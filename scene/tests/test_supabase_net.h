@@ -3,32 +3,37 @@
 
 #include "tests/test_macros.h"
 #include "core/io/resource_loader.h"
+#include "core/object/class_db.h"
 #include "core/object/object.h"
+#include "core/object/script_language.h"
 #include "core/os/os.h"
 #include "scene/main/scene_tree.h"
 
 namespace TestSupabaseNet {
 
 TEST_CASE("[Supabase][SceneTree] Fetch anomalies and validate data structure") {
-    // Load the SupabaseClient script
-    Ref<Resource> res = ResourceLoader::get_singleton()->load("res://Scripts/Systems/SupabaseClient.gd");
+    // Load the SupabaseClient script using static ResourceLoader::load()
+    Ref<Resource> res = ResourceLoader::load("res://Scripts/Systems/SupabaseClient.gd");
     REQUIRE_MESSAGE(res.is_valid(), "Failed to load SupabaseClient.gd; ensure res:// points to the project files when running tests.");
 
     Ref<Script> script = res;
     REQUIRE_MESSAGE(script.is_valid(), "Loaded resource is not a Script");
 
     // Load helper GDScript that receives the callback
-    Ref<Resource> helper_res = ResourceLoader::get_singleton()->load("res://scene/tests/CallbackHelper.gd");
+    Ref<Resource> helper_res = ResourceLoader::load("res://tests/CallbackHelper.gd");
     REQUIRE_MESSAGE(helper_res.is_valid(), "Failed to load CallbackHelper.gd");
     Ref<Script> helper_script = helper_res;
     REQUIRE_MESSAGE(helper_script.is_valid(), "CallbackHelper is not a Script");
 
-    Object *helper_instance = helper_script->new_instance();
-    REQUIRE_MESSAGE(helper_instance != nullptr, "Failed to instantiate CallbackHelper");
+    // Instantiate helper using Script::instance_create()
+    Object *helper_instance = ClassDB::instantiate("RefCounted");
+    REQUIRE_MESSAGE(helper_instance != nullptr, "Failed to create base object for CallbackHelper");
+    helper_script->instance_create(helper_instance);
 
     // Instantiate SupabaseClient
-    Object *client_instance = script->new_instance();
-    REQUIRE_MESSAGE(client_instance != nullptr, "Failed to instantiate SupabaseClient");
+    Object *client_instance = ClassDB::instantiate("RefCounted");
+    REQUIRE_MESSAGE(client_instance != nullptr, "Failed to create base object for SupabaseClient");
+    script->instance_create(client_instance);
 
     // Optionally override SUPABASE_URL from environment variable (for CI)
     String env_url = OS::get_singleton()->get_environment("SUPABASE_URL");
@@ -50,8 +55,8 @@ TEST_CASE("[Supabase][SceneTree] Fetch anomalies and validate data structure") {
     // Ensure SceneTree is available
     REQUIRE_MESSAGE(SceneTree::get_singleton() != nullptr, "SceneTree singleton not available");
 
-    // Issue the call
-    client_instance->callv(args);
+    // Issue the call using callv(method_name, args)
+    client_instance->callv(StringName("fetch_anomalies"), args);
 
     // Wait for callback with configurable timeout (default 10s, override via TEST_TIMEOUT_MS env var)
     String timeout_str = OS::get_singleton()->get_environment("TEST_TIMEOUT_MS");
@@ -62,10 +67,10 @@ TEST_CASE("[Supabase][SceneTree] Fetch anomalies and validate data structure") {
         MESSAGE(msg_to.utf8().get_data());
     }
 
-    int64_t start = OS::get_singleton()->get_ticks_msec();
+    int64_t start = static_cast<int64_t>(OS::get_singleton()->get_ticks_msec());
     bool called = false;
 
-    while (OS::get_singleton()->get_ticks_msec() - start < timeout_ms) {
+    while (static_cast<int64_t>(OS::get_singleton()->get_ticks_msec()) - start < timeout_ms) {
         // Process a small timestep so HTTPRequest and signals can be processed
         SceneTree::get_singleton()->process(0.05);
 
