@@ -34,7 +34,7 @@ TEST_CASE("[Supabase][SceneTree] Fetch anomalies and validate data structure") {
     String env_url = OS::get_singleton()->get_environment("SUPABASE_URL");
     if (env_url != "") {
         String msg_url = String("Using SUPABASE_URL from environment: ") + env_url;
-        MESSAGE(msg_url);
+        MESSAGE(msg_url.utf8().get_data());
         client_instance->set("SUPABASE_URL", env_url);
     }
 
@@ -59,7 +59,7 @@ TEST_CASE("[Supabase][SceneTree] Fetch anomalies and validate data structure") {
     if (timeout_str != "") {
         timeout_ms = timeout_str.to_int();
         String msg_to = String("Using TEST_TIMEOUT_MS from environment: ") + itos(timeout_ms) + String(" ms");
-        MESSAGE(msg_to);
+        MESSAGE(msg_to.utf8().get_data());
     }
 
     int64_t start = OS::get_singleton()->get_ticks_msec();
@@ -81,14 +81,15 @@ TEST_CASE("[Supabase][SceneTree] Fetch anomalies and validate data structure") {
     if (called) {
         Variant err_var = helper_instance->get("error");
         String err = err_var;
-        CHECK_MESSAGE(err == String(), String("Supabase returned error: ") + err);
+        String err_msg = String("Supabase returned error: ") + err;
+        CHECK_MESSAGE(err == String(), err_msg.utf8().get_data());
 
         Variant resp_var = helper_instance->get("response");
         CHECK_MESSAGE(resp_var.get_type() == Variant::ARRAY, "Response is not an Array");
         if (resp_var.get_type() == Variant::ARRAY) {
             Array resp = resp_var;
             String msg_fetch = String("Fetched items: ") + itos(resp.size());
-            MESSAGE(msg_fetch);
+            MESSAGE(msg_fetch.utf8().get_data());
         }
     }
 
