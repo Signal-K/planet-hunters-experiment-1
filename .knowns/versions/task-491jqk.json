@@ -1,6 +1,6 @@
 {
   "taskId": "491jqk",
-  "currentVersion": 3,
+  "currentVersion": 4,
   "versions": [
     {
       "id": "v1",
@@ -131,6 +131,50 @@
         ],
         "implementationPlan": "1. Confirm current web entrypoints and Godot export paths in repo\n2. Add Vercel routing config so / serves web shell and /game/* serves electron-dist/godot-web assets\n3. Add headers for wasm/pck and no-cache for shell html\n4. Validate locally by requesting / and /game/index.html from static serving flow\n5. Update task notes and proceed with remaining CI/deploy AC work",
         "implementationNotes": "✓ Vercel routing fixed: / and /:path* now point to electron-dist/godot-web; avoids serving root React Native index.js source"
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "491jqk",
+      "version": 4,
+      "timestamp": "2026-02-13T08:56:11.716Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "✓ Vercel routing fixed: / and /:path* now point to electron-dist/godot-web; avoids serving root React Native index.js source",
+          "newValue": "✓ Vercel routing fixed: / and /:path* now point to electron-dist/godot-web; avoids serving root React Native index.js source\n\n✓ Exported fresh Web + iOS builds; Android preset missing in scene/export_presets.cfg. Added web-only JSBridge fetch fallback in SupabaseClient to bypass Brotli decompression failure (HTTP result 8)."
+        }
+      ],
+      "snapshot": {
+        "title": "Run full Playwright+Cypress e2e and add final Vercel deploy pipeline stage",
+        "description": "Execute full browser e2e suites (Playwright and Cypress) for the web app, then add a Vercel deployment stage that runs at the end of the unified CI pipeline.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "e2e",
+          "playwright",
+          "cypress",
+          "vercel",
+          "ci",
+          "web"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Playwright e2e suite runs to completion"
+          },
+          {
+            "completed": false,
+            "text": "Cypress e2e suite runs to completion"
+          },
+          {
+            "completed": false,
+            "text": "CI pipeline includes final Vercel deployment stage after test/release/cache stages"
+          }
+        ],
+        "implementationPlan": "1. Confirm current web entrypoints and Godot export paths in repo\n2. Add Vercel routing config so / serves web shell and /game/* serves electron-dist/godot-web assets\n3. Add headers for wasm/pck and no-cache for shell html\n4. Validate locally by requesting / and /game/index.html from static serving flow\n5. Update task notes and proceed with remaining CI/deploy AC work",
+        "implementationNotes": "✓ Vercel routing fixed: / and /:path* now point to electron-dist/godot-web; avoids serving root React Native index.js source\n\n✓ Exported fresh Web + iOS builds; Android preset missing in scene/export_presets.cfg. Added web-only JSBridge fetch fallback in SupabaseClient to bypass Brotli decompression failure (HTTP result 8)."
       }
     }
   ]

@@ -1,0 +1,13 @@
+*
+
+# Deploy config
+!.vercelignore
+!vercel.json
+
+# Godot web export payload
+!electron-dist/
+!electron-dist/godot-web/
+!electron-dist/godot-web/**
+
+# Optional root fallback page
+!index.html

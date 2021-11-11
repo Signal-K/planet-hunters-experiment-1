@@ -11,7 +11,7 @@ labels:
   - ci
   - web
 createdAt: '2026-02-13T07:33:37.262Z'
-updatedAt: '2026-02-13T08:27:45.563Z'
+updatedAt: '2026-02-13T08:56:11.716Z'
 timeSpent: 0
 assignee: '@me'
 ---
@@ -44,5 +44,7 @@ Execute full browser e2e suites (Playwright and Cypress) for the web app, then a
 
 <!-- SECTION:NOTES:BEGIN -->
 ✓ Vercel routing fixed: / and /:path* now point to electron-dist/godot-web; avoids serving root React Native index.js source
+
+✓ Exported fresh Web + iOS builds; Android preset missing in scene/export_presets.cfg. Added web-only JSBridge fetch fallback in SupabaseClient to bypass Brotli decompression failure (HTTP result 8).
 <!-- SECTION:NOTES:END -->
 
