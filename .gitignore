@@ -54,3 +54,4 @@ node_modules/
 
 ## Keep specific files
 !ios/GodotTest.pck
+.vercel
