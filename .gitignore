@@ -8,6 +8,9 @@ build/
 ios/build/
 ios/Pods/Target Support Files/
 electron-dist/
+!electron-dist/
+!electron-dist/godot-web/
+!electron-dist/godot-web/**
 dist/
 release/
 out/
