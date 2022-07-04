@@ -23,12 +23,7 @@ module.exports = {
     "^react-native$": "<rootDir>/jest.setup.js",
   },
   moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
-  testMatch: [
-    "**/__tests__/**/*.test.ts",
-    "**/__tests__/**/*.test.tsx",
-    "**/?(*.)+(spec|test).ts",
-    "**/?(*.)+(spec|test).tsx",
-  ],
+  testMatch: ["**/__tests__/**/*.test.ts", "**/__tests__/**/*.test.tsx"],
   collectCoverageFrom: [
     "utils/**/*.ts",
     "utils/**/*.tsx",
