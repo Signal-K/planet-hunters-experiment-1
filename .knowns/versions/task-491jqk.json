@@ -1,6 +1,6 @@
 {
   "taskId": "491jqk",
-  "currentVersion": 1,
+  "currentVersion": 3,
   "versions": [
     {
       "id": "v1",
@@ -46,6 +46,91 @@
             "text": "CI pipeline includes final Vercel deployment stage after test/release/cache stages"
           }
         ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "491jqk",
+      "version": 2,
+      "timestamp": "2026-02-13T08:24:03.040Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "newValue": "1. Confirm current web entrypoints and Godot export paths in repo\n2. Add Vercel routing config so / serves web shell and /game/* serves electron-dist/godot-web assets\n3. Add headers for wasm/pck and no-cache for shell html\n4. Validate locally by requesting / and /game/index.html from static serving flow\n5. Update task notes and proceed with remaining CI/deploy AC work"
+        }
+      ],
+      "snapshot": {
+        "title": "Run full Playwright+Cypress e2e and add final Vercel deploy pipeline stage",
+        "description": "Execute full browser e2e suites (Playwright and Cypress) for the web app, then add a Vercel deployment stage that runs at the end of the unified CI pipeline.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "e2e",
+          "playwright",
+          "cypress",
+          "vercel",
+          "ci",
+          "web"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Playwright e2e suite runs to completion"
+          },
+          {
+            "completed": false,
+            "text": "Cypress e2e suite runs to completion"
+          },
+          {
+            "completed": false,
+            "text": "CI pipeline includes final Vercel deployment stage after test/release/cache stages"
+          }
+        ],
+        "implementationPlan": "1. Confirm current web entrypoints and Godot export paths in repo\n2. Add Vercel routing config so / serves web shell and /game/* serves electron-dist/godot-web assets\n3. Add headers for wasm/pck and no-cache for shell html\n4. Validate locally by requesting / and /game/index.html from static serving flow\n5. Update task notes and proceed with remaining CI/deploy AC work"
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "491jqk",
+      "version": 3,
+      "timestamp": "2026-02-13T08:27:45.564Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "✓ Vercel routing fixed: / and /:path* now point to electron-dist/godot-web; avoids serving root React Native index.js source"
+        }
+      ],
+      "snapshot": {
+        "title": "Run full Playwright+Cypress e2e and add final Vercel deploy pipeline stage",
+        "description": "Execute full browser e2e suites (Playwright and Cypress) for the web app, then add a Vercel deployment stage that runs at the end of the unified CI pipeline.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "e2e",
+          "playwright",
+          "cypress",
+          "vercel",
+          "ci",
+          "web"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Playwright e2e suite runs to completion"
+          },
+          {
+            "completed": false,
+            "text": "Cypress e2e suite runs to completion"
+          },
+          {
+            "completed": false,
+            "text": "CI pipeline includes final Vercel deployment stage after test/release/cache stages"
+          }
+        ],
+        "implementationPlan": "1. Confirm current web entrypoints and Godot export paths in repo\n2. Add Vercel routing config so / serves web shell and /game/* serves electron-dist/godot-web assets\n3. Add headers for wasm/pck and no-cache for shell html\n4. Validate locally by requesting / and /game/index.html from static serving flow\n5. Update task notes and proceed with remaining CI/deploy AC work",
+        "implementationNotes": "✓ Vercel routing fixed: / and /:path* now point to electron-dist/godot-web; avoids serving root React Native index.js source"
       }
     }
   ]
