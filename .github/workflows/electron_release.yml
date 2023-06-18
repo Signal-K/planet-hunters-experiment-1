@@ -10,22 +10,10 @@ permissions:
   contents: write
 
 jobs:
-  build:
-    name: Build (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os:
-          - macos-latest
-          - ubuntu-latest
-          - windows-latest
-
+  export-godot:
+    name: Export Godot Assets
+    runs-on: ubuntu-latest
     env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      CSC_IDENTITY_AUTO_DISCOVERY: "false"
-      CSC_FOR_PULL_REQUEST: "true"
-      ELECTRON_SKIP_NOTARIZATION: "true"
       GODOT_VERSION: "4.5-stable"
 
     steps:
@@ -49,26 +37,10 @@ jobs:
           mkdir -p .godot-bin
           cd .godot-bin
 
-          if [ "$RUNNER_OS" = "macOS" ]; then
-            curl -fsSL -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/Godot_v4.5-stable_macos.universal.zip"
-            unzip -q godot.zip
-            GODOT_PATH="$PWD/Godot.app/Contents/MacOS/Godot"
-            TEMPLATE_DIR="$HOME/Library/Application Support/Godot/export_templates/4.5.stable"
-          elif [ "$RUNNER_OS" = "Linux" ]; then
-            curl -fsSL -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/Godot_v4.5-stable_linux.x86_64.zip"
-            unzip -q godot.zip
-            GODOT_PATH="$PWD/Godot_v4.5-stable_linux.x86_64"
-            TEMPLATE_DIR="$HOME/.local/share/godot/export_templates/4.5.stable"
-          elif [ "$RUNNER_OS" = "Windows" ]; then
-            curl -fsSL -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/Godot_v4.5-stable_win64.exe.zip"
-            unzip -q godot.zip
-            GODOT_PATH="$PWD/Godot_v4.5-stable_win64.exe"
-            WIN_HOME="$(cygpath -u "$USERPROFILE")"
-            TEMPLATE_DIR="$WIN_HOME/AppData/Roaming/Godot/export_templates/4.5.stable"
-          else
-            echo "Unsupported runner OS: $RUNNER_OS"
-            exit 1
-          fi
+          curl -fsSL -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/Godot_v4.5-stable_linux.x86_64.zip"
+          unzip -q godot.zip
+          GODOT_PATH="$PWD/Godot_v4.5-stable_linux.x86_64"
+          TEMPLATE_DIR="$HOME/.local/share/godot/export_templates/4.5.stable"
 
           chmod +x "$GODOT_PATH" || true
           echo "GODOT_EDITOR=$GODOT_PATH" >> "$GITHUB_ENV"
@@ -99,9 +71,62 @@ jobs:
         shell: bash
         run: npm run godot:export:desktop
 
+      - name: Upload Godot web export
+        uses: actions/upload-artifact@v4
+        with:
+          name: godot-web-export
+          path: electron-dist/godot-web/**
+          if-no-files-found: error
+
+  build:
+    name: Build (${{ matrix.os }})
+    needs: export-godot
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - macos-latest
+          - ubuntu-latest
+          - windows-latest
+
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      CSC_IDENTITY_AUTO_DISCOVERY: "false"
+      CSC_FOR_PULL_REQUEST: "true"
+      ELECTRON_SKIP_NOTARIZATION: "true"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        shell: bash
+        run: npm ci
+
+      - name: Download Godot web export
+        uses: actions/download-artifact@v4
+        with:
+          name: godot-web-export
+          path: electron-dist/godot-web
+
+      - name: Verify Godot web export
+        shell: bash
+        run: |
+          test -f electron-dist/godot-web/index.html
+          test -f electron-dist/godot-web/index.js
+          test -f electron-dist/godot-web/index.pck
+          test -f electron-dist/godot-web/index.wasm
+
       - name: Build Electron distributables
         shell: bash
-        run: npm run electron:dist
+        run: npx electron-builder
 
       - name: Upload CI artifacts
         uses: actions/upload-artifact@v4
