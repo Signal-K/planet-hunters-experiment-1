@@ -6,9 +6,9 @@
     {
       "type": "starterrocket1",
       "id": "starterrocket1-6",
-      "x": 0,
-      "y": 0,
-      "status": "returningHome"
+      "x": 0.0,
+      "y": 0.0,
+      "status": "returned"
     }
   ],
   "launched": [
@@ -17,30 +17,28 @@
   ],
   "missions": [
   ],
-  "selected_target": "",
+  "selected_target": "4201",
   "preview_target": {
   },
   "detected_targets": [
   ],
   "seen_asteroids": [
+    "4201"
   ],
   "seen_planets": [
   ],
   "returning": [
-    {
-      "rocket_id": "starterrocket1-6"
-    }
   ],
   "arrived": {
   },
   "returned_mission": {
   },
   "returning_started": {
-    "starterrocket1-6": 1771150118
   },
   "status_changed_at": {
     "starterrocket1-6": {
-      "returningHome": 1771150118
+      "returningHome": 1771150118.0,
+      "returned": 1771161829.0
     }
   }
 }

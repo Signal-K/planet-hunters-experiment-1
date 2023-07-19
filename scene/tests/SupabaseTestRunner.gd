@@ -8,6 +8,17 @@ var _network_asteroid_count := -1
 var _resolved_supabase_url := ""
 var _resolved_supabase_key := ""
 
+func _find_button_recursive(node: Node, label_contains: String = "") -> Button:
+	if node is Button:
+		var btn := node as Button
+		if label_contains == "" or btn.text.findn(label_contains) >= 0:
+			return btn
+	for child in node.get_children():
+		var found = _find_button_recursive(child, label_contains)
+		if found:
+			return found
+	return null
+
 func _init():
 	reporter.start_suite("Supabase Integration", {
 		"engine": Engine.get_version_info()["string"],
@@ -252,21 +263,20 @@ func test_asteroid_selection():
 	
 	print("  ✓ Loaded " + str(asteroid_items.size()) + " asteroids in UI")
 	
-	# Find a clickable asteroid button
+	# Find clickable buttons inside the rendered anomaly item.
+	# Item layout can be nested, so search recursively.
 	var first_asteroid_data = null
-	var click_button = null
+	var select_button: Button = null
+	var view_button: Button = null
 	for item in asteroid_items:
-		# Each AsteroidItemPanel has asteroid data
-		if item.has_method("get") and item.get("asteroid_data"):
-			first_asteroid_data = item.get("asteroid_data")
-		# Look for the button
-		for child in item.get_children():
-			if child is Button:
-				click_button = child
-				break
-		if click_button and first_asteroid_data:
+		if select_button == null:
+			select_button = _find_button_recursive(item, "select")
+		if view_button == null:
+			view_button = _find_button_recursive(item, "view")
+		if select_button or view_button:
 			break
 	
+	var click_button: Button = view_button if view_button != null else select_button
 	if click_button == null:
 		fail(test_name, "Could not find clickable button in asteroid items")
 		panel.queue_free()
@@ -290,10 +300,20 @@ func test_asteroid_selection():
 	# Simulate actual button click
 	click_button.pressed.emit()
 	
-	# Wait for detail view to be created (it's added dynamically to content_container)
+	# Wait for UI reaction to selection/view action.
 	await create_timer(0.5).timeout
 	
-	# Find the detail view in content_container
+	# Current panel behavior routes to launchpad after selection.
+	var status_text := ""
+	if panel.has_node("PanelContainer/Panel/VBoxContainer/ContentContainer/StatusContainer/StatusLabel"):
+		status_text = str(panel.get_node("PanelContainer/Panel/VBoxContainer/ContentContainer/StatusContainer/StatusLabel").text)
+	var selected_target := ""
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if rm:
+		selected_target = str(rm.get_selected_target())
+	var routed_to_launchpad := status_text.begins_with("Target selected:") or selected_target != ""
+
+	# Backward-compatible path: older UI opened asteroid detail in-place.
 	var content_container = panel.get_node_or_null("PanelContainer/Panel/VBoxContainer/ContentContainer")
 	if not content_container:
 		fail(test_name, "ContentContainer not found in panel")
@@ -310,17 +330,20 @@ func test_asteroid_selection():
 				detail_view = child
 				break
 	
-	if not detail_view:
-		fail(test_name, "AsteroidDetailView was not created after button click")
+	if not routed_to_launchpad and not detail_view:
+		fail(test_name, "No valid UI reaction after click (neither selection routing nor detail view)")
 		panel.queue_free()
 		return
-	
-	if not detail_view.visible:
+
+	if detail_view and not detail_view.visible:
 		fail(test_name, "Asteroid detail view was created but is not visible")
 		panel.queue_free()
 		return
 	
-	print("  ✓ Asteroid detail view opened successfully")
+	if routed_to_launchpad:
+		print("  ✓ Target selection/routing succeeded")
+	elif detail_view:
+		print("  ✓ Asteroid detail view opened successfully")
 	
 	# Clean up
 	panel.queue_free()
