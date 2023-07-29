@@ -3,7 +3,7 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-version = "0.81.4"
+version = "0.81.5"
 source = { :git => 'https://github.com/facebook/react-native.git' }
 if version == '1000.0.0'
   # This is an unpublished version, use the latest commit hash of the react-native repo, which we’re presumably in.
@@ -96,8 +96,8 @@ pushd "$PODS_ROOT/../" > /dev/null
 RCT_SCRIPT_POD_INSTALLATION_ROOT=$(pwd)
 popd >/dev/null
 
-export RCT_SCRIPT_RN_DIR="$RCT_SCRIPT_POD_INSTALLATION_ROOT/../node_modules/react-native"
-export RCT_SCRIPT_APP_PATH="$RCT_SCRIPT_POD_INSTALLATION_ROOT/.."
+export RCT_SCRIPT_RN_DIR="$RCT_SCRIPT_POD_INSTALLATION_ROOT/../../../../../../../../../../../../../../../Navigation/Native/planet-hunters-experiment-1/node_modules/react-native"
+export RCT_SCRIPT_APP_PATH="$RCT_SCRIPT_POD_INSTALLATION_ROOT/../../../../../../../../../../../../../../../Navigation/Native/planet-hunters-experiment-1"
 export RCT_SCRIPT_OUTPUT_DIR="$RCT_SCRIPT_POD_INSTALLATION_ROOT"
 export RCT_SCRIPT_TYPE="withCodegenDiscovery"
 

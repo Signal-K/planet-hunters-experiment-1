@@ -16,6 +16,61 @@
 
 namespace facebook::react {
 
+RNSBottomTabsAccessoryContentProps::RNSBottomTabsAccessoryContentProps(
+    const PropsParserContext &context,
+    const RNSBottomTabsAccessoryContentProps &sourceProps,
+    const RawProps &rawProps): ViewProps(context, sourceProps, rawProps),
+
+    environment(convertRawProp(context, rawProps, "environment", sourceProps.environment, {RNSBottomTabsAccessoryContentEnvironment::Regular})) {}
+    
+#ifdef RN_SERIALIZABLE_STATE
+ComponentName RNSBottomTabsAccessoryContentProps::getDiffPropsImplementationTarget() const {
+  return "RNSBottomTabsAccessoryContent";
+}
+
+folly::dynamic RNSBottomTabsAccessoryContentProps::getDiffProps(
+    const Props* prevProps) const {
+  static const auto defaultProps = RNSBottomTabsAccessoryContentProps();
+  const RNSBottomTabsAccessoryContentProps* oldProps = prevProps == nullptr
+      ? &defaultProps
+      : static_cast<const RNSBottomTabsAccessoryContentProps*>(prevProps);
+  if (this == oldProps) {
+    return folly::dynamic::object();
+  }
+  folly::dynamic result = HostPlatformViewProps::getDiffProps(prevProps);
+  
+  if (environment != oldProps->environment) {
+    result["environment"] = toDynamic(environment);
+  }
+  return result;
+}
+#endif
+RNSBottomTabsAccessoryProps::RNSBottomTabsAccessoryProps(
+    const PropsParserContext &context,
+    const RNSBottomTabsAccessoryProps &sourceProps,
+    const RawProps &rawProps): ViewProps(context, sourceProps, rawProps)
+
+     {}
+    
+#ifdef RN_SERIALIZABLE_STATE
+ComponentName RNSBottomTabsAccessoryProps::getDiffPropsImplementationTarget() const {
+  return "RNSBottomTabsAccessory";
+}
+
+folly::dynamic RNSBottomTabsAccessoryProps::getDiffProps(
+    const Props* prevProps) const {
+  static const auto defaultProps = RNSBottomTabsAccessoryProps();
+  const RNSBottomTabsAccessoryProps* oldProps = prevProps == nullptr
+      ? &defaultProps
+      : static_cast<const RNSBottomTabsAccessoryProps*>(prevProps);
+  if (this == oldProps) {
+    return folly::dynamic::object();
+  }
+  folly::dynamic result = HostPlatformViewProps::getDiffProps(prevProps);
+  
+  return result;
+}
+#endif
 RNSBottomTabsProps::RNSBottomTabsProps(
     const PropsParserContext &context,
     const RNSBottomTabsProps &sourceProps,
@@ -37,6 +92,8 @@ RNSBottomTabsProps::RNSBottomTabsProps(
     tabBarItemLabelVisibilityMode(convertRawProp(context, rawProps, "tabBarItemLabelVisibilityMode", sourceProps.tabBarItemLabelVisibilityMode, {RNSBottomTabsTabBarItemLabelVisibilityMode::Auto})),
     tabBarTintColor(convertRawProp(context, rawProps, "tabBarTintColor", sourceProps.tabBarTintColor, {})),
     tabBarMinimizeBehavior(convertRawProp(context, rawProps, "tabBarMinimizeBehavior", sourceProps.tabBarMinimizeBehavior, {RNSBottomTabsTabBarMinimizeBehavior::Automatic})),
+    tabBarControllerMode(convertRawProp(context, rawProps, "tabBarControllerMode", sourceProps.tabBarControllerMode, {RNSBottomTabsTabBarControllerMode::Automatic})),
+    tabBarHidden(convertRawProp(context, rawProps, "tabBarHidden", sourceProps.tabBarHidden, {false})),
     controlNavigationStateInJS(convertRawProp(context, rawProps, "controlNavigationStateInJS", sourceProps.controlNavigationStateInJS, {false})) {}
     
 #ifdef RN_SERIALIZABLE_STATE
@@ -119,6 +176,14 @@ folly::dynamic RNSBottomTabsProps::getDiffProps(
     result["tabBarMinimizeBehavior"] = toDynamic(tabBarMinimizeBehavior);
   }
     
+  if (tabBarControllerMode != oldProps->tabBarControllerMode) {
+    result["tabBarControllerMode"] = toDynamic(tabBarControllerMode);
+  }
+    
+  if (tabBarHidden != oldProps->tabBarHidden) {
+    result["tabBarHidden"] = tabBarHidden;
+  }
+    
   if (controlNavigationStateInJS != oldProps->controlNavigationStateInJS) {
     result["controlNavigationStateInJS"] = controlNavigationStateInJS;
   }
@@ -133,10 +198,11 @@ RNSBottomTabsScreenProps::RNSBottomTabsScreenProps(
     isFocused(convertRawProp(context, rawProps, "isFocused", sourceProps.isFocused, {false})),
     tabKey(convertRawProp(context, rawProps, "tabKey", sourceProps.tabKey, {})),
     title(convertRawProp(context, rawProps, "title", sourceProps.title, {})),
+    isTitleUndefined(convertRawProp(context, rawProps, "isTitleUndefined", sourceProps.isTitleUndefined, {true})),
     badgeValue(convertRawProp(context, rawProps, "badgeValue", sourceProps.badgeValue, {})),
     orientation(convertRawProp(context, rawProps, "orientation", sourceProps.orientation, {RNSBottomTabsScreenOrientation::Inherit})),
-    iconResourceName(convertRawProp(context, rawProps, "iconResourceName", sourceProps.iconResourceName, {})),
-    iconResource(convertRawProp(context, rawProps, "iconResource", sourceProps.iconResource, {})),
+    drawableIconResourceName(convertRawProp(context, rawProps, "drawableIconResourceName", sourceProps.drawableIconResourceName, {})),
+    imageIconResource(convertRawProp(context, rawProps, "imageIconResource", sourceProps.imageIconResource, {})),
     tabBarItemBadgeTextColor(convertRawProp(context, rawProps, "tabBarItemBadgeTextColor", sourceProps.tabBarItemBadgeTextColor, {})),
     tabBarItemBadgeBackgroundColor(convertRawProp(context, rawProps, "tabBarItemBadgeBackgroundColor", sourceProps.tabBarItemBadgeBackgroundColor, {})),
     standardAppearance(convertRawProp(context, rawProps, "standardAppearance", sourceProps.standardAppearance, {})),
@@ -148,7 +214,12 @@ RNSBottomTabsScreenProps::RNSBottomTabsScreenProps(
     selectedIconSfSymbolName(convertRawProp(context, rawProps, "selectedIconSfSymbolName", sourceProps.selectedIconSfSymbolName, {})),
     systemItem(convertRawProp(context, rawProps, "systemItem", sourceProps.systemItem, {RNSBottomTabsScreenSystemItem::None})),
     specialEffects(convertRawProp(context, rawProps, "specialEffects", sourceProps.specialEffects, {})),
-    overrideScrollViewContentInsetAdjustmentBehavior(convertRawProp(context, rawProps, "overrideScrollViewContentInsetAdjustmentBehavior", sourceProps.overrideScrollViewContentInsetAdjustmentBehavior, {true})) {}
+    overrideScrollViewContentInsetAdjustmentBehavior(convertRawProp(context, rawProps, "overrideScrollViewContentInsetAdjustmentBehavior", sourceProps.overrideScrollViewContentInsetAdjustmentBehavior, {true})),
+    bottomScrollEdgeEffect(convertRawProp(context, rawProps, "bottomScrollEdgeEffect", sourceProps.bottomScrollEdgeEffect, {RNSBottomTabsScreenBottomScrollEdgeEffect::Automatic})),
+    leftScrollEdgeEffect(convertRawProp(context, rawProps, "leftScrollEdgeEffect", sourceProps.leftScrollEdgeEffect, {RNSBottomTabsScreenLeftScrollEdgeEffect::Automatic})),
+    rightScrollEdgeEffect(convertRawProp(context, rawProps, "rightScrollEdgeEffect", sourceProps.rightScrollEdgeEffect, {RNSBottomTabsScreenRightScrollEdgeEffect::Automatic})),
+    topScrollEdgeEffect(convertRawProp(context, rawProps, "topScrollEdgeEffect", sourceProps.topScrollEdgeEffect, {RNSBottomTabsScreenTopScrollEdgeEffect::Automatic})),
+    userInterfaceStyle(convertRawProp(context, rawProps, "userInterfaceStyle", sourceProps.userInterfaceStyle, {RNSBottomTabsScreenUserInterfaceStyle::Unspecified})) {}
     
 #ifdef RN_SERIALIZABLE_STATE
 ComponentName RNSBottomTabsScreenProps::getDiffPropsImplementationTarget() const {
@@ -178,6 +249,10 @@ folly::dynamic RNSBottomTabsScreenProps::getDiffProps(
     result["title"] = title;
   }
     
+  if (isTitleUndefined != oldProps->isTitleUndefined) {
+    result["isTitleUndefined"] = isTitleUndefined;
+  }
+    
   if (badgeValue != oldProps->badgeValue) {
     result["badgeValue"] = badgeValue;
   }
@@ -186,12 +261,12 @@ folly::dynamic RNSBottomTabsScreenProps::getDiffProps(
     result["orientation"] = toDynamic(orientation);
   }
     
-  if (iconResourceName != oldProps->iconResourceName) {
-    result["iconResourceName"] = iconResourceName;
+  if (drawableIconResourceName != oldProps->drawableIconResourceName) {
+    result["drawableIconResourceName"] = drawableIconResourceName;
   }
     
-  if (iconResource != oldProps->iconResource) {
-    result["iconResource"] = toDynamic(iconResource);
+  if (imageIconResource != oldProps->imageIconResource) {
+    result["imageIconResource"] = toDynamic(imageIconResource);
   }
     
   if (tabBarItemBadgeTextColor != oldProps->tabBarItemBadgeTextColor) {
@@ -240,6 +315,26 @@ folly::dynamic RNSBottomTabsScreenProps::getDiffProps(
     
   if (overrideScrollViewContentInsetAdjustmentBehavior != oldProps->overrideScrollViewContentInsetAdjustmentBehavior) {
     result["overrideScrollViewContentInsetAdjustmentBehavior"] = overrideScrollViewContentInsetAdjustmentBehavior;
+  }
+    
+  if (bottomScrollEdgeEffect != oldProps->bottomScrollEdgeEffect) {
+    result["bottomScrollEdgeEffect"] = toDynamic(bottomScrollEdgeEffect);
+  }
+    
+  if (leftScrollEdgeEffect != oldProps->leftScrollEdgeEffect) {
+    result["leftScrollEdgeEffect"] = toDynamic(leftScrollEdgeEffect);
+  }
+    
+  if (rightScrollEdgeEffect != oldProps->rightScrollEdgeEffect) {
+    result["rightScrollEdgeEffect"] = toDynamic(rightScrollEdgeEffect);
+  }
+    
+  if (topScrollEdgeEffect != oldProps->topScrollEdgeEffect) {
+    result["topScrollEdgeEffect"] = toDynamic(topScrollEdgeEffect);
+  }
+    
+  if (userInterfaceStyle != oldProps->userInterfaceStyle) {
+    result["userInterfaceStyle"] = toDynamic(userInterfaceStyle);
   }
   return result;
 }
@@ -311,6 +406,7 @@ RNSSplitViewHostProps::RNSSplitViewHostProps(
     displayModeButtonVisibility(convertRawProp(context, rawProps, "displayModeButtonVisibility", sourceProps.displayModeButtonVisibility, {RNSSplitViewHostDisplayModeButtonVisibility::Automatic})),
     columnMetrics(convertRawProp(context, rawProps, "columnMetrics", sourceProps.columnMetrics, {})),
     orientation(convertRawProp(context, rawProps, "orientation", sourceProps.orientation, {RNSSplitViewHostOrientation::Inherit})),
+    primaryBackgroundStyle(convertRawProp(context, rawProps, "primaryBackgroundStyle", sourceProps.primaryBackgroundStyle, {RNSSplitViewHostPrimaryBackgroundStyle::Default})),
     presentsWithGesture(convertRawProp(context, rawProps, "presentsWithGesture", sourceProps.presentsWithGesture, {true})),
     showInspector(convertRawProp(context, rawProps, "showInspector", sourceProps.showInspector, {false})) {}
     
@@ -356,6 +452,10 @@ folly::dynamic RNSSplitViewHostProps::getDiffProps(
     
   if (orientation != oldProps->orientation) {
     result["orientation"] = toDynamic(orientation);
+  }
+    
+  if (primaryBackgroundStyle != oldProps->primaryBackgroundStyle) {
+    result["primaryBackgroundStyle"] = toDynamic(primaryBackgroundStyle);
   }
     
   if (presentsWithGesture != oldProps->presentsWithGesture) {
@@ -444,8 +544,9 @@ RNSModalScreenProps::RNSModalScreenProps(
     sheetExpandsWhenScrolledToEdge(convertRawProp(context, rawProps, "sheetExpandsWhenScrolledToEdge", sourceProps.sheetExpandsWhenScrolledToEdge, {false})),
     sheetInitialDetent(convertRawProp(context, rawProps, "sheetInitialDetent", sourceProps.sheetInitialDetent, {0})),
     sheetElevation(convertRawProp(context, rawProps, "sheetElevation", sourceProps.sheetElevation, {24})),
+    sheetShouldOverflowTopInset(convertRawProp(context, rawProps, "sheetShouldOverflowTopInset", sourceProps.sheetShouldOverflowTopInset, {false})),
     customAnimationOnSwipe(convertRawProp(context, rawProps, "customAnimationOnSwipe", sourceProps.customAnimationOnSwipe, {false})),
-    fullScreenSwipeEnabled(convertRawProp(context, rawProps, "fullScreenSwipeEnabled", sourceProps.fullScreenSwipeEnabled, {false})),
+    fullScreenSwipeEnabled(convertRawProp(context, rawProps, "fullScreenSwipeEnabled", sourceProps.fullScreenSwipeEnabled, {RNSModalScreenFullScreenSwipeEnabled::Undefined})),
     fullScreenSwipeShadowEnabled(convertRawProp(context, rawProps, "fullScreenSwipeShadowEnabled", sourceProps.fullScreenSwipeShadowEnabled, {true})),
     homeIndicatorHidden(convertRawProp(context, rawProps, "homeIndicatorHidden", sourceProps.homeIndicatorHidden, {false})),
     preventNativeDismiss(convertRawProp(context, rawProps, "preventNativeDismiss", sourceProps.preventNativeDismiss, {false})),
@@ -467,7 +568,8 @@ RNSModalScreenProps::RNSModalScreenProps(
     navigationBarColor(convertRawProp(context, rawProps, "navigationBarColor", sourceProps.navigationBarColor, {})),
     navigationBarTranslucent(convertRawProp(context, rawProps, "navigationBarTranslucent", sourceProps.navigationBarTranslucent, {false})),
     navigationBarHidden(convertRawProp(context, rawProps, "navigationBarHidden", sourceProps.navigationBarHidden, {false})),
-    nativeBackButtonDismissalEnabled(convertRawProp(context, rawProps, "nativeBackButtonDismissalEnabled", sourceProps.nativeBackButtonDismissalEnabled, {false})) {}
+    nativeBackButtonDismissalEnabled(convertRawProp(context, rawProps, "nativeBackButtonDismissalEnabled", sourceProps.nativeBackButtonDismissalEnabled, {false})),
+    synchronousShadowStateUpdatesEnabled(convertRawProp(context, rawProps, "synchronousShadowStateUpdatesEnabled", sourceProps.synchronousShadowStateUpdatesEnabled, {false})) {}
     
 #ifdef RN_SERIALIZABLE_STATE
 ComponentName RNSModalScreenProps::getDiffPropsImplementationTarget() const {
@@ -517,12 +619,16 @@ folly::dynamic RNSModalScreenProps::getDiffProps(
     result["sheetElevation"] = sheetElevation;
   }
     
+  if (sheetShouldOverflowTopInset != oldProps->sheetShouldOverflowTopInset) {
+    result["sheetShouldOverflowTopInset"] = sheetShouldOverflowTopInset;
+  }
+    
   if (customAnimationOnSwipe != oldProps->customAnimationOnSwipe) {
     result["customAnimationOnSwipe"] = customAnimationOnSwipe;
   }
     
   if (fullScreenSwipeEnabled != oldProps->fullScreenSwipeEnabled) {
-    result["fullScreenSwipeEnabled"] = fullScreenSwipeEnabled;
+    result["fullScreenSwipeEnabled"] = toDynamic(fullScreenSwipeEnabled);
   }
     
   if (fullScreenSwipeShadowEnabled != oldProps->fullScreenSwipeShadowEnabled) {
@@ -611,6 +717,44 @@ folly::dynamic RNSModalScreenProps::getDiffProps(
     
   if (nativeBackButtonDismissalEnabled != oldProps->nativeBackButtonDismissalEnabled) {
     result["nativeBackButtonDismissalEnabled"] = nativeBackButtonDismissalEnabled;
+  }
+    
+  if (synchronousShadowStateUpdatesEnabled != oldProps->synchronousShadowStateUpdatesEnabled) {
+    result["synchronousShadowStateUpdatesEnabled"] = synchronousShadowStateUpdatesEnabled;
+  }
+  return result;
+}
+#endif
+RNSSafeAreaViewProps::RNSSafeAreaViewProps(
+    const PropsParserContext &context,
+    const RNSSafeAreaViewProps &sourceProps,
+    const RawProps &rawProps): ViewProps(context, sourceProps, rawProps),
+
+    edges(convertRawProp(context, rawProps, "edges", sourceProps.edges, {})),
+    insetType(convertRawProp(context, rawProps, "insetType", sourceProps.insetType, {RNSSafeAreaViewInsetType::All})) {}
+    
+#ifdef RN_SERIALIZABLE_STATE
+ComponentName RNSSafeAreaViewProps::getDiffPropsImplementationTarget() const {
+  return "RNSSafeAreaView";
+}
+
+folly::dynamic RNSSafeAreaViewProps::getDiffProps(
+    const Props* prevProps) const {
+  static const auto defaultProps = RNSSafeAreaViewProps();
+  const RNSSafeAreaViewProps* oldProps = prevProps == nullptr
+      ? &defaultProps
+      : static_cast<const RNSSafeAreaViewProps*>(prevProps);
+  if (this == oldProps) {
+    return folly::dynamic::object();
+  }
+  folly::dynamic result = HostPlatformViewProps::getDiffProps(prevProps);
+  
+  if (edges != oldProps->edges) {
+    result["edges"] = toDynamic(edges);
+  }
+    
+  if (insetType != oldProps->insetType) {
+    result["insetType"] = toDynamic(insetType);
   }
   return result;
 }
@@ -706,8 +850,9 @@ RNSScreenProps::RNSScreenProps(
     sheetExpandsWhenScrolledToEdge(convertRawProp(context, rawProps, "sheetExpandsWhenScrolledToEdge", sourceProps.sheetExpandsWhenScrolledToEdge, {false})),
     sheetInitialDetent(convertRawProp(context, rawProps, "sheetInitialDetent", sourceProps.sheetInitialDetent, {0})),
     sheetElevation(convertRawProp(context, rawProps, "sheetElevation", sourceProps.sheetElevation, {24})),
+    sheetShouldOverflowTopInset(convertRawProp(context, rawProps, "sheetShouldOverflowTopInset", sourceProps.sheetShouldOverflowTopInset, {false})),
     customAnimationOnSwipe(convertRawProp(context, rawProps, "customAnimationOnSwipe", sourceProps.customAnimationOnSwipe, {false})),
-    fullScreenSwipeEnabled(convertRawProp(context, rawProps, "fullScreenSwipeEnabled", sourceProps.fullScreenSwipeEnabled, {false})),
+    fullScreenSwipeEnabled(convertRawProp(context, rawProps, "fullScreenSwipeEnabled", sourceProps.fullScreenSwipeEnabled, {RNSScreenFullScreenSwipeEnabled::Undefined})),
     fullScreenSwipeShadowEnabled(convertRawProp(context, rawProps, "fullScreenSwipeShadowEnabled", sourceProps.fullScreenSwipeShadowEnabled, {true})),
     homeIndicatorHidden(convertRawProp(context, rawProps, "homeIndicatorHidden", sourceProps.homeIndicatorHidden, {false})),
     preventNativeDismiss(convertRawProp(context, rawProps, "preventNativeDismiss", sourceProps.preventNativeDismiss, {false})),
@@ -729,7 +874,13 @@ RNSScreenProps::RNSScreenProps(
     navigationBarColor(convertRawProp(context, rawProps, "navigationBarColor", sourceProps.navigationBarColor, {})),
     navigationBarTranslucent(convertRawProp(context, rawProps, "navigationBarTranslucent", sourceProps.navigationBarTranslucent, {false})),
     navigationBarHidden(convertRawProp(context, rawProps, "navigationBarHidden", sourceProps.navigationBarHidden, {false})),
-    nativeBackButtonDismissalEnabled(convertRawProp(context, rawProps, "nativeBackButtonDismissalEnabled", sourceProps.nativeBackButtonDismissalEnabled, {false})) {}
+    nativeBackButtonDismissalEnabled(convertRawProp(context, rawProps, "nativeBackButtonDismissalEnabled", sourceProps.nativeBackButtonDismissalEnabled, {false})),
+    bottomScrollEdgeEffect(convertRawProp(context, rawProps, "bottomScrollEdgeEffect", sourceProps.bottomScrollEdgeEffect, {RNSScreenBottomScrollEdgeEffect::Automatic})),
+    leftScrollEdgeEffect(convertRawProp(context, rawProps, "leftScrollEdgeEffect", sourceProps.leftScrollEdgeEffect, {RNSScreenLeftScrollEdgeEffect::Automatic})),
+    rightScrollEdgeEffect(convertRawProp(context, rawProps, "rightScrollEdgeEffect", sourceProps.rightScrollEdgeEffect, {RNSScreenRightScrollEdgeEffect::Automatic})),
+    topScrollEdgeEffect(convertRawProp(context, rawProps, "topScrollEdgeEffect", sourceProps.topScrollEdgeEffect, {RNSScreenTopScrollEdgeEffect::Automatic})),
+    synchronousShadowStateUpdatesEnabled(convertRawProp(context, rawProps, "synchronousShadowStateUpdatesEnabled", sourceProps.synchronousShadowStateUpdatesEnabled, {false})),
+    androidResetScreenShadowStateOnOrientationChangeEnabled(convertRawProp(context, rawProps, "androidResetScreenShadowStateOnOrientationChangeEnabled", sourceProps.androidResetScreenShadowStateOnOrientationChangeEnabled, {true})) {}
     
 #ifdef RN_SERIALIZABLE_STATE
 ComponentName RNSScreenProps::getDiffPropsImplementationTarget() const {
@@ -779,12 +930,16 @@ folly::dynamic RNSScreenProps::getDiffProps(
     result["sheetElevation"] = sheetElevation;
   }
     
+  if (sheetShouldOverflowTopInset != oldProps->sheetShouldOverflowTopInset) {
+    result["sheetShouldOverflowTopInset"] = sheetShouldOverflowTopInset;
+  }
+    
   if (customAnimationOnSwipe != oldProps->customAnimationOnSwipe) {
     result["customAnimationOnSwipe"] = customAnimationOnSwipe;
   }
     
   if (fullScreenSwipeEnabled != oldProps->fullScreenSwipeEnabled) {
-    result["fullScreenSwipeEnabled"] = fullScreenSwipeEnabled;
+    result["fullScreenSwipeEnabled"] = toDynamic(fullScreenSwipeEnabled);
   }
     
   if (fullScreenSwipeShadowEnabled != oldProps->fullScreenSwipeShadowEnabled) {
@@ -874,6 +1029,30 @@ folly::dynamic RNSScreenProps::getDiffProps(
   if (nativeBackButtonDismissalEnabled != oldProps->nativeBackButtonDismissalEnabled) {
     result["nativeBackButtonDismissalEnabled"] = nativeBackButtonDismissalEnabled;
   }
+    
+  if (bottomScrollEdgeEffect != oldProps->bottomScrollEdgeEffect) {
+    result["bottomScrollEdgeEffect"] = toDynamic(bottomScrollEdgeEffect);
+  }
+    
+  if (leftScrollEdgeEffect != oldProps->leftScrollEdgeEffect) {
+    result["leftScrollEdgeEffect"] = toDynamic(leftScrollEdgeEffect);
+  }
+    
+  if (rightScrollEdgeEffect != oldProps->rightScrollEdgeEffect) {
+    result["rightScrollEdgeEffect"] = toDynamic(rightScrollEdgeEffect);
+  }
+    
+  if (topScrollEdgeEffect != oldProps->topScrollEdgeEffect) {
+    result["topScrollEdgeEffect"] = toDynamic(topScrollEdgeEffect);
+  }
+    
+  if (synchronousShadowStateUpdatesEnabled != oldProps->synchronousShadowStateUpdatesEnabled) {
+    result["synchronousShadowStateUpdatesEnabled"] = synchronousShadowStateUpdatesEnabled;
+  }
+    
+  if (androidResetScreenShadowStateOnOrientationChangeEnabled != oldProps->androidResetScreenShadowStateOnOrientationChangeEnabled) {
+    result["androidResetScreenShadowStateOnOrientationChangeEnabled"] = androidResetScreenShadowStateOnOrientationChangeEnabled;
+  }
   return result;
 }
 #endif
@@ -935,7 +1114,11 @@ RNSScreenStackHeaderConfigProps::RNSScreenStackHeaderConfigProps(
     hideBackButton(convertRawProp(context, rawProps, "hideBackButton", sourceProps.hideBackButton, {false})),
     backButtonInCustomView(convertRawProp(context, rawProps, "backButtonInCustomView", sourceProps.backButtonInCustomView, {false})),
     blurEffect(convertRawProp(context, rawProps, "blurEffect", sourceProps.blurEffect, {RNSScreenStackHeaderConfigBlurEffect::None})),
-    topInsetEnabled(convertRawProp(context, rawProps, "topInsetEnabled", sourceProps.topInsetEnabled, {false})) {}
+    topInsetEnabled(convertRawProp(context, rawProps, "topInsetEnabled", sourceProps.topInsetEnabled, {false})),
+    headerLeftBarButtonItems(convertRawProp(context, rawProps, "headerLeftBarButtonItems", sourceProps.headerLeftBarButtonItems, {})),
+    headerRightBarButtonItems(convertRawProp(context, rawProps, "headerRightBarButtonItems", sourceProps.headerRightBarButtonItems, {})),
+    synchronousShadowStateUpdatesEnabled(convertRawProp(context, rawProps, "synchronousShadowStateUpdatesEnabled", sourceProps.synchronousShadowStateUpdatesEnabled, {false})),
+    userInterfaceStyle(convertRawProp(context, rawProps, "userInterfaceStyle", sourceProps.userInterfaceStyle, {RNSScreenStackHeaderConfigUserInterfaceStyle::Unspecified})) {}
     
 #ifdef RN_SERIALIZABLE_STATE
 ComponentName RNSScreenStackHeaderConfigProps::getDiffPropsImplementationTarget() const {
@@ -1064,6 +1247,22 @@ folly::dynamic RNSScreenStackHeaderConfigProps::getDiffProps(
   if (topInsetEnabled != oldProps->topInsetEnabled) {
     result["topInsetEnabled"] = topInsetEnabled;
   }
+    
+  if (headerLeftBarButtonItems != oldProps->headerLeftBarButtonItems) {
+    result["headerLeftBarButtonItems"] = toDynamic(headerLeftBarButtonItems);
+  }
+    
+  if (headerRightBarButtonItems != oldProps->headerRightBarButtonItems) {
+    result["headerRightBarButtonItems"] = toDynamic(headerRightBarButtonItems);
+  }
+    
+  if (synchronousShadowStateUpdatesEnabled != oldProps->synchronousShadowStateUpdatesEnabled) {
+    result["synchronousShadowStateUpdatesEnabled"] = synchronousShadowStateUpdatesEnabled;
+  }
+    
+  if (userInterfaceStyle != oldProps->userInterfaceStyle) {
+    result["userInterfaceStyle"] = toDynamic(userInterfaceStyle);
+  }
   return result;
 }
 #endif
@@ -1072,7 +1271,9 @@ RNSScreenStackHeaderSubviewProps::RNSScreenStackHeaderSubviewProps(
     const RNSScreenStackHeaderSubviewProps &sourceProps,
     const RawProps &rawProps): ViewProps(context, sourceProps, rawProps),
 
-    type(convertRawProp(context, rawProps, "type", sourceProps.type, {RNSScreenStackHeaderSubviewType::Left})) {}
+    type(convertRawProp(context, rawProps, "type", sourceProps.type, {RNSScreenStackHeaderSubviewType::Left})),
+    hidesSharedBackground(convertRawProp(context, rawProps, "hidesSharedBackground", sourceProps.hidesSharedBackground, {false})),
+    synchronousShadowStateUpdatesEnabled(convertRawProp(context, rawProps, "synchronousShadowStateUpdatesEnabled", sourceProps.synchronousShadowStateUpdatesEnabled, {false})) {}
     
 #ifdef RN_SERIALIZABLE_STATE
 ComponentName RNSScreenStackHeaderSubviewProps::getDiffPropsImplementationTarget() const {
@@ -1092,6 +1293,14 @@ folly::dynamic RNSScreenStackHeaderSubviewProps::getDiffProps(
   
   if (type != oldProps->type) {
     result["type"] = toDynamic(type);
+  }
+    
+  if (hidesSharedBackground != oldProps->hidesSharedBackground) {
+    result["hidesSharedBackground"] = hidesSharedBackground;
+  }
+    
+  if (synchronousShadowStateUpdatesEnabled != oldProps->synchronousShadowStateUpdatesEnabled) {
+    result["synchronousShadowStateUpdatesEnabled"] = synchronousShadowStateUpdatesEnabled;
   }
   return result;
 }
@@ -1128,16 +1337,17 @@ RNSSearchBarProps::RNSSearchBarProps(
     const RawProps &rawProps): ViewProps(context, sourceProps, rawProps),
 
     hideWhenScrolling(convertRawProp(context, rawProps, "hideWhenScrolling", sourceProps.hideWhenScrolling, {true})),
-    autoCapitalize(convertRawProp(context, rawProps, "autoCapitalize", sourceProps.autoCapitalize, {RNSSearchBarAutoCapitalize::None})),
+    autoCapitalize(convertRawProp(context, rawProps, "autoCapitalize", sourceProps.autoCapitalize, {RNSSearchBarAutoCapitalize::SystemDefault})),
     placeholder(convertRawProp(context, rawProps, "placeholder", sourceProps.placeholder, {})),
     placement(convertRawProp(context, rawProps, "placement", sourceProps.placement, {RNSSearchBarPlacement::Automatic})),
     allowToolbarIntegration(convertRawProp(context, rawProps, "allowToolbarIntegration", sourceProps.allowToolbarIntegration, {true})),
-    obscureBackground(convertRawProp(context, rawProps, "obscureBackground", sourceProps.obscureBackground, {false})),
-    hideNavigationBar(convertRawProp(context, rawProps, "hideNavigationBar", sourceProps.hideNavigationBar, {false})),
+    obscureBackground(convertRawProp(context, rawProps, "obscureBackground", sourceProps.obscureBackground, {RNSSearchBarObscureBackground::Undefined})),
+    hideNavigationBar(convertRawProp(context, rawProps, "hideNavigationBar", sourceProps.hideNavigationBar, {RNSSearchBarHideNavigationBar::Undefined})),
     cancelButtonText(convertRawProp(context, rawProps, "cancelButtonText", sourceProps.cancelButtonText, {})),
     barTintColor(convertRawProp(context, rawProps, "barTintColor", sourceProps.barTintColor, {})),
     tintColor(convertRawProp(context, rawProps, "tintColor", sourceProps.tintColor, {})),
     textColor(convertRawProp(context, rawProps, "textColor", sourceProps.textColor, {})),
+    autoFocus(convertRawProp(context, rawProps, "autoFocus", sourceProps.autoFocus, {false})),
     disableBackButtonOverride(convertRawProp(context, rawProps, "disableBackButtonOverride", sourceProps.disableBackButtonOverride, {false})),
     inputType(convertRawProp(context, rawProps, "inputType", sourceProps.inputType, {})),
     hintTextColor(convertRawProp(context, rawProps, "hintTextColor", sourceProps.hintTextColor, {})),
@@ -1181,11 +1391,11 @@ folly::dynamic RNSSearchBarProps::getDiffProps(
   }
     
   if (obscureBackground != oldProps->obscureBackground) {
-    result["obscureBackground"] = obscureBackground;
+    result["obscureBackground"] = toDynamic(obscureBackground);
   }
     
   if (hideNavigationBar != oldProps->hideNavigationBar) {
-    result["hideNavigationBar"] = hideNavigationBar;
+    result["hideNavigationBar"] = toDynamic(hideNavigationBar);
   }
     
   if (cancelButtonText != oldProps->cancelButtonText) {
@@ -1202,6 +1412,10 @@ folly::dynamic RNSSearchBarProps::getDiffProps(
     
   if (textColor != oldProps->textColor) {
     result["textColor"] = *textColor;
+  }
+    
+  if (autoFocus != oldProps->autoFocus) {
+    result["autoFocus"] = autoFocus;
   }
     
   if (disableBackButtonOverride != oldProps->disableBackButtonOverride) {

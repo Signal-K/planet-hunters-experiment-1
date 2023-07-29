@@ -1,6 +1,6 @@
 {
   "name": "ExpoModulesCore",
-  "version": "3.0.21",
+  "version": "3.0.29",
   "summary": "The core of Expo Modules architecture",
   "description": "The core of Expo Modules architecture",
   "license": "MIT",
@@ -34,7 +34,7 @@
       "$(PODS_ROOT)/SocketRocket",
       "$(PODS_ROOT)/RCT-Folly"
     ],
-    "GCC_PREPROCESSOR_DEFINITIONS": "$(inherited) EXPO_MODULES_CORE_VERSION=3.0.21",
+    "GCC_PREPROCESSOR_DEFINITIONS": "$(inherited) EXPO_MODULES_CORE_VERSION=3.0.29",
     "OTHER_CPLUSPLUSFLAGS": "$(inherited) -DRCT_NEW_ARCH_ENABLED=1 "
   },
   "user_target_xcconfig": {

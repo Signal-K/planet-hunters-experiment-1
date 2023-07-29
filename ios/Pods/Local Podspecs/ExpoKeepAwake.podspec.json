@@ -1,6 +1,6 @@
 {
   "name": "ExpoKeepAwake",
-  "version": "15.0.7",
+  "version": "15.0.8",
   "summary": "Provides a React component that prevents the screen sleeping when rendered. It also exposes static methods to control the behavior imperatively.",
   "description": "Provides a React component that prevents the screen sleeping when rendered. It also exposes static methods to control the behavior imperatively.",
   "license": "MIT",

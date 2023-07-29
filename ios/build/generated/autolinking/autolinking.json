@@ -1,20 +1,20 @@
 {
-  "root": "/Users/scroobz/Navigation/Native/godot-template",
-  "reactNativePath": "/Users/scroobz/Navigation/Native/godot-template/node_modules/react-native",
+  "root": "/Users/scroobz/Navigation/Native/planet-hunters-experiment-1",
+  "reactNativePath": "/Users/scroobz/Navigation/Native/planet-hunters-experiment-1/node_modules/react-native",
   "reactNativeVersion": "0.81",
   "dependencies": {
     "@borndotcom/react-native-godot": {
-      "root": "/Users/scroobz/Navigation/Native/godot-template/node_modules/@borndotcom/react-native-godot",
+      "root": "/Users/scroobz/Navigation/Native/planet-hunters-experiment-1/node_modules/@borndotcom/react-native-godot",
       "name": "@borndotcom/react-native-godot",
       "platforms": {
         "ios": {
-          "podspecPath": "/Users/scroobz/Navigation/Native/godot-template/node_modules/@borndotcom/react-native-godot/borndotcom-react-native-godot.podspec",
+          "podspecPath": "/Users/scroobz/Navigation/Native/planet-hunters-experiment-1/node_modules/@borndotcom/react-native-godot/borndotcom-react-native-godot.podspec",
           "version": "1.0.1",
           "configurations": [],
           "scriptPhases": []
         },
         "android": {
-          "sourceDir": "/Users/scroobz/Navigation/Native/godot-template/node_modules/@borndotcom/react-native-godot/android",
+          "sourceDir": "/Users/scroobz/Navigation/Native/planet-hunters-experiment-1/node_modules/@borndotcom/react-native-godot/android",
           "packageImportPath": "import com.rtngodot.GodotPackage;",
           "packageInstance": "new GodotPackage()",
           "buildTypes": [],
@@ -22,7 +22,7 @@
           "componentDescriptors": [
             "RTNGodotViewComponentDescriptor"
           ],
-          "cmakeListsPath": "/Users/scroobz/Navigation/Native/godot-template/node_modules/@borndotcom/react-native-godot/android/build/generated/source/codegen/jni/CMakeLists.txt",
+          "cmakeListsPath": "/Users/scroobz/Navigation/Native/planet-hunters-experiment-1/node_modules/@borndotcom/react-native-godot/android/build/generated/source/codegen/jni/CMakeLists.txt",
           "cxxModuleCMakeListsModuleName": null,
           "cxxModuleCMakeListsPath": null,
           "cxxModuleHeaderName": null,
@@ -31,22 +31,22 @@
       }
     },
     "expo": {
-      "root": "/Users/scroobz/Navigation/Native/godot-template/node_modules/expo",
+      "root": "/Users/scroobz/Navigation/Native/planet-hunters-experiment-1/node_modules/expo",
       "name": "expo",
       "platforms": {
         "ios": {
-          "podspecPath": "/Users/scroobz/Navigation/Native/godot-template/node_modules/expo/Expo.podspec",
-          "version": "54.0.13",
+          "podspecPath": "/Users/scroobz/Navigation/Native/planet-hunters-experiment-1/node_modules/expo/Expo.podspec",
+          "version": "54.0.31",
           "configurations": [],
           "scriptPhases": []
         },
         "android": {
-          "sourceDir": "/Users/scroobz/Navigation/Native/godot-template/node_modules/expo/android",
+          "sourceDir": "/Users/scroobz/Navigation/Native/planet-hunters-experiment-1/node_modules/expo/android",
           "packageImportPath": "import expo.modules.ExpoModulesPackage;",
           "packageInstance": "new ExpoModulesPackage()",
           "buildTypes": [],
           "componentDescriptors": [],
-          "cmakeListsPath": "/Users/scroobz/Navigation/Native/godot-template/node_modules/expo/android/build/generated/source/codegen/jni/CMakeLists.txt",
+          "cmakeListsPath": "/Users/scroobz/Navigation/Native/planet-hunters-experiment-1/node_modules/expo/android/build/generated/source/codegen/jni/CMakeLists.txt",
           "cxxModuleCMakeListsModuleName": null,
           "cxxModuleCMakeListsPath": null,
           "cxxModuleHeaderName": null,
@@ -55,17 +55,17 @@
       }
     },
     "react-native-safe-area-context": {
-      "root": "/Users/scroobz/Navigation/Native/godot-template/node_modules/react-native-safe-area-context",
+      "root": "/Users/scroobz/Navigation/Native/planet-hunters-experiment-1/node_modules/react-native-safe-area-context",
       "name": "react-native-safe-area-context",
       "platforms": {
         "ios": {
-          "podspecPath": "/Users/scroobz/Navigation/Native/godot-template/node_modules/react-native-safe-area-context/react-native-safe-area-context.podspec",
-          "version": "5.6.1",
+          "podspecPath": "/Users/scroobz/Navigation/Native/planet-hunters-experiment-1/node_modules/react-native-safe-area-context/react-native-safe-area-context.podspec",
+          "version": "5.6.2",
           "configurations": [],
           "scriptPhases": []
         },
         "android": {
-          "sourceDir": "/Users/scroobz/Navigation/Native/godot-template/node_modules/react-native-safe-area-context/android",
+          "sourceDir": "/Users/scroobz/Navigation/Native/planet-hunters-experiment-1/node_modules/react-native-safe-area-context/android",
           "packageImportPath": "import com.th3rdwave.safeareacontext.SafeAreaContextPackage;",
           "packageInstance": "new SafeAreaContextPackage()",
           "buildTypes": [],
@@ -74,7 +74,7 @@
             "RNCSafeAreaProviderComponentDescriptor",
             "RNCSafeAreaViewComponentDescriptor"
           ],
-          "cmakeListsPath": "/Users/scroobz/Navigation/Native/godot-template/node_modules/react-native-safe-area-context/android/src/main/jni/CMakeLists.txt",
+          "cmakeListsPath": "/Users/scroobz/Navigation/Native/planet-hunters-experiment-1/node_modules/react-native-safe-area-context/android/src/main/jni/CMakeLists.txt",
           "cxxModuleCMakeListsModuleName": null,
           "cxxModuleCMakeListsPath": null,
           "cxxModuleHeaderName": null,
@@ -83,17 +83,17 @@
       }
     },
     "react-native-screens": {
-      "root": "/Users/scroobz/Navigation/Native/godot-template/node_modules/react-native-screens",
+      "root": "/Users/scroobz/Navigation/Native/planet-hunters-experiment-1/node_modules/react-native-screens",
       "name": "react-native-screens",
       "platforms": {
         "ios": {
-          "podspecPath": "/Users/scroobz/Navigation/Native/godot-template/node_modules/react-native-screens/RNScreens.podspec",
-          "version": "4.16.0",
+          "podspecPath": "/Users/scroobz/Navigation/Native/planet-hunters-experiment-1/node_modules/react-native-screens/RNScreens.podspec",
+          "version": "4.19.0",
           "configurations": [],
           "scriptPhases": []
         },
         "android": {
-          "sourceDir": "/Users/scroobz/Navigation/Native/godot-template/node_modules/react-native-screens/android",
+          "sourceDir": "/Users/scroobz/Navigation/Native/planet-hunters-experiment-1/node_modules/react-native-screens/android",
           "packageImportPath": "import com.swmansion.rnscreens.RNScreensPackage;",
           "packageInstance": "new RNScreensPackage()",
           "buildTypes": [],
@@ -110,9 +110,10 @@
             "RNSScreenFooterComponentDescriptor",
             "RNSScreenContentWrapperComponentDescriptor",
             "RNSModalScreenComponentDescriptor",
-            "RNSBottomTabsComponentDescriptor"
+            "RNSBottomTabsComponentDescriptor",
+            "RNSSafeAreaViewComponentDescriptor"
           ],
-          "cmakeListsPath": "/Users/scroobz/Navigation/Native/godot-template/node_modules/react-native-screens/android/src/main/jni/CMakeLists.txt",
+          "cmakeListsPath": "/Users/scroobz/Navigation/Native/planet-hunters-experiment-1/node_modules/react-native-screens/android/src/main/jni/CMakeLists.txt",
           "cxxModuleCMakeListsModuleName": null,
           "cxxModuleCMakeListsPath": null,
           "cxxModuleHeaderName": null,
@@ -121,23 +122,23 @@
       }
     },
     "react-native-worklets-core": {
-      "root": "/Users/scroobz/Navigation/Native/godot-template/node_modules/react-native-worklets-core",
+      "root": "/Users/scroobz/Navigation/Native/planet-hunters-experiment-1/node_modules/react-native-worklets-core",
       "name": "react-native-worklets-core",
       "platforms": {
         "ios": {
-          "podspecPath": "/Users/scroobz/Navigation/Native/godot-template/node_modules/react-native-worklets-core/react-native-worklets-core.podspec",
+          "podspecPath": "/Users/scroobz/Navigation/Native/planet-hunters-experiment-1/node_modules/react-native-worklets-core/react-native-worklets-core.podspec",
           "version": "1.6.2",
           "configurations": [],
           "scriptPhases": []
         },
         "android": {
-          "sourceDir": "/Users/scroobz/Navigation/Native/godot-template/node_modules/react-native-worklets-core/android",
+          "sourceDir": "/Users/scroobz/Navigation/Native/planet-hunters-experiment-1/node_modules/react-native-worklets-core/android",
           "packageImportPath": "import com.worklets.WorkletsCorePackage;",
           "packageInstance": "new WorkletsCorePackage()",
           "buildTypes": [],
           "libraryName": "RNWorkletsSpec",
           "componentDescriptors": [],
-          "cmakeListsPath": "/Users/scroobz/Navigation/Native/godot-template/node_modules/react-native-worklets-core/android/build/generated/source/codegen/jni/CMakeLists.txt",
+          "cmakeListsPath": "/Users/scroobz/Navigation/Native/planet-hunters-experiment-1/node_modules/react-native-worklets-core/android/build/generated/source/codegen/jni/CMakeLists.txt",
           "cxxModuleCMakeListsModuleName": null,
           "cxxModuleCMakeListsPath": null,
           "cxxModuleHeaderName": null,
@@ -308,7 +309,7 @@
         {
           "name": "--path <path>",
           "description": "Path to the React Native project root.",
-          "default": "/Users/scroobz/Navigation/Native/godot-template/ios"
+          "default": "/Users/scroobz/Navigation/Native/planet-hunters-experiment-1/ios"
         },
         {
           "name": "--platform <string>",
@@ -608,7 +609,7 @@
   "assets": [],
   "project": {
     "ios": {
-      "sourceDir": "/Users/scroobz/Navigation/Native/godot-template/ios",
+      "sourceDir": "/Users/scroobz/Navigation/Native/planet-hunters-experiment-1/ios",
       "xcodeProject": {
         "name": "GodotTest.xcworkspace",
         "path": ".",
@@ -617,7 +618,7 @@
       "assets": []
     },
     "android": {
-      "sourceDir": "/Users/scroobz/Navigation/Native/godot-template/android",
+      "sourceDir": "/Users/scroobz/Navigation/Native/planet-hunters-experiment-1/android",
       "appName": "app",
       "packageName": "com.godottest",
       "applicationId": "com.godottest",

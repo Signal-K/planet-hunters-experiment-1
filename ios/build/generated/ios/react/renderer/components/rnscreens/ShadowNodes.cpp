@@ -12,6 +12,7 @@
 
 namespace facebook::react {
 
+extern const char RNSBottomTabsAccessoryContentComponentName[] = "RNSBottomTabsAccessoryContent";
 extern const char RNSBottomTabsScreenComponentName[] = "RNSBottomTabsScreen";
 extern const char RNSScreenStackHostComponentName[] = "RNSScreenStackHost";
 extern const char RNSSplitViewHostComponentName[] = "RNSSplitViewHost";

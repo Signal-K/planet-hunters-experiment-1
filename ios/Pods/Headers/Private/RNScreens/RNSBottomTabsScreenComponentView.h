@@ -1,1 +1,1 @@
-../../../../../node_modules/react-native-screens/ios/bottom-tabs/RNSBottomTabsScreenComponentView.h
+../../../../../node_modules/react-native-screens/ios/bottom-tabs/screen/RNSBottomTabsScreenComponentView.h

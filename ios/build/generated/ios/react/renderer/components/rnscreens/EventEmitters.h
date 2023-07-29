@@ -13,12 +13,41 @@
 
 
 namespace facebook::react {
+class RNSBottomTabsAccessoryContentEventEmitter : public ViewEventEmitter {
+ public:
+  using ViewEventEmitter::ViewEventEmitter;
+
+  
+  
+};
+class RNSBottomTabsAccessoryEventEmitter : public ViewEventEmitter {
+ public:
+  using ViewEventEmitter::ViewEventEmitter;
+
+  enum class OnEnvironmentChangeEnvironment {
+    Regular,
+    Inline
+  };
+
+  static char const *toString(const OnEnvironmentChangeEnvironment value) {
+    switch (value) {
+      case OnEnvironmentChangeEnvironment::Regular: return "regular";
+      case OnEnvironmentChangeEnvironment::Inline: return "inline";
+    }
+  }
+
+  struct OnEnvironmentChange {
+      OnEnvironmentChangeEnvironment environment;
+    };
+  void onEnvironmentChange(OnEnvironmentChange value) const;
+};
 class RNSBottomTabsEventEmitter : public ViewEventEmitter {
  public:
   using ViewEventEmitter::ViewEventEmitter;
 
   struct OnNativeFocusChange {
       std::string tabKey;
+    bool repeatedSelectionHandledBySpecialEffect;
     };
   void onNativeFocusChange(OnNativeFocusChange value) const;
 };
@@ -224,6 +253,13 @@ class RNSModalScreenEventEmitter : public ViewEventEmitter {
 
   void onSheetDetentChanged(OnSheetDetentChanged value) const;
 };
+class RNSSafeAreaViewEventEmitter : public ViewEventEmitter {
+ public:
+  using ViewEventEmitter::ViewEventEmitter;
+
+  
+  
+};
 class RNSScreenContainerEventEmitter : public ViewEventEmitter {
  public:
   using ViewEventEmitter::ViewEventEmitter;
@@ -335,9 +371,21 @@ class RNSScreenStackHeaderConfigEventEmitter : public ViewEventEmitter {
   struct OnDetached {
       
     };
+
+  struct OnPressHeaderBarButtonItem {
+      std::string buttonId;
+    };
+
+  struct OnPressHeaderBarButtonMenuItem {
+      std::string menuId;
+    };
   void onAttached(OnAttached value) const;
 
   void onDetached(OnDetached value) const;
+
+  void onPressHeaderBarButtonItem(OnPressHeaderBarButtonItem value) const;
+
+  void onPressHeaderBarButtonMenuItem(OnPressHeaderBarButtonMenuItem value) const;
 };
 class RNSScreenStackHeaderSubviewEventEmitter : public ViewEventEmitter {
  public:
