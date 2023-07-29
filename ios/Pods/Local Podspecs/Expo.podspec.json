@@ -1,6 +1,6 @@
 {
   "name": "Expo",
-  "version": "54.0.13",
+  "version": "54.0.31",
   "summary": "The Expo SDK",
   "description": "The Expo SDK",
   "license": "MIT",
@@ -76,7 +76,15 @@
   },
   "compiler_flags": "-DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1 -DFOLLY_CFG_NO_COROUTINES=1 -DFOLLY_HAVE_CLOCK_GETTIME=1 -Wno-comma -Wno-shorten-64-to-32",
   "source_files": "ios/**/*.{h,m,mm,swift}",
+  "exclude_files": "ios/Tests",
   "private_header_files": [
     "ios/**/Swift.h"
+  ],
+  "testspecs": [
+    {
+      "name": "Tests",
+      "test_type": "unit",
+      "source_files": "ios/Tests"
+    }
   ]
 }

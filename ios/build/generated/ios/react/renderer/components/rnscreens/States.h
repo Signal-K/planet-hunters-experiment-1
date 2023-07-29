@@ -15,6 +15,8 @@
 
 namespace facebook::react {
 
+using RNSBottomTabsAccessoryContentState = StateData;
+
 using RNSBottomTabsScreenState = StateData;
 
 using RNSScreenStackHostState = StateData;

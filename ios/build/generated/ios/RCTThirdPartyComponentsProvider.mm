@@ -38,8 +38,11 @@
 		@"RNSScreenStackHost": NSClassFromString(@"RNSScreenStackHostComponentView"), // react-native-screens
 		@"RNSBottomTabsScreen": NSClassFromString(@"RNSBottomTabsScreenComponentView"), // react-native-screens
 		@"RNSBottomTabs": NSClassFromString(@"RNSBottomTabsHostComponentView"), // react-native-screens
+		@"RNSBottomTabsAccessory": NSClassFromString(@"RNSBottomTabsAccessoryComponentView"), // react-native-screens
+		@"RNSBottomTabsAccessoryContent": NSClassFromString(@"RNSBottomTabsAccessoryContentComponentView"), // react-native-screens
 		@"RNSSplitViewHost": NSClassFromString(@"RNSSplitViewHostComponentView"), // react-native-screens
 		@"RNSSplitViewScreen": NSClassFromString(@"RNSSplitViewScreenComponentView"), // react-native-screens
+		@"RNSSafeAreaView": NSClassFromString(@"RNSSafeAreaViewComponentView"), // react-native-screens
     };
   });
 

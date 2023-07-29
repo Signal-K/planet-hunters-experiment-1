@@ -1,1 +1,1 @@
-../../../../../node_modules/react-native-screens/ios/RNSScrollViewFinder.h
+../../../../../node_modules/react-native-screens/ios/helpers/scroll-view/RNSScrollViewFinder.h

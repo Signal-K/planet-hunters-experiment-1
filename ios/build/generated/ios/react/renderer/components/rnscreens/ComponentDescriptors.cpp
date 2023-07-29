@@ -16,6 +16,7 @@ namespace facebook::react {
 
 void rnscreens_registerComponentDescriptorsFromCodegen(
   std::shared_ptr<const ComponentDescriptorProviderRegistry> registry) {
+registry->add(concreteComponentDescriptorProvider<RNSBottomTabsAccessoryContentComponentDescriptor>());
 registry->add(concreteComponentDescriptorProvider<RNSBottomTabsScreenComponentDescriptor>());
 registry->add(concreteComponentDescriptorProvider<RNSScreenStackHostComponentDescriptor>());
 registry->add(concreteComponentDescriptorProvider<RNSSplitViewHostComponentDescriptor>());

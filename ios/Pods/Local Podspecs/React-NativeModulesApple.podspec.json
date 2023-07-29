@@ -2,7 +2,7 @@
   "name": "React-NativeModulesApple",
   "module_name": "React_NativeModulesApple",
   "header_dir": "ReactCommon",
-  "version": "0.81.4",
+  "version": "0.81.5",
   "summary": "-",
   "homepage": "https://reactnative.dev/",
   "license": "MIT",
@@ -12,7 +12,7 @@
   },
   "source": {
     "git": "https://github.com/facebook/react-native.git",
-    "tag": "v0.81.4"
+    "tag": "v0.81.5"
   },
   "pod_target_xcconfig": {
     "HEADER_SEARCH_PATHS": [

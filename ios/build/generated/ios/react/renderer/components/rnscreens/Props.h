@@ -18,6 +18,60 @@
 
 namespace facebook::react {
 
+enum class RNSBottomTabsAccessoryContentEnvironment { Regular, Inline };
+
+static inline void fromRawValue(const PropsParserContext& context, const RawValue &value, RNSBottomTabsAccessoryContentEnvironment &result) {
+  auto string = (std::string)value;
+  if (string == "regular") { result = RNSBottomTabsAccessoryContentEnvironment::Regular; return; }
+  if (string == "inline") { result = RNSBottomTabsAccessoryContentEnvironment::Inline; return; }
+  abort();
+}
+
+static inline std::string toString(const RNSBottomTabsAccessoryContentEnvironment &value) {
+  switch (value) {
+    case RNSBottomTabsAccessoryContentEnvironment::Regular: return "regular";
+    case RNSBottomTabsAccessoryContentEnvironment::Inline: return "inline";
+  }
+}
+
+#ifdef RN_SERIALIZABLE_STATE
+static inline folly::dynamic toDynamic(const RNSBottomTabsAccessoryContentEnvironment &value) {
+  return toString(value);
+}
+#endif
+
+class RNSBottomTabsAccessoryContentProps final : public ViewProps {
+ public:
+  RNSBottomTabsAccessoryContentProps() = default;
+  RNSBottomTabsAccessoryContentProps(const PropsParserContext& context, const RNSBottomTabsAccessoryContentProps &sourceProps, const RawProps &rawProps);
+
+#pragma mark - Props
+
+  RNSBottomTabsAccessoryContentEnvironment environment{RNSBottomTabsAccessoryContentEnvironment::Regular};
+
+  #ifdef RN_SERIALIZABLE_STATE
+  ComponentName getDiffPropsImplementationTarget() const override;
+
+  folly::dynamic getDiffProps(const Props* prevProps) const override;
+  #endif
+};
+
+class RNSBottomTabsAccessoryProps final : public ViewProps {
+ public:
+  RNSBottomTabsAccessoryProps() = default;
+  RNSBottomTabsAccessoryProps(const PropsParserContext& context, const RNSBottomTabsAccessoryProps &sourceProps, const RawProps &rawProps);
+
+#pragma mark - Props
+
+  
+
+  #ifdef RN_SERIALIZABLE_STATE
+  ComponentName getDiffPropsImplementationTarget() const override;
+
+  folly::dynamic getDiffProps(const Props* prevProps) const override;
+  #endif
+};
+
 enum class RNSBottomTabsTabBarItemLabelVisibilityMode { Auto, Selected, Labeled, Unlabeled };
 
 static inline void fromRawValue(const PropsParserContext& context, const RawValue &value, RNSBottomTabsTabBarItemLabelVisibilityMode &result) {
@@ -68,6 +122,29 @@ static inline folly::dynamic toDynamic(const RNSBottomTabsTabBarMinimizeBehavior
   return toString(value);
 }
 #endif
+enum class RNSBottomTabsTabBarControllerMode { Automatic, TabBar, TabSidebar };
+
+static inline void fromRawValue(const PropsParserContext& context, const RawValue &value, RNSBottomTabsTabBarControllerMode &result) {
+  auto string = (std::string)value;
+  if (string == "automatic") { result = RNSBottomTabsTabBarControllerMode::Automatic; return; }
+  if (string == "tabBar") { result = RNSBottomTabsTabBarControllerMode::TabBar; return; }
+  if (string == "tabSidebar") { result = RNSBottomTabsTabBarControllerMode::TabSidebar; return; }
+  abort();
+}
+
+static inline std::string toString(const RNSBottomTabsTabBarControllerMode &value) {
+  switch (value) {
+    case RNSBottomTabsTabBarControllerMode::Automatic: return "automatic";
+    case RNSBottomTabsTabBarControllerMode::TabBar: return "tabBar";
+    case RNSBottomTabsTabBarControllerMode::TabSidebar: return "tabSidebar";
+  }
+}
+
+#ifdef RN_SERIALIZABLE_STATE
+static inline folly::dynamic toDynamic(const RNSBottomTabsTabBarControllerMode &value) {
+  return toString(value);
+}
+#endif
 
 class RNSBottomTabsProps final : public ViewProps {
  public:
@@ -92,6 +169,8 @@ class RNSBottomTabsProps final : public ViewProps {
   RNSBottomTabsTabBarItemLabelVisibilityMode tabBarItemLabelVisibilityMode{RNSBottomTabsTabBarItemLabelVisibilityMode::Auto};
   SharedColor tabBarTintColor{};
   RNSBottomTabsTabBarMinimizeBehavior tabBarMinimizeBehavior{RNSBottomTabsTabBarMinimizeBehavior::Automatic};
+  RNSBottomTabsTabBarControllerMode tabBarControllerMode{RNSBottomTabsTabBarControllerMode::Automatic};
+  bool tabBarHidden{false};
   bool controlNavigationStateInJS{false};
 
   #ifdef RN_SERIALIZABLE_STATE
@@ -202,6 +281,129 @@ static inline folly::dynamic toDynamic(const RNSBottomTabsScreenSystemItem &valu
   return toString(value);
 }
 #endif
+enum class RNSBottomTabsScreenBottomScrollEdgeEffect { Automatic, Hard, Soft, Hidden };
+
+static inline void fromRawValue(const PropsParserContext& context, const RawValue &value, RNSBottomTabsScreenBottomScrollEdgeEffect &result) {
+  auto string = (std::string)value;
+  if (string == "automatic") { result = RNSBottomTabsScreenBottomScrollEdgeEffect::Automatic; return; }
+  if (string == "hard") { result = RNSBottomTabsScreenBottomScrollEdgeEffect::Hard; return; }
+  if (string == "soft") { result = RNSBottomTabsScreenBottomScrollEdgeEffect::Soft; return; }
+  if (string == "hidden") { result = RNSBottomTabsScreenBottomScrollEdgeEffect::Hidden; return; }
+  abort();
+}
+
+static inline std::string toString(const RNSBottomTabsScreenBottomScrollEdgeEffect &value) {
+  switch (value) {
+    case RNSBottomTabsScreenBottomScrollEdgeEffect::Automatic: return "automatic";
+    case RNSBottomTabsScreenBottomScrollEdgeEffect::Hard: return "hard";
+    case RNSBottomTabsScreenBottomScrollEdgeEffect::Soft: return "soft";
+    case RNSBottomTabsScreenBottomScrollEdgeEffect::Hidden: return "hidden";
+  }
+}
+
+#ifdef RN_SERIALIZABLE_STATE
+static inline folly::dynamic toDynamic(const RNSBottomTabsScreenBottomScrollEdgeEffect &value) {
+  return toString(value);
+}
+#endif
+enum class RNSBottomTabsScreenLeftScrollEdgeEffect { Automatic, Hard, Soft, Hidden };
+
+static inline void fromRawValue(const PropsParserContext& context, const RawValue &value, RNSBottomTabsScreenLeftScrollEdgeEffect &result) {
+  auto string = (std::string)value;
+  if (string == "automatic") { result = RNSBottomTabsScreenLeftScrollEdgeEffect::Automatic; return; }
+  if (string == "hard") { result = RNSBottomTabsScreenLeftScrollEdgeEffect::Hard; return; }
+  if (string == "soft") { result = RNSBottomTabsScreenLeftScrollEdgeEffect::Soft; return; }
+  if (string == "hidden") { result = RNSBottomTabsScreenLeftScrollEdgeEffect::Hidden; return; }
+  abort();
+}
+
+static inline std::string toString(const RNSBottomTabsScreenLeftScrollEdgeEffect &value) {
+  switch (value) {
+    case RNSBottomTabsScreenLeftScrollEdgeEffect::Automatic: return "automatic";
+    case RNSBottomTabsScreenLeftScrollEdgeEffect::Hard: return "hard";
+    case RNSBottomTabsScreenLeftScrollEdgeEffect::Soft: return "soft";
+    case RNSBottomTabsScreenLeftScrollEdgeEffect::Hidden: return "hidden";
+  }
+}
+
+#ifdef RN_SERIALIZABLE_STATE
+static inline folly::dynamic toDynamic(const RNSBottomTabsScreenLeftScrollEdgeEffect &value) {
+  return toString(value);
+}
+#endif
+enum class RNSBottomTabsScreenRightScrollEdgeEffect { Automatic, Hard, Soft, Hidden };
+
+static inline void fromRawValue(const PropsParserContext& context, const RawValue &value, RNSBottomTabsScreenRightScrollEdgeEffect &result) {
+  auto string = (std::string)value;
+  if (string == "automatic") { result = RNSBottomTabsScreenRightScrollEdgeEffect::Automatic; return; }
+  if (string == "hard") { result = RNSBottomTabsScreenRightScrollEdgeEffect::Hard; return; }
+  if (string == "soft") { result = RNSBottomTabsScreenRightScrollEdgeEffect::Soft; return; }
+  if (string == "hidden") { result = RNSBottomTabsScreenRightScrollEdgeEffect::Hidden; return; }
+  abort();
+}
+
+static inline std::string toString(const RNSBottomTabsScreenRightScrollEdgeEffect &value) {
+  switch (value) {
+    case RNSBottomTabsScreenRightScrollEdgeEffect::Automatic: return "automatic";
+    case RNSBottomTabsScreenRightScrollEdgeEffect::Hard: return "hard";
+    case RNSBottomTabsScreenRightScrollEdgeEffect::Soft: return "soft";
+    case RNSBottomTabsScreenRightScrollEdgeEffect::Hidden: return "hidden";
+  }
+}
+
+#ifdef RN_SERIALIZABLE_STATE
+static inline folly::dynamic toDynamic(const RNSBottomTabsScreenRightScrollEdgeEffect &value) {
+  return toString(value);
+}
+#endif
+enum class RNSBottomTabsScreenTopScrollEdgeEffect { Automatic, Hard, Soft, Hidden };
+
+static inline void fromRawValue(const PropsParserContext& context, const RawValue &value, RNSBottomTabsScreenTopScrollEdgeEffect &result) {
+  auto string = (std::string)value;
+  if (string == "automatic") { result = RNSBottomTabsScreenTopScrollEdgeEffect::Automatic; return; }
+  if (string == "hard") { result = RNSBottomTabsScreenTopScrollEdgeEffect::Hard; return; }
+  if (string == "soft") { result = RNSBottomTabsScreenTopScrollEdgeEffect::Soft; return; }
+  if (string == "hidden") { result = RNSBottomTabsScreenTopScrollEdgeEffect::Hidden; return; }
+  abort();
+}
+
+static inline std::string toString(const RNSBottomTabsScreenTopScrollEdgeEffect &value) {
+  switch (value) {
+    case RNSBottomTabsScreenTopScrollEdgeEffect::Automatic: return "automatic";
+    case RNSBottomTabsScreenTopScrollEdgeEffect::Hard: return "hard";
+    case RNSBottomTabsScreenTopScrollEdgeEffect::Soft: return "soft";
+    case RNSBottomTabsScreenTopScrollEdgeEffect::Hidden: return "hidden";
+  }
+}
+
+#ifdef RN_SERIALIZABLE_STATE
+static inline folly::dynamic toDynamic(const RNSBottomTabsScreenTopScrollEdgeEffect &value) {
+  return toString(value);
+}
+#endif
+enum class RNSBottomTabsScreenUserInterfaceStyle { Unspecified, Light, Dark };
+
+static inline void fromRawValue(const PropsParserContext& context, const RawValue &value, RNSBottomTabsScreenUserInterfaceStyle &result) {
+  auto string = (std::string)value;
+  if (string == "unspecified") { result = RNSBottomTabsScreenUserInterfaceStyle::Unspecified; return; }
+  if (string == "light") { result = RNSBottomTabsScreenUserInterfaceStyle::Light; return; }
+  if (string == "dark") { result = RNSBottomTabsScreenUserInterfaceStyle::Dark; return; }
+  abort();
+}
+
+static inline std::string toString(const RNSBottomTabsScreenUserInterfaceStyle &value) {
+  switch (value) {
+    case RNSBottomTabsScreenUserInterfaceStyle::Unspecified: return "unspecified";
+    case RNSBottomTabsScreenUserInterfaceStyle::Light: return "light";
+    case RNSBottomTabsScreenUserInterfaceStyle::Dark: return "dark";
+  }
+}
+
+#ifdef RN_SERIALIZABLE_STATE
+static inline folly::dynamic toDynamic(const RNSBottomTabsScreenUserInterfaceStyle &value) {
+  return toString(value);
+}
+#endif
 struct RNSBottomTabsScreenSpecialEffectsRepeatedTabSelectionStruct {
   bool popToRoot{true};
   bool scrollToTop{true};
@@ -283,10 +485,11 @@ class RNSBottomTabsScreenProps final : public ViewProps {
   bool isFocused{false};
   std::string tabKey{};
   std::string title{};
+  bool isTitleUndefined{true};
   std::string badgeValue{};
   RNSBottomTabsScreenOrientation orientation{RNSBottomTabsScreenOrientation::Inherit};
-  std::string iconResourceName{};
-  ImageSource iconResource{};
+  std::string drawableIconResourceName{};
+  ImageSource imageIconResource{};
   SharedColor tabBarItemBadgeTextColor{};
   SharedColor tabBarItemBadgeBackgroundColor{};
   folly::dynamic standardAppearance{};
@@ -299,6 +502,11 @@ class RNSBottomTabsScreenProps final : public ViewProps {
   RNSBottomTabsScreenSystemItem systemItem{RNSBottomTabsScreenSystemItem::None};
   RNSBottomTabsScreenSpecialEffectsStruct specialEffects{};
   bool overrideScrollViewContentInsetAdjustmentBehavior{true};
+  RNSBottomTabsScreenBottomScrollEdgeEffect bottomScrollEdgeEffect{RNSBottomTabsScreenBottomScrollEdgeEffect::Automatic};
+  RNSBottomTabsScreenLeftScrollEdgeEffect leftScrollEdgeEffect{RNSBottomTabsScreenLeftScrollEdgeEffect::Automatic};
+  RNSBottomTabsScreenRightScrollEdgeEffect rightScrollEdgeEffect{RNSBottomTabsScreenRightScrollEdgeEffect::Automatic};
+  RNSBottomTabsScreenTopScrollEdgeEffect topScrollEdgeEffect{RNSBottomTabsScreenTopScrollEdgeEffect::Automatic};
+  RNSBottomTabsScreenUserInterfaceStyle userInterfaceStyle{RNSBottomTabsScreenUserInterfaceStyle::Unspecified};
 
   #ifdef RN_SERIALIZABLE_STATE
   ComponentName getDiffPropsImplementationTarget() const override;
@@ -474,6 +682,29 @@ static inline folly::dynamic toDynamic(const RNSSplitViewHostOrientation &value)
   return toString(value);
 }
 #endif
+enum class RNSSplitViewHostPrimaryBackgroundStyle { Default, None, Sidebar };
+
+static inline void fromRawValue(const PropsParserContext& context, const RawValue &value, RNSSplitViewHostPrimaryBackgroundStyle &result) {
+  auto string = (std::string)value;
+  if (string == "default") { result = RNSSplitViewHostPrimaryBackgroundStyle::Default; return; }
+  if (string == "none") { result = RNSSplitViewHostPrimaryBackgroundStyle::None; return; }
+  if (string == "sidebar") { result = RNSSplitViewHostPrimaryBackgroundStyle::Sidebar; return; }
+  abort();
+}
+
+static inline std::string toString(const RNSSplitViewHostPrimaryBackgroundStyle &value) {
+  switch (value) {
+    case RNSSplitViewHostPrimaryBackgroundStyle::Default: return "default";
+    case RNSSplitViewHostPrimaryBackgroundStyle::None: return "none";
+    case RNSSplitViewHostPrimaryBackgroundStyle::Sidebar: return "sidebar";
+  }
+}
+
+#ifdef RN_SERIALIZABLE_STATE
+static inline folly::dynamic toDynamic(const RNSSplitViewHostPrimaryBackgroundStyle &value) {
+  return toString(value);
+}
+#endif
 struct RNSSplitViewHostColumnMetricsStruct {
   Float minimumPrimaryColumnWidth{-1.0};
   Float maximumPrimaryColumnWidth{-1.0};
@@ -580,6 +811,7 @@ class RNSSplitViewHostProps final : public ViewProps {
   RNSSplitViewHostDisplayModeButtonVisibility displayModeButtonVisibility{RNSSplitViewHostDisplayModeButtonVisibility::Automatic};
   RNSSplitViewHostColumnMetricsStruct columnMetrics{};
   RNSSplitViewHostOrientation orientation{RNSSplitViewHostOrientation::Inherit};
+  RNSSplitViewHostPrimaryBackgroundStyle primaryBackgroundStyle{RNSSplitViewHostPrimaryBackgroundStyle::Default};
   bool presentsWithGesture{true};
   bool showInspector{false};
 
@@ -645,6 +877,29 @@ class RNSStackScreenProps final : public ViewProps {
   #endif
 };
 
+enum class RNSModalScreenFullScreenSwipeEnabled { Undefined, False, True };
+
+static inline void fromRawValue(const PropsParserContext& context, const RawValue &value, RNSModalScreenFullScreenSwipeEnabled &result) {
+  auto string = (std::string)value;
+  if (string == "undefined") { result = RNSModalScreenFullScreenSwipeEnabled::Undefined; return; }
+  if (string == "false") { result = RNSModalScreenFullScreenSwipeEnabled::False; return; }
+  if (string == "true") { result = RNSModalScreenFullScreenSwipeEnabled::True; return; }
+  abort();
+}
+
+static inline std::string toString(const RNSModalScreenFullScreenSwipeEnabled &value) {
+  switch (value) {
+    case RNSModalScreenFullScreenSwipeEnabled::Undefined: return "undefined";
+    case RNSModalScreenFullScreenSwipeEnabled::False: return "false";
+    case RNSModalScreenFullScreenSwipeEnabled::True: return "true";
+  }
+}
+
+#ifdef RN_SERIALIZABLE_STATE
+static inline folly::dynamic toDynamic(const RNSModalScreenFullScreenSwipeEnabled &value) {
+  return toString(value);
+}
+#endif
 enum class RNSModalScreenStackPresentation { Push, Modal, TransparentModal, FullScreenModal, FormSheet, PageSheet, ContainedModal, ContainedTransparentModal };
 
 static inline void fromRawValue(const PropsParserContext& context, const RawValue &value, RNSModalScreenStackPresentation &result) {
@@ -824,8 +1079,9 @@ class RNSModalScreenProps final : public ViewProps {
   bool sheetExpandsWhenScrolledToEdge{false};
   int sheetInitialDetent{0};
   int sheetElevation{24};
+  bool sheetShouldOverflowTopInset{false};
   bool customAnimationOnSwipe{false};
-  bool fullScreenSwipeEnabled{false};
+  RNSModalScreenFullScreenSwipeEnabled fullScreenSwipeEnabled{RNSModalScreenFullScreenSwipeEnabled::Undefined};
   bool fullScreenSwipeShadowEnabled{true};
   bool homeIndicatorHidden{false};
   bool preventNativeDismiss{false};
@@ -848,6 +1104,97 @@ class RNSModalScreenProps final : public ViewProps {
   bool navigationBarTranslucent{false};
   bool navigationBarHidden{false};
   bool nativeBackButtonDismissalEnabled{false};
+  bool synchronousShadowStateUpdatesEnabled{false};
+
+  #ifdef RN_SERIALIZABLE_STATE
+  ComponentName getDiffPropsImplementationTarget() const override;
+
+  folly::dynamic getDiffProps(const Props* prevProps) const override;
+  #endif
+};
+
+enum class RNSSafeAreaViewInsetType { All, System, Interface };
+
+static inline void fromRawValue(const PropsParserContext& context, const RawValue &value, RNSSafeAreaViewInsetType &result) {
+  auto string = (std::string)value;
+  if (string == "all") { result = RNSSafeAreaViewInsetType::All; return; }
+  if (string == "system") { result = RNSSafeAreaViewInsetType::System; return; }
+  if (string == "interface") { result = RNSSafeAreaViewInsetType::Interface; return; }
+  abort();
+}
+
+static inline std::string toString(const RNSSafeAreaViewInsetType &value) {
+  switch (value) {
+    case RNSSafeAreaViewInsetType::All: return "all";
+    case RNSSafeAreaViewInsetType::System: return "system";
+    case RNSSafeAreaViewInsetType::Interface: return "interface";
+  }
+}
+
+#ifdef RN_SERIALIZABLE_STATE
+static inline folly::dynamic toDynamic(const RNSSafeAreaViewInsetType &value) {
+  return toString(value);
+}
+#endif
+struct RNSSafeAreaViewEdgesStruct {
+  bool top{false};
+  bool right{false};
+  bool bottom{false};
+  bool left{false};
+
+#ifdef RN_SERIALIZABLE_STATE
+  bool operator==(const RNSSafeAreaViewEdgesStruct&) const = default;
+
+  folly::dynamic toDynamic() const {
+    folly::dynamic result = folly::dynamic::object();
+    result["top"] = top;
+    result["right"] = right;
+    result["bottom"] = bottom;
+    result["left"] = left;
+    return result;
+  }
+#endif
+};
+
+static inline void fromRawValue(const PropsParserContext& context, const RawValue &value, RNSSafeAreaViewEdgesStruct &result) {
+  auto map = (std::unordered_map<std::string, RawValue>)value;
+
+  auto tmp_top = map.find("top");
+  if (tmp_top != map.end()) {
+    fromRawValue(context, tmp_top->second, result.top);
+  }
+  auto tmp_right = map.find("right");
+  if (tmp_right != map.end()) {
+    fromRawValue(context, tmp_right->second, result.right);
+  }
+  auto tmp_bottom = map.find("bottom");
+  if (tmp_bottom != map.end()) {
+    fromRawValue(context, tmp_bottom->second, result.bottom);
+  }
+  auto tmp_left = map.find("left");
+  if (tmp_left != map.end()) {
+    fromRawValue(context, tmp_left->second, result.left);
+  }
+}
+
+static inline std::string toString(const RNSSafeAreaViewEdgesStruct &value) {
+  return "[Object RNSSafeAreaViewEdgesStruct]";
+}
+
+#ifdef RN_SERIALIZABLE_STATE
+static inline folly::dynamic toDynamic(const RNSSafeAreaViewEdgesStruct &value) {
+  return value.toDynamic();
+}
+#endif
+class RNSSafeAreaViewProps final : public ViewProps {
+ public:
+  RNSSafeAreaViewProps() = default;
+  RNSSafeAreaViewProps(const PropsParserContext& context, const RNSSafeAreaViewProps &sourceProps, const RawProps &rawProps);
+
+#pragma mark - Props
+
+  RNSSafeAreaViewEdgesStruct edges{};
+  RNSSafeAreaViewInsetType insetType{RNSSafeAreaViewInsetType::All};
 
   #ifdef RN_SERIALIZABLE_STATE
   ComponentName getDiffPropsImplementationTarget() const override;
@@ -904,6 +1251,29 @@ class RNSScreenFooterProps final : public ViewProps {
   #endif
 };
 
+enum class RNSScreenFullScreenSwipeEnabled { Undefined, False, True };
+
+static inline void fromRawValue(const PropsParserContext& context, const RawValue &value, RNSScreenFullScreenSwipeEnabled &result) {
+  auto string = (std::string)value;
+  if (string == "undefined") { result = RNSScreenFullScreenSwipeEnabled::Undefined; return; }
+  if (string == "false") { result = RNSScreenFullScreenSwipeEnabled::False; return; }
+  if (string == "true") { result = RNSScreenFullScreenSwipeEnabled::True; return; }
+  abort();
+}
+
+static inline std::string toString(const RNSScreenFullScreenSwipeEnabled &value) {
+  switch (value) {
+    case RNSScreenFullScreenSwipeEnabled::Undefined: return "undefined";
+    case RNSScreenFullScreenSwipeEnabled::False: return "false";
+    case RNSScreenFullScreenSwipeEnabled::True: return "true";
+  }
+}
+
+#ifdef RN_SERIALIZABLE_STATE
+static inline folly::dynamic toDynamic(const RNSScreenFullScreenSwipeEnabled &value) {
+  return toString(value);
+}
+#endif
 enum class RNSScreenStackPresentation { Push, Modal, TransparentModal, FullScreenModal, FormSheet, PageSheet, ContainedModal, ContainedTransparentModal };
 
 static inline void fromRawValue(const PropsParserContext& context, const RawValue &value, RNSScreenStackPresentation &result) {
@@ -1018,6 +1388,106 @@ static inline folly::dynamic toDynamic(const RNSScreenSwipeDirection &value) {
   return toString(value);
 }
 #endif
+enum class RNSScreenBottomScrollEdgeEffect { Automatic, Hard, Soft, Hidden };
+
+static inline void fromRawValue(const PropsParserContext& context, const RawValue &value, RNSScreenBottomScrollEdgeEffect &result) {
+  auto string = (std::string)value;
+  if (string == "automatic") { result = RNSScreenBottomScrollEdgeEffect::Automatic; return; }
+  if (string == "hard") { result = RNSScreenBottomScrollEdgeEffect::Hard; return; }
+  if (string == "soft") { result = RNSScreenBottomScrollEdgeEffect::Soft; return; }
+  if (string == "hidden") { result = RNSScreenBottomScrollEdgeEffect::Hidden; return; }
+  abort();
+}
+
+static inline std::string toString(const RNSScreenBottomScrollEdgeEffect &value) {
+  switch (value) {
+    case RNSScreenBottomScrollEdgeEffect::Automatic: return "automatic";
+    case RNSScreenBottomScrollEdgeEffect::Hard: return "hard";
+    case RNSScreenBottomScrollEdgeEffect::Soft: return "soft";
+    case RNSScreenBottomScrollEdgeEffect::Hidden: return "hidden";
+  }
+}
+
+#ifdef RN_SERIALIZABLE_STATE
+static inline folly::dynamic toDynamic(const RNSScreenBottomScrollEdgeEffect &value) {
+  return toString(value);
+}
+#endif
+enum class RNSScreenLeftScrollEdgeEffect { Automatic, Hard, Soft, Hidden };
+
+static inline void fromRawValue(const PropsParserContext& context, const RawValue &value, RNSScreenLeftScrollEdgeEffect &result) {
+  auto string = (std::string)value;
+  if (string == "automatic") { result = RNSScreenLeftScrollEdgeEffect::Automatic; return; }
+  if (string == "hard") { result = RNSScreenLeftScrollEdgeEffect::Hard; return; }
+  if (string == "soft") { result = RNSScreenLeftScrollEdgeEffect::Soft; return; }
+  if (string == "hidden") { result = RNSScreenLeftScrollEdgeEffect::Hidden; return; }
+  abort();
+}
+
+static inline std::string toString(const RNSScreenLeftScrollEdgeEffect &value) {
+  switch (value) {
+    case RNSScreenLeftScrollEdgeEffect::Automatic: return "automatic";
+    case RNSScreenLeftScrollEdgeEffect::Hard: return "hard";
+    case RNSScreenLeftScrollEdgeEffect::Soft: return "soft";
+    case RNSScreenLeftScrollEdgeEffect::Hidden: return "hidden";
+  }
+}
+
+#ifdef RN_SERIALIZABLE_STATE
+static inline folly::dynamic toDynamic(const RNSScreenLeftScrollEdgeEffect &value) {
+  return toString(value);
+}
+#endif
+enum class RNSScreenRightScrollEdgeEffect { Automatic, Hard, Soft, Hidden };
+
+static inline void fromRawValue(const PropsParserContext& context, const RawValue &value, RNSScreenRightScrollEdgeEffect &result) {
+  auto string = (std::string)value;
+  if (string == "automatic") { result = RNSScreenRightScrollEdgeEffect::Automatic; return; }
+  if (string == "hard") { result = RNSScreenRightScrollEdgeEffect::Hard; return; }
+  if (string == "soft") { result = RNSScreenRightScrollEdgeEffect::Soft; return; }
+  if (string == "hidden") { result = RNSScreenRightScrollEdgeEffect::Hidden; return; }
+  abort();
+}
+
+static inline std::string toString(const RNSScreenRightScrollEdgeEffect &value) {
+  switch (value) {
+    case RNSScreenRightScrollEdgeEffect::Automatic: return "automatic";
+    case RNSScreenRightScrollEdgeEffect::Hard: return "hard";
+    case RNSScreenRightScrollEdgeEffect::Soft: return "soft";
+    case RNSScreenRightScrollEdgeEffect::Hidden: return "hidden";
+  }
+}
+
+#ifdef RN_SERIALIZABLE_STATE
+static inline folly::dynamic toDynamic(const RNSScreenRightScrollEdgeEffect &value) {
+  return toString(value);
+}
+#endif
+enum class RNSScreenTopScrollEdgeEffect { Automatic, Hard, Soft, Hidden };
+
+static inline void fromRawValue(const PropsParserContext& context, const RawValue &value, RNSScreenTopScrollEdgeEffect &result) {
+  auto string = (std::string)value;
+  if (string == "automatic") { result = RNSScreenTopScrollEdgeEffect::Automatic; return; }
+  if (string == "hard") { result = RNSScreenTopScrollEdgeEffect::Hard; return; }
+  if (string == "soft") { result = RNSScreenTopScrollEdgeEffect::Soft; return; }
+  if (string == "hidden") { result = RNSScreenTopScrollEdgeEffect::Hidden; return; }
+  abort();
+}
+
+static inline std::string toString(const RNSScreenTopScrollEdgeEffect &value) {
+  switch (value) {
+    case RNSScreenTopScrollEdgeEffect::Automatic: return "automatic";
+    case RNSScreenTopScrollEdgeEffect::Hard: return "hard";
+    case RNSScreenTopScrollEdgeEffect::Soft: return "soft";
+    case RNSScreenTopScrollEdgeEffect::Hidden: return "hidden";
+  }
+}
+
+#ifdef RN_SERIALIZABLE_STATE
+static inline folly::dynamic toDynamic(const RNSScreenTopScrollEdgeEffect &value) {
+  return toString(value);
+}
+#endif
 struct RNSScreenGestureResponseDistanceStruct {
   Float start{0.0};
   Float end{0.0};
@@ -1083,8 +1553,9 @@ class RNSScreenProps final : public ViewProps {
   bool sheetExpandsWhenScrolledToEdge{false};
   int sheetInitialDetent{0};
   int sheetElevation{24};
+  bool sheetShouldOverflowTopInset{false};
   bool customAnimationOnSwipe{false};
-  bool fullScreenSwipeEnabled{false};
+  RNSScreenFullScreenSwipeEnabled fullScreenSwipeEnabled{RNSScreenFullScreenSwipeEnabled::Undefined};
   bool fullScreenSwipeShadowEnabled{true};
   bool homeIndicatorHidden{false};
   bool preventNativeDismiss{false};
@@ -1107,6 +1578,12 @@ class RNSScreenProps final : public ViewProps {
   bool navigationBarTranslucent{false};
   bool navigationBarHidden{false};
   bool nativeBackButtonDismissalEnabled{false};
+  RNSScreenBottomScrollEdgeEffect bottomScrollEdgeEffect{RNSScreenBottomScrollEdgeEffect::Automatic};
+  RNSScreenLeftScrollEdgeEffect leftScrollEdgeEffect{RNSScreenLeftScrollEdgeEffect::Automatic};
+  RNSScreenRightScrollEdgeEffect rightScrollEdgeEffect{RNSScreenRightScrollEdgeEffect::Automatic};
+  RNSScreenTopScrollEdgeEffect topScrollEdgeEffect{RNSScreenTopScrollEdgeEffect::Automatic};
+  bool synchronousShadowStateUpdatesEnabled{false};
+  bool androidResetScreenShadowStateOnOrientationChangeEnabled{true};
 
   #ifdef RN_SERIALIZABLE_STATE
   ComponentName getDiffPropsImplementationTarget() const override;
@@ -1234,6 +1711,29 @@ static inline folly::dynamic toDynamic(const RNSScreenStackHeaderConfigBlurEffec
   return toString(value);
 }
 #endif
+enum class RNSScreenStackHeaderConfigUserInterfaceStyle { Unspecified, Light, Dark };
+
+static inline void fromRawValue(const PropsParserContext& context, const RawValue &value, RNSScreenStackHeaderConfigUserInterfaceStyle &result) {
+  auto string = (std::string)value;
+  if (string == "unspecified") { result = RNSScreenStackHeaderConfigUserInterfaceStyle::Unspecified; return; }
+  if (string == "light") { result = RNSScreenStackHeaderConfigUserInterfaceStyle::Light; return; }
+  if (string == "dark") { result = RNSScreenStackHeaderConfigUserInterfaceStyle::Dark; return; }
+  abort();
+}
+
+static inline std::string toString(const RNSScreenStackHeaderConfigUserInterfaceStyle &value) {
+  switch (value) {
+    case RNSScreenStackHeaderConfigUserInterfaceStyle::Unspecified: return "unspecified";
+    case RNSScreenStackHeaderConfigUserInterfaceStyle::Light: return "light";
+    case RNSScreenStackHeaderConfigUserInterfaceStyle::Dark: return "dark";
+  }
+}
+
+#ifdef RN_SERIALIZABLE_STATE
+static inline folly::dynamic toDynamic(const RNSScreenStackHeaderConfigUserInterfaceStyle &value) {
+  return toString(value);
+}
+#endif
 
 class RNSScreenStackHeaderConfigProps final : public ViewProps {
  public:
@@ -1270,6 +1770,10 @@ class RNSScreenStackHeaderConfigProps final : public ViewProps {
   bool backButtonInCustomView{false};
   RNSScreenStackHeaderConfigBlurEffect blurEffect{RNSScreenStackHeaderConfigBlurEffect::None};
   bool topInsetEnabled{false};
+  std::vector<folly::dynamic> headerLeftBarButtonItems{};
+  std::vector<folly::dynamic> headerRightBarButtonItems{};
+  bool synchronousShadowStateUpdatesEnabled{false};
+  RNSScreenStackHeaderConfigUserInterfaceStyle userInterfaceStyle{RNSScreenStackHeaderConfigUserInterfaceStyle::Unspecified};
 
   #ifdef RN_SERIALIZABLE_STATE
   ComponentName getDiffPropsImplementationTarget() const override;
@@ -1316,6 +1820,8 @@ class RNSScreenStackHeaderSubviewProps final : public ViewProps {
 #pragma mark - Props
 
   RNSScreenStackHeaderSubviewType type{RNSScreenStackHeaderSubviewType::Left};
+  bool hidesSharedBackground{false};
+  bool synchronousShadowStateUpdatesEnabled{false};
 
   #ifdef RN_SERIALIZABLE_STATE
   ComponentName getDiffPropsImplementationTarget() const override;
@@ -1340,10 +1846,11 @@ class RNSScreenStackProps final : public ViewProps {
   #endif
 };
 
-enum class RNSSearchBarAutoCapitalize { None, Words, Sentences, Characters };
+enum class RNSSearchBarAutoCapitalize { SystemDefault, None, Words, Sentences, Characters };
 
 static inline void fromRawValue(const PropsParserContext& context, const RawValue &value, RNSSearchBarAutoCapitalize &result) {
   auto string = (std::string)value;
+  if (string == "systemDefault") { result = RNSSearchBarAutoCapitalize::SystemDefault; return; }
   if (string == "none") { result = RNSSearchBarAutoCapitalize::None; return; }
   if (string == "words") { result = RNSSearchBarAutoCapitalize::Words; return; }
   if (string == "sentences") { result = RNSSearchBarAutoCapitalize::Sentences; return; }
@@ -1353,6 +1860,7 @@ static inline void fromRawValue(const PropsParserContext& context, const RawValu
 
 static inline std::string toString(const RNSSearchBarAutoCapitalize &value) {
   switch (value) {
+    case RNSSearchBarAutoCapitalize::SystemDefault: return "systemDefault";
     case RNSSearchBarAutoCapitalize::None: return "none";
     case RNSSearchBarAutoCapitalize::Words: return "words";
     case RNSSearchBarAutoCapitalize::Sentences: return "sentences";
@@ -1394,6 +1902,52 @@ static inline folly::dynamic toDynamic(const RNSSearchBarPlacement &value) {
   return toString(value);
 }
 #endif
+enum class RNSSearchBarObscureBackground { Undefined, False, True };
+
+static inline void fromRawValue(const PropsParserContext& context, const RawValue &value, RNSSearchBarObscureBackground &result) {
+  auto string = (std::string)value;
+  if (string == "undefined") { result = RNSSearchBarObscureBackground::Undefined; return; }
+  if (string == "false") { result = RNSSearchBarObscureBackground::False; return; }
+  if (string == "true") { result = RNSSearchBarObscureBackground::True; return; }
+  abort();
+}
+
+static inline std::string toString(const RNSSearchBarObscureBackground &value) {
+  switch (value) {
+    case RNSSearchBarObscureBackground::Undefined: return "undefined";
+    case RNSSearchBarObscureBackground::False: return "false";
+    case RNSSearchBarObscureBackground::True: return "true";
+  }
+}
+
+#ifdef RN_SERIALIZABLE_STATE
+static inline folly::dynamic toDynamic(const RNSSearchBarObscureBackground &value) {
+  return toString(value);
+}
+#endif
+enum class RNSSearchBarHideNavigationBar { Undefined, False, True };
+
+static inline void fromRawValue(const PropsParserContext& context, const RawValue &value, RNSSearchBarHideNavigationBar &result) {
+  auto string = (std::string)value;
+  if (string == "undefined") { result = RNSSearchBarHideNavigationBar::Undefined; return; }
+  if (string == "false") { result = RNSSearchBarHideNavigationBar::False; return; }
+  if (string == "true") { result = RNSSearchBarHideNavigationBar::True; return; }
+  abort();
+}
+
+static inline std::string toString(const RNSSearchBarHideNavigationBar &value) {
+  switch (value) {
+    case RNSSearchBarHideNavigationBar::Undefined: return "undefined";
+    case RNSSearchBarHideNavigationBar::False: return "false";
+    case RNSSearchBarHideNavigationBar::True: return "true";
+  }
+}
+
+#ifdef RN_SERIALIZABLE_STATE
+static inline folly::dynamic toDynamic(const RNSSearchBarHideNavigationBar &value) {
+  return toString(value);
+}
+#endif
 
 class RNSSearchBarProps final : public ViewProps {
  public:
@@ -1403,16 +1957,17 @@ class RNSSearchBarProps final : public ViewProps {
 #pragma mark - Props
 
   bool hideWhenScrolling{true};
-  RNSSearchBarAutoCapitalize autoCapitalize{RNSSearchBarAutoCapitalize::None};
+  RNSSearchBarAutoCapitalize autoCapitalize{RNSSearchBarAutoCapitalize::SystemDefault};
   std::string placeholder{};
   RNSSearchBarPlacement placement{RNSSearchBarPlacement::Automatic};
   bool allowToolbarIntegration{true};
-  bool obscureBackground{false};
-  bool hideNavigationBar{false};
+  RNSSearchBarObscureBackground obscureBackground{RNSSearchBarObscureBackground::Undefined};
+  RNSSearchBarHideNavigationBar hideNavigationBar{RNSSearchBarHideNavigationBar::Undefined};
   std::string cancelButtonText{};
   SharedColor barTintColor{};
   SharedColor tintColor{};
   SharedColor textColor{};
+  bool autoFocus{false};
   bool disableBackButtonOverride{false};
   std::string inputType{};
   SharedColor hintTextColor{};

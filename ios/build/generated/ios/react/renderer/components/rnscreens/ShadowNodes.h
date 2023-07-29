@@ -18,6 +18,17 @@
 
 namespace facebook::react {
 
+JSI_EXPORT extern const char RNSBottomTabsAccessoryContentComponentName[];
+
+/*
+ * `ShadowNode` for <RNSBottomTabsAccessoryContent> component.
+ */
+using RNSBottomTabsAccessoryContentShadowNode = ConcreteViewShadowNode<
+    RNSBottomTabsAccessoryContentComponentName,
+    RNSBottomTabsAccessoryContentProps,
+    RNSBottomTabsAccessoryContentEventEmitter,
+    RNSBottomTabsAccessoryContentState>;
+
 JSI_EXPORT extern const char RNSBottomTabsScreenComponentName[];
 
 /*

@@ -1,6 +1,6 @@
 {
   "name": "React-utils",
-  "version": "0.81.4",
+  "version": "0.81.5",
   "summary": "-",
   "homepage": "https://reactnative.dev/",
   "license": "MIT",
@@ -10,7 +10,7 @@
   },
   "source": {
     "git": "https://github.com/facebook/react-native.git",
-    "tag": "v0.81.4"
+    "tag": "v0.81.5"
   },
   "source_files": [
     "*.{m,mm,cpp,h}",
@@ -26,7 +26,7 @@
   },
   "dependencies": {
     "React-jsi": [
-      "0.81.4"
+      "0.81.5"
     ],
     "hermes-engine": [],
     "glog": [],
