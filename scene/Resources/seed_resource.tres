@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="SeedResource" load_steps=10 format=3 uid="uid://bmllh5n0waylq"]
+
+[ext_resource type="Script" path="res://Resources/seed_resource.gd" id="1_q344l"]
+[ext_resource type="Resource" uid="uid://cenwda5qlnynh" path="res://Resources/seed_scenes_data/blue_bell.tres" id="2_obgfv"]
+[ext_resource type="Resource" uid="uid://dw5434nda7mgu" path="res://Resources/seed_scenes_data/daisy.tres" id="3_thmnl"]
+[ext_resource type="Resource" uid="uid://dlwk00sgrhhxt" path="res://Resources/seed_scenes_data/iris.tres" id="4_3acuk"]
+[ext_resource type="Resource" uid="uid://d1ookkkq5bvgb" path="res://Resources/seed_scenes_data/lotus.tres" id="5_awqun"]
+[ext_resource type="Resource" uid="uid://dqnc8kahwakax" path="res://Resources/seed_scenes_data/pansy.tres" id="6_uldcv"]
+[ext_resource type="Resource" uid="uid://c5si00pg6n4lx" path="res://Resources/seed_scenes_data/rose.tres" id="7_d3j5y"]
+[ext_resource type="Resource" uid="uid://dvx1gcu2iekol" path="res://Resources/seed_scenes_data/sunflower.tres" id="8_u8f4c"]
+[ext_resource type="Resource" uid="uid://rvbt1wllmbt" path="res://Resources/seed_scenes_data/tulip.tres" id="9_nat7a"]
+
+[resource]
+script = ExtResource("1_q344l")
+seedList = Array[Resource("res://Resources/seed_data.gd")]([ExtResource("2_obgfv"), ExtResource("3_thmnl"), ExtResource("4_3acuk"), ExtResource("5_awqun"), ExtResource("6_uldcv"), ExtResource("7_d3j5y"), ExtResource("8_u8f4c"), ExtResource("9_nat7a")])

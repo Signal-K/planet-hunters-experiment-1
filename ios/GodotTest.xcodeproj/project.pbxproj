@@ -8,8 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
+		24CB456D55AEF0955885928C /* libPods-GodotTest.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 45063375C1275EBA68584C7F /* libPods-GodotTest.a */; };
 		406D17942DA8FE210075776E /* GodotTest.pck in Resources */ = {isa = PBXBuildFile; fileRef = 406D17932DA8FE210075776E /* GodotTest.pck */; };
-		6B7DEC0FCEB83C9204A8E30C /* libPods-GodotTest.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 3B29F19F4A1BC841A336CD96 /* libPods-GodotTest.a */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		9A21678F53B4FD6D4F71032A /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BC59870BC2849015855652D /* ExpoModulesProvider.swift */; };
@@ -21,13 +21,13 @@
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = GodotTest/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = GodotTest/Info.plist; sourceTree = "<group>"; };
 		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = GodotTest/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		3B29F19F4A1BC841A336CD96 /* libPods-GodotTest.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-GodotTest.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		3B4392A12AC88292D35C810B /* Pods-GodotTest.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-GodotTest.debug.xcconfig"; path = "Target Support Files/Pods-GodotTest/Pods-GodotTest.debug.xcconfig"; sourceTree = "<group>"; };
 		406D17932DA8FE210075776E /* GodotTest.pck */ = {isa = PBXFileReference; lastKnownFileType = file; path = GodotTest.pck; sourceTree = "<group>"; };
+		45063375C1275EBA68584C7F /* libPods-GodotTest.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-GodotTest.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4BC59870BC2849015855652D /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-GodotTest/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
-		5709B34CF0A7D63546082F79 /* Pods-GodotTest.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-GodotTest.release.xcconfig"; path = "Target Support Files/Pods-GodotTest/Pods-GodotTest.release.xcconfig"; sourceTree = "<group>"; };
+		66DD9DB9648B7862F984D7B6 /* Pods-GodotTest.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-GodotTest.debug.xcconfig"; path = "Target Support Files/Pods-GodotTest/Pods-GodotTest.debug.xcconfig"; sourceTree = "<group>"; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = GodotTest/AppDelegate.swift; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = GodotTest/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		C2856EB484E9BFD1D9372005 /* Pods-GodotTest.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-GodotTest.release.xcconfig"; path = "Target Support Files/Pods-GodotTest/Pods-GodotTest.release.xcconfig"; sourceTree = "<group>"; };
 		E6A799796F6F39D4D34E0A95 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = GodotTest/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
@@ -37,7 +37,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6B7DEC0FCEB83C9204A8E30C /* libPods-GodotTest.a in Frameworks */,
+				24CB456D55AEF0955885928C /* libPods-GodotTest.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -62,7 +62,7 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				3B29F19F4A1BC841A336CD96 /* libPods-GodotTest.a */,
+				45063375C1275EBA68584C7F /* libPods-GodotTest.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -108,8 +108,8 @@
 		BBD78D7AC51CEA395F1C20DB /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				3B4392A12AC88292D35C810B /* Pods-GodotTest.debug.xcconfig */,
-				5709B34CF0A7D63546082F79 /* Pods-GodotTest.release.xcconfig */,
+				66DD9DB9648B7862F984D7B6 /* Pods-GodotTest.debug.xcconfig */,
+				C2856EB484E9BFD1D9372005 /* Pods-GodotTest.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -129,14 +129,14 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "GodotTest" */;
 			buildPhases = (
-				C38B50BA6285516D6DCD4F65 /* [CP] Check Pods Manifest.lock */,
+				A6510FE989F05EF204853871 /* [CP] Check Pods Manifest.lock */,
 				08571B1FF9FF0E90917835E2 /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
-				00EEFC60759A1932668264C0 /* [CP] Embed Pods Frameworks */,
-				E235C05ADACE081382539298 /* [CP] Copy Pods Resources */,
+				2D3C9AB9AF194E5C14C886B8 /* [CP] Embed Pods Frameworks */,
+				A7A297C3B8D40F89645C4F9E /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -210,23 +210,6 @@
 			shellPath = /bin/sh;
 			shellScript = "set -e\n\nWITH_ENVIRONMENT=\"$REACT_NATIVE_PATH/scripts/xcode/with-environment.sh\"\nREACT_NATIVE_XCODE=\"$REACT_NATIVE_PATH/scripts/react-native-xcode.sh\"\n\n/bin/sh -c \"$WITH_ENVIRONMENT $REACT_NATIVE_XCODE\"\n";
 		};
-		00EEFC60759A1932668264C0 /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-GodotTest/Pods-GodotTest-frameworks-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-GodotTest/Pods-GodotTest-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-GodotTest/Pods-GodotTest-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
 		08571B1FF9FF0E90917835E2 /* [Expo] Configure project */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
@@ -250,7 +233,24 @@
 			shellPath = /bin/sh;
 			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-GodotTest/expo-configure-project.sh\"\n";
 		};
-		C38B50BA6285516D6DCD4F65 /* [CP] Check Pods Manifest.lock */ = {
+		2D3C9AB9AF194E5C14C886B8 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-GodotTest/Pods-GodotTest-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-GodotTest/Pods-GodotTest-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-GodotTest/Pods-GodotTest-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		A6510FE989F05EF204853871 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -272,7 +272,7 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		E235C05ADACE081382539298 /* [CP] Copy Pods Resources */ = {
+		A7A297C3B8D40F89645C4F9E /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -306,7 +306,7 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 3B4392A12AC88292D35C810B /* Pods-GodotTest.debug.xcconfig */;
+			baseConfigurationReference = 66DD9DB9648B7862F984D7B6 /* Pods-GodotTest.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -336,7 +336,7 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 5709B34CF0A7D63546082F79 /* Pods-GodotTest.release.xcconfig */;
+			baseConfigurationReference = C2856EB484E9BFD1D9372005 /* Pods-GodotTest.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;

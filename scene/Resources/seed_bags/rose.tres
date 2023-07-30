@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="PlantData" load_steps=4 format=3 uid="uid://jqbdbmgso1pb"]
+
+[ext_resource type="Resource" uid="uid://clct6p3k7hj1" path="res://Resources/plant_names/Rose.tres" id="1_rose"]
+[ext_resource type="Script" path="res://Resources/plant_data.gd" id="2_rose"]
+[ext_resource type="Texture2D" uid="uid://bemvedktujona" path="res://assets/Art/Plants/Seeds/rose.png" id="3_rose"]
+
+[resource]
+script = ExtResource("2_rose")
+plantNameResource = ExtResource("1_rose")
+texture = ExtResource("3_rose")
+quantity = 2

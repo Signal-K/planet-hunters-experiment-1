@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="PlantName" load_steps=2 format=3 uid="uid://cx4wkgq26l0td"]
+
+[ext_resource type="Script" path="res://Resources/plant_name.gd" id="1_sunflower"]
+
+[resource]
+script = ExtResource("1_sunflower")
+plantName = "Sunflower"

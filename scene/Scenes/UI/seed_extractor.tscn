@@ -1,0 +1,46 @@
+[gd_scene load_steps=5 format=3 uid="uid://bbcaqssxca12s"]
+
+[ext_resource type="PackedScene" uid="uid://vehyc370mm2b" path="res://Scenes/UI/item_info.tscn" id="1_1gjb3"]
+[ext_resource type="Script" path="res://Scripts/UI/seed_extractor.gd" id="1_2guoa"]
+[ext_resource type="Texture2D" uid="uid://bwd0kokk6lp16" path="res://assets/Art/UI/Buttons/arrowRight.png" id="2_clqg0"]
+[ext_resource type="Texture2D" uid="uid://cf4jujec4k7te" path="res://assets/Art/UI/Buttons/button_normal.png" id="3_hteg1"]
+
+[node name="SeedExtractor" type="HBoxContainer"]
+offset_right = 247.0
+offset_bottom = 48.0
+script = ExtResource("1_2guoa")
+
+[node name="PlantInfo1" parent="." instance=ExtResource("1_1gjb3")]
+layout_mode = 2
+stretch_mode = 4
+
+[node name="TextureRect" type="TextureRect" parent="."]
+layout_mode = 2
+texture = ExtResource("2_clqg0")
+expand_mode = 3
+stretch_mode = 4
+
+[node name="PlantInfo2" parent="." instance=ExtResource("1_1gjb3")]
+layout_mode = 2
+stretch_mode = 4
+
+[node name="TextureButton" type="TextureButton" parent="."]
+layout_mode = 2
+texture_normal = ExtResource("3_hteg1")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="Label" type="Label" parent="TextureButton"]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_top = -9.0
+offset_right = 40.0
+offset_bottom = 9.0
+grow_vertical = 2
+text = "Claim"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[connection signal="button_down" from="TextureButton" to="." method="_on_texture_button_button_down"]

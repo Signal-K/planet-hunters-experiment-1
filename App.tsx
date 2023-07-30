@@ -13,6 +13,27 @@ import {
   RTNGodotView,
   runOnGodotThread,
 } from "@borndotcom/react-native-godot";
+import type { NavigationProp } from '@react-navigation/native';
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { LoginScreen } from "./screens/LoginScreen";
+
+// Type definitions for Godot objects
+interface AppController {
+  has_connections(signal: string): boolean;
+  window_status_update: {
+    connect(callback: (message: string) => void): void;
+  };
+  open_window(windowName: string): void;
+  close_window(windowName: string): void;
+}
+
+type RootStackParamList = {
+  Auth: undefined;
+  Loading: undefined;
+  Game: undefined;
+};
+
+type ScreenNavigationProp = NavigationProp<RootStackParamList>;
 import * as FileSystem from "expo-file-system/legacy";
 import {
   Button,
@@ -30,7 +51,7 @@ import * as Device from "expo-device";
 
 const Stack = createNativeStackNavigator();
 
-function initGodot(name) {
+function initGodot(name: string) {
   if (RTNGodot.getInstance() != null) {
     console.log("Godot was already initialized.");
     return;
@@ -114,11 +135,6 @@ function destroyGodot() {
   });
 }
 
-export interface AppController {
-  open_window(windowName: string): void;
-  close_window(windowName: string): void;
-}
-
 const instance = () => {
   "worklet";
 
@@ -150,7 +166,9 @@ const appController = () => {
   return controller;
 };
 
-const App = () => {
+const AppNavigator = () => {
+  const { user, isLoading: authLoading } = useAuth();
+
   const openSubwindow = function () {
     runOnGodotThread(() => {
       "worklet";
@@ -169,7 +187,19 @@ const App = () => {
     });
   };
 
-  const Loading = ({ navigation }) => {
+  const Loading = ({ navigation }: { navigation: ScreenNavigationProp }) => {
+    const { signOut } = useAuth();
+
+    const handleLogout = async () => {
+      try {
+        console.log('Logging out...');
+        await signOut();
+        console.log('Logged out successfully');
+      } catch (error) {
+        console.error('Logout error:', error);
+      }
+    };
+
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#007AFF" />
@@ -182,11 +212,18 @@ const App = () => {
             }}
           />
         </View>
+        <View style={styles.logoutButton}>
+          <Button
+            title="Log Out"
+            onPress={handleLogout}
+            color="#FF3B30"
+          />
+        </View>
       </View>
     );
   };
 
-  const Game = ({ navigation }) => {
+  const Game = ({ navigation }: { navigation: ScreenNavigationProp }) => {
     useEffect(() => {
       // Initialize Godot when entering the Game screen
       initGodot("GodotTest");
@@ -204,21 +241,47 @@ const App = () => {
     );
   };
 
+  if (authLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#007AFF" />
+        <Text style={styles.loadingText}>Initializing...</Text>
+      </View>
+    );
+  }
+
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Loading">
-        <Stack.Screen
-          name="Loading"
-          component={Loading}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="Game"
-          component={Game}
-          options={{ headerShown: false, presentation: "modal" }}
-        />
+      <Stack.Navigator
+        screenOptions={{ headerShown: false }}
+      >
+        {user ? (
+          <>
+            <Stack.Screen
+              name="Loading"
+              component={Loading}
+            />
+            <Stack.Screen
+              name="Game"
+              component={Game}
+              options={{ presentation: "modal" }}
+            />
+          </>
+        ) : (
+          <Stack.Screen name="Auth">
+            {() => <LoginScreen />}
+          </Stack.Screen>
+        )}
       </Stack.Navigator>
     </NavigationContainer>
+  );
+};
+
+const App = () => {
+  return (
+    <AuthProvider>
+      <AppNavigator />
+    </AuthProvider>
   );
 };
 
@@ -283,6 +346,10 @@ const styles = StyleSheet.create({
   },
   openButton: {
     marginTop: 16,
+    width: 160,
+  },
+  logoutButton: {
+    marginTop: 12,
     width: 160,
   },
   gameContainer: {

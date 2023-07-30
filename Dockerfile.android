@@ -1,0 +1,86 @@
+# Dockerfile.android - Android build image
+# Use with: docker-compose --profile android up android-builder
+
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    openjdk-17-jdk \
+    curl \
+    unzip \
+    wget \
+    git \
+    build-essential \
+    pkg-config \
+    python3 \
+    python3-pip \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set JAVA_HOME
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+ENV PATH=$JAVA_HOME/bin:$PATH
+
+# Create app directory
+WORKDIR /opt/android
+
+# Download Android SDK command line tools
+ENV ANDROID_SDK_ROOT=/opt/android-sdk
+ENV ANDROID_HOME=$ANDROID_SDK_ROOT
+ENV GRADLE_USER_HOME=/gradle-cache
+ENV PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH
+
+RUN mkdir -p $ANDROID_SDK_ROOT && \
+    mkdir -p $GRADLE_USER_HOME && \
+    curl -fsSL "https://dl.google.com/android/repository/commandlinetools-linux-10811513_latest.zip" \
+    -o cmdline-tools.zip && \
+    unzip -q cmdline-tools.zip -d $ANDROID_SDK_ROOT && \
+    rm cmdline-tools.zip && \
+    mv $ANDROID_SDK_ROOT/cmdline-tools $ANDROID_SDK_ROOT/latest
+
+# Accept Android licenses
+RUN yes | sdkmanager --licenses
+
+# Install required Android SDK components
+RUN sdkmanager --install \
+    "platforms;android-35" \
+    "platforms;android-34" \
+    "build-tools;35.0.0" \
+    "build-tools;34.0.0" \
+    "ndk;25.1.8937393" \
+    "platform-tools" \
+    "tools"
+
+# Download and install Gradle
+ENV GRADLE_VERSION=8.6
+RUN curl -fsSL "https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip" \
+    -o gradle.zip && \
+    unzip -q gradle.zip -d /opt && \
+    rm gradle.zip && \
+    ln -s /opt/gradle-${GRADLE_VERSION}/bin/gradle /usr/local/bin/gradle
+
+# Verify installations
+RUN java -version
+RUN gradle --version
+
+# Install Node.js dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    nodejs \
+    npm \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user
+RUN useradd -m -s /bin/bash builder
+
+# Set working directory
+WORKDIR /app
+
+# Copy project files (expected to be mounted as volume)
+# Change ownership to builder user
+RUN chown -R builder:builder /app /opt/android-sdk $GRADLE_USER_HOME
+
+USER builder
+
+# Default command
+CMD ["bash"]

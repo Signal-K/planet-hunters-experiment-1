@@ -1,6 +1,0 @@
-/Users/scroobz/Library/Android/sdk/cmake/3.22.1/bin/ninja \
-  -C \
-  /Users/scroobz/Navigation/Native/godot-template/android/app/.cxx/Debug/f5k6p364/armeabi-v7a \
-  appmodules \
-  react_codegen_rnscreens \
-  react_codegen_safeareacontext
