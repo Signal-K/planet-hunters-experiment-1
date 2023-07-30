@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="SeedData" load_steps=4 format=3 uid="uid://dqnc8kahwakax"]
+
+[ext_resource type="Resource" uid="uid://b5cghbw36l3pk" path="res://Resources/seed_bags/pansy.tres" id="1_pansy"]
+[ext_resource type="PackedScene" uid="uid://c7bcyrt13cbuw" path="res://Scenes/Flowers/pansy.tscn" id="2_pansy"]
+[ext_resource type="Script" path="res://Resources/seed_data.gd" id="3_pansy"]
+
+[resource]
+script = ExtResource("3_pansy")
+plantDataResource = ExtResource("1_pansy")
+plantScene = ExtResource("2_pansy")

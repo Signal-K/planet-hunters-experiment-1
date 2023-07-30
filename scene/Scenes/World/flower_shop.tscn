@@ -1,0 +1,53 @@
+[gd_scene load_steps=6 format=3 uid="uid://xr13yj36wadx"]
+
+[ext_resource type="PackedScene" uid="uid://bybry636opeds" path="res://Scenes/World/background.tscn" id="1_r8nrl"]
+[ext_resource type="Script" path="res://Scripts/Systems/StationContainer.gd" id="2_lpnin"]
+[ext_resource type="PackedScene" uid="uid://bbcaqssxca12s" path="res://Scenes/UI/seed_extractor.tscn" id="3_br557"]
+[ext_resource type="Resource" uid="uid://8lrk5rn82nap" path="res://Resources/flower_resource.tres" id="4_esn8p"]
+[ext_resource type="Resource" uid="uid://bmllh5n0waylq" path="res://Resources/seed_resource.tres" id="5_hf23d"]
+
+[node name="FlowerShop" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Background" parent="." instance=ExtResource("1_r8nrl")]
+custom_minimum_size = Vector2(293, 222)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 89.0
+offset_top = 11.0
+offset_right = 382.0
+offset_bottom = 233.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="Background"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="ScrollContainer" type="ScrollContainer" parent="Background/MarginContainer"]
+layout_mode = 2
+
+[node name="StationContainer" type="VBoxContainer" parent="Background/MarginContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+script = ExtResource("2_lpnin")
+seedExtractorScene = ExtResource("3_br557")
+flowerResource = ExtResource("4_esn8p")
+seedResource = ExtResource("5_hf23d")

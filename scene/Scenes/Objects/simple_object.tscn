@@ -1,0 +1,20 @@
+[gd_scene load_steps=4 format=3 uid="uid://dbequedieolio"]
+
+[ext_resource type="Texture2D" uid="uid://bxsysay51a72s" path="res://assets/Growth/graphics/tilesets/decoration.png" id="1_0voa3"]
+[ext_resource type="Script" uid="uid://smi8f64jkorc" path="res://Scenes/Objects/simple_object.gd" id="1_uwwpl"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_uwwpl"]
+size = Vector2(10, 4)
+
+[node name="SimpleObject" type="StaticBody2D"]
+script = ExtResource("1_uwwpl")
+size = 2
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("1_0voa3")
+hframes = 4
+vframes = 2
+frame = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_uwwpl")

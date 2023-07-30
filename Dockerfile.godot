@@ -1,0 +1,62 @@
+# Dockerfile.godot - Godot headless image for automated exports and builds
+# Use with: docker-compose --profile godot up godot-cli
+
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    curl \
+    unzip \
+    wget \
+    git \
+    python3 \
+    python3-pip \
+    build-essential \
+    pkg-config \
+    libxcursor1 \
+    libxinerama1 \
+    libxrandr2 \
+    libxext6 \
+    libx11-6 \
+    libgl1-mesa-glx \
+    libslang2 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create godot user (non-root)
+RUN useradd -m -s /bin/bash godot
+
+# Set working directory
+WORKDIR /opt
+
+# Download Godot 4.5.1 migeran fork (headless Linux version)
+ENV GODOT_VERSION=4.5.1.migeran.2
+RUN curl -fsSL \
+    "https://github.com/migeran/godot/releases/download/${GODOT_VERSION}/Godot_v${GODOT_VERSION}_linux_x86_64.zip" \
+    -o godot.zip && \
+    unzip -q godot.zip && \
+    rm godot.zip && \
+    chmod +x Godot_* && \
+    mv Godot_* /usr/local/bin/godot
+
+# Verify installation
+RUN godot --version
+
+# Create godot cache directory
+RUN mkdir -p /home/godot/.godot && \
+    chown -R godot:godot /home/godot
+
+# Switch to non-root user
+USER godot
+ENV HOME=/home/godot
+ENV GODOT_PATH=/usr/local/bin/godot
+
+# Set working directory to project
+WORKDIR /app/project
+
+# Default command - interactive godot shell
+# To export a PCK file:
+# docker-compose run --rm godot-cli godot --path . --export-pack "iOS" ../ios/GodotTest.pck
+CMD ["godot", "--help"]

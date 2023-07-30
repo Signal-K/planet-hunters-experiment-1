@@ -1,0 +1,76 @@
+[gd_scene load_steps=10 format=3 uid="uid://brjys8tcq54ps"]
+
+[ext_resource type="Texture2D" uid="uid://d4nnmlscu1se6" path="res://assets/Growth/graphics/machines/tv.png" id="1_a4k46"]
+[ext_resource type="Script" uid="uid://dsaj6ehojwc1w" path="res://Scenes/tv.gd" id="1_emhpc"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_emhpc"]
+atlas = ExtResource("1_a4k46")
+region = Rect2(0, 0, 16, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_q80sk"]
+atlas = ExtResource("1_a4k46")
+region = Rect2(48, 0, 16, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_slduq"]
+atlas = ExtResource("1_a4k46")
+region = Rect2(64, 0, 16, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_56o7x"]
+atlas = ExtResource("1_a4k46")
+region = Rect2(16, 0, 16, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_d4tdg"]
+atlas = ExtResource("1_a4k46")
+region = Rect2(32, 0, 16, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_ut6el"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_emhpc")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_q80sk")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_slduq")
+}],
+"loop": true,
+"name": &"rain",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_56o7x")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_d4tdg")
+}],
+"loop": true,
+"name": &"sun",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_oq2sc"]
+size = Vector2(16, 20)
+
+[node name="TV" type="StaticBody2D"]
+collision_layer = 12
+collision_mask = 0
+script = ExtResource("1_emhpc")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_ut6el")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -5)
+shape = SubResource("RectangleShape2D_oq2sc")
+
+[node name="Timer" type="Timer" parent="."]
+wait_time = 3.0
+one_shot = true

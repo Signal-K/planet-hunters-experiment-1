@@ -1,0 +1,75 @@
+# Dependencies and build outputs
+node_modules/
+npm-debug.log*
+yarn-error.log*
+.npm
+.yarn
+
+# Build artifacts
+build/
+dist/
+*.o
+*.a
+*.so
+.gradle/
+gradlew*
+
+# iOS specific
+ios/Pods/
+ios/build/
+ios/DerivedData/
+*.xcworkspace/xcshareddata/
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+xcuserdata/
+ios/.xcode.env.local
+
+# Android specific
+android/.gradle/
+android/local.properties
+android/build/
+*.apk
+*.aab
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.iml
+.prettierignore
+
+# Godot specific
+.godot/
+godot_modules/
+.import/
+export_presets.cfg.user
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Temporary files
+*.tmp
+*.log
+.cache/
+
+# Git
+.git/
+.gitignore
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.docker/
+
+# Misc
+README.md
+LICENSE
+.github/
+.gitpod.yml

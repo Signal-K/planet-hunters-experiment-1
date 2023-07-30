@@ -1,0 +1,69 @@
+# level 
+const MACHINE_PREVIEW_TEXTURES = {
+	Enum.Machine.SPRINKLER: {'texture':preload("res://graphics/icons/sprinkler.png"), 'offset': Vector2i(0,0)},
+	Enum.Machine.FISHER: {'texture':preload("res://graphics/icons/fisher.png"), 'offset': Vector2i(0,-4)},
+	Enum.Machine.SCARECROW: {'texture':preload("res://graphics/icons/scarecrow.png"), 'offset': Vector2i(0,-4)},
+	Enum.Machine.DELETE: {'texture':preload("res://graphics/icons/delete.png"), 'offset': Vector2i(0,0)}}
+	
+var machine_scenes = {
+	Enum.Machine.SPRINKLER: preload("res://scenes/machines/sprinkler.tscn"),
+	Enum.Machine.FISHER: preload("res://scenes/machines/fisher.tscn"),
+	Enum.Machine.SCARECROW: preload("res://scenes/machines/scare_crow.tscn")}
+
+
+# data 
+var seed_amount = {
+	Enum.Seed.CORN: 10,
+	Enum.Seed.TOMATO: 20,
+	Enum.Seed.PUMPKIN: 14,
+	Enum.Seed.WHEAT: 4}
+var items = {
+	Enum.Item.WOOD: 1,
+	Enum.Item.APPLE: 3,
+	Enum.Item.FISH: 4,
+	Enum.Item.CORN: 0,
+	Enum.Item.WHEAT: 0,
+	Enum.Item.PUMPKIN: 0,
+	Enum.Item.TOMATO: 0}
+
+# tool ui textures
+const TOOL_TEXTURES = {
+	Enum.Tool.AXE: preload("res://graphics/icons/axe.png"),
+	Enum.Tool.HOE: preload("res://graphics/icons/hoe.png"),
+	Enum.Tool.WATER: preload("res://graphics/icons/water.png"),
+	Enum.Tool.SWORD: preload("res://graphics/icons/sword.png"),
+	Enum.Tool.FISH: preload("res://graphics/icons/fish.png"),
+	Enum.Tool.SEED: preload("res://graphics/icons/wheat.png"),}
+const SEED_TEXTURES = {
+	Enum.Seed.CORN: preload("res://graphics/icons/corn.png"),
+	Enum.Seed.PUMPKIN: preload("res://graphics/icons/pumpkin.png"),
+	Enum.Seed.TOMATO: preload("res://graphics/icons/tomato.png"),
+	Enum.Seed.WHEAT: preload("res://graphics/icons/wheat.png")
+
+# water plants
+const SOIL_DIRECTIONS = [
+		Vector2i(-1, -1), Vector2i(0, -1), Vector2i(1, -1),
+		Vector2i(-1,  0),Vector2i(1,0), Vector2i(-1,  1), 
+		Vector2i(0,  1), Vector2i(1,  1)]
+
+
+# shop
+const ICON_PATHS = {
+	Enum.Item.WOOD: "res://graphics/icons/wood.png",
+	Enum.Item.FISH: "res://graphics/icons/goldfish.png",
+	Enum.Item.APPLE: "res://graphics/icons/apple.png",
+	Enum.Item.CORN: "res://graphics/icons/corn.png",
+	Enum.Item.WHEAT: "res://graphics/icons/wheat.png",
+	Enum.Item.PUMPKIN: "res://graphics/icons/pumpkin.png",
+	Enum.Item.TOMATO: "res://graphics/icons/tomato.png"}
+
+
+# item textures
+const TEXTURES = {
+	Enum.Item.WOOD: preload("res://graphics/icons/wood.png"),
+	Enum.Item.APPLE: preload("res://graphics/icons/apple.png"),
+	Enum.Item.FISH: preload("res://graphics/icons/goldfish.png"),
+	Enum.Item.CORN: preload("res://graphics/icons/corn.png"),
+	Enum.Item.TOMATO: preload("res://graphics/icons/tomato.png"),
+	Enum.Item.PUMPKIN: preload("res://graphics/icons/pumpkin.png"),
+	Enum.Item.WHEAT: preload("res://graphics/icons/wheat.png")}

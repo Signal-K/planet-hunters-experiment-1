@@ -1,0 +1,91 @@
+[gd_scene load_steps=11 format=3 uid="uid://b1mjown5nus5q"]
+
+[ext_resource type="Texture2D" uid="uid://csy41adf2s4wh" path="res://assets/Growth/graphics/icons/pumpkin.png" id="1_7cimr"]
+[ext_resource type="FontFile" uid="uid://pctatblkht3m" path="res://assets/Growth/graphics/fonts/HomeVideo-Regular.ttf" id="1_53fq5"]
+[ext_resource type="Texture2D" uid="uid://k4r0km103lsj" path="res://assets/Growth/graphics/ui/v_bar.png" id="2_53fq5"]
+[ext_resource type="Script" uid="uid://bvfkaadrlb4il" path="res://Scenes/UI/plant_info.gd" id="2_63faw"]
+[ext_resource type="Theme" uid="uid://mqjywcs6uupc" path="res://Scenes/UI/plant_info.tres" id="3_63faw"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_52kmh"]
+content_margin_left = 8.0
+content_margin_top = 8.0
+content_margin_right = 8.0
+content_margin_bottom = 8.0
+bg_color = Color(1, 1, 1, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+corner_detail = 5
+expand_margin_left = 2.0
+expand_margin_top = 2.0
+expand_margin_right = 2.0
+expand_margin_bottom = 2.0
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_63faw"]
+
+[sub_resource type="FontVariation" id="FontVariation_4j2vv"]
+base_font = ExtResource("1_53fq5")
+
+[sub_resource type="FontVariation" id="FontVariation_52kmh"]
+fallbacks = Array[Font]([ExtResource("1_53fq5")])
+base_font = SubResource("FontVariation_4j2vv")
+
+[sub_resource type="Theme" id="Theme_7cimr"]
+default_font = SubResource("FontVariation_52kmh")
+Label/colors/font_color = Color(0.09019608, 0.09019608, 0.09019608, 1)
+Label/colors/font_outline_color = Color(0, 0, 0, 1)
+Label/colors/font_shadow_color = Color(0, 0, 0, 0)
+Label/constants/line_spacing = 3
+Label/constants/outline_size = 0
+Label/constants/shadow_offset_x = 1
+Label/constants/shadow_offset_y = 1
+Label/constants/shadow_outline_size = 1
+Label/font_sizes/font_size = 48
+Label/styles/focus = SubResource("StyleBoxFlat_52kmh")
+Label/styles/normal = SubResource("StyleBoxEmpty_63faw")
+PanelContainer/styles/panel = SubResource("StyleBoxFlat_52kmh")
+
+[node name="PlantInfo" type="PanelContainer"]
+offset_right = 40.0
+offset_bottom = 40.0
+theme = SubResource("Theme_7cimr")
+script = ExtResource("2_63faw")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme = ExtResource("3_63faw")
+
+[node name="IconTexture" type="TextureRect" parent="HBoxContainer"]
+custom_minimum_size = Vector2(64, 0)
+layout_mode = 2
+texture = ExtResource("1_7cimr")
+stretch_mode = 5
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HBoxContainer"]
+layout_mode = 2
+
+[node name="NameLabel" type="Label" parent="HBoxContainer/VBoxContainer"]
+layout_mode = 2
+text = "Tomato"
+
+[node name="GrowthBar" type="TextureProgressBar" parent="HBoxContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+value = 6.0
+nine_patch_stretch = true
+texture_under = ExtResource("2_53fq5")
+texture_progress = ExtResource("2_53fq5")
+tint_under = Color(0.09019608, 0.09019608, 0.09019608, 1)
+tint_progress = Color(0.56078434, 0.8392157, 0.18431373, 1)
+
+[node name="DeathBar" type="TextureProgressBar" parent="HBoxContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+value = 55.0
+allow_lesser = true
+nine_patch_stretch = true
+texture_under = ExtResource("2_53fq5")
+texture_progress = ExtResource("2_53fq5")
+tint_under = Color(0.019554144, 0.019554138, 0.019554136, 1)
+tint_progress = Color(0.7764706, 0.26666668, 0.11372549, 1)

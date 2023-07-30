@@ -1,0 +1,53 @@
+[gd_scene load_steps=6 format=3 uid="uid://c8sqphvguvmsa"]
+
+[ext_resource type="Script" path="res://Scripts/UI/hud.gd" id="1_5055i"]
+[ext_resource type="PackedScene" uid="uid://3nj43ri7ysd1" path="res://Scenes/UI/inventory.tscn" id="1_u5af5"]
+[ext_resource type="PackedScene" uid="uid://xr13yj36wadx" path="res://Scenes/World/flower_shop.tscn" id="2_lk1v8"]
+[ext_resource type="Texture2D" uid="uid://b16saksy1wrqo" path="res://assets/Art/UI/Icons/green_circle.png" id="4_12s0w"]
+[ext_resource type="Texture2D" uid="uid://cr1wrrqvqrdww" path="res://assets/Art/UI/Icons/cart.png" id="5_hkwui"]
+
+[node name="HUD" type="CanvasLayer"]
+script = ExtResource("1_5055i")
+
+[node name="FlowerShop" parent="." instance=ExtResource("2_lk1v8")]
+visible = false
+pivot_offset = Vector2(288, 162)
+
+[node name="Inventory" parent="." instance=ExtResource("1_u5af5")]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -21.0
+offset_top = -42.0
+offset_right = 21.0
+offset_bottom = 0.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="TextureButton" type="TextureButton" parent="."]
+texture_filter = 2
+offset_left = 24.0
+offset_top = 24.0
+offset_right = 72.0
+offset_bottom = 72.0
+texture_normal = ExtResource("4_12s0w")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="TextureRect" type="TextureRect" parent="TextureButton"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 6.0
+offset_top = 7.0
+offset_right = -10.0
+offset_bottom = -7.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("5_hkwui")
+expand_mode = 1
+
+[connection signal="button_down" from="TextureButton" to="." method="_on_texture_button_button_down"]

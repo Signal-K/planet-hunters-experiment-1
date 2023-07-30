@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="FlowerResource" load_steps=10 format=3 uid="uid://8lrk5rn82nap"]
+
+[ext_resource type="Resource" uid="uid://dja8tsomvh0xt" path="res://Resources/flower_lists/blue_bell.tres" id="1_ximx7"]
+[ext_resource type="Resource" uid="uid://c8m5n3k7j2qxw" path="res://Resources/flower_lists/daisy.tres" id="2_8yokp"]
+[ext_resource type="Resource" uid="uid://d2oak5m3kapxr" path="res://Resources/flower_lists/iris.tres" id="3_bnni7"]
+[ext_resource type="Resource" uid="uid://dam8k4n2j5qwx" path="res://Resources/flower_lists/lotus.tres" id="4_sabgw"]
+[ext_resource type="Resource" uid="uid://b8k7n7m2j4pxv" path="res://Resources/flower_lists/pansy.tres" id="5_mccl5"]
+[ext_resource type="Resource" uid="uid://c8by7qsyyt6y" path="res://Resources/flower_lists/rose.tres" id="6_2easd"]
+[ext_resource type="Resource" uid="uid://b1t8volwf0uyp" path="res://Resources/flower_lists/sunflower.tres" id="7_agjix"]
+[ext_resource type="Resource" uid="uid://b4oam2k5j8pxw" path="res://Resources/flower_lists/tulip.tres" id="8_fy3p1"]
+[ext_resource type="Script" path="res://Resources/flower_resource.gd" id="9_mi6n6"]
+
+[resource]
+script = ExtResource("9_mi6n6")
+flowerList = Array[Resource("res://Resources/plant_data.gd")]([ExtResource("1_ximx7"), ExtResource("2_8yokp"), ExtResource("3_bnni7"), ExtResource("4_sabgw"), ExtResource("5_mccl5"), ExtResource("6_2easd"), ExtResource("7_agjix"), ExtResource("8_fy3p1")])

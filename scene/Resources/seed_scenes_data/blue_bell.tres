@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="SeedData" load_steps=4 format=3 uid="uid://cenwda5qlnynh"]
+
+[ext_resource type="Resource" uid="uid://bewfueh1reojt" path="res://Resources/seed_bags/blue_bell.tres" id="1_4t2m4"]
+[ext_resource type="PackedScene" uid="uid://v144jbo3r3rn" path="res://Scenes/Flowers/bluebell.tscn" id="2_72q58"]
+[ext_resource type="Script" path="res://Resources/seed_data.gd" id="3_xhfn1"]
+
+[resource]
+script = ExtResource("3_xhfn1")
+plantDataResource = ExtResource("1_4t2m4")
+plantScene = ExtResource("2_72q58")
