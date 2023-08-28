@@ -12,7 +12,7 @@ electron-dist/
 !electron-dist/godot-web/
 !electron-dist/godot-web/**
 dist/
-release/
+/release/
 out/
 dist/*.blockmap
 dist/*.dmg
