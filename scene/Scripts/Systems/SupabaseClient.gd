@@ -95,6 +95,12 @@ static func _is_running_from_editor() -> bool:
 ## Returns array of anomaly dictionaries via callback
 func fetch_anomalies(anomaly_set: String, limit: int, callback: Callable) -> HTTPRequest:
 	var http_request = HTTPRequest.new()
+	# Godot web builds can fail with RESULT_BODY_DECOMPRESS_FAILED on compressed responses.
+	# Force identity encoding when supported by runtime to keep prod fetches stable.
+	for prop in http_request.get_property_list():
+		if str(prop.get("name", "")) == "accept_gzip":
+			http_request.set("accept_gzip", false)
+			break
 	
 	# Need to add to scene tree for HTTPRequest to work
 	var scene_tree = Engine.get_main_loop()
@@ -112,6 +118,7 @@ func fetch_anomalies(anomaly_set: String, limit: int, callback: Callable) -> HTT
 	var headers = [
 		"apikey: " + SUPABASE_KEY,
 		"Authorization: Bearer " + SUPABASE_KEY,
+		"Accept-Encoding: identity",
 		"Content-Type: application/json"
 	]
 	
@@ -119,8 +126,13 @@ func fetch_anomalies(anomaly_set: String, limit: int, callback: Callable) -> HTT
 		func(result: int, response_code: int, response_headers: PackedStringArray, body: PackedByteArray):
 			var response_data = []
 			var error_message = ""
+			var content_encoding := ""
+			for h in response_headers:
+				if h.to_lower().begins_with("content-encoding:"):
+					content_encoding = h
+					break
 			
-			preload("res://Scripts/Utils/Logger.gd").d("SupabaseClient: HTTP result=%d, status=%d" % [result, response_code])
+			preload("res://Scripts/Utils/Logger.gd").d("SupabaseClient: HTTP result=%d, status=%d, encoding=%s" % [result, response_code, content_encoding])
 			
 			if result != HTTPRequest.RESULT_SUCCESS:
 				error_message = "HTTP Request failed with result: %d" % result
