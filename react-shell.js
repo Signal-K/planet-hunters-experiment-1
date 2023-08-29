@@ -129,6 +129,22 @@ async function ensureGuestUser() {
   return user.id;
 }
 
+function localDistinctId() {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return `local_guest_${crypto.randomUUID()}`;
+  }
+  return `local_guest_${Date.now()}_${Math.floor(Math.random() * 1e9)}`;
+}
+
+async function resolveSurveyDistinctId() {
+  try {
+    return await ensureGuestUser();
+  } catch (error) {
+    console.warn("Falling back to local distinct id for survey:", error);
+    return localDistinctId();
+  }
+}
+
 function buildProgressJson(finalEventPayload) {
   const compactActions = _actionLog.slice(-120).map((item) => ({
     t: item.t,
@@ -230,15 +246,13 @@ async function maybeTriggerFirstMissionSurvey(eventPayload) {
   if (_surveyShownInThisBoot) return;
   if (localStorage.getItem(SURVEY_SHOWN_KEY)) return;
 
-  const missionCount = Number((eventPayload && eventPayload.mission_count) || 0);
-  if (missionCount > 1) return;
-
   try {
-    const guestId = await ensureGuestUser();
+    const distinctId = await resolveSurveyDistinctId();
+    const missionCount = Number((eventPayload && eventPayload.mission_count) || 0);
     const progressJson = buildProgressJson(eventPayload);
     const params = {
-      distinct_id: guestId,
-      supabase_guest_id: guestId,
+      distinct_id: distinctId,
+      supabase_guest_id: distinctId,
       survey_context: "experiment1_first_mission",
       mission_count: String(missionCount || 1),
       mission_action: String((eventPayload && eventPayload.action) || ""),
@@ -304,7 +318,7 @@ function App() {
         return;
       }
       pushAction(eventName, payload);
-      if (eventName === "first_mission_completed") {
+      if (eventName === "first_mission_completed" || eventName === "mission_debrief_resolved") {
         maybeTriggerFirstMissionSurvey(payload);
       }
     }
