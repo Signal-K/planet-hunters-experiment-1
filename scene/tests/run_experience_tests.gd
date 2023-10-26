@@ -336,6 +336,12 @@ func _extract_distance_km(label_text: String, prefix: String) -> int:
 		return -1
 	return int(value)
 
+func _reset_tutorial_completion_for_test() -> void:
+	DirAccess.remove_absolute("user://tutorial.cfg")
+	var app = root.get_node_or_null("AppController")
+	if app and app.has_method("set_tutorial_completed_from_react"):
+		app.set_tutorial_completed_from_react(false)
+
 func test_outbound_transit_distance_label_decreases() -> void:
 	reporter.start_test("Outbound transit shows decreasing distance to destination")
 	var scene_pack = load("res://Scenes/Transitions/rocket_transit.tscn")
@@ -402,7 +408,7 @@ func test_return_transit_distance_label_decreases() -> void:
 
 func test_tutorial_panel_hidden_in_transit_scene() -> void:
 	reporter.start_test("Tutorial panel is hidden during transit scenes")
-	DirAccess.remove_absolute("user://tutorial.cfg")
+	_reset_tutorial_completion_for_test()
 	var scene_pack = load("res://Scenes/Transitions/rocket_transit.tscn")
 	if scene_pack == null:
 		reporter.fail_test("Could not load rocket_transit.tscn for tutorial visibility test")
@@ -427,7 +433,7 @@ func test_tutorial_panel_hidden_in_transit_scene() -> void:
 
 func test_tutorial_panel_reappears_on_destination_arrival() -> void:
 	reporter.start_test("Tutorial panel reappears when transit scene reaches destination orbit")
-	DirAccess.remove_absolute("user://tutorial.cfg")
+	_reset_tutorial_completion_for_test()
 	var scene_pack = load("res://Scenes/Transitions/rocket_transit.tscn")
 	if scene_pack == null:
 		reporter.fail_test("Could not load rocket_transit.tscn for tutorial arrival test")
