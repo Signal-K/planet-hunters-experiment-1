@@ -141,7 +141,8 @@ jobs:
         shell: bash
         run: |
           if [ "$RUNNER_OS" = "macOS" ]; then
-            CSC_NAME="-" npx electron-builder --mac dmg zip --universal
+            CSC_NAME="-" npx electron-builder --mac dmg zip --arm64
+            CSC_NAME="-" npx electron-builder --mac dmg zip --x64
           elif [ "$RUNNER_OS" = "Linux" ]; then
             npx electron-builder --linux AppImage tar.gz
           elif [ "$RUNNER_OS" = "Windows" ]; then
