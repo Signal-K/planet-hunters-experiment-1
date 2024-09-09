@@ -41,26 +41,54 @@ jobs:
           deleted=0
 
           while :; do
-            response="$(curl -fsSL \
+            response_file="$(mktemp)"
+            http_code="$(curl -sS -o "${response_file}" -w "%{http_code}" \
               -H "${accept_header}" \
               -H "${auth_header}" \
               -H "${version_header}" \
               "${api}?per_page=${per_page}&page=${page}")"
 
-            ids="$(echo "${response}" | jq -r '.actions_caches[].id')"
+            if [ "${http_code}" = "422" ]; then
+              echo "GitHub cache API returned 422 (likely no listable caches in this context). Skipping cleanup."
+              echo "Response body:"
+              cat "${response_file}"
+              rm -f "${response_file}"
+              break
+            fi
+
+            if [ "${http_code}" != "200" ]; then
+              echo "Failed to list caches (HTTP ${http_code})."
+              echo "Response body:"
+              cat "${response_file}"
+              rm -f "${response_file}"
+              exit 1
+            fi
+
+            response="$(cat "${response_file}")"
+            rm -f "${response_file}"
+
+            ids="$(echo "${response}" | jq -r '.actions_caches[]?.id // empty')"
             if [ -z "${ids}" ]; then
               break
             fi
 
             while IFS= read -r cache_id; do
               [ -z "${cache_id}" ] && continue
-              curl -fsSL -X DELETE \
+              delete_response_file="$(mktemp)"
+              delete_code="$(curl -sS -o "${delete_response_file}" -w "%{http_code}" -X DELETE \
                 -H "${accept_header}" \
                 -H "${auth_header}" \
                 -H "${version_header}" \
-                "${api}/${cache_id}" >/dev/null
-              deleted=$((deleted + 1))
-              echo "Deleted cache id=${cache_id}"
+                "${api}/${cache_id}")"
+              if [ "${delete_code}" = "200" ] || [ "${delete_code}" = "204" ]; then
+                deleted=$((deleted + 1))
+                echo "Deleted cache id=${cache_id}"
+              else
+                echo "Failed to delete cache id=${cache_id} (HTTP ${delete_code})"
+                echo "Response body:"
+                cat "${delete_response_file}"
+              fi
+              rm -f "${delete_response_file}"
             done <<< "${ids}"
 
             count_on_page="$(echo "${ids}" | wc -l | tr -d ' ')"
