@@ -1,0 +1,49 @@
+{
+  "taskId": "cgckf3",
+  "currentVersion": 1,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "cgckf3",
+      "version": 1,
+      "timestamp": "2026-02-13T06:48:24.603Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Harden clear Actions caches workflow against API 422",
+        "description": "Cache cleanup workflow fails the run when the GitHub cache API returns 422; handle non-fatal API responses gracefully and keep cleanup best-effort.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ci",
+          "github-actions",
+          "cache"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Workflow does not fail when cache list API returns 422"
+          },
+          {
+            "completed": false,
+            "text": "Workflow still deletes caches when API is healthy"
+          },
+          {
+            "completed": false,
+            "text": "Workflow logs API response details for troubleshooting"
+          }
+        ]
+      }
+    }
+  ]
+}

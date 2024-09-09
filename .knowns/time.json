@@ -1,3 +1,11 @@
 {
-  "active": []
+  "active": [
+    {
+      "taskId": "cgckf3",
+      "taskTitle": "Harden clear Actions caches workflow against API 422",
+      "startedAt": "2026-02-13T06:48:26.816Z",
+      "pausedAt": null,
+      "totalPausedMs": 0
+    }
+  ]
 }
