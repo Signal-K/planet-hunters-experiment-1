@@ -1,0 +1,38 @@
+name: Clear Actions Caches
+
+on:
+  workflow_run:
+    workflows:
+      - Export Godot + Build Expo
+      - Godot Tests
+      - Godot Archived UI Tests
+      - Electron Desktop Release
+    types:
+      - completed
+
+permissions:
+  actions: write
+  contents: read
+
+concurrency:
+  group: clear-actions-caches
+  cancel-in-progress: false
+
+jobs:
+  clear-caches:
+    name: Delete all Actions caches
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete caches for repository
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          echo "Clearing all Actions caches for ${REPO}"
+          curl -fsSL -X DELETE \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/${REPO}/actions/caches"
+          echo "Cache clear request sent."

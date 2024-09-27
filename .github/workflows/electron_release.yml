@@ -141,16 +141,23 @@ jobs:
         run: |
           if [ "$RUNNER_OS" = "macOS" ]; then
             if [ -n "${BUILD_CERTIFICATE_BASE64:-}" ] && [ -n "${P12_PASSWORD:-}" ] && [ -n "${APPLE_ID:-}" ] && [ -n "${APPLE_APP_SPECIFIC_PASSWORD:-}" ] && [ -n "${APPLE_TEAM_ID:-}" ]; then
-              echo "macOS signing secrets found: building signed + notarized artifacts."
+              echo "macOS signing secrets found: building signed + notarized artifacts (x64 + arm64)."
               CSC_LINK="${BUILD_CERTIFICATE_BASE64}" \
               CSC_KEY_PASSWORD="${P12_PASSWORD}" \
               APPLE_ID="${APPLE_ID}" \
               APPLE_APP_SPECIFIC_PASSWORD="${APPLE_APP_SPECIFIC_PASSWORD}" \
               APPLE_TEAM_ID="${APPLE_TEAM_ID}" \
-              npx electron-builder --mac dmg zip --universal
+              npx electron-builder --mac dmg zip --x64
+              CSC_LINK="${BUILD_CERTIFICATE_BASE64}" \
+              CSC_KEY_PASSWORD="${P12_PASSWORD}" \
+              APPLE_ID="${APPLE_ID}" \
+              APPLE_APP_SPECIFIC_PASSWORD="${APPLE_APP_SPECIFIC_PASSWORD}" \
+              APPLE_TEAM_ID="${APPLE_TEAM_ID}" \
+              npx electron-builder --mac dmg zip --arm64
             else
-              echo "macOS signing secrets missing: building unsigned artifacts."
-              CSC_IDENTITY_AUTO_DISCOVERY=false npx electron-builder --mac dmg zip --universal
+              echo "macOS signing secrets missing: building unsigned artifacts (x64 + arm64)."
+              CSC_IDENTITY_AUTO_DISCOVERY=false npx electron-builder --mac dmg zip --x64
+              CSC_IDENTITY_AUTO_DISCOVERY=false npx electron-builder --mac dmg zip --arm64
             fi
           elif [ "$RUNNER_OS" = "Linux" ]; then
             npx electron-builder --linux AppImage tar.gz
