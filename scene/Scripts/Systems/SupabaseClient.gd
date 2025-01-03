@@ -8,9 +8,7 @@ extends Node
 var SUPABASE_URL: String = "http://127.0.0.1:54321"
 var SUPABASE_KEY: String = "sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH"
 
-# Production values (used when running exported/built project)
-const PROD_SUPABASE_URL: String = "https://hlufptwhzkpkkjztimzo.supabase.co"
-const PROD_SUPABASE_KEY: String = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhsdWZwdHdoemtwa2tqenRpbXpvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTYyOTk3NTUsImV4cCI6MjAzMTg3NTc1NX0.v_NDVWjIU_lJQSPbJ_Y6GkW3axrQWKXfXVsBEAbFv_I"
+const RUNTIME_CONFIG_PATH: String = "res://supabase.runtime.json"
 # Force local mode - set this to true if you want to always use local development server
 # This can be useful for testing mobile builds against local development
 const FORCE_LOCAL_MODE: bool = false
@@ -24,33 +22,36 @@ static var _instance: SupabaseClient
 static func get_instance() -> SupabaseClient:
 	if _instance == null:
 		_instance = SupabaseClient.new()
-		
+
 		# Check for environment variables first (CI/GitHub Actions)
 		var env_url = OS.get_environment("SUPABASE_URL")
 		var env_key = OS.get_environment("SUPABASE_ANON_KEY")
-		
+		var runtime_credentials = _load_runtime_credentials()
+		var runtime_url = str(runtime_credentials.get("url", ""))
+		var runtime_key = str(runtime_credentials.get("key", ""))
+
 		if env_url != "" and env_key != "":
 			# Use environment variables (GitHub secrets in CI)
 			_instance.SUPABASE_URL = env_url
 			_instance.SUPABASE_KEY = env_key
 			preload("res://Scripts/Utils/Logger.gd").d("SupabaseClient: Using ENVIRONMENT credentials")
 			print("SupabaseClient: Using ENVIRONMENT credentials -> ", _instance.SUPABASE_URL)
+		elif runtime_url != "" and runtime_key != "":
+			# Use runtime config generated during secure CI export.
+			_instance.SUPABASE_URL = runtime_url
+			_instance.SUPABASE_KEY = runtime_key
+			preload("res://Scripts/Utils/Logger.gd").d("SupabaseClient: Using runtime config credentials")
+			print("SupabaseClient: Using runtime config credentials -> ", _instance.SUPABASE_URL)
 		elif FORCE_LOCAL_MODE:
 			# Explicitly using local mode
 			preload("res://Scripts/Utils/Logger.gd").d("SupabaseClient: Using LOCAL development credentials (FORCE_LOCAL_MODE enabled)")
 			print("SupabaseClient: FORCE_LOCAL_MODE -> ", _instance.SUPABASE_URL)
 		elif USE_PRODUCTION_IN_EDITOR and Engine.is_editor_hint():
-			# Use production in editor (default behavior)
-			_instance.SUPABASE_URL = PROD_SUPABASE_URL
-			_instance.SUPABASE_KEY = PROD_SUPABASE_KEY
-			preload("res://Scripts/Utils/Logger.gd").d("SupabaseClient: Using PRODUCTION credentials (editor mode)")
-			print("SupabaseClient: Using PRODUCTION credentials in editor -> ", _instance.SUPABASE_URL)
+			preload("res://Scripts/Utils/Logger.gd").d("SupabaseClient: Production editor mode enabled, but no runtime config found")
+			print("SupabaseClient: Production editor mode enabled, but runtime config is missing")
 		elif _should_use_production():
-			# Use production values when running on mobile devices or exported builds
-			_instance.SUPABASE_URL = PROD_SUPABASE_URL
-			_instance.SUPABASE_KEY = PROD_SUPABASE_KEY
-			preload("res://Scripts/Utils/Logger.gd").d("SupabaseClient: Using PRODUCTION credentials for mobile/exported build")
-			print("SupabaseClient: Using PRODUCTION credentials for exported build -> ", _instance.SUPABASE_URL)
+			preload("res://Scripts/Utils/Logger.gd").d("SupabaseClient: Production mode requested, but no runtime config found")
+			print("SupabaseClient: Production mode requested, but runtime config is missing")
 		else:
 			preload("res://Scripts/Utils/Logger.gd").d("SupabaseClient: Using LOCAL development credentials")
 			print("SupabaseClient: Using LOCAL development credentials -> ", _instance.SUPABASE_URL)
@@ -58,6 +59,35 @@ static func get_instance() -> SupabaseClient:
 	# Always print resolved URL for easier debugging
 	print("SupabaseClient: resolved SUPABASE_URL=", _instance.SUPABASE_URL, " key_present=", _instance.SUPABASE_KEY != "")
 	return _instance
+
+static func _load_runtime_credentials() -> Dictionary:
+	if not FileAccess.file_exists(RUNTIME_CONFIG_PATH):
+		return {}
+
+	var file = FileAccess.open(RUNTIME_CONFIG_PATH, FileAccess.READ)
+	if file == null:
+		return {}
+
+	var content = file.get_as_text()
+	file.close()
+
+	var json = JSON.new()
+	if json.parse(content) != OK:
+		return {}
+
+	if typeof(json.data) != TYPE_DICTIONARY:
+		return {}
+
+	var parsed: Dictionary = json.data
+	var cfg_url = str(parsed.get("supabaseUrl", "")).strip_edges()
+	var cfg_key = str(parsed.get("supabaseAnonKey", "")).strip_edges()
+	if cfg_url == "" or cfg_key == "":
+		return {}
+
+	return {
+		"url": cfg_url,
+		"key": cfg_key
+	}
 
 ## Determine if we should use production Supabase credentials
 static func _should_use_production() -> bool:
