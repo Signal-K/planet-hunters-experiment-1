@@ -35,6 +35,7 @@ release/*.tar.gz
 release/*.nupkg
 .cache/electron/
 .cache/electron-builder/
+scene/supabase.runtime.json
 
 # Node modules
 node_modules/

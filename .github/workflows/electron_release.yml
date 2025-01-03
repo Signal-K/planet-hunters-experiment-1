@@ -15,6 +15,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GODOT_VERSION: "4.5-stable"
+      PROD_SUPABASE_URL: ${{ secrets.PROD_SUPABASE_URL }}
+      PROD_SUPABASE_ANON_KEY: ${{ secrets.PROD_SUPABASE_ANON_KEY }}
 
     steps:
       - name: Checkout
@@ -29,6 +31,19 @@ jobs:
       - name: Install dependencies
         shell: bash
         run: npm ci
+
+      - name: Inject production Supabase config
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${PROD_SUPABASE_URL:-}" ] || [ -z "${PROD_SUPABASE_ANON_KEY:-}" ]; then
+            echo "Missing required secrets: PROD_SUPABASE_URL and/or PROD_SUPABASE_ANON_KEY"
+            exit 1
+          fi
+
+          cat > scene/supabase.runtime.json <<EOF
+          {"supabaseUrl":"${PROD_SUPABASE_URL}","supabaseAnonKey":"${PROD_SUPABASE_ANON_KEY}"}
+          EOF
 
       - name: Install Godot
         shell: bash
@@ -92,8 +107,6 @@ jobs:
 
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      CSC_IDENTITY_AUTO_DISCOVERY: "false"
-      CSC_FOR_PULL_REQUEST: "true"
       ELECTRON_SKIP_NOTARIZATION: "true"
 
     steps:
@@ -126,7 +139,16 @@ jobs:
 
       - name: Build Electron distributables
         shell: bash
-        run: npx electron-builder
+        run: |
+          if [ "$RUNNER_OS" = "macOS" ]; then
+            CSC_NAME="-" npx electron-builder --mac dmg zip --universal
+          elif [ "$RUNNER_OS" = "Linux" ]; then
+            npx electron-builder --linux AppImage tar.gz
+          elif [ "$RUNNER_OS" = "Windows" ]; then
+            npx electron-builder --win nsis zip
+          else
+            npx electron-builder
+          fi
 
       - name: Upload CI artifacts
         uses: actions/upload-artifact@v4
@@ -134,8 +156,11 @@ jobs:
           name: electron-${{ matrix.os }}
           path: |
             dist/*.dmg
+            dist/*-mac.zip
             dist/*.exe
+            dist/*win*.zip
             dist/*.AppImage
+            dist/*.tar.gz
           if-no-files-found: error
 
   release:
@@ -167,5 +192,8 @@ jobs:
           generate_release_notes: true
           files: |
             release-artifacts/**/*.dmg
+            release-artifacts/**/*-mac.zip
             release-artifacts/**/*.exe
+            release-artifacts/**/*win*.zip
             release-artifacts/**/*.AppImage
+            release-artifacts/**/*.tar.gz
