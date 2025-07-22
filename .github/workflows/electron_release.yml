@@ -107,7 +107,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: electron-${{ matrix.os }}
-          path: dist/**
+          path: |
+            dist/*.dmg
+            dist/*.exe
+            dist/*.AppImage
           if-no-files-found: error
 
   release:
@@ -138,4 +141,6 @@ jobs:
           name: Electron Build ${{ steps.tag.outputs.tag }}
           generate_release_notes: true
           files: |
-            release-artifacts/**/*
+            release-artifacts/**/*.dmg
+            release-artifacts/**/*.exe
+            release-artifacts/**/*.AppImage
