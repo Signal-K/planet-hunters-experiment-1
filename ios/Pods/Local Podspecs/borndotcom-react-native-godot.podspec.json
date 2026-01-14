@@ -1,0 +1,71 @@
+{
+  "name": "borndotcom-react-native-godot",
+  "version": "1.0.1",
+  "summary": "React Native Godot",
+  "description": "Embed Godot into React Native apps",
+  "homepage": "https://github.com/borndotcom/react-native-godot#readme",
+  "license": "MIT",
+  "platforms": {
+    "ios": "14.0"
+  },
+  "authors": "React Native Godot Developers (Born & Migeran)",
+  "source": {
+    "git": "https://github.com/borndotcom/react-native-godot.git",
+    "tag": "1.0.1"
+  },
+  "frameworks": "AVFAudio",
+  "vendored_frameworks": [
+    "ios/libs/libgodot/4.5.1.migeran.2/libgodot.xcframework",
+    "ios/libs/libgodot-cpp/4.5.1.migeran.2/libgodot-cpp.xcframework"
+  ],
+  "weak_frameworks": "libgodot",
+  "source_files": [
+    "ios/**/*.{h,hpp,cpp,m,mm,swift}"
+  ],
+  "header_mappings_dir": "ios",
+  "compiler_flags": "-DRCT_NEW_ARCH_ENABLED=1",
+  "dependencies": {
+    "React-Core": [],
+    "React-RCTFabric": [],
+    "ReactCodegen": [],
+    "RCTRequired": [],
+    "RCTTypeSafety": [],
+    "ReactCommon/turbomodule/bridging": [],
+    "ReactCommon/turbomodule/core": [],
+    "React-NativeModulesApple": [],
+    "Yoga": [],
+    "React-Fabric": [],
+    "React-graphics": [],
+    "React-utils": [],
+    "React-featureflags": [],
+    "React-debug": [],
+    "React-ImageManager": [],
+    "React-rendererdebug": [],
+    "React-jsi": [],
+    "React-renderercss": [],
+    "hermes-engine": [],
+    "glog": [],
+    "boost": [],
+    "DoubleConversion": [],
+    "fast_float": [],
+    "fmt": [],
+    "RCT-Folly": [],
+    "SocketRocket": [],
+    "RCT-Folly/Fabric": []
+  },
+  "pod_target_xcconfig": {
+    "HEADER_SEARCH_PATHS": "\"$(PODS_ROOT)/Headers/Private/Yoga\"",
+    "CLANG_CXX_LANGUAGE_STANDARD": "c++20",
+    "OTHER_CPLUSPLUSFLAGS": "$(inherited) -DRCT_NEW_ARCH_ENABLED=1 ",
+    "OTHER_SWIFT_FLAGS": "$(inherited) -DRCT_NEW_ARCH_ENABLED"
+  },
+  "subspecs": [
+    {
+      "name": "Common",
+      "header_mappings_dir": "common/include",
+      "source_files": [
+        "common/**/*.{h,hpp,c,cpp,inc}"
+      ]
+    }
+  ]
+}

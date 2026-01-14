@@ -1,0 +1,1 @@
+../../../../../../../../../../../../../node_modules/@borndotcom/react-native-godot/ios/libs/libgodot-cpp/4.5.1.migeran.2/libgodot-cpp.xcframework/ios-arm64_x86_64-simulator/Headers/godot_cpp/classes/visual_shader_node_if.hpp

@@ -1,0 +1,23 @@
+/opt/homebrew/Cellar/openjdk@17/17.0.17/libexec/openjdk.jdk/Contents/Home/bin/java \
+  --class-path \
+  /Users/scroobz/.gradle/caches/modules-2/files-2.1/com.google.prefab/cli/2.1.0/aa32fec809c44fa531f01dcfb739b5b3304d3050/cli-2.1.0-all.jar \
+  com.google.prefab.cli.AppKt \
+  --build-system \
+  cmake \
+  --platform \
+  android \
+  --abi \
+  armeabi-v7a \
+  --os-version \
+  29 \
+  --stl \
+  c++_shared \
+  --ndk-version \
+  28 \
+  --output \
+  /var/folders/s4/5kv5bxw50kj3lw54ng0hj_600000gn/T/agp-prefab-staging13776736666208094845/staged-cli-output \
+  /Users/scroobz/Navigation/Native/godot-template/android/app/build/intermediates/cxx/refs/borndotcom_react-native-godot/5p264n6n \
+  /Users/scroobz/.gradle/caches/8.13/transforms/14a3878c2800f6eea79160815e4bc073/transformed/react-android-0.81.4-debug/prefab \
+  /Users/scroobz/Navigation/Native/godot-template/android/app/build/intermediates/cxx/refs/react-native-worklets-core/3x2et664 \
+  /Users/scroobz/.gradle/caches/8.13/transforms/58f3773db662b9a1045ccbc83213ce45/transformed/hermes-android-0.81.4-debug/prefab \
+  /Users/scroobz/.gradle/caches/8.13/transforms/671de4e66643daa85f35a98ac72d8de2/transformed/fbjni-0.7.0/prefab

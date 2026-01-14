@@ -1,0 +1,118 @@
+[
+    {
+        "merged": "com.godottest.app-debug-49:/drawable-xxxhdpi_node_modules_reactnavigation_elements_lib_module_assets_backicon.png.flat",
+        "source": "com.godottest.app-res-44:/drawable-xxxhdpi/node_modules_reactnavigation_elements_lib_module_assets_backicon.png"
+    },
+    {
+        "merged": "com.godottest.app-debug-49:/raw_keep.xml.flat",
+        "source": "com.godottest.app-res-44:/raw/keep.xml"
+    },
+    {
+        "merged": "com.godottest.app-debug-49:/drawable_rn_edit_text_material.xml.flat",
+        "source": "com.godottest.app-main-51:/drawable/rn_edit_text_material.xml"
+    },
+    {
+        "merged": "com.godottest.app-debug-49:/mipmap-hdpi_ic_launcher.png.flat",
+        "source": "com.godottest.app-main-51:/mipmap-hdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.godottest.app-debug-49:/drawable-xxxhdpi_node_modules_reactnavigation_elements_lib_module_assets_searchicon.png.flat",
+        "source": "com.godottest.app-res-44:/drawable-xxxhdpi/node_modules_reactnavigation_elements_lib_module_assets_searchicon.png"
+    },
+    {
+        "merged": "com.godottest.app-debug-49:/drawable-xxhdpi_node_modules_reactnavigation_elements_lib_module_assets_clearicon.png.flat",
+        "source": "com.godottest.app-res-44:/drawable-xxhdpi/node_modules_reactnavigation_elements_lib_module_assets_clearicon.png"
+    },
+    {
+        "merged": "com.godottest.app-debug-49:/drawable-xhdpi_node_modules_reactnavigation_elements_lib_module_assets_searchicon.png.flat",
+        "source": "com.godottest.app-res-44:/drawable-xhdpi/node_modules_reactnavigation_elements_lib_module_assets_searchicon.png"
+    },
+    {
+        "merged": "com.godottest.app-debug-49:/mipmap-xxxhdpi_ic_launcher.png.flat",
+        "source": "com.godottest.app-main-51:/mipmap-xxxhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.godottest.app-debug-49:/mipmap-xhdpi_ic_launcher.png.flat",
+        "source": "com.godottest.app-main-51:/mipmap-xhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.godottest.app-debug-49:/drawable-mdpi_node_modules_reactnavigation_elements_lib_module_assets_closeicon.png.flat",
+        "source": "com.godottest.app-res-44:/drawable-mdpi/node_modules_reactnavigation_elements_lib_module_assets_closeicon.png"
+    },
+    {
+        "merged": "com.godottest.app-debug-49:/mipmap-mdpi_ic_launcher_round.png.flat",
+        "source": "com.godottest.app-main-51:/mipmap-mdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "com.godottest.app-debug-49:/drawable-mdpi_node_modules_reactnavigation_elements_lib_module_assets_backiconmask.png.flat",
+        "source": "com.godottest.app-res-44:/drawable-mdpi/node_modules_reactnavigation_elements_lib_module_assets_backiconmask.png"
+    },
+    {
+        "merged": "com.godottest.app-debug-49:/mipmap-xxhdpi_ic_launcher_round.png.flat",
+        "source": "com.godottest.app-main-51:/mipmap-xxhdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "com.godottest.app-debug-49:/mipmap-xhdpi_ic_launcher_round.png.flat",
+        "source": "com.godottest.app-main-51:/mipmap-xhdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "com.godottest.app-debug-49:/drawable-xxhdpi_node_modules_reactnavigation_elements_lib_module_assets_backicon.png.flat",
+        "source": "com.godottest.app-res-44:/drawable-xxhdpi/node_modules_reactnavigation_elements_lib_module_assets_backicon.png"
+    },
+    {
+        "merged": "com.godottest.app-debug-49:/mipmap-hdpi_ic_launcher_round.png.flat",
+        "source": "com.godottest.app-main-51:/mipmap-hdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "com.godottest.app-debug-49:/drawable-xxxhdpi_node_modules_reactnavigation_elements_lib_module_assets_clearicon.png.flat",
+        "source": "com.godottest.app-res-44:/drawable-xxxhdpi/node_modules_reactnavigation_elements_lib_module_assets_clearicon.png"
+    },
+    {
+        "merged": "com.godottest.app-debug-49:/drawable-xxhdpi_node_modules_reactnavigation_elements_lib_module_assets_searchicon.png.flat",
+        "source": "com.godottest.app-res-44:/drawable-xxhdpi/node_modules_reactnavigation_elements_lib_module_assets_searchicon.png"
+    },
+    {
+        "merged": "com.godottest.app-debug-49:/drawable-mdpi_node_modules_reactnavigation_elements_lib_module_assets_clearicon.png.flat",
+        "source": "com.godottest.app-res-44:/drawable-mdpi/node_modules_reactnavigation_elements_lib_module_assets_clearicon.png"
+    },
+    {
+        "merged": "com.godottest.app-debug-49:/drawable-mdpi_node_modules_reactnavigation_elements_lib_module_assets_searchicon.png.flat",
+        "source": "com.godottest.app-res-44:/drawable-mdpi/node_modules_reactnavigation_elements_lib_module_assets_searchicon.png"
+    },
+    {
+        "merged": "com.godottest.app-debug-49:/drawable-mdpi_node_modules_reactnavigation_elements_lib_module_assets_backicon.png.flat",
+        "source": "com.godottest.app-res-44:/drawable-mdpi/node_modules_reactnavigation_elements_lib_module_assets_backicon.png"
+    },
+    {
+        "merged": "com.godottest.app-debug-49:/drawable-xhdpi_node_modules_reactnavigation_elements_lib_module_assets_closeicon.png.flat",
+        "source": "com.godottest.app-res-44:/drawable-xhdpi/node_modules_reactnavigation_elements_lib_module_assets_closeicon.png"
+    },
+    {
+        "merged": "com.godottest.app-debug-49:/mipmap-mdpi_ic_launcher.png.flat",
+        "source": "com.godottest.app-main-51:/mipmap-mdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.godottest.app-debug-49:/drawable-xhdpi_node_modules_reactnavigation_elements_lib_module_assets_clearicon.png.flat",
+        "source": "com.godottest.app-res-44:/drawable-xhdpi/node_modules_reactnavigation_elements_lib_module_assets_clearicon.png"
+    },
+    {
+        "merged": "com.godottest.app-debug-49:/mipmap-xxxhdpi_ic_launcher_round.png.flat",
+        "source": "com.godottest.app-main-51:/mipmap-xxxhdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "com.godottest.app-debug-49:/mipmap-xxhdpi_ic_launcher.png.flat",
+        "source": "com.godottest.app-main-51:/mipmap-xxhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.godottest.app-debug-49:/drawable-xxhdpi_node_modules_reactnavigation_elements_lib_module_assets_closeicon.png.flat",
+        "source": "com.godottest.app-res-44:/drawable-xxhdpi/node_modules_reactnavigation_elements_lib_module_assets_closeicon.png"
+    },
+    {
+        "merged": "com.godottest.app-debug-49:/drawable-xxxhdpi_node_modules_reactnavigation_elements_lib_module_assets_closeicon.png.flat",
+        "source": "com.godottest.app-res-44:/drawable-xxxhdpi/node_modules_reactnavigation_elements_lib_module_assets_closeicon.png"
+    },
+    {
+        "merged": "com.godottest.app-debug-49:/drawable-xhdpi_node_modules_reactnavigation_elements_lib_module_assets_backicon.png.flat",
+        "source": "com.godottest.app-res-44:/drawable-xhdpi/node_modules_reactnavigation_elements_lib_module_assets_backicon.png"
+    }
+]

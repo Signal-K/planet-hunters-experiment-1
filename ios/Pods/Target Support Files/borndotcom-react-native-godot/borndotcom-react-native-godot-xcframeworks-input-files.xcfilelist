@@ -1,0 +1,3 @@
+${PODS_ROOT}/Target Support Files/borndotcom-react-native-godot/borndotcom-react-native-godot-xcframeworks.sh
+${PODS_ROOT}/../../node_modules/@borndotcom/react-native-godot/ios/libs/libgodot/4.5.1.migeran.2/libgodot.xcframework
+${PODS_ROOT}/../../node_modules/@borndotcom/react-native-godot/ios/libs/libgodot-cpp/4.5.1.migeran.2/libgodot-cpp.xcframework

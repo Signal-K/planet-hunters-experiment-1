@@ -1,0 +1,608 @@
+-- Merging decision tree log ---
+manifest
+ADDED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:1:1-32:12
+MERGED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:1:1-32:12
+INJECTED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/debug/AndroidManifest.xml:2:1-9:12
+INJECTED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/debug/AndroidManifest.xml:2:1-9:12
+INJECTED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/debug/AndroidManifest.xml:2:1-9:12
+MERGED from [:borndotcom_react-native-godot] /Users/scroobz/Navigation/Native/godot-template/node_modules/@borndotcom/react-native-godot/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:2:1-7:12
+MERGED from [:react-native-safe-area-context] /Users/scroobz/Navigation/Native/godot-template/node_modules/react-native-safe-area-context/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:2:1-7:12
+MERGED from [:react-native-screens] /Users/scroobz/Navigation/Native/godot-template/node_modules/react-native-screens/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:2:1-7:12
+MERGED from [:expo] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:2:1-7:12
+MERGED from [:react-native-worklets-core] /Users/scroobz/Navigation/Native/godot-template/node_modules/react-native-worklets-core/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:2:1-7:12
+MERGED from [:expo-modules-core] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-modules-core/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:2:1-18:12
+MERGED from [:expo-font] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-font/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:2:1-7:12
+MERGED from [com.facebook.react:react-android:0.81.4] /Users/scroobz/.gradle/caches/8.13/transforms/14a3878c2800f6eea79160815e4bc073/transformed/react-android-0.81.4-debug/AndroidManifest.xml:2:1-24:12
+MERGED from [com.migeran.libgodot:godot-debug:4.5.1.migeran.2-SNAPSHOT] /Users/scroobz/.gradle/caches/8.13/transforms/8fdf0ba9aab8202867eac1d9a9f6b3fe/transformed/godot-debug-4.5.1.migeran.2-SNAPSHOT/AndroidManifest.xml:2:1-35:12
+MERGED from [com.google.android.material:material:1.12.0] /Users/scroobz/.gradle/caches/8.13/transforms/83541e81f38b2608715c7d70d68d1c38/transformed/material-1.12.0/AndroidManifest.xml:17:1-24:12
+MERGED from [io.coil-kt.coil3:coil-android:3.0.4] /Users/scroobz/.gradle/caches/8.13/transforms/21ab9382eeda54ecb574b877257ed99d/transformed/coil-release/AndroidManifest.xml:2:1-7:12
+MERGED from [io.coil-kt.coil3:coil-svg-android:3.0.4] /Users/scroobz/.gradle/caches/8.13/transforms/f1d8be436e1a7216e3c0b8f3089f3085/transformed/coil-svg-release/AndroidManifest.xml:2:1-7:12
+MERGED from [io.coil-kt.coil3:coil-network-core-android:3.0.4] /Users/scroobz/.gradle/caches/8.13/transforms/fd498c6e9dc6206b8f770fa433ae546b/transformed/coil-network-core-release/AndroidManifest.xml:2:1-7:12
+MERGED from [io.coil-kt.coil3:coil-core-android:3.0.4] /Users/scroobz/.gradle/caches/8.13/transforms/4acacd265d9d4e0d99b214466e0309e1/transformed/coil-core-release/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.appcompat:appcompat-resources:1.7.0] /Users/scroobz/.gradle/caches/8.13/transforms/5d293acfd4d1520c8183c1a23ec3c85f/transformed/appcompat-resources-1.7.0/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.constraintlayout:constraintlayout:2.0.1] /Users/scroobz/.gradle/caches/8.13/transforms/7551c5126437d1d68edf9d1551274dd1/transformed/constraintlayout-2.0.1/AndroidManifest.xml:2:1-11:12
+MERGED from [androidx.appcompat:appcompat:1.7.0] /Users/scroobz/.gradle/caches/8.13/transforms/752714506bcc5f3835fdf17485776062/transformed/appcompat-1.7.0/AndroidManifest.xml:2:1-7:12
+MERGED from [com.facebook.fresco:fresco:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/0256fadb694956a801697712771bf88c/transformed/fresco-3.6.0/AndroidManifest.xml:2:1-7:12
+MERGED from [com.facebook.fresco:imagepipeline-okhttp3:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/fe9e5856d51f3cd43bf2f1da3e5a4feb/transformed/imagepipeline-okhttp3-3.6.0/AndroidManifest.xml:2:1-7:12
+MERGED from [com.facebook.fresco:drawee:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/de9e7b0420b33409e0fd5c9a2f6907cf/transformed/drawee-3.6.0/AndroidManifest.xml:2:1-7:12
+MERGED from [com.facebook.fresco:nativeimagefilters:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/a72e9895b5a8e222732ac84f16078ba2/transformed/nativeimagefilters-3.6.0/AndroidManifest.xml:2:1-7:12
+MERGED from [com.facebook.fresco:memory-type-native:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/4845504121d7ec44fa2a8aea5175d73d/transformed/memory-type-native-3.6.0/AndroidManifest.xml:2:1-7:12
+MERGED from [com.facebook.fresco:memory-type-java:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/acd7334acdfaef99a55ba5dfc138edbb/transformed/memory-type-java-3.6.0/AndroidManifest.xml:2:1-7:12
+MERGED from [com.facebook.fresco:imagepipeline-native:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/7c966a52bc084fdef3057a6354b8b8bc/transformed/imagepipeline-native-3.6.0/AndroidManifest.xml:2:1-7:12
+MERGED from [com.facebook.fresco:memory-type-ashmem:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/b9502d3701a65656f4aeea1cc3f6caab/transformed/memory-type-ashmem-3.6.0/AndroidManifest.xml:2:1-7:12
+MERGED from [com.facebook.fresco:imagepipeline:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/25f574f0cfd13ac3a3ce3411245f12d8/transformed/imagepipeline-3.6.0/AndroidManifest.xml:2:1-7:12
+MERGED from [com.facebook.fresco:nativeimagetranscoder:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/327128a7d96e4293b2f4403740eaedb6/transformed/nativeimagetranscoder-3.6.0/AndroidManifest.xml:2:1-7:12
+MERGED from [com.facebook.fresco:imagepipeline-base:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/e5570c2000d1a1d7a142a93159954167/transformed/imagepipeline-base-3.6.0/AndroidManifest.xml:2:1-7:12
+MERGED from [com.facebook.fresco:urimod:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/5f8d61d87e8e23c271528d1823327232/transformed/urimod-3.6.0/AndroidManifest.xml:2:1-7:12
+MERGED from [com.facebook.fresco:vito-source:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/f7a7295bb39e6263f5bca656c4b530f9/transformed/vito-source-3.6.0/AndroidManifest.xml:2:1-7:12
+MERGED from [com.facebook.fresco:middleware:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/2d4afd5b5908573c7556849bcb42e4d4/transformed/middleware-3.6.0/AndroidManifest.xml:2:1-7:12
+MERGED from [com.facebook.fresco:ui-common:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/46e9be1d16d3f4f7dc13705fa73c3413/transformed/ui-common-3.6.0/AndroidManifest.xml:2:1-7:12
+MERGED from [:expo-device] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-device/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:2:1-7:12
+MERGED from [:expo-file-system] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-file-system/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:2:1-33:12
+MERGED from [androidx.legacy:legacy-support-v4:1.0.0] /Users/scroobz/.gradle/caches/8.13/transforms/610d61ab219dfb92a998b9afc83efc71/transformed/legacy-support-v4-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.viewpager2:viewpager2:1.0.0] /Users/scroobz/.gradle/caches/8.13/transforms/9362286c026822d9afea737832bbaf23/transformed/viewpager2-1.0.0/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.fragment:fragment-ktx:1.8.6] /Users/scroobz/.gradle/caches/8.13/transforms/a8e5ff48dc404259de5d49a3dde5f29e/transformed/fragment-ktx-1.8.6/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.fragment:fragment:1.8.6] /Users/scroobz/.gradle/caches/8.13/transforms/9d98bceb20c6f702dd9093f1a79d1cb7/transformed/fragment-1.8.6/AndroidManifest.xml:2:1-7:12
+MERGED from [:expo-asset] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-asset/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:2:1-7:12
+MERGED from [:expo-constants] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-constants/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:2:1-7:12
+MERGED from [:expo-keep-awake] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-keep-awake/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.legacy:legacy-support-core-ui:1.0.0] /Users/scroobz/.gradle/caches/8.13/transforms/491c7226736ad3272004d0e1fc143e0c/transformed/legacy-support-core-ui-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.coordinatorlayout:coordinatorlayout:1.2.0] /Users/scroobz/.gradle/caches/8.13/transforms/4636935d172eede6b18fb7ba60fd05c1/transformed/coordinatorlayout-1.2.0/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.swiperefreshlayout:swiperefreshlayout:1.1.0] /Users/scroobz/.gradle/caches/8.13/transforms/4257eeb54ab7f1761b257e92a5368783/transformed/swiperefreshlayout-1.1.0/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.autofill:autofill:1.1.0] /Users/scroobz/.gradle/caches/8.13/transforms/a38794f5fb9a12ee90e63248f301ff89/transformed/autofill-1.1.0/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.transition:transition:1.5.0] /Users/scroobz/.gradle/caches/8.13/transforms/479465a0badd41e65a4fe017d6dc7c7d/transformed/transition-1.5.0/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.dynamicanimation:dynamicanimation:1.0.0] /Users/scroobz/.gradle/caches/8.13/transforms/fff3151475c8ad156fd30ad57bfa88d3/transformed/dynamicanimation-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.legacy:legacy-support-core-utils:1.0.0] /Users/scroobz/.gradle/caches/8.13/transforms/44a2fa8df0982d900feeb4479df6ca42/transformed/legacy-support-core-utils-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.documentfile:documentfile:1.1.0] /Users/scroobz/.gradle/caches/8.13/transforms/9a7a65cd5454636910d1e0c4f518d1db/transformed/documentfile-1.1.0/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.drawerlayout:drawerlayout:1.1.1] /Users/scroobz/.gradle/caches/8.13/transforms/1acb6db5c591e8896a9108684a5d1c6f/transformed/drawerlayout-1.1.1/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.vectordrawable:vectordrawable-animated:1.1.0] /Users/scroobz/.gradle/caches/8.13/transforms/f011cbf51376663dd9e2beab120efd38/transformed/vectordrawable-animated-1.1.0/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.vectordrawable:vectordrawable:1.1.0] /Users/scroobz/.gradle/caches/8.13/transforms/98570f88d798397ef49e7b82b93daf74/transformed/vectordrawable-1.1.0/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.emoji2:emoji2-views-helper:1.3.0] /Users/scroobz/.gradle/caches/8.13/transforms/2e0656f2c336b10ca604d17b1afcabf4/transformed/emoji2-views-helper-1.3.0/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.emoji2:emoji2:1.3.0] /Users/scroobz/.gradle/caches/8.13/transforms/9ac75a80c23966c00f5ba0114feda6b2/transformed/emoji2-1.3.0/AndroidManifest.xml:17:1-35:12
+MERGED from [com.facebook.fresco:soloader:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/f51efb217744b5c2694ede38d7882f28/transformed/soloader-3.6.0/AndroidManifest.xml:2:1-7:12
+MERGED from [com.facebook.fresco:fbcore:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/4ac14c7f142378f385679a0d3d17828a/transformed/fbcore-3.6.0/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.activity:activity-ktx:1.8.1] /Users/scroobz/.gradle/caches/8.13/transforms/5378ef3fc62b7ca48d8df5804b4b5bfd/transformed/activity-ktx-1.8.1/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.activity:activity:1.8.1] /Users/scroobz/.gradle/caches/8.13/transforms/b9cce7270fece087c1fa59199df7f029/transformed/activity-1.8.1/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.loader:loader:1.0.0] /Users/scroobz/.gradle/caches/8.13/transforms/014132c4c14c5fcc2bf8d1d0a80e965b/transformed/loader-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.viewpager:viewpager:1.0.0] /Users/scroobz/.gradle/caches/8.13/transforms/e4f65f89f4d78350bdfa4a8546ab1ac4/transformed/viewpager-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.media:media:1.0.0] /Users/scroobz/.gradle/caches/8.13/transforms/96834a06f064fd743183405ac1cc9773/transformed/media-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.recyclerview:recyclerview:1.1.0] /Users/scroobz/.gradle/caches/8.13/transforms/fb19fe83633cb88f196ec6c7d7dff410/transformed/recyclerview-1.1.0/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.slidingpanelayout:slidingpanelayout:1.0.0] /Users/scroobz/.gradle/caches/8.13/transforms/5cf2191fce38b5af96da92e8eaa90c5f/transformed/slidingpanelayout-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.customview:customview:1.1.0] /Users/scroobz/.gradle/caches/8.13/transforms/3c181ae16ef1ab1e2666867f8f655899/transformed/customview-1.1.0/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.asynclayoutinflater:asynclayoutinflater:1.0.0] /Users/scroobz/.gradle/caches/8.13/transforms/28a12726ab5e26318c878814e209d7f9/transformed/asynclayoutinflater-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.core:core:1.13.1] /Users/scroobz/.gradle/caches/8.13/transforms/1966bc226887e049897b1945bdfae0b0/transformed/core-1.13.1/AndroidManifest.xml:17:1-30:12
+MERGED from [androidx.savedstate:savedstate-ktx:1.2.1] /Users/scroobz/.gradle/caches/8.13/transforms/3347a3877bd4197d7dbe3a4564732f6f/transformed/savedstate-ktx-1.2.1/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.savedstate:savedstate:1.2.1] /Users/scroobz/.gradle/caches/8.13/transforms/16bc5b90c5ac2a388e86a11edff99009/transformed/savedstate-1.2.1/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.lifecycle:lifecycle-viewmodel:2.8.7] /Users/scroobz/.gradle/caches/8.13/transforms/c2b5bc2709d048b08468baf2b919da2f/transformed/lifecycle-viewmodel-2.8.7/AndroidManifest.xml:2:1-5:12
+MERGED from [androidx.lifecycle:lifecycle-viewmodel-android:2.8.7] /Users/scroobz/.gradle/caches/8.13/transforms/67fcb8770cf7adcefc0a4ec439927ec0/transformed/lifecycle-viewmodel-release/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.lifecycle:lifecycle-runtime-ktx-android:2.8.7] /Users/scroobz/.gradle/caches/8.13/transforms/808122ecd4680ba0abd59db06dff6a63/transformed/lifecycle-runtime-ktx-release/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7] /Users/scroobz/.gradle/caches/8.13/transforms/40c781a7ca56d606ff8e56a6cd994c75/transformed/lifecycle-viewmodel-ktx-2.8.7/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.lifecycle:lifecycle-process:2.8.7] /Users/scroobz/.gradle/caches/8.13/transforms/537e19ba5f1d1d747ca3d81c1c4ac786/transformed/lifecycle-process-2.8.7/AndroidManifest.xml:17:1-35:12
+MERGED from [androidx.lifecycle:lifecycle-livedata-core-ktx:2.8.7] /Users/scroobz/.gradle/caches/8.13/transforms/8281554e50e1faba08f5827b057f7924/transformed/lifecycle-livedata-core-ktx-2.8.7/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.lifecycle:lifecycle-livedata-core:2.8.7] /Users/scroobz/.gradle/caches/8.13/transforms/a83201bfddd529f3ef6d84c3e66089fe/transformed/lifecycle-livedata-core-2.8.7/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.lifecycle:lifecycle-livedata:2.8.7] /Users/scroobz/.gradle/caches/8.13/transforms/4fcb3de4e6b25d32e79741f60ad2488b/transformed/lifecycle-livedata-2.8.7/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.lifecycle:lifecycle-runtime-android:2.8.7] /Users/scroobz/.gradle/caches/8.13/transforms/45b0a725f48753f1c2647b29d25a1789/transformed/lifecycle-runtime-release/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.lifecycle:lifecycle-viewmodel-savedstate:2.8.7] /Users/scroobz/.gradle/caches/8.13/transforms/788d28bf1d3e4ba9a91c93e93565e96c/transformed/lifecycle-viewmodel-savedstate-2.8.7/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.core:core-ktx:1.13.1] /Users/scroobz/.gradle/caches/8.13/transforms/dac394b2f4a4fb72bf300d4036f9b1e2/transformed/core-ktx-1.13.1/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.profileinstaller:profileinstaller:1.4.1] /Users/scroobz/.gradle/caches/8.13/transforms/11710fde9512ada01b7df8185f303fc4/transformed/profileinstaller-1.4.1/AndroidManifest.xml:17:1-55:12
+MERGED from [androidx.startup:startup-runtime:1.1.1] /Users/scroobz/.gradle/caches/8.13/transforms/6f5bd8e758484da1c78bcbc31fadc9d9/transformed/startup-runtime-1.1.1/AndroidManifest.xml:17:1-33:12
+MERGED from [androidx.tracing:tracing:1.2.0] /Users/scroobz/.gradle/caches/8.13/transforms/107468667e921195eafcdbc1a836b55d/transformed/tracing-1.2.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.tracing:tracing-ktx:1.2.0] /Users/scroobz/.gradle/caches/8.13/transforms/90945992cd6c407125c356f989815ac6/transformed/tracing-ktx-1.2.0/AndroidManifest.xml:17:1-22:12
+MERGED from [com.facebook.fresco:ui-core:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/077fec1a3c0880a0ae5591b9284a511f/transformed/ui-core-3.6.0/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.annotation:annotation-experimental:1.4.0] /Users/scroobz/.gradle/caches/8.13/transforms/194e763e134a22cf3d197770d4651f5e/transformed/annotation-experimental-1.4.0/AndroidManifest.xml:2:1-7:12
+MERGED from [com.facebook.react:hermes-android:0.81.4] /Users/scroobz/.gradle/caches/8.13/transforms/58f3773db662b9a1045ccbc83213ce45/transformed/hermes-android-0.81.4-debug/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.interpolator:interpolator:1.0.0] /Users/scroobz/.gradle/caches/8.13/transforms/02daa9a762e319ad38a3452936f7db7f/transformed/interpolator-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.cardview:cardview:1.0.0] /Users/scroobz/.gradle/caches/8.13/transforms/3d9ff4a801c3eba1e8ebefeaf47faa4e/transformed/cardview-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.cursoradapter:cursoradapter:1.0.0] /Users/scroobz/.gradle/caches/8.13/transforms/1d3f68baec866a3792d5068d1fa7189e/transformed/cursoradapter-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /Users/scroobz/.gradle/caches/8.13/transforms/f7e4c8b93f235c18d04500fd96a440eb/transformed/versionedparcelable-1.1.1/AndroidManifest.xml:17:1-27:12
+MERGED from [androidx.localbroadcastmanager:localbroadcastmanager:1.0.0] /Users/scroobz/.gradle/caches/8.13/transforms/5d9bd10518bde2bfbedd43decb9da6e0/transformed/localbroadcastmanager-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.print:print:1.0.0] /Users/scroobz/.gradle/caches/8.13/transforms/b01fa7d25cb2ebb80310abbcadf48e44/transformed/print-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.arch.core:core-runtime:2.2.0] /Users/scroobz/.gradle/caches/8.13/transforms/dc87fb6e019e6f9705567df5f67c983f/transformed/core-runtime-2.2.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.exifinterface:exifinterface:1.3.7] /Users/scroobz/.gradle/caches/8.13/transforms/8f05362ec5c3013bfc10f1bae2cab480/transformed/exifinterface-1.3.7/AndroidManifest.xml:17:1-24:12
+MERGED from [com.jakewharton.threetenabp:threetenabp:1.4.9] /Users/scroobz/.gradle/caches/8.13/transforms/fe610f9bdb607ffd4b4753ffbbd4ab97/transformed/threetenabp-1.4.9/AndroidManifest.xml:2:1-9:12
+MERGED from [com.facebook.fbjni:fbjni:0.7.0] /Users/scroobz/.gradle/caches/8.13/transforms/671de4e66643daa85f35a98ac72d8de2/transformed/fbjni-0.7.0/AndroidManifest.xml:2:1-7:12
+MERGED from [com.facebook.soloader:soloader:0.12.1] /Users/scroobz/.gradle/caches/8.13/transforms/bc63510bb7c7ed32309230b2caede042/transformed/soloader-0.12.1/AndroidManifest.xml:2:1-17:12
+MERGED from [com.caverock:androidsvg-aar:1.4] /Users/scroobz/.gradle/caches/8.13/transforms/ba5584953672e8480ad32b9a66d01900/transformed/androidsvg-aar-1.4/AndroidManifest.xml:2:1-11:12
+	package
+		INJECTED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/debug/AndroidManifest.xml
+	android:versionName
+		INJECTED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/debug/AndroidManifest.xml
+	xmlns:tools
+		ADDED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/debug/AndroidManifest.xml:3:5-51
+	android:versionCode
+		INJECTED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/debug/AndroidManifest.xml
+	xmlns:android
+		ADDED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:1:11-69
+uses-permission#android.permission.INTERNET
+ADDED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:3:5-67
+MERGED from [:expo-file-system] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-file-system/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:8:5-67
+MERGED from [:expo-file-system] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-file-system/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:8:5-67
+	android:name
+		ADDED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:3:22-64
+uses-permission#android.permission.READ_MEDIA_VIDEO
+ADDED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:4:5-75
+	android:name
+		ADDED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:4:22-72
+uses-permission#android.permission.MANAGE_EXTERNAL_STORAGE
+ADDED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:5:5-82
+	android:name
+		ADDED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:5:22-79
+uses-feature#0x00030000
+ADDED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:7:5-9:35
+	android:glEsVersion
+		ADDED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:8:9-41
+	android:required
+		ADDED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:9:9-32
+application
+ADDED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:11:5-31:19
+MERGED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:11:5-31:19
+MERGED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:11:5-31:19
+INJECTED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/debug/AndroidManifest.xml:5:5-8:50
+MERGED from [:expo-modules-core] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-modules-core/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:8:5-16:19
+MERGED from [:expo-modules-core] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-modules-core/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:8:5-16:19
+MERGED from [com.facebook.react:react-android:0.81.4] /Users/scroobz/.gradle/caches/8.13/transforms/14a3878c2800f6eea79160815e4bc073/transformed/react-android-0.81.4-debug/AndroidManifest.xml:18:5-22:19
+MERGED from [com.facebook.react:react-android:0.81.4] /Users/scroobz/.gradle/caches/8.13/transforms/14a3878c2800f6eea79160815e4bc073/transformed/react-android-0.81.4-debug/AndroidManifest.xml:18:5-22:19
+MERGED from [com.migeran.libgodot:godot-debug:4.5.1.migeran.2-SNAPSHOT] /Users/scroobz/.gradle/caches/8.13/transforms/8fdf0ba9aab8202867eac1d9a9f6b3fe/transformed/godot-debug-4.5.1.migeran.2-SNAPSHOT/AndroidManifest.xml:9:5-33:19
+MERGED from [com.migeran.libgodot:godot-debug:4.5.1.migeran.2-SNAPSHOT] /Users/scroobz/.gradle/caches/8.13/transforms/8fdf0ba9aab8202867eac1d9a9f6b3fe/transformed/godot-debug-4.5.1.migeran.2-SNAPSHOT/AndroidManifest.xml:9:5-33:19
+MERGED from [com.google.android.material:material:1.12.0] /Users/scroobz/.gradle/caches/8.13/transforms/83541e81f38b2608715c7d70d68d1c38/transformed/material-1.12.0/AndroidManifest.xml:22:5-20
+MERGED from [com.google.android.material:material:1.12.0] /Users/scroobz/.gradle/caches/8.13/transforms/83541e81f38b2608715c7d70d68d1c38/transformed/material-1.12.0/AndroidManifest.xml:22:5-20
+MERGED from [androidx.constraintlayout:constraintlayout:2.0.1] /Users/scroobz/.gradle/caches/8.13/transforms/7551c5126437d1d68edf9d1551274dd1/transformed/constraintlayout-2.0.1/AndroidManifest.xml:9:5-20
+MERGED from [androidx.constraintlayout:constraintlayout:2.0.1] /Users/scroobz/.gradle/caches/8.13/transforms/7551c5126437d1d68edf9d1551274dd1/transformed/constraintlayout-2.0.1/AndroidManifest.xml:9:5-20
+MERGED from [:expo-file-system] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-file-system/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:20:5-31:19
+MERGED from [:expo-file-system] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-file-system/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:20:5-31:19
+MERGED from [androidx.emoji2:emoji2:1.3.0] /Users/scroobz/.gradle/caches/8.13/transforms/9ac75a80c23966c00f5ba0114feda6b2/transformed/emoji2-1.3.0/AndroidManifest.xml:23:5-33:19
+MERGED from [androidx.emoji2:emoji2:1.3.0] /Users/scroobz/.gradle/caches/8.13/transforms/9ac75a80c23966c00f5ba0114feda6b2/transformed/emoji2-1.3.0/AndroidManifest.xml:23:5-33:19
+MERGED from [androidx.core:core:1.13.1] /Users/scroobz/.gradle/caches/8.13/transforms/1966bc226887e049897b1945bdfae0b0/transformed/core-1.13.1/AndroidManifest.xml:28:5-89
+MERGED from [androidx.core:core:1.13.1] /Users/scroobz/.gradle/caches/8.13/transforms/1966bc226887e049897b1945bdfae0b0/transformed/core-1.13.1/AndroidManifest.xml:28:5-89
+MERGED from [androidx.lifecycle:lifecycle-process:2.8.7] /Users/scroobz/.gradle/caches/8.13/transforms/537e19ba5f1d1d747ca3d81c1c4ac786/transformed/lifecycle-process-2.8.7/AndroidManifest.xml:23:5-33:19
+MERGED from [androidx.lifecycle:lifecycle-process:2.8.7] /Users/scroobz/.gradle/caches/8.13/transforms/537e19ba5f1d1d747ca3d81c1c4ac786/transformed/lifecycle-process-2.8.7/AndroidManifest.xml:23:5-33:19
+MERGED from [androidx.profileinstaller:profileinstaller:1.4.1] /Users/scroobz/.gradle/caches/8.13/transforms/11710fde9512ada01b7df8185f303fc4/transformed/profileinstaller-1.4.1/AndroidManifest.xml:23:5-53:19
+MERGED from [androidx.profileinstaller:profileinstaller:1.4.1] /Users/scroobz/.gradle/caches/8.13/transforms/11710fde9512ada01b7df8185f303fc4/transformed/profileinstaller-1.4.1/AndroidManifest.xml:23:5-53:19
+MERGED from [androidx.startup:startup-runtime:1.1.1] /Users/scroobz/.gradle/caches/8.13/transforms/6f5bd8e758484da1c78bcbc31fadc9d9/transformed/startup-runtime-1.1.1/AndroidManifest.xml:25:5-31:19
+MERGED from [androidx.startup:startup-runtime:1.1.1] /Users/scroobz/.gradle/caches/8.13/transforms/6f5bd8e758484da1c78bcbc31fadc9d9/transformed/startup-runtime-1.1.1/AndroidManifest.xml:25:5-31:19
+MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /Users/scroobz/.gradle/caches/8.13/transforms/f7e4c8b93f235c18d04500fd96a440eb/transformed/versionedparcelable-1.1.1/AndroidManifest.xml:24:5-25:19
+MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /Users/scroobz/.gradle/caches/8.13/transforms/f7e4c8b93f235c18d04500fd96a440eb/transformed/versionedparcelable-1.1.1/AndroidManifest.xml:24:5-25:19
+MERGED from [com.jakewharton.threetenabp:threetenabp:1.4.9] /Users/scroobz/.gradle/caches/8.13/transforms/fe610f9bdb607ffd4b4753ffbbd4ab97/transformed/threetenabp-1.4.9/AndroidManifest.xml:7:5-20
+MERGED from [com.jakewharton.threetenabp:threetenabp:1.4.9] /Users/scroobz/.gradle/caches/8.13/transforms/fe610f9bdb607ffd4b4753ffbbd4ab97/transformed/threetenabp-1.4.9/AndroidManifest.xml:7:5-20
+MERGED from [com.facebook.soloader:soloader:0.12.1] /Users/scroobz/.gradle/caches/8.13/transforms/bc63510bb7c7ed32309230b2caede042/transformed/soloader-0.12.1/AndroidManifest.xml:11:5-15:19
+MERGED from [com.facebook.soloader:soloader:0.12.1] /Users/scroobz/.gradle/caches/8.13/transforms/bc63510bb7c7ed32309230b2caede042/transformed/soloader-0.12.1/AndroidManifest.xml:11:5-15:19
+	android:extractNativeLibs
+		INJECTED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/debug/AndroidManifest.xml
+	android:appComponentFactory
+		ADDED from [androidx.core:core:1.13.1] /Users/scroobz/.gradle/caches/8.13/transforms/1966bc226887e049897b1945bdfae0b0/transformed/core-1.13.1/AndroidManifest.xml:28:18-86
+	android:supportsRtl
+		ADDED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:18:7-33
+		ADDED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:18:7-33
+	android:label
+		ADDED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:13:7-39
+		ADDED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:13:7-39
+	tools:ignore
+		ADDED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/debug/AndroidManifest.xml:8:9-48
+	android:roundIcon
+		ADDED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:15:7-52
+		ADDED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:15:7-52
+	tools:targetApi
+		ADDED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/debug/AndroidManifest.xml:7:9-29
+	android:icon
+		ADDED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:14:7-41
+		ADDED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:14:7-41
+	android:allowBackup
+		ADDED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:16:7-34
+		ADDED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:16:7-34
+	android:theme
+		ADDED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:17:7-38
+		ADDED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:17:7-38
+	android:usesCleartextTraffic
+		ADDED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/debug/AndroidManifest.xml:6:9-44
+	android:name
+		ADDED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:12:7-38
+		ADDED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:12:7-38
+activity#com.godottest.MainActivity
+ADDED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:19:7-30:18
+	android:label
+		ADDED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:21:9-41
+	android:launchMode
+		ADDED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:23:9-40
+	android:windowSoftInputMode
+		ADDED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:24:9-51
+	android:exported
+		ADDED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:25:9-32
+	android:configChanges
+		ADDED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:22:9-118
+	android:name
+		ADDED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:20:9-37
+intent-filter#action:name:android.intent.action.MAIN+category:name:android.intent.category.LAUNCHER
+ADDED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:26:9-29:25
+action#android.intent.action.MAIN
+ADDED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:27:13-65
+	android:name
+		ADDED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:27:21-62
+category#android.intent.category.LAUNCHER
+ADDED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:28:13-73
+	android:name
+		ADDED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:28:23-70
+uses-sdk
+INJECTED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/debug/AndroidManifest.xml reason: use-sdk injection requested
+INJECTED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/debug/AndroidManifest.xml
+INJECTED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/debug/AndroidManifest.xml
+MERGED from [:borndotcom_react-native-godot] /Users/scroobz/Navigation/Native/godot-template/node_modules/@borndotcom/react-native-godot/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:5:5-44
+MERGED from [:borndotcom_react-native-godot] /Users/scroobz/Navigation/Native/godot-template/node_modules/@borndotcom/react-native-godot/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:5:5-44
+MERGED from [:react-native-safe-area-context] /Users/scroobz/Navigation/Native/godot-template/node_modules/react-native-safe-area-context/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:5:5-44
+MERGED from [:react-native-safe-area-context] /Users/scroobz/Navigation/Native/godot-template/node_modules/react-native-safe-area-context/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:5:5-44
+MERGED from [:react-native-screens] /Users/scroobz/Navigation/Native/godot-template/node_modules/react-native-screens/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:5:5-44
+MERGED from [:react-native-screens] /Users/scroobz/Navigation/Native/godot-template/node_modules/react-native-screens/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:5:5-44
+MERGED from [:expo] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:5:5-44
+MERGED from [:expo] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:5:5-44
+MERGED from [:react-native-worklets-core] /Users/scroobz/Navigation/Native/godot-template/node_modules/react-native-worklets-core/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:5:5-44
+MERGED from [:react-native-worklets-core] /Users/scroobz/Navigation/Native/godot-template/node_modules/react-native-worklets-core/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:5:5-44
+MERGED from [:expo-modules-core] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-modules-core/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:6:5-44
+MERGED from [:expo-modules-core] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-modules-core/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:6:5-44
+MERGED from [:expo-font] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-font/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:5:5-44
+MERGED from [:expo-font] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-font/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:5:5-44
+MERGED from [com.facebook.react:react-android:0.81.4] /Users/scroobz/.gradle/caches/8.13/transforms/14a3878c2800f6eea79160815e4bc073/transformed/react-android-0.81.4-debug/AndroidManifest.xml:10:5-44
+MERGED from [com.facebook.react:react-android:0.81.4] /Users/scroobz/.gradle/caches/8.13/transforms/14a3878c2800f6eea79160815e4bc073/transformed/react-android-0.81.4-debug/AndroidManifest.xml:10:5-44
+MERGED from [com.migeran.libgodot:godot-debug:4.5.1.migeran.2-SNAPSHOT] /Users/scroobz/.gradle/caches/8.13/transforms/8fdf0ba9aab8202867eac1d9a9f6b3fe/transformed/godot-debug-4.5.1.migeran.2-SNAPSHOT/AndroidManifest.xml:7:5-44
+MERGED from [com.migeran.libgodot:godot-debug:4.5.1.migeran.2-SNAPSHOT] /Users/scroobz/.gradle/caches/8.13/transforms/8fdf0ba9aab8202867eac1d9a9f6b3fe/transformed/godot-debug-4.5.1.migeran.2-SNAPSHOT/AndroidManifest.xml:7:5-44
+MERGED from [com.google.android.material:material:1.12.0] /Users/scroobz/.gradle/caches/8.13/transforms/83541e81f38b2608715c7d70d68d1c38/transformed/material-1.12.0/AndroidManifest.xml:20:5-44
+MERGED from [com.google.android.material:material:1.12.0] /Users/scroobz/.gradle/caches/8.13/transforms/83541e81f38b2608715c7d70d68d1c38/transformed/material-1.12.0/AndroidManifest.xml:20:5-44
+MERGED from [io.coil-kt.coil3:coil-android:3.0.4] /Users/scroobz/.gradle/caches/8.13/transforms/21ab9382eeda54ecb574b877257ed99d/transformed/coil-release/AndroidManifest.xml:5:5-44
+MERGED from [io.coil-kt.coil3:coil-android:3.0.4] /Users/scroobz/.gradle/caches/8.13/transforms/21ab9382eeda54ecb574b877257ed99d/transformed/coil-release/AndroidManifest.xml:5:5-44
+MERGED from [io.coil-kt.coil3:coil-svg-android:3.0.4] /Users/scroobz/.gradle/caches/8.13/transforms/f1d8be436e1a7216e3c0b8f3089f3085/transformed/coil-svg-release/AndroidManifest.xml:5:5-44
+MERGED from [io.coil-kt.coil3:coil-svg-android:3.0.4] /Users/scroobz/.gradle/caches/8.13/transforms/f1d8be436e1a7216e3c0b8f3089f3085/transformed/coil-svg-release/AndroidManifest.xml:5:5-44
+MERGED from [io.coil-kt.coil3:coil-network-core-android:3.0.4] /Users/scroobz/.gradle/caches/8.13/transforms/fd498c6e9dc6206b8f770fa433ae546b/transformed/coil-network-core-release/AndroidManifest.xml:5:5-44
+MERGED from [io.coil-kt.coil3:coil-network-core-android:3.0.4] /Users/scroobz/.gradle/caches/8.13/transforms/fd498c6e9dc6206b8f770fa433ae546b/transformed/coil-network-core-release/AndroidManifest.xml:5:5-44
+MERGED from [io.coil-kt.coil3:coil-core-android:3.0.4] /Users/scroobz/.gradle/caches/8.13/transforms/4acacd265d9d4e0d99b214466e0309e1/transformed/coil-core-release/AndroidManifest.xml:5:5-44
+MERGED from [io.coil-kt.coil3:coil-core-android:3.0.4] /Users/scroobz/.gradle/caches/8.13/transforms/4acacd265d9d4e0d99b214466e0309e1/transformed/coil-core-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.appcompat:appcompat-resources:1.7.0] /Users/scroobz/.gradle/caches/8.13/transforms/5d293acfd4d1520c8183c1a23ec3c85f/transformed/appcompat-resources-1.7.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.appcompat:appcompat-resources:1.7.0] /Users/scroobz/.gradle/caches/8.13/transforms/5d293acfd4d1520c8183c1a23ec3c85f/transformed/appcompat-resources-1.7.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.constraintlayout:constraintlayout:2.0.1] /Users/scroobz/.gradle/caches/8.13/transforms/7551c5126437d1d68edf9d1551274dd1/transformed/constraintlayout-2.0.1/AndroidManifest.xml:5:5-7:41
+MERGED from [androidx.constraintlayout:constraintlayout:2.0.1] /Users/scroobz/.gradle/caches/8.13/transforms/7551c5126437d1d68edf9d1551274dd1/transformed/constraintlayout-2.0.1/AndroidManifest.xml:5:5-7:41
+MERGED from [androidx.appcompat:appcompat:1.7.0] /Users/scroobz/.gradle/caches/8.13/transforms/752714506bcc5f3835fdf17485776062/transformed/appcompat-1.7.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.appcompat:appcompat:1.7.0] /Users/scroobz/.gradle/caches/8.13/transforms/752714506bcc5f3835fdf17485776062/transformed/appcompat-1.7.0/AndroidManifest.xml:5:5-44
+MERGED from [com.facebook.fresco:fresco:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/0256fadb694956a801697712771bf88c/transformed/fresco-3.6.0/AndroidManifest.xml:5:5-44
+MERGED from [com.facebook.fresco:fresco:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/0256fadb694956a801697712771bf88c/transformed/fresco-3.6.0/AndroidManifest.xml:5:5-44
+MERGED from [com.facebook.fresco:imagepipeline-okhttp3:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/fe9e5856d51f3cd43bf2f1da3e5a4feb/transformed/imagepipeline-okhttp3-3.6.0/AndroidManifest.xml:5:5-44
+MERGED from [com.facebook.fresco:imagepipeline-okhttp3:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/fe9e5856d51f3cd43bf2f1da3e5a4feb/transformed/imagepipeline-okhttp3-3.6.0/AndroidManifest.xml:5:5-44
+MERGED from [com.facebook.fresco:drawee:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/de9e7b0420b33409e0fd5c9a2f6907cf/transformed/drawee-3.6.0/AndroidManifest.xml:5:5-44
+MERGED from [com.facebook.fresco:drawee:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/de9e7b0420b33409e0fd5c9a2f6907cf/transformed/drawee-3.6.0/AndroidManifest.xml:5:5-44
+MERGED from [com.facebook.fresco:nativeimagefilters:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/a72e9895b5a8e222732ac84f16078ba2/transformed/nativeimagefilters-3.6.0/AndroidManifest.xml:5:5-44
+MERGED from [com.facebook.fresco:nativeimagefilters:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/a72e9895b5a8e222732ac84f16078ba2/transformed/nativeimagefilters-3.6.0/AndroidManifest.xml:5:5-44
+MERGED from [com.facebook.fresco:memory-type-native:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/4845504121d7ec44fa2a8aea5175d73d/transformed/memory-type-native-3.6.0/AndroidManifest.xml:5:5-44
+MERGED from [com.facebook.fresco:memory-type-native:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/4845504121d7ec44fa2a8aea5175d73d/transformed/memory-type-native-3.6.0/AndroidManifest.xml:5:5-44
+MERGED from [com.facebook.fresco:memory-type-java:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/acd7334acdfaef99a55ba5dfc138edbb/transformed/memory-type-java-3.6.0/AndroidManifest.xml:5:5-44
+MERGED from [com.facebook.fresco:memory-type-java:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/acd7334acdfaef99a55ba5dfc138edbb/transformed/memory-type-java-3.6.0/AndroidManifest.xml:5:5-44
+MERGED from [com.facebook.fresco:imagepipeline-native:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/7c966a52bc084fdef3057a6354b8b8bc/transformed/imagepipeline-native-3.6.0/AndroidManifest.xml:5:5-44
+MERGED from [com.facebook.fresco:imagepipeline-native:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/7c966a52bc084fdef3057a6354b8b8bc/transformed/imagepipeline-native-3.6.0/AndroidManifest.xml:5:5-44
+MERGED from [com.facebook.fresco:memory-type-ashmem:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/b9502d3701a65656f4aeea1cc3f6caab/transformed/memory-type-ashmem-3.6.0/AndroidManifest.xml:5:5-44
+MERGED from [com.facebook.fresco:memory-type-ashmem:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/b9502d3701a65656f4aeea1cc3f6caab/transformed/memory-type-ashmem-3.6.0/AndroidManifest.xml:5:5-44
+MERGED from [com.facebook.fresco:imagepipeline:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/25f574f0cfd13ac3a3ce3411245f12d8/transformed/imagepipeline-3.6.0/AndroidManifest.xml:5:5-44
+MERGED from [com.facebook.fresco:imagepipeline:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/25f574f0cfd13ac3a3ce3411245f12d8/transformed/imagepipeline-3.6.0/AndroidManifest.xml:5:5-44
+MERGED from [com.facebook.fresco:nativeimagetranscoder:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/327128a7d96e4293b2f4403740eaedb6/transformed/nativeimagetranscoder-3.6.0/AndroidManifest.xml:5:5-44
+MERGED from [com.facebook.fresco:nativeimagetranscoder:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/327128a7d96e4293b2f4403740eaedb6/transformed/nativeimagetranscoder-3.6.0/AndroidManifest.xml:5:5-44
+MERGED from [com.facebook.fresco:imagepipeline-base:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/e5570c2000d1a1d7a142a93159954167/transformed/imagepipeline-base-3.6.0/AndroidManifest.xml:5:5-44
+MERGED from [com.facebook.fresco:imagepipeline-base:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/e5570c2000d1a1d7a142a93159954167/transformed/imagepipeline-base-3.6.0/AndroidManifest.xml:5:5-44
+MERGED from [com.facebook.fresco:urimod:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/5f8d61d87e8e23c271528d1823327232/transformed/urimod-3.6.0/AndroidManifest.xml:5:5-44
+MERGED from [com.facebook.fresco:urimod:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/5f8d61d87e8e23c271528d1823327232/transformed/urimod-3.6.0/AndroidManifest.xml:5:5-44
+MERGED from [com.facebook.fresco:vito-source:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/f7a7295bb39e6263f5bca656c4b530f9/transformed/vito-source-3.6.0/AndroidManifest.xml:5:5-44
+MERGED from [com.facebook.fresco:vito-source:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/f7a7295bb39e6263f5bca656c4b530f9/transformed/vito-source-3.6.0/AndroidManifest.xml:5:5-44
+MERGED from [com.facebook.fresco:middleware:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/2d4afd5b5908573c7556849bcb42e4d4/transformed/middleware-3.6.0/AndroidManifest.xml:5:5-44
+MERGED from [com.facebook.fresco:middleware:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/2d4afd5b5908573c7556849bcb42e4d4/transformed/middleware-3.6.0/AndroidManifest.xml:5:5-44
+MERGED from [com.facebook.fresco:ui-common:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/46e9be1d16d3f4f7dc13705fa73c3413/transformed/ui-common-3.6.0/AndroidManifest.xml:5:5-44
+MERGED from [com.facebook.fresco:ui-common:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/46e9be1d16d3f4f7dc13705fa73c3413/transformed/ui-common-3.6.0/AndroidManifest.xml:5:5-44
+MERGED from [:expo-device] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-device/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:5:5-44
+MERGED from [:expo-device] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-device/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:5:5-44
+MERGED from [:expo-file-system] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-file-system/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:6:5-44
+MERGED from [:expo-file-system] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-file-system/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:6:5-44
+MERGED from [androidx.legacy:legacy-support-v4:1.0.0] /Users/scroobz/.gradle/caches/8.13/transforms/610d61ab219dfb92a998b9afc83efc71/transformed/legacy-support-v4-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.legacy:legacy-support-v4:1.0.0] /Users/scroobz/.gradle/caches/8.13/transforms/610d61ab219dfb92a998b9afc83efc71/transformed/legacy-support-v4-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.viewpager2:viewpager2:1.0.0] /Users/scroobz/.gradle/caches/8.13/transforms/9362286c026822d9afea737832bbaf23/transformed/viewpager2-1.0.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.viewpager2:viewpager2:1.0.0] /Users/scroobz/.gradle/caches/8.13/transforms/9362286c026822d9afea737832bbaf23/transformed/viewpager2-1.0.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.fragment:fragment-ktx:1.8.6] /Users/scroobz/.gradle/caches/8.13/transforms/a8e5ff48dc404259de5d49a3dde5f29e/transformed/fragment-ktx-1.8.6/AndroidManifest.xml:5:5-44
+MERGED from [androidx.fragment:fragment-ktx:1.8.6] /Users/scroobz/.gradle/caches/8.13/transforms/a8e5ff48dc404259de5d49a3dde5f29e/transformed/fragment-ktx-1.8.6/AndroidManifest.xml:5:5-44
+MERGED from [androidx.fragment:fragment:1.8.6] /Users/scroobz/.gradle/caches/8.13/transforms/9d98bceb20c6f702dd9093f1a79d1cb7/transformed/fragment-1.8.6/AndroidManifest.xml:5:5-44
+MERGED from [androidx.fragment:fragment:1.8.6] /Users/scroobz/.gradle/caches/8.13/transforms/9d98bceb20c6f702dd9093f1a79d1cb7/transformed/fragment-1.8.6/AndroidManifest.xml:5:5-44
+MERGED from [:expo-asset] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-asset/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:5:5-44
+MERGED from [:expo-asset] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-asset/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:5:5-44
+MERGED from [:expo-constants] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-constants/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:5:5-44
+MERGED from [:expo-constants] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-constants/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:5:5-44
+MERGED from [:expo-keep-awake] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-keep-awake/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:5:5-44
+MERGED from [:expo-keep-awake] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-keep-awake/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:5:5-44
+MERGED from [androidx.legacy:legacy-support-core-ui:1.0.0] /Users/scroobz/.gradle/caches/8.13/transforms/491c7226736ad3272004d0e1fc143e0c/transformed/legacy-support-core-ui-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.legacy:legacy-support-core-ui:1.0.0] /Users/scroobz/.gradle/caches/8.13/transforms/491c7226736ad3272004d0e1fc143e0c/transformed/legacy-support-core-ui-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.coordinatorlayout:coordinatorlayout:1.2.0] /Users/scroobz/.gradle/caches/8.13/transforms/4636935d172eede6b18fb7ba60fd05c1/transformed/coordinatorlayout-1.2.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.coordinatorlayout:coordinatorlayout:1.2.0] /Users/scroobz/.gradle/caches/8.13/transforms/4636935d172eede6b18fb7ba60fd05c1/transformed/coordinatorlayout-1.2.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.swiperefreshlayout:swiperefreshlayout:1.1.0] /Users/scroobz/.gradle/caches/8.13/transforms/4257eeb54ab7f1761b257e92a5368783/transformed/swiperefreshlayout-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.swiperefreshlayout:swiperefreshlayout:1.1.0] /Users/scroobz/.gradle/caches/8.13/transforms/4257eeb54ab7f1761b257e92a5368783/transformed/swiperefreshlayout-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.autofill:autofill:1.1.0] /Users/scroobz/.gradle/caches/8.13/transforms/a38794f5fb9a12ee90e63248f301ff89/transformed/autofill-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.autofill:autofill:1.1.0] /Users/scroobz/.gradle/caches/8.13/transforms/a38794f5fb9a12ee90e63248f301ff89/transformed/autofill-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.transition:transition:1.5.0] /Users/scroobz/.gradle/caches/8.13/transforms/479465a0badd41e65a4fe017d6dc7c7d/transformed/transition-1.5.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.transition:transition:1.5.0] /Users/scroobz/.gradle/caches/8.13/transforms/479465a0badd41e65a4fe017d6dc7c7d/transformed/transition-1.5.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.dynamicanimation:dynamicanimation:1.0.0] /Users/scroobz/.gradle/caches/8.13/transforms/fff3151475c8ad156fd30ad57bfa88d3/transformed/dynamicanimation-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.dynamicanimation:dynamicanimation:1.0.0] /Users/scroobz/.gradle/caches/8.13/transforms/fff3151475c8ad156fd30ad57bfa88d3/transformed/dynamicanimation-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.legacy:legacy-support-core-utils:1.0.0] /Users/scroobz/.gradle/caches/8.13/transforms/44a2fa8df0982d900feeb4479df6ca42/transformed/legacy-support-core-utils-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.legacy:legacy-support-core-utils:1.0.0] /Users/scroobz/.gradle/caches/8.13/transforms/44a2fa8df0982d900feeb4479df6ca42/transformed/legacy-support-core-utils-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.documentfile:documentfile:1.1.0] /Users/scroobz/.gradle/caches/8.13/transforms/9a7a65cd5454636910d1e0c4f518d1db/transformed/documentfile-1.1.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.documentfile:documentfile:1.1.0] /Users/scroobz/.gradle/caches/8.13/transforms/9a7a65cd5454636910d1e0c4f518d1db/transformed/documentfile-1.1.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.drawerlayout:drawerlayout:1.1.1] /Users/scroobz/.gradle/caches/8.13/transforms/1acb6db5c591e8896a9108684a5d1c6f/transformed/drawerlayout-1.1.1/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.drawerlayout:drawerlayout:1.1.1] /Users/scroobz/.gradle/caches/8.13/transforms/1acb6db5c591e8896a9108684a5d1c6f/transformed/drawerlayout-1.1.1/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.vectordrawable:vectordrawable-animated:1.1.0] /Users/scroobz/.gradle/caches/8.13/transforms/f011cbf51376663dd9e2beab120efd38/transformed/vectordrawable-animated-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.vectordrawable:vectordrawable-animated:1.1.0] /Users/scroobz/.gradle/caches/8.13/transforms/f011cbf51376663dd9e2beab120efd38/transformed/vectordrawable-animated-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.vectordrawable:vectordrawable:1.1.0] /Users/scroobz/.gradle/caches/8.13/transforms/98570f88d798397ef49e7b82b93daf74/transformed/vectordrawable-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.vectordrawable:vectordrawable:1.1.0] /Users/scroobz/.gradle/caches/8.13/transforms/98570f88d798397ef49e7b82b93daf74/transformed/vectordrawable-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.emoji2:emoji2-views-helper:1.3.0] /Users/scroobz/.gradle/caches/8.13/transforms/2e0656f2c336b10ca604d17b1afcabf4/transformed/emoji2-views-helper-1.3.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.emoji2:emoji2-views-helper:1.3.0] /Users/scroobz/.gradle/caches/8.13/transforms/2e0656f2c336b10ca604d17b1afcabf4/transformed/emoji2-views-helper-1.3.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.emoji2:emoji2:1.3.0] /Users/scroobz/.gradle/caches/8.13/transforms/9ac75a80c23966c00f5ba0114feda6b2/transformed/emoji2-1.3.0/AndroidManifest.xml:21:5-44
+MERGED from [androidx.emoji2:emoji2:1.3.0] /Users/scroobz/.gradle/caches/8.13/transforms/9ac75a80c23966c00f5ba0114feda6b2/transformed/emoji2-1.3.0/AndroidManifest.xml:21:5-44
+MERGED from [com.facebook.fresco:soloader:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/f51efb217744b5c2694ede38d7882f28/transformed/soloader-3.6.0/AndroidManifest.xml:5:5-44
+MERGED from [com.facebook.fresco:soloader:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/f51efb217744b5c2694ede38d7882f28/transformed/soloader-3.6.0/AndroidManifest.xml:5:5-44
+MERGED from [com.facebook.fresco:fbcore:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/4ac14c7f142378f385679a0d3d17828a/transformed/fbcore-3.6.0/AndroidManifest.xml:5:5-44
+MERGED from [com.facebook.fresco:fbcore:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/4ac14c7f142378f385679a0d3d17828a/transformed/fbcore-3.6.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.activity:activity-ktx:1.8.1] /Users/scroobz/.gradle/caches/8.13/transforms/5378ef3fc62b7ca48d8df5804b4b5bfd/transformed/activity-ktx-1.8.1/AndroidManifest.xml:5:5-44
+MERGED from [androidx.activity:activity-ktx:1.8.1] /Users/scroobz/.gradle/caches/8.13/transforms/5378ef3fc62b7ca48d8df5804b4b5bfd/transformed/activity-ktx-1.8.1/AndroidManifest.xml:5:5-44
+MERGED from [androidx.activity:activity:1.8.1] /Users/scroobz/.gradle/caches/8.13/transforms/b9cce7270fece087c1fa59199df7f029/transformed/activity-1.8.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.activity:activity:1.8.1] /Users/scroobz/.gradle/caches/8.13/transforms/b9cce7270fece087c1fa59199df7f029/transformed/activity-1.8.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.loader:loader:1.0.0] /Users/scroobz/.gradle/caches/8.13/transforms/014132c4c14c5fcc2bf8d1d0a80e965b/transformed/loader-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.loader:loader:1.0.0] /Users/scroobz/.gradle/caches/8.13/transforms/014132c4c14c5fcc2bf8d1d0a80e965b/transformed/loader-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.viewpager:viewpager:1.0.0] /Users/scroobz/.gradle/caches/8.13/transforms/e4f65f89f4d78350bdfa4a8546ab1ac4/transformed/viewpager-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.viewpager:viewpager:1.0.0] /Users/scroobz/.gradle/caches/8.13/transforms/e4f65f89f4d78350bdfa4a8546ab1ac4/transformed/viewpager-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.media:media:1.0.0] /Users/scroobz/.gradle/caches/8.13/transforms/96834a06f064fd743183405ac1cc9773/transformed/media-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.media:media:1.0.0] /Users/scroobz/.gradle/caches/8.13/transforms/96834a06f064fd743183405ac1cc9773/transformed/media-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.recyclerview:recyclerview:1.1.0] /Users/scroobz/.gradle/caches/8.13/transforms/fb19fe83633cb88f196ec6c7d7dff410/transformed/recyclerview-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.recyclerview:recyclerview:1.1.0] /Users/scroobz/.gradle/caches/8.13/transforms/fb19fe83633cb88f196ec6c7d7dff410/transformed/recyclerview-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.slidingpanelayout:slidingpanelayout:1.0.0] /Users/scroobz/.gradle/caches/8.13/transforms/5cf2191fce38b5af96da92e8eaa90c5f/transformed/slidingpanelayout-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.slidingpanelayout:slidingpanelayout:1.0.0] /Users/scroobz/.gradle/caches/8.13/transforms/5cf2191fce38b5af96da92e8eaa90c5f/transformed/slidingpanelayout-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.customview:customview:1.1.0] /Users/scroobz/.gradle/caches/8.13/transforms/3c181ae16ef1ab1e2666867f8f655899/transformed/customview-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.customview:customview:1.1.0] /Users/scroobz/.gradle/caches/8.13/transforms/3c181ae16ef1ab1e2666867f8f655899/transformed/customview-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.asynclayoutinflater:asynclayoutinflater:1.0.0] /Users/scroobz/.gradle/caches/8.13/transforms/28a12726ab5e26318c878814e209d7f9/transformed/asynclayoutinflater-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.asynclayoutinflater:asynclayoutinflater:1.0.0] /Users/scroobz/.gradle/caches/8.13/transforms/28a12726ab5e26318c878814e209d7f9/transformed/asynclayoutinflater-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.core:core:1.13.1] /Users/scroobz/.gradle/caches/8.13/transforms/1966bc226887e049897b1945bdfae0b0/transformed/core-1.13.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.core:core:1.13.1] /Users/scroobz/.gradle/caches/8.13/transforms/1966bc226887e049897b1945bdfae0b0/transformed/core-1.13.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.savedstate:savedstate-ktx:1.2.1] /Users/scroobz/.gradle/caches/8.13/transforms/3347a3877bd4197d7dbe3a4564732f6f/transformed/savedstate-ktx-1.2.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.savedstate:savedstate-ktx:1.2.1] /Users/scroobz/.gradle/caches/8.13/transforms/3347a3877bd4197d7dbe3a4564732f6f/transformed/savedstate-ktx-1.2.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.savedstate:savedstate:1.2.1] /Users/scroobz/.gradle/caches/8.13/transforms/16bc5b90c5ac2a388e86a11edff99009/transformed/savedstate-1.2.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.savedstate:savedstate:1.2.1] /Users/scroobz/.gradle/caches/8.13/transforms/16bc5b90c5ac2a388e86a11edff99009/transformed/savedstate-1.2.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-viewmodel:2.8.7] /Users/scroobz/.gradle/caches/8.13/transforms/c2b5bc2709d048b08468baf2b919da2f/transformed/lifecycle-viewmodel-2.8.7/AndroidManifest.xml:4:5-43
+MERGED from [androidx.lifecycle:lifecycle-viewmodel:2.8.7] /Users/scroobz/.gradle/caches/8.13/transforms/c2b5bc2709d048b08468baf2b919da2f/transformed/lifecycle-viewmodel-2.8.7/AndroidManifest.xml:4:5-43
+MERGED from [androidx.lifecycle:lifecycle-viewmodel-android:2.8.7] /Users/scroobz/.gradle/caches/8.13/transforms/67fcb8770cf7adcefc0a4ec439927ec0/transformed/lifecycle-viewmodel-release/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-viewmodel-android:2.8.7] /Users/scroobz/.gradle/caches/8.13/transforms/67fcb8770cf7adcefc0a4ec439927ec0/transformed/lifecycle-viewmodel-release/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-runtime-ktx-android:2.8.7] /Users/scroobz/.gradle/caches/8.13/transforms/808122ecd4680ba0abd59db06dff6a63/transformed/lifecycle-runtime-ktx-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.lifecycle:lifecycle-runtime-ktx-android:2.8.7] /Users/scroobz/.gradle/caches/8.13/transforms/808122ecd4680ba0abd59db06dff6a63/transformed/lifecycle-runtime-ktx-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7] /Users/scroobz/.gradle/caches/8.13/transforms/40c781a7ca56d606ff8e56a6cd994c75/transformed/lifecycle-viewmodel-ktx-2.8.7/AndroidManifest.xml:5:5-44
+MERGED from [androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7] /Users/scroobz/.gradle/caches/8.13/transforms/40c781a7ca56d606ff8e56a6cd994c75/transformed/lifecycle-viewmodel-ktx-2.8.7/AndroidManifest.xml:5:5-44
+MERGED from [androidx.lifecycle:lifecycle-process:2.8.7] /Users/scroobz/.gradle/caches/8.13/transforms/537e19ba5f1d1d747ca3d81c1c4ac786/transformed/lifecycle-process-2.8.7/AndroidManifest.xml:21:5-44
+MERGED from [androidx.lifecycle:lifecycle-process:2.8.7] /Users/scroobz/.gradle/caches/8.13/transforms/537e19ba5f1d1d747ca3d81c1c4ac786/transformed/lifecycle-process-2.8.7/AndroidManifest.xml:21:5-44
+MERGED from [androidx.lifecycle:lifecycle-livedata-core-ktx:2.8.7] /Users/scroobz/.gradle/caches/8.13/transforms/8281554e50e1faba08f5827b057f7924/transformed/lifecycle-livedata-core-ktx-2.8.7/AndroidManifest.xml:5:5-44
+MERGED from [androidx.lifecycle:lifecycle-livedata-core-ktx:2.8.7] /Users/scroobz/.gradle/caches/8.13/transforms/8281554e50e1faba08f5827b057f7924/transformed/lifecycle-livedata-core-ktx-2.8.7/AndroidManifest.xml:5:5-44
+MERGED from [androidx.lifecycle:lifecycle-livedata-core:2.8.7] /Users/scroobz/.gradle/caches/8.13/transforms/a83201bfddd529f3ef6d84c3e66089fe/transformed/lifecycle-livedata-core-2.8.7/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-livedata-core:2.8.7] /Users/scroobz/.gradle/caches/8.13/transforms/a83201bfddd529f3ef6d84c3e66089fe/transformed/lifecycle-livedata-core-2.8.7/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-livedata:2.8.7] /Users/scroobz/.gradle/caches/8.13/transforms/4fcb3de4e6b25d32e79741f60ad2488b/transformed/lifecycle-livedata-2.8.7/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-livedata:2.8.7] /Users/scroobz/.gradle/caches/8.13/transforms/4fcb3de4e6b25d32e79741f60ad2488b/transformed/lifecycle-livedata-2.8.7/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-runtime-android:2.8.7] /Users/scroobz/.gradle/caches/8.13/transforms/45b0a725f48753f1c2647b29d25a1789/transformed/lifecycle-runtime-release/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-runtime-android:2.8.7] /Users/scroobz/.gradle/caches/8.13/transforms/45b0a725f48753f1c2647b29d25a1789/transformed/lifecycle-runtime-release/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-viewmodel-savedstate:2.8.7] /Users/scroobz/.gradle/caches/8.13/transforms/788d28bf1d3e4ba9a91c93e93565e96c/transformed/lifecycle-viewmodel-savedstate-2.8.7/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-viewmodel-savedstate:2.8.7] /Users/scroobz/.gradle/caches/8.13/transforms/788d28bf1d3e4ba9a91c93e93565e96c/transformed/lifecycle-viewmodel-savedstate-2.8.7/AndroidManifest.xml:20:5-44
+MERGED from [androidx.core:core-ktx:1.13.1] /Users/scroobz/.gradle/caches/8.13/transforms/dac394b2f4a4fb72bf300d4036f9b1e2/transformed/core-ktx-1.13.1/AndroidManifest.xml:5:5-44
+MERGED from [androidx.core:core-ktx:1.13.1] /Users/scroobz/.gradle/caches/8.13/transforms/dac394b2f4a4fb72bf300d4036f9b1e2/transformed/core-ktx-1.13.1/AndroidManifest.xml:5:5-44
+MERGED from [androidx.profileinstaller:profileinstaller:1.4.1] /Users/scroobz/.gradle/caches/8.13/transforms/11710fde9512ada01b7df8185f303fc4/transformed/profileinstaller-1.4.1/AndroidManifest.xml:21:5-44
+MERGED from [androidx.profileinstaller:profileinstaller:1.4.1] /Users/scroobz/.gradle/caches/8.13/transforms/11710fde9512ada01b7df8185f303fc4/transformed/profileinstaller-1.4.1/AndroidManifest.xml:21:5-44
+MERGED from [androidx.startup:startup-runtime:1.1.1] /Users/scroobz/.gradle/caches/8.13/transforms/6f5bd8e758484da1c78bcbc31fadc9d9/transformed/startup-runtime-1.1.1/AndroidManifest.xml:21:5-23:41
+MERGED from [androidx.startup:startup-runtime:1.1.1] /Users/scroobz/.gradle/caches/8.13/transforms/6f5bd8e758484da1c78bcbc31fadc9d9/transformed/startup-runtime-1.1.1/AndroidManifest.xml:21:5-23:41
+MERGED from [androidx.tracing:tracing:1.2.0] /Users/scroobz/.gradle/caches/8.13/transforms/107468667e921195eafcdbc1a836b55d/transformed/tracing-1.2.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.tracing:tracing:1.2.0] /Users/scroobz/.gradle/caches/8.13/transforms/107468667e921195eafcdbc1a836b55d/transformed/tracing-1.2.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.tracing:tracing-ktx:1.2.0] /Users/scroobz/.gradle/caches/8.13/transforms/90945992cd6c407125c356f989815ac6/transformed/tracing-ktx-1.2.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.tracing:tracing-ktx:1.2.0] /Users/scroobz/.gradle/caches/8.13/transforms/90945992cd6c407125c356f989815ac6/transformed/tracing-ktx-1.2.0/AndroidManifest.xml:20:5-44
+MERGED from [com.facebook.fresco:ui-core:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/077fec1a3c0880a0ae5591b9284a511f/transformed/ui-core-3.6.0/AndroidManifest.xml:5:5-44
+MERGED from [com.facebook.fresco:ui-core:3.6.0] /Users/scroobz/.gradle/caches/8.13/transforms/077fec1a3c0880a0ae5591b9284a511f/transformed/ui-core-3.6.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.annotation:annotation-experimental:1.4.0] /Users/scroobz/.gradle/caches/8.13/transforms/194e763e134a22cf3d197770d4651f5e/transformed/annotation-experimental-1.4.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.annotation:annotation-experimental:1.4.0] /Users/scroobz/.gradle/caches/8.13/transforms/194e763e134a22cf3d197770d4651f5e/transformed/annotation-experimental-1.4.0/AndroidManifest.xml:5:5-44
+MERGED from [com.facebook.react:hermes-android:0.81.4] /Users/scroobz/.gradle/caches/8.13/transforms/58f3773db662b9a1045ccbc83213ce45/transformed/hermes-android-0.81.4-debug/AndroidManifest.xml:5:5-44
+MERGED from [com.facebook.react:hermes-android:0.81.4] /Users/scroobz/.gradle/caches/8.13/transforms/58f3773db662b9a1045ccbc83213ce45/transformed/hermes-android-0.81.4-debug/AndroidManifest.xml:5:5-44
+MERGED from [androidx.interpolator:interpolator:1.0.0] /Users/scroobz/.gradle/caches/8.13/transforms/02daa9a762e319ad38a3452936f7db7f/transformed/interpolator-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.interpolator:interpolator:1.0.0] /Users/scroobz/.gradle/caches/8.13/transforms/02daa9a762e319ad38a3452936f7db7f/transformed/interpolator-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.cardview:cardview:1.0.0] /Users/scroobz/.gradle/caches/8.13/transforms/3d9ff4a801c3eba1e8ebefeaf47faa4e/transformed/cardview-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.cardview:cardview:1.0.0] /Users/scroobz/.gradle/caches/8.13/transforms/3d9ff4a801c3eba1e8ebefeaf47faa4e/transformed/cardview-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.cursoradapter:cursoradapter:1.0.0] /Users/scroobz/.gradle/caches/8.13/transforms/1d3f68baec866a3792d5068d1fa7189e/transformed/cursoradapter-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.cursoradapter:cursoradapter:1.0.0] /Users/scroobz/.gradle/caches/8.13/transforms/1d3f68baec866a3792d5068d1fa7189e/transformed/cursoradapter-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /Users/scroobz/.gradle/caches/8.13/transforms/f7e4c8b93f235c18d04500fd96a440eb/transformed/versionedparcelable-1.1.1/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /Users/scroobz/.gradle/caches/8.13/transforms/f7e4c8b93f235c18d04500fd96a440eb/transformed/versionedparcelable-1.1.1/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.localbroadcastmanager:localbroadcastmanager:1.0.0] /Users/scroobz/.gradle/caches/8.13/transforms/5d9bd10518bde2bfbedd43decb9da6e0/transformed/localbroadcastmanager-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.localbroadcastmanager:localbroadcastmanager:1.0.0] /Users/scroobz/.gradle/caches/8.13/transforms/5d9bd10518bde2bfbedd43decb9da6e0/transformed/localbroadcastmanager-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.print:print:1.0.0] /Users/scroobz/.gradle/caches/8.13/transforms/b01fa7d25cb2ebb80310abbcadf48e44/transformed/print-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.print:print:1.0.0] /Users/scroobz/.gradle/caches/8.13/transforms/b01fa7d25cb2ebb80310abbcadf48e44/transformed/print-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.arch.core:core-runtime:2.2.0] /Users/scroobz/.gradle/caches/8.13/transforms/dc87fb6e019e6f9705567df5f67c983f/transformed/core-runtime-2.2.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.arch.core:core-runtime:2.2.0] /Users/scroobz/.gradle/caches/8.13/transforms/dc87fb6e019e6f9705567df5f67c983f/transformed/core-runtime-2.2.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.exifinterface:exifinterface:1.3.7] /Users/scroobz/.gradle/caches/8.13/transforms/8f05362ec5c3013bfc10f1bae2cab480/transformed/exifinterface-1.3.7/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.exifinterface:exifinterface:1.3.7] /Users/scroobz/.gradle/caches/8.13/transforms/8f05362ec5c3013bfc10f1bae2cab480/transformed/exifinterface-1.3.7/AndroidManifest.xml:20:5-22:41
+MERGED from [com.jakewharton.threetenabp:threetenabp:1.4.9] /Users/scroobz/.gradle/caches/8.13/transforms/fe610f9bdb607ffd4b4753ffbbd4ab97/transformed/threetenabp-1.4.9/AndroidManifest.xml:5:5-44
+MERGED from [com.jakewharton.threetenabp:threetenabp:1.4.9] /Users/scroobz/.gradle/caches/8.13/transforms/fe610f9bdb607ffd4b4753ffbbd4ab97/transformed/threetenabp-1.4.9/AndroidManifest.xml:5:5-44
+MERGED from [com.facebook.fbjni:fbjni:0.7.0] /Users/scroobz/.gradle/caches/8.13/transforms/671de4e66643daa85f35a98ac72d8de2/transformed/fbjni-0.7.0/AndroidManifest.xml:5:5-44
+MERGED from [com.facebook.fbjni:fbjni:0.7.0] /Users/scroobz/.gradle/caches/8.13/transforms/671de4e66643daa85f35a98ac72d8de2/transformed/fbjni-0.7.0/AndroidManifest.xml:5:5-44
+MERGED from [com.facebook.soloader:soloader:0.12.1] /Users/scroobz/.gradle/caches/8.13/transforms/bc63510bb7c7ed32309230b2caede042/transformed/soloader-0.12.1/AndroidManifest.xml:7:5-9:41
+MERGED from [com.facebook.soloader:soloader:0.12.1] /Users/scroobz/.gradle/caches/8.13/transforms/bc63510bb7c7ed32309230b2caede042/transformed/soloader-0.12.1/AndroidManifest.xml:7:5-9:41
+MERGED from [com.caverock:androidsvg-aar:1.4] /Users/scroobz/.gradle/caches/8.13/transforms/ba5584953672e8480ad32b9a66d01900/transformed/androidsvg-aar-1.4/AndroidManifest.xml:7:5-9:41
+MERGED from [com.caverock:androidsvg-aar:1.4] /Users/scroobz/.gradle/caches/8.13/transforms/ba5584953672e8480ad32b9a66d01900/transformed/androidsvg-aar-1.4/AndroidManifest.xml:7:5-9:41
+	android:targetSdkVersion
+		INJECTED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/debug/AndroidManifest.xml
+	android:minSdkVersion
+		INJECTED from /Users/scroobz/Navigation/Native/godot-template/android/app/src/debug/AndroidManifest.xml
+meta-data#org.unimodules.core.AppLoader#react-native-headless
+ADDED from [:expo-modules-core] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-modules-core/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:9:9-11:89
+	android:value
+		ADDED from [:expo-modules-core] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-modules-core/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:11:13-86
+	android:name
+		ADDED from [:expo-modules-core] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-modules-core/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:10:13-79
+meta-data#com.facebook.soloader.enabled
+ADDED from [:expo-modules-core] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-modules-core/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:12:9-15:45
+MERGED from [com.facebook.soloader:soloader:0.12.1] /Users/scroobz/.gradle/caches/8.13/transforms/bc63510bb7c7ed32309230b2caede042/transformed/soloader-0.12.1/AndroidManifest.xml:12:9-14:37
+MERGED from [com.facebook.soloader:soloader:0.12.1] /Users/scroobz/.gradle/caches/8.13/transforms/bc63510bb7c7ed32309230b2caede042/transformed/soloader-0.12.1/AndroidManifest.xml:12:9-14:37
+	tools:replace
+		ADDED from [:expo-modules-core] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-modules-core/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:15:13-42
+	android:value
+		ADDED from [:expo-modules-core] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-modules-core/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:14:13-33
+		REJECTED from [com.facebook.soloader:soloader:0.12.1] /Users/scroobz/.gradle/caches/8.13/transforms/bc63510bb7c7ed32309230b2caede042/transformed/soloader-0.12.1/AndroidManifest.xml:14:13-34
+	android:name
+		ADDED from [:expo-modules-core] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-modules-core/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:13:13-57
+uses-permission#android.permission.SYSTEM_ALERT_WINDOW
+ADDED from [com.facebook.react:react-android:0.81.4] /Users/scroobz/.gradle/caches/8.13/transforms/14a3878c2800f6eea79160815e4bc073/transformed/react-android-0.81.4-debug/AndroidManifest.xml:16:5-78
+	android:name
+		ADDED from [com.facebook.react:react-android:0.81.4] /Users/scroobz/.gradle/caches/8.13/transforms/14a3878c2800f6eea79160815e4bc073/transformed/react-android-0.81.4-debug/AndroidManifest.xml:16:22-75
+activity#com.facebook.react.devsupport.DevSettingsActivity
+ADDED from [com.facebook.react:react-android:0.81.4] /Users/scroobz/.gradle/caches/8.13/transforms/14a3878c2800f6eea79160815e4bc073/transformed/react-android-0.81.4-debug/AndroidManifest.xml:19:9-21:40
+	android:exported
+		ADDED from [com.facebook.react:react-android:0.81.4] /Users/scroobz/.gradle/caches/8.13/transforms/14a3878c2800f6eea79160815e4bc073/transformed/react-android-0.81.4-debug/AndroidManifest.xml:21:13-37
+	android:name
+		ADDED from [com.facebook.react:react-android:0.81.4] /Users/scroobz/.gradle/caches/8.13/transforms/14a3878c2800f6eea79160815e4bc073/transformed/react-android-0.81.4-debug/AndroidManifest.xml:20:13-77
+meta-data#org.godotengine.library.version
+ADDED from [com.migeran.libgodot:godot-debug:4.5.1.migeran.2-SNAPSHOT] /Users/scroobz/.gradle/caches/8.13/transforms/8fdf0ba9aab8202867eac1d9a9f6b3fe/transformed/godot-debug-4.5.1.migeran.2-SNAPSHOT/AndroidManifest.xml:12:9-14:47
+	android:value
+		ADDED from [com.migeran.libgodot:godot-debug:4.5.1.migeran.2-SNAPSHOT] /Users/scroobz/.gradle/caches/8.13/transforms/8fdf0ba9aab8202867eac1d9a9f6b3fe/transformed/godot-debug-4.5.1.migeran.2-SNAPSHOT/AndroidManifest.xml:14:13-44
+	android:name
+		ADDED from [com.migeran.libgodot:godot-debug:4.5.1.migeran.2-SNAPSHOT] /Users/scroobz/.gradle/caches/8.13/transforms/8fdf0ba9aab8202867eac1d9a9f6b3fe/transformed/godot-debug-4.5.1.migeran.2-SNAPSHOT/AndroidManifest.xml:13:13-59
+service#org.godotengine.godot.GodotDownloaderService
+ADDED from [com.migeran.libgodot:godot-debug:4.5.1.migeran.2-SNAPSHOT] /Users/scroobz/.gradle/caches/8.13/transforms/8fdf0ba9aab8202867eac1d9a9f6b3fe/transformed/godot-debug-4.5.1.migeran.2-SNAPSHOT/AndroidManifest.xml:16:9-80
+	android:name
+		ADDED from [com.migeran.libgodot:godot-debug:4.5.1.migeran.2-SNAPSHOT] /Users/scroobz/.gradle/caches/8.13/transforms/8fdf0ba9aab8202867eac1d9a9f6b3fe/transformed/godot-debug-4.5.1.migeran.2-SNAPSHOT/AndroidManifest.xml:16:18-77
+activity#org.godotengine.godot.utils.ProcessPhoenix
+ADDED from [com.migeran.libgodot:godot-debug:4.5.1.migeran.2-SNAPSHOT] /Users/scroobz/.gradle/caches/8.13/transforms/8fdf0ba9aab8202867eac1d9a9f6b3fe/transformed/godot-debug-4.5.1.migeran.2-SNAPSHOT/AndroidManifest.xml:18:9-22:75
+	android:process
+		ADDED from [com.migeran.libgodot:godot-debug:4.5.1.migeran.2-SNAPSHOT] /Users/scroobz/.gradle/caches/8.13/transforms/8fdf0ba9aab8202867eac1d9a9f6b3fe/transformed/godot-debug-4.5.1.migeran.2-SNAPSHOT/AndroidManifest.xml:21:13-39
+	android:exported
+		ADDED from [com.migeran.libgodot:godot-debug:4.5.1.migeran.2-SNAPSHOT] /Users/scroobz/.gradle/caches/8.13/transforms/8fdf0ba9aab8202867eac1d9a9f6b3fe/transformed/godot-debug-4.5.1.migeran.2-SNAPSHOT/AndroidManifest.xml:20:13-37
+	android:theme
+		ADDED from [com.migeran.libgodot:godot-debug:4.5.1.migeran.2-SNAPSHOT] /Users/scroobz/.gradle/caches/8.13/transforms/8fdf0ba9aab8202867eac1d9a9f6b3fe/transformed/godot-debug-4.5.1.migeran.2-SNAPSHOT/AndroidManifest.xml:22:13-72
+	android:name
+		ADDED from [com.migeran.libgodot:godot-debug:4.5.1.migeran.2-SNAPSHOT] /Users/scroobz/.gradle/caches/8.13/transforms/8fdf0ba9aab8202867eac1d9a9f6b3fe/transformed/godot-debug-4.5.1.migeran.2-SNAPSHOT/AndroidManifest.xml:19:13-70
+provider#androidx.core.content.FileProvider
+ADDED from [com.migeran.libgodot:godot-debug:4.5.1.migeran.2-SNAPSHOT] /Users/scroobz/.gradle/caches/8.13/transforms/8fdf0ba9aab8202867eac1d9a9f6b3fe/transformed/godot-debug-4.5.1.migeran.2-SNAPSHOT/AndroidManifest.xml:24:9-32:20
+	android:grantUriPermissions
+		ADDED from [com.migeran.libgodot:godot-debug:4.5.1.migeran.2-SNAPSHOT] /Users/scroobz/.gradle/caches/8.13/transforms/8fdf0ba9aab8202867eac1d9a9f6b3fe/transformed/godot-debug-4.5.1.migeran.2-SNAPSHOT/AndroidManifest.xml:28:13-47
+	android:authorities
+		ADDED from [com.migeran.libgodot:godot-debug:4.5.1.migeran.2-SNAPSHOT] /Users/scroobz/.gradle/caches/8.13/transforms/8fdf0ba9aab8202867eac1d9a9f6b3fe/transformed/godot-debug-4.5.1.migeran.2-SNAPSHOT/AndroidManifest.xml:26:13-64
+	android:exported
+		ADDED from [com.migeran.libgodot:godot-debug:4.5.1.migeran.2-SNAPSHOT] /Users/scroobz/.gradle/caches/8.13/transforms/8fdf0ba9aab8202867eac1d9a9f6b3fe/transformed/godot-debug-4.5.1.migeran.2-SNAPSHOT/AndroidManifest.xml:27:13-37
+	android:name
+		ADDED from [com.migeran.libgodot:godot-debug:4.5.1.migeran.2-SNAPSHOT] /Users/scroobz/.gradle/caches/8.13/transforms/8fdf0ba9aab8202867eac1d9a9f6b3fe/transformed/godot-debug-4.5.1.migeran.2-SNAPSHOT/AndroidManifest.xml:25:13-62
+meta-data#android.support.FILE_PROVIDER_PATHS
+ADDED from [com.migeran.libgodot:godot-debug:4.5.1.migeran.2-SNAPSHOT] /Users/scroobz/.gradle/caches/8.13/transforms/8fdf0ba9aab8202867eac1d9a9f6b3fe/transformed/godot-debug-4.5.1.migeran.2-SNAPSHOT/AndroidManifest.xml:29:13-31:64
+	android:resource
+		ADDED from [com.migeran.libgodot:godot-debug:4.5.1.migeran.2-SNAPSHOT] /Users/scroobz/.gradle/caches/8.13/transforms/8fdf0ba9aab8202867eac1d9a9f6b3fe/transformed/godot-debug-4.5.1.migeran.2-SNAPSHOT/AndroidManifest.xml:31:17-61
+	android:name
+		ADDED from [com.migeran.libgodot:godot-debug:4.5.1.migeran.2-SNAPSHOT] /Users/scroobz/.gradle/caches/8.13/transforms/8fdf0ba9aab8202867eac1d9a9f6b3fe/transformed/godot-debug-4.5.1.migeran.2-SNAPSHOT/AndroidManifest.xml:30:17-67
+uses-permission#android.permission.WRITE_EXTERNAL_STORAGE
+ADDED from [:expo-file-system] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-file-system/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:9:5-81
+	android:name
+		ADDED from [:expo-file-system] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-file-system/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:9:22-78
+uses-permission#android.permission.READ_EXTERNAL_STORAGE
+ADDED from [:expo-file-system] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-file-system/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:10:5-80
+	android:name
+		ADDED from [:expo-file-system] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-file-system/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:10:22-77
+queries
+ADDED from [:expo-file-system] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-file-system/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:12:5-18:15
+intent#action:name:android.intent.action.OPEN_DOCUMENT_TREE
+ADDED from [:expo-file-system] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-file-system/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:15:9-17:18
+action#android.intent.action.OPEN_DOCUMENT_TREE
+ADDED from [:expo-file-system] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-file-system/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:16:13-79
+	android:name
+		ADDED from [:expo-file-system] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-file-system/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:16:21-76
+provider#expo.modules.filesystem.FileSystemFileProvider
+ADDED from [:expo-file-system] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-file-system/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:21:9-30:20
+	android:grantUriPermissions
+		ADDED from [:expo-file-system] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-file-system/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:25:13-47
+	android:authorities
+		ADDED from [:expo-file-system] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-file-system/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:23:13-74
+	android:exported
+		ADDED from [:expo-file-system] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-file-system/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:24:13-37
+	tools:replace
+		ADDED from [:expo-file-system] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-file-system/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:26:13-48
+	android:name
+		ADDED from [:expo-file-system] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-file-system/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:22:13-74
+provider#androidx.startup.InitializationProvider
+ADDED from [androidx.emoji2:emoji2:1.3.0] /Users/scroobz/.gradle/caches/8.13/transforms/9ac75a80c23966c00f5ba0114feda6b2/transformed/emoji2-1.3.0/AndroidManifest.xml:24:9-32:20
+MERGED from [androidx.lifecycle:lifecycle-process:2.8.7] /Users/scroobz/.gradle/caches/8.13/transforms/537e19ba5f1d1d747ca3d81c1c4ac786/transformed/lifecycle-process-2.8.7/AndroidManifest.xml:24:9-32:20
+MERGED from [androidx.lifecycle:lifecycle-process:2.8.7] /Users/scroobz/.gradle/caches/8.13/transforms/537e19ba5f1d1d747ca3d81c1c4ac786/transformed/lifecycle-process-2.8.7/AndroidManifest.xml:24:9-32:20
+MERGED from [androidx.profileinstaller:profileinstaller:1.4.1] /Users/scroobz/.gradle/caches/8.13/transforms/11710fde9512ada01b7df8185f303fc4/transformed/profileinstaller-1.4.1/AndroidManifest.xml:24:9-32:20
+MERGED from [androidx.profileinstaller:profileinstaller:1.4.1] /Users/scroobz/.gradle/caches/8.13/transforms/11710fde9512ada01b7df8185f303fc4/transformed/profileinstaller-1.4.1/AndroidManifest.xml:24:9-32:20
+MERGED from [androidx.startup:startup-runtime:1.1.1] /Users/scroobz/.gradle/caches/8.13/transforms/6f5bd8e758484da1c78bcbc31fadc9d9/transformed/startup-runtime-1.1.1/AndroidManifest.xml:26:9-30:34
+MERGED from [androidx.startup:startup-runtime:1.1.1] /Users/scroobz/.gradle/caches/8.13/transforms/6f5bd8e758484da1c78bcbc31fadc9d9/transformed/startup-runtime-1.1.1/AndroidManifest.xml:26:9-30:34
+	tools:node
+		ADDED from [androidx.emoji2:emoji2:1.3.0] /Users/scroobz/.gradle/caches/8.13/transforms/9ac75a80c23966c00f5ba0114feda6b2/transformed/emoji2-1.3.0/AndroidManifest.xml:28:13-31
+	android:authorities
+		ADDED from [androidx.emoji2:emoji2:1.3.0] /Users/scroobz/.gradle/caches/8.13/transforms/9ac75a80c23966c00f5ba0114feda6b2/transformed/emoji2-1.3.0/AndroidManifest.xml:26:13-68
+	android:exported
+		ADDED from [androidx.emoji2:emoji2:1.3.0] /Users/scroobz/.gradle/caches/8.13/transforms/9ac75a80c23966c00f5ba0114feda6b2/transformed/emoji2-1.3.0/AndroidManifest.xml:27:13-37
+	android:name
+		ADDED from [androidx.emoji2:emoji2:1.3.0] /Users/scroobz/.gradle/caches/8.13/transforms/9ac75a80c23966c00f5ba0114feda6b2/transformed/emoji2-1.3.0/AndroidManifest.xml:25:13-67
+meta-data#androidx.emoji2.text.EmojiCompatInitializer
+ADDED from [androidx.emoji2:emoji2:1.3.0] /Users/scroobz/.gradle/caches/8.13/transforms/9ac75a80c23966c00f5ba0114feda6b2/transformed/emoji2-1.3.0/AndroidManifest.xml:29:13-31:52
+	android:value
+		ADDED from [androidx.emoji2:emoji2:1.3.0] /Users/scroobz/.gradle/caches/8.13/transforms/9ac75a80c23966c00f5ba0114feda6b2/transformed/emoji2-1.3.0/AndroidManifest.xml:31:17-49
+	android:name
+		ADDED from [androidx.emoji2:emoji2:1.3.0] /Users/scroobz/.gradle/caches/8.13/transforms/9ac75a80c23966c00f5ba0114feda6b2/transformed/emoji2-1.3.0/AndroidManifest.xml:30:17-75
+permission#${applicationId}.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+ADDED from [androidx.core:core:1.13.1] /Users/scroobz/.gradle/caches/8.13/transforms/1966bc226887e049897b1945bdfae0b0/transformed/core-1.13.1/AndroidManifest.xml:22:5-24:47
+	android:protectionLevel
+		ADDED from [androidx.core:core:1.13.1] /Users/scroobz/.gradle/caches/8.13/transforms/1966bc226887e049897b1945bdfae0b0/transformed/core-1.13.1/AndroidManifest.xml:24:9-44
+	android:name
+		ADDED from [androidx.core:core:1.13.1] /Users/scroobz/.gradle/caches/8.13/transforms/1966bc226887e049897b1945bdfae0b0/transformed/core-1.13.1/AndroidManifest.xml:23:9-81
+permission#com.godottest.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+ADDED from [androidx.core:core:1.13.1] /Users/scroobz/.gradle/caches/8.13/transforms/1966bc226887e049897b1945bdfae0b0/transformed/core-1.13.1/AndroidManifest.xml:22:5-24:47
+	android:protectionLevel
+		ADDED from [androidx.core:core:1.13.1] /Users/scroobz/.gradle/caches/8.13/transforms/1966bc226887e049897b1945bdfae0b0/transformed/core-1.13.1/AndroidManifest.xml:24:9-44
+	android:name
+		ADDED from [androidx.core:core:1.13.1] /Users/scroobz/.gradle/caches/8.13/transforms/1966bc226887e049897b1945bdfae0b0/transformed/core-1.13.1/AndroidManifest.xml:23:9-81
+uses-permission#${applicationId}.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+ADDED from [androidx.core:core:1.13.1] /Users/scroobz/.gradle/caches/8.13/transforms/1966bc226887e049897b1945bdfae0b0/transformed/core-1.13.1/AndroidManifest.xml:26:5-97
+	android:name
+		ADDED from [androidx.core:core:1.13.1] /Users/scroobz/.gradle/caches/8.13/transforms/1966bc226887e049897b1945bdfae0b0/transformed/core-1.13.1/AndroidManifest.xml:26:22-94
+uses-permission#com.godottest.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+ADDED from [androidx.core:core:1.13.1] /Users/scroobz/.gradle/caches/8.13/transforms/1966bc226887e049897b1945bdfae0b0/transformed/core-1.13.1/AndroidManifest.xml:26:5-97
+	android:name
+		ADDED from [androidx.core:core:1.13.1] /Users/scroobz/.gradle/caches/8.13/transforms/1966bc226887e049897b1945bdfae0b0/transformed/core-1.13.1/AndroidManifest.xml:26:22-94
+meta-data#androidx.lifecycle.ProcessLifecycleInitializer
+ADDED from [androidx.lifecycle:lifecycle-process:2.8.7] /Users/scroobz/.gradle/caches/8.13/transforms/537e19ba5f1d1d747ca3d81c1c4ac786/transformed/lifecycle-process-2.8.7/AndroidManifest.xml:29:13-31:52
+	android:value
+		ADDED from [androidx.lifecycle:lifecycle-process:2.8.7] /Users/scroobz/.gradle/caches/8.13/transforms/537e19ba5f1d1d747ca3d81c1c4ac786/transformed/lifecycle-process-2.8.7/AndroidManifest.xml:31:17-49
+	android:name
+		ADDED from [androidx.lifecycle:lifecycle-process:2.8.7] /Users/scroobz/.gradle/caches/8.13/transforms/537e19ba5f1d1d747ca3d81c1c4ac786/transformed/lifecycle-process-2.8.7/AndroidManifest.xml:30:17-78
+meta-data#androidx.profileinstaller.ProfileInstallerInitializer
+ADDED from [androidx.profileinstaller:profileinstaller:1.4.1] /Users/scroobz/.gradle/caches/8.13/transforms/11710fde9512ada01b7df8185f303fc4/transformed/profileinstaller-1.4.1/AndroidManifest.xml:29:13-31:52
+	android:value
+		ADDED from [androidx.profileinstaller:profileinstaller:1.4.1] /Users/scroobz/.gradle/caches/8.13/transforms/11710fde9512ada01b7df8185f303fc4/transformed/profileinstaller-1.4.1/AndroidManifest.xml:31:17-49
+	android:name
+		ADDED from [androidx.profileinstaller:profileinstaller:1.4.1] /Users/scroobz/.gradle/caches/8.13/transforms/11710fde9512ada01b7df8185f303fc4/transformed/profileinstaller-1.4.1/AndroidManifest.xml:30:17-85
+receiver#androidx.profileinstaller.ProfileInstallReceiver
+ADDED from [androidx.profileinstaller:profileinstaller:1.4.1] /Users/scroobz/.gradle/caches/8.13/transforms/11710fde9512ada01b7df8185f303fc4/transformed/profileinstaller-1.4.1/AndroidManifest.xml:34:9-52:20
+	android:enabled
+		ADDED from [androidx.profileinstaller:profileinstaller:1.4.1] /Users/scroobz/.gradle/caches/8.13/transforms/11710fde9512ada01b7df8185f303fc4/transformed/profileinstaller-1.4.1/AndroidManifest.xml:37:13-35
+	android:exported
+		ADDED from [androidx.profileinstaller:profileinstaller:1.4.1] /Users/scroobz/.gradle/caches/8.13/transforms/11710fde9512ada01b7df8185f303fc4/transformed/profileinstaller-1.4.1/AndroidManifest.xml:38:13-36
+	android:permission
+		ADDED from [androidx.profileinstaller:profileinstaller:1.4.1] /Users/scroobz/.gradle/caches/8.13/transforms/11710fde9512ada01b7df8185f303fc4/transformed/profileinstaller-1.4.1/AndroidManifest.xml:39:13-57
+	android:directBootAware
+		ADDED from [androidx.profileinstaller:profileinstaller:1.4.1] /Users/scroobz/.gradle/caches/8.13/transforms/11710fde9512ada01b7df8185f303fc4/transformed/profileinstaller-1.4.1/AndroidManifest.xml:36:13-44
+	android:name
+		ADDED from [androidx.profileinstaller:profileinstaller:1.4.1] /Users/scroobz/.gradle/caches/8.13/transforms/11710fde9512ada01b7df8185f303fc4/transformed/profileinstaller-1.4.1/AndroidManifest.xml:35:13-76
+intent-filter#action:name:androidx.profileinstaller.action.INSTALL_PROFILE
+ADDED from [androidx.profileinstaller:profileinstaller:1.4.1] /Users/scroobz/.gradle/caches/8.13/transforms/11710fde9512ada01b7df8185f303fc4/transformed/profileinstaller-1.4.1/AndroidManifest.xml:40:13-42:29
+action#androidx.profileinstaller.action.INSTALL_PROFILE
+ADDED from [androidx.profileinstaller:profileinstaller:1.4.1] /Users/scroobz/.gradle/caches/8.13/transforms/11710fde9512ada01b7df8185f303fc4/transformed/profileinstaller-1.4.1/AndroidManifest.xml:41:17-91
+	android:name
+		ADDED from [androidx.profileinstaller:profileinstaller:1.4.1] /Users/scroobz/.gradle/caches/8.13/transforms/11710fde9512ada01b7df8185f303fc4/transformed/profileinstaller-1.4.1/AndroidManifest.xml:41:25-88
+intent-filter#action:name:androidx.profileinstaller.action.SKIP_FILE
+ADDED from [androidx.profileinstaller:profileinstaller:1.4.1] /Users/scroobz/.gradle/caches/8.13/transforms/11710fde9512ada01b7df8185f303fc4/transformed/profileinstaller-1.4.1/AndroidManifest.xml:43:13-45:29
+action#androidx.profileinstaller.action.SKIP_FILE
+ADDED from [androidx.profileinstaller:profileinstaller:1.4.1] /Users/scroobz/.gradle/caches/8.13/transforms/11710fde9512ada01b7df8185f303fc4/transformed/profileinstaller-1.4.1/AndroidManifest.xml:44:17-85
+	android:name
+		ADDED from [androidx.profileinstaller:profileinstaller:1.4.1] /Users/scroobz/.gradle/caches/8.13/transforms/11710fde9512ada01b7df8185f303fc4/transformed/profileinstaller-1.4.1/AndroidManifest.xml:44:25-82
+intent-filter#action:name:androidx.profileinstaller.action.SAVE_PROFILE
+ADDED from [androidx.profileinstaller:profileinstaller:1.4.1] /Users/scroobz/.gradle/caches/8.13/transforms/11710fde9512ada01b7df8185f303fc4/transformed/profileinstaller-1.4.1/AndroidManifest.xml:46:13-48:29
+action#androidx.profileinstaller.action.SAVE_PROFILE
+ADDED from [androidx.profileinstaller:profileinstaller:1.4.1] /Users/scroobz/.gradle/caches/8.13/transforms/11710fde9512ada01b7df8185f303fc4/transformed/profileinstaller-1.4.1/AndroidManifest.xml:47:17-88
+	android:name
+		ADDED from [androidx.profileinstaller:profileinstaller:1.4.1] /Users/scroobz/.gradle/caches/8.13/transforms/11710fde9512ada01b7df8185f303fc4/transformed/profileinstaller-1.4.1/AndroidManifest.xml:47:25-85
+intent-filter#action:name:androidx.profileinstaller.action.BENCHMARK_OPERATION
+ADDED from [androidx.profileinstaller:profileinstaller:1.4.1] /Users/scroobz/.gradle/caches/8.13/transforms/11710fde9512ada01b7df8185f303fc4/transformed/profileinstaller-1.4.1/AndroidManifest.xml:49:13-51:29
+action#androidx.profileinstaller.action.BENCHMARK_OPERATION
+ADDED from [androidx.profileinstaller:profileinstaller:1.4.1] /Users/scroobz/.gradle/caches/8.13/transforms/11710fde9512ada01b7df8185f303fc4/transformed/profileinstaller-1.4.1/AndroidManifest.xml:50:17-95
+	android:name
+		ADDED from [androidx.profileinstaller:profileinstaller:1.4.1] /Users/scroobz/.gradle/caches/8.13/transforms/11710fde9512ada01b7df8185f303fc4/transformed/profileinstaller-1.4.1/AndroidManifest.xml:50:25-92

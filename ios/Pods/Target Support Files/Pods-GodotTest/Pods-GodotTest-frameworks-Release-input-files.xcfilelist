@@ -1,0 +1,3 @@
+${PODS_ROOT}/Target Support Files/Pods-GodotTest/Pods-GodotTest-frameworks.sh
+${PODS_XCFRAMEWORKS_BUILD_DIR}/borndotcom-react-native-godot/libgodot.framework/libgodot
+${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes
