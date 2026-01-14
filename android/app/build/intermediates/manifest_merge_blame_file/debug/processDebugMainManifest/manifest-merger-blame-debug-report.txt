@@ -1,0 +1,254 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="com.godottest"
+4    android:versionCode="1"
+5    android:versionName="1.0" >
+6
+7    <uses-sdk
+8        android:minSdkVersion="29"
+9        android:targetSdkVersion="35" />
+10
+11    <uses-permission android:name="android.permission.INTERNET" />
+11-->/Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:3:5-67
+11-->/Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:3:22-64
+12    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+12-->/Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:4:5-75
+12-->/Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:4:22-72
+13    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+13-->/Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:5:5-82
+13-->/Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:5:22-79
+14
+15    <uses-feature
+15-->/Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:7:5-9:35
+16        android:glEsVersion="0x00030000"
+16-->/Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:8:9-41
+17        android:required="true" />
+17-->/Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:9:9-32
+18    <!--
+19    This manifest file is used only by Gradle to configure debug-only capabilities
+20    for React Native Apps.
+21    -->
+22    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+22-->[com.facebook.react:react-android:0.81.4] /Users/scroobz/.gradle/caches/8.13/transforms/14a3878c2800f6eea79160815e4bc073/transformed/react-android-0.81.4-debug/AndroidManifest.xml:16:5-78
+22-->[com.facebook.react:react-android:0.81.4] /Users/scroobz/.gradle/caches/8.13/transforms/14a3878c2800f6eea79160815e4bc073/transformed/react-android-0.81.4-debug/AndroidManifest.xml:16:22-75
+23    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+23-->[:expo-file-system] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-file-system/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:9:5-81
+23-->[:expo-file-system] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-file-system/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:9:22-78
+24    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+24-->[:expo-file-system] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-file-system/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:10:5-80
+24-->[:expo-file-system] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-file-system/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:10:22-77
+25
+26    <queries>
+26-->[:expo-file-system] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-file-system/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:12:5-18:15
+27
+28        <!-- Query open documents -->
+29        <intent>
+29-->[:expo-file-system] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-file-system/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:15:9-17:18
+30            <action android:name="android.intent.action.OPEN_DOCUMENT_TREE" />
+30-->[:expo-file-system] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-file-system/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:16:13-79
+30-->[:expo-file-system] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-file-system/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:16:21-76
+31        </intent>
+32    </queries>
+33
+34    <permission
+34-->[androidx.core:core:1.13.1] /Users/scroobz/.gradle/caches/8.13/transforms/1966bc226887e049897b1945bdfae0b0/transformed/core-1.13.1/AndroidManifest.xml:22:5-24:47
+35        android:name="com.godottest.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+35-->[androidx.core:core:1.13.1] /Users/scroobz/.gradle/caches/8.13/transforms/1966bc226887e049897b1945bdfae0b0/transformed/core-1.13.1/AndroidManifest.xml:23:9-81
+36        android:protectionLevel="signature" />
+36-->[androidx.core:core:1.13.1] /Users/scroobz/.gradle/caches/8.13/transforms/1966bc226887e049897b1945bdfae0b0/transformed/core-1.13.1/AndroidManifest.xml:24:9-44
+37
+38    <uses-permission android:name="com.godottest.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+38-->[androidx.core:core:1.13.1] /Users/scroobz/.gradle/caches/8.13/transforms/1966bc226887e049897b1945bdfae0b0/transformed/core-1.13.1/AndroidManifest.xml:26:5-97
+38-->[androidx.core:core:1.13.1] /Users/scroobz/.gradle/caches/8.13/transforms/1966bc226887e049897b1945bdfae0b0/transformed/core-1.13.1/AndroidManifest.xml:26:22-94
+39
+40    <application
+40-->/Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:11:5-31:19
+41        android:name="com.godottest.MainApplication"
+41-->/Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:12:7-38
+42        android:allowBackup="false"
+42-->/Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:16:7-34
+43        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+43-->[androidx.core:core:1.13.1] /Users/scroobz/.gradle/caches/8.13/transforms/1966bc226887e049897b1945bdfae0b0/transformed/core-1.13.1/AndroidManifest.xml:28:18-86
+44        android:debuggable="true"
+45        android:extractNativeLibs="false"
+46        android:icon="@mipmap/ic_launcher"
+46-->/Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:14:7-41
+47        android:label="@string/app_name"
+47-->/Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:13:7-39
+48        android:roundIcon="@mipmap/ic_launcher_round"
+48-->/Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:15:7-52
+49        android:supportsRtl="true"
+49-->/Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:18:7-33
+50        android:theme="@style/AppTheme"
+50-->/Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:17:7-38
+51        android:usesCleartextTraffic="true" >
+51-->/Users/scroobz/Navigation/Native/godot-template/android/app/src/debug/AndroidManifest.xml:6:9-44
+52        <activity
+52-->/Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:19:7-30:18
+53            android:name="com.godottest.MainActivity"
+53-->/Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:20:9-37
+54            android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize|uiMode"
+54-->/Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:22:9-118
+55            android:exported="true"
+55-->/Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:25:9-32
+56            android:label="@string/app_name"
+56-->/Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:21:9-41
+57            android:launchMode="singleTask"
+57-->/Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:23:9-40
+58            android:windowSoftInputMode="adjustResize" >
+58-->/Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:24:9-51
+59            <intent-filter>
+59-->/Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:26:9-29:25
+60                <action android:name="android.intent.action.MAIN" />
+60-->/Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:27:13-65
+60-->/Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:27:21-62
+61
+62                <category android:name="android.intent.category.LAUNCHER" />
+62-->/Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:28:13-73
+62-->/Users/scroobz/Navigation/Native/godot-template/android/app/src/main/AndroidManifest.xml:28:23-70
+63            </intent-filter>
+64        </activity>
+65
+66        <meta-data
+66-->[:expo-modules-core] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-modules-core/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:9:9-11:89
+67            android:name="org.unimodules.core.AppLoader#react-native-headless"
+67-->[:expo-modules-core] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-modules-core/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:10:13-79
+68            android:value="expo.modules.adapters.react.apploader.RNHeadlessAppLoader" />
+68-->[:expo-modules-core] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-modules-core/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:11:13-86
+69        <meta-data
+69-->[:expo-modules-core] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-modules-core/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:12:9-15:45
+70            android:name="com.facebook.soloader.enabled"
+70-->[:expo-modules-core] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-modules-core/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:13:13-57
+71            android:value="true" />
+71-->[:expo-modules-core] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-modules-core/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:14:13-33
+72
+73        <activity
+73-->[com.facebook.react:react-android:0.81.4] /Users/scroobz/.gradle/caches/8.13/transforms/14a3878c2800f6eea79160815e4bc073/transformed/react-android-0.81.4-debug/AndroidManifest.xml:19:9-21:40
+74            android:name="com.facebook.react.devsupport.DevSettingsActivity"
+74-->[com.facebook.react:react-android:0.81.4] /Users/scroobz/.gradle/caches/8.13/transforms/14a3878c2800f6eea79160815e4bc073/transformed/react-android-0.81.4-debug/AndroidManifest.xml:20:13-77
+75            android:exported="false" /> <!-- Records the version of the Godot library -->
+75-->[com.facebook.react:react-android:0.81.4] /Users/scroobz/.gradle/caches/8.13/transforms/14a3878c2800f6eea79160815e4bc073/transformed/react-android-0.81.4-debug/AndroidManifest.xml:21:13-37
+76        <meta-data
+76-->[com.migeran.libgodot:godot-debug:4.5.1.migeran.2-SNAPSHOT] /Users/scroobz/.gradle/caches/8.13/transforms/8fdf0ba9aab8202867eac1d9a9f6b3fe/transformed/godot-debug-4.5.1.migeran.2-SNAPSHOT/AndroidManifest.xml:12:9-14:47
+77            android:name="org.godotengine.library.version"
+77-->[com.migeran.libgodot:godot-debug:4.5.1.migeran.2-SNAPSHOT] /Users/scroobz/.gradle/caches/8.13/transforms/8fdf0ba9aab8202867eac1d9a9f6b3fe/transformed/godot-debug-4.5.1.migeran.2-SNAPSHOT/AndroidManifest.xml:13:13-59
+78            android:value="4.5.1.migeran.2" />
+78-->[com.migeran.libgodot:godot-debug:4.5.1.migeran.2-SNAPSHOT] /Users/scroobz/.gradle/caches/8.13/transforms/8fdf0ba9aab8202867eac1d9a9f6b3fe/transformed/godot-debug-4.5.1.migeran.2-SNAPSHOT/AndroidManifest.xml:14:13-44
+79
+80        <service android:name="org.godotengine.godot.GodotDownloaderService" />
+80-->[com.migeran.libgodot:godot-debug:4.5.1.migeran.2-SNAPSHOT] /Users/scroobz/.gradle/caches/8.13/transforms/8fdf0ba9aab8202867eac1d9a9f6b3fe/transformed/godot-debug-4.5.1.migeran.2-SNAPSHOT/AndroidManifest.xml:16:9-80
+80-->[com.migeran.libgodot:godot-debug:4.5.1.migeran.2-SNAPSHOT] /Users/scroobz/.gradle/caches/8.13/transforms/8fdf0ba9aab8202867eac1d9a9f6b3fe/transformed/godot-debug-4.5.1.migeran.2-SNAPSHOT/AndroidManifest.xml:16:18-77
+81
+82        <activity
+82-->[com.migeran.libgodot:godot-debug:4.5.1.migeran.2-SNAPSHOT] /Users/scroobz/.gradle/caches/8.13/transforms/8fdf0ba9aab8202867eac1d9a9f6b3fe/transformed/godot-debug-4.5.1.migeran.2-SNAPSHOT/AndroidManifest.xml:18:9-22:75
+83            android:name="org.godotengine.godot.utils.ProcessPhoenix"
+83-->[com.migeran.libgodot:godot-debug:4.5.1.migeran.2-SNAPSHOT] /Users/scroobz/.gradle/caches/8.13/transforms/8fdf0ba9aab8202867eac1d9a9f6b3fe/transformed/godot-debug-4.5.1.migeran.2-SNAPSHOT/AndroidManifest.xml:19:13-70
+84            android:exported="false"
+84-->[com.migeran.libgodot:godot-debug:4.5.1.migeran.2-SNAPSHOT] /Users/scroobz/.gradle/caches/8.13/transforms/8fdf0ba9aab8202867eac1d9a9f6b3fe/transformed/godot-debug-4.5.1.migeran.2-SNAPSHOT/AndroidManifest.xml:20:13-37
+85            android:process=":phoenix"
+85-->[com.migeran.libgodot:godot-debug:4.5.1.migeran.2-SNAPSHOT] /Users/scroobz/.gradle/caches/8.13/transforms/8fdf0ba9aab8202867eac1d9a9f6b3fe/transformed/godot-debug-4.5.1.migeran.2-SNAPSHOT/AndroidManifest.xml:21:13-39
+86            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+86-->[com.migeran.libgodot:godot-debug:4.5.1.migeran.2-SNAPSHOT] /Users/scroobz/.gradle/caches/8.13/transforms/8fdf0ba9aab8202867eac1d9a9f6b3fe/transformed/godot-debug-4.5.1.migeran.2-SNAPSHOT/AndroidManifest.xml:22:13-72
+87
+88        <provider
+88-->[com.migeran.libgodot:godot-debug:4.5.1.migeran.2-SNAPSHOT] /Users/scroobz/.gradle/caches/8.13/transforms/8fdf0ba9aab8202867eac1d9a9f6b3fe/transformed/godot-debug-4.5.1.migeran.2-SNAPSHOT/AndroidManifest.xml:24:9-32:20
+89            android:name="androidx.core.content.FileProvider"
+89-->[com.migeran.libgodot:godot-debug:4.5.1.migeran.2-SNAPSHOT] /Users/scroobz/.gradle/caches/8.13/transforms/8fdf0ba9aab8202867eac1d9a9f6b3fe/transformed/godot-debug-4.5.1.migeran.2-SNAPSHOT/AndroidManifest.xml:25:13-62
+90            android:authorities="com.godottest.fileprovider"
+90-->[com.migeran.libgodot:godot-debug:4.5.1.migeran.2-SNAPSHOT] /Users/scroobz/.gradle/caches/8.13/transforms/8fdf0ba9aab8202867eac1d9a9f6b3fe/transformed/godot-debug-4.5.1.migeran.2-SNAPSHOT/AndroidManifest.xml:26:13-64
+91            android:exported="false"
+91-->[com.migeran.libgodot:godot-debug:4.5.1.migeran.2-SNAPSHOT] /Users/scroobz/.gradle/caches/8.13/transforms/8fdf0ba9aab8202867eac1d9a9f6b3fe/transformed/godot-debug-4.5.1.migeran.2-SNAPSHOT/AndroidManifest.xml:27:13-37
+92            android:grantUriPermissions="true" >
+92-->[com.migeran.libgodot:godot-debug:4.5.1.migeran.2-SNAPSHOT] /Users/scroobz/.gradle/caches/8.13/transforms/8fdf0ba9aab8202867eac1d9a9f6b3fe/transformed/godot-debug-4.5.1.migeran.2-SNAPSHOT/AndroidManifest.xml:28:13-47
+93            <meta-data
+93-->[com.migeran.libgodot:godot-debug:4.5.1.migeran.2-SNAPSHOT] /Users/scroobz/.gradle/caches/8.13/transforms/8fdf0ba9aab8202867eac1d9a9f6b3fe/transformed/godot-debug-4.5.1.migeran.2-SNAPSHOT/AndroidManifest.xml:29:13-31:64
+94                android:name="android.support.FILE_PROVIDER_PATHS"
+94-->[com.migeran.libgodot:godot-debug:4.5.1.migeran.2-SNAPSHOT] /Users/scroobz/.gradle/caches/8.13/transforms/8fdf0ba9aab8202867eac1d9a9f6b3fe/transformed/godot-debug-4.5.1.migeran.2-SNAPSHOT/AndroidManifest.xml:30:17-67
+95                android:resource="@xml/godot_provider_paths" />
+95-->[com.migeran.libgodot:godot-debug:4.5.1.migeran.2-SNAPSHOT] /Users/scroobz/.gradle/caches/8.13/transforms/8fdf0ba9aab8202867eac1d9a9f6b3fe/transformed/godot-debug-4.5.1.migeran.2-SNAPSHOT/AndroidManifest.xml:31:17-61
+96        </provider>
+97        <provider
+97-->[:expo-file-system] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-file-system/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:21:9-30:20
+98            android:name="expo.modules.filesystem.FileSystemFileProvider"
+98-->[:expo-file-system] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-file-system/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:22:13-74
+99            android:authorities="com.godottest.FileSystemFileProvider"
+99-->[:expo-file-system] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-file-system/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:23:13-74
+100            android:exported="false"
+100-->[:expo-file-system] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-file-system/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:24:13-37
+101            android:grantUriPermissions="true" >
+101-->[:expo-file-system] /Users/scroobz/Navigation/Native/godot-template/node_modules/expo-file-system/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:25:13-47
+102            <meta-data
+102-->[com.migeran.libgodot:godot-debug:4.5.1.migeran.2-SNAPSHOT] /Users/scroobz/.gradle/caches/8.13/transforms/8fdf0ba9aab8202867eac1d9a9f6b3fe/transformed/godot-debug-4.5.1.migeran.2-SNAPSHOT/AndroidManifest.xml:29:13-31:64
+103                android:name="android.support.FILE_PROVIDER_PATHS"
+103-->[com.migeran.libgodot:godot-debug:4.5.1.migeran.2-SNAPSHOT] /Users/scroobz/.gradle/caches/8.13/transforms/8fdf0ba9aab8202867eac1d9a9f6b3fe/transformed/godot-debug-4.5.1.migeran.2-SNAPSHOT/AndroidManifest.xml:30:17-67
+104                android:resource="@xml/file_system_provider_paths" />
+104-->[com.migeran.libgodot:godot-debug:4.5.1.migeran.2-SNAPSHOT] /Users/scroobz/.gradle/caches/8.13/transforms/8fdf0ba9aab8202867eac1d9a9f6b3fe/transformed/godot-debug-4.5.1.migeran.2-SNAPSHOT/AndroidManifest.xml:31:17-61
+105        </provider>
+106        <provider
+106-->[androidx.emoji2:emoji2:1.3.0] /Users/scroobz/.gradle/caches/8.13/transforms/9ac75a80c23966c00f5ba0114feda6b2/transformed/emoji2-1.3.0/AndroidManifest.xml:24:9-32:20
+107            android:name="androidx.startup.InitializationProvider"
+107-->[androidx.emoji2:emoji2:1.3.0] /Users/scroobz/.gradle/caches/8.13/transforms/9ac75a80c23966c00f5ba0114feda6b2/transformed/emoji2-1.3.0/AndroidManifest.xml:25:13-67
+108            android:authorities="com.godottest.androidx-startup"
+108-->[androidx.emoji2:emoji2:1.3.0] /Users/scroobz/.gradle/caches/8.13/transforms/9ac75a80c23966c00f5ba0114feda6b2/transformed/emoji2-1.3.0/AndroidManifest.xml:26:13-68
+109            android:exported="false" >
+109-->[androidx.emoji2:emoji2:1.3.0] /Users/scroobz/.gradle/caches/8.13/transforms/9ac75a80c23966c00f5ba0114feda6b2/transformed/emoji2-1.3.0/AndroidManifest.xml:27:13-37
+110            <meta-data
+110-->[androidx.emoji2:emoji2:1.3.0] /Users/scroobz/.gradle/caches/8.13/transforms/9ac75a80c23966c00f5ba0114feda6b2/transformed/emoji2-1.3.0/AndroidManifest.xml:29:13-31:52
+111                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+111-->[androidx.emoji2:emoji2:1.3.0] /Users/scroobz/.gradle/caches/8.13/transforms/9ac75a80c23966c00f5ba0114feda6b2/transformed/emoji2-1.3.0/AndroidManifest.xml:30:17-75
+112                android:value="androidx.startup" />
+112-->[androidx.emoji2:emoji2:1.3.0] /Users/scroobz/.gradle/caches/8.13/transforms/9ac75a80c23966c00f5ba0114feda6b2/transformed/emoji2-1.3.0/AndroidManifest.xml:31:17-49
+113            <meta-data
+113-->[androidx.lifecycle:lifecycle-process:2.8.7] /Users/scroobz/.gradle/caches/8.13/transforms/537e19ba5f1d1d747ca3d81c1c4ac786/transformed/lifecycle-process-2.8.7/AndroidManifest.xml:29:13-31:52
+114                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+114-->[androidx.lifecycle:lifecycle-process:2.8.7] /Users/scroobz/.gradle/caches/8.13/transforms/537e19ba5f1d1d747ca3d81c1c4ac786/transformed/lifecycle-process-2.8.7/AndroidManifest.xml:30:17-78
+115                android:value="androidx.startup" />
+115-->[androidx.lifecycle:lifecycle-process:2.8.7] /Users/scroobz/.gradle/caches/8.13/transforms/537e19ba5f1d1d747ca3d81c1c4ac786/transformed/lifecycle-process-2.8.7/AndroidManifest.xml:31:17-49
+116            <meta-data
+116-->[androidx.profileinstaller:profileinstaller:1.4.1] /Users/scroobz/.gradle/caches/8.13/transforms/11710fde9512ada01b7df8185f303fc4/transformed/profileinstaller-1.4.1/AndroidManifest.xml:29:13-31:52
+117                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+117-->[androidx.profileinstaller:profileinstaller:1.4.1] /Users/scroobz/.gradle/caches/8.13/transforms/11710fde9512ada01b7df8185f303fc4/transformed/profileinstaller-1.4.1/AndroidManifest.xml:30:17-85
+118                android:value="androidx.startup" />
+118-->[androidx.profileinstaller:profileinstaller:1.4.1] /Users/scroobz/.gradle/caches/8.13/transforms/11710fde9512ada01b7df8185f303fc4/transformed/profileinstaller-1.4.1/AndroidManifest.xml:31:17-49
+119        </provider>
+120
+121        <receiver
+121-->[androidx.profileinstaller:profileinstaller:1.4.1] /Users/scroobz/.gradle/caches/8.13/transforms/11710fde9512ada01b7df8185f303fc4/transformed/profileinstaller-1.4.1/AndroidManifest.xml:34:9-52:20
+122            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+122-->[androidx.profileinstaller:profileinstaller:1.4.1] /Users/scroobz/.gradle/caches/8.13/transforms/11710fde9512ada01b7df8185f303fc4/transformed/profileinstaller-1.4.1/AndroidManifest.xml:35:13-76
+123            android:directBootAware="false"
+123-->[androidx.profileinstaller:profileinstaller:1.4.1] /Users/scroobz/.gradle/caches/8.13/transforms/11710fde9512ada01b7df8185f303fc4/transformed/profileinstaller-1.4.1/AndroidManifest.xml:36:13-44
+124            android:enabled="true"
+124-->[androidx.profileinstaller:profileinstaller:1.4.1] /Users/scroobz/.gradle/caches/8.13/transforms/11710fde9512ada01b7df8185f303fc4/transformed/profileinstaller-1.4.1/AndroidManifest.xml:37:13-35
+125            android:exported="true"
+125-->[androidx.profileinstaller:profileinstaller:1.4.1] /Users/scroobz/.gradle/caches/8.13/transforms/11710fde9512ada01b7df8185f303fc4/transformed/profileinstaller-1.4.1/AndroidManifest.xml:38:13-36
+126            android:permission="android.permission.DUMP" >
+126-->[androidx.profileinstaller:profileinstaller:1.4.1] /Users/scroobz/.gradle/caches/8.13/transforms/11710fde9512ada01b7df8185f303fc4/transformed/profileinstaller-1.4.1/AndroidManifest.xml:39:13-57
+127            <intent-filter>
+127-->[androidx.profileinstaller:profileinstaller:1.4.1] /Users/scroobz/.gradle/caches/8.13/transforms/11710fde9512ada01b7df8185f303fc4/transformed/profileinstaller-1.4.1/AndroidManifest.xml:40:13-42:29
+128                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
+128-->[androidx.profileinstaller:profileinstaller:1.4.1] /Users/scroobz/.gradle/caches/8.13/transforms/11710fde9512ada01b7df8185f303fc4/transformed/profileinstaller-1.4.1/AndroidManifest.xml:41:17-91
+128-->[androidx.profileinstaller:profileinstaller:1.4.1] /Users/scroobz/.gradle/caches/8.13/transforms/11710fde9512ada01b7df8185f303fc4/transformed/profileinstaller-1.4.1/AndroidManifest.xml:41:25-88
+129            </intent-filter>
+130            <intent-filter>
+130-->[androidx.profileinstaller:profileinstaller:1.4.1] /Users/scroobz/.gradle/caches/8.13/transforms/11710fde9512ada01b7df8185f303fc4/transformed/profileinstaller-1.4.1/AndroidManifest.xml:43:13-45:29
+131                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
+131-->[androidx.profileinstaller:profileinstaller:1.4.1] /Users/scroobz/.gradle/caches/8.13/transforms/11710fde9512ada01b7df8185f303fc4/transformed/profileinstaller-1.4.1/AndroidManifest.xml:44:17-85
+131-->[androidx.profileinstaller:profileinstaller:1.4.1] /Users/scroobz/.gradle/caches/8.13/transforms/11710fde9512ada01b7df8185f303fc4/transformed/profileinstaller-1.4.1/AndroidManifest.xml:44:25-82
+132            </intent-filter>
+133            <intent-filter>
+133-->[androidx.profileinstaller:profileinstaller:1.4.1] /Users/scroobz/.gradle/caches/8.13/transforms/11710fde9512ada01b7df8185f303fc4/transformed/profileinstaller-1.4.1/AndroidManifest.xml:46:13-48:29
+134                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
+134-->[androidx.profileinstaller:profileinstaller:1.4.1] /Users/scroobz/.gradle/caches/8.13/transforms/11710fde9512ada01b7df8185f303fc4/transformed/profileinstaller-1.4.1/AndroidManifest.xml:47:17-88
+134-->[androidx.profileinstaller:profileinstaller:1.4.1] /Users/scroobz/.gradle/caches/8.13/transforms/11710fde9512ada01b7df8185f303fc4/transformed/profileinstaller-1.4.1/AndroidManifest.xml:47:25-85
+135            </intent-filter>
+136            <intent-filter>
+136-->[androidx.profileinstaller:profileinstaller:1.4.1] /Users/scroobz/.gradle/caches/8.13/transforms/11710fde9512ada01b7df8185f303fc4/transformed/profileinstaller-1.4.1/AndroidManifest.xml:49:13-51:29
+137                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
+137-->[androidx.profileinstaller:profileinstaller:1.4.1] /Users/scroobz/.gradle/caches/8.13/transforms/11710fde9512ada01b7df8185f303fc4/transformed/profileinstaller-1.4.1/AndroidManifest.xml:50:17-95
+137-->[androidx.profileinstaller:profileinstaller:1.4.1] /Users/scroobz/.gradle/caches/8.13/transforms/11710fde9512ada01b7df8185f303fc4/transformed/profileinstaller-1.4.1/AndroidManifest.xml:50:25-92
+138            </intent-filter>
+139        </receiver>
+140    </application>
+141
+142</manifest>

@@ -1,0 +1,26 @@
+{
+  "installationFolder": "/Users/scroobz/Navigation/Native/godot-template/node_modules/@borndotcom/react-native-godot/android/build/intermediates/prefab_package/debug/prefab",
+  "gradlePath": ":borndotcom_react-native-godot",
+  "packageInfo": {
+    "packageName": "borndotcom_react-native-godot",
+    "packageSchemaVersion": 2,
+    "packageDependencies": [],
+    "modules": [
+      {
+        "moduleName": "rtngodot",
+        "moduleHeaders": "/Users/scroobz/Navigation/Native/godot-template/node_modules/@borndotcom/react-native-godot/android/build/prefab-headers/rtngodot",
+        "moduleExportLibraries": [],
+        "abis": [
+          {
+            "abiName": "armeabi-v7a",
+            "abiApi": 29,
+            "abiNdkMajor": 28,
+            "abiStl": "c++_shared",
+            "abiLibrary": "/Users/scroobz/Navigation/Native/godot-template/node_modules/@borndotcom/react-native-godot/android/build/intermediates/cxx/Debug/584226p5/obj/armeabi-v7a/librtngodot.so",
+            "abiAndroidGradleBuildJsonFile": "/Users/scroobz/Navigation/Native/godot-template/node_modules/@borndotcom/react-native-godot/android/.cxx/Debug/584226p5/armeabi-v7a/android_gradle_build.json"
+          }
+        ]
+      }
+    ]
+  }
+}
