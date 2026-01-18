@@ -2,7 +2,19 @@ extends Node
 
 signal window_status_update(message: String)
 
+# Counter state shared between React Native and Godot
+var counter: int = 0
+
 #region React Public API
+
+## Set counter value from React Native
+func set_counter_from_react(value: int) -> void:
+	counter = value
+	print("AppController: Counter set from React Native to: ", counter)
+
+## Get counter value for React Native
+func get_counter() -> int:
+	return counter
 func open_window(window_name: String) -> Window:
 	window_status_update.emit("Window opened: " + window_name)
 	var root = get_tree().root

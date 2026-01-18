@@ -1,0 +1,966 @@
+{
+  "taskId": "yb7uij",
+  "currentVersion": 40,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "yb7uij",
+      "version": 1,
+      "timestamp": "2026-01-20T00:57:44.767Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "blocked",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Show peristent data in Expo",
+        "status": "done",
+        "priority": "low",
+        "labels": [
+          "Data",
+          "Expo",
+          "Storage"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "yb7uij",
+      "version": 2,
+      "timestamp": "2026-01-20T00:57:44.803Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "blocked",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Show peristent data in Expo",
+        "status": "done",
+        "priority": "low",
+        "labels": [
+          "Data",
+          "Expo",
+          "Storage"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "yb7uij",
+      "version": 3,
+      "timestamp": "2026-01-20T00:57:44.807Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "done",
+          "newValue": "blocked"
+        }
+      ],
+      "snapshot": {
+        "title": "Show peristent data in Expo",
+        "status": "blocked",
+        "priority": "low",
+        "labels": [
+          "Data",
+          "Expo",
+          "Storage"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "yb7uij",
+      "version": 4,
+      "timestamp": "2026-01-20T00:57:44.812Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "blocked",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Show peristent data in Expo",
+        "status": "done",
+        "priority": "low",
+        "labels": [
+          "Data",
+          "Expo",
+          "Storage"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "yb7uij",
+      "version": 5,
+      "timestamp": "2026-01-20T00:57:44.816Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "done",
+          "newValue": "blocked"
+        }
+      ],
+      "snapshot": {
+        "title": "Show peristent data in Expo",
+        "status": "blocked",
+        "priority": "low",
+        "labels": [
+          "Data",
+          "Expo",
+          "Storage"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "yb7uij",
+      "version": 6,
+      "timestamp": "2026-01-20T00:57:44.819Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "blocked",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Show peristent data in Expo",
+        "status": "done",
+        "priority": "low",
+        "labels": [
+          "Data",
+          "Expo",
+          "Storage"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v7",
+      "taskId": "yb7uij",
+      "version": 7,
+      "timestamp": "2026-01-20T00:57:44.822Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "done",
+          "newValue": "blocked"
+        }
+      ],
+      "snapshot": {
+        "title": "Show peristent data in Expo",
+        "status": "blocked",
+        "priority": "low",
+        "labels": [
+          "Data",
+          "Expo",
+          "Storage"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v8",
+      "taskId": "yb7uij",
+      "version": 8,
+      "timestamp": "2026-01-20T00:57:44.826Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "blocked",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Show peristent data in Expo",
+        "status": "done",
+        "priority": "low",
+        "labels": [
+          "Data",
+          "Expo",
+          "Storage"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v9",
+      "taskId": "yb7uij",
+      "version": 9,
+      "timestamp": "2026-01-20T00:57:44.829Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "done",
+          "newValue": "blocked"
+        }
+      ],
+      "snapshot": {
+        "title": "Show peristent data in Expo",
+        "status": "blocked",
+        "priority": "low",
+        "labels": [
+          "Data",
+          "Expo",
+          "Storage"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v10",
+      "taskId": "yb7uij",
+      "version": 10,
+      "timestamp": "2026-01-20T00:57:44.832Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "blocked",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Show peristent data in Expo",
+        "status": "done",
+        "priority": "low",
+        "labels": [
+          "Data",
+          "Expo",
+          "Storage"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v11",
+      "taskId": "yb7uij",
+      "version": 11,
+      "timestamp": "2026-01-20T00:57:44.836Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "done",
+          "newValue": "blocked"
+        }
+      ],
+      "snapshot": {
+        "title": "Show peristent data in Expo",
+        "status": "blocked",
+        "priority": "low",
+        "labels": [
+          "Data",
+          "Expo",
+          "Storage"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v12",
+      "taskId": "yb7uij",
+      "version": 12,
+      "timestamp": "2026-01-20T00:57:44.841Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "blocked",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Show peristent data in Expo",
+        "status": "done",
+        "priority": "low",
+        "labels": [
+          "Data",
+          "Expo",
+          "Storage"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v13",
+      "taskId": "yb7uij",
+      "version": 13,
+      "timestamp": "2026-01-20T00:57:44.848Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "done",
+          "newValue": "blocked"
+        }
+      ],
+      "snapshot": {
+        "title": "Show peristent data in Expo",
+        "status": "blocked",
+        "priority": "low",
+        "labels": [
+          "Data",
+          "Expo",
+          "Storage"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v14",
+      "taskId": "yb7uij",
+      "version": 14,
+      "timestamp": "2026-01-20T00:57:44.852Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "blocked",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Show peristent data in Expo",
+        "status": "done",
+        "priority": "low",
+        "labels": [
+          "Data",
+          "Expo",
+          "Storage"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v15",
+      "taskId": "yb7uij",
+      "version": 15,
+      "timestamp": "2026-01-20T00:57:44.856Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "done",
+          "newValue": "blocked"
+        }
+      ],
+      "snapshot": {
+        "title": "Show peristent data in Expo",
+        "status": "blocked",
+        "priority": "low",
+        "labels": [
+          "Data",
+          "Expo",
+          "Storage"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v16",
+      "taskId": "yb7uij",
+      "version": 16,
+      "timestamp": "2026-01-20T00:57:44.859Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "blocked",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Show peristent data in Expo",
+        "status": "done",
+        "priority": "low",
+        "labels": [
+          "Data",
+          "Expo",
+          "Storage"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v17",
+      "taskId": "yb7uij",
+      "version": 17,
+      "timestamp": "2026-01-20T00:57:44.862Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "done",
+          "newValue": "blocked"
+        }
+      ],
+      "snapshot": {
+        "title": "Show peristent data in Expo",
+        "status": "blocked",
+        "priority": "low",
+        "labels": [
+          "Data",
+          "Expo",
+          "Storage"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v18",
+      "taskId": "yb7uij",
+      "version": 18,
+      "timestamp": "2026-01-20T00:57:44.865Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "blocked",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Show peristent data in Expo",
+        "status": "done",
+        "priority": "low",
+        "labels": [
+          "Data",
+          "Expo",
+          "Storage"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v19",
+      "taskId": "yb7uij",
+      "version": 19,
+      "timestamp": "2026-01-20T00:57:44.869Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "done",
+          "newValue": "blocked"
+        }
+      ],
+      "snapshot": {
+        "title": "Show peristent data in Expo",
+        "status": "blocked",
+        "priority": "low",
+        "labels": [
+          "Data",
+          "Expo",
+          "Storage"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v20",
+      "taskId": "yb7uij",
+      "version": 20,
+      "timestamp": "2026-01-20T00:57:49.035Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "blocked",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Show peristent data in Expo",
+        "status": "done",
+        "priority": "low",
+        "labels": [
+          "Data",
+          "Expo",
+          "Storage"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v21",
+      "taskId": "yb7uij",
+      "version": 21,
+      "timestamp": "2026-01-20T00:57:49.063Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "done",
+          "newValue": "blocked"
+        }
+      ],
+      "snapshot": {
+        "title": "Show peristent data in Expo",
+        "status": "blocked",
+        "priority": "low",
+        "labels": [
+          "Data",
+          "Expo",
+          "Storage"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v22",
+      "taskId": "yb7uij",
+      "version": 22,
+      "timestamp": "2026-01-20T00:57:49.066Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "blocked",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Show peristent data in Expo",
+        "status": "done",
+        "priority": "low",
+        "labels": [
+          "Data",
+          "Expo",
+          "Storage"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v23",
+      "taskId": "yb7uij",
+      "version": 23,
+      "timestamp": "2026-01-20T00:57:49.070Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "done",
+          "newValue": "blocked"
+        }
+      ],
+      "snapshot": {
+        "title": "Show peristent data in Expo",
+        "status": "blocked",
+        "priority": "low",
+        "labels": [
+          "Data",
+          "Expo",
+          "Storage"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v24",
+      "taskId": "yb7uij",
+      "version": 24,
+      "timestamp": "2026-01-20T00:57:49.075Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "blocked",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Show peristent data in Expo",
+        "status": "done",
+        "priority": "low",
+        "labels": [
+          "Data",
+          "Expo",
+          "Storage"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v25",
+      "taskId": "yb7uij",
+      "version": 25,
+      "timestamp": "2026-01-20T00:57:49.079Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "done",
+          "newValue": "blocked"
+        }
+      ],
+      "snapshot": {
+        "title": "Show peristent data in Expo",
+        "status": "blocked",
+        "priority": "low",
+        "labels": [
+          "Data",
+          "Expo",
+          "Storage"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v26",
+      "taskId": "yb7uij",
+      "version": 26,
+      "timestamp": "2026-01-20T00:57:49.082Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "blocked",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Show peristent data in Expo",
+        "status": "done",
+        "priority": "low",
+        "labels": [
+          "Data",
+          "Expo",
+          "Storage"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v27",
+      "taskId": "yb7uij",
+      "version": 27,
+      "timestamp": "2026-01-20T00:57:49.085Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "done",
+          "newValue": "blocked"
+        }
+      ],
+      "snapshot": {
+        "title": "Show peristent data in Expo",
+        "status": "blocked",
+        "priority": "low",
+        "labels": [
+          "Data",
+          "Expo",
+          "Storage"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v28",
+      "taskId": "yb7uij",
+      "version": 28,
+      "timestamp": "2026-01-20T00:57:49.088Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "blocked",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Show peristent data in Expo",
+        "status": "done",
+        "priority": "low",
+        "labels": [
+          "Data",
+          "Expo",
+          "Storage"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v29",
+      "taskId": "yb7uij",
+      "version": 29,
+      "timestamp": "2026-01-20T00:57:49.092Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "done",
+          "newValue": "blocked"
+        }
+      ],
+      "snapshot": {
+        "title": "Show peristent data in Expo",
+        "status": "blocked",
+        "priority": "low",
+        "labels": [
+          "Data",
+          "Expo",
+          "Storage"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v30",
+      "taskId": "yb7uij",
+      "version": 30,
+      "timestamp": "2026-01-20T00:57:49.095Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "blocked",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Show peristent data in Expo",
+        "status": "done",
+        "priority": "low",
+        "labels": [
+          "Data",
+          "Expo",
+          "Storage"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v31",
+      "taskId": "yb7uij",
+      "version": 31,
+      "timestamp": "2026-01-20T00:57:49.098Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "done",
+          "newValue": "blocked"
+        }
+      ],
+      "snapshot": {
+        "title": "Show peristent data in Expo",
+        "status": "blocked",
+        "priority": "low",
+        "labels": [
+          "Data",
+          "Expo",
+          "Storage"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v32",
+      "taskId": "yb7uij",
+      "version": 32,
+      "timestamp": "2026-01-20T00:57:49.100Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "blocked",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Show peristent data in Expo",
+        "status": "done",
+        "priority": "low",
+        "labels": [
+          "Data",
+          "Expo",
+          "Storage"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v33",
+      "taskId": "yb7uij",
+      "version": 33,
+      "timestamp": "2026-01-20T00:57:49.104Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "done",
+          "newValue": "blocked"
+        }
+      ],
+      "snapshot": {
+        "title": "Show peristent data in Expo",
+        "status": "blocked",
+        "priority": "low",
+        "labels": [
+          "Data",
+          "Expo",
+          "Storage"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v34",
+      "taskId": "yb7uij",
+      "version": 34,
+      "timestamp": "2026-01-20T00:57:49.107Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "blocked",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Show peristent data in Expo",
+        "status": "done",
+        "priority": "low",
+        "labels": [
+          "Data",
+          "Expo",
+          "Storage"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v35",
+      "taskId": "yb7uij",
+      "version": 35,
+      "timestamp": "2026-01-20T00:57:49.110Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "done",
+          "newValue": "blocked"
+        }
+      ],
+      "snapshot": {
+        "title": "Show peristent data in Expo",
+        "status": "blocked",
+        "priority": "low",
+        "labels": [
+          "Data",
+          "Expo",
+          "Storage"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v36",
+      "taskId": "yb7uij",
+      "version": 36,
+      "timestamp": "2026-01-20T00:57:49.113Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "blocked",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Show peristent data in Expo",
+        "status": "done",
+        "priority": "low",
+        "labels": [
+          "Data",
+          "Expo",
+          "Storage"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v37",
+      "taskId": "yb7uij",
+      "version": 37,
+      "timestamp": "2026-01-20T00:57:49.117Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "done",
+          "newValue": "blocked"
+        }
+      ],
+      "snapshot": {
+        "title": "Show peristent data in Expo",
+        "status": "blocked",
+        "priority": "low",
+        "labels": [
+          "Data",
+          "Expo",
+          "Storage"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v38",
+      "taskId": "yb7uij",
+      "version": 38,
+      "timestamp": "2026-01-20T00:57:49.121Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "blocked",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Show peristent data in Expo",
+        "status": "done",
+        "priority": "low",
+        "labels": [
+          "Data",
+          "Expo",
+          "Storage"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v39",
+      "taskId": "yb7uij",
+      "version": 39,
+      "timestamp": "2026-01-20T00:57:49.125Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "done",
+          "newValue": "blocked"
+        }
+      ],
+      "snapshot": {
+        "title": "Show peristent data in Expo",
+        "status": "blocked",
+        "priority": "low",
+        "labels": [
+          "Data",
+          "Expo",
+          "Storage"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v40",
+      "taskId": "yb7uij",
+      "version": 40,
+      "timestamp": "2026-01-20T00:57:57.363Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "blocked",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Show peristent data in Expo",
+        "status": "done",
+        "priority": "low",
+        "labels": [
+          "Data",
+          "Expo",
+          "Storage"
+        ],
+        "acceptanceCriteria": []
+      }
+    }
+  ]
+}

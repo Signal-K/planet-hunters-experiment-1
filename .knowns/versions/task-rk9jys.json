@@ -1,0 +1,58 @@
+{
+  "taskId": "rk9jys",
+  "currentVersion": 2,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "rk9jys",
+      "version": 1,
+      "timestamp": "2026-01-18T03:56:29.734Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "in-review"
+        }
+      ],
+      "snapshot": {
+        "title": "Make structures clickable (UI panel)",
+        "description": "Ensure that it's a different panel type",
+        "status": "in-review",
+        "priority": "medium",
+        "labels": [
+          "Panel",
+          "Structures",
+          "Clickables",
+          "Menu"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "rk9jys",
+      "version": 2,
+      "timestamp": "2026-01-18T04:04:46.682Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-review",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Make structures clickable (UI panel)",
+        "description": "Ensure that it's a different panel type",
+        "status": "done",
+        "priority": "medium",
+        "labels": [
+          "Panel",
+          "Structures",
+          "Clickables",
+          "Menu"
+        ],
+        "acceptanceCriteria": []
+      }
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "taskId": "wnce6j",
+  "currentVersion": 2,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "wnce6j",
+      "version": 1,
+      "timestamp": "2026-01-15T06:22:02.798Z",
+      "changes": [
+        {
+          "field": "description",
+          "newValue": "There we go!\n\nAlso - issue with Knowns - can't add images or use commands like CMD-A...shame\n"
+        }
+      ],
+      "snapshot": {
+        "title": "Place Satellite Groundstation into UI view",
+        "description": "There we go!\n\nAlso - issue with Knowns - can't add images or use commands like CMD-A...shame\n",
+        "status": "in-progress",
+        "priority": "medium",
+        "labels": [
+          "Telescope",
+          "Structure",
+          "Satellite",
+          "Sprite"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "wnce6j",
+      "version": 2,
+      "timestamp": "2026-01-15T06:22:05.329Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Place Satellite Groundstation into UI view",
+        "description": "There we go!\n\nAlso - issue with Knowns - can't add images or use commands like CMD-A...shame",
+        "status": "done",
+        "priority": "medium",
+        "labels": [
+          "Telescope",
+          "Structure",
+          "Satellite",
+          "Sprite"
+        ],
+        "acceptanceCriteria": []
+      }
+    }
+  ]
+}

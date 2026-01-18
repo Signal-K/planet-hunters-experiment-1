@@ -50,4 +50,4 @@ with_node \
    \
    \
   --platform "apple" \
-  --packages "expo" "expo-asset" "expo-constants" "expo-device" "expo-file-system" "expo-font" "expo-keep-awake"
+  --packages "expo" "expo-asset" "expo-constants" "expo-dev-launcher" "expo-dev-menu" "expo-device" "expo-file-system" "expo-font" "expo-keep-awake"

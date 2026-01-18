@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3 uid="uid://dw8g3n5h2kp1m"]
+
+[ext_resource type="PackedScene" uid="uid://c8xt1j3h4kn2p" path="res://Scenes/Earth/earth_scene_template.tscn" id="1_template"]
+[ext_resource type="Script" path="res://Scenes/Earth/earth_base_example.gd" id="2_example_script"]
+
+[node name="EarthBaseExample" instance=ExtResource("1_template")]
+script = ExtResource("2_example_script")
+
+[editable path="StructuresLayer"]
+[editable path="SoilLayer"]
