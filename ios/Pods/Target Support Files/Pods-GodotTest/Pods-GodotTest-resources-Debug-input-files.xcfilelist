@@ -9,4 +9,6 @@ ${PODS_CONFIGURATION_BUILD_DIR}/RNSVG/RNSVGFilters.bundle
 ${PODS_CONFIGURATION_BUILD_DIR}/React-Core/React-Core_privacy.bundle
 ${PODS_CONFIGURATION_BUILD_DIR}/React-cxxreact/React-cxxreact_privacy.bundle
 ${PODS_CONFIGURATION_BUILD_DIR}/boost/boost_privacy.bundle
+${PODS_CONFIGURATION_BUILD_DIR}/expo-dev-launcher/EXDevLauncher.bundle
+${PODS_CONFIGURATION_BUILD_DIR}/expo-dev-menu/EXDevMenu.bundle
 ${PODS_CONFIGURATION_BUILD_DIR}/glog/glog_privacy.bundle

@@ -1,0 +1,54 @@
+{
+  "taskId": "9gjih5",
+  "currentVersion": 2,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "9gjih5",
+      "version": 1,
+      "timestamp": "2026-01-17T05:54:37.368Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "in-review"
+        }
+      ],
+      "snapshot": {
+        "title": "Separate background into soil & non-soil layers",
+        "status": "in-review",
+        "priority": "medium",
+        "labels": [
+          "Assets",
+          "Layers",
+          "Surface"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "9gjih5",
+      "version": 2,
+      "timestamp": "2026-01-17T05:57:46.366Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-review",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Separate background into soil & non-soil layers",
+        "status": "done",
+        "priority": "medium",
+        "labels": [
+          "Assets",
+          "Layers",
+          "Surface"
+        ],
+        "acceptanceCriteria": []
+      }
+    }
+  ]
+}

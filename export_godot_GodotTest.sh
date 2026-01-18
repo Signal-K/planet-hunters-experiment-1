@@ -20,4 +20,4 @@ case "$platform" in
         exit 1
 esac
 
-$BASE_DIR/export_godot.sh --target $BASE_DIR --name GodotTest --preset "$preset" --project $BASE_DIR/project --platform $platform
+$BASE_DIR/export_godot.sh --target $BASE_DIR --name GodotTest --preset "$preset" --project $BASE_DIR/scene --platform $platform

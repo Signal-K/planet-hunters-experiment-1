@@ -1,0 +1,41 @@
+{
+  "name": "planet-hunters-experiment-1",
+  "id": "planet-hunters-experiment-1",
+  "createdAt": "2026-01-15T05:32:14.124Z",
+  "settings": {
+    "defaultPriority": "medium",
+    "defaultLabels": [],
+    "statuses": [
+      "todo",
+      "in-progress",
+      "in-review",
+      "done",
+      "blocked",
+      "on-hold",
+      "urgent"
+    ],
+    "visibleColumns": [
+      "todo",
+      "in-progress",
+      "blocked",
+      "done",
+      "in-review",
+      "on-hold",
+      "urgent"
+    ],
+    "statusColors": {
+      "todo": "gray",
+      "in-progress": "blue",
+      "in-review": "purple",
+      "done": "green",
+      "blocked": "red",
+      "on-hold": "yellow",
+      "urgent": "orange"
+    },
+    "id": "planet-hunters-experiment-1",
+    "createdAt": "2026-01-15T05:32:14.124Z",
+    "timeFormat": "24h",
+    "gitTrackingMode": "git-tracked",
+    "serverPort": 6420
+  }
+}

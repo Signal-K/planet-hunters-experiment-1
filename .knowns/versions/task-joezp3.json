@@ -1,0 +1,54 @@
+{
+  "taskId": "joezp3",
+  "currentVersion": 2,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "joezp3",
+      "version": 1,
+      "timestamp": "2026-01-18T05:01:25.793Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "in-review"
+        }
+      ],
+      "snapshot": {
+        "title": "Earth Scene Template",
+        "status": "in-review",
+        "priority": "medium",
+        "labels": [
+          "Scenes",
+          "Templates",
+          "Earth"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "joezp3",
+      "version": 2,
+      "timestamp": "2026-01-18T07:31:09.578Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-review",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Earth Scene Template",
+        "status": "done",
+        "priority": "medium",
+        "labels": [
+          "Scenes",
+          "Templates",
+          "Earth"
+        ],
+        "acceptanceCriteria": []
+      }
+    }
+  ]
+}

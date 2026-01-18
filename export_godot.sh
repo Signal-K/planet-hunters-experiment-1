@@ -21,18 +21,30 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m'
 
-GODOT="/Applications/Godot.app/Contents/MacOS/Godot"
+GODOT=""
 GODOT_EDITOR="${GODOT_EDITOR:-}"
-if [ "$GODOT_EDITOR" != "" ] && [ -x "$GODOT_EDITOR" ]
-then
+
+# Prefer explicit env var if provided and executable
+if [ "$GODOT_EDITOR" != "" ] && [ -x "$GODOT_EDITOR" ]; then
     GODOT="$GODOT_EDITOR"
+else
+    # Try common macOS install locations (including Godot4.5.app)
+    for p in \
+        "/Applications/Godot.app/Contents/MacOS/Godot" \
+        "/Applications/Godot4.5.app/Contents/MacOS/Godot" \
+        "/Applications/Godot4.app/Contents/MacOS/Godot" \
+        "/usr/local/bin/godot"; do
+        if [ -x "$p" ]; then
+            GODOT="$p"
+            break
+        fi
+    done
 fi
 
-if [ ! -x "$GODOT" ]
-then
+if [ ! -x "$GODOT" ]; then
     echo -e "${RED}Error: Could not find Godot Editor binary${NC}"
-    echo "Please install Godot or set the GODOT_EDITOR environment variable:"
-    echo "  export GODOT_EDITOR=/path/to/godot"
+    echo "Please install Godot or set the GODOT_EDITOR environment variable to the Godot binary path." 
+    echo "Example: export GODOT_EDITOR=/Applications/Godot4.5.app/Contents/MacOS/Godot"
     exit 1
 fi
 

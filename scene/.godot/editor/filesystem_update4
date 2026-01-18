@@ -1,0 +1,3 @@
+res://Scripts/Earth/UIManager.gd
+res://Scripts/Systems/SupabaseClient.gd
+res://Scripts/UI/AsteroidDetail/AsteroidDetailView.gd

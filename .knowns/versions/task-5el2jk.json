@@ -1,0 +1,723 @@
+{
+  "taskId": "5el2jk",
+  "currentVersion": 29,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "5el2jk",
+      "version": 1,
+      "timestamp": "2026-01-19T06:49:42.703Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "on-hold",
+          "newValue": "blocked"
+        }
+      ],
+      "snapshot": {
+        "title": "Improve mobile UI panel - start with asteroid bundler",
+        "status": "blocked",
+        "priority": "medium",
+        "labels": [
+          "UI",
+          "Mobile",
+          "Improvements",
+          "Panels"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "5el2jk",
+      "version": 2,
+      "timestamp": "2026-01-19T06:49:42.742Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "blocked",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Improve mobile UI panel - start with asteroid bundler",
+        "status": "done",
+        "priority": "medium",
+        "labels": [
+          "UI",
+          "Mobile",
+          "Improvements",
+          "Panels"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "5el2jk",
+      "version": 3,
+      "timestamp": "2026-01-19T06:49:43.209Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "done",
+          "newValue": "in-review"
+        }
+      ],
+      "snapshot": {
+        "title": "Improve mobile UI panel - start with asteroid bundler",
+        "status": "in-review",
+        "priority": "medium",
+        "labels": [
+          "UI",
+          "Mobile",
+          "Improvements",
+          "Panels"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "5el2jk",
+      "version": 4,
+      "timestamp": "2026-01-19T06:49:43.226Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-review",
+          "newValue": "in-progress"
+        }
+      ],
+      "snapshot": {
+        "title": "Improve mobile UI panel - start with asteroid bundler",
+        "status": "in-progress",
+        "priority": "medium",
+        "labels": [
+          "UI",
+          "Mobile",
+          "Improvements",
+          "Panels"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "5el2jk",
+      "version": 5,
+      "timestamp": "2026-01-19T06:49:43.233Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "todo"
+        }
+      ],
+      "snapshot": {
+        "title": "Improve mobile UI panel - start with asteroid bundler",
+        "status": "todo",
+        "priority": "medium",
+        "labels": [
+          "UI",
+          "Mobile",
+          "Improvements",
+          "Panels"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "5el2jk",
+      "version": 6,
+      "timestamp": "2026-01-19T06:49:43.249Z",
+      "changes": [
+        {
+          "field": "status",
+          "newValue": "todo"
+        }
+      ],
+      "snapshot": {
+        "status": "todo",
+        "labels": [],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v7",
+      "taskId": "5el2jk",
+      "version": 7,
+      "timestamp": "2026-01-19T06:49:43.260Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        }
+      ],
+      "snapshot": {
+        "title": "Improve mobile UI panel - start with asteroid bundler",
+        "status": "in-progress",
+        "priority": "medium",
+        "labels": [
+          "UI",
+          "Mobile",
+          "Improvements",
+          "Panels"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v8",
+      "taskId": "5el2jk",
+      "version": 8,
+      "timestamp": "2026-01-19T06:49:43.264Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "todo"
+        }
+      ],
+      "snapshot": {
+        "title": "Improve mobile UI panel - start with asteroid bundler",
+        "status": "todo",
+        "priority": "medium",
+        "labels": [
+          "UI",
+          "Mobile",
+          "Improvements",
+          "Panels"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v9",
+      "taskId": "5el2jk",
+      "version": 9,
+      "timestamp": "2026-01-19T06:49:43.270Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "todo"
+        }
+      ],
+      "snapshot": {
+        "title": "Improve mobile UI panel - start with asteroid bundler",
+        "status": "todo",
+        "priority": "medium",
+        "labels": [
+          "UI",
+          "Mobile",
+          "Improvements",
+          "Panels"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v10",
+      "taskId": "5el2jk",
+      "version": 10,
+      "timestamp": "2026-01-19T06:49:43.272Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "todo"
+        }
+      ],
+      "snapshot": {
+        "title": "Improve mobile UI panel - start with asteroid bundler",
+        "status": "todo",
+        "priority": "medium",
+        "labels": [
+          "UI",
+          "Mobile",
+          "Improvements",
+          "Panels"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v11",
+      "taskId": "5el2jk",
+      "version": 11,
+      "timestamp": "2026-01-19T06:49:43.276Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        }
+      ],
+      "snapshot": {
+        "title": "Improve mobile UI panel - start with asteroid bundler",
+        "status": "in-progress",
+        "priority": "medium",
+        "labels": [
+          "UI",
+          "Mobile",
+          "Improvements",
+          "Panels"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v12",
+      "taskId": "5el2jk",
+      "version": 12,
+      "timestamp": "2026-01-19T06:49:43.277Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "todo"
+        }
+      ],
+      "snapshot": {
+        "title": "Improve mobile UI panel - start with asteroid bundler",
+        "status": "todo",
+        "priority": "medium",
+        "labels": [
+          "UI",
+          "Mobile",
+          "Improvements",
+          "Panels"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v13",
+      "taskId": "5el2jk",
+      "version": 13,
+      "timestamp": "2026-01-19T06:49:43.278Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        }
+      ],
+      "snapshot": {
+        "title": "Improve mobile UI panel - start with asteroid bundler",
+        "status": "in-progress",
+        "priority": "medium",
+        "labels": [
+          "UI",
+          "Mobile",
+          "Improvements",
+          "Panels"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v14",
+      "taskId": "5el2jk",
+      "version": 14,
+      "timestamp": "2026-01-19T06:49:43.280Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        }
+      ],
+      "snapshot": {
+        "title": "Improve mobile UI panel - start with asteroid bundler",
+        "status": "in-progress",
+        "priority": "medium",
+        "labels": [
+          "UI",
+          "Mobile",
+          "Improvements",
+          "Panels"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v15",
+      "taskId": "5el2jk",
+      "version": 15,
+      "timestamp": "2026-01-19T06:49:43.281Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "todo"
+        }
+      ],
+      "snapshot": {
+        "title": "Improve mobile UI panel - start with asteroid bundler",
+        "status": "todo",
+        "priority": "medium",
+        "labels": [
+          "UI",
+          "Mobile",
+          "Improvements",
+          "Panels"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v16",
+      "taskId": "5el2jk",
+      "version": 16,
+      "timestamp": "2026-01-19T06:49:43.285Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        }
+      ],
+      "snapshot": {
+        "title": "Improve mobile UI panel - start with asteroid bundler",
+        "status": "in-progress",
+        "priority": "medium",
+        "labels": [
+          "UI",
+          "Mobile",
+          "Improvements",
+          "Panels"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v17",
+      "taskId": "5el2jk",
+      "version": 17,
+      "timestamp": "2026-01-19T06:49:43.290Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "todo"
+        }
+      ],
+      "snapshot": {
+        "title": "Improve mobile UI panel - start with asteroid bundler",
+        "status": "todo",
+        "priority": "medium",
+        "labels": [
+          "UI",
+          "Mobile",
+          "Improvements",
+          "Panels"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v18",
+      "taskId": "5el2jk",
+      "version": 18,
+      "timestamp": "2026-01-19T06:49:43.294Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        }
+      ],
+      "snapshot": {
+        "title": "Improve mobile UI panel - start with asteroid bundler",
+        "status": "in-progress",
+        "priority": "medium",
+        "labels": [
+          "UI",
+          "Mobile",
+          "Improvements",
+          "Panels"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v19",
+      "taskId": "5el2jk",
+      "version": 19,
+      "timestamp": "2026-01-19T06:49:43.302Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "todo"
+        }
+      ],
+      "snapshot": {
+        "title": "Improve mobile UI panel - start with asteroid bundler",
+        "status": "todo",
+        "priority": "medium",
+        "labels": [
+          "UI",
+          "Mobile",
+          "Improvements",
+          "Panels"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v20",
+      "taskId": "5el2jk",
+      "version": 20,
+      "timestamp": "2026-01-19T06:49:43.305Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        }
+      ],
+      "snapshot": {
+        "title": "Improve mobile UI panel - start with asteroid bundler",
+        "status": "in-progress",
+        "priority": "medium",
+        "labels": [
+          "UI",
+          "Mobile",
+          "Improvements",
+          "Panels"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v21",
+      "taskId": "5el2jk",
+      "version": 21,
+      "timestamp": "2026-01-19T06:49:43.307Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "todo"
+        }
+      ],
+      "snapshot": {
+        "title": "Improve mobile UI panel - start with asteroid bundler",
+        "status": "todo",
+        "priority": "medium",
+        "labels": [
+          "UI",
+          "Mobile",
+          "Improvements",
+          "Panels"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v22",
+      "taskId": "5el2jk",
+      "version": 22,
+      "timestamp": "2026-01-19T06:49:43.310Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        }
+      ],
+      "snapshot": {
+        "title": "Improve mobile UI panel - start with asteroid bundler",
+        "status": "in-progress",
+        "priority": "medium",
+        "labels": [
+          "UI",
+          "Mobile",
+          "Improvements",
+          "Panels"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v23",
+      "taskId": "5el2jk",
+      "version": 23,
+      "timestamp": "2026-01-19T06:49:43.313Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "todo"
+        }
+      ],
+      "snapshot": {
+        "title": "Improve mobile UI panel - start with asteroid bundler",
+        "status": "todo",
+        "priority": "medium",
+        "labels": [
+          "UI",
+          "Mobile",
+          "Improvements",
+          "Panels"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v24",
+      "taskId": "5el2jk",
+      "version": 24,
+      "timestamp": "2026-01-19T06:49:43.315Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        }
+      ],
+      "snapshot": {
+        "title": "Improve mobile UI panel - start with asteroid bundler",
+        "status": "in-progress",
+        "priority": "medium",
+        "labels": [
+          "UI",
+          "Mobile",
+          "Improvements",
+          "Panels"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v25",
+      "taskId": "5el2jk",
+      "version": 25,
+      "timestamp": "2026-01-19T06:49:43.317Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "todo"
+        }
+      ],
+      "snapshot": {
+        "title": "Improve mobile UI panel - start with asteroid bundler",
+        "status": "todo",
+        "priority": "medium",
+        "labels": [
+          "UI",
+          "Mobile",
+          "Improvements",
+          "Panels"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v26",
+      "taskId": "5el2jk",
+      "version": 26,
+      "timestamp": "2026-01-19T06:49:43.320Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        }
+      ],
+      "snapshot": {
+        "title": "Improve mobile UI panel - start with asteroid bundler",
+        "status": "in-progress",
+        "priority": "medium",
+        "labels": [
+          "UI",
+          "Mobile",
+          "Improvements",
+          "Panels"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v27",
+      "taskId": "5el2jk",
+      "version": 27,
+      "timestamp": "2026-01-19T06:49:47.999Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "in-review"
+        }
+      ],
+      "snapshot": {
+        "title": "Improve mobile UI panel - start with asteroid bundler",
+        "status": "in-review",
+        "priority": "medium",
+        "labels": [
+          "UI",
+          "Mobile",
+          "Improvements",
+          "Panels"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v28",
+      "taskId": "5el2jk",
+      "version": 28,
+      "timestamp": "2026-01-20T00:57:36.838Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-review",
+          "newValue": "in-progress"
+        }
+      ],
+      "snapshot": {
+        "title": "Improve mobile UI panel - start with asteroid bundler",
+        "status": "in-progress",
+        "priority": "medium",
+        "labels": [
+          "UI",
+          "Mobile",
+          "Improvements",
+          "Panels"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v29",
+      "taskId": "5el2jk",
+      "version": 29,
+      "timestamp": "2026-01-20T00:57:36.896Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "todo"
+        }
+      ],
+      "snapshot": {
+        "title": "Improve mobile UI panel - start with asteroid bundler",
+        "status": "todo",
+        "priority": "medium",
+        "labels": [
+          "UI",
+          "Mobile",
+          "Improvements",
+          "Panels"
+        ],
+        "acceptanceCriteria": []
+      }
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "taskId": "udmgnm",
+  "currentVersion": 2,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "udmgnm",
+      "version": 1,
+      "timestamp": "2026-01-18T07:31:11.012Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "in-review"
+        }
+      ],
+      "snapshot": {
+        "title": "New scene: zoomed in launchpad",
+        "status": "in-review",
+        "priority": "medium",
+        "labels": [
+          "Structures",
+          "Scene",
+          "Launchpad",
+          "Rockets"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "udmgnm",
+      "version": 2,
+      "timestamp": "2026-01-18T07:31:11.095Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-review",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "New scene: zoomed in launchpad",
+        "status": "done",
+        "priority": "medium",
+        "labels": [
+          "Structures",
+          "Scene",
+          "Launchpad",
+          "Rockets"
+        ],
+        "acceptanceCriteria": []
+      }
+    }
+  ]
+}

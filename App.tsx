@@ -7,7 +7,8 @@
 
 import "setimmediate"; // Required by New Architecture
 import React from "react";
-import { useEffect } from "react";
+import { useEffect, useState, useCallback } from "react";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   RTNGodot,
   RTNGodotView,
@@ -19,12 +20,17 @@ import { LoginScreen } from "./screens/LoginScreen";
 
 // Type definitions for Godot objects
 interface AppController {
-  has_connections(signal: string): boolean;
+  has_signal_connections(signal: string): boolean;
   window_status_update: {
     connect(callback: (message: string) => void): void;
   };
+  counter_updated: {
+    connect(callback: (newValue: number) => void): void;
+  };
   open_window(windowName: string): void;
   close_window(windowName: string): void;
+  set_counter_from_react(value: number): void;
+  get_counter(): number;
 }
 
 type RootStackParamList = {
@@ -42,7 +48,10 @@ import {
   Platform,
   ActivityIndicator,
   Text,
+  ScrollView,
+  SafeAreaView,
 } from "react-native";
+import * as Progress from 'react-native-progress';
 
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
@@ -50,6 +59,9 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import * as Device from "expo-device";
 
 const Stack = createNativeStackNavigator();
+
+// Shared counter value accessible from Godot worklet thread
+let sharedCounterValue = 0;
 
 function initGodot(name: string) {
   if (RTNGodot.getInstance() != null) {
@@ -120,14 +132,6 @@ function initGodot(name: string) {
   });
 }
 
-function pauseGodot() {
-  RTNGodot.pause();
-}
-
-function resumeGodot() {
-  RTNGodot.resume();
-}
-
 function destroyGodot() {
   runOnGodotThread(() => {
     "worklet";
@@ -157,7 +161,7 @@ const appController = () => {
 
   if (!controller) return null;
 
-  if (!controller.has_connections("window_status_update")) {
+  if (!controller.has_signal_connections("window_status_update")) {
     controller.window_status_update.connect(function (message: string) {
       console.log(message);
     });
@@ -169,26 +173,79 @@ const appController = () => {
 const AppNavigator = () => {
   const { user, isLoading: authLoading } = useAuth();
 
-  const openSubwindow = function () {
-    runOnGodotThread(() => {
-      "worklet";
-      let controller = appController();
-      if (!controller) return;
-      controller.open_window("subwindow");
-    });
-  };
-
-  const closeSubwindow = function () {
-    runOnGodotThread(() => {
-      "worklet";
-      let controller = appController();
-      if (!controller) return;
-      controller.close_window("subwindow");
-    });
-  };
-
-  const Loading = ({ navigation }: { navigation: ScreenNavigationProp }) => {
+    const Loading = ({ navigation }: { navigation: ScreenNavigationProp }) => {
     const { signOut } = useAuth();
+    const [loadingStep, setLoadingStep] = useState(0);
+    const [progress, setProgress] = useState(0);
+    const [loadingText, setLoadingText] = useState('Initializing...');
+    const [isGameReady, setIsGameReady] = useState(false);
+    const [counter, setCounter] = useState(0);
+    const [counterLoaded, setCounterLoaded] = useState(false);
+
+    // Load counter from storage on mount
+    useEffect(() => {
+      const loadCounter = async () => {
+        try {
+          const saved = await AsyncStorage.getItem('gameCounter');
+          if (saved !== null) {
+            const value = parseInt(saved, 10);
+            setCounter(value);
+            console.log('Loaded counter from storage:', value);
+          }
+        } catch (e) {
+          console.error('Failed to load counter:', e);
+        } finally {
+          setCounterLoaded(true);
+        }
+      };
+      loadCounter();
+    }, []);
+
+    // Save counter to storage whenever it changes
+    useEffect(() => {
+      if (counterLoaded) {
+        AsyncStorage.setItem('gameCounter', counter.toString())
+          .then(() => console.log('Saved counter to storage:', counter))
+          .catch(e => console.error('Failed to save counter:', e));
+      }
+    }, [counter, counterLoaded]);
+    
+    const loadingSteps = [
+      'Initializing system...',
+      'Loading Godot engine...',
+      'Setting up native modules...',
+      'Preparing game assets...',
+      'Configuring rendering...',
+      'Loading scene data...',
+      'Finalizing setup...',
+      'Ready to play!'
+    ];
+
+    const simulateLoading = useCallback(() => {
+      const interval = setInterval(() => {
+        setLoadingStep(prev => {
+          const nextStep = Math.min(prev + 1, loadingSteps.length - 1);
+          setLoadingText(loadingSteps[nextStep]);
+          setProgress((nextStep + 1) / loadingSteps.length);
+          
+          if (nextStep === loadingSteps.length - 1) {
+            setTimeout(() => {
+              setIsGameReady(true);
+              clearInterval(interval);
+            }, 1000);
+          }
+          
+          return nextStep;
+        });
+      }, 2000); // Each step takes 2 seconds
+      
+      return () => clearInterval(interval);
+    }, [loadingSteps]);
+
+    useEffect(() => {
+      const cleanup = simulateLoading();
+      return cleanup;
+    }, [simulateLoading]);
 
     const handleLogout = async () => {
       try {
@@ -200,26 +257,74 @@ const AppNavigator = () => {
       }
     };
 
+    const handleOpenGame = () => {
+      if (isGameReady) {
+        // Store counter in module-level variable accessible from worklet
+        sharedCounterValue = counter;
+        console.log("Setting initial counter for game:", counter);
+        navigation.navigate("Game");
+      }
+    };
+
+    const incrementCounter = () => setCounter(prev => prev + 1);
+    const decrementCounter = () => setCounter(prev => prev - 1);
+
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.loadingText}>Loading...</Text>
-        <View style={styles.openButton}>
-          <Button
-            title="Open Game"
-            onPress={() => {
-              navigation.navigate("Game");
-            }}
-          />
+      <SafeAreaView style={styles.loadingContainer}>
+        <ScrollView contentContainerStyle={styles.scrollContent} bounces={false}>
+          <View style={styles.loadingContent}>
+            <Text style={styles.appTitle}>Planet Hunters</Text>
+            <Text style={styles.appSubtitle}>Godot + React Native</Text>
+            
+            <View style={styles.progressContainer}>
+              <View style={styles.circularProgress}>
+                <Text style={styles.progressText}>{Math.round(progress * 100)}%</Text>
+              </View>
+            </View>
+            
+            <Text style={styles.loadingText}>{loadingText}</Text>
+            
+            <View style={styles.progressBarContainer}>
+              <View style={styles.progressBarBackground}>
+                <View style={[styles.progressBarFill, { width: `${progress * 100}%` }]} />
+              </View>
+            </View>
+            
+            <Text style={styles.stepText}>
+              Step {loadingStep + 1} of {loadingSteps.length}
+            </Text>
+
+            <View style={styles.counterSection}>
+              <View style={styles.counterContainer}>
+                <Text style={styles.counterLabel}>Game Counter</Text>
+                <View style={styles.counterControls}>
+                  <Button title="-" onPress={decrementCounter} color="#FF3B30" />
+                  <Text style={styles.counterValue}>{counter}</Text>
+                  <Button title="+" onPress={incrementCounter} color="#34C759" />
+                </View>
+              </View>
+            </View>
+          </View>
+        </ScrollView>
+        
+        <View style={styles.buttonContainer}>
+          <View style={[styles.gameButton, { opacity: isGameReady ? 1 : 0.5 }]}>
+            <Button
+              title={isGameReady ? "Start Game" : "Please Wait..."}
+              onPress={handleOpenGame}
+              disabled={!isGameReady}
+              color={isGameReady ? "#34C759" : "#8E8E93"}
+            />
+          </View>
+          <View style={styles.logoutButton}>
+            <Button
+              title="Log Out"
+              onPress={handleLogout}
+              color="#FF3B30"
+            />
+          </View>
         </View>
-        <View style={styles.logoutButton}>
-          <Button
-            title="Log Out"
-            onPress={handleLogout}
-            color="#FF3B30"
-          />
-        </View>
-      </View>
+      </SafeAreaView>
     );
   };
 
@@ -228,7 +333,35 @@ const AppNavigator = () => {
       // Initialize Godot when entering the Game screen
       initGodot("GodotTest");
 
+      let retryCount = 0;
+      const maxRetries = 10;
+      let retryTimerId: NodeJS.Timeout | null = null;
+
+      // Retry until AppController is found and counter is set
+      const checkAndSetCounter = () => {
+        runOnGodotThread(() => {
+          "worklet";
+          const controller = appController();
+          if (controller) {
+            controller.set_counter_from_react(sharedCounterValue);
+            console.log("SUCCESS: Counter synced to Godot:", sharedCounterValue);
+          } else {
+            console.log("AppController not found, attempt:", retryCount + 1);
+          }
+        });
+        
+        retryCount++;
+        if (retryCount < maxRetries) {
+          retryTimerId = setTimeout(checkAndSetCounter, 500);
+        }
+      };
+
+      // Start checking after initial delay
+      const timerId = setTimeout(checkAndSetCounter, 1000);
+
       return () => {
+        clearTimeout(timerId);
+        if (retryTimerId) clearTimeout(retryTimerId);
         // Destroy Godot when leaving the Game screen
         destroyGodot();
       };
@@ -336,21 +469,138 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
+    backgroundColor: "#1C1C1E",
+    flexDirection: "column",
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 120,
+    alignItems: "center",
+  },
+  loadingContent: {
+    flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#ffffff",
+    paddingHorizontal: 20,
+    paddingVertical: 30,
+    width: "100%",
+  },
+  appTitle: {
+    fontSize: 28,
+    fontWeight: "bold",
+    color: "#FFFFFF",
+    marginBottom: 4,
+    textAlign: "center",
+  },
+  appSubtitle: {
+    fontSize: 14,
+    color: "#8E8E93",
+    marginBottom: 30,
+    textAlign: "center",
+  },
+  progressContainer: {
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  circularProgress: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    borderWidth: 6,
+    borderColor: "#E5E5EA",
+    borderTopColor: "#007AFF",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  progressText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#FFFFFF",
   },
   loadingText: {
-    marginTop: 12,
     fontSize: 16,
+    color: "#FFFFFF",
+    marginBottom: 20,
+    textAlign: "center",
+    fontWeight: "500",
+    minHeight: 20,
   },
-  openButton: {
-    marginTop: 16,
-    width: 160,
+  progressBarContainer: {
+    width: "100%",
+    paddingHorizontal: 40,
+    marginBottom: 16,
+    alignItems: "center",
+  },
+  progressBarBackground: {
+    width: "100%",
+    height: 4,
+    backgroundColor: "#E5E5EA",
+    borderRadius: 2,
+    overflow: "hidden",
+  },
+  progressBarFill: {
+    height: "100%",
+    backgroundColor: "#007AFF",
+    borderRadius: 2,
+  },
+  stepText: {
+    fontSize: 12,
+    color: "#8E8E93",
+    textAlign: "center",
+    marginBottom: 30,
+  },
+  counterSection: {
+    width: "100%",
+    alignItems: "center",
+    marginTop: 10,
+  },
+  counterContainer: {
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: '#2C2C2E',
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 10,
+    width: "80%",
+  },
+  counterLabel: {
+    fontSize: 12,
+    color: '#8E8E93',
+    fontWeight: '600',
+    letterSpacing: 0.3,
+  },
+  counterControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 20,
+    justifyContent: "center",
+  },
+  counterValue: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    minWidth: 50,
+    textAlign: "center",
+  },
+  buttonContainer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: "#1C1C1E",
+    paddingHorizontal: 40,
+    paddingVertical: 12,
+    gap: 10,
+    borderTopWidth: 1,
+    borderTopColor: "#3C3C3E",
+  },
+  gameButton: {
+    minHeight: 44,
+    justifyContent: "center",
   },
   logoutButton: {
-    marginTop: 12,
-    width: 160,
+    minHeight: 44,
+    justifyContent: "center",
   },
   gameContainer: {
     flex: 1,

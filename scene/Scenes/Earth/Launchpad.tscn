@@ -1,0 +1,42 @@
+[gd_scene load_steps=4 format=3 uid="uid://cyeikortw48gi"]
+
+[ext_resource type="Texture2D" uid="uid://bni1814mlo7mv" path="res://assets/Backdrops/Earth1.png" id="1_w3ovo"]
+[ext_resource type="Script" uid="uid://ce1a85vrjyh7x" path="res://Scripts/Earth/Launchpad.gd" id="2_lotk6"]
+[ext_resource type="Texture2D" uid="uid://ctuf1c3mi4pat" path="res://assets/Structures/launchpad.png" id="3_pjyjl"]
+
+[node name="LaunchpadScene" type="Node2D"]
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(960, 480)
+
+[node name="BackgroundLayer" type="CanvasLayer" parent="."]
+layer = 0
+
+[node name="BackgroundSprite" type="Sprite2D" parent="BackgroundLayer"]
+position = Vector2(960, 440)
+scale = Vector2(1.9, 1.9)
+texture = ExtResource("1_w3ovo")
+
+[node name="BackgroundSprite2" type="Sprite2D" parent="BackgroundLayer"]
+position = Vector2(280, 440)
+scale = Vector2(1.9, 1.9)
+texture = ExtResource("1_w3ovo")
+
+[node name="StructuresLayer" type="CanvasLayer" parent="."]
+
+[node name="Launchpad" type="Node2D" parent="StructuresLayer"]
+position = Vector2(960, 700)
+script = ExtResource("2_lotk6")
+
+[node name="Sprite2D" type="Sprite2D" parent="StructuresLayer/Launchpad"]
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("3_pjyjl")
+
+[node name="UILayer" type="CanvasLayer" parent="."]
+layer = 2
+
+[node name="ButtonContainer" type="HBoxContainer" parent="UILayer"]
+offset_left = 30.0
+offset_top = 100.0
+offset_right = 1890.0
+offset_bottom = 180.0

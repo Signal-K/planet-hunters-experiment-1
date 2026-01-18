@@ -1,0 +1,62 @@
+[gd_scene load_steps=2 format=3 uid="uid://cn8v4y3qwxb3l"]
+
+[ext_resource type="Script" path="res://Scripts/UI/AsteroidDetail/AsteroidDetailView.gd" id="1_asteroid_detail"]
+
+[node name="AsteroidDetailView" type="VBoxContainer"]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_asteroid_detail")
+
+[node name="HeaderContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="BackButton" type="Button" parent="HeaderContainer"]
+custom_minimum_size = Vector2(100, 50)
+layout_mode = 2
+text = "← Back"
+
+[node name="Title" type="Label" parent="HeaderContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Asteroid Details"
+vertical_alignment = 1
+
+[node name="Spacer" type="Control" parent="HeaderContainer"]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+
+[node name="ContentContainer" type="VBoxContainer" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 20
+
+[node name="LoadingLabel" type="Label" parent="ContentContainer"]
+layout_mode = 2
+text = "Loading..."
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ErrorLabel" type="Label" parent="ContentContainer"]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.2, 0.2, 1)
+text = "Error loading image"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ImageContainer" type="CenterContainer" parent="ContentContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="AsteroidImage" type="TextureRect" parent="ContentContainer/ImageContainer"]
+custom_minimum_size = Vector2(512, 512)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="InfoLabel" type="Label" parent="ContentContainer"]
+visible = false
+layout_mode = 2
+text = "Additional information will appear here"
+horizontal_alignment = 1

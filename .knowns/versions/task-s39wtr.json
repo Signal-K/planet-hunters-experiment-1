@@ -1,0 +1,34 @@
+{
+  "taskId": "s39wtr",
+  "currentVersion": 1,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "s39wtr",
+      "version": 1,
+      "timestamp": "2026-01-19T03:57:17.976Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-review",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Show asteroids in build",
+        "description": "Make sure mobile UI is readable\n\nInclude dual-type sb env variables",
+        "status": "done",
+        "priority": "medium",
+        "labels": [
+          "Supabase",
+          "Anomalies",
+          "Database",
+          "Data",
+          "Environment",
+          "Asteroids"
+        ],
+        "acceptanceCriteria": []
+      }
+    }
+  ]
+}

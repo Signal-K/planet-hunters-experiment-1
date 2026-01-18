@@ -1,0 +1,98 @@
+{
+  "taskId": "ky7wz5",
+  "currentVersion": 4,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "ky7wz5",
+      "version": 1,
+      "timestamp": "2026-01-19T09:00:25.739Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        }
+      ],
+      "snapshot": {
+        "title": "Allow users to switch between planets & asteroids",
+        "status": "in-progress",
+        "priority": "high",
+        "labels": [
+          "Supabase",
+          "Database"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "ky7wz5",
+      "version": 2,
+      "timestamp": "2026-01-19T09:00:25.797Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "in-review"
+        }
+      ],
+      "snapshot": {
+        "title": "Allow users to switch between planets & asteroids",
+        "status": "in-review",
+        "priority": "high",
+        "labels": [
+          "Supabase",
+          "Database"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "ky7wz5",
+      "version": 3,
+      "timestamp": "2026-01-19T09:00:27.533Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-review",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Allow users to switch between planets & asteroids",
+        "status": "done",
+        "priority": "high",
+        "labels": [
+          "Supabase",
+          "Database"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "ky7wz5",
+      "version": 4,
+      "timestamp": "2026-01-19T09:00:28.077Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "done",
+          "newValue": "in-review"
+        }
+      ],
+      "snapshot": {
+        "title": "Allow users to switch between planets & asteroids",
+        "status": "in-review",
+        "priority": "high",
+        "labels": [
+          "Supabase",
+          "Database"
+        ],
+        "acceptanceCriteria": []
+      }
+    }
+  ]
+}
