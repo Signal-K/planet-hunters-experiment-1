@@ -1,12 +1,12 @@
 ---
 id: vwvso8
 title: Integrate Obsidian with Knowns
-status: on-hold
+status: in-review
 priority: low
 labels: []
 createdAt: '2026-01-15T05:44:10.775Z'
-updatedAt: '2026-01-15T05:44:10.775Z'
-timeSpent: 0
+updatedAt: '2026-01-20T08:34:15.160Z'
+timeSpent: 23422
 ---
 # Integrate Obsidian with Knowns
 
