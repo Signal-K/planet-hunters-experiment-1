@@ -1,7 +1,7 @@
 ---
 id: fwzb5s
 title: Annotation test
-status: in-review
+status: done
 priority: medium
 labels:
   - Annotation
@@ -10,7 +10,7 @@ labels:
   - Asteroid
   - Supabase
 createdAt: '2026-01-19T09:07:20.143Z'
-updatedAt: '2026-01-20T08:41:14.530Z'
+updatedAt: '2026-01-20T13:22:53.802Z'
 timeSpent: 985
 ---
 # Annotation test

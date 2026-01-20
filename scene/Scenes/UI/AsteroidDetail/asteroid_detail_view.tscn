@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3 uid="uid://cn8v4y3qwxb3l"]
+[gd_scene load_steps=3 format=3 uid="uid://cn8v4y3qwxb3l"]
 
 [ext_resource type="Script" path="res://Scripts/UI/AsteroidDetail/AsteroidDetailView.gd" id="1_asteroid_detail"]
+[ext_resource type="Script" path="res://Scripts/UI/AsteroidDetail/DrawingCanvas.gd" id="2_drawing_canvas"]
 
 [node name="AsteroidDetailView" type="VBoxContainer"]
 size_flags_horizontal = 3
@@ -22,8 +23,48 @@ size_flags_horizontal = 3
 text = "Asteroid Details"
 vertical_alignment = 1
 
+[node name="PenButton" type="Button" parent="HeaderContainer"]
+custom_minimum_size = Vector2(120, 50)
+layout_mode = 2
+text = "✏️ Pen Tool"
+
+[node name="ClearButton" type="Button" parent="HeaderContainer"]
+visible = false
+custom_minimum_size = Vector2(100, 50)
+layout_mode = 2
+text = "Clear"
+
+[node name="SaveButton" type="Button" parent="HeaderContainer"]
+custom_minimum_size = Vector2(100, 50)
+layout_mode = 2
+text = "Save"
+
+[node name="PenFreeButton" type="Button" parent="HeaderContainer"]
+custom_minimum_size = Vector2(90, 40)
+layout_mode = 2
+text = "Free"
+
+[node name="PenRectButton" type="Button" parent="HeaderContainer"]
+custom_minimum_size = Vector2(90, 40)
+layout_mode = 2
+text = "Rect"
+
+[node name="PenCircleButton" type="Button" parent="HeaderContainer"]
+custom_minimum_size = Vector2(90, 40)
+layout_mode = 2
+text = "Circle"
+
+[node name="ColorPickerButton" type="ColorPickerButton" parent="HeaderContainer"]
+custom_minimum_size = Vector2(60, 40)
+layout_mode = 2
+
+[node name="AnnotationCount" type="Label" parent="HeaderContainer"]
+layout_mode = 2
+text = "Annotations: 0"
+vertical_alignment = 1
+
 [node name="Spacer" type="Control" parent="HeaderContainer"]
-custom_minimum_size = Vector2(100, 0)
+custom_minimum_size = Vector2(20, 0)
 layout_mode = 2
 
 [node name="ContentContainer" type="VBoxContainer" parent="."]
@@ -50,10 +91,15 @@ layout_mode = 2
 size_flags_vertical = 3
 
 [node name="AsteroidImage" type="TextureRect" parent="ContentContainer/ImageContainer"]
-custom_minimum_size = Vector2(512, 512)
+custom_minimum_size = Vector2(768, 768)
 layout_mode = 2
 expand_mode = 1
 stretch_mode = 5
+
+[node name="DrawingCanvas" type="Control" parent="ContentContainer/ImageContainer"]
+custom_minimum_size = Vector2(768, 768)
+layout_mode = 2
+script = ExtResource("2_drawing_canvas")
 
 [node name="InfoLabel" type="Label" parent="ContentContainer"]
 visible = false

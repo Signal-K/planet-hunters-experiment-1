@@ -1,3 +1,7 @@
-res://Scripts/Earth/UIManager.gd
-res://Scripts/Systems/SupabaseClient.gd
+res://Scenes/UI/AsteroidDetail/asteroid_detail_view.tscn
 res://Scripts/UI/AsteroidDetail/AsteroidDetailView.gd
+res://Scripts/UI/AsteroidDetail/DrawingCanvas.gd
+res://Scripts/UI/SatelliteStationPanel.gd
+res://Scripts/Earth/UIManager.gd
+res://Scripts/UI/LocalAnnotationsPanel.gd
+res://Scripts/UI/NewMissionPanel.gd

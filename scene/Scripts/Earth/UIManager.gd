@@ -26,6 +26,22 @@ func show_panel(panel_type: PanelType) -> void:
 	if panel_type == PanelType.MENU:
 		show_menu_panel()
 		return
+
+	# Special handling for NEW_MISSION - use the SatelliteStationPanel scene
+	if panel_type == PanelType.NEW_MISSION:
+		var panel_scene = load("res://Scenes/UI/NewMissionPanel.tscn")
+		if panel_scene:
+			var panel_instance = panel_scene.instantiate()
+			# Tell the panel to operate in local-only mode before adding to the scene tree
+			# panel is local-only by design
+			add_child(panel_instance)
+			if panel_instance.has_signal("panel_closed"):
+				panel_instance.panel_closed.connect(_on_panel_closed)
+			print("New Mission panel opened (SatelliteStationPanel)")
+			return
+		else:
+			print("Failed to load SatelliteStationPanel scene for New Mission")
+			# fall through to generic panel creation
 	
 	var panel = create_panel(panel_titles[panel_type])
 	add_child(panel)

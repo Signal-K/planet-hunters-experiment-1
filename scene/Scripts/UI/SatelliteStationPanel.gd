@@ -16,6 +16,10 @@ var target_load_time := 0.0
 var pending_anomalies := []
 var detail_view_active := false  # Track if detail view is showing
 var current_mode: String = "asteroids"  # Default mode
+var local_only: bool = false
+
+func set_local_only(val: bool) -> void:
+	local_only = val
 
 @onready var loading_container: VBoxContainer = $PanelContainer/Panel/VBoxContainer/ContentContainer/LoadingContainer
 @onready var anomaly_list: VBoxContainer = $PanelContainer/Panel/VBoxContainer/ContentContainer/AnomalyList
@@ -45,7 +49,15 @@ func _ready():
 	
 	# Start initial load
 	_start_loading(INITIAL_LOAD_TIME)
-	_fetch_anomalies()
+
+	if local_only:
+		# Local-only mode (New Mission): show saved annotated PNGs
+		var local = _load_local_annotations()
+		pending_anomalies = local
+		_finish_loading()
+	else:
+		# Default behavior: fetch anomalies from Supabase
+		_fetch_anomalies()
 
 func _process(delta: float):
 	if is_loading:
@@ -84,6 +96,31 @@ func _finish_loading():
 func _fetch_anomalies():
 	var supabase = SupabaseClient.get_instance()
 	supabase.fetch_anomalies(ANOMALY_SET, MAX_ANOMALIES, _on_anomalies_fetched)
+
+
+func _load_local_annotations() -> Array:
+	"""Scan user://annotations for saved annotated PNGs and return array of anomaly-like dictionaries."""
+	var results := []
+	var annotations_dir = "user://annotations"
+	var dir = DirAccess.open(annotations_dir)
+	if dir == null:
+		return results
+
+	var fname = dir.get_next()
+	while fname != "":
+		# We look for files like <id>-annotated.png
+		if fname.ends_with("-annotated.png"):
+			var idx = fname.rfind("-annotated.png")
+			var key = fname
+			if idx >= 0:
+				key = fname.substr(0, idx)
+			var entry := {}
+			entry["content"] = key
+			entry["local_thumbnail"] = "%s/%s" % [annotations_dir, fname]
+			results.append(entry)
+		fname = dir.get_next()
+
+	return results
 
 func _on_anomalies_fetched(data: Array, error: String):
 	if error != "":
@@ -135,6 +172,16 @@ func _create_anomaly_item(anomaly: Dictionary, index: int) -> Control:
 	var hbox = HBoxContainer.new()
 	hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	item_container.add_child(hbox)
+
+	# Add a full-size transparent button to capture clicks reliably
+	var click_btn = Button.new()
+	click_btn.text = ""
+	click_btn.flat = true
+	click_btn.focus_mode = Control.FOCUS_NONE
+	click_btn.mouse_filter = Control.MOUSE_FILTER_STOP
+	# Make it cover the whole item_container
+	click_btn.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	item_container.add_child(click_btn)
 	
 	# Icon/Number circle
 	var icon_container = PanelContainer.new()
@@ -148,14 +195,37 @@ func _create_anomaly_item(anomaly: Dictionary, index: int) -> Control:
 	icon_container.add_theme_stylebox_override("panel", icon_style)
 	
 	var icon_label = Label.new()
-	icon_label.text = "☄"
-	icon_label.add_theme_font_size_override("font_size", 28)
-	icon_label.add_theme_color_override("font_color", Color.WHITE)
-	icon_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	icon_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	icon_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	icon_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	icon_container.add_child(icon_label)
+	# If an annotated PNG exists for this anomaly, show it as a thumbnail
+	var combined_png = "user://annotations/%s-annotated.png" % anomaly.get("content", str(anomaly.get("id", index)))
+	if FileAccess.file_exists(combined_png):
+		var img = Image.new()
+		var err = img.load(combined_png)
+		if err == OK:
+			var tex = ImageTexture.create_from_image(img)
+			var thumb = TextureRect.new()
+			thumb.texture = tex
+			thumb.expand = true
+			thumb.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			thumb.custom_minimum_size = Vector2(50, 50)
+			icon_container.add_child(thumb)
+		else:
+			icon_label.text = "☄"
+			icon_label.add_theme_font_size_override("font_size", 28)
+			icon_label.add_theme_color_override("font_color", Color.WHITE)
+			icon_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			icon_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+			icon_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			icon_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
+			icon_container.add_child(icon_label)
+	else:
+		icon_label.text = "☄"
+		icon_label.add_theme_font_size_override("font_size", 28)
+		icon_label.add_theme_color_override("font_color", Color.WHITE)
+		icon_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		icon_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		icon_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		icon_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		icon_container.add_child(icon_label)
 	hbox.add_child(icon_container)
 	
 	# Spacer
@@ -213,8 +283,23 @@ func _create_anomaly_item(anomaly: Dictionary, index: int) -> Control:
 	subtitle_label.add_theme_color_override("font_color", Color(0.4, 0.45, 0.5, 1))
 	content_vbox.add_child(subtitle_label)
 	
-	# Make the item clickable
-	item_container.gui_input.connect(_on_anomaly_item_clicked.bind(anomaly))
+	# Connect the overlay button's pressed signal to open detail view
+	click_btn.pressed.connect(Callable(self, "_on_anomaly_item_button_pressed").bind(anomaly))
+
+	# Check for saved annotations for this anomaly and show indicator
+	var anomaly_key = anomaly.get("content", "")
+	if anomaly_key == "":
+		anomaly_key = str(anomaly.get("id", index))
+	var annotations_path = "user://annotations/%s.json" % anomaly_key
+	print("SatelliteStationPanel: checking annotations for key:", anomaly_key, "path:", annotations_path)
+	var exists = FileAccess.file_exists(annotations_path)
+	print("SatelliteStationPanel: annotations file exists?", exists)
+	if exists:
+		var saved_label = Label.new()
+		saved_label.text = "Saved"
+		saved_label.add_theme_color_override("font_color", Color(0.1, 0.6, 0.1))
+		saved_label.add_theme_font_size_override("font_size", 18)
+		hbox.add_child(saved_label)
 	
 	# Add hover effect
 	item_container.mouse_entered.connect(func():
@@ -232,6 +317,17 @@ func _on_anomaly_item_clicked(event: InputEvent, anomaly: Dictionary):
 	"""Handle click on an anomaly item"""
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		_show_asteroid_detail(anomaly)
+
+
+func _on_anomaly_item_gui_input(bound_anomaly: Dictionary, event: InputEvent):
+	"""Wrapper for gui_input when using Callable.bind(bound_anomaly) - called with (bound_anomaly, event)"""
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		_show_asteroid_detail(bound_anomaly)
+
+
+func _on_anomaly_item_button_pressed(bound_anomaly: Dictionary):
+	"""Called when the overlay button is pressed for an anomaly item."""
+	_show_asteroid_detail(bound_anomaly)
 
 func _show_asteroid_detail(anomaly: Dictionary):
 	"""Show the asteroid detail view"""
