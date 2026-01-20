@@ -155,19 +155,21 @@ jobs:
           cd ~/godot-src
           
           echo "Starting Godot build with tests enabled..."
-          echo "Running: scons platform=linux tools=yes tests=yes target=debug -j$(nproc)"
-          
+          echo "Running: scons platform=linux tools=yes tests=yes target=editor -j$(nproc)"
+
           scons \
             platform=linux \
             tools=yes \
             tests=yes \
-            target=debug \
+            target=editor \
             -j$(nproc) \
             2>&1 | tee build.log
-          
-          if [ -f "bin/godot.linux.editor.debug.x86_64" ]; then
-            echo "✓ Godot built successfully"
-            ls -lh bin/godot.linux.editor.debug.x86_64
+
+          # Find a built editor binary under bin/
+          BIN_PATH=$(find bin -maxdepth 1 -type f -executable -name 'godot*' | head -n1 || true)
+          if [ -n "$BIN_PATH" ]; then
+            echo "✓ Godot built successfully: $BIN_PATH"
+            ls -lh "$BIN_PATH"
           else
             echo "❌ Godot build failed - binary not found"
             tail -100 build.log
@@ -184,13 +186,19 @@ jobs:
           GODOT_DISABLE_DEPRECATED_WARNINGS: "1"
         run: |
           cd ~/godot-src
-          GODOT_BIN="bin/godot.linux.editor.debug.x86_64"
-          
-          echo "Running C++ tests..."
+
+          # Locate the built editor binary
+          GODOT_BIN=$(find bin -maxdepth 1 -type f -executable -name 'godot*' | head -n1 || true)
+          if [ -z "$GODOT_BIN" ]; then
+            echo "❌ Could not locate Godot binary in bin/"
+            exit 2
+          fi
+
+          echo "Running C++ tests with binary: $GODOT_BIN"
           echo "  SUPABASE_URL=$SUPABASE_URL"
           echo "  TEST_TIMEOUT_MS=$TEST_TIMEOUT_MS"
           echo ""
-          
+
           set +e  # Don't exit on command failure
           $GODOT_BIN \
             --test \
