@@ -1,0 +1,16 @@
+[gd_scene load_steps=1 format=3 uid="uid://franc_icon"]
+
+[node name="FrancIcon" type="Control"]
+layout_mode = 3
+anchors_preset = 3
+anchor_right = 0.0
+anchor_bottom = 0.0
+script = null
+
+[node name="Label" type="Label" parent="."]
+layout_mode = 2
+text = "F+"
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(0.85, 0.07, 0.2, 1)
+horizontal_alignment = 1
+vertical_alignment = 1
