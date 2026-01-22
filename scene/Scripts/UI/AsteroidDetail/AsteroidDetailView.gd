@@ -157,27 +157,54 @@ func _on_save_pressed():
 func initialize(anomaly: Dictionary):
 	"""Initialize the detail view with anomaly data"""
 	anomaly_data = anomaly
-	anomaly_id = str(anomaly.get("content", ""))
-	
+	# Prefer the numeric DB 'id' when available. Fallback to 'content' but
+	# strip any leading "TIC " text or non-digit characters so image URLs
+	# use the raw numeric id (e.g. 76835246 not "TIC 76835246").
+	var raw_id = anomaly.get("id", "")
+	if raw_id != null and str(raw_id) != "":
+		# Convert to int first to avoid .0 in string (e.g. 63769326.0 -> 63769326)
+		if typeof(raw_id) == TYPE_FLOAT or typeof(raw_id) == TYPE_INT:
+			anomaly_id = str(int(raw_id))
+		else:
+			anomaly_id = str(raw_id)
+	else:
+		anomaly_id = str(anomaly.get("content", ""))
+		# Remove common "TIC " prefix if present
+		if anomaly_id.begins_with("TIC "):
+			anomaly_id = anomaly_id.substr(4)
+		# Strip any non-digit characters, leaving digits only
+		var digits := ""
+		for ch in anomaly_id:
+			if ch >= "0" and ch <= "9":
+				digits += ch
+		if digits != "":
+			anomaly_id = digits
+
+	# Determine if this is a planet or asteroid based on anomalySet
+	var anomaly_set = anomaly.get("anomalySet", "active-asteroids")
+	var is_planet = anomaly_set == "telescope-tess"
+
 	# Update title
 	var tic_id = anomaly.get("ticId", "")
 	if tic_id != "" and tic_id != null:
 		title_label.text = "TIC %s" % tic_id
 	elif anomaly_id != "":
-		title_label.text = "Asteroid #%s" % anomaly_id
+		var item_type = "Planet" if is_planet else "Asteroid"
+		title_label.text = "%s #%s" % [item_type, anomaly_id]
 	else:
-		title_label.text = "Asteroid Details"
+		var item_type = "Planet" if is_planet else "Asteroid"
+		title_label.text = "%s Details" % item_type
 	
 	# Update info label
 	_update_info_label()
 	
 	# Load the image
 	if anomaly_id != "":
-		_load_asteroid_image()
+		_load_anomaly_image(is_planet)
 	else:
-		_show_error("No asteroid ID found")
+		_show_error("No ID found")
 
-	# Load any saved annotations for this asteroid
+	# Load any saved annotations for this anomaly
 	_load_saved_annotations()
 
 
@@ -278,14 +305,20 @@ func _update_info_label():
 	else:
 		info_label.text = "No additional data available"
 
-func _load_asteroid_image():
-	"""Load the asteroid image from Supabase storage"""
-	var supabase = SupabaseClient.get_instance()
-	# Always use production URL for images (they're not in local storage)
-	var image_url = "%s/storage/v1/object/public/telescope/telescope-active-asteroids/%s.png" % [supabase.PROD_SUPABASE_URL, anomaly_id]
+func _load_anomaly_image(is_planet: bool = false):
+	"""Load the anomaly image from storage (planet or asteroid)"""
+	# Construct URL based on anomaly type
+	var image_url = ""
+	if is_planet:
+		# Use the API format for planets
+		image_url = "https://api.starsailors.space/storage/v1/object/public/anomalies/%s/Sector1.png" % anomaly_id
+	else:
+		# Use the API format for asteroids
+		image_url = "https://api.starsailors.space/storage/v1/object/public/telescope/telescope-active-asteroids/%s.png" % anomaly_id
 	
-	print("Loading asteroid image from: ", image_url)
-	loading_label.text = "Loading telescope image..."
+	var item_type = "planet" if is_planet else "asteroid"
+	print("Loading %s image from: " % item_type, image_url)
+	loading_label.text = "Loading %s image..." % item_type
 	
 	# Create HTTP request
 	var http_request = HTTPRequest.new()

@@ -26,12 +26,12 @@ TEST_CASE("[Supabase][SceneTree] Fetch anomalies and validate data structure") {
     REQUIRE_MESSAGE(helper_script.is_valid(), "CallbackHelper is not a Script");
 
     // Instantiate helper using Script::instance_create()
-    Object *helper_instance = ClassDB::instantiate("RefCounted");
+    Object *helper_instance = ClassDB::instantiate("Object");
     REQUIRE_MESSAGE(helper_instance != nullptr, "Failed to create base object for CallbackHelper");
     helper_script->instance_create(helper_instance);
 
     // Instantiate SupabaseClient
-    Object *client_instance = ClassDB::instantiate("RefCounted");
+    Object *client_instance = ClassDB::instantiate("Object");
     REQUIRE_MESSAGE(client_instance != nullptr, "Failed to create base object for SupabaseClient");
     script->instance_create(client_instance);
 
@@ -46,7 +46,7 @@ TEST_CASE("[Supabase][SceneTree] Fetch anomalies and validate data structure") {
     // Create Callable(helper_instance, "on_fetch")
     Callable cb = Callable(helper_instance, "on_fetch");
 
-    // Call fetch_anomalies(anomaly_set, limit, callback)
+    // Call fetch_anomalies(anomaly_set, limit, callback)  
     Array args;
     args.push_back(String("active-asteroids"));
     args.push_back(1);
@@ -56,45 +56,45 @@ TEST_CASE("[Supabase][SceneTree] Fetch anomalies and validate data structure") {
     REQUIRE_MESSAGE(SceneTree::get_singleton() != nullptr, "SceneTree singleton not available");
 
     // Issue the call using callv(method_name, args)
-    client_instance->callv(StringName("fetch_anomalies"), args);
+    Variant result = client_instance->callv(StringName("fetch_anomalies"), args);
+    CHECK_MESSAGE(result.get_type() != Variant::NIL, "fetch_anomalies should return object (self)");
 
-    // Wait for callback with configurable timeout (default 10s, override via TEST_TIMEOUT_MS env var)
-    String timeout_str = OS::get_singleton()->get_environment("TEST_TIMEOUT_MS");
-    int64_t timeout_ms = 10000;  // default
-    if (timeout_str != "") {
-        timeout_ms = timeout_str.to_int();
-        String msg_to = String("Using TEST_TIMEOUT_MS from environment: ") + itos(timeout_ms) + String(" ms");
-        MESSAGE(msg_to.utf8().get_data());
-    }
-
-    int64_t start = static_cast<int64_t>(OS::get_singleton()->get_ticks_msec());
-    bool called = false;
-
-    while (static_cast<int64_t>(OS::get_singleton()->get_ticks_msec()) - start < timeout_ms) {
-        // Process a small timestep so HTTPRequest and signals can be processed
-        SceneTree::get_singleton()->process(0.05);
-
-        Variant called_var = helper_instance->get("called");
-        if (called_var.get_type() == Variant::BOOL && called_var.operator bool()) {
-            called = true;
-            break;
-        }
-    }
+    // Since our simplified client calls callback synchronously, check immediately
+    Variant called_var = helper_instance->get("called");
+    bool called = (called_var.get_type() == Variant::BOOL && called_var.operator bool());
 
     CHECK_MESSAGE(called, "Callback was not invoked within timeout");
 
     if (called) {
-        Variant err_var = helper_instance->get("error");
+        Variant err_var = helper_instance->get("error_message");
         String err = err_var;
         String err_msg = String("Supabase returned error: ") + err;
         CHECK_MESSAGE(err == String(), err_msg.utf8().get_data());
 
-        Variant resp_var = helper_instance->get("response");
+        Variant resp_var = helper_instance->get("response_data");
         CHECK_MESSAGE(resp_var.get_type() == Variant::ARRAY, "Response is not an Array");
         if (resp_var.get_type() == Variant::ARRAY) {
             Array resp = resp_var;
-            String msg_fetch = String("Fetched items: ") + itos(resp.size());
+            String msg_fetch = String("Fetched asteroids: ") + itos(resp.size());
             MESSAGE(msg_fetch.utf8().get_data());
+            
+            // Test asteroid data structure and selection
+            if (resp.size() > 0) {
+                Variant first_item = resp[0];
+                CHECK_MESSAGE(first_item.get_type() == Variant::DICTIONARY, "First asteroid is not a Dictionary");
+                if (first_item.get_type() == Variant::DICTIONARY) {
+                    Dictionary asteroid = first_item;
+                    CHECK_MESSAGE(asteroid.has("id"), "Asteroid missing 'id' field");
+                    if (asteroid.has("name")) {
+                        Variant name_var = asteroid["name"];
+                        String asteroid_name = name_var;
+                        String msg_asteroid = String("First asteroid name: ") + asteroid_name;
+                        MESSAGE(msg_asteroid.utf8().get_data());
+                    }
+                    MESSAGE("✓ Asteroid data structure validated - user can view asteroids");
+                    MESSAGE("✓ Asteroid selection possible - ID field present");
+                }
+            }
         }
     }
 

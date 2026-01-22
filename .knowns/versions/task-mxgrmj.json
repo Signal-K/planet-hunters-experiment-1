@@ -1,0 +1,161 @@
+{
+  "taskId": "mxgrmj",
+  "currentVersion": 5,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "mxgrmj",
+      "version": 1,
+      "timestamp": "2026-01-20T14:44:36.606Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        }
+      ],
+      "snapshot": {
+        "title": "Fetch planet anomaly images (lightcurves)",
+        "status": "in-progress",
+        "priority": "medium",
+        "labels": [
+          "Supabase",
+          "Anomalies",
+          "Planets",
+          "Telescope",
+          "Satellite",
+          "Database",
+          "Storage",
+          "Lightkurve",
+          "Contributions",
+          "Data"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "mxgrmj",
+      "version": 2,
+      "timestamp": "2026-01-20T14:54:28.611Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "in-review"
+        }
+      ],
+      "snapshot": {
+        "title": "Fetch planet anomaly images (lightcurves)",
+        "status": "in-review",
+        "priority": "medium",
+        "labels": [
+          "Supabase",
+          "Anomalies",
+          "Planets",
+          "Telescope",
+          "Satellite",
+          "Database",
+          "Storage",
+          "Lightkurve",
+          "Contributions",
+          "Data"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "mxgrmj",
+      "version": 3,
+      "timestamp": "2026-01-20T14:54:28.980Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-review",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Fetch planet anomaly images (lightcurves)",
+        "status": "done",
+        "priority": "medium",
+        "labels": [
+          "Supabase",
+          "Anomalies",
+          "Planets",
+          "Telescope",
+          "Satellite",
+          "Database",
+          "Storage",
+          "Lightkurve",
+          "Contributions",
+          "Data"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "mxgrmj",
+      "version": 4,
+      "timestamp": "2026-01-20T14:54:29.072Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "done",
+          "newValue": "in-review"
+        }
+      ],
+      "snapshot": {
+        "title": "Fetch planet anomaly images (lightcurves)",
+        "status": "in-review",
+        "priority": "medium",
+        "labels": [
+          "Supabase",
+          "Anomalies",
+          "Planets",
+          "Telescope",
+          "Satellite",
+          "Database",
+          "Storage",
+          "Lightkurve",
+          "Contributions",
+          "Data"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "mxgrmj",
+      "version": 5,
+      "timestamp": "2026-01-20T14:54:29.092Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-review",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Fetch planet anomaly images (lightcurves)",
+        "status": "done",
+        "priority": "medium",
+        "labels": [
+          "Supabase",
+          "Anomalies",
+          "Planets",
+          "Telescope",
+          "Satellite",
+          "Database",
+          "Storage",
+          "Lightkurve",
+          "Contributions",
+          "Data"
+        ],
+        "acceptanceCriteria": []
+      }
+    }
+  ]
+}

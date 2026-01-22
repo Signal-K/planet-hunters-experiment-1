@@ -2,71 +2,55 @@
 set -euo pipefail
 
 # integrate_and_run_godot_tests.sh
-# Copy the C++ test header into a Godot engine source checkout, include it in tests/test_main.cpp,
-# build the engine with tests enabled, and run the test runner against this project.
+# Run GDScript-based tests for Supabase integration.
 # Usage:
-#   ./scripts/integrate_and_run_godot_tests.sh /path/to/godot/source
-# or set GODOT_SRC env var before running.
+#   ./scripts/integrate_and_run_godot_tests.sh [/path/to/godot/binary]
+# or set GODOT_BIN env var before running.
 
-GODOT_SRC=${1:-${GODOT_SRC:-}}
-if [ -z "$GODOT_SRC" ]; then
-  echo "Error: Godot source path not provided. Usage: $0 /path/to/godot" >&2
+# Try to find Godot binary
+GODOT_BIN=${1:-${GODOT_BIN:-}}
+
+# Common locations to check for Godot
+if [ -z "$GODOT_BIN" ]; then
+  for candidate in \
+    "/Users/scroobz/godot-src/bin/godot.macos.editor.arm64" \
+    "$(which godot 2>/dev/null || true)" \
+    "/Applications/Godot.app/Contents/MacOS/Godot" \
+    "$HOME/godot-src/bin/godot.macos.editor.arm64"; do
+    if [ -x "$candidate" ]; then
+      GODOT_BIN="$candidate"
+      break
+    fi
+  done
+fi
+
+if [ -z "$GODOT_BIN" ] || [ ! -x "$GODOT_BIN" ]; then
+  echo "Error: Godot binary not found. Usage: $0 /path/to/godot" >&2
+  echo "Or set GODOT_BIN environment variable." >&2
   exit 2
 fi
 
-PROJECT_ROOT=$(pwd)
-TEST_HEADER=scene/tests/test_supabase_net.h
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+SCENE_DIR="$PROJECT_ROOT/scene"
+TEST_RUNNER="res://tests/SupabaseTestRunner.gd"
 
-if [ ! -f "$TEST_HEADER" ]; then
-  echo "Error: $TEST_HEADER not found in project. Run from project root." >&2
+if [ ! -f "$SCENE_DIR/tests/SupabaseTestRunner.gd" ]; then
+  echo "Error: SupabaseTestRunner.gd not found in $SCENE_DIR/tests/" >&2
   exit 3
 fi
 
-echo "Godot src: $GODOT_SRC"
-echo "Project root: $PROJECT_ROOT"
+echo "=========================================="
+echo "Supabase Integration Tests"
+echo "=========================================="
+echo "Godot binary: $GODOT_BIN"
+echo "Project path: $SCENE_DIR"
+echo "Test runner:  $TEST_RUNNER"
+echo "=========================================="
+echo ""
 
-DEST_TESTS_DIR="$GODOT_SRC/tests"
+# Run the GDScript test runner
+"$GODOT_BIN" --headless --path "$SCENE_DIR" --script "$TEST_RUNNER"
 
-if [ ! -d "$DEST_TESTS_DIR" ]; then
-  echo "Error: $DEST_TESTS_DIR not found. Ensure this is a Godot engine source tree." >&2
-  exit 4
-fi
-
-echo "Copying $TEST_HEADER -> $DEST_TESTS_DIR/"
-cp "$TEST_HEADER" "$DEST_TESTS_DIR/"
-
-MAIN_CPP="$GODOT_SRC/tests/test_main.cpp"
-BACKUP="$MAIN_CPP.bak_$(date +%s)"
-if [ ! -f "$MAIN_CPP" ]; then
-  echo "Warning: $MAIN_CPP not found. You may need to include the test manually." >&2
-else
-  echo "Backing up $MAIN_CPP -> $BACKUP"
-  cp "$MAIN_CPP" "$BACKUP"
-
-  # Insert include for our test header near other includes. Use awk to avoid fragile sed edits.
-  if ! grep -q "#include \"test_supabase_net.h\"" "$MAIN_CPP"; then
-    echo "Adding #include \"test_supabase_net.h\" to $MAIN_CPP"
-    awk 'BEGIN{printed=0} { print; if (!printed && /#include/ && NR>1) { print "#include \"test_supabase_net.h\""; printed=1 } }' "$BACKUP" > "$MAIN_CPP"
-  else
-    echo "Include already present in $MAIN_CPP"
-  fi
-fi
-
-echo "Building Godot with tests enabled (this may take a long time)"
-cd "$GODOT_SRC"
-
-# Example macOS build command; adjust platform/target as needed.
-echo "Running: scons platform=osx tools=yes tests=yes target=debug -j$(sysctl -n hw.ncpu)"
-scons platform=osx tools=yes tests=yes target=debug -j$(sysctl -n hw.ncpu)
-
-echo "Build finished. Locating test binary..."
-BIN=$(ls -1 bin/*tools*.64 2>/dev/null | head -n1 || true)
-if [ -z "$BIN" ]; then
-  echo "Could not locate Godot test binary under bin/. Adjust binary name in the script." >&2
-  exit 5
-fi
-
-echo "Running tests: $BIN --test --path $PROJECT_ROOT --source-file='*test_supabase_net*' --success"
-"$BIN" --test --path "$PROJECT_ROOT" --source-file="*test_supabase_net*" --success
-
-echo "Done. If tests failed, inspect the output above. Restoring original test_main.cpp if needed." 
+echo ""
+echo "Test run complete." 
