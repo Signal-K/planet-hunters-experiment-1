@@ -14,21 +14,40 @@ const PROD_SUPABASE_KEY: String = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3Mi
 # Force local mode - set this to true if you want to always use local development server
 # This can be useful for testing mobile builds against local development
 const FORCE_LOCAL_MODE: bool = false
+
+# Set this to true to use production in the editor (recommended)
+const USE_PRODUCTION_IN_EDITOR: bool = true
+
 static var _instance: SupabaseClient
 
 static func get_instance() -> SupabaseClient:
 	if _instance == null:
 		_instance = SupabaseClient.new()
-		# Use production values when running on mobile devices or exported builds
-		# This covers both React Native/Expo and exported Godot builds
-		if not FORCE_LOCAL_MODE and _should_use_production():
+		
+		# Check for environment variables first (CI/GitHub Actions)
+		var env_url = OS.get_environment("SUPABASE_URL")
+		var env_key = OS.get_environment("SUPABASE_ANON_KEY")
+		
+		if env_url != "" and env_key != "":
+			# Use environment variables (GitHub secrets in CI)
+			_instance.SUPABASE_URL = env_url
+			_instance.SUPABASE_KEY = env_key
+			print("SupabaseClient: Using ENVIRONMENT credentials (GitHub secrets)")
+		elif FORCE_LOCAL_MODE:
+			# Explicitly using local mode
+			print("SupabaseClient: Using LOCAL development credentials (FORCE_LOCAL_MODE enabled)")
+		elif USE_PRODUCTION_IN_EDITOR and Engine.is_editor_hint():
+			# Use production in editor (default behavior)
+			_instance.SUPABASE_URL = PROD_SUPABASE_URL
+			_instance.SUPABASE_KEY = PROD_SUPABASE_KEY
+			print("SupabaseClient: Using PRODUCTION credentials (editor mode)")
+		elif _should_use_production():
+			# Use production values when running on mobile devices or exported builds
 			_instance.SUPABASE_URL = PROD_SUPABASE_URL
 			_instance.SUPABASE_KEY = PROD_SUPABASE_KEY
 			print("SupabaseClient: Using PRODUCTION credentials for mobile/exported build")
 		else:
 			print("SupabaseClient: Using LOCAL development credentials")
-			if FORCE_LOCAL_MODE:
-				print("SupabaseClient: FORCE_LOCAL_MODE is enabled")
 	return _instance
 
 ## Determine if we should use production Supabase credentials

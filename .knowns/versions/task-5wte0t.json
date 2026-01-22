@@ -1,0 +1,28 @@
+{
+  "taskId": "5wte0t",
+  "currentVersion": 1,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "5wte0t",
+      "version": 1,
+      "timestamp": "2026-01-21T13:47:01.279Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "on-hold"
+        }
+      ],
+      "snapshot": {
+        "title": "Update available buttons",
+        "status": "on-hold",
+        "priority": "medium",
+        "labels": [
+          "Buttons"
+        ],
+        "acceptanceCriteria": []
+      }
+    }
+  ]
+}

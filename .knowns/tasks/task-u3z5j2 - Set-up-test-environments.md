@@ -1,14 +1,14 @@
 ---
 id: u3z5j2
 title: Set up test environments
-status: in-progress
+status: in-review
 priority: medium
 labels:
   - Tests
   - DX
 createdAt: '2026-01-20T14:01:52.605Z'
-updatedAt: '2026-01-20T14:01:58.656Z'
-timeSpent: 0
+updatedAt: '2026-01-20T14:36:09.515Z'
+timeSpent: 2045
 ---
 # Set up test environments
 

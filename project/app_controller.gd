@@ -1,9 +1,13 @@
 extends Node
 
 signal window_status_update(message: String)
+signal franc_balance_updated(new_value: int)
 
 # Counter state shared between React Native and Godot
 var counter: int = 0
+
+# Franc balance state shared between React Native and Godot
+var franc_balance: int = 10000000000  # Default 10B
 
 #region React Public API
 
@@ -15,6 +19,16 @@ func set_counter_from_react(value: int) -> void:
 ## Get counter value for React Native
 func get_counter() -> int:
 	return counter
+
+## Set Franc balance from React Native
+func set_franc_balance_from_react(value: int) -> void:
+	franc_balance = value
+	print("AppController: Franc balance set from React Native to: ", franc_balance)
+	franc_balance_updated.emit(franc_balance)
+
+## Get Franc balance for React Native
+func get_franc_balance() -> int:
+	return franc_balance
 func open_window(window_name: String) -> Window:
 	window_status_update.emit("Window opened: " + window_name)
 	var root = get_tree().root
