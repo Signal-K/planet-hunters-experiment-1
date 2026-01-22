@@ -1,6 +1,6 @@
 {
   "taskId": "fwzb5s",
-  "currentVersion": 5,
+  "currentVersion": 8,
   "versions": [
     {
       "id": "v1",
@@ -125,6 +125,90 @@
         "title": "Annotation test",
         "description": "Scope/plan - basically I'm going to start by setting up a pen tool, to draw over only the image.\n\nThen, count the number of distinct drawings.\n\nThen, add specific shapes and more colours/markers.\n\nAnd then, we can save images. Posting them won't be done for now just because I haven't gotten the dialogue or explanation done/right yet.\n\nWe'll show these in the archive",
         "status": "in-review",
+        "priority": "medium",
+        "labels": [
+          "Annotation",
+          "Classification",
+          "Contribution",
+          "Asteroid",
+          "Supabase"
+        ],
+        "acceptanceCriteria": [],
+        "implementationNotes": "Another thing to keep in mind is maybe making the anomaly image larger?"
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "fwzb5s",
+      "version": 6,
+      "timestamp": "2026-01-20T13:22:51.189Z",
+      "changes": [
+        {
+          "field": "priority",
+          "oldValue": "medium",
+          "newValue": "high"
+        }
+      ],
+      "snapshot": {
+        "title": "Annotation test",
+        "description": "Scope/plan - basically I'm going to start by setting up a pen tool, to draw over only the image.\n\nThen, count the number of distinct drawings.\n\nThen, add specific shapes and more colours/markers.\n\nAnd then, we can save images. Posting them won't be done for now just because I haven't gotten the dialogue or explanation done/right yet.\n\nWe'll show these in the archive",
+        "status": "in-review",
+        "priority": "high",
+        "labels": [
+          "Annotation",
+          "Classification",
+          "Contribution",
+          "Asteroid",
+          "Supabase"
+        ],
+        "acceptanceCriteria": [],
+        "implementationNotes": "Another thing to keep in mind is maybe making the anomaly image larger?"
+      }
+    },
+    {
+      "id": "v7",
+      "taskId": "fwzb5s",
+      "version": 7,
+      "timestamp": "2026-01-20T13:22:52.507Z",
+      "changes": [
+        {
+          "field": "priority",
+          "oldValue": "high",
+          "newValue": "medium"
+        }
+      ],
+      "snapshot": {
+        "title": "Annotation test",
+        "description": "Scope/plan - basically I'm going to start by setting up a pen tool, to draw over only the image.\n\nThen, count the number of distinct drawings.\n\nThen, add specific shapes and more colours/markers.\n\nAnd then, we can save images. Posting them won't be done for now just because I haven't gotten the dialogue or explanation done/right yet.\n\nWe'll show these in the archive",
+        "status": "in-review",
+        "priority": "medium",
+        "labels": [
+          "Annotation",
+          "Classification",
+          "Contribution",
+          "Asteroid",
+          "Supabase"
+        ],
+        "acceptanceCriteria": [],
+        "implementationNotes": "Another thing to keep in mind is maybe making the anomaly image larger?"
+      }
+    },
+    {
+      "id": "v8",
+      "taskId": "fwzb5s",
+      "version": 8,
+      "timestamp": "2026-01-20T13:22:53.803Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-review",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Annotation test",
+        "description": "Scope/plan - basically I'm going to start by setting up a pen tool, to draw over only the image.\n\nThen, count the number of distinct drawings.\n\nThen, add specific shapes and more colours/markers.\n\nAnd then, we can save images. Posting them won't be done for now just because I haven't gotten the dialogue or explanation done/right yet.\n\nWe'll show these in the archive",
+        "status": "done",
         "priority": "medium",
         "labels": [
           "Annotation",
