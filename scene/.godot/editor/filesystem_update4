@@ -1,7 +1,0 @@
-res://Scripts/Earth/UIManager.gd
-res://Scripts/UI/FrancBalance.gd
-res://Scripts/Systems/SupabaseClient.gd
-res://tests/CallbackHelper.gd
-res://tests/SupabaseTestRunner.gd
-res://Scripts/UI/AsteroidDetail/AsteroidDetailView.gd
-res://Scripts/UI/SatelliteStationPanel.gd
