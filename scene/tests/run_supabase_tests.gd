@@ -1,4 +1,4 @@
-extends SceneTree
+extends Node
 
 # Headless test runner for SupabaseClient.fetch_anomalies
 # Run with: godot --headless --path scene -s scene/tests/run_supabase_tests.gd

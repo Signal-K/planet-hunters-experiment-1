@@ -1,0 +1,35 @@
+{
+  "taskId": "izno4u",
+  "currentVersion": 1,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "izno4u",
+      "version": 1,
+      "timestamp": "2026-01-23T00:02:38.129Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        }
+      ],
+      "snapshot": {
+        "title": "Create scene showing available rockets",
+        "description": "Also need to make sure that we save unlocked rockets - we'll say that when users start the game, we *unlock* the first rocket then (so technically all rockets/vehicles are *locked* at some point). Just to test things out with regards to research state [management].\n\nShould have an extra field for 'new mission' target where if this 'available-rockets' scene is launched from the new mission scene, we show the target; and we also show if the rocket can reach the target (distance limits are something for another day, though)",
+        "status": "in-progress",
+        "priority": "high",
+        "labels": [
+          "Available",
+          "Rocket",
+          "Vehicles",
+          "Scene",
+          "Inventory",
+          "Researched",
+          "New-Mission"
+        ],
+        "acceptanceCriteria": []
+      }
+    }
+  ]
+}

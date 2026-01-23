@@ -1,0 +1,86 @@
+{
+  "taskId": "5zp87f",
+  "currentVersion": 3,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "5zp87f",
+      "version": 1,
+      "timestamp": "2026-01-22T00:19:27.477Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "First up - tutorial state variable that syncs between Godot and Expo\n"
+        }
+      ],
+      "snapshot": {
+        "title": "Create tutorial UI state",
+        "description": "Pretty simple structure - just a UI panel that will load in the sky when users play the scene; we need a local state to determine if users have finished the tutorial.\n\nAs well as a way to bypass this when running/testing locally",
+        "status": "todo",
+        "priority": "high",
+        "labels": [
+          "Tutorial",
+          "Layout",
+          "Onboarding",
+          "Narrative"
+        ],
+        "acceptanceCriteria": [],
+        "implementationNotes": "First up - tutorial state variable that syncs between Godot and Expo\n"
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "5zp87f",
+      "version": 2,
+      "timestamp": "2026-01-22T00:20:01.356Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        }
+      ],
+      "snapshot": {
+        "title": "Create tutorial UI state",
+        "description": "Pretty simple structure - just a UI panel that will load in the sky when users play the scene; we need a local state to determine if users have finished the tutorial.\n\nAs well as a way to bypass this when running/testing locally",
+        "status": "in-progress",
+        "priority": "high",
+        "labels": [
+          "Tutorial",
+          "Layout",
+          "Onboarding",
+          "Narrative"
+        ],
+        "acceptanceCriteria": [],
+        "implementationNotes": "First up - tutorial state variable that syncs between Godot and Expo"
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "5zp87f",
+      "version": 3,
+      "timestamp": "2026-01-22T13:24:02.724Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Create tutorial UI state",
+        "description": "Pretty simple structure - just a UI panel that will load in the sky when users play the scene; we need a local state to determine if users have finished the tutorial.\n\nAs well as a way to bypass this when running/testing locally",
+        "status": "done",
+        "priority": "high",
+        "labels": [
+          "Tutorial",
+          "Layout",
+          "Onboarding",
+          "Narrative"
+        ],
+        "acceptanceCriteria": [],
+        "implementationNotes": "First up - tutorial state variable that syncs between Godot and Expo"
+      }
+    }
+  ]
+}

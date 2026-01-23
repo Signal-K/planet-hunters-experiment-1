@@ -128,3 +128,15 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 16
 text = "Changes here will sync back to React Native"
 horizontal_alignment = 1
+
+[node name="ResetButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/ContentContainer"]
+custom_minimum_size = Vector2(160, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Reset All Data"
+
+[node name="ResetTutorialButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/ContentContainer"]
+custom_minimum_size = Vector2(160, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Reset Tutorial State"

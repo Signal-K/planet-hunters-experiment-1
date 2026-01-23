@@ -5,11 +5,15 @@ extends Control
 
 signal panel_closed
 signal counter_changed(new_value: int)
+signal reset_all
+signal reset_tutorial
 
 @onready var counter_label: Label = $PanelContainer/Panel/VBoxContainer/ContentContainer/CounterContainer/CounterLabel
 @onready var decrease_btn: Button = $PanelContainer/Panel/VBoxContainer/ContentContainer/CounterContainer/ButtonsContainer/DecreaseButton
 @onready var increase_btn: Button = $PanelContainer/Panel/VBoxContainer/ContentContainer/CounterContainer/ButtonsContainer/IncreaseButton
 @onready var close_btn: Button = $PanelContainer/Panel/VBoxContainer/HeaderContainer/CloseButton
+@onready var reset_btn: Button = $PanelContainer/Panel/VBoxContainer/ContentContainer/ResetButton
+@onready var reset_tutorial_btn: Button = $PanelContainer/Panel/VBoxContainer/ContentContainer/ResetTutorialButton
 
 var current_counter: int = 0
 
@@ -18,6 +22,8 @@ func _ready() -> void:
 	close_btn.pressed.connect(_on_close_button_pressed)
 	decrease_btn.pressed.connect(_on_decrease_button_pressed)
 	increase_btn.pressed.connect(_on_increase_button_pressed)
+	reset_btn.pressed.connect(_on_reset_button_pressed)
+	reset_tutorial_btn.pressed.connect(_on_reset_tutorial_button_pressed)
 	
 	# Update display
 	update_counter_display()
@@ -55,3 +61,11 @@ func _on_increase_button_pressed() -> void:
 	update_counter_display()
 	counter_changed.emit(current_counter)
 	print("Counter increased to: ", current_counter)
+
+func _on_reset_button_pressed() -> void:
+	print("MenuPanel reset button pressed")
+	reset_all.emit()
+
+func _on_reset_tutorial_button_pressed() -> void:
+	print("MenuPanel reset tutorial button pressed")
+	reset_tutorial.emit()
