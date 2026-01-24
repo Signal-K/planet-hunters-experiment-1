@@ -15,10 +15,15 @@ export interface AppController {
   franc_balance_updated: {
     connect(callback: (newValue: number) => void): void;
   };
+  tutorial_completed_updated: {
+    connect(callback: (isCompleted: boolean) => void): void;
+  };
   open_window(windowName: string): void;
   close_window(windowName: string): void;
   set_counter_from_react(value: number): void;
   get_counter(): number;
   set_franc_balance_from_react(value: number): void;
   get_franc_balance(): number;
+  set_tutorial_completed_from_react(isCompleted: boolean): void;
+  get_tutorial_completed(): boolean;
 }

@@ -1,0 +1,33 @@
+{
+  "taskId": "ubv8ff",
+  "currentVersion": 1,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "ubv8ff",
+      "version": 1,
+      "timestamp": "2026-01-23T00:02:41.954Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        }
+      ],
+      "snapshot": {
+        "title": "Remove (hide) annotation/contribution scenes",
+        "description": "For now - short term change just to simplify things for the first experiment version.",
+        "status": "in-progress",
+        "priority": "high",
+        "labels": [
+          "Experiment",
+          "Annotations",
+          "Scenes",
+          "Views",
+          "Temp"
+        ],
+        "acceptanceCriteria": []
+      }
+    }
+  ]
+}
