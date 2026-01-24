@@ -1,6 +1,6 @@
 {
   "taskId": "hrtvq6",
-  "currentVersion": 2,
+  "currentVersion": 3,
   "versions": [
     {
       "id": "v1",
@@ -42,6 +42,31 @@
       "snapshot": {
         "title": "Global tutorial state (has/has not completed?)",
         "status": "done",
+        "priority": "medium",
+        "labels": [
+          "State",
+          "LocalStorage",
+          "Storage",
+          "Tutorial"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "hrtvq6",
+      "version": 3,
+      "timestamp": "2026-01-24T05:42:34.230Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "done",
+          "newValue": "blocked"
+        }
+      ],
+      "snapshot": {
+        "title": "Global tutorial state (has/has not completed?)",
+        "status": "blocked",
         "priority": "medium",
         "labels": [
           "State",

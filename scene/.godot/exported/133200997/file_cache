@@ -11,7 +11,7 @@ res://Scenes/vfx/flash.tres::01d4220afe3afccaf25852ff16bf752f::1768447280::res:/
 res://Scenes/vfx/flash_sprite_2d.tscn::613107845907bb1a605f0bd4ff3614a2::1765802713::res://.godot/exported/133200997/export-6695c12dd65b5dac6ddc05048c94f87f-flash_sprite_2d.scn
 res://Scenes/World/background.tscn::3ea1834f6ae1d1aa123b8abfaf94a19a::1765093847::res://.godot/exported/133200997/export-ebb44e994f334141e4132d7daa27c52a-background.scn
 res://Scenes/tv.tscn::d40eaad77dec2e2ff2dfde3c72bc93c1::1767084870::res://.godot/exported/133200997/export-d2f1ed906593662d15b03d7a18491461-tv.scn
-res://Scenes/Earth/earth_base_1.tscn::c37e118193d4825e5ea8426e73867d6c::1769095225::res://.godot/exported/133200997/export-a370952bd9467ad57ec1ed7013acb9be-earth_base_1.scn
+res://Scenes/Earth/earth_base_1.tscn::c37e118193d4825e5ea8426e73867d6c::1769138675::res://.godot/exported/133200997/export-a370952bd9467ad57ec1ed7013acb9be-earth_base_1.scn
 res://themes/button_hover.tres::f986cf2985744994dae88ded8303b09d::1768658584::res://.godot/exported/133200997/export-1cd2b409b6fa0844529d7e43d1118193-button_hover.res
 res://themes/button_normal.tres::ca36a01f1b9b11c7e2c5f6ca5af21de5::1768658584::res://.godot/exported/133200997/export-20fa3da1c223668cd631182ab5c815c3-button_normal.res
 res://themes/button_pressed.tres::06d2574152e0a4942e4e9327413cc090::1768658584::res://.godot/exported/133200997/export-7baaebdae587b95f8409902a5d370e8b-button_pressed.res
@@ -20,10 +20,11 @@ res://Scenes/UI/LaunchpadPanel.tscn::adad4e2efacf13714ec0eb89891e62ef::176870883
 res://Scenes/UI/SatelliteStationPanel.tscn::fef84ee7e8a6ca6c3c5c8ee067f3c634::1768813170::res://.godot/exported/133200997/export-1c74935bb16f11a7d2a74ae6535b5eb8-SatelliteStationPanel.scn
 res://Scenes/Earth/earth_base_example.tscn::587650fa890d019f93d743c0fac37095::1768712013::res://.godot/exported/133200997/export-e98e276a65d9cd335742cb8d12c40397-earth_base_example.scn
 res://Scenes/Earth/earth_scene_template.tscn::799db8841f15649e6b27e5660df31ba6::1768712013::res://.godot/exported/133200997/export-88295f960f352d6a796790d3826e406e-earth_scene_template.scn
-res://Scenes/Earth/earth_launchpad.tscn::8ecb435a48bcd9b5d3baed7009771a2d::1769048384::res://.godot/exported/133200997/export-07ad96dc1ab0bd514e757abaaeb43e1f-earth_launchpad.scn
+res://Scenes/Earth/earth_launchpad.tscn::afd8ae61dc17efa6993f9e7c50809933::1769128421::res://.godot/exported/133200997/export-07ad96dc1ab0bd514e757abaaeb43e1f-earth_launchpad.scn
 res://Scenes/UI/MenuPanel.tscn::7e32875014119200d40525d860833199::1769092129::res://.godot/exported/133200997/export-cb29f7dd7fb15fbfb0dcaad15f04dd74-MenuPanel.scn
 res://Scenes/UI/AsteroidDetail/asteroid_detail_view.tscn::86ab35c31b36305817a2d0f3452ec659::1768900574::res://.godot/exported/133200997/export-073fbd3ec1ca0b9df9d1dab94e19b238-asteroid_detail_view.scn
 res://Scenes/UI/FrancBalance.tscn::438185c48552d6b54e3eab44a470ac83::1769003174::res://.godot/exported/133200997/export-0ae7a18235565bbf5ef9e17dd750b13c-FrancBalance.scn
 res://Scenes/UI/FrancIcon.tscn::2be366114e572b977f209d1c0ab253d7::1769000561::res://.godot/exported/133200997/export-c7cc471ad96e786f918c69f56fd14c52-FrancIcon.scn
 res://Scenes/UI/NewMissionPanel.tscn::360d0e22f44f7c222b14ddf1b084edb1::1768914633::res://.godot/exported/133200997/export-64fdd5c6c043a6dbf6c2498f8ffa649a-NewMissionPanel.scn
 res://Scenes/UI/TutorialPanel.tscn::50ac5506102072bc51e97c8965eaedec::1769088712::res://.godot/exported/133200997/export-c898eb16b8ef7b7f766458ba3a07e9c5-TutorialPanel.scn
+res://Scenes/Vehicles/StarterRocket1.tscn::441ad6d2c9263158191a2301f879a7f5::1769129469::res://.godot/exported/133200997/export-c9ef96459a43a57858eee15953018583-StarterRocket1.scn
