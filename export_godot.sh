@@ -30,7 +30,7 @@ if [ "$GODOT_EDITOR" != "" ] && [ -x "$GODOT_EDITOR" ]; then
 else
     # Try common macOS install locations (including Godot4.5.app)
     for p in \
-        "/Applications/Godot.app/Contents/MacOS/Godot" \
+        "/Applications/Godot.app/Contents/MacOS/Godot" \So
         "/Applications/Godot4.5.app/Contents/MacOS/Godot" \
         "/Applications/Godot4.app/Contents/MacOS/Godot" \
         "/usr/local/bin/godot"; do

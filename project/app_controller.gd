@@ -13,6 +13,11 @@ var franc_balance: int = 10000000000  # Default 10B
 # Tutorial completion state shared between React Native and Godot
 var tutorial_completed: bool = false
 
+func _ready() -> void:
+	print("Project AppController ready, tutorial_completed: ", tutorial_completed)
+	# Load persisted tutorial state
+	load_tutorial_completed()
+
 #region React Public API
 
 ## Set counter value from React Native
@@ -40,9 +45,35 @@ func set_tutorial_completed_from_react(is_completed: bool) -> void:
 	print("AppController: Tutorial completed set from React Native to: ", tutorial_completed)
 	tutorial_completed_updated.emit(tutorial_completed)
 
+	# Persist the new value
+	save_tutorial_completed()
+
 ## Get tutorial completion status for React Native
 func get_tutorial_completed() -> bool:
 	return tutorial_completed
+
+
+func save_tutorial_completed() -> void:
+	var cfg = ConfigFile.new()
+	cfg.set_value("tutorial", "completed", tutorial_completed)
+	var err = cfg.save("user://tutorial.cfg")
+	if err != OK:
+		print("[AppController] Failed to save tutorial state: ", err)
+	else:
+		print("[AppController] Tutorial state saved: ", tutorial_completed)
+
+func load_tutorial_completed() -> void:
+	var cfg = ConfigFile.new()
+	var err = cfg.load("user://tutorial.cfg")
+	if err == OK:
+		if cfg.has_section_key("tutorial", "completed"):
+			tutorial_completed = bool(cfg.get_value("tutorial", "completed"))
+			print("[AppController] Loaded tutorial state from disk: ", tutorial_completed)
+			tutorial_completed_updated.emit(tutorial_completed)
+		else:
+			print("[AppController] No tutorial state key in config; using default: ", tutorial_completed)
+	else:
+		print("[AppController] No saved tutorial config (or failed to load): ", err)
 func open_window(window_name: String) -> Window:
 	window_status_update.emit("Window opened: " + window_name)
 	var root = get_tree().root

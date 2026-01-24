@@ -28,3 +28,22 @@ func on_interact():
 		scene_manager.change_to_scene("res://Scenes/Earth/earth_launchpad.tscn")
 	else:
 		print("ERROR: SceneManager not found for Launchpad")
+
+func spawn_rocket(rocket_id: String) -> void:
+	print("Launchpad: spawn_rocket called for", rocket_id)
+	var mapping = {
+		"starterrocket1": "res://Scenes/Vehicles/StarterRocket1.tscn"
+	}
+	var path = mapping.get(rocket_id, "")
+	if path == "":
+		print("Launchpad: unknown rocket id:", rocket_id)
+		return
+	var packed = load(path)
+	if not packed:
+		print("Launchpad: failed to load rocket scene:", path)
+		return
+	var inst = packed.instantiate()
+	add_child(inst)
+	# place rocket visually above the pad
+	inst.position = Vector2(0, -520)
+	print("Launchpad: rocket instantiated")

@@ -1,7 +1,7 @@
 ---
 id: izno4u
 title: Create scene showing available rockets
-status: in-progress
+status: done
 priority: high
 labels:
   - Available
@@ -12,7 +12,7 @@ labels:
   - Researched
   - New-Mission
 createdAt: '2026-01-21T01:09:30.963Z'
-updatedAt: '2026-01-23T00:02:38.129Z'
+updatedAt: '2026-01-24T05:41:47.713Z'
 timeSpent: 0
 ---
 # Create scene showing available rockets
