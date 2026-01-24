@@ -1,7 +1,8 @@
-[gd_scene load_steps=5 format=3 uid="uid://cy168swpr8vvn"]
+[gd_scene load_steps=6 format=3 uid="uid://cy168swpr8vvn"]
 
 [ext_resource type="Script" path="res://cube.gd" id="1_nm2h5"]
 [ext_resource type="Script" path="res://app_controller.gd" id="2_app_ctrl"]
+[ext_resource type="PackedScene" uid="uid://cvxh4g8rw5qpq" path="res://tutorial_panel.tscn" id="3_tutorial_panel"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_f8oem"]
 albedo_color = Color(1, 1, 0, 1)
@@ -13,6 +14,8 @@ material = SubResource("StandardMaterial3D_f8oem")
 
 [node name="AppController" type="Node" parent="."]
 script = ExtResource("2_app_ctrl")
+
+[node name="TutorialPanel" parent="." instance=ExtResource("3_tutorial_panel")]
 
 [node name="Cube" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -2.90464)

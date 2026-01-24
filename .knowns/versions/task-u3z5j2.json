@@ -1,6 +1,6 @@
 {
   "taskId": "u3z5j2",
-  "currentVersion": 2,
+  "currentVersion": 3,
   "versions": [
     {
       "id": "v1",
@@ -42,6 +42,30 @@
         "title": "Set up test environments",
         "description": "This is more for a bit of fun, but it will come in handy later.",
         "status": "in-review",
+        "priority": "medium",
+        "labels": [
+          "Tests",
+          "DX"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "u3z5j2",
+      "version": 3,
+      "timestamp": "2026-01-24T05:41:58.682Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-review",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Set up test environments",
+        "description": "This is more for a bit of fun, but it will come in handy later.",
+        "status": "done",
         "priority": "medium",
         "labels": [
           "Tests",

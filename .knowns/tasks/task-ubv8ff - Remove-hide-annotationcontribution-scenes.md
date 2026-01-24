@@ -1,7 +1,7 @@
 ---
 id: ubv8ff
 title: Remove (hide) annotation/contribution scenes
-status: todo
+status: in-progress
 priority: high
 labels:
   - Experiment
@@ -10,7 +10,7 @@ labels:
   - Views
   - Temp
 createdAt: '2026-01-21T01:03:14.410Z'
-updatedAt: '2026-01-21T01:03:14.410Z'
+updatedAt: '2026-01-23T00:02:41.953Z'
 timeSpent: 0
 ---
 # Remove (hide) annotation/contribution scenes

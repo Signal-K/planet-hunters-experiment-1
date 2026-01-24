@@ -7,10 +7,11 @@ import {
   ScrollView,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
 import type { NavigationProp } from '@react-navigation/native';
 import type { RootStackParamList } from '../types/navigation';
 import { useAuth } from '../contexts/AuthContext';
-import { setSharedCounterValue, setSharedFrancBalance } from '../utils/godot';
+import { setSharedCounterValue, setSharedFrancBalance, updateSharedTutorialCompleted, getSharedCounterValue, getSharedFrancBalance, getSharedTutorialCompleted } from '../utils/godot';
 import { commonStyles } from '../styles/common';
 
 type ScreenNavigationProp = NavigationProp<RootStackParamList>;
@@ -29,6 +30,8 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ navigation }) => {
   const [counterLoaded, setCounterLoaded] = useState(false);
   const [francBalance, setFrancBalance] = useState(10000000000); // 10B default
   const [balanceLoaded, setBalanceLoaded] = useState(false);
+  const [tutorialCompleted, setTutorialCompleted] = useState(false);
+  const [tutorialLoaded, setTutorialLoaded] = useState(false);
 
   // Load counter from storage on mount
   useEffect(() => {
@@ -68,9 +71,29 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ navigation }) => {
     loadBalance();
   }, []);
 
-  // Save counter to storage whenever it changes
+  // Load tutorial completion from storage on mount
+  useEffect(() => {
+    const loadTutorialCompleted = async () => {
+      try {
+        const saved = await AsyncStorage.getItem('tutorialCompleted');
+        if (saved !== null) {
+          const value = saved === 'true';
+          setTutorialCompleted(value);
+          console.log('Loaded tutorial completed from storage:', value);
+        }
+      } catch (e) {
+        console.error('Failed to load tutorial completed:', e);
+      } finally {
+        setTutorialLoaded(true);
+      }
+    };
+    loadTutorialCompleted();
+  }, []);
+
+  // Save counter to storage whenever it changes and update shared value
   useEffect(() => {
     if (counterLoaded) {
+      setSharedCounterValue(counter);
       AsyncStorage.setItem('gameCounter', counter.toString())
         .then(() => console.log('Saved counter to storage:', counter))
         .catch(e => console.error('Failed to save counter:', e));
@@ -85,6 +108,57 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ navigation }) => {
         .catch(e => console.error('Failed to save franc balance:', e));
     }
   }, [francBalance, balanceLoaded]);
+
+  // Save tutorial completion to storage whenever it changes
+  useEffect(() => {
+    if (tutorialLoaded) {
+      AsyncStorage.setItem('tutorialCompleted', tutorialCompleted.toString())
+        .then(() => console.log('Saved tutorial completed to storage:', tutorialCompleted))
+        .catch(e => console.error('Failed to save tutorial completed:', e));
+    }
+  }, [tutorialCompleted, tutorialLoaded]);
+
+  // Reload counter, balance, and tutorial when screen comes into focus
+  // This ensures we have the latest values after returning from GameScreen
+  useFocusEffect(
+    useCallback(() => {
+      const reloadData = async () => {
+        try {
+          // Load from AsyncStorage (source of truth)
+          const [savedCounter, savedBalance, savedTutorial] = await Promise.all([
+            AsyncStorage.getItem('gameCounter'),
+            AsyncStorage.getItem('francBalance'),
+            AsyncStorage.getItem('tutorialCompleted'),
+          ]);
+
+          if (savedCounter !== null) {
+            const value = parseInt(savedCounter, 10);
+            setCounter(value);
+            setSharedCounterValue(value);
+            console.log('Reloaded counter from storage:', value);
+          }
+
+          if (savedBalance !== null) {
+            const value = parseInt(savedBalance, 10);
+            setFrancBalance(value);
+            setSharedFrancBalance(value);
+            console.log('Reloaded franc balance from storage:', value);
+          }
+
+          if (savedTutorial !== null) {
+            const value = savedTutorial === 'true';
+            setTutorialCompleted(value);
+            updateSharedTutorialCompleted(value);
+            console.log('Reloaded tutorial completed from storage:', value);
+          }
+        } catch (e) {
+          console.error('Failed to reload data:', e);
+        }
+      };
+
+      reloadData();
+    }, [])
+  );
 
   const loadingSteps = useMemo(() => [
     'Initializing system...',
@@ -135,17 +209,44 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ navigation }) => {
 
   const handleOpenGame = () => {
     if (isGameReady) {
-      // Store counter and balance in module-level variables accessible from worklet
+      // Store counter, balance, and tutorial completion in module-level variables accessible from worklet
       setSharedCounterValue(counter);
       setSharedFrancBalance(francBalance);
+      updateSharedTutorialCompleted(tutorialCompleted);
       console.log("Setting initial counter for game:", counter);
       console.log("Setting initial franc balance for game:", francBalance);
+      console.log("Setting initial tutorial completed for game:", tutorialCompleted);
       navigation.navigate("Game");
     }
   };
 
-  const incrementCounter = () => setCounter(prev => prev + 1);
-  const decrementCounter = () => setCounter(prev => prev - 1);
+  const incrementCounter = () => {
+    setCounter(prev => {
+      const newVal = prev + 1;
+      setSharedCounterValue(newVal);
+      return newVal;
+    });
+  };
+  const decrementCounter = () => {
+    setCounter(prev => {
+      const newVal = prev - 1;
+      setSharedCounterValue(newVal);
+      return newVal;
+    });
+  };
+
+  const clearAllState = async () => {
+    try {
+      await AsyncStorage.multiRemove(['gameCounter', 'francBalance', 'tutorialCompleted']);
+      setCounter(0);
+      setFrancBalance(10000000000);
+      setTutorialCompleted(false);
+      updateSharedTutorialCompleted(false);
+      console.log('All state cleared');
+    } catch (e) {
+      console.error('Failed to clear state:', e);
+    }
+  };
 
   const formattedFranc = useMemo(() => {
     const val = francBalance;
@@ -193,6 +294,23 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ navigation }) => {
               <Text style={commonStyles.counterLabel}>Franc Balance</Text>
               <Text style={[commonStyles.counterValue, { fontSize: 18 }]}>{formattedFranc} F</Text>
             </View>
+            <View style={{ marginTop: 16, alignItems: 'center' }}>
+              <Text style={commonStyles.counterLabel}>Tutorial Status</Text>
+              <Text style={[commonStyles.counterValue, { fontSize: 14, marginBottom: 8 }]}>
+                {tutorialCompleted ? "✓ Complete" : "○ Incomplete"}
+              </Text>
+              <Button
+                title={tutorialCompleted ? "Mark Incomplete" : "Mark Complete"}
+                onPress={() => {
+                  console.log("Tutorial button pressed, current:", tutorialCompleted);
+                  const newValue = !tutorialCompleted;
+                  console.log("Setting to:", newValue);
+                  setTutorialCompleted(newValue);
+                  updateSharedTutorialCompleted(newValue);
+                }}
+                color={tutorialCompleted ? "#FF3B30" : "#34C759"}
+              />
+            </View>
           </View>
         </View>
       </ScrollView>
@@ -211,6 +329,13 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ navigation }) => {
             title="Log Out"
             onPress={handleLogout}
             color="#FF3B30"
+          />
+        </View>
+        <View style={[commonStyles.logoutButton, { marginTop: 8 }]}>
+          <Button
+            title="Clear All State"
+            onPress={clearAllState}
+            color="#FF9500"
           />
         </View>
       </View>

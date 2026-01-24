@@ -1,7 +1,7 @@
 ---
 id: 5zp87f
 title: Create tutorial UI state
-status: todo
+status: done
 priority: high
 labels:
   - Tutorial
@@ -9,8 +9,8 @@ labels:
   - Onboarding
   - Narrative
 createdAt: '2026-01-20T01:56:29.436Z'
-updatedAt: '2026-01-20T01:56:29.436Z'
-timeSpent: 0
+updatedAt: '2026-01-22T13:24:02.723Z'
+timeSpent: 2960
 ---
 # Create tutorial UI state
 
@@ -21,4 +21,10 @@ Pretty simple structure - just a UI panel that will load in the sky when users p
 
 As well as a way to bypass this when running/testing locally
 <!-- SECTION:DESCRIPTION:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+First up - tutorial state variable that syncs between Godot and Expo
+<!-- SECTION:NOTES:END -->
 
