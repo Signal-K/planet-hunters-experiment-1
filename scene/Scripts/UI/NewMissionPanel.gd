@@ -2,11 +2,13 @@ extends Control
 
 signal panel_closed
 
-const AsteroidDetailView = preload("res://Scenes/UI/AsteroidDetail/asteroid_detail_view.tscn")
+const SimpleDetailView = preload("res://Scenes/UI/SimpleDetail/simple_detail_view.tscn")
 
 var panel_container: Node = null
 var anomaly_list: Node = null
 var close_button: Button = null
+var select_rocket_button: Button = null
+var launched_list_container: Node = null
 
 func _ready():
 	panel_container = get_node_or_null("PanelContainer")
@@ -30,7 +32,23 @@ func _ready():
 			queue_free()
 		)
 
-	_refresh()
+	# Rocket selector button (added in scene)
+	select_rocket_button = get_node_or_null("PanelContainer/Panel/VBoxContainer/HeaderContainer/SelectRocketButton")
+	if select_rocket_button:
+		select_rocket_button.pressed.connect(self._on_select_rocket_pressed)
+
+	# Container where we'll list launched rockets for mission selection
+	launched_list_container = get_node_or_null("PanelContainer/Panel/VBoxContainer/LaunchedList")
+	if launched_list_container == null:
+		# Create a container if missing
+		launched_list_container = VBoxContainer.new()
+		launched_list_container.name = "LaunchedList"
+		var parent_vbox = get_node_or_null("PanelContainer/Panel/VBoxContainer")
+		if parent_vbox:
+			parent_vbox.add_child(launched_list_container)
+
+	# Show launched rockets for self-destruct management
+	_display_launched_rockets()
 
 func _refresh():
 	var items = _load_local_annotations()
@@ -140,6 +158,29 @@ func _display_items(items: Array) -> void:
 	for i in range(items.size()):
 		var item = _create_item(items[i], i)
 		anomaly_list.add_child(item)
+
+func _on_select_rocket_pressed() -> void:
+	# Attempt to load RocketSelector script (try both Scripts/ and scripts/ paths)
+	var script = null
+	if ResourceLoader.exists("res://Scripts/Earth/RocketSelector.gd"):
+		script = load("res://Scripts/Earth/RocketSelector.gd")
+	elif ResourceLoader.exists("res://scripts/Earth/RocketSelector.gd"):
+		script = load("res://scripts/Earth/RocketSelector.gd")
+	if script == null:
+		push_error("NewMissionPanel: RocketSelector script not found")
+		return
+
+	var sel = Control.new()
+	sel.set_script(script)
+	# prefer adding to the current scene so it overlays the scene content
+	var root = get_tree().current_scene
+	if root:
+		root.add_child(sel)
+		# place on right side of screen relative to parent
+		sel.position = Vector2(1080, 120)
+	else:
+		get_tree().root.add_child(sel)
+
 
 func _create_item(data: Dictionary, idx: int) -> Control:
 	var pc = PanelContainer.new()
@@ -254,6 +295,50 @@ func _create_item(data: Dictionary, idx: int) -> Control:
 	return pc
 
 func _on_item_pressed(data: Dictionary) -> void:
-	var detail = AsteroidDetailView.instantiate()
+	var detail = SimpleDetailView.instantiate()
 	get_tree().root.add_child(detail)
 	detail.initialize(data)
+
+func _display_launched_rockets() -> void:
+	# Clear existing list
+	for c in launched_list_container.get_children():
+		c.queue_free()
+	# Load launched rockets from RocketsManager
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var launched = []
+	if rm:
+		launched = rm.get_launched()
+	if launched.size() == 0:
+		var lbl = Label.new()
+		lbl.text = "No launched rockets available."
+		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		launched_list_container.add_child(lbl)
+		return
+	# For each launched rocket, add a row with ID and a Self-Destruct button
+	for i in range(launched.size()):
+		var id = launched[i]
+		var h = HBoxContainer.new()
+		h.custom_minimum_size = Vector2(0, 48)
+		var name_lbl = Label.new()
+		name_lbl.text = str(id)
+		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		h.add_child(name_lbl)
+		var btn = Button.new()
+		btn.text = "Self-Destruct"
+		btn.pressed.connect(Callable(self, "_on_self_destruct_pressed").bind(id))
+		h.add_child(btn)
+		launched_list_container.add_child(h)
+
+func _on_self_destruct_pressed(rocket_id: String) -> void:
+	print("NewMissionPanel: self-destruct requested for", rocket_id)
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if rm:
+		var ok = rm.set_destroyed(rocket_id)
+		if ok:
+			print("NewMissionPanel: rocket", rocket_id, "marked Destroyed")
+			# Refresh the launched list UI
+			_display_launched_rockets()
+		else:
+			print("NewMissionPanel: failed to mark rocket destroyed:", rocket_id)
+	else:
+		print("NewMissionPanel: RocketsManager not available")

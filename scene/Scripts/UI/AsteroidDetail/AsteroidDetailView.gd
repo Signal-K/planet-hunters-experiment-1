@@ -120,8 +120,23 @@ func _on_save_pressed():
 	print("Saved annotations (variant) to:", file_path, " result=", write_err)
 	# Also render and save the annotated image (base image + drawing overlay)
 	# Determine render size from the drawing canvas (matches visible area)
-	var render_w = int(drawing_canvas.rect_size.x)
-	var render_h = int(drawing_canvas.rect_size.y)
+	var canvas_size = Vector2.ZERO
+	# Prefer Control API methods/props safely to support different Godot versions
+	if drawing_canvas:
+		if drawing_canvas.has_method("get_size"):
+			canvas_size = drawing_canvas.get_size()
+		elif drawing_canvas.has_method("get_rect"):
+			canvas_size = drawing_canvas.get_rect().size
+		elif drawing_canvas.has_meta("rect_size"):
+			canvas_size = drawing_canvas.get_meta("rect_size")
+		elif drawing_canvas.has_property("size"):
+			canvas_size = drawing_canvas.size
+	# Fallback to BASE_IMAGE_SIZE
+	if canvas_size == Vector2.ZERO:
+		canvas_size = BASE_IMAGE_SIZE
+
+	var render_w = int(canvas_size.x)
+	var render_h = int(canvas_size.y)
 	if render_w > 0 and render_h > 0 and asteroid_image.texture != null:
 		var vp = SubViewport.new()
 		vp.disable_3d = true
@@ -135,12 +150,15 @@ func _on_save_pressed():
 		tex_rect.texture = asteroid_image.texture
 		tex_rect.expand = true
 		tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		tex_rect.rect_size = Vector2(render_w, render_h)
+		# Use Control API to set desired size without assuming rect_size exists
+		tex_rect.set_custom_minimum_size(Vector2(render_w, render_h))
 		vp.add_child(tex_rect)
 
 		# Duplicate the drawing canvas so we can render the strokes on top
 		var canvas_copy = drawing_canvas.duplicate()
-		canvas_copy.rect_size = Vector2(render_w, render_h)
+		# Set copy's minimum size so it renders at desired dimensions
+		if canvas_copy and canvas_copy is Control:
+			canvas_copy.set_custom_minimum_size(Vector2(render_w, render_h))
 		vp.add_child(canvas_copy)
 
 		# Wait one frame so the viewport has rendered
@@ -154,8 +172,8 @@ func _on_save_pressed():
 	# update UI
 	_update_annotation_count()
 
-func initialize(anomaly: Dictionary):
-	"""Initialize the detail view with anomaly data"""
+func initialize(anomaly: Dictionary, force_controls_visible := false):
+	"""Initialize the detail view with anomaly data. If force_controls_visible is true, always show annotation controls."""
 	anomaly_data = anomaly
 	# Prefer the numeric DB 'id' when available. Fallback to 'content' but
 	# strip any leading "TIC " text or non-digit characters so image URLs
@@ -194,10 +212,10 @@ func initialize(anomaly: Dictionary):
 	else:
 		var item_type = "Planet" if is_planet else "Asteroid"
 		title_label.text = "%s Details" % item_type
-	
+
 	# Update info label
 	_update_info_label()
-	
+
 	# Load the image
 	if anomaly_id != "":
 		_load_anomaly_image(is_planet)
@@ -206,6 +224,17 @@ func initialize(anomaly: Dictionary):
 
 	# Load any saved annotations for this anomaly
 	_load_saved_annotations()
+
+	# If force_controls_visible, ensure all annotation controls are visible
+	if force_controls_visible:
+		pen_button.visible = true
+		clear_button.visible = true
+		save_button.visible = true
+		pen_free_button.visible = true
+		pen_rect_button.visible = true
+		pen_circle_button.visible = true
+		color_picker.visible = true
+		annotation_count_label.visible = true
 
 
 func _load_saved_annotations():

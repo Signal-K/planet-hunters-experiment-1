@@ -48,6 +48,11 @@ custom_minimum_size = Vector2(80, 40)
 layout_mode = 2
 text = "Close"
 
+[node name="SelectRocketButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/HeaderContainer"]
+custom_minimum_size = Vector2(160, 40)
+layout_mode = 2
+text = "Select Rocket"
+
 [node name="HSeparator" type="HSeparator" parent="PanelContainer/Panel/VBoxContainer"]
 layout_mode = 2
 

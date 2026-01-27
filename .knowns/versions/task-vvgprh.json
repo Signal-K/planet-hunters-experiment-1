@@ -1,0 +1,32 @@
+{
+  "taskId": "vvgprh",
+  "currentVersion": 1,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "vvgprh",
+      "version": 1,
+      "timestamp": "2026-01-25T01:45:07.392Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "Test\n\n```js\n\ntest\n\n```\n"
+        }
+      ],
+      "snapshot": {
+        "title": "Set up experience system",
+        "description": "Basically, a global system that allows users to unlock things.\n\nTo start with, the only thing that will be unlocked will be new rockets.\n\nWe'll say that launches, scans are the two types of things that add experience to the user's profile for now. Annotation and landing, mission completions etc can come later.\n\nSpeaking of, custom missions and generated missions (like in TSP, but in slightly more of a sandbox method) are something I'd like to explore later (probably next month).",
+        "status": "todo",
+        "priority": "medium",
+        "labels": [
+          "Experience",
+          "Research",
+          "Launch",
+          "Data"
+        ],
+        "acceptanceCriteria": [],
+        "implementationNotes": "Test\n\n```js\n\ntest\n\n```\n"
+      }
+    }
+  ]
+}

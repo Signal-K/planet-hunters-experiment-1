@@ -8,6 +8,7 @@ signal window_status_update(message: String)
 signal counter_updated(new_value: int)
 signal tutorial_completed_updated(is_completed: bool)
 signal franc_balance_updated(new_value: int)
+signal rockets_reset()
 
 var counter: int = 0
 var tutorial_completed: bool = false
@@ -130,6 +131,13 @@ func _on_reset_all() -> void:
 	# Persist tutorial reset
 	save_tutorial_completed()
 	franc_balance_updated.emit(franc_balance)
+	# Reset rockets persisted state and notify any in-scene systems to clear rockets
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if rm:
+		# RocketsManager.reset_state is a static function, call directly
+		rm.reset_state()
+		print("RocketsManager: persisted rockets state reset")
+	rockets_reset.emit()
 	print("All state reset in Godot. Signals emitted to notify React Native.")
 
 func _on_reset_tutorial() -> void:

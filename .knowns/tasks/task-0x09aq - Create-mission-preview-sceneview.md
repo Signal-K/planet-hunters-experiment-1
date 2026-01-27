@@ -1,7 +1,7 @@
 ---
 id: 0x09aq
 title: Create mission preview scene/view
-status: todo
+status: in-progress
 priority: medium
 labels:
   - Icons
@@ -11,7 +11,7 @@ labels:
   - New-Mission
   - Yield
 createdAt: '2026-01-21T01:07:20.654Z'
-updatedAt: '2026-01-21T01:07:20.654Z'
+updatedAt: '2026-01-25T06:16:30.174Z'
 timeSpent: 0
 ---
 # Create mission preview scene/view

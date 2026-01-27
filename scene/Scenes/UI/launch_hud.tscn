@@ -1,0 +1,9 @@
+[gd_scene load_steps=2 format=3 uid="uid://launchhud123"]
+
+[node name="LaunchHUD" type="CanvasLayer"]
+layer = 1
+
+[node name="LaunchButton" type="Button" parent="LaunchHUD"]
+position = Vector2(1700, 980)
+custom_minimum_size = Vector2(140, 64)
+text = "Launch"

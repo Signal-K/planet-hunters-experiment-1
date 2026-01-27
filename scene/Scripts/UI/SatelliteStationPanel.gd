@@ -8,7 +8,11 @@ const MAX_ANOMALIES := 5
 const ASTEROID_SET := "active-asteroids"
 const PLANET_SET := "telescope-tess"
 
-# Preload the asteroid detail view scene
+const MIN_DISPLAY_TIME := 0.5
+
+# Preload the simplified detail view (annotation tools archived)
+const SimpleDetailView = preload("res://Scenes/UI/SimpleDetail/simple_detail_view.tscn")
+# Preload the asteroid annotation detail view
 const AsteroidDetailView = preload("res://Scenes/UI/AsteroidDetail/asteroid_detail_view.tscn")
 
 var is_loading := false
@@ -18,6 +22,7 @@ var pending_anomalies := []
 var detail_view_active := false  # Track if detail view is showing
 var current_mode: String = "asteroids"  # Default mode
 var local_only: bool = false
+var anomalies_ready: bool = false
 
 ## Helpers for normalizing anomaly IDs and migrating old annotation files
 func _normalize_anomaly_id(anomaly: Dictionary, fallback_index: int) -> String:
@@ -99,6 +104,7 @@ func set_local_only(val: bool) -> void:
 @onready var anomaly_list: VBoxContainer = $PanelContainer/Panel/VBoxContainer/ContentContainer/AnomalyList
 @onready var progress_bar: ProgressBar = $PanelContainer/Panel/VBoxContainer/ContentContainer/LoadingContainer/ProgressBar
 @onready var loading_label: Label = $PanelContainer/Panel/VBoxContainer/ContentContainer/LoadingContainer/LoadingLabel
+			# Preload the asteroid detail view
 @onready var refresh_button: Button = $PanelContainer/Panel/VBoxContainer/ContentContainer/RefreshContainer/RefreshButton
 @onready var status_label: Label = $PanelContainer/Panel/VBoxContainer/ContentContainer/StatusContainer/StatusLabel
 @onready var content_container: VBoxContainer = $PanelContainer/Panel/VBoxContainer/ContentContainer
@@ -121,45 +127,31 @@ func _ready():
 	# Connect toggle switch
 	toggle_switch.pressed.connect(_on_toggle_switch_pressed)
 
-	# Migrate any old annotation filenames to numeric-only names
-	_migrate_annotations_on_disk()
-	
-	# Start initial load
+	# Start initial load (annotation features archived)
 	_start_loading(INITIAL_LOAD_TIME)
 
-	if local_only:
-		# Local-only mode (New Mission): show saved annotated PNGs
-		var local = _load_local_annotations()
-		pending_anomalies = local
-		_finish_loading()
-	else:
-		# Default behavior: fetch anomalies from Supabase
-		_fetch_anomalies()
-
-func _process(delta: float):
-	if is_loading:
-		load_timer += delta
-		var progress = clampf(load_timer / target_load_time, 0.0, 1.0)
-		progress_bar.value = progress * 100.0
-		
-		var remaining = max(0, target_load_time - load_timer)
-		var target_type = "planets" if current_mode == "planets" else "asteroids"
-		loading_label.text = "Scanning for %s... %.1fs" % [target_type, remaining]
-		
-		# Check if loading complete
-		if load_timer >= target_load_time:
-			_finish_loading()
+	# Default behavior: fetch anomalies from Supabase
+	_fetch_anomalies()
 
 func _start_loading(duration: float):
 	is_loading = true
 	load_timer = 0.0
 	target_load_time = duration
-	
+	anomalies_ready = false
+	print("SatelliteStationPanel: _start_loading duration=", duration)
+
+	# Ensure progress bar range is normalized (0-100)
+	if progress_bar:
+		progress_bar.max_value = 100
+
 	loading_container.visible = true
 	anomaly_list.visible = false
 	refresh_button.disabled = true
 	progress_bar.value = 0.0
 	status_label.text = "Status: Scanning..."
+
+	# Start processing so _process will run to animate progress
+	set_process(true)
 
 func _finish_loading():
 	is_loading = false
@@ -171,7 +163,11 @@ func _finish_loading():
 	_display_anomalies(pending_anomalies)
 	pending_anomalies = []
 
+	# Stop processing once loading is finished
+	set_process(false)
+
 func _fetch_anomalies():
+	print("SatelliteStationPanel: _fetch_anomalies called, mode=", current_mode)
 	var supabase = SupabaseClient.get_instance()
 	var anomaly_set = PLANET_SET if current_mode == "planets" else ASTEROID_SET
 	supabase.fetch_anomalies(anomaly_set, MAX_ANOMALIES, _on_anomalies_fetched)
@@ -206,10 +202,14 @@ func _on_anomalies_fetched(data: Array, error: String):
 		print("Error fetching anomalies: ", error)
 		pending_anomalies = []
 		status_label.text = "Status: Error - " + error
+		# Mark data ready; UI will finish after minimum display time or when timer completes
+		anomalies_ready = true
 	else:
 		pending_anomalies = data
 		var target_type = "planets" if current_mode == "planets" else "asteroids"
 		status_label.text = "Status: %d %s detected" % [data.size(), target_type]
+		# We got results — mark ready. UI finishes after minimum display time.
+		anomalies_ready = true
 
 func _display_anomalies(anomalies: Array):
 	# Clear existing items
@@ -276,40 +276,16 @@ func _create_anomaly_item(anomaly: Dictionary, index: int) -> Control:
 	icon_container.add_theme_stylebox_override("panel", icon_style)
 	
 	var icon_label = Label.new()
-	# If an annotated PNG exists for this anomaly, show it as a thumbnail
-	var id_key = _normalize_anomaly_id(anomaly, index)
-	var combined_png = "user://annotations/%s-annotated.png" % id_key
-	if FileAccess.file_exists(combined_png):
-		var img = Image.new()
-		var err = img.load(combined_png)
-		if err == OK:
-			var tex = ImageTexture.create_from_image(img)
-			var thumb = TextureRect.new()
-			thumb.texture = tex
-			thumb.expand = true
-			thumb.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-			thumb.custom_minimum_size = Vector2(50, 50)
-			icon_container.add_child(thumb)
-		else:
-			icon_label.text = "☄"
-			icon_label.add_theme_font_size_override("font_size", 28)
-			icon_label.add_theme_color_override("font_color", Color.WHITE)
-			icon_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			icon_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-			icon_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			icon_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
-			icon_container.add_child(icon_label)
-	else:
-		# Use planet icon for planets, asteroid icon for asteroids
-		var icon_text = "🪐" if current_mode == "planets" else "☄"
-		icon_label.text = icon_text
-		icon_label.add_theme_font_size_override("font_size", 28)
-		icon_label.add_theme_color_override("font_color", Color.WHITE)
-		icon_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		icon_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		icon_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		icon_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		icon_container.add_child(icon_label)
+	# Use planet icon for planets, asteroid icon for asteroids (annotation thumbnails archived)
+	var icon_text = "🪐" if current_mode == "planets" else "☄"
+	icon_label.text = icon_text
+	icon_label.add_theme_font_size_override("font_size", 28)
+	icon_label.add_theme_color_override("font_color", Color.WHITE)
+	icon_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	icon_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	icon_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	icon_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	icon_container.add_child(icon_label)
 	hbox.add_child(icon_container)
 	
 	# Spacer
@@ -372,18 +348,7 @@ func _create_anomaly_item(anomaly: Dictionary, index: int) -> Control:
 	# Connect the overlay button's pressed signal to open detail view
 	click_btn.pressed.connect(Callable(self, "_on_anomaly_item_button_pressed").bind(anomaly))
 
-	# Check for saved annotations for this anomaly and show indicator
-	var anomaly_key = _normalize_anomaly_id(anomaly, index)
-	var annotations_path = "user://annotations/%s.json" % anomaly_key
-	print("SatelliteStationPanel: checking annotations for key:", anomaly_key, "path:", annotations_path)
-	var exists = FileAccess.file_exists(annotations_path)
-	print("SatelliteStationPanel: annotations file exists?", exists)
-	if exists:
-		var saved_label = Label.new()
-		saved_label.text = "Saved"
-		saved_label.add_theme_color_override("font_color", Color(0.1, 0.6, 0.1))
-		saved_label.add_theme_font_size_override("font_size", 18)
-		hbox.add_child(saved_label)
+	# Annotation indicators archived (hidden from main UI)
 	
 	# Add hover effect
 	item_container.mouse_entered.connect(func():
@@ -442,13 +407,21 @@ func _show_asteroid_detail(anomaly: Dictionary):
 	loading_container.visible = false
 	anomaly_list.visible = false
 	
-	# Create and add detail view directly to the content container
-	var detail_view = AsteroidDetailView.instantiate()
-	content_container.add_child(detail_view)
-	detail_view.initialize(anomaly)
-	
+	# Create and add correct detail view (AsteroidDetailView for sample scene, SimpleDetailView otherwise)
+	var root = get_tree().root.get_child(0)
+	var use_asteroid_detail = root and root.name == "EarthBase1SampleAsteroid"
+	var detail_view = null
+	if use_asteroid_detail:
+		detail_view = AsteroidDetailView.instantiate()
+		content_container.add_child(detail_view)
+		detail_view.initialize(anomaly, true) # force_controls_visible = true
+	else:
+		detail_view = SimpleDetailView.instantiate()
+		content_container.add_child(detail_view)
+		detail_view.initialize(anomaly)
 	# Connect back button
-	detail_view.back_pressed.connect(_on_detail_view_back)
+	if detail_view.has_signal("back_pressed"):
+		detail_view.back_pressed.connect(_on_detail_view_back)
 
 func _on_detail_view_back():
 	"""Handle back button from detail view"""
@@ -504,6 +477,26 @@ func _apply_panel_style():
 	
 	var close_btn = $PanelContainer/Panel/VBoxContainer/HeaderContainer/CloseButton
 	close_btn.add_theme_color_override("font_color", Color(0, 0, 0, 1))  # Pure black text
+
+func _process(delta: float) -> void:
+	if not is_loading:
+		return
+
+	# Advance the loading timer and update progress
+	load_timer += delta
+	if target_load_time <= 0:
+		progress_bar.value = 100
+	else:
+		var pct = clamp(load_timer / target_load_time * 100.0, 0.0, 100.0)
+		progress_bar.value = pct
+
+	# Finish when either the timer completes or data is ready AND minimum display time elapsed
+	if load_timer >= target_load_time:
+		_finish_loading()
+		return
+
+	if anomalies_ready and load_timer >= MIN_DISPLAY_TIME:
+		_finish_loading()
 
 func _on_close_button_pressed():
 	panel_closed.emit()

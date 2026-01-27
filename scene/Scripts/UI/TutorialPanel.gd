@@ -7,7 +7,8 @@ var app_controller: Node
 func _ready() -> void:
 	# Force visible initially - will be hidden if tutorial is completed
 	self.visible = true
-	print("TutorialPanel: _ready called, forcing visible = true")
+	# reduced logging
+	preload("res://Scripts/Utils/Logger.gd").d("TutorialPanel: _ready called")
 	
 	# Prefer the autoload singleton at /root/AppController
 	if get_tree().root.has_node("AppController"):
@@ -20,18 +21,18 @@ func _ready() -> void:
 			if parent:
 				app_controller = parent.find_child("AppController", true, false)
 	
-	print("TutorialPanel: Ready, AppController found: ", app_controller != null)
+	preload("res://Scripts/Utils/Logger.gd").d("TutorialPanel: Ready, AppController found: %s" % [app_controller != null])
 	
 	update_tutorial_status()
 	
 	if app_controller and app_controller.has_signal("tutorial_completed_updated"):
 		app_controller.tutorial_completed_updated.connect(_on_tutorial_completed_updated)
-		print("TutorialPanel: Connected to tutorial_completed_updated signal")
+		preload("res://Scripts/Utils/Logger.gd").d("TutorialPanel: Connected to tutorial_completed_updated signal")
 
 	# Connect skip button to mark tutorial complete
 	if skip_button:
 		skip_button.connect("pressed", Callable(self, "_on_skip_pressed"))
-		print("TutorialPanel: Skip button connected")
+		preload("res://Scripts/Utils/Logger.gd").d("TutorialPanel: Skip button connected")
 
 func _process(_delta: float) -> void:
 	# Update the tutorial status display
@@ -45,13 +46,13 @@ func _process(_delta: float) -> void:
 			# If found, connect signal and update
 			if app_controller and app_controller.has_signal("tutorial_completed_updated"):
 				app_controller.tutorial_completed_updated.connect(_on_tutorial_completed_updated)
-				print("TutorialPanel: Late-connected to AppController signal")
+				preload("res://Scripts/Utils/Logger.gd").d("TutorialPanel: Late-connected to AppController signal")
 	# Update status each frame if we have the controller
 	if app_controller:
 		update_tutorial_status()
 
 func update_tutorial_status() -> void:
-	print("TutorialPanel: update_tutorial_status called, app_controller=", app_controller)
+	preload("res://Scripts/Utils/Logger.gd").d("TutorialPanel: update_tutorial_status called")
 	# Determine completion from AppController if available, else fall back to saved config
 	var is_completed: bool = false
 	var saved_completed: bool = false
@@ -65,7 +66,7 @@ func update_tutorial_status() -> void:
 		is_completed = app_controller.get_tutorial_completed()
 		# If controller disagrees but saved value says completed, restore controller and persist
 		if not is_completed and saved_completed:
-			print("TutorialPanel: Restoring AppController state from saved config")
+			preload("res://Scripts/Utils/Logger.gd").d("TutorialPanel: Restoring AppController state from saved config")
 			if app_controller.has_method("set_tutorial_completed_from_react"):
 				app_controller.set_tutorial_completed_from_react(true)
 			else:
@@ -80,7 +81,7 @@ func update_tutorial_status() -> void:
 	if not app_controller:
 		is_completed = saved_completed
 
-	print("TutorialPanel: is_completed = ", is_completed)
+	preload("res://Scripts/Utils/Logger.gd").d("TutorialPanel: is_completed = %s" % [is_completed])
 	if is_completed:
 		# Hide tutorial panel when completed
 		self.visible = false
@@ -94,7 +95,7 @@ func update_tutorial_status() -> void:
 
 
 func _on_skip_pressed() -> void:
-	print("TutorialPanel: Skip pressed - marking tutorial complete")
+	preload("res://Scripts/Utils/Logger.gd").d("TutorialPanel: Skip pressed - marking tutorial complete")
 	# Immediately hide panel for user feedback and to avoid race
 	self.visible = false
 
@@ -118,8 +119,8 @@ func _on_skip_pressed() -> void:
 			# Otherwise rely on controller's own persistence
 	else:
 		# No app controller found; just hide locally
-		print("TutorialPanel: No AppController found to persist tutorial state")
+		preload("res://Scripts/Utils/Logger.gd").d("TutorialPanel: No AppController found to persist tutorial state")
 
 func _on_tutorial_completed_updated(is_completed: bool) -> void:
-	print("TutorialPanel: Tutorial completed updated to: ", is_completed)
+	preload("res://Scripts/Utils/Logger.gd").d("TutorialPanel: Tutorial completed updated to: %s" % [is_completed])
 	update_tutorial_status()

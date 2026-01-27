@@ -1,1 +1,0 @@
-../../../../../node_modules/react-native-screens/ios/bridging/Swift-Bridging.h

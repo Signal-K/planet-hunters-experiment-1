@@ -1,0 +1,19 @@
+{
+  "unlocked": [
+    "starterrocket1"
+  ],
+  "placed": [
+    {
+      "type": "starterrocket1",
+      "id": "starterrocket1-3257156997",
+      "x": -110.0,
+      "y": -170.0,
+      "status": "Destroyed"
+    }
+  ],
+  "launched": [
+  ],
+  "destroyed": [
+    "starterrocket1-3257156997"
+  ]
+}
