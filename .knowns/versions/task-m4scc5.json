@@ -1,0 +1,62 @@
+{
+  "taskId": "m4scc5",
+  "currentVersion": 2,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "m4scc5",
+      "version": 1,
+      "timestamp": "2026-01-25T01:37:36.816Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "blocked"
+        }
+      ],
+      "snapshot": {
+        "title": "Cross-state management for experience points",
+        "description": "Ability to have it saved in expo and godot, and obviously then backed up to the sb profile",
+        "status": "blocked",
+        "priority": "medium",
+        "labels": [
+          "Supabase",
+          "Experience",
+          "Points",
+          "Data",
+          "State",
+          "Research"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "m4scc5",
+      "version": 2,
+      "timestamp": "2026-01-25T01:37:38.408Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "blocked",
+          "newValue": "on-hold"
+        }
+      ],
+      "snapshot": {
+        "title": "Cross-state management for experience points",
+        "description": "Ability to have it saved in expo and godot, and obviously then backed up to the sb profile",
+        "status": "on-hold",
+        "priority": "medium",
+        "labels": [
+          "Supabase",
+          "Experience",
+          "Points",
+          "Data",
+          "State",
+          "Research"
+        ],
+        "acceptanceCriteria": []
+      }
+    }
+  ]
+}

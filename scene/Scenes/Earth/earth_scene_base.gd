@@ -33,6 +33,8 @@ func _ready() -> void:
 	# Initialize scene manager
 	scene_manager = SceneManager.new()
 	add_child(scene_manager)
+	# Add to group so other scripts can discover it via get_first_node_in_group("scene_manager")
+	scene_manager.add_to_group("scene_manager")
 	
 	# Initialize UI manager
 	ui_manager = UIManager.new()

@@ -18,23 +18,80 @@ static func load_json(file_path: String) -> Dictionary:
 	var contents = file.get_as_text()
 	file.close()
 	
-	var parsed_data = JSON.parse_string(contents)
-	if typeof(parsed_data) == TYPE_DICTIONARY:
-		result = parsed_data
+	var parsed = JSON.parse_string(contents)
+	# Godot 4 returns a dictionary with keys like 'error' and 'result'. Handle both formats.
+	if typeof(parsed) == TYPE_DICTIONARY:
+		# If parser returned an error code, report and return empty
+		var err = parsed.get("error", 0)
+		if err != 0:
+			var err_line = parsed.get("error_line", 0)
+			var err_str = parsed.get("error_string", "Unknown parse error")
+			print("JSONFileManager: Parse JSON failed. Error at line %d: %s" % [err_line, err_str])
+			return result
+		# Prefer the 'result' field when present
+		if parsed.has("result"):
+			result = parsed.get("result", {})
+		else:
+			result = parsed
 	else:
 		print("JSONFileManager: Invalid JSON data in file: ", file_path)
 	
 	return result
 
+# Helper functions for pretty-printing JSON
+static func _escape_string(s: String) -> String:
+	var out = s.replace("\\", "\\\\")
+	out = out.replace("\"", "\\\"")
+	out = out.replace("\n", "\\n")
+	out = out.replace("\r", "\\r")
+	out = out.replace("\t", "\\t")
+	return out
+
+static func _indent(level: int) -> String:
+	var res = ""
+	for i in range(level):
+		res += "  "
+	return res
+
+static func _to_pretty(value, level: int = 0) -> String:
+	var t = typeof(value)
+	if t == TYPE_DICTIONARY:
+		var s = "{\n"
+		var keys = value.keys()
+		for k in keys:
+			var v = value.get(k)
+			s += _indent(level + 1) + '"' + str(k) + '": ' + _to_pretty(v, level + 1) + ",\n"
+		if s.ends_with(",\n"):
+			s = s.substr(0, s.length() - 2) + "\n"
+		s += _indent(level) + "}"
+		return s
+	elif t == TYPE_ARRAY:
+		var s = "[\n"
+		for i in range(value.size()):
+			s += _indent(level + 1) + _to_pretty(value[i], level + 1) + ",\n"
+		if s.ends_with(",\n"):
+			s = s.substr(0, s.length() - 2) + "\n"
+		s += _indent(level) + "]"
+		return s
+	elif t == TYPE_STRING:
+		return '"' + _escape_string(str(value)) + '"'
+	elif t == TYPE_FLOAT or t == TYPE_INT:
+		return str(value)
+	elif t == TYPE_BOOL:
+		return "true" if value else "false"
+	else:
+		return "null"
+
 ## Save data to a JSON file
 static func save_json(file_path: String, data: Dictionary) -> bool:
-	var json_string = JSON.stringify(data)
-	
+	# Pretty-print JSON with indentation and line breaks for readability
+	var json_string = _to_pretty(data, 0) + "\n"
+
 	var file = FileAccess.open(file_path, FileAccess.WRITE)
 	if not file:
 		print("JSONFileManager: Failed to open file for writing: ", file_path)
 		return false
-	
+
 	file.store_string(json_string)
 	file.close()
 	print("JSONFileManager: Successfully saved data to: ", file_path)

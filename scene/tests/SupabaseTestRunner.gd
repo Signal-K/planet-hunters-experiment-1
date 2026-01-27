@@ -285,7 +285,8 @@ func test_asteroid_selection():
 		# Check for AsteroidDetailView by class or script name
 		if child.get_class() == "VBoxContainer" and child.get_script():
 			var script_path = child.get_script().resource_path
-			if "AsteroidDetailView" in script_path:
+			# Accept either the simple viewer or the (archived) asteroid detail view.
+			if "AsteroidDetailView" in script_path or "SimpleDetailView" in script_path or "Archive/AsteroidDetail" in script_path:
 				detail_view = child
 				break
 	

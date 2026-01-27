@@ -1,0 +1,34 @@
+{
+  "taskId": "0x09aq",
+  "currentVersion": 1,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "0x09aq",
+      "version": 1,
+      "timestamp": "2026-01-25T06:16:30.174Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        }
+      ],
+      "snapshot": {
+        "title": "Create mission preview scene/view",
+        "description": "Houses:\n\n1. Selected target\n\n2. Available rockets (extra scene)\n\n3. Yield & cost, distance\n\n4. Icons for target",
+        "status": "in-progress",
+        "priority": "medium",
+        "labels": [
+          "Icons",
+          "Assets",
+          "Scene",
+          "Targets",
+          "New-Mission",
+          "Yield"
+        ],
+        "acceptanceCriteria": []
+      }
+    }
+  ]
+}

@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3 uid="uid://satellite_station_panel"]
+[gd_scene load_steps=4 format=3 uid="uid://satellite_station_panel"]
 
 [ext_resource type="Script" uid="uid://satellite_panel_script" path="res://Scripts/UI/SatelliteStationPanel.gd" id="1"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/AsteroidDetail/asteroid_detail_view.tscn" id="2"]
 
 [node name="SatelliteStationPanel" type="Control"]
 layout_mode = 3
