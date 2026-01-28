@@ -210,6 +210,16 @@ func _on_anomalies_fetched(data: Array, error: String):
 		status_label.text = "Status: %d %s detected" % [data.size(), target_type]
 		# We got results — mark ready. UI finishes after minimum display time.
 		anomalies_ready = true
+		# Persist a lightweight list of detected targets for other UI (e.g., Launchpad)
+		var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+		if rm:
+			var targets := []
+			for i in range(data.size()):
+				var a = data[i]
+				var id = _normalize_anomaly_id(a, i + 1)
+				var label = "TIC %s" % str(a.get("ticId")) if a.has("ticId") and a.get("ticId") != null and str(a.get("ticId")) != "" else str(a.get("content", id))
+				targets.append({"id": id, "label": label})
+			rm.set_detected_targets(targets)
 
 func _display_anomalies(anomalies: Array):
 	# Clear existing items
@@ -344,6 +354,31 @@ func _create_anomaly_item(anomaly: Dictionary, index: int) -> Control:
 	subtitle_label.add_theme_font_size_override("font_size", 20)
 	subtitle_label.add_theme_color_override("font_color", Color(0.4, 0.45, 0.5, 1))
 	content_vbox.add_child(subtitle_label)
+
+	# Select target button (only for detected anomalies)
+	var controls_h = HBoxContainer.new()
+	controls_h.size_flags_horizontal = Control.SIZE_FILL
+	controls_h.custom_minimum_size = Vector2(0, 32)
+	content_vbox.add_child(controls_h)
+
+	var select_btn = Button.new()
+	select_btn.text = "Select Target"
+	select_btn.focus_mode = Control.FOCUS_NONE
+	select_btn.custom_minimum_size = Vector2(160, 28)
+	controls_h.add_child(select_btn)
+
+	# Display selected marker if this matches currently selected target
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var normalized = _normalize_anomaly_id(anomaly, index)
+	var current_target = ""
+	if rm:
+		current_target = rm.get_selected_target()
+	if current_target == normalized:
+		select_btn.text = "Target Selected"
+		select_btn.disabled = true
+
+	# Connect select action
+	select_btn.pressed.connect(Callable(self, "_on_select_target_pressed").bind(anomaly, index, select_btn))
 	
 	# Connect the overlay button's pressed signal to open detail view
 	click_btn.pressed.connect(Callable(self, "_on_anomaly_item_button_pressed").bind(anomaly))
@@ -377,6 +412,25 @@ func _on_anomaly_item_gui_input(bound_anomaly: Dictionary, event: InputEvent):
 func _on_anomaly_item_button_pressed(bound_anomaly: Dictionary):
 	"""Called when the overlay button is pressed for an anomaly item."""
 	_show_asteroid_detail(bound_anomaly)
+
+func _on_select_target_pressed(bound_anomaly: Dictionary, index: int, btn: Button) -> void:
+	# Persist the selected target via RocketsManager
+	var target_id = _normalize_anomaly_id(bound_anomaly, index)
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if not rm:
+		print("SatelliteStationPanel: RocketsManager not available")
+		status_label.text = "Status: Unable to select target"
+		return
+	var ok = rm.select_target(target_id)
+	if ok:
+		status_label.text = "Target selected: %s" % target_id
+		print("SatelliteStationPanel: target selected:", target_id)
+		if btn:
+			btn.text = "Target Selected"
+			btn.disabled = true
+	else:
+		print("SatelliteStationPanel: failed to persist selected target:", target_id)
+		status_label.text = "Status: Failed to select target"
 
 func _show_asteroid_detail(anomaly: Dictionary):
 	"""Show the asteroid detail view"""

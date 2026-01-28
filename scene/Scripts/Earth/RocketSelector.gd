@@ -15,6 +15,7 @@ var ui_size: Vector2 = Vector2(720, 360)
 var _dragging: bool = false
 var _drag_node: TextureRect = null
 var _drag_rocket_id: String = ""
+var _creation_locked: bool = false
 
 func _ready():
 	position = ui_position
@@ -22,6 +23,12 @@ func _ready():
 	# Load unlocked rockets from RocketsManager if available
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	unlocked_rockets = rm.get_unlocked()
+	# If there is already a persisted awaitingLaunch rocket, disable creation UI
+	var placed = rm.get_placed()
+	for p in placed:
+		if p.get("status", "") == "awaitingLaunch":
+			_creation_locked = true
+			break
 	_build_ui()
 	set_process(true)
 
@@ -72,6 +79,7 @@ func _build_ui():
 
 		var btn = Button.new()
 		btn.text = "Create"
+		btn.disabled = _creation_locked
 		btn.pressed.connect(Callable(self, "_on_create_pressed").bind(rocket_id))
 		box.add_child(btn)
 
