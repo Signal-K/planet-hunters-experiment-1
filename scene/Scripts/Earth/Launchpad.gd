@@ -76,7 +76,15 @@ func _ready():
 		print("Launchpad: rocket restoration complete")
 		# Hide selector panel after restoration if rockets exist
 		if restore_items.size() > 0:
-			_hide_selector_panel()
+			# Hide only the rocket-creation area (RocketSelector) so the player cannot create
+			# another rocket, but keep the SelectorPanel visible so they can select a target
+			# for the restored awaiting rocket.
+			var rs = get_tree().current_scene.get_node_or_null("UILayer/SelectorPanel/VBox/RocketSelector")
+			if rs:
+				rs.visible = false
+				print("Launchpad: hid RocketSelector (creation UI) to prevent creating more rockets")
+			# Populate targets so the player can choose a detected target for the restored rocket
+			_populate_targets()
 			# show standalone launch button if present so user can launch restored rocket
 			var lb = get_tree().current_scene.get_node_or_null("UILayer/LaunchButton")
 			if lb:
@@ -244,8 +252,17 @@ func spawn_rocket(rocket_id: String) -> void:
 		if typeof(new_id) == TYPE_STRING and new_id != "":
 			inst.name = new_id
 		print("Launchpad: rocket persisted to state")
-	# Hide selector panel after rocket is created (hide primary too)
-	_hide_selector_panel(true)
+	# After creating a rocket, hide only the rocket-creation area so the player
+	# cannot create another rocket, but keep the SelectorPanel visible so they
+	# can select a target for the newly-created awaitingLaunch rocket.
+	var root_scene = get_tree().current_scene
+	if root_scene:
+		var rocket_selector = root_scene.get_node_or_null("UILayer/SelectorPanel/VBox/RocketSelector")
+		if rocket_selector:
+			rocket_selector.visible = false
+			print("Launchpad: hid RocketSelector (creation UI) after spawn")
+		# Ensure targets are populated so user can pick one
+		_populate_targets()
 	# Show the launch button so user can launch the placed rocket.
 	# Prefer a standalone `UILayer/LaunchButton` if present, otherwise show the HUD button under `LaunchHUD`.
 	var root = get_tree().current_scene
@@ -325,6 +342,31 @@ func _show_selector_panel() -> void:
 			stack.append(child)
 	if first_shown:
 		print("Launchpad: selector panel shown (primary instance)")
+		# Populate selector panel with detected targets
+		_populate_targets()
+		# Ensure the RocketSelector (creation UI) is visible again if there are
+		# no persisted awaitingLaunch rockets. This returns the panel to create/select mode.
+		var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+		var has_awaiting := false
+		if rm:
+			var placed = rm.get_placed()
+			for p in placed:
+				if p.get("status", "") == "awaitingLaunch":
+					has_awaiting = true
+					break
+		if not has_awaiting and root_scene:
+			var rocket_selector = root_scene.get_node_or_null("UILayer/SelectorPanel/VBox/RocketSelector")
+			if rocket_selector:
+				rocket_selector.visible = true
+				# Re-enable any Create buttons inside RocketSelector so creation is available again
+				var node_stack = [rocket_selector]
+				while node_stack.size() > 0:
+					var node = node_stack.pop_back()
+					for c in node.get_children():
+						if c is Button:
+							c.disabled = false
+						node_stack.append(c)
+				print("Launchpad: RocketSelector restored and Create buttons enabled (no awaiting rockets)")
 	else:
 		print("Launchpad: no SelectorPanel found to show")
 
@@ -339,6 +381,75 @@ func _show_selector_panel() -> void:
 				if c.name.ends_with("LaunchButton"):
 					lb = c
 		print("Launchpad: UI visibility summary -> UILayer/SelectorPanel=", s != null and s.visible or false, ", LaunchHUD=", hud != null and hud.visible or false, ", LaunchButton=", lb != null and lb.visible or false)
+
+func _populate_targets() -> void:
+	# Find the primary SelectorPanel VBox and populate with detected targets from RocketsManager
+	var root_scene = get_tree().current_scene
+	if not root_scene:
+		return
+	var panel = root_scene.get_node_or_null("UILayer/SelectorPanel")
+	if not panel:
+		return
+	var vbox = panel.get_node_or_null("VBox")
+	if not vbox:
+		return
+	# Clear existing entries except Title/BackButton (keep Title at top)
+	for child in vbox.get_children():
+		if child.name in ["Title", "BackButton", "RocketSelector", "LaunchedList"]:
+			continue
+		child.queue_free()
+
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if not rm:
+		return
+	var targets = rm.get_detected_targets()
+	if targets.size() == 0:
+		var lbl = Label.new()
+		lbl.text = "No detected targets available."
+		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		vbox.add_child(lbl)
+		return
+
+	for t in targets:
+		var entry = HBoxContainer.new()
+		entry.custom_minimum_size = Vector2(0, 40)
+		var name_lbl = Label.new()
+		name_lbl.text = str(t.get("label", t.get("id")))
+		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		entry.add_child(name_lbl)
+		var btn = Button.new()
+		btn.text = "Select"
+		btn.focus_mode = Control.FOCUS_NONE
+		# bind id
+		btn.pressed.connect(Callable(self, "_on_selector_target_pressed").bind(str(t.get("id")), btn))
+		entry.add_child(btn)
+		vbox.add_child(entry)
+
+func _on_selector_target_pressed(target_id: String, btn: Button) -> void:
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if not rm:
+		return
+	var ok = rm.select_target(target_id)
+	if ok:
+		print("Launchpad: target selected from selector:", target_id)
+		# update buttons in this panel to reflect selection
+		var root_scene = get_tree().current_scene
+		if root_scene:
+			var panel = root_scene.get_node_or_null("UILayer/SelectorPanel")
+			if panel:
+				var vbox = panel.get_node_or_null("VBox")
+				if vbox:
+					for child in vbox.get_children():
+						if child is HBoxContainer:
+							for c in child.get_children():
+								if c is Button:
+									c.text = "Select"
+									c.disabled = false
+				btn.text = "Target Selected"
+				btn.disabled = true
+		# Also update launch button visibility (unchanged) and status via any status label if present
+	else:
+		print("Launchpad: failed to persist target selection from selector", target_id)
 
 func _on_rockets_reset() -> void:
 	print("Launchpad: rockets reset event received, clearing rockets")
@@ -365,11 +476,73 @@ func _on_launch_button_pressed() -> void:
 		return
 	var rocket = nodes[0]
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
-	if rm:
-		rm.set_launched(rocket.name)
+	if not rm:
+		print("Launchpad: RocketsManager not available")
+		return
+	# Require a selected target before launching
+	var target = rm.get_selected_target()
+	if target == "":
+		print("Launchpad: No target selected — cannot launch. Open Satellite Station to choose a target.")
+		return
+	# Record mission with launch time (epoch seconds) and 60s travel
+	# Compute current epoch seconds with multiple safe fallbacks to work across
+	# Godot builds and platform differences.
+	var launch_time: int = 0
+
+	# 1) Time singleton (preferred when available in newer Godot builds)
+	if Engine.has_singleton("Time"):
+		var time_single = Engine.get_singleton("Time")
+		if time_single and time_single.has_method("get_unix_time"):
+			var tt = time_single.call("get_unix_time")
+			if typeof(tt) in [TYPE_INT, TYPE_FLOAT]:
+				launch_time = int(tt)
+			# try alternate name
+			elif time_single.has_method("get_unix_time_secs"):
+				var tt2 = time_single.call("get_unix_time_secs")
+				if typeof(tt2) in [TYPE_INT, TYPE_FLOAT]:
+					launch_time = int(tt2)
+
+	# 2) OS methods
+	if launch_time == 0:
+		if OS.has_method("get_unix_time"):
+			var tso = OS.call("get_unix_time")
+			if typeof(tso) in [TYPE_INT, TYPE_FLOAT]:
+				launch_time = int(tso)
+		elif OS.has_method("get_unix_time_secs"):
+			var tso2 = OS.call("get_unix_time_secs")
+			if typeof(tso2) in [TYPE_INT, TYPE_FLOAT]:
+				launch_time = int(tso2)
+
+	# 3) Fallback to high-resolution ticks divided down
+	if launch_time == 0:
+		if OS.has_method("get_ticks_usec"):
+			var usec = OS.call("get_ticks_usec")
+			if typeof(usec) in [TYPE_INT, TYPE_FLOAT]:
+				launch_time = int(usec / 1000000)
+		elif OS.has_method("get_ticks_msec"):
+			var msec = OS.call("get_ticks_msec")
+			if typeof(msec) in [TYPE_INT, TYPE_FLOAT]:
+				launch_time = int(msec / 1000)
+
+	# 4) Last resort: use OS.get_ticks_usec via direct property if available
+	if launch_time == 0:
+		# If still zero, set to int(OS.get_time()) where available (best-effort)
+		if OS.has_method("get_time"):
+			var tget = OS.call("get_time")
+			if typeof(tget) in [TYPE_INT, TYPE_FLOAT]:
+				launch_time = int(tget)
+
+	var mission_ok = rm.add_mission(rocket.name, target, int(launch_time), 60)
+	if not mission_ok:
+		print("Launchpad: failed to record mission for rocket", rocket.name)
+	# Mark rocket as launched (preserves existing launched list behavior)
+	var set_ok = rm.set_launched(rocket.name)
+	if set_ok:
 		print("Launchpad: marked rocket %s as launched" % rocket.name)
 	else:
-		print("Launchpad: RocketsManager not available")
+		print("Launchpad: failed to mark rocket as launched")
+	# Clear selected target after launch
+	rm.clear_selected_target()
 	# Remove the rocket from the scene after launching
 	if is_instance_valid(rocket):
 		rocket.queue_free()

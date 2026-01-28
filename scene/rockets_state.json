@@ -9,11 +9,78 @@
       "x": -110.0,
       "y": -170.0,
       "status": "Destroyed"
+    },
+    {
+      "type": "starterrocket1",
+      "id": "starterrocket1-2292954686",
+      "x": -110.0,
+      "y": -170.0,
+      "status": "launched"
+    },
+    {
+      "type": "starterrocket1",
+      "id": "starterrocket1-3175130685",
+      "x": -110.0,
+      "y": -170.0,
+      "status": "launched"
+    },
+    {
+      "type": "starterrocket1",
+      "id": "starterrocket1-512556871",
+      "x": -110.0,
+      "y": -170.0,
+      "status": "launched"
     }
   ],
   "launched": [
+    "starterrocket1-2292954686",
+    "starterrocket1-3175130685",
+    "starterrocket1-512556871"
   ],
   "destroyed": [
     "starterrocket1-3257156997"
+  ],
+  "missions": [
+    {
+      "rocket_id": "starterrocket1-2292954686",
+      "target": "68115570",
+      "launch_time": 0.0,
+      "arrival_time": 60.0
+    },
+    {
+      "rocket_id": "starterrocket1-3175130685",
+      "target": "63768316",
+      "launch_time": 0.0,
+      "arrival_time": 60.0
+    },
+    {
+      "rocket_id": "starterrocket1-512556871",
+      "target": "101445733",
+      "launch_time": 0.0,
+      "arrival_time": 60.0
+    }
+  ],
+  "selected_target": "",
+  "detected_targets": [
+    {
+      "id": "101445733",
+      "label": "101445733"
+    },
+    {
+      "id": "63768316",
+      "label": "63768316"
+    },
+    {
+      "id": "68115570",
+      "label": "68115570"
+    },
+    {
+      "id": "63768664",
+      "label": "63768664"
+    },
+    {
+      "id": "63769326",
+      "label": "63769326"
+    }
   ]
 }

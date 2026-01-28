@@ -1,3 +1,8 @@
 {
-  "active": null
+  "active": {
+    "taskId": "0x09aq",
+    "startedAt": "2026-01-28T01:02:17.003Z",
+    "pausedAt": null,
+    "totalPausedMs": 0
+  }
 }

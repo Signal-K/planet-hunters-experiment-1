@@ -1,7 +1,5 @@
+res://Scripts/Archive/AsteroidDetail/AsteroidDetailView.gd
 res://Scripts/Earth/Launchpad.gd
+res://Scripts/UI/SatelliteStationPanel.gd
 res://Scripts/Utils/RocketsManager.gd
-res://Scripts/Earth/LaunchpadScene.gd
-res://Scripts/Utils/JSONFileManager.gd
 res://Scripts/Earth/RocketSelector.gd
-res://Scripts/UI/NewMissionPanel.gd
-res://Scenes/Earth/earth_scene_base.gd
