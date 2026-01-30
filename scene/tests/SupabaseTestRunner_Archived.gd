@@ -1,18 +1,20 @@
 extends SceneTree
 ## Archived GDScript Test Runner: runs old UI tests against archived annotation scene
 
-var tests_passed := 0
-var tests_failed := 0
-var test_results := []
+const TestReporter = preload("res://tests/TestReporter.gd")
+var reporter := TestReporter.new()
 
 func _init():
-    print("\n" + "=".repeat(60))
-    print("🧪 SUPABASE INTEGRATION TESTS (ARCHIVED UI)")
-    print("=".repeat(60))
+    reporter.start_suite("Supabase Integration (Archived UI)", {
+        "engine": Engine.get_version_info()["string"],
+        "os": OS.get_name(),
+        "project": "scene",
+        "timestamp": Time.get_datetime_string_from_system()
+    })
     await run_all_tests()
     print_summary()
     await create_timer(0.1).timeout
-    if tests_failed > 0:
+    if reporter.tests_failed > 0:
         quit(1)
     else:
         quit(0)
@@ -26,7 +28,7 @@ func run_all_tests():
 # Reuse many helpers from main runner but check archived scene
 func test_supabase_client_exists():
     var test_name := "SupabaseClient can be instantiated (archived)"
-    print("▶ Running: " + test_name)
+    reporter.start_test(test_name)
     var script = load("res://Scripts/Systems/SupabaseClient.gd")
     if script == null:
         fail(test_name, "Could not load SupabaseClient.gd")
@@ -42,7 +44,7 @@ func test_supabase_client_exists():
 
 func test_fetch_asteroids():
     var test_name := "Can fetch asteroids from Supabase (archived)"
-    print("▶ Running: " + test_name)
+    reporter.start_test(test_name)
     var script = load("res://Scripts/Systems/SupabaseClient.gd")
     if script == null:
         fail(test_name, "Could not load SupabaseClient.gd")
@@ -84,7 +86,7 @@ func test_fetch_asteroids():
 
 func test_asteroid_data_structure():
     var test_name := "Asteroid data structure supports viewing (archived)"
-    print("▶ Running: " + test_name)
+    reporter.start_test(test_name)
     var mock_asteroid := {"id":1, "name":"Test", "anomalySet":"active-asteroids", "created_at":"2025-01-01T00:00:00Z"}
     var required_fields := ["id","name"]
     for field in required_fields:
@@ -95,7 +97,7 @@ func test_asteroid_data_structure():
 
 func test_asteroid_selection_archived():
     var test_name := "User can view asteroids with archived annotation UI"
-    print("▶ Running: " + test_name)
+    reporter.start_test(test_name)
     var panel_scene = load("res://Scenes/UI/SatelliteStationPanel.tscn")
     if panel_scene == null:
         fail(test_name, "Could not load SatelliteStationPanel.tscn")
@@ -153,21 +155,10 @@ func test_asteroid_selection_archived():
     pass_test(test_name)
 
 func pass_test(name: String):
-    tests_passed += 1
-    test_results.append({"name": name, "passed": true})
-    print("  ✅ PASSED: " + name + "\n")
+    reporter.pass_test(name)
 
 func fail(name: String, reason: String):
-    tests_failed += 1
-    test_results.append({"name": name, "passed": false, "reason": reason})
-    print("  ❌ FAILED: " + name)
-    print("     Reason: " + reason + "\n")
+    reporter.fail_test(reason, name)
 
 func print_summary():
-    print("=".repeat(60))
-    print("📊 TEST SUMMARY")
-    print("=".repeat(60))
-    print("Total:  " + str(tests_passed + tests_failed))
-    print("Passed: " + str(tests_passed) + " ✅")
-    print("Failed: " + str(tests_failed) + " ❌")
-    print("=".repeat(60))
+    reporter.summary()

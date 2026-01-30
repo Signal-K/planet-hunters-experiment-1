@@ -1,7 +1,7 @@
 ---
 id: mzl2k8
 title: Launch mission
-status: in-review
+status: done
 priority: medium
 labels:
   - New-Mission
@@ -9,7 +9,7 @@ labels:
   - Missions
   - Mining
 createdAt: '2026-01-21T01:12:45.683Z'
-updatedAt: '2026-01-27T14:15:25.191Z'
+updatedAt: '2026-02-02T03:06:01.588Z'
 timeSpent: 13799
 ---
 # Launch mission

@@ -1,6 +1,6 @@
 {
   "taskId": "mzl2k8",
-  "currentVersion": 3,
+  "currentVersion": 4,
   "versions": [
     {
       "id": "v1",
@@ -70,6 +70,33 @@
         "title": "Launch mission",
         "description": "Basically, convert a mission to the 'in-progress' phase, make all missions browseable in archive, deduct currency, show target as 'being investigated' or something",
         "status": "in-review",
+        "priority": "medium",
+        "labels": [
+          "New-Mission",
+          "Launch",
+          "Missions",
+          "Mining"
+        ],
+        "acceptanceCriteria": [],
+        "implementationNotes": "This has taken a huge amount of time, mainly fucking around with copilot to get scenes fixed due to heavy corruption"
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "mzl2k8",
+      "version": 4,
+      "timestamp": "2026-02-02T03:06:01.589Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-review",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Launch mission",
+        "description": "Basically, convert a mission to the 'in-progress' phase, make all missions browseable in archive, deduct currency, show target as 'being investigated' or something",
+        "status": "done",
         "priority": "medium",
         "labels": [
           "New-Mission",

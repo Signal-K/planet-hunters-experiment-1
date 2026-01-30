@@ -1,0 +1,258 @@
+{
+  "taskId": "hkf1h6",
+  "currentVersion": 9,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "hkf1h6",
+      "version": 1,
+      "timestamp": "2026-01-30T07:52:42.394Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        }
+      ],
+      "snapshot": {
+        "title": "Create starter yield algo",
+        "description": "Pretty simple - show cost, same mass value for all planets and same mass value for all asteroids, differing monetary yield value depending on composition; consistent starter ship price",
+        "status": "in-progress",
+        "priority": "medium",
+        "labels": [
+          "Algorithms",
+          "Yield",
+          "Mining",
+          "Procedural-Generation"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "hkf1h6",
+      "version": 2,
+      "timestamp": "2026-01-30T07:54:28.617Z",
+      "changes": [
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Create starter yield algo",
+        "description": "Pretty simple - show cost, same mass value for all planets and same mass value for all asteroids, differing monetary yield value depending on composition; consistent starter ship price",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "Algorithms",
+          "Yield",
+          "Mining",
+          "Procedural-Generation"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "hkf1h6",
+      "version": 3,
+      "timestamp": "2026-01-30T07:56:31.947Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "newValue": "1. Trace target data flow (detected targets → preview) and decide where to store target type for yield calc.\n2. Implement deterministic mineral yield helper (planet base capacity, asteroid at 20%) and hook into preview UI.\n3. Add minerals panel to asteroid preview scene and populate it from the helper.\n4. Quick sanity check in preview flow (no runtime errors, UI updates)."
+        }
+      ],
+      "snapshot": {
+        "title": "Create starter yield algo",
+        "description": "Pretty simple - show cost, same mass value for all planets and same mass value for all asteroids, differing monetary yield value depending on composition; consistent starter ship price",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "Algorithms",
+          "Yield",
+          "Mining",
+          "Procedural-Generation"
+        ],
+        "acceptanceCriteria": [],
+        "implementationPlan": "1. Trace target data flow (detected targets → preview) and decide where to store target type for yield calc.\n2. Implement deterministic mineral yield helper (planet base capacity, asteroid at 20%) and hook into preview UI.\n3. Add minerals panel to asteroid preview scene and populate it from the helper.\n4. Quick sanity check in preview flow (no runtime errors, UI updates)."
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "hkf1h6",
+      "version": 4,
+      "timestamp": "2026-01-30T07:59:13.597Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "## Summary\n- Added deterministic mineral yield helper (planet base capacity, asteroid at 20%).\n- Stored target type in detected targets and preview target.\n- Added minerals panel to preview scene and populated UI with yield."
+        }
+      ],
+      "snapshot": {
+        "title": "Create starter yield algo",
+        "description": "Pretty simple - show cost, same mass value for all planets and same mass value for all asteroids, differing monetary yield value depending on composition; consistent starter ship price",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "Algorithms",
+          "Yield",
+          "Mining",
+          "Procedural-Generation"
+        ],
+        "acceptanceCriteria": [],
+        "implementationPlan": "1. Trace target data flow (detected targets → preview) and decide where to store target type for yield calc.\n2. Implement deterministic mineral yield helper (planet base capacity, asteroid at 20%) and hook into preview UI.\n3. Add minerals panel to asteroid preview scene and populate it from the helper.\n4. Quick sanity check in preview flow (no runtime errors, UI updates).",
+        "implementationNotes": "## Summary\n- Added deterministic mineral yield helper (planet base capacity, asteroid at 20%).\n- Stored target type in detected targets and preview target.\n- Added minerals panel to preview scene and populated UI with yield."
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "hkf1h6",
+      "version": 5,
+      "timestamp": "2026-01-30T07:59:26.462Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Create starter yield algo",
+        "description": "Pretty simple - show cost, same mass value for all planets and same mass value for all asteroids, differing monetary yield value depending on composition; consistent starter ship price",
+        "status": "done",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "Algorithms",
+          "Yield",
+          "Mining",
+          "Procedural-Generation"
+        ],
+        "acceptanceCriteria": [],
+        "implementationPlan": "1. Trace target data flow (detected targets → preview) and decide where to store target type for yield calc.\n2. Implement deterministic mineral yield helper (planet base capacity, asteroid at 20%) and hook into preview UI.\n3. Add minerals panel to asteroid preview scene and populate it from the helper.\n4. Quick sanity check in preview flow (no runtime errors, UI updates).",
+        "implementationNotes": "## Summary\n- Added deterministic mineral yield helper (planet base capacity, asteroid at 20%).\n- Stored target type in detected targets and preview target.\n- Added minerals panel to preview scene and populated UI with yield."
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "hkf1h6",
+      "version": 6,
+      "timestamp": "2026-01-30T08:29:22.245Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "done",
+          "newValue": "in-review"
+        }
+      ],
+      "snapshot": {
+        "title": "Create starter yield algo",
+        "description": "Pretty simple - show cost, same mass value for all planets and same mass value for all asteroids, differing monetary yield value depending on composition; consistent starter ship price",
+        "status": "in-review",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "Algorithms",
+          "Yield",
+          "Mining",
+          "Procedural-Generation"
+        ],
+        "acceptanceCriteria": [],
+        "implementationPlan": "1. Trace target data flow (detected targets → preview) and decide where to store target type for yield calc.\n2. Implement deterministic mineral yield helper (planet base capacity, asteroid at 20%) and hook into preview UI.\n3. Add minerals panel to asteroid preview scene and populate it from the helper.\n4. Quick sanity check in preview flow (no runtime errors, UI updates).",
+        "implementationNotes": "## Summary\n- Added deterministic mineral yield helper (planet base capacity, asteroid at 20%).\n- Stored target type in detected targets and preview target.\n- Added minerals panel to preview scene and populated UI with yield."
+      }
+    },
+    {
+      "id": "v7",
+      "taskId": "hkf1h6",
+      "version": 7,
+      "timestamp": "2026-02-02T03:05:58.357Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-review",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Create starter yield algo",
+        "description": "Pretty simple - show cost, same mass value for all planets and same mass value for all asteroids, differing monetary yield value depending on composition; consistent starter ship price",
+        "status": "done",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "Algorithms",
+          "Yield",
+          "Mining",
+          "Procedural-Generation"
+        ],
+        "acceptanceCriteria": [],
+        "implementationPlan": "1. Trace target data flow (detected targets → preview) and decide where to store target type for yield calc.\n2. Implement deterministic mineral yield helper (planet base capacity, asteroid at 20%) and hook into preview UI.\n3. Add minerals panel to asteroid preview scene and populate it from the helper.\n4. Quick sanity check in preview flow (no runtime errors, UI updates).",
+        "implementationNotes": "## Summary\n- Added deterministic mineral yield helper (planet base capacity, asteroid at 20%).\n- Stored target type in detected targets and preview target.\n- Added minerals panel to preview scene and populated UI with yield."
+      }
+    },
+    {
+      "id": "v8",
+      "taskId": "hkf1h6",
+      "version": 8,
+      "timestamp": "2026-02-02T03:05:58.518Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "done",
+          "newValue": "blocked"
+        }
+      ],
+      "snapshot": {
+        "title": "Create starter yield algo",
+        "description": "Pretty simple - show cost, same mass value for all planets and same mass value for all asteroids, differing monetary yield value depending on composition; consistent starter ship price",
+        "status": "blocked",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "Algorithms",
+          "Yield",
+          "Mining",
+          "Procedural-Generation"
+        ],
+        "acceptanceCriteria": [],
+        "implementationPlan": "1. Trace target data flow (detected targets → preview) and decide where to store target type for yield calc.\n2. Implement deterministic mineral yield helper (planet base capacity, asteroid at 20%) and hook into preview UI.\n3. Add minerals panel to asteroid preview scene and populate it from the helper.\n4. Quick sanity check in preview flow (no runtime errors, UI updates).",
+        "implementationNotes": "## Summary\n- Added deterministic mineral yield helper (planet base capacity, asteroid at 20%).\n- Stored target type in detected targets and preview target.\n- Added minerals panel to preview scene and populated UI with yield."
+      }
+    },
+    {
+      "id": "v9",
+      "taskId": "hkf1h6",
+      "version": 9,
+      "timestamp": "2026-02-02T03:05:58.942Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "blocked",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Create starter yield algo",
+        "description": "Pretty simple - show cost, same mass value for all planets and same mass value for all asteroids, differing monetary yield value depending on composition; consistent starter ship price",
+        "status": "done",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "Algorithms",
+          "Yield",
+          "Mining",
+          "Procedural-Generation"
+        ],
+        "acceptanceCriteria": [],
+        "implementationPlan": "1. Trace target data flow (detected targets → preview) and decide where to store target type for yield calc.\n2. Implement deterministic mineral yield helper (planet base capacity, asteroid at 20%) and hook into preview UI.\n3. Add minerals panel to asteroid preview scene and populate it from the helper.\n4. Quick sanity check in preview flow (no runtime errors, UI updates).",
+        "implementationNotes": "## Summary\n- Added deterministic mineral yield helper (planet base capacity, asteroid at 20%).\n- Stored target type in detected targets and preview target.\n- Added minerals panel to preview scene and populated UI with yield."
+      }
+    }
+  ]
+}

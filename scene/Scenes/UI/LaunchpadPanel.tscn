@@ -1,6 +1,69 @@
-[gd_scene load_steps=2 format=3 uid="uid://di4gukoqu2lvg"]
+[gd_scene load_steps=6 format=3 uid="uid://di4gukoqu2lvg"]
 
 [ext_resource type="Script" uid="uid://bit4gvkbluv5a" path="res://Scripts/UI/LaunchpadPanel.gd" id="1"]
+
+[sub_resource type="StyleBoxFlat" id="1"]
+bg_color = Color(0.975, 0.98, 0.99, 1)
+border_color = Color(0.86, 0.89, 0.94, 1)
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_left = 20
+corner_radius_bottom_right = 20
+shadow_color = Color(0, 0, 0, 0.12)
+shadow_size = 12
+shadow_offset = Vector2(0, 6)
+border_width_left = 1
+border_width_right = 1
+border_width_top = 1
+border_width_bottom = 1
+
+[sub_resource type="StyleBoxFlat" id="2"]
+bg_color = Color(0.975, 0.98, 0.99, 1)
+border_color = Color(0.86, 0.89, 0.94, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_left = 12
+corner_radius_bottom_right = 12
+content_margin_left = 16.0
+content_margin_right = 16.0
+content_margin_top = 10.0
+content_margin_bottom = 10.0
+border_width_left = 1
+border_width_right = 1
+border_width_top = 1
+border_width_bottom = 1
+
+[sub_resource type="StyleBoxFlat" id="3"]
+bg_color = Color(0.94, 0.95, 0.97, 1)
+border_color = Color(0.86, 0.89, 0.94, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_left = 12
+corner_radius_bottom_right = 12
+content_margin_left = 16.0
+content_margin_right = 16.0
+content_margin_top = 10.0
+content_margin_bottom = 10.0
+border_width_left = 1
+border_width_right = 1
+border_width_top = 1
+border_width_bottom = 1
+
+[sub_resource type="StyleBoxFlat" id="4"]
+bg_color = Color(0.90, 0.92, 0.95, 1)
+border_color = Color(0.86, 0.89, 0.94, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_left = 12
+corner_radius_bottom_right = 12
+content_margin_left = 16.0
+content_margin_right = 16.0
+content_margin_top = 10.0
+content_margin_bottom = 10.0
+border_width_left = 1
+border_width_right = 1
+border_width_top = 1
+border_width_bottom = 1
 
 [node name="LaunchpadPanel" type="Control"]
 layout_mode = 3
@@ -18,7 +81,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0, 0, 0, 0.5)
+color = Color(0.95, 0.97, 1, 0.6)
 
 [node name="PanelContainer" type="Control" parent="."]
 layout_mode = 1
@@ -39,6 +102,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_styles/panel = SubResource("1")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/Panel"]
 layout_mode = 1
@@ -64,7 +128,12 @@ text = "Launch Facility"
 [node name="CloseButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/HeaderContainer"]
 custom_minimum_size = Vector2(60, 40)
 layout_mode = 2
+theme_override_colors/font_color = Color(0.1, 0.12, 0.16, 1)
 theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = SubResource("2")
+theme_override_styles/hover = SubResource("3")
+theme_override_styles/pressed = SubResource("4")
+theme_override_styles/focus = SubResource("3")
 text = "✕"
 
 [node name="HSeparator" type="HSeparator" parent="PanelContainer/Panel/VBoxContainer"]

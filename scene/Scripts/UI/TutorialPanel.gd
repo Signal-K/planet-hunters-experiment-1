@@ -7,6 +7,7 @@ var app_controller: Node
 func _ready() -> void:
 	# Force visible initially - will be hidden if tutorial is completed
 	self.visible = true
+	_apply_panel_style()
 	# reduced logging
 	preload("res://Scripts/Utils/Logger.gd").d("TutorialPanel: _ready called")
 	
@@ -33,6 +34,14 @@ func _ready() -> void:
 	if skip_button:
 		skip_button.connect("pressed", Callable(self, "_on_skip_pressed"))
 		preload("res://Scripts/Utils/Logger.gd").d("TutorialPanel: Skip button connected")
+
+func _apply_panel_style() -> void:
+	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
+	panel_style.apply_panel($PanelContainer)
+	var status_label = $PanelContainer/MarginContainer/HBoxContainer/TutorialStatusBox/TutorialLabel
+	panel_style.apply_body(status_label)
+	panel_style.apply_body(tutorial_status_label)
+	panel_style.apply_button(skip_button, true)
 
 func _process(_delta: float) -> void:
 	# Update the tutorial status display

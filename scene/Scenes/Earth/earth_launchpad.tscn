@@ -4,7 +4,7 @@
 [ext_resource type="Script" uid="uid://ce1a85vrjyh7x" path="res://Scripts/Earth/Launchpad.gd" id="2"]
 [ext_resource type="Texture2D" uid="uid://ciqmrddebyxh1" path="res://assets/Backdrops/Earth2.png" id="3"]
 [ext_resource type="Texture2D" uid="uid://ctuf1c3mi4pat" path="res://assets/Structures/launchpad.png" id="4"]
-[ext_resource type="Texture2D" uid="uid://cnk5y5i6x1hxd" path="res://assets/Vehicles/StarterRocket1.png" id="5"]
+[ext_resource type="Texture2D" path="res://assets/Vehicles/StarterRocket1LaunchFrame0.tres" id="5"]
 [ext_resource type="Script" uid="uid://c2a67yo3p1lro" path="res://Scripts/Earth/RocketSelector.gd" id="6"]
 [ext_resource type="Script" uid="uid://ctgklpqefk8h4" path="res://Scripts/Earth/RocketSelectorDrag.gd" id="7"]
 [ext_resource type="Script" uid="uid://bmhjgrsylq0hk" path="res://Scripts/Earth/LaunchpadSpriteDropHandler.gd" id="9"]
@@ -79,6 +79,3 @@ layout_mode = 2
 text = "Back"
 
 [node name="LaunchHUDInstance" type="Node" parent="."]
-# This node is a placeholder reference to the external UI scene `scene/Scenes/UI/launch_hud.tscn`.
-# The actual HUD should be instanced at runtime by SceneManager or the main scene loader.
-# We keep a placeholder to document the dependency; the launch button lives in a separate scene.

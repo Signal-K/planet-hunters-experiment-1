@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3 uid="uid://starterrocket2"]
+
+[ext_resource type="Texture2D" path="res://assets/Structures/ControlStation.png" id="1"]
+
+[node name="StarterRocket2" type="Node2D"]
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("1")
+offset = Vector2(0, 0)
+scale = Vector2(6, 6)

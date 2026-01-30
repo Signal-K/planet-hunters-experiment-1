@@ -5,7 +5,7 @@ extends RefCounted
 ## Load data from a JSON file
 static func load_json(file_path: String) -> Dictionary:
 	var result = {}
-	
+
 	if not FileAccess.file_exists(file_path):
 		print("JSONFileManager: File does not exist: ", file_path)
 		return result
@@ -17,24 +17,32 @@ static func load_json(file_path: String) -> Dictionary:
 	
 	var contents = file.get_as_text()
 	file.close()
+
+	if typeof(contents) != TYPE_STRING or contents.strip_edges() == "":
+		# Empty file — treat as empty state rather than failing JSON parse
+		print("JSONFileManager: Empty JSON file, returning empty object: ", file_path)
+		return result
 	
 	var parsed = JSON.parse_string(contents)
-	# Godot 4 returns a dictionary with keys like 'error' and 'result'. Handle both formats.
+
+	# JSON.parse_string returns a parse-result dictionary in Godot 4.
 	if typeof(parsed) == TYPE_DICTIONARY:
-		# If parser returned an error code, report and return empty
 		var err = parsed.get("error", 0)
 		if err != 0:
 			var err_line = parsed.get("error_line", 0)
 			var err_str = parsed.get("error_string", "Unknown parse error")
-			print("JSONFileManager: Parse JSON failed. Error at line %d: %s" % [err_line, err_str])
+			print("JSONFileManager: Parse JSON failed for %s. Error at line %d: %s" % [file_path, err_line, err_str])
 			return result
-		# Prefer the 'result' field when present
+		# Prefer the 'result' field when present (newer API)
 		if parsed.has("result"):
 			result = parsed.get("result", {})
 		else:
+			# If parser returned a raw dictionary, use it
 			result = parsed
 	else:
-		print("JSONFileManager: Invalid JSON data in file: ", file_path)
+		# Unexpected parse return type
+		print("JSONFileManager: Unexpected JSON.parse_string() return type for file: ", file_path)
+		return result
 	
 	return result
 

@@ -4,9 +4,13 @@ signal back_pressed
 
 const ANIMATION_DURATION := 0.6  # seconds for zoom-in effect
 const BASE_IMAGE_SIZE := Vector2(768, 768)  # Increased image size for better visibility
+const AsteroidDetailModel = preload("res://Scripts/UI/AsteroidDetail/AsteroidDetailModel.gd")
+const ArchivedAsteroidImageHelper = preload("res://Scripts/Archive/AsteroidDetail/ArchivedAsteroidImageHelper.gd")
 
 var anomaly_id: String = ""
 var anomaly_data: Dictionary = {}
+var _model := AsteroidDetailModel.new()
+var _image_helper := ArchivedAsteroidImageHelper.new()
 
 @onready var image_container: CenterContainer = $ContentContainer/ImageContainer
 @onready var asteroid_image: TextureRect = $ContentContainer/ImageContainer/AsteroidImage
@@ -59,6 +63,14 @@ func _ready():
 	drawing_canvas.set_pen_color(color_picker.color)
 	drawing_canvas.set_mode(0) # freeform default
 	_update_annotation_count()
+	_image_helper.setup(
+		self,
+		asteroid_image,
+		loading_label,
+		info_label,
+		ANIMATION_DURATION,
+		Callable(self, "_show_error")
+	)
 
 func _on_save_pressed():
 	# Archived copy: saving annotations kept for backup scene
@@ -67,37 +79,10 @@ func _on_save_pressed():
 
 func initialize(anomaly: Dictionary):
 	anomaly_data = anomaly
-	var raw_id = anomaly.get("id", "")
-	if raw_id != null and str(raw_id) != "":
-		if typeof(raw_id) == TYPE_FLOAT or typeof(raw_id) == TYPE_INT:
-			anomaly_id = str(int(raw_id))
-		else:
-			anomaly_id = str(raw_id)
-	else:
-		anomaly_id = str(anomaly.get("content", ""))
-		if anomaly_id.begins_with("TIC "):
-			anomaly_id = anomaly_id.substr(4)
-		var digits := ""
-		for ch in anomaly_id:
-			if ch >= "0" and ch <= "9":
-				digits += ch
-		if digits != "":
-			anomaly_id = digits
-
-	var anomaly_set = anomaly.get("anomalySet", "active-asteroids")
-	var is_planet = anomaly_set == "telescope-tess"
-
-	var tic_id = anomaly.get("ticId", "")
-	if tic_id != "" and tic_id != null:
-		title_label.text = "TIC %s" % tic_id
-	elif anomaly_id != "":
-		var item_type = "Planet" if is_planet else "Asteroid"
-		title_label.text = "%s #%s" % [item_type, anomaly_id]
-	else:
-		var item_type = "Planet" if is_planet else "Asteroid"
-		title_label.text = "%s Details" % item_type
-	
-	_update_info_label()
+	anomaly_id = _model.normalize_anomaly_id(anomaly)
+	var is_planet = _model.is_planet(anomaly)
+	title_label.text = _model.build_title(anomaly, anomaly_id, is_planet)
+	info_label.text = _model.build_info_text(anomaly_data)
 	if anomaly_id != "":
 		_load_anomaly_image(is_planet)
 	else:
@@ -107,68 +92,8 @@ func _load_saved_annotations():
 	# Archived: kept in archive folder
 	return
 
-func _update_info_label():
-	var properties = []
-	var anomaly_type = anomaly_data.get("anomalytype", "")
-	if anomaly_type != "" and anomaly_type != null:
-		properties.append(anomaly_type.capitalize().replace("Telescope", "").strip_edges())
-	var radius = anomaly_data.get("radius")
-	if radius != null:
-		properties.append("Radius: %.2f" % radius)
-	var mass = anomaly_data.get("mass")
-	if mass != null:
-		properties.append("Mass: %.2f" % mass)
-	var temp = anomaly_data.get("temperature")
-	if temp != null:
-		properties.append("Temperature: %.0fK" % temp)
-	var classification = anomaly_data.get("classification_status", "")
-	if classification != "" and classification != null:
-		properties.append("Status: " + classification)
-	if properties.size() > 0:
-		info_label.text = "\n".join(properties)
-	else:
-		info_label.text = "No additional data available"
-
 func _load_anomaly_image(is_planet: bool = false):
-	var image_url = ""
-	if is_planet:
-		image_url = "https://api.starsailors.space/storage/v1/object/public/anomalies/%s/Sector1.png" % anomaly_id
-	else:
-		image_url = "https://api.starsailors.space/storage/v1/object/public/telescope/telescope-active-asteroids/%s.png" % anomaly_id
-	loading_label.text = "Loading image..."
-	var http_request = HTTPRequest.new()
-	add_child(http_request)
-	http_request.request_completed.connect(Callable(self, "_on_image_loaded"))
-	var error = http_request.request(image_url)
-	if error != OK:
-		_show_error("Failed to initiate image download")
-		http_request.queue_free()
-
-func _on_image_loaded(result: int, response_code: int, headers: PackedStringArray, body: PackedByteArray):
-	if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
-		_show_error("Failed to load image (Code: %d)" % response_code)
-		return
-	var image = Image.new()
-	var error = image.load_png_from_buffer(body)
-	if error != OK:
-		error = image.load_jpg_from_buffer(body)
-	if error != OK:
-		_show_error("Failed to decode image")
-		return
-	var texture = ImageTexture.create_from_image(image)
-	asteroid_image.texture = texture
-	loading_label.visible = false
-	info_label.visible = true
-	asteroid_image.visible = true
-	_animate_image_appearance()
-
-func _animate_image_appearance():
-	var tween = create_tween()
-	tween.set_ease(Tween.EASE_OUT)
-	tween.set_trans(Tween.TRANS_BACK)
-	tween.tween_property(asteroid_image, "scale", Vector2.ONE, ANIMATION_DURATION)
-	asteroid_image.rotation = deg_to_rad(5)
-	tween.parallel().tween_property(asteroid_image, "rotation", 0.0, ANIMATION_DURATION)
+	_image_helper.load_anomaly_image(anomaly_id, is_planet)
 
 func _show_error(message: String):
 	loading_label.visible = false

@@ -3,26 +3,51 @@
 [ext_resource type="Script" path="res://Scripts/UI/TutorialPanel.gd" id="1_tutorial"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
-bg_color = Color(0.1, 0.1, 0.1, 0.7)
+bg_color = Color(0.975, 0.98, 0.99, 1)
+border_color = Color(0.86, 0.89, 0.94, 1)
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_left = 20
+corner_radius_bottom_right = 20
+shadow_color = Color(0, 0, 0, 0.12)
+shadow_size = 12
+shadow_offset = Vector2(0, 6)
+border_width_left = 1
+border_width_right = 1
+border_width_top = 1
+border_width_bottom = 1
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button_normal"]
-bg_color = Color(0.2, 0.5, 0.8, 1.0)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
+bg_color = Color(0.975, 0.98, 0.99, 1)
+border_color = Color(0.86, 0.89, 0.94, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+content_margin_left = 16.0
+content_margin_right = 16.0
+content_margin_top = 10.0
+content_margin_bottom = 10.0
+border_width_left = 1
+border_width_right = 1
+border_width_top = 1
+border_width_bottom = 1
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button_pressed"]
-bg_color = Color(0.15, 0.4, 0.65, 1.0)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
-border_width_left = 0
-border_width_top = 0
-border_width_right = 0
-border_width_bottom = 2
-border_color = Color(0.3, 0.3, 0.3, 0.5)
+bg_color = Color(0.90, 0.92, 0.95, 1)
+border_color = Color(0.86, 0.89, 0.94, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+content_margin_left = 16.0
+content_margin_right = 16.0
+content_margin_top = 10.0
+content_margin_bottom = 10.0
+border_width_left = 1
+border_width_right = 1
+border_width_top = 1
+border_width_bottom = 1
 
 [node name="TutorialPanel" type="CanvasLayer"]
 layer = 3
@@ -104,7 +129,7 @@ custom_minimum_size = Vector2(150, 40)
 size_flags_vertical = 4
 text = "Skip Tutorial"
 theme_override_font_sizes/font_size = 16
-theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_color = Color(0.1, 0.12, 0.16, 1)
 theme_override_styles/normal = SubResource("StyleBoxFlat_button_normal")
 theme_override_styles/hover = SubResource("StyleBoxFlat_button_normal")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_button_pressed")
