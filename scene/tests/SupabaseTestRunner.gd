@@ -2,20 +2,17 @@ extends SceneTree
 ## GDScript Test Runner for Supabase Integration
 ## Run with: godot --headless --script res://tests/SupabaseTestRunner.gd
 
-var tests_passed := 0
-var tests_failed := 0
-var test_results := []
+const TestReporter = preload("res://tests/TestReporter.gd")
+var reporter := TestReporter.new()
 
 func _init():
-	print("\n" + "=".repeat(60))
-	print("🧪 SUPABASE INTEGRATION TESTS")
-	print("=".repeat(60))
-	print("🎮 Godot Runtime Environment:")
-	print("   Engine version: " + Engine.get_version_info()["string"])
-	print("   OS: " + OS.get_name())
-	print("   SceneTree: " + str(get_root()))
-	print("   Working directory: " + OS.get_executable_path().get_base_dir())
-	print("=".repeat(60) + "\n")
+	reporter.start_suite("Supabase Integration", {
+		"engine": Engine.get_version_info()["string"],
+		"os": OS.get_name(),
+		"scene_tree": str(get_root()),
+		"workdir": OS.get_executable_path().get_base_dir(),
+		"timestamp": Time.get_datetime_string_from_system()
+	})
 	
 	# Run all tests
 	await run_all_tests()
@@ -27,7 +24,7 @@ func _init():
 	await create_timer(0.1).timeout
 	
 	# Exit with appropriate code
-	if tests_failed > 0:
+	if reporter.tests_failed > 0:
 		quit(1)
 	else:
 		quit(0)
@@ -41,7 +38,7 @@ func run_all_tests():
 ## TEST 1: SupabaseClient script exists and can be instantiated
 func test_supabase_client_exists():
 	var test_name := "SupabaseClient can be instantiated"
-	print("▶ Running: " + test_name)
+	reporter.start_test(test_name)
 	
 	var script = load("res://Scripts/Systems/SupabaseClient.gd")
 	if script == null:
@@ -63,7 +60,7 @@ func test_supabase_client_exists():
 ## TEST 2: Can fetch asteroids from Supabase (or mock data)
 func test_fetch_asteroids():
 	var test_name := "Can fetch asteroids from Supabase"
-	print("▶ Running: " + test_name)
+	reporter.start_test(test_name)
 	
 	var script = load("res://Scripts/Systems/SupabaseClient.gd")
 	if script == null:
@@ -158,7 +155,7 @@ func test_fetch_asteroids():
 ## TEST 3: Asteroid data has required fields for viewing
 func test_asteroid_data_structure():
 	var test_name := "Asteroid data structure supports viewing"
-	print("▶ Running: " + test_name)
+	reporter.start_test(test_name)
 	
 	# Create mock asteroid data to validate structure expectations
 	var mock_asteroid := {
@@ -190,7 +187,7 @@ func test_asteroid_data_structure():
 ## TEST 4: Real UI asteroid selection test
 func test_asteroid_selection():
 	var test_name := "User can view and select asteroids in the actual game UI"
-	print("▶ Running: " + test_name)
+	reporter.start_test(test_name)
 	
 	# Load the actual SatelliteStationPanel scene
 	var panel_scene = load("res://Scenes/UI/SatelliteStationPanel.tscn")
@@ -310,28 +307,12 @@ func test_asteroid_selection():
 
 ## Helper: Mark test as passed
 func pass_test(name: String):
-	tests_passed += 1
-	test_results.append({"name": name, "passed": true})
-	print("  ✅ PASSED: " + name + "\n")
+	reporter.pass_test(name)
 
 ## Helper: Mark test as failed
 func fail(name: String, reason: String):
-	tests_failed += 1
-	test_results.append({"name": name, "passed": false, "reason": reason})
-	print("  ❌ FAILED: " + name)
-	print("     Reason: " + reason + "\n")
+	reporter.fail_test(reason, name)
 
 ## Print test summary
 func print_summary():
-	print("=".repeat(60))
-	print("📊 TEST SUMMARY")
-	print("=".repeat(60))
-	print("Total:  " + str(tests_passed + tests_failed))
-	print("Passed: " + str(tests_passed) + " ✅")
-	print("Failed: " + str(tests_failed) + " ❌")
-	print("=".repeat(60))
-	
-	if tests_failed > 0:
-		print("\n❌ TESTS FAILED\n")
-	else:
-		print("\n✅ ALL TESTS PASSED\n")
+	reporter.summary()

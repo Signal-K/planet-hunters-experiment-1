@@ -15,6 +15,9 @@ export interface AppController {
   franc_balance_updated: {
     connect(callback: (newValue: number) => void): void;
   };
+  experience_updated: {
+    connect(callback: (xp: number, level: number) => void): void;
+  };
   tutorial_completed_updated: {
     connect(callback: (isCompleted: boolean) => void): void;
   };
@@ -24,6 +27,9 @@ export interface AppController {
   get_counter(): number;
   set_franc_balance_from_react(value: number): void;
   get_franc_balance(): number;
+  set_experience_from_react(xp: number, level: number): void;
+  get_experience_xp(): number;
+  get_experience_level(): number;
   set_tutorial_completed_from_react(isCompleted: boolean): void;
   get_tutorial_completed(): boolean;
 }

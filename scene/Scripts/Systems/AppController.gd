@@ -1,39 +1,46 @@
 extends Node
-
 ## App Controller for Scene Project
 ## Manages communication between React Native and Godot
 ## Handles counter synchronization and window management
-
 signal window_status_update(message: String)
 signal counter_updated(new_value: int)
 signal tutorial_completed_updated(is_completed: bool)
 signal franc_balance_updated(new_value: int)
+signal experience_updated(xp: int, level: int)
 signal rockets_reset()
 
 var counter: int = 0
 var tutorial_completed: bool = false
-var franc_balance: int = 0
+var franc_balance: int = 10000000000
+var experience_xp: int = 0
+var experience_level: int = 1
 var menu_panel_scene = preload("res://Scenes/UI/MenuPanel.tscn")
 var current_menu_panel: Control = null
+const AppControllerPersistence = preload("res://Scripts/Systems/AppControllerPersistence.gd")
+var _persistence := AppControllerPersistence.new()
+const BASE_XP_TO_LEVEL := 10
+const XP_AWARD_LAUNCH := 5
+const XP_AWARD_SCAN := 2
 
 func _ready() -> void:
 	print("AppController ready, counter initialized to: ", counter)
 	print("AppController ready, tutorial_completed initialized to: ", tutorial_completed)
-
 	# Load persisted tutorial state from disk (if present)
 	load_tutorial_completed()
+	# Load persisted franc balance from disk (if present)
+	load_franc_balance()
+	# Load persisted experience from disk (if present)
+	load_experience()
 
 func set_counter_from_react(value: int) -> void:
 	"""Set counter value from React Native"""
 	print("[AppController] set_counter_from_react CALLED with value: ", value)
 	counter = value
 	counter_updated.emit(counter)
-	
 	# Update any open menu panels
 	if current_menu_panel and current_menu_panel.has_method("set_counter"):
 		current_menu_panel.set_counter(counter)
 		print("[AppController] Updated open menu panel with counter: ", counter)
-	
 	print("[AppController] Counter now set to: ", counter)
 
 func get_counter() -> int:
@@ -44,7 +51,6 @@ func get_counter() -> int:
 func open_window(window_name: String) -> void:
 	"""Open a window/panel"""
 	print("Opening window: ", window_name)
-	
 	match window_name:
 		"menu", "main_menu":
 			show_menu_panel()
@@ -122,6 +128,8 @@ func _on_reset_all() -> void:
 	counter = 0
 	tutorial_completed = false
 	franc_balance = 10000000000
+	experience_xp = 0
+	experience_level = 1
 	if current_menu_panel and current_menu_panel.has_method("set_counter"):
 		current_menu_panel.set_counter(counter)
 	# Emit signals to notify React Native
@@ -130,7 +138,10 @@ func _on_reset_all() -> void:
 
 	# Persist tutorial reset
 	save_tutorial_completed()
+	save_franc_balance()
+	save_experience()
 	franc_balance_updated.emit(franc_balance)
+	_emit_experience_updated()
 	# Reset rockets persisted state and notify any in-scene systems to clear rockets
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	if rm:
@@ -171,34 +182,88 @@ func get_tutorial_completed() -> bool:
 
 ### Persistence helpers
 func save_tutorial_completed() -> void:
-	var cfg = ConfigFile.new()
-	cfg.set_value("tutorial", "completed", tutorial_completed)
-	var err = cfg.save("user://tutorial.cfg")
-	if err != OK:
-		print("[AppController] Failed to save tutorial state: ", err)
-	else:
-		print("[AppController] Tutorial state saved: ", tutorial_completed)
+	_persistence.save_tutorial_completed(tutorial_completed)
 
 func load_tutorial_completed() -> void:
-	var cfg = ConfigFile.new()
-	var err = cfg.load("user://tutorial.cfg")
-	if err == OK:
-		if cfg.has_section_key("tutorial", "completed"):
-			tutorial_completed = bool(cfg.get_value("tutorial", "completed"))
-			print("[AppController] Loaded tutorial state from disk: ", tutorial_completed)
-			# notify any listeners so UI updates immediately
-			tutorial_completed_updated.emit(tutorial_completed)
-		else:
-			print("[AppController] No tutorial state key in config; using default: ", tutorial_completed)
-	else:
-		print("[AppController] No saved tutorial config (or failed to load): ", err)
+	var result = _persistence.load_tutorial_completed(tutorial_completed)
+	if result.get("loaded", false):
+		tutorial_completed = result.get("value", tutorial_completed)
+		# notify any listeners so UI updates immediately
+		tutorial_completed_updated.emit(tutorial_completed)
 
 func set_franc_balance_from_react(value: int) -> void:
 	"""Set franc balance from React Native"""
 	franc_balance = value
 	franc_balance_updated.emit(franc_balance)
 	print("[AppController] Franc balance set from React Native: ", franc_balance)
+	save_franc_balance()
 
 func get_franc_balance() -> int:
 	"""Get franc balance"""
 	return franc_balance
+
+func save_franc_balance() -> void:
+	_persistence.save_franc_balance(franc_balance)
+
+func load_franc_balance() -> void:
+	var result = _persistence.load_franc_balance(franc_balance)
+	if result.get("loaded", false):
+		franc_balance = result.get("value", franc_balance)
+		franc_balance_updated.emit(franc_balance)
+
+func add_experience(amount: int, source: String = "") -> void:
+	if amount <= 0:
+		return
+	experience_xp += amount
+	var leveled_up = false
+	while experience_xp >= _xp_required_for_level(experience_level):
+		experience_xp -= _xp_required_for_level(experience_level)
+		experience_level += 1
+		leveled_up = true
+	if leveled_up:
+		_unlock_rockets_for_level(experience_level)
+	_emit_experience_updated()
+	save_experience()
+	if source != "":
+		print("[AppController] Experience gained from ", source, ": +", amount, " (xp=", experience_xp, " level=", experience_level, ")")
+
+func award_launch_experience() -> void:
+	add_experience(XP_AWARD_LAUNCH, "launch")
+
+func award_scan_experience() -> void:
+	add_experience(XP_AWARD_SCAN, "scan")
+
+func set_experience_from_react(xp: int, level: int) -> void:
+	experience_xp = max(xp, 0)
+	experience_level = max(level, 1)
+	_unlock_rockets_for_level(experience_level)
+	_emit_experience_updated()
+	save_experience()
+
+func get_experience_xp() -> int:
+	return experience_xp
+
+func get_experience_level() -> int:
+	return experience_level
+
+func save_experience() -> void:
+	_persistence.save_experience(experience_xp, experience_level)
+
+func load_experience() -> void:
+	var result = _persistence.load_experience(experience_xp, experience_level)
+	if result.get("loaded", false):
+		experience_xp = result.get("xp", experience_xp)
+		experience_level = result.get("level", experience_level)
+	_unlock_rockets_for_level(experience_level)
+	_emit_experience_updated()
+
+func _emit_experience_updated() -> void:
+	experience_updated.emit(experience_xp, experience_level)
+
+func _xp_required_for_level(level: int) -> int:
+	return BASE_XP_TO_LEVEL + max(level, 1)
+
+func _unlock_rockets_for_level(level: int) -> void:
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if rm:
+		rm.unlock_for_level(level)

@@ -18,6 +18,7 @@ signal reset_tutorial
 var current_counter: int = 0
 
 func _ready() -> void:
+	_apply_panel_style()
 	# Connect button signals
 	close_btn.pressed.connect(_on_close_button_pressed)
 	decrease_btn.pressed.connect(_on_decrease_button_pressed)
@@ -29,6 +30,29 @@ func _ready() -> void:
 	update_counter_display()
 	
 	print("MenuPanel ready with counter: ", current_counter)
+
+func _apply_panel_style() -> void:
+	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
+	var panel = $PanelContainer/Panel
+	panel_style.apply_panel(panel)
+
+	var title = $PanelContainer/Panel/VBoxContainer/HeaderContainer/Title
+	var separator = $PanelContainer/Panel/VBoxContainer/HSeparator
+	var info_label = $PanelContainer/Panel/VBoxContainer/ContentContainer/InfoLabel
+	var counter_title = $PanelContainer/Panel/VBoxContainer/ContentContainer/CounterContainer/CounterTitle
+	var counter_value = $PanelContainer/Panel/VBoxContainer/ContentContainer/CounterContainer/CounterLabel
+
+	panel_style.apply_title(title)
+	panel_style.apply_separator(separator)
+	panel_style.apply_body(counter_title)
+	panel_style.apply_title(counter_value)
+	panel_style.apply_muted(info_label)
+
+	panel_style.apply_button(close_btn, false)
+	panel_style.apply_button(decrease_btn, false)
+	panel_style.apply_button(increase_btn, false)
+	panel_style.apply_button(reset_btn, true)
+	panel_style.apply_button(reset_tutorial_btn, false)
 
 func set_counter(value: int) -> void:
 	"""Set the counter value from external source (e.g., React Native)"""

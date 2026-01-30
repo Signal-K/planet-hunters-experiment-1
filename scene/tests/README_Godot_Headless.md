@@ -19,6 +19,14 @@ Expected exit codes
 - `3` : Unexpected response type
 - `4` : Timeout waiting for HTTP response
 
+## Experience tests
+
+Run the experience/level/unlock tests:
+
+```bash
+godot --headless --path scene -s scene/tests/run_experience_tests.gd
+```
+
 Notes
 
 - The test uses the `SupabaseClient` script in `res://Scripts/Systems/SupabaseClient.gd`. By default `SupabaseClient` points to a local Supabase dev server (`http://127.0.0.1:54321`). Ensure a local Supabase dev instance or a reachable Supabase REST endpoint is available for meaningful results.
