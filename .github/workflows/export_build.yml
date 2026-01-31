@@ -55,6 +55,11 @@ jobs:
           timeout 60s ~/godot-linux/godot --headless --path . --import --quit || true
           echo "✓ Project imported"
 
+      - name: Ensure iOS output directory exists
+        run: |
+          mkdir -p ./ios
+          chmod 755 ./ios
+
       - name: Export Godot (iOS)
         env:
           GODOT_EDITOR: /home/runner/godot-linux/godot
