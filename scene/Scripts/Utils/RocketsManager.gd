@@ -133,6 +133,12 @@ static func save_state(data: Dictionary) -> bool:
         _override_state = {}
     return ok
 
+static func set_override_state(data: Dictionary) -> void:
+    _override_state = data.duplicate(true)
+
+static func clear_override_state() -> void:
+    _override_state = {}
+
 static func get_unlocked() -> Array:
     var s = load_state()
     return s.get("unlocked", [])
