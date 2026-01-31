@@ -1,5 +1,4 @@
 extends Node
-class_name SafeAreaUI
 
 @export var bottom_inset: float = 120.0
 @export var top_inset: float = 36.0
