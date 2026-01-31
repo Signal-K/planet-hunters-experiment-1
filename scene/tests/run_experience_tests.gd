@@ -74,16 +74,32 @@ func test_multi_level_up() -> void:
 
 func test_unlocks_at_level_two() -> void:
 	reporter.start_test("Unlocks starterrocket2 at level 2")
-	var reset_ok = RocketsManager.reset_state()
-	if not reset_ok:
-		reporter.fail_test("Failed to reset rocket state")
+	var clean_state = {
+		"unlocked": ["starterrocket1"],
+		"placed": [],
+		"launched": [],
+		"destroyed": [],
+		"missions": [],
+		"selected_target": "",
+		"detected_targets": [],
+		"seen_asteroids": [],
+		"seen_planets": []
+	}
+	RocketsManager.set_override_state(clean_state)
+	var unlocked_after_reset = RocketsManager.get_unlocked()
+	var placed_after_reset = RocketsManager.get_placed()
+	if unlocked_after_reset != ["starterrocket1"] or not placed_after_reset.is_empty():
+		reporter.fail_test("Reset state verification failed (unlocked=%s, placed=%s)" % [str(unlocked_after_reset), str(placed_after_reset)])
+		RocketsManager.clear_override_state()
 		return
 	var app = _new_controller()
 	app.set_experience_from_react(0, 2)
 	var unlocked = RocketsManager.get_unlocked()
 	if not unlocked.has("starterrocket2"):
 		reporter.fail_test("starterrocket2 not unlocked at level 2")
+		RocketsManager.clear_override_state()
 		return
+	RocketsManager.clear_override_state()
 	reporter.pass_test()
 
 func test_award_helpers() -> void:
