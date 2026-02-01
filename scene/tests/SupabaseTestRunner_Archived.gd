@@ -106,6 +106,7 @@ func test_asteroid_selection_archived():
     if panel == null:
         fail(test_name, "Could not instantiate SatelliteStationPanel")
         return
+    panel.use_archived_detail = true
     get_root().add_child(panel)
     await create_timer(0.2).timeout
     if panel.has_method("_on_visibility_changed"):
