@@ -1,14 +1,14 @@
 ---
 id: nm32sl
 title: Fix archived Supabase UI test failure in workflow
-status: in-review
+status: done
 priority: high
 labels:
   - ci
   - tests
   - supabase
 createdAt: '2026-02-02T03:21:35.261Z'
-updatedAt: '2026-02-04T04:14:29.115Z'
+updatedAt: '2026-02-04T04:31:07.500Z'
 timeSpent: 4994
 assignee: '@me'
 ---

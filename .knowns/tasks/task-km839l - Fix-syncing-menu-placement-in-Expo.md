@@ -1,7 +1,7 @@
 ---
 id: km839l
 title: Fix syncing & menu placement in Expo
-status: in-progress
+status: done
 priority: high
 labels:
   - Sync
@@ -9,7 +9,7 @@ labels:
   - Supabase
   - ExpoToGodot
 createdAt: '2026-02-04T04:15:01.539Z'
-updatedAt: '2026-02-04T04:15:09.251Z'
+updatedAt: '2026-02-04T04:30:59.331Z'
 timeSpent: 0
 assignee: '@Liam'
 parent: 6h4c7d
