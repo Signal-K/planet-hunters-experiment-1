@@ -1,6 +1,6 @@
 {
   "taskId": "km839l",
-  "currentVersion": 19,
+  "currentVersion": 35,
   "versions": [
     {
       "id": "v1",
@@ -467,6 +467,422 @@
       "snapshot": {
         "title": "Fix syncing & menu placement in Expo",
         "status": "in-progress",
+        "priority": "high",
+        "assignee": "@Liam",
+        "labels": [
+          "Sync",
+          "Data",
+          "Supabase",
+          "ExpoToGodot"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v20",
+      "taskId": "km839l",
+      "version": 20,
+      "timestamp": "2026-02-04T04:30:44.384Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "in-review"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix syncing & menu placement in Expo",
+        "status": "in-review",
+        "priority": "high",
+        "assignee": "@Liam",
+        "labels": [
+          "Sync",
+          "Data",
+          "Supabase",
+          "ExpoToGodot"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v21",
+      "taskId": "km839l",
+      "version": 21,
+      "timestamp": "2026-02-04T04:30:44.418Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-review",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix syncing & menu placement in Expo",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@Liam",
+        "labels": [
+          "Sync",
+          "Data",
+          "Supabase",
+          "ExpoToGodot"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v22",
+      "taskId": "km839l",
+      "version": 22,
+      "timestamp": "2026-02-04T04:30:44.457Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "done",
+          "newValue": "blocked"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix syncing & menu placement in Expo",
+        "status": "blocked",
+        "priority": "high",
+        "assignee": "@Liam",
+        "labels": [
+          "Sync",
+          "Data",
+          "Supabase",
+          "ExpoToGodot"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v23",
+      "taskId": "km839l",
+      "version": 23,
+      "timestamp": "2026-02-04T04:30:44.479Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "blocked",
+          "newValue": "on-hold"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix syncing & menu placement in Expo",
+        "status": "on-hold",
+        "priority": "high",
+        "assignee": "@Liam",
+        "labels": [
+          "Sync",
+          "Data",
+          "Supabase",
+          "ExpoToGodot"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v24",
+      "taskId": "km839l",
+      "version": 24,
+      "timestamp": "2026-02-04T04:30:44.503Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "on-hold",
+          "newValue": "urgent"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix syncing & menu placement in Expo",
+        "status": "urgent",
+        "priority": "high",
+        "assignee": "@Liam",
+        "labels": [
+          "Sync",
+          "Data",
+          "Supabase",
+          "ExpoToGodot"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v25",
+      "taskId": "km839l",
+      "version": 25,
+      "timestamp": "2026-02-04T04:30:44.877Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "urgent",
+          "newValue": "on-hold"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix syncing & menu placement in Expo",
+        "status": "on-hold",
+        "priority": "high",
+        "assignee": "@Liam",
+        "labels": [
+          "Sync",
+          "Data",
+          "Supabase",
+          "ExpoToGodot"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v26",
+      "taskId": "km839l",
+      "version": 26,
+      "timestamp": "2026-02-04T04:30:44.888Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "urgent",
+          "newValue": "on-hold"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix syncing & menu placement in Expo",
+        "status": "on-hold",
+        "priority": "high",
+        "assignee": "@Liam",
+        "labels": [
+          "Sync",
+          "Data",
+          "Supabase",
+          "ExpoToGodot"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v27",
+      "taskId": "km839l",
+      "version": 27,
+      "timestamp": "2026-02-04T04:30:44.896Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "urgent",
+          "newValue": "on-hold"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix syncing & menu placement in Expo",
+        "status": "on-hold",
+        "priority": "high",
+        "assignee": "@Liam",
+        "labels": [
+          "Sync",
+          "Data",
+          "Supabase",
+          "ExpoToGodot"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v28",
+      "taskId": "km839l",
+      "version": 28,
+      "timestamp": "2026-02-04T04:30:44.900Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "on-hold",
+          "newValue": "urgent"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix syncing & menu placement in Expo",
+        "status": "urgent",
+        "priority": "high",
+        "assignee": "@Liam",
+        "labels": [
+          "Sync",
+          "Data",
+          "Supabase",
+          "ExpoToGodot"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v29",
+      "taskId": "km839l",
+      "version": 29,
+      "timestamp": "2026-02-04T04:30:44.904Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "urgent",
+          "newValue": "on-hold"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix syncing & menu placement in Expo",
+        "status": "on-hold",
+        "priority": "high",
+        "assignee": "@Liam",
+        "labels": [
+          "Sync",
+          "Data",
+          "Supabase",
+          "ExpoToGodot"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v30",
+      "taskId": "km839l",
+      "version": 30,
+      "timestamp": "2026-02-04T04:30:44.909Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "on-hold",
+          "newValue": "urgent"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix syncing & menu placement in Expo",
+        "status": "urgent",
+        "priority": "high",
+        "assignee": "@Liam",
+        "labels": [
+          "Sync",
+          "Data",
+          "Supabase",
+          "ExpoToGodot"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v31",
+      "taskId": "km839l",
+      "version": 31,
+      "timestamp": "2026-02-04T04:30:44.925Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "urgent",
+          "newValue": "on-hold"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix syncing & menu placement in Expo",
+        "status": "on-hold",
+        "priority": "high",
+        "assignee": "@Liam",
+        "labels": [
+          "Sync",
+          "Data",
+          "Supabase",
+          "ExpoToGodot"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v32",
+      "taskId": "km839l",
+      "version": 32,
+      "timestamp": "2026-02-04T04:30:44.958Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "urgent",
+          "newValue": "on-hold"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix syncing & menu placement in Expo",
+        "status": "on-hold",
+        "priority": "high",
+        "assignee": "@Liam",
+        "labels": [
+          "Sync",
+          "Data",
+          "Supabase",
+          "ExpoToGodot"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v33",
+      "taskId": "km839l",
+      "version": 33,
+      "timestamp": "2026-02-04T04:30:44.961Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "on-hold",
+          "newValue": "urgent"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix syncing & menu placement in Expo",
+        "status": "urgent",
+        "priority": "high",
+        "assignee": "@Liam",
+        "labels": [
+          "Sync",
+          "Data",
+          "Supabase",
+          "ExpoToGodot"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v34",
+      "taskId": "km839l",
+      "version": 34,
+      "timestamp": "2026-02-04T04:30:44.965Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "urgent",
+          "newValue": "on-hold"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix syncing & menu placement in Expo",
+        "status": "on-hold",
+        "priority": "high",
+        "assignee": "@Liam",
+        "labels": [
+          "Sync",
+          "Data",
+          "Supabase",
+          "ExpoToGodot"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v35",
+      "taskId": "km839l",
+      "version": 35,
+      "timestamp": "2026-02-04T04:30:59.331Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "urgent",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix syncing & menu placement in Expo",
+        "status": "done",
         "priority": "high",
         "assignee": "@Liam",
         "labels": [
