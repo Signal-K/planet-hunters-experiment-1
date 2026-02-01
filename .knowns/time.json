@@ -1,3 +1,8 @@
 {
-  "active": null
+  "active": {
+    "taskId": "nm32sl",
+    "startedAt": "2026-02-02T03:21:44.388Z",
+    "pausedAt": null,
+    "totalPausedMs": 0
+  }
 }

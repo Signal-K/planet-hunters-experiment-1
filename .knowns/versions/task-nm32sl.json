@@ -1,0 +1,116 @@
+{
+  "taskId": "nm32sl",
+  "currentVersion": 3,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "nm32sl",
+      "version": 1,
+      "timestamp": "2026-02-02T03:21:40.010Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix archived Supabase UI test failure in workflow",
+        "description": "Workflow run on main fails: archived Supabase UI test can't create AsteroidDetailView after click (see CI output). Investigate and fix root cause so archived UI test passes.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ci",
+          "tests",
+          "supabase"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Archived Supabase UI test passes in workflow"
+          },
+          {
+            "completed": false,
+            "text": "No new warnings/regressions introduced in archived UI flow"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "nm32sl",
+      "version": 2,
+      "timestamp": "2026-02-02T03:21:57.086Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "newValue": "1. Locate archived test + UI paths and reproduce failure conditions from logs.\n2. Inspect relevant scene/scripts to see why AsteroidDetailView not created after click.\n3. Implement minimal fix to restore archived UI behavior and keep warnings in check.\n4. Run targeted test (or minimal local verification) and update notes/AC."
+        }
+      ],
+      "snapshot": {
+        "title": "Fix archived Supabase UI test failure in workflow",
+        "description": "Workflow run on main fails: archived Supabase UI test can't create AsteroidDetailView after click (see CI output). Investigate and fix root cause so archived UI test passes.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ci",
+          "tests",
+          "supabase"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Archived Supabase UI test passes in workflow"
+          },
+          {
+            "completed": false,
+            "text": "No new warnings/regressions introduced in archived UI flow"
+          }
+        ],
+        "implementationPlan": "1. Locate archived test + UI paths and reproduce failure conditions from logs.\n2. Inspect relevant scene/scripts to see why AsteroidDetailView not created after click.\n3. Implement minimal fix to restore archived UI behavior and keep warnings in check.\n4. Run targeted test (or minimal local verification) and update notes/AC."
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "nm32sl",
+      "version": 3,
+      "timestamp": "2026-02-02T03:24:46.911Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "- Added archived detail override flag and use archived detail view in test runner"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix archived Supabase UI test failure in workflow",
+        "description": "Workflow run on main fails: archived Supabase UI test can't create AsteroidDetailView after click (see CI output). Investigate and fix root cause so archived UI test passes.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ci",
+          "tests",
+          "supabase"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Archived Supabase UI test passes in workflow"
+          },
+          {
+            "completed": false,
+            "text": "No new warnings/regressions introduced in archived UI flow"
+          }
+        ],
+        "implementationPlan": "1. Locate archived test + UI paths and reproduce failure conditions from logs.\n2. Inspect relevant scene/scripts to see why AsteroidDetailView not created after click.\n3. Implement minimal fix to restore archived UI behavior and keep warnings in check.\n4. Run targeted test (or minimal local verification) and update notes/AC.",
+        "implementationNotes": "- Added archived detail override flag and use archived detail view in test runner"
+      }
+    }
+  ]
+}

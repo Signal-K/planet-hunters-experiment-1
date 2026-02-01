@@ -17,6 +17,7 @@ const SatelliteStationPanelLoading = preload("res://Scripts/UI/SatelliteStationP
 var pending_anomalies := []
 var current_mode: String = "asteroids"  # Default mode
 var local_only: bool = false
+var use_archived_detail: bool = false
 var _data := SatelliteStationPanelData.new()
 var _list := SatelliteStationPanelList.new()
 var _detail := SatelliteStationPanelDetail.new()
@@ -48,6 +49,7 @@ func _ready():
 		title_label,
 		close_button
 	)
+	_detail.set_use_archived_detail(use_archived_detail)
 	_detail.apply_panel_style()
 	_apply_panel_style()
 
