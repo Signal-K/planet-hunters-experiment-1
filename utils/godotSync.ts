@@ -10,7 +10,7 @@
  * - React Native persists state, Godot manages runtime state
  */
 
-import { runOnGodotThread, appController } from "./godot";
+import { runOnGodotThread, appController, syncBridge } from "./godot";
 import {
   loadState,
   getState,
@@ -112,33 +112,53 @@ export function pushAllToGodot(): void {
  * Pull current state from Godot and update React Native
  */
 export async function pullFromGodot(): Promise<SyncState | null> {
-  return new Promise((resolve) => {
+  const workletPromise = new Promise<SyncState | null>((resolve) => {
     runOnGodotThread(() => {
       "worklet";
       const controller = appController() as GodotAppController | null;
-      if (!controller) {
-        return null;
+      if (controller) {
+        return {
+          counter: controller.get_counter(),
+          tutorialCompleted: controller.get_tutorial_completed(),
+          francBalance: controller.get_franc_balance(),
+          experienceXp: controller.get_experience_xp(),
+          experienceLevel: controller.get_experience_level(),
+        };
       }
 
-      return {
-        counter: controller.get_counter(),
-        tutorialCompleted: controller.get_tutorial_completed(),
-        francBalance: controller.get_franc_balance(),
-        experienceXp: controller.get_experience_xp(),
-        experienceLevel: controller.get_experience_level(),
-      };
-    }).then((godotState: SyncState | null) => {
-      if (godotState) {
-        updateManyFromGodot(godotState);
-        resolve(godotState);
-      } else {
-        resolve(null);
+      const bridge = syncBridge();
+      if (bridge && bridge.get_state) {
+        return bridge.get_state();
       }
-    }).catch((e) => {
-      console.error("[GodotSync] Pull error:", e);
-      resolve(null);
-    });
+
+      return null;
+    })
+      .then((godotState: SyncState | null) => {
+        if (godotState) {
+          const normalized: SyncState = {
+            counter: Number(godotState.counter) || 0,
+            tutorialCompleted: Boolean(godotState.tutorialCompleted),
+            francBalance: Number(godotState.francBalance) || 0,
+            experienceXp: Number(godotState.experienceXp) || 0,
+            experienceLevel: Number(godotState.experienceLevel) || 1,
+          };
+          updateManyFromGodot(normalized);
+          resolve(normalized);
+        } else {
+          resolve(null);
+        }
+      })
+      .catch((e) => {
+        console.error("[GodotSync] Pull error:", e);
+        resolve(null);
+      });
   });
+
+  const timeoutPromise = new Promise<SyncState | null>((resolve) => {
+    setTimeout(() => resolve(null), 1200);
+  });
+
+  return Promise.race([workletPromise, timeoutPromise]);
 }
 
 // ============================================================================
@@ -162,17 +182,10 @@ export async function initSync(): Promise<void> {
   await loadState();
   
   // Prefer Godot as source of truth on startup to avoid overwriting its saves.
-  // If Godot isn't ready, fall back to pushing React state.
   setTimeout(() => {
-    pullFromGodot()
-      .then((godotState) => {
-        if (!godotState) {
-          pushAllToGodot();
-        }
-      })
-      .catch(() => {
-        pushAllToGodot();
-      });
+    pullFromGodot().catch(() => {
+      // If Godot isn't ready yet, polling will retry.
+    });
   }, 500);
 
   // Subscribe to React Native state changes and push to Godot
