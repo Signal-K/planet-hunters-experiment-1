@@ -1,0 +1,35 @@
+[gd_scene load_steps=2 format=3 uid="uid://simple_detail"]
+
+[ext_resource type="Script" path="res://Scripts/UI/SimpleDetail/SimpleDetailView.gd" id="1_simple"]
+
+[node name="SimpleDetailView" type="VBoxContainer"]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_simple")
+
+[node name="Header" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="BackButton" type="Button" parent="Header"]
+custom_minimum_size = Vector2(100,50)
+text = "← Back"
+
+[node name="Title" type="Label" parent="Header"]
+text = "Telescope Viewer"
+size_flags_horizontal = 3
+
+[node name="Content" type="VBoxContainer" parent="."]
+size_flags_vertical = 3
+theme_override_constants/separation = 12
+
+[node name="LoadingLabel" type="Label" parent="Content"]
+text = "Telescope is being tuned..."
+horizontal_alignment = 1
+
+[node name="ImageContainer" type="CenterContainer" parent="Content"]
+size_flags_vertical = 3
+
+[node name="AnomalyImage" type="TextureRect" parent="Content/ImageContainer"]
+custom_minimum_size = Vector2(768,768)
+expand = true
+stretch_mode = 5

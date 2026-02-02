@@ -1,1 +1,0 @@
-../../../../../node_modules/react-native-worklets-core/cpp/base/WKTRuntimeAwareCache.h

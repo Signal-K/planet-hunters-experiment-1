@@ -1,0 +1,46 @@
+{
+  "unlocked": [
+    "starterrocket1",
+    "starterrocket2"
+  ],
+  "placed": [
+  ],
+  "launched": [
+  ],
+  "destroyed": [
+  ],
+  "missions": [
+  ],
+  "selected_target": "",
+  "detected_targets": [
+    {
+      "id": "101445733",
+      "label": "101445733",
+      "type": "asteroid"
+    },
+    {
+      "id": "63768316",
+      "label": "63768316",
+      "type": "asteroid"
+    },
+    {
+      "id": "68115570",
+      "label": "68115570",
+      "type": "asteroid"
+    },
+    {
+      "id": "63768664",
+      "label": "63768664",
+      "type": "asteroid"
+    },
+    {
+      "id": "63769326",
+      "label": "63769326",
+      "type": "asteroid"
+    }
+  ],
+  "seen_asteroids": [
+  ],
+  "seen_planets": [
+  ]
+}

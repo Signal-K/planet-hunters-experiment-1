@@ -16,7 +16,8 @@ const PROD_SUPABASE_KEY: String = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3Mi
 const FORCE_LOCAL_MODE: bool = false
 
 # Set this to true to use production in the editor (recommended)
-const USE_PRODUCTION_IN_EDITOR: bool = true
+# Default false so local dev Supabase (localhost) is used when running in editor
+const USE_PRODUCTION_IN_EDITOR: bool = false
 
 static var _instance: SupabaseClient
 
@@ -32,22 +33,30 @@ static func get_instance() -> SupabaseClient:
 			# Use environment variables (GitHub secrets in CI)
 			_instance.SUPABASE_URL = env_url
 			_instance.SUPABASE_KEY = env_key
-			print("SupabaseClient: Using ENVIRONMENT credentials (GitHub secrets)")
+			preload("res://Scripts/Utils/Logger.gd").d("SupabaseClient: Using ENVIRONMENT credentials")
+			print("SupabaseClient: Using ENVIRONMENT credentials -> ", _instance.SUPABASE_URL)
 		elif FORCE_LOCAL_MODE:
 			# Explicitly using local mode
-			print("SupabaseClient: Using LOCAL development credentials (FORCE_LOCAL_MODE enabled)")
+			preload("res://Scripts/Utils/Logger.gd").d("SupabaseClient: Using LOCAL development credentials (FORCE_LOCAL_MODE enabled)")
+			print("SupabaseClient: FORCE_LOCAL_MODE -> ", _instance.SUPABASE_URL)
 		elif USE_PRODUCTION_IN_EDITOR and Engine.is_editor_hint():
 			# Use production in editor (default behavior)
 			_instance.SUPABASE_URL = PROD_SUPABASE_URL
 			_instance.SUPABASE_KEY = PROD_SUPABASE_KEY
-			print("SupabaseClient: Using PRODUCTION credentials (editor mode)")
+			preload("res://Scripts/Utils/Logger.gd").d("SupabaseClient: Using PRODUCTION credentials (editor mode)")
+			print("SupabaseClient: Using PRODUCTION credentials in editor -> ", _instance.SUPABASE_URL)
 		elif _should_use_production():
 			# Use production values when running on mobile devices or exported builds
 			_instance.SUPABASE_URL = PROD_SUPABASE_URL
 			_instance.SUPABASE_KEY = PROD_SUPABASE_KEY
-			print("SupabaseClient: Using PRODUCTION credentials for mobile/exported build")
+			preload("res://Scripts/Utils/Logger.gd").d("SupabaseClient: Using PRODUCTION credentials for mobile/exported build")
+			print("SupabaseClient: Using PRODUCTION credentials for exported build -> ", _instance.SUPABASE_URL)
 		else:
-			print("SupabaseClient: Using LOCAL development credentials")
+			preload("res://Scripts/Utils/Logger.gd").d("SupabaseClient: Using LOCAL development credentials")
+			print("SupabaseClient: Using LOCAL development credentials -> ", _instance.SUPABASE_URL)
+
+	# Always print resolved URL for easier debugging
+	print("SupabaseClient: resolved SUPABASE_URL=", _instance.SUPABASE_URL, " key_present=", _instance.SUPABASE_KEY != "")
 	return _instance
 
 ## Determine if we should use production Supabase credentials
@@ -83,7 +92,7 @@ func fetch_anomalies(anomaly_set: String, limit: int, callback: Callable) -> HTT
 		limit
 	]
 	
-	print("SupabaseClient: Fetching from URL: ", url)
+	preload("res://Scripts/Utils/Logger.gd").d("SupabaseClient: Fetching from URL: %s" % [url])
 	
 	var headers = [
 		"apikey: " + SUPABASE_KEY,
@@ -96,7 +105,7 @@ func fetch_anomalies(anomaly_set: String, limit: int, callback: Callable) -> HTT
 			var response_data = []
 			var error_message = ""
 			
-			print("SupabaseClient: HTTP result=%d, status=%d" % [result, response_code])
+			preload("res://Scripts/Utils/Logger.gd").d("SupabaseClient: HTTP result=%d, status=%d" % [result, response_code])
 			
 			if result != HTTPRequest.RESULT_SUCCESS:
 				error_message = "HTTP Request failed with result: %d" % result
@@ -109,7 +118,7 @@ func fetch_anomalies(anomaly_set: String, limit: int, callback: Callable) -> HTT
 				var parse_result = json.parse(body.get_string_from_utf8())
 				if parse_result == OK:
 					response_data = json.data
-					print("SupabaseClient: Successfully fetched %d anomalies" % response_data.size())
+					preload("res://Scripts/Utils/Logger.gd").d("SupabaseClient: Successfully fetched %d anomalies" % response_data.size())
 				else:
 					error_message = "Failed to parse JSON response"
 			

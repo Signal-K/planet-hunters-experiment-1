@@ -1,6 +1,6 @@
 {
   "taskId": "ubv8ff",
-  "currentVersion": 1,
+  "currentVersion": 3,
   "versions": [
     {
       "id": "v1",
@@ -18,6 +18,60 @@
         "title": "Remove (hide) annotation/contribution scenes",
         "description": "For now - short term change just to simplify things for the first experiment version.",
         "status": "in-progress",
+        "priority": "high",
+        "labels": [
+          "Experiment",
+          "Annotations",
+          "Scenes",
+          "Views",
+          "Temp"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "ubv8ff",
+      "version": 2,
+      "timestamp": "2026-01-25T01:54:14.779Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "in-review"
+        }
+      ],
+      "snapshot": {
+        "title": "Remove (hide) annotation/contribution scenes",
+        "description": "For now - short term change just to simplify things for the first experiment version.",
+        "status": "in-review",
+        "priority": "high",
+        "labels": [
+          "Experiment",
+          "Annotations",
+          "Scenes",
+          "Views",
+          "Temp"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "ubv8ff",
+      "version": 3,
+      "timestamp": "2026-01-25T01:54:15.161Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-review",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Remove (hide) annotation/contribution scenes",
+        "description": "For now - short term change just to simplify things for the first experiment version.",
+        "status": "done",
         "priority": "high",
         "labels": [
           "Experiment",

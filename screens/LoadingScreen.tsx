@@ -11,7 +11,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import type { NavigationProp } from '@react-navigation/native';
 import type { RootStackParamList } from '../types/navigation';
 import { useAuth } from '../contexts/AuthContext';
-import { setSharedCounterValue, setSharedFrancBalance, updateSharedTutorialCompleted, getSharedCounterValue, getSharedFrancBalance, getSharedTutorialCompleted } from '../utils/godot';
+import { setSharedCounterValue, setSharedFrancBalance, setSharedExperienceXp, setSharedExperienceLevel, updateSharedTutorialCompleted, getSharedCounterValue, getSharedFrancBalance, getSharedTutorialCompleted } from '../utils/godot';
 import { commonStyles } from '../styles/common';
 
 type ScreenNavigationProp = NavigationProp<RootStackParamList>;
@@ -32,6 +32,9 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ navigation }) => {
   const [balanceLoaded, setBalanceLoaded] = useState(false);
   const [tutorialCompleted, setTutorialCompleted] = useState(false);
   const [tutorialLoaded, setTutorialLoaded] = useState(false);
+  const [experienceXp, setExperienceXp] = useState(0);
+  const [experienceLevel, setExperienceLevel] = useState(1);
+  const [experienceLoaded, setExperienceLoaded] = useState(false);
 
   // Load counter from storage on mount
   useEffect(() => {
@@ -90,6 +93,33 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ navigation }) => {
     loadTutorialCompleted();
   }, []);
 
+  // Load experience from storage on mount
+  useEffect(() => {
+    const loadExperience = async () => {
+      try {
+        const [savedXp, savedLevel] = await Promise.all([
+          AsyncStorage.getItem('experienceXp'),
+          AsyncStorage.getItem('experienceLevel'),
+        ]);
+        if (savedXp !== null) {
+          const value = parseInt(savedXp, 10);
+          setExperienceXp(value);
+          console.log('Loaded experience XP from storage:', value);
+        }
+        if (savedLevel !== null) {
+          const value = parseInt(savedLevel, 10);
+          setExperienceLevel(value);
+          console.log('Loaded experience level from storage:', value);
+        }
+      } catch (e) {
+        console.error('Failed to load experience:', e);
+      } finally {
+        setExperienceLoaded(true);
+      }
+    };
+    loadExperience();
+  }, []);
+
   // Save counter to storage whenever it changes and update shared value
   useEffect(() => {
     if (counterLoaded) {
@@ -118,6 +148,18 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ navigation }) => {
     }
   }, [tutorialCompleted, tutorialLoaded]);
 
+  // Save experience to storage whenever it changes
+  useEffect(() => {
+    if (experienceLoaded) {
+      AsyncStorage.multiSet([
+        ['experienceXp', experienceXp.toString()],
+        ['experienceLevel', experienceLevel.toString()],
+      ])
+        .then(() => console.log('Saved experience to storage:', experienceXp, experienceLevel))
+        .catch(e => console.error('Failed to save experience:', e));
+    }
+  }, [experienceXp, experienceLevel, experienceLoaded]);
+
   // Reload counter, balance, and tutorial when screen comes into focus
   // This ensures we have the latest values after returning from GameScreen
   useFocusEffect(
@@ -129,6 +171,10 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ navigation }) => {
             AsyncStorage.getItem('gameCounter'),
             AsyncStorage.getItem('francBalance'),
             AsyncStorage.getItem('tutorialCompleted'),
+          ]);
+          const [savedXp, savedLevel] = await Promise.all([
+            AsyncStorage.getItem('experienceXp'),
+            AsyncStorage.getItem('experienceLevel'),
           ]);
 
           if (savedCounter !== null) {
@@ -150,6 +196,20 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ navigation }) => {
             setTutorialCompleted(value);
             updateSharedTutorialCompleted(value);
             console.log('Reloaded tutorial completed from storage:', value);
+          }
+
+          if (savedXp !== null) {
+            const value = parseInt(savedXp, 10);
+            setExperienceXp(value);
+            setSharedExperienceXp(value);
+            console.log('Reloaded experience XP from storage:', value);
+          }
+
+          if (savedLevel !== null) {
+            const value = parseInt(savedLevel, 10);
+            setExperienceLevel(value);
+            setSharedExperienceLevel(value);
+            console.log('Reloaded experience level from storage:', value);
           }
         } catch (e) {
           console.error('Failed to reload data:', e);
@@ -212,9 +272,12 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ navigation }) => {
       // Store counter, balance, and tutorial completion in module-level variables accessible from worklet
       setSharedCounterValue(counter);
       setSharedFrancBalance(francBalance);
+      setSharedExperienceXp(experienceXp);
+      setSharedExperienceLevel(experienceLevel);
       updateSharedTutorialCompleted(tutorialCompleted);
       console.log("Setting initial counter for game:", counter);
       console.log("Setting initial franc balance for game:", francBalance);
+      console.log("Setting initial experience for game:", experienceXp, experienceLevel);
       console.log("Setting initial tutorial completed for game:", tutorialCompleted);
       navigation.navigate("Game");
     }
@@ -237,9 +300,13 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ navigation }) => {
 
   const clearAllState = async () => {
     try {
-      await AsyncStorage.multiRemove(['gameCounter', 'francBalance', 'tutorialCompleted']);
+      await AsyncStorage.multiRemove(['gameCounter', 'francBalance', 'tutorialCompleted', 'experienceXp', 'experienceLevel']);
       setCounter(0);
       setFrancBalance(10000000000);
+      setExperienceXp(0);
+      setExperienceLevel(1);
+      setSharedExperienceXp(0);
+      setSharedExperienceLevel(1);
       setTutorialCompleted(false);
       updateSharedTutorialCompleted(false);
       console.log('All state cleared');

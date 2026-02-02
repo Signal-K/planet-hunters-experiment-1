@@ -28,38 +28,8 @@ func _style_balance_button() -> void:
 	"""Apply styling to the balance button"""
 	if not balance_button:
 		return
-	
-	# Normal state - Dark semi-transparent background
-	var normal_style = StyleBoxFlat.new()
-	normal_style.bg_color = Color(0.1, 0.1, 0.1, 0.8)
-	normal_style.border_width_left = 2
-	normal_style.border_width_right = 2
-	normal_style.border_width_top = 2
-	normal_style.border_width_bottom = 2
-	normal_style.border_color = Color(0.85, 0.07, 0.2, 1)  # Red accent
-	normal_style.corner_radius_top_left = 6
-	normal_style.corner_radius_top_right = 6
-	normal_style.corner_radius_bottom_left = 6
-	normal_style.corner_radius_bottom_right = 6
-	balance_button.add_theme_stylebox_override("normal", normal_style)
-	
-	# Hover state
-	var hover_style = StyleBoxFlat.new()
-	hover_style.bg_color = Color(0.2, 0.2, 0.2, 0.9)
-	hover_style.border_width_left = 2
-	hover_style.border_width_right = 2
-	hover_style.border_width_top = 2
-	hover_style.border_width_bottom = 2
-	hover_style.border_color = Color(0.95, 0.17, 0.3, 1)
-	hover_style.corner_radius_top_left = 6
-	hover_style.corner_radius_top_right = 6
-	hover_style.corner_radius_bottom_left = 6
-	hover_style.corner_radius_bottom_right = 6
-	balance_button.add_theme_stylebox_override("hover", hover_style)
-	
-	# Text color
-	balance_button.add_theme_color_override("font_color", Color(1, 1, 1, 1))
-	balance_button.add_theme_color_override("font_hover_color", Color(1, 1, 1, 1))
+	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
+	panel_style.apply_button(balance_button, false)
 
 func _find_app_controller() -> void:
 	"""Find the AppController node in the scene tree"""
@@ -101,9 +71,13 @@ func _setup_ui_connections() -> void:
 	
 	if add_btn:
 		add_btn.pressed.connect(func(): _modify_balance(1000000000))
+		var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
+		panel_style.apply_button(add_btn, false)
 		print("FrancBalance: Add button connected")
 	if sub_btn:
 		sub_btn.pressed.connect(func(): _modify_balance(-1000000000))
+		var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
+		panel_style.apply_button(sub_btn, false)
 		print("FrancBalance: Sub button connected")
 
 func _update_display() -> void:
