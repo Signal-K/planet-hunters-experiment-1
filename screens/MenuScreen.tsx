@@ -22,22 +22,7 @@ export const MenuScreen: React.FC<MenuScreenProps> = ({ navigation }) => {
   const syncState = useSyncState();
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  useFocusEffect(
-    useCallback(() => {
-      setGamePaused(true);
-      return () => setGamePaused(false);
-    }, [])
-  );
-
-  const formattedFranc = useMemo(() => {
-    const val = syncState.francBalance;
-    if (Math.abs(val) >= 1000000000) return Math.round(val / 1000000000) + 'B';
-    if (Math.abs(val) >= 1000000) return Math.round(val / 1000000) + 'M';
-    if (Math.abs(val) >= 1000) return Math.round(val / 1000) + 'K';
-    return String(val);
-  }, [syncState.francBalance]);
-
-  const handleRefresh = async () => {
+  const handleRefresh = useCallback(async () => {
     if (isRefreshing) {
       return;
     }
@@ -47,7 +32,23 @@ export const MenuScreen: React.FC<MenuScreenProps> = ({ navigation }) => {
     } finally {
       setIsRefreshing(false);
     }
-  };
+  }, [isRefreshing]);
+
+  useFocusEffect(
+    useCallback(() => {
+      setGamePaused(true);
+      handleRefresh();
+      return () => setGamePaused(false);
+    }, [handleRefresh])
+  );
+
+  const formattedFranc = useMemo(() => {
+    const val = syncState.francBalance;
+    if (Math.abs(val) >= 1000000000) return Math.round(val / 1000000000) + 'B';
+    if (Math.abs(val) >= 1000000) return Math.round(val / 1000000) + 'M';
+    if (Math.abs(val) >= 1000) return Math.round(val / 1000) + 'K';
+    return String(val);
+  }, [syncState.francBalance]);
 
   return (
     <SafeAreaView style={commonStyles.menuContainer}>
