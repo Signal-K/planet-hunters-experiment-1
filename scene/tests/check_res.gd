@@ -1,4 +1,8 @@
+print("\n" + "=".repeat(60))
+print("🧪 RESOURCE CHECKS")
+print("=".repeat(60))
 print("ResourceLoader.exists SupabaseClient:", ResourceLoader.exists("res://Scripts/Systems/SupabaseClient.gd"))
 print("ResourceLoader.exists CallbackHelper:", ResourceLoader.exists("res://tests/CallbackHelper.gd"))
 print("FileAccess.file_exists SupabaseClient:", FileAccess.file_exists("res://Scripts/Systems/SupabaseClient.gd"))
 print("FileAccess.file_exists CallbackHelper:", FileAccess.file_exists("res://tests/CallbackHelper.gd"))
+print("Timestamp:", Time.get_datetime_string_from_system())

@@ -1,44 +1,70 @@
-extends Node
+extends SceneTree
 
 # Headless test runner for SupabaseClient.fetch_anomalies
 # Run with: godot --headless --path scene -s scene/tests/run_supabase_tests.gd
 
-func _ready() -> void:
-    print("Supabase tests: starting")
+const TestReporter = preload("res://tests/TestReporter.gd")
+
+var reporter := TestReporter.new()
+var _client: Node = null
+
+func _init() -> void:
+    reporter.start_suite("Supabase Headless Fetch", {
+        "engine": Engine.get_version_info()["string"],
+        "os": OS.get_name(),
+        "project": "scene",
+        "timestamp": Time.get_datetime_string_from_system()
+    })
     run_tests()
 
 func run_tests() -> void:
+    reporter.start_test("Fetch anomalies (active-asteroids)")
     var SupabaseClientScript = load("res://Scripts/Systems/SupabaseClient.gd")
     if SupabaseClientScript == null:
-        print("TEST ERROR: Could not load SupabaseClient.gd")
-        get_tree().quit(5)
+        reporter.fail_test("Could not load SupabaseClient.gd")
+        quit(5)
         return
 
-    var client = SupabaseClientScript.instantiate()
+    _client = SupabaseClientScript.new()
+    get_root().add_child(_client)
+    await create_timer(0.05).timeout
     print("Supabase tests: using SUPABASE_URL=", client.SUPABASE_URL)
     print("Supabase tests: issuing HTTP request for anomaly_set=active-asteroids, limit=1")
     # Call fetch_anomalies with a short timeout watcher
-    client.fetch_anomalies("active-asteroids", 1, Callable(self, "_on_fetch"))
+    _client.fetch_anomalies("active-asteroids", 1, Callable(self, "_on_fetch"))
     # Timeout in 10 seconds
-    var timer = get_tree().create_timer(10.0)
+    var timer = create_timer(10.0)
     timer.timeout.connect(Callable(self, "_on_timeout"))
 
 func _on_fetch(response_data, error_message) -> void:
     if error_message != "":
-        print("TEST FAIL: Supabase fetch returned error: ", error_message)
-        get_tree().quit(2)
+        reporter.fail_test("Supabase fetch returned error: " + str(error_message))
+        reporter.summary()
+        if _client and is_instance_valid(_client):
+            _client.queue_free()
+        quit(2)
 
     if typeof(response_data) != TYPE_ARRAY:
-        print("TEST FAIL: unexpected response type: ", typeof(response_data))
-        get_tree().quit(3)
+        reporter.fail_test("Unexpected response type: " + str(typeof(response_data)))
+        reporter.summary()
+        if _client and is_instance_valid(_client):
+            _client.queue_free()
+        quit(3)
 
-    print("TEST PASS: fetched %d items" % [response_data.size()])
+    print("Supabase tests: fetched %d items" % [response_data.size()])
     # Optionally inspect structure of first item
     if response_data.size() > 0:
         var first = response_data[0]
         print("First item keys: ", first.keys())
-    get_tree().quit(0)
+    reporter.pass_test()
+    reporter.summary()
+    if _client and is_instance_valid(_client):
+        _client.queue_free()
+    quit(0)
 
 func _on_timeout() -> void:
-    print("TEST FAIL: timeout waiting for HTTP response")
-    get_tree().quit(4)
+    reporter.fail_test("Timeout waiting for HTTP response")
+    reporter.summary()
+    if _client and is_instance_valid(_client):
+        _client.queue_free()
+    quit(4)

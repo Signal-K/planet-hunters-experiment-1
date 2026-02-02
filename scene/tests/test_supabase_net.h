@@ -7,12 +7,17 @@
 #include "core/object/object.h"
 #include "core/object/script_language.h"
 #include "core/os/os.h"
+#include "core/string/print_string.h"
 #include "scene/main/scene_tree.h"
 
 namespace TestSupabaseNet {
 
 TEST_CASE("[Supabase][SceneTree] Fetch anomalies and validate data structure") {
+    print_line("\n==============================");
+    print_line("🧪 C++ TEST: Supabase fetch + data structure");
+    print_line("==============================");
     // Load the SupabaseClient script using static ResourceLoader::load()
+    print_line("Loading resource: res://Scripts/Systems/SupabaseClient.gd");
     Ref<Resource> res = ResourceLoader::load("res://Scripts/Systems/SupabaseClient.gd");
     REQUIRE_MESSAGE(res.is_valid(), "Failed to load SupabaseClient.gd; ensure res:// points to the project files when running tests.");
 
@@ -29,11 +34,13 @@ TEST_CASE("[Supabase][SceneTree] Fetch anomalies and validate data structure") {
     Object *helper_instance = ClassDB::instantiate("Object");
     REQUIRE_MESSAGE(helper_instance != nullptr, "Failed to create base object for CallbackHelper");
     helper_script->instance_create(helper_instance);
+    print_line("Helper instance created: CallbackHelper.gd");
 
     // Instantiate SupabaseClient
     Object *client_instance = ClassDB::instantiate("Object");
     REQUIRE_MESSAGE(client_instance != nullptr, "Failed to create base object for SupabaseClient");
     script->instance_create(client_instance);
+    print_line("Client instance created: SupabaseClient.gd");
 
     // Optionally override SUPABASE_URL from environment variable (for CI)
     String env_url = OS::get_singleton()->get_environment("SUPABASE_URL");
@@ -85,6 +92,7 @@ TEST_CASE("[Supabase][SceneTree] Fetch anomalies and validate data structure") {
                 if (first_item.get_type() == Variant::DICTIONARY) {
                     Dictionary asteroid = first_item;
                     CHECK_MESSAGE(asteroid.has("id"), "Asteroid missing 'id' field");
+                    MESSAGE("Asteroid contains ID field");
                     if (asteroid.has("name")) {
                         Variant name_var = asteroid["name"];
                         String asteroid_name = name_var;

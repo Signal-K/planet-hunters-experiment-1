@@ -84,6 +84,36 @@ export const updateSharedTutorialCompleted = (value: boolean) => {
   pushTutorialCompletedToGodot(value);
 };
 
+// Shared experience state accessible from Godot worklet thread
+let sharedExperienceXp = 0;
+let sharedExperienceLevel = 1;
+
+export const setSharedExperienceXp = (value: number) => {
+  sharedExperienceXp = value;
+};
+
+export const setSharedExperienceLevel = (value: number) => {
+  sharedExperienceLevel = value;
+};
+
+export const getSharedExperienceXp = () => {
+  return sharedExperienceXp;
+};
+
+export const getSharedExperienceLevel = () => {
+  return sharedExperienceLevel;
+};
+
+export const getSharedExperienceXpWorklet = () => {
+  "worklet";
+  return sharedExperienceXp;
+};
+
+export const getSharedExperienceLevelWorklet = () => {
+  "worklet";
+  return sharedExperienceLevel;
+};
+
 export function initGodot(name: string) {
   if (RTNGodot.getInstance() != null) {
     console.log("Godot was already initialized.");
@@ -222,10 +252,14 @@ type SyncUpdate =
   | { type: 'counter'; value: number }
   | { type: 'tutorial'; value: boolean }
   | { type: 'balance'; value: number }
+  | { type: 'experience'; xp: number; level: number }
   | { type: 'resetAll' };
 
 const syncQueue: SyncUpdate[] = [];
 let syncQueueListeners: Array<() => void> = [];
+let lastPolledFrancBalance: number | null = null;
+let lastPolledExperienceXp: number | null = null;
+let lastPolledExperienceLevel: number | null = null;
 
 /**
  * Get and clear pending sync updates from the queue
@@ -254,6 +288,72 @@ export function subscribeToSyncUpdates(callback: () => void): () => void {
 function enqueueSyncUpdate(update: SyncUpdate) {
   "worklet";
   syncQueue.push(update);
+}
+
+/**
+ * Poll franc balance from Godot and enqueue updates for persistence.
+ * Safe to call from React Native thread.
+ */
+export function pollGodotFrancBalance() {
+  runOnGodotThread(() => {
+    "worklet";
+    const controller = appController();
+    if (!controller || !(controller as any).get_franc_balance) return;
+    const value = (controller as any).get_franc_balance();
+    if (lastPolledFrancBalance === null || lastPolledFrancBalance !== value) {
+      lastPolledFrancBalance = value;
+      enqueueSyncUpdate({ type: 'balance', value });
+    }
+  });
+}
+
+/**
+ * Poll experience from Godot and enqueue updates for persistence.
+ * Safe to call from React Native thread.
+ */
+export function pollGodotExperience() {
+  runOnGodotThread(() => {
+    "worklet";
+    const controller = appController();
+    if (!controller || !(controller as any).get_experience_xp || !(controller as any).get_experience_level) return;
+    const xp = (controller as any).get_experience_xp();
+    const level = (controller as any).get_experience_level();
+    if (
+      lastPolledExperienceXp === null ||
+      lastPolledExperienceLevel === null ||
+      lastPolledExperienceXp !== xp ||
+      lastPolledExperienceLevel !== level
+    ) {
+      lastPolledExperienceXp = xp;
+      lastPolledExperienceLevel = level;
+      enqueueSyncUpdate({ type: 'experience', xp, level });
+    }
+  });
+}
+
+/**
+ * Reconcile franc balance between React Native and Godot on startup.
+ * If shared value is default but Godot has a saved value, use Godot's.
+ * Otherwise, push shared value into Godot to keep them aligned.
+ */
+export function reconcileFrancBalance(sharedValue: number, defaultValue = 10000000000) {
+  runOnGodotThread(() => {
+    "worklet";
+    const controller = appController();
+    if (!controller || !(controller as any).get_franc_balance) return;
+    const godotValue = (controller as any).get_franc_balance();
+    if (sharedValue === defaultValue && godotValue !== defaultValue) {
+      enqueueSyncUpdate({ type: 'balance', value: godotValue });
+      return;
+    }
+    if (sharedValue !== godotValue) {
+      if (typeof (controller as any).call === 'function') {
+        (controller as any).call("set_franc_balance_from_react", sharedValue);
+      } else if ((controller as any).set_franc_balance_from_react) {
+        (controller as any).set_franc_balance_from_react(sharedValue);
+      }
+    }
+  });
 }
 
 /**

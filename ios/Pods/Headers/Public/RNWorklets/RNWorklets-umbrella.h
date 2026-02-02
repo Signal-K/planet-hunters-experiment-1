@@ -1,1 +1,0 @@
-../../../Target Support Files/RNWorklets/RNWorklets-umbrella.h

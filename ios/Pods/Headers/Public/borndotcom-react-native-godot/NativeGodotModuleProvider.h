@@ -1,1 +1,0 @@
-../../../../../node_modules/@borndotcom/react-native-godot/ios/NativeGodotModuleProvider.h

@@ -4,7 +4,7 @@ import type { NavigationProp } from '@react-navigation/native';
 import { RTNGodotView, runOnGodotThread } from "@borndotcom/react-native-godot";
 import type { RootStackParamList } from '../types/navigation';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { initGodot, destroyGodot, appController, getSharedCounterValue, getSharedFrancBalance, getSharedTutorialCompleted, connectGodotSignals, subscribeToSyncUpdates, getSyncUpdates } from '../utils/godot';
+import { initGodot, destroyGodot, appController, getSharedCounterValue, getSharedFrancBalance, getSharedTutorialCompleted, getSharedExperienceXp, getSharedExperienceLevel, connectGodotSignals, subscribeToSyncUpdates, getSyncUpdates, setSharedFrancBalance, setSharedExperienceXp, setSharedExperienceLevel, pollGodotFrancBalance, pollGodotExperience } from '../utils/godot';
 import { FrancBalance } from '../components/FrancBalance';
 import { commonStyles } from '../styles/common';
 
@@ -32,12 +32,23 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation: _navigation 
               .catch(e => console.error("[GameScreen] Failed to save tutorial completed:", e));
             break;
           case 'balance':
+            setSharedFrancBalance(update.value);
             AsyncStorage.setItem('francBalance', update.value.toString())
               .then(() => console.log("[GameScreen] Franc balance saved to storage:", update.value))
               .catch(e => console.error("[GameScreen] Failed to save franc balance:", e));
             break;
+          case 'experience':
+            setSharedExperienceXp(update.xp);
+            setSharedExperienceLevel(update.level);
+            AsyncStorage.multiSet([
+              ['experienceXp', update.xp.toString()],
+              ['experienceLevel', update.level.toString()],
+            ])
+              .then(() => console.log("[GameScreen] Experience saved to storage:", update.xp, update.level))
+              .catch(e => console.error("[GameScreen] Failed to save experience:", e));
+            break;
           case 'resetAll':
-            AsyncStorage.multiRemove(['gameCounter', 'francBalance', 'tutorialCompleted'])
+            AsyncStorage.multiRemove(['gameCounter', 'francBalance', 'tutorialCompleted', 'experienceXp', 'experienceLevel'])
               .then(() => console.log("[GameScreen] Storage cleared"))
               .catch(e => console.error("[GameScreen] Failed to clear storage:", e));
             break;
@@ -50,6 +61,8 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation: _navigation 
     
     // Also poll periodically to catch any updates
     const pollInterval = setInterval(processSyncUpdates, 100);
+    const balancePollInterval = setInterval(() => pollGodotFrancBalance(), 500);
+    const experiencePollInterval = setInterval(() => pollGodotExperience(), 500);
 
     // Initialize Godot when entering the Game screen
     initGodot("GodotTest");
@@ -66,8 +79,10 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation: _navigation 
       const counterVal = getSharedCounterValue();
       const balanceVal = getSharedFrancBalance();
       const tutorialVal = getSharedTutorialCompleted();
+      const experienceXpVal = getSharedExperienceXp();
+      const experienceLevelVal = getSharedExperienceLevel();
       
-      console.log(`[GameScreen] Preparing to sync: counter=${counterVal}, balance=${balanceVal}, tutorial=${tutorialVal}`);
+      console.log(`[GameScreen] Preparing to sync: counter=${counterVal}, balance=${balanceVal}, tutorial=${tutorialVal}, xp=${experienceXpVal}, level=${experienceLevelVal}`);
       
       runOnGodotThread(() => {
         "worklet";
@@ -78,7 +93,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation: _navigation 
             console.log("[GameScreen] AppController found! Syncing data...");
             
             // Use captured values from closure (these are captured before worklet)
-            console.log(`[GameScreen] Syncing counter=${counterVal}, balance=${balanceVal}, tutorial=${tutorialVal}`);
+            console.log(`[GameScreen] Syncing counter=${counterVal}, balance=${balanceVal}, tutorial=${tutorialVal}, xp=${experienceXpVal}, level=${experienceLevelVal}`);
             
             // Try calling methods using Godot's call() method (required in worklet context)
             try {
@@ -99,14 +114,25 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation: _navigation 
             
             try {
               console.log("[GameScreen] Attempting to call set_franc_balance_from_react...");
-              if (typeof (controller as any).call === 'function') {
-                (controller as any).call("set_franc_balance_from_react", balanceVal);
-                console.log("[GameScreen] ✓ set_franc_balance_from_react called via call()");
-              } else if (controller.set_franc_balance_from_react) {
-                controller.set_franc_balance_from_react(balanceVal);
-                console.log("[GameScreen] ✓ set_franc_balance_from_react called directly");
-              } else {
-                console.log("[GameScreen] ✗ set_franc_balance_from_react method not found");
+              var godotBalance = null;
+              if ((controller as any).get_franc_balance) {
+                godotBalance = (controller as any).get_franc_balance();
+              }
+              var shouldSetBalance = true;
+              if (balanceVal === 10000000000 && godotBalance !== null && godotBalance !== 10000000000) {
+                shouldSetBalance = false;
+                console.log("[GameScreen] Skipping balance overwrite; Godot has saved value:", godotBalance);
+              }
+              if (shouldSetBalance) {
+                if (typeof (controller as any).call === 'function') {
+                  (controller as any).call("set_franc_balance_from_react", balanceVal);
+                  console.log("[GameScreen] ✓ set_franc_balance_from_react called via call()");
+                } else if (controller.set_franc_balance_from_react) {
+                  controller.set_franc_balance_from_react(balanceVal);
+                  console.log("[GameScreen] ✓ set_franc_balance_from_react called directly");
+                } else {
+                  console.log("[GameScreen] ✗ set_franc_balance_from_react method not found");
+                }
               }
             } catch (e2) {
               console.log("[GameScreen] ✗ Exception calling set_franc_balance_from_react:", e2);
@@ -127,6 +153,39 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation: _navigation 
             } catch (e3) {
               console.log("[GameScreen] ✗ Exception calling set_tutorial_completed_from_react:", e3);
               console.log("[GameScreen] Error details:", String(e3));
+            }
+
+            try {
+              console.log("[GameScreen] Attempting to call set_experience_from_react...");
+              var godotXp = null;
+              var godotLevel = null;
+              if ((controller as any).get_experience_xp) {
+                godotXp = (controller as any).get_experience_xp();
+              }
+              if ((controller as any).get_experience_level) {
+                godotLevel = (controller as any).get_experience_level();
+              }
+              var shouldSetExperience = true;
+              if (experienceXpVal === 0 && experienceLevelVal === 1 && (godotXp !== null || godotLevel !== null)) {
+                if ((godotXp !== null && godotXp !== 0) || (godotLevel !== null && godotLevel !== 1)) {
+                  shouldSetExperience = false;
+                  console.log("[GameScreen] Skipping experience overwrite; Godot has saved value:", godotXp, godotLevel);
+                }
+              }
+              if (shouldSetExperience) {
+                if (typeof (controller as any).call === 'function') {
+                  (controller as any).call("set_experience_from_react", experienceXpVal, experienceLevelVal);
+                  console.log("[GameScreen] ✓ set_experience_from_react called via call()");
+                } else if (controller.set_experience_from_react) {
+                  controller.set_experience_from_react(experienceXpVal, experienceLevelVal);
+                  console.log("[GameScreen] ✓ set_experience_from_react called directly");
+                } else {
+                  console.log("[GameScreen] ✗ set_experience_from_react method not found");
+                }
+              }
+            } catch (e5) {
+              console.log("[GameScreen] ✗ Exception calling set_experience_from_react:", e5);
+              console.log("[GameScreen] Error details:", String(e5));
             }
             
             // Verify the counter was set by reading it back
@@ -189,6 +248,8 @@ export const GameScreen: React.FC<GameScreenProps> = ({ navigation: _navigation 
       clearTimeout(timerId);
       if (retryTimerId) clearTimeout(retryTimerId);
       clearInterval(pollInterval);
+      clearInterval(balancePollInterval);
+      clearInterval(experiencePollInterval);
       unsubscribe();
       // Destroy Godot when leaving the Game screen
       destroyGodot();

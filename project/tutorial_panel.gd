@@ -1,18 +1,20 @@
 extends CanvasLayer
 
 @onready var tutorial_status_label = $PanelContainer/MarginContainer/HBoxContainer/TutorialStatusBox/TutorialStatus
-@onready var app_controller = (get_tree().root.has_node("AppController") ? get_node("/root/AppController") : get_tree().root.find_child("AppController", true, false))
+@onready var app_controller = null
+
+func _get_app_controller():
+	if get_tree().root.has_node("AppController"):
+		return get_node("/root/AppController")
+	else:
+		return get_tree().root.find_child("AppController", true, false)
 
 func _ready() -> void:
-	print("TutorialPanel: Ready")
+	app_controller = _get_app_controller()
 	update_tutorial_status()
-	
 	if app_controller:
 		if app_controller.has_signal("tutorial_completed_updated"):
 			app_controller.tutorial_completed_updated.connect(_on_tutorial_completed_updated)
-			print("TutorialPanel: Connected to tutorial_completed_updated signal")
-	else:
-		print("TutorialPanel: Could not find AppController")
 
 func _process(_delta: float) -> void:
 	# Update the tutorial status display
@@ -22,7 +24,6 @@ func _process(_delta: float) -> void:
 		app_controller = root.find_child("AppController", true, false)
 		if app_controller and app_controller.has_signal("tutorial_completed_updated"):
 			app_controller.tutorial_completed_updated.connect(_on_tutorial_completed_updated)
-			print("TutorialPanel: Late-connected to AppController signal (project)")
 	# Update status each frame if we have the controller
 	if app_controller:
 		update_tutorial_status()
@@ -38,7 +39,6 @@ func update_tutorial_status() -> void:
 	if app_controller:
 		is_completed = app_controller.get_tutorial_completed()
 		if not is_completed and saved_completed:
-			print("TutorialPanel (project): Restoring AppController state from saved config")
 			if app_controller.has_method("set_tutorial_completed_from_react"):
 				app_controller.set_tutorial_completed_from_react(true)
 			else:
@@ -60,11 +60,9 @@ func update_tutorial_status() -> void:
 		tutorial_status_label.modulate = Color(1, 1, 0, 1)
 
 func _on_tutorial_completed_updated(is_completed: bool) -> void:
-	print("TutorialPanel: Tutorial completed updated to: ", is_completed)
 	update_tutorial_status()
 
 func _on_skip_pressed() -> void:
-	print("TutorialPanel (project): Skip pressed - marking tutorial complete")
 	self.visible = false
 	if app_controller:
 		if app_controller.has_method("set_tutorial_completed_from_react"):
@@ -76,5 +74,3 @@ func _on_skip_pressed() -> void:
 
 		if app_controller.has_method("save_tutorial_completed"):
 			app_controller.save_tutorial_completed()
-	else:
-		print("TutorialPanel (project): No AppController found to persist tutorial state")

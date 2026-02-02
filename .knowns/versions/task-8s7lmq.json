@@ -1,0 +1,497 @@
+{
+  "taskId": "8s7lmq",
+  "currentVersion": 8,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "8s7lmq",
+      "version": 1,
+      "timestamp": "2026-01-28T07:45:36.781Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Add rocket purchase confirmation and balance updates",
+        "description": "Require purchase confirmation before creating rockets in earth_launchpad.tscn; track user francs balance (start 10B, rockets cost 1B, refund on self-destruct).",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "Launchpad",
+          "Economy",
+          "UX"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "User must confirm purchase before rocket is created"
+          },
+          {
+            "completed": false,
+            "text": "Creating a rocket deducts 1B francs from balance"
+          },
+          {
+            "completed": false,
+            "text": "Self-destructing a rocket refunds 1B francs"
+          },
+          {
+            "completed": false,
+            "text": "User starts with 10B francs"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "8s7lmq",
+      "version": 2,
+      "timestamp": "2026-01-28T07:49:41.221Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "newValue": "1. Inspect launchpad rocket creation and self-destruct flows; identify balance source and UI touchpoints.\n2. Add purchase confirmation + balance check/deduct on rocket creation (click + drag) and return success from spawn.\n3. Refund balance on self-destruct; keep AppController balance in sync; update defaults to 10B.\n4. Sanity check behavior in launchpad and new mission panel (no tests run unless requested)."
+        }
+      ],
+      "snapshot": {
+        "title": "Add rocket purchase confirmation and balance updates",
+        "description": "Require purchase confirmation before creating rockets in earth_launchpad.tscn; track user francs balance (start 10B, rockets cost 1B, refund on self-destruct).",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "Launchpad",
+          "Economy",
+          "UX"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "User must confirm purchase before rocket is created"
+          },
+          {
+            "completed": false,
+            "text": "Creating a rocket deducts 1B francs from balance"
+          },
+          {
+            "completed": false,
+            "text": "Self-destructing a rocket refunds 1B francs"
+          },
+          {
+            "completed": false,
+            "text": "User starts with 10B francs"
+          }
+        ],
+        "implementationPlan": "1. Inspect launchpad rocket creation and self-destruct flows; identify balance source and UI touchpoints.\n2. Add purchase confirmation + balance check/deduct on rocket creation (click + drag) and return success from spawn.\n3. Refund balance on self-destruct; keep AppController balance in sync; update defaults to 10B.\n4. Sanity check behavior in launchpad and new mission panel (no tests run unless requested)."
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "8s7lmq",
+      "version": 3,
+      "timestamp": "2026-01-28T07:53:52.348Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "User must confirm purchase before rocket is created"
+            },
+            {
+              "completed": false,
+              "text": "Creating a rocket deducts 1B francs from balance"
+            },
+            {
+              "completed": false,
+              "text": "Self-destructing a rocket refunds 1B francs"
+            },
+            {
+              "completed": false,
+              "text": "User starts with 10B francs"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "User must confirm purchase before rocket is created"
+            },
+            {
+              "completed": false,
+              "text": "Creating a rocket deducts 1B francs from balance"
+            },
+            {
+              "completed": false,
+              "text": "Self-destructing a rocket refunds 1B francs"
+            },
+            {
+              "completed": false,
+              "text": "User starts with 10B francs"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Add rocket purchase confirmation and balance updates",
+        "description": "Require purchase confirmation before creating rockets in earth_launchpad.tscn; track user francs balance (start 10B, rockets cost 1B, refund on self-destruct).",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "Launchpad",
+          "Economy",
+          "UX"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "User must confirm purchase before rocket is created"
+          },
+          {
+            "completed": false,
+            "text": "Creating a rocket deducts 1B francs from balance"
+          },
+          {
+            "completed": false,
+            "text": "Self-destructing a rocket refunds 1B francs"
+          },
+          {
+            "completed": false,
+            "text": "User starts with 10B francs"
+          }
+        ],
+        "implementationPlan": "1. Inspect launchpad rocket creation and self-destruct flows; identify balance source and UI touchpoints.\n2. Add purchase confirmation + balance check/deduct on rocket creation (click + drag) and return success from spawn.\n3. Refund balance on self-destruct; keep AppController balance in sync; update defaults to 10B.\n4. Sanity check behavior in launchpad and new mission panel (no tests run unless requested)."
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "8s7lmq",
+      "version": 4,
+      "timestamp": "2026-01-28T07:53:56.931Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "User must confirm purchase before rocket is created"
+            },
+            {
+              "completed": false,
+              "text": "Creating a rocket deducts 1B francs from balance"
+            },
+            {
+              "completed": false,
+              "text": "Self-destructing a rocket refunds 1B francs"
+            },
+            {
+              "completed": false,
+              "text": "User starts with 10B francs"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "User must confirm purchase before rocket is created"
+            },
+            {
+              "completed": true,
+              "text": "Creating a rocket deducts 1B francs from balance"
+            },
+            {
+              "completed": false,
+              "text": "Self-destructing a rocket refunds 1B francs"
+            },
+            {
+              "completed": false,
+              "text": "User starts with 10B francs"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Add rocket purchase confirmation and balance updates",
+        "description": "Require purchase confirmation before creating rockets in earth_launchpad.tscn; track user francs balance (start 10B, rockets cost 1B, refund on self-destruct).",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "Launchpad",
+          "Economy",
+          "UX"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "User must confirm purchase before rocket is created"
+          },
+          {
+            "completed": true,
+            "text": "Creating a rocket deducts 1B francs from balance"
+          },
+          {
+            "completed": false,
+            "text": "Self-destructing a rocket refunds 1B francs"
+          },
+          {
+            "completed": false,
+            "text": "User starts with 10B francs"
+          }
+        ],
+        "implementationPlan": "1. Inspect launchpad rocket creation and self-destruct flows; identify balance source and UI touchpoints.\n2. Add purchase confirmation + balance check/deduct on rocket creation (click + drag) and return success from spawn.\n3. Refund balance on self-destruct; keep AppController balance in sync; update defaults to 10B.\n4. Sanity check behavior in launchpad and new mission panel (no tests run unless requested)."
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "8s7lmq",
+      "version": 5,
+      "timestamp": "2026-01-28T07:54:00.366Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "User must confirm purchase before rocket is created"
+            },
+            {
+              "completed": true,
+              "text": "Creating a rocket deducts 1B francs from balance"
+            },
+            {
+              "completed": false,
+              "text": "Self-destructing a rocket refunds 1B francs"
+            },
+            {
+              "completed": false,
+              "text": "User starts with 10B francs"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "User must confirm purchase before rocket is created"
+            },
+            {
+              "completed": true,
+              "text": "Creating a rocket deducts 1B francs from balance"
+            },
+            {
+              "completed": true,
+              "text": "Self-destructing a rocket refunds 1B francs"
+            },
+            {
+              "completed": false,
+              "text": "User starts with 10B francs"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Add rocket purchase confirmation and balance updates",
+        "description": "Require purchase confirmation before creating rockets in earth_launchpad.tscn; track user francs balance (start 10B, rockets cost 1B, refund on self-destruct).",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "Launchpad",
+          "Economy",
+          "UX"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "User must confirm purchase before rocket is created"
+          },
+          {
+            "completed": true,
+            "text": "Creating a rocket deducts 1B francs from balance"
+          },
+          {
+            "completed": true,
+            "text": "Self-destructing a rocket refunds 1B francs"
+          },
+          {
+            "completed": false,
+            "text": "User starts with 10B francs"
+          }
+        ],
+        "implementationPlan": "1. Inspect launchpad rocket creation and self-destruct flows; identify balance source and UI touchpoints.\n2. Add purchase confirmation + balance check/deduct on rocket creation (click + drag) and return success from spawn.\n3. Refund balance on self-destruct; keep AppController balance in sync; update defaults to 10B.\n4. Sanity check behavior in launchpad and new mission panel (no tests run unless requested)."
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "8s7lmq",
+      "version": 6,
+      "timestamp": "2026-01-28T07:54:05.307Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "User must confirm purchase before rocket is created"
+            },
+            {
+              "completed": true,
+              "text": "Creating a rocket deducts 1B francs from balance"
+            },
+            {
+              "completed": true,
+              "text": "Self-destructing a rocket refunds 1B francs"
+            },
+            {
+              "completed": false,
+              "text": "User starts with 10B francs"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "User must confirm purchase before rocket is created"
+            },
+            {
+              "completed": true,
+              "text": "Creating a rocket deducts 1B francs from balance"
+            },
+            {
+              "completed": true,
+              "text": "Self-destructing a rocket refunds 1B francs"
+            },
+            {
+              "completed": true,
+              "text": "User starts with 10B francs"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Add rocket purchase confirmation and balance updates",
+        "description": "Require purchase confirmation before creating rockets in earth_launchpad.tscn; track user francs balance (start 10B, rockets cost 1B, refund on self-destruct).",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "Launchpad",
+          "Economy",
+          "UX"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "User must confirm purchase before rocket is created"
+          },
+          {
+            "completed": true,
+            "text": "Creating a rocket deducts 1B francs from balance"
+          },
+          {
+            "completed": true,
+            "text": "Self-destructing a rocket refunds 1B francs"
+          },
+          {
+            "completed": true,
+            "text": "User starts with 10B francs"
+          }
+        ],
+        "implementationPlan": "1. Inspect launchpad rocket creation and self-destruct flows; identify balance source and UI touchpoints.\n2. Add purchase confirmation + balance check/deduct on rocket creation (click + drag) and return success from spawn.\n3. Refund balance on self-destruct; keep AppController balance in sync; update defaults to 10B.\n4. Sanity check behavior in launchpad and new mission panel (no tests run unless requested)."
+      }
+    },
+    {
+      "id": "v7",
+      "taskId": "8s7lmq",
+      "version": 7,
+      "timestamp": "2026-01-28T07:54:11.450Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "## Summary\n- Added purchase confirmation + balance checks for rocket creation (click + drag).\n- Deducts 1B on successful spawn and refunds 1B on self-destruct.\n- Default franc balance now starts at 10B in AppController."
+        }
+      ],
+      "snapshot": {
+        "title": "Add rocket purchase confirmation and balance updates",
+        "description": "Require purchase confirmation before creating rockets in earth_launchpad.tscn; track user francs balance (start 10B, rockets cost 1B, refund on self-destruct).",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "Launchpad",
+          "Economy",
+          "UX"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "User must confirm purchase before rocket is created"
+          },
+          {
+            "completed": true,
+            "text": "Creating a rocket deducts 1B francs from balance"
+          },
+          {
+            "completed": true,
+            "text": "Self-destructing a rocket refunds 1B francs"
+          },
+          {
+            "completed": true,
+            "text": "User starts with 10B francs"
+          }
+        ],
+        "implementationPlan": "1. Inspect launchpad rocket creation and self-destruct flows; identify balance source and UI touchpoints.\n2. Add purchase confirmation + balance check/deduct on rocket creation (click + drag) and return success from spawn.\n3. Refund balance on self-destruct; keep AppController balance in sync; update defaults to 10B.\n4. Sanity check behavior in launchpad and new mission panel (no tests run unless requested).",
+        "implementationNotes": "## Summary\n- Added purchase confirmation + balance checks for rocket creation (click + drag).\n- Deducts 1B on successful spawn and refunds 1B on self-destruct.\n- Default franc balance now starts at 10B in AppController."
+      }
+    },
+    {
+      "id": "v8",
+      "taskId": "8s7lmq",
+      "version": 8,
+      "timestamp": "2026-01-28T07:54:18.582Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Add rocket purchase confirmation and balance updates",
+        "description": "Require purchase confirmation before creating rockets in earth_launchpad.tscn; track user francs balance (start 10B, rockets cost 1B, refund on self-destruct).",
+        "status": "done",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "Launchpad",
+          "Economy",
+          "UX"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "User must confirm purchase before rocket is created"
+          },
+          {
+            "completed": true,
+            "text": "Creating a rocket deducts 1B francs from balance"
+          },
+          {
+            "completed": true,
+            "text": "Self-destructing a rocket refunds 1B francs"
+          },
+          {
+            "completed": true,
+            "text": "User starts with 10B francs"
+          }
+        ],
+        "implementationPlan": "1. Inspect launchpad rocket creation and self-destruct flows; identify balance source and UI touchpoints.\n2. Add purchase confirmation + balance check/deduct on rocket creation (click + drag) and return success from spawn.\n3. Refund balance on self-destruct; keep AppController balance in sync; update defaults to 10B.\n4. Sanity check behavior in launchpad and new mission panel (no tests run unless requested).",
+        "implementationNotes": "## Summary\n- Added purchase confirmation + balance checks for rocket creation (click + drag).\n- Deducts 1B on successful spawn and refunds 1B on self-destruct.\n- Default franc balance now starts at 10B in AppController."
+      }
+    }
+  ]
+}

@@ -5,6 +5,7 @@ extends Node2D
 var camera_controller: Node
 var scene_manager: SceneManager
 var ui_manager: UIManager
+const PREVIEW_SCENE_PATH := "res://Scenes/UI/AsteroidPreview/asteroid_preview.tscn"
 
 func _ready() -> void:
 	# Initialize camera controller
@@ -21,6 +22,11 @@ func _ready() -> void:
 	ui_manager = UIManager.new()
 	add_child(ui_manager)
 	ui_manager.add_to_group("ui_manager")  # Add to group for easy access
+
+	# Reopen New Mission panel if requested by previous scene
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if rm and rm.consume_return_to_new_mission_panel():
+		ui_manager.show_panel(UIManager.PanelType.NEW_MISSION)
 	
 	# Style and connect button signals
 	_setup_buttons()
@@ -55,83 +61,21 @@ func _setup_buttons() -> void:
 	print("All buttons styled and connected")
 
 func _apply_button_style(button: Button) -> void:
-	"""Apply styling to a button based on CSS design system"""
-	# Normal state - Primary blue background
-	var normal_style = StyleBoxFlat.new()
-	normal_style.bg_color = Color(0.55, 0.72, 0.92, 1)  # Primary blue
-	normal_style.border_width_left = 2
-	normal_style.border_width_right = 2
-	normal_style.border_width_top = 2
-	normal_style.border_width_bottom = 2
-	normal_style.border_color = Color(0.45, 0.62, 0.82, 1)
-	normal_style.corner_radius_top_left = 8
-	normal_style.corner_radius_top_right = 8
-	normal_style.corner_radius_bottom_left = 8
-	normal_style.corner_radius_bottom_right = 8
-	normal_style.set_expand_margin_all(4)
-	button.add_theme_stylebox_override("normal", normal_style)
-	
-	# Hover state - Lighter blue
-	var hover_style = StyleBoxFlat.new()
-	hover_style.bg_color = Color(0.65, 0.78, 0.96, 1)
-	hover_style.border_width_left = 2
-	hover_style.border_width_right = 2
-	hover_style.border_width_top = 2
-	hover_style.border_width_bottom = 2
-	hover_style.border_color = Color(0.55, 0.72, 0.92, 1)
-	hover_style.corner_radius_top_left = 8
-	hover_style.corner_radius_top_right = 8
-	hover_style.corner_radius_bottom_left = 8
-	hover_style.corner_radius_bottom_right = 8
-	hover_style.set_expand_margin_all(4)
-	button.add_theme_stylebox_override("hover", hover_style)
-	
-	# Pressed state - Darker blue
-	var pressed_style = StyleBoxFlat.new()
-	pressed_style.bg_color = Color(0.45, 0.62, 0.82, 1)
-	pressed_style.border_width_left = 2
-	pressed_style.border_width_right = 2
-	pressed_style.border_width_top = 2
-	pressed_style.border_width_bottom = 2
-	pressed_style.border_color = Color(0.35, 0.52, 0.72, 1)
-	pressed_style.corner_radius_top_left = 8
-	pressed_style.corner_radius_top_right = 8
-	pressed_style.corner_radius_bottom_left = 8
-	pressed_style.corner_radius_bottom_right = 8
-	pressed_style.set_expand_margin_all(4)
-	button.add_theme_stylebox_override("pressed", pressed_style)
-	
-	# Focus state
-	var focus_style = StyleBoxFlat.new()
-	focus_style.bg_color = Color(0.60, 0.75, 0.94, 1)
-	focus_style.border_width_left = 2
-	focus_style.border_width_right = 2
-	focus_style.border_width_top = 2
-	focus_style.border_width_bottom = 2
-	focus_style.border_color = Color(0.55, 0.18, 0.25, 1)  # Ring color
-	focus_style.corner_radius_top_left = 8
-	focus_style.corner_radius_top_right = 8
-	focus_style.corner_radius_bottom_left = 8
-	focus_style.corner_radius_bottom_right = 8
-	focus_style.set_expand_margin_all(4)
-	button.add_theme_stylebox_override("focus", focus_style)
-	
-	# Text color - white with improved rendering
-	button.add_theme_color_override("font_color", Color(1, 1, 1, 1))
-	button.add_theme_color_override("font_hover_color", Color(1, 1, 1, 1))
-	button.add_theme_color_override("font_pressed_color", Color(1, 1, 1, 1))
-	button.add_theme_color_override("font_focus_color", Color(1, 1, 1, 1))
-	
-	# Improve font rendering quality
-	button.add_theme_font_size_override("font_size", 28)  # Larger font size for crisp text
+	"""Apply consistent panel styling"""
+	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
+	panel_style.apply_button(button, false)
 
 # Button handlers
 func _on_back_button_pressed() -> void:
 	print("Back button pressed - navigating backward")
+	if _open_preview_delta(-1):
+		return
 	scene_manager.navigate_backward()
 
 func _on_forward_button_pressed() -> void:
 	print("Forward button pressed - navigating forward")
+	if _open_preview_delta(1):
+		return
 	scene_manager.navigate_forward()
 
 func _on_menu_button_pressed() -> void:
@@ -143,9 +87,37 @@ func _on_market_button_pressed() -> void:
 	ui_manager.show_panel(UIManager.PanelType.MARKET)
 
 func _on_space_map_button_pressed() -> void:
-	print("Space Map button pressed - showing space map panel")
-	ui_manager.show_panel(UIManager.PanelType.SPACE_MAP)
+	print("Space Map button pressed - opening space map scene")
+	if scene_manager:
+		scene_manager.change_to_scene("res://Scenes/UI/SpaceMap/space_map.tscn")
+	else:
+		get_tree().change_scene_to_file("res://Scenes/UI/SpaceMap/space_map.tscn")
 
 func _on_new_mission_button_pressed() -> void:
 	print("New Mission button pressed - showing new mission panel")
 	ui_manager.show_panel(UIManager.PanelType.NEW_MISSION)
+
+func _open_preview_delta(delta: int) -> bool:
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if not rm:
+		return false
+	var candidates = rm.get_preview_candidates()
+	if candidates.is_empty():
+		return false
+	var idx = rm.get_preview_index()
+	idx = (idx + delta) % candidates.size()
+	if idx < 0:
+		idx = candidates.size() - 1
+	rm.set_preview_index(idx)
+	var target = candidates[idx]
+	rm.set_preview_target(
+		str(target.get("target_id", "")),
+		str(target.get("label", "")),
+		str(target.get("type", "asteroid")),
+		str(target.get("rocket_id", ""))
+	)
+	if scene_manager:
+		scene_manager.change_to_scene(PREVIEW_SCENE_PATH)
+	else:
+		get_tree().change_scene_to_file(PREVIEW_SCENE_PATH)
+	return true
