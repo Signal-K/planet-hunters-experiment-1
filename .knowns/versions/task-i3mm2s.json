@@ -1,0 +1,187 @@
+{
+  "taskId": "i3mm2s",
+  "currentVersion": 6,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "i3mm2s",
+      "version": 1,
+      "timestamp": "2026-02-02T10:23:24.219Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        }
+      ],
+      "snapshot": {
+        "title": "Scene for selling spoils from mining operations",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@Liam",
+        "labels": [
+          "Scenes",
+          "Mining",
+          "Items",
+          "Inventory",
+          "Sales",
+          "Missions",
+          "Subcontractors"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "i3mm2s",
+      "version": 2,
+      "timestamp": "2026-02-02T10:29:03.808Z",
+      "changes": [
+        {
+          "field": "description",
+          "newValue": "After a user has filled their ship and returned \"home\" to earth (so they're orbiting Earth), they can sell or keep some of the resources. Users will need to pay a fee to a subcontractor to bring the minerals to Earth's surface. Later, they can research and build the facilities so they can do this in-house. If the users bring the minerals to Earth, this will provide them with a higher sell price for the minerals. users can do construction on earth as well, but this is for later (keep it in the knowledge base/pool, though). After seling, users can scrap, salvage or leave their ship [in orbit] and they will then get a mission badge (based on the name of the ship and other parameters) and mission log added to their stats. This should be added to a new json file. This also should add experience to the user's total. Scrapping a ship will return a variable percentage of the original cost to the user's [franc] balance, but for now it will be a flat 20%.\n"
+        }
+      ],
+      "snapshot": {
+        "title": "Scene for selling spoils from mining operations",
+        "description": "After a user has filled their ship and returned \"home\" to earth (so they're orbiting Earth), they can sell or keep some of the resources. Users will need to pay a fee to a subcontractor to bring the minerals to Earth's surface. Later, they can research and build the facilities so they can do this in-house. If the users bring the minerals to Earth, this will provide them with a higher sell price for the minerals. users can do construction on earth as well, but this is for later (keep it in the knowledge base/pool, though). After seling, users can scrap, salvage or leave their ship [in orbit] and they will then get a mission badge (based on the name of the ship and other parameters) and mission log added to their stats. This should be added to a new json file. This also should add experience to the user's total. Scrapping a ship will return a variable percentage of the original cost to the user's [franc] balance, but for now it will be a flat 20%.\n",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@Liam",
+        "labels": [
+          "Scenes",
+          "Mining",
+          "Items",
+          "Inventory",
+          "Sales",
+          "Missions",
+          "Subcontractors"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "i3mm2s",
+      "version": 3,
+      "timestamp": "2026-02-02T10:30:25.064Z",
+      "changes": [
+        {
+          "field": "assignee",
+          "oldValue": "@Liam",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Scene for selling spoils from mining operations",
+        "description": "After a user has filled their ship and returned \"home\" to earth (so they're orbiting Earth), they can sell or keep some of the resources. Users will need to pay a fee to a subcontractor to bring the minerals to Earth's surface. Later, they can research and build the facilities so they can do this in-house. If the users bring the minerals to Earth, this will provide them with a higher sell price for the minerals. users can do construction on earth as well, but this is for later (keep it in the knowledge base/pool, though). After seling, users can scrap, salvage or leave their ship [in orbit] and they will then get a mission badge (based on the name of the ship and other parameters) and mission log added to their stats. This should be added to a new json file. This also should add experience to the user's total. Scrapping a ship will return a variable percentage of the original cost to the user's [franc] balance, but for now it will be a flat 20%.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "Scenes",
+          "Mining",
+          "Items",
+          "Inventory",
+          "Sales",
+          "Missions",
+          "Subcontractors"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "i3mm2s",
+      "version": 4,
+      "timestamp": "2026-02-02T10:35:59.565Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "newValue": "1. Add a mission debrief scene for post-return cargo review and sales actions.\n2. Implement mission log storage + sale/scrap logic that updates franc balance + XP.\n3. Wire return-home flow to debrief scene and add tests for mission log persistence."
+        }
+      ],
+      "snapshot": {
+        "title": "Scene for selling spoils from mining operations",
+        "description": "After a user has filled their ship and returned \"home\" to earth (so they're orbiting Earth), they can sell or keep some of the resources. Users will need to pay a fee to a subcontractor to bring the minerals to Earth's surface. Later, they can research and build the facilities so they can do this in-house. If the users bring the minerals to Earth, this will provide them with a higher sell price for the minerals. users can do construction on earth as well, but this is for later (keep it in the knowledge base/pool, though). After seling, users can scrap, salvage or leave their ship [in orbit] and they will then get a mission badge (based on the name of the ship and other parameters) and mission log added to their stats. This should be added to a new json file. This also should add experience to the user's total. Scrapping a ship will return a variable percentage of the original cost to the user's [franc] balance, but for now it will be a flat 20%.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "Scenes",
+          "Mining",
+          "Items",
+          "Inventory",
+          "Sales",
+          "Missions",
+          "Subcontractors"
+        ],
+        "acceptanceCriteria": [],
+        "implementationPlan": "1. Add a mission debrief scene for post-return cargo review and sales actions.\n2. Implement mission log storage + sale/scrap logic that updates franc balance + XP.\n3. Wire return-home flow to debrief scene and add tests for mission log persistence."
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "i3mm2s",
+      "version": 5,
+      "timestamp": "2026-02-02T10:36:13.500Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "## Summary\n- Added mission debrief scene for post-return cargo review, sales, and ship closeout actions.\n- Added MissionLogManager + mission log JSON, and sale/scrap logic updating Franc balance + XP.\n- Wired return-home flow to new debrief scene and added mission log test + CI job."
+        }
+      ],
+      "snapshot": {
+        "title": "Scene for selling spoils from mining operations",
+        "description": "After a user has filled their ship and returned \"home\" to earth (so they're orbiting Earth), they can sell or keep some of the resources. Users will need to pay a fee to a subcontractor to bring the minerals to Earth's surface. Later, they can research and build the facilities so they can do this in-house. If the users bring the minerals to Earth, this will provide them with a higher sell price for the minerals. users can do construction on earth as well, but this is for later (keep it in the knowledge base/pool, though). After seling, users can scrap, salvage or leave their ship [in orbit] and they will then get a mission badge (based on the name of the ship and other parameters) and mission log added to their stats. This should be added to a new json file. This also should add experience to the user's total. Scrapping a ship will return a variable percentage of the original cost to the user's [franc] balance, but for now it will be a flat 20%.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "Scenes",
+          "Mining",
+          "Items",
+          "Inventory",
+          "Sales",
+          "Missions",
+          "Subcontractors"
+        ],
+        "acceptanceCriteria": [],
+        "implementationPlan": "1. Add a mission debrief scene for post-return cargo review and sales actions.\n2. Implement mission log storage + sale/scrap logic that updates franc balance + XP.\n3. Wire return-home flow to debrief scene and add tests for mission log persistence.",
+        "implementationNotes": "## Summary\n- Added mission debrief scene for post-return cargo review, sales, and ship closeout actions.\n- Added MissionLogManager + mission log JSON, and sale/scrap logic updating Franc balance + XP.\n- Wired return-home flow to new debrief scene and added mission log test + CI job."
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "i3mm2s",
+      "version": 6,
+      "timestamp": "2026-02-02T10:36:25.658Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Scene for selling spoils from mining operations",
+        "description": "After a user has filled their ship and returned \"home\" to earth (so they're orbiting Earth), they can sell or keep some of the resources. Users will need to pay a fee to a subcontractor to bring the minerals to Earth's surface. Later, they can research and build the facilities so they can do this in-house. If the users bring the minerals to Earth, this will provide them with a higher sell price for the minerals. users can do construction on earth as well, but this is for later (keep it in the knowledge base/pool, though). After seling, users can scrap, salvage or leave their ship [in orbit] and they will then get a mission badge (based on the name of the ship and other parameters) and mission log added to their stats. This should be added to a new json file. This also should add experience to the user's total. Scrapping a ship will return a variable percentage of the original cost to the user's [franc] balance, but for now it will be a flat 20%.",
+        "status": "done",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "Scenes",
+          "Mining",
+          "Items",
+          "Inventory",
+          "Sales",
+          "Missions",
+          "Subcontractors"
+        ],
+        "acceptanceCriteria": [],
+        "implementationPlan": "1. Add a mission debrief scene for post-return cargo review and sales actions.\n2. Implement mission log storage + sale/scrap logic that updates franc balance + XP.\n3. Wire return-home flow to debrief scene and add tests for mission log persistence.",
+        "implementationNotes": "## Summary\n- Added mission debrief scene for post-return cargo review, sales, and ship closeout actions.\n- Added MissionLogManager + mission log JSON, and sale/scrap logic updating Franc balance + XP.\n- Wired return-home flow to new debrief scene and added mission log test + CI job."
+      }
+    }
+  ]
+}

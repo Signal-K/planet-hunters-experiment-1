@@ -57,6 +57,9 @@ func _show_menu_panel() -> void:
 		current_menu_panel = menu_scene.instantiate()
 		add_child(current_menu_panel)
 		_setup_menu_panel_integration()
+		var app_controller = _get_app_controller()
+		if app_controller and app_controller.has_method("request_menu_open"):
+			app_controller.request_menu_open()
 	else:
 		print("Failed to load MenuPanel scene")
 
@@ -121,6 +124,9 @@ func _on_reset_tutorial() -> void:
 func _on_menu_panel_closed() -> void:
 	print("Menu panel closed")
 	current_menu_panel = null
+	var app_controller = _get_app_controller()
+	if app_controller and app_controller.has_method("request_menu_close"):
+		app_controller.request_menu_close()
 
 func _on_menu_counter_changed(new_value: int) -> void:
 	"""Update AppController when counter changes in menu"""

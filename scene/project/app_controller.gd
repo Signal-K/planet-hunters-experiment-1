@@ -12,6 +12,12 @@ var franc_balance: int = 10000000000  # Default 10B
 
 # Tutorial completion state shared between React Native and Godot
 var tutorial_completed: bool = false
+var _game_paused: bool = false
+var _menu_request_version: int = 0
+var _menu_request_action: String = ""
+
+func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
 
 #region React Public API
 
@@ -80,3 +86,27 @@ func close_window(window_name: String) -> bool:
 			window.queue_free()
 			return true
 	return false
+
+func set_game_paused(paused: bool) -> void:
+	_game_paused = paused
+	get_tree().paused = paused
+	print("[AppController] Game paused set to: ", paused)
+
+func get_game_paused() -> bool:
+	return _game_paused
+
+func request_menu_open() -> void:
+	_menu_request_version += 1
+	_menu_request_action = "open"
+	window_status_update.emit("Opened menu")
+
+func request_menu_close() -> void:
+	_menu_request_version += 1
+	_menu_request_action = "close"
+	window_status_update.emit("Closed menu")
+
+func get_menu_request_version() -> int:
+	return _menu_request_version
+
+func get_menu_request_action() -> String:
+	return _menu_request_action

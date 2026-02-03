@@ -18,6 +18,8 @@ config/icon="res://icon.svg"
 [autoload]
 
 AppController="*res://Scripts/Systems/AppController.gd"
+SyncBridge="*res://Scripts/Systems/SyncBridge.gd"
+SafeAreaUI="*res://Scripts/UI/SafeAreaUI.gd"
 
 [display]
 

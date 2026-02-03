@@ -1,0 +1,62 @@
+[gd_scene load_steps=3 format=3 uid="uid://orbit_sale_preview"]
+
+[ext_resource type="Script" path="res://Scripts/Earth/OrbitSalePreview.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/Backdrops/Earth1.png" id="2"]
+
+[node name="OrbitSalePreview" type="Node2D"]
+script = ExtResource("1")
+
+[node name="EarthBackdrop" type="Sprite2D" parent="."]
+texture = ExtResource("2")
+position = Vector2(960, 740)
+scale = Vector2(1.2, 1.2)
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="Root" type="Control" parent="UI"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="Panel" type="Panel" parent="UI/Root"]
+anchor_left = 0.06
+anchor_top = 0.06
+anchor_right = 0.94
+anchor_bottom = 0.94
+
+[node name="VBox" type="VBoxContainer" parent="UI/Root/Panel"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = 24.0
+offset_right = -24.0
+offset_bottom = -24.0
+
+[node name="Title" type="Label" parent="UI/Root/Panel/VBox"]
+text = "Orbit Contract Preview"
+
+[node name="Subtitle" type="Label" parent="UI/Root/Panel/VBox"]
+text = ""
+
+[node name="Contractors" type="VBoxContainer" parent="UI/Root/Panel/VBox"]
+
+[node name="Actions" type="HBoxContainer" parent="UI/Root/Panel/VBox"]
+
+[node name="SellButton" type="Button" parent="UI/Root/Panel/VBox/Actions"]
+text = "Sell Minerals"
+
+[node name="SalvageButton" type="Button" parent="UI/Root/Panel/VBox/Actions"]
+text = "Salvage Ship"
+
+[node name="ScrapButton" type="Button" parent="UI/Root/Panel/VBox/Actions"]
+text = "Scrap Ship (20%)"
+
+[node name="ArchiveButton" type="Button" parent="UI/Root/Panel/VBox/Actions"]
+text = "Archive Ship"
+
+[node name="Footer" type="HBoxContainer" parent="UI/Root/Panel/VBox"]
+
+[node name="BackButton" type="Button" parent="UI/Root/Panel/VBox/Footer"]
+text = "Back to Missions"
+
+[node name="Status" type="Label" parent="UI/Root/Panel/VBox/Footer"]
+text = ""
