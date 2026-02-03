@@ -1,15 +1,16 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
-import { getSharedFrancBalance } from '../utils/godot';
+import { useSyncState } from '../utils/syncState';
 
 export const FrancBalance = () => {
+  const syncState = useSyncState();
   const balance = useMemo(() => {
-    const val = getSharedFrancBalance();
+    const val = syncState.francBalance;
     if (Math.abs(val) >= 1000000000) return Math.round(val / 1000000000) + 'B';
     if (Math.abs(val) >= 1000000) return Math.round(val / 1000000) + 'M';
     if (Math.abs(val) >= 1000) return Math.round(val / 1000) + 'K';
     return String(val);
-  }, []);
+  }, [syncState.francBalance]);
 
   return (
     <View style={styles.container} pointerEvents="box-none">

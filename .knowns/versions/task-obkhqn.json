@@ -1,0 +1,277 @@
+{
+  "taskId": "obkhqn",
+  "currentVersion": 4,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "obkhqn",
+      "version": 1,
+      "timestamp": "2026-02-03T01:27:08.396Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Unified Expo↔Godot Sync System",
+        "description": "Complete rewrite of the bidirectional sync system between React Native/Expo and Godot. Replaces the previous version-based polling approach with event-driven messaging. React Native owns persistence (AsyncStorage), Godot owns runtime state. See @doc/GODOT_INTEGRATION for architecture details. Related: @task-6h4c7d, @task-8t0o83, @task-vvgprh",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "sync",
+          "godot",
+          "expo",
+          "state",
+          "bridge",
+          "architecture"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "syncState.ts provides unified state management with React hooks"
+          },
+          {
+            "completed": false,
+            "text": "godotSync.ts handles worklet-based Godot communication"
+          },
+          {
+            "completed": false,
+            "text": "SyncBridge.gd connects to AppController signals"
+          },
+          {
+            "completed": false,
+            "text": "Godot tests verify bidirectional sync"
+          },
+          {
+            "completed": false,
+            "text": "Jest tests verify React Native state persistence"
+          },
+          {
+            "completed": false,
+            "text": "CI workflow exports Godot and builds Expo on main branch"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "obkhqn",
+      "version": 2,
+      "timestamp": "2026-02-03T01:32:17.876Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "syncState.ts provides unified state management with React hooks"
+            },
+            {
+              "completed": false,
+              "text": "godotSync.ts handles worklet-based Godot communication"
+            },
+            {
+              "completed": false,
+              "text": "SyncBridge.gd connects to AppController signals"
+            },
+            {
+              "completed": false,
+              "text": "Godot tests verify bidirectional sync"
+            },
+            {
+              "completed": false,
+              "text": "Jest tests verify React Native state persistence"
+            },
+            {
+              "completed": false,
+              "text": "CI workflow exports Godot and builds Expo on main branch"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "syncState.ts provides unified state management with React hooks"
+            },
+            {
+              "completed": true,
+              "text": "godotSync.ts handles worklet-based Godot communication"
+            },
+            {
+              "completed": true,
+              "text": "SyncBridge.gd connects to AppController signals"
+            },
+            {
+              "completed": true,
+              "text": "Godot tests verify bidirectional sync"
+            },
+            {
+              "completed": true,
+              "text": "Jest tests verify React Native state persistence"
+            },
+            {
+              "completed": true,
+              "text": "CI workflow exports Godot and builds Expo on main branch"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Unified Expo↔Godot Sync System",
+        "description": "Complete rewrite of the bidirectional sync system between React Native/Expo and Godot. Replaces the previous version-based polling approach with event-driven messaging. React Native owns persistence (AsyncStorage), Godot owns runtime state. See @doc/GODOT_INTEGRATION for architecture details. Related: @task-6h4c7d, @task-8t0o83, @task-vvgprh",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "sync",
+          "godot",
+          "expo",
+          "state",
+          "bridge",
+          "architecture"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "syncState.ts provides unified state management with React hooks"
+          },
+          {
+            "completed": true,
+            "text": "godotSync.ts handles worklet-based Godot communication"
+          },
+          {
+            "completed": true,
+            "text": "SyncBridge.gd connects to AppController signals"
+          },
+          {
+            "completed": true,
+            "text": "Godot tests verify bidirectional sync"
+          },
+          {
+            "completed": true,
+            "text": "Jest tests verify React Native state persistence"
+          },
+          {
+            "completed": true,
+            "text": "CI workflow exports Godot and builds Expo on main branch"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "obkhqn",
+      "version": 3,
+      "timestamp": "2026-02-03T01:32:33.846Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "## Summary\n\nComplete rewrite of the Expo ↔ Godot sync system.\n\n### Architecture\n- **React Native owns persistence** (AsyncStorage via unified_sync_state_v2 key)\n- **Godot owns runtime state** (authoritative during gameplay)\n- **Event-driven updates** (no polling-based version conflicts)\n\n### Files Created/Modified\n- `utils/syncState.ts` - Unified state management with React hooks\n- `utils/godotSync.ts` - Worklet-based Godot communication\n- `scene/Scripts/Systems/SyncBridge.gd` - Godot-side sync bridge\n- `scene/tests/run_sync_tests.gd` - 6 Godot sync tests\n- `__tests__/syncState.test.ts` - 10 Jest sync tests\n- `.github/workflows/export_build.yml` - CI workflow for main branch\n\n### Test Results\n- Jest: 10/10 passing\n- Godot: 6/6 passing"
+        }
+      ],
+      "snapshot": {
+        "title": "Unified Expo↔Godot Sync System",
+        "description": "Complete rewrite of the bidirectional sync system between React Native/Expo and Godot. Replaces the previous version-based polling approach with event-driven messaging. React Native owns persistence (AsyncStorage), Godot owns runtime state. See @doc/GODOT_INTEGRATION for architecture details. Related: @task-6h4c7d, @task-8t0o83, @task-vvgprh",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "sync",
+          "godot",
+          "expo",
+          "state",
+          "bridge",
+          "architecture"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "syncState.ts provides unified state management with React hooks"
+          },
+          {
+            "completed": true,
+            "text": "godotSync.ts handles worklet-based Godot communication"
+          },
+          {
+            "completed": true,
+            "text": "SyncBridge.gd connects to AppController signals"
+          },
+          {
+            "completed": true,
+            "text": "Godot tests verify bidirectional sync"
+          },
+          {
+            "completed": true,
+            "text": "Jest tests verify React Native state persistence"
+          },
+          {
+            "completed": true,
+            "text": "CI workflow exports Godot and builds Expo on main branch"
+          }
+        ],
+        "implementationNotes": "## Summary\n\nComplete rewrite of the Expo ↔ Godot sync system.\n\n### Architecture\n- **React Native owns persistence** (AsyncStorage via unified_sync_state_v2 key)\n- **Godot owns runtime state** (authoritative during gameplay)\n- **Event-driven updates** (no polling-based version conflicts)\n\n### Files Created/Modified\n- `utils/syncState.ts` - Unified state management with React hooks\n- `utils/godotSync.ts` - Worklet-based Godot communication\n- `scene/Scripts/Systems/SyncBridge.gd` - Godot-side sync bridge\n- `scene/tests/run_sync_tests.gd` - 6 Godot sync tests\n- `__tests__/syncState.test.ts` - 10 Jest sync tests\n- `.github/workflows/export_build.yml` - CI workflow for main branch\n\n### Test Results\n- Jest: 10/10 passing\n- Godot: 6/6 passing"
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "obkhqn",
+      "version": 4,
+      "timestamp": "2026-02-03T01:34:08.850Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Unified Expo↔Godot Sync System",
+        "description": "Complete rewrite of the bidirectional sync system between React Native/Expo and Godot. Replaces the previous version-based polling approach with event-driven messaging. React Native owns persistence (AsyncStorage), Godot owns runtime state. See @doc/GODOT_INTEGRATION for architecture details. Related: @task-6h4c7d, @task-8t0o83, @task-vvgprh",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "sync",
+          "godot",
+          "expo",
+          "state",
+          "bridge",
+          "architecture"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "syncState.ts provides unified state management with React hooks"
+          },
+          {
+            "completed": true,
+            "text": "godotSync.ts handles worklet-based Godot communication"
+          },
+          {
+            "completed": true,
+            "text": "SyncBridge.gd connects to AppController signals"
+          },
+          {
+            "completed": true,
+            "text": "Godot tests verify bidirectional sync"
+          },
+          {
+            "completed": true,
+            "text": "Jest tests verify React Native state persistence"
+          },
+          {
+            "completed": true,
+            "text": "CI workflow exports Godot and builds Expo on main branch"
+          }
+        ],
+        "implementationNotes": "## Summary\n\nComplete rewrite of the Expo ↔ Godot sync system.\n\n### Architecture\n- **React Native owns persistence** (AsyncStorage via unified_sync_state_v2 key)\n- **Godot owns runtime state** (authoritative during gameplay)\n- **Event-driven updates** (no polling-based version conflicts)\n\n### Files Created/Modified\n- `utils/syncState.ts` - Unified state management with React hooks\n- `utils/godotSync.ts` - Worklet-based Godot communication\n- `scene/Scripts/Systems/SyncBridge.gd` - Godot-side sync bridge\n- `scene/tests/run_sync_tests.gd` - 6 Godot sync tests\n- `__tests__/syncState.test.ts` - 10 Jest sync tests\n- `.github/workflows/export_build.yml` - CI workflow for main branch\n\n### Test Results\n- Jest: 10/10 passing\n- Godot: 6/6 passing"
+      }
+    }
+  ]
+}

@@ -1,0 +1,274 @@
+{
+  "taskId": "6h4c7d",
+  "currentVersion": 5,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "6h4c7d",
+      "version": 1,
+      "timestamp": "2026-02-02T09:53:21.719Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Rebuild Expo↔Godot sync pipeline",
+        "description": "Replace the current cross-bridge sync mechanism with a reliable, bidirectional, single-source-of-truth approach. Remove existing sync code and tests that are part of the current approach. Related: @.knowns/tasks/task-8t0o83",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "Sync",
+          "Godot",
+          "Expo",
+          "Tests",
+          "CI"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Bidirectional data sync (Expo→Godot and Godot→Expo) is reliable and lossless for defined state"
+          },
+          {
+            "completed": false,
+            "text": "Legacy sync code/tests removed"
+          },
+          {
+            "completed": false,
+            "text": "New tests cover bidirectional sync"
+          },
+          {
+            "completed": false,
+            "text": "CI workflow builds Godot export and Expo build on main"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "6h4c7d",
+      "version": 2,
+      "timestamp": "2026-02-02T10:03:44.272Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "newValue": "1. Replace legacy sync helpers in RN + Godot with a snapshot/patch SyncBridge autoload and a JS sync client.\n2. Update screens/components to use the new sync state store + loop; remove old queue/polling.\n3. Add Godot headless sync tests + Jest sync-state tests and wire into CI; add export/build workflow."
+        }
+      ],
+      "snapshot": {
+        "title": "Rebuild Expo↔Godot sync pipeline",
+        "description": "Replace the current cross-bridge sync mechanism with a reliable, bidirectional, single-source-of-truth approach. Remove existing sync code and tests that are part of the current approach. Related: @.knowns/tasks/task-8t0o83",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "Sync",
+          "Godot",
+          "Expo",
+          "Tests",
+          "CI"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Bidirectional data sync (Expo→Godot and Godot→Expo) is reliable and lossless for defined state"
+          },
+          {
+            "completed": false,
+            "text": "Legacy sync code/tests removed"
+          },
+          {
+            "completed": false,
+            "text": "New tests cover bidirectional sync"
+          },
+          {
+            "completed": false,
+            "text": "CI workflow builds Godot export and Expo build on main"
+          }
+        ],
+        "implementationPlan": "1. Replace legacy sync helpers in RN + Godot with a snapshot/patch SyncBridge autoload and a JS sync client.\n2. Update screens/components to use the new sync state store + loop; remove old queue/polling.\n3. Add Godot headless sync tests + Jest sync-state tests and wire into CI; add export/build workflow."
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "6h4c7d",
+      "version": 3,
+      "timestamp": "2026-02-02T10:05:11.431Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "## Summary\n- Replaced legacy Godot↔Expo sync with snapshot/patch SyncBridge autoload + JS sync loop and local sync store.\n- Updated Loading/Game screens + FrancBalance to use new sync state.\n- Added Godot sync tests, Jest syncState tests, and CI workflows for sync tests + export/build."
+        }
+      ],
+      "snapshot": {
+        "title": "Rebuild Expo↔Godot sync pipeline",
+        "description": "Replace the current cross-bridge sync mechanism with a reliable, bidirectional, single-source-of-truth approach. Remove existing sync code and tests that are part of the current approach. Related: @.knowns/tasks/task-8t0o83",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "Sync",
+          "Godot",
+          "Expo",
+          "Tests",
+          "CI"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Bidirectional data sync (Expo→Godot and Godot→Expo) is reliable and lossless for defined state"
+          },
+          {
+            "completed": false,
+            "text": "Legacy sync code/tests removed"
+          },
+          {
+            "completed": false,
+            "text": "New tests cover bidirectional sync"
+          },
+          {
+            "completed": false,
+            "text": "CI workflow builds Godot export and Expo build on main"
+          }
+        ],
+        "implementationPlan": "1. Replace legacy sync helpers in RN + Godot with a snapshot/patch SyncBridge autoload and a JS sync client.\n2. Update screens/components to use the new sync state store + loop; remove old queue/polling.\n3. Add Godot headless sync tests + Jest sync-state tests and wire into CI; add export/build workflow.",
+        "implementationNotes": "## Summary\n- Replaced legacy Godot↔Expo sync with snapshot/patch SyncBridge autoload + JS sync loop and local sync store.\n- Updated Loading/Game screens + FrancBalance to use new sync state.\n- Added Godot sync tests, Jest syncState tests, and CI workflows for sync tests + export/build."
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "6h4c7d",
+      "version": 4,
+      "timestamp": "2026-02-02T10:05:18.496Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Bidirectional data sync (Expo→Godot and Godot→Expo) is reliable and lossless for defined state"
+            },
+            {
+              "completed": false,
+              "text": "Legacy sync code/tests removed"
+            },
+            {
+              "completed": false,
+              "text": "New tests cover bidirectional sync"
+            },
+            {
+              "completed": false,
+              "text": "CI workflow builds Godot export and Expo build on main"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Bidirectional data sync (Expo→Godot and Godot→Expo) is reliable and lossless for defined state"
+            },
+            {
+              "completed": true,
+              "text": "Legacy sync code/tests removed"
+            },
+            {
+              "completed": true,
+              "text": "New tests cover bidirectional sync"
+            },
+            {
+              "completed": true,
+              "text": "CI workflow builds Godot export and Expo build on main"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Rebuild Expo↔Godot sync pipeline",
+        "description": "Replace the current cross-bridge sync mechanism with a reliable, bidirectional, single-source-of-truth approach. Remove existing sync code and tests that are part of the current approach. Related: @.knowns/tasks/task-8t0o83",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "Sync",
+          "Godot",
+          "Expo",
+          "Tests",
+          "CI"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Bidirectional data sync (Expo→Godot and Godot→Expo) is reliable and lossless for defined state"
+          },
+          {
+            "completed": true,
+            "text": "Legacy sync code/tests removed"
+          },
+          {
+            "completed": true,
+            "text": "New tests cover bidirectional sync"
+          },
+          {
+            "completed": true,
+            "text": "CI workflow builds Godot export and Expo build on main"
+          }
+        ],
+        "implementationPlan": "1. Replace legacy sync helpers in RN + Godot with a snapshot/patch SyncBridge autoload and a JS sync client.\n2. Update screens/components to use the new sync state store + loop; remove old queue/polling.\n3. Add Godot headless sync tests + Jest sync-state tests and wire into CI; add export/build workflow.",
+        "implementationNotes": "## Summary\n- Replaced legacy Godot↔Expo sync with snapshot/patch SyncBridge autoload + JS sync loop and local sync store.\n- Updated Loading/Game screens + FrancBalance to use new sync state.\n- Added Godot sync tests, Jest syncState tests, and CI workflows for sync tests + export/build."
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "6h4c7d",
+      "version": 5,
+      "timestamp": "2026-02-02T10:05:31.362Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Rebuild Expo↔Godot sync pipeline",
+        "description": "Replace the current cross-bridge sync mechanism with a reliable, bidirectional, single-source-of-truth approach. Remove existing sync code and tests that are part of the current approach. Related: @.knowns/tasks/task-8t0o83",
+        "status": "done",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "Sync",
+          "Godot",
+          "Expo",
+          "Tests",
+          "CI"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Bidirectional data sync (Expo→Godot and Godot→Expo) is reliable and lossless for defined state"
+          },
+          {
+            "completed": true,
+            "text": "Legacy sync code/tests removed"
+          },
+          {
+            "completed": true,
+            "text": "New tests cover bidirectional sync"
+          },
+          {
+            "completed": true,
+            "text": "CI workflow builds Godot export and Expo build on main"
+          }
+        ],
+        "implementationPlan": "1. Replace legacy sync helpers in RN + Godot with a snapshot/patch SyncBridge autoload and a JS sync client.\n2. Update screens/components to use the new sync state store + loop; remove old queue/polling.\n3. Add Godot headless sync tests + Jest sync-state tests and wire into CI; add export/build workflow.",
+        "implementationNotes": "## Summary\n- Replaced legacy Godot↔Expo sync with snapshot/patch SyncBridge autoload + JS sync loop and local sync store.\n- Updated Loading/Game screens + FrancBalance to use new sync state.\n- Added Godot sync tests, Jest syncState tests, and CI workflows for sync tests + export/build."
+      }
+    }
+  ]
+}

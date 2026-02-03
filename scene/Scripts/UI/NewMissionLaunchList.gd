@@ -3,7 +3,7 @@ class_name NewMissionLaunchList
 
 var _launch_list_container: Node
 var _on_refund: Callable
-const PREVIEW_SCENE_PATH := "res://Scenes/UI/AsteroidPreview/asteroid_preview.tscn"
+const PREVIEW_SCENE_PATH := "res://Scenes/Transitions/rocket_transit.tscn"
 const MIN_DISTANCE_KM := 150000.0
 const MAX_DISTANCE_KM := 3000000.0
 const TRAVEL_SECONDS := 60.0

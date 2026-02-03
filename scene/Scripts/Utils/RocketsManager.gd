@@ -12,6 +12,8 @@ static var _preview_target: Dictionary = {}
 static var _return_to_new_mission_panel: bool = false
 static var _preview_index: int = 0
 static var _override_state: Dictionary = {}
+static var _returned_mission: Dictionary = {}
+static var _orbiting_rockets: Dictionary = {}
 
 static func load_state() -> Dictionary:
     if _override_state.size() > 0:
@@ -416,6 +418,42 @@ static func get_preview_target() -> Dictionary:
 
 static func clear_preview_target() -> void:
     _preview_target = {}
+
+static func set_returned_mission(rocket_id: String, target_id: String, target_label: String, target_type: String) -> void:
+    _returned_mission = {
+        "rocket_id": rocket_id,
+        "target_id": target_id,
+        "label": target_label,
+        "type": target_type
+    }
+
+static func get_returned_mission() -> Dictionary:
+    return _returned_mission.duplicate()
+
+static func clear_returned_mission() -> void:
+    _returned_mission = {}
+
+static func add_orbiting_rocket(rocket_id: String, target_id: String, label: String, target_type: String) -> void:
+    if rocket_id == "":
+        return
+    _orbiting_rockets[rocket_id] = {
+        "rocket_id": rocket_id,
+        "target_id": target_id,
+        "label": label,
+        "type": target_type
+    }
+
+static func remove_orbiting_rocket(rocket_id: String) -> void:
+    if rocket_id == "":
+        return
+    if _orbiting_rockets.has(rocket_id):
+        _orbiting_rockets.erase(rocket_id)
+
+static func get_orbiting_rockets() -> Array:
+    var out := []
+    for key in _orbiting_rockets.keys():
+        out.append(_orbiting_rockets[key])
+    return out
 
 static func set_return_to_new_mission_panel(enabled: bool) -> void:
     _return_to_new_mission_panel = enabled
