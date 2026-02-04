@@ -60,6 +60,10 @@ const config = {
     ]),
     unstable_enableSymlinks: true,
   },
+  serializer: {
+    // Don't use Expo's custom serializer
+    customSerializer: undefined,
+  },
 };
 
 const config_merged = mergeConfig(defaultConfig, config);

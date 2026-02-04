@@ -6,12 +6,10 @@ import {
   SafeAreaView,
   ScrollView,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useFocusEffect } from '@react-navigation/native';
 import type { NavigationProp } from '@react-navigation/native';
 import type { RootStackParamList } from '../types/navigation';
 import { useAuth } from '../contexts/AuthContext';
-import { setSharedCounterValue, setSharedFrancBalance, setSharedExperienceXp, setSharedExperienceLevel, updateSharedTutorialCompleted, getSharedCounterValue, getSharedFrancBalance, getSharedTutorialCompleted } from '../utils/godot';
+import { useSyncState, setLocalSyncState, loadSyncState, resetSyncState } from '../utils/syncState';
 import { commonStyles } from '../styles/common';
 
 type ScreenNavigationProp = NavigationProp<RootStackParamList>;
@@ -26,199 +24,12 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ navigation }) => {
   const [progress, setProgress] = useState(0);
   const [loadingText, setLoadingText] = useState('Initializing...');
   const [isGameReady, setIsGameReady] = useState(false);
-  const [counter, setCounter] = useState(0);
-  const [counterLoaded, setCounterLoaded] = useState(false);
-  const [francBalance, setFrancBalance] = useState(10000000000); // 10B default
-  const [balanceLoaded, setBalanceLoaded] = useState(false);
-  const [tutorialCompleted, setTutorialCompleted] = useState(false);
-  const [tutorialLoaded, setTutorialLoaded] = useState(false);
-  const [experienceXp, setExperienceXp] = useState(0);
-  const [experienceLevel, setExperienceLevel] = useState(1);
-  const [experienceLoaded, setExperienceLoaded] = useState(false);
+  const [syncLoaded, setSyncLoaded] = useState(false);
+  const syncState = useSyncState();
 
-  // Load counter from storage on mount
   useEffect(() => {
-    const loadCounter = async () => {
-      try {
-        const saved = await AsyncStorage.getItem('gameCounter');
-        if (saved !== null) {
-          const value = parseInt(saved, 10);
-          setCounter(value);
-          console.log('Loaded counter from storage:', value);
-        }
-      } catch (e) {
-        console.error('Failed to load counter:', e);
-      } finally {
-        setCounterLoaded(true);
-      }
-    };
-    loadCounter();
+    loadSyncState().then(() => setSyncLoaded(true));
   }, []);
-
-  // Load Franc balance from storage on mount
-  useEffect(() => {
-    const loadBalance = async () => {
-      try {
-        const saved = await AsyncStorage.getItem('francBalance');
-        if (saved !== null) {
-          const value = parseInt(saved, 10);
-          setFrancBalance(value);
-          console.log('Loaded franc balance from storage:', value);
-        }
-      } catch (e) {
-        console.error('Failed to load franc balance:', e);
-      } finally {
-        setBalanceLoaded(true);
-      }
-    };
-    loadBalance();
-  }, []);
-
-  // Load tutorial completion from storage on mount
-  useEffect(() => {
-    const loadTutorialCompleted = async () => {
-      try {
-        const saved = await AsyncStorage.getItem('tutorialCompleted');
-        if (saved !== null) {
-          const value = saved === 'true';
-          setTutorialCompleted(value);
-          console.log('Loaded tutorial completed from storage:', value);
-        }
-      } catch (e) {
-        console.error('Failed to load tutorial completed:', e);
-      } finally {
-        setTutorialLoaded(true);
-      }
-    };
-    loadTutorialCompleted();
-  }, []);
-
-  // Load experience from storage on mount
-  useEffect(() => {
-    const loadExperience = async () => {
-      try {
-        const [savedXp, savedLevel] = await Promise.all([
-          AsyncStorage.getItem('experienceXp'),
-          AsyncStorage.getItem('experienceLevel'),
-        ]);
-        if (savedXp !== null) {
-          const value = parseInt(savedXp, 10);
-          setExperienceXp(value);
-          console.log('Loaded experience XP from storage:', value);
-        }
-        if (savedLevel !== null) {
-          const value = parseInt(savedLevel, 10);
-          setExperienceLevel(value);
-          console.log('Loaded experience level from storage:', value);
-        }
-      } catch (e) {
-        console.error('Failed to load experience:', e);
-      } finally {
-        setExperienceLoaded(true);
-      }
-    };
-    loadExperience();
-  }, []);
-
-  // Save counter to storage whenever it changes and update shared value
-  useEffect(() => {
-    if (counterLoaded) {
-      setSharedCounterValue(counter);
-      AsyncStorage.setItem('gameCounter', counter.toString())
-        .then(() => console.log('Saved counter to storage:', counter))
-        .catch(e => console.error('Failed to save counter:', e));
-    }
-  }, [counter, counterLoaded]);
-
-  // Save Franc balance to storage whenever it changes
-  useEffect(() => {
-    if (balanceLoaded) {
-      AsyncStorage.setItem('francBalance', francBalance.toString())
-        .then(() => console.log('Saved franc balance to storage:', francBalance))
-        .catch(e => console.error('Failed to save franc balance:', e));
-    }
-  }, [francBalance, balanceLoaded]);
-
-  // Save tutorial completion to storage whenever it changes
-  useEffect(() => {
-    if (tutorialLoaded) {
-      AsyncStorage.setItem('tutorialCompleted', tutorialCompleted.toString())
-        .then(() => console.log('Saved tutorial completed to storage:', tutorialCompleted))
-        .catch(e => console.error('Failed to save tutorial completed:', e));
-    }
-  }, [tutorialCompleted, tutorialLoaded]);
-
-  // Save experience to storage whenever it changes
-  useEffect(() => {
-    if (experienceLoaded) {
-      AsyncStorage.multiSet([
-        ['experienceXp', experienceXp.toString()],
-        ['experienceLevel', experienceLevel.toString()],
-      ])
-        .then(() => console.log('Saved experience to storage:', experienceXp, experienceLevel))
-        .catch(e => console.error('Failed to save experience:', e));
-    }
-  }, [experienceXp, experienceLevel, experienceLoaded]);
-
-  // Reload counter, balance, and tutorial when screen comes into focus
-  // This ensures we have the latest values after returning from GameScreen
-  useFocusEffect(
-    useCallback(() => {
-      const reloadData = async () => {
-        try {
-          // Load from AsyncStorage (source of truth)
-          const [savedCounter, savedBalance, savedTutorial] = await Promise.all([
-            AsyncStorage.getItem('gameCounter'),
-            AsyncStorage.getItem('francBalance'),
-            AsyncStorage.getItem('tutorialCompleted'),
-          ]);
-          const [savedXp, savedLevel] = await Promise.all([
-            AsyncStorage.getItem('experienceXp'),
-            AsyncStorage.getItem('experienceLevel'),
-          ]);
-
-          if (savedCounter !== null) {
-            const value = parseInt(savedCounter, 10);
-            setCounter(value);
-            setSharedCounterValue(value);
-            console.log('Reloaded counter from storage:', value);
-          }
-
-          if (savedBalance !== null) {
-            const value = parseInt(savedBalance, 10);
-            setFrancBalance(value);
-            setSharedFrancBalance(value);
-            console.log('Reloaded franc balance from storage:', value);
-          }
-
-          if (savedTutorial !== null) {
-            const value = savedTutorial === 'true';
-            setTutorialCompleted(value);
-            updateSharedTutorialCompleted(value);
-            console.log('Reloaded tutorial completed from storage:', value);
-          }
-
-          if (savedXp !== null) {
-            const value = parseInt(savedXp, 10);
-            setExperienceXp(value);
-            setSharedExperienceXp(value);
-            console.log('Reloaded experience XP from storage:', value);
-          }
-
-          if (savedLevel !== null) {
-            const value = parseInt(savedLevel, 10);
-            setExperienceLevel(value);
-            setSharedExperienceLevel(value);
-            console.log('Reloaded experience level from storage:', value);
-          }
-        } catch (e) {
-          console.error('Failed to reload data:', e);
-        }
-      };
-
-      reloadData();
-    }, [])
-  );
 
   const loadingSteps = useMemo(() => [
     'Initializing system...',
@@ -237,18 +48,18 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ navigation }) => {
         const nextStep = Math.min(prev + 1, loadingSteps.length - 1);
         setLoadingText(loadingSteps[nextStep]);
         setProgress((nextStep + 1) / loadingSteps.length);
-        
+
         if (nextStep === loadingSteps.length - 1) {
           setTimeout(() => {
             setIsGameReady(true);
             clearInterval(interval);
           }, 1000);
         }
-        
+
         return nextStep;
       });
-    }, 2000); // Each step takes 2 seconds
-    
+    }, 2000);
+
     return () => clearInterval(interval);
   }, [loadingSteps]);
 
@@ -268,47 +79,22 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ navigation }) => {
   };
 
   const handleOpenGame = () => {
-    if (isGameReady) {
-      // Store counter, balance, and tutorial completion in module-level variables accessible from worklet
-      setSharedCounterValue(counter);
-      setSharedFrancBalance(francBalance);
-      setSharedExperienceXp(experienceXp);
-      setSharedExperienceLevel(experienceLevel);
-      updateSharedTutorialCompleted(tutorialCompleted);
-      console.log("Setting initial counter for game:", counter);
-      console.log("Setting initial franc balance for game:", francBalance);
-      console.log("Setting initial experience for game:", experienceXp, experienceLevel);
-      console.log("Setting initial tutorial completed for game:", tutorialCompleted);
+    if (isGameReady && syncLoaded) {
       navigation.navigate("Game");
     }
   };
 
   const incrementCounter = () => {
-    setCounter(prev => {
-      const newVal = prev + 1;
-      setSharedCounterValue(newVal);
-      return newVal;
-    });
+    setLocalSyncState({ counter: syncState.counter + 1 });
   };
+
   const decrementCounter = () => {
-    setCounter(prev => {
-      const newVal = prev - 1;
-      setSharedCounterValue(newVal);
-      return newVal;
-    });
+    setLocalSyncState({ counter: syncState.counter - 1 });
   };
 
   const clearAllState = async () => {
     try {
-      await AsyncStorage.multiRemove(['gameCounter', 'francBalance', 'tutorialCompleted', 'experienceXp', 'experienceLevel']);
-      setCounter(0);
-      setFrancBalance(10000000000);
-      setExperienceXp(0);
-      setExperienceLevel(1);
-      setSharedExperienceXp(0);
-      setSharedExperienceLevel(1);
-      setTutorialCompleted(false);
-      updateSharedTutorialCompleted(false);
+      await resetSyncState();
       console.log('All state cleared');
     } catch (e) {
       console.error('Failed to clear state:', e);
@@ -316,12 +102,12 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ navigation }) => {
   };
 
   const formattedFranc = useMemo(() => {
-    const val = francBalance;
+    const val = syncState.francBalance;
     if (Math.abs(val) >= 1000000000) return Math.round(val / 1000000000) + 'B';
     if (Math.abs(val) >= 1000000) return Math.round(val / 1000000) + 'M';
     if (Math.abs(val) >= 1000) return Math.round(val / 1000) + 'K';
     return String(val);
-  }, [francBalance]);
+  }, [syncState.francBalance]);
 
   return (
     <SafeAreaView style={commonStyles.loadingContainer}>
@@ -329,21 +115,21 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ navigation }) => {
         <View style={commonStyles.loadingContent}>
           <Text style={commonStyles.appTitle}>Planet Hunters</Text>
           <Text style={commonStyles.appSubtitle}>Godot + React Native</Text>
-          
+
           <View style={commonStyles.progressContainer}>
             <View style={commonStyles.circularProgress}>
               <Text style={commonStyles.progressText}>{Math.round(progress * 100)}%</Text>
             </View>
           </View>
-          
+
           <Text style={commonStyles.loadingText}>{loadingText}</Text>
-          
+
           <View style={commonStyles.progressBarContainer}>
             <View style={commonStyles.progressBarBackground}>
               <View style={[commonStyles.progressBarFill, { width: `${progress * 100}%` }]} />
             </View>
           </View>
-          
+
           <Text style={commonStyles.stepText}>
             Step {loadingStep + 1} of {loadingSteps.length}
           </Text>
@@ -353,7 +139,7 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ navigation }) => {
               <Text style={commonStyles.counterLabel}>Game Counter</Text>
               <View style={commonStyles.counterControls}>
                 <Button title="-" onPress={decrementCounter} color="#FF3B30" />
-                <Text style={commonStyles.counterValue}>{counter}</Text>
+                <Text style={commonStyles.counterValue}>{syncState.counter}</Text>
                 <Button title="+" onPress={incrementCounter} color="#34C759" />
               </View>
             </View>
@@ -363,32 +149,29 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ navigation }) => {
             </View>
             <View style={{ marginTop: 16, alignItems: 'center' }}>
               <Text style={commonStyles.counterLabel}>Tutorial Status</Text>
-              <Text style={[commonStyles.counterValue, { fontSize: 14, marginBottom: 8 }]}>
-                {tutorialCompleted ? "✓ Complete" : "○ Incomplete"}
+              <Text style={[commonStyles.counterValue, { fontSize: 14, marginBottom: 8 }]}> 
+                {syncState.tutorialCompleted ? "✓ Complete" : "○ Incomplete"}
               </Text>
               <Button
-                title={tutorialCompleted ? "Mark Incomplete" : "Mark Complete"}
+                title={syncState.tutorialCompleted ? "Mark Incomplete" : "Mark Complete"}
                 onPress={() => {
-                  console.log("Tutorial button pressed, current:", tutorialCompleted);
-                  const newValue = !tutorialCompleted;
-                  console.log("Setting to:", newValue);
-                  setTutorialCompleted(newValue);
-                  updateSharedTutorialCompleted(newValue);
+                  const newValue = !syncState.tutorialCompleted;
+                  setLocalSyncState({ tutorialCompleted: newValue });
                 }}
-                color={tutorialCompleted ? "#FF3B30" : "#34C759"}
+                color={syncState.tutorialCompleted ? "#FF3B30" : "#34C759"}
               />
             </View>
           </View>
         </View>
       </ScrollView>
-      
+
       <View style={commonStyles.buttonContainer}>
-        <View style={isGameReady ? commonStyles.gameButton : commonStyles.gameButtonDisabled}>
+        <View style={isGameReady && syncLoaded ? commonStyles.gameButton : commonStyles.gameButtonDisabled}>
           <Button
-            title={isGameReady ? "Start Game" : "Please Wait..."}
+            title={isGameReady && syncLoaded ? "Start Game" : "Please Wait..."}
             onPress={handleOpenGame}
-            disabled={!isGameReady}
-            color={isGameReady ? "#34C759" : "#8E8E93"}
+            disabled={!isGameReady || !syncLoaded}
+            color={isGameReady && syncLoaded ? "#34C759" : "#8E8E93"}
           />
         </View>
         <View style={commonStyles.logoutButton}>

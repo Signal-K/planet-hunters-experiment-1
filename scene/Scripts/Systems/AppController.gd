@@ -16,6 +16,9 @@ var experience_xp: int = 0
 var experience_level: int = 1
 var menu_panel_scene = preload("res://Scenes/UI/MenuPanel.tscn")
 var current_menu_panel: Control = null
+var _game_paused: bool = false
+var _menu_request_version: int = 0
+var _menu_request_action: String = ""
 const AppControllerPersistence = preload("res://Scripts/Systems/AppControllerPersistence.gd")
 var _persistence := AppControllerPersistence.new()
 const BASE_XP_TO_LEVEL := 10
@@ -23,6 +26,7 @@ const XP_AWARD_LAUNCH := 5
 const XP_AWARD_SCAN := 2
 
 func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	print("AppController ready, counter initialized to: ", counter)
 	print("AppController ready, tutorial_completed initialized to: ", tutorial_completed)
 	# Load persisted tutorial state from disk (if present)
@@ -70,6 +74,30 @@ func close_window(window_name: String) -> void:
 			print("Unknown window: ", window_name)
 	
 	window_status_update.emit("Closed " + window_name)
+
+func set_game_paused(paused: bool) -> void:
+	_game_paused = paused
+	get_tree().paused = paused
+	print("[AppController] Game paused set to: ", paused)
+
+func get_game_paused() -> bool:
+	return _game_paused
+
+func request_menu_open() -> void:
+	_menu_request_version += 1
+	_menu_request_action = "open"
+	window_status_update.emit("Opened menu")
+
+func request_menu_close() -> void:
+	_menu_request_version += 1
+	_menu_request_action = "close"
+	window_status_update.emit("Closed menu")
+
+func get_menu_request_version() -> int:
+	return _menu_request_version
+
+func get_menu_request_action() -> String:
+	return _menu_request_action
 
 func show_menu_panel() -> void:
 	"""Show the main menu panel with counter"""
@@ -197,6 +225,15 @@ func set_franc_balance_from_react(value: int) -> void:
 	franc_balance_updated.emit(franc_balance)
 	print("[AppController] Franc balance set from React Native: ", franc_balance)
 	save_franc_balance()
+
+func add_franc_balance(amount: int, source: String = "") -> void:
+	if amount == 0:
+		return
+	franc_balance += amount
+	franc_balance_updated.emit(franc_balance)
+	save_franc_balance()
+	if source != "":
+		print("[AppController] Franc balance change from ", source, ": ", amount, " (balance=", franc_balance, ")")
 
 func get_franc_balance() -> int:
 	"""Get franc balance"""

@@ -1,0 +1,108 @@
+name: Export Godot + Build Expo
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  export-and-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Cache Godot
+        id: cache-godot
+        uses: actions/cache@v4
+        with:
+          path: ~/godot-linux
+          key: ${{ runner.os }}-godot-4.5-stable
+          restore-keys: |
+            ${{ runner.os }}-godot-4.5-
+
+      - name: Download Godot
+        if: steps.cache-godot.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ~/godot-linux
+          chmod 770 ~/godot-linux
+          mkdir -p ~/.config/godot
+          chmod 770 ~/.config/godot
+
+          DOWNLOAD_URL="https://github.com/godotengine/godot/releases/download/4.5-stable"
+          GODOT_BIN="Godot_v4.5-stable_linux.x86_64"
+          GODOT_PACKAGE="$GODOT_BIN.zip"
+
+          wget $DOWNLOAD_URL/$GODOT_PACKAGE -P ~/godot-linux
+          unzip ~/godot-linux/$GODOT_PACKAGE -d ~/godot-linux
+          mv ~/godot-linux/$GODOT_BIN ~/godot-linux/godot
+          chmod +x ~/godot-linux/godot
+          rm ~/godot-linux/$GODOT_PACKAGE
+
+      - name: Import Godot project
+        run: |
+          cd scene
+          timeout 60s ~/godot-linux/godot --headless --path . --import --quit || true
+          echo "✓ Project imported"
+
+      - name: Ensure iOS output directory exists
+        run: |
+          mkdir -p ./ios
+          chmod 755 ./ios
+
+      - name: Export Godot (iOS)
+        env:
+          GODOT_EDITOR: /home/runner/godot-linux/godot
+        run: |
+          chmod +x ./export_godot.sh
+          ./export_godot.sh \
+            --target ./ios \
+            --project ./scene \
+            --name GodotTest \
+            --preset iOS \
+            --platform ios
+
+      - name: Export Godot (Android)
+        env:
+          GODOT_EDITOR: /home/runner/godot-linux/godot
+        continue-on-error: true
+        run: |
+          # Android export may fail if preset not configured
+          mkdir -p ./android/app/src/main/assets
+          ./export_godot.sh \
+            --target ./android/app/src/main/assets \
+            --project ./scene \
+            --name main \
+            --preset Android \
+            --platform android || echo "⚠️ Android export skipped (no preset configured)"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run sync tests (Jest)
+        run: npm test -- syncState
+
+      - name: Build Expo bundle
+        env:
+          EXPO_NO_TELEMETRY: 1
+        run: npx expo export --platform ios
+
+      - name: Archive build artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: expo-build
+          path: |
+            ios/GodotTest.pck
+            dist/
+          retention-days: 7

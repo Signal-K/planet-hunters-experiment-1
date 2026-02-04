@@ -138,6 +138,151 @@ jobs:
             scene/tutorial_test_output.log
           retention-days: 7
 
+
+  sync-tests:
+    name: Sync Bridge Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Cache Godot
+        id: cache-godot
+        uses: actions/cache@v4
+        with:
+          path: ~/godot-linux
+          key: ${{ runner.os }}-godot-4.5-stable
+          restore-keys: |
+            ${{ runner.os }}-godot-4.5-
+
+      - name: Download Godot (prebuilt binary)
+        if: steps.cache-godot.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ~/godot-linux
+          chmod 770 ~/godot-linux
+          mkdir -p ~/.config/godot
+          chmod 770 ~/.config/godot
+
+          DOWNLOAD_URL="https://github.com/godotengine/godot/releases/download/4.5-stable"
+          GODOT_BIN="Godot_v4.5-stable_linux.x86_64"
+          GODOT_PACKAGE="$GODOT_BIN.zip"
+
+          echo "⬇️  Downloading prebuilt Godot 4.5 binary (skipping build)..."
+          wget $DOWNLOAD_URL/$GODOT_PACKAGE -P ~/godot-linux
+          unzip ~/godot-linux/$GODOT_PACKAGE -d ~/godot-linux
+          mv ~/godot-linux/$GODOT_BIN ~/godot-linux/godot
+          chmod +x ~/godot-linux/godot
+          rm ~/godot-linux/$GODOT_PACKAGE
+
+          echo "✅ Godot installed to ~/godot-linux/godot"
+
+      - name: Verify Godot installation
+        run: |
+          ~/godot-linux/godot --version
+          echo "✅ Godot ready for testing"
+
+      - name: Run Sync Tests
+        run: |
+          echo "🧪 Sync Bridge Tests"
+          cd $GITHUB_WORKSPACE/scene
+          ~/godot-linux/godot --headless --path . --script res://tests/run_sync_tests.gd 2>&1 | tee sync_test_output.log
+          exit ${PIPESTATUS[0]}
+
+      - name: Archive test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: godot-sync-test-output
+          path: |
+            scene/sync_test_output.log
+          retention-days: 7
+
+
+  js-sync-tests:
+    name: JS Sync State Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run Jest (syncState)
+        run: npm test -- syncState
+
+
+  mission-log-tests:
+    name: Mission Log Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Cache Godot
+        id: cache-godot
+        uses: actions/cache@v4
+        with:
+          path: ~/godot-linux
+          key: ${{ runner.os }}-godot-4.5-stable
+          restore-keys: |
+            ${{ runner.os }}-godot-4.5-
+
+      - name: Download Godot (prebuilt binary)
+        if: steps.cache-godot.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ~/godot-linux
+          chmod 770 ~/godot-linux
+          mkdir -p ~/.config/godot
+          chmod 770 ~/.config/godot
+
+          DOWNLOAD_URL="https://github.com/godotengine/godot/releases/download/4.5-stable"
+          GODOT_BIN="Godot_v4.5-stable_linux.x86_64"
+          GODOT_PACKAGE="$GODOT_BIN.zip"
+
+          echo "⬇️  Downloading prebuilt Godot 4.5 binary (skipping build)..."
+          wget $DOWNLOAD_URL/$GODOT_PACKAGE -P ~/godot-linux
+          unzip ~/godot-linux/$GODOT_PACKAGE -d ~/godot-linux
+          mv ~/godot-linux/$GODOT_BIN ~/godot-linux/godot
+          chmod +x ~/godot-linux/godot
+          rm ~/godot-linux/$GODOT_PACKAGE
+
+          echo "✅ Godot installed to ~/godot-linux/godot"
+
+      - name: Verify Godot installation
+        run: |
+          ~/godot-linux/godot --version
+          echo "✅ Godot ready for testing"
+
+      - name: Run Mission Log Tests
+        run: |
+          echo "🧪 Mission Log Tests"
+          cd $GITHUB_WORKSPACE/scene
+          ~/godot-linux/godot --headless --path . --script res://tests/run_mission_log_tests.gd 2>&1 | tee mission_log_test_output.log
+          exit ${PIPESTATUS[0]}
+
+      - name: Archive test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: godot-mission-log-test-output
+          path: |
+            scene/mission_log_test_output.log
+          retention-days: 7
+
   experience-tests:
     name: Experience Tests
     runs-on: ubuntu-latest

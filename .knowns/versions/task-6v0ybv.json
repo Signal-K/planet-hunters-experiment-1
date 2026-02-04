@@ -1,0 +1,118 @@
+{
+  "taskId": "6v0ybv",
+  "currentVersion": 4,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "6v0ybv",
+      "version": 1,
+      "timestamp": "2026-02-02T04:45:57.853Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "oldValue": "@Liam",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Add scene for rocket in space transit",
+        "description": "Basically the rocket should be flying over a background that goes from sky colour to a deep space black colour, before the rocket is dragged into orbit around the target",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "Scene",
+          "Transition",
+          "Rockets"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "6v0ybv",
+      "version": 2,
+      "timestamp": "2026-02-02T04:47:18.804Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "newValue": "1. Add a rocket-transit scene + script that animates a sky→space background and the rocket sprite, then auto-advances to the asteroid preview.\n2. Wire NewMissionLaunchList preview flow to route through the transit scene (keeping existing preview target data).\n3. Smoke-test launch → preview flow for expected transitions."
+        }
+      ],
+      "snapshot": {
+        "title": "Add scene for rocket in space transit",
+        "description": "Basically the rocket should be flying over a background that goes from sky colour to a deep space black colour, before the rocket is dragged into orbit around the target",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "Scene",
+          "Transition",
+          "Rockets"
+        ],
+        "acceptanceCriteria": [],
+        "implementationPlan": "1. Add a rocket-transit scene + script that animates a sky→space background and the rocket sprite, then auto-advances to the asteroid preview.\n2. Wire NewMissionLaunchList preview flow to route through the transit scene (keeping existing preview target data).\n3. Smoke-test launch → preview flow for expected transitions."
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "6v0ybv",
+      "version": 3,
+      "timestamp": "2026-02-02T04:49:50.862Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "## Summary\n- Added rocket transit scene with sky→space gradient and rocket tween, auto-advance to preview\n- Routed mission preview flow through transit scene"
+        }
+      ],
+      "snapshot": {
+        "title": "Add scene for rocket in space transit",
+        "description": "Basically the rocket should be flying over a background that goes from sky colour to a deep space black colour, before the rocket is dragged into orbit around the target",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "Scene",
+          "Transition",
+          "Rockets"
+        ],
+        "acceptanceCriteria": [],
+        "implementationPlan": "1. Add a rocket-transit scene + script that animates a sky→space background and the rocket sprite, then auto-advances to the asteroid preview.\n2. Wire NewMissionLaunchList preview flow to route through the transit scene (keeping existing preview target data).\n3. Smoke-test launch → preview flow for expected transitions.",
+        "implementationNotes": "## Summary\n- Added rocket transit scene with sky→space gradient and rocket tween, auto-advance to preview\n- Routed mission preview flow through transit scene"
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "6v0ybv",
+      "version": 4,
+      "timestamp": "2026-02-02T04:50:01.523Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Add scene for rocket in space transit",
+        "description": "Basically the rocket should be flying over a background that goes from sky colour to a deep space black colour, before the rocket is dragged into orbit around the target",
+        "status": "done",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "Scene",
+          "Transition",
+          "Rockets"
+        ],
+        "acceptanceCriteria": [],
+        "implementationPlan": "1. Add a rocket-transit scene + script that animates a sky→space background and the rocket sprite, then auto-advances to the asteroid preview.\n2. Wire NewMissionLaunchList preview flow to route through the transit scene (keeping existing preview target data).\n3. Smoke-test launch → preview flow for expected transitions.",
+        "implementationNotes": "## Summary\n- Added rocket transit scene with sky→space gradient and rocket tween, auto-advance to preview\n- Routed mission preview flow through transit scene"
+      }
+    }
+  ]
+}

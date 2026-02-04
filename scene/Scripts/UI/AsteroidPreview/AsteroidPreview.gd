@@ -7,6 +7,7 @@ const ORBIT_ROTATION_SPEED := 0.25
 const ORBIT_RADIUS_PX := 416.0
 const ORBIT_SEGMENTS := 64
 const TARGET_LEVEL_SIZE := 5
+const RETURN_SCENE_PATH := "res://Scenes/Transitions/rocket_return.tscn"
 
 @onready var asteroid_pivot: Node3D = $AsteroidPivot
 @onready var asteroid_mesh: MeshInstance3D = $AsteroidPivot/Asteroid
@@ -38,6 +39,7 @@ var _mine_ready_at := 0
 var _current_rocket_id := ""
 var _current_target_id := ""
 var _current_target_type := ""
+var _current_target_label := ""
 var _current_yield: Dictionary = {}
 
 func _ready() -> void:
@@ -67,6 +69,7 @@ func _ready() -> void:
 	_current_rocket_id = rocket_id
 	_current_target_id = target_id
 	_current_target_type = target_type
+	_current_target_label = label
 	if target_label:
 		if label != "":
 			target_label.text = "Preview: %s" % label
@@ -214,9 +217,10 @@ func _on_return_home_pressed() -> void:
 		return
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	if rm:
+		rm.set_returned_mission(_current_rocket_id, _current_target_id, _current_target_label, _current_target_type)
 		rm.return_home(_current_rocket_id)
 		rm.clear_preview_target()
-	_change_scene_to_base()
+	_change_scene_to_return()
 
 func _on_mine_pressed() -> void:
 	var now = Time.get_ticks_msec()
@@ -387,6 +391,18 @@ func _change_scene_to_base() -> void:
 		scene_manager.change_to_scene("res://Scenes/Earth/earth_base_1.tscn")
 	else:
 		tree.change_scene_to_file("res://Scenes/Earth/earth_base_1.tscn")
+
+func _change_scene_to_return() -> void:
+	var tree = Engine.get_main_loop() as SceneTree
+	if tree == null:
+		return
+	var scene_manager = null
+	if tree.current_scene:
+		scene_manager = tree.current_scene.get_node_or_null("SceneManager")
+	if scene_manager and scene_manager.has_method("change_to_scene"):
+		scene_manager.change_to_scene(RETURN_SCENE_PATH)
+	else:
+		tree.change_scene_to_file(RETURN_SCENE_PATH)
 
 func _change_scene_to_preview() -> void:
 	var tree = Engine.get_main_loop() as SceneTree
