@@ -143,9 +143,115 @@ export const commonStyles = StyleSheet.create({
   },
   gameContainer: {
     flex: 1,
-    backgroundColor: "black",
+    backgroundColor: "transparent",
   },
   fullscreenGodot: {
     ...StyleSheet.absoluteFillObject,
+  },
+  appRoot: {
+    flex: 1,
+    backgroundColor: "black",
+  },
+  navigationLayer: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 1,
+  },
+  stackContent: {
+    backgroundColor: "transparent",
+  },
+  godotHost: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 0,
+  },
+  menuContainer: {
+    flex: 1,
+    backgroundColor: "rgba(11, 11, 15, 0.88)",
+  },
+  menuContent: {
+    flexGrow: 1,
+    paddingBottom: 140,
+    paddingHorizontal: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 20,
+  },
+  menuHeader: {
+    marginBottom: 24,
+    alignItems: "center",
+  },
+  menuCard: {
+    width: "100%",
+    backgroundColor: "#171821",
+    borderRadius: 16,
+    paddingVertical: 24,
+    paddingHorizontal: 20,
+    borderWidth: 1,
+    borderColor: "#232638",
+    gap: 8,
+  },
+  menuCardTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#FFFFFF",
+  },
+  menuCardText: {
+    fontSize: 14,
+    color: "#A7A8B5",
+  },
+  menuStatRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 6,
+  },
+  menuStatLabel: {
+    fontSize: 13,
+    color: "#A7A8B5",
+  },
+  menuStatValue: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#FFFFFF",
+  },
+  menuButtonContainer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    backgroundColor: "#0B0B0F",
+    borderTopWidth: 1,
+    borderTopColor: "#232638",
+  },
+  menuPrimaryButton: {
+    minHeight: 44,
+    justifyContent: "center",
+  },
+  menuSecondaryButton: {
+    minHeight: 44,
+    justifyContent: "center",
+    marginTop: 8,
+  },
+  gameOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: "flex-start",
+    alignItems: "flex-start",
+    paddingTop: 50,
+    paddingHorizontal: 16,
+  },
+  menuExitButton: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 18,
+    backgroundColor: "rgba(0,0,0,0.55)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.12)",
+  },
+  menuExitButtonText: {
+    color: "#FFFFFF",
+    fontSize: 13,
+    fontWeight: "600",
+    letterSpacing: 0.2,
   },
 });

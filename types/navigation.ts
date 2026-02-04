@@ -1,7 +1,7 @@
 export type RootStackParamList = {
-  Auth: undefined;
-  Loading: undefined;
+  Menu: undefined;
   Game: undefined;
+  Auth: undefined;
 };
 
 export interface AppController {
@@ -21,6 +21,12 @@ export interface AppController {
   tutorial_completed_updated: {
     connect(callback: (isCompleted: boolean) => void): void;
   };
+  set_game_paused(paused: boolean): void;
+  get_game_paused(): boolean;
+  request_menu_open(): void;
+  request_menu_close(): void;
+  get_menu_request_version(): number;
+  get_menu_request_action(): string;
   open_window(windowName: string): void;
   close_window(windowName: string): void;
   set_counter_from_react(value: number): void;
