@@ -1,0 +1,236 @@
+{
+  "taskId": "gooz78",
+  "currentVersion": 6,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "gooz78",
+      "version": 1,
+      "timestamp": "2026-02-05T14:12:18.581Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "newValue": "1. Add an orbit direction indicator line to both transit scenes\n2. Hide orbit ring and center rocket during travel phases\n3. Ensure indicator aligns with rocket heading"
+        }
+      ],
+      "snapshot": {
+        "title": "Hide orbit ring during travel + add direction indicator",
+        "description": "When rocket is not orbiting, hide orbit ring, keep rocket visible, and add a forward direction line aligned with rocket heading.",
+        "status": "todo",
+        "priority": "medium",
+        "labels": [
+          "ui",
+          "godot"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Orbit ring hides during travel/transition and rocket remains visible"
+          },
+          {
+            "completed": false,
+            "text": "Direction indicator line appears aligned with rocket heading"
+          }
+        ],
+        "implementationPlan": "1. Add an orbit direction indicator line to both transit scenes\n2. Hide orbit ring and center rocket during travel phases\n3. Ensure indicator aligns with rocket heading"
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "gooz78",
+      "version": 2,
+      "timestamp": "2026-02-05T14:13:01.697Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "oldValue": "1. Add an orbit direction indicator line to both transit scenes\n2. Hide orbit ring and center rocket during travel phases\n3. Ensure indicator aligns with rocket heading",
+          "newValue": "1. Add a direction indicator line aligned with rocket heading in both transit scenes (shown in orbit and travel)\n2. Hide orbit ring during travel/transition while keeping rocket visible\n3. Center rocket during travel so it remains on-screen"
+        }
+      ],
+      "snapshot": {
+        "title": "Hide orbit ring during travel + add direction indicator",
+        "description": "When rocket is not orbiting, hide orbit ring, keep rocket visible, and add a forward direction line aligned with rocket heading.",
+        "status": "todo",
+        "priority": "medium",
+        "labels": [
+          "ui",
+          "godot"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Orbit ring hides during travel/transition and rocket remains visible"
+          },
+          {
+            "completed": false,
+            "text": "Direction indicator line appears aligned with rocket heading"
+          }
+        ],
+        "implementationPlan": "1. Add a direction indicator line aligned with rocket heading in both transit scenes (shown in orbit and travel)\n2. Hide orbit ring during travel/transition while keeping rocket visible\n3. Center rocket during travel so it remains on-screen"
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "gooz78",
+      "version": 3,
+      "timestamp": "2026-02-05T14:13:43.607Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Hide orbit ring during travel + add direction indicator",
+        "description": "When rocket is not orbiting, hide orbit ring, keep rocket visible, and add a forward direction line aligned with rocket heading.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "godot"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Orbit ring hides during travel/transition and rocket remains visible"
+          },
+          {
+            "completed": false,
+            "text": "Direction indicator line appears aligned with rocket heading"
+          }
+        ],
+        "implementationPlan": "1. Add a direction indicator line aligned with rocket heading in both transit scenes (shown in orbit and travel)\n2. Hide orbit ring during travel/transition while keeping rocket visible\n3. Center rocket during travel so it remains on-screen"
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "gooz78",
+      "version": 4,
+      "timestamp": "2026-02-05T14:15:40.175Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Orbit ring hides during travel/transition and rocket remains visible"
+            },
+            {
+              "completed": false,
+              "text": "Direction indicator line appears aligned with rocket heading"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Orbit ring hides during travel/transition and rocket remains visible"
+            },
+            {
+              "completed": true,
+              "text": "Direction indicator line appears aligned with rocket heading"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Hide orbit ring during travel + add direction indicator",
+        "description": "When rocket is not orbiting, hide orbit ring, keep rocket visible, and add a forward direction line aligned with rocket heading.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "godot"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Orbit ring hides during travel/transition and rocket remains visible"
+          },
+          {
+            "completed": true,
+            "text": "Direction indicator line appears aligned with rocket heading"
+          }
+        ],
+        "implementationPlan": "1. Add a direction indicator line aligned with rocket heading in both transit scenes (shown in orbit and travel)\n2. Hide orbit ring during travel/transition while keeping rocket visible\n3. Center rocket during travel so it remains on-screen"
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "gooz78",
+      "version": 5,
+      "timestamp": "2026-02-05T14:15:53.680Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "## Summary\n- Hid orbit ring during travel phases and centered rocket\n- Added direction indicator line aligned with rocket heading in both transit scenes"
+        }
+      ],
+      "snapshot": {
+        "title": "Hide orbit ring during travel + add direction indicator",
+        "description": "When rocket is not orbiting, hide orbit ring, keep rocket visible, and add a forward direction line aligned with rocket heading.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "godot"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Orbit ring hides during travel/transition and rocket remains visible"
+          },
+          {
+            "completed": true,
+            "text": "Direction indicator line appears aligned with rocket heading"
+          }
+        ],
+        "implementationPlan": "1. Add a direction indicator line aligned with rocket heading in both transit scenes (shown in orbit and travel)\n2. Hide orbit ring during travel/transition while keeping rocket visible\n3. Center rocket during travel so it remains on-screen",
+        "implementationNotes": "## Summary\n- Hid orbit ring during travel phases and centered rocket\n- Added direction indicator line aligned with rocket heading in both transit scenes"
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "gooz78",
+      "version": 6,
+      "timestamp": "2026-02-05T14:16:24.084Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Hide orbit ring during travel + add direction indicator",
+        "description": "When rocket is not orbiting, hide orbit ring, keep rocket visible, and add a forward direction line aligned with rocket heading.",
+        "status": "done",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "godot"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Orbit ring hides during travel/transition and rocket remains visible"
+          },
+          {
+            "completed": true,
+            "text": "Direction indicator line appears aligned with rocket heading"
+          }
+        ],
+        "implementationPlan": "1. Add a direction indicator line aligned with rocket heading in both transit scenes (shown in orbit and travel)\n2. Hide orbit ring during travel/transition while keeping rocket visible\n3. Center rocket during travel so it remains on-screen",
+        "implementationNotes": "## Summary\n- Hid orbit ring during travel phases and centered rocket\n- Added direction indicator line aligned with rocket heading in both transit scenes"
+      }
+    }
+  ]
+}

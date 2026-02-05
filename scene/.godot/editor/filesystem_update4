@@ -1,0 +1,11 @@
+res://Scenes/Earth/earth_base_1.gd
+res://Scenes/Earth/earth_scene_base.gd
+res://Scripts/Earth/ControlStation.gd
+res://Scripts/Utils/MiningInventory.gd
+res://Scripts/UI/NewMissionLaunchList.gd
+res://Scripts/Transitions/OutboundPreviewTransition.gd
+res://Scripts/Transitions/ReturnPreviewTransition.gd
+res://Scenes/UI/AsteroidPreview/asteroid_preview.tscn
+res://Scripts/Earth/MissionDebrief.gd
+res://Scripts/Utils/RocketsManager.gd
+res://Scripts/UI/AsteroidPreview/AsteroidPreview.gd

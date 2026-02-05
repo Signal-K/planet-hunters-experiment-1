@@ -33,9 +33,9 @@ layer = 2
 
 [node name="ButtonContainer" type="HBoxContainer" parent="UILayer"]
 offset_left = 30.0
-offset_top = 1000.0
+offset_top = 1020.0
 offset_right = 1890.0
-offset_bottom = 1080.0
+offset_bottom = 1100.0
 
 [node name="BackButton" type="Button" parent="UILayer/ButtonContainer"]
 custom_minimum_size = Vector2(160, 80)

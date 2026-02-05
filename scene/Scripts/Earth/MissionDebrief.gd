@@ -245,6 +245,9 @@ func _get_app_controller() -> Node:
 func _return_to_base() -> void:
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	if rm:
+		var rocket_id = str(_returned.get("rocket_id", ""))
+		if rocket_id != "":
+			rm.finalize_return(rocket_id)
 		rm.clear_returned_mission()
 	var tree = Engine.get_main_loop() as SceneTree
 	if tree == null:
