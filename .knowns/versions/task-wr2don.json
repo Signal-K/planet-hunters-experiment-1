@@ -1,0 +1,360 @@
+{
+  "taskId": "wr2don",
+  "currentVersion": 7,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "wr2don",
+      "version": 1,
+      "timestamp": "2026-02-05T06:19:19.599Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Update mission/control station buttons",
+        "description": "Wire New Mission to launchpad, move mission list to Control Station click, and label the Control Station with pointer.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "godot"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "New Mission button loads the launchpad scene"
+          },
+          {
+            "completed": false,
+            "text": "Clicking Control Station opens the mission list UI previously on New Mission"
+          },
+          {
+            "completed": false,
+            "text": "Control Station has a labeled pointer reading 'Control Station'"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "wr2don",
+      "version": 2,
+      "timestamp": "2026-02-05T06:20:42.783Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "newValue": "1. Locate New Mission button handlers and update to open launchpad scene\n2. Update ControlStation interaction to open the New Mission panel\n3. Add a Control Station label + pointer in the base Earth scene and verify placement"
+        }
+      ],
+      "snapshot": {
+        "title": "Update mission/control station buttons",
+        "description": "Wire New Mission to launchpad, move mission list to Control Station click, and label the Control Station with pointer.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "godot"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "New Mission button loads the launchpad scene"
+          },
+          {
+            "completed": false,
+            "text": "Clicking Control Station opens the mission list UI previously on New Mission"
+          },
+          {
+            "completed": false,
+            "text": "Control Station has a labeled pointer reading 'Control Station'"
+          }
+        ],
+        "implementationPlan": "1. Locate New Mission button handlers and update to open launchpad scene\n2. Update ControlStation interaction to open the New Mission panel\n3. Add a Control Station label + pointer in the base Earth scene and verify placement"
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "wr2don",
+      "version": 3,
+      "timestamp": "2026-02-05T06:21:52.680Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "New Mission button loads the launchpad scene"
+            },
+            {
+              "completed": false,
+              "text": "Clicking Control Station opens the mission list UI previously on New Mission"
+            },
+            {
+              "completed": false,
+              "text": "Control Station has a labeled pointer reading 'Control Station'"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "New Mission button loads the launchpad scene"
+            },
+            {
+              "completed": false,
+              "text": "Clicking Control Station opens the mission list UI previously on New Mission"
+            },
+            {
+              "completed": false,
+              "text": "Control Station has a labeled pointer reading 'Control Station'"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Update mission/control station buttons",
+        "description": "Wire New Mission to launchpad, move mission list to Control Station click, and label the Control Station with pointer.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "godot"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "New Mission button loads the launchpad scene"
+          },
+          {
+            "completed": false,
+            "text": "Clicking Control Station opens the mission list UI previously on New Mission"
+          },
+          {
+            "completed": false,
+            "text": "Control Station has a labeled pointer reading 'Control Station'"
+          }
+        ],
+        "implementationPlan": "1. Locate New Mission button handlers and update to open launchpad scene\n2. Update ControlStation interaction to open the New Mission panel\n3. Add a Control Station label + pointer in the base Earth scene and verify placement"
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "wr2don",
+      "version": 4,
+      "timestamp": "2026-02-05T06:21:59.295Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "New Mission button loads the launchpad scene"
+            },
+            {
+              "completed": false,
+              "text": "Clicking Control Station opens the mission list UI previously on New Mission"
+            },
+            {
+              "completed": false,
+              "text": "Control Station has a labeled pointer reading 'Control Station'"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "New Mission button loads the launchpad scene"
+            },
+            {
+              "completed": true,
+              "text": "Clicking Control Station opens the mission list UI previously on New Mission"
+            },
+            {
+              "completed": false,
+              "text": "Control Station has a labeled pointer reading 'Control Station'"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Update mission/control station buttons",
+        "description": "Wire New Mission to launchpad, move mission list to Control Station click, and label the Control Station with pointer.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "godot"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "New Mission button loads the launchpad scene"
+          },
+          {
+            "completed": true,
+            "text": "Clicking Control Station opens the mission list UI previously on New Mission"
+          },
+          {
+            "completed": false,
+            "text": "Control Station has a labeled pointer reading 'Control Station'"
+          }
+        ],
+        "implementationPlan": "1. Locate New Mission button handlers and update to open launchpad scene\n2. Update ControlStation interaction to open the New Mission panel\n3. Add a Control Station label + pointer in the base Earth scene and verify placement"
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "wr2don",
+      "version": 5,
+      "timestamp": "2026-02-05T06:22:06.099Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "New Mission button loads the launchpad scene"
+            },
+            {
+              "completed": true,
+              "text": "Clicking Control Station opens the mission list UI previously on New Mission"
+            },
+            {
+              "completed": false,
+              "text": "Control Station has a labeled pointer reading 'Control Station'"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "New Mission button loads the launchpad scene"
+            },
+            {
+              "completed": true,
+              "text": "Clicking Control Station opens the mission list UI previously on New Mission"
+            },
+            {
+              "completed": true,
+              "text": "Control Station has a labeled pointer reading 'Control Station'"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Update mission/control station buttons",
+        "description": "Wire New Mission to launchpad, move mission list to Control Station click, and label the Control Station with pointer.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "godot"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "New Mission button loads the launchpad scene"
+          },
+          {
+            "completed": true,
+            "text": "Clicking Control Station opens the mission list UI previously on New Mission"
+          },
+          {
+            "completed": true,
+            "text": "Control Station has a labeled pointer reading 'Control Station'"
+          }
+        ],
+        "implementationPlan": "1. Locate New Mission button handlers and update to open launchpad scene\n2. Update ControlStation interaction to open the New Mission panel\n3. Add a Control Station label + pointer in the base Earth scene and verify placement"
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "wr2don",
+      "version": 6,
+      "timestamp": "2026-02-05T06:22:14.045Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "## Summary\n- New Mission button now opens the launchpad scene\n- Control Station click opens the New Mission panel\n- Added Control Station label + pointer in base scene"
+        }
+      ],
+      "snapshot": {
+        "title": "Update mission/control station buttons",
+        "description": "Wire New Mission to launchpad, move mission list to Control Station click, and label the Control Station with pointer.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "godot"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "New Mission button loads the launchpad scene"
+          },
+          {
+            "completed": true,
+            "text": "Clicking Control Station opens the mission list UI previously on New Mission"
+          },
+          {
+            "completed": true,
+            "text": "Control Station has a labeled pointer reading 'Control Station'"
+          }
+        ],
+        "implementationPlan": "1. Locate New Mission button handlers and update to open launchpad scene\n2. Update ControlStation interaction to open the New Mission panel\n3. Add a Control Station label + pointer in the base Earth scene and verify placement",
+        "implementationNotes": "## Summary\n- New Mission button now opens the launchpad scene\n- Control Station click opens the New Mission panel\n- Added Control Station label + pointer in base scene"
+      }
+    },
+    {
+      "id": "v7",
+      "taskId": "wr2don",
+      "version": 7,
+      "timestamp": "2026-02-05T06:22:27.249Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Update mission/control station buttons",
+        "description": "Wire New Mission to launchpad, move mission list to Control Station click, and label the Control Station with pointer.",
+        "status": "done",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "godot"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "New Mission button loads the launchpad scene"
+          },
+          {
+            "completed": true,
+            "text": "Clicking Control Station opens the mission list UI previously on New Mission"
+          },
+          {
+            "completed": true,
+            "text": "Control Station has a labeled pointer reading 'Control Station'"
+          }
+        ],
+        "implementationPlan": "1. Locate New Mission button handlers and update to open launchpad scene\n2. Update ControlStation interaction to open the New Mission panel\n3. Add a Control Station label + pointer in the base Earth scene and verify placement",
+        "implementationNotes": "## Summary\n- New Mission button now opens the launchpad scene\n- Control Station click opens the New Mission panel\n- Added Control Station label + pointer in base scene"
+      }
+    }
+  ]
+}

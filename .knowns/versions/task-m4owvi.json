@@ -1,0 +1,179 @@
+{
+  "taskId": "m4owvi",
+  "currentVersion": 5,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "m4owvi",
+      "version": 1,
+      "timestamp": "2026-02-05T08:08:32.380Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "newValue": "1. Trace mission list preview eligibility for returning rockets\n2. Adjust preview logic to include return/arrived missions\n3. Verify preview action opens the asteroid preview scene for returning rockets"
+        }
+      ],
+      "snapshot": {
+        "title": "Allow preview for returning rocket",
+        "description": "When a rocket is returning home, it cannot be previewed from the missions list. Enable preview for returning missions.",
+        "status": "todo",
+        "priority": "medium",
+        "labels": [
+          "bug",
+          "ui",
+          "godot"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Returning rockets can be previewed like in-flight rockets"
+          }
+        ],
+        "implementationPlan": "1. Trace mission list preview eligibility for returning rockets\n2. Adjust preview logic to include return/arrived missions\n3. Verify preview action opens the asteroid preview scene for returning rockets"
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "m4owvi",
+      "version": 2,
+      "timestamp": "2026-02-05T08:11:16.559Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Allow preview for returning rocket",
+        "description": "When a rocket is returning home, it cannot be previewed from the missions list. Enable preview for returning missions.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "bug",
+          "ui",
+          "godot"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Returning rockets can be previewed like in-flight rockets"
+          }
+        ],
+        "implementationPlan": "1. Trace mission list preview eligibility for returning rockets\n2. Adjust preview logic to include return/arrived missions\n3. Verify preview action opens the asteroid preview scene for returning rockets"
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "m4owvi",
+      "version": 3,
+      "timestamp": "2026-02-05T08:11:37.831Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Returning rockets can be previewed like in-flight rockets"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Returning rockets can be previewed like in-flight rockets"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Allow preview for returning rocket",
+        "description": "When a rocket is returning home, it cannot be previewed from the missions list. Enable preview for returning missions.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "bug",
+          "ui",
+          "godot"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Returning rockets can be previewed like in-flight rockets"
+          }
+        ],
+        "implementationPlan": "1. Trace mission list preview eligibility for returning rockets\n2. Adjust preview logic to include return/arrived missions\n3. Verify preview action opens the asteroid preview scene for returning rockets"
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "m4owvi",
+      "version": 4,
+      "timestamp": "2026-02-05T08:11:45.341Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "## Summary\n- Added returning rocket row with Preview action in mission list UI"
+        }
+      ],
+      "snapshot": {
+        "title": "Allow preview for returning rocket",
+        "description": "When a rocket is returning home, it cannot be previewed from the missions list. Enable preview for returning missions.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "bug",
+          "ui",
+          "godot"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Returning rockets can be previewed like in-flight rockets"
+          }
+        ],
+        "implementationPlan": "1. Trace mission list preview eligibility for returning rockets\n2. Adjust preview logic to include return/arrived missions\n3. Verify preview action opens the asteroid preview scene for returning rockets",
+        "implementationNotes": "## Summary\n- Added returning rocket row with Preview action in mission list UI"
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "m4owvi",
+      "version": 5,
+      "timestamp": "2026-02-05T08:12:02.838Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Allow preview for returning rocket",
+        "description": "When a rocket is returning home, it cannot be previewed from the missions list. Enable preview for returning missions.",
+        "status": "done",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "bug",
+          "ui",
+          "godot"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Returning rockets can be previewed like in-flight rockets"
+          }
+        ],
+        "implementationPlan": "1. Trace mission list preview eligibility for returning rockets\n2. Adjust preview logic to include return/arrived missions\n3. Verify preview action opens the asteroid preview scene for returning rockets",
+        "implementationNotes": "## Summary\n- Added returning rocket row with Preview action in mission list UI"
+      }
+    }
+  ]
+}

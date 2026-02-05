@@ -150,3 +150,11 @@ The nerve center of all base operations:
 
 [i]Status: All Systems Green[/i]
 Command Authority: Level 9"
+
+[node name="OrbitingHeader" type="Label" parent="PanelContainer/Panel/VBoxContainer/ContentContainer"]
+layout_mode = 2
+text = "Orbiting Rockets"
+
+[node name="OrbitingList" type="VBoxContainer" parent="PanelContainer/Panel/VBoxContainer/ContentContainer"]
+layout_mode = 2
+theme_override_constants/separation = 6

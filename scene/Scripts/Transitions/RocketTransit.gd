@@ -1,41 +1,87 @@
 extends Node2D
 
 const PREVIEW_SCENE_PATH := "res://Scenes/UI/AsteroidPreview/asteroid_preview.tscn"
-const SKY_TOP := Color(0.45, 0.72, 0.98, 1.0)
-const SKY_BOTTOM := Color(0.70, 0.88, 1.0, 1.0)
 const SPACE_TOP := Color(0.03, 0.03, 0.07, 1.0)
 const SPACE_BOTTOM := Color(0.0, 0.0, 0.0, 1.0)
 
-const RISE_TIME := 2.2
-const PULL_TIME := 1.6
-const TOTAL_TIME := RISE_TIME + PULL_TIME
+const EARTH_ORBIT_TIME := 3.5
+const EARTH_FADE_TIME := 2.5
+const TRAVEL_TIME := 20.0
+const TARGET_APPROACH_TIME := 6.0
+
+const EARTH_TEXTURE := preload("res://assets/Backdrops/Earth1.png")
+
+const SPEED_MIN_KMH := 32000.0
+const SPEED_MAX_KMH := 140000.0
 
 @onready var background: TextureRect = $Background
 @onready var rocket_container: Node2D = $RocketContainer
 @onready var rocket: Sprite2D = $RocketContainer/Rocket
 @onready var status_label: Label = $UI/StatusLabel
+@onready var back_button: Button = $UI/BackButton
+@onready var travel_panel: Panel = $UI/TravelPanel
+@onready var travel_title: Label = $UI/TravelPanel/TravelMargin/TravelContent/TravelTitle
+@onready var travel_bar: ProgressBar = $UI/TravelPanel/TravelMargin/TravelContent/TravelBar
+@onready var travel_speed: Label = $UI/TravelPanel/TravelMargin/TravelContent/TravelSpeed
+@onready var mining_panel: Panel = $UI/MiningPanel
+@onready var mining_title: Label = $UI/MiningPanel/MiningMargin/MiningContent/MiningTitle
+@onready var mining_summary: Label = $UI/MiningPanel/MiningMargin/MiningContent/MiningSummary
+@onready var mining_total: Label = $UI/MiningPanel/MiningMargin/MiningContent/MiningTotal
 
 var _gradient := Gradient.new()
 var _gradient_texture := GradientTexture2D.new()
 var _elapsed := 0.0
 var _last_size := Vector2.ZERO
-var _start_pos := Vector2.ZERO
-var _mid_pos := Vector2.ZERO
-var _end_pos := Vector2.ZERO
+var _orbit_center := Vector2.ZERO
+var _orbit_radius := 120.0
+var _orbit_angle := 0.0
+var _earth_alpha := 1.0
+var _earth_radius := 140.0
+var _target_alpha := 0.0
+var _target_center := Vector2.ZERO
+var _target_radius := 140.0
+var _target_scale := 0.0
+var _phase_time := 0.0
+var _travel_active := false
+var _return_data := {}
+
+enum Phase {
+	EARTH_ORBIT,
+	TRAVEL,
+	TARGET_APPROACH,
+	TARGET_ORBIT
+}
+
+var _phase := Phase.EARTH_ORBIT
 
 func _ready() -> void:
 	_setup_background()
 	_setup_label()
 	_recalculate_layout()
-	_start_animation()
+	_setup_earth()
+	_setup_panels()
+	_setup_back_button()
+	_start_earth_orbit()
 
 func _process(delta: float) -> void:
 	_elapsed += delta
-	_update_background(_elapsed / max(TOTAL_TIME, 0.001))
-	_update_label()
+	_phase_time += delta
+	_update_background()
+	if _phase == Phase.EARTH_ORBIT:
+		_update_orbit(delta)
+		if _phase_time >= EARTH_ORBIT_TIME:
+			_start_travel()
+	elif _phase == Phase.TRAVEL:
+		_update_travel()
+	elif _phase == Phase.TARGET_APPROACH:
+		if _phase_time >= TARGET_APPROACH_TIME:
+			_start_target_orbit()
+	elif _phase == Phase.TARGET_ORBIT:
+		_update_orbit(delta)
 	var size = get_viewport_rect().size
 	if size != _last_size:
 		_recalculate_layout()
+	queue_redraw()
 
 func _setup_background() -> void:
 	if background == null:
@@ -55,9 +101,9 @@ func _setup_label() -> void:
 		var target = rm.get_preview_target()
 		var label = str(target.get("label", ""))
 		if label != "":
-			status_label.text = "En route to %s" % label
+			status_label.text = "Departing Earth → %s" % label
 		else:
-			status_label.text = "Entering orbit..."
+			status_label.text = "Departing Earth..."
 	status_label.position = Vector2(24, 24)
 	status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	status_label.vertical_alignment = VERTICAL_ALIGNMENT_TOP
@@ -67,40 +113,169 @@ func _setup_label() -> void:
 func _recalculate_layout() -> void:
 	_last_size = get_viewport_rect().size
 	var center = _last_size * 0.5
-	_start_pos = Vector2(center.x, _last_size.y * 0.78)
-	_mid_pos = Vector2(center.x + 28.0, _last_size.y * 0.45)
-	_end_pos = Vector2(center.x - 14.0, _last_size.y * 0.26)
-	if rocket_container:
-		rocket_container.position = _start_pos
+	_orbit_center = center
+	_orbit_radius = min(_last_size.x, _last_size.y) * 0.16
+	_target_center = center
+	_earth_radius = min(_last_size.x, _last_size.y) * 0.18
+	_target_radius = min(_last_size.x, _last_size.y) * 0.13
+	_target_scale = min(_last_size.x, _last_size.y) * 0.0014
+	if rocket_container and _phase in [Phase.EARTH_ORBIT, Phase.TARGET_ORBIT]:
+		rocket_container.position = _orbit_center + Vector2(cos(_orbit_angle), sin(_orbit_angle)) * _orbit_radius
 	if rocket:
-		rocket.scale = Vector2(4.2, 4.2)
+		rocket.scale = Vector2(2.0, 2.0)
 
-func _start_animation() -> void:
-	if rocket_container == null:
-		return
-	var tween = get_tree().create_tween()
-	tween.tween_property(rocket_container, "position", _mid_pos, RISE_TIME)\
-		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	tween.parallel().tween_property(rocket_container, "scale", Vector2(3.2, 3.2), RISE_TIME)\
-		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	tween.tween_property(rocket_container, "position", _end_pos, PULL_TIME)\
-		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
-	tween.parallel().tween_property(rocket_container, "scale", Vector2(2.0, 2.0), PULL_TIME)\
-		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
-	tween.tween_callback(Callable(self, "_advance_to_preview"))
+func _setup_earth() -> void:
+	pass
 
-func _update_background(t: float) -> void:
-	var pct = clamp(t, 0.0, 1.0)
-	var top = SKY_TOP.lerp(SPACE_TOP, pct)
-	var bottom = SKY_BOTTOM.lerp(SPACE_BOTTOM, pct)
-	_gradient.colors = PackedColorArray([top, bottom])
+func _update_background() -> void:
+	_gradient.colors = PackedColorArray([SPACE_TOP, SPACE_BOTTOM])
 	_gradient_texture.gradient = _gradient
 
-func _update_label() -> void:
-	if status_label == null:
+func _start_earth_orbit() -> void:
+	_phase = Phase.EARTH_ORBIT
+	_phase_time = 0.0
+	_earth_alpha = 1.0
+	_target_alpha = 0.0
+	_travel_active = false
+	if mining_panel:
+		mining_panel.visible = false
+	if travel_panel:
+		travel_panel.visible = false
+	status_label.text = "Departing Earth..."
+
+func _start_travel() -> void:
+	_phase = Phase.TRAVEL
+	_phase_time = 0.0
+	_travel_active = true
+	status_label.text = "Cruising to target..."
+	var earth_fade = get_tree().create_tween()
+	earth_fade.tween_property(self, "_earth_alpha", 0.0, EARTH_FADE_TIME)\
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	if travel_panel:
+		travel_panel.visible = true
+		travel_panel.modulate.a = 0.0
+		var travel_fade = get_tree().create_tween()
+		travel_fade.tween_property(travel_panel, "modulate:a", 1.0, 0.8)
+
+func _update_travel() -> void:
+	if not _travel_active:
 		return
-	var pct = clamp(_elapsed / max(TOTAL_TIME, 0.001), 0.0, 1.0)
-	status_label.modulate.a = 1.0 - clamp((pct - 0.6) / 0.4, 0.0, 1.0)
+	var pct = clamp(_phase_time / TRAVEL_TIME, 0.0, 1.0)
+	if travel_bar:
+		travel_bar.value = pct
+	if travel_speed:
+		var eased = pct * pct * (3.0 - 2.0 * pct)
+		var speed = lerp(SPEED_MIN_KMH, SPEED_MAX_KMH, eased)
+		travel_speed.text = "Speed: %s km/h" % _format_number_with_commas(str(int(round(speed))))
+	if pct >= 1.0:
+		_start_target_approach()
+
+func _start_target_approach() -> void:
+	_phase = Phase.TARGET_APPROACH
+	_phase_time = 0.0
+	_travel_active = false
+	status_label.text = "Target acquired..."
+	if travel_panel:
+		var fade = get_tree().create_tween()
+		fade.tween_property(travel_panel, "modulate:a", 0.0, 0.8)
+		fade.finished.connect(func():
+			travel_panel.visible = false
+		)
+	var target_tween = get_tree().create_tween()
+	target_tween.tween_property(self, "_target_alpha", 1.0, TARGET_APPROACH_TIME * 0.4)\
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+
+func _start_target_orbit() -> void:
+	_phase = Phase.TARGET_ORBIT
+	_phase_time = 0.0
+	_orbit_angle = 0.0
+	status_label.text = "Orbiting target..."
+	if mining_panel:
+		mining_panel.visible = true
+		mining_panel.modulate.a = 0.0
+		var tween = get_tree().create_tween()
+		tween.tween_property(mining_panel, "modulate:a", 1.0, 0.8)
+	var delay = get_tree().create_timer(0.8)
+	delay.timeout.connect(func():
+		_advance_to_preview()
+	)
+
+func _update_orbit(delta: float) -> void:
+	_orbit_angle += delta * 2.1
+	if rocket_container:
+		rocket_container.position = _orbit_center + Vector2(cos(_orbit_angle), sin(_orbit_angle)) * _orbit_radius
+
+func _setup_panels() -> void:
+	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
+	if travel_panel:
+		panel_style.apply_panel(travel_panel)
+		panel_style.apply_title(travel_title)
+		panel_style.apply_body(travel_speed)
+		panel_style.apply_progress_bar(travel_bar)
+		travel_panel.visible = false
+	if mining_panel:
+		panel_style.apply_panel(mining_panel)
+		panel_style.apply_title(mining_title)
+		panel_style.apply_body(mining_summary)
+		panel_style.apply_body(mining_total)
+		mining_panel.visible = false
+	_build_mining_panel()
+
+func _build_mining_panel() -> void:
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var target := {}
+	if rm:
+		target = rm.get_preview_target()
+	var target_id = str(target.get("id", ""))
+	if target_id == "":
+		mining_summary.text = "Remaining: 0 kg"
+		mining_total.text = "Total Collected: 0 kg"
+		return
+	var inv = preload("res://Scripts/Utils/MiningInventory.gd")
+	var state = inv.load_state()
+	var targets = state.get("targets", {})
+	var entry = targets.get(target_id, {})
+	var remaining = int(round(float(entry.get("remaining_mass", 0.0))))
+	var collected: Dictionary = entry.get("collected", {})
+	var total := 0
+	for v in collected.values():
+		total += int(v)
+	mining_summary.text = "Remaining: %s kg" % _format_number_with_commas(str(remaining))
+	mining_total.text = "Total Collected: %s kg" % _format_number_with_commas(str(total))
+
+func _setup_back_button() -> void:
+	if back_button == null:
+		return
+	back_button.text = "Back"
+	back_button.custom_minimum_size = Vector2(140, 44)
+	back_button.position = Vector2(24, 64)
+	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
+	panel_style.apply_button(back_button, false)
+	back_button.pressed.connect(_on_back_pressed)
+
+func _on_back_pressed() -> void:
+	_advance_to_preview()
+
+func _draw() -> void:
+	if _last_size == Vector2.ZERO:
+		return
+	if _earth_alpha > 0.01:
+		draw_circle(_orbit_center, _earth_radius, Color(0.2, 0.45, 0.85, _earth_alpha))
+		draw_circle(_orbit_center + Vector2(-24, -14), _earth_radius * 0.45, Color(0.25, 0.5, 0.9, _earth_alpha))
+	if _target_alpha > 0.01:
+		draw_circle(_target_center, _target_radius, Color(0.45, 0.45, 0.48, _target_alpha))
+		draw_circle(_target_center + Vector2(-18, -12), _target_radius * 0.35, Color(0.5, 0.5, 0.54, _target_alpha))
+		draw_circle(_target_center + Vector2(22, 16), _target_radius * 0.28, Color(0.38, 0.38, 0.42, _target_alpha))
+
+func _format_number_with_commas(value: String) -> String:
+	var out := ""
+	var count := 0
+	for i in range(value.length() - 1, -1, -1):
+		out = value[i] + out
+		count += 1
+		if count % 3 == 0 and i > 0:
+			out = "," + out
+	return out
 
 func _advance_to_preview() -> void:
 	var tree = Engine.get_main_loop() as SceneTree

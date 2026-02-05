@@ -4,6 +4,7 @@ class_name NewMissionLaunchList
 var _launch_list_container: Node
 var _on_refund: Callable
 const PREVIEW_SCENE_PATH := "res://Scenes/Transitions/rocket_transit.tscn"
+const ARRIVED_PREVIEW_SCENE_PATH := "res://Scenes/UI/AsteroidPreview/asteroid_preview.tscn"
 const MIN_DISTANCE_KM := 150000.0
 const MAX_DISTANCE_KM := 3000000.0
 const TRAVEL_SECONDS := 60.0
@@ -25,11 +26,14 @@ func display_launched_rockets() -> void:
 	var launched: Array = []
 	var missions: Array = []
 	var targets: Array = []
+	var returning := {}
 	if rm:
 		launched = rm.get_launched()
 		missions = rm.get_missions()
 		targets = rm.get_detected_targets()
-	if launched.size() == 0:
+		returning = rm.get_returned_mission()
+	var has_returning = not returning.is_empty() and str(returning.get("rocket_id", "")) != ""
+	if launched.size() == 0 and not has_returning:
 		var lbl = Label.new()
 		lbl.text = "No missions in flight."
 		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -37,11 +41,12 @@ func display_launched_rockets() -> void:
 		_launch_list_container.add_child(lbl)
 		return
 
-	var header = Label.new()
-	header.text = "Missions in flight"
-	header.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	panel_style.apply_title(header)
-	_launch_list_container.add_child(header)
+	if launched.size() > 0:
+		var header = Label.new()
+		header.text = "Missions in flight"
+		header.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		panel_style.apply_title(header)
+		_launch_list_container.add_child(header)
 
 	var target_map := _build_target_map(targets)
 	var missions_by_rocket := _build_missions_by_rocket(missions, launched)
@@ -103,6 +108,49 @@ func display_launched_rockets() -> void:
 			"arrival_time": float(mission.get("arrival_time", 0))
 		}
 
+	if has_returning:
+		var returning_header = Label.new()
+		returning_header.text = "Returning to Earth"
+		returning_header.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		panel_style.apply_title(returning_header)
+		_launch_list_container.add_child(returning_header)
+
+		var rocket_id = str(returning.get("rocket_id", ""))
+		var target_id = str(returning.get("target_id", ""))
+		var target_type = str(returning.get("type", "asteroid"))
+		var target_label = str(returning.get("label", ""))
+		if target_label == "" and target_id != "":
+			target_label = "Asteroid %s" % target_id
+		if target_label == "":
+			target_label = "Unknown target"
+
+		var row = HBoxContainer.new()
+		row.custom_minimum_size = Vector2(0, 88)
+
+		var info = VBoxContainer.new()
+		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var title_lbl = Label.new()
+		title_lbl.text = "Rocket %s → %s" % [rocket_id, target_label]
+		panel_style.apply_body(title_lbl)
+		var dist_lbl = Label.new()
+		dist_lbl.text = "Status: Returning"
+		panel_style.apply_muted(dist_lbl)
+		info.add_child(title_lbl)
+		info.add_child(dist_lbl)
+		row.add_child(info)
+
+		var preview_btn = Button.new()
+		preview_btn.text = "Preview"
+		preview_btn.custom_minimum_size = Vector2(120, 40)
+		if target_id == "":
+			preview_btn.disabled = true
+		else:
+			preview_btn.pressed.connect(Callable(self, "_on_preview_pressed").bind(target_id, target_label, target_type, rocket_id))
+		panel_style.apply_button(preview_btn, true)
+		row.add_child(preview_btn)
+
+		_launch_list_container.add_child(row)
+
 	update_progress()
 
 func _on_self_destruct_pressed(rocket_id: String) -> void:
@@ -125,9 +173,12 @@ func _on_preview_pressed(target_id: String, target_label: String, target_type: S
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	if rm:
 		rm.set_preview_target(target_id, target_label, target_type, rocket_id)
-	_change_to_preview_scene()
+	if _has_arrived(target_id, rocket_id):
+		_change_to_scene(ARRIVED_PREVIEW_SCENE_PATH)
+		return
+	_change_to_scene(PREVIEW_SCENE_PATH)
 
-func _change_to_preview_scene() -> void:
+func _change_to_scene(scene_path: String) -> void:
 	var tree = Engine.get_main_loop() as SceneTree
 	if tree == null:
 		return
@@ -135,9 +186,28 @@ func _change_to_preview_scene() -> void:
 	if tree.current_scene:
 		scene_manager = tree.current_scene.get_node_or_null("SceneManager")
 	if scene_manager and scene_manager.has_method("change_to_scene"):
-		scene_manager.change_to_scene(PREVIEW_SCENE_PATH)
+		scene_manager.change_to_scene(scene_path)
 	else:
-		tree.change_scene_to_file(PREVIEW_SCENE_PATH)
+		tree.change_scene_to_file(scene_path)
+
+func _has_arrived(target_id: String, rocket_id: String) -> bool:
+	if target_id == "" or rocket_id == "":
+		return false
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if not rm:
+		return false
+	var missions: Array = rm.get_missions()
+	if missions.is_empty():
+		return false
+	var now = float(TimeHelper.get_unix_epoch_seconds())
+	for m in missions:
+		if str(m.get("rocket_id", "")) != rocket_id:
+			continue
+		if str(m.get("target", "")) != target_id:
+			continue
+		var arrival_time = float(m.get("arrival_time", 0))
+		return arrival_time > 0.0 and arrival_time <= now
+	return false
 
 func _build_target_map(targets: Array) -> Dictionary:
 	var map := {}

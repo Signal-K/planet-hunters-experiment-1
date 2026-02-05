@@ -1,0 +1,57 @@
+{
+  "taskId": "yd10z1",
+  "currentVersion": 2,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "yd10z1",
+      "version": 1,
+      "timestamp": "2026-02-04T07:14:57.391Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "Update - Tom ended up fixing the placement. Think this is done.\n"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix sprite placements",
+        "description": "Rocket sprites are all over the place.",
+        "status": "todo",
+        "priority": "medium",
+        "assignee": "@Tom",
+        "labels": [
+          "Sprites",
+          "Rockets"
+        ],
+        "acceptanceCriteria": [],
+        "implementationNotes": "Update - Tom ended up fixing the placement. Think this is done.\n"
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "yd10z1",
+      "version": 2,
+      "timestamp": "2026-02-04T07:15:00.130Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix sprite placements",
+        "description": "Rocket sprites are all over the place.",
+        "status": "done",
+        "priority": "medium",
+        "assignee": "@Tom",
+        "labels": [
+          "Sprites",
+          "Rockets"
+        ],
+        "acceptanceCriteria": [],
+        "implementationNotes": "Update - Tom ended up fixing the placement. Think this is done."
+      }
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 extends Node
 
-@export var bottom_inset: float = 120.0
+@export var bottom_inset: float = 0.0
 @export var top_inset: float = 36.0
 @export var horizontal_inset: float = 24.0
 
