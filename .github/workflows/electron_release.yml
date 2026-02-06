@@ -53,14 +53,18 @@ jobs:
             curl -fsSL -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/Godot_v4.5-stable_macos.universal.zip"
             unzip -q godot.zip
             GODOT_PATH="$PWD/Godot.app/Contents/MacOS/Godot"
+            TEMPLATE_DIR="$HOME/Library/Application Support/Godot/export_templates/4.5.stable"
           elif [ "$RUNNER_OS" = "Linux" ]; then
             curl -fsSL -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/Godot_v4.5-stable_linux.x86_64.zip"
             unzip -q godot.zip
             GODOT_PATH="$PWD/Godot_v4.5-stable_linux.x86_64"
+            TEMPLATE_DIR="$HOME/.local/share/godot/export_templates/4.5.stable"
           elif [ "$RUNNER_OS" = "Windows" ]; then
             curl -fsSL -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/Godot_v4.5-stable_win64.exe.zip"
             unzip -q godot.zip
             GODOT_PATH="$PWD/Godot_v4.5-stable_win64.exe"
+            WIN_HOME="$(cygpath -u "$USERPROFILE")"
+            TEMPLATE_DIR="$WIN_HOME/AppData/Roaming/Godot/export_templates/4.5.stable"
           else
             echo "Unsupported runner OS: $RUNNER_OS"
             exit 1
@@ -68,6 +72,28 @@ jobs:
 
           chmod +x "$GODOT_PATH" || true
           echo "GODOT_EDITOR=$GODOT_PATH" >> "$GITHUB_ENV"
+
+          # Install export templates (required for --export-release)
+          curl -fsSL -o templates.tpz "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/Godot_v4.5-stable_export_templates.tpz"
+          rm -rf .godot-templates
+          mkdir -p .godot-templates
+          unzip -q templates.tpz -d .godot-templates
+
+          mkdir -p "$TEMPLATE_DIR"
+          TEMPLATE_SOURCE_DIR="$(find .godot-templates -type f -name 'web_nothreads_release.zip' -print -quit | xargs -I{} dirname "{}")"
+          if [ -z "$TEMPLATE_SOURCE_DIR" ]; then
+            echo "Could not locate Godot web export templates in downloaded archive"
+            find .godot-templates -maxdepth 4 -type f | sed -n '1,120p'
+            exit 1
+          fi
+          cp -R "$TEMPLATE_SOURCE_DIR"/* "$TEMPLATE_DIR/"
+
+          # Also mirror templates to the script's GODOT_USER_DIR default.
+          mkdir -p /tmp/godot/export_templates/4.5.stable
+          cp -R "$TEMPLATE_DIR"/* /tmp/godot/export_templates/4.5.stable/
+
+          test -f "$TEMPLATE_DIR/web_nothreads_release.zip"
+          test -f "$TEMPLATE_DIR/web_nothreads_debug.zip"
 
       - name: Export Godot desktop web assets
         shell: bash
