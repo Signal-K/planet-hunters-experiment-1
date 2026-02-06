@@ -36,7 +36,7 @@ func apply_safe_area() -> void:
 		control.anchor_right = 0.0
 		control.anchor_bottom = 0.0
 
-		var button_height := max(control.get_combined_minimum_size().y, 80.0)
+		var button_height: float = maxf(control.get_combined_minimum_size().y, 80.0)
 		control.offset_left = horizontal_inset
 		control.offset_right = visible_size.x - horizontal_inset
 		control.offset_bottom = visible_size.y - bottom_inset - bottom_padding
