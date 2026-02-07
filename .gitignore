@@ -7,6 +7,34 @@ android/app/build/
 build/
 ios/build/
 ios/Pods/Target Support Files/
+electron-dist/
+dist/
+release/
+out/
+dist/*.blockmap
+dist/*.dmg
+dist/*.AppImage
+dist/*.deb
+dist/*.rpm
+dist/*.snap
+dist/*.exe
+dist/*.msi
+dist/*.zip
+dist/*.tar.gz
+dist/*.nupkg
+release/*.blockmap
+release/*.dmg
+release/*.AppImage
+release/*.deb
+release/*.rpm
+release/*.snap
+release/*.exe
+release/*.msi
+release/*.zip
+release/*.tar.gz
+release/*.nupkg
+.cache/electron/
+.cache/electron-builder/
 
 # Node modules
 node_modules/
@@ -22,4 +50,3 @@ node_modules/
 
 ## Keep specific files
 !ios/GodotTest.pck
-
