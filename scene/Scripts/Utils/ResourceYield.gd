@@ -22,7 +22,8 @@ static func get_yield_for_target(target_id: String, target_type: String, level: 
 	var base_capacity = PLANET_CAPACITY if normalized_type == "planet" else int(round(PLANET_CAPACITY * ASTEROID_RATIO))
 	var mineable_pct = clamp(BASE_MINEABLE_PCT + MINEABLE_PCT_STEP * max(level - 1, 0), BASE_MINEABLE_PCT, MAX_MINEABLE_PCT)
 	var capacity = int(round(base_capacity * mineable_pct))
-	var seed = _hash_string("%s:%s" % [target_id, normalized_type])
+	var hash_util = preload("res://Scripts/Utils/HashUtils.gd")
+	var seed = hash_util.simple_hash("%s:%s" % [target_id, normalized_type])
 	var rng = RandomNumberGenerator.new()
 	rng.seed = seed
 
@@ -71,9 +72,3 @@ static func _normalize_type(value: String) -> String:
 	if t == "planet" or t == "asteroid":
 		return t
 	return "asteroid"
-
-static func _hash_string(value: String) -> int:
-	var hash := 0
-	for i in range(value.length()):
-		hash = int((hash * 31 + value.unicode_at(i)) & 0x7fffffff)
-	return max(hash, 1)

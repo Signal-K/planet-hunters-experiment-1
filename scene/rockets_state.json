@@ -3,13 +3,6 @@
     "starterrocket1"
   ],
   "placed": [
-    {
-      "type": "starterrocket1",
-      "id": "starterrocket1-2284140639",
-      "x": -110.0,
-      "y": -170.0,
-      "status": "returningHome"
-    }
   ],
   "launched": [
   ],
@@ -17,7 +10,7 @@
   ],
   "missions": [
   ],
-  "selected_target": "63768316",
+  "selected_target": "",
   "detected_targets": [
     {
       "id": "101445733",
@@ -46,19 +39,15 @@
     }
   ],
   "seen_asteroids": [
-    "63768316"
   ],
   "seen_planets": [
   ],
   "returning": [
-    {
-      "rocket_id": "starterrocket1-2284140639"
-    }
   ],
+  "arrived": {
+  },
   "returned_mission": {
-    "rocket_id": "starterrocket1-2284140639",
-    "target_id": "63768316",
-    "label": "63768316",
-    "type": "asteroid"
+  },
+  "returning_started": {
   }
 }

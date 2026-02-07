@@ -1,0 +1,202 @@
+{
+  "taskId": "j0esye",
+  "currentVersion": 5,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "j0esye",
+      "version": 1,
+      "timestamp": "2026-02-06T08:17:23.780Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix menu panel layout overlap",
+        "description": "Menu panel elements overlap after styling; adjust layout for proper spacing and scroll behavior.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "bug"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Menu header and content no longer overlap"
+          },
+          {
+            "completed": false,
+            "text": "Scrollable content stacks correctly"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "j0esye",
+      "version": 2,
+      "timestamp": "2026-02-06T08:17:55.515Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "newValue": "1. Fix header container sizing and padding\n2. Ensure scroll content container fills width and cards layout correctly\n3. Validate no overlap between header and content"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix menu panel layout overlap",
+        "description": "Menu panel elements overlap after styling; adjust layout for proper spacing and scroll behavior.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "bug"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Menu header and content no longer overlap"
+          },
+          {
+            "completed": false,
+            "text": "Scrollable content stacks correctly"
+          }
+        ],
+        "implementationPlan": "1. Fix header container sizing and padding\n2. Ensure scroll content container fills width and cards layout correctly\n3. Validate no overlap between header and content"
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "j0esye",
+      "version": 3,
+      "timestamp": "2026-02-06T08:18:10.865Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Menu header and content no longer overlap"
+            },
+            {
+              "completed": false,
+              "text": "Scrollable content stacks correctly"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Menu header and content no longer overlap"
+            },
+            {
+              "completed": true,
+              "text": "Scrollable content stacks correctly"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Fix menu panel layout overlap",
+        "description": "Menu panel elements overlap after styling; adjust layout for proper spacing and scroll behavior.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "bug"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Menu header and content no longer overlap"
+          },
+          {
+            "completed": true,
+            "text": "Scrollable content stacks correctly"
+          }
+        ],
+        "implementationPlan": "1. Fix header container sizing and padding\n2. Ensure scroll content container fills width and cards layout correctly\n3. Validate no overlap between header and content"
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "j0esye",
+      "version": 4,
+      "timestamp": "2026-02-06T08:18:26.470Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "## Summary\n- Fixed header sizing/padding and ensured header content stretches.\n- Converted cards to PanelContainer + ensured scroll content fills width.\n\n## Files\n- scene/Scenes/UI/MenuPanel.tscn"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix menu panel layout overlap",
+        "description": "Menu panel elements overlap after styling; adjust layout for proper spacing and scroll behavior.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "bug"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Menu header and content no longer overlap"
+          },
+          {
+            "completed": true,
+            "text": "Scrollable content stacks correctly"
+          }
+        ],
+        "implementationPlan": "1. Fix header container sizing and padding\n2. Ensure scroll content container fills width and cards layout correctly\n3. Validate no overlap between header and content",
+        "implementationNotes": "## Summary\n- Fixed header sizing/padding and ensured header content stretches.\n- Converted cards to PanelContainer + ensured scroll content fills width.\n\n## Files\n- scene/Scenes/UI/MenuPanel.tscn"
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "j0esye",
+      "version": 5,
+      "timestamp": "2026-02-06T08:18:58.995Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix menu panel layout overlap",
+        "description": "Menu panel elements overlap after styling; adjust layout for proper spacing and scroll behavior.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "bug"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Menu header and content no longer overlap"
+          },
+          {
+            "completed": true,
+            "text": "Scrollable content stacks correctly"
+          }
+        ],
+        "implementationPlan": "1. Fix header container sizing and padding\n2. Ensure scroll content container fills width and cards layout correctly\n3. Validate no overlap between header and content",
+        "implementationNotes": "## Summary\n- Fixed header sizing/padding and ensured header content stretches.\n- Converted cards to PanelContainer + ensured scroll content fills width.\n\n## Files\n- scene/Scenes/UI/MenuPanel.tscn"
+      }
+    }
+  ]
+}

@@ -65,6 +65,47 @@ border_width_right = 1
 border_width_top = 1
 border_width_bottom = 1
 
+[sub_resource type="StyleBoxFlat" id="5"]
+bg_color = Color(0.2, 0.24, 0.32, 1)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_left = 16
+corner_radius_bottom_right = 16
+content_margin_left = 14.0
+content_margin_right = 14.0
+content_margin_top = 10.0
+content_margin_bottom = 10.0
+
+[sub_resource type="StyleBoxFlat" id="6"]
+bg_color = Color(0.94, 0.96, 0.99, 1)
+border_color = Color(0.8, 0.84, 0.92, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_left = 14
+corner_radius_bottom_right = 14
+content_margin_left = 14.0
+content_margin_right = 14.0
+content_margin_top = 12.0
+content_margin_bottom = 12.0
+border_width_left = 1
+border_width_right = 1
+border_width_top = 1
+border_width_bottom = 1
+
+[sub_resource type="StyleBoxFlat" id="7"]
+bg_color = Color(0.18, 0.58, 0.78, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_left = 8
+corner_radius_bottom_right = 8
+
+[sub_resource type="StyleBoxFlat" id="8"]
+bg_color = Color(0.92, 0.95, 0.98, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_left = 8
+corner_radius_bottom_right = 8
+
 [node name="MenuPanel" type="Control"]
 layout_mode = 3
 anchors_preset = 15
@@ -81,7 +122,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.95, 0.97, 1, 0.6)
+color = Color(0.02, 0.04, 0.08, 0.55)
 
 [node name="PanelContainer" type="Control" parent="."]
 layout_mode = 1
@@ -109,25 +150,40 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 30.0
-offset_top = 30.0
-offset_right = -30.0
-offset_bottom = -30.0
+offset_left = 24.0
+offset_top = 24.0
+offset_right = -24.0
+offset_bottom = -24.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 20
+theme_override_constants/separation = 16
 
 [node name="HeaderContainer" type="HBoxContainer" parent="PanelContainer/Panel/VBoxContainer"]
 layout_mode = 2
 
-[node name="Title" type="Label" parent="PanelContainer/Panel/VBoxContainer/HeaderContainer"]
+[node name="HeaderBackground" type="Panel" parent="PanelContainer/Panel/VBoxContainer/HeaderContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.55, 0.18, 0.25, 1)
-theme_override_font_sizes/font_size = 32
+custom_minimum_size = Vector2(0, 56)
+theme_override_styles/panel = SubResource("5")
+
+[node name="HeaderContent" type="HBoxContainer" parent="PanelContainer/Panel/VBoxContainer/HeaderContainer/HeaderBackground"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="PanelContainer/Panel/VBoxContainer/HeaderContainer/HeaderBackground/HeaderContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.12, 0.68, 0.9, 1)
+theme_override_font_sizes/font_size = 30
 text = "Main Menu"
 
-[node name="CloseButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/HeaderContainer"]
+[node name="CloseButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/HeaderContainer/HeaderBackground/HeaderContent"]
 custom_minimum_size = Vector2(100, 50)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.1, 0.12, 0.16, 1)
@@ -141,40 +197,56 @@ text = "Close"
 [node name="HSeparator" type="HSeparator" parent="PanelContainer/Panel/VBoxContainer"]
 layout_mode = 2
 
-[node name="ContentContainer" type="VBoxContainer" parent="PanelContainer/Panel/VBoxContainer"]
+[node name="ScrollContainer" type="ScrollContainer" parent="PanelContainer/Panel/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_constants/separation = 15
+size_flags_horizontal = 3
+scroll_vertical = 0
+scroll_horizontal_enabled = false
+follow_focus = true
+theme_override_constants/scrollbar_margin_left = 8
+theme_override_constants/scrollbar_margin_right = 8
+
+[node name="ContentContainer" type="VBoxContainer" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+size_flags_horizontal = 3
+theme_override_constants/separation = 14
 
 [node name="Spacer" type="Control" parent="PanelContainer/Panel/VBoxContainer/ContentContainer"]
 layout_mode = 2
 size_flags_vertical = 1
 
-[node name="CounterContainer" type="VBoxContainer" parent="PanelContainer/Panel/VBoxContainer/ContentContainer"]
+[node name="CounterCard" type="PanelContainer" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("6")
+
+[node name="CounterContainer" type="VBoxContainer" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/CounterCard"]
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 0
 theme_override_constants/separation = 15
 
-[node name="CounterTitle" type="Label" parent="PanelContainer/Panel/VBoxContainer/ContentContainer/CounterContainer"]
+[node name="CounterTitle" type="Label" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/CounterCard/CounterContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 20
 text = "Game Counter"
 horizontal_alignment = 1
 
-[node name="CounterLabel" type="Label" parent="PanelContainer/Panel/VBoxContainer/ContentContainer/CounterContainer"]
+[node name="CounterLabel" type="Label" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/CounterCard/CounterContainer"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.55, 0.72, 0.92, 1)
 theme_override_font_sizes/font_size = 48
 text = "0"
 horizontal_alignment = 1
 
-[node name="ButtonsContainer" type="HBoxContainer" parent="PanelContainer/Panel/VBoxContainer/ContentContainer/CounterContainer"]
+[node name="ButtonsContainer" type="HBoxContainer" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/CounterCard/CounterContainer"]
 layout_mode = 2
 theme_override_constants/separation = 30
 alignment = 1
 
-[node name="DecreaseButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/ContentContainer/CounterContainer/ButtonsContainer"]
+[node name="DecreaseButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/CounterCard/CounterContainer/ButtonsContainer"]
 custom_minimum_size = Vector2(80, 80)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.1, 0.12, 0.16, 1)
@@ -185,7 +257,7 @@ theme_override_styles/pressed = SubResource("4")
 theme_override_styles/focus = SubResource("3")
 text = "-"
 
-[node name="IncreaseButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/ContentContainer/CounterContainer/ButtonsContainer"]
+[node name="IncreaseButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/CounterCard/CounterContainer/ButtonsContainer"]
 custom_minimum_size = Vector2(80, 80)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.1, 0.12, 0.16, 1)
@@ -196,17 +268,72 @@ theme_override_styles/pressed = SubResource("4")
 theme_override_styles/focus = SubResource("3")
 text = "+"
 
-[node name="Spacer2" type="Control" parent="PanelContainer/Panel/VBoxContainer/ContentContainer"]
+[node name="Spacer2" type="Control" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer"]
 layout_mode = 2
 size_flags_vertical = 1
 
-[node name="InfoLabel" type="Label" parent="PanelContainer/Panel/VBoxContainer/ContentContainer"]
+[node name="ProgressCard" type="PanelContainer" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("6")
+
+[node name="ProgressContainer" type="VBoxContainer" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/ProgressCard"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="ProgressTitle" type="Label" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/ProgressCard/ProgressContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Experience & Progression"
+
+[node name="LevelRow" type="HBoxContainer" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/ProgressCard/ProgressContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+
+[node name="LevelLabel" type="Label" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/ProgressCard/ProgressContainer/LevelRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+text = "Level 1"
+
+[node name="XpLabel" type="Label" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/ProgressCard/ProgressContainer/LevelRow"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "0 XP"
+horizontal_alignment = 2
+
+[node name="ProgressBar" type="ProgressBar" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/ProgressCard/ProgressContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 16)
+value = 0.0
+percent_visible = false
+theme_override_styles/fill = SubResource("7")
+theme_override_styles/background = SubResource("8")
+
+[node name="NextLevelLabel" type="Label" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/ProgressCard/ProgressContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "0 XP to next level"
+
+[node name="UnlocksTitle" type="Label" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/ProgressCard/ProgressContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Unlocks"
+
+[node name="UnlocksList" type="VBoxContainer" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/ProgressCard/ProgressContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="InfoLabel" type="Label" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
 text = "Changes here will sync back to React Native"
 horizontal_alignment = 1
 
-[node name="ResetButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/ContentContainer"]
+[node name="ResetButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer"]
 custom_minimum_size = Vector2(160, 50)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.1, 0.12, 0.16, 1)
@@ -217,7 +344,7 @@ theme_override_styles/pressed = SubResource("4")
 theme_override_styles/focus = SubResource("3")
 text = "Reset All Data"
 
-[node name="ResetTutorialButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/ContentContainer"]
+[node name="ResetTutorialButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer"]
 custom_minimum_size = Vector2(160, 50)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.1, 0.12, 0.16, 1)

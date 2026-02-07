@@ -1,0 +1,78 @@
+{
+  "taskId": "wnj3iw",
+  "currentVersion": 2,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "wnj3iw",
+      "version": 1,
+      "timestamp": "2026-02-06T01:39:46.821Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix missing return start time and returningHome preview routing",
+        "description": "Return-home state lacks timestamp; preview starts at target scene. Add migration and persistence for return start time and ensure returning/returned preview routing.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "bug",
+          "rocket-state"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "returningHome rockets persist return start time"
+          },
+          {
+            "completed": false,
+            "text": "returning rockets preview starts in return transit or Earth orbit based on elapsed time"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "wnj3iw",
+      "version": 2,
+      "timestamp": "2026-02-06T01:43:19.628Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "newValue": "1. Inspect RocketsManager return-home persistence + preview routing\n2. Backfill missing return start times and auto-promote overdue returns\n3. Ensure return_home always stamps returning_started and persist"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix missing return start time and returningHome preview routing",
+        "description": "Return-home state lacks timestamp; preview starts at target scene. Add migration and persistence for return start time and ensure returning/returned preview routing.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "bug",
+          "rocket-state"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "returningHome rockets persist return start time"
+          },
+          {
+            "completed": false,
+            "text": "returning rockets preview starts in return transit or Earth orbit based on elapsed time"
+          }
+        ],
+        "implementationPlan": "1. Inspect RocketsManager return-home persistence + preview routing\n2. Backfill missing return start times and auto-promote overdue returns\n3. Ensure return_home always stamps returning_started and persist"
+      }
+    }
+  ]
+}

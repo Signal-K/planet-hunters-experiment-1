@@ -31,15 +31,15 @@ static func create_styled_panel(title: String, tree: SceneTree) -> Control:
 	
 	panel_container.add_child(panel)
 	
-	# Create content layout
-	var content = _create_panel_content(title, panel_container)
-	panel_container.add_child(content)
-	
 	# Create wrapper to hold both overlay and panel
 	var wrapper = Control.new()
 	wrapper.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	wrapper.add_child(overlay)
 	wrapper.add_child(panel_container)
+
+	# Create content layout
+	var content = _create_panel_content(title, panel_container, wrapper)
+	panel_container.add_child(content)
 	
 	return wrapper
 
@@ -62,7 +62,7 @@ static func _apply_panel_style(panel: Panel) -> void:
 	panel.add_theme_stylebox_override("panel", style_box)
 
 ## Create the content layout for the panel
-static func _create_panel_content(title: String, parent: Control) -> VBoxContainer:
+static func _create_panel_content(title: String, parent: Control, wrapper: Control) -> VBoxContainer:
 	var vbox = VBoxContainer.new()
 	vbox.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	vbox.add_theme_constant_override("separation", 20)
@@ -88,7 +88,7 @@ static func _create_panel_content(title: String, parent: Control) -> VBoxContain
 	content_vbox.add_child(spacer)
 	
 	# Create close button
-	_create_close_button(content_vbox, parent)
+	_create_close_button(content_vbox, wrapper)
 	
 	return vbox
 

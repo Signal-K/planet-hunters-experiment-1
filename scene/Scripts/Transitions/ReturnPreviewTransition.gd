@@ -12,27 +12,10 @@ const ORBIT_SEGMENTS := 64
 
 const SPEED_MIN_KMH := 32000.0
 const SPEED_MAX_KMH := 140000.0
+const NumberFormat = preload("res://Scripts/Utils/NumberFormat.gd")
 
 const ORBIT_MULTIPLIER := 1.0
 const EARTH_MULTIPLIER := 1.35
-const MINERAL_PRICES := {
-	"Iron": 12,
-	"Nickel": 24,
-	"Cobalt": 36,
-	"Platinum": 120,
-	"Silicates": 8
-}
-
-const STAGE2_FRAME_PATHS := [
-	"res://assets/Vehicles/StarterRocketStage2Frame1.png",
-	"res://assets/Vehicles/StarterRocketStage2Frame2.png",
-	"res://assets/Vehicles/StarterRocketStage2Frame3.png",
-	"res://assets/Vehicles/StarterRocketStage2Frame4.png",
-	"res://assets/Vehicles/StarterRocketStage2Frame5.png",
-	"res://assets/Vehicles/StarterRocketStage2Frame6.png",
-	"res://assets/Vehicles/StarterRocketStage2Frame7.png",
-	"res://assets/Vehicles/StarterRocketStage2Frame8.png"
-]
 
 @onready var asteroid_pivot: Node3D = $AsteroidPivot
 @onready var asteroid_mesh: MeshInstance3D = $AsteroidPivot/Asteroid
@@ -64,6 +47,7 @@ const STAGE2_FRAME_PATHS := [
 var _orbit_angle := 0.0
 var _orbit_radius := ORBIT_RADIUS_PX
 var _heading_angle := 0.0
+var _center_locked := false
 var _phase_time := 0.0
 var _target_alpha := 1.0
 var _earth_alpha := 0.0
@@ -71,7 +55,6 @@ var _current_target_id := ""
 var _current_target_label := ""
 var _current_target_type := ""
 var _current_rocket_id := ""
-var _stage2_frames: SpriteFrames = null
 var _earth_pivot: Node3D
 var _earth_mesh: MeshInstance3D
 var _traveling := false
@@ -86,18 +69,30 @@ enum Phase {
 
 var _phase := Phase.TARGET_ORBIT
 
+func _should_start_at_earth_orbit() -> bool:
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if not rm:
+		return false
+	rm.mark_returned_if_due(_current_rocket_id)
+	return rm.has_return_completed(_current_rocket_id)
+
 func _ready() -> void:
 	_setup_ui()
 	_load_target_data()
 	_generate_target_asteroid(_current_target_id)
 	_setup_earth()
 	_setup_orbit_visual()
-	_start_target_orbit()
+	if _should_start_at_earth_orbit():
+		_start_earth_orbit()
+	else:
+		_start_target_orbit()
 
 func _process(delta: float) -> void:
 	_phase_time += delta
 	_update_orbit(delta)
 	_apply_earth_alpha()
+	if _phase != Phase.EARTH_ORBIT and _should_start_at_earth_orbit():
+		_start_earth_orbit()
 	if _phase == Phase.TARGET_ORBIT and _phase_time >= TARGET_ORBIT_TIME:
 		_start_depart_target()
 	elif _phase == Phase.DEPART_TARGET and _phase_time >= TARGET_FADE_TIME:
@@ -174,11 +169,13 @@ func _setup_orbit_visual() -> void:
 		return
 	orbit_root.visible = true
 	_orbit_angle = 0.0
-	_build_orbit_circle(_orbit_radius, ORBIT_SEGMENTS)
+	var orbit_utils = preload("res://Scripts/Utils/OrbitVisuals.gd")
+	orbit_utils.build_orbit_circle(orbit_circle, _orbit_radius, ORBIT_SEGMENTS)
 	orbit_rocket.position = Vector2(_orbit_radius, 0)
 	orbit_rocket.scale = Vector2(0.2, 0.2)
 	_set_orbit_rocket_visual(_current_rocket_id)
-	_update_heading_line()
+	var orbit_utils2 = preload("res://Scripts/Utils/OrbitVisuals.gd")
+	orbit_utils2.update_heading_line(orbit_heading, orbit_rocket)
 
 func _start_target_orbit() -> void:
 	_phase = Phase.TARGET_ORBIT
@@ -187,6 +184,7 @@ func _start_target_orbit() -> void:
 	_earth_alpha = 0.0
 	_traveling = false
 	_heading_angle = 0.0
+	_center_locked = false
 	minerals_panel.visible = true
 	inventory_panel.visible = true
 	control_panel.visible = false
@@ -202,6 +200,7 @@ func _start_depart_target() -> void:
 	_phase = Phase.DEPART_TARGET
 	_phase_time = 0.0
 	_heading_angle = orbit_rocket.rotation if orbit_rocket else 0.0
+	_center_locked = true
 	minerals_panel.modulate.a = 1.0
 	inventory_panel.modulate.a = 1.0
 	var fade = get_tree().create_tween()
@@ -214,12 +213,19 @@ func _start_depart_target() -> void:
 	_orbit_radius = 0.0
 	if orbit_circle:
 		orbit_circle.visible = false
+	var size = get_viewport().get_visible_rect().size
+	var center = size * 0.5
+	if orbit_root:
+		var tween = get_tree().create_tween()
+		tween.tween_property(orbit_root, "position", center, 0.6)\
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 func _start_travel() -> void:
 	_phase = Phase.TRAVEL
 	_phase_time = 0.0
 	_traveling = true
 	_orbit_radius = 0.0
+	_center_locked = true
 	travel_panel.visible = true
 	travel_panel.modulate.a = 0.0
 	get_tree().create_tween().tween_property(travel_panel, "modulate:a", 1.0, 0.6)
@@ -236,7 +242,7 @@ func _update_travel() -> void:
 	if travel_speed:
 		var eased = pct * pct * (3.0 - 2.0 * pct)
 		var speed = lerp(SPEED_MIN_KMH, SPEED_MAX_KMH, eased)
-		travel_speed.text = "Speed: %s km/h" % _format_number_with_commas(str(int(round(speed))))
+		travel_speed.text = "Speed: %s km/h" % NumberFormat.commas(str(int(round(speed))))
 	if pct >= 1.0:
 		_start_earth_approach()
 
@@ -244,6 +250,7 @@ func _start_earth_approach() -> void:
 	_phase = Phase.EARTH_APPROACH
 	_phase_time = 0.0
 	_traveling = false
+	_center_locked = false
 	if travel_panel:
 		var fade = get_tree().create_tween()
 		fade.tween_property(travel_panel, "modulate:a", 0.0, 0.6)
@@ -259,9 +266,16 @@ func _start_earth_orbit() -> void:
 	_phase = Phase.EARTH_ORBIT
 	_phase_time = 0.0
 	_orbit_radius = ORBIT_RADIUS_PX
-	_build_orbit_circle(_orbit_radius, ORBIT_SEGMENTS)
+	var orbit_utils3 = preload("res://Scripts/Utils/OrbitVisuals.gd")
+	orbit_utils3.build_orbit_circle(orbit_circle, _orbit_radius, ORBIT_SEGMENTS)
 	if orbit_circle:
 		orbit_circle.visible = true
+	_center_locked = false
+	_traveling = false
+	travel_panel.visible = false
+	if orbit_root:
+		var size = get_viewport().get_visible_rect().size
+		orbit_root.position = size * 0.5
 	_show_summary_panel()
 
 func _show_summary_panel() -> void:
@@ -298,17 +312,18 @@ func _summary_content() -> void:
 			panel_style.apply_body(name_lbl)
 			var amount = int(collected.get(name, 0))
 			var amount_lbl = Label.new()
-			amount_lbl.text = "%s kg" % _format_number_with_commas(str(amount))
+			amount_lbl.text = "%s kg" % NumberFormat.commas(str(amount))
 			amount_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 			panel_style.apply_muted(amount_lbl)
 			row.add_child(name_lbl)
 			row.add_child(amount_lbl)
 			summary_list.add_child(row)
-			total_value += _price_for_mineral(name, amount)
+			var pricing = preload("res://Scripts/Utils/MineralPricing.gd")
+			total_value += pricing.price_for(name, amount)
 	var orbit_value = int(round(total_value * ORBIT_MULTIPLIER))
 	var earth_value = int(round(total_value * EARTH_MULTIPLIER))
-	summary_orbit.text = "Sell in Orbit: %s F" % _format_number_with_commas(str(orbit_value))
-	summary_earth.text = "Sell on Earth: %s F" % _format_number_with_commas(str(earth_value))
+	summary_orbit.text = "Sell in Orbit: %s F" % NumberFormat.commas(str(orbit_value))
+	summary_earth.text = "Sell on Earth: %s F" % NumberFormat.commas(str(earth_value))
 
 func _update_orbit(delta: float) -> void:
 	if orbit_root == null or orbit_rocket == null:
@@ -316,29 +331,23 @@ func _update_orbit(delta: float) -> void:
 	if _phase in [Phase.DEPART_TARGET, Phase.TRAVEL]:
 		orbit_rocket.position = Vector2.ZERO
 		orbit_rocket.rotation = _heading_angle
-		var size = get_viewport().get_visible_rect().size
-		orbit_root.position = size * 0.5
+		if not _center_locked:
+			var size = get_viewport().get_visible_rect().size
+			orbit_root.position = size * 0.5
 	else:
 		_orbit_angle += ORBIT_ROTATION_SPEED * delta
 		var offset = Vector2(cos(_orbit_angle), sin(_orbit_angle)) * _orbit_radius
 		orbit_rocket.position = offset
 		orbit_rocket.rotation = _orbit_angle + PI
-		if camera_3d and asteroid_pivot:
+		if not _center_locked and camera_3d and asteroid_pivot:
 			if _phase in [Phase.EARTH_APPROACH, Phase.EARTH_ORBIT]:
 				orbit_root.position = camera_3d.unproject_position(_earth_pivot.global_position)
 			else:
 				orbit_root.position = camera_3d.unproject_position(asteroid_pivot.global_position)
-	_build_orbit_circle(_orbit_radius, ORBIT_SEGMENTS)
-	_update_heading_line()
-
-func _update_heading_line() -> void:
-	if orbit_heading == null or orbit_rocket == null:
-		return
-	orbit_heading.visible = true
-	var dir = Vector2(0, -1).rotated(orbit_rocket.rotation)
-	var start = orbit_rocket.position + dir * 24.0
-	var end = orbit_rocket.position + dir * 74.0
-	orbit_heading.points = PackedVector2Array([start, end])
+	var orbit_utils4 = preload("res://Scripts/Utils/OrbitVisuals.gd")
+	orbit_utils4.build_orbit_circle(orbit_circle, _orbit_radius, ORBIT_SEGMENTS)
+	var orbit_utils5 = preload("res://Scripts/Utils/OrbitVisuals.gd")
+	orbit_utils5.update_heading_line(orbit_heading, orbit_rocket)
 
 func _build_minerals_list() -> void:
 	if minerals_list == null:
@@ -352,7 +361,7 @@ func _build_minerals_list() -> void:
 	minerals_title.text = "Minerals Available"
 	minerals_summary.text = "Asteroid Level 1 • Mineable: %d%% • %s units" % [
 		int(round(float(yield_data.get("mineable_pct", 0.1)) * 100.0)),
-		_format_number_with_commas(str(capacity))
+		NumberFormat.commas(str(capacity))
 	]
 	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
 	for name in resource_yield.MINERALS:
@@ -364,7 +373,7 @@ func _build_minerals_list() -> void:
 		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		panel_style.apply_body(name_lbl)
 		var amount_lbl = Label.new()
-		amount_lbl.text = _format_number_with_commas(str(minerals.get(name, 0)))
+		amount_lbl.text = NumberFormat.commas(str(minerals.get(name, 0)))
 		panel_style.apply_muted(amount_lbl)
 		row.add_child(name_lbl)
 		row.add_child(amount_lbl)
@@ -373,152 +382,14 @@ func _build_minerals_list() -> void:
 func _generate_target_asteroid(target_id: String) -> void:
 	if asteroid_mesh == null:
 		return
-	var seed = _hash_string(target_id)
-	var rng = RandomNumberGenerator.new()
-	rng.seed = seed
-
-	var shape_noise = FastNoiseLite.new()
-	shape_noise.seed = seed
-	shape_noise.noise_type = FastNoiseLite.TYPE_SIMPLEX
-	shape_noise.frequency = rng.randf_range(1.4, 2.4)
-	shape_noise.fractal_type = FastNoiseLite.FRACTAL_FBM
-	shape_noise.fractal_octaves = int(rng.randi_range(4, 6))
-	shape_noise.fractal_gain = 0.55
-	shape_noise.fractal_lacunarity = rng.randf_range(1.8, 2.2)
-
-	var detail_noise = FastNoiseLite.new()
-	detail_noise.seed = seed + 31
-	detail_noise.noise_type = FastNoiseLite.TYPE_SIMPLEX
-	detail_noise.frequency = rng.randf_range(2.6, 3.6)
-	detail_noise.fractal_type = FastNoiseLite.FRACTAL_RIDGED
-	detail_noise.fractal_octaves = 2
-	detail_noise.fractal_gain = 0.5
-
-	var color_noise = FastNoiseLite.new()
-	color_noise.seed = seed + 77
-	color_noise.noise_type = FastNoiseLite.TYPE_SIMPLEX
-	color_noise.frequency = rng.randf_range(1.2, 2.0)
-	color_noise.fractal_type = FastNoiseLite.FRACTAL_FBM
-	color_noise.fractal_octaves = 3
-	color_noise.fractal_gain = 0.5
-
-	var base_mesh = SphereMesh.new()
-	base_mesh.radial_segments = 12
-	base_mesh.rings = 8
-	base_mesh.radius = 1.0
-
-	var arrays = base_mesh.get_mesh_arrays()
-	var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
-	var colors := PackedColorArray()
-	colors.resize(verts.size())
-
-	var base_radius = rng.randf_range(0.72, 0.96)
-	var palette_rng = RandomNumberGenerator.new()
-	palette_rng.seed = _hash_string("palette:%s" % target_id)
-	var palette_dir = palette_rng.randf_range(0.0, 1.0)
-	var primary = _palette_color(palette_dir, 0.0, palette_rng)
-	var secondary = _palette_color(palette_dir, 0.45, palette_rng)
-	var accent = _palette_color(palette_dir, 0.85, palette_rng)
-
-	for i in range(verts.size()):
-		var v = verts[i]
-		var n = v.normalized()
-		var nval = shape_noise.get_noise_3d(n.x * 1.6, n.y * 1.6, n.z * 1.6)
-		var detail = detail_noise.get_noise_3d(n.x * 3.0, n.y * 3.0, n.z * 3.0)
-		var displacement = (nval * 0.22) + (detail * 0.08)
-		verts[i] = n * (base_radius + displacement)
-
-		var cval = color_noise.get_noise_3d(n.x * 2.0, n.y * 2.0, n.z * 2.0)
-		var band = clamp((cval + 1.0) * 0.5, 0.0, 1.0)
-		var mix_a = primary.lerp(secondary, band)
-		var mix_b = mix_a.lerp(accent, clamp((nval + 0.35) * 0.55, 0.0, 1.0))
-		colors[i] = mix_b
-
-	arrays[Mesh.ARRAY_VERTEX] = verts
-	arrays[Mesh.ARRAY_COLOR] = colors
-
-	var temp_mesh = ArrayMesh.new()
-	temp_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
-
-	var st = SurfaceTool.new()
-	st.create_from(temp_mesh, 0)
-	st.index()
-	st.generate_normals(true)
-	var final_mesh = st.commit()
-
-	asteroid_mesh.mesh = final_mesh
-
-	var material = StandardMaterial3D.new()
-	material.vertex_color_use_as_albedo = true
-	material.roughness = 0.95
-	material.metallic = 0.0
-	material.emission_enabled = true
-	material.emission = Color(0.35, 0.35, 0.35)
-	material.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
-	asteroid_mesh.material_override = material
+	var builder = preload("res://Scripts/Utils/ProceduralBodyBuilder.gd")
+	builder.build_asteroid(asteroid_mesh, target_id, 0.72, 0.96, Color(0.35, 0.35, 0.35))
 
 func _generate_earth() -> void:
 	if _earth_mesh == null:
 		return
-	var seed = _hash_string("earth:%s" % _current_target_id)
-	var rng = RandomNumberGenerator.new()
-	rng.seed = seed
-
-	var shape_noise = FastNoiseLite.new()
-	shape_noise.seed = seed
-	shape_noise.noise_type = FastNoiseLite.TYPE_SIMPLEX
-	shape_noise.frequency = 1.6
-	shape_noise.fractal_type = FastNoiseLite.FRACTAL_FBM
-	shape_noise.fractal_octaves = 4
-	shape_noise.fractal_gain = 0.55
-
-	var base_mesh = SphereMesh.new()
-	base_mesh.radial_segments = 24
-	base_mesh.rings = 16
-	base_mesh.radius = 1.1
-
-	var arrays = base_mesh.get_mesh_arrays()
-	var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
-	var colors := PackedColorArray()
-	colors.resize(verts.size())
-
-	for i in range(verts.size()):
-		var v = verts[i]
-		var n = v.normalized()
-		var nval = shape_noise.get_noise_3d(n.x * 1.5, n.y * 1.5, n.z * 1.5)
-		verts[i] = n * (1.0 + nval * 0.03)
-		var ocean = Color(0.18, 0.35, 0.65)
-		var land = Color(0.22, 0.55, 0.35)
-		var ice = Color(0.85, 0.9, 0.95)
-		var band = clamp((nval + 1.0) * 0.5, 0.0, 1.0)
-		var base = ocean.lerp(land, band)
-		var polar = abs(n.y)
-		if polar > 0.75:
-			base = base.lerp(ice, (polar - 0.75) / 0.25)
-		colors[i] = base
-
-	arrays[Mesh.ARRAY_VERTEX] = verts
-	arrays[Mesh.ARRAY_COLOR] = colors
-
-	var temp_mesh = ArrayMesh.new()
-	temp_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
-
-	var st = SurfaceTool.new()
-	st.create_from(temp_mesh, 0)
-	st.index()
-	st.generate_normals(true)
-	var final_mesh = st.commit()
-
-	_earth_mesh.mesh = final_mesh
-	var material = StandardMaterial3D.new()
-	material.vertex_color_use_as_albedo = true
-	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	material.roughness = 0.7
-	material.metallic = 0.05
-	material.emission_enabled = true
-	material.emission = Color(0.1, 0.2, 0.4)
-	material.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
-	_earth_mesh.material_override = material
+	var builder = preload("res://Scripts/Utils/ProceduralBodyBuilder.gd")
+	builder.build_earth(_earth_mesh, "earth:%s" % _current_target_id, Color(0.1, 0.2, 0.4))
 	_apply_earth_alpha()
 
 func _apply_earth_alpha() -> void:
@@ -528,84 +399,11 @@ func _apply_earth_alpha() -> void:
 	if material:
 		material.albedo_color.a = _earth_alpha
 
-func _palette_color(direction: float, offset: float, rng: RandomNumberGenerator) -> Color:
-	var hue = fmod(direction + offset * 0.35, 1.0)
-	var sat = rng.randf_range(0.12, 0.32)
-	var val = rng.randf_range(0.68, 0.94)
-	return Color.from_hsv(hue, sat, val)
-
 func _set_orbit_rocket_visual(rocket_id: String) -> void:
 	if orbit_rocket == null:
 		return
-	var rocket_type = _rocket_type_from_id(rocket_id)
-	if rocket_type == "starterrocket1":
-		orbit_rocket.sprite_frames = _get_stage2_sprite_frames()
-		orbit_rocket.animation = &"default"
-		orbit_rocket.play()
-		return
-	var frames := SpriteFrames.new()
-	frames.add_animation("default")
-	frames.set_animation_speed("default", 1.0)
-	frames.set_animation_loop("default", false)
-	frames.add_frame("default", _rocket_texture_for_id(rocket_id))
-	orbit_rocket.sprite_frames = frames
-	orbit_rocket.animation = &"default"
-	orbit_rocket.stop()
-
-func _get_stage2_sprite_frames() -> SpriteFrames:
-	if _stage2_frames != null:
-		return _stage2_frames
-	var frames := SpriteFrames.new()
-	frames.add_animation("default")
-	frames.set_animation_speed("default", 8.0)
-	frames.set_animation_loop("default", true)
-	for path in STAGE2_FRAME_PATHS:
-		frames.add_frame("default", load(path))
-	_stage2_frames = frames
-	return frames
-
-func _rocket_texture_for_id(rocket_id: String) -> Texture2D:
-	var rocket_type = _rocket_type_from_id(rocket_id)
-	var textures = {
-		"starterrocket1": preload("res://assets/Vehicles/StarterRocket1.png")
-	}
-	return textures.get(rocket_type, textures["starterrocket1"])
-
-func _rocket_type_from_id(rocket_id: String) -> String:
-	if rocket_id.find("-") != -1:
-		var parts = rocket_id.split("-")
-		if parts.size() > 0:
-			return str(parts[0])
-	return rocket_id
-
-func _build_orbit_circle(radius: float, segments: int) -> void:
-	if orbit_circle == null:
-		return
-	var points := PackedVector2Array()
-	for i in range(segments + 1):
-		var t = float(i) / float(segments) * TAU
-		points.append(Vector2(cos(t), sin(t)) * radius)
-	orbit_circle.points = points
-
-func _price_for_mineral(name: String, amount: int) -> int:
-	var unit = int(MINERAL_PRICES.get(name, 5))
-	return unit * amount
-
-func _hash_string(value: String) -> int:
-	var hash := 0
-	for i in range(value.length() - 1, -1, -1):
-		hash = int((hash * 31 + value.unicode_at(i)) & 0x7fffffff)
-	return max(hash, 1)
-
-func _format_number_with_commas(value: String) -> String:
-	var out := ""
-	var count := 0
-	for i in range(value.length() - 1, -1, -1):
-		out = value[i] + out
-		count += 1
-		if count % 3 == 0 and i > 0:
-			out = "," + out
-	return out
+	var helper = preload("res://Scripts/Utils/RocketSpriteHelper.gd")
+	helper.apply_orbit_sprite(orbit_rocket, rocket_id)
 
 func _on_continue_pressed() -> void:
 	var tree = Engine.get_main_loop() as SceneTree

@@ -1,0 +1,80 @@
+{
+  "taskId": "om1clf",
+  "currentVersion": 2,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "om1clf",
+      "version": 1,
+      "timestamp": "2026-02-06T01:47:30.398Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix sell-in-orbit flow + logbook + balance update",
+        "description": "Sell in orbit button closes dialog without logging/salvage; ensure proper sale flow, mission log updates, and balance updates.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "bug",
+          "ui",
+          "missions"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Sell in orbit completes sale, updates mission log and rocket status"
+          },
+          {
+            "completed": false,
+            "text": "Balance updates for sale and scrap only when selected"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "om1clf",
+      "version": 2,
+      "timestamp": "2026-02-06T01:50:17.262Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "newValue": "1. Inspect MissionDebrief button handlers for sell/scrap flow (done)\n2. Remove auto-close/auto-scrap on sell-in-orbit, ensure sale only (done)\n3. Verify scrap/salvage actions update log and status (pending validation)"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix sell-in-orbit flow + logbook + balance update",
+        "description": "Sell in orbit button closes dialog without logging/salvage; ensure proper sale flow, mission log updates, and balance updates.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "bug",
+          "ui",
+          "missions"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Sell in orbit completes sale, updates mission log and rocket status"
+          },
+          {
+            "completed": false,
+            "text": "Balance updates for sale and scrap only when selected"
+          }
+        ],
+        "implementationPlan": "1. Inspect MissionDebrief button handlers for sell/scrap flow (done)\n2. Remove auto-close/auto-scrap on sell-in-orbit, ensure sale only (done)\n3. Verify scrap/salvage actions update log and status (pending validation)"
+      }
+    }
+  ]
+}

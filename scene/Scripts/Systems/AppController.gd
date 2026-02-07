@@ -283,6 +283,19 @@ func get_experience_xp() -> int:
 func get_experience_level() -> int:
 	return experience_level
 
+func get_xp_required_for_level(level: int) -> int:
+	return _xp_required_for_level(level)
+
+func get_xp_required_for_next_level() -> int:
+	return _xp_required_for_level(experience_level)
+
+func get_total_experience() -> int:
+	var total = 0
+	for lvl in range(1, max(experience_level, 1)):
+		total += _xp_required_for_level(lvl)
+	total += experience_xp
+	return total
+
 func save_experience() -> void:
 	_persistence.save_experience(experience_xp, experience_level)
 
