@@ -1,0 +1,44 @@
+{
+  "taskId": "7bf7br",
+  "currentVersion": 1,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "7bf7br",
+      "version": 1,
+      "timestamp": "2026-02-07T02:03:23.975Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Refactor large scripts + move UI config to scenes (full sweep)",
+        "description": "Split large .gd scripts into smaller components and move declarative UI setup into .tscn files where possible across the codebase.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "refactor",
+          "cleanup"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "All large scripts are split into smaller modules with clear responsibilities"
+          },
+          {
+            "completed": false,
+            "text": "UI setup moved to .tscn where feasible"
+          }
+        ]
+      }
+    }
+  ]
+}

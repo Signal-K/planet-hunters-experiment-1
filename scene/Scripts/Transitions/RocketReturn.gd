@@ -68,16 +68,9 @@ var _return_data := {}
 
 const SPEED_MIN_KMH := 32000.0
 const SPEED_MAX_KMH := 140000.0
+const NumberFormat = preload("res://Scripts/Utils/NumberFormat.gd")
 const ORBIT_MULTIPLIER := 1.0
 const EARTH_MULTIPLIER := 1.35
-const MINERAL_PRICES := {
-	"Iron": 12,
-	"Nickel": 24,
-	"Cobalt": 36,
-	"Platinum": 120,
-	"Silicates": 8
-}
-
 enum Phase {
 	TARGET_ORBIT,
 	TRAVEL,
@@ -238,7 +231,7 @@ func _update_travel() -> void:
 	if travel_speed:
 		var eased = pct * pct * (3.0 - 2.0 * pct)
 		var speed = lerp(SPEED_MIN_KMH, SPEED_MAX_KMH, eased)
-		travel_speed.text = "Speed: %s km/h" % _format_number_with_commas(str(int(round(speed))))
+		travel_speed.text = "Speed: %s km/h" % NumberFormat.commas(str(int(round(speed))))
 	if pct >= 1.0:
 		_start_earth_approach()
 
@@ -357,8 +350,8 @@ func _build_mining_panel() -> void:
 	var total := 0
 	for v in collected.values():
 		total += int(v)
-	mining_summary.text = "Remaining: %s kg" % _format_number_with_commas(str(remaining))
-	mining_total.text = "Total Collected: %s kg" % _format_number_with_commas(str(total))
+	mining_summary.text = "Remaining: %s kg" % NumberFormat.commas(str(remaining))
+	mining_total.text = "Total Collected: %s kg" % NumberFormat.commas(str(total))
 
 func _build_summary_panel() -> void:
 	if summary_list == null:
@@ -394,17 +387,18 @@ func _build_summary_panel() -> void:
 			panel_style.apply_body(name_lbl)
 			var amount = int(collected.get(name, 0))
 			var amount_lbl = Label.new()
-			amount_lbl.text = "%s kg" % _format_number_with_commas(str(amount))
+			amount_lbl.text = "%s kg" % NumberFormat.commas(str(amount))
 			amount_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 			panel_style.apply_muted(amount_lbl)
 			row.add_child(name_lbl)
 			row.add_child(amount_lbl)
 			summary_list.add_child(row)
-			total_value += _price_for_mineral(name, amount)
+			var pricing = preload("res://Scripts/Utils/MineralPricing.gd")
+			total_value += pricing.price_for(name, amount)
 	var orbit_value = int(round(total_value * ORBIT_MULTIPLIER))
 	var earth_value = int(round(total_value * EARTH_MULTIPLIER))
-	summary_orbit.text = "Sell in Orbit: %s F" % _format_number_with_commas(str(orbit_value))
-	summary_earth.text = "Sell on Earth: %s F" % _format_number_with_commas(str(earth_value))
+	summary_orbit.text = "Sell in Orbit: %s F" % NumberFormat.commas(str(orbit_value))
+	summary_earth.text = "Sell on Earth: %s F" % NumberFormat.commas(str(earth_value))
 
 func _show_summary_panel() -> void:
 	if summary_panel == null:
@@ -413,26 +407,12 @@ func _show_summary_panel() -> void:
 	var tween = get_tree().create_tween()
 	tween.tween_property(summary_panel, "modulate:a", 1.0, 0.8)
 
-func _price_for_mineral(name: String, amount: int) -> int:
-	var unit = int(MINERAL_PRICES.get(name, 5))
-	return unit * amount
-
 func _generate_stars() -> void:
 	_stars.clear()
 	var rng = RandomNumberGenerator.new()
 	rng.seed = int(Time.get_ticks_msec() % 100000)
 	for _i in range(120):
 		_stars.append(Vector2(rng.randf_range(0, _last_size.x), rng.randf_range(0, _last_size.y)))
-
-func _format_number_with_commas(value: String) -> String:
-	var out := ""
-	var count := 0
-	for i in range(value.length() - 1, -1, -1):
-		out = value[i] + out
-		count += 1
-		if count % 3 == 0 and i > 0:
-			out = "," + out
-	return out
 
 func _on_back_pressed() -> void:
 	var tree = Engine.get_main_loop() as SceneTree

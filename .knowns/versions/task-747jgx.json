@@ -1,0 +1,194 @@
+{
+  "taskId": "747jgx",
+  "currentVersion": 5,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "747jgx",
+      "version": 1,
+      "timestamp": "2026-02-06T01:29:43.092Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "newValue": "1. Inspect return completion logic and rocket status transitions\n2. Persist returned status and clear returningHome when return completes\n3. Update preview routing to skip transit for returned rockets"
+        }
+      ],
+      "snapshot": {
+        "title": "Persist returned rocket state",
+        "description": "Rockets that have completed return should be marked returned (not returningHome) and preview should skip transit.",
+        "status": "todo",
+        "priority": "high",
+        "labels": [
+          "bug",
+          "godot"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Returned rockets are marked returned in rockets_state"
+          },
+          {
+            "completed": false,
+            "text": "Preview skips transit for returned rockets"
+          }
+        ],
+        "implementationPlan": "1. Inspect return completion logic and rocket status transitions\n2. Persist returned status and clear returningHome when return completes\n3. Update preview routing to skip transit for returned rockets"
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "747jgx",
+      "version": 2,
+      "timestamp": "2026-02-06T01:30:47.941Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "oldValue": "1. Inspect return completion logic and rocket status transitions\n2. Persist returned status and clear returningHome when return completes\n3. Update preview routing to skip transit for returned rockets",
+          "newValue": "1. Record return start time when user chooses Return Home\n2. After 60s, mark rocket status as returned and clear returningHome\n3. Preview routing: returningHome uses return scene, returned skips transit"
+        }
+      ],
+      "snapshot": {
+        "title": "Persist returned rocket state",
+        "description": "Rockets that have completed return should be marked returned (not returningHome) and preview should skip transit.",
+        "status": "todo",
+        "priority": "high",
+        "labels": [
+          "bug",
+          "godot"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Returned rockets are marked returned in rockets_state"
+          },
+          {
+            "completed": false,
+            "text": "Preview skips transit for returned rockets"
+          }
+        ],
+        "implementationPlan": "1. Record return start time when user chooses Return Home\n2. After 60s, mark rocket status as returned and clear returningHome\n3. Preview routing: returningHome uses return scene, returned skips transit"
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "747jgx",
+      "version": 3,
+      "timestamp": "2026-02-06T01:32:25.044Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Returned rockets are marked returned in rockets_state"
+            },
+            {
+              "completed": false,
+              "text": "Preview skips transit for returned rockets"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Returned rockets are marked returned in rockets_state"
+            },
+            {
+              "completed": true,
+              "text": "Preview skips transit for returned rockets"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Persist returned rocket state",
+        "description": "Rockets that have completed return should be marked returned (not returningHome) and preview should skip transit.",
+        "status": "todo",
+        "priority": "high",
+        "labels": [
+          "bug",
+          "godot"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Returned rockets are marked returned in rockets_state"
+          },
+          {
+            "completed": true,
+            "text": "Preview skips transit for returned rockets"
+          }
+        ],
+        "implementationPlan": "1. Record return start time when user chooses Return Home\n2. After 60s, mark rocket status as returned and clear returningHome\n3. Preview routing: returningHome uses return scene, returned skips transit"
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "747jgx",
+      "version": 4,
+      "timestamp": "2026-02-06T01:32:39.455Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "## Summary\n- Return duration set to 60s; returningHome auto-promotes to returned\n- Preview now skips transit for returned rockets"
+        }
+      ],
+      "snapshot": {
+        "title": "Persist returned rocket state",
+        "description": "Rockets that have completed return should be marked returned (not returningHome) and preview should skip transit.",
+        "status": "todo",
+        "priority": "high",
+        "labels": [
+          "bug",
+          "godot"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Returned rockets are marked returned in rockets_state"
+          },
+          {
+            "completed": true,
+            "text": "Preview skips transit for returned rockets"
+          }
+        ],
+        "implementationPlan": "1. Record return start time when user chooses Return Home\n2. After 60s, mark rocket status as returned and clear returningHome\n3. Preview routing: returningHome uses return scene, returned skips transit",
+        "implementationNotes": "## Summary\n- Return duration set to 60s; returningHome auto-promotes to returned\n- Preview now skips transit for returned rockets"
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "747jgx",
+      "version": 5,
+      "timestamp": "2026-02-06T01:33:07.367Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Persist returned rocket state",
+        "description": "Rockets that have completed return should be marked returned (not returningHome) and preview should skip transit.",
+        "status": "done",
+        "priority": "high",
+        "labels": [
+          "bug",
+          "godot"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Returned rockets are marked returned in rockets_state"
+          },
+          {
+            "completed": true,
+            "text": "Preview skips transit for returned rockets"
+          }
+        ],
+        "implementationPlan": "1. Record return start time when user chooses Return Home\n2. After 60s, mark rocket status as returned and clear returningHome\n3. Preview routing: returningHome uses return scene, returned skips transit",
+        "implementationNotes": "## Summary\n- Return duration set to 60s; returningHome auto-promotes to returned\n- Preview now skips transit for returned rockets"
+      }
+    }
+  ]
+}

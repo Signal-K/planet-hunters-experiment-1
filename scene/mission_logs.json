@@ -1,3 +1,36 @@
 {
-  "missions": []
+  "missions": [
+    {
+      "timestamp": "2026-02-06T09:46:03",
+      "rocket_id": "starterrocket1-2678722812",
+      "target_id": "63769326",
+      "label": "63769326",
+      "action": "sell_orbit",
+      "payout": 1800.0,
+      "cargo": {
+        "Iron": 15.0,
+        "Nickel": 6.0,
+        "Cobalt": 15.0,
+        "Platinum": 6.0,
+        "Silicates": 18.0
+      },
+      "badge": "starterrocket1-2678722812-63769326"
+    },
+    {
+      "timestamp": "2026-02-06T09:46:03",
+      "rocket_id": "starterrocket1-2678722812",
+      "target_id": "63769326",
+      "label": "63769326",
+      "action": "scrap",
+      "payout": 200000000,
+      "cargo": {
+        "Iron": 15.0,
+        "Nickel": 6.0,
+        "Cobalt": 15.0,
+        "Platinum": 6.0,
+        "Silicates": 18.0
+      },
+      "badge": "starterrocket1-2678722812-63769326"
+    }
+  ]
 }

@@ -41,6 +41,17 @@ func _populate_orbiting_list() -> void:
 	var orbiting: Array = []
 	if rm:
 		orbiting = rm.get_orbiting_rockets()
+		var returned = rm.get_returned_rockets()
+		var seen := {}
+		for entry in orbiting:
+			var rid = str(entry.get("rocket_id", ""))
+			if rid != "":
+				seen[rid] = true
+		for entry in returned:
+			var rid = str(entry.get("rocket_id", ""))
+			if rid == "" or seen.has(rid):
+				continue
+			orbiting.append(entry)
 	if orbiting.is_empty():
 		var empty = Label.new()
 		empty.text = "No rockets currently in Earth orbit."

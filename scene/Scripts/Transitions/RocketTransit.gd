@@ -13,6 +13,7 @@ const EARTH_TEXTURE := preload("res://assets/Backdrops/Earth1.png")
 
 const SPEED_MIN_KMH := 32000.0
 const SPEED_MAX_KMH := 140000.0
+const NumberFormat = preload("res://Scripts/Utils/NumberFormat.gd")
 
 @onready var background: TextureRect = $Background
 @onready var rocket_container: Node2D = $RocketContainer
@@ -166,7 +167,7 @@ func _update_travel() -> void:
 	if travel_speed:
 		var eased = pct * pct * (3.0 - 2.0 * pct)
 		var speed = lerp(SPEED_MIN_KMH, SPEED_MAX_KMH, eased)
-		travel_speed.text = "Speed: %s km/h" % _format_number_with_commas(str(int(round(speed))))
+		travel_speed.text = "Speed: %s km/h" % NumberFormat.commas(str(int(round(speed))))
 	if pct >= 1.0:
 		_start_target_approach()
 
@@ -240,8 +241,8 @@ func _build_mining_panel() -> void:
 	var total := 0
 	for v in collected.values():
 		total += int(v)
-	mining_summary.text = "Remaining: %s kg" % _format_number_with_commas(str(remaining))
-	mining_total.text = "Total Collected: %s kg" % _format_number_with_commas(str(total))
+	mining_summary.text = "Remaining: %s kg" % NumberFormat.commas(str(remaining))
+	mining_total.text = "Total Collected: %s kg" % NumberFormat.commas(str(total))
 
 func _setup_back_button() -> void:
 	if back_button == null:
@@ -266,16 +267,6 @@ func _draw() -> void:
 		draw_circle(_target_center, _target_radius, Color(0.45, 0.45, 0.48, _target_alpha))
 		draw_circle(_target_center + Vector2(-18, -12), _target_radius * 0.35, Color(0.5, 0.5, 0.54, _target_alpha))
 		draw_circle(_target_center + Vector2(22, 16), _target_radius * 0.28, Color(0.38, 0.38, 0.42, _target_alpha))
-
-func _format_number_with_commas(value: String) -> String:
-	var out := ""
-	var count := 0
-	for i in range(value.length() - 1, -1, -1):
-		out = value[i] + out
-		count += 1
-		if count % 3 == 0 and i > 0:
-			out = "," + out
-	return out
 
 func _advance_to_preview() -> void:
 	var tree = Engine.get_main_loop() as SceneTree

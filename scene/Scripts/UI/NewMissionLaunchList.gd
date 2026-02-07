@@ -5,6 +5,7 @@ var _launch_list_container: Node
 var _on_refund: Callable
 const PREVIEW_SCENE_PATH := "res://Scenes/Transitions/rocket_transit.tscn"
 const ARRIVED_PREVIEW_SCENE_PATH := "res://Scenes/UI/AsteroidPreview/asteroid_preview.tscn"
+const RETURN_PREVIEW_SCENE_PATH := "res://Scenes/Transitions/rocket_return.tscn"
 const MIN_DISTANCE_KM := 150000.0
 const MAX_DISTANCE_KM := 3000000.0
 const TRAVEL_SECONDS := 60.0
@@ -173,6 +174,16 @@ func _on_preview_pressed(target_id: String, target_label: String, target_type: S
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	if rm:
 		rm.set_preview_target(target_id, target_label, target_type, rocket_id)
+	var status = ""
+	if rm:
+		rm.mark_returned_if_due(rocket_id)
+		status = rm.get_rocket_status(rocket_id)
+	if status == "returningHome":
+		_change_to_scene(RETURN_PREVIEW_SCENE_PATH)
+		return
+	if status == "returned":
+		_change_to_scene(RETURN_PREVIEW_SCENE_PATH)
+		return
 	if _has_arrived(target_id, rocket_id):
 		_change_to_scene(ARRIVED_PREVIEW_SCENE_PATH)
 		return
@@ -196,6 +207,8 @@ func _has_arrived(target_id: String, rocket_id: String) -> bool:
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	if not rm:
 		return false
+	if rm.has_arrived(rocket_id, target_id):
+		return true
 	var missions: Array = rm.get_missions()
 	if missions.is_empty():
 		return false
@@ -206,7 +219,10 @@ func _has_arrived(target_id: String, rocket_id: String) -> bool:
 		if str(m.get("target", "")) != target_id:
 			continue
 		var arrival_time = float(m.get("arrival_time", 0))
-		return arrival_time > 0.0 and arrival_time <= now
+		var arrived = arrival_time > 0.0 and arrival_time <= now
+		if arrived:
+			rm.mark_arrived(rocket_id, target_id)
+		return arrived
 	return false
 
 func _build_target_map(targets: Array) -> Dictionary:
@@ -246,30 +262,16 @@ func _get_target_type(target_map: Dictionary, target_id: String) -> String:
 	return "asteroid"
 
 func _distance_for_target(target_id: String) -> float:
-	var seed = _hash_string(target_id)
+	var hash_util = preload("res://Scripts/Utils/HashUtils.gd")
+	var seed = hash_util.simple_hash(target_id)
 	var rng = RandomNumberGenerator.new()
 	rng.seed = seed
 	return rng.randf_range(MIN_DISTANCE_KM, MAX_DISTANCE_KM)
 
 func _format_distance_km(distance_km: float) -> String:
 	var rounded = int(round(distance_km))
-	return "%s km" % _format_number_with_commas(str(rounded))
-
-func _format_number_with_commas(value: String) -> String:
-	var out := ""
-	var count := 0
-	for i in range(value.length() - 1, -1, -1):
-		out = value[i] + out
-		count += 1
-		if count % 3 == 0 and i > 0:
-			out = "," + out
-	return out
-
-func _hash_string(value: String) -> int:
-	var hash := 0
-	for i in range(value.length()):
-		hash = int((hash * 31 + value.unicode_at(i)) & 0x7fffffff)
-	return max(hash, 1)
+	var fmt = preload("res://Scripts/Utils/NumberFormat.gd")
+	return "%s km" % fmt.commas(str(rounded))
 
 func update_progress() -> void:
 	if _mission_rows.is_empty():

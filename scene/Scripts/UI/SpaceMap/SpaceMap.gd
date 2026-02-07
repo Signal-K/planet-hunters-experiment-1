@@ -81,7 +81,8 @@ func _build_target_positions() -> void:
 		if target_id == "":
 			continue
 		var target_type = str(t.get("type", "asteroid"))
-		var seed = _hash_string(target_id)
+		var hash_util = preload("res://Scripts/Utils/HashUtils.gd")
+		var seed = hash_util.simple_hash(target_id)
 		var rng = RandomNumberGenerator.new()
 		rng.seed = seed
 		var angle = rng.randf_range(0.0, TAU)
@@ -186,9 +187,3 @@ func _change_scene_to_base() -> void:
 		scene_manager.change_to_scene("res://Scenes/Earth/earth_base_1.tscn")
 	else:
 		tree.change_scene_to_file("res://Scenes/Earth/earth_base_1.tscn")
-
-func _hash_string(value: String) -> int:
-	var hash := 0
-	for i in range(value.length()):
-		hash = int((hash * 31 + value.unicode_at(i)) & 0x7fffffff)
-	return max(hash, 1)
