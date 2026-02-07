@@ -1,0 +1,115 @@
+name: Electron Desktop Release
+
+on:
+  push:
+    branches:
+      - main
+      - electron-support
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - macos-latest
+          - ubuntu-latest
+          - windows-latest
+
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      CSC_IDENTITY_AUTO_DISCOVERY: "false"
+      CSC_FOR_PULL_REQUEST: "true"
+      ELECTRON_SKIP_NOTARIZATION: "true"
+      GODOT_VERSION: "4.5-stable"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        shell: bash
+        run: npm ci
+
+      - name: Install Godot
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          cd .godot-bin
+
+          if [ "$RUNNER_OS" = "macOS" ]; then
+            curl -fsSL -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/Godot_v4.5-stable_macos.universal.zip"
+            unzip -q godot.zip
+            GODOT_PATH="$PWD/Godot.app/Contents/MacOS/Godot"
+          elif [ "$RUNNER_OS" = "Linux" ]; then
+            curl -fsSL -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/Godot_v4.5-stable_linux.x86_64.zip"
+            unzip -q godot.zip
+            GODOT_PATH="$PWD/Godot_v4.5-stable_linux.x86_64"
+          elif [ "$RUNNER_OS" = "Windows" ]; then
+            curl -fsSL -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/Godot_v4.5-stable_win64.exe.zip"
+            unzip -q godot.zip
+            GODOT_PATH="$PWD/Godot_v4.5-stable_win64.exe"
+          else
+            echo "Unsupported runner OS: $RUNNER_OS"
+            exit 1
+          fi
+
+          chmod +x "$GODOT_PATH" || true
+          echo "GODOT_EDITOR=$GODOT_PATH" >> "$GITHUB_ENV"
+
+      - name: Export Godot desktop web assets
+        shell: bash
+        run: npm run godot:export:desktop
+
+      - name: Build Electron distributables
+        shell: bash
+        run: npm run electron:dist
+
+      - name: Upload CI artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: electron-${{ matrix.os }}
+          path: dist/**
+          if-no-files-found: error
+
+  release:
+    name: Publish Release
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-artifacts
+
+      - name: Compute release tag
+        id: tag
+        shell: bash
+        run: |
+          TAG="electron-${GITHUB_REF_NAME}-${GITHUB_RUN_NUMBER}-${GITHUB_SHA::7}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          name: Electron Build ${{ steps.tag.outputs.tag }}
+          generate_release_notes: true
+          files: |
+            release-artifacts/**/*
