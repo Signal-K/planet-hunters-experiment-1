@@ -1,6 +1,6 @@
 {
   "taskId": "vwvso8",
-  "currentVersion": 2,
+  "currentVersion": 3,
   "versions": [
     {
       "id": "v1",
@@ -39,6 +39,27 @@
         "title": "Integrate Obsidian with Knowns",
         "description": "This is placed into the backlog since it's not urgently required yet, but it would be really cool if these could be integrated.\n\nI think a relatively simple starting point would be to have multiple repos inside one Knowns project...\n\nThe main value proposition I see here is a workflow that combines task management with programming/copilot instructions...but it doesn't have the integration with the other services or mobile apps (like Obsidian does).\n\nAnyway...story for another time. Maybe we can get copilot to scan tickets inside a knowns project and add them to Obsidian - semi-manual process that would be a good start.",
         "status": "in-review",
+        "priority": "low",
+        "labels": [],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "vwvso8",
+      "version": 3,
+      "timestamp": "2026-02-08T01:58:28.083Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-review",
+          "newValue": "blocked"
+        }
+      ],
+      "snapshot": {
+        "title": "Integrate Obsidian with Knowns",
+        "description": "This is placed into the backlog since it's not urgently required yet, but it would be really cool if these could be integrated.\n\nI think a relatively simple starting point would be to have multiple repos inside one Knowns project...\n\nThe main value proposition I see here is a workflow that combines task management with programming/copilot instructions...but it doesn't have the integration with the other services or mobile apps (like Obsidian does).\n\nAnyway...story for another time. Maybe we can get copilot to scan tickets inside a knowns project and add them to Obsidian - semi-manual process that would be a good start.",
+        "status": "blocked",
         "priority": "low",
         "labels": [],
         "acceptanceCriteria": []

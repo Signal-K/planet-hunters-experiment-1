@@ -194,6 +194,17 @@ theme_override_styles/pressed = SubResource("4")
 theme_override_styles/focus = SubResource("3")
 text = "Close"
 
+[node name="LogbookButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/HeaderContainer/HeaderBackground/HeaderContent"]
+custom_minimum_size = Vector2(120, 50)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.1, 0.12, 0.16, 1)
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("2")
+theme_override_styles/hover = SubResource("3")
+theme_override_styles/pressed = SubResource("4")
+theme_override_styles/focus = SubResource("3")
+text = "Logbook"
+
 [node name="HSeparator" type="HSeparator" parent="PanelContainer/Panel/VBoxContainer"]
 layout_mode = 2
 
@@ -354,3 +365,81 @@ theme_override_styles/hover = SubResource("3")
 theme_override_styles/pressed = SubResource("4")
 theme_override_styles/focus = SubResource("3")
 text = "Reset Tutorial State"
+
+[node name="LogbookOverlay" type="ColorRect" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.02, 0.04, 0.08, 0.68)
+
+[node name="LogbookPanelContainer" type="Control" parent="LogbookOverlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 216.0
+offset_top = 122.0
+offset_right = -216.0
+offset_bottom = -122.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="LogbookPanel" type="Panel" parent="LogbookOverlay/LogbookPanelContainer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("1")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="LogbookOverlay/LogbookPanelContainer/LogbookPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = 24.0
+offset_right = -24.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 12
+
+[node name="Header" type="HBoxContainer" parent="LogbookOverlay/LogbookPanelContainer/LogbookPanel/VBoxContainer"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="LogbookOverlay/LogbookPanelContainer/LogbookPanel/VBoxContainer/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 28
+text = "Mission Logbook"
+
+[node name="CloseLogbookButton" type="Button" parent="LogbookOverlay/LogbookPanelContainer/LogbookPanel/VBoxContainer/Header"]
+custom_minimum_size = Vector2(100, 44)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.1, 0.12, 0.16, 1)
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("2")
+theme_override_styles/hover = SubResource("3")
+theme_override_styles/pressed = SubResource("4")
+theme_override_styles/focus = SubResource("3")
+text = "Close"
+
+[node name="HSeparator" type="HSeparator" parent="LogbookOverlay/LogbookPanelContainer/LogbookPanel/VBoxContainer"]
+layout_mode = 2
+
+[node name="LogbookScroll" type="ScrollContainer" parent="LogbookOverlay/LogbookPanelContainer/LogbookPanel/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+size_flags_horizontal = 3
+scroll_horizontal_enabled = false
+
+[node name="Entries" type="VBoxContainer" parent="LogbookOverlay/LogbookPanelContainer/LogbookPanel/VBoxContainer/LogbookScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10

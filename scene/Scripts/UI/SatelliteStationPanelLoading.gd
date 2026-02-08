@@ -50,6 +50,9 @@ func start_loading(duration: float) -> void:
 func mark_anomalies_ready() -> void:
 	_anomalies_ready = true
 
+func is_loading() -> bool:
+	return _is_loading
+
 func on_process(delta: float) -> void:
 	if not _is_loading:
 		return

@@ -14,6 +14,7 @@ const EARTH_TEXTURE := preload("res://assets/Backdrops/Earth1.png")
 const SPEED_MIN_KMH := 32000.0
 const SPEED_MAX_KMH := 140000.0
 const NumberFormat = preload("res://Scripts/Utils/NumberFormat.gd")
+const MIN_TIMELINE_EPSILON := 0.01
 
 @onready var background: TextureRect = $Background
 @onready var rocket_container: Node2D = $RocketContainer
@@ -63,6 +64,7 @@ func _ready() -> void:
 	_setup_panels()
 	_setup_back_button()
 	_start_earth_orbit()
+	_resume_from_elapsed_outbound_time()
 
 func _process(delta: float) -> void:
 	_elapsed += delta
@@ -75,6 +77,7 @@ func _process(delta: float) -> void:
 	elif _phase == Phase.TRAVEL:
 		_update_travel()
 	elif _phase == Phase.TARGET_APPROACH:
+		_target_alpha = clamp(_phase_time / max(TARGET_APPROACH_TIME * 0.4, 0.01), 0.0, 1.0)
 		if _phase_time >= TARGET_APPROACH_TIME:
 			_start_target_orbit()
 	elif _phase == Phase.TARGET_ORBIT:
@@ -148,20 +151,18 @@ func _start_travel() -> void:
 	_phase = Phase.TRAVEL
 	_phase_time = 0.0
 	_travel_active = true
+	_target_alpha = 0.0
 	status_label.text = "Cruising to target..."
-	var earth_fade = get_tree().create_tween()
-	earth_fade.tween_property(self, "_earth_alpha", 0.0, EARTH_FADE_TIME)\
-		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	_earth_alpha = 1.0
 	if travel_panel:
 		travel_panel.visible = true
-		travel_panel.modulate.a = 0.0
-		var travel_fade = get_tree().create_tween()
-		travel_fade.tween_property(travel_panel, "modulate:a", 1.0, 0.8)
+		travel_panel.modulate.a = 1.0
 
 func _update_travel() -> void:
 	if not _travel_active:
 		return
 	var pct = clamp(_phase_time / TRAVEL_TIME, 0.0, 1.0)
+	_earth_alpha = clamp(1.0 - (_phase_time / max(EARTH_FADE_TIME, 0.01)), 0.0, 1.0)
 	if travel_bar:
 		travel_bar.value = pct
 	if travel_speed:
@@ -175,16 +176,11 @@ func _start_target_approach() -> void:
 	_phase = Phase.TARGET_APPROACH
 	_phase_time = 0.0
 	_travel_active = false
+	_target_alpha = 0.0
 	status_label.text = "Target acquired..."
 	if travel_panel:
-		var fade = get_tree().create_tween()
-		fade.tween_property(travel_panel, "modulate:a", 0.0, 0.8)
-		fade.finished.connect(func():
-			travel_panel.visible = false
-		)
-	var target_tween = get_tree().create_tween()
-	target_tween.tween_property(self, "_target_alpha", 1.0, TARGET_APPROACH_TIME * 0.4)\
-		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+		travel_panel.visible = false
+		travel_panel.modulate.a = 0.0
 
 func _start_target_orbit() -> void:
 	_phase = Phase.TARGET_ORBIT
@@ -193,9 +189,7 @@ func _start_target_orbit() -> void:
 	status_label.text = "Orbiting target..."
 	if mining_panel:
 		mining_panel.visible = true
-		mining_panel.modulate.a = 0.0
-		var tween = get_tree().create_tween()
-		tween.tween_property(mining_panel, "modulate:a", 1.0, 0.8)
+		mining_panel.modulate.a = 1.0
 	var delay = get_tree().create_timer(0.8)
 	delay.timeout.connect(func():
 		_advance_to_preview()
@@ -279,3 +273,34 @@ func _advance_to_preview() -> void:
 		scene_manager.change_to_scene(PREVIEW_SCENE_PATH)
 	else:
 		tree.change_scene_to_file(PREVIEW_SCENE_PATH)
+
+func _resume_from_elapsed_outbound_time() -> void:
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if not rm:
+		return
+	var target = rm.get_preview_target()
+	var rocket_id = str(target.get("rocket_id", ""))
+	if rocket_id == "":
+		return
+	var progress = float(rm.get_outbound_progress(rocket_id))
+	if progress <= 0.0:
+		return
+	var total_timeline = EARTH_ORBIT_TIME + TRAVEL_TIME + TARGET_APPROACH_TIME
+	var elapsed_timeline = clamp(progress * total_timeline, 0.0, total_timeline - MIN_TIMELINE_EPSILON)
+	_set_timeline_elapsed(elapsed_timeline)
+
+func _set_timeline_elapsed(elapsed_timeline: float) -> void:
+	var travel_start = EARTH_ORBIT_TIME
+	var approach_start = EARTH_ORBIT_TIME + TRAVEL_TIME
+	if elapsed_timeline < travel_start:
+		_start_earth_orbit()
+		_phase_time = elapsed_timeline
+	elif elapsed_timeline < approach_start:
+		_start_travel()
+		_phase_time = elapsed_timeline - travel_start
+		_update_travel()
+	else:
+		_start_target_approach()
+		_phase_time = elapsed_timeline - approach_start
+		_target_alpha = clamp(_phase_time / max(TARGET_APPROACH_TIME * 0.4, 0.01), 0.0, 1.0)
+	_update_orbit(0.0)

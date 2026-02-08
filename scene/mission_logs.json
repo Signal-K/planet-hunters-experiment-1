@@ -22,7 +22,7 @@
       "target_id": "63769326",
       "label": "63769326",
       "action": "scrap",
-      "payout": 200000000,
+      "payout": 200000000.0,
       "cargo": {
         "Iron": 15.0,
         "Nickel": 6.0,
@@ -31,6 +31,21 @@
         "Silicates": 18.0
       },
       "badge": "starterrocket1-2678722812-63769326"
+    },
+    {
+      "timestamp": "2026-02-08 10:00:1770516555.21419",
+      "rocket_id": "starterrocket1-test-1770516555.21419",
+      "target_id": "A-99",
+      "target_label": "Asteroid A-99",
+      "target_type": "asteroid",
+      "action": "sell_earth",
+      "payout": 123456,
+      "franc_delta": 123456,
+      "xp_awarded": 5,
+      "cargo": {
+        "Nickel": 10,
+        "Iron": 5
+      }
     }
   ]
 }

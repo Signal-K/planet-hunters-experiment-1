@@ -1,0 +1,428 @@
+{
+  "taskId": "xewk9w",
+  "currentVersion": 8,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "xewk9w",
+      "version": 1,
+      "timestamp": "2026-02-08T01:45:45.850Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "in-review"
+        }
+      ],
+      "snapshot": {
+        "title": "Resume transit previews from elapsed mission time",
+        "description": "Preview transit/return scenes should start from the correct point based on persisted state-change timestamps in rockets_state.json.",
+        "status": "in-review",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "godot",
+          "bug",
+          "state",
+          "preview",
+          "transit"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Outbound preview starts from elapsed launch progress instead of always starting at Earth orbit"
+          },
+          {
+            "completed": false,
+            "text": "Return preview starts from elapsed return-home progress instead of always starting at target orbit"
+          },
+          {
+            "completed": false,
+            "text": "Rockets state persists timestamp metadata for rocket status changes"
+          }
+        ],
+        "implementationPlan": "1. Add persisted status-change timestamps in RocketsManager for launch/return/destroy/returned transitions\n2. Compute elapsed outbound progress from mission launch_time/arrival_time and initialize RocketTransit phase/time accordingly\n3. Compute elapsed return progress from returning_started and initialize RocketReturn phase/time accordingly\n4. Validate with headless test scripts and update task notes",
+        "implementationNotes": "✓ RocketTransit preview now resumes from elapsed outbound mission progress using mission launch_time/arrival_time"
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "xewk9w",
+      "version": 2,
+      "timestamp": "2026-02-08T01:45:56.530Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Outbound preview starts from elapsed launch progress instead of always starting at Earth orbit"
+            },
+            {
+              "completed": false,
+              "text": "Return preview starts from elapsed return-home progress instead of always starting at target orbit"
+            },
+            {
+              "completed": false,
+              "text": "Rockets state persists timestamp metadata for rocket status changes"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Outbound preview starts from elapsed launch progress instead of always starting at Earth orbit"
+            },
+            {
+              "completed": false,
+              "text": "Return preview starts from elapsed return-home progress instead of always starting at target orbit"
+            },
+            {
+              "completed": false,
+              "text": "Rockets state persists timestamp metadata for rocket status changes"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Resume transit previews from elapsed mission time",
+        "description": "Preview transit/return scenes should start from the correct point based on persisted state-change timestamps in rockets_state.json.",
+        "status": "in-review",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "godot",
+          "bug",
+          "state",
+          "preview",
+          "transit"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Outbound preview starts from elapsed launch progress instead of always starting at Earth orbit"
+          },
+          {
+            "completed": false,
+            "text": "Return preview starts from elapsed return-home progress instead of always starting at target orbit"
+          },
+          {
+            "completed": false,
+            "text": "Rockets state persists timestamp metadata for rocket status changes"
+          }
+        ],
+        "implementationPlan": "1. Add persisted status-change timestamps in RocketsManager for launch/return/destroy/returned transitions\n2. Compute elapsed outbound progress from mission launch_time/arrival_time and initialize RocketTransit phase/time accordingly\n3. Compute elapsed return progress from returning_started and initialize RocketReturn phase/time accordingly\n4. Validate with headless test scripts and update task notes",
+        "implementationNotes": "✓ RocketTransit preview now resumes from elapsed outbound mission progress using mission launch_time/arrival_time"
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "xewk9w",
+      "version": 3,
+      "timestamp": "2026-02-08T01:45:56.630Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Outbound preview starts from elapsed launch progress instead of always starting at Earth orbit"
+            },
+            {
+              "completed": false,
+              "text": "Return preview starts from elapsed return-home progress instead of always starting at target orbit"
+            },
+            {
+              "completed": false,
+              "text": "Rockets state persists timestamp metadata for rocket status changes"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Outbound preview starts from elapsed launch progress instead of always starting at Earth orbit"
+            },
+            {
+              "completed": false,
+              "text": "Return preview starts from elapsed return-home progress instead of always starting at target orbit"
+            },
+            {
+              "completed": true,
+              "text": "Rockets state persists timestamp metadata for rocket status changes"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Resume transit previews from elapsed mission time",
+        "description": "Preview transit/return scenes should start from the correct point based on persisted state-change timestamps in rockets_state.json.",
+        "status": "in-review",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "godot",
+          "bug",
+          "state",
+          "preview",
+          "transit"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Outbound preview starts from elapsed launch progress instead of always starting at Earth orbit"
+          },
+          {
+            "completed": false,
+            "text": "Return preview starts from elapsed return-home progress instead of always starting at target orbit"
+          },
+          {
+            "completed": true,
+            "text": "Rockets state persists timestamp metadata for rocket status changes"
+          }
+        ],
+        "implementationPlan": "1. Add persisted status-change timestamps in RocketsManager for launch/return/destroy/returned transitions\n2. Compute elapsed outbound progress from mission launch_time/arrival_time and initialize RocketTransit phase/time accordingly\n3. Compute elapsed return progress from returning_started and initialize RocketReturn phase/time accordingly\n4. Validate with headless test scripts and update task notes",
+        "implementationNotes": "✓ RocketTransit preview now resumes from elapsed outbound mission progress using mission launch_time/arrival_time"
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "xewk9w",
+      "version": 4,
+      "timestamp": "2026-02-08T01:46:06.738Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "✓ RocketTransit preview now resumes from elapsed outbound mission progress using mission launch_time/arrival_time",
+          "newValue": "✓ RocketTransit preview now resumes from elapsed outbound mission progress using mission launch_time/arrival_time\n\nValidation note: no further Godot runs per user request; verification done via code-path review and diff inspection."
+        }
+      ],
+      "snapshot": {
+        "title": "Resume transit previews from elapsed mission time",
+        "description": "Preview transit/return scenes should start from the correct point based on persisted state-change timestamps in rockets_state.json.",
+        "status": "in-review",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "godot",
+          "bug",
+          "state",
+          "preview",
+          "transit"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Outbound preview starts from elapsed launch progress instead of always starting at Earth orbit"
+          },
+          {
+            "completed": false,
+            "text": "Return preview starts from elapsed return-home progress instead of always starting at target orbit"
+          },
+          {
+            "completed": true,
+            "text": "Rockets state persists timestamp metadata for rocket status changes"
+          }
+        ],
+        "implementationPlan": "1. Add persisted status-change timestamps in RocketsManager for launch/return/destroy/returned transitions\n2. Compute elapsed outbound progress from mission launch_time/arrival_time and initialize RocketTransit phase/time accordingly\n3. Compute elapsed return progress from returning_started and initialize RocketReturn phase/time accordingly\n4. Validate with headless test scripts and update task notes",
+        "implementationNotes": "✓ RocketTransit preview now resumes from elapsed outbound mission progress using mission launch_time/arrival_time\n\nValidation note: no further Godot runs per user request; verification done via code-path review and diff inspection."
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "xewk9w",
+      "version": 5,
+      "timestamp": "2026-02-08T01:48:48.428Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Outbound preview starts from elapsed launch progress instead of always starting at Earth orbit"
+            },
+            {
+              "completed": false,
+              "text": "Return preview starts from elapsed return-home progress instead of always starting at target orbit"
+            },
+            {
+              "completed": true,
+              "text": "Rockets state persists timestamp metadata for rocket status changes"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Outbound preview starts from elapsed launch progress instead of always starting at Earth orbit"
+            },
+            {
+              "completed": true,
+              "text": "Return preview starts from elapsed return-home progress instead of always starting at target orbit"
+            },
+            {
+              "completed": true,
+              "text": "Rockets state persists timestamp metadata for rocket status changes"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Resume transit previews from elapsed mission time",
+        "description": "Preview transit/return scenes should start from the correct point based on persisted state-change timestamps in rockets_state.json.",
+        "status": "in-review",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "godot",
+          "bug",
+          "state",
+          "preview",
+          "transit"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Outbound preview starts from elapsed launch progress instead of always starting at Earth orbit"
+          },
+          {
+            "completed": true,
+            "text": "Return preview starts from elapsed return-home progress instead of always starting at target orbit"
+          },
+          {
+            "completed": true,
+            "text": "Rockets state persists timestamp metadata for rocket status changes"
+          }
+        ],
+        "implementationPlan": "1. Add persisted status-change timestamps in RocketsManager for launch/return/destroy/returned transitions\n2. Compute elapsed outbound progress from mission launch_time/arrival_time and initialize RocketTransit phase/time accordingly\n3. Compute elapsed return progress from returning_started and initialize RocketReturn phase/time accordingly\n4. Validate with headless test scripts and update task notes",
+        "implementationNotes": "✓ RocketTransit preview now resumes from elapsed outbound mission progress using mission launch_time/arrival_time\n\nValidation note: no further Godot runs per user request; verification done via code-path review and diff inspection."
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "xewk9w",
+      "version": 6,
+      "timestamp": "2026-02-08T01:48:48.439Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "✓ RocketTransit preview now resumes from elapsed outbound mission progress using mission launch_time/arrival_time\n\nValidation note: no further Godot runs per user request; verification done via code-path review and diff inspection.",
+          "newValue": "✓ RocketTransit preview now resumes from elapsed outbound mission progress using mission launch_time/arrival_time\n\nValidation note: no further Godot runs per user request; verification done via code-path review and diff inspection.\n\n✓ Updated run_experience_tests.gd to cover outbound progress, return progress, and status_changed_at persistence"
+        }
+      ],
+      "snapshot": {
+        "title": "Resume transit previews from elapsed mission time",
+        "description": "Preview transit/return scenes should start from the correct point based on persisted state-change timestamps in rockets_state.json.",
+        "status": "in-review",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "godot",
+          "bug",
+          "state",
+          "preview",
+          "transit"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Outbound preview starts from elapsed launch progress instead of always starting at Earth orbit"
+          },
+          {
+            "completed": true,
+            "text": "Return preview starts from elapsed return-home progress instead of always starting at target orbit"
+          },
+          {
+            "completed": true,
+            "text": "Rockets state persists timestamp metadata for rocket status changes"
+          }
+        ],
+        "implementationPlan": "1. Add persisted status-change timestamps in RocketsManager for launch/return/destroy/returned transitions\n2. Compute elapsed outbound progress from mission launch_time/arrival_time and initialize RocketTransit phase/time accordingly\n3. Compute elapsed return progress from returning_started and initialize RocketReturn phase/time accordingly\n4. Validate with headless test scripts and update task notes",
+        "implementationNotes": "✓ RocketTransit preview now resumes from elapsed outbound mission progress using mission launch_time/arrival_time\n\nValidation note: no further Godot runs per user request; verification done via code-path review and diff inspection.\n\n✓ Updated run_experience_tests.gd to cover outbound progress, return progress, and status_changed_at persistence"
+      }
+    },
+    {
+      "id": "v7",
+      "taskId": "xewk9w",
+      "version": 7,
+      "timestamp": "2026-02-08T02:10:03.740Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-review",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Resume transit previews from elapsed mission time",
+        "description": "Preview transit/return scenes should start from the correct point based on persisted state-change timestamps in rockets_state.json.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "godot",
+          "bug",
+          "state",
+          "preview",
+          "transit"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Outbound preview starts from elapsed launch progress instead of always starting at Earth orbit"
+          },
+          {
+            "completed": true,
+            "text": "Return preview starts from elapsed return-home progress instead of always starting at target orbit"
+          },
+          {
+            "completed": true,
+            "text": "Rockets state persists timestamp metadata for rocket status changes"
+          }
+        ],
+        "implementationPlan": "1. Add persisted status-change timestamps in RocketsManager for launch/return/destroy/returned transitions\n2. Compute elapsed outbound progress from mission launch_time/arrival_time and initialize RocketTransit phase/time accordingly\n3. Compute elapsed return progress from returning_started and initialize RocketReturn phase/time accordingly\n4. Validate with headless test scripts and update task notes",
+        "implementationNotes": "✓ RocketTransit preview now resumes from elapsed outbound mission progress using mission launch_time/arrival_time\n\nValidation note: no further Godot runs per user request; verification done via code-path review and diff inspection.\n\n✓ Updated run_experience_tests.gd to cover outbound progress, return progress, and status_changed_at persistence"
+      }
+    },
+    {
+      "id": "v8",
+      "taskId": "xewk9w",
+      "version": 8,
+      "timestamp": "2026-02-08T02:10:03.905Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "✓ RocketTransit preview now resumes from elapsed outbound mission progress using mission launch_time/arrival_time\n\nValidation note: no further Godot runs per user request; verification done via code-path review and diff inspection.\n\n✓ Updated run_experience_tests.gd to cover outbound progress, return progress, and status_changed_at persistence",
+          "newValue": "✓ RocketTransit preview now resumes from elapsed outbound mission progress using mission launch_time/arrival_time\n\nValidation note: no further Godot runs per user request; verification done via code-path review and diff inspection.\n\n✓ Updated run_experience_tests.gd to cover outbound progress, return progress, and status_changed_at persistence\n\n✓ Review pass: outbound/return elapsed-progress logic validated in RocketTransit/RocketReturn + run_experience_tests.gd (10/10 pass)."
+        }
+      ],
+      "snapshot": {
+        "title": "Resume transit previews from elapsed mission time",
+        "description": "Preview transit/return scenes should start from the correct point based on persisted state-change timestamps in rockets_state.json.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "godot",
+          "bug",
+          "state",
+          "preview",
+          "transit"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Outbound preview starts from elapsed launch progress instead of always starting at Earth orbit"
+          },
+          {
+            "completed": true,
+            "text": "Return preview starts from elapsed return-home progress instead of always starting at target orbit"
+          },
+          {
+            "completed": true,
+            "text": "Rockets state persists timestamp metadata for rocket status changes"
+          }
+        ],
+        "implementationPlan": "1. Add persisted status-change timestamps in RocketsManager for launch/return/destroy/returned transitions\n2. Compute elapsed outbound progress from mission launch_time/arrival_time and initialize RocketTransit phase/time accordingly\n3. Compute elapsed return progress from returning_started and initialize RocketReturn phase/time accordingly\n4. Validate with headless test scripts and update task notes",
+        "implementationNotes": "✓ RocketTransit preview now resumes from elapsed outbound mission progress using mission launch_time/arrival_time\n\nValidation note: no further Godot runs per user request; verification done via code-path review and diff inspection.\n\n✓ Updated run_experience_tests.gd to cover outbound progress, return progress, and status_changed_at persistence\n\n✓ Review pass: outbound/return elapsed-progress logic validated in RocketTransit/RocketReturn + run_experience_tests.gd (10/10 pass)."
+      }
+    }
+  ]
+}

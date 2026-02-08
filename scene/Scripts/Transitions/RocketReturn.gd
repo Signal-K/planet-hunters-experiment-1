@@ -71,6 +71,7 @@ const SPEED_MAX_KMH := 140000.0
 const NumberFormat = preload("res://Scripts/Utils/NumberFormat.gd")
 const ORBIT_MULTIPLIER := 1.0
 const EARTH_MULTIPLIER := 1.35
+const MIN_TIMELINE_EPSILON := 0.01
 enum Phase {
 	TARGET_ORBIT,
 	TRAVEL,
@@ -89,6 +90,7 @@ func _ready() -> void:
 	_setup_back_button()
 	_setup_panels()
 	_start_target_orbit()
+	_resume_from_elapsed_return_time()
 
 func _process(delta: float) -> void:
 	_elapsed += delta
@@ -214,9 +216,7 @@ func _start_travel() -> void:
 	if rocket_container:
 		_travel_start_pos = rocket_container.position
 		_travel_end_pos = _orbit_center + Vector2(0.0, -_orbit_radius * 0.4)
-		var travel_tween = get_tree().create_tween()
-		travel_tween.tween_property(rocket_container, "position", _travel_end_pos, TRAVEL_TIME)\
-			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		rocket_container.position = _travel_start_pos
 	if travel_panel:
 		travel_panel.modulate.a = 0.0
 		var travel_fade = get_tree().create_tween()
@@ -226,6 +226,8 @@ func _update_travel() -> void:
 	if not _travel_active:
 		return
 	var pct = clamp(_phase_time / TRAVEL_TIME, 0.0, 1.0)
+	if rocket_container:
+		rocket_container.position = _travel_start_pos.lerp(_travel_end_pos, pct)
 	if travel_bar:
 		travel_bar.value = pct
 	if travel_speed:
@@ -425,3 +427,40 @@ func _on_back_pressed() -> void:
 		scene_manager.change_to_scene(MAIN_SCENE_PATH)
 	else:
 		tree.change_scene_to_file(MAIN_SCENE_PATH)
+
+func _resume_from_elapsed_return_time() -> void:
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if not rm:
+		return
+	var progress = float(rm.get_return_progress(str(_return_data.get("rocket_id", ""))))
+	if progress <= 0.0:
+		return
+	var total_timeline = TARGET_ORBIT_TIME + TARGET_FADE_TIME + TRAVEL_TIME + EARTH_APPROACH_TIME
+	var elapsed_timeline = clamp(progress * total_timeline, 0.0, total_timeline - MIN_TIMELINE_EPSILON)
+	_set_timeline_elapsed(elapsed_timeline)
+
+func _set_timeline_elapsed(elapsed_timeline: float) -> void:
+	var travel_start = TARGET_ORBIT_TIME
+	var approach_start = TARGET_ORBIT_TIME + TRAVEL_TIME
+	if elapsed_timeline < travel_start:
+		_start_target_orbit()
+		_phase_time = elapsed_timeline
+		return
+	if elapsed_timeline < approach_start:
+		_start_travel()
+		_phase_time = elapsed_timeline - travel_start
+		var fade_pct = clamp(_phase_time / max(TARGET_FADE_TIME, 0.01), 0.0, 1.0)
+		_target_alpha = clamp(1.0 - fade_pct, 0.0, 1.0)
+		if mining_panel:
+			mining_panel.modulate.a = 1.0 - fade_pct
+			if fade_pct >= 1.0:
+				mining_panel.visible = false
+		_update_travel()
+		return
+	_start_earth_approach()
+	_phase_time = elapsed_timeline - approach_start
+	var approach_pct = clamp(_phase_time / max(EARTH_APPROACH_TIME, 0.01), 0.0, 1.0)
+	if earth:
+		earth.visible = true
+		earth.modulate.a = approach_pct
+		earth.scale = Vector2.ONE * lerp(_earth_scale * 0.35, _earth_scale * 1.6, approach_pct)

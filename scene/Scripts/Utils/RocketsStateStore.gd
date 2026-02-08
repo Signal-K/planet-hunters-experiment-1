@@ -6,6 +6,7 @@ static func apply_migrations(data: Dictionary, save_fn: Callable) -> void:
 	_migrate_mission_times(data, save_fn)
 	_migrate_returning_started(data, save_fn)
 	_migrate_return_completion(data, save_fn)
+	_migrate_status_change_timestamps(data, save_fn)
 
 static func _migrate_placed_entries(data: Dictionary, save_fn: Callable) -> void:
 	if not data.has("placed"):
@@ -138,5 +139,50 @@ static func _migrate_return_completion(data: Dictionary, save_fn: Callable) -> v
 		data["returning"] = returning
 		data["returning_started"] = returning_started
 		data["arrived"] = arrived
+		if save_fn.is_valid():
+			save_fn.call(data)
+
+static func _migrate_status_change_timestamps(data: Dictionary, save_fn: Callable) -> void:
+	var timestamps = data.get("status_changed_at", {})
+	if typeof(timestamps) != TYPE_DICTIONARY:
+		timestamps = {}
+	var changed = false
+	var now = int(Time.get_unix_time_from_system())
+	var missions_by_rocket := {}
+	for m in data.get("missions", []):
+		var rid = str(m.get("rocket_id", ""))
+		if rid == "":
+			continue
+		var launch = int(m.get("launch_time", 0))
+		var arrival = int(m.get("arrival_time", 0))
+		if arrival <= launch:
+			arrival = launch + 60
+		missions_by_rocket[rid] = {"launch_time": launch, "arrival_time": arrival}
+	var returning_started = data.get("returning_started", {})
+	for item in data.get("placed", []):
+		var rid = str(item.get("id", ""))
+		if rid == "":
+			continue
+		var status = str(item.get("status", "awaitingLaunch"))
+		var per_rocket = timestamps.get(rid, {})
+		if typeof(per_rocket) != TYPE_DICTIONARY:
+			per_rocket = {}
+		if per_rocket.has(status):
+			continue
+		var inferred = now
+		if status == "launched" and missions_by_rocket.has(rid):
+			inferred = int(missions_by_rocket[rid].get("launch_time", now))
+		elif status == "returningHome":
+			inferred = int(returning_started.get(rid, now))
+		elif status == "returned":
+			if missions_by_rocket.has(rid):
+				inferred = int(missions_by_rocket[rid].get("arrival_time", now))
+			else:
+				inferred = int(returning_started.get(rid, now))
+		per_rocket[status] = inferred
+		timestamps[rid] = per_rocket
+		changed = true
+	if changed:
+		data["status_changed_at"] = timestamps
 		if save_fn.is_valid():
 			save_fn.call(data)

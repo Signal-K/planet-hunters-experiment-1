@@ -274,7 +274,7 @@ func _update_inventory_ui(state_override: Dictionary = {}) -> void:
 	if state.is_empty():
 		state = inventory.get_target_state(_current_target_id, capacity)
 	var remaining = float(state.get("remaining_mass", capacity))
-		inventory_summary.text = "Remaining: %s kg" % NumberFormat.commas(str(int(round(remaining))))
+	inventory_summary.text = "Remaining: %s kg" % NumberFormat.commas(str(int(round(remaining))))
 	var collected: Dictionary = state.get("collected", {})
 	var total_collected := 0
 	for v in collected.values():

@@ -1,6 +1,6 @@
 {
   "taskId": "2h6naf",
-  "currentVersion": 8,
+  "currentVersion": 10,
   "versions": [
     {
       "id": "v1",
@@ -270,6 +270,70 @@
         ],
         "implementationPlan": "1. Locate the main button container in the earth/base scene.\n2. Adjust its vertical offset/anchors to move it down while keeping layout stable.\n3. Verify the buttons no longer overlap buildings.",
         "implementationNotes": "## Summary\n- Moved the main bottom button container down 20px in earth base + template scenes to avoid covering buildings.\n\n🔄 Reopened: runtime SafeAreaUI was moving the buttons upward\n\n- Set SafeAreaUI bottom_inset to 0 so play-mode keeps the buttons at the bottom."
+      }
+    },
+    {
+      "id": "v9",
+      "taskId": "2h6naf",
+      "version": 9,
+      "timestamp": "2026-02-08T02:10:04.073Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-review",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Move main buttons down to avoid covering buildings",
+        "description": "Adjust main bottom button row positioning in earth scene so buildings remain visible.",
+        "status": "done",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "UI",
+          "Layout"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Main buttons no longer overlap building tops in earth view"
+          }
+        ],
+        "implementationPlan": "1. Locate the main button container in the earth/base scene.\n2. Adjust its vertical offset/anchors to move it down while keeping layout stable.\n3. Verify the buttons no longer overlap buildings.",
+        "implementationNotes": "## Summary\n- Moved the main bottom button container down 20px in earth base + template scenes to avoid covering buildings.\n\n🔄 Reopened: runtime SafeAreaUI was moving the buttons upward\n\n- Set SafeAreaUI bottom_inset to 0 so play-mode keeps the buttons at the bottom."
+      }
+    },
+    {
+      "id": "v10",
+      "taskId": "2h6naf",
+      "version": 10,
+      "timestamp": "2026-02-08T02:10:04.238Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "## Summary\n- Moved the main bottom button container down 20px in earth base + template scenes to avoid covering buildings.\n\n🔄 Reopened: runtime SafeAreaUI was moving the buttons upward\n\n- Set SafeAreaUI bottom_inset to 0 so play-mode keeps the buttons at the bottom.",
+          "newValue": "## Summary\n- Moved the main bottom button container down 20px in earth base + template scenes to avoid covering buildings.\n\n🔄 Reopened: runtime SafeAreaUI was moving the buttons upward\n\n- Set SafeAreaUI bottom_inset to 0 so play-mode keeps the buttons at the bottom.\n\n✓ Review pass: SafeArea/main button offset change verified; no dedicated headless test applicable for pure scene layout."
+        }
+      ],
+      "snapshot": {
+        "title": "Move main buttons down to avoid covering buildings",
+        "description": "Adjust main bottom button row positioning in earth scene so buildings remain visible.",
+        "status": "done",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "UI",
+          "Layout"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Main buttons no longer overlap building tops in earth view"
+          }
+        ],
+        "implementationPlan": "1. Locate the main button container in the earth/base scene.\n2. Adjust its vertical offset/anchors to move it down while keeping layout stable.\n3. Verify the buttons no longer overlap buildings.",
+        "implementationNotes": "## Summary\n- Moved the main bottom button container down 20px in earth base + template scenes to avoid covering buildings.\n\n🔄 Reopened: runtime SafeAreaUI was moving the buttons upward\n\n- Set SafeAreaUI bottom_inset to 0 so play-mode keeps the buttons at the bottom.\n\n✓ Review pass: SafeArea/main button offset change verified; no dedicated headless test applicable for pure scene layout."
       }
     }
   ]
