@@ -1,13 +1,13 @@
 ---
 id: 2h6naf
 title: Move main buttons down to avoid covering buildings
-status: in-review
+status: done
 priority: medium
 labels:
   - UI
   - Layout
 createdAt: '2026-02-04T09:24:00.479Z'
-updatedAt: '2026-02-04T10:08:18.961Z'
+updatedAt: '2026-02-08T02:10:04.238Z'
 timeSpent: 127
 assignee: '@me'
 ---
@@ -41,5 +41,7 @@ Adjust main bottom button row positioning in earth scene so buildings remain vis
 🔄 Reopened: runtime SafeAreaUI was moving the buttons upward
 
 - Set SafeAreaUI bottom_inset to 0 so play-mode keeps the buttons at the bottom.
+
+✓ Review pass: SafeArea/main button offset change verified; no dedicated headless test applicable for pure scene layout.
 <!-- SECTION:NOTES:END -->
 

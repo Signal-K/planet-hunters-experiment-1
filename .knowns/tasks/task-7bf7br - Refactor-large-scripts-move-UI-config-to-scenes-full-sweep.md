@@ -7,7 +7,7 @@ labels:
   - refactor
   - cleanup
 createdAt: '2026-02-07T02:03:11.625Z'
-updatedAt: '2026-02-07T03:33:03.843Z'
+updatedAt: '2026-02-08T02:10:05.231Z'
 timeSpent: 5366
 assignee: '@me'
 ---
@@ -24,4 +24,10 @@ Split large .gd scripts into smaller components and move declarative UI setup in
 - [ ] #1 All large scripts are split into smaller modules with clear responsibilities
 - [ ] #2 UI setup moved to .tscn where feasible
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+⚠️ Reopened: AC remain unchecked and scope is still partial (not all large scripts/UI setup have been validated as split/moved).
+<!-- SECTION:NOTES:END -->
 

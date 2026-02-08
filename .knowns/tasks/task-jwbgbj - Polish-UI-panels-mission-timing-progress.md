@@ -11,7 +11,7 @@ labels:
   - Menu
   - Button
 createdAt: '2026-01-29T00:12:47.647Z'
-updatedAt: '2026-02-01T05:35:13.352Z'
+updatedAt: '2026-02-08T02:54:14.950Z'
 timeSpent: 2359
 assignee: '@me'
 ---
@@ -27,7 +27,7 @@ Make all UI panels adopt a white, futuristic style (rounded corners, shadows, la
 <!-- AC:BEGIN -->
 - [x] #1 All UI panels use a cohesive white, rounded, shadowed style with larger typography
 - [x] #2 Mission list shows a distance progress bar reflecting real-time 0–60s travel
-- [ ] #3 Launch time is recorded using real unix time and used for progress
+- [x] #3 Launch time is recorded using real unix time and used for progress
 <!-- AC:END -->
 
 ## Implementation Plan
@@ -39,4 +39,14 @@ Make all UI panels adopt a white, futuristic style (rounded corners, shadows, la
 4. Ensure launch time is recorded with real unix time at launch and progress updates in real time.
 5. Verify panel visuals + mission progress behavior.
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+⚠️ Reopened: ticket was done with AC #3 unchecked (launch_time unix + progress usage not fully closed in task record).
+
+✓ Verified launch_time unix recording and progress usage across launch + mission list + transit preview code paths.
+
+Validation: LaunchpadLaunchButton uses unix launch_time; NewMissionLaunchList and RocketsManager use launch/arrival timestamps for progress; run_experience_tests PASS.
+<!-- SECTION:NOTES:END -->
 

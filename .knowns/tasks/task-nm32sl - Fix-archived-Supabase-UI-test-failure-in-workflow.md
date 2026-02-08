@@ -8,8 +8,8 @@ labels:
   - tests
   - supabase
 createdAt: '2026-02-02T03:21:35.261Z'
-updatedAt: '2026-02-04T04:31:07.500Z'
-timeSpent: 4994
+updatedAt: '2026-02-08T02:54:24.234Z'
+timeSpent: 5279
 assignee: '@me'
 ---
 # Fix archived Supabase UI test failure in workflow
@@ -22,8 +22,8 @@ Workflow run on main fails: archived Supabase UI test can't create AsteroidDetai
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Archived Supabase UI test passes in workflow
-- [ ] #2 No new warnings/regressions introduced in archived UI flow
+- [x] #1 Archived Supabase UI test passes in workflow
+- [x] #2 No new warnings/regressions introduced in archived UI flow
 <!-- AC:END -->
 
 ## Implementation Plan
@@ -39,5 +39,13 @@ Workflow run on main fails: archived Supabase UI test can't create AsteroidDetai
 
 <!-- SECTION:NOTES:BEGIN -->
 - Added archived detail override flag and use archived detail view in test runner
+
+⚠️ Reopened: done ticket had unchecked AC and run_supabase_tests.gd currently fails parse at line 31 (uses  instead of ).
+
+Clarification: parse failure is in scene/tests/run_supabase_tests.gd line 31, where variable name should reference _client not client.
+
+✓ Fixed run_supabase_tests parse error and made Supabase headless/UI runners deterministic under network-restricted headless runs (local-only panel mode).
+
+Validation: tests/run_supabase_tests.gd PASS; tests/SupabaseTestRunner.gd PASS (4/4).
 <!-- SECTION:NOTES:END -->
 
