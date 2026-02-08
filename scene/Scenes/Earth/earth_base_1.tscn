@@ -133,10 +133,12 @@ points = PackedVector2Array(0, 30, 0, 170)
 layer = 2
 
 [node name="ButtonContainer" type="HBoxContainer" parent="UILayer"]
-offset_left = 28.0
-offset_top = 975.0
-offset_right = 1888.0
-offset_bottom = 1055.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = -104.0
+offset_right = -24.0
+offset_bottom = -24.0
 
 [node name="BackButton" type="Button" parent="UILayer/ButtonContainer"]
 custom_minimum_size = Vector2(160, 80)
