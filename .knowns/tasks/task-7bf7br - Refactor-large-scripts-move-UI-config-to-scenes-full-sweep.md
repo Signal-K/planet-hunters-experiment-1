@@ -7,8 +7,8 @@ labels:
   - refactor
   - cleanup
 createdAt: '2026-02-07T02:03:11.625Z'
-updatedAt: '2026-02-07T02:03:23.975Z'
-timeSpent: 0
+updatedAt: '2026-02-07T03:33:03.843Z'
+timeSpent: 5366
 assignee: '@me'
 ---
 # Refactor large scripts + move UI config to scenes (full sweep)

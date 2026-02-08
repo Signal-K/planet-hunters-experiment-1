@@ -1,0 +1,200 @@
+name: Electron Desktop Release
+
+on:
+  push:
+    branches:
+      - main
+      - electron-support
+
+permissions:
+  contents: write
+
+jobs:
+  export-godot:
+    name: Export Godot Assets
+    runs-on: ubuntu-latest
+    env:
+      GODOT_VERSION: "4.5-stable"
+      PROD_SUPABASE_URL: ${{ secrets.PROD_SUPABASE_URL }}
+      PROD_SUPABASE_ANON_KEY: ${{ secrets.PROD_SUPABASE_ANON_KEY }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        shell: bash
+        run: npm ci
+
+      - name: Inject production Supabase config
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${PROD_SUPABASE_URL:-}" ] || [ -z "${PROD_SUPABASE_ANON_KEY:-}" ]; then
+            echo "Missing required secrets: PROD_SUPABASE_URL and/or PROD_SUPABASE_ANON_KEY"
+            exit 1
+          fi
+
+          cat > scene/supabase.runtime.json <<EOF
+          {"supabaseUrl":"${PROD_SUPABASE_URL}","supabaseAnonKey":"${PROD_SUPABASE_ANON_KEY}"}
+          EOF
+
+      - name: Install Godot
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          cd .godot-bin
+
+          curl -fsSL -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/Godot_v4.5-stable_linux.x86_64.zip"
+          unzip -q godot.zip
+          GODOT_PATH="$PWD/Godot_v4.5-stable_linux.x86_64"
+          TEMPLATE_DIR="$HOME/.local/share/godot/export_templates/4.5.stable"
+
+          chmod +x "$GODOT_PATH" || true
+          echo "GODOT_EDITOR=$GODOT_PATH" >> "$GITHUB_ENV"
+
+          # Install export templates (required for --export-release)
+          curl -fsSL -o templates.tpz "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/Godot_v4.5-stable_export_templates.tpz"
+          rm -rf .godot-templates
+          mkdir -p .godot-templates
+          unzip -q templates.tpz -d .godot-templates
+
+          mkdir -p "$TEMPLATE_DIR"
+          TEMPLATE_SOURCE_DIR="$(find .godot-templates -type f -name 'web_nothreads_release.zip' -print -quit | xargs -I{} dirname "{}")"
+          if [ -z "$TEMPLATE_SOURCE_DIR" ]; then
+            echo "Could not locate Godot web export templates in downloaded archive"
+            find .godot-templates -maxdepth 4 -type f | sed -n '1,120p'
+            exit 1
+          fi
+          cp -R "$TEMPLATE_SOURCE_DIR"/* "$TEMPLATE_DIR/"
+
+          # Also mirror templates to the script's GODOT_USER_DIR default.
+          mkdir -p /tmp/godot/export_templates/4.5.stable
+          cp -R "$TEMPLATE_DIR"/* /tmp/godot/export_templates/4.5.stable/
+
+          test -f "$TEMPLATE_DIR/web_nothreads_release.zip"
+          test -f "$TEMPLATE_DIR/web_nothreads_debug.zip"
+
+      - name: Export Godot desktop web assets
+        shell: bash
+        run: npm run godot:export:desktop
+
+      - name: Upload Godot web export
+        uses: actions/upload-artifact@v4
+        with:
+          name: godot-web-export
+          path: electron-dist/godot-web/**
+          if-no-files-found: error
+
+  build:
+    name: Build (${{ matrix.os }})
+    needs: export-godot
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - macos-latest
+          - ubuntu-latest
+          - windows-latest
+
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      ELECTRON_SKIP_NOTARIZATION: "true"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        shell: bash
+        run: npm ci
+
+      - name: Download Godot web export
+        uses: actions/download-artifact@v4
+        with:
+          name: godot-web-export
+          path: electron-dist/godot-web
+
+      - name: Verify Godot web export
+        shell: bash
+        run: |
+          test -f electron-dist/godot-web/index.html
+          test -f electron-dist/godot-web/index.js
+          test -f electron-dist/godot-web/index.pck
+          test -f electron-dist/godot-web/index.wasm
+
+      - name: Build Electron distributables
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" = "macOS" ]; then
+            CSC_NAME="-" npx electron-builder --mac dmg zip --arm64
+            CSC_NAME="-" npx electron-builder --mac dmg zip --x64
+          elif [ "$RUNNER_OS" = "Linux" ]; then
+            npx electron-builder --linux AppImage tar.gz
+          elif [ "$RUNNER_OS" = "Windows" ]; then
+            npx electron-builder --win nsis zip
+          else
+            npx electron-builder
+          fi
+
+      - name: Upload CI artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: electron-${{ matrix.os }}
+          path: |
+            dist/*.dmg
+            dist/*-mac.zip
+            dist/*.exe
+            dist/*win*.zip
+            dist/*.AppImage
+            dist/*.tar.gz
+          if-no-files-found: error
+
+  release:
+    name: Publish Release
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-artifacts
+
+      - name: Compute release tag
+        id: tag
+        shell: bash
+        run: |
+          TAG="electron-${GITHUB_REF_NAME}-${GITHUB_RUN_NUMBER}-${GITHUB_SHA::7}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          name: Electron Build ${{ steps.tag.outputs.tag }}
+          generate_release_notes: true
+          files: |
+            release-artifacts/**/*.dmg
+            release-artifacts/**/*-mac.zip
+            release-artifacts/**/*.exe
+            release-artifacts/**/*win*.zip
+            release-artifacts/**/*.AppImage
+            release-artifacts/**/*.tar.gz
