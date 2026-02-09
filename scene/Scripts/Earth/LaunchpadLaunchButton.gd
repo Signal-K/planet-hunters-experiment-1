@@ -5,19 +5,10 @@ var _launchpad: Node
 var _on_show_selector: Callable
 var _launch_btn_connected: bool = false
 var _launch_button: Button = null
-const LAUNCH_SPRITESHEET = preload("res://assets/Vehicles/StarterRocket1LaunchSpritesheet.png")
-const LAUNCH_COLUMNS := 6
-const LAUNCH_ROWS := 6
-const LAUNCH_COL_BOUNDS := [0, 170, 341, 512, 682, 853, 1024]
-const LAUNCH_ROW_BOUNDS := [0, 256, 512, 768, 1024, 1280, 1536]
-const LAUNCH_FRAME_COUNT := LAUNCH_COLUMNS * LAUNCH_ROWS
-const TOTAL_LAUNCH_TIME := 7.0
-const LAUNCH_ANIM_PORTION := 0.6
 const COUNTDOWN_STEP_TIME := 0.6
-const PREVIEW_SCENE_PATH := "res://Scenes/UI/AsteroidPreview/asteroid_preview.tscn"
-const AUTO_PREVIEW_DELAY_SECONDS := 5.0
+const OUTBOUND_TRANSIT_SCENE_PATH := "res://Scenes/Transitions/rocket_transit.tscn"
 const ACTION_LAUNCH_ROCKET := "launch_rocket_from_earth"
-const HINT_LAUNCH_ROCKET := "Your rocket is launching now, and the mission preview opens in a few seconds."
+const HINT_LAUNCH_ROCKET := "Your rocket is launching now."
 
 func setup(launchpad: Node, on_show_selector: Callable) -> void:
 	_launchpad = launchpad
@@ -124,7 +115,7 @@ func _on_launch_button_pressed() -> void:
 		return
 	if _launch_button:
 		_launch_button.disabled = true
-	# Countdown before launch animation
+	# Countdown before routing to outbound transit
 	await _play_countdown()
 	if rocket == null or not is_instance_valid(rocket):
 		if _launch_button:
@@ -148,8 +139,6 @@ func _on_launch_button_pressed() -> void:
 	else:
 		print("Launchpad: failed to mark rocket as launched")
 	var launched_rocket_id = rocket.name
-	# Play launch animation before removing rocket
-	await _play_launch_animation(rocket)
 	# Clear selected target after launch
 	rm.clear_selected_target()
 	# Remove the rocket from the scene after launching
@@ -160,70 +149,13 @@ func _on_launch_button_pressed() -> void:
 	if _on_show_selector.is_valid():
 		_on_show_selector.call()
 	if set_ok:
-		_start_auto_preview_transition(launched_rocket_id, launch_target_id, preview_meta)
+		_transition_to_outbound_transit(launched_rocket_id, launch_target_id, preview_meta)
 
 func _award_launch_experience() -> void:
 	var root = _launchpad.get_tree().root
 	var app_controller = root.find_child("AppController", true, false)
 	if app_controller and app_controller.has_method("award_launch_experience"):
 		app_controller.award_launch_experience()
-
-func _play_launch_animation(rocket: Node2D) -> void:
-	if rocket == null or not is_instance_valid(rocket):
-		return
-	var original_sprite: Sprite2D = rocket.get_node_or_null("Sprite2D")
-	var sprite = original_sprite
-	if sprite == null:
-		sprite = Sprite2D.new()
-		rocket.add_child(sprite)
-	var original_scale = sprite.scale
-	var original_position = sprite.position
-	var original_offset = sprite.offset
-	var base_size = Vector2.ZERO
-	if sprite.texture:
-		base_size = sprite.texture.get_size()
-	sprite.texture = _make_launch_frame_texture(LAUNCH_FRAME_COUNT - 1)
-	sprite.z_index = 10
-	var frame_size = sprite.texture.get_size()
-	if base_size != Vector2.ZERO and frame_size.x > 0 and frame_size.y > 0:
-		var scale_factor = base_size.y / frame_size.y
-		sprite.scale = Vector2(
-			original_scale.x * scale_factor,
-			original_scale.y * scale_factor
-		)
-	sprite.position = original_position
-	sprite.offset = original_offset
-
-	# Lift-off motion (constant speed to off-screen in TOTAL_LAUNCH_TIME)
-	var margin = frame_size.y * sprite.scale.y * 0.6
-	var target_y = -margin
-	var move_tween = rocket.get_tree().create_tween()
-	move_tween.tween_property(rocket, "position:y", target_y, TOTAL_LAUNCH_TIME).set_trans(Tween.TRANS_LINEAR)
-
-	var anim_time = TOTAL_LAUNCH_TIME * LAUNCH_ANIM_PORTION
-	var frame_time = anim_time / float(LAUNCH_FRAME_COUNT)
-	for i in range(LAUNCH_FRAME_COUNT - 1, -1, -1):
-		sprite.texture = _make_launch_frame_texture(i)
-		await rocket.get_tree().create_timer(frame_time).timeout
-	# Stick to the second-to-last frame (1-based: N-1)
-	sprite.texture = _make_launch_frame_texture(max(LAUNCH_FRAME_COUNT - 2, 0))
-	await move_tween.finished
-
-func _make_launch_frame_texture(frame_index: int) -> AtlasTexture:
-	var atlas := AtlasTexture.new()
-	atlas.atlas = LAUNCH_SPRITESHEET
-	atlas.region = _get_launch_frame_region(frame_index)
-	return atlas
-
-func _get_launch_frame_region(frame_index: int) -> Rect2i:
-	var col := frame_index % LAUNCH_COLUMNS
-	var row := int(frame_index / LAUNCH_COLUMNS)
-	var x0: int = int(LAUNCH_COL_BOUNDS[col])
-	var x1: int = int(LAUNCH_COL_BOUNDS[col + 1])
-	var y0: int = int(LAUNCH_ROW_BOUNDS[row])
-	var y1: int = int(LAUNCH_ROW_BOUNDS[row + 1])
-	return Rect2i(x0, y0, x1 - x0, y1 - y0)
-
 
 func _play_countdown() -> void:
 	var root = _launchpad.get_tree().current_scene
@@ -264,11 +196,7 @@ func _resolve_preview_target_meta(target_id: String) -> Dictionary:
 			break
 	return out
 
-func _start_auto_preview_transition(rocket_id: String, target_id: String, preview_meta: Dictionary) -> void:
-	_transition_to_preview_after_delay(rocket_id, target_id, preview_meta)
-
-func _transition_to_preview_after_delay(rocket_id: String, target_id: String, preview_meta: Dictionary) -> void:
-	await _launchpad.get_tree().create_timer(AUTO_PREVIEW_DELAY_SECONDS).timeout
+func _transition_to_outbound_transit(rocket_id: String, target_id: String, preview_meta: Dictionary) -> void:
 	if target_id == "" or rocket_id == "":
 		return
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
@@ -285,9 +213,9 @@ func _transition_to_preview_after_delay(rocket_id: String, target_id: String, pr
 		return
 	var scene_manager = tree.get_first_node_in_group("scene_manager")
 	if scene_manager and scene_manager.has_method("change_to_scene"):
-		scene_manager.change_to_scene(PREVIEW_SCENE_PATH)
+		scene_manager.change_to_scene(OUTBOUND_TRANSIT_SCENE_PATH)
 	else:
-		tree.change_scene_to_file(PREVIEW_SCENE_PATH)
+		tree.change_scene_to_file(OUTBOUND_TRANSIT_SCENE_PATH)
 
 func _show_tutorial_hint_once(action_key: String, message: String) -> void:
 	var tree = _launchpad.get_tree()

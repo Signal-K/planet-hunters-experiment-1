@@ -5,11 +5,12 @@ signal create_rocket(rocket_id)
 @export var unlocked_rockets := []
 
 const ROCKET_TEXTURES = {
-	"starterrocket1": preload("res://assets/Vehicles/StarterRocket1LaunchFrame0.tres"),
+	"starterrocket1": preload("res://assets/Vehicles/StarterRocket1.png"),
 	"starterrocket2": preload("res://assets/Structures/ControlStation.png")
 }
 const RocketSelectorUIBuilder = preload("res://Scripts/Earth/RocketSelectorUIBuilder.gd")
 const RocketSelectorDragHelper = preload("res://Scripts/Earth/RocketSelectorDragHelper.gd")
+const STARTERROCKET1_LAUNCHPAD_POS := Vector2(-110.0, -178.0)
 
 const ROCKET_COST: int = 1000000000
 const ACTION_CREATE_ROCKET := "create_rocket"
@@ -130,7 +131,7 @@ func _spawn_rocket(rocket_id: String) -> bool:
 				if scene:
 					var inst = scene.instantiate()
 					launchpad.add_child(inst)
-					inst.position = Vector2(-110.0, -170.0)
+					inst.position = STARTERROCKET1_LAUNCHPAD_POS
 					inst.add_to_group("rocket")
 					# persist placed rocket
 					var rm = preload("res://Scripts/Utils/RocketsManager.gd")
