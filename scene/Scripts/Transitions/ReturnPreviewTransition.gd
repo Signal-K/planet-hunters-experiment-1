@@ -74,6 +74,8 @@ func _should_start_at_earth_orbit() -> bool:
 	if not rm:
 		return false
 	rm.mark_returned_if_due(_current_rocket_id)
+	if rm.get_rocket_status(_current_rocket_id) == "returned":
+		return true
 	return rm.has_return_completed(_current_rocket_id)
 
 func _ready() -> void:

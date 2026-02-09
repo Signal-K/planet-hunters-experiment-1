@@ -28,6 +28,7 @@ func _build_list() -> void:
 		return
 	var app = get_node_or_null("/root/AppController")
 	var level = 1
+	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
 	if app and app.has_method("get_experience_level"):
 		level = int(app.get_experience_level())
 	var roster = sm.get_roster(level)
@@ -46,11 +47,11 @@ func _build_list() -> void:
 
 		var style = StyleBoxFlat.new()
 		if is_available:
-			style.bg_color = Color(0.93, 0.97, 1.0, 1.0)
-			style.border_color = Color(0.62, 0.78, 0.92, 1.0)
+			style.bg_color = Color(0.168627, 0.188235, 0.231373, 0.96)
+			style.border_color = Color(0.533, 0.753, 0.816, 0.7)
 		else:
-			style.bg_color = Color(0.92, 0.93, 0.95, 1.0)
-			style.border_color = Color(0.8, 0.82, 0.86, 1.0)
+			style.bg_color = Color(0.133333, 0.152941, 0.180392, 0.94)
+			style.border_color = Color(0.263, 0.298, 0.369, 1.0)
 		style.border_width_left = 1
 		style.border_width_right = 1
 		style.border_width_top = 1
@@ -72,12 +73,12 @@ func _build_list() -> void:
 			display_name = "Classified Subcontractor"
 		name_lbl.text = display_name
 		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		name_lbl.add_theme_color_override("font_color", Color(0.12, 0.2, 0.35))
+		name_lbl.add_theme_color_override("font_color", Color(0.847, 0.871, 0.914, 1))
 		name_lbl.add_theme_font_size_override("font_size", 20)
 		var level_lbl = Label.new()
 		level_lbl.text = "Lvl %s" % str(unlock_level)
 		level_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		level_lbl.add_theme_color_override("font_color", Color(0.35, 0.48, 0.65))
+		level_lbl.add_theme_color_override("font_color", Color(0.533, 0.753, 0.816, 1))
 		level_lbl.add_theme_font_size_override("font_size", 16)
 		header.add_child(name_lbl)
 		header.add_child(level_lbl)
@@ -88,7 +89,7 @@ func _build_list() -> void:
 			role_lbl.text = str(entry.get("role", ""))
 		else:
 			role_lbl.text = "Locked until level %s" % str(unlock_level)
-		role_lbl.add_theme_color_override("font_color", Color(0.35, 0.4, 0.5))
+		role_lbl.add_theme_color_override("font_color", Color(0.639, 0.694, 0.784, 1))
 		role_lbl.add_theme_font_size_override("font_size", 15)
 		row.add_child(role_lbl)
 
@@ -97,16 +98,17 @@ func _build_list() -> void:
 		affinity_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var affinity_lbl = Label.new()
 		affinity_lbl.text = "Affinity"
-		affinity_lbl.add_theme_color_override("font_color", Color(0.42, 0.48, 0.58))
+		affinity_lbl.add_theme_color_override("font_color", Color(0.639, 0.694, 0.784, 1))
 		affinity_lbl.add_theme_font_size_override("font_size", 13)
 		var bar = ProgressBar.new()
 		bar.custom_minimum_size = Vector2(180, 12)
 		bar.max_value = 100
 		bar.value = affinity
 		bar.show_percentage = false
+		panel_style.apply_progress_bar(bar)
 		var val_lbl = Label.new()
 		val_lbl.text = "%s/100" % str(affinity)
-		val_lbl.add_theme_color_override("font_color", Color(0.42, 0.48, 0.58))
+		val_lbl.add_theme_color_override("font_color", Color(0.639, 0.694, 0.784, 1))
 		val_lbl.add_theme_font_size_override("font_size", 13)
 		affinity_row.add_child(affinity_lbl)
 		affinity_row.add_child(bar)

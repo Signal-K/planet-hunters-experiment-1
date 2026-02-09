@@ -100,7 +100,7 @@ static func apply_mining(target_id: String, original_mass: float, minerals: Dict
 	for v in collected.values():
 		total_collected += float(v)
 	var remaining = max(stored_original - total_collected, 0.0)
-	var chunk = original_mass * 0.10
+	var chunk = max(floor(original_mass * 0.10), 1.0)
 	var mined = min(remaining, chunk)
 	if mined <= 0.0:
 		state["remaining_mass"] = remaining
@@ -114,14 +114,31 @@ static func apply_mining(target_id: String, original_mass: float, minerals: Dict
 		total_capacity += float(v)
 	if total_capacity <= 0.0:
 		total_capacity = 1.0
-	var ratio = mined / total_capacity
-
+	var mined_int = int(max(floor(mined), 0.0))
+	if mined_int <= 0 and remaining >= 1.0:
+		mined_int = 1
+	var exact_alloc := {}
+	var allocated := 0
 	for name in minerals.keys():
 		var amount = float(minerals.get(name, 0))
-		var add_kg = int(round(amount * ratio))
+		var exact = (amount / total_capacity) * float(mined_int)
+		exact_alloc[name] = exact
+		var add_kg = int(floor(exact))
+		allocated += add_kg
 		collected[name] = int(collected.get(name, 0)) + add_kg
+	var leftover = mined_int - allocated
+	if leftover > 0:
+		var names = minerals.keys()
+		names.sort_custom(func(a, b):
+			var frac_a = float(exact_alloc.get(a, 0.0)) - floor(float(exact_alloc.get(a, 0.0)))
+			var frac_b = float(exact_alloc.get(b, 0.0)) - floor(float(exact_alloc.get(b, 0.0)))
+			return frac_a > frac_b
+		)
+		for i in range(min(leftover, names.size())):
+			var n = names[i]
+			collected[n] = int(collected.get(n, 0)) + 1
 	state["collected"] = collected
-	state["remaining_mass"] = max(remaining - chunk, 0.0)
+	state["remaining_mass"] = max(remaining - float(mined_int), 0.0)
 
 	targets[target_id] = state
 	data["targets"] = targets

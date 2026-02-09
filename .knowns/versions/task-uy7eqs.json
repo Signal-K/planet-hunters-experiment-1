@@ -1,0 +1,394 @@
+{
+  "taskId": "uy7eqs",
+  "currentVersion": 8,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "uy7eqs",
+      "version": 1,
+      "timestamp": "2026-02-08T08:11:39.303Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Previewing returned rockets does not open full return transition scene"
+            },
+            {
+              "completed": false,
+              "text": "Returned-rocket preview routes directly to Earth/base state"
+            },
+            {
+              "completed": false,
+              "text": "Other preview routes (launched/returning) continue to behave as before"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Previewing returned rockets does not open full return transition scene"
+            },
+            {
+              "completed": true,
+              "text": "Returned-rocket preview routes directly to Earth/base state"
+            },
+            {
+              "completed": false,
+              "text": "Other preview routes (launched/returning) continue to behave as before"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Skip full transition when previewing rockets already returned to Earth",
+        "description": "Previewing a rocket that is already returned to Earth should not replay full return transition. Route directly to Earth/base preview state instead.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "bug",
+          "preview",
+          "routing",
+          "rocket-state"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Previewing returned rockets does not open full return transition scene"
+          },
+          {
+            "completed": true,
+            "text": "Returned-rocket preview routes directly to Earth/base state"
+          },
+          {
+            "completed": false,
+            "text": "Other preview routes (launched/returning) continue to behave as before"
+          }
+        ],
+        "implementationPlan": "1. Update `scene/Scripts/Transitions/ReturnPreviewTransition.gd` start-state logic so rockets with status `returned` immediately start at Earth orbit phase (skip outbound/return travel animation).\n2. Keep current behavior for `returningHome` rockets so in-progress returns still show transition progression.\n3. Run a targeted script regression check (`run_tutorial_tests.gd`) and verify no routing regressions in preview scene selection logic.",
+        "implementationNotes": "## Summary\n- Fixed return preview start logic in `scene/Scripts/Transitions/ReturnPreviewTransition.gd` so rockets with status `returned` start directly in Earth orbit phase instead of replaying full transition.\n- Kept `returningHome` behavior unchanged (still transitions unless return is already complete).\n\n## Verification\n- `GODOT_USER_DIR=/tmp/godot Godot --headless --path scene --script res://tests/run_tutorial_tests.gd` ✅ (2/2 pass)"
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "uy7eqs",
+      "version": 2,
+      "timestamp": "2026-02-08T08:11:39.372Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Skip full transition when previewing rockets already returned to Earth",
+        "description": "Previewing a rocket that is already returned to Earth should not replay full return transition. Route directly to Earth/base preview state instead.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "bug",
+          "preview",
+          "routing",
+          "rocket-state"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Previewing returned rockets does not open full return transition scene"
+          },
+          {
+            "completed": true,
+            "text": "Returned-rocket preview routes directly to Earth/base state"
+          },
+          {
+            "completed": false,
+            "text": "Other preview routes (launched/returning) continue to behave as before"
+          }
+        ],
+        "implementationPlan": "1. Update `scene/Scripts/Transitions/ReturnPreviewTransition.gd` start-state logic so rockets with status `returned` immediately start at Earth orbit phase (skip outbound/return travel animation).\n2. Keep current behavior for `returningHome` rockets so in-progress returns still show transition progression.\n3. Run a targeted script regression check (`run_tutorial_tests.gd`) and verify no routing regressions in preview scene selection logic.",
+        "implementationNotes": "## Summary\n- Fixed return preview start logic in `scene/Scripts/Transitions/ReturnPreviewTransition.gd` so rockets with status `returned` start directly in Earth orbit phase instead of replaying full transition.\n- Kept `returningHome` behavior unchanged (still transitions unless return is already complete).\n\n## Verification\n- `GODOT_USER_DIR=/tmp/godot Godot --headless --path scene --script res://tests/run_tutorial_tests.gd` ✅ (2/2 pass)"
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "uy7eqs",
+      "version": 3,
+      "timestamp": "2026-02-08T08:11:41.504Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Previewing returned rockets does not open full return transition scene"
+            },
+            {
+              "completed": true,
+              "text": "Returned-rocket preview routes directly to Earth/base state"
+            },
+            {
+              "completed": false,
+              "text": "Other preview routes (launched/returning) continue to behave as before"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Previewing returned rockets does not open full return transition scene"
+            },
+            {
+              "completed": true,
+              "text": "Returned-rocket preview routes directly to Earth/base state"
+            },
+            {
+              "completed": true,
+              "text": "Other preview routes (launched/returning) continue to behave as before"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Skip full transition when previewing rockets already returned to Earth",
+        "description": "Previewing a rocket that is already returned to Earth should not replay full return transition. Route directly to Earth/base preview state instead.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "bug",
+          "preview",
+          "routing",
+          "rocket-state"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Previewing returned rockets does not open full return transition scene"
+          },
+          {
+            "completed": true,
+            "text": "Returned-rocket preview routes directly to Earth/base state"
+          },
+          {
+            "completed": true,
+            "text": "Other preview routes (launched/returning) continue to behave as before"
+          }
+        ],
+        "implementationPlan": "1. Update `scene/Scripts/Transitions/ReturnPreviewTransition.gd` start-state logic so rockets with status `returned` immediately start at Earth orbit phase (skip outbound/return travel animation).\n2. Keep current behavior for `returningHome` rockets so in-progress returns still show transition progression.\n3. Run a targeted script regression check (`run_tutorial_tests.gd`) and verify no routing regressions in preview scene selection logic.",
+        "implementationNotes": "## Summary\n- Fixed return preview start logic in `scene/Scripts/Transitions/ReturnPreviewTransition.gd` so rockets with status `returned` start directly in Earth orbit phase instead of replaying full transition.\n- Kept `returningHome` behavior unchanged (still transitions unless return is already complete).\n\n## Verification\n- `GODOT_USER_DIR=/tmp/godot Godot --headless --path scene --script res://tests/run_tutorial_tests.gd` ✅ (2/2 pass)"
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "uy7eqs",
+      "version": 4,
+      "timestamp": "2026-02-08T08:13:20.902Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "done",
+          "newValue": "in-progress"
+        }
+      ],
+      "snapshot": {
+        "title": "Skip full transition when previewing rockets already returned to Earth",
+        "description": "Previewing a rocket that is already returned to Earth should not replay full return transition. Route directly to Earth/base preview state instead.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "bug",
+          "preview",
+          "routing",
+          "rocket-state"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Previewing returned rockets does not open full return transition scene"
+          },
+          {
+            "completed": true,
+            "text": "Returned-rocket preview routes directly to Earth/base state"
+          },
+          {
+            "completed": true,
+            "text": "Other preview routes (launched/returning) continue to behave as before"
+          }
+        ],
+        "implementationPlan": "1. Update `scene/Scripts/Transitions/ReturnPreviewTransition.gd` start-state logic so rockets with status `returned` immediately start at Earth orbit phase (skip outbound/return travel animation).\n2. Keep current behavior for `returningHome` rockets so in-progress returns still show transition progression.\n3. Run a targeted script regression check (`run_tutorial_tests.gd`) and verify no routing regressions in preview scene selection logic.",
+        "implementationNotes": "## Summary\n- Fixed return preview start logic in `scene/Scripts/Transitions/ReturnPreviewTransition.gd` so rockets with status `returned` start directly in Earth orbit phase instead of replaying full transition.\n- Kept `returningHome` behavior unchanged (still transitions unless return is already complete).\n\n## Verification\n- `GODOT_USER_DIR=/tmp/godot Godot --headless --path scene --script res://tests/run_tutorial_tests.gd` ✅ (2/2 pass)"
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "uy7eqs",
+      "version": 5,
+      "timestamp": "2026-02-08T08:13:55.525Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "## Summary\n- Fixed return preview start logic in `scene/Scripts/Transitions/ReturnPreviewTransition.gd` so rockets with status `returned` start directly in Earth orbit phase instead of replaying full transition.\n- Kept `returningHome` behavior unchanged (still transitions unless return is already complete).\n\n## Verification\n- `GODOT_USER_DIR=/tmp/godot Godot --headless --path scene --script res://tests/run_tutorial_tests.gd` ✅ (2/2 pass)",
+          "newValue": "## Summary\n- Fixed return preview start logic in `scene/Scripts/Transitions/ReturnPreviewTransition.gd` so rockets with status `returned` start directly in Earth orbit phase instead of replaying full transition.\n- Kept `returningHome` behavior unchanged (still transitions unless return is already complete).\n\n## Verification\n- `GODOT_USER_DIR=/tmp/godot Godot --headless --path scene --script res://tests/run_tutorial_tests.gd` ✅ (2/2 pass)\n\n🔄 Reopened fix: route status=returned preview directly to mission_debrief.tscn from NewMissionLaunchList; only returningHome uses rocket_return transition"
+        }
+      ],
+      "snapshot": {
+        "title": "Skip full transition when previewing rockets already returned to Earth",
+        "description": "Previewing a rocket that is already returned to Earth should not replay full return transition. Route directly to Earth/base preview state instead.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "bug",
+          "preview",
+          "routing",
+          "rocket-state"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Previewing returned rockets does not open full return transition scene"
+          },
+          {
+            "completed": true,
+            "text": "Returned-rocket preview routes directly to Earth/base state"
+          },
+          {
+            "completed": true,
+            "text": "Other preview routes (launched/returning) continue to behave as before"
+          }
+        ],
+        "implementationPlan": "1. Update `scene/Scripts/Transitions/ReturnPreviewTransition.gd` start-state logic so rockets with status `returned` immediately start at Earth orbit phase (skip outbound/return travel animation).\n2. Keep current behavior for `returningHome` rockets so in-progress returns still show transition progression.\n3. Run a targeted script regression check (`run_tutorial_tests.gd`) and verify no routing regressions in preview scene selection logic.",
+        "implementationNotes": "## Summary\n- Fixed return preview start logic in `scene/Scripts/Transitions/ReturnPreviewTransition.gd` so rockets with status `returned` start directly in Earth orbit phase instead of replaying full transition.\n- Kept `returningHome` behavior unchanged (still transitions unless return is already complete).\n\n## Verification\n- `GODOT_USER_DIR=/tmp/godot Godot --headless --path scene --script res://tests/run_tutorial_tests.gd` ✅ (2/2 pass)\n\n🔄 Reopened fix: route status=returned preview directly to mission_debrief.tscn from NewMissionLaunchList; only returningHome uses rocket_return transition"
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "uy7eqs",
+      "version": 6,
+      "timestamp": "2026-02-09T01:26:13.124Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "oldValue": "1. Update `scene/Scripts/Transitions/ReturnPreviewTransition.gd` start-state logic so rockets with status `returned` immediately start at Earth orbit phase (skip outbound/return travel animation).\n2. Keep current behavior for `returningHome` rockets so in-progress returns still show transition progression.\n3. Run a targeted script regression check (`run_tutorial_tests.gd`) and verify no routing regressions in preview scene selection logic.",
+          "newValue": "1. Validate NewMissionLaunchList preview routing for returned rockets\n2. Keep returningHome route on transition scene while returned routes direct to mission_debrief\n3. Add regression tests for returned/returning/launched route mapping"
+        }
+      ],
+      "snapshot": {
+        "title": "Skip full transition when previewing rockets already returned to Earth",
+        "description": "Previewing a rocket that is already returned to Earth should not replay full return transition. Route directly to Earth/base preview state instead.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "bug",
+          "preview",
+          "routing",
+          "rocket-state"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Previewing returned rockets does not open full return transition scene"
+          },
+          {
+            "completed": true,
+            "text": "Returned-rocket preview routes directly to Earth/base state"
+          },
+          {
+            "completed": true,
+            "text": "Other preview routes (launched/returning) continue to behave as before"
+          }
+        ],
+        "implementationPlan": "1. Validate NewMissionLaunchList preview routing for returned rockets\n2. Keep returningHome route on transition scene while returned routes direct to mission_debrief\n3. Add regression tests for returned/returning/launched route mapping",
+        "implementationNotes": "## Summary\n- Fixed return preview start logic in `scene/Scripts/Transitions/ReturnPreviewTransition.gd` so rockets with status `returned` start directly in Earth orbit phase instead of replaying full transition.\n- Kept `returningHome` behavior unchanged (still transitions unless return is already complete).\n\n## Verification\n- `GODOT_USER_DIR=/tmp/godot Godot --headless --path scene --script res://tests/run_tutorial_tests.gd` ✅ (2/2 pass)\n\n🔄 Reopened fix: route status=returned preview directly to mission_debrief.tscn from NewMissionLaunchList; only returningHome uses rocket_return transition"
+      }
+    },
+    {
+      "id": "v7",
+      "taskId": "uy7eqs",
+      "version": 7,
+      "timestamp": "2026-02-09T01:35:53.883Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "## Summary\n- Fixed return preview start logic in `scene/Scripts/Transitions/ReturnPreviewTransition.gd` so rockets with status `returned` start directly in Earth orbit phase instead of replaying full transition.\n- Kept `returningHome` behavior unchanged (still transitions unless return is already complete).\n\n## Verification\n- `GODOT_USER_DIR=/tmp/godot Godot --headless --path scene --script res://tests/run_tutorial_tests.gd` ✅ (2/2 pass)\n\n🔄 Reopened fix: route status=returned preview directly to mission_debrief.tscn from NewMissionLaunchList; only returningHome uses rocket_return transition",
+          "newValue": "## Summary\n- Fixed return preview start logic in `scene/Scripts/Transitions/ReturnPreviewTransition.gd` so rockets with status `returned` start directly in Earth orbit phase instead of replaying full transition.\n- Kept `returningHome` behavior unchanged (still transitions unless return is already complete).\n\n## Verification\n- `GODOT_USER_DIR=/tmp/godot Godot --headless --path scene --script res://tests/run_tutorial_tests.gd` ✅ (2/2 pass)\n\n🔄 Reopened fix: route status=returned preview directly to mission_debrief.tscn from NewMissionLaunchList; only returningHome uses rocket_return transition\n\n✓ Refactored preview route resolver into Scripts/UI/NewMissionPreviewRouting.gd and validated returned/returning route mapping via run_experience_tests.gd."
+        }
+      ],
+      "snapshot": {
+        "title": "Skip full transition when previewing rockets already returned to Earth",
+        "description": "Previewing a rocket that is already returned to Earth should not replay full return transition. Route directly to Earth/base preview state instead.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "bug",
+          "preview",
+          "routing",
+          "rocket-state"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Previewing returned rockets does not open full return transition scene"
+          },
+          {
+            "completed": true,
+            "text": "Returned-rocket preview routes directly to Earth/base state"
+          },
+          {
+            "completed": true,
+            "text": "Other preview routes (launched/returning) continue to behave as before"
+          }
+        ],
+        "implementationPlan": "1. Validate NewMissionLaunchList preview routing for returned rockets\n2. Keep returningHome route on transition scene while returned routes direct to mission_debrief\n3. Add regression tests for returned/returning/launched route mapping",
+        "implementationNotes": "## Summary\n- Fixed return preview start logic in `scene/Scripts/Transitions/ReturnPreviewTransition.gd` so rockets with status `returned` start directly in Earth orbit phase instead of replaying full transition.\n- Kept `returningHome` behavior unchanged (still transitions unless return is already complete).\n\n## Verification\n- `GODOT_USER_DIR=/tmp/godot Godot --headless --path scene --script res://tests/run_tutorial_tests.gd` ✅ (2/2 pass)\n\n🔄 Reopened fix: route status=returned preview directly to mission_debrief.tscn from NewMissionLaunchList; only returningHome uses rocket_return transition\n\n✓ Refactored preview route resolver into Scripts/UI/NewMissionPreviewRouting.gd and validated returned/returning route mapping via run_experience_tests.gd."
+      }
+    },
+    {
+      "id": "v8",
+      "taskId": "uy7eqs",
+      "version": 8,
+      "timestamp": "2026-02-09T01:35:58.295Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Skip full transition when previewing rockets already returned to Earth",
+        "description": "Previewing a rocket that is already returned to Earth should not replay full return transition. Route directly to Earth/base preview state instead.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "bug",
+          "preview",
+          "routing",
+          "rocket-state"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Previewing returned rockets does not open full return transition scene"
+          },
+          {
+            "completed": true,
+            "text": "Returned-rocket preview routes directly to Earth/base state"
+          },
+          {
+            "completed": true,
+            "text": "Other preview routes (launched/returning) continue to behave as before"
+          }
+        ],
+        "implementationPlan": "1. Validate NewMissionLaunchList preview routing for returned rockets\n2. Keep returningHome route on transition scene while returned routes direct to mission_debrief\n3. Add regression tests for returned/returning/launched route mapping",
+        "implementationNotes": "## Summary\n- Fixed return preview start logic in `scene/Scripts/Transitions/ReturnPreviewTransition.gd` so rockets with status `returned` start directly in Earth orbit phase instead of replaying full transition.\n- Kept `returningHome` behavior unchanged (still transitions unless return is already complete).\n\n## Verification\n- `GODOT_USER_DIR=/tmp/godot Godot --headless --path scene --script res://tests/run_tutorial_tests.gd` ✅ (2/2 pass)\n\n🔄 Reopened fix: route status=returned preview directly to mission_debrief.tscn from NewMissionLaunchList; only returningHome uses rocket_return transition\n\n✓ Refactored preview route resolver into Scripts/UI/NewMissionPreviewRouting.gd and validated returned/returning route mapping via run_experience_tests.gd."
+      }
+    }
+  ]
+}

@@ -79,8 +79,8 @@ func _on_save_pressed():
 
 func initialize(anomaly: Dictionary):
 	anomaly_data = anomaly
-	anomaly_id = _model.normalize_anomaly_id(anomaly)
 	var is_planet = _model.is_planet(anomaly)
+	anomaly_id = _model.normalize_anomaly_id(anomaly, is_planet)
 	title_label.text = _model.build_title(anomaly, anomaly_id, is_planet)
 	info_label.text = _model.build_info_text(anomaly_data)
 	if anomaly_id != "":

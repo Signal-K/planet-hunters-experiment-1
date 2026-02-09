@@ -31,11 +31,10 @@ var current_counter: int = 0
 const MISSION_UNLOCKS := [
 	{"level": 1, "name": "Asteroid mining missions"},
 	{"level": 1, "name": "Sell cargo in orbit"},
-	{"level": 2, "name": "Sell cargo on Earth"}
+	{"level": 3, "name": "Sell cargo on Earth"}
 ]
 
 func _ready() -> void:
-	_apply_panel_style()
 	# Connect button signals
 	close_btn.pressed.connect(_on_close_button_pressed)
 	logbook_btn.pressed.connect(_on_logbook_button_pressed)
@@ -52,39 +51,6 @@ func _ready() -> void:
 	_connect_experience_updates()
 	
 	print("MenuPanel ready with counter: ", current_counter)
-
-func _apply_panel_style() -> void:
-	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
-	var panel = $PanelContainer/Panel
-	panel_style.apply_panel(panel)
-
-	var title = $PanelContainer/Panel/VBoxContainer/HeaderContainer/HeaderBackground/HeaderContent/Title
-	var separator = $PanelContainer/Panel/VBoxContainer/HSeparator
-	var info_label = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/InfoLabel
-	var counter_title = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/CounterCard/CounterContainer/CounterTitle
-	var counter_value = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/CounterCard/CounterContainer/CounterLabel
-
-	panel_style.apply_title(title)
-	panel_style.apply_separator(separator)
-	panel_style.apply_body(counter_title)
-	panel_style.apply_title(counter_value)
-	panel_style.apply_muted(info_label)
-
-	panel_style.apply_button(close_btn, false)
-	panel_style.apply_button(logbook_btn, false)
-	panel_style.apply_button(decrease_btn, false)
-	panel_style.apply_button(increase_btn, false)
-	panel_style.apply_button(reset_btn, true)
-	panel_style.apply_button(reset_tutorial_btn, false)
-	panel_style.apply_title(progress_title)
-	panel_style.apply_body(level_label)
-	panel_style.apply_muted(xp_label)
-	panel_style.apply_muted(next_level_label)
-	panel_style.apply_body(unlocks_title)
-	info_label.add_theme_color_override("font_color", Color(0.4, 0.45, 0.55))
-	panel_style.apply_title(logbook_title)
-	panel_style.apply_button(logbook_close_btn, false)
-	panel_style.apply_separator($LogbookOverlay/LogbookPanelContainer/LogbookPanel/VBoxContainer/HSeparator)
 
 func set_counter(value: int) -> void:
 	"""Set the counter value from external source (e.g., React Native)"""
@@ -154,21 +120,17 @@ func _build_unlocks_list(current_level: int) -> void:
 		unlocks_by_level[lvl].append("Mission: %s" % str(m.get("name", "")))
 	var levels := unlocks_by_level.keys()
 	levels.sort()
-	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
 	for lvl in levels:
 		var header = Label.new()
 		header.text = "Level %s" % str(lvl)
-		panel_style.apply_body(header)
 		unlocks_list.add_child(header)
 		var items: Array = unlocks_by_level[lvl]
 		items.sort()
 		for item in items:
 			var row = Label.new()
 			row.text = "• %s" % str(item)
-			if lvl <= current_level:
-				panel_style.apply_body(row)
-			else:
-				panel_style.apply_muted(row)
+			if lvl > current_level:
+				row.modulate = Color(0.65, 0.65, 0.65, 1)
 			unlocks_list.add_child(row)
 
 func _get_app_controller() -> Node:
@@ -217,11 +179,11 @@ func _rebuild_logbook_entries() -> void:
 		child.queue_free()
 	var log = preload("res://Scripts/Utils/MissionLogManager.gd")
 	var rows: Array = log.get_missions() if log else []
-	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
 	if rows.is_empty():
 		var empty = Label.new()
 		empty.text = "No mission records yet."
-		panel_style.apply_muted(empty)
+		empty.add_theme_color_override("font_color", Color(0.639, 0.694, 0.784, 1))
+		empty.add_theme_font_size_override("font_size", 16)
 		empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		logbook_entries.add_child(empty)
 		return
@@ -231,38 +193,84 @@ func _rebuild_logbook_entries() -> void:
 		if typeof(entry) != TYPE_DICTIONARY:
 			continue
 		var card = PanelContainer.new()
-		panel_style.apply_panel(card, Color(0.94, 0.96, 0.99, 1.0))
+		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var card_style = StyleBoxFlat.new()
+		card_style.bg_color = Color(0.168627, 0.188235, 0.231373, 0.96)
+		card_style.border_color = Color(0.263, 0.298, 0.369, 1)
+		card_style.border_width_left = 1
+		card_style.border_width_right = 1
+		card_style.border_width_top = 1
+		card_style.border_width_bottom = 1
+		card_style.corner_radius_top_left = 12
+		card_style.corner_radius_top_right = 12
+		card_style.corner_radius_bottom_left = 12
+		card_style.corner_radius_bottom_right = 12
+		card_style.content_margin_left = 14.0
+		card_style.content_margin_right = 14.0
+		card_style.content_margin_top = 12.0
+		card_style.content_margin_bottom = 12.0
+		card.add_theme_stylebox_override("panel", card_style)
 		logbook_entries.add_child(card)
 
 		var body = VBoxContainer.new()
-		body.add_theme_constant_override("separation", 6)
+		body.add_theme_constant_override("separation", 10)
 		card.add_child(body)
 
 		var header = Label.new()
 		header.text = _build_logbook_header(entry, idx + 1)
-		panel_style.apply_body(header)
+		header.add_theme_color_override("font_color", Color(0.533, 0.753, 0.816, 1))
+		header.add_theme_font_size_override("font_size", 18)
 		body.add_child(header)
 
-		var keys: Array = entry.keys()
-		keys.sort()
-		for raw_key in keys:
-			var key = str(raw_key)
-			var row = HBoxContainer.new()
-			row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			body.add_child(row)
+		for section in _logbook_sections():
+			var section_keys: Array = section.get("keys", [])
+			var present := []
+			for section_key in section_keys:
+				if entry.has(section_key):
+					present.append(section_key)
+			if present.is_empty():
+				continue
 
-			var key_label = Label.new()
-			key_label.text = "%s:" % _format_logbook_key(key)
-			key_label.custom_minimum_size = Vector2(180, 0)
-			panel_style.apply_muted(key_label)
-			row.add_child(key_label)
+			var section_header = Label.new()
+			section_header.text = str(section.get("title", "Details"))
+			section_header.add_theme_color_override("font_color", Color(0.639, 0.694, 0.784, 1))
+			section_header.add_theme_font_size_override("font_size", 14)
+			body.add_child(section_header)
 
-			var value_label = Label.new()
-			value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			value_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			value_label.text = _format_logbook_value(key, entry.get(key))
-			panel_style.apply_body(value_label)
-			row.add_child(value_label)
+			for section_key in present:
+				var row = HBoxContainer.new()
+				row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+				row.add_theme_constant_override("separation", 12)
+				body.add_child(row)
+
+				var key_label = Label.new()
+				key_label.custom_minimum_size = Vector2(180, 0)
+				key_label.text = "%s:" % _format_logbook_key(str(section_key))
+				key_label.add_theme_color_override("font_color", Color(0.639, 0.694, 0.784, 1))
+				key_label.add_theme_font_size_override("font_size", 14)
+				row.add_child(key_label)
+
+				var value_label = Label.new()
+				value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+				value_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+				value_label.add_theme_color_override("font_color", Color(0.847, 0.871, 0.914, 1))
+				value_label.add_theme_font_size_override("font_size", 15)
+				value_label.text = _format_logbook_value(str(section_key), entry.get(section_key))
+				row.add_child(value_label)
+
+		if idx > 0:
+			var divider = HSeparator.new()
+			divider.add_theme_color_override("separator", Color(0.263, 0.298, 0.369, 1))
+			body.add_child(divider)
+
+func _logbook_sections() -> Array:
+	return [
+		{"title": "Summary", "keys": ["action", "label", "target_id", "rocket_id"]},
+		{"title": "Economy", "keys": ["payout", "payout_total", "franc_delta", "xp_awarded"]},
+		{"title": "Cargo", "keys": ["cargo"]},
+		{"title": "Timeline", "keys": ["timestamp", "first_timestamp", "last_timestamp"]},
+		{"title": "Technical", "keys": ["actions", "action_trace"]}
+	]
 
 func _build_logbook_header(entry: Dictionary, mission_index: int) -> String:
 	var action = str(entry.get("action", "mission"))
@@ -287,6 +295,34 @@ func _format_logbook_value(key: String, value) -> String:
 		var amount = int(value)
 		var fmt = preload("res://Scripts/Utils/NumberFormat.gd")
 		return "%s F" % fmt.commas(str(amount))
+	if key == "payout_total":
+		var total = int(value)
+		var fmt_total = preload("res://Scripts/Utils/NumberFormat.gd")
+		return "%s F" % fmt_total.commas(str(total))
+	if key == "cargo" and typeof(value) == TYPE_DICTIONARY:
+		var pairs := []
+		var cargo_keys: Array = value.keys()
+		cargo_keys.sort()
+		for cargo_key in cargo_keys:
+			pairs.append("%s: %s" % [_format_logbook_key(str(cargo_key)), str(value[cargo_key])])
+		return " | ".join(pairs)
+	if key in ["actions", "action_trace"] and typeof(value) == TYPE_ARRAY:
+		var lines := []
+		for action_entry in value:
+			if typeof(action_entry) == TYPE_DICTIONARY:
+				var action_name = str(action_entry.get("action", "event"))
+				var delta = str(action_entry.get("franc_delta", "-"))
+				var payout = str(action_entry.get("payout", "-"))
+				var stamp = str(action_entry.get("timestamp", ""))
+				lines.append("%s | delta: %s | payout: %s%s" % [
+					action_name,
+					delta,
+					payout,
+					(" | " + stamp) if stamp != "" else ""
+				])
+			else:
+				lines.append(str(action_entry))
+		return "\n".join(lines)
 	if typeof(value) == TYPE_DICTIONARY or typeof(value) == TYPE_ARRAY:
-		return JSON.stringify(value)
+		return JSON.stringify(value, "  ")
 	return str(value)

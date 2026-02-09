@@ -5,6 +5,7 @@ extends SceneTree
 const TestReporter = preload("res://tests/TestReporter.gd")
 const AppControllerScript = preload("res://Scripts/Systems/AppController.gd")
 const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
+const NewMissionPreviewRouting = preload("res://Scripts/UI/NewMissionPreviewRouting.gd")
 
 var reporter := TestReporter.new()
 
@@ -34,6 +35,8 @@ func run_all_tests() -> void:
 	await test_status_change_timestamps_recorded()
 	await test_preview_rocket_resolution_from_target()
 	await test_outbound_progress_fallback_to_status_timestamp()
+	await test_return_home_persists_return_start_time()
+	await test_preview_routing_for_return_states()
 
 func _new_controller() -> Node:
 	var app = AppControllerScript.new()
@@ -266,5 +269,56 @@ func test_outbound_progress_fallback_to_status_timestamp() -> void:
 	RocketsManager.clear_override_state()
 	if progress < 0.45 or progress > 0.55:
 		reporter.fail_test("Expected outbound fallback progress around 0.5, got %s" % str(progress))
+		return
+	reporter.pass_test()
+
+func test_return_home_persists_return_start_time() -> void:
+	reporter.start_test("return_home stamps and persists returning_started")
+	var state = {
+		"unlocked": ["starterrocket1"],
+		"placed": [{"type": "starterrocket1", "id": "starterrocket1-6", "x": 0, "y": 0, "status": "launched"}],
+		"launched": ["starterrocket1-6"],
+		"destroyed": [],
+		"missions": [{"rocket_id": "starterrocket1-6", "target": "123", "launch_time": int(Time.get_unix_time_from_system()) - 5, "arrival_time": int(Time.get_unix_time_from_system()) + 55}],
+		"selected_target": "",
+		"preview_target": {},
+		"detected_targets": [],
+		"seen_asteroids": [],
+		"seen_planets": [],
+		"returning": [],
+		"arrived": {},
+		"returned_mission": {},
+		"returning_started": {},
+		"status_changed_at": {}
+	}
+	RocketsManager.set_override_state(state)
+	var ok = RocketsManager.return_home("starterrocket1-6")
+	var started = int(RocketsManager.get_return_started_at("starterrocket1-6"))
+	RocketsManager.clear_override_state()
+	if not ok:
+		reporter.fail_test("return_home returned false")
+		return
+	if started <= 0:
+		reporter.fail_test("Expected returning_started timestamp to be persisted")
+		return
+	reporter.pass_test()
+
+func test_preview_routing_for_return_states() -> void:
+	reporter.start_test("Preview routing maps returning/returned/arrived/launched states correctly")
+	var returning_scene = NewMissionPreviewRouting.resolve_scene_path("returningHome", false)
+	var returned_scene = NewMissionPreviewRouting.resolve_scene_path("returned", false)
+	var arrived_scene = NewMissionPreviewRouting.resolve_scene_path("launched", true)
+	var outbound_scene = NewMissionPreviewRouting.resolve_scene_path("launched", false)
+	if returning_scene != "res://Scenes/Transitions/rocket_return.tscn":
+		reporter.fail_test("Expected returningHome to route to return preview")
+		return
+	if returned_scene != "res://Scenes/Earth/mission_debrief.tscn":
+		reporter.fail_test("Expected returned to route directly to mission debrief")
+		return
+	if arrived_scene != "res://Scenes/UI/AsteroidPreview/asteroid_preview.tscn":
+		reporter.fail_test("Expected arrived route to asteroid preview")
+		return
+	if outbound_scene != "res://Scenes/Transitions/rocket_transit.tscn":
+		reporter.fail_test("Expected launched/in-flight route to transit preview")
 		return
 	reporter.pass_test()

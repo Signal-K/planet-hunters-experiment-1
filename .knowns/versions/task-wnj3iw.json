@@ -1,6 +1,6 @@
 {
   "taskId": "wnj3iw",
-  "currentVersion": 2,
+  "currentVersion": 6,
   "versions": [
     {
       "id": "v1",
@@ -72,6 +72,165 @@
           }
         ],
         "implementationPlan": "1. Inspect RocketsManager return-home persistence + preview routing\n2. Backfill missing return start times and auto-promote overdue returns\n3. Ensure return_home always stamps returning_started and persist"
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "wnj3iw",
+      "version": 3,
+      "timestamp": "2026-02-09T01:26:13.123Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "oldValue": "1. Inspect RocketsManager return-home persistence + preview routing\n2. Backfill missing return start times and auto-promote overdue returns\n3. Ensure return_home always stamps returning_started and persist",
+          "newValue": "1. Verify return_home persistence of returning_started and migration fallback paths\n2. Tighten preview routing logic for returningHome vs returned states\n3. Add Godot tests for return start persistence + preview route selection outcomes"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix missing return start time and returningHome preview routing",
+        "description": "Return-home state lacks timestamp; preview starts at target scene. Add migration and persistence for return start time and ensure returning/returned preview routing.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "bug",
+          "rocket-state"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "returningHome rockets persist return start time"
+          },
+          {
+            "completed": false,
+            "text": "returning rockets preview starts in return transit or Earth orbit based on elapsed time"
+          }
+        ],
+        "implementationPlan": "1. Verify return_home persistence of returning_started and migration fallback paths\n2. Tighten preview routing logic for returningHome vs returned states\n3. Add Godot tests for return start persistence + preview route selection outcomes"
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "wnj3iw",
+      "version": 4,
+      "timestamp": "2026-02-09T01:35:32.293Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "returningHome rockets persist return start time"
+            },
+            {
+              "completed": false,
+              "text": "returning rockets preview starts in return transit or Earth orbit based on elapsed time"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "returningHome rockets persist return start time"
+            },
+            {
+              "completed": true,
+              "text": "returning rockets preview starts in return transit or Earth orbit based on elapsed time"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Fix missing return start time and returningHome preview routing",
+        "description": "Return-home state lacks timestamp; preview starts at target scene. Add migration and persistence for return start time and ensure returning/returned preview routing.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "bug",
+          "rocket-state"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "returningHome rockets persist return start time"
+          },
+          {
+            "completed": true,
+            "text": "returning rockets preview starts in return transit or Earth orbit based on elapsed time"
+          }
+        ],
+        "implementationPlan": "1. Verify return_home persistence of returning_started and migration fallback paths\n2. Tighten preview routing logic for returningHome vs returned states\n3. Add Godot tests for return start persistence + preview route selection outcomes"
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "wnj3iw",
+      "version": 5,
+      "timestamp": "2026-02-09T01:35:34.492Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "✓ Added return_home persistence regression test + preview routing map test in run_experience_tests.gd (12/12 pass)."
+        }
+      ],
+      "snapshot": {
+        "title": "Fix missing return start time and returningHome preview routing",
+        "description": "Return-home state lacks timestamp; preview starts at target scene. Add migration and persistence for return start time and ensure returning/returned preview routing.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "bug",
+          "rocket-state"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "returningHome rockets persist return start time"
+          },
+          {
+            "completed": true,
+            "text": "returning rockets preview starts in return transit or Earth orbit based on elapsed time"
+          }
+        ],
+        "implementationPlan": "1. Verify return_home persistence of returning_started and migration fallback paths\n2. Tighten preview routing logic for returningHome vs returned states\n3. Add Godot tests for return start persistence + preview route selection outcomes",
+        "implementationNotes": "✓ Added return_home persistence regression test + preview routing map test in run_experience_tests.gd (12/12 pass)."
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "wnj3iw",
+      "version": 6,
+      "timestamp": "2026-02-09T01:35:38.864Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix missing return start time and returningHome preview routing",
+        "description": "Return-home state lacks timestamp; preview starts at target scene. Add migration and persistence for return start time and ensure returning/returned preview routing.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "bug",
+          "rocket-state"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "returningHome rockets persist return start time"
+          },
+          {
+            "completed": true,
+            "text": "returning rockets preview starts in return transit or Earth orbit based on elapsed time"
+          }
+        ],
+        "implementationPlan": "1. Verify return_home persistence of returning_started and migration fallback paths\n2. Tighten preview routing logic for returningHome vs returned states\n3. Add Godot tests for return start persistence + preview route selection outcomes",
+        "implementationNotes": "✓ Added return_home persistence regression test + preview routing map test in run_experience_tests.gd (12/12 pass)."
       }
     }
   ]

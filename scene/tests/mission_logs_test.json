@@ -1,0 +1,17 @@
+{
+  "missions": [
+    {
+      "timestamp": "2026-02-09T10:45:26",
+      "rocket_id": "starterrocket1-test",
+      "target_id": "A-TEST",
+      "label": "Asteroid A-TEST",
+      "action": "scrap",
+      "payout": 200000000,
+      "cargo": {
+        "Iron": 10,
+        "Nickel": 2
+      },
+      "badge": "starterrocket1-test-A-TEST-1770605126"
+    }
+  ]
+}

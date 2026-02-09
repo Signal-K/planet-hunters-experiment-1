@@ -3,12 +3,10 @@ class_name NewMissionLaunchList
 
 var _launch_list_container: Node
 var _on_refund: Callable
-const PREVIEW_SCENE_PATH := "res://Scenes/Transitions/rocket_transit.tscn"
-const ARRIVED_PREVIEW_SCENE_PATH := "res://Scenes/UI/AsteroidPreview/asteroid_preview.tscn"
-const RETURN_PREVIEW_SCENE_PATH := "res://Scenes/Transitions/rocket_return.tscn"
 const MIN_DISTANCE_KM := 150000.0
 const MAX_DISTANCE_KM := 3000000.0
 const TRAVEL_SECONDS := 60.0
+const PreviewRouting = preload("res://Scripts/UI/NewMissionPreviewRouting.gd")
 var _mission_rows := {}
 const TimeHelper = preload("res://Scripts/Earth/TimeHelper.gd")
 
@@ -178,16 +176,8 @@ func _on_preview_pressed(target_id: String, target_label: String, target_type: S
 	if rm:
 		rm.mark_returned_if_due(rocket_id)
 		status = rm.get_rocket_status(rocket_id)
-	if status == "returningHome":
-		_change_to_scene(RETURN_PREVIEW_SCENE_PATH)
-		return
-	if status == "returned":
-		_change_to_scene(RETURN_PREVIEW_SCENE_PATH)
-		return
-	if _has_arrived(target_id, rocket_id):
-		_change_to_scene(ARRIVED_PREVIEW_SCENE_PATH)
-		return
-	_change_to_scene(PREVIEW_SCENE_PATH)
+	var arrived = _has_arrived(target_id, rocket_id)
+	_change_to_scene(PreviewRouting.resolve_scene_path(status, arrived))
 
 func _change_to_scene(scene_path: String) -> void:
 	var tree = Engine.get_main_loop() as SceneTree

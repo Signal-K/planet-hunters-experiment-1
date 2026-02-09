@@ -3,8 +3,8 @@
 [ext_resource type="Script" path="res://Scripts/UI/MenuPanel.gd" id="1"]
 
 [sub_resource type="StyleBoxFlat" id="1"]
-bg_color = Color(0.975, 0.98, 0.99, 1)
-border_color = Color(0.86, 0.89, 0.94, 1)
+bg_color = Color(0.133333, 0.152941, 0.180392, 0.94)
+border_color = Color(0.263, 0.298, 0.369, 1)
 corner_radius_top_left = 20
 corner_radius_top_right = 20
 corner_radius_bottom_left = 20
@@ -18,8 +18,8 @@ border_width_top = 1
 border_width_bottom = 1
 
 [sub_resource type="StyleBoxFlat" id="2"]
-bg_color = Color(0.975, 0.98, 0.99, 1)
-border_color = Color(0.86, 0.89, 0.94, 1)
+bg_color = Color(0.133333, 0.152941, 0.180392, 0.94)
+border_color = Color(0.263, 0.298, 0.369, 1)
 corner_radius_top_left = 12
 corner_radius_top_right = 12
 corner_radius_bottom_left = 12
@@ -34,8 +34,8 @@ border_width_top = 1
 border_width_bottom = 1
 
 [sub_resource type="StyleBoxFlat" id="3"]
-bg_color = Color(0.94, 0.95, 0.97, 1)
-border_color = Color(0.86, 0.89, 0.94, 1)
+bg_color = Color(0.168627, 0.188235, 0.231373, 0.96)
+border_color = Color(0.263, 0.298, 0.369, 1)
 corner_radius_top_left = 12
 corner_radius_top_right = 12
 corner_radius_bottom_left = 12
@@ -50,8 +50,8 @@ border_width_top = 1
 border_width_bottom = 1
 
 [sub_resource type="StyleBoxFlat" id="4"]
-bg_color = Color(0.90, 0.92, 0.95, 1)
-border_color = Color(0.86, 0.89, 0.94, 1)
+bg_color = Color(0.231373, 0.258824, 0.321569, 0.96)
+border_color = Color(0.263, 0.298, 0.369, 1)
 corner_radius_top_left = 12
 corner_radius_top_right = 12
 corner_radius_bottom_left = 12
@@ -77,8 +77,8 @@ content_margin_top = 10.0
 content_margin_bottom = 10.0
 
 [sub_resource type="StyleBoxFlat" id="6"]
-bg_color = Color(0.94, 0.96, 0.99, 1)
-border_color = Color(0.8, 0.84, 0.92, 1)
+bg_color = Color(0.168627, 0.188235, 0.231373, 0.96)
+border_color = Color(0.263, 0.298, 0.369, 1)
 corner_radius_top_left = 14
 corner_radius_top_right = 14
 corner_radius_bottom_left = 14
@@ -93,14 +93,14 @@ border_width_top = 1
 border_width_bottom = 1
 
 [sub_resource type="StyleBoxFlat" id="7"]
-bg_color = Color(0.18, 0.58, 0.78, 1)
+bg_color = Color(0.533, 0.753, 0.816, 1)
 corner_radius_top_left = 8
 corner_radius_top_right = 8
 corner_radius_bottom_left = 8
 corner_radius_bottom_right = 8
 
 [sub_resource type="StyleBoxFlat" id="8"]
-bg_color = Color(0.92, 0.95, 0.98, 1)
+bg_color = Color(0.231373, 0.258824, 0.321569, 0.96)
 corner_radius_top_left = 8
 corner_radius_top_right = 8
 corner_radius_bottom_left = 8
@@ -122,7 +122,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.02, 0.04, 0.08, 0.55)
+color = Color(0.094, 0.102, 0.122, 0.72)
 
 [node name="PanelContainer" type="Control" parent="."]
 layout_mode = 1
@@ -179,14 +179,14 @@ theme_override_constants/separation = 12
 [node name="Title" type="Label" parent="PanelContainer/Panel/VBoxContainer/HeaderContainer/HeaderBackground/HeaderContent"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.12, 0.68, 0.9, 1)
+theme_override_colors/font_color = Color(0.533, 0.753, 0.816, 1)
 theme_override_font_sizes/font_size = 30
 text = "Main Menu"
 
 [node name="CloseButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/HeaderContainer/HeaderBackground/HeaderContent"]
 custom_minimum_size = Vector2(100, 50)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.1, 0.12, 0.16, 1)
+theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
 theme_override_font_sizes/font_size = 20
 theme_override_styles/normal = SubResource("2")
 theme_override_styles/hover = SubResource("3")
@@ -197,7 +197,7 @@ text = "Close"
 [node name="LogbookButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/HeaderContainer/HeaderBackground/HeaderContent"]
 custom_minimum_size = Vector2(120, 50)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.1, 0.12, 0.16, 1)
+theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
 theme_override_font_sizes/font_size = 20
 theme_override_styles/normal = SubResource("2")
 theme_override_styles/hover = SubResource("3")
@@ -247,7 +247,7 @@ horizontal_alignment = 1
 
 [node name="CounterLabel" type="Label" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/CounterCard/CounterContainer"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.55, 0.72, 0.92, 1)
+theme_override_colors/font_color = Color(0.533, 0.753, 0.816, 1)
 theme_override_font_sizes/font_size = 48
 text = "0"
 horizontal_alignment = 1
@@ -260,7 +260,7 @@ alignment = 1
 [node name="DecreaseButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/CounterCard/CounterContainer/ButtonsContainer"]
 custom_minimum_size = Vector2(80, 80)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.1, 0.12, 0.16, 1)
+theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
 theme_override_font_sizes/font_size = 36
 theme_override_styles/normal = SubResource("2")
 theme_override_styles/hover = SubResource("3")
@@ -271,7 +271,7 @@ text = "-"
 [node name="IncreaseButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/CounterCard/CounterContainer/ButtonsContainer"]
 custom_minimum_size = Vector2(80, 80)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.1, 0.12, 0.16, 1)
+theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
 theme_override_font_sizes/font_size = 36
 theme_override_styles/normal = SubResource("2")
 theme_override_styles/hover = SubResource("3")
@@ -347,7 +347,7 @@ horizontal_alignment = 1
 [node name="ResetButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer"]
 custom_minimum_size = Vector2(160, 50)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.1, 0.12, 0.16, 1)
+theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
 theme_override_font_sizes/font_size = 20
 theme_override_styles/normal = SubResource("2")
 theme_override_styles/hover = SubResource("3")
@@ -358,7 +358,7 @@ text = "Reset All Data"
 [node name="ResetTutorialButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer"]
 custom_minimum_size = Vector2(160, 50)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.1, 0.12, 0.16, 1)
+theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
 theme_override_font_sizes/font_size = 20
 theme_override_styles/normal = SubResource("2")
 theme_override_styles/hover = SubResource("3")
@@ -374,17 +374,17 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.02, 0.04, 0.08, 0.68)
+color = Color(0.094, 0.102, 0.122, 0.78)
 
 [node name="LogbookPanelContainer" type="Control" parent="LogbookOverlay"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 216.0
-offset_top = 122.0
-offset_right = -216.0
-offset_bottom = -122.0
+offset_left = 168.0
+offset_top = 108.0
+offset_right = -168.0
+offset_bottom = -108.0
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -402,13 +402,13 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 24.0
-offset_top = 24.0
-offset_right = -24.0
-offset_bottom = -24.0
+offset_left = 28.0
+offset_top = 28.0
+offset_right = -28.0
+offset_bottom = -28.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 16
 
 [node name="Header" type="HBoxContainer" parent="LogbookOverlay/LogbookPanelContainer/LogbookPanel/VBoxContainer"]
 layout_mode = 2
@@ -422,7 +422,7 @@ text = "Mission Logbook"
 [node name="CloseLogbookButton" type="Button" parent="LogbookOverlay/LogbookPanelContainer/LogbookPanel/VBoxContainer/Header"]
 custom_minimum_size = Vector2(100, 44)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.1, 0.12, 0.16, 1)
+theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
 theme_override_font_sizes/font_size = 18
 theme_override_styles/normal = SubResource("2")
 theme_override_styles/hover = SubResource("3")
@@ -433,6 +433,12 @@ text = "Close"
 [node name="HSeparator" type="HSeparator" parent="LogbookOverlay/LogbookPanelContainer/LogbookPanel/VBoxContainer"]
 layout_mode = 2
 
+[node name="Subtitle" type="Label" parent="LogbookOverlay/LogbookPanelContainer/LogbookPanel/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.639, 0.694, 0.784, 1)
+theme_override_font_sizes/font_size = 16
+text = "Newest entries first. Mission details are grouped by section."
+
 [node name="LogbookScroll" type="ScrollContainer" parent="LogbookOverlay/LogbookPanelContainer/LogbookPanel/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
@@ -442,4 +448,4 @@ scroll_horizontal_enabled = false
 [node name="Entries" type="VBoxContainer" parent="LogbookOverlay/LogbookPanelContainer/LogbookPanel/VBoxContainer/LogbookScroll"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 10
+theme_override_constants/separation = 16

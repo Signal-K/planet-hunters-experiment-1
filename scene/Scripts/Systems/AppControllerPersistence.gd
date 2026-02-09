@@ -9,6 +9,8 @@ const FRANC_BALANCE_KEY := "balance"
 const EXPERIENCE_SECTION := "experience"
 const EXPERIENCE_XP_KEY := "xp"
 const EXPERIENCE_LEVEL_KEY := "level"
+const TUTORIAL_ACTIONS_SECTION := "tutorial"
+const TUTORIAL_ACTIONS_KEY := "actions_seen"
 
 func save_tutorial_completed(value: bool) -> void:
 	var cfg = ConfigFile.new()
@@ -31,6 +33,32 @@ func load_tutorial_completed(default_value: bool) -> Dictionary:
 		return {"loaded": false, "value": default_value}
 	print("[AppController] No saved tutorial config (or failed to load): ", err)
 	return {"loaded": false, "value": default_value}
+
+func save_tutorial_actions_seen(actions_seen: Dictionary) -> void:
+	var cfg = ConfigFile.new()
+	var err = cfg.load(TUTORIAL_CONFIG_PATH)
+	if err != OK and err != ERR_FILE_NOT_FOUND:
+		print("[AppController] Failed to load tutorial config before saving actions: ", err)
+	cfg.set_value(TUTORIAL_ACTIONS_SECTION, TUTORIAL_ACTIONS_KEY, actions_seen.duplicate(true))
+	err = cfg.save(TUTORIAL_CONFIG_PATH)
+	if err != OK:
+		print("[AppController] Failed to save tutorial actions_seen: ", err)
+	else:
+		print("[AppController] Tutorial actions_seen saved (count=", actions_seen.size(), ")")
+
+func load_tutorial_actions_seen() -> Dictionary:
+	var cfg = ConfigFile.new()
+	var err = cfg.load(TUTORIAL_CONFIG_PATH)
+	if err != OK:
+		if err != ERR_FILE_NOT_FOUND:
+			print("[AppController] Failed to load tutorial actions config: ", err)
+		return {}
+	if not cfg.has_section_key(TUTORIAL_ACTIONS_SECTION, TUTORIAL_ACTIONS_KEY):
+		return {}
+	var raw_actions = cfg.get_value(TUTORIAL_ACTIONS_SECTION, TUTORIAL_ACTIONS_KEY, {})
+	if typeof(raw_actions) != TYPE_DICTIONARY:
+		return {}
+	return raw_actions.duplicate(true)
 
 func save_franc_balance(value: int) -> void:
 	var cfg = ConfigFile.new()

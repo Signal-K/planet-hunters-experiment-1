@@ -13,10 +13,6 @@ const RUNTIME_CONFIG_PATH: String = "res://supabase.runtime.json"
 # This can be useful for testing mobile builds against local development
 const FORCE_LOCAL_MODE: bool = false
 
-# Set this to true to use production in the editor (recommended)
-# Default false so local dev Supabase (localhost) is used when running in editor
-const USE_PRODUCTION_IN_EDITOR: bool = false
-
 static var _instance: SupabaseClient
 
 static func get_instance() -> SupabaseClient:
@@ -29,8 +25,17 @@ static func get_instance() -> SupabaseClient:
 		var runtime_credentials = _load_runtime_credentials()
 		var runtime_url = str(runtime_credentials.get("url", ""))
 		var runtime_key = str(runtime_credentials.get("key", ""))
+		var in_editor_runtime = _is_running_from_editor()
 
-		if env_url != "" and env_key != "":
+		if FORCE_LOCAL_MODE:
+			# Explicit override for local mode.
+			preload("res://Scripts/Utils/Logger.gd").d("SupabaseClient: Using LOCAL development credentials (FORCE_LOCAL_MODE enabled)")
+			print("SupabaseClient: FORCE_LOCAL_MODE -> ", _instance.SUPABASE_URL)
+		elif in_editor_runtime:
+			# When running from the Godot editor (Play/F5), always use local credentials.
+			preload("res://Scripts/Utils/Logger.gd").d("SupabaseClient: Using LOCAL development credentials (editor runtime)")
+			print("SupabaseClient: Editor runtime detected; using LOCAL credentials -> ", _instance.SUPABASE_URL)
+		elif env_url != "" and env_key != "":
 			# Use environment variables (GitHub secrets in CI)
 			_instance.SUPABASE_URL = env_url
 			_instance.SUPABASE_KEY = env_key
@@ -42,13 +47,6 @@ static func get_instance() -> SupabaseClient:
 			_instance.SUPABASE_KEY = runtime_key
 			preload("res://Scripts/Utils/Logger.gd").d("SupabaseClient: Using runtime config credentials")
 			print("SupabaseClient: Using runtime config credentials -> ", _instance.SUPABASE_URL)
-		elif FORCE_LOCAL_MODE:
-			# Explicitly using local mode
-			preload("res://Scripts/Utils/Logger.gd").d("SupabaseClient: Using LOCAL development credentials (FORCE_LOCAL_MODE enabled)")
-			print("SupabaseClient: FORCE_LOCAL_MODE -> ", _instance.SUPABASE_URL)
-		elif USE_PRODUCTION_IN_EDITOR and Engine.is_editor_hint():
-			preload("res://Scripts/Utils/Logger.gd").d("SupabaseClient: Production editor mode enabled, but no runtime config found")
-			print("SupabaseClient: Production editor mode enabled, but runtime config is missing")
 		elif _should_use_production():
 			preload("res://Scripts/Utils/Logger.gd").d("SupabaseClient: Production mode requested, but no runtime config found")
 			print("SupabaseClient: Production mode requested, but runtime config is missing")
@@ -88,6 +86,10 @@ static func _load_runtime_credentials() -> Dictionary:
 		"url": cfg_url,
 		"key": cfg_key
 	}
+
+static func _is_running_from_editor() -> bool:
+	# True during Play/F5 from editor; false in exported/mobile runtime.
+	return OS.has_feature("editor")
 
 ## Determine if we should use production Supabase credentials
 static func _should_use_production() -> bool:

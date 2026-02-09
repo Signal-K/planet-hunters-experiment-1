@@ -1,6 +1,6 @@
 {
   "taskId": "ky7wz5",
-  "currentVersion": 3,
+  "currentVersion": 7,
   "versions": [
     {
       "id": "v1",
@@ -84,6 +84,121 @@
         ],
         "acceptanceCriteria": [],
         "implementationNotes": "Great, that works!\\\nNow we just need to get the annotation working for planets, too.\n\n✓ Added level-2 planet gate + one-time unlock overlay + auto-focus to planet scan\n\n✓ Level-2 overlay lists unlocks (planet discovery, rockets, subcontractors, mission) and CTA auto-focuses planet scan"
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "ky7wz5",
+      "version": 4,
+      "timestamp": "2026-02-09T01:26:13.123Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "newValue": "1. Review planet vs asteroid detail/annotation data flow\n2. Implement missing planet annotation compatibility in detail tooling\n3. Add Godot tests for planet anomaly id normalization + annotation key stability"
+        }
+      ],
+      "snapshot": {
+        "title": "Allow users to switch between planets & asteroids",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@Liam",
+        "labels": [
+          "Supabase",
+          "Database",
+          "Planets",
+          "UI",
+          "Anomalies"
+        ],
+        "acceptanceCriteria": [],
+        "implementationPlan": "1. Review planet vs asteroid detail/annotation data flow\n2. Implement missing planet annotation compatibility in detail tooling\n3. Add Godot tests for planet anomaly id normalization + annotation key stability",
+        "implementationNotes": "Great, that works!\\\nNow we just need to get the annotation working for planets, too.\n\n✓ Added level-2 planet gate + one-time unlock overlay + auto-focus to planet scan\n\n✓ Level-2 overlay lists unlocks (planet discovery, rockets, subcontractors, mission) and CTA auto-focuses planet scan"
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "ky7wz5",
+      "version": 5,
+      "timestamp": "2026-02-09T01:36:05.495Z",
+      "changes": [
+        {
+          "field": "assignee",
+          "oldValue": "@Liam",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Allow users to switch between planets & asteroids",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "Supabase",
+          "Database",
+          "Planets",
+          "UI",
+          "Anomalies"
+        ],
+        "acceptanceCriteria": [],
+        "implementationPlan": "1. Review planet vs asteroid detail/annotation data flow\n2. Implement missing planet annotation compatibility in detail tooling\n3. Add Godot tests for planet anomaly id normalization + annotation key stability",
+        "implementationNotes": "Great, that works!\\\nNow we just need to get the annotation working for planets, too.\n\n✓ Added level-2 planet gate + one-time unlock overlay + auto-focus to planet scan\n\n✓ Level-2 overlay lists unlocks (planet discovery, rockets, subcontractors, mission) and CTA auto-focuses planet scan"
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "ky7wz5",
+      "version": 6,
+      "timestamp": "2026-02-09T01:36:09.905Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "Great, that works!\\\nNow we just need to get the annotation working for planets, too.\n\n✓ Added level-2 planet gate + one-time unlock overlay + auto-focus to planet scan\n\n✓ Level-2 overlay lists unlocks (planet discovery, rockets, subcontractors, mission) and CTA auto-focuses planet scan",
+          "newValue": "Great, that works!\\\nNow we just need to get the annotation working for planets, too.\n\n✓ Added level-2 planet gate + one-time unlock overlay + auto-focus to planet scan\n\n✓ Level-2 overlay lists unlocks (planet discovery, rockets, subcontractors, mission) and CTA auto-focuses planet scan\n\n✓ Planet annotation IDs now normalize from ticId (not DB row id) and planet-set aliases are supported. Added tests/run_annotation_model_tests.gd (3/3 pass)."
+        }
+      ],
+      "snapshot": {
+        "title": "Allow users to switch between planets & asteroids",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "Supabase",
+          "Database",
+          "Planets",
+          "UI",
+          "Anomalies"
+        ],
+        "acceptanceCriteria": [],
+        "implementationPlan": "1. Review planet vs asteroid detail/annotation data flow\n2. Implement missing planet annotation compatibility in detail tooling\n3. Add Godot tests for planet anomaly id normalization + annotation key stability",
+        "implementationNotes": "Great, that works!\\\nNow we just need to get the annotation working for planets, too.\n\n✓ Added level-2 planet gate + one-time unlock overlay + auto-focus to planet scan\n\n✓ Level-2 overlay lists unlocks (planet discovery, rockets, subcontractors, mission) and CTA auto-focuses planet scan\n\n✓ Planet annotation IDs now normalize from ticId (not DB row id) and planet-set aliases are supported. Added tests/run_annotation_model_tests.gd (3/3 pass)."
+      }
+    },
+    {
+      "id": "v7",
+      "taskId": "ky7wz5",
+      "version": 7,
+      "timestamp": "2026-02-09T01:36:14.301Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Allow users to switch between planets & asteroids",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "Supabase",
+          "Database",
+          "Planets",
+          "UI",
+          "Anomalies"
+        ],
+        "acceptanceCriteria": [],
+        "implementationPlan": "1. Review planet vs asteroid detail/annotation data flow\n2. Implement missing planet annotation compatibility in detail tooling\n3. Add Godot tests for planet anomaly id normalization + annotation key stability",
+        "implementationNotes": "Great, that works!\\\nNow we just need to get the annotation working for planets, too.\n\n✓ Added level-2 planet gate + one-time unlock overlay + auto-focus to planet scan\n\n✓ Level-2 overlay lists unlocks (planet discovery, rockets, subcontractors, mission) and CTA auto-focuses planet scan\n\n✓ Planet annotation IDs now normalize from ticId (not DB row id) and planet-set aliases are supported. Added tests/run_annotation_model_tests.gd (3/3 pass)."
       }
     }
   ]

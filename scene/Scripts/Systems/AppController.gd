@@ -5,12 +5,14 @@ extends Node
 signal window_status_update(message: String)
 signal counter_updated(new_value: int)
 signal tutorial_completed_updated(is_completed: bool)
+signal tutorial_hint_requested(message: String)
 signal franc_balance_updated(new_value: int)
 signal experience_updated(xp: int, level: int)
 signal rockets_reset()
 
 var counter: int = 0
 var tutorial_completed: bool = false
+var tutorial_actions_seen: Dictionary = {}
 var franc_balance: int = 10000000000
 var experience_xp: int = 0
 var experience_level: int = 1
@@ -24,6 +26,17 @@ var _persistence := AppControllerPersistence.new()
 const BASE_XP_TO_LEVEL := 10
 const XP_AWARD_LAUNCH := 5
 const XP_AWARD_SCAN := 2
+const TUTORIAL_FLOW_VERSION := 2
+const TUTORIAL_FLOW_VERSION_KEY := "__tutorial_flow_version"
+const TUTORIAL_FLOW_INDEX_KEY := "__tutorial_flow_index"
+const TUTORIAL_SEQUENCE := [
+	"scan_targets",
+	"create_rocket",
+	"select_launch_target",
+	"launch_rocket_from_earth",
+	"mine_target",
+	"return_rocket_home"
+]
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -31,6 +44,7 @@ func _ready() -> void:
 	print("AppController ready, tutorial_completed initialized to: ", tutorial_completed)
 	# Load persisted tutorial state from disk (if present)
 	load_tutorial_completed()
+	load_tutorial_actions_seen()
 	# Load persisted franc balance from disk (if present)
 	load_franc_balance()
 	# Load persisted experience from disk (if present)
@@ -155,6 +169,7 @@ func _on_reset_all() -> void:
 	# Reset all state
 	counter = 0
 	tutorial_completed = false
+	tutorial_actions_seen = {}
 	franc_balance = 10000000000
 	experience_xp = 0
 	experience_level = 1
@@ -166,6 +181,7 @@ func _on_reset_all() -> void:
 
 	# Persist tutorial reset
 	save_tutorial_completed()
+	save_tutorial_actions_seen()
 	save_franc_balance()
 	save_experience()
 	franc_balance_updated.emit(franc_balance)
@@ -182,12 +198,14 @@ func _on_reset_all() -> void:
 func _on_reset_tutorial() -> void:
 	print("Reset tutorial requested from Godot UI")
 	tutorial_completed = false
+	tutorial_actions_seen = {}
 	tutorial_completed_updated.emit(tutorial_completed)
 	# TODO: Notify React Native to reset tutorial state as well
 	print("Tutorial state reset in Godot. Notify React Native to do the same.")
 
 	# Persist reset
 	save_tutorial_completed()
+	save_tutorial_actions_seen()
 
 func has_signal_connections(signal_name: String) -> bool:
 	"""Check if signal has connections (for React Native compatibility)"""
@@ -206,6 +224,62 @@ func set_tutorial_completed_from_react(is_completed: bool) -> void:
 func get_tutorial_completed() -> bool:
 	"""Get tutorial completed status"""
 	return tutorial_completed
+
+func save_tutorial_actions_seen() -> void:
+	_persistence.save_tutorial_actions_seen(tutorial_actions_seen)
+
+func load_tutorial_actions_seen() -> void:
+	tutorial_actions_seen = _persistence.load_tutorial_actions_seen()
+	_migrate_tutorial_flow_state_if_needed()
+
+func clear_tutorial_actions_seen() -> void:
+	tutorial_actions_seen = {}
+	save_tutorial_actions_seen()
+
+func has_seen_tutorial_action(action_key: String) -> bool:
+	if action_key == "":
+		return true
+	return bool(tutorial_actions_seen.get(action_key, false))
+
+func mark_tutorial_action_seen(action_key: String) -> bool:
+	if action_key == "":
+		return false
+	if has_seen_tutorial_action(action_key):
+		return false
+	tutorial_actions_seen[action_key] = true
+	save_tutorial_actions_seen()
+	return true
+
+func show_tutorial_hint_once(action_key: String, message: String) -> bool:
+	if action_key == "" or message == "":
+		return false
+	if tutorial_completed:
+		return false
+	var action_index = TUTORIAL_SEQUENCE.find(action_key)
+	if action_index == -1:
+		return false
+	var expected = int(tutorial_actions_seen.get(TUTORIAL_FLOW_INDEX_KEY, 0))
+	if action_index != expected:
+		return false
+	var is_first_time = mark_tutorial_action_seen(action_key)
+	if is_first_time:
+		tutorial_actions_seen[TUTORIAL_FLOW_INDEX_KEY] = action_index + 1
+		save_tutorial_actions_seen()
+		tutorial_hint_requested.emit(message)
+	return is_first_time
+
+func _migrate_tutorial_flow_state_if_needed() -> void:
+	var version = int(tutorial_actions_seen.get(TUTORIAL_FLOW_VERSION_KEY, 0))
+	if version >= TUTORIAL_FLOW_VERSION:
+		if not tutorial_actions_seen.has(TUTORIAL_FLOW_INDEX_KEY):
+			tutorial_actions_seen[TUTORIAL_FLOW_INDEX_KEY] = 0
+			save_tutorial_actions_seen()
+		return
+	tutorial_actions_seen = {
+		TUTORIAL_FLOW_VERSION_KEY: TUTORIAL_FLOW_VERSION,
+		TUTORIAL_FLOW_INDEX_KEY: 0
+	}
+	save_tutorial_actions_seen()
 
 
 ### Persistence helpers

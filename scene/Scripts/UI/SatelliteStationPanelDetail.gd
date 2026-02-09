@@ -57,9 +57,9 @@ func show_detail(anomaly: Dictionary) -> void:
 	# Hide toggle switch
 	_toggle_switch.visible = false
 
-	# Change panel background to specified gray (#7f7f7f)
+	# Keep detail view on the same dark panel palette as the rest of the UI.
 	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
-	panel_style.apply_panel(_panel, Color(0.94, 0.95, 0.97, 1))
+	panel_style.apply_panel(_panel, panel_style.ACCENT_SOFT)
 
 	# Hide the list container contents
 	_loading_container.visible = false

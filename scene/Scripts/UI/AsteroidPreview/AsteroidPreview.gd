@@ -10,6 +10,12 @@ const TARGET_LEVEL_SIZE := 5
 const NumberFormat = preload("res://Scripts/Utils/NumberFormat.gd")
 const RETURN_SCENE_PATH := "res://Scenes/Transitions/rocket_return.tscn"
 const ROCKET_TIP_PADDING_PX := 8.0
+const ACTION_OPEN_PREVIEW := "open_asteroid_preview"
+const ACTION_MINE_TARGET := "mine_target"
+const ACTION_RETURN_HOME := "return_rocket_home"
+const HINT_OPEN_PREVIEW := "This preview shows your rocket at the target and what you can collect."
+const HINT_MINE_TARGET := "Press Mine to collect minerals from this target."
+const HINT_RETURN_HOME := "Press Return Home to send this rocket back to Earth with its cargo."
 
 @onready var asteroid_pivot: Node3D = $AsteroidPivot
 @onready var asteroid_mesh: MeshInstance3D = $AsteroidPivot/Asteroid
@@ -89,12 +95,12 @@ func _ready() -> void:
 	_setup_orbit_preview(target_id, rocket_id)
 	_generate_asteroid(target_id)
 	_update_inventory_ui()
+	_show_tutorial_hint_once(ACTION_OPEN_PREVIEW, HINT_OPEN_PREVIEW)
 
 	if return_home_button:
 		return_home_button.pressed.connect(_on_return_home_pressed)
 	if mine_button:
 		mine_button.pressed.connect(_on_mine_pressed)
-		mine_button.text = "Mine"
 		_update_mine_button_state()
 	if mine_cooldown_label:
 		panel_style.apply_muted(mine_cooldown_label)
@@ -141,6 +147,7 @@ func _on_back_pressed() -> void:
 func _on_return_home_pressed() -> void:
 	if _current_rocket_id == "":
 		return
+	_show_tutorial_hint_once(ACTION_RETURN_HOME, HINT_RETURN_HOME)
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	if rm:
 		rm.set_returned_mission(_current_rocket_id, _current_target_id, _current_target_label, _current_target_type)
@@ -152,6 +159,7 @@ func _on_mine_pressed() -> void:
 	var now = Time.get_ticks_msec()
 	if now < _mine_ready_at:
 		return
+	_show_tutorial_hint_once(ACTION_MINE_TARGET, HINT_MINE_TARGET)
 	_mine_ready_at = now + 6000
 	if mine_button:
 		mine_button.text = "Mining..."
@@ -259,6 +267,11 @@ func _apply_mining_yield() -> void:
 	var state = inventory.apply_mining(_current_target_id, capacity, minerals)
 	_update_inventory_ui(state)
 
+func _show_tutorial_hint_once(action_key: String, message: String) -> void:
+	var app = get_tree().root.find_child("AppController", true, false)
+	if app and app.has_method("show_tutorial_hint_once"):
+		app.show_tutorial_hint_once(action_key, message)
+
 func _update_inventory_ui(state_override: Dictionary = {}) -> void:
 	if inventory_list == null:
 		return
@@ -279,7 +292,7 @@ func _update_inventory_ui(state_override: Dictionary = {}) -> void:
 	var total_collected := 0
 	for v in collected.values():
 		total_collected += int(v)
-		inventory_total.text = "Total Collected: %s kg" % NumberFormat.commas(str(total_collected))
+	inventory_total.text = "Total Collected: %s kg" % NumberFormat.commas(str(total_collected))
 	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
 	for name in collected.keys():
 		var row = HBoxContainer.new()

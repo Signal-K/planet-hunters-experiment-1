@@ -1,13 +1,13 @@
 ---
 id: vhjpr9
 title: Explain each structure to the user
-status: blocked
+status: todo
 priority: medium
 labels:
   - Tutorial
   - Structures
 createdAt: '2026-01-20T01:58:33.899Z'
-updatedAt: '2026-01-20T01:58:33.899Z'
+updatedAt: '2026-02-09T01:43:06.729Z'
 timeSpent: 0
 parent: 5zp87f
 ---

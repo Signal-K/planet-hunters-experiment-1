@@ -1,7 +1,16 @@
 extends RefCounted
 class_name AsteroidDetailModel
 
-func normalize_anomaly_id(anomaly: Dictionary) -> String:
+func normalize_anomaly_id(anomaly: Dictionary, is_planet: bool = false) -> String:
+	if is_planet:
+		var planet_tic = str(anomaly.get("ticId", ""))
+		if planet_tic != "":
+			var tic_digits := ""
+			for ch in planet_tic:
+				if ch >= "0" and ch <= "9":
+					tic_digits += ch
+			if tic_digits != "":
+				return tic_digits
 	# Prefer the numeric DB 'id' when available.
 	var raw_id = anomaly.get("id", "")
 	if raw_id != null and str(raw_id) != "":
@@ -24,8 +33,8 @@ func normalize_anomaly_id(anomaly: Dictionary) -> String:
 	return anomaly_id
 
 func is_planet(anomaly: Dictionary) -> bool:
-	var anomaly_set = anomaly.get("anomalySet", "active-asteroids")
-	return anomaly_set == "telescope-tess"
+	var anomaly_set = str(anomaly.get("anomalySet", "active-asteroids")).to_lower()
+	return anomaly_set == "telescope-tess" or anomaly_set == "planets" or anomaly_set == "planet"
 
 func build_title(anomaly: Dictionary, anomaly_id: String, is_planet: bool) -> String:
 	var tic_id = anomaly.get("ticId", "")
