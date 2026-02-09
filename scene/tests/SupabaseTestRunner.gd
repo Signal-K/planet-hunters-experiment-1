@@ -5,6 +5,8 @@ extends SceneTree
 const TestReporter = preload("res://tests/TestReporter.gd")
 var reporter := TestReporter.new()
 var _network_asteroid_count := -1
+var _resolved_supabase_url := ""
+var _resolved_supabase_key := ""
 
 func _init():
 	reporter.start_suite("Supabase Integration", {
@@ -75,6 +77,7 @@ func test_fetch_asteroids():
 	var env_key = OS.get_environment("SUPABASE_ANON_KEY")
 	if env_url != "":
 		client.SUPABASE_URL = env_url
+		_resolved_supabase_url = env_url
 		print("  🔐 Using SUPABASE_URL from environment")
 	else:
 		# Use production credentials by default in tests
@@ -82,9 +85,12 @@ func test_fetch_asteroids():
 		var prod_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhsdWZwdHdoemtwa2tqenRpbXpvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTYyOTk3NTUsImV4cCI6MjAzMTg3NTc1NX0.v_NDVWjIU_lJQSPbJ_Y6GkW3axrQWKXfXVsBEAbFv_I"
 		client.SUPABASE_URL = prod_url
 		client.SUPABASE_KEY = prod_key
+		_resolved_supabase_url = prod_url
+		_resolved_supabase_key = prod_key
 		print("  🔐 Using PRODUCTION Supabase credentials")
 	if env_key != "":
 		client.SUPABASE_KEY = env_key
+		_resolved_supabase_key = env_key
 		print("  🔐 Using SUPABASE_ANON_KEY from environment")
 	
 	# Add client to root and ensure tree is ready
@@ -202,6 +208,12 @@ func test_asteroid_selection():
 	if panel == null:
 		fail(test_name, "Could not instantiate SatelliteStationPanel")
 		return
+	# Keep panel fetch path aligned with credentials that already worked in test_fetch_asteroids.
+	var supabase_singleton = preload("res://Scripts/Systems/SupabaseClient.gd").get_instance()
+	if supabase_singleton and _resolved_supabase_url != "" and _resolved_supabase_key != "":
+		supabase_singleton.SUPABASE_URL = _resolved_supabase_url
+		supabase_singleton.SUPABASE_KEY = _resolved_supabase_key
+
 	if panel.has_method("set_local_only"):
 		var use_local_only = _network_asteroid_count <= 0
 		panel.set_local_only(use_local_only)

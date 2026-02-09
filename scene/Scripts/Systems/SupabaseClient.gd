@@ -31,10 +31,6 @@ static func get_instance() -> SupabaseClient:
 			# Explicit override for local mode.
 			preload("res://Scripts/Utils/Logger.gd").d("SupabaseClient: Using LOCAL development credentials (FORCE_LOCAL_MODE enabled)")
 			print("SupabaseClient: FORCE_LOCAL_MODE -> ", _instance.SUPABASE_URL)
-		elif in_editor_runtime:
-			# When running from the Godot editor (Play/F5), always use local credentials.
-			preload("res://Scripts/Utils/Logger.gd").d("SupabaseClient: Using LOCAL development credentials (editor runtime)")
-			print("SupabaseClient: Editor runtime detected; using LOCAL credentials -> ", _instance.SUPABASE_URL)
 		elif env_url != "" and env_key != "":
 			# Use environment variables (GitHub secrets in CI)
 			_instance.SUPABASE_URL = env_url
@@ -47,6 +43,10 @@ static func get_instance() -> SupabaseClient:
 			_instance.SUPABASE_KEY = runtime_key
 			preload("res://Scripts/Utils/Logger.gd").d("SupabaseClient: Using runtime config credentials")
 			print("SupabaseClient: Using runtime config credentials -> ", _instance.SUPABASE_URL)
+		elif in_editor_runtime:
+			# In editor runtime with no injected credentials, default to local development.
+			preload("res://Scripts/Utils/Logger.gd").d("SupabaseClient: Using LOCAL development credentials (editor runtime)")
+			print("SupabaseClient: Editor runtime detected; using LOCAL credentials -> ", _instance.SUPABASE_URL)
 		elif _should_use_production():
 			preload("res://Scripts/Utils/Logger.gd").d("SupabaseClient: Production mode requested, but no runtime config found")
 			print("SupabaseClient: Production mode requested, but runtime config is missing")
