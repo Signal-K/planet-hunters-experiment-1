@@ -16,20 +16,10 @@ func _ready() -> void:
 	_load_balance()
 	print("FrancBalance: Balance loaded = ", balance)
 	
-	# Style the button
-	_style_balance_button()
-	
 	# Setup UI
 	_setup_ui_connections()
 	_update_display()
 	print("FrancBalance: Setup complete")
-
-func _style_balance_button() -> void:
-	"""Apply styling to the balance button"""
-	if not balance_button:
-		return
-	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
-	panel_style.apply_button(balance_button, false)
 
 func _find_app_controller() -> void:
 	"""Find the AppController node in the scene tree"""
@@ -71,13 +61,9 @@ func _setup_ui_connections() -> void:
 	
 	if add_btn:
 		add_btn.pressed.connect(func(): _modify_balance(1000000000))
-		var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
-		panel_style.apply_button(add_btn, false)
 		print("FrancBalance: Add button connected")
 	if sub_btn:
 		sub_btn.pressed.connect(func(): _modify_balance(-1000000000))
-		var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
-		panel_style.apply_button(sub_btn, false)
 		print("FrancBalance: Sub button connected")
 
 func _update_display() -> void:

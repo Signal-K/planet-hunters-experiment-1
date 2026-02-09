@@ -96,6 +96,16 @@ func _show_new_mission_panel() -> void:
 
 func _show_generic_panel(panel_type: PanelType) -> void:
 	"""Show a generic styled panel"""
+	if panel_type == PanelType.MARKET:
+		var market_scene = load("res://Scenes/UI/SubcontractorsPanel.tscn")
+		if market_scene:
+			var market_instance = market_scene.instantiate()
+			add_child(market_instance)
+			if market_instance.has_signal("panel_closed"):
+				market_instance.panel_closed.connect(_on_panel_closed)
+			print("Market panel opened: Subcontractors")
+			return
+		print("Failed to load SubcontractorsPanel scene for Market")
 	var panel = PanelManager.create_styled_panel(panel_titles[panel_type], get_tree())
 	add_child(panel)
 	print("Panel opened: ", panel_titles[panel_type])

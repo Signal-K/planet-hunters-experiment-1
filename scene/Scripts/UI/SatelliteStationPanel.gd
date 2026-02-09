@@ -7,7 +7,16 @@ const REFRESH_LOAD_TIME := 10.0  # seconds for refresh
 const MAX_ANOMALIES := 5
 const ASTEROID_SET := "active-asteroids"
 const PLANET_SET := "telescope-tess"
+const PLANET_UNLOCK_LEVEL := 2
 const MIN_DISPLAY_TIME := 0.5
+const UNLOCK_CONFIG_PATH := "user://satellite_station.cfg"
+const UNLOCK_CONFIG_SECTION := "unlocks"
+const UNLOCK_LEVEL2_SEEN_KEY := "level2_overlay_seen"
+const LEVEL_UNLOCK_MISSIONS := [
+	{"level": 3, "name": "Sell cargo on Earth"}
+]
+const ACTION_SCAN_TARGETS := "scan_targets"
+const HINT_SCAN_TARGETS := "Scan space first to find targets for your missions."
 
 const SatelliteStationPanelData = preload("res://Scripts/UI/SatelliteStationPanelData.gd")
 const SatelliteStationPanelList = preload("res://Scripts/UI/SatelliteStationPanelList.gd")
@@ -18,6 +27,8 @@ var pending_anomalies := []
 var current_mode: String = "asteroids"  # Default mode
 var local_only: bool = false
 var use_archived_detail: bool = false
+var _player_level: int = 1
+var _unlock_overlay: ColorRect = null
 var _data := SatelliteStationPanelData.new()
 var _list := SatelliteStationPanelList.new()
 var _detail := SatelliteStationPanelDetail.new()
@@ -82,9 +93,15 @@ func _ready():
 	
 	# Connect toggle switch
 	toggle_switch.pressed.connect(_on_toggle_switch_pressed)
+	_connect_experience_updates()
+	_refresh_player_level()
+	_refresh_planet_unlock_ui(false)
 
 	# Start initial load (annotation features archived)
 	_start_loading(INITIAL_LOAD_TIME)
+	if local_only:
+		_apply_local_anomalies()
+		return
 
 	# Default behavior: fetch anomalies from Supabase
 	print("SatelliteStationPanel: calling _fetch_anomalies() — starting fetch")
@@ -144,6 +161,7 @@ func _on_anomalies_fetched(data: Array, error: String):
 	var target_type = "planets" if current_mode == "planets" else "asteroids"
 	status_label.text = "Status: %d %s detected" % [data.size(), target_type]
 	_loading.mark_anomalies_ready()
+	_show_tutorial_hint_once(ACTION_SCAN_TARGETS, HINT_SCAN_TARGETS)
 	_award_scan_experience()
 
 	# Persist a lightweight list of detected targets for other UI (e.g., Launchpad)
@@ -195,27 +213,72 @@ func _award_scan_experience() -> void:
 	if app_controller and app_controller.has_method("award_scan_experience"):
 		app_controller.award_scan_experience()
 
+func _show_tutorial_hint_once(action_key: String, message: String) -> void:
+	var app_controller = get_tree().root.find_child("AppController", true, false)
+	if app_controller and app_controller.has_method("show_tutorial_hint_once"):
+		app_controller.show_tutorial_hint_once(action_key, message)
+
 func _on_refresh_pressed():
 	_start_loading(REFRESH_LOAD_TIME)
+	if local_only:
+		_apply_local_anomalies()
+		return
 	_fetch_anomalies()
 
 func _on_toggle_switch_pressed():
 	"""Handle toggle switch between asteroids and planets"""
+	if _player_level < PLANET_UNLOCK_LEVEL:
+		status_label.text = "Status: Planets unlock at Level %d" % PLANET_UNLOCK_LEVEL
+		return
 	if current_mode == "asteroids":
 		current_mode = "planets"
 		toggle_switch.text = "Switch to Asteroids"
+		if local_only:
+			_start_loading(REFRESH_LOAD_TIME)
+			_apply_local_anomalies()
+			return
 		# Fetch and display planets
 		_start_loading(REFRESH_LOAD_TIME)
 		_fetch_anomalies()
 	else:
 		current_mode = "asteroids"
 		toggle_switch.text = "Switch to Planets"
+		if local_only:
+			_start_loading(REFRESH_LOAD_TIME)
+			_apply_local_anomalies()
+			return
 		# Fetch and display asteroids
 		_start_loading(REFRESH_LOAD_TIME)
 		_fetch_anomalies()
 
 func _get_current_mode() -> String:
 	return current_mode
+
+func _apply_local_anomalies() -> void:
+	pending_anomalies = _build_local_anomalies()
+	var target_type = "planets" if current_mode == "planets" else "asteroids"
+	status_label.text = "Status: %d local %s loaded" % [pending_anomalies.size(), target_type]
+	_loading.mark_anomalies_ready()
+
+func _build_local_anomalies() -> Array:
+	if current_mode == "planets":
+		return [
+			{
+				"id": 9101,
+				"ticId": "9101",
+				"content": "9101",
+				"anomalytype": "telescope_tess",
+				"temperature": 290
+			}
+		]
+	return [
+		{
+			"id": 4201,
+			"content": "4201",
+			"anomalytype": "active-asteroids",
+			"classification_status": "confirmed"
+		}
+	]
 
 
 func _process(delta: float) -> void:
@@ -229,3 +292,155 @@ func _on_background_input(event: InputEvent):
 	if event is InputEventMouseButton and event.pressed:
 		panel_closed.emit()
 		queue_free()
+
+func _connect_experience_updates() -> void:
+	var app = _get_app_controller()
+	if app and app.has_signal("experience_updated") and not app.experience_updated.is_connected(_on_experience_updated):
+		app.experience_updated.connect(_on_experience_updated)
+
+func _on_experience_updated(_xp: int, level: int) -> void:
+	var previous_level = _player_level
+	_player_level = max(level, 1)
+	var crossed_planet_unlock = previous_level < PLANET_UNLOCK_LEVEL and _player_level >= PLANET_UNLOCK_LEVEL
+	_refresh_planet_unlock_ui(crossed_planet_unlock)
+
+func _refresh_player_level() -> void:
+	var app = _get_app_controller()
+	if app and app.has_method("get_experience_level"):
+		_player_level = max(int(app.get_experience_level()), 1)
+	else:
+		_player_level = 1
+
+func _refresh_planet_unlock_ui(show_overlay_if_needed: bool) -> void:
+	var planets_unlocked = _player_level >= PLANET_UNLOCK_LEVEL
+	if not planets_unlocked:
+		current_mode = "asteroids"
+		toggle_switch.disabled = true
+		toggle_switch.text = "Planets unlock at Level %d" % PLANET_UNLOCK_LEVEL
+		if not _loading.is_loading():
+			status_label.text = "Status: Reach Level %d to unlock planet discovery" % PLANET_UNLOCK_LEVEL
+		return
+
+	toggle_switch.disabled = false
+	if current_mode == "planets":
+		toggle_switch.text = "Switch to Asteroids"
+	else:
+		toggle_switch.text = "Switch to Planets"
+
+	var has_seen_overlay = _has_seen_level2_unlock_overlay()
+	if show_overlay_if_needed or not has_seen_overlay:
+		_show_level2_unlock_overlay()
+
+func _show_level2_unlock_overlay() -> void:
+	if _unlock_overlay and is_instance_valid(_unlock_overlay):
+		return
+
+	_unlock_overlay = ColorRect.new()
+	_unlock_overlay.name = "Level2UnlockOverlay"
+	_unlock_overlay.color = Color(0, 0, 0, 0.62)
+	_unlock_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	_unlock_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(_unlock_overlay)
+
+	var center = CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_unlock_overlay.add_child(center)
+
+	var panel = PanelContainer.new()
+	panel.custom_minimum_size = Vector2(640, 0)
+	center.add_child(panel)
+	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
+	panel_style.apply_panel(panel)
+
+	var body = VBoxContainer.new()
+	body.add_theme_constant_override("separation", 10)
+	panel.add_child(body)
+
+	var title = Label.new()
+	title.text = "Level 2 Reached: New Unlocks"
+	panel_style.apply_title(title)
+	body.add_child(title)
+
+	var emphasis = Label.new()
+	emphasis.text = "Planet Discovery is now online."
+	emphasis.add_theme_font_size_override("font_size", 30)
+	emphasis.add_theme_color_override("font_color", panel_style.ACCENT)
+	body.add_child(emphasis)
+
+	var subtitle = Label.new()
+	subtitle.text = "You can now scan entries from anomalySet: telescope-tess."
+	panel_style.apply_muted(subtitle)
+	body.add_child(subtitle)
+
+	var unlock_items = _get_unlocks_for_level(PLANET_UNLOCK_LEVEL)
+	for item_text in unlock_items:
+		var row = Label.new()
+		row.text = "• %s" % item_text
+		panel_style.apply_body(row)
+		body.add_child(row)
+
+	var cta = Button.new()
+	cta.text = "Start Planet Scan"
+	panel_style.apply_button(cta, true)
+	cta.pressed.connect(_on_level2_overlay_confirmed)
+	body.add_child(cta)
+
+func _on_level2_overlay_confirmed() -> void:
+	_mark_level2_unlock_overlay_seen()
+	if _unlock_overlay and is_instance_valid(_unlock_overlay):
+		_unlock_overlay.queue_free()
+	_unlock_overlay = null
+	_focus_planets_after_unlock()
+
+func _focus_planets_after_unlock() -> void:
+	current_mode = "planets"
+	toggle_switch.text = "Switch to Asteroids"
+	var t = create_tween()
+	t.tween_property(toggle_switch, "scale", Vector2(1.09, 1.09), 0.12)
+	t.tween_property(toggle_switch, "scale", Vector2.ONE, 0.18)
+	_start_loading(REFRESH_LOAD_TIME)
+	_fetch_anomalies()
+
+func _get_unlocks_for_level(level: int) -> Array:
+	var items := []
+	if level == PLANET_UNLOCK_LEVEL:
+		items.append("Planet discovery targets (telescope-tess anomalies)")
+
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if rm:
+		for rocket_id in rm.ROCKET_UNLOCK_LEVELS.keys():
+			if int(rm.ROCKET_UNLOCK_LEVELS.get(rocket_id, 1)) == level:
+				items.append("Rocket: %s" % rocket_id)
+
+	var sm = preload("res://Scripts/Utils/SubcontractorManager.gd")
+	if sm:
+		for idx in range(sm.SUBCONTRACTORS.size()):
+			if int(sm.get_unlock_level_for_index(idx)) != level:
+				continue
+			var entry = sm.SUBCONTRACTORS[idx]
+			var name = str(entry.get("name", ""))
+			if entry.get("hidden", false):
+				name = "Classified Subcontractor"
+			items.append("Subcontractor: %s" % name)
+
+	for mission in LEVEL_UNLOCK_MISSIONS:
+		if int(mission.get("level", 1)) == level:
+			items.append("Mission: %s" % str(mission.get("name", "")))
+
+	return items
+
+func _has_seen_level2_unlock_overlay() -> bool:
+	var cfg = ConfigFile.new()
+	var err = cfg.load(UNLOCK_CONFIG_PATH)
+	if err != OK:
+		return false
+	return bool(cfg.get_value(UNLOCK_CONFIG_SECTION, UNLOCK_LEVEL2_SEEN_KEY, false))
+
+func _mark_level2_unlock_overlay_seen() -> void:
+	var cfg = ConfigFile.new()
+	cfg.load(UNLOCK_CONFIG_PATH)
+	cfg.set_value(UNLOCK_CONFIG_SECTION, UNLOCK_LEVEL2_SEEN_KEY, true)
+	cfg.save(UNLOCK_CONFIG_PATH)
+
+func _get_app_controller() -> Node:
+	return get_tree().root.find_child("AppController", true, false)

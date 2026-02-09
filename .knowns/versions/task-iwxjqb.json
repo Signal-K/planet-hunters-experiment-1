@@ -1,0 +1,136 @@
+{
+  "taskId": "iwxjqb",
+  "currentVersion": 4,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "iwxjqb",
+      "version": 1,
+      "timestamp": "2026-02-05T14:17:43.972Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "newValue": "1. Inspect Control Station panel UI + data flow for orbiting rockets\n2. Wire RocketsManager orbiting data into the panel list\n3. Confirm list updates when rockets enter orbit"
+        }
+      ],
+      "snapshot": {
+        "title": "Show orbiting rockets in Control Station",
+        "description": "Control Station panel should display rockets currently orbiting Earth.",
+        "status": "todo",
+        "priority": "medium",
+        "labels": [
+          "ui",
+          "godot"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Control Station shows list of orbiting rockets"
+          }
+        ],
+        "implementationPlan": "1. Inspect Control Station panel UI + data flow for orbiting rockets\n2. Wire RocketsManager orbiting data into the panel list\n3. Confirm list updates when rockets enter orbit"
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "iwxjqb",
+      "version": 2,
+      "timestamp": "2026-02-05T14:19:10.355Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Control Station shows list of orbiting rockets"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Control Station shows list of orbiting rockets"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Show orbiting rockets in Control Station",
+        "description": "Control Station panel should display rockets currently orbiting Earth.",
+        "status": "todo",
+        "priority": "medium",
+        "labels": [
+          "ui",
+          "godot"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Control Station shows list of orbiting rockets"
+          }
+        ],
+        "implementationPlan": "1. Inspect Control Station panel UI + data flow for orbiting rockets\n2. Wire RocketsManager orbiting data into the panel list\n3. Confirm list updates when rockets enter orbit"
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "iwxjqb",
+      "version": 3,
+      "timestamp": "2026-02-05T14:19:24.670Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "## Summary\n- Added Orbiting Rockets section to Control Station panel and populated from RocketsManager"
+        }
+      ],
+      "snapshot": {
+        "title": "Show orbiting rockets in Control Station",
+        "description": "Control Station panel should display rockets currently orbiting Earth.",
+        "status": "todo",
+        "priority": "medium",
+        "labels": [
+          "ui",
+          "godot"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Control Station shows list of orbiting rockets"
+          }
+        ],
+        "implementationPlan": "1. Inspect Control Station panel UI + data flow for orbiting rockets\n2. Wire RocketsManager orbiting data into the panel list\n3. Confirm list updates when rockets enter orbit",
+        "implementationNotes": "## Summary\n- Added Orbiting Rockets section to Control Station panel and populated from RocketsManager"
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "iwxjqb",
+      "version": 4,
+      "timestamp": "2026-02-05T14:19:51.083Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Show orbiting rockets in Control Station",
+        "description": "Control Station panel should display rockets currently orbiting Earth.",
+        "status": "done",
+        "priority": "medium",
+        "labels": [
+          "ui",
+          "godot"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Control Station shows list of orbiting rockets"
+          }
+        ],
+        "implementationPlan": "1. Inspect Control Station panel UI + data flow for orbiting rockets\n2. Wire RocketsManager orbiting data into the panel list\n3. Confirm list updates when rockets enter orbit",
+        "implementationNotes": "## Summary\n- Added Orbiting Rockets section to Control Station panel and populated from RocketsManager"
+      }
+    }
+  ]
+}

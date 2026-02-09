@@ -118,5 +118,8 @@ func _on_space_map_button_pressed() -> void:
 		get_tree().change_scene_to_file("res://Scenes/UI/SpaceMap/space_map.tscn")
 
 func _on_new_mission_button_pressed() -> void:
-	print("New Mission button pressed - showing new mission panel")
-	ui_manager.show_panel(UIManager.PanelType.NEW_MISSION)
+	print("New Mission button pressed - opening launchpad scene")
+	if scene_manager:
+		scene_manager.change_to_scene("res://Scenes/Earth/earth_launchpad.tscn")
+	else:
+		get_tree().change_scene_to_file("res://Scenes/Earth/earth_launchpad.tscn")

@@ -1,3 +1,74 @@
 {
-  "missions": []
+  "missions": [
+    {
+      "timestamp": "2026-02-06T09:46:03",
+      "rocket_id": "starterrocket1-2678722812",
+      "target_id": "63769326",
+      "label": "63769326",
+      "action": "sell_orbit + scrap",
+      "payout": 200001800,
+      "cargo": {
+        "Iron": 15.0,
+        "Nickel": 6.0,
+        "Cobalt": 15.0,
+        "Platinum": 6.0,
+        "Silicates": 18.0
+      },
+      "badge": "starterrocket1-2678722812-63769326",
+      "actions": [
+        {
+          "action": "sell_orbit",
+          "timestamp": "2026-02-06T09:46:03",
+          "payout": 1800,
+          "franc_delta": 1800,
+          "xp_awarded": 0
+        },
+        {
+          "action": "scrap",
+          "timestamp": "2026-02-06T09:46:03",
+          "payout": 200000000,
+          "franc_delta": 200000000,
+          "xp_awarded": 0
+        }
+      ],
+      "first_timestamp": "2026-02-06T09:46:03",
+      "last_timestamp": "2026-02-06T09:46:03",
+      "payout_total": 200001800
+    },
+    {
+      "timestamp": "2026-02-08T16:14:55",
+      "rocket_id": "starterrocket1-3186438017",
+      "target_id": "101445733",
+      "label": "101445733",
+      "action": "sell_orbit + scrap",
+      "payout": 200007827,
+      "cargo": {
+        "Iron": 28.0,
+        "Nickel": 19.0,
+        "Cobalt": 48.0,
+        "Platinum": 57.0,
+        "Silicates": 48.0
+      },
+      "badge": "starterrocket1-3186438017-101445733",
+      "actions": [
+        {
+          "action": "sell_orbit",
+          "timestamp": "2026-02-08T16:14:52",
+          "payout": 7827,
+          "franc_delta": 7827,
+          "xp_awarded": 0
+        },
+        {
+          "action": "scrap",
+          "timestamp": "2026-02-08T16:14:55",
+          "payout": 200000000,
+          "franc_delta": 200000000,
+          "xp_awarded": 0
+        }
+      ],
+      "first_timestamp": "2026-02-08T16:14:52",
+      "last_timestamp": "2026-02-08T16:14:55",
+      "payout_total": 200007827
+    }
+  ]
 }

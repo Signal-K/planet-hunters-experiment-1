@@ -75,11 +75,12 @@ func _display_items(items: Array) -> void:
 		_anomaly_list.add_child(item)
 
 func _create_item(data: Dictionary, idx: int) -> Control:
+	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
 	var pc = PanelContainer.new()
 	pc.custom_minimum_size = Vector2(0, 90)
 	var style = StyleBoxFlat.new()
-	style.bg_color = Color(0.97, 0.98, 1.0) # light card
-	style.border_color = Color(0.78, 0.82, 0.88)
+	style.bg_color = panel_style.ACCENT_SOFT
+	style.border_color = panel_style.PANEL_BORDER
 	style.border_width_bottom = 1
 	style.content_margin_left = 12
 	style.content_margin_right = 12
@@ -99,7 +100,7 @@ func _create_item(data: Dictionary, idx: int) -> Control:
 	var icon = PanelContainer.new()
 	icon.custom_minimum_size = Vector2(64, 64)
 	var icon_style = StyleBoxFlat.new()
-	icon_style.bg_color = Color(0.88, 0.92, 0.96)
+	icon_style.bg_color = panel_style.BUTTON_PRESSED
 	icon_style.corner_radius_top_left = 8
 	icon_style.corner_radius_top_right = 8
 	icon_style.corner_radius_bottom_left = 8
@@ -150,7 +151,7 @@ func _create_item(data: Dictionary, idx: int) -> Control:
 	var title = Label.new()
 	title.text = "Asteroid #%s" % str(data.get("content",""))
 	title.add_theme_font_size_override("font_size", 24)
-	title.add_theme_color_override("font_color", Color(0.06, 0.07, 0.08))
+	title.add_theme_color_override("font_color", panel_style.TEXT_PRIMARY)
 	content_v.add_child(title)
 
 	# Add optional saved indicator on the right
@@ -160,7 +161,7 @@ func _create_item(data: Dictionary, idx: int) -> Control:
 
 	var saved_lbl = Label.new()
 	saved_lbl.text = "Saved"
-	saved_lbl.add_theme_color_override("font_color", Color(0.06, 0.6, 0.06))
+	saved_lbl.add_theme_color_override("font_color", panel_style.ACCENT)
 	saved_lbl.add_theme_font_size_override("font_size", 16)
 	right_v.add_child(saved_lbl)
 
@@ -177,7 +178,7 @@ func _create_item(data: Dictionary, idx: int) -> Control:
 	# Hover effect
 	pc.mouse_entered.connect(func():
 		var hover_style = style.duplicate()
-		hover_style.bg_color = Color(0.985, 0.99, 1.0)
+		hover_style.bg_color = panel_style.BUTTON_PRESSED
 		pc.add_theme_stylebox_override("panel", hover_style)
 	)
 	pc.mouse_exited.connect(func():

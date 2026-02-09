@@ -1,5 +1,6 @@
 extends RefCounted
 class_name RocketSpawner
+const STARTERROCKET1_LAUNCHPAD_POS := Vector2(-110.0, -178.0)
 
 static func spawn(launchpad_node: Node, rocket_id: String) -> bool:
     if not launchpad_node:
@@ -34,7 +35,7 @@ static func spawn(launchpad_node: Node, rocket_id: String) -> bool:
     var inst = packed.instantiate()
     inst.add_to_group("rocket")
     inst.scale = Vector2(0.4, 0.4)
-    inst.position = Vector2(-110.0, -170.0)
+    inst.position = STARTERROCKET1_LAUNCHPAD_POS
     launchpad_node.add_child(inst)
     var rm = preload("res://Scripts/Utils/RocketsManager.gd")
     if rm:

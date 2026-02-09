@@ -1,5 +1,8 @@
 class_name SatelliteStation extends Structure
 
+const ACTION_OPEN_SATELLITE := "open_satellite_station"
+const HINT_OPEN_SATELLITE := "Use the Satellite Station to find mission targets."
+
 func _ready():
 	super._ready()
 	structure_name = "Satellite Station"
@@ -8,6 +11,7 @@ func _ready():
 
 func on_interact():
 	super.on_interact()
+	_show_tutorial_hint_once(ACTION_OPEN_SATELLITE, HINT_OPEN_SATELLITE)
 	print("Satellite Station clicked: " + structure_name)
 	
 	# Get the UIManager from the scene tree
@@ -28,3 +32,8 @@ func on_interact():
 		ui_manager.show_structure_panel("res://Scenes/UI/SatelliteStationPanel.tscn")
 	else:
 		print("ERROR: UIManager not found for Satellite Station")
+
+func _show_tutorial_hint_once(action_key: String, message: String) -> void:
+	var app = get_tree().root.find_child("AppController", true, false)
+	if app and app.has_method("show_tutorial_hint_once"):
+		app.show_tutorial_hint_once(action_key, message)

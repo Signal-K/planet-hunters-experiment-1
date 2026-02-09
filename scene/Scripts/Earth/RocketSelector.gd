@@ -5,13 +5,16 @@ signal create_rocket(rocket_id)
 @export var unlocked_rockets := []
 
 const ROCKET_TEXTURES = {
-	"starterrocket1": preload("res://assets/Vehicles/StarterRocket1LaunchFrame0.tres"),
+	"starterrocket1": preload("res://assets/Vehicles/StarterRocket1.png"),
 	"starterrocket2": preload("res://assets/Structures/ControlStation.png")
 }
 const RocketSelectorUIBuilder = preload("res://Scripts/Earth/RocketSelectorUIBuilder.gd")
 const RocketSelectorDragHelper = preload("res://Scripts/Earth/RocketSelectorDragHelper.gd")
+const STARTERROCKET1_LAUNCHPAD_POS := Vector2(-110.0, -178.0)
 
 const ROCKET_COST: int = 1000000000
+const ACTION_CREATE_ROCKET := "create_rocket"
+const HINT_CREATE_ROCKET := "Buy a rocket here before you select a target and launch."
 
 var ui_position: Vector2 = Vector2(80, 160)
 var ui_size: Vector2 = Vector2(720, 360)
@@ -107,6 +110,7 @@ func _on_purchase_confirmed() -> void:
 		return
 	var spawn_ok = _spawn_rocket(_pending_rocket_id)
 	if spawn_ok:
+		_show_tutorial_hint_once(ACTION_CREATE_ROCKET, HINT_CREATE_ROCKET)
 		_modify_balance(-ROCKET_COST)
 	else:
 		_show_info("Rocket could not be created.")
@@ -127,7 +131,7 @@ func _spawn_rocket(rocket_id: String) -> bool:
 				if scene:
 					var inst = scene.instantiate()
 					launchpad.add_child(inst)
-					inst.position = Vector2(-110.0, -170.0)
+					inst.position = STARTERROCKET1_LAUNCHPAD_POS
 					inst.add_to_group("rocket")
 					# persist placed rocket
 					var rm = preload("res://Scripts/Utils/RocketsManager.gd")
@@ -157,6 +161,10 @@ func _show_info(message: String) -> void:
 	if _info_dialog:
 		_info_dialog.dialog_text = message
 		_info_dialog.popup_centered()
+
+func _show_tutorial_hint_once(action_key: String, message: String) -> void:
+	if _app_controller and _app_controller.has_method("show_tutorial_hint_once"):
+		_app_controller.show_tutorial_hint_once(action_key, message)
 
 func _on_texture_gui_input(rocket_id, tex, event):
 	# Start drag on left button press

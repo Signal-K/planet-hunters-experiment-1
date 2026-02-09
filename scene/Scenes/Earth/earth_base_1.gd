@@ -6,6 +6,8 @@ var camera_controller: Node
 var scene_manager: SceneManager
 var ui_manager: UIManager
 const PREVIEW_SCENE_PATH := "res://Scenes/UI/AsteroidPreview/asteroid_preview.tscn"
+const ACTION_OPEN_NEW_MISSION := "open_new_mission"
+const HINT_OPEN_NEW_MISSION := "Tap New Mission to open the launch area and prepare a rocket."
 
 func _ready() -> void:
 	# Initialize camera controller
@@ -28,7 +30,7 @@ func _ready() -> void:
 	if rm and rm.consume_return_to_new_mission_panel():
 		ui_manager.show_panel(UIManager.PanelType.NEW_MISSION)
 	
-	# Style and connect button signals
+	# Connect button signals
 	_setup_buttons()
 	
 	# Create ground guide lines if enabled
@@ -37,18 +39,13 @@ func _ready() -> void:
 		DebugVisualizer.create_ground_guides(self)
 
 func _setup_buttons() -> void:
-	"""Setup button styling and connections"""
+	"""Setup button connections"""
 	var back_btn = $UILayer/ButtonContainer/BackButton
 	var forward_btn = $UILayer/ButtonContainer/ForwardButton
 	var menu_btn = $UILayer/ButtonContainer/MenuButton
 	var market_btn = $UILayer/ButtonContainer/MarketButton
 	var space_map_btn = $UILayer/ButtonContainer/SpaceMapButton
 	var new_mission_btn = $UILayer/ButtonContainer/NewMissionButton
-	
-	var buttons = [back_btn, forward_btn, menu_btn, market_btn, space_map_btn, new_mission_btn]
-	
-	for button in buttons:
-		_apply_button_style(button)
 	
 	# Connect signals
 	back_btn.pressed.connect(_on_back_button_pressed)
@@ -58,12 +55,7 @@ func _setup_buttons() -> void:
 	space_map_btn.pressed.connect(_on_space_map_button_pressed)
 	new_mission_btn.pressed.connect(_on_new_mission_button_pressed)
 	
-	print("All buttons styled and connected")
-
-func _apply_button_style(button: Button) -> void:
-	"""Apply consistent panel styling"""
-	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
-	panel_style.apply_button(button, false)
+	print("All button signals connected")
 
 # Button handlers
 func _on_back_button_pressed() -> void:
@@ -94,8 +86,12 @@ func _on_space_map_button_pressed() -> void:
 		get_tree().change_scene_to_file("res://Scenes/UI/SpaceMap/space_map.tscn")
 
 func _on_new_mission_button_pressed() -> void:
-	print("New Mission button pressed - showing new mission panel")
-	ui_manager.show_panel(UIManager.PanelType.NEW_MISSION)
+	print("New Mission button pressed - opening launchpad scene")
+	_show_tutorial_hint_once(ACTION_OPEN_NEW_MISSION, HINT_OPEN_NEW_MISSION)
+	if scene_manager:
+		scene_manager.change_to_scene("res://Scenes/Earth/earth_launchpad.tscn")
+	else:
+		get_tree().change_scene_to_file("res://Scenes/Earth/earth_launchpad.tscn")
 
 func _open_preview_delta(delta: int) -> bool:
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
@@ -121,3 +117,8 @@ func _open_preview_delta(delta: int) -> bool:
 	else:
 		get_tree().change_scene_to_file(PREVIEW_SCENE_PATH)
 	return true
+
+func _show_tutorial_hint_once(action_key: String, message: String) -> void:
+	var app = get_tree().root.find_child("AppController", true, false)
+	if app and app.has_method("show_tutorial_hint_once"):
+		app.show_tutorial_hint_once(action_key, message)

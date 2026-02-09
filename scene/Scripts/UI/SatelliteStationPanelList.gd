@@ -47,8 +47,8 @@ func _create_anomaly_item(anomaly: Dictionary, index: int) -> Control:
 
 	# Style the item
 	var item_style = StyleBoxFlat.new()
-	item_style.bg_color = Color(0.97, 0.98, 1.0, 1)
-	item_style.border_color = Color(0.85, 0.88, 0.94, 1)
+	item_style.bg_color = panel_style.ACCENT_SOFT
+	item_style.border_color = panel_style.PANEL_BORDER
 	item_style.border_width_bottom = 1
 	item_style.corner_radius_top_left = 16
 	item_style.corner_radius_top_right = 16
@@ -90,7 +90,7 @@ func _create_anomaly_item(anomaly: Dictionary, index: int) -> Control:
 	var icon_text = "🪐" if _get_mode.call() == "planets" else "☄"
 	icon_label.text = icon_text
 	icon_label.add_theme_font_size_override("font_size", 30)
-	icon_label.add_theme_color_override("font_color", Color.WHITE)
+	icon_label.add_theme_color_override("font_color", panel_style.TEXT_ON_ACCENT)
 	icon_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	icon_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	icon_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -185,7 +185,7 @@ func _create_anomaly_item(anomaly: Dictionary, index: int) -> Control:
 	# Add hover effect
 	item_container.mouse_entered.connect(func():
 		var hover_style = item_style.duplicate()
-		hover_style.bg_color = Color(0.94, 0.96, 0.99, 1)
+		hover_style.bg_color = panel_style.BUTTON_PRESSED
 		item_container.add_theme_stylebox_override("panel", hover_style)
 	)
 	item_container.mouse_exited.connect(func():
