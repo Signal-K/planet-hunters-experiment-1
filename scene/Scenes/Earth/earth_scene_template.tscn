@@ -32,49 +32,56 @@ layer = 1
 layer = 2
 
 [node name="ButtonContainer" type="HBoxContainer" parent="UILayer"]
-offset_left = 30.0
-offset_top = 1020.0
-offset_right = 1890.0
-offset_bottom = 1100.0
+custom_minimum_size = Vector2(0, 80)
+offset_left = 24.0
+offset_top = 976.0
+offset_right = 1896.0
+offset_bottom = 1056.0
 
 [node name="BackButton" type="Button" parent="UILayer/ButtonContainer"]
 custom_minimum_size = Vector2(160, 80)
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
+size_flags_vertical = 4
+theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
 theme_override_font_sizes/font_size = 24
 text = "<<"
 
 [node name="ForwardButton" type="Button" parent="UILayer/ButtonContainer"]
 custom_minimum_size = Vector2(160, 80)
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
+size_flags_vertical = 4
+theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
 theme_override_font_sizes/font_size = 24
 text = ">>"
 
 [node name="MenuButton" type="Button" parent="UILayer/ButtonContainer"]
 custom_minimum_size = Vector2(220, 80)
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
+size_flags_vertical = 4
+theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
 theme_override_font_sizes/font_size = 20
 text = "Menu"
 
 [node name="MarketButton" type="Button" parent="UILayer/ButtonContainer"]
 custom_minimum_size = Vector2(220, 80)
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
+size_flags_vertical = 4
+theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
 theme_override_font_sizes/font_size = 20
 text = "Market"
 
 [node name="SpaceMapButton" type="Button" parent="UILayer/ButtonContainer"]
 custom_minimum_size = Vector2(260, 80)
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
+size_flags_vertical = 4
+theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
 theme_override_font_sizes/font_size = 20
 text = "Space Map"
 
 [node name="NewMissionButton" type="Button" parent="UILayer/ButtonContainer"]
 custom_minimum_size = Vector2(300, 80)
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
+size_flags_vertical = 4
+theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
 theme_override_font_sizes/font_size = 20
 text = "New Mission"

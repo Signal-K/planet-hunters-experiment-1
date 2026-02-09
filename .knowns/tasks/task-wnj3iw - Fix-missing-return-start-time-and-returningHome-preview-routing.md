@@ -1,14 +1,14 @@
 ---
 id: wnj3iw
 title: Fix missing return start time and returningHome preview routing
-status: in-progress
+status: done
 priority: high
 labels:
   - bug
   - rocket-state
 createdAt: '2026-02-06T01:39:32.589Z'
-updatedAt: '2026-02-06T01:47:55.447Z'
-timeSpent: 475
+updatedAt: '2026-02-09T01:35:38.863Z'
+timeSpent: 481
 assignee: '@me'
 ---
 # Fix missing return start time and returningHome preview routing
@@ -21,15 +21,21 @@ Return-home state lacks timestamp; preview starts at target scene. Add migration
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 returningHome rockets persist return start time
-- [ ] #2 returning rockets preview starts in return transit or Earth orbit based on elapsed time
+- [x] #1 returningHome rockets persist return start time
+- [x] #2 returning rockets preview starts in return transit or Earth orbit based on elapsed time
 <!-- AC:END -->
 
 ## Implementation Plan
 
 <!-- SECTION:PLAN:BEGIN -->
-1. Inspect RocketsManager return-home persistence + preview routing
-2. Backfill missing return start times and auto-promote overdue returns
-3. Ensure return_home always stamps returning_started and persist
+1. Verify return_home persistence of returning_started and migration fallback paths
+2. Tighten preview routing logic for returningHome vs returned states
+3. Add Godot tests for return start persistence + preview route selection outcomes
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+✓ Added return_home persistence regression test + preview routing map test in run_experience_tests.gd (12/12 pass).
+<!-- SECTION:NOTES:END -->
 

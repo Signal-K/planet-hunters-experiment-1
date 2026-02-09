@@ -45,21 +45,8 @@ static func create_styled_panel(title: String, tree: SceneTree) -> Control:
 
 ## Apply consistent styling to panel
 static func _apply_panel_style(panel: Panel) -> void:
-	var style_box = StyleBoxFlat.new()
-	style_box.bg_color = Color(0.99, 1.002, 1.002, 1)  # --card
-	style_box.border_color = Color(0.45, 0.62, 0.82, 1)  # --primary
-	style_box.border_width_left = 3
-	style_box.border_width_right = 3
-	style_box.border_width_top = 3
-	style_box.border_width_bottom = 3
-	style_box.corner_radius_top_left = 12
-	style_box.corner_radius_top_right = 12
-	style_box.corner_radius_bottom_left = 12
-	style_box.corner_radius_bottom_right = 12
-	style_box.shadow_color = Color(0, 0, 0, 0.5)
-	style_box.shadow_size = 10
-	style_box.shadow_offset = Vector2(0, 4)
-	panel.add_theme_stylebox_override("panel", style_box)
+	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
+	panel_style.apply_panel(panel)
 
 ## Create the content layout for the panel
 static func _create_panel_content(title: String, parent: Control, wrapper: Control) -> VBoxContainer:
@@ -96,8 +83,8 @@ static func _create_panel_content(title: String, parent: Control, wrapper: Contr
 static func _create_title_label(title: String, parent: VBoxContainer) -> void:
 	var title_label = Label.new()
 	title_label.text = title
-	title_label.add_theme_font_size_override("font_size", 28)
-	title_label.add_theme_color_override("font_color", Color(0.55, 0.18, 0.25, 1))
+	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
+	panel_style.apply_title(title_label)
 	parent.add_child(title_label)
 
 ## Create styled close button
@@ -114,35 +101,5 @@ static func _create_close_button(parent: VBoxContainer, wrapper: Control) -> voi
 
 ## Apply consistent button styling
 static func _apply_button_style(button: Button) -> void:
-	# Normal style
-	var button_style = StyleBoxFlat.new()
-	button_style.bg_color = Color(0.55, 0.72, 0.92, 1)
-	button_style.border_width_left = 2
-	button_style.border_width_right = 2
-	button_style.border_width_top = 2
-	button_style.border_width_bottom = 2
-	button_style.border_color = Color(0.45, 0.62, 0.82, 1)
-	button_style.corner_radius_top_left = 8
-	button_style.corner_radius_top_right = 8
-	button_style.corner_radius_bottom_left = 8
-	button_style.corner_radius_bottom_right = 8
-	button_style.set_expand_margin_all(4)
-	button.add_theme_stylebox_override("normal", button_style)
-	
-	# Hover style
-	var button_hover = StyleBoxFlat.new()
-	button_hover.bg_color = Color(0.65, 0.78, 0.96, 1)
-	button_hover.border_width_left = 2
-	button_hover.border_width_right = 2
-	button_hover.border_width_top = 2
-	button_hover.border_width_bottom = 2
-	button_hover.border_color = Color(0.55, 0.72, 0.92, 1)
-	button_hover.corner_radius_top_left = 8
-	button_hover.corner_radius_top_right = 8
-	button_hover.corner_radius_bottom_left = 8
-	button_hover.corner_radius_bottom_right = 8
-	button_hover.set_expand_margin_all(4)
-	button.add_theme_stylebox_override("hover", button_hover)
-	
-	button.add_theme_color_override("font_color", Color.WHITE)
-	button.add_theme_color_override("font_hover_color", Color.WHITE)
+	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
+	panel_style.apply_button(button, true)

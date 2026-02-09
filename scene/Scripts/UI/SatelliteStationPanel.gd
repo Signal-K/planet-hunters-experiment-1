@@ -13,8 +13,10 @@ const UNLOCK_CONFIG_PATH := "user://satellite_station.cfg"
 const UNLOCK_CONFIG_SECTION := "unlocks"
 const UNLOCK_LEVEL2_SEEN_KEY := "level2_overlay_seen"
 const LEVEL_UNLOCK_MISSIONS := [
-	{"level": 2, "name": "Sell cargo on Earth"}
+	{"level": 3, "name": "Sell cargo on Earth"}
 ]
+const ACTION_SCAN_TARGETS := "scan_targets"
+const HINT_SCAN_TARGETS := "Scan space first to find targets for your missions."
 
 const SatelliteStationPanelData = preload("res://Scripts/UI/SatelliteStationPanelData.gd")
 const SatelliteStationPanelList = preload("res://Scripts/UI/SatelliteStationPanelList.gd")
@@ -159,6 +161,7 @@ func _on_anomalies_fetched(data: Array, error: String):
 	var target_type = "planets" if current_mode == "planets" else "asteroids"
 	status_label.text = "Status: %d %s detected" % [data.size(), target_type]
 	_loading.mark_anomalies_ready()
+	_show_tutorial_hint_once(ACTION_SCAN_TARGETS, HINT_SCAN_TARGETS)
 	_award_scan_experience()
 
 	# Persist a lightweight list of detected targets for other UI (e.g., Launchpad)
@@ -209,6 +212,11 @@ func _award_scan_experience() -> void:
 	var app_controller = root.find_child("AppController", true, false)
 	if app_controller and app_controller.has_method("award_scan_experience"):
 		app_controller.award_scan_experience()
+
+func _show_tutorial_hint_once(action_key: String, message: String) -> void:
+	var app_controller = get_tree().root.find_child("AppController", true, false)
+	if app_controller and app_controller.has_method("show_tutorial_hint_once"):
+		app_controller.show_tutorial_hint_once(action_key, message)
 
 func _on_refresh_pressed():
 	_start_loading(REFRESH_LOAD_TIME)

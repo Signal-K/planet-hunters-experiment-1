@@ -1,5 +1,8 @@
 class_name ControlStation extends Structure
 
+const ACTION_OPEN_CONTROL := "open_control_station"
+const HINT_OPEN_CONTROL := "Use the Control Station to manage your active missions."
+
 func _ready():
 	super._ready()
 	structure_name = "Control Station"
@@ -8,6 +11,7 @@ func _ready():
 
 func on_interact():
 	super.on_interact()
+	_show_tutorial_hint_once(ACTION_OPEN_CONTROL, HINT_OPEN_CONTROL)
 	print("Control Station clicked: " + structure_name)
 	
 	# Get the UIManager from the scene tree
@@ -28,3 +32,8 @@ func on_interact():
 		ui_manager.show_panel(UIManager.PanelType.NEW_MISSION)
 	else:
 		print("ERROR: UIManager not found for Control Station")
+
+func _show_tutorial_hint_once(action_key: String, message: String) -> void:
+	var app = get_tree().root.find_child("AppController", true, false)
+	if app and app.has_method("show_tutorial_hint_once"):
+		app.show_tutorial_hint_once(action_key, message)

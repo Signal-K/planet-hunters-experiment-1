@@ -4,6 +4,7 @@ extends SceneTree
 
 const TestReporter = preload("res://tests/TestReporter.gd")
 var reporter := TestReporter.new()
+var _network_asteroid_count := -1
 
 func _init():
 	reporter.start_suite("Supabase Integration", {
@@ -151,6 +152,7 @@ func test_fetch_asteroids():
 		pass_test(test_name + " (empty response, connection successful)")
 		return
 	
+	_network_asteroid_count = response_data.size()
 	pass_test(test_name + " - received " + str(response_data.size()) + " asteroids")
 
 ## TEST 3: Asteroid data has required fields for viewing
@@ -201,7 +203,12 @@ func test_asteroid_selection():
 		fail(test_name, "Could not instantiate SatelliteStationPanel")
 		return
 	if panel.has_method("set_local_only"):
-		panel.set_local_only(true)
+		var use_local_only = _network_asteroid_count <= 0
+		panel.set_local_only(use_local_only)
+		if use_local_only:
+			print("  ℹ️  UI test running in local-only fallback mode (expected 1 local asteroid).")
+		else:
+			print("  🌐 UI test running with remote anomaly fetch (network count=%d)." % _network_asteroid_count)
 	panel.use_archived_detail = true
 	
 	# Add to tree

@@ -3,7 +3,7 @@ extends Node2D
 const ORBIT_MULTIPLIER := 0.8
 const EARTH_MULTIPLIER := 1.0
 const SUBCONTRACTOR_FEE := 0
-const EARTH_SALE_MIN_LEVEL := 2
+const EARTH_SALE_MIN_LEVEL := 3
 const SCRAP_REFUND_PCT := 0.20
 const SALVAGE_REFUND_PCT := 0.10
 const XP_AWARD_MISSION := 4
@@ -141,12 +141,10 @@ func _update_labels() -> void:
 			sell_earth_button.text = "Sell on Earth"
 	# Save/salvage reserved for later unlocks
 	keep_button.disabled = true
-	keep_button.text = "Save Cargo (Locked)"
 	salvage_button.disabled = true
-	salvage_button.text = "Salvage Ship (Locked)"
 
 func _sell(to_earth: bool) -> void:
-	if _sold:
+	if _sold or _closed_out:
 		return
 	if _collected.is_empty():
 		status_label.text = "No cargo to sell."
@@ -169,8 +167,13 @@ func _sell(to_earth: bool) -> void:
 		sm.add_affinity(str(_subcontractor.get("id", "")))
 	_add_mission_log("sell_earth" if to_earth else "sell_orbit", net)
 	_sold = true
+	_closed_out = true
 	status_label.text = "Sale complete. Credited %s F." % str(net)
 	_clear_cargo()
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if rm:
+		rm.remove_orbiting_rocket(str(_returned.get("rocket_id", "")))
+	_lock_action_buttons()
 
 func _keep_cargo() -> void:
 	status_label.text = "Cargo stored. You can sell later."
@@ -183,6 +186,7 @@ func _archive_ship() -> void:
 	_add_mission_log("archive", 0)
 	status_label.text = "Ship archived."
 	_closed_out = true
+	_lock_action_buttons()
 
 func _scrap_ship(refund_pct: float) -> void:
 	if _closed_out:
@@ -199,6 +203,7 @@ func _scrap_ship(refund_pct: float) -> void:
 	_add_mission_log("scrap" if refund_pct >= 0.2 else "salvage", refund)
 	status_label.text = "Ship processed. Refund %s F." % str(refund)
 	_closed_out = true
+	_lock_action_buttons()
 
 func _leave_in_orbit() -> void:
 	if _closed_out:
@@ -206,6 +211,23 @@ func _leave_in_orbit() -> void:
 	_add_mission_log("leave_orbit", 0)
 	status_label.text = "Ship left in orbit."
 	_closed_out = true
+	_lock_action_buttons()
+
+func _lock_action_buttons() -> void:
+	if sell_orbit_button:
+		sell_orbit_button.disabled = true
+	if sell_earth_button:
+		sell_earth_button.disabled = true
+	if keep_button:
+		keep_button.disabled = true
+	if scrap_button:
+		scrap_button.disabled = true
+	if salvage_button:
+		salvage_button.disabled = true
+	if leave_button:
+		leave_button.disabled = true
+	if archive_button:
+		archive_button.disabled = true
 
 func _clear_cargo() -> void:
 	var target_id = str(_returned.get("target_id", ""))
@@ -259,7 +281,13 @@ func _make_badge() -> String:
 	var target_id = str(_returned.get("target_id", ""))
 	if rocket_id == "" or target_id == "":
 		return "Mission"
-	return "%s-%s" % [rocket_id, target_id]
+	var return_stamp = ""
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if rm:
+		return_stamp = str(int(rm.get_status_changed_at(rocket_id, "returned")))
+	if return_stamp == "" or return_stamp == "0":
+		return_stamp = str(int(Time.get_unix_time_from_system()))
+	return "%s-%s-%s" % [rocket_id, target_id, return_stamp]
 
 func _rocket_cost(rocket_id: String) -> int:
 	if rocket_id == "":

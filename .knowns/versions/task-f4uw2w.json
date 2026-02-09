@@ -1,6 +1,6 @@
 {
   "taskId": "f4uw2w",
-  "currentVersion": 11,
+  "currentVersion": 15,
   "versions": [
     {
       "id": "v1",
@@ -476,6 +476,172 @@
         ],
         "implementationPlan": "1. Inspect mining inventory and asteroid preview flow to locate update/save break\n2. Implement a fix so mining applies updates and persists state reliably\n3. Verify UI updates logic for Remaining/Total display",
         "implementationNotes": "## Summary\n- Added direct read/write fallback for mining inventory persistence when JSON helper fails\n\n🔄 Reopened: stats still not updating after persistence fallback\n\n- Use apply_mining return state for UI + update minerals list/summary to show remaining"
+      }
+    },
+    {
+      "id": "v12",
+      "taskId": "f4uw2w",
+      "version": 12,
+      "timestamp": "2026-02-09T01:26:13.123Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "oldValue": "1. Inspect mining inventory and asteroid preview flow to locate update/save break\n2. Implement a fix so mining applies updates and persists state reliably\n3. Verify UI updates logic for Remaining/Total display",
+          "newValue": "1. Reproduce mining UI update/persistence regression in AsteroidPreview + MiningInventory paths\n2. Fix state math/UI refresh so Remaining + Total update immediately after Mine\n3. Add/extend Godot tests for mining apply + persisted reload behavior"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix mining stats persistence and UI updates",
+        "description": "Remaining and total mined stats are not updating when mining; mining results aren't being saved.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "bug",
+          "ui",
+          "godot"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Mining updates Remaining and Total stats in the UI when Mine is pressed"
+          },
+          {
+            "completed": false,
+            "text": "Mining results persist (saved) across scene reloads"
+          }
+        ],
+        "implementationPlan": "1. Reproduce mining UI update/persistence regression in AsteroidPreview + MiningInventory paths\n2. Fix state math/UI refresh so Remaining + Total update immediately after Mine\n3. Add/extend Godot tests for mining apply + persisted reload behavior",
+        "implementationNotes": "## Summary\n- Added direct read/write fallback for mining inventory persistence when JSON helper fails\n\n🔄 Reopened: stats still not updating after persistence fallback\n\n- Use apply_mining return state for UI + update minerals list/summary to show remaining"
+      }
+    },
+    {
+      "id": "v13",
+      "taskId": "f4uw2w",
+      "version": 13,
+      "timestamp": "2026-02-09T01:31:21.624Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Mining updates Remaining and Total stats in the UI when Mine is pressed"
+            },
+            {
+              "completed": false,
+              "text": "Mining results persist (saved) across scene reloads"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Mining updates Remaining and Total stats in the UI when Mine is pressed"
+            },
+            {
+              "completed": true,
+              "text": "Mining results persist (saved) across scene reloads"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Fix mining stats persistence and UI updates",
+        "description": "Remaining and total mined stats are not updating when mining; mining results aren't being saved.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "bug",
+          "ui",
+          "godot"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Mining updates Remaining and Total stats in the UI when Mine is pressed"
+          },
+          {
+            "completed": true,
+            "text": "Mining results persist (saved) across scene reloads"
+          }
+        ],
+        "implementationPlan": "1. Reproduce mining UI update/persistence regression in AsteroidPreview + MiningInventory paths\n2. Fix state math/UI refresh so Remaining + Total update immediately after Mine\n3. Add/extend Godot tests for mining apply + persisted reload behavior",
+        "implementationNotes": "## Summary\n- Added direct read/write fallback for mining inventory persistence when JSON helper fails\n\n🔄 Reopened: stats still not updating after persistence fallback\n\n- Use apply_mining return state for UI + update minerals list/summary to show remaining"
+      }
+    },
+    {
+      "id": "v14",
+      "taskId": "f4uw2w",
+      "version": 14,
+      "timestamp": "2026-02-09T01:31:23.822Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "## Summary\n- Added direct read/write fallback for mining inventory persistence when JSON helper fails\n\n🔄 Reopened: stats still not updating after persistence fallback\n\n- Use apply_mining return state for UI + update minerals list/summary to show remaining",
+          "newValue": "## Summary\n- Added direct read/write fallback for mining inventory persistence when JSON helper fails\n\n🔄 Reopened: stats still not updating after persistence fallback\n\n- Use apply_mining return state for UI + update minerals list/summary to show remaining\n\n✓ Fixed mining mass allocation + inventory total label refresh; added tests/run_mining_tests.gd (2/2 pass)"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix mining stats persistence and UI updates",
+        "description": "Remaining and total mined stats are not updating when mining; mining results aren't being saved.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "bug",
+          "ui",
+          "godot"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Mining updates Remaining and Total stats in the UI when Mine is pressed"
+          },
+          {
+            "completed": true,
+            "text": "Mining results persist (saved) across scene reloads"
+          }
+        ],
+        "implementationPlan": "1. Reproduce mining UI update/persistence regression in AsteroidPreview + MiningInventory paths\n2. Fix state math/UI refresh so Remaining + Total update immediately after Mine\n3. Add/extend Godot tests for mining apply + persisted reload behavior",
+        "implementationNotes": "## Summary\n- Added direct read/write fallback for mining inventory persistence when JSON helper fails\n\n🔄 Reopened: stats still not updating after persistence fallback\n\n- Use apply_mining return state for UI + update minerals list/summary to show remaining\n\n✓ Fixed mining mass allocation + inventory total label refresh; added tests/run_mining_tests.gd (2/2 pass)"
+      }
+    },
+    {
+      "id": "v15",
+      "taskId": "f4uw2w",
+      "version": 15,
+      "timestamp": "2026-02-09T01:31:28.236Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix mining stats persistence and UI updates",
+        "description": "Remaining and total mined stats are not updating when mining; mining results aren't being saved.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "bug",
+          "ui",
+          "godot"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Mining updates Remaining and Total stats in the UI when Mine is pressed"
+          },
+          {
+            "completed": true,
+            "text": "Mining results persist (saved) across scene reloads"
+          }
+        ],
+        "implementationPlan": "1. Reproduce mining UI update/persistence regression in AsteroidPreview + MiningInventory paths\n2. Fix state math/UI refresh so Remaining + Total update immediately after Mine\n3. Add/extend Godot tests for mining apply + persisted reload behavior",
+        "implementationNotes": "## Summary\n- Added direct read/write fallback for mining inventory persistence when JSON helper fails\n\n🔄 Reopened: stats still not updating after persistence fallback\n\n- Use apply_mining return state for UI + update minerals list/summary to show remaining\n\n✓ Fixed mining mass allocation + inventory total label refresh; added tests/run_mining_tests.gd (2/2 pass)"
       }
     }
   ]
