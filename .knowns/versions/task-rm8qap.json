@@ -1,0 +1,326 @@
+{
+  "taskId": "rm8qap",
+  "currentVersion": 7,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "rm8qap",
+      "version": 1,
+      "timestamp": "2026-02-08T02:00:46.278Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "in-review"
+        }
+      ],
+      "snapshot": {
+        "title": "Add mission logbook to menu overlay",
+        "description": "Add a Logbook button at the top of MenuPanel that opens a formatted list of all missions from mission_logs history.",
+        "status": "in-review",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "godot",
+          "ui",
+          "menu",
+          "mission-log"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Menu overlay has a Logbook button in the header area"
+          },
+          {
+            "completed": true,
+            "text": "Clicking Logbook opens a panel/list containing full mission history entries"
+          },
+          {
+            "completed": true,
+            "text": "Mission history rows are clearly formatted and include all recorded fields"
+          }
+        ],
+        "implementationPlan": "1. Extend MenuPanel scene with Logbook button and overlay panel\n2. Wire MenuPanel script to open/close and render mission history\n3. Format mission rows to show all fields clearly\n4. Update mission log tests for full-field coverage",
+        "implementationNotes": "✓ Added header Logbook button + modal overlay with scrollable mission cards in MenuPanel\n\n✓ Updated run_mission_log_tests.gd to verify full mission entry field preservation"
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "rm8qap",
+      "version": 2,
+      "timestamp": "2026-02-08T02:00:58.143Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Menu overlay has a Logbook button in the header area"
+            },
+            {
+              "completed": true,
+              "text": "Clicking Logbook opens a panel/list containing full mission history entries"
+            },
+            {
+              "completed": true,
+              "text": "Mission history rows are clearly formatted and include all recorded fields"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Menu overlay has a Logbook button in the header area"
+            },
+            {
+              "completed": true,
+              "text": "Clicking Logbook opens a panel/list containing full mission history entries"
+            },
+            {
+              "completed": true,
+              "text": "Mission history rows are clearly formatted and include all recorded fields"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Add mission logbook to menu overlay",
+        "description": "Add a Logbook button at the top of MenuPanel that opens a formatted list of all missions from mission_logs history.",
+        "status": "in-review",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "godot",
+          "ui",
+          "menu",
+          "mission-log"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Menu overlay has a Logbook button in the header area"
+          },
+          {
+            "completed": true,
+            "text": "Clicking Logbook opens a panel/list containing full mission history entries"
+          },
+          {
+            "completed": true,
+            "text": "Mission history rows are clearly formatted and include all recorded fields"
+          }
+        ],
+        "implementationPlan": "1. Extend MenuPanel scene with Logbook button and overlay panel\n2. Wire MenuPanel script to open/close and render mission history\n3. Format mission rows to show all fields clearly\n4. Update mission log tests for full-field coverage",
+        "implementationNotes": "✓ Added header Logbook button + modal overlay with scrollable mission cards in MenuPanel\n\n✓ Updated run_mission_log_tests.gd to verify full mission entry field preservation"
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "rm8qap",
+      "version": 3,
+      "timestamp": "2026-02-08T02:10:04.410Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-review",
+          "newValue": "in-progress"
+        }
+      ],
+      "snapshot": {
+        "title": "Add mission logbook to menu overlay",
+        "description": "Add a Logbook button at the top of MenuPanel that opens a formatted list of all missions from mission_logs history.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "godot",
+          "ui",
+          "menu",
+          "mission-log"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Menu overlay has a Logbook button in the header area"
+          },
+          {
+            "completed": true,
+            "text": "Clicking Logbook opens a panel/list containing full mission history entries"
+          },
+          {
+            "completed": true,
+            "text": "Mission history rows are clearly formatted and include all recorded fields"
+          }
+        ],
+        "implementationPlan": "1. Extend MenuPanel scene with Logbook button and overlay panel\n2. Wire MenuPanel script to open/close and render mission history\n3. Format mission rows to show all fields clearly\n4. Update mission log tests for full-field coverage",
+        "implementationNotes": "✓ Added header Logbook button + modal overlay with scrollable mission cards in MenuPanel\n\n✓ Updated run_mission_log_tests.gd to verify full mission entry field preservation"
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "rm8qap",
+      "version": 4,
+      "timestamp": "2026-02-08T02:10:04.577Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "✓ Added header Logbook button + modal overlay with scrollable mission cards in MenuPanel\n\n✓ Updated run_mission_log_tests.gd to verify full mission entry field preservation",
+          "newValue": "✓ Added header Logbook button + modal overlay with scrollable mission cards in MenuPanel\n\n✓ Updated run_mission_log_tests.gd to verify full mission entry field preservation\n\n⚠️ Reopened: run_mission_log_tests currently failing (cannot write user://mission_logs.json in headless run); logbook behavior not yet test-green."
+        }
+      ],
+      "snapshot": {
+        "title": "Add mission logbook to menu overlay",
+        "description": "Add a Logbook button at the top of MenuPanel that opens a formatted list of all missions from mission_logs history.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "godot",
+          "ui",
+          "menu",
+          "mission-log"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Menu overlay has a Logbook button in the header area"
+          },
+          {
+            "completed": true,
+            "text": "Clicking Logbook opens a panel/list containing full mission history entries"
+          },
+          {
+            "completed": true,
+            "text": "Mission history rows are clearly formatted and include all recorded fields"
+          }
+        ],
+        "implementationPlan": "1. Extend MenuPanel scene with Logbook button and overlay panel\n2. Wire MenuPanel script to open/close and render mission history\n3. Format mission rows to show all fields clearly\n4. Update mission log tests for full-field coverage",
+        "implementationNotes": "✓ Added header Logbook button + modal overlay with scrollable mission cards in MenuPanel\n\n✓ Updated run_mission_log_tests.gd to verify full mission entry field preservation\n\n⚠️ Reopened: run_mission_log_tests currently failing (cannot write user://mission_logs.json in headless run); logbook behavior not yet test-green."
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "rm8qap",
+      "version": 5,
+      "timestamp": "2026-02-08T02:53:55.206Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "✓ Added header Logbook button + modal overlay with scrollable mission cards in MenuPanel\n\n✓ Updated run_mission_log_tests.gd to verify full mission entry field preservation\n\n⚠️ Reopened: run_mission_log_tests currently failing (cannot write user://mission_logs.json in headless run); logbook behavior not yet test-green.",
+          "newValue": "✓ Added header Logbook button + modal overlay with scrollable mission cards in MenuPanel\n\n✓ Updated run_mission_log_tests.gd to verify full mission entry field preservation\n\n⚠️ Reopened: run_mission_log_tests currently failing (cannot write user://mission_logs.json in headless run); logbook behavior not yet test-green.\n\n✓ MissionLogManager now supports test path overrides; run_mission_log_tests uses isolated res:// test log and passes."
+        }
+      ],
+      "snapshot": {
+        "title": "Add mission logbook to menu overlay",
+        "description": "Add a Logbook button at the top of MenuPanel that opens a formatted list of all missions from mission_logs history.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "godot",
+          "ui",
+          "menu",
+          "mission-log"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Menu overlay has a Logbook button in the header area"
+          },
+          {
+            "completed": true,
+            "text": "Clicking Logbook opens a panel/list containing full mission history entries"
+          },
+          {
+            "completed": true,
+            "text": "Mission history rows are clearly formatted and include all recorded fields"
+          }
+        ],
+        "implementationPlan": "1. Extend MenuPanel scene with Logbook button and overlay panel\n2. Wire MenuPanel script to open/close and render mission history\n3. Format mission rows to show all fields clearly\n4. Update mission log tests for full-field coverage",
+        "implementationNotes": "✓ Added header Logbook button + modal overlay with scrollable mission cards in MenuPanel\n\n✓ Updated run_mission_log_tests.gd to verify full mission entry field preservation\n\n⚠️ Reopened: run_mission_log_tests currently failing (cannot write user://mission_logs.json in headless run); logbook behavior not yet test-green.\n\n✓ MissionLogManager now supports test path overrides; run_mission_log_tests uses isolated res:// test log and passes."
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "rm8qap",
+      "version": 6,
+      "timestamp": "2026-02-08T02:53:57.395Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "✓ Added header Logbook button + modal overlay with scrollable mission cards in MenuPanel\n\n✓ Updated run_mission_log_tests.gd to verify full mission entry field preservation\n\n⚠️ Reopened: run_mission_log_tests currently failing (cannot write user://mission_logs.json in headless run); logbook behavior not yet test-green.\n\n✓ MissionLogManager now supports test path overrides; run_mission_log_tests uses isolated res:// test log and passes.",
+          "newValue": "✓ Added header Logbook button + modal overlay with scrollable mission cards in MenuPanel\n\n✓ Updated run_mission_log_tests.gd to verify full mission entry field preservation\n\n⚠️ Reopened: run_mission_log_tests currently failing (cannot write user://mission_logs.json in headless run); logbook behavior not yet test-green.\n\n✓ MissionLogManager now supports test path overrides; run_mission_log_tests uses isolated res:// test log and passes.\n\nValidation: tests/run_mission_log_tests.gd PASS (4/4)."
+        }
+      ],
+      "snapshot": {
+        "title": "Add mission logbook to menu overlay",
+        "description": "Add a Logbook button at the top of MenuPanel that opens a formatted list of all missions from mission_logs history.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "godot",
+          "ui",
+          "menu",
+          "mission-log"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Menu overlay has a Logbook button in the header area"
+          },
+          {
+            "completed": true,
+            "text": "Clicking Logbook opens a panel/list containing full mission history entries"
+          },
+          {
+            "completed": true,
+            "text": "Mission history rows are clearly formatted and include all recorded fields"
+          }
+        ],
+        "implementationPlan": "1. Extend MenuPanel scene with Logbook button and overlay panel\n2. Wire MenuPanel script to open/close and render mission history\n3. Format mission rows to show all fields clearly\n4. Update mission log tests for full-field coverage",
+        "implementationNotes": "✓ Added header Logbook button + modal overlay with scrollable mission cards in MenuPanel\n\n✓ Updated run_mission_log_tests.gd to verify full mission entry field preservation\n\n⚠️ Reopened: run_mission_log_tests currently failing (cannot write user://mission_logs.json in headless run); logbook behavior not yet test-green.\n\n✓ MissionLogManager now supports test path overrides; run_mission_log_tests uses isolated res:// test log and passes.\n\nValidation: tests/run_mission_log_tests.gd PASS (4/4)."
+      }
+    },
+    {
+      "id": "v7",
+      "taskId": "rm8qap",
+      "version": 7,
+      "timestamp": "2026-02-08T02:53:59.583Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Add mission logbook to menu overlay",
+        "description": "Add a Logbook button at the top of MenuPanel that opens a formatted list of all missions from mission_logs history.",
+        "status": "done",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "godot",
+          "ui",
+          "menu",
+          "mission-log"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Menu overlay has a Logbook button in the header area"
+          },
+          {
+            "completed": true,
+            "text": "Clicking Logbook opens a panel/list containing full mission history entries"
+          },
+          {
+            "completed": true,
+            "text": "Mission history rows are clearly formatted and include all recorded fields"
+          }
+        ],
+        "implementationPlan": "1. Extend MenuPanel scene with Logbook button and overlay panel\n2. Wire MenuPanel script to open/close and render mission history\n3. Format mission rows to show all fields clearly\n4. Update mission log tests for full-field coverage",
+        "implementationNotes": "✓ Added header Logbook button + modal overlay with scrollable mission cards in MenuPanel\n\n✓ Updated run_mission_log_tests.gd to verify full mission entry field preservation\n\n⚠️ Reopened: run_mission_log_tests currently failing (cannot write user://mission_logs.json in headless run); logbook behavior not yet test-green.\n\n✓ MissionLogManager now supports test path overrides; run_mission_log_tests uses isolated res:// test log and passes.\n\nValidation: tests/run_mission_log_tests.gd PASS (4/4)."
+      }
+    }
+  ]
+}

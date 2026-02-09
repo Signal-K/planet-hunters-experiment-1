@@ -36,6 +36,7 @@
     "createdAt": "2026-01-15T05:32:14.124Z",
     "timeFormat": "24h",
     "gitTrackingMode": "git-tracked",
-    "serverPort": 6420
+    "serverPort": 6420,
+    "defaultAssignee": "@Liam"
   }
 }

@@ -1,13 +1,15 @@
 extends RefCounted
 class_name PanelStyle
 
-const PANEL_BG := Color(0.975, 0.98, 0.99, 1)
-const PANEL_BORDER := Color(0.86, 0.89, 0.94, 1)
-const PANEL_SHADOW := Color(0, 0, 0, 0.12)
-const TEXT_PRIMARY := Color(0.10, 0.12, 0.16, 1)
-const TEXT_MUTED := Color(0.42, 0.45, 0.52, 1)
-const ACCENT := Color(0.16, 0.48, 0.92, 1)
-const ACCENT_SOFT := Color(0.88, 0.93, 0.99, 1)
+const PANEL_BG := Color(0.133333, 0.152941, 0.180392, 0.96)
+const PANEL_BORDER := Color(0.263, 0.298, 0.369, 1)
+const PANEL_SHADOW := Color(0, 0, 0, 0.38)
+const TEXT_PRIMARY := Color(0.847, 0.871, 0.914, 1)
+const TEXT_MUTED := Color(0.639, 0.694, 0.784, 1)
+const ACCENT := Color(0.533, 0.753, 0.816, 1)
+const ACCENT_SOFT := Color(0.168627, 0.188235, 0.231373, 0.96)
+const BUTTON_PRESSED := Color(0.231373, 0.258824, 0.321569, 0.96)
+const TEXT_ON_ACCENT := Color(0.094, 0.102, 0.122, 1)
 
 static func apply_panel(panel: Control, bg_color: Color = PANEL_BG) -> void:
 	if panel == null:
@@ -72,8 +74,8 @@ static func apply_button(button: Button, is_primary: bool = false) -> void:
 	normal.content_margin_right = 16
 	normal.content_margin_top = 10
 	normal.content_margin_bottom = 10
-	normal.bg_color = PANEL_BG
-	normal.border_color = PANEL_BORDER
+	normal.bg_color = ACCENT if is_primary else PANEL_BG
+	normal.border_color = ACCENT if is_primary else PANEL_BORDER
 	normal.border_width_left = 1
 	normal.border_width_right = 1
 	normal.border_width_top = 1
@@ -83,13 +85,20 @@ static func apply_button(button: Button, is_primary: bool = false) -> void:
 	if hover == null:
 		push_error("Failed to duplicate button style")
 		return
-	hover.bg_color = Color(0.94, 0.95, 0.97, 1)
+	hover.bg_color = BUTTON_PRESSED if is_primary else ACCENT_SOFT
 
 	var pressed = normal.duplicate()
 	if pressed == null:
 		push_error("Failed to duplicate button style")
 		return
-	pressed.bg_color = Color(0.90, 0.92, 0.95, 1)
+	pressed.bg_color = PANEL_BG if is_primary else BUTTON_PRESSED
+
+	var disabled = normal.duplicate()
+	if disabled == null:
+		push_error("Failed to duplicate disabled button style")
+		return
+	disabled.bg_color = Color(PANEL_BG.r, PANEL_BG.g, PANEL_BG.b, 0.7)
+	disabled.border_color = Color(PANEL_BORDER.r, PANEL_BORDER.g, PANEL_BORDER.b, 0.7)
 
 	if normal != null:
 		button.add_theme_stylebox_override("normal", normal)
@@ -98,10 +107,15 @@ static func apply_button(button: Button, is_primary: bool = false) -> void:
 	if pressed != null:
 		button.add_theme_stylebox_override("pressed", pressed)
 		button.add_theme_stylebox_override("focus", hover)
+	if disabled != null:
+		button.add_theme_stylebox_override("disabled", disabled)
 	button.add_theme_font_size_override("font_size", 20)
-	button.add_theme_color_override("font_color", TEXT_PRIMARY)
-	button.add_theme_color_override("font_hover_color", TEXT_PRIMARY)
-	button.add_theme_color_override("font_pressed_color", TEXT_PRIMARY)
+	var font_color = TEXT_ON_ACCENT if is_primary else TEXT_PRIMARY
+	button.add_theme_color_override("font_color", font_color)
+	button.add_theme_color_override("font_hover_color", font_color)
+	button.add_theme_color_override("font_pressed_color", font_color)
+	button.add_theme_color_override("font_focus_color", font_color)
+	button.add_theme_color_override("font_disabled_color", Color(TEXT_MUTED.r, TEXT_MUTED.g, TEXT_MUTED.b, 0.85))
 
 static func apply_separator(separator: HSeparator) -> void:
 	if separator == null:
@@ -115,7 +129,7 @@ static func apply_progress_bar(bar: ProgressBar) -> void:
 	if bg == null:
 		push_error("Failed to create background style for progress bar")
 		return
-	bg.bg_color = Color(0.92, 0.94, 0.97, 1)
+	bg.bg_color = ACCENT_SOFT
 	bg.corner_radius_top_left = 8
 	bg.corner_radius_top_right = 8
 	bg.corner_radius_bottom_left = 8

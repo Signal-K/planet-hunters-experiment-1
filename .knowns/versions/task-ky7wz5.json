@@ -1,236 +1,186 @@
 {
   "taskId": "ky7wz5",
-  "currentVersion": 12,
+  "currentVersion": 7,
   "versions": [
     {
       "id": "v1",
       "taskId": "ky7wz5",
       "version": 1,
-      "timestamp": "2026-01-19T09:00:25.739Z",
+      "timestamp": "2026-02-08T01:32:38.796Z",
       "changes": [
         {
-          "field": "status",
-          "oldValue": "todo",
-          "newValue": "in-progress"
+          "field": "implementationNotes",
+          "oldValue": "Great, that works!\\\nNow we just need to get the annotation working for planets, too.",
+          "newValue": "Great, that works!\\\nNow we just need to get the annotation working for planets, too.\n\n✓ Added level-2 planet gate + one-time unlock overlay + auto-focus to planet scan"
         }
       ],
       "snapshot": {
         "title": "Allow users to switch between planets & asteroids",
         "status": "in-progress",
         "priority": "high",
+        "assignee": "@me",
         "labels": [
           "Supabase",
-          "Database"
+          "Database",
+          "Planets",
+          "UI",
+          "Anomalies"
         ],
-        "acceptanceCriteria": []
+        "acceptanceCriteria": [],
+        "implementationNotes": "Great, that works!\\\nNow we just need to get the annotation working for planets, too.\n\n✓ Added level-2 planet gate + one-time unlock overlay + auto-focus to planet scan"
       }
     },
     {
       "id": "v2",
       "taskId": "ky7wz5",
       "version": 2,
-      "timestamp": "2026-01-19T09:00:25.797Z",
+      "timestamp": "2026-02-08T01:33:22.535Z",
       "changes": [
         {
-          "field": "status",
-          "oldValue": "in-progress",
-          "newValue": "in-review"
+          "field": "implementationNotes",
+          "oldValue": "Great, that works!\\\nNow we just need to get the annotation working for planets, too.\n\n✓ Added level-2 planet gate + one-time unlock overlay + auto-focus to planet scan",
+          "newValue": "Great, that works!\\\nNow we just need to get the annotation working for planets, too.\n\n✓ Added level-2 planet gate + one-time unlock overlay + auto-focus to planet scan\n\n✓ Level-2 overlay lists unlocks (planet discovery, rockets, subcontractors, mission) and CTA auto-focuses planet scan"
         }
       ],
       "snapshot": {
         "title": "Allow users to switch between planets & asteroids",
-        "status": "in-review",
+        "status": "in-progress",
         "priority": "high",
+        "assignee": "@me",
         "labels": [
           "Supabase",
-          "Database"
+          "Database",
+          "Planets",
+          "UI",
+          "Anomalies"
         ],
-        "acceptanceCriteria": []
+        "acceptanceCriteria": [],
+        "implementationNotes": "Great, that works!\\\nNow we just need to get the annotation working for planets, too.\n\n✓ Added level-2 planet gate + one-time unlock overlay + auto-focus to planet scan\n\n✓ Level-2 overlay lists unlocks (planet discovery, rockets, subcontractors, mission) and CTA auto-focuses planet scan"
       }
     },
     {
       "id": "v3",
       "taskId": "ky7wz5",
       "version": 3,
-      "timestamp": "2026-01-19T09:00:27.533Z",
+      "timestamp": "2026-02-08T01:58:36.495Z",
       "changes": [
         {
-          "field": "status",
-          "oldValue": "in-review",
-          "newValue": "done"
+          "field": "assignee",
+          "oldValue": "@me",
+          "newValue": "@Liam"
         }
       ],
       "snapshot": {
         "title": "Allow users to switch between planets & asteroids",
-        "status": "done",
+        "status": "in-progress",
         "priority": "high",
+        "assignee": "@Liam",
         "labels": [
           "Supabase",
-          "Database"
+          "Database",
+          "Planets",
+          "UI",
+          "Anomalies"
         ],
-        "acceptanceCriteria": []
+        "acceptanceCriteria": [],
+        "implementationNotes": "Great, that works!\\\nNow we just need to get the annotation working for planets, too.\n\n✓ Added level-2 planet gate + one-time unlock overlay + auto-focus to planet scan\n\n✓ Level-2 overlay lists unlocks (planet discovery, rockets, subcontractors, mission) and CTA auto-focuses planet scan"
       }
     },
     {
       "id": "v4",
       "taskId": "ky7wz5",
       "version": 4,
-      "timestamp": "2026-01-19T09:00:28.077Z",
+      "timestamp": "2026-02-09T01:26:13.123Z",
       "changes": [
         {
-          "field": "status",
-          "oldValue": "done",
-          "newValue": "in-review"
+          "field": "implementationPlan",
+          "newValue": "1. Review planet vs asteroid detail/annotation data flow\n2. Implement missing planet annotation compatibility in detail tooling\n3. Add Godot tests for planet anomaly id normalization + annotation key stability"
         }
       ],
       "snapshot": {
         "title": "Allow users to switch between planets & asteroids",
-        "status": "in-review",
+        "status": "in-progress",
         "priority": "high",
+        "assignee": "@Liam",
         "labels": [
           "Supabase",
-          "Database"
+          "Database",
+          "Planets",
+          "UI",
+          "Anomalies"
         ],
-        "acceptanceCriteria": []
+        "acceptanceCriteria": [],
+        "implementationPlan": "1. Review planet vs asteroid detail/annotation data flow\n2. Implement missing planet annotation compatibility in detail tooling\n3. Add Godot tests for planet anomaly id normalization + annotation key stability",
+        "implementationNotes": "Great, that works!\\\nNow we just need to get the annotation working for planets, too.\n\n✓ Added level-2 planet gate + one-time unlock overlay + auto-focus to planet scan\n\n✓ Level-2 overlay lists unlocks (planet discovery, rockets, subcontractors, mission) and CTA auto-focuses planet scan"
       }
     },
     {
       "id": "v5",
       "taskId": "ky7wz5",
       "version": 5,
-      "timestamp": "2026-01-20T14:38:22.541Z",
+      "timestamp": "2026-02-09T01:36:05.495Z",
       "changes": [
         {
-          "field": "labels",
-          "oldValue": [
-            "Supabase",
-            "Database"
-          ],
-          "newValue": [
-            "Supabase",
-            "Database",
-            "Planets"
-          ]
+          "field": "assignee",
+          "oldValue": "@Liam",
+          "newValue": "@me"
         }
       ],
       "snapshot": {
         "title": "Allow users to switch between planets & asteroids",
-        "status": "in-review",
+        "status": "in-progress",
         "priority": "high",
+        "assignee": "@me",
         "labels": [
           "Supabase",
           "Database",
-          "Planets"
+          "Planets",
+          "UI",
+          "Anomalies"
         ],
-        "acceptanceCriteria": []
+        "acceptanceCriteria": [],
+        "implementationPlan": "1. Review planet vs asteroid detail/annotation data flow\n2. Implement missing planet annotation compatibility in detail tooling\n3. Add Godot tests for planet anomaly id normalization + annotation key stability",
+        "implementationNotes": "Great, that works!\\\nNow we just need to get the annotation working for planets, too.\n\n✓ Added level-2 planet gate + one-time unlock overlay + auto-focus to planet scan\n\n✓ Level-2 overlay lists unlocks (planet discovery, rockets, subcontractors, mission) and CTA auto-focuses planet scan"
       }
     },
     {
       "id": "v6",
       "taskId": "ky7wz5",
       "version": 6,
-      "timestamp": "2026-01-20T14:38:24.836Z",
+      "timestamp": "2026-02-09T01:36:09.905Z",
       "changes": [
         {
-          "field": "labels",
-          "oldValue": [
-            "Supabase",
-            "Database",
-            "Planets"
-          ],
-          "newValue": [
-            "Supabase",
-            "Database",
-            "Planets",
-            "UI"
-          ]
+          "field": "implementationNotes",
+          "oldValue": "Great, that works!\\\nNow we just need to get the annotation working for planets, too.\n\n✓ Added level-2 planet gate + one-time unlock overlay + auto-focus to planet scan\n\n✓ Level-2 overlay lists unlocks (planet discovery, rockets, subcontractors, mission) and CTA auto-focuses planet scan",
+          "newValue": "Great, that works!\\\nNow we just need to get the annotation working for planets, too.\n\n✓ Added level-2 planet gate + one-time unlock overlay + auto-focus to planet scan\n\n✓ Level-2 overlay lists unlocks (planet discovery, rockets, subcontractors, mission) and CTA auto-focuses planet scan\n\n✓ Planet annotation IDs now normalize from ticId (not DB row id) and planet-set aliases are supported. Added tests/run_annotation_model_tests.gd (3/3 pass)."
         }
       ],
       "snapshot": {
         "title": "Allow users to switch between planets & asteroids",
-        "status": "in-review",
+        "status": "in-progress",
         "priority": "high",
+        "assignee": "@me",
         "labels": [
           "Supabase",
           "Database",
           "Planets",
-          "UI"
+          "UI",
+          "Anomalies"
         ],
-        "acceptanceCriteria": []
+        "acceptanceCriteria": [],
+        "implementationPlan": "1. Review planet vs asteroid detail/annotation data flow\n2. Implement missing planet annotation compatibility in detail tooling\n3. Add Godot tests for planet anomaly id normalization + annotation key stability",
+        "implementationNotes": "Great, that works!\\\nNow we just need to get the annotation working for planets, too.\n\n✓ Added level-2 planet gate + one-time unlock overlay + auto-focus to planet scan\n\n✓ Level-2 overlay lists unlocks (planet discovery, rockets, subcontractors, mission) and CTA auto-focuses planet scan\n\n✓ Planet annotation IDs now normalize from ticId (not DB row id) and planet-set aliases are supported. Added tests/run_annotation_model_tests.gd (3/3 pass)."
       }
     },
     {
       "id": "v7",
       "taskId": "ky7wz5",
       "version": 7,
-      "timestamp": "2026-01-20T14:38:29.329Z",
-      "changes": [
-        {
-          "field": "labels",
-          "oldValue": [
-            "Supabase",
-            "Database",
-            "Planets",
-            "UI"
-          ],
-          "newValue": [
-            "Supabase",
-            "Database",
-            "Planets",
-            "UI",
-            "Anomalies"
-          ]
-        }
-      ],
-      "snapshot": {
-        "title": "Allow users to switch between planets & asteroids",
-        "status": "in-review",
-        "priority": "high",
-        "labels": [
-          "Supabase",
-          "Database",
-          "Planets",
-          "UI",
-          "Anomalies"
-        ],
-        "acceptanceCriteria": []
-      }
-    },
-    {
-      "id": "v8",
-      "taskId": "ky7wz5",
-      "version": 8,
-      "timestamp": "2026-01-20T14:43:26.784Z",
-      "changes": [
-        {
-          "field": "implementationNotes",
-          "newValue": "Great, that works!\\\nNow we just need to get the annotation working for planets, too.\n"
-        }
-      ],
-      "snapshot": {
-        "title": "Allow users to switch between planets & asteroids",
-        "status": "in-review",
-        "priority": "high",
-        "labels": [
-          "Supabase",
-          "Database",
-          "Planets",
-          "UI",
-          "Anomalies"
-        ],
-        "acceptanceCriteria": [],
-        "implementationNotes": "Great, that works!\\\nNow we just need to get the annotation working for planets, too.\n"
-      }
-    },
-    {
-      "id": "v9",
-      "taskId": "ky7wz5",
-      "version": 9,
-      "timestamp": "2026-01-20T14:54:32.649Z",
+      "timestamp": "2026-02-09T01:36:14.301Z",
       "changes": [
         {
           "field": "status",
-          "oldValue": "in-review",
+          "oldValue": "in-progress",
           "newValue": "done"
         }
       ],
@@ -238,6 +188,7 @@
         "title": "Allow users to switch between planets & asteroids",
         "status": "done",
         "priority": "high",
+        "assignee": "@me",
         "labels": [
           "Supabase",
           "Database",
@@ -246,88 +197,8 @@
           "Anomalies"
         ],
         "acceptanceCriteria": [],
-        "implementationNotes": "Great, that works!\\\nNow we just need to get the annotation working for planets, too."
-      }
-    },
-    {
-      "id": "v10",
-      "taskId": "ky7wz5",
-      "version": 10,
-      "timestamp": "2026-01-20T14:54:32.658Z",
-      "changes": [
-        {
-          "field": "status",
-          "oldValue": "done",
-          "newValue": "in-review"
-        }
-      ],
-      "snapshot": {
-        "title": "Allow users to switch between planets & asteroids",
-        "status": "in-review",
-        "priority": "high",
-        "labels": [
-          "Supabase",
-          "Database",
-          "Planets",
-          "UI",
-          "Anomalies"
-        ],
-        "acceptanceCriteria": [],
-        "implementationNotes": "Great, that works!\\\nNow we just need to get the annotation working for planets, too."
-      }
-    },
-    {
-      "id": "v11",
-      "taskId": "ky7wz5",
-      "version": 11,
-      "timestamp": "2026-01-20T14:54:32.724Z",
-      "changes": [
-        {
-          "field": "status",
-          "oldValue": "in-review",
-          "newValue": "done"
-        }
-      ],
-      "snapshot": {
-        "title": "Allow users to switch between planets & asteroids",
-        "status": "done",
-        "priority": "high",
-        "labels": [
-          "Supabase",
-          "Database",
-          "Planets",
-          "UI",
-          "Anomalies"
-        ],
-        "acceptanceCriteria": [],
-        "implementationNotes": "Great, that works!\\\nNow we just need to get the annotation working for planets, too."
-      }
-    },
-    {
-      "id": "v12",
-      "taskId": "ky7wz5",
-      "version": 12,
-      "timestamp": "2026-01-20T14:54:37.454Z",
-      "changes": [
-        {
-          "field": "status",
-          "oldValue": "done",
-          "newValue": "in-review"
-        }
-      ],
-      "snapshot": {
-        "title": "Allow users to switch between planets & asteroids",
-        "status": "in-review",
-        "priority": "high",
-        "labels": [
-          "Supabase",
-          "Database",
-          "Planets",
-          "UI",
-          "Anomalies"
-        ],
-        "acceptanceCriteria": [],
-        "implementationNotes": "Great, that works!\\\nNow we just need to get the annotation working for planets, too."
+        "implementationPlan": "1. Review planet vs asteroid detail/annotation data flow\n2. Implement missing planet annotation compatibility in detail tooling\n3. Add Godot tests for planet anomaly id normalization + annotation key stability",
+        "implementationNotes": "Great, that works!\\\nNow we just need to get the annotation working for planets, too.\n\n✓ Added level-2 planet gate + one-time unlock overlay + auto-focus to planet scan\n\n✓ Level-2 overlay lists unlocks (planet discovery, rockets, subcontractors, mission) and CTA auto-focuses planet scan\n\n✓ Planet annotation IDs now normalize from ticId (not DB row id) and planet-set aliases are supported. Added tests/run_annotation_model_tests.gd (3/3 pass)."
       }
     }
   ]

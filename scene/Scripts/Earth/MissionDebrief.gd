@@ -1,19 +1,12 @@
 extends Node2D
 
-const ORBIT_MULTIPLIER := 1.0
-const EARTH_MULTIPLIER := 1.35
-const SUBCONTRACTOR_FEE := 250000000
+const ORBIT_MULTIPLIER := 0.8
+const EARTH_MULTIPLIER := 1.0
+const SUBCONTRACTOR_FEE := 0
+const EARTH_SALE_MIN_LEVEL := 3
 const SCRAP_REFUND_PCT := 0.20
 const SALVAGE_REFUND_PCT := 0.10
 const XP_AWARD_MISSION := 4
-
-const MINERAL_PRICES := {
-	"Iron": 12,
-	"Nickel": 24,
-	"Cobalt": 36,
-	"Platinum": 120,
-	"Silicates": 8
-}
 
 const ROCKET_COSTS := {
 	"starterrocket1": 1000000000,
@@ -29,7 +22,7 @@ const ROCKET_COSTS := {
 @onready var scrap_button: Button = $UI/Root/Panel/VBox/Actions/ShipRow/ScrapButton
 @onready var salvage_button: Button = $UI/Root/Panel/VBox/Actions/ShipRow/SalvageButton
 @onready var leave_button: Button = $UI/Root/Panel/VBox/Actions/ShipRow/LeaveButton
-@onready var archive_button: Button = $UI/Root/Panel/VBox/Actions/ShipRow/ArchiveButton
+@onready var archive_button: Button = $UI/Root/Panel/VBox/Actions/ShipRow/ArchiveButton if has_node("UI/Root/Panel/VBox/Actions/ShipRow/ArchiveButton") else null
 @onready var back_button: Button = $UI/Root/Panel/VBox/Footer/BackButton
 @onready var status_label: Label = $UI/Root/Panel/VBox/Footer/Status
 
@@ -38,6 +31,7 @@ var _collected := {}
 var _total_value := 0
 var _sold := false
 var _closed_out := false
+var _subcontractor := {}
 
 func _ready() -> void:
 	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
@@ -50,11 +44,14 @@ func _ready() -> void:
 	panel_style.apply_button(scrap_button, false)
 	panel_style.apply_button(salvage_button, false)
 	panel_style.apply_button(leave_button, false)
+	if archive_button:
+		panel_style.apply_button(archive_button, false)
 	panel_style.apply_button(back_button, false)
 
 	_returned = _load_returned_mission()
 	_register_orbiting()
 	_build_mineral_list()
+	_select_subcontractor()
 	_update_labels()
 
 	sell_orbit_button.pressed.connect(func(): _sell(false))
@@ -63,7 +60,8 @@ func _ready() -> void:
 	scrap_button.pressed.connect(func(): _scrap_ship(SCRAP_REFUND_PCT))
 	salvage_button.pressed.connect(func(): _scrap_ship(SALVAGE_REFUND_PCT))
 	leave_button.pressed.connect(func(): _leave_in_orbit())
-	archive_button.pressed.connect(func(): _archive_ship())
+	if archive_button:
+		archive_button.pressed.connect(func(): _archive_ship())
 	back_button.pressed.connect(func(): _return_to_base())
 
 func _load_returned_mission() -> Dictionary:
@@ -105,7 +103,8 @@ func _build_mineral_list() -> void:
 		row.add_child(name_label)
 		row.add_child(amount_label)
 		minerals_list.add_child(row)
-		_total_value += _price_for_mineral(k, amount)
+		var pricing = preload("res://Scripts/Utils/MineralPricing.gd")
+		_total_value += pricing.price_for(k, amount)
 
 func _get_collected_minerals() -> Dictionary:
 	var target_id = str(_returned.get("target_id", ""))
@@ -119,10 +118,6 @@ func _get_collected_minerals() -> Dictionary:
 	var entry = targets.get(target_id, {})
 	return entry.get("collected", {})
 
-func _price_for_mineral(name: String, amount: int) -> int:
-	var unit = int(MINERAL_PRICES.get(name, 5))
-	return unit * amount
-
 func _update_labels() -> void:
 	var rocket_id = str(_returned.get("rocket_id", ""))
 	var label = str(_returned.get("label", ""))
@@ -132,21 +127,34 @@ func _update_labels() -> void:
 		label = "Unknown Target"
 	title_label.text = "Mission Debrief"
 	subtitle_label.text = "Rocket %s returning from %s" % [rocket_id if rocket_id != "" else "", label]
-	status_label.text = "Estimated orbit sale value: %s F" % str(_total_value)
+	var subcontractor_name = str(_subcontractor.get("name", "Subcontractor"))
+	status_label.text = "Estimated orbit sale (%s): %s F" % [subcontractor_name, str(_total_value)]
 	var app = _get_app_controller()
 	if app:
 		var balance = app.get_franc_balance()
-		sell_earth_button.disabled = balance < SUBCONTRACTOR_FEE
-		sell_earth_button.text = "Bring to Earth (Fee %s F)" % str(SUBCONTRACTOR_FEE)
+		var level = int(app.get_experience_level())
+		if level < EARTH_SALE_MIN_LEVEL:
+			sell_earth_button.disabled = true
+			sell_earth_button.text = "Bring to Earth (Locked • Lvl %s)" % str(EARTH_SALE_MIN_LEVEL)
+		else:
+			sell_earth_button.disabled = false
+			sell_earth_button.text = "Sell on Earth"
+	# Save/salvage reserved for later unlocks
+	keep_button.disabled = true
+	salvage_button.disabled = true
 
 func _sell(to_earth: bool) -> void:
-	if _sold:
+	if _sold or _closed_out:
 		return
 	if _collected.is_empty():
 		status_label.text = "No cargo to sell."
 		return
-	var multiplier = EARTH_MULTIPLIER if to_earth else ORBIT_MULTIPLIER
-	var gross = int(round(_total_value * multiplier))
+	var gross := 0
+	if to_earth:
+		var multiplier = EARTH_MULTIPLIER
+		gross = int(round(_total_value * multiplier))
+	else:
+		gross = _orbit_sale_value()
 	var net = gross
 	if to_earth:
 		net = max(gross - SUBCONTRACTOR_FEE, 0)
@@ -154,10 +162,18 @@ func _sell(to_earth: bool) -> void:
 	if app:
 		app.add_franc_balance(net, "mission_sale")
 		app.add_experience(XP_AWARD_MISSION, "mission")
+	var sm = preload("res://Scripts/Utils/SubcontractorManager.gd")
+	if sm:
+		sm.add_affinity(str(_subcontractor.get("id", "")))
 	_add_mission_log("sell_earth" if to_earth else "sell_orbit", net)
 	_sold = true
+	_closed_out = true
 	status_label.text = "Sale complete. Credited %s F." % str(net)
 	_clear_cargo()
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if rm:
+		rm.remove_orbiting_rocket(str(_returned.get("rocket_id", "")))
+	_lock_action_buttons()
 
 func _keep_cargo() -> void:
 	status_label.text = "Cargo stored. You can sell later."
@@ -170,6 +186,7 @@ func _archive_ship() -> void:
 	_add_mission_log("archive", 0)
 	status_label.text = "Ship archived."
 	_closed_out = true
+	_lock_action_buttons()
 
 func _scrap_ship(refund_pct: float) -> void:
 	if _closed_out:
@@ -186,6 +203,7 @@ func _scrap_ship(refund_pct: float) -> void:
 	_add_mission_log("scrap" if refund_pct >= 0.2 else "salvage", refund)
 	status_label.text = "Ship processed. Refund %s F." % str(refund)
 	_closed_out = true
+	_lock_action_buttons()
 
 func _leave_in_orbit() -> void:
 	if _closed_out:
@@ -193,6 +211,23 @@ func _leave_in_orbit() -> void:
 	_add_mission_log("leave_orbit", 0)
 	status_label.text = "Ship left in orbit."
 	_closed_out = true
+	_lock_action_buttons()
+
+func _lock_action_buttons() -> void:
+	if sell_orbit_button:
+		sell_orbit_button.disabled = true
+	if sell_earth_button:
+		sell_earth_button.disabled = true
+	if keep_button:
+		keep_button.disabled = true
+	if scrap_button:
+		scrap_button.disabled = true
+	if salvage_button:
+		salvage_button.disabled = true
+	if leave_button:
+		leave_button.disabled = true
+	if archive_button:
+		archive_button.disabled = true
 
 func _clear_cargo() -> void:
 	var target_id = str(_returned.get("target_id", ""))
@@ -224,12 +259,35 @@ func _add_mission_log(action: String, payout: int) -> void:
 	}
 	log.add_mission(entry)
 
+func _select_subcontractor() -> void:
+	var app = _get_app_controller()
+	var level = 1
+	if app:
+		level = int(app.get_experience_level())
+	var sm = preload("res://Scripts/Utils/SubcontractorManager.gd")
+	if sm:
+		_subcontractor = sm.pick_subcontractor(level)
+	else:
+		_subcontractor = {}
+
+func _orbit_sale_value() -> int:
+	if _collected.is_empty():
+		return 0
+	var pricing = preload("res://Scripts/Utils/MineralPricing.gd")
+	return pricing.total_value(_collected, ORBIT_MULTIPLIER, _subcontractor.get("bonus", {}))
+
 func _make_badge() -> String:
 	var rocket_id = str(_returned.get("rocket_id", ""))
 	var target_id = str(_returned.get("target_id", ""))
 	if rocket_id == "" or target_id == "":
 		return "Mission"
-	return "%s-%s" % [rocket_id, target_id]
+	var return_stamp = ""
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if rm:
+		return_stamp = str(int(rm.get_status_changed_at(rocket_id, "returned")))
+	if return_stamp == "" or return_stamp == "0":
+		return_stamp = str(int(Time.get_unix_time_from_system()))
+	return "%s-%s-%s" % [rocket_id, target_id, return_stamp]
 
 func _rocket_cost(rocket_id: String) -> int:
 	if rocket_id == "":
@@ -245,6 +303,9 @@ func _get_app_controller() -> Node:
 func _return_to_base() -> void:
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	if rm:
+		var rocket_id = str(_returned.get("rocket_id", ""))
+		if rocket_id != "":
+			rm.finalize_return(rocket_id)
 		rm.clear_returned_mission()
 	var tree = Engine.get_main_loop() as SceneTree
 	if tree == null:

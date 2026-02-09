@@ -7,7 +7,15 @@ const ORBIT_ROTATION_SPEED := 0.25
 const ORBIT_RADIUS_PX := 416.0
 const ORBIT_SEGMENTS := 64
 const TARGET_LEVEL_SIZE := 5
+const NumberFormat = preload("res://Scripts/Utils/NumberFormat.gd")
 const RETURN_SCENE_PATH := "res://Scenes/Transitions/rocket_return.tscn"
+const ROCKET_TIP_PADDING_PX := 8.0
+const ACTION_OPEN_PREVIEW := "open_asteroid_preview"
+const ACTION_MINE_TARGET := "mine_target"
+const ACTION_RETURN_HOME := "return_rocket_home"
+const HINT_OPEN_PREVIEW := "This preview shows your rocket at the target and what you can collect."
+const HINT_MINE_TARGET := "Press Mine to collect minerals from this target."
+const HINT_RETURN_HOME := "Press Return Home to send this rocket back to Earth with its cargo."
 
 @onready var asteroid_pivot: Node3D = $AsteroidPivot
 @onready var asteroid_mesh: MeshInstance3D = $AsteroidPivot/Asteroid
@@ -22,7 +30,8 @@ const RETURN_SCENE_PATH := "res://Scenes/Transitions/rocket_return.tscn"
 @onready var minerals_list: VBoxContainer = $CanvasLayer/UI/Margin/VBox/MineralsPanel/MineralsMargin/MineralsContent/MineralsList
 @onready var orbit_root: Node2D = $CanvasLayer/Orbit2D
 @onready var orbit_circle: Line2D = $CanvasLayer/Orbit2D/OrbitCircle
-@onready var orbit_rocket: Sprite2D = $CanvasLayer/Orbit2D/OrbitRocket2D
+@onready var orbit_heading: Line2D = $CanvasLayer/Orbit2D/OrbitHeading
+@onready var orbit_rocket: AnimatedSprite2D = $CanvasLayer/Orbit2D/OrbitRocket2D
 @onready var return_home_button: Button = $CanvasLayer/UI/ControlPanel/ControlPanelMargin/ControlPanelButtons/ReturnHomeButton
 @onready var mine_button: Button = $CanvasLayer/UI/ControlPanel/ControlPanelMargin/ControlPanelButtons/MineButton
 @onready var mine_cooldown_label: Label = $CanvasLayer/UI/ControlPanel/ControlPanelMargin/ControlPanelButtons/MineCooldownLabel
@@ -37,10 +46,14 @@ const RETURN_SCENE_PATH := "res://Scenes/Transitions/rocket_return.tscn"
 var _orbit_angle := 0.0
 var _mine_ready_at := 0
 var _current_rocket_id := ""
+var _stage2_sprite_frames: SpriteFrames = null
+
 var _current_target_id := ""
 var _current_target_type := ""
 var _current_target_label := ""
 var _current_yield: Dictionary = {}
+var _mining_target_pos := Vector2.ZERO
+var _mining_active := false
 
 func _ready() -> void:
 	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
@@ -82,12 +95,12 @@ func _ready() -> void:
 	_setup_orbit_preview(target_id, rocket_id)
 	_generate_asteroid(target_id)
 	_update_inventory_ui()
+	_show_tutorial_hint_once(ACTION_OPEN_PREVIEW, HINT_OPEN_PREVIEW)
 
 	if return_home_button:
 		return_home_button.pressed.connect(_on_return_home_pressed)
 	if mine_button:
 		mine_button.pressed.connect(_on_mine_pressed)
-		mine_button.text = "Mine"
 		_update_mine_button_state()
 	if mine_cooldown_label:
 		panel_style.apply_muted(mine_cooldown_label)
@@ -110,100 +123,19 @@ func _process(delta: float) -> void:
 		var offset = Vector2(cos(_orbit_angle), sin(_orbit_angle)) * ORBIT_RADIUS_PX
 		orbit_rocket.position = offset
 		orbit_rocket.rotation = _orbit_angle + PI
+		var orbit_utils = preload("res://Scripts/Utils/OrbitVisuals.gd")
+		orbit_utils.update_heading_line(orbit_heading, orbit_rocket)
+	if _mining_active and mining_beam and mining_beam.visible:
+		var rocket_pos = _get_rocket_screen_pos()
+		mining_beam.set_point_position(0, rocket_pos)
+		mining_beam.set_point_position(1, _mining_target_pos)
 	_update_mine_button_state()
 
 func _generate_asteroid(target_id: String) -> void:
 	if asteroid_mesh == null:
 		return
-	var seed = _hash_string(target_id)
-	var rng = RandomNumberGenerator.new()
-	rng.seed = seed
-
-	var shape_noise = FastNoiseLite.new()
-	shape_noise.seed = seed
-	shape_noise.noise_type = FastNoiseLite.TYPE_SIMPLEX
-	shape_noise.frequency = rng.randf_range(1.4, 2.4)
-	shape_noise.fractal_type = FastNoiseLite.FRACTAL_FBM
-	shape_noise.fractal_octaves = int(rng.randi_range(4, 6))
-	shape_noise.fractal_gain = 0.55
-	shape_noise.fractal_lacunarity = rng.randf_range(1.8, 2.2)
-
-	var detail_noise = FastNoiseLite.new()
-	detail_noise.seed = seed + 31
-	detail_noise.noise_type = FastNoiseLite.TYPE_SIMPLEX
-	detail_noise.frequency = rng.randf_range(2.6, 3.6)
-	detail_noise.fractal_type = FastNoiseLite.FRACTAL_RIDGED
-	detail_noise.fractal_octaves = 2
-	detail_noise.fractal_gain = 0.5
-
-	var color_noise = FastNoiseLite.new()
-	color_noise.seed = seed + 77
-	color_noise.noise_type = FastNoiseLite.TYPE_SIMPLEX
-	color_noise.frequency = rng.randf_range(1.2, 2.0)
-	color_noise.fractal_type = FastNoiseLite.FRACTAL_FBM
-	color_noise.fractal_octaves = 3
-	color_noise.fractal_gain = 0.5
-
-	var base_mesh = SphereMesh.new()
-	base_mesh.radial_segments = 12
-	base_mesh.rings = 8
-	base_mesh.radius = 1.0
-
-	var arrays = base_mesh.get_mesh_arrays()
-	var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
-	var colors := PackedColorArray()
-	colors.resize(verts.size())
-
-	var base_radius = rng.randf_range(MIN_RADIUS, MAX_RADIUS)
-	var palette_rng = RandomNumberGenerator.new()
-	palette_rng.seed = _hash_string("palette:%s" % target_id)
-	var palette_dir = palette_rng.randf_range(0.0, 1.0)
-	var primary = _palette_color(palette_dir, 0.0, palette_rng)
-	var secondary = _palette_color(palette_dir, 0.45, palette_rng)
-	var accent = _palette_color(palette_dir, 0.85, palette_rng)
-
-	for i in range(verts.size()):
-		var v = verts[i]
-		var n = v.normalized()
-		var nval = shape_noise.get_noise_3d(n.x * 1.6, n.y * 1.6, n.z * 1.6)
-		var detail = detail_noise.get_noise_3d(n.x * 3.0, n.y * 3.0, n.z * 3.0)
-		var displacement = (nval * 0.22) + (detail * 0.08)
-		verts[i] = n * (base_radius + displacement)
-
-		var cval = color_noise.get_noise_3d(n.x * 2.0, n.y * 2.0, n.z * 2.0)
-		var band = clamp((cval + 1.0) * 0.5, 0.0, 1.0)
-		var mix_a = primary.lerp(secondary, band)
-		var mix_b = mix_a.lerp(accent, clamp((nval + 0.35) * 0.55, 0.0, 1.0))
-		colors[i] = mix_b
-
-	arrays[Mesh.ARRAY_VERTEX] = verts
-	arrays[Mesh.ARRAY_COLOR] = colors
-
-	var temp_mesh = ArrayMesh.new()
-	temp_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
-
-	var st = SurfaceTool.new()
-	st.create_from(temp_mesh, 0)
-	st.index()
-	st.generate_normals(true)
-	var final_mesh = st.commit()
-
-	asteroid_mesh.mesh = final_mesh
-
-	var material = StandardMaterial3D.new()
-	material.vertex_color_use_as_albedo = true
-	material.roughness = 0.95
-	material.metallic = 0.0
-	material.emission_enabled = true
-	material.emission = Color(0.35, 0.35, 0.35)
-	material.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
-	asteroid_mesh.material_override = material
-
-func _palette_color(direction: float, offset: float, rng: RandomNumberGenerator) -> Color:
-	var hue = fmod(direction + offset * 0.35, 1.0)
-	var sat = rng.randf_range(0.12, 0.32)
-	var val = rng.randf_range(0.68, 0.94)
-	return Color.from_hsv(hue, sat, val)
+	var builder = preload("res://Scripts/Utils/ProceduralBodyBuilder.gd")
+	builder.build_asteroid(asteroid_mesh, target_id, MIN_RADIUS, MAX_RADIUS, Color(0.35, 0.35, 0.35))
 
 func _on_back_pressed() -> void:
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
@@ -215,6 +147,7 @@ func _on_back_pressed() -> void:
 func _on_return_home_pressed() -> void:
 	if _current_rocket_id == "":
 		return
+	_show_tutorial_hint_once(ACTION_RETURN_HOME, HINT_RETURN_HOME)
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	if rm:
 		rm.set_returned_mission(_current_rocket_id, _current_target_id, _current_target_label, _current_target_type)
@@ -226,6 +159,7 @@ func _on_mine_pressed() -> void:
 	var now = Time.get_ticks_msec()
 	if now < _mine_ready_at:
 		return
+	_show_tutorial_hint_once(ACTION_MINE_TARGET, HINT_MINE_TARGET)
 	_mine_ready_at = now + 6000
 	if mine_button:
 		mine_button.text = "Mining..."
@@ -257,6 +191,8 @@ func _fire_mining_beam() -> void:
 		return
 	var rocket_pos = _get_rocket_screen_pos()
 	var target_pos = _get_target_screen_pos()
+	_mining_target_pos = target_pos
+	_mining_active = true
 	mining_beam.clear_points()
 	mining_beam.add_point(rocket_pos)
 	mining_beam.add_point(target_pos)
@@ -266,6 +202,7 @@ func _fire_mining_beam() -> void:
 	tween.tween_property(mining_beam, "modulate:a", 0.0, 0.4)
 	tween.finished.connect(func():
 		mining_beam.visible = false
+		_mining_active = false
 	)
 	_spawn_debris(target_pos, rocket_pos)
 
@@ -293,9 +230,27 @@ func _spawn_debris(from_pos: Vector2, to_pos: Vector2) -> void:
 
 func _get_rocket_screen_pos() -> Vector2:
 	if orbit_root and orbit_rocket:
-		return orbit_root.position + orbit_rocket.position
+		var tip_offset = _get_rocket_tip_offset()
+		return orbit_root.position + orbit_rocket.position + tip_offset
 	var size = get_viewport().get_visible_rect().size
 	return size * 0.5
+
+func _get_rocket_tip_offset() -> Vector2:
+	if orbit_rocket == null:
+		return Vector2.ZERO
+	var frames = orbit_rocket.sprite_frames
+	if frames == null or not frames.has_animation("default") or frames.get_frame_count("default") == 0:
+		return Vector2.ZERO
+	var tex: Texture2D = frames.get_frame_texture("default", 0)
+	if tex == null:
+		return Vector2.ZERO
+	var size = tex.get_size()
+	var scale = orbit_rocket.scale
+	if scale == Vector2.ZERO:
+		scale = Vector2.ONE
+	# Sprite is centered; tip is near the top edge in local space.
+	var local = Vector2(0.0, -size.y * 0.5 + ROCKET_TIP_PADDING_PX) * scale
+	return local.rotated(orbit_rocket.rotation)
 
 func _get_target_screen_pos() -> Vector2:
 	if camera_3d and asteroid_pivot:
@@ -309,10 +264,15 @@ func _apply_mining_yield() -> void:
 	var minerals: Dictionary = _current_yield.get("minerals", {})
 	var capacity = float(_current_yield.get("capacity", 0))
 	var inventory = preload("res://Scripts/Utils/MiningInventory.gd")
-	inventory.apply_mining(_current_target_id, capacity, minerals)
-	_update_inventory_ui()
+	var state = inventory.apply_mining(_current_target_id, capacity, minerals)
+	_update_inventory_ui(state)
 
-func _update_inventory_ui() -> void:
+func _show_tutorial_hint_once(action_key: String, message: String) -> void:
+	var app = get_tree().root.find_child("AppController", true, false)
+	if app and app.has_method("show_tutorial_hint_once"):
+		app.show_tutorial_hint_once(action_key, message)
+
+func _update_inventory_ui(state_override: Dictionary = {}) -> void:
 	if inventory_list == null:
 		return
 	for child in inventory_list.get_children():
@@ -323,14 +283,16 @@ func _update_inventory_ui() -> void:
 		return
 	var inventory = preload("res://Scripts/Utils/MiningInventory.gd")
 	var capacity = float(_current_yield.get("capacity", 0))
-	var state = inventory.get_target_state(_current_target_id, capacity)
+	var state = state_override
+	if state.is_empty():
+		state = inventory.get_target_state(_current_target_id, capacity)
 	var remaining = float(state.get("remaining_mass", capacity))
-	inventory_summary.text = "Remaining: %s kg" % _format_number_with_commas(str(int(round(remaining))))
+	inventory_summary.text = "Remaining: %s kg" % NumberFormat.commas(str(int(round(remaining))))
 	var collected: Dictionary = state.get("collected", {})
 	var total_collected := 0
 	for v in collected.values():
 		total_collected += int(v)
-	inventory_total.text = "Total Collected: %s kg" % _format_number_with_commas(str(total_collected))
+	inventory_total.text = "Total Collected: %s kg" % NumberFormat.commas(str(total_collected))
 	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
 	for name in collected.keys():
 		var row = HBoxContainer.new()
@@ -340,12 +302,27 @@ func _update_inventory_ui() -> void:
 		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		panel_style.apply_body(name_lbl)
 		var amount_lbl = Label.new()
-		amount_lbl.text = "%s kg" % _format_number_with_commas(str(collected.get(name, 0)))
+		amount_lbl.text = "%s kg" % NumberFormat.commas(str(collected.get(name, 0)))
 		panel_style.apply_muted(amount_lbl)
 		amount_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		row.add_child(name_lbl)
 		row.add_child(amount_lbl)
 		inventory_list.add_child(row)
+	_update_minerals_available(state)
+
+func _update_minerals_available(state: Dictionary) -> void:
+	if _current_yield.is_empty():
+		return
+	var minerals: Dictionary = _current_yield.get("minerals", {})
+	var collected: Dictionary = state.get("collected", {})
+	var remaining_minerals := {}
+	for name in minerals.keys():
+		var original = int(minerals.get(name, 0))
+		var mined = int(collected.get(name, 0))
+		remaining_minerals[name] = max(original - mined, 0)
+	_build_minerals_list(remaining_minerals)
+	var remaining_mass = int(round(float(state.get("remaining_mass", _current_yield.get("capacity", 0)))))
+	_update_minerals_summary(remaining_mass)
 
 func _on_prev_pressed() -> void:
 	_cycle_preview(-1)
@@ -416,12 +393,6 @@ func _change_scene_to_preview() -> void:
 	else:
 		tree.change_scene_to_file("res://Scenes/UI/AsteroidPreview/asteroid_preview.tscn")
 
-func _hash_string(value: String) -> int:
-	var hash := 0
-	for i in range(value.length()):
-		hash = int((hash * 31 + value.unicode_at(i)) & 0x7fffffff)
-	return max(hash, 1)
-
 func _populate_minerals(target_id: String, target_type: String) -> void:
 	if minerals_list == null:
 		return
@@ -449,9 +420,17 @@ func _populate_minerals(target_id: String, target_type: String) -> void:
 		type_label,
 		level_display,
 		int(round(mineable_pct * 100.0)),
-		_format_number_with_commas(str(capacity))
+		NumberFormat.commas(str(capacity))
 	]
 
+	_build_minerals_list(minerals)
+
+func _build_minerals_list(minerals: Dictionary) -> void:
+	if minerals_list == null:
+		return
+	for child in minerals_list.get_children():
+		child.queue_free()
+	var resource_yield = preload("res://Scripts/Utils/ResourceYield.gd")
 	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
 	for name in resource_yield.MINERALS:
 		if not minerals.has(name):
@@ -462,26 +441,31 @@ func _populate_minerals(target_id: String, target_type: String) -> void:
 		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		panel_style.apply_body(name_lbl)
 		var amount_lbl = Label.new()
-		amount_lbl.text = _format_number_with_commas(str(minerals.get(name, 0)))
+		amount_lbl.text = NumberFormat.commas(str(minerals.get(name, 0)))
 		panel_style.apply_muted(amount_lbl)
 		row.add_child(name_lbl)
 		row.add_child(amount_lbl)
 		minerals_list.add_child(row)
 
-func _format_number_with_commas(value: String) -> String:
-	var out := ""
-	var count := 0
-	for i in range(value.length() - 1, -1, -1):
-		out = value[i] + out
-		count += 1
-		if count % 3 == 0 and i > 0:
-			out = "," + out
-	return out
+func _update_minerals_summary(capacity_override: int) -> void:
+	if _current_yield.is_empty():
+		return
+	var mineable_pct = float(_current_yield.get("mineable_pct", 0.0))
+	var level_display = int(_current_yield.get("level", 1))
+	var type_label = "Planet" if str(_current_yield.get("type", "asteroid")) == "planet" else "Asteroid"
+	minerals_summary.text = "%s Level %d • Mineable: %d%% • %s units" % [
+		type_label,
+		level_display,
+		int(round(mineable_pct * 100.0)),
+		NumberFormat.commas(str(capacity_override))
+	]
 
 func _setup_orbit_preview(target_id: String, rocket_id: String) -> void:
 	if orbit_root == null or orbit_rocket == null or orbit_circle == null:
 		return
 	orbit_root.visible = false
+	if orbit_heading:
+		orbit_heading.visible = false
 	if target_id == "" or rocket_id == "":
 		return
 	if not _rocket_has_arrived(target_id, rocket_id):
@@ -493,15 +477,26 @@ func _setup_orbit_preview(target_id: String, rocket_id: String) -> void:
 	else:
 		var size = get_viewport().get_visible_rect().size
 		orbit_root.position = size * 0.5
-	_build_orbit_circle(ORBIT_RADIUS_PX, ORBIT_SEGMENTS)
+	var orbit_utils = preload("res://Scripts/Utils/OrbitVisuals.gd")
+	orbit_utils.build_orbit_circle(orbit_circle, ORBIT_RADIUS_PX, ORBIT_SEGMENTS)
 	orbit_rocket.position = Vector2(ORBIT_RADIUS_PX, 0)
 	orbit_rocket.scale = Vector2(0.2, 0.2)
-	orbit_rocket.texture = _rocket_texture_for_id(rocket_id)
+	_set_orbit_rocket_visual(rocket_id)
+	var orbit_utils2 = preload("res://Scripts/Utils/OrbitVisuals.gd")
+	orbit_utils2.update_heading_line(orbit_heading, orbit_rocket)
+
+func _set_orbit_rocket_visual(rocket_id: String) -> void:
+	if orbit_rocket == null:
+		return
+	var helper = preload("res://Scripts/Utils/RocketSpriteHelper.gd")
+	helper.apply_orbit_sprite(orbit_rocket, rocket_id)
 
 func _rocket_has_arrived(target_id: String, rocket_id: String) -> bool:
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	var missions: Array = []
 	if rm:
+		if rm.has_arrived(rocket_id, target_id):
+			return true
 		missions = rm.get_missions()
 	if missions.is_empty():
 		return false
@@ -513,28 +508,8 @@ func _rocket_has_arrived(target_id: String, rocket_id: String) -> bool:
 		if str(m.get("target", "")) != target_id:
 			continue
 		var arrival_time = int(m.get("arrival_time", 0))
-		return arrival_time > 0 and arrival_time <= now
+		var arrived = arrival_time > 0 and arrival_time <= now
+		if arrived and rm:
+			rm.mark_arrived(rocket_id, target_id)
+		return arrived
 	return false
-
-func _rocket_texture_for_id(rocket_id: String) -> Texture2D:
-	var rocket_type = _rocket_type_from_id(rocket_id)
-	var textures = {
-		"starterrocket1": preload("res://assets/Vehicles/StarterRocket1.png")
-	}
-	return textures.get(rocket_type, textures["starterrocket1"])
-
-func _rocket_type_from_id(rocket_id: String) -> String:
-	if rocket_id.find("-") != -1:
-		var parts = rocket_id.split("-")
-		if parts.size() > 0:
-			return str(parts[0])
-	return rocket_id
-
-func _build_orbit_circle(radius: float, segments: int) -> void:
-	if orbit_circle == null:
-		return
-	var points := PackedVector2Array()
-	for i in range(segments + 1):
-		var t = float(i) / float(segments) * TAU
-		points.append(Vector2(cos(t), sin(t)) * radius)
-	orbit_circle.points = points

@@ -37,7 +37,7 @@ text = "Orbit Contract Preview"
 [node name="Subtitle" type="Label" parent="UI/Root/Panel/VBox"]
 text = ""
 
-[node name="Contractors" type="VBoxContainer" parent="UI/Root/Panel/VBox"]
+[node name="Subcontractors" type="VBoxContainer" parent="UI/Root/Panel/VBox"]
 
 [node name="Actions" type="HBoxContainer" parent="UI/Root/Panel/VBox"]
 

@@ -1,5 +1,6 @@
 extends RefCounted
 class_name LaunchpadRestorer
+const STARTERROCKET1_LAUNCHPAD_POS := Vector2(-110.0, -178.0)
 
 func restore_if_needed(launchpad: Node, selector_panel: Object, launch_button: Object) -> void:
 	# Clear any existing rockets from the "rocket" group (cleanup baked-in or leftover nodes)
@@ -72,7 +73,11 @@ func restore_if_needed(launchpad: Node, selector_panel: Object, launch_button: O
 						inst.position = Vector2(item.get("x", -110.0), item.get("y", -170.0))
 				else:
 					inst.scale = Vector2(0.4, 0.4)  # Scale down to fit on launchpad
-					inst.position = Vector2(item.get("x", -110.0), item.get("y", -170.0))
+					if rtype == "starterrocket1":
+						# Keep launchpad alignment stable even for previously persisted coordinates.
+						inst.position = STARTERROCKET1_LAUNCHPAD_POS
+					else:
+						inst.position = Vector2(item.get("x", -110.0), item.get("y", -170.0))
 				print("Launchpad: restored rocket type=%s id=%s" % [rtype, rid])
 				restored_count += 1
 		print("Launchpad: rocket restoration complete")

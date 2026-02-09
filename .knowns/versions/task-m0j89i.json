@@ -1,0 +1,174 @@
+{
+  "taskId": "m0j89i",
+  "currentVersion": 5,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "m0j89i",
+      "version": 1,
+      "timestamp": "2026-02-06T07:18:27.173Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix Market overlay background not cleared on close",
+        "description": "Closing Market leaves overlay/background over Earth base. Ensure overlay is removed when panel closes.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "bug"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Market overlay is fully removed on close"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "m0j89i",
+      "version": 2,
+      "timestamp": "2026-02-06T07:21:44.280Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "newValue": "1. Identify Market panel creation path (UIManager -> PanelManager)\n2. Fix close handler to remove overlay wrapper\n3. Validate close removes entire panel + overlay"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix Market overlay background not cleared on close",
+        "description": "Closing Market leaves overlay/background over Earth base. Ensure overlay is removed when panel closes.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "bug"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Market overlay is fully removed on close"
+          }
+        ],
+        "implementationPlan": "1. Identify Market panel creation path (UIManager -> PanelManager)\n2. Fix close handler to remove overlay wrapper\n3. Validate close removes entire panel + overlay"
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "m0j89i",
+      "version": 3,
+      "timestamp": "2026-02-06T07:21:58.296Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Market overlay is fully removed on close"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Market overlay is fully removed on close"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Fix Market overlay background not cleared on close",
+        "description": "Closing Market leaves overlay/background over Earth base. Ensure overlay is removed when panel closes.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "bug"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Market overlay is fully removed on close"
+          }
+        ],
+        "implementationPlan": "1. Identify Market panel creation path (UIManager -> PanelManager)\n2. Fix close handler to remove overlay wrapper\n3. Validate close removes entire panel + overlay"
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "m0j89i",
+      "version": 4,
+      "timestamp": "2026-02-06T07:22:13.408Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "## Summary\n- Market panel close now removes the full wrapper (overlay + panel).\n\n## Files\n- scene/Scripts/Utils/PanelManager.gd"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix Market overlay background not cleared on close",
+        "description": "Closing Market leaves overlay/background over Earth base. Ensure overlay is removed when panel closes.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "bug"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Market overlay is fully removed on close"
+          }
+        ],
+        "implementationPlan": "1. Identify Market panel creation path (UIManager -> PanelManager)\n2. Fix close handler to remove overlay wrapper\n3. Validate close removes entire panel + overlay",
+        "implementationNotes": "## Summary\n- Market panel close now removes the full wrapper (overlay + panel).\n\n## Files\n- scene/Scripts/Utils/PanelManager.gd"
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "m0j89i",
+      "version": 5,
+      "timestamp": "2026-02-06T07:22:42.921Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix Market overlay background not cleared on close",
+        "description": "Closing Market leaves overlay/background over Earth base. Ensure overlay is removed when panel closes.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "bug"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Market overlay is fully removed on close"
+          }
+        ],
+        "implementationPlan": "1. Identify Market panel creation path (UIManager -> PanelManager)\n2. Fix close handler to remove overlay wrapper\n3. Validate close removes entire panel + overlay",
+        "implementationNotes": "## Summary\n- Market panel close now removes the full wrapper (overlay + panel).\n\n## Files\n- scene/Scripts/Utils/PanelManager.gd"
+      }
+    }
+  ]
+}

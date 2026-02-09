@@ -1,0 +1,235 @@
+{
+  "taskId": "c007zw",
+  "currentVersion": 5,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "c007zw",
+      "version": 1,
+      "timestamp": "2026-02-07T01:07:49.800Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Subcontractors system + interface standardization",
+        "description": "Add subcontractors scene, models, and update contractor behaviors to new standard.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "systems",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Subcontractors scene lists 10 with unlock tiers"
+          },
+          {
+            "completed": false,
+            "text": "Sale pricing uses orbit vs earth delta and purchase markup"
+          },
+          {
+            "completed": false,
+            "text": "All contractor logic uses new subcontractor model"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "c007zw",
+      "version": 2,
+      "timestamp": "2026-02-07T01:57:04.689Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "newValue": "1. Add subcontractor model + persistence + affinity tracking\n2. Create Market subcontractors UI scene and hook into UIManager\n3. Replace contractor logic in MissionDebrief/OrbitSalePreview/Menu with subcontractor standard (unlock tiers, sale multipliers)"
+        }
+      ],
+      "snapshot": {
+        "title": "Subcontractors system + interface standardization",
+        "description": "Add subcontractors scene, models, and update contractor behaviors to new standard.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "systems",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Subcontractors scene lists 10 with unlock tiers"
+          },
+          {
+            "completed": false,
+            "text": "Sale pricing uses orbit vs earth delta and purchase markup"
+          },
+          {
+            "completed": false,
+            "text": "All contractor logic uses new subcontractor model"
+          }
+        ],
+        "implementationPlan": "1. Add subcontractor model + persistence + affinity tracking\n2. Create Market subcontractors UI scene and hook into UIManager\n3. Replace contractor logic in MissionDebrief/OrbitSalePreview/Menu with subcontractor standard (unlock tiers, sale multipliers)"
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "c007zw",
+      "version": 3,
+      "timestamp": "2026-02-07T01:57:19.613Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Subcontractors scene lists 10 with unlock tiers"
+            },
+            {
+              "completed": false,
+              "text": "Sale pricing uses orbit vs earth delta and purchase markup"
+            },
+            {
+              "completed": false,
+              "text": "All contractor logic uses new subcontractor model"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Subcontractors scene lists 10 with unlock tiers"
+            },
+            {
+              "completed": true,
+              "text": "Sale pricing uses orbit vs earth delta and purchase markup"
+            },
+            {
+              "completed": true,
+              "text": "All contractor logic uses new subcontractor model"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Subcontractors system + interface standardization",
+        "description": "Add subcontractors scene, models, and update contractor behaviors to new standard.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "systems",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Subcontractors scene lists 10 with unlock tiers"
+          },
+          {
+            "completed": true,
+            "text": "Sale pricing uses orbit vs earth delta and purchase markup"
+          },
+          {
+            "completed": true,
+            "text": "All contractor logic uses new subcontractor model"
+          }
+        ],
+        "implementationPlan": "1. Add subcontractor model + persistence + affinity tracking\n2. Create Market subcontractors UI scene and hook into UIManager\n3. Replace contractor logic in MissionDebrief/OrbitSalePreview/Menu with subcontractor standard (unlock tiers, sale multipliers)"
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "c007zw",
+      "version": 4,
+      "timestamp": "2026-02-07T01:57:34.351Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "## Summary\n- Added SubcontractorManager with 10-entry roster, unlock tiers, and affinity tracking.\n- New Market UI: SubcontractorsPanel scene listing all 10 with lock states and affinity.\n- Updated OrbitSalePreview, MissionDebrief, and MenuPanel to use subcontractor standard and orbit/earth sale multipliers.\n\n## Files\n- scene/Scripts/Utils/SubcontractorManager.gd\n- scene/subcontractors.json\n- scene/Scenes/UI/SubcontractorsPanel.tscn\n- scene/Scripts/UI/SubcontractorsPanel.gd\n- scene/Scripts/Earth/UIManager.gd\n- scene/Scripts/Earth/OrbitSalePreview.gd\n- scene/Scenes/Earth/orbit_sale_preview.tscn\n- scene/Scripts/Earth/MissionDebrief.gd\n- scene/Scripts/UI/MenuPanel.gd"
+        }
+      ],
+      "snapshot": {
+        "title": "Subcontractors system + interface standardization",
+        "description": "Add subcontractors scene, models, and update contractor behaviors to new standard.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "systems",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Subcontractors scene lists 10 with unlock tiers"
+          },
+          {
+            "completed": true,
+            "text": "Sale pricing uses orbit vs earth delta and purchase markup"
+          },
+          {
+            "completed": true,
+            "text": "All contractor logic uses new subcontractor model"
+          }
+        ],
+        "implementationPlan": "1. Add subcontractor model + persistence + affinity tracking\n2. Create Market subcontractors UI scene and hook into UIManager\n3. Replace contractor logic in MissionDebrief/OrbitSalePreview/Menu with subcontractor standard (unlock tiers, sale multipliers)",
+        "implementationNotes": "## Summary\n- Added SubcontractorManager with 10-entry roster, unlock tiers, and affinity tracking.\n- New Market UI: SubcontractorsPanel scene listing all 10 with lock states and affinity.\n- Updated OrbitSalePreview, MissionDebrief, and MenuPanel to use subcontractor standard and orbit/earth sale multipliers.\n\n## Files\n- scene/Scripts/Utils/SubcontractorManager.gd\n- scene/subcontractors.json\n- scene/Scenes/UI/SubcontractorsPanel.tscn\n- scene/Scripts/UI/SubcontractorsPanel.gd\n- scene/Scripts/Earth/UIManager.gd\n- scene/Scripts/Earth/OrbitSalePreview.gd\n- scene/Scenes/Earth/orbit_sale_preview.tscn\n- scene/Scripts/Earth/MissionDebrief.gd\n- scene/Scripts/UI/MenuPanel.gd"
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "c007zw",
+      "version": 5,
+      "timestamp": "2026-02-07T01:58:00.413Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Subcontractors system + interface standardization",
+        "description": "Add subcontractors scene, models, and update contractor behaviors to new standard.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "systems",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Subcontractors scene lists 10 with unlock tiers"
+          },
+          {
+            "completed": true,
+            "text": "Sale pricing uses orbit vs earth delta and purchase markup"
+          },
+          {
+            "completed": true,
+            "text": "All contractor logic uses new subcontractor model"
+          }
+        ],
+        "implementationPlan": "1. Add subcontractor model + persistence + affinity tracking\n2. Create Market subcontractors UI scene and hook into UIManager\n3. Replace contractor logic in MissionDebrief/OrbitSalePreview/Menu with subcontractor standard (unlock tiers, sale multipliers)",
+        "implementationNotes": "## Summary\n- Added SubcontractorManager with 10-entry roster, unlock tiers, and affinity tracking.\n- New Market UI: SubcontractorsPanel scene listing all 10 with lock states and affinity.\n- Updated OrbitSalePreview, MissionDebrief, and MenuPanel to use subcontractor standard and orbit/earth sale multipliers.\n\n## Files\n- scene/Scripts/Utils/SubcontractorManager.gd\n- scene/subcontractors.json\n- scene/Scenes/UI/SubcontractorsPanel.tscn\n- scene/Scripts/UI/SubcontractorsPanel.gd\n- scene/Scripts/Earth/UIManager.gd\n- scene/Scripts/Earth/OrbitSalePreview.gd\n- scene/Scenes/Earth/orbit_sale_preview.tscn\n- scene/Scripts/Earth/MissionDebrief.gd\n- scene/Scripts/UI/MenuPanel.gd"
+      }
+    }
+  ]
+}

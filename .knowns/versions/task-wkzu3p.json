@@ -1,0 +1,57 @@
+{
+  "taskId": "wkzu3p",
+  "currentVersion": 2,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "wkzu3p",
+      "version": 1,
+      "timestamp": "2026-02-09T01:44:16.389Z",
+      "changes": [
+        {
+          "field": "description",
+          "newValue": "I mean, I think that the difference between resource amount is sufficient for now; plus we'll have different procedurally generated landmarks/visuals...\n\nNarrative wise, they're both bodies in space and there would be just as much differentiation between two different planets as a planet and an asteroid.\n"
+        }
+      ],
+      "snapshot": {
+        "title": "At some point, we'll need to add more differences between planets & asteroids",
+        "description": "I mean, I think that the difference between resource amount is sufficient for now; plus we'll have different procedurally generated landmarks/visuals...\n\nNarrative wise, they're both bodies in space and there would be just as much differentiation between two different planets as a planet and an asteroid.\n",
+        "status": "on-hold",
+        "priority": "low",
+        "labels": [
+          "Anomalies",
+          "Telescopes",
+          "Structures",
+          "Missions"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "wkzu3p",
+      "version": 2,
+      "timestamp": "2026-02-09T01:44:22.271Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "on-hold",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "At some point, we'll need to add more differences between planets & asteroids",
+        "description": "I mean, I think that the difference between resource amount is sufficient for now; plus we'll have different procedurally generated landmarks/visuals...\n\nNarrative wise, they're both bodies in space and there would be just as much differentiation between two different planets as a planet and an asteroid.",
+        "status": "done",
+        "priority": "low",
+        "labels": [
+          "Anomalies",
+          "Telescopes",
+          "Structures",
+          "Missions"
+        ],
+        "acceptanceCriteria": []
+      }
+    }
+  ]
+}

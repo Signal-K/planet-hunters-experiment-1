@@ -3,6 +3,8 @@ class_name RocketsManager
 
 const STATE_PATH := "user://rockets_state.json"
 const DEFAULT_STATE_PATH := "res://rockets_state.json"
+const RETURN_DURATION_SECONDS := 60
+const MISSION_DURATION_SECONDS := 60
 const KNOWN_ROCKET_TYPES := ["starterrocket1", "starterrocket2"]
 const ROCKET_UNLOCK_LEVELS := {
     "starterrocket1": 1,
@@ -49,81 +51,21 @@ static func load_state() -> Dictionary:
         data["seen_asteroids"] = []
     if not data.has("seen_planets"):
         data["seen_planets"] = []
-    _migrate_placed_entries(data)
-    _migrate_mission_times(data)
+    if not data.has("returning"):
+        data["returning"] = []
+    if not data.has("arrived"):
+        data["arrived"] = {}
+    if not data.has("returned_mission"):
+        data["returned_mission"] = {}
+    if not data.has("returning_started"):
+        data["returning_started"] = {}
+    if not data.has("preview_target"):
+        data["preview_target"] = {}
+    if not data.has("status_changed_at"):
+        data["status_changed_at"] = {}
+    var migrations = preload("res://Scripts/Utils/RocketsStateStore.gd")
+    migrations.apply_migrations(data, Callable(RocketsManager, "save_state"))
     return data
-
-static func _migrate_placed_entries(data: Dictionary) -> void:
-    if not data.has("placed"):
-        return
-    var placed = data.get("placed", [])
-    if placed.is_empty():
-        return
-    var changed = false
-    var used_ids := {}
-    for i in range(placed.size()):
-        var item = placed[i]
-        var rtype = str(item.get("type", ""))
-        var rid = str(item.get("id", ""))
-        if rtype == "" and KNOWN_ROCKET_TYPES.has(rid):
-            rtype = rid
-            item["type"] = rtype
-            changed = true
-        if rtype == "" and rid.find("-") != -1:
-            var parts = rid.split("-")
-            if parts.size() > 0 and KNOWN_ROCKET_TYPES.has(parts[0]):
-                rtype = parts[0]
-                item["type"] = rtype
-                changed = true
-        if rid == "" and rtype != "":
-            rid = rtype
-            item["id"] = rid
-            changed = true
-        if rid != "" and used_ids.has(rid):
-            var rng = RandomNumberGenerator.new()
-            rng.randomize()
-            var new_id = "%s-%d" % [rtype if rtype != "" else "rocket", rng.randi()]
-            item["id"] = new_id
-            rid = new_id
-            changed = true
-        if rid != "":
-            used_ids[rid] = true
-        var status = str(item.get("status", ""))
-        if status == "":
-            item["status"] = "awaitingLaunch"
-            changed = true
-        placed[i] = item
-    if changed:
-        data["placed"] = placed
-        save_state(data)
-
-static func _migrate_mission_times(data: Dictionary) -> void:
-    if not data.has("missions"):
-        return
-    var missions = data.get("missions", [])
-    if missions.is_empty():
-        return
-    var time_helper = preload("res://Scripts/Earth/TimeHelper.gd")
-    var now = int(time_helper.get_unix_epoch_seconds())
-    var changed = false
-    for i in range(missions.size()):
-        var m = missions[i]
-        var launch_time = int(m.get("launch_time", 0))
-        var arrival_time = int(m.get("arrival_time", 0))
-        if launch_time <= 0:
-            launch_time = now
-            m["launch_time"] = launch_time
-            arrival_time = launch_time + 60
-            m["arrival_time"] = arrival_time
-            missions[i] = m
-            changed = true
-        elif arrival_time <= launch_time:
-            m["arrival_time"] = launch_time + 60
-            missions[i] = m
-            changed = true
-    if changed:
-        data["missions"] = missions
-        save_state(data)
 
 static func save_state(data: Dictionary) -> bool:
     var json = preload("res://Scripts/Utils/JSONFileManager.gd")
@@ -198,6 +140,7 @@ static func set_launched(rocket_id: String) -> bool:
             placed[i]["status"] = "launched"
             changed = true
     s["placed"] = placed
+    _set_status_changed_at_in_state(s, rocket_id, "launched")
     if changed:
         return save_state(s)
     return true
@@ -225,6 +168,12 @@ static func add_mission(rocket_id: String, target_id: String, launch_time_epoch:
     var record = {"rocket_id": rocket_id, "target": target_id, "launch_time": launch_time_epoch, "arrival_time": arrival}
     missions.append(record)
     s["missions"] = missions
+    _set_status_changed_at_in_state(s, rocket_id, "launched", launch_time_epoch)
+    # Reset arrival flag for new mission
+    var arrived = s.get("arrived", {})
+    if arrived.has(rocket_id):
+        arrived.erase(rocket_id)
+        s["arrived"] = arrived
     return save_state(s)
 
 static func get_missions() -> Array:
@@ -292,6 +241,7 @@ static func set_destroyed(rocket_id: String) -> bool:
             placed[i]["status"] = "Destroyed"
             changed = true
     s["placed"] = placed
+    _set_status_changed_at_in_state(s, rocket_id, "Destroyed")
     if changed:
         return save_state(s)
     return true
@@ -317,12 +267,12 @@ static func return_home(rocket_id: String) -> bool:
             changed = true
     s["missions"] = missions
 
-    # Update placed entry to awaitingLaunch or add a new one
+    # Update placed entry to returningHome or add a new one
     var placed = s.get("placed", [])
     var found = false
     for i in range(placed.size()):
         if str(placed[i].get("id", "")) == rocket_id:
-            placed[i]["status"] = "awaitingLaunch"
+            placed[i]["status"] = "returningHome"
             placed[i]["x"] = placed[i].get("x", -110.0)
             placed[i]["y"] = placed[i].get("y", -170.0)
             found = true
@@ -330,13 +280,150 @@ static func return_home(rocket_id: String) -> bool:
             break
     if not found:
         var rtype = _rocket_type_from_id(rocket_id)
-        placed.append({"type": rtype, "id": rocket_id, "x": -110.0, "y": -170.0, "status": "awaitingLaunch"})
+        placed.append({"type": rtype, "id": rocket_id, "x": -110.0, "y": -170.0, "status": "returningHome"})
         changed = true
     s["placed"] = placed
+
+    # Track returning rocket
+    var returning = s.get("returning", [])
+    var exists = false
+    for entry in returning:
+        if str(entry.get("rocket_id", "")) == rocket_id:
+            exists = true
+            break
+    if not exists:
+        returning.append({"rocket_id": rocket_id})
+        s["returning"] = returning
+        changed = true
+
+    var returning_started = s.get("returning_started", {})
+    var now = int(Time.get_unix_time_from_system())
+    returning_started[rocket_id] = now
+    s["returning_started"] = returning_started
+    _set_status_changed_at_in_state(s, rocket_id, "returningHome", now)
+    changed = true
+
+    # Clear arrival flag when returning
+    var arrived = s.get("arrived", {})
+    if arrived.has(rocket_id):
+        arrived.erase(rocket_id)
+        s["arrived"] = arrived
+        changed = true
 
     if changed:
         return save_state(s)
     return true
+
+static func finalize_return(rocket_id: String) -> bool:
+    if rocket_id == "":
+        return false
+    var s = load_state()
+    var changed = false
+    var now = int(Time.get_unix_time_from_system())
+    var placed = s.get("placed", [])
+    for i in range(placed.size()):
+        if str(placed[i].get("id", "")) == rocket_id:
+            placed[i]["status"] = "returned"
+            changed = true
+            break
+    s["placed"] = placed
+    var returning = s.get("returning", [])
+    for i in range(returning.size() - 1, -1, -1):
+        if str(returning[i].get("rocket_id", "")) == rocket_id:
+            returning.remove_at(i)
+            changed = true
+    s["returning"] = returning
+    var returning_started = s.get("returning_started", {})
+    if returning_started.has(rocket_id):
+        returning_started.erase(rocket_id)
+        s["returning_started"] = returning_started
+        changed = true
+    var arrived = s.get("arrived", {})
+    if arrived.has(rocket_id):
+        arrived.erase(rocket_id)
+        s["arrived"] = arrived
+        changed = true
+    _set_status_changed_at_in_state(s, rocket_id, "returned", now)
+    if changed:
+        return save_state(s)
+    return true
+
+static func get_return_started_at(rocket_id: String) -> int:
+    if rocket_id == "":
+        return 0
+    var s = load_state()
+    var returning_started = s.get("returning_started", {})
+    return int(returning_started.get(rocket_id, 0))
+
+static func has_return_completed(rocket_id: String) -> bool:
+    if rocket_id == "":
+        return false
+    var started_at = get_return_started_at(rocket_id)
+    if started_at <= 0:
+        return false
+    var now = int(Time.get_unix_time_from_system())
+    return (now - started_at) >= RETURN_DURATION_SECONDS
+
+static func mark_returned_if_due(rocket_id: String) -> bool:
+    if rocket_id == "":
+        return false
+    if not has_return_completed(rocket_id):
+        return false
+    var s = load_state()
+    var changed = false
+    var now = int(Time.get_unix_time_from_system())
+    var placed = s.get("placed", [])
+    for i in range(placed.size()):
+        if str(placed[i].get("id", "")) == rocket_id:
+            if str(placed[i].get("status", "")) != "returned":
+                placed[i]["status"] = "returned"
+                changed = true
+            break
+    s["placed"] = placed
+    var returning = s.get("returning", [])
+    for i in range(returning.size() - 1, -1, -1):
+        if str(returning[i].get("rocket_id", "")) == rocket_id:
+            returning.remove_at(i)
+            changed = true
+    s["returning"] = returning
+    var returning_started = s.get("returning_started", {})
+    if returning_started.has(rocket_id):
+        returning_started.erase(rocket_id)
+        s["returning_started"] = returning_started
+        changed = true
+    _set_status_changed_at_in_state(s, rocket_id, "returned", now)
+    if changed:
+        return save_state(s)
+    return true
+
+static func mark_arrived(rocket_id: String, target_id: String) -> bool:
+    if rocket_id == "" or target_id == "":
+        return false
+    var s = load_state()
+    var arrived = s.get("arrived", {})
+    arrived[rocket_id] = {"target_id": target_id, "arrived_at": Time.get_unix_time_from_system()}
+    s["arrived"] = arrived
+    return save_state(s)
+
+static func has_arrived(rocket_id: String, target_id: String) -> bool:
+    if rocket_id == "" or target_id == "":
+        return false
+    var s = load_state()
+    var arrived = s.get("arrived", {})
+    if not arrived.has(rocket_id):
+        return false
+    var entry = arrived.get(rocket_id, {})
+    return str(entry.get("target_id", "")) == target_id
+
+static func get_rocket_status(rocket_id: String) -> String:
+    if rocket_id == "":
+        return ""
+    var s = load_state()
+    var placed = s.get("placed", [])
+    for item in placed:
+        if str(item.get("id", "")) == rocket_id:
+            return str(item.get("status", ""))
+    return ""
 
 static func _rocket_type_from_id(rocket_id: String) -> String:
     if rocket_id.find("-") != -1:
@@ -355,6 +442,7 @@ static func add_placed(rocket_type: String, position: Vector2) -> String:
     var uid = "%s-%d" % [rocket_type, rng.randi()]
     arr.append({"type": rocket_type, "id": uid, "x": position.x, "y": position.y, "status": "awaitingLaunch"})
     s["placed"] = arr
+    _set_status_changed_at_in_state(s, uid, "awaitingLaunch")
     save_state(s)
     return uid
 
@@ -367,9 +455,11 @@ static func reset_state() -> bool:
     data["destroyed"] = []
     data["missions"] = []
     data["selected_target"] = ""
+    data["preview_target"] = {}
     data["detected_targets"] = []
     data["seen_asteroids"] = []
     data["seen_planets"] = []
+    data["status_changed_at"] = {}
     _override_state = data.duplicate(true)
     var ok = save_state(data)
     if ok:
@@ -407,17 +497,30 @@ static func set_preview_target(target_id: String, target_label: String, target_t
         "type": target_type,
         "rocket_id": rocket_id
     }
+    var s = load_state()
+    s["preview_target"] = _preview_target.duplicate(true)
+    save_state(s)
 
 static func get_preview_target() -> Dictionary:
     var target = _preview_target.duplicate()
+    if target.is_empty():
+        var s = load_state()
+        var stored = s.get("preview_target", {})
+        if typeof(stored) == TYPE_DICTIONARY:
+            target = stored.duplicate(true)
     if not target.has("type"):
         target["type"] = "asteroid"
     if not target.has("rocket_id"):
         target["rocket_id"] = ""
+    if str(target.get("rocket_id", "")) == "":
+        target["rocket_id"] = resolve_preview_rocket_id(str(target.get("id", "")))
     return target
 
 static func clear_preview_target() -> void:
     _preview_target = {}
+    var s = load_state()
+    s["preview_target"] = {}
+    save_state(s)
 
 static func set_returned_mission(rocket_id: String, target_id: String, target_label: String, target_type: String) -> void:
     _returned_mission = {
@@ -426,12 +529,24 @@ static func set_returned_mission(rocket_id: String, target_id: String, target_la
         "label": target_label,
         "type": target_type
     }
+    var s = load_state()
+    s["returned_mission"] = _returned_mission.duplicate(true)
+    save_state(s)
 
 static func get_returned_mission() -> Dictionary:
-    return _returned_mission.duplicate()
+    if _returned_mission.size() > 0:
+        return _returned_mission.duplicate()
+    var s = load_state()
+    var stored = s.get("returned_mission", {})
+    if typeof(stored) == TYPE_DICTIONARY:
+        return stored.duplicate()
+    return {}
 
 static func clear_returned_mission() -> void:
     _returned_mission = {}
+    var s = load_state()
+    s["returned_mission"] = {}
+    save_state(s)
 
 static func add_orbiting_rocket(rocket_id: String, target_id: String, label: String, target_type: String) -> void:
     if rocket_id == "":
@@ -453,6 +568,24 @@ static func get_orbiting_rockets() -> Array:
     var out := []
     for key in _orbiting_rockets.keys():
         out.append(_orbiting_rockets[key])
+    return out
+
+static func get_returned_rockets() -> Array:
+    var out := []
+    var s = load_state()
+    var placed = s.get("placed", [])
+    for item in placed:
+        if str(item.get("status", "")) != "returned":
+            continue
+        var rid = str(item.get("id", ""))
+        if rid == "":
+            continue
+        out.append({
+            "rocket_id": rid,
+            "target_id": "",
+            "label": "Returned to Earth",
+            "type": "planet"
+        })
     return out
 
 static func set_return_to_new_mission_panel(enabled: bool) -> void:
@@ -504,6 +637,107 @@ static func get_preview_candidates() -> Array:
         })
     return out
 
+static func get_mission_for_rocket(rocket_id: String) -> Dictionary:
+    if rocket_id == "":
+        return {}
+    var missions = get_missions()
+    if missions.is_empty():
+        return {}
+    var latest := {}
+    var latest_launch := -1.0
+    for m in missions:
+        if str(m.get("rocket_id", "")) != rocket_id:
+            continue
+        var launch = float(m.get("launch_time", 0))
+        if launch >= latest_launch:
+            latest_launch = launch
+            latest = m
+    return latest
+
+static func get_latest_mission_for_target(target_id: String) -> Dictionary:
+    if target_id == "":
+        return {}
+    var missions = get_missions()
+    if missions.is_empty():
+        return {}
+    var latest := {}
+    var latest_launch := -1.0
+    for m in missions:
+        if str(m.get("target", "")) != target_id:
+            continue
+        var launch = float(m.get("launch_time", 0))
+        if launch >= latest_launch:
+            latest_launch = launch
+            latest = m
+    return latest
+
+static func resolve_preview_rocket_id(target_id: String = "") -> String:
+    var target := {}
+    if _preview_target.size() > 0:
+        target = _preview_target.duplicate(true)
+    else:
+        var s = load_state()
+        var stored = s.get("preview_target", {})
+        if typeof(stored) == TYPE_DICTIONARY:
+            target = stored.duplicate(true)
+    var rocket_id = str(target.get("rocket_id", ""))
+    if rocket_id != "":
+        return rocket_id
+    var target_id_effective = target_id
+    if target_id_effective == "":
+        target_id_effective = str(target.get("id", ""))
+    var launched = get_launched()
+    if launched.is_empty():
+        return ""
+    if target_id_effective != "":
+        var mission = get_latest_mission_for_target(target_id_effective)
+        var mission_rocket = str(mission.get("rocket_id", ""))
+        if mission_rocket != "" and launched.has(mission_rocket):
+            return mission_rocket
+    var fallback = str(launched[0])
+    return fallback
+
+static func get_outbound_progress(rocket_id: String) -> float:
+    var effective_rocket_id = rocket_id
+    if effective_rocket_id == "":
+        effective_rocket_id = resolve_preview_rocket_id()
+    var mission = get_mission_for_rocket(effective_rocket_id)
+    if mission.is_empty():
+        var launched_at = float(get_status_changed_at(effective_rocket_id, "launched"))
+        if launched_at > 0:
+            var now_fallback = float(Time.get_unix_time_from_system())
+            return clamp((now_fallback - launched_at) / float(max(MISSION_DURATION_SECONDS, 1)), 0.0, 1.0)
+        return 0.0
+    var launch = float(mission.get("launch_time", 0))
+    var arrival = float(mission.get("arrival_time", 0))
+    if launch <= 0:
+        return 0.0
+    if arrival <= launch:
+        arrival = launch + MISSION_DURATION_SECONDS
+    var now = float(Time.get_unix_time_from_system())
+    return clamp((now - launch) / max(arrival - launch, 1.0), 0.0, 1.0)
+
+static func get_return_progress(rocket_id: String) -> float:
+    if rocket_id == "":
+        return 0.0
+    var started_at = get_return_started_at(rocket_id)
+    if started_at <= 0:
+        return 0.0
+    var now = float(Time.get_unix_time_from_system())
+    return clamp((now - float(started_at)) / float(max(RETURN_DURATION_SECONDS, 1)), 0.0, 1.0)
+
+static func get_status_changed_at(rocket_id: String, status: String) -> int:
+    if rocket_id == "" or status == "":
+        return 0
+    var s = load_state()
+    var all_changes = s.get("status_changed_at", {})
+    if typeof(all_changes) != TYPE_DICTIONARY:
+        return 0
+    var per_rocket = all_changes.get(rocket_id, {})
+    if typeof(per_rocket) != TYPE_DICTIONARY:
+        return 0
+    return int(per_rocket.get(status, 0))
+
 static func _sort_mission_by_launch_time(a: Dictionary, b: Dictionary) -> bool:
     return float(a.get("launch_time", 0)) < float(b.get("launch_time", 0))
 
@@ -516,3 +750,19 @@ static func _normalize_target_type(value: String) -> String:
     if t == "planet" or t == "asteroid":
         return t
     return "asteroid"
+
+static func _set_status_changed_at_in_state(state: Dictionary, rocket_id: String, status: String, timestamp: int = 0) -> void:
+    if rocket_id == "" or status == "":
+        return
+    var when = timestamp
+    if when <= 0:
+        when = int(Time.get_unix_time_from_system())
+    var all_changes = state.get("status_changed_at", {})
+    if typeof(all_changes) != TYPE_DICTIONARY:
+        all_changes = {}
+    var per_rocket = all_changes.get(rocket_id, {})
+    if typeof(per_rocket) != TYPE_DICTIONARY:
+        per_rocket = {}
+    per_rocket[status] = when
+    all_changes[rocket_id] = per_rocket
+    state["status_changed_at"] = all_changes

@@ -1,11 +1,11 @@
 ---
 id: vwvso8
 title: Integrate Obsidian with Knowns
-status: in-review
+status: todo
 priority: low
 labels: []
 createdAt: '2026-01-15T05:44:10.775Z'
-updatedAt: '2026-01-20T08:34:15.160Z'
+updatedAt: '2026-02-09T01:42:39.404Z'
 timeSpent: 23422
 ---
 # Integrate Obsidian with Knowns
@@ -21,4 +21,12 @@ The main value proposition I see here is a workflow that combines task managemen
 
 Anyway...story for another time. Maybe we can get copilot to scan tickets inside a knowns project and add them to Obsidian - semi-manual process that would be a good start.
 <!-- SECTION:DESCRIPTION:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Idea - can we do something where we ping Knowns from another directory?
+
+What about adding multiple knowns instances?
+<!-- SECTION:NOTES:END -->
 

@@ -1,0 +1,202 @@
+{
+  "taskId": "8wtmgk",
+  "currentVersion": 5,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "8wtmgk",
+      "version": 1,
+      "timestamp": "2026-02-06T08:12:47.292Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Menu panel scrolling + visual polish",
+        "description": "Add scroll container and visual flair to menu panel while keeping content on-screen.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "polish"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Menu content scrolls and all sections remain accessible"
+          },
+          {
+            "completed": false,
+            "text": "Menu visuals improved with accent styling"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "8wtmgk",
+      "version": 2,
+      "timestamp": "2026-02-06T08:13:15.916Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "newValue": "1. Add ScrollContainer to menu content\n2. Introduce header accent + card backgrounds + progress bar styling\n3. Ensure layout still fits and scrolls when needed"
+        }
+      ],
+      "snapshot": {
+        "title": "Menu panel scrolling + visual polish",
+        "description": "Add scroll container and visual flair to menu panel while keeping content on-screen.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "polish"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Menu content scrolls and all sections remain accessible"
+          },
+          {
+            "completed": false,
+            "text": "Menu visuals improved with accent styling"
+          }
+        ],
+        "implementationPlan": "1. Add ScrollContainer to menu content\n2. Introduce header accent + card backgrounds + progress bar styling\n3. Ensure layout still fits and scrolls when needed"
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "8wtmgk",
+      "version": 3,
+      "timestamp": "2026-02-06T08:13:28.078Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Menu content scrolls and all sections remain accessible"
+            },
+            {
+              "completed": false,
+              "text": "Menu visuals improved with accent styling"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Menu content scrolls and all sections remain accessible"
+            },
+            {
+              "completed": true,
+              "text": "Menu visuals improved with accent styling"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Menu panel scrolling + visual polish",
+        "description": "Add scroll container and visual flair to menu panel while keeping content on-screen.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "polish"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Menu content scrolls and all sections remain accessible"
+          },
+          {
+            "completed": true,
+            "text": "Menu visuals improved with accent styling"
+          }
+        ],
+        "implementationPlan": "1. Add ScrollContainer to menu content\n2. Introduce header accent + card backgrounds + progress bar styling\n3. Ensure layout still fits and scrolls when needed"
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "8wtmgk",
+      "version": 4,
+      "timestamp": "2026-02-06T08:13:43.471Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "## Summary\n- Menu content is now scrollable.\n- Added header accent, card backgrounds, and progress bar styling.\n\n## Files\n- scene/Scenes/UI/MenuPanel.tscn\n- scene/Scripts/UI/MenuPanel.gd"
+        }
+      ],
+      "snapshot": {
+        "title": "Menu panel scrolling + visual polish",
+        "description": "Add scroll container and visual flair to menu panel while keeping content on-screen.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "polish"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Menu content scrolls and all sections remain accessible"
+          },
+          {
+            "completed": true,
+            "text": "Menu visuals improved with accent styling"
+          }
+        ],
+        "implementationPlan": "1. Add ScrollContainer to menu content\n2. Introduce header accent + card backgrounds + progress bar styling\n3. Ensure layout still fits and scrolls when needed",
+        "implementationNotes": "## Summary\n- Menu content is now scrollable.\n- Added header accent, card backgrounds, and progress bar styling.\n\n## Files\n- scene/Scenes/UI/MenuPanel.tscn\n- scene/Scripts/UI/MenuPanel.gd"
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "8wtmgk",
+      "version": 5,
+      "timestamp": "2026-02-06T08:14:12.033Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Menu panel scrolling + visual polish",
+        "description": "Add scroll container and visual flair to menu panel while keeping content on-screen.",
+        "status": "done",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "polish"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Menu content scrolls and all sections remain accessible"
+          },
+          {
+            "completed": true,
+            "text": "Menu visuals improved with accent styling"
+          }
+        ],
+        "implementationPlan": "1. Add ScrollContainer to menu content\n2. Introduce header accent + card backgrounds + progress bar styling\n3. Ensure layout still fits and scrolls when needed",
+        "implementationNotes": "## Summary\n- Menu content is now scrollable.\n- Added header accent, card backgrounds, and progress bar styling.\n\n## Files\n- scene/Scenes/UI/MenuPanel.tscn\n- scene/Scripts/UI/MenuPanel.gd"
+      }
+    }
+  ]
+}

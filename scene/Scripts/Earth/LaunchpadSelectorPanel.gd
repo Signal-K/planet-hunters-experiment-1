@@ -2,6 +2,8 @@ extends RefCounted
 class_name LaunchpadSelectorPanel
 
 var _launchpad: Node
+const ACTION_SELECT_TARGET := "select_launch_target"
+const HINT_SELECT_TARGET := "Pick one target so your rocket knows where to fly."
 
 func setup(launchpad: Node) -> void:
 	_launchpad = launchpad
@@ -146,6 +148,7 @@ func on_selector_target_pressed(target_id: String, btn: Button) -> void:
 		return
 	var ok = rm.select_target(target_id)
 	if ok:
+		_show_tutorial_hint_once(ACTION_SELECT_TARGET, HINT_SELECT_TARGET)
 		print("Launchpad: target selected from selector:", target_id)
 		# update buttons in this panel to reflect selection
 		var root_scene = _launchpad.get_tree().current_scene
@@ -164,3 +167,11 @@ func on_selector_target_pressed(target_id: String, btn: Button) -> void:
 				btn.disabled = true
 	else:
 		print("Launchpad: failed to persist target selection from selector", target_id)
+
+func _show_tutorial_hint_once(action_key: String, message: String) -> void:
+	var tree = _launchpad.get_tree()
+	if tree == null:
+		return
+	var app = tree.root.find_child("AppController", true, false)
+	if app and app.has_method("show_tutorial_hint_once"):
+		app.show_tutorial_hint_once(action_key, message)

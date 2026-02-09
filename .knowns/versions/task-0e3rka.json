@@ -1,0 +1,207 @@
+{
+  "taskId": "0e3rka",
+  "currentVersion": 5,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "0e3rka",
+      "version": 1,
+      "timestamp": "2026-02-09T01:57:15.209Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Clarify Supabase UI test count vs local-only fallback",
+        "description": "SupabaseTestRunner UI test could log 1 asteroid due to forced local-only mode even when network fetch returned 5, causing confusion.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "tests",
+          "supabase",
+          "ui"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "UI test uses remote data when fetch succeeds"
+          },
+          {
+            "completed": false,
+            "text": "Logs clearly indicate when local-only fallback is active"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "0e3rka",
+      "version": 2,
+      "timestamp": "2026-02-09T01:57:19.590Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "newValue": "1. Inspect SupabaseTestRunner mode flags\n2. Switch UI test to remote mode when network fetch succeeds\n3. Add explicit fallback log for local-only mode"
+        }
+      ],
+      "snapshot": {
+        "title": "Clarify Supabase UI test count vs local-only fallback",
+        "description": "SupabaseTestRunner UI test could log 1 asteroid due to forced local-only mode even when network fetch returned 5, causing confusion.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "tests",
+          "supabase",
+          "ui"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "UI test uses remote data when fetch succeeds"
+          },
+          {
+            "completed": false,
+            "text": "Logs clearly indicate when local-only fallback is active"
+          }
+        ],
+        "implementationPlan": "1. Inspect SupabaseTestRunner mode flags\n2. Switch UI test to remote mode when network fetch succeeds\n3. Add explicit fallback log for local-only mode"
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "0e3rka",
+      "version": 3,
+      "timestamp": "2026-02-09T01:57:21.776Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "UI test uses remote data when fetch succeeds"
+            },
+            {
+              "completed": false,
+              "text": "Logs clearly indicate when local-only fallback is active"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "UI test uses remote data when fetch succeeds"
+            },
+            {
+              "completed": true,
+              "text": "Logs clearly indicate when local-only fallback is active"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Clarify Supabase UI test count vs local-only fallback",
+        "description": "SupabaseTestRunner UI test could log 1 asteroid due to forced local-only mode even when network fetch returned 5, causing confusion.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "tests",
+          "supabase",
+          "ui"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "UI test uses remote data when fetch succeeds"
+          },
+          {
+            "completed": true,
+            "text": "Logs clearly indicate when local-only fallback is active"
+          }
+        ],
+        "implementationPlan": "1. Inspect SupabaseTestRunner mode flags\n2. Switch UI test to remote mode when network fetch succeeds\n3. Add explicit fallback log for local-only mode"
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "0e3rka",
+      "version": 4,
+      "timestamp": "2026-02-09T01:57:23.967Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "✓ Updated SupabaseTestRunner: UI test no longer forces local-only when fetch test succeeded; logs fallback explicitly. Re-ran res://tests/SupabaseTestRunner.gd: 5 fetched + 5 displayed."
+        }
+      ],
+      "snapshot": {
+        "title": "Clarify Supabase UI test count vs local-only fallback",
+        "description": "SupabaseTestRunner UI test could log 1 asteroid due to forced local-only mode even when network fetch returned 5, causing confusion.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "tests",
+          "supabase",
+          "ui"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "UI test uses remote data when fetch succeeds"
+          },
+          {
+            "completed": true,
+            "text": "Logs clearly indicate when local-only fallback is active"
+          }
+        ],
+        "implementationPlan": "1. Inspect SupabaseTestRunner mode flags\n2. Switch UI test to remote mode when network fetch succeeds\n3. Add explicit fallback log for local-only mode",
+        "implementationNotes": "✓ Updated SupabaseTestRunner: UI test no longer forces local-only when fetch test succeeded; logs fallback explicitly. Re-ran res://tests/SupabaseTestRunner.gd: 5 fetched + 5 displayed."
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "0e3rka",
+      "version": 5,
+      "timestamp": "2026-02-09T01:57:28.335Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Clarify Supabase UI test count vs local-only fallback",
+        "description": "SupabaseTestRunner UI test could log 1 asteroid due to forced local-only mode even when network fetch returned 5, causing confusion.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "tests",
+          "supabase",
+          "ui"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "UI test uses remote data when fetch succeeds"
+          },
+          {
+            "completed": true,
+            "text": "Logs clearly indicate when local-only fallback is active"
+          }
+        ],
+        "implementationPlan": "1. Inspect SupabaseTestRunner mode flags\n2. Switch UI test to remote mode when network fetch succeeds\n3. Add explicit fallback log for local-only mode",
+        "implementationNotes": "✓ Updated SupabaseTestRunner: UI test no longer forces local-only when fetch test succeeded; logs fallback explicitly. Re-ran res://tests/SupabaseTestRunner.gd: 5 fetched + 5 displayed."
+      }
+    }
+  ]
+}

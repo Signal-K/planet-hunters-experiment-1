@@ -1,6 +1,7 @@
 module.exports = {
   testEnvironment: "node",
   preset: undefined,
+  setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],
   transform: {
     "^.+\\.tsx?$": [
       "ts-jest",
@@ -13,10 +14,14 @@ module.exports = {
         },
       },
     ],
+    "^.+\\.jsx?$": "babel-jest",
   },
   transformIgnorePatterns: [
-    "node_modules/",
+    "node_modules/(?!(react-native|@react-native|@react-navigation|react-native-screens|react-native-safe-area-context)/)",
   ],
+  moduleNameMapper: {
+    "^react-native$": "<rootDir>/jest.setup.js",
+  },
   moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
   testMatch: [
     "**/__tests__/**/*.test.ts",

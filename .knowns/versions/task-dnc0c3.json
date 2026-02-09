@@ -1,0 +1,160 @@
+{
+  "taskId": "dnc0c3",
+  "currentVersion": 4,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "dnc0c3",
+      "version": 1,
+      "timestamp": "2026-02-06T01:13:56.985Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "newValue": "1. Track return start time/duration in rockets_state and expose helpers for completion\n2. Update returning preview to jump directly to Earth orbit + summary when return is complete\n3. Ensure control station preview uses the return preview scene for returningHome rockets"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix returning rocket preview to start at Earth orbit",
+        "description": "When previewing a returningHome rocket (from Control Station), it should start in Earth orbit with mineral values if the return duration has elapsed.",
+        "status": "todo",
+        "priority": "high",
+        "labels": [
+          "bug",
+          "godot"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "ReturningHome preview starts at Earth orbit once return duration elapsed"
+          },
+          {
+            "completed": false,
+            "text": "Mineral value context shown in Earth orbit preview"
+          }
+        ],
+        "implementationPlan": "1. Track return start time/duration in rockets_state and expose helpers for completion\n2. Update returning preview to jump directly to Earth orbit + summary when return is complete\n3. Ensure control station preview uses the return preview scene for returningHome rockets"
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "dnc0c3",
+      "version": 2,
+      "timestamp": "2026-02-06T01:16:59.715Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "ReturningHome preview starts at Earth orbit once return duration elapsed"
+            },
+            {
+              "completed": false,
+              "text": "Mineral value context shown in Earth orbit preview"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "ReturningHome preview starts at Earth orbit once return duration elapsed"
+            },
+            {
+              "completed": true,
+              "text": "Mineral value context shown in Earth orbit preview"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Fix returning rocket preview to start at Earth orbit",
+        "description": "When previewing a returningHome rocket (from Control Station), it should start in Earth orbit with mineral values if the return duration has elapsed.",
+        "status": "todo",
+        "priority": "high",
+        "labels": [
+          "bug",
+          "godot"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "ReturningHome preview starts at Earth orbit once return duration elapsed"
+          },
+          {
+            "completed": true,
+            "text": "Mineral value context shown in Earth orbit preview"
+          }
+        ],
+        "implementationPlan": "1. Track return start time/duration in rockets_state and expose helpers for completion\n2. Update returning preview to jump directly to Earth orbit + summary when return is complete\n3. Ensure control station preview uses the return preview scene for returningHome rockets"
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "dnc0c3",
+      "version": 3,
+      "timestamp": "2026-02-06T01:17:14.064Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "## Summary\n- Persisted return start time and return completion checks\n- Return preview now jumps directly to Earth orbit when return duration elapsed"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix returning rocket preview to start at Earth orbit",
+        "description": "When previewing a returningHome rocket (from Control Station), it should start in Earth orbit with mineral values if the return duration has elapsed.",
+        "status": "todo",
+        "priority": "high",
+        "labels": [
+          "bug",
+          "godot"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "ReturningHome preview starts at Earth orbit once return duration elapsed"
+          },
+          {
+            "completed": true,
+            "text": "Mineral value context shown in Earth orbit preview"
+          }
+        ],
+        "implementationPlan": "1. Track return start time/duration in rockets_state and expose helpers for completion\n2. Update returning preview to jump directly to Earth orbit + summary when return is complete\n3. Ensure control station preview uses the return preview scene for returningHome rockets",
+        "implementationNotes": "## Summary\n- Persisted return start time and return completion checks\n- Return preview now jumps directly to Earth orbit when return duration elapsed"
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "dnc0c3",
+      "version": 4,
+      "timestamp": "2026-02-06T01:17:43.172Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix returning rocket preview to start at Earth orbit",
+        "description": "When previewing a returningHome rocket (from Control Station), it should start in Earth orbit with mineral values if the return duration has elapsed.",
+        "status": "done",
+        "priority": "high",
+        "labels": [
+          "bug",
+          "godot"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "ReturningHome preview starts at Earth orbit once return duration elapsed"
+          },
+          {
+            "completed": true,
+            "text": "Mineral value context shown in Earth orbit preview"
+          }
+        ],
+        "implementationPlan": "1. Track return start time/duration in rockets_state and expose helpers for completion\n2. Update returning preview to jump directly to Earth orbit + summary when return is complete\n3. Ensure control station preview uses the return preview scene for returningHome rockets",
+        "implementationNotes": "## Summary\n- Persisted return start time and return completion checks\n- Return preview now jumps directly to Earth orbit when return duration elapsed"
+      }
+    }
+  ]
+}
