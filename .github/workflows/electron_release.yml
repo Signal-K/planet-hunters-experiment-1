@@ -107,7 +107,11 @@ jobs:
 
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      ELECTRON_SKIP_NOTARIZATION: "true"
+      CSC_LINK: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+      CSC_KEY_PASSWORD: ${{ secrets.P12_PASSWORD }}
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
 
     steps:
       - name: Checkout
@@ -137,12 +141,28 @@ jobs:
           test -f electron-dist/godot-web/index.pck
           test -f electron-dist/godot-web/index.wasm
 
+      - name: Validate macOS signing and notarization secrets
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          set -euo pipefail
+          missing=0
+          for key in CSC_LINK CSC_KEY_PASSWORD APPLE_ID APPLE_APP_SPECIFIC_PASSWORD APPLE_TEAM_ID; do
+            if [ -z "${!key:-}" ]; then
+              echo "Missing required secret: $key"
+              missing=1
+            fi
+          done
+          if [ "$missing" -eq 1 ]; then
+            echo "Refusing to build unsigned/unnotarized macOS artifacts."
+            exit 1
+          fi
+
       - name: Build Electron distributables
         shell: bash
         run: |
           if [ "$RUNNER_OS" = "macOS" ]; then
-            CSC_NAME="-" npx electron-builder --mac dmg zip --arm64
-            CSC_NAME="-" npx electron-builder --mac dmg zip --x64
+            npx electron-builder --mac dmg zip --universal
           elif [ "$RUNNER_OS" = "Linux" ]; then
             npx electron-builder --linux AppImage tar.gz
           elif [ "$RUNNER_OS" = "Windows" ]; then
