@@ -7,6 +7,8 @@ const EARTH_SALE_MIN_LEVEL := 3
 const SCRAP_REFUND_PCT := 0.20
 const SALVAGE_REFUND_PCT := 0.10
 const XP_AWARD_MISSION := 4
+const ACTION_RESOLVE_DEBRIEF := "resolve_mission_debrief"
+const HINT_RESOLVE_DEBRIEF := "Great. You completed debrief by choosing how to process the mission return."
 
 const ROCKET_COSTS := {
 	"starterrocket1": 1000000000,
@@ -170,6 +172,7 @@ func _sell(to_earth: bool) -> void:
 	_closed_out = true
 	status_label.text = "Sale complete. Credited %s F." % str(net)
 	_clear_cargo()
+	_show_tutorial_hint_once(ACTION_RESOLVE_DEBRIEF, HINT_RESOLVE_DEBRIEF)
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	if rm:
 		rm.remove_orbiting_rocket(str(_returned.get("rocket_id", "")))
@@ -178,6 +181,7 @@ func _sell(to_earth: bool) -> void:
 func _keep_cargo() -> void:
 	status_label.text = "Cargo stored. You can sell later."
 	_add_mission_log("keep_cargo", 0)
+	_show_tutorial_hint_once(ACTION_RESOLVE_DEBRIEF, HINT_RESOLVE_DEBRIEF)
 	_closed_out = true
 
 func _archive_ship() -> void:
@@ -185,6 +189,7 @@ func _archive_ship() -> void:
 		return
 	_add_mission_log("archive", 0)
 	status_label.text = "Ship archived."
+	_show_tutorial_hint_once(ACTION_RESOLVE_DEBRIEF, HINT_RESOLVE_DEBRIEF)
 	_closed_out = true
 	_lock_action_buttons()
 
@@ -202,6 +207,7 @@ func _scrap_ship(refund_pct: float) -> void:
 		rm.remove_orbiting_rocket(rocket_id)
 	_add_mission_log("scrap" if refund_pct >= 0.2 else "salvage", refund)
 	status_label.text = "Ship processed. Refund %s F." % str(refund)
+	_show_tutorial_hint_once(ACTION_RESOLVE_DEBRIEF, HINT_RESOLVE_DEBRIEF)
 	_closed_out = true
 	_lock_action_buttons()
 
@@ -210,6 +216,7 @@ func _leave_in_orbit() -> void:
 		return
 	_add_mission_log("leave_orbit", 0)
 	status_label.text = "Ship left in orbit."
+	_show_tutorial_hint_once(ACTION_RESOLVE_DEBRIEF, HINT_RESOLVE_DEBRIEF)
 	_closed_out = true
 	_lock_action_buttons()
 
@@ -299,6 +306,11 @@ func _rocket_cost(rocket_id: String) -> int:
 
 func _get_app_controller() -> Node:
 	return get_node_or_null("/root/AppController")
+
+func _show_tutorial_hint_once(action_key: String, message: String) -> void:
+	var app = _get_app_controller()
+	if app and app.has_method("show_tutorial_hint_once"):
+		app.show_tutorial_hint_once(action_key, message)
 
 func _return_to_base() -> void:
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")

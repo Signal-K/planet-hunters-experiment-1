@@ -1,6 +1,7 @@
 {
   "affinity": {
     "swinburne_auto": 1.0,
-    "sub-test": 5
+    "sub-test": 5.0,
+    "spacex": 1
   }
 }
