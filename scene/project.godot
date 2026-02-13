@@ -11,6 +11,8 @@ config_version=5
 [application]
 
 config/name="2d Tiny Garden Game"
+config/use_custom_user_dir=true
+config/custom_user_dir_name="PlanetHuntersExperiment1"
 run/main_scene="res://Scenes/Earth/earth_base_1.tscn"
 config/features=PackedStringArray("4.5", "GL Compatibility")
 config/icon="res://icon.svg"

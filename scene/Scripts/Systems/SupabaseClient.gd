@@ -4,9 +4,17 @@ extends Node
 ## Supabase REST API client for Godot
 ## Usage: SupabaseClient.get_instance().fetch_anomalies("active-asteroids", 5, callback)
 
-# Default local/dev values
-var SUPABASE_URL: String = "http://127.0.0.1:54321"
-var SUPABASE_KEY: String = "sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH"
+# Local/dev values (editor-only unless FORCE_LOCAL_MODE is enabled)
+const LOCAL_SUPABASE_URL: String = "http://127.0.0.1:54321"
+const LOCAL_SUPABASE_KEY: String = "sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH"
+
+# Production fallback values for bundled/exported runtime.
+# Runtime config and env vars still take precedence when available.
+const PROD_SUPABASE_URL: String = "https://hlufptwhzkpkkjztimzo.supabase.co"
+const PROD_SUPABASE_KEY: String = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhsdWZwdHdoemtwa2tqenRpbXpvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTYyOTk3NTUsImV4cCI6MjAzMTg3NTc1NX0.v_NDVWjIU_lJQSPbJ_Y6GkW3axrQWKXfXVsBEAbFv_I"
+
+var SUPABASE_URL: String = LOCAL_SUPABASE_URL
+var SUPABASE_KEY: String = LOCAL_SUPABASE_KEY
 
 const RUNTIME_CONFIG_PATH: String = "res://supabase.runtime.json"
 # Force local mode - set this to true if you want to always use local development server
@@ -20,43 +28,35 @@ static func get_instance() -> SupabaseClient:
 		_instance = SupabaseClient.new()
 
 		# Check for environment variables first (CI/GitHub Actions)
-		var env_url = OS.get_environment("SUPABASE_URL")
-		var env_key = OS.get_environment("SUPABASE_ANON_KEY")
+		var env_url = OS.get_environment("SUPABASE_URL").strip_edges()
+		var env_key = OS.get_environment("SUPABASE_ANON_KEY").strip_edges()
 		var runtime_credentials = _load_runtime_credentials()
-		var runtime_url = str(runtime_credentials.get("url", ""))
-		var runtime_key = str(runtime_credentials.get("key", ""))
+		var runtime_url = str(runtime_credentials.get("url", "")).strip_edges()
+		var runtime_key = str(runtime_credentials.get("key", "")).strip_edges()
 		var in_editor_runtime = _is_running_from_editor()
 
 		if FORCE_LOCAL_MODE:
-			# Explicit override for local mode.
-			preload("res://Scripts/Utils/Logger.gd").d("SupabaseClient: Using LOCAL development credentials (FORCE_LOCAL_MODE enabled)")
-			print("SupabaseClient: FORCE_LOCAL_MODE -> ", _instance.SUPABASE_URL)
+			_apply_credentials(_instance, LOCAL_SUPABASE_URL, LOCAL_SUPABASE_KEY, "forced-local")
 		elif env_url != "" and env_key != "":
-			# Use environment variables (GitHub secrets in CI)
-			_instance.SUPABASE_URL = env_url
-			_instance.SUPABASE_KEY = env_key
-			preload("res://Scripts/Utils/Logger.gd").d("SupabaseClient: Using ENVIRONMENT credentials")
-			print("SupabaseClient: Using ENVIRONMENT credentials -> ", _instance.SUPABASE_URL)
+			_apply_credentials(_instance, env_url, env_key, "env")
 		elif runtime_url != "" and runtime_key != "":
-			# Use runtime config generated during secure CI export.
-			_instance.SUPABASE_URL = runtime_url
-			_instance.SUPABASE_KEY = runtime_key
-			preload("res://Scripts/Utils/Logger.gd").d("SupabaseClient: Using runtime config credentials")
-			print("SupabaseClient: Using runtime config credentials -> ", _instance.SUPABASE_URL)
+			_apply_credentials(_instance, runtime_url, runtime_key, "runtime-config")
 		elif in_editor_runtime:
-			# In editor runtime with no injected credentials, default to local development.
-			preload("res://Scripts/Utils/Logger.gd").d("SupabaseClient: Using LOCAL development credentials (editor runtime)")
-			print("SupabaseClient: Editor runtime detected; using LOCAL credentials -> ", _instance.SUPABASE_URL)
-		elif _should_use_production():
-			preload("res://Scripts/Utils/Logger.gd").d("SupabaseClient: Production mode requested, but no runtime config found")
-			print("SupabaseClient: Production mode requested, but runtime config is missing")
+			# Editor runtime defaults to local dev endpoint.
+			_apply_credentials(_instance, LOCAL_SUPABASE_URL, LOCAL_SUPABASE_KEY, "editor-local")
 		else:
-			preload("res://Scripts/Utils/Logger.gd").d("SupabaseClient: Using LOCAL development credentials")
-			print("SupabaseClient: Using LOCAL development credentials -> ", _instance.SUPABASE_URL)
+			# Exported/bundled runtime must never silently use localhost.
+			_apply_credentials(_instance, PROD_SUPABASE_URL, PROD_SUPABASE_KEY, "production-fallback")
 
-	# Always print resolved URL for easier debugging
-	print("SupabaseClient: resolved SUPABASE_URL=", _instance.SUPABASE_URL, " key_present=", _instance.SUPABASE_KEY != "")
+		# Always print resolved URL for easier debugging
+		print("SupabaseClient: resolved SUPABASE_URL=", _instance.SUPABASE_URL, " key_present=", _instance.SUPABASE_KEY != "")
 	return _instance
+
+static func _apply_credentials(instance: SupabaseClient, url: String, key: String, source: String) -> void:
+	instance.SUPABASE_URL = url
+	instance.SUPABASE_KEY = key
+	preload("res://Scripts/Utils/Logger.gd").d("SupabaseClient: credentials_source=%s url=%s" % [source, instance.SUPABASE_URL])
+	print("SupabaseClient: credentials_source=", source, " url=", instance.SUPABASE_URL)
 
 static func _load_runtime_credentials() -> Dictionary:
 	if not FileAccess.file_exists(RUNTIME_CONFIG_PATH):
@@ -90,23 +90,6 @@ static func _load_runtime_credentials() -> Dictionary:
 static func _is_running_from_editor() -> bool:
 	# True during Play/F5 from editor; false in exported/mobile runtime.
 	return OS.has_feature("editor")
-
-## Determine if we should use production Supabase credentials
-static func _should_use_production() -> bool:
-	# Use production if running on mobile platforms (iOS/Android)
-	if OS.has_feature("mobile"):
-		return true
-	
-	# Use production if running in exported/built version (not in editor)
-	if not Engine.is_editor_hint() and not OS.is_debug_build():
-		return true
-	
-	# Use production if running through React Native/Expo
-	# (These usually don't have access to localhost)
-	if OS.get_name() == "iOS" or OS.get_name() == "Android":
-		return true
-	
-	return false
 
 ## Fetch anomalies from Supabase with a specific anomalySet
 ## Returns array of anomaly dictionaries via callback

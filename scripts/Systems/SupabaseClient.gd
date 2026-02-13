@@ -1,6 +1,6 @@
 extends RefCounted
 
-var SUPABASE_URL := "http://127.0.0.1:54321"
+var SUPABASE_URL := "https://hlufptwhzkpkkjztimzo.supabase.co"
 
 func fetch_anomalies(anomaly_set, limit, callback):
     # Minimal stub: immediately invoke the provided callback with no error
