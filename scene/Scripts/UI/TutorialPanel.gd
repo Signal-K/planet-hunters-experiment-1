@@ -1,126 +1,313 @@
 extends CanvasLayer
 
-@onready var tutorial_status_label = $PanelContainer/MarginContainer/HBoxContainer/TutorialStatusBox/TutorialStatus
-@onready var skip_button = $PanelContainer/MarginContainer/HBoxContainer/SkipButton
-var app_controller: Node
+const STEPS := [
+	{
+		"action": "scan_targets",
+		"title": "Scan for targets",
+		"instruction": "Open Satellite Station and run a scan.",
+		"context": "Find mineable targets."
+	},
+	{
+		"action": "create_rocket",
+		"title": "Build your first rocket",
+		"instruction": "Go to Launchpad and create a rocket.",
+		"context": "Build mission-ready rockets."
+	},
+	{
+		"action": "select_launch_target",
+		"title": "Assign mission target",
+		"instruction": "Select one scanned target in Launchpad.",
+		"context": "Give the rocket a destination."
+	},
+	{
+		"action": "launch_rocket_from_earth",
+		"title": "Launch mission",
+		"instruction": "Press Launch to send the rocket.",
+		"context": "Start outbound transit."
+	},
+	{
+		"action": "mine_target",
+		"title": "Mine resources",
+		"instruction": "At the target preview, press Mine.",
+		"context": "Collect cargo."
+	},
+	{
+		"action": "return_rocket_home",
+		"title": "Return to Earth",
+		"instruction": "Press Return Home with cargo.",
+		"context": "Bring cargo back."
+	},
+	{
+		"action": "resolve_mission_debrief",
+		"title": "Finish debrief",
+		"instruction": "Choose sell/salvage/scrap/store in debrief.",
+		"context": "Convert mission results into value."
+	}
+]
+
+@onready var panel: PanelContainer = $CoachPanel
+@onready var progress_label: Label = $CoachPanel/Margin/Root/TopRow/Progress
+@onready var instruction_label: Label = $CoachPanel/Margin/Root/Instruction
+@onready var skip_button: Button = $CoachPanel/Margin/Root/TopRow/SkipButton
+
+var app_controller: Node = null
+var _focus_target: CanvasItem = null
+var _focus_tween: Tween = null
+var _focus_base_modulate: Color = Color(1, 1, 1, 1)
+var _pointer_label: Label = null
 
 func _ready() -> void:
-	# Force visible initially - will be hidden if tutorial is completed
-	self.visible = true
-	# reduced logging
-	preload("res://Scripts/Utils/Logger.gd").d("TutorialPanel: _ready called")
-	
-	# Prefer the autoload singleton at /root/AppController
+	visible = true
+	if skip_button:
+		skip_button.pressed.connect(_on_skip_pressed)
+	_pointer_label = Label.new()
+	_pointer_label.text = "▼"
+	_pointer_label.visible = false
+	_pointer_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_pointer_label.add_theme_font_size_override("font_size", 24)
+	_pointer_label.modulate = Color(0.98, 0.82, 0.35, 1)
+	add_child(_pointer_label)
+	_find_app_controller()
+	_connect_app_controller_signals()
+	_apply_responsive_layout()
+	_refresh_ui()
+
+func _process(_delta: float) -> void:
+	if app_controller == null:
+		_find_app_controller()
+		_connect_app_controller_signals()
+	_apply_responsive_layout()
+	_refresh_ui()
+	_update_focus_marker()
+
+func _find_app_controller() -> void:
 	if get_tree().root.has_node("AppController"):
 		app_controller = get_node("/root/AppController")
 	else:
-		# Fallback: find AppController node in the scene tree
 		app_controller = get_tree().root.find_child("AppController", true, false)
-		if not app_controller:
-			var parent = get_parent()
-			if parent:
-				app_controller = parent.find_child("AppController", true, false)
-	
-	preload("res://Scripts/Utils/Logger.gd").d("TutorialPanel: Ready, AppController found: %s" % [app_controller != null])
-	
-	update_tutorial_status()
-	
-	if app_controller and app_controller.has_signal("tutorial_completed_updated"):
-		app_controller.tutorial_completed_updated.connect(_on_tutorial_completed_updated)
-		preload("res://Scripts/Utils/Logger.gd").d("TutorialPanel: Connected to tutorial_completed_updated signal")
 
-	# Connect skip button to mark tutorial complete
-	if skip_button:
-		skip_button.connect("pressed", Callable(self, "_on_skip_pressed"))
-		preload("res://Scripts/Utils/Logger.gd").d("TutorialPanel: Skip button connected")
-
-func _process(_delta: float) -> void:
-	# Update the tutorial status display
-	# If AppController wasn't available at ready, try to find and connect again
+func _connect_app_controller_signals() -> void:
 	if app_controller == null:
-		app_controller = get_tree().root.find_child("AppController", true, false)
-		if not app_controller:
-			var parent = get_parent()
-			if parent:
-				app_controller = parent.find_child("AppController", true, false)
-			# If found, connect signal and update
-			if app_controller and app_controller.has_signal("tutorial_completed_updated"):
-				app_controller.tutorial_completed_updated.connect(_on_tutorial_completed_updated)
-				preload("res://Scripts/Utils/Logger.gd").d("TutorialPanel: Late-connected to AppController signal")
-	# Update status each frame if we have the controller
-	if app_controller:
-		update_tutorial_status()
+		return
+	if app_controller.has_signal("tutorial_completed_updated"):
+		var complete_cb = Callable(self, "_on_tutorial_completed_updated")
+		if not app_controller.tutorial_completed_updated.is_connected(complete_cb):
+			app_controller.tutorial_completed_updated.connect(complete_cb)
+	if app_controller.has_signal("tutorial_progress_updated"):
+		var progress_cb = Callable(self, "_on_tutorial_progress_updated")
+		if not app_controller.tutorial_progress_updated.is_connected(progress_cb):
+			app_controller.tutorial_progress_updated.connect(progress_cb)
+	if app_controller.has_signal("experience_updated"):
+		var xp_cb = Callable(self, "_on_experience_updated")
+		if not app_controller.experience_updated.is_connected(xp_cb):
+			app_controller.experience_updated.connect(xp_cb)
 
-func update_tutorial_status() -> void:
-	preload("res://Scripts/Utils/Logger.gd").d("TutorialPanel: update_tutorial_status called")
-	# Determine completion from AppController if available, else fall back to saved config
-	var is_completed: bool = false
-	var saved_completed: bool = false
-
-	# Read saved value from disk
+func _is_tutorial_completed() -> bool:
+	if app_controller and app_controller.has_method("get_tutorial_completed"):
+		return bool(app_controller.get_tutorial_completed())
 	var cfg = ConfigFile.new()
 	if cfg.load("user://tutorial.cfg") == OK and cfg.has_section_key("tutorial", "completed"):
-		saved_completed = bool(cfg.get_value("tutorial", "completed"))
+		return bool(cfg.get_value("tutorial", "completed"))
+	return false
 
-	if app_controller and app_controller.has_method("get_tutorial_completed"):
-		is_completed = app_controller.get_tutorial_completed()
-		# If controller disagrees but saved value says completed, restore controller and persist
-		if not is_completed and saved_completed:
-			preload("res://Scripts/Utils/Logger.gd").d("TutorialPanel: Restoring AppController state from saved config")
-			if app_controller.has_method("set_tutorial_completed_from_react"):
-				app_controller.set_tutorial_completed_from_react(true)
-			else:
-				app_controller.tutorial_completed = true
-				if app_controller.has_signal("tutorial_completed_updated"):
-					app_controller.tutorial_completed_updated.emit(true)
-			# Ensure persistence
-			if app_controller.has_method("save_tutorial_completed"):
-				app_controller.save_tutorial_completed()
+func _get_progress() -> Dictionary:
+	var fallback := {
+		"current_step": 0,
+		"total_steps": STEPS.size(),
+		"is_completed": _is_tutorial_completed()
+	}
+	if app_controller and app_controller.has_method("get_tutorial_progress"):
+		var value = app_controller.get_tutorial_progress()
+		if typeof(value) == TYPE_DICTIONARY:
+			return value
+	return fallback
 
-	# If no controller, rely solely on saved value
-	if not app_controller:
-		is_completed = saved_completed
+func _refresh_ui() -> void:
+	if _is_tutorial_completed():
+		_clear_focus_target()
+		visible = false
+		return
+	visible = true
+	var progress = _get_progress()
+	var current_step = int(progress.get("current_step", 0))
+	var total_steps = max(int(progress.get("total_steps", STEPS.size())), 1)
+	var active_index = clamp(current_step, 0, STEPS.size() - 1)
+	var step = STEPS[active_index]
 
-	preload("res://Scripts/Utils/Logger.gd").d("TutorialPanel: is_completed = %s" % [is_completed])
-	if is_completed:
-		# Hide tutorial panel when completed
-		self.visible = false
-		tutorial_status_label.text = "Complete"
-		tutorial_status_label.modulate = Color(0, 1, 0, 1)  # Green
+	if progress_label:
+		progress_label.text = "Step %d/%d" % [active_index + 1, total_steps]
+	if instruction_label:
+		instruction_label.text = _instruction_for_scene(active_index, str(step.get("instruction", "")))
+	_set_focus_target(_resolve_focus_target(active_index))
+
+func _instruction_for_scene(step_index: int, fallback: String) -> String:
+	var scene_name = _current_scene_name()
+	match step_index:
+		0:
+			if scene_name == "EarthBase1":
+				return "Tap Satellite Station, then run a scan."
+			if scene_name == "LaunchpadScene":
+				return "Go back to Earth base and open Satellite Station first."
+		1:
+			if scene_name == "EarthBase1":
+				return "Tap New Mission to enter Launchpad."
+			if scene_name == "LaunchpadScene":
+				return "Tap Create on a rocket card."
+		2:
+			if scene_name == "LaunchpadScene":
+				return "Tap Select on one detected target."
+		3:
+			if scene_name == "LaunchpadScene":
+				return "Press Launch when a rocket and target are selected."
+		4:
+			if scene_name == "AsteroidPreview":
+				return "Press Mine to collect minerals."
+			return "Open target preview and mine once."
+		5:
+			if scene_name == "AsteroidPreview":
+				return "Press Return Home to send cargo back."
+			return "Return to target preview and press Return Home."
+		6:
+			if scene_name == "MissionDebrief":
+				return "Pick one: Sell Orbit, Sell Earth, Salvage, Scrap, Keep, or Leave."
+			return "Open mission debrief and complete one payout action."
+	return fallback
+
+func _apply_responsive_layout() -> void:
+	if panel == null:
+		return
+	var width = get_viewport().get_visible_rect().size.x
+	var card_width = clamp(width * 0.72, 320.0, 760.0)
+	panel.offset_left = -card_width * 0.5
+	panel.offset_right = card_width * 0.5
+	var compact = width < 900.0
+	if instruction_label:
+		instruction_label.add_theme_font_size_override("font_size", 13 if compact else 15)
+	if progress_label:
+		progress_label.add_theme_font_size_override("font_size", 12 if compact else 13)
+
+func _current_scene_name() -> String:
+	var scene = get_tree().current_scene
+	if scene == null:
+		return ""
+	return str(scene.name)
+
+func _resolve_focus_target(step_index: int) -> CanvasItem:
+	var scene = get_tree().current_scene
+	if scene == null:
+		return null
+	var scene_name = _current_scene_name()
+	match step_index:
+		0:
+			if scene_name == "EarthBase1":
+				return scene.get_node_or_null("StructuresLayer/SatelliteStation/Sprite2D")
+		1:
+			if scene_name == "EarthBase1":
+				return scene.get_node_or_null("UILayer/ButtonContainer/NewMissionButton")
+			if scene_name == "LaunchpadScene":
+				return _find_button_by_text(scene, "Create")
+		2:
+			if scene_name == "LaunchpadScene":
+				return _find_button_by_text(scene, "Select")
+		3:
+			if scene_name == "LaunchpadScene":
+				var launch_hud = scene.get_node_or_null("LaunchHUD")
+				if launch_hud:
+					for child in launch_hud.get_children():
+						if child is Button:
+							return child
+				return _find_button_by_text(scene, "Launch")
+		4:
+			if scene_name == "AsteroidPreview":
+				return scene.get_node_or_null("CanvasLayer/UI/ControlPanel/ControlPanelMargin/ControlPanelButtons/MineButton")
+		5:
+			if scene_name == "AsteroidPreview":
+				return scene.get_node_or_null("CanvasLayer/UI/ControlPanel/ControlPanelMargin/ControlPanelButtons/ReturnHomeButton")
+		6:
+			if scene_name == "MissionDebrief":
+				var candidates = [
+					"UI/Root/Panel/VBox/Actions/SellRow/SellOrbitButton",
+					"UI/Root/Panel/VBox/Actions/SellRow/SellEarthButton",
+					"UI/Root/Panel/VBox/Actions/ShipRow/SalvageButton",
+					"UI/Root/Panel/VBox/Actions/ShipRow/ScrapButton",
+					"UI/Root/Panel/VBox/Actions/KeepButton",
+					"UI/Root/Panel/VBox/Actions/ShipRow/LeaveButton"
+				]
+				for path in candidates:
+					var node = scene.get_node_or_null(path)
+					if node is Button and not node.disabled:
+						return node
+	return null
+
+func _find_button_by_text(root: Node, expected_text: String) -> Button:
+	if root == null:
+		return null
+	var stack := [root]
+	while not stack.is_empty():
+		var node = stack.pop_back()
+		for child in node.get_children():
+			if child is Button:
+				var text = str(child.text).to_lower()
+				if text.begins_with(expected_text.to_lower()):
+					return child
+			stack.append(child)
+	return null
+
+func _set_focus_target(new_target: CanvasItem) -> void:
+	if _focus_target == new_target:
+		return
+	_clear_focus_target()
+	if new_target == null:
+		return
+	_focus_target = new_target
+	_focus_base_modulate = _focus_target.modulate
+	_focus_tween = create_tween().set_loops()
+	_focus_tween.tween_property(_focus_target, "modulate", Color(1, 0.9, 0.45, 1), 0.45)
+	_focus_tween.tween_property(_focus_target, "modulate", _focus_base_modulate, 0.45)
+	if _pointer_label:
+		_pointer_label.visible = true
+	_update_focus_marker()
+
+func _update_focus_marker() -> void:
+	if _pointer_label == null:
+		return
+	if _focus_target == null or not is_instance_valid(_focus_target):
+		_pointer_label.visible = false
+		return
+	var point := Vector2.ZERO
+	if _focus_target is Control:
+		var control := _focus_target as Control
+		var rect = control.get_global_rect()
+		point = rect.position + Vector2(rect.size.x * 0.5, -14)
+	elif _focus_target is Node2D:
+		var node2d := _focus_target as Node2D
+		point = node2d.get_global_transform_with_canvas().origin + Vector2(0, -70)
 	else:
-		# Show tutorial panel when not completed
-		self.visible = true
-		tutorial_status_label.text = "In Progress"
-		tutorial_status_label.modulate = Color(1, 1, 0, 1)  # Yellow
+		_pointer_label.visible = false
+		return
+	_pointer_label.position = point - Vector2(_pointer_label.size.x * 0.5, 0)
+	_pointer_label.visible = true
 
+func _clear_focus_target() -> void:
+	if _focus_tween:
+		_focus_tween.kill()
+		_focus_tween = null
+	if _focus_target and is_instance_valid(_focus_target):
+		_focus_target.modulate = _focus_base_modulate
+	_focus_target = null
+	if _pointer_label:
+		_pointer_label.visible = false
 
 func _on_skip_pressed() -> void:
-	preload("res://Scripts/Utils/Logger.gd").d("TutorialPanel: Skip pressed - marking tutorial complete")
-	# Immediately hide panel for user feedback and to avoid race
-	self.visible = false
+	if app_controller and app_controller.has_method("set_tutorial_completed_from_react"):
+		app_controller.set_tutorial_completed_from_react(true)
+	_refresh_ui()
 
-	if app_controller:
-		# Prefer public API if available
-		if app_controller.has_method("set_tutorial_completed_from_react"):
-			app_controller.set_tutorial_completed_from_react(true)
-		else:
-			# Directly set state and emit
-			app_controller.tutorial_completed = true
-			if app_controller.has_signal("tutorial_completed_updated"):
-				app_controller.tutorial_completed_updated.emit(true)
+func _on_tutorial_completed_updated(_is_completed: bool) -> void:
+	_refresh_ui()
 
-		# Persist immediately if controller exposes helper
-		if app_controller.has_method("save_tutorial_completed"):
-			app_controller.save_tutorial_completed()
-		else:
-			# Try to call via available method name (project variant)
-			if app_controller.has_method("save_tutorial_completed"):
-				app_controller.save_tutorial_completed()
-			# Otherwise rely on controller's own persistence
-	else:
-		# No app controller found; just hide locally
-		preload("res://Scripts/Utils/Logger.gd").d("TutorialPanel: No AppController found to persist tutorial state")
+func _on_tutorial_progress_updated(_current_step: int, _total_steps: int, _action_key: String) -> void:
+	_refresh_ui()
 
-func _on_tutorial_completed_updated(is_completed: bool) -> void:
-	preload("res://Scripts/Utils/Logger.gd").d("TutorialPanel: Tutorial completed updated to: %s" % [is_completed])
-	update_tutorial_status()
+func _on_experience_updated(_xp: int, _level: int) -> void:
+	_refresh_ui()

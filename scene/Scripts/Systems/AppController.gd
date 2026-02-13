@@ -6,6 +6,7 @@ signal window_status_update(message: String)
 signal counter_updated(new_value: int)
 signal tutorial_completed_updated(is_completed: bool)
 signal tutorial_hint_requested(message: String)
+signal tutorial_progress_updated(current_step: int, total_steps: int, action_key: String)
 signal franc_balance_updated(new_value: int)
 signal experience_updated(xp: int, level: int)
 signal rockets_reset()
@@ -26,7 +27,7 @@ var _persistence := AppControllerPersistence.new()
 const BASE_XP_TO_LEVEL := 10
 const XP_AWARD_LAUNCH := 5
 const XP_AWARD_SCAN := 2
-const TUTORIAL_FLOW_VERSION := 2
+const TUTORIAL_FLOW_VERSION := 3
 const TUTORIAL_FLOW_VERSION_KEY := "__tutorial_flow_version"
 const TUTORIAL_FLOW_INDEX_KEY := "__tutorial_flow_index"
 const TUTORIAL_SEQUENCE := [
@@ -35,7 +36,8 @@ const TUTORIAL_SEQUENCE := [
 	"select_launch_target",
 	"launch_rocket_from_earth",
 	"mine_target",
-	"return_rocket_home"
+	"return_rocket_home",
+	"resolve_mission_debrief"
 ]
 
 func _ready() -> void:
@@ -178,6 +180,7 @@ func _on_reset_all() -> void:
 	# Emit signals to notify React Native
 	counter_updated.emit(counter)
 	tutorial_completed_updated.emit(tutorial_completed)
+	tutorial_progress_updated.emit(0, TUTORIAL_SEQUENCE.size(), "")
 
 	# Persist tutorial reset
 	save_tutorial_completed()
@@ -200,6 +203,7 @@ func _on_reset_tutorial() -> void:
 	tutorial_completed = false
 	tutorial_actions_seen = {}
 	tutorial_completed_updated.emit(tutorial_completed)
+	tutorial_progress_updated.emit(0, TUTORIAL_SEQUENCE.size(), "")
 	# TODO: Notify React Native to reset tutorial state as well
 	print("Tutorial state reset in Godot. Notify React Native to do the same.")
 
@@ -217,6 +221,7 @@ func set_tutorial_completed_from_react(is_completed: bool) -> void:
 	tutorial_completed = is_completed
 	print("[AppController] Tutorial completed set from React Native to: ", tutorial_completed)
 	tutorial_completed_updated.emit(tutorial_completed)
+	_emit_tutorial_progress("")
 
 	# Persist the new value so reloads remember the choice
 	save_tutorial_completed()
@@ -231,10 +236,12 @@ func save_tutorial_actions_seen() -> void:
 func load_tutorial_actions_seen() -> void:
 	tutorial_actions_seen = _persistence.load_tutorial_actions_seen()
 	_migrate_tutorial_flow_state_if_needed()
+	_emit_tutorial_progress("")
 
 func clear_tutorial_actions_seen() -> void:
 	tutorial_actions_seen = {}
 	save_tutorial_actions_seen()
+	_emit_tutorial_progress("")
 
 func has_seen_tutorial_action(action_key: String) -> bool:
 	if action_key == "":
@@ -256,17 +263,34 @@ func show_tutorial_hint_once(action_key: String, message: String) -> bool:
 	if tutorial_completed:
 		return false
 	var action_index = TUTORIAL_SEQUENCE.find(action_key)
+	var is_first_time = false
 	if action_index == -1:
-		return false
-	var expected = int(tutorial_actions_seen.get(TUTORIAL_FLOW_INDEX_KEY, 0))
-	if action_index != expected:
-		return false
-	var is_first_time = mark_tutorial_action_seen(action_key)
+		is_first_time = mark_tutorial_action_seen(action_key)
+	else:
+		var expected = int(tutorial_actions_seen.get(TUTORIAL_FLOW_INDEX_KEY, 0))
+		if action_index != expected:
+			return false
+		is_first_time = mark_tutorial_action_seen(action_key)
 	if is_first_time:
-		tutorial_actions_seen[TUTORIAL_FLOW_INDEX_KEY] = action_index + 1
+		if action_index != -1:
+			tutorial_actions_seen[TUTORIAL_FLOW_INDEX_KEY] = action_index + 1
 		save_tutorial_actions_seen()
+		_emit_tutorial_progress(action_key)
 		tutorial_hint_requested.emit(message)
+		_complete_tutorial_if_finished()
 	return is_first_time
+
+func get_tutorial_steps() -> Array:
+	return TUTORIAL_SEQUENCE.duplicate()
+
+func get_tutorial_progress() -> Dictionary:
+	var total_steps = TUTORIAL_SEQUENCE.size()
+	var current_step = int(tutorial_actions_seen.get(TUTORIAL_FLOW_INDEX_KEY, 0))
+	return {
+		"current_step": clamp(current_step, 0, total_steps),
+		"total_steps": total_steps,
+		"is_completed": tutorial_completed
+	}
 
 func _migrate_tutorial_flow_state_if_needed() -> void:
 	var version = int(tutorial_actions_seen.get(TUTORIAL_FLOW_VERSION_KEY, 0))
@@ -280,6 +304,26 @@ func _migrate_tutorial_flow_state_if_needed() -> void:
 		TUTORIAL_FLOW_INDEX_KEY: 0
 	}
 	save_tutorial_actions_seen()
+
+func _emit_tutorial_progress(action_key: String) -> void:
+	var progress = get_tutorial_progress()
+	tutorial_progress_updated.emit(
+		int(progress.get("current_step", 0)),
+		int(progress.get("total_steps", TUTORIAL_SEQUENCE.size())),
+		action_key
+	)
+
+func _complete_tutorial_if_finished() -> void:
+	var progress = get_tutorial_progress()
+	var current_step = int(progress.get("current_step", 0))
+	var total_steps = int(progress.get("total_steps", TUTORIAL_SEQUENCE.size()))
+	if current_step < total_steps:
+		return
+	if tutorial_completed:
+		return
+	tutorial_completed = true
+	tutorial_completed_updated.emit(true)
+	save_tutorial_completed()
 
 
 ### Persistence helpers
