@@ -1,0 +1,374 @@
+{
+  "taskId": "gfuk13",
+  "currentVersion": 7,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "gfuk13",
+      "version": 1,
+      "timestamp": "2026-02-13T07:07:47.304Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix bundled builds using localhost Supabase and enforce persistent release save paths",
+        "description": "Bundled/release builds are still resolving local Supabase endpoints and users report state not persisting reliably across app relaunches. Ensure exported builds prefer production credentials and use stable persistent user storage.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "supabase",
+          "release",
+          "persistence",
+          "bug"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Bundled/exported runtime never falls back to localhost Supabase unless explicit local override is enabled"
+          },
+          {
+            "completed": false,
+            "text": "Supabase credential source in logs is explicit for troubleshooting"
+          },
+          {
+            "completed": false,
+            "text": "Release builds use a stable custom user data directory so progress persists across app updates"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "gfuk13",
+      "version": 2,
+      "timestamp": "2026-02-13T07:08:07.858Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "newValue": "1. Harden Supabase runtime selection in `scene/Scripts/Systems/SupabaseClient.gd` so exported/bundled builds never default to localhost unless an explicit local override is set.\n2. Add production fallback credentials for non-editor runtime when env/runtime config is missing, with clear source logging.\n3. Set stable custom `user://` directory settings in `scene/project.godot` to preserve player data across release updates.\n4. Run targeted Godot tests and summarize resolved behavior + remaining risks."
+        }
+      ],
+      "snapshot": {
+        "title": "Fix bundled builds using localhost Supabase and enforce persistent release save paths",
+        "description": "Bundled/release builds are still resolving local Supabase endpoints and users report state not persisting reliably across app relaunches. Ensure exported builds prefer production credentials and use stable persistent user storage.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "supabase",
+          "release",
+          "persistence",
+          "bug"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Bundled/exported runtime never falls back to localhost Supabase unless explicit local override is enabled"
+          },
+          {
+            "completed": false,
+            "text": "Supabase credential source in logs is explicit for troubleshooting"
+          },
+          {
+            "completed": false,
+            "text": "Release builds use a stable custom user data directory so progress persists across app updates"
+          }
+        ],
+        "implementationPlan": "1. Harden Supabase runtime selection in `scene/Scripts/Systems/SupabaseClient.gd` so exported/bundled builds never default to localhost unless an explicit local override is set.\n2. Add production fallback credentials for non-editor runtime when env/runtime config is missing, with clear source logging.\n3. Set stable custom `user://` directory settings in `scene/project.godot` to preserve player data across release updates.\n4. Run targeted Godot tests and summarize resolved behavior + remaining risks."
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "gfuk13",
+      "version": 3,
+      "timestamp": "2026-02-13T07:09:31.348Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Bundled/exported runtime never falls back to localhost Supabase unless explicit local override is enabled"
+            },
+            {
+              "completed": false,
+              "text": "Supabase credential source in logs is explicit for troubleshooting"
+            },
+            {
+              "completed": false,
+              "text": "Release builds use a stable custom user data directory so progress persists across app updates"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Bundled/exported runtime never falls back to localhost Supabase unless explicit local override is enabled"
+            },
+            {
+              "completed": false,
+              "text": "Supabase credential source in logs is explicit for troubleshooting"
+            },
+            {
+              "completed": false,
+              "text": "Release builds use a stable custom user data directory so progress persists across app updates"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Fix bundled builds using localhost Supabase and enforce persistent release save paths",
+        "description": "Bundled/release builds are still resolving local Supabase endpoints and users report state not persisting reliably across app relaunches. Ensure exported builds prefer production credentials and use stable persistent user storage.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "supabase",
+          "release",
+          "persistence",
+          "bug"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Bundled/exported runtime never falls back to localhost Supabase unless explicit local override is enabled"
+          },
+          {
+            "completed": false,
+            "text": "Supabase credential source in logs is explicit for troubleshooting"
+          },
+          {
+            "completed": false,
+            "text": "Release builds use a stable custom user data directory so progress persists across app updates"
+          }
+        ],
+        "implementationPlan": "1. Harden Supabase runtime selection in `scene/Scripts/Systems/SupabaseClient.gd` so exported/bundled builds never default to localhost unless an explicit local override is set.\n2. Add production fallback credentials for non-editor runtime when env/runtime config is missing, with clear source logging.\n3. Set stable custom `user://` directory settings in `scene/project.godot` to preserve player data across release updates.\n4. Run targeted Godot tests and summarize resolved behavior + remaining risks."
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "gfuk13",
+      "version": 4,
+      "timestamp": "2026-02-13T07:09:33.568Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Bundled/exported runtime never falls back to localhost Supabase unless explicit local override is enabled"
+            },
+            {
+              "completed": false,
+              "text": "Supabase credential source in logs is explicit for troubleshooting"
+            },
+            {
+              "completed": false,
+              "text": "Release builds use a stable custom user data directory so progress persists across app updates"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Bundled/exported runtime never falls back to localhost Supabase unless explicit local override is enabled"
+            },
+            {
+              "completed": true,
+              "text": "Supabase credential source in logs is explicit for troubleshooting"
+            },
+            {
+              "completed": false,
+              "text": "Release builds use a stable custom user data directory so progress persists across app updates"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Fix bundled builds using localhost Supabase and enforce persistent release save paths",
+        "description": "Bundled/release builds are still resolving local Supabase endpoints and users report state not persisting reliably across app relaunches. Ensure exported builds prefer production credentials and use stable persistent user storage.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "supabase",
+          "release",
+          "persistence",
+          "bug"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Bundled/exported runtime never falls back to localhost Supabase unless explicit local override is enabled"
+          },
+          {
+            "completed": true,
+            "text": "Supabase credential source in logs is explicit for troubleshooting"
+          },
+          {
+            "completed": false,
+            "text": "Release builds use a stable custom user data directory so progress persists across app updates"
+          }
+        ],
+        "implementationPlan": "1. Harden Supabase runtime selection in `scene/Scripts/Systems/SupabaseClient.gd` so exported/bundled builds never default to localhost unless an explicit local override is set.\n2. Add production fallback credentials for non-editor runtime when env/runtime config is missing, with clear source logging.\n3. Set stable custom `user://` directory settings in `scene/project.godot` to preserve player data across release updates.\n4. Run targeted Godot tests and summarize resolved behavior + remaining risks."
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "gfuk13",
+      "version": 5,
+      "timestamp": "2026-02-13T07:09:35.787Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Bundled/exported runtime never falls back to localhost Supabase unless explicit local override is enabled"
+            },
+            {
+              "completed": true,
+              "text": "Supabase credential source in logs is explicit for troubleshooting"
+            },
+            {
+              "completed": false,
+              "text": "Release builds use a stable custom user data directory so progress persists across app updates"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Bundled/exported runtime never falls back to localhost Supabase unless explicit local override is enabled"
+            },
+            {
+              "completed": true,
+              "text": "Supabase credential source in logs is explicit for troubleshooting"
+            },
+            {
+              "completed": true,
+              "text": "Release builds use a stable custom user data directory so progress persists across app updates"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Fix bundled builds using localhost Supabase and enforce persistent release save paths",
+        "description": "Bundled/release builds are still resolving local Supabase endpoints and users report state not persisting reliably across app relaunches. Ensure exported builds prefer production credentials and use stable persistent user storage.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "supabase",
+          "release",
+          "persistence",
+          "bug"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Bundled/exported runtime never falls back to localhost Supabase unless explicit local override is enabled"
+          },
+          {
+            "completed": true,
+            "text": "Supabase credential source in logs is explicit for troubleshooting"
+          },
+          {
+            "completed": true,
+            "text": "Release builds use a stable custom user data directory so progress persists across app updates"
+          }
+        ],
+        "implementationPlan": "1. Harden Supabase runtime selection in `scene/Scripts/Systems/SupabaseClient.gd` so exported/bundled builds never default to localhost unless an explicit local override is set.\n2. Add production fallback credentials for non-editor runtime when env/runtime config is missing, with clear source logging.\n3. Set stable custom `user://` directory settings in `scene/project.godot` to preserve player data across release updates.\n4. Run targeted Godot tests and summarize resolved behavior + remaining risks."
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "gfuk13",
+      "version": 6,
+      "timestamp": "2026-02-13T07:09:38.012Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "## Summary\n- Hardened `SupabaseClient` credential resolution for bundled/exported runtime.\n- Exported runtime now uses production fallback credentials when env/runtime config are missing, instead of localhost.\n- Added explicit credential source logging (`forced-local`, `env`, `runtime-config`, `editor-local`, `production-fallback`).\n- Enabled stable custom Godot user data directory via project settings to preserve `user://` saves across release updates.\n\n## Verification\n- Tutorial tests pass headless.\n- Supabase headless test still reports localhost in editor/headless context (expected for editor-local mode); exported runtime path now defaults to production fallback."
+        }
+      ],
+      "snapshot": {
+        "title": "Fix bundled builds using localhost Supabase and enforce persistent release save paths",
+        "description": "Bundled/release builds are still resolving local Supabase endpoints and users report state not persisting reliably across app relaunches. Ensure exported builds prefer production credentials and use stable persistent user storage.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "supabase",
+          "release",
+          "persistence",
+          "bug"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Bundled/exported runtime never falls back to localhost Supabase unless explicit local override is enabled"
+          },
+          {
+            "completed": true,
+            "text": "Supabase credential source in logs is explicit for troubleshooting"
+          },
+          {
+            "completed": true,
+            "text": "Release builds use a stable custom user data directory so progress persists across app updates"
+          }
+        ],
+        "implementationPlan": "1. Harden Supabase runtime selection in `scene/Scripts/Systems/SupabaseClient.gd` so exported/bundled builds never default to localhost unless an explicit local override is set.\n2. Add production fallback credentials for non-editor runtime when env/runtime config is missing, with clear source logging.\n3. Set stable custom `user://` directory settings in `scene/project.godot` to preserve player data across release updates.\n4. Run targeted Godot tests and summarize resolved behavior + remaining risks.",
+        "implementationNotes": "## Summary\n- Hardened `SupabaseClient` credential resolution for bundled/exported runtime.\n- Exported runtime now uses production fallback credentials when env/runtime config are missing, instead of localhost.\n- Added explicit credential source logging (`forced-local`, `env`, `runtime-config`, `editor-local`, `production-fallback`).\n- Enabled stable custom Godot user data directory via project settings to preserve `user://` saves across release updates.\n\n## Verification\n- Tutorial tests pass headless.\n- Supabase headless test still reports localhost in editor/headless context (expected for editor-local mode); exported runtime path now defaults to production fallback."
+      }
+    },
+    {
+      "id": "v7",
+      "taskId": "gfuk13",
+      "version": 7,
+      "timestamp": "2026-02-13T07:09:55.285Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix bundled builds using localhost Supabase and enforce persistent release save paths",
+        "description": "Bundled/release builds are still resolving local Supabase endpoints and users report state not persisting reliably across app relaunches. Ensure exported builds prefer production credentials and use stable persistent user storage.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "supabase",
+          "release",
+          "persistence",
+          "bug"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Bundled/exported runtime never falls back to localhost Supabase unless explicit local override is enabled"
+          },
+          {
+            "completed": true,
+            "text": "Supabase credential source in logs is explicit for troubleshooting"
+          },
+          {
+            "completed": true,
+            "text": "Release builds use a stable custom user data directory so progress persists across app updates"
+          }
+        ],
+        "implementationPlan": "1. Harden Supabase runtime selection in `scene/Scripts/Systems/SupabaseClient.gd` so exported/bundled builds never default to localhost unless an explicit local override is set.\n2. Add production fallback credentials for non-editor runtime when env/runtime config is missing, with clear source logging.\n3. Set stable custom `user://` directory settings in `scene/project.godot` to preserve player data across release updates.\n4. Run targeted Godot tests and summarize resolved behavior + remaining risks.",
+        "implementationNotes": "## Summary\n- Hardened `SupabaseClient` credential resolution for bundled/exported runtime.\n- Exported runtime now uses production fallback credentials when env/runtime config are missing, instead of localhost.\n- Added explicit credential source logging (`forced-local`, `env`, `runtime-config`, `editor-local`, `production-fallback`).\n- Enabled stable custom Godot user data directory via project settings to preserve `user://` saves across release updates.\n\n## Verification\n- Tutorial tests pass headless.\n- Supabase headless test still reports localhost in editor/headless context (expected for editor-local mode); exported runtime path now defaults to production fallback."
+      }
+    }
+  ]
+}

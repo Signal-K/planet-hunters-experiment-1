@@ -1,15 +1,15 @@
 ---
 id: cgckf3
 title: Harden clear Actions caches workflow against API 422
-status: in-progress
+status: done
 priority: high
 labels:
   - ci
   - github-actions
   - cache
 createdAt: '2026-02-13T06:48:19.357Z'
-updatedAt: '2026-02-13T06:48:24.602Z'
-timeSpent: 0
+updatedAt: '2026-02-13T07:31:43.905Z'
+timeSpent: 2580
 assignee: '@me'
 ---
 # Harden clear Actions caches workflow against API 422
@@ -22,8 +22,14 @@ Cache cleanup workflow fails the run when the GitHub cache API returns 422; hand
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Workflow does not fail when cache list API returns 422
-- [ ] #2 Workflow still deletes caches when API is healthy
-- [ ] #3 Workflow logs API response details for troubleshooting
+- [x] #1 Workflow does not fail when cache list API returns 422
+- [x] #2 Workflow still deletes caches when API is healthy
+- [x] #3 Workflow logs API response details for troubleshooting
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+✓ Workflow now handles 422 non-fatally, logs list/delete HTTP responses, and still deletes caches on 200/204.
+<!-- SECTION:NOTES:END -->
 

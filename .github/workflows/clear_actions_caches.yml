@@ -1,14 +1,7 @@
 name: Clear Actions Caches
 
 on:
-  workflow_run:
-    workflows:
-      - Export Godot + Build Expo
-      - Godot Tests
-      - Godot Archived UI Tests
-      - Electron Desktop Release
-    types:
-      - completed
+  workflow_dispatch:
 
 permissions:
   actions: write

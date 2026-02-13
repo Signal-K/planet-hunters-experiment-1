@@ -1,9 +1,9 @@
 {
   "active": [
     {
-      "taskId": "cgckf3",
-      "taskTitle": "Harden clear Actions caches workflow against API 422",
-      "startedAt": "2026-02-13T06:48:26.816Z",
+      "taskId": "491jqk",
+      "taskTitle": "Run full Playwright+Cypress e2e and add final Vercel deploy pipeline stage",
+      "startedAt": "2026-02-13T07:33:46.811Z",
       "pausedAt": null,
       "totalPausedMs": 0
     }
