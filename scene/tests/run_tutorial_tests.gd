@@ -50,8 +50,12 @@ func run_tests() -> void:
         self.quit(7)
         return
 
-    # Find the Skip button and simulate a press
-    var skip_btn = panel.get_node("PanelContainer/MarginContainer/HBoxContainer/SkipButton")
+    # Find the Skip button and simulate a press.
+    # Primary path matches current TutorialPanel scene hierarchy.
+    var skip_btn = panel.get_node_or_null("CoachPanel/Margin/Root/TopRow/SkipButton")
+    if skip_btn == null:
+        # Backward-compatible fallback in case hierarchy changes again.
+        skip_btn = panel.find_child("SkipButton", true, false)
     if skip_btn == null:
         reporter.fail_test("SkipButton not found")
         self.quit(8)
