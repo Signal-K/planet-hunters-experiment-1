@@ -1,3 +1,2 @@
-res://Scripts/Earth/LaunchpadRestorer.gd
-res://Scripts/Earth/RocketSelector.gd
-res://Scripts/Earth/RocketSpawner.gd
+res://Scripts/Systems/AppController.gd
+res://Scripts/UI/TutorialPanel.gd
