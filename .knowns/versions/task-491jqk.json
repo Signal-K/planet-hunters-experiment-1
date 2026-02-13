@@ -1,0 +1,52 @@
+{
+  "taskId": "491jqk",
+  "currentVersion": 1,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "491jqk",
+      "version": 1,
+      "timestamp": "2026-02-13T07:33:44.591Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Run full Playwright+Cypress e2e and add final Vercel deploy pipeline stage",
+        "description": "Execute full browser e2e suites (Playwright and Cypress) for the web app, then add a Vercel deployment stage that runs at the end of the unified CI pipeline.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "e2e",
+          "playwright",
+          "cypress",
+          "vercel",
+          "ci",
+          "web"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Playwright e2e suite runs to completion"
+          },
+          {
+            "completed": false,
+            "text": "Cypress e2e suite runs to completion"
+          },
+          {
+            "completed": false,
+            "text": "CI pipeline includes final Vercel deployment stage after test/release/cache stages"
+          }
+        ]
+      }
+    }
+  ]
+}
