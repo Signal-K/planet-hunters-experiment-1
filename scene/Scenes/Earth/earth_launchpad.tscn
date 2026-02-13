@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://dkn5ffejmhljs"]
+[gd_scene load_steps=11 format=3 uid="uid://dkn5ffejmhljs"]
 
 [ext_resource type="Script" uid="uid://dtrksapur77k2" path="res://Scripts/Earth/LaunchpadScene.gd" id="1"]
 [ext_resource type="Script" uid="uid://ce1a85vrjyh7x" path="res://Scripts/Earth/Launchpad.gd" id="2"]
@@ -9,6 +9,7 @@
 [ext_resource type="Script" uid="uid://ctgklpqefk8h4" path="res://Scripts/Earth/RocketSelectorDrag.gd" id="7"]
 [ext_resource type="Script" uid="uid://bmhjgrsylq0hk" path="res://Scripts/Earth/LaunchpadSpriteDropHandler.gd" id="9"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/TutorialHintArea.tscn" id="10"]
+[ext_resource type="PackedScene" uid="uid://d1wd35tge78pt" path="res://Scenes/UI/TutorialPanel.tscn" id="11_tutorial"]
 
 [node name="LaunchpadScene" type="Node2D"]
 script = ExtResource("1")
@@ -80,5 +81,7 @@ layout_mode = 2
 text = "Back"
 
 [node name="LaunchHUDInstance" type="Node" parent="."]
+
+[node name="TutorialPanel" parent="." instance=ExtResource("11_tutorial")]
 
 [node name="TutorialHintArea" parent="." instance=ExtResource("10")]

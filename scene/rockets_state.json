@@ -6,39 +6,20 @@
   "placed": [
     {
       "type": "starterrocket1",
-      "id": "starterrocket1-6",
-      "x": 0.0,
-      "y": 0.0,
-      "status": "returned"
-    },
-    {
-      "type": "starterrocket1",
-      "id": "starterrocket1-693577185",
+      "id": "starterrocket1-3364892782",
       "x": -110.0,
-      "y": -170.0,
-      "status": "launched"
+      "y": -178.0,
+      "status": "returned"
     }
   ],
   "launched": [
-    "starterrocket1-693577185"
   ],
   "destroyed": [
-    "starterrocket1-test"
   ],
   "missions": [
-    {
-      "rocket_id": "starterrocket1-693577185",
-      "target": "63768316",
-      "launch_time": 1770639800.0,
-      "arrival_time": 1770639860.0
-    }
   ],
   "selected_target": "",
   "preview_target": {
-    "id": "63768316",
-    "label": "63768316",
-    "type": "asteroid",
-    "rocket_id": "starterrocket1-693577185"
   },
   "detected_targets": [
     {
@@ -68,9 +49,18 @@
     }
   ],
   "seen_asteroids": [
+    "63769326"
   ],
   "seen_planets": [
   ],
+  "status_changed_at": {
+    "starterrocket1-3364892782": {
+      "awaitingLaunch": 1770946698.0,
+      "launched": 1770946702.0,
+      "returningHome": 1770946887.0,
+      "returned": 1770946932.0
+    }
+  },
   "returning": [
   ],
   "arrived": {
@@ -78,18 +68,5 @@
   "returned_mission": {
   },
   "returning_started": {
-  },
-  "status_changed_at": {
-    "starterrocket1-6": {
-      "returningHome": 1770601008.0,
-      "returned": 1770601851.0
-    },
-    "starterrocket1-test": {
-      "Destroyed": 1770601009.0
-    },
-    "starterrocket1-693577185": {
-      "awaitingLaunch": 1770632283.0,
-      "launched": 1770639800.0
-    }
   }
 }
