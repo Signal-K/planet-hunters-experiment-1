@@ -11,7 +11,7 @@ labels:
   - ci
   - web
 createdAt: '2026-02-13T07:33:37.262Z'
-updatedAt: '2026-02-15T08:10:24.146Z'
+updatedAt: '2026-02-15T08:23:43.710Z'
 timeSpent: 0
 assignee: '@me'
 ---
@@ -54,5 +54,7 @@ Execute full browser e2e suites (Playwright and Cypress) for the web app, then a
 ✓ Folded legacy export_build.yml into unified electron_release.yml via main-only expo-export job (Godot iOS/Android export + Expo bundle artifact). ✓ Release now depends on both build + expo-export. ✓ Removed duplicate standalone workflows export_build.yml and clear_actions_caches.yml.
 
 ✓ Removed final legacy workflow godot_tests_archived.yml. CI is now fully unified under electron_release.yml.
+
+✓ Fixed preview/prod deploy staleness risk: added non-main export-godot-preview job and wired deploy-preview to consume fresh godot-web-export-preview artifact. deploy-production now depends on export-godot and downloads godot-web-export artifact before Vercel build/deploy.
 <!-- SECTION:NOTES:END -->
 
