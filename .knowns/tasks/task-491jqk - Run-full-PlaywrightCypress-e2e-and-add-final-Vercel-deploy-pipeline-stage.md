@@ -1,7 +1,7 @@
 ---
 id: 491jqk
 title: Run full Playwright+Cypress e2e and add final Vercel deploy pipeline stage
-status: in-progress
+status: done
 priority: high
 labels:
   - e2e
@@ -11,7 +11,7 @@ labels:
   - ci
   - web
 createdAt: '2026-02-13T07:33:37.262Z'
-updatedAt: '2026-02-15T08:23:43.710Z'
+updatedAt: "2026-02-15T16:38:46Z"
 timeSpent: 0
 assignee: '@me'
 ---

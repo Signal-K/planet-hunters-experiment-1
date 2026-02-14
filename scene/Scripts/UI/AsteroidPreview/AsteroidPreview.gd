@@ -79,6 +79,12 @@ func _ready() -> void:
 	var label = str(target.get("label", ""))
 	var target_type = str(target.get("type", "asteroid"))
 	var rocket_id = str(target.get("rocket_id", ""))
+	if target_id != "" and rocket_id == "":
+		var rm2 = preload("res://Scripts/Utils/RocketsManager.gd")
+		if rm2:
+			rocket_id = str(rm2.resolve_preview_rocket_id(target_id))
+	if rocket_id == "":
+		rocket_id = "starterrocket1"
 	_current_rocket_id = rocket_id
 	_current_target_id = target_id
 	_current_target_type = target_type
@@ -472,10 +478,20 @@ func _setup_orbit_preview(target_id: String, rocket_id: String) -> void:
 	orbit_root.visible = false
 	if orbit_heading:
 		orbit_heading.visible = false
-	if target_id == "" or rocket_id == "":
+	if target_id == "":
 		return
-	if not _rocket_has_arrived(target_id, rocket_id):
-		return
+	var effective_rocket_id = rocket_id
+	if effective_rocket_id == "":
+		var rm_resolve = preload("res://Scripts/Utils/RocketsManager.gd")
+		if rm_resolve:
+			effective_rocket_id = str(rm_resolve.resolve_preview_rocket_id(target_id))
+	if effective_rocket_id == "":
+		effective_rocket_id = "starterrocket1"
+	if not _rocket_has_arrived(target_id, effective_rocket_id):
+		var rm_mark = preload("res://Scripts/Utils/RocketsManager.gd")
+		if rm_mark:
+			rm_mark.mark_arrived(effective_rocket_id, target_id)
+	_current_rocket_id = effective_rocket_id
 	orbit_root.visible = true
 	_orbit_angle = 0.0
 	if camera_3d and asteroid_pivot:
@@ -487,7 +503,7 @@ func _setup_orbit_preview(target_id: String, rocket_id: String) -> void:
 	orbit_utils.build_orbit_circle(orbit_circle, ORBIT_RADIUS_PX, ORBIT_SEGMENTS)
 	orbit_rocket.position = Vector2(ORBIT_RADIUS_PX, 0)
 	orbit_rocket.scale = Vector2(0.2, 0.2)
-	_set_orbit_rocket_visual(rocket_id)
+	_set_orbit_rocket_visual(effective_rocket_id)
 	var orbit_utils2 = preload("res://Scripts/Utils/OrbitVisuals.gd")
 	orbit_utils2.update_heading_line(orbit_heading, orbit_rocket)
 

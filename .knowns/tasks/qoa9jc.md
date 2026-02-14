@@ -1,7 +1,7 @@
 ---
 id: qoa9jc
 title: "Trigger in Experiment 1 to show Posthog survey, and tie to user id. Right now, I'm setting up a survey and then I'll get codex to install a trigger; as well as setting up the guest auth provider. Later on, we'll add the ability for users to connect accounts."
-status: todo
+status: in-review
 priority: high
 labels:
   - survey
@@ -12,7 +12,7 @@ labels:
   - user
   - feedback
 createdAt: '2026-02-15T12:04:35Z'
-updatedAt: "2026-02-15T15:42:01Z"
+updatedAt: "2026-02-15T16:39:00Z"
 timeSpent: 0
 ---
 # Trigger in Experiment 1 to show Posthog survey, and tie to user id. Right now, I'm setting up a survey and then I'll get codex to install a trigger; as well as setting up the guest auth provider. Later on, we'll add the ability for users to connect accounts.
