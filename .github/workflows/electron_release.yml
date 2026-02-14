@@ -251,6 +251,61 @@ jobs:
             dist/
           retention-days: 7
 
+  export-godot-preview:
+    name: Export Godot Assets (non-main)
+    if: github.ref_name != 'main'
+    needs: basic-tests
+    runs-on: ubuntu-latest
+    env:
+      GODOT_VERSION: "4.5-stable"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        shell: bash
+        run: npm ci
+
+      - name: Install Godot + templates for web export
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          cd .godot-bin
+          curl -fsSL -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/Godot_v4.5-stable_linux.x86_64.zip"
+          unzip -q godot.zip
+          GODOT_PATH="$PWD/Godot_v4.5-stable_linux.x86_64"
+          chmod +x "$GODOT_PATH"
+          echo "GODOT_EDITOR=$GODOT_PATH" >> "$GITHUB_ENV"
+
+          TEMPLATE_DIR="$HOME/.local/share/godot/export_templates/4.5.stable"
+          curl -fsSL -o templates.tpz "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/Godot_v4.5-stable_export_templates.tpz"
+          rm -rf .godot-templates
+          mkdir -p .godot-templates
+          unzip -q templates.tpz -d .godot-templates
+          mkdir -p "$TEMPLATE_DIR"
+          TEMPLATE_SOURCE_DIR="$(find .godot-templates -type f -name 'web_nothreads_release.zip' -print -quit | xargs -I{} dirname "{}")"
+          cp -R "$TEMPLATE_SOURCE_DIR"/* "$TEMPLATE_DIR/"
+          mkdir -p /tmp/godot/export_templates/4.5.stable
+          cp -R "$TEMPLATE_DIR"/* /tmp/godot/export_templates/4.5.stable/
+
+      - name: Export Godot desktop web assets
+        shell: bash
+        run: npm run godot:export:desktop
+
+      - name: Upload Godot web export (preview)
+        uses: actions/upload-artifact@v4
+        with:
+          name: godot-web-export-preview
+          path: electron-dist/godot-web/**
+          if-no-files-found: error
+
   export-godot:
     name: Export Godot Assets (main only)
     if: github.ref_name == 'main'
@@ -556,7 +611,7 @@ jobs:
   deploy-preview:
     name: Deploy to Vercel Preview (non-main)
     if: github.ref_name != 'main'
-    needs: basic-tests
+    needs: [basic-tests, export-godot-preview]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -571,6 +626,12 @@ jobs:
       - name: Install dependencies
         shell: bash
         run: npm ci
+
+      - name: Download Godot web export (preview)
+        uses: actions/download-artifact@v4
+        with:
+          name: godot-web-export-preview
+          path: electron-dist/godot-web
 
       - name: Pull Vercel preview environment
         shell: bash
@@ -596,7 +657,7 @@ jobs:
   deploy-production:
     name: Deploy to Vercel Production (main)
     if: github.ref_name == 'main'
-    needs: clear-caches
+    needs: [clear-caches, export-godot]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -611,6 +672,12 @@ jobs:
       - name: Install dependencies
         shell: bash
         run: npm ci
+
+      - name: Download Godot web export (production)
+        uses: actions/download-artifact@v4
+        with:
+          name: godot-web-export
+          path: electron-dist/godot-web
 
       - name: Pull Vercel production environment
         shell: bash

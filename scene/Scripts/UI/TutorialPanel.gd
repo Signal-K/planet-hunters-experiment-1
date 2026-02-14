@@ -61,10 +61,12 @@ func _ready() -> void:
 	if skip_button:
 		skip_button.pressed.connect(_on_skip_pressed)
 	_pointer_label = Label.new()
-	_pointer_label.text = "▼"
+	# Use ASCII fallback so web exports don't show missing-glyph boxes.
+	_pointer_label.text = "v"
 	_pointer_label.visible = false
 	_pointer_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_pointer_label.add_theme_font_size_override("font_size", 24)
+	_pointer_label.add_theme_font_size_override("font_size", 28)
+	_pointer_label.add_theme_color_override("font_color", Color(0.98, 0.82, 0.35, 1))
 	_pointer_label.modulate = Color(0.98, 0.82, 0.35, 1)
 	add_child(_pointer_label)
 	_find_app_controller()
@@ -180,11 +182,14 @@ func _apply_responsive_layout() -> void:
 	var card_width = clamp(width * 0.72, 320.0, 760.0)
 	panel.offset_left = -card_width * 0.5
 	panel.offset_right = card_width * 0.5
+	panel.offset_bottom = panel.offset_top + (112.0 if width < 900.0 else 124.0)
 	var compact = width < 900.0
 	if instruction_label:
-		instruction_label.add_theme_font_size_override("font_size", 13 if compact else 15)
+		instruction_label.add_theme_font_size_override("font_size", 16 if compact else 18)
 	if progress_label:
-		progress_label.add_theme_font_size_override("font_size", 12 if compact else 13)
+		progress_label.add_theme_font_size_override("font_size", 14 if compact else 15)
+	if skip_button:
+		skip_button.add_theme_font_size_override("font_size", 14 if compact else 15)
 
 func _current_scene_name() -> String:
 	var scene = get_tree().current_scene
