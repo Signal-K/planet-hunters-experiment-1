@@ -23,17 +23,18 @@ var _game_paused: bool = false
 var _menu_request_version: int = 0
 var _menu_request_action: String = ""
 const AppControllerPersistence = preload("res://Scripts/Systems/AppControllerPersistence.gd")
+const WebEventBridge = preload("res://Scripts/Systems/WebEventBridge.gd")
 var _persistence := AppControllerPersistence.new()
 const BASE_XP_TO_LEVEL := 10
 const XP_AWARD_LAUNCH := 5
 const XP_AWARD_SCAN := 2
-const TUTORIAL_FLOW_VERSION := 3
+const TUTORIAL_FLOW_VERSION := 4
 const TUTORIAL_FLOW_VERSION_KEY := "__tutorial_flow_version"
 const TUTORIAL_FLOW_INDEX_KEY := "__tutorial_flow_index"
 const TUTORIAL_SEQUENCE := [
 	"scan_targets",
-	"create_rocket",
 	"select_launch_target",
+	"create_rocket",
 	"launch_rocket_from_earth",
 	"mine_target",
 	"return_rocket_home",
@@ -51,6 +52,12 @@ func _ready() -> void:
 	load_franc_balance()
 	# Load persisted experience from disk (if present)
 	load_experience()
+	WebEventBridge.emit("app_ready", {
+		"tutorial_completed": tutorial_completed,
+		"experience_level": experience_level,
+		"experience_xp": experience_xp,
+		"franc_balance": franc_balance
+	})
 
 func set_counter_from_react(value: int) -> void:
 	"""Set counter value from React Native"""
@@ -276,6 +283,13 @@ func show_tutorial_hint_once(action_key: String, message: String) -> bool:
 			tutorial_actions_seen[TUTORIAL_FLOW_INDEX_KEY] = action_index + 1
 		save_tutorial_actions_seen()
 		_emit_tutorial_progress(action_key)
+		var progress = get_tutorial_progress()
+		WebEventBridge.emit("tutorial_action_completed", {
+			"action_key": action_key,
+			"current_step": int(progress.get("current_step", 0)),
+			"total_steps": int(progress.get("total_steps", TUTORIAL_SEQUENCE.size())),
+			"is_completed": bool(progress.get("is_completed", false))
+		})
 		tutorial_hint_requested.emit(message)
 		_complete_tutorial_if_finished()
 	return is_first_time
@@ -324,6 +338,9 @@ func _complete_tutorial_if_finished() -> void:
 	tutorial_completed = true
 	tutorial_completed_updated.emit(true)
 	save_tutorial_completed()
+	WebEventBridge.emit("tutorial_completed", {
+		"total_steps": TUTORIAL_SEQUENCE.size()
+	})
 
 
 ### Persistence helpers

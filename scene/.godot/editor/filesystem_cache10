@@ -1,5 +1,5 @@
 72322a848ab928aa5c89f0cb78209805
-::res://::1770968488
+::res://::1771141367
 export_presets.cfg::TextFile::-1::1770641443::0::1::::<><><>0<>0<><>::
 franc_balance.json::JSON::-1::1769234012::0::1::::<><><>0<>0<><>::
 icon.svg::CompressedTexture2D::8424115179466568626::1761818086::1770519929::1::::<><><>0<>0<>fe02fbc8549ede408dbb62074911b2d6<>res://.godot/imported/icon.svg-218a8f2b3041327d8a5756f3a245f83b.ctex::
@@ -137,7 +137,7 @@ Structure.gd::GDScript::2984416440777460010::1768707349::0::1::::Structure<>Node
 TimeHelper.gd::GDScript::1323294876398688441::1770002387::0::1::::TimeHelper<>RefCounted<><>0<>0<><>::
 UIManager.gd::GDScript::2427879682423460808::1770641443::0::1::::UIManager<>CanvasLayer<><>0<>0<><>::
 ::res://Scripts/Systems/::1770968488
-AppController.gd::GDScript::3454646472737238968::1770965262::0::1::::<>Node<><>0<>0<><>::
+AppController.gd::GDScript::3454646472737238968::1770976543::0::1::::<>Node<><>0<>0<><>::
 AppControllerPersistence.gd::GDScript::8965145144914171356::1770641443::0::1::::AppControllerPersistence<>RefCounted<><>0<>0<><>::
 SupabaseClient.gd::GDScript::-1::1770973419::0::1::::SupabaseClient<>Node<><>0<>0<><>::
 SyncBridge.gd::GDScript::1585744792421198607::1770180411::0::1::::<>Node<><>0<>0<><>::
@@ -159,14 +159,14 @@ NewMissionPanel.gd::GDScript::456583294363542672::1770002387::0::1::::<>Control<
 NewMissionPreviewRouting.gd::GDScript::649006792427733335::1770641443::0::1::::NewMissionPreviewRouting<>RefCounted<><>0<>0<><>::
 PanelStyle.gd::GDScript::6371288005676179054::1770641443::0::1::::PanelStyle<>RefCounted<><>0<>0<><>::
 SafeAreaUI.gd::GDScript::1892588568773174708::1770641443::0::1::::<>Node<><>0<>0<><>::
-SatelliteStationPanel.gd::GDScript::7220226855589661432::1770641443::0::1::::<>Control<><>0<>0<><>::
+SatelliteStationPanel.gd::GDScript::7220226855589661432::1770976986::0::1::::<>Control<><>0<>0<><>::
 SatelliteStationPanelData.gd::GDScript::7950460330290189108::1770002387::0::1::::SatelliteStationPanelData<>RefCounted<><>0<>0<><>::
 SatelliteStationPanelDetail.gd::GDScript::5726651803783452614::1770641443::0::1::::SatelliteStationPanelDetail<>RefCounted<><>0<>0<><>::
-SatelliteStationPanelList.gd::GDScript::2377876701735261218::1770641443::0::1::::SatelliteStationPanelList<>RefCounted<><>0<>0<><>::
+SatelliteStationPanelList.gd::GDScript::2377876701735261218::1770976978::0::1::::SatelliteStationPanelList<>RefCounted<><>0<>0<><>::
 SatelliteStationPanelLoading.gd::GDScript::6121495965301075563::1770641443::0::1::::SatelliteStationPanelLoading<>RefCounted<><>0<>0<><>::
 SubcontractorsPanel.gd::GDScript::5110289116588589406::1770641443::0::1::::<>Control<><>0<>0<><>::
 TutorialHintArea.gd::GDScript::279936645238851422::1770641443::0::1::::<>CanvasLayer<><>0<>0<><>::
-TutorialPanel.gd::GDScript::3745946169939705766::1770965262::0::1::::<>CanvasLayer<><>0<>0<><>::
+TutorialPanel.gd::GDScript::3745946169939705766::1770976559::0::1::::<>CanvasLayer<><>0<>0<><>::
 ::res://Scripts/UI/AsteroidDetail/::1770641443
 AsteroidAnnotationHelper.gd::GDScript::7186641213863247286::1770002387::0::1::::AsteroidAnnotationHelper<>RefCounted<><>0<>0<><>::
 AsteroidDetailModel.gd::GDScript::7564269667403975777::1770641443::0::1::::AsteroidDetailModel<>RefCounted<><>0<>0<><>::
@@ -174,7 +174,7 @@ AsteroidDetailView.gd::GDScript::1901068087126822700::1770641443::0::1::::<>VBox
 AsteroidImageHelper.gd::GDScript::8321443183521344453::1770002387::0::1::::AsteroidImageHelper<>RefCounted<><>0<>0<><>::
 DrawingCanvas.gd::GDScript::8636421421820328228::1769234012::0::1::::<>Control<><>0<>0<><>::
 ::res://Scripts/UI/AsteroidPreview/::1770641443
-AsteroidPreview.gd::GDScript::3436503971689628958::1770641443::0::1::::<>Node3D<><>0<>0<><>::
+AsteroidPreview.gd::GDScript::3436503971689628958::1770977298::0::1::::<>Node3D<><>0<>0<><>::
 ::res://Scripts/UI/SimpleDetail/::1770002387
 SimpleDetailView.gd::GDScript::2080116368351909554::1770002387::0::1::::<>VBoxContainer<><>0<>0<><>::
 ::res://Scripts/UI/SpaceMap/::1770641443

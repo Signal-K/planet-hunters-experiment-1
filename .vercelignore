@@ -1,13 +1,9 @@
-*
-
-# Deploy config
-!.vercelignore
-!vercel.json
-
-# Godot web export payload
-!electron-dist/
-!electron-dist/godot-web/
-!electron-dist/godot-web/**
-
-# Optional root fallback page
-!index.html
+# Ignore local-only heavy folders
+node_modules/
+android/
+ios/
+dist/
+build/
+.git/
+.knowns/
+.DS_Store
