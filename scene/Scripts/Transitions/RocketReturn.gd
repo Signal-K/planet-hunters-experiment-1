@@ -66,8 +66,7 @@ var _travel_end_pos := Vector2.ZERO
 var _travel_active := false
 var _return_data := {}
 
-const SPEED_MIN_KMH := 32000.0
-const SPEED_MAX_KMH := 140000.0
+const TRAVEL_DISTANCE_TOTAL_KM := 420000.0
 const NumberFormat = preload("res://Scripts/Utils/NumberFormat.gd")
 const ORBIT_MULTIPLIER := 1.0
 const EARTH_MULTIPLIER := 1.35
@@ -231,9 +230,8 @@ func _update_travel() -> void:
 	if travel_bar:
 		travel_bar.value = pct
 	if travel_speed:
-		var eased = pct * pct * (3.0 - 2.0 * pct)
-		var speed = lerp(SPEED_MIN_KMH, SPEED_MAX_KMH, eased)
-		travel_speed.text = "Speed: %s km/h" % NumberFormat.commas(str(int(round(speed))))
+		var remaining_km = max(int(round(TRAVEL_DISTANCE_TOTAL_KM * (1.0 - pct))), 0)
+		travel_speed.text = "Distance to Earth: %s km" % NumberFormat.commas(str(remaining_km))
 	if pct >= 1.0:
 		_start_earth_approach()
 

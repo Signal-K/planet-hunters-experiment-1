@@ -129,6 +129,10 @@ func _refresh_ui() -> void:
 		_clear_focus_target()
 		visible = false
 		return
+	if _is_transit_scene():
+		_clear_focus_target()
+		visible = false
+		return
 	visible = true
 	var progress = _get_progress()
 	var current_step = int(progress.get("current_step", 0))
@@ -196,6 +200,16 @@ func _current_scene_name() -> String:
 	if scene == null:
 		return ""
 	return str(scene.name)
+
+func _current_scene_path() -> String:
+	var scene = get_tree().current_scene
+	if scene == null:
+		return ""
+	return str(scene.scene_file_path)
+
+func _is_transit_scene() -> bool:
+	var path = _current_scene_path()
+	return path.ends_with("Scenes/Transitions/rocket_transit.tscn") or path.ends_with("Scenes/Transitions/rocket_return.tscn")
 
 func _resolve_focus_target(step_index: int) -> CanvasItem:
 	var scene = get_tree().current_scene
