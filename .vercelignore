@@ -1,0 +1,9 @@
+# Ignore local-only heavy folders
+node_modules/
+android/
+ios/
+dist/
+build/
+.git/
+.knowns/
+.DS_Store

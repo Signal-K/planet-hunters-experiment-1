@@ -10,8 +10,7 @@ const ORBIT_ROTATION_SPEED := 0.25
 const ORBIT_RADIUS_PX := 416.0
 const ORBIT_SEGMENTS := 64
 
-const SPEED_MIN_KMH := 32000.0
-const SPEED_MAX_KMH := 140000.0
+const TRAVEL_DISTANCE_TOTAL_KM := 420000.0
 const NumberFormat = preload("res://Scripts/Utils/NumberFormat.gd")
 
 
@@ -29,6 +28,8 @@ const NumberFormat = preload("res://Scripts/Utils/NumberFormat.gd")
 @onready var minerals_summary: Label = $CanvasLayer/UI/Margin/VBox/MineralsPanel/MineralsMargin/MineralsContent/MineralsSummary
 @onready var minerals_list: VBoxContainer = $CanvasLayer/UI/Margin/VBox/MineralsPanel/MineralsMargin/MineralsContent/MineralsList
 @onready var control_panel: Panel = $CanvasLayer/UI/ControlPanel
+@onready var return_home_button: Button = $CanvasLayer/UI/ControlPanel/ControlPanelMargin/ControlPanelButtons/ReturnHomeButton
+@onready var mine_button: Button = $CanvasLayer/UI/ControlPanel/ControlPanelMargin/ControlPanelButtons/MineButton
 @onready var inventory_panel: Panel = $CanvasLayer/UI/InventoryPanel
 @onready var travel_panel: Panel = $CanvasLayer/UI/TravelPanel
 @onready var travel_title: Label = $CanvasLayer/UI/TravelPanel/TravelMargin/TravelContent/TravelTitle
@@ -55,6 +56,9 @@ enum Phase {
 }
 
 var _phase := Phase.EARTH_ORBIT
+
+func should_hide_tutorial_panel() -> bool:
+	return _phase != Phase.TARGET_ORBIT
 
 func _ready() -> void:
 	_setup_ui()
@@ -85,6 +89,8 @@ func _setup_ui() -> void:
 	panel_style.apply_body(minerals_summary)
 	panel_style.apply_panel(inventory_panel)
 	panel_style.apply_panel(control_panel)
+	panel_style.apply_button(return_home_button, false)
+	panel_style.apply_button(mine_button, true)
 	panel_style.apply_panel(travel_panel)
 	panel_style.apply_title(travel_title)
 	panel_style.apply_body(travel_speed)
@@ -94,6 +100,10 @@ func _setup_ui() -> void:
 	control_panel.visible = false
 	inventory_panel.visible = false
 	back_button.pressed.connect(_on_back_pressed)
+	if mine_button:
+		mine_button.pressed.connect(_on_mine_pressed)
+	if return_home_button:
+		return_home_button.pressed.connect(_on_return_home_pressed)
 
 func _load_target_data() -> void:
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
@@ -175,9 +185,8 @@ func _update_travel() -> void:
 	if travel_bar:
 		travel_bar.value = pct
 	if travel_speed:
-		var eased = pct * pct * (3.0 - 2.0 * pct)
-		var speed = lerp(SPEED_MIN_KMH, SPEED_MAX_KMH, eased)
-		travel_speed.text = "Speed: %s km/h" % NumberFormat.commas(str(int(round(speed))))
+		var remaining_km = max(int(round(TRAVEL_DISTANCE_TOTAL_KM * (1.0 - pct))), 0)
+		travel_speed.text = "Distance to destination: %s km" % NumberFormat.commas(str(remaining_km))
 	if pct >= 1.0:
 		_start_target_approach()
 
@@ -308,4 +317,14 @@ func _advance_to_preview() -> void:
 		tree.change_scene_to_file(PREVIEW_SCENE_PATH)
 
 func _on_back_pressed() -> void:
+	_advance_to_preview()
+
+func _on_mine_pressed() -> void:
+	# This scene is a transit presentation; move into the interactive preview
+	# where mining gameplay is handled.
+	_advance_to_preview()
+
+func _on_return_home_pressed() -> void:
+	# Keep behavior deterministic even if player presses return during transit preview:
+	# jump to interactive preview where return flow is available.
 	_advance_to_preview()

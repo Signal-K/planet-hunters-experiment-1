@@ -10,8 +10,7 @@ const ORBIT_ROTATION_SPEED := 0.25
 const ORBIT_RADIUS_PX := 416.0
 const ORBIT_SEGMENTS := 64
 
-const SPEED_MIN_KMH := 32000.0
-const SPEED_MAX_KMH := 140000.0
+const TRAVEL_DISTANCE_TOTAL_KM := 420000.0
 const NumberFormat = preload("res://Scripts/Utils/NumberFormat.gd")
 
 const ORBIT_MULTIPLIER := 1.0
@@ -58,6 +57,7 @@ var _current_rocket_id := ""
 var _earth_pivot: Node3D
 var _earth_mesh: MeshInstance3D
 var _traveling := false
+var _auto_advance_started := false
 
 enum Phase {
 	TARGET_ORBIT,
@@ -68,6 +68,9 @@ enum Phase {
 }
 
 var _phase := Phase.TARGET_ORBIT
+
+func should_hide_tutorial_panel() -> bool:
+	return _phase != Phase.EARTH_ORBIT
 
 func _should_start_at_earth_orbit() -> bool:
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
@@ -131,6 +134,7 @@ func _setup_ui() -> void:
 	if next_button:
 		next_button.visible = false
 	back_button.text = "Continue"
+	back_button.visible = false
 	back_button.pressed.connect(_on_continue_pressed)
 
 func _load_target_data() -> void:
@@ -242,9 +246,8 @@ func _update_travel() -> void:
 	if travel_bar:
 		travel_bar.value = pct
 	if travel_speed:
-		var eased = pct * pct * (3.0 - 2.0 * pct)
-		var speed = lerp(SPEED_MIN_KMH, SPEED_MAX_KMH, eased)
-		travel_speed.text = "Speed: %s km/h" % NumberFormat.commas(str(int(round(speed))))
+		var remaining_km = max(int(round(TRAVEL_DISTANCE_TOTAL_KM * (1.0 - pct))), 0)
+		travel_speed.text = "Distance to Earth: %s km" % NumberFormat.commas(str(remaining_km))
 	if pct >= 1.0:
 		_start_earth_approach()
 
@@ -279,6 +282,12 @@ func _start_earth_orbit() -> void:
 		var size = get_viewport().get_visible_rect().size
 		orbit_root.position = size * 0.5
 	_show_summary_panel()
+	if not _auto_advance_started:
+		_auto_advance_started = true
+		var t = get_tree().create_timer(1.2)
+		t.timeout.connect(func():
+			_on_continue_pressed()
+		)
 
 func _show_summary_panel() -> void:
 	if summary_panel == null:

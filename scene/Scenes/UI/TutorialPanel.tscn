@@ -61,7 +61,7 @@ anchor_bottom = 0.0
 offset_left = -360.0
 offset_top = 12.0
 offset_right = 360.0
-offset_bottom = 98.0
+offset_bottom = 124.0
 grow_horizontal = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
@@ -71,16 +71,16 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/margin_left = 12
-theme_override_constants/margin_top = 10
+theme_override_constants/margin_top = 12
 theme_override_constants/margin_right = 12
-theme_override_constants/margin_bottom = 10
+theme_override_constants/margin_bottom = 12
 
 [node name="Root" type="VBoxContainer" parent="CoachPanel/Margin"]
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 2
+theme_override_constants/separation = 6
 
 [node name="TopRow" type="HBoxContainer" parent="CoachPanel/Margin/Root"]
 theme_override_constants/separation = 10
@@ -88,13 +88,13 @@ theme_override_constants/separation = 10
 [node name="Progress" type="Label" parent="CoachPanel/Margin/Root/TopRow"]
 size_flags_horizontal = 3
 text = "Step 1/7"
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 15
 modulate = Color(0.64, 0.86, 0.96, 1)
 
 [node name="SkipButton" type="Button" parent="CoachPanel/Margin/Root/TopRow"]
-custom_minimum_size = Vector2(96, 30)
+custom_minimum_size = Vector2(104, 36)
 text = "Skip"
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 15
 theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
 theme_override_styles/normal = SubResource("StyleBoxFlat_button_normal")
 theme_override_styles/hover = SubResource("StyleBoxFlat_button_normal")
@@ -104,4 +104,4 @@ theme_override_styles/focus = SubResource("StyleBoxFlat_button_normal")
 [node name="Instruction" type="Label" parent="CoachPanel/Margin/Root"]
 autowrap_mode = 3
 text = "Open Satellite Station and run a scan."
-theme_override_font_sizes/font_size = 15
+theme_override_font_sizes/font_size = 18

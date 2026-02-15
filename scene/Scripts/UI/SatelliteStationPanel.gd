@@ -17,6 +17,9 @@ const LEVEL_UNLOCK_MISSIONS := [
 ]
 const ACTION_SCAN_TARGETS := "scan_targets"
 const HINT_SCAN_TARGETS := "Scan space first to find targets for your missions."
+const ACTION_SELECT_TARGET := "select_launch_target"
+const HINT_SELECT_TARGET := "Target locked. Heading to Launchpad."
+const LAUNCHPAD_SCENE_PATH := "res://Scenes/Earth/earth_launchpad.tscn"
 
 const SatelliteStationPanelData = preload("res://Scripts/UI/SatelliteStationPanelData.gd")
 const SatelliteStationPanelList = preload("res://Scripts/UI/SatelliteStationPanelList.gd")
@@ -69,7 +72,7 @@ func _ready():
 		Callable(self, "_get_current_mode"),
 		Callable(_data, "normalize_anomaly_id"),
 		Callable(self, "_on_select_target_pressed"),
-		Callable(_detail, "show_detail")
+		Callable(self, "_on_view_pressed")
 	)
 
 	_loading.setup(
@@ -133,6 +136,26 @@ func _start_loading(duration: float):
 	set_process(true)
 
 func _on_loading_finished() -> void:
+	# If scan completed but yielded nothing, provide deterministic offline targets.
+	# This covers timeout/hang/empty-result paths where error callbacks are not fired.
+	if pending_anomalies.is_empty():
+		pending_anomalies = _build_local_anomalies()
+		var fallback_type = "planets" if current_mode == "planets" else "asteroids"
+		status_label.text = "Status: Using offline %s" % fallback_type
+		# Keep tutorial flow consistent even when scan data is from offline fallback.
+		_show_tutorial_hint_once(ACTION_SCAN_TARGETS, HINT_SCAN_TARGETS)
+		_award_scan_experience()
+		var rm_fallback = preload("res://Scripts/Utils/RocketsManager.gd")
+		if rm_fallback:
+			var fallback_targets := []
+			for i in range(pending_anomalies.size()):
+				var a_fb = pending_anomalies[i]
+				var id_fb = _data.normalize_anomaly_id(a_fb, i + 1)
+				var label_fb = str(a_fb.get("content", id_fb))
+				var kind_fb = "planet" if current_mode == "planets" else "asteroid"
+				fallback_targets.append({"id": id_fb, "label": label_fb, "type": kind_fb})
+			rm_fallback.set_detected_targets(fallback_targets)
+
 	# Display the pending anomalies
 	_list.display_anomalies(pending_anomalies)
 	pending_anomalies = []
@@ -151,9 +174,24 @@ func _on_anomalies_fetched(data: Array, error: String):
 	print("SatelliteStationPanel: _on_anomalies_fetched called — error='" + str(error) + "', count=" + str(data.size()))
 	if error != "":
 		print("SatelliteStationPanel: Error fetching anomalies: ", error)
-		pending_anomalies = []
-		status_label.text = "Status: Error - " + error
+		# Keep gameplay moving in web builds even if remote fetch fails.
+		# Fallback to deterministic local anomalies so scan always produces targets.
+		pending_anomalies = _build_local_anomalies()
+		var fallback_type = "planets" if current_mode == "planets" else "asteroids"
+		status_label.text = "Status: Using offline %s (%s)" % [fallback_type, error.left(80)]
 		_loading.mark_anomalies_ready()
+		_show_tutorial_hint_once(ACTION_SCAN_TARGETS, HINT_SCAN_TARGETS)
+		_award_scan_experience()
+		var rm_fallback = preload("res://Scripts/Utils/RocketsManager.gd")
+		if rm_fallback:
+			var fallback_targets := []
+			for i in range(pending_anomalies.size()):
+				var a_fb = pending_anomalies[i]
+				var id_fb = _data.normalize_anomaly_id(a_fb, i + 1)
+				var label_fb = str(a_fb.get("content", id_fb))
+				var kind_fb = "planet" if current_mode == "planets" else "asteroid"
+				fallback_targets.append({"id": id_fb, "label": label_fb, "type": kind_fb})
+			rm_fallback.set_detected_targets(fallback_targets)
 		return
 
 	# No error
@@ -187,6 +225,13 @@ func _on_anomaly_item_button_pressed(bound_anomaly: Dictionary):
 	_detail.show_detail(bound_anomaly)
 
 func _on_select_target_pressed(bound_anomaly: Dictionary, index: int, btn: Button) -> void:
+	_select_target_and_launch(bound_anomaly, index, btn)
+
+func _on_view_pressed(bound_anomaly: Dictionary, index: int) -> void:
+	# "View" should go to Launchpad, not open the image/detail page.
+	_select_target_and_launch(bound_anomaly, index, null)
+
+func _select_target_and_launch(bound_anomaly: Dictionary, index: int, btn: Button) -> void:
 	# Persist the selected target via RocketsManager
 	var target_id = _data.normalize_anomaly_id(bound_anomaly, index)
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
@@ -203,9 +248,25 @@ func _on_select_target_pressed(bound_anomaly: Dictionary, index: int, btn: Butto
 		if btn:
 			btn.text = "Target Selected"
 			btn.disabled = true
+		_show_tutorial_hint_once(ACTION_SELECT_TARGET, HINT_SELECT_TARGET)
+		_change_to_launchpad_scene()
 	else:
 		print("SatelliteStationPanel: failed to persist selected target:", target_id)
 		status_label.text = "Status: Failed to select target"
+
+func _change_to_launchpad_scene() -> void:
+	var tree = Engine.get_main_loop() as SceneTree
+	if tree == null:
+		return
+
+	var scene_manager = null
+	if tree.current_scene:
+		scene_manager = tree.current_scene.get_node_or_null("SceneManager")
+
+	if scene_manager and scene_manager.has_method("change_to_scene"):
+		scene_manager.change_to_scene(LAUNCHPAD_SCENE_PATH)
+	else:
+		tree.change_scene_to_file(LAUNCHPAD_SCENE_PATH)
 
 func _award_scan_experience() -> void:
 	var root = get_tree().root

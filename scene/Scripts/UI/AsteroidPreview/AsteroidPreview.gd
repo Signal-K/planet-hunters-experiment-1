@@ -74,11 +74,17 @@ func _ready() -> void:
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	var target := {}
 	if rm:
-		target = rm.get_preview_target()
+		target = _resolve_preview_target_context(rm)
 	var target_id = str(target.get("id", ""))
 	var label = str(target.get("label", ""))
 	var target_type = str(target.get("type", "asteroid"))
 	var rocket_id = str(target.get("rocket_id", ""))
+	if target_id != "" and rocket_id == "":
+		var rm2 = preload("res://Scripts/Utils/RocketsManager.gd")
+		if rm2:
+			rocket_id = str(rm2.resolve_preview_rocket_id(target_id))
+	if rocket_id == "":
+		rocket_id = "starterrocket1"
 	_current_rocket_id = rocket_id
 	_current_target_id = target_id
 	_current_target_type = target_type
@@ -175,6 +181,12 @@ func _on_mine_pressed() -> void:
 
 func _update_mine_button_state() -> void:
 	if mine_button == null:
+		return
+	# Guard against incomplete preview context so the button never appears "dead".
+	if _current_target_id == "" or _current_yield.is_empty():
+		mine_button.disabled = true
+		if mine_cooldown_label:
+			mine_cooldown_label.text = "No target"
 		return
 	var remaining = max(_mine_ready_at - Time.get_ticks_msec(), 0)
 	if mine_cooldown_label:
@@ -466,10 +478,20 @@ func _setup_orbit_preview(target_id: String, rocket_id: String) -> void:
 	orbit_root.visible = false
 	if orbit_heading:
 		orbit_heading.visible = false
-	if target_id == "" or rocket_id == "":
+	if target_id == "":
 		return
-	if not _rocket_has_arrived(target_id, rocket_id):
-		return
+	var effective_rocket_id = rocket_id
+	if effective_rocket_id == "":
+		var rm_resolve = preload("res://Scripts/Utils/RocketsManager.gd")
+		if rm_resolve:
+			effective_rocket_id = str(rm_resolve.resolve_preview_rocket_id(target_id))
+	if effective_rocket_id == "":
+		effective_rocket_id = "starterrocket1"
+	if not _rocket_has_arrived(target_id, effective_rocket_id):
+		var rm_mark = preload("res://Scripts/Utils/RocketsManager.gd")
+		if rm_mark:
+			rm_mark.mark_arrived(effective_rocket_id, target_id)
+	_current_rocket_id = effective_rocket_id
 	orbit_root.visible = true
 	_orbit_angle = 0.0
 	if camera_3d and asteroid_pivot:
@@ -481,7 +503,7 @@ func _setup_orbit_preview(target_id: String, rocket_id: String) -> void:
 	orbit_utils.build_orbit_circle(orbit_circle, ORBIT_RADIUS_PX, ORBIT_SEGMENTS)
 	orbit_rocket.position = Vector2(ORBIT_RADIUS_PX, 0)
 	orbit_rocket.scale = Vector2(0.2, 0.2)
-	_set_orbit_rocket_visual(rocket_id)
+	_set_orbit_rocket_visual(effective_rocket_id)
 	var orbit_utils2 = preload("res://Scripts/Utils/OrbitVisuals.gd")
 	orbit_utils2.update_heading_line(orbit_heading, orbit_rocket)
 
@@ -513,3 +535,35 @@ func _rocket_has_arrived(target_id: String, rocket_id: String) -> bool:
 			rm.mark_arrived(rocket_id, target_id)
 		return arrived
 	return false
+
+func _resolve_preview_target_context(rm) -> Dictionary:
+	var target: Dictionary = rm.get_preview_target()
+	var target_id = str(target.get("id", ""))
+	var label = str(target.get("label", ""))
+	var target_type = str(target.get("type", "asteroid"))
+	var rocket_id = str(target.get("rocket_id", ""))
+
+	if target_id == "":
+		var candidates = rm.get_preview_candidates()
+		if not candidates.is_empty():
+			var idx = clamp(rm.get_preview_index(), 0, candidates.size() - 1)
+			var candidate: Dictionary = candidates[idx]
+			target_id = str(candidate.get("target_id", ""))
+			if label == "":
+				label = str(candidate.get("label", ""))
+			target_type = str(candidate.get("type", target_type))
+			if rocket_id == "":
+				rocket_id = str(candidate.get("rocket_id", ""))
+
+	if target_id == "" and rocket_id != "":
+		var mission = rm.get_mission_for_rocket(rocket_id)
+		target_id = str(mission.get("target", ""))
+
+	if rocket_id == "" and target_id != "":
+		rocket_id = rm.resolve_preview_rocket_id(target_id)
+
+	if target_id != "":
+		rm.set_preview_target(target_id, label, target_type, rocket_id)
+		target = rm.get_preview_target()
+
+	return target
