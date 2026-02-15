@@ -64,16 +64,6 @@ func _create_anomaly_item(anomaly: Dictionary, index: int) -> Control:
 	hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	item_container.add_child(hbox)
 
-	# Add a full-size transparent button to capture clicks reliably
-	var click_btn = Button.new()
-	click_btn.text = ""
-	click_btn.flat = true
-	click_btn.focus_mode = Control.FOCUS_NONE
-	click_btn.mouse_filter = Control.MOUSE_FILTER_STOP
-	# Make it cover the whole item_container
-	click_btn.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	item_container.add_child(click_btn)
-
 	# Icon/Number circle
 	var icon_container = PanelContainer.new()
 	icon_container.custom_minimum_size = Vector2(60, 60)
@@ -166,6 +156,13 @@ func _create_anomaly_item(anomaly: Dictionary, index: int) -> Control:
 	controls_h.add_child(select_btn)
 	panel_style.apply_button(select_btn, true)
 
+	var detail_btn = Button.new()
+	detail_btn.text = "View"
+	detail_btn.focus_mode = Control.FOCUS_NONE
+	detail_btn.custom_minimum_size = Vector2(120, 36)
+	controls_h.add_child(detail_btn)
+	panel_style.apply_button(detail_btn, false)
+
 	# Display selected marker if this matches currently selected target
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	var normalized = _normalize_cb.call(anomaly, index)
@@ -178,9 +175,7 @@ func _create_anomaly_item(anomaly: Dictionary, index: int) -> Control:
 
 	# Connect select action
 	select_btn.pressed.connect(_on_select_cb.bind(anomaly, index, select_btn))
-
-	# Connect the overlay button's pressed signal to open detail view
-	click_btn.pressed.connect(_on_detail_cb.bind(anomaly))
+	detail_btn.pressed.connect(_on_detail_cb.bind(anomaly, index))
 
 	# Add hover effect
 	item_container.mouse_entered.connect(func():

@@ -74,7 +74,7 @@ func _ready() -> void:
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	var target := {}
 	if rm:
-		target = rm.get_preview_target()
+		target = _resolve_preview_target_context(rm)
 	var target_id = str(target.get("id", ""))
 	var label = str(target.get("label", ""))
 	var target_type = str(target.get("type", "asteroid"))
@@ -175,6 +175,12 @@ func _on_mine_pressed() -> void:
 
 func _update_mine_button_state() -> void:
 	if mine_button == null:
+		return
+	# Guard against incomplete preview context so the button never appears "dead".
+	if _current_target_id == "" or _current_yield.is_empty():
+		mine_button.disabled = true
+		if mine_cooldown_label:
+			mine_cooldown_label.text = "No target"
 		return
 	var remaining = max(_mine_ready_at - Time.get_ticks_msec(), 0)
 	if mine_cooldown_label:
@@ -513,3 +519,35 @@ func _rocket_has_arrived(target_id: String, rocket_id: String) -> bool:
 			rm.mark_arrived(rocket_id, target_id)
 		return arrived
 	return false
+
+func _resolve_preview_target_context(rm) -> Dictionary:
+	var target: Dictionary = rm.get_preview_target()
+	var target_id = str(target.get("id", ""))
+	var label = str(target.get("label", ""))
+	var target_type = str(target.get("type", "asteroid"))
+	var rocket_id = str(target.get("rocket_id", ""))
+
+	if target_id == "":
+		var candidates = rm.get_preview_candidates()
+		if not candidates.is_empty():
+			var idx = clamp(rm.get_preview_index(), 0, candidates.size() - 1)
+			var candidate: Dictionary = candidates[idx]
+			target_id = str(candidate.get("target_id", ""))
+			if label == "":
+				label = str(candidate.get("label", ""))
+			target_type = str(candidate.get("type", target_type))
+			if rocket_id == "":
+				rocket_id = str(candidate.get("rocket_id", ""))
+
+	if target_id == "" and rocket_id != "":
+		var mission = rm.get_mission_for_rocket(rocket_id)
+		target_id = str(mission.get("target", ""))
+
+	if rocket_id == "" and target_id != "":
+		rocket_id = rm.resolve_preview_rocket_id(target_id)
+
+	if target_id != "":
+		rm.set_preview_target(target_id, label, target_type, rocket_id)
+		target = rm.get_preview_target()
+
+	return target

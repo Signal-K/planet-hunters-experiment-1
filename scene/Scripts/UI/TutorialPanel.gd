@@ -8,16 +8,16 @@ const STEPS := [
 		"context": "Find mineable targets."
 	},
 	{
-		"action": "create_rocket",
-		"title": "Build your first rocket",
-		"instruction": "Go to Launchpad and create a rocket.",
-		"context": "Build mission-ready rockets."
+		"action": "select_launch_target",
+		"title": "Lock a target",
+		"instruction": "Select one scanned target in Satellite Station.",
+		"context": "Set the mission destination."
 	},
 	{
-		"action": "select_launch_target",
-		"title": "Assign mission target",
-		"instruction": "Select one scanned target in Launchpad.",
-		"context": "Give the rocket a destination."
+		"action": "create_rocket",
+		"title": "Build your first rocket",
+		"instruction": "In Launchpad, create a rocket.",
+		"context": "Build mission-ready rockets."
 	},
 	{
 		"action": "launch_rocket_from_earth",
@@ -150,12 +150,12 @@ func _instruction_for_scene(step_index: int, fallback: String) -> String:
 				return "Go back to Earth base and open Satellite Station first."
 		1:
 			if scene_name == "EarthBase1":
-				return "Tap New Mission to enter Launchpad."
+				return "In Satellite Station, tap Select Target."
 			if scene_name == "LaunchpadScene":
-				return "Tap Create on a rocket card."
+				return "Return to Satellite Station and select a target first."
 		2:
 			if scene_name == "LaunchpadScene":
-				return "Tap Select on one detected target."
+				return "Tap Create on a rocket card."
 		3:
 			if scene_name == "LaunchpadScene":
 				return "Press Launch when a rocket and target are selected."
@@ -203,12 +203,12 @@ func _resolve_focus_target(step_index: int) -> CanvasItem:
 				return scene.get_node_or_null("StructuresLayer/SatelliteStation/Sprite2D")
 		1:
 			if scene_name == "EarthBase1":
-				return scene.get_node_or_null("UILayer/ButtonContainer/NewMissionButton")
+				return _find_button_by_text(get_tree().root, "Select Target")
 			if scene_name == "LaunchpadScene":
-				return _find_button_by_text(scene, "Create")
+				return null
 		2:
 			if scene_name == "LaunchpadScene":
-				return _find_button_by_text(scene, "Select")
+				return _find_button_by_text(scene, "Create")
 		3:
 			if scene_name == "LaunchpadScene":
 				var launch_hud = scene.get_node_or_null("LaunchHUD")

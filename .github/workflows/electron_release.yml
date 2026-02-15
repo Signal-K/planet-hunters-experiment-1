@@ -1,11 +1,9 @@
-name: Electron Desktop Release
+name: Tests + Release + Vercel Deploy
 
 on:
   push:
     branches:
-      - main
-      - master
-      - electron-support
+      - '**'
   workflow_dispatch:
 
 permissions:
@@ -13,8 +11,31 @@ permissions:
   actions: write
 
 jobs:
+  basic-tests:
+    name: Basic Tests (All Pushes)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        shell: bash
+        run: npm ci
+
+      - name: Run unit tests
+        shell: bash
+        run: npm run test:unit
+
   godot-tests:
-    name: Godot Runtime Tests
+    name: Full Godot Runtime Tests (main only)
+    if: github.ref_name == 'main'
+    needs: basic-tests
     runs-on: ubuntu-latest
     env:
       SUPABASE_URL: ${{ secrets.PROD_SUPABASE_URL }}
@@ -58,7 +79,8 @@ jobs:
           ~/godot-linux/godot --headless --path . --script res://tests/SupabaseTestRunner.gd
 
   app-unit-e2e-tests:
-    name: Unit + E2E Tests
+    name: Full App Unit + E2E Tests (main only)
+    if: github.ref_name == 'main'
     needs: godot-tests
     runs-on: ubuntu-latest
     env:
@@ -118,8 +140,120 @@ jobs:
         shell: bash
         run: npm run test:e2e
 
+  expo-export:
+    name: Export Godot + Build Expo (main only)
+    if: github.ref_name == 'main'
+    needs: app-unit-e2e-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Cache Godot
+        id: cache-godot
+        uses: actions/cache@v4
+        with:
+          path: ~/godot-linux
+          key: ${{ runner.os }}-godot-4.5-stable
+          restore-keys: |
+            ${{ runner.os }}-godot-4.5-
+
+      - name: Download Godot
+        if: steps.cache-godot.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p ~/godot-linux
+          chmod 770 ~/godot-linux
+          mkdir -p ~/.config/godot
+          chmod 770 ~/.config/godot
+
+          DOWNLOAD_URL="https://github.com/godotengine/godot/releases/download/4.5-stable"
+          GODOT_BIN="Godot_v4.5-stable_linux.x86_64"
+          GODOT_PACKAGE="$GODOT_BIN.zip"
+
+          wget "$DOWNLOAD_URL/$GODOT_PACKAGE" -P ~/godot-linux
+          unzip ~/godot-linux/$GODOT_PACKAGE -d ~/godot-linux
+          mv ~/godot-linux/$GODOT_BIN ~/godot-linux/godot
+          chmod +x ~/godot-linux/godot
+          rm ~/godot-linux/$GODOT_PACKAGE
+
+      - name: Import Godot project
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd scene
+          timeout 60s ~/godot-linux/godot --headless --path . --import --quit || true
+          echo "✓ Project imported"
+
+      - name: Ensure iOS output directory exists
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p ./ios
+          chmod 755 ./ios
+
+      - name: Export Godot (iOS)
+        shell: bash
+        env:
+          GODOT_EDITOR: /home/runner/godot-linux/godot
+        run: |
+          set -euo pipefail
+          chmod +x ./export_godot.sh
+          ./export_godot.sh \
+            --target ./ios \
+            --project ./scene \
+            --name GodotTest \
+            --preset iOS \
+            --platform ios
+
+      - name: Export Godot (Android)
+        shell: bash
+        env:
+          GODOT_EDITOR: /home/runner/godot-linux/godot
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          mkdir -p ./android/app/src/main/assets
+          ./export_godot.sh \
+            --target ./android/app/src/main/assets \
+            --project ./scene \
+            --name main \
+            --preset Android \
+            --platform android || echo "⚠️ Android export skipped (no preset configured)"
+
+      - name: Install dependencies
+        shell: bash
+        run: npm ci
+
+      - name: Build Expo bundle
+        shell: bash
+        env:
+          EXPO_NO_TELEMETRY: 1
+        run: npx expo export --platform ios
+
+      - name: Archive Expo build artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: expo-build
+          path: |
+            ios/GodotTest.pck
+            dist/
+          retention-days: 7
+
   export-godot:
-    name: Export Godot Assets
+    name: Export Godot Assets (main only)
+    if: github.ref_name == 'main'
     needs: app-unit-e2e-tests
     runs-on: ubuntu-latest
     env:
@@ -203,7 +337,8 @@ jobs:
           if-no-files-found: error
 
   build:
-    name: Build (${{ matrix.os }})
+    name: Build (${{ matrix.os }}) (main only)
+    if: github.ref_name == 'main'
     needs: export-godot
     runs-on: ${{ matrix.os }}
     strategy:
@@ -297,7 +432,8 @@ jobs:
 
   release:
     name: Publish Release
-    needs: build
+    if: github.ref_name == 'main'
+    needs: [build, expo-export]
     runs-on: ubuntu-latest
 
     steps:
@@ -339,8 +475,8 @@ jobs:
 
   clear-caches:
     name: Clear Actions Caches
+    if: always() && github.ref_name == 'main'
     needs: release
-    if: always()
     runs-on: ubuntu-latest
     steps:
       - name: Delete caches for repository
@@ -416,3 +552,83 @@ jobs:
           done
 
           echo "Done. Deleted ${deleted} cache entries."
+
+  deploy-preview:
+    name: Deploy to Vercel Preview (non-main)
+    if: github.ref_name != 'main'
+    needs: basic-tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        shell: bash
+        run: npm ci
+
+      - name: Pull Vercel preview environment
+        shell: bash
+        run: npx vercel pull --yes --environment=preview --token="${{ secrets.VERCEL_TOKEN }}" --scope="${{ secrets.VERCEL_TEAM_ID }}"
+        env:
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_TEAM_ID }}
+
+      - name: Build Vercel preview artifacts
+        shell: bash
+        run: npx vercel build --token="${{ secrets.VERCEL_TOKEN }}" --scope="${{ secrets.VERCEL_TEAM_ID }}"
+        env:
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_TEAM_ID }}
+
+      - name: Deploy preview
+        shell: bash
+        run: npx vercel deploy --prebuilt --token="${{ secrets.VERCEL_TOKEN }}" --scope="${{ secrets.VERCEL_TEAM_ID }}"
+        env:
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_TEAM_ID }}
+
+  deploy-production:
+    name: Deploy to Vercel Production (main)
+    if: github.ref_name == 'main'
+    needs: clear-caches
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        shell: bash
+        run: npm ci
+
+      - name: Pull Vercel production environment
+        shell: bash
+        run: npx vercel pull --yes --environment=production --token="${{ secrets.VERCEL_TOKEN }}" --scope="${{ secrets.VERCEL_TEAM_ID }}"
+        env:
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_TEAM_ID }}
+
+      - name: Build Vercel production artifacts
+        shell: bash
+        run: npx vercel build --prod --token="${{ secrets.VERCEL_TOKEN }}" --scope="${{ secrets.VERCEL_TEAM_ID }}"
+        env:
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_TEAM_ID }}
+
+      - name: Deploy production
+        shell: bash
+        run: npx vercel deploy --prebuilt --prod --token="${{ secrets.VERCEL_TOKEN }}" --scope="${{ secrets.VERCEL_TEAM_ID }}"
+        env:
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_TEAM_ID }}
