@@ -37,6 +37,11 @@ func run_all_tests() -> void:
 	await test_outbound_progress_fallback_to_status_timestamp()
 	await test_return_home_persists_return_start_time()
 	await test_preview_routing_for_return_states()
+	await test_outbound_transit_distance_label_decreases()
+	await test_return_transit_distance_label_decreases()
+	await test_tutorial_panel_hidden_in_transit_scene()
+	await test_tutorial_panel_reappears_on_destination_arrival()
+	await test_return_preview_auto_advances_to_debrief()
 
 func _new_controller() -> Node:
 	var app = AppControllerScript.new()
@@ -320,5 +325,155 @@ func test_preview_routing_for_return_states() -> void:
 		return
 	if outbound_scene != "res://Scenes/Transitions/rocket_transit.tscn":
 		reporter.fail_test("Expected launched/in-flight route to transit preview")
+		return
+	reporter.pass_test()
+
+func _extract_distance_km(label_text: String, prefix: String) -> int:
+	if not label_text.begins_with(prefix):
+		return -1
+	var value = label_text.trim_prefix(prefix).trim_suffix(" km").replace(",", "").strip_edges()
+	if value == "":
+		return -1
+	return int(value)
+
+func test_outbound_transit_distance_label_decreases() -> void:
+	reporter.start_test("Outbound transit shows decreasing distance to destination")
+	var scene_pack = load("res://Scenes/Transitions/rocket_transit.tscn")
+	if scene_pack == null:
+		reporter.fail_test("Could not load rocket_transit.tscn")
+		return
+	var err = change_scene_to_packed(scene_pack)
+	if err != OK:
+		reporter.fail_test("Could not change to rocket_transit.tscn (err=%s)" % str(err))
+		return
+	await create_timer(0.05).timeout
+	var scene = current_scene
+	if scene == null:
+		reporter.fail_test("No current scene after loading rocket_transit.tscn")
+		return
+	scene._start_travel()
+	scene._phase_time = 5.0
+	scene._update_travel()
+	var first_text = str(scene.travel_speed.text)
+	var first_value = _extract_distance_km(first_text, "Distance to destination: ")
+	scene._phase_time = 15.0
+	scene._update_travel()
+	var second_text = str(scene.travel_speed.text)
+	var second_value = _extract_distance_km(second_text, "Distance to destination: ")
+	if first_value < 0 or second_value < 0:
+		reporter.fail_test("Unexpected outbound distance labels: first=%s second=%s" % [first_text, second_text])
+		return
+	if second_value >= first_value:
+		reporter.fail_test("Expected outbound distance to decrease, got first=%s second=%s" % [str(first_value), str(second_value)])
+		return
+	reporter.pass_test()
+
+func test_return_transit_distance_label_decreases() -> void:
+	reporter.start_test("Return transit shows decreasing distance to Earth")
+	var scene_pack = load("res://Scenes/Transitions/rocket_return.tscn")
+	if scene_pack == null:
+		reporter.fail_test("Could not load rocket_return.tscn")
+		return
+	var err = change_scene_to_packed(scene_pack)
+	if err != OK:
+		reporter.fail_test("Could not change to rocket_return.tscn (err=%s)" % str(err))
+		return
+	await create_timer(0.05).timeout
+	var scene = current_scene
+	if scene == null:
+		reporter.fail_test("No current scene after loading rocket_return.tscn")
+		return
+	scene._start_travel()
+	scene._phase_time = 5.0
+	scene._update_travel()
+	var first_text = str(scene.travel_speed.text)
+	var first_value = _extract_distance_km(first_text, "Distance to Earth: ")
+	scene._phase_time = 15.0
+	scene._update_travel()
+	var second_text = str(scene.travel_speed.text)
+	var second_value = _extract_distance_km(second_text, "Distance to Earth: ")
+	if first_value < 0 or second_value < 0:
+		reporter.fail_test("Unexpected return distance labels: first=%s second=%s" % [first_text, second_text])
+		return
+	if second_value >= first_value:
+		reporter.fail_test("Expected return distance to decrease, got first=%s second=%s" % [str(first_value), str(second_value)])
+		return
+	reporter.pass_test()
+
+func test_tutorial_panel_hidden_in_transit_scene() -> void:
+	reporter.start_test("Tutorial panel is hidden during transit scenes")
+	DirAccess.remove_absolute("user://tutorial.cfg")
+	var scene_pack = load("res://Scenes/Transitions/rocket_transit.tscn")
+	if scene_pack == null:
+		reporter.fail_test("Could not load rocket_transit.tscn for tutorial visibility test")
+		return
+	var err = change_scene_to_packed(scene_pack)
+	if err != OK:
+		reporter.fail_test("Could not change to rocket_transit.tscn (err=%s)" % str(err))
+		return
+	await create_timer(0.05).timeout
+	var scene = current_scene
+	if scene == null:
+		reporter.fail_test("No current scene after loading transit scene")
+		return
+	var tutorial_panel = scene.get_node_or_null("TutorialPanel")
+	if tutorial_panel == null:
+		reporter.fail_test("TutorialPanel node missing in transit scene")
+		return
+	if tutorial_panel.visible:
+		reporter.fail_test("Expected TutorialPanel to be hidden in transit scene")
+		return
+	reporter.pass_test()
+
+func test_tutorial_panel_reappears_on_destination_arrival() -> void:
+	reporter.start_test("Tutorial panel reappears when transit scene reaches destination orbit")
+	DirAccess.remove_absolute("user://tutorial.cfg")
+	var scene_pack = load("res://Scenes/Transitions/rocket_transit.tscn")
+	if scene_pack == null:
+		reporter.fail_test("Could not load rocket_transit.tscn for tutorial arrival test")
+		return
+	var err = change_scene_to_packed(scene_pack)
+	if err != OK:
+		reporter.fail_test("Could not change to rocket_transit.tscn (err=%s)" % str(err))
+		return
+	await create_timer(0.05).timeout
+	var scene = current_scene
+	if scene == null:
+		reporter.fail_test("No current scene after loading transit scene")
+		return
+	scene._start_target_orbit()
+	await create_timer(0.05).timeout
+	var tutorial_panel = scene.get_node_or_null("TutorialPanel")
+	if tutorial_panel == null:
+		reporter.fail_test("TutorialPanel node missing in transit scene")
+		return
+	if not tutorial_panel.visible:
+		reporter.fail_test("Expected TutorialPanel to be visible once destination orbit is reached")
+		return
+	reporter.pass_test()
+
+func test_return_preview_auto_advances_to_debrief() -> void:
+	reporter.start_test("Return preview auto-advances to mission debrief without Continue")
+	var scene_pack = load("res://Scenes/Transitions/rocket_return.tscn")
+	if scene_pack == null:
+		reporter.fail_test("Could not load rocket_return.tscn for auto-advance test")
+		return
+	var err = change_scene_to_packed(scene_pack)
+	if err != OK:
+		reporter.fail_test("Could not change to rocket_return.tscn (err=%s)" % str(err))
+		return
+	await create_timer(0.05).timeout
+	var scene = current_scene
+	if scene == null:
+		reporter.fail_test("No current scene after loading rocket_return.tscn")
+		return
+	scene._start_earth_orbit()
+	await create_timer(1.5).timeout
+	if current_scene == null:
+		reporter.fail_test("Current scene missing after auto-advance window")
+		return
+	var loaded_path = str(current_scene.scene_file_path)
+	if loaded_path != "res://Scenes/Earth/mission_debrief.tscn":
+		reporter.fail_test("Expected auto-advance to mission_debrief.tscn, got %s" % loaded_path)
 		return
 	reporter.pass_test()

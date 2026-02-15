@@ -15,6 +15,7 @@ const PROD_SUPABASE_KEY: String = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3Mi
 
 var SUPABASE_URL: String = LOCAL_SUPABASE_URL
 var SUPABASE_KEY: String = LOCAL_SUPABASE_KEY
+var _web_pending_callbacks: Dictionary = {}
 
 const RUNTIME_CONFIG_PATH: String = "res://supabase.runtime.json"
 # Force local mode - set this to true if you want to always use local development server
@@ -91,9 +92,21 @@ static func _is_running_from_editor() -> bool:
 	# True during Play/F5 from editor; false in exported/mobile runtime.
 	return OS.has_feature("editor")
 
+func _resolve_api_base_url() -> String:
+	var base_url = str(SUPABASE_URL).strip_edges()
+	if base_url == "" or not base_url.begins_with("http"):
+		base_url = PROD_SUPABASE_URL
+	if base_url.ends_with("/"):
+		base_url = base_url.substr(0, base_url.length() - 1)
+	return base_url
+
 ## Fetch anomalies from Supabase with a specific anomalySet
 ## Returns array of anomaly dictionaries via callback
 func fetch_anomalies(anomaly_set: String, limit: int, callback: Callable) -> HTTPRequest:
+	if OS.has_feature("web"):
+		_fetch_anomalies_web(anomaly_set, limit, callback)
+		return null
+
 	var http_request = HTTPRequest.new()
 	# Godot web builds can fail with RESULT_BODY_DECOMPRESS_FAILED on compressed responses.
 	# Force identity encoding when supported by runtime to keep prod fetches stable.
@@ -107,8 +120,9 @@ func fetch_anomalies(anomaly_set: String, limit: int, callback: Callable) -> HTT
 	if scene_tree and scene_tree.root:
 		scene_tree.root.add_child(http_request)
 	
+	var api_base = _resolve_api_base_url()
 	var url = "%s/rest/v1/anomalies?anomalySet=eq.%s&order=created_at.desc&limit=%d" % [
-		SUPABASE_URL,
+		api_base,
 		anomaly_set.uri_encode(),
 		limit
 	]
@@ -159,3 +173,59 @@ func fetch_anomalies(anomaly_set: String, limit: int, callback: Callable) -> HTT
 		http_request.queue_free()
 	
 	return http_request
+
+func _fetch_anomalies_web(anomaly_set: String, limit: int, callback: Callable) -> void:
+	var window = JavaScriptBridge.get_interface("window")
+	if window == null:
+		callback.call([], "Window interface unavailable for web fetch")
+		return
+
+	var api_base = _resolve_api_base_url()
+	var url = "%s/rest/v1/anomalies?anomalySet=eq.%s&order=created_at.desc&limit=%d" % [
+		api_base,
+		anomaly_set.uri_encode(),
+		limit
+	]
+
+	var callback_id = "__ph_supabase_cb_%d" % Time.get_ticks_usec()
+	_web_pending_callbacks[callback_id] = callback
+	var bridge_callback = JavaScriptBridge.create_callback(Callable(self, "_on_web_fetch_completed").bind(callback_id))
+	window.set(callback_id, bridge_callback)
+
+	var url_js = JSON.stringify(url)
+	var key_js = JSON.stringify(SUPABASE_KEY)
+	var callback_js = JSON.stringify(callback_id)
+	var fallback_base_js = JSON.stringify(PROD_SUPABASE_URL)
+	var js = "(async function(){const k=%s;const u=%s;const fb=%s;async function rq(x){return fetch(x,{method:'GET',headers:{'apikey':k,'Authorization':'Bearer '+k,'Content-Type':'application/json'}});}try{let r=await rq(u);let t=await r.text();if((!r.ok)&&((r.status===404)||(t.indexOf('NOT_FOUND')!==-1)||(t.indexOf('Code: NOT_FOUND')!==-1))&&u.indexOf('supabase.co')===-1){const uu=(fb.replace(/\\/$/,'')+'/rest/v1/anomalies?anomalySet=eq.%s&order=created_at.desc&limit=%d');r=await rq(uu);t=await r.text();}if(!r.ok){window[%s]('__ERR__API returned status code: '+r.status+' body='+t.slice(0,260));return;}window[%s](t);}catch(e){window[%s]('__ERR__HTTP Request failed in JS fetch: '+(e&&e.message?e.message:String(e)));}})();" % [key_js, url_js, fallback_base_js, anomaly_set.uri_encode(), limit, callback_js, callback_js, callback_js]
+	JavaScriptBridge.eval(js, true)
+
+func _on_web_fetch_completed(args, callback_id: String) -> void:
+	var callback: Callable = _web_pending_callbacks.get(callback_id, Callable())
+	_web_pending_callbacks.erase(callback_id)
+
+	var window = JavaScriptBridge.get_interface("window")
+	if window != null:
+		window.set(callback_id, null)
+
+	if not callback.is_valid():
+		return
+
+	var payload = ""
+	if args is Array and args.size() > 0:
+		payload = str(args[0])
+
+	if payload.begins_with("__ERR__"):
+		callback.call([], payload.substr(7))
+		return
+
+	var json = JSON.new()
+	var parse_result = json.parse(payload)
+	if parse_result != OK:
+		callback.call([], "Failed to parse JSON response")
+		return
+
+	if typeof(json.data) != TYPE_ARRAY:
+		callback.call([], "Unexpected response payload type")
+		return
+
+	callback.call(json.data, "")

@@ -3,29 +3,29 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Planet Hunters</title>
+    <title>Planet Hunters Web</title>
     <style>
+      :root {
+        --bg-0: #05080f;
+        --bg-1: #0d1320;
+        --ink: #e7edf9;
+        --muted: #a9b4cc;
+        --edge: #233455;
+        --accent: #4ad0ff;
+      }
       html,
       body {
         margin: 0;
         padding: 0;
-        width: 100%;
-        height: 100%;
-        background: #000;
-      }
-      iframe {
-        border: 0;
-        width: 100%;
-        height: 100%;
-        display: block;
+        min-height: 100%;
+        font-family: "Avenir Next", "Segoe UI", sans-serif;
+        color: var(--ink);
+        background: radial-gradient(circle at 20% 0%, #17233b 0%, var(--bg-0) 46%, #020306 100%);
       }
     </style>
   </head>
   <body>
-    <iframe
-      src="/electron-dist/godot-web/index.html"
-      title="Planet Hunters Godot Web"
-      allow="fullscreen"
-    ></iframe>
+    <div id="root"></div>
+    <script type="module" src="/react-shell.js"></script>
   </body>
 </html>

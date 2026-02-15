@@ -9,6 +9,7 @@ const SALVAGE_REFUND_PCT := 0.10
 const XP_AWARD_MISSION := 4
 const ACTION_RESOLVE_DEBRIEF := "resolve_mission_debrief"
 const HINT_RESOLVE_DEBRIEF := "Great. You completed debrief by choosing how to process the mission return."
+const WebEventBridge = preload("res://Scripts/Systems/WebEventBridge.gd")
 
 const ROCKET_COSTS := {
 	"starterrocket1": 1000000000,
@@ -265,6 +266,20 @@ func _add_mission_log(action: String, payout: int) -> void:
 		"badge": _make_badge()
 	}
 	log.add_mission(entry)
+	var mission_rows: Array = log.get_missions()
+	var mission_count = mission_rows.size()
+	var event_payload := {
+		"action": action,
+		"payout": payout,
+		"rocket_id": str(entry.get("rocket_id", "")),
+		"target_id": str(entry.get("target_id", "")),
+		"label": str(entry.get("label", "")),
+		"badge": str(entry.get("badge", "")),
+		"mission_count": mission_count
+	}
+	WebEventBridge.emit("mission_debrief_resolved", event_payload)
+	if mission_count == 1:
+		WebEventBridge.emit("first_mission_completed", event_payload)
 
 func _select_subcontractor() -> void:
 	var app = _get_app_controller()

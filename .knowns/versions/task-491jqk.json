@@ -1,6 +1,6 @@
 {
   "taskId": "491jqk",
-  "currentVersion": 3,
+  "currentVersion": 10,
   "versions": [
     {
       "id": "v1",
@@ -131,6 +131,340 @@
         ],
         "implementationPlan": "1. Confirm current web entrypoints and Godot export paths in repo\n2. Add Vercel routing config so / serves web shell and /game/* serves electron-dist/godot-web assets\n3. Add headers for wasm/pck and no-cache for shell html\n4. Validate locally by requesting / and /game/index.html from static serving flow\n5. Update task notes and proceed with remaining CI/deploy AC work",
         "implementationNotes": "✓ Vercel routing fixed: / and /:path* now point to electron-dist/godot-web; avoids serving root React Native index.js source"
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "491jqk",
+      "version": 4,
+      "timestamp": "2026-02-13T08:56:11.716Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "✓ Vercel routing fixed: / and /:path* now point to electron-dist/godot-web; avoids serving root React Native index.js source",
+          "newValue": "✓ Vercel routing fixed: / and /:path* now point to electron-dist/godot-web; avoids serving root React Native index.js source\n\n✓ Exported fresh Web + iOS builds; Android preset missing in scene/export_presets.cfg. Added web-only JSBridge fetch fallback in SupabaseClient to bypass Brotli decompression failure (HTTP result 8)."
+        }
+      ],
+      "snapshot": {
+        "title": "Run full Playwright+Cypress e2e and add final Vercel deploy pipeline stage",
+        "description": "Execute full browser e2e suites (Playwright and Cypress) for the web app, then add a Vercel deployment stage that runs at the end of the unified CI pipeline.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "e2e",
+          "playwright",
+          "cypress",
+          "vercel",
+          "ci",
+          "web"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Playwright e2e suite runs to completion"
+          },
+          {
+            "completed": false,
+            "text": "Cypress e2e suite runs to completion"
+          },
+          {
+            "completed": false,
+            "text": "CI pipeline includes final Vercel deployment stage after test/release/cache stages"
+          }
+        ],
+        "implementationPlan": "1. Confirm current web entrypoints and Godot export paths in repo\n2. Add Vercel routing config so / serves web shell and /game/* serves electron-dist/godot-web assets\n3. Add headers for wasm/pck and no-cache for shell html\n4. Validate locally by requesting / and /game/index.html from static serving flow\n5. Update task notes and proceed with remaining CI/deploy AC work",
+        "implementationNotes": "✓ Vercel routing fixed: / and /:path* now point to electron-dist/godot-web; avoids serving root React Native index.js source\n\n✓ Exported fresh Web + iOS builds; Android preset missing in scene/export_presets.cfg. Added web-only JSBridge fetch fallback in SupabaseClient to bypass Brotli decompression failure (HTTP result 8)."
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "491jqk",
+      "version": 5,
+      "timestamp": "2026-02-15T08:06:22.685Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Playwright e2e suite runs to completion"
+            },
+            {
+              "completed": false,
+              "text": "Cypress e2e suite runs to completion"
+            },
+            {
+              "completed": false,
+              "text": "CI pipeline includes final Vercel deployment stage after test/release/cache stages"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": false,
+              "text": "Playwright e2e suite runs to completion"
+            },
+            {
+              "completed": false,
+              "text": "Cypress e2e suite runs to completion"
+            },
+            {
+              "completed": true,
+              "text": "CI pipeline includes final Vercel deployment stage after test/release/cache stages"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Run full Playwright+Cypress e2e and add final Vercel deploy pipeline stage",
+        "description": "Execute full browser e2e suites (Playwright and Cypress) for the web app, then add a Vercel deployment stage that runs at the end of the unified CI pipeline.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "e2e",
+          "playwright",
+          "cypress",
+          "vercel",
+          "ci",
+          "web"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Playwright e2e suite runs to completion"
+          },
+          {
+            "completed": false,
+            "text": "Cypress e2e suite runs to completion"
+          },
+          {
+            "completed": true,
+            "text": "CI pipeline includes final Vercel deployment stage after test/release/cache stages"
+          }
+        ],
+        "implementationPlan": "1. Confirm current web entrypoints and Godot export paths in repo\n2. Add Vercel routing config so / serves web shell and /game/* serves electron-dist/godot-web assets\n3. Add headers for wasm/pck and no-cache for shell html\n4. Validate locally by requesting / and /game/index.html from static serving flow\n5. Update task notes and proceed with remaining CI/deploy AC work",
+        "implementationNotes": "✓ Vercel routing fixed: / and /:path* now point to electron-dist/godot-web; avoids serving root React Native index.js source\n\n✓ Exported fresh Web + iOS builds; Android preset missing in scene/export_presets.cfg. Added web-only JSBridge fetch fallback in SupabaseClient to bypass Brotli decompression failure (HTTP result 8)."
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "491jqk",
+      "version": 6,
+      "timestamp": "2026-02-15T08:06:22.888Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "✓ Vercel routing fixed: / and /:path* now point to electron-dist/godot-web; avoids serving root React Native index.js source\n\n✓ Exported fresh Web + iOS builds; Android preset missing in scene/export_presets.cfg. Added web-only JSBridge fetch fallback in SupabaseClient to bypass Brotli decompression failure (HTTP result 8).",
+          "newValue": "✓ Vercel routing fixed: / and /:path* now point to electron-dist/godot-web; avoids serving root React Native index.js source\n\n✓ Exported fresh Web + iOS builds; Android preset missing in scene/export_presets.cfg. Added web-only JSBridge fetch fallback in SupabaseClient to bypass Brotli decompression failure (HTTP result 8).\n\n✓ Unified CI updated in electron_release.yml: basic tests run on all pushes; full test + build + release gated to main; Vercel preview deploy on non-main pushes; Vercel production deploy on main after release pipeline. Uses VERCEL_TOKEN, VERCEL_PROJECT_ID, VERCEL_TEAM_ID secrets."
+        }
+      ],
+      "snapshot": {
+        "title": "Run full Playwright+Cypress e2e and add final Vercel deploy pipeline stage",
+        "description": "Execute full browser e2e suites (Playwright and Cypress) for the web app, then add a Vercel deployment stage that runs at the end of the unified CI pipeline.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "e2e",
+          "playwright",
+          "cypress",
+          "vercel",
+          "ci",
+          "web"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Playwright e2e suite runs to completion"
+          },
+          {
+            "completed": false,
+            "text": "Cypress e2e suite runs to completion"
+          },
+          {
+            "completed": true,
+            "text": "CI pipeline includes final Vercel deployment stage after test/release/cache stages"
+          }
+        ],
+        "implementationPlan": "1. Confirm current web entrypoints and Godot export paths in repo\n2. Add Vercel routing config so / serves web shell and /game/* serves electron-dist/godot-web assets\n3. Add headers for wasm/pck and no-cache for shell html\n4. Validate locally by requesting / and /game/index.html from static serving flow\n5. Update task notes and proceed with remaining CI/deploy AC work",
+        "implementationNotes": "✓ Vercel routing fixed: / and /:path* now point to electron-dist/godot-web; avoids serving root React Native index.js source\n\n✓ Exported fresh Web + iOS builds; Android preset missing in scene/export_presets.cfg. Added web-only JSBridge fetch fallback in SupabaseClient to bypass Brotli decompression failure (HTTP result 8).\n\n✓ Unified CI updated in electron_release.yml: basic tests run on all pushes; full test + build + release gated to main; Vercel preview deploy on non-main pushes; Vercel production deploy on main after release pipeline. Uses VERCEL_TOKEN, VERCEL_PROJECT_ID, VERCEL_TEAM_ID secrets."
+      }
+    },
+    {
+      "id": "v7",
+      "taskId": "491jqk",
+      "version": 7,
+      "timestamp": "2026-02-15T08:07:09.710Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "✓ Vercel routing fixed: / and /:path* now point to electron-dist/godot-web; avoids serving root React Native index.js source\n\n✓ Exported fresh Web + iOS builds; Android preset missing in scene/export_presets.cfg. Added web-only JSBridge fetch fallback in SupabaseClient to bypass Brotli decompression failure (HTTP result 8).\n\n✓ Unified CI updated in electron_release.yml: basic tests run on all pushes; full test + build + release gated to main; Vercel preview deploy on non-main pushes; Vercel production deploy on main after release pipeline. Uses VERCEL_TOKEN, VERCEL_PROJECT_ID, VERCEL_TEAM_ID secrets.",
+          "newValue": "✓ Vercel routing fixed: / and /:path* now point to electron-dist/godot-web; avoids serving root React Native index.js source\n\n✓ Exported fresh Web + iOS builds; Android preset missing in scene/export_presets.cfg. Added web-only JSBridge fetch fallback in SupabaseClient to bypass Brotli decompression failure (HTTP result 8).\n\n✓ Unified CI updated in electron_release.yml: basic tests run on all pushes; full test + build + release gated to main; Vercel preview deploy on non-main pushes; Vercel production deploy on main after release pipeline. Uses VERCEL_TOKEN, VERCEL_PROJECT_ID, VERCEL_TEAM_ID secrets.\n\n✓ Retired .github/workflows/godot_tests.yml to avoid duplicate full test runs; unified pipeline in electron_release.yml is now the single source for main full tests + release + Vercel deploy."
+        }
+      ],
+      "snapshot": {
+        "title": "Run full Playwright+Cypress e2e and add final Vercel deploy pipeline stage",
+        "description": "Execute full browser e2e suites (Playwright and Cypress) for the web app, then add a Vercel deployment stage that runs at the end of the unified CI pipeline.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "e2e",
+          "playwright",
+          "cypress",
+          "vercel",
+          "ci",
+          "web"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Playwright e2e suite runs to completion"
+          },
+          {
+            "completed": false,
+            "text": "Cypress e2e suite runs to completion"
+          },
+          {
+            "completed": true,
+            "text": "CI pipeline includes final Vercel deployment stage after test/release/cache stages"
+          }
+        ],
+        "implementationPlan": "1. Confirm current web entrypoints and Godot export paths in repo\n2. Add Vercel routing config so / serves web shell and /game/* serves electron-dist/godot-web assets\n3. Add headers for wasm/pck and no-cache for shell html\n4. Validate locally by requesting / and /game/index.html from static serving flow\n5. Update task notes and proceed with remaining CI/deploy AC work",
+        "implementationNotes": "✓ Vercel routing fixed: / and /:path* now point to electron-dist/godot-web; avoids serving root React Native index.js source\n\n✓ Exported fresh Web + iOS builds; Android preset missing in scene/export_presets.cfg. Added web-only JSBridge fetch fallback in SupabaseClient to bypass Brotli decompression failure (HTTP result 8).\n\n✓ Unified CI updated in electron_release.yml: basic tests run on all pushes; full test + build + release gated to main; Vercel preview deploy on non-main pushes; Vercel production deploy on main after release pipeline. Uses VERCEL_TOKEN, VERCEL_PROJECT_ID, VERCEL_TEAM_ID secrets.\n\n✓ Retired .github/workflows/godot_tests.yml to avoid duplicate full test runs; unified pipeline in electron_release.yml is now the single source for main full tests + release + Vercel deploy."
+      }
+    },
+    {
+      "id": "v8",
+      "taskId": "491jqk",
+      "version": 8,
+      "timestamp": "2026-02-15T08:09:52.849Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "✓ Vercel routing fixed: / and /:path* now point to electron-dist/godot-web; avoids serving root React Native index.js source\n\n✓ Exported fresh Web + iOS builds; Android preset missing in scene/export_presets.cfg. Added web-only JSBridge fetch fallback in SupabaseClient to bypass Brotli decompression failure (HTTP result 8).\n\n✓ Unified CI updated in electron_release.yml: basic tests run on all pushes; full test + build + release gated to main; Vercel preview deploy on non-main pushes; Vercel production deploy on main after release pipeline. Uses VERCEL_TOKEN, VERCEL_PROJECT_ID, VERCEL_TEAM_ID secrets.\n\n✓ Retired .github/workflows/godot_tests.yml to avoid duplicate full test runs; unified pipeline in electron_release.yml is now the single source for main full tests + release + Vercel deploy.",
+          "newValue": "✓ Vercel routing fixed: / and /:path* now point to electron-dist/godot-web; avoids serving root React Native index.js source\n\n✓ Exported fresh Web + iOS builds; Android preset missing in scene/export_presets.cfg. Added web-only JSBridge fetch fallback in SupabaseClient to bypass Brotli decompression failure (HTTP result 8).\n\n✓ Unified CI updated in electron_release.yml: basic tests run on all pushes; full test + build + release gated to main; Vercel preview deploy on non-main pushes; Vercel production deploy on main after release pipeline. Uses VERCEL_TOKEN, VERCEL_PROJECT_ID, VERCEL_TEAM_ID secrets.\n\n✓ Retired .github/workflows/godot_tests.yml to avoid duplicate full test runs; unified pipeline in electron_release.yml is now the single source for main full tests + release + Vercel deploy.\n\n✓ Folded legacy export_build.yml into unified electron_release.yml via main-only expo-export job (Godot iOS/Android export + Expo bundle artifact). ✓ Release now depends on both build + expo-export. ✓ Removed duplicate standalone workflows export_build.yml and clear_actions_caches.yml."
+        }
+      ],
+      "snapshot": {
+        "title": "Run full Playwright+Cypress e2e and add final Vercel deploy pipeline stage",
+        "description": "Execute full browser e2e suites (Playwright and Cypress) for the web app, then add a Vercel deployment stage that runs at the end of the unified CI pipeline.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "e2e",
+          "playwright",
+          "cypress",
+          "vercel",
+          "ci",
+          "web"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Playwright e2e suite runs to completion"
+          },
+          {
+            "completed": false,
+            "text": "Cypress e2e suite runs to completion"
+          },
+          {
+            "completed": true,
+            "text": "CI pipeline includes final Vercel deployment stage after test/release/cache stages"
+          }
+        ],
+        "implementationPlan": "1. Confirm current web entrypoints and Godot export paths in repo\n2. Add Vercel routing config so / serves web shell and /game/* serves electron-dist/godot-web assets\n3. Add headers for wasm/pck and no-cache for shell html\n4. Validate locally by requesting / and /game/index.html from static serving flow\n5. Update task notes and proceed with remaining CI/deploy AC work",
+        "implementationNotes": "✓ Vercel routing fixed: / and /:path* now point to electron-dist/godot-web; avoids serving root React Native index.js source\n\n✓ Exported fresh Web + iOS builds; Android preset missing in scene/export_presets.cfg. Added web-only JSBridge fetch fallback in SupabaseClient to bypass Brotli decompression failure (HTTP result 8).\n\n✓ Unified CI updated in electron_release.yml: basic tests run on all pushes; full test + build + release gated to main; Vercel preview deploy on non-main pushes; Vercel production deploy on main after release pipeline. Uses VERCEL_TOKEN, VERCEL_PROJECT_ID, VERCEL_TEAM_ID secrets.\n\n✓ Retired .github/workflows/godot_tests.yml to avoid duplicate full test runs; unified pipeline in electron_release.yml is now the single source for main full tests + release + Vercel deploy.\n\n✓ Folded legacy export_build.yml into unified electron_release.yml via main-only expo-export job (Godot iOS/Android export + Expo bundle artifact). ✓ Release now depends on both build + expo-export. ✓ Removed duplicate standalone workflows export_build.yml and clear_actions_caches.yml."
+      }
+    },
+    {
+      "id": "v9",
+      "taskId": "491jqk",
+      "version": 9,
+      "timestamp": "2026-02-15T08:10:24.146Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "✓ Vercel routing fixed: / and /:path* now point to electron-dist/godot-web; avoids serving root React Native index.js source\n\n✓ Exported fresh Web + iOS builds; Android preset missing in scene/export_presets.cfg. Added web-only JSBridge fetch fallback in SupabaseClient to bypass Brotli decompression failure (HTTP result 8).\n\n✓ Unified CI updated in electron_release.yml: basic tests run on all pushes; full test + build + release gated to main; Vercel preview deploy on non-main pushes; Vercel production deploy on main after release pipeline. Uses VERCEL_TOKEN, VERCEL_PROJECT_ID, VERCEL_TEAM_ID secrets.\n\n✓ Retired .github/workflows/godot_tests.yml to avoid duplicate full test runs; unified pipeline in electron_release.yml is now the single source for main full tests + release + Vercel deploy.\n\n✓ Folded legacy export_build.yml into unified electron_release.yml via main-only expo-export job (Godot iOS/Android export + Expo bundle artifact). ✓ Release now depends on both build + expo-export. ✓ Removed duplicate standalone workflows export_build.yml and clear_actions_caches.yml.",
+          "newValue": "✓ Vercel routing fixed: / and /:path* now point to electron-dist/godot-web; avoids serving root React Native index.js source\n\n✓ Exported fresh Web + iOS builds; Android preset missing in scene/export_presets.cfg. Added web-only JSBridge fetch fallback in SupabaseClient to bypass Brotli decompression failure (HTTP result 8).\n\n✓ Unified CI updated in electron_release.yml: basic tests run on all pushes; full test + build + release gated to main; Vercel preview deploy on non-main pushes; Vercel production deploy on main after release pipeline. Uses VERCEL_TOKEN, VERCEL_PROJECT_ID, VERCEL_TEAM_ID secrets.\n\n✓ Retired .github/workflows/godot_tests.yml to avoid duplicate full test runs; unified pipeline in electron_release.yml is now the single source for main full tests + release + Vercel deploy.\n\n✓ Folded legacy export_build.yml into unified electron_release.yml via main-only expo-export job (Godot iOS/Android export + Expo bundle artifact). ✓ Release now depends on both build + expo-export. ✓ Removed duplicate standalone workflows export_build.yml and clear_actions_caches.yml.\n\n✓ Removed final legacy workflow godot_tests_archived.yml. CI is now fully unified under electron_release.yml."
+        }
+      ],
+      "snapshot": {
+        "title": "Run full Playwright+Cypress e2e and add final Vercel deploy pipeline stage",
+        "description": "Execute full browser e2e suites (Playwright and Cypress) for the web app, then add a Vercel deployment stage that runs at the end of the unified CI pipeline.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "e2e",
+          "playwright",
+          "cypress",
+          "vercel",
+          "ci",
+          "web"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Playwright e2e suite runs to completion"
+          },
+          {
+            "completed": false,
+            "text": "Cypress e2e suite runs to completion"
+          },
+          {
+            "completed": true,
+            "text": "CI pipeline includes final Vercel deployment stage after test/release/cache stages"
+          }
+        ],
+        "implementationPlan": "1. Confirm current web entrypoints and Godot export paths in repo\n2. Add Vercel routing config so / serves web shell and /game/* serves electron-dist/godot-web assets\n3. Add headers for wasm/pck and no-cache for shell html\n4. Validate locally by requesting / and /game/index.html from static serving flow\n5. Update task notes and proceed with remaining CI/deploy AC work",
+        "implementationNotes": "✓ Vercel routing fixed: / and /:path* now point to electron-dist/godot-web; avoids serving root React Native index.js source\n\n✓ Exported fresh Web + iOS builds; Android preset missing in scene/export_presets.cfg. Added web-only JSBridge fetch fallback in SupabaseClient to bypass Brotli decompression failure (HTTP result 8).\n\n✓ Unified CI updated in electron_release.yml: basic tests run on all pushes; full test + build + release gated to main; Vercel preview deploy on non-main pushes; Vercel production deploy on main after release pipeline. Uses VERCEL_TOKEN, VERCEL_PROJECT_ID, VERCEL_TEAM_ID secrets.\n\n✓ Retired .github/workflows/godot_tests.yml to avoid duplicate full test runs; unified pipeline in electron_release.yml is now the single source for main full tests + release + Vercel deploy.\n\n✓ Folded legacy export_build.yml into unified electron_release.yml via main-only expo-export job (Godot iOS/Android export + Expo bundle artifact). ✓ Release now depends on both build + expo-export. ✓ Removed duplicate standalone workflows export_build.yml and clear_actions_caches.yml.\n\n✓ Removed final legacy workflow godot_tests_archived.yml. CI is now fully unified under electron_release.yml."
+      }
+    },
+    {
+      "id": "v10",
+      "taskId": "491jqk",
+      "version": 10,
+      "timestamp": "2026-02-15T08:23:43.711Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "✓ Vercel routing fixed: / and /:path* now point to electron-dist/godot-web; avoids serving root React Native index.js source\n\n✓ Exported fresh Web + iOS builds; Android preset missing in scene/export_presets.cfg. Added web-only JSBridge fetch fallback in SupabaseClient to bypass Brotli decompression failure (HTTP result 8).\n\n✓ Unified CI updated in electron_release.yml: basic tests run on all pushes; full test + build + release gated to main; Vercel preview deploy on non-main pushes; Vercel production deploy on main after release pipeline. Uses VERCEL_TOKEN, VERCEL_PROJECT_ID, VERCEL_TEAM_ID secrets.\n\n✓ Retired .github/workflows/godot_tests.yml to avoid duplicate full test runs; unified pipeline in electron_release.yml is now the single source for main full tests + release + Vercel deploy.\n\n✓ Folded legacy export_build.yml into unified electron_release.yml via main-only expo-export job (Godot iOS/Android export + Expo bundle artifact). ✓ Release now depends on both build + expo-export. ✓ Removed duplicate standalone workflows export_build.yml and clear_actions_caches.yml.\n\n✓ Removed final legacy workflow godot_tests_archived.yml. CI is now fully unified under electron_release.yml.",
+          "newValue": "✓ Vercel routing fixed: / and /:path* now point to electron-dist/godot-web; avoids serving root React Native index.js source\n\n✓ Exported fresh Web + iOS builds; Android preset missing in scene/export_presets.cfg. Added web-only JSBridge fetch fallback in SupabaseClient to bypass Brotli decompression failure (HTTP result 8).\n\n✓ Unified CI updated in electron_release.yml: basic tests run on all pushes; full test + build + release gated to main; Vercel preview deploy on non-main pushes; Vercel production deploy on main after release pipeline. Uses VERCEL_TOKEN, VERCEL_PROJECT_ID, VERCEL_TEAM_ID secrets.\n\n✓ Retired .github/workflows/godot_tests.yml to avoid duplicate full test runs; unified pipeline in electron_release.yml is now the single source for main full tests + release + Vercel deploy.\n\n✓ Folded legacy export_build.yml into unified electron_release.yml via main-only expo-export job (Godot iOS/Android export + Expo bundle artifact). ✓ Release now depends on both build + expo-export. ✓ Removed duplicate standalone workflows export_build.yml and clear_actions_caches.yml.\n\n✓ Removed final legacy workflow godot_tests_archived.yml. CI is now fully unified under electron_release.yml.\n\n✓ Fixed preview/prod deploy staleness risk: added non-main export-godot-preview job and wired deploy-preview to consume fresh godot-web-export-preview artifact. deploy-production now depends on export-godot and downloads godot-web-export artifact before Vercel build/deploy."
+        }
+      ],
+      "snapshot": {
+        "title": "Run full Playwright+Cypress e2e and add final Vercel deploy pipeline stage",
+        "description": "Execute full browser e2e suites (Playwright and Cypress) for the web app, then add a Vercel deployment stage that runs at the end of the unified CI pipeline.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "e2e",
+          "playwright",
+          "cypress",
+          "vercel",
+          "ci",
+          "web"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Playwright e2e suite runs to completion"
+          },
+          {
+            "completed": false,
+            "text": "Cypress e2e suite runs to completion"
+          },
+          {
+            "completed": true,
+            "text": "CI pipeline includes final Vercel deployment stage after test/release/cache stages"
+          }
+        ],
+        "implementationPlan": "1. Confirm current web entrypoints and Godot export paths in repo\n2. Add Vercel routing config so / serves web shell and /game/* serves electron-dist/godot-web assets\n3. Add headers for wasm/pck and no-cache for shell html\n4. Validate locally by requesting / and /game/index.html from static serving flow\n5. Update task notes and proceed with remaining CI/deploy AC work",
+        "implementationNotes": "✓ Vercel routing fixed: / and /:path* now point to electron-dist/godot-web; avoids serving root React Native index.js source\n\n✓ Exported fresh Web + iOS builds; Android preset missing in scene/export_presets.cfg. Added web-only JSBridge fetch fallback in SupabaseClient to bypass Brotli decompression failure (HTTP result 8).\n\n✓ Unified CI updated in electron_release.yml: basic tests run on all pushes; full test + build + release gated to main; Vercel preview deploy on non-main pushes; Vercel production deploy on main after release pipeline. Uses VERCEL_TOKEN, VERCEL_PROJECT_ID, VERCEL_TEAM_ID secrets.\n\n✓ Retired .github/workflows/godot_tests.yml to avoid duplicate full test runs; unified pipeline in electron_release.yml is now the single source for main full tests + release + Vercel deploy.\n\n✓ Folded legacy export_build.yml into unified electron_release.yml via main-only expo-export job (Godot iOS/Android export + Expo bundle artifact). ✓ Release now depends on both build + expo-export. ✓ Removed duplicate standalone workflows export_build.yml and clear_actions_caches.yml.\n\n✓ Removed final legacy workflow godot_tests_archived.yml. CI is now fully unified under electron_release.yml.\n\n✓ Fixed preview/prod deploy staleness risk: added non-main export-godot-preview job and wired deploy-preview to consume fresh godot-web-export-preview artifact. deploy-production now depends on export-godot and downloads godot-web-export artifact before Vercel build/deploy."
       }
     }
   ]

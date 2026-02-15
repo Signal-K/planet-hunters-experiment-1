@@ -8,16 +8,16 @@ const STEPS := [
 		"context": "Find mineable targets."
 	},
 	{
-		"action": "create_rocket",
-		"title": "Build your first rocket",
-		"instruction": "Go to Launchpad and create a rocket.",
-		"context": "Build mission-ready rockets."
+		"action": "select_launch_target",
+		"title": "Lock a target",
+		"instruction": "Select one scanned target in Satellite Station.",
+		"context": "Set the mission destination."
 	},
 	{
-		"action": "select_launch_target",
-		"title": "Assign mission target",
-		"instruction": "Select one scanned target in Launchpad.",
-		"context": "Give the rocket a destination."
+		"action": "create_rocket",
+		"title": "Build your first rocket",
+		"instruction": "In Launchpad, create a rocket.",
+		"context": "Build mission-ready rockets."
 	},
 	{
 		"action": "launch_rocket_from_earth",
@@ -61,10 +61,12 @@ func _ready() -> void:
 	if skip_button:
 		skip_button.pressed.connect(_on_skip_pressed)
 	_pointer_label = Label.new()
-	_pointer_label.text = "▼"
+	# Use ASCII fallback so web exports don't show missing-glyph boxes.
+	_pointer_label.text = "v"
 	_pointer_label.visible = false
 	_pointer_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_pointer_label.add_theme_font_size_override("font_size", 24)
+	_pointer_label.add_theme_font_size_override("font_size", 28)
+	_pointer_label.add_theme_color_override("font_color", Color(0.98, 0.82, 0.35, 1))
 	_pointer_label.modulate = Color(0.98, 0.82, 0.35, 1)
 	add_child(_pointer_label)
 	_find_app_controller()
@@ -127,6 +129,10 @@ func _refresh_ui() -> void:
 		_clear_focus_target()
 		visible = false
 		return
+	if _should_hide_for_current_scene():
+		_clear_focus_target()
+		visible = false
+		return
 	visible = true
 	var progress = _get_progress()
 	var current_step = int(progress.get("current_step", 0))
@@ -150,12 +156,12 @@ func _instruction_for_scene(step_index: int, fallback: String) -> String:
 				return "Go back to Earth base and open Satellite Station first."
 		1:
 			if scene_name == "EarthBase1":
-				return "Tap New Mission to enter Launchpad."
+				return "In Satellite Station, tap Select Target."
 			if scene_name == "LaunchpadScene":
-				return "Tap Create on a rocket card."
+				return "Return to Satellite Station and select a target first."
 		2:
 			if scene_name == "LaunchpadScene":
-				return "Tap Select on one detected target."
+				return "Tap Create on a rocket card."
 		3:
 			if scene_name == "LaunchpadScene":
 				return "Press Launch when a rocket and target are selected."
@@ -180,17 +186,39 @@ func _apply_responsive_layout() -> void:
 	var card_width = clamp(width * 0.72, 320.0, 760.0)
 	panel.offset_left = -card_width * 0.5
 	panel.offset_right = card_width * 0.5
+	panel.offset_bottom = panel.offset_top + (112.0 if width < 900.0 else 124.0)
 	var compact = width < 900.0
 	if instruction_label:
-		instruction_label.add_theme_font_size_override("font_size", 13 if compact else 15)
+		instruction_label.add_theme_font_size_override("font_size", 16 if compact else 18)
 	if progress_label:
-		progress_label.add_theme_font_size_override("font_size", 12 if compact else 13)
+		progress_label.add_theme_font_size_override("font_size", 14 if compact else 15)
+	if skip_button:
+		skip_button.add_theme_font_size_override("font_size", 14 if compact else 15)
 
 func _current_scene_name() -> String:
 	var scene = get_tree().current_scene
 	if scene == null:
 		return ""
 	return str(scene.name)
+
+func _current_scene_path() -> String:
+	var scene = get_tree().current_scene
+	if scene == null:
+		return ""
+	return str(scene.scene_file_path)
+
+func _should_hide_for_current_scene() -> bool:
+	var scene = get_tree().current_scene
+	if scene == null:
+		return false
+	if scene.has_method("should_hide_tutorial_panel"):
+		return bool(scene.call("should_hide_tutorial_panel"))
+	var travel_panel = scene.get_node_or_null("CanvasLayer/UI/TravelPanel")
+	if travel_panel == null:
+		travel_panel = scene.get_node_or_null("UI/TravelPanel")
+	if travel_panel is CanvasItem and travel_panel.visible:
+		return true
+	return false
 
 func _resolve_focus_target(step_index: int) -> CanvasItem:
 	var scene = get_tree().current_scene
@@ -203,12 +231,12 @@ func _resolve_focus_target(step_index: int) -> CanvasItem:
 				return scene.get_node_or_null("StructuresLayer/SatelliteStation/Sprite2D")
 		1:
 			if scene_name == "EarthBase1":
-				return scene.get_node_or_null("UILayer/ButtonContainer/NewMissionButton")
+				return _find_button_by_text(get_tree().root, "Select Target")
 			if scene_name == "LaunchpadScene":
-				return _find_button_by_text(scene, "Create")
+				return null
 		2:
 			if scene_name == "LaunchpadScene":
-				return _find_button_by_text(scene, "Select")
+				return _find_button_by_text(scene, "Create")
 		3:
 			if scene_name == "LaunchpadScene":
 				var launch_hud = scene.get_node_or_null("LaunchHUD")
