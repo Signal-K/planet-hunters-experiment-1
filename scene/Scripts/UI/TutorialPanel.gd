@@ -129,7 +129,7 @@ func _refresh_ui() -> void:
 		_clear_focus_target()
 		visible = false
 		return
-	if _is_transit_scene():
+	if _should_hide_for_current_scene():
 		_clear_focus_target()
 		visible = false
 		return
@@ -207,9 +207,18 @@ func _current_scene_path() -> String:
 		return ""
 	return str(scene.scene_file_path)
 
-func _is_transit_scene() -> bool:
-	var path = _current_scene_path()
-	return path.ends_with("Scenes/Transitions/rocket_transit.tscn") or path.ends_with("Scenes/Transitions/rocket_return.tscn")
+func _should_hide_for_current_scene() -> bool:
+	var scene = get_tree().current_scene
+	if scene == null:
+		return false
+	if scene.has_method("should_hide_tutorial_panel"):
+		return bool(scene.call("should_hide_tutorial_panel"))
+	var travel_panel = scene.get_node_or_null("CanvasLayer/UI/TravelPanel")
+	if travel_panel == null:
+		travel_panel = scene.get_node_or_null("UI/TravelPanel")
+	if travel_panel is CanvasItem and travel_panel.visible:
+		return true
+	return false
 
 func _resolve_focus_target(step_index: int) -> CanvasItem:
 	var scene = get_tree().current_scene

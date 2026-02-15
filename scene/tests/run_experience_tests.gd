@@ -40,6 +40,7 @@ func run_all_tests() -> void:
 	await test_outbound_transit_distance_label_decreases()
 	await test_return_transit_distance_label_decreases()
 	await test_tutorial_panel_hidden_in_transit_scene()
+	await test_tutorial_panel_reappears_on_destination_arrival()
 	await test_return_preview_auto_advances_to_debrief()
 
 func _new_controller() -> Node:
@@ -421,6 +422,33 @@ func test_tutorial_panel_hidden_in_transit_scene() -> void:
 		return
 	if tutorial_panel.visible:
 		reporter.fail_test("Expected TutorialPanel to be hidden in transit scene")
+		return
+	reporter.pass_test()
+
+func test_tutorial_panel_reappears_on_destination_arrival() -> void:
+	reporter.start_test("Tutorial panel reappears when transit scene reaches destination orbit")
+	DirAccess.remove_absolute("user://tutorial.cfg")
+	var scene_pack = load("res://Scenes/Transitions/rocket_transit.tscn")
+	if scene_pack == null:
+		reporter.fail_test("Could not load rocket_transit.tscn for tutorial arrival test")
+		return
+	var err = change_scene_to_packed(scene_pack)
+	if err != OK:
+		reporter.fail_test("Could not change to rocket_transit.tscn (err=%s)" % str(err))
+		return
+	await create_timer(0.05).timeout
+	var scene = current_scene
+	if scene == null:
+		reporter.fail_test("No current scene after loading transit scene")
+		return
+	scene._start_target_orbit()
+	await create_timer(0.05).timeout
+	var tutorial_panel = scene.get_node_or_null("TutorialPanel")
+	if tutorial_panel == null:
+		reporter.fail_test("TutorialPanel node missing in transit scene")
+		return
+	if not tutorial_panel.visible:
+		reporter.fail_test("Expected TutorialPanel to be visible once destination orbit is reached")
 		return
 	reporter.pass_test()
 

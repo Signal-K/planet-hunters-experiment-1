@@ -69,6 +69,9 @@ enum Phase {
 
 var _phase := Phase.TARGET_ORBIT
 
+func should_hide_tutorial_panel() -> bool:
+	return _phase != Phase.EARTH_ORBIT
+
 func _should_start_at_earth_orbit() -> bool:
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	if not rm:
