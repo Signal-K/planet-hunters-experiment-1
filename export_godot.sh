@@ -106,6 +106,11 @@ echo "Name:        $name"
 echo "Preset:      $preset"
 echo ""
 
+# Resolve target path to an absolute directory so Godot export output does not
+# depend on --path project root resolution rules.
+mkdir -p "$target_base_dir"
+ABS_TARGET_BASE_DIR="$(cd "$target_base_dir" && pwd -P)"
+
 # Import project resources
 echo -e "${YELLOW}Importing project resources...${NC}"
 "$GODOT" --headless --path "$project_dir" --import
@@ -114,8 +119,7 @@ echo -e "${YELLOW}Importing project resources...${NC}"
 if [ "$platform" = "ios" ]
 then
     echo -e "${YELLOW}Exporting iOS as PCK file...${NC}"
-    mkdir -p "$target_base_dir"
-    OUTPUT_FILE="$target_base_dir/${name}.pck"
+    OUTPUT_FILE="$ABS_TARGET_BASE_DIR/${name}.pck"
     "$GODOT" --headless --path "$project_dir" --export-pack "$preset" "$OUTPUT_FILE"
     
     if [ -f "$OUTPUT_FILE" ]
@@ -131,9 +135,8 @@ then
 elif [ "$platform" = "android" ]
 then
     echo -e "${YELLOW}Exporting Android as folder...${NC}"
-    mkdir -p "$target_base_dir"
-    TARGET_DIR="$target_base_dir/${name}"
-    ZIP_FILE="$target_base_dir/${name}.zip"
+    TARGET_DIR="$ABS_TARGET_BASE_DIR/${name}"
+    ZIP_FILE="$ABS_TARGET_BASE_DIR/${name}.zip"
     
     # Export as zip first
     "$GODOT" --headless --path "$project_dir" --export-pack "$preset" "$ZIP_FILE"
