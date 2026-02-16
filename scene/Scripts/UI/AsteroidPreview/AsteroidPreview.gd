@@ -8,6 +8,7 @@ const ORBIT_RADIUS_PX := 416.0
 const ORBIT_SEGMENTS := 64
 const TARGET_LEVEL_SIZE := 5
 const NumberFormat = preload("res://Scripts/Utils/NumberFormat.gd")
+const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
 const RETURN_SCENE_PATH := "res://Scenes/Transitions/rocket_return.tscn"
 const ROCKET_TIP_PADDING_PX := 8.0
 const ACTION_OPEN_PREVIEW := "open_asteroid_preview"
@@ -276,7 +277,8 @@ func _apply_mining_yield() -> void:
 	var minerals: Dictionary = _current_yield.get("minerals", {})
 	var capacity = float(_current_yield.get("capacity", 0))
 	var inventory = preload("res://Scripts/Utils/MiningInventory.gd")
-	var state = inventory.apply_mining(_current_target_id, capacity, minerals)
+	var mining_multiplier = RocketSpecs.get_mining_multiplier(_current_rocket_id)
+	var state = inventory.apply_mining(_current_target_id, capacity, minerals, mining_multiplier)
 	_update_inventory_ui(state)
 
 func _show_tutorial_hint_once(action_key: String, message: String) -> void:
@@ -419,7 +421,8 @@ func _populate_minerals(target_id: String, target_type: String) -> void:
 		rank = rm.register_target_interaction(target_id, target_type)
 	var level = int(floor(float(max(rank - 1, 0)) / float(TARGET_LEVEL_SIZE))) + 1
 	var resource_yield = preload("res://Scripts/Utils/ResourceYield.gd")
-	var yield_data = resource_yield.get_yield_for_target(target_id, target_type, level)
+	var cargo_multiplier = RocketSpecs.get_cargo_multiplier(_current_rocket_id)
+	var yield_data = resource_yield.get_yield_for_target(target_id, target_type, level, cargo_multiplier)
 	_current_yield = yield_data
 	var minerals: Dictionary = yield_data.get("minerals", {})
 	var capacity = int(yield_data.get("capacity", 0))

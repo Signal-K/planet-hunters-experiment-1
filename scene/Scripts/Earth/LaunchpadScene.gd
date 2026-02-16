@@ -4,6 +4,13 @@ func _ready():
 	var back_btn = $UILayer/SelectorPanel/VBox/BackButton
 	if back_btn:
 		back_btn.pressed.connect(_on_back_button_pressed)
+	var selector_panel = $UILayer/SelectorPanel
+	if selector_panel:
+		selector_panel.offset_left = 24
+		selector_panel.offset_top = 24
+		selector_panel.offset_right = 24
+		selector_panel.offset_bottom = 24
+		selector_panel.custom_minimum_size = Vector2(1120, 720)
 
 	# Auto-instance the external Launch HUD so the Launch button is available
 	# when this scene is loaded. Avoid creating duplicate instances.

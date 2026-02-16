@@ -31,7 +31,9 @@ func run_all_tests() -> void:
 	await test_unlocks_at_level_two()
 	await test_award_helpers()
 	await test_outbound_progress_from_mission_times()
+	await test_sr2_outbound_progress_uses_faster_duration()
 	await test_return_progress_from_returning_started()
+	await test_sr2_return_progress_uses_faster_duration()
 	await test_status_change_timestamps_recorded()
 	await test_preview_rocket_resolution_from_target()
 	await test_outbound_progress_fallback_to_status_timestamp()
@@ -157,6 +159,33 @@ func test_outbound_progress_from_mission_times() -> void:
 		return
 	reporter.pass_test()
 
+func test_sr2_outbound_progress_uses_faster_duration() -> void:
+	reporter.start_test("SR2 outbound progress uses faster mission duration")
+	var now = int(Time.get_unix_time_from_system())
+	var state = {
+		"unlocked": ["starterrocket1", "starterrocket2"],
+		"placed": [{"type": "starterrocket2", "id": "starterrocket2-1", "x": 0, "y": 0, "status": "launched"}],
+		"launched": ["starterrocket2-1"],
+		"destroyed": [],
+		"missions": [],
+		"selected_target": "",
+		"detected_targets": [],
+		"seen_asteroids": [],
+		"seen_planets": [],
+		"returning": [],
+		"arrived": {},
+		"returned_mission": {},
+		"returning_started": {},
+		"status_changed_at": {"starterrocket2-1": {"launched": now - 30}}
+	}
+	RocketsManager.set_override_state(state)
+	var progress = float(RocketsManager.get_outbound_progress("starterrocket2-1"))
+	RocketsManager.clear_override_state()
+	if progress < 0.95:
+		reporter.fail_test("Expected SR2 outbound progress near completion after 30s, got %s" % str(progress))
+		return
+	reporter.pass_test()
+
 func test_return_progress_from_returning_started() -> void:
 	reporter.start_test("Return progress is derived from returning_started")
 	var now = int(Time.get_unix_time_from_system())
@@ -181,6 +210,33 @@ func test_return_progress_from_returning_started() -> void:
 	RocketsManager.clear_override_state()
 	if progress < 0.45 or progress > 0.55:
 		reporter.fail_test("Expected return progress around 0.5, got %s" % str(progress))
+		return
+	reporter.pass_test()
+
+func test_sr2_return_progress_uses_faster_duration() -> void:
+	reporter.start_test("SR2 return progress uses faster return duration")
+	var now = int(Time.get_unix_time_from_system())
+	var state = {
+		"unlocked": ["starterrocket1", "starterrocket2"],
+		"placed": [{"type": "starterrocket2", "id": "starterrocket2-2", "x": 0, "y": 0, "status": "returningHome"}],
+		"launched": [],
+		"destroyed": [],
+		"missions": [],
+		"selected_target": "",
+		"detected_targets": [],
+		"seen_asteroids": [],
+		"seen_planets": [],
+		"returning": [{"rocket_id": "starterrocket2-2"}],
+		"arrived": {},
+		"returned_mission": {},
+		"returning_started": {"starterrocket2-2": now - 30},
+		"status_changed_at": {}
+	}
+	RocketsManager.set_override_state(state)
+	var progress = float(RocketsManager.get_return_progress("starterrocket2-2"))
+	RocketsManager.clear_override_state()
+	if progress < 0.95:
+		reporter.fail_test("Expected SR2 return progress near completion after 30s, got %s" % str(progress))
 		return
 	reporter.pass_test()
 

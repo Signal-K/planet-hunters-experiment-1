@@ -17,13 +17,12 @@
   ],
   "missions": [
   ],
-  "selected_target": "4201",
+  "selected_target": "",
   "preview_target": {
   },
   "detected_targets": [
   ],
   "seen_asteroids": [
-    "4201"
   ],
   "seen_planets": [
   ],
@@ -37,8 +36,8 @@
   },
   "status_changed_at": {
     "starterrocket1-6": {
-      "returningHome": 1771150118.0,
-      "returned": 1771161829.0
+      "returningHome": 1771254424.0,
+      "returned": 1771254939
     }
   }
 }

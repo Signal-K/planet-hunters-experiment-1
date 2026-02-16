@@ -5,12 +5,12 @@ signal panel_closed
 const SimpleDetailView = preload("res://Scenes/UI/SimpleDetail/simple_detail_view.tscn")
 const NewMissionAnnotations = preload("res://Scripts/UI/NewMissionAnnotations.gd")
 const NewMissionLaunchList = preload("res://Scripts/UI/NewMissionLaunchList.gd")
+const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
 
 var panel_container: Node = null
 var anomaly_list: Node = null
 var close_button: Button = null
 var select_rocket_button: Button = null
-const ROCKET_REFUND: int = 1000000000
 var launched_list_container: Node = null
 var _annotations := NewMissionAnnotations.new()
 var _launch_list := NewMissionLaunchList.new()
@@ -91,11 +91,12 @@ func _on_select_rocket_pressed() -> void:
 func _display_launched_rockets() -> void:
 	_launch_list.display_launched_rockets()
 
-func _add_refund() -> void:
+func _add_refund(rocket_id: String) -> void:
 	var app_controller = _get_app_controller()
 	if app_controller and app_controller.has_method("get_franc_balance") and app_controller.has_method("set_franc_balance_from_react"):
 		var balance = int(app_controller.get_franc_balance())
-		app_controller.set_franc_balance_from_react(balance + ROCKET_REFUND)
+		var refund = RocketSpecs.get_cost(rocket_id)
+		app_controller.set_franc_balance_from_react(balance + refund)
 	else:
 		print("NewMissionPanel: AppController not available for refund")
 

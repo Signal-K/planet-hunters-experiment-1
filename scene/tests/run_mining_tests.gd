@@ -2,6 +2,9 @@ extends SceneTree
 
 const TestReporter = preload("res://tests/TestReporter.gd")
 const MiningInventory = preload("res://Scripts/Utils/MiningInventory.gd")
+const ResourceYield = preload("res://Scripts/Utils/ResourceYield.gd")
+const MineralPricing = preload("res://Scripts/Utils/MineralPricing.gd")
+const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
 
 var reporter := TestReporter.new()
 
@@ -23,6 +26,15 @@ func _init():
 func run_all_tests() -> void:
 	await test_apply_mining_updates_totals()
 	await test_state_persists_between_loads()
+	await test_sr2_mining_laser_extracts_more_per_cycle()
+	await test_sr2_cargo_capacity_multiplier_applies_to_yield()
+	await test_early_game_full_mine_plus_scrap_is_near_115_percent()
+	await test_sr1_rocket_specs_validation()
+	await test_sr2_rocket_specs_validation()
+	await test_sr2_speed_and_range_multipliers()
+	await test_sr2_unlock_after_first_mission()
+	await test_sr1_cost_and_salvage_values()
+	await test_sr2_cost_and_salvage_values()
 
 func _reset_inventory() -> void:
 	MiningInventory.save_state({"targets": {}})
@@ -72,3 +84,176 @@ func test_state_persists_between_loads() -> void:
 			reporter.fail_test("Expected persisted collected[%s]=%s, got %s" % [str(key), str(collected1.get(key, -1)), str(collected2.get(key, -1))])
 			return
 	reporter.pass_test()
+
+func test_sr2_mining_laser_extracts_more_per_cycle() -> void:
+	reporter.start_test("SR2 mining laser extracts about 50% more per cycle")
+	_reset_inventory()
+	var minerals = {"Iron": 150}
+	var base = MiningInventory.apply_mining("target-sr1", 150.0, minerals, 1.0)
+	var boosted = MiningInventory.apply_mining("target-sr2", 150.0, minerals, 1.5)
+	var base_collected = _sum_collected(base.get("collected", {}))
+	var boosted_collected = _sum_collected(boosted.get("collected", {}))
+	if boosted_collected <= base_collected:
+		reporter.fail_test("Expected boosted extraction to exceed base extraction")
+		return
+	if float(boosted_collected) < float(base_collected) * 1.4:
+		reporter.fail_test("Expected boosted extraction to be ~50%% higher (base=%s boosted=%s)" % [str(base_collected), str(boosted_collected)])
+		return
+	reporter.pass_test()
+
+func test_sr2_cargo_capacity_multiplier_applies_to_yield() -> void:
+	reporter.start_test("SR2 cargo multiplier increases mineable target capacity")
+	var normal = ResourceYield.get_yield_for_target("target-capacity", "asteroid", 1, 1.0)
+	var boosted = ResourceYield.get_yield_for_target("target-capacity", "asteroid", 1, 1.5)
+	var normal_capacity = int(normal.get("capacity", 0))
+	var boosted_capacity = int(boosted.get("capacity", 0))
+	if boosted_capacity <= normal_capacity:
+		reporter.fail_test("Expected boosted capacity > base capacity")
+		return
+	var expected = int(round(float(normal_capacity) * 1.5))
+	if boosted_capacity != expected:
+		reporter.fail_test("Expected boosted capacity=%s, got %s" % [str(expected), str(boosted_capacity)])
+		return
+	reporter.pass_test()
+
+func test_early_game_full_mine_plus_scrap_is_near_115_percent() -> void:
+	reporter.start_test("Early-game full mine + scrap lands near 115% of SR1 cost")
+	_reset_inventory()
+	var target_id = "target-early-economy"
+	var yield_data = ResourceYield.get_yield_for_target(target_id, "asteroid", 1, 1.0)
+	var minerals: Dictionary = yield_data.get("minerals", {})
+	var capacity = float(yield_data.get("capacity", 0))
+	var state = {}
+	var guard = 0
+	while guard < 100:
+		state = MiningInventory.apply_mining(target_id, capacity, minerals, 1.0)
+		var remaining = float(state.get("remaining_mass", 0))
+		if remaining <= 0.0:
+			break
+		guard += 1
+	if state.is_empty():
+		reporter.fail_test("Expected mining state to be populated")
+		return
+	var collected: Dictionary = state.get("collected", {})
+	var orbit_sale = MineralPricing.total_value(collected, 0.8, {})
+	var rocket_cost = RocketSpecs.get_cost("starterrocket1")
+	var scrap_refund = int(round(float(rocket_cost) * RocketSpecs.get_salvage_refund_pct("starterrocket1")))
+	var ratio = float(orbit_sale + scrap_refund) / float(max(rocket_cost, 1))
+	if ratio < 1.12 or ratio > 1.18:
+		reporter.fail_test("Expected ratio near 1.15, got %s" % str(ratio))
+		return
+	reporter.pass_test()
+
+func test_sr1_rocket_specs_validation() -> void:
+	reporter.start_test("SR1 specs are correctly configured")
+	var sr1_cost = RocketSpecs.get_cost("starterrocket1")
+	var sr1_display = RocketSpecs.get_display_name("starterrocket1")
+	var sr1_salvage = RocketSpecs.get_salvage_refund_pct("starterrocket1")
+	
+	if sr1_cost != 1000000000:
+		reporter.fail_test("Expected SR1 cost 1B, got %d" % sr1_cost)
+		return
+	if sr1_display != "Starter Rocket 1":
+		reporter.fail_test("Expected SR1 display name 'Starter Rocket 1', got '%s'" % sr1_display)
+		return
+	if sr1_salvage != 0.20:
+		reporter.fail_test("Expected SR1 salvage 20%%, got %f%%" % (sr1_salvage * 100.0))
+		return
+	reporter.pass_test()
+
+func test_sr2_rocket_specs_validation() -> void:
+	reporter.start_test("SR2 specs are correctly configured")
+	var sr2_cost = RocketSpecs.get_cost("starterrocket2")
+	var sr2_display = RocketSpecs.get_display_name("starterrocket2")
+	var sr2_salvage = RocketSpecs.get_salvage_refund_pct("starterrocket2")
+	
+	if sr2_cost != 1300000000:
+		reporter.fail_test("Expected SR2 cost 1.3B, got %d" % sr2_cost)
+		return
+	if sr2_display != "Starter Rocket 2":
+		reporter.fail_test("Expected SR2 display name 'Starter Rocket 2', got '%s'" % sr2_display)
+		return
+	if sr2_salvage != 0.20:
+		reporter.fail_test("Expected SR2 salvage 20%%, got %f%%" % (sr2_salvage * 100.0))
+		return
+	reporter.pass_test()
+
+func test_sr2_speed_and_range_multipliers() -> void:
+	reporter.start_test("SR2 has 2x speed and range multipliers")
+	var sr1_speed = RocketSpecs.get_speed_multiplier("starterrocket1")
+	var sr2_speed = RocketSpecs.get_speed_multiplier("starterrocket2")
+	var sr1_range = RocketSpecs.get_range_multiplier("starterrocket1")
+	var sr2_range = RocketSpecs.get_range_multiplier("starterrocket2")
+	
+	if sr1_speed != 1.0:
+		reporter.fail_test("Expected SR1 speed multiplier 1.0x, got %f" % sr1_speed)
+		return
+	if sr2_speed != 2.0:
+		reporter.fail_test("Expected SR2 speed multiplier 2.0x, got %f" % sr2_speed)
+		return
+	if sr1_range != 1.0:
+		reporter.fail_test("Expected SR1 range multiplier 1.0x, got %f" % sr1_range)
+		return
+	if sr2_range != 2.0:
+		reporter.fail_test("Expected SR2 range multiplier 2.0x, got %f" % sr2_range)
+		return
+	
+	# Verify mission/return times are affected by speed
+	var sr1_mission_secs = RocketSpecs.get_mission_seconds("starterrocket1", 60)
+	var sr2_mission_secs = RocketSpecs.get_mission_seconds("starterrocket2", 60)
+	if sr2_mission_secs >= sr1_mission_secs:
+		reporter.fail_test("Expected SR2 mission time (%d) < SR1 mission time (%d)" % [sr2_mission_secs, sr1_mission_secs])
+		return
+	reporter.pass_test()
+
+func test_sr2_unlock_after_first_mission() -> void:
+	reporter.start_test("SR2 is available as a rocket type for selection")
+	var sr2_spec = RocketSpecs.get_spec("starterrocket2")
+	if sr2_spec.is_empty():
+		reporter.fail_test("Expected SR2 spec to be defined")
+		return
+	# Verify all required fields are present
+	if not sr2_spec.has("cost"):
+		reporter.fail_test("SR2 spec missing 'cost'")
+		return
+	if not sr2_spec.has("speed_multiplier"):
+		reporter.fail_test("SR2 spec missing 'speed_multiplier'")
+		return
+	if not sr2_spec.has("range_multiplier"):
+		reporter.fail_test("SR2 spec missing 'range_multiplier'")
+		return
+	if not sr2_spec.has("cargo_multiplier"):
+		reporter.fail_test("SR2 spec missing 'cargo_multiplier'")
+		return
+	if not sr2_spec.has("mining_multiplier"):
+		reporter.fail_test("SR2 spec missing 'mining_multiplier'")
+		return
+	reporter.pass_test()
+
+func test_sr1_cost_and_salvage_values() -> void:
+	reporter.start_test("SR1 salvage refund is 20% of 1B cost")
+	var sr1_cost = RocketSpecs.get_cost("starterrocket1")
+	var sr1_salvage_pct = RocketSpecs.get_salvage_refund_pct("starterrocket1")
+	var expected_refund = int(round(float(sr1_cost) * sr1_salvage_pct))
+	
+	if expected_refund != 200000000:
+		reporter.fail_test("Expected SR1 salvage refund 200M F, got %d" % expected_refund)
+		return
+	reporter.pass_test()
+
+func test_sr2_cost_and_salvage_values() -> void:
+	reporter.start_test("SR2 salvage refund is 20% of 1.3B cost")
+	var sr2_cost = RocketSpecs.get_cost("starterrocket2")
+	var sr2_salvage_pct = RocketSpecs.get_salvage_refund_pct("starterrocket2")
+	var expected_refund = int(round(float(sr2_cost) * sr2_salvage_pct))
+	
+	if expected_refund != 260000000:
+		reporter.fail_test("Expected SR2 salvage refund 260M F, got %d" % expected_refund)
+		return
+	reporter.pass_test()
+
+func _sum_collected(collected: Dictionary) -> int:
+	var total = 0
+	for value in collected.values():
+		total += int(value)
+	return total

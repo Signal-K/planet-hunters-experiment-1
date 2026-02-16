@@ -10,11 +10,7 @@ const XP_AWARD_MISSION := 4
 const ACTION_RESOLVE_DEBRIEF := "resolve_mission_debrief"
 const HINT_RESOLVE_DEBRIEF := "Great. You completed debrief by choosing how to process the mission return."
 const WebEventBridge = preload("res://Scripts/Systems/WebEventBridge.gd")
-
-const ROCKET_COSTS := {
-	"starterrocket1": 1000000000,
-	"starterrocket2": 2000000000
-}
+const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
 
 @onready var title_label: Label = $UI/Root/Panel/VBox/Title
 @onready var subtitle_label: Label = $UI/Root/Panel/VBox/Subtitle
@@ -279,6 +275,9 @@ func _add_mission_log(action: String, payout: int) -> void:
 	}
 	WebEventBridge.emit("mission_debrief_resolved", event_payload)
 	if mission_count == 1:
+		var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+		if rm:
+			rm.unlock("starterrocket2")
 		WebEventBridge.emit("first_mission_completed", event_payload)
 
 func _select_subcontractor() -> void:
@@ -314,10 +313,7 @@ func _make_badge() -> String:
 func _rocket_cost(rocket_id: String) -> int:
 	if rocket_id == "":
 		return 0
-	var rtype = rocket_id
-	if rocket_id.find("-") != -1:
-		rtype = rocket_id.split("-")[0]
-	return int(ROCKET_COSTS.get(rtype, 1000000000))
+	return RocketSpecs.get_cost(rocket_id)
 
 func _get_app_controller() -> Node:
 	return get_node_or_null("/root/AppController")

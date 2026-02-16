@@ -8,6 +8,11 @@ var ui_manager: UIManager
 const PREVIEW_SCENE_PATH := "res://Scenes/UI/AsteroidPreview/asteroid_preview.tscn"
 const ACTION_OPEN_NEW_MISSION := "open_new_mission"
 const HINT_OPEN_NEW_MISSION := "Tap New Mission to open the launch area and prepare a rocket."
+const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
+const MissionLogManager = preload("res://Scripts/Utils/MissionLogManager.gd")
+const SR2_UNLOCK_POPUP_PATH := "user://rocket_unlock_popups.cfg"
+const SR2_UNLOCK_SECTION := "popups"
+const SR2_UNLOCK_KEY := "starterrocket2_seen"
 
 func _ready() -> void:
 	# Initialize camera controller
@@ -37,6 +42,8 @@ func _ready() -> void:
 	if show_ground_guide:
 		var DebugVisualizer = preload("res://Scripts/Earth/DebugVisualizer.gd")
 		DebugVisualizer.create_ground_guides(self)
+
+	call_deferred("_maybe_show_starterrocket2_unlock_popup")
 
 func _setup_buttons() -> void:
 	"""Setup button connections"""
@@ -122,3 +129,85 @@ func _show_tutorial_hint_once(action_key: String, message: String) -> void:
 	var app = get_tree().root.find_child("AppController", true, false)
 	if app and app.has_method("show_tutorial_hint_once"):
 		app.show_tutorial_hint_once(action_key, message)
+
+func _maybe_show_starterrocket2_unlock_popup() -> void:
+	if _has_seen_starterrocket2_unlock_popup():
+		return
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if not rm or not rm.is_unlocked("starterrocket2"):
+		return
+	var mission_count = MissionLogManager.get_missions().size()
+	if mission_count < 1:
+		return
+	_mark_starterrocket2_unlock_popup_seen()
+	_show_starterrocket2_unlock_popup()
+
+func _show_starterrocket2_unlock_popup() -> void:
+	var overlay = ColorRect.new()
+	overlay.name = "StarterRocket2UnlockOverlay"
+	overlay.color = Color(0, 0, 0, 0.62)
+	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(overlay)
+
+	var center = CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	overlay.add_child(center)
+
+	var panel = PanelContainer.new()
+	panel.custom_minimum_size = Vector2(700, 0)
+	center.add_child(panel)
+
+	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
+	panel_style.apply_panel(panel)
+
+	var body = VBoxContainer.new()
+	body.add_theme_constant_override("separation", 10)
+	panel.add_child(body)
+
+	var title = Label.new()
+	title.text = "Rocket Unlocked: Starter Rocket 2"
+	panel_style.apply_title(title)
+	body.add_child(title)
+
+	var icon = TextureRect.new()
+	icon.texture = RocketSpecs.get_icon_texture("starterrocket2")
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.custom_minimum_size = Vector2(180, 180)
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	body.add_child(icon)
+
+	var summary = Label.new()
+	summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	summary.text = "Starter Rocket 2 is now available. It is faster and has longer range."
+	panel_style.apply_body(summary)
+	body.add_child(summary)
+
+	var stats = Label.new()
+	stats.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	stats.text = "Speed: 2.0x | Range: 2.0x | Cargo: 1.5x | Mining Laser: 1.5x | Cost: 1.3B F | Salvage: 20%"
+	panel_style.apply_muted(stats)
+	body.add_child(stats)
+
+	var cta = Button.new()
+	cta.text = "View Rockets"
+	panel_style.apply_button(cta, true)
+	cta.pressed.connect(func():
+		if is_instance_valid(overlay):
+			overlay.queue_free()
+		_on_new_mission_button_pressed()
+	)
+	body.add_child(cta)
+
+func _has_seen_starterrocket2_unlock_popup() -> bool:
+	var cfg = ConfigFile.new()
+	var err = cfg.load(SR2_UNLOCK_POPUP_PATH)
+	if err != OK:
+		return false
+	return bool(cfg.get_value(SR2_UNLOCK_SECTION, SR2_UNLOCK_KEY, false))
+
+func _mark_starterrocket2_unlock_popup_seen() -> void:
+	var cfg = ConfigFile.new()
+	cfg.load(SR2_UNLOCK_POPUP_PATH)
+	cfg.set_value(SR2_UNLOCK_SECTION, SR2_UNLOCK_KEY, true)
+	cfg.save(SR2_UNLOCK_POPUP_PATH)

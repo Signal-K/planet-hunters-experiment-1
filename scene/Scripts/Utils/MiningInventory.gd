@@ -74,7 +74,7 @@ static func get_target_state(target_id: String, original_mass: float) -> Diction
 		save_state(data)
 	return state
 
-static func apply_mining(target_id: String, original_mass: float, minerals: Dictionary) -> Dictionary:
+static func apply_mining(target_id: String, original_mass: float, minerals: Dictionary, extraction_multiplier: float = 1.0) -> Dictionary:
 	if original_mass <= 0.0:
 		var inferred := 0.0
 		for v in minerals.values():
@@ -100,7 +100,8 @@ static func apply_mining(target_id: String, original_mass: float, minerals: Dict
 	for v in collected.values():
 		total_collected += float(v)
 	var remaining = max(stored_original - total_collected, 0.0)
-	var chunk = max(floor(original_mass * 0.10), 1.0)
+	var effective_extraction_multiplier = max(extraction_multiplier, 0.1)
+	var chunk = max(floor(original_mass * 0.10 * effective_extraction_multiplier), 1.0)
 	var mined = min(remaining, chunk)
 	if mined <= 0.0:
 		state["remaining_mass"] = remaining

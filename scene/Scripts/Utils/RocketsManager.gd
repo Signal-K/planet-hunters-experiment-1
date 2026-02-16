@@ -5,6 +5,7 @@ const STATE_PATH := "user://rockets_state.json"
 const DEFAULT_STATE_PATH := "res://rockets_state.json"
 const RETURN_DURATION_SECONDS := 60
 const MISSION_DURATION_SECONDS := 60
+const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
 const KNOWN_ROCKET_TYPES := ["starterrocket1", "starterrocket2"]
 const ROCKET_UNLOCK_LEVELS := {
     "starterrocket1": 1,
@@ -161,10 +162,13 @@ static func clear_selected_target() -> bool:
     s["selected_target"] = ""
     return save_state(s)
 
-static func add_mission(rocket_id: String, target_id: String, launch_time_epoch: int, travel_seconds: int = 60) -> bool:
+static func add_mission(rocket_id: String, target_id: String, launch_time_epoch: int, travel_seconds: int = 0) -> bool:
     var s = load_state()
     var missions = s.get("missions", [])
-    var arrival = launch_time_epoch + travel_seconds
+    var effective_travel_seconds = travel_seconds
+    if effective_travel_seconds <= 0:
+        effective_travel_seconds = get_mission_duration_seconds_for_rocket(rocket_id)
+    var arrival = launch_time_epoch + effective_travel_seconds
     var record = {"rocket_id": rocket_id, "target": target_id, "launch_time": launch_time_epoch, "arrival_time": arrival}
     missions.append(record)
     s["missions"] = missions
@@ -362,7 +366,7 @@ static func has_return_completed(rocket_id: String) -> bool:
     if started_at <= 0:
         return false
     var now = int(Time.get_unix_time_from_system())
-    return (now - started_at) >= RETURN_DURATION_SECONDS
+    return (now - started_at) >= get_return_duration_seconds_for_rocket(rocket_id)
 
 static func mark_returned_if_due(rocket_id: String) -> bool:
     if rocket_id == "":
@@ -706,14 +710,15 @@ static func get_outbound_progress(rocket_id: String) -> float:
         var launched_at = float(get_status_changed_at(effective_rocket_id, "launched"))
         if launched_at > 0:
             var now_fallback = float(Time.get_unix_time_from_system())
-            return clamp((now_fallback - launched_at) / float(max(MISSION_DURATION_SECONDS, 1)), 0.0, 1.0)
+            var fallback_duration = float(max(get_mission_duration_seconds_for_rocket(effective_rocket_id), 1))
+            return clamp((now_fallback - launched_at) / fallback_duration, 0.0, 1.0)
         return 0.0
     var launch = float(mission.get("launch_time", 0))
     var arrival = float(mission.get("arrival_time", 0))
     if launch <= 0:
         return 0.0
     if arrival <= launch:
-        arrival = launch + MISSION_DURATION_SECONDS
+        arrival = launch + get_mission_duration_seconds_for_rocket(effective_rocket_id)
     var now = float(Time.get_unix_time_from_system())
     return clamp((now - launch) / max(arrival - launch, 1.0), 0.0, 1.0)
 
@@ -724,7 +729,17 @@ static func get_return_progress(rocket_id: String) -> float:
     if started_at <= 0:
         return 0.0
     var now = float(Time.get_unix_time_from_system())
-    return clamp((now - float(started_at)) / float(max(RETURN_DURATION_SECONDS, 1)), 0.0, 1.0)
+    return clamp((now - float(started_at)) / float(max(get_return_duration_seconds_for_rocket(rocket_id), 1)), 0.0, 1.0)
+
+static func get_mission_duration_seconds_for_rocket(rocket_id: String) -> int:
+    if RocketSpecs:
+        return RocketSpecs.get_mission_seconds(rocket_id, MISSION_DURATION_SECONDS)
+    return MISSION_DURATION_SECONDS
+
+static func get_return_duration_seconds_for_rocket(rocket_id: String) -> int:
+    if RocketSpecs:
+        return RocketSpecs.get_return_seconds(rocket_id, RETURN_DURATION_SECONDS)
+    return RETURN_DURATION_SECONDS
 
 static func get_status_changed_at(rocket_id: String, status: String) -> int:
     if rocket_id == "" or status == "":
