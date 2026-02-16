@@ -126,8 +126,9 @@ func _on_launch_button_pressed() -> void:
 	var launch_time = time_helper.get_unix_epoch_seconds()
 	var launch_target_id = target
 	var preview_meta = _resolve_preview_target_meta(launch_target_id)
+	var mission_travel_seconds = rm.get_mission_duration_seconds_for_rocket(rocket.name)
 
-	var mission_ok = rm.add_mission(rocket.name, target, int(launch_time), 60)
+	var mission_ok = rm.add_mission(rocket.name, target, int(launch_time), mission_travel_seconds)
 	if not mission_ok:
 		print("Launchpad: failed to record mission for rocket", rocket.name)
 	# Mark rocket as launched (preserves existing launched list behavior)

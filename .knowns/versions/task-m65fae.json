@@ -1,0 +1,136 @@
+{
+  "taskId": "m65fae",
+  "currentVersion": 4,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "m65fae",
+      "version": 1,
+      "timestamp": "2026-02-16T15:10:31.550Z",
+      "changes": [
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Not pulling live targets from supabase in react app",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "bug",
+          "supabase",
+          "database",
+          "targets",
+          "anomalies",
+          "api",
+          "react",
+          "vercel",
+          "test",
+          "deployment"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "m65fae",
+      "version": 2,
+      "timestamp": "2026-02-16T15:13:14.281Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "newValue": "1. Add env-key compatibility aliases in runtime clients so Supabase credentials resolve from `SUPABASE_URL` + `SUPABASE_ANON`/`SUPABASE_ANON_KEY` (+ service-role fallback where safe).\n2. Update React/TS Supabase client env resolution to include the non-prefixed variable names shown in deployment settings.\n3. Update Godot Supabase client env resolution to support `SUPABASE_ANON` (and `SUPABASE_SERVICE` fallback) so live anomaly fetch uses deployed credentials.\n4. Run targeted tests/build checks and verify no regression in launchpad/anomaly fetch paths."
+        }
+      ],
+      "snapshot": {
+        "title": "Not pulling live targets from supabase in react app",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "bug",
+          "supabase",
+          "database",
+          "targets",
+          "anomalies",
+          "api",
+          "react",
+          "vercel",
+          "test",
+          "deployment"
+        ],
+        "acceptanceCriteria": [],
+        "implementationPlan": "1. Add env-key compatibility aliases in runtime clients so Supabase credentials resolve from `SUPABASE_URL` + `SUPABASE_ANON`/`SUPABASE_ANON_KEY` (+ service-role fallback where safe).\n2. Update React/TS Supabase client env resolution to include the non-prefixed variable names shown in deployment settings.\n3. Update Godot Supabase client env resolution to support `SUPABASE_ANON` (and `SUPABASE_SERVICE` fallback) so live anomaly fetch uses deployed credentials.\n4. Run targeted tests/build checks and verify no regression in launchpad/anomaly fetch paths."
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "m65fae",
+      "version": 3,
+      "timestamp": "2026-02-16T15:16:04.658Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "## Summary\n- Fixed Supabase env resolution mismatch between deployment variable names and app expectations.\n- Updated React client (`utils/supabase.ts`) to accept aliases: `SUPABASE_URL`, `SUPABASE_ANON`, `SUPABASE_ANON_KEY`, with service fallback for misconfigured environments.\n- Updated Godot anomaly client (`scene/Scripts/Systems/SupabaseClient.gd`) to resolve key from `SUPABASE_ANON_KEY`, then `SUPABASE_ANON`, then `SUPABASE_SERVICE`.\n- This removes dependency on only `NEXT_PUBLIC_*`/`EXPO_PUBLIC_*` naming and aligns with your Supabase project variable names shown in screenshot.\n\n## Validation\n- `cd /Users/scroobz/Navigation/Native/planet-hunters-experiment-1/scene && /Users/scroobz/godot-src/bin/godot.macos.editor.arm64 --headless --script res://tests/run_supabase_tests.gd 2>&1`\n  - 1/1 passed\n- `npm run test:unit -- --runInBand --watchman=false`\n  - 3 suites passed, 17 tests passed"
+        }
+      ],
+      "snapshot": {
+        "title": "Not pulling live targets from supabase in react app",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "bug",
+          "supabase",
+          "database",
+          "targets",
+          "anomalies",
+          "api",
+          "react",
+          "vercel",
+          "test",
+          "deployment"
+        ],
+        "acceptanceCriteria": [],
+        "implementationPlan": "1. Add env-key compatibility aliases in runtime clients so Supabase credentials resolve from `SUPABASE_URL` + `SUPABASE_ANON`/`SUPABASE_ANON_KEY` (+ service-role fallback where safe).\n2. Update React/TS Supabase client env resolution to include the non-prefixed variable names shown in deployment settings.\n3. Update Godot Supabase client env resolution to support `SUPABASE_ANON` (and `SUPABASE_SERVICE` fallback) so live anomaly fetch uses deployed credentials.\n4. Run targeted tests/build checks and verify no regression in launchpad/anomaly fetch paths.",
+        "implementationNotes": "## Summary\n- Fixed Supabase env resolution mismatch between deployment variable names and app expectations.\n- Updated React client (`utils/supabase.ts`) to accept aliases: `SUPABASE_URL`, `SUPABASE_ANON`, `SUPABASE_ANON_KEY`, with service fallback for misconfigured environments.\n- Updated Godot anomaly client (`scene/Scripts/Systems/SupabaseClient.gd`) to resolve key from `SUPABASE_ANON_KEY`, then `SUPABASE_ANON`, then `SUPABASE_SERVICE`.\n- This removes dependency on only `NEXT_PUBLIC_*`/`EXPO_PUBLIC_*` naming and aligns with your Supabase project variable names shown in screenshot.\n\n## Validation\n- `cd /Users/scroobz/Navigation/Native/planet-hunters-experiment-1/scene && /Users/scroobz/godot-src/bin/godot.macos.editor.arm64 --headless --script res://tests/run_supabase_tests.gd 2>&1`\n  - 1/1 passed\n- `npm run test:unit -- --runInBand --watchman=false`\n  - 3 suites passed, 17 tests passed"
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "m65fae",
+      "version": 4,
+      "timestamp": "2026-02-16T15:16:05.041Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Not pulling live targets from supabase in react app",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "bug",
+          "supabase",
+          "database",
+          "targets",
+          "anomalies",
+          "api",
+          "react",
+          "vercel",
+          "test",
+          "deployment"
+        ],
+        "acceptanceCriteria": [],
+        "implementationPlan": "1. Add env-key compatibility aliases in runtime clients so Supabase credentials resolve from `SUPABASE_URL` + `SUPABASE_ANON`/`SUPABASE_ANON_KEY` (+ service-role fallback where safe).\n2. Update React/TS Supabase client env resolution to include the non-prefixed variable names shown in deployment settings.\n3. Update Godot Supabase client env resolution to support `SUPABASE_ANON` (and `SUPABASE_SERVICE` fallback) so live anomaly fetch uses deployed credentials.\n4. Run targeted tests/build checks and verify no regression in launchpad/anomaly fetch paths.",
+        "implementationNotes": "## Summary\n- Fixed Supabase env resolution mismatch between deployment variable names and app expectations.\n- Updated React client (`utils/supabase.ts`) to accept aliases: `SUPABASE_URL`, `SUPABASE_ANON`, `SUPABASE_ANON_KEY`, with service fallback for misconfigured environments.\n- Updated Godot anomaly client (`scene/Scripts/Systems/SupabaseClient.gd`) to resolve key from `SUPABASE_ANON_KEY`, then `SUPABASE_ANON`, then `SUPABASE_SERVICE`.\n- This removes dependency on only `NEXT_PUBLIC_*`/`EXPO_PUBLIC_*` naming and aligns with your Supabase project variable names shown in screenshot.\n\n## Validation\n- `cd /Users/scroobz/Navigation/Native/planet-hunters-experiment-1/scene && /Users/scroobz/godot-src/bin/godot.macos.editor.arm64 --headless --script res://tests/run_supabase_tests.gd 2>&1`\n  - 1/1 passed\n- `npm run test:unit -- --runInBand --watchman=false`\n  - 3 suites passed, 17 tests passed"
+      }
+    }
+  ]
+}

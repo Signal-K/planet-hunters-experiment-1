@@ -12,6 +12,7 @@ const ORBIT_SEGMENTS := 64
 
 const TRAVEL_DISTANCE_TOTAL_KM := 420000.0
 const NumberFormat = preload("res://Scripts/Utils/NumberFormat.gd")
+const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
 
 const ORBIT_MULTIPLIER := 1.0
 const EARTH_MULTIPLIER := 1.35
@@ -366,7 +367,8 @@ func _build_minerals_list() -> void:
 	for child in minerals_list.get_children():
 		child.queue_free()
 	var resource_yield = preload("res://Scripts/Utils/ResourceYield.gd")
-	var yield_data = resource_yield.get_yield_for_target(_current_target_id, _current_target_type, 1)
+	var cargo_multiplier = RocketSpecs.get_cargo_multiplier(_current_rocket_id)
+	var yield_data = resource_yield.get_yield_for_target(_current_target_id, _current_target_type, 1, cargo_multiplier)
 	var minerals: Dictionary = yield_data.get("minerals", {})
 	var capacity = int(yield_data.get("capacity", 0))
 	minerals_title.text = "Minerals Available"

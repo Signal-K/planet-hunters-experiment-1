@@ -31,6 +31,10 @@ static func get_instance() -> SupabaseClient:
 		# Check for environment variables first (CI/GitHub Actions)
 		var env_url = OS.get_environment("SUPABASE_URL").strip_edges()
 		var env_key = OS.get_environment("SUPABASE_ANON_KEY").strip_edges()
+		if env_key == "":
+			env_key = OS.get_environment("SUPABASE_ANON").strip_edges()
+		if env_key == "":
+			env_key = OS.get_environment("SUPABASE_SERVICE").strip_edges()
 		var runtime_credentials = _load_runtime_credentials()
 		var runtime_url = str(runtime_credentials.get("url", "")).strip_edges()
 		var runtime_key = str(runtime_credentials.get("key", "")).strip_edges()

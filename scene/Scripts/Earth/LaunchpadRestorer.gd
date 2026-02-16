@@ -43,7 +43,8 @@ func restore_if_needed(launchpad: Node, selector_panel: Object, launch_button: O
 		if restore_items.size() > 0:
 			print("Launchpad: restoring %d placed rockets" % restore_items.size())
 			var mapping = {
-				"starterrocket1": "res://Scenes/Vehicles/StarterRocket1.tscn"
+				"starterrocket1": "res://Scenes/Vehicles/StarterRocket1.tscn",
+				"starterrocket2": "res://Scenes/Vehicles/StarterRocket2.tscn"
 			}
 			for item in restore_items:
 				var rid = item.get("id", "")
@@ -73,7 +74,7 @@ func restore_if_needed(launchpad: Node, selector_panel: Object, launch_button: O
 						inst.position = Vector2(item.get("x", -110.0), item.get("y", -170.0))
 				else:
 					inst.scale = Vector2(0.4, 0.4)  # Scale down to fit on launchpad
-					if rtype == "starterrocket1":
+					if rtype == "starterrocket1" or rtype == "starterrocket2":
 						# Keep launchpad alignment stable even for previously persisted coordinates.
 						inst.position = STARTERROCKET1_LAUNCHPAD_POS
 					else:

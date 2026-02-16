@@ -4,15 +4,11 @@ signal create_rocket(rocket_id)
 
 @export var unlocked_rockets := []
 
-const ROCKET_TEXTURES = {
-	"starterrocket1": preload("res://assets/Vehicles/StarterRocket1.png"),
-	"starterrocket2": preload("res://assets/Structures/ControlStation.png")
-}
+const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
 const RocketSelectorUIBuilder = preload("res://Scripts/Earth/RocketSelectorUIBuilder.gd")
 const RocketSelectorDragHelper = preload("res://Scripts/Earth/RocketSelectorDragHelper.gd")
 const STARTERROCKET1_LAUNCHPAD_POS := Vector2(-110.0, -178.0)
 
-const ROCKET_COST: int = 1000000000
 const ACTION_CREATE_ROCKET := "create_rocket"
 const HINT_CREATE_ROCKET := "Buy a rocket here before you select a target and launch."
 
@@ -24,12 +20,20 @@ var _pending_rocket_id: String = ""
 var _confirm_dialog: ConfirmationDialog = null
 var _info_dialog: AcceptDialog = null
 var _app_controller: Node = null
+var _rocket_textures := {
+	"starterrocket1": null,
+	"starterrocket2": null
+}
 var _ui_builder := RocketSelectorUIBuilder.new()
 var _drag_helper := RocketSelectorDragHelper.new()
 
 func _ready():
-	position = ui_position
-	size = ui_size
+	if get_parent() is Container:
+		size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		size_flags_vertical = Control.SIZE_EXPAND_FILL
+	else:
+		position = ui_position
+		size = ui_size
 	# Load unlocked rockets from RocketsManager if available
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	unlocked_rockets = rm.get_unlocked()
@@ -39,12 +43,14 @@ func _ready():
 		if p.get("status", "") == "awaitingLaunch":
 			_creation_locked = true
 			break
+	_rocket_textures["starterrocket1"] = load("res://assets/Vehicles/StarterRocket1.png")
+	_rocket_textures["starterrocket2"] = load("res://assets/Vehicles/Starter Rocket L2.png")
 	_find_app_controller()
 	_init_dialogs()
 	_ui_builder.setup(
 		self,
 		ui_size,
-		ROCKET_TEXTURES,
+		_rocket_textures,
 		_creation_locked,
 		Callable(self, "_on_create_pressed"),
 		Callable(self, "_on_texture_gui_input")
@@ -75,18 +81,7 @@ func _init_dialogs() -> void:
 # Public method to unlock creation (called from Launchpad when showing the panel after launch)
 func unlock_creation() -> void:
 	_creation_locked = false
-	# Update button states in the UI
-	var panel = get_node_or_null("Panel")
-	if panel:
-		var vbox = panel.get_node_or_null("VBox")
-		if vbox:
-			var grid = vbox.get_node_or_null("Grid")
-			if grid:
-				for child in grid.get_children():
-					if child is VBoxContainer:
-						for sub in child.get_children():
-							if sub is Button and sub.text == "Create":
-								sub.disabled = false
+	_set_create_buttons_disabled(false)
 
 func _on_create_pressed(rocket_id):
 	print("Create rocket requested:", rocket_id)
@@ -97,12 +92,16 @@ func _request_purchase(rocket_id: String) -> void:
 	if _creation_locked:
 		print("RocketSelector: creation locked; cannot purchase")
 		return
+	var cost = RocketSpecs.get_cost(rocket_id)
 	var balance = _get_balance()
-	if balance < ROCKET_COST:
+	if balance < cost:
 		_show_info("Insufficient funds to buy this rocket.")
 		return
 	_pending_rocket_id = rocket_id
-	_confirm_dialog.dialog_text = "Buy this rocket for 1B Francs?"
+	_confirm_dialog.dialog_text = "Buy %s for %s Francs?" % [
+		RocketSpecs.get_display_name(rocket_id),
+		_format_francs(cost)
+	]
 	_confirm_dialog.popup_centered()
 
 func _on_purchase_confirmed() -> void:
@@ -111,7 +110,7 @@ func _on_purchase_confirmed() -> void:
 	var spawn_ok = _spawn_rocket(_pending_rocket_id)
 	if spawn_ok:
 		_show_tutorial_hint_once(ACTION_CREATE_ROCKET, HINT_CREATE_ROCKET)
-		_modify_balance(-ROCKET_COST)
+		_modify_balance(-RocketSpecs.get_cost(_pending_rocket_id))
 	else:
 		_show_info("Rocket could not be created.")
 	_pending_rocket_id = ""
@@ -126,7 +125,11 @@ func _spawn_rocket(rocket_id: String) -> bool:
 				return launchpad.spawn_rocket(rocket_id)
 			else:
 				# fallback: instantiate the rocket scene directly under Launchpad
-				var path = "res://Scenes/Vehicles/StarterRocket1.tscn"
+				var mapping = {
+					"starterrocket1": "res://Scenes/Vehicles/StarterRocket1.tscn",
+					"starterrocket2": "res://Scenes/Vehicles/StarterRocket2.tscn"
+				}
+				var path = str(mapping.get(rocket_id, "res://Scenes/Vehicles/StarterRocket1.tscn"))
 				var scene = load(path)
 				if scene:
 					var inst = scene.instantiate()
@@ -166,6 +169,16 @@ func _show_tutorial_hint_once(action_key: String, message: String) -> void:
 	if _app_controller and _app_controller.has_method("show_tutorial_hint_once"):
 		_app_controller.show_tutorial_hint_once(action_key, message)
 
+func _format_francs(value: int) -> String:
+	var abs_value = abs(value)
+	if abs_value >= 1000000000:
+		var billions = float(value) / 1000000000.0
+		return "%.1fB" % billions
+	if abs_value >= 1000000:
+		var millions = float(value) / 1000000.0
+		return "%.1fM" % millions
+	return str(value)
+
 func _on_texture_gui_input(rocket_id, tex, event):
 	# Start drag on left button press
 	if event is InputEventMouseButton:
@@ -174,3 +187,12 @@ func _on_texture_gui_input(rocket_id, tex, event):
 
 func _process(delta):
 	_drag_helper.process(delta)
+
+func _set_create_buttons_disabled(disabled: bool) -> void:
+	var stack = [self]
+	while stack.size() > 0:
+		var node = stack.pop_back()
+		for child in node.get_children():
+			if child is Button and child.name.begins_with("CreateButton_"):
+				child.disabled = disabled
+			stack.append(child)

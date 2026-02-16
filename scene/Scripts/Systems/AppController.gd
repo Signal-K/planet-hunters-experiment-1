@@ -194,6 +194,7 @@ func _on_reset_all() -> void:
 	save_tutorial_actions_seen()
 	save_franc_balance()
 	save_experience()
+	DirAccess.remove_absolute("user://rocket_unlock_popups.cfg")
 	franc_balance_updated.emit(franc_balance)
 	_emit_experience_updated()
 	# Reset rockets persisted state and notify any in-scene systems to clear rockets

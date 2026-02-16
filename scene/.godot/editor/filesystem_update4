@@ -1,0 +1,5 @@
+res://Scripts/Earth/RocketSelector.gd
+res://Scripts/Utils/RocketSpriteHelper.gd
+res://tests/run_mining_tests.gd
+res://Scripts/Earth/LaunchpadSelectorPanel.gd
+res://Scripts/Earth/RocketSelectorUIBuilder.gd

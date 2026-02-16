@@ -5,6 +5,7 @@ const SCRAP_REFUND_PCT := 0.20
 const SALVAGE_REFUND_PCT := 0.10
 const XP_AWARD_MISSION := 4
 const ORBIT_SALE_MULTIPLIER := 0.8
+const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
 
 @onready var title_label: Label = $UI/Root/Panel/VBox/Title
 @onready var subtitle_label: Label = $UI/Root/Panel/VBox/Subtitle
@@ -147,14 +148,7 @@ func _clear_cargo() -> void:
 		inv.save_state(data)
 
 func _rocket_cost(rocket_id: String) -> int:
-	var rtype = rocket_id
-	if rocket_id.find("-") != -1:
-		rtype = rocket_id.split("-")[0]
-	var costs = {
-		"starterrocket1": 1000000000,
-		"starterrocket2": 2000000000
-	}
-	return int(costs.get(rtype, 1000000000))
+	return RocketSpecs.get_cost(rocket_id)
 
 func _back_to_missions() -> void:
 	var tree = Engine.get_main_loop() as SceneTree

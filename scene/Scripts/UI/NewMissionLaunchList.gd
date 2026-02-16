@@ -5,7 +5,6 @@ var _launch_list_container: Node
 var _on_refund: Callable
 const MIN_DISTANCE_KM := 150000.0
 const MAX_DISTANCE_KM := 3000000.0
-const TRAVEL_SECONDS := 60.0
 const PreviewRouting = preload("res://Scripts/UI/NewMissionPreviewRouting.gd")
 var _mission_rows := {}
 const TimeHelper = preload("res://Scripts/Earth/TimeHelper.gd")
@@ -160,7 +159,7 @@ func _on_self_destruct_pressed(rocket_id: String) -> void:
 		if ok:
 			print("NewMissionPanel: rocket", rocket_id, "marked Destroyed")
 			if _on_refund.is_valid():
-				_on_refund.call()
+				_on_refund.call(rocket_id)
 			# Refresh the launched list UI
 			display_launched_rockets()
 		else:
@@ -274,8 +273,12 @@ func update_progress() -> void:
 		var bar: ProgressBar = data["progress"]
 		var launch_time = float(data.get("launch_time", 0))
 		var arrival_time = float(data.get("arrival_time", 0))
+		var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+		var travel_seconds = 60.0
+		if rm:
+			travel_seconds = float(rm.get_mission_duration_seconds_for_rocket(str(rocket_id)))
 		if launch_time > 0 and arrival_time <= launch_time:
-			arrival_time = launch_time + TRAVEL_SECONDS
+			arrival_time = launch_time + travel_seconds
 		if launch_time <= 0 or arrival_time <= launch_time:
 			bar.value = 0
 			continue
