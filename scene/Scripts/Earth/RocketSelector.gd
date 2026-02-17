@@ -68,15 +68,22 @@ func _find_app_controller() -> void:
 		print("RocketSelector: AppController not found")
 
 func _init_dialogs() -> void:
-	_confirm_dialog = ConfirmationDialog.new()
-	_confirm_dialog.title = "Confirm Purchase"
-	add_child(_confirm_dialog)
-	_confirm_dialog.confirmed.connect(_on_purchase_confirmed)
-	_confirm_dialog.canceled.connect(func(): _pending_rocket_id = "")
-
-	_info_dialog = AcceptDialog.new()
-	_info_dialog.title = "Notice"
-	add_child(_info_dialog)
+	if _confirm_dialog and is_instance_valid(_confirm_dialog) and _info_dialog and is_instance_valid(_info_dialog):
+		return
+	var dialog_host: Node = self
+	var tree = get_tree()
+	if tree and tree.current_scene:
+		dialog_host = tree.current_scene
+	if not (_confirm_dialog and is_instance_valid(_confirm_dialog)):
+		_confirm_dialog = ConfirmationDialog.new()
+		_confirm_dialog.title = "Confirm Purchase"
+		dialog_host.call_deferred("add_child", _confirm_dialog)
+		_confirm_dialog.confirmed.connect(_on_purchase_confirmed)
+		_confirm_dialog.canceled.connect(func(): _pending_rocket_id = "")
+	if not (_info_dialog and is_instance_valid(_info_dialog)):
+		_info_dialog = AcceptDialog.new()
+		_info_dialog.title = "Notice"
+		dialog_host.call_deferred("add_child", _info_dialog)
 
 # Public method to unlock creation (called from Launchpad when showing the panel after launch)
 func unlock_creation() -> void:
@@ -89,6 +96,7 @@ func _on_create_pressed(rocket_id):
 	_request_purchase(rocket_id)
 
 func _request_purchase(rocket_id: String) -> void:
+	_init_dialogs()
 	if _creation_locked:
 		print("RocketSelector: creation locked; cannot purchase")
 		return
@@ -98,6 +106,9 @@ func _request_purchase(rocket_id: String) -> void:
 		_show_info("Insufficient funds to buy this rocket.")
 		return
 	_pending_rocket_id = rocket_id
+	if not (_confirm_dialog and is_instance_valid(_confirm_dialog)):
+		_show_info("Unable to open purchase confirmation dialog.")
+		return
 	_confirm_dialog.dialog_text = "Buy %s for %s Francs?" % [
 		RocketSpecs.get_display_name(rocket_id),
 		_format_francs(cost)
@@ -161,7 +172,8 @@ func _modify_balance(delta: int) -> void:
 	_set_balance(next_value)
 
 func _show_info(message: String) -> void:
-	if _info_dialog:
+	_init_dialogs()
+	if _info_dialog and is_instance_valid(_info_dialog):
 		_info_dialog.dialog_text = message
 		_info_dialog.popup_centered()
 

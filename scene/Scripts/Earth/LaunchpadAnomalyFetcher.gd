@@ -5,6 +5,7 @@ var _launchpad: Node
 var _on_populate_targets: Callable
 var _anomalies: Array = []
 var _anomalies_ready: bool = false
+var _panel_data = preload("res://Scripts/UI/SatelliteStationPanelData.gd").new()
 
 func setup(launchpad: Node, on_populate_targets: Callable) -> void:
 	_launchpad = launchpad
@@ -35,7 +36,26 @@ func _on_anomalies_fetched(anomalies: Array, error_message = "") -> void:
 			print("  First anomaly: %s" % str(anomalies[0]))
 		_anomalies = anomalies
 		_anomalies_ready = true
+		_persist_detected_targets(anomalies)
 	# NOW populate targets after fetch completes
 	print("Launchpad: calling _populate_targets after fetch callback")
 	if _on_populate_targets.is_valid():
 		_on_populate_targets.call()
+
+func _persist_detected_targets(anomalies: Array) -> void:
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if not rm:
+		return
+	var targets := []
+	for i in range(anomalies.size()):
+		var anomaly = anomalies[i]
+		var target_id = _panel_data.normalize_anomaly_id(anomaly, i + 1)
+		var target_label = "TIC %s" % str(anomaly.get("ticId")) if anomaly.has("ticId") and anomaly.get("ticId") != null and str(anomaly.get("ticId")) != "" else str(anomaly.get("content", target_id))
+		targets.append({
+			"id": target_id,
+			"label": target_label,
+			"type": "asteroid"
+		})
+	if targets.is_empty():
+		return
+	rm.set_detected_targets(targets)

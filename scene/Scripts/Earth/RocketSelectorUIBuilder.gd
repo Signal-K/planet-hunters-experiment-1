@@ -34,48 +34,62 @@ func build_ui(unlocked_rockets: Array) -> void:
 	root.name = "SelectorRoot"
 	root.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	root.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	root.add_theme_constant_override("separation", 10)
+	root.add_theme_constant_override("separation", 14)
 	_parent.add_child(root)
 
 	var heading = Label.new()
 	heading.text = "Available Rockets"
 	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	heading.add_theme_color_override("font_color", PanelStyle.TEXT_PRIMARY)
-	heading.add_theme_font_size_override("font_size", 30)
+	heading.add_theme_font_size_override("font_size", 34)
 	root.add_child(heading)
 
 	var subheading = Label.new()
-	subheading.text = "Choose your vehicle. Drag the image or press Create."
+	subheading.text = "Choose your vehicle. Drag the rocket image or press Create."
 	subheading.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	subheading.add_theme_color_override("font_color", PanelStyle.TEXT_MUTED)
-	subheading.add_theme_font_size_override("font_size", 18)
+	subheading.add_theme_font_size_override("font_size", 20)
 	root.add_child(subheading)
 
-	var scroll = ScrollContainer.new()
-	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	root.add_child(scroll)
+	var cards_wrap = CenterContainer.new()
+	cards_wrap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	cards_wrap.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	root.add_child(cards_wrap)
 
-	var cards = GridContainer.new()
-	cards.name = "Grid"
-	cards.columns = 2 if unlocked_rockets.size() > 1 else 1
+	var cards = HBoxContainer.new()
+	cards.name = "Cards"
 	cards.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	cards.add_theme_constant_override("h_separation", 16)
-	cards.add_theme_constant_override("v_separation", 16)
-	scroll.add_child(cards)
+	cards.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	cards.alignment = BoxContainer.ALIGNMENT_CENTER
+	cards.add_theme_constant_override("separation", 22)
+	cards_wrap.add_child(cards)
 
+	if unlocked_rockets.is_empty():
+		var empty = Label.new()
+		empty.text = "No rockets unlocked."
+		empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		empty.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		PanelStyle.apply_muted(empty)
+		cards.add_child(empty)
+		return
+
+	var rocket_ids := []
 	for rocket_id in unlocked_rockets:
-		cards.add_child(_build_rocket_card(str(rocket_id)))
+		rocket_ids.append(str(rocket_id))
+	for rocket_id in rocket_ids:
+		cards.add_child(_build_rocket_card(str(rocket_id), rocket_ids.size()))
 
-func _build_rocket_card(rocket_id: String) -> Control:
+func _build_rocket_card(rocket_id: String, total_cards: int) -> Control:
 	var card = PanelContainer.new()
-	card.custom_minimum_size = Vector2(380, 500)
-	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.custom_minimum_size = Vector2(520, 520) if total_cards <= 1 else Vector2(480, 520)
+	card.size_flags_horizontal = Control.SIZE_FILL
+	card.size_flags_vertical = Control.SIZE_FILL
 	card.add_theme_stylebox_override("panel", _card_style())
 
 	var body = VBoxContainer.new()
-	body.add_theme_constant_override("separation", 8)
+	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	body.add_theme_constant_override("separation", 12)
 	card.add_child(body)
 
 	var tex = _rocket_textures.get(rocket_id, null)
@@ -84,7 +98,8 @@ func _build_rocket_card(rocket_id: String) -> Control:
 		tr.texture = tex
 		tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		tr.custom_minimum_size = Vector2(0, 190)
+		tr.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		tr.custom_minimum_size = Vector2(0, 180)
 		tr.mouse_default_cursor_shape = Control.CURSOR_DRAG
 		tr.connect("gui_input", _on_texture_input.bind(rocket_id, tex))
 		body.add_child(tr)
@@ -93,13 +108,14 @@ func _build_rocket_card(rocket_id: String) -> Control:
 	name_label.text = RocketSpecs.get_display_name(rocket_id)
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_label.add_theme_color_override("font_color", PanelStyle.TEXT_PRIMARY)
-	name_label.add_theme_font_size_override("font_size", 26)
+	name_label.add_theme_font_size_override("font_size", 28)
 	body.add_child(name_label)
 
 	var chips = GridContainer.new()
 	chips.columns = 2
-	chips.add_theme_constant_override("h_separation", 8)
-	chips.add_theme_constant_override("v_separation", 6)
+	chips.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	chips.add_theme_constant_override("h_separation", 10)
+	chips.add_theme_constant_override("v_separation", 8)
 	body.add_child(chips)
 
 	var spec = RocketSpecs.get_spec(rocket_id)
@@ -119,7 +135,7 @@ func _build_rocket_card(rocket_id: String) -> Control:
 	]
 	economy.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	economy.add_theme_color_override("font_color", PanelStyle.TEXT_MUTED)
-	economy.add_theme_font_size_override("font_size", 17)
+	economy.add_theme_font_size_override("font_size", 18)
 	body.add_child(economy)
 
 	var spacer = Control.new()
@@ -129,7 +145,7 @@ func _build_rocket_card(rocket_id: String) -> Control:
 	var btn = Button.new()
 	btn.name = "CreateButton_%s" % rocket_id
 	btn.text = "Create %s" % RocketSpecs.get_display_name(rocket_id)
-	btn.custom_minimum_size = Vector2(0, 54)
+	btn.custom_minimum_size = Vector2(0, 62)
 	btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn.disabled = _creation_locked
 	PanelStyle.apply_button(btn, true)
@@ -145,7 +161,7 @@ func _stat_chip(text: String) -> Control:
 	lbl.text = text
 	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl.add_theme_color_override("font_color", PanelStyle.TEXT_PRIMARY)
-	lbl.add_theme_font_size_override("font_size", 14)
+	lbl.add_theme_font_size_override("font_size", 16)
 	chip.add_child(lbl)
 	return chip
 

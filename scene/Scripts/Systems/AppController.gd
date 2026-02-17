@@ -28,17 +28,18 @@ var _persistence := AppControllerPersistence.new()
 const BASE_XP_TO_LEVEL := 10
 const XP_AWARD_LAUNCH := 5
 const XP_AWARD_SCAN := 2
-const TUTORIAL_FLOW_VERSION := 4
+const TUTORIAL_FLOW_VERSION := 5
 const TUTORIAL_FLOW_VERSION_KEY := "__tutorial_flow_version"
 const TUTORIAL_FLOW_INDEX_KEY := "__tutorial_flow_index"
 const TUTORIAL_SEQUENCE := [
-	"scan_targets",
-	"select_launch_target",
 	"create_rocket",
 	"launch_rocket_from_earth",
 	"mine_target",
 	"return_rocket_home",
-	"resolve_mission_debrief"
+	"resolve_mission_debrief",
+	"build_scanner_station",
+	"scan_targets",
+	"select_launch_target"
 ]
 
 func _ready() -> void:

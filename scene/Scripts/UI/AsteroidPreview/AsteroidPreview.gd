@@ -25,7 +25,7 @@ const HINT_RETURN_HOME := "Press Return Home to send this rocket back to Earth w
 @onready var back_button: Button = $CanvasLayer/UI/Margin/VBox/Header/BackButton
 @onready var target_label: Label = $CanvasLayer/UI/Margin/VBox/Header/TargetLabel
 @onready var next_button: Button = $CanvasLayer/UI/ButtonContainer/NextButton
-@onready var minerals_panel: Panel = $CanvasLayer/UI/Margin/VBox/MineralsPanel
+@onready var minerals_panel: Button = $CanvasLayer/UI/Margin/VBox/MineralsPanel
 @onready var minerals_title: Label = $CanvasLayer/UI/Margin/VBox/MineralsPanel/MineralsMargin/MineralsContent/MineralsTitle
 @onready var minerals_summary: Label = $CanvasLayer/UI/Margin/VBox/MineralsPanel/MineralsMargin/MineralsContent/MineralsSummary
 @onready var minerals_list: VBoxContainer = $CanvasLayer/UI/Margin/VBox/MineralsPanel/MineralsMargin/MineralsContent/MineralsList
@@ -38,7 +38,7 @@ const HINT_RETURN_HOME := "Press Return Home to send this rocket back to Earth w
 @onready var mine_cooldown_label: Label = $CanvasLayer/UI/ControlPanel/ControlPanelMargin/ControlPanelButtons/MineCooldownLabel
 @onready var mining_layer: Node2D = $CanvasLayer/MiningLayer
 @onready var mining_beam: Line2D = $CanvasLayer/MiningLayer/MiningBeam
-@onready var inventory_panel: Panel = $CanvasLayer/UI/InventoryPanel
+@onready var inventory_panel: Button = $CanvasLayer/UI/InventoryPanel
 @onready var inventory_title: Label = $CanvasLayer/UI/InventoryPanel/InventoryMargin/InventoryContent/InventoryTitle
 @onready var inventory_summary: Label = $CanvasLayer/UI/InventoryPanel/InventoryMargin/InventoryContent/InventorySummary
 @onready var inventory_total: Label = $CanvasLayer/UI/InventoryPanel/InventoryMargin/InventoryContent/InventoryTotal
@@ -55,6 +55,8 @@ var _current_target_label := ""
 var _current_yield: Dictionary = {}
 var _mining_target_pos := Vector2.ZERO
 var _mining_active := false
+var _minerals_expanded := true
+var _inventory_expanded := true
 
 func _ready() -> void:
 	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
@@ -62,7 +64,7 @@ func _ready() -> void:
 	panel_style.apply_button(back_button, false)
 	panel_style.apply_button(next_button, false)
 	panel_style.apply_title(target_label)
-	panel_style.apply_panel(minerals_panel)
+	panel_style.apply_button(minerals_panel, false)
 	panel_style.apply_title(minerals_title)
 	panel_style.apply_body(minerals_summary)
 	if back_button:
@@ -112,11 +114,12 @@ func _ready() -> void:
 	if mine_cooldown_label:
 		panel_style.apply_muted(mine_cooldown_label)
 	if inventory_panel:
-		panel_style.apply_panel(inventory_panel)
+		panel_style.apply_button(inventory_panel, false)
 		panel_style.apply_title(inventory_title)
 		panel_style.apply_body(inventory_summary)
 		panel_style.apply_body(inventory_total)
 		panel_style.apply_separator($CanvasLayer/UI/InventoryPanel/InventoryMargin/InventoryContent/InventorySeparator)
+	_configure_readout_buttons()
 
 func _process(delta: float) -> void:
 	if asteroid_pivot:
@@ -285,6 +288,35 @@ func _show_tutorial_hint_once(action_key: String, message: String) -> void:
 	var app = get_tree().root.find_child("AppController", true, false)
 	if app and app.has_method("show_tutorial_hint_once"):
 		app.show_tutorial_hint_once(action_key, message)
+
+func _configure_readout_buttons() -> void:
+	if minerals_panel:
+		minerals_panel.focus_mode = Control.FOCUS_NONE
+		minerals_panel.pressed.connect(_on_minerals_pressed)
+	if inventory_panel:
+		inventory_panel.focus_mode = Control.FOCUS_NONE
+		inventory_panel.pressed.connect(_on_inventory_pressed)
+	_update_readout_visibility()
+
+func _on_minerals_pressed() -> void:
+	_minerals_expanded = not _minerals_expanded
+	_update_readout_visibility()
+
+func _on_inventory_pressed() -> void:
+	_inventory_expanded = not _inventory_expanded
+	_update_readout_visibility()
+
+func _update_readout_visibility() -> void:
+	if minerals_summary:
+		minerals_summary.visible = _minerals_expanded
+	if minerals_list:
+		minerals_list.visible = _minerals_expanded
+	if inventory_summary:
+		inventory_summary.visible = _inventory_expanded
+	if inventory_total:
+		inventory_total.visible = _inventory_expanded
+	if inventory_list:
+		inventory_list.visible = _inventory_expanded
 
 func _update_inventory_ui(state_override: Dictionary = {}) -> void:
 	if inventory_list == null:

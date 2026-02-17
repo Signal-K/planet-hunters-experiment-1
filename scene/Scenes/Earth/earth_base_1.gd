@@ -9,7 +9,6 @@ const PREVIEW_SCENE_PATH := "res://Scenes/UI/AsteroidPreview/asteroid_preview.ts
 const ACTION_OPEN_NEW_MISSION := "open_new_mission"
 const HINT_OPEN_NEW_MISSION := "Tap New Mission to open the launch area and prepare a rocket."
 const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
-const MissionLogManager = preload("res://Scripts/Utils/MissionLogManager.gd")
 const SR2_UNLOCK_POPUP_PATH := "user://rocket_unlock_popups.cfg"
 const SR2_UNLOCK_SECTION := "popups"
 const SR2_UNLOCK_KEY := "starterrocket2_seen"
@@ -136,8 +135,8 @@ func _maybe_show_starterrocket2_unlock_popup() -> void:
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	if not rm or not rm.is_unlocked("starterrocket2"):
 		return
-	var mission_count = MissionLogManager.get_missions().size()
-	if mission_count < 1:
+	var completed_count = int(rm.get_completed_mission_count())
+	if completed_count < 1:
 		return
 	_mark_starterrocket2_unlock_popup_seen()
 	_show_starterrocket2_unlock_popup()

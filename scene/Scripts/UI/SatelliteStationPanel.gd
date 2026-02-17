@@ -145,16 +145,8 @@ func _on_loading_finished() -> void:
 		# Keep tutorial flow consistent even when scan data is from offline fallback.
 		_show_tutorial_hint_once(ACTION_SCAN_TARGETS, HINT_SCAN_TARGETS)
 		_award_scan_experience()
-		var rm_fallback = preload("res://Scripts/Utils/RocketsManager.gd")
-		if rm_fallback:
-			var fallback_targets := []
-			for i in range(pending_anomalies.size()):
-				var a_fb = pending_anomalies[i]
-				var id_fb = _data.normalize_anomaly_id(a_fb, i + 1)
-				var label_fb = str(a_fb.get("content", id_fb))
-				var kind_fb = "planet" if current_mode == "planets" else "asteroid"
-				fallback_targets.append({"id": id_fb, "label": label_fb, "type": kind_fb})
-			rm_fallback.set_detected_targets(fallback_targets)
+
+	_persist_detected_targets_and_record_scan(pending_anomalies)
 
 	# Display the pending anomalies
 	_list.display_anomalies(pending_anomalies)
@@ -182,16 +174,6 @@ func _on_anomalies_fetched(data: Array, error: String):
 		_loading.mark_anomalies_ready()
 		_show_tutorial_hint_once(ACTION_SCAN_TARGETS, HINT_SCAN_TARGETS)
 		_award_scan_experience()
-		var rm_fallback = preload("res://Scripts/Utils/RocketsManager.gd")
-		if rm_fallback:
-			var fallback_targets := []
-			for i in range(pending_anomalies.size()):
-				var a_fb = pending_anomalies[i]
-				var id_fb = _data.normalize_anomaly_id(a_fb, i + 1)
-				var label_fb = str(a_fb.get("content", id_fb))
-				var kind_fb = "planet" if current_mode == "planets" else "asteroid"
-				fallback_targets.append({"id": id_fb, "label": label_fb, "type": kind_fb})
-			rm_fallback.set_detected_targets(fallback_targets)
 		return
 
 	# No error
@@ -202,18 +184,7 @@ func _on_anomalies_fetched(data: Array, error: String):
 	_show_tutorial_hint_once(ACTION_SCAN_TARGETS, HINT_SCAN_TARGETS)
 	_award_scan_experience()
 
-	# Persist a lightweight list of detected targets for other UI (e.g., Launchpad)
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
-	if rm:
-		var targets := []
-		for i in range(data.size()):
-			var a = data[i]
-			var id = _data.normalize_anomaly_id(a, i + 1)
-			var label = "TIC %s" % str(a.get("ticId")) if a.has("ticId") and a.get("ticId") != null and str(a.get("ticId")) != "" else str(a.get("content", id))
-			var target_kind = "planet" if current_mode == "planets" else "asteroid"
-			targets.append({"id": id, "label": label, "type": target_kind})
-		var ok = rm.set_detected_targets(targets)
-		print("SatelliteStationPanel: persisted detected_targets count=", targets.size(), " ok=", ok)
+	# Persist target data in _on_loading_finished once loading completes.
 
 func _on_anomaly_item_button_pressed(bound_anomaly: Dictionary):
 	"""Called when the overlay button is pressed for an anomaly item."""
@@ -320,6 +291,23 @@ func _apply_local_anomalies() -> void:
 	var target_type = "planets" if current_mode == "planets" else "asteroids"
 	status_label.text = "Status: %d local %s loaded" % [pending_anomalies.size(), target_type]
 	_loading.mark_anomalies_ready()
+
+func _persist_detected_targets_and_record_scan(anomalies: Array) -> void:
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if not rm:
+		return
+	var targets := []
+	var target_kind = "planet" if current_mode == "planets" else "asteroid"
+	for i in range(anomalies.size()):
+		var a = anomalies[i]
+		var id = _data.normalize_anomaly_id(a, i + 1)
+		var label = "TIC %s" % str(a.get("ticId")) if a.has("ticId") and a.get("ticId") != null and str(a.get("ticId")) != "" else str(a.get("content", id))
+		targets.append({"id": id, "label": label, "type": target_kind})
+	if targets.is_empty():
+		return
+	var ok = rm.set_detected_targets(targets)
+	rm.record_scan_pass(targets)
+	print("SatelliteStationPanel: persisted detected_targets count=", targets.size(), " ok=", ok)
 
 func _build_local_anomalies() -> Array:
 	if current_mode == "planets":

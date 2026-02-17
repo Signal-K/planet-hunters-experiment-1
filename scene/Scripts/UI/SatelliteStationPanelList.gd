@@ -118,28 +118,35 @@ func _create_anomaly_item(anomaly: Dictionary, index: int) -> Control:
 	# Subtitle with properties
 	var subtitle_label = Label.new()
 	var properties = []
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var normalized = _normalize_cb.call(anomaly, index)
+	var target_type = "planet" if _get_mode.call() == "planets" else "asteroid"
+	var scan_count = int(rm.get_target_scan_count(normalized, target_type)) if rm else 0
 
 	var anomaly_type = anomaly.get("anomalytype", "")
-	if anomaly_type != "" and anomaly_type != null:
+	if scan_count >= 1 and anomaly_type != "" and anomaly_type != null:
 		properties.append(anomaly_type.capitalize().replace("Telescope", "").strip_edges())
 
 	var radius = anomaly.get("radius")
-	if radius != null:
+	if scan_count >= 2 and radius != null:
 		properties.append("R: %.2f" % radius)
 
 	var mass = anomaly.get("mass")
-	if mass != null:
+	if scan_count >= 3 and mass != null:
 		properties.append("M: %.2f" % mass)
 
 	var temp = anomaly.get("temperature")
-	if temp != null:
+	if scan_count >= 2 and temp != null:
 		properties.append("T: %.0fK" % temp)
 
 	var classification = anomaly.get("classification_status", "")
-	if classification != "" and classification != null:
+	if scan_count >= 3 and classification != "" and classification != null:
 		properties.append(classification)
 
-	subtitle_label.text = " • ".join(properties) if properties.size() > 0 else "Awaiting analysis..."
+	if properties.size() > 0:
+		subtitle_label.text = " • ".join(properties)
+	else:
+		subtitle_label.text = "Scan to reveal details (%d/3)." % max(scan_count, 0)
 	panel_style.apply_muted(subtitle_label)
 	content_vbox.add_child(subtitle_label)
 
@@ -164,8 +171,6 @@ func _create_anomaly_item(anomaly: Dictionary, index: int) -> Control:
 	panel_style.apply_button(detail_btn, false)
 
 	# Display selected marker if this matches currently selected target
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
-	var normalized = _normalize_cb.call(anomaly, index)
 	var current_target = ""
 	if rm:
 		current_target = rm.get_selected_target()
