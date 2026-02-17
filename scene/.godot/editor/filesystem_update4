@@ -3,3 +3,16 @@ res://Scripts/Utils/RocketSpriteHelper.gd
 res://tests/run_mining_tests.gd
 res://Scripts/Earth/LaunchpadSelectorPanel.gd
 res://Scripts/Earth/RocketSelectorUIBuilder.gd
+res://Scripts/Earth/Launchpad.gd
+res://Scripts/Earth/LaunchpadAnomalyFetcher.gd
+res://Scripts/Earth/LaunchpadLaunchButton.gd
+res://Scripts/Earth/MissionDebrief.gd
+res://Scripts/Systems/SupabaseClient.gd
+res://Scripts/Utils/RocketsManager.gd
+res://tests/run_experience_tests.gd
+res://Scripts/Earth/ControlStation.gd
+res://Scripts/UI/ControlStationPanel.gd
+res://Scripts/UI/AsteroidPreview/AsteroidPreview.gd
+res://Scripts/Earth/SatelliteStation.gd
+res://Scripts/Systems/AppController.gd
+res://Scripts/UI/TutorialPanel.gd

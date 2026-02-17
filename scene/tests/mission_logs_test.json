@@ -1,7 +1,7 @@
 {
   "missions": [
     {
-      "timestamp": "2026-02-16T22:56:34",
+      "timestamp": "2026-02-17T14:44:17",
       "rocket_id": "starterrocket1-test",
       "target_id": "A-TEST",
       "label": "Asteroid A-TEST",
@@ -11,7 +11,7 @@
         "Iron": 10,
         "Nickel": 2
       },
-      "badge": "starterrocket1-test-A-TEST-1771253794"
+      "badge": "starterrocket1-test-A-TEST-1771310657"
     }
   ]
 }

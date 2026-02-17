@@ -76,7 +76,7 @@
       "target_id": "63769326",
       "label": "63769326",
       "action": "sell_orbit",
-      "payout": 2535,
+      "payout": 2535.0,
       "cargo": {
         "Iron": 25.0,
         "Nickel": 10.0,
@@ -85,6 +85,33 @@
         "Silicates": 30.0
       },
       "badge": "starterrocket1-3364892782-63769326-1770946931"
+    },
+    {
+      "timestamp": "2026-02-17T13:31:37",
+      "rocket_id": "starterrocket2-debug-1771306297",
+      "target_id": "debug-target-4",
+      "label": "Debug Target 4",
+      "action": "debug_skip_mission",
+      "payout": 0.0,
+      "cargo": {
+      },
+      "badge": "debug-skip-1771306297"
+    },
+    {
+      "timestamp": "2026-02-17T15:19:10",
+      "rocket_id": "starterrocket1-awaiting-1",
+      "target_id": "mission-1-training-target",
+      "label": "Training Asteroid A",
+      "action": "sell_orbit",
+      "payout": 490160000,
+      "cargo": {
+        "Iron": 25.0,
+        "Nickel": 15.0,
+        "Cobalt": 20.0,
+        "Platinum": 15.0,
+        "Silicates": 25.0
+      },
+      "badge": "starterrocket1-awaiting-1-mission-1-training-target-1771312750"
     }
   ]
 }

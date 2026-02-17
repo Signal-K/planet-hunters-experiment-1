@@ -6,10 +6,32 @@ const DEFAULT_STATE_PATH := "res://rockets_state.json"
 const RETURN_DURATION_SECONDS := 60
 const MISSION_DURATION_SECONDS := 60
 const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
+const HashUtils = preload("res://Scripts/Utils/HashUtils.gd")
 const KNOWN_ROCKET_TYPES := ["starterrocket1", "starterrocket2"]
 const ROCKET_UNLOCK_LEVELS := {
     "starterrocket1": 1,
     "starterrocket2": 2
+}
+const AU_IN_KM := 149597870.7
+const TARGET_DISTANCE_BANDS_AU := [3.0, 12.0, 34.0]
+const TARGET_REQUIRED_LEVEL_BY_BAND := [1, 2, 3]
+const MISSION_PROGRESS_SCHEMA_VERSION := 2
+const SCANNER_BUILD_COST := 2000000000
+const PREDEFINED_MISSION_TARGETS := {
+    1: {
+        "id": "mission-1-training-target",
+        "label": "Training Asteroid A",
+        "type": "asteroid",
+        "distance_au": 3.0,
+        "required_level": 1
+    },
+    2: {
+        "id": "mission-2-upgrade-target",
+        "label": "Training Asteroid B",
+        "type": "asteroid",
+        "distance_au": 12.0,
+        "required_level": 2
+    }
 }
 static var _preview_target: Dictionary = {}
 static var _return_to_new_mission_panel: bool = false
@@ -17,6 +39,7 @@ static var _preview_index: int = 0
 static var _override_state: Dictionary = {}
 static var _returned_mission: Dictionary = {}
 static var _orbiting_rockets: Dictionary = {}
+static var _pending_mission_guidance_id: int = 0
 
 static func load_state() -> Dictionary:
     if _override_state.size() > 0:
@@ -52,6 +75,8 @@ static func load_state() -> Dictionary:
         data["seen_asteroids"] = []
     if not data.has("seen_planets"):
         data["seen_planets"] = []
+    if not data.has("scan_counts"):
+        data["scan_counts"] = {}
     if not data.has("returning"):
         data["returning"] = []
     if not data.has("arrived"):
@@ -64,11 +89,29 @@ static func load_state() -> Dictionary:
         data["preview_target"] = {}
     if not data.has("status_changed_at"):
         data["status_changed_at"] = {}
+    if not data.has("mission_progress_completed"):
+        data["mission_progress_completed"] = 0
+    if not data.has("completed_mission_badges"):
+        data["completed_mission_badges"] = []
+    if not data.has("pending_mission_guidance_id"):
+        data["pending_mission_guidance_id"] = 0
+    if not data.has("scanner_station_built"):
+        data["scanner_station_built"] = false
+    if not data.has("scanner_unlock_dialog_seen"):
+        data["scanner_unlock_dialog_seen"] = false
+    if not data.has("mission_progress_schema_version"):
+        data["mission_progress_schema_version"] = 0
+    var progress_migrated = _migrate_mission_progress_schema(data)
+    var badge_sanitized = _sanitize_completed_badges(data)
+    if progress_migrated or badge_sanitized:
+        save_state(data)
     var migrations = preload("res://Scripts/Utils/RocketsStateStore.gd")
     migrations.apply_migrations(data, Callable(RocketsManager, "save_state"))
     return data
 
 static func save_state(data: Dictionary) -> bool:
+    if not data.has("mission_progress_schema_version"):
+        data["mission_progress_schema_version"] = MISSION_PROGRESS_SCHEMA_VERSION
     var json = preload("res://Scripts/Utils/JSONFileManager.gd")
     var ok = json.save_json(STATE_PATH, data)
     # Best-effort dev sync: update res:// file when writable (editor)
@@ -99,6 +142,156 @@ static func unlock(rocket_id: String) -> bool:
         s["unlocked"] = arr
         return save_state(s)
     return true
+
+static func get_completed_mission_count() -> int:
+    var s = load_state()
+    var badges = s.get("completed_mission_badges", [])
+    if typeof(badges) == TYPE_ARRAY:
+        return badges.size()
+    return max(int(s.get("mission_progress_completed", 0)), 0)
+
+static func get_last_completed_target_id() -> String:
+    var log = preload("res://Scripts/Utils/MissionLogManager.gd")
+    if not log:
+        return ""
+    var rows = log.get_missions()
+    if rows.is_empty():
+        return ""
+    var latest_row := {}
+    var latest_epoch := 0
+    for row in rows:
+        var ts = str(row.get("timestamp", ""))
+        var epoch = Time.get_unix_time_from_datetime_string(ts) if ts != "" else 0
+        if epoch >= latest_epoch:
+            latest_epoch = epoch
+            latest_row = row
+    return str(latest_row.get("target_id", ""))
+
+static func get_mission_stage() -> int:
+    var completed = get_completed_mission_count()
+    if completed <= 0:
+        return 1
+    if completed == 1:
+        return 2
+    return 3
+
+static func get_scanner_build_cost() -> int:
+    return SCANNER_BUILD_COST
+
+static func is_scanner_unlocked() -> bool:
+    return get_mission_stage() >= 3
+
+static func is_scanner_station_built() -> bool:
+    var s = load_state()
+    return bool(s.get("scanner_station_built", false))
+
+static func set_scanner_station_built(built: bool) -> bool:
+    var s = load_state()
+    s["scanner_station_built"] = built
+    return save_state(s)
+
+static func is_scanner_unlock_dialog_seen() -> bool:
+    var s = load_state()
+    return bool(s.get("scanner_unlock_dialog_seen", false))
+
+static func set_scanner_unlock_dialog_seen(seen: bool) -> bool:
+    var s = load_state()
+    s["scanner_unlock_dialog_seen"] = seen
+    return save_state(s)
+
+static func can_afford_scanner_build(balance: int) -> bool:
+    return balance >= SCANNER_BUILD_COST
+
+static func get_predefined_mission_target(stage: int) -> Dictionary:
+    if PREDEFINED_MISSION_TARGETS.has(stage):
+        return PREDEFINED_MISSION_TARGETS[stage].duplicate(true)
+    return {}
+
+static func debug_complete_mission_for_progression() -> bool:
+    var mission_log = preload("res://Scripts/Utils/MissionLogManager.gd")
+    if not mission_log:
+        return false
+    var now = int(Time.get_unix_time_from_system())
+    var completed = get_completed_mission_count()
+    var idx = completed + 1
+    var target_id = "debug-target-%d" % idx
+    var rocket_type = "starterrocket1"
+    var rocket_id = "%s-debug-%d" % [rocket_type, now]
+    if completed >= 1:
+        rocket_type = "starterrocket2"
+        rocket_id = "%s-debug-%d" % [rocket_type, now]
+    var entry = {
+        "timestamp": Time.get_datetime_string_from_system(),
+        "rocket_id": rocket_id,
+        "target_id": target_id,
+        "label": "Debug Target %d" % idx,
+        "action": "debug_skip_mission",
+        "payout": 0,
+        "cargo": {},
+        "badge": "debug-skip-%d" % now
+    }
+    var ok = mission_log.add_mission(entry)
+    if not ok:
+        return false
+    mark_mission_completed(str(entry.get("badge", "")))
+    if completed == 0:
+        unlock("starterrocket2")
+    return true
+
+static func mark_mission_completed(badge: String = "") -> bool:
+    var s = load_state()
+    var badges = s.get("completed_mission_badges", [])
+    if typeof(badges) != TYPE_ARRAY:
+        badges = []
+    var normalized_badge = badge.strip_edges()
+    if normalized_badge != "":
+        if badges.has(normalized_badge):
+            return true
+        badges.append(normalized_badge)
+    s["completed_mission_badges"] = badges
+    _sanitize_completed_badges(s)
+    s["mission_progress_completed"] = s.get("completed_mission_badges", []).size()
+    if int(s.get("mission_progress_completed", 0)) >= 1:
+        var unlocked = s.get("unlocked", [])
+        if typeof(unlocked) != TYPE_ARRAY:
+            unlocked = []
+        if not unlocked.has("starterrocket2"):
+            unlocked.append("starterrocket2")
+        s["unlocked"] = unlocked
+    return save_state(s)
+
+static func get_rocket_level(rocket_id_or_type: String) -> int:
+    var rocket_type = RocketSpecs.rocket_type_from_id(rocket_id_or_type)
+    return int(ROCKET_UNLOCK_LEVELS.get(rocket_type, 1))
+
+static func get_primary_awaiting_rocket_id() -> String:
+    var placed = get_placed()
+    for item in placed:
+        if str(item.get("status", "")) == "awaitingLaunch":
+            return str(item.get("id", ""))
+    return ""
+
+static func build_target_profile(target_id: String, target_type: String = "asteroid") -> Dictionary:
+    var predefined = get_predefined_target_profile(target_id)
+    if not predefined.is_empty():
+        return predefined
+    if target_id == "":
+        return {
+            "distance_au": 0.0,
+            "distance_km": 0.0,
+            "required_level": 1,
+            "type": _normalize_target_type(target_type)
+        }
+    var seed = HashUtils.simple_hash("%s:%s" % [target_id, _normalize_target_type(target_type)])
+    var bucket = int(seed % TARGET_DISTANCE_BANDS_AU.size())
+    var distance_au = float(TARGET_DISTANCE_BANDS_AU[bucket])
+    var required_level = int(TARGET_REQUIRED_LEVEL_BY_BAND[min(bucket, TARGET_REQUIRED_LEVEL_BY_BAND.size() - 1)])
+    return {
+        "distance_au": distance_au,
+        "distance_km": distance_au * AU_IN_KM,
+        "required_level": required_level,
+        "type": _normalize_target_type(target_type)
+    }
 
 static func unlock_for_level(level: int) -> Array:
     var newly_unlocked := []
@@ -210,6 +403,49 @@ static func register_target_interaction(target_id: String, target_type: String) 
     s[key] = list
     save_state(s)
     return list.size()
+
+static func increment_target_scan_count(target_id: String, target_type: String, amount: int = 1) -> int:
+    if target_id == "":
+        return 0
+    var s = load_state()
+    var counts = s.get("scan_counts", {})
+    if typeof(counts) != TYPE_DICTIONARY:
+        counts = {}
+    var key = _scan_count_key(target_id, target_type)
+    var next_count = max(int(counts.get(key, 0)) + max(amount, 1), 1)
+    counts[key] = next_count
+    s["scan_counts"] = counts
+    save_state(s)
+    return next_count
+
+static func get_target_scan_count(target_id: String, target_type: String) -> int:
+    if target_id == "":
+        return 0
+    var s = load_state()
+    var counts = s.get("scan_counts", {})
+    if typeof(counts) != TYPE_DICTIONARY:
+        return 0
+    return int(counts.get(_scan_count_key(target_id, target_type), 0))
+
+static func record_scan_pass(targets: Array) -> bool:
+    if targets.is_empty():
+        return false
+    var s = load_state()
+    var counts = s.get("scan_counts", {})
+    if typeof(counts) != TYPE_DICTIONARY:
+        counts = {}
+    var changed := false
+    for target in targets:
+        var target_id = str(target.get("id", ""))
+        if target_id == "":
+            continue
+        var key = _scan_count_key(target_id, str(target.get("type", "asteroid")))
+        counts[key] = int(counts.get(key, 0)) + 1
+        changed = true
+    if not changed:
+        return false
+    s["scan_counts"] = counts
+    return save_state(s)
 
 static func get_target_level(target_id: String, target_type: String) -> int:
     if target_id == "":
@@ -463,7 +699,14 @@ static func reset_state() -> bool:
     data["detected_targets"] = []
     data["seen_asteroids"] = []
     data["seen_planets"] = []
+    data["scan_counts"] = {}
     data["status_changed_at"] = {}
+    data["mission_progress_completed"] = 0
+    data["completed_mission_badges"] = []
+    data["scanner_station_built"] = false
+    data["scanner_unlock_dialog_seen"] = false
+    data["mission_progress_schema_version"] = MISSION_PROGRESS_SCHEMA_VERSION
+    data["pending_mission_guidance_id"] = 0
     _override_state = data.duplicate(true)
     var ok = save_state(data)
     if ok:
@@ -599,6 +842,29 @@ static func consume_return_to_new_mission_panel() -> bool:
     var flag = _return_to_new_mission_panel
     _return_to_new_mission_panel = false
     return flag
+
+static func set_pending_mission_guidance_id(mission_id: int) -> bool:
+    var safe_id = max(mission_id, 0)
+    _pending_mission_guidance_id = safe_id
+    var s = load_state()
+    s["pending_mission_guidance_id"] = safe_id
+    return save_state(s)
+
+static func get_pending_mission_guidance_id() -> int:
+    if _pending_mission_guidance_id > 0:
+        return _pending_mission_guidance_id
+    var s = load_state()
+    var stored = max(int(s.get("pending_mission_guidance_id", 0)), 0)
+    _pending_mission_guidance_id = stored
+    return stored
+
+static func consume_pending_mission_guidance_id() -> int:
+    var current = get_pending_mission_guidance_id()
+    _pending_mission_guidance_id = 0
+    var s = load_state()
+    s["pending_mission_guidance_id"] = 0
+    save_state(s)
+    return current
 
 static func get_preview_index() -> int:
     return _preview_index
@@ -766,6 +1032,9 @@ static func _normalize_target_type(value: String) -> String:
         return t
     return "asteroid"
 
+static func _scan_count_key(target_id: String, target_type: String) -> String:
+    return "%s:%s" % [_normalize_target_type(target_type), target_id]
+
 static func _set_status_changed_at_in_state(state: Dictionary, rocket_id: String, status: String, timestamp: int = 0) -> void:
     if rocket_id == "" or status == "":
         return
@@ -781,3 +1050,70 @@ static func _set_status_changed_at_in_state(state: Dictionary, rocket_id: String
     per_rocket[status] = when
     all_changes[rocket_id] = per_rocket
     state["status_changed_at"] = all_changes
+
+static func _sanitize_completed_badges(state: Dictionary) -> bool:
+    var raw = state.get("completed_mission_badges", [])
+    if typeof(raw) != TYPE_ARRAY:
+        state["completed_mission_badges"] = []
+        state["mission_progress_completed"] = 0
+        return true
+    var cleaned := []
+    var seen := {}
+    for badge_any in raw:
+        var badge = str(badge_any).strip_edges()
+        if badge == "":
+            continue
+        var lower = badge.to_lower()
+        # Ignore test-only badges so local/headless test runs don't pollute progression.
+        if lower.find("test") != -1:
+            continue
+        if not _is_progress_badge_valid(badge):
+            continue
+        if seen.has(badge):
+            continue
+        seen[badge] = true
+        cleaned.append(badge)
+    var prior_count = max(int(state.get("mission_progress_completed", 0)), 0)
+    var changed = cleaned.size() != raw.size() or prior_count != cleaned.size()
+    state["completed_mission_badges"] = cleaned
+    state["mission_progress_completed"] = cleaned.size()
+    return changed
+
+static func _migrate_mission_progress_schema(state: Dictionary) -> bool:
+    var current_version = int(state.get("mission_progress_schema_version", 0))
+    if current_version >= MISSION_PROGRESS_SCHEMA_VERSION:
+        return false
+    # Reset stale progression to avoid legacy saves marking mission roadmap as completed.
+    state["mission_progress_completed"] = 0
+    state["completed_mission_badges"] = []
+    state["mission_progress_schema_version"] = MISSION_PROGRESS_SCHEMA_VERSION
+    return true
+
+static func _is_progress_badge_valid(badge: String) -> bool:
+    var lower = badge.to_lower()
+    if lower.begins_with("mission-"):
+        return true
+    if lower.begins_with("debug-skip-"):
+        return true
+    var parts = badge.split("-")
+    if parts.size() < 3:
+        return false
+    var stamp = str(parts[parts.size() - 1]).strip_edges()
+    return stamp.is_valid_int()
+
+static func get_predefined_target_profile(target_id: String) -> Dictionary:
+    if target_id == "":
+        return {}
+    for stage in PREDEFINED_MISSION_TARGETS.keys():
+        var item = PREDEFINED_MISSION_TARGETS[stage]
+        if str(item.get("id", "")) != target_id:
+            continue
+        var distance_au = float(item.get("distance_au", 0.0))
+        var target_type = str(item.get("type", "asteroid"))
+        return {
+            "distance_au": distance_au,
+            "distance_km": distance_au * AU_IN_KM,
+            "required_level": int(item.get("required_level", 1)),
+            "type": _normalize_target_type(target_type)
+        }
+    return {}

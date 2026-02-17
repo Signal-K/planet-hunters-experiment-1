@@ -2,28 +2,16 @@ extends CanvasLayer
 
 const STEPS := [
 	{
-		"action": "scan_targets",
-		"title": "Scan for targets",
-		"instruction": "Open Satellite Station and run a scan.",
-		"context": "Find mineable targets."
-	},
-	{
-		"action": "select_launch_target",
-		"title": "Lock a target",
-		"instruction": "Select one scanned target in Satellite Station.",
-		"context": "Set the mission destination."
-	},
-	{
 		"action": "create_rocket",
 		"title": "Build your first rocket",
-		"instruction": "In Launchpad, create a rocket.",
-		"context": "Build mission-ready rockets."
+		"instruction": "Open Launchpad and create a rocket.",
+		"context": "Mission 1 uses a predefined target."
 	},
 	{
 		"action": "launch_rocket_from_earth",
 		"title": "Launch mission",
-		"instruction": "Press Launch to send the rocket.",
-		"context": "Start outbound transit."
+		"instruction": "Press Launch to start Mission 1.",
+		"context": "Send your rocket to the assigned target."
 	},
 	{
 		"action": "mine_target",
@@ -39,9 +27,27 @@ const STEPS := [
 	},
 	{
 		"action": "resolve_mission_debrief",
-		"title": "Finish debrief",
-		"instruction": "Choose sell/salvage/scrap/store in debrief.",
-		"context": "Convert mission results into value."
+		"title": "Complete debrief",
+		"instruction": "In debrief, choose one outcome to finish the mission.",
+		"context": "Progress to the next mission."
+	},
+	{
+		"action": "build_scanner_station",
+		"title": "Build Scanner Station",
+		"instruction": "Mission 3 unlocks Scanner Station. Build it for 2.0B F.",
+		"context": "Scanning unlocks after construction."
+	},
+	{
+		"action": "scan_targets",
+		"title": "Run your first scan",
+		"instruction": "Open Scanner Station and run a scan.",
+		"context": "Reveal new mission targets."
+	},
+	{
+		"action": "select_launch_target",
+		"title": "Choose scanned target",
+		"instruction": "Select one scanned target.",
+		"context": "Set your next mission destination."
 	}
 ]
 
@@ -150,33 +156,38 @@ func _instruction_for_scene(step_index: int, fallback: String) -> String:
 	var scene_name = _current_scene_name()
 	match step_index:
 		0:
-			if scene_name == "EarthBase1":
-				return "Tap Satellite Station, then run a scan."
-			if scene_name == "LaunchpadScene":
-				return "Go back to Earth base and open Satellite Station first."
-		1:
-			if scene_name == "EarthBase1":
-				return "In Satellite Station, tap Select Target."
-			if scene_name == "LaunchpadScene":
-				return "Return to Satellite Station and select a target first."
-		2:
 			if scene_name == "LaunchpadScene":
 				return "Tap Create on a rocket card."
-		3:
+			if scene_name == "EarthBase1":
+				return "Open New Mission to reach Launchpad and create a rocket."
+		1:
 			if scene_name == "LaunchpadScene":
-				return "Press Launch when a rocket and target are selected."
-		4:
+				return "Press Launch to start Mission 1."
+		2:
 			if scene_name == "AsteroidPreview":
 				return "Press Mine to collect minerals."
 			return "Open target preview and mine once."
-		5:
+		3:
 			if scene_name == "AsteroidPreview":
 				return "Press Return Home to send cargo back."
 			return "Return to target preview and press Return Home."
-		6:
+		4:
 			if scene_name == "MissionDebrief":
 				return "Pick one: Sell Orbit, Sell Earth, Salvage, Scrap, Keep, or Leave."
 			return "Open mission debrief and complete one payout action."
+		5:
+			if scene_name == "EarthBase1":
+				return "Mission 3 is unlocked. Open Scanner Station and build it for 2.0B F."
+			return "Return to Earth Base and build Scanner Station."
+		6:
+			if scene_name == "EarthBase1":
+				return "Open Scanner Station and run a scan."
+			return "Return to Earth Base to run your first scan."
+		7:
+			if scene_name == "EarthBase1":
+				return "Pick one scanned target to set your next mission."
+			if scene_name == "LaunchpadScene":
+				return "Select target is now scanner-driven. Return to Scanner Station."
 	return fallback
 
 func _apply_responsive_layout() -> void:
@@ -227,17 +238,9 @@ func _resolve_focus_target(step_index: int) -> CanvasItem:
 	var scene_name = _current_scene_name()
 	match step_index:
 		0:
-			if scene_name == "EarthBase1":
-				return scene.get_node_or_null("StructuresLayer/SatelliteStation/Sprite2D")
-		1:
-			if scene_name == "EarthBase1":
-				return _find_button_by_text(get_tree().root, "Select Target")
-			if scene_name == "LaunchpadScene":
-				return null
-		2:
 			if scene_name == "LaunchpadScene":
 				return _find_button_by_text(scene, "Create")
-		3:
+		1:
 			if scene_name == "LaunchpadScene":
 				var launch_hud = scene.get_node_or_null("LaunchHUD")
 				if launch_hud:
@@ -245,13 +248,13 @@ func _resolve_focus_target(step_index: int) -> CanvasItem:
 						if child is Button:
 							return child
 				return _find_button_by_text(scene, "Launch")
-		4:
+		2:
 			if scene_name == "AsteroidPreview":
 				return scene.get_node_or_null("CanvasLayer/UI/ControlPanel/ControlPanelMargin/ControlPanelButtons/MineButton")
-		5:
+		3:
 			if scene_name == "AsteroidPreview":
 				return scene.get_node_or_null("CanvasLayer/UI/ControlPanel/ControlPanelMargin/ControlPanelButtons/ReturnHomeButton")
-		6:
+		4:
 			if scene_name == "MissionDebrief":
 				var candidates = [
 					"UI/Root/Panel/VBox/Actions/SellRow/SellOrbitButton",
@@ -265,6 +268,15 @@ func _resolve_focus_target(step_index: int) -> CanvasItem:
 					var node = scene.get_node_or_null(path)
 					if node is Button and not node.disabled:
 						return node
+		5:
+			if scene_name == "EarthBase1":
+				return scene.get_node_or_null("StructuresLayer/SatelliteStation/Sprite2D")
+		6:
+			if scene_name == "EarthBase1":
+				return scene.get_node_or_null("StructuresLayer/SatelliteStation/Sprite2D")
+		7:
+			if scene_name == "EarthBase1":
+				return _find_button_by_text(get_tree().root, "Select")
 	return null
 
 func _find_button_by_text(root: Node, expected_text: String) -> Button:

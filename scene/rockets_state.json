@@ -3,13 +3,6 @@
     "starterrocket1"
   ],
   "placed": [
-    {
-      "type": "starterrocket1",
-      "id": "starterrocket1-6",
-      "x": 0.0,
-      "y": 0.0,
-      "status": "returned"
-    }
   ],
   "launched": [
   ],
@@ -19,25 +12,44 @@
   ],
   "selected_target": "",
   "preview_target": {
+    "id": "4201",
+    "label": "Asteroid 4201",
+    "type": "asteroid",
+    "rocket_id": "starterrocket1"
   },
   "detected_targets": [
+    {
+      "id": "4201",
+      "label": "Asteroid 4201",
+      "type": "asteroid"
+    }
   ],
   "seen_asteroids": [
+    "4201"
   ],
   "seen_planets": [
   ],
   "returning": [
   ],
   "arrived": {
+    "starterrocket1": {
+      "target_id": "4201",
+      "arrived_at": 1771312929.33917
+    }
   },
   "returned_mission": {
   },
   "returning_started": {
   },
   "status_changed_at": {
-    "starterrocket1-6": {
-      "returningHome": 1771254424.0,
-      "returned": 1771254939
-    }
-  }
+  },
+  "scan_counts": {
+  },
+  "mission_progress_completed": 0,
+  "completed_mission_badges": [
+  ],
+  "mission_progress_schema_version": 2.0,
+  "pending_mission_guidance_id": 0,
+  "scanner_station_built": false,
+  "scanner_unlock_dialog_seen": false
 }

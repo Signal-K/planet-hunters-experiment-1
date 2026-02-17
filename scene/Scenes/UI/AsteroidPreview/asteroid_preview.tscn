@@ -140,11 +140,14 @@ layout_mode = 2
 size_flags_horizontal = 3
 text = "Asteroid Preview"
 
-[node name="MineralsPanel" type="Panel" parent="CanvasLayer/UI/Margin/VBox"]
+[node name="MineralsPanel" type="Button" parent="CanvasLayer/UI/Margin/VBox"]
 custom_minimum_size = Vector2(540, 260)
 layout_mode = 2
 size_flags_horizontal = 0
 size_flags_vertical = 0
+focus_mode = 0
+toggle_mode = false
+flat = false
 
 [node name="MineralsMargin" type="MarginContainer" parent="CanvasLayer/UI/Margin/VBox/MineralsPanel"]
 layout_mode = 0
@@ -242,7 +245,7 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0.639, 0.694, 0.784, 1)
 theme_override_font_sizes/font_size = 16
 
-[node name="InventoryPanel" type="Panel" parent="CanvasLayer/UI"]
+[node name="InventoryPanel" type="Button" parent="CanvasLayer/UI"]
 custom_minimum_size = Vector2(320, 170)
 layout_mode = 0
 anchor_left = 1.0
@@ -251,6 +254,9 @@ offset_left = -360.0
 offset_top = 140.0
 offset_right = -24.0
 offset_bottom = 310.0
+focus_mode = 0
+toggle_mode = false
+flat = false
 
 [node name="InventoryMargin" type="MarginContainer" parent="CanvasLayer/UI/InventoryPanel"]
 layout_mode = 0

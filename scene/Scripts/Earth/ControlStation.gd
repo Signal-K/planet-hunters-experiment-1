@@ -28,8 +28,11 @@ func on_interact():
 		print("Found UIManager as child: ", ui_manager != null)
 	
 	if ui_manager:
-		print("Opening New Mission panel...")
-		ui_manager.show_panel(UIManager.PanelType.NEW_MISSION)
+		print("Opening Control Station panel...")
+		if ui_manager.has_method("show_structure_panel"):
+			ui_manager.show_structure_panel("res://Scenes/UI/ControlStationPanel.tscn")
+		else:
+			ui_manager.show_panel(UIManager.PanelType.NEW_MISSION)
 	else:
 		print("ERROR: UIManager not found for Control Station")
 

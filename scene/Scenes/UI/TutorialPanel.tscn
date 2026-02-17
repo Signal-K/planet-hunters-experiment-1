@@ -103,5 +103,5 @@ theme_override_styles/focus = SubResource("StyleBoxFlat_button_normal")
 
 [node name="Instruction" type="Label" parent="CoachPanel/Margin/Root"]
 autowrap_mode = 3
-text = "Open Satellite Station and run a scan."
+text = "Open Launchpad and create your first rocket."
 theme_override_font_sizes/font_size = 18

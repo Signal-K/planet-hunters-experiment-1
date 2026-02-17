@@ -86,6 +86,7 @@ func _on_timeout() -> void:
 
 func _test_tutorial_first_time_tracking() -> void:
     reporter.start_test("First-time tutorial actions persist and do not repeat")
+    DirAccess.remove_absolute("user://tutorial.cfg")
     var AppControllerScript = load("res://Scripts/Systems/AppController.gd")
     if AppControllerScript == null:
         reporter.fail_test("Could not load AppController for first-time tracking test")
@@ -93,14 +94,14 @@ func _test_tutorial_first_time_tracking() -> void:
     var app = AppControllerScript.new()
     app.name = "AppControllerTracking"
     self.root.add_child(app)
-    var first = app.show_tutorial_hint_once("scan_targets", "One sentence.")
-    var second = app.show_tutorial_hint_once("scan_targets", "One sentence.")
+    var first = app.show_tutorial_hint_once("create_rocket", "One sentence.")
+    var second = app.show_tutorial_hint_once("create_rocket", "One sentence.")
     app.queue_free()
 
     var reloaded = AppControllerScript.new()
     reloaded.name = "AppControllerTrackingReloaded"
     self.root.add_child(reloaded)
-    var persisted = reloaded.has_seen_tutorial_action("scan_targets")
+    var persisted = reloaded.has_seen_tutorial_action("create_rocket")
     reloaded.queue_free()
     if first and not second and persisted:
         reporter.pass_test()

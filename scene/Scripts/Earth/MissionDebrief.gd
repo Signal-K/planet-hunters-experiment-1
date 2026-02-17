@@ -9,6 +9,8 @@ const SALVAGE_REFUND_PCT := 0.10
 const XP_AWARD_MISSION := 4
 const ACTION_RESOLVE_DEBRIEF := "resolve_mission_debrief"
 const HINT_RESOLVE_DEBRIEF := "Great. You completed debrief by choosing how to process the mission return."
+const ACTION_UNLOCK_MISSION_2 := "unlock_mission_2"
+const HINT_UNLOCK_MISSION_2 := "Mission 2 unlocked. Starter Rocket 2 is now available in Launchpad."
 const WebEventBridge = preload("res://Scripts/Systems/WebEventBridge.gd")
 const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
 
@@ -48,6 +50,9 @@ func _ready() -> void:
 	panel_style.apply_button(back_button, false)
 
 	_returned = _load_returned_mission()
+	if _returned.is_empty():
+		_set_empty_state()
+		return
 	_register_orbiting()
 	_build_mineral_list()
 	_select_subcontractor()
@@ -233,6 +238,14 @@ func _lock_action_buttons() -> void:
 	if archive_button:
 		archive_button.disabled = true
 
+func _set_empty_state() -> void:
+	title_label.text = "Mission Debrief"
+	subtitle_label.text = "No returned mission found."
+	status_label.text = "Open missions from Launchpad to continue."
+	_lock_action_buttons()
+	if back_button:
+		back_button.disabled = false
+
 func _clear_cargo() -> void:
 	var target_id = str(_returned.get("target_id", ""))
 	if target_id == "":
@@ -249,8 +262,10 @@ func _clear_cargo() -> void:
 
 func _add_mission_log(action: String, payout: int) -> void:
 	var log = preload("res://Scripts/Utils/MissionLogManager.gd")
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	if not log:
 		return
+	var badge = _make_badge()
 	var entry = {
 		"timestamp": Time.get_datetime_string_from_system(),
 		"rocket_id": str(_returned.get("rocket_id", "")),
@@ -259,9 +274,13 @@ func _add_mission_log(action: String, payout: int) -> void:
 		"action": action,
 		"payout": payout,
 		"cargo": _collected.duplicate(true),
-		"badge": _make_badge()
+		"badge": badge
 	}
 	log.add_mission(entry)
+	var completed_count := 0
+	if rm:
+		rm.mark_mission_completed(badge)
+		completed_count = int(rm.get_completed_mission_count())
 	var mission_rows: Array = log.get_missions()
 	var mission_count = mission_rows.size()
 	var event_payload := {
@@ -274,10 +293,11 @@ func _add_mission_log(action: String, payout: int) -> void:
 		"mission_count": mission_count
 	}
 	WebEventBridge.emit("mission_debrief_resolved", event_payload)
-	if mission_count == 1:
-		var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if completed_count >= 1:
 		if rm:
 			rm.unlock("starterrocket2")
+	if completed_count == 1:
+		_show_tutorial_hint_once(ACTION_UNLOCK_MISSION_2, HINT_UNLOCK_MISSION_2)
 		WebEventBridge.emit("first_mission_completed", event_payload)
 
 func _select_subcontractor() -> void:
