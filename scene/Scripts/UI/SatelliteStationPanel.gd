@@ -145,6 +145,7 @@ func _on_loading_finished() -> void:
 		# Keep tutorial flow consistent even when scan data is from offline fallback.
 		_show_tutorial_hint_once(ACTION_SCAN_TARGETS, HINT_SCAN_TARGETS)
 		_award_scan_experience()
+	pending_anomalies = _filter_mission3_untargeted_anomalies(pending_anomalies)
 
 	_persist_detected_targets_and_record_scan(pending_anomalies)
 
@@ -328,6 +329,28 @@ func _build_local_anomalies() -> Array:
 			"classification_status": "confirmed"
 		}
 	]
+
+func _filter_mission3_untargeted_anomalies(anomalies: Array) -> Array:
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if not rm:
+		return anomalies
+	if current_mode != "asteroids":
+		return anomalies
+	if int(rm.get_mission_stage()) != 3:
+		return anomalies
+	var targeted_ids = rm.get_targeted_target_ids()
+	var filtered := []
+	for i in range(anomalies.size()):
+		var anomaly = anomalies[i]
+		if typeof(anomaly) != TYPE_DICTIONARY:
+			continue
+		var target_id = _data.normalize_anomaly_id(anomaly, i + 1)
+		if target_id == "" or targeted_ids.has(target_id):
+			continue
+		filtered.append(anomaly)
+		if filtered.size() >= 5:
+			break
+	return filtered
 
 
 func _process(delta: float) -> void:

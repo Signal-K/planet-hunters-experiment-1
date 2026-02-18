@@ -17,6 +17,8 @@ const ACTION_RETURN_HOME := "return_rocket_home"
 const HINT_OPEN_PREVIEW := "This preview shows your rocket at the target and what you can collect."
 const HINT_MINE_TARGET := "Press Mine to collect minerals from this target."
 const HINT_RETURN_HOME := "Press Return Home to send this rocket back to Earth with its cargo."
+const RETURN_HOME_LOCKED_TEXT := "Return Home (Mine target first)"
+const RETURN_HOME_READY_TEXT := "Return Home"
 
 @onready var asteroid_pivot: Node3D = $AsteroidPivot
 @onready var asteroid_mesh: MeshInstance3D = $AsteroidPivot/Asteroid
@@ -120,6 +122,7 @@ func _ready() -> void:
 		panel_style.apply_body(inventory_total)
 		panel_style.apply_separator($CanvasLayer/UI/InventoryPanel/InventoryMargin/InventoryContent/InventorySeparator)
 	_configure_readout_buttons()
+	_update_return_home_state()
 
 func _process(delta: float) -> void:
 	if asteroid_pivot:
@@ -155,6 +158,9 @@ func _on_back_pressed() -> void:
 	_change_scene_to_base()
 
 func _on_return_home_pressed() -> void:
+	_update_return_home_state()
+	if return_home_button and return_home_button.disabled:
+		return
 	if _current_rocket_id == "":
 		return
 	_show_tutorial_hint_once(ACTION_RETURN_HOME, HINT_RETURN_HOME)
@@ -283,6 +289,7 @@ func _apply_mining_yield() -> void:
 	var mining_multiplier = RocketSpecs.get_mining_multiplier(_current_rocket_id)
 	var state = inventory.apply_mining(_current_target_id, capacity, minerals, mining_multiplier)
 	_update_inventory_ui(state)
+	_update_return_home_state()
 
 func _show_tutorial_hint_once(action_key: String, message: String) -> void:
 	var app = get_tree().root.find_child("AppController", true, false)
@@ -506,6 +513,30 @@ func _update_minerals_summary(capacity_override: int) -> void:
 		int(round(mineable_pct * 100.0)),
 		NumberFormat.commas(str(capacity_override))
 	]
+
+func _update_return_home_state() -> void:
+	if return_home_button == null:
+		return
+	var locked = _should_lock_return_home_until_fully_mined()
+	if not locked:
+		return_home_button.disabled = false
+		return_home_button.text = RETURN_HOME_READY_TEXT
+		return
+	var inventory = preload("res://Scripts/Utils/MiningInventory.gd")
+	var capacity = float(_current_yield.get("capacity", 0))
+	var state = inventory.get_target_state(_current_target_id, capacity)
+	var remaining = float(state.get("remaining_mass", capacity))
+	var completed = remaining <= 0.0
+	return_home_button.disabled = not completed
+	return_home_button.text = RETURN_HOME_READY_TEXT if completed else RETURN_HOME_LOCKED_TEXT
+
+func _should_lock_return_home_until_fully_mined() -> bool:
+	if _current_target_id == "" or _current_yield.is_empty():
+		return false
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if not rm:
+		return false
+	return int(rm.get_mission_stage()) <= 3
 
 func _setup_orbit_preview(target_id: String, rocket_id: String) -> void:
 	if orbit_root == null or orbit_rocket == null or orbit_circle == null:

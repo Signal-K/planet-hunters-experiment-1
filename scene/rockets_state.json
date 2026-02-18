@@ -1,8 +1,16 @@
 {
   "unlocked": [
-    "starterrocket1"
+    "starterrocket1",
+    "starterrocket2"
   ],
   "placed": [
+    {
+      "type": "starterrocket1",
+      "id": "starterrocket1-652083489",
+      "x": -110.0,
+      "y": -178.0,
+      "status": "returningHome"
+    }
   ],
   "launched": [
   ],
@@ -12,10 +20,6 @@
   ],
   "selected_target": "",
   "preview_target": {
-    "id": "4201",
-    "label": "Asteroid 4201",
-    "type": "asteroid",
-    "rocket_id": "starterrocket1"
   },
   "detected_targets": [
     {
@@ -25,23 +29,37 @@
     }
   ],
   "seen_asteroids": [
-    "4201"
+    "4201",
+    "mission-1-training-target"
   ],
   "seen_planets": [
   ],
   "returning": [
+    {
+      "rocket_id": "starterrocket1-652083489"
+    }
   ],
   "arrived": {
     "starterrocket1": {
       "target_id": "4201",
-      "arrived_at": 1771312929.33917
+      "arrived_at": 1771426623.52158
     }
   },
   "returned_mission": {
+    "rocket_id": "starterrocket1-652083489",
+    "target_id": "mission-1-training-target",
+    "label": "Training Asteroid A",
+    "type": "asteroid"
   },
   "returning_started": {
+    "starterrocket1-652083489": 1771426864.0
   },
   "status_changed_at": {
+    "starterrocket1-652083489": {
+      "awaitingLaunch": 1771426718.0,
+      "launched": 1771426724.0,
+      "returningHome": 1771426864.0
+    }
   },
   "scan_counts": {
   },
@@ -49,7 +67,7 @@
   "completed_mission_badges": [
   ],
   "mission_progress_schema_version": 2.0,
-  "pending_mission_guidance_id": 0,
+  "pending_mission_guidance_id": 0.0,
   "scanner_station_built": false,
   "scanner_unlock_dialog_seen": false
 }
