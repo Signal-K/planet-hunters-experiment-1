@@ -50,6 +50,7 @@ func run_all_tests() -> void:
 	await test_rocket_selector_ui_has_no_scroll_container()
 	await test_launchpad_selector_panel_fullscreen_without_awaiting()
 	await test_launchpad_selector_hides_rocket_selector_and_limits_targets()
+	await test_early_mission_return_home_locked_until_fully_mined()
 	await test_asteroid_preview_readout_panels_are_buttons()
 	await test_launch_hud_resolution_prefers_node_with_button()
 	await test_control_station_roadmap_gating_states()
@@ -59,6 +60,8 @@ func run_all_tests() -> void:
 	await test_scanner_build_cost_enforced()
 	await test_tutorial_sequence_places_scanner_after_mission_two()
 	await test_launchpad_uses_predefined_targets_for_first_two_missions()
+	await test_predefined_mission_reward_ratios()
+	await test_mission3_targets_filter_and_single_sr2_reachable()
 	await test_outbound_transit_distance_label_decreases()
 	await test_return_transit_distance_label_decreases()
 	await test_tutorial_panel_hidden_in_transit_scene()
@@ -786,6 +789,70 @@ func test_asteroid_preview_readout_panels_are_buttons() -> void:
 		return
 	reporter.pass_test()
 
+func test_early_mission_return_home_locked_until_fully_mined() -> void:
+	reporter.start_test("Early mission keeps Return Home disabled until target is fully mined")
+	var state = {
+		"unlocked": ["starterrocket1"],
+		"placed": [],
+		"launched": [],
+		"destroyed": [],
+		"missions": [],
+		"selected_target": "",
+		"preview_target": {
+			"id": "4201",
+			"label": "Asteroid 4201",
+			"type": "asteroid",
+			"rocket_id": "starterrocket1"
+		},
+		"detected_targets": [{"id": "4201", "label": "Asteroid 4201", "type": "asteroid"}],
+		"seen_asteroids": [],
+		"seen_planets": [],
+		"returning": [],
+		"arrived": {},
+		"returned_mission": {},
+		"returning_started": {},
+		"status_changed_at": {},
+		"scan_counts": {},
+		"mission_progress_completed": 0,
+		"completed_mission_badges": [],
+		"mission_progress_schema_version": 2
+	}
+	RocketsManager.set_override_state(state)
+	var scene_pack = load("res://Scenes/UI/AsteroidPreview/asteroid_preview.tscn")
+	if scene_pack == null:
+		RocketsManager.clear_override_state()
+		reporter.fail_test("Could not load asteroid_preview.tscn for return-home lock test")
+		return
+	var err = change_scene_to_packed(scene_pack)
+	if err != OK:
+		RocketsManager.clear_override_state()
+		reporter.fail_test("Could not change to asteroid_preview.tscn (err=%s)" % str(err))
+		return
+	await create_timer(0.05).timeout
+	var scene = current_scene
+	if scene == null:
+		RocketsManager.clear_override_state()
+		reporter.fail_test("No current scene for return-home lock test")
+		return
+	var return_button = scene.get_node_or_null("CanvasLayer/UI/ControlPanel/ControlPanelMargin/ControlPanelButtons/ReturnHomeButton")
+	if return_button == null or not (return_button is Button):
+		RocketsManager.clear_override_state()
+		reporter.fail_test("Could not find ReturnHomeButton in asteroid preview")
+		return
+	var locked_initially = bool((return_button as Button).disabled)
+	for i in range(260):
+		scene._apply_mining_yield()
+		if not bool((return_button as Button).disabled):
+			break
+	RocketsManager.clear_override_state()
+	if not locked_initially:
+		reporter.fail_test("Expected Return Home to start disabled in early mission")
+		return
+	if bool((return_button as Button).disabled):
+		reporter.fail_test("Expected Return Home to unlock after full mining")
+		return
+	reporter.pass_test()
+
 func test_launch_hud_resolution_prefers_node_with_button() -> void:
 	reporter.start_test("LaunchHUD resolution prefers HUD with launch button")
 	var resolver = LaunchpadLaunchButtonScript.new()
@@ -950,6 +1017,63 @@ func test_launchpad_uses_predefined_targets_for_first_two_missions() -> void:
 		return
 	if int(profile2.get("required_level", 0)) != 2:
 		reporter.fail_test("Expected mission 2 predefined target to require L2")
+		return
+	reporter.pass_test()
+
+func test_predefined_mission_reward_ratios() -> void:
+	reporter.start_test("Predefined mission reward ratios are configured for M1/M2")
+	var mission1 = RocketsManager.get_predefined_mission_target(1)
+	var mission2 = RocketsManager.get_predefined_mission_target(2)
+	var ratio1 = RocketsManager.get_target_reward_ratio(str(mission1.get("id", "")))
+	var ratio2 = RocketsManager.get_target_reward_ratio(str(mission2.get("id", "")))
+	if abs(ratio1 - 1.2) > 0.001:
+		reporter.fail_test("Expected mission 1 reward ratio 1.2, got %s" % str(ratio1))
+		return
+	if abs(ratio2 - 1.3) > 0.001:
+		reporter.fail_test("Expected mission 2 reward ratio 1.3, got %s" % str(ratio2))
+		return
+	reporter.pass_test()
+
+func test_mission3_targets_filter_and_single_sr2_reachable() -> void:
+	reporter.start_test("Mission 3 targets exclude already-targeted asteroids and keep one SR2-reachable")
+	var mission_log_path = "user://mission_logs_test_mission3_targets.json"
+	DirAccess.remove_absolute(mission_log_path)
+	MissionLogManager.set_path_overrides(mission_log_path, mission_log_path)
+	MissionLogManager.save_state({
+		"missions": [
+			{"target_id": "m3-1", "badge": "mission3-test-badge-1", "action": "scrap", "timestamp": "2026-01-01T00:00:00"}
+		]
+	})
+	var state = RocketsManager.load_state()
+	state["mission_progress_completed"] = 2
+	state["completed_mission_badges"] = ["mission-1", "mission-2"]
+	state["detected_targets"] = [
+		{"id": "m3-1", "label": "Target 1", "type": "asteroid"},
+		{"id": "m3-2", "label": "Target 2", "type": "asteroid"},
+		{"id": "m3-3", "label": "Target 3", "type": "asteroid"},
+		{"id": "m3-4", "label": "Target 4", "type": "asteroid"},
+		{"id": "m3-5", "label": "Target 5", "type": "asteroid"},
+		{"id": "m3-6", "label": "Target 6", "type": "asteroid"}
+	]
+	RocketsManager.set_override_state(state)
+	var targets = RocketsManager.get_mission3_targets()
+	var reachable_count := 0
+	for target in targets:
+		var profile = RocketsManager.build_target_profile(str(target.get("id", "")), str(target.get("type", "asteroid")))
+		if int(profile.get("required_level", 99)) <= 2:
+			reachable_count += 1
+	RocketsManager.clear_override_state()
+	MissionLogManager.clear_path_overrides()
+	DirAccess.remove_absolute(mission_log_path)
+	if targets.size() != 5:
+		reporter.fail_test("Expected exactly 5 mission 3 targets, got %s" % str(targets.size()))
+		return
+	for target in targets:
+		if str(target.get("id", "")) == "m3-1":
+			reporter.fail_test("Expected targeted asteroid m3-1 to be filtered out")
+			return
+	if reachable_count != 1:
+		reporter.fail_test("Expected exactly one mission 3 target reachable by SR2, got %s" % str(reachable_count))
 		return
 	reporter.pass_test()
 

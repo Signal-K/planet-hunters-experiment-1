@@ -23,16 +23,19 @@ const PREDEFINED_MISSION_TARGETS := {
         "label": "Training Asteroid A",
         "type": "asteroid",
         "distance_au": 3.0,
-        "required_level": 1
+        "required_level": 1,
+        "reward_ratio": 1.2
     },
     2: {
         "id": "mission-2-upgrade-target",
         "label": "Training Asteroid B",
         "type": "asteroid",
         "distance_au": 12.0,
-        "required_level": 2
+        "required_level": 2,
+        "reward_ratio": 1.3
     }
 }
+const MISSION3_VISIBLE_TARGET_COUNT := 5
 static var _preview_target: Dictionary = {}
 static var _return_to_new_mission_panel: bool = false
 static var _preview_index: int = 0
@@ -207,6 +210,52 @@ static func get_predefined_mission_target(stage: int) -> Dictionary:
         return PREDEFINED_MISSION_TARGETS[stage].duplicate(true)
     return {}
 
+static func get_target_reward_ratio(target_id: String) -> float:
+    if target_id == "":
+        return 0.0
+    for stage in PREDEFINED_MISSION_TARGETS.keys():
+        var item = PREDEFINED_MISSION_TARGETS[stage]
+        if str(item.get("id", "")) != target_id:
+            continue
+        return max(float(item.get("reward_ratio", 0.0)), 0.0)
+    return 0.0
+
+static func get_targeted_target_ids() -> Dictionary:
+    var targeted := {}
+    var mission_log = preload("res://Scripts/Utils/MissionLogManager.gd")
+    if mission_log:
+        var rows = mission_log.get_missions()
+        for row in rows:
+            var tid = str(row.get("target_id", ""))
+            if tid != "":
+                targeted[tid] = true
+    var missions = get_missions()
+    for mission in missions:
+        var mission_target = str(mission.get("target", ""))
+        if mission_target != "":
+            targeted[mission_target] = true
+    return targeted
+
+static func get_mission3_targets(detected_targets: Array = []) -> Array:
+    var source = detected_targets
+    if source.is_empty():
+        source = get_detected_targets()
+    var targeted = get_targeted_target_ids()
+    var out := []
+    for target in source:
+        if typeof(target) != TYPE_DICTIONARY:
+            continue
+        var target_type = _normalize_target_type(str(target.get("type", "asteroid")))
+        if target_type != "asteroid":
+            continue
+        var target_id = str(target.get("id", ""))
+        if target_id == "" or targeted.has(target_id):
+            continue
+        out.append(target)
+        if out.size() >= MISSION3_VISIBLE_TARGET_COUNT:
+            break
+    return out
+
 static func debug_complete_mission_for_progression() -> bool:
     var mission_log = preload("res://Scripts/Utils/MissionLogManager.gd")
     if not mission_log:
@@ -275,6 +324,25 @@ static func build_target_profile(target_id: String, target_type: String = "aster
     var predefined = get_predefined_target_profile(target_id)
     if not predefined.is_empty():
         return predefined
+    if get_mission_stage() == 3 and _normalize_target_type(target_type) == "asteroid":
+        var mission3_targets = get_mission3_targets()
+        for i in range(mission3_targets.size()):
+            var item = mission3_targets[i]
+            if str(item.get("id", "")) != target_id:
+                continue
+            if i == 0:
+                return {
+                    "distance_au": 12.0,
+                    "distance_km": 12.0 * AU_IN_KM,
+                    "required_level": 2,
+                    "type": "asteroid"
+                }
+            return {
+                "distance_au": 34.0,
+                "distance_km": 34.0 * AU_IN_KM,
+                "required_level": 3,
+                "type": "asteroid"
+            }
     if target_id == "":
         return {
             "distance_au": 0.0,

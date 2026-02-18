@@ -28,7 +28,8 @@ func run_all_tests() -> void:
 	await test_state_persists_between_loads()
 	await test_sr2_mining_laser_extracts_more_per_cycle()
 	await test_sr2_cargo_capacity_multiplier_applies_to_yield()
-	await test_early_game_full_mine_plus_scrap_is_near_115_percent()
+	await test_mission1_full_mine_plus_scrap_is_near_120_percent()
+	await test_mission2_full_mine_plus_scrap_is_near_130_percent()
 	await test_sr1_rocket_specs_validation()
 	await test_sr2_rocket_specs_validation()
 	await test_sr2_speed_and_range_multipliers()
@@ -116,31 +117,19 @@ func test_sr2_cargo_capacity_multiplier_applies_to_yield() -> void:
 		return
 	reporter.pass_test()
 
-func test_early_game_full_mine_plus_scrap_is_near_115_percent() -> void:
-	reporter.start_test("Early-game full mine + scrap lands near 115% of SR1 cost")
-	_reset_inventory()
-	var target_id = "target-early-economy"
-	var yield_data = ResourceYield.get_yield_for_target(target_id, "asteroid", 1, 1.0)
-	var minerals: Dictionary = yield_data.get("minerals", {})
-	var capacity = float(yield_data.get("capacity", 0))
-	var state = {}
-	var guard = 0
-	while guard < 100:
-		state = MiningInventory.apply_mining(target_id, capacity, minerals, 1.0)
-		var remaining = float(state.get("remaining_mass", 0))
-		if remaining <= 0.0:
-			break
-		guard += 1
-	if state.is_empty():
-		reporter.fail_test("Expected mining state to be populated")
+func test_mission1_full_mine_plus_scrap_is_near_120_percent() -> void:
+	reporter.start_test("Mission 1 full mine + scrap lands near 120% of SR1 cost")
+	var ratio = _full_mine_plus_scrap_ratio("mission-1-training-target", "starterrocket1")
+	if ratio < 1.18 or ratio > 1.22:
+		reporter.fail_test("Expected Mission 1 ratio near 1.20, got %s" % str(ratio))
 		return
-	var collected: Dictionary = state.get("collected", {})
-	var orbit_sale = MineralPricing.total_value(collected, 0.8, {})
-	var rocket_cost = RocketSpecs.get_cost("starterrocket1")
-	var scrap_refund = int(round(float(rocket_cost) * RocketSpecs.get_salvage_refund_pct("starterrocket1")))
-	var ratio = float(orbit_sale + scrap_refund) / float(max(rocket_cost, 1))
-	if ratio < 1.12 or ratio > 1.18:
-		reporter.fail_test("Expected ratio near 1.15, got %s" % str(ratio))
+	reporter.pass_test()
+
+func test_mission2_full_mine_plus_scrap_is_near_130_percent() -> void:
+	reporter.start_test("Mission 2 full mine + scrap lands near 130% of SR2 cost")
+	var ratio = _full_mine_plus_scrap_ratio("mission-2-upgrade-target", "starterrocket2")
+	if ratio < 1.28 or ratio > 1.32:
+		reporter.fail_test("Expected Mission 2 ratio near 1.30, got %s" % str(ratio))
 		return
 	reporter.pass_test()
 
@@ -257,3 +246,26 @@ func _sum_collected(collected: Dictionary) -> int:
 	for value in collected.values():
 		total += int(value)
 	return total
+
+func _full_mine_plus_scrap_ratio(target_id: String, rocket_type: String) -> float:
+	_reset_inventory()
+	var cargo_multiplier = RocketSpecs.get_cargo_multiplier(rocket_type)
+	var mining_multiplier = RocketSpecs.get_mining_multiplier(rocket_type)
+	var yield_data = ResourceYield.get_yield_for_target(target_id, "asteroid", 1, cargo_multiplier)
+	var minerals: Dictionary = yield_data.get("minerals", {})
+	var capacity = float(yield_data.get("capacity", 0))
+	var state = {}
+	var guard = 0
+	while guard < 300:
+		state = MiningInventory.apply_mining(target_id, capacity, minerals, mining_multiplier)
+		var remaining = float(state.get("remaining_mass", 0))
+		if remaining <= 0.0:
+			break
+		guard += 1
+	if state.is_empty():
+		return 0.0
+	var collected: Dictionary = state.get("collected", {})
+	var orbit_sale = MineralPricing.total_value(collected, 0.8, {})
+	var rocket_cost = RocketSpecs.get_cost(rocket_type)
+	var scrap_refund = int(round(float(rocket_cost) * RocketSpecs.get_salvage_refund_pct(rocket_type)))
+	return float(orbit_sale + scrap_refund) / float(max(rocket_cost, 1))

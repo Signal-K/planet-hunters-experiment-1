@@ -7,6 +7,7 @@ const HINT_SELECT_TARGET := "Pick one target so your rocket knows where to fly."
 const HINT_PRESET_TARGET := "Mission target is pre-assigned for this early mission."
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
 const MAX_VISIBLE_TARGETS := 3
+const MAX_VISIBLE_TARGETS_MISSION3 := 5
 
 func setup(launchpad: Node) -> void:
 	_launchpad = launchpad
@@ -131,6 +132,8 @@ func populate_targets() -> void:
 		var predefined = rm.get_predefined_mission_target(mission_stage)
 		if not predefined.is_empty():
 			targets = [predefined]
+	elif mission_stage == 3:
+		targets = rm.get_mission3_targets()
 	else:
 		targets = rm.get_detected_targets()
 	print("Launchpad: _populate_targets -> detected targets count=", targets.size())
@@ -185,6 +188,12 @@ func populate_targets() -> void:
 		guidance.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		PanelStyle.apply_muted(guidance)
 		targets_section.add_child(guidance)
+	if mission_stage == 2 and awaiting_rocket_level < 2:
+		var mission2_hint = Label.new()
+		mission2_hint.text = "Mission 2 requires Starter Rocket 2 (L2)."
+		mission2_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		PanelStyle.apply_muted(mission2_hint)
+		targets_section.add_child(mission2_hint)
 
 	if targets.size() == 0:
 		var lbl = Label.new()
@@ -372,7 +381,7 @@ func _build_visible_targets(targets: Array, selected_target: String, mission_sta
 			return ordered
 
 	for t in targets:
-		if ordered.size() >= MAX_VISIBLE_TARGETS:
+		if ordered.size() >= _target_visibility_limit_for_stage(mission_stage):
 			break
 		var tid = str(t.get("id", ""))
 		if tid == "" or seen.has(tid):
@@ -384,7 +393,7 @@ func _build_visible_targets(targets: Array, selected_target: String, mission_sta
 			seen[tid] = true
 
 	for t in targets:
-		if ordered.size() >= MAX_VISIBLE_TARGETS:
+		if ordered.size() >= _target_visibility_limit_for_stage(mission_stage):
 			break
 		var tid = str(t.get("id", ""))
 		if tid == "" or seen.has(tid):
@@ -395,3 +404,8 @@ func _build_visible_targets(targets: Array, selected_target: String, mission_sta
 	if ordered.is_empty():
 		ordered.append(targets[0])
 	return ordered
+
+func _target_visibility_limit_for_stage(mission_stage: int) -> int:
+	if mission_stage == 3:
+		return MAX_VISIBLE_TARGETS_MISSION3
+	return MAX_VISIBLE_TARGETS
