@@ -11,6 +11,8 @@ const ACTION_RESOLVE_DEBRIEF := "resolve_mission_debrief"
 const HINT_RESOLVE_DEBRIEF := "Great. You completed debrief by choosing how to process the mission return."
 const ACTION_UNLOCK_MISSION_2 := "unlock_mission_2"
 const HINT_UNLOCK_MISSION_2 := "Mission 2 unlocked. Starter Rocket 2 is now available in Launchpad."
+const MISSION4_AFFINITY_GATE := 3
+const MISSION5_AFFINITY_GAIN := 2
 const WebEventBridge = preload("res://Scripts/Systems/WebEventBridge.gd")
 const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
 
@@ -133,6 +135,7 @@ func _update_labels() -> void:
 	subtitle_label.text = "Rocket %s returning from %s" % [rocket_id if rocket_id != "" else "", label]
 	var subcontractor_name = str(_subcontractor.get("name", "Subcontractor"))
 	status_label.text = "Estimated orbit sale (%s): %s F" % [subcontractor_name, str(_total_value)]
+	_apply_mission4_buyer_hint()
 	var app = _get_app_controller()
 	if app:
 		var balance = app.get_franc_balance()
@@ -162,22 +165,27 @@ func _sell(to_earth: bool) -> void:
 	var net = gross
 	if to_earth:
 		net = max(gross - SUBCONTRACTOR_FEE, 0)
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if rm:
+		net = int(rm.apply_mission5_payout_terms(net, str(_subcontractor.get("id", ""))))
 	var app = _get_app_controller()
 	if app:
 		app.add_franc_balance(net, "mission_sale")
 		app.add_experience(XP_AWARD_MISSION, "mission")
 	var sm = preload("res://Scripts/Utils/SubcontractorManager.gd")
 	if sm:
-		sm.add_affinity(str(_subcontractor.get("id", "")))
+		var affinity_gain = MISSION5_AFFINITY_GAIN if rm and int(rm.get_mission_stage()) >= 5 else 1
+		sm.add_affinity(str(_subcontractor.get("id", "")), affinity_gain)
 	_add_mission_log("sell_earth" if to_earth else "sell_orbit", net)
 	_sold = true
 	_closed_out = true
 	status_label.text = "Sale complete. Credited %s F." % str(net)
 	_clear_cargo()
 	_show_tutorial_hint_once(ACTION_RESOLVE_DEBRIEF, HINT_RESOLVE_DEBRIEF)
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	if rm:
 		rm.remove_orbiting_rocket(str(_returned.get("rocket_id", "")))
+		if int(rm.get_mission_stage()) >= 5:
+			rm.clear_mission5_contract_offer()
 	_lock_action_buttons()
 
 func _keep_cargo() -> void:
@@ -271,6 +279,8 @@ func _add_mission_log(action: String, payout: int) -> void:
 		"rocket_id": str(_returned.get("rocket_id", "")),
 		"target_id": str(_returned.get("target_id", "")),
 		"label": str(_returned.get("label", "")),
+		"subcontractor_id": str(_subcontractor.get("id", "")),
+		"subcontractor_name": str(_subcontractor.get("name", "")),
 		"action": action,
 		"payout": payout,
 		"cargo": _collected.duplicate(true),
@@ -305,11 +315,43 @@ func _select_subcontractor() -> void:
 	var level = 1
 	if app:
 		level = int(app.get_experience_level())
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	var sm = preload("res://Scripts/Utils/SubcontractorManager.gd")
-	if sm:
+	if sm and rm and int(rm.get_mission_stage()) >= 5:
+		var selected = rm.get_mission5_selected_contractor()
+		if not selected.is_empty():
+			var selected_id = str(selected.get("id", ""))
+			_subcontractor = sm.get_subcontractor(selected_id)
+			return
+	if sm and rm and int(rm.get_mission_stage()) >= 4:
+		_subcontractor = sm.get_subcontractor("spacex")
+	elif sm:
 		_subcontractor = sm.pick_subcontractor(level)
 	else:
 		_subcontractor = {}
+
+func _apply_mission4_buyer_hint() -> void:
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var sm = preload("res://Scripts/Utils/SubcontractorManager.gd")
+	if not rm or not sm:
+		return
+	if int(rm.get_mission_stage()) < 4:
+		return
+	var buyer_ids = ["spacex", "rocketlab", "astroforge"]
+	var buyer_labels := []
+	for idx in range(buyer_ids.size()):
+		var buyer_id = buyer_ids[idx]
+		var buyer = sm.get_subcontractor(buyer_id)
+		var buyer_name = str(buyer.get("name", buyer_id))
+		if idx == 0:
+			buyer_labels.append("%s (available)" % buyer_name)
+			continue
+		var affinity = int(sm.get_affinity(buyer_id))
+		if affinity >= MISSION4_AFFINITY_GATE:
+			buyer_labels.append("%s (available)" % buyer_name)
+		else:
+			buyer_labels.append("%s (locked %d/%d affinity)" % [buyer_name, affinity, MISSION4_AFFINITY_GATE])
+	status_label.text += "\nBuyers: %s" % ", ".join(buyer_labels)
 
 func _orbit_sale_value() -> int:
 	if _collected.is_empty():

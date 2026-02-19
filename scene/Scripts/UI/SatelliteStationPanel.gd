@@ -25,6 +25,8 @@ const SatelliteStationPanelData = preload("res://Scripts/UI/SatelliteStationPane
 const SatelliteStationPanelList = preload("res://Scripts/UI/SatelliteStationPanelList.gd")
 const SatelliteStationPanelDetail = preload("res://Scripts/UI/SatelliteStationPanelDetail.gd")
 const SatelliteStationPanelLoading = preload("res://Scripts/UI/SatelliteStationPanelLoading.gd")
+const Level2UnlockOverlayScene = preload("res://Scenes/UI/Templates/SatelliteLevel2UnlockOverlay.tscn")
+const UnlockItemScene = preload("res://Scenes/UI/Templates/MenuUnlockItem.tscn")
 
 var pending_anomalies := []
 var current_mode: String = "asteroids"  # Default mode
@@ -334,9 +336,12 @@ func _filter_mission3_untargeted_anomalies(anomalies: Array) -> Array:
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	if not rm:
 		return anomalies
-	if current_mode != "asteroids":
+	var mission_stage = int(rm.get_mission_stage())
+	if mission_stage == 3 and current_mode != "asteroids":
 		return anomalies
-	if int(rm.get_mission_stage()) != 3:
+	if mission_stage == 4 and current_mode != "planets":
+		return anomalies
+	if mission_stage != 3 and mission_stage != 4:
 		return anomalies
 	var targeted_ids = rm.get_targeted_target_ids()
 	var filtered := []
@@ -407,55 +412,38 @@ func _show_level2_unlock_overlay() -> void:
 	if _unlock_overlay and is_instance_valid(_unlock_overlay):
 		return
 
-	_unlock_overlay = ColorRect.new()
-	_unlock_overlay.name = "Level2UnlockOverlay"
-	_unlock_overlay.color = Color(0, 0, 0, 0.62)
-	_unlock_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
-	_unlock_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_unlock_overlay = Level2UnlockOverlayScene.instantiate()
 	add_child(_unlock_overlay)
 
-	var center = CenterContainer.new()
-	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_unlock_overlay.add_child(center)
-
-	var panel = PanelContainer.new()
-	panel.custom_minimum_size = Vector2(640, 0)
-	center.add_child(panel)
+	var panel: PanelContainer = _unlock_overlay.get_node("Center/Panel")
 	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
 	panel_style.apply_panel(panel)
 
-	var body = VBoxContainer.new()
-	body.add_theme_constant_override("separation", 10)
-	panel.add_child(body)
+	var body: VBoxContainer = _unlock_overlay.get_node("Center/Panel/Body")
 
-	var title = Label.new()
-	title.text = "Level 2 Reached: New Unlocks"
+	var title: Label = _unlock_overlay.get_node("Center/Panel/Body/Title")
 	panel_style.apply_title(title)
-	body.add_child(title)
 
-	var emphasis = Label.new()
-	emphasis.text = "Planet Discovery is now online."
+	var emphasis: Label = _unlock_overlay.get_node("Center/Panel/Body/Emphasis")
 	emphasis.add_theme_font_size_override("font_size", 30)
 	emphasis.add_theme_color_override("font_color", panel_style.ACCENT)
-	body.add_child(emphasis)
 
-	var subtitle = Label.new()
-	subtitle.text = "You can now scan entries from anomalySet: telescope-tess."
+	var subtitle: Label = _unlock_overlay.get_node("Center/Panel/Body/Subtitle")
 	panel_style.apply_muted(subtitle)
-	body.add_child(subtitle)
 
+	var unlock_list: VBoxContainer = _unlock_overlay.get_node("Center/Panel/Body/UnlockList")
+	for c in unlock_list.get_children():
+		c.queue_free()
 	var unlock_items = _get_unlocks_for_level(PLANET_UNLOCK_LEVEL)
 	for item_text in unlock_items:
-		var row = Label.new()
+		var row: Label = UnlockItemScene.instantiate()
 		row.text = "• %s" % item_text
 		panel_style.apply_body(row)
-		body.add_child(row)
+		unlock_list.add_child(row)
 
-	var cta = Button.new()
-	cta.text = "Start Planet Scan"
+	var cta: Button = _unlock_overlay.get_node("Center/Panel/Body/ConfirmButton")
 	panel_style.apply_button(cta, true)
 	cta.pressed.connect(_on_level2_overlay_confirmed)
-	body.add_child(cta)
 
 func _on_level2_overlay_confirmed() -> void:
 	_mark_level2_unlock_overlay_seen()

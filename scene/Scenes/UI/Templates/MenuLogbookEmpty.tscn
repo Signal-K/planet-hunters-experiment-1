@@ -1,0 +1,5 @@
+[gd_scene format=3]
+
+[node name="EmptyLabel" type="Label"]
+layout_mode = 2
+horizontal_alignment = 1

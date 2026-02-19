@@ -5,9 +5,15 @@ var _launchpad: Node
 const ACTION_SELECT_TARGET := "select_launch_target"
 const HINT_SELECT_TARGET := "Pick one target so your rocket knows where to fly."
 const HINT_PRESET_TARGET := "Mission target is pre-assigned for this early mission."
+const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
+const TargetCardScene = preload("res://Scenes/UI/Templates/LaunchpadTargetCard.tscn")
+const HeaderLabelScene = preload("res://Scenes/UI/Templates/MenuUnlockHeader.tscn")
+const EmptyLabelScene = preload("res://Scenes/UI/Templates/MenuLogbookEmpty.tscn")
 const MAX_VISIBLE_TARGETS := 3
 const MAX_VISIBLE_TARGETS_MISSION3 := 5
+const MAX_VISIBLE_TARGETS_MISSION4 := 5
+const MAX_VISIBLE_TARGETS_MISSION5 := 5
 
 func setup(launchpad: Node) -> void:
 	_launchpad = launchpad
@@ -134,6 +140,10 @@ func populate_targets() -> void:
 			targets = [predefined]
 	elif mission_stage == 3:
 		targets = rm.get_mission3_targets()
+	elif mission_stage == 4:
+		targets = rm.get_mission4_targets()
+	elif mission_stage == 5:
+		targets = rm.get_mission5_targets()
 	else:
 		targets = rm.get_detected_targets()
 	print("Launchpad: _populate_targets -> detected targets count=", targets.size())
@@ -156,26 +166,19 @@ func populate_targets() -> void:
 
 	var targets_section = vbox.get_node_or_null("TargetsSection")
 	if targets_section == null:
-		targets_section = VBoxContainer.new()
-		targets_section.name = "TargetsSection"
-		targets_section.add_theme_constant_override("separation", 8)
-		var idx_back = vbox.get_children().find(vbox.get_node_or_null("BackButton"))
-		if idx_back == -1:
-			vbox.add_child(targets_section)
-		else:
-			vbox.add_child(targets_section)
-			vbox.move_child(targets_section, idx_back)
+		push_error("Launchpad: TargetsSection node missing from selector panel")
+		return
 	for c in targets_section.get_children():
 		c.queue_free()
 
-	var targets_title = Label.new()
+	var targets_title: Label = HeaderLabelScene.instantiate()
 	targets_title.text = "Mission Target"
 	targets_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	PanelStyle.apply_muted(targets_title)
 	targets_title.add_theme_font_size_override("font_size", 16)
 	targets_section.add_child(targets_title)
 	if not has_awaiting_rocket:
-		var guidance = Label.new()
+		var guidance: Label = EmptyLabelScene.instantiate()
 		guidance.text = "Create a rocket first. Target selection unlocks after a rocket is on the launchpad."
 		guidance.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		PanelStyle.apply_muted(guidance)
@@ -183,20 +186,49 @@ func populate_targets() -> void:
 		return
 
 	if auto_selected_target != "":
-		var guidance = Label.new()
+		var guidance: Label = EmptyLabelScene.instantiate()
 		guidance.text = "Auto-selected target for Mission %d progression." % mission_stage
 		guidance.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		PanelStyle.apply_muted(guidance)
 		targets_section.add_child(guidance)
 	if mission_stage == 2 and awaiting_rocket_level < 2:
-		var mission2_hint = Label.new()
+		var mission2_hint: Label = EmptyLabelScene.instantiate()
 		mission2_hint.text = "Mission 2 requires Starter Rocket 2 (L2)."
 		mission2_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		PanelStyle.apply_muted(mission2_hint)
 		targets_section.add_child(mission2_hint)
+	if mission_stage == 4 and awaiting_rocket_level < 3:
+		var mission4_hint: Label = EmptyLabelScene.instantiate()
+		mission4_hint.text = "Mission 4 requires Starter Rocket 3 (L3) for planetary range."
+		mission4_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		PanelStyle.apply_muted(mission4_hint)
+		targets_section.add_child(mission4_hint)
+	var mission5_offer := {}
+	var mission5_selected_contractor := ""
+	var mission5_recommended_target_id := ""
+	if mission_stage == 5:
+		mission5_offer = rm.ensure_mission5_contract_offer(targets)
+		mission5_selected_contractor = str(mission5_offer.get("selected_contractor", ""))
+		mission5_recommended_target_id = str(mission5_offer.get("recommended_target_id", ""))
+		_render_mission5_contract_brief(targets_section, mission5_offer, mission5_selected_contractor)
+		if mission5_selected_contractor == "":
+			var mission5_pick_hint: Label = EmptyLabelScene.instantiate()
+			mission5_pick_hint.text = "Accept one contractor request before selecting a target."
+			mission5_pick_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+			PanelStyle.apply_muted(mission5_pick_hint)
+			targets_section.add_child(mission5_pick_hint)
+		if awaiting_rocket_id != "":
+			var payout_cap = int(mission5_offer.get("payout_cap", rm.get_mission5_payout_cap()))
+			var current_cost = RocketSpecs.get_cost(awaiting_rocket_id)
+			if current_cost > payout_cap:
+				var mission5_cost_warning: Label = EmptyLabelScene.instantiate()
+				mission5_cost_warning.text = "Warning: mission payout is capped at %s F. Current rocket costs %s F." % [_fmt_francs(payout_cap), _fmt_francs(current_cost)]
+				mission5_cost_warning.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+				PanelStyle.apply_muted(mission5_cost_warning)
+				targets_section.add_child(mission5_cost_warning)
 
 	if targets.size() == 0:
-		var lbl = Label.new()
+		var lbl: Label = EmptyLabelScene.instantiate()
 		lbl.text = "No detected targets available."
 		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		PanelStyle.apply_muted(lbl)
@@ -211,36 +243,27 @@ func populate_targets() -> void:
 		var required_level = int(profile.get("required_level", 1))
 		var distance_au = float(profile.get("distance_au", 0.0))
 		var blocked = awaiting_rocket_level > 0 and required_level > awaiting_rocket_level
-		var entry_panel = PanelContainer.new()
+		if mission_stage == 5 and mission5_selected_contractor == "":
+			blocked = true
+		var entry_panel: PanelContainer = TargetCardScene.instantiate()
 		entry_panel.add_theme_stylebox_override("panel", _target_card_style())
-		var entry = VBoxContainer.new()
-		entry.custom_minimum_size = Vector2(0, 72)
-		entry.add_theme_constant_override("separation", 6)
-		entry_panel.add_child(entry)
-		var header = HBoxContainer.new()
-		header.add_theme_constant_override("separation", 8)
-		entry.add_child(header)
-		var name_lbl = Label.new()
-		name_lbl.text = str(t.get("label", target_id))
-		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var name_lbl: Label = entry_panel.get_node("Entry/Header/NameLabel")
+		var is_recommended_target = mission_stage == 5 and mission5_recommended_target_id != "" and mission5_recommended_target_id == target_id
+		name_lbl.text = "%s (Recommended)" % str(t.get("label", target_id)) if is_recommended_target else str(t.get("label", target_id))
 		PanelStyle.apply_body(name_lbl)
 		name_lbl.add_theme_font_size_override("font_size", 16)
-		header.add_child(name_lbl)
-		var btn = Button.new()
-		btn.text = "Select"
+		var btn: Button = entry_panel.get_node("Entry/Header/SelectButton")
 		btn.focus_mode = Control.FOCUS_NONE
 		PanelStyle.apply_button(btn, false)
-		btn.custom_minimum_size = Vector2(120, 36)
 		if selected_target == target_id:
 			btn.text = "Target Selected"
 			btn.disabled = true
 		elif blocked:
-			btn.text = "Blocked"
+			btn.text = "Accept Contractor" if mission_stage == 5 and mission5_selected_contractor == "" else "Blocked"
 			btn.disabled = true
 		# bind id
 		btn.pressed.connect(Callable(self, "on_selector_target_pressed").bind(target_id, btn))
-		header.add_child(btn)
-		var details_lbl = Label.new()
+		var details_lbl: Label = entry_panel.get_node("Entry/DetailsLabel")
 		var details_text = "Distance: %.0f AU • Required: L%d" % [distance_au, required_level]
 		if awaiting_rocket_level > 0:
 			details_text += " • Current rocket: L%d" % awaiting_rocket_level
@@ -249,12 +272,11 @@ func populate_targets() -> void:
 		details_lbl.text = details_text
 		details_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		PanelStyle.apply_muted(details_lbl)
-		entry.add_child(details_lbl)
 		targets_section.add_child(entry_panel)
 
 	var hidden_count = max(targets.size() - visible_targets.size(), 0)
 	if hidden_count > 0:
-		var hidden_lbl = Label.new()
+		var hidden_lbl: Label = EmptyLabelScene.instantiate()
 		hidden_lbl.name = "HiddenTargetsNotice"
 		hidden_lbl.text = "%d additional targets hidden for clarity." % hidden_count
 		hidden_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
@@ -272,6 +294,85 @@ func on_selector_target_pressed(target_id: String, _btn: Button) -> void:
 		populate_targets()
 	else:
 		print("Launchpad: failed to persist target selection from selector", target_id)
+
+func _on_mission5_contractor_pressed(contractor_id: String) -> void:
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if not rm:
+		return
+	var ok = rm.select_mission5_contractor(contractor_id)
+	if ok:
+		populate_targets()
+
+func _render_mission5_contract_brief(targets_section: VBoxContainer, offer: Dictionary, selected_contractor: String) -> void:
+	if targets_section == null or offer.is_empty():
+		return
+	var heading: Label = HeaderLabelScene.instantiate()
+	heading.text = "Mission 5 Contract"
+	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	PanelStyle.apply_muted(heading)
+	heading.add_theme_font_size_override("font_size", 16)
+	targets_section.add_child(heading)
+
+	var requested: Dictionary = offer.get("requested_minerals", {})
+	var requested_text := []
+	for key in requested.keys():
+		requested_text.append("%s: %s kg" % [str(key), str(requested.get(key, 0))])
+	var requested_lbl: Label = EmptyLabelScene.instantiate()
+	requested_lbl.text = "Requested allotment: %s" % ", ".join(requested_text)
+	requested_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	PanelStyle.apply_muted(requested_lbl)
+	targets_section.add_child(requested_lbl)
+
+	var recommended_target_lbl: Label = EmptyLabelScene.instantiate()
+	recommended_target_lbl.text = "Recommended target: %s (asteroid)" % str(offer.get("recommended_target_label", offer.get("recommended_target_id", "")))
+	recommended_target_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	PanelStyle.apply_muted(recommended_target_lbl)
+	targets_section.add_child(recommended_target_lbl)
+
+	var recommended_rocket_lbl: Label = EmptyLabelScene.instantiate()
+	recommended_rocket_lbl.text = "Recommended rocket: Starter Rocket 1 (L1 mining is sufficient)."
+	recommended_rocket_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	PanelStyle.apply_muted(recommended_rocket_lbl)
+	targets_section.add_child(recommended_rocket_lbl)
+
+	var options: Array = offer.get("contractors", [])
+	for entry_any in options:
+		if typeof(entry_any) != TYPE_DICTIONARY:
+			continue
+		var entry: Dictionary = entry_any
+		var row: HBoxContainer = HBoxContainer.new()
+		row.add_theme_constant_override("separation", 8)
+		var label: Label = EmptyLabelScene.instantiate()
+		var contractor_id = str(entry.get("id", ""))
+		var effect = str(entry.get("effect", ""))
+		var effect_text = "15% ship discount" if effect == "build_discount" else "15% mineral payout bonus"
+		label.text = "%s - %s" % [str(entry.get("name", contractor_id)), effect_text]
+		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		PanelStyle.apply_muted(label)
+		row.add_child(label)
+		var btn: Button = Button.new()
+		var is_selected = selected_contractor == contractor_id and contractor_id != ""
+		btn.text = "Accepted" if is_selected else "Accept"
+		btn.disabled = is_selected
+		PanelStyle.apply_button(btn, false)
+		btn.pressed.connect(Callable(self, "_on_mission5_contractor_pressed").bind(contractor_id))
+		row.add_child(btn)
+		targets_section.add_child(row)
+
+	var cap_lbl: Label = EmptyLabelScene.instantiate()
+	cap_lbl.text = "Mission payout cap: %s F" % _fmt_francs(int(offer.get("payout_cap", 1400000000)))
+	cap_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	PanelStyle.apply_muted(cap_lbl)
+	targets_section.add_child(cap_lbl)
+
+func _fmt_francs(value: int) -> String:
+	var abs_value = abs(value)
+	if abs_value >= 1000000000:
+		return "%.1fB" % (float(value) / 1000000000.0)
+	if abs_value >= 1000000:
+		return "%.1fM" % (float(value) / 1000000.0)
+	return str(value)
 
 func _on_debug_skip_mission_pressed() -> void:
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
@@ -408,4 +509,8 @@ func _build_visible_targets(targets: Array, selected_target: String, mission_sta
 func _target_visibility_limit_for_stage(mission_stage: int) -> int:
 	if mission_stage == 3:
 		return MAX_VISIBLE_TARGETS_MISSION3
+	if mission_stage == 4:
+		return MAX_VISIBLE_TARGETS_MISSION4
+	if mission_stage == 5:
+		return MAX_VISIBLE_TARGETS_MISSION5
 	return MAX_VISIBLE_TARGETS

@@ -22,7 +22,8 @@ static func spawn(launchpad_node: Node, rocket_id: String) -> bool:
 
     var mapping = {
         "starterrocket1": "res://Scenes/Vehicles/StarterRocket1.tscn",
-        "starterrocket2": "res://Scenes/Vehicles/StarterRocket2.tscn"
+        "starterrocket2": "res://Scenes/Vehicles/StarterRocket2.tscn",
+        "starterrocket3": "res://Scenes/Vehicles/StarterRocket3.tscn"
     }
     var path = mapping.get(rocket_id, "")
     if path == "":

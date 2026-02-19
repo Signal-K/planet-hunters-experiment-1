@@ -2,6 +2,11 @@ extends Control
 
 signal panel_closed
 
+const OrbitingRowScene = preload("res://Scenes/UI/Templates/ControlStationOrbitingRow.tscn")
+const MissionHighlightCardScene = preload("res://Scenes/UI/Templates/ControlStationMissionHighlightCard.tscn")
+const RoadmapCardScene = preload("res://Scenes/UI/Templates/ControlStationRoadmapCard.tscn")
+const EmptyLabelScene = preload("res://Scenes/UI/Templates/MenuLogbookEmpty.tscn")
+
 const ROADMAP_MISSIONS := [
 	{
 		"id": 1,
@@ -24,8 +29,8 @@ const ROADMAP_MISSIONS := [
 	{
 		"id": 4,
 		"title": "Mission 4",
-		"summary": "Expand into planetary targets.",
-		"note": "Progression unlocks broader object classes."
+		"summary": "Acquire L3 rocket and mine nearby exoplanets.",
+		"note": "Planet scans, 3 buyer roster, and affinity-gated buyers come online."
 	},
 	{
 		"id": 5,
@@ -104,51 +109,45 @@ func _populate_orbiting_list() -> void:
 			})
 
 	if launchpad_rockets.is_empty() and in_flight.is_empty():
-		var empty = Label.new()
+		var empty: Label = EmptyLabelScene.instantiate()
 		empty.text = "No rockets on launchpad or in flight."
 		panel_style.apply_muted(empty)
 		list.add_child(empty)
 		return
 
 	if not launchpad_rockets.is_empty():
-		var lp_header = Label.new()
+		var lp_header: Label = EmptyLabelScene.instantiate()
 		lp_header.text = "On Launchpad"
+		lp_header.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		panel_style.apply_body(lp_header)
 		list.add_child(lp_header)
 		for entry in launchpad_rockets:
-			var row = HBoxContainer.new()
-			row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			var row: HBoxContainer = OrbitingRowScene.instantiate()
 			var rocket_id = str(entry.get("id", ""))
-			var name_lbl = Label.new()
+			var name_lbl: Label = row.get_node("NameLabel")
 			name_lbl.text = "Rocket %s" % rocket_id
-			name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			panel_style.apply_body(name_lbl)
-			var status_lbl = Label.new()
+			var status_lbl: Label = row.get_node("ValueLabel")
 			status_lbl.text = "Awaiting launch"
 			panel_style.apply_muted(status_lbl)
-			row.add_child(name_lbl)
-			row.add_child(status_lbl)
 			list.add_child(row)
 
 	if not in_flight.is_empty():
-		var flight_header = Label.new()
+		var flight_header: Label = EmptyLabelScene.instantiate()
 		flight_header.text = "In Flight"
+		flight_header.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		panel_style.apply_body(flight_header)
 		list.add_child(flight_header)
 		for entry in in_flight:
-			var row = HBoxContainer.new()
-			row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			var row: HBoxContainer = OrbitingRowScene.instantiate()
 			var rocket_id = str(entry.get("rocket_id", ""))
 			var target_label = str(entry.get("target_label", "Unknown target"))
-			var name_lbl = Label.new()
+			var name_lbl: Label = row.get_node("NameLabel")
 			name_lbl.text = "Rocket %s" % rocket_id
-			name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			panel_style.apply_body(name_lbl)
-			var target_lbl = Label.new()
+			var target_lbl: Label = row.get_node("ValueLabel")
 			target_lbl.text = "To %s" % target_label
 			panel_style.apply_muted(target_lbl)
-			row.add_child(name_lbl)
-			row.add_child(target_lbl)
 			list.add_child(row)
 
 func _populate_mission_roadmap() -> void:
@@ -158,57 +157,42 @@ func _populate_mission_roadmap() -> void:
 
 	var next_header = content.get_node_or_null("NextMissionHeader")
 	if next_header == null:
-		next_header = Label.new()
-		next_header.name = "NextMissionHeader"
-		next_header.text = "Next Mission"
-		content.add_child(next_header)
-		content.move_child(next_header, 1)
+		push_error("ControlStationPanel: missing NextMissionHeader")
+		return
 	panel_style.apply_title(next_header)
 
 	var next_card = content.get_node_or_null("NextMissionCard")
 	if next_card == null:
-		next_card = PanelContainer.new()
-		next_card.name = "NextMissionCard"
-		content.add_child(next_card)
-		content.move_child(next_card, 2)
+		push_error("ControlStationPanel: missing NextMissionCard")
+		return
 	for c in next_card.get_children():
 		c.queue_free()
 	next_card.add_theme_stylebox_override("panel", _roadmap_card_style(str(next_data.get("status", "current"))))
-	var next_body = VBoxContainer.new()
-	next_body.add_theme_constant_override("separation", 4)
+	var next_body: VBoxContainer = MissionHighlightCardScene.instantiate().get_node("Body")
 	next_card.add_child(next_body)
-	var next_title = Label.new()
+	var next_title: Label = next_body.get_node("TitleLabel")
 	next_title.text = str(next_data.get("title", "Mission"))
 	panel_style.apply_body(next_title)
 	next_title.add_theme_font_size_override("font_size", 18)
-	next_body.add_child(next_title)
-	var next_summary = Label.new()
+	var next_summary: Label = next_body.get_node("SummaryLabel")
 	next_summary.text = str(next_data.get("summary", ""))
 	panel_style.apply_muted(next_summary)
 	next_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	next_body.add_child(next_summary)
-	var next_note = Label.new()
+	var next_note: Label = next_body.get_node("NoteLabel")
 	next_note.text = str(next_data.get("note", ""))
 	panel_style.apply_muted(next_note)
 	next_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	next_body.add_child(next_note)
 
 	var roadmap_header = content.get_node_or_null("MissionRoadmapHeader")
 	if roadmap_header == null:
-		roadmap_header = Label.new()
-		roadmap_header.name = "MissionRoadmapHeader"
-		roadmap_header.text = "Mission Roadmap"
-		content.add_child(roadmap_header)
-		content.move_child(roadmap_header, 3)
+		push_error("ControlStationPanel: missing MissionRoadmapHeader")
+		return
 	panel_style.apply_title(roadmap_header)
 
 	var roadmap_list = content.get_node_or_null("MissionRoadmapList")
 	if roadmap_list == null:
-		roadmap_list = VBoxContainer.new()
-		roadmap_list.name = "MissionRoadmapList"
-		roadmap_list.add_theme_constant_override("separation", 8)
-		content.add_child(roadmap_list)
-		content.move_child(roadmap_list, 4)
+		push_error("ControlStationPanel: missing MissionRoadmapList")
+		return
 	for child in roadmap_list.get_children():
 		child.queue_free()
 
@@ -261,46 +245,37 @@ func build_mission_roadmap() -> Array:
 func _build_roadmap_row(item: Dictionary) -> PanelContainer:
 	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
 	var status = str(item.get("status", "upcoming"))
-	var card = PanelContainer.new()
+	var card: PanelContainer = RoadmapCardScene.instantiate()
 	card.add_theme_stylebox_override("panel", _roadmap_card_style(status))
-	var body = VBoxContainer.new()
-	body.add_theme_constant_override("separation", 4)
-	card.add_child(body)
-
-	var top_row = HBoxContainer.new()
-	var title = Label.new()
+	var body: VBoxContainer = card.get_node("Body")
+	var top_row: HBoxContainer = card.get_node("Body/TopRow")
+	var title: Label = card.get_node("Body/TopRow/TitleLabel")
 	title.text = "%s" % str(item.get("title", "Mission"))
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	panel_style.apply_body(title)
 	title.add_theme_font_size_override("font_size", 16)
-	var badge: Control = Label.new()
+	var status_label: Label = card.get_node("Body/TopRow/StatusLabel")
+	var start_btn: Button = card.get_node("Body/TopRow/StartButton")
 	if status == "current":
-		var start_btn = Button.new()
-		start_btn.text = "Start"
-		start_btn.custom_minimum_size = Vector2(110, 34)
+		start_btn.visible = true
+		status_label.visible = false
 		panel_style.apply_button(start_btn, true)
 		start_btn.pressed.connect(Callable(self, "_on_start_mission_pressed").bind(int(item.get("id", 0))))
-		badge = start_btn
 	else:
-		var badge_lbl = Label.new()
-		badge_lbl.text = _status_label(status)
-		panel_style.apply_muted(badge_lbl)
-		badge = badge_lbl
-	top_row.add_child(title)
-	top_row.add_child(badge)
-	body.add_child(top_row)
+		start_btn.visible = false
+		status_label.visible = true
+		status_label.text = _status_label(status)
+		panel_style.apply_muted(status_label)
 
-	var summary = Label.new()
+	var summary: Label = card.get_node("Body/SummaryLabel")
 	summary.text = str(item.get("summary", ""))
 	panel_style.apply_muted(summary)
 	summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	body.add_child(summary)
 
-	var note = Label.new()
+	var note: Label = card.get_node("Body/NoteLabel")
 	note.text = str(item.get("note", ""))
 	panel_style.apply_muted(note)
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	body.add_child(note)
 
 	return card
 

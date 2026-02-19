@@ -11,6 +11,7 @@ const LaunchpadSelectorPanelScript = preload("res://Scripts/Earth/LaunchpadSelec
 const LaunchpadLaunchButtonScript = preload("res://Scripts/Earth/LaunchpadLaunchButton.gd")
 const ControlStationPanelScript = preload("res://Scripts/UI/ControlStationPanel.gd")
 const MissionLogManager = preload("res://Scripts/Utils/MissionLogManager.gd")
+const JSONFileManager = preload("res://Scripts/Utils/JSONFileManager.gd")
 
 var reporter := TestReporter.new()
 
@@ -30,10 +31,12 @@ func _init():
 		quit(0)
 
 func run_all_tests() -> void:
+	await test_flow_index_has_defined_behaviour_groups()
 	await test_xp_accumulates()
 	await test_level_up_threshold()
 	await test_multi_level_up()
 	await test_unlocks_at_level_two()
+	await test_unlocks_at_level_three()
 	await test_award_helpers()
 	await test_outbound_progress_from_mission_times()
 	await test_sr2_outbound_progress_uses_faster_duration()
@@ -45,6 +48,7 @@ func run_all_tests() -> void:
 	await test_return_home_persists_return_start_time()
 	await test_preview_routing_for_return_states()
 	await test_mark_mission_completed_unlocks_rocket2()
+	await test_mark_mission_completed_unlocks_rocket3()
 	await test_debug_skip_mission_advances_progression()
 	await test_starting_mission_does_not_increment_completed_progression()
 	await test_rocket_selector_ui_has_no_scroll_container()
@@ -62,6 +66,12 @@ func run_all_tests() -> void:
 	await test_launchpad_uses_predefined_targets_for_first_two_missions()
 	await test_predefined_mission_reward_ratios()
 	await test_mission3_targets_filter_and_single_sr2_reachable()
+	await test_mission4_targets_filter_and_single_sr3_reachable()
+	await test_mission5_contract_offer_and_selection()
+	await test_mission5_contract_purchase_and_payout_rules()
+	await test_mission_progression_stage_order()
+	await test_editor_progress_persists_across_reload()
+	await test_editor_active_mission_state_persists_across_reload()
 	await test_outbound_transit_distance_label_decreases()
 	await test_return_transit_distance_label_decreases()
 	await test_tutorial_panel_hidden_in_transit_scene()
@@ -73,6 +83,26 @@ func _new_controller() -> Node:
 	app.experience_xp = 0
 	app.experience_level = 1
 	return app
+
+func test_flow_index_has_defined_behaviour_groups() -> void:
+	reporter.start_test("Flow index covers defined behaviour groups")
+	var flows = _defined_flows()
+	var required = [
+		"mission order",
+		"mission tutorials",
+		"supabase fetch",
+		"supabase interact",
+		"scene transitions",
+		"unlock progression",
+		"xp progression",
+		"editor persistence",
+		"bundle smoke"
+	]
+	for label in required:
+		if not flows.has(label):
+			reporter.fail_test("Missing flow label: %s" % label)
+			return
+	reporter.pass_test()
 
 func test_xp_accumulates() -> void:
 	reporter.start_test("XP accumulates without leveling")
@@ -136,6 +166,31 @@ func test_unlocks_at_level_two() -> void:
 	var unlocked = RocketsManager.get_unlocked()
 	if not unlocked.has("starterrocket2"):
 		reporter.fail_test("starterrocket2 not unlocked at level 2")
+		RocketsManager.clear_override_state()
+		return
+	RocketsManager.clear_override_state()
+	reporter.pass_test()
+
+func test_unlocks_at_level_three() -> void:
+	reporter.start_test("Unlocks starterrocket3 at level 3")
+	var clean_state = {
+		"unlocked": ["starterrocket1"],
+		"placed": [],
+		"launched": [],
+		"destroyed": [],
+		"missions": [],
+		"selected_target": "",
+		"detected_targets": [],
+		"seen_asteroids": [],
+		"seen_planets": [],
+		"status_changed_at": {}
+	}
+	RocketsManager.set_override_state(clean_state)
+	var app = _new_controller()
+	app.set_experience_from_react(0, 3)
+	var unlocked = RocketsManager.get_unlocked()
+	if not unlocked.has("starterrocket3"):
+		reporter.fail_test("starterrocket3 not unlocked at level 3")
 		RocketsManager.clear_override_state()
 		return
 	RocketsManager.clear_override_state()
@@ -442,6 +497,44 @@ func test_mark_mission_completed_unlocks_rocket2() -> void:
 		return
 	if completed != 1:
 		reporter.fail_test("Expected completed mission count 1 after first completion, got %s" % str(completed))
+		return
+	reporter.pass_test()
+
+func test_mark_mission_completed_unlocks_rocket3() -> void:
+	reporter.start_test("Mission progression unlocks starterrocket3 after third completion")
+	var state = {
+		"unlocked": ["starterrocket1", "starterrocket2"],
+		"placed": [],
+		"launched": [],
+		"destroyed": [],
+		"missions": [],
+		"selected_target": "",
+		"detected_targets": [],
+		"seen_asteroids": [],
+		"seen_planets": [],
+		"returning": [],
+		"arrived": {},
+		"returned_mission": {},
+		"returning_started": {},
+		"status_changed_at": {},
+		"scan_counts": {},
+		"mission_progress_completed": 2,
+		"completed_mission_badges": ["mission-1", "mission-2"],
+		"mission_progress_schema_version": 2
+	}
+	RocketsManager.set_override_state(state)
+	var ok = RocketsManager.mark_mission_completed("mission-3")
+	var unlocked = RocketsManager.get_unlocked()
+	var completed = RocketsManager.get_completed_mission_count()
+	RocketsManager.clear_override_state()
+	if not ok:
+		reporter.fail_test("Expected mark_mission_completed to return true for mission-3")
+		return
+	if not unlocked.has("starterrocket3"):
+		reporter.fail_test("Expected starterrocket3 unlocked after third completion")
+		return
+	if completed != 3:
+		reporter.fail_test("Expected completed mission count 3 after third completion, got %s" % str(completed))
 		return
 	reporter.pass_test()
 
@@ -791,6 +884,7 @@ func test_asteroid_preview_readout_panels_are_buttons() -> void:
 
 func test_early_mission_return_home_locked_until_fully_mined() -> void:
 	reporter.start_test("Early mission keeps Return Home disabled until target is fully mined")
+	DirAccess.remove_absolute("user://mining_inventory.json")
 	var state = {
 		"unlocked": ["starterrocket1"],
 		"placed": [],
@@ -1021,16 +1115,21 @@ func test_launchpad_uses_predefined_targets_for_first_two_missions() -> void:
 	reporter.pass_test()
 
 func test_predefined_mission_reward_ratios() -> void:
-	reporter.start_test("Predefined mission reward ratios are configured for M1/M2")
+	reporter.start_test("Predefined mission reward ratios are configured for M1/M2/M4")
 	var mission1 = RocketsManager.get_predefined_mission_target(1)
 	var mission2 = RocketsManager.get_predefined_mission_target(2)
+	var mission4 = RocketsManager.get_predefined_mission_target(4)
 	var ratio1 = RocketsManager.get_target_reward_ratio(str(mission1.get("id", "")))
 	var ratio2 = RocketsManager.get_target_reward_ratio(str(mission2.get("id", "")))
+	var ratio4 = RocketsManager.get_target_reward_ratio(str(mission4.get("id", "")))
 	if abs(ratio1 - 1.2) > 0.001:
 		reporter.fail_test("Expected mission 1 reward ratio 1.2, got %s" % str(ratio1))
 		return
 	if abs(ratio2 - 1.3) > 0.001:
 		reporter.fail_test("Expected mission 2 reward ratio 1.3, got %s" % str(ratio2))
+		return
+	if abs(ratio4 - 1.4) > 0.001:
+		reporter.fail_test("Expected mission 4 reward ratio 1.4, got %s" % str(ratio4))
 		return
 	reporter.pass_test()
 
@@ -1077,6 +1176,257 @@ func test_mission3_targets_filter_and_single_sr2_reachable() -> void:
 		return
 	reporter.pass_test()
 
+func test_mission4_targets_filter_and_single_sr3_reachable() -> void:
+	reporter.start_test("Mission 4 targets exclude already-targeted planets and keep one SR3-reachable")
+	var mission_log_path = "user://mission_logs_test_mission4_targets.json"
+	DirAccess.remove_absolute(mission_log_path)
+	MissionLogManager.set_path_overrides(mission_log_path, mission_log_path)
+	MissionLogManager.save_state({
+		"missions": [
+			{"target_id": "m4-1", "badge": "mission4-test-badge-1", "action": "scrap", "timestamp": "2026-01-01T00:00:00"}
+		]
+	})
+	var state = RocketsManager.load_state()
+	state["mission_progress_completed"] = 3
+	state["completed_mission_badges"] = ["mission-1", "mission-2", "mission-3"]
+	state["detected_targets"] = [
+		{"id": "m4-1", "label": "Planet 1", "type": "planet"},
+		{"id": "m4-2", "label": "Planet 2", "type": "planet"},
+		{"id": "m4-3", "label": "Planet 3", "type": "planet"},
+		{"id": "m4-4", "label": "Planet 4", "type": "planet"},
+		{"id": "m4-5", "label": "Planet 5", "type": "planet"},
+		{"id": "m4-6", "label": "Planet 6", "type": "planet"}
+	]
+	RocketsManager.set_override_state(state)
+	var targets = RocketsManager.get_mission4_targets()
+	var reachable_count := 0
+	for target in targets:
+		var profile = RocketsManager.build_target_profile(str(target.get("id", "")), str(target.get("type", "planet")))
+		if int(profile.get("required_level", 99)) <= 3:
+			reachable_count += 1
+	RocketsManager.clear_override_state()
+	MissionLogManager.clear_path_overrides()
+	DirAccess.remove_absolute(mission_log_path)
+	if targets.size() != 5:
+		reporter.fail_test("Expected exactly 5 mission 4 targets, got %s" % str(targets.size()))
+		return
+	for target in targets:
+		if str(target.get("id", "")) == "m4-1":
+			reporter.fail_test("Expected targeted planet m4-1 to be filtered out")
+			return
+	if reachable_count != 1:
+		reporter.fail_test("Expected exactly one mission 4 target reachable by SR3, got %s" % str(reachable_count))
+		return
+	reporter.pass_test()
+
+func test_mission5_contract_offer_and_selection() -> void:
+	reporter.start_test("Mission 5 contract offer is asteroid-focused and selectable")
+	var state = RocketsManager.load_state()
+	state["mission_progress_completed"] = 4
+	state["completed_mission_badges"] = ["mission-1", "mission-2", "mission-3", "mission-4"]
+	state["mission5_contract_offer"] = {}
+	state["detected_targets"] = [
+		{"id": "m5-a1", "label": "M5 Asteroid 1", "type": "asteroid"},
+		{"id": "m5-a2", "label": "M5 Asteroid 2", "type": "asteroid"},
+		{"id": "m5-p1", "label": "M5 Planet 1", "type": "planet"}
+	]
+	RocketsManager.set_override_state(state)
+	var offer = RocketsManager.ensure_mission5_contract_offer()
+	var targets = RocketsManager.get_mission5_targets()
+	var recommended_id = str(offer.get("recommended_target_id", ""))
+	var select_ok = RocketsManager.select_mission5_contractor("rocketlab")
+	var selected = RocketsManager.get_mission5_selected_contractor()
+	RocketsManager.clear_override_state()
+	if offer.is_empty():
+		reporter.fail_test("Expected mission 5 contract offer to be created")
+		return
+	if recommended_id == "":
+		reporter.fail_test("Expected mission 5 contract offer to include recommended target")
+		return
+	if targets.is_empty():
+		reporter.fail_test("Expected mission 5 target list to be non-empty")
+		return
+	for target in targets:
+		if str(target.get("type", "")) != "asteroid":
+			reporter.fail_test("Expected mission 5 targets to be asteroids only")
+			return
+	if not select_ok:
+		reporter.fail_test("Expected selecting mission 5 contractor to succeed")
+		return
+	if str(selected.get("id", "")) != "rocketlab":
+		reporter.fail_test("Expected selected mission 5 contractor to be rocketlab")
+		return
+	reporter.pass_test()
+
+func test_mission5_contract_purchase_and_payout_rules() -> void:
+	reporter.start_test("Mission 5 contract applies discount/bonus with payout cap")
+	var state = RocketsManager.load_state()
+	state["mission_progress_completed"] = 4
+	state["completed_mission_badges"] = ["mission-1", "mission-2", "mission-3", "mission-4"]
+	state["mission5_contract_offer"] = {
+		"contractors": RocketsManager.get_mission5_contractors(),
+		"selected_contractor": "rocketlab",
+		"recommended_target_id": "m5-a1",
+		"recommended_target_label": "M5 Asteroid 1",
+		"recommended_rocket": "starterrocket1",
+		"payout_cap": RocketsManager.get_mission5_payout_cap(),
+		"requested_minerals": {"Iron": 100, "Nickel": 80}
+	}
+	RocketsManager.set_override_state(state)
+	var discounted_cost = RocketsManager.get_mission5_purchase_cost("starterrocket2")
+	var capped_plain = RocketsManager.apply_mission5_payout_terms(1600000000, "rocketlab")
+	var capped_bonus = RocketsManager.apply_mission5_payout_terms(1300000000, "astroforge")
+	RocketsManager.clear_override_state()
+	if discounted_cost != 1040000000:
+		reporter.fail_test("Expected SR2 discounted cost 1.04B, got %s" % str(discounted_cost))
+		return
+	if capped_plain != 1400000000:
+		reporter.fail_test("Expected payout cap 1.4B for plain contractor, got %s" % str(capped_plain))
+		return
+	if capped_bonus != 1400000000:
+		reporter.fail_test("Expected payout bonus then cap to 1.4B, got %s" % str(capped_bonus))
+		return
+	reporter.pass_test()
+
+func test_mission_progression_stage_order() -> void:
+	reporter.start_test("Mission stage follows ordered mission completion")
+	var backup = _snapshot_user_rockets_state()
+	var baseline = {
+		"unlocked": ["starterrocket1"],
+		"placed": [],
+		"launched": [],
+		"destroyed": [],
+		"missions": [],
+		"selected_target": "",
+		"detected_targets": [],
+		"seen_asteroids": [],
+		"seen_planets": [],
+		"scan_counts": {},
+		"returning": [],
+		"arrived": {},
+		"returned_mission": {},
+		"returning_started": {},
+		"preview_target": {},
+		"status_changed_at": {},
+		"mission_progress_completed": 0,
+		"completed_mission_badges": [],
+		"mission_progress_schema_version": 2,
+		"pending_mission_guidance_id": 0,
+		"scanner_station_built": false,
+		"scanner_unlock_dialog_seen": false
+	}
+	RocketsManager.clear_override_state()
+	RocketsManager.save_state(baseline)
+	var before_stage = RocketsManager.get_mission_stage()
+	RocketsManager.mark_mission_completed("mission-1")
+	var after_one = RocketsManager.get_mission_stage()
+	RocketsManager.mark_mission_completed("mission-2")
+	var after_two = RocketsManager.get_mission_stage()
+	RocketsManager.mark_mission_completed("mission-3")
+	var after_three = RocketsManager.get_mission_stage()
+	_restore_user_rockets_state(backup)
+	if before_stage != 1:
+		reporter.fail_test("Expected starting stage 1, got %s" % str(before_stage))
+		return
+	if after_one != 2:
+		reporter.fail_test("Expected stage 2 after mission 1 completion, got %s" % str(after_one))
+		return
+	if after_two != 3:
+		reporter.fail_test("Expected stage 3 after mission 2 completion, got %s" % str(after_two))
+		return
+	if after_three != 4:
+		reporter.fail_test("Expected stage 4 after mission 3 completion, got %s" % str(after_three))
+		return
+	reporter.pass_test()
+
+func test_editor_progress_persists_across_reload() -> void:
+	reporter.start_test("Editor mission progress persists across reload")
+	var backup = _snapshot_user_rockets_state()
+	var baseline = {
+		"unlocked": ["starterrocket1"],
+		"placed": [],
+		"launched": [],
+		"destroyed": [],
+		"missions": [],
+		"selected_target": "",
+		"detected_targets": [],
+		"seen_asteroids": [],
+		"seen_planets": [],
+		"scan_counts": {},
+		"returning": [],
+		"arrived": {},
+		"returned_mission": {},
+		"returning_started": {},
+		"preview_target": {},
+		"status_changed_at": {},
+		"mission_progress_completed": 0,
+		"completed_mission_badges": [],
+		"mission_progress_schema_version": 2,
+		"pending_mission_guidance_id": 0,
+		"scanner_station_built": false,
+		"scanner_unlock_dialog_seen": false
+	}
+	RocketsManager.clear_override_state()
+	RocketsManager.save_state(baseline)
+	RocketsManager.mark_mission_completed("mission-1")
+	var loaded = RocketsManager.load_state()
+	_restore_user_rockets_state(backup)
+	var completed = int(loaded.get("mission_progress_completed", 0))
+	var badges = loaded.get("completed_mission_badges", [])
+	if completed != 1:
+		reporter.fail_test("Expected mission_progress_completed=1 after reload, got %s" % str(completed))
+		return
+	if typeof(badges) != TYPE_ARRAY or not badges.has("mission-1"):
+		reporter.fail_test("Expected completed_mission_badges to include mission-1 after reload")
+		return
+	reporter.pass_test()
+
+func test_editor_active_mission_state_persists_across_reload() -> void:
+	reporter.start_test("Editor mission launch state persists across reload")
+	var backup = _snapshot_user_rockets_state()
+	var baseline = {
+		"unlocked": ["starterrocket1"],
+		"placed": [],
+		"launched": [],
+		"destroyed": [],
+		"missions": [],
+		"selected_target": "",
+		"detected_targets": [],
+		"seen_asteroids": [],
+		"seen_planets": [],
+		"scan_counts": {},
+		"returning": [],
+		"arrived": {},
+		"returned_mission": {},
+		"returning_started": {},
+		"preview_target": {},
+		"status_changed_at": {},
+		"mission_progress_completed": 0,
+		"completed_mission_badges": [],
+		"mission_progress_schema_version": 2,
+		"pending_mission_guidance_id": 0,
+		"scanner_station_built": false,
+		"scanner_unlock_dialog_seen": false
+	}
+	RocketsManager.clear_override_state()
+	RocketsManager.save_state(baseline)
+	RocketsManager.select_target("persist-target-1")
+	var mission_ok = RocketsManager.add_mission("starterrocket1-persist-1", "persist-target-1", int(Time.get_unix_time_from_system()), 60)
+	var loaded = RocketsManager.load_state()
+	_restore_user_rockets_state(backup)
+	var selected = str(loaded.get("selected_target", ""))
+	var missions = loaded.get("missions", [])
+	if not mission_ok:
+		reporter.fail_test("Expected add_mission to succeed for persistence check")
+		return
+	if selected != "persist-target-1":
+		reporter.fail_test("Expected selected_target to persist, got %s" % selected)
+		return
+	if typeof(missions) != TYPE_ARRAY or missions.is_empty():
+		reporter.fail_test("Expected persisted missions array to contain launched mission")
+		return
+	reporter.pass_test()
+
 func _extract_distance_km(label_text: String, prefix: String) -> int:
 	if not label_text.begins_with(prefix):
 		return -1
@@ -1090,6 +1440,39 @@ func _reset_tutorial_completion_for_test() -> void:
 	var app = root.get_node_or_null("AppController")
 	if app and app.has_method("set_tutorial_completed_from_react"):
 		app.set_tutorial_completed_from_react(false)
+
+func _snapshot_user_rockets_state() -> Dictionary:
+	if not FileAccess.file_exists("user://rockets_state.json"):
+		return {"exists": false, "data": {}}
+	return {
+		"exists": true,
+		"data": JSONFileManager.load_json("user://rockets_state.json")
+	}
+
+func _restore_user_rockets_state(snapshot: Dictionary) -> void:
+	var existed = bool(snapshot.get("exists", false))
+	if not existed:
+		DirAccess.remove_absolute("user://rockets_state.json")
+		RocketsManager.clear_override_state()
+		return
+	var data = snapshot.get("data", {})
+	if typeof(data) != TYPE_DICTIONARY:
+		data = {}
+	JSONFileManager.save_json("user://rockets_state.json", data)
+	RocketsManager.clear_override_state()
+
+func _defined_flows() -> Dictionary:
+	return {
+		"mission order": ["test_mission_progression_stage_order", "test_launchpad_uses_predefined_targets_for_first_two_missions"],
+		"mission tutorials": ["test_tutorial_sequence_places_scanner_after_mission_two", "test_tutorial_panel_hidden_in_transit_scene"],
+		"supabase fetch": ["run_supabase_tests.gd::Fetch anomalies (active-asteroids)"],
+		"supabase interact": ["test_mission3_targets_filter_and_single_sr2_reachable", "test_mission4_targets_filter_and_single_sr3_reachable", "test_mission5_contract_offer_and_selection"],
+		"scene transitions": ["test_outbound_transit_distance_label_decreases", "test_return_preview_auto_advances_to_debrief"],
+		"unlock progression": ["test_mark_mission_completed_unlocks_rocket2", "test_mark_mission_completed_unlocks_rocket3", "test_scanner_unlock_gating_by_progress"],
+		"xp progression": ["test_xp_accumulates", "test_level_up_threshold", "test_multi_level_up"],
+		"editor persistence": ["test_editor_progress_persists_across_reload", "test_editor_active_mission_state_persists_across_reload"],
+		"bundle smoke": ["__tests__/bundle_flows.test.js"]
+	}
 
 func test_outbound_transit_distance_label_decreases() -> void:
 	reporter.start_test("Outbound transit shows decreasing distance to destination")

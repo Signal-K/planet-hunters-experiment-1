@@ -1,16 +1,8 @@
 {
   "unlocked": [
-    "starterrocket1",
-    "starterrocket2"
+    "starterrocket1"
   ],
   "placed": [
-    {
-      "type": "starterrocket1",
-      "id": "starterrocket1-652083489",
-      "x": -110.0,
-      "y": -178.0,
-      "status": "returningHome"
-    }
   ],
   "launched": [
   ],
@@ -18,56 +10,101 @@
   ],
   "missions": [
   ],
-  "selected_target": "",
+  "selected_target": "101445733",
   "preview_target": {
+    "id": "4201",
+    "label": "Asteroid 4201",
+    "type": "asteroid",
+    "rocket_id": "starterrocket1"
   },
   "detected_targets": [
     {
-      "id": "4201",
-      "label": "Asteroid 4201",
+      "id": "101445733",
+      "label": "101445733",
+      "type": "asteroid"
+    },
+    {
+      "id": "63768316",
+      "label": "63768316",
+      "type": "asteroid"
+    },
+    {
+      "id": "68115570",
+      "label": "68115570",
+      "type": "asteroid"
+    },
+    {
+      "id": "63768664",
+      "label": "63768664",
+      "type": "asteroid"
+    },
+    {
+      "id": "63769326",
+      "label": "63769326",
       "type": "asteroid"
     }
   ],
   "seen_asteroids": [
     "4201",
-    "mission-1-training-target"
+    "101445733"
   ],
   "seen_planets": [
   ],
   "returning": [
-    {
-      "rocket_id": "starterrocket1-652083489"
-    }
   ],
   "arrived": {
     "starterrocket1": {
       "target_id": "4201",
-      "arrived_at": 1771426623.52158
+      "arrived_at": 1771472563.67003
     }
   },
   "returned_mission": {
-    "rocket_id": "starterrocket1-652083489",
-    "target_id": "mission-1-training-target",
-    "label": "Training Asteroid A",
-    "type": "asteroid"
   },
   "returning_started": {
-    "starterrocket1-652083489": 1771426864.0
   },
   "status_changed_at": {
-    "starterrocket1-652083489": {
-      "awaitingLaunch": 1771426718.0,
-      "launched": 1771426724.0,
-      "returningHome": 1771426864.0
-    }
   },
   "scan_counts": {
+    "asteroid:101445733": 1.0,
+    "asteroid:63768316": 1.0,
+    "asteroid:68115570": 1.0,
+    "asteroid:63768664": 1.0,
+    "asteroid:63769326": 1.0
   },
-  "mission_progress_completed": 0,
+  "mission_progress_completed": 4,
   "completed_mission_badges": [
+    "mission-1",
+    "mission-2",
+    "mission-3",
+    "mission-4"
   ],
   "mission_progress_schema_version": 2.0,
-  "pending_mission_guidance_id": 0.0,
+  "pending_mission_guidance_id": 0,
   "scanner_station_built": false,
-  "scanner_unlock_dialog_seen": false
+  "scanner_unlock_dialog_seen": false,
+  "mission5_contract_offer": {
+    "contractors": [
+      {
+        "id": "rocketlab",
+        "name": "Rocketlab",
+        "effect": "build_discount",
+        "build_discount_pct": 0.2
+      },
+      {
+        "id": "astroforge",
+        "name": "Astroforge",
+        "effect": "payout_bonus",
+        "payout_bonus_mult": 1.15
+      }
+    ],
+    "selected_contractor": "rocketlab",
+    "requested_minerals": {
+      "Iron": 218.0,
+      "Nickel": 91.0
+    },
+    "recommended_target_id": "m5-a1",
+    "recommended_target_label": "M5 Asteroid 1",
+    "recommended_rocket": "starterrocket1",
+    "payout_cap": 1400000000.0
+  }
 }

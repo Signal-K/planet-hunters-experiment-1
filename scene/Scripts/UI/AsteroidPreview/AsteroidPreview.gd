@@ -536,7 +536,7 @@ func _should_lock_return_home_until_fully_mined() -> bool:
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	if not rm:
 		return false
-	return int(rm.get_mission_stage()) <= 3
+	return int(rm.get_mission_stage()) <= 4
 
 func _setup_orbit_preview(target_id: String, rocket_id: String) -> void:
 	if orbit_root == null or orbit_rocket == null or orbit_circle == null:

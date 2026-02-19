@@ -1,0 +1,50 @@
+[gd_scene format=3]
+
+[node name="AnomalyItem" type="PanelContainer"]
+custom_minimum_size = Vector2(0, 96)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HBox" type="HBoxContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="IconContainer" type="PanelContainer" parent="HBox"]
+custom_minimum_size = Vector2(60, 60)
+layout_mode = 2
+
+[node name="IconLabel" type="Label" parent="HBox/IconContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Spacer" type="Control" parent="HBox"]
+custom_minimum_size = Vector2(16, 0)
+layout_mode = 2
+
+[node name="ContentVBox" type="VBoxContainer" parent="HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TitleLabel" type="Label" parent="HBox/ContentVBox"]
+layout_mode = 2
+
+[node name="SubtitleLabel" type="Label" parent="HBox/ContentVBox"]
+layout_mode = 2
+
+[node name="Controls" type="HBoxContainer" parent="HBox/ContentVBox"]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+size_flags_horizontal = 1
+
+[node name="SelectButton" type="Button" parent="HBox/ContentVBox/Controls"]
+custom_minimum_size = Vector2(180, 36)
+layout_mode = 2
+text = "Select Target"
+
+[node name="DetailButton" type="Button" parent="HBox/ContentVBox/Controls"]
+custom_minimum_size = Vector2(120, 36)
+layout_mode = 2
+text = "View"

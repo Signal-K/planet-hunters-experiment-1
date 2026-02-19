@@ -1,0 +1,32 @@
+[gd_scene format=3]
+
+[node name="RoadmapCard" type="PanelContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Body" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="TopRow" type="HBoxContainer" parent="Body"]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="Body/TopRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="StatusLabel" type="Label" parent="Body/TopRow"]
+layout_mode = 2
+
+[node name="StartButton" type="Button" parent="Body/TopRow"]
+visible = false
+layout_mode = 2
+text = "Start"
+
+[node name="SummaryLabel" type="Label" parent="Body"]
+layout_mode = 2
+autowrap_mode = 3
+
+[node name="NoteLabel" type="Label" parent="Body"]
+layout_mode = 2
+autowrap_mode = 3

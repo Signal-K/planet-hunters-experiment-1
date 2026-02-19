@@ -30,12 +30,16 @@ func run_all_tests() -> void:
 	await test_sr2_cargo_capacity_multiplier_applies_to_yield()
 	await test_mission1_full_mine_plus_scrap_is_near_120_percent()
 	await test_mission2_full_mine_plus_scrap_is_near_130_percent()
+	await test_mission4_full_mine_plus_scrap_is_near_140_percent()
 	await test_sr1_rocket_specs_validation()
 	await test_sr2_rocket_specs_validation()
+	await test_sr3_rocket_specs_validation()
 	await test_sr2_speed_and_range_multipliers()
+	await test_sr3_range_is_ten_times_sr2()
 	await test_sr2_unlock_after_first_mission()
 	await test_sr1_cost_and_salvage_values()
 	await test_sr2_cost_and_salvage_values()
+	await test_sr3_cost_and_salvage_values()
 
 func _reset_inventory() -> void:
 	MiningInventory.save_state({"targets": {}})
@@ -127,9 +131,17 @@ func test_mission1_full_mine_plus_scrap_is_near_120_percent() -> void:
 
 func test_mission2_full_mine_plus_scrap_is_near_130_percent() -> void:
 	reporter.start_test("Mission 2 full mine + scrap lands near 130% of SR2 cost")
-	var ratio = _full_mine_plus_scrap_ratio("mission-2-upgrade-target", "starterrocket2")
+	var ratio = _full_mine_plus_scrap_ratio("mission-2-upgrade-target", "starterrocket2", "asteroid")
 	if ratio < 1.28 or ratio > 1.32:
 		reporter.fail_test("Expected Mission 2 ratio near 1.30, got %s" % str(ratio))
+		return
+	reporter.pass_test()
+
+func test_mission4_full_mine_plus_scrap_is_near_140_percent() -> void:
+	reporter.start_test("Mission 4 full mine + scrap lands near 140% of SR3 cost")
+	var ratio = _full_mine_plus_scrap_ratio("mission-4-exoplanet-target", "starterrocket3", "planet")
+	if ratio < 1.38 or ratio > 1.42:
+		reporter.fail_test("Expected Mission 4 ratio near 1.40, got %s" % str(ratio))
 		return
 	reporter.pass_test()
 
@@ -167,6 +179,30 @@ func test_sr2_rocket_specs_validation() -> void:
 		return
 	reporter.pass_test()
 
+func test_sr3_rocket_specs_validation() -> void:
+	reporter.start_test("SR3 specs are correctly configured")
+	var sr3_cost = RocketSpecs.get_cost("starterrocket3")
+	var sr3_display = RocketSpecs.get_display_name("starterrocket3")
+	var sr3_salvage = RocketSpecs.get_salvage_refund_pct("starterrocket3")
+	var sr3_mining = RocketSpecs.get_mining_multiplier("starterrocket3")
+	var sr3_cargo = RocketSpecs.get_cargo_multiplier("starterrocket3")
+	if sr3_cost != 4000000000:
+		reporter.fail_test("Expected SR3 cost 4B, got %d" % sr3_cost)
+		return
+	if sr3_display != "Starter Rocket 3":
+		reporter.fail_test("Expected SR3 display name 'Starter Rocket 3', got '%s'" % sr3_display)
+		return
+	if sr3_salvage != 0.20:
+		reporter.fail_test("Expected SR3 salvage 20%%, got %f%%" % (sr3_salvage * 100.0))
+		return
+	if abs(sr3_mining - 3.0) > 0.001:
+		reporter.fail_test("Expected SR3 mining multiplier 3.0x, got %f" % sr3_mining)
+		return
+	if abs(sr3_cargo - 7.5) > 0.001:
+		reporter.fail_test("Expected SR3 cargo multiplier 7.5x, got %f" % sr3_cargo)
+		return
+	reporter.pass_test()
+
 func test_sr2_speed_and_range_multipliers() -> void:
 	reporter.start_test("SR2 has 2x speed and range multipliers")
 	var sr1_speed = RocketSpecs.get_speed_multiplier("starterrocket1")
@@ -192,6 +228,15 @@ func test_sr2_speed_and_range_multipliers() -> void:
 	var sr2_mission_secs = RocketSpecs.get_mission_seconds("starterrocket2", 60)
 	if sr2_mission_secs >= sr1_mission_secs:
 		reporter.fail_test("Expected SR2 mission time (%d) < SR1 mission time (%d)" % [sr2_mission_secs, sr1_mission_secs])
+		return
+	reporter.pass_test()
+
+func test_sr3_range_is_ten_times_sr2() -> void:
+	reporter.start_test("SR3 range is 10x SR2 range")
+	var sr2_range = RocketSpecs.get_range_multiplier("starterrocket2")
+	var sr3_range = RocketSpecs.get_range_multiplier("starterrocket3")
+	if abs(sr3_range - sr2_range * 10.0) > 0.001:
+		reporter.fail_test("Expected SR3 range to be 10x SR2 (sr2=%s sr3=%s)" % [str(sr2_range), str(sr3_range)])
 		return
 	reporter.pass_test()
 
@@ -241,17 +286,27 @@ func test_sr2_cost_and_salvage_values() -> void:
 		return
 	reporter.pass_test()
 
+func test_sr3_cost_and_salvage_values() -> void:
+	reporter.start_test("SR3 salvage refund is 20% of 4B cost")
+	var sr3_cost = RocketSpecs.get_cost("starterrocket3")
+	var sr3_salvage_pct = RocketSpecs.get_salvage_refund_pct("starterrocket3")
+	var expected_refund = int(round(float(sr3_cost) * sr3_salvage_pct))
+	if expected_refund != 800000000:
+		reporter.fail_test("Expected SR3 salvage refund 800M F, got %d" % expected_refund)
+		return
+	reporter.pass_test()
+
 func _sum_collected(collected: Dictionary) -> int:
 	var total = 0
 	for value in collected.values():
 		total += int(value)
 	return total
 
-func _full_mine_plus_scrap_ratio(target_id: String, rocket_type: String) -> float:
+func _full_mine_plus_scrap_ratio(target_id: String, rocket_type: String, target_type: String = "asteroid") -> float:
 	_reset_inventory()
 	var cargo_multiplier = RocketSpecs.get_cargo_multiplier(rocket_type)
 	var mining_multiplier = RocketSpecs.get_mining_multiplier(rocket_type)
-	var yield_data = ResourceYield.get_yield_for_target(target_id, "asteroid", 1, cargo_multiplier)
+	var yield_data = ResourceYield.get_yield_for_target(target_id, target_type, 1, cargo_multiplier)
 	var minerals: Dictionary = yield_data.get("minerals", {})
 	var capacity = float(yield_data.get("capacity", 0))
 	var state = {}

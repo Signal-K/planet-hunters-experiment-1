@@ -1,6 +1,9 @@
 extends RefCounted
 class_name SatelliteStationPanelList
 
+const AnomalyItemScene = preload("res://Scenes/UI/Templates/SatelliteAnomalyItem.tscn")
+const EmptyLabelScene = preload("res://Scenes/UI/Templates/MenuLogbookEmpty.tscn")
+
 var _anomaly_list: VBoxContainer
 var _get_mode: Callable
 var _normalize_cb: Callable
@@ -26,7 +29,7 @@ func display_anomalies(anomalies: Array) -> void:
 		child.queue_free()
 
 	if anomalies.is_empty():
-		var empty_label = Label.new()
+		var empty_label: Label = EmptyLabelScene.instantiate()
 		var target_type = "planets" if _get_mode.call() == "planets" else "asteroids"
 		empty_label.text = "No %s detected in current scan range." % target_type
 		var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
@@ -41,8 +44,7 @@ func display_anomalies(anomalies: Array) -> void:
 		_anomaly_list.add_child(item)
 
 func _create_anomaly_item(anomaly: Dictionary, index: int) -> Control:
-	var item_container = PanelContainer.new()
-	item_container.custom_minimum_size = Vector2(0, 96)
+	var item_container: PanelContainer = AnomalyItemScene.instantiate()
 	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
 
 	# Style the item
@@ -60,13 +62,8 @@ func _create_anomaly_item(anomaly: Dictionary, index: int) -> Control:
 	item_style.content_margin_bottom = 14
 	item_container.add_theme_stylebox_override("panel", item_style)
 
-	var hbox = HBoxContainer.new()
-	hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	item_container.add_child(hbox)
-
 	# Icon/Number circle
-	var icon_container = PanelContainer.new()
-	icon_container.custom_minimum_size = Vector2(60, 60)
+	var icon_container: PanelContainer = item_container.get_node("HBox/IconContainer")
 	var icon_style = StyleBoxFlat.new()
 	icon_style.bg_color = panel_style.ACCENT
 	icon_style.corner_radius_top_left = 30
@@ -75,7 +72,7 @@ func _create_anomaly_item(anomaly: Dictionary, index: int) -> Control:
 	icon_style.corner_radius_bottom_right = 30
 	icon_container.add_theme_stylebox_override("panel", icon_style)
 
-	var icon_label = Label.new()
+	var icon_label: Label = item_container.get_node("HBox/IconContainer/IconLabel")
 	# Use planet icon for planets, asteroid icon for asteroids (annotation thumbnails archived)
 	var icon_text = "🪐" if _get_mode.call() == "planets" else "☄"
 	icon_label.text = icon_text
@@ -85,21 +82,9 @@ func _create_anomaly_item(anomaly: Dictionary, index: int) -> Control:
 	icon_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	icon_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	icon_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	icon_container.add_child(icon_label)
-	hbox.add_child(icon_container)
-
-	# Spacer
-	var spacer = Control.new()
-	spacer.custom_minimum_size = Vector2(16, 0)
-	hbox.add_child(spacer)
-
-	# Content
-	var content_vbox = VBoxContainer.new()
-	content_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hbox.add_child(content_vbox)
 
 	# Title - use TIC ID or content (asteroid ID)
-	var title_label = Label.new()
+	var title_label: Label = item_container.get_node("HBox/ContentVBox/TitleLabel")
 	var tic_id = anomaly.get("ticId", "")
 	var content_text = anomaly.get("content", "")
 	var anomaly_id = anomaly.get("id", index)
@@ -113,10 +98,9 @@ func _create_anomaly_item(anomaly: Dictionary, index: int) -> Control:
 		var item_type = "Planet" if _get_mode.call() == "planets" else "Asteroid"
 		title_label.text = "%s #%d" % [item_type, anomaly_id]
 	panel_style.apply_body(title_label)
-	content_vbox.add_child(title_label)
 
 	# Subtitle with properties
-	var subtitle_label = Label.new()
+	var subtitle_label: Label = item_container.get_node("HBox/ContentVBox/SubtitleLabel")
 	var properties = []
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	var normalized = _normalize_cb.call(anomaly, index)
@@ -148,26 +132,14 @@ func _create_anomaly_item(anomaly: Dictionary, index: int) -> Control:
 	else:
 		subtitle_label.text = "Scan to reveal details (%d/3)." % max(scan_count, 0)
 	panel_style.apply_muted(subtitle_label)
-	content_vbox.add_child(subtitle_label)
 
 	# Select target button (only for detected anomalies)
-	var controls_h = HBoxContainer.new()
-	controls_h.size_flags_horizontal = Control.SIZE_FILL
-	controls_h.custom_minimum_size = Vector2(0, 32)
-	content_vbox.add_child(controls_h)
-
-	var select_btn = Button.new()
-	select_btn.text = "Select Target"
+	var select_btn: Button = item_container.get_node("HBox/ContentVBox/Controls/SelectButton")
 	select_btn.focus_mode = Control.FOCUS_NONE
-	select_btn.custom_minimum_size = Vector2(180, 36)
-	controls_h.add_child(select_btn)
 	panel_style.apply_button(select_btn, true)
 
-	var detail_btn = Button.new()
-	detail_btn.text = "View"
+	var detail_btn: Button = item_container.get_node("HBox/ContentVBox/Controls/DetailButton")
 	detail_btn.focus_mode = Control.FOCUS_NONE
-	detail_btn.custom_minimum_size = Vector2(120, 36)
-	controls_h.add_child(detail_btn)
 	panel_style.apply_button(detail_btn, false)
 
 	# Display selected marker if this matches currently selected target
