@@ -206,7 +206,7 @@ func _resolve_preview_target_meta(target_id: String) -> Dictionary:
 			return out
 	var predefined = rm.get_predefined_target_profile(target_id)
 	if not predefined.is_empty():
-		for stage in [1, 2]:
+		for stage in [1, 2, 4, 5]:
 			var item = rm.get_predefined_mission_target(stage)
 			if str(item.get("id", "")) == target_id:
 				out["label"] = str(item.get("label", out["label"]))

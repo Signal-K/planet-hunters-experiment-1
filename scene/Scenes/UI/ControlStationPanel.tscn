@@ -158,3 +158,18 @@ text = "Orbiting Rockets"
 [node name="OrbitingList" type="VBoxContainer" parent="PanelContainer/Panel/VBoxContainer/ContentContainer"]
 layout_mode = 2
 theme_override_constants/separation = 6
+
+[node name="NextMissionHeader" type="Label" parent="PanelContainer/Panel/VBoxContainer/ContentContainer"]
+layout_mode = 2
+text = "Next Mission"
+
+[node name="NextMissionCard" type="PanelContainer" parent="PanelContainer/Panel/VBoxContainer/ContentContainer"]
+layout_mode = 2
+
+[node name="MissionRoadmapHeader" type="Label" parent="PanelContainer/Panel/VBoxContainer/ContentContainer"]
+layout_mode = 2
+text = "Mission Roadmap"
+
+[node name="MissionRoadmapList" type="VBoxContainer" parent="PanelContainer/Panel/VBoxContainer/ContentContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8

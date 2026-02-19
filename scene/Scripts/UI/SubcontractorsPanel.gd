@@ -2,6 +2,8 @@ extends Control
 
 signal panel_closed
 
+const SubcontractorCardScene = preload("res://Scenes/UI/Templates/SubcontractorCard.tscn")
+
 @onready var close_btn: Button = $PanelContainer/Panel/VBox/Header/HeaderBar/HeaderContent/CloseButton
 @onready var subtitle: Label = $PanelContainer/Panel/VBox/Subtitle
 @onready var list: VBoxContainer = $PanelContainer/Panel/VBox/Scroll/List
@@ -37,9 +39,7 @@ func _build_list() -> void:
 		var is_available = bool(entry.get("available", false))
 		var unlock_level = int(entry.get("unlock_level", entry.get("min_level", 1)))
 
-		var card = PanelContainer.new()
-		card.custom_minimum_size = Vector2(0, 82)
-		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var card: PanelContainer = SubcontractorCardScene.instantiate()
 		card.add_theme_constant_override("content_margin_left", 16)
 		card.add_theme_constant_override("content_margin_right", 16)
 		card.add_theme_constant_override("content_margin_top", 12)
@@ -62,12 +62,9 @@ func _build_list() -> void:
 		style.corner_radius_bottom_right = 12
 		card.add_theme_stylebox_override("panel", style)
 
-		var row = VBoxContainer.new()
-		row.add_theme_constant_override("separation", 6)
-
-		var header = HBoxContainer.new()
-		header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		var name_lbl = Label.new()
+		var row: VBoxContainer = card.get_node("Row")
+		var header: HBoxContainer = card.get_node("Row/Header")
+		var name_lbl: Label = card.get_node("Row/Header/NameLabel")
 		var display_name = str(entry.get("name", "Unknown"))
 		if is_hidden:
 			display_name = "Classified Subcontractor"
@@ -75,47 +72,34 @@ func _build_list() -> void:
 		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		name_lbl.add_theme_color_override("font_color", Color(0.847, 0.871, 0.914, 1))
 		name_lbl.add_theme_font_size_override("font_size", 20)
-		var level_lbl = Label.new()
+		var level_lbl: Label = card.get_node("Row/Header/LevelLabel")
 		level_lbl.text = "Lvl %s" % str(unlock_level)
 		level_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		level_lbl.add_theme_color_override("font_color", Color(0.533, 0.753, 0.816, 1))
 		level_lbl.add_theme_font_size_override("font_size", 16)
-		header.add_child(name_lbl)
-		header.add_child(level_lbl)
-		row.add_child(header)
 
-		var role_lbl = Label.new()
+		var role_lbl: Label = card.get_node("Row/RoleLabel")
 		if is_available:
 			role_lbl.text = str(entry.get("role", ""))
 		else:
 			role_lbl.text = "Locked until level %s" % str(unlock_level)
 		role_lbl.add_theme_color_override("font_color", Color(0.639, 0.694, 0.784, 1))
 		role_lbl.add_theme_font_size_override("font_size", 15)
-		row.add_child(role_lbl)
 
 		var affinity = int(sm.get_affinity(str(entry.get("id", ""))))
-		var affinity_row = HBoxContainer.new()
-		affinity_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		var affinity_lbl = Label.new()
-		affinity_lbl.text = "Affinity"
+		var affinity_row: HBoxContainer = card.get_node("Row/AffinityRow")
+		var affinity_lbl: Label = card.get_node("Row/AffinityRow/AffinityLabel")
 		affinity_lbl.add_theme_color_override("font_color", Color(0.639, 0.694, 0.784, 1))
 		affinity_lbl.add_theme_font_size_override("font_size", 13)
-		var bar = ProgressBar.new()
-		bar.custom_minimum_size = Vector2(180, 12)
+		var bar: ProgressBar = card.get_node("Row/AffinityRow/AffinityBar")
 		bar.max_value = 100
 		bar.value = affinity
 		bar.show_percentage = false
 		panel_style.apply_progress_bar(bar)
-		var val_lbl = Label.new()
+		var val_lbl: Label = card.get_node("Row/AffinityRow/AffinityValueLabel")
 		val_lbl.text = "%s/100" % str(affinity)
 		val_lbl.add_theme_color_override("font_color", Color(0.639, 0.694, 0.784, 1))
 		val_lbl.add_theme_font_size_override("font_size", 13)
-		affinity_row.add_child(affinity_lbl)
-		affinity_row.add_child(bar)
-		affinity_row.add_child(val_lbl)
-		row.add_child(affinity_row)
-
-		card.add_child(row)
 		list.add_child(card)
 
 func _on_close() -> void:

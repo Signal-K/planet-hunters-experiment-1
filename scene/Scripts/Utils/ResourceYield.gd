@@ -10,7 +10,8 @@ const MINEABLE_PCT_STEP := 0.05
 const MAX_MINEABLE_PCT := 0.50
 const TARGET_CAPACITY_MULTIPLIER := {
 	"mission-1-training-target": 1.05,
-	"mission-2-upgrade-target": 1.0
+	"mission-2-upgrade-target": 1.0,
+	"mission-4-exoplanet-target": 0.133
 }
 
 const MINERAL_RARITY := {
@@ -83,4 +84,4 @@ static func _normalize_type(value: String) -> String:
 static func _target_capacity_multiplier(target_id: String) -> float:
 	if target_id == "":
 		return 1.0
-	return max(float(TARGET_CAPACITY_MULTIPLIER.get(target_id, 1.0)), 0.1)
+	return max(float(TARGET_CAPACITY_MULTIPLIER.get(target_id, 1.0)), 0.01)

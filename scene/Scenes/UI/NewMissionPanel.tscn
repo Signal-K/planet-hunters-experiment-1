@@ -140,6 +140,10 @@ layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 12
 
+[node name="LaunchedList" type="VBoxContainer" parent="PanelContainer/Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
 [node name="RefreshContainer" type="HBoxContainer" parent="PanelContainer/Panel/VBoxContainer/ContentContainer"]
 layout_mode = 2
 alignment = 1

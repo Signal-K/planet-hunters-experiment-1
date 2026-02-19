@@ -3,6 +3,10 @@ class_name RocketSelectorUIBuilder
 
 const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
+const SelectorRootScene = preload("res://Scenes/UI/Templates/RocketSelectorRoot.tscn")
+const RocketCardScene = preload("res://Scenes/UI/Templates/RocketSelectorCard.tscn")
+const StatChipScene = preload("res://Scenes/UI/Templates/RocketSelectorStatChip.tscn")
+const EmptyLabelScene = preload("res://Scenes/UI/Templates/MenuLogbookEmpty.tscn")
 
 var _parent: Node
 var _ui_size: Vector2
@@ -30,45 +34,22 @@ func build_ui(unlocked_rockets: Array) -> void:
 	for child in _parent.get_children():
 		child.queue_free()
 
-	var root = VBoxContainer.new()
-	root.name = "SelectorRoot"
-	root.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	root.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	root.add_theme_constant_override("separation", 14)
+	var root: VBoxContainer = SelectorRootScene.instantiate()
 	_parent.add_child(root)
 
-	var heading = Label.new()
-	heading.text = "Available Rockets"
-	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	var heading: Label = root.get_node("Heading")
 	heading.add_theme_color_override("font_color", PanelStyle.TEXT_PRIMARY)
 	heading.add_theme_font_size_override("font_size", 34)
-	root.add_child(heading)
 
-	var subheading = Label.new()
-	subheading.text = "Choose your vehicle. Drag the rocket image or press Create."
-	subheading.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	var subheading: Label = root.get_node("Subheading")
 	subheading.add_theme_color_override("font_color", PanelStyle.TEXT_MUTED)
 	subheading.add_theme_font_size_override("font_size", 20)
-	root.add_child(subheading)
 
-	var cards_wrap = CenterContainer.new()
-	cards_wrap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	cards_wrap.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	root.add_child(cards_wrap)
-
-	var cards = HBoxContainer.new()
-	cards.name = "Cards"
-	cards.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	cards.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	cards.alignment = BoxContainer.ALIGNMENT_CENTER
-	cards.add_theme_constant_override("separation", 22)
-	cards_wrap.add_child(cards)
+	var cards: HBoxContainer = root.get_node("CardsWrap/Cards")
 
 	if unlocked_rockets.is_empty():
-		var empty = Label.new()
+		var empty: Label = EmptyLabelScene.instantiate()
 		empty.text = "No rockets unlocked."
-		empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		empty.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		PanelStyle.apply_muted(empty)
 		cards.add_child(empty)
 		return
@@ -80,43 +61,27 @@ func build_ui(unlocked_rockets: Array) -> void:
 		cards.add_child(_build_rocket_card(str(rocket_id), rocket_ids.size()))
 
 func _build_rocket_card(rocket_id: String, total_cards: int) -> Control:
-	var card = PanelContainer.new()
+	var card: PanelContainer = RocketCardScene.instantiate()
 	card.custom_minimum_size = Vector2(520, 520) if total_cards <= 1 else Vector2(480, 520)
-	card.size_flags_horizontal = Control.SIZE_FILL
-	card.size_flags_vertical = Control.SIZE_FILL
 	card.add_theme_stylebox_override("panel", _card_style())
 
-	var body = VBoxContainer.new()
-	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	body.add_theme_constant_override("separation", 12)
-	card.add_child(body)
+	var body: VBoxContainer = card.get_node("Body")
 
 	var tex = _rocket_textures.get(rocket_id, null)
 	if tex:
-		var tr = TextureRect.new()
+		var tr: TextureRect = card.get_node("Body/RocketTexture")
 		tr.texture = tex
 		tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		tr.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		tr.custom_minimum_size = Vector2(0, 180)
 		tr.mouse_default_cursor_shape = Control.CURSOR_DRAG
 		tr.connect("gui_input", _on_texture_input.bind(rocket_id, tex))
-		body.add_child(tr)
 
-	var name_label = Label.new()
+	var name_label: Label = card.get_node("Body/NameLabel")
 	name_label.text = RocketSpecs.get_display_name(rocket_id)
-	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_label.add_theme_color_override("font_color", PanelStyle.TEXT_PRIMARY)
 	name_label.add_theme_font_size_override("font_size", 28)
-	body.add_child(name_label)
 
-	var chips = GridContainer.new()
-	chips.columns = 2
-	chips.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	chips.add_theme_constant_override("h_separation", 10)
-	chips.add_theme_constant_override("v_separation", 8)
-	body.add_child(chips)
+	var chips: GridContainer = card.get_node("Body/Chips")
 
 	var spec = RocketSpecs.get_spec(rocket_id)
 	var stat_lines = [
@@ -128,41 +93,30 @@ func _build_rocket_card(rocket_id: String, total_cards: int) -> Control:
 	for line in stat_lines:
 		chips.add_child(_stat_chip(line))
 
-	var economy = Label.new()
+	var economy: Label = card.get_node("Body/EconomyLabel")
 	economy.text = "Cost: %s F   •   Salvage: %s%%" % [
 		_fmt_francs(int(spec.get("cost", 0))),
 		str(int(round(float(spec.get("salvage_refund_pct", 0.20)) * 100.0)))
 	]
-	economy.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	economy.add_theme_color_override("font_color", PanelStyle.TEXT_MUTED)
 	economy.add_theme_font_size_override("font_size", 18)
-	body.add_child(economy)
 
-	var spacer = Control.new()
-	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	body.add_child(spacer)
-
-	var btn = Button.new()
+	var btn: Button = card.get_node("Body/CreateButton")
 	btn.name = "CreateButton_%s" % rocket_id
 	btn.text = "Create %s" % RocketSpecs.get_display_name(rocket_id)
-	btn.custom_minimum_size = Vector2(0, 62)
-	btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn.disabled = _creation_locked
 	PanelStyle.apply_button(btn, true)
 	btn.pressed.connect(_on_create.bind(rocket_id))
-	body.add_child(btn)
 
 	return card
 
 func _stat_chip(text: String) -> Control:
-	var chip = PanelContainer.new()
+	var chip: PanelContainer = StatChipScene.instantiate()
 	chip.add_theme_stylebox_override("panel", _chip_style())
-	var lbl = Label.new()
+	var lbl: Label = chip.get_node("Label")
 	lbl.text = text
-	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl.add_theme_color_override("font_color", PanelStyle.TEXT_PRIMARY)
 	lbl.add_theme_font_size_override("font_size", 16)
-	chip.add_child(lbl)
 	return chip
 
 func _card_style() -> StyleBoxFlat:

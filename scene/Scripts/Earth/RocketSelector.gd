@@ -17,12 +17,14 @@ var ui_size: Vector2 = Vector2(720, 360)
 
 var _creation_locked: bool = false
 var _pending_rocket_id: String = ""
+var _pending_purchase_cost: int = 0
 var _confirm_dialog: ConfirmationDialog = null
 var _info_dialog: AcceptDialog = null
 var _app_controller: Node = null
 var _rocket_textures := {
 	"starterrocket1": null,
-	"starterrocket2": null
+	"starterrocket2": null,
+	"starterrocket3": null
 }
 var _ui_builder := RocketSelectorUIBuilder.new()
 var _drag_helper := RocketSelectorDragHelper.new()
@@ -45,6 +47,7 @@ func _ready():
 			break
 	_rocket_textures["starterrocket1"] = load("res://assets/Vehicles/StarterRocket1.png")
 	_rocket_textures["starterrocket2"] = load("res://assets/Vehicles/Starter Rocket L2.png")
+	_rocket_textures["starterrocket3"] = load("res://assets/Vehicles/Starter Rocket L2.png")
 	_find_app_controller()
 	_init_dialogs()
 	_ui_builder.setup(
@@ -100,19 +103,29 @@ func _request_purchase(rocket_id: String) -> void:
 	if _creation_locked:
 		print("RocketSelector: creation locked; cannot purchase")
 		return
-	var cost = RocketSpecs.get_cost(rocket_id)
+	var cost = _effective_purchase_cost(rocket_id)
 	var balance = _get_balance()
 	if balance < cost:
 		_show_info("Insufficient funds to buy this rocket.")
 		return
 	_pending_rocket_id = rocket_id
+	_pending_purchase_cost = cost
 	if not (_confirm_dialog and is_instance_valid(_confirm_dialog)):
 		_show_info("Unable to open purchase confirmation dialog.")
 		return
-	_confirm_dialog.dialog_text = "Buy %s for %s Francs?" % [
+	var summary = "Buy %s for %s Francs?" % [
 		RocketSpecs.get_display_name(rocket_id),
 		_format_francs(cost)
 	]
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if rm and int(rm.get_mission_stage()) >= 5:
+		var cap = int(rm.get_mission5_payout_cap())
+		if cost > cap:
+			summary += "\nMission 5 payout cap is %s F. This purchase may lose money." % _format_francs(cap)
+		var selected = rm.get_mission5_selected_contractor()
+		if str(selected.get("effect", "")) == "build_discount":
+			summary += "\nMission discount applied via %s." % str(selected.get("name", "contractor"))
+	_confirm_dialog.dialog_text = summary
 	_confirm_dialog.popup_centered()
 
 func _on_purchase_confirmed() -> void:
@@ -121,10 +134,11 @@ func _on_purchase_confirmed() -> void:
 	var spawn_ok = _spawn_rocket(_pending_rocket_id)
 	if spawn_ok:
 		_show_tutorial_hint_once(ACTION_CREATE_ROCKET, HINT_CREATE_ROCKET)
-		_modify_balance(-RocketSpecs.get_cost(_pending_rocket_id))
+		_modify_balance(-_pending_purchase_cost)
 	else:
 		_show_info("Rocket could not be created.")
 	_pending_rocket_id = ""
+	_pending_purchase_cost = 0
 
 func _spawn_rocket(rocket_id: String) -> bool:
 	# Try to find the Launchpad node in the current scene and call spawn_rocket
@@ -138,7 +152,8 @@ func _spawn_rocket(rocket_id: String) -> bool:
 				# fallback: instantiate the rocket scene directly under Launchpad
 				var mapping = {
 					"starterrocket1": "res://Scenes/Vehicles/StarterRocket1.tscn",
-					"starterrocket2": "res://Scenes/Vehicles/StarterRocket2.tscn"
+					"starterrocket2": "res://Scenes/Vehicles/StarterRocket2.tscn",
+					"starterrocket3": "res://Scenes/Vehicles/StarterRocket3.tscn"
 				}
 				var path = str(mapping.get(rocket_id, "res://Scenes/Vehicles/StarterRocket1.tscn"))
 				var scene = load(path)
@@ -176,6 +191,12 @@ func _show_info(message: String) -> void:
 	if _info_dialog and is_instance_valid(_info_dialog):
 		_info_dialog.dialog_text = message
 		_info_dialog.popup_centered()
+
+func _effective_purchase_cost(rocket_id: String) -> int:
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if not rm:
+		return RocketSpecs.get_cost(rocket_id)
+	return int(rm.get_mission5_purchase_cost(rocket_id))
 
 func _show_tutorial_hint_once(action_key: String, message: String) -> void:
 	if _app_controller and _app_controller.has_method("show_tutorial_hint_once"):

@@ -1,0 +1,139 @@
+{
+  "taskId": "7f6aja",
+  "currentVersion": 5,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "7f6aja",
+      "version": 1,
+      "timestamp": "2026-02-19T03:01:15.262Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Ensure that data/progress in missions is saved when testing the game in the Godot editor",
+        "description": "<!-- SECTION:DESCRIPTION:BEGIN -->\n<!-- SECTION:DESCRIPTION:END -->",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "editor",
+          "dx"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "7f6aja",
+      "version": 2,
+      "timestamp": "2026-02-19T03:06:50.947Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "newValue": "1. Add persistence regression tests that write mission progress to user:// state and verify reload roundtrip in editor/headless runs.\n2. Add persistence regression for active mission state (selected target + mission entry).\n3. Validate via headless experience tests and record results."
+        }
+      ],
+      "snapshot": {
+        "title": "Ensure that data/progress in missions is saved when testing the game in the Godot editor",
+        "description": "<!-- SECTION:DESCRIPTION:BEGIN -->",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "editor",
+          "dx"
+        ],
+        "acceptanceCriteria": [],
+        "implementationPlan": "1. Add persistence regression tests that write mission progress to user:// state and verify reload roundtrip in editor/headless runs.\n2. Add persistence regression for active mission state (selected target + mission entry).\n3. Validate via headless experience tests and record results."
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "7f6aja",
+      "version": 3,
+      "timestamp": "2026-02-19T03:08:13.295Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Ensure that data/progress in missions is saved when testing the game in the Godot editor",
+        "description": "<!-- SECTION:DESCRIPTION:BEGIN -->",
+        "status": "done",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "editor",
+          "dx"
+        ],
+        "acceptanceCriteria": [],
+        "implementationPlan": "1. Add persistence regression tests that write mission progress to user:// state and verify reload roundtrip in editor/headless runs.\n2. Add persistence regression for active mission state (selected target + mission entry).\n3. Validate via headless experience tests and record results."
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "7f6aja",
+      "version": 4,
+      "timestamp": "2026-02-19T03:08:13.299Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "✓ Added editor-persistence regression coverage in run_experience_tests: mission progress roundtrip across reload, active mission state persistence, and ordered mission-stage progression checks in headless/editor context."
+        }
+      ],
+      "snapshot": {
+        "title": "Ensure that data/progress in missions is saved when testing the game in the Godot editor",
+        "description": "<!-- SECTION:DESCRIPTION:BEGIN -->",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "editor",
+          "dx"
+        ],
+        "acceptanceCriteria": [],
+        "implementationPlan": "1. Add persistence regression tests that write mission progress to user:// state and verify reload roundtrip in editor/headless runs.\n2. Add persistence regression for active mission state (selected target + mission entry).\n3. Validate via headless experience tests and record results.",
+        "implementationNotes": "✓ Added editor-persistence regression coverage in run_experience_tests: mission progress roundtrip across reload, active mission state persistence, and ordered mission-stage progression checks in headless/editor context."
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "7f6aja",
+      "version": 5,
+      "timestamp": "2026-02-19T03:08:57.253Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Ensure that data/progress in missions is saved when testing the game in the Godot editor",
+        "description": "<!-- SECTION:DESCRIPTION:BEGIN -->",
+        "status": "done",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "editor",
+          "dx"
+        ],
+        "acceptanceCriteria": [],
+        "implementationPlan": "1. Add persistence regression tests that write mission progress to user:// state and verify reload roundtrip in editor/headless runs.\n2. Add persistence regression for active mission state (selected target + mission entry).\n3. Validate via headless experience tests and record results.",
+        "implementationNotes": "✓ Added editor-persistence regression coverage in run_experience_tests: mission progress roundtrip across reload, active mission state persistence, and ordered mission-stage progression checks in headless/editor context."
+      }
+    }
+  ]
+}

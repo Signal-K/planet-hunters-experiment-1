@@ -25,6 +25,16 @@ const SPECS := {
 		"range_multiplier": 2.0,
 		"cargo_multiplier": 1.5,
 		"mining_multiplier": 1.5
+	},
+	"starterrocket3": {
+		"display_name": "Starter Rocket 3",
+		"icon_path": "res://assets/Vehicles/Starter Rocket L2.png",
+		"cost": 4000000000,
+		"salvage_refund_pct": 0.20,
+		"speed_multiplier": 2.0,
+		"range_multiplier": 20.0,
+		"cargo_multiplier": 7.5,
+		"mining_multiplier": 3.0
 	}
 }
 

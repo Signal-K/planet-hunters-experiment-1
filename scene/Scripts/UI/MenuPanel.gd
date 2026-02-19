@@ -8,6 +8,13 @@ signal counter_changed(new_value: int)
 signal reset_all
 signal reset_tutorial
 
+const UnlockHeaderScene = preload("res://Scenes/UI/Templates/MenuUnlockHeader.tscn")
+const UnlockItemScene = preload("res://Scenes/UI/Templates/MenuUnlockItem.tscn")
+const LogbookEmptyScene = preload("res://Scenes/UI/Templates/MenuLogbookEmpty.tscn")
+const LogbookCardScene = preload("res://Scenes/UI/Templates/MenuLogbookCard.tscn")
+const LogbookSectionHeaderScene = preload("res://Scenes/UI/Templates/MenuLogbookSectionHeader.tscn")
+const LogbookKeyValueRowScene = preload("res://Scenes/UI/Templates/MenuLogbookKeyValueRow.tscn")
+
 @onready var counter_label: Label = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/CounterCard/CounterContainer/CounterLabel
 @onready var decrease_btn: Button = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/CounterCard/CounterContainer/ButtonsContainer/DecreaseButton
 @onready var increase_btn: Button = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/CounterCard/CounterContainer/ButtonsContainer/IncreaseButton
@@ -121,13 +128,13 @@ func _build_unlocks_list(current_level: int) -> void:
 	var levels := unlocks_by_level.keys()
 	levels.sort()
 	for lvl in levels:
-		var header = Label.new()
+		var header: Label = UnlockHeaderScene.instantiate()
 		header.text = "Level %s" % str(lvl)
 		unlocks_list.add_child(header)
 		var items: Array = unlocks_by_level[lvl]
 		items.sort()
 		for item in items:
-			var row = Label.new()
+			var row: Label = UnlockItemScene.instantiate()
 			row.text = "• %s" % str(item)
 			if lvl > current_level:
 				row.modulate = Color(0.65, 0.65, 0.65, 1)
@@ -180,11 +187,10 @@ func _rebuild_logbook_entries() -> void:
 	var log = preload("res://Scripts/Utils/MissionLogManager.gd")
 	var rows: Array = log.get_missions() if log else []
 	if rows.is_empty():
-		var empty = Label.new()
+		var empty: Label = LogbookEmptyScene.instantiate()
 		empty.text = "No mission records yet."
 		empty.add_theme_color_override("font_color", Color(0.639, 0.694, 0.784, 1))
 		empty.add_theme_font_size_override("font_size", 16)
-		empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		logbook_entries.add_child(empty)
 		return
 
@@ -192,8 +198,7 @@ func _rebuild_logbook_entries() -> void:
 		var entry = rows[idx]
 		if typeof(entry) != TYPE_DICTIONARY:
 			continue
-		var card = PanelContainer.new()
-		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var card: PanelContainer = LogbookCardScene.instantiate()
 		var card_style = StyleBoxFlat.new()
 		card_style.bg_color = Color(0.168627, 0.188235, 0.231373, 0.96)
 		card_style.border_color = Color(0.263, 0.298, 0.369, 1)
@@ -212,15 +217,12 @@ func _rebuild_logbook_entries() -> void:
 		card.add_theme_stylebox_override("panel", card_style)
 		logbook_entries.add_child(card)
 
-		var body = VBoxContainer.new()
-		body.add_theme_constant_override("separation", 10)
-		card.add_child(body)
+		var body: VBoxContainer = card.get_node("Body")
 
-		var header = Label.new()
+		var header: Label = body.get_node("HeaderLabel")
 		header.text = _build_logbook_header(entry, idx + 1)
 		header.add_theme_color_override("font_color", Color(0.533, 0.753, 0.816, 1))
 		header.add_theme_font_size_override("font_size", 18)
-		body.add_child(header)
 
 		for section in _logbook_sections():
 			var section_keys: Array = section.get("keys", [])
@@ -231,32 +233,25 @@ func _rebuild_logbook_entries() -> void:
 			if present.is_empty():
 				continue
 
-			var section_header = Label.new()
+			var section_header: Label = LogbookSectionHeaderScene.instantiate()
 			section_header.text = str(section.get("title", "Details"))
 			section_header.add_theme_color_override("font_color", Color(0.639, 0.694, 0.784, 1))
 			section_header.add_theme_font_size_override("font_size", 14)
 			body.add_child(section_header)
 
 			for section_key in present:
-				var row = HBoxContainer.new()
-				row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-				row.add_theme_constant_override("separation", 12)
+				var row: HBoxContainer = LogbookKeyValueRowScene.instantiate()
 				body.add_child(row)
 
-				var key_label = Label.new()
-				key_label.custom_minimum_size = Vector2(180, 0)
+				var key_label: Label = row.get_node("KeyLabel")
 				key_label.text = "%s:" % _format_logbook_key(str(section_key))
 				key_label.add_theme_color_override("font_color", Color(0.639, 0.694, 0.784, 1))
 				key_label.add_theme_font_size_override("font_size", 14)
-				row.add_child(key_label)
 
-				var value_label = Label.new()
-				value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-				value_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+				var value_label: Label = row.get_node("ValueLabel")
 				value_label.add_theme_color_override("font_color", Color(0.847, 0.871, 0.914, 1))
 				value_label.add_theme_font_size_override("font_size", 15)
 				value_label.text = _format_logbook_value(str(section_key), entry.get(section_key))
-				row.add_child(value_label)
 
 		if idx > 0:
 			var divider = HSeparator.new()
