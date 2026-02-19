@@ -348,7 +348,7 @@ function App() {
     React.createElement(
       "h1",
       { style: { margin: "0 0 8px", fontSize: "clamp(24px, 4vw, 38px)", letterSpacing: "0.02em" } },
-      "Planet Hunters Web"
+      "Star Sailors: Experiment 1"
     ),
     React.createElement(
       "p",
