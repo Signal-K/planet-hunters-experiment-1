@@ -1,8 +1,6 @@
 
 class_name Launchpad extends Structure
 
-const ACTION_OPEN_LAUNCHPAD := "open_launchpad"
-const HINT_OPEN_LAUNCHPAD := "Use the Launchpad to set up a rocket and start a mission."
 
 var TimeHelper = preload("res://Scripts/Earth/TimeHelper.gd")
 var RocketSpawner = preload("res://Scripts/Earth/RocketSpawner.gd")
@@ -65,7 +63,7 @@ func _drop_data(pos, data):
 
 func on_interact():
 	super.on_interact()
-	_show_tutorial_hint_once(ACTION_OPEN_LAUNCHPAD, HINT_OPEN_LAUNCHPAD)
+	preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("open_launchpad")
 	print("Launchpad clicked: " + structure_name)
 	
 	# Get the SceneManager from the scene tree
@@ -85,10 +83,9 @@ func on_interact():
 		print("Transitioning to earth_launchpad scene...")
 		scene_manager.change_to_scene("res://Scenes/Earth/earth_launchpad.tscn")
 	else:
-		print("ERROR: SceneManager not found for Launchpad")
+		print("Launchpad: SceneManager not found, using direct scene change fallback")
+		get_tree().change_scene_to_file("res://Scenes/Earth/earth_launchpad.tscn")
 
-func _show_tutorial_hint_once(action_key: String, message: String) -> void:
-	preload("res://Scripts/Utils/AppControllerHelper.gd").show_tutorial_hint_once(action_key, message)
 
 func spawn_rocket(rocket_id: String) -> bool:
 	return RocketSpawner.spawn(self, rocket_id)

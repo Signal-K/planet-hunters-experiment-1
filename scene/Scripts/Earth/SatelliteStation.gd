@@ -1,9 +1,5 @@
 class_name SatelliteStation extends Structure
 
-const ACTION_OPEN_SATELLITE := "open_satellite_station"
-const HINT_OPEN_SATELLITE := "Use Scanner Station to run scans for new mission targets."
-const ACTION_BUILD_SCANNER := "build_scanner_station"
-const HINT_BUILD_SCANNER := "Scanner Station is online. You can now scan for targets."
 
 var _build_dialog: ConfirmationDialog = null
 var _info_dialog: AcceptDialog = null
@@ -12,6 +8,7 @@ func _ready():
 	super._ready()
 	structure_name = "Scanner Station"
 	print("Satellite Station initialized: " + structure_name)
+	_ensure_scanner_state_consistency()
 	_refresh_visibility()
 	call_deferred("_maybe_show_unlock_dialog")
 
@@ -22,11 +19,11 @@ func on_interact():
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	if not rm:
 		return
+	_ensure_scanner_state_consistency(rm)
 	if not rm.is_scanner_station_built():
 		_prompt_build_scanner()
 		return
 	super.on_interact()
-	_show_tutorial_hint_once(ACTION_OPEN_SATELLITE, HINT_OPEN_SATELLITE)
 	print("Satellite Station clicked: " + structure_name)
 	
 	# Get the UIManager from the scene tree
@@ -48,8 +45,6 @@ func on_interact():
 	else:
 		print("ERROR: UIManager not found for Satellite Station")
 
-func _show_tutorial_hint_once(action_key: String, message: String) -> void:
-	preload("res://Scripts/Utils/AppControllerHelper.gd").show_tutorial_hint_once(action_key, message)
 
 func _refresh_visibility() -> void:
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
@@ -81,16 +76,18 @@ func _on_unlock_info_confirmed() -> void:
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	if not rm:
 		return
+	_ensure_scanner_state_consistency(rm)
 	if not rm.is_scanner_unlocked():
 		return
 	if rm.is_scanner_station_built():
 		return
-	_prompt_build_scanner()
+	# Leave build prompt to explicit station interaction to avoid repeated modal chaining.
 
 func _maybe_show_unlock_dialog() -> void:
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	if not rm or not rm.is_scanner_unlocked():
 		return
+	_ensure_scanner_state_consistency(rm)
 	if rm.is_scanner_station_built():
 		return
 	_ensure_dialogs()
@@ -100,18 +97,30 @@ func _maybe_show_unlock_dialog() -> void:
 			_info_dialog.dialog_text = "Scanner Station unlocked. Build it for %s F to start scanning." % cost_text
 			_info_dialog.call_deferred("popup_centered")
 		rm.set_scanner_unlock_dialog_seen(true)
-		return
-	_prompt_build_scanner()
+	return
 
 func _prompt_build_scanner() -> void:
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	if not rm:
+		return
+	_ensure_scanner_state_consistency(rm)
+	if rm.is_scanner_station_built():
 		return
 	_ensure_dialogs()
 	if _build_dialog and is_instance_valid(_build_dialog):
 		var cost_text = _format_francs(rm.get_scanner_build_cost())
 		_build_dialog.dialog_text = "Build Scanner Station for %s F?" % cost_text
 		_build_dialog.call_deferred("popup_centered")
+
+func _ensure_scanner_state_consistency(rm = null) -> void:
+	var rockets_manager = rm
+	if rockets_manager == null:
+		rockets_manager = preload("res://Scripts/Utils/RocketsManager.gd")
+	if not rockets_manager:
+		return
+	# Mission 4+ implies scanner flow was already completed.
+	if not rockets_manager.is_scanner_station_built() and int(rockets_manager.get_mission_stage()) >= 4:
+		rockets_manager.set_scanner_station_built(true)
 
 func _on_confirm_build_scanner() -> void:
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
@@ -128,8 +137,8 @@ func _on_confirm_build_scanner() -> void:
 		return
 	app.add_franc_balance(-cost, "build_scanner_station")
 	rm.set_scanner_station_built(true)
+	preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("build_scanner_station")
 	_refresh_visibility()
-	_show_tutorial_hint_once(ACTION_BUILD_SCANNER, HINT_BUILD_SCANNER)
 	_show_info("Scanner Station constructed. You can now run scans.")
 
 func _show_info(message: String) -> void:

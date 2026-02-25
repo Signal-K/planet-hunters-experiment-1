@@ -1,0 +1,129 @@
+{
+  "taskId": "bzx127",
+  "currentVersion": 2,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "bzx127",
+      "version": 1,
+      "timestamp": "2026-02-25T09:52:40.560Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Tutorial steps grouped by mission stage (M1-M5)"
+            },
+            {
+              "completed": false,
+              "text": "Tutorial shows only relevant steps for current mission"
+            },
+            {
+              "completed": false,
+              "text": "Tutorial adapts instruction text based on scene and mission context"
+            },
+            {
+              "completed": false,
+              "text": "Tutorial can be dismissed per-mission rather than globally"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Tutorial steps grouped by mission stage (M1-M5)"
+            },
+            {
+              "completed": true,
+              "text": "Tutorial shows only relevant steps for current mission"
+            },
+            {
+              "completed": true,
+              "text": "Tutorial adapts instruction text based on scene and mission context"
+            },
+            {
+              "completed": true,
+              "text": "Tutorial can be dismissed per-mission rather than globally"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Refactor tutorial system to be mission-contextual",
+        "description": "Refactor tutorial system to show contextual guidance based on current mission stage and player location. Tutorial should adapt to where player is in mission progression. See @doc/specs/mission-system-specification for mission stages.",
+        "status": "todo",
+        "priority": "medium",
+        "labels": [
+          "tutorial",
+          "refactor",
+          "missions",
+          "ux"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Tutorial steps grouped by mission stage (M1-M5)"
+          },
+          {
+            "completed": true,
+            "text": "Tutorial shows only relevant steps for current mission"
+          },
+          {
+            "completed": true,
+            "text": "Tutorial adapts instruction text based on scene and mission context"
+          },
+          {
+            "completed": true,
+            "text": "Tutorial can be dismissed per-mission rather than globally"
+          }
+        ],
+        "implementationPlan": "1. Add mission-stage tutorial grouping (M1-M5 mappings)\n2. Filter tutorial steps by current mission stage and scene context\n3. Add per-mission dismissal state (instead of single global dismiss)\n4. Update tutorial panel UI text generation with mission-context wording\n5. Run experience tests and close task"
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "bzx127",
+      "version": 2,
+      "timestamp": "2026-02-25T09:52:47.864Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Refactor tutorial system to be mission-contextual",
+        "description": "Refactor tutorial system to show contextual guidance based on current mission stage and player location. Tutorial should adapt to where player is in mission progression. See @doc/specs/mission-system-specification for mission stages.",
+        "status": "done",
+        "priority": "medium",
+        "labels": [
+          "tutorial",
+          "refactor",
+          "missions",
+          "ux"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Tutorial steps grouped by mission stage (M1-M5)"
+          },
+          {
+            "completed": true,
+            "text": "Tutorial shows only relevant steps for current mission"
+          },
+          {
+            "completed": true,
+            "text": "Tutorial adapts instruction text based on scene and mission context"
+          },
+          {
+            "completed": true,
+            "text": "Tutorial can be dismissed per-mission rather than globally"
+          }
+        ],
+        "implementationPlan": "1. Add mission-stage tutorial grouping (M1-M5 mappings)\n2. Filter tutorial steps by current mission stage and scene context\n3. Add per-mission dismissal state (instead of single global dismiss)\n4. Update tutorial panel UI text generation with mission-context wording\n5. Run experience tests and close task",
+        "implementationNotes": "✓ Tutorial now mission-contextual: added M1-M5 stage step group mapping in TutorialPanel, mission-specific instruction variants, and active-step filtering to only show steps relevant to current mission stage. Added per-mission dismiss support in AppController (dismiss/is_dismissed/get_current_mission_stage) and wired Skip to dismiss current mission only."
+      }
+    }
+  ]
+}

@@ -2,9 +2,6 @@ extends RefCounted
 class_name LaunchpadSelectorPanel
 
 var _launchpad: Node
-const ACTION_SELECT_TARGET := "select_launch_target"
-const HINT_SELECT_TARGET := "Pick one target so your rocket knows where to fly."
-const HINT_PRESET_TARGET := "Mission target is pre-assigned for this early mission."
 const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
 const TargetCardScene = preload("res://Scenes/UI/Templates/LaunchpadTargetCard.tscn")
@@ -15,6 +12,48 @@ const MAX_VISIBLE_TARGETS := 3
 const MAX_VISIBLE_TARGETS_MISSION3 := 5
 const MAX_VISIBLE_TARGETS_MISSION4 := 5
 const MAX_VISIBLE_TARGETS_MISSION5 := 5
+const MISSION_BRIEFINGS := {
+	1: {
+		"objective": "Complete your first launch loop (launch, mine, return, debrief).",
+		"mechanics": "Starter mission with predefined target and basic mining flow.",
+		"required_rocket_level": 1,
+		"target_type": "Asteroid",
+		"reward_ratio": 1.2,
+		"unlocks": "Mission 2 and Starter Rocket 2"
+	},
+	2: {
+		"objective": "Run the same loop with an upgraded rocket to improve yields.",
+		"mechanics": "Upgrade path mission with stronger rocket requirement.",
+		"required_rocket_level": 2,
+		"target_type": "Asteroid",
+		"reward_ratio": 1.3,
+		"unlocks": "Mission 3 and Scanner station access"
+	},
+	3: {
+		"objective": "Build scanner station and launch toward a scanned target.",
+		"mechanics": "First scanner-driven target selection mission.",
+		"required_rocket_level": 2,
+		"target_type": "Asteroid (scanned)",
+		"reward_ratio": 1.3,
+		"unlocks": "Mission 4 and Starter Rocket 3"
+	},
+	4: {
+		"objective": "Switch to planets and complete long-range exploration mission.",
+		"mechanics": "Planet target flow with higher mining yield.",
+		"required_rocket_level": 3,
+		"target_type": "Planet",
+		"reward_ratio": 1.4,
+		"unlocks": "Mission 5 and contractor flow"
+	},
+	5: {
+		"objective": "Accept a contractor offer and complete a contract mission.",
+		"mechanics": "Contractor effects modify discounts/payouts with capped rewards.",
+		"required_rocket_level": 1,
+		"target_type": "Asteroid (contract target)",
+		"reward_ratio": 1.1,
+		"unlocks": "Contractor affinity progression"
+	}
+}
 
 func setup(launchpad: Node) -> void:
 	_launchpad = launchpad
@@ -152,6 +191,7 @@ func populate_targets() -> void:
 	var awaiting_rocket_id = str(rm.get_primary_awaiting_rocket_id())
 	var awaiting_rocket_level = int(rm.get_rocket_level(awaiting_rocket_id))
 	var has_awaiting_rocket = awaiting_rocket_id != ""
+	_set_selector_panel_layout(has_awaiting_rocket)
 	_set_rocket_selector_visibility(vbox, not has_awaiting_rocket)
 	_set_title_for_state(panel, has_awaiting_rocket)
 	var auto_selected_target = ""
@@ -163,7 +203,6 @@ func populate_targets() -> void:
 		if auto_selected_target != "":
 			rm.select_target(auto_selected_target)
 			selected_target = auto_selected_target
-			_show_tutorial_hint_once(ACTION_SELECT_TARGET, HINT_PRESET_TARGET)
 
 	var targets_section = vbox.get_node_or_null("TargetsSection")
 	if targets_section == null:
@@ -184,6 +223,8 @@ func populate_targets() -> void:
 		guidance.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		PanelStyle.apply_muted(guidance)
 		targets_section.add_child(guidance)
+		return
+	if _render_mission_briefing_gate(targets_section, rm, mission_stage):
 		return
 
 	if auto_selected_target != "":
@@ -284,13 +325,20 @@ func populate_targets() -> void:
 		PanelStyle.apply_muted(hidden_lbl)
 		targets_section.add_child(hidden_lbl)
 
+func _render_mission_briefing_gate(targets_section: VBoxContainer, rm, mission_stage: int) -> bool:
+	# Mission briefings were creating visual clutter in the launchpad flow.
+	# Keep target selection immediately available.
+	return false
+
 func on_selector_target_pressed(target_id: String, _btn: Button) -> void:
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	if not rm:
 		return
 	var ok = rm.select_target(target_id)
 	if ok:
-		_show_tutorial_hint_once(ACTION_SELECT_TARGET, HINT_SELECT_TARGET)
+		preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("select_launch_target", {
+			"target_id": target_id
+		})
 		print("Launchpad: target selected from selector:", target_id)
 		populate_targets()
 	else:
@@ -302,6 +350,9 @@ func _on_mission5_contractor_pressed(contractor_id: String) -> void:
 		return
 	var ok = rm.select_mission5_contractor(contractor_id)
 	if ok:
+		preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("accept_contractor_offer", {
+			"contractor_id": contractor_id
+		})
 		populate_targets()
 
 func _render_mission5_contract_brief(targets_section: VBoxContainer, offer: Dictionary, selected_contractor: String) -> void:
@@ -318,23 +369,14 @@ func _render_mission5_contract_brief(targets_section: VBoxContainer, offer: Dict
 	var requested_text := []
 	for key in requested.keys():
 		requested_text.append("%s: %s kg" % [str(key), str(requested.get(key, 0))])
-	var requested_lbl: Label = EmptyLabelScene.instantiate()
-	requested_lbl.text = "Requested allotment: %s" % ", ".join(requested_text)
-	requested_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	PanelStyle.apply_muted(requested_lbl)
-	targets_section.add_child(requested_lbl)
-
-	var recommended_target_lbl: Label = EmptyLabelScene.instantiate()
-	recommended_target_lbl.text = "Recommended target: %s (asteroid)" % str(offer.get("recommended_target_label", offer.get("recommended_target_id", "")))
-	recommended_target_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	PanelStyle.apply_muted(recommended_target_lbl)
-	targets_section.add_child(recommended_target_lbl)
-
-	var recommended_rocket_lbl: Label = EmptyLabelScene.instantiate()
-	recommended_rocket_lbl.text = "Recommended rocket: Starter Rocket 1 (L1 mining is sufficient)."
-	recommended_rocket_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	PanelStyle.apply_muted(recommended_rocket_lbl)
-	targets_section.add_child(recommended_rocket_lbl)
+	var summary_lbl: Label = EmptyLabelScene.instantiate()
+	summary_lbl.text = "%s | Suggested target: %s" % [
+		", ".join(requested_text),
+		str(offer.get("recommended_target_label", offer.get("recommended_target_id", "")))
+	]
+	summary_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	PanelStyle.apply_muted(summary_lbl)
+	targets_section.add_child(summary_lbl)
 
 	var options: Array = offer.get("contractors", [])
 	for entry_any in options:
@@ -392,22 +434,20 @@ func _on_debug_mining_test_pressed() -> void:
 		if tree:
 			tree.change_scene_to_file("res://Scenes/UI/AsteroidPreview/asteroid_preview.tscn")
 
-func _show_tutorial_hint_once(action_key: String, message: String) -> void:
-	preload("res://Scripts/Utils/AppControllerHelper.gd").show_tutorial_hint_once(action_key, message)
 
 func _style_selector_panel(panel: Panel, vbox: VBoxContainer) -> void:
 	PanelStyle.apply_panel(panel, Color(0.08, 0.11, 0.15, 0.9))
 	if vbox:
-		vbox.add_theme_constant_override("separation", 10)
+		vbox.add_theme_constant_override("separation", 8)
 	var title = panel.get_node_or_null("VBox/Title")
 	if title and title is Label:
 		PanelStyle.apply_title(title)
 		title.text = "Select Your Rocket"
 		title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-		title.add_theme_font_size_override("font_size", 32)
+		title.add_theme_font_size_override("font_size", 24)
 	var back = panel.get_node_or_null("VBox/BackButton")
 	if back and back is Button:
-		back.custom_minimum_size = Vector2(0, 52)
+		back.custom_minimum_size = Vector2(0, 44)
 		back.text = "Back to Base"
 		PanelStyle.apply_button(back, false)
 
@@ -418,16 +458,24 @@ func _set_selector_panel_layout(has_awaiting: bool) -> void:
 	var panel = root_scene.get_node_or_null("UILayer/SelectorPanel")
 	if panel == null:
 		return
-	panel.anchor_left = 0.0
-	panel.anchor_top = 0.0
-	panel.anchor_right = 1.0
-	panel.anchor_bottom = 1.0
-	panel.offset_left = 16.0
-	panel.offset_top = 16.0
 	if has_awaiting:
-		panel.offset_right = -300.0
-		panel.offset_bottom = -120.0
+		# Compact target-selection mode after rocket exists.
+		panel.anchor_left = 0.0
+		panel.anchor_top = 0.0
+		panel.anchor_right = 0.0
+		panel.anchor_bottom = 0.0
+		panel.offset_left = 16.0
+		panel.offset_top = 16.0
+		panel.offset_right = 780.0
+		panel.offset_bottom = 700.0
 	else:
+		# Full-width creation mode before rocket exists.
+		panel.anchor_left = 0.0
+		panel.anchor_top = 0.0
+		panel.anchor_right = 1.0
+		panel.anchor_bottom = 1.0
+		panel.offset_left = 16.0
+		panel.offset_top = 16.0
 		panel.offset_right = -16.0
 		panel.offset_bottom = -16.0
 

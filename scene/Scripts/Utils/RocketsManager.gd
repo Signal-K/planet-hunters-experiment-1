@@ -19,7 +19,17 @@ const ASTEROID_REQUIRED_LEVEL_BY_BAND := [1, 2]
 const PLANET_DISTANCE_BANDS_AU := [120.0, 220.0, 340.0]
 const PLANET_REQUIRED_LEVEL_BY_BAND := [3, 3, 3]
 const MISSION_PROGRESS_SCHEMA_VERSION := 2
+const SCANNER_UNLOCK_COMPLETED_MISSIONS := 2
+
+## Mission System Constants
+## See: @doc/specs/mission-system-specification for complete mission design
+
+# Scanner Station build cost (Mission 3 unlock)
+# Spec: M3 requires 2B F scanner construction before first scan
 const SCANNER_BUILD_COST := 2000000000
+
+# Predefined mission targets with reward ratios
+# Spec: M1=1.2x, M2=1.3x, M4=1.4x, M5=1.1x base
 const PREDEFINED_MISSION_TARGETS := {
     1: {
         "id": "mission-1-training-target",
@@ -27,7 +37,7 @@ const PREDEFINED_MISSION_TARGETS := {
         "type": "asteroid",
         "distance_au": 3.0,
         "required_level": 1,
-        "reward_ratio": 1.2
+        "reward_ratio": 1.2  # Spec: M1 gentle introduction, guaranteed profit
     },
     2: {
         "id": "mission-2-upgrade-target",
@@ -35,7 +45,7 @@ const PREDEFINED_MISSION_TARGETS := {
         "type": "asteroid",
         "distance_au": 12.0,
         "required_level": 2,
-        "reward_ratio": 1.3
+        "reward_ratio": 1.3  # Spec: M2 reward upgrade investment
     },
     4: {
         "id": "mission-4-exoplanet-target",
@@ -43,7 +53,7 @@ const PREDEFINED_MISSION_TARGETS := {
         "type": "planet",
         "distance_au": 120.0,
         "required_level": 3,
-        "reward_ratio": 1.4
+        "reward_ratio": 1.4  # Spec: M4 reward planetary exploration
     },
     5: {
         "id": "mission-5-contractor-target",
@@ -51,27 +61,43 @@ const PREDEFINED_MISSION_TARGETS := {
         "type": "asteroid",
         "distance_au": 8.0,
         "required_level": 1,
-        "reward_ratio": 1.1
+        "reward_ratio": 1.1  # Spec: M5 base ratio, contractor effects provide value
     }
 }
+
+# Mission 3: Scanner-driven target selection
+# Spec: Shows 5 untargeted asteroids, 1 reachable by SR2
 const MISSION3_VISIBLE_TARGET_COUNT := 5
+
+# Mission 4: Planetary exploration
+# Spec: Shows 5 untargeted planets, requires SR3
 const MISSION4_VISIBLE_TARGET_COUNT := 5
+
+# Mission 5: Contractor missions
+# Spec: Shows 5 asteroid targets matching contractor mineral requests
 const MISSION5_VISIBLE_TARGET_COUNT := 5
+
+# Mission 5 payout cap
+# Spec: Maximum 1.4B F payout to prevent over-earning
 const MISSION5_PAYOUT_CAP := 1400000000
+
+# Mission 5 contractor offers
+# Spec: Rocketlab (20% build discount) vs Astroforge (1.15x payout bonus)
 const MISSION5_CONTRACTOR_OFFERS := [
     {
         "id": "rocketlab",
         "name": "Rocketlab",
         "effect": "build_discount",
-        "build_discount_pct": 0.20
+        "build_discount_pct": 0.20  # Spec: 20% off rocket purchase
     },
     {
         "id": "astroforge",
         "name": "Astroforge",
         "effect": "payout_bonus",
-        "payout_bonus_mult": 1.15
+        "payout_bonus_mult": 1.15  # Spec: 1.15x payout (capped at 1.4B)
     }
 ]
+
 static var _preview_target: Dictionary = {}
 static var _return_to_new_mission_panel: bool = false
 static var _preview_index: int = 0
@@ -136,10 +162,14 @@ static func load_state() -> Dictionary:
         data["pending_mission_guidance_id"] = 0
     if not data.has("scanner_station_built"):
         data["scanner_station_built"] = false
+    if not data.has("scanner_unlocked"):
+        data["scanner_unlocked"] = max(int(data.get("mission_progress_completed", 0)), 0) >= SCANNER_UNLOCK_COMPLETED_MISSIONS
     if not data.has("scanner_unlock_dialog_seen"):
         data["scanner_unlock_dialog_seen"] = false
     if not data.has("mission5_contract_offer"):
         data["mission5_contract_offer"] = {}
+    if not data.has("mission_briefings_seen"):
+        data["mission_briefings_seen"] = {}
     if not data.has("mission_progress_schema_version"):
         data["mission_progress_schema_version"] = 0
     var progress_migrated = _migrate_mission_progress_schema(data)
@@ -224,7 +254,9 @@ static func get_scanner_build_cost() -> int:
     return SCANNER_BUILD_COST
 
 static func is_scanner_unlocked() -> bool:
-    return get_mission_stage() >= 3
+    var s = load_state()
+    var progress_unlock = max(int(s.get("mission_progress_completed", 0)), 0) >= SCANNER_UNLOCK_COMPLETED_MISSIONS
+    return bool(s.get("scanner_unlocked", false)) or progress_unlock
 
 static func is_scanner_station_built() -> bool:
     var s = load_state()
@@ -381,6 +413,26 @@ static func clear_mission5_contract_offer() -> bool:
     s["mission5_contract_offer"] = {}
     return save_state(s)
 
+static func is_mission_briefing_seen(stage: int) -> bool:
+    if stage <= 0:
+        return false
+    var s = load_state()
+    var seen = s.get("mission_briefings_seen", {})
+    if typeof(seen) != TYPE_DICTIONARY:
+        return false
+    return bool(seen.get(str(stage), false))
+
+static func mark_mission_briefing_seen(stage: int) -> bool:
+    if stage <= 0:
+        return false
+    var s = load_state()
+    var seen = s.get("mission_briefings_seen", {})
+    if typeof(seen) != TYPE_DICTIONARY:
+        seen = {}
+    seen[str(stage)] = true
+    s["mission_briefings_seen"] = seen
+    return save_state(s)
+
 static func select_mission5_contractor(contractor_id: String) -> bool:
     if contractor_id == "":
         return false
@@ -504,6 +556,7 @@ static func mark_mission_completed(badge: String = "") -> bool:
     s["completed_mission_badges"] = badges
     _sanitize_completed_badges(s)
     s["mission_progress_completed"] = s.get("completed_mission_badges", []).size()
+    s["scanner_unlocked"] = int(s.get("mission_progress_completed", 0)) >= SCANNER_UNLOCK_COMPLETED_MISSIONS
     if int(s.get("mission_progress_completed", 0)) >= 1:
         var unlocked = s.get("unlocked", [])
         if typeof(unlocked) != TYPE_ARRAY:
@@ -1020,8 +1073,10 @@ static func reset_state() -> bool:
     data["mission_progress_completed"] = 0
     data["completed_mission_badges"] = []
     data["scanner_station_built"] = false
+    data["scanner_unlocked"] = false
     data["scanner_unlock_dialog_seen"] = false
     data["mission5_contract_offer"] = {}
+    data["mission_briefings_seen"] = {}
     data["mission_progress_schema_version"] = MISSION_PROGRESS_SCHEMA_VERSION
     data["pending_mission_guidance_id"] = 0
     _override_state = data.duplicate(true)
@@ -1426,6 +1481,7 @@ static func _sanitize_completed_badges(state: Dictionary) -> bool:
     var changed = cleaned.size() != raw.size() or prior_count != cleaned.size()
     state["completed_mission_badges"] = cleaned
     state["mission_progress_completed"] = cleaned.size()
+    state["scanner_unlocked"] = cleaned.size() >= SCANNER_UNLOCK_COMPLETED_MISSIONS
     return changed
 
 static func _migrate_mission_progress_schema(state: Dictionary) -> bool:
@@ -1435,6 +1491,7 @@ static func _migrate_mission_progress_schema(state: Dictionary) -> bool:
     # Reset stale progression to avoid legacy saves marking mission roadmap as completed.
     state["mission_progress_completed"] = 0
     state["completed_mission_badges"] = []
+    state["scanner_unlocked"] = false
     state["mission_progress_schema_version"] = MISSION_PROGRESS_SCHEMA_VERSION
     return true
 

@@ -9,7 +9,7 @@ labels:
   - Launch
   - Data
 createdAt: '2026-01-25T01:36:27.595Z'
-updatedAt: '2026-02-02T03:05:53.905Z'
+updatedAt: '2026-02-25T08:45:18.941Z'
 timeSpent: 2225
 assignee: '@Liam'
 ---
@@ -46,5 +46,9 @@ Test
 test
 
 ```
+
+
+
+Spec Reference: @doc/specs/level-progression-and-unlocks-specification
 <!-- SECTION:NOTES:END -->
 

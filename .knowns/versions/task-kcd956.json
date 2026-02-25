@@ -1,6 +1,6 @@
 {
   "taskId": "kcd956",
-  "currentVersion": 4,
+  "currentVersion": 5,
   "versions": [
     {
       "id": "v1",
@@ -92,6 +92,31 @@
       "snapshot": {
         "title": "Sprite sheet separation for rocket 1 launch",
         "status": "todo",
+        "priority": "medium",
+        "labels": [
+          "Rocket",
+          "Rockets",
+          "Sprites",
+          "Animations"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "kcd956",
+      "version": 5,
+      "timestamp": "2026-02-25T08:44:39.814Z",
+      "changes": [
+        {
+          "field": "description",
+          "newValue": "Separate rocket 1 sprite sheet for launch animations. See @doc/dev/nebula-theme-implementation for visual design context."
+        }
+      ],
+      "snapshot": {
+        "title": "Sprite sheet separation for rocket 1 launch",
+        "description": "Separate rocket 1 sprite sheet for launch animations. See @doc/dev/nebula-theme-implementation for visual design context.",
+        "status": "in-review",
         "priority": "medium",
         "labels": [
           "Rocket",

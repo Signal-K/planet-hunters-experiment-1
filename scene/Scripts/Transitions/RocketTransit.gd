@@ -55,9 +55,6 @@ enum Phase {
 
 var _phase := Phase.EARTH_ORBIT
 
-func should_hide_tutorial_panel() -> bool:
-	return _phase != Phase.TARGET_ORBIT
-
 func _ready() -> void:
 	_setup_background()
 	_setup_label()

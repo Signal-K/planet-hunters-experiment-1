@@ -1,109 +1,113 @@
 extends SceneTree
 
-# Test runner for Tutorial skip flow (runs when script is started)
-# Run with: godot --path scene --script res://tests/run_tutorial_tests.gd
-
 const TestReporter = preload("res://tests/TestReporter.gd")
+const TutorialControllerScript = preload("res://Scripts/Tutorial/TutorialController.gd")
 
 var reporter := TestReporter.new()
 
 func _init() -> void:
-    reporter.start_suite("Tutorial Skip Flow", {
-        "engine": Engine.get_version_info()["string"],
-        "os": OS.get_name(),
-        "project": "scene",
-        "timestamp": Time.get_datetime_string_from_system()
-    })
-    # Start tests after initialization
-    run_tests()
+	reporter.start_suite("Tutorial Infrastructure", {
+		"engine": Engine.get_version_info()["string"],
+		"os": OS.get_name(),
+		"project": "scene",
+		"timestamp": Time.get_datetime_string_from_system()
+	})
+	await run_all_tests()
+	reporter.summary()
+	await create_timer(0.1).timeout
+	quit(1 if reporter.tests_failed > 0 else 0)
 
-func run_tests() -> void:
-    reporter.start_test("Skip button marks tutorial complete")
-    DirAccess.remove_absolute("user://tutorial.cfg")
-    var AppControllerScript = load("res://Scripts/Systems/AppController.gd")
-    if AppControllerScript == null:
-        reporter.fail_test("Could not load Scripts/Systems/AppController.gd")
-        self.quit(5)
-        return
+func run_all_tests() -> void:
+	await test_progression_advances_on_expected_actions()
+	await test_skip_and_replay_controls()
+	await test_state_persists_across_controller_recreation()
 
-    var app = AppControllerScript.new()
-    app.name = "AppController"
-    self.root.add_child(app)
+func _setup_controller() -> Node:
+	var controller = TutorialControllerScript.new()
+	controller.name = "TutorialController"
+	get_root().add_child(controller)
+	await create_timer(0.05).timeout
+	return controller
 
-    var PanelScene = load("res://Scenes/UI/TutorialPanel.tscn")
-    if PanelScene == null:
-        reporter.fail_test("Could not load TutorialPanel.tscn")
-        self.quit(6)
-        return
+func _teardown_controller(controller: Node) -> void:
+	if is_instance_valid(controller):
+		controller.queue_free()
+	await create_timer(0.05).timeout
 
-    var panel = PanelScene.instantiate()
-    self.root.add_child(panel)
+func _reset_tutorial_state() -> void:
+	DirAccess.remove_absolute("user://tutorial_v2.cfg")
 
-    # Wait a brief moment so the panel's _ready() runs and connects signals
-    await create_timer(0.05).timeout
+func test_progression_advances_on_expected_actions() -> void:
+	reporter.start_test("Tutorial progression advances on ordered mission actions")
+	_reset_tutorial_state()
+	var controller = await _setup_controller()
 
-    # Listen for the app_controller signal
-    if app.has_signal("tutorial_completed_updated"):
-        app.tutorial_completed_updated.connect(Callable(self, "_on_tutorial_completed"))
-    else:
-        reporter.fail_test("AppController missing tutorial_completed_updated signal")
-        self.quit(7)
-        return
+	controller.replay_full()
+	await create_timer(0.02).timeout
+	var before = controller.get_tutorial_state()
+	if str(before.get("current_step", {}).get("action_key", "")) != "open_launchpad":
+		reporter.fail_test("Expected first action open_launchpad")
+		await _teardown_controller(controller)
+		return
 
-    # Find the Skip button and simulate a press.
-    # Primary path matches current TutorialPanel scene hierarchy.
-    var skip_btn = panel.get_node_or_null("CoachPanel/Margin/Root/TopRow/SkipButton")
-    if skip_btn == null:
-        # Backward-compatible fallback in case hierarchy changes again.
-        skip_btn = panel.find_child("SkipButton", true, false)
-    if skip_btn == null:
-        reporter.fail_test("SkipButton not found")
-        self.quit(8)
-        return
+	controller.record_action("open_launchpad")
+	controller.record_action("create_rocket")
+	controller.record_action("select_launch_target")
+	var after = controller.get_tutorial_state()
+	if int(after.get("current_step_index", 0)) < 3:
+		reporter.fail_test("Expected current_step_index >= 3 after first actions")
+		await _teardown_controller(controller)
+		return
 
-    print("Tutorial tests: pressing Skip button")
-    skip_btn.emit_signal("pressed")
+	reporter.pass_test()
+	await _teardown_controller(controller)
 
-    # Timeout in 3 seconds
-    var timer = self.create_timer(3.0)
-    timer.timeout.connect(Callable(self, "_on_timeout"))
+func test_skip_and_replay_controls() -> void:
+	reporter.start_test("Tutorial supports skip and mission/full replay")
+	_reset_tutorial_state()
+	var controller = await _setup_controller()
 
-func _on_tutorial_completed(is_completed) -> void:
-    if is_completed:
-        reporter.pass_test()
-        _test_tutorial_first_time_tracking()
-        reporter.summary()
-        self.quit(0)
-    else:
-        reporter.fail_test("tutorial_completed was false")
-        reporter.summary()
-        self.quit(2)
+	controller.skip_all()
+	var skipped = controller.get_tutorial_state()
+	if not bool(skipped.get("skipped", false)):
+		reporter.fail_test("Expected skipped=true after skip_all")
+		await _teardown_controller(controller)
+		return
 
-func _on_timeout() -> void:
-    reporter.fail_test("Timeout waiting for tutorial_completed signal")
-    reporter.summary()
-    self.quit(3)
+	controller.replay_current_mission()
+	var replay_mission = controller.get_tutorial_state()
+	if bool(replay_mission.get("skipped", true)):
+		reporter.fail_test("Expected skipped=false after replay_current_mission")
+		await _teardown_controller(controller)
+		return
 
-func _test_tutorial_first_time_tracking() -> void:
-    reporter.start_test("First-time tutorial actions persist and do not repeat")
-    DirAccess.remove_absolute("user://tutorial.cfg")
-    var AppControllerScript = load("res://Scripts/Systems/AppController.gd")
-    if AppControllerScript == null:
-        reporter.fail_test("Could not load AppController for first-time tracking test")
-        return
-    var app = AppControllerScript.new()
-    app.name = "AppControllerTracking"
-    self.root.add_child(app)
-    var first = app.show_tutorial_hint_once("create_rocket", "One sentence.")
-    var second = app.show_tutorial_hint_once("create_rocket", "One sentence.")
-    app.queue_free()
+	controller.record_action("open_launchpad")
+	controller.replay_full()
+	var replay_full = controller.get_tutorial_state()
+	if int(replay_full.get("current_stage", 0)) != 1 or int(replay_full.get("current_step_index", -1)) != 0:
+		reporter.fail_test("Expected replay_full to reset stage/index")
+		await _teardown_controller(controller)
+		return
 
-    var reloaded = AppControllerScript.new()
-    reloaded.name = "AppControllerTrackingReloaded"
-    self.root.add_child(reloaded)
-    var persisted = reloaded.has_seen_tutorial_action("create_rocket")
-    reloaded.queue_free()
-    if first and not second and persisted:
-        reporter.pass_test()
-    else:
-        reporter.fail_test("Expected first=true second=false persisted=true, got first=%s second=%s persisted=%s" % [first, second, persisted])
+	reporter.pass_test()
+	await _teardown_controller(controller)
+
+func test_state_persists_across_controller_recreation() -> void:
+	reporter.start_test("Tutorial state persists across controller recreation")
+	_reset_tutorial_state()
+	var controller = await _setup_controller()
+	controller.replay_full()
+	controller.record_action("open_launchpad")
+	controller.record_action("create_rocket")
+	await create_timer(0.02).timeout
+	await _teardown_controller(controller)
+
+	var reloaded = await _setup_controller()
+	var state = reloaded.get_tutorial_state()
+	if int(state.get("current_step_index", 0)) < 2:
+		reporter.fail_test("Expected persisted step index >= 2, got %s" % str(state.get("current_step_index", 0)))
+		await _teardown_controller(reloaded)
+		return
+
+	reporter.pass_test()
+	await _teardown_controller(reloaded)

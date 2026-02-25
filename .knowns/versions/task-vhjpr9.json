@@ -1,6 +1,6 @@
 {
   "taskId": "vhjpr9",
-  "currentVersion": 18,
+  "currentVersion": 19,
   "versions": [
     {
       "id": "v1",
@@ -473,6 +473,33 @@
         "acceptanceCriteria": [],
         "implementationPlan": "1. Redesign tutorial system: convert TutorialPanel into a structured step-by-step guide with persistent progress, contextual instructions, and structure explanations.\n2. Wire gameplay signals into tutorial progress for scan, rocket creation, target selection, launch, mining, return/debrief, and post-mission economy actions (sell/salvage/scrap/store).\n3. Integrate level/unlock explanations into tutorial content by reading unlock data from existing progression systems (rockets, missions, subcontractors, planet scan unlock).\n4. Update in-game copy/UI so each structure (Satellite Station, Launchpad, Control Station, Market/Subcontractors, Menu/Progress) is clearly explained in context.\n5. Validate flow manually via scene transitions and run available tests/lint for touched scripts; then update task notes and AC.",
         "implementationNotes": "✓ Rebuilt tutorial panel into 7-step guided mission flow (scan→rocket→target→launch→mine→return→debrief). ✓ Added dynamic structure explanations + level unlock overview in-panel. ✓ Added AppController tutorial progress signal/API + auto-complete on final step. ✓ Hooked debrief actions (sell/salvage/scrap/keep/leave/archive) to final tutorial step.\n\n✓ Replaced oversized tutorial wall with compact coach card (single action line + short context). ✓ Added scene-aware guidance text per step (EarthBase1, LaunchpadScene, AsteroidPreview, MissionDebrief). ✓ Removed checklist/structures/unlocks dump from live overlay.\n\n✓ Added visual guidance: tutorial now pulses the current target UI/structure and shows a pointer marker to direct attention step-by-step.\n\n✓ Fixed disappearance by instancing TutorialPanel in Launchpad scene. ✓ Also instanced TutorialPanel in AsteroidPreview and MissionDebrief for uninterrupted guidance. ✓ Reduced on-card text to a single instruction line and added responsive card width/font sizing for smaller screens.\n\n✓ Added TutorialPanel instance to transition preview scenes: rocket_transit and rocket_return (fixes missing tutorial in en-route/mining preview flow)."
+      }
+    },
+    {
+      "id": "v19",
+      "taskId": "vhjpr9",
+      "version": 19,
+      "timestamp": "2026-02-25T08:45:18.730Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "✓ Rebuilt tutorial panel into 7-step guided mission flow (scan→rocket→target→launch→mine→return→debrief). ✓ Added dynamic structure explanations + level unlock overview in-panel. ✓ Added AppController tutorial progress signal/API + auto-complete on final step. ✓ Hooked debrief actions (sell/salvage/scrap/keep/leave/archive) to final tutorial step.\n\n✓ Replaced oversized tutorial wall with compact coach card (single action line + short context). ✓ Added scene-aware guidance text per step (EarthBase1, LaunchpadScene, AsteroidPreview, MissionDebrief). ✓ Removed checklist/structures/unlocks dump from live overlay.\n\n✓ Added visual guidance: tutorial now pulses the current target UI/structure and shows a pointer marker to direct attention step-by-step.\n\n✓ Fixed disappearance by instancing TutorialPanel in Launchpad scene. ✓ Also instanced TutorialPanel in AsteroidPreview and MissionDebrief for uninterrupted guidance. ✓ Reduced on-card text to a single instruction line and added responsive card width/font sizing for smaller screens.\n\n✓ Added TutorialPanel instance to transition preview scenes: rocket_transit and rocket_return (fixes missing tutorial in en-route/mining preview flow).",
+          "newValue": "✓ Rebuilt tutorial panel into 7-step guided mission flow (scan→rocket→target→launch→mine→return→debrief). ✓ Added dynamic structure explanations + level unlock overview in-panel. ✓ Added AppController tutorial progress signal/API + auto-complete on final step. ✓ Hooked debrief actions (sell/salvage/scrap/keep/leave/archive) to final tutorial step.\n\n✓ Replaced oversized tutorial wall with compact coach card (single action line + short context). ✓ Added scene-aware guidance text per step (EarthBase1, LaunchpadScene, AsteroidPreview, MissionDebrief). ✓ Removed checklist/structures/unlocks dump from live overlay.\n\n✓ Added visual guidance: tutorial now pulses the current target UI/structure and shows a pointer marker to direct attention step-by-step.\n\n✓ Fixed disappearance by instancing TutorialPanel in Launchpad scene. ✓ Also instanced TutorialPanel in AsteroidPreview and MissionDebrief for uninterrupted guidance. ✓ Reduced on-card text to a single instruction line and added responsive card width/font sizing for smaller screens.\n\n✓ Added TutorialPanel instance to transition preview scenes: rocket_transit and rocket_return (fixes missing tutorial in en-route/mining preview flow).\n\n\n\nSpec Reference: @doc/specs/mission-system-specification (Tutorial system)"
+        }
+      ],
+      "snapshot": {
+        "title": "Explain each structure to the user",
+        "description": "Telescope Station: Discover objects and targets for future missions here\n\nControl Station: Control all missions and rockets\n\nLaunchpad: Launch missions here\n\nCan probably get AI to augment this :)",
+        "status": "done",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "Tutorial",
+          "Structures"
+        ],
+        "acceptanceCriteria": [],
+        "implementationPlan": "1. Redesign tutorial system: convert TutorialPanel into a structured step-by-step guide with persistent progress, contextual instructions, and structure explanations.\n2. Wire gameplay signals into tutorial progress for scan, rocket creation, target selection, launch, mining, return/debrief, and post-mission economy actions (sell/salvage/scrap/store).\n3. Integrate level/unlock explanations into tutorial content by reading unlock data from existing progression systems (rockets, missions, subcontractors, planet scan unlock).\n4. Update in-game copy/UI so each structure (Satellite Station, Launchpad, Control Station, Market/Subcontractors, Menu/Progress) is clearly explained in context.\n5. Validate flow manually via scene transitions and run available tests/lint for touched scripts; then update task notes and AC.",
+        "implementationNotes": "✓ Rebuilt tutorial panel into 7-step guided mission flow (scan→rocket→target→launch→mine→return→debrief). ✓ Added dynamic structure explanations + level unlock overview in-panel. ✓ Added AppController tutorial progress signal/API + auto-complete on final step. ✓ Hooked debrief actions (sell/salvage/scrap/keep/leave/archive) to final tutorial step.\n\n✓ Replaced oversized tutorial wall with compact coach card (single action line + short context). ✓ Added scene-aware guidance text per step (EarthBase1, LaunchpadScene, AsteroidPreview, MissionDebrief). ✓ Removed checklist/structures/unlocks dump from live overlay.\n\n✓ Added visual guidance: tutorial now pulses the current target UI/structure and shows a pointer marker to direct attention step-by-step.\n\n✓ Fixed disappearance by instancing TutorialPanel in Launchpad scene. ✓ Also instanced TutorialPanel in AsteroidPreview and MissionDebrief for uninterrupted guidance. ✓ Reduced on-card text to a single instruction line and added responsive card width/font sizing for smaller screens.\n\n✓ Added TutorialPanel instance to transition preview scenes: rocket_transit and rocket_return (fixes missing tutorial in en-route/mining preview flow).\n\n\n\nSpec Reference: @doc/specs/mission-system-specification (Tutorial system)"
       }
     }
   ]

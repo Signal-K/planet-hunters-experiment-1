@@ -37,6 +37,11 @@ static func spawn(launchpad_node: Node, rocket_id: String) -> bool:
     inst.add_to_group("rocket")
     inst.scale = Vector2(0.4, 0.4)
     inst.position = STARTERROCKET1_LAUNCHPAD_POS
+    
+    # Rockets are Node2D, they don't block input by default
+    # The InteractionArea should be on a higher z-index
+    inst.z_index = -1  # Put rocket behind interaction area
+    
     launchpad_node.add_child(inst)
     var rm = preload("res://Scripts/Utils/RocketsManager.gd")
     if rm:
@@ -48,10 +53,14 @@ static func spawn(launchpad_node: Node, rocket_id: String) -> bool:
     # Hide creation UI (RocketSelector) but keep selector panel visible
     var root_scene = launchpad_node.get_tree().current_scene
     if root_scene:
-        var rocket_selector = root_scene.get_node_or_null("UILayer/SelectorPanel/VBox/RocketSelector")
-        if rocket_selector:
-            rocket_selector.visible = false
-            print("Launchpad: hid RocketSelector (creation UI) after spawn")
+        var stack = [root_scene]
+        while stack.size() > 0:
+            var node = stack.pop_back()
+            if node.name == "RocketSelector" and node is Control:
+                node.visible = false
+            for child in node.get_children():
+                stack.append(child)
+        print("Launchpad: hid RocketSelector (creation UI) after spawn")
         # Ensure targets are populated
         if launchpad_node.has_method("_populate_targets"):
             launchpad_node._populate_targets()

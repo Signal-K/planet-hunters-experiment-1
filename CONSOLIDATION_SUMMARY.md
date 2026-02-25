@@ -245,7 +245,6 @@ func _setup_interaction() -> void:
 |------|-------|------------------|
 | RocketsManager.gd | 1468 | Rockets, missions, targets, state |
 | AsteroidPreview.gd | 695 | 3D rendering, UI, mining, inventory |
-| SidescrollMining.gd | 547 | Mining game, tutorial, UI |
 | LaunchpadSelectorPanel.gd | 526 | Rocket selection, drag/drop, UI |
 | SatelliteStationPanel.gd | 506 | Scanner UI, anomaly loading |
 
@@ -289,13 +288,11 @@ func _setup_interaction() -> void:
 ## Alignment with M1-M3 Vision
 
 ### Mission Progression (from task-4r0j05)
-- **M1:** Tutorial mission with StarterRocket1 (static, no animation)
 - **M2:** Requires new rocket unlock
 - **M3:** Scanner introduction
 
 ### Verification Needed
 - [ ] No code for missions beyond M3
-- [ ] Tutorial flow matches spec
 - [ ] Scanner gating works correctly
 - [ ] No pre-M1 complexity (multiple rockets, advanced features)
 - [ ] Unused contractor logic (M5+) removed
@@ -346,7 +343,6 @@ func _setup_interaction() -> void:
 
 After each phase:
 1. Run Godot editor - check for errors
-2. Test M1 tutorial flow
 3. Test M2 progression
 4. Test M3 scanner introduction
 5. Run existing test suite

@@ -86,12 +86,6 @@ export const MenuScreen: React.FC<MenuScreenProps> = ({ navigation }) => {
               {syncState.experienceXp} XP · Lvl {syncState.experienceLevel}
             </Text>
           </View>
-          <View style={commonStyles.menuStatRow}>
-            <Text style={commonStyles.menuStatLabel}>Tutorial</Text>
-            <Text style={commonStyles.menuStatValue}>
-              {syncState.tutorialCompleted ? 'Complete' : 'Incomplete'}
-            </Text>
-          </View>
         </View>
       </ScrollView>
 

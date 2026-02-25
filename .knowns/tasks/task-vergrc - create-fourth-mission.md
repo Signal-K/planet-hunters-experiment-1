@@ -10,7 +10,7 @@ labels:
   - tutorial
   - mission4
 createdAt: '2026-02-19T11:22:17.000Z'
-updatedAt: '2026-02-19T03:36:40.757Z'
+updatedAt: '2026-02-25T08:45:01.153Z'
 timeSpent: 0
 assignee: '@me'
 ---
@@ -42,5 +42,9 @@ Mission 4 will involve the user acquiring a level 3 rocket, which has a distance
 - Updated scanner filtering to support Mission 4 planet progression filtering and extended early-mission Return Home lock to include mission stage 4.
 - Added Mission 4 debrief buyer messaging showing 3 buyers with affinity gating for non-default buyers.
 - Calibrated Mission 4 yield scalar so full mine + scrap with SR3 lands near 140% payout target.
+
+
+
+Spec Reference: @doc/specs/mission-system-specification (Mission 4 design)
 <!-- SECTION:NOTES:END -->
 

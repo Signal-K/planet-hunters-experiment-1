@@ -6,6 +6,7 @@ const SALVAGE_REFUND_PCT := 0.10
 const XP_AWARD_MISSION := 4
 const ORBIT_SALE_MULTIPLIER := 0.8
 const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
+const NavigationMixin = preload("res://Scripts/Utils/NavigationMixin.gd")
 const LabelActionRowScene = preload("res://Scenes/UI/Templates/LabelActionRow.tscn")
 
 @onready var title_label: Label = $UI/Root/Panel/VBox/Title
@@ -162,7 +163,7 @@ func _back_to_missions() -> void:
 	if scene_manager and scene_manager.has_method("change_to_scene"):
 		scene_manager.change_to_scene(ORBIT_SCENE_BACK)
 	else:
-		tree.change_scene_to_file(ORBIT_SCENE_BACK)
+		NavigationMixin.go_to_scene(tree, ORBIT_SCENE_BACK)
 
 func _get_app_controller() -> Node:
 	return get_node_or_null("/root/AppController")

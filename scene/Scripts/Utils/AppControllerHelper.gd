@@ -7,7 +7,7 @@ static func get_instance() -> Node:
 		return tree.root.find_child("AppController", true, false)
 	return null
 
-static func show_tutorial_hint_once(action_key: String, message: String) -> void:
+static func record_tutorial_action(action_key: String, metadata: Dictionary = {}) -> void:
 	var app = get_instance()
-	if app and app.has_method("show_tutorial_hint_once"):
-		app.show_tutorial_hint_once(action_key, message)
+	if app and app.has_method("record_tutorial_action"):
+		app.record_tutorial_action(action_key, metadata)

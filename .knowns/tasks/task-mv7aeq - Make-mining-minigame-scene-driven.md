@@ -7,7 +7,7 @@ labels:
   - refactor
   - architecture
 createdAt: '2026-02-24T14:47:34.421Z'
-updatedAt: '2026-02-25T00:27:23.737Z'
+updatedAt: '2026-02-25T08:45:17.292Z'
 timeSpent: 39
 ---
 # Make mining minigame scene-driven
@@ -58,5 +58,9 @@ Move all configuration, visual setup, and structure into .tscn files. Scripts sh
 - Check collisions via metadata
 - Update UI text/bars
 - Emit signals
+
+
+
+Spec Reference: @doc/specs/mining-minigame-system-specification
 <!-- SECTION:NOTES:END -->
 

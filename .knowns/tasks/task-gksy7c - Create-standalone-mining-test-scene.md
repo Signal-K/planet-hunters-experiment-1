@@ -8,7 +8,7 @@ labels:
   - mining
   - ui
 createdAt: '2026-02-24T14:18:07.177Z'
-updatedAt: '2026-02-25T00:26:46.789Z'
+updatedAt: '2026-02-25T08:45:17.908Z'
 timeSpent: 62
 ---
 # Create standalone mining test scene
@@ -52,5 +52,9 @@ Created completely standalone mining test scene:
 
 ### Removed
 - Old MiningTestLauncher.gd (replaced with simpler approach)
+
+
+
+Spec Reference: @doc/specs/mining-minigame-system-specification
 <!-- SECTION:NOTES:END -->
 

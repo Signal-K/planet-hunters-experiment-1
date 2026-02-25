@@ -7,8 +7,6 @@ var _launch_btn_connected: bool = false
 var _launch_button: Button = null
 const COUNTDOWN_STEP_TIME := 0.6
 const OUTBOUND_TRANSIT_SCENE_PATH := "res://Scenes/Transitions/rocket_transit.tscn"
-const ACTION_LAUNCH_ROCKET := "launch_rocket_from_earth"
-const HINT_LAUNCH_ROCKET := "Your rocket is launching now."
 
 func setup(launchpad: Node, on_show_selector: Callable) -> void:
 	_launchpad = launchpad
@@ -110,6 +108,10 @@ func _on_launch_button_pressed() -> void:
 	var target = rm.get_selected_target()
 	if target == "":
 		print("Launchpad: No target selected — cannot launch. Open Scanner Station to choose a target.")
+		if _on_show_selector.is_valid():
+			_on_show_selector.call()
+		if _launchpad and _launchpad.has_method("_populate_targets"):
+			_launchpad._populate_targets()
 		if _launch_button:
 			_launch_button.disabled = false
 		return
@@ -144,7 +146,10 @@ func _on_launch_button_pressed() -> void:
 	if set_ok:
 		print("Launchpad: marked rocket %s as launched" % rocket.name)
 		_award_launch_experience()
-		_show_tutorial_hint_once(ACTION_LAUNCH_ROCKET, HINT_LAUNCH_ROCKET)
+		preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("launch_rocket_from_earth", {
+			"rocket_id": rocket.name,
+			"target_id": launch_target_id
+		})
 	else:
 		print("Launchpad: failed to mark rocket as launched")
 	var launched_rocket_id = rocket.name
@@ -235,8 +240,6 @@ func _transition_to_outbound_transit(rocket_id: String, target_id: String, previ
 	else:
 		tree.change_scene_to_file(OUTBOUND_TRANSIT_SCENE_PATH)
 
-func _show_tutorial_hint_once(action_key: String, message: String) -> void:
-	preload("res://Scripts/Utils/AppControllerHelper.gd").show_tutorial_hint_once(action_key, message)
 
 func _resolve_launch_button() -> Button:
 	if _launch_button and is_instance_valid(_launch_button):

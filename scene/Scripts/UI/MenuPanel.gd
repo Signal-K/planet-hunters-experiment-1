@@ -6,7 +6,9 @@ extends Control
 signal panel_closed
 signal counter_changed(new_value: int)
 signal reset_all
-signal reset_tutorial
+signal skip_tutorial_requested
+signal replay_mission_tutorial_requested
+signal replay_all_tutorial_requested
 
 const UnlockHeaderScene = preload("res://Scenes/UI/Templates/MenuUnlockHeader.tscn")
 const UnlockItemScene = preload("res://Scenes/UI/Templates/MenuUnlockItem.tscn")
@@ -21,7 +23,9 @@ const LogbookKeyValueRowScene = preload("res://Scenes/UI/Templates/MenuLogbookKe
 @onready var close_btn: Button = $PanelContainer/Panel/VBoxContainer/HeaderContainer/HeaderBackground/HeaderContent/CloseButton
 @onready var logbook_btn: Button = $PanelContainer/Panel/VBoxContainer/HeaderContainer/HeaderBackground/HeaderContent/LogbookButton
 @onready var reset_btn: Button = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/ResetButton
-@onready var reset_tutorial_btn: Button = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/ResetTutorialButton
+@onready var skip_tutorial_btn: Button = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/SkipTutorialButton
+@onready var replay_mission_tutorial_btn: Button = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/ReplayMissionTutorialButton
+@onready var replay_all_tutorial_btn: Button = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/ReplayAllTutorialButton
 @onready var progress_title: Label = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/ProgressCard/ProgressContainer/ProgressTitle
 @onready var level_label: Label = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/ProgressCard/ProgressContainer/LevelRow/LevelLabel
 @onready var xp_label: Label = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/ProgressCard/ProgressContainer/LevelRow/XpLabel
@@ -50,7 +54,9 @@ func _ready() -> void:
 	decrease_btn.pressed.connect(_on_decrease_button_pressed)
 	increase_btn.pressed.connect(_on_increase_button_pressed)
 	reset_btn.pressed.connect(_on_reset_button_pressed)
-	reset_tutorial_btn.pressed.connect(_on_reset_tutorial_button_pressed)
+	skip_tutorial_btn.pressed.connect(_on_skip_tutorial_pressed)
+	replay_mission_tutorial_btn.pressed.connect(_on_replay_mission_tutorial_pressed)
+	replay_all_tutorial_btn.pressed.connect(_on_replay_all_tutorial_pressed)
 	
 	# Update display
 	update_counter_display()
@@ -164,9 +170,14 @@ func _on_reset_button_pressed() -> void:
 	print("MenuPanel reset button pressed")
 	reset_all.emit()
 
-func _on_reset_tutorial_button_pressed() -> void:
-	print("MenuPanel reset tutorial button pressed")
-	reset_tutorial.emit()
+func _on_skip_tutorial_pressed() -> void:
+	skip_tutorial_requested.emit()
+
+func _on_replay_mission_tutorial_pressed() -> void:
+	replay_mission_tutorial_requested.emit()
+
+func _on_replay_all_tutorial_pressed() -> void:
+	replay_all_tutorial_requested.emit()
 
 func _on_logbook_button_pressed() -> void:
 	_rebuild_logbook_entries()
