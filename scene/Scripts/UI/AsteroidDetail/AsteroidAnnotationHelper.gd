@@ -1,6 +1,8 @@
 extends RefCounted
 class_name AsteroidAnnotationHelper
 
+const AnnotationRenderViewportScene = preload("res://Scenes/UI/Templates/AnnotationRenderViewport.tscn")
+
 var _owner: Node
 var _drawing_canvas: Control
 var _annotation_count_label: Label
@@ -162,18 +164,15 @@ func _render_annotated_image(anomaly_id: String) -> void:
 	var render_w = int(canvas_size.x)
 	var render_h = int(canvas_size.y)
 	if render_w > 0 and render_h > 0 and _asteroid_image.texture != null:
-		var vp = SubViewport.new()
-		vp.disable_3d = true
-		vp.render_target_v_flip = true
+		var vp: SubViewport = AnnotationRenderViewportScene.instantiate()
+		if vp == null:
+			return
 		vp.size = Vector2(render_w, render_h)
 		_owner.add_child(vp)
 
-		var tex_rect = TextureRect.new()
+		var tex_rect: TextureRect = vp.get_node("Image")
 		tex_rect.texture = _asteroid_image.texture
-		tex_rect.expand = true
-		tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		tex_rect.set_custom_minimum_size(Vector2(render_w, render_h))
-		vp.add_child(tex_rect)
 
 		var canvas_copy = _drawing_canvas.duplicate()
 		if canvas_copy and canvas_copy is Control:

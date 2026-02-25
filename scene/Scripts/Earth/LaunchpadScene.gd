@@ -1,8 +1,9 @@
 extends "res://Scenes/Earth/earth_scene_base.gd"
 
+const MissionGuidanceOverlayScene = preload("res://Scenes/UI/Templates/LaunchpadMissionGuidanceOverlay.tscn")
+
 var _mission_guidance_id: int = 0
 var _mission_guidance_layer: CanvasLayer = null
-var _mission_guidance_panel: PanelContainer = null
 var _mission_guidance_label: Label = null
 var _mission_guidance_pointer: Label = null
 var _mission_guidance_active: bool = false
@@ -110,40 +111,18 @@ func _setup_mission_guidance() -> void:
 	var tutorial_panel = get_node_or_null("TutorialPanel")
 	if tutorial_panel and tutorial_panel is CanvasItem:
 		tutorial_panel.visible = false
-	_mission_guidance_layer = CanvasLayer.new()
-	_mission_guidance_layer.layer = 6
+	_mission_guidance_layer = MissionGuidanceOverlayScene.instantiate()
+	if _mission_guidance_layer == null:
+		return
 	add_child(_mission_guidance_layer)
-
-	_mission_guidance_panel = PanelContainer.new()
-	_mission_guidance_panel.anchor_left = 0.5
-	_mission_guidance_panel.anchor_top = 0.0
-	_mission_guidance_panel.anchor_right = 0.5
-	_mission_guidance_panel.anchor_bottom = 0.0
-	_mission_guidance_panel.offset_left = -320.0
-	_mission_guidance_panel.offset_top = 14.0
-	_mission_guidance_panel.offset_right = 320.0
-	_mission_guidance_panel.offset_bottom = 96.0
-	_mission_guidance_layer.add_child(_mission_guidance_panel)
+	var mission_panel: PanelContainer = _mission_guidance_layer.get_node_or_null("Panel")
+	_mission_guidance_label = _mission_guidance_layer.get_node_or_null("Panel/Margin/MessageLabel")
+	_mission_guidance_pointer = _mission_guidance_layer.get_node_or_null("PointerLabel")
 	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
-	panel_style.apply_panel(_mission_guidance_panel)
-
-	var margin = MarginContainer.new()
-	margin.add_theme_constant_override("margin_left", 12)
-	margin.add_theme_constant_override("margin_right", 12)
-	margin.add_theme_constant_override("margin_top", 10)
-	margin.add_theme_constant_override("margin_bottom", 10)
-	_mission_guidance_panel.add_child(margin)
-	_mission_guidance_label = Label.new()
-	_mission_guidance_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	panel_style.apply_body(_mission_guidance_label)
-	margin.add_child(_mission_guidance_label)
-
-	_mission_guidance_pointer = Label.new()
-	_mission_guidance_pointer.text = "v"
-	_mission_guidance_pointer.add_theme_font_size_override("font_size", 30)
-	_mission_guidance_pointer.add_theme_color_override("font_color", Color(0.98, 0.82, 0.35, 1.0))
-	_mission_guidance_pointer.visible = false
-	_mission_guidance_layer.add_child(_mission_guidance_pointer)
+	if mission_panel:
+		panel_style.apply_panel(mission_panel)
+	if _mission_guidance_label:
+		panel_style.apply_body(_mission_guidance_label)
 
 func _update_mission_guidance() -> void:
 	if not _mission_guidance_active:
@@ -206,6 +185,5 @@ func _clear_mission_guidance() -> void:
 	if tutorial_panel and tutorial_panel is CanvasItem:
 		tutorial_panel.visible = true
 	_mission_guidance_layer = null
-	_mission_guidance_panel = null
 	_mission_guidance_label = null
 	_mission_guidance_pointer = null

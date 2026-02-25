@@ -1,0 +1,237 @@
+{
+  "taskId": "kn5r76",
+  "currentVersion": 5,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "kn5r76",
+      "version": 1,
+      "timestamp": "2026-02-19T05:03:46.565Z",
+      "changes": [
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Prevent scanner station from showing up before it's purchased",
+        "description": "The scanner structure should not be visible or clickable until the user purchases it, when it becomes available to purchase. There should be some dialogue that allows them to do this.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "stations",
+          "progress",
+          "bug",
+          "scanner",
+          "level2"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "kn5r76",
+      "version": 2,
+      "timestamp": "2026-02-25T00:25:59.654Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [],
+          "newValue": [
+            {
+              "text": "Scanner station hidden until mission stage 3",
+              "completed": false
+            },
+            {
+              "text": "Scanner station visible when unlocked",
+              "completed": false
+            },
+            {
+              "text": "Purchase dialog only shows when unlocked",
+              "completed": false
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Prevent scanner station from showing up before it's purchased",
+        "description": "The scanner structure should not be visible or clickable until the user purchases it, when it becomes available to purchase. There should be some dialogue that allows them to do this.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "stations",
+          "progress",
+          "bug",
+          "scanner",
+          "level2"
+        ],
+        "acceptanceCriteria": [
+          {
+            "text": "Scanner station hidden until mission stage 3",
+            "completed": false
+          },
+          {
+            "text": "Scanner station visible when unlocked",
+            "completed": false
+          },
+          {
+            "text": "Purchase dialog only shows when unlocked",
+            "completed": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "kn5r76",
+      "version": 3,
+      "timestamp": "2026-02-25T00:26:03.470Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Scanner station hidden until mission stage 3"
+            },
+            {
+              "completed": false,
+              "text": "Scanner station visible when unlocked"
+            },
+            {
+              "completed": false,
+              "text": "Purchase dialog only shows when unlocked"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Scanner station hidden until mission stage 3"
+            },
+            {
+              "completed": true,
+              "text": "Scanner station visible when unlocked"
+            },
+            {
+              "completed": true,
+              "text": "Purchase dialog only shows when unlocked"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Prevent scanner station from showing up before it's purchased",
+        "description": "The scanner structure should not be visible or clickable until the user purchases it, when it becomes available to purchase. There should be some dialogue that allows them to do this.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "stations",
+          "progress",
+          "bug",
+          "scanner",
+          "level2"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Scanner station hidden until mission stage 3"
+          },
+          {
+            "completed": true,
+            "text": "Scanner station visible when unlocked"
+          },
+          {
+            "completed": true,
+            "text": "Purchase dialog only shows when unlocked"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "kn5r76",
+      "version": 4,
+      "timestamp": "2026-02-25T00:26:07.690Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "Changed _refresh_visibility() to check is_scanner_unlocked() instead of is_scanner_station_built(). Scanner station now hidden until mission stage 3, then becomes visible for purchase."
+        }
+      ],
+      "snapshot": {
+        "title": "Prevent scanner station from showing up before it's purchased",
+        "description": "The scanner structure should not be visible or clickable until the user purchases it, when it becomes available to purchase. There should be some dialogue that allows them to do this.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "stations",
+          "progress",
+          "bug",
+          "scanner",
+          "level2"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Scanner station hidden until mission stage 3"
+          },
+          {
+            "completed": true,
+            "text": "Scanner station visible when unlocked"
+          },
+          {
+            "completed": true,
+            "text": "Purchase dialog only shows when unlocked"
+          }
+        ],
+        "implementationNotes": "Changed _refresh_visibility() to check is_scanner_unlocked() instead of is_scanner_station_built(). Scanner station now hidden until mission stage 3, then becomes visible for purchase."
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "kn5r76",
+      "version": 5,
+      "timestamp": "2026-02-25T00:26:17.625Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Prevent scanner station from showing up before it's purchased",
+        "description": "The scanner structure should not be visible or clickable until the user purchases it, when it becomes available to purchase. There should be some dialogue that allows them to do this.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "stations",
+          "progress",
+          "bug",
+          "scanner",
+          "level2"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Scanner station hidden until mission stage 3"
+          },
+          {
+            "completed": true,
+            "text": "Scanner station visible when unlocked"
+          },
+          {
+            "completed": true,
+            "text": "Purchase dialog only shows when unlocked"
+          }
+        ],
+        "implementationNotes": "Changed _refresh_visibility() to check is_scanner_unlocked() instead of is_scanner_station_built(). Scanner station now hidden until mission stage 3, then becomes visible for purchase."
+      }
+    }
+  ]
+}

@@ -37,6 +37,4 @@ func on_interact():
 		print("ERROR: UIManager not found for Control Station")
 
 func _show_tutorial_hint_once(action_key: String, message: String) -> void:
-	var app = get_tree().root.find_child("AppController", true, false)
-	if app and app.has_method("show_tutorial_hint_once"):
-		app.show_tutorial_hint_once(action_key, message)
+	preload("res://Scripts/Utils/AppControllerHelper.gd").show_tutorial_hint_once(action_key, message)

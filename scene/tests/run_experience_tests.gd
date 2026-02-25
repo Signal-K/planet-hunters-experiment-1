@@ -65,8 +65,8 @@ func run_all_tests() -> void:
 	await test_tutorial_sequence_places_scanner_after_mission_two()
 	await test_launchpad_uses_predefined_targets_for_first_two_missions()
 	await test_predefined_mission_reward_ratios()
-	await test_mission3_targets_filter_and_single_sr2_reachable()
-	await test_mission4_targets_filter_and_single_sr3_reachable()
+	await test_mission3_targets_filter_and_sr2_reachable()
+	await test_mission4_targets_filter_and_sr3_reachable()
 	await test_mission5_contract_offer_and_selection()
 	await test_mission5_contract_purchase_and_payout_rules()
 	await test_mission_progression_stage_order()
@@ -1133,8 +1133,8 @@ func test_predefined_mission_reward_ratios() -> void:
 		return
 	reporter.pass_test()
 
-func test_mission3_targets_filter_and_single_sr2_reachable() -> void:
-	reporter.start_test("Mission 3 targets exclude already-targeted asteroids and keep one SR2-reachable")
+func test_mission3_targets_filter_and_sr2_reachable() -> void:
+	reporter.start_test("Mission 3 targets exclude already-targeted asteroids and keep asteroid requirements at L1/L2")
 	var mission_log_path = "user://mission_logs_test_mission3_targets.json"
 	DirAccess.remove_absolute(mission_log_path)
 	MissionLogManager.set_path_overrides(mission_log_path, mission_log_path)
@@ -1171,13 +1171,13 @@ func test_mission3_targets_filter_and_single_sr2_reachable() -> void:
 		if str(target.get("id", "")) == "m3-1":
 			reporter.fail_test("Expected targeted asteroid m3-1 to be filtered out")
 			return
-	if reachable_count != 1:
-		reporter.fail_test("Expected exactly one mission 3 target reachable by SR2, got %s" % str(reachable_count))
+	if reachable_count != targets.size():
+		reporter.fail_test("Expected all mission 3 targets to be reachable by SR2, got %s/%s" % [str(reachable_count), str(targets.size())])
 		return
 	reporter.pass_test()
 
-func test_mission4_targets_filter_and_single_sr3_reachable() -> void:
-	reporter.start_test("Mission 4 targets exclude already-targeted planets and keep one SR3-reachable")
+func test_mission4_targets_filter_and_sr3_reachable() -> void:
+	reporter.start_test("Mission 4 targets exclude already-targeted planets and keep planet requirements at L3+")
 	var mission_log_path = "user://mission_logs_test_mission4_targets.json"
 	DirAccess.remove_absolute(mission_log_path)
 	MissionLogManager.set_path_overrides(mission_log_path, mission_log_path)
@@ -1214,8 +1214,8 @@ func test_mission4_targets_filter_and_single_sr3_reachable() -> void:
 		if str(target.get("id", "")) == "m4-1":
 			reporter.fail_test("Expected targeted planet m4-1 to be filtered out")
 			return
-	if reachable_count != 1:
-		reporter.fail_test("Expected exactly one mission 4 target reachable by SR3, got %s" % str(reachable_count))
+	if reachable_count != targets.size():
+		reporter.fail_test("Expected all mission 4 targets to be reachable by SR3, got %s/%s" % [str(reachable_count), str(targets.size())])
 		return
 	reporter.pass_test()
 
@@ -1466,7 +1466,7 @@ func _defined_flows() -> Dictionary:
 		"mission order": ["test_mission_progression_stage_order", "test_launchpad_uses_predefined_targets_for_first_two_missions"],
 		"mission tutorials": ["test_tutorial_sequence_places_scanner_after_mission_two", "test_tutorial_panel_hidden_in_transit_scene"],
 		"supabase fetch": ["run_supabase_tests.gd::Fetch anomalies (active-asteroids)"],
-		"supabase interact": ["test_mission3_targets_filter_and_single_sr2_reachable", "test_mission4_targets_filter_and_single_sr3_reachable", "test_mission5_contract_offer_and_selection"],
+		"supabase interact": ["test_mission3_targets_filter_and_sr2_reachable", "test_mission4_targets_filter_and_sr3_reachable", "test_mission5_contract_offer_and_selection"],
 		"scene transitions": ["test_outbound_transit_distance_label_decreases", "test_return_preview_auto_advances_to_debrief"],
 		"unlock progression": ["test_mark_mission_completed_unlocks_rocket2", "test_mark_mission_completed_unlocks_rocket3", "test_scanner_unlock_gating_by_progress"],
 		"xp progression": ["test_xp_accumulates", "test_level_up_threshold", "test_multi_level_up"],

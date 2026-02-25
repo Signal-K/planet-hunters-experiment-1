@@ -249,9 +249,7 @@ func _award_scan_experience() -> void:
 		app_controller.award_scan_experience()
 
 func _show_tutorial_hint_once(action_key: String, message: String) -> void:
-	var app_controller = get_tree().root.find_child("AppController", true, false)
-	if app_controller and app_controller.has_method("show_tutorial_hint_once"):
-		app_controller.show_tutorial_hint_once(action_key, message)
+	preload("res://Scripts/Utils/AppControllerHelper.gd").show_tutorial_hint_once(action_key, message)
 
 func _on_refresh_pressed():
 	_start_loading(REFRESH_LOAD_TIME)
@@ -503,4 +501,4 @@ func _mark_level2_unlock_overlay_seen() -> void:
 	cfg.save(UNLOCK_CONFIG_PATH)
 
 func _get_app_controller() -> Node:
-	return get_tree().root.find_child("AppController", true, false)
+	return preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()

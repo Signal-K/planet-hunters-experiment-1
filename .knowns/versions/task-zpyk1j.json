@@ -1,0 +1,67 @@
+{
+  "taskId": "zpyk1j",
+  "currentVersion": 1,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "zpyk1j",
+      "version": 1,
+      "timestamp": "2026-02-25T02:41:12.676Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        },
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Rocket is 80% larger"
+            },
+            {
+              "completed": false,
+              "text": "Maintains proper proportions"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Rocket is 80% larger"
+            },
+            {
+              "completed": true,
+              "text": "Maintains proper proportions"
+            }
+          ]
+        },
+        {
+          "field": "implementationNotes",
+          "newValue": "Changed rocket scale from 0.15 to 0.27 (80% increase)"
+        }
+      ],
+      "snapshot": {
+        "title": "Increase rocket size by 80%",
+        "description": "Rocket sprite is too small in mining minigame. Scale up by 80% for better visibility.",
+        "status": "done",
+        "priority": "medium",
+        "labels": [
+          "mining",
+          "visuals"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Rocket is 80% larger"
+          },
+          {
+            "completed": true,
+            "text": "Maintains proper proportions"
+          }
+        ],
+        "implementationNotes": "Changed rocket scale from 0.15 to 0.27 (80% increase)"
+      }
+    }
+  ]
+}

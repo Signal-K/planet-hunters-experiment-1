@@ -1,7 +1,7 @@
 ---
 id: gijns1
 title: "Icon & new subdomain for nextjs deployment"
-status: in-progress
+status: done
 priority: low
 labels:
   - branding
@@ -9,7 +9,7 @@ labels:
   - frontend
   - web
 createdAt: '2026-02-19T12:25:32Z'
-updatedAt: '2026-02-19T12:25:32Z'
+updatedAt: "2026-02-19T12:40:37Z"
 timeSpent: 0
 ---
 

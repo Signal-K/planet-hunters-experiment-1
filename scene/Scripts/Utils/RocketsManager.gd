@@ -14,8 +14,10 @@ const ROCKET_UNLOCK_LEVELS := {
     "starterrocket3": 3
 }
 const AU_IN_KM := 149597870.7
-const TARGET_DISTANCE_BANDS_AU := [3.0, 12.0, 34.0]
-const TARGET_REQUIRED_LEVEL_BY_BAND := [1, 2, 3]
+const ASTEROID_DISTANCE_BANDS_AU := [3.0, 24.0]
+const ASTEROID_REQUIRED_LEVEL_BY_BAND := [1, 2]
+const PLANET_DISTANCE_BANDS_AU := [120.0, 220.0, 340.0]
+const PLANET_REQUIRED_LEVEL_BY_BAND := [3, 3, 3]
 const MISSION_PROGRESS_SCHEMA_VERSION := 2
 const SCANNER_BUILD_COST := 2000000000
 const PREDEFINED_MISSION_TARGETS := {
@@ -459,6 +461,36 @@ static func debug_complete_mission_for_progression() -> bool:
         unlock("starterrocket2")
     return true
 
+static func debug_launch_mining_test() -> bool:
+    var s = load_state()
+    var rng = RandomNumberGenerator.new()
+    rng.randomize()
+    
+    var unlocked = s.get("unlocked", ["starterrocket1"])
+    var rocket_type = unlocked[rng.randi() % unlocked.size()]
+    var rocket_id = "%s-test-%d" % [rocket_type, Time.get_ticks_msec()]
+    
+    var target_id = "test-asteroid-%d" % rng.randi()
+    var target_label = "Test Asteroid %d" % (rng.randi() % 999 + 1)
+    
+    var placed = s.get("placed", [])
+    placed.append({
+        "id": rocket_id,
+        "type": rocket_type,
+        "status": "inTransit",
+        "target": target_id,
+        "label": target_label,
+        "launch_time": 0,
+        "arrival_time": 0
+    })
+    s["placed"] = placed
+    save_state(s)
+    
+    set_preview_target(target_id, target_label, "asteroid", rocket_id)
+    mark_arrived(rocket_id, target_id)
+    
+    return true
+
 static func mark_mission_completed(badge: String = "") -> bool:
     var s = load_state()
     var badges = s.get("completed_mission_badges", [])
@@ -495,10 +527,11 @@ static func get_primary_awaiting_rocket_id() -> String:
     return ""
 
 static func build_target_profile(target_id: String, target_type: String = "asteroid") -> Dictionary:
+    var normalized_type = _normalize_target_type(target_type)
     var predefined = get_predefined_target_profile(target_id)
     if not predefined.is_empty():
         return predefined
-    if get_mission_stage() == 3 and _normalize_target_type(target_type) == "asteroid":
+    if get_mission_stage() == 3 and normalized_type == "asteroid":
         var mission3_targets = get_mission3_targets()
         for i in range(mission3_targets.size()):
             var item = mission3_targets[i]
@@ -512,12 +545,12 @@ static func build_target_profile(target_id: String, target_type: String = "aster
                     "type": "asteroid"
                 }
             return {
-                "distance_au": 34.0,
-                "distance_km": 34.0 * AU_IN_KM,
-                "required_level": 3,
+                "distance_au": 24.0,
+                "distance_km": 24.0 * AU_IN_KM,
+                "required_level": 2,
                 "type": "asteroid"
             }
-    if get_mission_stage() == 4 and _normalize_target_type(target_type) == "planet":
+    if get_mission_stage() == 4 and normalized_type == "planet":
         var mission4_targets = get_mission4_targets()
         for i in range(mission4_targets.size()):
             var item = mission4_targets[i]
@@ -533,38 +566,47 @@ static func build_target_profile(target_id: String, target_type: String = "aster
             return {
                 "distance_au": 220.0,
                 "distance_km": 220.0 * AU_IN_KM,
-                "required_level": 4,
+                "required_level": 3,
                 "type": "planet"
             }
-    if get_mission_stage() >= 5 and _normalize_target_type(target_type) == "asteroid":
+    if get_mission_stage() >= 5 and normalized_type == "asteroid":
         var mission5_targets = get_mission5_targets()
         for i in range(mission5_targets.size()):
             var item = mission5_targets[i]
             if str(item.get("id", "")) != target_id:
                 continue
-            var distance_au = 8.0 if i == 0 else 10.0
+            var distance_au = 8.0 if i == 0 else 24.0
             return {
                 "distance_au": distance_au,
                 "distance_km": distance_au * AU_IN_KM,
-                "required_level": 1,
+                "required_level": 1 if i == 0 else 2,
                 "type": "asteroid"
             }
     if target_id == "":
+        if normalized_type == "planet":
+            return {
+                "distance_au": 120.0,
+                "distance_km": 120.0 * AU_IN_KM,
+                "required_level": 3,
+                "type": "planet"
+            }
         return {
             "distance_au": 0.0,
             "distance_km": 0.0,
             "required_level": 1,
-            "type": _normalize_target_type(target_type)
+            "type": "asteroid"
         }
-    var seed = HashUtils.simple_hash("%s:%s" % [target_id, _normalize_target_type(target_type)])
-    var bucket = int(seed % TARGET_DISTANCE_BANDS_AU.size())
-    var distance_au = float(TARGET_DISTANCE_BANDS_AU[bucket])
-    var required_level = int(TARGET_REQUIRED_LEVEL_BY_BAND[min(bucket, TARGET_REQUIRED_LEVEL_BY_BAND.size() - 1)])
+    var seed = HashUtils.simple_hash("%s:%s" % [target_id, normalized_type])
+    var distance_bands = PLANET_DISTANCE_BANDS_AU if normalized_type == "planet" else ASTEROID_DISTANCE_BANDS_AU
+    var required_bands = PLANET_REQUIRED_LEVEL_BY_BAND if normalized_type == "planet" else ASTEROID_REQUIRED_LEVEL_BY_BAND
+    var bucket = int(seed % distance_bands.size())
+    var distance_au = float(distance_bands[bucket])
+    var required_level = int(required_bands[min(bucket, required_bands.size() - 1)])
     return {
         "distance_au": distance_au,
         "distance_km": distance_au * AU_IN_KM,
         "required_level": required_level,
-        "type": _normalize_target_type(target_type)
+        "type": normalized_type
     }
 
 static func unlock_for_level(level: int) -> Array:

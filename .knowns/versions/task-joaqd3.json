@@ -1,0 +1,80 @@
+{
+  "taskId": "joaqd3",
+  "currentVersion": 1,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "joaqd3",
+      "version": 1,
+      "timestamp": "2026-02-25T02:41:59.564Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        },
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Terrain loops seamlessly at end"
+            },
+            {
+              "completed": false,
+              "text": "No visible seam or gap"
+            },
+            {
+              "completed": false,
+              "text": "Minerals regenerate in loop"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Terrain loops seamlessly at end"
+            },
+            {
+              "completed": true,
+              "text": "No visible seam or gap"
+            },
+            {
+              "completed": true,
+              "text": "Minerals regenerate in loop"
+            }
+          ]
+        },
+        {
+          "field": "implementationNotes",
+          "newValue": "Added _reset_minerals() function that resets collected state and visual modulation when terrain loops"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix terrain looping - landscape ends instead of repeating",
+        "description": "Terrain should seamlessly loop when reaching the end, but currently stops. Implement infinite scrolling terrain.",
+        "status": "done",
+        "priority": "high",
+        "labels": [
+          "mining",
+          "terrain",
+          "bug"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Terrain loops seamlessly at end"
+          },
+          {
+            "completed": true,
+            "text": "No visible seam or gap"
+          },
+          {
+            "completed": true,
+            "text": "Minerals regenerate in loop"
+          }
+        ],
+        "implementationNotes": "Added _reset_minerals() function that resets collected state and visual modulation when terrain loops"
+      }
+    }
+  ]
+}

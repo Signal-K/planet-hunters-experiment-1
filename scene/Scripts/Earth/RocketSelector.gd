@@ -103,6 +103,20 @@ func _request_purchase(rocket_id: String) -> void:
 	if _creation_locked:
 		print("RocketSelector: creation locked; cannot purchase")
 		return
+	var range_check = _validate_target_range_for_rocket(rocket_id)
+	if not bool(range_check.get("ok", true)):
+		var target_label = str(range_check.get("target_label", "Selected target"))
+		var required_level = int(range_check.get("required_level", 1))
+		var rocket_level = int(range_check.get("rocket_level", 1))
+		var distance_au = float(range_check.get("distance_au", 0.0))
+		_show_info("%s is %.0f AU away and requires rocket level L%d. %s is L%d and cannot reach this target." % [
+			target_label,
+			distance_au,
+			required_level,
+			RocketSpecs.get_display_name(rocket_id),
+			rocket_level
+		])
+		return
 	var cost = _effective_purchase_cost(rocket_id)
 	var balance = _get_balance()
 	if balance < cost:
@@ -199,8 +213,7 @@ func _effective_purchase_cost(rocket_id: String) -> int:
 	return int(rm.get_mission5_purchase_cost(rocket_id))
 
 func _show_tutorial_hint_once(action_key: String, message: String) -> void:
-	if _app_controller and _app_controller.has_method("show_tutorial_hint_once"):
-		_app_controller.show_tutorial_hint_once(action_key, message)
+	preload("res://Scripts/Utils/AppControllerHelper.gd").show_tutorial_hint_once(action_key, message)
 
 func _format_francs(value: int) -> String:
 	var abs_value = abs(value)
@@ -229,3 +242,35 @@ func _set_create_buttons_disabled(disabled: bool) -> void:
 			if child is Button and child.name.begins_with("CreateButton_"):
 				child.disabled = disabled
 			stack.append(child)
+
+func _validate_target_range_for_rocket(rocket_id: String) -> Dictionary:
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if not rm:
+		return {"ok": true}
+	var selected_target = str(rm.get_selected_target())
+	if selected_target == "":
+		return {"ok": true}
+	var detected = rm.get_detected_targets()
+	var target_type = "asteroid"
+	var target_label = selected_target
+	for t_any in detected:
+		if typeof(t_any) != TYPE_DICTIONARY:
+			continue
+		var t: Dictionary = t_any
+		if str(t.get("id", "")) != selected_target:
+			continue
+		target_type = str(t.get("type", "asteroid"))
+		target_label = str(t.get("label", selected_target))
+		break
+	var profile = rm.build_target_profile(selected_target, target_type)
+	var required_level = int(profile.get("required_level", 1))
+	var rocket_level = int(rm.get_rocket_level(rocket_id))
+	if rocket_level >= required_level:
+		return {"ok": true}
+	return {
+		"ok": false,
+		"required_level": required_level,
+		"rocket_level": rocket_level,
+		"distance_au": float(profile.get("distance_au", 0.0)),
+		"target_label": target_label
+	}

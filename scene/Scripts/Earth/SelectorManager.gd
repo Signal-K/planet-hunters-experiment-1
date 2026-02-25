@@ -1,6 +1,9 @@
 extends RefCounted
 class_name SelectorManager
 
+const LabelActionRowScene = preload("res://Scenes/UI/Templates/LabelActionRow.tscn")
+const EmptyLabelScene = preload("res://Scenes/UI/Templates/MenuLogbookEmpty.tscn")
+
 static func hide_selector_panel(root_scene: Node, hide_primary: bool = false) -> void:
     if not root_scene:
         return
@@ -44,25 +47,23 @@ static func populate_targets(root_scene: Node) -> void:
         return
     var targets = rm.get_detected_targets()
     if targets.size() == 0:
-        var lbl = Label.new()
+        var lbl: Label = EmptyLabelScene.instantiate()
         lbl.text = "No detected targets available."
         lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
         vbox.add_child(lbl)
         return
 
     for t in targets:
-        var entry = HBoxContainer.new()
+        var entry: HBoxContainer = LabelActionRowScene.instantiate()
         entry.custom_minimum_size = Vector2(0, 40)
-        var name_lbl = Label.new()
+        var name_lbl: Label = entry.get_node("TextLabel")
         name_lbl.text = str(t.get("label", t.get("id")))
         name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-        entry.add_child(name_lbl)
-        var btn = Button.new()
+        var btn: Button = entry.get_node("ActionButton")
         btn.text = "Select"
         btn.focus_mode = Control.FOCUS_NONE
         # Connection to selection handler is done by the UI owner (Launchpad) so
         # we don't bind callbacks here to avoid cross-script coupling.
-        entry.add_child(btn)
         vbox.add_child(entry)
 
 static func show_selector_panel(root_scene: Node) -> void:

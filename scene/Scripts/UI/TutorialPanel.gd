@@ -55,26 +55,17 @@ const STEPS := [
 @onready var progress_label: Label = $CoachPanel/Margin/Root/TopRow/Progress
 @onready var instruction_label: Label = $CoachPanel/Margin/Root/Instruction
 @onready var skip_button: Button = $CoachPanel/Margin/Root/TopRow/SkipButton
+@onready var _pointer_label: Label = $PointerLabel
 
 var app_controller: Node = null
 var _focus_target: CanvasItem = null
 var _focus_tween: Tween = null
 var _focus_base_modulate: Color = Color(1, 1, 1, 1)
-var _pointer_label: Label = null
 
 func _ready() -> void:
 	visible = true
 	if skip_button:
 		skip_button.pressed.connect(_on_skip_pressed)
-	_pointer_label = Label.new()
-	# Use ASCII fallback so web exports don't show missing-glyph boxes.
-	_pointer_label.text = "v"
-	_pointer_label.visible = false
-	_pointer_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_pointer_label.add_theme_font_size_override("font_size", 28)
-	_pointer_label.add_theme_color_override("font_color", Color(0.98, 0.82, 0.35, 1))
-	_pointer_label.modulate = Color(0.98, 0.82, 0.35, 1)
-	add_child(_pointer_label)
 	_find_app_controller()
 	_connect_app_controller_signals()
 	_apply_responsive_layout()

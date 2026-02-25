@@ -236,12 +236,7 @@ func _transition_to_outbound_transit(rocket_id: String, target_id: String, previ
 		tree.change_scene_to_file(OUTBOUND_TRANSIT_SCENE_PATH)
 
 func _show_tutorial_hint_once(action_key: String, message: String) -> void:
-	var tree = _launchpad.get_tree()
-	if tree == null:
-		return
-	var app = tree.root.find_child("AppController", true, false)
-	if app and app.has_method("show_tutorial_hint_once"):
-		app.show_tutorial_hint_once(action_key, message)
+	preload("res://Scripts/Utils/AppControllerHelper.gd").show_tutorial_hint_once(action_key, message)
 
 func _resolve_launch_button() -> Button:
 	if _launch_button and is_instance_valid(_launch_button):

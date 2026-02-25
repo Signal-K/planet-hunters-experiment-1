@@ -1,0 +1,68 @@
+{
+  "taskId": "xjucc2",
+  "currentVersion": 1,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "xjucc2",
+      "version": 1,
+      "timestamp": "2026-02-25T02:41:25.165Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        },
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Drones reach target before exploding"
+            },
+            {
+              "completed": false,
+              "text": "Visual impact matches explosion timing"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Drones reach target before exploding"
+            },
+            {
+              "completed": true,
+              "text": "Visual impact matches explosion timing"
+            }
+          ]
+        },
+        {
+          "field": "implementationNotes",
+          "newValue": "Adjusted target position to polygon[0].y + 20 and reduced collision distance to 15px for accurate impact"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix drone explosion timing - exploding before hitting targets",
+        "description": "Drones are exploding prematurely before reaching mineral deposits. Need to adjust collision detection distance or target positioning.",
+        "status": "done",
+        "priority": "high",
+        "labels": [
+          "mining",
+          "drones",
+          "bug"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Drones reach target before exploding"
+          },
+          {
+            "completed": true,
+            "text": "Visual impact matches explosion timing"
+          }
+        ],
+        "implementationNotes": "Adjusted target position to polygon[0].y + 20 and reduced collision distance to 15px for accurate impact"
+      }
+    }
+  ]
+}

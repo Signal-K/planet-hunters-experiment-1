@@ -88,9 +88,7 @@ func on_interact():
 		print("ERROR: SceneManager not found for Launchpad")
 
 func _show_tutorial_hint_once(action_key: String, message: String) -> void:
-	var app = get_tree().root.find_child("AppController", true, false)
-	if app and app.has_method("show_tutorial_hint_once"):
-		app.show_tutorial_hint_once(action_key, message)
+	preload("res://Scripts/Utils/AppControllerHelper.gd").show_tutorial_hint_once(action_key, message)
 
 func spawn_rocket(rocket_id: String) -> bool:
 	return RocketSpawner.spawn(self, rocket_id)

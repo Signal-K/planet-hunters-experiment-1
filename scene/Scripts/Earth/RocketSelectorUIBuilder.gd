@@ -120,21 +120,13 @@ func _stat_chip(text: String) -> Control:
 	return chip
 
 func _card_style() -> StyleBoxFlat:
-	var style = StyleBoxFlat.new()
+	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
+	var style = panel_style.create_card_style()
 	style.bg_color = Color(0.08, 0.12, 0.16, 0.86)
-	style.border_color = Color(0.263, 0.298, 0.369, 1.0)
-	style.border_width_left = 1
-	style.border_width_right = 1
-	style.border_width_top = 1
-	style.border_width_bottom = 1
 	style.corner_radius_top_left = 20
 	style.corner_radius_top_right = 20
 	style.corner_radius_bottom_left = 20
 	style.corner_radius_bottom_right = 20
-	style.content_margin_left = 12
-	style.content_margin_top = 12
-	style.content_margin_right = 12
-	style.content_margin_bottom = 12
 	style.shadow_color = Color(0, 0, 0, 0.3)
 	style.shadow_size = 10
 	style.shadow_offset = Vector2(0, 4)

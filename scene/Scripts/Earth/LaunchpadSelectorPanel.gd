@@ -10,6 +10,7 @@ const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
 const TargetCardScene = preload("res://Scenes/UI/Templates/LaunchpadTargetCard.tscn")
 const HeaderLabelScene = preload("res://Scenes/UI/Templates/MenuUnlockHeader.tscn")
 const EmptyLabelScene = preload("res://Scenes/UI/Templates/MenuLogbookEmpty.tscn")
+const LabelActionRowScene = preload("res://Scenes/UI/Templates/LabelActionRow.tscn")
 const MAX_VISIBLE_TARGETS := 3
 const MAX_VISIBLE_TARGETS_MISSION3 := 5
 const MAX_VISIBLE_TARGETS_MISSION4 := 5
@@ -340,9 +341,9 @@ func _render_mission5_contract_brief(targets_section: VBoxContainer, offer: Dict
 		if typeof(entry_any) != TYPE_DICTIONARY:
 			continue
 		var entry: Dictionary = entry_any
-		var row: HBoxContainer = HBoxContainer.new()
+		var row: HBoxContainer = LabelActionRowScene.instantiate()
 		row.add_theme_constant_override("separation", 8)
-		var label: Label = EmptyLabelScene.instantiate()
+		var label: Label = row.get_node("TextLabel")
 		var contractor_id = str(entry.get("id", ""))
 		var effect = str(entry.get("effect", ""))
 		var effect_text = "15% ship discount" if effect == "build_discount" else "15% mineral payout bonus"
@@ -350,14 +351,12 @@ func _render_mission5_contract_brief(targets_section: VBoxContainer, offer: Dict
 		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		PanelStyle.apply_muted(label)
-		row.add_child(label)
-		var btn: Button = Button.new()
+		var btn: Button = row.get_node("ActionButton")
 		var is_selected = selected_contractor == contractor_id and contractor_id != ""
 		btn.text = "Accepted" if is_selected else "Accept"
 		btn.disabled = is_selected
 		PanelStyle.apply_button(btn, false)
 		btn.pressed.connect(Callable(self, "_on_mission5_contractor_pressed").bind(contractor_id))
-		row.add_child(btn)
 		targets_section.add_child(row)
 
 	var cap_lbl: Label = EmptyLabelScene.instantiate()
@@ -382,13 +381,19 @@ func _on_debug_skip_mission_pressed() -> void:
 	print("Launchpad: debug skip mission -> ", ok)
 	populate_targets()
 
-func _show_tutorial_hint_once(action_key: String, message: String) -> void:
-	var tree = _launchpad.get_tree()
-	if tree == null:
+func _on_debug_mining_test_pressed() -> void:
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if not rm:
 		return
-	var app = tree.root.find_child("AppController", true, false)
-	if app and app.has_method("show_tutorial_hint_once"):
-		app.show_tutorial_hint_once(action_key, message)
+	var ok = rm.debug_launch_mining_test()
+	print("Launchpad: debug mining test -> ", ok)
+	if ok:
+		var tree = _launchpad.get_tree()
+		if tree:
+			tree.change_scene_to_file("res://Scenes/UI/AsteroidPreview/asteroid_preview.tscn")
+
+func _show_tutorial_hint_once(action_key: String, message: String) -> void:
+	preload("res://Scripts/Utils/AppControllerHelper.gd").show_tutorial_hint_once(action_key, message)
 
 func _style_selector_panel(panel: Panel, vbox: VBoxContainer) -> void:
 	PanelStyle.apply_panel(panel, Color(0.08, 0.11, 0.15, 0.9))
