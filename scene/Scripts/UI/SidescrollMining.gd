@@ -75,6 +75,8 @@ var _drone_cooldown_timer = 0.0
 var _active_drones = []
 var _surface_mined_count = 0
 var _scroll_speed_multiplier = 1.0
+var _target_minerals: Dictionary = {}
+var _target_mineable_pct: float = 0.5
 
 func _ready():
 	_load_rocket_frames()
@@ -94,41 +96,20 @@ func _ready():
 	if not Engine.is_editor_hint():
 		_show_tutorial_step()
 
-func start_mining(is_planet: bool = false, difficulty: int = 1, target_id: String = ""):
+func start_mining(is_planet: bool = false, difficulty: int = 1, target_id: String = "", minerals: Dictionary = {}, mineable_pct: float = 0.5):
 	_is_planet = is_planet
 	_target_duration = PLANET_DURATION if is_planet else ASTEROID_DURATION
 	_elapsed_time = 0.0
 	_current_target_id = target_id
+	_rocket_level = difficulty
+	_target_minerals = minerals
+	_target_mineable_pct = mineable_pct
 	
-	# Regenerate terrain with target seed
+	# Regenerate terrain with target seed and difficulty
 	_generate_terrain()
-	_add_surface_rocks(RandomNumberGenerator.new())
-	_generate_minerals(RandomNumberGenerator.new())
 	
-	# Set beam charges based on rocket level
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
-	var rocket_id = rm.resolve_preview_rocket_id("")
-	if rocket_id:
-		var rocket_data = rm.get_rocket(rocket_id)
-		if rocket_data:
-			var rocket_type = rocket_data.get("type", "starterrocket1")
-			_rocket_name = rocket_type.capitalize().replace("Starterrocket", "SR")
-			
-			# Set charges based on rocket type
-			match rocket_type:
-				"starterrocket1":
-					_rocket_level = 1
-					_max_beam_charges = 20.0
-				"starterrocket2":
-					_rocket_level = 2
-					_max_beam_charges = 40.0
-				"starterrocket3":
-					_rocket_level = 3
-					_max_beam_charges = 60.0
-				_:
-					_rocket_level = 1
-					_max_beam_charges = 20.0
-	
+	# Beam charges based on difficulty level
+	_max_beam_charges = 20.0 + (difficulty * 10.0)
 	_beam_charges = _max_beam_charges
 	
 	# Update UI after scene is ready
@@ -136,7 +117,7 @@ func start_mining(is_planet: bool = false, difficulty: int = 1, target_id: Strin
 
 func _update_rocket_ui():
 	if rocket_label:
-		rocket_label.text = "%s (L%d)" % [_rocket_name, _rocket_level]
+		rocket_label.text = "Level %d" % _rocket_level
 	if beam_bar:
 		beam_bar.value = 100.0
 
@@ -153,6 +134,7 @@ func _setup_rocket():
 
 func _generate_terrain():
 	var rng = RandomNumberGenerator.new()
+	var NebulaTheme = preload("res://Resources/NebulaSciTheme.gd")
 	
 	# Use target ID as seed if available
 	if _current_target_id != "":
@@ -168,36 +150,66 @@ func _generate_terrain():
 	var base_height = screen_height - 250
 	var prev_height = base_height
 	
+	# Higher difficulty = more varied terrain
+	var difficulty_multiplier = 1.0 + (_rocket_level * 0.15)
+	
 	for i in range(segments + 1):
 		var x = i * TERRAIN_SEGMENT_WIDTH
 		
-		# Random height variation
-		var height_change = rng.randf_range(-25, 25)
+		# Random height variation (increases with difficulty)
+		var height_change = rng.randf_range(-25, 25) * difficulty_multiplier
 		
-		# Occasional sharp peaks/valleys
-		if rng.randf() < 0.08:
-			height_change = rng.randf_range(-100, -60)  # Sharp peak up
-		elif rng.randf() < 0.05:
-			height_change = rng.randf_range(40, 80)  # Valley down
+		# Occasional sharp peaks/valleys (more frequent at higher difficulty)
+		var peak_chance = 0.08 + (_rocket_level * 0.01)
+		if rng.randf() < peak_chance:
+			height_change = rng.randf_range(-100, -60) * difficulty_multiplier  # Sharp peak up
+		elif rng.randf() < (0.05 + _rocket_level * 0.005):
+			height_change = rng.randf_range(40, 80) * difficulty_multiplier  # Valley down
 		
 		prev_height = clamp(prev_height + height_change, screen_height - 380, screen_height - 120)
 		_terrain_points.append(Vector2(x, prev_height))
 	
 	terrain_line.points = _terrain_points
-	terrain_line.width = 6
-	terrain_line.default_color = Color(0.4, 0.35, 0.3)
+	terrain_line.width = 4
+	terrain_line.default_color = Color(0.85, 0.55, 0.35, 0.9)  # Orange desert outline
 	terrain_line.joint_mode = Line2D.LINE_JOINT_SHARP
-	terrain_line.antialiased = false
+	terrain_line.antialiased = true
 	
 	var fill_points = PackedVector2Array()
 	fill_points.append_array(_terrain_points)
 	fill_points.append(Vector2(_terrain_width, screen_height))
 	fill_points.append(Vector2(0, screen_height))
 	terrain_fill.polygon = fill_points
-	terrain_fill.color = Color(0.2, 0.16, 0.14)
+	terrain_fill.color = Color(0.65, 0.35, 0.25, 1.0)  # Orange-brown desert ground
+	
+	# Add nebula sky background
+	_add_nebula_sky()
 	
 	_add_surface_rocks(rng)
 	_generate_minerals(rng)
+
+func _add_nebula_sky():
+	var sky = get_node_or_null("NebulaBackground")
+	if sky:
+		return  # Already exists
+	
+	var NebulaTheme = preload("res://Resources/NebulaSciTheme.gd")
+	var bg = ColorRect.new()
+	bg.name = "NebulaBackground"
+	bg.z_index = -100
+	bg.anchor_right = 1.0
+	bg.anchor_bottom = 1.0
+	
+	# Create gradient texture
+	var gradient_tex = GradientTexture2D.new()
+	gradient_tex.gradient = NebulaTheme.create_nebula_gradient()
+	gradient_tex.fill_from = Vector2(0, 0)
+	gradient_tex.fill_to = Vector2(0.3, 1)
+	
+	bg.material = CanvasItemMaterial.new()
+	
+	add_child(bg)
+	move_child(bg, 0)
 
 func _add_surface_rocks(rng: RandomNumberGenerator):
 	# Use pre-created rock pool from scene instead of runtime creation
@@ -231,12 +243,26 @@ func _add_surface_rocks(rng: RandomNumberGenerator):
 		rock.visible = true
 
 func _generate_minerals(rng: RandomNumberGenerator):
-	var mineral_types = [
-		{"name": "Iron", "color": Color(0.9, 0.4, 0.2), "value": 10},
-		{"name": "Nickel", "color": Color(0.7, 0.7, 0.5), "value": 15},
-		{"name": "Cobalt", "color": Color(0.3, 0.5, 1.0), "value": 25},
-		{"name": "Platinum", "color": Color(1.0, 1.0, 0.8), "value": 50}
-	]
+	# Use target's actual minerals if available
+	var mineral_types = []
+	if not _target_minerals.is_empty():
+		for mineral_name in _target_minerals.keys():
+			var amount = _target_minerals[mineral_name]
+			if amount > 0:
+				mineral_types.append({
+					"name": mineral_name,
+					"color": _get_mineral_color(mineral_name),
+					"value": amount
+				})
+	
+	# Fallback to default minerals if none provided
+	if mineral_types.is_empty():
+		mineral_types = [
+			{"name": "Iron", "color": Color(0.9, 0.4, 0.2), "value": 10},
+			{"name": "Nickel", "color": Color(0.7, 0.7, 0.5), "value": 15},
+			{"name": "Cobalt", "color": Color(0.3, 0.5, 1.0), "value": 25},
+			{"name": "Platinum", "color": Color(1.0, 1.0, 0.8), "value": 50}
+		]
 	
 	var screen_height = get_viewport_rect().size.y
 	
@@ -245,19 +271,35 @@ func _generate_minerals(rng: RandomNumberGenerator):
 		# Surface deposit 1 (Iron) at 600px
 		_create_mineral_deposit(600, 100, mineral_types[0], true, screen_height)
 		# Surface deposit 2 (Nickel) at 1000px
-		_create_mineral_deposit(1000, 100, mineral_types[1], true, screen_height)
+		if mineral_types.size() > 1:
+			_create_mineral_deposit(1000, 100, mineral_types[1], true, screen_height)
 		# Subsurface deposit (Cobalt) at 1400px
-		_create_mineral_deposit(1400, 100, mineral_types[2], false, screen_height)
+		if mineral_types.size() > 2:
+			_create_mineral_deposit(1400, 100, mineral_types[2], false, screen_height)
 	
-	# Generate remaining random deposits
+	# Generate deposits based on mineable_pct (more mineable = more deposits)
+	var deposit_count = int(30 + (_target_mineable_pct * 20))
 	var start_x = 1800 if _tutorial_active else 300
-	for i in range(37):
+	
+	for i in range(deposit_count):
 		var x = rng.randf_range(start_x, _terrain_width - 200)
 		var width = rng.randf_range(60, 120)
 		var mineral = mineral_types[rng.randi() % mineral_types.size()]
-		var is_surface = rng.randf() < 0.5
+		var is_surface = rng.randf() < _target_mineable_pct
 		
 		_create_mineral_deposit(x, width, mineral, is_surface, screen_height)
+
+func _get_mineral_color(mineral_name: String) -> Color:
+	match mineral_name.to_lower():
+		"iron": return Color(0.9, 0.4, 0.2)
+		"nickel": return Color(0.7, 0.7, 0.5)
+		"cobalt": return Color(0.3, 0.5, 1.0)
+		"platinum": return Color(1.0, 1.0, 0.8)
+		"gold": return Color(1.0, 0.84, 0.0)
+		"silver": return Color(0.75, 0.75, 0.75)
+		"copper": return Color(0.72, 0.45, 0.2)
+		"titanium": return Color(0.5, 0.5, 0.6)
+		_: return Color(0.6, 0.6, 0.6)
 
 var _mineral_pool_index = 0
 

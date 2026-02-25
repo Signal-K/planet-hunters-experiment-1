@@ -4,41 +4,46 @@
   ],
   "placed": [
     {
-      "id": "starterrocket1-test-306",
       "type": "starterrocket1",
-      "status": "inTransit",
-      "target": "test-asteroid-1535735226",
-      "label": "Test Asteroid 360",
-      "launch_time": 0.0,
-      "arrival_time": 0.0
+      "id": "starterrocket1-1415462309",
+      "x": -110.0,
+      "y": -178.0,
+      "status": "launched"
     },
     {
       "type": "starterrocket1",
-      "id": "starterrocket1-1405086058",
+      "id": "starterrocket1-1627167291",
       "x": -110.0,
       "y": -178.0,
       "status": "launched"
     }
   ],
   "launched": [
-    "starterrocket1-1405086058"
+    "starterrocket1-1415462309",
+    "starterrocket1-1627167291"
   ],
   "destroyed": [
   ],
   "missions": [
     {
-      "rocket_id": "starterrocket1-1405086058",
+      "rocket_id": "starterrocket1-1415462309",
       "target": "mission-1-training-target",
-      "launch_time": 1771989081.0,
-      "arrival_time": 1771989141.0
+      "launch_time": 1771999987.0,
+      "arrival_time": 1772000047.0
+    },
+    {
+      "rocket_id": "starterrocket1-1627167291",
+      "target": "mission-1-training-target",
+      "launch_time": 1772000202.0,
+      "arrival_time": 1772000262.0
     }
   ],
   "selected_target": "",
   "preview_target": {
     "id": "mission-1-training-target",
-    "label": "Training Asteroid A",
+    "label": "mission-1-training-target",
     "type": "asteroid",
-    "rocket_id": "starterrocket1-1405086058"
+    "rocket_id": "starterrocket1-1415462309"
   },
   "detected_targets": [
     {
@@ -143,20 +148,19 @@
     }
   ],
   "seen_asteroids": [
-    "test-asteroid-1535735226",
-    "mission-1-training-target"
   ],
   "seen_planets": [
   ],
   "scan_counts": {
   },
   "status_changed_at": {
-    "starterrocket1-test-306": {
-      "inTransit": 1771942634.0
+    "starterrocket1-1415462309": {
+      "awaitingLaunch": 1771999984.0,
+      "launched": 1771999987.0
     },
-    "starterrocket1-1405086058": {
-      "awaitingLaunch": 1771989077.0,
-      "launched": 1771989081.0
+    "starterrocket1-1627167291": {
+      "awaitingLaunch": 1772000198.0,
+      "launched": 1772000202.0
     }
   },
   "mission_progress_completed": 0,
@@ -171,14 +175,6 @@
   "returning": [
   ],
   "arrived": {
-    "starterrocket1-test-306": {
-      "target_id": "test-asteroid-1535735226",
-      "arrived_at": 1771942634.552
-    },
-    "starterrocket1-1405086058": {
-      "target_id": "mission-1-training-target",
-      "arrived_at": 1771989113.66385
-    }
   },
   "returned_mission": {
   },

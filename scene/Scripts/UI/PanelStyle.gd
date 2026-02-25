@@ -1,15 +1,17 @@
 extends RefCounted
 class_name PanelStyle
 
-const PANEL_BG := Color(0.133333, 0.152941, 0.180392, 0.96)
-const PANEL_BORDER := Color(0.263, 0.298, 0.369, 1)
-const PANEL_SHADOW := Color(0, 0, 0, 0.38)
-const TEXT_PRIMARY := Color(0.847, 0.871, 0.914, 1)
-const TEXT_MUTED := Color(0.639, 0.694, 0.784, 1)
-const ACCENT := Color(0.533, 0.753, 0.816, 1)
-const ACCENT_SOFT := Color(0.168627, 0.188235, 0.231373, 0.96)
-const BUTTON_PRESSED := Color(0.231373, 0.258824, 0.321569, 0.96)
-const TEXT_ON_ACCENT := Color(0.094, 0.102, 0.122, 1)
+const NebulaTheme = preload("res://Resources/NebulaSciTheme.gd")
+
+const PANEL_BG := NebulaTheme.PANEL_BG
+const PANEL_BORDER := NebulaTheme.PANEL_OUTLINE
+const PANEL_SHADOW := Color(0, 0, 0, 0.5)
+const TEXT_PRIMARY := Color(0.95, 0.95, 0.98, 1)
+const TEXT_MUTED := Color(0.7, 0.7, 0.75, 1)
+const ACCENT := NebulaTheme.ACCENT_BLUE
+const ACCENT_SOFT := NebulaTheme.BUTTON_BG
+const BUTTON_PRESSED := NebulaTheme.BUTTON_PRESSED
+const TEXT_ON_ACCENT := Color(0.05, 0.05, 0.08, 1)
 
 static var _instance: PanelStyle = null
 
@@ -27,17 +29,17 @@ static func apply_panel(panel: Control, bg_color: Color = PANEL_BG) -> void:
 		return
 	style_box.bg_color = bg_color
 	style_box.border_color = PANEL_BORDER
-	style_box.border_width_left = 1
-	style_box.border_width_right = 1
-	style_box.border_width_top = 1
-	style_box.border_width_bottom = 1
-	style_box.corner_radius_top_left = 20
-	style_box.corner_radius_top_right = 20
-	style_box.corner_radius_bottom_left = 20
-	style_box.corner_radius_bottom_right = 20
+	style_box.border_width_left = 3
+	style_box.border_width_right = 3
+	style_box.border_width_top = 3
+	style_box.border_width_bottom = 3
+	style_box.corner_radius_top_left = 12
+	style_box.corner_radius_top_right = 12
+	style_box.corner_radius_bottom_left = 12
+	style_box.corner_radius_bottom_right = 12
 	style_box.shadow_color = PANEL_SHADOW
-	style_box.shadow_size = 12
-	style_box.shadow_offset = Vector2(0, 6)
+	style_box.shadow_size = 16
+	style_box.shadow_offset = Vector2(0, 4)
 	if style_box != null:
 		panel.add_theme_stylebox_override("panel", style_box)
 
@@ -70,42 +72,45 @@ static func apply_muted(label: Label) -> void:
 static func apply_button(button: Button, is_primary: bool = false) -> void:
 	if button == null:
 		return
+	
+	var NebulaTheme = preload("res://Resources/NebulaSciTheme.gd")
+	
 	var normal = StyleBoxFlat.new()
 	if normal == null:
 		return
-	normal.corner_radius_top_left = 12
-	normal.corner_radius_top_right = 12
-	normal.corner_radius_bottom_left = 12
-	normal.corner_radius_bottom_right = 12
+	normal.corner_radius_top_left = 8
+	normal.corner_radius_top_right = 8
+	normal.corner_radius_bottom_left = 8
+	normal.corner_radius_bottom_right = 8
 	normal.content_margin_left = 16
 	normal.content_margin_right = 16
 	normal.content_margin_top = 10
 	normal.content_margin_bottom = 10
-	normal.bg_color = ACCENT if is_primary else PANEL_BG
-	normal.border_color = ACCENT if is_primary else PANEL_BORDER
-	normal.border_width_left = 1
-	normal.border_width_right = 1
-	normal.border_width_top = 1
-	normal.border_width_bottom = 1
+	normal.bg_color = NebulaTheme.ACCENT_BLUE if is_primary else NebulaTheme.BUTTON_BG
+	normal.border_color = PANEL_BORDER
+	normal.border_width_left = 2
+	normal.border_width_right = 2
+	normal.border_width_top = 2
+	normal.border_width_bottom = 2
 
 	var hover = normal.duplicate()
 	if hover == null:
 		push_error("Failed to duplicate button style")
 		return
-	hover.bg_color = BUTTON_PRESSED if is_primary else ACCENT_SOFT
+	hover.bg_color = NebulaTheme.BUTTON_HOVER
 
 	var pressed = normal.duplicate()
 	if pressed == null:
 		push_error("Failed to duplicate button style")
 		return
-	pressed.bg_color = PANEL_BG if is_primary else BUTTON_PRESSED
+	pressed.bg_color = NebulaTheme.BUTTON_PRESSED
 
 	var disabled = normal.duplicate()
 	if disabled == null:
 		push_error("Failed to duplicate disabled button style")
 		return
-	disabled.bg_color = Color(PANEL_BG.r, PANEL_BG.g, PANEL_BG.b, 0.7)
-	disabled.border_color = Color(PANEL_BORDER.r, PANEL_BORDER.g, PANEL_BORDER.b, 0.7)
+	disabled.bg_color = Color(PANEL_BG.r, PANEL_BG.g, PANEL_BG.b, 0.5)
+	disabled.border_color = Color(PANEL_BORDER.r, PANEL_BORDER.g, PANEL_BORDER.b, 0.5)
 
 	if normal != null:
 		button.add_theme_stylebox_override("normal", normal)
@@ -116,6 +121,11 @@ static func apply_button(button: Button, is_primary: bool = false) -> void:
 		button.add_theme_stylebox_override("focus", hover)
 	if disabled != null:
 		button.add_theme_stylebox_override("disabled", disabled)
+	
+	# Update text color
+	button.add_theme_color_override("font_color", TEXT_PRIMARY)
+	if is_primary:
+		button.add_theme_color_override("font_hover_color", Color.WHITE)
 	button.add_theme_font_size_override("font_size", 20)
 	var font_color = TEXT_ON_ACCENT if is_primary else TEXT_PRIMARY
 	button.add_theme_color_override("font_color", font_color)

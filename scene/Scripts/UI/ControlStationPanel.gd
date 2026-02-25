@@ -2,347 +2,197 @@ extends Control
 
 signal panel_closed
 
-const OrbitingRowScene = preload("res://Scenes/UI/Templates/ControlStationOrbitingRow.tscn")
-const MissionHighlightCardScene = preload("res://Scenes/UI/Templates/ControlStationMissionHighlightCard.tscn")
-const RoadmapCardScene = preload("res://Scenes/UI/Templates/ControlStationRoadmapCard.tscn")
-const EmptyLabelScene = preload("res://Scenes/UI/Templates/MenuLogbookEmpty.tscn")
+const PREVIEW_SCENE := "res://Scenes/UI/AsteroidPreview/asteroid_preview.tscn"
 
-const ROADMAP_MISSIONS := [
-	{
-		"id": 1,
-		"title": "Mission 1",
-		"summary": "Launch your first target run.",
-		"note": "No scanner required. First target is progression-selected."
-	},
-	{
-		"id": 2,
-		"title": "Mission 2",
-		"summary": "Re-run target with upgraded rocket.",
-		"note": "Use L2 capability for improved yields."
-	},
-	{
-		"id": 3,
-		"title": "Mission 3",
-		"summary": "Introduce the system scanner.",
-		"note": "Scanning reveals richer target details over time."
-	},
-	{
-		"id": 4,
-		"title": "Mission 4",
-		"summary": "Acquire L3 rocket and mine nearby exoplanets.",
-		"note": "Planet scans, 3 buyer roster, and affinity-gated buyers come online."
-	},
-	{
-		"id": 5,
-		"title": "Mission 5",
-		"summary": "Handle multi-object operations.",
-		"note": "Use scanner intelligence to optimize choices."
-	}
+const STORY_MISSIONS := [
+	{"id": 1, "title": "First Launch", "desc": "Launch your first mission"},
+	{"id": 2, "title": "Upgrade Path", "desc": "Re-run with upgraded rocket"},
+	{"id": 3, "title": "Scanner Online", "desc": "Unlock system scanner"},
+	{"id": 4, "title": "Deep Space", "desc": "Mine exoplanets with L3 rocket"},
+	{"id": 5, "title": "Fleet Ops", "desc": "Multi-rocket operations"}
 ]
 
+@onready var bg: ColorRect = $Background
+@onready var panel: Panel = $Panel
+@onready var title: Label = $Panel/Margin/VBox/Title
+@onready var tabs: HBoxContainer = $Panel/Margin/VBox/Tabs
+@onready var active_tab: Button = $Panel/Margin/VBox/Tabs/ActiveTab
+@onready var story_tab: Button = $Panel/Margin/VBox/Tabs/StoryTab
+@onready var missions_list: VBoxContainer = $Panel/Margin/VBox/Scroll/MissionsList
+@onready var close_btn: Button = $Panel/Margin/VBox/Header/CloseButton
+
+var _current_tab := "active"
+
 func _ready():
-	# Apply consistent panel styling
-	_apply_panel_style()
-	_populate_mission_roadmap()
-	_populate_orbiting_list()
+	var NebulaTheme = preload("res://Resources/NebulaSciTheme.gd")
+	var style = NebulaTheme.create_panel_style()
+	panel.add_theme_stylebox_override("panel", style)
 	
-	# Connect close button
-	var close_button = $PanelContainer/Panel/VBoxContainer/HeaderContainer/CloseButton
-	close_button.pressed.connect(_on_close_button_pressed)
+	title.add_theme_color_override("font_color", Color(0.95, 0.95, 0.98))
+	title.add_theme_font_size_override("font_size", 28)
 	
-	# Connect background click to close
-	$Background.gui_input.connect(_on_background_input)
+	var btn_style = NebulaTheme.create_button_style()
+	close_btn.add_theme_stylebox_override("normal", btn_style)
+	close_btn.pressed.connect(_close)
+	
+	# Setup tabs
+	var tab_normal = NebulaTheme.create_button_style()
+	var tab_active = NebulaTheme.create_button_style("pressed")
+	active_tab.add_theme_stylebox_override("normal", tab_active)
+	active_tab.pressed.connect(_show_active_tab)
+	story_tab.add_theme_stylebox_override("normal", tab_normal)
+	story_tab.pressed.connect(_show_story_tab)
+	
+	bg.color = Color(0, 0, 0, 0.7)
+	bg.gui_input.connect(_on_bg_input)
+	
+	_show_active_tab()
 
-func _apply_panel_style():
-	"""Apply polished panel styling"""
-	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
-	var panel = $PanelContainer/Panel
-	panel_style.apply_panel(panel)
+func _populate_missions():
+	_populate_active_missions()
 
-	var title = $PanelContainer/Panel/VBoxContainer/HeaderContainer/Title
-	var content = $PanelContainer/Panel/VBoxContainer/ContentContainer/Description
-	var orbit_header = $PanelContainer/Panel/VBoxContainer/ContentContainer/OrbitingHeader
-	var close_btn = $PanelContainer/Panel/VBoxContainer/HeaderContainer/CloseButton
-	var separator = $PanelContainer/Panel/VBoxContainer/HSeparator
-
-	panel_style.apply_title(title)
-	panel_style.apply_richtext(content)
-	panel_style.apply_body(orbit_header)
-	panel_style.apply_button(close_btn, false)
-	panel_style.apply_separator(separator)
-
-func _populate_orbiting_list() -> void:
-	var list: VBoxContainer = $PanelContainer/Panel/VBoxContainer/ContentContainer/OrbitingList
-	for child in list.get_children():
-		child.queue_free()
-	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
-	var launchpad_rockets: Array = []
-	var in_flight: Array = []
-	if rm:
-		var placed = rm.get_placed()
-		for entry in placed:
-			var status = str(entry.get("status", ""))
-			if status == "awaitingLaunch":
-				launchpad_rockets.append(entry)
-		var launched = rm.get_launched()
-		var targets = rm.get_detected_targets()
-		var target_map := {}
-		for t in targets:
-			var tid = str(t.get("id", ""))
-			if tid != "":
-				target_map[tid] = str(t.get("label", tid))
-		var missions = rm.get_missions()
-		var missions_by_rocket := {}
-		for m in missions:
-			var rid = str(m.get("rocket_id", ""))
-			if rid != "":
-				missions_by_rocket[rid] = m
-		for rid_any in launched:
-			var rid = str(rid_any)
-			var mission = missions_by_rocket.get(rid, {})
-			var target_id = str(mission.get("target", ""))
-			var target_label = str(target_map.get(target_id, "Target %s" % target_id if target_id != "" else "Unknown target"))
-			in_flight.append({
-				"rocket_id": rid,
-				"target_label": target_label
-			})
-
-	if launchpad_rockets.is_empty() and in_flight.is_empty():
-		var empty: Label = EmptyLabelScene.instantiate()
-		empty.text = "No rockets on launchpad or in flight."
-		panel_style.apply_muted(empty)
-		list.add_child(empty)
-		return
-
-	if not launchpad_rockets.is_empty():
-		var lp_header: Label = EmptyLabelScene.instantiate()
-		lp_header.text = "On Launchpad"
-		lp_header.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-		panel_style.apply_body(lp_header)
-		list.add_child(lp_header)
-		for entry in launchpad_rockets:
-			var row: HBoxContainer = OrbitingRowScene.instantiate()
-			var rocket_id = str(entry.get("id", ""))
-			var name_lbl: Label = row.get_node("NameLabel")
-			name_lbl.text = "Rocket %s" % rocket_id
-			panel_style.apply_body(name_lbl)
-			var status_lbl: Label = row.get_node("ValueLabel")
-			status_lbl.text = "Awaiting launch"
-			panel_style.apply_muted(status_lbl)
-			list.add_child(row)
-
-	if not in_flight.is_empty():
-		var flight_header: Label = EmptyLabelScene.instantiate()
-		flight_header.text = "In Flight"
-		flight_header.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-		panel_style.apply_body(flight_header)
-		list.add_child(flight_header)
-		for entry in in_flight:
-			var row: HBoxContainer = OrbitingRowScene.instantiate()
-			var rocket_id = str(entry.get("rocket_id", ""))
-			var target_label = str(entry.get("target_label", "Unknown target"))
-			var name_lbl: Label = row.get_node("NameLabel")
-			name_lbl.text = "Rocket %s" % rocket_id
-			panel_style.apply_body(name_lbl)
-			var target_lbl: Label = row.get_node("ValueLabel")
-			target_lbl.text = "To %s" % target_label
-			panel_style.apply_muted(target_lbl)
-			list.add_child(row)
-
-func _populate_mission_roadmap() -> void:
-	var content = $PanelContainer/Panel/VBoxContainer/ContentContainer
-	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
-	var next_data = build_next_mission_highlight_data()
-
-	var next_header = content.get_node_or_null("NextMissionHeader")
-	if next_header == null:
-		push_error("ControlStationPanel: missing NextMissionHeader")
-		return
-	panel_style.apply_title(next_header)
-
-	var next_card = content.get_node_or_null("NextMissionCard")
-	if next_card == null:
-		push_error("ControlStationPanel: missing NextMissionCard")
-		return
-	for c in next_card.get_children():
-		c.queue_free()
-	next_card.add_theme_stylebox_override("panel", _roadmap_card_style(str(next_data.get("status", "current"))))
-	var next_body: VBoxContainer = MissionHighlightCardScene.instantiate().get_node("Body")
-	next_card.add_child(next_body)
-	var next_title: Label = next_body.get_node("TitleLabel")
-	next_title.text = str(next_data.get("title", "Mission"))
-	panel_style.apply_body(next_title)
-	next_title.add_theme_font_size_override("font_size", 18)
-	var next_summary: Label = next_body.get_node("SummaryLabel")
-	next_summary.text = str(next_data.get("summary", ""))
-	panel_style.apply_muted(next_summary)
-	next_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	var next_note: Label = next_body.get_node("NoteLabel")
-	next_note.text = str(next_data.get("note", ""))
-	panel_style.apply_muted(next_note)
-	next_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-
-	var roadmap_header = content.get_node_or_null("MissionRoadmapHeader")
-	if roadmap_header == null:
-		push_error("ControlStationPanel: missing MissionRoadmapHeader")
-		return
-	panel_style.apply_title(roadmap_header)
-
-	var roadmap_list = content.get_node_or_null("MissionRoadmapList")
-	if roadmap_list == null:
-		push_error("ControlStationPanel: missing MissionRoadmapList")
-		return
-	for child in roadmap_list.get_children():
-		child.queue_free()
-
-	for item in build_mission_roadmap():
-		var row = _build_roadmap_row(item)
-		roadmap_list.add_child(row)
-
-func build_next_mission_highlight_data() -> Dictionary:
-	var roadmap = build_mission_roadmap()
-	for item in roadmap:
-		if str(item.get("status", "")) == "current":
-			return item
-	if roadmap.is_empty():
-		return {
-			"title": "No missions available",
-			"summary": "No mission roadmap entries were found.",
-			"note": "",
-			"status": "upcoming"
-		}
-	var last = roadmap[roadmap.size() - 1]
-	return {
-		"title": "All planned missions complete",
-		"summary": "No upcoming missions are currently queued.",
-		"note": "Latest completed: %s" % str(last.get("title", "Mission")),
-		"status": "completed"
-	}
-
-func build_mission_roadmap() -> Array:
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
-	var completed_count := 0
-	if rm:
-		completed_count = int(rm.get_completed_mission_count())
-	var out := []
-	for mission in ROADMAP_MISSIONS:
-		var mission_id = int(mission.get("id", 0))
-		var status = "upcoming"
-		if mission_id <= completed_count:
-			status = "completed"
-		elif mission_id == completed_count + 1:
-			status = "current"
-		out.append({
-			"id": mission_id,
-			"title": str(mission.get("title", "Mission")),
-			"summary": str(mission.get("summary", "")),
-			"note": str(mission.get("note", "")),
-			"status": status
-		})
-	return out
-
-func _build_roadmap_row(item: Dictionary) -> PanelContainer:
-	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
-	var status = str(item.get("status", "upcoming"))
-	var card: PanelContainer = RoadmapCardScene.instantiate()
-	card.add_theme_stylebox_override("panel", _roadmap_card_style(status))
-	var body: VBoxContainer = card.get_node("Body")
-	var top_row: HBoxContainer = card.get_node("Body/TopRow")
-	var title: Label = card.get_node("Body/TopRow/TitleLabel")
-	title.text = "%s" % str(item.get("title", "Mission"))
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	panel_style.apply_body(title)
-	title.add_theme_font_size_override("font_size", 16)
-	var status_label: Label = card.get_node("Body/TopRow/StatusLabel")
-	var start_btn: Button = card.get_node("Body/TopRow/StartButton")
-	if status == "current":
-		start_btn.visible = true
-		status_label.visible = false
-		panel_style.apply_button(start_btn, true)
-		start_btn.pressed.connect(Callable(self, "_on_start_mission_pressed").bind(int(item.get("id", 0))))
-	else:
-		start_btn.visible = false
-		status_label.visible = true
-		status_label.text = _status_label(status)
-		panel_style.apply_muted(status_label)
-
-	var summary: Label = card.get_node("Body/SummaryLabel")
-	summary.text = str(item.get("summary", ""))
-	panel_style.apply_muted(summary)
-	summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-
-	var note: Label = card.get_node("Body/NoteLabel")
-	note.text = str(item.get("note", ""))
-	panel_style.apply_muted(note)
-	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-
+func _create_story_card(mission: Dictionary) -> PanelContainer:
+	var NebulaTheme = preload("res://Resources/NebulaSciTheme.gd")
+	
+	var card = PanelContainer.new()
+	var card_style = StyleBoxFlat.new()
+	card_style.bg_color = NebulaTheme.BUTTON_BG
+	card_style.border_color = NebulaTheme.PANEL_OUTLINE
+	card_style.border_width_left = 2
+	card_style.border_width_top = 2
+	card_style.border_width_right = 2
+	card_style.border_width_bottom = 2
+	card_style.corner_radius_top_left = 8
+	card_style.corner_radius_top_right = 8
+	card_style.corner_radius_bottom_left = 8
+	card_style.corner_radius_bottom_right = 8
+	card.add_theme_stylebox_override("panel", card_style)
+	
+	var vbox = VBoxContainer.new()
+	card.add_child(vbox)
+	
+	var title_lbl = Label.new()
+	title_lbl.text = "Mission %d: %s" % [mission.id, mission.title]
+	title_lbl.add_theme_color_override("font_color", Color(0.95, 0.95, 0.98))
+	title_lbl.add_theme_font_size_override("font_size", 18)
+	vbox.add_child(title_lbl)
+	
+	var desc_lbl = Label.new()
+	desc_lbl.text = mission.desc
+	desc_lbl.add_theme_color_override("font_color", Color(0.7, 0.7, 0.75))
+	vbox.add_child(desc_lbl)
+	
 	return card
 
-func _on_start_mission_pressed(mission_id: int) -> void:
-	var current_mission_id = _get_current_mission_id()
-	if mission_id != current_mission_id:
-		return
+func _create_mission_card(rocket_id: String, target_label: String, target_id: String, target_type: String) -> PanelContainer:
+	var NebulaTheme = preload("res://Resources/NebulaSciTheme.gd")
+	
+	var card = PanelContainer.new()
+	var card_style = StyleBoxFlat.new()
+	card_style.bg_color = NebulaTheme.BUTTON_BG
+	card_style.border_color = NebulaTheme.PANEL_OUTLINE
+	card_style.border_width_left = 2
+	card_style.border_width_top = 2
+	card_style.border_width_right = 2
+	card_style.border_width_bottom = 2
+	card_style.corner_radius_top_left = 8
+	card_style.corner_radius_top_right = 8
+	card_style.corner_radius_bottom_left = 8
+	card_style.corner_radius_bottom_right = 8
+	card.add_theme_stylebox_override("panel", card_style)
+	
+	var hbox = HBoxContainer.new()
+	card.add_child(hbox)
+	
+	var vbox = VBoxContainer.new()
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hbox.add_child(vbox)
+	
+	var rocket_lbl = Label.new()
+	rocket_lbl.text = rocket_id
+	rocket_lbl.add_theme_color_override("font_color", Color(0.95, 0.95, 0.98))
+	rocket_lbl.add_theme_font_size_override("font_size", 18)
+	vbox.add_child(rocket_lbl)
+	
+	var target_lbl = Label.new()
+	target_lbl.text = "→ " + target_label
+	target_lbl.add_theme_color_override("font_color", NebulaTheme.ACCENT_BLUE)
+	vbox.add_child(target_lbl)
+	
+	var btn = Button.new()
+	btn.text = "RESUME"
+	var btn_style = NebulaTheme.create_button_style()
+	btn.add_theme_stylebox_override("normal", btn_style)
+	btn.add_theme_color_override("font_color", Color(0.95, 0.95, 0.98))
+	btn.pressed.connect(_resume_mission.bind(rocket_id, target_id, target_type))
+	hbox.add_child(btn)
+	
+	return card
+
+func _resume_mission(rocket_id: String, target_id: String, target_type: String):
+	print("[ControlStation] _resume_mission called: rocket=%s, target=%s, type=%s" % [rocket_id, target_id, target_type])
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
-	if rm:
-		rm.set_pending_mission_guidance_id(mission_id)
-	panel_closed.emit()
-	queue_free()
-	var tree = get_tree()
-	if tree == null:
-		return
-	var scene_manager = tree.get_first_node_in_group("scene_manager")
-	if scene_manager and scene_manager.has_method("change_to_scene"):
-		scene_manager.change_to_scene("res://Scenes/Earth/earth_launchpad.tscn")
-	else:
-		tree.change_scene_to_file("res://Scenes/Earth/earth_launchpad.tscn")
+	rm.set_preview_target(target_id, target_id, target_type, rocket_id)
+	print("[ControlStation] Preview target set, changing scene...")
+	get_tree().change_scene_to_file(PREVIEW_SCENE)
 
-func _get_current_mission_id() -> int:
-	for item in build_mission_roadmap():
-		if str(item.get("status", "")) == "current":
-			return int(item.get("id", 0))
-	return 0
-
-func _status_label(status: String) -> String:
-	match status:
-		"completed":
-			return "Completed"
-		"current":
-			return "Current"
-		_:
-			return "Upcoming"
-
-func _roadmap_card_style(status: String) -> StyleBoxFlat:
-	var style = StyleBoxFlat.new()
-	style.corner_radius_top_left = 10
-	style.corner_radius_top_right = 10
-	style.corner_radius_bottom_left = 10
-	style.corner_radius_bottom_right = 10
-	style.content_margin_left = 10
-	style.content_margin_top = 8
-	style.content_margin_right = 10
-	style.content_margin_bottom = 8
-	style.border_width_left = 1
-	style.border_width_right = 1
-	style.border_width_top = 1
-	style.border_width_bottom = 1
-	match status:
-		"completed":
-			style.bg_color = Color(0.12, 0.20, 0.17, 0.85)
-			style.border_color = Color(0.30, 0.55, 0.45, 0.95)
-		"current":
-			style.bg_color = Color(0.16, 0.20, 0.26, 0.9)
-			style.border_color = Color(0.40, 0.56, 0.72, 0.95)
-		_:
-			style.bg_color = Color(0.12, 0.13, 0.15, 0.8)
-			style.border_color = Color(0.26, 0.29, 0.34, 0.8)
-	return style
-
-func _on_close_button_pressed():
+func _close():
 	panel_closed.emit()
 	queue_free()
 
-func _on_background_input(event: InputEvent):
+func _on_bg_input(event: InputEvent):
 	if event is InputEventMouseButton and event.pressed:
-		panel_closed.emit()
-		queue_free()
+		_close()
+
+func _show_active_tab():
+	_current_tab = "active"
+	var NebulaTheme = preload("res://Resources/NebulaSciTheme.gd")
+	active_tab.add_theme_stylebox_override("normal", NebulaTheme.create_button_style("pressed"))
+	story_tab.add_theme_stylebox_override("normal", NebulaTheme.create_button_style())
+	_populate_active_missions()
+
+func _show_story_tab():
+	_current_tab = "story"
+	var NebulaTheme = preload("res://Resources/NebulaSciTheme.gd")
+	active_tab.add_theme_stylebox_override("normal", NebulaTheme.create_button_style())
+	story_tab.add_theme_stylebox_override("normal", NebulaTheme.create_button_style("pressed"))
+	_populate_story_missions()
+
+func _populate_active_missions():
+	for child in missions_list.get_children():
+		child.queue_free()
+	
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var missions = rm.get_missions()
+	var targets = rm.get_detected_targets()
+	var target_map := {}
+	for t in targets:
+		target_map[str(t.get("id", ""))] = str(t.get("label", ""))
+	
+	print("[ControlStation] Active missions count: ", missions.size())
+	
+	if missions.is_empty():
+		var empty = Label.new()
+		empty.text = "No active missions"
+		empty.add_theme_color_override("font_color", Color(0.7, 0.7, 0.75))
+		empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		missions_list.add_child(empty)
+		return
+	
+	for m in missions:
+		var rocket_id = str(m.get("rocket_id", ""))
+		var target_id = str(m.get("target", ""))
+		var target_label = target_map.get(target_id, target_id)
+		
+		print("[ControlStation] Mission: rocket=%s, target=%s, label=%s" % [rocket_id, target_id, target_label])
+		
+		var card = _create_mission_card(rocket_id, target_label, target_id, str(m.get("target_type", "asteroid")))
+		missions_list.add_child(card)
+
+func _populate_story_missions():
+	for child in missions_list.get_children():
+		child.queue_free()
+	
+	for mission in STORY_MISSIONS:
+		var card = _create_story_card(mission)
+		missions_list.add_child(card)

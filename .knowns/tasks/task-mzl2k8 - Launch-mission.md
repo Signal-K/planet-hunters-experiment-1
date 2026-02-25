@@ -23,6 +23,6 @@ Basically, convert a mission to the 'in-progress' phase, make all missions brows
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
-This has taken a huge amount of time, mainly fucking around with copilot to get scenes fixed due to heavy corruption
+
 <!-- SECTION:NOTES:END -->
 
