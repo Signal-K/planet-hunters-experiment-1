@@ -26,3 +26,7 @@ res://Scripts/UI/NewMissionPanel.gd
 res://Scripts/UI/PanelStyle.gd
 res://Scripts/UI/SatelliteStationPanel.gd
 res://Scripts/UI/SatelliteStationPanelList.gd
+res://Scripts/UI/SpaceMap/SpaceMap.gd
+res://Scripts/UI/NebulaBackground.gd
+res://Scenes/UI/Templates/ControlStationOrbitingRow.tscn
+res://Scripts/UI/ControlStationPanel.gd
