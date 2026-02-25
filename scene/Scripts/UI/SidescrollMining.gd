@@ -15,7 +15,7 @@ const PLANET_DURATION = 180.0
 const MAX_DRONES = 3
 const DRONE_COOLDOWN = 5.0
 
-enum TutorialStep {
+enum GuideStep {
 	INTRO,
 	MINE_SURFACE_IRON,
 	MINE_SURFACE_NICKEL,
@@ -67,9 +67,9 @@ var _current_target_id = ""
 @onready var return_button: Button = $UI/ReturnButton
 
 var _rocket_frames = []
-var _tutorial_step = TutorialStep.INTRO
-var _tutorial_active = true
-var _tutorial_paused = false
+var _guide_step = GuideStep.INTRO
+var _guide_active = true
+var _guide_paused = false
 var _drones_available = MAX_DRONES
 var _drone_cooldown_timer = 0.0
 var _active_drones = []
@@ -94,7 +94,7 @@ func _ready():
 	_update_drone_display()
 	
 	if not Engine.is_editor_hint():
-		_show_tutorial_step()
+		_show_guide_step()
 
 func start_mining(is_planet: bool = false, difficulty: int = 1, target_id: String = "", minerals: Dictionary = {}, mineable_pct: float = 0.5):
 	_is_planet = is_planet
@@ -266,8 +266,8 @@ func _generate_minerals(rng: RandomNumberGenerator):
 	
 	var screen_height = get_viewport_rect().size.y
 	
-	# If tutorial active, place guaranteed deposits near start
-	if _tutorial_active:
+	# If guide active, place guaranteed deposits near start
+	if _guide_active:
 		# Surface deposit 1 (Iron) at 600px
 		_create_mineral_deposit(600, 100, mineral_types[0], true, screen_height)
 		# Surface deposit 2 (Nickel) at 1000px
@@ -279,7 +279,7 @@ func _generate_minerals(rng: RandomNumberGenerator):
 	
 	# Generate deposits based on mineable_pct (more mineable = more deposits)
 	var deposit_count = int(30 + (_target_mineable_pct * 20))
-	var start_x = 1800 if _tutorial_active else 300
+	var start_x = 1800 if _guide_active else 300
 	
 	for i in range(deposit_count):
 		var x = rng.randf_range(start_x, _terrain_width - 200)
@@ -360,9 +360,9 @@ func _process(delta):
 	# Animate particles from pool
 	_animate_particles(delta)
 	
-	# Check if we should slow down for tutorial
-	if _tutorial_active:
-		_check_tutorial_slowdown()
+	# Check if we should slow down for guide
+	if _guide_active:
+		_check_guide_slowdown()
 	
 	# Apply speed multiplier
 	_scroll_offset += SCROLL_SPEED * _scroll_speed_multiplier * delta
@@ -409,8 +409,8 @@ func _process(delta):
 		if _drone_cooldown_timer <= 0:
 			_update_drone_display()
 	
-	if _tutorial_active:
-		_update_tutorial(delta)
+	if _guide_active:
+		_update_guide(delta)
 	
 	if _is_mining and _beam_charges > 0:
 		_heat = min(100, _heat + HEAT_GAIN_RATE * delta)
@@ -432,7 +432,7 @@ func _process(delta):
 	else:
 		inventory_panel.visible = false
 	
-	if not _tutorial_active:
+	if not _guide_active:
 		if Input.is_action_pressed("ui_accept") and not OS.has_feature("mobile"):
 			_is_mining = true
 		elif Input.is_action_just_released("ui_accept"):
@@ -474,7 +474,7 @@ func _check_mineral_hit():
 			# Reduce beam charge by 1 per mineral collected
 			_beam_charges = max(0, _beam_charges - 1)
 			
-			if _tutorial_active:
+			if _guide_active:
 				_surface_mined_count += 1
 			
 			_combo += 1
@@ -555,69 +555,69 @@ func _update_inventory_display():
 func _complete_mining():
 	mining_completed.emit(_collected_minerals, _score)
 
-func _show_tutorial_step():
+func _show_guide_step():
 	var tween = create_tween()
 	tween.set_parallel(true)
 	
 	instructions.modulate.a = 0.0
 	instructions.scale = Vector2(0.8, 0.8)
 	
-	match _tutorial_step:
-		TutorialStep.INTRO:
+	match _guide_step:
+		GuideStep.INTRO:
 			instructions.text = "Welcome! Mine colored minerals as you fly over the asteroid."
-			_tutorial_paused = false  # Keep flying
-		TutorialStep.MINE_SURFACE_IRON:
+			_guide_paused = false  # Keep flying
+		GuideStep.MINE_SURFACE_IRON:
 			instructions.text = "ORANGE = Iron (10pts). Hold SPACE to mine surface deposits!"
-			_tutorial_paused = false  # Keep flying until near deposit
-		TutorialStep.MINE_SURFACE_NICKEL:
+			_guide_paused = false  # Keep flying until near deposit
+		GuideStep.MINE_SURFACE_NICKEL:
 			instructions.text = "YELLOW = Nickel (15pts). Mine another surface deposit!"
-			_tutorial_paused = false  # Keep flying until near deposit
-		TutorialStep.EXPLAIN_SUBSURFACE:
+			_guide_paused = false  # Keep flying until near deposit
+		GuideStep.EXPLAIN_SUBSURFACE:
 			instructions.text = "DARKER deposits are underground. Use drones to reach them!"
-			_tutorial_paused = false  # Keep flying
-		TutorialStep.DEPLOY_DRONE:
+			_guide_paused = false  # Keep flying
+		GuideStep.DEPLOY_DRONE:
 			instructions.text = "Press D to deploy a drone at the next dark deposit!"
-			_tutorial_paused = false  # Keep flying until near subsurface
-		TutorialStep.COMPLETE:
+			_guide_paused = false  # Keep flying until near subsurface
+		GuideStep.COMPLETE:
 			instructions.text = "Great! Continue mining. Watch FUEL and HEAT!"
-			_tutorial_paused = false
-			_tutorial_active = false
+			_guide_paused = false
+			_guide_active = false
 	
 	tween.tween_property(instructions, "modulate:a", 1.0, 0.4).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	tween.tween_property(instructions, "scale", Vector2(1.0, 1.0), 0.4).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
-func _update_tutorial(delta):
+func _update_guide(delta):
 	if Input.is_action_pressed("ui_accept") and not OS.has_feature("mobile"):
 		_is_mining = true
 	elif Input.is_action_just_released("ui_accept"):
 		_is_mining = false
 	
 	if Input.is_key_pressed(KEY_D) and _drones_available > 0 and _drone_cooldown_timer <= 0:
-		if _tutorial_step == TutorialStep.DEPLOY_DRONE:
+		if _guide_step == GuideStep.DEPLOY_DRONE:
 			_deploy_drone()
 			await get_tree().create_timer(2.0).timeout
-			_tutorial_step = TutorialStep.COMPLETE
-			_show_tutorial_step()
+			_guide_step = GuideStep.COMPLETE
+			_show_guide_step()
 	
-	match _tutorial_step:
-		TutorialStep.INTRO:
+	match _guide_step:
+		GuideStep.INTRO:
 			await get_tree().create_timer(3.0).timeout
-			_tutorial_step = TutorialStep.MINE_SURFACE_IRON
-			_show_tutorial_step()
-		TutorialStep.MINE_SURFACE_IRON:
+			_guide_step = GuideStep.MINE_SURFACE_IRON
+			_show_guide_step()
+		GuideStep.MINE_SURFACE_IRON:
 			if _surface_mined_count >= 1:
 				await get_tree().create_timer(1.0).timeout
-				_tutorial_step = TutorialStep.MINE_SURFACE_NICKEL
-				_show_tutorial_step()
-		TutorialStep.MINE_SURFACE_NICKEL:
+				_guide_step = GuideStep.MINE_SURFACE_NICKEL
+				_show_guide_step()
+		GuideStep.MINE_SURFACE_NICKEL:
 			if _surface_mined_count >= 2:
 				await get_tree().create_timer(1.0).timeout
-				_tutorial_step = TutorialStep.EXPLAIN_SUBSURFACE
-				_show_tutorial_step()
-		TutorialStep.EXPLAIN_SUBSURFACE:
+				_guide_step = GuideStep.EXPLAIN_SUBSURFACE
+				_show_guide_step()
+		GuideStep.EXPLAIN_SUBSURFACE:
 			await get_tree().create_timer(3.0).timeout
-			_tutorial_step = TutorialStep.DEPLOY_DRONE
-			_show_tutorial_step()
+			_guide_step = GuideStep.DEPLOY_DRONE
+			_show_guide_step()
 
 func _deploy_drone():
 	_drones_available -= 1
@@ -658,11 +658,11 @@ func _find_subsurface_target():
 func _on_drone_exploded(pos: Vector2):
 	_score += 50
 
-func _check_tutorial_pause():
-	# Renamed to _check_tutorial_slowdown - see below
+func _check_guide_pause():
+	# Renamed to _check_guide_slowdown - see below
 	pass
 
-func _check_tutorial_slowdown():
+func _check_guide_slowdown():
 	var rocket_x = fmod(rocket.position.x + _scroll_offset, _terrain_width)
 	var slowdown_range = 120
 	
@@ -679,14 +679,14 @@ func _check_tutorial_slowdown():
 		var inside = rocket_x >= region.x and rocket_x <= (region.x + region.width)
 		
 		if inside or min_distance < slowdown_range:
-			# Slow down if this is a relevant deposit for current tutorial step
-			if _tutorial_step == TutorialStep.MINE_SURFACE_IRON and region.is_surface and _surface_mined_count == 0:
+			# Slow down if this is a relevant deposit for current guide step
+			if _guide_step == GuideStep.MINE_SURFACE_IRON and region.is_surface and _surface_mined_count == 0:
 				_scroll_speed_multiplier = 0.3
 				return
-			elif _tutorial_step == TutorialStep.MINE_SURFACE_NICKEL and region.is_surface and _surface_mined_count == 1:
+			elif _guide_step == GuideStep.MINE_SURFACE_NICKEL and region.is_surface and _surface_mined_count == 1:
 				_scroll_speed_multiplier = 0.3
 				return
-			elif _tutorial_step == TutorialStep.DEPLOY_DRONE and not region.is_surface:
+			elif _guide_step == GuideStep.DEPLOY_DRONE and not region.is_surface:
 				_scroll_speed_multiplier = 0.3
 				return
 	

@@ -6,8 +6,6 @@ var camera_controller: Node
 var scene_manager: SceneManager
 var ui_manager: UIManager
 const PREVIEW_SCENE_PATH := "res://Scenes/UI/AsteroidPreview/asteroid_preview.tscn"
-const ACTION_OPEN_NEW_MISSION := "open_new_mission"
-const HINT_OPEN_NEW_MISSION := "Tap New Mission to open the launch area and prepare a rocket."
 const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
 const SR2_UNLOCK_POPUP_PATH := "user://rocket_unlock_popups.cfg"
 const SR2_UNLOCK_SECTION := "popups"
@@ -63,6 +61,38 @@ func _setup_buttons() -> void:
 	
 	print("All button signals connected")
 
+func _unhandled_input(event: InputEvent) -> void:
+	if not (event is InputEventMouseButton):
+		return
+	var mouse_event := event as InputEventMouseButton
+	if mouse_event.button_index != MOUSE_BUTTON_LEFT or not mouse_event.pressed:
+		return
+	if _try_launchpad_click_fallback(mouse_event.position):
+		get_viewport().set_input_as_handled()
+
+func _try_launchpad_click_fallback(screen_position: Vector2) -> bool:
+	var launchpad = get_node_or_null("StructuresLayer/Launchpad")
+	if launchpad == null:
+		return false
+	var sprite = launchpad.get_node_or_null("Sprite2D")
+	if sprite == null or not sprite is Sprite2D:
+		return false
+	if not _sprite_contains_point(sprite, screen_position):
+		return false
+	if launchpad.has_method("on_interact"):
+		launchpad.on_interact()
+		return true
+	return false
+
+func _sprite_contains_point(sprite: Sprite2D, screen_position: Vector2) -> bool:
+	if sprite.texture == null:
+		return false
+	var size = sprite.texture.get_size() * sprite.global_scale.abs()
+	if size.x <= 0 or size.y <= 0:
+		return false
+	var top_left = sprite.global_position - (size * 0.5)
+	return Rect2(top_left, size).has_point(screen_position)
+
 # Button handlers
 func _on_back_button_pressed() -> void:
 	print("Back button pressed - navigating backward")
@@ -93,7 +123,6 @@ func _on_space_map_button_pressed() -> void:
 
 func _on_new_mission_button_pressed() -> void:
 	print("New Mission button pressed - opening launchpad scene")
-	_show_tutorial_hint_once(ACTION_OPEN_NEW_MISSION, HINT_OPEN_NEW_MISSION)
 	if scene_manager:
 		scene_manager.change_to_scene("res://Scenes/Earth/earth_launchpad.tscn")
 	else:
@@ -123,11 +152,6 @@ func _open_preview_delta(delta: int) -> bool:
 	else:
 		get_tree().change_scene_to_file(PREVIEW_SCENE_PATH)
 	return true
-
-func _show_tutorial_hint_once(action_key: String, message: String) -> void:
-	var app = get_tree().root.find_child("AppController", true, false)
-	if app and app.has_method("show_tutorial_hint_once"):
-		app.show_tutorial_hint_once(action_key, message)
 
 func _maybe_show_starterrocket2_unlock_popup() -> void:
 	if _has_seen_starterrocket2_unlock_popup():

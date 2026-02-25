@@ -83,9 +83,6 @@ None found - all scripts are referenced
 
 ### Priority 3: Minor Refactors
 
-#### 11. TutorialPanel.gd (344 lines)
-- Extract tutorial steps to data file
-- Create TutorialStep.tscn component
 
 #### 12. OutboundPreviewTransition.gd (330 lines)
 - Similar to ReturnPreviewTransition

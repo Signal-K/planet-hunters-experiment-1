@@ -6,7 +6,7 @@ priority: high
 labels:
   - mining
 createdAt: '2026-02-24T15:04:33.282Z'
-updatedAt: '2026-02-25T00:26:21.712Z'
+updatedAt: '2026-02-25T08:45:16.466Z'
 timeSpent: 52
 ---
 # Build actual working mining minigame
@@ -29,5 +29,9 @@ Now that buttons work, build the real side-scrolling mining game
 
 <!-- SECTION:NOTES:BEGIN -->
 Created working minigame at scene/mining_test.tscn - Click MINE button, hold SPACE to mine colored minerals as they scroll by
+
+
+
+Spec Reference: @doc/specs/mining-minigame-system-specification
 <!-- SECTION:NOTES:END -->
 

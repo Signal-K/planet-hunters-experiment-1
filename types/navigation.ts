@@ -18,9 +18,6 @@ export interface AppController {
   experience_updated: {
     connect(callback: (xp: number, level: number) => void): void;
   };
-  tutorial_completed_updated: {
-    connect(callback: (isCompleted: boolean) => void): void;
-  };
   set_game_paused(paused: boolean): void;
   get_game_paused(): boolean;
   request_menu_open(): void;
@@ -36,6 +33,4 @@ export interface AppController {
   set_experience_from_react(xp: number, level: number): void;
   get_experience_xp(): number;
   get_experience_level(): number;
-  set_tutorial_completed_from_react(isCompleted: boolean): void;
-  get_tutorial_completed(): boolean;
 }

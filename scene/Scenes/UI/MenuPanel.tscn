@@ -355,7 +355,7 @@ theme_override_styles/pressed = SubResource("4")
 theme_override_styles/focus = SubResource("3")
 text = "Reset All Data"
 
-[node name="ResetTutorialButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer"]
+[node name="SkipTutorialButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer"]
 custom_minimum_size = Vector2(160, 50)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
@@ -364,7 +364,30 @@ theme_override_styles/normal = SubResource("2")
 theme_override_styles/hover = SubResource("3")
 theme_override_styles/pressed = SubResource("4")
 theme_override_styles/focus = SubResource("3")
-text = "Reset Tutorial State"
+text = "Skip Onboarding"
+
+[node name="ReplayMissionTutorialButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer"]
+custom_minimum_size = Vector2(160, 50)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("2")
+theme_override_styles/hover = SubResource("3")
+theme_override_styles/pressed = SubResource("4")
+theme_override_styles/focus = SubResource("3")
+text = "Replay This Mission Guide"
+
+[node name="ReplayAllTutorialButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer"]
+custom_minimum_size = Vector2(160, 50)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("2")
+theme_override_styles/hover = SubResource("3")
+theme_override_styles/pressed = SubResource("4")
+theme_override_styles/focus = SubResource("3")
+text = "Replay Full Onboarding"
+
 
 [node name="LogbookOverlay" type="ColorRect" parent="."]
 visible = false

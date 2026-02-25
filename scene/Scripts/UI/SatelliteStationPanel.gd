@@ -15,10 +15,6 @@ const UNLOCK_LEVEL2_SEEN_KEY := "level2_overlay_seen"
 const LEVEL_UNLOCK_MISSIONS := [
 	{"level": 3, "name": "Sell cargo on Earth"}
 ]
-const ACTION_SCAN_TARGETS := "scan_targets"
-const HINT_SCAN_TARGETS := "Scan space first to find targets for your missions."
-const ACTION_SELECT_TARGET := "select_launch_target"
-const HINT_SELECT_TARGET := "Target locked. Heading to Launchpad."
 const LAUNCHPAD_SCENE_PATH := "res://Scenes/Earth/earth_launchpad.tscn"
 
 const SatelliteStationPanelData = preload("res://Scripts/UI/SatelliteStationPanelData.gd")
@@ -31,7 +27,6 @@ const UnlockItemScene = preload("res://Scenes/UI/Templates/MenuUnlockItem.tscn")
 var pending_anomalies := []
 var current_mode: String = "asteroids"  # Default mode
 var local_only: bool = false
-var use_archived_detail: bool = false
 var _player_level: int = 1
 var _unlock_overlay: ColorRect = null
 var _data := SatelliteStationPanelData.new()
@@ -65,7 +60,6 @@ func _ready():
 		title_label,
 		close_button
 	)
-	_detail.set_use_archived_detail(use_archived_detail)
 	_detail.apply_panel_style()
 	_apply_panel_style()
 
@@ -144,10 +138,12 @@ func _on_loading_finished() -> void:
 		pending_anomalies = _build_local_anomalies()
 		var fallback_type = "planets" if current_mode == "planets" else "asteroids"
 		status_label.text = "Status: Using offline %s" % fallback_type
-		# Keep tutorial flow consistent even when scan data is from offline fallback.
-		_show_tutorial_hint_once(ACTION_SCAN_TARGETS, HINT_SCAN_TARGETS)
 		_award_scan_experience()
 	pending_anomalies = _filter_mission3_untargeted_anomalies(pending_anomalies)
+	preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("scan_targets", {
+		"mode": current_mode,
+		"count": pending_anomalies.size()
+	})
 
 	_persist_detected_targets_and_record_scan(pending_anomalies)
 
@@ -175,7 +171,6 @@ func _on_anomalies_fetched(data: Array, error: String):
 		var fallback_type = "planets" if current_mode == "planets" else "asteroids"
 		status_label.text = "Status: Using offline %s (%s)" % [fallback_type, error.left(80)]
 		_loading.mark_anomalies_ready()
-		_show_tutorial_hint_once(ACTION_SCAN_TARGETS, HINT_SCAN_TARGETS)
 		_award_scan_experience()
 		return
 
@@ -184,7 +179,6 @@ func _on_anomalies_fetched(data: Array, error: String):
 	var target_type = "planets" if current_mode == "planets" else "asteroids"
 	status_label.text = "Status: %d %s detected" % [data.size(), target_type]
 	_loading.mark_anomalies_ready()
-	_show_tutorial_hint_once(ACTION_SCAN_TARGETS, HINT_SCAN_TARGETS)
 	_award_scan_experience()
 
 	# Persist target data in _on_loading_finished once loading completes.
@@ -217,12 +211,15 @@ func _select_target_and_launch(bound_anomaly: Dictionary, index: int, btn: Butto
 	rm.register_target_interaction(target_id, target_type)
 	var ok = rm.select_target(target_id)
 	if ok:
+		preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("select_launch_target", {
+			"target_id": target_id,
+			"source": "scanner"
+		})
 		status_label.text = "Target selected: %s" % target_id
 		print("SatelliteStationPanel: target selected:", target_id)
 		if btn:
 			btn.text = "Target Selected"
 			btn.disabled = true
-		_show_tutorial_hint_once(ACTION_SELECT_TARGET, HINT_SELECT_TARGET)
 		_change_to_launchpad_scene()
 	else:
 		print("SatelliteStationPanel: failed to persist selected target:", target_id)
@@ -248,8 +245,6 @@ func _award_scan_experience() -> void:
 	if app_controller and app_controller.has_method("award_scan_experience"):
 		app_controller.award_scan_experience()
 
-func _show_tutorial_hint_once(action_key: String, message: String) -> void:
-	preload("res://Scripts/Utils/AppControllerHelper.gd").show_tutorial_hint_once(action_key, message)
 
 func _on_refresh_pressed():
 	_start_loading(REFRESH_LOAD_TIME)
@@ -265,6 +260,7 @@ func _on_toggle_switch_pressed():
 		return
 	if current_mode == "asteroids":
 		current_mode = "planets"
+		preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("toggle_planet_scanner")
 		toggle_switch.text = "Switch to Asteroids"
 		if local_only:
 			_start_loading(REFRESH_LOAD_TIME)

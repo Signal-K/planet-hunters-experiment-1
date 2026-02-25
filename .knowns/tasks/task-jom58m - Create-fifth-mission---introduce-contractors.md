@@ -11,7 +11,7 @@ labels:
   - tutorial
   - progression
 createdAt: '2026-02-19T11:27:21.000Z'
-updatedAt: '2026-02-19T03:43:34.202Z'
+updatedAt: '2026-02-25T08:45:01.366Z'
 timeSpent: 0
 assignee: '@me'
 ---
@@ -58,5 +58,9 @@ The fifth mission will start off with the two non-default contractors requesting
 - `run_experience_tests.gd`: 46/46 pass
 - `run_mining_tests.gd`: 16/16 pass
 - `run_mission_log_tests.gd`: could not run due Godot logger crash in this environment (signal 11 in `RotatedFileLogger::rotate_file`).
+
+
+
+Spec Reference: @doc/specs/mission-system-specification (Mission 5 design)
 <!-- SECTION:NOTES:END -->
 

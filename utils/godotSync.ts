@@ -27,15 +27,12 @@ import {
 type GodotAppController = {
   set_counter_from_react: (value: number) => void;
   get_counter: () => number;
-  set_tutorial_completed_from_react: (value: boolean) => void;
-  get_tutorial_completed: () => boolean;
   set_franc_balance_from_react: (value: number) => void;
   get_franc_balance: () => number;
   set_experience_from_react: (xp: number, level: number) => void;
   get_experience_xp: () => number;
   get_experience_level: () => number;
   counter_updated: { connect: (callback: (value: number) => void) => void };
-  tutorial_completed_updated: { connect: (callback: (value: boolean) => void) => void };
   franc_balance_updated: { connect: (callback: (value: number) => void) => void };
   experience_updated: { connect: (callback: (xp: number, level: number) => void) => void };
 };
@@ -70,9 +67,6 @@ export function pushToGodot<K extends SyncStateKey>(
       case "counter":
         controller.set_counter_from_react(value as number);
         break;
-      case "tutorialCompleted":
-        controller.set_tutorial_completed_from_react(value as boolean);
-        break;
       case "francBalance":
         controller.set_franc_balance_from_react(value as number);
         break;
@@ -98,7 +92,6 @@ export function pushAllToGodot(): void {
     }
 
     controller.set_counter_from_react(state.counter);
-    controller.set_tutorial_completed_from_react(state.tutorialCompleted);
     controller.set_franc_balance_from_react(state.francBalance);
     controller.set_experience_from_react(state.experienceXp, state.experienceLevel);
   });
@@ -119,7 +112,6 @@ export async function pullFromGodot(): Promise<SyncState | null> {
       if (controller) {
         return {
           counter: controller.get_counter(),
-          tutorialCompleted: controller.get_tutorial_completed(),
           francBalance: controller.get_franc_balance(),
           experienceXp: controller.get_experience_xp(),
           experienceLevel: controller.get_experience_level(),
@@ -137,7 +129,6 @@ export async function pullFromGodot(): Promise<SyncState | null> {
         if (godotState) {
           const normalized: SyncState = {
             counter: Number(godotState.counter) || 0,
-            tutorialCompleted: Boolean(godotState.tutorialCompleted),
             francBalance: Number(godotState.francBalance) || 0,
             experienceXp: Number(godotState.experienceXp) || 0,
             experienceLevel: Number(godotState.experienceLevel) || 1,

@@ -1,0 +1,75 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/TutorialCoachOverlay.gd" id="1_overlay"]
+
+[node name="TutorialCoachOverlay" type="CanvasLayer"]
+script = ExtResource("1_overlay")
+
+[node name="Root" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="PanelContainer" parent="Root"]
+layout_mode = 1
+anchors_preset = 0
+offset_left = 24.0
+offset_top = 24.0
+offset_right = 700.0
+offset_bottom = 340.0
+
+[node name="Margin" type="MarginContainer" parent="Root/Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 12
+
+[node name="VBox" type="VBoxContainer" parent="Root/Panel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Header" type="HBoxContainer" parent="Root/Panel/Margin/VBox"]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="Root/Panel/Margin/VBox/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Mission Guidance"
+
+[node name="StageLabel" type="Label" parent="Root/Panel/Margin/VBox/Header"]
+layout_mode = 2
+text = "Mission 1"
+
+[node name="MessageLabel" type="Label" parent="Root/Panel/Margin/VBox"]
+layout_mode = 2
+text = "Tutorial step message"
+autowrap_mode = 3
+
+[node name="ActionLabel" type="Label" parent="Root/Panel/Margin/VBox"]
+layout_mode = 2
+text = "Required action: ..."
+autowrap_mode = 3
+
+[node name="ProgressLabel" type="Label" parent="Root/Panel/Margin/VBox"]
+layout_mode = 2
+text = "Step 1/7"
+
+[node name="Buttons" type="HBoxContainer" parent="Root/Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="SkipButton" type="Button" parent="Root/Panel/Margin/VBox/Buttons"]
+layout_mode = 2
+text = "Skip"
+
+[node name="ReplayMissionButton" type="Button" parent="Root/Panel/Margin/VBox/Buttons"]
+layout_mode = 2
+text = "Replay Mission"
+
+[node name="ReplayAllButton" type="Button" parent="Root/Panel/Margin/VBox/Buttons"]
+layout_mode = 2
+text = "Replay All"

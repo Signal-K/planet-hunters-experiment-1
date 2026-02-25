@@ -19,7 +19,6 @@ import { useEffect, useState, useCallback } from "react";
 
 export interface SyncState {
   counter: number;
-  tutorialCompleted: boolean;
   francBalance: number;
   experienceXp: number;
   experienceLevel: number;
@@ -42,7 +41,6 @@ const STORAGE_KEY = "unified_sync_state_v2";
 
 const DEFAULT_STATE: SyncState = {
   counter: 0,
-  tutorialCompleted: false,
   francBalance: 10000000000,
   experienceXp: 0,
   experienceLevel: 1,
@@ -150,7 +148,6 @@ async function migrateLegacyState(): Promise<SyncState> {
   const legacyKeys = [
     "gameCounter",
     "francBalance",
-    "tutorialCompleted",
     "experienceXp",
     "experienceLevel",
     "sync_state_v1",
@@ -168,10 +165,9 @@ async function migrateLegacyState(): Promise<SyncState> {
     }
 
     // Fall back to individual keys
-    const [counter, balance, tutorial, xp, level] = await Promise.all([
+    const [counter, balance, xp, level] = await Promise.all([
       AsyncStorage.getItem("gameCounter"),
       AsyncStorage.getItem("francBalance"),
-      AsyncStorage.getItem("tutorialCompleted"),
       AsyncStorage.getItem("experienceXp"),
       AsyncStorage.getItem("experienceLevel"),
     ]);
@@ -179,7 +175,6 @@ async function migrateLegacyState(): Promise<SyncState> {
     const state: SyncState = {
       counter: counter ? parseInt(counter, 10) : DEFAULT_STATE.counter,
       francBalance: balance ? parseInt(balance, 10) : DEFAULT_STATE.francBalance,
-      tutorialCompleted: tutorial === "true",
       experienceXp: xp ? parseInt(xp, 10) : DEFAULT_STATE.experienceXp,
       experienceLevel: level ? parseInt(level, 10) : DEFAULT_STATE.experienceLevel,
     };

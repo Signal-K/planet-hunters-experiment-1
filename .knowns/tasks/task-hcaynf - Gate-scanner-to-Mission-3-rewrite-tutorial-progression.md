@@ -10,7 +10,7 @@ labels:
   - progression
   - ui
 createdAt: '2026-02-17T07:03:26.169Z'
-updatedAt: '2026-02-17T07:14:12.960Z'
+updatedAt: '2026-02-25T08:45:00.499Z'
 timeSpent: 0
 assignee: '@me'
 ---
@@ -58,5 +58,9 @@ Implemented scanner/tutorial progression from .knowns/assets/IMG_1755.jpeg (+ se
 Validation:
 - run_experience_tests.gd: 32/32 pass
 - run_tutorial_tests.gd: 2/2 pass
+
+
+
+Spec Reference: @doc/specs/mission-system-specification (Mission 3 scanner unlock)
 <!-- SECTION:NOTES:END -->
 

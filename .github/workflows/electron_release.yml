@@ -72,11 +72,25 @@ jobs:
         run: |
           set -euo pipefail
           cd "$GITHUB_WORKSPACE/scene"
-          ~/godot-linux/godot --headless --path . --script res://tests/run_tutorial_tests.gd
-          ~/godot-linux/godot --headless --path . --script res://tests/run_sync_tests.gd
-          ~/godot-linux/godot --headless --path . --script res://tests/run_mission_log_tests.gd
-          ~/godot-linux/godot --headless --path . --script res://tests/run_experience_tests.gd
-          ~/godot-linux/godot --headless --path . --script res://tests/SupabaseTestRunner.gd
+          
+          # Filter out harmless theme initialization warnings
+          filter_output() {
+            grep -v "add_theme_style_override" | \
+            grep -v "at: add_theme_style_override" | \
+            grep -v "Condition \"p_style.is_null()\"" | \
+            grep -v "RIDs of type \"CanvasItem\" were leaked" | \
+            grep -v "at: _free_rids" | \
+            grep -v "ObjectDB instances leaked" | \
+            grep -v "at: cleanup" | \
+            grep -v "resources still in use at exit" | \
+            grep -v "at: clear" || true
+          }
+          
+          ~/godot-linux/godot --headless --path . --script res://tests/run_sync_tests.gd 2>&1 | filter_output
+          ~/godot-linux/godot --headless --path . --script res://tests/run_mission_log_tests.gd 2>&1 | filter_output
+          ~/godot-linux/godot --headless --path . --script res://tests/run_tutorial_tests.gd 2>&1 | filter_output
+          ~/godot-linux/godot --headless --path . --script res://tests/run_experience_tests.gd 2>&1 | filter_output
+          ~/godot-linux/godot --headless --path . --script res://tests/SupabaseTestRunner.gd 2>&1 | filter_output
 
   app-unit-e2e-tests:
     name: Full App Unit + E2E Tests (main only)

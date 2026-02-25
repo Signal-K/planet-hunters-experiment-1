@@ -343,7 +343,7 @@ const InternalConfig = function (initConfig) { // eslint-disable-line no-unused-
 		/**
 		 * The arguments to be passed as command line arguments on startup.
 		 *
-		 * See :ref:`command line tutorial <doc_command_line_tutorial>`.
+		 * See :ref:`command line guide <doc_command_line_guide>`.
 		 *
 		 * **Note**: :js:meth:`startGame <Engine.prototype.startGame>` will always add the ``--main-pack`` argument.
 		 *

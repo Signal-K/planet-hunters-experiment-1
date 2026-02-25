@@ -3,7 +3,6 @@ class_name SatelliteStationPanelDetail
 
 const SimpleDetailView = preload("res://Scenes/UI/SimpleDetail/simple_detail_view.tscn")
 const AsteroidDetailView = preload("res://Scenes/UI/AsteroidDetail/asteroid_detail_view.tscn")
-const ArchivedAsteroidDetailView = preload("res://Scenes/Archive/AsteroidDetail/asteroid_detail_view.tscn")
 
 var _panel: Control
 var _loading_container: Control
@@ -13,7 +12,6 @@ var _toggle_switch: Control
 var _title_label: Label
 var _close_button: Button
 var _detail_view_active := false
-var _use_archived_detail := false
 
 func setup(
 	panel: Control,
@@ -34,9 +32,6 @@ func setup(
 
 func is_active() -> bool:
 	return _detail_view_active
-
-func set_use_archived_detail(val: bool) -> void:
-	_use_archived_detail = val
 
 func apply_panel_style() -> void:
 	"""Apply polished panel styling"""
@@ -65,15 +60,11 @@ func show_detail(anomaly: Dictionary) -> void:
 	_loading_container.visible = false
 	_anomaly_list.visible = false
 
-	# Create and add correct detail view (archived, sample scene, or simple)
+	# Create and add correct detail view (sample scene or simple)
 	var root = _panel.get_tree().root.get_child(0)
 	var use_asteroid_detail = root and root.name == "EarthBase1SampleAsteroid"
 	var detail_view = null
-	if _use_archived_detail:
-		detail_view = ArchivedAsteroidDetailView.instantiate()
-		_content_container.add_child(detail_view)
-		detail_view.initialize(anomaly)
-	elif use_asteroid_detail:
+	if use_asteroid_detail:
 		detail_view = AsteroidDetailView.instantiate()
 		_content_container.add_child(detail_view)
 		detail_view.initialize(anomaly, true) # force_controls_visible = true

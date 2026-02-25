@@ -1,7 +1,7 @@
 ---
 id: 37wan4
 title: "Update background or rocket - change pixelation"
-status: todo
+status: in-review
 priority: medium
 labels:
   - styling
@@ -13,7 +13,7 @@ labels:
   - art
   - from-feedback
 createdAt: '2026-02-16T22:26:13Z'
-updatedAt: '2026-02-16T22:26:13Z'
+updatedAt: "2026-02-25T16:40:44Z"
 timeSpent: 0
 ---
 

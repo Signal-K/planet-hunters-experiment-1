@@ -1,6 +1,6 @@
 {
   "taskId": "lhvj5s",
-  "currentVersion": 7,
+  "currentVersion": 8,
   "versions": [
     {
       "id": "v1",
@@ -332,6 +332,49 @@
           }
         ],
         "implementationNotes": "## Refactoring Complete\n\n### Visual Elements in Scene\n- Rocket: AnimatedSprite2D (uses RocketSpriteHelper)\n- Terrain: Polygon2D for solid surface\n- Minerals/Obstacles: Node2D containers\n- UI: Proper hierarchy with VBoxContainers\n- All visuals defined in .tscn, not created in code\n\n### Solid Terrain\n- Single Polygon2D for continuous surface\n- 3000px wide (was 2000px)\n- Smaller height variance (40 vs 80)\n- Solid gray asteroid/planet surface\n\n### Slower Pacing\n- Scroll speed: 80 (was 150) - 47% slower\n- Fuel drain: 8 (was 10) - 20% less drain\n- Longer terrain: 3000px (was 2000px) - 50% more time\n- Larger segments: Better visibility of upcoming obstacles\n\n### Rocket Sprites\n- Uses RocketSpriteHelper.apply_orbit_sprite()\n- Stage 2 animated sprites for SR1/SR2\n- Accepts rocket_id parameter in start_mining()\n- Scales to 0.25 for proper size\n\n\n\n## Second Pass - Proper Implementation\n\n### Fuel Fixed\n- Drain rate: 2.0 (was 8) = 75% slower drain\n- Scroll speed: 50 (was 80) = 38% slower\n- Terrain: 4000px (was 3000px) = 33% longer\n- Fuel refill per mineral: 8 (was 6)\n- **Result**: ~80 second gameplay (was <5 seconds)\n\n### All Visuals in Scene\n- 12 mineral deposits (Polygon2D with metadata)\n- 4 boulder obstacles (Polygon2D with metadata)\n- Solid terrain surface (single Polygon2D)\n- Script only reads metadata, no visual creation\n- Scene has 20+ objects, not 3"
+      }
+    },
+    {
+      "id": "v8",
+      "taskId": "lhvj5s",
+      "version": 8,
+      "timestamp": "2026-02-25T08:45:17.085Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "## Refactoring Complete\n\n### Visual Elements in Scene\n- Rocket: AnimatedSprite2D (uses RocketSpriteHelper)\n- Terrain: Polygon2D for solid surface\n- Minerals/Obstacles: Node2D containers\n- UI: Proper hierarchy with VBoxContainers\n- All visuals defined in .tscn, not created in code\n\n### Solid Terrain\n- Single Polygon2D for continuous surface\n- 3000px wide (was 2000px)\n- Smaller height variance (40 vs 80)\n- Solid gray asteroid/planet surface\n\n### Slower Pacing\n- Scroll speed: 80 (was 150) - 47% slower\n- Fuel drain: 8 (was 10) - 20% less drain\n- Longer terrain: 3000px (was 2000px) - 50% more time\n- Larger segments: Better visibility of upcoming obstacles\n\n### Rocket Sprites\n- Uses RocketSpriteHelper.apply_orbit_sprite()\n- Stage 2 animated sprites for SR1/SR2\n- Accepts rocket_id parameter in start_mining()\n- Scales to 0.25 for proper size\n\n\n\n## Second Pass - Proper Implementation\n\n### Fuel Fixed\n- Drain rate: 2.0 (was 8) = 75% slower drain\n- Scroll speed: 50 (was 80) = 38% slower\n- Terrain: 4000px (was 3000px) = 33% longer\n- Fuel refill per mineral: 8 (was 6)\n- **Result**: ~80 second gameplay (was <5 seconds)\n\n### All Visuals in Scene\n- 12 mineral deposits (Polygon2D with metadata)\n- 4 boulder obstacles (Polygon2D with metadata)\n- Solid terrain surface (single Polygon2D)\n- Script only reads metadata, no visual creation\n- Scene has 20+ objects, not 3",
+          "newValue": "## Refactoring Complete\n\n### Visual Elements in Scene\n- Rocket: AnimatedSprite2D (uses RocketSpriteHelper)\n- Terrain: Polygon2D for solid surface\n- Minerals/Obstacles: Node2D containers\n- UI: Proper hierarchy with VBoxContainers\n- All visuals defined in .tscn, not created in code\n\n### Solid Terrain\n- Single Polygon2D for continuous surface\n- 3000px wide (was 2000px)\n- Smaller height variance (40 vs 80)\n- Solid gray asteroid/planet surface\n\n### Slower Pacing\n- Scroll speed: 80 (was 150) - 47% slower\n- Fuel drain: 8 (was 10) - 20% less drain\n- Longer terrain: 3000px (was 2000px) - 50% more time\n- Larger segments: Better visibility of upcoming obstacles\n\n### Rocket Sprites\n- Uses RocketSpriteHelper.apply_orbit_sprite()\n- Stage 2 animated sprites for SR1/SR2\n- Accepts rocket_id parameter in start_mining()\n- Scales to 0.25 for proper size\n\n\n\n## Second Pass - Proper Implementation\n\n### Fuel Fixed\n- Drain rate: 2.0 (was 8) = 75% slower drain\n- Scroll speed: 50 (was 80) = 38% slower\n- Terrain: 4000px (was 3000px) = 33% longer\n- Fuel refill per mineral: 8 (was 6)\n- **Result**: ~80 second gameplay (was <5 seconds)\n\n### All Visuals in Scene\n- 12 mineral deposits (Polygon2D with metadata)\n- 4 boulder obstacles (Polygon2D with metadata)\n- Solid terrain surface (single Polygon2D)\n- Script only reads metadata, no visual creation\n- Scene has 20+ objects, not 3\n\n\n\nSpec Reference: @doc/specs/mining-minigame-system-specification"
+        }
+      ],
+      "snapshot": {
+        "title": "Refactor mining minigame visuals and pacing",
+        "description": "Move visual elements to scene file, create solid terrain, slow down gameplay, use existing rocket sprites",
+        "status": "done",
+        "priority": "high",
+        "labels": [
+          "refactor",
+          "mining",
+          "visuals"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Visual elements in .tscn not .gd"
+          },
+          {
+            "completed": true,
+            "text": "Solid continuous terrain surface"
+          },
+          {
+            "completed": true,
+            "text": "Slower pacing with better visibility"
+          },
+          {
+            "completed": true,
+            "text": "Use RocketSpriteHelper for rocket visuals"
+          }
+        ],
+        "implementationNotes": "## Refactoring Complete\n\n### Visual Elements in Scene\n- Rocket: AnimatedSprite2D (uses RocketSpriteHelper)\n- Terrain: Polygon2D for solid surface\n- Minerals/Obstacles: Node2D containers\n- UI: Proper hierarchy with VBoxContainers\n- All visuals defined in .tscn, not created in code\n\n### Solid Terrain\n- Single Polygon2D for continuous surface\n- 3000px wide (was 2000px)\n- Smaller height variance (40 vs 80)\n- Solid gray asteroid/planet surface\n\n### Slower Pacing\n- Scroll speed: 80 (was 150) - 47% slower\n- Fuel drain: 8 (was 10) - 20% less drain\n- Longer terrain: 3000px (was 2000px) - 50% more time\n- Larger segments: Better visibility of upcoming obstacles\n\n### Rocket Sprites\n- Uses RocketSpriteHelper.apply_orbit_sprite()\n- Stage 2 animated sprites for SR1/SR2\n- Accepts rocket_id parameter in start_mining()\n- Scales to 0.25 for proper size\n\n\n\n## Second Pass - Proper Implementation\n\n### Fuel Fixed\n- Drain rate: 2.0 (was 8) = 75% slower drain\n- Scroll speed: 50 (was 80) = 38% slower\n- Terrain: 4000px (was 3000px) = 33% longer\n- Fuel refill per mineral: 8 (was 6)\n- **Result**: ~80 second gameplay (was <5 seconds)\n\n### All Visuals in Scene\n- 12 mineral deposits (Polygon2D with metadata)\n- 4 boulder obstacles (Polygon2D with metadata)\n- Solid terrain surface (single Polygon2D)\n- Script only reads metadata, no visual creation\n- Scene has 20+ objects, not 3\n\n\n\nSpec Reference: @doc/specs/mining-minigame-system-specification"
       }
     }
   ]

@@ -20,6 +20,7 @@ func _setup_interaction() -> void:
 		push_warning("InteractionArea not found in scene for: " + structure_name)
 		push_warning("Add Area2D node named 'InteractionArea' with CollisionShape2D child to structure scene")
 		return
+	area.input_pickable = true
 	
 	# Connect area signals
 	if not area.input_event.is_connected(_on_input_event):
@@ -45,6 +46,7 @@ func on_hover_exit() -> void:
 
 func _on_input_event(viewport: Node, event: InputEvent, shape_idx: int) -> void:
 	"""Handle mouse input events"""
+	print("Structure._on_input_event called for: ", structure_name, " event: ", event)
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 			print("Mouse clicked on: ", structure_name)

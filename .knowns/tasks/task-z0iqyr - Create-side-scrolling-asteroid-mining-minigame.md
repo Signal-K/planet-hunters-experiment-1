@@ -8,7 +8,7 @@ labels:
   - mining
   - minigame
 createdAt: '2026-02-24T14:31:41.902Z'
-updatedAt: '2026-02-25T00:27:23.966Z'
+updatedAt: '2026-02-25T08:45:17.497Z'
 timeSpent: 117
 ---
 # Create side-scrolling asteroid mining minigame
@@ -73,5 +73,9 @@ Created side-scrolling asteroid surface mining minigame:
 - `scene/Scenes/UI/SidescrollMining.tscn`
 - Updated AsteroidPreview integration
 - Updated test_mining.gd
+
+
+
+Spec Reference: @doc/specs/mining-minigame-system-specification
 <!-- SECTION:NOTES:END -->
 

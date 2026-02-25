@@ -70,6 +70,9 @@ func _on_mine_pressed():
 	if _current_yield.is_empty():
 		print("[Preview] ERROR: No yield data")
 		return
+	preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("start_mining", {
+		"target_id": _current_target_id
+	})
 	
 	print("[Preview] Hiding UI...")
 	ui_container.visible = false
@@ -94,6 +97,11 @@ func _on_mine_pressed():
 
 func _on_mining_completed(minerals_collected: Dictionary, score: int):
 	print("[Preview] Mining completed: score=%d" % score)
+	if not minerals_collected.is_empty():
+		preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("mine_target", {
+			"target_id": _current_target_id,
+			"score": score
+		})
 	
 	if _minigame_instance:
 		_minigame_instance.queue_free()
@@ -103,6 +111,10 @@ func _on_mining_completed(minerals_collected: Dictionary, score: int):
 
 func _on_return_pressed():
 	print("[Preview] Return home pressed")
+	preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("return_rocket_home", {
+		"rocket_id": _current_rocket_id,
+		"target_id": _current_target_id
+	})
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	rm.return_home(_current_rocket_id)
 	rm.clear_preview_target()

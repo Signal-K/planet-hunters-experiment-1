@@ -38,12 +38,10 @@ func build_ui(unlocked_rockets: Array) -> void:
 	_parent.add_child(root)
 
 	var heading: Label = root.get_node("Heading")
-	heading.add_theme_color_override("font_color", PanelStyle.TEXT_PRIMARY)
-	heading.add_theme_font_size_override("font_size", 34)
+	heading.visible = false
 
 	var subheading: Label = root.get_node("Subheading")
-	subheading.add_theme_color_override("font_color", PanelStyle.TEXT_MUTED)
-	subheading.add_theme_font_size_override("font_size", 20)
+	subheading.visible = false
 
 	var cards: HBoxContainer = root.get_node("CardsWrap/Cards")
 
@@ -62,7 +60,7 @@ func build_ui(unlocked_rockets: Array) -> void:
 
 func _build_rocket_card(rocket_id: String, total_cards: int) -> Control:
 	var card: PanelContainer = RocketCardScene.instantiate()
-	card.custom_minimum_size = Vector2(520, 520) if total_cards <= 1 else Vector2(480, 520)
+	card.custom_minimum_size = Vector2(320, 320) if total_cards <= 1 else Vector2(300, 320)
 	card.add_theme_stylebox_override("panel", _card_style())
 
 	var body: VBoxContainer = card.get_node("Body")
@@ -79,27 +77,24 @@ func _build_rocket_card(rocket_id: String, total_cards: int) -> Control:
 	var name_label: Label = card.get_node("Body/NameLabel")
 	name_label.text = RocketSpecs.get_display_name(rocket_id)
 	name_label.add_theme_color_override("font_color", PanelStyle.TEXT_PRIMARY)
-	name_label.add_theme_font_size_override("font_size", 28)
+	name_label.add_theme_font_size_override("font_size", 18)
 
 	var chips: GridContainer = card.get_node("Body/Chips")
 
 	var spec = RocketSpecs.get_spec(rocket_id)
 	var stat_lines = [
 		"Speed x%s" % _fmt_one_decimal(float(spec.get("speed_multiplier", 1.0))),
-		"Range x%s" % _fmt_one_decimal(float(spec.get("range_multiplier", 1.0))),
-		"Cargo x%s" % _fmt_one_decimal(float(spec.get("cargo_multiplier", 1.0))),
-		"Mining x%s" % _fmt_one_decimal(float(spec.get("mining_multiplier", 1.0)))
+		"Range x%s" % _fmt_one_decimal(float(spec.get("range_multiplier", 1.0)))
 	]
 	for line in stat_lines:
 		chips.add_child(_stat_chip(line))
 
 	var economy: Label = card.get_node("Body/EconomyLabel")
-	economy.text = "Cost: %s F   •   Salvage: %s%%" % [
+	economy.text = "Cost: %s F" % [
 		_fmt_francs(int(spec.get("cost", 0))),
-		str(int(round(float(spec.get("salvage_refund_pct", 0.20)) * 100.0)))
 	]
 	economy.add_theme_color_override("font_color", PanelStyle.TEXT_MUTED)
-	economy.add_theme_font_size_override("font_size", 18)
+	economy.add_theme_font_size_override("font_size", 14)
 
 	var btn: Button = card.get_node("Body/CreateButton")
 	btn.name = "CreateButton_%s" % rocket_id

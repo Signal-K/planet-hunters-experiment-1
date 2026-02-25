@@ -8,7 +8,7 @@ labels:
   - mining
   - minigame
 createdAt: '2026-02-24T12:09:13.987Z'
-updatedAt: '2026-02-25T00:27:23.513Z'
+updatedAt: '2026-02-25T08:45:16.869Z'
 timeSpent: 169
 ---
 # Design interactive mining minigame system
@@ -64,5 +64,9 @@ Created Dredge-inspired timing-based mining minigame system:
 ### Files Modified
 - scene/Scripts/UI/AsteroidPreview/AsteroidPreview.gd
 - scene/Scenes/UI/AsteroidPreview/asteroid_preview.tscn
+
+
+
+Spec Reference: @doc/specs/mining-minigame-system-specification
 <!-- SECTION:NOTES:END -->
 

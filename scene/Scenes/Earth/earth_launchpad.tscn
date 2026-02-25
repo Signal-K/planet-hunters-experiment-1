@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3 uid="uid://dkn5ffejmhljs"]
+[gd_scene load_steps=10 format=3 uid="uid://dkn5ffejmhljs"]
 
 [ext_resource type="Script" uid="uid://dtrksapur77k2" path="res://Scripts/Earth/LaunchpadScene.gd" id="1"]
 [ext_resource type="Script" uid="uid://ce1a85vrjyh7x" path="res://Scripts/Earth/Launchpad.gd" id="2"]
@@ -8,8 +8,9 @@
 [ext_resource type="Script" uid="uid://c2a67yo3p1lro" path="res://Scripts/Earth/RocketSelector.gd" id="6"]
 [ext_resource type="Script" uid="uid://ctgklpqefk8h4" path="res://Scripts/Earth/RocketSelectorDrag.gd" id="7"]
 [ext_resource type="Script" uid="uid://bmhjgrsylq0hk" path="res://Scripts/Earth/LaunchpadSpriteDropHandler.gd" id="9"]
-[ext_resource type="PackedScene" path="res://Scenes/UI/TutorialHintArea.tscn" id="10"]
-[ext_resource type="PackedScene" uid="uid://d1wd35tge78pt" path="res://Scenes/UI/TutorialPanel.tscn" id="11_tutorial"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_launchpad"]
+size = Vector2(300, 220)
 
 [node name="LaunchpadScene" type="Node2D"]
 script = ExtResource("1")
@@ -39,6 +40,11 @@ script = ExtResource("2")
 position = Vector2(-180, -304)
 texture = ExtResource("4")
 script = ExtResource("9")
+
+[node name="InteractionArea" type="Area2D" parent="StructuresLayer/Launchpad"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StructuresLayer/Launchpad/InteractionArea"]
+shape = SubResource("RectangleShape2D_launchpad")
 
 [node name="UILayer" type="CanvasLayer" parent="."]
 
@@ -85,7 +91,3 @@ layout_mode = 2
 text = "Back"
 
 [node name="LaunchHUDInstance" type="Node" parent="."]
-
-[node name="TutorialPanel" parent="." instance=ExtResource("11_tutorial")]
-
-[node name="TutorialHintArea" parent="." instance=ExtResource("10")]

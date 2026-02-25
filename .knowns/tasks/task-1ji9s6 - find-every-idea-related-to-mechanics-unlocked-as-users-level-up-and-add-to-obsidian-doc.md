@@ -14,7 +14,7 @@ labels:
   - mechanics
   - data
 createdAt: '2026-02-15T12:15:38.000Z'
-updatedAt: '2026-02-25T00:29:22.082Z'
+updatedAt: '2026-02-25T08:45:19.154Z'
 timeSpent: 79
 assignee: '@me'
 ---
@@ -32,5 +32,9 @@ assignee: '@me'
 
 <!-- SECTION:NOTES:BEGIN -->
 Created comprehensive doc @doc/game-design/level-progression-and-unlocks covering all level-based unlocks (rockets L1-3, planets L2, subcontractors L1-5), mission-gated content (Scanner Station at M3), code references, unlock flow, UI indicators, and testing info.
+
+
+
+Spec Reference: @doc/specs/level-progression-and-unlocks-specification
 <!-- SECTION:NOTES:END -->
 

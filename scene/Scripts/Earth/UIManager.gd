@@ -78,8 +78,6 @@ func _setup_menu_panel_integration() -> void:
 		current_menu_panel.counter_changed.connect(_on_menu_counter_changed)
 	if current_menu_panel.has_signal("reset_all"):
 		current_menu_panel.reset_all.connect(_on_reset_all)
-	if current_menu_panel.has_signal("reset_tutorial"):
-		current_menu_panel.reset_tutorial.connect(_on_reset_tutorial)
 
 func _show_new_mission_panel() -> void:
 	"""Show the New Mission panel (SatelliteStationPanel)"""
@@ -122,13 +120,6 @@ func _on_reset_all() -> void:
 	else:
 		print("UIManager: AppController not found for reset_all")
 
-func _on_reset_tutorial() -> void:
-	"""Handle reset tutorial from menu panel - relay to AppController"""
-	var app_controller = _get_app_controller()
-	if app_controller and app_controller.has_method("_on_reset_tutorial"):
-		app_controller._on_reset_tutorial()
-	else:
-		print("UIManager: AppController not found for reset_tutorial")
 
 # Signal handlers
 func _on_menu_panel_closed() -> void:
