@@ -1,0 +1,376 @@
+{
+  "taskId": "fxxdhr",
+  "currentVersion": 7,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "fxxdhr",
+      "version": 1,
+      "timestamp": "2026-02-19T05:19:00.485Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Enforce planetary targets as L3+ and asteroids as L1/L2",
+        "description": "Update target profiling so all planet targets are outside the solar system and require at least L3 rockets, while asteroid targets are within inner/outer solar system bands requiring only L1 or L2 rockets.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "balance",
+          "progression",
+          "targets",
+          "rockets"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "All planet targets resolve to required rocket level >= 3"
+          },
+          {
+            "completed": false,
+            "text": "All asteroid targets resolve to required rocket level 1 or 2 only"
+          },
+          {
+            "completed": false,
+            "text": "UI target details reflect the updated distance/required-level rules for planets vs asteroids"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "fxxdhr",
+      "version": 2,
+      "timestamp": "2026-02-19T05:19:25.729Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "newValue": "1. Update RocketsManager target profile rules: planets map to out-of-solar-system distances with required_level >= 3; asteroids map to inner/outer solar distances with required_level 1-2 only.\n2. Adjust mission-specific fallback profile branches so no asteroid path requires L3+ and planet paths stay L3+.\n3. Verify UI uses these profiles (scanner list + launchpad details already profile-driven) and run regression tests."
+        }
+      ],
+      "snapshot": {
+        "title": "Enforce planetary targets as L3+ and asteroids as L1/L2",
+        "description": "Update target profiling so all planet targets are outside the solar system and require at least L3 rockets, while asteroid targets are within inner/outer solar system bands requiring only L1 or L2 rockets.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "balance",
+          "progression",
+          "targets",
+          "rockets"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "All planet targets resolve to required rocket level >= 3"
+          },
+          {
+            "completed": false,
+            "text": "All asteroid targets resolve to required rocket level 1 or 2 only"
+          },
+          {
+            "completed": false,
+            "text": "UI target details reflect the updated distance/required-level rules for planets vs asteroids"
+          }
+        ],
+        "implementationPlan": "1. Update RocketsManager target profile rules: planets map to out-of-solar-system distances with required_level >= 3; asteroids map to inner/outer solar distances with required_level 1-2 only.\n2. Adjust mission-specific fallback profile branches so no asteroid path requires L3+ and planet paths stay L3+.\n3. Verify UI uses these profiles (scanner list + launchpad details already profile-driven) and run regression tests."
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "fxxdhr",
+      "version": 3,
+      "timestamp": "2026-02-19T05:20:49.804Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "All planet targets resolve to required rocket level >= 3"
+            },
+            {
+              "completed": false,
+              "text": "All asteroid targets resolve to required rocket level 1 or 2 only"
+            },
+            {
+              "completed": false,
+              "text": "UI target details reflect the updated distance/required-level rules for planets vs asteroids"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": false,
+              "text": "All planet targets resolve to required rocket level >= 3"
+            },
+            {
+              "completed": true,
+              "text": "All asteroid targets resolve to required rocket level 1 or 2 only"
+            },
+            {
+              "completed": false,
+              "text": "UI target details reflect the updated distance/required-level rules for planets vs asteroids"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Enforce planetary targets as L3+ and asteroids as L1/L2",
+        "description": "Update target profiling so all planet targets are outside the solar system and require at least L3 rockets, while asteroid targets are within inner/outer solar system bands requiring only L1 or L2 rockets.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "balance",
+          "progression",
+          "targets",
+          "rockets"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "All planet targets resolve to required rocket level >= 3"
+          },
+          {
+            "completed": true,
+            "text": "All asteroid targets resolve to required rocket level 1 or 2 only"
+          },
+          {
+            "completed": false,
+            "text": "UI target details reflect the updated distance/required-level rules for planets vs asteroids"
+          }
+        ],
+        "implementationPlan": "1. Update RocketsManager target profile rules: planets map to out-of-solar-system distances with required_level >= 3; asteroids map to inner/outer solar distances with required_level 1-2 only.\n2. Adjust mission-specific fallback profile branches so no asteroid path requires L3+ and planet paths stay L3+.\n3. Verify UI uses these profiles (scanner list + launchpad details already profile-driven) and run regression tests."
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "fxxdhr",
+      "version": 4,
+      "timestamp": "2026-02-19T05:20:57.230Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "## Summary\n- Reworked target profile rules in RocketsManager to enforce planet vs asteroid distance/range tiers.\n- Planets now always map to out-of-solar-system bands and require L3 minimum.\n- Asteroids now map to inner/outer solar bands only and require L1/L2.\n- Updated mission-stage specific profile branches (M3/M4/M5) to conform to the new level constraints.\n- Updated experience tests to assert the new mission profile expectations.\n\n## Validation\n- Passed: res://tests/run_experience_tests.gd (46/46)\n- Passed: res://tests/run_tutorial_tests.gd (2/2)"
+        }
+      ],
+      "snapshot": {
+        "title": "Enforce planetary targets as L3+ and asteroids as L1/L2",
+        "description": "Update target profiling so all planet targets are outside the solar system and require at least L3 rockets, while asteroid targets are within inner/outer solar system bands requiring only L1 or L2 rockets.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "balance",
+          "progression",
+          "targets",
+          "rockets"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "All planet targets resolve to required rocket level >= 3"
+          },
+          {
+            "completed": false,
+            "text": "All asteroid targets resolve to required rocket level 1 or 2 only"
+          },
+          {
+            "completed": true,
+            "text": "UI target details reflect the updated distance/required-level rules for planets vs asteroids"
+          }
+        ],
+        "implementationPlan": "1. Update RocketsManager target profile rules: planets map to out-of-solar-system distances with required_level >= 3; asteroids map to inner/outer solar distances with required_level 1-2 only.\n2. Adjust mission-specific fallback profile branches so no asteroid path requires L3+ and planet paths stay L3+.\n3. Verify UI uses these profiles (scanner list + launchpad details already profile-driven) and run regression tests.",
+        "implementationNotes": "## Summary\n- Reworked target profile rules in RocketsManager to enforce planet vs asteroid distance/range tiers.\n- Planets now always map to out-of-solar-system bands and require L3 minimum.\n- Asteroids now map to inner/outer solar bands only and require L1/L2.\n- Updated mission-stage specific profile branches (M3/M4/M5) to conform to the new level constraints.\n- Updated experience tests to assert the new mission profile expectations.\n\n## Validation\n- Passed: res://tests/run_experience_tests.gd (46/46)\n- Passed: res://tests/run_tutorial_tests.gd (2/2)"
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "fxxdhr",
+      "version": 5,
+      "timestamp": "2026-02-19T05:21:04.572Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Enforce planetary targets as L3+ and asteroids as L1/L2",
+        "description": "Update target profiling so all planet targets are outside the solar system and require at least L3 rockets, while asteroid targets are within inner/outer solar system bands requiring only L1 or L2 rockets.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "balance",
+          "progression",
+          "targets",
+          "rockets"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "All planet targets resolve to required rocket level >= 3"
+          },
+          {
+            "completed": false,
+            "text": "All asteroid targets resolve to required rocket level 1 or 2 only"
+          },
+          {
+            "completed": true,
+            "text": "UI target details reflect the updated distance/required-level rules for planets vs asteroids"
+          }
+        ],
+        "implementationPlan": "1. Update RocketsManager target profile rules: planets map to out-of-solar-system distances with required_level >= 3; asteroids map to inner/outer solar distances with required_level 1-2 only.\n2. Adjust mission-specific fallback profile branches so no asteroid path requires L3+ and planet paths stay L3+.\n3. Verify UI uses these profiles (scanner list + launchpad details already profile-driven) and run regression tests.",
+        "implementationNotes": "## Summary\n- Reworked target profile rules in RocketsManager to enforce planet vs asteroid distance/range tiers.\n- Planets now always map to out-of-solar-system bands and require L3 minimum.\n- Asteroids now map to inner/outer solar bands only and require L1/L2.\n- Updated mission-stage specific profile branches (M3/M4/M5) to conform to the new level constraints.\n- Updated experience tests to assert the new mission profile expectations.\n\n## Validation\n- Passed: res://tests/run_experience_tests.gd (46/46)\n- Passed: res://tests/run_tutorial_tests.gd (2/2)"
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "fxxdhr",
+      "version": 6,
+      "timestamp": "2026-02-19T05:21:21.929Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "All planet targets resolve to required rocket level >= 3"
+            },
+            {
+              "completed": false,
+              "text": "All asteroid targets resolve to required rocket level 1 or 2 only"
+            },
+            {
+              "completed": true,
+              "text": "UI target details reflect the updated distance/required-level rules for planets vs asteroids"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "All planet targets resolve to required rocket level >= 3"
+            },
+            {
+              "completed": false,
+              "text": "All asteroid targets resolve to required rocket level 1 or 2 only"
+            },
+            {
+              "completed": true,
+              "text": "UI target details reflect the updated distance/required-level rules for planets vs asteroids"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Enforce planetary targets as L3+ and asteroids as L1/L2",
+        "description": "Update target profiling so all planet targets are outside the solar system and require at least L3 rockets, while asteroid targets are within inner/outer solar system bands requiring only L1 or L2 rockets.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "balance",
+          "progression",
+          "targets",
+          "rockets"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "All planet targets resolve to required rocket level >= 3"
+          },
+          {
+            "completed": false,
+            "text": "All asteroid targets resolve to required rocket level 1 or 2 only"
+          },
+          {
+            "completed": true,
+            "text": "UI target details reflect the updated distance/required-level rules for planets vs asteroids"
+          }
+        ],
+        "implementationPlan": "1. Update RocketsManager target profile rules: planets map to out-of-solar-system distances with required_level >= 3; asteroids map to inner/outer solar distances with required_level 1-2 only.\n2. Adjust mission-specific fallback profile branches so no asteroid path requires L3+ and planet paths stay L3+.\n3. Verify UI uses these profiles (scanner list + launchpad details already profile-driven) and run regression tests.",
+        "implementationNotes": "## Summary\n- Reworked target profile rules in RocketsManager to enforce planet vs asteroid distance/range tiers.\n- Planets now always map to out-of-solar-system bands and require L3 minimum.\n- Asteroids now map to inner/outer solar bands only and require L1/L2.\n- Updated mission-stage specific profile branches (M3/M4/M5) to conform to the new level constraints.\n- Updated experience tests to assert the new mission profile expectations.\n\n## Validation\n- Passed: res://tests/run_experience_tests.gd (46/46)\n- Passed: res://tests/run_tutorial_tests.gd (2/2)"
+      }
+    },
+    {
+      "id": "v7",
+      "taskId": "fxxdhr",
+      "version": 7,
+      "timestamp": "2026-02-19T05:21:24.157Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "All planet targets resolve to required rocket level >= 3"
+            },
+            {
+              "completed": false,
+              "text": "All asteroid targets resolve to required rocket level 1 or 2 only"
+            },
+            {
+              "completed": true,
+              "text": "UI target details reflect the updated distance/required-level rules for planets vs asteroids"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "All planet targets resolve to required rocket level >= 3"
+            },
+            {
+              "completed": true,
+              "text": "All asteroid targets resolve to required rocket level 1 or 2 only"
+            },
+            {
+              "completed": true,
+              "text": "UI target details reflect the updated distance/required-level rules for planets vs asteroids"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Enforce planetary targets as L3+ and asteroids as L1/L2",
+        "description": "Update target profiling so all planet targets are outside the solar system and require at least L3 rockets, while asteroid targets are within inner/outer solar system bands requiring only L1 or L2 rockets.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "balance",
+          "progression",
+          "targets",
+          "rockets"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "All planet targets resolve to required rocket level >= 3"
+          },
+          {
+            "completed": true,
+            "text": "All asteroid targets resolve to required rocket level 1 or 2 only"
+          },
+          {
+            "completed": true,
+            "text": "UI target details reflect the updated distance/required-level rules for planets vs asteroids"
+          }
+        ],
+        "implementationPlan": "1. Update RocketsManager target profile rules: planets map to out-of-solar-system distances with required_level >= 3; asteroids map to inner/outer solar distances with required_level 1-2 only.\n2. Adjust mission-specific fallback profile branches so no asteroid path requires L3+ and planet paths stay L3+.\n3. Verify UI uses these profiles (scanner list + launchpad details already profile-driven) and run regression tests.",
+        "implementationNotes": "## Summary\n- Reworked target profile rules in RocketsManager to enforce planet vs asteroid distance/range tiers.\n- Planets now always map to out-of-solar-system bands and require L3 minimum.\n- Asteroids now map to inner/outer solar bands only and require L1/L2.\n- Updated mission-stage specific profile branches (M3/M4/M5) to conform to the new level constraints.\n- Updated experience tests to assert the new mission profile expectations.\n\n## Validation\n- Passed: res://tests/run_experience_tests.gd (46/46)\n- Passed: res://tests/run_tutorial_tests.gd (2/2)"
+      }
+    }
+  ]
+}

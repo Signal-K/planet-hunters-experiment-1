@@ -1,0 +1,130 @@
+{
+  "taskId": "nr8frl",
+  "currentVersion": 2,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "nr8frl",
+      "version": 1,
+      "timestamp": "2026-02-25T00:21:31.158Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        },
+        {
+          "field": "implementationNotes",
+          "newValue": "Added D key deployment control, DroneLabel UI shows count and cooldown timer, visual feedback via particle explosion, cooldown system (5s) with max 3 drones implemented in SidescrollMining.gd"
+        }
+      ],
+      "snapshot": {
+        "title": "Add drone deployment UI and controls",
+        "description": "Implement player controls to deploy drones (button/key binding) and UI feedback showing available drones and deployment status.",
+        "status": "done",
+        "priority": "medium",
+        "labels": [
+          "mining",
+          "drones",
+          "ui"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Deployment control works (key/button)"
+          },
+          {
+            "completed": false,
+            "text": "UI shows drone count"
+          },
+          {
+            "completed": false,
+            "text": "Visual feedback on deployment"
+          },
+          {
+            "completed": false,
+            "text": "Cooldown/limit system works"
+          }
+        ],
+        "implementationNotes": "Added D key deployment control, DroneLabel UI shows count and cooldown timer, visual feedback via particle explosion, cooldown system (5s) with max 3 drones implemented in SidescrollMining.gd"
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "nr8frl",
+      "version": 2,
+      "timestamp": "2026-02-25T00:21:34.555Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Deployment control works (key/button)"
+            },
+            {
+              "completed": false,
+              "text": "UI shows drone count"
+            },
+            {
+              "completed": false,
+              "text": "Visual feedback on deployment"
+            },
+            {
+              "completed": false,
+              "text": "Cooldown/limit system works"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Deployment control works (key/button)"
+            },
+            {
+              "completed": true,
+              "text": "UI shows drone count"
+            },
+            {
+              "completed": true,
+              "text": "Visual feedback on deployment"
+            },
+            {
+              "completed": true,
+              "text": "Cooldown/limit system works"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Add drone deployment UI and controls",
+        "description": "Implement player controls to deploy drones (button/key binding) and UI feedback showing available drones and deployment status.",
+        "status": "done",
+        "priority": "medium",
+        "labels": [
+          "mining",
+          "drones",
+          "ui"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Deployment control works (key/button)"
+          },
+          {
+            "completed": true,
+            "text": "UI shows drone count"
+          },
+          {
+            "completed": true,
+            "text": "Visual feedback on deployment"
+          },
+          {
+            "completed": true,
+            "text": "Cooldown/limit system works"
+          }
+        ],
+        "implementationNotes": "Added D key deployment control, DroneLabel UI shows count and cooldown timer, visual feedback via particle explosion, cooldown system (5s) with max 3 drones implemented in SidescrollMining.gd"
+      }
+    }
+  ]
+}

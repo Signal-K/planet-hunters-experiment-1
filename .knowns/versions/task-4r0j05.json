@@ -1,0 +1,128 @@
+{
+  "taskId": "4r0j05",
+  "currentVersion": 2,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "4r0j05",
+      "version": 1,
+      "timestamp": "2026-02-17T04:57:10.152Z",
+      "changes": [
+        {
+          "field": "description",
+          "oldValue": "Implement M1-M3 mission flow updates captured from handwritten product notes: progression-aware mission selector, dedicated debrief screen, scanner introduction behavior, and target/rocket gating rules.",
+          "newValue": "Implement M1-M3 mission flow updates captured from handwritten product notes in .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, and .knowns/assets/IMG_1756.jpeg: progression-aware mission selector, dedicated debrief screen, scanner introduction behavior, and target/rocket gating rules."
+        }
+      ],
+      "snapshot": {
+        "title": "Implement mission progression updates from 2026-02-17 design notes",
+        "description": "Implement M1-M3 mission flow updates captured from handwritten product notes in .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, and .knowns/assets/IMG_1756.jpeg: progression-aware mission selector, dedicated debrief screen, scanner introduction behavior, and target/rocket gating rules.",
+        "status": "todo",
+        "priority": "high",
+        "labels": [
+          "missions",
+          "progression",
+          "ui"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Players see mission options based on progression and rocket availability"
+          },
+          {
+            "completed": false,
+            "text": "M1-M3 flows behave per spec including scanner introduction timing"
+          },
+          {
+            "completed": false,
+            "text": "Post-mission debrief is available as a dedicated step"
+          },
+          {
+            "completed": false,
+            "text": "Work is split into trackable subtasks"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "4r0j05",
+      "version": 2,
+      "timestamp": "2026-02-17T05:06:54.482Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Players see mission options based on progression and rocket availability"
+            },
+            {
+              "completed": false,
+              "text": "M1-M3 flows behave per spec including scanner introduction timing"
+            },
+            {
+              "completed": false,
+              "text": "Post-mission debrief is available as a dedicated step"
+            },
+            {
+              "completed": false,
+              "text": "Work is split into trackable subtasks"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Players see mission options based on progression and rocket availability"
+            },
+            {
+              "completed": true,
+              "text": "M1-M3 flows behave per spec including scanner introduction timing"
+            },
+            {
+              "completed": true,
+              "text": "Post-mission debrief is available as a dedicated step"
+            },
+            {
+              "completed": true,
+              "text": "Work is split into trackable subtasks"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Implement mission progression updates from 2026-02-17 design notes",
+        "description": "Implement M1-M3 mission flow updates captured from handwritten product notes in .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, and .knowns/assets/IMG_1756.jpeg: progression-aware mission selector, dedicated debrief screen, scanner introduction behavior, and target/rocket gating rules.",
+        "status": "todo",
+        "priority": "high",
+        "labels": [
+          "missions",
+          "progression",
+          "ui"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Players see mission options based on progression and rocket availability"
+          },
+          {
+            "completed": true,
+            "text": "M1-M3 flows behave per spec including scanner introduction timing"
+          },
+          {
+            "completed": true,
+            "text": "Post-mission debrief is available as a dedicated step"
+          },
+          {
+            "completed": true,
+            "text": "Work is split into trackable subtasks"
+          }
+        ]
+      }
+    }
+  ]
+}ot bypass blocked targets).\n- Dedicated mission debrief flow confirmed and hardened with deterministic empty-state behavior.\n- Scanner behavior now keeps real targets available even before scanning; scans incrementally reveal target metadata over repeated scan passes.\n- Validation: run_tutorial_tests.gd and run_experience_tests.gd pass."
+      }
+    }
+  ]
+}

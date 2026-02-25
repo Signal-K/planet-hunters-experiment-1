@@ -1,0 +1,42 @@
+[gd_scene format=3]
+
+[node name="SubcontractorCard" type="PanelContainer"]
+custom_minimum_size = Vector2(0, 82)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Row" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Header" type="HBoxContainer" parent="Row"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="NameLabel" type="Label" parent="Row/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="LevelLabel" type="Label" parent="Row/Header"]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="RoleLabel" type="Label" parent="Row"]
+layout_mode = 2
+
+[node name="AffinityRow" type="HBoxContainer" parent="Row"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="AffinityLabel" type="Label" parent="Row/AffinityRow"]
+layout_mode = 2
+text = "Affinity"
+
+[node name="AffinityBar" type="ProgressBar" parent="Row/AffinityRow"]
+custom_minimum_size = Vector2(180, 12)
+layout_mode = 2
+max_value = 100.0
+show_percentage = false
+
+[node name="AffinityValueLabel" type="Label" parent="Row/AffinityRow"]
+layout_mode = 2

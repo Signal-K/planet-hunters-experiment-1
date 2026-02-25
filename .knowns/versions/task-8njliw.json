@@ -1,0 +1,274 @@
+{
+  "taskId": "8njliw",
+  "currentVersion": 7,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "8njliw",
+      "version": 1,
+      "timestamp": "2026-02-16T14:38:59.072Z",
+      "changes": [
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Update rough earnings from mining in the early game",
+        "description": "In the early game, as long as the user mines the maximum amount they can from a target (based on the strength of the mining laser (how much it can extract) and the capacity), they should net around 115% of the original price of the rocket, as long as they also salvage/scrap the rocket too at the end of the mission.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "mining",
+          "earnings",
+          "tutorial",
+          "behaviour",
+          "balance",
+          "minerals",
+          "selling"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "8njliw",
+      "version": 2,
+      "timestamp": "2026-02-16T14:42:10.294Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "newValue": "1. Centralize rocket balance inputs (cost, speed/range multipliers, mining/cargo multipliers) in a shared config utility.\n2. Tune early-game economy so full mining + scrap on Starter Rocket 1 yields roughly 115% of rocket price.\n3. Add/adjust tests for payout and mining/output scaling to lock expected economics."
+        }
+      ],
+      "snapshot": {
+        "title": "Update rough earnings from mining in the early game",
+        "description": "In the early game, as long as the user mines the maximum amount they can from a target (based on the strength of the mining laser (how much it can extract) and the capacity), they should net around 115% of the original price of the rocket, as long as they also salvage/scrap the rocket too at the end of the mission.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "mining",
+          "earnings",
+          "tutorial",
+          "behaviour",
+          "balance",
+          "minerals",
+          "selling"
+        ],
+        "acceptanceCriteria": [],
+        "implementationPlan": "1. Centralize rocket balance inputs (cost, speed/range multipliers, mining/cargo multipliers) in a shared config utility.\n2. Tune early-game economy so full mining + scrap on Starter Rocket 1 yields roughly 115% of rocket price.\n3. Add/adjust tests for payout and mining/output scaling to lock expected economics."
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "8njliw",
+      "version": 3,
+      "timestamp": "2026-02-16T14:57:33.927Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "## Summary\n- Added shared rocket specs utility for cost/salvage/speed/range/cargo/mining multipliers.\n- Tuned mineral base pricing so full SR1 mining + 20% scrap lands near ~115% total return.\n- Added tests for early-game 115% target and mining/cargo multipliers.\n\n## Validation\n- `cd /Users/scroobz/Navigation/Native/planet-hunters-experiment-1/scene && /Users/scroobz/godot-src/bin/godot.macos.editor.arm64 --headless --script res://tests/run_mining_tests.gd 2>&1`\n- `cd /Users/scroobz/Navigation/Native/planet-hunters-experiment-1/scene && /Users/scroobz/godot-src/bin/godot.macos.editor.arm64 --headless --script res://tests/run_experience_tests.gd 2>&1`\n- `cd /Users/scroobz/Navigation/Native/planet-hunters-experiment-1/scene && /Users/scroobz/godot-src/bin/godot.macos.editor.arm64 --headless --script res://tests/run_mission_log_tests.gd 2>&1`"
+        }
+      ],
+      "snapshot": {
+        "title": "Update rough earnings from mining in the early game",
+        "description": "In the early game, as long as the user mines the maximum amount they can from a target (based on the strength of the mining laser (how much it can extract) and the capacity), they should net around 115% of the original price of the rocket, as long as they also salvage/scrap the rocket too at the end of the mission.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "mining",
+          "earnings",
+          "tutorial",
+          "behaviour",
+          "balance",
+          "minerals",
+          "selling"
+        ],
+        "acceptanceCriteria": [],
+        "implementationPlan": "1. Centralize rocket balance inputs (cost, speed/range multipliers, mining/cargo multipliers) in a shared config utility.\n2. Tune early-game economy so full mining + scrap on Starter Rocket 1 yields roughly 115% of rocket price.\n3. Add/adjust tests for payout and mining/output scaling to lock expected economics.",
+        "implementationNotes": "## Summary\n- Added shared rocket specs utility for cost/salvage/speed/range/cargo/mining multipliers.\n- Tuned mineral base pricing so full SR1 mining + 20% scrap lands near ~115% total return.\n- Added tests for early-game 115% target and mining/cargo multipliers.\n\n## Validation\n- `cd /Users/scroobz/Navigation/Native/planet-hunters-experiment-1/scene && /Users/scroobz/godot-src/bin/godot.macos.editor.arm64 --headless --script res://tests/run_mining_tests.gd 2>&1`\n- `cd /Users/scroobz/Navigation/Native/planet-hunters-experiment-1/scene && /Users/scroobz/godot-src/bin/godot.macos.editor.arm64 --headless --script res://tests/run_experience_tests.gd 2>&1`\n- `cd /Users/scroobz/Navigation/Native/planet-hunters-experiment-1/scene && /Users/scroobz/godot-src/bin/godot.macos.editor.arm64 --headless --script res://tests/run_mission_log_tests.gd 2>&1`"
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "8njliw",
+      "version": 4,
+      "timestamp": "2026-02-16T14:57:34.128Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Update rough earnings from mining in the early game",
+        "description": "In the early game, as long as the user mines the maximum amount they can from a target (based on the strength of the mining laser (how much it can extract) and the capacity), they should net around 115% of the original price of the rocket, as long as they also salvage/scrap the rocket too at the end of the mission.",
+        "status": "done",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "mining",
+          "earnings",
+          "tutorial",
+          "behaviour",
+          "balance",
+          "minerals",
+          "selling"
+        ],
+        "acceptanceCriteria": [],
+        "implementationPlan": "1. Centralize rocket balance inputs (cost, speed/range multipliers, mining/cargo multipliers) in a shared config utility.\n2. Tune early-game economy so full mining + scrap on Starter Rocket 1 yields roughly 115% of rocket price.\n3. Add/adjust tests for payout and mining/output scaling to lock expected economics.",
+        "implementationNotes": "## Summary\n- Added shared rocket specs utility for cost/salvage/speed/range/cargo/mining multipliers.\n- Tuned mineral base pricing so full SR1 mining + 20% scrap lands near ~115% total return.\n- Added tests for early-game 115% target and mining/cargo multipliers.\n\n## Validation\n- `cd /Users/scroobz/Navigation/Native/planet-hunters-experiment-1/scene && /Users/scroobz/godot-src/bin/godot.macos.editor.arm64 --headless --script res://tests/run_mining_tests.gd 2>&1`\n- `cd /Users/scroobz/Navigation/Native/planet-hunters-experiment-1/scene && /Users/scroobz/godot-src/bin/godot.macos.editor.arm64 --headless --script res://tests/run_experience_tests.gd 2>&1`\n- `cd /Users/scroobz/Navigation/Native/planet-hunters-experiment-1/scene && /Users/scroobz/godot-src/bin/godot.macos.editor.arm64 --headless --script res://tests/run_mission_log_tests.gd 2>&1`"
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "8njliw",
+      "version": 5,
+      "timestamp": "2026-02-24T23:25:18.241Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "done",
+          "newValue": "todo"
+        }
+      ],
+      "snapshot": {
+        "title": "Update rough earnings from mining in the early game",
+        "description": "In the early game, as long as the user mines the maximum amount they can from a target (based on the strength of the mining laser (how much it can extract) and the capacity), they should net around 115% of the original price of the rocket, as long as they also salvage/scrap the rocket too at the end of the mission.",
+        "status": "todo",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "mining",
+          "earnings",
+          "tutorial",
+          "behaviour",
+          "balance",
+          "minerals",
+          "selling"
+        ],
+        "acceptanceCriteria": [],
+        "implementationPlan": "1. Centralize rocket balance inputs (cost, speed/range multipliers, mining/cargo multipliers) in a shared config utility.\n2. Tune early-game economy so full mining + scrap on Starter Rocket 1 yields roughly 115% of rocket price.\n3. Add/adjust tests for payout and mining/output scaling to lock expected economics.",
+        "implementationNotes": "## Summary\n- Added shared rocket specs utility for cost/salvage/speed/range/cargo/mining multipliers.\n- Tuned mineral base pricing so full SR1 mining + 20% scrap lands near ~115% total return.\n- Added tests for early-game 115% target and mining/cargo multipliers.\n\n## Validation\n- `cd /Users/scroobz/Navigation/Native/planet-hunters-experiment-1/scene && /Users/scroobz/godot-src/bin/godot.macos.editor.arm64 --headless --script res://tests/run_mining_tests.gd 2>&1`\n- `cd /Users/scroobz/Navigation/Native/planet-hunters-experiment-1/scene && /Users/scroobz/godot-src/bin/godot.macos.editor.arm64 --headless --script res://tests/run_experience_tests.gd 2>&1`\n- `cd /Users/scroobz/Navigation/Native/planet-hunters-experiment-1/scene && /Users/scroobz/godot-src/bin/godot.macos.editor.arm64 --headless --script res://tests/run_mission_log_tests.gd 2>&1`"
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "8njliw",
+      "version": 6,
+      "timestamp": "2026-02-25T00:26:58.972Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [],
+          "newValue": [
+            {
+              "text": "Full mining + scrap yields ~115% of rocket cost",
+              "completed": false
+            },
+            {
+              "text": "Tests validate early game economics",
+              "completed": false
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Update rough earnings from mining in the early game",
+        "description": "In the early game, as long as the user mines the maximum amount they can from a target (based on the strength of the mining laser (how much it can extract) and the capacity), they should net around 115% of the original price of the rocket, as long as they also salvage/scrap the rocket too at the end of the mission.",
+        "status": "todo",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "mining",
+          "earnings",
+          "tutorial",
+          "behaviour",
+          "balance",
+          "minerals",
+          "selling"
+        ],
+        "acceptanceCriteria": [
+          {
+            "text": "Full mining + scrap yields ~115% of rocket cost",
+            "completed": false
+          },
+          {
+            "text": "Tests validate early game economics",
+            "completed": false
+          }
+        ],
+        "implementationPlan": "1. Centralize rocket balance inputs (cost, speed/range multipliers, mining/cargo multipliers) in a shared config utility.\n2. Tune early-game economy so full mining + scrap on Starter Rocket 1 yields roughly 115% of rocket price.\n3. Add/adjust tests for payout and mining/output scaling to lock expected economics.",
+        "implementationNotes": "## Summary\n- Added shared rocket specs utility for cost/salvage/speed/range/cargo/mining multipliers.\n- Tuned mineral base pricing so full SR1 mining + 20% scrap lands near ~115% total return.\n- Added tests for early-game 115% target and mining/cargo multipliers.\n\n## Validation\n- `cd /Users/scroobz/Navigation/Native/planet-hunters-experiment-1/scene && /Users/scroobz/godot-src/bin/godot.macos.editor.arm64 --headless --script res://tests/run_mining_tests.gd 2>&1`\n- `cd /Users/scroobz/Navigation/Native/planet-hunters-experiment-1/scene && /Users/scroobz/godot-src/bin/godot.macos.editor.arm64 --headless --script res://tests/run_experience_tests.gd 2>&1`\n- `cd /Users/scroobz/Navigation/Native/planet-hunters-experiment-1/scene && /Users/scroobz/godot-src/bin/godot.macos.editor.arm64 --headless --script res://tests/run_mission_log_tests.gd 2>&1`"
+      }
+    },
+    {
+      "id": "v7",
+      "taskId": "8njliw",
+      "version": 7,
+      "timestamp": "2026-02-25T00:27:07.739Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        },
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Full mining + scrap yields ~115% of rocket cost"
+            },
+            {
+              "completed": false,
+              "text": "Tests validate early game economics"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Full mining + scrap yields ~115% of rocket cost"
+            },
+            {
+              "completed": true,
+              "text": "Tests validate early game economics"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Update rough earnings from mining in the early game",
+        "description": "In the early game, as long as the user mines the maximum amount they can from a target (based on the strength of the mining laser (how much it can extract) and the capacity), they should net around 115% of the original price of the rocket, as long as they also salvage/scrap the rocket too at the end of the mission.",
+        "status": "done",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "mining",
+          "earnings",
+          "tutorial",
+          "behaviour",
+          "balance",
+          "minerals",
+          "selling"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Full mining + scrap yields ~115% of rocket cost"
+          },
+          {
+            "completed": true,
+            "text": "Tests validate early game economics"
+          }
+        ],
+        "implementationPlan": "1. Centralize rocket balance inputs (cost, speed/range multipliers, mining/cargo multipliers) in a shared config utility.\n2. Tune early-game economy so full mining + scrap on Starter Rocket 1 yields roughly 115% of rocket price.\n3. Add/adjust tests for payout and mining/output scaling to lock expected economics.",
+        "implementationNotes": "## Summary\n- Added shared rocket specs utility for cost/salvage/speed/range/cargo/mining multipliers.\n- Tuned mineral base pricing so full SR1 mining + 20% scrap lands near ~115% total return.\n- Added tests for early-game 115% target and mining/cargo multipliers.\n\n## Validation\n- `cd /Users/scroobz/Navigation/Native/planet-hunters-experiment-1/scene && /Users/scroobz/godot-src/bin/godot.macos.editor.arm64 --headless --script res://tests/run_mining_tests.gd 2>&1`\n- `cd /Users/scroobz/Navigation/Native/planet-hunters-experiment-1/scene && /Users/scroobz/godot-src/bin/godot.macos.editor.arm64 --headless --script res://tests/run_experience_tests.gd 2>&1`\n- `cd /Users/scroobz/Navigation/Native/planet-hunters-experiment-1/scene && /Users/scroobz/godot-src/bin/godot.macos.editor.arm64 --headless --script res://tests/run_mission_log_tests.gd 2>&1`"
+      }
+    }
+  ]
+}

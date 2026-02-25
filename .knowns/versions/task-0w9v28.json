@@ -1,0 +1,48 @@
+{
+  "taskId": "0w9v28",
+  "currentVersion": 1,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "0w9v28",
+      "version": 1,
+      "timestamp": "2026-02-25T02:28:39.823Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "Created analysis doc @doc/dev/scene-vs-script-refactoring-guide. Key findings: SidescrollMining.gd creates 90+ visual objects at runtime (rocks, minerals, particles). Should use object pools or pre-placed nodes in scene. Structure.gd creates collision shapes at runtime. AsteroidPreview.gd creates debris procedurally. Documented refactoring patterns and priorities."
+        }
+      ],
+      "snapshot": {
+        "title": "Refactor runtime object creation to scene files",
+        "description": "Move procedurally generated UI elements and game objects from .gd scripts to .tscn scene files. Scripts should only contain behavior/logic, not object instantiation.",
+        "status": "todo",
+        "priority": "high",
+        "labels": [
+          "refactor",
+          "architecture",
+          "scenes"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Identify all scripts creating UI/visual objects at runtime"
+          },
+          {
+            "completed": false,
+            "text": "Move static/reusable objects to scene files"
+          },
+          {
+            "completed": false,
+            "text": "Keep only procedural/dynamic generation in scripts"
+          },
+          {
+            "completed": false,
+            "text": "Document refactoring patterns"
+          }
+        ],
+        "implementationNotes": "Created analysis doc @doc/dev/scene-vs-script-refactoring-guide. Key findings: SidescrollMining.gd creates 90+ visual objects at runtime (rocks, minerals, particles). Should use object pools or pre-placed nodes in scene. Structure.gd creates collision shapes at runtime. AsteroidPreview.gd creates debris procedurally. Documented refactoring patterns and priorities."
+      }
+    }
+  ]
+}

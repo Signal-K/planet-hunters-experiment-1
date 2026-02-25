@@ -1,0 +1,194 @@
+{
+  "taskId": "xvu4c8",
+  "currentVersion": 4,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "xvu4c8",
+      "version": 1,
+      "timestamp": "2026-02-17T05:02:51.160Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Dedicated mission debrief screen and flow",
+        "description": "Add dedicated mission debrief flow as specified in .knowns/assets/IMG_1755.jpeg (formal ticket note) and consistent with overall notes in .knowns/assets/IMG_1754.jpeg + .knowns/assets/IMG_1756.jpeg.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "missions",
+          "debrief",
+          "ui"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Completing a mission transitions into a dedicated debrief screen"
+          },
+          {
+            "completed": false,
+            "text": "Debrief presents mission outcome summary without breaking current progression"
+          },
+          {
+            "completed": false,
+            "text": "Flow back to mission selection/next step is deterministic"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "xvu4c8",
+      "version": 2,
+      "timestamp": "2026-02-17T05:03:29.089Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "Validated dedicated debrief flow against .knowns/assets/IMG_1755.jpeg (formal debrief requirement) with context from .knowns/assets/IMG_1754.jpeg and .knowns/assets/IMG_1756.jpeg.\n- Confirmed return transitions route to res://Scenes/Earth/mission_debrief.tscn (dedicated debrief step).\n- Added deterministic empty-state handling in MissionDebrief.gd: when returned mission context is missing, actions are locked and UI explicitly routes player to continue via Back.\n- Re-ran run_experience_tests.gd headless: 19/19 pass."
+        }
+      ],
+      "snapshot": {
+        "title": "Dedicated mission debrief screen and flow",
+        "description": "Add dedicated mission debrief flow as specified in .knowns/assets/IMG_1755.jpeg (formal ticket note) and consistent with overall notes in .knowns/assets/IMG_1754.jpeg + .knowns/assets/IMG_1756.jpeg.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "missions",
+          "debrief",
+          "ui"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Completing a mission transitions into a dedicated debrief screen"
+          },
+          {
+            "completed": false,
+            "text": "Debrief presents mission outcome summary without breaking current progression"
+          },
+          {
+            "completed": false,
+            "text": "Flow back to mission selection/next step is deterministic"
+          }
+        ],
+        "implementationNotes": "Validated dedicated debrief flow against .knowns/assets/IMG_1755.jpeg (formal debrief requirement) with context from .knowns/assets/IMG_1754.jpeg and .knowns/assets/IMG_1756.jpeg.\n- Confirmed return transitions route to res://Scenes/Earth/mission_debrief.tscn (dedicated debrief step).\n- Added deterministic empty-state handling in MissionDebrief.gd: when returned mission context is missing, actions are locked and UI explicitly routes player to continue via Back.\n- Re-ran run_experience_tests.gd headless: 19/19 pass."
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "xvu4c8",
+      "version": 3,
+      "timestamp": "2026-02-17T05:10:40.638Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Completing a mission transitions into a dedicated debrief screen"
+            },
+            {
+              "completed": false,
+              "text": "Debrief presents mission outcome summary without breaking current progression"
+            },
+            {
+              "completed": false,
+              "text": "Flow back to mission selection/next step is deterministic"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Completing a mission transitions into a dedicated debrief screen"
+            },
+            {
+              "completed": true,
+              "text": "Debrief presents mission outcome summary without breaking current progression"
+            },
+            {
+              "completed": true,
+              "text": "Flow back to mission selection/next step is deterministic"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Dedicated mission debrief screen and flow",
+        "description": "Add dedicated mission debrief flow as specified in .knowns/assets/IMG_1755.jpeg (formal ticket note) and consistent with overall notes in .knowns/assets/IMG_1754.jpeg + .knowns/assets/IMG_1756.jpeg.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "missions",
+          "debrief",
+          "ui"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Completing a mission transitions into a dedicated debrief screen"
+          },
+          {
+            "completed": true,
+            "text": "Debrief presents mission outcome summary without breaking current progression"
+          },
+          {
+            "completed": true,
+            "text": "Flow back to mission selection/next step is deterministic"
+          }
+        ],
+        "implementationNotes": "Validated dedicated debrief flow against .knowns/assets/IMG_1755.jpeg (formal debrief requirement) with context from .knowns/assets/IMG_1754.jpeg and .knowns/assets/IMG_1756.jpeg.\n- Confirmed return transitions route to res://Scenes/Earth/mission_debrief.tscn (dedicated debrief step).\n- Added deterministic empty-state handling in MissionDebrief.gd: when returned mission context is missing, actions are locked and UI explicitly routes player to continue via Back.\n- Re-ran run_experience_tests.gd headless: 19/19 pass."
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "xvu4c8",
+      "version": 4,
+      "timestamp": "2026-02-17T05:10:46.111Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Dedicated mission debrief screen and flow",
+        "description": "Add dedicated mission debrief flow as specified in .knowns/assets/IMG_1755.jpeg (formal ticket note) and consistent with overall notes in .knowns/assets/IMG_1754.jpeg + .knowns/assets/IMG_1756.jpeg.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "missions",
+          "debrief",
+          "ui"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Completing a mission transitions into a dedicated debrief screen"
+          },
+          {
+            "completed": true,
+            "text": "Debrief presents mission outcome summary without breaking current progression"
+          },
+          {
+            "completed": true,
+            "text": "Flow back to mission selection/next step is deterministic"
+          }
+        ],
+        "implementationNotes": "Validated dedicated debrief flow against .knowns/assets/IMG_1755.jpeg (formal debrief requirement) with context from .knowns/assets/IMG_1754.jpeg and .knowns/assets/IMG_1756.jpeg.\n- Confirmed return transitions route to res://Scenes/Earth/mission_debrief.tscn (dedicated debrief step).\n- Added deterministic empty-state handling in MissionDebrief.gd: when returned mission context is missing, actions are locked and UI explicitly routes player to continue via Back.\n- Re-ran run_experience_tests.gd headless: 19/19 pass."
+      }
+    }
+  ]
+}

@@ -1,0 +1,133 @@
+{
+  "taskId": "z4bdkt",
+  "currentVersion": 4,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "z4bdkt",
+      "version": 1,
+      "timestamp": "2026-02-18T14:57:37.164Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Early game - users can't go home until they've mined the target completely",
+        "description": "In the tutorial missions (so first ~3 levels for now), the \"Go Home\" button isn't clickable until the user has mined the target to completion (the completion value should be based on 1) the level of the rocket (which determines its mining capacity, which is reflected in the overlay detailing the available mineral composition of the target) 2) the capacity of the rocket",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "mining",
+          "targets",
+          "limits",
+          "tutorial",
+          "narrative",
+          "early",
+          "missions"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "z4bdkt",
+      "version": 2,
+      "timestamp": "2026-02-18T14:57:37.545Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "newValue": "1. Lock Return Home in asteroid preview for early missions until target mining reaches completion.\n2. Base unlock on actual remaining mass/capacity so rocket level and capacity govern completion.\n3. Add preview regression test for locked-then-unlocked Return Home behavior.\n4. Run headless experience tests and record results."
+        }
+      ],
+      "snapshot": {
+        "title": "Early game - users can't go home until they've mined the target completely",
+        "description": "In the tutorial missions (so first ~3 levels for now), the \"Go Home\" button isn't clickable until the user has mined the target to completion (the completion value should be based on 1) the level of the rocket (which determines its mining capacity, which is reflected in the overlay detailing the available mineral composition of the target) 2) the capacity of the rocket",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "mining",
+          "targets",
+          "limits",
+          "tutorial",
+          "narrative",
+          "early",
+          "missions"
+        ],
+        "acceptanceCriteria": [],
+        "implementationPlan": "1. Lock Return Home in asteroid preview for early missions until target mining reaches completion.\n2. Base unlock on actual remaining mass/capacity so rocket level and capacity govern completion.\n3. Add preview regression test for locked-then-unlocked Return Home behavior.\n4. Run headless experience tests and record results."
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "z4bdkt",
+      "version": 3,
+      "timestamp": "2026-02-18T14:57:37.747Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "✓ Early missions now disable Return Home until mining completion; button text/gating updates as remaining mass reaches zero. Added test_early_mission_return_home_locked_until_fully_mined."
+        }
+      ],
+      "snapshot": {
+        "title": "Early game - users can't go home until they've mined the target completely",
+        "description": "In the tutorial missions (so first ~3 levels for now), the \"Go Home\" button isn't clickable until the user has mined the target to completion (the completion value should be based on 1) the level of the rocket (which determines its mining capacity, which is reflected in the overlay detailing the available mineral composition of the target) 2) the capacity of the rocket",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "mining",
+          "targets",
+          "limits",
+          "tutorial",
+          "narrative",
+          "early",
+          "missions"
+        ],
+        "acceptanceCriteria": [],
+        "implementationPlan": "1. Lock Return Home in asteroid preview for early missions until target mining reaches completion.\n2. Base unlock on actual remaining mass/capacity so rocket level and capacity govern completion.\n3. Add preview regression test for locked-then-unlocked Return Home behavior.\n4. Run headless experience tests and record results.",
+        "implementationNotes": "✓ Early missions now disable Return Home until mining completion; button text/gating updates as remaining mass reaches zero. Added test_early_mission_return_home_locked_until_fully_mined."
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "z4bdkt",
+      "version": 4,
+      "timestamp": "2026-02-18T14:57:38.158Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Early game - users can't go home until they've mined the target completely",
+        "description": "In the tutorial missions (so first ~3 levels for now), the \"Go Home\" button isn't clickable until the user has mined the target to completion (the completion value should be based on 1) the level of the rocket (which determines its mining capacity, which is reflected in the overlay detailing the available mineral composition of the target) 2) the capacity of the rocket",
+        "status": "done",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "mining",
+          "targets",
+          "limits",
+          "tutorial",
+          "narrative",
+          "early",
+          "missions"
+        ],
+        "acceptanceCriteria": [],
+        "implementationPlan": "1. Lock Return Home in asteroid preview for early missions until target mining reaches completion.\n2. Base unlock on actual remaining mass/capacity so rocket level and capacity govern completion.\n3. Add preview regression test for locked-then-unlocked Return Home behavior.\n4. Run headless experience tests and record results.",
+        "implementationNotes": "✓ Early missions now disable Return Home until mining completion; button text/gating updates as remaining mass reaches zero. Added test_early_mission_return_home_locked_until_fully_mined."
+      }
+    }
+  ]
+}

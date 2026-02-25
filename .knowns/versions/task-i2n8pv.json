@@ -1,0 +1,80 @@
+{
+  "taskId": "i2n8pv",
+  "currentVersion": 1,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "i2n8pv",
+      "version": 1,
+      "timestamp": "2026-02-25T02:42:36.488Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        },
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Surface deposits mineable with laser"
+            },
+            {
+              "completed": false,
+              "text": "Subsurface deposits require drones"
+            },
+            {
+              "completed": false,
+              "text": "Visual distinction between deposit types"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Surface deposits mineable with laser"
+            },
+            {
+              "completed": true,
+              "text": "Subsurface deposits require drones"
+            },
+            {
+              "completed": true,
+              "text": "Visual distinction between deposit types"
+            }
+          ]
+        },
+        {
+          "field": "implementationNotes",
+          "newValue": "Added is_surface flag to minerals. Surface deposits (50%) are bright and mineable with laser. Subsurface deposits (50%) are darker and require drones. Laser skips subsurface, drones skip surface."
+        }
+      ],
+      "snapshot": {
+        "title": "Separate surface vs subsurface mineral deposits",
+        "description": "Some minerals should be on surface (mineable with laser), others below crust (require drones). Drones only for subsurface deposits.",
+        "status": "done",
+        "priority": "high",
+        "labels": [
+          "mining",
+          "drones",
+          "gameplay"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Surface deposits mineable with laser"
+          },
+          {
+            "completed": true,
+            "text": "Subsurface deposits require drones"
+          },
+          {
+            "completed": true,
+            "text": "Visual distinction between deposit types"
+          }
+        ],
+        "implementationNotes": "Added is_surface flag to minerals. Surface deposits (50%) are bright and mineable with laser. Subsurface deposits (50%) are darker and require drones. Laser skips subsurface, drones skip surface."
+      }
+    }
+  ]
+}

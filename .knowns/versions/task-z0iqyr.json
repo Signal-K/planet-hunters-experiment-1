@@ -1,0 +1,327 @@
+{
+  "taskId": "z0iqyr",
+  "currentVersion": 6,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "z0iqyr",
+      "version": 1,
+      "timestamp": "2026-02-24T14:31:54.402Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        }
+      ],
+      "snapshot": {
+        "title": "Create side-scrolling asteroid mining minigame",
+        "description": "Replace timing minigame with side-scrolling surface mining where player flies over procedural asteroid terrain and mines colored mineral regions",
+        "status": "in-progress",
+        "priority": "high",
+        "labels": [
+          "gameplay",
+          "mining",
+          "minigame"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Procedural asteroid surface generation"
+          },
+          {
+            "completed": false,
+            "text": "Scrolling terrain with mineral regions"
+          },
+          {
+            "completed": false,
+            "text": "Rocket flies above surface with mining laser"
+          },
+          {
+            "completed": false,
+            "text": "Mobile touch controls + keyboard support"
+          },
+          {
+            "completed": false,
+            "text": "Score/collection mechanics"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "z0iqyr",
+      "version": 2,
+      "timestamp": "2026-02-24T14:33:34.146Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Procedural asteroid surface generation"
+            },
+            {
+              "completed": false,
+              "text": "Scrolling terrain with mineral regions"
+            },
+            {
+              "completed": false,
+              "text": "Rocket flies above surface with mining laser"
+            },
+            {
+              "completed": false,
+              "text": "Mobile touch controls + keyboard support"
+            },
+            {
+              "completed": false,
+              "text": "Score/collection mechanics"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Procedural asteroid surface generation"
+            },
+            {
+              "completed": true,
+              "text": "Scrolling terrain with mineral regions"
+            },
+            {
+              "completed": true,
+              "text": "Rocket flies above surface with mining laser"
+            },
+            {
+              "completed": true,
+              "text": "Mobile touch controls + keyboard support"
+            },
+            {
+              "completed": true,
+              "text": "Score/collection mechanics"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Create side-scrolling asteroid mining minigame",
+        "description": "Replace timing minigame with side-scrolling surface mining where player flies over procedural asteroid terrain and mines colored mineral regions",
+        "status": "in-progress",
+        "priority": "high",
+        "labels": [
+          "gameplay",
+          "mining",
+          "minigame"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Procedural asteroid surface generation"
+          },
+          {
+            "completed": true,
+            "text": "Scrolling terrain with mineral regions"
+          },
+          {
+            "completed": true,
+            "text": "Rocket flies above surface with mining laser"
+          },
+          {
+            "completed": true,
+            "text": "Mobile touch controls + keyboard support"
+          },
+          {
+            "completed": true,
+            "text": "Score/collection mechanics"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "z0iqyr",
+      "version": 3,
+      "timestamp": "2026-02-24T14:33:47.667Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "## Implementation\n\nCreated side-scrolling asteroid surface mining minigame:\n\n### Core Mechanics\n- **Scrolling terrain**: Procedurally generated asteroid surface scrolls right-to-left\n- **Mineral regions**: Colored patches represent different minerals (Iron, Nickel, Cobalt, Platinum, Silicates)\n- **Mining laser**: Hold SPACE/CLICK to fire laser downward at minerals\n- **Fuel system**: Limited fuel drains over time, run out = game over\n- **Heat management**: Laser generates heat, overheat = forced cooldown\n- **Combo system**: Consecutive hits multiply score, broken when laser cools\n\n### Gameplay Flow\n1. Rocket flies at fixed height above scrolling surface\n2. Player fires laser at colored mineral regions below\n3. Successful hits collect minerals and add to score\n4. Each hit gives small fuel bonus and increases combo\n5. Missing breaks combo when heat reaches zero\n6. Complete when terrain ends or fuel depletes\n\n### Visual Elements\n- Stage 2 rocket sprite with fins and flame\n- Colored mineral deposits on terrain\n- Blue/red laser beam (color changes with heat)\n- Heat and fuel bars\n- Score with combo multiplier display\n\n### Mobile Support\n- Touch controls: FIRE button bottom-right\n- Auto-detects mobile platform\n- Same mechanics as desktop\n\n### Integration\n- Replaces timing minigame in AsteroidPreview\n- Score bonus affects mining yield (score/1000 = bonus multiplier)\n- Returns collected minerals dictionary + score\n\n### Files\n- `scene/Scripts/UI/SidescrollMining.gd`\n- `scene/Scenes/UI/SidescrollMining.tscn`\n- Updated AsteroidPreview integration\n- Updated test_mining.gd"
+        }
+      ],
+      "snapshot": {
+        "title": "Create side-scrolling asteroid mining minigame",
+        "description": "Replace timing minigame with side-scrolling surface mining where player flies over procedural asteroid terrain and mines colored mineral regions",
+        "status": "in-progress",
+        "priority": "high",
+        "labels": [
+          "gameplay",
+          "mining",
+          "minigame"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Procedural asteroid surface generation"
+          },
+          {
+            "completed": true,
+            "text": "Scrolling terrain with mineral regions"
+          },
+          {
+            "completed": true,
+            "text": "Rocket flies above surface with mining laser"
+          },
+          {
+            "completed": true,
+            "text": "Mobile touch controls + keyboard support"
+          },
+          {
+            "completed": true,
+            "text": "Score/collection mechanics"
+          }
+        ],
+        "implementationNotes": "## Implementation\n\nCreated side-scrolling asteroid surface mining minigame:\n\n### Core Mechanics\n- **Scrolling terrain**: Procedurally generated asteroid surface scrolls right-to-left\n- **Mineral regions**: Colored patches represent different minerals (Iron, Nickel, Cobalt, Platinum, Silicates)\n- **Mining laser**: Hold SPACE/CLICK to fire laser downward at minerals\n- **Fuel system**: Limited fuel drains over time, run out = game over\n- **Heat management**: Laser generates heat, overheat = forced cooldown\n- **Combo system**: Consecutive hits multiply score, broken when laser cools\n\n### Gameplay Flow\n1. Rocket flies at fixed height above scrolling surface\n2. Player fires laser at colored mineral regions below\n3. Successful hits collect minerals and add to score\n4. Each hit gives small fuel bonus and increases combo\n5. Missing breaks combo when heat reaches zero\n6. Complete when terrain ends or fuel depletes\n\n### Visual Elements\n- Stage 2 rocket sprite with fins and flame\n- Colored mineral deposits on terrain\n- Blue/red laser beam (color changes with heat)\n- Heat and fuel bars\n- Score with combo multiplier display\n\n### Mobile Support\n- Touch controls: FIRE button bottom-right\n- Auto-detects mobile platform\n- Same mechanics as desktop\n\n### Integration\n- Replaces timing minigame in AsteroidPreview\n- Score bonus affects mining yield (score/1000 = bonus multiplier)\n- Returns collected minerals dictionary + score\n\n### Files\n- `scene/Scripts/UI/SidescrollMining.gd`\n- `scene/Scenes/UI/SidescrollMining.tscn`\n- Updated AsteroidPreview integration\n- Updated test_mining.gd"
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "z0iqyr",
+      "version": 4,
+      "timestamp": "2026-02-24T14:33:52.427Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Create side-scrolling asteroid mining minigame",
+        "description": "Replace timing minigame with side-scrolling surface mining where player flies over procedural asteroid terrain and mines colored mineral regions",
+        "status": "done",
+        "priority": "high",
+        "labels": [
+          "gameplay",
+          "mining",
+          "minigame"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Procedural asteroid surface generation"
+          },
+          {
+            "completed": true,
+            "text": "Scrolling terrain with mineral regions"
+          },
+          {
+            "completed": true,
+            "text": "Rocket flies above surface with mining laser"
+          },
+          {
+            "completed": true,
+            "text": "Mobile touch controls + keyboard support"
+          },
+          {
+            "completed": true,
+            "text": "Score/collection mechanics"
+          }
+        ],
+        "implementationNotes": "## Implementation\n\nCreated side-scrolling asteroid surface mining minigame:\n\n### Core Mechanics\n- **Scrolling terrain**: Procedurally generated asteroid surface scrolls right-to-left\n- **Mineral regions**: Colored patches represent different minerals (Iron, Nickel, Cobalt, Platinum, Silicates)\n- **Mining laser**: Hold SPACE/CLICK to fire laser downward at minerals\n- **Fuel system**: Limited fuel drains over time, run out = game over\n- **Heat management**: Laser generates heat, overheat = forced cooldown\n- **Combo system**: Consecutive hits multiply score, broken when laser cools\n\n### Gameplay Flow\n1. Rocket flies at fixed height above scrolling surface\n2. Player fires laser at colored mineral regions below\n3. Successful hits collect minerals and add to score\n4. Each hit gives small fuel bonus and increases combo\n5. Missing breaks combo when heat reaches zero\n6. Complete when terrain ends or fuel depletes\n\n### Visual Elements\n- Stage 2 rocket sprite with fins and flame\n- Colored mineral deposits on terrain\n- Blue/red laser beam (color changes with heat)\n- Heat and fuel bars\n- Score with combo multiplier display\n\n### Mobile Support\n- Touch controls: FIRE button bottom-right\n- Auto-detects mobile platform\n- Same mechanics as desktop\n\n### Integration\n- Replaces timing minigame in AsteroidPreview\n- Score bonus affects mining yield (score/1000 = bonus multiplier)\n- Returns collected minerals dictionary + score\n\n### Files\n- `scene/Scripts/UI/SidescrollMining.gd`\n- `scene/Scenes/UI/SidescrollMining.tscn`\n- Updated AsteroidPreview integration\n- Updated test_mining.gd"
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "z0iqyr",
+      "version": 5,
+      "timestamp": "2026-02-24T23:25:18.014Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "done",
+          "newValue": "todo"
+        }
+      ],
+      "snapshot": {
+        "title": "Create side-scrolling asteroid mining minigame",
+        "description": "Replace timing minigame with side-scrolling surface mining where player flies over procedural asteroid terrain and mines colored mineral regions",
+        "status": "todo",
+        "priority": "high",
+        "labels": [
+          "gameplay",
+          "mining",
+          "minigame"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Procedural asteroid surface generation"
+          },
+          {
+            "completed": true,
+            "text": "Scrolling terrain with mineral regions"
+          },
+          {
+            "completed": true,
+            "text": "Rocket flies above surface with mining laser"
+          },
+          {
+            "completed": true,
+            "text": "Mobile touch controls + keyboard support"
+          },
+          {
+            "completed": true,
+            "text": "Score/collection mechanics"
+          }
+        ],
+        "implementationNotes": "## Implementation\n\nCreated side-scrolling asteroid surface mining minigame:\n\n### Core Mechanics\n- **Scrolling terrain**: Procedurally generated asteroid surface scrolls right-to-left\n- **Mineral regions**: Colored patches represent different minerals (Iron, Nickel, Cobalt, Platinum, Silicates)\n- **Mining laser**: Hold SPACE/CLICK to fire laser downward at minerals\n- **Fuel system**: Limited fuel drains over time, run out = game over\n- **Heat management**: Laser generates heat, overheat = forced cooldown\n- **Combo system**: Consecutive hits multiply score, broken when laser cools\n\n### Gameplay Flow\n1. Rocket flies at fixed height above scrolling surface\n2. Player fires laser at colored mineral regions below\n3. Successful hits collect minerals and add to score\n4. Each hit gives small fuel bonus and increases combo\n5. Missing breaks combo when heat reaches zero\n6. Complete when terrain ends or fuel depletes\n\n### Visual Elements\n- Stage 2 rocket sprite with fins and flame\n- Colored mineral deposits on terrain\n- Blue/red laser beam (color changes with heat)\n- Heat and fuel bars\n- Score with combo multiplier display\n\n### Mobile Support\n- Touch controls: FIRE button bottom-right\n- Auto-detects mobile platform\n- Same mechanics as desktop\n\n### Integration\n- Replaces timing minigame in AsteroidPreview\n- Score bonus affects mining yield (score/1000 = bonus multiplier)\n- Returns collected minerals dictionary + score\n\n### Files\n- `scene/Scripts/UI/SidescrollMining.gd`\n- `scene/Scenes/UI/SidescrollMining.tscn`\n- Updated AsteroidPreview integration\n- Updated test_mining.gd"
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "z0iqyr",
+      "version": 6,
+      "timestamp": "2026-02-25T00:27:23.966Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Create side-scrolling asteroid mining minigame",
+        "description": "Replace timing minigame with side-scrolling surface mining where player flies over procedural asteroid terrain and mines colored mineral regions",
+        "status": "done",
+        "priority": "high",
+        "labels": [
+          "gameplay",
+          "mining",
+          "minigame"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Procedural asteroid surface generation"
+          },
+          {
+            "completed": true,
+            "text": "Scrolling terrain with mineral regions"
+          },
+          {
+            "completed": true,
+            "text": "Rocket flies above surface with mining laser"
+          },
+          {
+            "completed": true,
+            "text": "Mobile touch controls + keyboard support"
+          },
+          {
+            "completed": true,
+            "text": "Score/collection mechanics"
+          }
+        ],
+        "implementationNotes": "## Implementation\n\nCreated side-scrolling asteroid surface mining minigame:\n\n### Core Mechanics\n- **Scrolling terrain**: Procedurally generated asteroid surface scrolls right-to-left\n- **Mineral regions**: Colored patches represent different minerals (Iron, Nickel, Cobalt, Platinum, Silicates)\n- **Mining laser**: Hold SPACE/CLICK to fire laser downward at minerals\n- **Fuel system**: Limited fuel drains over time, run out = game over\n- **Heat management**: Laser generates heat, overheat = forced cooldown\n- **Combo system**: Consecutive hits multiply score, broken when laser cools\n\n### Gameplay Flow\n1. Rocket flies at fixed height above scrolling surface\n2. Player fires laser at colored mineral regions below\n3. Successful hits collect minerals and add to score\n4. Each hit gives small fuel bonus and increases combo\n5. Missing breaks combo when heat reaches zero\n6. Complete when terrain ends or fuel depletes\n\n### Visual Elements\n- Stage 2 rocket sprite with fins and flame\n- Colored mineral deposits on terrain\n- Blue/red laser beam (color changes with heat)\n- Heat and fuel bars\n- Score with combo multiplier display\n\n### Mobile Support\n- Touch controls: FIRE button bottom-right\n- Auto-detects mobile platform\n- Same mechanics as desktop\n\n### Integration\n- Replaces timing minigame in AsteroidPreview\n- Score bonus affects mining yield (score/1000 = bonus multiplier)\n- Returns collected minerals dictionary + score\n\n### Files\n- `scene/Scripts/UI/SidescrollMining.gd`\n- `scene/Scenes/UI/SidescrollMining.tscn`\n- Updated AsteroidPreview integration\n- Updated test_mining.gd"
+      }
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-const { getDefaultConfig, mergeConfig } = require("@react-native/metro-config");
+const { getDefaultConfig } = require("expo/metro-config");
 const path = require("node:path");
 
 var list = [/\/__tests__\/.*/];
@@ -40,9 +40,9 @@ function exclusionList(additionalExclusions) {
  * @type {import('@react-native/metro-config').MetroConfig}
  */
 
-const defaultConfig = getDefaultConfig(__dirname);
+const config = getDefaultConfig(__dirname);
 
-const config = {
+Object.assign(config, {
   // Watch the project root and its parent directory (the repository root)
   watchFolders: [
     path.resolve(__dirname, "."), // the example folder itself
@@ -60,12 +60,6 @@ const config = {
     ]),
     unstable_enableSymlinks: true,
   },
-  serializer: {
-    // Don't use Expo's custom serializer
-    customSerializer: undefined,
-  },
-};
+});
 
-const config_merged = mergeConfig(defaultConfig, config);
-
-module.exports = config_merged;
+module.exports = config;

@@ -1,0 +1,199 @@
+{
+  "taskId": "f82pml",
+  "currentVersion": 3,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "f82pml",
+      "version": 1,
+      "timestamp": "2026-02-25T02:42:42.126Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Add interactive mining tutorial with pause",
+        "description": "Tutorial should pause rocket movement, guide user to mine surface deposits (explain colors), then teach drone usage for subsurface deposits before allowing continuation.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "mining",
+          "tutorial",
+          "ux"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Rocket pauses during tutorial steps"
+          },
+          {
+            "completed": false,
+            "text": "Tutorial explains mineral colors and values"
+          },
+          {
+            "completed": false,
+            "text": "Surface mining tutorial step works"
+          },
+          {
+            "completed": false,
+            "text": "Drone tutorial step works"
+          },
+          {
+            "completed": false,
+            "text": "Rocket resumes after tutorial complete"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "f82pml",
+      "version": 2,
+      "timestamp": "2026-02-25T02:43:49.507Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Rocket pauses during tutorial steps"
+            },
+            {
+              "completed": false,
+              "text": "Tutorial explains mineral colors and values"
+            },
+            {
+              "completed": false,
+              "text": "Surface mining tutorial step works"
+            },
+            {
+              "completed": false,
+              "text": "Drone tutorial step works"
+            },
+            {
+              "completed": false,
+              "text": "Rocket resumes after tutorial complete"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Rocket pauses during tutorial steps"
+            },
+            {
+              "completed": true,
+              "text": "Tutorial explains mineral colors and values"
+            },
+            {
+              "completed": true,
+              "text": "Surface mining tutorial step works"
+            },
+            {
+              "completed": true,
+              "text": "Drone tutorial step works"
+            },
+            {
+              "completed": true,
+              "text": "Rocket resumes after tutorial complete"
+            }
+          ]
+        },
+        {
+          "field": "implementationNotes",
+          "newValue": "Implemented interactive tutorial: INTRO → mine Iron → mine Nickel → explain subsurface → deploy drone → complete. Rocket pauses (_tutorial_paused) during each step. Tracks _surface_mined_count to progress. Explains mineral colors and drone usage."
+        }
+      ],
+      "snapshot": {
+        "title": "Add interactive mining tutorial with pause",
+        "description": "Tutorial should pause rocket movement, guide user to mine surface deposits (explain colors), then teach drone usage for subsurface deposits before allowing continuation.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "mining",
+          "tutorial",
+          "ux"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Rocket pauses during tutorial steps"
+          },
+          {
+            "completed": true,
+            "text": "Tutorial explains mineral colors and values"
+          },
+          {
+            "completed": true,
+            "text": "Surface mining tutorial step works"
+          },
+          {
+            "completed": true,
+            "text": "Drone tutorial step works"
+          },
+          {
+            "completed": true,
+            "text": "Rocket resumes after tutorial complete"
+          }
+        ],
+        "implementationNotes": "Implemented interactive tutorial: INTRO → mine Iron → mine Nickel → explain subsurface → deploy drone → complete. Rocket pauses (_tutorial_paused) during each step. Tracks _surface_mined_count to progress. Explains mineral colors and drone usage."
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "f82pml",
+      "version": 3,
+      "timestamp": "2026-02-25T02:43:59.465Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Add interactive mining tutorial with pause",
+        "description": "Tutorial should pause rocket movement, guide user to mine surface deposits (explain colors), then teach drone usage for subsurface deposits before allowing continuation.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "mining",
+          "tutorial",
+          "ux"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Rocket pauses during tutorial steps"
+          },
+          {
+            "completed": true,
+            "text": "Tutorial explains mineral colors and values"
+          },
+          {
+            "completed": true,
+            "text": "Surface mining tutorial step works"
+          },
+          {
+            "completed": true,
+            "text": "Drone tutorial step works"
+          },
+          {
+            "completed": true,
+            "text": "Rocket resumes after tutorial complete"
+          }
+        ],
+        "implementationNotes": "Implemented interactive tutorial: INTRO → mine Iron → mine Nickel → explain subsurface → deploy drone → complete. Rocket pauses (_tutorial_paused) during each step. Tracks _surface_mined_count to progress. Explains mineral colors and drone usage."
+      }
+    }
+  ]
+}

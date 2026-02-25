@@ -1,0 +1,130 @@
+{
+  "taskId": "bz4bzo",
+  "currentVersion": 2,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "bz4bzo",
+      "version": 1,
+      "timestamp": "2026-02-25T00:21:21.664Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        },
+        {
+          "field": "implementationNotes",
+          "newValue": "Implemented in MiningDrone.gd: _find_subsurface_target() searches 400px range for uncollected minerals, State.SEEKING navigates drone to target, collision detection via distance check, explode() marks deposits as collected and darkens them"
+        }
+      ],
+      "snapshot": {
+        "title": "Implement drone targeting logic for subsurface deposits",
+        "description": "Add logic to detect subsurface deposits and guide drones to them. Drones should seek out deposits below the visible surface layer.",
+        "status": "done",
+        "priority": "high",
+        "labels": [
+          "mining",
+          "drones",
+          "logic"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Drones detect subsurface deposits"
+          },
+          {
+            "completed": false,
+            "text": "Drones navigate toward targets"
+          },
+          {
+            "completed": false,
+            "text": "Collision detection works"
+          },
+          {
+            "completed": false,
+            "text": "Deposits are destroyed on impact"
+          }
+        ],
+        "implementationNotes": "Implemented in MiningDrone.gd: _find_subsurface_target() searches 400px range for uncollected minerals, State.SEEKING navigates drone to target, collision detection via distance check, explode() marks deposits as collected and darkens them"
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "bz4bzo",
+      "version": 2,
+      "timestamp": "2026-02-25T00:21:26.385Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Drones detect subsurface deposits"
+            },
+            {
+              "completed": false,
+              "text": "Drones navigate toward targets"
+            },
+            {
+              "completed": false,
+              "text": "Collision detection works"
+            },
+            {
+              "completed": false,
+              "text": "Deposits are destroyed on impact"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Drones detect subsurface deposits"
+            },
+            {
+              "completed": true,
+              "text": "Drones navigate toward targets"
+            },
+            {
+              "completed": true,
+              "text": "Collision detection works"
+            },
+            {
+              "completed": true,
+              "text": "Deposits are destroyed on impact"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Implement drone targeting logic for subsurface deposits",
+        "description": "Add logic to detect subsurface deposits and guide drones to them. Drones should seek out deposits below the visible surface layer.",
+        "status": "done",
+        "priority": "high",
+        "labels": [
+          "mining",
+          "drones",
+          "logic"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Drones detect subsurface deposits"
+          },
+          {
+            "completed": true,
+            "text": "Drones navigate toward targets"
+          },
+          {
+            "completed": true,
+            "text": "Collision detection works"
+          },
+          {
+            "completed": true,
+            "text": "Deposits are destroyed on impact"
+          }
+        ],
+        "implementationNotes": "Implemented in MiningDrone.gd: _find_subsurface_target() searches 400px range for uncollected minerals, State.SEEKING navigates drone to target, collision detection via distance check, explode() marks deposits as collected and darkens them"
+      }
+    }
+  ]
+}

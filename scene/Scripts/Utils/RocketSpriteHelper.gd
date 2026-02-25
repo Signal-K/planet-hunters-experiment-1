@@ -7,13 +7,14 @@ static func apply_orbit_sprite(sprite: AnimatedSprite2D, rocket_id: String) -> v
 	if sprite == null:
 		return
 	var rocket_type = _rocket_type_from_id(rocket_id)
-	if rocket_type == "starterrocket1":
+	if rocket_type == "starterrocket1" or rocket_type == "starterrocket2":
 		sprite.sprite_frames = _get_stage2_sprite_frames()
 		sprite.animation = &"default"
 		sprite.play()
 		return
 	var frames := SpriteFrames.new()
-	frames.add_animation("default")
+	if not frames.has_animation("default"):
+		frames.add_animation("default")
 	frames.set_animation_speed("default", 1.0)
 	frames.set_animation_loop("default", false)
 	frames.add_frame("default", _rocket_texture_for_id(rocket_id))
@@ -25,7 +26,8 @@ static func _get_stage2_sprite_frames() -> SpriteFrames:
 	if _stage2_frames != null:
 		return _stage2_frames
 	var frames := SpriteFrames.new()
-	frames.add_animation("default")
+	if not frames.has_animation("default"):
+		frames.add_animation("default")
 	frames.set_animation_speed("default", 8.0)
 	frames.set_animation_loop("default", true)
 	var paths = [
@@ -46,9 +48,11 @@ static func _get_stage2_sprite_frames() -> SpriteFrames:
 static func _rocket_texture_for_id(rocket_id: String) -> Texture2D:
 	var rocket_type = _rocket_type_from_id(rocket_id)
 	var textures = {
-		"starterrocket1": preload("res://assets/Vehicles/StarterRocket1.png")
+		"starterrocket1": "res://assets/Vehicles/StarterRocket1.png",
+		"starterrocket2": "res://assets/Vehicles/Starter Rocket L2.png"
 	}
-	return textures.get(rocket_type, textures["starterrocket1"])
+	var path = str(textures.get(rocket_type, textures["starterrocket1"]))
+	return load(path)
 
 static func _rocket_type_from_id(rocket_id: String) -> String:
 	if rocket_id.find("-") != -1:

@@ -9,12 +9,14 @@ const SALVAGE_REFUND_PCT := 0.10
 const XP_AWARD_MISSION := 4
 const ACTION_RESOLVE_DEBRIEF := "resolve_mission_debrief"
 const HINT_RESOLVE_DEBRIEF := "Great. You completed debrief by choosing how to process the mission return."
+const ACTION_UNLOCK_MISSION_2 := "unlock_mission_2"
+const HINT_UNLOCK_MISSION_2 := "Mission 2 unlocked. Starter Rocket 2 is now available in Launchpad."
+const MISSION4_AFFINITY_GATE := 3
+const MISSION5_AFFINITY_GAIN := 2
 const WebEventBridge = preload("res://Scripts/Systems/WebEventBridge.gd")
-
-const ROCKET_COSTS := {
-	"starterrocket1": 1000000000,
-	"starterrocket2": 2000000000
-}
+const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
+const ResourceValueRowScene = preload("res://Scenes/UI/Templates/ResourceValueRow.tscn")
+const EmptyLabelScene = preload("res://Scenes/UI/Templates/MenuLogbookEmpty.tscn")
 
 @onready var title_label: Label = $UI/Root/Panel/VBox/Title
 @onready var subtitle_label: Label = $UI/Root/Panel/VBox/Subtitle
@@ -52,6 +54,9 @@ func _ready() -> void:
 	panel_style.apply_button(back_button, false)
 
 	_returned = _load_returned_mission()
+	if _returned.is_empty():
+		_set_empty_state()
+		return
 	_register_orbiting()
 	_build_mineral_list()
 	_select_subcontractor()
@@ -89,22 +94,22 @@ func _build_mineral_list() -> void:
 		c.queue_free()
 	_collected = _get_collected_minerals()
 	_total_value = 0
+	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
 	if _collected.is_empty():
-		var empty_label = Label.new()
+		var empty_label: Label = EmptyLabelScene.instantiate()
 		empty_label.text = "No cargo recorded for this mission."
+		panel_style.apply_muted(empty_label)
 		minerals_list.add_child(empty_label)
 		return
 	for k in _collected.keys():
-		var row = HBoxContainer.new()
-		var name_label = Label.new()
+		var row: HBoxContainer = ResourceValueRowScene.instantiate()
+		var name_label: Label = row.get_node("NameLabel")
 		name_label.text = str(k)
+		panel_style.apply_body(name_label)
 		var amount = int(_collected.get(k, 0))
-		var amount_label = Label.new()
+		var amount_label: Label = row.get_node("ValueLabel")
 		amount_label.text = "%s kg" % str(amount)
-		amount_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		amount_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		row.add_child(name_label)
-		row.add_child(amount_label)
+		panel_style.apply_muted(amount_label)
 		minerals_list.add_child(row)
 		var pricing = preload("res://Scripts/Utils/MineralPricing.gd")
 		_total_value += pricing.price_for(k, amount)
@@ -132,6 +137,7 @@ func _update_labels() -> void:
 	subtitle_label.text = "Rocket %s returning from %s" % [rocket_id if rocket_id != "" else "", label]
 	var subcontractor_name = str(_subcontractor.get("name", "Subcontractor"))
 	status_label.text = "Estimated orbit sale (%s): %s F" % [subcontractor_name, str(_total_value)]
+	_apply_mission4_buyer_hint()
 	var app = _get_app_controller()
 	if app:
 		var balance = app.get_franc_balance()
@@ -161,22 +167,27 @@ func _sell(to_earth: bool) -> void:
 	var net = gross
 	if to_earth:
 		net = max(gross - SUBCONTRACTOR_FEE, 0)
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if rm:
+		net = int(rm.apply_mission5_payout_terms(net, str(_subcontractor.get("id", ""))))
 	var app = _get_app_controller()
 	if app:
 		app.add_franc_balance(net, "mission_sale")
 		app.add_experience(XP_AWARD_MISSION, "mission")
 	var sm = preload("res://Scripts/Utils/SubcontractorManager.gd")
 	if sm:
-		sm.add_affinity(str(_subcontractor.get("id", "")))
+		var affinity_gain = MISSION5_AFFINITY_GAIN if rm and int(rm.get_mission_stage()) >= 5 else 1
+		sm.add_affinity(str(_subcontractor.get("id", "")), affinity_gain)
 	_add_mission_log("sell_earth" if to_earth else "sell_orbit", net)
 	_sold = true
 	_closed_out = true
 	status_label.text = "Sale complete. Credited %s F." % str(net)
 	_clear_cargo()
 	_show_tutorial_hint_once(ACTION_RESOLVE_DEBRIEF, HINT_RESOLVE_DEBRIEF)
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	if rm:
 		rm.remove_orbiting_rocket(str(_returned.get("rocket_id", "")))
+		if int(rm.get_mission_stage()) >= 5:
+			rm.clear_mission5_contract_offer()
 	_lock_action_buttons()
 
 func _keep_cargo() -> void:
@@ -237,6 +248,14 @@ func _lock_action_buttons() -> void:
 	if archive_button:
 		archive_button.disabled = true
 
+func _set_empty_state() -> void:
+	title_label.text = "Mission Debrief"
+	subtitle_label.text = "No returned mission found."
+	status_label.text = "Open missions from Launchpad to continue."
+	_lock_action_buttons()
+	if back_button:
+		back_button.disabled = false
+
 func _clear_cargo() -> void:
 	var target_id = str(_returned.get("target_id", ""))
 	if target_id == "":
@@ -253,19 +272,27 @@ func _clear_cargo() -> void:
 
 func _add_mission_log(action: String, payout: int) -> void:
 	var log = preload("res://Scripts/Utils/MissionLogManager.gd")
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	if not log:
 		return
+	var badge = _make_badge()
 	var entry = {
 		"timestamp": Time.get_datetime_string_from_system(),
 		"rocket_id": str(_returned.get("rocket_id", "")),
 		"target_id": str(_returned.get("target_id", "")),
 		"label": str(_returned.get("label", "")),
+		"subcontractor_id": str(_subcontractor.get("id", "")),
+		"subcontractor_name": str(_subcontractor.get("name", "")),
 		"action": action,
 		"payout": payout,
 		"cargo": _collected.duplicate(true),
-		"badge": _make_badge()
+		"badge": badge
 	}
 	log.add_mission(entry)
+	var completed_count := 0
+	if rm:
+		rm.mark_mission_completed(badge)
+		completed_count = int(rm.get_completed_mission_count())
 	var mission_rows: Array = log.get_missions()
 	var mission_count = mission_rows.size()
 	var event_payload := {
@@ -278,7 +305,11 @@ func _add_mission_log(action: String, payout: int) -> void:
 		"mission_count": mission_count
 	}
 	WebEventBridge.emit("mission_debrief_resolved", event_payload)
-	if mission_count == 1:
+	if completed_count >= 1:
+		if rm:
+			rm.unlock("starterrocket2")
+	if completed_count == 1:
+		_show_tutorial_hint_once(ACTION_UNLOCK_MISSION_2, HINT_UNLOCK_MISSION_2)
 		WebEventBridge.emit("first_mission_completed", event_payload)
 
 func _select_subcontractor() -> void:
@@ -286,11 +317,43 @@ func _select_subcontractor() -> void:
 	var level = 1
 	if app:
 		level = int(app.get_experience_level())
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	var sm = preload("res://Scripts/Utils/SubcontractorManager.gd")
-	if sm:
+	if sm and rm and int(rm.get_mission_stage()) >= 5:
+		var selected = rm.get_mission5_selected_contractor()
+		if not selected.is_empty():
+			var selected_id = str(selected.get("id", ""))
+			_subcontractor = sm.get_subcontractor(selected_id)
+			return
+	if sm and rm and int(rm.get_mission_stage()) >= 4:
+		_subcontractor = sm.get_subcontractor("spacex")
+	elif sm:
 		_subcontractor = sm.pick_subcontractor(level)
 	else:
 		_subcontractor = {}
+
+func _apply_mission4_buyer_hint() -> void:
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var sm = preload("res://Scripts/Utils/SubcontractorManager.gd")
+	if not rm or not sm:
+		return
+	if int(rm.get_mission_stage()) < 4:
+		return
+	var buyer_ids = ["spacex", "rocketlab", "astroforge"]
+	var buyer_labels := []
+	for idx in range(buyer_ids.size()):
+		var buyer_id = buyer_ids[idx]
+		var buyer = sm.get_subcontractor(buyer_id)
+		var buyer_name = str(buyer.get("name", buyer_id))
+		if idx == 0:
+			buyer_labels.append("%s (available)" % buyer_name)
+			continue
+		var affinity = int(sm.get_affinity(buyer_id))
+		if affinity >= MISSION4_AFFINITY_GATE:
+			buyer_labels.append("%s (available)" % buyer_name)
+		else:
+			buyer_labels.append("%s (locked %d/%d affinity)" % [buyer_name, affinity, MISSION4_AFFINITY_GATE])
+	status_label.text += "\nBuyers: %s" % ", ".join(buyer_labels)
 
 func _orbit_sale_value() -> int:
 	if _collected.is_empty():
@@ -314,18 +377,13 @@ func _make_badge() -> String:
 func _rocket_cost(rocket_id: String) -> int:
 	if rocket_id == "":
 		return 0
-	var rtype = rocket_id
-	if rocket_id.find("-") != -1:
-		rtype = rocket_id.split("-")[0]
-	return int(ROCKET_COSTS.get(rtype, 1000000000))
+	return RocketSpecs.get_cost(rocket_id)
 
 func _get_app_controller() -> Node:
-	return get_node_or_null("/root/AppController")
+	return preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
 
 func _show_tutorial_hint_once(action_key: String, message: String) -> void:
-	var app = _get_app_controller()
-	if app and app.has_method("show_tutorial_hint_once"):
-		app.show_tutorial_hint_once(action_key, message)
+	preload("res://Scripts/Utils/AppControllerHelper.gd").show_tutorial_hint_once(action_key, message)
 
 func _return_to_base() -> void:
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")

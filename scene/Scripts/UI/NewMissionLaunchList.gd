@@ -5,8 +5,11 @@ var _launch_list_container: Node
 var _on_refund: Callable
 const MIN_DISTANCE_KM := 150000.0
 const MAX_DISTANCE_KM := 3000000.0
-const TRAVEL_SECONDS := 60.0
 const PreviewRouting = preload("res://Scripts/UI/NewMissionPreviewRouting.gd")
+const LaunchRowScene = preload("res://Scenes/UI/Templates/NewMissionLaunchRow.tscn")
+const ReturningRowScene = preload("res://Scenes/UI/Templates/NewMissionReturningRow.tscn")
+const HeaderLabelScene = preload("res://Scenes/UI/Templates/MenuUnlockHeader.tscn")
+const EmptyLabelScene = preload("res://Scenes/UI/Templates/MenuLogbookEmpty.tscn")
 var _mission_rows := {}
 const TimeHelper = preload("res://Scripts/Earth/TimeHelper.gd")
 
@@ -33,15 +36,14 @@ func display_launched_rockets() -> void:
 		returning = rm.get_returned_mission()
 	var has_returning = not returning.is_empty() and str(returning.get("rocket_id", "")) != ""
 	if launched.size() == 0 and not has_returning:
-		var lbl = Label.new()
+		var lbl: Label = EmptyLabelScene.instantiate()
 		lbl.text = "No missions in flight."
-		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		panel_style.apply_muted(lbl)
 		_launch_list_container.add_child(lbl)
 		return
 
 	if launched.size() > 0:
-		var header = Label.new()
+		var header: Label = HeaderLabelScene.instantiate()
 		header.text = "Missions in flight"
 		header.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		panel_style.apply_title(header)
@@ -61,44 +63,31 @@ func display_launched_rockets() -> void:
 			var distance_km = _distance_for_target(target_id)
 			distance_text = _format_distance_km(distance_km)
 
-		var row = HBoxContainer.new()
-		row.custom_minimum_size = Vector2(0, 88)
-
-		var info = VBoxContainer.new()
-		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		var title_lbl = Label.new()
+		var row: HBoxContainer = LaunchRowScene.instantiate()
+		var info: VBoxContainer = row.get_node("Info")
+		var title_lbl: Label = row.get_node("Info/TitleLabel")
 		title_lbl.text = "Rocket %s → %s" % [id, target_label]
 		panel_style.apply_body(title_lbl)
-		var dist_lbl = Label.new()
+		var dist_lbl: Label = row.get_node("Info/DistanceLabel")
 		dist_lbl.text = "Distance: %s" % distance_text
 		panel_style.apply_muted(dist_lbl)
-		var progress = ProgressBar.new()
-		progress.custom_minimum_size = Vector2(260, 18)
+		var progress: ProgressBar = row.get_node("Info/Progress")
 		progress.min_value = 0
 		progress.max_value = 100
 		panel_style.apply_progress_bar(progress)
-		info.add_child(title_lbl)
-		info.add_child(dist_lbl)
-		info.add_child(progress)
-		row.add_child(info)
 
-		var preview_btn = Button.new()
-		preview_btn.text = "Preview"
-		preview_btn.custom_minimum_size = Vector2(120, 40)
+		var preview_btn: Button = row.get_node("PreviewButton")
 		if target_id == "":
 			preview_btn.disabled = true
 		else:
 			var target_type = _get_target_type(target_map, target_id)
 			preview_btn.pressed.connect(Callable(self, "_on_preview_pressed").bind(target_id, target_label, target_type, id))
 		panel_style.apply_button(preview_btn, true)
-		row.add_child(preview_btn)
 
-		var btn = Button.new()
+		var btn: Button = row.get_node("ActionButton")
 		btn.text = "Self-Destruct"
-		btn.custom_minimum_size = Vector2(160, 40)
 		btn.pressed.connect(Callable(self, "_on_self_destruct_pressed").bind(id))
 		panel_style.apply_button(btn, false)
-		row.add_child(btn)
 
 		_launch_list_container.add_child(row)
 		_mission_rows[id] = {
@@ -108,7 +97,7 @@ func display_launched_rockets() -> void:
 		}
 
 	if has_returning:
-		var returning_header = Label.new()
+		var returning_header: Label = HeaderLabelScene.instantiate()
 		returning_header.text = "Returning to Earth"
 		returning_header.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		panel_style.apply_title(returning_header)
@@ -123,30 +112,21 @@ func display_launched_rockets() -> void:
 		if target_label == "":
 			target_label = "Unknown target"
 
-		var row = HBoxContainer.new()
-		row.custom_minimum_size = Vector2(0, 88)
-
-		var info = VBoxContainer.new()
-		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		var title_lbl = Label.new()
+		var row: HBoxContainer = ReturningRowScene.instantiate()
+		var info: VBoxContainer = row.get_node("Info")
+		var title_lbl: Label = row.get_node("Info/TitleLabel")
 		title_lbl.text = "Rocket %s → %s" % [rocket_id, target_label]
 		panel_style.apply_body(title_lbl)
-		var dist_lbl = Label.new()
+		var dist_lbl: Label = row.get_node("Info/StatusLabel")
 		dist_lbl.text = "Status: Returning"
 		panel_style.apply_muted(dist_lbl)
-		info.add_child(title_lbl)
-		info.add_child(dist_lbl)
-		row.add_child(info)
 
-		var preview_btn = Button.new()
-		preview_btn.text = "Preview"
-		preview_btn.custom_minimum_size = Vector2(120, 40)
+		var preview_btn: Button = row.get_node("PreviewButton")
 		if target_id == "":
 			preview_btn.disabled = true
 		else:
 			preview_btn.pressed.connect(Callable(self, "_on_preview_pressed").bind(target_id, target_label, target_type, rocket_id))
 		panel_style.apply_button(preview_btn, true)
-		row.add_child(preview_btn)
 
 		_launch_list_container.add_child(row)
 
@@ -160,7 +140,7 @@ func _on_self_destruct_pressed(rocket_id: String) -> void:
 		if ok:
 			print("NewMissionPanel: rocket", rocket_id, "marked Destroyed")
 			if _on_refund.is_valid():
-				_on_refund.call()
+				_on_refund.call(rocket_id)
 			# Refresh the launched list UI
 			display_launched_rockets()
 		else:
@@ -274,8 +254,12 @@ func update_progress() -> void:
 		var bar: ProgressBar = data["progress"]
 		var launch_time = float(data.get("launch_time", 0))
 		var arrival_time = float(data.get("arrival_time", 0))
+		var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+		var travel_seconds = 60.0
+		if rm:
+			travel_seconds = float(rm.get_mission_duration_seconds_for_rocket(str(rocket_id)))
 		if launch_time > 0 and arrival_time <= launch_time:
-			arrival_time = launch_time + TRAVEL_SECONDS
+			arrival_time = launch_time + travel_seconds
 		if launch_time <= 0 or arrival_time <= launch_time:
 			bar.value = 0
 			continue

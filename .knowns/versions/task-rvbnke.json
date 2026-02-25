@@ -1,0 +1,199 @@
+{
+  "taskId": "rvbnke",
+  "currentVersion": 4,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "rvbnke",
+      "version": 1,
+      "timestamp": "2026-02-25T03:03:26.044Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "Need to find where mining is triggered from preview scene and add orbit animation + fade transition before launching SidescrollMining scene. Check AsteroidPreview.gd or similar preview scripts."
+        }
+      ],
+      "snapshot": {
+        "title": "Add orbit-to-mining transition with fade",
+        "description": "When mining starts, show rocket orbiting target in preview scene, then fade transition to mining minigame. Creates visual continuity from space travel to mining operations.",
+        "status": "todo",
+        "priority": "high",
+        "labels": [
+          "mining",
+          "transitions",
+          "ux"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Preview scene shows rocket orbiting before mining"
+          },
+          {
+            "completed": false,
+            "text": "Smooth fade transition to mining scene"
+          },
+          {
+            "completed": false,
+            "text": "Maintains visual flow from transit to mining"
+          }
+        ],
+        "implementationNotes": "Need to find where mining is triggered from preview scene and add orbit animation + fade transition before launching SidescrollMining scene. Check AsteroidPreview.gd or similar preview scripts."
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "rvbnke",
+      "version": 2,
+      "timestamp": "2026-02-25T03:04:16.280Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Add orbit-to-mining transition with fade",
+        "description": "When mining starts, show rocket orbiting target in preview scene, then fade transition to mining minigame. Creates visual continuity from space travel to mining operations.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "mining",
+          "transitions",
+          "ux"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Preview scene shows rocket orbiting before mining"
+          },
+          {
+            "completed": false,
+            "text": "Smooth fade transition to mining scene"
+          },
+          {
+            "completed": false,
+            "text": "Maintains visual flow from transit to mining"
+          }
+        ],
+        "implementationNotes": "Need to find where mining is triggered from preview scene and add orbit animation + fade transition before launching SidescrollMining scene. Check AsteroidPreview.gd or similar preview scripts."
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "rvbnke",
+      "version": 3,
+      "timestamp": "2026-02-25T03:04:50.791Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Preview scene shows rocket orbiting before mining"
+            },
+            {
+              "completed": false,
+              "text": "Smooth fade transition to mining scene"
+            },
+            {
+              "completed": false,
+              "text": "Maintains visual flow from transit to mining"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Preview scene shows rocket orbiting before mining"
+            },
+            {
+              "completed": true,
+              "text": "Smooth fade transition to mining scene"
+            },
+            {
+              "completed": true,
+              "text": "Maintains visual flow from transit to mining"
+            }
+          ]
+        },
+        {
+          "field": "implementationNotes",
+          "oldValue": "Need to find where mining is triggered from preview scene and add orbit animation + fade transition before launching SidescrollMining scene. Check AsteroidPreview.gd or similar preview scripts.",
+          "newValue": "Added _show_orbit_transition() that: 1) Hides UI elements, 2) Shows orbit rocket for 1.5s, 3) Fades out 3D asteroid and orbit, 4) Fades in mining minigame. Creates smooth visual flow from preview to mining."
+        }
+      ],
+      "snapshot": {
+        "title": "Add orbit-to-mining transition with fade",
+        "description": "When mining starts, show rocket orbiting target in preview scene, then fade transition to mining minigame. Creates visual continuity from space travel to mining operations.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "mining",
+          "transitions",
+          "ux"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Preview scene shows rocket orbiting before mining"
+          },
+          {
+            "completed": true,
+            "text": "Smooth fade transition to mining scene"
+          },
+          {
+            "completed": true,
+            "text": "Maintains visual flow from transit to mining"
+          }
+        ],
+        "implementationNotes": "Added _show_orbit_transition() that: 1) Hides UI elements, 2) Shows orbit rocket for 1.5s, 3) Fades out 3D asteroid and orbit, 4) Fades in mining minigame. Creates smooth visual flow from preview to mining."
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "rvbnke",
+      "version": 4,
+      "timestamp": "2026-02-25T03:05:00.605Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Add orbit-to-mining transition with fade",
+        "description": "When mining starts, show rocket orbiting target in preview scene, then fade transition to mining minigame. Creates visual continuity from space travel to mining operations.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "mining",
+          "transitions",
+          "ux"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Preview scene shows rocket orbiting before mining"
+          },
+          {
+            "completed": true,
+            "text": "Smooth fade transition to mining scene"
+          },
+          {
+            "completed": true,
+            "text": "Maintains visual flow from transit to mining"
+          }
+        ],
+        "implementationNotes": "Added _show_orbit_transition() that: 1) Hides UI elements, 2) Shows orbit rocket for 1.5s, 3) Fades out 3D asteroid and orbit, 4) Fades in mining minigame. Creates smooth visual flow from preview to mining."
+      }
+    }
+  ]
+}

@@ -51,7 +51,7 @@ border_width_bottom = 1
 [node name="LaunchHUD" type="CanvasLayer"]
 layer = 1
 
-[node name="LaunchButton" type="Button" parent="LaunchHUD"]
+[node name="LaunchButton" type="Button" parent="."]
 position = Vector2(1700, 980)
 custom_minimum_size = Vector2(140, 64)
 theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
@@ -61,7 +61,7 @@ theme_override_styles/pressed = SubResource("3")
 theme_override_styles/focus = SubResource("2")
 text = "Launch"
 
-[node name="CountdownLabel" type="Label" parent="LaunchHUD"]
+[node name="CountdownLabel" type="Label" parent="."]
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5

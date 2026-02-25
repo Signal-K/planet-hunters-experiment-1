@@ -75,6 +75,10 @@ script = ExtResource("7")
 layout_mode = 2
 text = "Rocket 2"
 
+[node name="TargetsSection" type="VBoxContainer" parent="UILayer/SelectorPanel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
 [node name="BackButton" type="Button" parent="UILayer/SelectorPanel/VBox"]
 custom_minimum_size = Vector2(120, 48)
 layout_mode = 2

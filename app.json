@@ -4,6 +4,7 @@
   "expo": {
     "name": "GodotTest",
     "slug": "godot-test",
+    "entryPoint": "./index.js",
     "version": "1.0.0",
     "orientation": "landscape",
     "icon": "./assets/icon.png",

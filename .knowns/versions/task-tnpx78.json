@@ -1,0 +1,231 @@
+{
+  "taskId": "tnpx78",
+  "currentVersion": 6,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "tnpx78",
+      "version": 1,
+      "timestamp": "2026-02-24T14:13:57.874Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        }
+      ],
+      "snapshot": {
+        "title": "Add test mission for mining minigame",
+        "description": "Create quick debug function to launch mining minigame test with random target and ship",
+        "status": "in-progress",
+        "priority": "medium",
+        "labels": [
+          "testing",
+          "mining",
+          "debug"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Debug function added to RocketsManager"
+          },
+          {
+            "completed": false,
+            "text": "Test accessible from game UI or console"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "tnpx78",
+      "version": 2,
+      "timestamp": "2026-02-24T14:16:01.211Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Debug function added to RocketsManager"
+            },
+            {
+              "completed": false,
+              "text": "Test accessible from game UI or console"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Debug function added to RocketsManager"
+            },
+            {
+              "completed": true,
+              "text": "Test accessible from game UI or console"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Add test mission for mining minigame",
+        "description": "Create quick debug function to launch mining minigame test with random target and ship",
+        "status": "in-progress",
+        "priority": "medium",
+        "labels": [
+          "testing",
+          "mining",
+          "debug"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Debug function added to RocketsManager"
+          },
+          {
+            "completed": true,
+            "text": "Test accessible from game UI or console"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "tnpx78",
+      "version": 3,
+      "timestamp": "2026-02-24T14:16:11.066Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "## Implementation\n\nCreated quick test system for mining minigame:\n\n### Test Scene\n- **Location**: `scene/Scenes/Debug/mining_test.tscn`\n- **Usage**: Right-click → Run Scene (F6) in Godot\n- **Auto-launches**: Creates test mission and opens mining preview\n\n### Debug Function\n- **Function**: `RocketsManager.debug_launch_mining_test()`\n- **Creates**: Random asteroid (level 1-10) with random unlocked rocket\n- **Sets up**: Preview context and marks rocket as arrived\n- **No side effects**: Doesn't affect mission progression\n\n### Test Features\n- Random asteroid ID and label\n- Random difficulty level (1-10)\n- Uses any unlocked rocket type\n- Instant arrival (no transit time)\n- Direct to mining preview\n\n### Files Created\n- `scene/Scenes/Debug/mining_test.tscn`\n- `scene/Scripts/Debug/MiningTestLauncher.gd`\n- `scene/Scenes/Debug/README_MINING_TEST.md`\n\n### Files Modified\n- `scene/Scripts/Utils/RocketsManager.gd` - Added debug_launch_mining_test()\n- `scene/Scripts/Earth/LaunchpadSelectorPanel.gd` - Added handler (unused but available)"
+        }
+      ],
+      "snapshot": {
+        "title": "Add test mission for mining minigame",
+        "description": "Create quick debug function to launch mining minigame test with random target and ship",
+        "status": "in-progress",
+        "priority": "medium",
+        "labels": [
+          "testing",
+          "mining",
+          "debug"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Debug function added to RocketsManager"
+          },
+          {
+            "completed": true,
+            "text": "Test accessible from game UI or console"
+          }
+        ],
+        "implementationNotes": "## Implementation\n\nCreated quick test system for mining minigame:\n\n### Test Scene\n- **Location**: `scene/Scenes/Debug/mining_test.tscn`\n- **Usage**: Right-click → Run Scene (F6) in Godot\n- **Auto-launches**: Creates test mission and opens mining preview\n\n### Debug Function\n- **Function**: `RocketsManager.debug_launch_mining_test()`\n- **Creates**: Random asteroid (level 1-10) with random unlocked rocket\n- **Sets up**: Preview context and marks rocket as arrived\n- **No side effects**: Doesn't affect mission progression\n\n### Test Features\n- Random asteroid ID and label\n- Random difficulty level (1-10)\n- Uses any unlocked rocket type\n- Instant arrival (no transit time)\n- Direct to mining preview\n\n### Files Created\n- `scene/Scenes/Debug/mining_test.tscn`\n- `scene/Scripts/Debug/MiningTestLauncher.gd`\n- `scene/Scenes/Debug/README_MINING_TEST.md`\n\n### Files Modified\n- `scene/Scripts/Utils/RocketsManager.gd` - Added debug_launch_mining_test()\n- `scene/Scripts/Earth/LaunchpadSelectorPanel.gd` - Added handler (unused but available)"
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "tnpx78",
+      "version": 4,
+      "timestamp": "2026-02-24T14:16:16.367Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Add test mission for mining minigame",
+        "description": "Create quick debug function to launch mining minigame test with random target and ship",
+        "status": "done",
+        "priority": "medium",
+        "labels": [
+          "testing",
+          "mining",
+          "debug"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Debug function added to RocketsManager"
+          },
+          {
+            "completed": true,
+            "text": "Test accessible from game UI or console"
+          }
+        ],
+        "implementationNotes": "## Implementation\n\nCreated quick test system for mining minigame:\n\n### Test Scene\n- **Location**: `scene/Scenes/Debug/mining_test.tscn`\n- **Usage**: Right-click → Run Scene (F6) in Godot\n- **Auto-launches**: Creates test mission and opens mining preview\n\n### Debug Function\n- **Function**: `RocketsManager.debug_launch_mining_test()`\n- **Creates**: Random asteroid (level 1-10) with random unlocked rocket\n- **Sets up**: Preview context and marks rocket as arrived\n- **No side effects**: Doesn't affect mission progression\n\n### Test Features\n- Random asteroid ID and label\n- Random difficulty level (1-10)\n- Uses any unlocked rocket type\n- Instant arrival (no transit time)\n- Direct to mining preview\n\n### Files Created\n- `scene/Scenes/Debug/mining_test.tscn`\n- `scene/Scripts/Debug/MiningTestLauncher.gd`\n- `scene/Scenes/Debug/README_MINING_TEST.md`\n\n### Files Modified\n- `scene/Scripts/Utils/RocketsManager.gd` - Added debug_launch_mining_test()\n- `scene/Scripts/Earth/LaunchpadSelectorPanel.gd` - Added handler (unused but available)"
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "tnpx78",
+      "version": 5,
+      "timestamp": "2026-02-24T23:25:18.476Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "done",
+          "newValue": "todo"
+        }
+      ],
+      "snapshot": {
+        "title": "Add test mission for mining minigame",
+        "description": "Create quick debug function to launch mining minigame test with random target and ship",
+        "status": "todo",
+        "priority": "medium",
+        "labels": [
+          "testing",
+          "mining",
+          "debug"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Debug function added to RocketsManager"
+          },
+          {
+            "completed": true,
+            "text": "Test accessible from game UI or console"
+          }
+        ],
+        "implementationNotes": "## Implementation\n\nCreated quick test system for mining minigame:\n\n### Test Scene\n- **Location**: `scene/Scenes/Debug/mining_test.tscn`\n- **Usage**: Right-click → Run Scene (F6) in Godot\n- **Auto-launches**: Creates test mission and opens mining preview\n\n### Debug Function\n- **Function**: `RocketsManager.debug_launch_mining_test()`\n- **Creates**: Random asteroid (level 1-10) with random unlocked rocket\n- **Sets up**: Preview context and marks rocket as arrived\n- **No side effects**: Doesn't affect mission progression\n\n### Test Features\n- Random asteroid ID and label\n- Random difficulty level (1-10)\n- Uses any unlocked rocket type\n- Instant arrival (no transit time)\n- Direct to mining preview\n\n### Files Created\n- `scene/Scenes/Debug/mining_test.tscn`\n- `scene/Scripts/Debug/MiningTestLauncher.gd`\n- `scene/Scenes/Debug/README_MINING_TEST.md`\n\n### Files Modified\n- `scene/Scripts/Utils/RocketsManager.gd` - Added debug_launch_mining_test()\n- `scene/Scripts/Earth/LaunchpadSelectorPanel.gd` - Added handler (unused but available)"
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "tnpx78",
+      "version": 6,
+      "timestamp": "2026-02-25T00:27:38.777Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Add test mission for mining minigame",
+        "description": "Create quick debug function to launch mining minigame test with random target and ship",
+        "status": "done",
+        "priority": "medium",
+        "labels": [
+          "testing",
+          "mining",
+          "debug"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Debug function added to RocketsManager"
+          },
+          {
+            "completed": true,
+            "text": "Test accessible from game UI or console"
+          }
+        ],
+        "implementationNotes": "## Implementation\n\nCreated quick test system for mining minigame:\n\n### Test Scene\n- **Location**: `scene/Scenes/Debug/mining_test.tscn`\n- **Usage**: Right-click → Run Scene (F6) in Godot\n- **Auto-launches**: Creates test mission and opens mining preview\n\n### Debug Function\n- **Function**: `RocketsManager.debug_launch_mining_test()`\n- **Creates**: Random asteroid (level 1-10) with random unlocked rocket\n- **Sets up**: Preview context and marks rocket as arrived\n- **No side effects**: Doesn't affect mission progression\n\n### Test Features\n- Random asteroid ID and label\n- Random difficulty level (1-10)\n- Uses any unlocked rocket type\n- Instant arrival (no transit time)\n- Direct to mining preview\n\n### Files Created\n- `scene/Scenes/Debug/mining_test.tscn`\n- `scene/Scripts/Debug/MiningTestLauncher.gd`\n- `scene/Scenes/Debug/README_MINING_TEST.md`\n\n### Files Modified\n- `scene/Scripts/Utils/RocketsManager.gd` - Added debug_launch_mining_test()\n- `scene/Scripts/Earth/LaunchpadSelectorPanel.gd` - Added handler (unused but available)"
+      }
+    }
+  ]
+}

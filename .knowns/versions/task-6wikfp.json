@@ -1,0 +1,282 @@
+{
+  "taskId": "6wikfp",
+  "currentVersion": 6,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "6wikfp",
+      "version": 1,
+      "timestamp": "2026-02-24T15:04:39.295Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        }
+      ],
+      "snapshot": {
+        "title": "Build actual working mining minigame",
+        "description": "Now that buttons work, build the real side-scrolling mining game",
+        "status": "in-progress",
+        "priority": "high",
+        "labels": [
+          "mining"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Minigame scene created"
+          },
+          {
+            "completed": false,
+            "text": "Scrolling terrain works"
+          },
+          {
+            "completed": false,
+            "text": "Mining works"
+          },
+          {
+            "completed": false,
+            "text": "Integrates with game"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "6wikfp",
+      "version": 2,
+      "timestamp": "2026-02-24T15:05:31.301Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Minigame scene created"
+            },
+            {
+              "completed": false,
+              "text": "Scrolling terrain works"
+            },
+            {
+              "completed": false,
+              "text": "Mining works"
+            },
+            {
+              "completed": false,
+              "text": "Integrates with game"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Minigame scene created"
+            },
+            {
+              "completed": true,
+              "text": "Scrolling terrain works"
+            },
+            {
+              "completed": true,
+              "text": "Mining works"
+            },
+            {
+              "completed": true,
+              "text": "Integrates with game"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Build actual working mining minigame",
+        "description": "Now that buttons work, build the real side-scrolling mining game",
+        "status": "in-progress",
+        "priority": "high",
+        "labels": [
+          "mining"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Minigame scene created"
+          },
+          {
+            "completed": true,
+            "text": "Scrolling terrain works"
+          },
+          {
+            "completed": true,
+            "text": "Mining works"
+          },
+          {
+            "completed": true,
+            "text": "Integrates with game"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "6wikfp",
+      "version": 3,
+      "timestamp": "2026-02-24T15:05:31.736Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Build actual working mining minigame",
+        "description": "Now that buttons work, build the real side-scrolling mining game",
+        "status": "done",
+        "priority": "high",
+        "labels": [
+          "mining"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Minigame scene created"
+          },
+          {
+            "completed": true,
+            "text": "Scrolling terrain works"
+          },
+          {
+            "completed": true,
+            "text": "Mining works"
+          },
+          {
+            "completed": true,
+            "text": "Integrates with game"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "6wikfp",
+      "version": 4,
+      "timestamp": "2026-02-24T15:05:31.936Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "Created working minigame at scene/mining_test.tscn - Click MINE button, hold SPACE to mine colored minerals as they scroll by"
+        }
+      ],
+      "snapshot": {
+        "title": "Build actual working mining minigame",
+        "description": "Now that buttons work, build the real side-scrolling mining game",
+        "status": "done",
+        "priority": "high",
+        "labels": [
+          "mining"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Minigame scene created"
+          },
+          {
+            "completed": true,
+            "text": "Scrolling terrain works"
+          },
+          {
+            "completed": true,
+            "text": "Mining works"
+          },
+          {
+            "completed": true,
+            "text": "Integrates with game"
+          }
+        ],
+        "implementationNotes": "Created working minigame at scene/mining_test.tscn - Click MINE button, hold SPACE to mine colored minerals as they scroll by"
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "6wikfp",
+      "version": 5,
+      "timestamp": "2026-02-24T23:25:15.574Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "done",
+          "newValue": "todo"
+        }
+      ],
+      "snapshot": {
+        "title": "Build actual working mining minigame",
+        "description": "Now that buttons work, build the real side-scrolling mining game",
+        "status": "todo",
+        "priority": "high",
+        "labels": [
+          "mining"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Minigame scene created"
+          },
+          {
+            "completed": true,
+            "text": "Scrolling terrain works"
+          },
+          {
+            "completed": true,
+            "text": "Mining works"
+          },
+          {
+            "completed": true,
+            "text": "Integrates with game"
+          }
+        ],
+        "implementationNotes": "Created working minigame at scene/mining_test.tscn - Click MINE button, hold SPACE to mine colored minerals as they scroll by"
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "6wikfp",
+      "version": 6,
+      "timestamp": "2026-02-25T00:26:21.712Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Build actual working mining minigame",
+        "description": "Now that buttons work, build the real side-scrolling mining game",
+        "status": "done",
+        "priority": "high",
+        "labels": [
+          "mining"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Minigame scene created"
+          },
+          {
+            "completed": true,
+            "text": "Scrolling terrain works"
+          },
+          {
+            "completed": true,
+            "text": "Mining works"
+          },
+          {
+            "completed": true,
+            "text": "Integrates with game"
+          }
+        ],
+        "implementationNotes": "Created working minigame at scene/mining_test.tscn - Click MINE button, hold SPACE to mine colored minerals as they scroll by"
+      }
+    }
+  ]
+}

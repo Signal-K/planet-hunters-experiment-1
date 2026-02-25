@@ -8,6 +8,11 @@ const LEVEL_SIZE := 5
 const BASE_MINEABLE_PCT := 0.10
 const MINEABLE_PCT_STEP := 0.05
 const MAX_MINEABLE_PCT := 0.50
+const TARGET_CAPACITY_MULTIPLIER := {
+	"mission-1-training-target": 1.05,
+	"mission-2-upgrade-target": 1.0,
+	"mission-4-exoplanet-target": 0.133
+}
 
 const MINERAL_RARITY := {
 	"Iron": 0.0,
@@ -17,11 +22,13 @@ const MINERAL_RARITY := {
 	"Platinum": 1.0
 }
 
-static func get_yield_for_target(target_id: String, target_type: String, level: int = 1) -> Dictionary:
+static func get_yield_for_target(target_id: String, target_type: String, level: int = 1, cargo_multiplier: float = 1.0) -> Dictionary:
 	var normalized_type = _normalize_type(target_type)
 	var base_capacity = PLANET_CAPACITY if normalized_type == "planet" else int(round(PLANET_CAPACITY * ASTEROID_RATIO))
 	var mineable_pct = clamp(BASE_MINEABLE_PCT + MINEABLE_PCT_STEP * max(level - 1, 0), BASE_MINEABLE_PCT, MAX_MINEABLE_PCT)
-	var capacity = int(round(base_capacity * mineable_pct))
+	var effective_cargo_multiplier = max(cargo_multiplier, 0.1)
+	var target_multiplier = _target_capacity_multiplier(target_id)
+	var capacity = int(round(base_capacity * mineable_pct * effective_cargo_multiplier * target_multiplier))
 	var hash_util = preload("res://Scripts/Utils/HashUtils.gd")
 	var seed = hash_util.simple_hash("%s:%s" % [target_id, normalized_type])
 	var rng = RandomNumberGenerator.new()
@@ -59,6 +66,7 @@ static func get_yield_for_target(target_id: String, target_type: String, level: 
 		"type": normalized_type,
 		"level": level,
 		"mineable_pct": mineable_pct,
+		"cargo_multiplier": effective_cargo_multiplier,
 		"capacity": capacity,
 		"minerals": minerals
 	}
@@ -72,3 +80,8 @@ static func _normalize_type(value: String) -> String:
 	if t == "planet" or t == "asteroid":
 		return t
 	return "asteroid"
+
+static func _target_capacity_multiplier(target_id: String) -> float:
+	if target_id == "":
+		return 1.0
+	return max(float(TARGET_CAPACITY_MULTIPLIER.get(target_id, 1.0)), 0.01)

@@ -1,0 +1,289 @@
+{
+  "taskId": "uvmvbf",
+  "currentVersion": 6,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "uvmvbf",
+      "version": 1,
+      "timestamp": "2026-02-24T14:34:52.016Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        }
+      ],
+      "snapshot": {
+        "title": "Add mining mechanics and obstacles",
+        "description": "Add gameplay depth: fuel management, heat buildup, asteroid hazards (craters, rocks), combo system for consecutive hits",
+        "status": "in-progress",
+        "priority": "medium",
+        "labels": [
+          "gameplay",
+          "mining"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Fuel/energy system"
+          },
+          {
+            "completed": false,
+            "text": "Heat management (overheat = cooldown)"
+          },
+          {
+            "completed": false,
+            "text": "Environmental hazards"
+          },
+          {
+            "completed": false,
+            "text": "Combo multiplier system"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "uvmvbf",
+      "version": 2,
+      "timestamp": "2026-02-24T14:36:12.151Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Fuel/energy system"
+            },
+            {
+              "completed": false,
+              "text": "Heat management (overheat = cooldown)"
+            },
+            {
+              "completed": false,
+              "text": "Environmental hazards"
+            },
+            {
+              "completed": false,
+              "text": "Combo multiplier system"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Fuel/energy system"
+            },
+            {
+              "completed": true,
+              "text": "Heat management (overheat = cooldown)"
+            },
+            {
+              "completed": true,
+              "text": "Environmental hazards"
+            },
+            {
+              "completed": true,
+              "text": "Combo multiplier system"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Add mining mechanics and obstacles",
+        "description": "Add gameplay depth: fuel management, heat buildup, asteroid hazards (craters, rocks), combo system for consecutive hits",
+        "status": "in-progress",
+        "priority": "medium",
+        "labels": [
+          "gameplay",
+          "mining"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Fuel/energy system"
+          },
+          {
+            "completed": true,
+            "text": "Heat management (overheat = cooldown)"
+          },
+          {
+            "completed": true,
+            "text": "Environmental hazards"
+          },
+          {
+            "completed": true,
+            "text": "Combo multiplier system"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "uvmvbf",
+      "version": 3,
+      "timestamp": "2026-02-24T14:36:22.489Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "## Added Mechanics\n\n### Vertical Movement\n- **UP/DOWN arrows** or mobile buttons to move rocket\n- Rocket constrained to safe zone (y: 150-350)\n- Dodge obstacles while mining\n\n### Obstacles\n1. **Craters**: Deep depressions in terrain (visual hazard)\n2. **Boulders**: Solid rocks jutting from surface - collision damages fuel\n3. **Gas Vents**: Periodic steam bursts - collision damages fuel\n\n### Collision System\n- Hit obstacle = lose fuel + break combo\n- 1 second invulnerability after hit (flashing sprite)\n- Obstacles scale with difficulty level\n\n### Enhanced Combo\n- Combo displayed separately in gold text\n- Breaks on hit OR when heat reaches zero\n- Higher combos = exponentially higher scores\n\n### Difficulty Scaling\n- Higher levels = more obstacles (15% + 5% per level)\n- Seeded RNG for consistent terrain per level\n\n### Mobile Controls\n- UP/DOWN buttons (left side)\n- FIRE button (right side)\n- Same mechanics as desktop"
+        }
+      ],
+      "snapshot": {
+        "title": "Add mining mechanics and obstacles",
+        "description": "Add gameplay depth: fuel management, heat buildup, asteroid hazards (craters, rocks), combo system for consecutive hits",
+        "status": "in-progress",
+        "priority": "medium",
+        "labels": [
+          "gameplay",
+          "mining"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Fuel/energy system"
+          },
+          {
+            "completed": true,
+            "text": "Heat management (overheat = cooldown)"
+          },
+          {
+            "completed": true,
+            "text": "Environmental hazards"
+          },
+          {
+            "completed": true,
+            "text": "Combo multiplier system"
+          }
+        ],
+        "implementationNotes": "## Added Mechanics\n\n### Vertical Movement\n- **UP/DOWN arrows** or mobile buttons to move rocket\n- Rocket constrained to safe zone (y: 150-350)\n- Dodge obstacles while mining\n\n### Obstacles\n1. **Craters**: Deep depressions in terrain (visual hazard)\n2. **Boulders**: Solid rocks jutting from surface - collision damages fuel\n3. **Gas Vents**: Periodic steam bursts - collision damages fuel\n\n### Collision System\n- Hit obstacle = lose fuel + break combo\n- 1 second invulnerability after hit (flashing sprite)\n- Obstacles scale with difficulty level\n\n### Enhanced Combo\n- Combo displayed separately in gold text\n- Breaks on hit OR when heat reaches zero\n- Higher combos = exponentially higher scores\n\n### Difficulty Scaling\n- Higher levels = more obstacles (15% + 5% per level)\n- Seeded RNG for consistent terrain per level\n\n### Mobile Controls\n- UP/DOWN buttons (left side)\n- FIRE button (right side)\n- Same mechanics as desktop"
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "uvmvbf",
+      "version": 4,
+      "timestamp": "2026-02-24T14:36:22.906Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Add mining mechanics and obstacles",
+        "description": "Add gameplay depth: fuel management, heat buildup, asteroid hazards (craters, rocks), combo system for consecutive hits",
+        "status": "done",
+        "priority": "medium",
+        "labels": [
+          "gameplay",
+          "mining"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Fuel/energy system"
+          },
+          {
+            "completed": true,
+            "text": "Heat management (overheat = cooldown)"
+          },
+          {
+            "completed": true,
+            "text": "Environmental hazards"
+          },
+          {
+            "completed": true,
+            "text": "Combo multiplier system"
+          }
+        ],
+        "implementationNotes": "## Added Mechanics\n\n### Vertical Movement\n- **UP/DOWN arrows** or mobile buttons to move rocket\n- Rocket constrained to safe zone (y: 150-350)\n- Dodge obstacles while mining\n\n### Obstacles\n1. **Craters**: Deep depressions in terrain (visual hazard)\n2. **Boulders**: Solid rocks jutting from surface - collision damages fuel\n3. **Gas Vents**: Periodic steam bursts - collision damages fuel\n\n### Collision System\n- Hit obstacle = lose fuel + break combo\n- 1 second invulnerability after hit (flashing sprite)\n- Obstacles scale with difficulty level\n\n### Enhanced Combo\n- Combo displayed separately in gold text\n- Breaks on hit OR when heat reaches zero\n- Higher combos = exponentially higher scores\n\n### Difficulty Scaling\n- Higher levels = more obstacles (15% + 5% per level)\n- Seeded RNG for consistent terrain per level\n\n### Mobile Controls\n- UP/DOWN buttons (left side)\n- FIRE button (right side)\n- Same mechanics as desktop"
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "uvmvbf",
+      "version": 5,
+      "timestamp": "2026-02-24T23:25:18.730Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "done",
+          "newValue": "todo"
+        }
+      ],
+      "snapshot": {
+        "title": "Add mining mechanics and obstacles",
+        "description": "Add gameplay depth: fuel management, heat buildup, asteroid hazards (craters, rocks), combo system for consecutive hits",
+        "status": "todo",
+        "priority": "medium",
+        "labels": [
+          "gameplay",
+          "mining"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Fuel/energy system"
+          },
+          {
+            "completed": true,
+            "text": "Heat management (overheat = cooldown)"
+          },
+          {
+            "completed": true,
+            "text": "Environmental hazards"
+          },
+          {
+            "completed": true,
+            "text": "Combo multiplier system"
+          }
+        ],
+        "implementationNotes": "## Added Mechanics\n\n### Vertical Movement\n- **UP/DOWN arrows** or mobile buttons to move rocket\n- Rocket constrained to safe zone (y: 150-350)\n- Dodge obstacles while mining\n\n### Obstacles\n1. **Craters**: Deep depressions in terrain (visual hazard)\n2. **Boulders**: Solid rocks jutting from surface - collision damages fuel\n3. **Gas Vents**: Periodic steam bursts - collision damages fuel\n\n### Collision System\n- Hit obstacle = lose fuel + break combo\n- 1 second invulnerability after hit (flashing sprite)\n- Obstacles scale with difficulty level\n\n### Enhanced Combo\n- Combo displayed separately in gold text\n- Breaks on hit OR when heat reaches zero\n- Higher combos = exponentially higher scores\n\n### Difficulty Scaling\n- Higher levels = more obstacles (15% + 5% per level)\n- Seeded RNG for consistent terrain per level\n\n### Mobile Controls\n- UP/DOWN buttons (left side)\n- FIRE button (right side)\n- Same mechanics as desktop"
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "uvmvbf",
+      "version": 6,
+      "timestamp": "2026-02-25T00:27:45.733Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Add mining mechanics and obstacles",
+        "description": "Add gameplay depth: fuel management, heat buildup, asteroid hazards (craters, rocks), combo system for consecutive hits",
+        "status": "done",
+        "priority": "medium",
+        "labels": [
+          "gameplay",
+          "mining"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Fuel/energy system"
+          },
+          {
+            "completed": true,
+            "text": "Heat management (overheat = cooldown)"
+          },
+          {
+            "completed": true,
+            "text": "Environmental hazards"
+          },
+          {
+            "completed": true,
+            "text": "Combo multiplier system"
+          }
+        ],
+        "implementationNotes": "## Added Mechanics\n\n### Vertical Movement\n- **UP/DOWN arrows** or mobile buttons to move rocket\n- Rocket constrained to safe zone (y: 150-350)\n- Dodge obstacles while mining\n\n### Obstacles\n1. **Craters**: Deep depressions in terrain (visual hazard)\n2. **Boulders**: Solid rocks jutting from surface - collision damages fuel\n3. **Gas Vents**: Periodic steam bursts - collision damages fuel\n\n### Collision System\n- Hit obstacle = lose fuel + break combo\n- 1 second invulnerability after hit (flashing sprite)\n- Obstacles scale with difficulty level\n\n### Enhanced Combo\n- Combo displayed separately in gold text\n- Breaks on hit OR when heat reaches zero\n- Higher combos = exponentially higher scores\n\n### Difficulty Scaling\n- Higher levels = more obstacles (15% + 5% per level)\n- Seeded RNG for consistent terrain per level\n\n### Mobile Controls\n- UP/DOWN buttons (left side)\n- FIRE button (right side)\n- Same mechanics as desktop"
+      }
+    }
+  ]
+}

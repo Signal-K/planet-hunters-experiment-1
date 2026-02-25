@@ -11,8 +11,8 @@ labels:
   - ci
   - web
 createdAt: '2026-02-13T07:33:37.262Z'
-updatedAt: "2026-02-15T16:38:46Z"
-timeSpent: 0
+updatedAt: '2026-02-17T05:11:17.257Z'
+timeSpent: 337050
 assignee: '@me'
 ---
 # Run full Playwright+Cypress e2e and add final Vercel deploy pipeline stage

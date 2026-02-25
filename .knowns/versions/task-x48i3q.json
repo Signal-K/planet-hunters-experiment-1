@@ -1,0 +1,1271 @@
+{
+  "taskId": "x48i3q",
+  "currentVersion": 28,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "x48i3q",
+      "version": 1,
+      "timestamp": "2026-02-17T04:57:30.019Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Mission selector progression and rocket/target gating (M1-M3)",
+        "description": "Implement progression-aware mission selector and gating behavior from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg. Include pre-selected target in M1, L2 unlock/progression timing, and distance/capability constraints.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "missions",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Mission selector reflects available rockets and mission progression state"
+          },
+          {
+            "completed": false,
+            "text": "M1 target is pre-selected and follows no-scanner flow"
+          },
+          {
+            "completed": false,
+            "text": "M2 requires/uses L2 rocket progression and same-target richer-yield behavior"
+          },
+          {
+            "completed": false,
+            "text": "Target list indicates when options are blocked by range/capability"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "x48i3q",
+      "version": 2,
+      "timestamp": "2026-02-17T04:59:13.416Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "newValue": "1. Review existing mission/launchpad/debrief flows and progression docs (@doc/dev/sprint-3-mission-preview-sync-rebuild, @doc/dev/sprint-4-return-flow-debrief-systems, @doc/dev/sprint-5-stabilization-routing-refactor) and align handwritten requirements from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg.\n2. Implement mission-stage helpers (M1/M2/M3) and progression checks in RocketsManager (mission count, current stage, selected rocket level).\n3. Update Launchpad selector target list to show distance + required level/capability, disable blocked targets, and auto pre-select Mission 1 target.\n4. Enforce target/rocket compatibility at launch to prevent bypassing selector gating.\n5. Run focused Godot script checks/tests and update task notes + AC status."
+        }
+      ],
+      "snapshot": {
+        "title": "Mission selector progression and rocket/target gating (M1-M3)",
+        "description": "Implement progression-aware mission selector and gating behavior from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg. Include pre-selected target in M1, L2 unlock/progression timing, and distance/capability constraints.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "missions",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Mission selector reflects available rockets and mission progression state"
+          },
+          {
+            "completed": false,
+            "text": "M1 target is pre-selected and follows no-scanner flow"
+          },
+          {
+            "completed": false,
+            "text": "M2 requires/uses L2 rocket progression and same-target richer-yield behavior"
+          },
+          {
+            "completed": false,
+            "text": "Target list indicates when options are blocked by range/capability"
+          }
+        ],
+        "implementationPlan": "1. Review existing mission/launchpad/debrief flows and progression docs (@doc/dev/sprint-3-mission-preview-sync-rebuild, @doc/dev/sprint-4-return-flow-debrief-systems, @doc/dev/sprint-5-stabilization-routing-refactor) and align handwritten requirements from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg.\n2. Implement mission-stage helpers (M1/M2/M3) and progression checks in RocketsManager (mission count, current stage, selected rocket level).\n3. Update Launchpad selector target list to show distance + required level/capability, disable blocked targets, and auto pre-select Mission 1 target.\n4. Enforce target/rocket compatibility at launch to prevent bypassing selector gating.\n5. Run focused Godot script checks/tests and update task notes + AC status."
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "x48i3q",
+      "version": 3,
+      "timestamp": "2026-02-17T05:02:39.964Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass)."
+        }
+      ],
+      "snapshot": {
+        "title": "Mission selector progression and rocket/target gating (M1-M3)",
+        "description": "Implement progression-aware mission selector and gating behavior from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg. Include pre-selected target in M1, L2 unlock/progression timing, and distance/capability constraints.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "missions",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Mission selector reflects available rockets and mission progression state"
+          },
+          {
+            "completed": false,
+            "text": "M1 target is pre-selected and follows no-scanner flow"
+          },
+          {
+            "completed": false,
+            "text": "M2 requires/uses L2 rocket progression and same-target richer-yield behavior"
+          },
+          {
+            "completed": false,
+            "text": "Target list indicates when options are blocked by range/capability"
+          }
+        ],
+        "implementationPlan": "1. Review existing mission/launchpad/debrief flows and progression docs (@doc/dev/sprint-3-mission-preview-sync-rebuild, @doc/dev/sprint-4-return-flow-debrief-systems, @doc/dev/sprint-5-stabilization-routing-refactor) and align handwritten requirements from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg.\n2. Implement mission-stage helpers (M1/M2/M3) and progression checks in RocketsManager (mission count, current stage, selected rocket level).\n3. Update Launchpad selector target list to show distance + required level/capability, disable blocked targets, and auto pre-select Mission 1 target.\n4. Enforce target/rocket compatibility at launch to prevent bypassing selector gating.\n5. Run focused Godot script checks/tests and update task notes + AC status.",
+        "implementationNotes": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass)."
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "x48i3q",
+      "version": 4,
+      "timestamp": "2026-02-17T05:09:44.010Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass).",
+          "newValue": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass).\n\n🔄 Reopened from editor repro: harden LaunchHUD/LaunchButton lookup to tolerate node naming variants and ensure show/hide/countdown resolve consistently."
+        }
+      ],
+      "snapshot": {
+        "title": "Mission selector progression and rocket/target gating (M1-M3)",
+        "description": "Implement progression-aware mission selector and gating behavior from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg. Include pre-selected target in M1, L2 unlock/progression timing, and distance/capability constraints.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "missions",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Mission selector reflects available rockets and mission progression state"
+          },
+          {
+            "completed": false,
+            "text": "M1 target is pre-selected and follows no-scanner flow"
+          },
+          {
+            "completed": false,
+            "text": "M2 requires/uses L2 rocket progression and same-target richer-yield behavior"
+          },
+          {
+            "completed": false,
+            "text": "Target list indicates when options are blocked by range/capability"
+          }
+        ],
+        "implementationPlan": "1. Review existing mission/launchpad/debrief flows and progression docs (@doc/dev/sprint-3-mission-preview-sync-rebuild, @doc/dev/sprint-4-return-flow-debrief-systems, @doc/dev/sprint-5-stabilization-routing-refactor) and align handwritten requirements from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg.\n2. Implement mission-stage helpers (M1/M2/M3) and progression checks in RocketsManager (mission count, current stage, selected rocket level).\n3. Update Launchpad selector target list to show distance + required level/capability, disable blocked targets, and auto pre-select Mission 1 target.\n4. Enforce target/rocket compatibility at launch to prevent bypassing selector gating.\n5. Run focused Godot script checks/tests and update task notes + AC status.",
+        "implementationNotes": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass).\n\n🔄 Reopened from editor repro: harden LaunchHUD/LaunchButton lookup to tolerate node naming variants and ensure show/hide/countdown resolve consistently."
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "x48i3q",
+      "version": 5,
+      "timestamp": "2026-02-17T05:09:48.450Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Mission selector progression and rocket/target gating (M1-M3)",
+        "description": "Implement progression-aware mission selector and gating behavior from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg. Include pre-selected target in M1, L2 unlock/progression timing, and distance/capability constraints.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "missions",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Mission selector reflects available rockets and mission progression state"
+          },
+          {
+            "completed": false,
+            "text": "M1 target is pre-selected and follows no-scanner flow"
+          },
+          {
+            "completed": false,
+            "text": "M2 requires/uses L2 rocket progression and same-target richer-yield behavior"
+          },
+          {
+            "completed": false,
+            "text": "Target list indicates when options are blocked by range/capability"
+          }
+        ],
+        "implementationPlan": "1. Review existing mission/launchpad/debrief flows and progression docs (@doc/dev/sprint-3-mission-preview-sync-rebuild, @doc/dev/sprint-4-return-flow-debrief-systems, @doc/dev/sprint-5-stabilization-routing-refactor) and align handwritten requirements from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg.\n2. Implement mission-stage helpers (M1/M2/M3) and progression checks in RocketsManager (mission count, current stage, selected rocket level).\n3. Update Launchpad selector target list to show distance + required level/capability, disable blocked targets, and auto pre-select Mission 1 target.\n4. Enforce target/rocket compatibility at launch to prevent bypassing selector gating.\n5. Run focused Godot script checks/tests and update task notes + AC status.",
+        "implementationNotes": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass).\n\n🔄 Reopened from editor repro: harden LaunchHUD/LaunchButton lookup to tolerate node naming variants and ensure show/hide/countdown resolve consistently."
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "x48i3q",
+      "version": 6,
+      "timestamp": "2026-02-17T05:12:56.934Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "done",
+          "newValue": "in-progress"
+        }
+      ],
+      "snapshot": {
+        "title": "Mission selector progression and rocket/target gating (M1-M3)",
+        "description": "Implement progression-aware mission selector and gating behavior from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg. Include pre-selected target in M1, L2 unlock/progression timing, and distance/capability constraints.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "missions",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Mission selector reflects available rockets and mission progression state"
+          },
+          {
+            "completed": false,
+            "text": "M1 target is pre-selected and follows no-scanner flow"
+          },
+          {
+            "completed": false,
+            "text": "M2 requires/uses L2 rocket progression and same-target richer-yield behavior"
+          },
+          {
+            "completed": false,
+            "text": "Target list indicates when options are blocked by range/capability"
+          }
+        ],
+        "implementationPlan": "1. Review existing mission/launchpad/debrief flows and progression docs (@doc/dev/sprint-3-mission-preview-sync-rebuild, @doc/dev/sprint-4-return-flow-debrief-systems, @doc/dev/sprint-5-stabilization-routing-refactor) and align handwritten requirements from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg.\n2. Implement mission-stage helpers (M1/M2/M3) and progression checks in RocketsManager (mission count, current stage, selected rocket level).\n3. Update Launchpad selector target list to show distance + required level/capability, disable blocked targets, and auto pre-select Mission 1 target.\n4. Enforce target/rocket compatibility at launch to prevent bypassing selector gating.\n5. Run focused Godot script checks/tests and update task notes + AC status.",
+        "implementationNotes": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass).\n\n🔄 Reopened from editor repro: harden LaunchHUD/LaunchButton lookup to tolerate node naming variants and ensure show/hide/countdown resolve consistently."
+      }
+    },
+    {
+      "id": "v7",
+      "taskId": "x48i3q",
+      "version": 7,
+      "timestamp": "2026-02-17T05:12:56.935Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass).\n\n🔄 Reopened from editor repro: harden LaunchHUD/LaunchButton lookup to tolerate node naming variants and ensure show/hide/countdown resolve consistently.",
+          "newValue": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass).\n\n🔄 Reopened from editor repro: harden LaunchHUD/LaunchButton lookup to tolerate node naming variants and ensure show/hide/countdown resolve consistently.\n\n🔄 Reopened: user requested complete rocket-selector UI rebuild (no scroll, full-screen when no awaiting rocket)."
+        }
+      ],
+      "snapshot": {
+        "title": "Mission selector progression and rocket/target gating (M1-M3)",
+        "description": "Implement progression-aware mission selector and gating behavior from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg. Include pre-selected target in M1, L2 unlock/progression timing, and distance/capability constraints.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "missions",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Mission selector reflects available rockets and mission progression state"
+          },
+          {
+            "completed": false,
+            "text": "M1 target is pre-selected and follows no-scanner flow"
+          },
+          {
+            "completed": false,
+            "text": "M2 requires/uses L2 rocket progression and same-target richer-yield behavior"
+          },
+          {
+            "completed": false,
+            "text": "Target list indicates when options are blocked by range/capability"
+          }
+        ],
+        "implementationPlan": "1. Review existing mission/launchpad/debrief flows and progression docs (@doc/dev/sprint-3-mission-preview-sync-rebuild, @doc/dev/sprint-4-return-flow-debrief-systems, @doc/dev/sprint-5-stabilization-routing-refactor) and align handwritten requirements from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg.\n2. Implement mission-stage helpers (M1/M2/M3) and progression checks in RocketsManager (mission count, current stage, selected rocket level).\n3. Update Launchpad selector target list to show distance + required level/capability, disable blocked targets, and auto pre-select Mission 1 target.\n4. Enforce target/rocket compatibility at launch to prevent bypassing selector gating.\n5. Run focused Godot script checks/tests and update task notes + AC status.",
+        "implementationNotes": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass).\n\n🔄 Reopened from editor repro: harden LaunchHUD/LaunchButton lookup to tolerate node naming variants and ensure show/hide/countdown resolve consistently.\n\n🔄 Reopened: user requested complete rocket-selector UI rebuild (no scroll, full-screen when no awaiting rocket)."
+      }
+    },
+    {
+      "id": "v8",
+      "taskId": "x48i3q",
+      "version": 8,
+      "timestamp": "2026-02-17T05:18:00.197Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass).\n\n🔄 Reopened from editor repro: harden LaunchHUD/LaunchButton lookup to tolerate node naming variants and ensure show/hide/countdown resolve consistently.\n\n🔄 Reopened: user requested complete rocket-selector UI rebuild (no scroll, full-screen when no awaiting rocket).",
+          "newValue": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass).\n\n🔄 Reopened from editor repro: harden LaunchHUD/LaunchButton lookup to tolerate node naming variants and ensure show/hide/countdown resolve consistently.\n\n🔄 Reopened: user requested complete rocket-selector UI rebuild (no scroll, full-screen when no awaiting rocket).\n\n✓ Rebuilt Available Rockets selector UI from scratch: removed ScrollContainer, switched to fixed no-scroll full layout with centered large cards and larger create actions. Selector panel now expands to near full-screen when no awaiting rocket exists, and uses compact bounds when awaiting rocket is present."
+        }
+      ],
+      "snapshot": {
+        "title": "Mission selector progression and rocket/target gating (M1-M3)",
+        "description": "Implement progression-aware mission selector and gating behavior from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg. Include pre-selected target in M1, L2 unlock/progression timing, and distance/capability constraints.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "missions",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Mission selector reflects available rockets and mission progression state"
+          },
+          {
+            "completed": false,
+            "text": "M1 target is pre-selected and follows no-scanner flow"
+          },
+          {
+            "completed": false,
+            "text": "M2 requires/uses L2 rocket progression and same-target richer-yield behavior"
+          },
+          {
+            "completed": false,
+            "text": "Target list indicates when options are blocked by range/capability"
+          }
+        ],
+        "implementationPlan": "1. Review existing mission/launchpad/debrief flows and progression docs (@doc/dev/sprint-3-mission-preview-sync-rebuild, @doc/dev/sprint-4-return-flow-debrief-systems, @doc/dev/sprint-5-stabilization-routing-refactor) and align handwritten requirements from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg.\n2. Implement mission-stage helpers (M1/M2/M3) and progression checks in RocketsManager (mission count, current stage, selected rocket level).\n3. Update Launchpad selector target list to show distance + required level/capability, disable blocked targets, and auto pre-select Mission 1 target.\n4. Enforce target/rocket compatibility at launch to prevent bypassing selector gating.\n5. Run focused Godot script checks/tests and update task notes + AC status.",
+        "implementationNotes": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass).\n\n🔄 Reopened from editor repro: harden LaunchHUD/LaunchButton lookup to tolerate node naming variants and ensure show/hide/countdown resolve consistently.\n\n🔄 Reopened: user requested complete rocket-selector UI rebuild (no scroll, full-screen when no awaiting rocket).\n\n✓ Rebuilt Available Rockets selector UI from scratch: removed ScrollContainer, switched to fixed no-scroll full layout with centered large cards and larger create actions. Selector panel now expands to near full-screen when no awaiting rocket exists, and uses compact bounds when awaiting rocket is present."
+      }
+    },
+    {
+      "id": "v9",
+      "taskId": "x48i3q",
+      "version": 9,
+      "timestamp": "2026-02-17T05:21:58.454Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass).\n\n🔄 Reopened from editor repro: harden LaunchHUD/LaunchButton lookup to tolerate node naming variants and ensure show/hide/countdown resolve consistently.\n\n🔄 Reopened: user requested complete rocket-selector UI rebuild (no scroll, full-screen when no awaiting rocket).\n\n✓ Rebuilt Available Rockets selector UI from scratch: removed ScrollContainer, switched to fixed no-scroll full layout with centered large cards and larger create actions. Selector panel now expands to near full-screen when no awaiting rocket exists, and uses compact bounds when awaiting rocket is present.",
+          "newValue": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass).\n\n🔄 Reopened from editor repro: harden LaunchHUD/LaunchButton lookup to tolerate node naming variants and ensure show/hide/countdown resolve consistently.\n\n🔄 Reopened: user requested complete rocket-selector UI rebuild (no scroll, full-screen when no awaiting rocket).\n\n✓ Rebuilt Available Rockets selector UI from scratch: removed ScrollContainer, switched to fixed no-scroll full layout with centered large cards and larger create actions. Selector panel now expands to near full-screen when no awaiting rocket exists, and uses compact bounds when awaiting rocket is present.\n\n🔄 Reopened: ultrawide selector/tut overlay alignment pass + selector test coverage updates."
+        }
+      ],
+      "snapshot": {
+        "title": "Mission selector progression and rocket/target gating (M1-M3)",
+        "description": "Implement progression-aware mission selector and gating behavior from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg. Include pre-selected target in M1, L2 unlock/progression timing, and distance/capability constraints.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "missions",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Mission selector reflects available rockets and mission progression state"
+          },
+          {
+            "completed": false,
+            "text": "M1 target is pre-selected and follows no-scanner flow"
+          },
+          {
+            "completed": false,
+            "text": "M2 requires/uses L2 rocket progression and same-target richer-yield behavior"
+          },
+          {
+            "completed": false,
+            "text": "Target list indicates when options are blocked by range/capability"
+          }
+        ],
+        "implementationPlan": "1. Review existing mission/launchpad/debrief flows and progression docs (@doc/dev/sprint-3-mission-preview-sync-rebuild, @doc/dev/sprint-4-return-flow-debrief-systems, @doc/dev/sprint-5-stabilization-routing-refactor) and align handwritten requirements from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg.\n2. Implement mission-stage helpers (M1/M2/M3) and progression checks in RocketsManager (mission count, current stage, selected rocket level).\n3. Update Launchpad selector target list to show distance + required level/capability, disable blocked targets, and auto pre-select Mission 1 target.\n4. Enforce target/rocket compatibility at launch to prevent bypassing selector gating.\n5. Run focused Godot script checks/tests and update task notes + AC status.",
+        "implementationNotes": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass).\n\n🔄 Reopened from editor repro: harden LaunchHUD/LaunchButton lookup to tolerate node naming variants and ensure show/hide/countdown resolve consistently.\n\n🔄 Reopened: user requested complete rocket-selector UI rebuild (no scroll, full-screen when no awaiting rocket).\n\n✓ Rebuilt Available Rockets selector UI from scratch: removed ScrollContainer, switched to fixed no-scroll full layout with centered large cards and larger create actions. Selector panel now expands to near full-screen when no awaiting rocket exists, and uses compact bounds when awaiting rocket is present.\n\n🔄 Reopened: ultrawide selector/tut overlay alignment pass + selector test coverage updates."
+      }
+    },
+    {
+      "id": "v10",
+      "taskId": "x48i3q",
+      "version": 10,
+      "timestamp": "2026-02-17T05:22:07.923Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass).\n\n🔄 Reopened from editor repro: harden LaunchHUD/LaunchButton lookup to tolerate node naming variants and ensure show/hide/countdown resolve consistently.\n\n🔄 Reopened: user requested complete rocket-selector UI rebuild (no scroll, full-screen when no awaiting rocket).\n\n✓ Rebuilt Available Rockets selector UI from scratch: removed ScrollContainer, switched to fixed no-scroll full layout with centered large cards and larger create actions. Selector panel now expands to near full-screen when no awaiting rocket exists, and uses compact bounds when awaiting rocket is present.\n\n🔄 Reopened: ultrawide selector/tut overlay alignment pass + selector test coverage updates.",
+          "newValue": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass).\n\n🔄 Reopened from editor repro: harden LaunchHUD/LaunchButton lookup to tolerate node naming variants and ensure show/hide/countdown resolve consistently.\n\n🔄 Reopened: user requested complete rocket-selector UI rebuild (no scroll, full-screen when no awaiting rocket).\n\n✓ Rebuilt Available Rockets selector UI from scratch: removed ScrollContainer, switched to fixed no-scroll full layout with centered large cards and larger create actions. Selector panel now expands to near full-screen when no awaiting rocket exists, and uses compact bounds when awaiting rocket is present.\n\n🔄 Reopened: ultrawide selector/tut overlay alignment pass + selector test coverage updates.\n\n- Updated RocketSelectorUIBuilder to fixed no-scroll card layout with centered cards and larger action affordances.\n- Updated LaunchpadSelectorPanel layout mode: near full-screen when no awaiting rocket, compact when awaiting rocket exists.\n- Added tests in scene/tests/run_experience_tests.gd:  and .\n- Updated scene/tests/TEST_DESCRIPTIONS.md.\n- Validation: run_experience_tests.gd (21/21 pass), run_tutorial_tests.gd (2/2 pass)."
+        }
+      ],
+      "snapshot": {
+        "title": "Mission selector progression and rocket/target gating (M1-M3)",
+        "description": "Implement progression-aware mission selector and gating behavior from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg. Include pre-selected target in M1, L2 unlock/progression timing, and distance/capability constraints.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "missions",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Mission selector reflects available rockets and mission progression state"
+          },
+          {
+            "completed": false,
+            "text": "M1 target is pre-selected and follows no-scanner flow"
+          },
+          {
+            "completed": false,
+            "text": "M2 requires/uses L2 rocket progression and same-target richer-yield behavior"
+          },
+          {
+            "completed": false,
+            "text": "Target list indicates when options are blocked by range/capability"
+          }
+        ],
+        "implementationPlan": "1. Review existing mission/launchpad/debrief flows and progression docs (@doc/dev/sprint-3-mission-preview-sync-rebuild, @doc/dev/sprint-4-return-flow-debrief-systems, @doc/dev/sprint-5-stabilization-routing-refactor) and align handwritten requirements from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg.\n2. Implement mission-stage helpers (M1/M2/M3) and progression checks in RocketsManager (mission count, current stage, selected rocket level).\n3. Update Launchpad selector target list to show distance + required level/capability, disable blocked targets, and auto pre-select Mission 1 target.\n4. Enforce target/rocket compatibility at launch to prevent bypassing selector gating.\n5. Run focused Godot script checks/tests and update task notes + AC status.",
+        "implementationNotes": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass).\n\n🔄 Reopened from editor repro: harden LaunchHUD/LaunchButton lookup to tolerate node naming variants and ensure show/hide/countdown resolve consistently.\n\n🔄 Reopened: user requested complete rocket-selector UI rebuild (no scroll, full-screen when no awaiting rocket).\n\n✓ Rebuilt Available Rockets selector UI from scratch: removed ScrollContainer, switched to fixed no-scroll full layout with centered large cards and larger create actions. Selector panel now expands to near full-screen when no awaiting rocket exists, and uses compact bounds when awaiting rocket is present.\n\n🔄 Reopened: ultrawide selector/tut overlay alignment pass + selector test coverage updates.\n\n- Updated RocketSelectorUIBuilder to fixed no-scroll card layout with centered cards and larger action affordances.\n- Updated LaunchpadSelectorPanel layout mode: near full-screen when no awaiting rocket, compact when awaiting rocket exists.\n- Added tests in scene/tests/run_experience_tests.gd:  and .\n- Updated scene/tests/TEST_DESCRIPTIONS.md.\n- Validation: run_experience_tests.gd (21/21 pass), run_tutorial_tests.gd (2/2 pass)."
+      }
+    },
+    {
+      "id": "v11",
+      "taskId": "x48i3q",
+      "version": 11,
+      "timestamp": "2026-02-17T05:22:15.002Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass).\n\n🔄 Reopened from editor repro: harden LaunchHUD/LaunchButton lookup to tolerate node naming variants and ensure show/hide/countdown resolve consistently.\n\n🔄 Reopened: user requested complete rocket-selector UI rebuild (no scroll, full-screen when no awaiting rocket).\n\n✓ Rebuilt Available Rockets selector UI from scratch: removed ScrollContainer, switched to fixed no-scroll full layout with centered large cards and larger create actions. Selector panel now expands to near full-screen when no awaiting rocket exists, and uses compact bounds when awaiting rocket is present.\n\n🔄 Reopened: ultrawide selector/tut overlay alignment pass + selector test coverage updates.\n\n- Updated RocketSelectorUIBuilder to fixed no-scroll card layout with centered cards and larger action affordances.\n- Updated LaunchpadSelectorPanel layout mode: near full-screen when no awaiting rocket, compact when awaiting rocket exists.\n- Added tests in scene/tests/run_experience_tests.gd:  and .\n- Updated scene/tests/TEST_DESCRIPTIONS.md.\n- Validation: run_experience_tests.gd (21/21 pass), run_tutorial_tests.gd (2/2 pass).",
+          "newValue": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass).\n\n🔄 Reopened from editor repro: harden LaunchHUD/LaunchButton lookup to tolerate node naming variants and ensure show/hide/countdown resolve consistently.\n\n🔄 Reopened: user requested complete rocket-selector UI rebuild (no scroll, full-screen when no awaiting rocket).\n\n✓ Rebuilt Available Rockets selector UI from scratch: removed ScrollContainer, switched to fixed no-scroll full layout with centered large cards and larger create actions. Selector panel now expands to near full-screen when no awaiting rocket exists, and uses compact bounds when awaiting rocket is present.\n\n🔄 Reopened: ultrawide selector/tut overlay alignment pass + selector test coverage updates.\n\n- Updated RocketSelectorUIBuilder to fixed no-scroll card layout with centered cards and larger action affordances.\n- Updated LaunchpadSelectorPanel layout mode: near full-screen when no awaiting rocket, compact when awaiting rocket exists.\n- Added tests in scene/tests/run_experience_tests.gd:  and .\n- Updated scene/tests/TEST_DESCRIPTIONS.md.\n- Validation: run_experience_tests.gd (21/21 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: added selector layout tests in scene/tests/run_experience_tests.gd (test_rocket_selector_ui_has_no_scroll_container, test_launchpad_selector_panel_fullscreen_without_awaiting)."
+        }
+      ],
+      "snapshot": {
+        "title": "Mission selector progression and rocket/target gating (M1-M3)",
+        "description": "Implement progression-aware mission selector and gating behavior from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg. Include pre-selected target in M1, L2 unlock/progression timing, and distance/capability constraints.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "missions",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Mission selector reflects available rockets and mission progression state"
+          },
+          {
+            "completed": false,
+            "text": "M1 target is pre-selected and follows no-scanner flow"
+          },
+          {
+            "completed": false,
+            "text": "M2 requires/uses L2 rocket progression and same-target richer-yield behavior"
+          },
+          {
+            "completed": false,
+            "text": "Target list indicates when options are blocked by range/capability"
+          }
+        ],
+        "implementationPlan": "1. Review existing mission/launchpad/debrief flows and progression docs (@doc/dev/sprint-3-mission-preview-sync-rebuild, @doc/dev/sprint-4-return-flow-debrief-systems, @doc/dev/sprint-5-stabilization-routing-refactor) and align handwritten requirements from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg.\n2. Implement mission-stage helpers (M1/M2/M3) and progression checks in RocketsManager (mission count, current stage, selected rocket level).\n3. Update Launchpad selector target list to show distance + required level/capability, disable blocked targets, and auto pre-select Mission 1 target.\n4. Enforce target/rocket compatibility at launch to prevent bypassing selector gating.\n5. Run focused Godot script checks/tests and update task notes + AC status.",
+        "implementationNotes": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass).\n\n🔄 Reopened from editor repro: harden LaunchHUD/LaunchButton lookup to tolerate node naming variants and ensure show/hide/countdown resolve consistently.\n\n🔄 Reopened: user requested complete rocket-selector UI rebuild (no scroll, full-screen when no awaiting rocket).\n\n✓ Rebuilt Available Rockets selector UI from scratch: removed ScrollContainer, switched to fixed no-scroll full layout with centered large cards and larger create actions. Selector panel now expands to near full-screen when no awaiting rocket exists, and uses compact bounds when awaiting rocket is present.\n\n🔄 Reopened: ultrawide selector/tut overlay alignment pass + selector test coverage updates.\n\n- Updated RocketSelectorUIBuilder to fixed no-scroll card layout with centered cards and larger action affordances.\n- Updated LaunchpadSelectorPanel layout mode: near full-screen when no awaiting rocket, compact when awaiting rocket exists.\n- Added tests in scene/tests/run_experience_tests.gd:  and .\n- Updated scene/tests/TEST_DESCRIPTIONS.md.\n- Validation: run_experience_tests.gd (21/21 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: added selector layout tests in scene/tests/run_experience_tests.gd (test_rocket_selector_ui_has_no_scroll_container, test_launchpad_selector_panel_fullscreen_without_awaiting)."
+      }
+    },
+    {
+      "id": "v12",
+      "taskId": "x48i3q",
+      "version": 12,
+      "timestamp": "2026-02-17T05:30:11.744Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "done",
+          "newValue": "in-progress"
+        }
+      ],
+      "snapshot": {
+        "title": "Mission selector progression and rocket/target gating (M1-M3)",
+        "description": "Implement progression-aware mission selector and gating behavior from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg. Include pre-selected target in M1, L2 unlock/progression timing, and distance/capability constraints.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "missions",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Mission selector reflects available rockets and mission progression state"
+          },
+          {
+            "completed": false,
+            "text": "M1 target is pre-selected and follows no-scanner flow"
+          },
+          {
+            "completed": false,
+            "text": "M2 requires/uses L2 rocket progression and same-target richer-yield behavior"
+          },
+          {
+            "completed": false,
+            "text": "Target list indicates when options are blocked by range/capability"
+          }
+        ],
+        "implementationPlan": "1. Review existing mission/launchpad/debrief flows and progression docs (@doc/dev/sprint-3-mission-preview-sync-rebuild, @doc/dev/sprint-4-return-flow-debrief-systems, @doc/dev/sprint-5-stabilization-routing-refactor) and align handwritten requirements from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg.\n2. Implement mission-stage helpers (M1/M2/M3) and progression checks in RocketsManager (mission count, current stage, selected rocket level).\n3. Update Launchpad selector target list to show distance + required level/capability, disable blocked targets, and auto pre-select Mission 1 target.\n4. Enforce target/rocket compatibility at launch to prevent bypassing selector gating.\n5. Run focused Godot script checks/tests and update task notes + AC status.",
+        "implementationNotes": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass).\n\n🔄 Reopened from editor repro: harden LaunchHUD/LaunchButton lookup to tolerate node naming variants and ensure show/hide/countdown resolve consistently.\n\n🔄 Reopened: user requested complete rocket-selector UI rebuild (no scroll, full-screen when no awaiting rocket).\n\n✓ Rebuilt Available Rockets selector UI from scratch: removed ScrollContainer, switched to fixed no-scroll full layout with centered large cards and larger create actions. Selector panel now expands to near full-screen when no awaiting rocket exists, and uses compact bounds when awaiting rocket is present.\n\n🔄 Reopened: ultrawide selector/tut overlay alignment pass + selector test coverage updates.\n\n- Updated RocketSelectorUIBuilder to fixed no-scroll card layout with centered cards and larger action affordances.\n- Updated LaunchpadSelectorPanel layout mode: near full-screen when no awaiting rocket, compact when awaiting rocket exists.\n- Added tests in scene/tests/run_experience_tests.gd:  and .\n- Updated scene/tests/TEST_DESCRIPTIONS.md.\n- Validation: run_experience_tests.gd (21/21 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: added selector layout tests in scene/tests/run_experience_tests.gd (test_rocket_selector_ui_has_no_scroll_container, test_launchpad_selector_panel_fullscreen_without_awaiting)."
+      }
+    },
+    {
+      "id": "v13",
+      "taskId": "x48i3q",
+      "version": 13,
+      "timestamp": "2026-02-17T05:30:11.746Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass).\n\n🔄 Reopened from editor repro: harden LaunchHUD/LaunchButton lookup to tolerate node naming variants and ensure show/hide/countdown resolve consistently.\n\n🔄 Reopened: user requested complete rocket-selector UI rebuild (no scroll, full-screen when no awaiting rocket).\n\n✓ Rebuilt Available Rockets selector UI from scratch: removed ScrollContainer, switched to fixed no-scroll full layout with centered large cards and larger create actions. Selector panel now expands to near full-screen when no awaiting rocket exists, and uses compact bounds when awaiting rocket is present.\n\n🔄 Reopened: ultrawide selector/tut overlay alignment pass + selector test coverage updates.\n\n- Updated RocketSelectorUIBuilder to fixed no-scroll card layout with centered cards and larger action affordances.\n- Updated LaunchpadSelectorPanel layout mode: near full-screen when no awaiting rocket, compact when awaiting rocket exists.\n- Added tests in scene/tests/run_experience_tests.gd:  and .\n- Updated scene/tests/TEST_DESCRIPTIONS.md.\n- Validation: run_experience_tests.gd (21/21 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: added selector layout tests in scene/tests/run_experience_tests.gd (test_rocket_selector_ui_has_no_scroll_container, test_launchpad_selector_panel_fullscreen_without_awaiting).",
+          "newValue": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass).\n\n🔄 Reopened from editor repro: harden LaunchHUD/LaunchButton lookup to tolerate node naming variants and ensure show/hide/countdown resolve consistently.\n\n🔄 Reopened: user requested complete rocket-selector UI rebuild (no scroll, full-screen when no awaiting rocket).\n\n✓ Rebuilt Available Rockets selector UI from scratch: removed ScrollContainer, switched to fixed no-scroll full layout with centered large cards and larger create actions. Selector panel now expands to near full-screen when no awaiting rocket exists, and uses compact bounds when awaiting rocket is present.\n\n🔄 Reopened: ultrawide selector/tut overlay alignment pass + selector test coverage updates.\n\n- Updated RocketSelectorUIBuilder to fixed no-scroll card layout with centered cards and larger action affordances.\n- Updated LaunchpadSelectorPanel layout mode: near full-screen when no awaiting rocket, compact when awaiting rocket exists.\n- Added tests in scene/tests/run_experience_tests.gd:  and .\n- Updated scene/tests/TEST_DESCRIPTIONS.md.\n- Validation: run_experience_tests.gd (21/21 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: added selector layout tests in scene/tests/run_experience_tests.gd (test_rocket_selector_ui_has_no_scroll_container, test_launchpad_selector_panel_fullscreen_without_awaiting).\n\n🔄 Reopened: add editor-only mission skip/jump debug button + automated test coverage."
+        }
+      ],
+      "snapshot": {
+        "title": "Mission selector progression and rocket/target gating (M1-M3)",
+        "description": "Implement progression-aware mission selector and gating behavior from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg. Include pre-selected target in M1, L2 unlock/progression timing, and distance/capability constraints.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "missions",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Mission selector reflects available rockets and mission progression state"
+          },
+          {
+            "completed": false,
+            "text": "M1 target is pre-selected and follows no-scanner flow"
+          },
+          {
+            "completed": false,
+            "text": "M2 requires/uses L2 rocket progression and same-target richer-yield behavior"
+          },
+          {
+            "completed": false,
+            "text": "Target list indicates when options are blocked by range/capability"
+          }
+        ],
+        "implementationPlan": "1. Review existing mission/launchpad/debrief flows and progression docs (@doc/dev/sprint-3-mission-preview-sync-rebuild, @doc/dev/sprint-4-return-flow-debrief-systems, @doc/dev/sprint-5-stabilization-routing-refactor) and align handwritten requirements from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg.\n2. Implement mission-stage helpers (M1/M2/M3) and progression checks in RocketsManager (mission count, current stage, selected rocket level).\n3. Update Launchpad selector target list to show distance + required level/capability, disable blocked targets, and auto pre-select Mission 1 target.\n4. Enforce target/rocket compatibility at launch to prevent bypassing selector gating.\n5. Run focused Godot script checks/tests and update task notes + AC status.",
+        "implementationNotes": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass).\n\n🔄 Reopened from editor repro: harden LaunchHUD/LaunchButton lookup to tolerate node naming variants and ensure show/hide/countdown resolve consistently.\n\n🔄 Reopened: user requested complete rocket-selector UI rebuild (no scroll, full-screen when no awaiting rocket).\n\n✓ Rebuilt Available Rockets selector UI from scratch: removed ScrollContainer, switched to fixed no-scroll full layout with centered large cards and larger create actions. Selector panel now expands to near full-screen when no awaiting rocket exists, and uses compact bounds when awaiting rocket is present.\n\n🔄 Reopened: ultrawide selector/tut overlay alignment pass + selector test coverage updates.\n\n- Updated RocketSelectorUIBuilder to fixed no-scroll card layout with centered cards and larger action affordances.\n- Updated LaunchpadSelectorPanel layout mode: near full-screen when no awaiting rocket, compact when awaiting rocket exists.\n- Added tests in scene/tests/run_experience_tests.gd:  and .\n- Updated scene/tests/TEST_DESCRIPTIONS.md.\n- Validation: run_experience_tests.gd (21/21 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: added selector layout tests in scene/tests/run_experience_tests.gd (test_rocket_selector_ui_has_no_scroll_container, test_launchpad_selector_panel_fullscreen_without_awaiting).\n\n🔄 Reopened: add editor-only mission skip/jump debug button + automated test coverage."
+      }
+    },
+    {
+      "id": "v14",
+      "taskId": "x48i3q",
+      "version": 14,
+      "timestamp": "2026-02-17T05:30:21.533Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "oldValue": "1. Review existing mission/launchpad/debrief flows and progression docs (@doc/dev/sprint-3-mission-preview-sync-rebuild, @doc/dev/sprint-4-return-flow-debrief-systems, @doc/dev/sprint-5-stabilization-routing-refactor) and align handwritten requirements from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg.\n2. Implement mission-stage helpers (M1/M2/M3) and progression checks in RocketsManager (mission count, current stage, selected rocket level).\n3. Update Launchpad selector target list to show distance + required level/capability, disable blocked targets, and auto pre-select Mission 1 target.\n4. Enforce target/rocket compatibility at launch to prevent bypassing selector gating.\n5. Run focused Godot script checks/tests and update task notes + AC status.",
+          "newValue": "1. Add progression debug helper in RocketsManager: append a synthetic completed mission log entry and unlock L2 on first skip so mission stage advances safely without requiring full mission runtime.\n2. Add an editor-only button in Launchpad selector UI (visible only when OS.has_feature(\"editor\")) labeled skip/jump progression; wire it to the helper and refresh selector/target state immediately.\n3. Add automated test(s) in run_experience_tests.gd to verify helper behavior and progression advancement, plus guard that editor-only visibility logic does not affect non-editor paths.\n4. Run run_experience_tests.gd + run_tutorial_tests.gd and update task notes/AC/status."
+        }
+      ],
+      "snapshot": {
+        "title": "Mission selector progression and rocket/target gating (M1-M3)",
+        "description": "Implement progression-aware mission selector and gating behavior from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg. Include pre-selected target in M1, L2 unlock/progression timing, and distance/capability constraints.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "missions",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Mission selector reflects available rockets and mission progression state"
+          },
+          {
+            "completed": false,
+            "text": "M1 target is pre-selected and follows no-scanner flow"
+          },
+          {
+            "completed": false,
+            "text": "M2 requires/uses L2 rocket progression and same-target richer-yield behavior"
+          },
+          {
+            "completed": false,
+            "text": "Target list indicates when options are blocked by range/capability"
+          }
+        ],
+        "implementationPlan": "1. Add progression debug helper in RocketsManager: append a synthetic completed mission log entry and unlock L2 on first skip so mission stage advances safely without requiring full mission runtime.\n2. Add an editor-only button in Launchpad selector UI (visible only when OS.has_feature(\"editor\")) labeled skip/jump progression; wire it to the helper and refresh selector/target state immediately.\n3. Add automated test(s) in run_experience_tests.gd to verify helper behavior and progression advancement, plus guard that editor-only visibility logic does not affect non-editor paths.\n4. Run run_experience_tests.gd + run_tutorial_tests.gd and update task notes/AC/status.",
+        "implementationNotes": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass).\n\n🔄 Reopened from editor repro: harden LaunchHUD/LaunchButton lookup to tolerate node naming variants and ensure show/hide/countdown resolve consistently.\n\n🔄 Reopened: user requested complete rocket-selector UI rebuild (no scroll, full-screen when no awaiting rocket).\n\n✓ Rebuilt Available Rockets selector UI from scratch: removed ScrollContainer, switched to fixed no-scroll full layout with centered large cards and larger create actions. Selector panel now expands to near full-screen when no awaiting rocket exists, and uses compact bounds when awaiting rocket is present.\n\n🔄 Reopened: ultrawide selector/tut overlay alignment pass + selector test coverage updates.\n\n- Updated RocketSelectorUIBuilder to fixed no-scroll card layout with centered cards and larger action affordances.\n- Updated LaunchpadSelectorPanel layout mode: near full-screen when no awaiting rocket, compact when awaiting rocket exists.\n- Added tests in scene/tests/run_experience_tests.gd:  and .\n- Updated scene/tests/TEST_DESCRIPTIONS.md.\n- Validation: run_experience_tests.gd (21/21 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: added selector layout tests in scene/tests/run_experience_tests.gd (test_rocket_selector_ui_has_no_scroll_container, test_launchpad_selector_panel_fullscreen_without_awaiting).\n\n🔄 Reopened: add editor-only mission skip/jump debug button + automated test coverage."
+      }
+    },
+    {
+      "id": "v15",
+      "taskId": "x48i3q",
+      "version": 15,
+      "timestamp": "2026-02-17T05:32:21.756Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass).\n\n🔄 Reopened from editor repro: harden LaunchHUD/LaunchButton lookup to tolerate node naming variants and ensure show/hide/countdown resolve consistently.\n\n🔄 Reopened: user requested complete rocket-selector UI rebuild (no scroll, full-screen when no awaiting rocket).\n\n✓ Rebuilt Available Rockets selector UI from scratch: removed ScrollContainer, switched to fixed no-scroll full layout with centered large cards and larger create actions. Selector panel now expands to near full-screen when no awaiting rocket exists, and uses compact bounds when awaiting rocket is present.\n\n🔄 Reopened: ultrawide selector/tut overlay alignment pass + selector test coverage updates.\n\n- Updated RocketSelectorUIBuilder to fixed no-scroll card layout with centered cards and larger action affordances.\n- Updated LaunchpadSelectorPanel layout mode: near full-screen when no awaiting rocket, compact when awaiting rocket exists.\n- Added tests in scene/tests/run_experience_tests.gd:  and .\n- Updated scene/tests/TEST_DESCRIPTIONS.md.\n- Validation: run_experience_tests.gd (21/21 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: added selector layout tests in scene/tests/run_experience_tests.gd (test_rocket_selector_ui_has_no_scroll_container, test_launchpad_selector_panel_fullscreen_without_awaiting).\n\n🔄 Reopened: add editor-only mission skip/jump debug button + automated test coverage.",
+          "newValue": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass).\n\n🔄 Reopened from editor repro: harden LaunchHUD/LaunchButton lookup to tolerate node naming variants and ensure show/hide/countdown resolve consistently.\n\n🔄 Reopened: user requested complete rocket-selector UI rebuild (no scroll, full-screen when no awaiting rocket).\n\n✓ Rebuilt Available Rockets selector UI from scratch: removed ScrollContainer, switched to fixed no-scroll full layout with centered large cards and larger create actions. Selector panel now expands to near full-screen when no awaiting rocket exists, and uses compact bounds when awaiting rocket is present.\n\n🔄 Reopened: ultrawide selector/tut overlay alignment pass + selector test coverage updates.\n\n- Updated RocketSelectorUIBuilder to fixed no-scroll card layout with centered cards and larger action affordances.\n- Updated LaunchpadSelectorPanel layout mode: near full-screen when no awaiting rocket, compact when awaiting rocket exists.\n- Added tests in scene/tests/run_experience_tests.gd:  and .\n- Updated scene/tests/TEST_DESCRIPTIONS.md.\n- Validation: run_experience_tests.gd (21/21 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: added selector layout tests in scene/tests/run_experience_tests.gd (test_rocket_selector_ui_has_no_scroll_container, test_launchpad_selector_panel_fullscreen_without_awaiting).\n\n🔄 Reopened: add editor-only mission skip/jump debug button + automated test coverage.\n\n- Added editor-only debug progression button in launchpad selector () visible only when OS.has_feature('editor').\n- Added RocketsManager.debug_complete_mission_for_progression() to simulate mission completion and advance stage safely.\n- Added automated test  in scene/tests/run_experience_tests.gd with isolated mission-log path override.\n- Validation: run_experience_tests.gd (22/22 pass), run_tutorial_tests.gd (2/2 pass)."
+        }
+      ],
+      "snapshot": {
+        "title": "Mission selector progression and rocket/target gating (M1-M3)",
+        "description": "Implement progression-aware mission selector and gating behavior from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg. Include pre-selected target in M1, L2 unlock/progression timing, and distance/capability constraints.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "missions",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Mission selector reflects available rockets and mission progression state"
+          },
+          {
+            "completed": false,
+            "text": "M1 target is pre-selected and follows no-scanner flow"
+          },
+          {
+            "completed": false,
+            "text": "M2 requires/uses L2 rocket progression and same-target richer-yield behavior"
+          },
+          {
+            "completed": false,
+            "text": "Target list indicates when options are blocked by range/capability"
+          }
+        ],
+        "implementationPlan": "1. Add progression debug helper in RocketsManager: append a synthetic completed mission log entry and unlock L2 on first skip so mission stage advances safely without requiring full mission runtime.\n2. Add an editor-only button in Launchpad selector UI (visible only when OS.has_feature(\"editor\")) labeled skip/jump progression; wire it to the helper and refresh selector/target state immediately.\n3. Add automated test(s) in run_experience_tests.gd to verify helper behavior and progression advancement, plus guard that editor-only visibility logic does not affect non-editor paths.\n4. Run run_experience_tests.gd + run_tutorial_tests.gd and update task notes/AC/status.",
+        "implementationNotes": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass).\n\n🔄 Reopened from editor repro: harden LaunchHUD/LaunchButton lookup to tolerate node naming variants and ensure show/hide/countdown resolve consistently.\n\n🔄 Reopened: user requested complete rocket-selector UI rebuild (no scroll, full-screen when no awaiting rocket).\n\n✓ Rebuilt Available Rockets selector UI from scratch: removed ScrollContainer, switched to fixed no-scroll full layout with centered large cards and larger create actions. Selector panel now expands to near full-screen when no awaiting rocket exists, and uses compact bounds when awaiting rocket is present.\n\n🔄 Reopened: ultrawide selector/tut overlay alignment pass + selector test coverage updates.\n\n- Updated RocketSelectorUIBuilder to fixed no-scroll card layout with centered cards and larger action affordances.\n- Updated LaunchpadSelectorPanel layout mode: near full-screen when no awaiting rocket, compact when awaiting rocket exists.\n- Added tests in scene/tests/run_experience_tests.gd:  and .\n- Updated scene/tests/TEST_DESCRIPTIONS.md.\n- Validation: run_experience_tests.gd (21/21 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: added selector layout tests in scene/tests/run_experience_tests.gd (test_rocket_selector_ui_has_no_scroll_container, test_launchpad_selector_panel_fullscreen_without_awaiting).\n\n🔄 Reopened: add editor-only mission skip/jump debug button + automated test coverage.\n\n- Added editor-only debug progression button in launchpad selector () visible only when OS.has_feature('editor').\n- Added RocketsManager.debug_complete_mission_for_progression() to simulate mission completion and advance stage safely.\n- Added automated test  in scene/tests/run_experience_tests.gd with isolated mission-log path override.\n- Validation: run_experience_tests.gd (22/22 pass), run_tutorial_tests.gd (2/2 pass)."
+      }
+    },
+    {
+      "id": "v16",
+      "taskId": "x48i3q",
+      "version": 16,
+      "timestamp": "2026-02-17T05:32:29.843Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass).\n\n🔄 Reopened from editor repro: harden LaunchHUD/LaunchButton lookup to tolerate node naming variants and ensure show/hide/countdown resolve consistently.\n\n🔄 Reopened: user requested complete rocket-selector UI rebuild (no scroll, full-screen when no awaiting rocket).\n\n✓ Rebuilt Available Rockets selector UI from scratch: removed ScrollContainer, switched to fixed no-scroll full layout with centered large cards and larger create actions. Selector panel now expands to near full-screen when no awaiting rocket exists, and uses compact bounds when awaiting rocket is present.\n\n🔄 Reopened: ultrawide selector/tut overlay alignment pass + selector test coverage updates.\n\n- Updated RocketSelectorUIBuilder to fixed no-scroll card layout with centered cards and larger action affordances.\n- Updated LaunchpadSelectorPanel layout mode: near full-screen when no awaiting rocket, compact when awaiting rocket exists.\n- Added tests in scene/tests/run_experience_tests.gd:  and .\n- Updated scene/tests/TEST_DESCRIPTIONS.md.\n- Validation: run_experience_tests.gd (21/21 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: added selector layout tests in scene/tests/run_experience_tests.gd (test_rocket_selector_ui_has_no_scroll_container, test_launchpad_selector_panel_fullscreen_without_awaiting).\n\n🔄 Reopened: add editor-only mission skip/jump debug button + automated test coverage.\n\n- Added editor-only debug progression button in launchpad selector () visible only when OS.has_feature('editor').\n- Added RocketsManager.debug_complete_mission_for_progression() to simulate mission completion and advance stage safely.\n- Added automated test  in scene/tests/run_experience_tests.gd with isolated mission-log path override.\n- Validation: run_experience_tests.gd (22/22 pass), run_tutorial_tests.gd (2/2 pass).",
+          "newValue": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass).\n\n🔄 Reopened from editor repro: harden LaunchHUD/LaunchButton lookup to tolerate node naming variants and ensure show/hide/countdown resolve consistently.\n\n🔄 Reopened: user requested complete rocket-selector UI rebuild (no scroll, full-screen when no awaiting rocket).\n\n✓ Rebuilt Available Rockets selector UI from scratch: removed ScrollContainer, switched to fixed no-scroll full layout with centered large cards and larger create actions. Selector panel now expands to near full-screen when no awaiting rocket exists, and uses compact bounds when awaiting rocket is present.\n\n🔄 Reopened: ultrawide selector/tut overlay alignment pass + selector test coverage updates.\n\n- Updated RocketSelectorUIBuilder to fixed no-scroll card layout with centered cards and larger action affordances.\n- Updated LaunchpadSelectorPanel layout mode: near full-screen when no awaiting rocket, compact when awaiting rocket exists.\n- Added tests in scene/tests/run_experience_tests.gd:  and .\n- Updated scene/tests/TEST_DESCRIPTIONS.md.\n- Validation: run_experience_tests.gd (21/21 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: added selector layout tests in scene/tests/run_experience_tests.gd (test_rocket_selector_ui_has_no_scroll_container, test_launchpad_selector_panel_fullscreen_without_awaiting).\n\n🔄 Reopened: add editor-only mission skip/jump debug button + automated test coverage.\n\n- Added editor-only debug progression button in launchpad selector () visible only when OS.has_feature('editor').\n- Added RocketsManager.debug_complete_mission_for_progression() to simulate mission completion and advance stage safely.\n- Added automated test  in scene/tests/run_experience_tests.gd with isolated mission-log path override.\n- Validation: run_experience_tests.gd (22/22 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: editor-only button label is Debug: Skip Mission. Added test function test_debug_skip_mission_advances_progression in scene/tests/run_experience_tests.gd."
+        }
+      ],
+      "snapshot": {
+        "title": "Mission selector progression and rocket/target gating (M1-M3)",
+        "description": "Implement progression-aware mission selector and gating behavior from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg. Include pre-selected target in M1, L2 unlock/progression timing, and distance/capability constraints.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "missions",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Mission selector reflects available rockets and mission progression state"
+          },
+          {
+            "completed": false,
+            "text": "M1 target is pre-selected and follows no-scanner flow"
+          },
+          {
+            "completed": false,
+            "text": "M2 requires/uses L2 rocket progression and same-target richer-yield behavior"
+          },
+          {
+            "completed": false,
+            "text": "Target list indicates when options are blocked by range/capability"
+          }
+        ],
+        "implementationPlan": "1. Add progression debug helper in RocketsManager: append a synthetic completed mission log entry and unlock L2 on first skip so mission stage advances safely without requiring full mission runtime.\n2. Add an editor-only button in Launchpad selector UI (visible only when OS.has_feature(\"editor\")) labeled skip/jump progression; wire it to the helper and refresh selector/target state immediately.\n3. Add automated test(s) in run_experience_tests.gd to verify helper behavior and progression advancement, plus guard that editor-only visibility logic does not affect non-editor paths.\n4. Run run_experience_tests.gd + run_tutorial_tests.gd and update task notes/AC/status.",
+        "implementationNotes": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass).\n\n🔄 Reopened from editor repro: harden LaunchHUD/LaunchButton lookup to tolerate node naming variants and ensure show/hide/countdown resolve consistently.\n\n🔄 Reopened: user requested complete rocket-selector UI rebuild (no scroll, full-screen when no awaiting rocket).\n\n✓ Rebuilt Available Rockets selector UI from scratch: removed ScrollContainer, switched to fixed no-scroll full layout with centered large cards and larger create actions. Selector panel now expands to near full-screen when no awaiting rocket exists, and uses compact bounds when awaiting rocket is present.\n\n🔄 Reopened: ultrawide selector/tut overlay alignment pass + selector test coverage updates.\n\n- Updated RocketSelectorUIBuilder to fixed no-scroll card layout with centered cards and larger action affordances.\n- Updated LaunchpadSelectorPanel layout mode: near full-screen when no awaiting rocket, compact when awaiting rocket exists.\n- Added tests in scene/tests/run_experience_tests.gd:  and .\n- Updated scene/tests/TEST_DESCRIPTIONS.md.\n- Validation: run_experience_tests.gd (21/21 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: added selector layout tests in scene/tests/run_experience_tests.gd (test_rocket_selector_ui_has_no_scroll_container, test_launchpad_selector_panel_fullscreen_without_awaiting).\n\n🔄 Reopened: add editor-only mission skip/jump debug button + automated test coverage.\n\n- Added editor-only debug progression button in launchpad selector () visible only when OS.has_feature('editor').\n- Added RocketsManager.debug_complete_mission_for_progression() to simulate mission completion and advance stage safely.\n- Added automated test  in scene/tests/run_experience_tests.gd with isolated mission-log path override.\n- Validation: run_experience_tests.gd (22/22 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: editor-only button label is Debug: Skip Mission. Added test function test_debug_skip_mission_advances_progression in scene/tests/run_experience_tests.gd."
+      }
+    },
+    {
+      "id": "v17",
+      "taskId": "x48i3q",
+      "version": 17,
+      "timestamp": "2026-02-17T05:35:28.848Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "done",
+          "newValue": "in-progress"
+        }
+      ],
+      "snapshot": {
+        "title": "Mission selector progression and rocket/target gating (M1-M3)",
+        "description": "Implement progression-aware mission selector and gating behavior from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg. Include pre-selected target in M1, L2 unlock/progression timing, and distance/capability constraints.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "missions",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Mission selector reflects available rockets and mission progression state"
+          },
+          {
+            "completed": false,
+            "text": "M1 target is pre-selected and follows no-scanner flow"
+          },
+          {
+            "completed": false,
+            "text": "M2 requires/uses L2 rocket progression and same-target richer-yield behavior"
+          },
+          {
+            "completed": false,
+            "text": "Target list indicates when options are blocked by range/capability"
+          }
+        ],
+        "implementationPlan": "1. Add progression debug helper in RocketsManager: append a synthetic completed mission log entry and unlock L2 on first skip so mission stage advances safely without requiring full mission runtime.\n2. Add an editor-only button in Launchpad selector UI (visible only when OS.has_feature(\"editor\")) labeled skip/jump progression; wire it to the helper and refresh selector/target state immediately.\n3. Add automated test(s) in run_experience_tests.gd to verify helper behavior and progression advancement, plus guard that editor-only visibility logic does not affect non-editor paths.\n4. Run run_experience_tests.gd + run_tutorial_tests.gd and update task notes/AC/status.",
+        "implementationNotes": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass).\n\n🔄 Reopened from editor repro: harden LaunchHUD/LaunchButton lookup to tolerate node naming variants and ensure show/hide/countdown resolve consistently.\n\n🔄 Reopened: user requested complete rocket-selector UI rebuild (no scroll, full-screen when no awaiting rocket).\n\n✓ Rebuilt Available Rockets selector UI from scratch: removed ScrollContainer, switched to fixed no-scroll full layout with centered large cards and larger create actions. Selector panel now expands to near full-screen when no awaiting rocket exists, and uses compact bounds when awaiting rocket is present.\n\n🔄 Reopened: ultrawide selector/tut overlay alignment pass + selector test coverage updates.\n\n- Updated RocketSelectorUIBuilder to fixed no-scroll card layout with centered cards and larger action affordances.\n- Updated LaunchpadSelectorPanel layout mode: near full-screen when no awaiting rocket, compact when awaiting rocket exists.\n- Added tests in scene/tests/run_experience_tests.gd:  and .\n- Updated scene/tests/TEST_DESCRIPTIONS.md.\n- Validation: run_experience_tests.gd (21/21 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: added selector layout tests in scene/tests/run_experience_tests.gd (test_rocket_selector_ui_has_no_scroll_container, test_launchpad_selector_panel_fullscreen_without_awaiting).\n\n🔄 Reopened: add editor-only mission skip/jump debug button + automated test coverage.\n\n- Added editor-only debug progression button in launchpad selector () visible only when OS.has_feature('editor').\n- Added RocketsManager.debug_complete_mission_for_progression() to simulate mission completion and advance stage safely.\n- Added automated test  in scene/tests/run_experience_tests.gd with isolated mission-log path override.\n- Validation: run_experience_tests.gd (22/22 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: editor-only button label is Debug: Skip Mission. Added test function test_debug_skip_mission_advances_progression in scene/tests/run_experience_tests.gd."
+      }
+    },
+    {
+      "id": "v18",
+      "taskId": "x48i3q",
+      "version": 18,
+      "timestamp": "2026-02-17T05:36:49.390Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "oldValue": "1. Add progression debug helper in RocketsManager: append a synthetic completed mission log entry and unlock L2 on first skip so mission stage advances safely without requiring full mission runtime.\n2. Add an editor-only button in Launchpad selector UI (visible only when OS.has_feature(\"editor\")) labeled skip/jump progression; wire it to the helper and refresh selector/target state immediately.\n3. Add automated test(s) in run_experience_tests.gd to verify helper behavior and progression advancement, plus guard that editor-only visibility logic does not affect non-editor paths.\n4. Run run_experience_tests.gd + run_tutorial_tests.gd and update task notes/AC/status.",
+          "newValue": "1. Stabilize Supabase fetch startup path: defer/retry HTTPRequest kickoff when request returns ERR_UNCONFIGURED/early-init failure (the `Failed to create HTTP request: 3` log).\n2. Harden LaunchHUD lookup/connection: prefer real HUD with LaunchButton over empty `LaunchHUDInstance`, and add bounded retry so initial earth_launchpad load binds reliably.\n3. Add regression tests in `scene/tests/run_experience_tests.gd` for LaunchHUD resolution preference and/or safe connection path.\n4. Run headless test suite (`run_experience_tests.gd` and `run_tutorial_tests.gd`) and update task notes/status."
+        }
+      ],
+      "snapshot": {
+        "title": "Mission selector progression and rocket/target gating (M1-M3)",
+        "description": "Implement progression-aware mission selector and gating behavior from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg. Include pre-selected target in M1, L2 unlock/progression timing, and distance/capability constraints.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "missions",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Mission selector reflects available rockets and mission progression state"
+          },
+          {
+            "completed": false,
+            "text": "M1 target is pre-selected and follows no-scanner flow"
+          },
+          {
+            "completed": false,
+            "text": "M2 requires/uses L2 rocket progression and same-target richer-yield behavior"
+          },
+          {
+            "completed": false,
+            "text": "Target list indicates when options are blocked by range/capability"
+          }
+        ],
+        "implementationPlan": "1. Stabilize Supabase fetch startup path: defer/retry HTTPRequest kickoff when request returns ERR_UNCONFIGURED/early-init failure (the `Failed to create HTTP request: 3` log).\n2. Harden LaunchHUD lookup/connection: prefer real HUD with LaunchButton over empty `LaunchHUDInstance`, and add bounded retry so initial earth_launchpad load binds reliably.\n3. Add regression tests in `scene/tests/run_experience_tests.gd` for LaunchHUD resolution preference and/or safe connection path.\n4. Run headless test suite (`run_experience_tests.gd` and `run_tutorial_tests.gd`) and update task notes/status.",
+        "implementationNotes": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass).\n\n🔄 Reopened from editor repro: harden LaunchHUD/LaunchButton lookup to tolerate node naming variants and ensure show/hide/countdown resolve consistently.\n\n🔄 Reopened: user requested complete rocket-selector UI rebuild (no scroll, full-screen when no awaiting rocket).\n\n✓ Rebuilt Available Rockets selector UI from scratch: removed ScrollContainer, switched to fixed no-scroll full layout with centered large cards and larger create actions. Selector panel now expands to near full-screen when no awaiting rocket exists, and uses compact bounds when awaiting rocket is present.\n\n🔄 Reopened: ultrawide selector/tut overlay alignment pass + selector test coverage updates.\n\n- Updated RocketSelectorUIBuilder to fixed no-scroll card layout with centered cards and larger action affordances.\n- Updated LaunchpadSelectorPanel layout mode: near full-screen when no awaiting rocket, compact when awaiting rocket exists.\n- Added tests in scene/tests/run_experience_tests.gd:  and .\n- Updated scene/tests/TEST_DESCRIPTIONS.md.\n- Validation: run_experience_tests.gd (21/21 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: added selector layout tests in scene/tests/run_experience_tests.gd (test_rocket_selector_ui_has_no_scroll_container, test_launchpad_selector_panel_fullscreen_without_awaiting).\n\n🔄 Reopened: add editor-only mission skip/jump debug button + automated test coverage.\n\n- Added editor-only debug progression button in launchpad selector () visible only when OS.has_feature('editor').\n- Added RocketsManager.debug_complete_mission_for_progression() to simulate mission completion and advance stage safely.\n- Added automated test  in scene/tests/run_experience_tests.gd with isolated mission-log path override.\n- Validation: run_experience_tests.gd (22/22 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: editor-only button label is Debug: Skip Mission. Added test function test_debug_skip_mission_advances_progression in scene/tests/run_experience_tests.gd."
+      }
+    },
+    {
+      "id": "v19",
+      "taskId": "x48i3q",
+      "version": 19,
+      "timestamp": "2026-02-17T05:43:35.008Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Mission selector reflects available rockets and mission progression state"
+            },
+            {
+              "completed": false,
+              "text": "M1 target is pre-selected and follows no-scanner flow"
+            },
+            {
+              "completed": false,
+              "text": "M2 requires/uses L2 rocket progression and same-target richer-yield behavior"
+            },
+            {
+              "completed": false,
+              "text": "Target list indicates when options are blocked by range/capability"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Mission selector reflects available rockets and mission progression state"
+            },
+            {
+              "completed": true,
+              "text": "M1 target is pre-selected and follows no-scanner flow"
+            },
+            {
+              "completed": true,
+              "text": "M2 requires/uses L2 rocket progression and same-target richer-yield behavior"
+            },
+            {
+              "completed": true,
+              "text": "Target list indicates when options are blocked by range/capability"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Mission selector progression and rocket/target gating (M1-M3)",
+        "description": "Implement progression-aware mission selector and gating behavior from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg. Include pre-selected target in M1, L2 unlock/progression timing, and distance/capability constraints.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "missions",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Mission selector reflects available rockets and mission progression state"
+          },
+          {
+            "completed": true,
+            "text": "M1 target is pre-selected and follows no-scanner flow"
+          },
+          {
+            "completed": true,
+            "text": "M2 requires/uses L2 rocket progression and same-target richer-yield behavior"
+          },
+          {
+            "completed": true,
+            "text": "Target list indicates when options are blocked by range/capability"
+          }
+        ],
+        "implementationPlan": "1. Stabilize Supabase fetch startup path: defer/retry HTTPRequest kickoff when request returns ERR_UNCONFIGURED/early-init failure (the `Failed to create HTTP request: 3` log).\n2. Harden LaunchHUD lookup/connection: prefer real HUD with LaunchButton over empty `LaunchHUDInstance`, and add bounded retry so initial earth_launchpad load binds reliably.\n3. Add regression tests in `scene/tests/run_experience_tests.gd` for LaunchHUD resolution preference and/or safe connection path.\n4. Run headless test suite (`run_experience_tests.gd` and `run_tutorial_tests.gd`) and update task notes/status.",
+        "implementationNotes": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass).\n\n🔄 Reopened from editor repro: harden LaunchHUD/LaunchButton lookup to tolerate node naming variants and ensure show/hide/countdown resolve consistently.\n\n🔄 Reopened: user requested complete rocket-selector UI rebuild (no scroll, full-screen when no awaiting rocket).\n\n✓ Rebuilt Available Rockets selector UI from scratch: removed ScrollContainer, switched to fixed no-scroll full layout with centered large cards and larger create actions. Selector panel now expands to near full-screen when no awaiting rocket exists, and uses compact bounds when awaiting rocket is present.\n\n🔄 Reopened: ultrawide selector/tut overlay alignment pass + selector test coverage updates.\n\n- Updated RocketSelectorUIBuilder to fixed no-scroll card layout with centered cards and larger action affordances.\n- Updated LaunchpadSelectorPanel layout mode: near full-screen when no awaiting rocket, compact when awaiting rocket exists.\n- Added tests in scene/tests/run_experience_tests.gd:  and .\n- Updated scene/tests/TEST_DESCRIPTIONS.md.\n- Validation: run_experience_tests.gd (21/21 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: added selector layout tests in scene/tests/run_experience_tests.gd (test_rocket_selector_ui_has_no_scroll_container, test_launchpad_selector_panel_fullscreen_without_awaiting).\n\n🔄 Reopened: add editor-only mission skip/jump debug button + automated test coverage.\n\n- Added editor-only debug progression button in launchpad selector () visible only when OS.has_feature('editor').\n- Added RocketsManager.debug_complete_mission_for_progression() to simulate mission completion and advance stage safely.\n- Added automated test  in scene/tests/run_experience_tests.gd with isolated mission-log path override.\n- Validation: run_experience_tests.gd (22/22 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: editor-only button label is Debug: Skip Mission. Added test function test_debug_skip_mission_advances_progression in scene/tests/run_experience_tests.gd."
+      }
+    },
+    {
+      "id": "v20",
+      "taskId": "x48i3q",
+      "version": 20,
+      "timestamp": "2026-02-17T05:43:35.206Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass).\n\n🔄 Reopened from editor repro: harden LaunchHUD/LaunchButton lookup to tolerate node naming variants and ensure show/hide/countdown resolve consistently.\n\n🔄 Reopened: user requested complete rocket-selector UI rebuild (no scroll, full-screen when no awaiting rocket).\n\n✓ Rebuilt Available Rockets selector UI from scratch: removed ScrollContainer, switched to fixed no-scroll full layout with centered large cards and larger create actions. Selector panel now expands to near full-screen when no awaiting rocket exists, and uses compact bounds when awaiting rocket is present.\n\n🔄 Reopened: ultrawide selector/tut overlay alignment pass + selector test coverage updates.\n\n- Updated RocketSelectorUIBuilder to fixed no-scroll card layout with centered cards and larger action affordances.\n- Updated LaunchpadSelectorPanel layout mode: near full-screen when no awaiting rocket, compact when awaiting rocket exists.\n- Added tests in scene/tests/run_experience_tests.gd:  and .\n- Updated scene/tests/TEST_DESCRIPTIONS.md.\n- Validation: run_experience_tests.gd (21/21 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: added selector layout tests in scene/tests/run_experience_tests.gd (test_rocket_selector_ui_has_no_scroll_container, test_launchpad_selector_panel_fullscreen_without_awaiting).\n\n🔄 Reopened: add editor-only mission skip/jump debug button + automated test coverage.\n\n- Added editor-only debug progression button in launchpad selector () visible only when OS.has_feature('editor').\n- Added RocketsManager.debug_complete_mission_for_progression() to simulate mission completion and advance stage safely.\n- Added automated test  in scene/tests/run_experience_tests.gd with isolated mission-log path override.\n- Validation: run_experience_tests.gd (22/22 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: editor-only button label is Debug: Skip Mission. Added test function test_debug_skip_mission_advances_progression in scene/tests/run_experience_tests.gd.",
+          "newValue": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass).\n\n🔄 Reopened from editor repro: harden LaunchHUD/LaunchButton lookup to tolerate node naming variants and ensure show/hide/countdown resolve consistently.\n\n🔄 Reopened: user requested complete rocket-selector UI rebuild (no scroll, full-screen when no awaiting rocket).\n\n✓ Rebuilt Available Rockets selector UI from scratch: removed ScrollContainer, switched to fixed no-scroll full layout with centered large cards and larger create actions. Selector panel now expands to near full-screen when no awaiting rocket exists, and uses compact bounds when awaiting rocket is present.\n\n🔄 Reopened: ultrawide selector/tut overlay alignment pass + selector test coverage updates.\n\n- Updated RocketSelectorUIBuilder to fixed no-scroll card layout with centered cards and larger action affordances.\n- Updated LaunchpadSelectorPanel layout mode: near full-screen when no awaiting rocket, compact when awaiting rocket exists.\n- Added tests in scene/tests/run_experience_tests.gd:  and .\n- Updated scene/tests/TEST_DESCRIPTIONS.md.\n- Validation: run_experience_tests.gd (21/21 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: added selector layout tests in scene/tests/run_experience_tests.gd (test_rocket_selector_ui_has_no_scroll_container, test_launchpad_selector_panel_fullscreen_without_awaiting).\n\n🔄 Reopened: add editor-only mission skip/jump debug button + automated test coverage.\n\n- Added editor-only debug progression button in launchpad selector () visible only when OS.has_feature('editor').\n- Added RocketsManager.debug_complete_mission_for_progression() to simulate mission completion and advance stage safely.\n- Added automated test  in scene/tests/run_experience_tests.gd with isolated mission-log path override.\n- Validation: run_experience_tests.gd (22/22 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: editor-only button label is Debug: Skip Mission. Added test function test_debug_skip_mission_advances_progression in scene/tests/run_experience_tests.gd.\n\n🔧 Launchpad error fix pass (2026-02-17):\n- SupabaseClient request startup hardened: deferred kickoff + bounded retry for ERR_UNCONFIGURED ().\n- LaunchHUD resolver now prefers HUD node containing LaunchButton, avoiding empty LaunchHUDInstance selection race on first frame.\n- Added regression test: test_launch_hud_resolution_prefers_node_with_button in scene/tests/run_experience_tests.gd.\n- Validation: run_experience_tests.gd (23/23 pass), run_tutorial_tests.gd (2/2 pass)."
+        }
+      ],
+      "snapshot": {
+        "title": "Mission selector progression and rocket/target gating (M1-M3)",
+        "description": "Implement progression-aware mission selector and gating behavior from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg. Include pre-selected target in M1, L2 unlock/progression timing, and distance/capability constraints.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "missions",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Mission selector reflects available rockets and mission progression state"
+          },
+          {
+            "completed": true,
+            "text": "M1 target is pre-selected and follows no-scanner flow"
+          },
+          {
+            "completed": true,
+            "text": "M2 requires/uses L2 rocket progression and same-target richer-yield behavior"
+          },
+          {
+            "completed": true,
+            "text": "Target list indicates when options are blocked by range/capability"
+          }
+        ],
+        "implementationPlan": "1. Stabilize Supabase fetch startup path: defer/retry HTTPRequest kickoff when request returns ERR_UNCONFIGURED/early-init failure (the `Failed to create HTTP request: 3` log).\n2. Harden LaunchHUD lookup/connection: prefer real HUD with LaunchButton over empty `LaunchHUDInstance`, and add bounded retry so initial earth_launchpad load binds reliably.\n3. Add regression tests in `scene/tests/run_experience_tests.gd` for LaunchHUD resolution preference and/or safe connection path.\n4. Run headless test suite (`run_experience_tests.gd` and `run_tutorial_tests.gd`) and update task notes/status.",
+        "implementationNotes": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass).\n\n🔄 Reopened from editor repro: harden LaunchHUD/LaunchButton lookup to tolerate node naming variants and ensure show/hide/countdown resolve consistently.\n\n🔄 Reopened: user requested complete rocket-selector UI rebuild (no scroll, full-screen when no awaiting rocket).\n\n✓ Rebuilt Available Rockets selector UI from scratch: removed ScrollContainer, switched to fixed no-scroll full layout with centered large cards and larger create actions. Selector panel now expands to near full-screen when no awaiting rocket exists, and uses compact bounds when awaiting rocket is present.\n\n🔄 Reopened: ultrawide selector/tut overlay alignment pass + selector test coverage updates.\n\n- Updated RocketSelectorUIBuilder to fixed no-scroll card layout with centered cards and larger action affordances.\n- Updated LaunchpadSelectorPanel layout mode: near full-screen when no awaiting rocket, compact when awaiting rocket exists.\n- Added tests in scene/tests/run_experience_tests.gd:  and .\n- Updated scene/tests/TEST_DESCRIPTIONS.md.\n- Validation: run_experience_tests.gd (21/21 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: added selector layout tests in scene/tests/run_experience_tests.gd (test_rocket_selector_ui_has_no_scroll_container, test_launchpad_selector_panel_fullscreen_without_awaiting).\n\n🔄 Reopened: add editor-only mission skip/jump debug button + automated test coverage.\n\n- Added editor-only debug progression button in launchpad selector () visible only when OS.has_feature('editor').\n- Added RocketsManager.debug_complete_mission_for_progression() to simulate mission completion and advance stage safely.\n- Added automated test  in scene/tests/run_experience_tests.gd with isolated mission-log path override.\n- Validation: run_experience_tests.gd (22/22 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: editor-only button label is Debug: Skip Mission. Added test function test_debug_skip_mission_advances_progression in scene/tests/run_experience_tests.gd.\n\n🔧 Launchpad error fix pass (2026-02-17):\n- SupabaseClient request startup hardened: deferred kickoff + bounded retry for ERR_UNCONFIGURED ().\n- LaunchHUD resolver now prefers HUD node containing LaunchButton, avoiding empty LaunchHUDInstance selection race on first frame.\n- Added regression test: test_launch_hud_resolution_prefers_node_with_button in scene/tests/run_experience_tests.gd.\n- Validation: run_experience_tests.gd (23/23 pass), run_tutorial_tests.gd (2/2 pass)."
+      }
+    },
+    {
+      "id": "v21",
+      "taskId": "x48i3q",
+      "version": 21,
+      "timestamp": "2026-02-17T05:43:35.594Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Mission selector progression and rocket/target gating (M1-M3)",
+        "description": "Implement progression-aware mission selector and gating behavior from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg. Include pre-selected target in M1, L2 unlock/progression timing, and distance/capability constraints.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "missions",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Mission selector reflects available rockets and mission progression state"
+          },
+          {
+            "completed": true,
+            "text": "M1 target is pre-selected and follows no-scanner flow"
+          },
+          {
+            "completed": true,
+            "text": "M2 requires/uses L2 rocket progression and same-target richer-yield behavior"
+          },
+          {
+            "completed": true,
+            "text": "Target list indicates when options are blocked by range/capability"
+          }
+        ],
+        "implementationPlan": "1. Stabilize Supabase fetch startup path: defer/retry HTTPRequest kickoff when request returns ERR_UNCONFIGURED/early-init failure (the `Failed to create HTTP request: 3` log).\n2. Harden LaunchHUD lookup/connection: prefer real HUD with LaunchButton over empty `LaunchHUDInstance`, and add bounded retry so initial earth_launchpad load binds reliably.\n3. Add regression tests in `scene/tests/run_experience_tests.gd` for LaunchHUD resolution preference and/or safe connection path.\n4. Run headless test suite (`run_experience_tests.gd` and `run_tutorial_tests.gd`) and update task notes/status.",
+        "implementationNotes": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass).\n\n🔄 Reopened from editor repro: harden LaunchHUD/LaunchButton lookup to tolerate node naming variants and ensure show/hide/countdown resolve consistently.\n\n🔄 Reopened: user requested complete rocket-selector UI rebuild (no scroll, full-screen when no awaiting rocket).\n\n✓ Rebuilt Available Rockets selector UI from scratch: removed ScrollContainer, switched to fixed no-scroll full layout with centered large cards and larger create actions. Selector panel now expands to near full-screen when no awaiting rocket exists, and uses compact bounds when awaiting rocket is present.\n\n🔄 Reopened: ultrawide selector/tut overlay alignment pass + selector test coverage updates.\n\n- Updated RocketSelectorUIBuilder to fixed no-scroll card layout with centered cards and larger action affordances.\n- Updated LaunchpadSelectorPanel layout mode: near full-screen when no awaiting rocket, compact when awaiting rocket exists.\n- Added tests in scene/tests/run_experience_tests.gd:  and .\n- Updated scene/tests/TEST_DESCRIPTIONS.md.\n- Validation: run_experience_tests.gd (21/21 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: added selector layout tests in scene/tests/run_experience_tests.gd (test_rocket_selector_ui_has_no_scroll_container, test_launchpad_selector_panel_fullscreen_without_awaiting).\n\n🔄 Reopened: add editor-only mission skip/jump debug button + automated test coverage.\n\n- Added editor-only debug progression button in launchpad selector () visible only when OS.has_feature('editor').\n- Added RocketsManager.debug_complete_mission_for_progression() to simulate mission completion and advance stage safely.\n- Added automated test  in scene/tests/run_experience_tests.gd with isolated mission-log path override.\n- Validation: run_experience_tests.gd (22/22 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: editor-only button label is Debug: Skip Mission. Added test function test_debug_skip_mission_advances_progression in scene/tests/run_experience_tests.gd.\n\n🔧 Launchpad error fix pass (2026-02-17):\n- SupabaseClient request startup hardened: deferred kickoff + bounded retry for ERR_UNCONFIGURED ().\n- LaunchHUD resolver now prefers HUD node containing LaunchButton, avoiding empty LaunchHUDInstance selection race on first frame.\n- Added regression test: test_launch_hud_resolution_prefers_node_with_button in scene/tests/run_experience_tests.gd.\n- Validation: run_experience_tests.gd (23/23 pass), run_tutorial_tests.gd (2/2 pass)."
+      }
+    },
+    {
+      "id": "v22",
+      "taskId": "x48i3q",
+      "version": 22,
+      "timestamp": "2026-02-17T05:43:42.006Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass).\n\n🔄 Reopened from editor repro: harden LaunchHUD/LaunchButton lookup to tolerate node naming variants and ensure show/hide/countdown resolve consistently.\n\n🔄 Reopened: user requested complete rocket-selector UI rebuild (no scroll, full-screen when no awaiting rocket).\n\n✓ Rebuilt Available Rockets selector UI from scratch: removed ScrollContainer, switched to fixed no-scroll full layout with centered large cards and larger create actions. Selector panel now expands to near full-screen when no awaiting rocket exists, and uses compact bounds when awaiting rocket is present.\n\n🔄 Reopened: ultrawide selector/tut overlay alignment pass + selector test coverage updates.\n\n- Updated RocketSelectorUIBuilder to fixed no-scroll card layout with centered cards and larger action affordances.\n- Updated LaunchpadSelectorPanel layout mode: near full-screen when no awaiting rocket, compact when awaiting rocket exists.\n- Added tests in scene/tests/run_experience_tests.gd:  and .\n- Updated scene/tests/TEST_DESCRIPTIONS.md.\n- Validation: run_experience_tests.gd (21/21 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: added selector layout tests in scene/tests/run_experience_tests.gd (test_rocket_selector_ui_has_no_scroll_container, test_launchpad_selector_panel_fullscreen_without_awaiting).\n\n🔄 Reopened: add editor-only mission skip/jump debug button + automated test coverage.\n\n- Added editor-only debug progression button in launchpad selector () visible only when OS.has_feature('editor').\n- Added RocketsManager.debug_complete_mission_for_progression() to simulate mission completion and advance stage safely.\n- Added automated test  in scene/tests/run_experience_tests.gd with isolated mission-log path override.\n- Validation: run_experience_tests.gd (22/22 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: editor-only button label is Debug: Skip Mission. Added test function test_debug_skip_mission_advances_progression in scene/tests/run_experience_tests.gd.\n\n🔧 Launchpad error fix pass (2026-02-17):\n- SupabaseClient request startup hardened: deferred kickoff + bounded retry for ERR_UNCONFIGURED ().\n- LaunchHUD resolver now prefers HUD node containing LaunchButton, avoiding empty LaunchHUDInstance selection race on first frame.\n- Added regression test: test_launch_hud_resolution_prefers_node_with_button in scene/tests/run_experience_tests.gd.\n- Validation: run_experience_tests.gd (23/23 pass), run_tutorial_tests.gd (2/2 pass).",
+          "newValue": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass).\n\n🔄 Reopened from editor repro: harden LaunchHUD/LaunchButton lookup to tolerate node naming variants and ensure show/hide/countdown resolve consistently.\n\n🔄 Reopened: user requested complete rocket-selector UI rebuild (no scroll, full-screen when no awaiting rocket).\n\n✓ Rebuilt Available Rockets selector UI from scratch: removed ScrollContainer, switched to fixed no-scroll full layout with centered large cards and larger create actions. Selector panel now expands to near full-screen when no awaiting rocket exists, and uses compact bounds when awaiting rocket is present.\n\n🔄 Reopened: ultrawide selector/tut overlay alignment pass + selector test coverage updates.\n\n- Updated RocketSelectorUIBuilder to fixed no-scroll card layout with centered cards and larger action affordances.\n- Updated LaunchpadSelectorPanel layout mode: near full-screen when no awaiting rocket, compact when awaiting rocket exists.\n- Added tests in scene/tests/run_experience_tests.gd:  and .\n- Updated scene/tests/TEST_DESCRIPTIONS.md.\n- Validation: run_experience_tests.gd (21/21 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: added selector layout tests in scene/tests/run_experience_tests.gd (test_rocket_selector_ui_has_no_scroll_container, test_launchpad_selector_panel_fullscreen_without_awaiting).\n\n🔄 Reopened: add editor-only mission skip/jump debug button + automated test coverage.\n\n- Added editor-only debug progression button in launchpad selector () visible only when OS.has_feature('editor').\n- Added RocketsManager.debug_complete_mission_for_progression() to simulate mission completion and advance stage safely.\n- Added automated test  in scene/tests/run_experience_tests.gd with isolated mission-log path override.\n- Validation: run_experience_tests.gd (22/22 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: editor-only button label is Debug: Skip Mission. Added test function test_debug_skip_mission_advances_progression in scene/tests/run_experience_tests.gd.\n\n🔧 Launchpad error fix pass (2026-02-17):\n- SupabaseClient request startup hardened: deferred kickoff + bounded retry for ERR_UNCONFIGURED ().\n- LaunchHUD resolver now prefers HUD node containing LaunchButton, avoiding empty LaunchHUDInstance selection race on first frame.\n- Added regression test: test_launch_hud_resolution_prefers_node_with_button in scene/tests/run_experience_tests.gd.\n- Validation: run_experience_tests.gd (23/23 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: Supabase startup fix targets the error string Failed to create HTTP request: 3 (no functional change; previous note append had shell backtick interpolation)."
+        }
+      ],
+      "snapshot": {
+        "title": "Mission selector progression and rocket/target gating (M1-M3)",
+        "description": "Implement progression-aware mission selector and gating behavior from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg. Include pre-selected target in M1, L2 unlock/progression timing, and distance/capability constraints.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "missions",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Mission selector reflects available rockets and mission progression state"
+          },
+          {
+            "completed": true,
+            "text": "M1 target is pre-selected and follows no-scanner flow"
+          },
+          {
+            "completed": true,
+            "text": "M2 requires/uses L2 rocket progression and same-target richer-yield behavior"
+          },
+          {
+            "completed": true,
+            "text": "Target list indicates when options are blocked by range/capability"
+          }
+        ],
+        "implementationPlan": "1. Stabilize Supabase fetch startup path: defer/retry HTTPRequest kickoff when request returns ERR_UNCONFIGURED/early-init failure (the `Failed to create HTTP request: 3` log).\n2. Harden LaunchHUD lookup/connection: prefer real HUD with LaunchButton over empty `LaunchHUDInstance`, and add bounded retry so initial earth_launchpad load binds reliably.\n3. Add regression tests in `scene/tests/run_experience_tests.gd` for LaunchHUD resolution preference and/or safe connection path.\n4. Run headless test suite (`run_experience_tests.gd` and `run_tutorial_tests.gd`) and update task notes/status.",
+        "implementationNotes": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass).\n\n🔄 Reopened from editor repro: harden LaunchHUD/LaunchButton lookup to tolerate node naming variants and ensure show/hide/countdown resolve consistently.\n\n🔄 Reopened: user requested complete rocket-selector UI rebuild (no scroll, full-screen when no awaiting rocket).\n\n✓ Rebuilt Available Rockets selector UI from scratch: removed ScrollContainer, switched to fixed no-scroll full layout with centered large cards and larger create actions. Selector panel now expands to near full-screen when no awaiting rocket exists, and uses compact bounds when awaiting rocket is present.\n\n🔄 Reopened: ultrawide selector/tut overlay alignment pass + selector test coverage updates.\n\n- Updated RocketSelectorUIBuilder to fixed no-scroll card layout with centered cards and larger action affordances.\n- Updated LaunchpadSelectorPanel layout mode: near full-screen when no awaiting rocket, compact when awaiting rocket exists.\n- Added tests in scene/tests/run_experience_tests.gd:  and .\n- Updated scene/tests/TEST_DESCRIPTIONS.md.\n- Validation: run_experience_tests.gd (21/21 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: added selector layout tests in scene/tests/run_experience_tests.gd (test_rocket_selector_ui_has_no_scroll_container, test_launchpad_selector_panel_fullscreen_without_awaiting).\n\n🔄 Reopened: add editor-only mission skip/jump debug button + automated test coverage.\n\n- Added editor-only debug progression button in launchpad selector () visible only when OS.has_feature('editor').\n- Added RocketsManager.debug_complete_mission_for_progression() to simulate mission completion and advance stage safely.\n- Added automated test  in scene/tests/run_experience_tests.gd with isolated mission-log path override.\n- Validation: run_experience_tests.gd (22/22 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: editor-only button label is Debug: Skip Mission. Added test function test_debug_skip_mission_advances_progression in scene/tests/run_experience_tests.gd.\n\n🔧 Launchpad error fix pass (2026-02-17):\n- SupabaseClient request startup hardened: deferred kickoff + bounded retry for ERR_UNCONFIGURED ().\n- LaunchHUD resolver now prefers HUD node containing LaunchButton, avoiding empty LaunchHUDInstance selection race on first frame.\n- Added regression test: test_launch_hud_resolution_prefers_node_with_button in scene/tests/run_experience_tests.gd.\n- Validation: run_experience_tests.gd (23/23 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: Supabase startup fix targets the error string Failed to create HTTP request: 3 (no functional change; previous note append had shell backtick interpolation)."
+      }
+    },
+    {
+      "id": "v23",
+      "taskId": "x48i3q",
+      "version": 23,
+      "timestamp": "2026-02-17T05:44:27.450Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "done",
+          "newValue": "in-progress"
+        }
+      ],
+      "snapshot": {
+        "title": "Mission selector progression and rocket/target gating (M1-M3)",
+        "description": "Implement progression-aware mission selector and gating behavior from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg. Include pre-selected target in M1, L2 unlock/progression timing, and distance/capability constraints.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "missions",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Mission selector reflects available rockets and mission progression state"
+          },
+          {
+            "completed": true,
+            "text": "M1 target is pre-selected and follows no-scanner flow"
+          },
+          {
+            "completed": true,
+            "text": "M2 requires/uses L2 rocket progression and same-target richer-yield behavior"
+          },
+          {
+            "completed": true,
+            "text": "Target list indicates when options are blocked by range/capability"
+          }
+        ],
+        "implementationPlan": "1. Stabilize Supabase fetch startup path: defer/retry HTTPRequest kickoff when request returns ERR_UNCONFIGURED/early-init failure (the `Failed to create HTTP request: 3` log).\n2. Harden LaunchHUD lookup/connection: prefer real HUD with LaunchButton over empty `LaunchHUDInstance`, and add bounded retry so initial earth_launchpad load binds reliably.\n3. Add regression tests in `scene/tests/run_experience_tests.gd` for LaunchHUD resolution preference and/or safe connection path.\n4. Run headless test suite (`run_experience_tests.gd` and `run_tutorial_tests.gd`) and update task notes/status.",
+        "implementationNotes": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass).\n\n🔄 Reopened from editor repro: harden LaunchHUD/LaunchButton lookup to tolerate node naming variants and ensure show/hide/countdown resolve consistently.\n\n🔄 Reopened: user requested complete rocket-selector UI rebuild (no scroll, full-screen when no awaiting rocket).\n\n✓ Rebuilt Available Rockets selector UI from scratch: removed ScrollContainer, switched to fixed no-scroll full layout with centered large cards and larger create actions. Selector panel now expands to near full-screen when no awaiting rocket exists, and uses compact bounds when awaiting rocket is present.\n\n🔄 Reopened: ultrawide selector/tut overlay alignment pass + selector test coverage updates.\n\n- Updated RocketSelectorUIBuilder to fixed no-scroll card layout with centered cards and larger action affordances.\n- Updated LaunchpadSelectorPanel layout mode: near full-screen when no awaiting rocket, compact when awaiting rocket exists.\n- Added tests in scene/tests/run_experience_tests.gd:  and .\n- Updated scene/tests/TEST_DESCRIPTIONS.md.\n- Validation: run_experience_tests.gd (21/21 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: added selector layout tests in scene/tests/run_experience_tests.gd (test_rocket_selector_ui_has_no_scroll_container, test_launchpad_selector_panel_fullscreen_without_awaiting).\n\n🔄 Reopened: add editor-only mission skip/jump debug button + automated test coverage.\n\n- Added editor-only debug progression button in launchpad selector () visible only when OS.has_feature('editor').\n- Added RocketsManager.debug_complete_mission_for_progression() to simulate mission completion and advance stage safely.\n- Added automated test  in scene/tests/run_experience_tests.gd with isolated mission-log path override.\n- Validation: run_experience_tests.gd (22/22 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: editor-only button label is Debug: Skip Mission. Added test function test_debug_skip_mission_advances_progression in scene/tests/run_experience_tests.gd.\n\n🔧 Launchpad error fix pass (2026-02-17):\n- SupabaseClient request startup hardened: deferred kickoff + bounded retry for ERR_UNCONFIGURED ().\n- LaunchHUD resolver now prefers HUD node containing LaunchButton, avoiding empty LaunchHUDInstance selection race on first frame.\n- Added regression test: test_launch_hud_resolution_prefers_node_with_button in scene/tests/run_experience_tests.gd.\n- Validation: run_experience_tests.gd (23/23 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: Supabase startup fix targets the error string Failed to create HTTP request: 3 (no functional change; previous note append had shell backtick interpolation)."
+      }
+    },
+    {
+      "id": "v24",
+      "taskId": "x48i3q",
+      "version": 24,
+      "timestamp": "2026-02-17T05:44:27.831Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass).\n\n🔄 Reopened from editor repro: harden LaunchHUD/LaunchButton lookup to tolerate node naming variants and ensure show/hide/countdown resolve consistently.\n\n🔄 Reopened: user requested complete rocket-selector UI rebuild (no scroll, full-screen when no awaiting rocket).\n\n✓ Rebuilt Available Rockets selector UI from scratch: removed ScrollContainer, switched to fixed no-scroll full layout with centered large cards and larger create actions. Selector panel now expands to near full-screen when no awaiting rocket exists, and uses compact bounds when awaiting rocket is present.\n\n🔄 Reopened: ultrawide selector/tut overlay alignment pass + selector test coverage updates.\n\n- Updated RocketSelectorUIBuilder to fixed no-scroll card layout with centered cards and larger action affordances.\n- Updated LaunchpadSelectorPanel layout mode: near full-screen when no awaiting rocket, compact when awaiting rocket exists.\n- Added tests in scene/tests/run_experience_tests.gd:  and .\n- Updated scene/tests/TEST_DESCRIPTIONS.md.\n- Validation: run_experience_tests.gd (21/21 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: added selector layout tests in scene/tests/run_experience_tests.gd (test_rocket_selector_ui_has_no_scroll_container, test_launchpad_selector_panel_fullscreen_without_awaiting).\n\n🔄 Reopened: add editor-only mission skip/jump debug button + automated test coverage.\n\n- Added editor-only debug progression button in launchpad selector () visible only when OS.has_feature('editor').\n- Added RocketsManager.debug_complete_mission_for_progression() to simulate mission completion and advance stage safely.\n- Added automated test  in scene/tests/run_experience_tests.gd with isolated mission-log path override.\n- Validation: run_experience_tests.gd (22/22 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: editor-only button label is Debug: Skip Mission. Added test function test_debug_skip_mission_advances_progression in scene/tests/run_experience_tests.gd.\n\n🔧 Launchpad error fix pass (2026-02-17):\n- SupabaseClient request startup hardened: deferred kickoff + bounded retry for ERR_UNCONFIGURED ().\n- LaunchHUD resolver now prefers HUD node containing LaunchButton, avoiding empty LaunchHUDInstance selection race on first frame.\n- Added regression test: test_launch_hud_resolution_prefers_node_with_button in scene/tests/run_experience_tests.gd.\n- Validation: run_experience_tests.gd (23/23 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: Supabase startup fix targets the error string Failed to create HTTP request: 3 (no functional change; previous note append had shell backtick interpolation).",
+          "newValue": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass).\n\n🔄 Reopened from editor repro: harden LaunchHUD/LaunchButton lookup to tolerate node naming variants and ensure show/hide/countdown resolve consistently.\n\n🔄 Reopened: user requested complete rocket-selector UI rebuild (no scroll, full-screen when no awaiting rocket).\n\n✓ Rebuilt Available Rockets selector UI from scratch: removed ScrollContainer, switched to fixed no-scroll full layout with centered large cards and larger create actions. Selector panel now expands to near full-screen when no awaiting rocket exists, and uses compact bounds when awaiting rocket is present.\n\n🔄 Reopened: ultrawide selector/tut overlay alignment pass + selector test coverage updates.\n\n- Updated RocketSelectorUIBuilder to fixed no-scroll card layout with centered cards and larger action affordances.\n- Updated LaunchpadSelectorPanel layout mode: near full-screen when no awaiting rocket, compact when awaiting rocket exists.\n- Added tests in scene/tests/run_experience_tests.gd:  and .\n- Updated scene/tests/TEST_DESCRIPTIONS.md.\n- Validation: run_experience_tests.gd (21/21 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: added selector layout tests in scene/tests/run_experience_tests.gd (test_rocket_selector_ui_has_no_scroll_container, test_launchpad_selector_panel_fullscreen_without_awaiting).\n\n🔄 Reopened: add editor-only mission skip/jump debug button + automated test coverage.\n\n- Added editor-only debug progression button in launchpad selector () visible only when OS.has_feature('editor').\n- Added RocketsManager.debug_complete_mission_for_progression() to simulate mission completion and advance stage safely.\n- Added automated test  in scene/tests/run_experience_tests.gd with isolated mission-log path override.\n- Validation: run_experience_tests.gd (22/22 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: editor-only button label is Debug: Skip Mission. Added test function test_debug_skip_mission_advances_progression in scene/tests/run_experience_tests.gd.\n\n🔧 Launchpad error fix pass (2026-02-17):\n- SupabaseClient request startup hardened: deferred kickoff + bounded retry for ERR_UNCONFIGURED ().\n- LaunchHUD resolver now prefers HUD node containing LaunchButton, avoiding empty LaunchHUDInstance selection race on first frame.\n- Added regression test: test_launch_hud_resolution_prefers_node_with_button in scene/tests/run_experience_tests.gd.\n- Validation: run_experience_tests.gd (23/23 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: Supabase startup fix targets the error string Failed to create HTTP request: 3 (no functional change; previous note append had shell backtick interpolation).\n\nFollow-up fix: corrected launch_hud.tscn child parent paths from LaunchHUD to . to remove parent-vanished instancing warnings and normalize child names (LaunchButton/CountdownLabel). Re-ran run_experience_tests.gd: 23/23 pass."
+        }
+      ],
+      "snapshot": {
+        "title": "Mission selector progression and rocket/target gating (M1-M3)",
+        "description": "Implement progression-aware mission selector and gating behavior from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg. Include pre-selected target in M1, L2 unlock/progression timing, and distance/capability constraints.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "missions",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Mission selector reflects available rockets and mission progression state"
+          },
+          {
+            "completed": true,
+            "text": "M1 target is pre-selected and follows no-scanner flow"
+          },
+          {
+            "completed": true,
+            "text": "M2 requires/uses L2 rocket progression and same-target richer-yield behavior"
+          },
+          {
+            "completed": true,
+            "text": "Target list indicates when options are blocked by range/capability"
+          }
+        ],
+        "implementationPlan": "1. Stabilize Supabase fetch startup path: defer/retry HTTPRequest kickoff when request returns ERR_UNCONFIGURED/early-init failure (the `Failed to create HTTP request: 3` log).\n2. Harden LaunchHUD lookup/connection: prefer real HUD with LaunchButton over empty `LaunchHUDInstance`, and add bounded retry so initial earth_launchpad load binds reliably.\n3. Add regression tests in `scene/tests/run_experience_tests.gd` for LaunchHUD resolution preference and/or safe connection path.\n4. Run headless test suite (`run_experience_tests.gd` and `run_tutorial_tests.gd`) and update task notes/status.",
+        "implementationNotes": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass).\n\n🔄 Reopened from editor repro: harden LaunchHUD/LaunchButton lookup to tolerate node naming variants and ensure show/hide/countdown resolve consistently.\n\n🔄 Reopened: user requested complete rocket-selector UI rebuild (no scroll, full-screen when no awaiting rocket).\n\n✓ Rebuilt Available Rockets selector UI from scratch: removed ScrollContainer, switched to fixed no-scroll full layout with centered large cards and larger create actions. Selector panel now expands to near full-screen when no awaiting rocket exists, and uses compact bounds when awaiting rocket is present.\n\n🔄 Reopened: ultrawide selector/tut overlay alignment pass + selector test coverage updates.\n\n- Updated RocketSelectorUIBuilder to fixed no-scroll card layout with centered cards and larger action affordances.\n- Updated LaunchpadSelectorPanel layout mode: near full-screen when no awaiting rocket, compact when awaiting rocket exists.\n- Added tests in scene/tests/run_experience_tests.gd:  and .\n- Updated scene/tests/TEST_DESCRIPTIONS.md.\n- Validation: run_experience_tests.gd (21/21 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: added selector layout tests in scene/tests/run_experience_tests.gd (test_rocket_selector_ui_has_no_scroll_container, test_launchpad_selector_panel_fullscreen_without_awaiting).\n\n🔄 Reopened: add editor-only mission skip/jump debug button + automated test coverage.\n\n- Added editor-only debug progression button in launchpad selector () visible only when OS.has_feature('editor').\n- Added RocketsManager.debug_complete_mission_for_progression() to simulate mission completion and advance stage safely.\n- Added automated test  in scene/tests/run_experience_tests.gd with isolated mission-log path override.\n- Validation: run_experience_tests.gd (22/22 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: editor-only button label is Debug: Skip Mission. Added test function test_debug_skip_mission_advances_progression in scene/tests/run_experience_tests.gd.\n\n🔧 Launchpad error fix pass (2026-02-17):\n- SupabaseClient request startup hardened: deferred kickoff + bounded retry for ERR_UNCONFIGURED ().\n- LaunchHUD resolver now prefers HUD node containing LaunchButton, avoiding empty LaunchHUDInstance selection race on first frame.\n- Added regression test: test_launch_hud_resolution_prefers_node_with_button in scene/tests/run_experience_tests.gd.\n- Validation: run_experience_tests.gd (23/23 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: Supabase startup fix targets the error string Failed to create HTTP request: 3 (no functional change; previous note append had shell backtick interpolation).\n\nFollow-up fix: corrected launch_hud.tscn child parent paths from LaunchHUD to . to remove parent-vanished instancing warnings and normalize child names (LaunchButton/CountdownLabel). Re-ran run_experience_tests.gd: 23/23 pass."
+      }
+    },
+    {
+      "id": "v25",
+      "taskId": "x48i3q",
+      "version": 25,
+      "timestamp": "2026-02-17T05:44:28.232Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Mission selector progression and rocket/target gating (M1-M3)",
+        "description": "Implement progression-aware mission selector and gating behavior from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg. Include pre-selected target in M1, L2 unlock/progression timing, and distance/capability constraints.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "missions",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Mission selector reflects available rockets and mission progression state"
+          },
+          {
+            "completed": true,
+            "text": "M1 target is pre-selected and follows no-scanner flow"
+          },
+          {
+            "completed": true,
+            "text": "M2 requires/uses L2 rocket progression and same-target richer-yield behavior"
+          },
+          {
+            "completed": true,
+            "text": "Target list indicates when options are blocked by range/capability"
+          }
+        ],
+        "implementationPlan": "1. Stabilize Supabase fetch startup path: defer/retry HTTPRequest kickoff when request returns ERR_UNCONFIGURED/early-init failure (the `Failed to create HTTP request: 3` log).\n2. Harden LaunchHUD lookup/connection: prefer real HUD with LaunchButton over empty `LaunchHUDInstance`, and add bounded retry so initial earth_launchpad load binds reliably.\n3. Add regression tests in `scene/tests/run_experience_tests.gd` for LaunchHUD resolution preference and/or safe connection path.\n4. Run headless test suite (`run_experience_tests.gd` and `run_tutorial_tests.gd`) and update task notes/status.",
+        "implementationNotes": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass).\n\n🔄 Reopened from editor repro: harden LaunchHUD/LaunchButton lookup to tolerate node naming variants and ensure show/hide/countdown resolve consistently.\n\n🔄 Reopened: user requested complete rocket-selector UI rebuild (no scroll, full-screen when no awaiting rocket).\n\n✓ Rebuilt Available Rockets selector UI from scratch: removed ScrollContainer, switched to fixed no-scroll full layout with centered large cards and larger create actions. Selector panel now expands to near full-screen when no awaiting rocket exists, and uses compact bounds when awaiting rocket is present.\n\n🔄 Reopened: ultrawide selector/tut overlay alignment pass + selector test coverage updates.\n\n- Updated RocketSelectorUIBuilder to fixed no-scroll card layout with centered cards and larger action affordances.\n- Updated LaunchpadSelectorPanel layout mode: near full-screen when no awaiting rocket, compact when awaiting rocket exists.\n- Added tests in scene/tests/run_experience_tests.gd:  and .\n- Updated scene/tests/TEST_DESCRIPTIONS.md.\n- Validation: run_experience_tests.gd (21/21 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: added selector layout tests in scene/tests/run_experience_tests.gd (test_rocket_selector_ui_has_no_scroll_container, test_launchpad_selector_panel_fullscreen_without_awaiting).\n\n🔄 Reopened: add editor-only mission skip/jump debug button + automated test coverage.\n\n- Added editor-only debug progression button in launchpad selector () visible only when OS.has_feature('editor').\n- Added RocketsManager.debug_complete_mission_for_progression() to simulate mission completion and advance stage safely.\n- Added automated test  in scene/tests/run_experience_tests.gd with isolated mission-log path override.\n- Validation: run_experience_tests.gd (22/22 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: editor-only button label is Debug: Skip Mission. Added test function test_debug_skip_mission_advances_progression in scene/tests/run_experience_tests.gd.\n\n🔧 Launchpad error fix pass (2026-02-17):\n- SupabaseClient request startup hardened: deferred kickoff + bounded retry for ERR_UNCONFIGURED ().\n- LaunchHUD resolver now prefers HUD node containing LaunchButton, avoiding empty LaunchHUDInstance selection race on first frame.\n- Added regression test: test_launch_hud_resolution_prefers_node_with_button in scene/tests/run_experience_tests.gd.\n- Validation: run_experience_tests.gd (23/23 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: Supabase startup fix targets the error string Failed to create HTTP request: 3 (no functional change; previous note append had shell backtick interpolation).\n\nFollow-up fix: corrected launch_hud.tscn child parent paths from LaunchHUD to . to remove parent-vanished instancing warnings and normalize child names (LaunchButton/CountdownLabel). Re-ran run_experience_tests.gd: 23/23 pass."
+      }
+    },
+    {
+      "id": "v26",
+      "taskId": "x48i3q",
+      "version": 26,
+      "timestamp": "2026-02-17T05:45:00.974Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "done",
+          "newValue": "in-progress"
+        }
+      ],
+      "snapshot": {
+        "title": "Mission selector progression and rocket/target gating (M1-M3)",
+        "description": "Implement progression-aware mission selector and gating behavior from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg. Include pre-selected target in M1, L2 unlock/progression timing, and distance/capability constraints.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "missions",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Mission selector reflects available rockets and mission progression state"
+          },
+          {
+            "completed": true,
+            "text": "M1 target is pre-selected and follows no-scanner flow"
+          },
+          {
+            "completed": true,
+            "text": "M2 requires/uses L2 rocket progression and same-target richer-yield behavior"
+          },
+          {
+            "completed": true,
+            "text": "Target list indicates when options are blocked by range/capability"
+          }
+        ],
+        "implementationPlan": "1. Stabilize Supabase fetch startup path: defer/retry HTTPRequest kickoff when request returns ERR_UNCONFIGURED/early-init failure (the `Failed to create HTTP request: 3` log).\n2. Harden LaunchHUD lookup/connection: prefer real HUD with LaunchButton over empty `LaunchHUDInstance`, and add bounded retry so initial earth_launchpad load binds reliably.\n3. Add regression tests in `scene/tests/run_experience_tests.gd` for LaunchHUD resolution preference and/or safe connection path.\n4. Run headless test suite (`run_experience_tests.gd` and `run_tutorial_tests.gd`) and update task notes/status.",
+        "implementationNotes": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass).\n\n🔄 Reopened from editor repro: harden LaunchHUD/LaunchButton lookup to tolerate node naming variants and ensure show/hide/countdown resolve consistently.\n\n🔄 Reopened: user requested complete rocket-selector UI rebuild (no scroll, full-screen when no awaiting rocket).\n\n✓ Rebuilt Available Rockets selector UI from scratch: removed ScrollContainer, switched to fixed no-scroll full layout with centered large cards and larger create actions. Selector panel now expands to near full-screen when no awaiting rocket exists, and uses compact bounds when awaiting rocket is present.\n\n🔄 Reopened: ultrawide selector/tut overlay alignment pass + selector test coverage updates.\n\n- Updated RocketSelectorUIBuilder to fixed no-scroll card layout with centered cards and larger action affordances.\n- Updated LaunchpadSelectorPanel layout mode: near full-screen when no awaiting rocket, compact when awaiting rocket exists.\n- Added tests in scene/tests/run_experience_tests.gd:  and .\n- Updated scene/tests/TEST_DESCRIPTIONS.md.\n- Validation: run_experience_tests.gd (21/21 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: added selector layout tests in scene/tests/run_experience_tests.gd (test_rocket_selector_ui_has_no_scroll_container, test_launchpad_selector_panel_fullscreen_without_awaiting).\n\n🔄 Reopened: add editor-only mission skip/jump debug button + automated test coverage.\n\n- Added editor-only debug progression button in launchpad selector () visible only when OS.has_feature('editor').\n- Added RocketsManager.debug_complete_mission_for_progression() to simulate mission completion and advance stage safely.\n- Added automated test  in scene/tests/run_experience_tests.gd with isolated mission-log path override.\n- Validation: run_experience_tests.gd (22/22 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: editor-only button label is Debug: Skip Mission. Added test function test_debug_skip_mission_advances_progression in scene/tests/run_experience_tests.gd.\n\n🔧 Launchpad error fix pass (2026-02-17):\n- SupabaseClient request startup hardened: deferred kickoff + bounded retry for ERR_UNCONFIGURED ().\n- LaunchHUD resolver now prefers HUD node containing LaunchButton, avoiding empty LaunchHUDInstance selection race on first frame.\n- Added regression test: test_launch_hud_resolution_prefers_node_with_button in scene/tests/run_experience_tests.gd.\n- Validation: run_experience_tests.gd (23/23 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: Supabase startup fix targets the error string Failed to create HTTP request: 3 (no functional change; previous note append had shell backtick interpolation).\n\nFollow-up fix: corrected launch_hud.tscn child parent paths from LaunchHUD to . to remove parent-vanished instancing warnings and normalize child names (LaunchButton/CountdownLabel). Re-ran run_experience_tests.gd: 23/23 pass."
+      }
+    },
+    {
+      "id": "v27",
+      "taskId": "x48i3q",
+      "version": 27,
+      "timestamp": "2026-02-17T05:45:01.405Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass).\n\n🔄 Reopened from editor repro: harden LaunchHUD/LaunchButton lookup to tolerate node naming variants and ensure show/hide/countdown resolve consistently.\n\n🔄 Reopened: user requested complete rocket-selector UI rebuild (no scroll, full-screen when no awaiting rocket).\n\n✓ Rebuilt Available Rockets selector UI from scratch: removed ScrollContainer, switched to fixed no-scroll full layout with centered large cards and larger create actions. Selector panel now expands to near full-screen when no awaiting rocket exists, and uses compact bounds when awaiting rocket is present.\n\n🔄 Reopened: ultrawide selector/tut overlay alignment pass + selector test coverage updates.\n\n- Updated RocketSelectorUIBuilder to fixed no-scroll card layout with centered cards and larger action affordances.\n- Updated LaunchpadSelectorPanel layout mode: near full-screen when no awaiting rocket, compact when awaiting rocket exists.\n- Added tests in scene/tests/run_experience_tests.gd:  and .\n- Updated scene/tests/TEST_DESCRIPTIONS.md.\n- Validation: run_experience_tests.gd (21/21 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: added selector layout tests in scene/tests/run_experience_tests.gd (test_rocket_selector_ui_has_no_scroll_container, test_launchpad_selector_panel_fullscreen_without_awaiting).\n\n🔄 Reopened: add editor-only mission skip/jump debug button + automated test coverage.\n\n- Added editor-only debug progression button in launchpad selector () visible only when OS.has_feature('editor').\n- Added RocketsManager.debug_complete_mission_for_progression() to simulate mission completion and advance stage safely.\n- Added automated test  in scene/tests/run_experience_tests.gd with isolated mission-log path override.\n- Validation: run_experience_tests.gd (22/22 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: editor-only button label is Debug: Skip Mission. Added test function test_debug_skip_mission_advances_progression in scene/tests/run_experience_tests.gd.\n\n🔧 Launchpad error fix pass (2026-02-17):\n- SupabaseClient request startup hardened: deferred kickoff + bounded retry for ERR_UNCONFIGURED ().\n- LaunchHUD resolver now prefers HUD node containing LaunchButton, avoiding empty LaunchHUDInstance selection race on first frame.\n- Added regression test: test_launch_hud_resolution_prefers_node_with_button in scene/tests/run_experience_tests.gd.\n- Validation: run_experience_tests.gd (23/23 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: Supabase startup fix targets the error string Failed to create HTTP request: 3 (no functional change; previous note append had shell backtick interpolation).\n\nFollow-up fix: corrected launch_hud.tscn child parent paths from LaunchHUD to . to remove parent-vanished instancing warnings and normalize child names (LaunchButton/CountdownLabel). Re-ran run_experience_tests.gd: 23/23 pass.",
+          "newValue": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass).\n\n🔄 Reopened from editor repro: harden LaunchHUD/LaunchButton lookup to tolerate node naming variants and ensure show/hide/countdown resolve consistently.\n\n🔄 Reopened: user requested complete rocket-selector UI rebuild (no scroll, full-screen when no awaiting rocket).\n\n✓ Rebuilt Available Rockets selector UI from scratch: removed ScrollContainer, switched to fixed no-scroll full layout with centered large cards and larger create actions. Selector panel now expands to near full-screen when no awaiting rocket exists, and uses compact bounds when awaiting rocket is present.\n\n🔄 Reopened: ultrawide selector/tut overlay alignment pass + selector test coverage updates.\n\n- Updated RocketSelectorUIBuilder to fixed no-scroll card layout with centered cards and larger action affordances.\n- Updated LaunchpadSelectorPanel layout mode: near full-screen when no awaiting rocket, compact when awaiting rocket exists.\n- Added tests in scene/tests/run_experience_tests.gd:  and .\n- Updated scene/tests/TEST_DESCRIPTIONS.md.\n- Validation: run_experience_tests.gd (21/21 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: added selector layout tests in scene/tests/run_experience_tests.gd (test_rocket_selector_ui_has_no_scroll_container, test_launchpad_selector_panel_fullscreen_without_awaiting).\n\n🔄 Reopened: add editor-only mission skip/jump debug button + automated test coverage.\n\n- Added editor-only debug progression button in launchpad selector () visible only when OS.has_feature('editor').\n- Added RocketsManager.debug_complete_mission_for_progression() to simulate mission completion and advance stage safely.\n- Added automated test  in scene/tests/run_experience_tests.gd with isolated mission-log path override.\n- Validation: run_experience_tests.gd (22/22 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: editor-only button label is Debug: Skip Mission. Added test function test_debug_skip_mission_advances_progression in scene/tests/run_experience_tests.gd.\n\n🔧 Launchpad error fix pass (2026-02-17):\n- SupabaseClient request startup hardened: deferred kickoff + bounded retry for ERR_UNCONFIGURED ().\n- LaunchHUD resolver now prefers HUD node containing LaunchButton, avoiding empty LaunchHUDInstance selection race on first frame.\n- Added regression test: test_launch_hud_resolution_prefers_node_with_button in scene/tests/run_experience_tests.gd.\n- Validation: run_experience_tests.gd (23/23 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: Supabase startup fix targets the error string Failed to create HTTP request: 3 (no functional change; previous note append had shell backtick interpolation).\n\nFollow-up fix: corrected launch_hud.tscn child parent paths from LaunchHUD to . to remove parent-vanished instancing warnings and normalize child names (LaunchButton/CountdownLabel). Re-ran run_experience_tests.gd: 23/23 pass.\n\nFollow-up tweak: _find_launch_hud now returns null when only LaunchHUD* placeholders exist without controls, avoiding false-positive 'LaunchHUD found' logs before real HUD instancing. Validation rerun: run_experience_tests.gd 23/23 pass."
+        }
+      ],
+      "snapshot": {
+        "title": "Mission selector progression and rocket/target gating (M1-M3)",
+        "description": "Implement progression-aware mission selector and gating behavior from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg. Include pre-selected target in M1, L2 unlock/progression timing, and distance/capability constraints.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "missions",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Mission selector reflects available rockets and mission progression state"
+          },
+          {
+            "completed": true,
+            "text": "M1 target is pre-selected and follows no-scanner flow"
+          },
+          {
+            "completed": true,
+            "text": "M2 requires/uses L2 rocket progression and same-target richer-yield behavior"
+          },
+          {
+            "completed": true,
+            "text": "Target list indicates when options are blocked by range/capability"
+          }
+        ],
+        "implementationPlan": "1. Stabilize Supabase fetch startup path: defer/retry HTTPRequest kickoff when request returns ERR_UNCONFIGURED/early-init failure (the `Failed to create HTTP request: 3` log).\n2. Harden LaunchHUD lookup/connection: prefer real HUD with LaunchButton over empty `LaunchHUDInstance`, and add bounded retry so initial earth_launchpad load binds reliably.\n3. Add regression tests in `scene/tests/run_experience_tests.gd` for LaunchHUD resolution preference and/or safe connection path.\n4. Run headless test suite (`run_experience_tests.gd` and `run_tutorial_tests.gd`) and update task notes/status.",
+        "implementationNotes": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass).\n\n🔄 Reopened from editor repro: harden LaunchHUD/LaunchButton lookup to tolerate node naming variants and ensure show/hide/countdown resolve consistently.\n\n🔄 Reopened: user requested complete rocket-selector UI rebuild (no scroll, full-screen when no awaiting rocket).\n\n✓ Rebuilt Available Rockets selector UI from scratch: removed ScrollContainer, switched to fixed no-scroll full layout with centered large cards and larger create actions. Selector panel now expands to near full-screen when no awaiting rocket exists, and uses compact bounds when awaiting rocket is present.\n\n🔄 Reopened: ultrawide selector/tut overlay alignment pass + selector test coverage updates.\n\n- Updated RocketSelectorUIBuilder to fixed no-scroll card layout with centered cards and larger action affordances.\n- Updated LaunchpadSelectorPanel layout mode: near full-screen when no awaiting rocket, compact when awaiting rocket exists.\n- Added tests in scene/tests/run_experience_tests.gd:  and .\n- Updated scene/tests/TEST_DESCRIPTIONS.md.\n- Validation: run_experience_tests.gd (21/21 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: added selector layout tests in scene/tests/run_experience_tests.gd (test_rocket_selector_ui_has_no_scroll_container, test_launchpad_selector_panel_fullscreen_without_awaiting).\n\n🔄 Reopened: add editor-only mission skip/jump debug button + automated test coverage.\n\n- Added editor-only debug progression button in launchpad selector () visible only when OS.has_feature('editor').\n- Added RocketsManager.debug_complete_mission_for_progression() to simulate mission completion and advance stage safely.\n- Added automated test  in scene/tests/run_experience_tests.gd with isolated mission-log path override.\n- Validation: run_experience_tests.gd (22/22 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: editor-only button label is Debug: Skip Mission. Added test function test_debug_skip_mission_advances_progression in scene/tests/run_experience_tests.gd.\n\n🔧 Launchpad error fix pass (2026-02-17):\n- SupabaseClient request startup hardened: deferred kickoff + bounded retry for ERR_UNCONFIGURED ().\n- LaunchHUD resolver now prefers HUD node containing LaunchButton, avoiding empty LaunchHUDInstance selection race on first frame.\n- Added regression test: test_launch_hud_resolution_prefers_node_with_button in scene/tests/run_experience_tests.gd.\n- Validation: run_experience_tests.gd (23/23 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: Supabase startup fix targets the error string Failed to create HTTP request: 3 (no functional change; previous note append had shell backtick interpolation).\n\nFollow-up fix: corrected launch_hud.tscn child parent paths from LaunchHUD to . to remove parent-vanished instancing warnings and normalize child names (LaunchButton/CountdownLabel). Re-ran run_experience_tests.gd: 23/23 pass.\n\nFollow-up tweak: _find_launch_hud now returns null when only LaunchHUD* placeholders exist without controls, avoiding false-positive 'LaunchHUD found' logs before real HUD instancing. Validation rerun: run_experience_tests.gd 23/23 pass."
+      }
+    },
+    {
+      "id": "v28",
+      "taskId": "x48i3q",
+      "version": 28,
+      "timestamp": "2026-02-17T05:45:01.861Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Mission selector progression and rocket/target gating (M1-M3)",
+        "description": "Implement progression-aware mission selector and gating behavior from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg. Include pre-selected target in M1, L2 unlock/progression timing, and distance/capability constraints.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "missions",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Mission selector reflects available rockets and mission progression state"
+          },
+          {
+            "completed": true,
+            "text": "M1 target is pre-selected and follows no-scanner flow"
+          },
+          {
+            "completed": true,
+            "text": "M2 requires/uses L2 rocket progression and same-target richer-yield behavior"
+          },
+          {
+            "completed": true,
+            "text": "Target list indicates when options are blocked by range/capability"
+          }
+        ],
+        "implementationPlan": "1. Stabilize Supabase fetch startup path: defer/retry HTTPRequest kickoff when request returns ERR_UNCONFIGURED/early-init failure (the `Failed to create HTTP request: 3` log).\n2. Harden LaunchHUD lookup/connection: prefer real HUD with LaunchButton over empty `LaunchHUDInstance`, and add bounded retry so initial earth_launchpad load binds reliably.\n3. Add regression tests in `scene/tests/run_experience_tests.gd` for LaunchHUD resolution preference and/or safe connection path.\n4. Run headless test suite (`run_experience_tests.gd` and `run_tutorial_tests.gd`) and update task notes/status.",
+        "implementationNotes": "Implemented from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg\n- Added mission progression helpers in RocketsManager (stage, mission count, last completed target, target profile distance/required level, awaiting rocket level).\n- Launchpad selector now shows Distance/Required Level/Current Rocket level and blocks out-of-range targets.\n- Mission 1 auto-selects first target when none selected. Mission 2 auto-selects last completed target when available.\n- Launch action now validates rocket/target compatibility before countdown to prevent bypassing selector gating.\n- Verified with headless Godot: run_tutorial_tests.gd and run_experience_tests.gd (pass).\n\n🔄 Reopened from editor repro: harden LaunchHUD/LaunchButton lookup to tolerate node naming variants and ensure show/hide/countdown resolve consistently.\n\n🔄 Reopened: user requested complete rocket-selector UI rebuild (no scroll, full-screen when no awaiting rocket).\n\n✓ Rebuilt Available Rockets selector UI from scratch: removed ScrollContainer, switched to fixed no-scroll full layout with centered large cards and larger create actions. Selector panel now expands to near full-screen when no awaiting rocket exists, and uses compact bounds when awaiting rocket is present.\n\n🔄 Reopened: ultrawide selector/tut overlay alignment pass + selector test coverage updates.\n\n- Updated RocketSelectorUIBuilder to fixed no-scroll card layout with centered cards and larger action affordances.\n- Updated LaunchpadSelectorPanel layout mode: near full-screen when no awaiting rocket, compact when awaiting rocket exists.\n- Added tests in scene/tests/run_experience_tests.gd:  and .\n- Updated scene/tests/TEST_DESCRIPTIONS.md.\n- Validation: run_experience_tests.gd (21/21 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: added selector layout tests in scene/tests/run_experience_tests.gd (test_rocket_selector_ui_has_no_scroll_container, test_launchpad_selector_panel_fullscreen_without_awaiting).\n\n🔄 Reopened: add editor-only mission skip/jump debug button + automated test coverage.\n\n- Added editor-only debug progression button in launchpad selector () visible only when OS.has_feature('editor').\n- Added RocketsManager.debug_complete_mission_for_progression() to simulate mission completion and advance stage safely.\n- Added automated test  in scene/tests/run_experience_tests.gd with isolated mission-log path override.\n- Validation: run_experience_tests.gd (22/22 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: editor-only button label is Debug: Skip Mission. Added test function test_debug_skip_mission_advances_progression in scene/tests/run_experience_tests.gd.\n\n🔧 Launchpad error fix pass (2026-02-17):\n- SupabaseClient request startup hardened: deferred kickoff + bounded retry for ERR_UNCONFIGURED ().\n- LaunchHUD resolver now prefers HUD node containing LaunchButton, avoiding empty LaunchHUDInstance selection race on first frame.\n- Added regression test: test_launch_hud_resolution_prefers_node_with_button in scene/tests/run_experience_tests.gd.\n- Validation: run_experience_tests.gd (23/23 pass), run_tutorial_tests.gd (2/2 pass).\n\nCorrection: Supabase startup fix targets the error string Failed to create HTTP request: 3 (no functional change; previous note append had shell backtick interpolation).\n\nFollow-up fix: corrected launch_hud.tscn child parent paths from LaunchHUD to . to remove parent-vanished instancing warnings and normalize child names (LaunchButton/CountdownLabel). Re-ran run_experience_tests.gd: 23/23 pass.\n\nFollow-up tweak: _find_launch_hud now returns null when only LaunchHUD* placeholders exist without controls, avoiding false-positive 'LaunchHUD found' logs before real HUD instancing. Validation rerun: run_experience_tests.gd 23/23 pass."
+      }
+    }
+  ]
+}

@@ -1,6 +1,8 @@
 extends RefCounted
 class_name RocketSelectorDragHelper
 
+const RocketDragPreviewScene = preload("res://Scenes/UI/Templates/RocketDragPreview.tscn")
+
 var _parent: Node
 var _on_drop: Callable
 var _dragging: bool = false
@@ -17,12 +19,12 @@ func start_drag(rocket_id: String, tex: Texture2D) -> void:
 	_dragging = true
 	_drag_rocket_id = rocket_id
 	# create a temporary preview sprite that follows the mouse
-	var preview = TextureRect.new()
+	var preview: TextureRect = RocketDragPreviewScene.instantiate()
+	if preview == null:
+		_dragging = false
+		_drag_rocket_id = ""
+		return
 	preview.texture = tex
-	preview.expand = true
-	preview.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	preview.custom_minimum_size = Vector2(160, 320)
-	preview.z_index = 10000
 	_parent.get_tree().current_scene.add_child(preview)
 	_drag_node = preview
 
