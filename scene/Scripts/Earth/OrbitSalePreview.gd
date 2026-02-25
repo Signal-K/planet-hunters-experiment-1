@@ -6,6 +6,7 @@ const SALVAGE_REFUND_PCT := 0.10
 const XP_AWARD_MISSION := 4
 const ORBIT_SALE_MULTIPLIER := 0.8
 const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
+const LabelActionRowScene = preload("res://Scenes/UI/Templates/LabelActionRow.tscn")
 
 @onready var title_label: Label = $UI/Root/Panel/VBox/Title
 @onready var subtitle_label: Label = $UI/Root/Panel/VBox/Subtitle
@@ -66,19 +67,20 @@ func _build_subcontractors() -> void:
 		level = int(app.get_experience_level())
 	var sm = preload("res://Scripts/Utils/SubcontractorManager.gd")
 	_subcontractors = sm.get_available_for_level(level) if sm else []
+	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
 	for idx in range(_subcontractors.size()):
 		var c = _subcontractors[idx]
-		var row = HBoxContainer.new()
+		var row: HBoxContainer = LabelActionRowScene.instantiate()
 		row.custom_minimum_size = Vector2(0, 44)
-		var label = Label.new()
+		var label: Label = row.get_node("TextLabel")
 		label.text = "%s (Lvl %s)" % [c.get("name", ""), str(c.get("min_level", 1))]
 		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		row.add_child(label)
-		var btn = Button.new()
+		panel_style.apply_body(label)
+		var btn: Button = row.get_node("ActionButton")
 		btn.text = "Select"
 		btn.disabled = level < int(c.get("min_level", 1))
+		panel_style.apply_button(btn, false)
 		btn.pressed.connect(func(): _select_subcontractor(idx))
-		row.add_child(btn)
 		subcontractors_box.add_child(row)
 
 func _select_subcontractor(idx: int) -> void:

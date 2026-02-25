@@ -13,6 +13,8 @@ const ORBIT_SEGMENTS := 64
 const TRAVEL_DISTANCE_TOTAL_KM := 420000.0
 const NumberFormat = preload("res://Scripts/Utils/NumberFormat.gd")
 const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
+const ResourceValueRowScene = preload("res://Scenes/UI/Templates/ResourceValueRow.tscn")
+const EmptyLabelScene = preload("res://Scenes/UI/Templates/MenuLogbookEmpty.tscn")
 
 const ORBIT_MULTIPLIER := 1.0
 const EARTH_MULTIPLIER := 1.35
@@ -311,24 +313,20 @@ func _summary_content() -> void:
 	var total_value := 0
 	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
 	if collected.is_empty():
-		var empty = Label.new()
+		var empty: Label = EmptyLabelScene.instantiate()
 		empty.text = "No cargo recorded."
+		panel_style.apply_muted(empty)
 		summary_list.add_child(empty)
 	else:
 		for name in collected.keys():
-			var row = HBoxContainer.new()
-			row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			var name_lbl = Label.new()
+			var row: HBoxContainer = ResourceValueRowScene.instantiate()
+			var name_lbl: Label = row.get_node("NameLabel")
 			name_lbl.text = str(name)
-			name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			panel_style.apply_body(name_lbl)
 			var amount = int(collected.get(name, 0))
-			var amount_lbl = Label.new()
+			var amount_lbl: Label = row.get_node("ValueLabel")
 			amount_lbl.text = "%s kg" % NumberFormat.commas(str(amount))
-			amount_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 			panel_style.apply_muted(amount_lbl)
-			row.add_child(name_lbl)
-			row.add_child(amount_lbl)
 			summary_list.add_child(row)
 			var pricing = preload("res://Scripts/Utils/MineralPricing.gd")
 			total_value += pricing.price_for(name, amount)
@@ -380,16 +378,13 @@ func _build_minerals_list() -> void:
 	for name in resource_yield.MINERALS:
 		if not minerals.has(name):
 			continue
-		var row = HBoxContainer.new()
-		var name_lbl = Label.new()
+		var row: HBoxContainer = ResourceValueRowScene.instantiate()
+		var name_lbl: Label = row.get_node("NameLabel")
 		name_lbl.text = str(name)
-		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		panel_style.apply_body(name_lbl)
-		var amount_lbl = Label.new()
+		var amount_lbl: Label = row.get_node("ValueLabel")
 		amount_lbl.text = NumberFormat.commas(str(minerals.get(name, 0)))
 		panel_style.apply_muted(amount_lbl)
-		row.add_child(name_lbl)
-		row.add_child(amount_lbl)
 		minerals_list.add_child(row)
 
 func _generate_target_asteroid(target_id: String) -> void:

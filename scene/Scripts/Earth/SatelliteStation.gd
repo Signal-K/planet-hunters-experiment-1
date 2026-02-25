@@ -49,9 +49,7 @@ func on_interact():
 		print("ERROR: UIManager not found for Satellite Station")
 
 func _show_tutorial_hint_once(action_key: String, message: String) -> void:
-	var app = get_tree().root.find_child("AppController", true, false)
-	if app and app.has_method("show_tutorial_hint_once"):
-		app.show_tutorial_hint_once(action_key, message)
+	preload("res://Scripts/Utils/AppControllerHelper.gd").show_tutorial_hint_once(action_key, message)
 
 func _refresh_visibility() -> void:
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
@@ -77,6 +75,17 @@ func _ensure_dialogs() -> void:
 		_info_dialog = AcceptDialog.new()
 		_info_dialog.title = "Scanner Station"
 		host.call_deferred("add_child", _info_dialog)
+		_info_dialog.confirmed.connect(_on_unlock_info_confirmed)
+
+func _on_unlock_info_confirmed() -> void:
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if not rm:
+		return
+	if not rm.is_scanner_unlocked():
+		return
+	if rm.is_scanner_station_built():
+		return
+	_prompt_build_scanner()
 
 func _maybe_show_unlock_dialog() -> void:
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
@@ -84,14 +93,15 @@ func _maybe_show_unlock_dialog() -> void:
 		return
 	if rm.is_scanner_station_built():
 		return
-	if rm.is_scanner_unlock_dialog_seen():
-		return
 	_ensure_dialogs()
-	if _info_dialog and is_instance_valid(_info_dialog):
-		var cost_text = _format_francs(rm.get_scanner_build_cost())
-		_info_dialog.dialog_text = "Scanner Station unlocked. Build it for %s F to start scanning." % cost_text
-		_info_dialog.call_deferred("popup_centered")
-	rm.set_scanner_unlock_dialog_seen(true)
+	if not rm.is_scanner_unlock_dialog_seen():
+		if _info_dialog and is_instance_valid(_info_dialog):
+			var cost_text = _format_francs(rm.get_scanner_build_cost())
+			_info_dialog.dialog_text = "Scanner Station unlocked. Build it for %s F to start scanning." % cost_text
+			_info_dialog.call_deferred("popup_centered")
+		rm.set_scanner_unlock_dialog_seen(true)
+		return
+	_prompt_build_scanner()
 
 func _prompt_build_scanner() -> void:
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
@@ -118,6 +128,7 @@ func _on_confirm_build_scanner() -> void:
 		return
 	app.add_franc_balance(-cost, "build_scanner_station")
 	rm.set_scanner_station_built(true)
+	_refresh_visibility()
 	_show_tutorial_hint_once(ACTION_BUILD_SCANNER, HINT_BUILD_SCANNER)
 	_show_info("Scanner Station constructed. You can now run scans.")
 

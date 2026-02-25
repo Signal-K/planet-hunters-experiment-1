@@ -9,6 +9,7 @@ const ORBIT_SEGMENTS := 64
 const TARGET_LEVEL_SIZE := 5
 const NumberFormat = preload("res://Scripts/Utils/NumberFormat.gd")
 const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
+const ResourceValueRowScene = preload("res://Scenes/UI/Templates/ResourceValueRow.tscn")
 const RETURN_SCENE_PATH := "res://Scenes/Transitions/rocket_return.tscn"
 const ROCKET_TIP_PADDING_PX := 8.0
 const ACTION_OPEN_PREVIEW := "open_asteroid_preview"
@@ -40,6 +41,7 @@ const RETURN_HOME_READY_TEXT := "Return Home"
 @onready var mine_cooldown_label: Label = $CanvasLayer/UI/ControlPanel/ControlPanelMargin/ControlPanelButtons/MineCooldownLabel
 @onready var mining_layer: Node2D = $CanvasLayer/MiningLayer
 @onready var mining_beam: Line2D = $CanvasLayer/MiningLayer/MiningBeam
+@onready var minigame_container: Control = $CanvasLayer/MinigameContainer
 @onready var inventory_panel: Button = $CanvasLayer/UI/InventoryPanel
 @onready var inventory_title: Label = $CanvasLayer/UI/InventoryPanel/InventoryMargin/InventoryContent/InventoryTitle
 @onready var inventory_summary: Label = $CanvasLayer/UI/InventoryPanel/InventoryMargin/InventoryContent/InventorySummary
@@ -59,6 +61,7 @@ var _mining_target_pos := Vector2.ZERO
 var _mining_active := false
 var _minerals_expanded := true
 var _inventory_expanded := true
+var _minigame_instance: Control = null
 
 func _ready() -> void:
 	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
@@ -176,18 +179,7 @@ func _on_mine_pressed() -> void:
 	if now < _mine_ready_at:
 		return
 	_show_tutorial_hint_once(ACTION_MINE_TARGET, HINT_MINE_TARGET)
-	_mine_ready_at = now + 6000
-	if mine_button:
-		mine_button.text = "Mining..."
-		mine_button.disabled = true
-		var t = get_tree().create_timer(0.6)
-		t.timeout.connect(func():
-			if mine_button:
-				mine_button.text = "Mine"
-				mine_button.disabled = false
-		)
-	_fire_mining_beam()
-	_apply_mining_yield()
+	_launch_mining_minigame()
 
 func _update_mine_button_state() -> void:
 	if mine_button == null:
@@ -291,10 +283,53 @@ func _apply_mining_yield() -> void:
 	_update_inventory_ui(state)
 	_update_return_home_state()
 
+func _launch_mining_minigame() -> void:
+	if minigame_container == null:
+		return
+	
+	# Start orbit transition
+	await _show_orbit_transition()
+	
+	var MiningScene = preload("res://Scenes/UI/SidescrollMining.tscn")
+	_minigame_instance = MiningScene.instantiate()
+	minigame_container.add_child(_minigame_instance)
+	
+	_minigame_instance.mining_completed.connect(_on_minigame_completed)
+	
+	var is_planet = _current_target_type == "planet"
+	var level = int(_current_yield.get("level", 1))
+	_minigame_instance.start_mining(is_planet, level, _current_target_id)
+	
+	# Fade in minigame
+	_minigame_instance.modulate.a = 0.0
+	var tween = create_tween()
+	tween.tween_property(_minigame_instance, "modulate:a", 1.0, 0.5)
+
+func _on_minigame_completed(minerals_collected: Dictionary, score: int) -> void:
+	if _minigame_instance:
+		_minigame_instance.queue_free()
+		_minigame_instance = null
+	
+	var now = Time.get_ticks_msec()
+	_mine_ready_at = now + 6000
+	
+	_fire_mining_beam()
+	
+	var success_rate = clamp(float(score) / 1000.0, 0.5, 1.5)
+	var capacity = float(_current_yield.get("capacity", 0))
+	var inventory = preload("res://Scripts/Utils/MiningInventory.gd")
+	var mining_multiplier = RocketSpecs.get_mining_multiplier(_current_rocket_id)
+	var state = inventory.apply_mining(_current_target_id, capacity, _current_yield.get("minerals", {}), mining_multiplier * success_rate)
+	_update_inventory_ui(state)
+	_update_return_home_state()
+
+func _on_minigame_cancelled() -> void:
+	if _minigame_instance:
+		_minigame_instance.queue_free()
+		_minigame_instance = null
+
 func _show_tutorial_hint_once(action_key: String, message: String) -> void:
-	var app = get_tree().root.find_child("AppController", true, false)
-	if app and app.has_method("show_tutorial_hint_once"):
-		app.show_tutorial_hint_once(action_key, message)
+	preload("res://Scripts/Utils/AppControllerHelper.gd").show_tutorial_hint_once(action_key, message)
 
 func _configure_readout_buttons() -> void:
 	if minerals_panel:
@@ -348,18 +383,13 @@ func _update_inventory_ui(state_override: Dictionary = {}) -> void:
 	inventory_total.text = "Total Collected: %s kg" % NumberFormat.commas(str(total_collected))
 	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
 	for name in collected.keys():
-		var row = HBoxContainer.new()
-		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		var name_lbl = Label.new()
+		var row: HBoxContainer = ResourceValueRowScene.instantiate()
+		var name_lbl: Label = row.get_node("NameLabel")
 		name_lbl.text = str(name)
-		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		panel_style.apply_body(name_lbl)
-		var amount_lbl = Label.new()
+		var amount_lbl: Label = row.get_node("ValueLabel")
 		amount_lbl.text = "%s kg" % NumberFormat.commas(str(collected.get(name, 0)))
 		panel_style.apply_muted(amount_lbl)
-		amount_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		row.add_child(name_lbl)
-		row.add_child(amount_lbl)
 		inventory_list.add_child(row)
 	_update_minerals_available(state)
 
@@ -489,16 +519,13 @@ func _build_minerals_list(minerals: Dictionary) -> void:
 	for name in resource_yield.MINERALS:
 		if not minerals.has(name):
 			continue
-		var row = HBoxContainer.new()
-		var name_lbl = Label.new()
+		var row: HBoxContainer = ResourceValueRowScene.instantiate()
+		var name_lbl: Label = row.get_node("NameLabel")
 		name_lbl.text = str(name)
-		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		panel_style.apply_body(name_lbl)
-		var amount_lbl = Label.new()
+		var amount_lbl: Label = row.get_node("ValueLabel")
 		amount_lbl.text = NumberFormat.commas(str(minerals.get(name, 0)))
 		panel_style.apply_muted(amount_lbl)
-		row.add_child(name_lbl)
-		row.add_child(amount_lbl)
 		minerals_list.add_child(row)
 
 func _update_minerals_summary(capacity_override: int) -> void:
@@ -633,3 +660,34 @@ func _resolve_preview_target_context(rm) -> Dictionary:
 		target = rm.get_preview_target()
 
 	return target
+
+
+func _show_orbit_transition() -> void:
+	# Hide UI elements
+	var ui_elements = [mine_button, return_home_button, minerals_panel, inventory_panel, prev_button, next_button, back_button]
+	for element in ui_elements:
+		if element:
+			element.visible = false
+	
+	# Make orbit rocket visible and prominent
+	if orbit_rocket:
+		orbit_rocket.visible = true
+		orbit_rocket.modulate = Color(1, 1, 1, 1)
+	
+	# Fade out 3D asteroid
+	if asteroid_pivot:
+		var tween = create_tween()
+		tween.tween_property(asteroid_pivot, "modulate:a", 0.0, 0.8)
+	
+	# Animate rocket orbiting for 1.5 seconds
+	var orbit_time = 0.0
+	var orbit_duration = 1.5
+	while orbit_time < orbit_duration:
+		await get_tree().process_frame
+		orbit_time += get_process_delta_time()
+	
+	# Fade out orbit elements
+	if orbit_root:
+		var tween2 = create_tween()
+		tween2.tween_property(orbit_root, "modulate:a", 0.0, 0.5)
+		await tween2.finished

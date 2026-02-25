@@ -11,6 +11,13 @@ const ACCENT_SOFT := Color(0.168627, 0.188235, 0.231373, 0.96)
 const BUTTON_PRESSED := Color(0.231373, 0.258824, 0.321569, 0.96)
 const TEXT_ON_ACCENT := Color(0.094, 0.102, 0.122, 1)
 
+static var _instance: PanelStyle = null
+
+static func get_instance() -> PanelStyle:
+	if _instance == null:
+		_instance = PanelStyle.new()
+	return _instance
+
 static func apply_panel(panel: Control, bg_color: Color = PANEL_BG) -> void:
 	if panel == null:
 		return
@@ -150,3 +157,45 @@ static func apply_progress_bar(bar: ProgressBar) -> void:
 	if fill != null:
 		bar.add_theme_stylebox_override("fill", fill)
 	bar.show_percentage = false
+
+static func create_list_item_style() -> StyleBoxFlat:
+	var style = StyleBoxFlat.new()
+	style.bg_color = ACCENT_SOFT
+	style.border_color = PANEL_BORDER
+	style.border_width_bottom = 1
+	style.corner_radius_top_left = 16
+	style.corner_radius_top_right = 16
+	style.corner_radius_bottom_left = 16
+	style.corner_radius_bottom_right = 16
+	style.content_margin_left = 18
+	style.content_margin_right = 18
+	style.content_margin_top = 14
+	style.content_margin_bottom = 14
+	return style
+
+static func create_icon_circle_style() -> StyleBoxFlat:
+	var style = StyleBoxFlat.new()
+	style.bg_color = ACCENT
+	style.corner_radius_top_left = 30
+	style.corner_radius_top_right = 30
+	style.corner_radius_bottom_left = 30
+	style.corner_radius_bottom_right = 30
+	return style
+
+static func create_card_style() -> StyleBoxFlat:
+	var style = StyleBoxFlat.new()
+	style.bg_color = ACCENT_SOFT
+	style.border_color = PANEL_BORDER
+	style.border_width_left = 1
+	style.border_width_right = 1
+	style.border_width_top = 1
+	style.border_width_bottom = 1
+	style.corner_radius_top_left = 12
+	style.corner_radius_top_right = 12
+	style.corner_radius_bottom_left = 12
+	style.corner_radius_bottom_right = 12
+	style.content_margin_left = 14
+	style.content_margin_right = 14
+	style.content_margin_top = 12
+	style.content_margin_bottom = 12
+	return style

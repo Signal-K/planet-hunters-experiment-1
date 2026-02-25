@@ -15,6 +15,8 @@ const MISSION4_AFFINITY_GATE := 3
 const MISSION5_AFFINITY_GAIN := 2
 const WebEventBridge = preload("res://Scripts/Systems/WebEventBridge.gd")
 const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
+const ResourceValueRowScene = preload("res://Scenes/UI/Templates/ResourceValueRow.tscn")
+const EmptyLabelScene = preload("res://Scenes/UI/Templates/MenuLogbookEmpty.tscn")
 
 @onready var title_label: Label = $UI/Root/Panel/VBox/Title
 @onready var subtitle_label: Label = $UI/Root/Panel/VBox/Subtitle
@@ -92,22 +94,22 @@ func _build_mineral_list() -> void:
 		c.queue_free()
 	_collected = _get_collected_minerals()
 	_total_value = 0
+	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
 	if _collected.is_empty():
-		var empty_label = Label.new()
+		var empty_label: Label = EmptyLabelScene.instantiate()
 		empty_label.text = "No cargo recorded for this mission."
+		panel_style.apply_muted(empty_label)
 		minerals_list.add_child(empty_label)
 		return
 	for k in _collected.keys():
-		var row = HBoxContainer.new()
-		var name_label = Label.new()
+		var row: HBoxContainer = ResourceValueRowScene.instantiate()
+		var name_label: Label = row.get_node("NameLabel")
 		name_label.text = str(k)
+		panel_style.apply_body(name_label)
 		var amount = int(_collected.get(k, 0))
-		var amount_label = Label.new()
+		var amount_label: Label = row.get_node("ValueLabel")
 		amount_label.text = "%s kg" % str(amount)
-		amount_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		amount_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		row.add_child(name_label)
-		row.add_child(amount_label)
+		panel_style.apply_muted(amount_label)
 		minerals_list.add_child(row)
 		var pricing = preload("res://Scripts/Utils/MineralPricing.gd")
 		_total_value += pricing.price_for(k, amount)
@@ -378,12 +380,10 @@ func _rocket_cost(rocket_id: String) -> int:
 	return RocketSpecs.get_cost(rocket_id)
 
 func _get_app_controller() -> Node:
-	return get_node_or_null("/root/AppController")
+	return preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
 
 func _show_tutorial_hint_once(action_key: String, message: String) -> void:
-	var app = _get_app_controller()
-	if app and app.has_method("show_tutorial_hint_once"):
-		app.show_tutorial_hint_once(action_key, message)
+	preload("res://Scripts/Utils/AppControllerHelper.gd").show_tutorial_hint_once(action_key, message)
 
 func _return_to_base() -> void:
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")

@@ -141,7 +141,7 @@ func _build_unlocks_list(current_level: int) -> void:
 			unlocks_list.add_child(row)
 
 func _get_app_controller() -> Node:
-	return get_node_or_null("/root/AppController")
+	return preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
 
 func _on_close_button_pressed() -> void:
 	print("MenuPanel close button pressed")
@@ -199,22 +199,8 @@ func _rebuild_logbook_entries() -> void:
 		if typeof(entry) != TYPE_DICTIONARY:
 			continue
 		var card: PanelContainer = LogbookCardScene.instantiate()
-		var card_style = StyleBoxFlat.new()
-		card_style.bg_color = Color(0.168627, 0.188235, 0.231373, 0.96)
-		card_style.border_color = Color(0.263, 0.298, 0.369, 1)
-		card_style.border_width_left = 1
-		card_style.border_width_right = 1
-		card_style.border_width_top = 1
-		card_style.border_width_bottom = 1
-		card_style.corner_radius_top_left = 12
-		card_style.corner_radius_top_right = 12
-		card_style.corner_radius_bottom_left = 12
-		card_style.corner_radius_bottom_right = 12
-		card_style.content_margin_left = 14.0
-		card_style.content_margin_right = 14.0
-		card_style.content_margin_top = 12.0
-		card_style.content_margin_bottom = 12.0
-		card.add_theme_stylebox_override("panel", card_style)
+		var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
+		card.add_theme_stylebox_override("panel", panel_style.create_card_style())
 		logbook_entries.add_child(card)
 
 		var body: VBoxContainer = card.get_node("Body")

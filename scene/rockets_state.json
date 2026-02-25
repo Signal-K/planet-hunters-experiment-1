@@ -3,19 +3,42 @@
     "starterrocket1"
   ],
   "placed": [
+    {
+      "id": "starterrocket1-test-306",
+      "type": "starterrocket1",
+      "status": "inTransit",
+      "target": "test-asteroid-1535735226",
+      "label": "Test Asteroid 360",
+      "launch_time": 0.0,
+      "arrival_time": 0.0
+    },
+    {
+      "type": "starterrocket1",
+      "id": "starterrocket1-1405086058",
+      "x": -110.0,
+      "y": -178.0,
+      "status": "launched"
+    }
   ],
   "launched": [
+    "starterrocket1-1405086058"
   ],
   "destroyed": [
   ],
   "missions": [
+    {
+      "rocket_id": "starterrocket1-1405086058",
+      "target": "mission-1-training-target",
+      "launch_time": 1771989081.0,
+      "arrival_time": 1771989141.0
+    }
   ],
-  "selected_target": "101445733",
+  "selected_target": "",
   "preview_target": {
-    "id": "4201",
-    "label": "Asteroid 4201",
+    "id": "mission-1-training-target",
+    "label": "Training Asteroid A",
     "type": "asteroid",
-    "rocket_id": "starterrocket1"
+    "rocket_id": "starterrocket1-1405086058"
   },
   "detected_targets": [
     {
@@ -42,69 +65,123 @@
       "id": "63769326",
       "label": "63769326",
       "type": "asteroid"
+    },
+    {
+      "id": "63769527",
+      "label": "63769527",
+      "type": "asteroid"
+    },
+    {
+      "id": "63768638",
+      "label": "63768638",
+      "type": "asteroid"
+    },
+    {
+      "id": "101465726",
+      "label": "101465726",
+      "type": "asteroid"
+    },
+    {
+      "id": "63768597",
+      "label": "63768597",
+      "type": "asteroid"
+    },
+    {
+      "id": "63768741",
+      "label": "63768741",
+      "type": "asteroid"
+    },
+    {
+      "id": "101455833",
+      "label": "101455833",
+      "type": "asteroid"
+    },
+    {
+      "id": "101459176",
+      "label": "101459176",
+      "type": "asteroid"
+    },
+    {
+      "id": "63768383",
+      "label": "63768383",
+      "type": "asteroid"
+    },
+    {
+      "id": "63769506",
+      "label": "63769506",
+      "type": "asteroid"
+    },
+    {
+      "id": "101450453",
+      "label": "101450453",
+      "type": "asteroid"
+    },
+    {
+      "id": "105934719",
+      "label": "105934719",
+      "type": "asteroid"
+    },
+    {
+      "id": "101458811",
+      "label": "101458811",
+      "type": "asteroid"
+    },
+    {
+      "id": "63768737",
+      "label": "63768737",
+      "type": "asteroid"
+    },
+    {
+      "id": "63769410",
+      "label": "63769410",
+      "type": "asteroid"
+    },
+    {
+      "id": "101454181",
+      "label": "101454181",
+      "type": "asteroid"
     }
   ],
   "seen_asteroids": [
-    "4201",
-    "101445733"
+    "test-asteroid-1535735226",
+    "mission-1-training-target"
   ],
   "seen_planets": [
   ],
+  "scan_counts": {
+  },
+  "status_changed_at": {
+    "starterrocket1-test-306": {
+      "inTransit": 1771942634.0
+    },
+    "starterrocket1-1405086058": {
+      "awaitingLaunch": 1771989077.0,
+      "launched": 1771989081.0
+    }
+  },
+  "mission_progress_completed": 0,
+  "completed_mission_badges": [
+  ],
+  "scanner_station_built": false,
+  "scanner_unlock_dialog_seen": false,
+  "mission5_contract_offer": {
+  },
+  "mission_progress_schema_version": 2.0,
+  "pending_mission_guidance_id": 0.0,
   "returning": [
   ],
   "arrived": {
-    "starterrocket1": {
-      "target_id": "4201",
-      "arrived_at": 1771472563.67003
+    "starterrocket1-test-306": {
+      "target_id": "test-asteroid-1535735226",
+      "arrived_at": 1771942634.552
+    },
+    "starterrocket1-1405086058": {
+      "target_id": "mission-1-training-target",
+      "arrived_at": 1771989113.66385
     }
   },
   "returned_mission": {
   },
   "returning_started": {
-  },
-  "status_changed_at": {
-  },
-  "scan_counts": {
-    "asteroid:101445733": 1.0,
-    "asteroid:63768316": 1.0,
-    "asteroid:68115570": 1.0,
-    "asteroid:63768664": 1.0,
-    "asteroid:63769326": 1.0
-  },
-  "mission_progress_completed": 4,
-  "completed_mission_badges": [
-    "mission-1",
-    "mission-2",
-    "mission-3",
-    "mission-4"
-  ],
-  "mission_progress_schema_version": 2.0,
-  "pending_mission_guidance_id": 0,
-  "scanner_station_built": false,
-  "scanner_unlock_dialog_seen": false,
-  "mission5_contract_offer": {
-    "contractors": [
-      {
-        "id": "rocketlab",
-        "name": "Rocketlab",
-        "effect": "build_discount",
-        "build_discount_pct": 0.2
-      },
-      {
-        "id": "astroforge",
-        "name": "Astroforge",
-        "effect": "payout_bonus",
-        "payout_bonus_mult": 1.15
-      }
-    ],
-    "selected_contractor": "rocketlab",
-    "requested_minerals": {
-      "Iron": 218.0,
-      "Nickel": 91.0
-    },
-    "recommended_target_id": "m5-a1",
-    "recommended_target_label": "M5 Asteroid 1",
-    "recommended_rocket": "starterrocket1",
-    "payout_cap": 1400000000.0
   }
 }

@@ -12,7 +12,7 @@ labels:
   - minerals
   - selling
 createdAt: '2026-02-16T22:38:17.000Z'
-updatedAt: '2026-02-16T14:57:34.127Z'
+updatedAt: '2026-02-25T00:27:07.739Z'
 timeSpent: 1097
 assignee: '@me'
 ---
@@ -23,6 +23,12 @@ assignee: '@me'
 <!-- SECTION:DESCRIPTION:BEGIN -->
 In the early game, as long as the user mines the maximum amount they can from a target (based on the strength of the mining laser (how much it can extract) and the capacity), they should net around 115% of the original price of the rocket, as long as they also salvage/scrap the rocket too at the end of the mission.
 <!-- SECTION:DESCRIPTION:END -->
+
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [x] #1 Full mining + scrap yields ~115% of rocket cost
+- [x] #2 Tests validate early game economics
+<!-- AC:END -->
 
 ## Implementation Plan
 

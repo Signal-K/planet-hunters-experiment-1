@@ -1,0 +1,130 @@
+{
+  "taskId": "c75105",
+  "currentVersion": 2,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "c75105",
+      "version": 1,
+      "timestamp": "2026-02-25T00:21:12.556Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        },
+        {
+          "field": "implementationNotes",
+          "newValue": "Created MiningDrone.tscn with sprite and CPUParticles2D. Animations: deployment (rotation + downward movement), flight (smooth rotation toward target), explosion (particle burst with color gradient)"
+        }
+      ],
+      "snapshot": {
+        "title": "Create animated mining drone sprite/scene",
+        "description": "Design and implement the visual representation of mining drones with animations for: deployment, flight, and explosion/impact.",
+        "status": "done",
+        "priority": "high",
+        "labels": [
+          "mining",
+          "drones",
+          "animation"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Drone sprite created"
+          },
+          {
+            "completed": false,
+            "text": "Deployment animation works"
+          },
+          {
+            "completed": false,
+            "text": "Flight animation works"
+          },
+          {
+            "completed": false,
+            "text": "Explosion animation works"
+          }
+        ],
+        "implementationNotes": "Created MiningDrone.tscn with sprite and CPUParticles2D. Animations: deployment (rotation + downward movement), flight (smooth rotation toward target), explosion (particle burst with color gradient)"
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "c75105",
+      "version": 2,
+      "timestamp": "2026-02-25T00:21:16.304Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Drone sprite created"
+            },
+            {
+              "completed": false,
+              "text": "Deployment animation works"
+            },
+            {
+              "completed": false,
+              "text": "Flight animation works"
+            },
+            {
+              "completed": false,
+              "text": "Explosion animation works"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Drone sprite created"
+            },
+            {
+              "completed": true,
+              "text": "Deployment animation works"
+            },
+            {
+              "completed": true,
+              "text": "Flight animation works"
+            },
+            {
+              "completed": true,
+              "text": "Explosion animation works"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Create animated mining drone sprite/scene",
+        "description": "Design and implement the visual representation of mining drones with animations for: deployment, flight, and explosion/impact.",
+        "status": "done",
+        "priority": "high",
+        "labels": [
+          "mining",
+          "drones",
+          "animation"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Drone sprite created"
+          },
+          {
+            "completed": true,
+            "text": "Deployment animation works"
+          },
+          {
+            "completed": true,
+            "text": "Flight animation works"
+          },
+          {
+            "completed": true,
+            "text": "Explosion animation works"
+          }
+        ],
+        "implementationNotes": "Created MiningDrone.tscn with sprite and CPUParticles2D. Animations: deployment (rotation + downward movement), flight (smooth rotation toward target), explosion (particle burst with color gradient)"
+      }
+    }
+  ]
+}

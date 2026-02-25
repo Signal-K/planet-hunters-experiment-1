@@ -103,4 +103,4 @@ func _apply_panel_style() -> void:
 		panel_style.apply_button(refresh_btn, true)
 
 func _get_app_controller() -> Node:
-	return get_tree().root.find_child("AppController", true, false)
+	return preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()

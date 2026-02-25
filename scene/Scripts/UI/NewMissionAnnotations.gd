@@ -79,10 +79,8 @@ func _display_items(items: Array) -> void:
 func _create_item(data: Dictionary, idx: int) -> Control:
 	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
 	var pc: PanelContainer = AnnotationItemScene.instantiate()
-	var style = StyleBoxFlat.new()
-	style.bg_color = panel_style.ACCENT_SOFT
-	style.border_color = panel_style.PANEL_BORDER
-	style.border_width_bottom = 1
+	
+	var style = panel_style.create_list_item_style()
 	style.content_margin_left = 12
 	style.content_margin_right = 12
 	style.content_margin_top = 10

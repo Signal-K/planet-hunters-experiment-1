@@ -13,6 +13,7 @@ const ORBIT_SEGMENTS := 64
 const TRAVEL_DISTANCE_TOTAL_KM := 420000.0
 const NumberFormat = preload("res://Scripts/Utils/NumberFormat.gd")
 const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
+const ResourceValueRowScene = preload("res://Scenes/UI/Templates/ResourceValueRow.tscn")
 
 
 @onready var asteroid_pivot: Node3D = $AsteroidPivot
@@ -268,16 +269,13 @@ func _build_minerals_list() -> void:
 	for name in resource_yield.MINERALS:
 		if not minerals.has(name):
 			continue
-		var row = HBoxContainer.new()
-		var name_lbl = Label.new()
+		var row: HBoxContainer = ResourceValueRowScene.instantiate()
+		var name_lbl: Label = row.get_node("NameLabel")
 		name_lbl.text = str(name)
-		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		panel_style.apply_body(name_lbl)
-		var amount_lbl = Label.new()
+		var amount_lbl: Label = row.get_node("ValueLabel")
 		amount_lbl.text = NumberFormat.commas(str(minerals.get(name, 0)))
 		panel_style.apply_muted(amount_lbl)
-		row.add_child(name_lbl)
-		row.add_child(amount_lbl)
 		minerals_list.add_child(row)
 
 func _generate_target_asteroid(target_id: String) -> void:

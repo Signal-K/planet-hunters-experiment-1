@@ -1,0 +1,756 @@
+[gd_scene load_steps=8 format=3 uid="uid://bvx8m3qp4nwc"]
+
+[ext_resource type="Script" path="res://Scripts/UI/SidescrollMining.gd" id="1"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1"]
+bg_color = Color(0.15, 0.2, 0.3, 0.9)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.4, 0.5, 0.7, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_2"]
+bg_color = Color(0.2, 0.25, 0.35, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3"]
+bg_color = Color(0.3, 0.8, 0.3, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_4"]
+bg_color = Color(1, 0.4, 0.2, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_5"]
+bg_color = Color(0.3, 0.7, 1, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[node name="SidescrollMining" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.02, 0.02, 0.08, 1)
+
+[node name="TerrainContainer" type="Node2D" parent="."]
+
+[node name="RockPool" type="Node2D" parent="TerrainContainer"]
+
+[node name="Rock1" type="Polygon2D" parent="TerrainContainer/RockPool"]
+visible = false
+color = Color(0.32, 0.28, 0.25, 1)
+
+[node name="Rock2" type="Polygon2D" parent="TerrainContainer/RockPool"]
+visible = false
+color = Color(0.32, 0.28, 0.25, 1)
+
+[node name="Rock3" type="Polygon2D" parent="TerrainContainer/RockPool"]
+visible = false
+color = Color(0.32, 0.28, 0.25, 1)
+
+[node name="Rock4" type="Polygon2D" parent="TerrainContainer/RockPool"]
+visible = false
+color = Color(0.32, 0.28, 0.25, 1)
+
+[node name="Rock5" type="Polygon2D" parent="TerrainContainer/RockPool"]
+visible = false
+color = Color(0.32, 0.28, 0.25, 1)
+
+[node name="Rock6" type="Polygon2D" parent="TerrainContainer/RockPool"]
+visible = false
+color = Color(0.32, 0.28, 0.25, 1)
+
+[node name="Rock7" type="Polygon2D" parent="TerrainContainer/RockPool"]
+visible = false
+color = Color(0.32, 0.28, 0.25, 1)
+
+[node name="Rock8" type="Polygon2D" parent="TerrainContainer/RockPool"]
+visible = false
+color = Color(0.32, 0.28, 0.25, 1)
+
+[node name="Rock9" type="Polygon2D" parent="TerrainContainer/RockPool"]
+visible = false
+color = Color(0.32, 0.28, 0.25, 1)
+
+[node name="Rock10" type="Polygon2D" parent="TerrainContainer/RockPool"]
+visible = false
+color = Color(0.32, 0.28, 0.25, 1)
+
+[node name="Rock11" type="Polygon2D" parent="TerrainContainer/RockPool"]
+visible = false
+color = Color(0.32, 0.28, 0.25, 1)
+
+[node name="Rock12" type="Polygon2D" parent="TerrainContainer/RockPool"]
+visible = false
+color = Color(0.32, 0.28, 0.25, 1)
+
+[node name="Rock13" type="Polygon2D" parent="TerrainContainer/RockPool"]
+visible = false
+color = Color(0.32, 0.28, 0.25, 1)
+
+[node name="Rock14" type="Polygon2D" parent="TerrainContainer/RockPool"]
+visible = false
+color = Color(0.32, 0.28, 0.25, 1)
+
+[node name="Rock15" type="Polygon2D" parent="TerrainContainer/RockPool"]
+visible = false
+color = Color(0.32, 0.28, 0.25, 1)
+
+[node name="Rock16" type="Polygon2D" parent="TerrainContainer/RockPool"]
+visible = false
+color = Color(0.32, 0.28, 0.25, 1)
+
+[node name="Rock17" type="Polygon2D" parent="TerrainContainer/RockPool"]
+visible = false
+color = Color(0.32, 0.28, 0.25, 1)
+
+[node name="Rock18" type="Polygon2D" parent="TerrainContainer/RockPool"]
+visible = false
+color = Color(0.32, 0.28, 0.25, 1)
+
+[node name="Rock19" type="Polygon2D" parent="TerrainContainer/RockPool"]
+visible = false
+color = Color(0.32, 0.28, 0.25, 1)
+
+[node name="Rock20" type="Polygon2D" parent="TerrainContainer/RockPool"]
+visible = false
+color = Color(0.32, 0.28, 0.25, 1)
+
+[node name="Rock21" type="Polygon2D" parent="TerrainContainer/RockPool"]
+visible = false
+color = Color(0.32, 0.28, 0.25, 1)
+
+[node name="Rock22" type="Polygon2D" parent="TerrainContainer/RockPool"]
+visible = false
+color = Color(0.32, 0.28, 0.25, 1)
+
+[node name="Rock23" type="Polygon2D" parent="TerrainContainer/RockPool"]
+visible = false
+color = Color(0.32, 0.28, 0.25, 1)
+
+[node name="Rock24" type="Polygon2D" parent="TerrainContainer/RockPool"]
+visible = false
+color = Color(0.32, 0.28, 0.25, 1)
+
+[node name="Rock25" type="Polygon2D" parent="TerrainContainer/RockPool"]
+visible = false
+color = Color(0.32, 0.28, 0.25, 1)
+
+[node name="Rock26" type="Polygon2D" parent="TerrainContainer/RockPool"]
+visible = false
+color = Color(0.32, 0.28, 0.25, 1)
+
+[node name="Rock27" type="Polygon2D" parent="TerrainContainer/RockPool"]
+visible = false
+color = Color(0.32, 0.28, 0.25, 1)
+
+[node name="Rock28" type="Polygon2D" parent="TerrainContainer/RockPool"]
+visible = false
+color = Color(0.32, 0.28, 0.25, 1)
+
+[node name="Rock29" type="Polygon2D" parent="TerrainContainer/RockPool"]
+visible = false
+color = Color(0.32, 0.28, 0.25, 1)
+
+[node name="Rock30" type="Polygon2D" parent="TerrainContainer/RockPool"]
+visible = false
+color = Color(0.32, 0.28, 0.25, 1)
+
+[node name="Rock31" type="Polygon2D" parent="TerrainContainer/RockPool"]
+visible = false
+color = Color(0.32, 0.28, 0.25, 1)
+
+[node name="Rock32" type="Polygon2D" parent="TerrainContainer/RockPool"]
+visible = false
+color = Color(0.32, 0.28, 0.25, 1)
+
+[node name="Rock33" type="Polygon2D" parent="TerrainContainer/RockPool"]
+visible = false
+color = Color(0.32, 0.28, 0.25, 1)
+
+[node name="Rock34" type="Polygon2D" parent="TerrainContainer/RockPool"]
+visible = false
+color = Color(0.32, 0.28, 0.25, 1)
+
+[node name="Rock35" type="Polygon2D" parent="TerrainContainer/RockPool"]
+visible = false
+color = Color(0.32, 0.28, 0.25, 1)
+
+[node name="Rock36" type="Polygon2D" parent="TerrainContainer/RockPool"]
+visible = false
+color = Color(0.32, 0.28, 0.25, 1)
+
+[node name="Rock37" type="Polygon2D" parent="TerrainContainer/RockPool"]
+visible = false
+color = Color(0.32, 0.28, 0.25, 1)
+
+[node name="Rock38" type="Polygon2D" parent="TerrainContainer/RockPool"]
+visible = false
+color = Color(0.32, 0.28, 0.25, 1)
+
+[node name="Rock39" type="Polygon2D" parent="TerrainContainer/RockPool"]
+visible = false
+color = Color(0.32, 0.28, 0.25, 1)
+
+[node name="Rock40" type="Polygon2D" parent="TerrainContainer/RockPool"]
+visible = false
+color = Color(0.32, 0.28, 0.25, 1)
+
+[node name="Rock41" type="Polygon2D" parent="TerrainContainer/RockPool"]
+visible = false
+color = Color(0.32, 0.28, 0.25, 1)
+
+[node name="Rock42" type="Polygon2D" parent="TerrainContainer/RockPool"]
+visible = false
+color = Color(0.32, 0.28, 0.25, 1)
+
+[node name="Rock43" type="Polygon2D" parent="TerrainContainer/RockPool"]
+visible = false
+color = Color(0.32, 0.28, 0.25, 1)
+
+[node name="Rock44" type="Polygon2D" parent="TerrainContainer/RockPool"]
+visible = false
+color = Color(0.32, 0.28, 0.25, 1)
+
+[node name="Rock45" type="Polygon2D" parent="TerrainContainer/RockPool"]
+visible = false
+color = Color(0.32, 0.28, 0.25, 1)
+
+[node name="Rock46" type="Polygon2D" parent="TerrainContainer/RockPool"]
+visible = false
+color = Color(0.32, 0.28, 0.25, 1)
+
+[node name="Rock47" type="Polygon2D" parent="TerrainContainer/RockPool"]
+visible = false
+color = Color(0.32, 0.28, 0.25, 1)
+
+[node name="Rock48" type="Polygon2D" parent="TerrainContainer/RockPool"]
+visible = false
+color = Color(0.32, 0.28, 0.25, 1)
+
+[node name="Rock49" type="Polygon2D" parent="TerrainContainer/RockPool"]
+visible = false
+color = Color(0.32, 0.28, 0.25, 1)
+
+[node name="Rock50" type="Polygon2D" parent="TerrainContainer/RockPool"]
+visible = false
+color = Color(0.32, 0.28, 0.25, 1)
+
+[node name="MineralPool" type="Node2D" parent="TerrainContainer"]
+
+[node name="Mineral1" type="Polygon2D" parent="TerrainContainer/MineralPool"]
+visible = false
+
+[node name="Mineral2" type="Polygon2D" parent="TerrainContainer/MineralPool"]
+visible = false
+
+[node name="Mineral3" type="Polygon2D" parent="TerrainContainer/MineralPool"]
+visible = false
+
+[node name="Mineral4" type="Polygon2D" parent="TerrainContainer/MineralPool"]
+visible = false
+
+[node name="Mineral5" type="Polygon2D" parent="TerrainContainer/MineralPool"]
+visible = false
+
+[node name="Mineral6" type="Polygon2D" parent="TerrainContainer/MineralPool"]
+visible = false
+
+[node name="Mineral7" type="Polygon2D" parent="TerrainContainer/MineralPool"]
+visible = false
+
+[node name="Mineral8" type="Polygon2D" parent="TerrainContainer/MineralPool"]
+visible = false
+
+[node name="Mineral9" type="Polygon2D" parent="TerrainContainer/MineralPool"]
+visible = false
+
+[node name="Mineral10" type="Polygon2D" parent="TerrainContainer/MineralPool"]
+visible = false
+
+[node name="Mineral11" type="Polygon2D" parent="TerrainContainer/MineralPool"]
+visible = false
+
+[node name="Mineral12" type="Polygon2D" parent="TerrainContainer/MineralPool"]
+visible = false
+
+[node name="Mineral13" type="Polygon2D" parent="TerrainContainer/MineralPool"]
+visible = false
+
+[node name="Mineral14" type="Polygon2D" parent="TerrainContainer/MineralPool"]
+visible = false
+
+[node name="Mineral15" type="Polygon2D" parent="TerrainContainer/MineralPool"]
+visible = false
+
+[node name="Mineral16" type="Polygon2D" parent="TerrainContainer/MineralPool"]
+visible = false
+
+[node name="Mineral17" type="Polygon2D" parent="TerrainContainer/MineralPool"]
+visible = false
+
+[node name="Mineral18" type="Polygon2D" parent="TerrainContainer/MineralPool"]
+visible = false
+
+[node name="Mineral19" type="Polygon2D" parent="TerrainContainer/MineralPool"]
+visible = false
+
+[node name="Mineral20" type="Polygon2D" parent="TerrainContainer/MineralPool"]
+visible = false
+
+[node name="Mineral21" type="Polygon2D" parent="TerrainContainer/MineralPool"]
+visible = false
+
+[node name="Mineral22" type="Polygon2D" parent="TerrainContainer/MineralPool"]
+visible = false
+
+[node name="Mineral23" type="Polygon2D" parent="TerrainContainer/MineralPool"]
+visible = false
+
+[node name="Mineral24" type="Polygon2D" parent="TerrainContainer/MineralPool"]
+visible = false
+
+[node name="Mineral25" type="Polygon2D" parent="TerrainContainer/MineralPool"]
+visible = false
+
+[node name="Mineral26" type="Polygon2D" parent="TerrainContainer/MineralPool"]
+visible = false
+
+[node name="Mineral27" type="Polygon2D" parent="TerrainContainer/MineralPool"]
+visible = false
+
+[node name="Mineral28" type="Polygon2D" parent="TerrainContainer/MineralPool"]
+visible = false
+
+[node name="Mineral29" type="Polygon2D" parent="TerrainContainer/MineralPool"]
+visible = false
+
+[node name="Mineral30" type="Polygon2D" parent="TerrainContainer/MineralPool"]
+visible = false
+
+[node name="Mineral31" type="Polygon2D" parent="TerrainContainer/MineralPool"]
+visible = false
+
+[node name="Mineral32" type="Polygon2D" parent="TerrainContainer/MineralPool"]
+visible = false
+
+[node name="Mineral33" type="Polygon2D" parent="TerrainContainer/MineralPool"]
+visible = false
+
+[node name="Mineral34" type="Polygon2D" parent="TerrainContainer/MineralPool"]
+visible = false
+
+[node name="Mineral35" type="Polygon2D" parent="TerrainContainer/MineralPool"]
+visible = false
+
+[node name="Mineral36" type="Polygon2D" parent="TerrainContainer/MineralPool"]
+visible = false
+
+[node name="Mineral37" type="Polygon2D" parent="TerrainContainer/MineralPool"]
+visible = false
+
+[node name="Mineral38" type="Polygon2D" parent="TerrainContainer/MineralPool"]
+visible = false
+
+[node name="Mineral39" type="Polygon2D" parent="TerrainContainer/MineralPool"]
+visible = false
+
+[node name="Mineral40" type="Polygon2D" parent="TerrainContainer/MineralPool"]
+visible = false
+
+[node name="TerrainFill" type="Polygon2D" parent="TerrainContainer"]
+color = Color(0.25, 0.2, 0.18, 1)
+
+[node name="TerrainLine" type="Line2D" parent="TerrainContainer"]
+width = 4.0
+default_color = Color(0.5, 0.4, 0.35, 1)
+
+[node name="Rocket" type="Sprite2D" parent="."]
+position = Vector2(250, 200)
+scale = Vector2(0.15, 0.15)
+
+[node name="Laser" type="Line2D" parent="."]
+width = 6.0
+default_color = Color(0.2, 0.9, 1, 1)
+
+[node name="ParticlesContainer" type="Node2D" parent="."]
+z_index = 10
+
+[node name="ParticlePool" type="Node2D" parent="ParticlesContainer"]
+
+[node name="Particle1" type="ColorRect" parent="ParticlesContainer/ParticlePool"]
+visible = false
+offset_right = 4.0
+offset_bottom = 4.0
+
+[node name="Particle2" type="ColorRect" parent="ParticlesContainer/ParticlePool"]
+visible = false
+offset_right = 4.0
+offset_bottom = 4.0
+
+[node name="Particle3" type="ColorRect" parent="ParticlesContainer/ParticlePool"]
+visible = false
+offset_right = 4.0
+offset_bottom = 4.0
+
+[node name="Particle4" type="ColorRect" parent="ParticlesContainer/ParticlePool"]
+visible = false
+offset_right = 4.0
+offset_bottom = 4.0
+
+[node name="Particle5" type="ColorRect" parent="ParticlesContainer/ParticlePool"]
+visible = false
+offset_right = 4.0
+offset_bottom = 4.0
+
+[node name="Particle6" type="ColorRect" parent="ParticlesContainer/ParticlePool"]
+visible = false
+offset_right = 4.0
+offset_bottom = 4.0
+
+[node name="Particle7" type="ColorRect" parent="ParticlesContainer/ParticlePool"]
+visible = false
+offset_right = 4.0
+offset_bottom = 4.0
+
+[node name="Particle8" type="ColorRect" parent="ParticlesContainer/ParticlePool"]
+visible = false
+offset_right = 4.0
+offset_bottom = 4.0
+
+[node name="Particle9" type="ColorRect" parent="ParticlesContainer/ParticlePool"]
+visible = false
+offset_right = 4.0
+offset_bottom = 4.0
+
+[node name="Particle10" type="ColorRect" parent="ParticlesContainer/ParticlePool"]
+visible = false
+offset_right = 4.0
+offset_bottom = 4.0
+
+[node name="Particle11" type="ColorRect" parent="ParticlesContainer/ParticlePool"]
+visible = false
+offset_right = 4.0
+offset_bottom = 4.0
+
+[node name="Particle12" type="ColorRect" parent="ParticlesContainer/ParticlePool"]
+visible = false
+offset_right = 4.0
+offset_bottom = 4.0
+
+[node name="Particle13" type="ColorRect" parent="ParticlesContainer/ParticlePool"]
+visible = false
+offset_right = 4.0
+offset_bottom = 4.0
+
+[node name="Particle14" type="ColorRect" parent="ParticlesContainer/ParticlePool"]
+visible = false
+offset_right = 4.0
+offset_bottom = 4.0
+
+[node name="Particle15" type="ColorRect" parent="ParticlesContainer/ParticlePool"]
+visible = false
+offset_right = 4.0
+offset_bottom = 4.0
+
+[node name="Particle16" type="ColorRect" parent="ParticlesContainer/ParticlePool"]
+visible = false
+offset_right = 4.0
+offset_bottom = 4.0
+
+[node name="Particle17" type="ColorRect" parent="ParticlesContainer/ParticlePool"]
+visible = false
+offset_right = 4.0
+offset_bottom = 4.0
+
+[node name="Particle18" type="ColorRect" parent="ParticlesContainer/ParticlePool"]
+visible = false
+offset_right = 4.0
+offset_bottom = 4.0
+
+[node name="Particle19" type="ColorRect" parent="ParticlesContainer/ParticlePool"]
+visible = false
+offset_right = 4.0
+offset_bottom = 4.0
+
+[node name="Particle20" type="ColorRect" parent="ParticlesContainer/ParticlePool"]
+visible = false
+offset_right = 4.0
+offset_bottom = 4.0
+
+
+[node name="UI" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TopBar" type="HBoxContainer" parent="UI"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = 90.0
+grow_horizontal = 2
+theme_override_constants/separation = 20
+
+[node name="LeftGauges" type="HBoxContainer" parent="UI/TopBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.5
+theme_override_constants/separation = 15
+
+[node name="FuelPanel" type="PanelContainer" parent="UI/TopBar/LeftGauges"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_1")
+
+[node name="VBox" type="VBoxContainer" parent="UI/TopBar/LeftGauges/FuelPanel"]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="Label" type="Label" parent="UI/TopBar/LeftGauges/FuelPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.9, 0.5, 1)
+theme_override_font_sizes/font_size = 18
+text = "FUEL"
+horizontal_alignment = 1
+
+[node name="FuelBar" type="ProgressBar" parent="UI/TopBar/LeftGauges/FuelPanel/VBox"]
+custom_minimum_size = Vector2(0, 28)
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_styles/background = SubResource("StyleBoxFlat_2")
+theme_override_styles/fill = SubResource("StyleBoxFlat_3")
+max_value = 100.0
+value = 100.0
+show_percentage = false
+
+[node name="HeatPanel" type="PanelContainer" parent="UI/TopBar/LeftGauges"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_1")
+
+[node name="VBox" type="VBoxContainer" parent="UI/TopBar/LeftGauges/HeatPanel"]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="Label" type="Label" parent="UI/TopBar/LeftGauges/HeatPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.5, 0.3, 1)
+theme_override_font_sizes/font_size = 18
+text = "HEAT"
+horizontal_alignment = 1
+
+[node name="HeatBar" type="ProgressBar" parent="UI/TopBar/LeftGauges/HeatPanel/VBox"]
+custom_minimum_size = Vector2(0, 28)
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_styles/background = SubResource("StyleBoxFlat_2")
+theme_override_styles/fill = SubResource("StyleBoxFlat_4")
+max_value = 100.0
+show_percentage = false
+
+[node name="DronePanel" type="PanelContainer" parent="UI/TopBar/LeftGauges"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_1")
+
+[node name="VBox" type="VBoxContainer" parent="UI/TopBar/LeftGauges/DronePanel"]
+layout_mode = 2
+
+[node name="DroneLabel" type="Label" parent="UI/TopBar/LeftGauges/DronePanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.8, 1, 1)
+theme_override_font_sizes/font_size = 18
+text = "DRONES: 3"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BeamPanel" type="PanelContainer" parent="UI/TopBar/LeftGauges"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_1")
+
+[node name="VBox" type="VBoxContainer" parent="UI/TopBar/LeftGauges/BeamPanel"]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="Label" type="Label" parent="UI/TopBar/LeftGauges/BeamPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.9, 1, 1)
+theme_override_font_sizes/font_size = 18
+text = "BEAM: 20"
+horizontal_alignment = 1
+
+[node name="BeamBar" type="ProgressBar" parent="UI/TopBar/LeftGauges/BeamPanel/VBox"]
+custom_minimum_size = Vector2(0, 28)
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_styles/background = SubResource("StyleBoxFlat_2")
+theme_override_styles/fill = SubResource("StyleBoxFlat_5")
+max_value = 100.0
+value = 100.0
+show_percentage = false
+
+[node name="Spacer" type="Control" parent="UI/TopBar"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+
+[node name="RightStats" type="VBoxContainer" parent="UI/TopBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.5
+theme_override_constants/separation = 10
+
+[node name="RocketPanel" type="PanelContainer" parent="UI/TopBar/RightStats"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_1")
+
+[node name="Label" type="Label" parent="UI/TopBar/RightStats/RocketPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 1, 1)
+theme_override_font_sizes/font_size = 18
+text = "SR1 (L1)"
+horizontal_alignment = 1
+
+[node name="ScorePanel" type="PanelContainer" parent="UI/TopBar/RightStats"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_1")
+
+[node name="ScoreLabel" type="Label" parent="UI/TopBar/RightStats/ScorePanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 1, 0.4, 1)
+theme_override_font_sizes/font_size = 20
+text = "SCORE: 0"
+horizontal_alignment = 1
+
+[node name="ValuePanel" type="PanelContainer" parent="UI/TopBar/RightStats"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_1")
+
+[node name="Label" type="Label" parent="UI/TopBar/RightStats/ValuePanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.3, 1)
+theme_override_font_sizes/font_size = 18
+text = "VALUE: ₣0"
+horizontal_alignment = 1
+
+[node name="Instructions" type="Label" parent="UI"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -400.0
+offset_top = 100.0
+offset_right = 400.0
+offset_bottom = 140.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(1, 1, 0.8, 1)
+theme_override_font_sizes/font_size = 22
+text = "HOLD SPACE (or FIRE) to mine | Press E for inventory"
+horizontal_alignment = 1
+
+[node name="FireButton" type="Button" parent="UI"]
+visible = false
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -60.0
+offset_top = -70.0
+offset_right = 60.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 0
+text = "FIRE"
+
+[node name="InventoryButton" type="Button" parent="UI"]
+visible = false
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -120.0
+offset_top = -100.0
+offset_right = -10.0
+offset_bottom = -60.0
+grow_horizontal = 0
+grow_vertical = 0
+text = "INVENTORY"
+
+[node name="InventoryPanel" type="PanelContainer" parent="UI"]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -150.0
+offset_right = 200.0
+offset_bottom = 150.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="InventoryLabel" type="Label" parent="UI/InventoryPanel"]
+layout_mode = 2
+text = "MINERALS COLLECTED
+
+Nothing yet...
+
+Score: 0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ReturnButton" type="Button" parent="UI"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -140.0
+offset_top = -50.0
+offset_right = -10.0
+offset_bottom = -10.0
+grow_horizontal = 0
+grow_vertical = 0
+text = "RETURN TO EARTH"

@@ -47,30 +47,10 @@ func _create_anomaly_item(anomaly: Dictionary, index: int) -> Control:
 	var item_container: PanelContainer = AnomalyItemScene.instantiate()
 	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
 
-	# Style the item
-	var item_style = StyleBoxFlat.new()
-	item_style.bg_color = panel_style.ACCENT_SOFT
-	item_style.border_color = panel_style.PANEL_BORDER
-	item_style.border_width_bottom = 1
-	item_style.corner_radius_top_left = 16
-	item_style.corner_radius_top_right = 16
-	item_style.corner_radius_bottom_left = 16
-	item_style.corner_radius_bottom_right = 16
-	item_style.content_margin_left = 18
-	item_style.content_margin_right = 18
-	item_style.content_margin_top = 14
-	item_style.content_margin_bottom = 14
-	item_container.add_theme_stylebox_override("panel", item_style)
+	item_container.add_theme_stylebox_override("panel", panel_style.create_list_item_style())
 
-	# Icon/Number circle
 	var icon_container: PanelContainer = item_container.get_node("HBox/IconContainer")
-	var icon_style = StyleBoxFlat.new()
-	icon_style.bg_color = panel_style.ACCENT
-	icon_style.corner_radius_top_left = 30
-	icon_style.corner_radius_top_right = 30
-	icon_style.corner_radius_bottom_left = 30
-	icon_style.corner_radius_bottom_right = 30
-	icon_container.add_theme_stylebox_override("panel", icon_style)
+	icon_container.add_theme_stylebox_override("panel", panel_style.create_icon_circle_style())
 
 	var icon_label: Label = item_container.get_node("HBox/IconContainer/IconLabel")
 	# Use planet icon for planets, asteroid icon for asteroids (annotation thumbnails archived)
@@ -105,7 +85,12 @@ func _create_anomaly_item(anomaly: Dictionary, index: int) -> Control:
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	var normalized = _normalize_cb.call(anomaly, index)
 	var target_type = "planet" if _get_mode.call() == "planets" else "asteroid"
+	var profile = rm.build_target_profile(normalized, target_type) if rm else {}
+	var distance_au = float(profile.get("distance_au", 0.0))
+	var required_level = int(profile.get("required_level", 1))
 	var scan_count = int(rm.get_target_scan_count(normalized, target_type)) if rm else 0
+	properties.append("Distance: %.0f AU" % distance_au)
+	properties.append("Requires: L%d" % required_level)
 
 	var anomaly_type = anomaly.get("anomalytype", "")
 	if scan_count >= 1 and anomaly_type != "" and anomaly_type != null:
@@ -127,10 +112,7 @@ func _create_anomaly_item(anomaly: Dictionary, index: int) -> Control:
 	if scan_count >= 3 and classification != "" and classification != null:
 		properties.append(classification)
 
-	if properties.size() > 0:
-		subtitle_label.text = " • ".join(properties)
-	else:
-		subtitle_label.text = "Scan to reveal details (%d/3)." % max(scan_count, 0)
+	subtitle_label.text = " • ".join(properties)
 	panel_style.apply_muted(subtitle_label)
 
 	# Select target button (only for detected anomalies)
@@ -154,14 +136,17 @@ func _create_anomaly_item(anomaly: Dictionary, index: int) -> Control:
 	select_btn.pressed.connect(_on_select_cb.bind(anomaly, index, select_btn))
 	detail_btn.pressed.connect(_on_detail_cb.bind(anomaly, index))
 
+	# Store the base style for hover effects
+	var base_style = panel_style.create_list_item_style()
+	
 	# Add hover effect
 	item_container.mouse_entered.connect(func():
-		var hover_style = item_style.duplicate()
+		var hover_style = base_style.duplicate()
 		hover_style.bg_color = panel_style.BUTTON_PRESSED
 		item_container.add_theme_stylebox_override("panel", hover_style)
 	)
 	item_container.mouse_exited.connect(func():
-		item_container.add_theme_stylebox_override("panel", item_style)
+		item_container.add_theme_stylebox_override("panel", base_style)
 	)
 
 	return item_container

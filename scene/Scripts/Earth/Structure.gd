@@ -14,34 +14,20 @@ func _ready() -> void:
 
 func _setup_interaction() -> void:
 	"""Setup mouse input for this structure"""
-	# Enable input processing
-	set_process_unhandled_input(true)
+	# Get the Area2D child that should be pre-created in the scene
+	var area = get_node_or_null("InteractionArea")
+	if not area:
+		push_warning("InteractionArea not found in scene for: " + structure_name)
+		push_warning("Add Area2D node named 'InteractionArea' with CollisionShape2D child to structure scene")
+		return
 	
-	# Get the sprite child for collision detection
-	var sprite = get_node("Sprite2D")
-	if sprite and sprite.texture:
-		# Create a collision area for mouse detection
-		var area = Area2D.new()
-		var collision_shape = CollisionShape2D.new()
-		var rect_shape = RectangleShape2D.new()
-		
-		# Set the collision shape to match the sprite size and position
-		var texture_size = sprite.texture.get_size()
-		rect_shape.size = texture_size * sprite.scale
-		
-		collision_shape.shape = rect_shape
-		# Position the collision shape to match the sprite's position
-		collision_shape.position = sprite.position
-		
-		area.add_child(collision_shape)
-		add_child(area)
-		
-		# Connect area signals
+	# Connect area signals
+	if not area.input_event.is_connected(_on_input_event):
 		area.input_event.connect(_on_input_event)
+	if not area.mouse_entered.is_connected(on_hover_enter):
 		area.mouse_entered.connect(on_hover_enter)
+	if not area.mouse_exited.is_connected(on_hover_exit):
 		area.mouse_exited.connect(on_hover_exit)
-		
-		print("Interaction setup complete for: ", structure_name, " at position: ", sprite.position)
 
 func on_interact() -> void:
 	"""Called when this structure is clicked/interacted with"""

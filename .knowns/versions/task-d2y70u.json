@@ -1,0 +1,217 @@
+{
+  "taskId": "d2y70u",
+  "currentVersion": 5,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "d2y70u",
+      "version": 1,
+      "timestamp": "2026-02-24T14:25:32.369Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        }
+      ],
+      "snapshot": {
+        "title": "Create working mining test scene",
+        "description": "Build simple standalone test that actually works",
+        "status": "in-progress",
+        "priority": "high",
+        "labels": [
+          "testing",
+          "mining"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Test scene runs and button works"
+          },
+          {
+            "completed": false,
+            "text": "Has visual asteroid"
+          },
+          {
+            "completed": false,
+            "text": "Minigame launches on button press"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "d2y70u",
+      "version": 2,
+      "timestamp": "2026-02-24T14:26:00.078Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Test scene runs and button works"
+            },
+            {
+              "completed": false,
+              "text": "Has visual asteroid"
+            },
+            {
+              "completed": false,
+              "text": "Minigame launches on button press"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Test scene runs and button works"
+            },
+            {
+              "completed": true,
+              "text": "Has visual asteroid"
+            },
+            {
+              "completed": true,
+              "text": "Minigame launches on button press"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Create working mining test scene",
+        "description": "Build simple standalone test that actually works",
+        "status": "in-progress",
+        "priority": "high",
+        "labels": [
+          "testing",
+          "mining"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Test scene runs and button works"
+          },
+          {
+            "completed": true,
+            "text": "Has visual asteroid"
+          },
+          {
+            "completed": true,
+            "text": "Minigame launches on button press"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "d2y70u",
+      "version": 3,
+      "timestamp": "2026-02-24T14:26:00.487Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Create working mining test scene",
+        "description": "Build simple standalone test that actually works",
+        "status": "done",
+        "priority": "high",
+        "labels": [
+          "testing",
+          "mining"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Test scene runs and button works"
+          },
+          {
+            "completed": true,
+            "text": "Has visual asteroid"
+          },
+          {
+            "completed": true,
+            "text": "Minigame launches on button press"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "d2y70u",
+      "version": 4,
+      "timestamp": "2026-02-24T23:25:16.860Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "done",
+          "newValue": "todo"
+        }
+      ],
+      "snapshot": {
+        "title": "Create working mining test scene",
+        "description": "Build simple standalone test that actually works",
+        "status": "todo",
+        "priority": "high",
+        "labels": [
+          "testing",
+          "mining"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Test scene runs and button works"
+          },
+          {
+            "completed": true,
+            "text": "Has visual asteroid"
+          },
+          {
+            "completed": true,
+            "text": "Minigame launches on button press"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "d2y70u",
+      "version": 5,
+      "timestamp": "2026-02-25T00:26:46.569Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Create working mining test scene",
+        "description": "Build simple standalone test that actually works",
+        "status": "done",
+        "priority": "high",
+        "labels": [
+          "testing",
+          "mining"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Test scene runs and button works"
+          },
+          {
+            "completed": true,
+            "text": "Has visual asteroid"
+          },
+          {
+            "completed": true,
+            "text": "Minigame launches on button press"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -39,12 +39,11 @@ func _ready() -> void:
 # ============================================================================
 
 func _get_app_controller() -> Node:
-	# Try autoload first
-	var app = get_node_or_null("/root/AppController")
+	var app = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
 	if app:
 		return app
 	
-	# Try as sibling (for tests)
+	# Fallback: Try as sibling (for tests)
 	app = get_parent().get_node_or_null("AppController")
 	if app:
 		return app

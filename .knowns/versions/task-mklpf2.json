@@ -1,0 +1,263 @@
+{
+  "taskId": "mklpf2",
+  "currentVersion": 6,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "mklpf2",
+      "version": 1,
+      "timestamp": "2026-02-24T12:09:21.363Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        }
+      ],
+      "snapshot": {
+        "title": "Design interactive mining minigame system",
+        "description": "Create Dredge-inspired timing-based mining mechanics to replace simple button press. Research completed - implementing rotating stability rings with timing challenges.",
+        "status": "in-progress",
+        "priority": "high",
+        "labels": [
+          "gameplay",
+          "mining",
+          "minigame"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Mining minigame scene created with visual components"
+          },
+          {
+            "completed": false,
+            "text": "Timing mechanics implemented with success/fail feedback"
+          },
+          {
+            "completed": false,
+            "text": "Integration with existing mining system complete"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "mklpf2",
+      "version": 2,
+      "timestamp": "2026-02-24T12:11:53.466Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Mining minigame scene created with visual components"
+            },
+            {
+              "completed": false,
+              "text": "Timing mechanics implemented with success/fail feedback"
+            },
+            {
+              "completed": false,
+              "text": "Integration with existing mining system complete"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Mining minigame scene created with visual components"
+            },
+            {
+              "completed": true,
+              "text": "Timing mechanics implemented with success/fail feedback"
+            },
+            {
+              "completed": true,
+              "text": "Integration with existing mining system complete"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Design interactive mining minigame system",
+        "description": "Create Dredge-inspired timing-based mining mechanics to replace simple button press. Research completed - implementing rotating stability rings with timing challenges.",
+        "status": "in-progress",
+        "priority": "high",
+        "labels": [
+          "gameplay",
+          "mining",
+          "minigame"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Mining minigame scene created with visual components"
+          },
+          {
+            "completed": true,
+            "text": "Timing mechanics implemented with success/fail feedback"
+          },
+          {
+            "completed": true,
+            "text": "Integration with existing mining system complete"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "mklpf2",
+      "version": 3,
+      "timestamp": "2026-02-24T12:12:03.361Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "## Implementation Summary\n\nCreated Dredge-inspired timing-based mining minigame system:\n\n### Core Mechanics\n- **Rotating indicator**: Spins around stability ring at variable speed\n- **Timing challenge**: Player presses SPACE when indicator aligns with green zones\n- **Quality feedback**: PERFECT (90%+) or Good (70%+) hits, Miss for failures\n- **Progressive difficulty**: Speed increases, zones shrink, fewer zones at higher levels\n\n### Difficulty Scaling\n- Level 1-2: 3 zones, base speed, 5 hits required\n- Level 3-4: Smaller zones (85% size), faster rotation\n- Level 5-6: Only 2 zones, even faster\n- Level 7+: Smallest zones (64% size), maximum speed\n\n### Reward System\n- Success rate = hits / (hits + misses)\n- Bonus multiplier: 1.0 + (success_rate * 0.5)\n- Perfect play = 1.5x mining yield\n- 3 misses = mining fails, no resources\n\n### Integration\n- Replaces simple button press in AsteroidPreview\n- Launches as overlay when Mine button pressed\n- Visual feedback with drill depth progression\n- Cooldown timer still applies after completion\n\n### Files Created\n- scene/Scripts/UI/MiningMinigame.gd\n- scene/Scenes/UI/MiningMinigame.tscn\n\n### Files Modified\n- scene/Scripts/UI/AsteroidPreview/AsteroidPreview.gd\n- scene/Scenes/UI/AsteroidPreview/asteroid_preview.tscn"
+        }
+      ],
+      "snapshot": {
+        "title": "Design interactive mining minigame system",
+        "description": "Create Dredge-inspired timing-based mining mechanics to replace simple button press. Research completed - implementing rotating stability rings with timing challenges.",
+        "status": "in-progress",
+        "priority": "high",
+        "labels": [
+          "gameplay",
+          "mining",
+          "minigame"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Mining minigame scene created with visual components"
+          },
+          {
+            "completed": true,
+            "text": "Timing mechanics implemented with success/fail feedback"
+          },
+          {
+            "completed": true,
+            "text": "Integration with existing mining system complete"
+          }
+        ],
+        "implementationNotes": "## Implementation Summary\n\nCreated Dredge-inspired timing-based mining minigame system:\n\n### Core Mechanics\n- **Rotating indicator**: Spins around stability ring at variable speed\n- **Timing challenge**: Player presses SPACE when indicator aligns with green zones\n- **Quality feedback**: PERFECT (90%+) or Good (70%+) hits, Miss for failures\n- **Progressive difficulty**: Speed increases, zones shrink, fewer zones at higher levels\n\n### Difficulty Scaling\n- Level 1-2: 3 zones, base speed, 5 hits required\n- Level 3-4: Smaller zones (85% size), faster rotation\n- Level 5-6: Only 2 zones, even faster\n- Level 7+: Smallest zones (64% size), maximum speed\n\n### Reward System\n- Success rate = hits / (hits + misses)\n- Bonus multiplier: 1.0 + (success_rate * 0.5)\n- Perfect play = 1.5x mining yield\n- 3 misses = mining fails, no resources\n\n### Integration\n- Replaces simple button press in AsteroidPreview\n- Launches as overlay when Mine button pressed\n- Visual feedback with drill depth progression\n- Cooldown timer still applies after completion\n\n### Files Created\n- scene/Scripts/UI/MiningMinigame.gd\n- scene/Scenes/UI/MiningMinigame.tscn\n\n### Files Modified\n- scene/Scripts/UI/AsteroidPreview/AsteroidPreview.gd\n- scene/Scenes/UI/AsteroidPreview/asteroid_preview.tscn"
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "mklpf2",
+      "version": 4,
+      "timestamp": "2026-02-24T12:12:11.285Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Design interactive mining minigame system",
+        "description": "Create Dredge-inspired timing-based mining mechanics to replace simple button press. Research completed - implementing rotating stability rings with timing challenges.",
+        "status": "done",
+        "priority": "high",
+        "labels": [
+          "gameplay",
+          "mining",
+          "minigame"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Mining minigame scene created with visual components"
+          },
+          {
+            "completed": true,
+            "text": "Timing mechanics implemented with success/fail feedback"
+          },
+          {
+            "completed": true,
+            "text": "Integration with existing mining system complete"
+          }
+        ],
+        "implementationNotes": "## Implementation Summary\n\nCreated Dredge-inspired timing-based mining minigame system:\n\n### Core Mechanics\n- **Rotating indicator**: Spins around stability ring at variable speed\n- **Timing challenge**: Player presses SPACE when indicator aligns with green zones\n- **Quality feedback**: PERFECT (90%+) or Good (70%+) hits, Miss for failures\n- **Progressive difficulty**: Speed increases, zones shrink, fewer zones at higher levels\n\n### Difficulty Scaling\n- Level 1-2: 3 zones, base speed, 5 hits required\n- Level 3-4: Smaller zones (85% size), faster rotation\n- Level 5-6: Only 2 zones, even faster\n- Level 7+: Smallest zones (64% size), maximum speed\n\n### Reward System\n- Success rate = hits / (hits + misses)\n- Bonus multiplier: 1.0 + (success_rate * 0.5)\n- Perfect play = 1.5x mining yield\n- 3 misses = mining fails, no resources\n\n### Integration\n- Replaces simple button press in AsteroidPreview\n- Launches as overlay when Mine button pressed\n- Visual feedback with drill depth progression\n- Cooldown timer still applies after completion\n\n### Files Created\n- scene/Scripts/UI/MiningMinigame.gd\n- scene/Scenes/UI/MiningMinigame.tscn\n\n### Files Modified\n- scene/Scripts/UI/AsteroidPreview/AsteroidPreview.gd\n- scene/Scenes/UI/AsteroidPreview/asteroid_preview.tscn"
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "mklpf2",
+      "version": 5,
+      "timestamp": "2026-02-24T23:25:17.552Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "done",
+          "newValue": "todo"
+        }
+      ],
+      "snapshot": {
+        "title": "Design interactive mining minigame system",
+        "description": "Create Dredge-inspired timing-based mining mechanics to replace simple button press. Research completed - implementing rotating stability rings with timing challenges.",
+        "status": "todo",
+        "priority": "high",
+        "labels": [
+          "gameplay",
+          "mining",
+          "minigame"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Mining minigame scene created with visual components"
+          },
+          {
+            "completed": true,
+            "text": "Timing mechanics implemented with success/fail feedback"
+          },
+          {
+            "completed": true,
+            "text": "Integration with existing mining system complete"
+          }
+        ],
+        "implementationNotes": "## Implementation Summary\n\nCreated Dredge-inspired timing-based mining minigame system:\n\n### Core Mechanics\n- **Rotating indicator**: Spins around stability ring at variable speed\n- **Timing challenge**: Player presses SPACE when indicator aligns with green zones\n- **Quality feedback**: PERFECT (90%+) or Good (70%+) hits, Miss for failures\n- **Progressive difficulty**: Speed increases, zones shrink, fewer zones at higher levels\n\n### Difficulty Scaling\n- Level 1-2: 3 zones, base speed, 5 hits required\n- Level 3-4: Smaller zones (85% size), faster rotation\n- Level 5-6: Only 2 zones, even faster\n- Level 7+: Smallest zones (64% size), maximum speed\n\n### Reward System\n- Success rate = hits / (hits + misses)\n- Bonus multiplier: 1.0 + (success_rate * 0.5)\n- Perfect play = 1.5x mining yield\n- 3 misses = mining fails, no resources\n\n### Integration\n- Replaces simple button press in AsteroidPreview\n- Launches as overlay when Mine button pressed\n- Visual feedback with drill depth progression\n- Cooldown timer still applies after completion\n\n### Files Created\n- scene/Scripts/UI/MiningMinigame.gd\n- scene/Scenes/UI/MiningMinigame.tscn\n\n### Files Modified\n- scene/Scripts/UI/AsteroidPreview/AsteroidPreview.gd\n- scene/Scenes/UI/AsteroidPreview/asteroid_preview.tscn"
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "mklpf2",
+      "version": 6,
+      "timestamp": "2026-02-25T00:27:23.513Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Design interactive mining minigame system",
+        "description": "Create Dredge-inspired timing-based mining mechanics to replace simple button press. Research completed - implementing rotating stability rings with timing challenges.",
+        "status": "done",
+        "priority": "high",
+        "labels": [
+          "gameplay",
+          "mining",
+          "minigame"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Mining minigame scene created with visual components"
+          },
+          {
+            "completed": true,
+            "text": "Timing mechanics implemented with success/fail feedback"
+          },
+          {
+            "completed": true,
+            "text": "Integration with existing mining system complete"
+          }
+        ],
+        "implementationNotes": "## Implementation Summary\n\nCreated Dredge-inspired timing-based mining minigame system:\n\n### Core Mechanics\n- **Rotating indicator**: Spins around stability ring at variable speed\n- **Timing challenge**: Player presses SPACE when indicator aligns with green zones\n- **Quality feedback**: PERFECT (90%+) or Good (70%+) hits, Miss for failures\n- **Progressive difficulty**: Speed increases, zones shrink, fewer zones at higher levels\n\n### Difficulty Scaling\n- Level 1-2: 3 zones, base speed, 5 hits required\n- Level 3-4: Smaller zones (85% size), faster rotation\n- Level 5-6: Only 2 zones, even faster\n- Level 7+: Smallest zones (64% size), maximum speed\n\n### Reward System\n- Success rate = hits / (hits + misses)\n- Bonus multiplier: 1.0 + (success_rate * 0.5)\n- Perfect play = 1.5x mining yield\n- 3 misses = mining fails, no resources\n\n### Integration\n- Replaces simple button press in AsteroidPreview\n- Launches as overlay when Mine button pressed\n- Visual feedback with drill depth progression\n- Cooldown timer still applies after completion\n\n### Files Created\n- scene/Scripts/UI/MiningMinigame.gd\n- scene/Scenes/UI/MiningMinigame.tscn\n\n### Files Modified\n- scene/Scripts/UI/AsteroidPreview/AsteroidPreview.gd\n- scene/Scenes/UI/AsteroidPreview/asteroid_preview.tscn"
+      }
+    }
+  ]
+}
