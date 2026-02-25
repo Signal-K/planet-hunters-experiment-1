@@ -4,6 +4,8 @@ extends Node
 signal scene_changing
 signal scene_changed
 
+const SceneFlashOverlayScene = preload("res://Scenes/UI/Templates/SceneFlashOverlay.tscn")
+
 var current_scene_index: int = 0
 var scene_list: Array[String] = [
     "res://Scenes/Earth/earth_base_1.tscn"
@@ -24,11 +26,11 @@ func change_to_scene(scene_path: String) -> void:
 	var tween = get_tree().create_tween()
 	
 	# Flash effect
-	var flash_overlay = ColorRect.new()
-	flash_overlay.color = Color.WHITE
-	flash_overlay.modulate.a = 0.0
+	var flash_overlay: ColorRect = SceneFlashOverlayScene.instantiate()
+	if flash_overlay == null:
+		get_tree().change_scene_to_file(scene_path)
+		return
 	get_tree().current_scene.add_child(flash_overlay)
-	flash_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	
 	tween.tween_property(flash_overlay, "modulate:a", 0.8, 0.15)
 	tween.tween_callback(func(): get_tree().change_scene_to_file(scene_path))

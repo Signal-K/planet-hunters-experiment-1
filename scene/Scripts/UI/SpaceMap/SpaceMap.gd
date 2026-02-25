@@ -107,14 +107,23 @@ func _draw() -> void:
 	var size = _last_size
 	if size == Vector2.ZERO:
 		return
-	draw_rect(Rect2(Vector2.ZERO, size), Color(0, 0, 0, 1), true)
+	
+	var NebulaTheme = preload("res://Resources/NebulaSciTheme.gd")
+	
+	# Draw nebula gradient background
+	var gradient = NebulaTheme.create_nebula_gradient()
+	for i in range(4):
+		var t = float(i) / 3.0
+		var color = gradient.sample(t)
+		var rect_height = size.y / 4.0
+		draw_rect(Rect2(0, i * rect_height, size.x, rect_height), color, true)
 
 	for s in _stars:
 		draw_circle(s["pos"], s["r"], STAR_COLOR)
 
 	var center = size * 0.5
 	for r in _orbit_radii:
-		draw_arc(center, r, 0.0, TAU, 160, ORBIT_COLOR, 1.0, true)
+		draw_arc(center, r, 0.0, TAU, 160, Color(NebulaTheme.PANEL_OUTLINE.r, NebulaTheme.PANEL_OUTLINE.g, NebulaTheme.PANEL_OUTLINE.b, 0.3), 1.5, true)
 
 	var sun_r = _last_sun_radius
 	draw_circle(center, sun_r * 1.4, Color(1, 0.9, 0.5, 0.25))
@@ -132,7 +141,7 @@ func _draw() -> void:
 		var color = PLANET_COLOR if t == "planet" else ASTEROID_COLOR
 		var radius = float(entry.get("radius", sun_r * 0.18))
 		draw_circle(pos, radius, color)
-		draw_string(_label_font, pos + Vector2(10, -10), str(entry.get("label", target_id)), HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color(0.9, 0.9, 0.9, 0.9))
+		draw_string(_label_font, pos + Vector2(10, -10), str(entry.get("label", target_id)), HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color(0.95, 0.95, 0.98, 0.95))
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:

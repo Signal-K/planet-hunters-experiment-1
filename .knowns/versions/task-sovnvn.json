@@ -1,0 +1,129 @@
+{
+  "taskId": "sovnvn",
+  "currentVersion": 4,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "sovnvn",
+      "version": 1,
+      "timestamp": "2026-02-19T03:10:13.292Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Update SpaceMap scene to be its own tscn file",
+        "description": "A lot of scenes/buttons like the SpaceMap are, right now, just a bunch of `.gd` files that create behaviour/UIs at runtime. I want these scenes to be `tscn` files, e.g. `SpaceMap.tscn`, where all UI elements are part of the Godot scene. the `.gd` files should be used for creating behaviour, functionality, etc....not for UI. Identify all `.gd` scripts that follow this incorrect pattern and fix, please",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "scenes",
+          "scripts",
+          "tscn",
+          "map",
+          "ui",
+          "mission-select"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "sovnvn",
+      "version": 2,
+      "timestamp": "2026-02-19T03:12:59.409Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "newValue": "1. Identify all scripts that still create panel/card/button UI nodes at runtime (scene-level and list/card templates).\n2. Add reusable .tscn templates for matching dynamic rows/cards and add missing fixed containers to existing panel scenes.\n3. Refactor scripts to instantiate templates and bind data/behavior only (no structural UI creation with *.new()).\n4. Update/adjust tests for affected flows and run the targeted experience/supabase suites.\n5. Check AC, add completion notes, stop timer, and mark task done."
+        }
+      ],
+      "snapshot": {
+        "title": "Update SpaceMap scene to be its own tscn file",
+        "description": "A lot of scenes/buttons like the SpaceMap are, right now, just a bunch of `.gd` files that create behaviour/UIs at runtime. I want these scenes to be `tscn` files, e.g. `SpaceMap.tscn`, where all UI elements are part of the Godot scene. the `.gd` files should be used for creating behaviour, functionality, etc....not for UI. Identify all `.gd` scripts that follow this incorrect pattern and fix, please",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "scenes",
+          "scripts",
+          "tscn",
+          "map",
+          "ui",
+          "mission-select"
+        ],
+        "acceptanceCriteria": [],
+        "implementationPlan": "1. Identify all scripts that still create panel/card/button UI nodes at runtime (scene-level and list/card templates).\n2. Add reusable .tscn templates for matching dynamic rows/cards and add missing fixed containers to existing panel scenes.\n3. Refactor scripts to instantiate templates and bind data/behavior only (no structural UI creation with *.new()).\n4. Update/adjust tests for affected flows and run the targeted experience/supabase suites.\n5. Check AC, add completion notes, stop timer, and mark task done."
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "sovnvn",
+      "version": 3,
+      "timestamp": "2026-02-19T03:22:57.486Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "## Summary\n- Migrated runtime-built UI structures to reusable tscn templates under scene/Scenes/UI/Templates/.\n- Refactored matching scripts to instantiate templates and bind data/signals only (behavior in gd, structure in scenes).\n- Added missing fixed scene nodes where scripts previously created containers at runtime (e.g. LaunchedList, TargetsSection, control-station roadmap containers).\n- Added scene/Scenes/UI/RocketSelectorOverlay.tscn and switched New Mission rocket-selector launch to scene instantiation.\n\n## Files updated\n- scene/Scripts/UI/NewMissionPanel.gd, scene/Scripts/UI/NewMissionLaunchList.gd, scene/Scripts/UI/NewMissionAnnotations.gd\n- scene/Scripts/UI/SatelliteStationPanelList.gd, scene/Scripts/UI/SatelliteStationPanel.gd\n- scene/Scripts/UI/SubcontractorsPanel.gd, scene/Scripts/UI/ControlStationPanel.gd, scene/Scripts/UI/MenuPanel.gd\n- scene/Scripts/Earth/RocketSelectorUIBuilder.gd, scene/Scripts/Earth/LaunchpadSelectorPanel.gd\n- scene/Scenes/UI/NewMissionPanel.tscn, scene/Scenes/UI/ControlStationPanel.tscn, scene/Scenes/Earth/earth_launchpad.tscn\n- New templates in scene/Scenes/UI/Templates/ plus scene/Scenes/UI/RocketSelectorOverlay.tscn\n\n## Verification\n- No further tests run per user instruction (environment crashes when running headless Godot tests)."
+        }
+      ],
+      "snapshot": {
+        "title": "Update SpaceMap scene to be its own tscn file",
+        "description": "A lot of scenes/buttons like the SpaceMap are, right now, just a bunch of `.gd` files that create behaviour/UIs at runtime. I want these scenes to be `tscn` files, e.g. `SpaceMap.tscn`, where all UI elements are part of the Godot scene. the `.gd` files should be used for creating behaviour, functionality, etc....not for UI. Identify all `.gd` scripts that follow this incorrect pattern and fix, please",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "scenes",
+          "scripts",
+          "tscn",
+          "map",
+          "ui",
+          "mission-select"
+        ],
+        "acceptanceCriteria": [],
+        "implementationPlan": "1. Identify all scripts that still create panel/card/button UI nodes at runtime (scene-level and list/card templates).\n2. Add reusable .tscn templates for matching dynamic rows/cards and add missing fixed containers to existing panel scenes.\n3. Refactor scripts to instantiate templates and bind data/behavior only (no structural UI creation with *.new()).\n4. Update/adjust tests for affected flows and run the targeted experience/supabase suites.\n5. Check AC, add completion notes, stop timer, and mark task done.",
+        "implementationNotes": "## Summary\n- Migrated runtime-built UI structures to reusable tscn templates under scene/Scenes/UI/Templates/.\n- Refactored matching scripts to instantiate templates and bind data/signals only (behavior in gd, structure in scenes).\n- Added missing fixed scene nodes where scripts previously created containers at runtime (e.g. LaunchedList, TargetsSection, control-station roadmap containers).\n- Added scene/Scenes/UI/RocketSelectorOverlay.tscn and switched New Mission rocket-selector launch to scene instantiation.\n\n## Files updated\n- scene/Scripts/UI/NewMissionPanel.gd, scene/Scripts/UI/NewMissionLaunchList.gd, scene/Scripts/UI/NewMissionAnnotations.gd\n- scene/Scripts/UI/SatelliteStationPanelList.gd, scene/Scripts/UI/SatelliteStationPanel.gd\n- scene/Scripts/UI/SubcontractorsPanel.gd, scene/Scripts/UI/ControlStationPanel.gd, scene/Scripts/UI/MenuPanel.gd\n- scene/Scripts/Earth/RocketSelectorUIBuilder.gd, scene/Scripts/Earth/LaunchpadSelectorPanel.gd\n- scene/Scenes/UI/NewMissionPanel.tscn, scene/Scenes/UI/ControlStationPanel.tscn, scene/Scenes/Earth/earth_launchpad.tscn\n- New templates in scene/Scenes/UI/Templates/ plus scene/Scenes/UI/RocketSelectorOverlay.tscn\n\n## Verification\n- No further tests run per user instruction (environment crashes when running headless Godot tests)."
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "sovnvn",
+      "version": 4,
+      "timestamp": "2026-02-19T03:23:11.268Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Update SpaceMap scene to be its own tscn file",
+        "description": "A lot of scenes/buttons like the SpaceMap are, right now, just a bunch of `.gd` files that create behaviour/UIs at runtime. I want these scenes to be `tscn` files, e.g. `SpaceMap.tscn`, where all UI elements are part of the Godot scene. the `.gd` files should be used for creating behaviour, functionality, etc....not for UI. Identify all `.gd` scripts that follow this incorrect pattern and fix, please",
+        "status": "done",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "scenes",
+          "scripts",
+          "tscn",
+          "map",
+          "ui",
+          "mission-select"
+        ],
+        "acceptanceCriteria": [],
+        "implementationPlan": "1. Identify all scripts that still create panel/card/button UI nodes at runtime (scene-level and list/card templates).\n2. Add reusable .tscn templates for matching dynamic rows/cards and add missing fixed containers to existing panel scenes.\n3. Refactor scripts to instantiate templates and bind data/behavior only (no structural UI creation with *.new()).\n4. Update/adjust tests for affected flows and run the targeted experience/supabase suites.\n5. Check AC, add completion notes, stop timer, and mark task done.",
+        "implementationNotes": "## Summary\n- Migrated runtime-built UI structures to reusable tscn templates under scene/Scenes/UI/Templates/.\n- Refactored matching scripts to instantiate templates and bind data/signals only (behavior in gd, structure in scenes).\n- Added missing fixed scene nodes where scripts previously created containers at runtime (e.g. LaunchedList, TargetsSection, control-station roadmap containers).\n- Added scene/Scenes/UI/RocketSelectorOverlay.tscn and switched New Mission rocket-selector launch to scene instantiation.\n\n## Files updated\n- scene/Scripts/UI/NewMissionPanel.gd, scene/Scripts/UI/NewMissionLaunchList.gd, scene/Scripts/UI/NewMissionAnnotations.gd\n- scene/Scripts/UI/SatelliteStationPanelList.gd, scene/Scripts/UI/SatelliteStationPanel.gd\n- scene/Scripts/UI/SubcontractorsPanel.gd, scene/Scripts/UI/ControlStationPanel.gd, scene/Scripts/UI/MenuPanel.gd\n- scene/Scripts/Earth/RocketSelectorUIBuilder.gd, scene/Scripts/Earth/LaunchpadSelectorPanel.gd\n- scene/Scenes/UI/NewMissionPanel.tscn, scene/Scenes/UI/ControlStationPanel.tscn, scene/Scenes/Earth/earth_launchpad.tscn\n- New templates in scene/Scenes/UI/Templates/ plus scene/Scenes/UI/RocketSelectorOverlay.tscn\n\n## Verification\n- No further tests run per user instruction (environment crashes when running headless Godot tests)."
+      }
+    }
+  ]
+}

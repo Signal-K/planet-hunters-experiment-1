@@ -1,0 +1,257 @@
+{
+  "taskId": "mv7aeq",
+  "currentVersion": 6,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "mv7aeq",
+      "version": 1,
+      "timestamp": "2026-02-24T14:47:40.235Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        }
+      ],
+      "snapshot": {
+        "title": "Make mining minigame scene-driven",
+        "description": "Move all configuration, visual setup, and structure into .tscn files. Scripts should only handle input/physics/state",
+        "status": "in-progress",
+        "priority": "high",
+        "labels": [
+          "refactor",
+          "architecture"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Scene file defines all visual elements"
+          },
+          {
+            "completed": false,
+            "text": "Script only handles: input, scrolling, collision, scoring"
+          },
+          {
+            "completed": false,
+            "text": "No visual creation in code"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "mv7aeq",
+      "version": 2,
+      "timestamp": "2026-02-24T14:48:18.763Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Scene file defines all visual elements"
+            },
+            {
+              "completed": false,
+              "text": "Script only handles: input, scrolling, collision, scoring"
+            },
+            {
+              "completed": false,
+              "text": "No visual creation in code"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Scene file defines all visual elements"
+            },
+            {
+              "completed": true,
+              "text": "Script only handles: input, scrolling, collision, scoring"
+            },
+            {
+              "completed": true,
+              "text": "No visual creation in code"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Make mining minigame scene-driven",
+        "description": "Move all configuration, visual setup, and structure into .tscn files. Scripts should only handle input/physics/state",
+        "status": "in-progress",
+        "priority": "high",
+        "labels": [
+          "refactor",
+          "architecture"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Scene file defines all visual elements"
+          },
+          {
+            "completed": true,
+            "text": "Script only handles: input, scrolling, collision, scoring"
+          },
+          {
+            "completed": true,
+            "text": "No visual creation in code"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "mv7aeq",
+      "version": 3,
+      "timestamp": "2026-02-24T14:48:18.970Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "## Scene-Driven Architecture\n\n### Script Reduced to 80 Lines\n- Only handles: input, scrolling, collision detection, scoring\n- No visual creation, no setup code\n- Uses @export for all configuration\n- Direct node path access ($Rocket, $Terrain, etc.)\n\n### Scene File Contains\n- All visual elements (20+ objects)\n- All minerals with metadata\n- All obstacles with metadata  \n- Complete UI hierarchy\n- Terrain surface polygon\n- Rocket AnimatedSprite2D\n- Laser Line2D\n\n### Configuration via @export\n- scroll_speed, fuel_drain_rate, max_fuel\n- heat_per_shot, heat_cooldown, max_heat\n- rocket_speed\n- All tunable in editor\n\n### Script Responsibilities ONLY\n- Process input (keyboard/mouse)\n- Update scroll offset\n- Check laser hits via metadata\n- Check collisions via metadata\n- Update UI text/bars\n- Emit signals"
+        }
+      ],
+      "snapshot": {
+        "title": "Make mining minigame scene-driven",
+        "description": "Move all configuration, visual setup, and structure into .tscn files. Scripts should only handle input/physics/state",
+        "status": "in-progress",
+        "priority": "high",
+        "labels": [
+          "refactor",
+          "architecture"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Scene file defines all visual elements"
+          },
+          {
+            "completed": true,
+            "text": "Script only handles: input, scrolling, collision, scoring"
+          },
+          {
+            "completed": true,
+            "text": "No visual creation in code"
+          }
+        ],
+        "implementationNotes": "## Scene-Driven Architecture\n\n### Script Reduced to 80 Lines\n- Only handles: input, scrolling, collision detection, scoring\n- No visual creation, no setup code\n- Uses @export for all configuration\n- Direct node path access ($Rocket, $Terrain, etc.)\n\n### Scene File Contains\n- All visual elements (20+ objects)\n- All minerals with metadata\n- All obstacles with metadata  \n- Complete UI hierarchy\n- Terrain surface polygon\n- Rocket AnimatedSprite2D\n- Laser Line2D\n\n### Configuration via @export\n- scroll_speed, fuel_drain_rate, max_fuel\n- heat_per_shot, heat_cooldown, max_heat\n- rocket_speed\n- All tunable in editor\n\n### Script Responsibilities ONLY\n- Process input (keyboard/mouse)\n- Update scroll offset\n- Check laser hits via metadata\n- Check collisions via metadata\n- Update UI text/bars\n- Emit signals"
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "mv7aeq",
+      "version": 4,
+      "timestamp": "2026-02-24T14:48:19.424Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Make mining minigame scene-driven",
+        "description": "Move all configuration, visual setup, and structure into .tscn files. Scripts should only handle input/physics/state",
+        "status": "done",
+        "priority": "high",
+        "labels": [
+          "refactor",
+          "architecture"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Scene file defines all visual elements"
+          },
+          {
+            "completed": true,
+            "text": "Script only handles: input, scrolling, collision, scoring"
+          },
+          {
+            "completed": true,
+            "text": "No visual creation in code"
+          }
+        ],
+        "implementationNotes": "## Scene-Driven Architecture\n\n### Script Reduced to 80 Lines\n- Only handles: input, scrolling, collision detection, scoring\n- No visual creation, no setup code\n- Uses @export for all configuration\n- Direct node path access ($Rocket, $Terrain, etc.)\n\n### Scene File Contains\n- All visual elements (20+ objects)\n- All minerals with metadata\n- All obstacles with metadata  \n- Complete UI hierarchy\n- Terrain surface polygon\n- Rocket AnimatedSprite2D\n- Laser Line2D\n\n### Configuration via @export\n- scroll_speed, fuel_drain_rate, max_fuel\n- heat_per_shot, heat_cooldown, max_heat\n- rocket_speed\n- All tunable in editor\n\n### Script Responsibilities ONLY\n- Process input (keyboard/mouse)\n- Update scroll offset\n- Check laser hits via metadata\n- Check collisions via metadata\n- Update UI text/bars\n- Emit signals"
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "mv7aeq",
+      "version": 5,
+      "timestamp": "2026-02-24T23:25:17.785Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "done",
+          "newValue": "todo"
+        }
+      ],
+      "snapshot": {
+        "title": "Make mining minigame scene-driven",
+        "description": "Move all configuration, visual setup, and structure into .tscn files. Scripts should only handle input/physics/state",
+        "status": "todo",
+        "priority": "high",
+        "labels": [
+          "refactor",
+          "architecture"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Scene file defines all visual elements"
+          },
+          {
+            "completed": true,
+            "text": "Script only handles: input, scrolling, collision, scoring"
+          },
+          {
+            "completed": true,
+            "text": "No visual creation in code"
+          }
+        ],
+        "implementationNotes": "## Scene-Driven Architecture\n\n### Script Reduced to 80 Lines\n- Only handles: input, scrolling, collision detection, scoring\n- No visual creation, no setup code\n- Uses @export for all configuration\n- Direct node path access ($Rocket, $Terrain, etc.)\n\n### Scene File Contains\n- All visual elements (20+ objects)\n- All minerals with metadata\n- All obstacles with metadata  \n- Complete UI hierarchy\n- Terrain surface polygon\n- Rocket AnimatedSprite2D\n- Laser Line2D\n\n### Configuration via @export\n- scroll_speed, fuel_drain_rate, max_fuel\n- heat_per_shot, heat_cooldown, max_heat\n- rocket_speed\n- All tunable in editor\n\n### Script Responsibilities ONLY\n- Process input (keyboard/mouse)\n- Update scroll offset\n- Check laser hits via metadata\n- Check collisions via metadata\n- Update UI text/bars\n- Emit signals"
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "mv7aeq",
+      "version": 6,
+      "timestamp": "2026-02-25T00:27:23.737Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Make mining minigame scene-driven",
+        "description": "Move all configuration, visual setup, and structure into .tscn files. Scripts should only handle input/physics/state",
+        "status": "done",
+        "priority": "high",
+        "labels": [
+          "refactor",
+          "architecture"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Scene file defines all visual elements"
+          },
+          {
+            "completed": true,
+            "text": "Script only handles: input, scrolling, collision, scoring"
+          },
+          {
+            "completed": true,
+            "text": "No visual creation in code"
+          }
+        ],
+        "implementationNotes": "## Scene-Driven Architecture\n\n### Script Reduced to 80 Lines\n- Only handles: input, scrolling, collision detection, scoring\n- No visual creation, no setup code\n- Uses @export for all configuration\n- Direct node path access ($Rocket, $Terrain, etc.)\n\n### Scene File Contains\n- All visual elements (20+ objects)\n- All minerals with metadata\n- All obstacles with metadata  \n- Complete UI hierarchy\n- Terrain surface polygon\n- Rocket AnimatedSprite2D\n- Laser Line2D\n\n### Configuration via @export\n- scroll_speed, fuel_drain_rate, max_fuel\n- heat_per_shot, heat_cooldown, max_heat\n- rocket_speed\n- All tunable in editor\n\n### Script Responsibilities ONLY\n- Process input (keyboard/mouse)\n- Update scroll offset\n- Check laser hits via metadata\n- Check collisions via metadata\n- Update UI text/bars\n- Emit signals"
+      }
+    }
+  ]
+}

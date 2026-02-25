@@ -2,11 +2,11 @@ extends RefCounted
 class_name MineralPricing
 
 const BASE_PRICES := {
-	"Iron": 12,
-	"Nickel": 24,
-	"Cobalt": 36,
-	"Platinum": 120,
-	"Silicates": 8
+	"Iron": 5900000,
+	"Nickel": 6000000,
+	"Cobalt": 6100000,
+	"Platinum": 6200000,
+	"Silicates": 5700000
 }
 
 static func price_for(name: String, amount: int) -> int:

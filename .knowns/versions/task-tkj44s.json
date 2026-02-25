@@ -1,0 +1,218 @@
+{
+  "taskId": "tkj44s",
+  "currentVersion": 4,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "tkj44s",
+      "version": 1,
+      "timestamp": "2026-02-17T05:03:46.683Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "System scanner introduction and incremental reveal behavior",
+        "description": "Implement scanner onboarding behavior from .knowns/assets/IMG_1755.jpeg and .knowns/assets/IMG_1756.jpeg, grounded by progression sketch in .knowns/assets/IMG_1754.jpeg. Use real targets even before scan completion, while scan state controls what information is revealed and when.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "missions",
+          "scanner",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Mission 3 introduces scanner with explicit behavior change"
+          },
+          {
+            "completed": false,
+            "text": "Target source remains real targets regardless of scan completion"
+          },
+          {
+            "completed": false,
+            "text": "Scanning incrementally reveals object information across scan actions"
+          },
+          {
+            "completed": false,
+            "text": "Scanner UI/state does not regress M1/M2 no-scanner expectations"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "tkj44s",
+      "version": 2,
+      "timestamp": "2026-02-17T05:06:35.772Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "Implemented scanner and target-source behavior from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg.\n- Launchpad now auto-loads real targets when none are present (without requiring prior scanner interaction).\n- Launchpad anomaly fetch now persists real detected targets to RocketsManager for mission selection.\n- Added scan-count persistence in RocketsManager (`scan_counts`) and scan-pass recording on completed scans.\n- Satellite station list now reveals target details incrementally by scan count (tiered metadata visibility).\n- Existing M1/M2 expectations preserved: target source remains real targets regardless scan completion.\n- Validation: run_tutorial_tests.gd (2/2 pass), run_experience_tests.gd (19/19 pass)."
+        }
+      ],
+      "snapshot": {
+        "title": "System scanner introduction and incremental reveal behavior",
+        "description": "Implement scanner onboarding behavior from .knowns/assets/IMG_1755.jpeg and .knowns/assets/IMG_1756.jpeg, grounded by progression sketch in .knowns/assets/IMG_1754.jpeg. Use real targets even before scan completion, while scan state controls what information is revealed and when.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "missions",
+          "scanner",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Mission 3 introduces scanner with explicit behavior change"
+          },
+          {
+            "completed": false,
+            "text": "Target source remains real targets regardless of scan completion"
+          },
+          {
+            "completed": false,
+            "text": "Scanning incrementally reveals object information across scan actions"
+          },
+          {
+            "completed": false,
+            "text": "Scanner UI/state does not regress M1/M2 no-scanner expectations"
+          }
+        ],
+        "implementationNotes": "Implemented scanner and target-source behavior from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg.\n- Launchpad now auto-loads real targets when none are present (without requiring prior scanner interaction).\n- Launchpad anomaly fetch now persists real detected targets to RocketsManager for mission selection.\n- Added scan-count persistence in RocketsManager (`scan_counts`) and scan-pass recording on completed scans.\n- Satellite station list now reveals target details incrementally by scan count (tiered metadata visibility).\n- Existing M1/M2 expectations preserved: target source remains real targets regardless scan completion.\n- Validation: run_tutorial_tests.gd (2/2 pass), run_experience_tests.gd (19/19 pass)."
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "tkj44s",
+      "version": 3,
+      "timestamp": "2026-02-17T05:10:40.638Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Mission 3 introduces scanner with explicit behavior change"
+            },
+            {
+              "completed": false,
+              "text": "Target source remains real targets regardless of scan completion"
+            },
+            {
+              "completed": false,
+              "text": "Scanning incrementally reveals object information across scan actions"
+            },
+            {
+              "completed": false,
+              "text": "Scanner UI/state does not regress M1/M2 no-scanner expectations"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Mission 3 introduces scanner with explicit behavior change"
+            },
+            {
+              "completed": true,
+              "text": "Target source remains real targets regardless of scan completion"
+            },
+            {
+              "completed": true,
+              "text": "Scanning incrementally reveals object information across scan actions"
+            },
+            {
+              "completed": true,
+              "text": "Scanner UI/state does not regress M1/M2 no-scanner expectations"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "System scanner introduction and incremental reveal behavior",
+        "description": "Implement scanner onboarding behavior from .knowns/assets/IMG_1755.jpeg and .knowns/assets/IMG_1756.jpeg, grounded by progression sketch in .knowns/assets/IMG_1754.jpeg. Use real targets even before scan completion, while scan state controls what information is revealed and when.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "missions",
+          "scanner",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Mission 3 introduces scanner with explicit behavior change"
+          },
+          {
+            "completed": true,
+            "text": "Target source remains real targets regardless of scan completion"
+          },
+          {
+            "completed": true,
+            "text": "Scanning incrementally reveals object information across scan actions"
+          },
+          {
+            "completed": true,
+            "text": "Scanner UI/state does not regress M1/M2 no-scanner expectations"
+          }
+        ],
+        "implementationNotes": "Implemented scanner and target-source behavior from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg.\n- Launchpad now auto-loads real targets when none are present (without requiring prior scanner interaction).\n- Launchpad anomaly fetch now persists real detected targets to RocketsManager for mission selection.\n- Added scan-count persistence in RocketsManager (`scan_counts`) and scan-pass recording on completed scans.\n- Satellite station list now reveals target details incrementally by scan count (tiered metadata visibility).\n- Existing M1/M2 expectations preserved: target source remains real targets regardless scan completion.\n- Validation: run_tutorial_tests.gd (2/2 pass), run_experience_tests.gd (19/19 pass)."
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "tkj44s",
+      "version": 4,
+      "timestamp": "2026-02-17T05:10:46.109Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "System scanner introduction and incremental reveal behavior",
+        "description": "Implement scanner onboarding behavior from .knowns/assets/IMG_1755.jpeg and .knowns/assets/IMG_1756.jpeg, grounded by progression sketch in .knowns/assets/IMG_1754.jpeg. Use real targets even before scan completion, while scan state controls what information is revealed and when.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "missions",
+          "scanner",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Mission 3 introduces scanner with explicit behavior change"
+          },
+          {
+            "completed": true,
+            "text": "Target source remains real targets regardless of scan completion"
+          },
+          {
+            "completed": true,
+            "text": "Scanning incrementally reveals object information across scan actions"
+          },
+          {
+            "completed": true,
+            "text": "Scanner UI/state does not regress M1/M2 no-scanner expectations"
+          }
+        ],
+        "implementationNotes": "Implemented scanner and target-source behavior from .knowns/assets/IMG_1754.jpeg, .knowns/assets/IMG_1755.jpeg, .knowns/assets/IMG_1756.jpeg.\n- Launchpad now auto-loads real targets when none are present (without requiring prior scanner interaction).\n- Launchpad anomaly fetch now persists real detected targets to RocketsManager for mission selection.\n- Added scan-count persistence in RocketsManager (`scan_counts`) and scan-pass recording on completed scans.\n- Satellite station list now reveals target details incrementally by scan count (tiered metadata visibility).\n- Existing M1/M2 expectations preserved: target source remains real targets regardless scan completion.\n- Validation: run_tutorial_tests.gd (2/2 pass), run_experience_tests.gd (19/19 pass)."
+      }
+    }
+  ]
+}

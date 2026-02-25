@@ -1,0 +1,689 @@
+{
+  "taskId": "gk4g2k",
+  "currentVersion": 12,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "gk4g2k",
+      "version": 1,
+      "timestamp": "2026-02-16T14:59:40.475Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Significant launchpad UI redesign",
+        "description": "Overhaul launchpad rocket selection UI to improve hierarchy, readability, card design, spacing, and visual polish while keeping existing functionality.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "launchpad",
+          "ui",
+          "ux",
+          "rockets"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Launchpad selector has clear visual hierarchy and is readable on desktop/mobile"
+          },
+          {
+            "completed": false,
+            "text": "Rocket cards present stats and actions in a polished, consistent layout"
+          },
+          {
+            "completed": false,
+            "text": "Primary actions (create/back) are visually distinct and accessible"
+          },
+          {
+            "completed": false,
+            "text": "Existing launchpad behavior remains functional (rocket creation, dragging, back)"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "gk4g2k",
+      "version": 2,
+      "timestamp": "2026-02-16T15:00:10.201Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "newValue": "1. Restructure launchpad selector composition to remove nested/overlapping panels and create a single cohesive layout container.\n2. Redesign rocket cards with stronger hierarchy: hero image, title, grouped stats chips, clear pricing row, and prominent Create CTA.\n3. Apply polished visual system (contrast, spacing, borders/shadows, typography sizing) and make panel responsive for smaller viewports.\n4. Keep existing behavior (create/drag/back/target select) intact and run launchpad-related test scripts."
+        }
+      ],
+      "snapshot": {
+        "title": "Significant launchpad UI redesign",
+        "description": "Overhaul launchpad rocket selection UI to improve hierarchy, readability, card design, spacing, and visual polish while keeping existing functionality.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "launchpad",
+          "ui",
+          "ux",
+          "rockets"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Launchpad selector has clear visual hierarchy and is readable on desktop/mobile"
+          },
+          {
+            "completed": false,
+            "text": "Rocket cards present stats and actions in a polished, consistent layout"
+          },
+          {
+            "completed": false,
+            "text": "Primary actions (create/back) are visually distinct and accessible"
+          },
+          {
+            "completed": false,
+            "text": "Existing launchpad behavior remains functional (rocket creation, dragging, back)"
+          }
+        ],
+        "implementationPlan": "1. Restructure launchpad selector composition to remove nested/overlapping panels and create a single cohesive layout container.\n2. Redesign rocket cards with stronger hierarchy: hero image, title, grouped stats chips, clear pricing row, and prominent Create CTA.\n3. Apply polished visual system (contrast, spacing, borders/shadows, typography sizing) and make panel responsive for smaller viewports.\n4. Keep existing behavior (create/drag/back/target select) intact and run launchpad-related test scripts."
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "gk4g2k",
+      "version": 3,
+      "timestamp": "2026-02-16T15:03:41.493Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Launchpad selector has clear visual hierarchy and is readable on desktop/mobile"
+            },
+            {
+              "completed": false,
+              "text": "Rocket cards present stats and actions in a polished, consistent layout"
+            },
+            {
+              "completed": false,
+              "text": "Primary actions (create/back) are visually distinct and accessible"
+            },
+            {
+              "completed": false,
+              "text": "Existing launchpad behavior remains functional (rocket creation, dragging, back)"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Launchpad selector has clear visual hierarchy and is readable on desktop/mobile"
+            },
+            {
+              "completed": false,
+              "text": "Rocket cards present stats and actions in a polished, consistent layout"
+            },
+            {
+              "completed": false,
+              "text": "Primary actions (create/back) are visually distinct and accessible"
+            },
+            {
+              "completed": false,
+              "text": "Existing launchpad behavior remains functional (rocket creation, dragging, back)"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Significant launchpad UI redesign",
+        "description": "Overhaul launchpad rocket selection UI to improve hierarchy, readability, card design, spacing, and visual polish while keeping existing functionality.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "launchpad",
+          "ui",
+          "ux",
+          "rockets"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Launchpad selector has clear visual hierarchy and is readable on desktop/mobile"
+          },
+          {
+            "completed": false,
+            "text": "Rocket cards present stats and actions in a polished, consistent layout"
+          },
+          {
+            "completed": false,
+            "text": "Primary actions (create/back) are visually distinct and accessible"
+          },
+          {
+            "completed": false,
+            "text": "Existing launchpad behavior remains functional (rocket creation, dragging, back)"
+          }
+        ],
+        "implementationPlan": "1. Restructure launchpad selector composition to remove nested/overlapping panels and create a single cohesive layout container.\n2. Redesign rocket cards with stronger hierarchy: hero image, title, grouped stats chips, clear pricing row, and prominent Create CTA.\n3. Apply polished visual system (contrast, spacing, borders/shadows, typography sizing) and make panel responsive for smaller viewports.\n4. Keep existing behavior (create/drag/back/target select) intact and run launchpad-related test scripts."
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "gk4g2k",
+      "version": 4,
+      "timestamp": "2026-02-16T15:03:41.688Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Launchpad selector has clear visual hierarchy and is readable on desktop/mobile"
+            },
+            {
+              "completed": false,
+              "text": "Rocket cards present stats and actions in a polished, consistent layout"
+            },
+            {
+              "completed": false,
+              "text": "Primary actions (create/back) are visually distinct and accessible"
+            },
+            {
+              "completed": false,
+              "text": "Existing launchpad behavior remains functional (rocket creation, dragging, back)"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Launchpad selector has clear visual hierarchy and is readable on desktop/mobile"
+            },
+            {
+              "completed": true,
+              "text": "Rocket cards present stats and actions in a polished, consistent layout"
+            },
+            {
+              "completed": false,
+              "text": "Primary actions (create/back) are visually distinct and accessible"
+            },
+            {
+              "completed": false,
+              "text": "Existing launchpad behavior remains functional (rocket creation, dragging, back)"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Significant launchpad UI redesign",
+        "description": "Overhaul launchpad rocket selection UI to improve hierarchy, readability, card design, spacing, and visual polish while keeping existing functionality.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "launchpad",
+          "ui",
+          "ux",
+          "rockets"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Launchpad selector has clear visual hierarchy and is readable on desktop/mobile"
+          },
+          {
+            "completed": true,
+            "text": "Rocket cards present stats and actions in a polished, consistent layout"
+          },
+          {
+            "completed": false,
+            "text": "Primary actions (create/back) are visually distinct and accessible"
+          },
+          {
+            "completed": false,
+            "text": "Existing launchpad behavior remains functional (rocket creation, dragging, back)"
+          }
+        ],
+        "implementationPlan": "1. Restructure launchpad selector composition to remove nested/overlapping panels and create a single cohesive layout container.\n2. Redesign rocket cards with stronger hierarchy: hero image, title, grouped stats chips, clear pricing row, and prominent Create CTA.\n3. Apply polished visual system (contrast, spacing, borders/shadows, typography sizing) and make panel responsive for smaller viewports.\n4. Keep existing behavior (create/drag/back/target select) intact and run launchpad-related test scripts."
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "gk4g2k",
+      "version": 5,
+      "timestamp": "2026-02-16T15:03:41.878Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Launchpad selector has clear visual hierarchy and is readable on desktop/mobile"
+            },
+            {
+              "completed": true,
+              "text": "Rocket cards present stats and actions in a polished, consistent layout"
+            },
+            {
+              "completed": false,
+              "text": "Primary actions (create/back) are visually distinct and accessible"
+            },
+            {
+              "completed": false,
+              "text": "Existing launchpad behavior remains functional (rocket creation, dragging, back)"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Launchpad selector has clear visual hierarchy and is readable on desktop/mobile"
+            },
+            {
+              "completed": true,
+              "text": "Rocket cards present stats and actions in a polished, consistent layout"
+            },
+            {
+              "completed": true,
+              "text": "Primary actions (create/back) are visually distinct and accessible"
+            },
+            {
+              "completed": false,
+              "text": "Existing launchpad behavior remains functional (rocket creation, dragging, back)"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Significant launchpad UI redesign",
+        "description": "Overhaul launchpad rocket selection UI to improve hierarchy, readability, card design, spacing, and visual polish while keeping existing functionality.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "launchpad",
+          "ui",
+          "ux",
+          "rockets"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Launchpad selector has clear visual hierarchy and is readable on desktop/mobile"
+          },
+          {
+            "completed": true,
+            "text": "Rocket cards present stats and actions in a polished, consistent layout"
+          },
+          {
+            "completed": true,
+            "text": "Primary actions (create/back) are visually distinct and accessible"
+          },
+          {
+            "completed": false,
+            "text": "Existing launchpad behavior remains functional (rocket creation, dragging, back)"
+          }
+        ],
+        "implementationPlan": "1. Restructure launchpad selector composition to remove nested/overlapping panels and create a single cohesive layout container.\n2. Redesign rocket cards with stronger hierarchy: hero image, title, grouped stats chips, clear pricing row, and prominent Create CTA.\n3. Apply polished visual system (contrast, spacing, borders/shadows, typography sizing) and make panel responsive for smaller viewports.\n4. Keep existing behavior (create/drag/back/target select) intact and run launchpad-related test scripts."
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "gk4g2k",
+      "version": 6,
+      "timestamp": "2026-02-16T15:03:42.069Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Launchpad selector has clear visual hierarchy and is readable on desktop/mobile"
+            },
+            {
+              "completed": true,
+              "text": "Rocket cards present stats and actions in a polished, consistent layout"
+            },
+            {
+              "completed": true,
+              "text": "Primary actions (create/back) are visually distinct and accessible"
+            },
+            {
+              "completed": false,
+              "text": "Existing launchpad behavior remains functional (rocket creation, dragging, back)"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Launchpad selector has clear visual hierarchy and is readable on desktop/mobile"
+            },
+            {
+              "completed": true,
+              "text": "Rocket cards present stats and actions in a polished, consistent layout"
+            },
+            {
+              "completed": true,
+              "text": "Primary actions (create/back) are visually distinct and accessible"
+            },
+            {
+              "completed": true,
+              "text": "Existing launchpad behavior remains functional (rocket creation, dragging, back)"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Significant launchpad UI redesign",
+        "description": "Overhaul launchpad rocket selection UI to improve hierarchy, readability, card design, spacing, and visual polish while keeping existing functionality.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "launchpad",
+          "ui",
+          "ux",
+          "rockets"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Launchpad selector has clear visual hierarchy and is readable on desktop/mobile"
+          },
+          {
+            "completed": true,
+            "text": "Rocket cards present stats and actions in a polished, consistent layout"
+          },
+          {
+            "completed": true,
+            "text": "Primary actions (create/back) are visually distinct and accessible"
+          },
+          {
+            "completed": true,
+            "text": "Existing launchpad behavior remains functional (rocket creation, dragging, back)"
+          }
+        ],
+        "implementationPlan": "1. Restructure launchpad selector composition to remove nested/overlapping panels and create a single cohesive layout container.\n2. Redesign rocket cards with stronger hierarchy: hero image, title, grouped stats chips, clear pricing row, and prominent Create CTA.\n3. Apply polished visual system (contrast, spacing, borders/shadows, typography sizing) and make panel responsive for smaller viewports.\n4. Keep existing behavior (create/drag/back/target select) intact and run launchpad-related test scripts."
+      }
+    },
+    {
+      "id": "v7",
+      "taskId": "gk4g2k",
+      "version": 7,
+      "timestamp": "2026-02-16T15:03:42.279Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "## Summary\n- Refactored `RocketSelector` to be container-driven (removed hardcoded in-container positioning) to eliminate panel overlap/crowding.\n- Rebuilt selector UI with a polished card-based layout: strong header, guidance subtitle, scrollable responsive grid, richer rocket cards, grouped stat chips, clear economy row, and prominent primary CTA.\n- Styled launchpad selector/targets section for readability with improved panel contrast, spacing, card rows, and accessible button styling.\n- Kept existing behavior intact (create flow, drag initiation, back navigation, target selection).\n\n## Validation\n- `cd /Users/scroobz/Navigation/Native/planet-hunters-experiment-1/scene && /Users/scroobz/godot-src/bin/godot.macos.editor.arm64 --headless --script res://tests/run_experience_tests.gd 2>&1`\n  - 19/19 passed."
+        }
+      ],
+      "snapshot": {
+        "title": "Significant launchpad UI redesign",
+        "description": "Overhaul launchpad rocket selection UI to improve hierarchy, readability, card design, spacing, and visual polish while keeping existing functionality.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "launchpad",
+          "ui",
+          "ux",
+          "rockets"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Launchpad selector has clear visual hierarchy and is readable on desktop/mobile"
+          },
+          {
+            "completed": true,
+            "text": "Rocket cards present stats and actions in a polished, consistent layout"
+          },
+          {
+            "completed": true,
+            "text": "Primary actions (create/back) are visually distinct and accessible"
+          },
+          {
+            "completed": true,
+            "text": "Existing launchpad behavior remains functional (rocket creation, dragging, back)"
+          }
+        ],
+        "implementationPlan": "1. Restructure launchpad selector composition to remove nested/overlapping panels and create a single cohesive layout container.\n2. Redesign rocket cards with stronger hierarchy: hero image, title, grouped stats chips, clear pricing row, and prominent Create CTA.\n3. Apply polished visual system (contrast, spacing, borders/shadows, typography sizing) and make panel responsive for smaller viewports.\n4. Keep existing behavior (create/drag/back/target select) intact and run launchpad-related test scripts.",
+        "implementationNotes": "## Summary\n- Refactored `RocketSelector` to be container-driven (removed hardcoded in-container positioning) to eliminate panel overlap/crowding.\n- Rebuilt selector UI with a polished card-based layout: strong header, guidance subtitle, scrollable responsive grid, richer rocket cards, grouped stat chips, clear economy row, and prominent primary CTA.\n- Styled launchpad selector/targets section for readability with improved panel contrast, spacing, card rows, and accessible button styling.\n- Kept existing behavior intact (create flow, drag initiation, back navigation, target selection).\n\n## Validation\n- `cd /Users/scroobz/Navigation/Native/planet-hunters-experiment-1/scene && /Users/scroobz/godot-src/bin/godot.macos.editor.arm64 --headless --script res://tests/run_experience_tests.gd 2>&1`\n  - 19/19 passed."
+      }
+    },
+    {
+      "id": "v8",
+      "taskId": "gk4g2k",
+      "version": 8,
+      "timestamp": "2026-02-16T15:03:42.678Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Significant launchpad UI redesign",
+        "description": "Overhaul launchpad rocket selection UI to improve hierarchy, readability, card design, spacing, and visual polish while keeping existing functionality.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "launchpad",
+          "ui",
+          "ux",
+          "rockets"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Launchpad selector has clear visual hierarchy and is readable on desktop/mobile"
+          },
+          {
+            "completed": true,
+            "text": "Rocket cards present stats and actions in a polished, consistent layout"
+          },
+          {
+            "completed": true,
+            "text": "Primary actions (create/back) are visually distinct and accessible"
+          },
+          {
+            "completed": true,
+            "text": "Existing launchpad behavior remains functional (rocket creation, dragging, back)"
+          }
+        ],
+        "implementationPlan": "1. Restructure launchpad selector composition to remove nested/overlapping panels and create a single cohesive layout container.\n2. Redesign rocket cards with stronger hierarchy: hero image, title, grouped stats chips, clear pricing row, and prominent Create CTA.\n3. Apply polished visual system (contrast, spacing, borders/shadows, typography sizing) and make panel responsive for smaller viewports.\n4. Keep existing behavior (create/drag/back/target select) intact and run launchpad-related test scripts.",
+        "implementationNotes": "## Summary\n- Refactored `RocketSelector` to be container-driven (removed hardcoded in-container positioning) to eliminate panel overlap/crowding.\n- Rebuilt selector UI with a polished card-based layout: strong header, guidance subtitle, scrollable responsive grid, richer rocket cards, grouped stat chips, clear economy row, and prominent primary CTA.\n- Styled launchpad selector/targets section for readability with improved panel contrast, spacing, card rows, and accessible button styling.\n- Kept existing behavior intact (create flow, drag initiation, back navigation, target selection).\n\n## Validation\n- `cd /Users/scroobz/Navigation/Native/planet-hunters-experiment-1/scene && /Users/scroobz/godot-src/bin/godot.macos.editor.arm64 --headless --script res://tests/run_experience_tests.gd 2>&1`\n  - 19/19 passed."
+      }
+    },
+    {
+      "id": "v9",
+      "taskId": "gk4g2k",
+      "version": 9,
+      "timestamp": "2026-02-16T15:05:25.446Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "done",
+          "newValue": "in-progress"
+        }
+      ],
+      "snapshot": {
+        "title": "Significant launchpad UI redesign",
+        "description": "Overhaul launchpad rocket selection UI to improve hierarchy, readability, card design, spacing, and visual polish while keeping existing functionality.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "launchpad",
+          "ui",
+          "ux",
+          "rockets"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Launchpad selector has clear visual hierarchy and is readable on desktop/mobile"
+          },
+          {
+            "completed": true,
+            "text": "Rocket cards present stats and actions in a polished, consistent layout"
+          },
+          {
+            "completed": true,
+            "text": "Primary actions (create/back) are visually distinct and accessible"
+          },
+          {
+            "completed": true,
+            "text": "Existing launchpad behavior remains functional (rocket creation, dragging, back)"
+          }
+        ],
+        "implementationPlan": "1. Restructure launchpad selector composition to remove nested/overlapping panels and create a single cohesive layout container.\n2. Redesign rocket cards with stronger hierarchy: hero image, title, grouped stats chips, clear pricing row, and prominent Create CTA.\n3. Apply polished visual system (contrast, spacing, borders/shadows, typography sizing) and make panel responsive for smaller viewports.\n4. Keep existing behavior (create/drag/back/target select) intact and run launchpad-related test scripts.",
+        "implementationNotes": "## Summary\n- Refactored `RocketSelector` to be container-driven (removed hardcoded in-container positioning) to eliminate panel overlap/crowding.\n- Rebuilt selector UI with a polished card-based layout: strong header, guidance subtitle, scrollable responsive grid, richer rocket cards, grouped stat chips, clear economy row, and prominent primary CTA.\n- Styled launchpad selector/targets section for readability with improved panel contrast, spacing, card rows, and accessible button styling.\n- Kept existing behavior intact (create flow, drag initiation, back navigation, target selection).\n\n## Validation\n- `cd /Users/scroobz/Navigation/Native/planet-hunters-experiment-1/scene && /Users/scroobz/godot-src/bin/godot.macos.editor.arm64 --headless --script res://tests/run_experience_tests.gd 2>&1`\n  - 19/19 passed."
+      }
+    },
+    {
+      "id": "v10",
+      "taskId": "gk4g2k",
+      "version": 10,
+      "timestamp": "2026-02-16T15:05:25.831Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "## Summary\n- Refactored `RocketSelector` to be container-driven (removed hardcoded in-container positioning) to eliminate panel overlap/crowding.\n- Rebuilt selector UI with a polished card-based layout: strong header, guidance subtitle, scrollable responsive grid, richer rocket cards, grouped stat chips, clear economy row, and prominent primary CTA.\n- Styled launchpad selector/targets section for readability with improved panel contrast, spacing, card rows, and accessible button styling.\n- Kept existing behavior intact (create flow, drag initiation, back navigation, target selection).\n\n## Validation\n- `cd /Users/scroobz/Navigation/Native/planet-hunters-experiment-1/scene && /Users/scroobz/godot-src/bin/godot.macos.editor.arm64 --headless --script res://tests/run_experience_tests.gd 2>&1`\n  - 19/19 passed.",
+          "newValue": "## Summary\n- Refactored `RocketSelector` to be container-driven (removed hardcoded in-container positioning) to eliminate panel overlap/crowding.\n- Rebuilt selector UI with a polished card-based layout: strong header, guidance subtitle, scrollable responsive grid, richer rocket cards, grouped stat chips, clear economy row, and prominent primary CTA.\n- Styled launchpad selector/targets section for readability with improved panel contrast, spacing, card rows, and accessible button styling.\n- Kept existing behavior intact (create flow, drag initiation, back navigation, target selection).\n\n## Validation\n- `cd /Users/scroobz/Navigation/Native/planet-hunters-experiment-1/scene && /Users/scroobz/godot-src/bin/godot.macos.editor.arm64 --headless --script res://tests/run_experience_tests.gd 2>&1`\n  - 19/19 passed.\n\n🔄 Reopened: harmonize shell/card styles and increase selector size after UI feedback"
+        }
+      ],
+      "snapshot": {
+        "title": "Significant launchpad UI redesign",
+        "description": "Overhaul launchpad rocket selection UI to improve hierarchy, readability, card design, spacing, and visual polish while keeping existing functionality.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "launchpad",
+          "ui",
+          "ux",
+          "rockets"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Launchpad selector has clear visual hierarchy and is readable on desktop/mobile"
+          },
+          {
+            "completed": true,
+            "text": "Rocket cards present stats and actions in a polished, consistent layout"
+          },
+          {
+            "completed": true,
+            "text": "Primary actions (create/back) are visually distinct and accessible"
+          },
+          {
+            "completed": true,
+            "text": "Existing launchpad behavior remains functional (rocket creation, dragging, back)"
+          }
+        ],
+        "implementationPlan": "1. Restructure launchpad selector composition to remove nested/overlapping panels and create a single cohesive layout container.\n2. Redesign rocket cards with stronger hierarchy: hero image, title, grouped stats chips, clear pricing row, and prominent Create CTA.\n3. Apply polished visual system (contrast, spacing, borders/shadows, typography sizing) and make panel responsive for smaller viewports.\n4. Keep existing behavior (create/drag/back/target select) intact and run launchpad-related test scripts.",
+        "implementationNotes": "## Summary\n- Refactored `RocketSelector` to be container-driven (removed hardcoded in-container positioning) to eliminate panel overlap/crowding.\n- Rebuilt selector UI with a polished card-based layout: strong header, guidance subtitle, scrollable responsive grid, richer rocket cards, grouped stat chips, clear economy row, and prominent primary CTA.\n- Styled launchpad selector/targets section for readability with improved panel contrast, spacing, card rows, and accessible button styling.\n- Kept existing behavior intact (create flow, drag initiation, back navigation, target selection).\n\n## Validation\n- `cd /Users/scroobz/Navigation/Native/planet-hunters-experiment-1/scene && /Users/scroobz/godot-src/bin/godot.macos.editor.arm64 --headless --script res://tests/run_experience_tests.gd 2>&1`\n  - 19/19 passed.\n\n🔄 Reopened: harmonize shell/card styles and increase selector size after UI feedback"
+      }
+    },
+    {
+      "id": "v11",
+      "taskId": "gk4g2k",
+      "version": 11,
+      "timestamp": "2026-02-16T15:07:25.617Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "## Summary\n- Refactored `RocketSelector` to be container-driven (removed hardcoded in-container positioning) to eliminate panel overlap/crowding.\n- Rebuilt selector UI with a polished card-based layout: strong header, guidance subtitle, scrollable responsive grid, richer rocket cards, grouped stat chips, clear economy row, and prominent primary CTA.\n- Styled launchpad selector/targets section for readability with improved panel contrast, spacing, card rows, and accessible button styling.\n- Kept existing behavior intact (create flow, drag initiation, back navigation, target selection).\n\n## Validation\n- `cd /Users/scroobz/Navigation/Native/planet-hunters-experiment-1/scene && /Users/scroobz/godot-src/bin/godot.macos.editor.arm64 --headless --script res://tests/run_experience_tests.gd 2>&1`\n  - 19/19 passed.\n\n🔄 Reopened: harmonize shell/card styles and increase selector size after UI feedback",
+          "newValue": "## Summary\n- Refactored `RocketSelector` to be container-driven (removed hardcoded in-container positioning) to eliminate panel overlap/crowding.\n- Rebuilt selector UI with a polished card-based layout: strong header, guidance subtitle, scrollable responsive grid, richer rocket cards, grouped stat chips, clear economy row, and prominent primary CTA.\n- Styled launchpad selector/targets section for readability with improved panel contrast, spacing, card rows, and accessible button styling.\n- Kept existing behavior intact (create flow, drag initiation, back navigation, target selection).\n\n## Validation\n- `cd /Users/scroobz/Navigation/Native/planet-hunters-experiment-1/scene && /Users/scroobz/godot-src/bin/godot.macos.editor.arm64 --headless --script res://tests/run_experience_tests.gd 2>&1`\n  - 19/19 passed.\n\n🔄 Reopened: harmonize shell/card styles and increase selector size after UI feedback\n\n✓ Second-pass polish: increased shell footprint, aligned shell/card palette and radius, increased typography scale, and expanded rocket card dimensions to reduce cramped view"
+        }
+      ],
+      "snapshot": {
+        "title": "Significant launchpad UI redesign",
+        "description": "Overhaul launchpad rocket selection UI to improve hierarchy, readability, card design, spacing, and visual polish while keeping existing functionality.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "launchpad",
+          "ui",
+          "ux",
+          "rockets"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Launchpad selector has clear visual hierarchy and is readable on desktop/mobile"
+          },
+          {
+            "completed": true,
+            "text": "Rocket cards present stats and actions in a polished, consistent layout"
+          },
+          {
+            "completed": true,
+            "text": "Primary actions (create/back) are visually distinct and accessible"
+          },
+          {
+            "completed": true,
+            "text": "Existing launchpad behavior remains functional (rocket creation, dragging, back)"
+          }
+        ],
+        "implementationPlan": "1. Restructure launchpad selector composition to remove nested/overlapping panels and create a single cohesive layout container.\n2. Redesign rocket cards with stronger hierarchy: hero image, title, grouped stats chips, clear pricing row, and prominent Create CTA.\n3. Apply polished visual system (contrast, spacing, borders/shadows, typography sizing) and make panel responsive for smaller viewports.\n4. Keep existing behavior (create/drag/back/target select) intact and run launchpad-related test scripts.",
+        "implementationNotes": "## Summary\n- Refactored `RocketSelector` to be container-driven (removed hardcoded in-container positioning) to eliminate panel overlap/crowding.\n- Rebuilt selector UI with a polished card-based layout: strong header, guidance subtitle, scrollable responsive grid, richer rocket cards, grouped stat chips, clear economy row, and prominent primary CTA.\n- Styled launchpad selector/targets section for readability with improved panel contrast, spacing, card rows, and accessible button styling.\n- Kept existing behavior intact (create flow, drag initiation, back navigation, target selection).\n\n## Validation\n- `cd /Users/scroobz/Navigation/Native/planet-hunters-experiment-1/scene && /Users/scroobz/godot-src/bin/godot.macos.editor.arm64 --headless --script res://tests/run_experience_tests.gd 2>&1`\n  - 19/19 passed.\n\n🔄 Reopened: harmonize shell/card styles and increase selector size after UI feedback\n\n✓ Second-pass polish: increased shell footprint, aligned shell/card palette and radius, increased typography scale, and expanded rocket card dimensions to reduce cramped view"
+      }
+    },
+    {
+      "id": "v12",
+      "taskId": "gk4g2k",
+      "version": 12,
+      "timestamp": "2026-02-16T15:07:26.110Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Significant launchpad UI redesign",
+        "description": "Overhaul launchpad rocket selection UI to improve hierarchy, readability, card design, spacing, and visual polish while keeping existing functionality.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "launchpad",
+          "ui",
+          "ux",
+          "rockets"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Launchpad selector has clear visual hierarchy and is readable on desktop/mobile"
+          },
+          {
+            "completed": true,
+            "text": "Rocket cards present stats and actions in a polished, consistent layout"
+          },
+          {
+            "completed": true,
+            "text": "Primary actions (create/back) are visually distinct and accessible"
+          },
+          {
+            "completed": true,
+            "text": "Existing launchpad behavior remains functional (rocket creation, dragging, back)"
+          }
+        ],
+        "implementationPlan": "1. Restructure launchpad selector composition to remove nested/overlapping panels and create a single cohesive layout container.\n2. Redesign rocket cards with stronger hierarchy: hero image, title, grouped stats chips, clear pricing row, and prominent Create CTA.\n3. Apply polished visual system (contrast, spacing, borders/shadows, typography sizing) and make panel responsive for smaller viewports.\n4. Keep existing behavior (create/drag/back/target select) intact and run launchpad-related test scripts.",
+        "implementationNotes": "## Summary\n- Refactored `RocketSelector` to be container-driven (removed hardcoded in-container positioning) to eliminate panel overlap/crowding.\n- Rebuilt selector UI with a polished card-based layout: strong header, guidance subtitle, scrollable responsive grid, richer rocket cards, grouped stat chips, clear economy row, and prominent primary CTA.\n- Styled launchpad selector/targets section for readability with improved panel contrast, spacing, card rows, and accessible button styling.\n- Kept existing behavior intact (create flow, drag initiation, back navigation, target selection).\n\n## Validation\n- `cd /Users/scroobz/Navigation/Native/planet-hunters-experiment-1/scene && /Users/scroobz/godot-src/bin/godot.macos.editor.arm64 --headless --script res://tests/run_experience_tests.gd 2>&1`\n  - 19/19 passed.\n\n🔄 Reopened: harmonize shell/card styles and increase selector size after UI feedback\n\n✓ Second-pass polish: increased shell footprint, aligned shell/card palette and radius, increased typography scale, and expanded rocket card dimensions to reduce cramped view"
+      }
+    }
+  ]
+}

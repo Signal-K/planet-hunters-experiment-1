@@ -25,6 +25,8 @@ const SatelliteStationPanelData = preload("res://Scripts/UI/SatelliteStationPane
 const SatelliteStationPanelList = preload("res://Scripts/UI/SatelliteStationPanelList.gd")
 const SatelliteStationPanelDetail = preload("res://Scripts/UI/SatelliteStationPanelDetail.gd")
 const SatelliteStationPanelLoading = preload("res://Scripts/UI/SatelliteStationPanelLoading.gd")
+const Level2UnlockOverlayScene = preload("res://Scenes/UI/Templates/SatelliteLevel2UnlockOverlay.tscn")
+const UnlockItemScene = preload("res://Scenes/UI/Templates/MenuUnlockItem.tscn")
 
 var pending_anomalies := []
 var current_mode: String = "asteroids"  # Default mode
@@ -145,16 +147,9 @@ func _on_loading_finished() -> void:
 		# Keep tutorial flow consistent even when scan data is from offline fallback.
 		_show_tutorial_hint_once(ACTION_SCAN_TARGETS, HINT_SCAN_TARGETS)
 		_award_scan_experience()
-		var rm_fallback = preload("res://Scripts/Utils/RocketsManager.gd")
-		if rm_fallback:
-			var fallback_targets := []
-			for i in range(pending_anomalies.size()):
-				var a_fb = pending_anomalies[i]
-				var id_fb = _data.normalize_anomaly_id(a_fb, i + 1)
-				var label_fb = str(a_fb.get("content", id_fb))
-				var kind_fb = "planet" if current_mode == "planets" else "asteroid"
-				fallback_targets.append({"id": id_fb, "label": label_fb, "type": kind_fb})
-			rm_fallback.set_detected_targets(fallback_targets)
+	pending_anomalies = _filter_mission3_untargeted_anomalies(pending_anomalies)
+
+	_persist_detected_targets_and_record_scan(pending_anomalies)
 
 	# Display the pending anomalies
 	_list.display_anomalies(pending_anomalies)
@@ -182,16 +177,6 @@ func _on_anomalies_fetched(data: Array, error: String):
 		_loading.mark_anomalies_ready()
 		_show_tutorial_hint_once(ACTION_SCAN_TARGETS, HINT_SCAN_TARGETS)
 		_award_scan_experience()
-		var rm_fallback = preload("res://Scripts/Utils/RocketsManager.gd")
-		if rm_fallback:
-			var fallback_targets := []
-			for i in range(pending_anomalies.size()):
-				var a_fb = pending_anomalies[i]
-				var id_fb = _data.normalize_anomaly_id(a_fb, i + 1)
-				var label_fb = str(a_fb.get("content", id_fb))
-				var kind_fb = "planet" if current_mode == "planets" else "asteroid"
-				fallback_targets.append({"id": id_fb, "label": label_fb, "type": kind_fb})
-			rm_fallback.set_detected_targets(fallback_targets)
 		return
 
 	# No error
@@ -202,18 +187,7 @@ func _on_anomalies_fetched(data: Array, error: String):
 	_show_tutorial_hint_once(ACTION_SCAN_TARGETS, HINT_SCAN_TARGETS)
 	_award_scan_experience()
 
-	# Persist a lightweight list of detected targets for other UI (e.g., Launchpad)
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
-	if rm:
-		var targets := []
-		for i in range(data.size()):
-			var a = data[i]
-			var id = _data.normalize_anomaly_id(a, i + 1)
-			var label = "TIC %s" % str(a.get("ticId")) if a.has("ticId") and a.get("ticId") != null and str(a.get("ticId")) != "" else str(a.get("content", id))
-			var target_kind = "planet" if current_mode == "planets" else "asteroid"
-			targets.append({"id": id, "label": label, "type": target_kind})
-		var ok = rm.set_detected_targets(targets)
-		print("SatelliteStationPanel: persisted detected_targets count=", targets.size(), " ok=", ok)
+	# Persist target data in _on_loading_finished once loading completes.
 
 func _on_anomaly_item_button_pressed(bound_anomaly: Dictionary):
 	"""Called when the overlay button is pressed for an anomaly item."""
@@ -275,9 +249,7 @@ func _award_scan_experience() -> void:
 		app_controller.award_scan_experience()
 
 func _show_tutorial_hint_once(action_key: String, message: String) -> void:
-	var app_controller = get_tree().root.find_child("AppController", true, false)
-	if app_controller and app_controller.has_method("show_tutorial_hint_once"):
-		app_controller.show_tutorial_hint_once(action_key, message)
+	preload("res://Scripts/Utils/AppControllerHelper.gd").show_tutorial_hint_once(action_key, message)
 
 func _on_refresh_pressed():
 	_start_loading(REFRESH_LOAD_TIME)
@@ -321,6 +293,23 @@ func _apply_local_anomalies() -> void:
 	status_label.text = "Status: %d local %s loaded" % [pending_anomalies.size(), target_type]
 	_loading.mark_anomalies_ready()
 
+func _persist_detected_targets_and_record_scan(anomalies: Array) -> void:
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if not rm:
+		return
+	var targets := []
+	var target_kind = "planet" if current_mode == "planets" else "asteroid"
+	for i in range(anomalies.size()):
+		var a = anomalies[i]
+		var id = _data.normalize_anomaly_id(a, i + 1)
+		var label = "TIC %s" % str(a.get("ticId")) if a.has("ticId") and a.get("ticId") != null and str(a.get("ticId")) != "" else str(a.get("content", id))
+		targets.append({"id": id, "label": label, "type": target_kind})
+	if targets.is_empty():
+		return
+	var ok = rm.set_detected_targets(targets)
+	rm.record_scan_pass(targets)
+	print("SatelliteStationPanel: persisted detected_targets count=", targets.size(), " ok=", ok)
+
 func _build_local_anomalies() -> Array:
 	if current_mode == "planets":
 		return [
@@ -340,6 +329,31 @@ func _build_local_anomalies() -> Array:
 			"classification_status": "confirmed"
 		}
 	]
+
+func _filter_mission3_untargeted_anomalies(anomalies: Array) -> Array:
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if not rm:
+		return anomalies
+	var mission_stage = int(rm.get_mission_stage())
+	if mission_stage == 3 and current_mode != "asteroids":
+		return anomalies
+	if mission_stage == 4 and current_mode != "planets":
+		return anomalies
+	if mission_stage != 3 and mission_stage != 4:
+		return anomalies
+	var targeted_ids = rm.get_targeted_target_ids()
+	var filtered := []
+	for i in range(anomalies.size()):
+		var anomaly = anomalies[i]
+		if typeof(anomaly) != TYPE_DICTIONARY:
+			continue
+		var target_id = _data.normalize_anomaly_id(anomaly, i + 1)
+		if target_id == "" or targeted_ids.has(target_id):
+			continue
+		filtered.append(anomaly)
+		if filtered.size() >= 5:
+			break
+	return filtered
 
 
 func _process(delta: float) -> void:
@@ -396,55 +410,38 @@ func _show_level2_unlock_overlay() -> void:
 	if _unlock_overlay and is_instance_valid(_unlock_overlay):
 		return
 
-	_unlock_overlay = ColorRect.new()
-	_unlock_overlay.name = "Level2UnlockOverlay"
-	_unlock_overlay.color = Color(0, 0, 0, 0.62)
-	_unlock_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
-	_unlock_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_unlock_overlay = Level2UnlockOverlayScene.instantiate()
 	add_child(_unlock_overlay)
 
-	var center = CenterContainer.new()
-	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_unlock_overlay.add_child(center)
-
-	var panel = PanelContainer.new()
-	panel.custom_minimum_size = Vector2(640, 0)
-	center.add_child(panel)
+	var panel: PanelContainer = _unlock_overlay.get_node("Center/Panel")
 	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
 	panel_style.apply_panel(panel)
 
-	var body = VBoxContainer.new()
-	body.add_theme_constant_override("separation", 10)
-	panel.add_child(body)
+	var body: VBoxContainer = _unlock_overlay.get_node("Center/Panel/Body")
 
-	var title = Label.new()
-	title.text = "Level 2 Reached: New Unlocks"
+	var title: Label = _unlock_overlay.get_node("Center/Panel/Body/Title")
 	panel_style.apply_title(title)
-	body.add_child(title)
 
-	var emphasis = Label.new()
-	emphasis.text = "Planet Discovery is now online."
+	var emphasis: Label = _unlock_overlay.get_node("Center/Panel/Body/Emphasis")
 	emphasis.add_theme_font_size_override("font_size", 30)
 	emphasis.add_theme_color_override("font_color", panel_style.ACCENT)
-	body.add_child(emphasis)
 
-	var subtitle = Label.new()
-	subtitle.text = "You can now scan entries from anomalySet: telescope-tess."
+	var subtitle: Label = _unlock_overlay.get_node("Center/Panel/Body/Subtitle")
 	panel_style.apply_muted(subtitle)
-	body.add_child(subtitle)
 
+	var unlock_list: VBoxContainer = _unlock_overlay.get_node("Center/Panel/Body/UnlockList")
+	for c in unlock_list.get_children():
+		c.queue_free()
 	var unlock_items = _get_unlocks_for_level(PLANET_UNLOCK_LEVEL)
 	for item_text in unlock_items:
-		var row = Label.new()
+		var row: Label = UnlockItemScene.instantiate()
 		row.text = "• %s" % item_text
 		panel_style.apply_body(row)
-		body.add_child(row)
+		unlock_list.add_child(row)
 
-	var cta = Button.new()
-	cta.text = "Start Planet Scan"
+	var cta: Button = _unlock_overlay.get_node("Center/Panel/Body/ConfirmButton")
 	panel_style.apply_button(cta, true)
 	cta.pressed.connect(_on_level2_overlay_confirmed)
-	body.add_child(cta)
 
 func _on_level2_overlay_confirmed() -> void:
 	_mark_level2_unlock_overlay_seen()
@@ -504,4 +501,4 @@ func _mark_level2_unlock_overlay_seen() -> void:
 	cfg.save(UNLOCK_CONFIG_PATH)
 
 func _get_app_controller() -> Node:
-	return get_tree().root.find_child("AppController", true, false)
+	return preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()

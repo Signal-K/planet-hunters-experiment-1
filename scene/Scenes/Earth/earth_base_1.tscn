@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3 uid="uid://bl5h6pq4ns86t"]
+[gd_scene load_steps=15 format=3 uid="uid://bl5h6pq4ns86t"]
 
 [ext_resource type="Texture2D" uid="uid://bni1814mlo7mv" path="res://assets/Backdrops/Earth1.png" id="0"]
 [ext_resource type="Script" uid="uid://eoqjev5txcu5" path="res://Scenes/Earth/earth_base_1.gd" id="1"]
@@ -10,6 +10,9 @@
 [ext_resource type="Texture2D" uid="uid://bhjh4wo2yo046" path="res://assets/Structures/ControlStation.png" id="7"]
 [ext_resource type="PackedScene" uid="uid://d1wd35tge78pt" path="res://Scenes/UI/TutorialPanel.tscn" id="9"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/TutorialHintArea.tscn" id="13"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_control"]
+size = Vector2(200, 200)
 
 [sub_resource type="StyleBoxFlat" id="10"]
 content_margin_left = 16.0
@@ -110,6 +113,11 @@ script = ExtResource("6")
 position = Vector2(-29.00003, 5.9999847)
 scale = Vector2(0.5, 0.5)
 texture = ExtResource("7")
+
+[node name="InteractionArea" type="Area2D" parent="StructuresLayer/ControlStation"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StructuresLayer/ControlStation/InteractionArea"]
+shape = SubResource("RectangleShape2D_control")
 
 [node name="ControlStationLabel" type="Node2D" parent="StructuresLayer"]
 position = Vector2(1600, 620)

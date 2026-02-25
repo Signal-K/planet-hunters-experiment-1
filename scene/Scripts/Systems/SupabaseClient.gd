@@ -31,6 +31,10 @@ static func get_instance() -> SupabaseClient:
 		# Check for environment variables first (CI/GitHub Actions)
 		var env_url = OS.get_environment("SUPABASE_URL").strip_edges()
 		var env_key = OS.get_environment("SUPABASE_ANON_KEY").strip_edges()
+		if env_key == "":
+			env_key = OS.get_environment("SUPABASE_ANON").strip_edges()
+		if env_key == "":
+			env_key = OS.get_environment("SUPABASE_SERVICE").strip_edges()
 		var runtime_credentials = _load_runtime_credentials()
 		var runtime_url = str(runtime_credentials.get("url", "")).strip_edges()
 		var runtime_key = str(runtime_credentials.get("key", "")).strip_edges()
@@ -166,13 +170,37 @@ func fetch_anomalies(anomaly_set: String, limit: int, callback: Callable) -> HTT
 			callback.call(response_data, error_message)
 			http_request.queue_free()
 	)
-	
-	var error = http_request.request(url, headers, HTTPClient.METHOD_GET)
-	if error != OK:
-		callback.call([], "Failed to create HTTP request: %d" % error)
-		http_request.queue_free()
+
+	# Defer request kickoff so the node is fully in-tree before request().
+	_start_fetch_request(http_request, url, headers, callback, 0)
 	
 	return http_request
+
+func _start_fetch_request(http_request: HTTPRequest, url: String, headers: Array, callback: Callable, attempt: int) -> void:
+	if http_request == null or not is_instance_valid(http_request):
+		return
+	if not http_request.is_inside_tree():
+		http_request.call_deferred("_deferred_start_fetch_request", http_request, url, headers, callback, attempt)
+		return
+	var error = http_request.request(url, headers, HTTPClient.METHOD_GET)
+	if error == OK:
+		return
+	# ERR_UNCONFIGURED can happen when request() is called too early in scene startup.
+	# Retry once on the next frame before failing.
+	if error == ERR_UNCONFIGURED and attempt < 1:
+		var tree = Engine.get_main_loop()
+		if tree and tree.has_method("create_timer"):
+			tree.create_timer(0.01).timeout.connect(
+				func():
+					_start_fetch_request(http_request, url, headers, callback, attempt + 1),
+				CONNECT_ONE_SHOT
+			)
+			return
+	callback.call([], "Failed to create HTTP request: %d" % error)
+	http_request.queue_free()
+
+func _deferred_start_fetch_request(http_request: HTTPRequest, url: String, headers: Array, callback: Callable, attempt: int) -> void:
+	_start_fetch_request(http_request, url, headers, callback, attempt)
 
 func _fetch_anomalies_web(anomaly_set: String, limit: int, callback: Callable) -> void:
 	var window = JavaScriptBridge.get_interface("window")

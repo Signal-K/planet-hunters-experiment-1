@@ -1,291 +1,69 @@
-[gd_scene load_steps=8 format=3 uid="uid://rqlk5xixjqmi"]
+[gd_scene load_steps=3 format=3 uid="uid://rqlk5xixjqmi"]
 
-[ext_resource type="Script" uid="uid://bo7wyonn4uthu" path="res://Scripts/UI/AsteroidPreview/AsteroidPreview.gd" id="1"]
-[ext_resource type="PackedScene" path="res://Scenes/UI/TutorialHintArea.tscn" id="2_hint"]
-[ext_resource type="PackedScene" uid="uid://d1wd35tge78pt" path="res://Scenes/UI/TutorialPanel.tscn" id="3_tutorial"]
+[ext_resource type="Script" path="res://Scripts/UI/AsteroidPreview/AsteroidPreview.gd" id="1"]
 
 [sub_resource type="Environment" id="1"]
 background_mode = 1
-background_color = Color(0.02, 0.02, 0.03, 1)
-
-[sub_resource type="StyleBoxFlat" id="2"]
-content_margin_left = 16.0
-content_margin_top = 10.0
-content_margin_right = 16.0
-content_margin_bottom = 10.0
-bg_color = Color(0.133333, 0.152941, 0.180392, 0.94)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.263, 0.298, 0.369, 1)
-corner_radius_top_left = 12
-corner_radius_top_right = 12
-corner_radius_bottom_right = 12
-corner_radius_bottom_left = 12
-
-[sub_resource type="StyleBoxFlat" id="4"]
-content_margin_left = 16.0
-content_margin_top = 10.0
-content_margin_right = 16.0
-content_margin_bottom = 10.0
-bg_color = Color(0.231373, 0.258824, 0.321569, 0.96)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.263, 0.298, 0.369, 1)
-corner_radius_top_left = 12
-corner_radius_top_right = 12
-corner_radius_bottom_right = 12
-corner_radius_bottom_left = 12
-
-[sub_resource type="StyleBoxFlat" id="3"]
-content_margin_left = 16.0
-content_margin_top = 10.0
-content_margin_right = 16.0
-content_margin_bottom = 10.0
-bg_color = Color(0.168627, 0.188235, 0.231373, 0.96)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.263, 0.298, 0.369, 1)
-corner_radius_top_left = 12
-corner_radius_top_right = 12
-corner_radius_bottom_right = 12
-corner_radius_bottom_left = 12
+background_color = Color(0.08, 0.05, 0.15, 1)
 
 [node name="AsteroidPreview" type="Node3D"]
 script = ExtResource("1")
 
-[node name="TutorialPanel" parent="." instance=ExtResource("3_tutorial")]
-
-[node name="TutorialHintArea" parent="." instance=ExtResource("2_hint")]
-
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("1")
 
-[node name="AsteroidPivot" type="Node3D" parent="."]
-
-[node name="Asteroid" type="MeshInstance3D" parent="AsteroidPivot"]
-
 [node name="Camera3D" type="Camera3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 0.996195, -0.0871557, 0, 0.0871557, 0.996195, 0, 0.25, 4.2)
-
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
-transform = Transform3D(0.939693, 0.17101, -0.296198, 0, 0.866025, 0.5, 0.34202, -0.469846, 0.813798, 2, 2, 1)
-light_energy = 2.2
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 5)
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
-layer = 4
 
-[node name="Orbit2D" type="Node2D" parent="CanvasLayer"]
-visible = false
-z_index = 5
-
-[node name="OrbitCircle" type="Line2D" parent="CanvasLayer/Orbit2D"]
-width = 2.0
-default_color = Color(0.2, 0.85, 1, 0.8)
-
-[node name="OrbitHeading" type="Line2D" parent="CanvasLayer/Orbit2D"]
-z_index = 12
-width = 3.0
-default_color = Color(1, 1, 1, 0.95)
-
-[node name="OrbitRocket2D" type="AnimatedSprite2D" parent="CanvasLayer/Orbit2D"]
-z_index = 6
-scale = Vector2(0.2, 0.2)
+[node name="MinigameContainer" type="Control" parent="CanvasLayer"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
 
 [node name="UI" type="Control" parent="CanvasLayer"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
 
-[node name="Margin" type="MarginContainer" parent="CanvasLayer/UI"]
+[node name="TargetLabel" type="Label" parent="CanvasLayer/UI"]
 layout_mode = 1
-anchors_preset = 15
+anchors_preset = 10
 anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 24.0
-offset_top = 24.0
-offset_right = -24.0
-offset_bottom = -24.0
-grow_horizontal = 2
-grow_vertical = 2
+offset_bottom = 40.0
+theme_override_colors/font_color = Color(0.95, 0.95, 0.98, 1)
+theme_override_font_sizes/font_size = 24
+text = "Target"
+horizontal_alignment = 1
 
-[node name="VBox" type="VBoxContainer" parent="CanvasLayer/UI/Margin"]
-layout_mode = 2
-size_flags_vertical = 0
+[node name="MineButton" type="Button" parent="CanvasLayer/UI"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -30.0
+offset_right = 150.0
+offset_bottom = 30.0
+theme_override_font_sizes/font_size = 32
+text = "MINE"
 
-[node name="Header" type="HBoxContainer" parent="CanvasLayer/UI/Margin/VBox"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="BackButton" type="Button" parent="CanvasLayer/UI/Margin/VBox/Header"]
-custom_minimum_size = Vector2(120, 44)
-layout_mode = 2
-theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
-theme_override_styles/normal = SubResource("2")
-theme_override_styles/pressed = SubResource("4")
-theme_override_styles/hover = SubResource("3")
-theme_override_styles/focus = SubResource("3")
-text = "Back"
-
-[node name="TargetLabel" type="Label" parent="CanvasLayer/UI/Margin/VBox/Header"]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Asteroid Preview"
-
-[node name="MineralsPanel" type="Panel" parent="CanvasLayer/UI/Margin/VBox"]
-custom_minimum_size = Vector2(540, 260)
-layout_mode = 2
-size_flags_horizontal = 0
-size_flags_vertical = 0
-
-[node name="MineralsMargin" type="MarginContainer" parent="CanvasLayer/UI/Margin/VBox/MineralsPanel"]
-layout_mode = 0
-theme_override_constants/margin_left = 16
-theme_override_constants/margin_top = 12
-theme_override_constants/margin_right = 16
-theme_override_constants/margin_bottom = 12
-
-[node name="MineralsContent" type="VBoxContainer" parent="CanvasLayer/UI/Margin/VBox/MineralsPanel/MineralsMargin"]
-layout_mode = 2
-
-[node name="MineralsTitle" type="Label" parent="CanvasLayer/UI/Margin/VBox/MineralsPanel/MineralsMargin/MineralsContent"]
-layout_mode = 2
-text = "Minerals Available"
-
-[node name="MineralsSummary" type="Label" parent="CanvasLayer/UI/Margin/VBox/MineralsPanel/MineralsMargin/MineralsContent"]
-layout_mode = 2
-text = "Capacity: 0 units"
-
-[node name="MineralsList" type="VBoxContainer" parent="CanvasLayer/UI/Margin/VBox/MineralsPanel/MineralsMargin/MineralsContent"]
-layout_mode = 2
-
-[node name="ButtonContainer" type="HBoxContainer" parent="CanvasLayer/UI"]
-layout_mode = 0
-offset_left = 30.0
-offset_top = 1000.0
-offset_right = 1890.0
-offset_bottom = 1080.0
-
-[node name="PrevButton" type="Button" parent="CanvasLayer/UI/ButtonContainer"]
-custom_minimum_size = Vector2(160, 80)
-layout_mode = 2
-theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
-theme_override_styles/normal = SubResource("2")
-theme_override_styles/pressed = SubResource("4")
-theme_override_styles/hover = SubResource("3")
-theme_override_styles/focus = SubResource("3")
-text = "<<"
-
-[node name="NextButton" type="Button" parent="CanvasLayer/UI/ButtonContainer"]
-custom_minimum_size = Vector2(160, 80)
-layout_mode = 2
-theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
-theme_override_styles/normal = SubResource("2")
-theme_override_styles/pressed = SubResource("4")
-theme_override_styles/hover = SubResource("3")
-theme_override_styles/focus = SubResource("3")
-text = ">>"
-
-[node name="ControlPanel" type="Panel" parent="CanvasLayer/UI"]
-custom_minimum_size = Vector2(320, 100)
-layout_mode = 0
-anchor_left = 1.0
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -360.0
-offset_top = -140.0
-offset_right = -24.0
-offset_bottom = -24.0
-
-[node name="ControlPanelMargin" type="MarginContainer" parent="CanvasLayer/UI/ControlPanel"]
-layout_mode = 0
-theme_override_constants/margin_left = 12
-theme_override_constants/margin_top = 10
-theme_override_constants/margin_right = 12
-theme_override_constants/margin_bottom = 10
-
-[node name="ControlPanelButtons" type="HBoxContainer" parent="CanvasLayer/UI/ControlPanel/ControlPanelMargin"]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="ReturnHomeButton" type="Button" parent="CanvasLayer/UI/ControlPanel/ControlPanelMargin/ControlPanelButtons"]
-custom_minimum_size = Vector2(140, 48)
-layout_mode = 2
-theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
-theme_override_styles/normal = SubResource("2")
-theme_override_styles/pressed = SubResource("4")
-theme_override_styles/hover = SubResource("3")
-theme_override_styles/focus = SubResource("3")
-text = "Return Home"
-
-[node name="MineButton" type="Button" parent="CanvasLayer/UI/ControlPanel/ControlPanelMargin/ControlPanelButtons"]
-custom_minimum_size = Vector2(100, 48)
-layout_mode = 2
-theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
-theme_override_styles/normal = SubResource("2")
-theme_override_styles/pressed = SubResource("4")
-theme_override_styles/hover = SubResource("3")
-theme_override_styles/focus = SubResource("3")
-text = "Mine"
-
-[node name="MineCooldownLabel" type="Label" parent="CanvasLayer/UI/ControlPanel/ControlPanelMargin/ControlPanelButtons"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.639, 0.694, 0.784, 1)
-theme_override_font_sizes/font_size = 16
-
-[node name="InventoryPanel" type="Panel" parent="CanvasLayer/UI"]
-custom_minimum_size = Vector2(320, 170)
-layout_mode = 0
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -360.0
-offset_top = 140.0
-offset_right = -24.0
-offset_bottom = 310.0
-
-[node name="InventoryMargin" type="MarginContainer" parent="CanvasLayer/UI/InventoryPanel"]
-layout_mode = 0
-theme_override_constants/margin_left = 12
-theme_override_constants/margin_top = 10
-theme_override_constants/margin_right = 12
-theme_override_constants/margin_bottom = 10
-
-[node name="InventoryContent" type="VBoxContainer" parent="CanvasLayer/UI/InventoryPanel/InventoryMargin"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="InventoryTitle" type="Label" parent="CanvasLayer/UI/InventoryPanel/InventoryMargin/InventoryContent"]
-layout_mode = 2
-text = "Inventory"
-
-[node name="InventorySummary" type="Label" parent="CanvasLayer/UI/InventoryPanel/InventoryMargin/InventoryContent"]
-layout_mode = 2
-text = "Remaining: 0 kg"
-
-[node name="InventoryTotal" type="Label" parent="CanvasLayer/UI/InventoryPanel/InventoryMargin/InventoryContent"]
-layout_mode = 2
-text = "Total Collected: 0 kg"
-
-[node name="InventorySeparator" type="HSeparator" parent="CanvasLayer/UI/InventoryPanel/InventoryMargin/InventoryContent"]
-layout_mode = 2
-
-[node name="InventoryList" type="VBoxContainer" parent="CanvasLayer/UI/InventoryPanel/InventoryMargin/InventoryContent"]
-layout_mode = 2
-theme_override_constants/separation = 6
-
-[node name="MiningLayer" type="Node2D" parent="CanvasLayer"]
-z_index = 6
-
-[node name="MiningBeam" type="Line2D" parent="CanvasLayer/MiningLayer"]
-visible = false
-width = 3.0
-default_color = Color(0.4, 0.85, 1, 0.9)
+[node name="ReturnButton" type="Button" parent="CanvasLayer/UI"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = 50.0
+offset_right = 150.0
+offset_bottom = 110.0
+theme_override_font_sizes/font_size = 24
+text = "RETURN HOME"

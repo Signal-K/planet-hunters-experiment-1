@@ -1,7 +1,7 @@
 ---
 id: p2x59n
 title: Allow users to select their first target objects
-status: todo
+status: done
 priority: low
 labels:
   - Tutorial
@@ -10,7 +10,7 @@ labels:
   - Anomalies
   - Telescope
 createdAt: '2026-01-20T02:00:28.644Z'
-updatedAt: '2026-02-09T01:43:11.392Z'
+updatedAt: "2026-02-19T12:45:39Z"
 timeSpent: 0
 parent: 5zp87f
 ---

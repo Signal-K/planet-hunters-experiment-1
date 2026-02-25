@@ -46,6 +46,7 @@ func _ready():
 	# If the HUD hasn't been instanced yet (by LaunchpadScene), this can be called
 	# again later via `connect_launch_button()` which is public.
 	connect_launch_button()
+	_ensure_targets_loaded_for_launchpad()
 
 func connect_launch_button() -> void:
 	_launch_button.connect_launch_button()
@@ -87,9 +88,7 @@ func on_interact():
 		print("ERROR: SceneManager not found for Launchpad")
 
 func _show_tutorial_hint_once(action_key: String, message: String) -> void:
-	var app = get_tree().root.find_child("AppController", true, false)
-	if app and app.has_method("show_tutorial_hint_once"):
-		app.show_tutorial_hint_once(action_key, message)
+	preload("res://Scripts/Utils/AppControllerHelper.gd").show_tutorial_hint_once(action_key, message)
 
 func spawn_rocket(rocket_id: String) -> bool:
 	return RocketSpawner.spawn(self, rocket_id)
@@ -109,6 +108,15 @@ func _fetch_anomalies_for_selector():
 # Populate selector panel with detected targets from RocketsManager
 func _populate_targets() -> void:
 	_selector_panel.populate_targets()
+
+func _ensure_targets_loaded_for_launchpad() -> void:
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if not rm:
+		return
+	var detected = rm.get_detected_targets()
+	if detected.size() > 0:
+		return
+	_fetch_anomalies_for_selector()
 
 func _on_rockets_reset() -> void:
 	print("Launchpad: rockets reset event received, clearing rockets")

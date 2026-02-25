@@ -1,6 +1,9 @@
 extends RefCounted
 class_name NewMissionAnnotations
 
+const AnnotationItemScene = preload("res://Scenes/UI/Templates/NewMissionAnnotationItem.tscn")
+const EmptyLabelScene = preload("res://Scenes/UI/Templates/MenuLogbookEmpty.tscn")
+
 var _owner: Node
 var _anomaly_list: Node
 var _simple_detail_scene: PackedScene
@@ -64,9 +67,8 @@ func _display_items(items: Array) -> void:
 	for c in _anomaly_list.get_children():
 		c.queue_free()
 	if items.size() == 0:
-		var lbl = Label.new()
+		var lbl: Label = EmptyLabelScene.instantiate()
 		lbl.text = "No saved annotations found."
-		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		_anomaly_list.add_child(lbl)
 		return
 
@@ -76,12 +78,9 @@ func _display_items(items: Array) -> void:
 
 func _create_item(data: Dictionary, idx: int) -> Control:
 	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
-	var pc = PanelContainer.new()
-	pc.custom_minimum_size = Vector2(0, 90)
-	var style = StyleBoxFlat.new()
-	style.bg_color = panel_style.ACCENT_SOFT
-	style.border_color = panel_style.PANEL_BORDER
-	style.border_width_bottom = 1
+	var pc: PanelContainer = AnnotationItemScene.instantiate()
+	
+	var style = panel_style.create_list_item_style()
 	style.content_margin_left = 12
 	style.content_margin_right = 12
 	style.content_margin_top = 10
@@ -92,13 +91,7 @@ func _create_item(data: Dictionary, idx: int) -> Control:
 	style.corner_radius_bottom_right = 6
 	pc.add_theme_stylebox_override("panel", style)
 
-	var h = HBoxContainer.new()
-	h.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	pc.add_child(h)
-
-	# Icon / thumbnail container with subtle background
-	var icon = PanelContainer.new()
-	icon.custom_minimum_size = Vector2(64, 64)
+	var icon: PanelContainer = pc.get_node("Content/IconContainer")
 	var icon_style = StyleBoxFlat.new()
 	icon_style.bg_color = panel_style.BUTTON_PRESSED
 	icon_style.corner_radius_top_left = 8
@@ -110,7 +103,8 @@ func _create_item(data: Dictionary, idx: int) -> Control:
 	icon_style.content_margin_top = 6
 	icon_style.content_margin_bottom = 6
 	icon.add_theme_stylebox_override("panel", icon_style)
-	h.add_child(icon)
+	var icon_label: Label = pc.get_node("Content/IconContainer/IconLabel")
+	var thumb: TextureRect = pc.get_node("Content/IconContainer/Thumbnail")
 
 	var thumb_path = data.get("local_thumbnail", "")
 	if thumb_path != "" and FileAccess.file_exists(thumb_path):
@@ -118,61 +112,23 @@ func _create_item(data: Dictionary, idx: int) -> Control:
 		var err = img.load(thumb_path)
 		if err == OK:
 			var tex = ImageTexture.create_from_image(img)
-			var tr = TextureRect.new()
-			tr.texture = tex
-			tr.expand = true
-			tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-			tr.custom_minimum_size = Vector2(52,52)
-			icon.add_child(tr)
-		else:
-			var lblp = Label.new()
-			lblp.text = "☄"
-			lblp.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			lblp.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-			lblp.add_theme_font_size_override("font_size", 28)
-			icon.add_child(lblp)
-	else:
-		var lbl = Label.new()
-		lbl.text = "☄"
-		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		lbl.add_theme_font_size_override("font_size", 28)
-		icon.add_child(lbl)
+			thumb.texture = tex
+			thumb.visible = true
+			icon_label.visible = false
 
-	# Spacer between icon and content
-	var spacer_small = Control.new()
-	spacer_small.custom_minimum_size = Vector2(12, 0)
-	h.add_child(spacer_small)
-
-	var content_v = VBoxContainer.new()
-	content_v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	h.add_child(content_v)
-
-	var title = Label.new()
+	var title: Label = pc.get_node("Content/Main/TitleLabel")
 	title.text = "Asteroid #%s" % str(data.get("content",""))
 	title.add_theme_font_size_override("font_size", 24)
 	title.add_theme_color_override("font_color", panel_style.TEXT_PRIMARY)
-	content_v.add_child(title)
-
-	# Add optional saved indicator on the right
-	var right_v = VBoxContainer.new()
-	right_v.size_flags_horizontal = Control.SIZE_SHRINK_END
-	h.add_child(right_v)
-
-	var saved_lbl = Label.new()
+	var saved_lbl: Label = pc.get_node("Content/Right/SavedLabel")
 	saved_lbl.text = "Saved"
 	saved_lbl.add_theme_color_override("font_color", panel_style.ACCENT)
 	saved_lbl.add_theme_font_size_override("font_size", 16)
-	right_v.add_child(saved_lbl)
 
-	# Overlay button to capture clicks
-	var btn = Button.new()
-	btn.text = ""
-	btn.flat = true
+	# Overlay button captures click to open details.
+	var btn: Button = pc.get_node("OverlayButton")
 	btn.focus_mode = Control.FOCUS_NONE
 	btn.mouse_filter = Control.MOUSE_FILTER_STOP
-	btn.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	pc.add_child(btn)
 	btn.pressed.connect(Callable(self, "_on_item_pressed").bind(data))
 
 	# Hover effect

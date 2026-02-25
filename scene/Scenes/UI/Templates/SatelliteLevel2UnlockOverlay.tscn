@@ -1,0 +1,47 @@
+[gd_scene format=3]
+
+[node name="Level2UnlockOverlay" type="ColorRect"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.62)
+mouse_filter = 1
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="PanelContainer" parent="Center"]
+custom_minimum_size = Vector2(640, 0)
+layout_mode = 2
+
+[node name="Body" type="VBoxContainer" parent="Center/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="Center/Panel/Body"]
+layout_mode = 2
+text = "Level 2 Reached: New Unlocks"
+
+[node name="Emphasis" type="Label" parent="Center/Panel/Body"]
+layout_mode = 2
+text = "Planet Discovery is now online."
+
+[node name="Subtitle" type="Label" parent="Center/Panel/Body"]
+layout_mode = 2
+text = "You can now scan entries from anomalySet: telescope-tess."
+
+[node name="UnlockList" type="VBoxContainer" parent="Center/Panel/Body"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="ConfirmButton" type="Button" parent="Center/Panel/Body"]
+layout_mode = 2
+text = "Start Planet Scan"

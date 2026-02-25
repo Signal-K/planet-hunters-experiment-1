@@ -1,11 +1,3 @@
 {
-  "active": [
-    {
-      "taskId": "491jqk",
-      "taskTitle": "Run full Playwright+Cypress e2e and add final Vercel deploy pipeline stage",
-      "startedAt": "2026-02-13T07:33:46.811Z",
-      "pausedAt": null,
-      "totalPausedMs": 0
-    }
-  ]
+  "active": []
 }

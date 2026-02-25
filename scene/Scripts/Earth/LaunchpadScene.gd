@@ -1,9 +1,24 @@
 extends "res://Scenes/Earth/earth_scene_base.gd"
 
+const MissionGuidanceOverlayScene = preload("res://Scenes/UI/Templates/LaunchpadMissionGuidanceOverlay.tscn")
+
+var _mission_guidance_id: int = 0
+var _mission_guidance_layer: CanvasLayer = null
+var _mission_guidance_label: Label = null
+var _mission_guidance_pointer: Label = null
+var _mission_guidance_active: bool = false
+
 func _ready():
 	var back_btn = $UILayer/SelectorPanel/VBox/BackButton
 	if back_btn:
 		back_btn.pressed.connect(_on_back_button_pressed)
+	var selector_panel = $UILayer/SelectorPanel
+	if selector_panel:
+		selector_panel.offset_left = 24
+		selector_panel.offset_top = 24
+		selector_panel.offset_right = 24
+		selector_panel.offset_bottom = 24
+		selector_panel.custom_minimum_size = Vector2(1120, 720)
 
 	# Auto-instance the external Launch HUD so the Launch button is available
 	# when this scene is loaded. Avoid creating duplicate instances.
@@ -23,6 +38,10 @@ func _ready():
 				print("LaunchpadScene: failed to load launch_hud.tscn")
 		else:
 			print("LaunchpadScene: LaunchHUD already present, skipping instancing")
+	_setup_mission_guidance()
+
+func _process(_delta: float) -> void:
+	_update_mission_guidance()
 
 ## Earth Launchpad Scene
 ##
@@ -79,3 +98,92 @@ func _recursive_find_by_name(node: Node, target_name: String) -> Node:
 		if found:
 			return found
 	return null
+
+func _setup_mission_guidance() -> void:
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if not rm:
+		return
+	_mission_guidance_id = int(rm.consume_pending_mission_guidance_id())
+	if _mission_guidance_id <= 0:
+		return
+	_mission_guidance_active = true
+	set_process(true)
+	var tutorial_panel = get_node_or_null("TutorialPanel")
+	if tutorial_panel and tutorial_panel is CanvasItem:
+		tutorial_panel.visible = false
+	_mission_guidance_layer = MissionGuidanceOverlayScene.instantiate()
+	if _mission_guidance_layer == null:
+		return
+	add_child(_mission_guidance_layer)
+	var mission_panel: PanelContainer = _mission_guidance_layer.get_node_or_null("Panel")
+	_mission_guidance_label = _mission_guidance_layer.get_node_or_null("Panel/Margin/MessageLabel")
+	_mission_guidance_pointer = _mission_guidance_layer.get_node_or_null("PointerLabel")
+	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
+	if mission_panel:
+		panel_style.apply_panel(mission_panel)
+	if _mission_guidance_label:
+		panel_style.apply_body(_mission_guidance_label)
+
+func _update_mission_guidance() -> void:
+	if not _mission_guidance_active:
+		return
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if not rm:
+		return
+	if rm.get_launched().size() > 0:
+		_clear_mission_guidance()
+		return
+
+	var launchpad_root = get_tree().current_scene
+	if launchpad_root == null:
+		return
+	var target_button: Control = null
+	var selected_target = str(rm.get_selected_target())
+	var rockets = get_tree().get_nodes_in_group("rocket")
+	if rockets.is_empty():
+		target_button = _find_button_by_text(launchpad_root, "Create")
+		_mission_guidance_label.text = "Mission %d: Create a rocket to begin." % _mission_guidance_id
+	elif selected_target == "":
+		target_button = _find_button_by_text(launchpad_root, "Select")
+		_mission_guidance_label.text = "Mission %d: Select a mission target before launch." % _mission_guidance_id
+	else:
+		target_button = _find_button_by_text(launchpad_root, "Launch")
+		_mission_guidance_label.text = "Mission %d: Press Launch to start the mission." % _mission_guidance_id
+	_position_mission_pointer(target_button)
+
+func _position_mission_pointer(target_button: Control) -> void:
+	if _mission_guidance_pointer == null:
+		return
+	if target_button == null:
+		_mission_guidance_pointer.visible = false
+		return
+	var rect = target_button.get_global_rect()
+	_mission_guidance_pointer.position = Vector2(rect.position.x + rect.size.x * 0.5 - 8.0, rect.position.y - 34.0)
+	_mission_guidance_pointer.visible = true
+
+func _find_button_by_text(root: Node, expected_text: String) -> Button:
+	if root == null:
+		return null
+	var expected = expected_text.strip_edges().to_lower()
+	var stack := [root]
+	while not stack.is_empty():
+		var node = stack.pop_back()
+		for child in node.get_children():
+			if child is Button:
+				var txt = str(child.text).strip_edges().to_lower()
+				if txt.begins_with(expected):
+					return child
+			stack.append(child)
+	return null
+
+func _clear_mission_guidance() -> void:
+	_mission_guidance_active = false
+	_mission_guidance_id = 0
+	if _mission_guidance_layer and is_instance_valid(_mission_guidance_layer):
+		_mission_guidance_layer.queue_free()
+	var tutorial_panel = get_node_or_null("TutorialPanel")
+	if tutorial_panel and tutorial_panel is CanvasItem:
+		tutorial_panel.visible = true
+	_mission_guidance_layer = null
+	_mission_guidance_label = null
+	_mission_guidance_pointer = null

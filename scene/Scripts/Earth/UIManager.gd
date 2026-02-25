@@ -112,7 +112,7 @@ func _show_generic_panel(panel_type: PanelType) -> void:
 
 func _get_app_controller() -> Node:
 	"""Get reference to the AppController"""
-	return get_tree().root.find_child("AppController", true, false)
+	return preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
 
 func _on_reset_all() -> void:
 	"""Handle reset all from menu panel - relay to AppController"""
