@@ -1,0 +1,852 @@
+{
+  "taskId": "blav3e",
+  "currentVersion": 10,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "blav3e",
+      "version": 1,
+      "timestamp": "2026-02-26T01:56:11.230Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Backlog: spec fidelity, architecture cleanup, and UX polish",
+        "description": "Execute prioritized improvements identified from codebase and knowns spec/doc audit: fix source-of-truth docs, reduce runtime logging noise, refactor large scripts, add onboarding/briefing UX, extend automated tests, and clean stale assets/tasks.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "roadmap",
+          "refactor",
+          "docs",
+          "ux",
+          "testing",
+          "cleanup"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Spec/docs inconsistencies and broken references are resolved"
+          },
+          {
+            "completed": false,
+            "text": "Runtime logging is normalized through Logger with reduced print noise"
+          },
+          {
+            "completed": false,
+            "text": "Large script refactors are delivered with unchanged behavior"
+          },
+          {
+            "completed": false,
+            "text": "Mission onboarding and briefing UX are implemented and validated"
+          },
+          {
+            "completed": false,
+            "text": "New tests cover recently added weather/UI systems"
+          },
+          {
+            "completed": false,
+            "text": "Stale/duplicate tasks and legacy backup files are cleaned up"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "blav3e",
+      "version": 2,
+      "timestamp": "2026-02-26T02:22:39.578Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Spec/docs inconsistencies and broken references are resolved"
+            },
+            {
+              "completed": false,
+              "text": "Runtime logging is normalized through Logger with reduced print noise"
+            },
+            {
+              "completed": false,
+              "text": "Large script refactors are delivered with unchanged behavior"
+            },
+            {
+              "completed": false,
+              "text": "Mission onboarding and briefing UX are implemented and validated"
+            },
+            {
+              "completed": false,
+              "text": "New tests cover recently added weather/UI systems"
+            },
+            {
+              "completed": false,
+              "text": "Stale/duplicate tasks and legacy backup files are cleaned up"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Spec/docs inconsistencies and broken references are resolved"
+            },
+            {
+              "completed": false,
+              "text": "Runtime logging is normalized through Logger with reduced print noise"
+            },
+            {
+              "completed": false,
+              "text": "Large script refactors are delivered with unchanged behavior"
+            },
+            {
+              "completed": false,
+              "text": "Mission onboarding and briefing UX are implemented and validated"
+            },
+            {
+              "completed": false,
+              "text": "New tests cover recently added weather/UI systems"
+            },
+            {
+              "completed": false,
+              "text": "Stale/duplicate tasks and legacy backup files are cleaned up"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Backlog: spec fidelity, architecture cleanup, and UX polish",
+        "description": "Execute prioritized improvements identified from codebase and knowns spec/doc audit: fix source-of-truth docs, reduce runtime logging noise, refactor large scripts, add onboarding/briefing UX, extend automated tests, and clean stale assets/tasks.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "roadmap",
+          "refactor",
+          "docs",
+          "ux",
+          "testing",
+          "cleanup"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Spec/docs inconsistencies and broken references are resolved"
+          },
+          {
+            "completed": false,
+            "text": "Runtime logging is normalized through Logger with reduced print noise"
+          },
+          {
+            "completed": false,
+            "text": "Large script refactors are delivered with unchanged behavior"
+          },
+          {
+            "completed": false,
+            "text": "Mission onboarding and briefing UX are implemented and validated"
+          },
+          {
+            "completed": false,
+            "text": "New tests cover recently added weather/UI systems"
+          },
+          {
+            "completed": false,
+            "text": "Stale/duplicate tasks and legacy backup files are cleaned up"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "blav3e",
+      "version": 3,
+      "timestamp": "2026-02-26T02:22:41.799Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Spec/docs inconsistencies and broken references are resolved"
+            },
+            {
+              "completed": false,
+              "text": "Runtime logging is normalized through Logger with reduced print noise"
+            },
+            {
+              "completed": false,
+              "text": "Large script refactors are delivered with unchanged behavior"
+            },
+            {
+              "completed": false,
+              "text": "Mission onboarding and briefing UX are implemented and validated"
+            },
+            {
+              "completed": false,
+              "text": "New tests cover recently added weather/UI systems"
+            },
+            {
+              "completed": false,
+              "text": "Stale/duplicate tasks and legacy backup files are cleaned up"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Spec/docs inconsistencies and broken references are resolved"
+            },
+            {
+              "completed": true,
+              "text": "Runtime logging is normalized through Logger with reduced print noise"
+            },
+            {
+              "completed": false,
+              "text": "Large script refactors are delivered with unchanged behavior"
+            },
+            {
+              "completed": false,
+              "text": "Mission onboarding and briefing UX are implemented and validated"
+            },
+            {
+              "completed": false,
+              "text": "New tests cover recently added weather/UI systems"
+            },
+            {
+              "completed": false,
+              "text": "Stale/duplicate tasks and legacy backup files are cleaned up"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Backlog: spec fidelity, architecture cleanup, and UX polish",
+        "description": "Execute prioritized improvements identified from codebase and knowns spec/doc audit: fix source-of-truth docs, reduce runtime logging noise, refactor large scripts, add onboarding/briefing UX, extend automated tests, and clean stale assets/tasks.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "roadmap",
+          "refactor",
+          "docs",
+          "ux",
+          "testing",
+          "cleanup"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Spec/docs inconsistencies and broken references are resolved"
+          },
+          {
+            "completed": true,
+            "text": "Runtime logging is normalized through Logger with reduced print noise"
+          },
+          {
+            "completed": false,
+            "text": "Large script refactors are delivered with unchanged behavior"
+          },
+          {
+            "completed": false,
+            "text": "Mission onboarding and briefing UX are implemented and validated"
+          },
+          {
+            "completed": false,
+            "text": "New tests cover recently added weather/UI systems"
+          },
+          {
+            "completed": false,
+            "text": "Stale/duplicate tasks and legacy backup files are cleaned up"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "blav3e",
+      "version": 4,
+      "timestamp": "2026-02-26T02:22:44.030Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Spec/docs inconsistencies and broken references are resolved"
+            },
+            {
+              "completed": true,
+              "text": "Runtime logging is normalized through Logger with reduced print noise"
+            },
+            {
+              "completed": false,
+              "text": "Large script refactors are delivered with unchanged behavior"
+            },
+            {
+              "completed": false,
+              "text": "Mission onboarding and briefing UX are implemented and validated"
+            },
+            {
+              "completed": false,
+              "text": "New tests cover recently added weather/UI systems"
+            },
+            {
+              "completed": false,
+              "text": "Stale/duplicate tasks and legacy backup files are cleaned up"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Spec/docs inconsistencies and broken references are resolved"
+            },
+            {
+              "completed": true,
+              "text": "Runtime logging is normalized through Logger with reduced print noise"
+            },
+            {
+              "completed": true,
+              "text": "Large script refactors are delivered with unchanged behavior"
+            },
+            {
+              "completed": false,
+              "text": "Mission onboarding and briefing UX are implemented and validated"
+            },
+            {
+              "completed": false,
+              "text": "New tests cover recently added weather/UI systems"
+            },
+            {
+              "completed": false,
+              "text": "Stale/duplicate tasks and legacy backup files are cleaned up"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Backlog: spec fidelity, architecture cleanup, and UX polish",
+        "description": "Execute prioritized improvements identified from codebase and knowns spec/doc audit: fix source-of-truth docs, reduce runtime logging noise, refactor large scripts, add onboarding/briefing UX, extend automated tests, and clean stale assets/tasks.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "roadmap",
+          "refactor",
+          "docs",
+          "ux",
+          "testing",
+          "cleanup"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Spec/docs inconsistencies and broken references are resolved"
+          },
+          {
+            "completed": true,
+            "text": "Runtime logging is normalized through Logger with reduced print noise"
+          },
+          {
+            "completed": true,
+            "text": "Large script refactors are delivered with unchanged behavior"
+          },
+          {
+            "completed": false,
+            "text": "Mission onboarding and briefing UX are implemented and validated"
+          },
+          {
+            "completed": false,
+            "text": "New tests cover recently added weather/UI systems"
+          },
+          {
+            "completed": false,
+            "text": "Stale/duplicate tasks and legacy backup files are cleaned up"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "blav3e",
+      "version": 5,
+      "timestamp": "2026-02-26T02:22:46.258Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Spec/docs inconsistencies and broken references are resolved"
+            },
+            {
+              "completed": true,
+              "text": "Runtime logging is normalized through Logger with reduced print noise"
+            },
+            {
+              "completed": true,
+              "text": "Large script refactors are delivered with unchanged behavior"
+            },
+            {
+              "completed": false,
+              "text": "Mission onboarding and briefing UX are implemented and validated"
+            },
+            {
+              "completed": false,
+              "text": "New tests cover recently added weather/UI systems"
+            },
+            {
+              "completed": false,
+              "text": "Stale/duplicate tasks and legacy backup files are cleaned up"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Spec/docs inconsistencies and broken references are resolved"
+            },
+            {
+              "completed": true,
+              "text": "Runtime logging is normalized through Logger with reduced print noise"
+            },
+            {
+              "completed": true,
+              "text": "Large script refactors are delivered with unchanged behavior"
+            },
+            {
+              "completed": true,
+              "text": "Mission onboarding and briefing UX are implemented and validated"
+            },
+            {
+              "completed": false,
+              "text": "New tests cover recently added weather/UI systems"
+            },
+            {
+              "completed": false,
+              "text": "Stale/duplicate tasks and legacy backup files are cleaned up"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Backlog: spec fidelity, architecture cleanup, and UX polish",
+        "description": "Execute prioritized improvements identified from codebase and knowns spec/doc audit: fix source-of-truth docs, reduce runtime logging noise, refactor large scripts, add onboarding/briefing UX, extend automated tests, and clean stale assets/tasks.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "roadmap",
+          "refactor",
+          "docs",
+          "ux",
+          "testing",
+          "cleanup"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Spec/docs inconsistencies and broken references are resolved"
+          },
+          {
+            "completed": true,
+            "text": "Runtime logging is normalized through Logger with reduced print noise"
+          },
+          {
+            "completed": true,
+            "text": "Large script refactors are delivered with unchanged behavior"
+          },
+          {
+            "completed": true,
+            "text": "Mission onboarding and briefing UX are implemented and validated"
+          },
+          {
+            "completed": false,
+            "text": "New tests cover recently added weather/UI systems"
+          },
+          {
+            "completed": false,
+            "text": "Stale/duplicate tasks and legacy backup files are cleaned up"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "blav3e",
+      "version": 6,
+      "timestamp": "2026-02-26T02:22:48.485Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Spec/docs inconsistencies and broken references are resolved"
+            },
+            {
+              "completed": true,
+              "text": "Runtime logging is normalized through Logger with reduced print noise"
+            },
+            {
+              "completed": true,
+              "text": "Large script refactors are delivered with unchanged behavior"
+            },
+            {
+              "completed": true,
+              "text": "Mission onboarding and briefing UX are implemented and validated"
+            },
+            {
+              "completed": false,
+              "text": "New tests cover recently added weather/UI systems"
+            },
+            {
+              "completed": false,
+              "text": "Stale/duplicate tasks and legacy backup files are cleaned up"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Spec/docs inconsistencies and broken references are resolved"
+            },
+            {
+              "completed": true,
+              "text": "Runtime logging is normalized through Logger with reduced print noise"
+            },
+            {
+              "completed": true,
+              "text": "Large script refactors are delivered with unchanged behavior"
+            },
+            {
+              "completed": true,
+              "text": "Mission onboarding and briefing UX are implemented and validated"
+            },
+            {
+              "completed": true,
+              "text": "New tests cover recently added weather/UI systems"
+            },
+            {
+              "completed": false,
+              "text": "Stale/duplicate tasks and legacy backup files are cleaned up"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Backlog: spec fidelity, architecture cleanup, and UX polish",
+        "description": "Execute prioritized improvements identified from codebase and knowns spec/doc audit: fix source-of-truth docs, reduce runtime logging noise, refactor large scripts, add onboarding/briefing UX, extend automated tests, and clean stale assets/tasks.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "roadmap",
+          "refactor",
+          "docs",
+          "ux",
+          "testing",
+          "cleanup"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Spec/docs inconsistencies and broken references are resolved"
+          },
+          {
+            "completed": true,
+            "text": "Runtime logging is normalized through Logger with reduced print noise"
+          },
+          {
+            "completed": true,
+            "text": "Large script refactors are delivered with unchanged behavior"
+          },
+          {
+            "completed": true,
+            "text": "Mission onboarding and briefing UX are implemented and validated"
+          },
+          {
+            "completed": true,
+            "text": "New tests cover recently added weather/UI systems"
+          },
+          {
+            "completed": false,
+            "text": "Stale/duplicate tasks and legacy backup files are cleaned up"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v7",
+      "taskId": "blav3e",
+      "version": 7,
+      "timestamp": "2026-02-26T02:22:50.715Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Spec/docs inconsistencies and broken references are resolved"
+            },
+            {
+              "completed": true,
+              "text": "Runtime logging is normalized through Logger with reduced print noise"
+            },
+            {
+              "completed": true,
+              "text": "Large script refactors are delivered with unchanged behavior"
+            },
+            {
+              "completed": true,
+              "text": "Mission onboarding and briefing UX are implemented and validated"
+            },
+            {
+              "completed": true,
+              "text": "New tests cover recently added weather/UI systems"
+            },
+            {
+              "completed": false,
+              "text": "Stale/duplicate tasks and legacy backup files are cleaned up"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Spec/docs inconsistencies and broken references are resolved"
+            },
+            {
+              "completed": true,
+              "text": "Runtime logging is normalized through Logger with reduced print noise"
+            },
+            {
+              "completed": true,
+              "text": "Large script refactors are delivered with unchanged behavior"
+            },
+            {
+              "completed": true,
+              "text": "Mission onboarding and briefing UX are implemented and validated"
+            },
+            {
+              "completed": true,
+              "text": "New tests cover recently added weather/UI systems"
+            },
+            {
+              "completed": true,
+              "text": "Stale/duplicate tasks and legacy backup files are cleaned up"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Backlog: spec fidelity, architecture cleanup, and UX polish",
+        "description": "Execute prioritized improvements identified from codebase and knowns spec/doc audit: fix source-of-truth docs, reduce runtime logging noise, refactor large scripts, add onboarding/briefing UX, extend automated tests, and clean stale assets/tasks.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "roadmap",
+          "refactor",
+          "docs",
+          "ux",
+          "testing",
+          "cleanup"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Spec/docs inconsistencies and broken references are resolved"
+          },
+          {
+            "completed": true,
+            "text": "Runtime logging is normalized through Logger with reduced print noise"
+          },
+          {
+            "completed": true,
+            "text": "Large script refactors are delivered with unchanged behavior"
+          },
+          {
+            "completed": true,
+            "text": "Mission onboarding and briefing UX are implemented and validated"
+          },
+          {
+            "completed": true,
+            "text": "New tests cover recently added weather/UI systems"
+          },
+          {
+            "completed": true,
+            "text": "Stale/duplicate tasks and legacy backup files are cleaned up"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v8",
+      "taskId": "blav3e",
+      "version": 8,
+      "timestamp": "2026-02-26T02:22:52.957Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "✓ Completed subtasks: h5xn2s, md41lh, hvvvss, 5wr341, f31ywm, wryqox, zxpvox, 6de0wj."
+        }
+      ],
+      "snapshot": {
+        "title": "Backlog: spec fidelity, architecture cleanup, and UX polish",
+        "description": "Execute prioritized improvements identified from codebase and knowns spec/doc audit: fix source-of-truth docs, reduce runtime logging noise, refactor large scripts, add onboarding/briefing UX, extend automated tests, and clean stale assets/tasks.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "roadmap",
+          "refactor",
+          "docs",
+          "ux",
+          "testing",
+          "cleanup"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Spec/docs inconsistencies and broken references are resolved"
+          },
+          {
+            "completed": true,
+            "text": "Runtime logging is normalized through Logger with reduced print noise"
+          },
+          {
+            "completed": true,
+            "text": "Large script refactors are delivered with unchanged behavior"
+          },
+          {
+            "completed": true,
+            "text": "Mission onboarding and briefing UX are implemented and validated"
+          },
+          {
+            "completed": true,
+            "text": "New tests cover recently added weather/UI systems"
+          },
+          {
+            "completed": true,
+            "text": "Stale/duplicate tasks and legacy backup files are cleaned up"
+          }
+        ],
+        "implementationNotes": "✓ Completed subtasks: h5xn2s, md41lh, hvvvss, 5wr341, f31ywm, wryqox, zxpvox, 6de0wj."
+      }
+    },
+    {
+      "id": "v9",
+      "taskId": "blav3e",
+      "version": 9,
+      "timestamp": "2026-02-26T02:22:55.195Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "✓ Completed subtasks: h5xn2s, md41lh, hvvvss, 5wr341, f31ywm, wryqox, zxpvox, 6de0wj.",
+          "newValue": "✓ Completed subtasks: h5xn2s, md41lh, hvvvss, 5wr341, f31ywm, wryqox, zxpvox, 6de0wj.\n\nNote: validations in this session were primarily code-level/static; runtime Godot execution intentionally avoided in sandbox."
+        }
+      ],
+      "snapshot": {
+        "title": "Backlog: spec fidelity, architecture cleanup, and UX polish",
+        "description": "Execute prioritized improvements identified from codebase and knowns spec/doc audit: fix source-of-truth docs, reduce runtime logging noise, refactor large scripts, add onboarding/briefing UX, extend automated tests, and clean stale assets/tasks.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "roadmap",
+          "refactor",
+          "docs",
+          "ux",
+          "testing",
+          "cleanup"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Spec/docs inconsistencies and broken references are resolved"
+          },
+          {
+            "completed": true,
+            "text": "Runtime logging is normalized through Logger with reduced print noise"
+          },
+          {
+            "completed": true,
+            "text": "Large script refactors are delivered with unchanged behavior"
+          },
+          {
+            "completed": true,
+            "text": "Mission onboarding and briefing UX are implemented and validated"
+          },
+          {
+            "completed": true,
+            "text": "New tests cover recently added weather/UI systems"
+          },
+          {
+            "completed": true,
+            "text": "Stale/duplicate tasks and legacy backup files are cleaned up"
+          }
+        ],
+        "implementationNotes": "✓ Completed subtasks: h5xn2s, md41lh, hvvvss, 5wr341, f31ywm, wryqox, zxpvox, 6de0wj.\n\nNote: validations in this session were primarily code-level/static; runtime Godot execution intentionally avoided in sandbox."
+      }
+    },
+    {
+      "id": "v10",
+      "taskId": "blav3e",
+      "version": 10,
+      "timestamp": "2026-02-26T02:22:57.417Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Backlog: spec fidelity, architecture cleanup, and UX polish",
+        "description": "Execute prioritized improvements identified from codebase and knowns spec/doc audit: fix source-of-truth docs, reduce runtime logging noise, refactor large scripts, add onboarding/briefing UX, extend automated tests, and clean stale assets/tasks.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "roadmap",
+          "refactor",
+          "docs",
+          "ux",
+          "testing",
+          "cleanup"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Spec/docs inconsistencies and broken references are resolved"
+          },
+          {
+            "completed": true,
+            "text": "Runtime logging is normalized through Logger with reduced print noise"
+          },
+          {
+            "completed": true,
+            "text": "Large script refactors are delivered with unchanged behavior"
+          },
+          {
+            "completed": true,
+            "text": "Mission onboarding and briefing UX are implemented and validated"
+          },
+          {
+            "completed": true,
+            "text": "New tests cover recently added weather/UI systems"
+          },
+          {
+            "completed": true,
+            "text": "Stale/duplicate tasks and legacy backup files are cleaned up"
+          }
+        ],
+        "implementationNotes": "✓ Completed subtasks: h5xn2s, md41lh, hvvvss, 5wr341, f31ywm, wryqox, zxpvox, 6de0wj.\n\nNote: validations in this session were primarily code-level/static; runtime Godot execution intentionally avoided in sandbox."
+      }
+    }
+  ]
+}

@@ -67,9 +67,10 @@ func _setup_guide_nodes() -> void:
 	_highlight_box = Panel.new()
 	_highlight_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_highlight_box.visible = false
+	# Intentional opt-out from generic panel style: this is a guidance/highlight affordance.
 	var highlight_style = StyleBoxFlat.new()
 	highlight_style.bg_color = Color(0.39, 0.78, 0.98, 0.12)
-	highlight_style.border_color = Color(0.64, 0.89, 1.0, 0.96)
+	highlight_style.border_color = Color(PanelStyle.ACCENT.r, PanelStyle.ACCENT.g, PanelStyle.ACCENT.b, 0.96)
 	highlight_style.border_width_left = 3
 	highlight_style.border_width_top = 3
 	highlight_style.border_width_right = 3
@@ -84,13 +85,13 @@ func _setup_guide_nodes() -> void:
 	_guide_line = Line2D.new()
 	_guide_line.visible = false
 	_guide_line.width = 4.0
-	_guide_line.default_color = Color(0.64, 0.89, 1.0, 0.96)
+	_guide_line.default_color = Color(PanelStyle.ACCENT.r, PanelStyle.ACCENT.g, PanelStyle.ACCENT.b, 0.96)
 	_guide_line.antialiased = true
 	add_child(_guide_line)
 
 	_guide_arrow = Polygon2D.new()
 	_guide_arrow.visible = false
-	_guide_arrow.color = Color(0.64, 0.89, 1.0, 0.96)
+	_guide_arrow.color = Color(PanelStyle.ACCENT.r, PanelStyle.ACCENT.g, PanelStyle.ACCENT.b, 0.96)
 	_guide_arrow.polygon = PackedVector2Array([
 		Vector2(0, 0),
 		Vector2(-16, -9),
@@ -103,7 +104,7 @@ func _setup_guide_nodes() -> void:
 	_guide_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_guide_label.text = "Click here ->"
 	_guide_label.add_theme_font_size_override("font_size", 18)
-	_guide_label.add_theme_color_override("font_color", Color(0.95, 0.98, 1.0, 1.0))
+	_guide_label.add_theme_color_override("font_color", PanelStyle.TEXT_PRIMARY)
 	_guide_label.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.8))
 	_guide_label.add_theme_constant_override("shadow_offset_x", 2)
 	_guide_label.add_theme_constant_override("shadow_offset_y", 2)

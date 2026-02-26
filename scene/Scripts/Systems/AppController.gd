@@ -20,6 +20,7 @@ var _menu_request_version: int = 0
 var _menu_request_action: String = ""
 const AppControllerPersistence = preload("res://Scripts/Systems/AppControllerPersistence.gd")
 const WebEventBridge = preload("res://Scripts/Systems/WebEventBridge.gd")
+const AppLogger = preload("res://Scripts/Utils/Logger.gd")
 var _persistence := AppControllerPersistence.new()
 const BASE_XP_TO_LEVEL := 10
 const XP_AWARD_LAUNCH := 5
@@ -31,7 +32,7 @@ var _tutorial_controller: Node = null
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	print("AppController ready, counter initialized to: ", counter)
+	AppLogger.d("AppController ready, counter initialized to: %s" % counter)
 	# Load persisted franc balance from disk (if present)
 	load_franc_balance()
 	# Load persisted experience from disk (if present)
@@ -75,46 +76,46 @@ func _ensure_mission_progress_tracker() -> void:
 
 func set_counter_from_react(value: int) -> void:
 	"""Set counter value from React Native"""
-	print("[AppController] set_counter_from_react CALLED with value: ", value)
+	AppLogger.d("[AppController] set_counter_from_react CALLED with value: %s" % value)
 	counter = value
 	counter_updated.emit(counter)
 	if current_menu_panel and current_menu_panel.has_method("set_counter"):
 		current_menu_panel.set_counter(counter)
-		print("[AppController] Updated open menu panel with counter: ", counter)
-	print("[AppController] Counter now set to: ", counter)
+		AppLogger.d("[AppController] Updated open menu panel with counter: %s" % counter)
+	AppLogger.d("[AppController] Counter now set to: %s" % counter)
 
 func get_counter() -> int:
 	"""Get current counter value"""
-	print("[AppController] get_counter() called, returning: ", counter)
+	AppLogger.d("[AppController] get_counter() called, returning: %s" % counter)
 	return counter
 
 func open_window(window_name: String) -> void:
 	"""Open a window/panel"""
-	print("Opening window: ", window_name)
+	AppLogger.d("Opening window: %s" % window_name)
 	match window_name:
 		"menu", "main_menu":
 			show_menu_panel()
 		_:
-			print("Unknown window: ", window_name)
+			AppLogger.w("Unknown window: %s" % window_name)
 
 	window_status_update.emit("Opened " + window_name)
 
 func close_window(window_name: String) -> void:
 	"""Close a window/panel"""
-	print("Closing window: ", window_name)
+	AppLogger.d("Closing window: %s" % window_name)
 
 	match window_name:
 		"menu", "main_menu":
 			hide_menu_panel()
 		_:
-			print("Unknown window: ", window_name)
+			AppLogger.w("Unknown window: %s" % window_name)
 
 	window_status_update.emit("Closed " + window_name)
 
 func set_game_paused(paused: bool) -> void:
 	_game_paused = paused
 	get_tree().paused = paused
-	print("[AppController] Game paused set to: ", paused)
+	AppLogger.d("[AppController] Game paused set to: %s" % paused)
 
 func get_game_paused() -> bool:
 	return _game_paused
@@ -161,14 +162,14 @@ func show_menu_panel() -> void:
 	if current_menu_panel.has_signal("replay_all_tutorial_requested"):
 		current_menu_panel.replay_all_tutorial_requested.connect(replay_tutorial_from_mission1)
 
-	print("Menu panel shown with counter: ", counter)
+	AppLogger.d("Menu panel shown with counter: %s" % counter)
 
 func hide_menu_panel() -> void:
 	"""Hide the main menu panel"""
 	if current_menu_panel:
 		current_menu_panel.queue_free()
 		current_menu_panel = null
-		print("Menu panel hidden")
+		AppLogger.d("Menu panel hidden")
 
 func _on_menu_panel_closed() -> void:
 	"""Handle menu panel being closed"""
@@ -179,11 +180,11 @@ func _on_counter_changed(new_value: int) -> void:
 	"""Handle counter being changed in Godot UI"""
 	counter = new_value
 	counter_updated.emit(counter)
-	print("Counter changed in Godot UI: ", counter)
+	AppLogger.d("Counter changed in Godot UI: %s" % counter)
 
 func _on_reset_all() -> void:
 	"""Handle reset all action from menu panel"""
-	print("Reset all requested from Godot UI")
+	AppLogger.d("Reset all requested from Godot UI")
 	counter = 0
 	franc_balance = 10000000000
 	experience_xp = 0
@@ -199,11 +200,11 @@ func _on_reset_all() -> void:
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	if rm:
 		rm.reset_state()
-		print("RocketsManager: persisted rockets state reset")
+		AppLogger.d("RocketsManager: persisted rockets state reset")
 	if _tutorial_controller and _tutorial_controller.has_method("reset_all"):
 		_tutorial_controller.reset_all()
 	rockets_reset.emit()
-	print("All state reset in Godot. Signals emitted to notify React Native.")
+	AppLogger.d("All state reset in Godot. Signals emitted to notify React Native.")
 
 func has_signal_connections(signal_name: String) -> bool:
 	"""Check if signal has connections (for React Native compatibility)"""
@@ -213,7 +214,7 @@ func set_franc_balance_from_react(value: int) -> void:
 	"""Set franc balance from React Native"""
 	franc_balance = value
 	franc_balance_updated.emit(franc_balance)
-	print("[AppController] Franc balance set from React Native: ", franc_balance)
+	AppLogger.d("[AppController] Franc balance set from React Native: %s" % franc_balance)
 	save_franc_balance()
 
 func add_franc_balance(amount: int, source: String = "") -> void:
@@ -223,7 +224,7 @@ func add_franc_balance(amount: int, source: String = "") -> void:
 	franc_balance_updated.emit(franc_balance)
 	save_franc_balance()
 	if source != "":
-		print("[AppController] Franc balance change from ", source, ": ", amount, " (balance=", franc_balance, ")")
+		AppLogger.d("[AppController] Franc balance change from %s: %s (balance=%s)" % [source, amount, franc_balance])
 
 func get_franc_balance() -> int:
 	"""Get franc balance"""
@@ -252,7 +253,7 @@ func add_experience(amount: int, source: String = "") -> void:
 	_emit_experience_updated()
 	save_experience()
 	if source != "":
-		print("[AppController] Experience gained from ", source, ": +", amount, " (xp=", experience_xp, " level=", experience_level, ")")
+		AppLogger.d("[AppController] Experience gained from %s: +%s (xp=%s level=%s)" % [source, amount, experience_xp, experience_level])
 
 func award_launch_experience() -> void:
 	add_experience(XP_AWARD_LAUNCH, "launch")

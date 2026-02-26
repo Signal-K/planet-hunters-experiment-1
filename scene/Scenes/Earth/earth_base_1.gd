@@ -50,6 +50,14 @@ func _setup_buttons() -> void:
 	var market_btn = $UILayer/ButtonContainer/MarketButton
 	var space_map_btn = $UILayer/ButtonContainer/SpaceMapButton
 	var new_mission_btn = $UILayer/ButtonContainer/NewMissionButton
+	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
+
+	panel_style.apply_button(back_btn, false)
+	panel_style.apply_button(forward_btn, false)
+	panel_style.apply_button(menu_btn, false)
+	panel_style.apply_button(market_btn, false)
+	panel_style.apply_button(space_map_btn, false)
+	panel_style.apply_button(new_mission_btn, true)
 	
 	# Connect signals
 	back_btn.pressed.connect(_on_back_button_pressed)

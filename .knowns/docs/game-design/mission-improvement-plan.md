@@ -1,7 +1,7 @@
 ---
 title: Mission Improvement Plan
 createdAt: '2026-02-25T08:23:40.138Z'
-updatedAt: '2026-02-25T08:23:40.325Z'
+updatedAt: '2026-02-26T01:53:33.631Z'
 description: >-
   Comprehensive plan to improve mission onboarding, documentation, and
   spec-driven development
@@ -20,7 +20,7 @@ This document outlines the comprehensive plan to improve mission onboarding, doc
 ## ✅ Completed
 
 ### 1. Mission Design Specification Document
-**Task**: @task-k1naxd  
+**Task**: task-k1naxd  
 **Status**: Done  
 **Location**: @doc/game-design/mission-system-specification
 
@@ -39,7 +39,7 @@ Created comprehensive spec document covering:
 ## 🎯 High Priority Tasks
 
 ### 2. Mission Onboarding Overlays
-**Task**: @task-7xdhgi  
+**Task**: task-7xdhgi  
 **Priority**: High  
 **Purpose**: Replace wall-of-text with step-by-step guidance
 
@@ -54,7 +54,7 @@ Created comprehensive spec document covering:
 **User Benefit**: Clear, digestible mission objectives at each stage
 
 ### 3. Mission Spec Validation Tests
-**Task**: @task-r3wjy5  
+**Task**: task-r3wjy5  
 **Priority**: High  
 **Purpose**: Ensure implementation matches spec
 
@@ -72,7 +72,7 @@ Created comprehensive spec document covering:
 ## 📋 Medium Priority Tasks
 
 ### 4. Refactor Tutorial System
-**Task**: @task-bzx127  
+**Task**: task-bzx127  
 **Priority**: Medium  
 **Purpose**: Make tutorial mission-contextual
 
@@ -85,7 +85,7 @@ Created comprehensive spec document covering:
 **User Benefit**: Relevant guidance without overwhelming information
 
 ### 5. Mission Briefing Screen
-**Task**: @task-r7f35q  
+**Task**: task-r7f35q  
 **Priority**: Medium  
 **Purpose**: Pre-launch mission summary
 
@@ -99,7 +99,7 @@ Created comprehensive spec document covering:
 **User Benefit**: Clear understanding before committing to mission
 
 ### 6. Align Mission Constants with Spec
-**Task**: @task-w0j1ov  
+**Task**: task-w0j1ov  
 **Priority**: Medium  
 **Purpose**: Code matches spec exactly
 
@@ -117,7 +117,7 @@ Created comprehensive spec document covering:
 ## 🎨 Low Priority Tasks
 
 ### 7. Mission Progress Tracker UI
-**Task**: @task-tpl2om  
+**Task**: task-tpl2om  
 **Priority**: Low  
 **Purpose**: Persistent mission status display
 
@@ -131,7 +131,7 @@ Created comprehensive spec document covering:
 **User Benefit**: Always know where you are in progression
 
 ### 8. Mission Flowchart Diagrams
-**Task**: @task-32sidu  
+**Task**: task-32sidu  
 **Priority**: Low  
 **Purpose**: Visual mission flow documentation
 
@@ -189,12 +189,12 @@ M5: Contractor Missions
 ```
 
 ### Related Completed Tasks
-- @task-hcaynf: Gate scanner to M3
-- @task-x48i3q: Mission selector progression (M1-M3)
-- @task-srnf59: Create mission 3
-- @task-vergrc: Create mission 4
-- @task-jom58m: Create mission 5
-- @task-4r0j05: Mission progression updates
+- task-hcaynf: Gate scanner to M3
+- task-x48i3q: Mission selector progression (M1-M3)
+- task-srnf59: Create mission 3
+- task-vergrc: Create mission 4
+- task-jom58m: Create mission 5
+- task-4r0j05: Mission progression updates
 
 ---
 
@@ -278,7 +278,7 @@ M5: Contractor Missions
 
 - **Spec Document**: `.knowns/docs/game-design/mission-system-specification.md`
 - **Mission Code**: `scene/Scripts/Utils/RocketsManager.gd`
-- **Tutorial Code**: `scene/Scripts/UI/TutorialPanel.gd`
+- **Tutorial Code**: `scene/Scripts/UI/TutorialCoachOverlay.gd`
 - **Tests**: `scene/tests/run_experience_tests.gd`
 
 ---

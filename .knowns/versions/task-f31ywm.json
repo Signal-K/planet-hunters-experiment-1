@@ -1,0 +1,534 @@
+{
+  "taskId": "f31ywm",
+  "currentVersion": 11,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "f31ywm",
+      "version": 1,
+      "timestamp": "2026-02-26T02:18:21.919Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Implement mission onboarding overlays and briefing screens",
+        "description": "Add contextual mission guidance overlays and first-view briefing screens aligned with mission progression spec.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ux",
+          "onboarding",
+          "missions"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "M1-M5 each have clear onboarding/briefing content"
+          },
+          {
+            "completed": false,
+            "text": "Briefings are skippable after first view"
+          },
+          {
+            "completed": false,
+            "text": "Tutorial messaging is mission-contextual without wall-of-text regressions"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "f31ywm",
+      "version": 2,
+      "timestamp": "2026-02-26T02:18:48.796Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "newValue": "1. Re-enable mission briefing gate in LaunchpadSelectorPanel using mission stage data and mission_briefings_seen persistence in RocketsManager.\n2. Add concise per-mission (M1-M5) briefing payloads with objective/mechanic-focused copy to avoid wall-of-text.\n3. Ensure first-view behavior is gated once per mission and skippable thereafter (Skip + Continue actions both persist seen state).\n4. Wire tutorial action breadcrumbs from briefing CTA paths and keep existing target-selection flow intact.\n5. Add/update focused tests around briefing-seen persistence and gating behavior."
+        }
+      ],
+      "snapshot": {
+        "title": "Implement mission onboarding overlays and briefing screens",
+        "description": "Add contextual mission guidance overlays and first-view briefing screens aligned with mission progression spec.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ux",
+          "onboarding",
+          "missions"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "M1-M5 each have clear onboarding/briefing content"
+          },
+          {
+            "completed": false,
+            "text": "Briefings are skippable after first view"
+          },
+          {
+            "completed": false,
+            "text": "Tutorial messaging is mission-contextual without wall-of-text regressions"
+          }
+        ],
+        "implementationPlan": "1. Re-enable mission briefing gate in LaunchpadSelectorPanel using mission stage data and mission_briefings_seen persistence in RocketsManager.\n2. Add concise per-mission (M1-M5) briefing payloads with objective/mechanic-focused copy to avoid wall-of-text.\n3. Ensure first-view behavior is gated once per mission and skippable thereafter (Skip + Continue actions both persist seen state).\n4. Wire tutorial action breadcrumbs from briefing CTA paths and keep existing target-selection flow intact.\n5. Add/update focused tests around briefing-seen persistence and gating behavior."
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "f31ywm",
+      "version": 3,
+      "timestamp": "2026-02-26T02:20:21.490Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "✓ Re-enabled mission briefing gate in LaunchpadSelectorPanel using mission_briefings_seen persistence from RocketsManager."
+        }
+      ],
+      "snapshot": {
+        "title": "Implement mission onboarding overlays and briefing screens",
+        "description": "Add contextual mission guidance overlays and first-view briefing screens aligned with mission progression spec.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ux",
+          "onboarding",
+          "missions"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "M1-M5 each have clear onboarding/briefing content"
+          },
+          {
+            "completed": false,
+            "text": "Briefings are skippable after first view"
+          },
+          {
+            "completed": false,
+            "text": "Tutorial messaging is mission-contextual without wall-of-text regressions"
+          }
+        ],
+        "implementationPlan": "1. Re-enable mission briefing gate in LaunchpadSelectorPanel using mission stage data and mission_briefings_seen persistence in RocketsManager.\n2. Add concise per-mission (M1-M5) briefing payloads with objective/mechanic-focused copy to avoid wall-of-text.\n3. Ensure first-view behavior is gated once per mission and skippable thereafter (Skip + Continue actions both persist seen state).\n4. Wire tutorial action breadcrumbs from briefing CTA paths and keep existing target-selection flow intact.\n5. Add/update focused tests around briefing-seen persistence and gating behavior.",
+        "implementationNotes": "✓ Re-enabled mission briefing gate in LaunchpadSelectorPanel using mission_briefings_seen persistence from RocketsManager."
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "f31ywm",
+      "version": 4,
+      "timestamp": "2026-02-26T02:20:23.719Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "✓ Re-enabled mission briefing gate in LaunchpadSelectorPanel using mission_briefings_seen persistence from RocketsManager.",
+          "newValue": "✓ Re-enabled mission briefing gate in LaunchpadSelectorPanel using mission_briefings_seen persistence from RocketsManager.\n\n✓ Added concise M1-M5 briefing UI card with objective/mechanic/loadout/reward/unlock summary; avoids wall-of-text."
+        }
+      ],
+      "snapshot": {
+        "title": "Implement mission onboarding overlays and briefing screens",
+        "description": "Add contextual mission guidance overlays and first-view briefing screens aligned with mission progression spec.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ux",
+          "onboarding",
+          "missions"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "M1-M5 each have clear onboarding/briefing content"
+          },
+          {
+            "completed": false,
+            "text": "Briefings are skippable after first view"
+          },
+          {
+            "completed": false,
+            "text": "Tutorial messaging is mission-contextual without wall-of-text regressions"
+          }
+        ],
+        "implementationPlan": "1. Re-enable mission briefing gate in LaunchpadSelectorPanel using mission stage data and mission_briefings_seen persistence in RocketsManager.\n2. Add concise per-mission (M1-M5) briefing payloads with objective/mechanic-focused copy to avoid wall-of-text.\n3. Ensure first-view behavior is gated once per mission and skippable thereafter (Skip + Continue actions both persist seen state).\n4. Wire tutorial action breadcrumbs from briefing CTA paths and keep existing target-selection flow intact.\n5. Add/update focused tests around briefing-seen persistence and gating behavior.",
+        "implementationNotes": "✓ Re-enabled mission briefing gate in LaunchpadSelectorPanel using mission_briefings_seen persistence from RocketsManager.\n\n✓ Added concise M1-M5 briefing UI card with objective/mechanic/loadout/reward/unlock summary; avoids wall-of-text."
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "f31ywm",
+      "version": 5,
+      "timestamp": "2026-02-26T02:20:25.942Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "✓ Re-enabled mission briefing gate in LaunchpadSelectorPanel using mission_briefings_seen persistence from RocketsManager.\n\n✓ Added concise M1-M5 briefing UI card with objective/mechanic/loadout/reward/unlock summary; avoids wall-of-text.",
+          "newValue": "✓ Re-enabled mission briefing gate in LaunchpadSelectorPanel using mission_briefings_seen persistence from RocketsManager.\n\n✓ Added concise M1-M5 briefing UI card with objective/mechanic/loadout/reward/unlock summary; avoids wall-of-text.\n\n✓ Added Continue + Skip Briefing actions; both mark briefing as seen and proceed to target selection."
+        }
+      ],
+      "snapshot": {
+        "title": "Implement mission onboarding overlays and briefing screens",
+        "description": "Add contextual mission guidance overlays and first-view briefing screens aligned with mission progression spec.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ux",
+          "onboarding",
+          "missions"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "M1-M5 each have clear onboarding/briefing content"
+          },
+          {
+            "completed": false,
+            "text": "Briefings are skippable after first view"
+          },
+          {
+            "completed": false,
+            "text": "Tutorial messaging is mission-contextual without wall-of-text regressions"
+          }
+        ],
+        "implementationPlan": "1. Re-enable mission briefing gate in LaunchpadSelectorPanel using mission stage data and mission_briefings_seen persistence in RocketsManager.\n2. Add concise per-mission (M1-M5) briefing payloads with objective/mechanic-focused copy to avoid wall-of-text.\n3. Ensure first-view behavior is gated once per mission and skippable thereafter (Skip + Continue actions both persist seen state).\n4. Wire tutorial action breadcrumbs from briefing CTA paths and keep existing target-selection flow intact.\n5. Add/update focused tests around briefing-seen persistence and gating behavior.",
+        "implementationNotes": "✓ Re-enabled mission briefing gate in LaunchpadSelectorPanel using mission_briefings_seen persistence from RocketsManager.\n\n✓ Added concise M1-M5 briefing UI card with objective/mechanic/loadout/reward/unlock summary; avoids wall-of-text.\n\n✓ Added Continue + Skip Briefing actions; both mark briefing as seen and proceed to target selection."
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "f31ywm",
+      "version": 6,
+      "timestamp": "2026-02-26T02:20:28.342Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "✓ Re-enabled mission briefing gate in LaunchpadSelectorPanel using mission_briefings_seen persistence from RocketsManager.\n\n✓ Added concise M1-M5 briefing UI card with objective/mechanic/loadout/reward/unlock summary; avoids wall-of-text.\n\n✓ Added Continue + Skip Briefing actions; both mark briefing as seen and proceed to target selection.",
+          "newValue": "✓ Re-enabled mission briefing gate in LaunchpadSelectorPanel using mission_briefings_seen persistence from RocketsManager.\n\n✓ Added concise M1-M5 briefing UI card with objective/mechanic/loadout/reward/unlock summary; avoids wall-of-text.\n\n✓ Added Continue + Skip Briefing actions; both mark briefing as seen and proceed to target selection.\n\n✓ Added run_structure_tests coverage for mission briefing seen persistence (RocketsManager mark/is flow)."
+        }
+      ],
+      "snapshot": {
+        "title": "Implement mission onboarding overlays and briefing screens",
+        "description": "Add contextual mission guidance overlays and first-view briefing screens aligned with mission progression spec.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ux",
+          "onboarding",
+          "missions"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "M1-M5 each have clear onboarding/briefing content"
+          },
+          {
+            "completed": false,
+            "text": "Briefings are skippable after first view"
+          },
+          {
+            "completed": false,
+            "text": "Tutorial messaging is mission-contextual without wall-of-text regressions"
+          }
+        ],
+        "implementationPlan": "1. Re-enable mission briefing gate in LaunchpadSelectorPanel using mission stage data and mission_briefings_seen persistence in RocketsManager.\n2. Add concise per-mission (M1-M5) briefing payloads with objective/mechanic-focused copy to avoid wall-of-text.\n3. Ensure first-view behavior is gated once per mission and skippable thereafter (Skip + Continue actions both persist seen state).\n4. Wire tutorial action breadcrumbs from briefing CTA paths and keep existing target-selection flow intact.\n5. Add/update focused tests around briefing-seen persistence and gating behavior.",
+        "implementationNotes": "✓ Re-enabled mission briefing gate in LaunchpadSelectorPanel using mission_briefings_seen persistence from RocketsManager.\n\n✓ Added concise M1-M5 briefing UI card with objective/mechanic/loadout/reward/unlock summary; avoids wall-of-text.\n\n✓ Added Continue + Skip Briefing actions; both mark briefing as seen and proceed to target selection.\n\n✓ Added run_structure_tests coverage for mission briefing seen persistence (RocketsManager mark/is flow)."
+      }
+    },
+    {
+      "id": "v7",
+      "taskId": "f31ywm",
+      "version": 7,
+      "timestamp": "2026-02-26T02:20:30.733Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "M1-M5 each have clear onboarding/briefing content"
+            },
+            {
+              "completed": false,
+              "text": "Briefings are skippable after first view"
+            },
+            {
+              "completed": false,
+              "text": "Tutorial messaging is mission-contextual without wall-of-text regressions"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "M1-M5 each have clear onboarding/briefing content"
+            },
+            {
+              "completed": false,
+              "text": "Briefings are skippable after first view"
+            },
+            {
+              "completed": false,
+              "text": "Tutorial messaging is mission-contextual without wall-of-text regressions"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Implement mission onboarding overlays and briefing screens",
+        "description": "Add contextual mission guidance overlays and first-view briefing screens aligned with mission progression spec.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ux",
+          "onboarding",
+          "missions"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "M1-M5 each have clear onboarding/briefing content"
+          },
+          {
+            "completed": false,
+            "text": "Briefings are skippable after first view"
+          },
+          {
+            "completed": false,
+            "text": "Tutorial messaging is mission-contextual without wall-of-text regressions"
+          }
+        ],
+        "implementationPlan": "1. Re-enable mission briefing gate in LaunchpadSelectorPanel using mission stage data and mission_briefings_seen persistence in RocketsManager.\n2. Add concise per-mission (M1-M5) briefing payloads with objective/mechanic-focused copy to avoid wall-of-text.\n3. Ensure first-view behavior is gated once per mission and skippable thereafter (Skip + Continue actions both persist seen state).\n4. Wire tutorial action breadcrumbs from briefing CTA paths and keep existing target-selection flow intact.\n5. Add/update focused tests around briefing-seen persistence and gating behavior.",
+        "implementationNotes": "✓ Re-enabled mission briefing gate in LaunchpadSelectorPanel using mission_briefings_seen persistence from RocketsManager.\n\n✓ Added concise M1-M5 briefing UI card with objective/mechanic/loadout/reward/unlock summary; avoids wall-of-text.\n\n✓ Added Continue + Skip Briefing actions; both mark briefing as seen and proceed to target selection.\n\n✓ Added run_structure_tests coverage for mission briefing seen persistence (RocketsManager mark/is flow)."
+      }
+    },
+    {
+      "id": "v8",
+      "taskId": "f31ywm",
+      "version": 8,
+      "timestamp": "2026-02-26T02:20:33.128Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "M1-M5 each have clear onboarding/briefing content"
+            },
+            {
+              "completed": false,
+              "text": "Briefings are skippable after first view"
+            },
+            {
+              "completed": false,
+              "text": "Tutorial messaging is mission-contextual without wall-of-text regressions"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "M1-M5 each have clear onboarding/briefing content"
+            },
+            {
+              "completed": true,
+              "text": "Briefings are skippable after first view"
+            },
+            {
+              "completed": false,
+              "text": "Tutorial messaging is mission-contextual without wall-of-text regressions"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Implement mission onboarding overlays and briefing screens",
+        "description": "Add contextual mission guidance overlays and first-view briefing screens aligned with mission progression spec.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ux",
+          "onboarding",
+          "missions"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "M1-M5 each have clear onboarding/briefing content"
+          },
+          {
+            "completed": true,
+            "text": "Briefings are skippable after first view"
+          },
+          {
+            "completed": false,
+            "text": "Tutorial messaging is mission-contextual without wall-of-text regressions"
+          }
+        ],
+        "implementationPlan": "1. Re-enable mission briefing gate in LaunchpadSelectorPanel using mission stage data and mission_briefings_seen persistence in RocketsManager.\n2. Add concise per-mission (M1-M5) briefing payloads with objective/mechanic-focused copy to avoid wall-of-text.\n3. Ensure first-view behavior is gated once per mission and skippable thereafter (Skip + Continue actions both persist seen state).\n4. Wire tutorial action breadcrumbs from briefing CTA paths and keep existing target-selection flow intact.\n5. Add/update focused tests around briefing-seen persistence and gating behavior.",
+        "implementationNotes": "✓ Re-enabled mission briefing gate in LaunchpadSelectorPanel using mission_briefings_seen persistence from RocketsManager.\n\n✓ Added concise M1-M5 briefing UI card with objective/mechanic/loadout/reward/unlock summary; avoids wall-of-text.\n\n✓ Added Continue + Skip Briefing actions; both mark briefing as seen and proceed to target selection.\n\n✓ Added run_structure_tests coverage for mission briefing seen persistence (RocketsManager mark/is flow)."
+      }
+    },
+    {
+      "id": "v9",
+      "taskId": "f31ywm",
+      "version": 9,
+      "timestamp": "2026-02-26T02:20:35.358Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "M1-M5 each have clear onboarding/briefing content"
+            },
+            {
+              "completed": true,
+              "text": "Briefings are skippable after first view"
+            },
+            {
+              "completed": false,
+              "text": "Tutorial messaging is mission-contextual without wall-of-text regressions"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "M1-M5 each have clear onboarding/briefing content"
+            },
+            {
+              "completed": true,
+              "text": "Briefings are skippable after first view"
+            },
+            {
+              "completed": true,
+              "text": "Tutorial messaging is mission-contextual without wall-of-text regressions"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Implement mission onboarding overlays and briefing screens",
+        "description": "Add contextual mission guidance overlays and first-view briefing screens aligned with mission progression spec.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ux",
+          "onboarding",
+          "missions"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "M1-M5 each have clear onboarding/briefing content"
+          },
+          {
+            "completed": true,
+            "text": "Briefings are skippable after first view"
+          },
+          {
+            "completed": true,
+            "text": "Tutorial messaging is mission-contextual without wall-of-text regressions"
+          }
+        ],
+        "implementationPlan": "1. Re-enable mission briefing gate in LaunchpadSelectorPanel using mission stage data and mission_briefings_seen persistence in RocketsManager.\n2. Add concise per-mission (M1-M5) briefing payloads with objective/mechanic-focused copy to avoid wall-of-text.\n3. Ensure first-view behavior is gated once per mission and skippable thereafter (Skip + Continue actions both persist seen state).\n4. Wire tutorial action breadcrumbs from briefing CTA paths and keep existing target-selection flow intact.\n5. Add/update focused tests around briefing-seen persistence and gating behavior.",
+        "implementationNotes": "✓ Re-enabled mission briefing gate in LaunchpadSelectorPanel using mission_briefings_seen persistence from RocketsManager.\n\n✓ Added concise M1-M5 briefing UI card with objective/mechanic/loadout/reward/unlock summary; avoids wall-of-text.\n\n✓ Added Continue + Skip Briefing actions; both mark briefing as seen and proceed to target selection.\n\n✓ Added run_structure_tests coverage for mission briefing seen persistence (RocketsManager mark/is flow)."
+      }
+    },
+    {
+      "id": "v10",
+      "taskId": "f31ywm",
+      "version": 10,
+      "timestamp": "2026-02-26T02:20:37.606Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "✓ Re-enabled mission briefing gate in LaunchpadSelectorPanel using mission_briefings_seen persistence from RocketsManager.\n\n✓ Added concise M1-M5 briefing UI card with objective/mechanic/loadout/reward/unlock summary; avoids wall-of-text.\n\n✓ Added Continue + Skip Briefing actions; both mark briefing as seen and proceed to target selection.\n\n✓ Added run_structure_tests coverage for mission briefing seen persistence (RocketsManager mark/is flow).",
+          "newValue": "✓ Re-enabled mission briefing gate in LaunchpadSelectorPanel using mission_briefings_seen persistence from RocketsManager.\n\n✓ Added concise M1-M5 briefing UI card with objective/mechanic/loadout/reward/unlock summary; avoids wall-of-text.\n\n✓ Added Continue + Skip Briefing actions; both mark briefing as seen and proceed to target selection.\n\n✓ Added run_structure_tests coverage for mission briefing seen persistence (RocketsManager mark/is flow).\n\nNote: verification in this pass is code-level/static only; no Godot runtime execution in sandbox."
+        }
+      ],
+      "snapshot": {
+        "title": "Implement mission onboarding overlays and briefing screens",
+        "description": "Add contextual mission guidance overlays and first-view briefing screens aligned with mission progression spec.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ux",
+          "onboarding",
+          "missions"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "M1-M5 each have clear onboarding/briefing content"
+          },
+          {
+            "completed": true,
+            "text": "Briefings are skippable after first view"
+          },
+          {
+            "completed": true,
+            "text": "Tutorial messaging is mission-contextual without wall-of-text regressions"
+          }
+        ],
+        "implementationPlan": "1. Re-enable mission briefing gate in LaunchpadSelectorPanel using mission stage data and mission_briefings_seen persistence in RocketsManager.\n2. Add concise per-mission (M1-M5) briefing payloads with objective/mechanic-focused copy to avoid wall-of-text.\n3. Ensure first-view behavior is gated once per mission and skippable thereafter (Skip + Continue actions both persist seen state).\n4. Wire tutorial action breadcrumbs from briefing CTA paths and keep existing target-selection flow intact.\n5. Add/update focused tests around briefing-seen persistence and gating behavior.",
+        "implementationNotes": "✓ Re-enabled mission briefing gate in LaunchpadSelectorPanel using mission_briefings_seen persistence from RocketsManager.\n\n✓ Added concise M1-M5 briefing UI card with objective/mechanic/loadout/reward/unlock summary; avoids wall-of-text.\n\n✓ Added Continue + Skip Briefing actions; both mark briefing as seen and proceed to target selection.\n\n✓ Added run_structure_tests coverage for mission briefing seen persistence (RocketsManager mark/is flow).\n\nNote: verification in this pass is code-level/static only; no Godot runtime execution in sandbox."
+      }
+    },
+    {
+      "id": "v11",
+      "taskId": "f31ywm",
+      "version": 11,
+      "timestamp": "2026-02-26T02:20:42.053Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Implement mission onboarding overlays and briefing screens",
+        "description": "Add contextual mission guidance overlays and first-view briefing screens aligned with mission progression spec.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ux",
+          "onboarding",
+          "missions"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "M1-M5 each have clear onboarding/briefing content"
+          },
+          {
+            "completed": true,
+            "text": "Briefings are skippable after first view"
+          },
+          {
+            "completed": true,
+            "text": "Tutorial messaging is mission-contextual without wall-of-text regressions"
+          }
+        ],
+        "implementationPlan": "1. Re-enable mission briefing gate in LaunchpadSelectorPanel using mission stage data and mission_briefings_seen persistence in RocketsManager.\n2. Add concise per-mission (M1-M5) briefing payloads with objective/mechanic-focused copy to avoid wall-of-text.\n3. Ensure first-view behavior is gated once per mission and skippable thereafter (Skip + Continue actions both persist seen state).\n4. Wire tutorial action breadcrumbs from briefing CTA paths and keep existing target-selection flow intact.\n5. Add/update focused tests around briefing-seen persistence and gating behavior.",
+        "implementationNotes": "✓ Re-enabled mission briefing gate in LaunchpadSelectorPanel using mission_briefings_seen persistence from RocketsManager.\n\n✓ Added concise M1-M5 briefing UI card with objective/mechanic/loadout/reward/unlock summary; avoids wall-of-text.\n\n✓ Added Continue + Skip Briefing actions; both mark briefing as seen and proceed to target selection.\n\n✓ Added run_structure_tests coverage for mission briefing seen persistence (RocketsManager mark/is flow).\n\nNote: verification in this pass is code-level/static only; no Godot runtime execution in sandbox."
+      }
+    }
+  ]
+}

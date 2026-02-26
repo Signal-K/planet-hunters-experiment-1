@@ -60,6 +60,7 @@ var _current_target_id = ""
 @onready var fire_button: Button = $UI/FireButton
 @onready var instructions: Label = $UI/Instructions
 @onready var particles_container: Node2D = $ParticlesContainer
+@onready var drone_pool: Node2D = $DronePool
 @onready var inventory_panel: PanelContainer = $UI/InventoryPanel
 @onready var inventory_label: Label = $UI/InventoryPanel/InventoryLabel
 @onready var inventory_button: Button = $UI/InventoryButton
@@ -182,34 +183,8 @@ func _generate_terrain():
 	terrain_fill.polygon = fill_points
 	terrain_fill.color = Color(0.65, 0.35, 0.25, 1.0)  # Orange-brown desert ground
 	
-	# Add nebula sky background
-	_add_nebula_sky()
-	
 	_add_surface_rocks(rng)
 	_generate_minerals(rng)
-
-func _add_nebula_sky():
-	var sky = get_node_or_null("NebulaBackground")
-	if sky:
-		return  # Already exists
-	
-	var NebulaTheme = preload("res://Resources/NebulaSciTheme.gd")
-	var bg = ColorRect.new()
-	bg.name = "NebulaBackground"
-	bg.z_index = -100
-	bg.anchor_right = 1.0
-	bg.anchor_bottom = 1.0
-	
-	# Create gradient texture
-	var gradient_tex = GradientTexture2D.new()
-	gradient_tex.gradient = NebulaTheme.create_nebula_gradient()
-	gradient_tex.fill_from = Vector2(0, 0)
-	gradient_tex.fill_to = Vector2(0.3, 1)
-	
-	bg.material = CanvasItemMaterial.new()
-	
-	add_child(bg)
-	move_child(bg, 0)
 
 func _add_surface_rocks(rng: RandomNumberGenerator):
 	# Use pre-created rock pool from scene instead of runtime creation
@@ -620,21 +595,36 @@ func _update_guide(delta):
 			_show_guide_step()
 
 func _deploy_drone():
+	var drone = _acquire_drone_from_pool()
+	if drone == null:
+		return
+
 	_drones_available -= 1
 	_drone_cooldown_timer = DRONE_COOLDOWN
 	_update_drone_display()
-	
-	var DroneScene = preload("res://Scenes/UI/MiningDrone.tscn")
-	var drone = DroneScene.instantiate()
-	add_child(drone)
 	_active_drones.append(drone)
-	
+
 	drone.deploy(rocket.position)
-	drone.exploded.connect(_on_drone_exploded)
+	var exploded_cb = Callable(self, "_on_drone_exploded")
+	if not drone.exploded.is_connected(exploded_cb):
+		drone.exploded.connect(exploded_cb)
 	
 	var subsurface_target = _find_subsurface_target()
 	if subsurface_target:
 		drone.set_target(subsurface_target)
+
+func _acquire_drone_from_pool() -> Node:
+	if drone_pool == null:
+		push_warning("DronePool not found - cannot deploy drone")
+		return null
+	var drones = drone_pool.get_children()
+	if drones.is_empty():
+		push_warning("DronePool is empty - add drone instances in scene")
+		return null
+	for drone in drones:
+		if drone.has_method("is_available_for_deploy") and bool(drone.is_available_for_deploy()):
+			return drone
+	return null
 
 func _find_subsurface_target():
 	var rocket_x = fmod(rocket.position.x + _scroll_offset, _terrain_width)
