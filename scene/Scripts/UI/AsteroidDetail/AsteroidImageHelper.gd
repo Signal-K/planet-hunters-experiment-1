@@ -1,6 +1,8 @@
 extends RefCounted
 class_name AsteroidImageHelper
 
+const AppLogger = preload("res://Scripts/Utils/Logger.gd")
+
 var _owner: Node
 var _asteroid_image: TextureRect
 var _loading_label: Label
@@ -38,7 +40,7 @@ func load_anomaly_image(anomaly_id: String, is_planet: bool = false) -> void:
 		image_url = "https://api.starsailors.space/storage/v1/object/public/telescope/telescope-active-asteroids/%s.png" % anomaly_id
 
 	var item_type = "planet" if is_planet else "asteroid"
-	Logger.d("Loading %s image from: %s" % [item_type, image_url])
+	AppLogger.d("Loading %s image from: %s" % [item_type, image_url])
 	_loading_label.text = "Loading %s image..." % item_type
 
 	# Create HTTP request
@@ -135,4 +137,4 @@ func _show_error(message: String) -> void:
 	if _on_error.is_valid():
 		_on_error.call(message)
 	else:
-		Logger.w("AsteroidDetailView error: %s" % message)
+		AppLogger.w("AsteroidDetailView error: %s" % message)

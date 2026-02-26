@@ -1,5 +1,7 @@
 extends Control
 
+const GameplayAnalytics = preload("res://Scripts/Systems/GameplayAnalytics.gd")
+
 signal panel_closed
 
 const INITIAL_LOAD_TIME := 3.0  # seconds for initial load
@@ -23,7 +25,7 @@ const SatelliteStationPanelDetail = preload("res://Scripts/UI/SatelliteStationPa
 const SatelliteStationPanelLoading = preload("res://Scripts/UI/SatelliteStationPanelLoading.gd")
 const Level2UnlockOverlayScene = preload("res://Scenes/UI/Templates/SatelliteLevel2UnlockOverlay.tscn")
 const UnlockItemScene = preload("res://Scenes/UI/Templates/MenuUnlockItem.tscn")
-const Logger = preload("res://Scripts/Utils/Logger.gd")
+const AppLogger = preload("res://Scripts/Utils/Logger.gd")
 
 var pending_anomalies := []
 var current_mode: String = "asteroids"  # Default mode
@@ -104,12 +106,12 @@ func _ready():
 		return
 
 	# Default behavior: fetch anomalies from Supabase
-	Logger.d("SatelliteStationPanel: calling _fetch_anomalies() — starting fetch")
+	AppLogger.d("SatelliteStationPanel: calling _fetch_anomalies() - starting fetch")
 	var sup = preload("res://Scripts/Systems/SupabaseClient.gd").get_instance()
 	if sup:
-		Logger.d("SatelliteStationPanel: Supabase URL -> %s" % sup.SUPABASE_URL)
+		AppLogger.d("SatelliteStationPanel: Supabase URL -> %s" % sup.SUPABASE_URL)
 	else:
-		Logger.w("SatelliteStationPanel: SupabaseClient instance not available")
+		AppLogger.w("SatelliteStationPanel: SupabaseClient instance not available")
 
 	_fetch_anomalies()
 
@@ -127,7 +129,7 @@ func _apply_panel_style() -> void:
 	panel_style.apply_progress_bar($PanelContainer/Panel/VBoxContainer/ContentContainer/LoadingContainer/ProgressBar)
 
 func _start_loading(duration: float):
-	Logger.d("SatelliteStationPanel: _start_loading duration=%s" % duration)
+	AppLogger.d("SatelliteStationPanel: _start_loading duration=%s" % duration)
 	_loading.start_loading(duration)
 	# Start processing so _process will run to animate progress
 	set_process(true)
@@ -145,6 +147,10 @@ func _on_loading_finished() -> void:
 		"mode": current_mode,
 		"count": pending_anomalies.size()
 	})
+	GameplayAnalytics.emit_event("scanner_scan_completed", {
+		"scanner_mode": current_mode,
+		"detected_count": pending_anomalies.size()
+	})
 
 	_persist_detected_targets_and_record_scan(pending_anomalies)
 
@@ -155,7 +161,7 @@ func _on_loading_finished() -> void:
 	set_process(false)
 
 func _fetch_anomalies():
-	Logger.d("SatelliteStationPanel: _fetch_anomalies called, mode=%s" % current_mode)
+	AppLogger.d("SatelliteStationPanel: _fetch_anomalies called, mode=%s" % current_mode)
 	var supabase = SupabaseClient.get_instance()
 	var anomaly_set = PLANET_SET if current_mode == "planets" else ASTEROID_SET
 	supabase.fetch_anomalies(anomaly_set, MAX_ANOMALIES, _on_anomalies_fetched)
@@ -163,9 +169,9 @@ func _fetch_anomalies():
 
 func _on_anomalies_fetched(data: Array, error: String):
 	# Debug logging for callback
-	Logger.d("SatelliteStationPanel: _on_anomalies_fetched called — error='%s', count=%s" % [str(error), data.size()])
+	AppLogger.d("SatelliteStationPanel: _on_anomalies_fetched called - error='%s', count=%s" % [str(error), data.size()])
 	if error != "":
-		Logger.w("SatelliteStationPanel: Error fetching anomalies: %s" % error)
+		AppLogger.w("SatelliteStationPanel: Error fetching anomalies: %s" % error)
 		# Keep gameplay moving in web builds even if remote fetch fails.
 		# Fallback to deterministic local anomalies so scan always produces targets.
 		pending_anomalies = _build_local_anomalies()
@@ -205,25 +211,28 @@ func _select_target_and_launch(bound_anomaly: Dictionary, index: int, btn: Butto
 	var target_id = _data.normalize_anomaly_id(bound_anomaly, index)
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	if not rm:
-		Logger.w("SatelliteStationPanel: RocketsManager not available")
+		AppLogger.w("SatelliteStationPanel: RocketsManager not available")
 		status_label.text = "Status: Unable to select target"
 		return
 	var target_type = "planet" if current_mode == "planets" else "asteroid"
 	rm.register_target_interaction(target_id, target_type)
 	var ok = rm.select_target(target_id)
 	if ok:
+		GameplayAnalytics.emit_target_selected(target_id, target_type, "scanner_station", {
+			"target_index": index
+		})
 		preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("select_launch_target", {
 			"target_id": target_id,
 			"source": "scanner"
 		})
 		status_label.text = "Target selected: %s" % target_id
-		Logger.d("SatelliteStationPanel: target selected: %s" % target_id)
+		AppLogger.d("SatelliteStationPanel: target selected: %s" % target_id)
 		if btn:
 			btn.text = "Target Selected"
 			btn.disabled = true
 		_change_to_launchpad_scene()
 	else:
-		Logger.w("SatelliteStationPanel: failed to persist selected target: %s" % target_id)
+		AppLogger.w("SatelliteStationPanel: failed to persist selected target: %s" % target_id)
 		status_label.text = "Status: Failed to select target"
 
 func _change_to_launchpad_scene() -> void:
@@ -261,6 +270,9 @@ func _on_toggle_switch_pressed():
 		return
 	if current_mode == "asteroids":
 		current_mode = "planets"
+		GameplayAnalytics.emit_event("scanner_mode_toggled", {
+			"scanner_mode": "planets"
+		})
 		preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("toggle_planet_scanner")
 		toggle_switch.text = "Switch to Asteroids"
 		if local_only:
@@ -272,6 +284,9 @@ func _on_toggle_switch_pressed():
 		_fetch_anomalies()
 	else:
 		current_mode = "asteroids"
+		GameplayAnalytics.emit_event("scanner_mode_toggled", {
+			"scanner_mode": "asteroids"
+		})
 		toggle_switch.text = "Switch to Planets"
 		if local_only:
 			_start_loading(REFRESH_LOAD_TIME)
@@ -305,7 +320,7 @@ func _persist_detected_targets_and_record_scan(anomalies: Array) -> void:
 		return
 	var ok = rm.set_detected_targets(targets)
 	rm.record_scan_pass(targets)
-	Logger.d("SatelliteStationPanel: persisted detected_targets count=%s ok=%s" % [targets.size(), ok])
+	AppLogger.d("SatelliteStationPanel: persisted detected_targets count=%s ok=%s" % [targets.size(), ok])
 
 func _build_local_anomalies() -> Array:
 	if current_mode == "planets":

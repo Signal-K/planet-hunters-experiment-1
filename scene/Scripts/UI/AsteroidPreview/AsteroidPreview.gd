@@ -3,6 +3,7 @@ extends Node3D
 const PREVIEW_SCENE_PATH := "res://Scenes/UI/AsteroidPreview/asteroid_preview.tscn"
 const MINING_SCENE_PATH := "res://Scenes/UI/SidescrollMining.tscn"
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
+const GameplayAnalytics = preload("res://Scripts/Systems/GameplayAnalytics.gd")
 
 @onready var ui_container: Control = $CanvasLayer/UI
 @onready var mine_btn: Button = $CanvasLayer/UI/MineButton
@@ -57,6 +58,13 @@ func _ready():
 	_current_yield = resource_yield.get_yield_for_target(_current_target_id, _current_target_type, level, 1.0)
 	
 	target_label.text = "Target: %s (Level %d)" % [_current_target_id, level]
+	GameplayAnalytics.emit_event("mission_target_preview_opened", {
+		"target_id": _current_target_id,
+		"target_type": _current_target_type,
+		"rocket_id": _current_rocket_id,
+		"target_level": level,
+		"mineable_pct": float(_current_yield.get("mineable_pct", 0.0))
+	})
 	
 	print("[Preview] Ready - target=%s, rocket=%s, yield=%s" % [_current_target_id, _current_rocket_id, str(_current_yield)])
 
@@ -67,6 +75,11 @@ func _on_mine_pressed():
 	if _current_yield.is_empty():
 		print("[Preview] ERROR: No yield data")
 		return
+	GameplayAnalytics.emit_event("mining_entry_requested", {
+		"target_id": _current_target_id,
+		"target_type": _current_target_type,
+		"rocket_id": _current_rocket_id
+	})
 	preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("start_mining", {
 		"target_id": _current_target_id
 	})
@@ -108,6 +121,11 @@ func _on_mining_completed(minerals_collected: Dictionary, score: int):
 
 func _on_return_pressed():
 	print("[Preview] Return home pressed")
+	GameplayAnalytics.emit_event("mission_return_requested", {
+		"rocket_id": _current_rocket_id,
+		"target_id": _current_target_id,
+		"target_type": _current_target_type
+	})
 	preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("return_rocket_home", {
 		"rocket_id": _current_rocket_id,
 		"target_id": _current_target_id

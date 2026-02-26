@@ -3,7 +3,7 @@ class_name EarthSceneUIHelper
 
 var _owner: Node
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
-const Logger = preload("res://Scripts/Utils/Logger.gd")
+const AppLogger = preload("res://Scripts/Utils/Logger.gd")
 
 func setup(owner: Node) -> void:
 	_owner = owner
@@ -32,4 +32,4 @@ func setup_buttons() -> void:
 	space_map_btn.pressed.connect(Callable(_owner, "_on_space_map_button_pressed"))
 	new_mission_btn.pressed.connect(Callable(_owner, "_on_new_mission_button_pressed"))
 
-	Logger.d("All button signals connected")
+	AppLogger.d("All button signals connected")

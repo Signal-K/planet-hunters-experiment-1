@@ -1,6 +1,8 @@
 extends CanvasLayer
 
+const MiningPracticePanelScene = preload("res://Scenes/UI/MiningPracticePanel.tscn")
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
+const Targeting = preload("res://Scripts/UI/TutorialCoachTargeting.gd")
 const PANEL_MARGIN := 20.0
 const PANEL_DEFAULT_SIZE := Vector2(560.0, 240.0)
 const PANEL_MIN_SIZE := Vector2(420.0, 172.0)
@@ -14,6 +16,7 @@ const HIGHLIGHT_PADDING := 12.0
 @onready var action_label: Label = $Root/Panel/Margin/VBox/ActionLabel
 @onready var progress_label: Label = $Root/Panel/Margin/VBox/ProgressLabel
 @onready var skip_button: Button = $Root/Panel/Margin/VBox/Buttons/SkipButton
+@onready var practice_mining_button: Button = $Root/Panel/Margin/VBox/Buttons/PracticeMiningButton
 @onready var replay_mission_button: Button = $Root/Panel/Margin/VBox/Buttons/ReplayMissionButton
 @onready var replay_all_button: Button = $Root/Panel/Margin/VBox/Buttons/ReplayAllButton
 
@@ -39,6 +42,7 @@ func _ready() -> void:
 	if _app_controller and _app_controller.has_signal("tutorial_state_updated"):
 		_app_controller.tutorial_state_updated.connect(_on_tutorial_state_updated)
 	skip_button.pressed.connect(_on_skip_pressed)
+	practice_mining_button.pressed.connect(_on_practice_mining_pressed)
 	replay_mission_button.pressed.connect(_on_replay_mission_pressed)
 	replay_all_button.pressed.connect(_on_replay_all_pressed)
 	set_process(true)
@@ -60,6 +64,7 @@ func _apply_style() -> void:
 	PanelStyle.apply_muted(action_label)
 	PanelStyle.apply_muted(progress_label)
 	PanelStyle.apply_button(skip_button, false)
+	PanelStyle.apply_button(practice_mining_button, true)
 	PanelStyle.apply_button(replay_mission_button, false)
 	PanelStyle.apply_button(replay_all_button, false)
 
@@ -133,6 +138,7 @@ func _on_tutorial_state_updated(state: Dictionary) -> void:
 		message_label.text = "You can resume onboarding at any time from this panel or the main menu."
 		action_label.text = ""
 		progress_label.text = ""
+		practice_mining_button.visible = false
 		_hide_guide_overlay()
 		call_deferred("_reposition_panel")
 		return
@@ -147,8 +153,9 @@ func _on_tutorial_state_updated(state: Dictionary) -> void:
 	title_label.text = str(step.get("title", "Mission Guidance"))
 	stage_label.text = "Mission %d" % stage
 	message_label.text = str(step.get("message", ""))
-	action_label.text = "Next click: %s" % _action_hint_for_step(str(step.get("action_key", "")))
+	action_label.text = "Next click: %s" % Targeting.action_hint_for_step(str(step.get("action_key", "")))
 	progress_label.text = "Step %d/%d" % [min(current_idx + 1, max(total, 1)), max(total, 1)]
+	practice_mining_button.visible = _step_supports_practice(step)
 	call_deferred("_reposition_panel")
 	call_deferred("_update_guidance_overlay")
 
@@ -159,7 +166,7 @@ func _reposition_panel() -> void:
 	var panel_size = _panel_layout_size(viewport_rect)
 	var blockers: Array[Rect2] = []
 	_collect_blocking_rects(get_tree().root, blockers)
-	var target_rect = _find_current_target_rect()
+	var target_rect = Targeting.find_current_target_rect(_current_step, get_tree())
 	if _has_rect(target_rect):
 		blockers.append(target_rect)
 	var best_overlap := INF
@@ -264,7 +271,7 @@ func _update_guidance_overlay() -> void:
 	if not visible or _current_step.is_empty():
 		_hide_guide_overlay()
 		return
-	var target_rect = _find_current_target_rect()
+	var target_rect = Targeting.find_current_target_rect(_current_step, get_tree())
 	if not _has_rect(target_rect):
 		_hide_guide_overlay()
 		return
@@ -300,128 +307,6 @@ func _hide_guide_overlay() -> void:
 	_guide_label.visible = false
 	_guide_target_rect = Rect2()
 
-func _find_current_target_rect() -> Rect2:
-	var action_key = str(_current_step.get("action_key", ""))
-	if action_key == "":
-		return Rect2()
-	var target = _find_target_for_action(action_key)
-	if target == null:
-		return Rect2()
-	return _build_target_rect(target)
-
-func _find_target_for_action(action_key: String) -> Node:
-	match action_key:
-		"open_launchpad":
-			return _find_node_path_any([
-				"StructuresLayer/Launchpad/InteractionArea",
-				"StructuresLayer/Launchpad"
-			])
-		"build_scanner_station":
-			return _find_node_path_any([
-				"StructuresLayer/SatelliteStation/InteractionArea",
-				"StructuresLayer/SatelliteStation"
-			])
-		"create_rocket":
-			var create_btn = _find_visible_button(func(btn: Button) -> bool:
-				return btn.name.begins_with("CreateButton_") and not btn.disabled
-			)
-			if create_btn:
-				return create_btn
-			return _find_node_path_any(["UILayer/SelectorPanel/VBox/RocketSelector"])
-		"select_launch_target":
-			return _find_visible_button(func(btn: Button) -> bool:
-				if btn.disabled:
-					return false
-				var text = btn.text.to_lower()
-				return text.find("select") != -1 or text.find("target") != -1
-			)
-		"launch_rocket_from_earth":
-			return _find_visible_button(func(btn: Button) -> bool:
-				return not btn.disabled and (btn.name.ends_with("LaunchButton") or btn.text.to_lower().find("launch") != -1)
-			)
-		"scan_targets":
-			return _find_node_path_any(["PanelContainer/Panel/VBoxContainer/ContentContainer/RefreshContainer/RefreshButton"])
-		"toggle_planet_scanner":
-			return _find_node_path_any(["PanelContainer/Panel/VBoxContainer/HeaderContainer/ToggleSwitch"])
-		"mine_target":
-			return _find_node_path_any(["CanvasLayer/UI/MineButton"])
-		"return_rocket_home":
-			return _find_node_path_any(["CanvasLayer/UI/ReturnButton"])
-		"resolve_mission_debrief", "complete_contractor_mission":
-			return _find_visible_button(func(btn: Button) -> bool:
-				if btn.disabled:
-					return false
-				var key = btn.name
-				return key == "SellOrbitButton" or key == "SellEarthButton" or key == "KeepButton" or key == "ScrapButton" or key == "SalvageButton" or key == "LeaveButton" or key == "ArchiveButton"
-			)
-		"accept_contractor_offer":
-			return _find_visible_button(func(btn: Button) -> bool:
-				return not btn.disabled and btn.text.to_lower().find("accept") != -1
-			)
-	return null
-
-func _build_target_rect(target: Node) -> Rect2:
-	if target is Control:
-		var rect = (target as Control).get_global_rect()
-		return rect
-	if target is CollisionShape2D:
-		var shape_node = target as CollisionShape2D
-		if shape_node.shape is RectangleShape2D:
-			var rect_shape := shape_node.shape as RectangleShape2D
-			var center = shape_node.get_global_transform_with_canvas().origin
-			var size = rect_shape.size * shape_node.global_scale.abs()
-			return Rect2(center - (size * 0.5), size)
-	if target is Area2D:
-		var area := target as Area2D
-		for child in area.get_children():
-			if child is CollisionShape2D:
-				return _build_target_rect(child)
-		var center = area.get_global_transform_with_canvas().origin
-		return Rect2(center - Vector2(64, 64), Vector2(128, 128))
-	if target is Sprite2D:
-		var sprite := target as Sprite2D
-		if sprite.texture:
-			var size = sprite.texture.get_size() * sprite.global_scale.abs()
-			var center = sprite.get_global_transform_with_canvas().origin
-			return Rect2(center - (size * 0.5), size)
-	if target is CanvasItem:
-		var center = (target as CanvasItem).get_global_transform_with_canvas().origin
-		return Rect2(center - Vector2(72, 72), Vector2(144, 144))
-	return Rect2()
-
-func _find_visible_button(predicate: Callable) -> Button:
-	var root = get_tree().current_scene
-	if root == null:
-		return null
-	var stack: Array[Node] = [root]
-	while not stack.is_empty():
-		var node = stack.pop_back()
-		if node is Button:
-			var btn := node as Button
-			if btn.is_visible_in_tree() and bool(predicate.call(btn)):
-				return btn
-		for child in node.get_children():
-			stack.append(child)
-	return null
-
-func _find_node_path_any(paths: Array[String]) -> Node:
-	var root = get_tree().current_scene
-	if root == null:
-		return null
-	for path in paths:
-		var node = root.get_node_or_null(path)
-		if node and (not (node is CanvasItem) or (node as CanvasItem).is_visible_in_tree()):
-			return node
-	var stack: Array[Node] = [root]
-	while not stack.is_empty():
-		var node = stack.pop_back()
-		for child in node.get_children():
-			for path in paths:
-				if str(child.get_path()).find(path) != -1 and (not (child is CanvasItem) or (child as CanvasItem).is_visible_in_tree()):
-					return child
-			stack.append(child)
-	return null
-
 func _closest_point_on_rect(rect: Rect2, point: Vector2) -> Vector2:
 	return Vector2(
 		clamp(point.x, rect.position.x, rect.end.x),
@@ -430,34 +315,6 @@ func _closest_point_on_rect(rect: Rect2, point: Vector2) -> Vector2:
 
 func _has_rect(rect: Rect2) -> bool:
 	return rect.size.x > 0.0 and rect.size.y > 0.0
-
-func _action_hint_for_step(action_key: String) -> String:
-	match action_key:
-		"open_launchpad":
-			return "Launchpad"
-		"create_rocket":
-			return "Create button in Rocket Selector"
-		"select_launch_target":
-			return "Select target button"
-		"launch_rocket_from_earth":
-			return "Launch button"
-		"mine_target":
-			return "MINE button"
-		"return_rocket_home":
-			return "RETURN HOME button"
-		"resolve_mission_debrief":
-			return "Choose any enabled debrief action"
-		"build_scanner_station":
-			return "Scanner Station structure"
-		"scan_targets":
-			return "Refresh button in scanner panel"
-		"toggle_planet_scanner":
-			return "Scanner toggle switch"
-		"accept_contractor_offer":
-			return "Accept contractor button"
-		"complete_contractor_mission":
-			return "Complete debrief for contractor mission"
-	return action_key
 
 func _on_skip_pressed() -> void:
 	if _app_controller and _app_controller.has_method("skip_tutorial"):
@@ -470,3 +327,15 @@ func _on_replay_mission_pressed() -> void:
 func _on_replay_all_pressed() -> void:
 	if _app_controller and _app_controller.has_method("replay_tutorial_from_mission1"):
 		_app_controller.replay_tutorial_from_mission1()
+
+func _on_practice_mining_pressed() -> void:
+	var root = get_tree().root
+	if root == null:
+		return
+	var panel_instance = MiningPracticePanelScene.instantiate()
+	root.add_child(panel_instance)
+
+func _step_supports_practice(step: Dictionary) -> bool:
+	var action_key = str(step.get("action_key", ""))
+	var mechanic = str(step.get("mechanic", ""))
+	return action_key == "mine_target" or mechanic == "mining"

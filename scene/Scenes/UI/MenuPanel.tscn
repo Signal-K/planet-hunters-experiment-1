@@ -355,6 +355,17 @@ theme_override_styles/pressed = SubResource("4")
 theme_override_styles/focus = SubResource("3")
 text = "Reset All Data"
 
+[node name="PracticeMiningButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer"]
+custom_minimum_size = Vector2(160, 50)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("2")
+theme_override_styles/hover = SubResource("3")
+theme_override_styles/pressed = SubResource("4")
+theme_override_styles/focus = SubResource("3")
+text = "Practice Mining"
+
 [node name="SkipTutorialButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer"]
 custom_minimum_size = Vector2(160, 50)
 layout_mode = 2

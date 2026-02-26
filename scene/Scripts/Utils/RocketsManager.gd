@@ -613,6 +613,33 @@ static func get_selected_target() -> String:
     var s = load_state()
     return str(s.get("selected_target", ""))
 
+static func get_target_details(target_id: String) -> Dictionary:
+    if target_id == "":
+        return {}
+    for stage in PREDEFINED_MISSION_TARGETS.keys():
+        var item = PREDEFINED_MISSION_TARGETS[stage]
+        if str(item.get("id", "")) == target_id:
+            return item.duplicate(true)
+    var detected = get_detected_targets()
+    for target in detected:
+        if str(target.get("id", "")) == target_id:
+            return target.duplicate(true)
+    var preview = get_preview_target()
+    if str(preview.get("id", "")) == target_id:
+        return preview.duplicate(true)
+    var returned = get_returned_mission()
+    if str(returned.get("target_id", "")) == target_id:
+        return {
+            "id": target_id,
+            "label": str(returned.get("label", target_id)),
+            "type": str(returned.get("type", "asteroid"))
+        }
+    return {
+        "id": target_id,
+        "label": target_id,
+        "type": "asteroid"
+    }
+
 static func clear_selected_target() -> bool:
     var s = load_state()
     s["selected_target"] = ""

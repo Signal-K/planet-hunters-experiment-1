@@ -1,6 +1,6 @@
 class_name UIManager
 extends CanvasLayer
-const Logger = preload("res://Scripts/Utils/Logger.gd")
+const AppLogger = preload("res://Scripts/Utils/Logger.gd")
 
 enum PanelType {
 	MENU,
@@ -33,9 +33,9 @@ func _add_franc_balance_ui() -> void:
 	if franc_scene:
 		var franc_instance = franc_scene.instantiate()
 		add_child(franc_instance)
-		Logger.d("UIManager: FrancBalance added")
+		AppLogger.d("UIManager: FrancBalance added")
 	else:
-		Logger.w("UIManager: failed to load FrancBalance scene")
+		AppLogger.w("UIManager: failed to load FrancBalance scene")
 
 func show_panel(panel_type: PanelType) -> void:
 	"""Show a panel based on its type"""
@@ -50,7 +50,7 @@ func show_panel(panel_type: PanelType) -> void:
 func _show_menu_panel() -> void:
 	"""Show the Menu panel with counter integration"""
 	if current_menu_panel != null:
-		Logger.d("Menu panel already open")
+		AppLogger.d("Menu panel already open")
 		return
 	
 	var menu_scene = load("res://Scenes/UI/MenuPanel.tscn")
@@ -62,7 +62,7 @@ func _show_menu_panel() -> void:
 		if app_controller and app_controller.has_method("request_menu_open"):
 			app_controller.request_menu_open()
 	else:
-		Logger.w("Failed to load MenuPanel scene")
+		AppLogger.w("Failed to load MenuPanel scene")
 
 func _setup_menu_panel_integration() -> void:
 	"""Setup counter integration and signal connections for menu panel"""
@@ -70,7 +70,7 @@ func _setup_menu_panel_integration() -> void:
 	if app_controller and current_menu_panel.has_method("set_counter"):
 		var counter_value = app_controller.get_counter()
 		current_menu_panel.set_counter(counter_value)
-		Logger.d("Menu panel opened with counter: %s" % counter_value)
+		AppLogger.d("Menu panel opened with counter: %s" % counter_value)
 	
 	# Connect signals
 	if current_menu_panel.has_signal("panel_closed"):
@@ -88,9 +88,9 @@ func _show_new_mission_panel() -> void:
 		add_child(panel_instance)
 		if panel_instance.has_signal("panel_closed"):
 			panel_instance.panel_closed.connect(_on_panel_closed)
-		Logger.d("New Mission panel opened (SatelliteStationPanel)")
+		AppLogger.d("New Mission panel opened (SatelliteStationPanel)")
 	else:
-		Logger.w("Failed to load SatelliteStationPanel scene for New Mission")
+		AppLogger.w("Failed to load SatelliteStationPanel scene for New Mission")
 		_show_generic_panel(PanelType.NEW_MISSION)
 
 func _show_generic_panel(panel_type: PanelType) -> void:
@@ -102,12 +102,12 @@ func _show_generic_panel(panel_type: PanelType) -> void:
 			add_child(market_instance)
 			if market_instance.has_signal("panel_closed"):
 				market_instance.panel_closed.connect(_on_panel_closed)
-			Logger.d("Market panel opened: Subcontractors")
+			AppLogger.d("Market panel opened: Subcontractors")
 			return
-		Logger.w("Failed to load SubcontractorsPanel scene for Market")
+		AppLogger.w("Failed to load SubcontractorsPanel scene for Market")
 	var panel = PanelManager.create_styled_panel(panel_titles[panel_type], get_tree())
 	add_child(panel)
-	Logger.d("Panel opened: %s" % panel_titles[panel_type])
+	AppLogger.d("Panel opened: %s" % panel_titles[panel_type])
 
 func _get_app_controller() -> Node:
 	"""Get reference to the AppController"""
@@ -119,12 +119,12 @@ func _on_reset_all() -> void:
 	if app_controller and app_controller.has_method("_on_reset_all"):
 		app_controller._on_reset_all()
 	else:
-		Logger.w("UIManager: AppController not found for reset_all")
+		AppLogger.w("UIManager: AppController not found for reset_all")
 
 
 # Signal handlers
 func _on_menu_panel_closed() -> void:
-	Logger.d("Menu panel closed")
+	AppLogger.d("Menu panel closed")
 	current_menu_panel = null
 	var app_controller = _get_app_controller()
 	if app_controller and app_controller.has_method("request_menu_close"):
@@ -135,10 +135,10 @@ func _on_menu_counter_changed(new_value: int) -> void:
 	var app_controller = _get_app_controller()
 	if app_controller and app_controller.has_method("set_counter_from_react"):
 		app_controller.counter = new_value
-		Logger.d("UIManager: Counter updated to: %s" % new_value)
+		AppLogger.d("UIManager: Counter updated to: %s" % new_value)
 
 func _on_panel_closed() -> void:
-	Logger.d("Panel closed")
+	AppLogger.d("Panel closed")
 
 func show_structure_panel(panel_scene_path: String) -> void:
 	"""Load and display a structure-specific panel from a scene file"""
@@ -149,6 +149,6 @@ func show_structure_panel(panel_scene_path: String) -> void:
 		# Connect close signal if available
 		if panel_instance.has_signal("panel_closed"):
 			panel_instance.panel_closed.connect(_on_panel_closed)
-		Logger.d("Structure panel opened: %s" % panel_scene_path)
+		AppLogger.d("Structure panel opened: %s" % panel_scene_path)
 	else:
-		Logger.w("Failed to load panel scene: %s" % panel_scene_path)
+		AppLogger.w("Failed to load panel scene: %s" % panel_scene_path)

@@ -28,6 +28,7 @@ const XP_AWARD_SCAN := 2
 const MISSION_PROGRESS_TRACKER_SCENE := preload("res://Scenes/UI/MissionProgressTracker.tscn")
 const TUTORIAL_CONTROLLER_SCENE := preload("res://Scripts/Tutorial/TutorialController.gd")
 const TUTORIAL_OVERLAY_SCENE := preload("res://Scenes/UI/TutorialCoachOverlay.tscn")
+const FEEDBACK_BEACON_SCENE := preload("res://Scenes/UI/FeedbackBeacon.tscn")
 var _tutorial_controller: Node = null
 
 func _ready() -> void:
@@ -39,6 +40,7 @@ func _ready() -> void:
 	load_experience()
 	_ensure_mission_progress_tracker()
 	_ensure_tutorial_runtime()
+	_ensure_feedback_beacon()
 	WebEventBridge.emit("app_ready", {
 		"experience_level": experience_level,
 		"experience_xp": experience_xp,
@@ -73,6 +75,17 @@ func _ensure_mission_progress_tracker() -> void:
 	if tracker:
 		tracker.name = "MissionProgressTracker"
 		get_tree().root.call_deferred("add_child", tracker)
+
+func _ensure_feedback_beacon() -> void:
+	if get_tree() == null or get_tree().root == null:
+		return
+	var existing = get_tree().root.get_node_or_null("FeedbackBeacon")
+	if existing:
+		return
+	var beacon = FEEDBACK_BEACON_SCENE.instantiate()
+	if beacon:
+		beacon.name = "FeedbackBeacon"
+		get_tree().root.call_deferred("add_child", beacon)
 
 func set_counter_from_react(value: int) -> void:
 	"""Set counter value from React Native"""

@@ -3,6 +3,7 @@ class_name NewMissionAnnotations
 
 const AnnotationItemScene = preload("res://Scenes/UI/Templates/NewMissionAnnotationItem.tscn")
 const EmptyLabelScene = preload("res://Scenes/UI/Templates/MenuLogbookEmpty.tscn")
+const AppLogger = preload("res://Scripts/Utils/Logger.gd")
 
 var _owner: Node
 var _anomaly_list: Node
@@ -22,7 +23,7 @@ func _load_local_annotations() -> Array:
 	var annotations_dir = "user://annotations"
 	var dir = DirAccess.open(annotations_dir)
 	if dir == null:
-		Logger.d("NewMissionPanel: annotations dir not found: %s" % annotations_dir)
+		AppLogger.d("NewMissionPanel: annotations dir not found: %s" % annotations_dir)
 		return results
 
 	# Ensure listing begins (compatibility across Godot versions)
@@ -44,7 +45,7 @@ func _load_local_annotations() -> Array:
 			var key = fname.substr(0, fname.length() - 5) # remove .json
 			if not keys.has(key):
 				keys[key] = {"content": key, "local_thumbnail": ""}
-				Logger.d("NewMissionPanel: found annotation json: %s" % fname)
+				AppLogger.d("NewMissionPanel: found annotation json: %s" % fname)
 
 		# Annotated PNGs provide thumbnails
 		if fname.to_lower().ends_with("-annotated.png"):
@@ -54,13 +55,13 @@ func _load_local_annotations() -> Array:
 				keys[keypng] = {"content": keypng, "local_thumbnail": thumb_path}
 			else:
 				keys[keypng]["local_thumbnail"] = thumb_path
-			Logger.d("NewMissionPanel: found annotated png: %s -> %s" % [fname, thumb_path])
+			AppLogger.d("NewMissionPanel: found annotated png: %s -> %s" % [fname, thumb_path])
 
 	# Convert keys dict to results array
 	for k in keys.keys():
 		results.append(keys[k])
 
-	Logger.d("NewMissionPanel: total saved annotations found: %s" % results.size())
+	AppLogger.d("NewMissionPanel: total saved annotations found: %s" % results.size())
 	return results
 
 func _display_items(items: Array) -> void:

@@ -9,6 +9,7 @@ const HeaderLabelScene = preload("res://Scenes/UI/Templates/MenuUnlockHeader.tsc
 const EmptyLabelScene = preload("res://Scenes/UI/Templates/MenuLogbookEmpty.tscn")
 const LabelActionRowScene = preload("res://Scenes/UI/Templates/LabelActionRow.tscn")
 const AppLogger = preload("res://Scripts/Utils/Logger.gd")
+const GameplayAnalytics = preload("res://Scripts/Systems/GameplayAnalytics.gd")
 const MAX_VISIBLE_TARGETS := 3
 const MAX_VISIBLE_TARGETS_MISSION3 := 5
 const MAX_VISIBLE_TARGETS_MISSION4 := 5
@@ -423,6 +424,15 @@ func on_selector_target_pressed(target_id: String, _btn: Button) -> void:
 		return
 	var ok = rm.select_target(target_id)
 	if ok:
+		var target = rm.get_target_details(target_id)
+		GameplayAnalytics.emit_target_selected(
+			target_id,
+			str(target.get("type", "asteroid")),
+			"launchpad_selector",
+			{
+				"target_label": str(target.get("label", target_id))
+			}
+		)
 		preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("select_launch_target", {
 			"target_id": target_id
 		})
