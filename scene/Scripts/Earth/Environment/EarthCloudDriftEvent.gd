@@ -44,7 +44,7 @@ func _draw_cloud_blob(center: Vector2, width: float, height: float, color: Color
 	draw_rect(Rect2(center + Vector2(-width * 0.34, -height * 0.05), Vector2(width * 0.68, height * 0.36)), color)
 
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_RESIZED:
+	if what == NOTIFICATION_WM_SIZE_CHANGED:
 		_rebuild_clouds()
 		queue_redraw()
 

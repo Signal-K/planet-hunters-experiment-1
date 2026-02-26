@@ -16,6 +16,7 @@ const LogbookEmptyScene = preload("res://Scenes/UI/Templates/MenuLogbookEmpty.ts
 const LogbookCardScene = preload("res://Scenes/UI/Templates/MenuLogbookCard.tscn")
 const LogbookSectionHeaderScene = preload("res://Scenes/UI/Templates/MenuLogbookSectionHeader.tscn")
 const LogbookKeyValueRowScene = preload("res://Scenes/UI/Templates/MenuLogbookKeyValueRow.tscn")
+const MiningPracticePanelScene = preload("res://Scenes/UI/MiningPracticePanel.tscn")
 const AppLogger = preload("res://Scripts/Utils/Logger.gd")
 
 @onready var counter_label: Label = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/CounterCard/CounterContainer/CounterLabel
@@ -24,6 +25,7 @@ const AppLogger = preload("res://Scripts/Utils/Logger.gd")
 @onready var close_btn: Button = $PanelContainer/Panel/VBoxContainer/HeaderContainer/HeaderBackground/HeaderContent/CloseButton
 @onready var logbook_btn: Button = $PanelContainer/Panel/VBoxContainer/HeaderContainer/HeaderBackground/HeaderContent/LogbookButton
 @onready var reset_btn: Button = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/ResetButton
+@onready var practice_mining_btn: Button = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/PracticeMiningButton
 @onready var skip_tutorial_btn: Button = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/SkipTutorialButton
 @onready var replay_mission_tutorial_btn: Button = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/ReplayMissionTutorialButton
 @onready var replay_all_tutorial_btn: Button = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/ReplayAllTutorialButton
@@ -34,6 +36,7 @@ const AppLogger = preload("res://Scripts/Utils/Logger.gd")
 @onready var next_level_label: Label = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/ProgressCard/ProgressContainer/NextLevelLabel
 @onready var unlocks_title: Label = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/ProgressCard/ProgressContainer/UnlocksTitle
 @onready var unlocks_list: VBoxContainer = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/ProgressCard/ProgressContainer/UnlocksList
+@onready var info_label: Label = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/InfoLabel
 @onready var logbook_overlay: ColorRect = $LogbookOverlay
 @onready var logbook_close_btn: Button = $LogbookOverlay/LogbookPanelContainer/LogbookPanel/VBoxContainer/Header/CloseLogbookButton
 @onready var logbook_title: Label = $LogbookOverlay/LogbookPanelContainer/LogbookPanel/VBoxContainer/Header/Title
@@ -55,6 +58,7 @@ func _ready() -> void:
 	decrease_btn.pressed.connect(_on_decrease_button_pressed)
 	increase_btn.pressed.connect(_on_increase_button_pressed)
 	reset_btn.pressed.connect(_on_reset_button_pressed)
+	practice_mining_btn.pressed.connect(_on_practice_mining_pressed)
 	skip_tutorial_btn.pressed.connect(_on_skip_tutorial_pressed)
 	replay_mission_tutorial_btn.pressed.connect(_on_replay_mission_tutorial_pressed)
 	replay_all_tutorial_btn.pressed.connect(_on_replay_all_tutorial_pressed)
@@ -63,6 +67,7 @@ func _ready() -> void:
 	update_counter_display()
 	_update_experience_ui()
 	_connect_experience_updates()
+	info_label.text = "Open Mining Academy here to rehearse routes, drones, and early returns without risking a mission."
 	
 	AppLogger.d("MenuPanel ready with counter: %s" % current_counter)
 
@@ -170,6 +175,15 @@ func _on_increase_button_pressed() -> void:
 func _on_reset_button_pressed() -> void:
 	AppLogger.d("MenuPanel reset button pressed")
 	reset_all.emit()
+
+func _on_practice_mining_pressed() -> void:
+	var root = get_tree().root
+	if root == null:
+		return
+	var panel = MiningPracticePanelScene.instantiate()
+	root.add_child(panel)
+	panel_closed.emit()
+	queue_free()
 
 func _on_skip_tutorial_pressed() -> void:
 	skip_tutorial_requested.emit()

@@ -37,7 +37,7 @@ func _draw() -> void:
 		draw_circle(star["pos"], float(star["radius"]), color)
 
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_RESIZED:
+	if what == NOTIFICATION_WM_SIZE_CHANGED:
 		_rebuild_stars()
 		queue_redraw()
 

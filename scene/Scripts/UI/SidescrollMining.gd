@@ -1,6 +1,9 @@
 extends Control
 
 const NavigationMixin = preload("res://Scripts/Utils/NavigationMixin.gd")
+const GameplayAnalytics = preload("res://Scripts/Systems/GameplayAnalytics.gd")
+const RegionMath = preload("res://Scripts/UI/SidescrollMiningRegionMath.gd")
+const VisualSync = preload("res://Scripts/UI/SidescrollMiningVisualSync.gd")
 
 signal mining_completed(minerals: Dictionary, score: int)
 
@@ -45,6 +48,7 @@ var _is_planet = false
 var _rocket_name = "StarterRocket1"
 var _rocket_level = 1
 var _current_target_id = ""
+var _terrain_loop_container: Node2D = null
 
 @onready var terrain_container: Node2D = $TerrainContainer
 @onready var terrain_fill: Polygon2D = $TerrainContainer/TerrainFill
@@ -78,6 +82,18 @@ var _surface_mined_count = 0
 var _scroll_speed_multiplier = 1.0
 var _target_minerals: Dictionary = {}
 var _target_mineable_pct: float = 0.5
+var _session_context: Dictionary = {}
+var _total_deposit_count := 0
+var _surface_deposit_count := 0
+var _subsurface_deposit_count := 0
+var _collected_deposit_count := 0
+var _surface_collected_count := 0
+var _subsurface_collected_count := 0
+var _drones_deployed := 0
+var _stuck_reasons_emitted: Dictionary = {}
+var _completion_reason := "duration_elapsed"
+var _completion_emitted := false
+var _last_progress_elapsed := 0.0
 
 func _ready():
 	_load_rocket_frames()
@@ -97,14 +113,32 @@ func _ready():
 	if not Engine.is_editor_hint():
 		_show_guide_step()
 
-func start_mining(is_planet: bool = false, difficulty: int = 1, target_id: String = "", minerals: Dictionary = {}, mineable_pct: float = 0.5):
+func start_mining(is_planet: bool = false, difficulty: int = 1, target_id: String = "", minerals: Dictionary = {}, mineable_pct: float = 0.5, session_context: Dictionary = {}):
 	_is_planet = is_planet
 	_target_duration = PLANET_DURATION if is_planet else ASTEROID_DURATION
 	_elapsed_time = 0.0
+	_loop_count = 0
+	_score = 0
+	_combo = 0
+	_collected_minerals = {}
+	_total_deposit_count = 0
+	_surface_deposit_count = 0
+	_subsurface_deposit_count = 0
+	_collected_deposit_count = 0
+	_surface_collected_count = 0
+	_subsurface_collected_count = 0
+	_drones_deployed = 0
+	_stuck_reasons_emitted = {}
+	_completion_reason = "duration_elapsed"
+	_completion_emitted = false
+	_last_progress_elapsed = 0.0
+	_fuel = 100.0
+	_heat = 0.0
 	_current_target_id = target_id
 	_rocket_level = difficulty
 	_target_minerals = minerals
 	_target_mineable_pct = mineable_pct
+	_session_context = session_context.duplicate(true)
 	
 	# Regenerate terrain with target seed and difficulty
 	_generate_terrain()
@@ -112,6 +146,20 @@ func start_mining(is_planet: bool = false, difficulty: int = 1, target_id: Strin
 	# Beam charges based on difficulty level
 	_max_beam_charges = 20.0 + (difficulty * 10.0)
 	_beam_charges = _max_beam_charges
+	score_label.text = "Score: 0"
+	return_button.text = "RETURN"
+	return_button.modulate = Color(1, 1, 1, 1)
+	var analytics_payload := _with_session_context({
+		"target_id": _current_target_id,
+		"target_type": "planet" if _is_planet else "asteroid",
+		"rocket_level": _rocket_level,
+		"target_duration_seconds": _target_duration,
+		"mineable_pct": _target_mineable_pct,
+		"total_deposit_count": _total_deposit_count,
+		"surface_deposit_count": _surface_deposit_count,
+		"subsurface_deposit_count": _subsurface_deposit_count
+	})
+	GameplayAnalytics.start_mining_session(analytics_payload)
 	
 	# Update UI after scene is ready
 	call_deferred("_update_rocket_ui")
@@ -135,7 +183,6 @@ func _setup_rocket():
 
 func _generate_terrain():
 	var rng = RandomNumberGenerator.new()
-	var NebulaTheme = preload("res://Resources/NebulaSciTheme.gd")
 	
 	# Use target ID as seed if available
 	if _current_target_id != "":
@@ -147,6 +194,17 @@ func _generate_terrain():
 	var segments = int(_terrain_width / TERRAIN_SEGMENT_WIDTH)
 	
 	_terrain_points.clear()
+	_mineral_regions.clear()
+	_mineral_pool_index = 0
+	_total_deposit_count = 0
+	_surface_deposit_count = 0
+	_subsurface_deposit_count = 0
+	var mineral_pool = terrain_container.get_node_or_null("MineralPool")
+	if mineral_pool:
+		for mineral in mineral_pool.get_children():
+			if mineral is Polygon2D:
+				mineral.visible = false
+				mineral.modulate = Color(1, 1, 1, 1)
 	
 	var base_height = screen_height - 250
 	var prev_height = base_height
@@ -185,6 +243,18 @@ func _generate_terrain():
 	
 	_add_surface_rocks(rng)
 	_generate_minerals(rng)
+	_rebuild_loop_container()
+
+func _rebuild_loop_container() -> void:
+	if _terrain_loop_container and is_instance_valid(_terrain_loop_container):
+		_terrain_loop_container.queue_free()
+		_terrain_loop_container = null
+	_terrain_loop_container = terrain_container.duplicate()
+	if _terrain_loop_container == null:
+		return
+	_terrain_loop_container.name = "TerrainContainerLoop"
+	add_child(_terrain_loop_container)
+	move_child(_terrain_loop_container, terrain_container.get_index() + 1)
 
 func _add_surface_rocks(rng: RandomNumberGenerator):
 	# Use pre-created rock pool from scene instead of runtime creation
@@ -315,9 +385,15 @@ func _create_mineral_deposit(x: float, width: float, mineral: Dictionary, is_sur
 		"width": width,
 		"mineral": mineral,
 		"poly": poly,
+		"pool_index": _mineral_pool_index - 1,
 		"collected": false,
 		"is_surface": is_surface
 	})
+	_total_deposit_count += 1
+	if is_surface:
+		_surface_deposit_count += 1
+	else:
+		_subsurface_deposit_count += 1
 
 func _get_terrain_y_at(x: float) -> float:
 	var segment = int(x / TERRAIN_SEGMENT_WIDTH)
@@ -346,10 +422,17 @@ func _process(delta):
 	if _scroll_offset >= _terrain_width:
 		_scroll_offset = fmod(_scroll_offset, _terrain_width)
 		_loop_count += 1
+		GameplayAnalytics.emit_mining_loop(_loop_count, {
+			"elapsed_seconds": snapped(_elapsed_time, 0.1),
+			"collected_deposit_count": _collected_deposit_count,
+			"drones_deployed": _drones_deployed
+		})
 		_reset_minerals()
 	
 	# Position both terrain instances for seamless loop
 	terrain_container.position.x = -_scroll_offset
+	if _terrain_loop_container and is_instance_valid(_terrain_loop_container):
+		_terrain_loop_container.position.x = -_scroll_offset + _terrain_width
 	
 	# Check if we need to show the loop (when near end)
 	if _scroll_offset > _terrain_width * 0.5:
@@ -375,6 +458,9 @@ func _process(delta):
 		fuel_bar.value = 0
 		return_button.text = "FUEL DEPLETED - RETURN"
 		return_button.modulate = Color(1, 0.5, 0.5, 1)
+		_completion_reason = "fuel_depleted"
+		_complete_mining()
+		return
 	elif _beam_charges <= 0:
 		return_button.text = "BEAM DEPLETED - RETURN"
 		return_button.modulate = Color(1, 0.7, 0.3, 1)
@@ -417,7 +503,11 @@ func _process(delta):
 			_deploy_drone()
 	
 	if _elapsed_time >= _target_duration:
+		_completion_reason = "duration_elapsed"
 		_complete_mining()
+		return
+
+	_maybe_emit_stuck_signals()
 
 func _fire_laser():
 	laser.visible = true
@@ -444,26 +534,17 @@ func _check_mineral_hit():
 		
 		if rocket_x >= region.x and rocket_x <= region.x + region.width:
 			region.collected = true
-			region.poly.modulate = Color(0.4, 0.4, 0.4, 0.5)
+			_apply_region_visual_state(region)
 			
 			# Reduce beam charge by 1 per mineral collected
 			_beam_charges = max(0, _beam_charges - 1)
 			
 			if _guide_active:
 				_surface_mined_count += 1
-			
-			_combo += 1
-			var points = region.mineral.value * _combo
-			_score += points
-			
-			if not _collected_minerals.has(region.mineral.name):
-				_collected_minerals[region.mineral.name] = 0
-			_collected_minerals[region.mineral.name] += 1
-			
+			_record_region_collection(region, "laser")
 			_spawn_particles(region)
 			
 			_fuel = min(100, _fuel + 5)
-			score_label.text = "Score: %d (x%d COMBO)" % [_score, _combo]
 			break
 
 var _particle_pool_index = 0
@@ -506,6 +587,63 @@ func _spawn_particles(region):
 		tween.tween_property(particle, "position", rocket.position, 0.3).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 		tween.tween_callback(func(): particle.visible = false)
 
+func _record_region_collection(region: Dictionary, source: String) -> void:
+	if region.is_empty():
+		return
+	_collected_deposit_count += 1
+	_last_progress_elapsed = _elapsed_time
+	if bool(region.get("is_surface", false)):
+		_surface_collected_count += 1
+		_combo += 1
+	else:
+		_subsurface_collected_count += 1
+		_combo = 0
+	var mineral = region.get("mineral", {})
+	var mineral_name = str(mineral.get("name", "Unknown"))
+	var mineral_value = int(mineral.get("value", 0))
+	var points = mineral_value * max(_combo, 1)
+	_score += points
+	if not _collected_minerals.has(mineral_name):
+		_collected_minerals[mineral_name] = 0
+	_collected_minerals[mineral_name] += 1
+	if _combo > 1:
+		score_label.text = "Score: %d (x%d COMBO)" % [_score, _combo]
+	else:
+		score_label.text = "Score: %d" % _score
+	if _collected_deposit_count == 1:
+		GameplayAnalytics.emit_event("mining_first_collection", _with_session_context({
+			"collection_source": source,
+			"elapsed_seconds": snapped(_elapsed_time, 0.1),
+			"mineral_name": mineral_name
+		}))
+
+func _maybe_emit_stuck_signals() -> void:
+	if _should_emit_stuck_reason("no_collection_30s", _elapsed_time >= 30.0 and _collected_deposit_count == 0):
+		GameplayAnalytics.emit_mining_stuck("no_collection_30s", {
+			"elapsed_seconds": snapped(_elapsed_time, 0.1),
+			"loop_count": _loop_count
+		})
+	if _should_emit_stuck_reason("looping_low_yield", _loop_count >= 1 and _elapsed_time >= 45.0 and _collected_deposit_count <= 1):
+		GameplayAnalytics.emit_mining_stuck("looping_low_yield", {
+			"elapsed_seconds": snapped(_elapsed_time, 0.1),
+			"loop_count": _loop_count,
+			"collected_deposit_count": _collected_deposit_count
+		})
+
+func _should_emit_stuck_reason(reason: String, condition: bool) -> bool:
+	if not condition:
+		return false
+	if bool(_stuck_reasons_emitted.get(reason, false)):
+		return false
+	_stuck_reasons_emitted[reason] = true
+	return true
+
+func _with_session_context(payload: Dictionary) -> Dictionary:
+	var merged := payload.duplicate(true)
+	for key in _session_context.keys():
+		merged[key] = _session_context[key]
+	return merged
+
 func _on_fire_pressed():
 	_is_mining = true
 
@@ -528,6 +666,29 @@ func _update_inventory_display():
 	inventory_label.text = text
 
 func _complete_mining():
+	if _completion_emitted:
+		return
+	_completion_emitted = true
+	var total_passes = max(_loop_count + 1, 1)
+	var available_deposit_opportunities = max(_total_deposit_count * total_passes, 1)
+	var collection_rate_pct = (float(_collected_deposit_count) / float(available_deposit_opportunities)) * 100.0
+	GameplayAnalytics.complete_mining_session({
+		"completion_reason": _completion_reason,
+		"elapsed_seconds": snapped(_elapsed_time, 0.1),
+		"loop_count": _loop_count,
+		"passes_completed": total_passes,
+		"fuel_remaining_pct": snapped(_fuel, 0.1),
+		"beam_remaining_pct": snapped((_beam_charges / max(_max_beam_charges, 1.0)) * 100.0, 0.1),
+		"heat_pct": snapped(_heat, 0.1),
+		"score": _score,
+		"collected_deposit_count": _collected_deposit_count,
+		"surface_collected_count": _surface_collected_count,
+		"subsurface_collected_count": _subsurface_collected_count,
+		"drones_deployed": _drones_deployed,
+		"collection_rate_pct": snapped(collection_rate_pct, 0.1),
+		"collection_inventory": _collected_minerals.duplicate(true),
+		"last_progress_seconds": snapped(_last_progress_elapsed, 0.1)
+	})
 	mining_completed.emit(_collected_minerals, _score)
 
 func _show_guide_step():
@@ -600,6 +761,7 @@ func _deploy_drone():
 		return
 
 	_drones_available -= 1
+	_drones_deployed += 1
 	_drone_cooldown_timer = DRONE_COOLDOWN
 	_update_drone_display()
 	_active_drones.append(drone)
@@ -629,24 +791,22 @@ func _acquire_drone_from_pool() -> Node:
 func _find_subsurface_target():
 	var rocket_x = fmod(rocket.position.x + _scroll_offset, _terrain_width)
 	var search_range = 400
-	
-	for region in _mineral_regions:
-		if region.collected:
-			continue
-		
-		if region.is_surface:  # Skip surface deposits
-			continue
-		
-		var region_center = region.x + region.width / 2
-		var distance = abs(region_center - rocket_x)
-		
-		if distance < search_range:
-			return region
-	
+	var nearest_region = RegionMath.find_nearest_region(rocket_x, false, _mineral_regions, _terrain_width)
+	if nearest_region.is_empty():
+		return null
+	var distance = RegionMath.distance_to_region_edges(rocket_x, nearest_region, _terrain_width)
+	if distance <= search_range:
+		return nearest_region
 	return null
 
-func _on_drone_exploded(pos: Vector2):
+func _on_drone_exploded(_pos: Vector2, region: Dictionary = {}):
+	if not region.is_empty():
+		region.collected = true
+		_apply_region_visual_state(region)
+		_record_region_collection(region, "drone")
+		_spawn_particles(region)
 	_score += 50
+	score_label.text = "Score: %d" % _score
 
 func _check_guide_pause():
 	# Renamed to _check_guide_slowdown - see below
@@ -655,31 +815,25 @@ func _check_guide_pause():
 func _check_guide_slowdown():
 	var rocket_x = fmod(rocket.position.x + _scroll_offset, _terrain_width)
 	var slowdown_range = 120
-	
-	for region in _mineral_regions:
-		if region.collected:
-			continue
-		
-		# Check if rocket is near this deposit
-		var distance_to_start = abs(region.x - rocket_x)
-		var distance_to_end = abs((region.x + region.width) - rocket_x)
-		var min_distance = min(distance_to_start, distance_to_end)
-		
-		# Also check if we're inside the deposit
-		var inside = rocket_x >= region.x and rocket_x <= (region.x + region.width)
-		
-		if inside or min_distance < slowdown_range:
-			# Slow down if this is a relevant deposit for current guide step
-			if _guide_step == GuideStep.MINE_SURFACE_IRON and region.is_surface and _surface_mined_count == 0:
-				_scroll_speed_multiplier = 0.3
-				return
-			elif _guide_step == GuideStep.MINE_SURFACE_NICKEL and region.is_surface and _surface_mined_count == 1:
-				_scroll_speed_multiplier = 0.3
-				return
-			elif _guide_step == GuideStep.DEPLOY_DRONE and not region.is_surface:
-				_scroll_speed_multiplier = 0.3
-				return
-	
+	var target_surface: Variant = null
+	if _guide_step == GuideStep.MINE_SURFACE_IRON and _surface_mined_count == 0:
+		target_surface = true
+	elif _guide_step == GuideStep.MINE_SURFACE_NICKEL and _surface_mined_count == 1:
+		target_surface = true
+	elif _guide_step == GuideStep.DEPLOY_DRONE:
+		target_surface = false
+
+	if target_surface == null:
+		_scroll_speed_multiplier = 1.0
+		return
+
+	var target_region = RegionMath.find_nearest_region(rocket_x, target_surface, _mineral_regions, _terrain_width)
+	if not target_region.is_empty():
+		var distance = RegionMath.distance_to_region_edges(rocket_x, target_region, _terrain_width)
+		if distance < slowdown_range:
+			_scroll_speed_multiplier = 0.3
+			return
+
 	# No relevant deposit nearby, normal speed
 	_scroll_speed_multiplier = 1.0
 
@@ -694,9 +848,17 @@ func _reset_minerals():
 	_mineral_pool_index = 0
 	for region in _mineral_regions:
 		region.collected = false
-		region.poly.visible = true
-		region.poly.modulate = Color(1, 1, 1, 1)
+		_apply_region_visual_state(region)
+
+func _apply_region_visual_state(region: Dictionary) -> void:
+	VisualSync.apply_region_visual_state(region, _terrain_loop_container)
 
 func _on_return_pressed():
 	# Complete mining early and return to preview
+	if _fuel <= 0:
+		_completion_reason = "fuel_depleted"
+	elif _beam_charges <= 0:
+		_completion_reason = "beam_depleted"
+	else:
+		_completion_reason = "manual_return"
 	_complete_mining()

@@ -1,6 +1,6 @@
 extends Node2D
 
-signal exploded(position: Vector2)
+signal exploded(position: Vector2, region: Dictionary)
 
 enum State { DEPLOYING, SEEKING, EXPLODING, DONE }
 
@@ -77,11 +77,10 @@ func _explode():
 	particles.explosiveness = 1.0
 	particles.initial_velocity_min = 50
 	particles.initial_velocity_max = 150
-	exploded.emit(position)
-	
 	if target_region:
 		target_region.collected = true
 		target_region.poly.modulate = Color(0.2, 0.2, 0.2, 0.3)
+	exploded.emit(position, target_region if target_region else {})
 
 func is_available_for_deploy() -> bool:
 	return _available_for_deploy

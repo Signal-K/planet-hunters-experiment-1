@@ -66,6 +66,11 @@ theme_override_constants/separation = 8
 layout_mode = 2
 text = "Skip"
 
+[node name="PracticeMiningButton" type="Button" parent="Root/Panel/Margin/VBox/Buttons"]
+layout_mode = 2
+visible = false
+text = "Practice Mining"
+
 [node name="ReplayMissionButton" type="Button" parent="Root/Panel/Margin/VBox/Buttons"]
 layout_mode = 2
 text = "Replay Mission"

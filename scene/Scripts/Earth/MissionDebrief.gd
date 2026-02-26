@@ -9,7 +9,7 @@ const SALVAGE_REFUND_PCT := 0.10
 const XP_AWARD_MISSION := 4
 const MISSION4_AFFINITY_GATE := 3
 const MISSION5_AFFINITY_GAIN := 2
-const WebEventBridge = preload("res://Scripts/Systems/WebEventBridge.gd")
+const GameplayAnalytics = preload("res://Scripts/Systems/GameplayAnalytics.gd")
 const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
 const NavigationMixin = preload("res://Scripts/Utils/NavigationMixin.gd")
 const ResourceValueRowScene = preload("res://Scenes/UI/Templates/ResourceValueRow.tscn")
@@ -307,20 +307,31 @@ func _add_mission_log(action: String, payout: int) -> void:
 		"payout": payout,
 		"rocket_id": str(entry.get("rocket_id", "")),
 		"target_id": str(entry.get("target_id", "")),
+		"target_type": str(_returned.get("type", "asteroid")),
 		"label": str(entry.get("label", "")),
 		"badge": str(entry.get("badge", "")),
-		"mission_count": mission_count
+		"mission_count": mission_count,
+		"cargo_units": _count_cargo_units(),
+		"cargo_types": _collected.size(),
+		"subcontractor_id": str(_subcontractor.get("id", "")),
+		"subcontractor_name": str(_subcontractor.get("name", ""))
 	}
-	WebEventBridge.emit("mission_debrief_resolved", event_payload)
+	GameplayAnalytics.emit_event("mission_debrief_resolved", event_payload)
 	if completed_count >= 1:
 		if rm:
 			rm.unlock("starterrocket2")
 	if completed_count == 1:
-		WebEventBridge.emit("first_mission_completed", event_payload)
+		GameplayAnalytics.emit_event("first_mission_completed", event_payload)
 	if rm and int(rm.get_mission_stage()) >= 5:
 		preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("complete_contractor_mission", {
 			"badge": badge
 		})
+
+func _count_cargo_units() -> int:
+	var total := 0
+	for value in _collected.values():
+		total += int(value)
+	return total
 
 func _select_subcontractor() -> void:
 	var app = _get_app_controller()
