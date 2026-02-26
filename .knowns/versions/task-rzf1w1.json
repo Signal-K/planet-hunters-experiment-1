@@ -1,0 +1,326 @@
+{
+  "taskId": "rzf1w1",
+  "currentVersion": 6,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "rzf1w1",
+      "version": 1,
+      "timestamp": "2026-02-26T02:37:25.574Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Stabilization: post-refactor regression fixes and release checklist",
+        "description": "Capture and resolve regressions found during headless verification after architecture/UX/test refactors, and record release-readiness checks.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "stabilization",
+          "testing",
+          "release"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Headless structure and visual quality suites pass after fixes"
+          },
+          {
+            "completed": false,
+            "text": "Parser/runtime regressions introduced during refactor are resolved"
+          },
+          {
+            "completed": false,
+            "text": "Release checklist is recorded with validated status"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "rzf1w1",
+      "version": 2,
+      "timestamp": "2026-02-26T02:37:40.605Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "## Stabilization Summary\n- Fixed logger parse regressions after refactor:\n  - MenuPanel: added logger preload + namespaced calls\n  - AppController: resolved Logger symbol/path conflict\n  - LaunchpadSelectorPanel: resolved Logger symbol/path conflict\n  - UIConsistencyEnforcer: removed class_name/autoload naming collision\n- Fixed visual quality weather baseline harness counter implementation.\n- Added UX-focused automated checks:\n  - Launchpad mission briefing gate is one-time (seen state persistence)\n  - Sidescroll mining drone pool reuse under repeated deploy calls\n\n## Verified Test Runs (2026-02-26)\n- PASS: `run_structure_tests.gd` (11/11)\n- PASS: `run_visual_quality_tests.gd` (4/4)\n\n## Release Checklist\n- [x] Structure test suite passing\n- [x] Visual quality suite passing\n- [x] Mission briefing first-view + skip persistence covered\n- [x] Drone pool reuse regression covered\n- [x] No parse-time autoload blockers in updated scripts\n- [ ] Non-blocking Godot RID/Object leak warnings triaged separately (follow-up)\n"
+        }
+      ],
+      "snapshot": {
+        "title": "Stabilization: post-refactor regression fixes and release checklist",
+        "description": "Capture and resolve regressions found during headless verification after architecture/UX/test refactors, and record release-readiness checks.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "stabilization",
+          "testing",
+          "release"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Headless structure and visual quality suites pass after fixes"
+          },
+          {
+            "completed": false,
+            "text": "Parser/runtime regressions introduced during refactor are resolved"
+          },
+          {
+            "completed": false,
+            "text": "Release checklist is recorded with validated status"
+          }
+        ],
+        "implementationNotes": "## Stabilization Summary\n- Fixed logger parse regressions after refactor:\n  - MenuPanel: added logger preload + namespaced calls\n  - AppController: resolved Logger symbol/path conflict\n  - LaunchpadSelectorPanel: resolved Logger symbol/path conflict\n  - UIConsistencyEnforcer: removed class_name/autoload naming collision\n- Fixed visual quality weather baseline harness counter implementation.\n- Added UX-focused automated checks:\n  - Launchpad mission briefing gate is one-time (seen state persistence)\n  - Sidescroll mining drone pool reuse under repeated deploy calls\n\n## Verified Test Runs (2026-02-26)\n- PASS: `run_structure_tests.gd` (11/11)\n- PASS: `run_visual_quality_tests.gd` (4/4)\n\n## Release Checklist\n- [x] Structure test suite passing\n- [x] Visual quality suite passing\n- [x] Mission briefing first-view + skip persistence covered\n- [x] Drone pool reuse regression covered\n- [x] No parse-time autoload blockers in updated scripts\n- [ ] Non-blocking Godot RID/Object leak warnings triaged separately (follow-up)\n"
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "rzf1w1",
+      "version": 3,
+      "timestamp": "2026-02-26T02:37:42.866Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Headless structure and visual quality suites pass after fixes"
+            },
+            {
+              "completed": false,
+              "text": "Parser/runtime regressions introduced during refactor are resolved"
+            },
+            {
+              "completed": false,
+              "text": "Release checklist is recorded with validated status"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Headless structure and visual quality suites pass after fixes"
+            },
+            {
+              "completed": false,
+              "text": "Parser/runtime regressions introduced during refactor are resolved"
+            },
+            {
+              "completed": false,
+              "text": "Release checklist is recorded with validated status"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Stabilization: post-refactor regression fixes and release checklist",
+        "description": "Capture and resolve regressions found during headless verification after architecture/UX/test refactors, and record release-readiness checks.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "stabilization",
+          "testing",
+          "release"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Headless structure and visual quality suites pass after fixes"
+          },
+          {
+            "completed": false,
+            "text": "Parser/runtime regressions introduced during refactor are resolved"
+          },
+          {
+            "completed": false,
+            "text": "Release checklist is recorded with validated status"
+          }
+        ],
+        "implementationNotes": "## Stabilization Summary\n- Fixed logger parse regressions after refactor:\n  - MenuPanel: added logger preload + namespaced calls\n  - AppController: resolved Logger symbol/path conflict\n  - LaunchpadSelectorPanel: resolved Logger symbol/path conflict\n  - UIConsistencyEnforcer: removed class_name/autoload naming collision\n- Fixed visual quality weather baseline harness counter implementation.\n- Added UX-focused automated checks:\n  - Launchpad mission briefing gate is one-time (seen state persistence)\n  - Sidescroll mining drone pool reuse under repeated deploy calls\n\n## Verified Test Runs (2026-02-26)\n- PASS: `run_structure_tests.gd` (11/11)\n- PASS: `run_visual_quality_tests.gd` (4/4)\n\n## Release Checklist\n- [x] Structure test suite passing\n- [x] Visual quality suite passing\n- [x] Mission briefing first-view + skip persistence covered\n- [x] Drone pool reuse regression covered\n- [x] No parse-time autoload blockers in updated scripts\n- [ ] Non-blocking Godot RID/Object leak warnings triaged separately (follow-up)"
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "rzf1w1",
+      "version": 4,
+      "timestamp": "2026-02-26T02:37:45.211Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Headless structure and visual quality suites pass after fixes"
+            },
+            {
+              "completed": false,
+              "text": "Parser/runtime regressions introduced during refactor are resolved"
+            },
+            {
+              "completed": false,
+              "text": "Release checklist is recorded with validated status"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Headless structure and visual quality suites pass after fixes"
+            },
+            {
+              "completed": true,
+              "text": "Parser/runtime regressions introduced during refactor are resolved"
+            },
+            {
+              "completed": false,
+              "text": "Release checklist is recorded with validated status"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Stabilization: post-refactor regression fixes and release checklist",
+        "description": "Capture and resolve regressions found during headless verification after architecture/UX/test refactors, and record release-readiness checks.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "stabilization",
+          "testing",
+          "release"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Headless structure and visual quality suites pass after fixes"
+          },
+          {
+            "completed": true,
+            "text": "Parser/runtime regressions introduced during refactor are resolved"
+          },
+          {
+            "completed": false,
+            "text": "Release checklist is recorded with validated status"
+          }
+        ],
+        "implementationNotes": "## Stabilization Summary\n- Fixed logger parse regressions after refactor:\n  - MenuPanel: added logger preload + namespaced calls\n  - AppController: resolved Logger symbol/path conflict\n  - LaunchpadSelectorPanel: resolved Logger symbol/path conflict\n  - UIConsistencyEnforcer: removed class_name/autoload naming collision\n- Fixed visual quality weather baseline harness counter implementation.\n- Added UX-focused automated checks:\n  - Launchpad mission briefing gate is one-time (seen state persistence)\n  - Sidescroll mining drone pool reuse under repeated deploy calls\n\n## Verified Test Runs (2026-02-26)\n- PASS: `run_structure_tests.gd` (11/11)\n- PASS: `run_visual_quality_tests.gd` (4/4)\n\n## Release Checklist\n- [x] Structure test suite passing\n- [x] Visual quality suite passing\n- [x] Mission briefing first-view + skip persistence covered\n- [x] Drone pool reuse regression covered\n- [x] No parse-time autoload blockers in updated scripts\n- [ ] Non-blocking Godot RID/Object leak warnings triaged separately (follow-up)"
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "rzf1w1",
+      "version": 5,
+      "timestamp": "2026-02-26T02:37:47.473Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Headless structure and visual quality suites pass after fixes"
+            },
+            {
+              "completed": true,
+              "text": "Parser/runtime regressions introduced during refactor are resolved"
+            },
+            {
+              "completed": false,
+              "text": "Release checklist is recorded with validated status"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Headless structure and visual quality suites pass after fixes"
+            },
+            {
+              "completed": true,
+              "text": "Parser/runtime regressions introduced during refactor are resolved"
+            },
+            {
+              "completed": true,
+              "text": "Release checklist is recorded with validated status"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Stabilization: post-refactor regression fixes and release checklist",
+        "description": "Capture and resolve regressions found during headless verification after architecture/UX/test refactors, and record release-readiness checks.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "stabilization",
+          "testing",
+          "release"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Headless structure and visual quality suites pass after fixes"
+          },
+          {
+            "completed": true,
+            "text": "Parser/runtime regressions introduced during refactor are resolved"
+          },
+          {
+            "completed": true,
+            "text": "Release checklist is recorded with validated status"
+          }
+        ],
+        "implementationNotes": "## Stabilization Summary\n- Fixed logger parse regressions after refactor:\n  - MenuPanel: added logger preload + namespaced calls\n  - AppController: resolved Logger symbol/path conflict\n  - LaunchpadSelectorPanel: resolved Logger symbol/path conflict\n  - UIConsistencyEnforcer: removed class_name/autoload naming collision\n- Fixed visual quality weather baseline harness counter implementation.\n- Added UX-focused automated checks:\n  - Launchpad mission briefing gate is one-time (seen state persistence)\n  - Sidescroll mining drone pool reuse under repeated deploy calls\n\n## Verified Test Runs (2026-02-26)\n- PASS: `run_structure_tests.gd` (11/11)\n- PASS: `run_visual_quality_tests.gd` (4/4)\n\n## Release Checklist\n- [x] Structure test suite passing\n- [x] Visual quality suite passing\n- [x] Mission briefing first-view + skip persistence covered\n- [x] Drone pool reuse regression covered\n- [x] No parse-time autoload blockers in updated scripts\n- [ ] Non-blocking Godot RID/Object leak warnings triaged separately (follow-up)"
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "rzf1w1",
+      "version": 6,
+      "timestamp": "2026-02-26T02:37:51.978Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Stabilization: post-refactor regression fixes and release checklist",
+        "description": "Capture and resolve regressions found during headless verification after architecture/UX/test refactors, and record release-readiness checks.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "stabilization",
+          "testing",
+          "release"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Headless structure and visual quality suites pass after fixes"
+          },
+          {
+            "completed": true,
+            "text": "Parser/runtime regressions introduced during refactor are resolved"
+          },
+          {
+            "completed": true,
+            "text": "Release checklist is recorded with validated status"
+          }
+        ],
+        "implementationNotes": "## Stabilization Summary\n- Fixed logger parse regressions after refactor:\n  - MenuPanel: added logger preload + namespaced calls\n  - AppController: resolved Logger symbol/path conflict\n  - LaunchpadSelectorPanel: resolved Logger symbol/path conflict\n  - UIConsistencyEnforcer: removed class_name/autoload naming collision\n- Fixed visual quality weather baseline harness counter implementation.\n- Added UX-focused automated checks:\n  - Launchpad mission briefing gate is one-time (seen state persistence)\n  - Sidescroll mining drone pool reuse under repeated deploy calls\n\n## Verified Test Runs (2026-02-26)\n- PASS: `run_structure_tests.gd` (11/11)\n- PASS: `run_visual_quality_tests.gd` (4/4)\n\n## Release Checklist\n- [x] Structure test suite passing\n- [x] Visual quality suite passing\n- [x] Mission briefing first-view + skip persistence covered\n- [x] Drone pool reuse regression covered\n- [x] No parse-time autoload blockers in updated scripts\n- [ ] Non-blocking Godot RID/Object leak warnings triaged separately (follow-up)"
+      }
+    }
+  ]
+}

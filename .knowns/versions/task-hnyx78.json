@@ -1,0 +1,75 @@
+{
+  "taskId": "hnyx78",
+  "currentVersion": 2,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "hnyx78",
+      "version": 1,
+      "timestamp": "2026-02-26T02:01:42.593Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "Duplicate created during UI pass. Superseded by task-9jqnvv."
+        }
+      ],
+      "snapshot": {
+        "title": "Remediate non-compliant UI elements",
+        "description": "Apply code/scene updates so all non-compliant UI elements use shared panel/button/text styling and layout conventions.",
+        "status": "todo",
+        "priority": "high",
+        "labels": [
+          "ui",
+          "refactor",
+          "theme"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "All failing items from audit are fixed or explicitly deferred with rationale"
+          },
+          {
+            "completed": false,
+            "text": "Shared style helpers are used over duplicated ad-hoc styles"
+          }
+        ],
+        "implementationNotes": "Duplicate created during UI pass. Superseded by task-9jqnvv."
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "hnyx78",
+      "version": 2,
+      "timestamp": "2026-02-26T02:01:44.831Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Remediate non-compliant UI elements",
+        "description": "Apply code/scene updates so all non-compliant UI elements use shared panel/button/text styling and layout conventions.",
+        "status": "done",
+        "priority": "high",
+        "labels": [
+          "ui",
+          "refactor",
+          "theme"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "All failing items from audit are fixed or explicitly deferred with rationale"
+          },
+          {
+            "completed": false,
+            "text": "Shared style helpers are used over duplicated ad-hoc styles"
+          }
+        ],
+        "implementationNotes": "Duplicate created during UI pass. Superseded by task-9jqnvv."
+      }
+    }
+  ]
+}

@@ -23,6 +23,7 @@ const SatelliteStationPanelDetail = preload("res://Scripts/UI/SatelliteStationPa
 const SatelliteStationPanelLoading = preload("res://Scripts/UI/SatelliteStationPanelLoading.gd")
 const Level2UnlockOverlayScene = preload("res://Scenes/UI/Templates/SatelliteLevel2UnlockOverlay.tscn")
 const UnlockItemScene = preload("res://Scenes/UI/Templates/MenuUnlockItem.tscn")
+const Logger = preload("res://Scripts/Utils/Logger.gd")
 
 var pending_anomalies := []
 var current_mode: String = "asteroids"  # Default mode
@@ -103,12 +104,12 @@ func _ready():
 		return
 
 	# Default behavior: fetch anomalies from Supabase
-	print("SatelliteStationPanel: calling _fetch_anomalies() — starting fetch")
+	Logger.d("SatelliteStationPanel: calling _fetch_anomalies() — starting fetch")
 	var sup = preload("res://Scripts/Systems/SupabaseClient.gd").get_instance()
 	if sup:
-		print("SatelliteStationPanel: Supabase URL -> ", sup.SUPABASE_URL)
+		Logger.d("SatelliteStationPanel: Supabase URL -> %s" % sup.SUPABASE_URL)
 	else:
-		print("SatelliteStationPanel: SupabaseClient instance not available")
+		Logger.w("SatelliteStationPanel: SupabaseClient instance not available")
 
 	_fetch_anomalies()
 
@@ -126,7 +127,7 @@ func _apply_panel_style() -> void:
 	panel_style.apply_progress_bar($PanelContainer/Panel/VBoxContainer/ContentContainer/LoadingContainer/ProgressBar)
 
 func _start_loading(duration: float):
-	print("SatelliteStationPanel: _start_loading duration=", duration)
+	Logger.d("SatelliteStationPanel: _start_loading duration=%s" % duration)
 	_loading.start_loading(duration)
 	# Start processing so _process will run to animate progress
 	set_process(true)
@@ -154,7 +155,7 @@ func _on_loading_finished() -> void:
 	set_process(false)
 
 func _fetch_anomalies():
-	print("SatelliteStationPanel: _fetch_anomalies called, mode=", current_mode)
+	Logger.d("SatelliteStationPanel: _fetch_anomalies called, mode=%s" % current_mode)
 	var supabase = SupabaseClient.get_instance()
 	var anomaly_set = PLANET_SET if current_mode == "planets" else ASTEROID_SET
 	supabase.fetch_anomalies(anomaly_set, MAX_ANOMALIES, _on_anomalies_fetched)
@@ -162,9 +163,9 @@ func _fetch_anomalies():
 
 func _on_anomalies_fetched(data: Array, error: String):
 	# Debug logging for callback
-	print("SatelliteStationPanel: _on_anomalies_fetched called — error='" + str(error) + "', count=" + str(data.size()))
+	Logger.d("SatelliteStationPanel: _on_anomalies_fetched called — error='%s', count=%s" % [str(error), data.size()])
 	if error != "":
-		print("SatelliteStationPanel: Error fetching anomalies: ", error)
+		Logger.w("SatelliteStationPanel: Error fetching anomalies: %s" % error)
 		# Keep gameplay moving in web builds even if remote fetch fails.
 		# Fallback to deterministic local anomalies so scan always produces targets.
 		pending_anomalies = _build_local_anomalies()
@@ -204,7 +205,7 @@ func _select_target_and_launch(bound_anomaly: Dictionary, index: int, btn: Butto
 	var target_id = _data.normalize_anomaly_id(bound_anomaly, index)
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	if not rm:
-		print("SatelliteStationPanel: RocketsManager not available")
+		Logger.w("SatelliteStationPanel: RocketsManager not available")
 		status_label.text = "Status: Unable to select target"
 		return
 	var target_type = "planet" if current_mode == "planets" else "asteroid"
@@ -216,13 +217,13 @@ func _select_target_and_launch(bound_anomaly: Dictionary, index: int, btn: Butto
 			"source": "scanner"
 		})
 		status_label.text = "Target selected: %s" % target_id
-		print("SatelliteStationPanel: target selected:", target_id)
+		Logger.d("SatelliteStationPanel: target selected: %s" % target_id)
 		if btn:
 			btn.text = "Target Selected"
 			btn.disabled = true
 		_change_to_launchpad_scene()
 	else:
-		print("SatelliteStationPanel: failed to persist selected target:", target_id)
+		Logger.w("SatelliteStationPanel: failed to persist selected target: %s" % target_id)
 		status_label.text = "Status: Failed to select target"
 
 func _change_to_launchpad_scene() -> void:
@@ -304,7 +305,7 @@ func _persist_detected_targets_and_record_scan(anomalies: Array) -> void:
 		return
 	var ok = rm.set_detected_targets(targets)
 	rm.record_scan_pass(targets)
-	print("SatelliteStationPanel: persisted detected_targets count=", targets.size(), " ok=", ok)
+	Logger.d("SatelliteStationPanel: persisted detected_targets count=%s ok=%s" % [targets.size(), ok])
 
 func _build_local_anomalies() -> Array:
 	if current_mode == "planets":

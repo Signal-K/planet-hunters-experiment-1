@@ -1,23 +1,24 @@
 extends RefCounted
 class_name RocketSpawner
 const STARTERROCKET1_LAUNCHPAD_POS := Vector2(-110.0, -178.0)
+const Logger = preload("res://Scripts/Utils/Logger.gd")
 
 static func spawn(launchpad_node: Node, rocket_id: String) -> bool:
     if not launchpad_node:
-        print("RocketSpawner: launchpad_node is null")
+        Logger.w("RocketSpawner: launchpad_node is null")
         return false
-    print("Launchpad: spawn_rocket called for", rocket_id)
+    Logger.d("Launchpad: spawn_rocket called for %s" % rocket_id)
     # Enforce only one awaitingLaunch rocket at a time
     var existing_nodes = launchpad_node.get_tree().get_nodes_in_group("rocket")
     if existing_nodes.size() > 0:
-        print("Launchpad: a rocket node already exists in scene; cannot create another")
+        Logger.w("Launchpad: a rocket node already exists in scene; cannot create another")
         return false
     var rm_check = preload("res://Scripts/Utils/RocketsManager.gd")
     if rm_check:
         var placed_check = rm_check.get_placed()
         for it in placed_check:
             if it.get("status", "") == "awaitingLaunch":
-                print("Launchpad: an awaitingLaunch rocket already exists in saved state; cannot create another")
+                Logger.w("Launchpad: an awaitingLaunch rocket already exists in saved state; cannot create another")
                 return false
 
     var mapping = {
@@ -27,11 +28,11 @@ static func spawn(launchpad_node: Node, rocket_id: String) -> bool:
     }
     var path = mapping.get(rocket_id, "")
     if path == "":
-        print("Launchpad: unknown rocket id:", rocket_id)
+        Logger.w("Launchpad: unknown rocket id: %s" % rocket_id)
         return false
     var packed = load(path)
     if not packed:
-        print("Launchpad: failed to load rocket scene:", path)
+        Logger.w("Launchpad: failed to load rocket scene: %s" % path)
         return false
     var inst = packed.instantiate()
     inst.add_to_group("rocket")
@@ -48,7 +49,7 @@ static func spawn(launchpad_node: Node, rocket_id: String) -> bool:
         var new_id = rm.add_placed(rocket_id, inst.position)
         if typeof(new_id) == TYPE_STRING and new_id != "":
             inst.name = new_id
-        print("Launchpad: rocket persisted to state")
+        Logger.d("Launchpad: rocket persisted to state")
 
     # Hide creation UI (RocketSelector) but keep selector panel visible
     var root_scene = launchpad_node.get_tree().current_scene
@@ -60,7 +61,7 @@ static func spawn(launchpad_node: Node, rocket_id: String) -> bool:
                 node.visible = false
             for child in node.get_children():
                 stack.append(child)
-        print("Launchpad: hid RocketSelector (creation UI) after spawn")
+        Logger.d("Launchpad: hid RocketSelector (creation UI) after spawn")
         # Ensure targets are populated
         if launchpad_node.has_method("_populate_targets"):
             launchpad_node._populate_targets()
@@ -75,7 +76,7 @@ static func spawn(launchpad_node: Node, rocket_id: String) -> bool:
             lb.position = vs - Vector2(180, 100)
             lb.visible = true
             lb.z_index = 1000
-            print("Launchpad: showing standalone LaunchButton at", lb.position)
+            Logger.d("Launchpad: showing standalone LaunchButton at %s" % [lb.position])
             shown = true
         else:
             var hud = root.get_node_or_null("LaunchHUD")
@@ -85,9 +86,9 @@ static func spawn(launchpad_node: Node, rocket_id: String) -> bool:
                         c.position = vs - Vector2(180, 100)
                         c.visible = true
                         c.z_index = 1000
-                        print("Launchpad: showing LaunchHUD's LaunchButton (node=", c.get_path(), ") at", c.position)
+                        Logger.d("Launchpad: showing LaunchHUD's LaunchButton (node=%s) at %s" % [c.get_path(), c.position])
                         shown = true
                         break
     if not shown:
-        print("Launchpad: could not find a LaunchButton to show after spawn")
+        Logger.w("Launchpad: could not find a LaunchButton to show after spawn")
     return true

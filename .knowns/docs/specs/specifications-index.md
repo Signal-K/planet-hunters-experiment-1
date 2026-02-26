@@ -1,7 +1,7 @@
 ---
 title: Specifications Index
 createdAt: '2026-02-25T08:30:27.435Z'
-updatedAt: '2026-02-25T09:59:01.119Z'
+updatedAt: '2026-02-26T01:53:31.426Z'
 description: >-
   Index of all game specification documents - single source of truth for
   implementation
@@ -30,8 +30,8 @@ This folder contains all formal specification documents for Planet Hunters. Thes
 - Implementation references
 
 **Related Tasks**:
-- @task-r3wjy5: Mission spec validation tests
-- @task-w0j1ov: Align mission constants with spec
+- Mission spec validation tests (historical task id archived)
+- Align mission constants with spec (historical task id archived)
 
 ### 2. User Flow and Citizen Science Specification
 **Location**: @doc/specs/user-flow-and-citizen-science-specification  

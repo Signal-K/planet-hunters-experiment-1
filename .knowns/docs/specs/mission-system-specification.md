@@ -1,7 +1,7 @@
 ---
 title: 'spec,missions,game-design,reference'
 createdAt: '2026-02-25T08:19:42.936Z'
-updatedAt: '2026-02-25T08:30:06.051Z'
+updatedAt: '2026-02-26T01:53:24.805Z'
 description: >-
   Complete specification for all 5 missions including objectives, mechanics,
   progression, rewards, and onboarding flow
@@ -51,12 +51,12 @@ Teach basic game loop: build → launch → mine → return → debrief
 ### Requirements
 - **Rocket**: Starter Rocket 1 (L1, auto-unlocked)
 - **Target**: Training Asteroid A (predefined, 3 AU)
-- **Cost**: ~200M F (SR1 build cost)
+- **Cost**: ~1B F (SR1 build cost)
 - **Scanner**: Not required (hidden until M3)
 
 ### Rewards
 - **Ratio**: 1.2x rocket cost
-- **Expected**: ~240M F (full mine + scrap)
+- **Expected**: ~1.2B F (full mine + scrap)
 - **Unlocks**: Mission 2, Starter Rocket 2
 
 ### Tutorial Flow
@@ -67,8 +67,8 @@ Teach basic game loop: build → launch → mine → return → debrief
 5. "Complete debrief" → Choose payout option
 
 ### Implementation References
-- Task: @task-hcaynf (Gate scanner to M3)
-- Task: @task-x48i3q (Mission selector progression)
+- Task: task-hcaynf (Gate scanner to M3)
+- Task: task-x48i3q (Mission selector progression)
 - Code: `RocketsManager.PREDEFINED_MISSION_TARGETS[1]`
 
 ---
@@ -87,12 +87,12 @@ Introduce rocket progression and demonstrate yield improvements
 ### Requirements
 - **Rocket**: Starter Rocket 2 (L2, unlocked after M1)
 - **Target**: Training Asteroid B (predefined, 12 AU)
-- **Cost**: ~1.5B F (SR2 build cost)
+- **Cost**: ~1.3B F (SR2 build cost)
 - **Scanner**: Not required (still hidden)
 
 ### Rewards
 - **Ratio**: 1.3x rocket cost
-- **Expected**: ~1.95B F (full mine + scrap)
+- **Expected**: ~1.69B F (full mine + scrap)
 - **Unlocks**: Mission 3, Scanner Station
 
 ### Tutorial Flow
@@ -103,8 +103,8 @@ Introduce rocket progression and demonstrate yield improvements
 5. "Complete debrief" → Advance to M3
 
 ### Implementation References
-- Task: @task-lumudz (L2 mission requirement)
-- Task: @task-q5z1xo (1.3x reward ratio)
+- Task: task-lumudz (L2 mission requirement)
+- Task: task-q5z1xo (1.3x reward ratio)
 - Code: `RocketsManager.PREDEFINED_MISSION_TARGETS[2]`
 
 ---
@@ -147,9 +147,9 @@ Introduce scanning system and player-driven target selection
 - Filters out previously targeted asteroids
 
 ### Implementation References
-- Task: @task-hcaynf (Scanner gating to M3)
-- Task: @task-tkj44s (Scanner introduction)
-- Task: @task-srnf59 (Create mission 3)
+- Task: task-hcaynf (Scanner gating to M3)
+- Task: task-tkj44s (Scanner introduction)
+- Task: task-srnf59 (Create mission 3)
 - Code: `RocketsManager.get_mission3_targets()`
 - Const: `SCANNER_BUILD_COST = 2000000000`
 
@@ -194,8 +194,8 @@ Introduce exoplanet targets and long-range exploration
 - Filters out previously targeted planets
 
 ### Implementation References
-- Task: @task-vergrc (Create mission 4)
-- Task: @task-h819cf (Add second rocket)
+- Task: task-vergrc (Create mission 4)
+- Task: task-h819cf (Add second rocket)
 - Code: `RocketsManager.PREDEFINED_MISSION_TARGETS[4]`
 - Code: `RocketsManager.get_mission4_targets()`
 
@@ -251,7 +251,7 @@ Introduce contractor system and strategic choice
 - No penalty for ignored contractor
 
 ### Implementation References
-- Task: @task-jom58m (Create mission 5)
+- Task: task-jom58m (Create mission 5)
 - Code: `RocketsManager.MISSION5_CONTRACTOR_OFFERS`
 - Code: `RocketsManager.get_mission5_targets()`
 - Const: `MISSION5_PAYOUT_CAP = 1400000000`
@@ -263,8 +263,8 @@ Introduce contractor system and strategic choice
 ### Rocket Progression
 | Rocket | Level | Cost | Range | Cargo | Laser | Unlocked |
 |--------|-------|------|-------|-------|-------|----------|
-| Starter Rocket 1 | L1 | 200M F | 10 AU | 1x | 10% | M1 start |
-| Starter Rocket 2 | L2 | 1.5B F | 120 AU | 2x | 20% | M1 complete |
+| Starter Rocket 1 | L1 | 1B F | 10 AU | 1x | 10% | M1 start |
+| Starter Rocket 2 | L2 | 1.3B F | 120 AU | 2x | 20% | M1 complete |
 | Starter Rocket 3 | L3 | 4B F | 1200 AU | 10x | 30% | M3 complete |
 
 ### Target Types
@@ -300,7 +300,7 @@ Introduce contractor system and strategic choice
 
 ### Code References
 - `scene/Scripts/Utils/RocketsManager.gd`: Mission state, targets, progression
-- `scene/Scripts/UI/TutorialPanel.gd`: Tutorial steps and flow
+- `scene/Scripts/UI/TutorialCoachOverlay.gd`: Tutorial steps and flow
 - `scene/Scripts/Earth/MissionDebrief.gd`: Payout and progression
 - `scene/Scripts/UI/SatelliteStationPanel.gd`: Scanner behavior
 - `scene/Scripts/Earth/LaunchpadSelectorPanel.gd`: Target selection
@@ -311,12 +311,12 @@ Introduce contractor system and strategic choice
 - `scene/tests/run_tutorial_tests.gd`: Tutorial flow validation
 
 ### Related Tasks
-- @task-hcaynf: Gate scanner to M3
-- @task-x48i3q: Mission selector progression
-- @task-srnf59: Create mission 3
-- @task-vergrc: Create mission 4
-- @task-jom58m: Create mission 5
-- @task-4r0j05: Mission progression updates
+- task-hcaynf: Gate scanner to M3
+- task-x48i3q: Mission selector progression
+- task-srnf59: Create mission 3
+- task-vergrc: Create mission 4
+- task-jom58m: Create mission 5
+- task-4r0j05: Mission progression updates
 
 ---
 
@@ -330,10 +330,10 @@ Introduce contractor system and strategic choice
 5. **Mission replay**: Ability to replay missions for practice
 
 ### Related Tasks
-- @task-7xdhgi: Mission onboarding overlays
-- @task-tpl2om: Mission progress tracker
-- @task-bzx127: Refactor tutorial to be mission-contextual
-- @task-r7f35q: Mission briefing screen
+- task-7xdhgi: Mission onboarding overlays
+- task-tpl2om: Mission progress tracker
+- task-bzx127: Refactor tutorial to be mission-contextual
+- task-r7f35q: Mission briefing screen
 
 
 

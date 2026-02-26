@@ -29,10 +29,12 @@
   "completed_mission_badges": [
   ],
   "scanner_station_built": false,
+  "scanner_unlocked": false,
   "scanner_unlock_dialog_seen": false,
   "mission5_contract_offer": {
   },
   "mission_briefings_seen": {
+    "3": true
   },
   "mission_progress_schema_version": 2.0,
   "pending_mission_guidance_id": 0.0,
@@ -43,6 +45,5 @@
   "returned_mission": {
   },
   "returning_started": {
-  },
-  "scanner_unlocked": false
+  }
 }

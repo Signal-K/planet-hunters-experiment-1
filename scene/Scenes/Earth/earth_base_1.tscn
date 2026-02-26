@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3 uid="uid://bl5h6pq4ns86t"]
+[gd_scene load_steps=19 format=3 uid="uid://bl5h6pq4ns86t"]
 
 [ext_resource type="Texture2D" uid="uid://bni1814mlo7mv" path="res://assets/Backdrops/Earth1.png" id="0"]
 [ext_resource type="Script" uid="uid://eoqjev5txcu5" path="res://Scenes/Earth/earth_base_1.gd" id="1"]
@@ -8,6 +8,10 @@
 [ext_resource type="Texture2D" uid="uid://ctuf1c3mi4pat" path="res://assets/Structures/launchpad.png" id="5"]
 [ext_resource type="Script" uid="uid://dys0ofbnycpy0" path="res://Scripts/Earth/ControlStation.gd" id="6"]
 [ext_resource type="Texture2D" uid="uid://bhjh4wo2yo046" path="res://assets/Structures/ControlStation.png" id="7"]
+[ext_resource type="Script" path="res://Scripts/Earth/Environment/EarthWeatherEngine.gd" id="8"]
+[ext_resource type="Script" path="res://Scripts/Earth/Environment/EarthSkyNightFilterEvent.gd" id="9"]
+[ext_resource type="Script" path="res://Scripts/Earth/Environment/EarthStarFieldEvent.gd" id="10"]
+[ext_resource type="Script" path="res://Scripts/Earth/Environment/EarthCloudDriftEvent.gd" id="11"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_control"]
 size = Vector2(200, 200)
@@ -84,6 +88,16 @@ texture = ExtResource("0")
 position = Vector2(2880, 440)
 scale = Vector2(1.9010351, 1.9)
 texture = ExtResource("0")
+
+[node name="SkyNightFilterEvent" type="Node" parent="BackgroundLayer"]
+script = ExtResource("9")
+backdrop_paths = Array[NodePath]([NodePath("../BackgroundSprite"), NodePath("../BackgroundSprite2")])
+
+[node name="StarFieldEvent" type="Node2D" parent="BackgroundLayer"]
+script = ExtResource("10")
+
+[node name="CloudDriftEvent" type="Node2D" parent="BackgroundLayer"]
+script = ExtResource("11")
 
 [node name="StructuresLayer" type="CanvasLayer" parent="."]
 
@@ -236,3 +250,6 @@ theme_override_styles/pressed = SubResource("12")
 theme_override_styles/hover = SubResource("11")
 theme_override_styles/focus = SubResource("11")
 text = "New Mission"
+
+[node name="EnvironmentEngine" type="Node" parent="."]
+script = ExtResource("8")

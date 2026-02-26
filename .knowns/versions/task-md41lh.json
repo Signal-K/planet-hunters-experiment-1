@@ -1,0 +1,366 @@
+{
+  "taskId": "md41lh",
+  "currentVersion": 7,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "md41lh",
+      "version": 1,
+      "timestamp": "2026-02-26T01:54:34.414Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Normalize runtime logging and remove debug noise",
+        "description": "Replace noisy print calls in runtime flows with Logger utility and guard verbose logs behind debug flags.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "refactor",
+          "logging",
+          "cleanup"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Core runtime scripts no longer emit excessive unguarded prints"
+          },
+          {
+            "completed": false,
+            "text": "Logger utility is used in key systems with clear severity levels"
+          },
+          {
+            "completed": false,
+            "text": "No gameplay behavior changes introduced by logging cleanup"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "md41lh",
+      "version": 2,
+      "timestamp": "2026-02-26T01:55:54.586Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "✓ Replaced print noise with Logger in AppController, UIManager, SatelliteStationPanel (core runtime/UI flows). Remaining logging cleanup still needed in launchpad/rocket/preview scripts."
+        }
+      ],
+      "snapshot": {
+        "title": "Normalize runtime logging and remove debug noise",
+        "description": "Replace noisy print calls in runtime flows with Logger utility and guard verbose logs behind debug flags.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "refactor",
+          "logging",
+          "cleanup"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Core runtime scripts no longer emit excessive unguarded prints"
+          },
+          {
+            "completed": false,
+            "text": "Logger utility is used in key systems with clear severity levels"
+          },
+          {
+            "completed": false,
+            "text": "No gameplay behavior changes introduced by logging cleanup"
+          }
+        ],
+        "implementationNotes": "✓ Replaced print noise with Logger in AppController, UIManager, SatelliteStationPanel (core runtime/UI flows). Remaining logging cleanup still needed in launchpad/rocket/preview scripts."
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "md41lh",
+      "version": 3,
+      "timestamp": "2026-02-26T02:01:09.096Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Core runtime scripts no longer emit excessive unguarded prints"
+            },
+            {
+              "completed": false,
+              "text": "Logger utility is used in key systems with clear severity levels"
+            },
+            {
+              "completed": false,
+              "text": "No gameplay behavior changes introduced by logging cleanup"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Core runtime scripts no longer emit excessive unguarded prints"
+            },
+            {
+              "completed": false,
+              "text": "Logger utility is used in key systems with clear severity levels"
+            },
+            {
+              "completed": false,
+              "text": "No gameplay behavior changes introduced by logging cleanup"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Normalize runtime logging and remove debug noise",
+        "description": "Replace noisy print calls in runtime flows with Logger utility and guard verbose logs behind debug flags.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "refactor",
+          "logging",
+          "cleanup"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Core runtime scripts no longer emit excessive unguarded prints"
+          },
+          {
+            "completed": false,
+            "text": "Logger utility is used in key systems with clear severity levels"
+          },
+          {
+            "completed": false,
+            "text": "No gameplay behavior changes introduced by logging cleanup"
+          }
+        ],
+        "implementationNotes": "✓ Replaced print noise with Logger in AppController, UIManager, SatelliteStationPanel (core runtime/UI flows). Remaining logging cleanup still needed in launchpad/rocket/preview scripts."
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "md41lh",
+      "version": 4,
+      "timestamp": "2026-02-26T02:01:11.324Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Core runtime scripts no longer emit excessive unguarded prints"
+            },
+            {
+              "completed": false,
+              "text": "Logger utility is used in key systems with clear severity levels"
+            },
+            {
+              "completed": false,
+              "text": "No gameplay behavior changes introduced by logging cleanup"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Core runtime scripts no longer emit excessive unguarded prints"
+            },
+            {
+              "completed": true,
+              "text": "Logger utility is used in key systems with clear severity levels"
+            },
+            {
+              "completed": false,
+              "text": "No gameplay behavior changes introduced by logging cleanup"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Normalize runtime logging and remove debug noise",
+        "description": "Replace noisy print calls in runtime flows with Logger utility and guard verbose logs behind debug flags.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "refactor",
+          "logging",
+          "cleanup"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Core runtime scripts no longer emit excessive unguarded prints"
+          },
+          {
+            "completed": true,
+            "text": "Logger utility is used in key systems with clear severity levels"
+          },
+          {
+            "completed": false,
+            "text": "No gameplay behavior changes introduced by logging cleanup"
+          }
+        ],
+        "implementationNotes": "✓ Replaced print noise with Logger in AppController, UIManager, SatelliteStationPanel (core runtime/UI flows). Remaining logging cleanup still needed in launchpad/rocket/preview scripts."
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "md41lh",
+      "version": 5,
+      "timestamp": "2026-02-26T02:01:13.654Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Core runtime scripts no longer emit excessive unguarded prints"
+            },
+            {
+              "completed": true,
+              "text": "Logger utility is used in key systems with clear severity levels"
+            },
+            {
+              "completed": false,
+              "text": "No gameplay behavior changes introduced by logging cleanup"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Core runtime scripts no longer emit excessive unguarded prints"
+            },
+            {
+              "completed": true,
+              "text": "Logger utility is used in key systems with clear severity levels"
+            },
+            {
+              "completed": true,
+              "text": "No gameplay behavior changes introduced by logging cleanup"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Normalize runtime logging and remove debug noise",
+        "description": "Replace noisy print calls in runtime flows with Logger utility and guard verbose logs behind debug flags.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "refactor",
+          "logging",
+          "cleanup"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Core runtime scripts no longer emit excessive unguarded prints"
+          },
+          {
+            "completed": true,
+            "text": "Logger utility is used in key systems with clear severity levels"
+          },
+          {
+            "completed": true,
+            "text": "No gameplay behavior changes introduced by logging cleanup"
+          }
+        ],
+        "implementationNotes": "✓ Replaced print noise with Logger in AppController, UIManager, SatelliteStationPanel (core runtime/UI flows). Remaining logging cleanup still needed in launchpad/rocket/preview scripts."
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "md41lh",
+      "version": 6,
+      "timestamp": "2026-02-26T02:01:15.910Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "✓ Replaced print noise with Logger in AppController, UIManager, SatelliteStationPanel (core runtime/UI flows). Remaining logging cleanup still needed in launchpad/rocket/preview scripts.",
+          "newValue": "## Summary\n- Replaced unguarded `print()` calls with `Logger` usage in core runtime/UI flows:\n  - `AppController.gd`\n  - `UIManager.gd`\n  - `SatelliteStationPanel.gd`\n  - `Launchpad.gd`\n  - `LaunchpadLaunchButton.gd`\n  - `LaunchpadSelectorPanel.gd`\n  - `LaunchpadAnomalyFetcher.gd`\n  - `LaunchpadRestorer.gd`\n  - `RocketSpawner.gd`\n  - `EarthSceneUIHelper.gd`\n- Used `Logger.d` for verbose traces and `Logger.w` for recoverable issues.\n- No gameplay logic changes; logging-only refactor."
+        }
+      ],
+      "snapshot": {
+        "title": "Normalize runtime logging and remove debug noise",
+        "description": "Replace noisy print calls in runtime flows with Logger utility and guard verbose logs behind debug flags.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "refactor",
+          "logging",
+          "cleanup"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Core runtime scripts no longer emit excessive unguarded prints"
+          },
+          {
+            "completed": true,
+            "text": "Logger utility is used in key systems with clear severity levels"
+          },
+          {
+            "completed": true,
+            "text": "No gameplay behavior changes introduced by logging cleanup"
+          }
+        ],
+        "implementationNotes": "## Summary\n- Replaced unguarded `print()` calls with `Logger` usage in core runtime/UI flows:\n  - `AppController.gd`\n  - `UIManager.gd`\n  - `SatelliteStationPanel.gd`\n  - `Launchpad.gd`\n  - `LaunchpadLaunchButton.gd`\n  - `LaunchpadSelectorPanel.gd`\n  - `LaunchpadAnomalyFetcher.gd`\n  - `LaunchpadRestorer.gd`\n  - `RocketSpawner.gd`\n  - `EarthSceneUIHelper.gd`\n- Used `Logger.d` for verbose traces and `Logger.w` for recoverable issues.\n- No gameplay logic changes; logging-only refactor."
+      }
+    },
+    {
+      "id": "v7",
+      "taskId": "md41lh",
+      "version": 7,
+      "timestamp": "2026-02-26T02:01:20.392Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Normalize runtime logging and remove debug noise",
+        "description": "Replace noisy print calls in runtime flows with Logger utility and guard verbose logs behind debug flags.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "refactor",
+          "logging",
+          "cleanup"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Core runtime scripts no longer emit excessive unguarded prints"
+          },
+          {
+            "completed": true,
+            "text": "Logger utility is used in key systems with clear severity levels"
+          },
+          {
+            "completed": true,
+            "text": "No gameplay behavior changes introduced by logging cleanup"
+          }
+        ],
+        "implementationNotes": "## Summary\n- Replaced unguarded `print()` calls with `Logger` usage in core runtime/UI flows:\n  - `AppController.gd`\n  - `UIManager.gd`\n  - `SatelliteStationPanel.gd`\n  - `Launchpad.gd`\n  - `LaunchpadLaunchButton.gd`\n  - `LaunchpadSelectorPanel.gd`\n  - `LaunchpadAnomalyFetcher.gd`\n  - `LaunchpadRestorer.gd`\n  - `RocketSpawner.gd`\n  - `EarthSceneUIHelper.gd`\n- Used `Logger.d` for verbose traces and `Logger.w` for recoverable issues.\n- No gameplay logic changes; logging-only refactor."
+      }
+    }
+  ]
+}

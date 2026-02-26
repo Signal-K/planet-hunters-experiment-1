@@ -2,6 +2,7 @@ extends Node3D
 
 const PREVIEW_SCENE_PATH := "res://Scenes/UI/AsteroidPreview/asteroid_preview.tscn"
 const MINING_SCENE_PATH := "res://Scenes/UI/SidescrollMining.tscn"
+const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
 
 @onready var ui_container: Control = $CanvasLayer/UI
 @onready var mine_btn: Button = $CanvasLayer/UI/MineButton
@@ -18,14 +19,10 @@ var _minigame_instance = null
 func _ready():
 	print("[Preview] _ready called")
 	
-	# Apply theme to buttons
-	var NebulaTheme = preload("res://Resources/NebulaSciTheme.gd")
-	var btn_style = NebulaTheme.create_button_style()
-	mine_btn.add_theme_stylebox_override("normal", btn_style)
-	mine_btn.add_theme_color_override("font_color", Color(0.95, 0.95, 0.98))
-	return_btn.add_theme_stylebox_override("normal", btn_style)
-	return_btn.add_theme_color_override("font_color", Color(0.95, 0.95, 0.98))
-	target_label.add_theme_color_override("font_color", Color(0.95, 0.95, 0.98))
+	# Apply shared panel/button/text styling for preview controls.
+	PanelStyle.apply_button(mine_btn, true)
+	PanelStyle.apply_button(return_btn, false)
+	PanelStyle.apply_body(target_label)
 	
 	mine_btn.pressed.connect(_on_mine_pressed)
 	return_btn.pressed.connect(_on_return_pressed)

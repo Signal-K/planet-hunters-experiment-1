@@ -8,6 +8,7 @@ const TargetCardScene = preload("res://Scenes/UI/Templates/LaunchpadTargetCard.t
 const HeaderLabelScene = preload("res://Scenes/UI/Templates/MenuUnlockHeader.tscn")
 const EmptyLabelScene = preload("res://Scenes/UI/Templates/MenuLogbookEmpty.tscn")
 const LabelActionRowScene = preload("res://Scenes/UI/Templates/LabelActionRow.tscn")
+const AppLogger = preload("res://Scripts/Utils/Logger.gd")
 const MAX_VISIBLE_TARGETS := 3
 const MAX_VISIBLE_TARGETS_MISSION3 := 5
 const MAX_VISIBLE_TARGETS_MISSION4 := 5
@@ -81,9 +82,9 @@ func hide_selector_panel(hide_primary: bool = false) -> void:
 			stack.append(child)
 	if hidden_count > 0:
 		if hide_primary:
-			print("Launchpad: selector panel hidden (all instances), count=", hidden_count)
+			AppLogger.d("Launchpad: selector panel hidden (all instances), count=%s" % hidden_count)
 		else:
-			print("Launchpad: selector panel hidden (duplicates only), count=", hidden_count)
+			AppLogger.d("Launchpad: selector panel hidden (duplicates only), count=%s" % hidden_count)
 
 func show_selector_panel() -> void:
 	# Show the first SelectorPanel found and hide any duplicates to prevent overlap
@@ -103,7 +104,7 @@ func show_selector_panel() -> void:
 					child.visible = false
 			stack.append(child)
 	if first_shown:
-		print("Launchpad: selector panel shown (primary instance)")
+		AppLogger.d("Launchpad: selector panel shown (primary instance)")
 		# Ensure the RocketSelector (creation UI) is visible again if there are
 		# no persisted awaitingLaunch rockets. This returns the panel to create/select mode.
 		var rm = preload("res://Scripts/Utils/RocketsManager.gd")
@@ -132,11 +133,11 @@ func show_selector_panel() -> void:
 						if c is Button:
 							c.disabled = false
 						node_stack.append(c)
-				print("Launchpad: RocketSelector restored and Create buttons enabled (no awaiting rockets)")
+				AppLogger.d("Launchpad: RocketSelector restored and Create buttons enabled (no awaiting rockets)")
 		# Populate selector panel with detected targets
 		populate_targets()
 	else:
-		print("Launchpad: no SelectorPanel found to show")
+		AppLogger.w("Launchpad: no SelectorPanel found to show")
 
 	# Debug: print UI visibility summary
 	var root = _launchpad.get_tree().current_scene
@@ -148,10 +149,10 @@ func show_selector_panel() -> void:
 			for c in hud.get_children():
 				if c.name.ends_with("LaunchButton"):
 					lb = c
-		print("Launchpad: UI visibility summary -> UILayer/SelectorPanel=", s != null and s.visible or false, ", LaunchHUD=", hud != null and hud.visible or false, ", LaunchButton=", lb != null and lb.visible or false)
+		AppLogger.d("Launchpad: UI visibility summary -> UILayer/SelectorPanel=%s, LaunchHUD=%s, LaunchButton=%s" % [s != null and s.visible or false, hud != null and hud.visible or false, lb != null and lb.visible or false])
 
 func populate_targets() -> void:
-	print("Launchpad: _populate_targets called")
+	AppLogger.d("Launchpad: _populate_targets called")
 	var root_scene = _launchpad.get_tree().current_scene
 	if not root_scene:
 		return
@@ -162,7 +163,7 @@ func populate_targets() -> void:
 	if not vbox:
 		return
 	_style_selector_panel(panel, vbox)
-	print("Launchpad: found SelectorPanel VBox")
+	AppLogger.d("Launchpad: found SelectorPanel VBox")
 	# Clear existing entries except the core nodes.
 	for child in vbox.get_children():
 		if child.name in ["Title", "BackButton", "RocketSelector", "LaunchedList", "TargetsSection"]:
@@ -186,7 +187,7 @@ func populate_targets() -> void:
 		targets = rm.get_mission5_targets()
 	else:
 		targets = rm.get_detected_targets()
-	print("Launchpad: _populate_targets -> detected targets count=", targets.size())
+	AppLogger.d("Launchpad: _populate_targets -> detected targets count=%s" % targets.size())
 	var selected_target = rm.get_selected_target()
 	var awaiting_rocket_id = str(rm.get_primary_awaiting_rocket_id())
 	var awaiting_rocket_level = int(rm.get_rocket_level(awaiting_rocket_id))
@@ -326,9 +327,95 @@ func populate_targets() -> void:
 		targets_section.add_child(hidden_lbl)
 
 func _render_mission_briefing_gate(targets_section: VBoxContainer, rm, mission_stage: int) -> bool:
-	# Mission briefings were creating visual clutter in the launchpad flow.
-	# Keep target selection immediately available.
-	return false
+	if targets_section == null or rm == null:
+		return false
+	if mission_stage <= 0 or not MISSION_BRIEFINGS.has(mission_stage):
+		return false
+	if rm.is_mission_briefing_seen(mission_stage):
+		return false
+	var briefing: Dictionary = MISSION_BRIEFINGS[mission_stage]
+	var heading: Label = HeaderLabelScene.instantiate()
+	heading.text = "Mission %d Briefing" % mission_stage
+	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	PanelStyle.apply_muted(heading)
+	heading.add_theme_font_size_override("font_size", 16)
+	targets_section.add_child(heading)
+
+	var card := PanelContainer.new()
+	card.add_theme_stylebox_override("panel", PanelStyle.create_card_style())
+	card.add_theme_constant_override("content_margin_left", 14)
+	card.add_theme_constant_override("content_margin_right", 14)
+	card.add_theme_constant_override("content_margin_top", 12)
+	card.add_theme_constant_override("content_margin_bottom", 12)
+	targets_section.add_child(card)
+
+	var content := VBoxContainer.new()
+	content.add_theme_constant_override("separation", 8)
+	card.add_child(content)
+
+	var objective_lbl := Label.new()
+	objective_lbl.text = "Objective: %s" % str(briefing.get("objective", ""))
+	objective_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	objective_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	PanelStyle.apply_body(objective_lbl)
+	objective_lbl.add_theme_font_size_override("font_size", 16)
+	content.add_child(objective_lbl)
+
+	var mechanics_lbl := Label.new()
+	mechanics_lbl.text = "Mechanic: %s" % str(briefing.get("mechanics", ""))
+	mechanics_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	mechanics_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	PanelStyle.apply_muted(mechanics_lbl)
+	mechanics_lbl.add_theme_font_size_override("font_size", 14)
+	content.add_child(mechanics_lbl)
+
+	var summary_lbl := Label.new()
+	summary_lbl.text = "Loadout L%d • %s • Reward %.1fx • Unlocks: %s" % [
+		int(briefing.get("required_rocket_level", 1)),
+		str(briefing.get("target_type", "Target")),
+		float(briefing.get("reward_ratio", 1.0)),
+		str(briefing.get("unlocks", "next progression"))
+	]
+	summary_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	summary_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	PanelStyle.apply_muted(summary_lbl)
+	summary_lbl.add_theme_font_size_override("font_size", 14)
+	content.add_child(summary_lbl)
+
+	var action_row := HBoxContainer.new()
+	action_row.add_theme_constant_override("separation", 10)
+	content.add_child(action_row)
+
+	var continue_btn := Button.new()
+	continue_btn.text = "Continue"
+	PanelStyle.apply_button(continue_btn, true)
+	continue_btn.pressed.connect(Callable(self, "_on_mission_briefing_acknowledged").bind(mission_stage, false))
+	action_row.add_child(continue_btn)
+
+	var skip_btn := Button.new()
+	skip_btn.text = "Skip Briefing"
+	PanelStyle.apply_button(skip_btn, false)
+	skip_btn.pressed.connect(Callable(self, "_on_mission_briefing_acknowledged").bind(mission_stage, true))
+	action_row.add_child(skip_btn)
+
+	var hint_lbl: Label = EmptyLabelScene.instantiate()
+	hint_lbl.text = "Briefings appear once per mission. Continue or skip to proceed."
+	hint_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	PanelStyle.apply_muted(hint_lbl)
+	targets_section.add_child(hint_lbl)
+	return true
+
+func _on_mission_briefing_acknowledged(mission_stage: int, skipped: bool) -> void:
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if rm:
+		var ok = rm.mark_mission_briefing_seen(mission_stage)
+		if not ok:
+			AppLogger.w("Launchpad: failed to persist mission briefing seen for stage=%s" % mission_stage)
+	preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("mission_briefing_seen", {
+		"mission_stage": mission_stage,
+		"skipped": skipped
+	})
+	populate_targets()
 
 func on_selector_target_pressed(target_id: String, _btn: Button) -> void:
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
@@ -339,10 +426,10 @@ func on_selector_target_pressed(target_id: String, _btn: Button) -> void:
 		preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("select_launch_target", {
 			"target_id": target_id
 		})
-		print("Launchpad: target selected from selector:", target_id)
+		AppLogger.d("Launchpad: target selected from selector: %s" % target_id)
 		populate_targets()
 	else:
-		print("Launchpad: failed to persist target selection from selector", target_id)
+		AppLogger.w("Launchpad: failed to persist target selection from selector %s" % target_id)
 
 func _on_mission5_contractor_pressed(contractor_id: String) -> void:
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
@@ -420,7 +507,7 @@ func _on_debug_skip_mission_pressed() -> void:
 	if not rm:
 		return
 	var ok = rm.debug_complete_mission_for_progression()
-	print("Launchpad: debug skip mission -> ", ok)
+	AppLogger.d("Launchpad: debug skip mission -> %s" % ok)
 	populate_targets()
 
 func _on_debug_mining_test_pressed() -> void:
@@ -428,7 +515,7 @@ func _on_debug_mining_test_pressed() -> void:
 	if not rm:
 		return
 	var ok = rm.debug_launch_mining_test()
-	print("Launchpad: debug mining test -> ", ok)
+	AppLogger.d("Launchpad: debug mining test -> %s" % ok)
 	if ok:
 		var tree = _launchpad.get_tree()
 		if tree:

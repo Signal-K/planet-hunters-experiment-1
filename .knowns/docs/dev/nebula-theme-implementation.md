@@ -1,7 +1,7 @@
 ---
 title: Nebula Theme Implementation
 createdAt: '2026-02-25T08:23:18.694Z'
-updatedAt: '2026-02-25T08:23:33.239Z'
+updatedAt: '2026-02-26T02:06:58.109Z'
 description: Complete UI/visual redesign with nebula space backgrounds and sci-fi styling
 spec: true
 tags:
@@ -101,3 +101,16 @@ Run any scene to see the new theme:
 - Asteroid Preview: Purple ambient lighting
 - Mining Scene: Orange desert with nebula sky
 - All UI: White-outlined panels and buttons
+
+
+## Shared UI Style Usage (2026-02-26)
+
+Use `PanelStyle.gd` as the default source for runtime-created UI visuals.
+
+- Use `PanelStyle.create_card_style()` or `create_list_item_style()` for `PanelContainer` cards instead of building `StyleBoxFlat` from scratch.
+- Use `PanelStyle` text tokens (`TEXT_PRIMARY`, `TEXT_MUTED`, `ACCENT`) for runtime label colors.
+- Use `PanelStyle.apply_progress_bar()` for progress bars.
+- Use `Logger.d`/`Logger.w` instead of `print()` in UI scripts.
+
+Intentional opt-outs are allowed for tutorial guidance overlays where stronger highlight affordance is required.
+When opting out, keep an inline comment in code that explains why shared defaults are not used.

@@ -1,0 +1,73 @@
+{
+  "taskId": "43ckab",
+  "currentVersion": 2,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "43ckab",
+      "version": 1,
+      "timestamp": "2026-02-26T02:01:42.591Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "Duplicate created during UI pass. Superseded by task-mp7lsn."
+        }
+      ],
+      "snapshot": {
+        "title": "Audit UI elements and generate compliance matrix",
+        "description": "Create a practical inventory of UI scenes/scripts and record compliance against Nebula principles and shared styling APIs.",
+        "status": "todo",
+        "priority": "high",
+        "labels": [
+          "ui",
+          "audit"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Inventory covers all UI scene/script files in scope"
+          },
+          {
+            "completed": false,
+            "text": "Each item has pass/fail + reason"
+          }
+        ],
+        "implementationNotes": "Duplicate created during UI pass. Superseded by task-mp7lsn."
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "43ckab",
+      "version": 2,
+      "timestamp": "2026-02-26T02:01:44.831Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Audit UI elements and generate compliance matrix",
+        "description": "Create a practical inventory of UI scenes/scripts and record compliance against Nebula principles and shared styling APIs.",
+        "status": "done",
+        "priority": "high",
+        "labels": [
+          "ui",
+          "audit"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Inventory covers all UI scene/script files in scope"
+          },
+          {
+            "completed": false,
+            "text": "Each item has pass/fail + reason"
+          }
+        ],
+        "implementationNotes": "Duplicate created during UI pass. Superseded by task-mp7lsn."
+      }
+    }
+  ]
+}
