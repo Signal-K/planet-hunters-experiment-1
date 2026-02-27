@@ -8,7 +8,7 @@ labels:
   - scanner
   - progression
 createdAt: '2026-02-17T04:57:18.007Z'
-updatedAt: '2026-02-17T05:10:46.109Z'
+updatedAt: '2026-02-25T08:45:01.999Z'
 timeSpent: 175
 assignee: '@me'
 parent: 4r0j05
@@ -39,5 +39,9 @@ Implemented scanner and target-source behavior from .knowns/assets/IMG_1754.jpeg
 - Satellite station list now reveals target details incrementally by scan count (tiered metadata visibility).
 - Existing M1/M2 expectations preserved: target source remains real targets regardless scan completion.
 - Validation: run_tutorial_tests.gd (2/2 pass), run_experience_tests.gd (19/19 pass).
+
+
+
+Spec Reference: @doc/specs/mission-system-specification (Scanner introduction M3)
 <!-- SECTION:NOTES:END -->
 

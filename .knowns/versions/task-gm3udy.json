@@ -1,0 +1,174 @@
+{
+  "taskId": "gm3udy",
+  "currentVersion": 6,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "gm3udy",
+      "version": 1,
+      "timestamp": "2026-02-27T05:49:21.810Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "Implemented a Godot-first analytics flow for web builds. Added a persistent in-game feedback beacon that emits feedback requests through the web bridge, a GameplayAnalytics helper that enriches events with mission/session context, and broader telemetry for scanner mode changes, target selection, launch start, preview open, mission returns, mining starts, repeated mining loops, stuck signals, collection progress, and debrief outcomes.\n\nWeb shell now bootstraps PostHog with the provided project token, forwards bridge events into PostHog captures, enables session recording config, preserves the existing first-mission survey flow, and adds a structured always-available feedback popup that logs rich context into PostHog instead of depending solely on an external survey.\n\nValidation: targeted ESLint passed for react-shell.js and web/public/app.js. Full yarn lint remains red due unrelated pre-existing repo issues in generated Godot web output and other files.\n\nReopened to fix Godot parse blockers: corrected SidescrollMining loop indentation, replaced Logger aliases with AppLogger in affected GDScript files for Godot 4.5 compatibility, and changed Earth environment resize notifications away from NOTIFICATION_RESIZED.\n\nAdded direct test harness scenes for web-shell analytics and surveys: scene/Scenes/Test/AnalyticsHarness.tscn emits feedback/survey/selection/launch events from buttons, and scene/Scenes/Test/MiningAnalyticsHarness.tscn boots SidescrollMining directly with easy/hard presets plus direct survey/feedback triggers. Both attach the floating FeedbackBeacon so popup testing works without the full game flow.",
+          "newValue": "Implemented a Godot-first analytics flow for web builds. Added a persistent in-game feedback beacon that emits feedback requests through the web bridge, a GameplayAnalytics helper that enriches events with mission/session context, and broader telemetry for scanner mode changes, target selection, launch start, preview open, mission returns, mining starts, repeated mining loops, stuck signals, collection progress, and debrief outcomes.\n\nWeb shell now bootstraps PostHog with the provided project token, forwards bridge events into PostHog captures, enables session recording config, preserves the existing first-mission survey flow, and adds a structured always-available feedback popup that logs rich context into PostHog instead of depending solely on an external survey.\n\nValidation: targeted ESLint passed for react-shell.js and web/public/app.js. Full yarn lint remains red due unrelated pre-existing repo issues in generated Godot web output and other files.\n\nReopened to fix Godot parse blockers: corrected SidescrollMining loop indentation, replaced Logger aliases with AppLogger in affected GDScript files for Godot 4.5 compatibility, and changed Earth environment resize notifications away from NOTIFICATION_RESIZED.\n\nAdded direct test harness scenes for web-shell analytics and surveys: scene/Scenes/Test/AnalyticsHarness.tscn emits feedback/survey/selection/launch events from buttons, and scene/Scenes/Test/MiningAnalyticsHarness.tscn boots SidescrollMining directly with easy/hard presets plus direct survey/feedback triggers. Both attach the floating FeedbackBeacon so popup testing works without the full game flow.\n\n✓ Fixed asteroid terrain cutoff by adding seamless loop TerrainContainer copy + synchronized mineral visual state across both terrain instances in SidescrollMining."
+        }
+      ],
+      "snapshot": {
+        "title": "Add posthog session replays",
+        "description": "Here's some info on posthog analytics using http requests: https://www.reddit.com/r/godot/comments/1jwe1yy/dont_forget_to_add_analytics_to_your_games/. There should be a simple survey/popup at all times for if users get stuck, at any point. Additionally, I want to track if users are favouring planets/asteroids, as well as determining how easy the mining minigame is (e.g. how many times do they have to \"repeat\" the scene [flying over the target] to collect the minerals, how many minerals (as a percentage) are they gathering, etc etc. Codex/AI - you have full reign over how this is done. It just needs to be set up so we can get accurate insights as to how our early users are playing this game and identifying what mechanics work and what doesn't - this way we're not 100% reliant on user surveys",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "posthog",
+          "analytics",
+          "feedback"
+        ],
+        "acceptanceCriteria": [],
+        "implementationPlan": "1. Add a proper PostHog web-shell client layer for experiment web builds, including session replay bootstrapping and safe event forwarding from the existing Godot bridge.\n2. Expand gameplay instrumentation across mission selection, target-type preference, mining loops, mining yield/efficiency, and mission debrief so we can answer planet-vs-asteroid preference and mining difficulty questions.\n3. Add an always-available in-game feedback entry point that opens a PostHog survey/modal with current session context when players feel stuck, instead of only prompting after one milestone.\n4. Keep the existing first-mission survey flow, but enrich it with better progress/session properties so survey responses and replay/event data line up.\n5. Add or update focused tests/docs/config so the analytics path is maintainable and doesn't silently regress.",
+        "implementationNotes": "Implemented a Godot-first analytics flow for web builds. Added a persistent in-game feedback beacon that emits feedback requests through the web bridge, a GameplayAnalytics helper that enriches events with mission/session context, and broader telemetry for scanner mode changes, target selection, launch start, preview open, mission returns, mining starts, repeated mining loops, stuck signals, collection progress, and debrief outcomes.\n\nWeb shell now bootstraps PostHog with the provided project token, forwards bridge events into PostHog captures, enables session recording config, preserves the existing first-mission survey flow, and adds a structured always-available feedback popup that logs rich context into PostHog instead of depending solely on an external survey.\n\nValidation: targeted ESLint passed for react-shell.js and web/public/app.js. Full yarn lint remains red due unrelated pre-existing repo issues in generated Godot web output and other files.\n\nReopened to fix Godot parse blockers: corrected SidescrollMining loop indentation, replaced Logger aliases with AppLogger in affected GDScript files for Godot 4.5 compatibility, and changed Earth environment resize notifications away from NOTIFICATION_RESIZED.\n\nAdded direct test harness scenes for web-shell analytics and surveys: scene/Scenes/Test/AnalyticsHarness.tscn emits feedback/survey/selection/launch events from buttons, and scene/Scenes/Test/MiningAnalyticsHarness.tscn boots SidescrollMining directly with easy/hard presets plus direct survey/feedback triggers. Both attach the floating FeedbackBeacon so popup testing works without the full game flow.\n\n✓ Fixed asteroid terrain cutoff by adding seamless loop TerrainContainer copy + synchronized mineral visual state across both terrain instances in SidescrollMining."
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "gm3udy",
+      "version": 2,
+      "timestamp": "2026-02-27T05:49:21.811Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Add posthog session replays",
+        "description": "Here's some info on posthog analytics using http requests: https://www.reddit.com/r/godot/comments/1jwe1yy/dont_forget_to_add_analytics_to_your_games/. There should be a simple survey/popup at all times for if users get stuck, at any point. Additionally, I want to track if users are favouring planets/asteroids, as well as determining how easy the mining minigame is (e.g. how many times do they have to \"repeat\" the scene [flying over the target] to collect the minerals, how many minerals (as a percentage) are they gathering, etc etc. Codex/AI - you have full reign over how this is done. It just needs to be set up so we can get accurate insights as to how our early users are playing this game and identifying what mechanics work and what doesn't - this way we're not 100% reliant on user surveys",
+        "status": "done",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "posthog",
+          "analytics",
+          "feedback"
+        ],
+        "acceptanceCriteria": [],
+        "implementationPlan": "1. Add a proper PostHog web-shell client layer for experiment web builds, including session replay bootstrapping and safe event forwarding from the existing Godot bridge.\n2. Expand gameplay instrumentation across mission selection, target-type preference, mining loops, mining yield/efficiency, and mission debrief so we can answer planet-vs-asteroid preference and mining difficulty questions.\n3. Add an always-available in-game feedback entry point that opens a PostHog survey/modal with current session context when players feel stuck, instead of only prompting after one milestone.\n4. Keep the existing first-mission survey flow, but enrich it with better progress/session properties so survey responses and replay/event data line up.\n5. Add or update focused tests/docs/config so the analytics path is maintainable and doesn't silently regress.",
+        "implementationNotes": "Implemented a Godot-first analytics flow for web builds. Added a persistent in-game feedback beacon that emits feedback requests through the web bridge, a GameplayAnalytics helper that enriches events with mission/session context, and broader telemetry for scanner mode changes, target selection, launch start, preview open, mission returns, mining starts, repeated mining loops, stuck signals, collection progress, and debrief outcomes.\n\nWeb shell now bootstraps PostHog with the provided project token, forwards bridge events into PostHog captures, enables session recording config, preserves the existing first-mission survey flow, and adds a structured always-available feedback popup that logs rich context into PostHog instead of depending solely on an external survey.\n\nValidation: targeted ESLint passed for react-shell.js and web/public/app.js. Full yarn lint remains red due unrelated pre-existing repo issues in generated Godot web output and other files.\n\nReopened to fix Godot parse blockers: corrected SidescrollMining loop indentation, replaced Logger aliases with AppLogger in affected GDScript files for Godot 4.5 compatibility, and changed Earth environment resize notifications away from NOTIFICATION_RESIZED.\n\nAdded direct test harness scenes for web-shell analytics and surveys: scene/Scenes/Test/AnalyticsHarness.tscn emits feedback/survey/selection/launch events from buttons, and scene/Scenes/Test/MiningAnalyticsHarness.tscn boots SidescrollMining directly with easy/hard presets plus direct survey/feedback triggers. Both attach the floating FeedbackBeacon so popup testing works without the full game flow."
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "gm3udy",
+      "version": 3,
+      "timestamp": "2026-02-27T05:53:58.066Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "done",
+          "newValue": "in-progress"
+        }
+      ],
+      "snapshot": {
+        "title": "Add posthog session replays",
+        "description": "Here's some info on posthog analytics using http requests: https://www.reddit.com/r/godot/comments/1jwe1yy/dont_forget_to_add_analytics_to_your_games/. There should be a simple survey/popup at all times for if users get stuck, at any point. Additionally, I want to track if users are favouring planets/asteroids, as well as determining how easy the mining minigame is (e.g. how many times do they have to \"repeat\" the scene [flying over the target] to collect the minerals, how many minerals (as a percentage) are they gathering, etc etc. Codex/AI - you have full reign over how this is done. It just needs to be set up so we can get accurate insights as to how our early users are playing this game and identifying what mechanics work and what doesn't - this way we're not 100% reliant on user surveys",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "posthog",
+          "analytics",
+          "feedback"
+        ],
+        "acceptanceCriteria": [],
+        "implementationPlan": "1. Add a proper PostHog web-shell client layer for experiment web builds, including session replay bootstrapping and safe event forwarding from the existing Godot bridge.\n2. Expand gameplay instrumentation across mission selection, target-type preference, mining loops, mining yield/efficiency, and mission debrief so we can answer planet-vs-asteroid preference and mining difficulty questions.\n3. Add an always-available in-game feedback entry point that opens a PostHog survey/modal with current session context when players feel stuck, instead of only prompting after one milestone.\n4. Keep the existing first-mission survey flow, but enrich it with better progress/session properties so survey responses and replay/event data line up.\n5. Add or update focused tests/docs/config so the analytics path is maintainable and doesn't silently regress.",
+        "implementationNotes": "Implemented a Godot-first analytics flow for web builds. Added a persistent in-game feedback beacon that emits feedback requests through the web bridge, a GameplayAnalytics helper that enriches events with mission/session context, and broader telemetry for scanner mode changes, target selection, launch start, preview open, mission returns, mining starts, repeated mining loops, stuck signals, collection progress, and debrief outcomes.\n\nWeb shell now bootstraps PostHog with the provided project token, forwards bridge events into PostHog captures, enables session recording config, preserves the existing first-mission survey flow, and adds a structured always-available feedback popup that logs rich context into PostHog instead of depending solely on an external survey.\n\nValidation: targeted ESLint passed for react-shell.js and web/public/app.js. Full yarn lint remains red due unrelated pre-existing repo issues in generated Godot web output and other files.\n\nReopened to fix Godot parse blockers: corrected SidescrollMining loop indentation, replaced Logger aliases with AppLogger in affected GDScript files for Godot 4.5 compatibility, and changed Earth environment resize notifications away from NOTIFICATION_RESIZED.\n\nAdded direct test harness scenes for web-shell analytics and surveys: scene/Scenes/Test/AnalyticsHarness.tscn emits feedback/survey/selection/launch events from buttons, and scene/Scenes/Test/MiningAnalyticsHarness.tscn boots SidescrollMining directly with easy/hard presets plus direct survey/feedback triggers. Both attach the floating FeedbackBeacon so popup testing works without the full game flow."
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "gm3udy",
+      "version": 4,
+      "timestamp": "2026-02-27T05:54:06.502Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "oldValue": "1. Add a proper PostHog web-shell client layer for experiment web builds, including session replay bootstrapping and safe event forwarding from the existing Godot bridge.\n2. Expand gameplay instrumentation across mission selection, target-type preference, mining loops, mining yield/efficiency, and mission debrief so we can answer planet-vs-asteroid preference and mining difficulty questions.\n3. Add an always-available in-game feedback entry point that opens a PostHog survey/modal with current session context when players feel stuck, instead of only prompting after one milestone.\n4. Keep the existing first-mission survey flow, but enrich it with better progress/session properties so survey responses and replay/event data line up.\n5. Add or update focused tests/docs/config so the analytics path is maintainable and doesn't silently regress.",
+          "newValue": "1. Make guide targeting use circular terrain distance so slowdown/\"Press D\" triggers at the nearest actual subsurface deposit (including around loop boundary).\n2. Prefer nearest relevant uncollected deposit for guide slowdown and drone target selection so prompt matches visible dark deposits.\n3. Auto-complete mining with fuel-depleted reason when fuel reaches zero so gameplay returns to Earth immediately."
+        }
+      ],
+      "snapshot": {
+        "title": "Add posthog session replays",
+        "description": "Here's some info on posthog analytics using http requests: https://www.reddit.com/r/godot/comments/1jwe1yy/dont_forget_to_add_analytics_to_your_games/. There should be a simple survey/popup at all times for if users get stuck, at any point. Additionally, I want to track if users are favouring planets/asteroids, as well as determining how easy the mining minigame is (e.g. how many times do they have to \"repeat\" the scene [flying over the target] to collect the minerals, how many minerals (as a percentage) are they gathering, etc etc. Codex/AI - you have full reign over how this is done. It just needs to be set up so we can get accurate insights as to how our early users are playing this game and identifying what mechanics work and what doesn't - this way we're not 100% reliant on user surveys",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "posthog",
+          "analytics",
+          "feedback"
+        ],
+        "acceptanceCriteria": [],
+        "implementationPlan": "1. Make guide targeting use circular terrain distance so slowdown/\"Press D\" triggers at the nearest actual subsurface deposit (including around loop boundary).\n2. Prefer nearest relevant uncollected deposit for guide slowdown and drone target selection so prompt matches visible dark deposits.\n3. Auto-complete mining with fuel-depleted reason when fuel reaches zero so gameplay returns to Earth immediately.",
+        "implementationNotes": "Implemented a Godot-first analytics flow for web builds. Added a persistent in-game feedback beacon that emits feedback requests through the web bridge, a GameplayAnalytics helper that enriches events with mission/session context, and broader telemetry for scanner mode changes, target selection, launch start, preview open, mission returns, mining starts, repeated mining loops, stuck signals, collection progress, and debrief outcomes.\n\nWeb shell now bootstraps PostHog with the provided project token, forwards bridge events into PostHog captures, enables session recording config, preserves the existing first-mission survey flow, and adds a structured always-available feedback popup that logs rich context into PostHog instead of depending solely on an external survey.\n\nValidation: targeted ESLint passed for react-shell.js and web/public/app.js. Full yarn lint remains red due unrelated pre-existing repo issues in generated Godot web output and other files.\n\nReopened to fix Godot parse blockers: corrected SidescrollMining loop indentation, replaced Logger aliases with AppLogger in affected GDScript files for Godot 4.5 compatibility, and changed Earth environment resize notifications away from NOTIFICATION_RESIZED.\n\nAdded direct test harness scenes for web-shell analytics and surveys: scene/Scenes/Test/AnalyticsHarness.tscn emits feedback/survey/selection/launch events from buttons, and scene/Scenes/Test/MiningAnalyticsHarness.tscn boots SidescrollMining directly with easy/hard presets plus direct survey/feedback triggers. Both attach the floating FeedbackBeacon so popup testing works without the full game flow."
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "gm3udy",
+      "version": 5,
+      "timestamp": "2026-02-27T05:56:40.157Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "Implemented a Godot-first analytics flow for web builds. Added a persistent in-game feedback beacon that emits feedback requests through the web bridge, a GameplayAnalytics helper that enriches events with mission/session context, and broader telemetry for scanner mode changes, target selection, launch start, preview open, mission returns, mining starts, repeated mining loops, stuck signals, collection progress, and debrief outcomes.\n\nWeb shell now bootstraps PostHog with the provided project token, forwards bridge events into PostHog captures, enables session recording config, preserves the existing first-mission survey flow, and adds a structured always-available feedback popup that logs rich context into PostHog instead of depending solely on an external survey.\n\nValidation: targeted ESLint passed for react-shell.js and web/public/app.js. Full yarn lint remains red due unrelated pre-existing repo issues in generated Godot web output and other files.\n\nReopened to fix Godot parse blockers: corrected SidescrollMining loop indentation, replaced Logger aliases with AppLogger in affected GDScript files for Godot 4.5 compatibility, and changed Earth environment resize notifications away from NOTIFICATION_RESIZED.\n\nAdded direct test harness scenes for web-shell analytics and surveys: scene/Scenes/Test/AnalyticsHarness.tscn emits feedback/survey/selection/launch events from buttons, and scene/Scenes/Test/MiningAnalyticsHarness.tscn boots SidescrollMining directly with easy/hard presets plus direct survey/feedback triggers. Both attach the floating FeedbackBeacon so popup testing works without the full game flow.",
+          "newValue": "Implemented a Godot-first analytics flow for web builds. Added a persistent in-game feedback beacon that emits feedback requests through the web bridge, a GameplayAnalytics helper that enriches events with mission/session context, and broader telemetry for scanner mode changes, target selection, launch start, preview open, mission returns, mining starts, repeated mining loops, stuck signals, collection progress, and debrief outcomes.\n\nWeb shell now bootstraps PostHog with the provided project token, forwards bridge events into PostHog captures, enables session recording config, preserves the existing first-mission survey flow, and adds a structured always-available feedback popup that logs rich context into PostHog instead of depending solely on an external survey.\n\nValidation: targeted ESLint passed for react-shell.js and web/public/app.js. Full yarn lint remains red due unrelated pre-existing repo issues in generated Godot web output and other files.\n\nReopened to fix Godot parse blockers: corrected SidescrollMining loop indentation, replaced Logger aliases with AppLogger in affected GDScript files for Godot 4.5 compatibility, and changed Earth environment resize notifications away from NOTIFICATION_RESIZED.\n\nAdded direct test harness scenes for web-shell analytics and surveys: scene/Scenes/Test/AnalyticsHarness.tscn emits feedback/survey/selection/launch events from buttons, and scene/Scenes/Test/MiningAnalyticsHarness.tscn boots SidescrollMining directly with easy/hard presets plus direct survey/feedback triggers. Both attach the floating FeedbackBeacon so popup testing works without the full game flow.\n\n✓ Guide slowdown/drone targeting now selects nearest relevant uncollected deposit using circular terrain distance; fuel depletion now auto-completes mining with fuel_depleted return."
+        }
+      ],
+      "snapshot": {
+        "title": "Add posthog session replays",
+        "description": "Here's some info on posthog analytics using http requests: https://www.reddit.com/r/godot/comments/1jwe1yy/dont_forget_to_add_analytics_to_your_games/. There should be a simple survey/popup at all times for if users get stuck, at any point. Additionally, I want to track if users are favouring planets/asteroids, as well as determining how easy the mining minigame is (e.g. how many times do they have to \"repeat\" the scene [flying over the target] to collect the minerals, how many minerals (as a percentage) are they gathering, etc etc. Codex/AI - you have full reign over how this is done. It just needs to be set up so we can get accurate insights as to how our early users are playing this game and identifying what mechanics work and what doesn't - this way we're not 100% reliant on user surveys",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "posthog",
+          "analytics",
+          "feedback"
+        ],
+        "acceptanceCriteria": [],
+        "implementationPlan": "1. Make guide targeting use circular terrain distance so slowdown/\"Press D\" triggers at the nearest actual subsurface deposit (including around loop boundary).\n2. Prefer nearest relevant uncollected deposit for guide slowdown and drone target selection so prompt matches visible dark deposits.\n3. Auto-complete mining with fuel-depleted reason when fuel reaches zero so gameplay returns to Earth immediately.",
+        "implementationNotes": "Implemented a Godot-first analytics flow for web builds. Added a persistent in-game feedback beacon that emits feedback requests through the web bridge, a GameplayAnalytics helper that enriches events with mission/session context, and broader telemetry for scanner mode changes, target selection, launch start, preview open, mission returns, mining starts, repeated mining loops, stuck signals, collection progress, and debrief outcomes.\n\nWeb shell now bootstraps PostHog with the provided project token, forwards bridge events into PostHog captures, enables session recording config, preserves the existing first-mission survey flow, and adds a structured always-available feedback popup that logs rich context into PostHog instead of depending solely on an external survey.\n\nValidation: targeted ESLint passed for react-shell.js and web/public/app.js. Full yarn lint remains red due unrelated pre-existing repo issues in generated Godot web output and other files.\n\nReopened to fix Godot parse blockers: corrected SidescrollMining loop indentation, replaced Logger aliases with AppLogger in affected GDScript files for Godot 4.5 compatibility, and changed Earth environment resize notifications away from NOTIFICATION_RESIZED.\n\nAdded direct test harness scenes for web-shell analytics and surveys: scene/Scenes/Test/AnalyticsHarness.tscn emits feedback/survey/selection/launch events from buttons, and scene/Scenes/Test/MiningAnalyticsHarness.tscn boots SidescrollMining directly with easy/hard presets plus direct survey/feedback triggers. Both attach the floating FeedbackBeacon so popup testing works without the full game flow.\n\n✓ Guide slowdown/drone targeting now selects nearest relevant uncollected deposit using circular terrain distance; fuel depletion now auto-completes mining with fuel_depleted return."
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "gm3udy",
+      "version": 6,
+      "timestamp": "2026-02-27T05:56:40.172Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Add posthog session replays",
+        "description": "Here's some info on posthog analytics using http requests: https://www.reddit.com/r/godot/comments/1jwe1yy/dont_forget_to_add_analytics_to_your_games/. There should be a simple survey/popup at all times for if users get stuck, at any point. Additionally, I want to track if users are favouring planets/asteroids, as well as determining how easy the mining minigame is (e.g. how many times do they have to \"repeat\" the scene [flying over the target] to collect the minerals, how many minerals (as a percentage) are they gathering, etc etc. Codex/AI - you have full reign over how this is done. It just needs to be set up so we can get accurate insights as to how our early users are playing this game and identifying what mechanics work and what doesn't - this way we're not 100% reliant on user surveys",
+        "status": "done",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "posthog",
+          "analytics",
+          "feedback"
+        ],
+        "acceptanceCriteria": [],
+        "implementationPlan": "1. Make guide targeting use circular terrain distance so slowdown/\"Press D\" triggers at the nearest actual subsurface deposit (including around loop boundary).\n2. Prefer nearest relevant uncollected deposit for guide slowdown and drone target selection so prompt matches visible dark deposits.\n3. Auto-complete mining with fuel-depleted reason when fuel reaches zero so gameplay returns to Earth immediately.",
+        "implementationNotes": "Implemented a Godot-first analytics flow for web builds. Added a persistent in-game feedback beacon that emits feedback requests through the web bridge, a GameplayAnalytics helper that enriches events with mission/session context, and broader telemetry for scanner mode changes, target selection, launch start, preview open, mission returns, mining starts, repeated mining loops, stuck signals, collection progress, and debrief outcomes.\n\nWeb shell now bootstraps PostHog with the provided project token, forwards bridge events into PostHog captures, enables session recording config, preserves the existing first-mission survey flow, and adds a structured always-available feedback popup that logs rich context into PostHog instead of depending solely on an external survey.\n\nValidation: targeted ESLint passed for react-shell.js and web/public/app.js. Full yarn lint remains red due unrelated pre-existing repo issues in generated Godot web output and other files.\n\nReopened to fix Godot parse blockers: corrected SidescrollMining loop indentation, replaced Logger aliases with AppLogger in affected GDScript files for Godot 4.5 compatibility, and changed Earth environment resize notifications away from NOTIFICATION_RESIZED.\n\nAdded direct test harness scenes for web-shell analytics and surveys: scene/Scenes/Test/AnalyticsHarness.tscn emits feedback/survey/selection/launch events from buttons, and scene/Scenes/Test/MiningAnalyticsHarness.tscn boots SidescrollMining directly with easy/hard presets plus direct survey/feedback triggers. Both attach the floating FeedbackBeacon so popup testing works without the full game flow."
+      }
+    }
+  ]
+}

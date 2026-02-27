@@ -9,7 +9,7 @@ labels:
   - ui
   - progression
 createdAt: '2026-02-17T05:48:46.589Z'
-updatedAt: '2026-02-17T06:35:29.139Z'
+updatedAt: '2026-02-25T08:45:02.217Z'
 timeSpent: 1163
 assignee: '@me'
 parent: 4r0j05
@@ -59,5 +59,9 @@ Sequential progression overhaul from feedback: mission completion now uses expli
 Correction: sequential progression now keyed by mission_progress_completed state field (previous note had shell interpolation issue due backticks).
 
 Follow-up fixes from overlap/progression feedback: RocketSelector dialog lifecycle hardened to avoid freed dialog_text crash and busy add_child errors (dialogs attached deferred to stable host). Launchpad selector now gates Mission Target list until a rocket is awaiting launch, removing selector overlap pressure and keeping no-scroll flow. ControlStationPanel orbit list now includes rockets awaiting launch and in-flight launches with target labels. LaunchpadScene hides TutorialPanel while mission guidance overlay is active to prevent instruction overlap. Added progression safety test: starting a mission does not increment completed progression. Full test run completed across all headless runners: tutorial, sync, annotation model, experience, supabase, mining, visual quality, mission log (all passing).
+
+
+
+Spec Reference: @doc/specs/mission-system-specification (Mission roadmap)
 <!-- SECTION:NOTES:END -->
 

@@ -1,0 +1,235 @@
+{
+  "taskId": "gjx9td",
+  "currentVersion": 5,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "gjx9td",
+      "version": 1,
+      "timestamp": "2026-02-27T05:57:40.573Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Refactor oversized GDScript files into reusable components",
+        "description": "Split large gameplay/UI scripts into focused helper components to improve maintainability and reduce regression risk while preserving behavior.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "refactor",
+          "gdscript",
+          "architecture"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Sidescroll mining logic is split into dedicated components with existing behavior preserved"
+          },
+          {
+            "completed": false,
+            "text": "At least one additional oversized UI script is split into dedicated components"
+          },
+          {
+            "completed": false,
+            "text": "Project scripts parse with no new GDScript errors introduced"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "gjx9td",
+      "version": 2,
+      "timestamp": "2026-02-27T05:58:15.797Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "newValue": "1. Extract SidescrollMining region math + nearest-target selection into a helper script and keep SidescrollMining as orchestrator.\n2. Extract SidescrollMining mineral visual sync (primary/loop terrain state) into a helper script.\n3. Extract TutorialCoachOverlay target-finding/rect utilities + action-hint mapping into a helper script, keeping overlay UI wiring in place.\n4. Update call sites and run static parse checks (via script inspection + Godot invocation if available) to ensure no new errors."
+        }
+      ],
+      "snapshot": {
+        "title": "Refactor oversized GDScript files into reusable components",
+        "description": "Split large gameplay/UI scripts into focused helper components to improve maintainability and reduce regression risk while preserving behavior.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "refactor",
+          "gdscript",
+          "architecture"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Sidescroll mining logic is split into dedicated components with existing behavior preserved"
+          },
+          {
+            "completed": false,
+            "text": "At least one additional oversized UI script is split into dedicated components"
+          },
+          {
+            "completed": false,
+            "text": "Project scripts parse with no new GDScript errors introduced"
+          }
+        ],
+        "implementationPlan": "1. Extract SidescrollMining region math + nearest-target selection into a helper script and keep SidescrollMining as orchestrator.\n2. Extract SidescrollMining mineral visual sync (primary/loop terrain state) into a helper script.\n3. Extract TutorialCoachOverlay target-finding/rect utilities + action-hint mapping into a helper script, keeping overlay UI wiring in place.\n4. Update call sites and run static parse checks (via script inspection + Godot invocation if available) to ensure no new errors."
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "gjx9td",
+      "version": 3,
+      "timestamp": "2026-02-27T06:01:23.527Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Sidescroll mining logic is split into dedicated components with existing behavior preserved"
+            },
+            {
+              "completed": false,
+              "text": "At least one additional oversized UI script is split into dedicated components"
+            },
+            {
+              "completed": false,
+              "text": "Project scripts parse with no new GDScript errors introduced"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": false,
+              "text": "Sidescroll mining logic is split into dedicated components with existing behavior preserved"
+            },
+            {
+              "completed": true,
+              "text": "At least one additional oversized UI script is split into dedicated components"
+            },
+            {
+              "completed": false,
+              "text": "Project scripts parse with no new GDScript errors introduced"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Refactor oversized GDScript files into reusable components",
+        "description": "Split large gameplay/UI scripts into focused helper components to improve maintainability and reduce regression risk while preserving behavior.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "refactor",
+          "gdscript",
+          "architecture"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Sidescroll mining logic is split into dedicated components with existing behavior preserved"
+          },
+          {
+            "completed": true,
+            "text": "At least one additional oversized UI script is split into dedicated components"
+          },
+          {
+            "completed": false,
+            "text": "Project scripts parse with no new GDScript errors introduced"
+          }
+        ],
+        "implementationPlan": "1. Extract SidescrollMining region math + nearest-target selection into a helper script and keep SidescrollMining as orchestrator.\n2. Extract SidescrollMining mineral visual sync (primary/loop terrain state) into a helper script.\n3. Extract TutorialCoachOverlay target-finding/rect utilities + action-hint mapping into a helper script, keeping overlay UI wiring in place.\n4. Update call sites and run static parse checks (via script inspection + Godot invocation if available) to ensure no new errors."
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "gjx9td",
+      "version": 4,
+      "timestamp": "2026-02-27T06:01:56.434Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "✓ Split SidescrollMining into RegionMath + VisualSync helpers and split TutorialCoachOverlay targeting/hint logic into TutorialCoachTargeting. SidescrollMining now 864 lines (from 927) and TutorialCoachOverlay now 341 (from 490)."
+        }
+      ],
+      "snapshot": {
+        "title": "Refactor oversized GDScript files into reusable components",
+        "description": "Split large gameplay/UI scripts into focused helper components to improve maintainability and reduce regression risk while preserving behavior.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "refactor",
+          "gdscript",
+          "architecture"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Sidescroll mining logic is split into dedicated components with existing behavior preserved"
+          },
+          {
+            "completed": true,
+            "text": "At least one additional oversized UI script is split into dedicated components"
+          },
+          {
+            "completed": false,
+            "text": "Project scripts parse with no new GDScript errors introduced"
+          }
+        ],
+        "implementationPlan": "1. Extract SidescrollMining region math + nearest-target selection into a helper script and keep SidescrollMining as orchestrator.\n2. Extract SidescrollMining mineral visual sync (primary/loop terrain state) into a helper script.\n3. Extract TutorialCoachOverlay target-finding/rect utilities + action-hint mapping into a helper script, keeping overlay UI wiring in place.\n4. Update call sites and run static parse checks (via script inspection + Godot invocation if available) to ensure no new errors.",
+        "implementationNotes": "✓ Split SidescrollMining into RegionMath + VisualSync helpers and split TutorialCoachOverlay targeting/hint logic into TutorialCoachTargeting. SidescrollMining now 864 lines (from 927) and TutorialCoachOverlay now 341 (from 490)."
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "gjx9td",
+      "version": 5,
+      "timestamp": "2026-02-27T06:01:56.457Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "✓ Split SidescrollMining into RegionMath + VisualSync helpers and split TutorialCoachOverlay targeting/hint logic into TutorialCoachTargeting. SidescrollMining now 864 lines (from 927) and TutorialCoachOverlay now 341 (from 490).",
+          "newValue": "⚠ Godot headless parse check still blocked by existing RotatedFileLogger crash on this machine; AC #3 pending in-editor verification."
+        }
+      ],
+      "snapshot": {
+        "title": "Refactor oversized GDScript files into reusable components",
+        "description": "Split large gameplay/UI scripts into focused helper components to improve maintainability and reduce regression risk while preserving behavior.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "refactor",
+          "gdscript",
+          "architecture"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Sidescroll mining logic is split into dedicated components with existing behavior preserved"
+          },
+          {
+            "completed": true,
+            "text": "At least one additional oversized UI script is split into dedicated components"
+          },
+          {
+            "completed": false,
+            "text": "Project scripts parse with no new GDScript errors introduced"
+          }
+        ],
+        "implementationPlan": "1. Extract SidescrollMining region math + nearest-target selection into a helper script and keep SidescrollMining as orchestrator.\n2. Extract SidescrollMining mineral visual sync (primary/loop terrain state) into a helper script.\n3. Extract TutorialCoachOverlay target-finding/rect utilities + action-hint mapping into a helper script, keeping overlay UI wiring in place.\n4. Update call sites and run static parse checks (via script inspection + Godot invocation if available) to ensure no new errors.",
+        "implementationNotes": "⚠ Godot headless parse check still blocked by existing RotatedFileLogger crash on this machine; AC #3 pending in-editor verification."
+      }
+    }
+  ]
+}

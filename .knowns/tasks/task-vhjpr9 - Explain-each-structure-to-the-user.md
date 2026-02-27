@@ -7,7 +7,7 @@ labels:
   - Tutorial
   - Structures
 createdAt: '2026-01-20T01:58:33.899Z'
-updatedAt: '2026-02-13T01:40:24.351Z'
+updatedAt: '2026-02-25T08:45:18.729Z'
 timeSpent: 0
 assignee: '@me'
 parent: 5zp87f
@@ -48,5 +48,9 @@ Can probably get AI to augment this :)
 ✓ Fixed disappearance by instancing TutorialPanel in Launchpad scene. ✓ Also instanced TutorialPanel in AsteroidPreview and MissionDebrief for uninterrupted guidance. ✓ Reduced on-card text to a single instruction line and added responsive card width/font sizing for smaller screens.
 
 ✓ Added TutorialPanel instance to transition preview scenes: rocket_transit and rocket_return (fixes missing tutorial in en-route/mining preview flow).
+
+
+
+Spec Reference: @doc/specs/mission-system-specification (Tutorial system)
 <!-- SECTION:NOTES:END -->
 

@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3 uid="uid://bl5h6pq4ns86t"]
+[gd_scene load_steps=19 format=3 uid="uid://bl5h6pq4ns86t"]
 
 [ext_resource type="Texture2D" uid="uid://bni1814mlo7mv" path="res://assets/Backdrops/Earth1.png" id="0"]
 [ext_resource type="Script" uid="uid://eoqjev5txcu5" path="res://Scenes/Earth/earth_base_1.gd" id="1"]
@@ -8,11 +8,19 @@
 [ext_resource type="Texture2D" uid="uid://ctuf1c3mi4pat" path="res://assets/Structures/launchpad.png" id="5"]
 [ext_resource type="Script" uid="uid://dys0ofbnycpy0" path="res://Scripts/Earth/ControlStation.gd" id="6"]
 [ext_resource type="Texture2D" uid="uid://bhjh4wo2yo046" path="res://assets/Structures/ControlStation.png" id="7"]
-[ext_resource type="PackedScene" uid="uid://d1wd35tge78pt" path="res://Scenes/UI/TutorialPanel.tscn" id="9"]
-[ext_resource type="PackedScene" path="res://Scenes/UI/TutorialHintArea.tscn" id="13"]
+[ext_resource type="Script" path="res://Scripts/Earth/Environment/EarthWeatherEngine.gd" id="8"]
+[ext_resource type="Script" path="res://Scripts/Earth/Environment/EarthSkyNightFilterEvent.gd" id="9"]
+[ext_resource type="Script" path="res://Scripts/Earth/Environment/EarthStarFieldEvent.gd" id="10"]
+[ext_resource type="Script" path="res://Scripts/Earth/Environment/EarthCloudDriftEvent.gd" id="11"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_control"]
 size = Vector2(200, 200)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_satellite"]
+size = Vector2(300, 220)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_launchpad"]
+size = Vector2(300, 200)
 
 [sub_resource type="StyleBoxFlat" id="10"]
 content_margin_left = 16.0
@@ -68,10 +76,6 @@ script = ExtResource("1")
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(960, 480)
 
-[node name="TutorialPanel" parent="." instance=ExtResource("9")]
-
-[node name="TutorialHintArea" parent="." instance=ExtResource("13")]
-
 [node name="BackgroundLayer" type="CanvasLayer" parent="."]
 layer = 0
 
@@ -85,6 +89,16 @@ position = Vector2(2880, 440)
 scale = Vector2(1.9010351, 1.9)
 texture = ExtResource("0")
 
+[node name="SkyNightFilterEvent" type="Node" parent="BackgroundLayer"]
+script = ExtResource("9")
+backdrop_paths = Array[NodePath]([NodePath("../BackgroundSprite"), NodePath("../BackgroundSprite2")])
+
+[node name="StarFieldEvent" type="Node2D" parent="BackgroundLayer"]
+script = ExtResource("10")
+
+[node name="CloudDriftEvent" type="Node2D" parent="BackgroundLayer"]
+script = ExtResource("11")
+
 [node name="StructuresLayer" type="CanvasLayer" parent="."]
 
 [node name="SatelliteStation" type="Node2D" parent="StructuresLayer"]
@@ -96,6 +110,13 @@ position = Vector2(-321.00003, 23.999979)
 scale = Vector2(0.90555567, 0.9602942)
 texture = ExtResource("2")
 
+[node name="InteractionArea" type="Area2D" parent="StructuresLayer/SatelliteStation"]
+position = Vector2(-321.00003, 23.999979)
+input_pickable = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StructuresLayer/SatelliteStation/InteractionArea"]
+shape = SubResource("RectangleShape2D_satellite")
+
 [node name="Launchpad" type="Node2D" parent="StructuresLayer"]
 position = Vector2(1100, 800)
 script = ExtResource("4")
@@ -104,6 +125,13 @@ script = ExtResource("4")
 position = Vector2(-303.00003, -12.000015)
 scale = Vector2(0.37747392, 0.40156248)
 texture = ExtResource("5")
+
+[node name="InteractionArea" type="Area2D" parent="StructuresLayer/Launchpad"]
+position = Vector2(-303.00003, -12.000015)
+input_pickable = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StructuresLayer/Launchpad/InteractionArea"]
+shape = SubResource("RectangleShape2D_launchpad")
 
 [node name="ControlStation" type="Node2D" parent="StructuresLayer"]
 position = Vector2(1600, 800)
@@ -115,6 +143,7 @@ scale = Vector2(0.5, 0.5)
 texture = ExtResource("7")
 
 [node name="InteractionArea" type="Area2D" parent="StructuresLayer/ControlStation"]
+input_pickable = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="StructuresLayer/ControlStation/InteractionArea"]
 shape = SubResource("RectangleShape2D_control")
@@ -221,3 +250,6 @@ theme_override_styles/pressed = SubResource("12")
 theme_override_styles/hover = SubResource("11")
 theme_override_styles/focus = SubResource("11")
 text = "New Mission"
+
+[node name="EnvironmentEngine" type="Node" parent="."]
+script = ExtResource("8")

@@ -1,6 +1,6 @@
 {
   "taskId": "6wikfp",
-  "currentVersion": 6,
+  "currentVersion": 7,
   "versions": [
     {
       "id": "v1",
@@ -276,6 +276,47 @@
           }
         ],
         "implementationNotes": "Created working minigame at scene/mining_test.tscn - Click MINE button, hold SPACE to mine colored minerals as they scroll by"
+      }
+    },
+    {
+      "id": "v7",
+      "taskId": "6wikfp",
+      "version": 7,
+      "timestamp": "2026-02-25T08:45:16.467Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "Created working minigame at scene/mining_test.tscn - Click MINE button, hold SPACE to mine colored minerals as they scroll by",
+          "newValue": "Created working minigame at scene/mining_test.tscn - Click MINE button, hold SPACE to mine colored minerals as they scroll by\n\n\n\nSpec Reference: @doc/specs/mining-minigame-system-specification"
+        }
+      ],
+      "snapshot": {
+        "title": "Build actual working mining minigame",
+        "description": "Now that buttons work, build the real side-scrolling mining game",
+        "status": "done",
+        "priority": "high",
+        "labels": [
+          "mining"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Minigame scene created"
+          },
+          {
+            "completed": true,
+            "text": "Scrolling terrain works"
+          },
+          {
+            "completed": true,
+            "text": "Mining works"
+          },
+          {
+            "completed": true,
+            "text": "Integrates with game"
+          }
+        ],
+        "implementationNotes": "Created working minigame at scene/mining_test.tscn - Click MINE button, hold SPACE to mine colored minerals as they scroll by\n\n\n\nSpec Reference: @doc/specs/mining-minigame-system-specification"
       }
     }
   ]

@@ -9,8 +9,6 @@ const RocketSelectorUIBuilder = preload("res://Scripts/Earth/RocketSelectorUIBui
 const RocketSelectorDragHelper = preload("res://Scripts/Earth/RocketSelectorDragHelper.gd")
 const STARTERROCKET1_LAUNCHPAD_POS := Vector2(-110.0, -178.0)
 
-const ACTION_CREATE_ROCKET := "create_rocket"
-const HINT_CREATE_ROCKET := "Buy a rocket here before you select a target and launch."
 
 var ui_position: Vector2 = Vector2(80, 160)
 var ui_size: Vector2 = Vector2(720, 360)
@@ -147,8 +145,21 @@ func _on_purchase_confirmed() -> void:
 		return
 	var spawn_ok = _spawn_rocket(_pending_rocket_id)
 	if spawn_ok:
-		_show_tutorial_hint_once(ACTION_CREATE_ROCKET, HINT_CREATE_ROCKET)
+		preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("create_rocket", {
+			"rocket_id": _pending_rocket_id
+		})
 		_modify_balance(-_pending_purchase_cost)
+		_creation_locked = true
+		_set_create_buttons_disabled(true)
+		visible = false
+		var root = get_tree().current_scene
+		if root:
+			var launchpad = root.get_node_or_null("StructuresLayer/Launchpad")
+			if launchpad:
+				if launchpad.has_method("_show_selector_panel"):
+					launchpad._show_selector_panel()
+				if launchpad.has_method("_populate_targets"):
+					launchpad._populate_targets()
 	else:
 		_show_info("Rocket could not be created.")
 	_pending_rocket_id = ""
@@ -212,8 +223,6 @@ func _effective_purchase_cost(rocket_id: String) -> int:
 		return RocketSpecs.get_cost(rocket_id)
 	return int(rm.get_mission5_purchase_cost(rocket_id))
 
-func _show_tutorial_hint_once(action_key: String, message: String) -> void:
-	preload("res://Scripts/Utils/AppControllerHelper.gd").show_tutorial_hint_once(action_key, message)
 
 func _format_francs(value: int) -> String:
 	var abs_value = abs(value)

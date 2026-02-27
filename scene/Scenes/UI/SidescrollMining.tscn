@@ -1,6 +1,7 @@
 [gd_scene load_steps=8 format=3 uid="uid://bvx8m3qp4nwc"]
 
-[ext_resource type="Script" path="res://Scripts/UI/SidescrollMining.gd" id="1"]
+[ext_resource type="Script" uid="uid://duab3b5ak0b7w" path="res://Scripts/UI/SidescrollMining.gd" id="1"]
+[ext_resource type="PackedScene" uid="uid://c8yv3qbxmh7wd" path="res://Scenes/UI/MiningDrone.tscn" id="2"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1"]
 bg_color = Color(0.15, 0.2, 0.3, 0.9)
@@ -506,6 +507,16 @@ visible = false
 offset_right = 4.0
 offset_bottom = 4.0
 
+[node name="DronePool" type="Node2D" parent="."]
+
+[node name="Drone1" parent="DronePool" instance=ExtResource("2")]
+visible = false
+
+[node name="Drone2" parent="DronePool" instance=ExtResource("2")]
+visible = false
+
+[node name="Drone3" parent="DronePool" instance=ExtResource("2")]
+visible = false
 
 [node name="UI" type="Control" parent="."]
 layout_mode = 1
@@ -554,7 +565,6 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0, 0, 0, 1)
 theme_override_styles/background = SubResource("StyleBoxFlat_2")
 theme_override_styles/fill = SubResource("StyleBoxFlat_3")
-max_value = 100.0
 value = 100.0
 show_percentage = false
 
@@ -580,7 +590,6 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0, 0, 0, 1)
 theme_override_styles/background = SubResource("StyleBoxFlat_2")
 theme_override_styles/fill = SubResource("StyleBoxFlat_4")
-max_value = 100.0
 show_percentage = false
 
 [node name="DronePanel" type="PanelContainer" parent="UI/TopBar/LeftGauges"]
@@ -621,7 +630,6 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0, 0, 0, 1)
 theme_override_styles/background = SubResource("StyleBoxFlat_2")
 theme_override_styles/fill = SubResource("StyleBoxFlat_5")
-max_value = 100.0
 value = 100.0
 show_percentage = false
 

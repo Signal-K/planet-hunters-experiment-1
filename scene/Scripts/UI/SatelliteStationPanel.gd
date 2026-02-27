@@ -1,5 +1,7 @@
 extends Control
 
+const GameplayAnalytics = preload("res://Scripts/Systems/GameplayAnalytics.gd")
+
 signal panel_closed
 
 const INITIAL_LOAD_TIME := 3.0  # seconds for initial load
@@ -15,10 +17,6 @@ const UNLOCK_LEVEL2_SEEN_KEY := "level2_overlay_seen"
 const LEVEL_UNLOCK_MISSIONS := [
 	{"level": 3, "name": "Sell cargo on Earth"}
 ]
-const ACTION_SCAN_TARGETS := "scan_targets"
-const HINT_SCAN_TARGETS := "Scan space first to find targets for your missions."
-const ACTION_SELECT_TARGET := "select_launch_target"
-const HINT_SELECT_TARGET := "Target locked. Heading to Launchpad."
 const LAUNCHPAD_SCENE_PATH := "res://Scenes/Earth/earth_launchpad.tscn"
 
 const SatelliteStationPanelData = preload("res://Scripts/UI/SatelliteStationPanelData.gd")
@@ -27,11 +25,11 @@ const SatelliteStationPanelDetail = preload("res://Scripts/UI/SatelliteStationPa
 const SatelliteStationPanelLoading = preload("res://Scripts/UI/SatelliteStationPanelLoading.gd")
 const Level2UnlockOverlayScene = preload("res://Scenes/UI/Templates/SatelliteLevel2UnlockOverlay.tscn")
 const UnlockItemScene = preload("res://Scenes/UI/Templates/MenuUnlockItem.tscn")
+const AppLogger = preload("res://Scripts/Utils/Logger.gd")
 
 var pending_anomalies := []
 var current_mode: String = "asteroids"  # Default mode
 var local_only: bool = false
-var use_archived_detail: bool = false
 var _player_level: int = 1
 var _unlock_overlay: ColorRect = null
 var _data := SatelliteStationPanelData.new()
@@ -65,7 +63,6 @@ func _ready():
 		title_label,
 		close_button
 	)
-	_detail.set_use_archived_detail(use_archived_detail)
 	_detail.apply_panel_style()
 	_apply_panel_style()
 
@@ -109,12 +106,12 @@ func _ready():
 		return
 
 	# Default behavior: fetch anomalies from Supabase
-	print("SatelliteStationPanel: calling _fetch_anomalies() — starting fetch")
+	AppLogger.d("SatelliteStationPanel: calling _fetch_anomalies() - starting fetch")
 	var sup = preload("res://Scripts/Systems/SupabaseClient.gd").get_instance()
 	if sup:
-		print("SatelliteStationPanel: Supabase URL -> ", sup.SUPABASE_URL)
+		AppLogger.d("SatelliteStationPanel: Supabase URL -> %s" % sup.SUPABASE_URL)
 	else:
-		print("SatelliteStationPanel: SupabaseClient instance not available")
+		AppLogger.w("SatelliteStationPanel: SupabaseClient instance not available")
 
 	_fetch_anomalies()
 
@@ -132,7 +129,7 @@ func _apply_panel_style() -> void:
 	panel_style.apply_progress_bar($PanelContainer/Panel/VBoxContainer/ContentContainer/LoadingContainer/ProgressBar)
 
 func _start_loading(duration: float):
-	print("SatelliteStationPanel: _start_loading duration=", duration)
+	AppLogger.d("SatelliteStationPanel: _start_loading duration=%s" % duration)
 	_loading.start_loading(duration)
 	# Start processing so _process will run to animate progress
 	set_process(true)
@@ -144,10 +141,16 @@ func _on_loading_finished() -> void:
 		pending_anomalies = _build_local_anomalies()
 		var fallback_type = "planets" if current_mode == "planets" else "asteroids"
 		status_label.text = "Status: Using offline %s" % fallback_type
-		# Keep tutorial flow consistent even when scan data is from offline fallback.
-		_show_tutorial_hint_once(ACTION_SCAN_TARGETS, HINT_SCAN_TARGETS)
 		_award_scan_experience()
 	pending_anomalies = _filter_mission3_untargeted_anomalies(pending_anomalies)
+	preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("scan_targets", {
+		"mode": current_mode,
+		"count": pending_anomalies.size()
+	})
+	GameplayAnalytics.emit_event("scanner_scan_completed", {
+		"scanner_mode": current_mode,
+		"detected_count": pending_anomalies.size()
+	})
 
 	_persist_detected_targets_and_record_scan(pending_anomalies)
 
@@ -158,7 +161,7 @@ func _on_loading_finished() -> void:
 	set_process(false)
 
 func _fetch_anomalies():
-	print("SatelliteStationPanel: _fetch_anomalies called, mode=", current_mode)
+	AppLogger.d("SatelliteStationPanel: _fetch_anomalies called, mode=%s" % current_mode)
 	var supabase = SupabaseClient.get_instance()
 	var anomaly_set = PLANET_SET if current_mode == "planets" else ASTEROID_SET
 	supabase.fetch_anomalies(anomaly_set, MAX_ANOMALIES, _on_anomalies_fetched)
@@ -166,16 +169,15 @@ func _fetch_anomalies():
 
 func _on_anomalies_fetched(data: Array, error: String):
 	# Debug logging for callback
-	print("SatelliteStationPanel: _on_anomalies_fetched called — error='" + str(error) + "', count=" + str(data.size()))
+	AppLogger.d("SatelliteStationPanel: _on_anomalies_fetched called - error='%s', count=%s" % [str(error), data.size()])
 	if error != "":
-		print("SatelliteStationPanel: Error fetching anomalies: ", error)
+		AppLogger.w("SatelliteStationPanel: Error fetching anomalies: %s" % error)
 		# Keep gameplay moving in web builds even if remote fetch fails.
 		# Fallback to deterministic local anomalies so scan always produces targets.
 		pending_anomalies = _build_local_anomalies()
 		var fallback_type = "planets" if current_mode == "planets" else "asteroids"
 		status_label.text = "Status: Using offline %s (%s)" % [fallback_type, error.left(80)]
 		_loading.mark_anomalies_ready()
-		_show_tutorial_hint_once(ACTION_SCAN_TARGETS, HINT_SCAN_TARGETS)
 		_award_scan_experience()
 		return
 
@@ -184,7 +186,6 @@ func _on_anomalies_fetched(data: Array, error: String):
 	var target_type = "planets" if current_mode == "planets" else "asteroids"
 	status_label.text = "Status: %d %s detected" % [data.size(), target_type]
 	_loading.mark_anomalies_ready()
-	_show_tutorial_hint_once(ACTION_SCAN_TARGETS, HINT_SCAN_TARGETS)
 	_award_scan_experience()
 
 	# Persist target data in _on_loading_finished once loading completes.
@@ -210,22 +211,28 @@ func _select_target_and_launch(bound_anomaly: Dictionary, index: int, btn: Butto
 	var target_id = _data.normalize_anomaly_id(bound_anomaly, index)
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	if not rm:
-		print("SatelliteStationPanel: RocketsManager not available")
+		AppLogger.w("SatelliteStationPanel: RocketsManager not available")
 		status_label.text = "Status: Unable to select target"
 		return
 	var target_type = "planet" if current_mode == "planets" else "asteroid"
 	rm.register_target_interaction(target_id, target_type)
 	var ok = rm.select_target(target_id)
 	if ok:
+		GameplayAnalytics.emit_target_selected(target_id, target_type, "scanner_station", {
+			"target_index": index
+		})
+		preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("select_launch_target", {
+			"target_id": target_id,
+			"source": "scanner"
+		})
 		status_label.text = "Target selected: %s" % target_id
-		print("SatelliteStationPanel: target selected:", target_id)
+		AppLogger.d("SatelliteStationPanel: target selected: %s" % target_id)
 		if btn:
 			btn.text = "Target Selected"
 			btn.disabled = true
-		_show_tutorial_hint_once(ACTION_SELECT_TARGET, HINT_SELECT_TARGET)
 		_change_to_launchpad_scene()
 	else:
-		print("SatelliteStationPanel: failed to persist selected target:", target_id)
+		AppLogger.w("SatelliteStationPanel: failed to persist selected target: %s" % target_id)
 		status_label.text = "Status: Failed to select target"
 
 func _change_to_launchpad_scene() -> void:
@@ -248,8 +255,6 @@ func _award_scan_experience() -> void:
 	if app_controller and app_controller.has_method("award_scan_experience"):
 		app_controller.award_scan_experience()
 
-func _show_tutorial_hint_once(action_key: String, message: String) -> void:
-	preload("res://Scripts/Utils/AppControllerHelper.gd").show_tutorial_hint_once(action_key, message)
 
 func _on_refresh_pressed():
 	_start_loading(REFRESH_LOAD_TIME)
@@ -265,6 +270,10 @@ func _on_toggle_switch_pressed():
 		return
 	if current_mode == "asteroids":
 		current_mode = "planets"
+		GameplayAnalytics.emit_event("scanner_mode_toggled", {
+			"scanner_mode": "planets"
+		})
+		preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("toggle_planet_scanner")
 		toggle_switch.text = "Switch to Asteroids"
 		if local_only:
 			_start_loading(REFRESH_LOAD_TIME)
@@ -275,6 +284,9 @@ func _on_toggle_switch_pressed():
 		_fetch_anomalies()
 	else:
 		current_mode = "asteroids"
+		GameplayAnalytics.emit_event("scanner_mode_toggled", {
+			"scanner_mode": "asteroids"
+		})
 		toggle_switch.text = "Switch to Planets"
 		if local_only:
 			_start_loading(REFRESH_LOAD_TIME)
@@ -308,7 +320,7 @@ func _persist_detected_targets_and_record_scan(anomalies: Array) -> void:
 		return
 	var ok = rm.set_detected_targets(targets)
 	rm.record_scan_pass(targets)
-	print("SatelliteStationPanel: persisted detected_targets count=", targets.size(), " ok=", ok)
+	AppLogger.d("SatelliteStationPanel: persisted detected_targets count=%s ok=%s" % [targets.size(), ok])
 
 func _build_local_anomalies() -> Array:
 	if current_mode == "planets":

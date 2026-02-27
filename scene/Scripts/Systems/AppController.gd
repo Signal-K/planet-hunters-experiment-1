@@ -4,16 +4,12 @@ extends Node
 ## Handles counter synchronization and window management
 signal window_status_update(message: String)
 signal counter_updated(new_value: int)
-signal tutorial_completed_updated(is_completed: bool)
-signal tutorial_hint_requested(message: String)
-signal tutorial_progress_updated(current_step: int, total_steps: int, action_key: String)
 signal franc_balance_updated(new_value: int)
 signal experience_updated(xp: int, level: int)
 signal rockets_reset()
+signal tutorial_state_updated(state: Dictionary)
 
 var counter: int = 0
-var tutorial_completed: bool = false
-var tutorial_actions_seen: Dictionary = {}
 var franc_balance: int = 10000000000
 var experience_xp: int = 0
 var experience_level: int = 1
@@ -24,85 +20,115 @@ var _menu_request_version: int = 0
 var _menu_request_action: String = ""
 const AppControllerPersistence = preload("res://Scripts/Systems/AppControllerPersistence.gd")
 const WebEventBridge = preload("res://Scripts/Systems/WebEventBridge.gd")
+const AppLogger = preload("res://Scripts/Utils/Logger.gd")
 var _persistence := AppControllerPersistence.new()
 const BASE_XP_TO_LEVEL := 10
 const XP_AWARD_LAUNCH := 5
 const XP_AWARD_SCAN := 2
-const TUTORIAL_FLOW_VERSION := 5
-const TUTORIAL_FLOW_VERSION_KEY := "__tutorial_flow_version"
-const TUTORIAL_FLOW_INDEX_KEY := "__tutorial_flow_index"
-const TUTORIAL_SEQUENCE := [
-	"create_rocket",
-	"launch_rocket_from_earth",
-	"mine_target",
-	"return_rocket_home",
-	"resolve_mission_debrief",
-	"build_scanner_station",
-	"scan_targets",
-	"select_launch_target"
-]
+const MISSION_PROGRESS_TRACKER_SCENE := preload("res://Scenes/UI/MissionProgressTracker.tscn")
+const TUTORIAL_CONTROLLER_SCENE := preload("res://Scripts/Tutorial/TutorialController.gd")
+const TUTORIAL_OVERLAY_SCENE := preload("res://Scenes/UI/TutorialCoachOverlay.tscn")
+const FEEDBACK_BEACON_SCENE := preload("res://Scenes/UI/FeedbackBeacon.tscn")
+var _tutorial_controller: Node = null
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	print("AppController ready, counter initialized to: ", counter)
-	print("AppController ready, tutorial_completed initialized to: ", tutorial_completed)
-	# Load persisted tutorial state from disk (if present)
-	load_tutorial_completed()
-	load_tutorial_actions_seen()
+	AppLogger.d("AppController ready, counter initialized to: %s" % counter)
 	# Load persisted franc balance from disk (if present)
 	load_franc_balance()
 	# Load persisted experience from disk (if present)
 	load_experience()
+	_ensure_mission_progress_tracker()
+	_ensure_tutorial_runtime()
+	_ensure_feedback_beacon()
 	WebEventBridge.emit("app_ready", {
-		"tutorial_completed": tutorial_completed,
 		"experience_level": experience_level,
 		"experience_xp": experience_xp,
 		"franc_balance": franc_balance
 	})
 
+func _ensure_tutorial_runtime() -> void:
+	if get_tree() == null or get_tree().root == null:
+		return
+	var root = get_tree().root
+	_tutorial_controller = root.get_node_or_null("TutorialController")
+	if _tutorial_controller == null:
+		_tutorial_controller = TUTORIAL_CONTROLLER_SCENE.new()
+		_tutorial_controller.name = "TutorialController"
+		root.call_deferred("add_child", _tutorial_controller)
+	if _tutorial_controller and _tutorial_controller.has_signal("tutorial_state_updated"):
+		_tutorial_controller.tutorial_state_updated.connect(_on_tutorial_state_updated)
+	var overlay = root.get_node_or_null("TutorialCoachOverlay")
+	if overlay == null:
+		var overlay_instance = TUTORIAL_OVERLAY_SCENE.instantiate()
+		if overlay_instance:
+			overlay_instance.name = "TutorialCoachOverlay"
+			root.call_deferred("add_child", overlay_instance)
+
+func _ensure_mission_progress_tracker() -> void:
+	if get_tree() == null or get_tree().root == null:
+		return
+	var existing = get_tree().root.get_node_or_null("MissionProgressTracker")
+	if existing:
+		return
+	var tracker = MISSION_PROGRESS_TRACKER_SCENE.instantiate()
+	if tracker:
+		tracker.name = "MissionProgressTracker"
+		get_tree().root.call_deferred("add_child", tracker)
+
+func _ensure_feedback_beacon() -> void:
+	if get_tree() == null or get_tree().root == null:
+		return
+	var existing = get_tree().root.get_node_or_null("FeedbackBeacon")
+	if existing:
+		return
+	var beacon = FEEDBACK_BEACON_SCENE.instantiate()
+	if beacon:
+		beacon.name = "FeedbackBeacon"
+		get_tree().root.call_deferred("add_child", beacon)
+
 func set_counter_from_react(value: int) -> void:
 	"""Set counter value from React Native"""
-	print("[AppController] set_counter_from_react CALLED with value: ", value)
+	AppLogger.d("[AppController] set_counter_from_react CALLED with value: %s" % value)
 	counter = value
 	counter_updated.emit(counter)
-	# Update any open menu panels
 	if current_menu_panel and current_menu_panel.has_method("set_counter"):
 		current_menu_panel.set_counter(counter)
-		print("[AppController] Updated open menu panel with counter: ", counter)
-	print("[AppController] Counter now set to: ", counter)
+		AppLogger.d("[AppController] Updated open menu panel with counter: %s" % counter)
+	AppLogger.d("[AppController] Counter now set to: %s" % counter)
 
 func get_counter() -> int:
 	"""Get current counter value"""
-	print("[AppController] get_counter() called, returning: ", counter)
+	AppLogger.d("[AppController] get_counter() called, returning: %s" % counter)
 	return counter
 
 func open_window(window_name: String) -> void:
 	"""Open a window/panel"""
-	print("Opening window: ", window_name)
+	AppLogger.d("Opening window: %s" % window_name)
 	match window_name:
 		"menu", "main_menu":
 			show_menu_panel()
 		_:
-			print("Unknown window: ", window_name)
-	
+			AppLogger.w("Unknown window: %s" % window_name)
+
 	window_status_update.emit("Opened " + window_name)
 
 func close_window(window_name: String) -> void:
 	"""Close a window/panel"""
-	print("Closing window: ", window_name)
-	
+	AppLogger.d("Closing window: %s" % window_name)
+
 	match window_name:
 		"menu", "main_menu":
 			hide_menu_panel()
 		_:
-			print("Unknown window: ", window_name)
-	
+			AppLogger.w("Unknown window: %s" % window_name)
+
 	window_status_update.emit("Closed " + window_name)
 
 func set_game_paused(paused: bool) -> void:
 	_game_paused = paused
 	get_tree().paused = paused
-	print("[AppController] Game paused set to: ", paused)
+	AppLogger.d("[AppController] Game paused set to: %s" % paused)
 
 func get_game_paused() -> bool:
 	return _game_paused
@@ -126,38 +152,37 @@ func get_menu_request_action() -> String:
 func show_menu_panel() -> void:
 	"""Show the main menu panel with counter"""
 	if current_menu_panel:
-		return  # Already showing
-	
+		return
+
 	current_menu_panel = menu_panel_scene.instantiate()
 	get_tree().root.add_child(current_menu_panel)
-	
-	# Set initial counter value
+
 	if current_menu_panel.has_method("set_counter"):
 		current_menu_panel.set_counter(counter)
-	
-	# Connect signals
+
 	if current_menu_panel.has_signal("panel_closed"):
 		current_menu_panel.panel_closed.connect(_on_menu_panel_closed)
-	
+
 	if current_menu_panel.has_signal("counter_changed"):
 		current_menu_panel.counter_changed.connect(_on_counter_changed)
 
-	# Connect reset_all signal
 	if current_menu_panel.has_signal("reset_all"):
 		current_menu_panel.reset_all.connect(_on_reset_all)
-	
-	# Connect reset_tutorial signal
-	if current_menu_panel.has_signal("reset_tutorial"):
-		current_menu_panel.reset_tutorial.connect(_on_reset_tutorial)
-	
-	print("Menu panel shown with counter: ", counter)
+	if current_menu_panel.has_signal("skip_tutorial_requested"):
+		current_menu_panel.skip_tutorial_requested.connect(skip_tutorial)
+	if current_menu_panel.has_signal("replay_mission_tutorial_requested"):
+		current_menu_panel.replay_mission_tutorial_requested.connect(replay_tutorial_for_current_mission)
+	if current_menu_panel.has_signal("replay_all_tutorial_requested"):
+		current_menu_panel.replay_all_tutorial_requested.connect(replay_tutorial_from_mission1)
+
+	AppLogger.d("Menu panel shown with counter: %s" % counter)
 
 func hide_menu_panel() -> void:
 	"""Hide the main menu panel"""
 	if current_menu_panel:
 		current_menu_panel.queue_free()
 		current_menu_panel = null
-		print("Menu panel hidden")
+		AppLogger.d("Menu panel hidden")
 
 func _on_menu_panel_closed() -> void:
 	"""Handle menu panel being closed"""
@@ -168,199 +193,41 @@ func _on_counter_changed(new_value: int) -> void:
 	"""Handle counter being changed in Godot UI"""
 	counter = new_value
 	counter_updated.emit(counter)
-	
-	# Here you would typically sync back to React Native
-	# For now, just log it
-	print("Counter changed in Godot UI: ", counter)
+	AppLogger.d("Counter changed in Godot UI: %s" % counter)
 
 func _on_reset_all() -> void:
 	"""Handle reset all action from menu panel"""
-	print("Reset all requested from Godot UI")
-	# Reset all state
+	AppLogger.d("Reset all requested from Godot UI")
 	counter = 0
-	tutorial_completed = false
-	tutorial_actions_seen = {}
 	franc_balance = 10000000000
 	experience_xp = 0
 	experience_level = 1
 	if current_menu_panel and current_menu_panel.has_method("set_counter"):
 		current_menu_panel.set_counter(counter)
-	# Emit signals to notify React Native
 	counter_updated.emit(counter)
-	tutorial_completed_updated.emit(tutorial_completed)
-	tutorial_progress_updated.emit(0, TUTORIAL_SEQUENCE.size(), "")
-
-	# Persist tutorial reset
-	save_tutorial_completed()
-	save_tutorial_actions_seen()
 	save_franc_balance()
 	save_experience()
 	DirAccess.remove_absolute("user://rocket_unlock_popups.cfg")
 	franc_balance_updated.emit(franc_balance)
 	_emit_experience_updated()
-	# Reset rockets persisted state and notify any in-scene systems to clear rockets
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	if rm:
-		# RocketsManager.reset_state is a static function, call directly
 		rm.reset_state()
-		print("RocketsManager: persisted rockets state reset")
+		AppLogger.d("RocketsManager: persisted rockets state reset")
+	if _tutorial_controller and _tutorial_controller.has_method("reset_all"):
+		_tutorial_controller.reset_all()
 	rockets_reset.emit()
-	print("All state reset in Godot. Signals emitted to notify React Native.")
-
-func _on_reset_tutorial() -> void:
-	print("Reset tutorial requested from Godot UI")
-	tutorial_completed = false
-	tutorial_actions_seen = {}
-	tutorial_completed_updated.emit(tutorial_completed)
-	tutorial_progress_updated.emit(0, TUTORIAL_SEQUENCE.size(), "")
-	# TODO: Notify React Native to reset tutorial state as well
-	print("Tutorial state reset in Godot. Notify React Native to do the same.")
-
-	# Persist reset
-	save_tutorial_completed()
-	save_tutorial_actions_seen()
+	AppLogger.d("All state reset in Godot. Signals emitted to notify React Native.")
 
 func has_signal_connections(signal_name: String) -> bool:
 	"""Check if signal has connections (for React Native compatibility)"""
 	return get_signal_connection_list(signal_name).size() > 0
 
-func set_tutorial_completed_from_react(is_completed: bool) -> void:
-	"""Set tutorial completed status from React Native"""
-	# Update in-memory state, notify listeners and persist
-	tutorial_completed = is_completed
-	print("[AppController] Tutorial completed set from React Native to: ", tutorial_completed)
-	tutorial_completed_updated.emit(tutorial_completed)
-	_emit_tutorial_progress("")
-
-	# Persist the new value so reloads remember the choice
-	save_tutorial_completed()
-
-func get_tutorial_completed() -> bool:
-	"""Get tutorial completed status"""
-	return tutorial_completed
-
-func save_tutorial_actions_seen() -> void:
-	_persistence.save_tutorial_actions_seen(tutorial_actions_seen)
-
-func load_tutorial_actions_seen() -> void:
-	tutorial_actions_seen = _persistence.load_tutorial_actions_seen()
-	_migrate_tutorial_flow_state_if_needed()
-	_emit_tutorial_progress("")
-
-func clear_tutorial_actions_seen() -> void:
-	tutorial_actions_seen = {}
-	save_tutorial_actions_seen()
-	_emit_tutorial_progress("")
-
-func has_seen_tutorial_action(action_key: String) -> bool:
-	if action_key == "":
-		return true
-	return bool(tutorial_actions_seen.get(action_key, false))
-
-func mark_tutorial_action_seen(action_key: String) -> bool:
-	if action_key == "":
-		return false
-	if has_seen_tutorial_action(action_key):
-		return false
-	tutorial_actions_seen[action_key] = true
-	save_tutorial_actions_seen()
-	return true
-
-func show_tutorial_hint_once(action_key: String, message: String) -> bool:
-	if action_key == "" or message == "":
-		return false
-	if tutorial_completed:
-		return false
-	var action_index = TUTORIAL_SEQUENCE.find(action_key)
-	var is_first_time = false
-	if action_index == -1:
-		is_first_time = mark_tutorial_action_seen(action_key)
-	else:
-		var expected = int(tutorial_actions_seen.get(TUTORIAL_FLOW_INDEX_KEY, 0))
-		if action_index != expected:
-			return false
-		is_first_time = mark_tutorial_action_seen(action_key)
-	if is_first_time:
-		if action_index != -1:
-			tutorial_actions_seen[TUTORIAL_FLOW_INDEX_KEY] = action_index + 1
-		save_tutorial_actions_seen()
-		_emit_tutorial_progress(action_key)
-		var progress = get_tutorial_progress()
-		WebEventBridge.emit("tutorial_action_completed", {
-			"action_key": action_key,
-			"current_step": int(progress.get("current_step", 0)),
-			"total_steps": int(progress.get("total_steps", TUTORIAL_SEQUENCE.size())),
-			"is_completed": bool(progress.get("is_completed", false))
-		})
-		tutorial_hint_requested.emit(message)
-		_complete_tutorial_if_finished()
-	return is_first_time
-
-func get_tutorial_steps() -> Array:
-	return TUTORIAL_SEQUENCE.duplicate()
-
-func get_tutorial_progress() -> Dictionary:
-	var total_steps = TUTORIAL_SEQUENCE.size()
-	var current_step = int(tutorial_actions_seen.get(TUTORIAL_FLOW_INDEX_KEY, 0))
-	return {
-		"current_step": clamp(current_step, 0, total_steps),
-		"total_steps": total_steps,
-		"is_completed": tutorial_completed
-	}
-
-func _migrate_tutorial_flow_state_if_needed() -> void:
-	var version = int(tutorial_actions_seen.get(TUTORIAL_FLOW_VERSION_KEY, 0))
-	if version >= TUTORIAL_FLOW_VERSION:
-		if not tutorial_actions_seen.has(TUTORIAL_FLOW_INDEX_KEY):
-			tutorial_actions_seen[TUTORIAL_FLOW_INDEX_KEY] = 0
-			save_tutorial_actions_seen()
-		return
-	tutorial_actions_seen = {
-		TUTORIAL_FLOW_VERSION_KEY: TUTORIAL_FLOW_VERSION,
-		TUTORIAL_FLOW_INDEX_KEY: 0
-	}
-	save_tutorial_actions_seen()
-
-func _emit_tutorial_progress(action_key: String) -> void:
-	var progress = get_tutorial_progress()
-	tutorial_progress_updated.emit(
-		int(progress.get("current_step", 0)),
-		int(progress.get("total_steps", TUTORIAL_SEQUENCE.size())),
-		action_key
-	)
-
-func _complete_tutorial_if_finished() -> void:
-	var progress = get_tutorial_progress()
-	var current_step = int(progress.get("current_step", 0))
-	var total_steps = int(progress.get("total_steps", TUTORIAL_SEQUENCE.size()))
-	if current_step < total_steps:
-		return
-	if tutorial_completed:
-		return
-	tutorial_completed = true
-	tutorial_completed_updated.emit(true)
-	save_tutorial_completed()
-	WebEventBridge.emit("tutorial_completed", {
-		"total_steps": TUTORIAL_SEQUENCE.size()
-	})
-
-
-### Persistence helpers
-func save_tutorial_completed() -> void:
-	_persistence.save_tutorial_completed(tutorial_completed)
-
-func load_tutorial_completed() -> void:
-	var result = _persistence.load_tutorial_completed(tutorial_completed)
-	if result.get("loaded", false):
-		tutorial_completed = result.get("value", tutorial_completed)
-		# notify any listeners so UI updates immediately
-		tutorial_completed_updated.emit(tutorial_completed)
-
 func set_franc_balance_from_react(value: int) -> void:
 	"""Set franc balance from React Native"""
 	franc_balance = value
 	franc_balance_updated.emit(franc_balance)
-	print("[AppController] Franc balance set from React Native: ", franc_balance)
+	AppLogger.d("[AppController] Franc balance set from React Native: %s" % franc_balance)
 	save_franc_balance()
 
 func add_franc_balance(amount: int, source: String = "") -> void:
@@ -370,7 +237,7 @@ func add_franc_balance(amount: int, source: String = "") -> void:
 	franc_balance_updated.emit(franc_balance)
 	save_franc_balance()
 	if source != "":
-		print("[AppController] Franc balance change from ", source, ": ", amount, " (balance=", franc_balance, ")")
+		AppLogger.d("[AppController] Franc balance change from %s: %s (balance=%s)" % [source, amount, franc_balance])
 
 func get_franc_balance() -> int:
 	"""Get franc balance"""
@@ -399,7 +266,7 @@ func add_experience(amount: int, source: String = "") -> void:
 	_emit_experience_updated()
 	save_experience()
 	if source != "":
-		print("[AppController] Experience gained from ", source, ": +", amount, " (xp=", experience_xp, " level=", experience_level, ")")
+		AppLogger.d("[AppController] Experience gained from %s: +%s (xp=%s level=%s)" % [source, amount, experience_xp, experience_level])
 
 func award_launch_experience() -> void:
 	add_experience(XP_AWARD_LAUNCH, "launch")
@@ -454,3 +321,33 @@ func _unlock_rockets_for_level(level: int) -> void:
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	if rm:
 		rm.unlock_for_level(level)
+
+func record_tutorial_action(action_key: String, metadata: Dictionary = {}) -> bool:
+	if _tutorial_controller and _tutorial_controller.has_method("record_action"):
+		return bool(_tutorial_controller.record_action(action_key, metadata))
+	return false
+
+func has_seen_guide_action(action_key: String) -> bool:
+	if _tutorial_controller and _tutorial_controller.has_method("has_seen_tutorial_action"):
+		return bool(_tutorial_controller.has_seen_tutorial_action(action_key))
+	return false
+
+func get_tutorial_state() -> Dictionary:
+	if _tutorial_controller and _tutorial_controller.has_method("get_tutorial_state"):
+		return _tutorial_controller.get_tutorial_state()
+	return {}
+
+func skip_tutorial() -> void:
+	if _tutorial_controller and _tutorial_controller.has_method("skip_all"):
+		_tutorial_controller.skip_all()
+
+func replay_tutorial_for_current_mission() -> void:
+	if _tutorial_controller and _tutorial_controller.has_method("replay_current_mission"):
+		_tutorial_controller.replay_current_mission()
+
+func replay_tutorial_from_mission1() -> void:
+	if _tutorial_controller and _tutorial_controller.has_method("replay_full"):
+		_tutorial_controller.replay_full()
+
+func _on_tutorial_state_updated(state: Dictionary) -> void:
+	tutorial_state_updated.emit(state)

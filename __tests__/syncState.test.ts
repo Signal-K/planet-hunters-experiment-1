@@ -71,7 +71,6 @@ describe("syncState", () => {
       
       expect(state).toEqual({
         counter: 0,
-        tutorialCompleted: false,
         francBalance: 10000000000,
         experienceXp: 0,
         experienceLevel: 1,
@@ -81,7 +80,6 @@ describe("syncState", () => {
     it("loads persisted state from storage", async () => {
       const stored: SyncState = {
         counter: 42,
-        tutorialCompleted: true,
         francBalance: 5000,
         experienceXp: 100,
         experienceLevel: 3,
@@ -92,7 +90,6 @@ describe("syncState", () => {
       const state = await load();
 
       expect(state.counter).toBe(42);
-      expect(state.tutorialCompleted).toBe(true);
       expect(state.francBalance).toBe(5000);
       expect(state.experienceXp).toBe(100);
       expect(state.experienceLevel).toBe(3);
@@ -101,7 +98,6 @@ describe("syncState", () => {
     it("migrates from v1 state format", async () => {
       const v1State = {
         counter: 10,
-        tutorialCompleted: false,
         francBalance: 99999,
         experienceXp: 50,
         experienceLevel: 2,
@@ -145,12 +141,11 @@ describe("syncState", () => {
       sub((state: SyncState, event: any) => {
         if (event) events.push(event);
       });
-
-      await update("tutorialCompleted", true);
+      await update("counter", 9);
 
       expect(events).toHaveLength(1);
-      expect(events[0].key).toBe("tutorialCompleted");
-      expect(events[0].value).toBe(true);
+      expect(events[0].key).toBe("counter");
+      expect(events[0].value).toBe(9);
       expect(events[0].source).toBe("react");
     });
   });
@@ -180,13 +175,11 @@ describe("syncState", () => {
 
       await update({
         counter: 5,
-        tutorialCompleted: true,
         francBalance: 999,
       });
 
       const state = get();
       expect(state.counter).toBe(5);
-      expect(state.tutorialCompleted).toBe(true);
       expect(state.francBalance).toBe(999);
     });
   });

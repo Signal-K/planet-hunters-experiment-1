@@ -38,7 +38,6 @@
       "question": "What should we fix first before a wider release?",
       "choices": [
         "UI clarity",
-        "Tutorial and onboarding",
         "Performance",
         "Mission pacing",
         "Reward balance",

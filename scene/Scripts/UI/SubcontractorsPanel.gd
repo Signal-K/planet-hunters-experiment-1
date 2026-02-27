@@ -45,21 +45,12 @@ func _build_list() -> void:
 		card.add_theme_constant_override("content_margin_top", 12)
 		card.add_theme_constant_override("content_margin_bottom", 12)
 
-		var style = StyleBoxFlat.new()
+		var style = panel_style.create_card_style()
 		if is_available:
-			style.bg_color = Color(0.168627, 0.188235, 0.231373, 0.96)
-			style.border_color = Color(0.533, 0.753, 0.816, 0.7)
+			style.border_color = Color(panel_style.ACCENT.r, panel_style.ACCENT.g, panel_style.ACCENT.b, 0.7)
 		else:
-			style.bg_color = Color(0.133333, 0.152941, 0.180392, 0.94)
-			style.border_color = Color(0.263, 0.298, 0.369, 1.0)
-		style.border_width_left = 1
-		style.border_width_right = 1
-		style.border_width_top = 1
-		style.border_width_bottom = 1
-		style.corner_radius_top_left = 12
-		style.corner_radius_top_right = 12
-		style.corner_radius_bottom_left = 12
-		style.corner_radius_bottom_right = 12
+			style.bg_color = Color(panel_style.PANEL_BG.r, panel_style.PANEL_BG.g, panel_style.PANEL_BG.b, 0.94)
+			style.border_color = panel_style.PANEL_BORDER
 		card.add_theme_stylebox_override("panel", style)
 
 		var row: VBoxContainer = card.get_node("Row")
@@ -70,12 +61,12 @@ func _build_list() -> void:
 			display_name = "Classified Subcontractor"
 		name_lbl.text = display_name
 		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		name_lbl.add_theme_color_override("font_color", Color(0.847, 0.871, 0.914, 1))
+		name_lbl.add_theme_color_override("font_color", panel_style.TEXT_PRIMARY)
 		name_lbl.add_theme_font_size_override("font_size", 20)
 		var level_lbl: Label = card.get_node("Row/Header/LevelLabel")
 		level_lbl.text = "Lvl %s" % str(unlock_level)
 		level_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		level_lbl.add_theme_color_override("font_color", Color(0.533, 0.753, 0.816, 1))
+		level_lbl.add_theme_color_override("font_color", panel_style.ACCENT)
 		level_lbl.add_theme_font_size_override("font_size", 16)
 
 		var role_lbl: Label = card.get_node("Row/RoleLabel")
@@ -83,13 +74,13 @@ func _build_list() -> void:
 			role_lbl.text = str(entry.get("role", ""))
 		else:
 			role_lbl.text = "Locked until level %s" % str(unlock_level)
-		role_lbl.add_theme_color_override("font_color", Color(0.639, 0.694, 0.784, 1))
+		role_lbl.add_theme_color_override("font_color", panel_style.TEXT_MUTED)
 		role_lbl.add_theme_font_size_override("font_size", 15)
 
 		var affinity = int(sm.get_affinity(str(entry.get("id", ""))))
 		var affinity_row: HBoxContainer = card.get_node("Row/AffinityRow")
 		var affinity_lbl: Label = card.get_node("Row/AffinityRow/AffinityLabel")
-		affinity_lbl.add_theme_color_override("font_color", Color(0.639, 0.694, 0.784, 1))
+		affinity_lbl.add_theme_color_override("font_color", panel_style.TEXT_MUTED)
 		affinity_lbl.add_theme_font_size_override("font_size", 13)
 		var bar: ProgressBar = card.get_node("Row/AffinityRow/AffinityBar")
 		bar.max_value = 100
@@ -98,7 +89,7 @@ func _build_list() -> void:
 		panel_style.apply_progress_bar(bar)
 		var val_lbl: Label = card.get_node("Row/AffinityRow/AffinityValueLabel")
 		val_lbl.text = "%s/100" % str(affinity)
-		val_lbl.add_theme_color_override("font_color", Color(0.639, 0.694, 0.784, 1))
+		val_lbl.add_theme_color_override("font_color", panel_style.TEXT_MUTED)
 		val_lbl.add_theme_font_size_override("font_size", 13)
 		list.add_child(card)
 

@@ -22,6 +22,7 @@ config/icon="res://icon.svg"
 AppController="*res://Scripts/Systems/AppController.gd"
 SyncBridge="*res://Scripts/Systems/SyncBridge.gd"
 SafeAreaUI="*res://Scripts/UI/SafeAreaUI.gd"
+UIConsistencyEnforcer="*res://Scripts/UI/UIConsistencyEnforcer.gd"
 
 [display]
 

@@ -6,7 +6,9 @@ extends Control
 signal panel_closed
 signal counter_changed(new_value: int)
 signal reset_all
-signal reset_tutorial
+signal skip_tutorial_requested
+signal replay_mission_tutorial_requested
+signal replay_all_tutorial_requested
 
 const UnlockHeaderScene = preload("res://Scenes/UI/Templates/MenuUnlockHeader.tscn")
 const UnlockItemScene = preload("res://Scenes/UI/Templates/MenuUnlockItem.tscn")
@@ -14,6 +16,8 @@ const LogbookEmptyScene = preload("res://Scenes/UI/Templates/MenuLogbookEmpty.ts
 const LogbookCardScene = preload("res://Scenes/UI/Templates/MenuLogbookCard.tscn")
 const LogbookSectionHeaderScene = preload("res://Scenes/UI/Templates/MenuLogbookSectionHeader.tscn")
 const LogbookKeyValueRowScene = preload("res://Scenes/UI/Templates/MenuLogbookKeyValueRow.tscn")
+const MiningPracticePanelScene = preload("res://Scenes/UI/MiningPracticePanel.tscn")
+const AppLogger = preload("res://Scripts/Utils/Logger.gd")
 
 @onready var counter_label: Label = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/CounterCard/CounterContainer/CounterLabel
 @onready var decrease_btn: Button = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/CounterCard/CounterContainer/ButtonsContainer/DecreaseButton
@@ -21,7 +25,10 @@ const LogbookKeyValueRowScene = preload("res://Scenes/UI/Templates/MenuLogbookKe
 @onready var close_btn: Button = $PanelContainer/Panel/VBoxContainer/HeaderContainer/HeaderBackground/HeaderContent/CloseButton
 @onready var logbook_btn: Button = $PanelContainer/Panel/VBoxContainer/HeaderContainer/HeaderBackground/HeaderContent/LogbookButton
 @onready var reset_btn: Button = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/ResetButton
-@onready var reset_tutorial_btn: Button = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/ResetTutorialButton
+@onready var practice_mining_btn: Button = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/PracticeMiningButton
+@onready var skip_tutorial_btn: Button = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/SkipTutorialButton
+@onready var replay_mission_tutorial_btn: Button = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/ReplayMissionTutorialButton
+@onready var replay_all_tutorial_btn: Button = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/ReplayAllTutorialButton
 @onready var progress_title: Label = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/ProgressCard/ProgressContainer/ProgressTitle
 @onready var level_label: Label = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/ProgressCard/ProgressContainer/LevelRow/LevelLabel
 @onready var xp_label: Label = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/ProgressCard/ProgressContainer/LevelRow/XpLabel
@@ -29,6 +36,7 @@ const LogbookKeyValueRowScene = preload("res://Scenes/UI/Templates/MenuLogbookKe
 @onready var next_level_label: Label = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/ProgressCard/ProgressContainer/NextLevelLabel
 @onready var unlocks_title: Label = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/ProgressCard/ProgressContainer/UnlocksTitle
 @onready var unlocks_list: VBoxContainer = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/ProgressCard/ProgressContainer/UnlocksList
+@onready var info_label: Label = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/InfoLabel
 @onready var logbook_overlay: ColorRect = $LogbookOverlay
 @onready var logbook_close_btn: Button = $LogbookOverlay/LogbookPanelContainer/LogbookPanel/VBoxContainer/Header/CloseLogbookButton
 @onready var logbook_title: Label = $LogbookOverlay/LogbookPanelContainer/LogbookPanel/VBoxContainer/Header/Title
@@ -50,20 +58,24 @@ func _ready() -> void:
 	decrease_btn.pressed.connect(_on_decrease_button_pressed)
 	increase_btn.pressed.connect(_on_increase_button_pressed)
 	reset_btn.pressed.connect(_on_reset_button_pressed)
-	reset_tutorial_btn.pressed.connect(_on_reset_tutorial_button_pressed)
+	practice_mining_btn.pressed.connect(_on_practice_mining_pressed)
+	skip_tutorial_btn.pressed.connect(_on_skip_tutorial_pressed)
+	replay_mission_tutorial_btn.pressed.connect(_on_replay_mission_tutorial_pressed)
+	replay_all_tutorial_btn.pressed.connect(_on_replay_all_tutorial_pressed)
 	
 	# Update display
 	update_counter_display()
 	_update_experience_ui()
 	_connect_experience_updates()
+	info_label.text = "Open Mining Academy here to rehearse routes, drones, and early returns without risking a mission."
 	
-	print("MenuPanel ready with counter: ", current_counter)
+	AppLogger.d("MenuPanel ready with counter: %s" % current_counter)
 
 func set_counter(value: int) -> void:
 	"""Set the counter value from external source (e.g., React Native)"""
 	current_counter = value
 	update_counter_display()
-	print("MenuPanel counter set to: ", current_counter)
+	AppLogger.d("MenuPanel counter set to: %s" % current_counter)
 
 func get_counter() -> int:
 	"""Get the current counter value"""
@@ -144,7 +156,7 @@ func _get_app_controller() -> Node:
 	return preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
 
 func _on_close_button_pressed() -> void:
-	print("MenuPanel close button pressed")
+	AppLogger.d("MenuPanel close button pressed")
 	panel_closed.emit()
 	queue_free()
 
@@ -152,21 +164,35 @@ func _on_decrease_button_pressed() -> void:
 	current_counter -= 1
 	update_counter_display()
 	counter_changed.emit(current_counter)
-	print("Counter decreased to: ", current_counter)
+	AppLogger.d("Counter decreased to: %s" % current_counter)
 
 func _on_increase_button_pressed() -> void:
 	current_counter += 1
 	update_counter_display()
 	counter_changed.emit(current_counter)
-	print("Counter increased to: ", current_counter)
+	AppLogger.d("Counter increased to: %s" % current_counter)
 
 func _on_reset_button_pressed() -> void:
-	print("MenuPanel reset button pressed")
+	AppLogger.d("MenuPanel reset button pressed")
 	reset_all.emit()
 
-func _on_reset_tutorial_button_pressed() -> void:
-	print("MenuPanel reset tutorial button pressed")
-	reset_tutorial.emit()
+func _on_practice_mining_pressed() -> void:
+	var root = get_tree().root
+	if root == null:
+		return
+	var panel = MiningPracticePanelScene.instantiate()
+	root.add_child(panel)
+	panel_closed.emit()
+	queue_free()
+
+func _on_skip_tutorial_pressed() -> void:
+	skip_tutorial_requested.emit()
+
+func _on_replay_mission_tutorial_pressed() -> void:
+	replay_mission_tutorial_requested.emit()
+
+func _on_replay_all_tutorial_pressed() -> void:
+	replay_all_tutorial_requested.emit()
 
 func _on_logbook_button_pressed() -> void:
 	_rebuild_logbook_entries()
@@ -189,7 +215,8 @@ func _rebuild_logbook_entries() -> void:
 	if rows.is_empty():
 		var empty: Label = LogbookEmptyScene.instantiate()
 		empty.text = "No mission records yet."
-		empty.add_theme_color_override("font_color", Color(0.639, 0.694, 0.784, 1))
+		var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
+		empty.add_theme_color_override("font_color", panel_style.TEXT_MUTED)
 		empty.add_theme_font_size_override("font_size", 16)
 		logbook_entries.add_child(empty)
 		return
@@ -207,7 +234,7 @@ func _rebuild_logbook_entries() -> void:
 
 		var header: Label = body.get_node("HeaderLabel")
 		header.text = _build_logbook_header(entry, idx + 1)
-		header.add_theme_color_override("font_color", Color(0.533, 0.753, 0.816, 1))
+		header.add_theme_color_override("font_color", panel_style.ACCENT)
 		header.add_theme_font_size_override("font_size", 18)
 
 		for section in _logbook_sections():
@@ -221,7 +248,7 @@ func _rebuild_logbook_entries() -> void:
 
 			var section_header: Label = LogbookSectionHeaderScene.instantiate()
 			section_header.text = str(section.get("title", "Details"))
-			section_header.add_theme_color_override("font_color", Color(0.639, 0.694, 0.784, 1))
+			section_header.add_theme_color_override("font_color", panel_style.TEXT_MUTED)
 			section_header.add_theme_font_size_override("font_size", 14)
 			body.add_child(section_header)
 
@@ -231,17 +258,17 @@ func _rebuild_logbook_entries() -> void:
 
 				var key_label: Label = row.get_node("KeyLabel")
 				key_label.text = "%s:" % _format_logbook_key(str(section_key))
-				key_label.add_theme_color_override("font_color", Color(0.639, 0.694, 0.784, 1))
+				key_label.add_theme_color_override("font_color", panel_style.TEXT_MUTED)
 				key_label.add_theme_font_size_override("font_size", 14)
 
 				var value_label: Label = row.get_node("ValueLabel")
-				value_label.add_theme_color_override("font_color", Color(0.847, 0.871, 0.914, 1))
+				value_label.add_theme_color_override("font_color", panel_style.TEXT_PRIMARY)
 				value_label.add_theme_font_size_override("font_size", 15)
 				value_label.text = _format_logbook_value(str(section_key), entry.get(section_key))
 
 		if idx > 0:
 			var divider = HSeparator.new()
-			divider.add_theme_color_override("separator", Color(0.263, 0.298, 0.369, 1))
+			divider.add_theme_color_override("separator", panel_style.PANEL_BORDER)
 			body.add_child(divider)
 
 func _logbook_sections() -> Array:

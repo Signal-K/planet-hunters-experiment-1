@@ -1,0 +1,45 @@
+{
+  "taskId": "ozy55l",
+  "currentVersion": 1,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "ozy55l",
+      "version": 1,
+      "timestamp": "2026-02-26T01:32:25.820Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Build Earth weather engine core (cycle + event API)",
+        "description": "Add a reusable script/component that drives normalized time-of-day, day/night interpolation over 60s, and a plugin-style weather event API for effects.",
+        "status": "done",
+        "priority": "high",
+        "labels": [
+          "godot",
+          "earth",
+          "weather",
+          "architecture"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Engine exposes configurable cycle duration with default 60 seconds"
+          },
+          {
+            "completed": false,
+            "text": "Engine emits/updates normalized day-night factor for visuals"
+          },
+          {
+            "completed": false,
+            "text": "Engine provides modular hooks to add/remove weather events without scene rewrites"
+          }
+        ]
+      }
+    }
+  ]
+}
