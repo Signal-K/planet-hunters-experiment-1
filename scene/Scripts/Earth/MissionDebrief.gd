@@ -7,14 +7,11 @@ const EARTH_SALE_MIN_LEVEL := 3
 const SCRAP_REFUND_PCT := 0.20
 const SALVAGE_REFUND_PCT := 0.10
 const XP_AWARD_MISSION := 4
-const ACTION_RESOLVE_DEBRIEF := "resolve_mission_debrief"
-const HINT_RESOLVE_DEBRIEF := "Great. You completed debrief by choosing how to process the mission return."
-const ACTION_UNLOCK_MISSION_2 := "unlock_mission_2"
-const HINT_UNLOCK_MISSION_2 := "Mission 2 unlocked. Starter Rocket 2 is now available in Launchpad."
 const MISSION4_AFFINITY_GATE := 3
 const MISSION5_AFFINITY_GAIN := 2
-const WebEventBridge = preload("res://Scripts/Systems/WebEventBridge.gd")
+const GameplayAnalytics = preload("res://Scripts/Systems/GameplayAnalytics.gd")
 const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
+const NavigationMixin = preload("res://Scripts/Utils/NavigationMixin.gd")
 const ResourceValueRowScene = preload("res://Scenes/UI/Templates/ResourceValueRow.tscn")
 const EmptyLabelScene = preload("res://Scenes/UI/Templates/MenuLogbookEmpty.tscn")
 
@@ -179,11 +176,13 @@ func _sell(to_earth: bool) -> void:
 		var affinity_gain = MISSION5_AFFINITY_GAIN if rm and int(rm.get_mission_stage()) >= 5 else 1
 		sm.add_affinity(str(_subcontractor.get("id", "")), affinity_gain)
 	_add_mission_log("sell_earth" if to_earth else "sell_orbit", net)
+	preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("resolve_mission_debrief", {
+		"mode": "sell_earth" if to_earth else "sell_orbit"
+	})
 	_sold = true
 	_closed_out = true
 	status_label.text = "Sale complete. Credited %s F." % str(net)
 	_clear_cargo()
-	_show_tutorial_hint_once(ACTION_RESOLVE_DEBRIEF, HINT_RESOLVE_DEBRIEF)
 	if rm:
 		rm.remove_orbiting_rocket(str(_returned.get("rocket_id", "")))
 		if int(rm.get_mission_stage()) >= 5:
@@ -193,15 +192,19 @@ func _sell(to_earth: bool) -> void:
 func _keep_cargo() -> void:
 	status_label.text = "Cargo stored. You can sell later."
 	_add_mission_log("keep_cargo", 0)
-	_show_tutorial_hint_once(ACTION_RESOLVE_DEBRIEF, HINT_RESOLVE_DEBRIEF)
+	preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("resolve_mission_debrief", {
+		"mode": "keep_cargo"
+	})
 	_closed_out = true
 
 func _archive_ship() -> void:
 	if _closed_out:
 		return
 	_add_mission_log("archive", 0)
+	preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("resolve_mission_debrief", {
+		"mode": "archive"
+	})
 	status_label.text = "Ship archived."
-	_show_tutorial_hint_once(ACTION_RESOLVE_DEBRIEF, HINT_RESOLVE_DEBRIEF)
 	_closed_out = true
 	_lock_action_buttons()
 
@@ -218,8 +221,10 @@ func _scrap_ship(refund_pct: float) -> void:
 		rm.set_destroyed(rocket_id)
 		rm.remove_orbiting_rocket(rocket_id)
 	_add_mission_log("scrap" if refund_pct >= 0.2 else "salvage", refund)
+	preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("resolve_mission_debrief", {
+		"mode": "scrap" if refund_pct >= 0.2 else "salvage"
+	})
 	status_label.text = "Ship processed. Refund %s F." % str(refund)
-	_show_tutorial_hint_once(ACTION_RESOLVE_DEBRIEF, HINT_RESOLVE_DEBRIEF)
 	_closed_out = true
 	_lock_action_buttons()
 
@@ -227,8 +232,10 @@ func _leave_in_orbit() -> void:
 	if _closed_out:
 		return
 	_add_mission_log("leave_orbit", 0)
+	preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("resolve_mission_debrief", {
+		"mode": "leave_orbit"
+	})
 	status_label.text = "Ship left in orbit."
-	_show_tutorial_hint_once(ACTION_RESOLVE_DEBRIEF, HINT_RESOLVE_DEBRIEF)
 	_closed_out = true
 	_lock_action_buttons()
 
@@ -300,17 +307,31 @@ func _add_mission_log(action: String, payout: int) -> void:
 		"payout": payout,
 		"rocket_id": str(entry.get("rocket_id", "")),
 		"target_id": str(entry.get("target_id", "")),
+		"target_type": str(_returned.get("type", "asteroid")),
 		"label": str(entry.get("label", "")),
 		"badge": str(entry.get("badge", "")),
-		"mission_count": mission_count
+		"mission_count": mission_count,
+		"cargo_units": _count_cargo_units(),
+		"cargo_types": _collected.size(),
+		"subcontractor_id": str(_subcontractor.get("id", "")),
+		"subcontractor_name": str(_subcontractor.get("name", ""))
 	}
-	WebEventBridge.emit("mission_debrief_resolved", event_payload)
+	GameplayAnalytics.emit_event("mission_debrief_resolved", event_payload)
 	if completed_count >= 1:
 		if rm:
 			rm.unlock("starterrocket2")
 	if completed_count == 1:
-		_show_tutorial_hint_once(ACTION_UNLOCK_MISSION_2, HINT_UNLOCK_MISSION_2)
-		WebEventBridge.emit("first_mission_completed", event_payload)
+		GameplayAnalytics.emit_event("first_mission_completed", event_payload)
+	if rm and int(rm.get_mission_stage()) >= 5:
+		preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("complete_contractor_mission", {
+			"badge": badge
+		})
+
+func _count_cargo_units() -> int:
+	var total := 0
+	for value in _collected.values():
+		total += int(value)
+	return total
 
 func _select_subcontractor() -> void:
 	var app = _get_app_controller()
@@ -382,8 +403,6 @@ func _rocket_cost(rocket_id: String) -> int:
 func _get_app_controller() -> Node:
 	return preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
 
-func _show_tutorial_hint_once(action_key: String, message: String) -> void:
-	preload("res://Scripts/Utils/AppControllerHelper.gd").show_tutorial_hint_once(action_key, message)
 
 func _return_to_base() -> void:
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
@@ -401,4 +420,4 @@ func _return_to_base() -> void:
 	if scene_manager and scene_manager.has_method("change_to_scene"):
 		scene_manager.change_to_scene("res://Scenes/Earth/earth_base_1.tscn")
 	else:
-		tree.change_scene_to_file("res://Scenes/Earth/earth_base_1.tscn")
+		NavigationMixin.go_back_to_earth(tree)

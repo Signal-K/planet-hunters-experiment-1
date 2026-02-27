@@ -1,6 +1,6 @@
 {
   "taskId": "mklpf2",
-  "currentVersion": 6,
+  "currentVersion": 7,
   "versions": [
     {
       "id": "v1",
@@ -257,6 +257,45 @@
           }
         ],
         "implementationNotes": "## Implementation Summary\n\nCreated Dredge-inspired timing-based mining minigame system:\n\n### Core Mechanics\n- **Rotating indicator**: Spins around stability ring at variable speed\n- **Timing challenge**: Player presses SPACE when indicator aligns with green zones\n- **Quality feedback**: PERFECT (90%+) or Good (70%+) hits, Miss for failures\n- **Progressive difficulty**: Speed increases, zones shrink, fewer zones at higher levels\n\n### Difficulty Scaling\n- Level 1-2: 3 zones, base speed, 5 hits required\n- Level 3-4: Smaller zones (85% size), faster rotation\n- Level 5-6: Only 2 zones, even faster\n- Level 7+: Smallest zones (64% size), maximum speed\n\n### Reward System\n- Success rate = hits / (hits + misses)\n- Bonus multiplier: 1.0 + (success_rate * 0.5)\n- Perfect play = 1.5x mining yield\n- 3 misses = mining fails, no resources\n\n### Integration\n- Replaces simple button press in AsteroidPreview\n- Launches as overlay when Mine button pressed\n- Visual feedback with drill depth progression\n- Cooldown timer still applies after completion\n\n### Files Created\n- scene/Scripts/UI/MiningMinigame.gd\n- scene/Scenes/UI/MiningMinigame.tscn\n\n### Files Modified\n- scene/Scripts/UI/AsteroidPreview/AsteroidPreview.gd\n- scene/Scenes/UI/AsteroidPreview/asteroid_preview.tscn"
+      }
+    },
+    {
+      "id": "v7",
+      "taskId": "mklpf2",
+      "version": 7,
+      "timestamp": "2026-02-25T08:45:16.870Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "## Implementation Summary\n\nCreated Dredge-inspired timing-based mining minigame system:\n\n### Core Mechanics\n- **Rotating indicator**: Spins around stability ring at variable speed\n- **Timing challenge**: Player presses SPACE when indicator aligns with green zones\n- **Quality feedback**: PERFECT (90%+) or Good (70%+) hits, Miss for failures\n- **Progressive difficulty**: Speed increases, zones shrink, fewer zones at higher levels\n\n### Difficulty Scaling\n- Level 1-2: 3 zones, base speed, 5 hits required\n- Level 3-4: Smaller zones (85% size), faster rotation\n- Level 5-6: Only 2 zones, even faster\n- Level 7+: Smallest zones (64% size), maximum speed\n\n### Reward System\n- Success rate = hits / (hits + misses)\n- Bonus multiplier: 1.0 + (success_rate * 0.5)\n- Perfect play = 1.5x mining yield\n- 3 misses = mining fails, no resources\n\n### Integration\n- Replaces simple button press in AsteroidPreview\n- Launches as overlay when Mine button pressed\n- Visual feedback with drill depth progression\n- Cooldown timer still applies after completion\n\n### Files Created\n- scene/Scripts/UI/MiningMinigame.gd\n- scene/Scenes/UI/MiningMinigame.tscn\n\n### Files Modified\n- scene/Scripts/UI/AsteroidPreview/AsteroidPreview.gd\n- scene/Scenes/UI/AsteroidPreview/asteroid_preview.tscn",
+          "newValue": "## Implementation Summary\n\nCreated Dredge-inspired timing-based mining minigame system:\n\n### Core Mechanics\n- **Rotating indicator**: Spins around stability ring at variable speed\n- **Timing challenge**: Player presses SPACE when indicator aligns with green zones\n- **Quality feedback**: PERFECT (90%+) or Good (70%+) hits, Miss for failures\n- **Progressive difficulty**: Speed increases, zones shrink, fewer zones at higher levels\n\n### Difficulty Scaling\n- Level 1-2: 3 zones, base speed, 5 hits required\n- Level 3-4: Smaller zones (85% size), faster rotation\n- Level 5-6: Only 2 zones, even faster\n- Level 7+: Smallest zones (64% size), maximum speed\n\n### Reward System\n- Success rate = hits / (hits + misses)\n- Bonus multiplier: 1.0 + (success_rate * 0.5)\n- Perfect play = 1.5x mining yield\n- 3 misses = mining fails, no resources\n\n### Integration\n- Replaces simple button press in AsteroidPreview\n- Launches as overlay when Mine button pressed\n- Visual feedback with drill depth progression\n- Cooldown timer still applies after completion\n\n### Files Created\n- scene/Scripts/UI/MiningMinigame.gd\n- scene/Scenes/UI/MiningMinigame.tscn\n\n### Files Modified\n- scene/Scripts/UI/AsteroidPreview/AsteroidPreview.gd\n- scene/Scenes/UI/AsteroidPreview/asteroid_preview.tscn\n\n\n\nSpec Reference: @doc/specs/mining-minigame-system-specification"
+        }
+      ],
+      "snapshot": {
+        "title": "Design interactive mining minigame system",
+        "description": "Create Dredge-inspired timing-based mining mechanics to replace simple button press. Research completed - implementing rotating stability rings with timing challenges.",
+        "status": "done",
+        "priority": "high",
+        "labels": [
+          "gameplay",
+          "mining",
+          "minigame"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Mining minigame scene created with visual components"
+          },
+          {
+            "completed": true,
+            "text": "Timing mechanics implemented with success/fail feedback"
+          },
+          {
+            "completed": true,
+            "text": "Integration with existing mining system complete"
+          }
+        ],
+        "implementationNotes": "## Implementation Summary\n\nCreated Dredge-inspired timing-based mining minigame system:\n\n### Core Mechanics\n- **Rotating indicator**: Spins around stability ring at variable speed\n- **Timing challenge**: Player presses SPACE when indicator aligns with green zones\n- **Quality feedback**: PERFECT (90%+) or Good (70%+) hits, Miss for failures\n- **Progressive difficulty**: Speed increases, zones shrink, fewer zones at higher levels\n\n### Difficulty Scaling\n- Level 1-2: 3 zones, base speed, 5 hits required\n- Level 3-4: Smaller zones (85% size), faster rotation\n- Level 5-6: Only 2 zones, even faster\n- Level 7+: Smallest zones (64% size), maximum speed\n\n### Reward System\n- Success rate = hits / (hits + misses)\n- Bonus multiplier: 1.0 + (success_rate * 0.5)\n- Perfect play = 1.5x mining yield\n- 3 misses = mining fails, no resources\n\n### Integration\n- Replaces simple button press in AsteroidPreview\n- Launches as overlay when Mine button pressed\n- Visual feedback with drill depth progression\n- Cooldown timer still applies after completion\n\n### Files Created\n- scene/Scripts/UI/MiningMinigame.gd\n- scene/Scenes/UI/MiningMinigame.tscn\n\n### Files Modified\n- scene/Scripts/UI/AsteroidPreview/AsteroidPreview.gd\n- scene/Scenes/UI/AsteroidPreview/asteroid_preview.tscn\n\n\n\nSpec Reference: @doc/specs/mining-minigame-system-specification"
       }
     }
   ]

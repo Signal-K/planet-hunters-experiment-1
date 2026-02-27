@@ -1,0 +1,32 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/FeedbackBeacon.gd" id="1_feedback"]
+
+[node name="FeedbackBeacon" type="CanvasLayer"]
+script = ExtResource("1_feedback")
+
+[node name="Anchor" type="MarginContainer" parent="."]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -292.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = 136.0
+grow_horizontal = 0
+
+[node name="Panel" type="PanelContainer" parent="Anchor"]
+layout_mode = 2
+
+[node name="VBox" type="VBoxContainer" parent="Anchor/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="FeedbackButton" type="Button" parent="Anchor/Panel/VBox"]
+layout_mode = 2
+text = "Need help? Send feedback"
+
+[node name="HintLabel" type="Label" parent="Anchor/Panel/VBox"]
+layout_mode = 2
+modulate = Color(0.86, 0.91, 1, 0.92)
+text = "Open the feedback popup anytime."

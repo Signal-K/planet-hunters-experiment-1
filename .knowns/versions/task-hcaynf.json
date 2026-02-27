@@ -1,6 +1,6 @@
 {
   "taskId": "hcaynf",
-  "currentVersion": 1,
+  "currentVersion": 2,
   "versions": [
     {
       "id": "v1",
@@ -55,6 +55,61 @@
         ],
         "implementationPlan": "1. Gate scanner visibility/interactions by mission progression (unlock at Mission 3)\n2. Add scanner build requirement state and 2B F purchase enforcement\n3. Force Missions 1-2 to use predefined targets in launch selector\n4. Rewrite tutorial sequence/copy so scanner appears after Mission 3 unlock/build\n5. Add/adjust automated tests for scanner gating, build cost, and tutorial text flow\n6. Run test suite and finalize task notes/status",
         "implementationNotes": "Implemented scanner/tutorial progression from .knowns/assets/IMG_1755.jpeg (+ sequence context in IMG_1754/1756).\n\n- Scanner Station is hidden until mission stage 3.\n- Added scanner build gating: 2,000,000,000 F required before scanner usage.\n- Added unlock/build dialogues and build tutorial action event.\n- Missions 1-2 now use predefined progression targets (no scanning dependency).\n- Rewrote tutorial sequence/copy so scanning appears only after mission debrief + scanner build.\n- Added tests for scanner unlock gating, 2B affordability enforcement, tutorial order, and predefined mission targets.\n\nValidation:\n- run_experience_tests.gd: 32/32 pass\n- run_tutorial_tests.gd: 2/2 pass"
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "hcaynf",
+      "version": 2,
+      "timestamp": "2026-02-25T08:45:00.500Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "Implemented scanner/tutorial progression from .knowns/assets/IMG_1755.jpeg (+ sequence context in IMG_1754/1756).\n\n- Scanner Station is hidden until mission stage 3.\n- Added scanner build gating: 2,000,000,000 F required before scanner usage.\n- Added unlock/build dialogues and build tutorial action event.\n- Missions 1-2 now use predefined progression targets (no scanning dependency).\n- Rewrote tutorial sequence/copy so scanning appears only after mission debrief + scanner build.\n- Added tests for scanner unlock gating, 2B affordability enforcement, tutorial order, and predefined mission targets.\n\nValidation:\n- run_experience_tests.gd: 32/32 pass\n- run_tutorial_tests.gd: 2/2 pass",
+          "newValue": "Implemented scanner/tutorial progression from .knowns/assets/IMG_1755.jpeg (+ sequence context in IMG_1754/1756).\n\n- Scanner Station is hidden until mission stage 3.\n- Added scanner build gating: 2,000,000,000 F required before scanner usage.\n- Added unlock/build dialogues and build tutorial action event.\n- Missions 1-2 now use predefined progression targets (no scanning dependency).\n- Rewrote tutorial sequence/copy so scanning appears only after mission debrief + scanner build.\n- Added tests for scanner unlock gating, 2B affordability enforcement, tutorial order, and predefined mission targets.\n\nValidation:\n- run_experience_tests.gd: 32/32 pass\n- run_tutorial_tests.gd: 2/2 pass\n\n\n\nSpec Reference: @doc/specs/mission-system-specification (Mission 3 scanner unlock)"
+        }
+      ],
+      "snapshot": {
+        "title": "Gate scanner to Mission 3 + rewrite tutorial progression",
+        "description": "Implement mission-gated scanner/tutorial flow from notes in .knowns/assets/IMG_1755.jpeg (and related sequence context in .knowns/assets/IMG_1754.jpeg and .knowns/assets/IMG_1756.jpeg). Scanning is not introduced until Mission 3; Missions 1-2 must use predefined targets. Scanner/Station should be hidden until Mission 3 unlock, then shown with new unlock dialogue and player-build step costing 2B F.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "tutorial",
+          "missions",
+          "scanner",
+          "progression",
+          "ui"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Missions 1 and 2 use predefined targets only, with no scanning interaction required or shown"
+          },
+          {
+            "completed": false,
+            "text": "Scanner/Scanning Station UI and interaction are hidden/disabled until Mission 3"
+          },
+          {
+            "completed": false,
+            "text": "At Mission 3 unlock, show new tutorial dialogue introducing scanner unlock and requiring construction"
+          },
+          {
+            "completed": false,
+            "text": "Scanner station construction costs exactly 2,000,000,000 F and blocks scanner usage until paid/built"
+          },
+          {
+            "completed": false,
+            "text": "Tutorial copy is rewritten to match this mission order and scanner introduction flow"
+          },
+          {
+            "completed": false,
+            "text": "Automated tests cover mission gating (M1/M2), Mission 3 unlock visibility, build-cost enforcement, and updated tutorial progression text triggers"
+          }
+        ],
+        "implementationPlan": "1. Gate scanner visibility/interactions by mission progression (unlock at Mission 3)\n2. Add scanner build requirement state and 2B F purchase enforcement\n3. Force Missions 1-2 to use predefined targets in launch selector\n4. Rewrite tutorial sequence/copy so scanner appears after Mission 3 unlock/build\n5. Add/adjust automated tests for scanner gating, build cost, and tutorial text flow\n6. Run test suite and finalize task notes/status",
+        "implementationNotes": "Implemented scanner/tutorial progression from .knowns/assets/IMG_1755.jpeg (+ sequence context in IMG_1754/1756).\n\n- Scanner Station is hidden until mission stage 3.\n- Added scanner build gating: 2,000,000,000 F required before scanner usage.\n- Added unlock/build dialogues and build tutorial action event.\n- Missions 1-2 now use predefined progression targets (no scanning dependency).\n- Rewrote tutorial sequence/copy so scanning appears only after mission debrief + scanner build.\n- Added tests for scanner unlock gating, 2B affordability enforcement, tutorial order, and predefined mission targets.\n\nValidation:\n- run_experience_tests.gd: 32/32 pass\n- run_tutorial_tests.gd: 2/2 pass\n\n\n\nSpec Reference: @doc/specs/mission-system-specification (Mission 3 scanner unlock)"
       }
     }
   ]

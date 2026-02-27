@@ -1,0 +1,1 @@
+../.knowns/docs/specs/mining-minigame-system-specification.md

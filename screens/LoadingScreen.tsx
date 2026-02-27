@@ -147,20 +147,6 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ navigation }) => {
               <Text style={commonStyles.counterLabel}>Franc Balance</Text>
               <Text style={[commonStyles.counterValue, { fontSize: 18 }]}>{formattedFranc} F</Text>
             </View>
-            <View style={{ marginTop: 16, alignItems: 'center' }}>
-              <Text style={commonStyles.counterLabel}>Tutorial Status</Text>
-              <Text style={[commonStyles.counterValue, { fontSize: 14, marginBottom: 8 }]}> 
-                {syncState.tutorialCompleted ? "✓ Complete" : "○ Incomplete"}
-              </Text>
-              <Button
-                title={syncState.tutorialCompleted ? "Mark Incomplete" : "Mark Complete"}
-                onPress={() => {
-                  const newValue = !syncState.tutorialCompleted;
-                  setLocalSyncState({ tutorialCompleted: newValue });
-                }}
-                color={syncState.tutorialCompleted ? "#FF3B30" : "#34C759"}
-              />
-            </View>
           </View>
         </View>
       </ScrollView>

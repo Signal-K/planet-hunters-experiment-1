@@ -1,6 +1,6 @@
 {
   "taskId": "vvgprh",
-  "currentVersion": 7,
+  "currentVersion": 8,
   "versions": [
     {
       "id": "v1",
@@ -195,6 +195,35 @@
         "acceptanceCriteria": [],
         "implementationPlan": "1. Review Godot/RN state sync patterns (AppController, utils/godot.ts, AsyncStorage) and identify XP integration points (launch + scan).\n2. Add experience state + persistence in Godot AppController, with helpers to add XP and evaluate rocket unlocks from a small config.\n3. Wire XP awards into launch flow and scan completion, and update RocketsManager unlock list when thresholds reached.\n4. Extend React Native shared state + sync queue to load/save experience (AsyncStorage) and push to Godot on game start.",
         "implementationNotes": "Test\n\n```js\n\ntest\n\n```"
+      }
+    },
+    {
+      "id": "v8",
+      "taskId": "vvgprh",
+      "version": 8,
+      "timestamp": "2026-02-25T08:45:18.942Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "Test\n\n```js\n\ntest\n\n```",
+          "newValue": "Test\n\n```js\n\ntest\n\n```\n\n\n\nSpec Reference: @doc/specs/level-progression-and-unlocks-specification"
+        }
+      ],
+      "snapshot": {
+        "title": "Set up experience system",
+        "description": "Basically, a global system that allows users to unlock things.\n\nTo start with, the only thing that will be unlocked will be new rockets.\n\nWe'll say that launches, scans are the two types of things that add experience to the user's profile for now. Annotation and landing, mission completions etc can come later.\n\nSpeaking of, custom missions and generated missions (like in TSP, but in slightly more of a sandbox method) are something I'd like to explore later (probably next month).",
+        "status": "done",
+        "priority": "medium",
+        "assignee": "@Liam",
+        "labels": [
+          "Experience",
+          "Research",
+          "Launch",
+          "Data"
+        ],
+        "acceptanceCriteria": [],
+        "implementationPlan": "1. Review Godot/RN state sync patterns (AppController, utils/godot.ts, AsyncStorage) and identify XP integration points (launch + scan).\n2. Add experience state + persistence in Godot AppController, with helpers to add XP and evaluate rocket unlocks from a small config.\n3. Wire XP awards into launch flow and scan completion, and update RocketsManager unlock list when thresholds reached.\n4. Extend React Native shared state + sync queue to load/save experience (AsyncStorage) and push to Godot on game start.",
+        "implementationNotes": "Test\n\n```js\n\ntest\n\n```\n\n\n\nSpec Reference: @doc/specs/level-progression-and-unlocks-specification"
       }
     }
   ]

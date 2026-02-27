@@ -40,7 +40,7 @@ static func apply_panel(panel: Control, bg_color: Color = PANEL_BG) -> void:
 	style_box.shadow_color = PANEL_SHADOW
 	style_box.shadow_size = 16
 	style_box.shadow_offset = Vector2(0, 4)
-	if style_box != null:
+	if style_box != null and panel != null and panel.is_inside_tree():
 		panel.add_theme_stylebox_override("panel", style_box)
 
 static func apply_title(label: Label) -> void:

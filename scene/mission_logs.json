@@ -103,7 +103,7 @@
       "target_id": "mission-1-training-target",
       "label": "Training Asteroid A",
       "action": "sell_orbit",
-      "payout": 490160000,
+      "payout": 490160000.0,
       "cargo": {
         "Iron": 25.0,
         "Nickel": 15.0,
@@ -112,6 +112,328 @@
         "Silicates": 25.0
       },
       "badge": "starterrocket1-awaiting-1-mission-1-training-target-1771312750"
+    },
+    {
+      "timestamp": "2026-02-25T17:47:26",
+      "rocket_id": "starterrocket1-m5-affinity",
+      "target_id": "mission5-affinity-target",
+      "label": "M5 Affinity Target",
+      "subcontractor_id": "rocketlab",
+      "subcontractor_name": "Rocketlab",
+      "action": "sell_orbit",
+      "payout": 236000000.0,
+      "cargo": {
+        "Iron": 50.0
+      },
+      "badge": "starterrocket1-m5-affinity-mission5-affinity-target-1772012846"
+    },
+    {
+      "timestamp": "2026-02-25T17:48:44",
+      "rocket_id": "starterrocket1-m5-affinity",
+      "target_id": "mission5-affinity-target",
+      "label": "M5 Affinity Target",
+      "subcontractor_id": "rocketlab",
+      "subcontractor_name": "Rocketlab",
+      "action": "sell_orbit",
+      "payout": 236000000.0,
+      "cargo": {
+        "Iron": 50.0
+      },
+      "badge": "starterrocket1-m5-affinity-mission5-affinity-target-1772012924"
+    },
+    {
+      "timestamp": "2026-02-25T17:49:16",
+      "rocket_id": "starterrocket1-m5-affinity",
+      "target_id": "mission5-affinity-target",
+      "label": "M5 Affinity Target",
+      "subcontractor_id": "rocketlab",
+      "subcontractor_name": "Rocketlab",
+      "action": "sell_orbit",
+      "payout": 236000000.0,
+      "cargo": {
+        "Iron": 50.0
+      },
+      "badge": "starterrocket1-m5-affinity-mission5-affinity-target-1772012956"
+    },
+    {
+      "timestamp": "2026-02-25T17:50:27",
+      "rocket_id": "starterrocket1-m5-affinity",
+      "target_id": "mission5-affinity-target",
+      "label": "M5 Affinity Target",
+      "subcontractor_id": "rocketlab",
+      "subcontractor_name": "Rocketlab",
+      "action": "sell_orbit",
+      "payout": 236000000.0,
+      "cargo": {
+        "Iron": 50.0
+      },
+      "badge": "starterrocket1-m5-affinity-mission5-affinity-target-1772013027"
+    },
+    {
+      "timestamp": "2026-02-25T17:52:31",
+      "rocket_id": "starterrocket1-m5-affinity",
+      "target_id": "mission5-affinity-target",
+      "label": "M5 Affinity Target",
+      "subcontractor_id": "rocketlab",
+      "subcontractor_name": "Rocketlab",
+      "action": "sell_orbit",
+      "payout": 236000000.0,
+      "cargo": {
+        "Iron": 50.0
+      },
+      "badge": "starterrocket1-m5-affinity-mission5-affinity-target-1772013151"
+    },
+    {
+      "timestamp": "2026-02-25T17:54:40",
+      "rocket_id": "starterrocket1-m5-affinity",
+      "target_id": "mission5-affinity-target",
+      "label": "M5 Affinity Target",
+      "subcontractor_id": "rocketlab",
+      "subcontractor_name": "Rocketlab",
+      "action": "sell_orbit",
+      "payout": 236000000.0,
+      "cargo": {
+        "Iron": 50.0
+      },
+      "badge": "starterrocket1-m5-affinity-mission5-affinity-target-1772013280"
+    },
+    {
+      "timestamp": "2026-02-25T17:56:18",
+      "rocket_id": "starterrocket1-m5-affinity",
+      "target_id": "mission5-affinity-target",
+      "label": "M5 Affinity Target",
+      "subcontractor_id": "rocketlab",
+      "subcontractor_name": "Rocketlab",
+      "action": "sell_orbit",
+      "payout": 236000000.0,
+      "cargo": {
+        "Iron": 50.0
+      },
+      "badge": "starterrocket1-m5-affinity-mission5-affinity-target-1772013378"
+    },
+    {
+      "timestamp": "2026-02-25T18:16:06",
+      "rocket_id": "starterrocket1-m5-affinity",
+      "target_id": "mission5-affinity-target",
+      "label": "M5 Affinity Target",
+      "subcontractor_id": "rocketlab",
+      "subcontractor_name": "Rocketlab",
+      "action": "sell_orbit",
+      "payout": 236000000.0,
+      "cargo": {
+        "Iron": 50.0
+      },
+      "badge": "starterrocket1-m5-affinity-mission5-affinity-target-1772014566"
+    },
+    {
+      "timestamp": "2026-02-25T18:19:35",
+      "rocket_id": "starterrocket1-m5-affinity",
+      "target_id": "mission5-affinity-target",
+      "label": "M5 Affinity Target",
+      "subcontractor_id": "rocketlab",
+      "subcontractor_name": "Rocketlab",
+      "action": "sell_orbit",
+      "payout": 236000000.0,
+      "cargo": {
+        "Iron": 50.0
+      },
+      "badge": "starterrocket1-m5-affinity-mission5-affinity-target-1772014775"
+    },
+    {
+      "timestamp": "2026-02-25T18:22:15",
+      "rocket_id": "starterrocket1-m5-affinity",
+      "target_id": "mission5-affinity-target",
+      "label": "M5 Affinity Target",
+      "subcontractor_id": "rocketlab",
+      "subcontractor_name": "Rocketlab",
+      "action": "sell_orbit",
+      "payout": 236000000.0,
+      "cargo": {
+        "Iron": 50.0
+      },
+      "badge": "starterrocket1-m5-affinity-mission5-affinity-target-1772014935"
+    },
+    {
+      "timestamp": "2026-02-25T18:22:47",
+      "rocket_id": "starterrocket1-m5-affinity",
+      "target_id": "mission5-affinity-target",
+      "label": "M5 Affinity Target",
+      "subcontractor_id": "rocketlab",
+      "subcontractor_name": "Rocketlab",
+      "action": "sell_orbit",
+      "payout": 236000000.0,
+      "cargo": {
+        "Iron": 50.0
+      },
+      "badge": "starterrocket1-m5-affinity-mission5-affinity-target-1772014967"
+    },
+    {
+      "timestamp": "2026-02-25T18:24:17",
+      "rocket_id": "starterrocket1-m5-affinity",
+      "target_id": "mission5-affinity-target",
+      "label": "M5 Affinity Target",
+      "subcontractor_id": "rocketlab",
+      "subcontractor_name": "Rocketlab",
+      "action": "sell_orbit",
+      "payout": 236000000.0,
+      "cargo": {
+        "Iron": 50.0
+      },
+      "badge": "starterrocket1-m5-affinity-mission5-affinity-target-1772015057"
+    },
+    {
+      "timestamp": "2026-02-25T18:33:52",
+      "rocket_id": "starterrocket1-m5-affinity",
+      "target_id": "mission5-affinity-target",
+      "label": "M5 Affinity Target",
+      "subcontractor_id": "rocketlab",
+      "subcontractor_name": "Rocketlab",
+      "action": "sell_orbit",
+      "payout": 236000000.0,
+      "cargo": {
+        "Iron": 50.0
+      },
+      "badge": "starterrocket1-m5-affinity-mission5-affinity-target-1772015632"
+    },
+    {
+      "timestamp": "2026-02-25T18:34:06",
+      "rocket_id": "starterrocket1-m5-affinity",
+      "target_id": "mission5-affinity-target",
+      "label": "M5 Affinity Target",
+      "subcontractor_id": "rocketlab",
+      "subcontractor_name": "Rocketlab",
+      "action": "sell_orbit",
+      "payout": 236000000.0,
+      "cargo": {
+        "Iron": 50.0
+      },
+      "badge": "starterrocket1-m5-affinity-mission5-affinity-target-1772015646"
+    },
+    {
+      "timestamp": "2026-02-25T18:38:02",
+      "rocket_id": "starterrocket1-m5-affinity",
+      "target_id": "mission5-affinity-target",
+      "label": "M5 Affinity Target",
+      "subcontractor_id": "rocketlab",
+      "subcontractor_name": "Rocketlab",
+      "action": "sell_orbit",
+      "payout": 236000000.0,
+      "cargo": {
+        "Iron": 50.0
+      },
+      "badge": "starterrocket1-m5-affinity-mission5-affinity-target-1772015882"
+    },
+    {
+      "timestamp": "2026-02-25T18:39:19",
+      "rocket_id": "starterrocket1-m5-affinity",
+      "target_id": "mission5-affinity-target",
+      "label": "M5 Affinity Target",
+      "subcontractor_id": "rocketlab",
+      "subcontractor_name": "Rocketlab",
+      "action": "sell_orbit",
+      "payout": 236000000.0,
+      "cargo": {
+        "Iron": 50.0
+      },
+      "badge": "starterrocket1-m5-affinity-mission5-affinity-target-1772015959"
+    },
+    {
+      "timestamp": "2026-02-25T18:39:38",
+      "rocket_id": "starterrocket1-m5-affinity",
+      "target_id": "mission5-affinity-target",
+      "label": "M5 Affinity Target",
+      "subcontractor_id": "rocketlab",
+      "subcontractor_name": "Rocketlab",
+      "action": "sell_orbit",
+      "payout": 236000000.0,
+      "cargo": {
+        "Iron": 50.0
+      },
+      "badge": "starterrocket1-m5-affinity-mission5-affinity-target-1772015978"
+    },
+    {
+      "timestamp": "2026-02-25T18:44:39",
+      "rocket_id": "starterrocket1-m5-affinity",
+      "target_id": "mission5-affinity-target",
+      "label": "M5 Affinity Target",
+      "subcontractor_id": "rocketlab",
+      "subcontractor_name": "Rocketlab",
+      "action": "sell_orbit",
+      "payout": 236000000.0,
+      "cargo": {
+        "Iron": 50.0
+      },
+      "badge": "starterrocket1-m5-affinity-mission5-affinity-target-1772016279"
+    },
+    {
+      "timestamp": "2026-02-25T18:46:28",
+      "rocket_id": "starterrocket1-m5-affinity",
+      "target_id": "mission5-affinity-target",
+      "label": "M5 Affinity Target",
+      "subcontractor_id": "rocketlab",
+      "subcontractor_name": "Rocketlab",
+      "action": "sell_orbit",
+      "payout": 236000000.0,
+      "cargo": {
+        "Iron": 50.0
+      },
+      "badge": "starterrocket1-m5-affinity-mission5-affinity-target-1772016388"
+    },
+    {
+      "timestamp": "2026-02-25T18:50:04",
+      "rocket_id": "starterrocket1-m5-affinity",
+      "target_id": "mission5-affinity-target",
+      "label": "M5 Affinity Target",
+      "subcontractor_id": "rocketlab",
+      "subcontractor_name": "Rocketlab",
+      "action": "sell_orbit",
+      "payout": 236000000.0,
+      "cargo": {
+        "Iron": 50.0
+      },
+      "badge": "starterrocket1-m5-affinity-mission5-affinity-target-1772016604"
+    },
+    {
+      "timestamp": "2026-02-25T18:50:22",
+      "rocket_id": "starterrocket1-m5-affinity",
+      "target_id": "mission5-affinity-target",
+      "label": "M5 Affinity Target",
+      "subcontractor_id": "rocketlab",
+      "subcontractor_name": "Rocketlab",
+      "action": "sell_orbit",
+      "payout": 236000000.0,
+      "cargo": {
+        "Iron": 50.0
+      },
+      "badge": "starterrocket1-m5-affinity-mission5-affinity-target-1772016622"
+    },
+    {
+      "timestamp": "2026-02-25T18:55:42",
+      "rocket_id": "starterrocket1-m5-affinity",
+      "target_id": "mission5-affinity-target",
+      "label": "M5 Affinity Target",
+      "subcontractor_id": "rocketlab",
+      "subcontractor_name": "Rocketlab",
+      "action": "sell_orbit",
+      "payout": 236000000.0,
+      "cargo": {
+        "Iron": 50.0
+      },
+      "badge": "starterrocket1-m5-affinity-mission5-affinity-target-1772016942"
+    },
+    {
+      "timestamp": "2026-02-25T18:58:27",
+      "rocket_id": "starterrocket1-m5-affinity",
+      "target_id": "mission5-affinity-target",
+      "label": "M5 Affinity Target",
+      "subcontractor_id": "rocketlab",
+      "subcontractor_name": "Rocketlab",
+      "action": "sell_orbit",
+      "payout": 236000000,
+      "cargo": {
+        "Iron": 50.0
+      },
+      "badge": "starterrocket1-m5-affinity-mission5-affinity-target-1772017107"
     }
   ]
 }

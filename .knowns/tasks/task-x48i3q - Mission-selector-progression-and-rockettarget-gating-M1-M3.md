@@ -7,7 +7,7 @@ labels:
   - missions
   - progression
 createdAt: '2026-02-17T04:57:10.149Z'
-updatedAt: '2026-02-17T05:45:01.860Z'
+updatedAt: '2026-02-25T08:45:00.731Z'
 timeSpent: 801
 assignee: '@me'
 parent: 4r0j05
@@ -83,5 +83,9 @@ Correction: Supabase startup fix targets the error string Failed to create HTTP 
 Follow-up fix: corrected launch_hud.tscn child parent paths from LaunchHUD to . to remove parent-vanished instancing warnings and normalize child names (LaunchButton/CountdownLabel). Re-ran run_experience_tests.gd: 23/23 pass.
 
 Follow-up tweak: _find_launch_hud now returns null when only LaunchHUD* placeholders exist without controls, avoiding false-positive 'LaunchHUD found' logs before real HUD instancing. Validation rerun: run_experience_tests.gd 23/23 pass.
+
+
+
+Spec Reference: @doc/specs/mission-system-specification (Mission progression M1-M3)
 <!-- SECTION:NOTES:END -->
 

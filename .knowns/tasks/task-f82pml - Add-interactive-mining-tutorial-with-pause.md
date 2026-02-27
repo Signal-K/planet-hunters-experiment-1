@@ -8,7 +8,7 @@ labels:
   - tutorial
   - ux
 createdAt: '2026-02-25T02:40:45.808Z'
-updatedAt: '2026-02-25T02:43:59.464Z'
+updatedAt: '2026-02-25T08:45:18.320Z'
 timeSpent: 67
 assignee: '@me'
 ---
@@ -33,5 +33,9 @@ Tutorial should pause rocket movement, guide user to mine surface deposits (expl
 
 <!-- SECTION:NOTES:BEGIN -->
 Implemented interactive tutorial: INTRO → mine Iron → mine Nickel → explain subsurface → deploy drone → complete. Rocket pauses (_tutorial_paused) during each step. Tracks _surface_mined_count to progress. Explains mineral colors and drone usage.
+
+
+
+Spec Reference: @doc/specs/mission-system-specification (Tutorial system)
 <!-- SECTION:NOTES:END -->
 

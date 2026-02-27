@@ -9,7 +9,7 @@ labels:
   - targets
   - rockets
 createdAt: '2026-02-19T05:18:06.647Z'
-updatedAt: '2026-02-19T05:21:28.593Z'
+updatedAt: '2026-02-25T08:45:01.781Z'
 timeSpent: 123
 assignee: '@me'
 ---
@@ -49,5 +49,9 @@ Update target profiling so all planet targets are outside the solar system and r
 ## Validation
 - Passed: res://tests/run_experience_tests.gd (46/46)
 - Passed: res://tests/run_tutorial_tests.gd (2/2)
+
+
+
+Spec Reference: @doc/specs/mission-system-specification (Target level requirements)
 <!-- SECTION:NOTES:END -->
 

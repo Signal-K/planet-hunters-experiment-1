@@ -1,14 +1,14 @@
 extends RefCounted
 class_name LaunchpadLaunchButton
 
+const AppLogger = preload("res://Scripts/Utils/Logger.gd")
+const GameplayAnalytics = preload("res://Scripts/Systems/GameplayAnalytics.gd")
 var _launchpad: Node
 var _on_show_selector: Callable
 var _launch_btn_connected: bool = false
 var _launch_button: Button = null
 const COUNTDOWN_STEP_TIME := 0.6
 const OUTBOUND_TRANSIT_SCENE_PATH := "res://Scenes/Transitions/rocket_transit.tscn"
-const ACTION_LAUNCH_ROCKET := "launch_rocket_from_earth"
-const HINT_LAUNCH_ROCKET := "Your rocket is launching now."
 
 func setup(launchpad: Node, on_show_selector: Callable) -> void:
 	_launchpad = launchpad
@@ -18,11 +18,11 @@ func connect_launch_button() -> void:
 	if _launch_btn_connected:
 		return
 	var root = _launchpad.get_tree().current_scene
-	print("Launchpad: connect_launch_button called, root scene=" + root.name)
+	AppLogger.d("Launchpad: connect_launch_button called, root scene=%s" % root.name)
 	var children_names = []
 	for c in root.get_children():
 		children_names.append(c.name)
-	print("Launchpad: root scene children: ", children_names)
+	AppLogger.d("Launchpad: root scene children: %s" % [children_names])
 
 	# Check if LaunchHUD exists and what's inside it
 	var launch_hud = _find_launch_hud(root)
@@ -30,9 +30,9 @@ func connect_launch_button() -> void:
 		var hud_child_names = []
 		for _c in launch_hud.get_children():
 			hud_child_names.append(_c.name)
-		print("Launchpad: LaunchHUD found, children: ", hud_child_names)
+		AppLogger.d("Launchpad: LaunchHUD found, children: %s" % [hud_child_names])
 	else:
-		print("Launchpad: LaunchHUD not found in root")
+		AppLogger.d("Launchpad: LaunchHUD not found in root")
 
 	# Try to find LaunchButton under LaunchHUD first (be tolerant of instance renaming)
 	var btn = null
@@ -43,20 +43,20 @@ func connect_launch_button() -> void:
 				btn = child_node
 				break
 		if btn:
-			print("Launchpad: found LaunchButton under LaunchHUD (child name=", btn.name, ")")
+			AppLogger.d("Launchpad: found LaunchButton under LaunchHUD (child name=%s)" % btn.name)
 		else:
-			print("Launchpad: LaunchButton NOT found under LaunchHUD")
+			AppLogger.d("Launchpad: LaunchButton NOT found under LaunchHUD")
 	# fallback locations
 	if not btn:
 		btn = root.get_node_or_null("UILayer/LaunchButton")
 		if btn:
-			print("Launchpad: found LaunchButton at UILayer/LaunchButton")
+			AppLogger.d("Launchpad: found LaunchButton at UILayer/LaunchButton")
 		else:
 			btn = root.get_node_or_null("UILayer/SelectorPanel/VBox/LaunchButton")
 			if btn:
-				print("Launchpad: found LaunchButton at UILayer/SelectorPanel/VBox/LaunchButton")
+				AppLogger.d("Launchpad: found LaunchButton at UILayer/SelectorPanel/VBox/LaunchButton")
 	if not btn:
-		print("Launchpad: LaunchButton not found when attempting to connect")
+		AppLogger.w("Launchpad: LaunchButton not found when attempting to connect")
 		return
 	# Always connect the pressed signal to ensure handler is wired (avoid fragile is_connected checks)
 	btn.pressed.connect(Callable(self, "_on_launch_button_pressed"))
@@ -72,13 +72,13 @@ func connect_launch_button() -> void:
 		btn.z_index = 1000
 	else:
 		btn.visible = false
-	print("Launchpad: connected LaunchButton pressed signal (node=", btn.get_path(), ")")
+	AppLogger.d("Launchpad: connected LaunchButton pressed signal (node=%s)" % btn.get_path())
 
 	# Debug: Final count of what's actually in scene
 	var all_rockets = _launchpad.get_tree().get_nodes_in_group("rocket")
-	print("Launchpad: FINAL rocket count in scene: %d total rockets in 'rocket' group" % all_rockets.size())
+	AppLogger.d("Launchpad: FINAL rocket count in scene: %d total rockets in 'rocket' group" % all_rockets.size())
 	for r in all_rockets:
-		print("  - Rocket node: %s at position %s" % [r.name, r.global_position])
+		AppLogger.d("  - Rocket node: %s at position %s" % [r.name, r.global_position])
 
 func show_standalone_launch_button() -> void:
 	var lb = _resolve_launch_button()
@@ -88,7 +88,7 @@ func show_standalone_launch_button() -> void:
 		lb.visible = true
 		lb.z_index = 1000
 		lb.disabled = false
-		print("Launchpad: showing standalone LaunchButton at", lb.position)
+		AppLogger.d("Launchpad: showing standalone LaunchButton at %s" % [lb.position])
 
 func hide_launch_button() -> void:
 	var lb = _resolve_launch_button()
@@ -96,20 +96,24 @@ func hide_launch_button() -> void:
 		lb.visible = false
 
 func _on_launch_button_pressed() -> void:
-	print("Launchpad: Launch button pressed")
+	AppLogger.d("Launchpad: Launch button pressed")
 	var nodes = _launchpad.get_tree().get_nodes_in_group("rocket")
 	if nodes.size() == 0:
-		print("Launchpad: no rockets to launch")
+		AppLogger.w("Launchpad: no rockets to launch")
 		return
 	var rocket = nodes[0]
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	if not rm:
-		print("Launchpad: RocketsManager not available")
+		AppLogger.w("Launchpad: RocketsManager not available")
 		return
 	# Require a selected target before launching
 	var target = rm.get_selected_target()
 	if target == "":
-		print("Launchpad: No target selected — cannot launch. Open Scanner Station to choose a target.")
+		AppLogger.w("Launchpad: No target selected - cannot launch. Open Scanner Station to choose a target.")
+		if _on_show_selector.is_valid():
+			_on_show_selector.call()
+		if _launchpad and _launchpad.has_method("_populate_targets"):
+			_launchpad._populate_targets()
 		if _launch_button:
 			_launch_button.disabled = false
 		return
@@ -118,7 +122,7 @@ func _on_launch_button_pressed() -> void:
 	var target_profile = rm.build_target_profile(target, str(preview_meta.get("type", "asteroid")))
 	var required_level = int(target_profile.get("required_level", 1))
 	if required_level > rocket_level:
-		print("Launchpad: target %s blocked for rocket %s (requires L%d, current L%d)" % [target, rocket.name, required_level, rocket_level])
+		AppLogger.w("Launchpad: target %s blocked for rocket %s (requires L%d, current L%d)" % [target, rocket.name, required_level, rocket_level])
 		if _launch_button:
 			_launch_button.disabled = false
 		return
@@ -138,15 +142,26 @@ func _on_launch_button_pressed() -> void:
 
 	var mission_ok = rm.add_mission(rocket.name, target, int(launch_time), mission_travel_seconds)
 	if not mission_ok:
-		print("Launchpad: failed to record mission for rocket", rocket.name)
+		AppLogger.w("Launchpad: failed to record mission for rocket %s" % rocket.name)
 	# Mark rocket as launched (preserves existing launched list behavior)
 	var set_ok = rm.set_launched(rocket.name)
 	if set_ok:
-		print("Launchpad: marked rocket %s as launched" % rocket.name)
+		AppLogger.d("Launchpad: marked rocket %s as launched" % rocket.name)
+		GameplayAnalytics.emit_launch_started(
+			rocket.name,
+			launch_target_id,
+			str(preview_meta.get("type", "asteroid")),
+			{
+				"target_label": str(preview_meta.get("label", launch_target_id))
+			}
+		)
 		_award_launch_experience()
-		_show_tutorial_hint_once(ACTION_LAUNCH_ROCKET, HINT_LAUNCH_ROCKET)
+		preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("launch_rocket_from_earth", {
+			"rocket_id": rocket.name,
+			"target_id": launch_target_id
+		})
 	else:
-		print("Launchpad: failed to mark rocket as launched")
+		AppLogger.w("Launchpad: failed to mark rocket as launched")
 	var launched_rocket_id = rocket.name
 	# Clear selected target after launch
 	rm.clear_selected_target()
@@ -235,8 +250,6 @@ func _transition_to_outbound_transit(rocket_id: String, target_id: String, previ
 	else:
 		tree.change_scene_to_file(OUTBOUND_TRANSIT_SCENE_PATH)
 
-func _show_tutorial_hint_once(action_key: String, message: String) -> void:
-	preload("res://Scripts/Utils/AppControllerHelper.gd").show_tutorial_hint_once(action_key, message)
 
 func _resolve_launch_button() -> Button:
 	if _launch_button and is_instance_valid(_launch_button):

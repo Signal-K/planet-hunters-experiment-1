@@ -1,6 +1,6 @@
 extends Node2D
 
-signal exploded(position: Vector2)
+signal exploded(position: Vector2, region: Dictionary)
 
 enum State { DEPLOYING, SEEKING, EXPLODING, DONE }
 
@@ -12,14 +12,23 @@ var state = State.DEPLOYING
 var target_region = null
 var _velocity = Vector2.ZERO
 var _lifetime = 0.0
+var _available_for_deploy := true
 
 @onready var sprite: ColorRect = $Sprite
 @onready var particles: CPUParticles2D = $Particles
 
 func _ready():
 	particles.emitting = false
+	visible = false
+	_set_available_for_deploy(true)
 
 func deploy(start_pos: Vector2):
+	_set_available_for_deploy(false)
+	visible = true
+	sprite.visible = true
+	particles.emitting = false
+	_lifetime = 0.0
+	target_region = null
 	position = start_pos
 	_velocity = Vector2(0, DEPLOY_SPEED)  # Straight down
 	state = State.DEPLOYING
@@ -54,7 +63,9 @@ func _process(delta):
 		State.EXPLODING:
 			if _lifetime > 0.8:
 				state = State.DONE
-				queue_free()
+				_set_available_for_deploy(true)
+				visible = false
+				particles.emitting = false
 
 func _explode():
 	state = State.EXPLODING
@@ -66,8 +77,14 @@ func _explode():
 	particles.explosiveness = 1.0
 	particles.initial_velocity_min = 50
 	particles.initial_velocity_max = 150
-	exploded.emit(position)
-	
 	if target_region:
 		target_region.collected = true
 		target_region.poly.modulate = Color(0.2, 0.2, 0.2, 0.3)
+	exploded.emit(position, target_region if target_region else {})
+
+func is_available_for_deploy() -> bool:
+	return _available_for_deploy
+
+func _set_available_for_deploy(value: bool) -> void:
+	_available_for_deploy = value
+	set_process(not value)

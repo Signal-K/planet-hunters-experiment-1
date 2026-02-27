@@ -1,0 +1,534 @@
+{
+  "taskId": "5wr341",
+  "currentVersion": 11,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "5wr341",
+      "version": 1,
+      "timestamp": "2026-02-26T02:15:15.666Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Refactor SidescrollMining runtime object creation to scene-driven pools",
+        "description": "Move visual object creation out of runtime script into scene/template pools to improve performance and maintainability.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "architecture",
+          "refactor",
+          "mining"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Runtime creation of repeated visual objects is replaced with scene-managed pools"
+          },
+          {
+            "completed": false,
+            "text": "Mining gameplay and reward behavior remain unchanged"
+          },
+          {
+            "completed": false,
+            "text": "Scene/script structure follows scene-vs-script refactor guidance"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "5wr341",
+      "version": 2,
+      "timestamp": "2026-02-26T02:17:26.252Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "newValue": "1. Audit SidescrollMining runtime-created visual/game objects against @doc/scene-vs-script-refactoring-guide.\n2. Move repeated runtime-created objects to scene-managed pools/templates (drone deployment and background setup).\n3. Keep mining reward/collection flow unchanged and add notes/tests where practical for regression confidence."
+        }
+      ],
+      "snapshot": {
+        "title": "Refactor SidescrollMining runtime object creation to scene-driven pools",
+        "description": "Move visual object creation out of runtime script into scene/template pools to improve performance and maintainability.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "architecture",
+          "refactor",
+          "mining"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Runtime creation of repeated visual objects is replaced with scene-managed pools"
+          },
+          {
+            "completed": false,
+            "text": "Mining gameplay and reward behavior remain unchanged"
+          },
+          {
+            "completed": false,
+            "text": "Scene/script structure follows scene-vs-script refactor guidance"
+          }
+        ],
+        "implementationPlan": "1. Audit SidescrollMining runtime-created visual/game objects against @doc/scene-vs-script-refactoring-guide.\n2. Move repeated runtime-created objects to scene-managed pools/templates (drone deployment and background setup).\n3. Keep mining reward/collection flow unchanged and add notes/tests where practical for regression confidence."
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "5wr341",
+      "version": 3,
+      "timestamp": "2026-02-26T02:17:43.682Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "✓ SidescrollMining now uses scene-managed DronePool (no runtime MiningDrone instantiation)."
+        }
+      ],
+      "snapshot": {
+        "title": "Refactor SidescrollMining runtime object creation to scene-driven pools",
+        "description": "Move visual object creation out of runtime script into scene/template pools to improve performance and maintainability.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "architecture",
+          "refactor",
+          "mining"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Runtime creation of repeated visual objects is replaced with scene-managed pools"
+          },
+          {
+            "completed": false,
+            "text": "Mining gameplay and reward behavior remain unchanged"
+          },
+          {
+            "completed": false,
+            "text": "Scene/script structure follows scene-vs-script refactor guidance"
+          }
+        ],
+        "implementationPlan": "1. Audit SidescrollMining runtime-created visual/game objects against @doc/scene-vs-script-refactoring-guide.\n2. Move repeated runtime-created objects to scene-managed pools/templates (drone deployment and background setup).\n3. Keep mining reward/collection flow unchanged and add notes/tests where practical for regression confidence.",
+        "implementationNotes": "✓ SidescrollMining now uses scene-managed DronePool (no runtime MiningDrone instantiation)."
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "5wr341",
+      "version": 4,
+      "timestamp": "2026-02-26T02:17:45.909Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "✓ SidescrollMining now uses scene-managed DronePool (no runtime MiningDrone instantiation).",
+          "newValue": "✓ SidescrollMining now uses scene-managed DronePool (no runtime MiningDrone instantiation).\n\n✓ Removed runtime sky node creation path from SidescrollMining; scene background remains source-of-truth."
+        }
+      ],
+      "snapshot": {
+        "title": "Refactor SidescrollMining runtime object creation to scene-driven pools",
+        "description": "Move visual object creation out of runtime script into scene/template pools to improve performance and maintainability.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "architecture",
+          "refactor",
+          "mining"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Runtime creation of repeated visual objects is replaced with scene-managed pools"
+          },
+          {
+            "completed": false,
+            "text": "Mining gameplay and reward behavior remain unchanged"
+          },
+          {
+            "completed": false,
+            "text": "Scene/script structure follows scene-vs-script refactor guidance"
+          }
+        ],
+        "implementationPlan": "1. Audit SidescrollMining runtime-created visual/game objects against @doc/scene-vs-script-refactoring-guide.\n2. Move repeated runtime-created objects to scene-managed pools/templates (drone deployment and background setup).\n3. Keep mining reward/collection flow unchanged and add notes/tests where practical for regression confidence.",
+        "implementationNotes": "✓ SidescrollMining now uses scene-managed DronePool (no runtime MiningDrone instantiation).\n\n✓ Removed runtime sky node creation path from SidescrollMining; scene background remains source-of-truth."
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "5wr341",
+      "version": 5,
+      "timestamp": "2026-02-26T02:17:48.149Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "✓ SidescrollMining now uses scene-managed DronePool (no runtime MiningDrone instantiation).\n\n✓ Removed runtime sky node creation path from SidescrollMining; scene background remains source-of-truth.",
+          "newValue": "✓ SidescrollMining now uses scene-managed DronePool (no runtime MiningDrone instantiation).\n\n✓ Removed runtime sky node creation path from SidescrollMining; scene background remains source-of-truth.\n\n✓ MiningDrone updated for pool lifecycle (available/active state) instead of queue_free-based one-shot instances."
+        }
+      ],
+      "snapshot": {
+        "title": "Refactor SidescrollMining runtime object creation to scene-driven pools",
+        "description": "Move visual object creation out of runtime script into scene/template pools to improve performance and maintainability.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "architecture",
+          "refactor",
+          "mining"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Runtime creation of repeated visual objects is replaced with scene-managed pools"
+          },
+          {
+            "completed": false,
+            "text": "Mining gameplay and reward behavior remain unchanged"
+          },
+          {
+            "completed": false,
+            "text": "Scene/script structure follows scene-vs-script refactor guidance"
+          }
+        ],
+        "implementationPlan": "1. Audit SidescrollMining runtime-created visual/game objects against @doc/scene-vs-script-refactoring-guide.\n2. Move repeated runtime-created objects to scene-managed pools/templates (drone deployment and background setup).\n3. Keep mining reward/collection flow unchanged and add notes/tests where practical for regression confidence.",
+        "implementationNotes": "✓ SidescrollMining now uses scene-managed DronePool (no runtime MiningDrone instantiation).\n\n✓ Removed runtime sky node creation path from SidescrollMining; scene background remains source-of-truth.\n\n✓ MiningDrone updated for pool lifecycle (available/active state) instead of queue_free-based one-shot instances."
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "5wr341",
+      "version": 6,
+      "timestamp": "2026-02-26T02:17:50.394Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "✓ SidescrollMining now uses scene-managed DronePool (no runtime MiningDrone instantiation).\n\n✓ Removed runtime sky node creation path from SidescrollMining; scene background remains source-of-truth.\n\n✓ MiningDrone updated for pool lifecycle (available/active state) instead of queue_free-based one-shot instances.",
+          "newValue": "✓ SidescrollMining now uses scene-managed DronePool (no runtime MiningDrone instantiation).\n\n✓ Removed runtime sky node creation path from SidescrollMining; scene background remains source-of-truth.\n\n✓ MiningDrone updated for pool lifecycle (available/active state) instead of queue_free-based one-shot instances.\n\nStatic check: no instantiate/new-based visual object creation remains in SidescrollMining except RNG utility allocation."
+        }
+      ],
+      "snapshot": {
+        "title": "Refactor SidescrollMining runtime object creation to scene-driven pools",
+        "description": "Move visual object creation out of runtime script into scene/template pools to improve performance and maintainability.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "architecture",
+          "refactor",
+          "mining"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Runtime creation of repeated visual objects is replaced with scene-managed pools"
+          },
+          {
+            "completed": false,
+            "text": "Mining gameplay and reward behavior remain unchanged"
+          },
+          {
+            "completed": false,
+            "text": "Scene/script structure follows scene-vs-script refactor guidance"
+          }
+        ],
+        "implementationPlan": "1. Audit SidescrollMining runtime-created visual/game objects against @doc/scene-vs-script-refactoring-guide.\n2. Move repeated runtime-created objects to scene-managed pools/templates (drone deployment and background setup).\n3. Keep mining reward/collection flow unchanged and add notes/tests where practical for regression confidence.",
+        "implementationNotes": "✓ SidescrollMining now uses scene-managed DronePool (no runtime MiningDrone instantiation).\n\n✓ Removed runtime sky node creation path from SidescrollMining; scene background remains source-of-truth.\n\n✓ MiningDrone updated for pool lifecycle (available/active state) instead of queue_free-based one-shot instances.\n\nStatic check: no instantiate/new-based visual object creation remains in SidescrollMining except RNG utility allocation."
+      }
+    },
+    {
+      "id": "v7",
+      "taskId": "5wr341",
+      "version": 7,
+      "timestamp": "2026-02-26T02:18:00.129Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Runtime creation of repeated visual objects is replaced with scene-managed pools"
+            },
+            {
+              "completed": false,
+              "text": "Mining gameplay and reward behavior remain unchanged"
+            },
+            {
+              "completed": false,
+              "text": "Scene/script structure follows scene-vs-script refactor guidance"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Runtime creation of repeated visual objects is replaced with scene-managed pools"
+            },
+            {
+              "completed": false,
+              "text": "Mining gameplay and reward behavior remain unchanged"
+            },
+            {
+              "completed": false,
+              "text": "Scene/script structure follows scene-vs-script refactor guidance"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Refactor SidescrollMining runtime object creation to scene-driven pools",
+        "description": "Move visual object creation out of runtime script into scene/template pools to improve performance and maintainability.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "architecture",
+          "refactor",
+          "mining"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Runtime creation of repeated visual objects is replaced with scene-managed pools"
+          },
+          {
+            "completed": false,
+            "text": "Mining gameplay and reward behavior remain unchanged"
+          },
+          {
+            "completed": false,
+            "text": "Scene/script structure follows scene-vs-script refactor guidance"
+          }
+        ],
+        "implementationPlan": "1. Audit SidescrollMining runtime-created visual/game objects against @doc/scene-vs-script-refactoring-guide.\n2. Move repeated runtime-created objects to scene-managed pools/templates (drone deployment and background setup).\n3. Keep mining reward/collection flow unchanged and add notes/tests where practical for regression confidence.",
+        "implementationNotes": "✓ SidescrollMining now uses scene-managed DronePool (no runtime MiningDrone instantiation).\n\n✓ Removed runtime sky node creation path from SidescrollMining; scene background remains source-of-truth.\n\n✓ MiningDrone updated for pool lifecycle (available/active state) instead of queue_free-based one-shot instances.\n\nStatic check: no instantiate/new-based visual object creation remains in SidescrollMining except RNG utility allocation."
+      }
+    },
+    {
+      "id": "v8",
+      "taskId": "5wr341",
+      "version": 8,
+      "timestamp": "2026-02-26T02:18:02.352Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Runtime creation of repeated visual objects is replaced with scene-managed pools"
+            },
+            {
+              "completed": false,
+              "text": "Mining gameplay and reward behavior remain unchanged"
+            },
+            {
+              "completed": false,
+              "text": "Scene/script structure follows scene-vs-script refactor guidance"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Runtime creation of repeated visual objects is replaced with scene-managed pools"
+            },
+            {
+              "completed": true,
+              "text": "Mining gameplay and reward behavior remain unchanged"
+            },
+            {
+              "completed": false,
+              "text": "Scene/script structure follows scene-vs-script refactor guidance"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Refactor SidescrollMining runtime object creation to scene-driven pools",
+        "description": "Move visual object creation out of runtime script into scene/template pools to improve performance and maintainability.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "architecture",
+          "refactor",
+          "mining"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Runtime creation of repeated visual objects is replaced with scene-managed pools"
+          },
+          {
+            "completed": true,
+            "text": "Mining gameplay and reward behavior remain unchanged"
+          },
+          {
+            "completed": false,
+            "text": "Scene/script structure follows scene-vs-script refactor guidance"
+          }
+        ],
+        "implementationPlan": "1. Audit SidescrollMining runtime-created visual/game objects against @doc/scene-vs-script-refactoring-guide.\n2. Move repeated runtime-created objects to scene-managed pools/templates (drone deployment and background setup).\n3. Keep mining reward/collection flow unchanged and add notes/tests where practical for regression confidence.",
+        "implementationNotes": "✓ SidescrollMining now uses scene-managed DronePool (no runtime MiningDrone instantiation).\n\n✓ Removed runtime sky node creation path from SidescrollMining; scene background remains source-of-truth.\n\n✓ MiningDrone updated for pool lifecycle (available/active state) instead of queue_free-based one-shot instances.\n\nStatic check: no instantiate/new-based visual object creation remains in SidescrollMining except RNG utility allocation."
+      }
+    },
+    {
+      "id": "v9",
+      "taskId": "5wr341",
+      "version": 9,
+      "timestamp": "2026-02-26T02:18:04.583Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Runtime creation of repeated visual objects is replaced with scene-managed pools"
+            },
+            {
+              "completed": true,
+              "text": "Mining gameplay and reward behavior remain unchanged"
+            },
+            {
+              "completed": false,
+              "text": "Scene/script structure follows scene-vs-script refactor guidance"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Runtime creation of repeated visual objects is replaced with scene-managed pools"
+            },
+            {
+              "completed": true,
+              "text": "Mining gameplay and reward behavior remain unchanged"
+            },
+            {
+              "completed": true,
+              "text": "Scene/script structure follows scene-vs-script refactor guidance"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Refactor SidescrollMining runtime object creation to scene-driven pools",
+        "description": "Move visual object creation out of runtime script into scene/template pools to improve performance and maintainability.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "architecture",
+          "refactor",
+          "mining"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Runtime creation of repeated visual objects is replaced with scene-managed pools"
+          },
+          {
+            "completed": true,
+            "text": "Mining gameplay and reward behavior remain unchanged"
+          },
+          {
+            "completed": true,
+            "text": "Scene/script structure follows scene-vs-script refactor guidance"
+          }
+        ],
+        "implementationPlan": "1. Audit SidescrollMining runtime-created visual/game objects against @doc/scene-vs-script-refactoring-guide.\n2. Move repeated runtime-created objects to scene-managed pools/templates (drone deployment and background setup).\n3. Keep mining reward/collection flow unchanged and add notes/tests where practical for regression confidence.",
+        "implementationNotes": "✓ SidescrollMining now uses scene-managed DronePool (no runtime MiningDrone instantiation).\n\n✓ Removed runtime sky node creation path from SidescrollMining; scene background remains source-of-truth.\n\n✓ MiningDrone updated for pool lifecycle (available/active state) instead of queue_free-based one-shot instances.\n\nStatic check: no instantiate/new-based visual object creation remains in SidescrollMining except RNG utility allocation."
+      }
+    },
+    {
+      "id": "v10",
+      "taskId": "5wr341",
+      "version": 10,
+      "timestamp": "2026-02-26T02:18:06.826Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "✓ SidescrollMining now uses scene-managed DronePool (no runtime MiningDrone instantiation).\n\n✓ Removed runtime sky node creation path from SidescrollMining; scene background remains source-of-truth.\n\n✓ MiningDrone updated for pool lifecycle (available/active state) instead of queue_free-based one-shot instances.\n\nStatic check: no instantiate/new-based visual object creation remains in SidescrollMining except RNG utility allocation.",
+          "newValue": "✓ SidescrollMining now uses scene-managed DronePool (no runtime MiningDrone instantiation).\n\n✓ Removed runtime sky node creation path from SidescrollMining; scene background remains source-of-truth.\n\n✓ MiningDrone updated for pool lifecycle (available/active state) instead of queue_free-based one-shot instances.\n\nStatic check: no instantiate/new-based visual object creation remains in SidescrollMining except RNG utility allocation.\n\nNote: verification in this pass is code-level/static only; no Godot runtime execution in sandbox."
+        }
+      ],
+      "snapshot": {
+        "title": "Refactor SidescrollMining runtime object creation to scene-driven pools",
+        "description": "Move visual object creation out of runtime script into scene/template pools to improve performance and maintainability.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "architecture",
+          "refactor",
+          "mining"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Runtime creation of repeated visual objects is replaced with scene-managed pools"
+          },
+          {
+            "completed": true,
+            "text": "Mining gameplay and reward behavior remain unchanged"
+          },
+          {
+            "completed": true,
+            "text": "Scene/script structure follows scene-vs-script refactor guidance"
+          }
+        ],
+        "implementationPlan": "1. Audit SidescrollMining runtime-created visual/game objects against @doc/scene-vs-script-refactoring-guide.\n2. Move repeated runtime-created objects to scene-managed pools/templates (drone deployment and background setup).\n3. Keep mining reward/collection flow unchanged and add notes/tests where practical for regression confidence.",
+        "implementationNotes": "✓ SidescrollMining now uses scene-managed DronePool (no runtime MiningDrone instantiation).\n\n✓ Removed runtime sky node creation path from SidescrollMining; scene background remains source-of-truth.\n\n✓ MiningDrone updated for pool lifecycle (available/active state) instead of queue_free-based one-shot instances.\n\nStatic check: no instantiate/new-based visual object creation remains in SidescrollMining except RNG utility allocation.\n\nNote: verification in this pass is code-level/static only; no Godot runtime execution in sandbox."
+      }
+    },
+    {
+      "id": "v11",
+      "taskId": "5wr341",
+      "version": 11,
+      "timestamp": "2026-02-26T02:18:11.289Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Refactor SidescrollMining runtime object creation to scene-driven pools",
+        "description": "Move visual object creation out of runtime script into scene/template pools to improve performance and maintainability.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "architecture",
+          "refactor",
+          "mining"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Runtime creation of repeated visual objects is replaced with scene-managed pools"
+          },
+          {
+            "completed": true,
+            "text": "Mining gameplay and reward behavior remain unchanged"
+          },
+          {
+            "completed": true,
+            "text": "Scene/script structure follows scene-vs-script refactor guidance"
+          }
+        ],
+        "implementationPlan": "1. Audit SidescrollMining runtime-created visual/game objects against @doc/scene-vs-script-refactoring-guide.\n2. Move repeated runtime-created objects to scene-managed pools/templates (drone deployment and background setup).\n3. Keep mining reward/collection flow unchanged and add notes/tests where practical for regression confidence.",
+        "implementationNotes": "✓ SidescrollMining now uses scene-managed DronePool (no runtime MiningDrone instantiation).\n\n✓ Removed runtime sky node creation path from SidescrollMining; scene background remains source-of-truth.\n\n✓ MiningDrone updated for pool lifecycle (available/active state) instead of queue_free-based one-shot instances.\n\nStatic check: no instantiate/new-based visual object creation remains in SidescrollMining except RNG utility allocation.\n\nNote: verification in this pass is code-level/static only; no Godot runtime execution in sandbox."
+      }
+    }
+  ]
+}

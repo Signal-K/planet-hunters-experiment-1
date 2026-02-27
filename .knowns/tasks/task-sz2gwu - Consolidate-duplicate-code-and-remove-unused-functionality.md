@@ -1,32 +1,42 @@
 ---
 id: sz2gwu
 title: Consolidate duplicate code and remove unused functionality
-status: todo
+status: done
 priority: high
 labels:
   - refactor
   - cleanup
   - architecture
 createdAt: '2026-02-25T03:14:01.934Z'
-updatedAt: '2026-02-25T04:47:57.458Z'
-timeSpent: 1052
+updatedAt: '2026-02-25T09:50:44.438Z'
+timeSpent: 1102
 ---
 # Consolidate duplicate code and remove unused functionality
 
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-Based on analysis of the Godot project, merge duplicate/similar code, consolidate scenes, and remove code that isn't needed per the original mission progression vision (M1-M3 flow)
+Consolidate duplicate code and remove unused functionality. Align codebase with M1-M5 mission progression. See @doc/dev/refactoring-plan for detailed analysis.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [x] #1 Runtime object creation moved to scene files (SidescrollMining, Structure, AsteroidPreview)
-- [ ] #2 Duplicate styling code consolidated into reusable components
-- [ ] #3 Similar scene navigation patterns unified
+- [x] #2 Duplicate styling code consolidated into reusable components
+- [x] #3 Similar scene navigation patterns unified
 - [x] #4 Unused/legacy code removed
 - [x] #5 Documentation updated to reflect changes
 <!-- AC:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Audit remaining duplicate styling/navigation patterns
+2. Consolidate one additional repeated style pattern into PanelStyle helper
+3. Replace duplicate back/scene navigation handlers with NavigationMixin in key UI scripts
+4. Run experience tests for regression safety
+5. Update AC/notes and close task
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 

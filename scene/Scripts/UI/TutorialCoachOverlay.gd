@@ -1,0 +1,341 @@
+extends CanvasLayer
+
+const MiningPracticePanelScene = preload("res://Scenes/UI/MiningPracticePanel.tscn")
+const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
+const Targeting = preload("res://Scripts/UI/TutorialCoachTargeting.gd")
+const PANEL_MARGIN := 20.0
+const PANEL_DEFAULT_SIZE := Vector2(560.0, 240.0)
+const PANEL_MIN_SIZE := Vector2(420.0, 172.0)
+const LAYOUT_REFRESH_INTERVAL := 0.15
+const HIGHLIGHT_PADDING := 12.0
+
+@onready var panel: PanelContainer = $Root/Panel
+@onready var title_label: Label = $Root/Panel/Margin/VBox/Header/TitleLabel
+@onready var stage_label: Label = $Root/Panel/Margin/VBox/Header/StageLabel
+@onready var message_label: Label = $Root/Panel/Margin/VBox/MessageLabel
+@onready var action_label: Label = $Root/Panel/Margin/VBox/ActionLabel
+@onready var progress_label: Label = $Root/Panel/Margin/VBox/ProgressLabel
+@onready var skip_button: Button = $Root/Panel/Margin/VBox/Buttons/SkipButton
+@onready var practice_mining_button: Button = $Root/Panel/Margin/VBox/Buttons/PracticeMiningButton
+@onready var replay_mission_button: Button = $Root/Panel/Margin/VBox/Buttons/ReplayMissionButton
+@onready var replay_all_button: Button = $Root/Panel/Margin/VBox/Buttons/ReplayAllButton
+
+var _app_controller: Node = null
+var _layout_elapsed := 0.0
+var _current_state: Dictionary = {}
+var _current_step: Dictionary = {}
+
+var _highlight_box: Panel = null
+var _guide_line: Line2D = null
+var _guide_arrow: Polygon2D = null
+var _guide_label: Label = null
+var _guide_target_rect := Rect2()
+
+func _ready() -> void:
+	layer = 70
+	$Root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.mouse_filter = Control.MOUSE_FILTER_STOP
+	panel.size = PANEL_DEFAULT_SIZE
+	_apply_style()
+	_setup_guide_nodes()
+	_app_controller = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
+	if _app_controller and _app_controller.has_signal("tutorial_state_updated"):
+		_app_controller.tutorial_state_updated.connect(_on_tutorial_state_updated)
+	skip_button.pressed.connect(_on_skip_pressed)
+	practice_mining_button.pressed.connect(_on_practice_mining_pressed)
+	replay_mission_button.pressed.connect(_on_replay_mission_pressed)
+	replay_all_button.pressed.connect(_on_replay_all_pressed)
+	set_process(true)
+	_refresh()
+
+func _process(delta: float) -> void:
+	_layout_elapsed += delta
+	if _layout_elapsed < LAYOUT_REFRESH_INTERVAL:
+		return
+	_layout_elapsed = 0.0
+	_reposition_panel()
+	_update_guidance_overlay()
+
+func _apply_style() -> void:
+	PanelStyle.apply_panel(panel)
+	PanelStyle.apply_title(title_label)
+	PanelStyle.apply_muted(stage_label)
+	PanelStyle.apply_body(message_label)
+	PanelStyle.apply_muted(action_label)
+	PanelStyle.apply_muted(progress_label)
+	PanelStyle.apply_button(skip_button, false)
+	PanelStyle.apply_button(practice_mining_button, true)
+	PanelStyle.apply_button(replay_mission_button, false)
+	PanelStyle.apply_button(replay_all_button, false)
+
+func _setup_guide_nodes() -> void:
+	_highlight_box = Panel.new()
+	_highlight_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_highlight_box.visible = false
+	# Intentional opt-out from generic panel style: this is a guidance/highlight affordance.
+	var highlight_style = StyleBoxFlat.new()
+	highlight_style.bg_color = Color(0.39, 0.78, 0.98, 0.12)
+	highlight_style.border_color = Color(PanelStyle.ACCENT.r, PanelStyle.ACCENT.g, PanelStyle.ACCENT.b, 0.96)
+	highlight_style.border_width_left = 3
+	highlight_style.border_width_top = 3
+	highlight_style.border_width_right = 3
+	highlight_style.border_width_bottom = 3
+	highlight_style.corner_radius_top_left = 8
+	highlight_style.corner_radius_top_right = 8
+	highlight_style.corner_radius_bottom_left = 8
+	highlight_style.corner_radius_bottom_right = 8
+	_highlight_box.add_theme_stylebox_override("panel", highlight_style)
+	$Root.add_child(_highlight_box)
+
+	_guide_line = Line2D.new()
+	_guide_line.visible = false
+	_guide_line.width = 4.0
+	_guide_line.default_color = Color(PanelStyle.ACCENT.r, PanelStyle.ACCENT.g, PanelStyle.ACCENT.b, 0.96)
+	_guide_line.antialiased = true
+	add_child(_guide_line)
+
+	_guide_arrow = Polygon2D.new()
+	_guide_arrow.visible = false
+	_guide_arrow.color = Color(PanelStyle.ACCENT.r, PanelStyle.ACCENT.g, PanelStyle.ACCENT.b, 0.96)
+	_guide_arrow.polygon = PackedVector2Array([
+		Vector2(0, 0),
+		Vector2(-16, -9),
+		Vector2(-16, 9)
+	])
+	add_child(_guide_arrow)
+
+	_guide_label = Label.new()
+	_guide_label.visible = false
+	_guide_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_guide_label.text = "Click here ->"
+	_guide_label.add_theme_font_size_override("font_size", 18)
+	_guide_label.add_theme_color_override("font_color", PanelStyle.TEXT_PRIMARY)
+	_guide_label.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.8))
+	_guide_label.add_theme_constant_override("shadow_offset_x", 2)
+	_guide_label.add_theme_constant_override("shadow_offset_y", 2)
+	$Root.add_child(_guide_label)
+
+func _refresh() -> void:
+	if not _app_controller or not _app_controller.has_method("get_tutorial_state"):
+		visible = false
+		return
+	var state = _app_controller.get_tutorial_state()
+	_on_tutorial_state_updated(state)
+
+func _on_tutorial_state_updated(state: Dictionary) -> void:
+	_current_state = state.duplicate(true)
+	if state.is_empty():
+		visible = false
+		_hide_guide_overlay()
+		return
+	var skipped = bool(state.get("skipped", false))
+	var step: Dictionary = state.get("current_step", {})
+	_current_step = step.duplicate(true)
+	if skipped:
+		visible = true
+		title_label.text = "Onboarding Paused"
+		stage_label.text = "Tutorial skipped."
+		message_label.text = "You can resume onboarding at any time from this panel or the main menu."
+		action_label.text = ""
+		progress_label.text = ""
+		practice_mining_button.visible = false
+		_hide_guide_overlay()
+		call_deferred("_reposition_panel")
+		return
+	if step.is_empty():
+		visible = false
+		_hide_guide_overlay()
+		return
+	visible = true
+	var stage = int(state.get("current_stage", 1))
+	var current_idx = int(state.get("current_step_index", 0))
+	var total = int(state.get("total_steps", 0))
+	title_label.text = str(step.get("title", "Mission Guidance"))
+	stage_label.text = "Mission %d" % stage
+	message_label.text = str(step.get("message", ""))
+	action_label.text = "Next click: %s" % Targeting.action_hint_for_step(str(step.get("action_key", "")))
+	progress_label.text = "Step %d/%d" % [min(current_idx + 1, max(total, 1)), max(total, 1)]
+	practice_mining_button.visible = _step_supports_practice(step)
+	call_deferred("_reposition_panel")
+	call_deferred("_update_guidance_overlay")
+
+func _reposition_panel() -> void:
+	if not visible:
+		return
+	var viewport_rect := get_viewport().get_visible_rect()
+	var panel_size = _panel_layout_size(viewport_rect)
+	var blockers: Array[Rect2] = []
+	_collect_blocking_rects(get_tree().root, blockers)
+	var target_rect = Targeting.find_current_target_rect(_current_step, get_tree())
+	if _has_rect(target_rect):
+		blockers.append(target_rect)
+	var best_overlap := INF
+	var best_rect := Rect2(Vector2.ZERO, panel_size)
+	for candidate in _candidate_rects(viewport_rect, panel_size, target_rect):
+		var overlap := _rect_overlap_area(candidate, blockers)
+		if overlap < best_overlap:
+			best_overlap = overlap
+			best_rect = candidate
+	if best_overlap > 0.0:
+		panel.visible = false
+		return
+	panel.visible = true
+	panel.size = panel_size
+	panel.position = _clamp_panel_position(best_rect.position, panel_size, viewport_rect)
+
+func _candidate_rects(viewport_rect: Rect2, size: Vector2, target_rect: Rect2) -> Array[Rect2]:
+	var left := viewport_rect.position.x + PANEL_MARGIN
+	var top := viewport_rect.position.y + PANEL_MARGIN
+	var right := viewport_rect.position.x + viewport_rect.size.x - size.x - PANEL_MARGIN
+	var bottom := viewport_rect.position.y + viewport_rect.size.y - size.y - PANEL_MARGIN
+	var out: Array[Rect2] = [
+		Rect2(Vector2(left, top), size),
+		Rect2(Vector2(right, top), size),
+		Rect2(Vector2(left, bottom), size),
+		Rect2(Vector2(right, bottom), size)
+	]
+	if _has_rect(target_rect):
+		out.append(Rect2(Vector2(
+			clamp(target_rect.position.x - size.x - PANEL_MARGIN, left, right),
+			clamp(target_rect.position.y, top, bottom)
+		), size))
+		out.append(Rect2(Vector2(
+			clamp(target_rect.end.x + PANEL_MARGIN, left, right),
+			clamp(target_rect.position.y, top, bottom)
+		), size))
+		out.append(Rect2(Vector2(
+			clamp(target_rect.position.x, left, right),
+			clamp(target_rect.position.y - size.y - PANEL_MARGIN, top, bottom)
+		), size))
+		out.append(Rect2(Vector2(
+			clamp(target_rect.position.x, left, right),
+			clamp(target_rect.end.y + PANEL_MARGIN, top, bottom)
+		), size))
+	return out
+
+func _panel_layout_size(viewport_rect: Rect2) -> Vector2:
+	var min_size = panel.get_combined_minimum_size()
+	var size = Vector2(
+		max(PANEL_MIN_SIZE.x, max(PANEL_DEFAULT_SIZE.x, min_size.x)),
+		max(PANEL_MIN_SIZE.y, max(PANEL_DEFAULT_SIZE.y, min_size.y))
+	)
+	var max_width = max(viewport_rect.size.x - (PANEL_MARGIN * 2.0), PANEL_MIN_SIZE.x)
+	var max_height = max(viewport_rect.size.y - (PANEL_MARGIN * 2.0), PANEL_MIN_SIZE.y)
+	size.x = min(size.x, max_width)
+	size.y = min(size.y, max_height)
+	return size
+
+func _clamp_panel_position(position: Vector2, panel_size: Vector2, viewport_rect: Rect2) -> Vector2:
+	var min_x = viewport_rect.position.x + PANEL_MARGIN
+	var min_y = viewport_rect.position.y + PANEL_MARGIN
+	var max_x = max(viewport_rect.position.x + viewport_rect.size.x - panel_size.x - PANEL_MARGIN, min_x)
+	var max_y = max(viewport_rect.position.y + viewport_rect.size.y - panel_size.y - PANEL_MARGIN, min_y)
+	return Vector2(
+		clamp(position.x, min_x, max_x),
+		clamp(position.y, min_y, max_y)
+	)
+
+func _collect_blocking_rects(node: Node, blockers: Array[Rect2]) -> void:
+	if node == self:
+		return
+	if node is Control:
+		var control := node as Control
+		if control == $Root or $Root.is_ancestor_of(control):
+			return
+		if control.is_visible_in_tree() and _is_blocking_control(control):
+			var rect := control.get_global_rect()
+			if rect.size.x >= 56.0 and rect.size.y >= 40.0:
+				blockers.append(rect)
+	for child in node.get_children():
+		_collect_blocking_rects(child, blockers)
+
+func _is_blocking_control(control: Control) -> bool:
+	return (
+		control is PanelContainer
+		or control is ScrollContainer
+		or control is ItemList
+		or control is Tree
+		or control is TabContainer
+		or control is BaseButton
+	)
+
+func _rect_overlap_area(rect: Rect2, blockers: Array[Rect2]) -> float:
+	var total := 0.0
+	for blocker in blockers:
+		var overlap := rect.intersection(blocker)
+		if overlap.size.x > 0.0 and overlap.size.y > 0.0:
+			total += overlap.size.x * overlap.size.y
+	return total
+
+func _update_guidance_overlay() -> void:
+	if not visible or _current_step.is_empty():
+		_hide_guide_overlay()
+		return
+	var target_rect = Targeting.find_current_target_rect(_current_step, get_tree())
+	if not _has_rect(target_rect):
+		_hide_guide_overlay()
+		return
+	_guide_target_rect = target_rect
+	_highlight_box.visible = true
+	_highlight_box.position = target_rect.position - Vector2(HIGHLIGHT_PADDING, HIGHLIGHT_PADDING)
+	_highlight_box.size = target_rect.size + Vector2(HIGHLIGHT_PADDING * 2.0, HIGHLIGHT_PADDING * 2.0)
+
+	var target_center = target_rect.position + (target_rect.size * 0.5)
+	var source_point = target_center + Vector2(-240, -120)
+	if panel.visible:
+		var panel_rect = Rect2(panel.global_position, panel.size)
+		source_point = _closest_point_on_rect(panel_rect, target_center)
+	_guide_line.visible = true
+	_guide_line.points = PackedVector2Array([source_point, target_center])
+
+	var direction = (target_center - source_point).normalized()
+	_guide_arrow.visible = true
+	_guide_arrow.position = target_center
+	_guide_arrow.rotation = direction.angle()
+
+	_guide_label.visible = true
+	_guide_label.text = "Click here ->"
+	_guide_label.position = Vector2(
+		clamp(target_rect.position.x - 160.0, 8.0, get_viewport().get_visible_rect().size.x - 200.0),
+		max(target_rect.position.y - 36.0, 8.0)
+	)
+
+func _hide_guide_overlay() -> void:
+	_highlight_box.visible = false
+	_guide_line.visible = false
+	_guide_arrow.visible = false
+	_guide_label.visible = false
+	_guide_target_rect = Rect2()
+
+func _closest_point_on_rect(rect: Rect2, point: Vector2) -> Vector2:
+	return Vector2(
+		clamp(point.x, rect.position.x, rect.end.x),
+		clamp(point.y, rect.position.y, rect.end.y)
+	)
+
+func _has_rect(rect: Rect2) -> bool:
+	return rect.size.x > 0.0 and rect.size.y > 0.0
+
+func _on_skip_pressed() -> void:
+	if _app_controller and _app_controller.has_method("skip_tutorial"):
+		_app_controller.skip_tutorial()
+
+func _on_replay_mission_pressed() -> void:
+	if _app_controller and _app_controller.has_method("replay_tutorial_for_current_mission"):
+		_app_controller.replay_tutorial_for_current_mission()
+
+func _on_replay_all_pressed() -> void:
+	if _app_controller and _app_controller.has_method("replay_tutorial_from_mission1"):
+		_app_controller.replay_tutorial_from_mission1()
+
+func _on_practice_mining_pressed() -> void:
+	var root = get_tree().root
+	if root == null:
+		return
+	var panel_instance = MiningPracticePanelScene.instantiate()
+	root.add_child(panel_instance)
+
+func _step_supports_practice(step: Dictionary) -> bool:
+	var action_key = str(step.get("action_key", ""))
+	var mechanic = str(step.get("mechanic", ""))
+	return action_key == "mine_target" or mechanic == "mining"

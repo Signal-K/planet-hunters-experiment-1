@@ -1,6 +1,6 @@
 {
   "taskId": "1ji9s6",
-  "currentVersion": 5,
+  "currentVersion": 6,
   "versions": [
     {
       "id": "v1",
@@ -269,6 +269,53 @@
           }
         ],
         "implementationNotes": "Created comprehensive doc @doc/game-design/level-progression-and-unlocks covering all level-based unlocks (rockets L1-3, planets L2, subcontractors L1-5), mission-gated content (Scanner Station at M3), code references, unlock flow, UI indicators, and testing info."
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "1ji9s6",
+      "version": 6,
+      "timestamp": "2026-02-25T08:45:19.155Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "Created comprehensive doc @doc/game-design/level-progression-and-unlocks covering all level-based unlocks (rockets L1-3, planets L2, subcontractors L1-5), mission-gated content (Scanner Station at M3), code references, unlock flow, UI indicators, and testing info.",
+          "newValue": "Created comprehensive doc @doc/game-design/level-progression-and-unlocks covering all level-based unlocks (rockets L1-3, planets L2, subcontractors L1-5), mission-gated content (Scanner Station at M3), code references, unlock flow, UI indicators, and testing info.\n\n\n\nSpec Reference: @doc/specs/level-progression-and-unlocks-specification"
+        }
+      ],
+      "snapshot": {
+        "title": "Find every idea related to mechanics unlocked as users level up, and add to obsidian doc",
+        "status": "done",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "levelling",
+          "exp",
+          "xp",
+          "experience",
+          "level",
+          "mechanics",
+          "data"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Document all level-based unlocks"
+          },
+          {
+            "completed": true,
+            "text": "Include rockets, planets, subcontractors"
+          },
+          {
+            "completed": true,
+            "text": "Document mission-gated content"
+          },
+          {
+            "completed": true,
+            "text": "Add code references and testing info"
+          }
+        ],
+        "implementationNotes": "Created comprehensive doc @doc/game-design/level-progression-and-unlocks covering all level-based unlocks (rockets L1-3, planets L2, subcontractors L1-5), mission-gated content (Scanner Station at M3), code references, unlock flow, UI indicators, and testing info.\n\n\n\nSpec Reference: @doc/specs/level-progression-and-unlocks-specification"
       }
     }
   ]

@@ -6,17 +6,18 @@
       "id": "v1",
       "taskId": "0w9v28",
       "version": 1,
-      "timestamp": "2026-02-25T02:28:39.823Z",
+      "timestamp": "2026-02-25T09:49:32.775Z",
       "changes": [
         {
-          "field": "implementationNotes",
-          "newValue": "Created analysis doc @doc/dev/scene-vs-script-refactoring-guide. Key findings: SidescrollMining.gd creates 90+ visual objects at runtime (rocks, minerals, particles). Should use object pools or pre-placed nodes in scene. Structure.gd creates collision shapes at runtime. AsteroidPreview.gd creates debris procedurally. Documented refactoring patterns and priorities."
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
         }
       ],
       "snapshot": {
         "title": "Refactor runtime object creation to scene files",
-        "description": "Move procedurally generated UI elements and game objects from .gd scripts to .tscn scene files. Scripts should only contain behavior/logic, not object instantiation.",
-        "status": "todo",
+        "description": "Move procedurally generated UI elements and game objects from .gd scripts to .tscn scene files. Scripts should only contain behavior/logic, not object instantiation. See @doc/dev/refactoring-plan for detailed analysis.",
+        "status": "done",
         "priority": "high",
         "labels": [
           "refactor",
@@ -41,6 +42,7 @@
             "text": "Document refactoring patterns"
           }
         ],
+        "implementationPlan": "1. Audit runtime UI/visual object creation hotspots (SidescrollMining, Structure, AsteroidPreview)\n2. Move static/reusable nodes to scenes where still script-created\n3. Keep procedural-only generation in scripts\n4. Validate by running experience tests\n5. Update notes/AC and close task",
         "implementationNotes": "Created analysis doc @doc/dev/scene-vs-script-refactoring-guide. Key findings: SidescrollMining.gd creates 90+ visual objects at runtime (rocks, minerals, particles). Should use object pools or pre-placed nodes in scene. Structure.gd creates collision shapes at runtime. AsteroidPreview.gd creates debris procedurally. Documented refactoring patterns and priorities."
       }
     }

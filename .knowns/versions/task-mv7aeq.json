@@ -1,6 +1,6 @@
 {
   "taskId": "mv7aeq",
-  "currentVersion": 6,
+  "currentVersion": 7,
   "versions": [
     {
       "id": "v1",
@@ -251,6 +251,44 @@
           }
         ],
         "implementationNotes": "## Scene-Driven Architecture\n\n### Script Reduced to 80 Lines\n- Only handles: input, scrolling, collision detection, scoring\n- No visual creation, no setup code\n- Uses @export for all configuration\n- Direct node path access ($Rocket, $Terrain, etc.)\n\n### Scene File Contains\n- All visual elements (20+ objects)\n- All minerals with metadata\n- All obstacles with metadata  \n- Complete UI hierarchy\n- Terrain surface polygon\n- Rocket AnimatedSprite2D\n- Laser Line2D\n\n### Configuration via @export\n- scroll_speed, fuel_drain_rate, max_fuel\n- heat_per_shot, heat_cooldown, max_heat\n- rocket_speed\n- All tunable in editor\n\n### Script Responsibilities ONLY\n- Process input (keyboard/mouse)\n- Update scroll offset\n- Check laser hits via metadata\n- Check collisions via metadata\n- Update UI text/bars\n- Emit signals"
+      }
+    },
+    {
+      "id": "v7",
+      "taskId": "mv7aeq",
+      "version": 7,
+      "timestamp": "2026-02-25T08:45:17.293Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "## Scene-Driven Architecture\n\n### Script Reduced to 80 Lines\n- Only handles: input, scrolling, collision detection, scoring\n- No visual creation, no setup code\n- Uses @export for all configuration\n- Direct node path access ($Rocket, $Terrain, etc.)\n\n### Scene File Contains\n- All visual elements (20+ objects)\n- All minerals with metadata\n- All obstacles with metadata  \n- Complete UI hierarchy\n- Terrain surface polygon\n- Rocket AnimatedSprite2D\n- Laser Line2D\n\n### Configuration via @export\n- scroll_speed, fuel_drain_rate, max_fuel\n- heat_per_shot, heat_cooldown, max_heat\n- rocket_speed\n- All tunable in editor\n\n### Script Responsibilities ONLY\n- Process input (keyboard/mouse)\n- Update scroll offset\n- Check laser hits via metadata\n- Check collisions via metadata\n- Update UI text/bars\n- Emit signals",
+          "newValue": "## Scene-Driven Architecture\n\n### Script Reduced to 80 Lines\n- Only handles: input, scrolling, collision detection, scoring\n- No visual creation, no setup code\n- Uses @export for all configuration\n- Direct node path access ($Rocket, $Terrain, etc.)\n\n### Scene File Contains\n- All visual elements (20+ objects)\n- All minerals with metadata\n- All obstacles with metadata  \n- Complete UI hierarchy\n- Terrain surface polygon\n- Rocket AnimatedSprite2D\n- Laser Line2D\n\n### Configuration via @export\n- scroll_speed, fuel_drain_rate, max_fuel\n- heat_per_shot, heat_cooldown, max_heat\n- rocket_speed\n- All tunable in editor\n\n### Script Responsibilities ONLY\n- Process input (keyboard/mouse)\n- Update scroll offset\n- Check laser hits via metadata\n- Check collisions via metadata\n- Update UI text/bars\n- Emit signals\n\n\n\nSpec Reference: @doc/specs/mining-minigame-system-specification"
+        }
+      ],
+      "snapshot": {
+        "title": "Make mining minigame scene-driven",
+        "description": "Move all configuration, visual setup, and structure into .tscn files. Scripts should only handle input/physics/state",
+        "status": "done",
+        "priority": "high",
+        "labels": [
+          "refactor",
+          "architecture"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Scene file defines all visual elements"
+          },
+          {
+            "completed": true,
+            "text": "Script only handles: input, scrolling, collision, scoring"
+          },
+          {
+            "completed": true,
+            "text": "No visual creation in code"
+          }
+        ],
+        "implementationNotes": "## Scene-Driven Architecture\n\n### Script Reduced to 80 Lines\n- Only handles: input, scrolling, collision detection, scoring\n- No visual creation, no setup code\n- Uses @export for all configuration\n- Direct node path access ($Rocket, $Terrain, etc.)\n\n### Scene File Contains\n- All visual elements (20+ objects)\n- All minerals with metadata\n- All obstacles with metadata  \n- Complete UI hierarchy\n- Terrain surface polygon\n- Rocket AnimatedSprite2D\n- Laser Line2D\n\n### Configuration via @export\n- scroll_speed, fuel_drain_rate, max_fuel\n- heat_per_shot, heat_cooldown, max_heat\n- rocket_speed\n- All tunable in editor\n\n### Script Responsibilities ONLY\n- Process input (keyboard/mouse)\n- Update scroll offset\n- Check laser hits via metadata\n- Check collisions via metadata\n- Update UI text/bars\n- Emit signals\n\n\n\nSpec Reference: @doc/specs/mining-minigame-system-specification"
       }
     }
   ]

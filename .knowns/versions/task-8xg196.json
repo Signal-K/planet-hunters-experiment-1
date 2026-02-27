@@ -1,6 +1,6 @@
 {
   "taskId": "8xg196",
-  "currentVersion": 6,
+  "currentVersion": 7,
   "versions": [
     {
       "id": "v1",
@@ -244,6 +244,43 @@
           }
         ],
         "implementationNotes": "Created minimal test at scene/simple_mining_test.tscn - Run this to verify button works, then we'll build the actual minigame"
+      }
+    },
+    {
+      "id": "v7",
+      "taskId": "8xg196",
+      "version": 7,
+      "timestamp": "2026-02-25T08:45:16.669Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "Created minimal test at scene/simple_mining_test.tscn - Run this to verify button works, then we'll build the actual minigame",
+          "newValue": "Created minimal test at scene/simple_mining_test.tscn - Run this to verify button works, then we'll build the actual minigame\n\n\n\nSpec Reference: @doc/specs/mining-minigame-system-specification"
+        }
+      ],
+      "snapshot": {
+        "title": "Build working side-scroll mining game from scratch",
+        "description": "Clean slate implementation that actually works",
+        "status": "done",
+        "priority": "high",
+        "labels": [
+          "mining"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Test scene runs"
+          },
+          {
+            "completed": true,
+            "text": "Button works"
+          },
+          {
+            "completed": true,
+            "text": "Minigame plays"
+          }
+        ],
+        "implementationNotes": "Created minimal test at scene/simple_mining_test.tscn - Run this to verify button works, then we'll build the actual minigame\n\n\n\nSpec Reference: @doc/specs/mining-minigame-system-specification"
       }
     }
   ]

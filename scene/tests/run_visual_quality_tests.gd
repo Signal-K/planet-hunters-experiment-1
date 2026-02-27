@@ -2,8 +2,28 @@ extends SceneTree
 
 const TestReporter = preload("res://tests/TestReporter.gd")
 const FrancBalanceScene = preload("res://Scenes/UI/FrancBalance.tscn")
+const EarthWeatherEngine = preload("res://Scripts/Earth/Environment/EarthWeatherEngine.gd")
+const UIConsistencyEnforcer = preload("res://Scripts/UI/UIConsistencyEnforcer.gd")
+const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
 
 var reporter := TestReporter.new()
+
+class WeatherProbe:
+	extends Node
+	var tick_count := 0
+	var signal_hits := 0
+	var last_cycle_t := -1.0
+	var last_night_factor := -1.0
+	var last_delta := -1.0
+
+	func on_day_night_tick(cycle_t: float, night_factor: float, delta: float) -> void:
+		tick_count += 1
+		last_cycle_t = cycle_t
+		last_night_factor = night_factor
+		last_delta = delta
+
+	func on_cycle_updated(_cycle_t: float, _night_factor: float) -> void:
+		signal_hits += 1
 
 func _init():
 	reporter.start_suite("Visual Quality", {
@@ -23,6 +43,8 @@ func _init():
 func run_all_tests() -> void:
 	await test_project_uses_linear_canvas_filter()
 	await test_franc_balance_button_has_readable_text_color()
+	await test_weather_cycle_and_event_hooks()
+	await test_ui_consistency_enforcer_applies_expected_defaults()
 
 func test_project_uses_linear_canvas_filter() -> void:
 	reporter.start_test("Project canvas texture filter is linear (not nearest)")
@@ -55,3 +77,83 @@ func test_franc_balance_button_has_readable_text_color() -> void:
 		return
 	node.queue_free()
 	reporter.pass_test()
+
+func test_weather_cycle_and_event_hooks() -> void:
+	reporter.start_test("[Baseline] Weather engine cycle updates and event hooks remain functional")
+	var host = Node.new()
+	get_root().add_child(host)
+	var engine = EarthWeatherEngine.new()
+	engine.auto_start = false
+	engine.cycle_duration_seconds = 60.0
+	host.add_child(engine)
+	var probe = WeatherProbe.new()
+	host.add_child(probe)
+	engine.register_event(probe)
+	engine.cycle_updated.connect(Callable(probe, "on_cycle_updated"))
+
+	engine.set_cycle_t(0.0)
+	if not is_equal_approx(engine.get_night_factor(), 0.0):
+		reporter.fail_test("Expected night_factor=0.0 at cycle_t=0.0")
+		host.queue_free()
+		return
+	engine.set_cycle_t(0.5)
+	if abs(engine.get_night_factor() - 1.0) > 0.001:
+		reporter.fail_test("Expected night_factor near 1.0 at cycle_t=0.5, got %s" % str(engine.get_night_factor()))
+		host.queue_free()
+		return
+	if probe.tick_count < 2:
+		reporter.fail_test("Expected weather probe to receive >=2 tick callbacks, got %s" % probe.tick_count)
+		host.queue_free()
+		return
+	if probe.signal_hits < 2:
+		reporter.fail_test("Expected cycle_updated signal hits >=2, got %s" % probe.signal_hits)
+		host.queue_free()
+		return
+	host.queue_free()
+	reporter.pass_test()
+
+func test_ui_consistency_enforcer_applies_expected_defaults() -> void:
+	reporter.start_test("[Baseline] UI consistency enforcer applies defaults and respects style locks")
+	var root = Control.new()
+	var launch_button = Button.new()
+	launch_button.name = "LaunchButton"
+	launch_button.text = "Launch"
+	root.add_child(launch_button)
+	var muted_label = Label.new()
+	muted_label.name = "StatusHintLabel"
+	root.add_child(muted_label)
+	var title_label = Label.new()
+	title_label.name = "TitleLabel"
+	root.add_child(title_label)
+	var locked = Button.new()
+	locked.name = "LockedButton"
+	locked.set_meta(UIConsistencyEnforcer.META_LOCK, true)
+	root.add_child(locked)
+
+	var enforcer = UIConsistencyEnforcer.new()
+	enforcer._apply_tree(root)
+
+	if not launch_button.has_theme_stylebox_override("normal"):
+		reporter.fail_test("Expected LaunchButton to receive themed normal style")
+		return
+	if not muted_label.has_theme_color_override("font_color"):
+		reporter.fail_test("Expected muted label to receive font_color override")
+		return
+	if not _colors_close(muted_label.get_theme_color("font_color"), PanelStyle.TEXT_MUTED):
+		reporter.fail_test("Muted label color mismatch")
+		return
+	if not _colors_close(title_label.get_theme_color("font_color"), PanelStyle.TEXT_PRIMARY):
+		reporter.fail_test("Primary label color mismatch")
+		return
+	if locked.has_meta(UIConsistencyEnforcer.META_KEY):
+		reporter.fail_test("Locked control should not be marked as consistency-applied")
+		return
+	reporter.pass_test()
+
+func _colors_close(a: Color, b: Color) -> bool:
+	return (
+		abs(a.r - b.r) <= 0.01 and
+		abs(a.g - b.g) <= 0.01 and
+		abs(a.b - b.b) <= 0.01 and
+		abs(a.a - b.a) <= 0.01
+	)

@@ -14,7 +14,7 @@ labels:
   - targets
   - anomalies
 createdAt: '2026-02-18T22:44:54.000Z'
-updatedAt: '2026-02-18T14:57:46.468Z'
+updatedAt: '2026-02-25T08:45:00.942Z'
 timeSpent: 0
 assignee: '@me'
 ---
@@ -39,5 +39,9 @@ Mission 3 consists of users having to use the scanner to find asteroids (which a
 
 <!-- SECTION:NOTES:BEGIN -->
 ✓ Implemented Mission 3 target filtering to untargeted asteroids and fixed Mission 3 profile shaping: five candidates with one SR2-reachable target, others blocked by level/range. Added test_mission3_targets_filter_and_single_sr2_reachable.
+
+
+
+Spec Reference: @doc/specs/mission-system-specification (Mission 3 design)
 <!-- SECTION:NOTES:END -->
 

@@ -8,7 +8,7 @@ labels:
   - mining
   - visuals
 createdAt: '2026-02-24T14:39:09.675Z'
-updatedAt: '2026-02-25T00:27:15.582Z'
+updatedAt: '2026-02-25T08:45:17.084Z'
 timeSpent: 151
 ---
 # Refactor mining minigame visuals and pacing
@@ -74,5 +74,9 @@ Move visual elements to scene file, create solid terrain, slow down gameplay, us
 - Solid terrain surface (single Polygon2D)
 - Script only reads metadata, no visual creation
 - Scene has 20+ objects, not 3
+
+
+
+Spec Reference: @doc/specs/mining-minigame-system-specification
 <!-- SECTION:NOTES:END -->
 

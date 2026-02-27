@@ -1,6 +1,6 @@
 {
   "taskId": "5el2jk",
-  "currentVersion": 30,
+  "currentVersion": 31,
   "versions": [
     {
       "id": "v1",
@@ -733,6 +733,31 @@
       ],
       "snapshot": {
         "title": "Improve mobile UI panel - start with asteroid bundler",
+        "status": "on-hold",
+        "priority": "medium",
+        "labels": [
+          "UI",
+          "Mobile",
+          "Improvements",
+          "Panels"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v31",
+      "taskId": "5el2jk",
+      "version": 31,
+      "timestamp": "2026-02-25T08:41:10.719Z",
+      "changes": [
+        {
+          "field": "description",
+          "newValue": "Improve mobile UI panel responsiveness starting with asteroid bundler. See @doc/specs/user-flow-and-citizen-science-specification for UI flow context."
+        }
+      ],
+      "snapshot": {
+        "title": "Improve mobile UI panel - start with asteroid bundler",
+        "description": "Improve mobile UI panel responsiveness starting with asteroid bundler. See @doc/specs/user-flow-and-citizen-science-specification for UI flow context.",
         "status": "on-hold",
         "priority": "medium",
         "labels": [

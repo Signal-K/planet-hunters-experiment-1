@@ -9,7 +9,7 @@ labels:
   - Onboarding
   - Narrative
 createdAt: '2026-01-20T01:56:29.436Z'
-updatedAt: '2026-01-22T13:24:02.723Z'
+updatedAt: '2026-02-25T08:45:18.115Z'
 timeSpent: 2960
 ---
 # Create tutorial UI state
@@ -26,5 +26,9 @@ As well as a way to bypass this when running/testing locally
 
 <!-- SECTION:NOTES:BEGIN -->
 First up - tutorial state variable that syncs between Godot and Expo
+
+
+
+Spec Reference: @doc/specs/mission-system-specification (Tutorial system)
 <!-- SECTION:NOTES:END -->
 

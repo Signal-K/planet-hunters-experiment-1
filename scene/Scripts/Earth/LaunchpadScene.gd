@@ -108,9 +108,6 @@ func _setup_mission_guidance() -> void:
 		return
 	_mission_guidance_active = true
 	set_process(true)
-	var tutorial_panel = get_node_or_null("TutorialPanel")
-	if tutorial_panel and tutorial_panel is CanvasItem:
-		tutorial_panel.visible = false
 	_mission_guidance_layer = MissionGuidanceOverlayScene.instantiate()
 	if _mission_guidance_layer == null:
 		return
@@ -181,9 +178,6 @@ func _clear_mission_guidance() -> void:
 	_mission_guidance_id = 0
 	if _mission_guidance_layer and is_instance_valid(_mission_guidance_layer):
 		_mission_guidance_layer.queue_free()
-	var tutorial_panel = get_node_or_null("TutorialPanel")
-	if tutorial_panel and tutorial_panel is CanvasItem:
-		tutorial_panel.visible = true
 	_mission_guidance_layer = null
 	_mission_guidance_label = null
 	_mission_guidance_pointer = null
