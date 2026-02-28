@@ -48,6 +48,12 @@ var _current_target_type := ""
 var _current_rocket_id := ""
 var _earth_pivot: Node3D
 var _earth_mesh: MeshInstance3D
+# Science image panel shown during TRAVEL phase
+var _science_panel: PanelContainer = null
+var _science_image: TextureRect = null
+var _science_caption: Label = null
+var _science_http: HTTPRequest = null
+var _science_image_requested := false
 var _traveling := false
 
 enum Phase {
@@ -65,6 +71,7 @@ func _ready() -> void:
 	_generate_target_asteroid(_current_target_id)
 	_setup_earth()
 	_setup_orbit_visual()
+	_build_science_panel()
 	_start_earth_orbit()
 
 func _process(delta: float) -> void:
@@ -82,6 +89,7 @@ func _process(delta: float) -> void:
 func _setup_ui() -> void:
 	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
 	panel_style.apply_button(back_button, false)
+	back_button.text = "Skip"
 	panel_style.apply_title(target_label)
 	panel_style.apply_panel(minerals_panel)
 	panel_style.apply_title(minerals_title)
@@ -176,6 +184,7 @@ func _start_travel() -> void:
 	get_tree().create_tween().tween_property(self, "_earth_alpha", 0.0, EARTH_FADE_TIME)
 	if orbit_circle:
 		orbit_circle.visible = false
+	_show_science_panel()
 
 func _update_travel() -> void:
 	if not _traveling:
@@ -312,6 +321,115 @@ func _advance_to_preview() -> void:
 		scene_manager.change_to_scene(PREVIEW_SCENE_PATH)
 	else:
 		tree.change_scene_to_file(PREVIEW_SCENE_PATH)
+
+func _build_science_panel() -> void:
+	# Build a science image panel that sits over the transit UI.
+	# It is hidden initially and revealed during the TRAVEL phase.
+	var canvas = $CanvasLayer
+	if canvas == null:
+		return
+	_science_panel = PanelContainer.new()
+	_science_panel.name = "SciencePanel"
+	_science_panel.visible = false
+	_science_panel.modulate.a = 0.0
+	_science_panel.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	_science_panel.anchor_top = 0.0
+	_science_panel.anchor_bottom = 0.0
+	_science_panel.anchor_left = 0.5
+	_science_panel.anchor_right = 0.5
+	_science_panel.offset_left = -220
+	_science_panel.offset_right = 220
+	_science_panel.offset_top = 24
+	_science_panel.offset_bottom = 24
+
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.06, 0.08, 0.16, 0.92)
+	style.border_color = Color(0.30, 0.50, 0.90, 0.8)
+	style.border_width_left = 1
+	style.border_width_right = 1
+	style.border_width_top = 1
+	style.border_width_bottom = 1
+	style.corner_radius_top_left = 10
+	style.corner_radius_top_right = 10
+	style.corner_radius_bottom_left = 10
+	style.corner_radius_bottom_right = 10
+	style.content_margin_left = 12
+	style.content_margin_right = 12
+	style.content_margin_top = 12
+	style.content_margin_bottom = 12
+	_science_panel.add_theme_stylebox_override("panel", style)
+
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 8)
+	_science_panel.add_child(vbox)
+
+	var header = Label.new()
+	header.text = "INCOMING TELESCOPE DATA"
+	header.add_theme_color_override("font_color", Color(0.45, 0.70, 1.0))
+	header.add_theme_font_size_override("font_size", 11)
+	header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(header)
+
+	_science_image = TextureRect.new()
+	_science_image.custom_minimum_size = Vector2(320, 200)
+	_science_image.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+	_science_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_science_image.visible = false
+	vbox.add_child(_science_image)
+
+	_science_caption = Label.new()
+	_science_caption.text = "Tuning telescope... connecting to target..."
+	_science_caption.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_science_caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_science_caption.add_theme_color_override("font_color", Color(0.72, 0.78, 0.92))
+	_science_caption.add_theme_font_size_override("font_size", 12)
+	vbox.add_child(_science_caption)
+
+	canvas.add_child(_science_panel)
+
+func _show_science_panel() -> void:
+	if _science_panel == null or _science_image_requested:
+		return
+	_science_image_requested = true
+	_science_panel.visible = true
+	var t = create_tween()
+	t.tween_property(_science_panel, "modulate:a", 1.0, 0.8).set_delay(1.5)
+	var dataset = "Active Asteroids Programme"
+	if _current_target_type == "planet" or _current_target_type == "tess":
+		dataset = "NASA TESS dataset"
+	var label_text = _current_target_label if _current_target_label != "" else "Target %s" % _current_target_id
+	_science_caption.text = "Observing: %s\nData source: %s" % [label_text, dataset]
+	if _current_target_id != "":
+		_fetch_science_image(_current_target_id, _current_target_type)
+
+func _fetch_science_image(target_id: String, target_type: String) -> void:
+	var image_url := ""
+	if target_type == "planet" or target_type == "tess":
+		image_url = "https://api.starsailors.space/storage/v1/object/public/anomalies/%s/Sector1.png" % target_id
+	else:
+		image_url = "https://api.starsailors.space/storage/v1/object/public/telescope/telescope-active-asteroids/%s.png" % target_id
+	_science_http = HTTPRequest.new()
+	add_child(_science_http)
+	_science_http.request_completed.connect(_on_science_image_loaded)
+	_science_http.request(image_url)
+
+func _on_science_image_loaded(result: int, _response_code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
+	if result != OK or body.is_empty():
+		if _science_caption:
+			_science_caption.text += "\n(Image unavailable — signal too weak)"
+		return
+	var img = Image.new()
+	var err = img.load_png_from_buffer(body)
+	if err != OK:
+		err = img.load_jpg_from_buffer(body)
+	if err != OK:
+		if _science_caption:
+			_science_caption.text += "\n(Unable to decode image)"
+		return
+	var tex = ImageTexture.create_from_image(img)
+	if _science_image and is_instance_valid(_science_image):
+		_science_image.texture = tex
+		_science_image.visible = true
 
 func _on_back_pressed() -> void:
 	_advance_to_preview()

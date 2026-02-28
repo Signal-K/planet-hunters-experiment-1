@@ -1,7 +1,7 @@
 ---
 id: 4uqwke
 title: 'Earth scenes: modular weather + day/night cycle'
-status: in-review
+status: done
 priority: high
 labels:
   - godot
@@ -10,7 +10,7 @@ labels:
   - day-night
   - visuals
 createdAt: '2026-02-26T00:59:09.082Z'
-updatedAt: '2026-02-26T01:32:52.450Z'
+updatedAt: '2026-02-27T08:47:54.606Z'
 timeSpent: 1999
 assignee: '@me'
 ---
@@ -54,5 +54,7 @@ Implement a reusable Earth environment system that supports a 60-second day/nigh
 ## Validation
 - Did not run further Godot runtime tests per user request after repeated sandbox/headless crash in logger initialization (`user://logs/...`).
 - Changes are implemented and wired; runtime verification should be done in local non-sandbox editor/runtime.
+
+Completed and moved to done per user request (2026-02-27).
 <!-- SECTION:NOTES:END -->
 

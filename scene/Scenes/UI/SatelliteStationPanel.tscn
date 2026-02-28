@@ -1,6 +1,6 @@
 [gd_scene load_steps=8 format=3 uid="uid://satellite_station_panel"]
 
-[ext_resource type="Script" uid="uid://satellite_panel_script" path="res://Scripts/UI/SatelliteStationPanel.gd" id="1"]
+[ext_resource type="Script" uid="uid://da4sc1ei1l61q" path="res://Scripts/UI/SatelliteStationPanel.gd" id="1"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/AsteroidDetail/asteroid_detail_view.tscn" id="2"]
 
 [sub_resource type="StyleBoxFlat" id="1"]

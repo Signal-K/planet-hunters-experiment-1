@@ -1,0 +1,367 @@
+{
+  "taskId": "os17dx",
+  "currentVersion": 6,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "os17dx",
+      "version": 1,
+      "timestamp": "2026-02-28T09:54:42.494Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        }
+      ],
+      "snapshot": {
+        "title": "Science contribution card in mission debrief",
+        "description": "After a mission is resolved (sell/scrap/salvage), show a highlighted 'Scientific Observation' card that closes the citizen science loop. Currently the debrief shows minerals and francs but nothing connects it to real science. Users need to feel that their mission contributed to something real.",
+        "status": "in-progress",
+        "priority": "high",
+        "labels": [
+          "citizen-science",
+          "debrief",
+          "ux",
+          "experiment1"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "A styled card appears in the debrief showing: target name, dataset (TESS / Active Asteroids), observation type"
+          },
+          {
+            "completed": false,
+            "text": "Card text: 'You contributed observation data on [Target]. This data supports the Planet Hunters citizen science network.'"
+          },
+          {
+            "completed": false,
+            "text": "Card is visually distinct (accent color) from the mineral/economy section"
+          },
+          {
+            "completed": false,
+            "text": "Shown after mission is resolved, persists on screen"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "os17dx",
+      "version": 2,
+      "timestamp": "2026-02-28T09:58:44.899Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "A styled card appears in the debrief showing: target name, dataset (TESS / Active Asteroids), observation type"
+            },
+            {
+              "completed": false,
+              "text": "Card text: 'You contributed observation data on [Target]. This data supports the Planet Hunters citizen science network.'"
+            },
+            {
+              "completed": false,
+              "text": "Card is visually distinct (accent color) from the mineral/economy section"
+            },
+            {
+              "completed": false,
+              "text": "Shown after mission is resolved, persists on screen"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "A styled card appears in the debrief showing: target name, dataset (TESS / Active Asteroids), observation type"
+            },
+            {
+              "completed": false,
+              "text": "Card text: 'You contributed observation data on [Target]. This data supports the Planet Hunters citizen science network.'"
+            },
+            {
+              "completed": false,
+              "text": "Card is visually distinct (accent color) from the mineral/economy section"
+            },
+            {
+              "completed": false,
+              "text": "Shown after mission is resolved, persists on screen"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Science contribution card in mission debrief",
+        "description": "After a mission is resolved (sell/scrap/salvage), show a highlighted 'Scientific Observation' card that closes the citizen science loop. Currently the debrief shows minerals and francs but nothing connects it to real science. Users need to feel that their mission contributed to something real.",
+        "status": "in-progress",
+        "priority": "high",
+        "labels": [
+          "citizen-science",
+          "debrief",
+          "ux",
+          "experiment1"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "A styled card appears in the debrief showing: target name, dataset (TESS / Active Asteroids), observation type"
+          },
+          {
+            "completed": false,
+            "text": "Card text: 'You contributed observation data on [Target]. This data supports the Planet Hunters citizen science network.'"
+          },
+          {
+            "completed": false,
+            "text": "Card is visually distinct (accent color) from the mineral/economy section"
+          },
+          {
+            "completed": false,
+            "text": "Shown after mission is resolved, persists on screen"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "os17dx",
+      "version": 3,
+      "timestamp": "2026-02-28T09:58:45.151Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "A styled card appears in the debrief showing: target name, dataset (TESS / Active Asteroids), observation type"
+            },
+            {
+              "completed": false,
+              "text": "Card text: 'You contributed observation data on [Target]. This data supports the Planet Hunters citizen science network.'"
+            },
+            {
+              "completed": false,
+              "text": "Card is visually distinct (accent color) from the mineral/economy section"
+            },
+            {
+              "completed": false,
+              "text": "Shown after mission is resolved, persists on screen"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "A styled card appears in the debrief showing: target name, dataset (TESS / Active Asteroids), observation type"
+            },
+            {
+              "completed": true,
+              "text": "Card text: 'You contributed observation data on [Target]. This data supports the Planet Hunters citizen science network.'"
+            },
+            {
+              "completed": false,
+              "text": "Card is visually distinct (accent color) from the mineral/economy section"
+            },
+            {
+              "completed": false,
+              "text": "Shown after mission is resolved, persists on screen"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Science contribution card in mission debrief",
+        "description": "After a mission is resolved (sell/scrap/salvage), show a highlighted 'Scientific Observation' card that closes the citizen science loop. Currently the debrief shows minerals and francs but nothing connects it to real science. Users need to feel that their mission contributed to something real.",
+        "status": "in-progress",
+        "priority": "high",
+        "labels": [
+          "citizen-science",
+          "debrief",
+          "ux",
+          "experiment1"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "A styled card appears in the debrief showing: target name, dataset (TESS / Active Asteroids), observation type"
+          },
+          {
+            "completed": true,
+            "text": "Card text: 'You contributed observation data on [Target]. This data supports the Planet Hunters citizen science network.'"
+          },
+          {
+            "completed": false,
+            "text": "Card is visually distinct (accent color) from the mineral/economy section"
+          },
+          {
+            "completed": false,
+            "text": "Shown after mission is resolved, persists on screen"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "os17dx",
+      "version": 4,
+      "timestamp": "2026-02-28T09:58:45.394Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "A styled card appears in the debrief showing: target name, dataset (TESS / Active Asteroids), observation type"
+            },
+            {
+              "completed": true,
+              "text": "Card text: 'You contributed observation data on [Target]. This data supports the Planet Hunters citizen science network.'"
+            },
+            {
+              "completed": false,
+              "text": "Card is visually distinct (accent color) from the mineral/economy section"
+            },
+            {
+              "completed": false,
+              "text": "Shown after mission is resolved, persists on screen"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "A styled card appears in the debrief showing: target name, dataset (TESS / Active Asteroids), observation type"
+            },
+            {
+              "completed": true,
+              "text": "Card text: 'You contributed observation data on [Target]. This data supports the Planet Hunters citizen science network.'"
+            },
+            {
+              "completed": true,
+              "text": "Card is visually distinct (accent color) from the mineral/economy section"
+            },
+            {
+              "completed": false,
+              "text": "Shown after mission is resolved, persists on screen"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Science contribution card in mission debrief",
+        "description": "After a mission is resolved (sell/scrap/salvage), show a highlighted 'Scientific Observation' card that closes the citizen science loop. Currently the debrief shows minerals and francs but nothing connects it to real science. Users need to feel that their mission contributed to something real.",
+        "status": "in-progress",
+        "priority": "high",
+        "labels": [
+          "citizen-science",
+          "debrief",
+          "ux",
+          "experiment1"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "A styled card appears in the debrief showing: target name, dataset (TESS / Active Asteroids), observation type"
+          },
+          {
+            "completed": true,
+            "text": "Card text: 'You contributed observation data on [Target]. This data supports the Planet Hunters citizen science network.'"
+          },
+          {
+            "completed": true,
+            "text": "Card is visually distinct (accent color) from the mineral/economy section"
+          },
+          {
+            "completed": false,
+            "text": "Shown after mission is resolved, persists on screen"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "os17dx",
+      "version": 5,
+      "timestamp": "2026-02-28T10:00:29.599Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "Science card built programmatically, inserted before Footer in VBox. Shows target, dataset (TESS/Active Asteroids by type), and citizen science message. Triggered by all 5 resolution paths."
+        }
+      ],
+      "snapshot": {
+        "title": "Science contribution card in mission debrief",
+        "description": "After a mission is resolved (sell/scrap/salvage), show a highlighted 'Scientific Observation' card that closes the citizen science loop. Currently the debrief shows minerals and francs but nothing connects it to real science. Users need to feel that their mission contributed to something real.",
+        "status": "in-progress",
+        "priority": "high",
+        "labels": [
+          "citizen-science",
+          "debrief",
+          "ux",
+          "experiment1"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "A styled card appears in the debrief showing: target name, dataset (TESS / Active Asteroids), observation type"
+          },
+          {
+            "completed": true,
+            "text": "Card text: 'You contributed observation data on [Target]. This data supports the Planet Hunters citizen science network.'"
+          },
+          {
+            "completed": true,
+            "text": "Card is visually distinct (accent color) from the mineral/economy section"
+          },
+          {
+            "completed": false,
+            "text": "Shown after mission is resolved, persists on screen"
+          }
+        ],
+        "implementationNotes": "Science card built programmatically, inserted before Footer in VBox. Shows target, dataset (TESS/Active Asteroids by type), and citizen science message. Triggered by all 5 resolution paths."
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "os17dx",
+      "version": 6,
+      "timestamp": "2026-02-28T10:00:29.860Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Science contribution card in mission debrief",
+        "description": "After a mission is resolved (sell/scrap/salvage), show a highlighted 'Scientific Observation' card that closes the citizen science loop. Currently the debrief shows minerals and francs but nothing connects it to real science. Users need to feel that their mission contributed to something real.",
+        "status": "done",
+        "priority": "high",
+        "labels": [
+          "citizen-science",
+          "debrief",
+          "ux",
+          "experiment1"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "A styled card appears in the debrief showing: target name, dataset (TESS / Active Asteroids), observation type"
+          },
+          {
+            "completed": true,
+            "text": "Card text: 'You contributed observation data on [Target]. This data supports the Planet Hunters citizen science network.'"
+          },
+          {
+            "completed": true,
+            "text": "Card is visually distinct (accent color) from the mineral/economy section"
+          },
+          {
+            "completed": false,
+            "text": "Shown after mission is resolved, persists on screen"
+          }
+        ],
+        "implementationNotes": "Science card built programmatically, inserted before Footer in VBox. Shows target, dataset (TESS/Active Asteroids by type), and citizen science message. Triggered by all 5 resolution paths."
+      }
+    }
+  ]
+}

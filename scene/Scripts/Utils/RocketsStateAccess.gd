@@ -77,9 +77,12 @@ static func build_default_state(mission_progress_schema_version: int) -> Diction
     data["scanner_unlocked"] = false
     data["scanner_unlock_dialog_seen"] = false
     data["mission5_contract_offer"] = {}
+    data["operation_mode"] = "contract"
+    data["rocket_customizations"] = {}
     data["mission_briefings_seen"] = {}
     data["mission_progress_schema_version"] = mission_progress_schema_version
     data["pending_mission_guidance_id"] = 0
+    data["launch_fallback_notice"] = ""
     return data
 
 static func write_state_direct(data: Dictionary, state_path: String) -> bool:
@@ -138,7 +141,13 @@ static func _apply_defaults(data: Dictionary, scanner_unlock_completed_missions:
         data["scanner_unlock_dialog_seen"] = false
     if not data.has("mission5_contract_offer"):
         data["mission5_contract_offer"] = {}
+    if not data.has("operation_mode"):
+        data["operation_mode"] = "contract"
+    if not data.has("rocket_customizations"):
+        data["rocket_customizations"] = {}
     if not data.has("mission_briefings_seen"):
         data["mission_briefings_seen"] = {}
+    if not data.has("launch_fallback_notice"):
+        data["launch_fallback_notice"] = ""
     if not data.has("mission_progress_schema_version"):
         data["mission_progress_schema_version"] = 0

@@ -53,10 +53,12 @@ const PRACTICE_PRESETS := {
 var _mining_instance: Control = null
 var _current_preset_key := ""
 var _previous_preview_target: Dictionary = {}
+var _tutorial_overlay_was_visible: bool = false
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	_previous_preview_target = RocketsManager.get_preview_target().duplicate(true)
+	_suspend_tutorial_overlay()
 	_apply_style()
 	_connect_buttons()
 	_set_idle_copy()
@@ -66,6 +68,7 @@ func _ready() -> void:
 	GameplayAnalytics.emit_event("mining_practice_panel_opened", {
 		"entry_point": "menu_panel"
 	})
+	_maybe_auto_start_when_no_rocket_in_play()
 
 func _apply_style() -> void:
 	PanelStyle.apply_panel(panel)
@@ -159,7 +162,12 @@ func _on_close_pressed() -> void:
 	})
 	_clear_active_run()
 	_restore_previous_preview_target()
+	_restore_tutorial_overlay()
+	var parent_canvas = get_parent() as CanvasLayer
+	var should_free_parent_layer = parent_canvas != null and parent_canvas.name == "MiningPracticeOverlayLayer"
 	queue_free()
+	if should_free_parent_layer:
+		parent_canvas.queue_free()
 
 func _clear_active_run() -> void:
 	if _mining_instance and is_instance_valid(_mining_instance):
@@ -176,3 +184,34 @@ func _restore_previous_preview_target() -> void:
 		str(_previous_preview_target.get("type", "asteroid")),
 		str(_previous_preview_target.get("rocket_id", ""))
 	)
+
+func _maybe_auto_start_when_no_rocket_in_play() -> void:
+	var has_active_rocket = RocketsManager.get_primary_awaiting_rocket_id() != ""
+	if not has_active_rocket:
+		# Smart skip-ahead: if player has no rocket staged, jump directly into
+		# a forgiving drill so test/sandbox flow is immediately usable.
+		print("MiningPracticePanel: no rocket in play, auto-starting warm-up drill")
+		_start_preset("warmup_asteroid")
+
+func _suspend_tutorial_overlay() -> void:
+	var root = get_tree().root if get_tree() else null
+	if root == null:
+		return
+	var overlay = root.get_node_or_null("TutorialCoachOverlay")
+	if overlay == null:
+		return
+	_tutorial_overlay_was_visible = bool(overlay.visible)
+	overlay.visible = false
+	overlay.process_mode = Node.PROCESS_MODE_DISABLED
+
+func _restore_tutorial_overlay() -> void:
+	var root = get_tree().root if get_tree() else null
+	if root == null:
+		return
+	var overlay = root.get_node_or_null("TutorialCoachOverlay")
+	if overlay == null:
+		return
+	overlay.process_mode = Node.PROCESS_MODE_INHERIT
+	overlay.visible = _tutorial_overlay_was_visible
+	if overlay.has_method("_refresh"):
+		overlay.call_deferred("_refresh")

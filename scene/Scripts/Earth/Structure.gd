@@ -46,6 +46,8 @@ func on_hover_exit() -> void:
 
 func _on_input_event(viewport: Node, event: InputEvent, shape_idx: int) -> void:
 	"""Handle mouse input events"""
+	if preload("res://Scripts/Utils/AppControllerHelper.gd").is_menu_open():
+		return
 	print("Structure._on_input_event called for: ", structure_name, " event: ", event)
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:

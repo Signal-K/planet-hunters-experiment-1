@@ -12,7 +12,7 @@ module.exports = (req, res) => {
       region: process.env.Posthog_Region || process.env.POSTHOG_REGION || "",
       apiHost: posthogApiHost,
       uiHost: posthogUiHost,
-      surveyId: process.env.Posthog_Survey_ID || process.env.POSTHOG_SURVEY_ID || "019c603e-d236-0000-85ce-f507635d2311",
+      surveyId: process.env.Posthog_Survey_ID || process.env.POSTHOG_SURVEY_ID || "019c9df8-db7f-0000-072f-73b3347a4d6c",
     },
     supabase: {
       url: process.env.SUPABASE_URL || "",

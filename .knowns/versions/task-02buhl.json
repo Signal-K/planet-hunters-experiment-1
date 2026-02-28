@@ -1,0 +1,605 @@
+{
+  "taskId": "02buhl",
+  "currentVersion": 8,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "02buhl",
+      "version": 1,
+      "timestamp": "2026-02-27T08:27:28.066Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Implement v0 Level & Mission Spec for Experiment 1",
+        "description": "Implement the 2026-01-15 and 2026-01-19 level/mission design draft with a tutorial-first flow, scanner-driven target selection, fallback generation, and exposure-point progression. Source: user-provided PlanetHunters Experiment1 - Level & Mission Spec (v0).",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "missions",
+          "progression",
+          "spec",
+          "experiment1"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Level 1 guided launch flow is fully playable end-to-end with debrief and progression unlock."
+          },
+          {
+            "completed": false,
+            "text": "Level 2 structured exploration supports limited mission variants and reduced guidance."
+          },
+          {
+            "completed": false,
+            "text": "Level 3 open operations supports route/mode choice and expanded debrief stats."
+          },
+          {
+            "completed": false,
+            "text": "Mission starts always provide a playable fallback scenario when generation constraints fail."
+          },
+          {
+            "completed": false,
+            "text": "Exposure gain and next unlock progress are shown clearly in mission feedback."
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "02buhl",
+      "version": 2,
+      "timestamp": "2026-02-27T08:27:34.476Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Level 1 guided launch flow is fully playable end-to-end with debrief and progression unlock."
+            },
+            {
+              "completed": false,
+              "text": "Level 2 structured exploration supports limited mission variants and reduced guidance."
+            },
+            {
+              "completed": false,
+              "text": "Level 3 open operations supports route/mode choice and expanded debrief stats."
+            },
+            {
+              "completed": false,
+              "text": "Mission starts always provide a playable fallback scenario when generation constraints fail."
+            },
+            {
+              "completed": false,
+              "text": "Exposure gain and next unlock progress are shown clearly in mission feedback."
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Level 1 guided launch flow is fully playable end-to-end with debrief and progression unlock."
+            },
+            {
+              "completed": false,
+              "text": "Level 2 structured exploration supports limited mission variants and reduced guidance."
+            },
+            {
+              "completed": false,
+              "text": "Level 3 open operations supports route/mode choice and expanded debrief stats."
+            },
+            {
+              "completed": false,
+              "text": "Mission starts always provide a playable fallback scenario when generation constraints fail."
+            },
+            {
+              "completed": false,
+              "text": "Exposure gain and next unlock progress are shown clearly in mission feedback."
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Implement v0 Level & Mission Spec for Experiment 1",
+        "description": "Implement the 2026-01-15 and 2026-01-19 level/mission design draft with a tutorial-first flow, scanner-driven target selection, fallback generation, and exposure-point progression. Source: user-provided PlanetHunters Experiment1 - Level & Mission Spec (v0).",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "missions",
+          "progression",
+          "spec",
+          "experiment1"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Level 1 guided launch flow is fully playable end-to-end with debrief and progression unlock."
+          },
+          {
+            "completed": false,
+            "text": "Level 2 structured exploration supports limited mission variants and reduced guidance."
+          },
+          {
+            "completed": false,
+            "text": "Level 3 open operations supports route/mode choice and expanded debrief stats."
+          },
+          {
+            "completed": false,
+            "text": "Mission starts always provide a playable fallback scenario when generation constraints fail."
+          },
+          {
+            "completed": false,
+            "text": "Exposure gain and next unlock progress are shown clearly in mission feedback."
+          }
+        ]
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "02buhl",
+      "version": 3,
+      "timestamp": "2026-02-27T08:27:34.724Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Level 1 guided launch flow is fully playable end-to-end with debrief and progression unlock."
+            },
+            {
+              "completed": false,
+              "text": "Level 2 structured exploration supports limited mission variants and reduced guidance."
+            },
+            {
+              "completed": false,
+              "text": "Level 3 open operations supports route/mode choice and expanded debrief stats."
+            },
+            {
+              "completed": false,
+              "text": "Mission starts always provide a playable fallback scenario when generation constraints fail."
+            },
+            {
+              "completed": false,
+              "text": "Exposure gain and next unlock progress are shown clearly in mission feedback."
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Level 1 guided launch flow is fully playable end-to-end with debrief and progression unlock."
+            },
+            {
+              "completed": true,
+              "text": "Level 2 structured exploration supports limited mission variants and reduced guidance."
+            },
+            {
+              "completed": false,
+              "text": "Level 3 open operations supports route/mode choice and expanded debrief stats."
+            },
+            {
+              "completed": false,
+              "text": "Mission starts always provide a playable fallback scenario when generation constraints fail."
+            },
+            {
+              "completed": false,
+              "text": "Exposure gain and next unlock progress are shown clearly in mission feedback."
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Implement v0 Level & Mission Spec for Experiment 1",
+        "description": "Implement the 2026-01-15 and 2026-01-19 level/mission design draft with a tutorial-first flow, scanner-driven target selection, fallback generation, and exposure-point progression. Source: user-provided PlanetHunters Experiment1 - Level & Mission Spec (v0).",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "missions",
+          "progression",
+          "spec",
+          "experiment1"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Level 1 guided launch flow is fully playable end-to-end with debrief and progression unlock."
+          },
+          {
+            "completed": true,
+            "text": "Level 2 structured exploration supports limited mission variants and reduced guidance."
+          },
+          {
+            "completed": false,
+            "text": "Level 3 open operations supports route/mode choice and expanded debrief stats."
+          },
+          {
+            "completed": false,
+            "text": "Mission starts always provide a playable fallback scenario when generation constraints fail."
+          },
+          {
+            "completed": false,
+            "text": "Exposure gain and next unlock progress are shown clearly in mission feedback."
+          }
+        ]
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "02buhl",
+      "version": 4,
+      "timestamp": "2026-02-27T08:27:34.961Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Level 1 guided launch flow is fully playable end-to-end with debrief and progression unlock."
+            },
+            {
+              "completed": true,
+              "text": "Level 2 structured exploration supports limited mission variants and reduced guidance."
+            },
+            {
+              "completed": false,
+              "text": "Level 3 open operations supports route/mode choice and expanded debrief stats."
+            },
+            {
+              "completed": false,
+              "text": "Mission starts always provide a playable fallback scenario when generation constraints fail."
+            },
+            {
+              "completed": false,
+              "text": "Exposure gain and next unlock progress are shown clearly in mission feedback."
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Level 1 guided launch flow is fully playable end-to-end with debrief and progression unlock."
+            },
+            {
+              "completed": true,
+              "text": "Level 2 structured exploration supports limited mission variants and reduced guidance."
+            },
+            {
+              "completed": true,
+              "text": "Level 3 open operations supports route/mode choice and expanded debrief stats."
+            },
+            {
+              "completed": false,
+              "text": "Mission starts always provide a playable fallback scenario when generation constraints fail."
+            },
+            {
+              "completed": false,
+              "text": "Exposure gain and next unlock progress are shown clearly in mission feedback."
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Implement v0 Level & Mission Spec for Experiment 1",
+        "description": "Implement the 2026-01-15 and 2026-01-19 level/mission design draft with a tutorial-first flow, scanner-driven target selection, fallback generation, and exposure-point progression. Source: user-provided PlanetHunters Experiment1 - Level & Mission Spec (v0).",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "missions",
+          "progression",
+          "spec",
+          "experiment1"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Level 1 guided launch flow is fully playable end-to-end with debrief and progression unlock."
+          },
+          {
+            "completed": true,
+            "text": "Level 2 structured exploration supports limited mission variants and reduced guidance."
+          },
+          {
+            "completed": true,
+            "text": "Level 3 open operations supports route/mode choice and expanded debrief stats."
+          },
+          {
+            "completed": false,
+            "text": "Mission starts always provide a playable fallback scenario when generation constraints fail."
+          },
+          {
+            "completed": false,
+            "text": "Exposure gain and next unlock progress are shown clearly in mission feedback."
+          }
+        ]
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "02buhl",
+      "version": 5,
+      "timestamp": "2026-02-27T08:27:35.417Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Level 1 guided launch flow is fully playable end-to-end with debrief and progression unlock."
+            },
+            {
+              "completed": true,
+              "text": "Level 2 structured exploration supports limited mission variants and reduced guidance."
+            },
+            {
+              "completed": true,
+              "text": "Level 3 open operations supports route/mode choice and expanded debrief stats."
+            },
+            {
+              "completed": false,
+              "text": "Mission starts always provide a playable fallback scenario when generation constraints fail."
+            },
+            {
+              "completed": false,
+              "text": "Exposure gain and next unlock progress are shown clearly in mission feedback."
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Level 1 guided launch flow is fully playable end-to-end with debrief and progression unlock."
+            },
+            {
+              "completed": true,
+              "text": "Level 2 structured exploration supports limited mission variants and reduced guidance."
+            },
+            {
+              "completed": true,
+              "text": "Level 3 open operations supports route/mode choice and expanded debrief stats."
+            },
+            {
+              "completed": true,
+              "text": "Mission starts always provide a playable fallback scenario when generation constraints fail."
+            },
+            {
+              "completed": false,
+              "text": "Exposure gain and next unlock progress are shown clearly in mission feedback."
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Implement v0 Level & Mission Spec for Experiment 1",
+        "description": "Implement the 2026-01-15 and 2026-01-19 level/mission design draft with a tutorial-first flow, scanner-driven target selection, fallback generation, and exposure-point progression. Source: user-provided PlanetHunters Experiment1 - Level & Mission Spec (v0).",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "missions",
+          "progression",
+          "spec",
+          "experiment1"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Level 1 guided launch flow is fully playable end-to-end with debrief and progression unlock."
+          },
+          {
+            "completed": true,
+            "text": "Level 2 structured exploration supports limited mission variants and reduced guidance."
+          },
+          {
+            "completed": true,
+            "text": "Level 3 open operations supports route/mode choice and expanded debrief stats."
+          },
+          {
+            "completed": true,
+            "text": "Mission starts always provide a playable fallback scenario when generation constraints fail."
+          },
+          {
+            "completed": false,
+            "text": "Exposure gain and next unlock progress are shown clearly in mission feedback."
+          }
+        ]
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "02buhl",
+      "version": 6,
+      "timestamp": "2026-02-27T08:27:35.706Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Level 1 guided launch flow is fully playable end-to-end with debrief and progression unlock."
+            },
+            {
+              "completed": true,
+              "text": "Level 2 structured exploration supports limited mission variants and reduced guidance."
+            },
+            {
+              "completed": true,
+              "text": "Level 3 open operations supports route/mode choice and expanded debrief stats."
+            },
+            {
+              "completed": true,
+              "text": "Mission starts always provide a playable fallback scenario when generation constraints fail."
+            },
+            {
+              "completed": false,
+              "text": "Exposure gain and next unlock progress are shown clearly in mission feedback."
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Level 1 guided launch flow is fully playable end-to-end with debrief and progression unlock."
+            },
+            {
+              "completed": true,
+              "text": "Level 2 structured exploration supports limited mission variants and reduced guidance."
+            },
+            {
+              "completed": true,
+              "text": "Level 3 open operations supports route/mode choice and expanded debrief stats."
+            },
+            {
+              "completed": true,
+              "text": "Mission starts always provide a playable fallback scenario when generation constraints fail."
+            },
+            {
+              "completed": true,
+              "text": "Exposure gain and next unlock progress are shown clearly in mission feedback."
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Implement v0 Level & Mission Spec for Experiment 1",
+        "description": "Implement the 2026-01-15 and 2026-01-19 level/mission design draft with a tutorial-first flow, scanner-driven target selection, fallback generation, and exposure-point progression. Source: user-provided PlanetHunters Experiment1 - Level & Mission Spec (v0).",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "missions",
+          "progression",
+          "spec",
+          "experiment1"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Level 1 guided launch flow is fully playable end-to-end with debrief and progression unlock."
+          },
+          {
+            "completed": true,
+            "text": "Level 2 structured exploration supports limited mission variants and reduced guidance."
+          },
+          {
+            "completed": true,
+            "text": "Level 3 open operations supports route/mode choice and expanded debrief stats."
+          },
+          {
+            "completed": true,
+            "text": "Mission starts always provide a playable fallback scenario when generation constraints fail."
+          },
+          {
+            "completed": true,
+            "text": "Exposure gain and next unlock progress are shown clearly in mission feedback."
+          }
+        ]
+      }
+    },
+    {
+      "id": "v7",
+      "taskId": "02buhl",
+      "version": 7,
+      "timestamp": "2026-02-27T08:27:44.648Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "## Summary\nImplemented and validated the Experiment 1 v0 mission/level spec across child tasks:\n- Level 1 guided route + debrief/progression: task-hl3d5b\n- Level 2 structured variants + reduced guidance: task-9w14kp\n- Scanner-required targeting flow: task-7z1z11\n- Mission fallback generation and launch continuity: task-r36co4\n- Exposure + unlock progress feedback in debrief: task-7wzber\n- Open operations mode/route + advanced debrief stats: task-6vt91o\n- Resolved spec open questions (mode split/formulas/overlays): task-j05hgn\n\n## Verification\n- run_structure_tests.gd, run_mission_log_tests.gd, run_experience_tests.gd all passing in latest run set."
+        }
+      ],
+      "snapshot": {
+        "title": "Implement v0 Level & Mission Spec for Experiment 1",
+        "description": "Implement the 2026-01-15 and 2026-01-19 level/mission design draft with a tutorial-first flow, scanner-driven target selection, fallback generation, and exposure-point progression. Source: user-provided PlanetHunters Experiment1 - Level & Mission Spec (v0).",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "missions",
+          "progression",
+          "spec",
+          "experiment1"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Level 1 guided launch flow is fully playable end-to-end with debrief and progression unlock."
+          },
+          {
+            "completed": true,
+            "text": "Level 2 structured exploration supports limited mission variants and reduced guidance."
+          },
+          {
+            "completed": true,
+            "text": "Level 3 open operations supports route/mode choice and expanded debrief stats."
+          },
+          {
+            "completed": true,
+            "text": "Mission starts always provide a playable fallback scenario when generation constraints fail."
+          },
+          {
+            "completed": true,
+            "text": "Exposure gain and next unlock progress are shown clearly in mission feedback."
+          }
+        ],
+        "implementationNotes": "## Summary\nImplemented and validated the Experiment 1 v0 mission/level spec across child tasks:\n- Level 1 guided route + debrief/progression: task-hl3d5b\n- Level 2 structured variants + reduced guidance: task-9w14kp\n- Scanner-required targeting flow: task-7z1z11\n- Mission fallback generation and launch continuity: task-r36co4\n- Exposure + unlock progress feedback in debrief: task-7wzber\n- Open operations mode/route + advanced debrief stats: task-6vt91o\n- Resolved spec open questions (mode split/formulas/overlays): task-j05hgn\n\n## Verification\n- run_structure_tests.gd, run_mission_log_tests.gd, run_experience_tests.gd all passing in latest run set."
+      }
+    },
+    {
+      "id": "v8",
+      "taskId": "02buhl",
+      "version": 8,
+      "timestamp": "2026-02-27T08:27:50.900Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Implement v0 Level & Mission Spec for Experiment 1",
+        "description": "Implement the 2026-01-15 and 2026-01-19 level/mission design draft with a tutorial-first flow, scanner-driven target selection, fallback generation, and exposure-point progression. Source: user-provided PlanetHunters Experiment1 - Level & Mission Spec (v0).",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "missions",
+          "progression",
+          "spec",
+          "experiment1"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Level 1 guided launch flow is fully playable end-to-end with debrief and progression unlock."
+          },
+          {
+            "completed": true,
+            "text": "Level 2 structured exploration supports limited mission variants and reduced guidance."
+          },
+          {
+            "completed": true,
+            "text": "Level 3 open operations supports route/mode choice and expanded debrief stats."
+          },
+          {
+            "completed": true,
+            "text": "Mission starts always provide a playable fallback scenario when generation constraints fail."
+          },
+          {
+            "completed": true,
+            "text": "Exposure gain and next unlock progress are shown clearly in mission feedback."
+          }
+        ],
+        "implementationNotes": "## Summary\nImplemented and validated the Experiment 1 v0 mission/level spec across child tasks:\n- Level 1 guided route + debrief/progression: task-hl3d5b\n- Level 2 structured variants + reduced guidance: task-9w14kp\n- Scanner-required targeting flow: task-7z1z11\n- Mission fallback generation and launch continuity: task-r36co4\n- Exposure + unlock progress feedback in debrief: task-7wzber\n- Open operations mode/route + advanced debrief stats: task-6vt91o\n- Resolved spec open questions (mode split/formulas/overlays): task-j05hgn\n\n## Verification\n- run_structure_tests.gd, run_mission_log_tests.gd, run_experience_tests.gd all passing in latest run set."
+      }
+    }
+  ]
+}

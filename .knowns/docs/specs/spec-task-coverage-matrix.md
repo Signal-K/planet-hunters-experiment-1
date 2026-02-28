@@ -1,7 +1,7 @@
 ---
 title: Spec Task Coverage Matrix
 createdAt: '2026-02-25T09:58:31.984Z'
-updatedAt: '2026-02-26T01:53:54.327Z'
+updatedAt: '2026-02-27T08:26:47.616Z'
 description: >-
   Coverage map from spec requirements to implementation tasks and validation
   tests
@@ -50,3 +50,11 @@ This matrix maps active specification requirements to completed implementation t
 
 - Coverage status reflects current active specs and implementation tasks in Knowns.
 - Validation currently relies on Godot experience/missions coverage plus JS unit tests in this environment.
+
+
+
+## Addendum (2026-02-27): Resolved Design Definitions
+
+| Requirement | Coverage Evidence | Validation | Status |
+|---|---|---|---|
+| Level 2/3 mode split + drag/drop scope + exposure formulas + overlay minimums | @doc/specs/level-2-3-mode-split-and-exposure-formula-specification | Structure + mission log suites include open-operations persistence and advanced debrief assertions | Covered |

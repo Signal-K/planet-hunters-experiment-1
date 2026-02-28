@@ -30,8 +30,10 @@ const AppLogger = preload("res://Scripts/Utils/Logger.gd")
 var pending_anomalies := []
 var current_mode: String = "asteroids"  # Default mode
 var local_only: bool = false
+var use_archived_detail: bool = false
 var _player_level: int = 1
 var _unlock_overlay: ColorRect = null
+var _citizen_science_hint_label: Label = null
 var _data := SatelliteStationPanelData.new()
 var _list := SatelliteStationPanelList.new()
 var _detail := SatelliteStationPanelDetail.new()
@@ -96,8 +98,11 @@ func _ready():
 	# Connect toggle switch
 	toggle_switch.pressed.connect(_on_toggle_switch_pressed)
 	_connect_experience_updates()
+	_connect_preference_updates()
 	_refresh_player_level()
 	_refresh_planet_unlock_ui(false)
+	_ensure_citizen_science_hint()
+	_refresh_citizen_science_hint()
 
 	# Start initial load (annotation features archived)
 	_start_loading(INITIAL_LOAD_TIME)
@@ -217,6 +222,8 @@ func _select_target_and_launch(bound_anomaly: Dictionary, index: int, btn: Butto
 	var target_type = "planet" if current_mode == "planets" else "asteroid"
 	rm.register_target_interaction(target_id, target_type)
 	var ok = rm.select_target(target_id)
+	if not ok:
+		ok = bool(rm.force_select_detected_target(target_id))
 	if ok:
 		GameplayAnalytics.emit_target_selected(target_id, target_type, "scanner_station", {
 			"target_index": index
@@ -254,6 +261,35 @@ func _award_scan_experience() -> void:
 	var app_controller = root.find_child("AppController", true, false)
 	if app_controller and app_controller.has_method("award_scan_experience"):
 		app_controller.award_scan_experience()
+
+func _connect_preference_updates() -> void:
+	var app = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
+	if app and app.has_signal("citizen_science_dialogue_toggled"):
+		app.citizen_science_dialogue_toggled.connect(_on_citizen_science_dialogue_toggled)
+
+func _on_citizen_science_dialogue_toggled(_enabled: bool) -> void:
+	_refresh_citizen_science_hint()
+
+func _ensure_citizen_science_hint() -> void:
+	if _citizen_science_hint_label and is_instance_valid(_citizen_science_hint_label):
+		return
+	_citizen_science_hint_label = Label.new()
+	_citizen_science_hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_citizen_science_hint_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_citizen_science_hint_label.add_theme_font_size_override("font_size", 14)
+	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
+	panel_style.apply_muted(_citizen_science_hint_label)
+	var status_container = $PanelContainer/Panel/VBoxContainer/ContentContainer/StatusContainer
+	if status_container:
+		status_container.add_child(_citizen_science_hint_label)
+
+func _refresh_citizen_science_hint() -> void:
+	if not _citizen_science_hint_label:
+		return
+	var enabled = preload("res://Scripts/Utils/AppControllerHelper.gd").is_citizen_science_dialogue_enabled(true)
+	_citizen_science_hint_label.visible = enabled
+	if enabled:
+		_citizen_science_hint_label.text = "Citizen science note: saved annotations are used to improve target classification quality."
 
 
 func _on_refresh_pressed():

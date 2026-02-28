@@ -103,10 +103,13 @@ func _setup_label() -> void:
 	if rm:
 		var target = rm.get_preview_target()
 		var label = str(target.get("label", ""))
+		var fallback_notice = str(rm.consume_launch_fallback_notice())
 		if label != "":
 			status_label.text = "Departing Earth → %s" % label
 		else:
 			status_label.text = "Departing Earth..."
+		if fallback_notice != "":
+			status_label.text = "%s\n%s" % [status_label.text, fallback_notice]
 	status_label.position = Vector2(24, 24)
 	status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	status_label.vertical_alignment = VERTICAL_ALIGNMENT_TOP

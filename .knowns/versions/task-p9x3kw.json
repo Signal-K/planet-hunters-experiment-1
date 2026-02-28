@@ -1,0 +1,372 @@
+{
+  "taskId": "p9x3kw",
+  "currentVersion": 4,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "p9x3kw",
+      "version": 1,
+      "timestamp": "2026-02-28T09:15:30.899Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        }
+      ],
+      "snapshot": {
+        "title": "Rocket launch atmospheric ascent animation (launchpad → orbit)",
+        "description": "Rather than cutting directly from the launchpad scene to the orbit/transit scene, the launch should be a continuous, satisfying animation that carries the player through the atmosphere. The landscape should gradually change as altitude increases, and the sky should progressively darken from light blue to deep blue to black.\n\n**Source:** Handwritten notebook page 119 (IMG_1832.jpeg, Rooms & Upgrades note). The four storyboard frames sketched in the bottom-right of that page define the visual sequence:\n\n### Storyboard frames (page 119 diagrams)\n\n**Frame 1 — Ground / launchpad:**\n- Rocket sits on the pad, partially framed by the launch structure\n- Landscape visible: ground-level terrain, buildings, horizon in the distance\n- Sky is full light blue — daytime atmosphere\n- The rocket is large and central in frame\n\n**Frame 2 — Low altitude, ascending:**\n- Rocket is now airborne, tilting into its upright ascent posture\n- The landscape below begins to shrink and recede\n- Sky at the top of the frame begins to darken — deep blue encroaching from above\n- Rocket exhaust/trail visible beneath\n\n**Frame 3 — Upper atmosphere:**\n- Rocket silhouette is fully vertical and elongated\n- Ground is now just a faint line or thin strip at the base of the frame\n- Sky is near-black — just a faint blue band at the very bottom\n- Horizon begins to show a slight curve\n- Stars may begin to appear faintly\n\n**Frame 4 — Orbit / space threshold:**\n- Full dark space fills the frame\n- The planet is now visible as a partial arc or small disc below\n- Rocket is comparatively tiny — in orbit orientation\n- Stars present\n\n### Transition logic\n\nThe animation should be continuous, not scene-switched. The following elements should lerp/animate as \"altitude\" increases from 0.0 → 1.0:\n\n| Property | At altitude 0.0 (ground) | At altitude 1.0 (orbit) |\n|---|---|---|\n| Sky colour | Light blue (#87CEEB or game equivalent) | Black (#000000) |\n| Star overlay opacity | 0.0 | 1.0 |\n| Landscape scale / position | Full size, centred | Tiny, shifted to bottom |\n| Horizon curvature | Flat | Slight arc |\n| Rocket scale on screen | Large (hero) | Small |\n| Rocket orientation | Angled (launch posture) | Vertical or slight drift |\n| Atmospheric haze | Strong | None |\n| Ambient sound | Wind / launchpad SFX | Silence / space ambience fade-in |\n\n### Relationship to existing tasks\n\n- `task-2nlvlo` removed the launch animation and routes directly to transit. **This ticket restores a launch animation**, but as a continuous scroll/tween rather than a discrete scene swap.\n- `task-ssq8b2` / `task-4uqwke` implement sky darkening for the Earth day/night cycle — the **shader or colour tween approach from those tasks should be reused or extended** here for the ascent darkening.\n- `task-r8mxvw` covers the in-transit animation (once in space/en route). The ascent animation described here is the **pre-transit launch phase**.\n- `task-ymh13c` added a skip button to transitions — a **skip button should also be present** during the ascent animation.\n\n### Design intent\n\nThe goal is to make the act of launching feel like a real departure. The player should feel the world falling away beneath them and the stars emerging above. This doesn't need to be long — 3–6 seconds is enough — but it should be **continuous, smooth, and skippable**. It creates the emotional punctuation between \"you're on Earth\" and \"you're in space.\"",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "animation",
+          "launch",
+          "atmosphere",
+          "transition",
+          "scenes",
+          "experiment1"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "The launchpad → orbit transition is animated, not a hard scene cut."
+          },
+          {
+            "completed": false,
+            "text": "Sky colour lerps from light blue to black over the duration of the ascent animation."
+          },
+          {
+            "completed": false,
+            "text": "Stars fade in as sky darkens (can reuse EarthStarFieldEvent or equivalent shader from task-4uqwke/ssq8b2)."
+          },
+          {
+            "completed": false,
+            "text": "The ground/landscape recedes visually — either scaling down, parallax scroll upward, or camera pan."
+          },
+          {
+            "completed": false,
+            "text": "Horizon curvature is visible by Frame 3 (upper atmosphere stage)."
+          },
+          {
+            "completed": false,
+            "text": "A skip button is present throughout (consistent with task-ymh13c pattern)."
+          },
+          {
+            "completed": false,
+            "text": "The animation runs in approximately 3–6 seconds at normal speed."
+          },
+          {
+            "completed": false,
+            "text": "On skip, the scene transitions cleanly to the orbit/transit state."
+          },
+          {
+            "completed": false,
+            "text": "Rocket orientation and scale animate consistently with altitude (large + angled at launch → small + vertical at orbit)."
+          },
+          {
+            "completed": false,
+            "text": "Atmospheric haze effect (if present) fades out as altitude increases."
+          }
+        ],
+        "implementationNotes": "Source: handwritten notebook page 119, photos IMG_1832.jpeg, \"Rooms & Upgrades\" Obsidian note. Storyboard frames are in the bottom-right section of that page.\n\nThe sky shader approach from task-ssq8b2 / task-4uqwke (earth_sky_night_filter.gdshader) is a strong candidate for reuse — rather than a day/night time input, the shader's \"darkness\" parameter can be driven by an altitude float.\n\nA simple implementation path:\n1. Create an `AscendSequence` node / script that owns an `altitude` float (0.0 → 1.0)\n2. Tween `altitude` over ~4 seconds on launch\n3. All visual elements subscribe to `altitude` and lerp their properties accordingly\n4. On `altitude == 1.0`, emit `ascent_complete` signal and hand off to orbit/transit scene\n\nThe landscape recession could use the existing earth backdrop sprites with a scale/position tween, or a camera zoom-out effect on the launchpad scene."
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "p9x3kw",
+      "version": 2,
+      "timestamp": "2026-02-28T09:19:04.755Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "The launchpad → orbit transition is animated, not a hard scene cut."
+            },
+            {
+              "completed": false,
+              "text": "Sky colour lerps from light blue to black over the duration of the ascent animation."
+            },
+            {
+              "completed": false,
+              "text": "Stars fade in as sky darkens (can reuse EarthStarFieldEvent or equivalent shader from task-4uqwke/ssq8b2)."
+            },
+            {
+              "completed": false,
+              "text": "The ground/landscape recedes visually — either scaling down, parallax scroll upward, or camera pan."
+            },
+            {
+              "completed": false,
+              "text": "Horizon curvature is visible by Frame 3 (upper atmosphere stage)."
+            },
+            {
+              "completed": false,
+              "text": "A skip button is present throughout (consistent with task-ymh13c pattern)."
+            },
+            {
+              "completed": false,
+              "text": "The animation runs in approximately 3–6 seconds at normal speed."
+            },
+            {
+              "completed": false,
+              "text": "On skip, the scene transitions cleanly to the orbit/transit state."
+            },
+            {
+              "completed": false,
+              "text": "Rocket orientation and scale animate consistently with altitude (large + angled at launch → small + vertical at orbit)."
+            },
+            {
+              "completed": false,
+              "text": "Atmospheric haze effect (if present) fades out as altitude increases."
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "The launchpad → orbit transition is animated, not a hard scene cut."
+            },
+            {
+              "completed": true,
+              "text": "Sky colour lerps from light blue to black over the duration of the ascent animation."
+            },
+            {
+              "completed": true,
+              "text": "Stars fade in as sky darkens (can reuse EarthStarFieldEvent or equivalent shader from task-4uqwke/ssq8b2)."
+            },
+            {
+              "completed": true,
+              "text": "The ground/landscape recedes visually — either scaling down, parallax scroll upward, or camera pan."
+            },
+            {
+              "completed": false,
+              "text": "Horizon curvature is visible by Frame 3 (upper atmosphere stage)."
+            },
+            {
+              "completed": true,
+              "text": "A skip button is present throughout (consistent with task-ymh13c pattern)."
+            },
+            {
+              "completed": true,
+              "text": "The animation runs in approximately 3–6 seconds at normal speed."
+            },
+            {
+              "completed": true,
+              "text": "On skip, the scene transitions cleanly to the orbit/transit state."
+            },
+            {
+              "completed": true,
+              "text": "Rocket orientation and scale animate consistently with altitude (large + angled at launch → small + vertical at orbit)."
+            },
+            {
+              "completed": false,
+              "text": "Atmospheric haze effect (if present) fades out as altitude increases."
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Rocket launch atmospheric ascent animation (launchpad → orbit)",
+        "description": "Rather than cutting directly from the launchpad scene to the orbit/transit scene, the launch should be a continuous, satisfying animation that carries the player through the atmosphere. The landscape should gradually change as altitude increases, and the sky should progressively darken from light blue to deep blue to black.\n\n**Source:** Handwritten notebook page 119 (IMG_1832.jpeg, Rooms & Upgrades note). The four storyboard frames sketched in the bottom-right of that page define the visual sequence:\n\n### Storyboard frames (page 119 diagrams)\n\n**Frame 1 — Ground / launchpad:**\n- Rocket sits on the pad, partially framed by the launch structure\n- Landscape visible: ground-level terrain, buildings, horizon in the distance\n- Sky is full light blue — daytime atmosphere\n- The rocket is large and central in frame\n\n**Frame 2 — Low altitude, ascending:**\n- Rocket is now airborne, tilting into its upright ascent posture\n- The landscape below begins to shrink and recede\n- Sky at the top of the frame begins to darken — deep blue encroaching from above\n- Rocket exhaust/trail visible beneath\n\n**Frame 3 — Upper atmosphere:**\n- Rocket silhouette is fully vertical and elongated\n- Ground is now just a faint line or thin strip at the base of the frame\n- Sky is near-black — just a faint blue band at the very bottom\n- Horizon begins to show a slight curve\n- Stars may begin to appear faintly\n\n**Frame 4 — Orbit / space threshold:**\n- Full dark space fills the frame\n- The planet is now visible as a partial arc or small disc below\n- Rocket is comparatively tiny — in orbit orientation\n- Stars present\n\n### Transition logic\n\nThe animation should be continuous, not scene-switched. The following elements should lerp/animate as \"altitude\" increases from 0.0 → 1.0:\n\n| Property | At altitude 0.0 (ground) | At altitude 1.0 (orbit) |\n|---|---|---|\n| Sky colour | Light blue (#87CEEB or game equivalent) | Black (#000000) |\n| Star overlay opacity | 0.0 | 1.0 |\n| Landscape scale / position | Full size, centred | Tiny, shifted to bottom |\n| Horizon curvature | Flat | Slight arc |\n| Rocket scale on screen | Large (hero) | Small |\n| Rocket orientation | Angled (launch posture) | Vertical or slight drift |\n| Atmospheric haze | Strong | None |\n| Ambient sound | Wind / launchpad SFX | Silence / space ambience fade-in |\n\n### Relationship to existing tasks\n\n- `task-2nlvlo` removed the launch animation and routes directly to transit. **This ticket restores a launch animation**, but as a continuous scroll/tween rather than a discrete scene swap.\n- `task-ssq8b2` / `task-4uqwke` implement sky darkening for the Earth day/night cycle — the **shader or colour tween approach from those tasks should be reused or extended** here for the ascent darkening.\n- `task-r8mxvw` covers the in-transit animation (once in space/en route). The ascent animation described here is the **pre-transit launch phase**.\n- `task-ymh13c` added a skip button to transitions — a **skip button should also be present** during the ascent animation.\n\n### Design intent\n\nThe goal is to make the act of launching feel like a real departure. The player should feel the world falling away beneath them and the stars emerging above. This doesn't need to be long — 3–6 seconds is enough — but it should be **continuous, smooth, and skippable**. It creates the emotional punctuation between \"you're on Earth\" and \"you're in space.\"",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "animation",
+          "launch",
+          "atmosphere",
+          "transition",
+          "scenes",
+          "experiment1"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "The launchpad → orbit transition is animated, not a hard scene cut."
+          },
+          {
+            "completed": true,
+            "text": "Sky colour lerps from light blue to black over the duration of the ascent animation."
+          },
+          {
+            "completed": true,
+            "text": "Stars fade in as sky darkens (can reuse EarthStarFieldEvent or equivalent shader from task-4uqwke/ssq8b2)."
+          },
+          {
+            "completed": true,
+            "text": "The ground/landscape recedes visually — either scaling down, parallax scroll upward, or camera pan."
+          },
+          {
+            "completed": false,
+            "text": "Horizon curvature is visible by Frame 3 (upper atmosphere stage)."
+          },
+          {
+            "completed": true,
+            "text": "A skip button is present throughout (consistent with task-ymh13c pattern)."
+          },
+          {
+            "completed": true,
+            "text": "The animation runs in approximately 3–6 seconds at normal speed."
+          },
+          {
+            "completed": true,
+            "text": "On skip, the scene transitions cleanly to the orbit/transit state."
+          },
+          {
+            "completed": true,
+            "text": "Rocket orientation and scale animate consistently with altitude (large + angled at launch → small + vertical at orbit)."
+          },
+          {
+            "completed": false,
+            "text": "Atmospheric haze effect (if present) fades out as altitude increases."
+          }
+        ],
+        "implementationNotes": "Source: handwritten notebook page 119, photos IMG_1832.jpeg, \"Rooms & Upgrades\" Obsidian note. Storyboard frames are in the bottom-right section of that page.\n\nThe sky shader approach from task-ssq8b2 / task-4uqwke (earth_sky_night_filter.gdshader) is a strong candidate for reuse — rather than a day/night time input, the shader's \"darkness\" parameter can be driven by an altitude float.\n\nA simple implementation path:\n1. Create an `AscendSequence` node / script that owns an `altitude` float (0.0 → 1.0)\n2. Tween `altitude` over ~4 seconds on launch\n3. All visual elements subscribe to `altitude` and lerp their properties accordingly\n4. On `altitude == 1.0`, emit `ascent_complete` signal and hand off to orbit/transit scene\n\nThe landscape recession could use the existing earth backdrop sprites with a scale/position tween, or a camera zoom-out effect on the launchpad scene."
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "p9x3kw",
+      "version": 3,
+      "timestamp": "2026-02-28T09:19:05.007Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "Source: handwritten notebook page 119, photos IMG_1832.jpeg, \"Rooms & Upgrades\" Obsidian note. Storyboard frames are in the bottom-right section of that page.\n\nThe sky shader approach from task-ssq8b2 / task-4uqwke (earth_sky_night_filter.gdshader) is a strong candidate for reuse — rather than a day/night time input, the shader's \"darkness\" parameter can be driven by an altitude float.\n\nA simple implementation path:\n1. Create an `AscendSequence` node / script that owns an `altitude` float (0.0 → 1.0)\n2. Tween `altitude` over ~4 seconds on launch\n3. All visual elements subscribe to `altitude` and lerp their properties accordingly\n4. On `altitude == 1.0`, emit `ascent_complete` signal and hand off to orbit/transit scene\n\nThe landscape recession could use the existing earth backdrop sprites with a scale/position tween, or a camera zoom-out effect on the launchpad scene.",
+          "newValue": "## Implementation\n- New RocketAscent.gd: sky-to-black tween, earth receding, stars fading in, rocket ascending + straightening\n- All elements built programmatically in _ready() (no editor nodes)\n- rocket_ascent.tscn: minimal scene file (Node2D root + script)\n- LaunchpadLaunchButton: routes to rocket_ascent.tscn instead of rocket_transit.tscn\n- TutorialCoachOverlay: rocket_ascent added to TRANSIT_SCENE_BASENAMES\n- ACs 5 (horizon curvature) and 10 (atmospheric haze shader) not implemented; handled by earth sprite shrinkage and haze ColorRect respectively"
+        }
+      ],
+      "snapshot": {
+        "title": "Rocket launch atmospheric ascent animation (launchpad → orbit)",
+        "description": "Rather than cutting directly from the launchpad scene to the orbit/transit scene, the launch should be a continuous, satisfying animation that carries the player through the atmosphere. The landscape should gradually change as altitude increases, and the sky should progressively darken from light blue to deep blue to black.\n\n**Source:** Handwritten notebook page 119 (IMG_1832.jpeg, Rooms & Upgrades note). The four storyboard frames sketched in the bottom-right of that page define the visual sequence:\n\n### Storyboard frames (page 119 diagrams)\n\n**Frame 1 — Ground / launchpad:**\n- Rocket sits on the pad, partially framed by the launch structure\n- Landscape visible: ground-level terrain, buildings, horizon in the distance\n- Sky is full light blue — daytime atmosphere\n- The rocket is large and central in frame\n\n**Frame 2 — Low altitude, ascending:**\n- Rocket is now airborne, tilting into its upright ascent posture\n- The landscape below begins to shrink and recede\n- Sky at the top of the frame begins to darken — deep blue encroaching from above\n- Rocket exhaust/trail visible beneath\n\n**Frame 3 — Upper atmosphere:**\n- Rocket silhouette is fully vertical and elongated\n- Ground is now just a faint line or thin strip at the base of the frame\n- Sky is near-black — just a faint blue band at the very bottom\n- Horizon begins to show a slight curve\n- Stars may begin to appear faintly\n\n**Frame 4 — Orbit / space threshold:**\n- Full dark space fills the frame\n- The planet is now visible as a partial arc or small disc below\n- Rocket is comparatively tiny — in orbit orientation\n- Stars present\n\n### Transition logic\n\nThe animation should be continuous, not scene-switched. The following elements should lerp/animate as \"altitude\" increases from 0.0 → 1.0:\n\n| Property | At altitude 0.0 (ground) | At altitude 1.0 (orbit) |\n|---|---|---|\n| Sky colour | Light blue (#87CEEB or game equivalent) | Black (#000000) |\n| Star overlay opacity | 0.0 | 1.0 |\n| Landscape scale / position | Full size, centred | Tiny, shifted to bottom |\n| Horizon curvature | Flat | Slight arc |\n| Rocket scale on screen | Large (hero) | Small |\n| Rocket orientation | Angled (launch posture) | Vertical or slight drift |\n| Atmospheric haze | Strong | None |\n| Ambient sound | Wind / launchpad SFX | Silence / space ambience fade-in |\n\n### Relationship to existing tasks\n\n- `task-2nlvlo` removed the launch animation and routes directly to transit. **This ticket restores a launch animation**, but as a continuous scroll/tween rather than a discrete scene swap.\n- `task-ssq8b2` / `task-4uqwke` implement sky darkening for the Earth day/night cycle — the **shader or colour tween approach from those tasks should be reused or extended** here for the ascent darkening.\n- `task-r8mxvw` covers the in-transit animation (once in space/en route). The ascent animation described here is the **pre-transit launch phase**.\n- `task-ymh13c` added a skip button to transitions — a **skip button should also be present** during the ascent animation.\n\n### Design intent\n\nThe goal is to make the act of launching feel like a real departure. The player should feel the world falling away beneath them and the stars emerging above. This doesn't need to be long — 3–6 seconds is enough — but it should be **continuous, smooth, and skippable**. It creates the emotional punctuation between \"you're on Earth\" and \"you're in space.\"",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "animation",
+          "launch",
+          "atmosphere",
+          "transition",
+          "scenes",
+          "experiment1"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "The launchpad → orbit transition is animated, not a hard scene cut."
+          },
+          {
+            "completed": true,
+            "text": "Sky colour lerps from light blue to black over the duration of the ascent animation."
+          },
+          {
+            "completed": true,
+            "text": "Stars fade in as sky darkens (can reuse EarthStarFieldEvent or equivalent shader from task-4uqwke/ssq8b2)."
+          },
+          {
+            "completed": true,
+            "text": "The ground/landscape recedes visually — either scaling down, parallax scroll upward, or camera pan."
+          },
+          {
+            "completed": false,
+            "text": "Horizon curvature is visible by Frame 3 (upper atmosphere stage)."
+          },
+          {
+            "completed": true,
+            "text": "A skip button is present throughout (consistent with task-ymh13c pattern)."
+          },
+          {
+            "completed": true,
+            "text": "The animation runs in approximately 3–6 seconds at normal speed."
+          },
+          {
+            "completed": true,
+            "text": "On skip, the scene transitions cleanly to the orbit/transit state."
+          },
+          {
+            "completed": true,
+            "text": "Rocket orientation and scale animate consistently with altitude (large + angled at launch → small + vertical at orbit)."
+          },
+          {
+            "completed": false,
+            "text": "Atmospheric haze effect (if present) fades out as altitude increases."
+          }
+        ],
+        "implementationNotes": "## Implementation\n- New RocketAscent.gd: sky-to-black tween, earth receding, stars fading in, rocket ascending + straightening\n- All elements built programmatically in _ready() (no editor nodes)\n- rocket_ascent.tscn: minimal scene file (Node2D root + script)\n- LaunchpadLaunchButton: routes to rocket_ascent.tscn instead of rocket_transit.tscn\n- TutorialCoachOverlay: rocket_ascent added to TRANSIT_SCENE_BASENAMES\n- ACs 5 (horizon curvature) and 10 (atmospheric haze shader) not implemented; handled by earth sprite shrinkage and haze ColorRect respectively"
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "p9x3kw",
+      "version": 4,
+      "timestamp": "2026-02-28T09:19:05.538Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Rocket launch atmospheric ascent animation (launchpad → orbit)",
+        "description": "Rather than cutting directly from the launchpad scene to the orbit/transit scene, the launch should be a continuous, satisfying animation that carries the player through the atmosphere. The landscape should gradually change as altitude increases, and the sky should progressively darken from light blue to deep blue to black.\n\n**Source:** Handwritten notebook page 119 (IMG_1832.jpeg, Rooms & Upgrades note). The four storyboard frames sketched in the bottom-right of that page define the visual sequence:\n\n### Storyboard frames (page 119 diagrams)\n\n**Frame 1 — Ground / launchpad:**\n- Rocket sits on the pad, partially framed by the launch structure\n- Landscape visible: ground-level terrain, buildings, horizon in the distance\n- Sky is full light blue — daytime atmosphere\n- The rocket is large and central in frame\n\n**Frame 2 — Low altitude, ascending:**\n- Rocket is now airborne, tilting into its upright ascent posture\n- The landscape below begins to shrink and recede\n- Sky at the top of the frame begins to darken — deep blue encroaching from above\n- Rocket exhaust/trail visible beneath\n\n**Frame 3 — Upper atmosphere:**\n- Rocket silhouette is fully vertical and elongated\n- Ground is now just a faint line or thin strip at the base of the frame\n- Sky is near-black — just a faint blue band at the very bottom\n- Horizon begins to show a slight curve\n- Stars may begin to appear faintly\n\n**Frame 4 — Orbit / space threshold:**\n- Full dark space fills the frame\n- The planet is now visible as a partial arc or small disc below\n- Rocket is comparatively tiny — in orbit orientation\n- Stars present\n\n### Transition logic\n\nThe animation should be continuous, not scene-switched. The following elements should lerp/animate as \"altitude\" increases from 0.0 → 1.0:\n\n| Property | At altitude 0.0 (ground) | At altitude 1.0 (orbit) |\n|---|---|---|\n| Sky colour | Light blue (#87CEEB or game equivalent) | Black (#000000) |\n| Star overlay opacity | 0.0 | 1.0 |\n| Landscape scale / position | Full size, centred | Tiny, shifted to bottom |\n| Horizon curvature | Flat | Slight arc |\n| Rocket scale on screen | Large (hero) | Small |\n| Rocket orientation | Angled (launch posture) | Vertical or slight drift |\n| Atmospheric haze | Strong | None |\n| Ambient sound | Wind / launchpad SFX | Silence / space ambience fade-in |\n\n### Relationship to existing tasks\n\n- `task-2nlvlo` removed the launch animation and routes directly to transit. **This ticket restores a launch animation**, but as a continuous scroll/tween rather than a discrete scene swap.\n- `task-ssq8b2` / `task-4uqwke` implement sky darkening for the Earth day/night cycle — the **shader or colour tween approach from those tasks should be reused or extended** here for the ascent darkening.\n- `task-r8mxvw` covers the in-transit animation (once in space/en route). The ascent animation described here is the **pre-transit launch phase**.\n- `task-ymh13c` added a skip button to transitions — a **skip button should also be present** during the ascent animation.\n\n### Design intent\n\nThe goal is to make the act of launching feel like a real departure. The player should feel the world falling away beneath them and the stars emerging above. This doesn't need to be long — 3–6 seconds is enough — but it should be **continuous, smooth, and skippable**. It creates the emotional punctuation between \"you're on Earth\" and \"you're in space.\"",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "animation",
+          "launch",
+          "atmosphere",
+          "transition",
+          "scenes",
+          "experiment1"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "The launchpad → orbit transition is animated, not a hard scene cut."
+          },
+          {
+            "completed": true,
+            "text": "Sky colour lerps from light blue to black over the duration of the ascent animation."
+          },
+          {
+            "completed": true,
+            "text": "Stars fade in as sky darkens (can reuse EarthStarFieldEvent or equivalent shader from task-4uqwke/ssq8b2)."
+          },
+          {
+            "completed": true,
+            "text": "The ground/landscape recedes visually — either scaling down, parallax scroll upward, or camera pan."
+          },
+          {
+            "completed": false,
+            "text": "Horizon curvature is visible by Frame 3 (upper atmosphere stage)."
+          },
+          {
+            "completed": true,
+            "text": "A skip button is present throughout (consistent with task-ymh13c pattern)."
+          },
+          {
+            "completed": true,
+            "text": "The animation runs in approximately 3–6 seconds at normal speed."
+          },
+          {
+            "completed": true,
+            "text": "On skip, the scene transitions cleanly to the orbit/transit state."
+          },
+          {
+            "completed": true,
+            "text": "Rocket orientation and scale animate consistently with altitude (large + angled at launch → small + vertical at orbit)."
+          },
+          {
+            "completed": false,
+            "text": "Atmospheric haze effect (if present) fades out as altitude increases."
+          }
+        ],
+        "implementationNotes": "## Implementation\n- New RocketAscent.gd: sky-to-black tween, earth receding, stars fading in, rocket ascending + straightening\n- All elements built programmatically in _ready() (no editor nodes)\n- rocket_ascent.tscn: minimal scene file (Node2D root + script)\n- LaunchpadLaunchButton: routes to rocket_ascent.tscn instead of rocket_transit.tscn\n- TutorialCoachOverlay: rocket_ascent added to TRANSIT_SCENE_BASENAMES\n- ACs 5 (horizon curvature) and 10 (atmospheric haze shader) not implemented; handled by earth sprite shrinkage and haze ColorRect respectively"
+      }
+    }
+  ]
+}

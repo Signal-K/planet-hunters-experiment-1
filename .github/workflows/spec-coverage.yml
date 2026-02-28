@@ -14,10 +14,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
       - name: Install knowns CLI
         run: |
-          brew tap knowns-dev/tap
-          brew install knowns
+          npm install -g knowns
+          knowns --version
       
       - name: Check spec coverage
         id: coverage

@@ -9,12 +9,13 @@
   var SURVEY_IFRAME_ID = "planet-hunters-survey-iframe";
   var FEEDBACK_OVERLAY_ID = "planet-hunters-feedback-overlay";
   var SUPABASE_SESSION_STORAGE_KEY = "planet_hunters_supabase_guest";
+  var XP_STATE_KEY = "planet_hunters_xp_state_v1";
   var DEFAULT_RUNTIME_CONFIG = {
     posthog: {
       projectToken: "phc_65umDftbbTkrm1V6azue6OeU4u5c8iJcaHm4JtJ95di",
       apiHost: "https://us.i.posthog.com",
       uiHost: "https://us.posthog.com",
-      surveyId: "019c603e-d236-0000-85ce-f507635d2311",
+      surveyId: "019c9df8-db7f-0000-072f-73b3347a4d6c",
     },
     supabase: {
       url: "https://hlufptwhzkpkkjztimzo.supabase.co",
@@ -28,6 +29,9 @@
   var _posthogPromise = null;
   var _runtimeConfig = null;
   var _runtimeConfigPromise = null;
+  var _bridgeEventSequence = 0;
+  var _xpSyncInFlight = false;
+  var _pendingXpSnapshot = null;
 
   function setText(id, text, ok) {
     var el = document.getElementById(id);
@@ -45,6 +49,17 @@
     } catch (_error) {
       return fallback;
     }
+  }
+
+  function readXpState() {
+    return safeJsonParse(localStorage.getItem(XP_STATE_KEY), null);
+  }
+
+  function writeXpState(snapshot) {
+    if (!snapshot || typeof snapshot !== "object") {
+      return;
+    }
+    localStorage.setItem(XP_STATE_KEY, JSON.stringify(snapshot));
   }
 
   function mergeRuntimeConfig(remoteConfig) {
@@ -126,6 +141,18 @@
     saveActionLog();
   }
 
+  function addBridgeCorrelationMetadata(eventName, payload, bridgeTimestamp) {
+    var enriched = payload && typeof payload === "object" ? Object.assign({}, payload) : {};
+    _bridgeEventSequence += 1;
+    enriched.correlation_event_name = String(eventName || "unknown");
+    enriched.correlation_event_seq = _bridgeEventSequence;
+    enriched.correlation_client_ts_ms = Date.now();
+    if (typeof bridgeTimestamp === "number" && Number.isFinite(bridgeTimestamp)) {
+      enriched.correlation_godot_ts_unix = bridgeTimestamp;
+    }
+    return enriched;
+  }
+
   async function loadPostHogClient() {
     if (_posthogPromise) {
       return _posthogPromise;
@@ -183,6 +210,12 @@
     loadPostHogClient()
       .then(function (client) {
         var eventPayload = payload && typeof payload === "object" ? payload : {};
+        if (client && typeof client.get_distinct_id === "function") {
+          eventPayload.correlation_posthog_distinct_id = client.get_distinct_id();
+        }
+        if (client && typeof client.get_session_id === "function") {
+          eventPayload.correlation_posthog_session_id = client.get_session_id();
+        }
         client.capture(eventName, eventPayload);
         client.register({
           last_game_event: eventName,
@@ -290,6 +323,35 @@
       throw new Error("Anonymous sign-in succeeded but no user id was returned");
     }
     return user.id;
+  }
+
+  async function syncExperienceToSupabase(snapshot) {
+    if (!snapshot || typeof snapshot !== "object") {
+      return;
+    }
+    _pendingXpSnapshot = snapshot;
+    if (_xpSyncInFlight) {
+      return;
+    }
+    _xpSyncInFlight = true;
+    try {
+      while (_pendingXpSnapshot) {
+        var next = _pendingXpSnapshot;
+        _pendingXpSnapshot = null;
+        var client = await loadSupabaseClient();
+        await client.auth.updateUser({
+          data: {
+            experience_level: Number(next.experience_level || 1),
+            experience_xp: Number(next.experience_xp || 0),
+            experience_updated_at: new Date().toISOString(),
+          },
+        });
+      }
+    } catch (error) {
+      console.warn("Failed to sync experience to Supabase profile:", error);
+    } finally {
+      _xpSyncInFlight = false;
+    }
   }
 
   function localDistinctId() {
@@ -620,8 +682,23 @@
     if (!eventName) {
       return;
     }
-    pushAction(eventName, payload);
-    captureAnalyticsEvent(eventName, payload);
+    var correlatedPayload = addBridgeCorrelationMetadata(eventName, payload, Number(data.timestamp));
+    pushAction(eventName, correlatedPayload);
+    captureAnalyticsEvent(eventName, correlatedPayload);
+    if (typeof correlatedPayload.experience_level !== "undefined" || typeof correlatedPayload.experience_xp !== "undefined") {
+      var currentXp = readXpState() || {};
+      var snapshot = {
+        experience_level: Number(
+          typeof correlatedPayload.experience_level !== "undefined" ? correlatedPayload.experience_level : currentXp.experience_level || 1
+        ),
+        experience_xp: Number(
+          typeof correlatedPayload.experience_xp !== "undefined" ? correlatedPayload.experience_xp : currentXp.experience_xp || 0
+        ),
+        updated_at: new Date().toISOString(),
+      };
+      writeXpState(snapshot);
+      syncExperienceToSupabase(snapshot);
+    }
     if (eventName === "feedback_requested") {
       showFeedbackDialog(payload);
     }
@@ -639,6 +716,13 @@
       shell_entry: "inline_web_shell",
     });
   });
+  var persistedXp = readXpState();
+  if (persistedXp && typeof persistedXp.experience_level !== "undefined") {
+    registerAnalyticsContext({
+      experience_level: Number(persistedXp.experience_level || 1),
+      experience_xp: Number(persistedXp.experience_xp || 0),
+    });
+  }
   window.addEventListener("message", onBridgeMessage);
   updateSaveMarker();
   requestPersistentStorage();
