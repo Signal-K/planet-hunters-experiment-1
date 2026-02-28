@@ -25,7 +25,7 @@ func setup(
 	_base_image_size = base_image_size
 	_on_error = on_error
 
-func save_annotations(anomaly_id: String) -> void:
+func save_annotations(anomaly_id: String, target_type: String = "asteroid", title: String = "") -> void:
 	"""Save current annotations for this asteroid to user://annotations/<id>.json"""
 	print("_on_save_pressed called for anomaly_id:", anomaly_id)
 	if anomaly_id == "":
@@ -73,7 +73,13 @@ func save_annotations(anomaly_id: String) -> void:
 	if file == null:
 		_show_error("Failed to open file for saving annotations")
 		return
-	var write_err = file.store_var(serializable)
+	var payload := {
+		"version": 2,
+		"target_type": target_type,
+		"title": title,
+		"strokes": serializable
+	}
+	var write_err = file.store_string(JSON.stringify(payload))
 	file.close()
 	print("Saved annotations (variant) to:", file_path, " result=", write_err)
 
@@ -102,6 +108,9 @@ func load_saved_annotations(anomaly_id: String) -> void:
 	var parse_result = json.parse(content)
 	if parse_result == OK and typeof(json.data) == TYPE_ARRAY:
 		parsed = json.data
+	elif parse_result == OK and typeof(json.data) == TYPE_DICTIONARY:
+		var parsed_obj: Dictionary = json.data
+		parsed = parsed_obj.get("strokes", [])
 	else:
 		# Fallback: maybe the file was written with store_var(), attempt to read variant
 		var file2 = FileAccess.open(annotations_path, FileAccess.READ)

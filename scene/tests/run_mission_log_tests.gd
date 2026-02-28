@@ -26,6 +26,12 @@ class MockAppController:
 	func get_experience_level() -> int:
 		return _level
 
+	func get_experience_xp() -> int:
+		return _xp
+
+	func get_xp_required_for_next_level() -> int:
+		return 10 + max(_level, 1)
+
 func _init():
 	MissionLogManager.set_path_overrides(TEST_LOG_PATH, TEST_LOG_PATH)
 	reporter.start_suite("Mission Log", {
@@ -52,6 +58,7 @@ func run_all_tests() -> void:
 	await test_salvage_action_recorded()
 	await test_sell_orbit_closes_out_actions()
 	await test_scrap_only_applies_when_selected()
+	await test_debrief_progress_feedback_shows_objective_exposure_and_unlock_progress()
 
 func _setup_mission_debrief() -> Dictionary:
 	var existing = get_root().get_node_or_null("AppController")
@@ -344,6 +351,42 @@ func test_scrap_only_applies_when_selected() -> void:
 			break
 	if not found:
 		reporter.fail_test("Expected scrap action to be written to mission log")
+		await _teardown_mission_debrief(ctx)
+		return
+	await _teardown_mission_debrief(ctx)
+	reporter.pass_test()
+
+func test_debrief_progress_feedback_shows_objective_exposure_and_unlock_progress() -> void:
+	reporter.start_test("Debrief progress feedback shows objective, exposure, and next unlock progress")
+	var ctx = await _setup_mission_debrief()
+	var scene = ctx["scene"]
+	scene._returned = {"rocket_id": "starterrocket1-test", "target_id": "A-FEEDBACK", "label": "Asteroid Feedback", "type": "asteroid", "operation_mode": "survey"}
+	scene._collected = {"Iron": 10, "Nickel": 2}
+	scene._total_value = 10000
+	scene._update_labels()
+	var text = str(scene.status_label.text)
+	if text.find("Objective: Completed") == -1:
+		reporter.fail_test("Expected objective completion line in debrief feedback")
+		await _teardown_mission_debrief(ctx)
+		return
+	if text.find("Exposure on resolve: +") == -1:
+		reporter.fail_test("Expected exposure line in debrief feedback")
+		await _teardown_mission_debrief(ctx)
+		return
+	if text.find("Next unlock progress: L") == -1:
+		reporter.fail_test("Expected next unlock progress line in debrief feedback")
+		await _teardown_mission_debrief(ctx)
+		return
+	if text.find("Operation mode: Survey Route") == -1:
+		reporter.fail_test("Expected operation mode line in advanced debrief feedback")
+		await _teardown_mission_debrief(ctx)
+		return
+	if text.find("Target profile:") == -1:
+		reporter.fail_test("Expected target profile line in advanced debrief feedback")
+		await _teardown_mission_debrief(ctx)
+		return
+	if text.find("Cargo efficiency:") == -1:
+		reporter.fail_test("Expected cargo efficiency line in advanced debrief feedback")
 		await _teardown_mission_debrief(ctx)
 		return
 	await _teardown_mission_debrief(ctx)

@@ -10,6 +10,7 @@ const SURVEY_OVERLAY_ID = "planet-hunters-survey-overlay";
 const SURVEY_IFRAME_ID = "planet-hunters-survey-iframe";
 const FEEDBACK_OVERLAY_ID = "planet-hunters-feedback-overlay";
 const SUPABASE_SESSION_STORAGE_KEY = "planet_hunters_supabase_guest";
+const XP_STATE_KEY = "planet_hunters_xp_state_v1";
 const DEFAULT_RUNTIME_CONFIG = {
   posthog: {
     projectToken: "phc_65umDftbbTkrm1V6azue6OeU4u5c8iJcaHm4JtJ95di",
@@ -30,6 +31,8 @@ let _surveyShownInThisBoot = false;
 let _posthogPromise = null;
 let _runtimeConfig = null;
 let _runtimeConfigPromise = null;
+let _xpSyncInFlight = false;
+let _pendingXpSnapshot = null;
 
 function readCookie(name) {
   const prefix = `${name}=`;
@@ -70,6 +73,15 @@ function safeJsonParse(raw, fallback) {
   } catch (_error) {
     return fallback;
   }
+}
+
+function readXpState() {
+  return safeJsonParse(localStorage.getItem(XP_STATE_KEY), null);
+}
+
+function writeXpState(snapshot) {
+  if (!snapshot || typeof snapshot !== "object") return;
+  localStorage.setItem(XP_STATE_KEY, JSON.stringify(snapshot));
 }
 
 function mergeRuntimeConfig(remoteConfig) {
@@ -274,6 +286,31 @@ async function ensureGuestUser() {
     throw new Error("Anonymous sign-in succeeded but no user id was returned");
   }
   return user.id;
+}
+
+async function syncExperienceToSupabase(snapshot) {
+  if (!snapshot || typeof snapshot !== "object") return;
+  _pendingXpSnapshot = snapshot;
+  if (_xpSyncInFlight) return;
+  _xpSyncInFlight = true;
+  try {
+    while (_pendingXpSnapshot) {
+      const next = _pendingXpSnapshot;
+      _pendingXpSnapshot = null;
+      const client = await loadSupabaseClient();
+      await client.auth.updateUser({
+        data: {
+          experience_level: Number(next.experience_level || 1),
+          experience_xp: Number(next.experience_xp || 0),
+          experience_updated_at: new Date().toISOString(),
+        },
+      });
+    }
+  } catch (error) {
+    console.warn("Failed to sync experience to Supabase profile:", error);
+  } finally {
+    _xpSyncInFlight = false;
+  }
 }
 
 function localDistinctId() {
@@ -578,6 +615,15 @@ function App() {
   const [progress, setProgress] = useState(() => parseProgress(readCookie(COOKIE_NAME)));
   const [storageStatus, setStorageStatus] = useState("Cookie storage active");
   const [gameSrc] = useState("/electron-dist/godot-web/index.html");
+  const [isMobile, setIsMobile] = useState(() => typeof window !== "undefined" && window.innerWidth < 768);
+
+  useEffect(() => {
+    function onResize() {
+      setIsMobile(window.innerWidth < 768);
+    }
+    window.addEventListener("resize", onResize, { passive: true });
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   useEffect(() => {
     loadActionLog();
@@ -589,6 +635,13 @@ function App() {
         shell_entry: "react_shell",
       });
     });
+    const persistedXp = readXpState();
+    if (persistedXp && typeof persistedXp.experience_level !== "undefined") {
+      registerAnalyticsContext({
+        experience_level: Number(persistedXp.experience_level || 1),
+        experience_xp: Number(persistedXp.experience_xp || 0),
+      });
+    }
   }, []);
 
   useEffect(() => {
@@ -630,6 +683,18 @@ function App() {
       }
       pushAction(eventName, payload);
       captureAnalyticsEvent(eventName, payload);
+      if (typeof payload.experience_level !== "undefined" || typeof payload.experience_xp !== "undefined") {
+        const current = readXpState() || {};
+        const snapshot = {
+          experience_level: Number(
+            typeof payload.experience_level !== "undefined" ? payload.experience_level : current.experience_level || 1
+          ),
+          experience_xp: Number(typeof payload.experience_xp !== "undefined" ? payload.experience_xp : current.experience_xp || 0),
+          updated_at: new Date().toISOString(),
+        };
+        writeXpState(snapshot);
+        syncExperienceToSupabase(snapshot);
+      }
       if (eventName === "feedback_requested") {
         showFeedbackDialog(payload);
       }
@@ -651,7 +716,9 @@ function App() {
 
   const frameStyle = {
     width: "100%",
-    height: "min(75vh, 860px)",
+    // On mobile (<768px), fill as much of the screen as possible minus a slim header strip.
+    // On desktop, cap at 860px so it doesn't fill giant monitors completely.
+    height: isMobile ? "min(calc(100svh - 80px), 860px)" : "min(75vh, 860px)",
     border: "0",
     display: "block",
     background: "#000",
@@ -659,7 +726,7 @@ function App() {
 
   return React.createElement(
     "main",
-    { style: { maxWidth: "1200px", margin: "0 auto", padding: "20px" } },
+    { style: { maxWidth: "1200px", margin: "0 auto", padding: isMobile ? "8px" : "20px" } },
     React.createElement(
       "h1",
       { style: { margin: "0 0 8px", fontSize: "clamp(24px, 4vw, 38px)", letterSpacing: "0.02em" } },

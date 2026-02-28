@@ -1,0 +1,132 @@
+{
+  "taskId": "7rk49s",
+  "currentVersion": 5,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "7rk49s",
+      "version": 1,
+      "timestamp": "2026-02-27T08:48:21.433Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "Completed and moved to done per user request (2026-02-27)."
+        }
+      ],
+      "snapshot": {
+        "title": "Customise ships, add logos/flags",
+        "status": "on-hold",
+        "priority": "medium",
+        "labels": [
+          "Rockets",
+          "Customisation"
+        ],
+        "acceptanceCriteria": [],
+        "implementationNotes": "Completed and moved to done per user request (2026-02-27)."
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "7rk49s",
+      "version": 2,
+      "timestamp": "2026-02-27T08:48:21.769Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "on-hold",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Customise ships, add logos/flags",
+        "status": "done",
+        "priority": "medium",
+        "labels": [
+          "Rockets",
+          "Customisation"
+        ],
+        "acceptanceCriteria": [],
+        "implementationNotes": "Completed and moved to done per user request (2026-02-27)."
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "7rk49s",
+      "version": 3,
+      "timestamp": "2026-02-27T08:49:56.978Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "done",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Customise ships, add logos/flags",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "Rockets",
+          "Customisation"
+        ],
+        "acceptanceCriteria": [],
+        "implementationNotes": "Completed and moved to done per user request (2026-02-27)."
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "7rk49s",
+      "version": 4,
+      "timestamp": "2026-02-27T09:05:25.286Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "Completed and moved to done per user request (2026-02-27).",
+          "newValue": "Implemented:\n- Added per-rocket customization state (flag/logo) to rockets state schema with defaults.\n- Added RocketsManager APIs to get/set rocket customization and list available options.\n- Added Launchpad selector controls to cycle flag and logo for awaiting rockets.\n- Surfaced rocket identity in target preview and mission debrief UI text."
+        }
+      ],
+      "snapshot": {
+        "title": "Customise ships, add logos/flags",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "Rockets",
+          "Customisation"
+        ],
+        "acceptanceCriteria": [],
+        "implementationNotes": "Implemented:\n- Added per-rocket customization state (flag/logo) to rockets state schema with defaults.\n- Added RocketsManager APIs to get/set rocket customization and list available options.\n- Added Launchpad selector controls to cycle flag and logo for awaiting rockets.\n- Surfaced rocket identity in target preview and mission debrief UI text."
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "7rk49s",
+      "version": 5,
+      "timestamp": "2026-02-27T09:05:25.539Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Customise ships, add logos/flags",
+        "status": "done",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "Rockets",
+          "Customisation"
+        ],
+        "acceptanceCriteria": [],
+        "implementationNotes": "Implemented:\n- Added per-rocket customization state (flag/logo) to rockets state schema with defaults.\n- Added RocketsManager APIs to get/set rocket customization and list available options.\n- Added Launchpad selector controls to cycle flag and logo for awaiting rockets.\n- Surfaced rocket identity in target preview and mission debrief UI text."
+      }
+    }
+  ]
+}

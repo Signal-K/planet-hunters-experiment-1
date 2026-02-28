@@ -1,6 +1,6 @@
 {
   "taskId": "5wte0t",
-  "currentVersion": 1,
+  "currentVersion": 6,
   "versions": [
     {
       "id": "v1",
@@ -22,6 +22,127 @@
           "Buttons"
         ],
         "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "5wte0t",
+      "version": 2,
+      "timestamp": "2026-02-27T08:48:22.687Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "Completed and moved to done per user request (2026-02-27)."
+        }
+      ],
+      "snapshot": {
+        "title": "Update available buttons",
+        "status": "on-hold",
+        "priority": "medium",
+        "labels": [
+          "Buttons"
+        ],
+        "acceptanceCriteria": [],
+        "implementationNotes": "Completed and moved to done per user request (2026-02-27)."
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "5wte0t",
+      "version": 3,
+      "timestamp": "2026-02-27T08:48:23.019Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "on-hold",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Update available buttons",
+        "status": "done",
+        "priority": "medium",
+        "labels": [
+          "Buttons"
+        ],
+        "acceptanceCriteria": [],
+        "implementationNotes": "Completed and moved to done per user request (2026-02-27)."
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "5wte0t",
+      "version": 4,
+      "timestamp": "2026-02-27T08:49:57.499Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "done",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Update available buttons",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "Buttons"
+        ],
+        "acceptanceCriteria": [],
+        "implementationNotes": "Completed and moved to done per user request (2026-02-27)."
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "5wte0t",
+      "version": 5,
+      "timestamp": "2026-02-27T09:05:24.207Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "Completed and moved to done per user request (2026-02-27).",
+          "newValue": "Implemented:\n- Hardened debrief action button availability with centralized state refresh logic.\n- Enforced disabled states based on cargo availability, closeout state, and level-gated Earth sale.\n- Added consistent button lock behavior after mission resolution.\n- Kept preview button availability stable during mine/return flow."
+        }
+      ],
+      "snapshot": {
+        "title": "Update available buttons",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "Buttons"
+        ],
+        "acceptanceCriteria": [],
+        "implementationNotes": "Implemented:\n- Hardened debrief action button availability with centralized state refresh logic.\n- Enforced disabled states based on cargo availability, closeout state, and level-gated Earth sale.\n- Added consistent button lock behavior after mission resolution.\n- Kept preview button availability stable during mine/return flow."
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "5wte0t",
+      "version": 6,
+      "timestamp": "2026-02-27T09:05:24.474Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Update available buttons",
+        "status": "done",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "Buttons"
+        ],
+        "acceptanceCriteria": [],
+        "implementationNotes": "Implemented:\n- Hardened debrief action button availability with centralized state refresh logic.\n- Enforced disabled states based on cargo availability, closeout state, and level-gated Earth sale.\n- Added consistent button lock behavior after mission resolution.\n- Kept preview button availability stable during mine/return flow."
       }
     }
   ]

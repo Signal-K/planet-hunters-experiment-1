@@ -1,10 +1,18 @@
 extends RefCounted
 
-static func find_current_target_rect(current_step: Dictionary, tree: SceneTree) -> Rect2:
+static func find_current_target(current_step: Dictionary, tree: SceneTree) -> Node:
 	var action_key = str(current_step.get("action_key", ""))
 	if action_key == "":
+		return null
+	return _find_target_for_action(action_key, tree)
+
+static func find_current_target_rect(current_step: Dictionary, tree: SceneTree) -> Rect2:
+	var target = find_current_target(current_step, tree)
+	if target == null:
 		return Rect2()
-	var target = _find_target_for_action(action_key, tree)
+	return _build_target_rect(target)
+
+static func build_target_rect(target: Node) -> Rect2:
 	if target == null:
 		return Rect2()
 	return _build_target_rect(target)
@@ -41,13 +49,13 @@ static func _find_target_for_action(action_key: String, tree: SceneTree) -> Node
 	match action_key:
 		"open_launchpad":
 			return _find_node_path_any(tree, [
-				"StructuresLayer/Launchpad/InteractionArea",
-				"StructuresLayer/Launchpad"
+				"StructuresLayer/Launchpad",
+				"StructuresLayer/Launchpad/InteractionArea"
 			])
 		"build_scanner_station":
 			return _find_node_path_any(tree, [
-				"StructuresLayer/SatelliteStation/InteractionArea",
-				"StructuresLayer/SatelliteStation"
+				"StructuresLayer/SatelliteStation",
+				"StructuresLayer/SatelliteStation/InteractionArea"
 			])
 		"create_rocket":
 			var create_btn = _find_visible_button(tree, func(btn: Button) -> bool:

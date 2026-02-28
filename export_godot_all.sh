@@ -14,6 +14,7 @@ PLATFORMS="web,ios"
 OUTPUT_BASE_DIR="$BASE_DIR"
 SCENE_DIR="${SCENE_DIR:-$BASE_DIR/scene}"
 PROJECT_DIR="${PROJECT_DIR:-$BASE_DIR/scene}"
+EXPORT_PRESETS_FILE="$PROJECT_DIR/export_presets.cfg"
 
 # Colors for output
 GREEN='\033[0;32m'
@@ -132,6 +133,14 @@ echo ""
 # Parse platforms
 IFS=',' read -ra PLATFORM_ARRAY <<< "$PLATFORMS"
 
+preset_exists() {
+    local preset="$1"
+    if [ ! -f "$EXPORT_PRESETS_FILE" ]; then
+        return 1
+    fi
+    grep -q "name=\"$preset\"" "$EXPORT_PRESETS_FILE"
+}
+
 export_web() {
     echo -e "${BLUE}───────────────────────────────────────${NC}"
     echo -e "${YELLOW}Exporting Web (HTML5/Electron)...${NC}"
@@ -139,7 +148,6 @@ export_web() {
     
     OUTPUT_DIR="$OUTPUT_BASE_DIR/electron-dist/godot-web"
     PRESET="Web"
-    EXPORT_PRESETS_FILE="$PROJECT_DIR/export_presets.cfg"
     GODOT_USER_DIR="${GODOT_USER_DIR:-/tmp/godot}"
     
     if [ ! -f "$EXPORT_PRESETS_FILE" ]; then
@@ -147,7 +155,7 @@ export_web() {
         return 1
     fi
     
-    if ! grep -q "name=\"$PRESET\"" "$EXPORT_PRESETS_FILE"; then
+    if ! preset_exists "$PRESET"; then
         echo -e "${RED}✗ Export preset \"$PRESET\" not found in $EXPORT_PRESETS_FILE${NC}"
         return 1
     fi
@@ -186,6 +194,11 @@ export_ios() {
     TARGET_DIR="$OUTPUT_BASE_DIR/ios"
     PRESET="iOS"
     NAME="GodotTest"
+
+    if ! preset_exists "$PRESET"; then
+        echo -e "${RED}✗ Export preset \"$PRESET\" not found in $EXPORT_PRESETS_FILE${NC}"
+        return 1
+    fi
     
     mkdir -p "$TARGET_DIR"
     OUTPUT_FILE="$TARGET_DIR/${NAME}.pck"
@@ -217,6 +230,11 @@ export_android() {
     TARGET_DIR="$OUTPUT_BASE_DIR/android/app/src/main/assets"
     PRESET="Android"
     NAME="main"
+
+    if ! preset_exists "$PRESET"; then
+        echo -e "${YELLOW}⚠ Android preset \"$PRESET\" not found in $EXPORT_PRESETS_FILE; skipping Android export.${NC}"
+        return 2
+    fi
     
     mkdir -p "$TARGET_DIR"
     OUTPUT_FOLDER="$TARGET_DIR/${NAME}"
@@ -253,6 +271,7 @@ export_android() {
 # Track success/failure
 SUCCESS=0
 FAILED=0
+SKIPPED=0
 
 # Execute exports for requested platforms
 for platform in "${PLATFORM_ARRAY[@]}"; do
@@ -260,13 +279,30 @@ for platform in "${PLATFORM_ARRAY[@]}"; do
     
     case "$platform" in
         web)
-            export_web && ((SUCCESS++)) || ((FAILED++))
+            if export_web; then
+                ((SUCCESS++))
+            else
+                ((FAILED++))
+            fi
         ;;
         ios)
-            export_ios && ((SUCCESS++)) || ((FAILED++))
+            if export_ios; then
+                ((SUCCESS++))
+            else
+                ((FAILED++))
+            fi
         ;;
         android)
-            export_android && ((SUCCESS++)) || ((FAILED++))
+            if export_android; then
+                ((SUCCESS++))
+            else
+                rc=$?
+                if [ "$rc" -eq 2 ]; then
+                    ((SKIPPED++))
+                else
+                    ((FAILED++))
+                fi
+            fi
         ;;
         *)
             echo -e "${RED}Unknown platform: $platform${NC}"
@@ -281,6 +317,7 @@ echo -e "${GREEN}Export Summary${NC}"
 echo -e "${BLUE}═══════════════════════════════════════${NC}"
 echo "Successful: $SUCCESS"
 echo "Failed:     $FAILED"
+echo "Skipped:    $SKIPPED"
 
 if [ $FAILED -eq 0 ]; then
     echo -e "${GREEN}✓ All exports completed successfully!${NC}"

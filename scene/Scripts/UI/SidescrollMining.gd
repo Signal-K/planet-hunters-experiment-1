@@ -94,6 +94,9 @@ var _stuck_reasons_emitted: Dictionary = {}
 var _completion_reason := "duration_elapsed"
 var _completion_emitted := false
 var _last_progress_elapsed := 0.0
+# True when touch/on-screen buttons should be shown: native mobile OR small viewport
+# (web users on phones report OS.has_feature("mobile") as false, so we fall back to width)
+var _uses_touch_controls := false
 
 func _ready():
 	_load_rocket_frames()
@@ -104,14 +107,24 @@ func _ready():
 	fire_button.button_up.connect(_on_fire_released)
 	inventory_button.pressed.connect(_toggle_inventory)
 	return_button.pressed.connect(_on_return_pressed)
-	
-	fire_button.visible = OS.has_feature("mobile")
-	inventory_button.visible = OS.has_feature("mobile")
+
+	_uses_touch_controls = OS.has_feature("mobile") or get_viewport_rect().size.x < 768
+	fire_button.visible = _uses_touch_controls
+	inventory_button.visible = _uses_touch_controls
 	inventory_panel.visible = false
 	_update_drone_display()
-	
+	get_viewport().size_changed.connect(_on_viewport_size_changed)
+
 	if not Engine.is_editor_hint():
 		_show_guide_step()
+
+func _on_viewport_size_changed() -> void:
+	var now_touch = OS.has_feature("mobile") or get_viewport_rect().size.x < 768
+	if now_touch == _uses_touch_controls:
+		return
+	_uses_touch_controls = now_touch
+	fire_button.visible = _uses_touch_controls
+	inventory_button.visible = _uses_touch_controls
 
 func start_mining(is_planet: bool = false, difficulty: int = 1, target_id: String = "", minerals: Dictionary = {}, mineable_pct: float = 0.5, session_context: Dictionary = {}):
 	_is_planet = is_planet
@@ -494,7 +507,7 @@ func _process(delta):
 		inventory_panel.visible = false
 	
 	if not _guide_active:
-		if Input.is_action_pressed("ui_accept") and not OS.has_feature("mobile"):
+		if Input.is_action_pressed("ui_accept") and not _uses_touch_controls:
 			_is_mining = true
 		elif Input.is_action_just_released("ui_accept"):
 			_is_mining = false
@@ -700,7 +713,10 @@ func _show_guide_step():
 	
 	match _guide_step:
 		GuideStep.INTRO:
-			instructions.text = "Welcome! Mine colored minerals as you fly over the asteroid."
+			if _uses_touch_controls:
+				instructions.text = "Welcome to mining. Hold FIRE to mine, tap DRONE for drones, tap RETURN to head back to debrief."
+			else:
+				instructions.text = "Welcome to mining. Hold SPACE to mine, press D for drones, press RETURN to head back to debrief."
 			_guide_paused = false  # Keep flying
 		GuideStep.MINE_SURFACE_IRON:
 			instructions.text = "ORANGE = Iron (10pts). Hold SPACE to mine surface deposits!"
@@ -715,7 +731,10 @@ func _show_guide_step():
 			instructions.text = "Press D to deploy a drone at the next dark deposit!"
 			_guide_paused = false  # Keep flying until near subsurface
 		GuideStep.COMPLETE:
-			instructions.text = "Great! Continue mining. Watch FUEL and HEAT!"
+			if _uses_touch_controls:
+				instructions.text = "Great! Continue mining. FIRE mine, DRONE deploy, RETURN debrief. Watch FUEL and HEAT!"
+			else:
+				instructions.text = "Great! Continue mining. Controls: SPACE mine, D drone, RETURN debrief. Watch FUEL and HEAT!"
 			_guide_paused = false
 			_guide_active = false
 	
@@ -723,7 +742,7 @@ func _show_guide_step():
 	tween.tween_property(instructions, "scale", Vector2(1.0, 1.0), 0.4).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 func _update_guide(delta):
-	if Input.is_action_pressed("ui_accept") and not OS.has_feature("mobile"):
+	if Input.is_action_pressed("ui_accept") and not _uses_touch_controls:
 		_is_mining = true
 	elif Input.is_action_just_released("ui_accept"):
 		_is_mining = false

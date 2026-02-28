@@ -61,6 +61,7 @@ var _earth_pivot: Node3D
 var _earth_mesh: MeshInstance3D
 var _traveling := false
 var _auto_advance_started := false
+var _depart_start_rocket_pos := Vector2.ZERO
 
 enum Phase {
 	TARGET_ORBIT,
@@ -133,8 +134,8 @@ func _setup_ui() -> void:
 		prev_button.visible = false
 	if next_button:
 		next_button.visible = false
-	back_button.text = "Continue"
-	back_button.visible = false
+	back_button.text = "Skip"
+	back_button.visible = true
 	back_button.pressed.connect(_on_continue_pressed)
 
 func _load_target_data() -> void:
@@ -207,6 +208,8 @@ func _start_depart_target() -> void:
 	_phase_time = 0.0
 	_heading_angle = orbit_rocket.rotation if orbit_rocket else 0.0
 	_center_locked = true
+	if orbit_rocket:
+		_depart_start_rocket_pos = orbit_rocket.position
 	minerals_panel.modulate.a = 1.0
 	inventory_panel.modulate.a = 1.0
 	var fade = get_tree().create_tween()
@@ -335,7 +338,14 @@ func _summary_content() -> void:
 func _update_orbit(delta: float) -> void:
 	if orbit_root == null or orbit_rocket == null:
 		return
-	if _phase in [Phase.DEPART_TARGET, Phase.TRAVEL]:
+	if _phase == Phase.DEPART_TARGET:
+		var depart_pct = clamp(_phase_time / max(TARGET_FADE_TIME, 0.01), 0.0, 1.0)
+		orbit_rocket.position = _depart_start_rocket_pos.lerp(Vector2.ZERO, depart_pct)
+		orbit_rocket.rotation = _heading_angle
+		if not _center_locked:
+			var size_depart = get_viewport().get_visible_rect().size
+			orbit_root.position = size_depart * 0.5
+	elif _phase == Phase.TRAVEL:
 		orbit_rocket.position = Vector2.ZERO
 		orbit_rocket.rotation = _heading_angle
 		if not _center_locked:

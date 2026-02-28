@@ -57,7 +57,14 @@ func _ready():
 	
 	_current_yield = resource_yield.get_yield_for_target(_current_target_id, _current_target_type, level, 1.0)
 	
-	target_label.text = "Target: %s (Level %d)" % [_current_target_id, level]
+	var rocket_custom = preview.get("rocket_customization", {})
+	var custom_text = ""
+	if typeof(rocket_custom) == TYPE_DICTIONARY:
+		var flag = str(rocket_custom.get("flag", ""))
+		var logo = str(rocket_custom.get("logo", ""))
+		if flag != "" or logo != "":
+			custom_text = " • %s/%s" % [flag if flag != "" else "No Flag", logo if logo != "" else "No Logo"]
+	target_label.text = "Target: %s (Level %d)%s" % [_current_target_id, level, custom_text]
 	GameplayAnalytics.emit_event("mission_target_preview_opened", {
 		"target_id": _current_target_id,
 		"target_type": _current_target_type,
@@ -85,6 +92,8 @@ func _on_mine_pressed():
 	})
 	
 	print("[Preview] Hiding UI...")
+	mine_btn.disabled = true
+	return_btn.disabled = false
 	ui_container.visible = false
 	
 	print("[Preview] Loading mining scene...")
@@ -118,6 +127,7 @@ func _on_mining_completed(minerals_collected: Dictionary, score: int):
 		_minigame_instance = null
 	
 	ui_container.visible = true
+	mine_btn.disabled = false
 
 func _on_return_pressed():
 	print("[Preview] Return home pressed")
@@ -131,6 +141,12 @@ func _on_return_pressed():
 		"target_id": _current_target_id
 	})
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var target_label = _current_target_id
+	var preview = rm.get_preview_target()
+	if not preview.is_empty():
+		target_label = str(preview.get("label", target_label))
+	var operation_mode = rm.get_operation_mode_for_rocket(_current_rocket_id)
+	rm.set_returned_mission(_current_rocket_id, _current_target_id, target_label, _current_target_type, operation_mode)
 	rm.return_home(_current_rocket_id)
 	rm.clear_preview_target()
 	get_tree().change_scene_to_file("res://Scenes/Transitions/rocket_return.tscn")

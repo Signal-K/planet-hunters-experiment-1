@@ -2,7 +2,10 @@
 set -euo pipefail
 
 # Create the Experiment 1 external survey in PostHog.
-# Required:
+# Required (Vercel names supported first):
+#   Posthog_Personal_Token=phx_...
+#   Posthog_Project_ID=<numeric id>
+# Backward-compatible aliases:
 #   POSTHOG_PERSONAL_API_KEY=phx_...
 #   POSTHOG_PROJECT_ID=<numeric id>
 # Optional:
@@ -16,17 +19,20 @@ if [[ ! -f "$PAYLOAD_PATH" ]]; then
   exit 1
 fi
 
+POSTHOG_PERSONAL_API_KEY="${Posthog_Personal_Token:-${POSTHOG_PERSONAL_API_KEY:-}}"
+POSTHOG_PROJECT_ID="${Posthog_Project_ID:-${POSTHOG_PROJECT_ID:-}}"
+POSTHOG_API_HOST="${Posthog_API_Host:-${POSTHOG_API_HOST:-https://us.posthog.com}}"
+
 if [[ -z "${POSTHOG_PERSONAL_API_KEY:-}" ]]; then
-  echo "Missing POSTHOG_PERSONAL_API_KEY (expected phx_...)." >&2
+  echo "Missing Posthog_Personal_Token (or POSTHOG_PERSONAL_API_KEY)." >&2
   exit 1
 fi
 
 if [[ -z "${POSTHOG_PROJECT_ID:-}" ]]; then
-  echo "Missing POSTHOG_PROJECT_ID." >&2
+  echo "Missing Posthog_Project_ID (or POSTHOG_PROJECT_ID)." >&2
   exit 1
 fi
 
-POSTHOG_API_HOST="${POSTHOG_API_HOST:-https://us.posthog.com}"
 API_URL="${POSTHOG_API_HOST%/}/api/projects/${POSTHOG_PROJECT_ID}/surveys/"
 
 echo "Creating survey on: $API_URL"

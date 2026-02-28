@@ -71,6 +71,53 @@ const PREDEFINED_MISSION_TARGETS := {
 # Mission 3: Scanner-driven target selection
 # Spec: Shows 5 untargeted asteroids, 1 reachable by SR2
 const MISSION3_VISIBLE_TARGET_COUNT := 5
+const MISSION2_VISIBLE_TARGET_COUNT := 3
+const MISSION2_FALLBACK_TARGETS := [
+    {
+        "id": "mission-2-upgrade-target",
+        "label": "Training Asteroid B",
+        "type": "asteroid",
+        "distance_au": 12.0,
+        "required_level": 2
+    },
+    {
+        "id": "mission-2-variant-near",
+        "label": "Survey Asteroid Delta",
+        "type": "asteroid",
+        "distance_au": 8.0,
+        "required_level": 2
+    },
+    {
+        "id": "mission-2-variant-mid",
+        "label": "Survey Asteroid Epsilon",
+        "type": "asteroid",
+        "distance_au": 18.0,
+        "required_level": 2
+    }
+]
+const MISSION3_FALLBACK_TARGETS := [
+    {
+        "id": "mission-3-scanner-fallback-primary",
+        "label": "Fallback Scan Asteroid Alpha",
+        "type": "asteroid",
+        "distance_au": 12.0,
+        "required_level": 2
+    },
+    {
+        "id": "mission-3-scanner-fallback-delta",
+        "label": "Fallback Scan Asteroid Delta",
+        "type": "asteroid",
+        "distance_au": 24.0,
+        "required_level": 2
+    },
+    {
+        "id": "mission-3-scanner-fallback-epsilon",
+        "label": "Fallback Scan Asteroid Epsilon",
+        "type": "asteroid",
+        "distance_au": 24.0,
+        "required_level": 2
+    }
+]
 
 # Mission 4: Planetary exploration
 # Spec: Shows 5 untargeted planets, requires SR3
@@ -79,6 +126,9 @@ const MISSION4_VISIBLE_TARGET_COUNT := 5
 # Mission 5: Contractor missions
 # Spec: Shows 5 asteroid targets matching contractor mineral requests
 const MISSION5_VISIBLE_TARGET_COUNT := 5
+const OPEN_OPERATION_MODES := ["contract", "survey"]
+const ROCKET_FLAG_OPTIONS := ["Earth Union", "Signal-K", "Open Science", "Frontier Guild"]
+const ROCKET_LOGO_OPTIONS := ["Star", "Wave", "Miner", "Pulse"]
 
 # Mission 5 payout cap
 # Spec: Maximum 1.4B F payout to prevent over-earning
@@ -245,8 +295,48 @@ static func get_mission3_targets(detected_targets: Array = []) -> Array:
         source,
         get_targeted_target_ids(),
         "asteroid",
-        MISSION3_VISIBLE_TARGET_COUNT
+        MISSION3_VISIBLE_TARGET_COUNT,
+        _primary_fallback_target_for_stage(3)
     )
+
+static func get_mission2_targets(detected_targets: Array = []) -> Array:
+    var source = detected_targets
+    if source.is_empty():
+        source = get_detected_targets()
+    var targeted = get_targeted_target_ids()
+    var selected: Array = []
+    for target_any in source:
+        if typeof(target_any) != TYPE_DICTIONARY:
+            continue
+        var target: Dictionary = target_any
+        var target_id = str(target.get("id", ""))
+        if target_id == "" or targeted.has(target_id):
+            continue
+        if _normalize_target_type(str(target.get("type", "asteroid"))) != "asteroid":
+            continue
+        selected.append(target.duplicate(true))
+        if selected.size() >= MISSION2_VISIBLE_TARGET_COUNT:
+            break
+    for fallback_any in MISSION2_FALLBACK_TARGETS:
+        if selected.size() >= MISSION2_VISIBLE_TARGET_COUNT:
+            break
+        if typeof(fallback_any) != TYPE_DICTIONARY:
+            continue
+        var fallback: Dictionary = fallback_any
+        var fallback_id = str(fallback.get("id", ""))
+        if fallback_id == "" or targeted.has(fallback_id):
+            continue
+        var exists := false
+        for row_any in selected:
+            if typeof(row_any) != TYPE_DICTIONARY:
+                continue
+            if str(row_any.get("id", "")) == fallback_id:
+                exists = true
+                break
+        if exists:
+            continue
+        selected.append(fallback.duplicate(true))
+    return selected
 
 static func get_mission4_targets(detected_targets: Array = []) -> Array:
     var source = detected_targets
@@ -354,6 +444,8 @@ static func get_mission5_purchase_cost(rocket_id_or_type: String) -> int:
     if get_mission_stage() < 5:
         return base_cost
     var selected = get_mission5_selected_contractor()
+    if get_operation_mode() != "contract":
+        return base_cost
     if str(selected.get("effect", "")) != "build_discount":
         return base_cost
     var discount_pct = clamp(float(selected.get("build_discount_pct", 0.0)), 0.0, 0.95)
@@ -362,6 +454,8 @@ static func get_mission5_purchase_cost(rocket_id_or_type: String) -> int:
 static func apply_mission5_payout_terms(base_payout: int, contractor_id: String = "") -> int:
     var payout = max(base_payout, 0)
     if get_mission_stage() < 5:
+        return payout
+    if get_operation_mode() != "contract":
         return payout
     var selected := {}
     if contractor_id != "":
@@ -478,6 +572,20 @@ static func build_target_profile(target_id: String, target_type: String = "aster
     var predefined = get_predefined_target_profile(target_id)
     if not predefined.is_empty():
         return predefined
+    if get_mission_stage() == 2 and normalized_type == "asteroid":
+        for variant_any in MISSION2_FALLBACK_TARGETS:
+            if typeof(variant_any) != TYPE_DICTIONARY:
+                continue
+            var variant: Dictionary = variant_any
+            if str(variant.get("id", "")) != target_id:
+                continue
+            var distance = float(variant.get("distance_au", 12.0))
+            return {
+                "distance_au": distance,
+                "distance_km": distance * AU_IN_KM,
+                "required_level": int(variant.get("required_level", 2)),
+                "type": "asteroid"
+            }
     if get_mission_stage() == 3 and normalized_type == "asteroid":
         var mission3_targets = get_mission3_targets()
         for i in range(mission3_targets.size()):
@@ -571,6 +679,43 @@ static func get_placed() -> Array:
     var s = load_state()
     return s.get("placed", [])
 
+static func get_rocket_customization_options() -> Dictionary:
+    return {
+        "flags": ROCKET_FLAG_OPTIONS.duplicate(),
+        "logos": ROCKET_LOGO_OPTIONS.duplicate()
+    }
+
+static func get_rocket_customization(rocket_id: String) -> Dictionary:
+    if rocket_id == "":
+        return {}
+    var s = load_state()
+    var all = s.get("rocket_customizations", {})
+    if typeof(all) != TYPE_DICTIONARY:
+        all = {}
+    var existing = all.get(rocket_id, {})
+    if typeof(existing) != TYPE_DICTIONARY:
+        existing = {}
+    var rocket_type = RocketSpecs.rocket_type_from_id(rocket_id)
+    return {
+        "flag": str(existing.get("flag", ROCKET_FLAG_OPTIONS[0])),
+        "logo": str(existing.get("logo", ROCKET_LOGO_OPTIONS[0])),
+        "rocket_type": rocket_type
+    }
+
+static func set_rocket_customization(rocket_id: String, customization: Dictionary) -> bool:
+    if rocket_id == "":
+        return false
+    var s = load_state()
+    var all = s.get("rocket_customizations", {})
+    if typeof(all) != TYPE_DICTIONARY:
+        all = {}
+    var current = get_rocket_customization(rocket_id)
+    current["flag"] = str(customization.get("flag", current.get("flag", ROCKET_FLAG_OPTIONS[0])))
+    current["logo"] = str(customization.get("logo", current.get("logo", ROCKET_LOGO_OPTIONS[0])))
+    all[rocket_id] = current
+    s["rocket_customizations"] = all
+    return save_state(s)
+
 static func get_launched() -> Array:
     var s = load_state()
     return s.get("launched", [])
@@ -603,15 +748,134 @@ static func set_launched(rocket_id: String) -> bool:
     return true
 
 static func select_target(target_id: String) -> bool:
+    if target_id == "":
+        return false
+    if not is_target_selectable_for_current_stage(target_id):
+        return false
     var s = load_state()
     if typeof(target_id) != TYPE_STRING:
         return false
     s["selected_target"] = target_id
     return save_state(s)
 
+static func force_select_detected_target(target_id: String) -> bool:
+    if target_id == "":
+        return false
+    var detected = get_detected_targets()
+    var exists = false
+    for item_any in detected:
+        if typeof(item_any) != TYPE_DICTIONARY:
+            continue
+        var item: Dictionary = item_any
+        if str(item.get("id", "")) == target_id:
+            exists = true
+            break
+    if not exists:
+        return false
+    var s = load_state()
+    s["selected_target"] = target_id
+    return save_state(s)
+
 static func get_selected_target() -> String:
     var s = load_state()
     return str(s.get("selected_target", ""))
+
+static func is_target_selectable_for_current_stage(target_id: String) -> bool:
+    if target_id == "":
+        return false
+    var selectable = get_selectable_targets_for_stage()
+    for target in selectable:
+        if str(target.get("id", "")) == target_id:
+            return true
+    return false
+
+static func get_selectable_targets_for_stage(stage: int = -1) -> Array:
+    var mission_stage = stage if stage > 0 else get_mission_stage()
+    if mission_stage == 1:
+        var predefined = get_predefined_mission_target(mission_stage)
+        return [predefined] if not predefined.is_empty() else []
+    if mission_stage == 2:
+        return get_mission2_targets()
+    if mission_stage == 3:
+        return get_mission3_targets()
+    if mission_stage == 4:
+        return get_mission4_targets()
+    if mission_stage == 5:
+        return get_mission5_targets()
+    return get_detected_targets()
+
+static func ensure_selected_target_for_launch(rocket_id: String = "") -> Dictionary:
+    var existing_target_id = get_selected_target()
+    if existing_target_id != "" and is_target_selectable_for_current_stage(existing_target_id):
+        var existing_details = get_target_details(existing_target_id)
+        return {
+            "ok": true,
+            "target_id": existing_target_id,
+            "target_type": str(existing_details.get("type", "asteroid")),
+            "target_label": str(existing_details.get("label", existing_target_id)),
+            "fallback_used": false
+        }
+
+    var mission_stage = get_mission_stage()
+    var selectable = get_selectable_targets_for_stage(mission_stage)
+    if selectable.is_empty():
+        _ensure_stage_fallback_targets(mission_stage)
+        selectable = get_selectable_targets_for_stage(mission_stage)
+
+    var rocket_level = get_rocket_level(rocket_id) if rocket_id != "" else 99
+    var selected_row := {}
+    for item_any in selectable:
+        if typeof(item_any) != TYPE_DICTIONARY:
+            continue
+        var item: Dictionary = item_any
+        var tid = str(item.get("id", ""))
+        if tid == "":
+            continue
+        var profile = build_target_profile(tid, str(item.get("type", "asteroid")))
+        if int(profile.get("required_level", 1)) <= rocket_level:
+            selected_row = item
+            break
+    if selected_row.is_empty() and not selectable.is_empty():
+        selected_row = selectable[0]
+    if selected_row.is_empty():
+        return {
+            "ok": false,
+            "target_id": "",
+            "fallback_used": false,
+            "reason": "No playable targets available"
+        }
+
+    var selected_id = str(selected_row.get("id", ""))
+    if selected_id == "":
+        return {
+            "ok": false,
+            "target_id": "",
+            "fallback_used": false,
+            "reason": "Resolved fallback target was invalid"
+        }
+    if not select_target(selected_id):
+        return {
+            "ok": false,
+            "target_id": "",
+            "fallback_used": false,
+            "reason": "Failed to persist fallback target selection"
+        }
+    var selected_type = str(selected_row.get("type", "asteroid"))
+    var selected_label = str(selected_row.get("label", selected_id))
+    var notice = "Scan fallback engaged: proceeding to %s." % selected_label
+    set_launch_fallback_notice(notice)
+    return {
+        "ok": true,
+        "target_id": selected_id,
+        "target_type": selected_type,
+        "target_label": selected_label,
+        "fallback_used": true,
+        "notice": notice
+    }
+
+static func get_mission_exposure_reward(stage: int) -> int:
+    var safe_stage = max(stage, 1)
+    return 4 + (safe_stage - 1)
 
 static func get_target_details(target_id: String) -> Dictionary:
     if target_id == "":
@@ -652,7 +916,13 @@ static func add_mission(rocket_id: String, target_id: String, launch_time_epoch:
     if effective_travel_seconds <= 0:
         effective_travel_seconds = get_mission_duration_seconds_for_rocket(rocket_id)
     var arrival = launch_time_epoch + effective_travel_seconds
-    var record = {"rocket_id": rocket_id, "target": target_id, "launch_time": launch_time_epoch, "arrival_time": arrival}
+    var record = {
+        "rocket_id": rocket_id,
+        "target": target_id,
+        "launch_time": launch_time_epoch,
+        "arrival_time": arrival,
+        "operation_mode": get_operation_mode()
+    }
     missions.append(record)
     s["missions"] = missions
     _set_status_changed_at_in_state(s, rocket_id, "launched", launch_time_epoch)
@@ -678,6 +948,18 @@ static func get_detected_targets() -> Array:
     var targets = s.get("detected_targets", [])
     print("RocketsManager: get_detected_targets -> count=", targets.size())
     return targets
+
+static func set_launch_fallback_notice(message: String) -> bool:
+    var s = load_state()
+    s["launch_fallback_notice"] = message.strip_edges()
+    return save_state(s)
+
+static func consume_launch_fallback_notice() -> String:
+    var s = load_state()
+    var message = str(s.get("launch_fallback_notice", ""))
+    s["launch_fallback_notice"] = ""
+    save_state(s)
+    return message
 
 static func register_target_interaction(target_id: String, target_type: String) -> int:
     if target_id == "":
@@ -972,6 +1254,16 @@ static func add_placed(rocket_type: String, position: Vector2) -> String:
     var uid = "%s-%d" % [rocket_type, rng.randi()]
     arr.append({"type": rocket_type, "id": uid, "x": position.x, "y": position.y, "status": "awaitingLaunch"})
     s["placed"] = arr
+    var customizations = s.get("rocket_customizations", {})
+    if typeof(customizations) != TYPE_DICTIONARY:
+        customizations = {}
+    if not customizations.has(uid):
+        customizations[uid] = {
+            "flag": ROCKET_FLAG_OPTIONS[0],
+            "logo": ROCKET_LOGO_OPTIONS[0],
+            "rocket_type": rocket_type
+        }
+    s["rocket_customizations"] = customizations
     _set_status_changed_at_in_state(s, uid, "awaitingLaunch")
     save_state(s)
     return uid
@@ -1029,6 +1321,9 @@ static func get_preview_target() -> Dictionary:
         target["rocket_id"] = ""
     if str(target.get("rocket_id", "")) == "":
         target["rocket_id"] = resolve_preview_rocket_id(str(target.get("id", "")))
+    var preview_rocket_id = str(target.get("rocket_id", ""))
+    if preview_rocket_id != "":
+        target["rocket_customization"] = get_rocket_customization(preview_rocket_id)
     return target
 
 static func clear_preview_target() -> void:
@@ -1037,12 +1332,17 @@ static func clear_preview_target() -> void:
     s["preview_target"] = {}
     save_state(s)
 
-static func set_returned_mission(rocket_id: String, target_id: String, target_label: String, target_type: String) -> void:
+static func set_returned_mission(rocket_id: String, target_id: String, target_label: String, target_type: String, operation_mode: String = "") -> void:
+    var resolved_mode = operation_mode.strip_edges().to_lower()
+    if not OPEN_OPERATION_MODES.has(resolved_mode):
+        resolved_mode = get_operation_mode_for_rocket(rocket_id)
     _returned_mission = {
         "rocket_id": rocket_id,
         "target_id": target_id,
         "label": target_label,
-        "type": target_type
+        "type": target_type,
+        "operation_mode": resolved_mode,
+        "rocket_customization": get_rocket_customization(rocket_id)
     }
     var s = load_state()
     s["returned_mission"] = _returned_mission.duplicate(true)
@@ -1191,6 +1491,31 @@ static func get_mission_for_rocket(rocket_id: String) -> Dictionary:
             latest_launch = launch
             latest = m
     return latest
+
+static func get_operation_mode() -> String:
+    var s = load_state()
+    var mode = str(s.get("operation_mode", "contract")).strip_edges().to_lower()
+    if not OPEN_OPERATION_MODES.has(mode):
+        return "contract"
+    return mode
+
+static func set_operation_mode(mode: String) -> bool:
+    var normalized = mode.strip_edges().to_lower()
+    if not OPEN_OPERATION_MODES.has(normalized):
+        return false
+    var s = load_state()
+    s["operation_mode"] = normalized
+    return save_state(s)
+
+static func get_open_operation_modes() -> Array:
+    return OPEN_OPERATION_MODES.duplicate(true)
+
+static func get_operation_mode_for_rocket(rocket_id: String) -> String:
+    var mission = get_mission_for_rocket(rocket_id)
+    var from_mission = str(mission.get("operation_mode", "")).strip_edges().to_lower()
+    if OPEN_OPERATION_MODES.has(from_mission):
+        return from_mission
+    return get_operation_mode()
 
 static func get_latest_mission_for_target(target_id: String) -> Dictionary:
     if target_id == "":
@@ -1352,4 +1677,67 @@ static func get_predefined_target_profile(target_id: String) -> Dictionary:
             "required_level": int(item.get("required_level", 1)),
             "type": _normalize_target_type(target_type)
         }
+    return {}
+
+static func _ensure_stage_fallback_targets(stage: int) -> bool:
+    var fallback_rows: Array = []
+    if stage == 3:
+        fallback_rows = MISSION3_FALLBACK_TARGETS
+    elif stage == 2:
+        fallback_rows = MISSION2_FALLBACK_TARGETS
+    elif stage == 1:
+        var m1 = get_predefined_mission_target(1)
+        if not m1.is_empty():
+            fallback_rows = [m1]
+    elif stage == 4:
+        var m4 = get_predefined_mission_target(4)
+        if not m4.is_empty():
+            fallback_rows = [m4]
+    elif stage >= 5:
+        var m5 = get_predefined_mission_target(5)
+        if not m5.is_empty():
+            fallback_rows = [m5]
+    if fallback_rows.is_empty():
+        return false
+
+    var merged = get_detected_targets()
+    var ids := {}
+    for row_any in merged:
+        if typeof(row_any) != TYPE_DICTIONARY:
+            continue
+        ids[str(row_any.get("id", ""))] = true
+    var changed := false
+    for row_any in fallback_rows:
+        if typeof(row_any) != TYPE_DICTIONARY:
+            continue
+        var row: Dictionary = row_any
+        var tid = str(row.get("id", ""))
+        if tid == "" or ids.has(tid):
+            continue
+        merged.append({
+            "id": tid,
+            "label": str(row.get("label", tid)),
+            "type": _normalize_target_type(str(row.get("type", "asteroid")))
+        })
+        ids[tid] = true
+        changed = true
+    if not changed:
+        return false
+    return set_detected_targets(merged)
+
+static func _primary_fallback_target_for_stage(stage: int) -> Dictionary:
+    if stage == 3:
+        if not MISSION3_FALLBACK_TARGETS.is_empty():
+            return MISSION3_FALLBACK_TARGETS[0].duplicate(true)
+        return {}
+    if stage == 2:
+        if not MISSION2_FALLBACK_TARGETS.is_empty():
+            return MISSION2_FALLBACK_TARGETS[0].duplicate(true)
+        return {}
+    if stage == 4:
+        return get_predefined_mission_target(4)
+    if stage >= 5:
+        return get_predefined_mission_target(5)
+    if stage == 1:
+        return get_predefined_mission_target(1)
     return {}

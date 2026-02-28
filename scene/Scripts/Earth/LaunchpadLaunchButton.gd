@@ -7,8 +7,10 @@ var _launchpad: Node
 var _on_show_selector: Callable
 var _launch_btn_connected: bool = false
 var _launch_button: Button = null
+var _connect_attempts: int = 0
+const MAX_CONNECT_ATTEMPTS := 8
 const COUNTDOWN_STEP_TIME := 0.6
-const OUTBOUND_TRANSIT_SCENE_PATH := "res://Scenes/Transitions/rocket_transit.tscn"
+const OUTBOUND_TRANSIT_SCENE_PATH := "res://Scenes/Transitions/rocket_ascent.tscn"
 
 func setup(launchpad: Node, on_show_selector: Callable) -> void:
 	_launchpad = launchpad
@@ -56,8 +58,14 @@ func connect_launch_button() -> void:
 			if btn:
 				AppLogger.d("Launchpad: found LaunchButton at UILayer/SelectorPanel/VBox/LaunchButton")
 	if not btn:
-		AppLogger.w("Launchpad: LaunchButton not found when attempting to connect")
+		_connect_attempts += 1
+		if _connect_attempts < MAX_CONNECT_ATTEMPTS:
+			# LaunchHUD may be instanced a few frames later; retry before warning.
+			_launchpad.call_deferred("connect_launch_button")
+		else:
+			AppLogger.w("Launchpad: LaunchButton not found when attempting to connect")
 		return
+	_connect_attempts = 0
 	# Always connect the pressed signal to ensure handler is wired (avoid fragile is_connected checks)
 	btn.pressed.connect(Callable(self, "_on_launch_button_pressed"))
 	_launch_button = btn
@@ -107,9 +115,9 @@ func _on_launch_button_pressed() -> void:
 		AppLogger.w("Launchpad: RocketsManager not available")
 		return
 	# Require a selected target before launching
-	var target = rm.get_selected_target()
-	if target == "":
-		AppLogger.w("Launchpad: No target selected - cannot launch. Open Scanner Station to choose a target.")
+	var resolved = rm.ensure_selected_target_for_launch(rocket.name)
+	if not bool(resolved.get("ok", false)):
+		AppLogger.w("Launchpad: No playable target available for launch (%s)" % str(resolved.get("reason", "unknown reason")))
 		if _on_show_selector.is_valid():
 			_on_show_selector.call()
 		if _launchpad and _launchpad.has_method("_populate_targets"):
@@ -117,7 +125,22 @@ func _on_launch_button_pressed() -> void:
 		if _launch_button:
 			_launch_button.disabled = false
 		return
+	var target = str(resolved.get("target_id", ""))
+	if target == "":
+		AppLogger.w("Launchpad: target resolution returned empty target id")
+		if _launch_button:
+			_launch_button.disabled = false
+		return
 	var preview_meta = _resolve_preview_target_meta(target)
+	if bool(resolved.get("fallback_used", false)):
+		preview_meta["label"] = str(resolved.get("target_label", preview_meta.get("label", target)))
+		preview_meta["type"] = str(resolved.get("target_type", preview_meta.get("type", "asteroid")))
+		# Auto-selection counts as completing the "select a target" tutorial step so
+		# the overlay doesn't stay stuck on "Select Target" while the rocket is in flight.
+		preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("select_launch_target", {
+			"target_id": target,
+			"auto_selected": true
+		})
 	var rocket_level = int(rm.get_rocket_level(rocket.name))
 	var target_profile = rm.build_target_profile(target, str(preview_meta.get("type", "asteroid")))
 	var required_level = int(target_profile.get("required_level", 1))
@@ -152,7 +175,8 @@ func _on_launch_button_pressed() -> void:
 			launch_target_id,
 			str(preview_meta.get("type", "asteroid")),
 			{
-				"target_label": str(preview_meta.get("label", launch_target_id))
+				"target_label": str(preview_meta.get("label", launch_target_id)),
+				"operation_mode": str(rm.get_operation_mode())
 			}
 		)
 		_award_launch_experience()
@@ -165,6 +189,9 @@ func _on_launch_button_pressed() -> void:
 	var launched_rocket_id = rocket.name
 	# Clear selected target after launch
 	rm.clear_selected_target()
+	if int(rm.get_mission_stage()) >= 3:
+		# Force a fresh scanner pass for scanner-gated mission flows.
+		rm.set_detected_targets([])
 	# Remove the rocket from the scene after launching
 	if is_instance_valid(rocket):
 		rocket.queue_free()

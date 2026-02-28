@@ -344,6 +344,17 @@ theme_override_font_sizes/font_size = 16
 text = "Changes here will sync back to React Native"
 horizontal_alignment = 1
 
+[node name="CitizenScienceDialogueButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer"]
+custom_minimum_size = Vector2(160, 50)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("2")
+theme_override_styles/hover = SubResource("3")
+theme_override_styles/pressed = SubResource("4")
+theme_override_styles/focus = SubResource("3")
+text = "Citizen Science Dialogue: On"
+
 [node name="ResetButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer"]
 custom_minimum_size = Vector2(160, 50)
 layout_mode = 2

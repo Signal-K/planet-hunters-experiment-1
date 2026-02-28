@@ -1,0 +1,170 @@
+{
+  "taskId": "l1sexq",
+  "currentVersion": 4,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "l1sexq",
+      "version": 1,
+      "timestamp": "2026-02-27T09:41:26.669Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Tutorial guidance affordances: arrow + flashing target",
+        "description": "Add pulsing directional guidance and flashing click targets in TutorialCoachOverlay so users can clearly identify required interaction points.",
+        "status": "done",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "tutorial",
+          "ux",
+          "godot"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Tutorial overlay shows animated directional arrow guidance to current required target"
+          },
+          {
+            "completed": false,
+            "text": "Current target structure/button visibly flashes while its tutorial step is active"
+          },
+          {
+            "completed": false,
+            "text": "Guidance visuals restore cleanly when step changes or tutorial hides"
+          }
+        ],
+        "implementationPlan": "1. Extend tutorial targeting helper to expose current target node and rect together.\n2. Add pulse animation for guidance arrow/highlight in TutorialCoachOverlay.\n3. Flash active target CanvasItem while step is active and restore on change/hide.\n4. Run mission/tutorial test suite and record results.",
+        "implementationNotes": "## Summary\n- Added pulsing arrow/line/highlight animation to TutorialCoachOverlay.\n- Added flashing target affordance on active tutorial targets with safe restore on step change/hide/exit.\n- Extended TutorialCoachTargeting with target-node lookup and rect helper to support flashing the resolved target node.\n- Prioritized visible structure nodes for launchpad/scanner target selection guidance."
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "l1sexq",
+      "version": 2,
+      "timestamp": "2026-02-27T09:43:28.021Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "done",
+          "newValue": "in-progress"
+        }
+      ],
+      "snapshot": {
+        "title": "Tutorial guidance affordances: arrow + flashing target",
+        "description": "Add pulsing directional guidance and flashing click targets in TutorialCoachOverlay so users can clearly identify required interaction points.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "tutorial",
+          "ux",
+          "godot"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Tutorial overlay shows animated directional arrow guidance to current required target"
+          },
+          {
+            "completed": false,
+            "text": "Current target structure/button visibly flashes while its tutorial step is active"
+          },
+          {
+            "completed": false,
+            "text": "Guidance visuals restore cleanly when step changes or tutorial hides"
+          }
+        ],
+        "implementationPlan": "1. Extend tutorial targeting helper to expose current target node and rect together.\n2. Add pulse animation for guidance arrow/highlight in TutorialCoachOverlay.\n3. Flash active target CanvasItem while step is active and restore on change/hide.\n4. Run mission/tutorial test suite and record results.",
+        "implementationNotes": "## Summary\n- Added pulsing arrow/line/highlight animation to TutorialCoachOverlay.\n- Added flashing target affordance on active tutorial targets with safe restore on step change/hide/exit.\n- Extended TutorialCoachTargeting with target-node lookup and rect helper to support flashing the resolved target node.\n- Prioritized visible structure nodes for launchpad/scanner target selection guidance."
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "l1sexq",
+      "version": 3,
+      "timestamp": "2026-02-27T09:43:35.112Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "## Summary\n- Added pulsing arrow/line/highlight animation to TutorialCoachOverlay.\n- Added flashing target affordance on active tutorial targets with safe restore on step change/hide/exit.\n- Extended TutorialCoachTargeting with target-node lookup and rect helper to support flashing the resolved target node.\n- Prioritized visible structure nodes for launchpad/scanner target selection guidance.",
+          "newValue": "## Summary\n- Added pulsing arrow/line/highlight animation to TutorialCoachOverlay.\n- Added flashing target affordance on active tutorial targets with safe restore on step change/hide/exit.\n- Extended TutorialCoachTargeting with target-node lookup and rect helper to support flashing the resolved target node.\n- Prioritized visible structure nodes for launchpad/scanner target selection guidance.\n\n- Added tutorial targeting regression tests in scene/tests/run_tutorial_tests.gd for structure-node preference and launch-button resolution."
+        }
+      ],
+      "snapshot": {
+        "title": "Tutorial guidance affordances: arrow + flashing target",
+        "description": "Add pulsing directional guidance and flashing click targets in TutorialCoachOverlay so users can clearly identify required interaction points.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "tutorial",
+          "ux",
+          "godot"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Tutorial overlay shows animated directional arrow guidance to current required target"
+          },
+          {
+            "completed": false,
+            "text": "Current target structure/button visibly flashes while its tutorial step is active"
+          },
+          {
+            "completed": false,
+            "text": "Guidance visuals restore cleanly when step changes or tutorial hides"
+          }
+        ],
+        "implementationPlan": "1. Extend tutorial targeting helper to expose current target node and rect together.\n2. Add pulse animation for guidance arrow/highlight in TutorialCoachOverlay.\n3. Flash active target CanvasItem while step is active and restore on change/hide.\n4. Run mission/tutorial test suite and record results.",
+        "implementationNotes": "## Summary\n- Added pulsing arrow/line/highlight animation to TutorialCoachOverlay.\n- Added flashing target affordance on active tutorial targets with safe restore on step change/hide/exit.\n- Extended TutorialCoachTargeting with target-node lookup and rect helper to support flashing the resolved target node.\n- Prioritized visible structure nodes for launchpad/scanner target selection guidance.\n\n- Added tutorial targeting regression tests in scene/tests/run_tutorial_tests.gd for structure-node preference and launch-button resolution."
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "l1sexq",
+      "version": 4,
+      "timestamp": "2026-02-27T09:43:44.393Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Tutorial guidance affordances: arrow + flashing target",
+        "description": "Add pulsing directional guidance and flashing click targets in TutorialCoachOverlay so users can clearly identify required interaction points.",
+        "status": "done",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "tutorial",
+          "ux",
+          "godot"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Tutorial overlay shows animated directional arrow guidance to current required target"
+          },
+          {
+            "completed": false,
+            "text": "Current target structure/button visibly flashes while its tutorial step is active"
+          },
+          {
+            "completed": false,
+            "text": "Guidance visuals restore cleanly when step changes or tutorial hides"
+          }
+        ],
+        "implementationPlan": "1. Extend tutorial targeting helper to expose current target node and rect together.\n2. Add pulse animation for guidance arrow/highlight in TutorialCoachOverlay.\n3. Flash active target CanvasItem while step is active and restore on change/hide.\n4. Run mission/tutorial test suite and record results.",
+        "implementationNotes": "## Summary\n- Added pulsing arrow/line/highlight animation to TutorialCoachOverlay.\n- Added flashing target affordance on active tutorial targets with safe restore on step change/hide/exit.\n- Extended TutorialCoachTargeting with target-node lookup and rect helper to support flashing the resolved target node.\n- Prioritized visible structure nodes for launchpad/scanner target selection guidance.\n\n- Added tutorial targeting regression tests in scene/tests/run_tutorial_tests.gd for structure-node preference and launch-button resolution."
+      }
+    }
+  ]
+}

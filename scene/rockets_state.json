@@ -9,10 +9,11 @@
   "launched": [
   ],
   "destroyed": [
+    "starterrocket1-test"
   ],
   "missions": [
   ],
-  "selected_target": "",
+  "selected_target": "mission-5-contractor-target",
   "preview_target": {
   },
   "detected_targets": [
@@ -24,20 +25,35 @@
   "scan_counts": {
   },
   "status_changed_at": {
+    "starterrocket1-test": {
+      "Destroyed": 1772261941.0
+    }
   },
-  "mission_progress_completed": 0,
+  "mission_progress_completed": 8,
   "completed_mission_badges": [
+    "e2e-stage-1-259",
+    "e2e-stage-2-262",
+    "e2e-stage-3-266",
+    "e2e-stage-4-269",
+    "e2e-stage-1-289",
+    "e2e-stage-2-289",
+    "e2e-stage-3-289",
+    "e2e-stage-4-290"
   ],
   "scanner_station_built": false,
-  "scanner_unlocked": false,
+  "scanner_unlocked": true,
   "scanner_unlock_dialog_seen": false,
   "mission5_contract_offer": {
+  },
+  "operation_mode": "survey",
+  "rocket_customizations": {
   },
   "mission_briefings_seen": {
     "3": true
   },
   "mission_progress_schema_version": 2.0,
   "pending_mission_guidance_id": 0.0,
+  "launch_fallback_notice": "Scan fallback engaged: proceeding to Contract Asteroid C.",
   "returning": [
   ],
   "arrived": {

@@ -45,7 +45,6 @@ func _ready():
 	# If the HUD hasn't been instanced yet (by LaunchpadScene), this can be called
 	# again later via `connect_launch_button()` which is public.
 	connect_launch_button()
-	_ensure_targets_loaded_for_launchpad()
 
 func connect_launch_button() -> void:
 	_launch_button.connect_launch_button()
@@ -108,13 +107,9 @@ func _populate_targets() -> void:
 	_selector_panel.populate_targets()
 
 func _ensure_targets_loaded_for_launchpad() -> void:
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
-	if not rm:
-		return
-	var detected = rm.get_detected_targets()
-	if detected.size() > 0:
-		return
-	_fetch_anomalies_for_selector()
+	# Intentionally no-op: launchpad no longer auto-fetches anomalies.
+	# Scanner Station is the source of anomaly discovery/selection.
+	return
 
 func _on_rockets_reset() -> void:
 	AppLogger.d("Launchpad: rockets reset event received, clearing rockets")

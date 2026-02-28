@@ -1,6 +1,10 @@
 extends RefCounted
 class_name AppControllerHelper
 
+const MINING_PRACTICE_PANEL_SCENE := preload("res://Scenes/UI/MiningPracticePanel.tscn")
+const MINING_PRACTICE_LAYER_NAME := "MiningPracticeOverlayLayer"
+const MINING_PRACTICE_LAYER_INDEX := 130
+
 static func get_instance() -> Node:
 	var tree = Engine.get_main_loop() as SceneTree
 	if tree:
@@ -11,3 +15,37 @@ static func record_tutorial_action(action_key: String, metadata: Dictionary = {}
 	var app = get_instance()
 	if app and app.has_method("record_tutorial_action"):
 		app.record_tutorial_action(action_key, metadata)
+
+static func is_citizen_science_dialogue_enabled(default_value: bool = true) -> bool:
+	var app = get_instance()
+	if app and app.has_method("is_citizen_science_dialogue_enabled"):
+		return bool(app.is_citizen_science_dialogue_enabled())
+	return default_value
+
+static func is_menu_open() -> bool:
+	var app = get_instance()
+	if app and app.has_method("is_menu_open"):
+		return bool(app.is_menu_open())
+	return false
+
+static func open_mining_practice_panel(entry_point: String = "menu_panel") -> bool:
+	var tree = Engine.get_main_loop() as SceneTree
+	if tree == null or tree.root == null:
+		return false
+	var root = tree.root
+	var layer = root.get_node_or_null(MINING_PRACTICE_LAYER_NAME) as CanvasLayer
+	if layer == null:
+		layer = CanvasLayer.new()
+		layer.name = MINING_PRACTICE_LAYER_NAME
+		layer.layer = MINING_PRACTICE_LAYER_INDEX
+		root.add_child(layer)
+	# Reuse existing panel if already open.
+	var existing = layer.get_node_or_null("MiningPracticePanel")
+	if existing != null:
+		return true
+	var panel = MINING_PRACTICE_PANEL_SCENE.instantiate()
+	if panel == null:
+		return false
+	panel.set_meta("entry_point", entry_point)
+	layer.add_child(panel)
+	return true

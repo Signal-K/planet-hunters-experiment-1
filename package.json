@@ -10,7 +10,7 @@
     "start": "react-native start",
     "test": "jest",
     "test:unit": "jest --runInBand --watchman=false",
-    "test:e2e": "playwright test",
+    "test:e2e": "npx playwright install chromium && playwright test",
     "test:all": "npm run test:unit && npm run test:e2e",
     "web:start": "node web/server.js",
     "web:sync-game": "mkdir -p game && cp -f electron-dist/godot-web/* game/",

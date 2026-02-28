@@ -1,12 +1,12 @@
 {
-  "name": "Experiment 1 Exit Survey (Godot build)",
+  "name": "Star Sailors: Planet Hunters (Experiment 1) Exit Survey",
   "type": "external_survey",
   "schedule": "always",
   "enable_partial_responses": true,
   "appearance": {
     "displayThankYouMessage": true,
-    "thankYouMessageHeader": "Thanks for testing Experiment 1",
-    "thankYouMessageDescription": "Your feedback helps shape how this prototype connects into the Star Sailors web game."
+    "thankYouMessageHeader": "Thanks for testing Star Sailors: Planet Hunters",
+    "thankYouMessageDescription": "Your feedback helps shape this Planet Hunters experiment and its connection to the wider Star Sailors web game."
   },
   "questions": [
     {
