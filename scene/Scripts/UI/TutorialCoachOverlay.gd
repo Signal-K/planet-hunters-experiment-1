@@ -1,13 +1,24 @@
 extends CanvasLayer
 
-const MiningPracticePanelScene = preload("res://Scenes/UI/MiningPracticePanel.tscn")
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
 const Targeting = preload("res://Scripts/UI/TutorialCoachTargeting.gd")
 const PANEL_MARGIN := 20.0
+# Scenes where the tutorial overlay should be suppressed entirely — the player
+# is watching an automated transit animation and cannot act on any tutorial step.
+const TRANSIT_SCENE_BASENAMES := ["rocket_ascent", "rocket_transit", "rocket_return"]
 const PANEL_DEFAULT_SIZE := Vector2(560.0, 240.0)
 const PANEL_MIN_SIZE := Vector2(420.0, 172.0)
 const LAYOUT_REFRESH_INTERVAL := 0.15
 const HIGHLIGHT_PADDING := 12.0
+const GUIDE_PULSE_SPEED := 4.8
+const GUIDE_LINE_ALPHA_MIN := 0.45
+const GUIDE_LINE_ALPHA_MAX := 0.98
+const GUIDE_ARROW_SWAY_PX := 8.0
+const HIGHLIGHT_BG_ALPHA_MIN := 0.08
+const HIGHLIGHT_BG_ALPHA_MAX := 0.24
+const HIGHLIGHT_BORDER_ALPHA_MIN := 0.56
+const HIGHLIGHT_BORDER_ALPHA_MAX := 1.0
+const TARGET_FLASH_BLEND := 0.42
 
 @onready var panel: PanelContainer = $Root/Panel
 @onready var title_label: Label = $Root/Panel/Margin/VBox/Header/TitleLabel
@@ -24,12 +35,19 @@ var _app_controller: Node = null
 var _layout_elapsed := 0.0
 var _current_state: Dictionary = {}
 var _current_step: Dictionary = {}
+var _transit_suppressed := false
 
 var _highlight_box: Panel = null
 var _guide_line: Line2D = null
 var _guide_arrow: Polygon2D = null
 var _guide_label: Label = null
 var _guide_target_rect := Rect2()
+var _guide_source_point := Vector2.ZERO
+var _guide_target_node: Node = null
+var _highlight_style: StyleBoxFlat = null
+var _pulse_elapsed := 0.0
+var _active_flash_target: CanvasItem = null
+var _active_flash_base_modulate := Color(1, 1, 1, 1)
 
 func _ready() -> void:
 	layer = 70
@@ -49,12 +67,34 @@ func _ready() -> void:
 	_refresh()
 
 func _process(delta: float) -> void:
+	_pulse_elapsed += delta
+	_animate_guidance_overlay()
 	_layout_elapsed += delta
 	if _layout_elapsed < LAYOUT_REFRESH_INTERVAL:
 		return
 	_layout_elapsed = 0.0
+	_apply_transit_suppression()
 	_reposition_panel()
 	_update_guidance_overlay()
+
+func _apply_transit_suppression() -> void:
+	var in_transit = _is_transit_scene()
+	if in_transit == _transit_suppressed:
+		return
+	_transit_suppressed = in_transit
+	if in_transit:
+		visible = false
+		_hide_guide_overlay()
+	else:
+		# Resuming from transit — re-read current state and restore the panel.
+		_refresh()
+
+func _is_transit_scene() -> bool:
+	var tree = get_tree()
+	if tree == null or tree.current_scene == null:
+		return false
+	var basename = tree.current_scene.scene_file_path.get_file().get_basename().to_lower()
+	return basename in TRANSIT_SCENE_BASENAMES
 
 func _apply_style() -> void:
 	PanelStyle.apply_panel(panel)
@@ -73,18 +113,18 @@ func _setup_guide_nodes() -> void:
 	_highlight_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_highlight_box.visible = false
 	# Intentional opt-out from generic panel style: this is a guidance/highlight affordance.
-	var highlight_style = StyleBoxFlat.new()
-	highlight_style.bg_color = Color(0.39, 0.78, 0.98, 0.12)
-	highlight_style.border_color = Color(PanelStyle.ACCENT.r, PanelStyle.ACCENT.g, PanelStyle.ACCENT.b, 0.96)
-	highlight_style.border_width_left = 3
-	highlight_style.border_width_top = 3
-	highlight_style.border_width_right = 3
-	highlight_style.border_width_bottom = 3
-	highlight_style.corner_radius_top_left = 8
-	highlight_style.corner_radius_top_right = 8
-	highlight_style.corner_radius_bottom_left = 8
-	highlight_style.corner_radius_bottom_right = 8
-	_highlight_box.add_theme_stylebox_override("panel", highlight_style)
+	_highlight_style = StyleBoxFlat.new()
+	_highlight_style.bg_color = Color(0.39, 0.78, 0.98, 0.12)
+	_highlight_style.border_color = Color(PanelStyle.ACCENT.r, PanelStyle.ACCENT.g, PanelStyle.ACCENT.b, 0.96)
+	_highlight_style.border_width_left = 3
+	_highlight_style.border_width_top = 3
+	_highlight_style.border_width_right = 3
+	_highlight_style.border_width_bottom = 3
+	_highlight_style.corner_radius_top_left = 8
+	_highlight_style.corner_radius_top_right = 8
+	_highlight_style.corner_radius_bottom_left = 8
+	_highlight_style.corner_radius_bottom_right = 8
+	_highlight_box.add_theme_stylebox_override("panel", _highlight_style)
 	$Root.add_child(_highlight_box)
 
 	_guide_line = Line2D.new()
@@ -176,9 +216,8 @@ func _reposition_panel() -> void:
 		if overlap < best_overlap:
 			best_overlap = overlap
 			best_rect = candidate
-	if best_overlap > 0.0:
-		panel.visible = false
-		return
+	# Always show the panel at the least-overlapping position — hiding entirely when
+	# every candidate overlaps something leaves the user with no guidance at all.
 	panel.visible = true
 	panel.size = panel_size
 	panel.position = _clamp_panel_position(best_rect.position, panel_size, viewport_rect)
@@ -271,24 +310,26 @@ func _update_guidance_overlay() -> void:
 	if not visible or _current_step.is_empty():
 		_hide_guide_overlay()
 		return
-	var target_rect = Targeting.find_current_target_rect(_current_step, get_tree())
+	_guide_target_node = Targeting.find_current_target(_current_step, get_tree())
+	var target_rect = Targeting.build_target_rect(_guide_target_node)
 	if not _has_rect(target_rect):
 		_hide_guide_overlay()
 		return
+	_set_active_flash_target(_guide_target_node)
 	_guide_target_rect = target_rect
 	_highlight_box.visible = true
 	_highlight_box.position = target_rect.position - Vector2(HIGHLIGHT_PADDING, HIGHLIGHT_PADDING)
 	_highlight_box.size = target_rect.size + Vector2(HIGHLIGHT_PADDING * 2.0, HIGHLIGHT_PADDING * 2.0)
 
 	var target_center = target_rect.position + (target_rect.size * 0.5)
-	var source_point = target_center + Vector2(-240, -120)
+	_guide_source_point = target_center + Vector2(-240, -120)
 	if panel.visible:
 		var panel_rect = Rect2(panel.global_position, panel.size)
-		source_point = _closest_point_on_rect(panel_rect, target_center)
+		_guide_source_point = _closest_point_on_rect(panel_rect, target_center)
 	_guide_line.visible = true
-	_guide_line.points = PackedVector2Array([source_point, target_center])
+	_guide_line.points = PackedVector2Array([_guide_source_point, target_center])
 
-	var direction = (target_center - source_point).normalized()
+	var direction = (target_center - _guide_source_point).normalized()
 	_guide_arrow.visible = true
 	_guide_arrow.position = target_center
 	_guide_arrow.rotation = direction.angle()
@@ -301,11 +342,107 @@ func _update_guidance_overlay() -> void:
 	)
 
 func _hide_guide_overlay() -> void:
+	_set_active_flash_target(null)
 	_highlight_box.visible = false
 	_guide_line.visible = false
 	_guide_arrow.visible = false
 	_guide_label.visible = false
 	_guide_target_rect = Rect2()
+	_guide_target_node = null
+
+func _animate_guidance_overlay() -> void:
+	if not _guide_line or not _guide_arrow or not _guide_label:
+		return
+	if not _guide_line.visible:
+		return
+	var pulse = (sin(_pulse_elapsed * GUIDE_PULSE_SPEED) + 1.0) * 0.5
+	var accent_alpha = lerp(GUIDE_LINE_ALPHA_MIN, GUIDE_LINE_ALPHA_MAX, pulse)
+	var accent_color = Color(PanelStyle.ACCENT.r, PanelStyle.ACCENT.g, PanelStyle.ACCENT.b, accent_alpha)
+	if _highlight_style:
+		_highlight_style.bg_color = Color(
+			PanelStyle.ACCENT.r,
+			PanelStyle.ACCENT.g,
+			PanelStyle.ACCENT.b,
+			lerp(HIGHLIGHT_BG_ALPHA_MIN, HIGHLIGHT_BG_ALPHA_MAX, pulse)
+		)
+		_highlight_style.border_color = Color(
+			PanelStyle.ACCENT.r,
+			PanelStyle.ACCENT.g,
+			PanelStyle.ACCENT.b,
+			lerp(HIGHLIGHT_BORDER_ALPHA_MIN, HIGHLIGHT_BORDER_ALPHA_MAX, pulse)
+		)
+		var border_width = int(round(2.0 + pulse * 2.0))
+		_highlight_style.border_width_left = border_width
+		_highlight_style.border_width_top = border_width
+		_highlight_style.border_width_right = border_width
+		_highlight_style.border_width_bottom = border_width
+	_guide_line.default_color = accent_color
+	_guide_arrow.color = accent_color
+	_guide_label.modulate = Color(1, 1, 1, lerp(0.62, 1.0, pulse))
+	if _has_rect(_guide_target_rect):
+		var target_center = _guide_target_rect.position + (_guide_target_rect.size * 0.5)
+		var direction = (target_center - _guide_source_point).normalized()
+		var orthogonal = Vector2(-direction.y, direction.x)
+		var sway_offset = orthogonal * sin(_pulse_elapsed * GUIDE_PULSE_SPEED * 0.85) * GUIDE_ARROW_SWAY_PX
+		var animated_source = _guide_source_point + sway_offset
+		_guide_line.points = PackedVector2Array([animated_source, target_center])
+		_guide_arrow.position = target_center
+		_guide_arrow.rotation = (target_center - animated_source).angle()
+	_apply_target_flash(pulse)
+
+func _set_active_flash_target(target: Node) -> void:
+	var resolved_target = _resolve_flash_target(target)
+	if resolved_target == _active_flash_target:
+		return
+	_clear_active_flash_target()
+	if resolved_target == null:
+		return
+	_active_flash_target = resolved_target
+	_active_flash_base_modulate = _active_flash_target.modulate
+
+func _resolve_flash_target(target: Node) -> CanvasItem:
+	if target == null:
+		return null
+	var candidate = target
+	if candidate is CollisionShape2D:
+		candidate = candidate.get_parent()
+	if candidate is Area2D:
+		var area_parent = candidate.get_parent()
+		if area_parent is CanvasItem:
+			return area_parent as CanvasItem
+	if candidate is CanvasItem:
+		return candidate as CanvasItem
+	var cursor = candidate
+	while cursor != null:
+		cursor = cursor.get_parent()
+		if cursor is CanvasItem:
+			return cursor as CanvasItem
+	return null
+
+func _apply_target_flash(pulse: float) -> void:
+	if _active_flash_target == null:
+		return
+	if not is_instance_valid(_active_flash_target):
+		_active_flash_target = null
+		return
+	var blend = pulse * TARGET_FLASH_BLEND
+	var base = _active_flash_base_modulate
+	var accent = PanelStyle.ACCENT
+	_active_flash_target.modulate = Color(
+		lerp(base.r, accent.r, blend),
+		lerp(base.g, accent.g, blend),
+		lerp(base.b, accent.b, blend),
+		base.a
+	)
+
+func _clear_active_flash_target() -> void:
+	if _active_flash_target and is_instance_valid(_active_flash_target):
+		_active_flash_target.modulate = _active_flash_base_modulate
+	_active_flash_target = null
+	_active_flash_base_modulate = Color(1, 1, 1, 1)
+
+func _exit_tree() -> void:
+	_clear_active_flash_target()
 
 func _closest_point_on_rect(rect: Rect2, point: Vector2) -> Vector2:
 	return Vector2(
@@ -329,11 +466,7 @@ func _on_replay_all_pressed() -> void:
 		_app_controller.replay_tutorial_from_mission1()
 
 func _on_practice_mining_pressed() -> void:
-	var root = get_tree().root
-	if root == null:
-		return
-	var panel_instance = MiningPracticePanelScene.instantiate()
-	root.add_child(panel_instance)
+	preload("res://Scripts/Utils/AppControllerHelper.gd").open_mining_practice_panel("tutorial_overlay")
 
 func _step_supports_practice(step: Dictionary) -> bool:
 	var action_key = str(step.get("action_key", ""))

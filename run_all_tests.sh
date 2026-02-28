@@ -42,7 +42,7 @@ fi
 echo ""
 echo -e "${BLUE}Running JavaScript Tests...${NC}"
 echo ""
-if npm test; then
+if npm run test:unit; then
   JS_TESTS_PASSED=1
   echo -e "${GREEN}✓ JavaScript tests passed${NC}"
 else

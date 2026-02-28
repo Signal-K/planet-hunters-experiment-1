@@ -8,13 +8,16 @@ signal franc_balance_updated(new_value: int)
 signal experience_updated(xp: int, level: int)
 signal rockets_reset()
 signal tutorial_state_updated(state: Dictionary)
+signal citizen_science_dialogue_toggled(enabled: bool)
 
 var counter: int = 0
 var franc_balance: int = 10000000000
 var experience_xp: int = 0
 var experience_level: int = 1
+var citizen_science_dialogue_enabled: bool = true
 var menu_panel_scene = preload("res://Scenes/UI/MenuPanel.tscn")
 var current_menu_panel: Control = null
+var _menu_layer: CanvasLayer = null
 var _game_paused: bool = false
 var _menu_request_version: int = 0
 var _menu_request_action: String = ""
@@ -29,7 +32,12 @@ const MISSION_PROGRESS_TRACKER_SCENE := preload("res://Scenes/UI/MissionProgress
 const TUTORIAL_CONTROLLER_SCENE := preload("res://Scripts/Tutorial/TutorialController.gd")
 const TUTORIAL_OVERLAY_SCENE := preload("res://Scenes/UI/TutorialCoachOverlay.tscn")
 const FEEDBACK_BEACON_SCENE := preload("res://Scenes/UI/FeedbackBeacon.tscn")
+const INTRO_SPLASH_SCRIPT := preload("res://Scripts/UI/PlanetHuntersIntroSplash.gd")
+const WEB_XP_STATE_KEY := "planet_hunters_xp_state_v1"
 var _tutorial_controller: Node = null
+# Actions recorded before the TutorialController's _ready() has run are queued
+# here and replayed in order once the controller is fully initialised.
+var _pending_tutorial_actions: Array = []
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -38,13 +46,17 @@ func _ready() -> void:
 	load_franc_balance()
 	# Load persisted experience from disk (if present)
 	load_experience()
+	_sync_experience_from_web_storage()
+	load_preferences()
 	_ensure_mission_progress_tracker()
 	_ensure_tutorial_runtime()
 	_ensure_feedback_beacon()
+	_show_intro_splash_if_needed()
 	WebEventBridge.emit("app_ready", {
 		"experience_level": experience_level,
 		"experience_xp": experience_xp,
-		"franc_balance": franc_balance
+		"franc_balance": franc_balance,
+		"citizen_science_dialogue_enabled": citizen_science_dialogue_enabled
 	})
 
 func _ensure_tutorial_runtime() -> void:
@@ -56,6 +68,10 @@ func _ensure_tutorial_runtime() -> void:
 		_tutorial_controller = TUTORIAL_CONTROLLER_SCENE.new()
 		_tutorial_controller.name = "TutorialController"
 		root.call_deferred("add_child", _tutorial_controller)
+		# Drain any actions that were recorded before the controller entered the
+		# tree (and therefore before its _ready() loaded persisted state).
+		# Using the `ready` signal guarantees _ready() has already run.
+		_tutorial_controller.ready.connect(_drain_pending_tutorial_actions, CONNECT_ONE_SHOT)
 	if _tutorial_controller and _tutorial_controller.has_signal("tutorial_state_updated"):
 		_tutorial_controller.tutorial_state_updated.connect(_on_tutorial_state_updated)
 	var overlay = root.get_node_or_null("TutorialCoachOverlay")
@@ -154,8 +170,11 @@ func show_menu_panel() -> void:
 	if current_menu_panel:
 		return
 
+	_ensure_menu_layer()
 	current_menu_panel = menu_panel_scene.instantiate()
-	get_tree().root.add_child(current_menu_panel)
+	_menu_layer.add_child(current_menu_panel)
+	current_menu_panel.process_mode = Node.PROCESS_MODE_WHEN_PAUSED
+	_set_tutorial_overlay_suspended(true)
 
 	if current_menu_panel.has_method("set_counter"):
 		current_menu_panel.set_counter(counter)
@@ -182,12 +201,51 @@ func hide_menu_panel() -> void:
 	if current_menu_panel:
 		current_menu_panel.queue_free()
 		current_menu_panel = null
+		_set_tutorial_overlay_suspended(false)
 		AppLogger.d("Menu panel hidden")
 
 func _on_menu_panel_closed() -> void:
 	"""Handle menu panel being closed"""
 	current_menu_panel = null
+	_set_tutorial_overlay_suspended(false)
 	window_status_update.emit("Menu panel closed")
+
+func is_menu_open() -> bool:
+	return current_menu_panel != null
+
+func _set_tutorial_overlay_suspended(suspended: bool) -> void:
+	var root = get_tree().root if get_tree() else null
+	if root == null:
+		return
+	var overlay = root.get_node_or_null("TutorialCoachOverlay")
+	if overlay == null:
+		return
+	overlay.visible = not suspended
+	if not suspended and overlay.has_method("_refresh"):
+		overlay.call_deferred("_refresh")
+
+func _show_intro_splash_if_needed() -> void:
+	if INTRO_SPLASH_SCRIPT.has_been_shown():
+		return
+	if get_tree() == null or get_tree().root == null:
+		return
+	var splash = INTRO_SPLASH_SCRIPT.new()
+	splash.name = "PlanetHuntersIntroSplash"
+	splash.splash_dismissed.connect(func():
+		_set_tutorial_overlay_suspended(false)
+	)
+	_set_tutorial_overlay_suspended(true)
+	get_tree().root.call_deferred("add_child", splash)
+
+func _ensure_menu_layer() -> void:
+	if _menu_layer and is_instance_valid(_menu_layer):
+		return
+	if get_tree() == null or get_tree().root == null:
+		return
+	_menu_layer = CanvasLayer.new()
+	_menu_layer.name = "MenuOverlayLayer"
+	_menu_layer.layer = 120
+	get_tree().root.add_child(_menu_layer)
 
 func _on_counter_changed(new_value: int) -> void:
 	"""Handle counter being changed in Godot UI"""
@@ -202,11 +260,13 @@ func _on_reset_all() -> void:
 	franc_balance = 10000000000
 	experience_xp = 0
 	experience_level = 1
+	citizen_science_dialogue_enabled = true
 	if current_menu_panel and current_menu_panel.has_method("set_counter"):
 		current_menu_panel.set_counter(counter)
 	counter_updated.emit(counter)
 	save_franc_balance()
 	save_experience()
+	save_preferences()
 	DirAccess.remove_absolute("user://rocket_unlock_popups.cfg")
 	franc_balance_updated.emit(franc_balance)
 	_emit_experience_updated()
@@ -311,8 +371,68 @@ func load_experience() -> void:
 	_unlock_rockets_for_level(experience_level)
 	_emit_experience_updated()
 
+func save_preferences() -> void:
+	_persistence.save_citizen_science_dialogue_enabled(citizen_science_dialogue_enabled)
+
+func load_preferences() -> void:
+	citizen_science_dialogue_enabled = _persistence.load_citizen_science_dialogue_enabled(true)
+	citizen_science_dialogue_toggled.emit(citizen_science_dialogue_enabled)
+
 func _emit_experience_updated() -> void:
 	experience_updated.emit(experience_xp, experience_level)
+	_sync_experience_to_web_storage()
+	WebEventBridge.emit("experience_state_updated", {
+		"experience_xp": experience_xp,
+		"experience_level": experience_level
+	})
+
+func set_citizen_science_dialogue_enabled(enabled: bool) -> void:
+	var next_enabled = bool(enabled)
+	if citizen_science_dialogue_enabled == next_enabled:
+		return
+	citizen_science_dialogue_enabled = next_enabled
+	save_preferences()
+	citizen_science_dialogue_toggled.emit(citizen_science_dialogue_enabled)
+
+func is_citizen_science_dialogue_enabled() -> bool:
+	return citizen_science_dialogue_enabled
+
+func _sync_experience_from_web_storage() -> void:
+	if not OS.has_feature("web"):
+		return
+	var payload = JavaScriptBridge.eval("(function(){try{return window.localStorage.getItem('%s') || '';}catch(_e){return '';}})();" % WEB_XP_STATE_KEY, true)
+	if payload == null:
+		return
+	var raw = str(payload)
+	if raw == "":
+		return
+	var parsed = JSON.parse_string(raw)
+	if typeof(parsed) != TYPE_DICTIONARY:
+		return
+	var web_xp = int(parsed.get("experience_xp", 0))
+	var web_level = int(parsed.get("experience_level", 1))
+	var local_total = get_total_experience()
+	var web_total = _total_experience_for(web_xp, web_level)
+	if web_total > local_total:
+		set_experience_from_react(web_xp, web_level)
+
+func _sync_experience_to_web_storage() -> void:
+	if not OS.has_feature("web"):
+		return
+	var payload = {
+		"experience_xp": experience_xp,
+		"experience_level": experience_level,
+		"updated_at_unix": Time.get_unix_time_from_system()
+	}
+	var json_payload = JSON.stringify(payload)
+	JavaScriptBridge.eval("(function(){try{window.localStorage.setItem('%s', %s);}catch(_e){}})();" % [WEB_XP_STATE_KEY, JSON.stringify(json_payload)], true)
+
+func _total_experience_for(xp: int, level: int) -> int:
+	var total = 0
+	for lvl in range(1, max(level, 1)):
+		total += _xp_required_for_level(lvl)
+	total += max(xp, 0)
+	return total
 
 func _xp_required_for_level(level: int) -> int:
 	return BASE_XP_TO_LEVEL + max(level, 1)
@@ -323,9 +443,23 @@ func _unlock_rockets_for_level(level: int) -> void:
 		rm.unlock_for_level(level)
 
 func record_tutorial_action(action_key: String, metadata: Dictionary = {}) -> bool:
-	if _tutorial_controller and _tutorial_controller.has_method("record_action"):
+	# Guard against the deferred add_child window: _tutorial_controller exists as
+	# an object but _ready() hasn't loaded persisted state yet, so recording now
+	# would be overwritten.  Queue and replay instead.
+	if _tutorial_controller and _tutorial_controller.is_inside_tree() and _tutorial_controller.has_method("record_action"):
+		_drain_pending_tutorial_actions()
 		return bool(_tutorial_controller.record_action(action_key, metadata))
+	_pending_tutorial_actions.append({"action": action_key, "meta": metadata})
 	return false
+
+func _drain_pending_tutorial_actions() -> void:
+	if _pending_tutorial_actions.is_empty():
+		return
+	if not (_tutorial_controller and _tutorial_controller.is_inside_tree() and _tutorial_controller.has_method("record_action")):
+		return
+	while _pending_tutorial_actions.size() > 0:
+		var entry = _pending_tutorial_actions.pop_front()
+		_tutorial_controller.record_action(str(entry.get("action", "")), entry.get("meta", {}))
 
 func has_seen_guide_action(action_key: String) -> bool:
 	if _tutorial_controller and _tutorial_controller.has_method("has_seen_tutorial_action"):

@@ -41,6 +41,7 @@ func _ready() -> void:
 		DebugVisualizer.create_ground_guides(self)
 
 	call_deferred("_maybe_show_starterrocket2_unlock_popup")
+	_build_earth_base_identity()
 
 func _setup_buttons() -> void:
 	"""Setup button connections"""
@@ -229,6 +230,46 @@ func _show_starterrocket2_unlock_popup() -> void:
 		_on_new_mission_button_pressed()
 	)
 	body.add_child(cta)
+
+func _build_earth_base_identity() -> void:
+	_build_wordmark()
+	_build_ambient_stars()
+
+func _build_wordmark() -> void:
+	var ui_layer = get_node_or_null("UILayer")
+	if ui_layer == null:
+		return
+	var wordmark = Label.new()
+	wordmark.name = "PlanetHuntersWordmark"
+	wordmark.text = "PLANET HUNTERS"
+	wordmark.add_theme_font_size_override("font_size", 15)
+	wordmark.add_theme_color_override("font_color", Color(0.45, 0.72, 1.0, 0.72))
+	wordmark.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	wordmark.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	wordmark.offset_top = 10.0
+	wordmark.offset_bottom = 30.0
+	wordmark.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ui_layer.add_child(wordmark)
+
+func _build_ambient_stars() -> void:
+	var star_layer = CanvasLayer.new()
+	star_layer.name = "AmbientStarLayer"
+	star_layer.layer = -1
+	add_child(star_layer)
+	var star_root = Node2D.new()
+	star_layer.add_child(star_root)
+	var vp = get_viewport_rect().size
+	var sky_h = vp.y * 0.50
+	var rng = RandomNumberGenerator.new()
+	rng.seed = 0xC3B9A1
+	for _i in range(55):
+		var dot = ColorRect.new()
+		var sz = rng.randf_range(1.0, 2.4)
+		dot.size = Vector2(sz, sz)
+		dot.color = Color(0.88, 0.94, 1.0, rng.randf_range(0.10, 0.32))
+		dot.position = Vector2(rng.randf_range(0.0, vp.x), rng.randf_range(0.0, sky_h))
+		dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		star_root.add_child(dot)
 
 func _has_seen_starterrocket2_unlock_popup() -> bool:
 	var cfg = ConfigFile.new()

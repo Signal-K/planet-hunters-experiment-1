@@ -1,6 +1,6 @@
 {
   "taskId": "m4scc5",
-  "currentVersion": 2,
+  "currentVersion": 7,
   "versions": [
     {
       "id": "v1",
@@ -56,6 +56,157 @@
           "Research"
         ],
         "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "m4scc5",
+      "version": 3,
+      "timestamp": "2026-02-27T08:48:22.116Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "Completed and moved to done per user request (2026-02-27)."
+        }
+      ],
+      "snapshot": {
+        "title": "Cross-state management for experience points",
+        "description": "Ability to have it saved in expo and godot, and obviously then backed up to the sb profile",
+        "status": "on-hold",
+        "priority": "medium",
+        "labels": [
+          "Supabase",
+          "Experience",
+          "Points",
+          "Data",
+          "State",
+          "Research"
+        ],
+        "acceptanceCriteria": [],
+        "implementationNotes": "Completed and moved to done per user request (2026-02-27)."
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "m4scc5",
+      "version": 4,
+      "timestamp": "2026-02-27T08:48:22.397Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "on-hold",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Cross-state management for experience points",
+        "description": "Ability to have it saved in expo and godot, and obviously then backed up to the sb profile",
+        "status": "done",
+        "priority": "medium",
+        "labels": [
+          "Supabase",
+          "Experience",
+          "Points",
+          "Data",
+          "State",
+          "Research"
+        ],
+        "acceptanceCriteria": [],
+        "implementationNotes": "Completed and moved to done per user request (2026-02-27)."
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "m4scc5",
+      "version": 5,
+      "timestamp": "2026-02-27T08:49:57.233Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "done",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Cross-state management for experience points",
+        "description": "Ability to have it saved in expo and godot, and obviously then backed up to the sb profile",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "Supabase",
+          "Experience",
+          "Points",
+          "Data",
+          "State",
+          "Research"
+        ],
+        "acceptanceCriteria": [],
+        "implementationNotes": "Completed and moved to done per user request (2026-02-27)."
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "m4scc5",
+      "version": 6,
+      "timestamp": "2026-02-27T09:05:25.834Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "Completed and moved to done per user request (2026-02-27).",
+          "newValue": "Implemented:\n- Added web-side XP state persistence key and sync logic in React shell + static web shell.\n- Captured experience payloads from game bridge events and persisted them to local storage.\n- Added best-effort Supabase profile metadata sync for experience level/xp updates.\n- Added Godot-side web localStorage load/save bridge for experience state continuity."
+        }
+      ],
+      "snapshot": {
+        "title": "Cross-state management for experience points",
+        "description": "Ability to have it saved in expo and godot, and obviously then backed up to the sb profile",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "Supabase",
+          "Experience",
+          "Points",
+          "Data",
+          "State",
+          "Research"
+        ],
+        "acceptanceCriteria": [],
+        "implementationNotes": "Implemented:\n- Added web-side XP state persistence key and sync logic in React shell + static web shell.\n- Captured experience payloads from game bridge events and persisted them to local storage.\n- Added best-effort Supabase profile metadata sync for experience level/xp updates.\n- Added Godot-side web localStorage load/save bridge for experience state continuity."
+      }
+    },
+    {
+      "id": "v7",
+      "taskId": "m4scc5",
+      "version": 7,
+      "timestamp": "2026-02-27T09:05:26.101Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Cross-state management for experience points",
+        "description": "Ability to have it saved in expo and godot, and obviously then backed up to the sb profile",
+        "status": "done",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "Supabase",
+          "Experience",
+          "Points",
+          "Data",
+          "State",
+          "Research"
+        ],
+        "acceptanceCriteria": [],
+        "implementationNotes": "Implemented:\n- Added web-side XP state persistence key and sync logic in React shell + static web shell.\n- Captured experience payloads from game bridge events and persisted them to local storage.\n- Added best-effort Supabase profile metadata sync for experience level/xp updates.\n- Added Godot-side web localStorage load/save bridge for experience state continuity."
       }
     }
   ]

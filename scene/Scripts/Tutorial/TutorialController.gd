@@ -121,6 +121,14 @@ func _advance_if_match(action_key: String, _metadata: Dictionary) -> bool:
 			advanced = true
 			continue
 		if expected_key != action_key:
+			# If the current step's action was already recorded out-of-order (e.g.
+			# auto-launch recorded select_launch_target before the player tapped the
+			# panel), skip past it so the tutorial never gets permanently stuck.
+			if bool(_state.get("completed_actions", {}).get(expected_key, false)):
+				_mark_step_complete(int(_state.get("current_stage", 1)), int(_state.get("current_step_index", 0)))
+				_state["current_step_index"] = int(_state.get("current_step_index", 0)) + 1
+				advanced = true
+				continue
 			break
 		_mark_step_complete(int(_state.get("current_stage", 1)), int(_state.get("current_step_index", 0)))
 		_state["current_step_index"] = int(_state.get("current_step_index", 0)) + 1
@@ -174,6 +182,21 @@ func _reconcile_step_index() -> void:
 		return
 	var idx = int(_state.get("current_step_index", 0))
 	_state["current_step_index"] = clamp(idx, 0, total)
+	# Fast-forward past any steps whose action_key was already recorded in a
+	# previous session or during a cross-session resume (crash recovery, app restart
+	# mid-mission, etc.).  Without this, the loaded index can point to a step the
+	# user already completed, showing a stale/wrong tutorial step.
+	var completed_actions: Dictionary = _state.get("completed_actions", {})
+	var guard := 0
+	while guard < total:
+		guard += 1
+		var step = get_current_step()
+		if step.is_empty():
+			break
+		var key = str(step.get("action_key", ""))
+		if key == "" or not bool(completed_actions.get(key, false)):
+			break
+		_state["current_step_index"] = int(_state.get("current_step_index", 0)) + 1
 
 func _build_progress_percent() -> int:
 	var stage = int(_state.get("current_stage", 1))

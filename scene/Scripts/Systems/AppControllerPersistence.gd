@@ -8,6 +8,8 @@ const FRANC_BALANCE_KEY := "balance"
 const EXPERIENCE_SECTION := "experience"
 const EXPERIENCE_XP_KEY := "xp"
 const EXPERIENCE_LEVEL_KEY := "level"
+const PREFERENCES_SECTION := "preferences"
+const CITIZEN_SCIENCE_DIALOGUE_KEY := "citizen_science_dialogue_enabled"
 
 func save_franc_balance(value: int) -> void:
 	var cfg = ConfigFile.new()
@@ -54,3 +56,25 @@ func load_experience(default_xp: int, default_level: int) -> Dictionary:
 		return {"loaded": false, "xp": default_xp, "level": default_level}
 	print("[AppController] No saved experience config (or failed to load): ", err)
 	return {"loaded": false, "xp": default_xp, "level": default_level}
+
+func save_citizen_science_dialogue_enabled(enabled: bool) -> void:
+	var cfg = ConfigFile.new()
+	var err = cfg.load(EXPERIENCE_CONFIG_PATH)
+	if err != OK and err != ERR_FILE_NOT_FOUND:
+		print("[AppController] Failed to load preferences config for write: ", err)
+	cfg.set_value(PREFERENCES_SECTION, CITIZEN_SCIENCE_DIALOGUE_KEY, enabled)
+	var save_err = cfg.save(EXPERIENCE_CONFIG_PATH)
+	if save_err != OK:
+		print("[AppController] Failed to save citizen science dialogue preference: ", save_err)
+	else:
+		print("[AppController] Citizen science dialogue preference saved: ", enabled)
+
+func load_citizen_science_dialogue_enabled(default_value: bool = true) -> bool:
+	var cfg = ConfigFile.new()
+	var err = cfg.load(EXPERIENCE_CONFIG_PATH)
+	if err == OK:
+		if cfg.has_section_key(PREFERENCES_SECTION, CITIZEN_SCIENCE_DIALOGUE_KEY):
+			return bool(cfg.get_value(PREFERENCES_SECTION, CITIZEN_SCIENCE_DIALOGUE_KEY))
+		return default_value
+	print("[AppController] No saved preferences config (or failed to load): ", err)
+	return default_value

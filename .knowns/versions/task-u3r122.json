@@ -1,0 +1,170 @@
+{
+  "taskId": "u3r122",
+  "currentVersion": 3,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "u3r122",
+      "version": 1,
+      "timestamp": "2026-02-28T10:06:53.683Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Session arc: Intro splash (30s) → M1 tutorial flow (4-5 min) → Science image moment during transit → Debrief with science card → Survey prompt → Done"
+            },
+            {
+              "completed": false,
+              "text": "A 'Mission Complete' beat plays after M1 debrief is resolved before survey triggers"
+            },
+            {
+              "completed": false,
+              "text": "FeedbackBeacon is prominent on the earth_base hub so users can always access help"
+            },
+            {
+              "completed": false,
+              "text": "The session flows linearly for first-time users with no dead ends"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Session arc: Intro splash (30s) → M1 tutorial flow (4-5 min) → Science image moment during transit → Debrief with science card → Survey prompt → Done"
+            },
+            {
+              "completed": true,
+              "text": "A 'Mission Complete' beat plays after M1 debrief is resolved before survey triggers"
+            },
+            {
+              "completed": true,
+              "text": "FeedbackBeacon is prominent on the earth_base hub so users can always access help"
+            },
+            {
+              "completed": true,
+              "text": "The session flows linearly for first-time users with no dead ends"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "5-10 minute guided session flow: structure the full experiment-1 experience",
+        "description": "The experiment needs a defined, paced flow that takes users from first boot to survey completion in 5-10 minutes. Currently a user can complete M1 in ~5 min but there is no 'session arc' — no clear beginning (intro), middle (mission), or end (contribution + survey). This ticket defines and implements the session structure.",
+        "status": "todo",
+        "priority": "high",
+        "labels": [
+          "ux",
+          "session-design",
+          "experiment1",
+          "flow"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Session arc: Intro splash (30s) → M1 tutorial flow (4-5 min) → Science image moment during transit → Debrief with science card → Survey prompt → Done"
+          },
+          {
+            "completed": true,
+            "text": "A 'Mission Complete' beat plays after M1 debrief is resolved before survey triggers"
+          },
+          {
+            "completed": true,
+            "text": "FeedbackBeacon is prominent on the earth_base hub so users can always access help"
+          },
+          {
+            "completed": true,
+            "text": "The session flows linearly for first-time users with no dead ends"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "u3r122",
+      "version": 2,
+      "timestamp": "2026-02-28T10:07:16.828Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "AC1: full session arc complete (intro splash→tutorial→science transit→debrief science card→survey). AC2: Mission Complete beat added to MissionDebrief, auto-dismisses after 2.5s. AC3: FeedbackBeacon now applies PanelStyle (blue primary button). AC4: linear flow verified—no dead ends, tutorial always advances."
+        }
+      ],
+      "snapshot": {
+        "title": "5-10 minute guided session flow: structure the full experiment-1 experience",
+        "description": "The experiment needs a defined, paced flow that takes users from first boot to survey completion in 5-10 minutes. Currently a user can complete M1 in ~5 min but there is no 'session arc' — no clear beginning (intro), middle (mission), or end (contribution + survey). This ticket defines and implements the session structure.",
+        "status": "todo",
+        "priority": "high",
+        "labels": [
+          "ux",
+          "session-design",
+          "experiment1",
+          "flow"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Session arc: Intro splash (30s) → M1 tutorial flow (4-5 min) → Science image moment during transit → Debrief with science card → Survey prompt → Done"
+          },
+          {
+            "completed": true,
+            "text": "A 'Mission Complete' beat plays after M1 debrief is resolved before survey triggers"
+          },
+          {
+            "completed": true,
+            "text": "FeedbackBeacon is prominent on the earth_base hub so users can always access help"
+          },
+          {
+            "completed": true,
+            "text": "The session flows linearly for first-time users with no dead ends"
+          }
+        ],
+        "implementationNotes": "AC1: full session arc complete (intro splash→tutorial→science transit→debrief science card→survey). AC2: Mission Complete beat added to MissionDebrief, auto-dismisses after 2.5s. AC3: FeedbackBeacon now applies PanelStyle (blue primary button). AC4: linear flow verified—no dead ends, tutorial always advances."
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "u3r122",
+      "version": 3,
+      "timestamp": "2026-02-28T10:07:17.075Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "5-10 minute guided session flow: structure the full experiment-1 experience",
+        "description": "The experiment needs a defined, paced flow that takes users from first boot to survey completion in 5-10 minutes. Currently a user can complete M1 in ~5 min but there is no 'session arc' — no clear beginning (intro), middle (mission), or end (contribution + survey). This ticket defines and implements the session structure.",
+        "status": "done",
+        "priority": "high",
+        "labels": [
+          "ux",
+          "session-design",
+          "experiment1",
+          "flow"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Session arc: Intro splash (30s) → M1 tutorial flow (4-5 min) → Science image moment during transit → Debrief with science card → Survey prompt → Done"
+          },
+          {
+            "completed": true,
+            "text": "A 'Mission Complete' beat plays after M1 debrief is resolved before survey triggers"
+          },
+          {
+            "completed": true,
+            "text": "FeedbackBeacon is prominent on the earth_base hub so users can always access help"
+          },
+          {
+            "completed": true,
+            "text": "The session flows linearly for first-time users with no dead ends"
+          }
+        ],
+        "implementationNotes": "AC1: full session arc complete (intro splash→tutorial→science transit→debrief science card→survey). AC2: Mission Complete beat added to MissionDebrief, auto-dismisses after 2.5s. AC3: FeedbackBeacon now applies PanelStyle (blue primary button). AC4: linear flow verified—no dead ends, tutorial always advances."
+      }
+    }
+  ]
+}

@@ -25,6 +25,7 @@ func run_all_tests() -> void:
 	await test_multi_level_up()
 	await test_scanner_unlock_gating_by_progress()
 	await test_scanner_build_cost_enforced()
+	await test_scanner_stage_requires_scanned_target_selection()
 	await test_outbound_transit_distance_label_decreases()
 	await test_return_transit_distance_label_decreases()
 	await test_return_preview_auto_advances_to_debrief()
@@ -118,6 +119,30 @@ func test_scanner_build_cost_enforced() -> void:
 		return
 	if not RocketsManager.can_afford_scanner_build(cost):
 		reporter.fail_test("Expected affordability true for exact-cost balance")
+		return
+	reporter.pass_test()
+
+func test_scanner_stage_requires_scanned_target_selection() -> void:
+	reporter.start_test("Scanner stages require scanned target selection")
+	var scanned_target_id = "scan-stage3-target-%d" % int(Time.get_ticks_msec())
+	var state = RocketsManager.load_state()
+	state["mission_progress_completed"] = 2
+	state["completed_mission_badges"] = ["mission-1", "mission-2"]
+	state["detected_targets"] = [{
+		"id": scanned_target_id,
+		"label": "Scanned Stage3 Target",
+		"type": "asteroid"
+	}]
+	state["missions"] = []
+	RocketsManager.set_override_state(state)
+	var selectable_scanned = RocketsManager.is_target_selectable_for_current_stage(scanned_target_id)
+	var selectable_default = RocketsManager.is_target_selectable_for_current_stage("mission-1-training-target")
+	RocketsManager.clear_override_state()
+	if not selectable_scanned:
+		reporter.fail_test("Expected scanned target to be selectable in scanner-gated stage")
+		return
+	if selectable_default:
+		reporter.fail_test("Expected hidden/default target to be rejected in scanner-gated stage")
 		return
 	reporter.pass_test()
 

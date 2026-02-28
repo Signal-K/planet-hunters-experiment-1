@@ -16,12 +16,12 @@ const MAX_VISIBLE_TARGETS_MISSION4 := 5
 const MAX_VISIBLE_TARGETS_MISSION5 := 5
 const MISSION_BRIEFINGS := {
 	1: {
-		"objective": "Complete your first launch loop (launch, mine, return, debrief).",
-		"mechanics": "Starter mission with predefined target and basic mining flow.",
+		"objective": "Complete your first mining loop (launch, mine, return, debrief).",
+		"mechanics": "Single-route starter mission with one predefined target and guided progression prompts.",
 		"required_rocket_level": 1,
 		"target_type": "Asteroid",
 		"reward_ratio": 1.2,
-		"unlocks": "Mission 2 and Starter Rocket 2"
+		"unlocks": "Level 2 mission route and Starter Rocket 2"
 	},
 	2: {
 		"objective": "Run the same loop with an upgraded rocket to improve yields.",
@@ -177,9 +177,12 @@ func populate_targets() -> void:
 	var mission_stage = int(rm.get_mission_stage())
 	var targets: Array = []
 	if mission_stage <= 2:
-		var predefined = rm.get_predefined_mission_target(mission_stage)
-		if not predefined.is_empty():
-			targets = [predefined]
+		if mission_stage == 1:
+			var predefined = rm.get_predefined_mission_target(mission_stage)
+			if not predefined.is_empty():
+				targets = [predefined]
+		else:
+			targets = rm.get_mission2_targets()
 	elif mission_stage == 3:
 		targets = rm.get_mission3_targets()
 	elif mission_stage == 4:
@@ -196,15 +199,6 @@ func populate_targets() -> void:
 	_set_selector_panel_layout(has_awaiting_rocket)
 	_set_rocket_selector_visibility(vbox, not has_awaiting_rocket)
 	_set_title_for_state(panel, has_awaiting_rocket)
-	var auto_selected_target = ""
-	if has_awaiting_rocket and selected_target == "":
-		if mission_stage == 1 and targets.size() > 0:
-			auto_selected_target = str(targets[0].get("id", ""))
-		elif mission_stage == 2:
-			auto_selected_target = str(targets[0].get("id", "")) if targets.size() > 0 else ""
-		if auto_selected_target != "":
-			rm.select_target(auto_selected_target)
-			selected_target = auto_selected_target
 
 	var targets_section = vbox.get_node_or_null("TargetsSection")
 	if targets_section == null:
@@ -226,21 +220,22 @@ func populate_targets() -> void:
 		PanelStyle.apply_muted(guidance)
 		targets_section.add_child(guidance)
 		return
+	_render_rocket_customization_controls(targets_section, rm, awaiting_rocket_id)
 	if _render_mission_briefing_gate(targets_section, rm, mission_stage):
 		return
 
-	if auto_selected_target != "":
-		var guidance: Label = EmptyLabelScene.instantiate()
-		guidance.text = "Auto-selected target for Mission %d progression." % mission_stage
-		guidance.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-		PanelStyle.apply_muted(guidance)
-		targets_section.add_child(guidance)
 	if mission_stage == 2 and awaiting_rocket_level < 2:
 		var mission2_hint: Label = EmptyLabelScene.instantiate()
 		mission2_hint.text = "Mission 2 requires Starter Rocket 2 (L2)."
 		mission2_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		PanelStyle.apply_muted(mission2_hint)
 		targets_section.add_child(mission2_hint)
+	if mission_stage == 2:
+		var mission2_checklist: Label = EmptyLabelScene.instantiate()
+		mission2_checklist.text = _build_stage2_checklist_text()
+		mission2_checklist.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		PanelStyle.apply_muted(mission2_checklist)
+		targets_section.add_child(mission2_checklist)
 	if mission_stage == 4 and awaiting_rocket_level < 3:
 		var mission4_hint: Label = EmptyLabelScene.instantiate()
 		mission4_hint.text = "Mission 4 requires Starter Rocket 3 (L3) for planetary range."
@@ -250,12 +245,15 @@ func populate_targets() -> void:
 	var mission5_offer := {}
 	var mission5_selected_contractor := ""
 	var mission5_recommended_target_id := ""
+	var operation_mode := "contract"
 	if mission_stage == 5:
+		operation_mode = str(rm.get_operation_mode())
+		_render_open_operation_mode_picker(targets_section, operation_mode)
 		mission5_offer = rm.ensure_mission5_contract_offer(targets)
 		mission5_selected_contractor = str(mission5_offer.get("selected_contractor", ""))
 		mission5_recommended_target_id = str(mission5_offer.get("recommended_target_id", ""))
 		_render_mission5_contract_brief(targets_section, mission5_offer, mission5_selected_contractor)
-		if mission5_selected_contractor == "":
+		if operation_mode == "contract" and mission5_selected_contractor == "":
 			var mission5_pick_hint: Label = EmptyLabelScene.instantiate()
 			mission5_pick_hint.text = "Accept one contractor request before selecting a target."
 			mission5_pick_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
@@ -273,7 +271,10 @@ func populate_targets() -> void:
 
 	if targets.size() == 0:
 		var lbl: Label = EmptyLabelScene.instantiate()
-		lbl.text = "No detected targets available."
+		if mission_stage >= 3:
+			lbl.text = "No scanned targets available. Open Scanner Station, run a scan, and select a target."
+		else:
+			lbl.text = "No detected targets available."
 		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		PanelStyle.apply_muted(lbl)
 		targets_section.add_child(lbl)
@@ -286,9 +287,13 @@ func populate_targets() -> void:
 		var profile = rm.build_target_profile(target_id, target_type)
 		var required_level = int(profile.get("required_level", 1))
 		var distance_au = float(profile.get("distance_au", 0.0))
-		var blocked = awaiting_rocket_level > 0 and required_level > awaiting_rocket_level
-		if mission_stage == 5 and mission5_selected_contractor == "":
-			blocked = true
+		var blocked = _is_target_blocked_for_selection(
+			mission_stage,
+			awaiting_rocket_level,
+			required_level,
+			operation_mode,
+			mission5_selected_contractor
+		)
 		var entry_panel: PanelContainer = TargetCardScene.instantiate()
 		entry_panel.add_theme_stylebox_override("panel", _target_card_style())
 		var name_lbl: Label = entry_panel.get_node("Entry/Header/NameLabel")
@@ -303,7 +308,7 @@ func populate_targets() -> void:
 			btn.text = "Target Selected"
 			btn.disabled = true
 		elif blocked:
-			btn.text = "Accept Contractor" if mission_stage == 5 and mission5_selected_contractor == "" else "Blocked"
+			btn.text = "Accept Contractor" if mission_stage == 5 and operation_mode == "contract" and mission5_selected_contractor == "" else "Blocked"
 			btn.disabled = true
 		# bind id
 		btn.pressed.connect(Callable(self, "on_selector_target_pressed").bind(target_id, btn))
@@ -313,6 +318,9 @@ func populate_targets() -> void:
 			details_text += " • Current rocket: L%d" % awaiting_rocket_level
 		if blocked:
 			details_text += " • Too far for current rocket"
+		elif mission_stage == 5:
+			var profile_text = "Survey Route" if operation_mode == "survey" else "Contract Route"
+			details_text += " • %s" % profile_text
 		details_lbl.text = details_text
 		details_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		PanelStyle.apply_muted(details_lbl)
@@ -504,6 +512,126 @@ func _render_mission5_contract_brief(targets_section: VBoxContainer, offer: Dict
 	PanelStyle.apply_muted(cap_lbl)
 	targets_section.add_child(cap_lbl)
 
+func _render_open_operation_mode_picker(targets_section: VBoxContainer, mode: String) -> void:
+	if targets_section == null:
+		return
+	var heading: Label = HeaderLabelScene.instantiate()
+	heading.text = "Open Operations Route"
+	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	PanelStyle.apply_muted(heading)
+	heading.add_theme_font_size_override("font_size", 16)
+	targets_section.add_child(heading)
+
+	var summary: Label = EmptyLabelScene.instantiate()
+	summary.text = "Current route: %s" % ("Survey (fewer constraints)" if mode == "survey" else "Contract (bonus modifiers)")
+	summary.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	PanelStyle.apply_muted(summary)
+	targets_section.add_child(summary)
+
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	var survey_btn := Button.new()
+	survey_btn.text = "Survey Route"
+	survey_btn.disabled = mode == "survey"
+	PanelStyle.apply_button(survey_btn, mode == "survey")
+	survey_btn.pressed.connect(Callable(self, "_on_open_operation_mode_selected").bind("survey"))
+	row.add_child(survey_btn)
+	var contract_btn := Button.new()
+	contract_btn.text = "Contract Route"
+	contract_btn.disabled = mode == "contract"
+	PanelStyle.apply_button(contract_btn, mode == "contract")
+	contract_btn.pressed.connect(Callable(self, "_on_open_operation_mode_selected").bind("contract"))
+	row.add_child(contract_btn)
+	targets_section.add_child(row)
+
+func _on_open_operation_mode_selected(mode: String) -> void:
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if not rm:
+		return
+	var ok = rm.set_operation_mode(mode)
+	if ok:
+		preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("set_operation_mode", {
+			"mode": mode
+		})
+	populate_targets()
+
+func _render_rocket_customization_controls(targets_section: VBoxContainer, rm, rocket_id: String) -> void:
+	if targets_section == null or rm == null or rocket_id == "":
+		return
+	var options = rm.get_rocket_customization_options()
+	var flags: Array = options.get("flags", [])
+	var logos: Array = options.get("logos", [])
+	var customization: Dictionary = rm.get_rocket_customization(rocket_id)
+
+	var heading: Label = HeaderLabelScene.instantiate()
+	heading.text = "Rocket Identity"
+	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	PanelStyle.apply_muted(heading)
+	heading.add_theme_font_size_override("font_size", 16)
+	targets_section.add_child(heading)
+
+	var summary: Label = EmptyLabelScene.instantiate()
+	summary.text = "Flag: %s • Logo: %s" % [str(customization.get("flag", "Earth Union")), str(customization.get("logo", "Star"))]
+	summary.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	PanelStyle.apply_muted(summary)
+	targets_section.add_child(summary)
+
+	var flag_row: HBoxContainer = LabelActionRowScene.instantiate()
+	var flag_label: Label = flag_row.get_node("TextLabel")
+	flag_label.text = "Cycle ship flag (%d options)" % max(flags.size(), 1)
+	PanelStyle.apply_muted(flag_label)
+	var flag_btn: Button = flag_row.get_node("ActionButton")
+	flag_btn.text = "Change Flag"
+	PanelStyle.apply_button(flag_btn, false)
+	flag_btn.pressed.connect(Callable(self, "_on_cycle_rocket_flag").bind(rocket_id))
+	targets_section.add_child(flag_row)
+
+	var logo_row: HBoxContainer = LabelActionRowScene.instantiate()
+	var logo_label: Label = logo_row.get_node("TextLabel")
+	logo_label.text = "Cycle ship logo (%d options)" % max(logos.size(), 1)
+	PanelStyle.apply_muted(logo_label)
+	var logo_btn: Button = logo_row.get_node("ActionButton")
+	logo_btn.text = "Change Logo"
+	PanelStyle.apply_button(logo_btn, false)
+	logo_btn.pressed.connect(Callable(self, "_on_cycle_rocket_logo").bind(rocket_id))
+	targets_section.add_child(logo_row)
+
+func _on_cycle_rocket_flag(rocket_id: String) -> void:
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if not rm:
+		return
+	var options = rm.get_rocket_customization_options()
+	var flags: Array = options.get("flags", [])
+	if flags.is_empty():
+		return
+	var customization = rm.get_rocket_customization(rocket_id)
+	var current = str(customization.get("flag", flags[0]))
+	var next = _next_option(flags, current)
+	rm.set_rocket_customization(rocket_id, {"flag": next})
+	populate_targets()
+
+func _on_cycle_rocket_logo(rocket_id: String) -> void:
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if not rm:
+		return
+	var options = rm.get_rocket_customization_options()
+	var logos: Array = options.get("logos", [])
+	if logos.is_empty():
+		return
+	var customization = rm.get_rocket_customization(rocket_id)
+	var current = str(customization.get("logo", logos[0]))
+	var next = _next_option(logos, current)
+	rm.set_rocket_customization(rocket_id, {"logo": next})
+	populate_targets()
+
+func _next_option(options: Array, current: String) -> String:
+	if options.is_empty():
+		return current
+	var index = options.find(current)
+	if index == -1:
+		return str(options[0])
+	return str(options[(index + 1) % options.size()])
+
 func _fmt_francs(value: int) -> String:
 	var abs_value = abs(value)
 	if abs_value >= 1000000000:
@@ -511,6 +639,18 @@ func _fmt_francs(value: int) -> String:
 	if abs_value >= 1000000:
 		return "%.1fM" % (float(value) / 1000000.0)
 	return str(value)
+
+func _build_stage2_checklist_text() -> String:
+	var app = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
+	var has_seen := false
+	if app and app.has_method("has_seen_guide_action"):
+		has_seen = bool(app.has_seen_guide_action("create_rocket"))
+	var checks := [
+		"[x] Build/drag Starter Rocket 2" if has_seen else "[ ] Build/drag Starter Rocket 2",
+		"[ ] Select one mission variant target",
+		"[ ] Launch, mine, return, debrief"
+	]
+	return "Mission 2 Checklist:\n%s" % "\n".join(checks)
 
 func _on_debug_skip_mission_pressed() -> void:
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
@@ -664,3 +804,16 @@ func _target_visibility_limit_for_stage(mission_stage: int) -> int:
 	if mission_stage == 5:
 		return MAX_VISIBLE_TARGETS_MISSION5
 	return MAX_VISIBLE_TARGETS
+
+func _is_target_blocked_for_selection(
+	mission_stage: int,
+	awaiting_rocket_level: int,
+	required_level: int,
+	operation_mode: String,
+	mission5_selected_contractor: String
+) -> bool:
+	if awaiting_rocket_level > 0 and required_level > awaiting_rocket_level:
+		return true
+	if mission_stage == 5 and operation_mode == "contract" and mission5_selected_contractor == "":
+		return true
+	return false

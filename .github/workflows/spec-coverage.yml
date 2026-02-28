@@ -14,10 +14,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
       - name: Install knowns CLI
         run: |
-          brew tap knowns-dev/tap
-          brew install knowns
+          npm install -g knowns
+          knowns --version
       
       - name: Check spec coverage
         id: coverage
@@ -45,16 +50,6 @@ jobs:
           echo "coverage=$COVERAGE" >> $GITHUB_OUTPUT
           
           echo "📊 Spec Coverage: $WITH_SPEC/$TOTAL tasks ($COVERAGE%)"
-      
-      - name: Create coverage badge
-        uses: schneegans/dynamic-badges-action@v1.7.0
-        with:
-          auth: ${{ secrets.GIST_SECRET }}
-          gistID: YOUR_GIST_ID
-          filename: spec-coverage.json
-          label: Spec Coverage
-          message: ${{ steps.coverage.outputs.coverage }}%
-          color: ${{ steps.coverage.outputs.coverage >= 80 && 'green' || steps.coverage.outputs.coverage >= 50 && 'yellow' || 'red' }}
       
       - name: Comment on PR
         if: github.event_name == 'pull_request'

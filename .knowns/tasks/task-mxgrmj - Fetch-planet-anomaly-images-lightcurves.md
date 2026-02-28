@@ -1,7 +1,7 @@
 ---
 id: mxgrmj
 title: Fetch planet anomaly images (lightcurves)
-status: blocked
+status: done
 priority: medium
 labels:
   - Supabase
@@ -14,10 +14,8 @@ labels:
   - Lightkurve
   - Contributions
   - Data
-specs:
-  - user-flow-and-citizen-science-specification
 createdAt: '2026-01-20T14:44:30.898Z'
-updatedAt: '2026-02-25T08:44:39.607Z'
+updatedAt: '2026-02-27T08:45:22.867Z'
 timeSpent: 587
 parent: gn04el
 ---
@@ -28,4 +26,10 @@ parent: gn04el
 <!-- SECTION:DESCRIPTION:BEGIN -->
 Fetch planet anomaly images (lightcurves) from TESS data for citizen science integration. See @doc/specs/user-flow-and-citizen-science-specification for data requirements.
 <!-- SECTION:DESCRIPTION:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Closed and moved to done per user request (2026-02-27).
+<!-- SECTION:NOTES:END -->
 

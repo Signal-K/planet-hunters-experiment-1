@@ -34,6 +34,9 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 SCENE_DIR="$PROJECT_ROOT/scene"
 TEST_RUNNER="res://tests/SupabaseTestRunner.gd"
+GODOT_USER_DIR="${GODOT_USER_DIR:-/tmp/godot-test-user-$$}"
+
+mkdir -p "$GODOT_USER_DIR/logs"
 
 if [ ! -f "$SCENE_DIR/tests/SupabaseTestRunner.gd" ]; then
   echo "Error: SupabaseTestRunner.gd not found in $SCENE_DIR/tests/" >&2
@@ -50,7 +53,7 @@ echo "=========================================="
 echo ""
 
 # Run the GDScript test runner
-"$GODOT_BIN" --headless --path "$SCENE_DIR" --script "$TEST_RUNNER"
+GODOT_USER_DIR="$GODOT_USER_DIR" "$GODOT_BIN" --headless --user-data-dir "$GODOT_USER_DIR" --path "$SCENE_DIR" --script "$TEST_RUNNER"
 
 echo ""
 echo "Test run complete." 

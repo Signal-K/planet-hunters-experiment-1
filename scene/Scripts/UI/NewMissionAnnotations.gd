@@ -44,15 +44,24 @@ func _load_local_annotations() -> Array:
 		if fname.to_lower().ends_with(".json"):
 			var key = fname.substr(0, fname.length() - 5) # remove .json
 			if not keys.has(key):
-				keys[key] = {"content": key, "local_thumbnail": ""}
+				keys[key] = {"content": key, "local_thumbnail": "", "target_type": "asteroid", "title": ""}
 				AppLogger.d("NewMissionPanel: found annotation json: %s" % fname)
+			var full_path = "%s/%s" % [annotations_dir, fname]
+			var file = FileAccess.open(full_path, FileAccess.READ)
+			if file:
+				var raw = file.get_as_text()
+				file.close()
+				var parsed = JSON.parse_string(raw)
+				if typeof(parsed) == TYPE_DICTIONARY:
+					keys[key]["target_type"] = str(parsed.get("target_type", "asteroid"))
+					keys[key]["title"] = str(parsed.get("title", ""))
 
 		# Annotated PNGs provide thumbnails
 		if fname.to_lower().ends_with("-annotated.png"):
 			var keypng = fname.substr(0, fname.length() - "-annotated.png".length())
 			var thumb_path = "%s/%s" % [annotations_dir, fname]
 			if not keys.has(keypng):
-				keys[keypng] = {"content": keypng, "local_thumbnail": thumb_path}
+				keys[keypng] = {"content": keypng, "local_thumbnail": thumb_path, "target_type": "asteroid", "title": ""}
 			else:
 				keys[keypng]["local_thumbnail"] = thumb_path
 			AppLogger.d("NewMissionPanel: found annotated png: %s -> %s" % [fname, thumb_path])
@@ -118,7 +127,12 @@ func _create_item(data: Dictionary, idx: int) -> Control:
 			icon_label.visible = false
 
 	var title: Label = pc.get_node("Content/Main/TitleLabel")
-	title.text = "Asteroid #%s" % str(data.get("content",""))
+	var custom_title = str(data.get("title", ""))
+	if custom_title != "":
+		title.text = custom_title
+	else:
+		var item_type = "Planet" if str(data.get("target_type", "asteroid")).to_lower() == "planet" else "Asteroid"
+		title.text = "%s #%s" % [item_type, str(data.get("content",""))]
 	title.add_theme_font_size_override("font_size", 24)
 	title.add_theme_color_override("font_color", panel_style.TEXT_PRIMARY)
 	var saved_lbl: Label = pc.get_node("Content/Right/SavedLabel")

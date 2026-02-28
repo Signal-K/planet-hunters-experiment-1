@@ -1,6 +1,6 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=2 format=3 uid="uid://bijt8wrktaq1h"]
 
-[ext_resource type="Script" path="res://Scripts/Test/AnalyticsHarness.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://c2bay2mdihq1e" path="res://Scripts/Test/AnalyticsHarness.gd" id="1_script"]
 
 [node name="AnalyticsHarness" type="Control"]
 layout_mode = 3
@@ -46,8 +46,8 @@ text = "Analytics Harness"
 
 [node name="SubtitleLabel" type="Label" parent="Overlay/Panel/VBox"]
 layout_mode = 2
-autowrap_mode = 3
 text = "Use these buttons to trigger the web-shell analytics and survey flows directly. This scene is intended for the web build so you can test PostHog capture and survey popup behavior without running the full game."
+autowrap_mode = 3
 
 [node name="ButtonGrid" type="GridContainer" parent="Overlay/Panel/VBox"]
 layout_mode = 2
@@ -79,12 +79,10 @@ text = "Emit Launch Event"
 
 [node name="StatusLabel" type="Label" parent="Overlay/Panel/VBox"]
 layout_mode = 2
-autowrap_mode = 3
 text = "Status"
+autowrap_mode = 3
 
 [node name="OutputLabel" type="RichTextLabel" parent="Overlay/Panel/VBox"]
 custom_minimum_size = Vector2(0, 280)
 layout_mode = 2
-bbcode_enabled = false
 scroll_following = true
-text = ""

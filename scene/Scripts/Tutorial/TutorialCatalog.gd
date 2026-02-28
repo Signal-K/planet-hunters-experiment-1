@@ -5,17 +5,17 @@ const MAX_MISSION_STAGE := 5
 
 const STEPS_BY_MISSION := {
 	1: [
-		{"id": "m1_open_launchpad", "action_key": "open_launchpad", "title": "Open Launchpad", "message": "Use the Launchpad to start your first mission mechanic loop.", "mechanic": "navigation"},
-		{"id": "m1_create_rocket", "action_key": "create_rocket", "title": "Create Rocket", "message": "Build Starter Rocket 1 so you can launch your mission.", "mechanic": "economy"},
-		{"id": "m1_select_target", "action_key": "select_launch_target", "title": "Select Target", "message": "Choose a mission target so flight routing is defined.", "mechanic": "targeting"},
+		{"id": "m1_open_launchpad", "action_key": "open_launchpad", "title": "Open Launchpad", "message": "Mission 1 briefing starts at the Launchpad. Follow the guided route.", "mechanic": "navigation"},
+		{"id": "m1_create_rocket", "action_key": "create_rocket", "title": "Create Rocket", "message": "Build Starter Rocket 1 to unlock the mission target step.", "mechanic": "economy"},
+		{"id": "m1_select_target", "action_key": "select_launch_target", "title": "Select Target", "message": "Select the guided Mission 1 target to lock your flight path.", "mechanic": "targeting"},
 		{"id": "m1_launch", "action_key": "launch_rocket_from_earth", "title": "Launch Mission", "message": "Launch to begin the outbound mission phase.", "mechanic": "launch"},
-		{"id": "m1_mine", "action_key": "mine_target", "title": "Mine Resources", "message": "Extract minerals to generate mission value.", "mechanic": "mining"},
+		{"id": "m1_mine", "action_key": "mine_target", "title": "Mine Resources", "message": "Extract minerals to generate cargo value for supplier payouts.", "mechanic": "mining"},
 		{"id": "m1_return", "action_key": "return_rocket_home", "title": "Return Home", "message": "Bring your rocket and cargo back for debrief.", "mechanic": "return"},
-		{"id": "m1_debrief", "action_key": "resolve_mission_debrief", "title": "Complete Debrief", "message": "Choose a debrief outcome to complete the mission loop.", "mechanic": "debrief"}
+		{"id": "m1_debrief", "action_key": "resolve_mission_debrief", "title": "Complete Debrief", "message": "Resolve debrief to earn Exposure Points and unlock Level 2.", "mechanic": "debrief"}
 	],
 	2: [
-		{"id": "m2_create_rocket", "action_key": "create_rocket", "title": "Build Upgraded Rocket", "message": "Use your upgraded rocket to improve outcomes.", "mechanic": "progression"},
-		{"id": "m2_select_target", "action_key": "select_launch_target", "title": "Select Mission Target", "message": "Confirm a valid target for your upgraded mission.", "mechanic": "targeting"},
+		{"id": "m2_create_rocket", "action_key": "create_rocket", "title": "Build Upgraded Rocket", "message": "Drag or create Starter Rocket 2 to begin semi-open mission routing.", "mechanic": "progression"},
+		{"id": "m2_select_target", "action_key": "select_launch_target", "title": "Select Mission Variant", "message": "Choose one of the available mission variants for this run.", "mechanic": "targeting"},
 		{"id": "m2_launch", "action_key": "launch_rocket_from_earth", "title": "Launch Upgraded Mission", "message": "Start mission 2 and compare performance.", "mechanic": "launch"},
 		{"id": "m2_mine", "action_key": "mine_target", "title": "Mine With Better Equipment", "message": "Use improved equipment to increase yield.", "mechanic": "mining"},
 		{"id": "m2_return", "action_key": "return_rocket_home", "title": "Return To Debrief", "message": "Return with cargo to finish mission 2.", "mechanic": "return"},

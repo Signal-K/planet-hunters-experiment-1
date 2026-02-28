@@ -1,0 +1,81 @@
+{
+  "taskId": "e2x0ka",
+  "currentVersion": 1,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "e2x0ka",
+      "version": 1,
+      "timestamp": "2026-02-28T07:06:47.800Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        },
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "LaunchpadLaunchButton records 'select_launch_target' tutorial action when ensure_selected_target_for_launch auto-selects a fallback target"
+            },
+            {
+              "completed": false,
+              "text": "Tutorial advances past 'select_launch_target' step correctly when auto-selection is used"
+            },
+            {
+              "completed": false,
+              "text": "Tutorial does not show 'Select Target' step while rocket is in transit"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "LaunchpadLaunchButton records 'select_launch_target' tutorial action when ensure_selected_target_for_launch auto-selects a fallback target"
+            },
+            {
+              "completed": true,
+              "text": "Tutorial advances past 'select_launch_target' step correctly when auto-selection is used"
+            },
+            {
+              "completed": true,
+              "text": "Tutorial does not show 'Select Target' step while rocket is in transit"
+            }
+          ]
+        },
+        {
+          "field": "implementationNotes",
+          "newValue": "Recorded select_launch_target in LaunchpadLaunchButton when ensure_selected_target_for_launch uses fallback auto-selection (lines 135-141)."
+        }
+      ],
+      "snapshot": {
+        "title": "Tutorial stalls on 'Select Target' when launch uses fallback auto-selection",
+        "description": "When the user presses Launch without explicitly clicking a target in the selector panel, LaunchpadLaunchButton calls ensure_selected_target_for_launch which auto-selects a fallback target. This does NOT call record_tutorial_action('select_launch_target'), so the tutorial remains stuck on the 'Select Target' step even after the rocket is in flight. This is the direct cause of the screenshot bug where the rocket is en route but the tutorial panel shows 'Select Target / Mission 1'.",
+        "status": "done",
+        "priority": "high",
+        "labels": [
+          "tutorial",
+          "bug",
+          "launchpad",
+          "launch"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "LaunchpadLaunchButton records 'select_launch_target' tutorial action when ensure_selected_target_for_launch auto-selects a fallback target"
+          },
+          {
+            "completed": true,
+            "text": "Tutorial advances past 'select_launch_target' step correctly when auto-selection is used"
+          },
+          {
+            "completed": true,
+            "text": "Tutorial does not show 'Select Target' step while rocket is in transit"
+          }
+        ],
+        "implementationNotes": "Recorded select_launch_target in LaunchpadLaunchButton when ensure_selected_target_for_launch uses fallback auto-selection (lines 135-141)."
+      }
+    }
+  ]
+}

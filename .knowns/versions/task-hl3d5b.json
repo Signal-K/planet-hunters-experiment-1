@@ -1,0 +1,165 @@
+{
+  "taskId": "hl3d5b",
+  "currentVersion": 4,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "hl3d5b",
+      "version": 1,
+      "timestamp": "2026-02-27T08:06:38.129Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "## Summary\n- Enforced strict Level 1 single-route target gating via stage-aware selectable target checks.\n- Updated Level 1 tutorial and mission briefing copy to reinforce guided route and debrief completion outcomes.\n- Added mission exposure reward helper and applied mission exposure award on debrief completion paths with user-facing status text.\n- Added regression coverage for Level 1 route strictness and mission exposure scaling.\n\n## Validation\n- ./run_tests_clean.sh (pass)\n- godot --headless --path scene --script tests/run_structure_tests.gd (pass, elevated)\n- godot --headless --path scene --script tests/run_tutorial_tests.gd (pass, elevated)"
+        }
+      ],
+      "snapshot": {
+        "title": "Implement Level 1 Guided Launch tutorial route",
+        "description": "Ensure Level 1 remains a strict, low-failure tutorial route with explicit structure introduction, single route mission execution, and guaranteed valid first mission completion.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "missions",
+          "tutorial",
+          "level1"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Level 1 enforces a single guided route with constrained interactions and minimal branching."
+          },
+          {
+            "completed": true,
+            "text": "Player completes one full mission cycle with clear prompts from briefing through debrief."
+          },
+          {
+            "completed": true,
+            "text": "Level 1 rewards exposure points and reliably unlocks Level 2."
+          }
+        ],
+        "implementationNotes": "## Summary\n- Enforced strict Level 1 single-route target gating via stage-aware selectable target checks.\n- Updated Level 1 tutorial and mission briefing copy to reinforce guided route and debrief completion outcomes.\n- Added mission exposure reward helper and applied mission exposure award on debrief completion paths with user-facing status text.\n- Added regression coverage for Level 1 route strictness and mission exposure scaling.\n\n## Validation\n- ./run_tests_clean.sh (pass)\n- godot --headless --path scene --script tests/run_structure_tests.gd (pass, elevated)\n- godot --headless --path scene --script tests/run_tutorial_tests.gd (pass, elevated)"
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "hl3d5b",
+      "version": 2,
+      "timestamp": "2026-02-27T08:06:46.106Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Implement Level 1 Guided Launch tutorial route",
+        "description": "Ensure Level 1 remains a strict, low-failure tutorial route with explicit structure introduction, single route mission execution, and guaranteed valid first mission completion.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "missions",
+          "tutorial",
+          "level1"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Level 1 enforces a single guided route with constrained interactions and minimal branching."
+          },
+          {
+            "completed": true,
+            "text": "Player completes one full mission cycle with clear prompts from briefing through debrief."
+          },
+          {
+            "completed": true,
+            "text": "Level 1 rewards exposure points and reliably unlocks Level 2."
+          }
+        ],
+        "implementationNotes": "## Summary\n- Enforced strict Level 1 single-route target gating via stage-aware selectable target checks.\n- Updated Level 1 tutorial and mission briefing copy to reinforce guided route and debrief completion outcomes.\n- Added mission exposure reward helper and applied mission exposure award on debrief completion paths with user-facing status text.\n- Added regression coverage for Level 1 route strictness and mission exposure scaling.\n\n## Validation\n- ./run_tests_clean.sh (pass)\n- godot --headless --path scene --script tests/run_structure_tests.gd (pass, elevated)\n- godot --headless --path scene --script tests/run_tutorial_tests.gd (pass, elevated)"
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "hl3d5b",
+      "version": 3,
+      "timestamp": "2026-02-27T08:44:37.840Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "## Summary\n- Enforced strict Level 1 single-route target gating via stage-aware selectable target checks.\n- Updated Level 1 tutorial and mission briefing copy to reinforce guided route and debrief completion outcomes.\n- Added mission exposure reward helper and applied mission exposure award on debrief completion paths with user-facing status text.\n- Added regression coverage for Level 1 route strictness and mission exposure scaling.\n\n## Validation\n- ./run_tests_clean.sh (pass)\n- godot --headless --path scene --script tests/run_structure_tests.gd (pass, elevated)\n- godot --headless --path scene --script tests/run_tutorial_tests.gd (pass, elevated)",
+          "newValue": "## Summary\n- Enforced strict Level 1 single-route target gating via stage-aware selectable target checks.\n- Updated Level 1 tutorial and mission briefing copy to reinforce guided route and debrief completion outcomes.\n- Added mission exposure reward helper and applied mission exposure award on debrief completion paths with user-facing status text.\n- Added regression coverage for Level 1 route strictness and mission exposure scaling.\n\n## Validation\n- ./run_tests_clean.sh (pass)\n- godot --headless --path scene --script tests/run_structure_tests.gd (pass, elevated)\n- godot --headless --path scene --script tests/run_tutorial_tests.gd (pass, elevated)\n\nClosed and moved to done per user request (2026-02-27)."
+        }
+      ],
+      "snapshot": {
+        "title": "Implement Level 1 Guided Launch tutorial route",
+        "description": "Ensure Level 1 remains a strict, low-failure tutorial route with explicit structure introduction, single route mission execution, and guaranteed valid first mission completion.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "missions",
+          "tutorial",
+          "level1"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Level 1 enforces a single guided route with constrained interactions and minimal branching."
+          },
+          {
+            "completed": true,
+            "text": "Player completes one full mission cycle with clear prompts from briefing through debrief."
+          },
+          {
+            "completed": true,
+            "text": "Level 1 rewards exposure points and reliably unlocks Level 2."
+          }
+        ],
+        "implementationNotes": "## Summary\n- Enforced strict Level 1 single-route target gating via stage-aware selectable target checks.\n- Updated Level 1 tutorial and mission briefing copy to reinforce guided route and debrief completion outcomes.\n- Added mission exposure reward helper and applied mission exposure award on debrief completion paths with user-facing status text.\n- Added regression coverage for Level 1 route strictness and mission exposure scaling.\n\n## Validation\n- ./run_tests_clean.sh (pass)\n- godot --headless --path scene --script tests/run_structure_tests.gd (pass, elevated)\n- godot --headless --path scene --script tests/run_tutorial_tests.gd (pass, elevated)\n\nClosed and moved to done per user request (2026-02-27)."
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "hl3d5b",
+      "version": 4,
+      "timestamp": "2026-02-27T08:44:38.100Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Implement Level 1 Guided Launch tutorial route",
+        "description": "Ensure Level 1 remains a strict, low-failure tutorial route with explicit structure introduction, single route mission execution, and guaranteed valid first mission completion.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "missions",
+          "tutorial",
+          "level1"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Level 1 enforces a single guided route with constrained interactions and minimal branching."
+          },
+          {
+            "completed": true,
+            "text": "Player completes one full mission cycle with clear prompts from briefing through debrief."
+          },
+          {
+            "completed": true,
+            "text": "Level 1 rewards exposure points and reliably unlocks Level 2."
+          }
+        ],
+        "implementationNotes": "## Summary\n- Enforced strict Level 1 single-route target gating via stage-aware selectable target checks.\n- Updated Level 1 tutorial and mission briefing copy to reinforce guided route and debrief completion outcomes.\n- Added mission exposure reward helper and applied mission exposure award on debrief completion paths with user-facing status text.\n- Added regression coverage for Level 1 route strictness and mission exposure scaling.\n\n## Validation\n- ./run_tests_clean.sh (pass)\n- godot --headless --path scene --script tests/run_structure_tests.gd (pass, elevated)\n- godot --headless --path scene --script tests/run_tutorial_tests.gd (pass, elevated)\n\nClosed and moved to done per user request (2026-02-27)."
+      }
+    }
+  ]
+}
