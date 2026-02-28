@@ -1,0 +1,83 @@
+{
+  "taskId": "ymh13c",
+  "currentVersion": 2,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "ymh13c",
+      "version": 1,
+      "timestamp": "2026-02-27T07:17:41.638Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        },
+        {
+          "field": "labels",
+          "oldValue": [
+            "preview",
+            "transition",
+            "transport"
+          ],
+          "newValue": [
+            "preview",
+            "transition",
+            "transport",
+            "ux"
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Skip button during transition",
+        "description": "<!-- SECTION:DESCRIPTION:BEGIN -->\n<!-- SECTION:DESCRIPTION:END -->",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "preview",
+          "transition",
+          "transport",
+          "ux"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "ymh13c",
+      "version": 2,
+      "timestamp": "2026-02-27T07:17:46.139Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        },
+        {
+          "field": "implementationNotes",
+          "newValue": "Added skip controls in transition scenes. Outbound preview transition now shows BackButton as 'Skip'. Return preview transition now shows a visible 'Skip' button wired to continue/debrief advance."
+        }
+      ],
+      "snapshot": {
+        "title": "Skip button during transition",
+        "description": "<!-- SECTION:DESCRIPTION:BEGIN -->",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "preview",
+          "transition",
+          "transport",
+          "ux"
+        ],
+        "acceptanceCriteria": [],
+        "implementationNotes": "Added skip controls in transition scenes. Outbound preview transition now shows BackButton as 'Skip'. Return preview transition now shows a visible 'Skip' button wired to continue/debrief advance."
+      }
+    }
+  ]
+}

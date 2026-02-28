@@ -4,13 +4,11 @@
 **/.cxx/
 godot-exports/
 android/app/build/
+android/app/src/main/assets/
 build/
 ios/build/
 ios/Pods/Target Support Files/
 electron-dist/
-!electron-dist/
-!electron-dist/godot-web/
-!electron-dist/godot-web/**
 dist/
 /release/
 out/
@@ -40,6 +38,17 @@ release/*.nupkg
 .cache/electron-builder/
 scene/supabase.runtime.json
 
+# Godot editor/build cache
+**/.godot/
+
+# Root-level Godot build artifacts
+GodotTest.pck
+GodotTest/
+
+# macOS metadata
+.DS_Store
+**/.DS_Store
+
 # Node modules
 node_modules/
 
@@ -52,7 +61,5 @@ node_modules/
 *.apk
 *.aab
 
-## Keep specific files
-!ios/GodotTest.pck
 .vercel
 .env

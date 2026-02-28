@@ -1,0 +1,83 @@
+{
+  "taskId": "ejsxfh",
+  "currentVersion": 1,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "ejsxfh",
+      "version": 1,
+      "timestamp": "2026-02-27T07:19:09.998Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        },
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Every Godot bridge event captured in web shell includes monotonic action sequence and client timestamp"
+            },
+            {
+              "completed": true,
+              "text": "Captured events include PostHog distinct/session identifiers (when available) to correlate with session replay"
+            },
+            {
+              "completed": false,
+              "text": "Correlation behavior is documented in task notes with validation steps in browser/PostHog"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Every Godot bridge event captured in web shell includes monotonic action sequence and client timestamp"
+            },
+            {
+              "completed": true,
+              "text": "Captured events include PostHog distinct/session identifiers (when available) to correlate with session replay"
+            },
+            {
+              "completed": true,
+              "text": "Correlation behavior is documented in task notes with validation steps in browser/PostHog"
+            }
+          ]
+        },
+        {
+          "field": "implementationNotes",
+          "oldValue": "✓ Added correlation metadata for all Godot bridge events in web/public/app.js: correlation_event_seq (monotonic), correlation_client_ts_ms, correlation_event_name, and correlation_godot_ts_unix when present.",
+          "newValue": "✓ Added correlation metadata for all Godot bridge events in web/public/app.js: correlation_event_seq (monotonic), correlation_client_ts_ms, correlation_event_name, and correlation_godot_ts_unix when present.\n\nValidation steps: verify correlation_event_seq and correlation_client_ts_ms on gameplay events; verify correlation_posthog_distinct_id and correlation_posthog_session_id when available; align replay timeline with correlation_client_ts_ms."
+        }
+      ],
+      "snapshot": {
+        "title": "Improve PostHog replay correlation for Godot WebGL actions",
+        "description": "Session replay does not render the Godot canvas reliably (WebGL/canvas limitation). Improve observability by enriching Godot bridge analytics with deterministic action sequencing and replay/session identifiers so user actions can be matched to replays.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "analytics",
+          "posthog",
+          "observability"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Every Godot bridge event captured in web shell includes monotonic action sequence and client timestamp"
+          },
+          {
+            "completed": true,
+            "text": "Captured events include PostHog distinct/session identifiers (when available) to correlate with session replay"
+          },
+          {
+            "completed": true,
+            "text": "Correlation behavior is documented in task notes with validation steps in browser/PostHog"
+          }
+        ],
+        "implementationPlan": "1. Update web shell analytics capture to append deterministic correlation metadata per event (monotonic sequence + client timestamp) before sending to PostHog.\n2. Include PostHog identifiers when available (`distinct_id`, session id) on captured Godot bridge events to link directly to replay sessions.\n3. Keep event names/payloads backward compatible while adding a small namespaced metadata block.\n4. Add implementation notes with exact PostHog verification steps (event payload fields + replay/session matching).",
+        "implementationNotes": "✓ Added correlation metadata for all Godot bridge events in web/public/app.js: correlation_event_seq (monotonic), correlation_client_ts_ms, correlation_event_name, and correlation_godot_ts_unix when present.\n\nValidation steps: verify correlation_event_seq and correlation_client_ts_ms on gameplay events; verify correlation_posthog_distinct_id and correlation_posthog_session_id when available; align replay timeline with correlation_client_ts_ms."
+      }
+    }
+  ]
+}

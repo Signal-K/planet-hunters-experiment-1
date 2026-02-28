@@ -2,6 +2,7 @@ extends SceneTree
 
 const TestReporter = preload("res://tests/TestReporter.gd")
 const TutorialControllerScript = preload("res://Scripts/Tutorial/TutorialController.gd")
+const TutorialTargeting = preload("res://Scripts/UI/TutorialCoachTargeting.gd")
 
 var reporter := TestReporter.new()
 
@@ -21,6 +22,10 @@ func run_all_tests() -> void:
 	await test_progression_advances_on_expected_actions()
 	await test_skip_and_replay_controls()
 	await test_state_persists_across_controller_recreation()
+	await test_targeting_prefers_structure_nodes_for_world_actions()
+	await test_targeting_finds_launch_button_for_launch_action()
+	await test_advance_if_match_skips_past_out_of_order_completed_actions()
+	await test_reconcile_step_index_fast_forwards_past_completed_actions()
 
 func _setup_controller() -> Node:
 	var controller = TutorialControllerScript.new()
@@ -111,3 +116,137 @@ func test_state_persists_across_controller_recreation() -> void:
 
 	reporter.pass_test()
 	await _teardown_controller(reloaded)
+
+func _setup_mock_scene_root() -> Node2D:
+	var scene_root := Node2D.new()
+	scene_root.name = "MockScene"
+	var structures := Node2D.new()
+	structures.name = "StructuresLayer"
+	scene_root.add_child(structures)
+	var launchpad := Node2D.new()
+	launchpad.name = "Launchpad"
+	structures.add_child(launchpad)
+	var launchpad_interaction := Area2D.new()
+	launchpad_interaction.name = "InteractionArea"
+	launchpad.add_child(launchpad_interaction)
+	var satellite := Node2D.new()
+	satellite.name = "SatelliteStation"
+	structures.add_child(satellite)
+	var satellite_interaction := Area2D.new()
+	satellite_interaction.name = "InteractionArea"
+	satellite.add_child(satellite_interaction)
+	var ui_root := Control.new()
+	ui_root.name = "UIRoot"
+	scene_root.add_child(ui_root)
+	var launch_button := Button.new()
+	launch_button.name = "PrimaryLaunchButton"
+	launch_button.text = "Launch Mission"
+	ui_root.add_child(launch_button)
+	get_root().add_child(scene_root)
+	current_scene = scene_root
+	await create_timer(0.02).timeout
+	return scene_root
+
+func _teardown_mock_scene_root(scene_root: Node) -> void:
+	if current_scene == scene_root:
+		current_scene = null
+	if is_instance_valid(scene_root):
+		scene_root.queue_free()
+	await create_timer(0.02).timeout
+
+func test_targeting_prefers_structure_nodes_for_world_actions() -> void:
+	reporter.start_test("Tutorial targeting prefers structure nodes over interaction children")
+	var scene_root = await _setup_mock_scene_root()
+	var launch_target = TutorialTargeting.find_current_target({"action_key": "open_launchpad"}, self)
+	var scanner_target = TutorialTargeting.find_current_target({"action_key": "build_scanner_station"}, self)
+	if launch_target == null or launch_target.name != "Launchpad":
+		reporter.fail_test("Expected open_launchpad target to resolve to Launchpad node")
+		await _teardown_mock_scene_root(scene_root)
+		return
+	if scanner_target == null or scanner_target.name != "SatelliteStation":
+		reporter.fail_test("Expected build_scanner_station target to resolve to SatelliteStation node")
+		await _teardown_mock_scene_root(scene_root)
+		return
+	reporter.pass_test()
+	await _teardown_mock_scene_root(scene_root)
+
+func test_targeting_finds_launch_button_for_launch_action() -> void:
+	reporter.start_test("Tutorial targeting resolves visible launch button for launch action")
+	var scene_root = await _setup_mock_scene_root()
+	var launch_target = TutorialTargeting.find_current_target({"action_key": "launch_rocket_from_earth"}, self)
+	if launch_target == null or not (launch_target is Button):
+		reporter.fail_test("Expected launch_rocket_from_earth target to resolve to a visible Button")
+		await _teardown_mock_scene_root(scene_root)
+		return
+	if str((launch_target as Button).name) != "PrimaryLaunchButton":
+		reporter.fail_test("Unexpected launch target button resolved: %s" % str((launch_target as Button).name))
+		await _teardown_mock_scene_root(scene_root)
+		return
+	reporter.pass_test()
+	await _teardown_mock_scene_root(scene_root)
+
+func test_advance_if_match_skips_past_out_of_order_completed_actions() -> void:
+	reporter.start_test("Tutorial advances past stuck steps whose action is already in completed_actions")
+	_reset_tutorial_state()
+	var controller = await _setup_controller()
+	controller.replay_full()
+	await create_timer(0.02).timeout
+
+	# Advance normally through the first two steps:
+	controller.record_action("open_launchpad")
+	controller.record_action("create_rocket")
+	var pre_state = controller.get_tutorial_state()
+	var step_idx_before = int(pre_state.get("current_step_index", 0))
+
+	# Record the skipped step first (as auto-selection would), then the next step.
+	# Without the fix _advance_if_match would break on launch_rocket_from_earth
+	# (because the current step is select_launch_target) and leave it stuck.
+	controller.record_action("select_launch_target")
+	controller.record_action("launch_rocket_from_earth")
+	var after = controller.get_tutorial_state()
+	var step_idx_after = int(after.get("current_step_index", 0))
+	if step_idx_after <= step_idx_before:
+		reporter.fail_test("Tutorial did not advance past launch step (idx before=%s, after=%s)" % [step_idx_before, step_idx_after])
+		await _teardown_controller(controller)
+		return
+	if str(after.get("current_step", {}).get("action_key", "")) == "select_launch_target":
+		reporter.fail_test("Tutorial is still stuck on select_launch_target after launch was recorded")
+		await _teardown_controller(controller)
+		return
+
+	reporter.pass_test()
+	await _teardown_controller(controller)
+
+func test_reconcile_step_index_fast_forwards_past_completed_actions() -> void:
+	reporter.start_test("Tutorial reconciles step index past completed actions on startup")
+	_reset_tutorial_state()
+	var controller = await _setup_controller()
+	controller.replay_full()
+	await create_timer(0.02).timeout
+
+	# Complete the first two steps then capture the index:
+	controller.record_action("open_launchpad")
+	controller.record_action("create_rocket")
+	var mid_state = controller.get_tutorial_state()
+	var idx_after_two = int(mid_state.get("current_step_index", 0))
+
+	# Simulate crash/restart by freeing and recreating the controller.
+	# The new instance loads persisted state and must fast-forward.
+	await _teardown_controller(controller)
+	var controller2 = await _setup_controller()
+	await create_timer(0.02).timeout
+	var restored = controller2.get_tutorial_state()
+	var restored_idx = int(restored.get("current_step_index", 0))
+
+	if restored_idx < idx_after_two:
+		reporter.fail_test("Reconciled index (%s) is behind mid-session index (%s) — completed actions not fast-forwarded on startup" % [restored_idx, idx_after_two])
+		await _teardown_controller(controller2)
+		return
+	var restored_key = str(restored.get("current_step", {}).get("action_key", ""))
+	if restored_key in ["open_launchpad", "create_rocket"]:
+		reporter.fail_test("Tutorial shows already-completed step (%s) after restart" % restored_key)
+		await _teardown_controller(controller2)
+		return
+
+	reporter.pass_test()
+	await _teardown_controller(controller2)

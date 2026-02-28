@@ -21,7 +21,7 @@ func _on_tree_node_added(node: Node) -> void:
 	if node == null:
 		return
 	if node is Control:
-		call_deferred("_apply_tree", node)
+		_apply_tree(node)
 
 func _apply_tree(root: Node) -> void:
 	if root == null:
@@ -82,8 +82,12 @@ func _apply_label_color(label: Label) -> void:
 		return
 	if _is_muted_label(label):
 		label.add_theme_color_override("font_color", PanelStyle.TEXT_MUTED)
+		if not label.has_theme_font_size_override("font_size"):
+			label.add_theme_font_size_override("font_size", 18)
 	else:
 		label.add_theme_color_override("font_color", PanelStyle.TEXT_PRIMARY)
+		if not label.has_theme_font_size_override("font_size"):
+			label.add_theme_font_size_override("font_size", 20)
 
 func _apply_richtext_color(label: RichTextLabel) -> void:
 	if label.has_theme_color_override("default_color"):

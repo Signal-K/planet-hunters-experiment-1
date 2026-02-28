@@ -1,7 +1,6 @@
 extends RefCounted
 class_name SatelliteStationPanelDetail
 
-const SimpleDetailView = preload("res://Scenes/UI/SimpleDetail/simple_detail_view.tscn")
 const AsteroidDetailView = preload("res://Scenes/UI/AsteroidDetail/asteroid_detail_view.tscn")
 
 var _panel: Control
@@ -60,18 +59,12 @@ func show_detail(anomaly: Dictionary) -> void:
 	_loading_container.visible = false
 	_anomaly_list.visible = false
 
-	# Create and add correct detail view (sample scene or simple)
-	var root = _panel.get_tree().root.get_child(0)
-	var use_asteroid_detail = root and root.name == "EarthBase1SampleAsteroid"
-	var detail_view = null
-	if use_asteroid_detail:
-		detail_view = AsteroidDetailView.instantiate()
-		_content_container.add_child(detail_view)
-		detail_view.initialize(anomaly, true) # force_controls_visible = true
-	else:
-		detail_view = SimpleDetailView.instantiate()
-		_content_container.add_child(detail_view)
-		detail_view.initialize(anomaly)
+	# Use annotation-enabled detail for both asteroids and planets.
+	var detail_view = AsteroidDetailView.instantiate() if AsteroidDetailView else null
+	if detail_view == null:
+		return
+	_content_container.add_child(detail_view)
+	detail_view.initialize(anomaly, true) # force_controls_visible = true
 	# Connect back button
 	if detail_view.has_signal("back_pressed"):
 		detail_view.back_pressed.connect(_on_detail_view_back)

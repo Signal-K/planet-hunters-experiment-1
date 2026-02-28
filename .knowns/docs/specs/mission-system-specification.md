@@ -1,7 +1,7 @@
 ---
 title: 'spec,missions,game-design,reference'
 createdAt: '2026-02-25T08:19:42.936Z'
-updatedAt: '2026-02-26T01:53:24.805Z'
+updatedAt: '2026-02-27T08:26:41.018Z'
 description: >-
   Complete specification for all 5 missions including objectives, mechanics,
   progression, rewards, and onboarding flow
@@ -353,3 +353,14 @@ Introduce contractor system and strategic choice
 - SR2 Cost: 1.3B F
 - Reward Ratio: 1.3x
 - Expected Return: ~1.69B F (full mine + scrap)
+
+
+---
+
+## Resolved Definitions (2026-02-27)
+
+Open questions for Level 2/3 mode split, drag/drop scope, exposure formulas, unlock thresholds, and first-release overlays are now defined in:
+
+- @doc/specs/level-2-3-mode-split-and-exposure-formula-specification
+
+This document is the implementation and test reference for those previously unresolved items.

@@ -1,0 +1,82 @@
+{
+  "taskId": "u1yvbn",
+  "currentVersion": 2,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "u1yvbn",
+      "version": 1,
+      "timestamp": "2026-02-27T07:17:55.955Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        },
+        {
+          "field": "labels",
+          "oldValue": [
+            "controls",
+            "narrative"
+          ],
+          "newValue": [
+            "controls",
+            "narrative",
+            "onboarding",
+            "ux"
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Control hints & on-screen controls",
+        "description": "<!-- SECTION:DESCRIPTION:BEGIN -->\n<!-- SECTION:DESCRIPTION:END -->",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "controls",
+          "narrative",
+          "onboarding",
+          "ux"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "u1yvbn",
+      "version": 2,
+      "timestamp": "2026-02-27T07:18:00.607Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        },
+        {
+          "field": "implementationNotes",
+          "newValue": "Updated on-screen control guidance in mining tutorial text. Intro now explains SPACE mine, D deploy drone, RETURN to debrief. Completion step reiterates control mapping plus FUEL/HEAT monitoring."
+        }
+      ],
+      "snapshot": {
+        "title": "Control hints & on-screen controls",
+        "description": "<!-- SECTION:DESCRIPTION:BEGIN -->",
+        "status": "done",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "controls",
+          "narrative",
+          "onboarding",
+          "ux"
+        ],
+        "acceptanceCriteria": [],
+        "implementationNotes": "Updated on-screen control guidance in mining tutorial text. Intro now explains SPACE mine, D deploy drone, RETURN to debrief. Completion step reiterates control mapping plus FUEL/HEAT monitoring."
+      }
+    }
+  ]
+}

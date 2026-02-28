@@ -1,6 +1,6 @@
 {
   "taskId": "4uqwke",
-  "currentVersion": 9,
+  "currentVersion": 11,
   "versions": [
     {
       "id": "v1",
@@ -663,6 +663,108 @@
         ],
         "implementationPlan": "1. Build reusable Earth weather engine node with 60s cycle state, extensible event registration, and scene-safe lifecycle hooks.\n2. Add Earth backdrop night visual pipeline: sky-selective darkening filter based on blue sky tones + synchronized star overlay fade.\n3. Add modular weather event(s) (initial cloud drift) managed by engine and configurable per scene.\n4. Integrate into Earth scenes using Earth1/EarthBackdrop nodes (earth_base_1, mission_debrief, orbit_sale_preview), keeping scene scripts minimal.\n5. Run Godot headless checks/tests that are practical in this repo and document implementation notes in the knowns task.",
         "implementationNotes": "## Summary\n- Added modular Earth environment engine with 60s day/night cycle (`EarthWeatherEngine.gd`).\n- Added sky-selective night shader filter for Earth backdrop sky regions (`earth_sky_night_filter.gdshader`) and wiring event (`EarthSkyNightFilterEvent.gd`).\n- Added starfield event with night fade/twinkle (`EarthStarFieldEvent.gd`).\n- Added cloud drift weather event (`EarthCloudDriftEvent.gd`).\n- Integrated environment nodes into Earth scenes: `earth_scene_template.tscn`, `earth_base_1.tscn`, `mission_debrief.tscn`, `orbit_sale_preview.tscn`.\n\n## Validation\n- Did not run further Godot runtime tests per user request after repeated sandbox/headless crash in logger initialization (`user://logs/...`).\n- Changes are implemented and wired; runtime verification should be done in local non-sandbox editor/runtime."
+      }
+    },
+    {
+      "id": "v10",
+      "taskId": "4uqwke",
+      "version": 10,
+      "timestamp": "2026-02-27T08:47:54.149Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "## Summary\n- Added modular Earth environment engine with 60s day/night cycle (`EarthWeatherEngine.gd`).\n- Added sky-selective night shader filter for Earth backdrop sky regions (`earth_sky_night_filter.gdshader`) and wiring event (`EarthSkyNightFilterEvent.gd`).\n- Added starfield event with night fade/twinkle (`EarthStarFieldEvent.gd`).\n- Added cloud drift weather event (`EarthCloudDriftEvent.gd`).\n- Integrated environment nodes into Earth scenes: `earth_scene_template.tscn`, `earth_base_1.tscn`, `mission_debrief.tscn`, `orbit_sale_preview.tscn`.\n\n## Validation\n- Did not run further Godot runtime tests per user request after repeated sandbox/headless crash in logger initialization (`user://logs/...`).\n- Changes are implemented and wired; runtime verification should be done in local non-sandbox editor/runtime.",
+          "newValue": "## Summary\n- Added modular Earth environment engine with 60s day/night cycle (`EarthWeatherEngine.gd`).\n- Added sky-selective night shader filter for Earth backdrop sky regions (`earth_sky_night_filter.gdshader`) and wiring event (`EarthSkyNightFilterEvent.gd`).\n- Added starfield event with night fade/twinkle (`EarthStarFieldEvent.gd`).\n- Added cloud drift weather event (`EarthCloudDriftEvent.gd`).\n- Integrated environment nodes into Earth scenes: `earth_scene_template.tscn`, `earth_base_1.tscn`, `mission_debrief.tscn`, `orbit_sale_preview.tscn`.\n\n## Validation\n- Did not run further Godot runtime tests per user request after repeated sandbox/headless crash in logger initialization (`user://logs/...`).\n- Changes are implemented and wired; runtime verification should be done in local non-sandbox editor/runtime.\n\nCompleted and moved to done per user request (2026-02-27)."
+        }
+      ],
+      "snapshot": {
+        "title": "Earth scenes: modular weather + day/night cycle",
+        "description": "Implement a reusable Earth environment system that supports a 60-second day/night loop, sky darkening on Earth1/Earth backdrop sprites, star overlays at night, and expandable weather events for Earth scenes.",
+        "status": "in-review",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "godot",
+          "earth",
+          "weather",
+          "day-night",
+          "visuals"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Earth scenes using Earth1 backdrop shift from day to night over a 60-second cycle"
+          },
+          {
+            "completed": true,
+            "text": "Sky region is darkened at night while preserving non-sky background details"
+          },
+          {
+            "completed": true,
+            "text": "Night visuals include star effects"
+          },
+          {
+            "completed": true,
+            "text": "Weather system supports modular event registration and extension"
+          },
+          {
+            "completed": true,
+            "text": "Implementation notes document where the system is integrated"
+          }
+        ],
+        "implementationPlan": "1. Build reusable Earth weather engine node with 60s cycle state, extensible event registration, and scene-safe lifecycle hooks.\n2. Add Earth backdrop night visual pipeline: sky-selective darkening filter based on blue sky tones + synchronized star overlay fade.\n3. Add modular weather event(s) (initial cloud drift) managed by engine and configurable per scene.\n4. Integrate into Earth scenes using Earth1/EarthBackdrop nodes (earth_base_1, mission_debrief, orbit_sale_preview), keeping scene scripts minimal.\n5. Run Godot headless checks/tests that are practical in this repo and document implementation notes in the knowns task.",
+        "implementationNotes": "## Summary\n- Added modular Earth environment engine with 60s day/night cycle (`EarthWeatherEngine.gd`).\n- Added sky-selective night shader filter for Earth backdrop sky regions (`earth_sky_night_filter.gdshader`) and wiring event (`EarthSkyNightFilterEvent.gd`).\n- Added starfield event with night fade/twinkle (`EarthStarFieldEvent.gd`).\n- Added cloud drift weather event (`EarthCloudDriftEvent.gd`).\n- Integrated environment nodes into Earth scenes: `earth_scene_template.tscn`, `earth_base_1.tscn`, `mission_debrief.tscn`, `orbit_sale_preview.tscn`.\n\n## Validation\n- Did not run further Godot runtime tests per user request after repeated sandbox/headless crash in logger initialization (`user://logs/...`).\n- Changes are implemented and wired; runtime verification should be done in local non-sandbox editor/runtime.\n\nCompleted and moved to done per user request (2026-02-27)."
+      }
+    },
+    {
+      "id": "v11",
+      "taskId": "4uqwke",
+      "version": 11,
+      "timestamp": "2026-02-27T08:47:54.607Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-review",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Earth scenes: modular weather + day/night cycle",
+        "description": "Implement a reusable Earth environment system that supports a 60-second day/night loop, sky darkening on Earth1/Earth backdrop sprites, star overlays at night, and expandable weather events for Earth scenes.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "godot",
+          "earth",
+          "weather",
+          "day-night",
+          "visuals"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Earth scenes using Earth1 backdrop shift from day to night over a 60-second cycle"
+          },
+          {
+            "completed": true,
+            "text": "Sky region is darkened at night while preserving non-sky background details"
+          },
+          {
+            "completed": true,
+            "text": "Night visuals include star effects"
+          },
+          {
+            "completed": true,
+            "text": "Weather system supports modular event registration and extension"
+          },
+          {
+            "completed": true,
+            "text": "Implementation notes document where the system is integrated"
+          }
+        ],
+        "implementationPlan": "1. Build reusable Earth weather engine node with 60s cycle state, extensible event registration, and scene-safe lifecycle hooks.\n2. Add Earth backdrop night visual pipeline: sky-selective darkening filter based on blue sky tones + synchronized star overlay fade.\n3. Add modular weather event(s) (initial cloud drift) managed by engine and configurable per scene.\n4. Integrate into Earth scenes using Earth1/EarthBackdrop nodes (earth_base_1, mission_debrief, orbit_sale_preview), keeping scene scripts minimal.\n5. Run Godot headless checks/tests that are practical in this repo and document implementation notes in the knowns task.",
+        "implementationNotes": "## Summary\n- Added modular Earth environment engine with 60s day/night cycle (`EarthWeatherEngine.gd`).\n- Added sky-selective night shader filter for Earth backdrop sky regions (`earth_sky_night_filter.gdshader`) and wiring event (`EarthSkyNightFilterEvent.gd`).\n- Added starfield event with night fade/twinkle (`EarthStarFieldEvent.gd`).\n- Added cloud drift weather event (`EarthCloudDriftEvent.gd`).\n- Integrated environment nodes into Earth scenes: `earth_scene_template.tscn`, `earth_base_1.tscn`, `mission_debrief.tscn`, `orbit_sale_preview.tscn`.\n\n## Validation\n- Did not run further Godot runtime tests per user request after repeated sandbox/headless crash in logger initialization (`user://logs/...`).\n- Changes are implemented and wired; runtime verification should be done in local non-sandbox editor/runtime.\n\nCompleted and moved to done per user request (2026-02-27)."
       }
     }
   ]

@@ -1,0 +1,323 @@
+{
+  "taskId": "j05hgn",
+  "currentVersion": 6,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "j05hgn",
+      "version": 1,
+      "timestamp": "2026-02-27T08:24:44.820Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Define unresolved Level 2/3 mode split and exposure formulas",
+        "description": "Resolve open design questions from the v0 spec: initial mode split boundaries, drag/drop scope by screen, exposure point formula, unlock thresholds, and minimum graph/data overlays.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "spec",
+          "design",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Documented and approved definitions exist for Level 2/3 mode split and drag/drop scope."
+          },
+          {
+            "completed": false,
+            "text": "Exposure formula and unlock thresholds are explicitly specified for implementation and testing."
+          },
+          {
+            "completed": false,
+            "text": "Minimum viable graph/data overlay set is defined for first release."
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "j05hgn",
+      "version": 2,
+      "timestamp": "2026-02-27T08:27:00.174Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Documented and approved definitions exist for Level 2/3 mode split and drag/drop scope."
+            },
+            {
+              "completed": false,
+              "text": "Exposure formula and unlock thresholds are explicitly specified for implementation and testing."
+            },
+            {
+              "completed": false,
+              "text": "Minimum viable graph/data overlay set is defined for first release."
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Documented and approved definitions exist for Level 2/3 mode split and drag/drop scope."
+            },
+            {
+              "completed": false,
+              "text": "Exposure formula and unlock thresholds are explicitly specified for implementation and testing."
+            },
+            {
+              "completed": false,
+              "text": "Minimum viable graph/data overlay set is defined for first release."
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Define unresolved Level 2/3 mode split and exposure formulas",
+        "description": "Resolve open design questions from the v0 spec: initial mode split boundaries, drag/drop scope by screen, exposure point formula, unlock thresholds, and minimum graph/data overlays.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "spec",
+          "design",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Documented and approved definitions exist for Level 2/3 mode split and drag/drop scope."
+          },
+          {
+            "completed": false,
+            "text": "Exposure formula and unlock thresholds are explicitly specified for implementation and testing."
+          },
+          {
+            "completed": false,
+            "text": "Minimum viable graph/data overlay set is defined for first release."
+          }
+        ]
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "j05hgn",
+      "version": 3,
+      "timestamp": "2026-02-27T08:27:00.899Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Documented and approved definitions exist for Level 2/3 mode split and drag/drop scope."
+            },
+            {
+              "completed": false,
+              "text": "Exposure formula and unlock thresholds are explicitly specified for implementation and testing."
+            },
+            {
+              "completed": false,
+              "text": "Minimum viable graph/data overlay set is defined for first release."
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Documented and approved definitions exist for Level 2/3 mode split and drag/drop scope."
+            },
+            {
+              "completed": true,
+              "text": "Exposure formula and unlock thresholds are explicitly specified for implementation and testing."
+            },
+            {
+              "completed": false,
+              "text": "Minimum viable graph/data overlay set is defined for first release."
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Define unresolved Level 2/3 mode split and exposure formulas",
+        "description": "Resolve open design questions from the v0 spec: initial mode split boundaries, drag/drop scope by screen, exposure point formula, unlock thresholds, and minimum graph/data overlays.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "spec",
+          "design",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Documented and approved definitions exist for Level 2/3 mode split and drag/drop scope."
+          },
+          {
+            "completed": true,
+            "text": "Exposure formula and unlock thresholds are explicitly specified for implementation and testing."
+          },
+          {
+            "completed": false,
+            "text": "Minimum viable graph/data overlay set is defined for first release."
+          }
+        ]
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "j05hgn",
+      "version": 4,
+      "timestamp": "2026-02-27T08:27:01.207Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Documented and approved definitions exist for Level 2/3 mode split and drag/drop scope."
+            },
+            {
+              "completed": true,
+              "text": "Exposure formula and unlock thresholds are explicitly specified for implementation and testing."
+            },
+            {
+              "completed": false,
+              "text": "Minimum viable graph/data overlay set is defined for first release."
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Documented and approved definitions exist for Level 2/3 mode split and drag/drop scope."
+            },
+            {
+              "completed": true,
+              "text": "Exposure formula and unlock thresholds are explicitly specified for implementation and testing."
+            },
+            {
+              "completed": true,
+              "text": "Minimum viable graph/data overlay set is defined for first release."
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Define unresolved Level 2/3 mode split and exposure formulas",
+        "description": "Resolve open design questions from the v0 spec: initial mode split boundaries, drag/drop scope by screen, exposure point formula, unlock thresholds, and minimum graph/data overlays.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "spec",
+          "design",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Documented and approved definitions exist for Level 2/3 mode split and drag/drop scope."
+          },
+          {
+            "completed": true,
+            "text": "Exposure formula and unlock thresholds are explicitly specified for implementation and testing."
+          },
+          {
+            "completed": true,
+            "text": "Minimum viable graph/data overlay set is defined for first release."
+          }
+        ]
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "j05hgn",
+      "version": 5,
+      "timestamp": "2026-02-27T08:27:07.849Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "## Summary\n- Created @doc/specs/level-2-3-mode-split-and-exposure-formula-specification with explicit definitions for:\n  - Level 2 vs Level 3+ mode split boundaries.\n  - Drag/drop interaction scope by screen.\n  - Exposure formula, XP mapping, and cumulative unlock thresholds.\n  - Minimum viable graph/data overlay set for first release.\n- Updated @doc/specs/mission-system-specification with resolved-definition reference.\n- Updated @doc/specs/spec-task-coverage-matrix with addendum row marking this requirement set covered.\n\n## Outcome\n- Open questions from the v0 mission spec are now implementation-ready and test-referenceable.\n- Definitions align with current shipped behavior (including open-operations mode in stage 5 flows) while preserving web/mobile parity."
+        }
+      ],
+      "snapshot": {
+        "title": "Define unresolved Level 2/3 mode split and exposure formulas",
+        "description": "Resolve open design questions from the v0 spec: initial mode split boundaries, drag/drop scope by screen, exposure point formula, unlock thresholds, and minimum graph/data overlays.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "spec",
+          "design",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Documented and approved definitions exist for Level 2/3 mode split and drag/drop scope."
+          },
+          {
+            "completed": true,
+            "text": "Exposure formula and unlock thresholds are explicitly specified for implementation and testing."
+          },
+          {
+            "completed": true,
+            "text": "Minimum viable graph/data overlay set is defined for first release."
+          }
+        ],
+        "implementationNotes": "## Summary\n- Created @doc/specs/level-2-3-mode-split-and-exposure-formula-specification with explicit definitions for:\n  - Level 2 vs Level 3+ mode split boundaries.\n  - Drag/drop interaction scope by screen.\n  - Exposure formula, XP mapping, and cumulative unlock thresholds.\n  - Minimum viable graph/data overlay set for first release.\n- Updated @doc/specs/mission-system-specification with resolved-definition reference.\n- Updated @doc/specs/spec-task-coverage-matrix with addendum row marking this requirement set covered.\n\n## Outcome\n- Open questions from the v0 mission spec are now implementation-ready and test-referenceable.\n- Definitions align with current shipped behavior (including open-operations mode in stage 5 flows) while preserving web/mobile parity."
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "j05hgn",
+      "version": 6,
+      "timestamp": "2026-02-27T08:27:15.174Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Define unresolved Level 2/3 mode split and exposure formulas",
+        "description": "Resolve open design questions from the v0 spec: initial mode split boundaries, drag/drop scope by screen, exposure point formula, unlock thresholds, and minimum graph/data overlays.",
+        "status": "done",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "spec",
+          "design",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Documented and approved definitions exist for Level 2/3 mode split and drag/drop scope."
+          },
+          {
+            "completed": true,
+            "text": "Exposure formula and unlock thresholds are explicitly specified for implementation and testing."
+          },
+          {
+            "completed": true,
+            "text": "Minimum viable graph/data overlay set is defined for first release."
+          }
+        ],
+        "implementationNotes": "## Summary\n- Created @doc/specs/level-2-3-mode-split-and-exposure-formula-specification with explicit definitions for:\n  - Level 2 vs Level 3+ mode split boundaries.\n  - Drag/drop interaction scope by screen.\n  - Exposure formula, XP mapping, and cumulative unlock thresholds.\n  - Minimum viable graph/data overlay set for first release.\n- Updated @doc/specs/mission-system-specification with resolved-definition reference.\n- Updated @doc/specs/spec-task-coverage-matrix with addendum row marking this requirement set covered.\n\n## Outcome\n- Open questions from the v0 mission spec are now implementation-ready and test-referenceable.\n- Definitions align with current shipped behavior (including open-operations mode in stage 5 flows) while preserving web/mobile parity."
+      }
+    }
+  ]
+}

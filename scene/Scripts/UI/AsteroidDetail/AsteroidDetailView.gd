@@ -84,7 +84,8 @@ func _ready():
 	_update_annotation_count()
 
 func _on_save_pressed():
-	_annotations.save_annotations(anomaly_id)
+	var target_type = "planet" if _model.is_planet(anomaly_data) else "asteroid"
+	_annotations.save_annotations(anomaly_id, target_type, title_label.text)
 
 func initialize(anomaly: Dictionary, force_controls_visible := false):
 	"""Initialize the detail view with anomaly data. If force_controls_visible is true, always show annotation controls."""

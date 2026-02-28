@@ -36,6 +36,14 @@ func run_all_tests() -> void:
 	await test_rockets_state_default_shape()
 	await test_rockets_mission_progress_mapping()
 	await test_rockets_targeting_filtering()
+	await test_level1_target_route_is_strict()
+	await test_level2_has_limited_variants_with_fallback()
+	await test_level3_scanner_targets_have_fallback_when_scan_empty()
+	await test_level2_completion_unlocks_level3_systems()
+	await test_launch_target_resolution_applies_playable_fallback()
+	await test_open_operation_mode_persists_and_applies_to_missions()
+	await test_open_operation_survey_route_relaxes_contractor_block()
+	await test_mission_exposure_reward_progression()
 	await test_mission_briefing_seen_persistence()
 	await test_launchpad_briefing_gate_is_one_time()
 	await test_sidescroll_mining_drone_pool_reuse()
@@ -130,7 +138,7 @@ func test_rockets_state_default_shape() -> void:
 		"seen_asteroids", "seen_planets", "scan_counts", "status_changed_at",
 		"mission_progress_completed", "completed_mission_badges",
 		"scanner_station_built", "scanner_unlocked", "scanner_unlock_dialog_seen",
-		"mission5_contract_offer", "mission_briefings_seen",
+		"mission5_contract_offer", "operation_mode", "launch_fallback_notice", "mission_briefings_seen",
 		"mission_progress_schema_version", "pending_mission_guidance_id"
 	]
 	for key in required_keys:
@@ -178,6 +186,157 @@ func test_rockets_targeting_filtering() -> void:
 		return
 	if str(out[0].get("id", "")) != "a1" or str(out[1].get("id", "")) != "a3":
 		reporter.fail_test("Unexpected filtered ids: %s, %s" % [out[0].get("id", ""), out[1].get("id", "")])
+		return
+	reporter.pass_test()
+
+func test_level1_target_route_is_strict() -> void:
+	reporter.start_test("[UX] Level 1 route allows only mission 1 predefined target")
+	var state = RocketsStateAccess.build_default_state(2)
+	state["mission_progress_completed"] = 0
+	state["completed_mission_badges"] = []
+	state["detected_targets"] = [
+		{"id": "mission-1-training-target", "label": "Training Asteroid A", "type": "asteroid"},
+		{"id": "random-stage1-target", "label": "Random Asteroid", "type": "asteroid"}
+	]
+	RocketsManager.set_override_state(state)
+	var selectable = RocketsManager.get_selectable_targets_for_stage(1)
+	var selected_ok = RocketsManager.select_target("mission-1-training-target")
+	var selected_bad = RocketsManager.select_target("random-stage1-target")
+	RocketsManager.clear_override_state()
+	if selectable.size() != 1:
+		reporter.fail_test("Expected exactly one selectable level1 target, got %s" % selectable.size())
+		return
+	if str(selectable[0].get("id", "")) != "mission-1-training-target":
+		reporter.fail_test("Expected mission-1-training-target as sole level1 target")
+		return
+	if not selected_ok:
+		reporter.fail_test("Expected mission-1-training-target selection to succeed")
+		return
+	if selected_bad:
+		reporter.fail_test("Expected non-predefined level1 target selection to fail")
+		return
+	reporter.pass_test()
+
+func test_level2_has_limited_variants_with_fallback() -> void:
+	reporter.start_test("[UX] Level 2 provides limited mission variants with fallback targets")
+	var state = RocketsStateAccess.build_default_state(2)
+	state["mission_progress_completed"] = 1
+	state["completed_mission_badges"] = ["mission-1"]
+	state["detected_targets"] = []
+	RocketsManager.set_override_state(state)
+	var variants = RocketsManager.get_selectable_targets_for_stage(2)
+	RocketsManager.clear_override_state()
+	if variants.size() < 2:
+		reporter.fail_test("Expected at least 2 Level 2 mission variants, got %s" % variants.size())
+		return
+	if variants.size() > 3:
+		reporter.fail_test("Expected at most 3 Level 2 mission variants, got %s" % variants.size())
+		return
+	reporter.pass_test()
+
+func test_level3_scanner_targets_have_fallback_when_scan_empty() -> void:
+	reporter.start_test("[UX] Level 3 scanner route provides fallback targets when scans are empty")
+	var state = RocketsStateAccess.build_default_state(2)
+	state["mission_progress_completed"] = 2
+	state["completed_mission_badges"] = ["mission-1", "mission-2"]
+	state["detected_targets"] = []
+	RocketsManager.set_override_state(state)
+	var targets = RocketsManager.get_selectable_targets_for_stage(3)
+	RocketsManager.clear_override_state()
+	if targets.is_empty():
+		reporter.fail_test("Expected at least one level 3 fallback target when scan results are empty")
+		return
+	var first_id = str(targets[0].get("id", ""))
+	if first_id == "":
+		reporter.fail_test("Expected fallback target to include a stable id")
+		return
+	reporter.pass_test()
+
+func test_launch_target_resolution_applies_playable_fallback() -> void:
+	reporter.start_test("[UX] Launch target resolver auto-selects playable fallback when selection is missing")
+	var state = RocketsStateAccess.build_default_state(2)
+	state["mission_progress_completed"] = 2
+	state["completed_mission_badges"] = ["mission-1", "mission-2"]
+	state["detected_targets"] = []
+	state["selected_target"] = ""
+	RocketsManager.set_override_state(state)
+	var resolved = RocketsManager.ensure_selected_target_for_launch("starterrocket2-test-fallback")
+	var selected = RocketsManager.get_selected_target()
+	RocketsManager.clear_override_state()
+	if not bool(resolved.get("ok", false)):
+		reporter.fail_test("Expected resolver to return ok=true for scanner-stage fallback")
+		return
+	if not bool(resolved.get("fallback_used", false)):
+		reporter.fail_test("Expected fallback_used=true when no target was selected")
+		return
+	if selected == "":
+		reporter.fail_test("Expected fallback-selected target to persist in rockets state")
+		return
+	reporter.pass_test()
+
+func test_open_operation_mode_persists_and_applies_to_missions() -> void:
+	reporter.start_test("[UX] Open operation mode persists and is stored on mission records")
+	var state = RocketsStateAccess.build_default_state(2)
+	state["mission_progress_completed"] = 4
+	state["completed_mission_badges"] = ["mission-1", "mission-2", "mission-3", "mission-4"]
+	state["operation_mode"] = "contract"
+	RocketsManager.set_override_state(state)
+	var set_ok = RocketsManager.set_operation_mode("survey")
+	var mode = RocketsManager.get_operation_mode()
+	RocketsManager.add_mission("starterrocket3-test-open-ops", "mission-5-contractor-target", int(Time.get_unix_time_from_system()), 60)
+	var mission = RocketsManager.get_mission_for_rocket("starterrocket3-test-open-ops")
+	RocketsManager.clear_override_state()
+	if not set_ok:
+		reporter.fail_test("Expected set_operation_mode(\"survey\") to succeed")
+		return
+	if mode != "survey":
+		reporter.fail_test("Expected persisted operation mode survey, got %s" % mode)
+		return
+	if str(mission.get("operation_mode", "")) != "survey":
+		reporter.fail_test("Expected mission record operation_mode=survey")
+		return
+	reporter.pass_test()
+
+func test_open_operation_survey_route_relaxes_contractor_block() -> void:
+	reporter.start_test("[UX] Survey route does not require contractor lock before target selection")
+	var selector = LaunchpadSelectorPanel.new()
+	var blocked_in_contract = selector._is_target_blocked_for_selection(5, 3, 1, "contract", "")
+	var blocked_in_survey = selector._is_target_blocked_for_selection(5, 3, 1, "survey", "")
+	if not blocked_in_contract:
+		reporter.fail_test("Expected contract route to block target selection when contractor is missing")
+		return
+	if blocked_in_survey:
+		reporter.fail_test("Expected survey route to allow target selection without contractor")
+		return
+	reporter.pass_test()
+
+func test_level2_completion_unlocks_level3_systems() -> void:
+	reporter.start_test("[SPEC] Completing Level 2 unlocks stage 3 scanner systems")
+	var state = RocketsStateAccess.build_default_state(2)
+	state["mission_progress_completed"] = 2
+	state["completed_mission_badges"] = ["mission-1", "mission-2"]
+	RocketsManager.set_override_state(state)
+	var stage = RocketsManager.get_mission_stage()
+	var scanner_unlocked = RocketsManager.is_scanner_unlocked()
+	RocketsManager.clear_override_state()
+	if stage != 3:
+		reporter.fail_test("Expected mission stage 3 after two completions, got %s" % stage)
+		return
+	if not scanner_unlocked:
+		reporter.fail_test("Expected scanner systems unlocked at mission stage 3")
+		return
+	reporter.pass_test()
+
+func test_mission_exposure_reward_progression() -> void:
+	reporter.start_test("[SPEC] Mission exposure reward scales by stage")
+	if RocketsManager.get_mission_exposure_reward(1) != 4:
+		reporter.fail_test("Stage 1 exposure reward should be 4")
+		return
+	if RocketsManager.get_mission_exposure_reward(2) != 5:
+		reporter.fail_test("Stage 2 exposure reward should be 5")
+		return
+	if RocketsManager.get_mission_exposure_reward(3) != 6:
+		reporter.fail_test("Stage 3 exposure reward should be 6")
 		return
 	reporter.pass_test()
 
