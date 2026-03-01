@@ -9,7 +9,8 @@ const STEPS_BY_MISSION := {
 		{"id": "m1_create_rocket", "action_key": "create_rocket", "title": "Create Rocket", "message": "Build Starter Rocket 1 to unlock the mission target step.", "mechanic": "economy"},
 		{"id": "m1_select_target", "action_key": "select_launch_target", "title": "Select Target", "message": "Select the guided Mission 1 target to lock your flight path.", "mechanic": "targeting"},
 		{"id": "m1_launch", "action_key": "launch_rocket_from_earth", "title": "Launch Mission", "message": "Launch to begin the outbound mission phase.", "mechanic": "launch"},
-		{"id": "m1_mine", "action_key": "mine_target", "title": "Mine Resources", "message": "Extract minerals to generate cargo value for supplier payouts.", "mechanic": "mining"},
+		{"id": "m1_mine_intro", "action_key": "arrived_at_mining_site", "title": "You've Arrived!", "message": "Your rocket is now over the target. Hold the FIRE button (or SPACE on keyboard) to fire the mining laser. The laser shoots straight down — position your rocket over a resource deposit to extract minerals.", "mechanic": "mining-intro"},
+		{"id": "m1_mine", "action_key": "mine_target", "title": "Mine Resources", "message": "Hold FIRE over a glowing deposit to mine it. Orange = Iron, Yellow = Nickel. Watch your Fuel and Heat gauges — return home before they run out.", "mechanic": "mining"},
 		{"id": "m1_return", "action_key": "return_rocket_home", "title": "Return Home", "message": "Bring your rocket and cargo back for debrief.", "mechanic": "return"},
 		{"id": "m1_debrief", "action_key": "resolve_mission_debrief", "title": "Complete Debrief", "message": "Resolve debrief to earn Exposure Points and unlock Level 2.", "mechanic": "debrief"}
 	],

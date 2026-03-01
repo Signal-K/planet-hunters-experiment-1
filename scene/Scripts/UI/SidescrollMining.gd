@@ -117,6 +117,7 @@ func _ready():
 
 	if not Engine.is_editor_hint():
 		_show_guide_step()
+		preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("arrived_at_mining_site")
 
 func _on_viewport_size_changed() -> void:
 	var now_touch = OS.has_feature("mobile") or get_viewport_rect().size.x < 768
@@ -725,10 +726,13 @@ func _show_guide_step():
 			instructions.text = "YELLOW = Nickel (15pts). Mine another surface deposit!"
 			_guide_paused = false  # Keep flying until near deposit
 		GuideStep.EXPLAIN_SUBSURFACE:
-			instructions.text = "DARKER deposits are underground. Use drones to reach them!"
+			instructions.text = "DARKER deposits are underground — your laser can't reach them. Drones can!"
 			_guide_paused = false  # Keep flying
 		GuideStep.DEPLOY_DRONE:
-			instructions.text = "Press D to deploy a drone at the next dark deposit!"
+			if _uses_touch_controls:
+				instructions.text = "Tap DRONE to drop a drone. It lands directly below your rocket — position over the dark deposit first!"
+			else:
+				instructions.text = "Press D to deploy a drone. It drops straight down from your rocket — position over the dark deposit first!"
 			_guide_paused = false  # Keep flying until near subsurface
 		GuideStep.COMPLETE:
 			if _uses_touch_controls:

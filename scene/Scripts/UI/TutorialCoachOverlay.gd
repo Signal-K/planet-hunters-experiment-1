@@ -172,15 +172,8 @@ func _on_tutorial_state_updated(state: Dictionary) -> void:
 	var step: Dictionary = state.get("current_step", {})
 	_current_step = step.duplicate(true)
 	if skipped:
-		visible = true
-		title_label.text = "Onboarding Paused"
-		stage_label.text = "Tutorial skipped."
-		message_label.text = "You can resume onboarding at any time from this panel or the main menu."
-		action_label.text = ""
-		progress_label.text = ""
-		practice_mining_button.visible = false
+		visible = false
 		_hide_guide_overlay()
-		call_deferred("_reposition_panel")
 		return
 	if step.is_empty():
 		visible = false
