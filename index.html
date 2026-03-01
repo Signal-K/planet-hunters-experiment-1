@@ -2,7 +2,13 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#05080f" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Star Sailors" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" href="/game/index.apple-touch-icon.png" />
     <title>Star Sailors: Experiment 1</title>
     <style>
       :root {
@@ -21,11 +27,27 @@
         font-family: "Avenir Next", "Segoe UI", sans-serif;
         color: var(--ink);
         background: radial-gradient(circle at 20% 0%, #17233b 0%, var(--bg-0) 46%, #020306 100%);
+        overscroll-behavior: none;
+      }
+      @media (max-width: 767px) {
+        html, body, #root {
+          height: 100svh;
+          overflow: hidden;
+          background: #000;
+        }
       }
     </style>
   </head>
   <body>
     <div id="root"></div>
+    <script defer src="/_vercel/insights/script.js"></script>
     <script type="module" src="/react-shell.js"></script>
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", function () {
+          navigator.serviceWorker.register("/sw.js").catch(console.error);
+        });
+      }
+    </script>
   </body>
 </html>

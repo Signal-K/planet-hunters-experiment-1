@@ -1,5 +1,5 @@
 /* eslint-env browser */
-import React, { useEffect, useMemo, useState } from "https://esm.sh/react@19";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "https://esm.sh/react@19";
 import { createRoot } from "https://esm.sh/react-dom@19/client";
 
 const COOKIE_NAME = "planet_hunters_progress_v1";
@@ -33,6 +33,31 @@ let _runtimeConfig = null;
 let _runtimeConfigPromise = null;
 let _xpSyncInFlight = false;
 let _pendingXpSnapshot = null;
+
+const LEVEL_UNLOCK_HINTS = {
+  2: "Longer range unlocked",
+  3: "Faster mining speed unlocked",
+  4: "Cargo capacity increased",
+  5: "Advanced scanner unlocked",
+};
+
+function vibrate(pattern) {
+  if (typeof navigator !== "undefined" && navigator.vibrate) {
+    try { navigator.vibrate(pattern); } catch (_) {}
+  }
+}
+
+function isPwaMode() {
+  return (
+    window.matchMedia("(display-mode: fullscreen)").matches ||
+    window.matchMedia("(display-mode: standalone)").matches ||
+    window.navigator.standalone === true
+  );
+}
+
+function isIosDevice() {
+  return /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+}
 
 function readCookie(name) {
   const prefix = `${name}=`;
@@ -614,8 +639,18 @@ async function maybeTriggerFirstMissionSurvey(eventPayload) {
 function App() {
   const [progress, setProgress] = useState(() => parseProgress(readCookie(COOKIE_NAME)));
   const [storageStatus, setStorageStatus] = useState("Cookie storage active");
-  const [gameSrc] = useState("/electron-dist/godot-web/index.html");
+  const [gameSrc] = useState("/game/index.html");
   const [isMobile, setIsMobile] = useState(() => typeof window !== "undefined" && window.innerWidth < 768);
+  const [isPwa] = useState(() => isPwaMode());
+  const [isIos] = useState(() => isIosDevice());
+  const [installPrompt, setInstallPrompt] = useState(null);
+  const [showMobileBanner, setShowMobileBanner] = useState(false);
+  const [showIosHint, setShowIosHint] = useState(false);
+  const [levelUpBanner, setLevelUpBanner] = useState(null); // { level, hint }
+  const levelUpTimerRef = useRef(null);
+  const [isPortrait, setIsPortrait] = useState(
+    () => typeof window !== "undefined" && window.matchMedia("(orientation: portrait)").matches
+  );
 
   useEffect(() => {
     function onResize() {
@@ -623,6 +658,13 @@ function App() {
     }
     window.addEventListener("resize", onResize, { passive: true });
     return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(orientation: portrait)");
+    function onChange(e) { setIsPortrait(e.matches); }
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
   }, []);
 
   useEffect(() => {
@@ -685,15 +727,29 @@ function App() {
       captureAnalyticsEvent(eventName, payload);
       if (typeof payload.experience_level !== "undefined" || typeof payload.experience_xp !== "undefined") {
         const current = readXpState() || {};
+        const prevLevel = Number(current.experience_level || 1);
         const snapshot = {
           experience_level: Number(
-            typeof payload.experience_level !== "undefined" ? payload.experience_level : current.experience_level || 1
+            typeof payload.experience_level !== "undefined" ? payload.experience_level : prevLevel
           ),
           experience_xp: Number(typeof payload.experience_xp !== "undefined" ? payload.experience_xp : current.experience_xp || 0),
           updated_at: new Date().toISOString(),
         };
         writeXpState(snapshot);
         syncExperienceToSupabase(snapshot);
+        if (snapshot.experience_level > prevLevel) {
+          const hint = LEVEL_UNLOCK_HINTS[snapshot.experience_level] || null;
+          setLevelUpBanner({ level: snapshot.experience_level, hint });
+          vibrate([80, 60, 120]);
+          clearTimeout(levelUpTimerRef.current);
+          levelUpTimerRef.current = setTimeout(() => setLevelUpBanner(null), 4000);
+        }
+      }
+      if (eventName === "mine_hit") {
+        vibrate([30]);
+      }
+      if (eventName === "rocket_landed" || eventName === "first_mission_completed" || eventName === "mission_debrief_resolved") {
+        vibrate([60, 40, 60]);
       }
       if (eventName === "feedback_requested") {
         showFeedbackDialog(payload);
@@ -707,6 +763,41 @@ function App() {
     return () => window.removeEventListener("message", onGameMessage);
   }, []);
 
+  useEffect(() => {
+    function onBeforeInstall(e) {
+      e.preventDefault();
+      setInstallPrompt(e);
+    }
+    window.addEventListener("beforeinstallprompt", onBeforeInstall);
+    return () => window.removeEventListener("beforeinstallprompt", onBeforeInstall);
+  }, []);
+
+  useEffect(() => {
+    if (isMobile && !isPwa) {
+      const t = setTimeout(() => setShowMobileBanner(true), 2000);
+      return () => clearTimeout(t);
+    }
+  }, [isMobile, isPwa]);
+
+  const handleOpenFullscreen = useCallback(() => {
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    }
+    setShowMobileBanner(false);
+  }, []);
+
+  const handleInstallApp = useCallback(async () => {
+    if (isIos) {
+      setShowIosHint((h) => !h);
+      return;
+    }
+    if (installPrompt) {
+      await installPrompt.prompt();
+      setInstallPrompt(null);
+    }
+    setShowMobileBanner(false);
+  }, [installPrompt, isIos]);
+
   const markerText = useMemo(() => {
     if (!progress) {
       return "pending";
@@ -716,23 +807,257 @@ function App() {
 
   const frameStyle = {
     width: "100%",
-    // On mobile (<768px), fill as much of the screen as possible minus a slim header strip.
-    // On desktop, cap at 860px so it doesn't fill giant monitors completely.
-    height: isMobile ? "min(calc(100svh - 80px), 860px)" : "min(75vh, 860px)",
+    height: isMobile ? "100svh" : "min(75vh, 860px)",
     border: "0",
     display: "block",
     background: "#000",
   };
 
+  // Level-up celebration banner (top-centre, auto-dismisses after 4s)
+  const levelUpOverlay = levelUpBanner
+    ? React.createElement(
+        "div",
+        {
+          style: {
+            position: "fixed",
+            top: "24px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            background: "linear-gradient(135deg, #1a3a6e, #0f2040)",
+            border: "1px solid #3a6abf",
+            borderRadius: "12px",
+            padding: "14px 24px",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "4px",
+            zIndex: 99998,
+            pointerEvents: "none",
+            boxShadow: "0 4px 24px rgba(58,106,191,0.4)",
+          },
+        },
+        React.createElement(
+          "span",
+          { style: { color: "#a0c0ff", fontSize: "11px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase" } },
+          `Level ${levelUpBanner.level} reached`
+        ),
+        levelUpBanner.hint
+          ? React.createElement(
+              "span",
+              { style: { color: "#ffffff", fontSize: "15px", fontWeight: 700 } },
+              levelUpBanner.hint
+            )
+          : null
+      )
+    : null;
+
+  // Portrait overlay — covers the game when a mobile device is held portrait
+  const rotatePrompt =
+    isMobile && isPortrait
+      ? React.createElement(
+          "div",
+          {
+            style: {
+              position: "fixed",
+              inset: 0,
+              background: "#05080f",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "20px",
+              zIndex: 99999,
+            },
+          },
+          React.createElement(
+            "span",
+            {
+              style: {
+                fontSize: "64px",
+                display: "block",
+                transform: "rotate(-90deg)",
+                transition: "transform 0.4s",
+              },
+            },
+            "\uD83D\uDCF1"
+          ),
+          React.createElement(
+            "p",
+            {
+              style: {
+                color: "#8899cc",
+                fontSize: "17px",
+                textAlign: "center",
+                margin: "0 40px",
+                lineHeight: 1.5,
+              },
+            },
+            "Rotate your device to landscape for the best experience"
+          )
+        )
+      : null;
+
+  // PWA mode: minimal chrome — slim header + game fills remaining height
+  if (isPwa) {
+    return React.createElement(
+      "div",
+      { style: { display: "flex", flexDirection: "column", height: "100svh", background: "#000" } },
+      React.createElement(
+        "div",
+        {
+          style: {
+            display: "flex",
+            alignItems: "center",
+            gap: "12px",
+            padding: "6px 14px",
+            background: "#05080f",
+            borderBottom: "1px solid #1a2340",
+            flexShrink: 0,
+          },
+        },
+        React.createElement(
+          "button",
+          {
+            style: {
+              background: "none",
+              border: "1px solid #2a3560",
+              color: "#8899cc",
+              borderRadius: "6px",
+              padding: "4px 12px",
+              cursor: "pointer",
+              fontSize: "13px",
+            },
+            onClick: () => {
+              if (document.exitFullscreen && document.fullscreenElement) {
+                document.exitFullscreen();
+              }
+              if (window.history.length > 1) {
+                window.history.back();
+              } else {
+                window.close();
+              }
+            },
+          },
+          "\u2190 Exit"
+        ),
+        React.createElement(
+          "span",
+          { style: { color: "#6677aa", fontSize: "13px" } },
+          "Star Sailors: Experiment 1"
+        )
+      ),
+      React.createElement("iframe", {
+        id: "game-frame",
+        src: gameSrc,
+        title: "Planet Hunters Game",
+        allow: "fullscreen",
+        style: { flex: 1, border: 0, display: "block", background: "#000", width: "100%" },
+        onError: () => setStorageStatus("Game load error"),
+        onLoad: () => {
+          saveProgress({ marker: "game-loaded", updatedAt: new Date().toISOString() }, setProgress);
+          setStorageStatus("Cookie saved");
+        },
+      }),
+      rotatePrompt,
+      levelUpOverlay
+    );
+  }
+
+  // Mobile banner: shown after 2s on mobile non-PWA
+  const mobileBanner =
+    isMobile && showMobileBanner
+      ? React.createElement(
+          "div",
+          {
+            style: {
+              position: "fixed",
+              bottom: 0,
+              left: 0,
+              right: 0,
+              background: "#05080f",
+              borderTop: "1px solid #1a2340",
+              padding: "12px 16px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "8px",
+              zIndex: 9999,
+            },
+          },
+          React.createElement(
+            "div",
+            { style: { display: "flex", gap: "8px" } },
+            React.createElement(
+              "button",
+              {
+                style: {
+                  flex: 1,
+                  padding: "10px",
+                  background: "#1a2a5e",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "8px",
+                  fontSize: "14px",
+                  cursor: "pointer",
+                },
+                onClick: handleOpenFullscreen,
+              },
+              "Open Fullscreen"
+            ),
+            isIos || installPrompt
+              ? React.createElement(
+                  "button",
+                  {
+                    style: {
+                      flex: 1,
+                      padding: "10px",
+                      background: "#1e3a1a",
+                      color: "#fff",
+                      border: "none",
+                      borderRadius: "8px",
+                      fontSize: "14px",
+                      cursor: "pointer",
+                    },
+                    onClick: handleInstallApp,
+                  },
+                  isIos ? "Add to Home Screen" : "Install App"
+                )
+              : null,
+            React.createElement(
+              "button",
+              {
+                style: {
+                  padding: "10px 14px",
+                  background: "none",
+                  color: "#6677aa",
+                  border: "1px solid #2a3560",
+                  borderRadius: "8px",
+                  fontSize: "14px",
+                  cursor: "pointer",
+                },
+                onClick: () => setShowMobileBanner(false),
+              },
+              "\u00d7"
+            )
+          ),
+          showIosHint
+            ? React.createElement(
+                "p",
+                { style: { margin: 0, fontSize: "13px", color: "#8899cc", textAlign: "center" } },
+                "Tap the Share button (\uD83D\uDCE4) then \u201cAdd to Home Screen\u201d"
+              )
+            : null
+        )
+      : null;
+
   return React.createElement(
     "main",
-    { style: { maxWidth: "1200px", margin: "0 auto", padding: isMobile ? "8px" : "20px" } },
-    React.createElement(
+    { style: isMobile ? { margin: 0, padding: 0 } : { maxWidth: "1200px", margin: "0 auto", padding: "20px" } },
+    !isMobile && React.createElement(
       "h1",
       { style: { margin: "0 0 8px", fontSize: "clamp(24px, 4vw, 38px)", letterSpacing: "0.02em" } },
       "Star Sailors: Experiment 1"
     ),
-    React.createElement(
+    !isMobile && React.createElement(
       "p",
       {
         style: {
@@ -790,13 +1115,15 @@ function App() {
     React.createElement(
       "div",
       {
-        style: {
-          border: "1px solid var(--edge)",
-          borderRadius: "14px",
-          overflow: "hidden",
-          background: "linear-gradient(180deg, #0f1729, #090e19)",
-          boxShadow: "0 18px 48px rgba(0, 0, 0, 0.35)",
-        },
+        style: isMobile
+          ? { overflow: "hidden", background: "#000" }
+          : {
+              border: "1px solid var(--edge)",
+              borderRadius: "14px",
+              overflow: "hidden",
+              background: "linear-gradient(180deg, #0f1729, #090e19)",
+              boxShadow: "0 18px 48px rgba(0, 0, 0, 0.35)",
+            },
       },
       React.createElement("iframe", {
         id: "game-frame",
@@ -816,7 +1143,10 @@ function App() {
           setStorageStatus("Cookie saved");
         },
       })
-    )
+    ),
+    mobileBanner,
+    rotatePrompt,
+    levelUpOverlay
   );
 }
 

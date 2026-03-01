@@ -80,9 +80,9 @@ static func _find_target_for_action(action_key: String, tree: SceneTree) -> Node
 		"toggle_planet_scanner":
 			return _find_node_path_any(tree, ["PanelContainer/Panel/VBoxContainer/HeaderContainer/ToggleSwitch"])
 		"mine_target":
-			return _find_node_path_any(tree, ["CanvasLayer/UI/MineButton"])
+			return _find_node_path_any(tree, ["CanvasLayer/UI/MineButton", "UI/FireButton"])
 		"return_rocket_home":
-			return _find_node_path_any(tree, ["CanvasLayer/UI/ReturnButton"])
+			return _find_node_path_any(tree, ["CanvasLayer/UI/ReturnButton", "UI/ReturnButton"])
 		"resolve_mission_debrief", "complete_contractor_mission":
 			return _find_visible_button(tree, func(btn: Button) -> bool:
 				if btn.disabled:
@@ -135,8 +135,9 @@ static func _find_visible_button(tree: SceneTree, predicate: Callable) -> Button
 			var btn := node as Button
 			if btn.is_visible_in_tree() and bool(predicate.call(btn)):
 				return btn
-		for child in node.get_children():
-			stack.append(child)
+		var children = node.get_children()
+		for i in range(children.size() - 1, -1, -1):
+			stack.append(children[i])
 	return null
 
 static func _find_node_path_any(tree: SceneTree, paths: Array[String]) -> Node:

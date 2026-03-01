@@ -18,6 +18,7 @@ var _state := {
 	"stage_lock": 0,
 	"skipped": false,
 	"completed_actions": {},
+	"completed_actions_by_stage": {},
 	"completed_steps_by_stage": {}
 }
 
@@ -51,7 +52,18 @@ func record_action(action_key: String, metadata: Dictionary = {}) -> bool:
 	var completed_actions: Dictionary = _state.get("completed_actions", {})
 	completed_actions[action_key] = true
 	_state["completed_actions"] = completed_actions
+	# Snapshot the stage BEFORE advancing so we can record in the right bucket.
+	# We only write to completed_actions_by_stage when the action actually
+	# advances a step — this prevents duplicate calls (fired after a stage
+	# transition) from contaminating the new stage's action dict.
+	var stage_before := int(_state.get("current_stage", 1))
 	var advanced = _advance_if_match(action_key, metadata)
+	if advanced:
+		var by_stage: Dictionary = _state.get("completed_actions_by_stage", {})
+		var stage_actions: Dictionary = by_stage.get(str(stage_before), {})
+		stage_actions[action_key] = true
+		by_stage[str(stage_before)] = stage_actions
+		_state["completed_actions_by_stage"] = by_stage
 	_persist_and_emit(action_key, advanced)
 	return advanced
 
@@ -70,6 +82,7 @@ func replay_full() -> void:
 		"stage_lock": 1,
 		"skipped": false,
 		"completed_actions": {},
+		"completed_actions_by_stage": {},
 		"completed_steps_by_stage": {}
 	}
 	_persist_and_emit()
@@ -84,6 +97,11 @@ func replay_current_mission() -> void:
 	var completed_steps: Dictionary = _state.get("completed_steps_by_stage", {})
 	completed_steps[str(stage)] = []
 	_state["completed_steps_by_stage"] = completed_steps
+	# Also clear the per-stage completed actions so the reconciler and
+	# stuck-step skip don't skip over steps the player replays.
+	var by_stage: Dictionary = _state.get("completed_actions_by_stage", {})
+	by_stage[str(stage)] = {}
+	_state["completed_actions_by_stage"] = by_stage
 	_persist_and_emit()
 	_emit_step_changed()
 
@@ -104,6 +122,10 @@ func force_advance_current_step() -> bool:
 func _advance_if_match(action_key: String, _metadata: Dictionary) -> bool:
 	if bool(_state.get("skipped", false)):
 		return false
+	# If the reconciler already fast-forwarded us to the end of a stage (empty
+	# step), don't treat this call as a trigger to chain into the next stage.
+	if get_current_step().is_empty():
+		return false
 	var advanced := false
 	var guard = 0
 	while guard < 12:
@@ -121,10 +143,15 @@ func _advance_if_match(action_key: String, _metadata: Dictionary) -> bool:
 			advanced = true
 			continue
 		if expected_key != action_key:
-			# If the current step's action was already recorded out-of-order (e.g.
-			# auto-launch recorded select_launch_target before the player tapped the
-			# panel), skip past it so the tutorial never gets permanently stuck.
-			if bool(_state.get("completed_actions", {}).get(expected_key, false)):
+			# If the current step's action was already recorded in THIS stage
+			# (out-of-order recording, e.g. auto-launch fired select_launch_target
+			# before the player tapped the panel), skip past it so the tutorial
+			# never gets permanently stuck.
+			# We use per-stage actions to avoid cross-stage contamination: the
+			# same action key (e.g. select_launch_target) appears in multiple
+			# stages, and a recording in stage 1 must not cause stage 3's step
+			# to be silently skipped.
+			if _stage_action_completed(int(_state.get("current_stage", 1)), expected_key):
 				_mark_step_complete(int(_state.get("current_stage", 1)), int(_state.get("current_step_index", 0)))
 				_state["current_step_index"] = int(_state.get("current_step_index", 0)) + 1
 				advanced = true
@@ -140,6 +167,19 @@ func _advance_if_match(action_key: String, _metadata: Dictionary) -> bool:
 		_reconcile_step_index()
 		_emit_step_changed()
 	return advanced
+
+# Returns true if action_key was recorded while the tutorial was at this stage.
+# Falls back to global completed_actions only for saves that pre-date per-stage
+# tracking (i.e. the top-level completed_actions_by_stage dict is absent / empty
+# because no action has ever been recorded in this session).  An empty stage-
+# specific sub-dict simply means no actions have been recorded in that stage yet.
+func _stage_action_completed(stage: int, action_key: String) -> bool:
+	var by_stage: Dictionary = _state.get("completed_actions_by_stage", {})
+	if not by_stage.is_empty():
+		# Per-stage tracking is active — use only this stage's actions.
+		return bool(by_stage.get(str(stage), {}).get(action_key, false))
+	# Fallback: old save that pre-dates per-stage tracking.
+	return bool(_state.get("completed_actions", {}).get(action_key, false))
 
 func _mark_step_complete(stage: int, step_index: int) -> void:
 	var completed_steps: Dictionary = _state.get("completed_steps_by_stage", {})
@@ -182,11 +222,10 @@ func _reconcile_step_index() -> void:
 		return
 	var idx = int(_state.get("current_step_index", 0))
 	_state["current_step_index"] = clamp(idx, 0, total)
-	# Fast-forward past any steps whose action_key was already recorded in a
-	# previous session or during a cross-session resume (crash recovery, app restart
-	# mid-mission, etc.).  Without this, the loaded index can point to a step the
-	# user already completed, showing a stale/wrong tutorial step.
-	var completed_actions: Dictionary = _state.get("completed_actions", {})
+	# Fast-forward past any steps whose action_key was already recorded in THIS
+	# stage (crash recovery, app restart mid-mission, etc.).
+	# Using per-stage lookup avoids skipping steps just because the same action
+	# key was recorded in a different stage.
 	var guard := 0
 	while guard < total:
 		guard += 1
@@ -194,7 +233,7 @@ func _reconcile_step_index() -> void:
 		if step.is_empty():
 			break
 		var key = str(step.get("action_key", ""))
-		if key == "" or not bool(completed_actions.get(key, false)):
+		if key == "" or not _stage_action_completed(stage, key):
 			break
 		_state["current_step_index"] = int(_state.get("current_step_index", 0)) + 1
 
