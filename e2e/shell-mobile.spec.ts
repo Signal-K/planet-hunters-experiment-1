@@ -19,11 +19,13 @@ test.describe("Mobile portrait — rotate prompt", () => {
       page.locator("text=Rotate your device to landscape for the best experience")
     ).toBeVisible({ timeout: 3_000 });
   });
+});
 
-  // SP14 - install banner appears after 2s on mobile non-PWA
+test.describe("Mobile non-PWA install banner", () => {
+  // SP14 - narrow landscape so isMobile=true but no portrait rotate prompt
+  test.use({ viewport: { width: 667, height: 375 } });
+
   test("SP14: mobile non-PWA shows install banner after 2 seconds", async ({ page }) => {
-    // Use a narrow landscape viewport (width < 768) so isMobile=true but no portrait rotate prompt
-    await page.setViewportSize({ width: 667, height: 375 });
     await page.goto("/");
     await expect(page.locator("text=Open Fullscreen")).toBeVisible({ timeout: 5_000 });
   });
