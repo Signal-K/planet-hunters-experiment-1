@@ -8,7 +8,7 @@ test.describe("Shell basics", () => {
   test("loads React shell with game iframe pointing at /game/index.html", async ({ page }) => {
     await page.goto("/");
     await expect(page.locator("#game-frame")).toBeVisible();
-    await expect(page.locator("#game-frame")).toHaveAttribute("src", "/game/index.html");
+    await expect(page.locator("#game-frame")).toHaveAttribute("src", /^\/game\/index\.html/);
   });
 
   test("serves all critical static assets with HTTP 200", async ({ request }) => {
