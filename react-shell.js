@@ -639,7 +639,7 @@ async function maybeTriggerFirstMissionSurvey(eventPayload) {
 function App() {
   const [progress, setProgress] = useState(() => parseProgress(readCookie(COOKIE_NAME)));
   const [storageStatus, setStorageStatus] = useState("Cookie storage active");
-  const [gameSrc] = useState("/game/index.html");
+  const [gameSrc] = useState(() => "/game/index.html?v=" + Date.now());
   const [isMobile, setIsMobile] = useState(() => typeof window !== "undefined" && window.innerWidth < 768);
   const [isPwa] = useState(() => isPwaMode());
   const [isIos] = useState(() => isIosDevice());

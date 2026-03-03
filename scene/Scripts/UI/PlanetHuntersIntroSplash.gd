@@ -1,4 +1,5 @@
 extends CanvasLayer
+class_name PlanetHuntersIntroSplash
 
 const SHOWN_FLAG_PATH := "user://planet_hunters_intro_v1.cfg"
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
@@ -6,6 +7,7 @@ const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
 signal splash_dismissed
 
 var _panel: PanelContainer
+var _overlay: ColorRect
 var _shown := false
 
 static func has_been_shown() -> bool:
@@ -27,6 +29,7 @@ func _build_ui() -> void:
 	overlay.color = Color(0.04, 0.05, 0.10, 0.96)
 	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	_overlay = overlay
 	add_child(overlay)
 
 	# Centred content panel
@@ -49,6 +52,8 @@ func _build_ui() -> void:
 	style.content_margin_top = 40
 	style.content_margin_bottom = 40
 	_panel.add_theme_stylebox_override("panel", style)
+	# Lock before add_child so UIConsistencyEnforcer's node_added handler can't overwrite.
+	_panel.set_meta("ui_style_locked", true)
 	overlay.add_child(_panel)
 
 	var vbox = VBoxContainer.new()
@@ -120,9 +125,9 @@ func _build_ui() -> void:
 	vbox.add_child(fine)
 
 	# Animate in
-	modulate.a = 0.0
+	_overlay.modulate.a = 0.0
 	var tween = create_tween()
-	tween.tween_property(self, "modulate:a", 1.0, 0.5).set_trans(Tween.TRANS_SINE)
+	tween.tween_property(_overlay, "modulate:a", 1.0, 0.5).set_trans(Tween.TRANS_SINE)
 
 func _dismiss() -> void:
 	if _shown:
@@ -130,7 +135,7 @@ func _dismiss() -> void:
 	_shown = true
 	PlanetHuntersIntroSplash.mark_shown()
 	var tween = create_tween()
-	tween.tween_property(self, "modulate:a", 0.0, 0.3)
+	tween.tween_property(_overlay, "modulate:a", 0.0, 0.3)
 	tween.finished.connect(func():
 		splash_dismissed.emit()
 		queue_free()

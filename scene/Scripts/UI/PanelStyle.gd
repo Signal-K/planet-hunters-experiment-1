@@ -3,15 +3,23 @@ class_name PanelStyle
 
 const NebulaTheme = preload("res://Resources/NebulaSciTheme.gd")
 
-const PANEL_BG := NebulaTheme.PANEL_BG
-const PANEL_BORDER := NebulaTheme.PANEL_OUTLINE
-const PANEL_SHADOW := Color(0, 0, 0, 0.5)
-const TEXT_PRIMARY := Color(0.95, 0.95, 0.98, 1)
-const TEXT_MUTED := Color(0.7, 0.7, 0.75, 1)
-const ACCENT := NebulaTheme.ACCENT_BLUE
-const ACCENT_SOFT := NebulaTheme.BUTTON_BG
+# ── Colour constants (referenced from TutorialCoachOverlay etc.) ─────────────
+const PANEL_BG       := NebulaTheme.PANEL_BG
+const PANEL_BORDER   := NebulaTheme.PANEL_OUTLINE
+const PANEL_SHADOW   := Color(0, 0, 0, 0.55)
+const TEXT_PRIMARY   := Color(0.95, 0.93, 0.90, 1.0)   # warm white
+const TEXT_MUTED     := Color(0.62, 0.60, 0.58, 1.0)   # warm grey
+const ACCENT         := NebulaTheme.ACCENT_CYAN         # cyan — panel borders, progress fill
+const ACCENT_WARM    := NebulaTheme.ACCENT_WARM         # amber — primary CTA buttons only
+const ACCENT_SOFT    := NebulaTheme.BUTTON_BG
 const BUTTON_PRESSED := NebulaTheme.BUTTON_PRESSED
-const TEXT_ON_ACCENT := Color(0.05, 0.05, 0.08, 1)
+const TEXT_ON_ACCENT := Color(0.02, 0.08, 0.12, 1.0)   # near-black on cyan
+
+# Font sizes — large enough to read at mobile scale (1920×1080 → ~375px tall)
+const FONT_TITLE  := 52
+const FONT_BODY   := 40
+const FONT_MUTED  := 34
+const FONT_BUTTON := 36
 
 static var _instance: PanelStyle = null
 
@@ -20,119 +28,98 @@ static func get_instance() -> PanelStyle:
 		_instance = PanelStyle.new()
 	return _instance
 
+
+# ── Panel / label helpers ────────────────────────────────────────────────────
+
 static func apply_panel(panel: Control, bg_color: Color = PANEL_BG) -> void:
 	if panel == null:
 		return
-	var style_box = StyleBoxFlat.new()
-	if style_box == null:
-		push_error("Failed to create style box for panel")
-		return
-	style_box.bg_color = bg_color
-	style_box.border_color = PANEL_BORDER
-	style_box.border_width_left = 3
-	style_box.border_width_right = 3
-	style_box.border_width_top = 3
-	style_box.border_width_bottom = 3
-	style_box.corner_radius_top_left = 12
-	style_box.corner_radius_top_right = 12
-	style_box.corner_radius_bottom_left = 12
-	style_box.corner_radius_bottom_right = 12
-	style_box.shadow_color = PANEL_SHADOW
-	style_box.shadow_size = 16
-	style_box.shadow_offset = Vector2(0, 4)
-	if style_box != null and panel != null and panel.is_inside_tree():
-		panel.add_theme_stylebox_override("panel", style_box)
+	var s := StyleBoxFlat.new()
+	s.bg_color     = bg_color
+	s.border_color = PANEL_BORDER
+	s.set_border_width_all(2)
+	s.set_corner_radius_all(6)
+	s.shadow_color  = PANEL_SHADOW
+	s.shadow_size   = 20
+	s.shadow_offset = Vector2(0, 6)
+	s.content_margin_left   = 24
+	s.content_margin_right  = 24
+	s.content_margin_top    = 18
+	s.content_margin_bottom = 18
+	if panel.is_inside_tree():
+		panel.add_theme_stylebox_override("panel", s)
 
 static func apply_title(label: Label) -> void:
 	if label == null:
 		return
 	label.add_theme_color_override("font_color", TEXT_PRIMARY)
-	label.add_theme_font_size_override("font_size", 32)
+	label.add_theme_font_size_override("font_size", FONT_TITLE)
 
 static func apply_body(label: Label) -> void:
 	if label == null:
 		return
 	label.add_theme_color_override("font_color", TEXT_PRIMARY)
-	label.add_theme_font_size_override("font_size", 22)
+	label.add_theme_font_size_override("font_size", FONT_BODY)
 
 static func apply_richtext(label: RichTextLabel) -> void:
 	if label == null:
 		return
 	label.add_theme_color_override("default_color", TEXT_PRIMARY)
-	label.add_theme_font_size_override("normal_font_size", 22)
-	label.add_theme_font_size_override("bold_font_size", 22)
-	label.add_theme_font_size_override("italic_font_size", 22)
+	label.add_theme_font_size_override("normal_font_size", FONT_BODY)
+	label.add_theme_font_size_override("bold_font_size", FONT_BODY)
+	label.add_theme_font_size_override("italic_font_size", FONT_BODY)
 
 static func apply_muted(label: Label) -> void:
 	if label == null:
 		return
 	label.add_theme_color_override("font_color", TEXT_MUTED)
-	label.add_theme_font_size_override("font_size", 20)
+	label.add_theme_font_size_override("font_size", FONT_MUTED)
+
+
+# ── Button helper ────────────────────────────────────────────────────────────
 
 static func apply_button(button: Button, is_primary: bool = false) -> void:
 	if button == null:
 		return
-	
-	var NebulaTheme = preload("res://Resources/NebulaSciTheme.gd")
-	
-	var normal = StyleBoxFlat.new()
-	if normal == null:
-		return
-	normal.corner_radius_top_left = 8
-	normal.corner_radius_top_right = 8
-	normal.corner_radius_bottom_left = 8
-	normal.corner_radius_bottom_right = 8
-	normal.content_margin_left = 16
-	normal.content_margin_right = 16
-	normal.content_margin_top = 12
-	normal.content_margin_bottom = 12
-	normal.bg_color = NebulaTheme.ACCENT_BLUE if is_primary else NebulaTheme.BUTTON_BG
+
+	var NebulaRef = preload("res://Resources/NebulaSciTheme.gd")
+
+	var normal := StyleBoxFlat.new()
+	normal.set_corner_radius_all(4)
+	normal.content_margin_left   = 20
+	normal.content_margin_right  = 20
+	normal.content_margin_top    = 14
+	normal.content_margin_bottom = 14
+	normal.bg_color     = NebulaRef.ACCENT_WARM if is_primary else NebulaRef.BUTTON_BG
 	normal.border_color = PANEL_BORDER
-	normal.border_width_left = 2
-	normal.border_width_right = 2
-	normal.border_width_top = 2
-	normal.border_width_bottom = 2
+	normal.set_border_width_all(1)
 
-	var hover = normal.duplicate()
-	if hover == null:
-		push_error("Failed to duplicate button style")
-		return
-	hover.bg_color = NebulaTheme.BUTTON_HOVER
+	var hover    := normal.duplicate()
+	hover.bg_color = NebulaRef.BUTTON_HOVER
 
-	var pressed = normal.duplicate()
-	if pressed == null:
-		push_error("Failed to duplicate button style")
-		return
-	pressed.bg_color = NebulaTheme.BUTTON_PRESSED
+	var pressed  := normal.duplicate()
+	pressed.bg_color = NebulaRef.BUTTON_PRESSED
 
-	var disabled = normal.duplicate()
-	if disabled == null:
-		push_error("Failed to duplicate disabled button style")
-		return
-	disabled.bg_color = Color(PANEL_BG.r, PANEL_BG.g, PANEL_BG.b, 0.5)
-	disabled.border_color = Color(PANEL_BORDER.r, PANEL_BORDER.g, PANEL_BORDER.b, 0.5)
+	var disabled := normal.duplicate()
+	disabled.bg_color    = Color(PANEL_BG.r, PANEL_BG.g, PANEL_BG.b, 0.45)
+	disabled.border_color = Color(PANEL_BORDER.r, PANEL_BORDER.g, PANEL_BORDER.b, 0.35)
 
-	if normal != null:
-		button.add_theme_stylebox_override("normal", normal)
-	if hover != null:
-		button.add_theme_stylebox_override("hover", hover)
-	if pressed != null:
-		button.add_theme_stylebox_override("pressed", pressed)
-		button.add_theme_stylebox_override("focus", hover)
-	if disabled != null:
-		button.add_theme_stylebox_override("disabled", disabled)
-	
-	# Update text color
-	button.add_theme_color_override("font_color", TEXT_PRIMARY)
-	if is_primary:
-		button.add_theme_color_override("font_hover_color", Color.WHITE)
-	button.add_theme_font_size_override("font_size", 20)
-	var font_color = TEXT_ON_ACCENT if is_primary else TEXT_PRIMARY
-	button.add_theme_color_override("font_color", font_color)
-	button.add_theme_color_override("font_hover_color", font_color)
-	button.add_theme_color_override("font_pressed_color", font_color)
-	button.add_theme_color_override("font_focus_color", font_color)
-	button.add_theme_color_override("font_disabled_color", Color(TEXT_MUTED.r, TEXT_MUTED.g, TEXT_MUTED.b, 0.85))
+	button.add_theme_stylebox_override("normal",   normal)
+	button.add_theme_stylebox_override("hover",    hover)
+	button.add_theme_stylebox_override("pressed",  pressed)
+	button.add_theme_stylebox_override("focus",    hover)
+	button.add_theme_stylebox_override("disabled", disabled)
+
+	var font_color := TEXT_ON_ACCENT if is_primary else TEXT_PRIMARY
+	button.add_theme_color_override("font_color",          font_color)
+	button.add_theme_color_override("font_hover_color",    font_color)
+	button.add_theme_color_override("font_pressed_color",  font_color)
+	button.add_theme_color_override("font_focus_color",    font_color)
+	button.add_theme_color_override("font_disabled_color", Color(TEXT_MUTED.r, TEXT_MUTED.g, TEXT_MUTED.b, 0.7))
+	button.add_theme_font_size_override("font_size", FONT_BUTTON)
+
+
+# ── Misc style factories ─────────────────────────────────────────────────────
 
 static func apply_separator(separator: HSeparator) -> void:
 	if separator == null:
@@ -142,70 +129,44 @@ static func apply_separator(separator: HSeparator) -> void:
 static func apply_progress_bar(bar: ProgressBar) -> void:
 	if bar == null:
 		return
-	var bg = StyleBoxFlat.new()
-	if bg == null:
-		push_error("Failed to create background style for progress bar")
-		return
+	var bg := StyleBoxFlat.new()
 	bg.bg_color = ACCENT_SOFT
-	bg.corner_radius_top_left = 8
-	bg.corner_radius_top_right = 8
-	bg.corner_radius_bottom_left = 8
-	bg.corner_radius_bottom_right = 8
-	
-	var fill = StyleBoxFlat.new()
-	if fill == null:
-		push_error("Failed to create fill style for progress bar")
-		return
+	bg.set_corner_radius_all(6)
+
+	var fill := StyleBoxFlat.new()
 	fill.bg_color = ACCENT
-	fill.corner_radius_top_left = 8
-	fill.corner_radius_top_right = 8
-	fill.corner_radius_bottom_left = 8
-	fill.corner_radius_bottom_right = 8
-	
-	if bg != null:
-		bar.add_theme_stylebox_override("background", bg)
-	if fill != null:
-		bar.add_theme_stylebox_override("fill", fill)
+	fill.set_corner_radius_all(6)
+
+	bar.add_theme_stylebox_override("background", bg)
+	bar.add_theme_stylebox_override("fill", fill)
 	bar.show_percentage = false
 
 static func create_list_item_style() -> StyleBoxFlat:
-	var style = StyleBoxFlat.new()
-	style.bg_color = ACCENT_SOFT
-	style.border_color = PANEL_BORDER
-	style.border_width_bottom = 1
-	style.corner_radius_top_left = 16
-	style.corner_radius_top_right = 16
-	style.corner_radius_bottom_left = 16
-	style.corner_radius_bottom_right = 16
-	style.content_margin_left = 18
-	style.content_margin_right = 18
-	style.content_margin_top = 14
-	style.content_margin_bottom = 14
-	return style
+	var s := StyleBoxFlat.new()
+	s.bg_color     = ACCENT_SOFT
+	s.border_color = PANEL_BORDER
+	s.border_width_bottom = 1
+	s.set_corner_radius_all(8)
+	s.content_margin_left   = 22
+	s.content_margin_right  = 22
+	s.content_margin_top    = 16
+	s.content_margin_bottom = 16
+	return s
 
 static func create_icon_circle_style() -> StyleBoxFlat:
-	var style = StyleBoxFlat.new()
-	style.bg_color = ACCENT
-	style.corner_radius_top_left = 30
-	style.corner_radius_top_right = 30
-	style.corner_radius_bottom_left = 30
-	style.corner_radius_bottom_right = 30
-	return style
+	var s := StyleBoxFlat.new()
+	s.bg_color = ACCENT
+	s.set_corner_radius_all(32)
+	return s
 
 static func create_card_style() -> StyleBoxFlat:
-	var style = StyleBoxFlat.new()
-	style.bg_color = ACCENT_SOFT
-	style.border_color = PANEL_BORDER
-	style.border_width_left = 1
-	style.border_width_right = 1
-	style.border_width_top = 1
-	style.border_width_bottom = 1
-	style.corner_radius_top_left = 12
-	style.corner_radius_top_right = 12
-	style.corner_radius_bottom_left = 12
-	style.corner_radius_bottom_right = 12
-	style.content_margin_left = 14
-	style.content_margin_right = 14
-	style.content_margin_top = 12
-	style.content_margin_bottom = 12
-	return style
+	var s := StyleBoxFlat.new()
+	s.bg_color     = ACCENT_SOFT
+	s.border_color = PANEL_BORDER
+	s.set_border_width_all(1)
+	s.set_corner_radius_all(6)
+	s.content_margin_left   = 18
+	s.content_margin_right  = 18
+	s.content_margin_top    = 14
+	s.content_margin_bottom = 14
+	return s

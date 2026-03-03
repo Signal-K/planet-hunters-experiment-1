@@ -1,12 +1,9 @@
-[gd_scene load_steps=10 format=3 uid="uid://dkn5ffejmhljs"]
+[gd_scene load_steps=6 format=3 uid="uid://dkn5ffejmhljs"]
 
 [ext_resource type="Script" uid="uid://dtrksapur77k2" path="res://Scripts/Earth/LaunchpadScene.gd" id="1"]
 [ext_resource type="Script" uid="uid://ce1a85vrjyh7x" path="res://Scripts/Earth/Launchpad.gd" id="2"]
 [ext_resource type="Texture2D" uid="uid://ciqmrddebyxh1" path="res://assets/Backdrops/Earth2.png" id="3"]
 [ext_resource type="Texture2D" uid="uid://ctuf1c3mi4pat" path="res://assets/Structures/launchpad.png" id="4"]
-[ext_resource type="Texture2D" path="res://assets/Vehicles/StarterRocket1.png" id="5"]
-[ext_resource type="Script" uid="uid://c2a67yo3p1lro" path="res://Scripts/Earth/RocketSelector.gd" id="6"]
-[ext_resource type="Script" uid="uid://ctgklpqefk8h4" path="res://Scripts/Earth/RocketSelectorDrag.gd" id="7"]
 [ext_resource type="Script" uid="uid://bmhjgrsylq0hk" path="res://Scripts/Earth/LaunchpadSpriteDropHandler.gd" id="9"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_launchpad"]
@@ -47,47 +44,5 @@ script = ExtResource("9")
 shape = SubResource("RectangleShape2D_launchpad")
 
 [node name="UILayer" type="CanvasLayer" parent="."]
-
-[node name="SelectorPanel" type="Panel" parent="UILayer"]
-custom_minimum_size = Vector2(480, 320)
-offset_left = 80.0
-offset_top = 80.0
-offset_right = 80.0
-offset_bottom = 80.0
-
-[node name="VBox" type="VBoxContainer" parent="UILayer/SelectorPanel"]
-custom_minimum_size = Vector2(480, 320)
-layout_mode = 0
-
-[node name="Title" type="Label" parent="UILayer/SelectorPanel/VBox"]
-layout_mode = 2
-text = "Select Your Rocket"
-horizontal_alignment = 1
-
-[node name="RocketSelector" type="HBoxContainer" parent="UILayer/SelectorPanel/VBox"]
-layout_mode = 2
-script = ExtResource("6")
-
-[node name="Rocket1Sprite" type="TextureRect" parent="UILayer/SelectorPanel/VBox/RocketSelector"]
-visible = false
-custom_minimum_size = Vector2(96, 192)
-layout_mode = 2
-texture = ExtResource("5")
-expand_mode = 2
-stretch_mode = 2
-script = ExtResource("7")
-
-[node name="Rocket2Button" type="Button" parent="UILayer/SelectorPanel/VBox/RocketSelector"]
-layout_mode = 2
-text = "Rocket 2"
-
-[node name="TargetsSection" type="VBoxContainer" parent="UILayer/SelectorPanel/VBox"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="BackButton" type="Button" parent="UILayer/SelectorPanel/VBox"]
-custom_minimum_size = Vector2(120, 48)
-layout_mode = 2
-text = "Back"
 
 [node name="LaunchHUDInstance" type="Node" parent="."]

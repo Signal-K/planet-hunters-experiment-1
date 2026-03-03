@@ -6,19 +6,25 @@ const PANEL_MARGIN := 20.0
 # Scenes where the tutorial overlay should be suppressed entirely — the player
 # is watching an automated transit animation and cannot act on any tutorial step.
 const TRANSIT_SCENE_BASENAMES := ["rocket_ascent", "rocket_transit", "rocket_return"]
-const PANEL_DEFAULT_SIZE := Vector2(560.0, 240.0)
-const PANEL_MIN_SIZE := Vector2(420.0, 172.0)
+const PANEL_DEFAULT_SIZE := Vector2(420.0, 260.0)
+const PANEL_MIN_SIZE := Vector2(360.0, 200.0)
 const LAYOUT_REFRESH_INTERVAL := 0.15
-const HIGHLIGHT_PADDING := 12.0
+const HIGHLIGHT_PADDING := 14.0
 const GUIDE_PULSE_SPEED := 4.8
-const GUIDE_LINE_ALPHA_MIN := 0.45
-const GUIDE_LINE_ALPHA_MAX := 0.98
-const GUIDE_ARROW_SWAY_PX := 8.0
-const HIGHLIGHT_BG_ALPHA_MIN := 0.08
-const HIGHLIGHT_BG_ALPHA_MAX := 0.24
-const HIGHLIGHT_BORDER_ALPHA_MIN := 0.56
+const GUIDE_LINE_ALPHA_MIN := 0.50
+const GUIDE_LINE_ALPHA_MAX := 1.0
+const GUIDE_ARROW_SWAY_PX := 10.0
+const HIGHLIGHT_BG_ALPHA_MIN := 0.05
+const HIGHLIGHT_BG_ALPHA_MAX := 0.18
+const HIGHLIGHT_BORDER_ALPHA_MIN := 0.65
 const HIGHLIGHT_BORDER_ALPHA_MAX := 1.0
-const TARGET_FLASH_BLEND := 0.42
+const TARGET_FLASH_BLEND := 0.38
+# Accent colours — Out There: Omega palette
+const CYAN  := Color(0.28, 0.88, 0.96, 1.0)   # #47E0F5 — panel borders, guide line
+const AMBER := Color(0.941, 0.690, 0.188, 1.0) # #F0B030 — primary CTA only
+# Dashed guide line: segment length and gap length in viewport pixels
+const DASH_ON  := 22.0
+const DASH_OFF := 14.0
 
 @onready var panel: PanelContainer = $Root/Panel
 @onready var title_label: Label = $Root/Panel/Margin/VBox/Header/TitleLabel
@@ -97,60 +103,120 @@ func _is_transit_scene() -> bool:
 	return basename in TRANSIT_SCENE_BASENAMES
 
 func _apply_style() -> void:
-	PanelStyle.apply_panel(panel)
+	# Lock panel and buttons so UIConsistencyEnforcer (which runs deferred) cannot
+	# overwrite these custom amber styles after _ready() completes.
+	panel.set_meta("ui_style_locked", true)
+
+	# Panel: dark translucent bg + bright cyan border — Out There: Omega style
+	var panel_style := StyleBoxFlat.new()
+	panel_style.bg_color     = Color(0.04, 0.06, 0.12, 0.82)  # dark, slightly transparent
+	panel_style.border_color = CYAN                            # full-opacity cyan, clearly visible
+	panel_style.set_border_width_all(2)
+	panel_style.set_corner_radius_all(6)
+	panel_style.shadow_color  = Color(CYAN.r, CYAN.g, CYAN.b, 0.25)  # cyan glow shadow
+	panel_style.shadow_size   = 18
+	panel_style.shadow_offset = Vector2(0, 0)
+	panel_style.content_margin_left   = 28
+	panel_style.content_margin_right  = 28
+	panel_style.content_margin_top    = 22
+	panel_style.content_margin_bottom = 22
+	if panel.is_inside_tree():
+		panel.add_theme_stylebox_override("panel", panel_style)
+
+	# Text — use panel-appropriate sizes (panel is ~420px wide, not fullscreen)
 	PanelStyle.apply_title(title_label)
+	title_label.add_theme_font_size_override("font_size", 32)
 	PanelStyle.apply_muted(stage_label)
+	stage_label.add_theme_font_size_override("font_size", 22)
 	PanelStyle.apply_body(message_label)
-	PanelStyle.apply_muted(action_label)
+	message_label.add_theme_font_size_override("font_size", 26)
+	if action_label:
+		action_label.add_theme_color_override("font_color", Color(0.62, 0.60, 0.58, 1.0))
+		action_label.add_theme_font_size_override("font_size", 22)
 	PanelStyle.apply_muted(progress_label)
-	PanelStyle.apply_button(skip_button, false)
-	PanelStyle.apply_button(practice_mining_button, true)
-	PanelStyle.apply_button(replay_mission_button, false)
-	PanelStyle.apply_button(replay_all_button, false)
+	progress_label.add_theme_font_size_override("font_size", 22)
+
+	# Buttons — pill outline: cyan outline for secondary, amber for primary CTA
+	for btn in [skip_button, replay_mission_button, replay_all_button]:
+		_apply_pill_outline_button(btn, false)
+	_apply_pill_outline_button(practice_mining_button, true)
+
+
+func _apply_pill_outline_button(btn: Button, is_primary: bool) -> void:
+	if btn == null:
+		return
+	# Prevent UIConsistencyEnforcer (deferred) from overwriting our pill style.
+	btn.set_meta("ui_style_locked", true)
+	var col: Color  = AMBER if is_primary else CYAN
+	var col_d: Color = Color(col.r, col.g, col.b, 0.5)
+
+	var normal := StyleBoxFlat.new()
+	normal.bg_color = Color(0, 0, 0, 0)
+	normal.border_color = col
+	normal.set_border_width_all(1)
+	normal.set_corner_radius_all(32)
+	normal.content_margin_left   = 24
+	normal.content_margin_right  = 24
+	normal.content_margin_top    = 10
+	normal.content_margin_bottom = 10
+
+	var hover := normal.duplicate()
+	hover.bg_color = Color(col.r, col.g, col.b, 0.12)
+
+	var pressed := normal.duplicate()
+	pressed.bg_color = Color(col.r, col.g, col.b, 0.22)
+
+	btn.add_theme_stylebox_override("normal",  normal)
+	btn.add_theme_stylebox_override("hover",   hover)
+	btn.add_theme_stylebox_override("pressed", pressed)
+	btn.add_theme_stylebox_override("focus",   hover)
+	btn.add_theme_color_override("font_color",         col)
+	btn.add_theme_color_override("font_hover_color",   col)
+	btn.add_theme_color_override("font_pressed_color", col)
+	btn.add_theme_color_override("font_disabled_color",col_d)
+	btn.add_theme_font_size_override("font_size", 22)
 
 func _setup_guide_nodes() -> void:
 	_highlight_box = Panel.new()
 	_highlight_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_highlight_box.visible = false
-	# Intentional opt-out from generic panel style: this is a guidance/highlight affordance.
+	_highlight_box.set_meta("ui_style_locked", true)
+	# Cyan highlight box — Out There: Omega style
 	_highlight_style = StyleBoxFlat.new()
-	_highlight_style.bg_color = Color(0.39, 0.78, 0.98, 0.12)
-	_highlight_style.border_color = Color(PanelStyle.ACCENT.r, PanelStyle.ACCENT.g, PanelStyle.ACCENT.b, 0.96)
-	_highlight_style.border_width_left = 3
-	_highlight_style.border_width_top = 3
-	_highlight_style.border_width_right = 3
-	_highlight_style.border_width_bottom = 3
-	_highlight_style.corner_radius_top_left = 8
-	_highlight_style.corner_radius_top_right = 8
-	_highlight_style.corner_radius_bottom_left = 8
-	_highlight_style.corner_radius_bottom_right = 8
+	_highlight_style.bg_color     = Color(CYAN.r, CYAN.g, CYAN.b, 0.06)
+	_highlight_style.border_color = Color(CYAN.r, CYAN.g, CYAN.b, 0.96)
+	_highlight_style.set_border_width_all(2)
+	_highlight_style.set_corner_radius_all(4)
 	_highlight_box.add_theme_stylebox_override("panel", _highlight_style)
 	$Root.add_child(_highlight_box)
 
+	# Dashed guide line
 	_guide_line = Line2D.new()
 	_guide_line.visible = false
-	_guide_line.width = 4.0
-	_guide_line.default_color = Color(PanelStyle.ACCENT.r, PanelStyle.ACCENT.g, PanelStyle.ACCENT.b, 0.96)
+	_guide_line.width = 2.5
+	_guide_line.default_color = Color(CYAN.r, CYAN.g, CYAN.b, 0.90)
 	_guide_line.antialiased = true
+	_guide_line.begin_cap_mode = Line2D.LINE_CAP_ROUND
+	_guide_line.end_cap_mode   = Line2D.LINE_CAP_ROUND
 	add_child(_guide_line)
 
 	_guide_arrow = Polygon2D.new()
 	_guide_arrow.visible = false
-	_guide_arrow.color = Color(PanelStyle.ACCENT.r, PanelStyle.ACCENT.g, PanelStyle.ACCENT.b, 0.96)
+	_guide_arrow.color = Color(CYAN.r, CYAN.g, CYAN.b, 0.96)
 	_guide_arrow.polygon = PackedVector2Array([
 		Vector2(0, 0),
-		Vector2(-16, -9),
-		Vector2(-16, 9)
+		Vector2(-18, -10),
+		Vector2(-18, 10)
 	])
 	add_child(_guide_arrow)
 
 	_guide_label = Label.new()
 	_guide_label.visible = false
 	_guide_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_guide_label.text = "Click here ->"
-	_guide_label.add_theme_font_size_override("font_size", 18)
-	_guide_label.add_theme_color_override("font_color", PanelStyle.TEXT_PRIMARY)
-	_guide_label.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.8))
+	_guide_label.text = "Tap here"
+	_guide_label.add_theme_font_size_override("font_size", 26)
+	_guide_label.add_theme_color_override("font_color", Color(CYAN.r, CYAN.g, CYAN.b, 0.90))
+	_guide_label.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.85))
 	_guide_label.add_theme_constant_override("shadow_offset_x", 2)
 	_guide_label.add_theme_constant_override("shadow_offset_y", 2)
 	$Root.add_child(_guide_label)
@@ -307,6 +373,9 @@ func _update_guidance_overlay() -> void:
 	var target_rect = Targeting.build_target_rect(_guide_target_node)
 	if not _has_rect(target_rect):
 		_hide_guide_overlay()
+		var action_key := str(_current_step.get("action_key", ""))
+		if action_key != "" and action_label != null:
+			action_label.text = Targeting.navigation_hint_for_action(action_key)
 		return
 	_set_active_flash_target(_guide_target_node)
 	_guide_target_rect = target_rect
@@ -320,7 +389,7 @@ func _update_guidance_overlay() -> void:
 		var panel_rect = Rect2(panel.global_position, panel.size)
 		_guide_source_point = _closest_point_on_rect(panel_rect, target_center)
 	_guide_line.visible = true
-	_guide_line.points = PackedVector2Array([_guide_source_point, target_center])
+	_guide_line.points = _dashed_points(_guide_source_point, target_center)
 
 	var direction = (target_center - _guide_source_point).normalized()
 	_guide_arrow.visible = true
@@ -348,40 +417,60 @@ func _animate_guidance_overlay() -> void:
 		return
 	if not _guide_line.visible:
 		return
-	var pulse = (sin(_pulse_elapsed * GUIDE_PULSE_SPEED) + 1.0) * 0.5
-	var accent_alpha = lerp(GUIDE_LINE_ALPHA_MIN, GUIDE_LINE_ALPHA_MAX, pulse)
-	var accent_color = Color(PanelStyle.ACCENT.r, PanelStyle.ACCENT.g, PanelStyle.ACCENT.b, accent_alpha)
+	var pulse: float = (sin(_pulse_elapsed * GUIDE_PULSE_SPEED) + 1.0) * 0.5
+	var line_alpha: float = lerp(GUIDE_LINE_ALPHA_MIN, GUIDE_LINE_ALPHA_MAX, pulse)
+	var cyan_line: Color = Color(CYAN.r, CYAN.g, CYAN.b, line_alpha)
+
 	if _highlight_style:
-		_highlight_style.bg_color = Color(
-			PanelStyle.ACCENT.r,
-			PanelStyle.ACCENT.g,
-			PanelStyle.ACCENT.b,
-			lerp(HIGHLIGHT_BG_ALPHA_MIN, HIGHLIGHT_BG_ALPHA_MAX, pulse)
-		)
-		_highlight_style.border_color = Color(
-			PanelStyle.ACCENT.r,
-			PanelStyle.ACCENT.g,
-			PanelStyle.ACCENT.b,
-			lerp(HIGHLIGHT_BORDER_ALPHA_MIN, HIGHLIGHT_BORDER_ALPHA_MAX, pulse)
-		)
-		var border_width = int(round(2.0 + pulse * 2.0))
-		_highlight_style.border_width_left = border_width
-		_highlight_style.border_width_top = border_width
-		_highlight_style.border_width_right = border_width
-		_highlight_style.border_width_bottom = border_width
-	_guide_line.default_color = accent_color
-	_guide_arrow.color = accent_color
-	_guide_label.modulate = Color(1, 1, 1, lerp(0.62, 1.0, pulse))
+		_highlight_style.bg_color = Color(CYAN.r, CYAN.g, CYAN.b,
+			lerp(HIGHLIGHT_BG_ALPHA_MIN, HIGHLIGHT_BG_ALPHA_MAX, pulse))
+		_highlight_style.border_color = Color(CYAN.r, CYAN.g, CYAN.b,
+			lerp(HIGHLIGHT_BORDER_ALPHA_MIN, HIGHLIGHT_BORDER_ALPHA_MAX, pulse))
+		var bw := int(round(2.0 + pulse * 1.5))
+		_highlight_style.set_border_width_all(bw)
+
+	_guide_line.default_color = cyan_line
+	_guide_arrow.color = cyan_line
+	_guide_label.modulate = Color(1, 1, 1, lerp(0.55, 1.0, pulse))
+
 	if _has_rect(_guide_target_rect):
-		var target_center = _guide_target_rect.position + (_guide_target_rect.size * 0.5)
-		var direction = (target_center - _guide_source_point).normalized()
-		var orthogonal = Vector2(-direction.y, direction.x)
-		var sway_offset = orthogonal * sin(_pulse_elapsed * GUIDE_PULSE_SPEED * 0.85) * GUIDE_ARROW_SWAY_PX
-		var animated_source = _guide_source_point + sway_offset
-		_guide_line.points = PackedVector2Array([animated_source, target_center])
+		var target_center := _guide_target_rect.position + (_guide_target_rect.size * 0.5)
+		var direction := (target_center - _guide_source_point).normalized()
+		var orthogonal := Vector2(-direction.y, direction.x)
+		var sway := orthogonal * sin(_pulse_elapsed * GUIDE_PULSE_SPEED * 0.85) * GUIDE_ARROW_SWAY_PX
+		var animated_source := _guide_source_point + sway
+		# Build dashed points
+		_guide_line.points = _dashed_points(animated_source, target_center)
 		_guide_arrow.position = target_center
 		_guide_arrow.rotation = (target_center - animated_source).angle()
 	_apply_target_flash(pulse)
+
+
+# Build a PackedVector2Array that represents a dashed line from start → end.
+# Line2D draws each consecutive pair of points as a segment, so we alternate
+# real dash segments with zero-length "gap" segments (duplicate points).
+func _dashed_points(start: Vector2, end: Vector2) -> PackedVector2Array:
+	var pts := PackedVector2Array()
+	var dir := (end - start).normalized()
+	var total := start.distance_to(end)
+	var d := 0.0
+	var on := true
+	while d < total:
+		var p := start + dir * d
+		if on:
+			pts.append(p)
+			d += DASH_ON
+			var p2: Vector2 = start + dir * minf(d, total)
+			pts.append(p2)
+			# Duplicate to start a "gap" (zero-length invisible segment)
+			pts.append(p2)
+		else:
+			d += DASH_OFF
+			var p2: Vector2 = start + dir * minf(d, total)
+			# Duplicate at gap end to restart next dash segment
+			pts.append(p2)
+		on = !on
+	return pts
 
 func _set_active_flash_target(target: Node) -> void:
 	var resolved_target = _resolve_flash_target(target)

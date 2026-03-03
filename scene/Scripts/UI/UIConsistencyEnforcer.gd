@@ -83,16 +83,18 @@ func _apply_label_color(label: Label) -> void:
 	if _is_muted_label(label):
 		label.add_theme_color_override("font_color", PanelStyle.TEXT_MUTED)
 		if not label.has_theme_font_size_override("font_size"):
-			label.add_theme_font_size_override("font_size", 18)
+			label.add_theme_font_size_override("font_size", PanelStyle.FONT_MUTED)
 	else:
 		label.add_theme_color_override("font_color", PanelStyle.TEXT_PRIMARY)
 		if not label.has_theme_font_size_override("font_size"):
-			label.add_theme_font_size_override("font_size", 20)
+			label.add_theme_font_size_override("font_size", PanelStyle.FONT_BODY)
 
 func _apply_richtext_color(label: RichTextLabel) -> void:
 	if label.has_theme_color_override("default_color"):
 		return
 	label.add_theme_color_override("default_color", PanelStyle.TEXT_PRIMARY)
+	if not label.has_theme_font_size_override("normal_font_size"):
+		label.add_theme_font_size_override("normal_font_size", PanelStyle.FONT_BODY)
 
 func _is_muted_label(label: Label) -> bool:
 	var name_lower := label.name.to_lower()

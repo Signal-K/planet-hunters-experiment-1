@@ -14,9 +14,10 @@ func _ready():
 	$Background.gui_input.connect(_on_background_input)
 
 func _apply_panel_style():
-	"""Apply polished panel styling"""
 	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
 	var panel = $PanelContainer/Panel
+	# Lock before UIConsistencyEnforcer deferred scan can overwrite .tscn styles.
+	panel.set_meta("ui_style_locked", true)
 	panel_style.apply_panel(panel)
 
 	var title = $PanelContainer/Panel/VBoxContainer/HeaderContainer/Title
@@ -26,6 +27,7 @@ func _apply_panel_style():
 
 	panel_style.apply_title(title)
 	panel_style.apply_richtext(content)
+	close_btn.set_meta("ui_style_locked", true)
 	panel_style.apply_button(close_btn, false)
 	panel_style.apply_separator(separator)
 
