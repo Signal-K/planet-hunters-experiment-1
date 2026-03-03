@@ -60,6 +60,7 @@ const MISSION_BRIEFINGS := {
 func setup(launchpad: Node) -> void:
 	_launchpad = launchpad
 
+
 func hide_selector_panel(hide_primary: bool = false) -> void:
 	# Hide SelectorPanel nodes. By default hide duplicates only; if hide_primary is true hide the primary too.
 	var root_scene = _launchpad.get_tree().current_scene
@@ -211,7 +212,7 @@ func populate_targets() -> void:
 	targets_title.text = "Mission Target"
 	targets_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	PanelStyle.apply_muted(targets_title)
-	targets_title.add_theme_font_size_override("font_size", 16)
+	targets_title.add_theme_font_size_override("font_size", 24)
 	targets_section.add_child(targets_title)
 	if not has_awaiting_rocket:
 		var guidance: Label = EmptyLabelScene.instantiate()
@@ -221,8 +222,6 @@ func populate_targets() -> void:
 		targets_section.add_child(guidance)
 		return
 	_render_rocket_customization_controls(targets_section, rm, awaiting_rocket_id)
-	if _render_mission_briefing_gate(targets_section, rm, mission_stage):
-		return
 
 	if mission_stage == 2 and awaiting_rocket_level < 2:
 		var mission2_hint: Label = EmptyLabelScene.instantiate()
@@ -300,7 +299,6 @@ func populate_targets() -> void:
 		var is_recommended_target = mission_stage == 5 and mission5_recommended_target_id != "" and mission5_recommended_target_id == target_id
 		name_lbl.text = "%s (Recommended)" % str(t.get("label", target_id)) if is_recommended_target else str(t.get("label", target_id))
 		PanelStyle.apply_body(name_lbl)
-		name_lbl.add_theme_font_size_override("font_size", 16)
 		var btn: Button = entry_panel.get_node("Entry/Header/SelectButton")
 		btn.focus_mode = Control.FOCUS_NONE
 		PanelStyle.apply_button(btn, false)
@@ -335,96 +333,6 @@ func populate_targets() -> void:
 		PanelStyle.apply_muted(hidden_lbl)
 		targets_section.add_child(hidden_lbl)
 
-func _render_mission_briefing_gate(targets_section: VBoxContainer, rm, mission_stage: int) -> bool:
-	if targets_section == null or rm == null:
-		return false
-	if mission_stage <= 0 or not MISSION_BRIEFINGS.has(mission_stage):
-		return false
-	if rm.is_mission_briefing_seen(mission_stage):
-		return false
-	var briefing: Dictionary = MISSION_BRIEFINGS[mission_stage]
-	var heading: Label = HeaderLabelScene.instantiate()
-	heading.text = "Mission %d Briefing" % mission_stage
-	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	PanelStyle.apply_muted(heading)
-	heading.add_theme_font_size_override("font_size", 16)
-	targets_section.add_child(heading)
-
-	var card := PanelContainer.new()
-	card.add_theme_stylebox_override("panel", PanelStyle.create_card_style())
-	card.add_theme_constant_override("content_margin_left", 14)
-	card.add_theme_constant_override("content_margin_right", 14)
-	card.add_theme_constant_override("content_margin_top", 12)
-	card.add_theme_constant_override("content_margin_bottom", 12)
-	targets_section.add_child(card)
-
-	var content := VBoxContainer.new()
-	content.add_theme_constant_override("separation", 8)
-	card.add_child(content)
-
-	var objective_lbl := Label.new()
-	objective_lbl.text = "Objective: %s" % str(briefing.get("objective", ""))
-	objective_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	objective_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	PanelStyle.apply_body(objective_lbl)
-	objective_lbl.add_theme_font_size_override("font_size", 16)
-	content.add_child(objective_lbl)
-
-	var mechanics_lbl := Label.new()
-	mechanics_lbl.text = "Mechanic: %s" % str(briefing.get("mechanics", ""))
-	mechanics_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	mechanics_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	PanelStyle.apply_muted(mechanics_lbl)
-	mechanics_lbl.add_theme_font_size_override("font_size", 14)
-	content.add_child(mechanics_lbl)
-
-	var summary_lbl := Label.new()
-	summary_lbl.text = "Loadout L%d • %s • Reward %.1fx • Unlocks: %s" % [
-		int(briefing.get("required_rocket_level", 1)),
-		str(briefing.get("target_type", "Target")),
-		float(briefing.get("reward_ratio", 1.0)),
-		str(briefing.get("unlocks", "next progression"))
-	]
-	summary_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	summary_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	PanelStyle.apply_muted(summary_lbl)
-	summary_lbl.add_theme_font_size_override("font_size", 14)
-	content.add_child(summary_lbl)
-
-	var action_row := HBoxContainer.new()
-	action_row.add_theme_constant_override("separation", 10)
-	content.add_child(action_row)
-
-	var continue_btn := Button.new()
-	continue_btn.text = "Continue"
-	PanelStyle.apply_button(continue_btn, true)
-	continue_btn.pressed.connect(Callable(self, "_on_mission_briefing_acknowledged").bind(mission_stage, false))
-	action_row.add_child(continue_btn)
-
-	var skip_btn := Button.new()
-	skip_btn.text = "Skip Briefing"
-	PanelStyle.apply_button(skip_btn, false)
-	skip_btn.pressed.connect(Callable(self, "_on_mission_briefing_acknowledged").bind(mission_stage, true))
-	action_row.add_child(skip_btn)
-
-	var hint_lbl: Label = EmptyLabelScene.instantiate()
-	hint_lbl.text = "Briefings appear once per mission. Continue or skip to proceed."
-	hint_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	PanelStyle.apply_muted(hint_lbl)
-	targets_section.add_child(hint_lbl)
-	return true
-
-func _on_mission_briefing_acknowledged(mission_stage: int, skipped: bool) -> void:
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
-	if rm:
-		var ok = rm.mark_mission_briefing_seen(mission_stage)
-		if not ok:
-			AppLogger.w("Launchpad: failed to persist mission briefing seen for stage=%s" % mission_stage)
-	preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("mission_briefing_seen", {
-		"mission_stage": mission_stage,
-		"skipped": skipped
-	})
-	populate_targets()
 
 func on_selector_target_pressed(target_id: String, _btn: Button) -> void:
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
@@ -467,7 +375,6 @@ func _render_mission5_contract_brief(targets_section: VBoxContainer, offer: Dict
 	heading.text = "Mission 5 Contract"
 	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	PanelStyle.apply_muted(heading)
-	heading.add_theme_font_size_override("font_size", 16)
 	targets_section.add_child(heading)
 
 	var requested: Dictionary = offer.get("requested_minerals", {})
@@ -519,7 +426,6 @@ func _render_open_operation_mode_picker(targets_section: VBoxContainer, mode: St
 	heading.text = "Open Operations Route"
 	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	PanelStyle.apply_muted(heading)
-	heading.add_theme_font_size_override("font_size", 16)
 	targets_section.add_child(heading)
 
 	var summary: Label = EmptyLabelScene.instantiate()
@@ -567,7 +473,7 @@ func _render_rocket_customization_controls(targets_section: VBoxContainer, rm, r
 	heading.text = "Rocket Identity"
 	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	PanelStyle.apply_muted(heading)
-	heading.add_theme_font_size_override("font_size", 16)
+	heading.add_theme_font_size_override("font_size", 24)
 	targets_section.add_child(heading)
 
 	var summary: Label = EmptyLabelScene.instantiate()
@@ -673,18 +579,21 @@ func _on_debug_mining_test_pressed() -> void:
 
 
 func _style_selector_panel(panel: Panel, vbox: VBoxContainer) -> void:
-	PanelStyle.apply_panel(panel, Color(0.08, 0.11, 0.15, 0.9))
+	# Lock before UIConsistencyEnforcer deferred scan can overwrite.
+	panel.set_meta("ui_style_locked", true)
+	PanelStyle.apply_panel(panel, Color(0.04, 0.06, 0.12, 0.88))
 	if vbox:
-		vbox.add_theme_constant_override("separation", 8)
+		vbox.add_theme_constant_override("separation", 12)
 	var title = panel.get_node_or_null("VBox/Title")
 	if title and title is Label:
 		PanelStyle.apply_title(title)
 		title.text = "Select Your Rocket"
 		title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-		title.add_theme_font_size_override("font_size", 24)
+		title.add_theme_font_size_override("font_size", 36)
 	var back = panel.get_node_or_null("VBox/BackButton")
 	if back and back is Button:
-		back.custom_minimum_size = Vector2(0, 44)
+		back.set_meta("ui_style_locked", true)
+		back.custom_minimum_size = Vector2(0, 56)
 		back.text = "Back to Base"
 		PanelStyle.apply_button(back, false)
 
@@ -696,15 +605,15 @@ func _set_selector_panel_layout(has_awaiting: bool) -> void:
 	if panel == null:
 		return
 	if has_awaiting:
-		# Compact target-selection mode after rocket exists.
+		# Narrow sidebar — leaves rocket visible on the right.
 		panel.anchor_left = 0.0
 		panel.anchor_top = 0.0
 		panel.anchor_right = 0.0
 		panel.anchor_bottom = 0.0
 		panel.offset_left = 16.0
 		panel.offset_top = 16.0
-		panel.offset_right = 780.0
-		panel.offset_bottom = 700.0
+		panel.offset_right = 520.0
+		panel.offset_bottom = 620.0
 	else:
 		# Full-width creation mode before rocket exists.
 		panel.anchor_left = 0.0
@@ -723,20 +632,14 @@ func _set_selector_panel_layout(has_awaiting: bool) -> void:
 
 func _target_card_style() -> StyleBoxFlat:
 	var style = StyleBoxFlat.new()
-	style.bg_color = Color(0.15, 0.20, 0.25, 0.55)
-	style.border_color = Color(0.35, 0.45, 0.55, 0.55)
-	style.border_width_left = 1
-	style.border_width_right = 1
-	style.border_width_top = 1
-	style.border_width_bottom = 1
-	style.corner_radius_top_left = 10
-	style.corner_radius_top_right = 10
-	style.corner_radius_bottom_left = 10
-	style.corner_radius_bottom_right = 10
-	style.content_margin_left = 8
-	style.content_margin_top = 6
-	style.content_margin_right = 8
-	style.content_margin_bottom = 6
+	style.bg_color    = Color(0.06, 0.10, 0.16, 0.70)
+	style.border_color = Color(0.28, 0.88, 0.96, 0.70)   # cyan, partial opacity
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(4)
+	style.content_margin_left   = 14
+	style.content_margin_top    = 10
+	style.content_margin_right  = 14
+	style.content_margin_bottom = 10
 	return style
 
 func _set_rocket_selector_visibility(vbox: VBoxContainer, visible: bool) -> void:

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Two opposing arrows — exchange/market -->
+  <line x1="12" y1="24" x2="46" y2="24" stroke="white" stroke-width="4" stroke-linecap="round"/>
+  <polyline points="38,16 46,24 38,32" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="52" y1="40" x2="18" y2="40" stroke="white" stroke-width="4" stroke-linecap="round"/>
+  <polyline points="26,32 18,40 26,48" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

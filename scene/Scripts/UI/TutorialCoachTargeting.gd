@@ -17,6 +17,36 @@ static func build_target_rect(target: Node) -> Rect2:
 		return Rect2()
 	return _build_target_rect(target)
 
+static func navigation_hint_for_action(action_key: String) -> String:
+	match action_key:
+		"open_launchpad":
+			return "→ Click the Launchpad structure on the base"
+		"create_rocket":
+			return "→ Open the Launchpad to build a rocket"
+		"select_launch_target":
+			return "→ Open the Launchpad, then select a target"
+		"launch_rocket_from_earth":
+			return "→ Open the Launchpad, then click Launch"
+		"mine_target":
+			return "→ Launch a mission first to reach the mining site"
+		"return_rocket_home":
+			return "→ Use the in-flight Return Home controls"
+		"resolve_mission_debrief":
+			return "→ Complete the debrief when your rocket lands"
+		"build_scanner_station":
+			return "→ Click the Scanner Station structure"
+		"scan_targets":
+			return "→ Open the Scanner Station to run a scan"
+		"toggle_planet_scanner":
+			return "→ Open the Scanner Station to toggle modes"
+		"accept_contractor_offer":
+			return "→ Open the Contractor panel to accept an offer"
+		"complete_contractor_mission":
+			return "→ Finish the debrief for your contractor mission"
+		"arrived_at_mining_site":
+			return "→ Launch a mission to reach the mining site"
+	return "→ %s" % action_key
+
 static func action_hint_for_step(action_key: String) -> String:
 	match action_key:
 		"open_launchpad":

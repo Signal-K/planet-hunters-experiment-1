@@ -1,6 +1,6 @@
 res://assets/Vehicles/StarterRocket1LaunchFrame0.tres::bd2db43c2395eccf58062795e75f22e1::1770002387::res://.godot/exported/133200997/export-dbf600c88da07c3d637122df2c125994-StarterRocket1LaunchFrame0.res
 res://SampleScenes/earth_base_sample_asteroid.tscn::a028ff90963a1ccfaacc3f2294210b3a::1772280321::res://.godot/exported/133200997/export-6c777fc9bd76cb673527512941c736d6-earth_base_sample_asteroid.scn
-res://Scenes/Earth/earth_base_1.tscn::6f3236ad498295af46bf34459b406e4d::1772280321::res://.godot/exported/133200997/export-a370952bd9467ad57ec1ed7013acb9be-earth_base_1.scn
+res://Scenes/Earth/earth_base_1.tscn::e9faa69f418744dcca0c1894552cfe59::1772420915::res://.godot/exported/133200997/export-a370952bd9467ad57ec1ed7013acb9be-earth_base_1.scn
 res://Scenes/Earth/earth_base_example.tscn::2235ace5bc6ca8caa87ca4cdca0e654b::1770002387::res://.godot/exported/133200997/export-e98e276a65d9cd335742cb8d12c40397-earth_base_example.scn
 res://Scenes/Earth/earth_launchpad.tscn::24358311f6d9ed8333f6e70678d49d7e::1772280321::res://.godot/exported/133200997/export-07ad96dc1ab0bd514e757abaaeb43e1f-earth_launchpad.scn
 res://Scenes/Earth/earth_scene_template.tscn::a38df05bb81a2d0e9666e09669946a59::1772280321::res://.godot/exported/133200997/export-88295f960f352d6a796790d3826e406e-earth_scene_template.scn
@@ -22,7 +22,7 @@ res://Scenes/UI/FrancBalance.tscn::aa0f9df0ad7192d265a36b36313ee7a9::1770641443:
 res://Scenes/UI/FrancIcon.tscn::2be366114e572b977f209d1c0ab253d7::1770604353::res://.godot/exported/133200997/export-c7cc471ad96e786f918c69f56fd14c52-FrancIcon.scn
 res://Scenes/UI/hud.tscn::6edf360f58b0f7b56a4ed74bbf3438ca::1770604353::res://.godot/exported/133200997/export-67605cadf80d25390853685a572b8dfc-hud.scn
 res://Scenes/UI/item_info.tscn::f35fa08b5ff04740fdc5f81cac84eb8a::1770604353::res://.godot/exported/133200997/export-893028af5ff8f0b68a053d4b6fda47be-item_info.scn
-res://Scenes/UI/LaunchpadPanel.tscn::d2ff98e52260f88c8b0e88940a37928d::1770641443::res://.godot/exported/133200997/export-d5c6eec51f6a616a0c21468c1f42c140-LaunchpadPanel.scn
+res://Scenes/UI/LaunchpadPanel.tscn::1213c88bb3421bdfbdda0a71b6c157d1::1772432475::res://.godot/exported/133200997/export-d5c6eec51f6a616a0c21468c1f42c140-LaunchpadPanel.scn
 res://Scenes/UI/launch_hud.tscn::714ca062fbd9af2744739712aa2ae0de::1772280321::res://.godot/exported/133200997/export-4b389cba24054e32986a04ffbda2c3dc-launch_hud.scn
 res://Scenes/UI/MenuPanel.tscn::1fcd8883037d0dc34a43a2126ec273dd::1772280321::res://.godot/exported/133200997/export-cb29f7dd7fb15fbfb0dcaad15f04dd74-MenuPanel.scn
 res://Scenes/UI/NewMissionPanel.tscn::7192d93bb95ef1585552f6b49b8417e8::1772280321::res://.godot/exported/133200997/export-64fdd5c6c043a6dbf6c2498f8ffa649a-NewMissionPanel.scn
@@ -68,7 +68,7 @@ res://Scenes/UI/Templates/SatelliteLevel2UnlockOverlay.tscn::1c285b535dba0fb9a07
 res://Scenes/UI/Templates/SceneFlashOverlay.tscn::b39fc175e974c21477d79be329c4bf69::1772280321::res://.godot/exported/133200997/export-8456c0c18897781d3baf94050bcc7895-SceneFlashOverlay.scn
 res://Scenes/UI/Templates/StyledPanelBase.tscn::22cb0cb62c8e7d842daa8f1f6d3a7148::1772280321::res://.godot/exported/133200997/export-a66436544221752e3199c61d9ae27e18-StyledPanelBase.scn
 res://Scenes/UI/Templates/SubcontractorCard.tscn::6aff0090232461deaa43a6acedf3065c::1772280321::res://.godot/exported/133200997/export-88a53ccc7bf8956dc9f6138f03e7198b-SubcontractorCard.scn
-res://Scenes/UI/FeedbackBeacon.tscn::3628b496e9876d2896ce0aa483baa77b::1772365100::res://.godot/exported/133200997/export-5e41effe3404bbfafb6509b53a2c5312-FeedbackBeacon.scn
+res://Scenes/UI/FeedbackBeacon.tscn::455590946d8f49e93aa207edb7a8408f::1772432402::res://.godot/exported/133200997/export-5e41effe3404bbfafb6509b53a2c5312-FeedbackBeacon.scn
 res://Scenes/UI/MiningDrone.tscn::3cd0d18b41c279e30fb35b09b74d1281::1772280321::res://.godot/exported/133200997/export-35ccd119c084ea0a025be891d34c1fc4-MiningDrone.scn
 res://Scenes/UI/MiningMinigame.tscn::d6056d155ec8b5d91cec065e6a587d77::1772280321::res://.godot/exported/133200997/export-6ea8524065f309038e856fa2b57033cf-MiningMinigame.scn
 res://Scenes/UI/MiningPracticePanel.tscn::fd1b3e07d3d21dece35f5dff15bdd9bf::1772280321::res://.godot/exported/133200997/export-b17e7720e98b5066d3bbea814edc8720-MiningPracticePanel.scn

@@ -44,31 +44,110 @@ func _ready() -> void:
 	_build_earth_base_identity()
 
 func _setup_buttons() -> void:
-	"""Setup button connections"""
-	var back_btn = $UILayer/ButtonContainer/BackButton
-	var forward_btn = $UILayer/ButtonContainer/ForwardButton
-	var menu_btn = $UILayer/ButtonContainer/MenuButton
-	var market_btn = $UILayer/ButtonContainer/MarketButton
-	var space_map_btn = $UILayer/ButtonContainer/SpaceMapButton
-	var new_mission_btn = $UILayer/ButtonContainer/NewMissionButton
-	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
+	var back_btn        := $UILayer/ButtonContainer/BackButton       as Button
+	var forward_btn     := $UILayer/ButtonContainer/ForwardButton    as Button
+	var menu_btn        := $UILayer/ButtonContainer/MenuButton       as Button
+	var market_btn      := $UILayer/ButtonContainer/MarketButton     as Button
+	var space_map_btn   := $UILayer/ButtonContainer/SpaceMapButton   as Button
+	var new_mission_btn := $UILayer/ButtonContainer/NewMissionButton as Button
+	var container       := $UILayer/ButtonContainer                  as HBoxContainer
 
-	panel_style.apply_button(back_btn, false)
-	panel_style.apply_button(forward_btn, false)
-	panel_style.apply_button(menu_btn, false)
-	panel_style.apply_button(market_btn, false)
-	panel_style.apply_button(space_map_btn, false)
-	panel_style.apply_button(new_mission_btn, true)
-	
-	# Connect signals
+	# ── Unified pill background behind all buttons ───────────────────────────
+	var bg := Panel.new()
+	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var bg_style := StyleBoxFlat.new()
+	bg_style.bg_color     = Color(0.03, 0.03, 0.04, 0.94)
+	bg_style.border_color = Color(0.28, 0.88, 0.96, 0.35)   # cyan, low-opacity border
+	bg_style.set_border_width_all(1)
+	bg_style.set_corner_radius_all(12)
+	bg.add_theme_stylebox_override("panel", bg_style)
+	container.add_child(bg)
+	container.move_child(bg, 0)
+	container.add_theme_constant_override("separation", 0)
+
+	# ── Style buttons as transparent slots with divider on the right ─────────
+	_style_nav_slot(back_btn,        false)
+	_style_nav_slot(forward_btn,     false)
+	_style_nav_slot(menu_btn,        false)
+	_style_nav_slot(market_btn,      false)
+	_style_nav_slot(space_map_btn,   false)
+	_style_nav_slot(new_mission_btn, true)   # amber, no right divider
+
+	# ── Labels and icons ─────────────────────────────────────────────────────
+	back_btn.text        = "Back"
+	forward_btn.text     = "Next"
+	menu_btn.text        = "Menu"
+	market_btn.text      = "Market"
+	space_map_btn.text   = "Map"
+	new_mission_btn.text = "New Mission"
+
+	_load_icon(back_btn,        "res://Resources/Icons/nav_back.svg",    false)
+	_load_icon(forward_btn,     "res://Resources/Icons/nav_forward.svg", false)
+	_load_icon(menu_btn,        "res://Resources/Icons/nav_menu.svg",    false)
+	_load_icon(market_btn,      "res://Resources/Icons/nav_market.svg",  false)
+	_load_icon(space_map_btn,   "res://Resources/Icons/nav_map.svg",     false)
+	_load_icon(new_mission_btn, "res://Resources/Icons/nav_mission.svg", true)
+
+	# ── Connect signals ───────────────────────────────────────────────────────
 	back_btn.pressed.connect(_on_back_button_pressed)
 	forward_btn.pressed.connect(_on_forward_button_pressed)
 	menu_btn.pressed.connect(_on_menu_button_pressed)
 	market_btn.pressed.connect(_on_market_button_pressed)
 	space_map_btn.pressed.connect(_on_space_map_button_pressed)
 	new_mission_btn.pressed.connect(_on_new_mission_button_pressed)
-	
-	print("All button signals connected")
+
+
+const _AMBER        := Color(0.941, 0.690, 0.188, 1.0)
+const _CYAN_FAINT   := Color(0.28, 0.88, 0.96, 0.35)   # cyan divider
+const _FONT_WHITE   := Color(0.95, 0.93, 0.90, 1.0)
+
+func _style_nav_slot(btn: Button, is_amber: bool) -> void:
+	var col: Color = _AMBER if is_amber else _FONT_WHITE
+	var div: Color = Color(_AMBER.r, _AMBER.g, _AMBER.b, 0.60) if is_amber else _CYAN_FAINT
+
+	var normal := StyleBoxFlat.new()
+	normal.bg_color = Color(0, 0, 0, 0)
+	normal.border_width_right = 0 if is_amber else 1
+	normal.border_color = div
+	normal.set_corner_radius_all(0)
+	normal.content_margin_top    = 8
+	normal.content_margin_bottom = 8
+
+	var hover := StyleBoxFlat.new()
+	hover.bg_color = Color(_AMBER.r, _AMBER.g, _AMBER.b, 0.12) if is_amber else Color(1, 1, 1, 0.06)
+	hover.border_width_right = normal.border_width_right
+	hover.border_color = div
+	hover.set_corner_radius_all(0)
+	hover.content_margin_top    = 8
+	hover.content_margin_bottom = 8
+
+	var pressed := hover.duplicate()
+	pressed.bg_color = Color(_AMBER.r, _AMBER.g, _AMBER.b, 0.22) if is_amber else Color(1, 1, 1, 0.12)
+
+	btn.add_theme_stylebox_override("normal",  normal)
+	btn.add_theme_stylebox_override("hover",   hover)
+	btn.add_theme_stylebox_override("pressed", pressed)
+	btn.add_theme_stylebox_override("focus",   hover)
+	btn.add_theme_color_override("font_color",         col)
+	btn.add_theme_color_override("font_hover_color",   col)
+	btn.add_theme_color_override("font_pressed_color", col)
+	btn.add_theme_font_size_override("font_size", 28)
+	# Lock so UIConsistencyEnforcer does not override our custom nav styling
+	btn.set_meta("ui_style_locked", true)
+
+
+func _load_icon(btn: Button, path: String, is_amber: bool) -> void:
+	if not ResourceLoader.exists(path):
+		return
+	var tex := load(path) as Texture2D
+	if tex == null:
+		return
+	btn.icon = tex
+	var col: Color = _AMBER if is_amber else _FONT_WHITE
+	btn.add_theme_color_override("icon_normal_color",  col)
+	btn.add_theme_color_override("icon_hover_color",   col)
+	btn.add_theme_color_override("icon_pressed_color", col)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not (event is InputEventMouseButton):
@@ -243,7 +322,7 @@ func _build_wordmark() -> void:
 	wordmark.name = "PlanetHuntersWordmark"
 	wordmark.text = "PLANET HUNTERS"
 	wordmark.add_theme_font_size_override("font_size", 15)
-	wordmark.add_theme_color_override("font_color", Color(0.45, 0.72, 1.0, 0.72))
+	wordmark.add_theme_color_override("font_color", Color(0.90, 0.87, 0.82, 0.45))
 	wordmark.set_anchors_preset(Control.PRESET_TOP_WIDE)
 	wordmark.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	wordmark.offset_top = 10.0

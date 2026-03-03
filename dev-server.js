@@ -61,7 +61,13 @@ http
     }
 
     const ext = path.extname(fp).toLowerCase();
-    res.writeHead(200, { "Content-Type": MIME[ext] || "application/octet-stream" });
+    // Never cache game assets in dev — forces the browser to always fetch fresh files.
+    res.writeHead(200, {
+      "Content-Type": MIME[ext] || "application/octet-stream",
+      "Cache-Control": "no-store, no-cache, must-revalidate",
+      "Pragma": "no-cache",
+      "Expires": "0",
+    });
     if (req.method === "HEAD") { res.end(); return; }
     fs.createReadStream(fp).pipe(res);
   })
