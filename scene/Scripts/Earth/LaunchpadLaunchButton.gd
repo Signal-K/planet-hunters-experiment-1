@@ -114,6 +114,15 @@ func _on_launch_button_pressed() -> void:
 	if not rm:
 		AppLogger.w("Launchpad: RocketsManager not available")
 		return
+	if int(rm.get_mission_stage()) == 1 and rm.get_starter_selected_contractor().is_empty():
+		AppLogger.w("Launchpad: starter contractor must be selected before launch")
+		if _on_show_selector.is_valid():
+			_on_show_selector.call()
+		if _launchpad and _launchpad.has_method("_populate_targets"):
+			_launchpad._populate_targets()
+		if _launch_button:
+			_launch_button.disabled = false
+		return
 	# Require a selected target before launching
 	var resolved = rm.ensure_selected_target_for_launch(rocket.name)
 	if not bool(resolved.get("ok", false)):

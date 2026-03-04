@@ -100,6 +100,7 @@ func _resume_mission(rocket_id: String, target_id: String, target_type: String):
 	get_tree().change_scene_to_file(PREVIEW_SCENE)
 
 func _close():
+	preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("tour_close_control_station")
 	panel_closed.emit()
 	queue_free()
 

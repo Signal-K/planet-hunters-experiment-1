@@ -9,6 +9,7 @@ func _ready():
 
 func on_interact():
 	super.on_interact()
+	preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("tour_open_control_station")
 	print("Control Station clicked: " + structure_name)
 	
 	# Get the UIManager from the scene tree
@@ -32,4 +33,3 @@ func on_interact():
 			ui_manager.show_panel(UIManager.PanelType.NEW_MISSION)
 	else:
 		print("ERROR: UIManager not found for Control Station")
-

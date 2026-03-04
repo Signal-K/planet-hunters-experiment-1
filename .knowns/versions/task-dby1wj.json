@@ -1,0 +1,929 @@
+{
+  "taskId": "dby1wj",
+  "currentVersion": 14,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "dby1wj",
+      "version": 1,
+      "timestamp": "2026-03-03T22:09:23.341Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Starter flow: contractor-first onboarding + guided mission order",
+        "description": "Update early-game flow so players complete a minimal tour, choose one of three starter contractors, fulfill contractor mineral order in mining, and get affinity-based debrief/retry behavior for early missions.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "onboarding",
+          "tutorial",
+          "contractor",
+          "mining",
+          "debrief"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "First-run onboarding includes a short in-game tour before mission actions."
+          },
+          {
+            "completed": false,
+            "text": "Player selects one of three starter contractors with clear thematic descriptions (military tech, consumer electronics, space innovation)."
+          },
+          {
+            "completed": false,
+            "text": "Mining UI shows active contractor mineral order targets during early missions."
+          },
+          {
+            "completed": false,
+            "text": "Early mission debrief hides sell actions and instead evaluates contractor order completion with affinity feedback."
+          },
+          {
+            "completed": false,
+            "text": "If early mission mining ends without meeting contractor order, mission restarts instead of progressing debrief payout flow."
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "dby1wj",
+      "version": 2,
+      "timestamp": "2026-03-03T22:15:16.005Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "newValue": "1. Extend tutorial stage 1 to start with a short guided base tour and a contractor-signing step before launch.\n2. Add starter contractor contract data (3 options, improved thematic copy, per-contractor mineral order variants) and persist selected starter contractor + mission order.\n3. Update launchpad stage-1 UI to require contractor selection before target/launch and record tutorial action for contractor signing.\n4. Add mining HUD order tracker (top section) showing required minerals + progress for selected starter contractor mission.\n5. Update early mission debrief flow: hide sell/scrap actions, evaluate contract completion, award contractor affinity, and show recap messaging.\n6. Enforce early-mission failure behavior: if mining session ends without meeting order, trigger mission restart loop instead of normal debrief progression.\n7. Run targeted tests (unit + e2e subset) and adjust any tutorial action mappings/checklists impacted by new action keys."
+        }
+      ],
+      "snapshot": {
+        "title": "Starter flow: contractor-first onboarding + guided mission order",
+        "description": "Update early-game flow so players complete a minimal tour, choose one of three starter contractors, fulfill contractor mineral order in mining, and get affinity-based debrief/retry behavior for early missions.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "onboarding",
+          "tutorial",
+          "contractor",
+          "mining",
+          "debrief"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "First-run onboarding includes a short in-game tour before mission actions."
+          },
+          {
+            "completed": false,
+            "text": "Player selects one of three starter contractors with clear thematic descriptions (military tech, consumer electronics, space innovation)."
+          },
+          {
+            "completed": false,
+            "text": "Mining UI shows active contractor mineral order targets during early missions."
+          },
+          {
+            "completed": false,
+            "text": "Early mission debrief hides sell actions and instead evaluates contractor order completion with affinity feedback."
+          },
+          {
+            "completed": false,
+            "text": "If early mission mining ends without meeting contractor order, mission restarts instead of progressing debrief payout flow."
+          }
+        ],
+        "implementationPlan": "1. Extend tutorial stage 1 to start with a short guided base tour and a contractor-signing step before launch.\n2. Add starter contractor contract data (3 options, improved thematic copy, per-contractor mineral order variants) and persist selected starter contractor + mission order.\n3. Update launchpad stage-1 UI to require contractor selection before target/launch and record tutorial action for contractor signing.\n4. Add mining HUD order tracker (top section) showing required minerals + progress for selected starter contractor mission.\n5. Update early mission debrief flow: hide sell/scrap actions, evaluate contract completion, award contractor affinity, and show recap messaging.\n6. Enforce early-mission failure behavior: if mining session ends without meeting order, trigger mission restart loop instead of normal debrief progression.\n7. Run targeted tests (unit + e2e subset) and adjust any tutorial action mappings/checklists impacted by new action keys."
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "dby1wj",
+      "version": 3,
+      "timestamp": "2026-03-03T22:28:19.480Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "✓ Implemented starter contractor state + stage-1 tour/contractor tutorial + launchpad gating + mining order tracker + early debrief recap/restart flow"
+        }
+      ],
+      "snapshot": {
+        "title": "Starter flow: contractor-first onboarding + guided mission order",
+        "description": "Update early-game flow so players complete a minimal tour, choose one of three starter contractors, fulfill contractor mineral order in mining, and get affinity-based debrief/retry behavior for early missions.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "onboarding",
+          "tutorial",
+          "contractor",
+          "mining",
+          "debrief"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "First-run onboarding includes a short in-game tour before mission actions."
+          },
+          {
+            "completed": false,
+            "text": "Player selects one of three starter contractors with clear thematic descriptions (military tech, consumer electronics, space innovation)."
+          },
+          {
+            "completed": false,
+            "text": "Mining UI shows active contractor mineral order targets during early missions."
+          },
+          {
+            "completed": false,
+            "text": "Early mission debrief hides sell actions and instead evaluates contractor order completion with affinity feedback."
+          },
+          {
+            "completed": false,
+            "text": "If early mission mining ends without meeting contractor order, mission restarts instead of progressing debrief payout flow."
+          }
+        ],
+        "implementationPlan": "1. Extend tutorial stage 1 to start with a short guided base tour and a contractor-signing step before launch.\n2. Add starter contractor contract data (3 options, improved thematic copy, per-contractor mineral order variants) and persist selected starter contractor + mission order.\n3. Update launchpad stage-1 UI to require contractor selection before target/launch and record tutorial action for contractor signing.\n4. Add mining HUD order tracker (top section) showing required minerals + progress for selected starter contractor mission.\n5. Update early mission debrief flow: hide sell/scrap actions, evaluate contract completion, award contractor affinity, and show recap messaging.\n6. Enforce early-mission failure behavior: if mining session ends without meeting order, trigger mission restart loop instead of normal debrief progression.\n7. Run targeted tests (unit + e2e subset) and adjust any tutorial action mappings/checklists impacted by new action keys.",
+        "implementationNotes": "✓ Implemented starter contractor state + stage-1 tour/contractor tutorial + launchpad gating + mining order tracker + early debrief recap/restart flow"
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "dby1wj",
+      "version": 4,
+      "timestamp": "2026-03-03T22:28:49.977Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "First-run onboarding includes a short in-game tour before mission actions."
+            },
+            {
+              "completed": false,
+              "text": "Player selects one of three starter contractors with clear thematic descriptions (military tech, consumer electronics, space innovation)."
+            },
+            {
+              "completed": false,
+              "text": "Mining UI shows active contractor mineral order targets during early missions."
+            },
+            {
+              "completed": false,
+              "text": "Early mission debrief hides sell actions and instead evaluates contractor order completion with affinity feedback."
+            },
+            {
+              "completed": false,
+              "text": "If early mission mining ends without meeting contractor order, mission restarts instead of progressing debrief payout flow."
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "First-run onboarding includes a short in-game tour before mission actions."
+            },
+            {
+              "completed": false,
+              "text": "Player selects one of three starter contractors with clear thematic descriptions (military tech, consumer electronics, space innovation)."
+            },
+            {
+              "completed": false,
+              "text": "Mining UI shows active contractor mineral order targets during early missions."
+            },
+            {
+              "completed": false,
+              "text": "Early mission debrief hides sell actions and instead evaluates contractor order completion with affinity feedback."
+            },
+            {
+              "completed": false,
+              "text": "If early mission mining ends without meeting contractor order, mission restarts instead of progressing debrief payout flow."
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Starter flow: contractor-first onboarding + guided mission order",
+        "description": "Update early-game flow so players complete a minimal tour, choose one of three starter contractors, fulfill contractor mineral order in mining, and get affinity-based debrief/retry behavior for early missions.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "onboarding",
+          "tutorial",
+          "contractor",
+          "mining",
+          "debrief"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "First-run onboarding includes a short in-game tour before mission actions."
+          },
+          {
+            "completed": false,
+            "text": "Player selects one of three starter contractors with clear thematic descriptions (military tech, consumer electronics, space innovation)."
+          },
+          {
+            "completed": false,
+            "text": "Mining UI shows active contractor mineral order targets during early missions."
+          },
+          {
+            "completed": false,
+            "text": "Early mission debrief hides sell actions and instead evaluates contractor order completion with affinity feedback."
+          },
+          {
+            "completed": false,
+            "text": "If early mission mining ends without meeting contractor order, mission restarts instead of progressing debrief payout flow."
+          }
+        ],
+        "implementationPlan": "1. Extend tutorial stage 1 to start with a short guided base tour and a contractor-signing step before launch.\n2. Add starter contractor contract data (3 options, improved thematic copy, per-contractor mineral order variants) and persist selected starter contractor + mission order.\n3. Update launchpad stage-1 UI to require contractor selection before target/launch and record tutorial action for contractor signing.\n4. Add mining HUD order tracker (top section) showing required minerals + progress for selected starter contractor mission.\n5. Update early mission debrief flow: hide sell/scrap actions, evaluate contract completion, award contractor affinity, and show recap messaging.\n6. Enforce early-mission failure behavior: if mining session ends without meeting order, trigger mission restart loop instead of normal debrief progression.\n7. Run targeted tests (unit + e2e subset) and adjust any tutorial action mappings/checklists impacted by new action keys.",
+        "implementationNotes": "✓ Implemented starter contractor state + stage-1 tour/contractor tutorial + launchpad gating + mining order tracker + early debrief recap/restart flow"
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "dby1wj",
+      "version": 5,
+      "timestamp": "2026-03-03T22:28:52.217Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "First-run onboarding includes a short in-game tour before mission actions."
+            },
+            {
+              "completed": false,
+              "text": "Player selects one of three starter contractors with clear thematic descriptions (military tech, consumer electronics, space innovation)."
+            },
+            {
+              "completed": false,
+              "text": "Mining UI shows active contractor mineral order targets during early missions."
+            },
+            {
+              "completed": false,
+              "text": "Early mission debrief hides sell actions and instead evaluates contractor order completion with affinity feedback."
+            },
+            {
+              "completed": false,
+              "text": "If early mission mining ends without meeting contractor order, mission restarts instead of progressing debrief payout flow."
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "First-run onboarding includes a short in-game tour before mission actions."
+            },
+            {
+              "completed": true,
+              "text": "Player selects one of three starter contractors with clear thematic descriptions (military tech, consumer electronics, space innovation)."
+            },
+            {
+              "completed": false,
+              "text": "Mining UI shows active contractor mineral order targets during early missions."
+            },
+            {
+              "completed": false,
+              "text": "Early mission debrief hides sell actions and instead evaluates contractor order completion with affinity feedback."
+            },
+            {
+              "completed": false,
+              "text": "If early mission mining ends without meeting contractor order, mission restarts instead of progressing debrief payout flow."
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Starter flow: contractor-first onboarding + guided mission order",
+        "description": "Update early-game flow so players complete a minimal tour, choose one of three starter contractors, fulfill contractor mineral order in mining, and get affinity-based debrief/retry behavior for early missions.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "onboarding",
+          "tutorial",
+          "contractor",
+          "mining",
+          "debrief"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "First-run onboarding includes a short in-game tour before mission actions."
+          },
+          {
+            "completed": true,
+            "text": "Player selects one of three starter contractors with clear thematic descriptions (military tech, consumer electronics, space innovation)."
+          },
+          {
+            "completed": false,
+            "text": "Mining UI shows active contractor mineral order targets during early missions."
+          },
+          {
+            "completed": false,
+            "text": "Early mission debrief hides sell actions and instead evaluates contractor order completion with affinity feedback."
+          },
+          {
+            "completed": false,
+            "text": "If early mission mining ends without meeting contractor order, mission restarts instead of progressing debrief payout flow."
+          }
+        ],
+        "implementationPlan": "1. Extend tutorial stage 1 to start with a short guided base tour and a contractor-signing step before launch.\n2. Add starter contractor contract data (3 options, improved thematic copy, per-contractor mineral order variants) and persist selected starter contractor + mission order.\n3. Update launchpad stage-1 UI to require contractor selection before target/launch and record tutorial action for contractor signing.\n4. Add mining HUD order tracker (top section) showing required minerals + progress for selected starter contractor mission.\n5. Update early mission debrief flow: hide sell/scrap actions, evaluate contract completion, award contractor affinity, and show recap messaging.\n6. Enforce early-mission failure behavior: if mining session ends without meeting order, trigger mission restart loop instead of normal debrief progression.\n7. Run targeted tests (unit + e2e subset) and adjust any tutorial action mappings/checklists impacted by new action keys.",
+        "implementationNotes": "✓ Implemented starter contractor state + stage-1 tour/contractor tutorial + launchpad gating + mining order tracker + early debrief recap/restart flow"
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "dby1wj",
+      "version": 6,
+      "timestamp": "2026-03-03T22:28:54.458Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "First-run onboarding includes a short in-game tour before mission actions."
+            },
+            {
+              "completed": true,
+              "text": "Player selects one of three starter contractors with clear thematic descriptions (military tech, consumer electronics, space innovation)."
+            },
+            {
+              "completed": false,
+              "text": "Mining UI shows active contractor mineral order targets during early missions."
+            },
+            {
+              "completed": false,
+              "text": "Early mission debrief hides sell actions and instead evaluates contractor order completion with affinity feedback."
+            },
+            {
+              "completed": false,
+              "text": "If early mission mining ends without meeting contractor order, mission restarts instead of progressing debrief payout flow."
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "First-run onboarding includes a short in-game tour before mission actions."
+            },
+            {
+              "completed": true,
+              "text": "Player selects one of three starter contractors with clear thematic descriptions (military tech, consumer electronics, space innovation)."
+            },
+            {
+              "completed": true,
+              "text": "Mining UI shows active contractor mineral order targets during early missions."
+            },
+            {
+              "completed": false,
+              "text": "Early mission debrief hides sell actions and instead evaluates contractor order completion with affinity feedback."
+            },
+            {
+              "completed": false,
+              "text": "If early mission mining ends without meeting contractor order, mission restarts instead of progressing debrief payout flow."
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Starter flow: contractor-first onboarding + guided mission order",
+        "description": "Update early-game flow so players complete a minimal tour, choose one of three starter contractors, fulfill contractor mineral order in mining, and get affinity-based debrief/retry behavior for early missions.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "onboarding",
+          "tutorial",
+          "contractor",
+          "mining",
+          "debrief"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "First-run onboarding includes a short in-game tour before mission actions."
+          },
+          {
+            "completed": true,
+            "text": "Player selects one of three starter contractors with clear thematic descriptions (military tech, consumer electronics, space innovation)."
+          },
+          {
+            "completed": true,
+            "text": "Mining UI shows active contractor mineral order targets during early missions."
+          },
+          {
+            "completed": false,
+            "text": "Early mission debrief hides sell actions and instead evaluates contractor order completion with affinity feedback."
+          },
+          {
+            "completed": false,
+            "text": "If early mission mining ends without meeting contractor order, mission restarts instead of progressing debrief payout flow."
+          }
+        ],
+        "implementationPlan": "1. Extend tutorial stage 1 to start with a short guided base tour and a contractor-signing step before launch.\n2. Add starter contractor contract data (3 options, improved thematic copy, per-contractor mineral order variants) and persist selected starter contractor + mission order.\n3. Update launchpad stage-1 UI to require contractor selection before target/launch and record tutorial action for contractor signing.\n4. Add mining HUD order tracker (top section) showing required minerals + progress for selected starter contractor mission.\n5. Update early mission debrief flow: hide sell/scrap actions, evaluate contract completion, award contractor affinity, and show recap messaging.\n6. Enforce early-mission failure behavior: if mining session ends without meeting order, trigger mission restart loop instead of normal debrief progression.\n7. Run targeted tests (unit + e2e subset) and adjust any tutorial action mappings/checklists impacted by new action keys.",
+        "implementationNotes": "✓ Implemented starter contractor state + stage-1 tour/contractor tutorial + launchpad gating + mining order tracker + early debrief recap/restart flow"
+      }
+    },
+    {
+      "id": "v7",
+      "taskId": "dby1wj",
+      "version": 7,
+      "timestamp": "2026-03-03T22:28:56.687Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "First-run onboarding includes a short in-game tour before mission actions."
+            },
+            {
+              "completed": true,
+              "text": "Player selects one of three starter contractors with clear thematic descriptions (military tech, consumer electronics, space innovation)."
+            },
+            {
+              "completed": true,
+              "text": "Mining UI shows active contractor mineral order targets during early missions."
+            },
+            {
+              "completed": false,
+              "text": "Early mission debrief hides sell actions and instead evaluates contractor order completion with affinity feedback."
+            },
+            {
+              "completed": false,
+              "text": "If early mission mining ends without meeting contractor order, mission restarts instead of progressing debrief payout flow."
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "First-run onboarding includes a short in-game tour before mission actions."
+            },
+            {
+              "completed": true,
+              "text": "Player selects one of three starter contractors with clear thematic descriptions (military tech, consumer electronics, space innovation)."
+            },
+            {
+              "completed": true,
+              "text": "Mining UI shows active contractor mineral order targets during early missions."
+            },
+            {
+              "completed": true,
+              "text": "Early mission debrief hides sell actions and instead evaluates contractor order completion with affinity feedback."
+            },
+            {
+              "completed": false,
+              "text": "If early mission mining ends without meeting contractor order, mission restarts instead of progressing debrief payout flow."
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Starter flow: contractor-first onboarding + guided mission order",
+        "description": "Update early-game flow so players complete a minimal tour, choose one of three starter contractors, fulfill contractor mineral order in mining, and get affinity-based debrief/retry behavior for early missions.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "onboarding",
+          "tutorial",
+          "contractor",
+          "mining",
+          "debrief"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "First-run onboarding includes a short in-game tour before mission actions."
+          },
+          {
+            "completed": true,
+            "text": "Player selects one of three starter contractors with clear thematic descriptions (military tech, consumer electronics, space innovation)."
+          },
+          {
+            "completed": true,
+            "text": "Mining UI shows active contractor mineral order targets during early missions."
+          },
+          {
+            "completed": true,
+            "text": "Early mission debrief hides sell actions and instead evaluates contractor order completion with affinity feedback."
+          },
+          {
+            "completed": false,
+            "text": "If early mission mining ends without meeting contractor order, mission restarts instead of progressing debrief payout flow."
+          }
+        ],
+        "implementationPlan": "1. Extend tutorial stage 1 to start with a short guided base tour and a contractor-signing step before launch.\n2. Add starter contractor contract data (3 options, improved thematic copy, per-contractor mineral order variants) and persist selected starter contractor + mission order.\n3. Update launchpad stage-1 UI to require contractor selection before target/launch and record tutorial action for contractor signing.\n4. Add mining HUD order tracker (top section) showing required minerals + progress for selected starter contractor mission.\n5. Update early mission debrief flow: hide sell/scrap actions, evaluate contract completion, award contractor affinity, and show recap messaging.\n6. Enforce early-mission failure behavior: if mining session ends without meeting order, trigger mission restart loop instead of normal debrief progression.\n7. Run targeted tests (unit + e2e subset) and adjust any tutorial action mappings/checklists impacted by new action keys.",
+        "implementationNotes": "✓ Implemented starter contractor state + stage-1 tour/contractor tutorial + launchpad gating + mining order tracker + early debrief recap/restart flow"
+      }
+    },
+    {
+      "id": "v8",
+      "taskId": "dby1wj",
+      "version": 8,
+      "timestamp": "2026-03-03T22:28:58.930Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "First-run onboarding includes a short in-game tour before mission actions."
+            },
+            {
+              "completed": true,
+              "text": "Player selects one of three starter contractors with clear thematic descriptions (military tech, consumer electronics, space innovation)."
+            },
+            {
+              "completed": true,
+              "text": "Mining UI shows active contractor mineral order targets during early missions."
+            },
+            {
+              "completed": true,
+              "text": "Early mission debrief hides sell actions and instead evaluates contractor order completion with affinity feedback."
+            },
+            {
+              "completed": false,
+              "text": "If early mission mining ends without meeting contractor order, mission restarts instead of progressing debrief payout flow."
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "First-run onboarding includes a short in-game tour before mission actions."
+            },
+            {
+              "completed": true,
+              "text": "Player selects one of three starter contractors with clear thematic descriptions (military tech, consumer electronics, space innovation)."
+            },
+            {
+              "completed": true,
+              "text": "Mining UI shows active contractor mineral order targets during early missions."
+            },
+            {
+              "completed": true,
+              "text": "Early mission debrief hides sell actions and instead evaluates contractor order completion with affinity feedback."
+            },
+            {
+              "completed": true,
+              "text": "If early mission mining ends without meeting contractor order, mission restarts instead of progressing debrief payout flow."
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Starter flow: contractor-first onboarding + guided mission order",
+        "description": "Update early-game flow so players complete a minimal tour, choose one of three starter contractors, fulfill contractor mineral order in mining, and get affinity-based debrief/retry behavior for early missions.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "onboarding",
+          "tutorial",
+          "contractor",
+          "mining",
+          "debrief"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "First-run onboarding includes a short in-game tour before mission actions."
+          },
+          {
+            "completed": true,
+            "text": "Player selects one of three starter contractors with clear thematic descriptions (military tech, consumer electronics, space innovation)."
+          },
+          {
+            "completed": true,
+            "text": "Mining UI shows active contractor mineral order targets during early missions."
+          },
+          {
+            "completed": true,
+            "text": "Early mission debrief hides sell actions and instead evaluates contractor order completion with affinity feedback."
+          },
+          {
+            "completed": true,
+            "text": "If early mission mining ends without meeting contractor order, mission restarts instead of progressing debrief payout flow."
+          }
+        ],
+        "implementationPlan": "1. Extend tutorial stage 1 to start with a short guided base tour and a contractor-signing step before launch.\n2. Add starter contractor contract data (3 options, improved thematic copy, per-contractor mineral order variants) and persist selected starter contractor + mission order.\n3. Update launchpad stage-1 UI to require contractor selection before target/launch and record tutorial action for contractor signing.\n4. Add mining HUD order tracker (top section) showing required minerals + progress for selected starter contractor mission.\n5. Update early mission debrief flow: hide sell/scrap actions, evaluate contract completion, award contractor affinity, and show recap messaging.\n6. Enforce early-mission failure behavior: if mining session ends without meeting order, trigger mission restart loop instead of normal debrief progression.\n7. Run targeted tests (unit + e2e subset) and adjust any tutorial action mappings/checklists impacted by new action keys.",
+        "implementationNotes": "✓ Implemented starter contractor state + stage-1 tour/contractor tutorial + launchpad gating + mining order tracker + early debrief recap/restart flow"
+      }
+    },
+    {
+      "id": "v9",
+      "taskId": "dby1wj",
+      "version": 9,
+      "timestamp": "2026-03-03T22:29:01.173Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "✓ Implemented starter contractor state + stage-1 tour/contractor tutorial + launchpad gating + mining order tracker + early debrief recap/restart flow",
+          "newValue": "## Summary\n- Added stage-1 quick base tour step (Control Station) before launch flow.\n- Added three starter contractors with updated thematic copy and per-contractor Iron/Nickel order variants.\n- Gated stage-1 launch flow on contractor signing in Launchpad selector and launch button validation.\n- Added mining top HUD order tracker with live collected/required progress and completion state.\n- Added early debrief recap mode (no sell/scrap controls) that evaluates order completion and awards contractor affinity.\n- Added early mission restart loop: incomplete starter order after mining completion triggers immediate mining restart.\n\n## Verification\n- `npm run test:unit` passed (4 suites / 21 tests).\n- `npm run test:e2e -- --grep \"SP14\"` passed.\n- `npm run test:e2e` ran; 26 passed, 2 narrative survey tests failed (NP03, NP05) unrelated to starter-flow logic."
+        }
+      ],
+      "snapshot": {
+        "title": "Starter flow: contractor-first onboarding + guided mission order",
+        "description": "Update early-game flow so players complete a minimal tour, choose one of three starter contractors, fulfill contractor mineral order in mining, and get affinity-based debrief/retry behavior for early missions.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "onboarding",
+          "tutorial",
+          "contractor",
+          "mining",
+          "debrief"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "First-run onboarding includes a short in-game tour before mission actions."
+          },
+          {
+            "completed": true,
+            "text": "Player selects one of three starter contractors with clear thematic descriptions (military tech, consumer electronics, space innovation)."
+          },
+          {
+            "completed": true,
+            "text": "Mining UI shows active contractor mineral order targets during early missions."
+          },
+          {
+            "completed": true,
+            "text": "Early mission debrief hides sell actions and instead evaluates contractor order completion with affinity feedback."
+          },
+          {
+            "completed": true,
+            "text": "If early mission mining ends without meeting contractor order, mission restarts instead of progressing debrief payout flow."
+          }
+        ],
+        "implementationPlan": "1. Extend tutorial stage 1 to start with a short guided base tour and a contractor-signing step before launch.\n2. Add starter contractor contract data (3 options, improved thematic copy, per-contractor mineral order variants) and persist selected starter contractor + mission order.\n3. Update launchpad stage-1 UI to require contractor selection before target/launch and record tutorial action for contractor signing.\n4. Add mining HUD order tracker (top section) showing required minerals + progress for selected starter contractor mission.\n5. Update early mission debrief flow: hide sell/scrap actions, evaluate contract completion, award contractor affinity, and show recap messaging.\n6. Enforce early-mission failure behavior: if mining session ends without meeting order, trigger mission restart loop instead of normal debrief progression.\n7. Run targeted tests (unit + e2e subset) and adjust any tutorial action mappings/checklists impacted by new action keys.",
+        "implementationNotes": "## Summary\n- Added stage-1 quick base tour step (Control Station) before launch flow.\n- Added three starter contractors with updated thematic copy and per-contractor Iron/Nickel order variants.\n- Gated stage-1 launch flow on contractor signing in Launchpad selector and launch button validation.\n- Added mining top HUD order tracker with live collected/required progress and completion state.\n- Added early debrief recap mode (no sell/scrap controls) that evaluates order completion and awards contractor affinity.\n- Added early mission restart loop: incomplete starter order after mining completion triggers immediate mining restart.\n\n## Verification\n- `npm run test:unit` passed (4 suites / 21 tests).\n- `npm run test:e2e -- --grep \"SP14\"` passed.\n- `npm run test:e2e` ran; 26 passed, 2 narrative survey tests failed (NP03, NP05) unrelated to starter-flow logic."
+      }
+    },
+    {
+      "id": "v10",
+      "taskId": "dby1wj",
+      "version": 10,
+      "timestamp": "2026-03-03T22:29:05.661Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Starter flow: contractor-first onboarding + guided mission order",
+        "description": "Update early-game flow so players complete a minimal tour, choose one of three starter contractors, fulfill contractor mineral order in mining, and get affinity-based debrief/retry behavior for early missions.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "onboarding",
+          "tutorial",
+          "contractor",
+          "mining",
+          "debrief"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "First-run onboarding includes a short in-game tour before mission actions."
+          },
+          {
+            "completed": true,
+            "text": "Player selects one of three starter contractors with clear thematic descriptions (military tech, consumer electronics, space innovation)."
+          },
+          {
+            "completed": true,
+            "text": "Mining UI shows active contractor mineral order targets during early missions."
+          },
+          {
+            "completed": true,
+            "text": "Early mission debrief hides sell actions and instead evaluates contractor order completion with affinity feedback."
+          },
+          {
+            "completed": true,
+            "text": "If early mission mining ends without meeting contractor order, mission restarts instead of progressing debrief payout flow."
+          }
+        ],
+        "implementationPlan": "1. Extend tutorial stage 1 to start with a short guided base tour and a contractor-signing step before launch.\n2. Add starter contractor contract data (3 options, improved thematic copy, per-contractor mineral order variants) and persist selected starter contractor + mission order.\n3. Update launchpad stage-1 UI to require contractor selection before target/launch and record tutorial action for contractor signing.\n4. Add mining HUD order tracker (top section) showing required minerals + progress for selected starter contractor mission.\n5. Update early mission debrief flow: hide sell/scrap actions, evaluate contract completion, award contractor affinity, and show recap messaging.\n6. Enforce early-mission failure behavior: if mining session ends without meeting order, trigger mission restart loop instead of normal debrief progression.\n7. Run targeted tests (unit + e2e subset) and adjust any tutorial action mappings/checklists impacted by new action keys.",
+        "implementationNotes": "## Summary\n- Added stage-1 quick base tour step (Control Station) before launch flow.\n- Added three starter contractors with updated thematic copy and per-contractor Iron/Nickel order variants.\n- Gated stage-1 launch flow on contractor signing in Launchpad selector and launch button validation.\n- Added mining top HUD order tracker with live collected/required progress and completion state.\n- Added early debrief recap mode (no sell/scrap controls) that evaluates order completion and awards contractor affinity.\n- Added early mission restart loop: incomplete starter order after mining completion triggers immediate mining restart.\n\n## Verification\n- `npm run test:unit` passed (4 suites / 21 tests).\n- `npm run test:e2e -- --grep \"SP14\"` passed.\n- `npm run test:e2e` ran; 26 passed, 2 narrative survey tests failed (NP03, NP05) unrelated to starter-flow logic."
+      }
+    },
+    {
+      "id": "v11",
+      "taskId": "dby1wj",
+      "version": 11,
+      "timestamp": "2026-03-03T22:31:56.378Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "done",
+          "newValue": "in-progress"
+        }
+      ],
+      "snapshot": {
+        "title": "Starter flow: contractor-first onboarding + guided mission order",
+        "description": "Update early-game flow so players complete a minimal tour, choose one of three starter contractors, fulfill contractor mineral order in mining, and get affinity-based debrief/retry behavior for early missions.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "onboarding",
+          "tutorial",
+          "contractor",
+          "mining",
+          "debrief"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "First-run onboarding includes a short in-game tour before mission actions."
+          },
+          {
+            "completed": true,
+            "text": "Player selects one of three starter contractors with clear thematic descriptions (military tech, consumer electronics, space innovation)."
+          },
+          {
+            "completed": true,
+            "text": "Mining UI shows active contractor mineral order targets during early missions."
+          },
+          {
+            "completed": true,
+            "text": "Early mission debrief hides sell actions and instead evaluates contractor order completion with affinity feedback."
+          },
+          {
+            "completed": true,
+            "text": "If early mission mining ends without meeting contractor order, mission restarts instead of progressing debrief payout flow."
+          }
+        ],
+        "implementationPlan": "1. Extend tutorial stage 1 to start with a short guided base tour and a contractor-signing step before launch.\n2. Add starter contractor contract data (3 options, improved thematic copy, per-contractor mineral order variants) and persist selected starter contractor + mission order.\n3. Update launchpad stage-1 UI to require contractor selection before target/launch and record tutorial action for contractor signing.\n4. Add mining HUD order tracker (top section) showing required minerals + progress for selected starter contractor mission.\n5. Update early mission debrief flow: hide sell/scrap actions, evaluate contract completion, award contractor affinity, and show recap messaging.\n6. Enforce early-mission failure behavior: if mining session ends without meeting order, trigger mission restart loop instead of normal debrief progression.\n7. Run targeted tests (unit + e2e subset) and adjust any tutorial action mappings/checklists impacted by new action keys.",
+        "implementationNotes": "## Summary\n- Added stage-1 quick base tour step (Control Station) before launch flow.\n- Added three starter contractors with updated thematic copy and per-contractor Iron/Nickel order variants.\n- Gated stage-1 launch flow on contractor signing in Launchpad selector and launch button validation.\n- Added mining top HUD order tracker with live collected/required progress and completion state.\n- Added early debrief recap mode (no sell/scrap controls) that evaluates order completion and awards contractor affinity.\n- Added early mission restart loop: incomplete starter order after mining completion triggers immediate mining restart.\n\n## Verification\n- `npm run test:unit` passed (4 suites / 21 tests).\n- `npm run test:e2e -- --grep \"SP14\"` passed.\n- `npm run test:e2e` ran; 26 passed, 2 narrative survey tests failed (NP03, NP05) unrelated to starter-flow logic."
+      }
+    },
+    {
+      "id": "v12",
+      "taskId": "dby1wj",
+      "version": 12,
+      "timestamp": "2026-03-03T23:40:42.664Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "## Summary\n- Added stage-1 quick base tour step (Control Station) before launch flow.\n- Added three starter contractors with updated thematic copy and per-contractor Iron/Nickel order variants.\n- Gated stage-1 launch flow on contractor signing in Launchpad selector and launch button validation.\n- Added mining top HUD order tracker with live collected/required progress and completion state.\n- Added early debrief recap mode (no sell/scrap controls) that evaluates order completion and awards contractor affinity.\n- Added early mission restart loop: incomplete starter order after mining completion triggers immediate mining restart.\n\n## Verification\n- `npm run test:unit` passed (4 suites / 21 tests).\n- `npm run test:e2e -- --grep \"SP14\"` passed.\n- `npm run test:e2e` ran; 26 passed, 2 narrative survey tests failed (NP03, NP05) unrelated to starter-flow logic.",
+          "newValue": "## Summary\n- Added stage-1 quick base tour step (Control Station) before launch flow.\n- Added three starter contractors with updated thematic copy and per-contractor Iron/Nickel order variants.\n- Gated stage-1 launch flow on contractor signing in Launchpad selector and launch button validation.\n- Added mining top HUD order tracker with live collected/required progress and completion state.\n- Added early debrief recap mode (no sell/scrap controls) that evaluates order completion and awards contractor affinity.\n- Added early mission restart loop: incomplete starter order after mining completion triggers immediate mining restart.\n\n## Verification\n- `npm run test:unit` passed (4 suites / 21 tests).\n- `npm run test:e2e -- --grep \"SP14\"` passed.\n- `npm run test:e2e` ran; 26 passed, 2 narrative survey tests failed (NP03, NP05) unrelated to starter-flow logic.\n\n✓ Follow-up fix: added explicit Control Station close step, removed hard open_launchpad stage-1 step, added close action recording, improved contractor step fallback guidance, and ensured launchpad selector panel is auto-created/shown in earth_launchpad."
+        }
+      ],
+      "snapshot": {
+        "title": "Starter flow: contractor-first onboarding + guided mission order",
+        "description": "Update early-game flow so players complete a minimal tour, choose one of three starter contractors, fulfill contractor mineral order in mining, and get affinity-based debrief/retry behavior for early missions.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "onboarding",
+          "tutorial",
+          "contractor",
+          "mining",
+          "debrief"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "First-run onboarding includes a short in-game tour before mission actions."
+          },
+          {
+            "completed": true,
+            "text": "Player selects one of three starter contractors with clear thematic descriptions (military tech, consumer electronics, space innovation)."
+          },
+          {
+            "completed": true,
+            "text": "Mining UI shows active contractor mineral order targets during early missions."
+          },
+          {
+            "completed": true,
+            "text": "Early mission debrief hides sell actions and instead evaluates contractor order completion with affinity feedback."
+          },
+          {
+            "completed": true,
+            "text": "If early mission mining ends without meeting contractor order, mission restarts instead of progressing debrief payout flow."
+          }
+        ],
+        "implementationPlan": "1. Extend tutorial stage 1 to start with a short guided base tour and a contractor-signing step before launch.\n2. Add starter contractor contract data (3 options, improved thematic copy, per-contractor mineral order variants) and persist selected starter contractor + mission order.\n3. Update launchpad stage-1 UI to require contractor selection before target/launch and record tutorial action for contractor signing.\n4. Add mining HUD order tracker (top section) showing required minerals + progress for selected starter contractor mission.\n5. Update early mission debrief flow: hide sell/scrap actions, evaluate contract completion, award contractor affinity, and show recap messaging.\n6. Enforce early-mission failure behavior: if mining session ends without meeting order, trigger mission restart loop instead of normal debrief progression.\n7. Run targeted tests (unit + e2e subset) and adjust any tutorial action mappings/checklists impacted by new action keys.",
+        "implementationNotes": "## Summary\n- Added stage-1 quick base tour step (Control Station) before launch flow.\n- Added three starter contractors with updated thematic copy and per-contractor Iron/Nickel order variants.\n- Gated stage-1 launch flow on contractor signing in Launchpad selector and launch button validation.\n- Added mining top HUD order tracker with live collected/required progress and completion state.\n- Added early debrief recap mode (no sell/scrap controls) that evaluates order completion and awards contractor affinity.\n- Added early mission restart loop: incomplete starter order after mining completion triggers immediate mining restart.\n\n## Verification\n- `npm run test:unit` passed (4 suites / 21 tests).\n- `npm run test:e2e -- --grep \"SP14\"` passed.\n- `npm run test:e2e` ran; 26 passed, 2 narrative survey tests failed (NP03, NP05) unrelated to starter-flow logic.\n\n✓ Follow-up fix: added explicit Control Station close step, removed hard open_launchpad stage-1 step, added close action recording, improved contractor step fallback guidance, and ensured launchpad selector panel is auto-created/shown in earth_launchpad."
+      }
+    },
+    {
+      "id": "v13",
+      "taskId": "dby1wj",
+      "version": 13,
+      "timestamp": "2026-03-03T23:40:51.572Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Starter flow: contractor-first onboarding + guided mission order",
+        "description": "Update early-game flow so players complete a minimal tour, choose one of three starter contractors, fulfill contractor mineral order in mining, and get affinity-based debrief/retry behavior for early missions.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "onboarding",
+          "tutorial",
+          "contractor",
+          "mining",
+          "debrief"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "First-run onboarding includes a short in-game tour before mission actions."
+          },
+          {
+            "completed": true,
+            "text": "Player selects one of three starter contractors with clear thematic descriptions (military tech, consumer electronics, space innovation)."
+          },
+          {
+            "completed": true,
+            "text": "Mining UI shows active contractor mineral order targets during early missions."
+          },
+          {
+            "completed": true,
+            "text": "Early mission debrief hides sell actions and instead evaluates contractor order completion with affinity feedback."
+          },
+          {
+            "completed": true,
+            "text": "If early mission mining ends without meeting contractor order, mission restarts instead of progressing debrief payout flow."
+          }
+        ],
+        "implementationPlan": "1. Extend tutorial stage 1 to start with a short guided base tour and a contractor-signing step before launch.\n2. Add starter contractor contract data (3 options, improved thematic copy, per-contractor mineral order variants) and persist selected starter contractor + mission order.\n3. Update launchpad stage-1 UI to require contractor selection before target/launch and record tutorial action for contractor signing.\n4. Add mining HUD order tracker (top section) showing required minerals + progress for selected starter contractor mission.\n5. Update early mission debrief flow: hide sell/scrap actions, evaluate contract completion, award contractor affinity, and show recap messaging.\n6. Enforce early-mission failure behavior: if mining session ends without meeting order, trigger mission restart loop instead of normal debrief progression.\n7. Run targeted tests (unit + e2e subset) and adjust any tutorial action mappings/checklists impacted by new action keys.",
+        "implementationNotes": "## Summary\n- Added stage-1 quick base tour step (Control Station) before launch flow.\n- Added three starter contractors with updated thematic copy and per-contractor Iron/Nickel order variants.\n- Gated stage-1 launch flow on contractor signing in Launchpad selector and launch button validation.\n- Added mining top HUD order tracker with live collected/required progress and completion state.\n- Added early debrief recap mode (no sell/scrap controls) that evaluates order completion and awards contractor affinity.\n- Added early mission restart loop: incomplete starter order after mining completion triggers immediate mining restart.\n\n## Verification\n- `npm run test:unit` passed (4 suites / 21 tests).\n- `npm run test:e2e -- --grep \"SP14\"` passed.\n- `npm run test:e2e` ran; 26 passed, 2 narrative survey tests failed (NP03, NP05) unrelated to starter-flow logic.\n\n✓ Follow-up fix: added explicit Control Station close step, removed hard open_launchpad stage-1 step, added close action recording, improved contractor step fallback guidance, and ensured launchpad selector panel is auto-created/shown in earth_launchpad."
+      }
+    },
+    {
+      "id": "v14",
+      "taskId": "dby1wj",
+      "version": 14,
+      "timestamp": "2026-03-03T23:43:02.886Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "## Summary\n- Added stage-1 quick base tour step (Control Station) before launch flow.\n- Added three starter contractors with updated thematic copy and per-contractor Iron/Nickel order variants.\n- Gated stage-1 launch flow on contractor signing in Launchpad selector and launch button validation.\n- Added mining top HUD order tracker with live collected/required progress and completion state.\n- Added early debrief recap mode (no sell/scrap controls) that evaluates order completion and awards contractor affinity.\n- Added early mission restart loop: incomplete starter order after mining completion triggers immediate mining restart.\n\n## Verification\n- `npm run test:unit` passed (4 suites / 21 tests).\n- `npm run test:e2e -- --grep \"SP14\"` passed.\n- `npm run test:e2e` ran; 26 passed, 2 narrative survey tests failed (NP03, NP05) unrelated to starter-flow logic.\n\n✓ Follow-up fix: added explicit Control Station close step, removed hard open_launchpad stage-1 step, added close action recording, improved contractor step fallback guidance, and ensured launchpad selector panel is auto-created/shown in earth_launchpad.",
+          "newValue": "## Summary\n- Added stage-1 quick base tour step (Control Station) before launch flow.\n- Added three starter contractors with updated thematic copy and per-contractor Iron/Nickel order variants.\n- Gated stage-1 launch flow on contractor signing in Launchpad selector and launch button validation.\n- Added mining top HUD order tracker with live collected/required progress and completion state.\n- Added early debrief recap mode (no sell/scrap controls) that evaluates order completion and awards contractor affinity.\n- Added early mission restart loop: incomplete starter order after mining completion triggers immediate mining restart.\n\n## Verification\n- `npm run test:unit` passed (4 suites / 21 tests).\n- `npm run test:e2e -- --grep \"SP14\"` passed.\n- `npm run test:e2e` ran; 26 passed, 2 narrative survey tests failed (NP03, NP05) unrelated to starter-flow logic.\n\n✓ Follow-up fix: added explicit Control Station close step, removed hard open_launchpad stage-1 step, added close action recording, improved contractor step fallback guidance, and ensured launchpad selector panel is auto-created/shown in earth_launchpad.\n\n✓ Verification rerun after tutorial-flow follow-up: npm run test:unit passed; npm run test:e2e -- --grep \"SP14\" passed; full npm run test:e2e now 28/28 passed."
+        }
+      ],
+      "snapshot": {
+        "title": "Starter flow: contractor-first onboarding + guided mission order",
+        "description": "Update early-game flow so players complete a minimal tour, choose one of three starter contractors, fulfill contractor mineral order in mining, and get affinity-based debrief/retry behavior for early missions.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "onboarding",
+          "tutorial",
+          "contractor",
+          "mining",
+          "debrief"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "First-run onboarding includes a short in-game tour before mission actions."
+          },
+          {
+            "completed": true,
+            "text": "Player selects one of three starter contractors with clear thematic descriptions (military tech, consumer electronics, space innovation)."
+          },
+          {
+            "completed": true,
+            "text": "Mining UI shows active contractor mineral order targets during early missions."
+          },
+          {
+            "completed": true,
+            "text": "Early mission debrief hides sell actions and instead evaluates contractor order completion with affinity feedback."
+          },
+          {
+            "completed": true,
+            "text": "If early mission mining ends without meeting contractor order, mission restarts instead of progressing debrief payout flow."
+          }
+        ],
+        "implementationPlan": "1. Extend tutorial stage 1 to start with a short guided base tour and a contractor-signing step before launch.\n2. Add starter contractor contract data (3 options, improved thematic copy, per-contractor mineral order variants) and persist selected starter contractor + mission order.\n3. Update launchpad stage-1 UI to require contractor selection before target/launch and record tutorial action for contractor signing.\n4. Add mining HUD order tracker (top section) showing required minerals + progress for selected starter contractor mission.\n5. Update early mission debrief flow: hide sell/scrap actions, evaluate contract completion, award contractor affinity, and show recap messaging.\n6. Enforce early-mission failure behavior: if mining session ends without meeting order, trigger mission restart loop instead of normal debrief progression.\n7. Run targeted tests (unit + e2e subset) and adjust any tutorial action mappings/checklists impacted by new action keys.",
+        "implementationNotes": "## Summary\n- Added stage-1 quick base tour step (Control Station) before launch flow.\n- Added three starter contractors with updated thematic copy and per-contractor Iron/Nickel order variants.\n- Gated stage-1 launch flow on contractor signing in Launchpad selector and launch button validation.\n- Added mining top HUD order tracker with live collected/required progress and completion state.\n- Added early debrief recap mode (no sell/scrap controls) that evaluates order completion and awards contractor affinity.\n- Added early mission restart loop: incomplete starter order after mining completion triggers immediate mining restart.\n\n## Verification\n- `npm run test:unit` passed (4 suites / 21 tests).\n- `npm run test:e2e -- --grep \"SP14\"` passed.\n- `npm run test:e2e` ran; 26 passed, 2 narrative survey tests failed (NP03, NP05) unrelated to starter-flow logic.\n\n✓ Follow-up fix: added explicit Control Station close step, removed hard open_launchpad stage-1 step, added close action recording, improved contractor step fallback guidance, and ensured launchpad selector panel is auto-created/shown in earth_launchpad.\n\n✓ Verification rerun after tutorial-flow follow-up: npm run test:unit passed; npm run test:e2e -- --grep \"SP14\" passed; full npm run test:e2e now 28/28 passed."
+      }
+    }
+  ]
+}

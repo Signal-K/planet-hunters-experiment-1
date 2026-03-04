@@ -151,6 +151,36 @@ const MISSION5_CONTRACTOR_OFFERS := [
 	}
 ]
 
+const STARTER_CONTRACTOR_OFFERS := [
+	{
+		"id": "aegis_defense",
+		"name": "Aegis Defense Systems",
+		"focus": "Defense-grade avionics and hardened military systems",
+		"requested_minerals": {
+			"Iron": 130,
+			"Nickel": 95
+		}
+	},
+	{
+		"id": "lumen_consumer",
+		"name": "Lumen Consumer Labs",
+		"focus": "High-volume consumer electronics and smart devices",
+		"requested_minerals": {
+			"Iron": 115,
+			"Nickel": 110
+		}
+	},
+	{
+		"id": "helion_orbital",
+		"name": "Helion Orbital Works",
+		"focus": "Next-gen propulsion and frontier space innovation",
+		"requested_minerals": {
+			"Iron": 105,
+			"Nickel": 125
+		}
+	}
+]
+
 static var _preview_target: Dictionary = {}
 static var _return_to_new_mission_panel: bool = false
 static var _preview_index: int = 0
@@ -367,6 +397,73 @@ static func get_mission5_payout_cap() -> int:
 
 static func get_mission5_contractors() -> Array:
 	return MISSION5_CONTRACTOR_OFFERS.duplicate(true)
+
+static func get_starter_contractors() -> Array:
+	return STARTER_CONTRACTOR_OFFERS.duplicate(true)
+
+static func ensure_starter_contract_offer() -> Dictionary:
+	if get_mission_stage() > 1:
+		return {}
+	var s = load_state()
+	var existing = s.get("starter_contract_offer", {})
+	if typeof(existing) == TYPE_DICTIONARY and not existing.is_empty():
+		var selected_contractor = str(existing.get("selected_contractor", ""))
+		var has_valid_selected = selected_contractor == "" or _find_starter_contractor(selected_contractor).size() > 0
+		if has_valid_selected:
+			return existing.duplicate(true)
+	var offer = _build_starter_contract_offer()
+	s["starter_contract_offer"] = offer.duplicate(true)
+	save_state(s)
+	return offer
+
+static func get_starter_contract_offer() -> Dictionary:
+	var s = load_state()
+	var offer = s.get("starter_contract_offer", {})
+	if typeof(offer) != TYPE_DICTIONARY:
+		return {}
+	return offer.duplicate(true)
+
+static func clear_starter_contract_offer() -> bool:
+	var s = load_state()
+	s["starter_contract_offer"] = {}
+	return save_state(s)
+
+static func select_starter_contractor(contractor_id: String) -> bool:
+	if contractor_id == "":
+		return false
+	if get_mission_stage() > 1:
+		return false
+	if _find_starter_contractor(contractor_id).is_empty():
+		return false
+	var offer = ensure_starter_contract_offer()
+	if offer.is_empty():
+		return false
+	offer["selected_contractor"] = contractor_id
+	var s = load_state()
+	s["starter_contract_offer"] = offer
+	return save_state(s)
+
+static func get_starter_selected_contractor() -> Dictionary:
+	var offer = get_starter_contract_offer()
+	if offer.is_empty():
+		return {}
+	var selected = str(offer.get("selected_contractor", ""))
+	if selected == "":
+		return {}
+	return _find_starter_contractor(selected).duplicate(true)
+
+static func get_starter_requested_minerals(contractor_id: String = "") -> Dictionary:
+	var selected := {}
+	if contractor_id != "":
+		selected = _find_starter_contractor(contractor_id)
+	else:
+		selected = get_starter_selected_contractor()
+	if selected.is_empty():
+		return {}
+	var requested = selected.get("requested_minerals", {})
+	if typeof(requested) != TYPE_DICTIONARY:
+		return {}
+	return requested.duplicate(true)
 
 static func ensure_mission5_contract_offer(detected_targets: Array = []) -> Dictionary:
 	if get_mission_stage() < 5:
@@ -1332,7 +1429,7 @@ static func clear_preview_target() -> void:
 	s["preview_target"] = {}
 	save_state(s)
 
-static func set_returned_mission(rocket_id: String, target_id: String, target_label: String, target_type: String, operation_mode: String = "") -> void:
+static func set_returned_mission(rocket_id: String, target_id: String, target_label: String, target_type: String, operation_mode: String = "", extra: Dictionary = {}) -> void:
 	var resolved_mode = operation_mode.strip_edges().to_lower()
 	if not OPEN_OPERATION_MODES.has(resolved_mode):
 		resolved_mode = get_operation_mode_for_rocket(rocket_id)
@@ -1344,6 +1441,8 @@ static func set_returned_mission(rocket_id: String, target_id: String, target_la
 		"operation_mode": resolved_mode,
 		"rocket_customization": get_rocket_customization(rocket_id)
 	}
+	for key in extra.keys():
+		_returned_mission[key] = extra[key]
 	var s = load_state()
 	s["returned_mission"] = _returned_mission.duplicate(true)
 	save_state(s)
@@ -1639,6 +1738,15 @@ static func _set_status_changed_at_in_state(state: Dictionary, rocket_id: String
 
 static func _find_mission5_contractor(contractor_id: String) -> Dictionary:
 	return RocketsMissionProgress.find_mission5_contractor(contractor_id, MISSION5_CONTRACTOR_OFFERS)
+
+static func _find_starter_contractor(contractor_id: String) -> Dictionary:
+	return RocketsMissionProgress.find_mission5_contractor(contractor_id, STARTER_CONTRACTOR_OFFERS)
+
+static func _build_starter_contract_offer() -> Dictionary:
+	return {
+		"contractors": get_starter_contractors(),
+		"selected_contractor": ""
+	}
 
 static func _build_mission5_contract_offer(detected_targets: Array = []) -> Dictionary:
 	return RocketsMissionProgress.build_mission5_contract_offer(

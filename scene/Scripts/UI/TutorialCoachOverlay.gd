@@ -29,6 +29,7 @@ const DASH_OFF := 14.0
 @onready var panel: PanelContainer = $Root/Panel
 @onready var title_label: Label = $Root/Panel/Margin/VBox/Header/TitleLabel
 @onready var stage_label: Label = $Root/Panel/Margin/VBox/Header/StageLabel
+@onready var collapse_button: Button = $Root/Panel/Margin/VBox/Header/CollapseButton
 @onready var message_label: Label = $Root/Panel/Margin/VBox/MessageLabel
 @onready var action_label: Label = $Root/Panel/Margin/VBox/ActionLabel
 @onready var progress_label: Label = $Root/Panel/Margin/VBox/ProgressLabel
@@ -37,11 +38,13 @@ const DASH_OFF := 14.0
 @onready var replay_mission_button: Button = $Root/Panel/Margin/VBox/Buttons/ReplayMissionButton
 @onready var replay_all_button: Button = $Root/Panel/Margin/VBox/Buttons/ReplayAllButton
 
+var _collapsed := false
 var _app_controller: Node = null
 var _layout_elapsed := 0.0
 var _current_state: Dictionary = {}
 var _current_step: Dictionary = {}
 var _transit_suppressed := false
+var _off_course := false
 
 var _highlight_box: Panel = null
 var _guide_line: Line2D = null
@@ -65,6 +68,7 @@ func _ready() -> void:
 	_app_controller = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
 	if _app_controller and _app_controller.has_signal("tutorial_state_updated"):
 		_app_controller.tutorial_state_updated.connect(_on_tutorial_state_updated)
+	collapse_button.pressed.connect(_on_collapse_pressed)
 	skip_button.pressed.connect(_on_skip_pressed)
 	practice_mining_button.pressed.connect(_on_practice_mining_pressed)
 	replay_mission_button.pressed.connect(_on_replay_mission_pressed)
@@ -80,6 +84,7 @@ func _process(delta: float) -> void:
 		return
 	_layout_elapsed = 0.0
 	_apply_transit_suppression()
+	_apply_off_course_check()
 	_reposition_panel()
 	_update_guidance_overlay()
 
@@ -93,7 +98,32 @@ func _apply_transit_suppression() -> void:
 		_hide_guide_overlay()
 	else:
 		# Resuming from transit — re-read current state and restore the panel.
+		_off_course = false
 		_refresh()
+
+func _apply_off_course_check() -> void:
+	if not visible:
+		return
+	var valid_scenes: Array = _current_step.get("valid_scenes", [])
+	if valid_scenes.is_empty():
+		if _off_course:
+			_off_course = false
+			_on_tutorial_state_updated(_current_state)
+		return
+	var tree = get_tree()
+	if tree == null or tree.current_scene == null:
+		return
+	var basename: String = tree.current_scene.scene_file_path.get_file().get_basename()
+	var in_valid_scene: bool = basename in valid_scenes
+	if not in_valid_scene and not _off_course:
+		_off_course = true
+		message_label.text = "This area isn't part of the current step. Head back to the base to continue."
+		if action_label:
+			action_label.text = "← Return to the base"
+		_hide_guide_overlay()
+	elif in_valid_scene and _off_course:
+		_off_course = false
+		_on_tutorial_state_updated(_current_state)
 
 func _is_transit_scene() -> bool:
 	var tree = get_tree()
@@ -140,6 +170,7 @@ func _apply_style() -> void:
 	for btn in [skip_button, replay_mission_button, replay_all_button]:
 		_apply_pill_outline_button(btn, false)
 	_apply_pill_outline_button(practice_mining_button, true)
+	_apply_collapse_button_style()
 
 
 func _apply_pill_outline_button(btn: Button, is_primary: bool) -> void:
@@ -175,6 +206,42 @@ func _apply_pill_outline_button(btn: Button, is_primary: bool) -> void:
 	btn.add_theme_color_override("font_pressed_color", col)
 	btn.add_theme_color_override("font_disabled_color",col_d)
 	btn.add_theme_font_size_override("font_size", 22)
+
+func _apply_collapse_button_style() -> void:
+	if collapse_button == null:
+		return
+	collapse_button.set_meta("ui_style_locked", true)
+	var col := CYAN
+	var normal := StyleBoxFlat.new()
+	normal.bg_color = Color(0, 0, 0, 0)
+	normal.border_color = Color(col.r, col.g, col.b, 0.5)
+	normal.set_border_width_all(1)
+	normal.set_corner_radius_all(32)
+	normal.content_margin_left   = 14
+	normal.content_margin_right  = 14
+	normal.content_margin_top    = 6
+	normal.content_margin_bottom = 6
+	var hover := normal.duplicate()
+	hover.bg_color = Color(col.r, col.g, col.b, 0.12)
+	var pressed := normal.duplicate()
+	pressed.bg_color = Color(col.r, col.g, col.b, 0.22)
+	collapse_button.add_theme_stylebox_override("normal",  normal)
+	collapse_button.add_theme_stylebox_override("hover",   hover)
+	collapse_button.add_theme_stylebox_override("pressed", pressed)
+	collapse_button.add_theme_stylebox_override("focus",   hover)
+	collapse_button.add_theme_color_override("font_color", col)
+	collapse_button.add_theme_color_override("font_hover_color", col)
+	collapse_button.add_theme_color_override("font_pressed_color", col)
+	collapse_button.add_theme_font_size_override("font_size", 22)
+
+func _on_collapse_pressed() -> void:
+	_collapsed = !_collapsed
+	collapse_button.text = "+" if _collapsed else "−"
+	message_label.visible = !_collapsed
+	action_label.visible = !_collapsed
+	progress_label.visible = !_collapsed
+	$Root/Panel/Margin/VBox/Buttons.visible = !_collapsed
+	call_deferred("_reposition_panel")
 
 func _setup_guide_nodes() -> void:
 	_highlight_box = Panel.new()
@@ -229,6 +296,7 @@ func _refresh() -> void:
 	_on_tutorial_state_updated(state)
 
 func _on_tutorial_state_updated(state: Dictionary) -> void:
+	_off_course = false
 	_current_state = state.duplicate(true)
 	if state.is_empty():
 		visible = false
@@ -275,8 +343,12 @@ func _reposition_panel() -> void:
 		if overlap < best_overlap:
 			best_overlap = overlap
 			best_rect = candidate
-	# Always show the panel at the least-overlapping position — hiding entirely when
-	# every candidate overlaps something leaves the user with no guidance at all.
+	# Hide when a menu/screen is covering the viewport — the user can't act on
+	# tutorial steps while another panel is open, so the overlay would only obstruct.
+	var panel_area: float = panel_size.x * panel_size.y
+	if best_overlap > panel_area * 0.15:
+		panel.visible = false
+		return
 	panel.visible = true
 	panel.size = panel_size
 	panel.position = _clamp_panel_position(best_rect.position, panel_size, viewport_rect)
@@ -313,6 +385,8 @@ func _candidate_rects(viewport_rect: Rect2, size: Vector2, target_rect: Rect2) -
 
 func _panel_layout_size(viewport_rect: Rect2) -> Vector2:
 	var min_size = panel.get_combined_minimum_size()
+	if _collapsed:
+		return Vector2(max(PANEL_MIN_SIZE.x, min_size.x), min_size.y)
 	var size = Vector2(
 		max(PANEL_MIN_SIZE.x, max(PANEL_DEFAULT_SIZE.x, min_size.x)),
 		max(PANEL_MIN_SIZE.y, max(PANEL_DEFAULT_SIZE.y, min_size.y))
