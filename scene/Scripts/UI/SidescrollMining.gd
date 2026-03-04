@@ -61,6 +61,9 @@ var _terrain_loop_container: Node2D = null
 @onready var beam_label: Label = $UI/TopBar/LeftGauges/BeamPanel/VBox/Label
 @onready var score_label: Label = $UI/TopBar/RightStats/ScorePanel/ScoreLabel
 @onready var rocket_label: Label = $UI/TopBar/RightStats/RocketPanel/Label
+@onready var contract_order_panel: PanelContainer = $UI/ContractOrderPanel
+@onready var contract_order_title: Label = $UI/ContractOrderPanel/VBox/TitleLabel
+@onready var contract_order_progress: Label = $UI/ContractOrderPanel/VBox/ProgressLabel
 @onready var fire_button: Button = $UI/FireButton
 @onready var instructions: Label = $UI/Instructions
 @onready var particles_container: Node2D = $ParticlesContainer
@@ -93,7 +96,11 @@ var _drones_deployed := 0
 var _stuck_reasons_emitted: Dictionary = {}
 var _completion_reason := "duration_elapsed"
 var _completion_emitted := false
+var _completion_report := {}
 var _last_progress_elapsed := 0.0
+var _starter_contract_active := false
+var _starter_contractor_name := ""
+var _starter_order_targets: Dictionary = {}
 # True when touch/on-screen buttons should be shown: native mobile OR small viewport
 # (web users on phones report OS.has_feature("mobile") as false, so we fall back to width)
 var _uses_touch_controls := false
@@ -153,6 +160,8 @@ func start_mining(is_planet: bool = false, difficulty: int = 1, target_id: Strin
 	_target_minerals = minerals
 	_target_mineable_pct = mineable_pct
 	_session_context = session_context.duplicate(true)
+	_completion_report = {}
+	_resolve_starter_contract_context()
 	
 	# Regenerate terrain with target seed and difficulty
 	_generate_terrain()
@@ -174,6 +183,7 @@ func start_mining(is_planet: bool = false, difficulty: int = 1, target_id: Strin
 		"subsurface_deposit_count": _subsurface_deposit_count
 	})
 	GameplayAnalytics.start_mining_session(analytics_payload)
+	_refresh_contract_order_tracker()
 	
 	# Update UI after scene is ready
 	call_deferred("_update_rocket_ui")
@@ -630,6 +640,7 @@ func _record_region_collection(region: Dictionary, source: String) -> void:
 			"elapsed_seconds": snapped(_elapsed_time, 0.1),
 			"mineral_name": mineral_name
 		}))
+	_refresh_contract_order_tracker()
 
 func _maybe_emit_stuck_signals() -> void:
 	if _should_emit_stuck_reason("no_collection_30s", _elapsed_time >= 30.0 and _collected_deposit_count == 0):
@@ -683,6 +694,7 @@ func _complete_mining():
 	if _completion_emitted:
 		return
 	_completion_emitted = true
+	var starter_contract_complete = _is_starter_contract_complete()
 	var total_passes = max(_loop_count + 1, 1)
 	var available_deposit_opportunities = max(_total_deposit_count * total_passes, 1)
 	var collection_rate_pct = (float(_collected_deposit_count) / float(available_deposit_opportunities)) * 100.0
@@ -701,8 +713,17 @@ func _complete_mining():
 		"drones_deployed": _drones_deployed,
 		"collection_rate_pct": snapped(collection_rate_pct, 0.1),
 		"collection_inventory": _collected_minerals.duplicate(true),
-		"last_progress_seconds": snapped(_last_progress_elapsed, 0.1)
+		"last_progress_seconds": snapped(_last_progress_elapsed, 0.1),
+		"starter_contract_active": _starter_contract_active,
+		"starter_contract_complete": starter_contract_complete
 	})
+	_completion_report = {
+		"reason": _completion_reason,
+		"starter_contract_active": _starter_contract_active,
+		"starter_contract_complete": starter_contract_complete,
+		"starter_order": _starter_order_targets.duplicate(true),
+		"collected": _collected_minerals.duplicate(true)
+	}
 	mining_completed.emit(_collected_minerals, _score)
 
 func _show_guide_step():
@@ -718,6 +739,8 @@ func _show_guide_step():
 				instructions.text = "Welcome to mining. Hold FIRE to mine, tap DRONE for drones, tap RETURN to head back to debrief."
 			else:
 				instructions.text = "Welcome to mining. Hold SPACE to mine, press D for drones, press RETURN to head back to debrief."
+			if _starter_contract_active and _starter_order_targets.size() > 0:
+				instructions.text += " Follow the mission order shown at the top."
 			_guide_paused = false  # Keep flying
 		GuideStep.MINE_SURFACE_IRON:
 			instructions.text = "ORANGE = Iron (10pts). Hold SPACE to mine surface deposits!"
@@ -885,3 +908,54 @@ func _on_return_pressed():
 	else:
 		_completion_reason = "manual_return"
 	_complete_mining()
+
+func get_completion_report() -> Dictionary:
+	return _completion_report.duplicate(true)
+
+func _resolve_starter_contract_context() -> void:
+	_starter_contract_active = false
+	_starter_contractor_name = ""
+	_starter_order_targets = {}
+	var starter_contract = _session_context.get("starter_contract", {})
+	if typeof(starter_contract) != TYPE_DICTIONARY or starter_contract.is_empty():
+		return
+	_starter_contract_active = bool(starter_contract.get("active", false))
+	_starter_contractor_name = str(starter_contract.get("name", "Contractor"))
+	var requested = starter_contract.get("requested_minerals", {})
+	if typeof(requested) != TYPE_DICTIONARY:
+		return
+	for key in requested.keys():
+		var amount = max(int(requested.get(key, 0)), 0)
+		if amount > 0:
+			_starter_order_targets[str(key)] = amount
+	if _starter_order_targets.is_empty():
+		_starter_contract_active = false
+
+func _is_starter_contract_complete() -> bool:
+	if not _starter_contract_active or _starter_order_targets.is_empty():
+		return false
+	for key in _starter_order_targets.keys():
+		var required_amount = int(_starter_order_targets.get(key, 0))
+		var collected_amount = int(_collected_minerals.get(key, 0))
+		if collected_amount < required_amount:
+			return false
+	return true
+
+func _refresh_contract_order_tracker() -> void:
+	if contract_order_panel == null or contract_order_title == null or contract_order_progress == null:
+		return
+	var show_order = _starter_contract_active and not _starter_order_targets.is_empty()
+	contract_order_panel.visible = show_order
+	if not show_order:
+		return
+	contract_order_title.text = "%s Order" % _starter_contractor_name
+	var lines := []
+	var keys = _starter_order_targets.keys()
+	keys.sort()
+	for key in keys:
+		var required_amount = int(_starter_order_targets.get(key, 0))
+		var collected_amount = int(_collected_minerals.get(key, 0))
+		lines.append("%s: %d/%d kg" % [str(key), collected_amount, required_amount])
+	if _is_starter_contract_complete():
+		lines.append("Order complete. Return to debrief.")
+	contract_order_progress.text = "\n".join(lines)

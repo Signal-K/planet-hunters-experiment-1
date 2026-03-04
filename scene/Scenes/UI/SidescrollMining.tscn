@@ -1,7 +1,8 @@
-[gd_scene load_steps=8 format=3 uid="uid://bvx8m3qp4nwc"]
+[gd_scene load_steps=9 format=3 uid="uid://bvx8m3qp4nwc"]
 
 [ext_resource type="Script" uid="uid://duab3b5ak0b7w" path="res://Scripts/UI/SidescrollMining.gd" id="1"]
 [ext_resource type="PackedScene" uid="uid://c8yv3qbxmh7wd" path="res://Scenes/UI/MiningDrone.tscn" id="2"]
+[ext_resource type="Texture2D" path="res://assets/Vehicles/StarterRocketStage2Frame1.png" id="3"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1"]
 bg_color = Color(0.15, 0.2, 0.3, 0.9)
@@ -388,15 +389,19 @@ visible = false
 visible = false
 
 [node name="TerrainFill" type="Polygon2D" parent="TerrainContainer"]
-color = Color(0.25, 0.2, 0.18, 1)
+color = Color(0.65, 0.35, 0.25, 1)
+polygon = PackedVector2Array(0, 480, 400, 450, 700, 490, 1000, 430, 1300, 410, 1600, 465, 1900, 490, 2200, 445, 2600, 475, 3000, 440, 3400, 470, 3800, 455, 4000, 475, 4000, 720, 0, 720)
 
 [node name="TerrainLine" type="Line2D" parent="TerrainContainer"]
 width = 4.0
-default_color = Color(0.5, 0.4, 0.35, 1)
+default_color = Color(0.85, 0.55, 0.35, 0.9)
+points = PackedVector2Array(0, 480, 400, 450, 700, 490, 1000, 430, 1300, 410, 1600, 465, 1900, 490, 2200, 445, 2600, 475, 3000, 440, 3400, 470, 3800, 455, 4000, 475)
 
 [node name="Rocket" type="Sprite2D" parent="."]
 position = Vector2(250, 200)
-scale = Vector2(0.15, 0.15)
+rotation = 1.5708
+scale = Vector2(0.27, 0.27)
+texture = ExtResource("3")
 
 [node name="Laser" type="Line2D" parent="."]
 width = 6.0
@@ -536,6 +541,37 @@ offset_right = -20.0
 offset_bottom = 90.0
 grow_horizontal = 2
 theme_override_constants/separation = 20
+
+[node name="ContractOrderPanel" type="PanelContainer" parent="UI"]
+visible = false
+layout_mode = 1
+anchors_preset = 10
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -300.0
+offset_top = 100.0
+offset_right = 300.0
+offset_bottom = 188.0
+grow_horizontal = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_1")
+
+[node name="VBox" type="VBoxContainer" parent="UI/ContractOrderPanel"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="TitleLabel" type="Label" parent="UI/ContractOrderPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.93, 1, 1)
+theme_override_font_sizes/font_size = 17
+text = "Contract Order"
+horizontal_alignment = 1
+
+[node name="ProgressLabel" type="Label" parent="UI/ContractOrderPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 0.84, 1)
+theme_override_font_sizes/font_size = 15
+text = "Iron: 0/0 kg"
+horizontal_alignment = 1
 
 [node name="LeftGauges" type="HBoxContainer" parent="UI/TopBar"]
 layout_mode = 2

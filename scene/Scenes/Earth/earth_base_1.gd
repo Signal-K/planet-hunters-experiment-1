@@ -41,6 +41,7 @@ func _ready() -> void:
 		DebugVisualizer.create_ground_guides(self)
 
 	call_deferred("_maybe_show_starterrocket2_unlock_popup")
+	call_deferred("_apply_tutorial_button_state")
 	_build_earth_base_identity()
 
 func _setup_buttons() -> void:
@@ -211,6 +212,7 @@ func _on_space_map_button_pressed() -> void:
 
 func _on_new_mission_button_pressed() -> void:
 	print("New Mission button pressed - opening launchpad scene")
+	preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("open_launchpad")
 	if scene_manager:
 		scene_manager.change_to_scene("res://Scenes/Earth/earth_launchpad.tscn")
 	else:
@@ -309,6 +311,23 @@ func _show_starterrocket2_unlock_popup() -> void:
 		_on_new_mission_button_pressed()
 	)
 	body.add_child(cta)
+
+func _apply_tutorial_button_state() -> void:
+	var app = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
+	var tutorial_active := false
+	if app != null and app.has_method("get_tutorial_state"):
+		var state: Dictionary = app.get_tutorial_state()
+		tutorial_active = not state.is_empty() and not bool(state.get("skipped", false))
+	# During the tutorial keep only Menu + New Mission active.
+	# SpaceMap, Market, and Forward lead nowhere useful and confuse new players.
+	for btn_path in [
+		"UILayer/ButtonContainer/ForwardButton",
+		"UILayer/ButtonContainer/MarketButton",
+		"UILayer/ButtonContainer/SpaceMapButton",
+	]:
+		var btn := get_node_or_null(btn_path) as Button
+		if btn:
+			btn.disabled = tutorial_active
 
 func _build_earth_base_identity() -> void:
 	_build_wordmark()

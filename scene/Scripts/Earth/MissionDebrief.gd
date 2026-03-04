@@ -17,9 +17,12 @@ const EmptyLabelScene = preload("res://Scenes/UI/Templates/MenuLogbookEmpty.tscn
 @onready var title_label: Label = $UI/Root/Panel/VBox/Title
 @onready var subtitle_label: Label = $UI/Root/Panel/VBox/Subtitle
 @onready var minerals_list: VBoxContainer = $UI/Root/Panel/VBox/Minerals/MineralsList
+@onready var actions_container: VBoxContainer = $UI/Root/Panel/VBox/Actions
+@onready var sell_row: HBoxContainer = $UI/Root/Panel/VBox/Actions/SellRow
 @onready var sell_orbit_button: Button = $UI/Root/Panel/VBox/Actions/SellRow/SellOrbitButton
 @onready var sell_earth_button: Button = $UI/Root/Panel/VBox/Actions/SellRow/SellEarthButton
 @onready var keep_button: Button = $UI/Root/Panel/VBox/Actions/KeepButton
+@onready var ship_row: HBoxContainer = $UI/Root/Panel/VBox/Actions/ShipRow
 @onready var scrap_button: Button = $UI/Root/Panel/VBox/Actions/ShipRow/ScrapButton
 @onready var salvage_button: Button = $UI/Root/Panel/VBox/Actions/ShipRow/SalvageButton
 @onready var leave_button: Button = $UI/Root/Panel/VBox/Actions/ShipRow/LeaveButton
@@ -35,6 +38,11 @@ var _closed_out := false
 var _subcontractor := {}
 var _last_exposure_awarded := 0
 var _science_card: PanelContainer = null
+var _starter_contract_mode := false
+var _starter_contract := {}
+var _starter_order := {}
+var _starter_order_complete := false
+var _starter_affinity_after := 0
 
 func _ready() -> void:
 	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
@@ -58,6 +66,7 @@ func _ready() -> void:
 	_register_orbiting()
 	_build_mineral_list()
 	_select_subcontractor()
+	_resolve_starter_contract_mode()
 	_update_labels()
 	_build_science_card()
 
@@ -70,6 +79,8 @@ func _ready() -> void:
 	if archive_button:
 		archive_button.pressed.connect(func(): _archive_ship())
 	back_button.pressed.connect(func(): _return_to_base())
+	if _starter_contract_mode:
+		_complete_starter_contract_debrief()
 
 func _load_returned_mission() -> Dictionary:
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
@@ -114,6 +125,9 @@ func _build_mineral_list() -> void:
 		_total_value += pricing.price_for(k, amount)
 
 func _get_collected_minerals() -> Dictionary:
+	var run_collected = _returned.get("mining_run_collected", {})
+	if typeof(run_collected) == TYPE_DICTIONARY and not run_collected.is_empty():
+		return run_collected.duplicate(true)
 	var target_id = str(_returned.get("target_id", ""))
 	if target_id == "":
 		return {}
@@ -141,10 +155,111 @@ func _update_labels() -> void:
 		if flag != "" or logo != "":
 			custom_suffix = " • %s/%s" % [flag if flag != "" else "No Flag", logo if logo != "" else "No Logo"]
 	subtitle_label.text = "Rocket %s returning from %s%s" % [rocket_id if rocket_id != "" else "", label, custom_suffix]
+	if _starter_contract_mode:
+		var contractor_name = str(_starter_contract.get("name", "Contractor"))
+		subtitle_label.text = "Starter contract recap for %s" % contractor_name
+		_apply_starter_contract_actions_visibility()
+		status_label.text = _build_starter_contract_recap_text()
+		_refresh_action_buttons()
+		return
 	var subcontractor_name = str(_subcontractor.get("name", "Subcontractor"))
 	status_label.text = _build_progress_feedback_text("Estimated orbit sale (%s): %s F" % [subcontractor_name, str(_total_value)])
 	_apply_mission4_buyer_hint()
 	_refresh_action_buttons()
+
+func _resolve_starter_contract_mode() -> void:
+	_starter_contract_mode = false
+	_starter_contract = {}
+	_starter_order = {}
+	_starter_order_complete = false
+	_starter_affinity_after = 0
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if not rm:
+		return
+	if int(rm.get_mission_stage()) != 1:
+		return
+	var selected = rm.get_starter_selected_contractor()
+	if selected.is_empty():
+		return
+	var requested = rm.get_starter_requested_minerals(str(selected.get("id", "")))
+	if requested.is_empty():
+		return
+	_starter_contract_mode = true
+	_starter_contract = selected.duplicate(true)
+	_starter_order = requested.duplicate(true)
+	_starter_order_complete = _check_order_complete(_collected, _starter_order)
+
+func _check_order_complete(collected: Dictionary, requested: Dictionary) -> bool:
+	if requested.is_empty():
+		return false
+	for key in requested.keys():
+		var required_amount = max(int(requested.get(key, 0)), 0)
+		if required_amount <= 0:
+			continue
+		var collected_amount = int(collected.get(str(key), 0))
+		if collected_amount < required_amount:
+			return false
+	return true
+
+func _apply_starter_contract_actions_visibility() -> void:
+	if sell_row:
+		sell_row.visible = false
+	if keep_button:
+		keep_button.visible = false
+	if ship_row:
+		ship_row.visible = false
+	if archive_button:
+		archive_button.visible = false
+
+func _complete_starter_contract_debrief() -> void:
+	if not _starter_contract_mode:
+		return
+	_apply_starter_contract_actions_visibility()
+	_lock_action_buttons()
+	if back_button:
+		back_button.disabled = false
+		back_button.text = "Continue"
+	if not _starter_order_complete:
+		status_label.text = "Starter order incomplete. Relaunch Mission 1 to finish the contract."
+		return
+	var app = _get_app_controller()
+	if app:
+		_award_mission_exposure(app)
+	var sm = preload("res://Scripts/Utils/SubcontractorManager.gd")
+	if sm:
+		_starter_affinity_after = int(sm.add_affinity(str(_starter_contract.get("id", "")), 1))
+	_add_mission_log("starter_contract_complete", 0)
+	preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("resolve_mission_debrief", {
+		"mode": "starter_contract_recap"
+	})
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if rm:
+		rm.clear_starter_contract_offer()
+		rm.remove_orbiting_rocket(str(_returned.get("rocket_id", "")))
+	_last_exposure_awarded = _mission_exposure_reward()
+	status_label.text = _build_starter_contract_recap_text()
+	_closed_out = true
+	_show_science_card()
+
+func _build_starter_contract_recap_text() -> String:
+	var contractor_name = str(_starter_contract.get("name", "Contractor"))
+	var lines := []
+	lines.append("Contractor: %s" % contractor_name)
+	var keys = _starter_order.keys()
+	keys.sort()
+	for key in keys:
+		var required_amount = int(_starter_order.get(key, 0))
+		var collected_amount = int(_collected.get(str(key), 0))
+		var done = "OK" if collected_amount >= required_amount else "Pending"
+		lines.append("%s: %d/%d kg (%s)" % [str(key), collected_amount, required_amount, done])
+	if _starter_order_complete:
+		lines.append("Order complete. Contractor affinity +1.")
+		if _starter_affinity_after > 0:
+			lines.append("Current affinity: %d" % _starter_affinity_after)
+		lines.append("Exposure gained: +%d" % _last_exposure_awarded)
+	else:
+		lines.append("Order incomplete. Mission restart required.")
+	return "\n".join(lines)
 
 func _sell(to_earth: bool) -> void:
 	if _sold or _closed_out:
@@ -274,6 +389,11 @@ func _lock_action_buttons() -> void:
 		archive_button.disabled = true
 
 func _refresh_action_buttons() -> void:
+	if _starter_contract_mode:
+		_lock_action_buttons()
+		if back_button:
+			back_button.disabled = false
+		return
 	var has_cargo = not _collected.is_empty()
 	var can_act = not _closed_out
 	sell_orbit_button.disabled = (not can_act) or (not has_cargo)
@@ -323,14 +443,19 @@ func _add_mission_log(action: String, payout: int) -> void:
 	if not log:
 		return
 	var badge = _make_badge()
+	var log_subcontractor_id = str(_subcontractor.get("id", ""))
+	var log_subcontractor_name = str(_subcontractor.get("name", ""))
+	if _starter_contract_mode:
+		log_subcontractor_id = str(_starter_contract.get("id", log_subcontractor_id))
+		log_subcontractor_name = str(_starter_contract.get("name", log_subcontractor_name))
 	var entry = {
 		"timestamp": Time.get_datetime_string_from_system(),
 		"rocket_id": str(_returned.get("rocket_id", "")),
 		"target_id": str(_returned.get("target_id", "")),
 		"label": str(_returned.get("label", "")),
 		"operation_mode": str(_returned.get("operation_mode", "contract")),
-		"subcontractor_id": str(_subcontractor.get("id", "")),
-		"subcontractor_name": str(_subcontractor.get("name", "")),
+		"subcontractor_id": log_subcontractor_id,
+		"subcontractor_name": log_subcontractor_name,
 		"action": action,
 		"payout": payout,
 		"cargo": _collected.duplicate(true),
@@ -354,8 +479,8 @@ func _add_mission_log(action: String, payout: int) -> void:
 		"mission_count": mission_count,
 		"cargo_units": _count_cargo_units(),
 		"cargo_types": _collected.size(),
-		"subcontractor_id": str(_subcontractor.get("id", "")),
-		"subcontractor_name": str(_subcontractor.get("name", ""))
+		"subcontractor_id": log_subcontractor_id,
+		"subcontractor_name": log_subcontractor_name
 	}
 	GameplayAnalytics.emit_event("mission_debrief_resolved", event_payload)
 	if completed_count >= 1:

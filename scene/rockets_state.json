@@ -3,13 +3,6 @@
     "starterrocket1"
   ],
   "placed": [
-    {
-      "type": "starterrocket1",
-      "id": "starterrocket1-333133902",
-      "x": -110.0,
-      "y": -178.0,
-      "status": "awaitingLaunch"
-    }
   ],
   "launched": [
   ],
@@ -29,9 +22,6 @@
   "scan_counts": {
   },
   "status_changed_at": {
-    "starterrocket1-333133902": {
-      "awaitingLaunch": 1772451874.0
-    }
   },
   "mission_progress_completed": 0,
   "completed_mission_badges": [
@@ -43,11 +33,6 @@
   },
   "operation_mode": "contract",
   "rocket_customizations": {
-    "starterrocket1-333133902": {
-      "flag": "Earth Union",
-      "logo": "Star",
-      "rocket_type": "starterrocket1"
-    }
   },
   "mission_briefings_seen": {
   },

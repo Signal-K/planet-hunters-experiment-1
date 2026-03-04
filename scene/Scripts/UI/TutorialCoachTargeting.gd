@@ -19,6 +19,10 @@ static func build_target_rect(target: Node) -> Rect2:
 
 static func navigation_hint_for_action(action_key: String) -> String:
 	match action_key:
+		"tour_open_control_station":
+			return "→ Click the Control Station to complete the quick tour"
+		"tour_close_control_station":
+			return "→ Close the Control Station panel using the X button"
 		"open_launchpad":
 			return "→ Click the Launchpad structure on the base"
 		"create_rocket":
@@ -41,6 +45,8 @@ static func navigation_hint_for_action(action_key: String) -> String:
 			return "→ Open the Scanner Station to toggle modes"
 		"accept_contractor_offer":
 			return "→ Open the Contractor panel to accept an offer"
+		"accept_starter_contractor":
+			return "→ Open Launchpad, then select Sign on one starter contractor"
 		"complete_contractor_mission":
 			return "→ Finish the debrief for your contractor mission"
 		"arrived_at_mining_site":
@@ -49,6 +55,10 @@ static func navigation_hint_for_action(action_key: String) -> String:
 
 static func action_hint_for_step(action_key: String) -> String:
 	match action_key:
+		"tour_open_control_station":
+			return "Control Station"
+		"tour_close_control_station":
+			return "Control Station close button"
 		"open_launchpad":
 			return "Launchpad"
 		"create_rocket":
@@ -71,12 +81,27 @@ static func action_hint_for_step(action_key: String) -> String:
 			return "Scanner toggle switch"
 		"accept_contractor_offer":
 			return "Accept contractor button"
+		"accept_starter_contractor":
+			return "Sign button in Launchpad panel"
 		"complete_contractor_mission":
 			return "Complete debrief for contractor mission"
 	return action_key
 
 static func _find_target_for_action(action_key: String, tree: SceneTree) -> Node:
 	match action_key:
+		"tour_open_control_station":
+			return _find_node_path_any(tree, [
+				"StructuresLayer/ControlStation",
+				"StructuresLayer/ControlStation/InteractionArea"
+			])
+		"tour_close_control_station":
+			return _find_visible_button(tree, func(btn: Button) -> bool:
+				var key = btn.name.to_lower()
+				if key.find("close") == -1:
+					return false
+				var path = str(btn.get_path()).to_lower()
+				return path.find("controlstationpanel") != -1
+			)
 		"open_launchpad":
 			return _find_node_path_any(tree, [
 				"StructuresLayer/Launchpad",
@@ -124,6 +149,16 @@ static func _find_target_for_action(action_key: String, tree: SceneTree) -> Node
 			return _find_visible_button(tree, func(btn: Button) -> bool:
 				return not btn.disabled and btn.text.to_lower().find("accept") != -1
 			)
+		"accept_starter_contractor":
+			var sign_button = _find_visible_button(tree, func(btn: Button) -> bool:
+				return not btn.disabled and btn.text.to_lower().find("sign") != -1
+			)
+			if sign_button:
+				return sign_button
+			return _find_node_path_any(tree, [
+				"StructuresLayer/Launchpad",
+				"StructuresLayer/Launchpad/InteractionArea"
+			])
 	return null
 
 static func _build_target_rect(target: Node) -> Rect2:

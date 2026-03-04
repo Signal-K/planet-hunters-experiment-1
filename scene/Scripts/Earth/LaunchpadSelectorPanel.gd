@@ -8,6 +8,7 @@ const TargetCardScene = preload("res://Scenes/UI/Templates/LaunchpadTargetCard.t
 const HeaderLabelScene = preload("res://Scenes/UI/Templates/MenuUnlockHeader.tscn")
 const EmptyLabelScene = preload("res://Scenes/UI/Templates/MenuLogbookEmpty.tscn")
 const LabelActionRowScene = preload("res://Scenes/UI/Templates/LabelActionRow.tscn")
+const RocketSelectorOverlayScene = preload("res://Scenes/UI/RocketSelectorOverlay.tscn")
 const AppLogger = preload("res://Scripts/Utils/Logger.gd")
 const GameplayAnalytics = preload("res://Scripts/Systems/GameplayAnalytics.gd")
 const MAX_VISIBLE_TARGETS := 3
@@ -93,6 +94,7 @@ func show_selector_panel() -> void:
 	var root_scene = _launchpad.get_tree().current_scene
 	if not root_scene:
 		return
+	_ensure_selector_panel_exists(root_scene)
 	var first_shown = false
 	var stack = [root_scene]
 	while stack.size() > 0:
@@ -158,7 +160,7 @@ func populate_targets() -> void:
 	var root_scene = _launchpad.get_tree().current_scene
 	if not root_scene:
 		return
-	var panel = root_scene.get_node_or_null("UILayer/SelectorPanel")
+	var panel = _ensure_selector_panel_exists(root_scene)
 	if not panel:
 		return
 	var vbox = panel.get_node_or_null("VBox")
@@ -214,6 +216,22 @@ func populate_targets() -> void:
 	PanelStyle.apply_muted(targets_title)
 	targets_title.add_theme_font_size_override("font_size", 24)
 	targets_section.add_child(targets_title)
+	var mission5_offer := {}
+	var mission5_selected_contractor := ""
+	var mission5_recommended_target_id := ""
+	var starter_offer := {}
+	var starter_selected_contractor := ""
+	var operation_mode := "contract"
+	if mission_stage == 1:
+		starter_offer = rm.ensure_starter_contract_offer()
+		starter_selected_contractor = str(starter_offer.get("selected_contractor", ""))
+		_render_starter_contract_brief(targets_section, starter_offer, starter_selected_contractor)
+		if starter_selected_contractor == "":
+			var starter_pick_hint: Label = EmptyLabelScene.instantiate()
+			starter_pick_hint.text = "Pick a contractor before selecting the mission target."
+			starter_pick_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+			PanelStyle.apply_muted(starter_pick_hint)
+			targets_section.add_child(starter_pick_hint)
 	if not has_awaiting_rocket:
 		var guidance: Label = EmptyLabelScene.instantiate()
 		guidance.text = "Create a rocket first. Target selection unlocks after a rocket is on the launchpad."
@@ -241,10 +259,6 @@ func populate_targets() -> void:
 		mission4_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		PanelStyle.apply_muted(mission4_hint)
 		targets_section.add_child(mission4_hint)
-	var mission5_offer := {}
-	var mission5_selected_contractor := ""
-	var mission5_recommended_target_id := ""
-	var operation_mode := "contract"
 	if mission_stage == 5:
 		operation_mode = str(rm.get_operation_mode())
 		_render_open_operation_mode_picker(targets_section, operation_mode)
@@ -291,7 +305,8 @@ func populate_targets() -> void:
 			awaiting_rocket_level,
 			required_level,
 			operation_mode,
-			mission5_selected_contractor
+			mission5_selected_contractor,
+			starter_selected_contractor
 		)
 		var entry_panel: PanelContainer = TargetCardScene.instantiate()
 		entry_panel.add_theme_stylebox_override("panel", _target_card_style())
@@ -306,7 +321,12 @@ func populate_targets() -> void:
 			btn.text = "Target Selected"
 			btn.disabled = true
 		elif blocked:
-			btn.text = "Accept Contractor" if mission_stage == 5 and operation_mode == "contract" and mission5_selected_contractor == "" else "Blocked"
+			if mission_stage == 1 and starter_selected_contractor == "":
+				btn.text = "Sign Contract"
+			elif mission_stage == 5 and operation_mode == "contract" and mission5_selected_contractor == "":
+				btn.text = "Accept Contractor"
+			else:
+				btn.text = "Blocked"
 			btn.disabled = true
 		# bind id
 		btn.pressed.connect(Callable(self, "on_selector_target_pressed").bind(target_id, btn))
@@ -367,6 +387,68 @@ func _on_mission5_contractor_pressed(contractor_id: String) -> void:
 			"contractor_id": contractor_id
 		})
 		populate_targets()
+
+func _on_starter_contractor_pressed(contractor_id: String) -> void:
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if not rm:
+		return
+	var ok = rm.select_starter_contractor(contractor_id)
+	if ok:
+		preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("accept_starter_contractor", {
+			"contractor_id": contractor_id
+		})
+		populate_targets()
+
+func _render_starter_contract_brief(targets_section: VBoxContainer, offer: Dictionary, selected_contractor: String) -> void:
+	if targets_section == null or offer.is_empty():
+		return
+	var heading: Label = HeaderLabelScene.instantiate()
+	heading.text = "Starter Contractor Mission"
+	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	PanelStyle.apply_muted(heading)
+	targets_section.add_child(heading)
+
+	var summary_lbl: Label = EmptyLabelScene.instantiate()
+	summary_lbl.text = "Sign with one contractor to receive your first mineral order."
+	summary_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	PanelStyle.apply_muted(summary_lbl)
+	targets_section.add_child(summary_lbl)
+
+	var options: Array = offer.get("contractors", [])
+	for entry_any in options:
+		if typeof(entry_any) != TYPE_DICTIONARY:
+			continue
+		var entry: Dictionary = entry_any
+		var contractor_id = str(entry.get("id", ""))
+		var requested: Dictionary = entry.get("requested_minerals", {})
+		var request_parts := []
+		for key in requested.keys():
+			request_parts.append("%s %s kg" % [str(key), str(requested.get(key, 0))])
+		request_parts.sort()
+		var row: VBoxContainer = VBoxContainer.new()
+		row.add_theme_constant_override("separation", 4)
+
+		var action_row: HBoxContainer = LabelActionRowScene.instantiate()
+		action_row.add_theme_constant_override("separation", 8)
+		var label: Label = action_row.get_node("TextLabel")
+		label.text = "%s — %s" % [str(entry.get("name", contractor_id)), str(entry.get("focus", ""))]
+		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		PanelStyle.apply_muted(label)
+		var btn: Button = action_row.get_node("ActionButton")
+		var is_selected = selected_contractor == contractor_id and contractor_id != ""
+		btn.text = "Signed" if is_selected else "Sign"
+		btn.disabled = is_selected
+		PanelStyle.apply_button(btn, false)
+		btn.pressed.connect(Callable(self, "_on_starter_contractor_pressed").bind(contractor_id))
+		row.add_child(action_row)
+
+		var order_lbl: Label = EmptyLabelScene.instantiate()
+		order_lbl.text = "Order: %s" % ", ".join(request_parts)
+		order_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		PanelStyle.apply_muted(order_lbl)
+		row.add_child(order_lbl)
+		targets_section.add_child(row)
 
 func _render_mission5_contract_brief(targets_section: VBoxContainer, offer: Dictionary, selected_contractor: String) -> void:
 	if targets_section == null or offer.is_empty():
@@ -601,7 +683,7 @@ func _set_selector_panel_layout(has_awaiting: bool) -> void:
 	var root_scene = _launchpad.get_tree().current_scene
 	if not root_scene:
 		return
-	var panel = root_scene.get_node_or_null("UILayer/SelectorPanel")
+	var panel = _ensure_selector_panel_exists(root_scene)
 	if panel == null:
 		return
 	if has_awaiting:
@@ -713,10 +795,108 @@ func _is_target_blocked_for_selection(
 	awaiting_rocket_level: int,
 	required_level: int,
 	operation_mode: String,
-	mission5_selected_contractor: String
+	mission5_selected_contractor: String,
+	starter_selected_contractor: String
 ) -> bool:
 	if awaiting_rocket_level > 0 and required_level > awaiting_rocket_level:
+		return true
+	if mission_stage == 1 and starter_selected_contractor == "":
 		return true
 	if mission_stage == 5 and operation_mode == "contract" and mission5_selected_contractor == "":
 		return true
 	return false
+
+func _ensure_selector_panel_exists(root_scene: Node) -> Panel:
+	if root_scene == null:
+		return null
+	var ui_layer = root_scene.get_node_or_null("UILayer")
+	if ui_layer == null:
+		ui_layer = CanvasLayer.new()
+		ui_layer.name = "UILayer"
+		root_scene.add_child(ui_layer)
+
+	var existing = root_scene.get_node_or_null("UILayer/SelectorPanel")
+	if existing and not (existing is Panel):
+		existing.queue_free()
+		existing = null
+
+	var panel = existing as Panel
+	if panel == null:
+		panel = Panel.new()
+		panel.name = "SelectorPanel"
+		panel.anchor_left = 0.0
+		panel.anchor_top = 0.0
+		panel.anchor_right = 1.0
+		panel.anchor_bottom = 1.0
+		panel.offset_left = 16.0
+		panel.offset_top = 16.0
+		panel.offset_right = -16.0
+		panel.offset_bottom = -16.0
+		ui_layer.add_child(panel)
+
+		var vbox := VBoxContainer.new()
+		vbox.name = "VBox"
+		vbox.anchor_left = 0.0
+		vbox.anchor_top = 0.0
+		vbox.anchor_right = 1.0
+		vbox.anchor_bottom = 1.0
+		vbox.offset_left = 20.0
+		vbox.offset_top = 16.0
+		vbox.offset_right = -20.0
+		vbox.offset_bottom = -16.0
+		vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		panel.add_child(vbox)
+
+		var title := Label.new()
+		title.name = "Title"
+		title.text = "Select Your Rocket"
+		title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		vbox.add_child(title)
+
+		var back_button := Button.new()
+		back_button.name = "BackButton"
+		back_button.text = "Back to Base"
+		back_button.size_flags_horizontal = Control.SIZE_FILL
+		vbox.add_child(back_button)
+
+		if RocketSelectorOverlayScene:
+			var rocket_selector = RocketSelectorOverlayScene.instantiate()
+			if rocket_selector:
+				rocket_selector.name = "RocketSelector"
+				if rocket_selector is Control:
+					var rocket_control := rocket_selector as Control
+					rocket_control.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+					rocket_control.size_flags_vertical = Control.SIZE_EXPAND_FILL
+				vbox.add_child(rocket_selector)
+
+		var targets_section := VBoxContainer.new()
+		targets_section.name = "TargetsSection"
+		targets_section.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		targets_section.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		vbox.add_child(targets_section)
+
+	_wire_back_button(panel)
+	return panel
+
+func _wire_back_button(panel: Panel) -> void:
+	if panel == null:
+		return
+	var back_button = panel.get_node_or_null("VBox/BackButton") as Button
+	if back_button == null:
+		return
+	var cb = Callable(self, "_on_back_to_base_pressed")
+	if not back_button.pressed.is_connected(cb):
+		back_button.pressed.connect(cb)
+
+func _on_back_to_base_pressed() -> void:
+	if _launchpad == null:
+		return
+	var tree = _launchpad.get_tree()
+	if tree == null:
+		return
+	var scene_manager = tree.get_first_node_in_group("scene_manager")
+	if scene_manager and scene_manager.has_method("change_to_scene"):
+		scene_manager.change_to_scene("res://Scenes/Earth/earth_base_1.tscn")
+	else:
+		tree.change_scene_to_file("res://Scenes/Earth/earth_base_1.tscn")

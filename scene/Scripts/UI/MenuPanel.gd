@@ -17,26 +17,25 @@ const LogbookCardScene = preload("res://Scenes/UI/Templates/MenuLogbookCard.tscn
 const LogbookSectionHeaderScene = preload("res://Scenes/UI/Templates/MenuLogbookSectionHeader.tscn")
 const LogbookKeyValueRowScene = preload("res://Scenes/UI/Templates/MenuLogbookKeyValueRow.tscn")
 const AppLogger = preload("res://Scripts/Utils/Logger.gd")
+const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
 
-@onready var counter_label: Label = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/CounterCard/CounterContainer/CounterLabel
-@onready var decrease_btn: Button = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/CounterCard/CounterContainer/ButtonsContainer/DecreaseButton
-@onready var increase_btn: Button = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/CounterCard/CounterContainer/ButtonsContainer/IncreaseButton
+@onready var counter_label: Label = $PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/CounterCard/CounterContainer/CounterLabel
+@onready var decrease_btn: Button = $PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/CounterCard/CounterContainer/ButtonsContainer/DecreaseButton
+@onready var increase_btn: Button = $PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/CounterCard/CounterContainer/ButtonsContainer/IncreaseButton
 @onready var close_btn: Button = $PanelContainer/Panel/VBoxContainer/HeaderContainer/HeaderBackground/HeaderContent/CloseButton
 @onready var logbook_btn: Button = $PanelContainer/Panel/VBoxContainer/HeaderContainer/HeaderBackground/HeaderContent/LogbookButton
-@onready var reset_btn: Button = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/ResetButton
-@onready var practice_mining_btn: Button = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/PracticeMiningButton
-@onready var skip_tutorial_btn: Button = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/SkipTutorialButton
-@onready var replay_mission_tutorial_btn: Button = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/ReplayMissionTutorialButton
-@onready var replay_all_tutorial_btn: Button = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/ReplayAllTutorialButton
-@onready var progress_title: Label = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/ProgressCard/ProgressContainer/ProgressTitle
-@onready var level_label: Label = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/ProgressCard/ProgressContainer/LevelRow/LevelLabel
-@onready var xp_label: Label = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/ProgressCard/ProgressContainer/LevelRow/XpLabel
-@onready var progress_bar: ProgressBar = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/ProgressCard/ProgressContainer/ProgressBar
-@onready var next_level_label: Label = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/ProgressCard/ProgressContainer/NextLevelLabel
-@onready var unlocks_title: Label = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/ProgressCard/ProgressContainer/UnlocksTitle
-@onready var unlocks_list: VBoxContainer = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/ProgressCard/ProgressContainer/UnlocksList
-@onready var info_label: Label = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/InfoLabel
-@onready var citizen_science_dialogue_btn: Button = $PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/CitizenScienceDialogueButton
+@onready var reset_btn: Button = $PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/ResetButton
+@onready var practice_mining_btn: Button = $PanelContainer/Panel/VBoxContainer/TabContainer/Settings/Content/PracticeMiningButton
+@onready var skip_tutorial_btn: Button = $PanelContainer/Panel/VBoxContainer/TabContainer/Settings/Content/SkipTutorialButton
+@onready var replay_mission_tutorial_btn: Button = $PanelContainer/Panel/VBoxContainer/TabContainer/Settings/Content/ReplayMissionTutorialButton
+@onready var replay_all_tutorial_btn: Button = $PanelContainer/Panel/VBoxContainer/TabContainer/Settings/Content/ReplayAllTutorialButton
+@onready var level_label: Label = $PanelContainer/Panel/VBoxContainer/TabContainer/Progress/Content/ProgressCard/ProgressContainer/LevelRow/LevelLabel
+@onready var xp_label: Label = $PanelContainer/Panel/VBoxContainer/TabContainer/Progress/Content/ProgressCard/ProgressContainer/LevelRow/XpLabel
+@onready var progress_bar: ProgressBar = $PanelContainer/Panel/VBoxContainer/TabContainer/Progress/Content/ProgressCard/ProgressContainer/ProgressBar
+@onready var next_level_label: Label = $PanelContainer/Panel/VBoxContainer/TabContainer/Progress/Content/ProgressCard/ProgressContainer/NextLevelLabel
+@onready var unlocks_list: VBoxContainer = $PanelContainer/Panel/VBoxContainer/TabContainer/Unlocks/Content/UnlocksList
+@onready var info_label: Label = $PanelContainer/Panel/VBoxContainer/TabContainer/Settings/Content/InfoLabel
+@onready var citizen_science_dialogue_btn: Button = $PanelContainer/Panel/VBoxContainer/TabContainer/Settings/Content/CitizenScienceDialogueButton
 @onready var logbook_overlay: ColorRect = $LogbookOverlay
 @onready var logbook_close_btn: Button = $LogbookOverlay/LogbookPanelContainer/LogbookPanel/VBoxContainer/Header/CloseLogbookButton
 @onready var logbook_title: Label = $LogbookOverlay/LogbookPanelContainer/LogbookPanel/VBoxContainer/Header/Title
@@ -53,6 +52,7 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	$Overlay.mouse_filter = Control.MOUSE_FILTER_STOP
 	$PanelContainer.mouse_filter = Control.MOUSE_FILTER_STOP
+	_apply_style()
 	# Connect button signals
 	close_btn.pressed.connect(_on_close_button_pressed)
 	logbook_btn.pressed.connect(_on_logbook_button_pressed)
@@ -75,6 +75,34 @@ func _ready() -> void:
 	info_label.text = "Open Mining Academy here to rehearse routes, drones, and early returns without risking a mission."
 	
 	AppLogger.d("MenuPanel ready with counter: %s" % current_counter)
+
+func _apply_style() -> void:
+	PanelStyle.apply_panel($PanelContainer/Panel)
+	$PanelContainer/Panel/VBoxContainer/HeaderContainer/HeaderBackground.add_theme_stylebox_override("panel", PanelStyle.create_card_style())
+	$PanelContainer/Panel/VBoxContainer/HeaderContainer/HeaderBackground/HeaderContent/Title.add_theme_color_override("font_color", PanelStyle.ACCENT)
+	PanelStyle.apply_button(close_btn, false)
+	PanelStyle.apply_button(logbook_btn, false)
+	PanelStyle.apply_separator($PanelContainer/Panel/VBoxContainer/HSeparator)
+	$PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/CounterCard.add_theme_stylebox_override("panel", PanelStyle.create_card_style())
+	PanelStyle.apply_muted($PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/CounterCard/CounterContainer/CounterTitle)
+	counter_label.add_theme_color_override("font_color", PanelStyle.ACCENT)
+	PanelStyle.apply_button(decrease_btn, false)
+	PanelStyle.apply_button(increase_btn, false)
+	$PanelContainer/Panel/VBoxContainer/TabContainer/Progress/Content/ProgressCard.add_theme_stylebox_override("panel", PanelStyle.create_card_style())
+	PanelStyle.apply_muted(info_label)
+	PanelStyle.apply_muted($PanelContainer/Panel/VBoxContainer/TabContainer/Unlocks/Content/UnlocksHint)
+	PanelStyle.apply_muted($PanelContainer/Panel/VBoxContainer/TabContainer/Settings/Content/TutorialSectionLabel)
+	PanelStyle.apply_progress_bar(progress_bar)
+	PanelStyle.apply_button(citizen_science_dialogue_btn, false)
+	PanelStyle.apply_button(reset_btn, false)
+	PanelStyle.apply_button(practice_mining_btn, false)
+	PanelStyle.apply_button(skip_tutorial_btn, false)
+	PanelStyle.apply_button(replay_mission_tutorial_btn, false)
+	PanelStyle.apply_button(replay_all_tutorial_btn, false)
+	PanelStyle.apply_panel($LogbookOverlay/LogbookPanelContainer/LogbookPanel)
+	PanelStyle.apply_button(logbook_close_btn, false)
+	PanelStyle.apply_separator($LogbookOverlay/LogbookPanelContainer/LogbookPanel/VBoxContainer/HSeparator)
+	$LogbookOverlay/LogbookPanelContainer/LogbookPanel/VBoxContainer/Subtitle.add_theme_color_override("font_color", PanelStyle.TEXT_MUTED)
 
 func _unhandled_input(_event: InputEvent) -> void:
 	get_viewport().set_input_as_handled()

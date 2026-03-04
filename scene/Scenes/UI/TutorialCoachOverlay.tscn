@@ -44,6 +44,10 @@ text = "Mission Guidance"
 layout_mode = 2
 text = "Mission 1"
 
+[node name="CollapseButton" type="Button" parent="Root/Panel/Margin/VBox/Header"]
+layout_mode = 2
+text = "−"
+
 [node name="MessageLabel" type="Label" parent="Root/Panel/Margin/VBox"]
 layout_mode = 2
 text = "Tutorial step message"
