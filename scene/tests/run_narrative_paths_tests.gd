@@ -117,13 +117,14 @@ func _assert_no_duplicate_steps(state: Dictionary, label: String) -> bool:
 # ─── Tests ───────────────────────────────────────────────────────────────────
 
 func test_p01_mission1_full_linear_path() -> void:
-	reporter.start_test("P01: Mission 1 full linear path (8 steps including arrived_at_mining_site)")
+	reporter.start_test("P01: Mission 1 full linear path (10 steps including tour and arrived_at_mining_site)")
 	_reset()
 	var c = await _setup()
 	c.replay_full()
 	await create_timer(0.02).timeout
 
-	var m1_actions = ["open_launchpad", "create_rocket", "select_launch_target",
+	var m1_actions = ["tour_open_control_station", "tour_close_control_station",
+		"accept_starter_contractor", "create_rocket", "select_launch_target",
 		"launch_rocket_from_earth", "arrived_at_mining_site", "mine_target",
 		"return_rocket_home", "resolve_mission_debrief"]
 

@@ -37,7 +37,7 @@
   "mission_briefings_seen": {
   },
   "mission_progress_schema_version": 2.0,
-  "pending_mission_guidance_id": 0,
+  "pending_mission_guidance_id": 0.0,
   "launch_fallback_notice": "",
   "returning": [
   ],
@@ -46,5 +46,38 @@
   "returned_mission": {
   },
   "returning_started": {
-  }
+  },
+  "starter_contract_offer": {
+    "contractors": [
+      {
+        "id": "aegis_defense",
+        "name": "Aegis Defense Systems",
+        "focus": "Defense-grade avionics and hardened military systems",
+        "requested_minerals": {
+          "Iron": 130.0,
+          "Nickel": 95.0
+        }
+      },
+      {
+        "id": "lumen_consumer",
+        "name": "Lumen Consumer Labs",
+        "focus": "High-volume consumer electronics and smart devices",
+        "requested_minerals": {
+          "Iron": 115.0,
+          "Nickel": 110.0
+        }
+      },
+      {
+        "id": "helion_orbital",
+        "name": "Helion Orbital Works",
+        "focus": "Next-gen propulsion and frontier space innovation",
+        "requested_minerals": {
+          "Iron": 105.0,
+          "Nickel": 125.0
+        }
+      }
+    ],
+    "selected_contractor": ""
+  },
+  "launch_guidance_notice": ""
 }

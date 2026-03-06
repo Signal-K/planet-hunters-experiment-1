@@ -50,14 +50,14 @@ func test_progression_advances_on_expected_actions() -> void:
 	controller.replay_full()
 	await create_timer(0.02).timeout
 	var before = controller.get_tutorial_state()
-	if str(before.get("current_step", {}).get("action_key", "")) != "open_launchpad":
-		reporter.fail_test("Expected first action open_launchpad")
+	if str(before.get("current_step", {}).get("action_key", "")) != "tour_open_control_station":
+		reporter.fail_test("Expected first action tour_open_control_station")
 		await _teardown_controller(controller)
 		return
 
-	controller.record_action("open_launchpad")
-	controller.record_action("create_rocket")
-	controller.record_action("select_launch_target")
+	controller.record_action("tour_open_control_station")
+	controller.record_action("tour_close_control_station")
+	controller.record_action("accept_starter_contractor")
 	var after = controller.get_tutorial_state()
 	if int(after.get("current_step_index", 0)) < 3:
 		reporter.fail_test("Expected current_step_index >= 3 after first actions")
@@ -102,8 +102,8 @@ func test_state_persists_across_controller_recreation() -> void:
 	_reset_tutorial_state()
 	var controller = await _setup_controller()
 	controller.replay_full()
-	controller.record_action("open_launchpad")
-	controller.record_action("create_rocket")
+	controller.record_action("tour_open_control_station")
+	controller.record_action("tour_close_control_station")
 	await create_timer(0.02).timeout
 	await _teardown_controller(controller)
 
@@ -192,15 +192,16 @@ func test_advance_if_match_skips_past_out_of_order_completed_actions() -> void:
 	controller.replay_full()
 	await create_timer(0.02).timeout
 
-	# Advance normally through the first two steps:
-	controller.record_action("open_launchpad")
+	# Advance normally through the first four steps to reach select_launch_target:
+	controller.record_action("tour_open_control_station")
+	controller.record_action("tour_close_control_station")
+	controller.record_action("accept_starter_contractor")
 	controller.record_action("create_rocket")
 	var pre_state = controller.get_tutorial_state()
 	var step_idx_before = int(pre_state.get("current_step_index", 0))
 
-	# Record the skipped step first (as auto-selection would), then the next step.
-	# Without the fix _advance_if_match would break on launch_rocket_from_earth
-	# (because the current step is select_launch_target) and leave it stuck.
+	# Record select then launch in order. Without the advance-if-match fix,
+	# launch_rocket_from_earth would leave the tutorial stuck on select_launch_target.
 	controller.record_action("select_launch_target")
 	controller.record_action("launch_rocket_from_earth")
 	var after = controller.get_tutorial_state()

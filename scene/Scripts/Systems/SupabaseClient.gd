@@ -12,6 +12,7 @@ const LOCAL_SUPABASE_KEY: String = "sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxA
 # Runtime config and env vars still take precedence when available.
 const PROD_SUPABASE_URL: String = "https://hlufptwhzkpkkjztimzo.supabase.co"
 const PROD_SUPABASE_KEY: String = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhsdWZwdHdoemtwa2tqenRpbXpvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTYyOTk3NTUsImV4cCI6MjAzMTg3NTc1NX0.v_NDVWjIU_lJQSPbJ_Y6GkW3axrQWKXfXVsBEAbFv_I"
+const AppLogger = preload("res://Scripts/Utils/Logger.gd")
 
 var SUPABASE_URL: String = LOCAL_SUPABASE_URL
 var SUPABASE_KEY: String = LOCAL_SUPABASE_KEY
@@ -60,7 +61,7 @@ static func get_instance() -> SupabaseClient:
 static func _apply_credentials(instance: SupabaseClient, url: String, key: String, source: String) -> void:
 	instance.SUPABASE_URL = url
 	instance.SUPABASE_KEY = key
-	preload("res://Scripts/Utils/Logger.gd").d("SupabaseClient: credentials_source=%s url=%s" % [source, instance.SUPABASE_URL])
+	AppLogger.d("SupabaseClient: credentials_source=%s url=%s" % [source, instance.SUPABASE_URL])
 	print("SupabaseClient: credentials_source=", source, " url=", instance.SUPABASE_URL)
 
 static func _load_runtime_credentials() -> Dictionary:
@@ -131,7 +132,7 @@ func fetch_anomalies(anomaly_set: String, limit: int, callback: Callable) -> HTT
 		limit
 	]
 	
-	preload("res://Scripts/Utils/Logger.gd").d("SupabaseClient: Fetching from URL: %s" % [url])
+	AppLogger.d("SupabaseClient: Fetching from URL: %s" % [url])
 	
 	var headers = [
 		"apikey: " + SUPABASE_KEY,
@@ -150,7 +151,7 @@ func fetch_anomalies(anomaly_set: String, limit: int, callback: Callable) -> HTT
 					content_encoding = h
 					break
 			
-			preload("res://Scripts/Utils/Logger.gd").d("SupabaseClient: HTTP result=%d, status=%d, encoding=%s" % [result, response_code, content_encoding])
+			AppLogger.d("SupabaseClient: HTTP result=%d, status=%d, encoding=%s" % [result, response_code, content_encoding])
 			
 			if result != HTTPRequest.RESULT_SUCCESS:
 				error_message = "HTTP Request failed with result: %d" % result
@@ -163,7 +164,7 @@ func fetch_anomalies(anomaly_set: String, limit: int, callback: Callable) -> HTT
 				var parse_result = json.parse(body.get_string_from_utf8())
 				if parse_result == OK:
 					response_data = json.data
-					preload("res://Scripts/Utils/Logger.gd").d("SupabaseClient: Successfully fetched %d anomalies" % response_data.size())
+					AppLogger.d("SupabaseClient: Successfully fetched %d anomalies" % response_data.size())
 				else:
 					error_message = "Failed to parse JSON response"
 			

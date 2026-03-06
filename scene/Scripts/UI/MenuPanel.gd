@@ -18,6 +18,11 @@ const LogbookSectionHeaderScene = preload("res://Scenes/UI/Templates/MenuLogbook
 const LogbookKeyValueRowScene = preload("res://Scenes/UI/Templates/MenuLogbookKeyValueRow.tscn")
 const AppLogger = preload("res://Scripts/Utils/Logger.gd")
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
+const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
+const SubcontractorManager = preload("res://Scripts/Utils/SubcontractorManager.gd")
+const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd")
+const MissionLogManager = preload("res://Scripts/Utils/MissionLogManager.gd")
+const NumberFormat = preload("res://Scripts/Utils/NumberFormat.gd")
 
 @onready var counter_label: Label = $PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/CounterCard/CounterContainer/CounterLabel
 @onready var decrease_btn: Button = $PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/CounterCard/CounterContainer/ButtonsContainer/DecreaseButton
@@ -150,14 +155,14 @@ func _build_unlocks_list(current_level: int) -> void:
 	for child in unlocks_list.get_children():
 		child.queue_free()
 	var unlocks_by_level := {}
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var rm = RocketsManager
 	if rm:
 		for rocket_id in rm.ROCKET_UNLOCK_LEVELS.keys():
 			var lvl = int(rm.ROCKET_UNLOCK_LEVELS.get(rocket_id, 1))
 			if not unlocks_by_level.has(lvl):
 				unlocks_by_level[lvl] = []
 			unlocks_by_level[lvl].append("Rocket: %s" % rocket_id)
-	var sm = preload("res://Scripts/Utils/SubcontractorManager.gd")
+	var sm = SubcontractorManager
 	if sm:
 		for idx in range(sm.SUBCONTRACTORS.size()):
 			var c = sm.SUBCONTRACTORS[idx]
@@ -189,7 +194,7 @@ func _build_unlocks_list(current_level: int) -> void:
 			unlocks_list.add_child(row)
 
 func _get_app_controller() -> Node:
-	return preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
+	return AppControllerHelper.get_instance()
 
 func _on_close_button_pressed() -> void:
 	AppLogger.d("MenuPanel close button pressed")
@@ -214,7 +219,7 @@ func _on_reset_button_pressed() -> void:
 
 func _on_practice_mining_pressed() -> void:
 	print("MenuPanel: Practice Mining pressed")
-	var opened = preload("res://Scripts/Utils/AppControllerHelper.gd").open_mining_practice_panel("menu_panel")
+	var opened = AppControllerHelper.open_mining_practice_panel("menu_panel")
 	if not opened:
 		print("MenuPanel: failed to open MiningPracticePanel overlay")
 		return
@@ -242,7 +247,7 @@ func _on_citizen_science_dialogue_pressed() -> void:
 func _refresh_citizen_science_dialogue_button() -> void:
 	if citizen_science_dialogue_btn == null:
 		return
-	var enabled = preload("res://Scripts/Utils/AppControllerHelper.gd").is_citizen_science_dialogue_enabled(true)
+	var enabled = AppControllerHelper.is_citizen_science_dialogue_enabled(true)
 	citizen_science_dialogue_btn.text = "Citizen Science Dialogue: %s" % ("On" if enabled else "Off")
 
 func _on_logbook_button_pressed() -> void:
@@ -261,12 +266,12 @@ func _on_logbook_overlay_input(event: InputEvent) -> void:
 func _rebuild_logbook_entries() -> void:
 	for child in logbook_entries.get_children():
 		child.queue_free()
-	var log = preload("res://Scripts/Utils/MissionLogManager.gd")
+	var log = MissionLogManager
 	var rows: Array = log.get_missions() if log else []
 	if rows.is_empty():
 		var empty: Label = LogbookEmptyScene.instantiate()
 		empty.text = "No mission records yet."
-		var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
+		var panel_style = PanelStyle
 		empty.add_theme_color_override("font_color", panel_style.TEXT_MUTED)
 		empty.add_theme_font_size_override("font_size", 16)
 		logbook_entries.add_child(empty)
@@ -277,7 +282,7 @@ func _rebuild_logbook_entries() -> void:
 		if typeof(entry) != TYPE_DICTIONARY:
 			continue
 		var card: PanelContainer = LogbookCardScene.instantiate()
-		var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
+		var panel_style = PanelStyle
 		card.add_theme_stylebox_override("panel", panel_style.create_card_style())
 		logbook_entries.add_child(card)
 
@@ -352,11 +357,11 @@ func _format_logbook_value(key: String, value) -> String:
 		return "-"
 	if key == "payout":
 		var amount = int(value)
-		var fmt = preload("res://Scripts/Utils/NumberFormat.gd")
+		var fmt = NumberFormat
 		return "%s F" % fmt.commas(str(amount))
 	if key == "payout_total":
 		var total = int(value)
-		var fmt_total = preload("res://Scripts/Utils/NumberFormat.gd")
+		var fmt_total = NumberFormat
 		return "%s F" % fmt_total.commas(str(total))
 	if key == "cargo" and typeof(value) == TYPE_DICTIONARY:
 		var pairs := []

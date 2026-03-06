@@ -1,7 +1,7 @@
 ---
 id: hj2q5t
 title: Room levels and rocket upgrade progression
-status: todo
+status: done
 priority: medium
 labels:
   - rooms
@@ -10,8 +10,8 @@ labels:
   - rockets
   - experiment1
 createdAt: '2026-02-28T00:00:00.000Z'
-updatedAt: '2026-02-28T00:00:00.000Z'
-timeSpent: 0
+updatedAt: '2026-03-05T12:44:27.176Z'
+timeSpent: 377
 assignee: '@me'
 ---
 # Room levels and rocket upgrade progression
@@ -176,40 +176,43 @@ Other references:
 | Parachute | Basic Chute | — | — | Consumable per use |
 | Science | Sample Lab | Telescope | Atmo Sensor | Bonus XP / payout |
 | Comms | Comms Relay | Broadcast Array | — | Debrief data quality |
-
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Rooms have levels distinct from P65 — tied to consumable rockets, not a persistent base.
-- [ ] #2 Level 1 rocket includes a starter shop / basic loadout: Basic Thruster, Small Reactor, Small Tank, Cargo Bay, Mining Drill, Basic Nav, Basic Plating.
-- [ ] #3 Hall/bay tile capacity gates room installation — larger rooms require bay upgrades first.
-- [ ] #4 Each room category (propulsion, fuel, storage, mining, nav, hull, science) has at least 2 upgrade tiers defined.
-- [ ] #5 A room being upgraded is non-functional (offline) during that upgrade process.
-- [ ] #6 The rocket's overall level is derived from its installed rooms, not a separate XP stat.
-- [ ] #7 T2 bay expansion zones restrict which room types can be installed (utility-only in expanded areas).
-- [ ] #8 Parachute is a consumable room slot — it depletes on use and must be restocked.
-- [ ] #9 Science rooms (Sample Lab, Telescope) increase mission payout/XP — trackable in debrief.
-- [ ] #10 Later-game progression unlocks crew quarters / life support room category.
+- [x] #1 Rooms have levels distinct from P65 — tied to consumable rockets, not a persistent base.
+- [x] #2 Level 1 rocket includes a starter shop / basic loadout: Basic Thruster, Small Reactor, Small Tank, Cargo Bay, Mining Drill, Basic Nav, Basic Plating.
+- [x] #3 Hall/bay tile capacity gates room installation — larger rooms require bay upgrades first.
+- [x] #4 Each room category (propulsion, fuel, storage, mining, nav, hull, science) has at least 2 upgrade tiers defined.
+- [x] #5 A room being upgraded is non-functional (offline) during that upgrade process.
+- [x] #6 The rocket's overall level is derived from its installed rooms, not a separate XP stat.
+- [x] #7 T2 bay expansion zones restrict which room types can be installed (utility-only in expanded areas).
+- [x] #8 Parachute is a consumable room slot — it depletes on use and must be restocked.
+- [x] #9 Science rooms (Sample Lab, Telescope) increase mission payout/XP — trackable in debrief.
+- [x] #10 Later-game progression unlocks crew quarters / life support room category.
 <!-- AC:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Add a room catalog data model (starter loadout, tiers, bay restrictions, offline upgrades).
+2. Add a room sprite-sheet mapper/renderer for 4-column module tiles.
+3. Integrate room visuals + derived rocket level into SidescrollMining.
+4. Add bay restriction validation (T2 utility-only) and parachute consumable handling.
+5. Run focused tests and update task notes/AC status.
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
-Source: handwritten notebook page 121, photos IMG_1830.jpeg in the Rooms & Upgrades Obsidian note.
+## Summary
+- Added RoomCatalog model with starter loadout, room tiers, bay capacity gates, utility-only expansion rules, offline upgrade state, and parachute consumable slot.
+- Added RoomSpriteAtlas sheet mapper for 4-column room atlas layout and room-id->cell mapping.
+- Integrated rooms into SidescrollMining UI (live room panel with sprites/fallback labels), derived rocket level from installed rooms, and science multiplier telemetry in mining completion payload.
+- Added progression-based room installation for higher difficulty levels and offline-upgrade visualization.
 
-Key distinction from P65: rooms are not permanent structures — they're tied to consumable rockets. Each launch carries its own room configuration.
+- Follow-up: replaced fixed room grid slicing with content-aware auto-detection of module rectangles; keeps grid fallback when detection fails.
 
-The "halls must fit upgrades" rule is the central gating mechanic. It should be surfaced clearly in the UI when a player tries to install a room that doesn't fit: "Upgrade your bay first."
-
-Related tickets:
-- `task-k4p7nc` — item/component/resource system (fuel-at-orbit, storage ratios)
-- `task-r8mxvw` — transit animation (ship data dashboard visible during travel, which will show room stats)
-- `task-lmky3l` — mining drone deployment (drone bay room)
-- `task-bz4bzo` — drone targeting logic (subsurface probe room)
-- `task-7z1z11` — scanner anomaly selection (scanner array room)
-
-Reference:
-- Pixel Starships: https://pixelstarships.fandom.com/wiki/Rooms
-- Pixel Starships advanced layout: https://pixelstarships.fandom.com/wiki/Advanced_Layout_Guide
+- Added F8 debug overlay in SidescrollMining to preview auto-detected room crop boxes (index + room id labels) against the source sheet.
 <!-- SECTION:NOTES:END -->
+

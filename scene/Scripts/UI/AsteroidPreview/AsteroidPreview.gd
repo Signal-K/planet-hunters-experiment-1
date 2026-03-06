@@ -4,6 +4,10 @@ const PREVIEW_SCENE_PATH := "res://Scenes/UI/AsteroidPreview/asteroid_preview.ts
 const MINING_SCENE_PATH := "res://Scenes/UI/SidescrollMining.tscn"
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
 const GameplayAnalytics = preload("res://Scripts/Systems/GameplayAnalytics.gd")
+const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
+const ResourceYield = preload("res://Scripts/Utils/ResourceYield.gd")
+const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd")
+const MiningInventory = preload("res://Scripts/Utils/MiningInventory.gd")
 
 @onready var ui_container: Control = $CanvasLayer/UI
 @onready var mine_btn: Button = $CanvasLayer/UI/MineButton
@@ -31,7 +35,7 @@ func _ready():
 	mine_btn.pressed.connect(_on_mine_pressed)
 	return_btn.pressed.connect(_on_return_pressed)
 	
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var rm = RocketsManager
 	var preview = rm.get_preview_target()
 	_starter_contract_context = _build_starter_contract_context(rm)
 	
@@ -51,7 +55,7 @@ func _ready():
 		return
 	
 	# Get yield data
-	var resource_yield = preload("res://Scripts/Utils/ResourceYield.gd")
+	var resource_yield = ResourceYield
 	var targets = rm.get_detected_targets()
 	var level = 1
 	for t in targets:
@@ -91,7 +95,7 @@ func _on_mine_pressed():
 		"target_type": _current_target_type,
 		"rocket_id": _current_rocket_id
 	})
-	preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("start_mining", {
+	AppControllerHelper.record_tutorial_action("start_mining", {
 		"target_id": _current_target_id
 	})
 	
@@ -129,7 +133,7 @@ func _on_mining_completed(minerals_collected: Dictionary, score: int):
 		_last_mining_report = _minigame_instance.get_completion_report()
 	_persist_mining_result(_last_mining_collected)
 	if not minerals_collected.is_empty():
-		preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("mine_target", {
+		AppControllerHelper.record_tutorial_action("mine_target", {
 			"target_id": _current_target_id,
 			"score": score
 		})
@@ -156,11 +160,11 @@ func _on_return_pressed():
 		"target_id": _current_target_id,
 		"target_type": _current_target_type
 	})
-	preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("return_rocket_home", {
+	AppControllerHelper.record_tutorial_action("return_rocket_home", {
 		"rocket_id": _current_rocket_id,
 		"target_id": _current_target_id
 	})
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var rm = RocketsManager
 	var target_label = _current_target_id
 	var preview = rm.get_preview_target()
 	if not preview.is_empty():
@@ -168,6 +172,7 @@ func _on_return_pressed():
 	var operation_mode = rm.get_operation_mode_for_rocket(_current_rocket_id)
 	rm.set_returned_mission(_current_rocket_id, _current_target_id, target_label, _current_target_type, operation_mode, {
 		"mining_run_collected": _last_mining_collected.duplicate(true),
+		"mining_report": _last_mining_report.duplicate(true),
 		"starter_contract_context": _starter_contract_context.duplicate(true),
 		"starter_contract_complete": _starter_requirements_met(_last_mining_collected)
 	})
@@ -231,7 +236,7 @@ func _restart_starter_run(message: String) -> void:
 func _persist_mining_result(collected: Dictionary) -> void:
 	if _current_target_id == "":
 		return
-	var inv = preload("res://Scripts/Utils/MiningInventory.gd")
+	var inv = MiningInventory
 	if not inv:
 		return
 	var data = inv.load_state()

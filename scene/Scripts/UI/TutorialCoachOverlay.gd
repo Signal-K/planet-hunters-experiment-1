@@ -19,6 +19,12 @@ const HIGHLIGHT_BG_ALPHA_MAX := 0.18
 const HIGHLIGHT_BORDER_ALPHA_MIN := 0.65
 const HIGHLIGHT_BORDER_ALPHA_MAX := 1.0
 const TARGET_FLASH_BLEND := 0.38
+const LOW_INTENSITY_ACTIONS := [
+	"tour_open_control_station",
+	"tour_close_control_station",
+	"accept_starter_contractor",
+	"create_rocket"
+]
 # Accent colours — Out There: Omega palette
 const CYAN  := Color(0.28, 0.88, 0.96, 1.0)   # #47E0F5 — panel borders, guide line
 const AMBER := Color(0.941, 0.690, 0.188, 1.0) # #F0B030 — primary CTA only
@@ -320,7 +326,8 @@ func _on_tutorial_state_updated(state: Dictionary) -> void:
 	title_label.text = str(step.get("title", "Mission Guidance"))
 	stage_label.text = "Mission %d" % stage
 	message_label.text = str(step.get("message", ""))
-	action_label.text = "Next click: %s" % Targeting.action_hint_for_step(str(step.get("action_key", "")))
+	var action_key = str(step.get("action_key", ""))
+	action_label.text = Targeting.navigation_hint_for_action(action_key)
 	progress_label.text = "Step %d/%d" % [min(current_idx + 1, max(total, 1)), max(total, 1)]
 	practice_mining_button.visible = _step_supports_practice(step)
 	call_deferred("_reposition_panel")
@@ -451,11 +458,21 @@ func _update_guidance_overlay() -> void:
 		if action_key != "" and action_label != null:
 			action_label.text = Targeting.navigation_hint_for_action(action_key)
 		return
-	_set_active_flash_target(_guide_target_node)
+	var action_key := str(_current_step.get("action_key", ""))
+	var low_intensity = _is_low_intensity_action(action_key)
+	if low_intensity:
+		_set_active_flash_target(null)
+	else:
+		_set_active_flash_target(_guide_target_node)
 	_guide_target_rect = target_rect
 	_highlight_box.visible = true
 	_highlight_box.position = target_rect.position - Vector2(HIGHLIGHT_PADDING, HIGHLIGHT_PADDING)
 	_highlight_box.size = target_rect.size + Vector2(HIGHLIGHT_PADDING * 2.0, HIGHLIGHT_PADDING * 2.0)
+	if low_intensity:
+		_guide_line.visible = false
+		_guide_arrow.visible = false
+		_guide_label.visible = false
+		return
 
 	var target_center = target_rect.position + (target_rect.size * 0.5)
 	_guide_source_point = target_center + Vector2(-240, -120)
@@ -476,6 +493,9 @@ func _update_guidance_overlay() -> void:
 		clamp(target_rect.position.x - 160.0, 8.0, get_viewport().get_visible_rect().size.x - 200.0),
 		max(target_rect.position.y - 36.0, 8.0)
 	)
+
+func _is_low_intensity_action(action_key: String) -> bool:
+	return action_key in LOW_INTENSITY_ACTIONS
 
 func _hide_guide_overlay() -> void:
 	_set_active_flash_target(null)
