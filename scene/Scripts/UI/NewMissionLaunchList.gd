@@ -12,6 +12,10 @@ const HeaderLabelScene = preload("res://Scenes/UI/Templates/MenuUnlockHeader.tsc
 const EmptyLabelScene = preload("res://Scenes/UI/Templates/MenuLogbookEmpty.tscn")
 var _mission_rows := {}
 const TimeHelper = preload("res://Scripts/Earth/TimeHelper.gd")
+const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
+const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
+const HashUtils = preload("res://Scripts/Utils/HashUtils.gd")
+const NumberFormat = preload("res://Scripts/Utils/NumberFormat.gd")
 
 func setup(launch_list_container: Node, on_refund: Callable) -> void:
 	_launch_list_container = launch_list_container
@@ -23,8 +27,8 @@ func display_launched_rockets() -> void:
 		c.queue_free()
 	_mission_rows.clear()
 	# Load launched rockets from RocketsManager
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
-	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
+	var rm = RocketsManager
+	var panel_style = PanelStyle
 	var launched: Array = []
 	var missions: Array = []
 	var targets: Array = []
@@ -134,7 +138,7 @@ func display_launched_rockets() -> void:
 
 func _on_self_destruct_pressed(rocket_id: String) -> void:
 	print("NewMissionPanel: self-destruct requested for", rocket_id)
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var rm = RocketsManager
 	if rm:
 		var ok = rm.set_destroyed(rocket_id)
 		if ok:
@@ -149,7 +153,7 @@ func _on_self_destruct_pressed(rocket_id: String) -> void:
 		print("NewMissionPanel: RocketsManager not available")
 
 func _on_preview_pressed(target_id: String, target_label: String, target_type: String, rocket_id: String) -> void:
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var rm = RocketsManager
 	if rm:
 		rm.set_preview_target(target_id, target_label, target_type, rocket_id)
 	var status = ""
@@ -174,7 +178,7 @@ func _change_to_scene(scene_path: String) -> void:
 func _has_arrived(target_id: String, rocket_id: String) -> bool:
 	if target_id == "" or rocket_id == "":
 		return false
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var rm = RocketsManager
 	if not rm:
 		return false
 	if rm.has_arrived(rocket_id, target_id):
@@ -232,7 +236,7 @@ func _get_target_type(target_map: Dictionary, target_id: String) -> String:
 	return "asteroid"
 
 func _distance_for_target(target_id: String) -> float:
-	var hash_util = preload("res://Scripts/Utils/HashUtils.gd")
+	var hash_util = HashUtils
 	var seed = hash_util.simple_hash(target_id)
 	var rng = RandomNumberGenerator.new()
 	rng.seed = seed
@@ -240,7 +244,7 @@ func _distance_for_target(target_id: String) -> float:
 
 func _format_distance_km(distance_km: float) -> String:
 	var rounded = int(round(distance_km))
-	var fmt = preload("res://Scripts/Utils/NumberFormat.gd")
+	var fmt = NumberFormat
 	return "%s km" % fmt.commas(str(rounded))
 
 func update_progress() -> void:
@@ -254,7 +258,7 @@ func update_progress() -> void:
 		var bar: ProgressBar = data["progress"]
 		var launch_time = float(data.get("launch_time", 0))
 		var arrival_time = float(data.get("arrival_time", 0))
-		var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+		var rm = RocketsManager
 		var travel_seconds = 60.0
 		if rm:
 			travel_seconds = float(rm.get_mission_duration_seconds_for_rocket(str(rocket_id)))

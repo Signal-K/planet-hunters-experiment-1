@@ -1,5 +1,7 @@
 class_name SatelliteStation extends Structure
 
+const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
+const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd")
 
 var _build_dialog: ConfirmationDialog = null
 var _info_dialog: AcceptDialog = null
@@ -16,7 +18,7 @@ func on_interact():
 	_refresh_visibility()
 	if not visible:
 		return
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var rm = RocketsManager
 	if not rm:
 		return
 	_ensure_scanner_state_consistency(rm)
@@ -47,7 +49,7 @@ func on_interact():
 
 
 func _refresh_visibility() -> void:
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var rm = RocketsManager
 	var unlocked = rm and rm.is_scanner_unlocked()
 	visible = unlocked
 	if has_node("Sprite2D"):
@@ -73,7 +75,7 @@ func _ensure_dialogs() -> void:
 		_info_dialog.confirmed.connect(_on_unlock_info_confirmed)
 
 func _on_unlock_info_confirmed() -> void:
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var rm = RocketsManager
 	if not rm:
 		return
 	_ensure_scanner_state_consistency(rm)
@@ -84,7 +86,7 @@ func _on_unlock_info_confirmed() -> void:
 	# Leave build prompt to explicit station interaction to avoid repeated modal chaining.
 
 func _maybe_show_unlock_dialog() -> void:
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var rm = RocketsManager
 	if not rm or not rm.is_scanner_unlocked():
 		return
 	_ensure_scanner_state_consistency(rm)
@@ -100,7 +102,7 @@ func _maybe_show_unlock_dialog() -> void:
 	return
 
 func _prompt_build_scanner() -> void:
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var rm = RocketsManager
 	if not rm:
 		return
 	_ensure_scanner_state_consistency(rm)
@@ -115,7 +117,7 @@ func _prompt_build_scanner() -> void:
 func _ensure_scanner_state_consistency(rm = null) -> void:
 	var rockets_manager = rm
 	if rockets_manager == null:
-		rockets_manager = preload("res://Scripts/Utils/RocketsManager.gd")
+		rockets_manager = RocketsManager
 	if not rockets_manager:
 		return
 	# Mission 4+ implies scanner flow was already completed.
@@ -123,7 +125,7 @@ func _ensure_scanner_state_consistency(rm = null) -> void:
 		rockets_manager.set_scanner_station_built(true)
 
 func _on_confirm_build_scanner() -> void:
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var rm = RocketsManager
 	if not rm:
 		return
 	var app = get_tree().root.find_child("AppController", true, false)
@@ -137,7 +139,7 @@ func _on_confirm_build_scanner() -> void:
 		return
 	app.add_franc_balance(-cost, "build_scanner_station")
 	rm.set_scanner_station_built(true)
-	preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("build_scanner_station")
+	AppControllerHelper.record_tutorial_action("build_scanner_station")
 	_refresh_visibility()
 	_show_info("Scanner Station constructed. You can now run scans.")
 

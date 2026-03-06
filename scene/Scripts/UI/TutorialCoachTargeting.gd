@@ -19,18 +19,22 @@ static func build_target_rect(target: Node) -> Rect2:
 
 static func navigation_hint_for_action(action_key: String) -> String:
 	match action_key:
+		"tour_open_control_station":
+			return "→ Click the Control Station"
+		"tour_close_control_station":
+			return "→ Close the Control Station panel"
 		"open_launchpad":
 			return "→ Click the Launchpad structure on the base"
 		"create_rocket":
-			return "→ Open the Launchpad to build a rocket"
+			return "→ Create a rocket in Launchpad"
 		"select_launch_target":
-			return "→ Open the Launchpad, then select a target"
+			return "→ Select a mission target in Launchpad"
 		"launch_rocket_from_earth":
-			return "→ Open the Launchpad, then click Launch"
+			return "→ Press Launch in Launchpad"
 		"mine_target":
-			return "→ Launch a mission first to reach the mining site"
+			return "→ Follow the order panel and mine only requested minerals"
 		"return_rocket_home":
-			return "→ Use the in-flight Return Home controls"
+			return "→ Press Return Home"
 		"resolve_mission_debrief":
 			return "→ Complete the debrief when your rocket lands"
 		"build_scanner_station":
@@ -40,7 +44,9 @@ static func navigation_hint_for_action(action_key: String) -> String:
 		"toggle_planet_scanner":
 			return "→ Open the Scanner Station to toggle modes"
 		"accept_contractor_offer":
-			return "→ Open the Contractor panel to accept an offer"
+			return "→ Accept one contractor offer"
+		"accept_starter_contractor":
+			return "→ Sign one starter contractor in Launchpad"
 		"complete_contractor_mission":
 			return "→ Finish the debrief for your contractor mission"
 		"arrived_at_mining_site":
@@ -49,6 +55,10 @@ static func navigation_hint_for_action(action_key: String) -> String:
 
 static func action_hint_for_step(action_key: String) -> String:
 	match action_key:
+		"tour_open_control_station":
+			return "Control Station"
+		"tour_close_control_station":
+			return "Control Station close button"
 		"open_launchpad":
 			return "Launchpad"
 		"create_rocket":
@@ -71,12 +81,27 @@ static func action_hint_for_step(action_key: String) -> String:
 			return "Scanner toggle switch"
 		"accept_contractor_offer":
 			return "Accept contractor button"
+		"accept_starter_contractor":
+			return "Sign button in Launchpad panel"
 		"complete_contractor_mission":
 			return "Complete debrief for contractor mission"
 	return action_key
 
 static func _find_target_for_action(action_key: String, tree: SceneTree) -> Node:
 	match action_key:
+		"tour_open_control_station":
+			return _find_node_path_any(tree, [
+				"StructuresLayer/ControlStation",
+				"StructuresLayer/ControlStation/InteractionArea"
+			])
+		"tour_close_control_station":
+			return _find_visible_button(tree, func(btn: Button) -> bool:
+				var key = btn.name.to_lower()
+				if key.find("close") == -1:
+					return false
+				var path = str(btn.get_path()).to_lower()
+				return path.find("controlstationpanel") != -1
+			)
 		"open_launchpad":
 			return _find_node_path_any(tree, [
 				"StructuresLayer/Launchpad",
@@ -110,9 +135,23 @@ static func _find_target_for_action(action_key: String, tree: SceneTree) -> Node
 		"toggle_planet_scanner":
 			return _find_node_path_any(tree, ["PanelContainer/Panel/VBoxContainer/HeaderContainer/ToggleSwitch"])
 		"mine_target":
-			return _find_node_path_any(tree, ["CanvasLayer/UI/MineButton", "UI/FireButton"])
+			return _find_node_path_any(tree, [
+				"CanvasLayer/UI/ControlPanel/ControlPanelMargin/ControlPanelButtons/MineButton",
+				"CanvasLayer/UI/MineButton",
+				"UI/FireButton"
+			])
 		"return_rocket_home":
-			return _find_node_path_any(tree, ["CanvasLayer/UI/ReturnButton", "UI/ReturnButton"])
+			var return_button = _find_visible_button(tree, func(btn: Button) -> bool:
+				var text = btn.text.to_lower()
+				return text.find("return home") != -1 or btn.name.to_lower().find("return") != -1
+			)
+			if return_button:
+				return return_button
+			return _find_node_path_any(tree, [
+				"CanvasLayer/UI/ControlPanel/ControlPanelMargin/ControlPanelButtons/ReturnHomeButton",
+				"CanvasLayer/UI/ReturnButton",
+				"UI/ReturnButton"
+			])
 		"resolve_mission_debrief", "complete_contractor_mission":
 			return _find_visible_button(tree, func(btn: Button) -> bool:
 				if btn.disabled:
@@ -124,6 +163,19 @@ static func _find_target_for_action(action_key: String, tree: SceneTree) -> Node
 			return _find_visible_button(tree, func(btn: Button) -> bool:
 				return not btn.disabled and btn.text.to_lower().find("accept") != -1
 			)
+		"accept_starter_contractor":
+			var sign_button = _find_visible_button(tree, func(btn: Button) -> bool:
+				if btn.disabled:
+					return false
+				var text = btn.text.strip_edges().to_lower()
+				if text.find("sign") == -1:
+					return false
+				var path = str(btn.get_path()).to_lower()
+				return path.find("selectorpanel") != -1 or path.find("targetssection") != -1
+			)
+			if sign_button:
+				return sign_button
+			return null
 	return null
 
 static func _build_target_rect(target: Node) -> Rect2:

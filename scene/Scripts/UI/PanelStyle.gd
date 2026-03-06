@@ -6,7 +6,6 @@ const NebulaTheme = preload("res://Resources/NebulaSciTheme.gd")
 # ── Colour constants (referenced from TutorialCoachOverlay etc.) ─────────────
 const PANEL_BG       := NebulaTheme.PANEL_BG
 const PANEL_BORDER   := NebulaTheme.PANEL_OUTLINE
-const PANEL_SHADOW   := Color(0, 0, 0, 0.55)
 const TEXT_PRIMARY   := Color(0.95, 0.93, 0.90, 1.0)   # warm white
 const TEXT_MUTED     := Color(0.62, 0.60, 0.58, 1.0)   # warm grey
 const ACCENT         := NebulaTheme.ACCENT_CYAN         # cyan — panel borders, progress fill
@@ -39,9 +38,9 @@ static func apply_panel(panel: Control, bg_color: Color = PANEL_BG) -> void:
 	s.border_color = PANEL_BORDER
 	s.set_border_width_all(2)
 	s.set_corner_radius_all(6)
-	s.shadow_color  = PANEL_SHADOW
-	s.shadow_size   = 20
-	s.shadow_offset = Vector2(0, 6)
+	s.shadow_color  = Color(PANEL_BORDER.r, PANEL_BORDER.g, PANEL_BORDER.b, 0.25)
+	s.shadow_size   = 18
+	s.shadow_offset = Vector2(0, 0)
 	s.content_margin_left   = 24
 	s.content_margin_right  = 24
 	s.content_margin_top    = 18

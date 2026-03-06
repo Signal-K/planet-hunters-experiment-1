@@ -15,6 +15,14 @@ const NumberFormat = preload("res://Scripts/Utils/NumberFormat.gd")
 const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
 const ResourceValueRowScene = preload("res://Scenes/UI/Templates/ResourceValueRow.tscn")
 const EmptyLabelScene = preload("res://Scenes/UI/Templates/MenuLogbookEmpty.tscn")
+const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
+const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
+const OrbitVisuals = preload("res://Scripts/Utils/OrbitVisuals.gd")
+const MiningInventory = preload("res://Scripts/Utils/MiningInventory.gd")
+const MineralPricing = preload("res://Scripts/Utils/MineralPricing.gd")
+const ResourceYield = preload("res://Scripts/Utils/ResourceYield.gd")
+const ProceduralBodyBuilder = preload("res://Scripts/Utils/ProceduralBodyBuilder.gd")
+const RocketSpriteHelper = preload("res://Scripts/Utils/RocketSpriteHelper.gd")
 
 const ORBIT_MULTIPLIER := 1.0
 const EARTH_MULTIPLIER := 1.35
@@ -62,6 +70,7 @@ var _earth_mesh: MeshInstance3D
 var _traveling := false
 var _auto_advance_started := false
 var _depart_start_rocket_pos := Vector2.ZERO
+var _last_viewport_size := Vector2.ZERO
 
 enum Phase {
 	TARGET_ORBIT,
@@ -74,7 +83,7 @@ enum Phase {
 var _phase := Phase.TARGET_ORBIT
 
 func _should_start_at_earth_orbit() -> bool:
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var rm = RocketsManager
 	if not rm:
 		return false
 	rm.mark_returned_if_due(_current_rocket_id)
@@ -88,12 +97,17 @@ func _ready() -> void:
 	_generate_target_asteroid(_current_target_id)
 	_setup_earth()
 	_setup_orbit_visual()
+	_apply_responsive_layout()
 	if _should_start_at_earth_orbit():
 		_start_earth_orbit()
 	else:
 		_start_target_orbit()
 
 func _process(delta: float) -> void:
+	var viewport_size = get_viewport().get_visible_rect().size
+	if viewport_size != _last_viewport_size:
+		_last_viewport_size = viewport_size
+		_apply_responsive_layout()
 	_phase_time += delta
 	_update_orbit(delta)
 	_apply_earth_alpha()
@@ -110,7 +124,7 @@ func _process(delta: float) -> void:
 	_update_target_label()
 
 func _setup_ui() -> void:
-	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
+	var panel_style = PanelStyle
 	panel_style.apply_button(back_button, false)
 	panel_style.apply_title(target_label)
 	panel_style.apply_panel(minerals_panel)
@@ -138,8 +152,41 @@ func _setup_ui() -> void:
 	back_button.visible = true
 	back_button.pressed.connect(_on_continue_pressed)
 
+func _apply_responsive_layout() -> void:
+	var viewport = get_viewport().get_visible_rect().size
+	if viewport == Vector2.ZERO:
+		return
+	var compact = viewport.x < 1360.0 or viewport.y < 860.0
+	var edge_margin = 16.0
+	var left_panel_width = clamp(viewport.x * (0.34 if compact else 0.30), 300.0, 420.0)
+	var right_panel_width = clamp(viewport.x * (0.34 if compact else 0.30), 300.0, 420.0)
+	if travel_panel:
+		travel_panel.anchor_left = 0.0
+		travel_panel.anchor_right = 0.0
+		travel_panel.anchor_top = 0.0
+		travel_panel.anchor_bottom = 0.0
+		travel_panel.offset_left = edge_margin
+		travel_panel.offset_top = 96.0
+		travel_panel.offset_right = edge_margin + left_panel_width
+		travel_panel.offset_bottom = 216.0
+	if summary_panel:
+		summary_panel.anchor_left = 1.0
+		summary_panel.anchor_right = 1.0
+		summary_panel.anchor_top = 0.0
+		summary_panel.anchor_bottom = 0.0
+		summary_panel.offset_left = -edge_margin - right_panel_width
+		summary_panel.offset_top = 96.0 if compact else 128.0
+		summary_panel.offset_right = -edge_margin
+		summary_panel.offset_bottom = summary_panel.offset_top + (300.0 if compact else 360.0)
+	if control_panel:
+		control_panel.offset_left = -edge_margin - right_panel_width
+		control_panel.offset_right = -edge_margin
+	if inventory_panel:
+		inventory_panel.offset_left = -edge_margin - right_panel_width
+		inventory_panel.offset_right = -edge_margin
+
 func _load_target_data() -> void:
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var rm = RocketsManager
 	var returned := {}
 	if rm:
 		returned = rm.get_returned_mission()
@@ -176,12 +223,12 @@ func _setup_orbit_visual() -> void:
 		return
 	orbit_root.visible = true
 	_orbit_angle = 0.0
-	var orbit_utils = preload("res://Scripts/Utils/OrbitVisuals.gd")
+	var orbit_utils = OrbitVisuals
 	orbit_utils.build_orbit_circle(orbit_circle, _orbit_radius, ORBIT_SEGMENTS)
 	orbit_rocket.position = Vector2(_orbit_radius, 0)
 	orbit_rocket.scale = Vector2(0.2, 0.2)
 	_set_orbit_rocket_visual(_current_rocket_id)
-	var orbit_utils2 = preload("res://Scripts/Utils/OrbitVisuals.gd")
+	var orbit_utils2 = OrbitVisuals
 	orbit_utils2.update_heading_line(orbit_heading, orbit_rocket)
 
 func _start_target_orbit() -> void:
@@ -274,7 +321,7 @@ func _start_earth_orbit() -> void:
 	_phase = Phase.EARTH_ORBIT
 	_phase_time = 0.0
 	_orbit_radius = ORBIT_RADIUS_PX
-	var orbit_utils3 = preload("res://Scripts/Utils/OrbitVisuals.gd")
+	var orbit_utils3 = OrbitVisuals
 	orbit_utils3.build_orbit_circle(orbit_circle, _orbit_radius, ORBIT_SEGMENTS)
 	if orbit_circle:
 		orbit_circle.visible = true
@@ -305,13 +352,13 @@ func _summary_content() -> void:
 		return
 	for c in summary_list.get_children():
 		c.queue_free()
-	var inv = preload("res://Scripts/Utils/MiningInventory.gd")
+	var inv = MiningInventory
 	var state = inv.load_state()
 	var targets = state.get("targets", {})
 	var entry = targets.get(_current_target_id, {})
 	var collected: Dictionary = entry.get("collected", {})
 	var total_value := 0
-	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
+	var panel_style = PanelStyle
 	if collected.is_empty():
 		var empty: Label = EmptyLabelScene.instantiate()
 		empty.text = "No cargo recorded."
@@ -328,7 +375,7 @@ func _summary_content() -> void:
 			amount_lbl.text = "%s kg" % NumberFormat.commas(str(amount))
 			panel_style.apply_muted(amount_lbl)
 			summary_list.add_child(row)
-			var pricing = preload("res://Scripts/Utils/MineralPricing.gd")
+			var pricing = MineralPricing
 			total_value += pricing.price_for(name, amount)
 	var orbit_value = int(round(total_value * ORBIT_MULTIPLIER))
 	var earth_value = int(round(total_value * EARTH_MULTIPLIER))
@@ -361,9 +408,9 @@ func _update_orbit(delta: float) -> void:
 				orbit_root.position = camera_3d.unproject_position(_earth_pivot.global_position)
 			else:
 				orbit_root.position = camera_3d.unproject_position(asteroid_pivot.global_position)
-	var orbit_utils4 = preload("res://Scripts/Utils/OrbitVisuals.gd")
+	var orbit_utils4 = OrbitVisuals
 	orbit_utils4.build_orbit_circle(orbit_circle, _orbit_radius, ORBIT_SEGMENTS)
-	var orbit_utils5 = preload("res://Scripts/Utils/OrbitVisuals.gd")
+	var orbit_utils5 = OrbitVisuals
 	orbit_utils5.update_heading_line(orbit_heading, orbit_rocket)
 
 func _build_minerals_list() -> void:
@@ -371,7 +418,7 @@ func _build_minerals_list() -> void:
 		return
 	for child in minerals_list.get_children():
 		child.queue_free()
-	var resource_yield = preload("res://Scripts/Utils/ResourceYield.gd")
+	var resource_yield = ResourceYield
 	var cargo_multiplier = RocketSpecs.get_cargo_multiplier(_current_rocket_id)
 	var yield_data = resource_yield.get_yield_for_target(_current_target_id, _current_target_type, 1, cargo_multiplier)
 	var minerals: Dictionary = yield_data.get("minerals", {})
@@ -381,7 +428,7 @@ func _build_minerals_list() -> void:
 		int(round(float(yield_data.get("mineable_pct", 0.1)) * 100.0)),
 		NumberFormat.commas(str(capacity))
 	]
-	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
+	var panel_style = PanelStyle
 	for name in resource_yield.MINERALS:
 		if not minerals.has(name):
 			continue
@@ -397,13 +444,13 @@ func _build_minerals_list() -> void:
 func _generate_target_asteroid(target_id: String) -> void:
 	if asteroid_mesh == null:
 		return
-	var builder = preload("res://Scripts/Utils/ProceduralBodyBuilder.gd")
+	var builder = ProceduralBodyBuilder
 	builder.build_asteroid(asteroid_mesh, target_id, 0.72, 0.96, Color(0.35, 0.35, 0.35))
 
 func _generate_earth() -> void:
 	if _earth_mesh == null:
 		return
-	var builder = preload("res://Scripts/Utils/ProceduralBodyBuilder.gd")
+	var builder = ProceduralBodyBuilder
 	builder.build_earth(_earth_mesh, "earth:%s" % _current_target_id, Color(0.1, 0.2, 0.4))
 	_apply_earth_alpha()
 
@@ -417,7 +464,7 @@ func _apply_earth_alpha() -> void:
 func _set_orbit_rocket_visual(rocket_id: String) -> void:
 	if orbit_rocket == null:
 		return
-	var helper = preload("res://Scripts/Utils/RocketSpriteHelper.gd")
+	var helper = RocketSpriteHelper
 	helper.apply_orbit_sprite(orbit_rocket, rocket_id)
 
 func _on_continue_pressed() -> void:

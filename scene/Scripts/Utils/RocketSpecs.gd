@@ -4,6 +4,9 @@ class_name RocketSpecs
 const DEFAULT_ROCKET_TYPE := "starterrocket1"
 const BASE_MISSION_SECONDS := 60
 const BASE_RETURN_SECONDS := 60
+# Max one-way range (AU) for a rocket with range_multiplier = 1.0.
+# Used for fuel budget display at target selection (AC #4, task k4p7nc).
+const BASE_RANGE_AU := 12.0
 
 const SPECS := {
 	"starterrocket1": {
@@ -67,6 +70,9 @@ static func get_speed_multiplier(rocket_id_or_type: String) -> float:
 
 static func get_range_multiplier(rocket_id_or_type: String) -> float:
 	return max(float(get_spec(rocket_id_or_type).get("range_multiplier", 1.0)), 0.1)
+
+static func get_max_range_au(rocket_id_or_type: String) -> float:
+	return BASE_RANGE_AU * get_range_multiplier(rocket_id_or_type)
 
 static func get_cargo_multiplier(rocket_id_or_type: String) -> float:
 	return max(float(get_spec(rocket_id_or_type).get("cargo_multiplier", 1.0)), 0.1)

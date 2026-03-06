@@ -28,6 +28,7 @@ const TARGET_CLICK_RADIUS := 22.0
 func _ready() -> void:
 	if back_button:
 		back_button.pressed.connect(_on_back_pressed)
+		preload("res://Scripts/UI/PanelStyle.gd").apply_button(back_button, false)
 	set_process_unhandled_input(true)
 	set_process_input(true)
 	_label_font = ThemeDB.fallback_font
@@ -107,16 +108,19 @@ func _draw() -> void:
 	var size = _last_size
 	if size == Vector2.ZERO:
 		return
-	
+
 	var NebulaTheme = preload("res://Resources/NebulaSciTheme.gd")
-	
-	# Draw nebula gradient background
+
+	# Draw nebula gradient background covering the full viewport rect (including
+	# any negative origin offset from canvas_items+expand stretch mode)
+	var vp_rect := get_viewport_rect()
 	var gradient = NebulaTheme.create_nebula_gradient()
 	for i in range(4):
 		var t = float(i) / 3.0
 		var color = gradient.sample(t)
-		var rect_height = size.y / 4.0
-		draw_rect(Rect2(0, i * rect_height, size.x, rect_height), color, true)
+		color.a = 1.0
+		var rect_height = vp_rect.size.y / 4.0
+		draw_rect(Rect2(vp_rect.position.x, vp_rect.position.y + i * rect_height, vp_rect.size.x, rect_height), color, true)
 
 	for s in _stars:
 		draw_circle(s["pos"], s["r"], STAR_COLOR)

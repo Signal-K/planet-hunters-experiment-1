@@ -70,6 +70,10 @@ const TRAVEL_DISTANCE_TOTAL_KM := 420000.0
 const NumberFormat = preload("res://Scripts/Utils/NumberFormat.gd")
 const ResourceValueRowScene = preload("res://Scenes/UI/Templates/ResourceValueRow.tscn")
 const EmptyLabelScene = preload("res://Scenes/UI/Templates/MenuLogbookEmpty.tscn")
+const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
+const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
+const MiningInventory = preload("res://Scripts/Utils/MiningInventory.gd")
+const MineralPricing = preload("res://Scripts/Utils/MineralPricing.gd")
 const ORBIT_MULTIPLIER := 1.0
 const EARTH_MULTIPLIER := 1.35
 const MIN_TIMELINE_EPSILON := 0.01
@@ -142,7 +146,7 @@ func _setup_label() -> void:
 	status_label.position = Vector2(24, 80)
 	status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	status_label.vertical_alignment = VERTICAL_ALIGNMENT_TOP
-	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
+	var panel_style = PanelStyle
 	panel_style.apply_title(status_label)
 
 func _setup_back_button() -> void:
@@ -151,7 +155,7 @@ func _setup_back_button() -> void:
 	back_button.text = "Back"
 	back_button.custom_minimum_size = Vector2(140, 44)
 	back_button.position = Vector2(24, 24)
-	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
+	var panel_style = PanelStyle
 	panel_style.apply_button(back_button, false)
 	back_button.pressed.connect(_on_back_pressed)
 
@@ -273,7 +277,7 @@ func _update_background() -> void:
 	_gradient_texture.gradient = _gradient
 
 func _setup_rocket_animation() -> void:
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var rm = RocketsManager
 	var returned := {}
 	if rm:
 		returned = rm.get_returned_mission()
@@ -315,7 +319,7 @@ func _setup_earth() -> void:
 	earth.modulate.a = 0.0
 
 func _setup_panels() -> void:
-	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
+	var panel_style = PanelStyle
 	if mining_panel:
 		panel_style.apply_panel(mining_panel)
 		panel_style.apply_title(mining_title)
@@ -343,7 +347,7 @@ func _build_mining_panel() -> void:
 		mining_summary.text = "Remaining: 0 kg"
 		mining_total.text = "Total Collected: 0 kg"
 		return
-	var inv = preload("res://Scripts/Utils/MiningInventory.gd")
+	var inv = MiningInventory
 	var state = inv.load_state()
 	var targets = state.get("targets", {})
 	var entry = targets.get(target_id, {})
@@ -368,13 +372,13 @@ func _build_summary_panel() -> void:
 		summary_orbit.text = "Sell in Orbit: 0 F"
 		summary_earth.text = "Sell on Earth: 0 F"
 		return
-	var inv = preload("res://Scripts/Utils/MiningInventory.gd")
+	var inv = MiningInventory
 	var state = inv.load_state()
 	var targets = state.get("targets", {})
 	var entry = targets.get(target_id, {})
 	var collected: Dictionary = entry.get("collected", {})
 	var total_value := 0
-	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
+	var panel_style = PanelStyle
 	if collected.is_empty():
 		var empty: Label = EmptyLabelScene.instantiate()
 		empty.text = "No cargo recorded."
@@ -391,7 +395,7 @@ func _build_summary_panel() -> void:
 			amount_lbl.text = "%s kg" % NumberFormat.commas(str(amount))
 			panel_style.apply_muted(amount_lbl)
 			summary_list.add_child(row)
-			var pricing = preload("res://Scripts/Utils/MineralPricing.gd")
+			var pricing = MineralPricing
 			total_value += pricing.price_for(name, amount)
 	var orbit_value = int(round(total_value * ORBIT_MULTIPLIER))
 	var earth_value = int(round(total_value * EARTH_MULTIPLIER))
@@ -425,7 +429,7 @@ func _on_back_pressed() -> void:
 		tree.change_scene_to_file(MAIN_SCENE_PATH)
 
 func _resume_from_elapsed_return_time() -> void:
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var rm = RocketsManager
 	if not rm:
 		return
 	var progress = float(rm.get_return_progress(str(_return_data.get("rocket_id", ""))))
