@@ -1,0 +1,454 @@
+{
+  "taskId": "slwerj",
+  "currentVersion": 8,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "slwerj",
+      "version": 1,
+      "timestamp": "2026-03-05T12:47:13.850Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Launchpad rocket interior zoom + room overlay",
+        "description": "When viewing a rocket on the launchpad, allow zoom-in to interior room view by fading the rocket sprite into a hull outline that reveals room modules. Use room assignments tied to rocket tiers from @task-hj2q5t and @doc/game-design/level-progression-and-unlocks.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "launchpad",
+          "rooms",
+          "rocket",
+          "ui",
+          "zoom"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "User can zoom in/out on launchpad rocket view."
+          },
+          {
+            "completed": false,
+            "text": "Rocket sprite fades to an outline/interior mode while zoomed."
+          },
+          {
+            "completed": false,
+            "text": "Interior room modules shown reflect the active rocket tier (SR1/SR2/SR3 mapping)."
+          },
+          {
+            "completed": false,
+            "text": "Feature does not break launch flow, selector panel, or existing launchpad interactions."
+          },
+          {
+            "completed": false,
+            "text": "Tests pass for existing progression/launchpad-related suites."
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "slwerj",
+      "version": 2,
+      "timestamp": "2026-03-05T12:47:52.327Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "newValue": "1. Add launchpad interior zoom controller script with room rendering per rocket type.\n2. Integrate with launchpad camera and rocket nodes (fade sprite -> hull outline + rooms on zoom).\n3. Add user interactions to toggle zoom and restore state safely on scene changes.\n4. Map room loadouts by rocket tier using knowns room progression references.\n5. Run tests and complete task bookkeeping."
+        }
+      ],
+      "snapshot": {
+        "title": "Launchpad rocket interior zoom + room overlay",
+        "description": "When viewing a rocket on the launchpad, allow zoom-in to interior room view by fading the rocket sprite into a hull outline that reveals room modules. Use room assignments tied to rocket tiers from @task-hj2q5t and @doc/game-design/level-progression-and-unlocks.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "launchpad",
+          "rooms",
+          "rocket",
+          "ui",
+          "zoom"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "User can zoom in/out on launchpad rocket view."
+          },
+          {
+            "completed": false,
+            "text": "Rocket sprite fades to an outline/interior mode while zoomed."
+          },
+          {
+            "completed": false,
+            "text": "Interior room modules shown reflect the active rocket tier (SR1/SR2/SR3 mapping)."
+          },
+          {
+            "completed": false,
+            "text": "Feature does not break launch flow, selector panel, or existing launchpad interactions."
+          },
+          {
+            "completed": false,
+            "text": "Tests pass for existing progression/launchpad-related suites."
+          }
+        ],
+        "implementationPlan": "1. Add launchpad interior zoom controller script with room rendering per rocket type.\n2. Integrate with launchpad camera and rocket nodes (fade sprite -> hull outline + rooms on zoom).\n3. Add user interactions to toggle zoom and restore state safely on scene changes.\n4. Map room loadouts by rocket tier using knowns room progression references.\n5. Run tests and complete task bookkeeping."
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "slwerj",
+      "version": 3,
+      "timestamp": "2026-03-05T12:50:54.917Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "User can zoom in/out on launchpad rocket view."
+            },
+            {
+              "completed": false,
+              "text": "Rocket sprite fades to an outline/interior mode while zoomed."
+            },
+            {
+              "completed": false,
+              "text": "Interior room modules shown reflect the active rocket tier (SR1/SR2/SR3 mapping)."
+            },
+            {
+              "completed": false,
+              "text": "Feature does not break launch flow, selector panel, or existing launchpad interactions."
+            },
+            {
+              "completed": false,
+              "text": "Tests pass for existing progression/launchpad-related suites."
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "User can zoom in/out on launchpad rocket view."
+            },
+            {
+              "completed": true,
+              "text": "Rocket sprite fades to an outline/interior mode while zoomed."
+            },
+            {
+              "completed": true,
+              "text": "Interior room modules shown reflect the active rocket tier (SR1/SR2/SR3 mapping)."
+            },
+            {
+              "completed": true,
+              "text": "Feature does not break launch flow, selector panel, or existing launchpad interactions."
+            },
+            {
+              "completed": true,
+              "text": "Tests pass for existing progression/launchpad-related suites."
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Launchpad rocket interior zoom + room overlay",
+        "description": "When viewing a rocket on the launchpad, allow zoom-in to interior room view by fading the rocket sprite into a hull outline that reveals room modules. Use room assignments tied to rocket tiers from @task-hj2q5t and @doc/game-design/level-progression-and-unlocks.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "launchpad",
+          "rooms",
+          "rocket",
+          "ui",
+          "zoom"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "User can zoom in/out on launchpad rocket view."
+          },
+          {
+            "completed": true,
+            "text": "Rocket sprite fades to an outline/interior mode while zoomed."
+          },
+          {
+            "completed": true,
+            "text": "Interior room modules shown reflect the active rocket tier (SR1/SR2/SR3 mapping)."
+          },
+          {
+            "completed": true,
+            "text": "Feature does not break launch flow, selector panel, or existing launchpad interactions."
+          },
+          {
+            "completed": true,
+            "text": "Tests pass for existing progression/launchpad-related suites."
+          }
+        ],
+        "implementationPlan": "1. Add launchpad interior zoom controller script with room rendering per rocket type.\n2. Integrate with launchpad camera and rocket nodes (fade sprite -> hull outline + rooms on zoom).\n3. Add user interactions to toggle zoom and restore state safely on scene changes.\n4. Map room loadouts by rocket tier using knowns room progression references.\n5. Run tests and complete task bookkeeping."
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "slwerj",
+      "version": 4,
+      "timestamp": "2026-03-05T12:50:57.174Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "## Summary\n- Added launchpad rocket interior inspection mode in LaunchpadScene with an `Inspect Rooms` button, `I` hotkey toggle, `Esc` exit, and mouse-wheel zoom while inspecting.\n- Implemented camera tween zoom + focus on active launchpad rocket, with fade transition from rocket sprite to hull-outline interior overlay.\n- Added interior room rendering from RoomCatalog + RoomSpriteAtlas, including offline-upgrade stripe indicator for rooms marked offline.\n- Added canonical room mapping helper `RoomCatalog.create_layout_for_rocket_type()` (SR1/SR2/SR3) using knowns progression definitions and reused it in SidescrollMining to keep mappings consistent.\n- Preserved launch flow and existing launchpad interactions; inspect UI only appears when a rocket is present."
+        }
+      ],
+      "snapshot": {
+        "title": "Launchpad rocket interior zoom + room overlay",
+        "description": "When viewing a rocket on the launchpad, allow zoom-in to interior room view by fading the rocket sprite into a hull outline that reveals room modules. Use room assignments tied to rocket tiers from @task-hj2q5t and @doc/game-design/level-progression-and-unlocks.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "launchpad",
+          "rooms",
+          "rocket",
+          "ui",
+          "zoom"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "User can zoom in/out on launchpad rocket view."
+          },
+          {
+            "completed": true,
+            "text": "Rocket sprite fades to an outline/interior mode while zoomed."
+          },
+          {
+            "completed": true,
+            "text": "Interior room modules shown reflect the active rocket tier (SR1/SR2/SR3 mapping)."
+          },
+          {
+            "completed": true,
+            "text": "Feature does not break launch flow, selector panel, or existing launchpad interactions."
+          },
+          {
+            "completed": true,
+            "text": "Tests pass for existing progression/launchpad-related suites."
+          }
+        ],
+        "implementationPlan": "1. Add launchpad interior zoom controller script with room rendering per rocket type.\n2. Integrate with launchpad camera and rocket nodes (fade sprite -> hull outline + rooms on zoom).\n3. Add user interactions to toggle zoom and restore state safely on scene changes.\n4. Map room loadouts by rocket tier using knowns room progression references.\n5. Run tests and complete task bookkeeping.",
+        "implementationNotes": "## Summary\n- Added launchpad rocket interior inspection mode in LaunchpadScene with an `Inspect Rooms` button, `I` hotkey toggle, `Esc` exit, and mouse-wheel zoom while inspecting.\n- Implemented camera tween zoom + focus on active launchpad rocket, with fade transition from rocket sprite to hull-outline interior overlay.\n- Added interior room rendering from RoomCatalog + RoomSpriteAtlas, including offline-upgrade stripe indicator for rooms marked offline.\n- Added canonical room mapping helper `RoomCatalog.create_layout_for_rocket_type()` (SR1/SR2/SR3) using knowns progression definitions and reused it in SidescrollMining to keep mappings consistent.\n- Preserved launch flow and existing launchpad interactions; inspect UI only appears when a rocket is present."
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "slwerj",
+      "version": 5,
+      "timestamp": "2026-03-05T12:51:01.684Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Launchpad rocket interior zoom + room overlay",
+        "description": "When viewing a rocket on the launchpad, allow zoom-in to interior room view by fading the rocket sprite into a hull outline that reveals room modules. Use room assignments tied to rocket tiers from @task-hj2q5t and @doc/game-design/level-progression-and-unlocks.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "launchpad",
+          "rooms",
+          "rocket",
+          "ui",
+          "zoom"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "User can zoom in/out on launchpad rocket view."
+          },
+          {
+            "completed": true,
+            "text": "Rocket sprite fades to an outline/interior mode while zoomed."
+          },
+          {
+            "completed": true,
+            "text": "Interior room modules shown reflect the active rocket tier (SR1/SR2/SR3 mapping)."
+          },
+          {
+            "completed": true,
+            "text": "Feature does not break launch flow, selector panel, or existing launchpad interactions."
+          },
+          {
+            "completed": true,
+            "text": "Tests pass for existing progression/launchpad-related suites."
+          }
+        ],
+        "implementationPlan": "1. Add launchpad interior zoom controller script with room rendering per rocket type.\n2. Integrate with launchpad camera and rocket nodes (fade sprite -> hull outline + rooms on zoom).\n3. Add user interactions to toggle zoom and restore state safely on scene changes.\n4. Map room loadouts by rocket tier using knowns room progression references.\n5. Run tests and complete task bookkeeping.",
+        "implementationNotes": "## Summary\n- Added launchpad rocket interior inspection mode in LaunchpadScene with an `Inspect Rooms` button, `I` hotkey toggle, `Esc` exit, and mouse-wheel zoom while inspecting.\n- Implemented camera tween zoom + focus on active launchpad rocket, with fade transition from rocket sprite to hull-outline interior overlay.\n- Added interior room rendering from RoomCatalog + RoomSpriteAtlas, including offline-upgrade stripe indicator for rooms marked offline.\n- Added canonical room mapping helper `RoomCatalog.create_layout_for_rocket_type()` (SR1/SR2/SR3) using knowns progression definitions and reused it in SidescrollMining to keep mappings consistent.\n- Preserved launch flow and existing launchpad interactions; inspect UI only appears when a rocket is present."
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "slwerj",
+      "version": 6,
+      "timestamp": "2026-03-05T12:51:50.708Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "done",
+          "newValue": "in-progress"
+        }
+      ],
+      "snapshot": {
+        "title": "Launchpad rocket interior zoom + room overlay",
+        "description": "When viewing a rocket on the launchpad, allow zoom-in to interior room view by fading the rocket sprite into a hull outline that reveals room modules. Use room assignments tied to rocket tiers from @task-hj2q5t and @doc/game-design/level-progression-and-unlocks.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "launchpad",
+          "rooms",
+          "rocket",
+          "ui",
+          "zoom"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "User can zoom in/out on launchpad rocket view."
+          },
+          {
+            "completed": true,
+            "text": "Rocket sprite fades to an outline/interior mode while zoomed."
+          },
+          {
+            "completed": true,
+            "text": "Interior room modules shown reflect the active rocket tier (SR1/SR2/SR3 mapping)."
+          },
+          {
+            "completed": true,
+            "text": "Feature does not break launch flow, selector panel, or existing launchpad interactions."
+          },
+          {
+            "completed": true,
+            "text": "Tests pass for existing progression/launchpad-related suites."
+          }
+        ],
+        "implementationPlan": "1. Add launchpad interior zoom controller script with room rendering per rocket type.\n2. Integrate with launchpad camera and rocket nodes (fade sprite -> hull outline + rooms on zoom).\n3. Add user interactions to toggle zoom and restore state safely on scene changes.\n4. Map room loadouts by rocket tier using knowns room progression references.\n5. Run tests and complete task bookkeeping.",
+        "implementationNotes": "## Summary\n- Added launchpad rocket interior inspection mode in LaunchpadScene with an `Inspect Rooms` button, `I` hotkey toggle, `Esc` exit, and mouse-wheel zoom while inspecting.\n- Implemented camera tween zoom + focus on active launchpad rocket, with fade transition from rocket sprite to hull-outline interior overlay.\n- Added interior room rendering from RoomCatalog + RoomSpriteAtlas, including offline-upgrade stripe indicator for rooms marked offline.\n- Added canonical room mapping helper `RoomCatalog.create_layout_for_rocket_type()` (SR1/SR2/SR3) using knowns progression definitions and reused it in SidescrollMining to keep mappings consistent.\n- Preserved launch flow and existing launchpad interactions; inspect UI only appears when a rocket is present."
+      }
+    },
+    {
+      "id": "v7",
+      "taskId": "slwerj",
+      "version": 7,
+      "timestamp": "2026-03-05T12:52:23.332Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "## Summary\n- Added launchpad rocket interior inspection mode in LaunchpadScene with an `Inspect Rooms` button, `I` hotkey toggle, `Esc` exit, and mouse-wheel zoom while inspecting.\n- Implemented camera tween zoom + focus on active launchpad rocket, with fade transition from rocket sprite to hull-outline interior overlay.\n- Added interior room rendering from RoomCatalog + RoomSpriteAtlas, including offline-upgrade stripe indicator for rooms marked offline.\n- Added canonical room mapping helper `RoomCatalog.create_layout_for_rocket_type()` (SR1/SR2/SR3) using knowns progression definitions and reused it in SidescrollMining to keep mappings consistent.\n- Preserved launch flow and existing launchpad interactions; inspect UI only appears when a rocket is present.",
+          "newValue": "## Summary\n- Added launchpad rocket interior inspection mode in LaunchpadScene with an `Inspect Rooms` button, `I` hotkey toggle, `Esc` exit, and mouse-wheel zoom while inspecting.\n- Implemented camera tween zoom + focus on active launchpad rocket, with fade transition from rocket sprite to hull-outline interior overlay.\n- Added interior room rendering from RoomCatalog + RoomSpriteAtlas, including offline-upgrade stripe indicator for rooms marked offline.\n- Added canonical room mapping helper `RoomCatalog.create_layout_for_rocket_type()` (SR1/SR2/SR3) using knowns progression definitions and reused it in SidescrollMining to keep mappings consistent.\n- Preserved launch flow and existing launchpad interactions; inspect UI only appears when a rocket is present.\n\n- Added direct click-to-inspect: left-clicking the rocket sprite now enters room inspection zoom mode."
+        }
+      ],
+      "snapshot": {
+        "title": "Launchpad rocket interior zoom + room overlay",
+        "description": "When viewing a rocket on the launchpad, allow zoom-in to interior room view by fading the rocket sprite into a hull outline that reveals room modules. Use room assignments tied to rocket tiers from @task-hj2q5t and @doc/game-design/level-progression-and-unlocks.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "launchpad",
+          "rooms",
+          "rocket",
+          "ui",
+          "zoom"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "User can zoom in/out on launchpad rocket view."
+          },
+          {
+            "completed": true,
+            "text": "Rocket sprite fades to an outline/interior mode while zoomed."
+          },
+          {
+            "completed": true,
+            "text": "Interior room modules shown reflect the active rocket tier (SR1/SR2/SR3 mapping)."
+          },
+          {
+            "completed": true,
+            "text": "Feature does not break launch flow, selector panel, or existing launchpad interactions."
+          },
+          {
+            "completed": true,
+            "text": "Tests pass for existing progression/launchpad-related suites."
+          }
+        ],
+        "implementationPlan": "1. Add launchpad interior zoom controller script with room rendering per rocket type.\n2. Integrate with launchpad camera and rocket nodes (fade sprite -> hull outline + rooms on zoom).\n3. Add user interactions to toggle zoom and restore state safely on scene changes.\n4. Map room loadouts by rocket tier using knowns room progression references.\n5. Run tests and complete task bookkeeping.",
+        "implementationNotes": "## Summary\n- Added launchpad rocket interior inspection mode in LaunchpadScene with an `Inspect Rooms` button, `I` hotkey toggle, `Esc` exit, and mouse-wheel zoom while inspecting.\n- Implemented camera tween zoom + focus on active launchpad rocket, with fade transition from rocket sprite to hull-outline interior overlay.\n- Added interior room rendering from RoomCatalog + RoomSpriteAtlas, including offline-upgrade stripe indicator for rooms marked offline.\n- Added canonical room mapping helper `RoomCatalog.create_layout_for_rocket_type()` (SR1/SR2/SR3) using knowns progression definitions and reused it in SidescrollMining to keep mappings consistent.\n- Preserved launch flow and existing launchpad interactions; inspect UI only appears when a rocket is present.\n\n- Added direct click-to-inspect: left-clicking the rocket sprite now enters room inspection zoom mode."
+      }
+    },
+    {
+      "id": "v8",
+      "taskId": "slwerj",
+      "version": 8,
+      "timestamp": "2026-03-05T12:52:27.844Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Launchpad rocket interior zoom + room overlay",
+        "description": "When viewing a rocket on the launchpad, allow zoom-in to interior room view by fading the rocket sprite into a hull outline that reveals room modules. Use room assignments tied to rocket tiers from @task-hj2q5t and @doc/game-design/level-progression-and-unlocks.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "launchpad",
+          "rooms",
+          "rocket",
+          "ui",
+          "zoom"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "User can zoom in/out on launchpad rocket view."
+          },
+          {
+            "completed": true,
+            "text": "Rocket sprite fades to an outline/interior mode while zoomed."
+          },
+          {
+            "completed": true,
+            "text": "Interior room modules shown reflect the active rocket tier (SR1/SR2/SR3 mapping)."
+          },
+          {
+            "completed": true,
+            "text": "Feature does not break launch flow, selector panel, or existing launchpad interactions."
+          },
+          {
+            "completed": true,
+            "text": "Tests pass for existing progression/launchpad-related suites."
+          }
+        ],
+        "implementationPlan": "1. Add launchpad interior zoom controller script with room rendering per rocket type.\n2. Integrate with launchpad camera and rocket nodes (fade sprite -> hull outline + rooms on zoom).\n3. Add user interactions to toggle zoom and restore state safely on scene changes.\n4. Map room loadouts by rocket tier using knowns room progression references.\n5. Run tests and complete task bookkeeping.",
+        "implementationNotes": "## Summary\n- Added launchpad rocket interior inspection mode in LaunchpadScene with an `Inspect Rooms` button, `I` hotkey toggle, `Esc` exit, and mouse-wheel zoom while inspecting.\n- Implemented camera tween zoom + focus on active launchpad rocket, with fade transition from rocket sprite to hull-outline interior overlay.\n- Added interior room rendering from RoomCatalog + RoomSpriteAtlas, including offline-upgrade stripe indicator for rooms marked offline.\n- Added canonical room mapping helper `RoomCatalog.create_layout_for_rocket_type()` (SR1/SR2/SR3) using knowns progression definitions and reused it in SidescrollMining to keep mappings consistent.\n- Preserved launch flow and existing launchpad interactions; inspect UI only appears when a rocket is present.\n\n- Added direct click-to-inspect: left-clicking the rocket sprite now enters room inspection zoom mode."
+      }
+    }
+  ]
+}

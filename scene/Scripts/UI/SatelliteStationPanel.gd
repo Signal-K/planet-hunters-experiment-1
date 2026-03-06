@@ -26,6 +26,11 @@ const SatelliteStationPanelLoading = preload("res://Scripts/UI/SatelliteStationP
 const Level2UnlockOverlayScene = preload("res://Scenes/UI/Templates/SatelliteLevel2UnlockOverlay.tscn")
 const UnlockItemScene = preload("res://Scenes/UI/Templates/MenuUnlockItem.tscn")
 const AppLogger = preload("res://Scripts/Utils/Logger.gd")
+const SupabaseClient = preload("res://Scripts/Systems/SupabaseClient.gd")
+const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
+const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd")
+const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
+const SubcontractorManager = preload("res://Scripts/Utils/SubcontractorManager.gd")
 
 var pending_anomalies := []
 var current_mode: String = "asteroids"  # Default mode
@@ -112,7 +117,7 @@ func _ready():
 
 	# Default behavior: fetch anomalies from Supabase
 	AppLogger.d("SatelliteStationPanel: calling _fetch_anomalies() - starting fetch")
-	var sup = preload("res://Scripts/Systems/SupabaseClient.gd").get_instance()
+	var sup = SupabaseClient.get_instance()
 	if sup:
 		AppLogger.d("SatelliteStationPanel: Supabase URL -> %s" % sup.SUPABASE_URL)
 	else:
@@ -121,7 +126,7 @@ func _ready():
 	_fetch_anomalies()
 
 func _apply_panel_style() -> void:
-	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
+	var panel_style = PanelStyle
 	panel_style.apply_panel($PanelContainer/Panel)
 	panel_style.apply_title($PanelContainer/Panel/VBoxContainer/HeaderContainer/Title)
 	panel_style.apply_separator($PanelContainer/Panel/VBoxContainer/HSeparator)
@@ -148,7 +153,7 @@ func _on_loading_finished() -> void:
 		status_label.text = "Status: Using offline %s" % fallback_type
 		_award_scan_experience()
 	pending_anomalies = _filter_mission3_untargeted_anomalies(pending_anomalies)
-	preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("scan_targets", {
+	AppControllerHelper.record_tutorial_action("scan_targets", {
 		"mode": current_mode,
 		"count": pending_anomalies.size()
 	})
@@ -197,7 +202,7 @@ func _on_anomalies_fetched(data: Array, error: String):
 
 func _on_anomaly_item_button_pressed(bound_anomaly: Dictionary):
 	"""Called when the overlay button is pressed for an anomaly item."""
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var rm = RocketsManager
 	if rm:
 		var target_id = _data.normalize_anomaly_id(bound_anomaly, 1)
 		var target_type = "planet" if current_mode == "planets" else "asteroid"
@@ -214,7 +219,7 @@ func _on_view_pressed(bound_anomaly: Dictionary, index: int) -> void:
 func _select_target_and_launch(bound_anomaly: Dictionary, index: int, btn: Button) -> void:
 	# Persist the selected target via RocketsManager
 	var target_id = _data.normalize_anomaly_id(bound_anomaly, index)
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var rm = RocketsManager
 	if not rm:
 		AppLogger.w("SatelliteStationPanel: RocketsManager not available")
 		status_label.text = "Status: Unable to select target"
@@ -228,7 +233,7 @@ func _select_target_and_launch(bound_anomaly: Dictionary, index: int, btn: Butto
 		GameplayAnalytics.emit_target_selected(target_id, target_type, "scanner_station", {
 			"target_index": index
 		})
-		preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("select_launch_target", {
+		AppControllerHelper.record_tutorial_action("select_launch_target", {
 			"target_id": target_id,
 			"source": "scanner"
 		})
@@ -263,7 +268,7 @@ func _award_scan_experience() -> void:
 		app_controller.award_scan_experience()
 
 func _connect_preference_updates() -> void:
-	var app = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
+	var app = AppControllerHelper.get_instance()
 	if app and app.has_signal("citizen_science_dialogue_toggled"):
 		app.citizen_science_dialogue_toggled.connect(_on_citizen_science_dialogue_toggled)
 
@@ -277,7 +282,7 @@ func _ensure_citizen_science_hint() -> void:
 	_citizen_science_hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_citizen_science_hint_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_citizen_science_hint_label.add_theme_font_size_override("font_size", 14)
-	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
+	var panel_style = PanelStyle
 	panel_style.apply_muted(_citizen_science_hint_label)
 	var status_container = $PanelContainer/Panel/VBoxContainer/ContentContainer/StatusContainer
 	if status_container:
@@ -286,7 +291,7 @@ func _ensure_citizen_science_hint() -> void:
 func _refresh_citizen_science_hint() -> void:
 	if not _citizen_science_hint_label:
 		return
-	var enabled = preload("res://Scripts/Utils/AppControllerHelper.gd").is_citizen_science_dialogue_enabled(true)
+	var enabled = AppControllerHelper.is_citizen_science_dialogue_enabled(true)
 	_citizen_science_hint_label.visible = enabled
 	if enabled:
 		_citizen_science_hint_label.text = "Citizen science note: saved annotations are used to improve target classification quality."
@@ -309,7 +314,7 @@ func _on_toggle_switch_pressed():
 		GameplayAnalytics.emit_event("scanner_mode_toggled", {
 			"scanner_mode": "planets"
 		})
-		preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("toggle_planet_scanner")
+		AppControllerHelper.record_tutorial_action("toggle_planet_scanner")
 		toggle_switch.text = "Switch to Asteroids"
 		if local_only:
 			_start_loading(REFRESH_LOAD_TIME)
@@ -342,7 +347,7 @@ func _apply_local_anomalies() -> void:
 	_loading.mark_anomalies_ready()
 
 func _persist_detected_targets_and_record_scan(anomalies: Array) -> void:
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var rm = RocketsManager
 	if not rm:
 		return
 	var targets := []
@@ -379,7 +384,7 @@ func _build_local_anomalies() -> Array:
 	]
 
 func _filter_mission3_untargeted_anomalies(anomalies: Array) -> Array:
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var rm = RocketsManager
 	if not rm:
 		return anomalies
 	var mission_stage = int(rm.get_mission_stage())
@@ -462,7 +467,7 @@ func _show_level2_unlock_overlay() -> void:
 	add_child(_unlock_overlay)
 
 	var panel: PanelContainer = _unlock_overlay.get_node("Center/Panel")
-	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
+	var panel_style = PanelStyle
 	panel_style.apply_panel(panel)
 
 	var body: VBoxContainer = _unlock_overlay.get_node("Center/Panel/Body")
@@ -512,13 +517,13 @@ func _get_unlocks_for_level(level: int) -> Array:
 	if level == PLANET_UNLOCK_LEVEL:
 		items.append("Planet discovery targets (telescope-tess anomalies)")
 
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var rm = RocketsManager
 	if rm:
 		for rocket_id in rm.ROCKET_UNLOCK_LEVELS.keys():
 			if int(rm.ROCKET_UNLOCK_LEVELS.get(rocket_id, 1)) == level:
 				items.append("Rocket: %s" % rocket_id)
 
-	var sm = preload("res://Scripts/Utils/SubcontractorManager.gd")
+	var sm = SubcontractorManager
 	if sm:
 		for idx in range(sm.SUBCONTRACTORS.size()):
 			if int(sm.get_unlock_level_for_index(idx)) != level:
@@ -549,4 +554,4 @@ func _mark_level2_unlock_overlay_seen() -> void:
 	cfg.save(UNLOCK_CONFIG_PATH)
 
 func _get_app_controller() -> Node:
-	return preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
+	return AppControllerHelper.get_instance()

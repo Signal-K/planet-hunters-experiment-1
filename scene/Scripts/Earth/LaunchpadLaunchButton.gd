@@ -3,6 +3,9 @@ class_name LaunchpadLaunchButton
 
 const AppLogger = preload("res://Scripts/Utils/Logger.gd")
 const GameplayAnalytics = preload("res://Scripts/Systems/GameplayAnalytics.gd")
+const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
+const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd")
+const TimeHelper = preload("res://Scripts/Earth/TimeHelper.gd")
 var _launchpad: Node
 var _on_show_selector: Callable
 var _launch_btn_connected: bool = false
@@ -74,8 +77,7 @@ func connect_launch_button() -> void:
 	# set visibility based on rocket presence
 	var nodes = _launchpad.get_tree().get_nodes_in_group("rocket")
 	if nodes.size() > 0:
-		var vs = _launchpad.get_viewport().get_visible_rect().size
-		btn.position = vs - Vector2(180, 100)
+		btn.position = _resolve_safe_launch_button_position(btn)
 		btn.visible = true
 		btn.z_index = 1000
 	else:
@@ -91,8 +93,7 @@ func connect_launch_button() -> void:
 func show_standalone_launch_button() -> void:
 	var lb = _resolve_launch_button()
 	if lb:
-		var vs = _launchpad.get_viewport().get_visible_rect().size
-		lb.position = vs - Vector2(180, 100)
+		lb.position = _resolve_safe_launch_button_position(lb)
 		lb.visible = true
 		lb.z_index = 1000
 		lb.disabled = false
@@ -103,19 +104,34 @@ func hide_launch_button() -> void:
 	if lb:
 		lb.visible = false
 
+func _resolve_safe_launch_button_position(btn: Button) -> Vector2:
+	var viewport_size = _launchpad.get_viewport().get_visible_rect().size
+	var pos = viewport_size - Vector2(180, 100)
+	var scene = _launchpad.get_tree().current_scene
+	if scene:
+		var selector_panel = scene.get_node_or_null("UILayer/SelectorPanel")
+		if selector_panel and selector_panel is Control and selector_panel.visible:
+			var selector_rect = (selector_panel as Control).get_global_rect()
+			pos.x = max(pos.x, selector_rect.end.x + 24.0)
+	pos.x = clamp(pos.x, 24.0, max(viewport_size.x - btn.size.x - 24.0, 24.0))
+	pos.y = clamp(pos.y, 24.0, max(viewport_size.y - btn.size.y - 24.0, 24.0))
+	return pos
+
 func _on_launch_button_pressed() -> void:
 	AppLogger.d("Launchpad: Launch button pressed")
 	var nodes = _launchpad.get_tree().get_nodes_in_group("rocket")
 	if nodes.size() == 0:
 		AppLogger.w("Launchpad: no rockets to launch")
+		RocketsManager.set_launch_guidance_notice("Launch blocked: create or drag a rocket onto the launchpad first.")
 		return
 	var rocket = nodes[0]
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var rm = RocketsManager
 	if not rm:
 		AppLogger.w("Launchpad: RocketsManager not available")
 		return
 	if int(rm.get_mission_stage()) == 1 and rm.get_starter_selected_contractor().is_empty():
 		AppLogger.w("Launchpad: starter contractor must be selected before launch")
+		RocketsManager.set_launch_guidance_notice("Launch blocked: sign one starter contractor, then select a mission target.")
 		if _on_show_selector.is_valid():
 			_on_show_selector.call()
 		if _launchpad and _launchpad.has_method("_populate_targets"):
@@ -127,6 +143,7 @@ func _on_launch_button_pressed() -> void:
 	var resolved = rm.ensure_selected_target_for_launch(rocket.name)
 	if not bool(resolved.get("ok", false)):
 		AppLogger.w("Launchpad: No playable target available for launch (%s)" % str(resolved.get("reason", "unknown reason")))
+		RocketsManager.set_launch_guidance_notice("Launch blocked: no valid target is currently selectable. Open Scanner Station and pick a reachable target.")
 		if _on_show_selector.is_valid():
 			_on_show_selector.call()
 		if _launchpad and _launchpad.has_method("_populate_targets"):
@@ -137,6 +154,7 @@ func _on_launch_button_pressed() -> void:
 	var target = str(resolved.get("target_id", ""))
 	if target == "":
 		AppLogger.w("Launchpad: target resolution returned empty target id")
+		RocketsManager.set_launch_guidance_notice("Launch blocked: mission target could not be resolved. Re-open target selection and try again.")
 		if _launch_button:
 			_launch_button.disabled = false
 		return
@@ -146,7 +164,7 @@ func _on_launch_button_pressed() -> void:
 		preview_meta["type"] = str(resolved.get("target_type", preview_meta.get("type", "asteroid")))
 		# Auto-selection counts as completing the "select a target" tutorial step so
 		# the overlay doesn't stay stuck on "Select Target" while the rocket is in flight.
-		preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("select_launch_target", {
+		AppControllerHelper.record_tutorial_action("select_launch_target", {
 			"target_id": target,
 			"auto_selected": true
 		})
@@ -155,6 +173,7 @@ func _on_launch_button_pressed() -> void:
 	var required_level = int(target_profile.get("required_level", 1))
 	if required_level > rocket_level:
 		AppLogger.w("Launchpad: target %s blocked for rocket %s (requires L%d, current L%d)" % [target, rocket.name, required_level, rocket_level])
+		RocketsManager.set_launch_guidance_notice("Launch blocked: selected target requires rocket level L%d. Current rocket is L%d." % [required_level, rocket_level])
 		if _launch_button:
 			_launch_button.disabled = false
 		return
@@ -167,7 +186,7 @@ func _on_launch_button_pressed() -> void:
 			_launch_button.disabled = false
 		return
 	# Record mission with launch time (epoch seconds) using TimeHelper
-	var time_helper = preload("res://Scripts/Earth/TimeHelper.gd")
+	var time_helper = TimeHelper
 	var launch_time = time_helper.get_unix_epoch_seconds()
 	var launch_target_id = target
 	var mission_travel_seconds = rm.get_mission_duration_seconds_for_rocket(rocket.name)
@@ -175,6 +194,7 @@ func _on_launch_button_pressed() -> void:
 	var mission_ok = rm.add_mission(rocket.name, target, int(launch_time), mission_travel_seconds)
 	if not mission_ok:
 		AppLogger.w("Launchpad: failed to record mission for rocket %s" % rocket.name)
+		RocketsManager.set_launch_guidance_notice("Launch blocked: mission record failed to save. Retry launch in a moment.")
 	# Mark rocket as launched (preserves existing launched list behavior)
 	var set_ok = rm.set_launched(rocket.name)
 	if set_ok:
@@ -189,12 +209,13 @@ func _on_launch_button_pressed() -> void:
 			}
 		)
 		_award_launch_experience()
-		preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("launch_rocket_from_earth", {
+		AppControllerHelper.record_tutorial_action("launch_rocket_from_earth", {
 			"rocket_id": rocket.name,
 			"target_id": launch_target_id
 		})
 	else:
 		AppLogger.w("Launchpad: failed to mark rocket as launched")
+		RocketsManager.set_launch_guidance_notice("Launch blocked: rocket launch state did not finalize. Re-open Launchpad and try again.")
 	var launched_rocket_id = rocket.name
 	# Clear selected target after launch
 	rm.clear_selected_target()
@@ -246,7 +267,7 @@ func _resolve_preview_target_meta(target_id: String) -> Dictionary:
 	}
 	if target_id == "":
 		return out
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var rm = RocketsManager
 	if not rm:
 		return out
 	var detected_targets = rm.get_detected_targets()
@@ -268,7 +289,7 @@ func _resolve_preview_target_meta(target_id: String) -> Dictionary:
 func _transition_to_outbound_transit(rocket_id: String, target_id: String, preview_meta: Dictionary) -> void:
 	if target_id == "" or rocket_id == "":
 		return
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var rm = RocketsManager
 	if not rm:
 		return
 	rm.set_preview_target(

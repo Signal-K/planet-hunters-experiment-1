@@ -10,6 +10,7 @@ const HashUtils = preload("res://Scripts/Utils/HashUtils.gd")
 const RocketsStateAccess = preload("res://Scripts/Utils/RocketsStateAccess.gd")
 const RocketsMissionProgress = preload("res://Scripts/Utils/RocketsMissionProgress.gd")
 const RocketsTargeting = preload("res://Scripts/Utils/RocketsTargeting.gd")
+const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd")
 const KNOWN_ROCKET_TYPES := ["starterrocket1", "starterrocket2", "starterrocket3"]
 const ROCKET_UNLOCK_LEVELS := {
 	"starterrocket1": 1,
@@ -402,7 +403,7 @@ static func get_starter_contractors() -> Array:
 	return STARTER_CONTRACTOR_OFFERS.duplicate(true)
 
 static func ensure_starter_contract_offer() -> Dictionary:
-	if get_mission_stage() > 1:
+	if get_mission_stage() > 1 and not _is_tutorial_stage_one_active():
 		return {}
 	var s = load_state()
 	var existing = s.get("starter_contract_offer", {})
@@ -431,7 +432,7 @@ static func clear_starter_contract_offer() -> bool:
 static func select_starter_contractor(contractor_id: String) -> bool:
 	if contractor_id == "":
 		return false
-	if get_mission_stage() > 1:
+	if get_mission_stage() > 1 and not _is_tutorial_stage_one_active():
 		return false
 	if _find_starter_contractor(contractor_id).is_empty():
 		return false
@@ -880,7 +881,7 @@ static func get_selected_target() -> String:
 static func is_target_selectable_for_current_stage(target_id: String) -> bool:
 	if target_id == "":
 		return false
-	var selectable = get_selectable_targets_for_stage()
+	var selectable = get_selectable_targets_for_stage(_effective_stage_for_target_selection())
 	for target in selectable:
 		if str(target.get("id", "")) == target_id:
 			return true
@@ -913,7 +914,7 @@ static func ensure_selected_target_for_launch(rocket_id: String = "") -> Diction
 			"fallback_used": false
 		}
 
-	var mission_stage = get_mission_stage()
+	var mission_stage = _effective_stage_for_target_selection()
 	var selectable = get_selectable_targets_for_stage(mission_stage)
 	if selectable.is_empty():
 		_ensure_stage_fallback_targets(mission_stage)
@@ -959,7 +960,7 @@ static func ensure_selected_target_for_launch(rocket_id: String = "") -> Diction
 		}
 	var selected_type = str(selected_row.get("type", "asteroid"))
 	var selected_label = str(selected_row.get("label", selected_id))
-	var notice = "Scan fallback engaged: proceeding to %s." % selected_label
+	var notice = "No target was selected, so mission control auto-selected %s for this launch." % selected_label
 	set_launch_fallback_notice(notice)
 	return {
 		"ok": true,
@@ -1055,6 +1056,18 @@ static func consume_launch_fallback_notice() -> String:
 	var s = load_state()
 	var message = str(s.get("launch_fallback_notice", ""))
 	s["launch_fallback_notice"] = ""
+	save_state(s)
+	return message
+
+static func set_launch_guidance_notice(message: String) -> bool:
+	var s = load_state()
+	s["launch_guidance_notice"] = message.strip_edges()
+	return save_state(s)
+
+static func consume_launch_guidance_notice() -> String:
+	var s = load_state()
+	var message = str(s.get("launch_guidance_notice", ""))
+	s["launch_guidance_notice"] = ""
 	save_state(s)
 	return message
 
@@ -1747,6 +1760,21 @@ static func _build_starter_contract_offer() -> Dictionary:
 		"contractors": get_starter_contractors(),
 		"selected_contractor": ""
 	}
+
+static func _is_tutorial_stage_one_active() -> bool:
+	var app = AppControllerHelper.get_instance()
+	if app and app.has_method("get_tutorial_state"):
+		var state = app.get_tutorial_state()
+		if typeof(state) == TYPE_DICTIONARY:
+			if bool(state.get("skipped", false)):
+				return false
+			return int(state.get("current_stage", 0)) == 1
+	return false
+
+static func _effective_stage_for_target_selection() -> int:
+	if _is_tutorial_stage_one_active():
+		return 1
+	return get_mission_stage()
 
 static func _build_mission5_contract_offer(detected_targets: Array = []) -> Dictionary:
 	return RocketsMissionProgress.build_mission5_contract_offer(

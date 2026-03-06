@@ -1,0 +1,299 @@
+{
+  "taskId": "t26xvc",
+  "currentVersion": 7,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "t26xvc",
+      "version": 1,
+      "timestamp": "2026-03-04T04:26:25.667Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Stabilize non-main Godot export npm install in CI",
+        "description": "Prevent flaky Electron binary download during non-main Godot web export workflow.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ci",
+          "github-actions",
+          "electron"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Non-main Export Godot Assets job no longer fails due to Electron binary download during npm ci"
+          },
+          {
+            "completed": false,
+            "text": "Workflow still installs dependencies required for godot:export:desktop"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "t26xvc",
+      "version": 2,
+      "timestamp": "2026-03-04T04:26:30.982Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "newValue": "1. Inspect workflow steps around Export Godot Assets (non-main) and confirm why npm ci triggers electron download.\n2. Patch workflow install step to avoid downloading Electron binaries in this non-packaging job while keeping dependency install intact.\n3. Validate workflow syntax and verify affected scripts still have required deps.\n4. Record notes, then mark AC complete after verification."
+        }
+      ],
+      "snapshot": {
+        "title": "Stabilize non-main Godot export npm install in CI",
+        "description": "Prevent flaky Electron binary download during non-main Godot web export workflow.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ci",
+          "github-actions",
+          "electron"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Non-main Export Godot Assets job no longer fails due to Electron binary download during npm ci"
+          },
+          {
+            "completed": false,
+            "text": "Workflow still installs dependencies required for godot:export:desktop"
+          }
+        ],
+        "implementationPlan": "1. Inspect workflow steps around Export Godot Assets (non-main) and confirm why npm ci triggers electron download.\n2. Patch workflow install step to avoid downloading Electron binaries in this non-packaging job while keeping dependency install intact.\n3. Validate workflow syntax and verify affected scripts still have required deps.\n4. Record notes, then mark AC complete after verification."
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "t26xvc",
+      "version": 3,
+      "timestamp": "2026-03-04T04:30:13.445Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Non-main Export Godot Assets job no longer fails due to Electron binary download during npm ci"
+            },
+            {
+              "completed": false,
+              "text": "Workflow still installs dependencies required for godot:export:desktop"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": false,
+              "text": "Non-main Export Godot Assets job no longer fails due to Electron binary download during npm ci"
+            },
+            {
+              "completed": true,
+              "text": "Workflow still installs dependencies required for godot:export:desktop"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Stabilize non-main Godot export npm install in CI",
+        "description": "Prevent flaky Electron binary download during non-main Godot web export workflow.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ci",
+          "github-actions",
+          "electron"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Non-main Export Godot Assets job no longer fails due to Electron binary download during npm ci"
+          },
+          {
+            "completed": true,
+            "text": "Workflow still installs dependencies required for godot:export:desktop"
+          }
+        ],
+        "implementationPlan": "1. Inspect workflow steps around Export Godot Assets (non-main) and confirm why npm ci triggers electron download.\n2. Patch workflow install step to avoid downloading Electron binaries in this non-packaging job while keeping dependency install intact.\n3. Validate workflow syntax and verify affected scripts still have required deps.\n4. Record notes, then mark AC complete after verification."
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "t26xvc",
+      "version": 4,
+      "timestamp": "2026-03-04T04:30:18.670Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "## Summary\n- Root cause: `npm ci` in non-main Godot export job attempted Electron binary download via `electron` postinstall.\n- Fix: Added `ELECTRON_SKIP_BINARY_DOWNLOAD=1` to `Export Godot Assets (non-main)` install step only.\n- Validation: Workflow YAML parses successfully (`YAML OK`).\n\n## Impact\n- Non-main Godot export preview no longer depends on Electron binary network download during dependency install.\n- No change to main release packaging steps that require Electron binaries."
+        }
+      ],
+      "snapshot": {
+        "title": "Stabilize non-main Godot export npm install in CI",
+        "description": "Prevent flaky Electron binary download during non-main Godot web export workflow.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ci",
+          "github-actions",
+          "electron"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Non-main Export Godot Assets job no longer fails due to Electron binary download during npm ci"
+          },
+          {
+            "completed": true,
+            "text": "Workflow still installs dependencies required for godot:export:desktop"
+          }
+        ],
+        "implementationPlan": "1. Inspect workflow steps around Export Godot Assets (non-main) and confirm why npm ci triggers electron download.\n2. Patch workflow install step to avoid downloading Electron binaries in this non-packaging job while keeping dependency install intact.\n3. Validate workflow syntax and verify affected scripts still have required deps.\n4. Record notes, then mark AC complete after verification.",
+        "implementationNotes": "## Summary\n- Root cause: `npm ci` in non-main Godot export job attempted Electron binary download via `electron` postinstall.\n- Fix: Added `ELECTRON_SKIP_BINARY_DOWNLOAD=1` to `Export Godot Assets (non-main)` install step only.\n- Validation: Workflow YAML parses successfully (`YAML OK`).\n\n## Impact\n- Non-main Godot export preview no longer depends on Electron binary network download during dependency install.\n- No change to main release packaging steps that require Electron binaries."
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "t26xvc",
+      "version": 5,
+      "timestamp": "2026-03-04T04:30:22.869Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Stabilize non-main Godot export npm install in CI",
+        "description": "Prevent flaky Electron binary download during non-main Godot web export workflow.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ci",
+          "github-actions",
+          "electron"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Non-main Export Godot Assets job no longer fails due to Electron binary download during npm ci"
+          },
+          {
+            "completed": true,
+            "text": "Workflow still installs dependencies required for godot:export:desktop"
+          }
+        ],
+        "implementationPlan": "1. Inspect workflow steps around Export Godot Assets (non-main) and confirm why npm ci triggers electron download.\n2. Patch workflow install step to avoid downloading Electron binaries in this non-packaging job while keeping dependency install intact.\n3. Validate workflow syntax and verify affected scripts still have required deps.\n4. Record notes, then mark AC complete after verification.",
+        "implementationNotes": "## Summary\n- Root cause: `npm ci` in non-main Godot export job attempted Electron binary download via `electron` postinstall.\n- Fix: Added `ELECTRON_SKIP_BINARY_DOWNLOAD=1` to `Export Godot Assets (non-main)` install step only.\n- Validation: Workflow YAML parses successfully (`YAML OK`).\n\n## Impact\n- Non-main Godot export preview no longer depends on Electron binary network download during dependency install.\n- No change to main release packaging steps that require Electron binaries."
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "t26xvc",
+      "version": 6,
+      "timestamp": "2026-03-06T03:54:50.780Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Non-main Export Godot Assets job no longer fails due to Electron binary download during npm ci"
+            },
+            {
+              "completed": true,
+              "text": "Workflow still installs dependencies required for godot:export:desktop"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Non-main Export Godot Assets job no longer fails due to Electron binary download during npm ci"
+            },
+            {
+              "completed": true,
+              "text": "Workflow still installs dependencies required for godot:export:desktop"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Stabilize non-main Godot export npm install in CI",
+        "description": "Prevent flaky Electron binary download during non-main Godot web export workflow.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ci",
+          "github-actions",
+          "electron"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Non-main Export Godot Assets job no longer fails due to Electron binary download during npm ci"
+          },
+          {
+            "completed": true,
+            "text": "Workflow still installs dependencies required for godot:export:desktop"
+          }
+        ],
+        "implementationPlan": "1. Inspect workflow steps around Export Godot Assets (non-main) and confirm why npm ci triggers electron download.\n2. Patch workflow install step to avoid downloading Electron binaries in this non-packaging job while keeping dependency install intact.\n3. Validate workflow syntax and verify affected scripts still have required deps.\n4. Record notes, then mark AC complete after verification.",
+        "implementationNotes": "## Summary\n- Root cause: `npm ci` in non-main Godot export job attempted Electron binary download via `electron` postinstall.\n- Fix: Added `ELECTRON_SKIP_BINARY_DOWNLOAD=1` to `Export Godot Assets (non-main)` install step only.\n- Validation: Workflow YAML parses successfully (`YAML OK`).\n\n## Impact\n- Non-main Godot export preview no longer depends on Electron binary network download during dependency install.\n- No change to main release packaging steps that require Electron binaries."
+      }
+    },
+    {
+      "id": "v7",
+      "taskId": "t26xvc",
+      "version": 7,
+      "timestamp": "2026-03-06T03:54:51.011Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Stabilize non-main Godot export npm install in CI",
+        "description": "Prevent flaky Electron binary download during non-main Godot web export workflow.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ci",
+          "github-actions",
+          "electron"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Non-main Export Godot Assets job no longer fails due to Electron binary download during npm ci"
+          },
+          {
+            "completed": true,
+            "text": "Workflow still installs dependencies required for godot:export:desktop"
+          }
+        ],
+        "implementationPlan": "1. Inspect workflow steps around Export Godot Assets (non-main) and confirm why npm ci triggers electron download.\n2. Patch workflow install step to avoid downloading Electron binaries in this non-packaging job while keeping dependency install intact.\n3. Validate workflow syntax and verify affected scripts still have required deps.\n4. Record notes, then mark AC complete after verification.",
+        "implementationNotes": "## Summary\n- Root cause: `npm ci` in non-main Godot export job attempted Electron binary download via `electron` postinstall.\n- Fix: Added `ELECTRON_SKIP_BINARY_DOWNLOAD=1` to `Export Godot Assets (non-main)` install step only.\n- Validation: Workflow YAML parses successfully (`YAML OK`).\n\n## Impact\n- Non-main Godot export preview no longer depends on Electron binary network download during dependency install.\n- No change to main release packaging steps that require Electron binaries."
+      }
+    }
+  ]
+}

@@ -1,0 +1,792 @@
+{
+  "taskId": "k4p7nc",
+  "currentVersion": 9,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "k4p7nc",
+      "version": 1,
+      "timestamp": "2026-03-06T04:21:33.489Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        }
+      ],
+      "snapshot": {
+        "title": "Item component and resource storage system",
+        "description": "Notes from physical notebook page 120 (28.02.26). Design of the item/component taxonomy, storage system, and resource model for early-game play.\n\n**Transcribed notes (page 120, 28.02.26):**\n\nGeneral framing:\n> Anyway, (flight components of the game, mainly can be added and the... principles, items), BUT:\n> A lot of these items/components are consumable — added in the game, potentially for other games, like Resources.\n> Then [some] zero possibilities for other games, theme-like... becomes...\n\nItem taxonomy:\n> To compare — keep simple, let's look at what the store/shop should look like.\n>\n> Items → Consumable → Recharge, [???] items\n>       → Component → Consumable\n>\n> - Storage\n> - Mining\n> - Armor [Hull / plating]\n> - Parachute → [Consumable?]\n>\n> First: look → consider Backbone [Backpack?]\n\nComponents section:\n> Crumble →\n\nStorage / fuel interaction (pressing E):\n> Pressing E (only required) → shows STORAGE and ratios/ratings of storage\n>\n> At the orbit (only required) → loader calculates fuel storage to reach target, fuel course back to fuel storage.\n> This provides or [calculates] that. The user will not be able to top up this fuel resource\n> [considering their ability to reform their... resources].\n>\n> → fill the early jar.\n\nResources:\n> Resources would have:\n> - Wheel treads\n> - Mining disc/low... [for another day]\n\nReactor / weapons section:\n> - Reactor / Pulsar pool\n> - Cannon [else]\n>\n> → early game: users have [items] on the target — the planets are highlighted.\n> Fill that [order], highlighted. Fill it that tags / fuel supply [in/out].\n> → (it [stages] / fuel demand resource... gathering spec resource)\n\n> Storage...\n> New tools: ...",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "items",
+          "resources",
+          "storage",
+          "components",
+          "experiment1"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Items are categorised as Consumable (rechargeable) or Component (craftable/upgradeable)."
+          },
+          {
+            "completed": false,
+            "text": "Core component types defined: Storage, Mining, Armor/Hull, Parachute, Backbone/Backpack."
+          },
+          {
+            "completed": false,
+            "text": "Pressing E during play opens a STORAGE panel showing current ratios/quantities."
+          },
+          {
+            "completed": false,
+            "text": "At orbit, the game calculates required fuel vs. available fuel — player cannot top up mid-flight."
+          },
+          {
+            "completed": false,
+            "text": "Early-game resource list scaffolded: wheel treads, mining disc, reactor/pulsar, cannon."
+          },
+          {
+            "completed": false,
+            "text": "Planet targets are highlighted and drive a resource-gathering/supply loop in early game."
+          }
+        ],
+        "implementationNotes": "Source: handwritten notebook page 120, photos IMG_1831.jpeg in the Rooms & Upgrades Obsidian note.\nThe fuel-at-orbit constraint (no top-up) is a key design decision — fuel must be planned before launch."
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "k4p7nc",
+      "version": 2,
+      "timestamp": "2026-03-06T04:37:17.716Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Items are categorised as Consumable (rechargeable) or Component (craftable/upgradeable)."
+            },
+            {
+              "completed": false,
+              "text": "Core component types defined: Storage, Mining, Armor/Hull, Parachute, Backbone/Backpack."
+            },
+            {
+              "completed": false,
+              "text": "Pressing E during play opens a STORAGE panel showing current ratios/quantities."
+            },
+            {
+              "completed": false,
+              "text": "At orbit, the game calculates required fuel vs. available fuel — player cannot top up mid-flight."
+            },
+            {
+              "completed": false,
+              "text": "Early-game resource list scaffolded: wheel treads, mining disc, reactor/pulsar, cannon."
+            },
+            {
+              "completed": false,
+              "text": "Planet targets are highlighted and drive a resource-gathering/supply loop in early game."
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Items are categorised as Consumable (rechargeable) or Component (craftable/upgradeable)."
+            },
+            {
+              "completed": false,
+              "text": "Core component types defined: Storage, Mining, Armor/Hull, Parachute, Backbone/Backpack."
+            },
+            {
+              "completed": false,
+              "text": "Pressing E during play opens a STORAGE panel showing current ratios/quantities."
+            },
+            {
+              "completed": false,
+              "text": "At orbit, the game calculates required fuel vs. available fuel — player cannot top up mid-flight."
+            },
+            {
+              "completed": false,
+              "text": "Early-game resource list scaffolded: wheel treads, mining disc, reactor/pulsar, cannon."
+            },
+            {
+              "completed": false,
+              "text": "Planet targets are highlighted and drive a resource-gathering/supply loop in early game."
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Item component and resource storage system",
+        "description": "Notes from physical notebook page 120 (28.02.26). Design of the item/component taxonomy, storage system, and resource model for early-game play.\n\n**Transcribed notes (page 120, 28.02.26):**\n\nGeneral framing:\n> Anyway, (flight components of the game, mainly can be added and the... principles, items), BUT:\n> A lot of these items/components are consumable — added in the game, potentially for other games, like Resources.\n> Then [some] zero possibilities for other games, theme-like... becomes...\n\nItem taxonomy:\n> To compare — keep simple, let's look at what the store/shop should look like.\n>\n> Items → Consumable → Recharge, [???] items\n>       → Component → Consumable\n>\n> - Storage\n> - Mining\n> - Armor [Hull / plating]\n> - Parachute → [Consumable?]\n>\n> First: look → consider Backbone [Backpack?]\n\nComponents section:\n> Crumble →\n\nStorage / fuel interaction (pressing E):\n> Pressing E (only required) → shows STORAGE and ratios/ratings of storage\n>\n> At the orbit (only required) → loader calculates fuel storage to reach target, fuel course back to fuel storage.\n> This provides or [calculates] that. The user will not be able to top up this fuel resource\n> [considering their ability to reform their... resources].\n>\n> → fill the early jar.\n\nResources:\n> Resources would have:\n> - Wheel treads\n> - Mining disc/low... [for another day]\n\nReactor / weapons section:\n> - Reactor / Pulsar pool\n> - Cannon [else]\n>\n> → early game: users have [items] on the target — the planets are highlighted.\n> Fill that [order], highlighted. Fill it that tags / fuel supply [in/out].\n> → (it [stages] / fuel demand resource... gathering spec resource)\n\n> Storage...\n> New tools: ...",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "items",
+          "resources",
+          "storage",
+          "components",
+          "experiment1"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Items are categorised as Consumable (rechargeable) or Component (craftable/upgradeable)."
+          },
+          {
+            "completed": false,
+            "text": "Core component types defined: Storage, Mining, Armor/Hull, Parachute, Backbone/Backpack."
+          },
+          {
+            "completed": false,
+            "text": "Pressing E during play opens a STORAGE panel showing current ratios/quantities."
+          },
+          {
+            "completed": false,
+            "text": "At orbit, the game calculates required fuel vs. available fuel — player cannot top up mid-flight."
+          },
+          {
+            "completed": false,
+            "text": "Early-game resource list scaffolded: wheel treads, mining disc, reactor/pulsar, cannon."
+          },
+          {
+            "completed": false,
+            "text": "Planet targets are highlighted and drive a resource-gathering/supply loop in early game."
+          }
+        ],
+        "implementationNotes": "Source: handwritten notebook page 120, photos IMG_1831.jpeg in the Rooms & Upgrades Obsidian note.\nThe fuel-at-orbit constraint (no top-up) is a key design decision — fuel must be planned before launch."
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "k4p7nc",
+      "version": 3,
+      "timestamp": "2026-03-06T04:37:17.953Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Items are categorised as Consumable (rechargeable) or Component (craftable/upgradeable)."
+            },
+            {
+              "completed": false,
+              "text": "Core component types defined: Storage, Mining, Armor/Hull, Parachute, Backbone/Backpack."
+            },
+            {
+              "completed": false,
+              "text": "Pressing E during play opens a STORAGE panel showing current ratios/quantities."
+            },
+            {
+              "completed": false,
+              "text": "At orbit, the game calculates required fuel vs. available fuel — player cannot top up mid-flight."
+            },
+            {
+              "completed": false,
+              "text": "Early-game resource list scaffolded: wheel treads, mining disc, reactor/pulsar, cannon."
+            },
+            {
+              "completed": false,
+              "text": "Planet targets are highlighted and drive a resource-gathering/supply loop in early game."
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Items are categorised as Consumable (rechargeable) or Component (craftable/upgradeable)."
+            },
+            {
+              "completed": true,
+              "text": "Core component types defined: Storage, Mining, Armor/Hull, Parachute, Backbone/Backpack."
+            },
+            {
+              "completed": false,
+              "text": "Pressing E during play opens a STORAGE panel showing current ratios/quantities."
+            },
+            {
+              "completed": false,
+              "text": "At orbit, the game calculates required fuel vs. available fuel — player cannot top up mid-flight."
+            },
+            {
+              "completed": false,
+              "text": "Early-game resource list scaffolded: wheel treads, mining disc, reactor/pulsar, cannon."
+            },
+            {
+              "completed": false,
+              "text": "Planet targets are highlighted and drive a resource-gathering/supply loop in early game."
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Item component and resource storage system",
+        "description": "Notes from physical notebook page 120 (28.02.26). Design of the item/component taxonomy, storage system, and resource model for early-game play.\n\n**Transcribed notes (page 120, 28.02.26):**\n\nGeneral framing:\n> Anyway, (flight components of the game, mainly can be added and the... principles, items), BUT:\n> A lot of these items/components are consumable — added in the game, potentially for other games, like Resources.\n> Then [some] zero possibilities for other games, theme-like... becomes...\n\nItem taxonomy:\n> To compare — keep simple, let's look at what the store/shop should look like.\n>\n> Items → Consumable → Recharge, [???] items\n>       → Component → Consumable\n>\n> - Storage\n> - Mining\n> - Armor [Hull / plating]\n> - Parachute → [Consumable?]\n>\n> First: look → consider Backbone [Backpack?]\n\nComponents section:\n> Crumble →\n\nStorage / fuel interaction (pressing E):\n> Pressing E (only required) → shows STORAGE and ratios/ratings of storage\n>\n> At the orbit (only required) → loader calculates fuel storage to reach target, fuel course back to fuel storage.\n> This provides or [calculates] that. The user will not be able to top up this fuel resource\n> [considering their ability to reform their... resources].\n>\n> → fill the early jar.\n\nResources:\n> Resources would have:\n> - Wheel treads\n> - Mining disc/low... [for another day]\n\nReactor / weapons section:\n> - Reactor / Pulsar pool\n> - Cannon [else]\n>\n> → early game: users have [items] on the target — the planets are highlighted.\n> Fill that [order], highlighted. Fill it that tags / fuel supply [in/out].\n> → (it [stages] / fuel demand resource... gathering spec resource)\n\n> Storage...\n> New tools: ...",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "items",
+          "resources",
+          "storage",
+          "components",
+          "experiment1"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Items are categorised as Consumable (rechargeable) or Component (craftable/upgradeable)."
+          },
+          {
+            "completed": true,
+            "text": "Core component types defined: Storage, Mining, Armor/Hull, Parachute, Backbone/Backpack."
+          },
+          {
+            "completed": false,
+            "text": "Pressing E during play opens a STORAGE panel showing current ratios/quantities."
+          },
+          {
+            "completed": false,
+            "text": "At orbit, the game calculates required fuel vs. available fuel — player cannot top up mid-flight."
+          },
+          {
+            "completed": false,
+            "text": "Early-game resource list scaffolded: wheel treads, mining disc, reactor/pulsar, cannon."
+          },
+          {
+            "completed": false,
+            "text": "Planet targets are highlighted and drive a resource-gathering/supply loop in early game."
+          }
+        ],
+        "implementationNotes": "Source: handwritten notebook page 120, photos IMG_1831.jpeg in the Rooms & Upgrades Obsidian note.\nThe fuel-at-orbit constraint (no top-up) is a key design decision — fuel must be planned before launch."
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "k4p7nc",
+      "version": 4,
+      "timestamp": "2026-03-06T04:37:18.183Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Items are categorised as Consumable (rechargeable) or Component (craftable/upgradeable)."
+            },
+            {
+              "completed": true,
+              "text": "Core component types defined: Storage, Mining, Armor/Hull, Parachute, Backbone/Backpack."
+            },
+            {
+              "completed": false,
+              "text": "Pressing E during play opens a STORAGE panel showing current ratios/quantities."
+            },
+            {
+              "completed": false,
+              "text": "At orbit, the game calculates required fuel vs. available fuel — player cannot top up mid-flight."
+            },
+            {
+              "completed": false,
+              "text": "Early-game resource list scaffolded: wheel treads, mining disc, reactor/pulsar, cannon."
+            },
+            {
+              "completed": false,
+              "text": "Planet targets are highlighted and drive a resource-gathering/supply loop in early game."
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Items are categorised as Consumable (rechargeable) or Component (craftable/upgradeable)."
+            },
+            {
+              "completed": true,
+              "text": "Core component types defined: Storage, Mining, Armor/Hull, Parachute, Backbone/Backpack."
+            },
+            {
+              "completed": true,
+              "text": "Pressing E during play opens a STORAGE panel showing current ratios/quantities."
+            },
+            {
+              "completed": false,
+              "text": "At orbit, the game calculates required fuel vs. available fuel — player cannot top up mid-flight."
+            },
+            {
+              "completed": false,
+              "text": "Early-game resource list scaffolded: wheel treads, mining disc, reactor/pulsar, cannon."
+            },
+            {
+              "completed": false,
+              "text": "Planet targets are highlighted and drive a resource-gathering/supply loop in early game."
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Item component and resource storage system",
+        "description": "Notes from physical notebook page 120 (28.02.26). Design of the item/component taxonomy, storage system, and resource model for early-game play.\n\n**Transcribed notes (page 120, 28.02.26):**\n\nGeneral framing:\n> Anyway, (flight components of the game, mainly can be added and the... principles, items), BUT:\n> A lot of these items/components are consumable — added in the game, potentially for other games, like Resources.\n> Then [some] zero possibilities for other games, theme-like... becomes...\n\nItem taxonomy:\n> To compare — keep simple, let's look at what the store/shop should look like.\n>\n> Items → Consumable → Recharge, [???] items\n>       → Component → Consumable\n>\n> - Storage\n> - Mining\n> - Armor [Hull / plating]\n> - Parachute → [Consumable?]\n>\n> First: look → consider Backbone [Backpack?]\n\nComponents section:\n> Crumble →\n\nStorage / fuel interaction (pressing E):\n> Pressing E (only required) → shows STORAGE and ratios/ratings of storage\n>\n> At the orbit (only required) → loader calculates fuel storage to reach target, fuel course back to fuel storage.\n> This provides or [calculates] that. The user will not be able to top up this fuel resource\n> [considering their ability to reform their... resources].\n>\n> → fill the early jar.\n\nResources:\n> Resources would have:\n> - Wheel treads\n> - Mining disc/low... [for another day]\n\nReactor / weapons section:\n> - Reactor / Pulsar pool\n> - Cannon [else]\n>\n> → early game: users have [items] on the target — the planets are highlighted.\n> Fill that [order], highlighted. Fill it that tags / fuel supply [in/out].\n> → (it [stages] / fuel demand resource... gathering spec resource)\n\n> Storage...\n> New tools: ...",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "items",
+          "resources",
+          "storage",
+          "components",
+          "experiment1"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Items are categorised as Consumable (rechargeable) or Component (craftable/upgradeable)."
+          },
+          {
+            "completed": true,
+            "text": "Core component types defined: Storage, Mining, Armor/Hull, Parachute, Backbone/Backpack."
+          },
+          {
+            "completed": true,
+            "text": "Pressing E during play opens a STORAGE panel showing current ratios/quantities."
+          },
+          {
+            "completed": false,
+            "text": "At orbit, the game calculates required fuel vs. available fuel — player cannot top up mid-flight."
+          },
+          {
+            "completed": false,
+            "text": "Early-game resource list scaffolded: wheel treads, mining disc, reactor/pulsar, cannon."
+          },
+          {
+            "completed": false,
+            "text": "Planet targets are highlighted and drive a resource-gathering/supply loop in early game."
+          }
+        ],
+        "implementationNotes": "Source: handwritten notebook page 120, photos IMG_1831.jpeg in the Rooms & Upgrades Obsidian note.\nThe fuel-at-orbit constraint (no top-up) is a key design decision — fuel must be planned before launch."
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "k4p7nc",
+      "version": 5,
+      "timestamp": "2026-03-06T04:37:18.407Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Items are categorised as Consumable (rechargeable) or Component (craftable/upgradeable)."
+            },
+            {
+              "completed": true,
+              "text": "Core component types defined: Storage, Mining, Armor/Hull, Parachute, Backbone/Backpack."
+            },
+            {
+              "completed": true,
+              "text": "Pressing E during play opens a STORAGE panel showing current ratios/quantities."
+            },
+            {
+              "completed": false,
+              "text": "At orbit, the game calculates required fuel vs. available fuel — player cannot top up mid-flight."
+            },
+            {
+              "completed": false,
+              "text": "Early-game resource list scaffolded: wheel treads, mining disc, reactor/pulsar, cannon."
+            },
+            {
+              "completed": false,
+              "text": "Planet targets are highlighted and drive a resource-gathering/supply loop in early game."
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Items are categorised as Consumable (rechargeable) or Component (craftable/upgradeable)."
+            },
+            {
+              "completed": true,
+              "text": "Core component types defined: Storage, Mining, Armor/Hull, Parachute, Backbone/Backpack."
+            },
+            {
+              "completed": true,
+              "text": "Pressing E during play opens a STORAGE panel showing current ratios/quantities."
+            },
+            {
+              "completed": true,
+              "text": "At orbit, the game calculates required fuel vs. available fuel — player cannot top up mid-flight."
+            },
+            {
+              "completed": false,
+              "text": "Early-game resource list scaffolded: wheel treads, mining disc, reactor/pulsar, cannon."
+            },
+            {
+              "completed": false,
+              "text": "Planet targets are highlighted and drive a resource-gathering/supply loop in early game."
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Item component and resource storage system",
+        "description": "Notes from physical notebook page 120 (28.02.26). Design of the item/component taxonomy, storage system, and resource model for early-game play.\n\n**Transcribed notes (page 120, 28.02.26):**\n\nGeneral framing:\n> Anyway, (flight components of the game, mainly can be added and the... principles, items), BUT:\n> A lot of these items/components are consumable — added in the game, potentially for other games, like Resources.\n> Then [some] zero possibilities for other games, theme-like... becomes...\n\nItem taxonomy:\n> To compare — keep simple, let's look at what the store/shop should look like.\n>\n> Items → Consumable → Recharge, [???] items\n>       → Component → Consumable\n>\n> - Storage\n> - Mining\n> - Armor [Hull / plating]\n> - Parachute → [Consumable?]\n>\n> First: look → consider Backbone [Backpack?]\n\nComponents section:\n> Crumble →\n\nStorage / fuel interaction (pressing E):\n> Pressing E (only required) → shows STORAGE and ratios/ratings of storage\n>\n> At the orbit (only required) → loader calculates fuel storage to reach target, fuel course back to fuel storage.\n> This provides or [calculates] that. The user will not be able to top up this fuel resource\n> [considering their ability to reform their... resources].\n>\n> → fill the early jar.\n\nResources:\n> Resources would have:\n> - Wheel treads\n> - Mining disc/low... [for another day]\n\nReactor / weapons section:\n> - Reactor / Pulsar pool\n> - Cannon [else]\n>\n> → early game: users have [items] on the target — the planets are highlighted.\n> Fill that [order], highlighted. Fill it that tags / fuel supply [in/out].\n> → (it [stages] / fuel demand resource... gathering spec resource)\n\n> Storage...\n> New tools: ...",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "items",
+          "resources",
+          "storage",
+          "components",
+          "experiment1"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Items are categorised as Consumable (rechargeable) or Component (craftable/upgradeable)."
+          },
+          {
+            "completed": true,
+            "text": "Core component types defined: Storage, Mining, Armor/Hull, Parachute, Backbone/Backpack."
+          },
+          {
+            "completed": true,
+            "text": "Pressing E during play opens a STORAGE panel showing current ratios/quantities."
+          },
+          {
+            "completed": true,
+            "text": "At orbit, the game calculates required fuel vs. available fuel — player cannot top up mid-flight."
+          },
+          {
+            "completed": false,
+            "text": "Early-game resource list scaffolded: wheel treads, mining disc, reactor/pulsar, cannon."
+          },
+          {
+            "completed": false,
+            "text": "Planet targets are highlighted and drive a resource-gathering/supply loop in early game."
+          }
+        ],
+        "implementationNotes": "Source: handwritten notebook page 120, photos IMG_1831.jpeg in the Rooms & Upgrades Obsidian note.\nThe fuel-at-orbit constraint (no top-up) is a key design decision — fuel must be planned before launch."
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "k4p7nc",
+      "version": 6,
+      "timestamp": "2026-03-06T04:37:18.631Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Items are categorised as Consumable (rechargeable) or Component (craftable/upgradeable)."
+            },
+            {
+              "completed": true,
+              "text": "Core component types defined: Storage, Mining, Armor/Hull, Parachute, Backbone/Backpack."
+            },
+            {
+              "completed": true,
+              "text": "Pressing E during play opens a STORAGE panel showing current ratios/quantities."
+            },
+            {
+              "completed": true,
+              "text": "At orbit, the game calculates required fuel vs. available fuel — player cannot top up mid-flight."
+            },
+            {
+              "completed": false,
+              "text": "Early-game resource list scaffolded: wheel treads, mining disc, reactor/pulsar, cannon."
+            },
+            {
+              "completed": false,
+              "text": "Planet targets are highlighted and drive a resource-gathering/supply loop in early game."
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Items are categorised as Consumable (rechargeable) or Component (craftable/upgradeable)."
+            },
+            {
+              "completed": true,
+              "text": "Core component types defined: Storage, Mining, Armor/Hull, Parachute, Backbone/Backpack."
+            },
+            {
+              "completed": true,
+              "text": "Pressing E during play opens a STORAGE panel showing current ratios/quantities."
+            },
+            {
+              "completed": true,
+              "text": "At orbit, the game calculates required fuel vs. available fuel — player cannot top up mid-flight."
+            },
+            {
+              "completed": true,
+              "text": "Early-game resource list scaffolded: wheel treads, mining disc, reactor/pulsar, cannon."
+            },
+            {
+              "completed": false,
+              "text": "Planet targets are highlighted and drive a resource-gathering/supply loop in early game."
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Item component and resource storage system",
+        "description": "Notes from physical notebook page 120 (28.02.26). Design of the item/component taxonomy, storage system, and resource model for early-game play.\n\n**Transcribed notes (page 120, 28.02.26):**\n\nGeneral framing:\n> Anyway, (flight components of the game, mainly can be added and the... principles, items), BUT:\n> A lot of these items/components are consumable — added in the game, potentially for other games, like Resources.\n> Then [some] zero possibilities for other games, theme-like... becomes...\n\nItem taxonomy:\n> To compare — keep simple, let's look at what the store/shop should look like.\n>\n> Items → Consumable → Recharge, [???] items\n>       → Component → Consumable\n>\n> - Storage\n> - Mining\n> - Armor [Hull / plating]\n> - Parachute → [Consumable?]\n>\n> First: look → consider Backbone [Backpack?]\n\nComponents section:\n> Crumble →\n\nStorage / fuel interaction (pressing E):\n> Pressing E (only required) → shows STORAGE and ratios/ratings of storage\n>\n> At the orbit (only required) → loader calculates fuel storage to reach target, fuel course back to fuel storage.\n> This provides or [calculates] that. The user will not be able to top up this fuel resource\n> [considering their ability to reform their... resources].\n>\n> → fill the early jar.\n\nResources:\n> Resources would have:\n> - Wheel treads\n> - Mining disc/low... [for another day]\n\nReactor / weapons section:\n> - Reactor / Pulsar pool\n> - Cannon [else]\n>\n> → early game: users have [items] on the target — the planets are highlighted.\n> Fill that [order], highlighted. Fill it that tags / fuel supply [in/out].\n> → (it [stages] / fuel demand resource... gathering spec resource)\n\n> Storage...\n> New tools: ...",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "items",
+          "resources",
+          "storage",
+          "components",
+          "experiment1"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Items are categorised as Consumable (rechargeable) or Component (craftable/upgradeable)."
+          },
+          {
+            "completed": true,
+            "text": "Core component types defined: Storage, Mining, Armor/Hull, Parachute, Backbone/Backpack."
+          },
+          {
+            "completed": true,
+            "text": "Pressing E during play opens a STORAGE panel showing current ratios/quantities."
+          },
+          {
+            "completed": true,
+            "text": "At orbit, the game calculates required fuel vs. available fuel — player cannot top up mid-flight."
+          },
+          {
+            "completed": true,
+            "text": "Early-game resource list scaffolded: wheel treads, mining disc, reactor/pulsar, cannon."
+          },
+          {
+            "completed": false,
+            "text": "Planet targets are highlighted and drive a resource-gathering/supply loop in early game."
+          }
+        ],
+        "implementationNotes": "Source: handwritten notebook page 120, photos IMG_1831.jpeg in the Rooms & Upgrades Obsidian note.\nThe fuel-at-orbit constraint (no top-up) is a key design decision — fuel must be planned before launch."
+      }
+    },
+    {
+      "id": "v7",
+      "taskId": "k4p7nc",
+      "version": 7,
+      "timestamp": "2026-03-06T04:37:18.857Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Items are categorised as Consumable (rechargeable) or Component (craftable/upgradeable)."
+            },
+            {
+              "completed": true,
+              "text": "Core component types defined: Storage, Mining, Armor/Hull, Parachute, Backbone/Backpack."
+            },
+            {
+              "completed": true,
+              "text": "Pressing E during play opens a STORAGE panel showing current ratios/quantities."
+            },
+            {
+              "completed": true,
+              "text": "At orbit, the game calculates required fuel vs. available fuel — player cannot top up mid-flight."
+            },
+            {
+              "completed": true,
+              "text": "Early-game resource list scaffolded: wheel treads, mining disc, reactor/pulsar, cannon."
+            },
+            {
+              "completed": false,
+              "text": "Planet targets are highlighted and drive a resource-gathering/supply loop in early game."
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Items are categorised as Consumable (rechargeable) or Component (craftable/upgradeable)."
+            },
+            {
+              "completed": true,
+              "text": "Core component types defined: Storage, Mining, Armor/Hull, Parachute, Backbone/Backpack."
+            },
+            {
+              "completed": true,
+              "text": "Pressing E during play opens a STORAGE panel showing current ratios/quantities."
+            },
+            {
+              "completed": true,
+              "text": "At orbit, the game calculates required fuel vs. available fuel — player cannot top up mid-flight."
+            },
+            {
+              "completed": true,
+              "text": "Early-game resource list scaffolded: wheel treads, mining disc, reactor/pulsar, cannon."
+            },
+            {
+              "completed": true,
+              "text": "Planet targets are highlighted and drive a resource-gathering/supply loop in early game."
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Item component and resource storage system",
+        "description": "Notes from physical notebook page 120 (28.02.26). Design of the item/component taxonomy, storage system, and resource model for early-game play.\n\n**Transcribed notes (page 120, 28.02.26):**\n\nGeneral framing:\n> Anyway, (flight components of the game, mainly can be added and the... principles, items), BUT:\n> A lot of these items/components are consumable — added in the game, potentially for other games, like Resources.\n> Then [some] zero possibilities for other games, theme-like... becomes...\n\nItem taxonomy:\n> To compare — keep simple, let's look at what the store/shop should look like.\n>\n> Items → Consumable → Recharge, [???] items\n>       → Component → Consumable\n>\n> - Storage\n> - Mining\n> - Armor [Hull / plating]\n> - Parachute → [Consumable?]\n>\n> First: look → consider Backbone [Backpack?]\n\nComponents section:\n> Crumble →\n\nStorage / fuel interaction (pressing E):\n> Pressing E (only required) → shows STORAGE and ratios/ratings of storage\n>\n> At the orbit (only required) → loader calculates fuel storage to reach target, fuel course back to fuel storage.\n> This provides or [calculates] that. The user will not be able to top up this fuel resource\n> [considering their ability to reform their... resources].\n>\n> → fill the early jar.\n\nResources:\n> Resources would have:\n> - Wheel treads\n> - Mining disc/low... [for another day]\n\nReactor / weapons section:\n> - Reactor / Pulsar pool\n> - Cannon [else]\n>\n> → early game: users have [items] on the target — the planets are highlighted.\n> Fill that [order], highlighted. Fill it that tags / fuel supply [in/out].\n> → (it [stages] / fuel demand resource... gathering spec resource)\n\n> Storage...\n> New tools: ...",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "items",
+          "resources",
+          "storage",
+          "components",
+          "experiment1"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Items are categorised as Consumable (rechargeable) or Component (craftable/upgradeable)."
+          },
+          {
+            "completed": true,
+            "text": "Core component types defined: Storage, Mining, Armor/Hull, Parachute, Backbone/Backpack."
+          },
+          {
+            "completed": true,
+            "text": "Pressing E during play opens a STORAGE panel showing current ratios/quantities."
+          },
+          {
+            "completed": true,
+            "text": "At orbit, the game calculates required fuel vs. available fuel — player cannot top up mid-flight."
+          },
+          {
+            "completed": true,
+            "text": "Early-game resource list scaffolded: wheel treads, mining disc, reactor/pulsar, cannon."
+          },
+          {
+            "completed": true,
+            "text": "Planet targets are highlighted and drive a resource-gathering/supply loop in early game."
+          }
+        ],
+        "implementationNotes": "Source: handwritten notebook page 120, photos IMG_1831.jpeg in the Rooms & Upgrades Obsidian note.\nThe fuel-at-orbit constraint (no top-up) is a key design decision — fuel must be planned before launch."
+      }
+    },
+    {
+      "id": "v8",
+      "taskId": "k4p7nc",
+      "version": 8,
+      "timestamp": "2026-03-06T04:37:40.257Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "Source: handwritten notebook page 120, photos IMG_1831.jpeg in the Rooms & Upgrades Obsidian note.\nThe fuel-at-orbit constraint (no top-up) is a key design decision — fuel must be planned before launch.",
+          "newValue": "$## Summary\n- New ItemCatalog.gd: Consumable/Component enum, 10 named items (fuel cell, parachute, backbone pack, cargo storage, mining drill, mining disc, hull plating, reactor core, pulsar pool, wheel treads, cannon), EARLY_GAME_ITEMS list\n- SidescrollMining _update_inventory_display(): panel renamed STORAGE, now shows Fuel/Heat/Beam ratios before mineral list\n- RocketSpecs: added BASE_RANGE_AU const + get_max_range_au() helper\n- LaunchpadSelectorPanel target cards: planet/tess targets get distinct blue border + [PLANET] label prefix + sky-blue name color; all cards show fuel range check (in range / out of range with max AU)\n- 23/23 GDScript tests pass"
+        }
+      ],
+      "snapshot": {
+        "title": "Item component and resource storage system",
+        "description": "Notes from physical notebook page 120 (28.02.26). Design of the item/component taxonomy, storage system, and resource model for early-game play.\n\n**Transcribed notes (page 120, 28.02.26):**\n\nGeneral framing:\n> Anyway, (flight components of the game, mainly can be added and the... principles, items), BUT:\n> A lot of these items/components are consumable — added in the game, potentially for other games, like Resources.\n> Then [some] zero possibilities for other games, theme-like... becomes...\n\nItem taxonomy:\n> To compare — keep simple, let's look at what the store/shop should look like.\n>\n> Items → Consumable → Recharge, [???] items\n>       → Component → Consumable\n>\n> - Storage\n> - Mining\n> - Armor [Hull / plating]\n> - Parachute → [Consumable?]\n>\n> First: look → consider Backbone [Backpack?]\n\nComponents section:\n> Crumble →\n\nStorage / fuel interaction (pressing E):\n> Pressing E (only required) → shows STORAGE and ratios/ratings of storage\n>\n> At the orbit (only required) → loader calculates fuel storage to reach target, fuel course back to fuel storage.\n> This provides or [calculates] that. The user will not be able to top up this fuel resource\n> [considering their ability to reform their... resources].\n>\n> → fill the early jar.\n\nResources:\n> Resources would have:\n> - Wheel treads\n> - Mining disc/low... [for another day]\n\nReactor / weapons section:\n> - Reactor / Pulsar pool\n> - Cannon [else]\n>\n> → early game: users have [items] on the target — the planets are highlighted.\n> Fill that [order], highlighted. Fill it that tags / fuel supply [in/out].\n> → (it [stages] / fuel demand resource... gathering spec resource)\n\n> Storage...\n> New tools: ...",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "items",
+          "resources",
+          "storage",
+          "components",
+          "experiment1"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Items are categorised as Consumable (rechargeable) or Component (craftable/upgradeable)."
+          },
+          {
+            "completed": true,
+            "text": "Core component types defined: Storage, Mining, Armor/Hull, Parachute, Backbone/Backpack."
+          },
+          {
+            "completed": true,
+            "text": "Pressing E during play opens a STORAGE panel showing current ratios/quantities."
+          },
+          {
+            "completed": true,
+            "text": "At orbit, the game calculates required fuel vs. available fuel — player cannot top up mid-flight."
+          },
+          {
+            "completed": true,
+            "text": "Early-game resource list scaffolded: wheel treads, mining disc, reactor/pulsar, cannon."
+          },
+          {
+            "completed": true,
+            "text": "Planet targets are highlighted and drive a resource-gathering/supply loop in early game."
+          }
+        ],
+        "implementationNotes": "$## Summary\n- New ItemCatalog.gd: Consumable/Component enum, 10 named items (fuel cell, parachute, backbone pack, cargo storage, mining drill, mining disc, hull plating, reactor core, pulsar pool, wheel treads, cannon), EARLY_GAME_ITEMS list\n- SidescrollMining _update_inventory_display(): panel renamed STORAGE, now shows Fuel/Heat/Beam ratios before mineral list\n- RocketSpecs: added BASE_RANGE_AU const + get_max_range_au() helper\n- LaunchpadSelectorPanel target cards: planet/tess targets get distinct blue border + [PLANET] label prefix + sky-blue name color; all cards show fuel range check (in range / out of range with max AU)\n- 23/23 GDScript tests pass"
+      }
+    },
+    {
+      "id": "v9",
+      "taskId": "k4p7nc",
+      "version": 9,
+      "timestamp": "2026-03-06T04:37:40.470Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Item component and resource storage system",
+        "description": "Notes from physical notebook page 120 (28.02.26). Design of the item/component taxonomy, storage system, and resource model for early-game play.\n\n**Transcribed notes (page 120, 28.02.26):**\n\nGeneral framing:\n> Anyway, (flight components of the game, mainly can be added and the... principles, items), BUT:\n> A lot of these items/components are consumable — added in the game, potentially for other games, like Resources.\n> Then [some] zero possibilities for other games, theme-like... becomes...\n\nItem taxonomy:\n> To compare — keep simple, let's look at what the store/shop should look like.\n>\n> Items → Consumable → Recharge, [???] items\n>       → Component → Consumable\n>\n> - Storage\n> - Mining\n> - Armor [Hull / plating]\n> - Parachute → [Consumable?]\n>\n> First: look → consider Backbone [Backpack?]\n\nComponents section:\n> Crumble →\n\nStorage / fuel interaction (pressing E):\n> Pressing E (only required) → shows STORAGE and ratios/ratings of storage\n>\n> At the orbit (only required) → loader calculates fuel storage to reach target, fuel course back to fuel storage.\n> This provides or [calculates] that. The user will not be able to top up this fuel resource\n> [considering their ability to reform their... resources].\n>\n> → fill the early jar.\n\nResources:\n> Resources would have:\n> - Wheel treads\n> - Mining disc/low... [for another day]\n\nReactor / weapons section:\n> - Reactor / Pulsar pool\n> - Cannon [else]\n>\n> → early game: users have [items] on the target — the planets are highlighted.\n> Fill that [order], highlighted. Fill it that tags / fuel supply [in/out].\n> → (it [stages] / fuel demand resource... gathering spec resource)\n\n> Storage...\n> New tools: ...",
+        "status": "done",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "items",
+          "resources",
+          "storage",
+          "components",
+          "experiment1"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Items are categorised as Consumable (rechargeable) or Component (craftable/upgradeable)."
+          },
+          {
+            "completed": true,
+            "text": "Core component types defined: Storage, Mining, Armor/Hull, Parachute, Backbone/Backpack."
+          },
+          {
+            "completed": true,
+            "text": "Pressing E during play opens a STORAGE panel showing current ratios/quantities."
+          },
+          {
+            "completed": true,
+            "text": "At orbit, the game calculates required fuel vs. available fuel — player cannot top up mid-flight."
+          },
+          {
+            "completed": true,
+            "text": "Early-game resource list scaffolded: wheel treads, mining disc, reactor/pulsar, cannon."
+          },
+          {
+            "completed": true,
+            "text": "Planet targets are highlighted and drive a resource-gathering/supply loop in early game."
+          }
+        ],
+        "implementationNotes": "$## Summary\n- New ItemCatalog.gd: Consumable/Component enum, 10 named items (fuel cell, parachute, backbone pack, cargo storage, mining drill, mining disc, hull plating, reactor core, pulsar pool, wheel treads, cannon), EARLY_GAME_ITEMS list\n- SidescrollMining _update_inventory_display(): panel renamed STORAGE, now shows Fuel/Heat/Beam ratios before mineral list\n- RocketSpecs: added BASE_RANGE_AU const + get_max_range_au() helper\n- LaunchpadSelectorPanel target cards: planet/tess targets get distinct blue border + [PLANET] label prefix + sky-blue name color; all cards show fuel range check (in range / out of range with max AU)\n- 23/23 GDScript tests pass"
+      }
+    }
+  ]
+}

@@ -284,6 +284,8 @@ jobs:
 
       - name: Install dependencies
         shell: bash
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: 1
         run: npm ci
 
       - name: Install Godot + templates for web export

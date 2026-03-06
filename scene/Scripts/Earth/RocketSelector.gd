@@ -7,6 +7,8 @@ signal create_rocket(rocket_id)
 const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
 const RocketSelectorUIBuilder = preload("res://Scripts/Earth/RocketSelectorUIBuilder.gd")
 const RocketSelectorDragHelper = preload("res://Scripts/Earth/RocketSelectorDragHelper.gd")
+const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
+const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd")
 const STARTERROCKET1_LAUNCHPAD_POS := Vector2(-110.0, -178.0)
 
 
@@ -35,8 +37,10 @@ func _ready():
 		position = ui_position
 		size = ui_size
 	# Load unlocked rockets from RocketsManager if available
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var rm = RocketsManager
 	unlocked_rockets = rm.get_unlocked()
+	var mission_stage = _effective_mission_stage_for_ui()
+	unlocked_rockets = _filter_rockets_for_stage(unlocked_rockets, mission_stage)
 	# If there is already a persisted awaitingLaunch rocket, disable creation UI
 	var placed = rm.get_placed()
 	for p in placed:
@@ -101,6 +105,10 @@ func _request_purchase(rocket_id: String) -> void:
 	if _creation_locked:
 		print("RocketSelector: creation locked; cannot purchase")
 		return
+	var mission_stage = _effective_mission_stage_for_ui()
+	if not _is_rocket_allowed_for_stage(rocket_id, mission_stage):
+		_show_info("%s unlocks later in the mission path. Complete current missions first." % RocketSpecs.get_display_name(rocket_id))
+		return
 	var range_check = _validate_target_range_for_rocket(rocket_id)
 	if not bool(range_check.get("ok", true)):
 		var target_label = str(range_check.get("target_label", "Selected target"))
@@ -129,7 +137,7 @@ func _request_purchase(rocket_id: String) -> void:
 		RocketSpecs.get_display_name(rocket_id),
 		_format_francs(cost)
 	]
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var rm = RocketsManager
 	if rm and int(rm.get_mission_stage()) >= 5:
 		var cap = int(rm.get_mission5_payout_cap())
 		if cost > cap:
@@ -145,7 +153,7 @@ func _on_purchase_confirmed() -> void:
 		return
 	var spawn_ok = _spawn_rocket(_pending_rocket_id)
 	if spawn_ok:
-		preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("create_rocket", {
+		AppControllerHelper.record_tutorial_action("create_rocket", {
 			"rocket_id": _pending_rocket_id
 		})
 		_modify_balance(-_pending_purchase_cost)
@@ -188,7 +196,7 @@ func _spawn_rocket(rocket_id: String) -> bool:
 					inst.position = STARTERROCKET1_LAUNCHPAD_POS
 					inst.add_to_group("rocket")
 					# persist placed rocket
-					var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+					var rm = RocketsManager
 					var new_id = rm.add_placed(rocket_id, inst.position)
 					if typeof(new_id) == TYPE_STRING and new_id != "":
 						inst.name = new_id
@@ -218,7 +226,7 @@ func _show_info(message: String) -> void:
 		_info_dialog.popup_centered()
 
 func _effective_purchase_cost(rocket_id: String) -> int:
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var rm = RocketsManager
 	if not rm:
 		return RocketSpecs.get_cost(rocket_id)
 	return int(rm.get_mission5_purchase_cost(rocket_id))
@@ -253,7 +261,7 @@ func _set_create_buttons_disabled(disabled: bool) -> void:
 			stack.append(child)
 
 func _validate_target_range_for_rocket(rocket_id: String) -> Dictionary:
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var rm = RocketsManager
 	if not rm:
 		return {"ok": true}
 	var selected_target = str(rm.get_selected_target())
@@ -283,3 +291,35 @@ func _validate_target_range_for_rocket(rocket_id: String) -> Dictionary:
 		"distance_au": float(profile.get("distance_au", 0.0)),
 		"target_label": target_label
 	}
+
+func _filter_rockets_for_stage(rocket_ids: Array, mission_stage: int) -> Array:
+	var allowed := _allowed_rockets_for_stage(mission_stage)
+	var filtered := []
+	for rocket_any in rocket_ids:
+		var rocket_id = str(rocket_any)
+		if allowed.has(rocket_id):
+			filtered.append(rocket_id)
+	if filtered.is_empty():
+		filtered.append("starterrocket1")
+	return filtered
+
+func _allowed_rockets_for_stage(mission_stage: int) -> Array:
+	if mission_stage <= 1:
+		return ["starterrocket1"]
+	if mission_stage <= 3:
+		return ["starterrocket1", "starterrocket2"]
+	return ["starterrocket1", "starterrocket2", "starterrocket3"]
+
+func _is_rocket_allowed_for_stage(rocket_id: String, mission_stage: int) -> bool:
+	return _allowed_rockets_for_stage(mission_stage).has(rocket_id)
+
+func _effective_mission_stage_for_ui() -> int:
+	var mission_stage = int(RocketsManager.get_mission_stage())
+	var app = AppControllerHelper.get_instance()
+	if app and app.has_method("get_tutorial_state"):
+		var state = app.get_tutorial_state()
+		if typeof(state) == TYPE_DICTIONARY and not bool(state.get("skipped", false)):
+			var tutorial_stage = int(state.get("current_stage", mission_stage))
+			if tutorial_stage == 1:
+				return 1
+	return mission_stage

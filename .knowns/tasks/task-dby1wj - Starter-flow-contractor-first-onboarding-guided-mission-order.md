@@ -10,7 +10,7 @@ labels:
   - mining
   - debrief
 createdAt: '2026-03-03T22:09:18.985Z'
-updatedAt: '2026-03-03T23:43:02.886Z'
+updatedAt: '2026-03-04T12:18:26.831Z'
 timeSpent: 1180
 assignee: '@me'
 ---
@@ -62,5 +62,7 @@ Update early-game flow so players complete a minimal tour, choose one of three s
 ✓ Follow-up fix: added explicit Control Station close step, removed hard open_launchpad stage-1 step, added close action recording, improved contractor step fallback guidance, and ensured launchpad selector panel is auto-created/shown in earth_launchpad.
 
 ✓ Verification rerun after tutorial-flow follow-up: npm run test:unit passed; npm run test:e2e -- --grep "SP14" passed; full npm run test:e2e now 28/28 passed.
+
+✓ Verification: npm run test:unit passed; npm run test:e2e passed (28/28).
 <!-- SECTION:NOTES:END -->
 

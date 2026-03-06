@@ -1,7 +1,7 @@
 ---
 id: k4p7nc
 title: Item component and resource storage system
-status: todo
+status: done
 priority: medium
 labels:
   - items
@@ -10,8 +10,8 @@ labels:
   - components
   - experiment1
 createdAt: '2026-02-28T00:00:00.000Z'
-updatedAt: '2026-02-28T00:00:00.000Z'
-timeSpent: 0
+updatedAt: '2026-03-06T04:37:40.682Z'
+timeSpent: 967
 assignee: '@me'
 ---
 # Item component and resource storage system
@@ -72,17 +72,22 @@ Reactor / weapons section:
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Items are categorised as Consumable (rechargeable) or Component (craftable/upgradeable).
-- [ ] #2 Core component types defined: Storage, Mining, Armor/Hull, Parachute, Backbone/Backpack.
-- [ ] #3 Pressing E during play opens a STORAGE panel showing current ratios/quantities.
-- [ ] #4 At orbit, the game calculates required fuel vs. available fuel — player cannot top up mid-flight.
-- [ ] #5 Early-game resource list scaffolded: wheel treads, mining disc, reactor/pulsar, cannon.
-- [ ] #6 Planet targets are highlighted and drive a resource-gathering/supply loop in early game.
+- [x] #1 Items are categorised as Consumable (rechargeable) or Component (craftable/upgradeable).
+- [x] #2 Core component types defined: Storage, Mining, Armor/Hull, Parachute, Backbone/Backpack.
+- [x] #3 Pressing E during play opens a STORAGE panel showing current ratios/quantities.
+- [x] #4 At orbit, the game calculates required fuel vs. available fuel — player cannot top up mid-flight.
+- [x] #5 Early-game resource list scaffolded: wheel treads, mining disc, reactor/pulsar, cannon.
+- [x] #6 Planet targets are highlighted and drive a resource-gathering/supply loop in early game.
 <!-- AC:END -->
 
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
-Source: handwritten notebook page 120, photos IMG_1831.jpeg in the Rooms & Upgrades Obsidian note.
-The fuel-at-orbit constraint (no top-up) is a key design decision — fuel must be planned before launch.
+$## Summary
+- New ItemCatalog.gd: Consumable/Component enum, 10 named items (fuel cell, parachute, backbone pack, cargo storage, mining drill, mining disc, hull plating, reactor core, pulsar pool, wheel treads, cannon), EARLY_GAME_ITEMS list
+- SidescrollMining _update_inventory_display(): panel renamed STORAGE, now shows Fuel/Heat/Beam ratios before mineral list
+- RocketSpecs: added BASE_RANGE_AU const + get_max_range_au() helper
+- LaunchpadSelectorPanel target cards: planet/tess targets get distinct blue border + [PLANET] label prefix + sky-blue name color; all cards show fuel range check (in range / out of range with max AU)
+- 23/23 GDScript tests pass
 <!-- SECTION:NOTES:END -->
+
