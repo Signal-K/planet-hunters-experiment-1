@@ -27,7 +27,10 @@ test.describe("Mobile non-PWA install banner", () => {
 
   test("SP14: mobile non-PWA shows install banner after 2 seconds", async ({ page }) => {
     await page.goto("/");
-    await expect(page.locator("text=Open Fullscreen")).toBeVisible({ timeout: 5_000 });
+    await page.waitForSelector("#game-frame");
+    await expect(page.getByRole("button", { name: "Open Fullscreen" })).toBeVisible({
+      timeout: 10_000,
+    });
   });
 });
 

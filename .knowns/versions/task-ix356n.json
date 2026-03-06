@@ -1,0 +1,288 @@
+{
+  "taskId": "ix356n",
+  "currentVersion": 5,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "ix356n",
+      "version": 1,
+      "timestamp": "2026-03-05T12:56:31.533Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "## Summary\n- Shortened Mission 1 opening copy to single-action instructions (tour open/close, sign contractor, create rocket, select target).\n- Reduced early-step guidance intensity in TutorialCoachOverlay for opening actions: keep highlight box, hide guide line/arrow/click label, disable target flash.\n- Simplified action label text to direct navigation hints (removed repetitive \"Next click:\" prefix).\n- Verified behavior with headless tutorial tests.\n\n## Validation\n- Command: HOME=/tmp /Users/scroobz/godot-src/bin/godot.macos.editor.arm64 --headless --path scene -s tests/run_tutorial_tests.gd\n- Result: 7/7 passed."
+        }
+      ],
+      "snapshot": {
+        "title": "Simplify opening tutorial step density",
+        "description": "Reduce first-tutorial cognitive load by shortening early copy, reducing simultaneous guidance cues, and making Mission 1 opening sequence easier to parse based on latest playtest feedback screenshot.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "tutorial",
+          "ux",
+          "onboarding"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Mission 1 opening guidance uses concise text with one clear action at a time"
+          },
+          {
+            "completed": false,
+            "text": "Visual guidance intensity is reduced during the earliest onboarding steps"
+          },
+          {
+            "completed": false,
+            "text": "Tutorial progression/tests remain passing for existing step action keys"
+          }
+        ],
+        "implementationPlan": "1. Keep existing action keys/order intact, but rewrite Mission 1 opening copy (first 3-4 steps) to be shorter and directive.\n2. Reduce early-step visual intensity in TutorialCoachOverlay (disable line/arrow/click-label for first onboarding steps; keep target highlight only).\n3. Make action label cleaner (remove repetitive prefix) so panel reads as one command.\n4. Run tutorial test suite and adjust any expectations only if they rely on copy, not behavior.\n5. Record notes, check AC, and prepare summary for review.",
+        "implementationNotes": "## Summary\n- Shortened Mission 1 opening copy to single-action instructions (tour open/close, sign contractor, create rocket, select target).\n- Reduced early-step guidance intensity in TutorialCoachOverlay for opening actions: keep highlight box, hide guide line/arrow/click label, disable target flash.\n- Simplified action label text to direct navigation hints (removed repetitive \"Next click:\" prefix).\n- Verified behavior with headless tutorial tests.\n\n## Validation\n- Command: HOME=/tmp /Users/scroobz/godot-src/bin/godot.macos.editor.arm64 --headless --path scene -s tests/run_tutorial_tests.gd\n- Result: 7/7 passed."
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "ix356n",
+      "version": 2,
+      "timestamp": "2026-03-06T03:54:49.522Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Mission 1 opening guidance uses concise text with one clear action at a time"
+            },
+            {
+              "completed": false,
+              "text": "Visual guidance intensity is reduced during the earliest onboarding steps"
+            },
+            {
+              "completed": false,
+              "text": "Tutorial progression/tests remain passing for existing step action keys"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Mission 1 opening guidance uses concise text with one clear action at a time"
+            },
+            {
+              "completed": false,
+              "text": "Visual guidance intensity is reduced during the earliest onboarding steps"
+            },
+            {
+              "completed": false,
+              "text": "Tutorial progression/tests remain passing for existing step action keys"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Simplify opening tutorial step density",
+        "description": "Reduce first-tutorial cognitive load by shortening early copy, reducing simultaneous guidance cues, and making Mission 1 opening sequence easier to parse based on latest playtest feedback screenshot.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "tutorial",
+          "ux",
+          "onboarding"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Mission 1 opening guidance uses concise text with one clear action at a time"
+          },
+          {
+            "completed": false,
+            "text": "Visual guidance intensity is reduced during the earliest onboarding steps"
+          },
+          {
+            "completed": false,
+            "text": "Tutorial progression/tests remain passing for existing step action keys"
+          }
+        ],
+        "implementationPlan": "1. Keep existing action keys/order intact, but rewrite Mission 1 opening copy (first 3-4 steps) to be shorter and directive.\n2. Reduce early-step visual intensity in TutorialCoachOverlay (disable line/arrow/click-label for first onboarding steps; keep target highlight only).\n3. Make action label cleaner (remove repetitive prefix) so panel reads as one command.\n4. Run tutorial test suite and adjust any expectations only if they rely on copy, not behavior.\n5. Record notes, check AC, and prepare summary for review.",
+        "implementationNotes": "## Summary\n- Shortened Mission 1 opening copy to single-action instructions (tour open/close, sign contractor, create rocket, select target).\n- Reduced early-step guidance intensity in TutorialCoachOverlay for opening actions: keep highlight box, hide guide line/arrow/click label, disable target flash.\n- Simplified action label text to direct navigation hints (removed repetitive \"Next click:\" prefix).\n- Verified behavior with headless tutorial tests.\n\n## Validation\n- Command: HOME=/tmp /Users/scroobz/godot-src/bin/godot.macos.editor.arm64 --headless --path scene -s tests/run_tutorial_tests.gd\n- Result: 7/7 passed."
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "ix356n",
+      "version": 3,
+      "timestamp": "2026-03-06T03:54:49.732Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Mission 1 opening guidance uses concise text with one clear action at a time"
+            },
+            {
+              "completed": false,
+              "text": "Visual guidance intensity is reduced during the earliest onboarding steps"
+            },
+            {
+              "completed": false,
+              "text": "Tutorial progression/tests remain passing for existing step action keys"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Mission 1 opening guidance uses concise text with one clear action at a time"
+            },
+            {
+              "completed": true,
+              "text": "Visual guidance intensity is reduced during the earliest onboarding steps"
+            },
+            {
+              "completed": false,
+              "text": "Tutorial progression/tests remain passing for existing step action keys"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Simplify opening tutorial step density",
+        "description": "Reduce first-tutorial cognitive load by shortening early copy, reducing simultaneous guidance cues, and making Mission 1 opening sequence easier to parse based on latest playtest feedback screenshot.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "tutorial",
+          "ux",
+          "onboarding"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Mission 1 opening guidance uses concise text with one clear action at a time"
+          },
+          {
+            "completed": true,
+            "text": "Visual guidance intensity is reduced during the earliest onboarding steps"
+          },
+          {
+            "completed": false,
+            "text": "Tutorial progression/tests remain passing for existing step action keys"
+          }
+        ],
+        "implementationPlan": "1. Keep existing action keys/order intact, but rewrite Mission 1 opening copy (first 3-4 steps) to be shorter and directive.\n2. Reduce early-step visual intensity in TutorialCoachOverlay (disable line/arrow/click-label for first onboarding steps; keep target highlight only).\n3. Make action label cleaner (remove repetitive prefix) so panel reads as one command.\n4. Run tutorial test suite and adjust any expectations only if they rely on copy, not behavior.\n5. Record notes, check AC, and prepare summary for review.",
+        "implementationNotes": "## Summary\n- Shortened Mission 1 opening copy to single-action instructions (tour open/close, sign contractor, create rocket, select target).\n- Reduced early-step guidance intensity in TutorialCoachOverlay for opening actions: keep highlight box, hide guide line/arrow/click label, disable target flash.\n- Simplified action label text to direct navigation hints (removed repetitive \"Next click:\" prefix).\n- Verified behavior with headless tutorial tests.\n\n## Validation\n- Command: HOME=/tmp /Users/scroobz/godot-src/bin/godot.macos.editor.arm64 --headless --path scene -s tests/run_tutorial_tests.gd\n- Result: 7/7 passed."
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "ix356n",
+      "version": 4,
+      "timestamp": "2026-03-06T03:54:49.940Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Mission 1 opening guidance uses concise text with one clear action at a time"
+            },
+            {
+              "completed": true,
+              "text": "Visual guidance intensity is reduced during the earliest onboarding steps"
+            },
+            {
+              "completed": false,
+              "text": "Tutorial progression/tests remain passing for existing step action keys"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Mission 1 opening guidance uses concise text with one clear action at a time"
+            },
+            {
+              "completed": true,
+              "text": "Visual guidance intensity is reduced during the earliest onboarding steps"
+            },
+            {
+              "completed": true,
+              "text": "Tutorial progression/tests remain passing for existing step action keys"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Simplify opening tutorial step density",
+        "description": "Reduce first-tutorial cognitive load by shortening early copy, reducing simultaneous guidance cues, and making Mission 1 opening sequence easier to parse based on latest playtest feedback screenshot.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "tutorial",
+          "ux",
+          "onboarding"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Mission 1 opening guidance uses concise text with one clear action at a time"
+          },
+          {
+            "completed": true,
+            "text": "Visual guidance intensity is reduced during the earliest onboarding steps"
+          },
+          {
+            "completed": true,
+            "text": "Tutorial progression/tests remain passing for existing step action keys"
+          }
+        ],
+        "implementationPlan": "1. Keep existing action keys/order intact, but rewrite Mission 1 opening copy (first 3-4 steps) to be shorter and directive.\n2. Reduce early-step visual intensity in TutorialCoachOverlay (disable line/arrow/click-label for first onboarding steps; keep target highlight only).\n3. Make action label cleaner (remove repetitive prefix) so panel reads as one command.\n4. Run tutorial test suite and adjust any expectations only if they rely on copy, not behavior.\n5. Record notes, check AC, and prepare summary for review.",
+        "implementationNotes": "## Summary\n- Shortened Mission 1 opening copy to single-action instructions (tour open/close, sign contractor, create rocket, select target).\n- Reduced early-step guidance intensity in TutorialCoachOverlay for opening actions: keep highlight box, hide guide line/arrow/click label, disable target flash.\n- Simplified action label text to direct navigation hints (removed repetitive \"Next click:\" prefix).\n- Verified behavior with headless tutorial tests.\n\n## Validation\n- Command: HOME=/tmp /Users/scroobz/godot-src/bin/godot.macos.editor.arm64 --headless --path scene -s tests/run_tutorial_tests.gd\n- Result: 7/7 passed."
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "ix356n",
+      "version": 5,
+      "timestamp": "2026-03-06T03:54:50.148Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Simplify opening tutorial step density",
+        "description": "Reduce first-tutorial cognitive load by shortening early copy, reducing simultaneous guidance cues, and making Mission 1 opening sequence easier to parse based on latest playtest feedback screenshot.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "tutorial",
+          "ux",
+          "onboarding"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Mission 1 opening guidance uses concise text with one clear action at a time"
+          },
+          {
+            "completed": true,
+            "text": "Visual guidance intensity is reduced during the earliest onboarding steps"
+          },
+          {
+            "completed": true,
+            "text": "Tutorial progression/tests remain passing for existing step action keys"
+          }
+        ],
+        "implementationPlan": "1. Keep existing action keys/order intact, but rewrite Mission 1 opening copy (first 3-4 steps) to be shorter and directive.\n2. Reduce early-step visual intensity in TutorialCoachOverlay (disable line/arrow/click-label for first onboarding steps; keep target highlight only).\n3. Make action label cleaner (remove repetitive prefix) so panel reads as one command.\n4. Run tutorial test suite and adjust any expectations only if they rely on copy, not behavior.\n5. Record notes, check AC, and prepare summary for review.",
+        "implementationNotes": "## Summary\n- Shortened Mission 1 opening copy to single-action instructions (tour open/close, sign contractor, create rocket, select target).\n- Reduced early-step guidance intensity in TutorialCoachOverlay for opening actions: keep highlight box, hide guide line/arrow/click label, disable target flash.\n- Simplified action label text to direct navigation hints (removed repetitive \"Next click:\" prefix).\n- Verified behavior with headless tutorial tests.\n\n## Validation\n- Command: HOME=/tmp /Users/scroobz/godot-src/bin/godot.macos.editor.arm64 --headless --path scene -s tests/run_tutorial_tests.gd\n- Result: 7/7 passed."
+      }
+    }
+  ]
+}

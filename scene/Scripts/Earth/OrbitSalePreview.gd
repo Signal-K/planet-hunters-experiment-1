@@ -8,6 +8,12 @@ const ORBIT_SALE_MULTIPLIER := 0.8
 const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
 const NavigationMixin = preload("res://Scripts/Utils/NavigationMixin.gd")
 const LabelActionRowScene = preload("res://Scenes/UI/Templates/LabelActionRow.tscn")
+const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
+const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
+const MiningInventory = preload("res://Scripts/Utils/MiningInventory.gd")
+const SubcontractorManager = preload("res://Scripts/Utils/SubcontractorManager.gd")
+const MineralPricing = preload("res://Scripts/Utils/MineralPricing.gd")
+const EarthInventory = preload("res://Scripts/Utils/EarthInventory.gd")
 
 @onready var title_label: Label = $UI/Root/Panel/VBox/Title
 @onready var subtitle_label: Label = $UI/Root/Panel/VBox/Subtitle
@@ -25,7 +31,7 @@ var _cargo := {}
 var _subcontractors := []
 
 func _ready() -> void:
-	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
+	var panel_style = PanelStyle
 	panel_style.apply_title(title_label)
 	panel_style.apply_body(subtitle_label)
 	panel_style.apply_body(status_label)
@@ -46,14 +52,14 @@ func _ready() -> void:
 	back_button.pressed.connect(_back_to_missions)
 
 func _load_orbit_entry() -> void:
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var rm = RocketsManager
 	var orbiting = rm.get_orbiting_rockets()
 	if orbiting.is_empty():
 		_orbit_entry = {}
 		return
 	_orbit_entry = orbiting[0]
 	var target_id = str(_orbit_entry.get("target_id", ""))
-	var inv = preload("res://Scripts/Utils/MiningInventory.gd")
+	var inv = MiningInventory
 	if inv and target_id != "":
 		var state = inv.load_state()
 		var entry = state.get("targets", {}).get(target_id, {})
@@ -66,9 +72,9 @@ func _build_subcontractors() -> void:
 	var level = 1
 	if app:
 		level = int(app.get_experience_level())
-	var sm = preload("res://Scripts/Utils/SubcontractorManager.gd")
+	var sm = SubcontractorManager
 	_subcontractors = sm.get_available_for_level(level) if sm else []
-	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
+	var panel_style = PanelStyle
 	for idx in range(_subcontractors.size()):
 		var c = _subcontractors[idx]
 		var row: HBoxContainer = LabelActionRowScene.instantiate()
@@ -103,13 +109,13 @@ func _sell_minerals() -> void:
 		status_label.text = "No cargo available."
 		return
 	var subcontractor = _subcontractors[_selected_subcontractor]
-	var pricing = preload("res://Scripts/Utils/MineralPricing.gd")
+	var pricing = MineralPricing
 	var payout = pricing.total_value(_cargo, ORBIT_SALE_MULTIPLIER, subcontractor.get("bonus", {}))
 	var app = _get_app_controller()
 	if app:
 		app.add_franc_balance(payout, "orbit_sale")
 		app.add_experience(XP_AWARD_MISSION, "mission")
-	var sm = preload("res://Scripts/Utils/SubcontractorManager.gd")
+	var sm = SubcontractorManager
 	if sm:
 		sm.add_affinity(str(subcontractor.get("id", "")))
 	_clear_cargo()
@@ -117,7 +123,7 @@ func _sell_minerals() -> void:
 
 func _salvage_ship(refund_pct: float) -> void:
 	var rocket_id = str(_orbit_entry.get("rocket_id", ""))
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var rm = RocketsManager
 	if rm:
 		rm.set_destroyed(rocket_id)
 		rm.remove_orbiting_rocket(rocket_id)
@@ -125,13 +131,13 @@ func _salvage_ship(refund_pct: float) -> void:
 	var app = _get_app_controller()
 	if app:
 		app.add_franc_balance(refund, "salvage")
-	var inv = preload("res://Scripts/Utils/EarthInventory.gd")
+	var inv = EarthInventory
 	if inv:
 		inv.add_materials(_cargo)
 	status_label.text = "Ship salvaged. Refund %s F." % str(refund)
 
 func _archive_ship() -> void:
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var rm = RocketsManager
 	if rm:
 		rm.remove_orbiting_rocket(str(_orbit_entry.get("rocket_id", "")))
 	status_label.text = "Ship archived."
@@ -140,7 +146,7 @@ func _clear_cargo() -> void:
 	var target_id = str(_orbit_entry.get("target_id", ""))
 	if target_id == "":
 		return
-	var inv = preload("res://Scripts/Utils/MiningInventory.gd")
+	var inv = MiningInventory
 	if not inv:
 		return
 	var data = inv.load_state()

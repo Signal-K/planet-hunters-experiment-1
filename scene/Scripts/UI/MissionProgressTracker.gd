@@ -3,14 +3,14 @@ extends CanvasLayer
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
 const ROCKETS_MANAGER = preload("res://Scripts/Utils/RocketsManager.gd")
 const MISSION_OBJECTIVES := {
-	1: "Build, launch, mine, return, and debrief.",
+	1: "Complete base tour, sign a contractor, and deliver the starter order.",
 	2: "Repeat loop with upgraded rocket.",
 	3: "Build scanner and launch from scanned targets.",
 	4: "Switch to planetary targets and complete mission.",
 	5: "Accept contractor request and complete contract mission."
 }
 const MISSION_STEP_KEYS := {
-	1: ["create_rocket", "launch_rocket_from_earth", "mine_target", "return_rocket_home", "resolve_mission_debrief"],
+	1: ["tour_open_control_station", "tour_close_control_station", "accept_starter_contractor", "create_rocket", "launch_rocket_from_earth", "mine_target", "return_rocket_home", "resolve_mission_debrief"],
 	2: ["launch_rocket_from_earth", "mine_target", "return_rocket_home", "resolve_mission_debrief"],
 	3: ["build_scanner_station", "scan_targets", "select_launch_target"],
 	4: ["scan_targets", "select_launch_target", "mine_target", "return_rocket_home", "resolve_mission_debrief"],
@@ -111,6 +111,14 @@ func _has_seen_guide_action(action_key: String) -> bool:
 
 func _label_for_action(action_key: String) -> String:
 	match action_key:
+		"tour_open_control_station":
+			return "Open control station"
+		"tour_close_control_station":
+			return "Close control station panel"
+		"open_launchpad":
+			return "Open launchpad"
+		"accept_starter_contractor":
+			return "Sign starter contractor"
 		"create_rocket":
 			return "Create rocket"
 		"launch_rocket_from_earth":

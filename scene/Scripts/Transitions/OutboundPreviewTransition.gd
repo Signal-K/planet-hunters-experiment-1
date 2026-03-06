@@ -9,11 +9,20 @@ const TARGET_APPROACH_TIME := 6.0
 const ORBIT_ROTATION_SPEED := 0.25
 const ORBIT_RADIUS_PX := 416.0
 const ORBIT_SEGMENTS := 64
+const SHAKE_DURATION := 0.6
+const SHAKE_MAGNITUDE := 7.0
 
 const TRAVEL_DISTANCE_TOTAL_KM := 420000.0
 const NumberFormat = preload("res://Scripts/Utils/NumberFormat.gd")
 const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
 const ResourceValueRowScene = preload("res://Scenes/UI/Templates/ResourceValueRow.tscn")
+const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
+const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
+const OrbitVisuals = preload("res://Scripts/Utils/OrbitVisuals.gd")
+const ResourceYield = preload("res://Scripts/Utils/ResourceYield.gd")
+const ProceduralBodyBuilder = preload("res://Scripts/Utils/ProceduralBodyBuilder.gd")
+const RocketSpriteHelper = preload("res://Scripts/Utils/RocketSpriteHelper.gd")
+const RoomCatalog = preload("res://Scripts/Utils/RoomCatalog.gd")
 
 
 @onready var asteroid_pivot: Node3D = $AsteroidPivot
@@ -55,6 +64,17 @@ var _science_caption: Label = null
 var _science_http: HTTPRequest = null
 var _science_image_requested := false
 var _traveling := false
+var _last_viewport_size := Vector2.ZERO
+var _shake_offset := Vector2.ZERO
+var _shake_elapsed := 0.0
+var _shake_active := false
+var _travel_start_pos := Vector2.ZERO
+var _travel_end_pos := Vector2.ZERO
+var _shop_button: Button = null
+var _ship_status_panel: PanelContainer = null
+var _ship_status_visible := false
+var _travel_eta_label: Label = null
+var _travel_info_label: Label = null
 
 enum Phase {
 	EARTH_ORBIT,
@@ -72,10 +92,18 @@ func _ready() -> void:
 	_setup_earth()
 	_setup_orbit_visual()
 	_build_science_panel()
+	_enhance_travel_dashboard()
+	_build_shop_button()
+	_apply_responsive_layout()
 	_start_earth_orbit()
 
 func _process(delta: float) -> void:
 	_phase_time += delta
+	var viewport_size = get_viewport().get_visible_rect().size
+	if viewport_size != _last_viewport_size:
+		_last_viewport_size = viewport_size
+		_apply_responsive_layout()
+	_update_shake(delta)
 	_update_orbit(delta)
 	_apply_earth_alpha()
 	if _phase == Phase.EARTH_ORBIT and _phase_time >= EARTH_ORBIT_TIME:
@@ -87,7 +115,7 @@ func _process(delta: float) -> void:
 	_update_target_label()
 
 func _setup_ui() -> void:
-	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
+	var panel_style = PanelStyle
 	panel_style.apply_button(back_button, false)
 	back_button.text = "Skip"
 	panel_style.apply_title(target_label)
@@ -113,7 +141,7 @@ func _setup_ui() -> void:
 		return_home_button.pressed.connect(_on_return_home_pressed)
 
 func _load_target_data() -> void:
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var rm = RocketsManager
 	var target := {}
 	if rm:
 		target = rm.get_preview_target()
@@ -149,12 +177,12 @@ func _setup_orbit_visual() -> void:
 		return
 	orbit_root.visible = true
 	_orbit_angle = 0.0
-	var orbit_utils = preload("res://Scripts/Utils/OrbitVisuals.gd")
+	var orbit_utils = OrbitVisuals
 	orbit_utils.build_orbit_circle(orbit_circle, ORBIT_RADIUS_PX, ORBIT_SEGMENTS)
 	orbit_rocket.position = Vector2(ORBIT_RADIUS_PX, 0)
 	orbit_rocket.scale = Vector2(0.2, 0.2)
 	_set_orbit_rocket_visual(_current_rocket_id)
-	var orbit_utils2 = preload("res://Scripts/Utils/OrbitVisuals.gd")
+	var orbit_utils2 = OrbitVisuals
 	orbit_utils2.update_heading_line(orbit_heading, orbit_rocket)
 
 func _start_earth_orbit() -> void:
@@ -185,6 +213,16 @@ func _start_travel() -> void:
 	if orbit_circle:
 		orbit_circle.visible = false
 	_show_science_panel()
+	# Start shake and cache travel arc endpoints
+	_shake_active = true
+	_shake_elapsed = 0.0
+	_shake_offset = Vector2.ZERO
+	_travel_start_pos = orbit_rocket.position
+	var viewport_size = get_viewport().get_visible_rect().size
+	_travel_end_pos = (viewport_size * 0.5) - orbit_root.position
+	# Show ship status button during transit
+	if _shop_button:
+		_shop_button.visible = true
 
 func _update_travel() -> void:
 	if not _traveling:
@@ -194,7 +232,12 @@ func _update_travel() -> void:
 		travel_bar.value = pct
 	if travel_speed:
 		var remaining_km = max(int(round(TRAVEL_DISTANCE_TOTAL_KM * (1.0 - pct))), 0)
-		travel_speed.text = "Distance to destination: %s km" % NumberFormat.commas(str(remaining_km))
+		travel_speed.text = "Distance: %s km" % NumberFormat.commas(str(remaining_km))
+	if _travel_eta_label:
+		var remaining_secs = max(TRAVEL_TIME - _phase_time, 0.0)
+		var eta_min = int(remaining_secs / 60.0)
+		var eta_sec = int(fmod(remaining_secs, 60.0))
+		_travel_eta_label.text = "ETA: %02d:%02d" % [eta_min, eta_sec]
 	if pct >= 1.0:
 		_start_target_approach()
 
@@ -202,6 +245,11 @@ func _start_target_approach() -> void:
 	_phase = Phase.TARGET_APPROACH
 	_phase_time = 0.0
 	_traveling = false
+	if _shop_button:
+		_shop_button.visible = false
+	if _ship_status_panel and _ship_status_visible:
+		_ship_status_panel.visible = false
+		_ship_status_visible = false
 	if travel_panel:
 		var fade = get_tree().create_tween()
 		fade.tween_property(travel_panel, "modulate:a", 0.0, 0.6)
@@ -242,8 +290,13 @@ func _update_orbit(delta: float) -> void:
 		return
 	_orbit_angle += ORBIT_ROTATION_SPEED * delta
 	if _phase == Phase.TRAVEL:
-		orbit_rocket.position = Vector2.ZERO
-		orbit_rocket.rotation = 0.0
+		var pct = clamp(_phase_time / TRAVEL_TIME, 0.0, 1.0)
+		var arc_pos = _travel_start_pos.lerp(_travel_end_pos, pct)
+		arc_pos.y += sin(pct * PI) * -50.0
+		var travel_dir = (_travel_end_pos - _travel_start_pos).normalized()
+		if travel_dir.length_squared() > 0.01:
+			orbit_rocket.rotation = atan2(travel_dir.y, travel_dir.x) - PI * 0.5
+		orbit_rocket.position = arc_pos + _shake_offset
 	else:
 		var offset = Vector2(cos(_orbit_angle), sin(_orbit_angle)) * ORBIT_RADIUS_PX
 		orbit_rocket.position = offset
@@ -253,7 +306,7 @@ func _update_orbit(delta: float) -> void:
 			orbit_root.position = camera_3d.unproject_position(_earth_pivot.global_position)
 		else:
 			orbit_root.position = camera_3d.unproject_position(asteroid_pivot.global_position)
-	var orbit_utils3 = preload("res://Scripts/Utils/OrbitVisuals.gd")
+	var orbit_utils3 = OrbitVisuals
 	orbit_utils3.update_heading_line(orbit_heading, orbit_rocket)
 
 func _build_minerals_list() -> void:
@@ -261,7 +314,7 @@ func _build_minerals_list() -> void:
 		return
 	for child in minerals_list.get_children():
 		child.queue_free()
-	var resource_yield = preload("res://Scripts/Utils/ResourceYield.gd")
+	var resource_yield = ResourceYield
 	var cargo_multiplier = RocketSpecs.get_cargo_multiplier(_current_rocket_id)
 	var yield_data = resource_yield.get_yield_for_target(_current_target_id, _current_target_type, 1, cargo_multiplier)
 	var minerals: Dictionary = yield_data.get("minerals", {})
@@ -271,7 +324,7 @@ func _build_minerals_list() -> void:
 		int(round(float(yield_data.get("mineable_pct", 0.1)) * 100.0)),
 		NumberFormat.commas(str(capacity))
 	]
-	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
+	var panel_style = PanelStyle
 	for name in resource_yield.MINERALS:
 		if not minerals.has(name):
 			continue
@@ -287,13 +340,13 @@ func _build_minerals_list() -> void:
 func _generate_target_asteroid(target_id: String) -> void:
 	if asteroid_mesh == null:
 		return
-	var builder = preload("res://Scripts/Utils/ProceduralBodyBuilder.gd")
+	var builder = ProceduralBodyBuilder
 	builder.build_asteroid(asteroid_mesh, target_id, 0.72, 0.96, Color(0.35, 0.35, 0.35))
 
 func _generate_earth() -> void:
 	if _earth_mesh == null:
 		return
-	var builder = preload("res://Scripts/Utils/ProceduralBodyBuilder.gd")
+	var builder = ProceduralBodyBuilder
 	builder.build_earth(_earth_mesh, "earth:%s" % _current_target_id, Color(0.1, 0.2, 0.4))
 	_apply_earth_alpha()
 
@@ -307,7 +360,7 @@ func _apply_earth_alpha() -> void:
 func _set_orbit_rocket_visual(rocket_id: String) -> void:
 	if orbit_rocket == null:
 		return
-	var helper = preload("res://Scripts/Utils/RocketSpriteHelper.gd")
+	var helper = RocketSpriteHelper
 	helper.apply_orbit_sprite(orbit_rocket, rocket_id)
 
 func _advance_to_preview() -> void:
@@ -387,6 +440,42 @@ func _build_science_panel() -> void:
 
 	canvas.add_child(_science_panel)
 
+func _apply_responsive_layout() -> void:
+	var viewport = get_viewport().get_visible_rect().size
+	if viewport == Vector2.ZERO:
+		return
+	var compact = viewport.x < 1360.0 or viewport.y < 860.0
+	var edge_margin = 16.0
+	var panel_width = clamp(viewport.x * (0.33 if compact else 0.28), 300.0, 420.0)
+	var panel_height = 120.0
+	if travel_panel:
+		travel_panel.anchor_left = 0.0
+		travel_panel.anchor_right = 0.0
+		travel_panel.anchor_top = 0.0
+		travel_panel.anchor_bottom = 0.0
+		travel_panel.offset_left = edge_margin
+		travel_panel.offset_top = 96.0
+		travel_panel.offset_right = edge_margin + panel_width
+		travel_panel.offset_bottom = 96.0 + panel_height
+	if _science_panel:
+		var science_width = clamp(viewport.x * (0.72 if compact else 0.45), 320.0, 560.0)
+		var science_bottom = 24.0
+		if compact:
+			science_bottom = 12.0
+		_science_panel.anchor_left = 0.5
+		_science_panel.anchor_right = 0.5
+		_science_panel.anchor_top = 1.0
+		_science_panel.anchor_bottom = 1.0
+		_science_panel.offset_left = -science_width * 0.5
+		_science_panel.offset_right = science_width * 0.5
+		_science_panel.offset_top = -260.0 - science_bottom
+		_science_panel.offset_bottom = -science_bottom
+	if _science_image:
+		_science_image.custom_minimum_size = Vector2(
+			clamp(viewport.x * (0.56 if compact else 0.28), 280.0, 360.0),
+			clamp(viewport.y * 0.24, 160.0, 220.0)
+		)
+
 func _show_science_panel() -> void:
 	if _science_panel == null or _science_image_requested:
 		return
@@ -438,6 +527,124 @@ func _on_mine_pressed() -> void:
 	# This scene is a transit presentation; move into the interactive preview
 	# where mining gameplay is handled.
 	_advance_to_preview()
+
+func _update_shake(delta: float) -> void:
+	if not _shake_active:
+		return
+	_shake_elapsed += delta
+	if _shake_elapsed >= SHAKE_DURATION:
+		_shake_active = false
+		_shake_offset = Vector2.ZERO
+		return
+	var decay = 1.0 - (_shake_elapsed / SHAKE_DURATION)
+	_shake_offset = Vector2(
+		sin(_shake_elapsed * 40.0) * SHAKE_MAGNITUDE * decay,
+		cos(_shake_elapsed * 29.0) * SHAKE_MAGNITUDE * decay
+	)
+
+func _enhance_travel_dashboard() -> void:
+	var vbox = travel_panel.get_node_or_null("TravelMargin/TravelContent")
+	if vbox == null:
+		return
+	var panel_style = PanelStyle
+	_travel_eta_label = Label.new()
+	_travel_eta_label.text = "ETA: --:--"
+	panel_style.apply_body(_travel_eta_label)
+	vbox.add_child(_travel_eta_label)
+	_travel_info_label = Label.new()
+	_travel_info_label.text = "Vessel: %s" % (_current_rocket_id if _current_rocket_id != "" else "—")
+	panel_style.apply_muted(_travel_info_label)
+	vbox.add_child(_travel_info_label)
+
+func _build_shop_button() -> void:
+	var canvas = $CanvasLayer
+	if canvas == null:
+		return
+	_shop_button = Button.new()
+	_shop_button.name = "ShipStatusButton"
+	_shop_button.text = "Ship Status"
+	_shop_button.custom_minimum_size = Vector2(130, 44)
+	_shop_button.visible = false
+	var panel_style = PanelStyle
+	panel_style.apply_button(_shop_button, false)
+	_shop_button.anchor_left = 1.0
+	_shop_button.anchor_right = 1.0
+	_shop_button.anchor_top = 0.0
+	_shop_button.anchor_bottom = 0.0
+	_shop_button.offset_left = -166.0
+	_shop_button.offset_right = -24.0
+	_shop_button.offset_top = 24.0
+	_shop_button.offset_bottom = 68.0
+	canvas.add_child(_shop_button)
+	_shop_button.pressed.connect(_on_ship_status_pressed)
+
+func _on_ship_status_pressed() -> void:
+	_ship_status_visible = not _ship_status_visible
+	if _ship_status_panel == null:
+		_build_ship_status_panel()
+	if _ship_status_panel:
+		_ship_status_panel.visible = _ship_status_visible
+
+func _build_ship_status_panel() -> void:
+	var canvas = $CanvasLayer
+	if canvas == null:
+		return
+	_ship_status_panel = PanelContainer.new()
+	_ship_status_panel.name = "ShipStatusPanel"
+	_ship_status_panel.visible = false
+	_ship_status_panel.anchor_left = 1.0
+	_ship_status_panel.anchor_right = 1.0
+	_ship_status_panel.anchor_top = 0.0
+	_ship_status_panel.anchor_bottom = 0.0
+	_ship_status_panel.offset_left = -300.0
+	_ship_status_panel.offset_right = -24.0
+	_ship_status_panel.offset_top = 80.0
+	_ship_status_panel.offset_bottom = 80.0
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.06, 0.08, 0.16, 0.94)
+	style.border_color = Color(0.28, 0.88, 0.96, 0.8)
+	style.border_width_left = 1
+	style.border_width_right = 1
+	style.border_width_top = 1
+	style.border_width_bottom = 1
+	style.corner_radius_top_left = 10
+	style.corner_radius_top_right = 10
+	style.corner_radius_bottom_left = 10
+	style.corner_radius_bottom_right = 10
+	style.content_margin_left = 14
+	style.content_margin_right = 14
+	style.content_margin_top = 12
+	style.content_margin_bottom = 12
+	_ship_status_panel.add_theme_stylebox_override("panel", style)
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 6)
+	_ship_status_panel.add_child(vbox)
+	var title = Label.new()
+	title.text = "SHIP STATUS"
+	title.add_theme_color_override("font_color", Color(0.28, 0.88, 0.96))
+	title.add_theme_font_size_override("font_size", 12)
+	vbox.add_child(title)
+	vbox.add_child(HSeparator.new())
+	var vessel_lbl = Label.new()
+	vessel_lbl.text = "Vessel: %s" % (_current_rocket_id if _current_rocket_id != "" else "—")
+	vessel_lbl.add_theme_color_override("font_color", Color(0.85, 0.87, 0.92))
+	vessel_lbl.add_theme_font_size_override("font_size", 13)
+	vbox.add_child(vessel_lbl)
+	var rooms_header = Label.new()
+	rooms_header.text = "Rooms:"
+	rooms_header.add_theme_color_override("font_color", Color(0.60, 0.65, 0.78))
+	rooms_header.add_theme_font_size_override("font_size", 12)
+	vbox.add_child(rooms_header)
+	var layout = RoomCatalog.create_layout_for_rocket_type(_current_rocket_id)
+	var installed = RoomCatalog.get_installed_rooms(layout)
+	for room_inst in installed:
+		var room_def = RoomCatalog.get_room(str(room_inst.get("room_id", "")))
+		var row = Label.new()
+		row.text = "  • %s" % room_def.get("name", room_inst.get("room_id", "?"))
+		row.add_theme_color_override("font_color", Color(0.72, 0.78, 0.92))
+		row.add_theme_font_size_override("font_size", 12)
+		vbox.add_child(row)
+	canvas.add_child(_ship_status_panel)
 
 func _on_return_home_pressed() -> void:
 	# Keep behavior deterministic even if player presses return during transit preview:

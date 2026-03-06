@@ -4,6 +4,10 @@ const PREVIEW_SCENE_PATH := "res://Scenes/UI/AsteroidPreview/asteroid_preview.ts
 const MINING_SCENE_PATH := "res://Scenes/UI/SidescrollMining.tscn"
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
 const GameplayAnalytics = preload("res://Scripts/Systems/GameplayAnalytics.gd")
+const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
+const ResourceYield = preload("res://Scripts/Utils/ResourceYield.gd")
+const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd")
+const MiningInventory = preload("res://Scripts/Utils/MiningInventory.gd")
 
 @onready var ui_container: Control = $CanvasLayer/UI
 @onready var mine_btn: Button = $CanvasLayer/UI/MineButton
@@ -16,6 +20,9 @@ var _current_target_type := ""
 var _current_rocket_id := ""
 var _current_yield := {}
 var _minigame_instance = null
+var _starter_contract_context := {}
+var _last_mining_collected := {}
+var _last_mining_report := {}
 
 func _ready():
 	print("[Preview] _ready called")
@@ -28,8 +35,9 @@ func _ready():
 	mine_btn.pressed.connect(_on_mine_pressed)
 	return_btn.pressed.connect(_on_return_pressed)
 	
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var rm = RocketsManager
 	var preview = rm.get_preview_target()
+	_starter_contract_context = _build_starter_contract_context(rm)
 	
 	print("[Preview] Preview data: ", preview)
 	
@@ -47,7 +55,7 @@ func _ready():
 		return
 	
 	# Get yield data
-	var resource_yield = preload("res://Scripts/Utils/ResourceYield.gd")
+	var resource_yield = ResourceYield
 	var targets = rm.get_detected_targets()
 	var level = 1
 	for t in targets:
@@ -87,7 +95,7 @@ func _on_mine_pressed():
 		"target_type": _current_target_type,
 		"rocket_id": _current_rocket_id
 	})
-	preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("start_mining", {
+	AppControllerHelper.record_tutorial_action("start_mining", {
 		"target_id": _current_target_id
 	})
 	
@@ -109,15 +117,23 @@ func _on_mine_pressed():
 	var level = int(_current_yield.get("level", 1))
 	var minerals = _current_yield.get("minerals", {})
 	var mineable_pct = float(_current_yield.get("mineable_pct", 0.5))
+	var session_context := {}
+	if not _starter_contract_context.is_empty():
+		session_context["starter_contract"] = _starter_contract_context.duplicate(true)
 	
 	print("[Preview] Starting mining: level=%d, minerals=%s, mineable=%f" % [level, str(minerals), mineable_pct])
-	_minigame_instance.start_mining(is_planet, level, _current_target_id, minerals, mineable_pct)
+	_minigame_instance.start_mining(is_planet, level, _current_target_id, minerals, mineable_pct, session_context)
 	print("[Preview] Mining started!")
 
 func _on_mining_completed(minerals_collected: Dictionary, score: int):
 	print("[Preview] Mining completed: score=%d" % score)
+	_last_mining_collected = minerals_collected.duplicate(true)
+	_last_mining_report = {}
+	if _minigame_instance and _minigame_instance.has_method("get_completion_report"):
+		_last_mining_report = _minigame_instance.get_completion_report()
+	_persist_mining_result(_last_mining_collected)
 	if not minerals_collected.is_empty():
-		preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("mine_target", {
+		AppControllerHelper.record_tutorial_action("mine_target", {
 			"target_id": _current_target_id,
 			"score": score
 		})
@@ -126,27 +142,112 @@ func _on_mining_completed(minerals_collected: Dictionary, score: int):
 		_minigame_instance.queue_free()
 		_minigame_instance = null
 	
+	if _should_restart_starter_run():
+		await _restart_starter_run("Order incomplete. Restarting mining run...")
+		return
+	
 	ui_container.visible = true
 	mine_btn.disabled = false
+	return_btn.disabled = false
 
 func _on_return_pressed():
+	if _is_starter_contract_active() and not _starter_requirements_met(_last_mining_collected):
+		await _restart_starter_run("Complete the contractor order before returning.")
+		return
 	print("[Preview] Return home pressed")
 	GameplayAnalytics.emit_event("mission_return_requested", {
 		"rocket_id": _current_rocket_id,
 		"target_id": _current_target_id,
 		"target_type": _current_target_type
 	})
-	preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("return_rocket_home", {
+	AppControllerHelper.record_tutorial_action("return_rocket_home", {
 		"rocket_id": _current_rocket_id,
 		"target_id": _current_target_id
 	})
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var rm = RocketsManager
 	var target_label = _current_target_id
 	var preview = rm.get_preview_target()
 	if not preview.is_empty():
 		target_label = str(preview.get("label", target_label))
 	var operation_mode = rm.get_operation_mode_for_rocket(_current_rocket_id)
-	rm.set_returned_mission(_current_rocket_id, _current_target_id, target_label, _current_target_type, operation_mode)
+	rm.set_returned_mission(_current_rocket_id, _current_target_id, target_label, _current_target_type, operation_mode, {
+		"mining_run_collected": _last_mining_collected.duplicate(true),
+		"mining_report": _last_mining_report.duplicate(true),
+		"starter_contract_context": _starter_contract_context.duplicate(true),
+		"starter_contract_complete": _starter_requirements_met(_last_mining_collected)
+	})
 	rm.return_home(_current_rocket_id)
 	rm.clear_preview_target()
 	get_tree().change_scene_to_file("res://Scenes/Transitions/rocket_return.tscn")
+
+func _build_starter_contract_context(rm) -> Dictionary:
+	if rm == null:
+		return {}
+	if int(rm.get_mission_stage()) != 1:
+		return {}
+	var selected = rm.get_starter_selected_contractor()
+	if selected.is_empty():
+		return {}
+	var requested = rm.get_starter_requested_minerals(str(selected.get("id", "")))
+	if requested.is_empty():
+		return {}
+	return {
+		"active": true,
+		"id": str(selected.get("id", "")),
+		"name": str(selected.get("name", "Contractor")),
+		"requested_minerals": requested.duplicate(true)
+	}
+
+func _is_starter_contract_active() -> bool:
+	return bool(_starter_contract_context.get("active", false)) and typeof(_starter_contract_context.get("requested_minerals", {})) == TYPE_DICTIONARY
+
+func _starter_requirements_met(collected: Dictionary) -> bool:
+	if not _is_starter_contract_active():
+		return true
+	var requested = _starter_contract_context.get("requested_minerals", {})
+	if typeof(requested) != TYPE_DICTIONARY or requested.is_empty():
+		return true
+	for key in requested.keys():
+		var required_amount = max(int(requested.get(key, 0)), 0)
+		if required_amount <= 0:
+			continue
+		var collected_amount = int(collected.get(str(key), 0))
+		if collected_amount < required_amount:
+			return false
+	return true
+
+func _should_restart_starter_run() -> bool:
+	if not _is_starter_contract_active():
+		return false
+	var reason = str(_last_mining_report.get("reason", ""))
+	if reason == "":
+		return not _starter_requirements_met(_last_mining_collected)
+	return not _starter_requirements_met(_last_mining_collected)
+
+func _restart_starter_run(message: String) -> void:
+	ui_container.visible = true
+	mine_btn.disabled = true
+	return_btn.disabled = true
+	target_label.text = message
+	await get_tree().create_timer(1.0).timeout
+	target_label.text = "Target: %s" % _current_target_id
+	_on_mine_pressed()
+
+func _persist_mining_result(collected: Dictionary) -> void:
+	if _current_target_id == "":
+		return
+	var inv = MiningInventory
+	if not inv:
+		return
+	var data = inv.load_state()
+	var targets: Dictionary = data.get("targets", {})
+	var total_collected := 0
+	for value in collected.values():
+		total_collected += int(value)
+	targets[_current_target_id] = {
+		"original_mass": total_collected,
+		"remaining_mass": 0,
+		"collected": collected.duplicate(true)
+	}
+	data["targets"] = targets
+	inv.save_state(data)

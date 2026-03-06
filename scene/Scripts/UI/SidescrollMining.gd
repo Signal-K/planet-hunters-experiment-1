@@ -4,6 +4,8 @@ const NavigationMixin = preload("res://Scripts/Utils/NavigationMixin.gd")
 const GameplayAnalytics = preload("res://Scripts/Systems/GameplayAnalytics.gd")
 const RegionMath = preload("res://Scripts/UI/SidescrollMiningRegionMath.gd")
 const VisualSync = preload("res://Scripts/UI/SidescrollMiningVisualSync.gd")
+const RoomCatalog = preload("res://Scripts/Utils/RoomCatalog.gd")
+const RoomSpriteAtlas = preload("res://Scripts/UI/RoomSpriteAtlas.gd")
 
 signal mining_completed(minerals: Dictionary, score: int)
 
@@ -17,6 +19,8 @@ const ASTEROID_DURATION = 90.0
 const PLANET_DURATION = 180.0
 const MAX_DRONES = 3
 const DRONE_COOLDOWN = 5.0
+const ROOM_ICON_WIDTH = 76
+const ROOM_ICON_HEIGHT = 30
 
 enum GuideStep {
 	INTRO,
@@ -61,6 +65,9 @@ var _terrain_loop_container: Node2D = null
 @onready var beam_label: Label = $UI/TopBar/LeftGauges/BeamPanel/VBox/Label
 @onready var score_label: Label = $UI/TopBar/RightStats/ScorePanel/ScoreLabel
 @onready var rocket_label: Label = $UI/TopBar/RightStats/RocketPanel/Label
+@onready var contract_order_panel: PanelContainer = $UI/ContractOrderPanel
+@onready var contract_order_title: Label = $UI/ContractOrderPanel/VBox/TitleLabel
+@onready var contract_order_progress: Label = $UI/ContractOrderPanel/VBox/ProgressLabel
 @onready var fire_button: Button = $UI/FireButton
 @onready var instructions: Label = $UI/Instructions
 @onready var particles_container: Node2D = $ParticlesContainer
@@ -93,7 +100,22 @@ var _drones_deployed := 0
 var _stuck_reasons_emitted: Dictionary = {}
 var _completion_reason := "duration_elapsed"
 var _completion_emitted := false
+var _completion_report := {}
 var _last_progress_elapsed := 0.0
+var _starter_contract_active := false
+var _starter_contractor_name := ""
+var _starter_order_targets: Dictionary = {}
+var _collection_by_tool := {"laser": 0, "drone": 0}
+var _order_matches_by_tool := {"laser": 0, "drone": 0}
+var _order_match_total := 0
+var _non_order_total := 0
+var _rocket_room_layout: Dictionary = {}
+var _science_payout_multiplier := 1.0
+var _science_xp_multiplier := 1.0
+var _room_panel: PanelContainer = null
+var _room_grid: GridContainer = null
+var _room_debug_overlay: Control = null
+var _room_debug_visible := false
 # True when touch/on-screen buttons should be shown: native mobile OR small viewport
 # (web users on phones report OS.has_feature("mobile") as false, so we fall back to width)
 var _uses_touch_controls := false
@@ -102,6 +124,8 @@ func _ready():
 	_load_rocket_frames()
 	_setup_rocket()
 	_generate_terrain()
+	_setup_room_panel()
+	_configure_rocket_rooms(1)
 	laser.visible = false
 	fire_button.pressed.connect(_on_fire_pressed)
 	fire_button.button_up.connect(_on_fire_released)
@@ -150,9 +174,16 @@ func start_mining(is_planet: bool = false, difficulty: int = 1, target_id: Strin
 	_heat = 0.0
 	_current_target_id = target_id
 	_rocket_level = difficulty
+	_configure_rocket_rooms(difficulty)
 	_target_minerals = minerals
 	_target_mineable_pct = mineable_pct
 	_session_context = session_context.duplicate(true)
+	_completion_report = {}
+	_resolve_starter_contract_context()
+	_collection_by_tool = {"laser": 0, "drone": 0}
+	_order_matches_by_tool = {"laser": 0, "drone": 0}
+	_order_match_total = 0
+	_non_order_total = 0
 	
 	# Regenerate terrain with target seed and difficulty
 	_generate_terrain()
@@ -167,6 +198,8 @@ func start_mining(is_planet: bool = false, difficulty: int = 1, target_id: Strin
 		"target_id": _current_target_id,
 		"target_type": "planet" if _is_planet else "asteroid",
 		"rocket_level": _rocket_level,
+		"science_payout_multiplier": snapped(_science_payout_multiplier, 0.01),
+		"science_xp_multiplier": snapped(_science_xp_multiplier, 0.01),
 		"target_duration_seconds": _target_duration,
 		"mineable_pct": _target_mineable_pct,
 		"total_deposit_count": _total_deposit_count,
@@ -174,15 +207,150 @@ func start_mining(is_planet: bool = false, difficulty: int = 1, target_id: Strin
 		"subsurface_deposit_count": _subsurface_deposit_count
 	})
 	GameplayAnalytics.start_mining_session(analytics_payload)
+	_refresh_contract_order_tracker()
 	
 	# Update UI after scene is ready
 	call_deferred("_update_rocket_ui")
 
 func _update_rocket_ui():
 	if rocket_label:
-		rocket_label.text = "Level %d" % _rocket_level
+		var parachute_ready := "Yes" if RoomCatalog.has_parachute(_rocket_room_layout) else "No"
+		rocket_label.text = "Level %d | Chute: %s" % [_rocket_level, parachute_ready]
 	if beam_bar:
 		beam_bar.value = 100.0
+
+func _configure_rocket_rooms(progress_level: int) -> void:
+	var rocket_type = "starterrocket1"
+	if progress_level >= 3:
+		rocket_type = "starterrocket3"
+	elif progress_level >= 2:
+		rocket_type = "starterrocket2"
+	_rocket_room_layout = RoomCatalog.create_layout_for_rocket_type(rocket_type)
+	_rocket_level = RoomCatalog.derive_rocket_level(_rocket_room_layout)
+	_refresh_science_room_context()
+	_render_room_panel()
+
+func _refresh_science_room_context() -> void:
+	var science = RoomCatalog.science_multipliers(_rocket_room_layout)
+	_science_payout_multiplier = float(science.get("payout_multiplier", 1.0))
+	_science_xp_multiplier = float(science.get("xp_multiplier", 1.0))
+
+func _setup_room_panel() -> void:
+	var ui_root = get_node_or_null("UI")
+	if ui_root == null or not (ui_root is Control):
+		return
+	_room_panel = PanelContainer.new()
+	_room_panel.name = "RoomPanel"
+	_room_panel.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	_room_panel.offset_left = -340
+	_room_panel.offset_top = 120
+	_room_panel.offset_right = -20
+	_room_panel.offset_bottom = 320
+	ui_root.add_child(_room_panel)
+
+	var margin := MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 8)
+	margin.add_theme_constant_override("margin_top", 8)
+	margin.add_theme_constant_override("margin_right", 8)
+	margin.add_theme_constant_override("margin_bottom", 8)
+	_room_panel.add_child(margin)
+
+	var vbox := VBoxContainer.new()
+	margin.add_child(vbox)
+
+	var title := Label.new()
+	title.text = "Rocket Rooms"
+	vbox.add_child(title)
+
+	_room_grid = GridContainer.new()
+	_room_grid.columns = 2
+	_room_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox.add_child(_room_grid)
+
+	_room_debug_overlay = Control.new()
+	_room_debug_overlay.name = "RoomDebugOverlay"
+	_room_debug_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_room_debug_overlay.visible = false
+	_room_debug_overlay.z_index = 20
+	_room_debug_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ui_root.add_child(_room_debug_overlay)
+
+func _render_room_panel() -> void:
+	if _room_grid == null:
+		return
+	for child in _room_grid.get_children():
+		child.queue_free()
+	var rooms = RoomCatalog.get_installed_rooms(_rocket_room_layout)
+	for room_row in rooms:
+		var room_id = str(room_row.get("room_id", ""))
+		var room_def = RoomCatalog.get_room(room_id)
+		if room_def.is_empty():
+			continue
+		var tile := TextureRect.new()
+		tile.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		tile.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		tile.custom_minimum_size = Vector2(ROOM_ICON_WIDTH, ROOM_ICON_HEIGHT)
+		tile.texture = RoomSpriteAtlas.texture_for_room(room_id)
+		if tile.texture == null:
+			tile.modulate = Color(0.16, 0.22, 0.34, 1.0)
+		_room_grid.add_child(tile)
+
+		var label := Label.new()
+		var status_suffix := " (offline)" if bool(room_row.get("offline", false)) else ""
+		label.text = "%s T%d%s" % [str(room_def.get("name", room_id)), int(room_row.get("tier", 1)), status_suffix]
+		_room_grid.add_child(label)
+	_refresh_room_debug_overlay()
+
+func _refresh_room_debug_overlay() -> void:
+	if _room_debug_overlay == null:
+		return
+	for child in _room_debug_overlay.get_children():
+		child.queue_free()
+	_room_debug_overlay.visible = _room_debug_visible
+	if not _room_debug_visible:
+		return
+	if not RoomSpriteAtlas.has_sheet():
+		return
+	var debug_regions = RoomSpriteAtlas.get_debug_regions()
+	if debug_regions.is_empty():
+		return
+	var sheet = load(RoomSpriteAtlas.SHEET_PATH)
+	if sheet == null or not (sheet is Texture2D):
+		return
+	var texture_rect := TextureRect.new()
+	texture_rect.texture = sheet
+	texture_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	texture_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	texture_rect.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	texture_rect.offset_left = -540
+	texture_rect.offset_top = 330
+	texture_rect.offset_right = -20
+	texture_rect.offset_bottom = 650
+	texture_rect.modulate = Color(1, 1, 1, 0.92)
+	_room_debug_overlay.add_child(texture_rect)
+	var target_rect := texture_rect.get_rect()
+	var sheet_size := Vector2(texture_rect.texture.get_width(), texture_rect.texture.get_height())
+	if sheet_size.x <= 0 or sheet_size.y <= 0:
+		return
+	var scale_x := target_rect.size.x / sheet_size.x
+	var scale_y := target_rect.size.y / sheet_size.y
+	for entry in debug_regions:
+		var r: Rect2 = entry.get("rect", Rect2())
+		var marker := ColorRect.new()
+		marker.color = Color(0.15, 0.95, 0.95, 0.18)
+		marker.position = target_rect.position + Vector2(r.position.x * scale_x, r.position.y * scale_y)
+		marker.size = Vector2(r.size.x * scale_x, r.size.y * scale_y)
+		_room_debug_overlay.add_child(marker)
+		var outline := ColorRect.new()
+		outline.color = Color(0.15, 0.95, 0.95, 0.95)
+		outline.position = marker.position
+		outline.size = Vector2(marker.size.x, 1)
+		_room_debug_overlay.add_child(outline)
+		var index_label := Label.new()
+		index_label.text = "%d %s" % [int(entry.get("index", 0)) + 1, str(entry.get("room_id", ""))]
+		index_label.position = marker.position + Vector2(4, 2)
+		index_label.add_theme_font_size_override("font_size", 11)
+		_room_debug_overlay.add_child(index_label)
 
 func _load_rocket_frames():
 	for i in range(1, 9):
@@ -614,6 +782,19 @@ func _record_region_collection(region: Dictionary, source: String) -> void:
 		_combo = 0
 	var mineral = region.get("mineral", {})
 	var mineral_name = str(mineral.get("name", "Unknown"))
+	var source_key = source.strip_edges().to_lower()
+	if source_key == "":
+		source_key = "laser"
+	if not _collection_by_tool.has(source_key):
+		_collection_by_tool[source_key] = 0
+	_collection_by_tool[source_key] = int(_collection_by_tool.get(source_key, 0)) + 1
+	if _is_order_target_mineral(mineral_name):
+		if not _order_matches_by_tool.has(source_key):
+			_order_matches_by_tool[source_key] = 0
+		_order_matches_by_tool[source_key] = int(_order_matches_by_tool.get(source_key, 0)) + 1
+		_order_match_total += 1
+	else:
+		_non_order_total += 1
 	var mineral_value = int(mineral.get("value", 0))
 	var points = mineral_value * max(_combo, 1)
 	_score += points
@@ -630,6 +811,7 @@ func _record_region_collection(region: Dictionary, source: String) -> void:
 			"elapsed_seconds": snapped(_elapsed_time, 0.1),
 			"mineral_name": mineral_name
 		}))
+	_refresh_contract_order_tracker()
 
 func _maybe_emit_stuck_signals() -> void:
 	if _should_emit_stuck_reason("no_collection_30s", _elapsed_time >= 30.0 and _collected_deposit_count == 0):
@@ -664,13 +846,23 @@ func _on_fire_pressed():
 func _on_fire_released():
 	_is_mining = false
 
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F8:
+		_room_debug_visible = not _room_debug_visible
+		_refresh_room_debug_overlay()
+
 func _toggle_inventory():
 	inventory_panel.visible = !inventory_panel.visible
 	if inventory_panel.visible:
 		_update_inventory_display()
 
 func _update_inventory_display():
-	var text = "MINERALS COLLECTED\n\n"
+	var text = "STORAGE\n"
+	text += "─────────────────\n"
+	text += "Fuel:  %d%%\n" % int(round(_fuel))
+	text += "Heat:  %d%%\n" % int(round(_heat))
+	text += "Beam:  %d%%\n" % int(round(_beam_charges / max(_max_beam_charges, 1.0) * 100.0))
+	text += "\nMINERALS COLLECTED\n"
 	if _collected_minerals.is_empty():
 		text += "Nothing yet...\n"
 	else:
@@ -683,9 +875,41 @@ func _complete_mining():
 	if _completion_emitted:
 		return
 	_completion_emitted = true
+	var starter_contract_complete = _is_starter_contract_complete()
 	var total_passes = max(_loop_count + 1, 1)
 	var available_deposit_opportunities = max(_total_deposit_count * total_passes, 1)
 	var collection_rate_pct = (float(_collected_deposit_count) / float(available_deposit_opportunities)) * 100.0
+	var laser_collected = int(_collection_by_tool.get("laser", 0))
+	var drone_collected = int(_collection_by_tool.get("drone", 0))
+	var total_collected = max(_collected_deposit_count, 0)
+	var order_precision_pct = 0.0
+	if total_collected > 0:
+		order_precision_pct = (float(_order_match_total) / float(total_collected)) * 100.0
+	var laser_order_precision_pct = 0.0
+	if laser_collected > 0:
+		laser_order_precision_pct = (float(int(_order_matches_by_tool.get("laser", 0))) / float(laser_collected)) * 100.0
+	var drone_order_precision_pct = 0.0
+	if drone_collected > 0:
+		drone_order_precision_pct = (float(int(_order_matches_by_tool.get("drone", 0))) / float(drone_collected)) * 100.0
+	var drone_effective_hit_rate_pct = 0.0
+	if _drones_deployed > 0:
+		drone_effective_hit_rate_pct = (float(drone_collected) / float(_drones_deployed)) * 100.0
+	var accuracy_payload := {
+		"total_collections": total_collected,
+		"laser_collections": laser_collected,
+		"drone_collections": drone_collected,
+		"drones_deployed": _drones_deployed,
+		"drone_effective_hit_rate_pct": snapped(drone_effective_hit_rate_pct, 0.1),
+		"starter_order_active": _starter_contract_active and not _starter_order_targets.is_empty(),
+		"order_match_count": _order_match_total,
+		"non_order_count": _non_order_total,
+		"order_precision_pct": snapped(order_precision_pct, 0.1),
+		"laser_order_precision_pct": snapped(laser_order_precision_pct, 0.1),
+		"drone_order_precision_pct": snapped(drone_order_precision_pct, 0.1)
+	}
+	accuracy_payload["science_payout_multiplier"] = snapped(_science_payout_multiplier, 0.01)
+	accuracy_payload["science_xp_multiplier"] = snapped(_science_xp_multiplier, 0.01)
+	accuracy_payload["rooms"] = RoomCatalog.get_installed_rooms(_rocket_room_layout)
 	GameplayAnalytics.complete_mining_session({
 		"completion_reason": _completion_reason,
 		"elapsed_seconds": snapped(_elapsed_time, 0.1),
@@ -701,8 +925,19 @@ func _complete_mining():
 		"drones_deployed": _drones_deployed,
 		"collection_rate_pct": snapped(collection_rate_pct, 0.1),
 		"collection_inventory": _collected_minerals.duplicate(true),
-		"last_progress_seconds": snapped(_last_progress_elapsed, 0.1)
+		"last_progress_seconds": snapped(_last_progress_elapsed, 0.1),
+		"starter_contract_active": _starter_contract_active,
+		"starter_contract_complete": starter_contract_complete,
+		"accuracy": accuracy_payload.duplicate(true)
 	})
+	_completion_report = {
+		"reason": _completion_reason,
+		"starter_contract_active": _starter_contract_active,
+		"starter_contract_complete": starter_contract_complete,
+		"starter_order": _starter_order_targets.duplicate(true),
+		"collected": _collected_minerals.duplicate(true),
+		"accuracy": accuracy_payload.duplicate(true)
+	}
 	mining_completed.emit(_collected_minerals, _score)
 
 func _show_guide_step():
@@ -718,12 +953,20 @@ func _show_guide_step():
 				instructions.text = "Welcome to mining. Hold FIRE to mine, tap DRONE for drones, tap RETURN to head back to debrief."
 			else:
 				instructions.text = "Welcome to mining. Hold SPACE to mine, press D for drones, press RETURN to head back to debrief."
+			if _starter_contract_active and _starter_order_targets.size() > 0:
+				instructions.text += " Follow the order panel at the top: mine listed minerals and ignore non-order deposits."
 			_guide_paused = false  # Keep flying
 		GuideStep.MINE_SURFACE_IRON:
-			instructions.text = "ORANGE = Iron (10pts). Hold SPACE to mine surface deposits!"
+			if _starter_contract_active and _starter_order_targets.size() > 0:
+				instructions.text = "Mine only surface deposits that match your active order. Ignore off-order colors."
+			else:
+				instructions.text = "ORANGE = Iron (10pts). Hold SPACE to mine surface deposits!"
 			_guide_paused = false  # Keep flying until near deposit
 		GuideStep.MINE_SURFACE_NICKEL:
-			instructions.text = "YELLOW = Nickel (15pts). Mine another surface deposit!"
+			if _starter_contract_active and _starter_order_targets.size() > 0:
+				instructions.text = "Good. Keep prioritizing order minerals and skip anything not requested."
+			else:
+				instructions.text = "YELLOW = Nickel (15pts). Mine another surface deposit!"
 			_guide_paused = false  # Keep flying until near deposit
 		GuideStep.EXPLAIN_SUBSURFACE:
 			instructions.text = "DARKER deposits are underground — your laser can't reach them. Drones can!"
@@ -885,3 +1128,62 @@ func _on_return_pressed():
 	else:
 		_completion_reason = "manual_return"
 	_complete_mining()
+
+func get_completion_report() -> Dictionary:
+	return _completion_report.duplicate(true)
+
+func _resolve_starter_contract_context() -> void:
+	_starter_contract_active = false
+	_starter_contractor_name = ""
+	_starter_order_targets = {}
+	var starter_contract = _session_context.get("starter_contract", {})
+	if typeof(starter_contract) != TYPE_DICTIONARY or starter_contract.is_empty():
+		return
+	_starter_contract_active = bool(starter_contract.get("active", false))
+	_starter_contractor_name = str(starter_contract.get("name", "Contractor"))
+	var requested = starter_contract.get("requested_minerals", {})
+	if typeof(requested) != TYPE_DICTIONARY:
+		return
+	for key in requested.keys():
+		var amount = max(int(requested.get(key, 0)), 0)
+		if amount > 0:
+			_starter_order_targets[str(key)] = amount
+	if _starter_order_targets.is_empty():
+		_starter_contract_active = false
+
+func _is_starter_contract_complete() -> bool:
+	if not _starter_contract_active or _starter_order_targets.is_empty():
+		return false
+	for key in _starter_order_targets.keys():
+		var required_amount = int(_starter_order_targets.get(key, 0))
+		var collected_amount = int(_collected_minerals.get(key, 0))
+		if collected_amount < required_amount:
+			return false
+	return true
+
+func _refresh_contract_order_tracker() -> void:
+	if contract_order_panel == null or contract_order_title == null or contract_order_progress == null:
+		return
+	var show_order = _starter_contract_active and not _starter_order_targets.is_empty()
+	contract_order_panel.visible = show_order
+	if not show_order:
+		return
+	contract_order_title.text = "%s Order" % _starter_contractor_name
+	var lines := []
+	var keys = _starter_order_targets.keys()
+	keys.sort()
+	for key in keys:
+		var required_amount = int(_starter_order_targets.get(key, 0))
+		var collected_amount = int(_collected_minerals.get(key, 0))
+		lines.append("%s: %d/%d kg" % [str(key), collected_amount, required_amount])
+	if _is_starter_contract_complete():
+		lines.append("Order complete. Return to debrief.")
+	contract_order_progress.text = "\n".join(lines)
+
+func _is_order_target_mineral(mineral_name: String) -> bool:
+	if not _starter_contract_active or _starter_order_targets.is_empty():
+		return false
+	for key in _starter_order_targets.keys():
+		if str(key).to_lower() == mineral_name.to_lower():
+			return true
+	return false

@@ -1,110 +1,6 @@
-[gd_scene load_steps=6 format=3 uid="uid://menu_panel"]
+[gd_scene load_steps=2 format=3 uid="uid://menu_panel"]
 
 [ext_resource type="Script" path="res://Scripts/UI/MenuPanel.gd" id="1"]
-
-[sub_resource type="StyleBoxFlat" id="1"]
-bg_color = Color(0.133333, 0.152941, 0.180392, 0.94)
-border_color = Color(0.263, 0.298, 0.369, 1)
-corner_radius_top_left = 20
-corner_radius_top_right = 20
-corner_radius_bottom_left = 20
-corner_radius_bottom_right = 20
-shadow_color = Color(0, 0, 0, 0.12)
-shadow_size = 12
-shadow_offset = Vector2(0, 6)
-border_width_left = 1
-border_width_right = 1
-border_width_top = 1
-border_width_bottom = 1
-
-[sub_resource type="StyleBoxFlat" id="2"]
-bg_color = Color(0.133333, 0.152941, 0.180392, 0.94)
-border_color = Color(0.263, 0.298, 0.369, 1)
-corner_radius_top_left = 12
-corner_radius_top_right = 12
-corner_radius_bottom_left = 12
-corner_radius_bottom_right = 12
-content_margin_left = 16.0
-content_margin_right = 16.0
-content_margin_top = 10.0
-content_margin_bottom = 10.0
-border_width_left = 1
-border_width_right = 1
-border_width_top = 1
-border_width_bottom = 1
-
-[sub_resource type="StyleBoxFlat" id="3"]
-bg_color = Color(0.168627, 0.188235, 0.231373, 0.96)
-border_color = Color(0.263, 0.298, 0.369, 1)
-corner_radius_top_left = 12
-corner_radius_top_right = 12
-corner_radius_bottom_left = 12
-corner_radius_bottom_right = 12
-content_margin_left = 16.0
-content_margin_right = 16.0
-content_margin_top = 10.0
-content_margin_bottom = 10.0
-border_width_left = 1
-border_width_right = 1
-border_width_top = 1
-border_width_bottom = 1
-
-[sub_resource type="StyleBoxFlat" id="4"]
-bg_color = Color(0.231373, 0.258824, 0.321569, 0.96)
-border_color = Color(0.263, 0.298, 0.369, 1)
-corner_radius_top_left = 12
-corner_radius_top_right = 12
-corner_radius_bottom_left = 12
-corner_radius_bottom_right = 12
-content_margin_left = 16.0
-content_margin_right = 16.0
-content_margin_top = 10.0
-content_margin_bottom = 10.0
-border_width_left = 1
-border_width_right = 1
-border_width_top = 1
-border_width_bottom = 1
-
-[sub_resource type="StyleBoxFlat" id="5"]
-bg_color = Color(0.2, 0.24, 0.32, 1)
-corner_radius_top_left = 16
-corner_radius_top_right = 16
-corner_radius_bottom_left = 16
-corner_radius_bottom_right = 16
-content_margin_left = 14.0
-content_margin_right = 14.0
-content_margin_top = 10.0
-content_margin_bottom = 10.0
-
-[sub_resource type="StyleBoxFlat" id="6"]
-bg_color = Color(0.168627, 0.188235, 0.231373, 0.96)
-border_color = Color(0.263, 0.298, 0.369, 1)
-corner_radius_top_left = 14
-corner_radius_top_right = 14
-corner_radius_bottom_left = 14
-corner_radius_bottom_right = 14
-content_margin_left = 14.0
-content_margin_right = 14.0
-content_margin_top = 12.0
-content_margin_bottom = 12.0
-border_width_left = 1
-border_width_right = 1
-border_width_top = 1
-border_width_bottom = 1
-
-[sub_resource type="StyleBoxFlat" id="7"]
-bg_color = Color(0.533, 0.753, 0.816, 1)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_left = 8
-corner_radius_bottom_right = 8
-
-[sub_resource type="StyleBoxFlat" id="8"]
-bg_color = Color(0.231373, 0.258824, 0.321569, 0.96)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_left = 8
-corner_radius_bottom_right = 8
 
 [node name="MenuPanel" type="Control"]
 layout_mode = 3
@@ -143,7 +39,6 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_styles/panel = SubResource("1")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/Panel"]
 layout_mode = 1
@@ -165,7 +60,6 @@ layout_mode = 2
 layout_mode = 2
 size_flags_horizontal = 3
 custom_minimum_size = Vector2(0, 56)
-theme_override_styles/panel = SubResource("5")
 
 [node name="HeaderContent" type="HBoxContainer" parent="PanelContainer/Panel/VBoxContainer/HeaderContainer/HeaderBackground"]
 layout_mode = 1
@@ -179,237 +73,223 @@ theme_override_constants/separation = 12
 [node name="Title" type="Label" parent="PanelContainer/Panel/VBoxContainer/HeaderContainer/HeaderBackground/HeaderContent"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.533, 0.753, 0.816, 1)
 theme_override_font_sizes/font_size = 30
 text = "Main Menu"
 
 [node name="CloseButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/HeaderContainer/HeaderBackground/HeaderContent"]
 custom_minimum_size = Vector2(100, 50)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
 theme_override_font_sizes/font_size = 20
-theme_override_styles/normal = SubResource("2")
-theme_override_styles/hover = SubResource("3")
-theme_override_styles/pressed = SubResource("4")
-theme_override_styles/focus = SubResource("3")
 text = "Close"
 
 [node name="LogbookButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/HeaderContainer/HeaderBackground/HeaderContent"]
 custom_minimum_size = Vector2(120, 50)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
 theme_override_font_sizes/font_size = 20
-theme_override_styles/normal = SubResource("2")
-theme_override_styles/hover = SubResource("3")
-theme_override_styles/pressed = SubResource("4")
-theme_override_styles/focus = SubResource("3")
 text = "Logbook"
 
 [node name="HSeparator" type="HSeparator" parent="PanelContainer/Panel/VBoxContainer"]
 layout_mode = 2
 
-[node name="ScrollContainer" type="ScrollContainer" parent="PanelContainer/Panel/VBoxContainer"]
+[node name="TabContainer" type="TabContainer" parent="PanelContainer/Panel/VBoxContainer"]
 layout_mode = 2
-size_flags_vertical = 3
 size_flags_horizontal = 3
-scroll_vertical = 0
+size_flags_vertical = 3
+
+[node name="Progress" type="ScrollContainer" parent="PanelContainer/Panel/VBoxContainer/TabContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
 scroll_horizontal_enabled = false
 follow_focus = true
 theme_override_constants/scrollbar_margin_left = 8
 theme_override_constants/scrollbar_margin_right = 8
 
-[node name="ContentContainer" type="VBoxContainer" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer"]
+[node name="Content" type="VBoxContainer" parent="PanelContainer/Panel/VBoxContainer/TabContainer/Progress"]
 layout_mode = 2
-size_flags_vertical = 3
 size_flags_horizontal = 3
 theme_override_constants/separation = 14
 
-[node name="Spacer" type="Control" parent="PanelContainer/Panel/VBoxContainer/ContentContainer"]
-layout_mode = 2
-size_flags_vertical = 1
-
-[node name="CounterCard" type="PanelContainer" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer"]
+[node name="ProgressCard" type="PanelContainer" parent="PanelContainer/Panel/VBoxContainer/TabContainer/Progress/Content"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_styles/panel = SubResource("6")
 
-[node name="CounterContainer" type="VBoxContainer" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/CounterCard"]
-layout_mode = 2
-size_flags_horizontal = 4
-size_flags_vertical = 0
-theme_override_constants/separation = 15
-
-[node name="CounterTitle" type="Label" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/CounterCard/CounterContainer"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 20
-text = "Game Counter"
-horizontal_alignment = 1
-
-[node name="CounterLabel" type="Label" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/CounterCard/CounterContainer"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.533, 0.753, 0.816, 1)
-theme_override_font_sizes/font_size = 48
-text = "0"
-horizontal_alignment = 1
-
-[node name="ButtonsContainer" type="HBoxContainer" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/CounterCard/CounterContainer"]
-layout_mode = 2
-theme_override_constants/separation = 30
-alignment = 1
-
-[node name="DecreaseButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/CounterCard/CounterContainer/ButtonsContainer"]
-custom_minimum_size = Vector2(80, 80)
-layout_mode = 2
-theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
-theme_override_font_sizes/font_size = 36
-theme_override_styles/normal = SubResource("2")
-theme_override_styles/hover = SubResource("3")
-theme_override_styles/pressed = SubResource("4")
-theme_override_styles/focus = SubResource("3")
-text = "-"
-
-[node name="IncreaseButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/CounterCard/CounterContainer/ButtonsContainer"]
-custom_minimum_size = Vector2(80, 80)
-layout_mode = 2
-theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
-theme_override_font_sizes/font_size = 36
-theme_override_styles/normal = SubResource("2")
-theme_override_styles/hover = SubResource("3")
-theme_override_styles/pressed = SubResource("4")
-theme_override_styles/focus = SubResource("3")
-text = "+"
-
-[node name="Spacer2" type="Control" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer"]
-layout_mode = 2
-size_flags_vertical = 1
-
-[node name="ProgressCard" type="PanelContainer" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_styles/panel = SubResource("6")
-
-[node name="ProgressContainer" type="VBoxContainer" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/ProgressCard"]
+[node name="ProgressContainer" type="VBoxContainer" parent="PanelContainer/Panel/VBoxContainer/TabContainer/Progress/Content/ProgressCard"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="ProgressTitle" type="Label" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/ProgressCard/ProgressContainer"]
+[node name="ProgressTitle" type="Label" parent="PanelContainer/Panel/VBoxContainer/TabContainer/Progress/Content/ProgressCard/ProgressContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 20
-text = "Experience & Progression"
+text = "Your Progress"
 
-[node name="LevelRow" type="HBoxContainer" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/ProgressCard/ProgressContainer"]
+[node name="LevelRow" type="HBoxContainer" parent="PanelContainer/Panel/VBoxContainer/TabContainer/Progress/Content/ProgressCard/ProgressContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 12
 
-[node name="LevelLabel" type="Label" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/ProgressCard/ProgressContainer/LevelRow"]
+[node name="LevelLabel" type="Label" parent="PanelContainer/Panel/VBoxContainer/TabContainer/Progress/Content/ProgressCard/ProgressContainer/LevelRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 18
 text = "Level 1"
 
-[node name="XpLabel" type="Label" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/ProgressCard/ProgressContainer/LevelRow"]
+[node name="XpLabel" type="Label" parent="PanelContainer/Panel/VBoxContainer/TabContainer/Progress/Content/ProgressCard/ProgressContainer/LevelRow"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
 text = "0 XP"
 horizontal_alignment = 2
 
-[node name="ProgressBar" type="ProgressBar" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/ProgressCard/ProgressContainer"]
+[node name="ProgressBar" type="ProgressBar" parent="PanelContainer/Panel/VBoxContainer/TabContainer/Progress/Content/ProgressCard/ProgressContainer"]
 layout_mode = 2
 custom_minimum_size = Vector2(0, 16)
 value = 0.0
 percent_visible = false
-theme_override_styles/fill = SubResource("7")
-theme_override_styles/background = SubResource("8")
 
-[node name="NextLevelLabel" type="Label" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/ProgressCard/ProgressContainer"]
+[node name="NextLevelLabel" type="Label" parent="PanelContainer/Panel/VBoxContainer/TabContainer/Progress/Content/ProgressCard/ProgressContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
 text = "0 XP to next level"
 
-[node name="UnlocksTitle" type="Label" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/ProgressCard/ProgressContainer"]
+[node name="Unlocks" type="ScrollContainer" parent="PanelContainer/Panel/VBoxContainer/TabContainer"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
-text = "Unlocks"
+size_flags_horizontal = 3
+size_flags_vertical = 3
+scroll_horizontal_enabled = false
+follow_focus = true
+theme_override_constants/scrollbar_margin_left = 8
+theme_override_constants/scrollbar_margin_right = 8
 
-[node name="UnlocksList" type="VBoxContainer" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer/ProgressCard/ProgressContainer"]
+[node name="Content" type="VBoxContainer" parent="PanelContainer/Panel/VBoxContainer/TabContainer/Unlocks"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 14
+
+[node name="UnlocksHint" type="Label" parent="PanelContainer/Panel/VBoxContainer/TabContainer/Unlocks/Content"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "Unlocked items are shown at full brightness. Future unlocks are dimmed."
+autowrap_mode = 3
+
+[node name="UnlocksList" type="VBoxContainer" parent="PanelContainer/Panel/VBoxContainer/TabContainer/Unlocks/Content"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 6
 
-[node name="InfoLabel" type="Label" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer"]
+[node name="Settings" type="ScrollContainer" parent="PanelContainer/Panel/VBoxContainer/TabContainer"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 16
-text = "Changes here will sync back to React Native"
-horizontal_alignment = 1
+size_flags_horizontal = 3
+size_flags_vertical = 3
+scroll_horizontal_enabled = false
+follow_focus = true
+theme_override_constants/scrollbar_margin_left = 8
+theme_override_constants/scrollbar_margin_right = 8
 
-[node name="CitizenScienceDialogueButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer"]
+[node name="Content" type="VBoxContainer" parent="PanelContainer/Panel/VBoxContainer/TabContainer/Settings"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 14
+
+[node name="CitizenScienceDialogueButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/TabContainer/Settings/Content"]
 custom_minimum_size = Vector2(160, 50)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
 theme_override_font_sizes/font_size = 18
-theme_override_styles/normal = SubResource("2")
-theme_override_styles/hover = SubResource("3")
-theme_override_styles/pressed = SubResource("4")
-theme_override_styles/focus = SubResource("3")
 text = "Citizen Science Dialogue: On"
 
-[node name="ResetButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer"]
-custom_minimum_size = Vector2(160, 50)
+[node name="TutorialSectionLabel" type="Label" parent="PanelContainer/Panel/VBoxContainer/TabContainer/Settings/Content"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
-theme_override_font_sizes/font_size = 20
-theme_override_styles/normal = SubResource("2")
-theme_override_styles/hover = SubResource("3")
-theme_override_styles/pressed = SubResource("4")
-theme_override_styles/focus = SubResource("3")
-text = "Reset All Data"
+theme_override_font_sizes/font_size = 16
+text = "Tutorial & Training"
 
-[node name="PracticeMiningButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer"]
+[node name="PracticeMiningButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/TabContainer/Settings/Content"]
 custom_minimum_size = Vector2(160, 50)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
 theme_override_font_sizes/font_size = 20
-theme_override_styles/normal = SubResource("2")
-theme_override_styles/hover = SubResource("3")
-theme_override_styles/pressed = SubResource("4")
-theme_override_styles/focus = SubResource("3")
 text = "Practice Mining"
 
-[node name="SkipTutorialButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer"]
+[node name="SkipTutorialButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/TabContainer/Settings/Content"]
 custom_minimum_size = Vector2(160, 50)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
 theme_override_font_sizes/font_size = 20
-theme_override_styles/normal = SubResource("2")
-theme_override_styles/hover = SubResource("3")
-theme_override_styles/pressed = SubResource("4")
-theme_override_styles/focus = SubResource("3")
 text = "Skip Onboarding"
 
-[node name="ReplayMissionTutorialButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer"]
+[node name="ReplayMissionTutorialButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/TabContainer/Settings/Content"]
 custom_minimum_size = Vector2(160, 50)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
 theme_override_font_sizes/font_size = 20
-theme_override_styles/normal = SubResource("2")
-theme_override_styles/hover = SubResource("3")
-theme_override_styles/pressed = SubResource("4")
-theme_override_styles/focus = SubResource("3")
 text = "Replay This Mission Guide"
 
-[node name="ReplayAllTutorialButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/ScrollContainer/ContentContainer"]
+[node name="ReplayAllTutorialButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/TabContainer/Settings/Content"]
 custom_minimum_size = Vector2(160, 50)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
 theme_override_font_sizes/font_size = 20
-theme_override_styles/normal = SubResource("2")
-theme_override_styles/hover = SubResource("3")
-theme_override_styles/pressed = SubResource("4")
-theme_override_styles/focus = SubResource("3")
 text = "Replay Full Onboarding"
 
+[node name="InfoLabel" type="Label" parent="PanelContainer/Panel/VBoxContainer/TabContainer/Settings/Content"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "Open Mining Academy here to rehearse routes, drones, and early returns without risking a mission."
+autowrap_mode = 3
+
+[node name="Advanced" type="ScrollContainer" parent="PanelContainer/Panel/VBoxContainer/TabContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+scroll_horizontal_enabled = false
+follow_focus = true
+theme_override_constants/scrollbar_margin_left = 8
+theme_override_constants/scrollbar_margin_right = 8
+
+[node name="Content" type="VBoxContainer" parent="PanelContainer/Panel/VBoxContainer/TabContainer/Advanced"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 14
+
+[node name="CounterCard" type="PanelContainer" parent="PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="CounterContainer" type="VBoxContainer" parent="PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/CounterCard"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 0
+theme_override_constants/separation = 15
+
+[node name="CounterTitle" type="Label" parent="PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/CounterCard/CounterContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Game Counter"
+horizontal_alignment = 1
+
+[node name="CounterLabel" type="Label" parent="PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/CounterCard/CounterContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 48
+text = "0"
+horizontal_alignment = 1
+
+[node name="ButtonsContainer" type="HBoxContainer" parent="PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/CounterCard/CounterContainer"]
+layout_mode = 2
+theme_override_constants/separation = 30
+alignment = 1
+
+[node name="DecreaseButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/CounterCard/CounterContainer/ButtonsContainer"]
+custom_minimum_size = Vector2(80, 80)
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+text = "-"
+
+[node name="IncreaseButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/CounterCard/CounterContainer/ButtonsContainer"]
+custom_minimum_size = Vector2(80, 80)
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+text = "+"
+
+[node name="ResetButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content"]
+custom_minimum_size = Vector2(160, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Reset All Data"
 
 [node name="LogbookOverlay" type="ColorRect" parent="."]
 visible = false
@@ -440,7 +320,6 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_styles/panel = SubResource("1")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="LogbookOverlay/LogbookPanelContainer/LogbookPanel"]
 layout_mode = 1
@@ -467,12 +346,7 @@ text = "Mission Logbook"
 [node name="CloseLogbookButton" type="Button" parent="LogbookOverlay/LogbookPanelContainer/LogbookPanel/VBoxContainer/Header"]
 custom_minimum_size = Vector2(100, 44)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
 theme_override_font_sizes/font_size = 18
-theme_override_styles/normal = SubResource("2")
-theme_override_styles/hover = SubResource("3")
-theme_override_styles/pressed = SubResource("4")
-theme_override_styles/focus = SubResource("3")
 text = "Close"
 
 [node name="HSeparator" type="HSeparator" parent="LogbookOverlay/LogbookPanelContainer/LogbookPanel/VBoxContainer"]
@@ -480,7 +354,6 @@ layout_mode = 2
 
 [node name="Subtitle" type="Label" parent="LogbookOverlay/LogbookPanelContainer/LogbookPanel/VBoxContainer"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.639, 0.694, 0.784, 1)
 theme_override_font_sizes/font_size = 16
 text = "Newest entries first. Mission details are grouped by section."
 

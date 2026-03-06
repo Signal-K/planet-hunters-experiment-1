@@ -45,18 +45,37 @@ func _ready() -> void:
 	# Style and connect button signals
 	_ui_helper.setup(self)
 	_ui_helper.setup_buttons()
-	
+	call_deferred("_apply_tutorial_button_state")
+
 	# Create ground guide lines if enabled
 	if show_ground_guide:
 		var DebugVisualizer = preload("res://Scripts/Earth/DebugVisualizer.gd")
 		DebugVisualizer.create_ground_guides(self)
-	
+
 	# Call custom initialization for derived scenes
 	_custom_ready()
 
 ## Override this in derived scripts for custom initialization
 func _custom_ready() -> void:
 	pass
+
+func _apply_tutorial_button_state() -> void:
+	var app = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
+	var tutorial_active := false
+	if app != null and app.has_method("get_tutorial_state"):
+		var state: Dictionary = app.get_tutorial_state()
+		tutorial_active = not state.is_empty() and not bool(state.get("skipped", false))
+	# During the tutorial disable off-mission nav buttons (SpaceMap, Market, Forward).
+	# Back and Menu stay enabled so the player can navigate back or access skip/replay.
+	# New Mission stays enabled in template scenes where it triggers the launchpad flow.
+	for btn_path in [
+		"UILayer/ButtonContainer/ForwardButton",
+		"UILayer/ButtonContainer/MarketButton",
+		"UILayer/ButtonContainer/SpaceMapButton",
+	]:
+		var btn := get_node_or_null(btn_path) as Button
+		if btn:
+			btn.disabled = tutorial_active
 
 # ============================================================================
 # Ground and Soil Helper Functions
@@ -119,6 +138,7 @@ func _on_space_map_button_pressed() -> void:
 
 func _on_new_mission_button_pressed() -> void:
 	print("New Mission button pressed - opening launchpad scene")
+	preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("open_launchpad")
 	if scene_manager:
 		scene_manager.change_to_scene("res://Scenes/Earth/earth_launchpad.tscn")
 	else:

@@ -1,0 +1,616 @@
+{
+  "taskId": "r8mxvw",
+  "currentVersion": 8,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "r8mxvw",
+      "version": 1,
+      "timestamp": "2026-03-06T04:05:30.393Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        }
+      ],
+      "snapshot": {
+        "title": "Ship transit animation and travel UX (P65 style)",
+        "description": "Notes from physical notebook page 119 (28.02.26). While thinking about P65-style ship building, ideas came up around the in-transit travel experience and how the ship animates during travel.\n\n**Transcribed notes (page 119, 28.02.26):**\n\n> P65 → style Ship Building — this morning and it got me on the subject of travel:\n>\n> - → shop button during transit\n> - → actual transitions / shaking point — a chain ... higher ... (not points)\n> - → actual transition shapes\n> - → ship data dashboard\n> - → rocket begins to rotate\n>\n> → fully, rocket onto [progress bar], sides → (this part & [sketch])\n> → Now, the last transition (arguably [fine] now)\n\nSketches show 4 frames of rocket/ship orientation representing distinct transition states during travel.\n\nContext note from same page (25.02.26):\n\n> Orbital → (the demo is a rooms mockup — there needs to be stories of rooms)\n> Art can be about finding, lose more journeys",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "transit",
+          "animation",
+          "UX",
+          "ship",
+          "experiment1"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "A \"shop\" or action button is accessible during the transit phase."
+          },
+          {
+            "completed": false,
+            "text": "The ship visually transitions between states (e.g. shaking, rotating) during travel."
+          },
+          {
+            "completed": false,
+            "text": "Transition shapes/frames are defined and implemented (4+ keyframes sketched)."
+          },
+          {
+            "completed": false,
+            "text": "A ship data dashboard is displayed during transit showing relevant flight info."
+          },
+          {
+            "completed": false,
+            "text": "Rocket rotation animation plays as the ship progresses along the route."
+          }
+        ],
+        "implementationNotes": "Source: handwritten notebook page 119, photos IMG_1832.jpeg in the Rooms & Upgrades Obsidian note."
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "r8mxvw",
+      "version": 2,
+      "timestamp": "2026-03-06T04:17:51.102Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "A \"shop\" or action button is accessible during the transit phase."
+            },
+            {
+              "completed": false,
+              "text": "The ship visually transitions between states (e.g. shaking, rotating) during travel."
+            },
+            {
+              "completed": false,
+              "text": "Transition shapes/frames are defined and implemented (4+ keyframes sketched)."
+            },
+            {
+              "completed": false,
+              "text": "A ship data dashboard is displayed during transit showing relevant flight info."
+            },
+            {
+              "completed": false,
+              "text": "Rocket rotation animation plays as the ship progresses along the route."
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "A \"shop\" or action button is accessible during the transit phase."
+            },
+            {
+              "completed": false,
+              "text": "The ship visually transitions between states (e.g. shaking, rotating) during travel."
+            },
+            {
+              "completed": false,
+              "text": "Transition shapes/frames are defined and implemented (4+ keyframes sketched)."
+            },
+            {
+              "completed": false,
+              "text": "A ship data dashboard is displayed during transit showing relevant flight info."
+            },
+            {
+              "completed": false,
+              "text": "Rocket rotation animation plays as the ship progresses along the route."
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Ship transit animation and travel UX (P65 style)",
+        "description": "Notes from physical notebook page 119 (28.02.26). While thinking about P65-style ship building, ideas came up around the in-transit travel experience and how the ship animates during travel.\n\n**Transcribed notes (page 119, 28.02.26):**\n\n> P65 → style Ship Building — this morning and it got me on the subject of travel:\n>\n> - → shop button during transit\n> - → actual transitions / shaking point — a chain ... higher ... (not points)\n> - → actual transition shapes\n> - → ship data dashboard\n> - → rocket begins to rotate\n>\n> → fully, rocket onto [progress bar], sides → (this part & [sketch])\n> → Now, the last transition (arguably [fine] now)\n\nSketches show 4 frames of rocket/ship orientation representing distinct transition states during travel.\n\nContext note from same page (25.02.26):\n\n> Orbital → (the demo is a rooms mockup — there needs to be stories of rooms)\n> Art can be about finding, lose more journeys",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "transit",
+          "animation",
+          "UX",
+          "ship",
+          "experiment1"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "A \"shop\" or action button is accessible during the transit phase."
+          },
+          {
+            "completed": false,
+            "text": "The ship visually transitions between states (e.g. shaking, rotating) during travel."
+          },
+          {
+            "completed": false,
+            "text": "Transition shapes/frames are defined and implemented (4+ keyframes sketched)."
+          },
+          {
+            "completed": false,
+            "text": "A ship data dashboard is displayed during transit showing relevant flight info."
+          },
+          {
+            "completed": false,
+            "text": "Rocket rotation animation plays as the ship progresses along the route."
+          }
+        ],
+        "implementationNotes": "Source: handwritten notebook page 119, photos IMG_1832.jpeg in the Rooms & Upgrades Obsidian note."
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "r8mxvw",
+      "version": 3,
+      "timestamp": "2026-03-06T04:17:51.328Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "A \"shop\" or action button is accessible during the transit phase."
+            },
+            {
+              "completed": false,
+              "text": "The ship visually transitions between states (e.g. shaking, rotating) during travel."
+            },
+            {
+              "completed": false,
+              "text": "Transition shapes/frames are defined and implemented (4+ keyframes sketched)."
+            },
+            {
+              "completed": false,
+              "text": "A ship data dashboard is displayed during transit showing relevant flight info."
+            },
+            {
+              "completed": false,
+              "text": "Rocket rotation animation plays as the ship progresses along the route."
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "A \"shop\" or action button is accessible during the transit phase."
+            },
+            {
+              "completed": true,
+              "text": "The ship visually transitions between states (e.g. shaking, rotating) during travel."
+            },
+            {
+              "completed": false,
+              "text": "Transition shapes/frames are defined and implemented (4+ keyframes sketched)."
+            },
+            {
+              "completed": false,
+              "text": "A ship data dashboard is displayed during transit showing relevant flight info."
+            },
+            {
+              "completed": false,
+              "text": "Rocket rotation animation plays as the ship progresses along the route."
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Ship transit animation and travel UX (P65 style)",
+        "description": "Notes from physical notebook page 119 (28.02.26). While thinking about P65-style ship building, ideas came up around the in-transit travel experience and how the ship animates during travel.\n\n**Transcribed notes (page 119, 28.02.26):**\n\n> P65 → style Ship Building — this morning and it got me on the subject of travel:\n>\n> - → shop button during transit\n> - → actual transitions / shaking point — a chain ... higher ... (not points)\n> - → actual transition shapes\n> - → ship data dashboard\n> - → rocket begins to rotate\n>\n> → fully, rocket onto [progress bar], sides → (this part & [sketch])\n> → Now, the last transition (arguably [fine] now)\n\nSketches show 4 frames of rocket/ship orientation representing distinct transition states during travel.\n\nContext note from same page (25.02.26):\n\n> Orbital → (the demo is a rooms mockup — there needs to be stories of rooms)\n> Art can be about finding, lose more journeys",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "transit",
+          "animation",
+          "UX",
+          "ship",
+          "experiment1"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "A \"shop\" or action button is accessible during the transit phase."
+          },
+          {
+            "completed": true,
+            "text": "The ship visually transitions between states (e.g. shaking, rotating) during travel."
+          },
+          {
+            "completed": false,
+            "text": "Transition shapes/frames are defined and implemented (4+ keyframes sketched)."
+          },
+          {
+            "completed": false,
+            "text": "A ship data dashboard is displayed during transit showing relevant flight info."
+          },
+          {
+            "completed": false,
+            "text": "Rocket rotation animation plays as the ship progresses along the route."
+          }
+        ],
+        "implementationNotes": "Source: handwritten notebook page 119, photos IMG_1832.jpeg in the Rooms & Upgrades Obsidian note."
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "r8mxvw",
+      "version": 4,
+      "timestamp": "2026-03-06T04:17:51.554Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "A \"shop\" or action button is accessible during the transit phase."
+            },
+            {
+              "completed": true,
+              "text": "The ship visually transitions between states (e.g. shaking, rotating) during travel."
+            },
+            {
+              "completed": false,
+              "text": "Transition shapes/frames are defined and implemented (4+ keyframes sketched)."
+            },
+            {
+              "completed": false,
+              "text": "A ship data dashboard is displayed during transit showing relevant flight info."
+            },
+            {
+              "completed": false,
+              "text": "Rocket rotation animation plays as the ship progresses along the route."
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "A \"shop\" or action button is accessible during the transit phase."
+            },
+            {
+              "completed": true,
+              "text": "The ship visually transitions between states (e.g. shaking, rotating) during travel."
+            },
+            {
+              "completed": true,
+              "text": "Transition shapes/frames are defined and implemented (4+ keyframes sketched)."
+            },
+            {
+              "completed": false,
+              "text": "A ship data dashboard is displayed during transit showing relevant flight info."
+            },
+            {
+              "completed": false,
+              "text": "Rocket rotation animation plays as the ship progresses along the route."
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Ship transit animation and travel UX (P65 style)",
+        "description": "Notes from physical notebook page 119 (28.02.26). While thinking about P65-style ship building, ideas came up around the in-transit travel experience and how the ship animates during travel.\n\n**Transcribed notes (page 119, 28.02.26):**\n\n> P65 → style Ship Building — this morning and it got me on the subject of travel:\n>\n> - → shop button during transit\n> - → actual transitions / shaking point — a chain ... higher ... (not points)\n> - → actual transition shapes\n> - → ship data dashboard\n> - → rocket begins to rotate\n>\n> → fully, rocket onto [progress bar], sides → (this part & [sketch])\n> → Now, the last transition (arguably [fine] now)\n\nSketches show 4 frames of rocket/ship orientation representing distinct transition states during travel.\n\nContext note from same page (25.02.26):\n\n> Orbital → (the demo is a rooms mockup — there needs to be stories of rooms)\n> Art can be about finding, lose more journeys",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "transit",
+          "animation",
+          "UX",
+          "ship",
+          "experiment1"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "A \"shop\" or action button is accessible during the transit phase."
+          },
+          {
+            "completed": true,
+            "text": "The ship visually transitions between states (e.g. shaking, rotating) during travel."
+          },
+          {
+            "completed": true,
+            "text": "Transition shapes/frames are defined and implemented (4+ keyframes sketched)."
+          },
+          {
+            "completed": false,
+            "text": "A ship data dashboard is displayed during transit showing relevant flight info."
+          },
+          {
+            "completed": false,
+            "text": "Rocket rotation animation plays as the ship progresses along the route."
+          }
+        ],
+        "implementationNotes": "Source: handwritten notebook page 119, photos IMG_1832.jpeg in the Rooms & Upgrades Obsidian note."
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "r8mxvw",
+      "version": 5,
+      "timestamp": "2026-03-06T04:17:51.777Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "A \"shop\" or action button is accessible during the transit phase."
+            },
+            {
+              "completed": true,
+              "text": "The ship visually transitions between states (e.g. shaking, rotating) during travel."
+            },
+            {
+              "completed": true,
+              "text": "Transition shapes/frames are defined and implemented (4+ keyframes sketched)."
+            },
+            {
+              "completed": false,
+              "text": "A ship data dashboard is displayed during transit showing relevant flight info."
+            },
+            {
+              "completed": false,
+              "text": "Rocket rotation animation plays as the ship progresses along the route."
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "A \"shop\" or action button is accessible during the transit phase."
+            },
+            {
+              "completed": true,
+              "text": "The ship visually transitions between states (e.g. shaking, rotating) during travel."
+            },
+            {
+              "completed": true,
+              "text": "Transition shapes/frames are defined and implemented (4+ keyframes sketched)."
+            },
+            {
+              "completed": true,
+              "text": "A ship data dashboard is displayed during transit showing relevant flight info."
+            },
+            {
+              "completed": false,
+              "text": "Rocket rotation animation plays as the ship progresses along the route."
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Ship transit animation and travel UX (P65 style)",
+        "description": "Notes from physical notebook page 119 (28.02.26). While thinking about P65-style ship building, ideas came up around the in-transit travel experience and how the ship animates during travel.\n\n**Transcribed notes (page 119, 28.02.26):**\n\n> P65 → style Ship Building — this morning and it got me on the subject of travel:\n>\n> - → shop button during transit\n> - → actual transitions / shaking point — a chain ... higher ... (not points)\n> - → actual transition shapes\n> - → ship data dashboard\n> - → rocket begins to rotate\n>\n> → fully, rocket onto [progress bar], sides → (this part & [sketch])\n> → Now, the last transition (arguably [fine] now)\n\nSketches show 4 frames of rocket/ship orientation representing distinct transition states during travel.\n\nContext note from same page (25.02.26):\n\n> Orbital → (the demo is a rooms mockup — there needs to be stories of rooms)\n> Art can be about finding, lose more journeys",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "transit",
+          "animation",
+          "UX",
+          "ship",
+          "experiment1"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "A \"shop\" or action button is accessible during the transit phase."
+          },
+          {
+            "completed": true,
+            "text": "The ship visually transitions between states (e.g. shaking, rotating) during travel."
+          },
+          {
+            "completed": true,
+            "text": "Transition shapes/frames are defined and implemented (4+ keyframes sketched)."
+          },
+          {
+            "completed": true,
+            "text": "A ship data dashboard is displayed during transit showing relevant flight info."
+          },
+          {
+            "completed": false,
+            "text": "Rocket rotation animation plays as the ship progresses along the route."
+          }
+        ],
+        "implementationNotes": "Source: handwritten notebook page 119, photos IMG_1832.jpeg in the Rooms & Upgrades Obsidian note."
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "r8mxvw",
+      "version": 6,
+      "timestamp": "2026-03-06T04:17:52.005Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "A \"shop\" or action button is accessible during the transit phase."
+            },
+            {
+              "completed": true,
+              "text": "The ship visually transitions between states (e.g. shaking, rotating) during travel."
+            },
+            {
+              "completed": true,
+              "text": "Transition shapes/frames are defined and implemented (4+ keyframes sketched)."
+            },
+            {
+              "completed": true,
+              "text": "A ship data dashboard is displayed during transit showing relevant flight info."
+            },
+            {
+              "completed": false,
+              "text": "Rocket rotation animation plays as the ship progresses along the route."
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "A \"shop\" or action button is accessible during the transit phase."
+            },
+            {
+              "completed": true,
+              "text": "The ship visually transitions between states (e.g. shaking, rotating) during travel."
+            },
+            {
+              "completed": true,
+              "text": "Transition shapes/frames are defined and implemented (4+ keyframes sketched)."
+            },
+            {
+              "completed": true,
+              "text": "A ship data dashboard is displayed during transit showing relevant flight info."
+            },
+            {
+              "completed": true,
+              "text": "Rocket rotation animation plays as the ship progresses along the route."
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Ship transit animation and travel UX (P65 style)",
+        "description": "Notes from physical notebook page 119 (28.02.26). While thinking about P65-style ship building, ideas came up around the in-transit travel experience and how the ship animates during travel.\n\n**Transcribed notes (page 119, 28.02.26):**\n\n> P65 → style Ship Building — this morning and it got me on the subject of travel:\n>\n> - → shop button during transit\n> - → actual transitions / shaking point — a chain ... higher ... (not points)\n> - → actual transition shapes\n> - → ship data dashboard\n> - → rocket begins to rotate\n>\n> → fully, rocket onto [progress bar], sides → (this part & [sketch])\n> → Now, the last transition (arguably [fine] now)\n\nSketches show 4 frames of rocket/ship orientation representing distinct transition states during travel.\n\nContext note from same page (25.02.26):\n\n> Orbital → (the demo is a rooms mockup — there needs to be stories of rooms)\n> Art can be about finding, lose more journeys",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "transit",
+          "animation",
+          "UX",
+          "ship",
+          "experiment1"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "A \"shop\" or action button is accessible during the transit phase."
+          },
+          {
+            "completed": true,
+            "text": "The ship visually transitions between states (e.g. shaking, rotating) during travel."
+          },
+          {
+            "completed": true,
+            "text": "Transition shapes/frames are defined and implemented (4+ keyframes sketched)."
+          },
+          {
+            "completed": true,
+            "text": "A ship data dashboard is displayed during transit showing relevant flight info."
+          },
+          {
+            "completed": true,
+            "text": "Rocket rotation animation plays as the ship progresses along the route."
+          }
+        ],
+        "implementationNotes": "Source: handwritten notebook page 119, photos IMG_1832.jpeg in the Rooms & Upgrades Obsidian note."
+      }
+    },
+    {
+      "id": "v7",
+      "taskId": "r8mxvw",
+      "version": 7,
+      "timestamp": "2026-03-06T04:19:24.913Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "Source: handwritten notebook page 119, photos IMG_1832.jpeg in the Rooms & Upgrades Obsidian note.",
+          "newValue": "## Summary\n- Rocket follows arc from Earth orbit position to viewport center during TRAVEL, with sinusoidal Y offset for visual depth\n- Rotation tracks travel direction (atan2 with sprite correction)\n- 0.6s decaying shake on travel start\n- Ship Status button (top-right, TRAVEL phase only) toggles panel showing vessel name + installed rooms from RoomCatalog\n- Travel dashboard enhanced: distance, ETA MM:SS countdown\n- All 4 phases visually distinct; 23/23 GDScript tests pass"
+        }
+      ],
+      "snapshot": {
+        "title": "Ship transit animation and travel UX (P65 style)",
+        "description": "Notes from physical notebook page 119 (28.02.26). While thinking about P65-style ship building, ideas came up around the in-transit travel experience and how the ship animates during travel.\n\n**Transcribed notes (page 119, 28.02.26):**\n\n> P65 → style Ship Building — this morning and it got me on the subject of travel:\n>\n> - → shop button during transit\n> - → actual transitions / shaking point — a chain ... higher ... (not points)\n> - → actual transition shapes\n> - → ship data dashboard\n> - → rocket begins to rotate\n>\n> → fully, rocket onto [progress bar], sides → (this part & [sketch])\n> → Now, the last transition (arguably [fine] now)\n\nSketches show 4 frames of rocket/ship orientation representing distinct transition states during travel.\n\nContext note from same page (25.02.26):\n\n> Orbital → (the demo is a rooms mockup — there needs to be stories of rooms)\n> Art can be about finding, lose more journeys",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "transit",
+          "animation",
+          "UX",
+          "ship",
+          "experiment1"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "A \"shop\" or action button is accessible during the transit phase."
+          },
+          {
+            "completed": true,
+            "text": "The ship visually transitions between states (e.g. shaking, rotating) during travel."
+          },
+          {
+            "completed": true,
+            "text": "Transition shapes/frames are defined and implemented (4+ keyframes sketched)."
+          },
+          {
+            "completed": true,
+            "text": "A ship data dashboard is displayed during transit showing relevant flight info."
+          },
+          {
+            "completed": true,
+            "text": "Rocket rotation animation plays as the ship progresses along the route."
+          }
+        ],
+        "implementationNotes": "## Summary\n- Rocket follows arc from Earth orbit position to viewport center during TRAVEL, with sinusoidal Y offset for visual depth\n- Rotation tracks travel direction (atan2 with sprite correction)\n- 0.6s decaying shake on travel start\n- Ship Status button (top-right, TRAVEL phase only) toggles panel showing vessel name + installed rooms from RoomCatalog\n- Travel dashboard enhanced: distance, ETA MM:SS countdown\n- All 4 phases visually distinct; 23/23 GDScript tests pass"
+      }
+    },
+    {
+      "id": "v8",
+      "taskId": "r8mxvw",
+      "version": 8,
+      "timestamp": "2026-03-06T04:19:25.129Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Ship transit animation and travel UX (P65 style)",
+        "description": "Notes from physical notebook page 119 (28.02.26). While thinking about P65-style ship building, ideas came up around the in-transit travel experience and how the ship animates during travel.\n\n**Transcribed notes (page 119, 28.02.26):**\n\n> P65 → style Ship Building — this morning and it got me on the subject of travel:\n>\n> - → shop button during transit\n> - → actual transitions / shaking point — a chain ... higher ... (not points)\n> - → actual transition shapes\n> - → ship data dashboard\n> - → rocket begins to rotate\n>\n> → fully, rocket onto [progress bar], sides → (this part & [sketch])\n> → Now, the last transition (arguably [fine] now)\n\nSketches show 4 frames of rocket/ship orientation representing distinct transition states during travel.\n\nContext note from same page (25.02.26):\n\n> Orbital → (the demo is a rooms mockup — there needs to be stories of rooms)\n> Art can be about finding, lose more journeys",
+        "status": "done",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "transit",
+          "animation",
+          "UX",
+          "ship",
+          "experiment1"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "A \"shop\" or action button is accessible during the transit phase."
+          },
+          {
+            "completed": true,
+            "text": "The ship visually transitions between states (e.g. shaking, rotating) during travel."
+          },
+          {
+            "completed": true,
+            "text": "Transition shapes/frames are defined and implemented (4+ keyframes sketched)."
+          },
+          {
+            "completed": true,
+            "text": "A ship data dashboard is displayed during transit showing relevant flight info."
+          },
+          {
+            "completed": true,
+            "text": "Rocket rotation animation plays as the ship progresses along the route."
+          }
+        ],
+        "implementationNotes": "## Summary\n- Rocket follows arc from Earth orbit position to viewport center during TRAVEL, with sinusoidal Y offset for visual depth\n- Rotation tracks travel direction (atan2 with sprite correction)\n- 0.6s decaying shake on travel start\n- Ship Status button (top-right, TRAVEL phase only) toggles panel showing vessel name + installed rooms from RoomCatalog\n- Travel dashboard enhanced: distance, ETA MM:SS countdown\n- All 4 phases visually distinct; 23/23 GDScript tests pass"
+      }
+    }
+  ]
+}

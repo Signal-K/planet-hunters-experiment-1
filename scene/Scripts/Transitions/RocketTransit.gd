@@ -13,6 +13,9 @@ const EARTH_TEXTURE := preload("res://assets/Backdrops/Earth1.png")
 
 const TRAVEL_DISTANCE_TOTAL_KM := 420000.0
 const NumberFormat = preload("res://Scripts/Utils/NumberFormat.gd")
+const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
+const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
+const MiningInventory = preload("res://Scripts/Utils/MiningInventory.gd")
 const MIN_TIMELINE_EPSILON := 0.01
 
 @onready var background: TextureRect = $Background
@@ -99,7 +102,7 @@ func _setup_background() -> void:
 func _setup_label() -> void:
 	if status_label == null:
 		return
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var rm = RocketsManager
 	if rm:
 		var target = rm.get_preview_target()
 		var label = str(target.get("label", ""))
@@ -113,7 +116,7 @@ func _setup_label() -> void:
 	status_label.position = Vector2(24, 24)
 	status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	status_label.vertical_alignment = VERTICAL_ALIGNMENT_TOP
-	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
+	var panel_style = PanelStyle
 	panel_style.apply_title(status_label)
 
 func _recalculate_layout() -> void:
@@ -202,7 +205,7 @@ func _update_orbit(delta: float) -> void:
 		rocket_container.position = _orbit_center + Vector2(cos(_orbit_angle), sin(_orbit_angle)) * _orbit_radius
 
 func _setup_panels() -> void:
-	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
+	var panel_style = PanelStyle
 	if travel_panel:
 		panel_style.apply_panel(travel_panel)
 		panel_style.apply_title(travel_title)
@@ -218,7 +221,7 @@ func _setup_panels() -> void:
 	_build_mining_panel()
 
 func _build_mining_panel() -> void:
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var rm = RocketsManager
 	var target := {}
 	if rm:
 		target = rm.get_preview_target()
@@ -227,7 +230,7 @@ func _build_mining_panel() -> void:
 		mining_summary.text = "Remaining: 0 kg"
 		mining_total.text = "Total Collected: 0 kg"
 		return
-	var inv = preload("res://Scripts/Utils/MiningInventory.gd")
+	var inv = MiningInventory
 	var state = inv.load_state()
 	var targets = state.get("targets", {})
 	var entry = targets.get(target_id, {})
@@ -245,7 +248,7 @@ func _setup_back_button() -> void:
 	back_button.text = "Back"
 	back_button.custom_minimum_size = Vector2(140, 44)
 	back_button.position = Vector2(24, 64)
-	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
+	var panel_style = PanelStyle
 	panel_style.apply_button(back_button, false)
 	back_button.pressed.connect(_on_back_pressed)
 
@@ -276,7 +279,7 @@ func _advance_to_preview() -> void:
 		tree.change_scene_to_file(PREVIEW_SCENE_PATH)
 
 func _resume_from_elapsed_outbound_time() -> void:
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var rm = RocketsManager
 	if not rm:
 		return
 	var target = rm.get_preview_target()
