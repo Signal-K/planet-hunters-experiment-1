@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3 uid="uid://orbit_sale_preview"]
+[gd_scene load_steps=8 format=3 uid="uid://orbit_sale_preview"]
 
 [ext_resource type="Script" path="res://Scripts/Earth/OrbitSalePreview.gd" id="1"]
 [ext_resource type="Texture2D" path="res://assets/Backdrops/Earth1.png" id="2"]
@@ -6,6 +6,7 @@
 [ext_resource type="Script" path="res://Scripts/Earth/Environment/EarthSkyNightFilterEvent.gd" id="4"]
 [ext_resource type="Script" path="res://Scripts/Earth/Environment/EarthStarFieldEvent.gd" id="5"]
 [ext_resource type="Script" path="res://Scripts/Earth/Environment/EarthCloudDriftEvent.gd" id="6"]
+[ext_resource type="Script" path="res://Scripts/Earth/Environment/EarthSkyMapEvent.gd" id="7"]
 
 [node name="OrbitSalePreview" type="Node2D"]
 script = ExtResource("1")
@@ -21,6 +22,9 @@ backdrop_paths = Array[NodePath]([NodePath("../EarthBackdrop")])
 
 [node name="StarFieldEvent" type="Node2D" parent="."]
 script = ExtResource("5")
+
+[node name="SkyMapEvent" type="Node2D" parent="."]
+script = ExtResource("7")
 
 [node name="CloudDriftEvent" type="Node2D" parent="."]
 script = ExtResource("6")

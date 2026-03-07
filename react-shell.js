@@ -48,10 +48,18 @@ function vibrate(pattern) {
 }
 
 function isPwaMode() {
-  return (
-    window.matchMedia("(display-mode: standalone)").matches ||
-    window.navigator.standalone === true
-  );
+  if (typeof window === "undefined") return false;
+  const displayModes = ["standalone", "fullscreen", "minimal-ui"];
+  const displayModeMatch = displayModes.some((mode) => {
+    try {
+      return window.matchMedia(`(display-mode: ${mode})`).matches;
+    } catch (_error) {
+      return false;
+    }
+  });
+  const iosStandalone = window.navigator && window.navigator.standalone === true;
+  const fullscreenElement = typeof document !== "undefined" && !!document.fullscreenElement;
+  return displayModeMatch || iosStandalone || fullscreenElement;
 }
 
 function isIosDevice() {
@@ -645,6 +653,7 @@ function App() {
   const [installPrompt, setInstallPrompt] = useState(null);
   const [showMobileBanner, setShowMobileBanner] = useState(false);
   const [showIosHint, setShowIosHint] = useState(false);
+  const [showInstallHint, setShowInstallHint] = useState(false);
   const [levelUpBanner, setLevelUpBanner] = useState(null); // { level, hint }
   const levelUpTimerRef = useRef(null);
   const [isPortrait, setIsPortrait] = useState(
@@ -786,15 +795,21 @@ function App() {
   }, []);
 
   const handleInstallApp = useCallback(async () => {
+    setShowInstallHint(false);
     if (isIos) {
       setShowIosHint((h) => !h);
       return;
     }
     if (installPrompt) {
       await installPrompt.prompt();
+      try {
+        await installPrompt.userChoice;
+      } catch (_error) {}
       setInstallPrompt(null);
+      setShowMobileBanner(false);
+      return;
     }
-    setShowMobileBanner(false);
+    setShowInstallHint(true);
   }, [installPrompt, isIos]);
 
   const markerText = useMemo(() => {
@@ -900,7 +915,15 @@ function App() {
   if (isPwa) {
     return React.createElement(
       "div",
-      { style: { display: "flex", flexDirection: "column", height: "100svh", background: "#000" } },
+      {
+        style: {
+          display: "flex",
+          flexDirection: "column",
+          height: "100svh",
+          minHeight: "100svh",
+          background: "#000",
+        },
+      },
       React.createElement(
         "div",
         {
@@ -908,7 +931,7 @@ function App() {
             display: "flex",
             alignItems: "center",
             gap: "12px",
-            padding: "6px 14px",
+            padding: "max(6px, env(safe-area-inset-top)) 14px 6px 14px",
             background: "#05080f",
             borderBottom: "1px solid #1a2340",
             flexShrink: 0,
@@ -950,7 +973,14 @@ function App() {
         src: gameSrc,
         title: "Planet Hunters Game",
         allow: "fullscreen",
-        style: { flex: 1, border: 0, display: "block", background: "#000", width: "100%" },
+        style: {
+          flex: 1,
+          border: 0,
+          display: "block",
+          background: "#000",
+          width: "100%",
+          height: "100%",
+        },
         onError: () => setStorageStatus("Game load error"),
         onLoad: () => {
           saveProgress({ marker: "game-loaded", updatedAt: new Date().toISOString() }, setProgress);
@@ -983,6 +1013,11 @@ function App() {
             },
           },
           React.createElement(
+            "p",
+            { style: { margin: 0, fontSize: "13px", color: "#9cb0e8", textAlign: "center" } },
+            "Install for fullscreen play and faster relaunch."
+          ),
+          React.createElement(
             "div",
             { style: { display: "flex", gap: "8px" } },
             React.createElement(
@@ -1002,25 +1037,23 @@ function App() {
               },
               "Open Fullscreen"
             ),
-            isIos || installPrompt
-              ? React.createElement(
-                  "button",
-                  {
-                    style: {
-                      flex: 1,
-                      padding: "10px",
-                      background: "#1e3a1a",
-                      color: "#fff",
-                      border: "none",
-                      borderRadius: "8px",
-                      fontSize: "14px",
-                      cursor: "pointer",
-                    },
-                    onClick: handleInstallApp,
-                  },
-                  isIos ? "Add to Home Screen" : "Install App"
-                )
-              : null,
+            React.createElement(
+              "button",
+              {
+                style: {
+                  flex: 1,
+                  padding: "10px",
+                  background: "#1e3a1a",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "8px",
+                  fontSize: "14px",
+                  cursor: "pointer",
+                },
+                onClick: handleInstallApp,
+              },
+              isIos ? "Add to Home Screen" : "Install App"
+            ),
             React.createElement(
               "button",
               {
@@ -1043,6 +1076,13 @@ function App() {
                 "p",
                 { style: { margin: 0, fontSize: "13px", color: "#8899cc", textAlign: "center" } },
                 "Tap the Share button (\uD83D\uDCE4) then \u201cAdd to Home Screen\u201d"
+              )
+            : null,
+          showInstallHint
+            ? React.createElement(
+                "p",
+                { style: { margin: 0, fontSize: "13px", color: "#8899cc", textAlign: "center" } },
+                "Install prompt unavailable in this browser session. Use your browser menu to install."
               )
             : null
         )

@@ -35,7 +35,7 @@ Migrate remaining ad-hoc style code to shared PanelStyle/Nebula primitives and k
 
 ✓ Added explicit intentional opt-out comment for TutorialCoachOverlay highlight style.
 
-✓ Documented shared style usage in @doc/nebula-theme-implementation.
+✓ Documented shared style usage in @doc/dev/nebula-theme-implementation.
 
 Note: verification is static/code-level only in this pass (no Godot visual runtime executed).
 <!-- SECTION:NOTES:END -->

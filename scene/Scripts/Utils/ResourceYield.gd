@@ -25,14 +25,15 @@ const MINERAL_RARITY := {
 static func get_yield_for_target(target_id: String, target_type: String, level: int = 1, cargo_multiplier: float = 1.0) -> Dictionary:
 	var normalized_type = _normalize_type(target_type)
 	var base_capacity = PLANET_CAPACITY if normalized_type == "planet" else int(round(PLANET_CAPACITY * ASTEROID_RATIO))
-	var mineable_pct = clamp(BASE_MINEABLE_PCT + MINEABLE_PCT_STEP * max(level - 1, 0), BASE_MINEABLE_PCT, MAX_MINEABLE_PCT)
 	var effective_cargo_multiplier = max(cargo_multiplier, 0.1)
 	var target_multiplier = _target_capacity_multiplier(target_id)
-	var capacity = int(round(base_capacity * mineable_pct * effective_cargo_multiplier * target_multiplier))
 	var hash_util = preload("res://Scripts/Utils/HashUtils.gd")
 	var seed = hash_util.simple_hash("%s:%s" % [target_id, normalized_type])
 	var rng = RandomNumberGenerator.new()
 	rng.seed = seed
+	var signature = _build_generation_signature(target_id, normalized_type, level, seed)
+	var mineable_pct = float(signature.get("mineable_pct", BASE_MINEABLE_PCT))
+	var capacity = int(round(base_capacity * mineable_pct * effective_cargo_multiplier * target_multiplier))
 
 	var level_factor = clamp(float(max(level - 1, 0)) / 4.0, 0.0, 1.0)
 	var weights := []
@@ -68,7 +69,34 @@ static func get_yield_for_target(target_id: String, target_type: String, level: 
 		"mineable_pct": mineable_pct,
 		"cargo_multiplier": effective_cargo_multiplier,
 		"capacity": capacity,
-		"minerals": minerals
+		"minerals": minerals,
+		"generation_signature": signature
+	}
+
+static func _build_generation_signature(target_id: String, target_type: String, level: int, seed: int) -> Dictionary:
+	var rng = RandomNumberGenerator.new()
+	rng.seed = seed
+	var base_pct = clamp(
+		BASE_MINEABLE_PCT + MINEABLE_PCT_STEP * max(level - 1, 0),
+		BASE_MINEABLE_PCT,
+		MAX_MINEABLE_PCT
+	)
+	# Deterministic per-target offset keeps same-level targets from feeling identical.
+	var pct_jitter = rng.randf_range(-0.08, 0.08)
+	var mineable_pct = clamp(base_pct + pct_jitter, BASE_MINEABLE_PCT, MAX_MINEABLE_PCT)
+	return {
+		"seed": seed,
+		"target_id": target_id,
+		"target_type": target_type,
+		"mineable_pct": mineable_pct,
+		"terrain": {
+			"roughness": rng.randf_range(0.82, 1.24),
+			"peak_chance_boost": rng.randf_range(-0.03, 0.05),
+			"valley_chance_boost": rng.randf_range(-0.02, 0.04),
+			"height_bias": rng.randf_range(-28.0, 34.0),
+			"landmark_cluster_bias": rng.randf_range(0.2, 0.85),
+			"landmark_cluster_count": rng.randi_range(2, 5)
+		}
 	}
 
 static func _normalize_type(value: String) -> String:

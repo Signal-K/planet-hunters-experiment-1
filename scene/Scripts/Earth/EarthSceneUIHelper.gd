@@ -55,8 +55,8 @@ func setup_buttons() -> void:
 
 	# ── Enforce minimum tap-target heights for mobile ────────────────────────
 	for btn in [back_btn, forward_btn, menu_btn, market_btn, space_map_btn]:
-		_set_min(btn, 160, 120)
-	_set_min(new_mission_btn, 220, 120)
+		_set_min(btn, 152, 108)
+	_set_min(new_mission_btn, 210, 108)
 
 	# Remove the gap between buttons so dividers butt up cleanly
 	container.add_theme_constant_override("separation", 0)
@@ -107,8 +107,8 @@ func _style_nav_btn(btn: Button, is_amber: bool, no_right_divider: bool) -> void
 	normal.border_width_right = 0 if no_right_divider else 1
 	normal.border_color = divider_color
 	normal.set_corner_radius_all(0)
-	normal.content_margin_left   = 0
-	normal.content_margin_right  = 0
+	normal.content_margin_left   = 12
+	normal.content_margin_right  = 12
 	normal.content_margin_top    = 8
 	normal.content_margin_bottom = 8
 
@@ -118,8 +118,8 @@ func _style_nav_btn(btn: Button, is_amber: bool, no_right_divider: bool) -> void
 	hover.border_width_right = normal.border_width_right
 	hover.border_color = divider_color
 	hover.set_corner_radius_all(0)
-	hover.content_margin_left   = 0
-	hover.content_margin_right  = 0
+	hover.content_margin_left   = 12
+	hover.content_margin_right  = 12
 	hover.content_margin_top    = 8
 	hover.content_margin_bottom = 8
 
