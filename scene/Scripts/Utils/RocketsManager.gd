@@ -151,6 +151,8 @@ const MISSION5_CONTRACTOR_OFFERS := [
 		"payout_bonus_mult": 1.15  # Spec: 1.15x payout (capped at 1.4B)
 	}
 ]
+const FIRST_MISSION_PAYOUT_MULT := 1.5
+const EARLY_MISSION_PAYOUT_TARGET_MULT := 1.15
 
 const STARTER_CONTRACTOR_OFFERS := [
 	{
@@ -1140,6 +1142,19 @@ static func get_target_level(target_id: String, target_type: String) -> int:
 		if str(list[i]) == target_id:
 			return i + 1
 	return 0
+
+static func calibrate_onboarding_payout(raw_net: int, rocket_id: String) -> int:
+	var base = max(int(raw_net), 0)
+	var completed = get_completed_mission_count()
+	var rocket_cost = max(RocketSpecs.get_cost(rocket_id), 0)
+	if rocket_cost <= 0:
+		return base
+	if completed <= 0:
+		var first_floor = int(round(float(rocket_cost) * FIRST_MISSION_PAYOUT_MULT))
+		return max(base, first_floor)
+	var target = int(round(float(rocket_cost) * EARLY_MISSION_PAYOUT_TARGET_MULT))
+	# Softly nudge early repeat runs back toward normal economy.
+	return int(round(lerp(float(base), float(target), 0.35)))
 
 static func set_destroyed(rocket_id: String) -> bool:
 	var s = load_state()

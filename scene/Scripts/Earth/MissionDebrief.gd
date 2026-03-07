@@ -51,6 +51,8 @@ var _starter_order := {}
 var _starter_order_complete := false
 var _starter_affinity_after := 0
 var _mining_report := {}
+var _guide_button: Button = null
+var _guide_panel: PanelContainer = null
 
 func _ready() -> void:
 	var panel_style = PanelStyle
@@ -81,6 +83,7 @@ func _ready() -> void:
 	_resolve_starter_contract_mode()
 	_update_labels()
 	_build_science_card()
+	_setup_button_handbook()
 
 	sell_orbit_button.pressed.connect(func(): _sell(false))
 	sell_earth_button.pressed.connect(func(): _sell(true))
@@ -93,6 +96,50 @@ func _ready() -> void:
 	back_button.pressed.connect(func(): _return_to_base())
 	if _starter_contract_mode:
 		_complete_starter_contract_debrief()
+
+func _setup_button_handbook() -> void:
+	var root = get_node_or_null("UI/Root") as Control
+	if root == null:
+		return
+	_guide_button = Button.new()
+	_guide_button.text = "? Guide"
+	_guide_button.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	_guide_button.offset_left = -150
+	_guide_button.offset_right = -24
+	_guide_button.offset_top = 20
+	_guide_button.offset_bottom = 58
+	PanelStyle.apply_button(_guide_button, false)
+	_guide_button.pressed.connect(_toggle_button_handbook)
+	root.add_child(_guide_button)
+
+	_guide_panel = PanelContainer.new()
+	_guide_panel.visible = false
+	_guide_panel.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	_guide_panel.offset_left = -440
+	_guide_panel.offset_right = -24
+	_guide_panel.offset_top = 66
+	_guide_panel.offset_bottom = 316
+	PanelStyle.apply_panel(_guide_panel)
+	root.add_child(_guide_panel)
+
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 6)
+	_guide_panel.add_child(vbox)
+	var title = Label.new()
+	title.text = "Debrief Button Guide"
+	PanelStyle.apply_title(title)
+	title.add_theme_font_size_override("font_size", 20)
+	vbox.add_child(title)
+	var body = Label.new()
+	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	body.text = "Sell in Orbit: quick payout now.\nBring to Earth: sell at Earth market value.\nKeep Cargo: store minerals for later.\nScrap/Salvage: convert ship to refunds.\nLeave in Orbit: keep ship for later missions.\nReturn to Base: exit debrief flow."
+	PanelStyle.apply_body(body)
+	vbox.add_child(body)
+
+func _toggle_button_handbook() -> void:
+	if _guide_panel == null:
+		return
+	_guide_panel.visible = not _guide_panel.visible
 
 func _load_returned_mission() -> Dictionary:
 	var rm = RocketsManager
@@ -332,6 +379,7 @@ func _sell(to_earth: bool) -> void:
 	var rm = RocketsManager
 	if rm:
 		net = int(rm.apply_mission5_payout_terms(net, str(_subcontractor.get("id", ""))))
+		net = int(rm.calibrate_onboarding_payout(net, str(_returned.get("rocket_id", ""))))
 	var app = _get_app_controller()
 	if app:
 		app.add_franc_balance(net, "mission_sale")

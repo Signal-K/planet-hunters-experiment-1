@@ -1,6 +1,8 @@
 {
   "unlocked": [
-    "starterrocket1"
+    "starterrocket1",
+    "starterrocket2",
+    "starterrocket3"
   ],
   "placed": [
   ],
@@ -10,16 +12,51 @@
   ],
   "missions": [
   ],
-  "selected_target": "",
+  "selected_target": "101445733",
   "preview_target": {
+    "id": "practice-asteroid-warmup",
+    "label": "Academy Warm-Up Asteroid",
+    "type": "asteroid",
+    "rocket_id": ""
   },
   "detected_targets": [
+    {
+      "id": "101445733",
+      "label": "101445733",
+      "type": "asteroid"
+    },
+    {
+      "id": "63768316",
+      "label": "63768316",
+      "type": "asteroid"
+    },
+    {
+      "id": "68115570",
+      "label": "68115570",
+      "type": "asteroid"
+    },
+    {
+      "id": "63768664",
+      "label": "63768664",
+      "type": "asteroid"
+    },
+    {
+      "id": "63769326",
+      "label": "63769326",
+      "type": "asteroid"
+    }
   ],
   "seen_asteroids": [
+    "101445733"
   ],
   "seen_planets": [
   ],
   "scan_counts": {
+    "asteroid:101445733": 3.0,
+    "asteroid:63768316": 3.0,
+    "asteroid:68115570": 3.0,
+    "asteroid:63768664": 3.0,
+    "asteroid:63769326": 3.0
   },
   "status_changed_at": {
   },

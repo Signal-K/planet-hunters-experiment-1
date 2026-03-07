@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3 uid="uid://c8xt1j3h4kn2p"]
+[gd_scene load_steps=8 format=3 uid="uid://c8xt1j3h4kn2p"]
 
 [ext_resource type="Texture2D" uid="uid://bni1814mlo7mv" path="res://assets/Backdrops/Earth1.png" id="1_earth_bg"]
 [ext_resource type="Script" path="res://Scenes/Earth/earth_scene_base.gd" id="1_base_script"]
@@ -6,6 +6,7 @@
 [ext_resource type="Script" path="res://Scripts/Earth/Environment/EarthSkyNightFilterEvent.gd" id="3_sky_event"]
 [ext_resource type="Script" path="res://Scripts/Earth/Environment/EarthStarFieldEvent.gd" id="4_star_event"]
 [ext_resource type="Script" path="res://Scripts/Earth/Environment/EarthCloudDriftEvent.gd" id="5_cloud_event"]
+[ext_resource type="Script" path="res://Scripts/Earth/Environment/EarthSkyMapEvent.gd" id="6_skymap_event"]
 
 [node name="EarthSceneTemplate" type="Node2D"]
 script = ExtResource("1_base_script")
@@ -32,6 +33,9 @@ backdrop_paths = Array[NodePath]([NodePath("../BackgroundSprite"), NodePath("../
 
 [node name="StarFieldEvent" type="Node2D" parent="BackgroundLayer"]
 script = ExtResource("4_star_event")
+
+[node name="SkyMapEvent" type="Node2D" parent="BackgroundLayer"]
+script = ExtResource("6_skymap_event")
 
 [node name="CloudDriftEvent" type="Node2D" parent="BackgroundLayer"]
 script = ExtResource("5_cloud_event")

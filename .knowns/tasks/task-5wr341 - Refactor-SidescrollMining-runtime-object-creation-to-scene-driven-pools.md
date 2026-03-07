@@ -31,7 +31,7 @@ Move visual object creation out of runtime script into scene/template pools to i
 ## Implementation Plan
 
 <!-- SECTION:PLAN:BEGIN -->
-1. Audit SidescrollMining runtime-created visual/game objects against @doc/scene-vs-script-refactoring-guide.
+1. Audit SidescrollMining runtime-created visual/game objects against @doc/dev/scene-vs-script-refactoring-guide.
 2. Move repeated runtime-created objects to scene-managed pools/templates (drone deployment and background setup).
 3. Keep mining reward/collection flow unchanged and add notes/tests where practical for regression confidence.
 <!-- SECTION:PLAN:END -->

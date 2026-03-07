@@ -7,6 +7,7 @@ var scene_manager: SceneManager
 var ui_manager: UIManager
 const PREVIEW_SCENE_PATH := "res://Scenes/UI/AsteroidPreview/asteroid_preview.tscn"
 const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
+const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
 const SR2_UNLOCK_POPUP_PATH := "user://rocket_unlock_popups.cfg"
 const SR2_UNLOCK_SECTION := "popups"
 const SR2_UNLOCK_KEY := "starterrocket2_seen"
@@ -89,6 +90,9 @@ func _setup_buttons() -> void:
 	_load_icon(market_btn,      "res://Resources/Icons/nav_market.svg",  false)
 	_load_icon(space_map_btn,   "res://Resources/Icons/nav_map.svg",     false)
 	_load_icon(new_mission_btn, "res://Resources/Icons/nav_mission.svg", true)
+	for btn in [back_btn, forward_btn, menu_btn, market_btn, space_map_btn]:
+		_set_nav_min(btn, 152, 108)
+	_set_nav_min(new_mission_btn, 210, 108)
 
 	# ── Connect signals ───────────────────────────────────────────────────────
 	back_btn.pressed.connect(_on_back_button_pressed)
@@ -112,6 +116,8 @@ func _style_nav_slot(btn: Button, is_amber: bool) -> void:
 	normal.border_width_right = 0 if is_amber else 1
 	normal.border_color = div
 	normal.set_corner_radius_all(0)
+	normal.content_margin_left   = 12
+	normal.content_margin_right  = 12
 	normal.content_margin_top    = 8
 	normal.content_margin_bottom = 8
 
@@ -120,6 +126,8 @@ func _style_nav_slot(btn: Button, is_amber: bool) -> void:
 	hover.border_width_right = normal.border_width_right
 	hover.border_color = div
 	hover.set_corner_radius_all(0)
+	hover.content_margin_left   = 12
+	hover.content_margin_right  = 12
 	hover.content_margin_top    = 8
 	hover.content_margin_bottom = 8
 
@@ -149,6 +157,12 @@ func _load_icon(btn: Button, path: String, is_amber: bool) -> void:
 	btn.add_theme_color_override("icon_normal_color",  col)
 	btn.add_theme_color_override("icon_hover_color",   col)
 	btn.add_theme_color_override("icon_pressed_color", col)
+
+func _set_nav_min(btn: Button, min_w: float, min_h: float) -> void:
+	if btn == null:
+		return
+	var current := btn.custom_minimum_size
+	btn.custom_minimum_size = Vector2(max(current.x, min_w), max(current.y, min_h))
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not (event is InputEventMouseButton):
@@ -258,7 +272,7 @@ func _maybe_show_starterrocket2_unlock_popup() -> void:
 func _show_starterrocket2_unlock_popup() -> void:
 	var overlay = ColorRect.new()
 	overlay.name = "StarterRocket2UnlockOverlay"
-	overlay.color = Color(0, 0, 0, 0.62)
+	overlay.color = Color(0, 0, 0, 0.0)
 	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
 	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(overlay)
@@ -269,6 +283,8 @@ func _show_starterrocket2_unlock_popup() -> void:
 
 	var panel = PanelContainer.new()
 	panel.custom_minimum_size = Vector2(700, 0)
+	panel.scale = Vector2(0.92, 0.92)
+	panel.modulate = Color(1, 1, 1, 0.0)
 	center.add_child(panel)
 
 	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
@@ -279,7 +295,7 @@ func _show_starterrocket2_unlock_popup() -> void:
 	panel.add_child(body)
 
 	var title = Label.new()
-	title.text = "Rocket Unlocked: Starter Rocket 2"
+	title.text = "Mission Milestone: Starter Rocket 2"
 	panel_style.apply_title(title)
 	body.add_child(title)
 
@@ -292,13 +308,27 @@ func _show_starterrocket2_unlock_popup() -> void:
 
 	var summary = Label.new()
 	summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	summary.text = "Starter Rocket 2 is now available. It is faster and has longer range."
+	summary.text = "Starter Rocket 2 is now available. Faster travel and longer-range operations are now unlocked."
 	panel_style.apply_body(summary)
 	body.add_child(summary)
 
+	var highlights = HBoxContainer.new()
+	highlights.add_theme_constant_override("separation", 8)
+	body.add_child(highlights)
+	for text in ["SPEED 2.0x", "RANGE 2.0x", "CARGO 1.5x"]:
+		var chip = PanelContainer.new()
+		chip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		panel_style.apply_panel(chip)
+		var chip_label = Label.new()
+		chip_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		chip_label.text = text
+		panel_style.apply_body(chip_label)
+		chip.add_child(chip_label)
+		highlights.add_child(chip)
+
 	var stats = Label.new()
 	stats.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	stats.text = "Speed: 2.0x | Range: 2.0x | Cargo: 1.5x | Mining Laser: 1.5x | Cost: 1.3B F | Salvage: 20%"
+	stats.text = "Mining Laser: 1.5x | Cost: 1.3B F | Salvage Refund: 20%"
 	panel_style.apply_muted(stats)
 	body.add_child(stats)
 
@@ -311,6 +341,15 @@ func _show_starterrocket2_unlock_popup() -> void:
 		_on_new_mission_button_pressed()
 	)
 	body.add_child(cta)
+
+	var intro = create_tween()
+	intro.tween_property(overlay, "color:a", 0.68, 0.25)
+	intro.parallel().tween_property(panel, "modulate:a", 1.0, 0.28)
+	intro.parallel().tween_property(panel, "scale", Vector2(1.0, 1.0), 0.28).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	var pulse = create_tween()
+	pulse.set_loops()
+	pulse.tween_property(icon, "modulate:a", 0.78, 0.65).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	pulse.tween_property(icon, "modulate:a", 1.0, 0.65).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 func _apply_tutorial_button_state() -> void:
 	var app = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
@@ -332,6 +371,7 @@ func _apply_tutorial_button_state() -> void:
 func _build_earth_base_identity() -> void:
 	_build_wordmark()
 	_build_ambient_stars()
+	_build_progression_cards()
 
 func _build_wordmark() -> void:
 	var ui_layer = get_node_or_null("UILayer")
@@ -368,6 +408,92 @@ func _build_ambient_stars() -> void:
 		dot.position = Vector2(rng.randf_range(0.0, vp.x), rng.randf_range(0.0, sky_h))
 		dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		star_root.add_child(dot)
+
+func _build_progression_cards() -> void:
+	var ui_layer = get_node_or_null("UILayer")
+	if ui_layer == null:
+		return
+	var cards_root = VBoxContainer.new()
+	cards_root.name = "ProgressionCards"
+	cards_root.add_theme_constant_override("separation", 10)
+	cards_root.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	cards_root.offset_left = -400
+	cards_root.offset_right = -20
+	cards_root.offset_top = 40
+	cards_root.offset_bottom = 320
+	ui_layer.add_child(cards_root)
+
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if rm and int(rm.get_completed_mission_count()) >= 1:
+		cards_root.add_child(_build_next_mission_card())
+	cards_root.add_child(_build_star_map_card())
+
+func _build_next_mission_card() -> PanelContainer:
+	var panel = PanelContainer.new()
+	panel.custom_minimum_size = Vector2(360, 110)
+	PanelStyle.apply_panel(panel)
+	var body = VBoxContainer.new()
+	body.add_theme_constant_override("separation", 6)
+	panel.add_child(body)
+	var title = Label.new()
+	title.text = "Next Mission Available"
+	PanelStyle.apply_title(title)
+	title.add_theme_font_size_override("font_size", 20)
+	body.add_child(title)
+	var subtitle = Label.new()
+	subtitle.text = "Continue progression and launch your next run."
+	subtitle.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	PanelStyle.apply_body(subtitle)
+	body.add_child(subtitle)
+	var cta = Button.new()
+	cta.text = "Open Launchpad"
+	PanelStyle.apply_button(cta, true)
+	cta.pressed.connect(_on_new_mission_button_pressed)
+	body.add_child(cta)
+	return panel
+
+func _build_star_map_card() -> PanelContainer:
+	var panel = PanelContainer.new()
+	panel.custom_minimum_size = Vector2(360, 120)
+	PanelStyle.apply_panel(panel)
+	var body = VBoxContainer.new()
+	body.add_theme_constant_override("separation", 6)
+	panel.add_child(body)
+	var title = Label.new()
+	title.text = "Star Map"
+	PanelStyle.apply_title(title)
+	title.add_theme_font_size_override("font_size", 20)
+	body.add_child(title)
+	var discovered_count = _get_discovered_planet_count()
+	var subtitle = Label.new()
+	subtitle.text = "Discovered: %d / ??? planets" % discovered_count
+	PanelStyle.apply_body(subtitle)
+	body.add_child(subtitle)
+	var hint = Label.new()
+	hint.text = "Track discoveries and unlock distant targets."
+	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	PanelStyle.apply_muted(hint)
+	body.add_child(hint)
+	var cta = Button.new()
+	cta.text = "Open Star Map"
+	PanelStyle.apply_button(cta, false)
+	cta.pressed.connect(_on_space_map_button_pressed)
+	body.add_child(cta)
+	return panel
+
+func _get_discovered_planet_count() -> int:
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if not rm:
+		return 0
+	var state = rm.load_state()
+	var seen_planets = state.get("seen_planets", [])
+	var seen_count = seen_planets.size() if typeof(seen_planets) == TYPE_ARRAY else 0
+	var detected_planets = 0
+	for target in rm.get_detected_targets():
+		var target_type = str(target.get("type", "")).to_lower()
+		if target_type == "planet" or target_type == "tess":
+			detected_planets += 1
+	return max(seen_count, detected_planets)
 
 func _has_seen_starterrocket2_unlock_popup() -> bool:
 	var cfg = ConfigFile.new()

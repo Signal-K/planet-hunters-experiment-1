@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://starterrocket1"]
 
-[ext_resource type="Texture2D" uid="uid://bmtki48j3q583" path="res://assets/Vehicles/StarterRocket1.png" id="1"]
+[ext_resource type="Texture2D" path="res://assets/Vehicles/StarterRocket1.png" id="1"]
 
 [node name="StarterRocket1" type="Node2D"]
 

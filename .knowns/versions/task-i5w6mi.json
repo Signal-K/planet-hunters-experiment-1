@@ -1,0 +1,180 @@
+{
+  "taskId": "i5w6mi",
+  "currentVersion": 5,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "i5w6mi",
+      "version": 1,
+      "timestamp": "2026-03-07T01:29:30.728Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Next mission card on base screen after debrief",
+        "description": "After the mission debrief closes there is no clear re-entry point. Show a 'Next mission available' card or CTA on the base screen to drive repeat play.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "retention",
+          "ux",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Base screen shows a next-mission prompt after first mission is completed"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "i5w6mi",
+      "version": 2,
+      "timestamp": "2026-03-07T01:29:31.146Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "newValue": "1. Add base-screen progression cards container\n2. Show next-mission CTA after first mission completion\n3. Wire CTA to launchpad/new mission flow\n4. Validate Earth base scene load and close task"
+        }
+      ],
+      "snapshot": {
+        "title": "Next mission card on base screen after debrief",
+        "description": "After the mission debrief closes there is no clear re-entry point. Show a 'Next mission available' card or CTA on the base screen to drive repeat play.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "retention",
+          "ux",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Base screen shows a next-mission prompt after first mission is completed"
+          }
+        ],
+        "implementationPlan": "1. Add base-screen progression cards container\n2. Show next-mission CTA after first mission completion\n3. Wire CTA to launchpad/new mission flow\n4. Validate Earth base scene load and close task"
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "i5w6mi",
+      "version": 3,
+      "timestamp": "2026-03-07T01:30:25.177Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "✓ Added runtime Next Mission card on Earth base when completed_mission_count >= 1, with CTA wired to launchpad flow via _on_new_mission_button_pressed(). Validated earth_base_1.tscn loads headlessly."
+        }
+      ],
+      "snapshot": {
+        "title": "Next mission card on base screen after debrief",
+        "description": "After the mission debrief closes there is no clear re-entry point. Show a 'Next mission available' card or CTA on the base screen to drive repeat play.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "retention",
+          "ux",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Base screen shows a next-mission prompt after first mission is completed"
+          }
+        ],
+        "implementationPlan": "1. Add base-screen progression cards container\n2. Show next-mission CTA after first mission completion\n3. Wire CTA to launchpad/new mission flow\n4. Validate Earth base scene load and close task",
+        "implementationNotes": "✓ Added runtime Next Mission card on Earth base when completed_mission_count >= 1, with CTA wired to launchpad flow via _on_new_mission_button_pressed(). Validated earth_base_1.tscn loads headlessly."
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "i5w6mi",
+      "version": 4,
+      "timestamp": "2026-03-07T01:30:25.391Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Base screen shows a next-mission prompt after first mission is completed"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Base screen shows a next-mission prompt after first mission is completed"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Next mission card on base screen after debrief",
+        "description": "After the mission debrief closes there is no clear re-entry point. Show a 'Next mission available' card or CTA on the base screen to drive repeat play.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "retention",
+          "ux",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Base screen shows a next-mission prompt after first mission is completed"
+          }
+        ],
+        "implementationPlan": "1. Add base-screen progression cards container\n2. Show next-mission CTA after first mission completion\n3. Wire CTA to launchpad/new mission flow\n4. Validate Earth base scene load and close task",
+        "implementationNotes": "✓ Added runtime Next Mission card on Earth base when completed_mission_count >= 1, with CTA wired to launchpad flow via _on_new_mission_button_pressed(). Validated earth_base_1.tscn loads headlessly."
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "i5w6mi",
+      "version": 5,
+      "timestamp": "2026-03-07T01:30:25.819Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Next mission card on base screen after debrief",
+        "description": "After the mission debrief closes there is no clear re-entry point. Show a 'Next mission available' card or CTA on the base screen to drive repeat play.",
+        "status": "done",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "retention",
+          "ux",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Base screen shows a next-mission prompt after first mission is completed"
+          }
+        ],
+        "implementationPlan": "1. Add base-screen progression cards container\n2. Show next-mission CTA after first mission completion\n3. Wire CTA to launchpad/new mission flow\n4. Validate Earth base scene load and close task",
+        "implementationNotes": "✓ Added runtime Next Mission card on Earth base when completed_mission_count >= 1, with CTA wired to launchpad flow via _on_new_mission_button_pressed(). Validated earth_base_1.tscn loads headlessly."
+      }
+    }
+  ]
+}

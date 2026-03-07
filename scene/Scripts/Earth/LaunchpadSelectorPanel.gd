@@ -244,6 +244,7 @@ func populate_targets() -> void:
 		targets_title.add_theme_font_size_override("font_size", 24)
 		targets_section.add_child(targets_title)
 	_render_launch_guidance_notice(targets_section)
+	_render_mining_practice_shortcut(targets_section)
 	var mission5_offer := {}
 	var mission5_selected_contractor := ""
 	var mission5_recommended_target_id := ""
@@ -749,6 +750,28 @@ func _on_debug_mining_test_pressed() -> void:
 		if tree:
 			tree.change_scene_to_file("res://Scenes/UI/AsteroidPreview/asteroid_preview.tscn")
 
+func _on_open_mining_practice_pressed() -> void:
+	var opened = AppControllerHelper.open_mining_practice_panel("launchpad_selector")
+	AppLogger.d("Launchpad: open mining practice shortcut -> %s" % opened)
+	if opened:
+		hide_selector_panel(true)
+
+func _render_mining_practice_shortcut(targets_section: VBoxContainer) -> void:
+	if targets_section == null:
+		return
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	var btn := Button.new()
+	btn.text = "Open Mining Academy"
+	PanelStyle.apply_button(btn, false)
+	btn.pressed.connect(Callable(self, "_on_open_mining_practice_pressed"))
+	row.add_child(btn)
+	targets_section.add_child(row)
+	var helper: Label = EmptyLabelScene.instantiate()
+	helper.text = "Practice side-scrolling mining directly without mission progression."
+	helper.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	PanelStyle.apply_muted(helper)
+	targets_section.add_child(helper)
 
 func _style_selector_panel(panel: Panel, vbox: VBoxContainer) -> void:
 	# Lock before UIConsistencyEnforcer deferred scan can overwrite.

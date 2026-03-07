@@ -1,0 +1,17 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://ghrmt5x2fqsm"
+
+[deps]
+
+files=["res://assets/Rooms/checklists/room_component_asset_checklist.asset.translation", "res://assets/Rooms/checklists/room_component_asset_checklist.room.translation", "res://assets/Rooms/checklists/room_component_asset_checklist.room.translation", "res://assets/Rooms/checklists/room_component_asset_checklist.category.translation", "res://assets/Rooms/checklists/room_component_asset_checklist.tier.translation", "res://assets/Rooms/checklists/room_component_asset_checklist.component.translation", "res://assets/Rooms/checklists/room_component_asset_checklist.component.translation", "res://assets/Rooms/checklists/room_component_asset_checklist.component.translation", "res://assets/Rooms/checklists/room_component_asset_checklist.state.translation", "res://assets/Rooms/checklists/room_component_asset_checklist.priority.translation", "res://assets/Rooms/checklists/room_component_asset_checklist.prompt.translation"]
+
+source_file="res://assets/Rooms/checklists/room_component_asset_checklist.csv"
+dest_files=["res://assets/Rooms/checklists/room_component_asset_checklist.asset.translation", "res://assets/Rooms/checklists/room_component_asset_checklist.room.translation", "res://assets/Rooms/checklists/room_component_asset_checklist.room.translation", "res://assets/Rooms/checklists/room_component_asset_checklist.category.translation", "res://assets/Rooms/checklists/room_component_asset_checklist.tier.translation", "res://assets/Rooms/checklists/room_component_asset_checklist.component.translation", "res://assets/Rooms/checklists/room_component_asset_checklist.component.translation", "res://assets/Rooms/checklists/room_component_asset_checklist.component.translation", "res://assets/Rooms/checklists/room_component_asset_checklist.state.translation", "res://assets/Rooms/checklists/room_component_asset_checklist.priority.translation", "res://assets/Rooms/checklists/room_component_asset_checklist.prompt.translation"]
+
+[params]
+
+compress=true
+delimiter=0

@@ -24,6 +24,7 @@ func on_day_night_tick(_cycle_t: float, night_factor: float, _delta: float) -> v
 func _apply_materials() -> void:
 	_materials.clear()
 	for sprite in _resolve_backdrops():
+		sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		var material := ShaderMaterial.new()
 		material.shader = SKY_SHADER
 		material.set_shader_parameter("night_factor", 0.0)
