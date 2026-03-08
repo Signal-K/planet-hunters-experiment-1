@@ -748,6 +748,16 @@ function App() {
     return () => mq.removeEventListener("change", onChange);
   }, []);
 
+  // Attempt to lock landscape orientation on PWA/mobile (no-ops silently where unsupported, e.g. iOS)
+  useEffect(() => {
+    if (!isPwa && !isMobile) return;
+    try {
+      if (screen.orientation && typeof screen.orientation.lock === "function") {
+        screen.orientation.lock("landscape").catch(() => {});
+      }
+    } catch (_) {}
+  }, [isPwa, isMobile]);
+
   useEffect(() => {
     loadActionLog();
     pushAction("react_shell_loaded", { href: window.location.href });
@@ -950,9 +960,9 @@ function App() {
       )
     : null;
 
-  // Portrait overlay — covers the game when a mobile device is held portrait
+  // Portrait overlay — covers the game when a mobile/PWA device is held portrait
   const rotatePrompt =
-    isMobile && isPortrait
+    (isMobile || isPwa) && isPortrait
       ? React.createElement(
           "div",
           {
@@ -1060,11 +1070,11 @@ function App() {
         allow: "fullscreen",
         style: {
           flex: 1,
+          minHeight: 0,
           border: 0,
           display: "block",
           background: "#000",
           width: "100%",
-          height: "100%",
         },
         onError: () => setStorageStatus("Game load error"),
         onLoad: () => {
