@@ -1,0 +1,28 @@
+{
+  "name": "Planet Hunters: Contractor First Impression",
+  "type": "external_survey",
+  "schedule": "always",
+  "enable_partial_responses": true,
+  "appearance": {
+    "displayThankYouMessage": true,
+    "thankYouMessageHeader": "Thanks!",
+    "thankYouMessageDescription": "Your answer helps us improve the contractor system."
+  },
+  "questions": [
+    {
+      "type": "multiple_choice",
+      "question": "Why did you pick this contractor?",
+      "choices": ["Their resource bonuses", "The company name", "First one listed", "Not sure"],
+      "descriptionContentType": "text"
+    },
+    {
+      "type": "rating",
+      "scale": 5,
+      "display": "number",
+      "question": "How clear was it what signing this contractor would give you?",
+      "lowerBoundLabel": "Very unclear",
+      "upperBoundLabel": "Crystal clear",
+      "descriptionContentType": "text"
+    }
+  ]
+}

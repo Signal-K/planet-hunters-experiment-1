@@ -1,0 +1,25 @@
+{
+  "name": "Planet Hunters: Real Science Awareness",
+  "type": "external_survey",
+  "schedule": "always",
+  "enable_partial_responses": true,
+  "appearance": {
+    "displayThankYouMessage": true,
+    "thankYouMessageHeader": "Thanks!",
+    "thankYouMessageDescription": "Real astronomical data is at the core of Planet Hunters."
+  },
+  "questions": [
+    {
+      "type": "multiple_choice",
+      "question": "Did you know the object you just scanned is a real astronomical object catalogued by scientists?",
+      "choices": ["Yes - that is why I am playing", "Yes, I noticed", "No, I did not realise", "Wait, really?"],
+      "descriptionContentType": "text"
+    },
+    {
+      "type": "multiple_choice",
+      "question": "How much does knowing this is real science data affect how you play?",
+      "choices": ["A lot - it makes it meaningful", "Somewhat", "Not much", "I had forgotten about it", "I just want to mine"],
+      "descriptionContentType": "text"
+    }
+  ]
+}

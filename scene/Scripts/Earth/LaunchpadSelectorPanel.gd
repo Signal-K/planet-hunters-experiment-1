@@ -440,6 +440,10 @@ func _on_starter_contractor_pressed(contractor_id: String) -> void:
 		_record_tutorial_action("accept_starter_contractor", {
 			"contractor_id": contractor_id
 		})
+		GameplayAnalytics.emit_event("contractor_signed", {
+			"contractor_id": contractor_id,
+			"contract_type": "starter",
+		})
 		populate_targets()
 
 func _render_starter_contract_brief(targets_section: VBoxContainer, offer: Dictionary, selected_contractor: String) -> void:

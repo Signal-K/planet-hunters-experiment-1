@@ -1,0 +1,148 @@
+{
+  "taskId": "w5y40t",
+  "currentVersion": 2,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "w5y40t",
+      "version": 1,
+      "timestamp": "2026-03-08T01:06:35.722Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [],
+          "newValue": [
+            {
+              "text": "Room building: no visible guidance on required room combination for a mission order",
+              "completed": false
+            },
+            {
+              "text": "Contractor bonuses are shown at signup but their effect is invisible during mission",
+              "completed": false
+            },
+            {
+              "text": "Francs economy is undefined - players have no sense of what it is or its value",
+              "completed": false
+            },
+            {
+              "text": "Mining order panel: players must know which mineral to collect without clear in-world signposting",
+              "completed": false
+            },
+            {
+              "text": "Debrief resolution is unclear - what does Resolve mean and what am I getting?",
+              "completed": false
+            },
+            {
+              "text": "Mission 5 contractor offer arrives with no narrative context explaining what changed",
+              "completed": false
+            },
+            {
+              "text": "Science data connection is buried - TESS/asteroid provenance is not shown on the target card",
+              "completed": false
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "UX issues and confusing mechanics identified from codebase review",
+        "description": "Catalogue of mechanics and flows that are likely to confuse new players, based on code analysis. Needs triage and prioritisation before fixing.",
+        "status": "todo",
+        "priority": "high",
+        "labels": [
+          "ux",
+          "onboarding",
+          "research"
+        ],
+        "acceptanceCriteria": [
+          {
+            "text": "Room building: no visible guidance on required room combination for a mission order",
+            "completed": false
+          },
+          {
+            "text": "Contractor bonuses are shown at signup but their effect is invisible during mission",
+            "completed": false
+          },
+          {
+            "text": "Francs economy is undefined - players have no sense of what it is or its value",
+            "completed": false
+          },
+          {
+            "text": "Mining order panel: players must know which mineral to collect without clear in-world signposting",
+            "completed": false
+          },
+          {
+            "text": "Debrief resolution is unclear - what does Resolve mean and what am I getting?",
+            "completed": false
+          },
+          {
+            "text": "Mission 5 contractor offer arrives with no narrative context explaining what changed",
+            "completed": false
+          },
+          {
+            "text": "Science data connection is buried - TESS/asteroid provenance is not shown on the target card",
+            "completed": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "w5y40t",
+      "version": 2,
+      "timestamp": "2026-03-08T02:33:27.736Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        },
+        {
+          "field": "implementationNotes",
+          "newValue": "Research complete. 7 individual actionable tickets created: m2wlh4, a23wzd, au0mke, 44a83y, f5o81u, 97orwg, g070st. This task is now a catalogue/index."
+        }
+      ],
+      "snapshot": {
+        "title": "UX issues and confusing mechanics identified from codebase review",
+        "description": "Catalogue of mechanics and flows that are likely to confuse new players, based on code analysis. Needs triage and prioritisation before fixing.",
+        "status": "done",
+        "priority": "high",
+        "labels": [
+          "ux",
+          "onboarding",
+          "research"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Room building: no visible guidance on required room combination for a mission order"
+          },
+          {
+            "completed": false,
+            "text": "Contractor bonuses are shown at signup but their effect is invisible during mission"
+          },
+          {
+            "completed": false,
+            "text": "Francs economy is undefined - players have no sense of what it is or its value"
+          },
+          {
+            "completed": false,
+            "text": "Mining order panel: players must know which mineral to collect without clear in-world signposting"
+          },
+          {
+            "completed": false,
+            "text": "Debrief resolution is unclear - what does Resolve mean and what am I getting?"
+          },
+          {
+            "completed": false,
+            "text": "Mission 5 contractor offer arrives with no narrative context explaining what changed"
+          },
+          {
+            "completed": false,
+            "text": "Science data connection is buried - TESS/asteroid provenance is not shown on the target card"
+          }
+        ],
+        "implementationNotes": "Research complete. 7 individual actionable tickets created: m2wlh4, a23wzd, au0mke, 44a83y, f5o81u, 97orwg, g070st. This task is now a catalogue/index."
+      }
+    }
+  ]
+}
