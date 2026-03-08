@@ -20,14 +20,6 @@ const FONT_BODY   := 40
 const FONT_MUTED  := 34
 const FONT_BUTTON := 36
 
-static var _instance: PanelStyle = null
-
-static func get_instance() -> PanelStyle:
-	if _instance == null:
-		_instance = PanelStyle.new()
-	return _instance
-
-
 # ── Panel / label helpers ────────────────────────────────────────────────────
 
 static func apply_panel(panel: Control, bg_color: Color = PANEL_BG) -> void:
