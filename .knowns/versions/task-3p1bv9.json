@@ -1,0 +1,44 @@
+{
+  "taskId": "3p1bv9",
+  "currentVersion": 1,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "3p1bv9",
+      "version": 1,
+      "timestamp": "2026-03-06T07:05:27.096Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Add 2D pixelated Mars-style background to mining scene",
+        "description": "Introduce a Mars-inspired pixelated background layer behind mining terrain in the sidescroll mining scene without changing existing app font/color choices.",
+        "status": "done",
+        "priority": "high",
+        "labels": [
+          "mining",
+          "background",
+          "art-direction"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Mining scene shows a pixelated Mars-style sky/horizon treatment"
+          },
+          {
+            "completed": false,
+            "text": "Background is behind terrain and gameplay UI"
+          },
+          {
+            "completed": false,
+            "text": "Background scales across desktop and mobile aspect ratios"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -8,7 +8,7 @@ labels:
   - analytics
   - surveys
 createdAt: '2026-02-28T06:21:56.504Z'
-updatedAt: '2026-02-28T06:29:29.361Z'
+updatedAt: '2026-03-08T02:33:41.587Z'
 timeSpent: 447
 ---
 # Remove non-Planet-Hunters surveys from PostHog project
@@ -37,5 +37,7 @@ Archived 5 surveys via PostHog API:
 - DailySail Exit Survey (v1)
 
 Remaining active: Star Sailors Feedback, Open feedback, Webapp Loop Survey, Experiment 1 Exit Survey (Godot)
+
+2026-03-08: Re-ran archiving. Previous run set archived:true but PostHog list filter had a bug masking it. Confirmed via direct field check all 6 non-PH popovers now archived: Hives/Orders, Basics NPS, Classification, Core Farming, DailySail v1, Webapp Loop Survey 2.2.
 <!-- SECTION:NOTES:END -->
 

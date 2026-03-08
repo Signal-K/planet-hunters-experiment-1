@@ -11,8 +11,8 @@ labels:
   - scenes
   - experiment1
 createdAt: '2026-02-28T00:00:00.000Z'
-updatedAt: '2026-02-28T09:19:05.538Z'
-timeSpent: 213
+updatedAt: '2026-03-07T01:16:34.123Z'
+timeSpent: 220
 assignee: '@me'
 ---
 # Rocket launch atmospheric ascent animation (launchpad → orbit)
@@ -84,13 +84,22 @@ The goal is to make the act of launching feel like a real departure. The player 
 - [x] #2 Sky colour lerps from light blue to black over the duration of the ascent animation.
 - [x] #3 Stars fade in as sky darkens (can reuse EarthStarFieldEvent or equivalent shader from task-4uqwke/ssq8b2).
 - [x] #4 The ground/landscape recedes visually — either scaling down, parallax scroll upward, or camera pan.
-- [ ] #5 Horizon curvature is visible by Frame 3 (upper atmosphere stage).
+- [x] #5 Horizon curvature is visible by Frame 3 (upper atmosphere stage).
 - [x] #6 A skip button is present throughout (consistent with task-ymh13c pattern).
 - [x] #7 The animation runs in approximately 3–6 seconds at normal speed.
 - [x] #8 On skip, the scene transitions cleanly to the orbit/transit state.
 - [x] #9 Rocket orientation and scale animate consistently with altitude (large + angled at launch → small + vertical at orbit).
-- [ ] #10 Atmospheric haze effect (if present) fades out as altitude increases.
+- [x] #10 Atmospheric haze effect (if present) fades out as altitude increases.
 <!-- AC:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Add explicit horizon-curve visual during ascent mid/late phase
+2. Make atmospheric haze fade deterministic with altitude
+3. Validate rocket_ascent.tscn headless load
+4. Check AC 5 and 10 and close task
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 
@@ -102,5 +111,7 @@ The goal is to make the act of launching feel like a real departure. The player 
 - LaunchpadLaunchButton: routes to rocket_ascent.tscn instead of rocket_transit.tscn
 - TutorialCoachOverlay: rocket_ascent added to TRANSIT_SCENE_BASENAMES
 - ACs 5 (horizon curvature) and 10 (atmospheric haze shader) not implemented; handled by earth sprite shrinkage and haze ColorRect respectively
+
+✓ Added explicit curved horizon line in RocketAscent.gd (visible from mid ascent onward) and made haze alpha driven directly by altitude. Verified rocket_ascent.tscn loads via headless Godot.
 <!-- SECTION:NOTES:END -->
 

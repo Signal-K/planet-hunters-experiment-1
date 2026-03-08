@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3 uid="uid://mission_debrief_scene"]
+[gd_scene load_steps=9 format=3 uid="uid://mission_debrief_scene"]
 
 [ext_resource type="Script" path="res://Scripts/Earth/MissionDebrief.gd" id="1"]
 [ext_resource type="Texture2D" path="res://assets/Backdrops/Earth1.png" id="2"]
@@ -6,6 +6,7 @@
 [ext_resource type="Script" path="res://Scripts/Earth/Environment/EarthSkyNightFilterEvent.gd" id="4"]
 [ext_resource type="Script" path="res://Scripts/Earth/Environment/EarthStarFieldEvent.gd" id="5"]
 [ext_resource type="Script" path="res://Scripts/Earth/Environment/EarthCloudDriftEvent.gd" id="6"]
+[ext_resource type="Script" path="res://Scripts/Earth/Environment/EarthSkyMapEvent.gd" id="7"]
 
 [node name="MissionDebrief" type="Node2D"]
 script = ExtResource("1")
@@ -22,6 +23,9 @@ backdrop_paths = Array[NodePath]([NodePath("../EarthBackdrop")])
 
 [node name="StarFieldEvent" type="Node2D" parent="."]
 script = ExtResource("5")
+
+[node name="SkyMapEvent" type="Node2D" parent="."]
+script = ExtResource("7")
 
 [node name="CloudDriftEvent" type="Node2D" parent="."]
 script = ExtResource("6")

@@ -6,6 +6,20 @@ const COOKIE_NAME = "planet_hunters_progress_v1";
 const COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365;
 const ACTION_LOG_KEY = "planet_hunters_action_log_v1";
 const SURVEY_SHOWN_KEY = "planet_hunters_exit_survey_first_mission_v1";
+const MICRO_SURVEY_KEYS = {
+  contractor:   "planet_hunters_micro_survey_contractor_v1",
+  mining:       "planet_hunters_micro_survey_mining_v1",
+  science:      "planet_hunters_micro_survey_science_v1",
+  progression2: "planet_hunters_micro_survey_progression_stage2_v1",
+  progression3: "planet_hunters_micro_survey_progression_stage3_v1",
+  progression4: "planet_hunters_micro_survey_progression_stage4_v1",
+};
+const MICRO_SURVEY_IDS = {
+  contractor:  "019ccaf8-4299-0000-b3ad-92a57ab75b95",
+  mining:      "019ccaf8-c4d8-0000-901b-aa850dfd43c5",
+  science:     "019ccaf9-0259-0000-d411-e11fdc643d97",
+  progression: "019ccaf9-3453-0000-b6b9-0e41fcae8f1c",
+};
 const SURVEY_OVERLAY_ID = "planet-hunters-survey-overlay";
 const SURVEY_IFRAME_ID = "planet-hunters-survey-iframe";
 const FEEDBACK_OVERLAY_ID = "planet-hunters-feedback-overlay";
@@ -48,10 +62,18 @@ function vibrate(pattern) {
 }
 
 function isPwaMode() {
-  return (
-    window.matchMedia("(display-mode: standalone)").matches ||
-    window.navigator.standalone === true
-  );
+  if (typeof window === "undefined") return false;
+  const displayModes = ["standalone", "fullscreen", "minimal-ui"];
+  const displayModeMatch = displayModes.some((mode) => {
+    try {
+      return window.matchMedia(`(display-mode: ${mode})`).matches;
+    } catch (_error) {
+      return false;
+    }
+  });
+  const iosStandalone = window.navigator && window.navigator.standalone === true;
+  const fullscreenElement = typeof document !== "undefined" && !!document.fullscreenElement;
+  return displayModeMatch || iosStandalone || fullscreenElement;
 }
 
 function isIosDevice() {
@@ -536,9 +558,9 @@ function showFeedbackDialog(context = {}) {
   captureAnalyticsEvent("feedback_dialog_opened", context);
 }
 
-async function showInlineSurvey(params) {
+async function showInlineSurvey(params, surveyIdOverride) {
   const runtimeConfig = await getRuntimeConfig();
-  const surveyId = runtimeConfig.posthog.surveyId;
+  const surveyId = surveyIdOverride || runtimeConfig.posthog.surveyId;
   const surveyUrl = `${runtimeConfig.posthog.uiHost}/external_surveys/${surveyId}`;
   removeSurveyOverlay();
 
@@ -585,7 +607,7 @@ async function showInlineSurvey(params) {
   const iframe = document.createElement("iframe");
   iframe.id = SURVEY_IFRAME_ID;
   iframe.src = `${surveyUrl}?${new URLSearchParams(params).toString()}`;
-  iframe.title = "Experiment 1 Exit Survey";
+  iframe.title = params.survey_context ? "Planet Hunters Survey" : "Experiment 1 Exit Survey";
   iframe.style.width = "100%";
   iframe.style.height = "100%";
   iframe.style.border = "0";
@@ -596,16 +618,75 @@ async function showInlineSurvey(params) {
   overlay.appendChild(card);
   document.body.appendChild(overlay);
 
-  pushAction("survey_opened", {
+  const openMeta = {
     survey_id: surveyId,
-    mission_count: params.mission_count || "",
+    survey_context: params.survey_context || "",
     supabase_guest_id: params.supabase_guest_id || "",
-  });
-  captureAnalyticsEvent("survey_opened", {
-    survey_id: surveyId,
-    mission_count: params.mission_count || "",
-  });
+  };
+  if (params.mission_count) openMeta.mission_count = params.mission_count;
+  if (params.mission_stage) openMeta.mission_stage = params.mission_stage;
+  pushAction("survey_opened", openMeta);
+  captureAnalyticsEvent("survey_opened", openMeta);
 }
+
+// ── Micro-survey helpers ──────────────────────────────────────────────────────
+
+async function maybeTriggerMicroSurvey(storageKey, surveyId, context, eventPayload) {
+  // Never overlap with exit survey or another micro-survey already open.
+  if (_surveyShownInThisBoot) return;
+  if (document.getElementById(SURVEY_OVERLAY_ID)) return;
+  if (localStorage.getItem(storageKey)) return;
+  try {
+    const distinctId = await resolveSurveyDistinctId();
+    const params = {
+      distinct_id: distinctId,
+      supabase_guest_id: distinctId,
+      survey_context: context,
+      mission_stage: String((eventPayload && eventPayload.mission_stage) || ""),
+    };
+    await showInlineSurvey(params, surveyId);
+    localStorage.setItem(storageKey, new Date().toISOString());
+  } catch (err) {
+    console.error("Micro-survey trigger failed:", storageKey, err);
+  }
+}
+
+function maybeShowContractorSurvey(payload) {
+  maybeTriggerMicroSurvey(
+    MICRO_SURVEY_KEYS.contractor,
+    MICRO_SURVEY_IDS.contractor,
+    "micro_contractor_first_impression",
+    payload
+  );
+}
+
+function maybeShowMiningSurvey(payload) {
+  maybeTriggerMicroSurvey(
+    MICRO_SURVEY_KEYS.mining,
+    MICRO_SURVEY_IDS.mining,
+    "micro_mining_loop_feel",
+    payload
+  );
+}
+
+function maybeShowScienceSurvey(payload) {
+  maybeTriggerMicroSurvey(
+    MICRO_SURVEY_KEYS.science,
+    MICRO_SURVEY_IDS.science,
+    "micro_real_science_awareness",
+    payload
+  );
+}
+
+function maybeShowProgressionSurvey(payload) {
+  const stage = Number((payload && payload.mission_stage) || 0);
+  if (stage < 2 || stage > 4) return;
+  const key = MICRO_SURVEY_KEYS["progression" + stage];
+  if (!key) return;
+  maybeTriggerMicroSurvey(key, MICRO_SURVEY_IDS.progression, "micro_mission_progression_clarity", payload);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 async function maybeTriggerFirstMissionSurvey(eventPayload) {
   if (_surveyShownInThisBoot) return;
@@ -645,6 +726,7 @@ function App() {
   const [installPrompt, setInstallPrompt] = useState(null);
   const [showMobileBanner, setShowMobileBanner] = useState(false);
   const [showIosHint, setShowIosHint] = useState(false);
+  const [showInstallHint, setShowInstallHint] = useState(false);
   const [levelUpBanner, setLevelUpBanner] = useState(null); // { level, hint }
   const levelUpTimerRef = useRef(null);
   const [isPortrait, setIsPortrait] = useState(
@@ -756,6 +838,18 @@ function App() {
       if (eventName === "first_mission_completed" || eventName === "mission_debrief_resolved") {
         maybeTriggerFirstMissionSurvey(payload);
       }
+      if (eventName === "contractor_signed") {
+        maybeShowContractorSurvey(payload);
+      }
+      if (eventName === "mining_run_completed") {
+        maybeShowMiningSurvey(payload);
+      }
+      if (eventName === "scanner_scan_completed") {
+        maybeShowScienceSurvey(payload);
+      }
+      if (eventName === "mission_debrief_resolved") {
+        maybeShowProgressionSurvey(payload);
+      }
     }
 
     window.addEventListener("message", onGameMessage);
@@ -786,15 +880,21 @@ function App() {
   }, []);
 
   const handleInstallApp = useCallback(async () => {
+    setShowInstallHint(false);
     if (isIos) {
       setShowIosHint((h) => !h);
       return;
     }
     if (installPrompt) {
       await installPrompt.prompt();
+      try {
+        await installPrompt.userChoice;
+      } catch (_error) {}
       setInstallPrompt(null);
+      setShowMobileBanner(false);
+      return;
     }
-    setShowMobileBanner(false);
+    setShowInstallHint(true);
   }, [installPrompt, isIos]);
 
   const markerText = useMemo(() => {
@@ -900,7 +1000,15 @@ function App() {
   if (isPwa) {
     return React.createElement(
       "div",
-      { style: { display: "flex", flexDirection: "column", height: "100svh", background: "#000" } },
+      {
+        style: {
+          display: "flex",
+          flexDirection: "column",
+          height: "100svh",
+          minHeight: "100svh",
+          background: "#000",
+        },
+      },
       React.createElement(
         "div",
         {
@@ -908,7 +1016,7 @@ function App() {
             display: "flex",
             alignItems: "center",
             gap: "12px",
-            padding: "6px 14px",
+            padding: "max(6px, env(safe-area-inset-top)) 14px 6px 14px",
             background: "#05080f",
             borderBottom: "1px solid #1a2340",
             flexShrink: 0,
@@ -950,7 +1058,14 @@ function App() {
         src: gameSrc,
         title: "Planet Hunters Game",
         allow: "fullscreen",
-        style: { flex: 1, border: 0, display: "block", background: "#000", width: "100%" },
+        style: {
+          flex: 1,
+          border: 0,
+          display: "block",
+          background: "#000",
+          width: "100%",
+          height: "100%",
+        },
         onError: () => setStorageStatus("Game load error"),
         onLoad: () => {
           saveProgress({ marker: "game-loaded", updatedAt: new Date().toISOString() }, setProgress);
@@ -983,6 +1098,11 @@ function App() {
             },
           },
           React.createElement(
+            "p",
+            { style: { margin: 0, fontSize: "13px", color: "#9cb0e8", textAlign: "center" } },
+            "Install for fullscreen play and faster relaunch."
+          ),
+          React.createElement(
             "div",
             { style: { display: "flex", gap: "8px" } },
             React.createElement(
@@ -1002,25 +1122,23 @@ function App() {
               },
               "Open Fullscreen"
             ),
-            isIos || installPrompt
-              ? React.createElement(
-                  "button",
-                  {
-                    style: {
-                      flex: 1,
-                      padding: "10px",
-                      background: "#1e3a1a",
-                      color: "#fff",
-                      border: "none",
-                      borderRadius: "8px",
-                      fontSize: "14px",
-                      cursor: "pointer",
-                    },
-                    onClick: handleInstallApp,
-                  },
-                  isIos ? "Add to Home Screen" : "Install App"
-                )
-              : null,
+            React.createElement(
+              "button",
+              {
+                style: {
+                  flex: 1,
+                  padding: "10px",
+                  background: "#1e3a1a",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "8px",
+                  fontSize: "14px",
+                  cursor: "pointer",
+                },
+                onClick: handleInstallApp,
+              },
+              isIos ? "Add to Home Screen" : "Install App"
+            ),
             React.createElement(
               "button",
               {
@@ -1043,6 +1161,13 @@ function App() {
                 "p",
                 { style: { margin: 0, fontSize: "13px", color: "#8899cc", textAlign: "center" } },
                 "Tap the Share button (\uD83D\uDCE4) then \u201cAdd to Home Screen\u201d"
+              )
+            : null,
+          showInstallHint
+            ? React.createElement(
+                "p",
+                { style: { margin: 0, fontSize: "13px", color: "#8899cc", textAlign: "center" } },
+                "Install prompt unavailable in this browser session. Use your browser menu to install."
               )
             : null
         )

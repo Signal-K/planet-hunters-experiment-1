@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://new_mission_panel"]
 
-[ext_resource type="Script" uid="uid://new_mission_script" path="res://Scripts/UI/NewMissionPanel.gd" id="1"]
+[ext_resource type="Script" path="res://Scripts/UI/NewMissionPanel.gd" id="1"]
 
 [node name="NewMissionPanel" type="Control"]
 layout_mode = 3
