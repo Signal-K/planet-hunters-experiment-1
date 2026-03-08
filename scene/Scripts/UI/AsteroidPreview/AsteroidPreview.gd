@@ -118,6 +118,10 @@ func _on_mine_pressed():
 	var minerals = _current_yield.get("minerals", {})
 	var mineable_pct = float(_current_yield.get("mineable_pct", 0.5))
 	var session_context := {}
+	session_context["target_type"] = _current_target_type
+	var generation_signature = _current_yield.get("generation_signature", {})
+	if typeof(generation_signature) == TYPE_DICTIONARY and not generation_signature.is_empty():
+		session_context["generation_signature"] = generation_signature.duplicate(true)
 	if not _starter_contract_context.is_empty():
 		session_context["starter_contract"] = _starter_contract_context.duplicate(true)
 	

@@ -6,6 +6,7 @@ const RegionMath = preload("res://Scripts/UI/SidescrollMiningRegionMath.gd")
 const VisualSync = preload("res://Scripts/UI/SidescrollMiningVisualSync.gd")
 const RoomCatalog = preload("res://Scripts/Utils/RoomCatalog.gd")
 const RoomSpriteAtlas = preload("res://Scripts/UI/RoomSpriteAtlas.gd")
+const MiningTargetTheme = preload("res://Scripts/UI/MiningTargetTheme.gd")
 
 signal mining_completed(minerals: Dictionary, score: int)
 
@@ -21,6 +22,9 @@ const MAX_DRONES = 3
 const DRONE_COOLDOWN = 5.0
 const ROOM_ICON_WIDTH = 76
 const ROOM_ICON_HEIGHT = 30
+const BEAM_SEGMENTS = 14
+const PIXEL_BG_MIN_WIDTH = 160
+const PIXEL_BG_MIN_HEIGHT = 90
 
 enum GuideStep {
 	INTRO,
@@ -59,12 +63,24 @@ var _terrain_loop_container: Node2D = null
 @onready var terrain_line: Line2D = $TerrainContainer/TerrainLine
 @onready var rocket: Sprite2D = $Rocket
 @onready var laser: Line2D = $Laser
+@onready var ui_root: Control = $UI
+@onready var top_bar: HBoxContainer = $UI/TopBar
+@onready var top_spacer: Control = $UI/TopBar/Spacer
+@onready var left_gauges: HBoxContainer = $UI/TopBar/LeftGauges
+@onready var right_stats: VBoxContainer = $UI/TopBar/RightStats
+@onready var fuel_label: Label = $UI/TopBar/LeftGauges/FuelPanel/VBox/Label
+@onready var heat_label: Label = $UI/TopBar/LeftGauges/HeatPanel/VBox/Label
+@onready var contract_order_vbox: VBoxContainer = $UI/ContractOrderPanel/VBox
 @onready var fuel_bar: ProgressBar = $UI/TopBar/LeftGauges/FuelPanel/VBox/FuelBar
 @onready var heat_bar: ProgressBar = $UI/TopBar/LeftGauges/HeatPanel/VBox/HeatBar
 @onready var beam_bar: ProgressBar = $UI/TopBar/LeftGauges/BeamPanel/VBox/BeamBar
 @onready var beam_label: Label = $UI/TopBar/LeftGauges/BeamPanel/VBox/Label
+@onready var rocket_panel: PanelContainer = $UI/TopBar/RightStats/RocketPanel
+@onready var score_panel: PanelContainer = $UI/TopBar/RightStats/ScorePanel
+@onready var value_panel: PanelContainer = $UI/TopBar/RightStats/ValuePanel
 @onready var score_label: Label = $UI/TopBar/RightStats/ScorePanel/ScoreLabel
 @onready var rocket_label: Label = $UI/TopBar/RightStats/RocketPanel/Label
+@onready var value_label: Label = $UI/TopBar/RightStats/ValuePanel/Label
 @onready var contract_order_panel: PanelContainer = $UI/ContractOrderPanel
 @onready var contract_order_title: Label = $UI/ContractOrderPanel/VBox/TitleLabel
 @onready var contract_order_progress: Label = $UI/ContractOrderPanel/VBox/ProgressLabel
@@ -90,6 +106,7 @@ var _scroll_speed_multiplier = 1.0
 var _target_minerals: Dictionary = {}
 var _target_mineable_pct: float = 0.5
 var _session_context: Dictionary = {}
+var _generation_signature: Dictionary = {}
 var _total_deposit_count := 0
 var _surface_deposit_count := 0
 var _subsurface_deposit_count := 0
@@ -115,22 +132,42 @@ var _science_xp_multiplier := 1.0
 var _room_panel: PanelContainer = null
 var _room_grid: GridContainer = null
 var _room_debug_overlay: Control = null
+var _room_toggle_button: Button = null
 var _room_debug_visible := false
+var _compact_layout_active := false
+var _room_panel_visible := false
+var _beam_glow: Line2D = null
+var _mars_background: TextureRect = null
+var _mars_bg_size := Vector2i.ZERO
+var _tutorial_overlay_was_visible := false
+var _terrain_pixel_textures: Dictionary = {}
+var _target_theme := "asteroid"
+var _target_palette: Dictionary = {}
+var _target_palette_key := "asteroid:default"
+var _handbook_button: Button = null
+var _handbook_panel: PanelContainer = null
 # True when touch/on-screen buttons should be shown: native mobile OR small viewport
 # (web users on phones report OS.has_feature("mobile") as false, so we fall back to width)
 var _uses_touch_controls := false
 
 func _ready():
+	_suspend_tutorial_overlay()
+	_target_palette = _theme_palette(_target_theme)
+	_target_palette_key = str(_target_palette.get("palette_key", "asteroid:default"))
+	_setup_mars_background()
 	_load_rocket_frames()
 	_setup_rocket()
 	_generate_terrain()
 	_setup_room_panel()
 	_configure_rocket_rooms(1)
+	_setup_beam_visuals()
+	_apply_responsive_layout()
 	laser.visible = false
 	fire_button.pressed.connect(_on_fire_pressed)
 	fire_button.button_up.connect(_on_fire_released)
 	inventory_button.pressed.connect(_toggle_inventory)
 	return_button.pressed.connect(_on_return_pressed)
+	_setup_button_handbook()
 
 	_uses_touch_controls = OS.has_feature("mobile") or get_viewport_rect().size.x < 768
 	fire_button.visible = _uses_touch_controls
@@ -143,13 +180,517 @@ func _ready():
 		_show_guide_step()
 		preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("arrived_at_mining_site")
 
+func _setup_button_handbook() -> void:
+	_handbook_button = Button.new()
+	_handbook_button.text = "? Guide"
+	_handbook_button.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	_handbook_button.offset_left = -150
+	_handbook_button.offset_right = -22
+	_handbook_button.offset_top = 14
+	_handbook_button.offset_bottom = 54
+	_handbook_button.mouse_filter = Control.MOUSE_FILTER_STOP
+	ui_root.add_child(_handbook_button)
+	_handbook_button.pressed.connect(_toggle_button_handbook)
+
+	_handbook_panel = PanelContainer.new()
+	_handbook_panel.visible = false
+	_handbook_panel.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	_handbook_panel.offset_left = -420
+	_handbook_panel.offset_right = -22
+	_handbook_panel.offset_top = 62
+	_handbook_panel.offset_bottom = 292
+	_handbook_panel.mouse_filter = Control.MOUSE_FILTER_STOP
+	ui_root.add_child(_handbook_panel)
+	var panel_style = StyleBoxFlat.new()
+	panel_style.bg_color = Color(0.05, 0.10, 0.18, 0.94)
+	panel_style.border_color = Color(0.26, 0.88, 0.95, 0.95)
+	panel_style.set_border_width_all(1)
+	panel_style.set_corner_radius_all(10)
+	_handbook_panel.add_theme_stylebox_override("panel", panel_style)
+
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 6)
+	_handbook_panel.add_child(vbox)
+	var title = Label.new()
+	title.text = "Mining Controls Guide"
+	title.add_theme_color_override("font_color", Color(0.95, 1.0, 1.0, 1.0))
+	title.add_theme_font_size_override("font_size", 18)
+	vbox.add_child(title)
+	var body = Label.new()
+	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	body.add_theme_color_override("font_color", Color(0.80, 0.90, 1.0, 1.0))
+	body.text = "Mine: hold SPACE (or FIRE) to collect surface deposits.\nDrone: press D (or DRONE) for subsurface dark deposits.\nInventory: check collected minerals and value.\nReturn to Earth: end run and open mission debrief.\nScore/Value: track run performance and payout potential."
+	vbox.add_child(body)
+
+func _toggle_button_handbook() -> void:
+	if _handbook_panel == null:
+		return
+	_handbook_panel.visible = not _handbook_panel.visible
+
+func _exit_tree() -> void:
+	_restore_tutorial_overlay()
+
 func _on_viewport_size_changed() -> void:
 	var now_touch = OS.has_feature("mobile") or get_viewport_rect().size.x < 768
-	if now_touch == _uses_touch_controls:
+	if now_touch != _uses_touch_controls:
+		_uses_touch_controls = now_touch
+		fire_button.visible = _uses_touch_controls
+		inventory_button.visible = _uses_touch_controls
+	_apply_responsive_layout()
+	_refresh_mars_background()
+	_position_rocket_lane()
+
+func _setup_beam_visuals() -> void:
+	laser.begin_cap_mode = Line2D.LINE_CAP_ROUND
+	laser.end_cap_mode = Line2D.LINE_CAP_ROUND
+	laser.antialiased = true
+	if _beam_glow and is_instance_valid(_beam_glow):
 		return
-	_uses_touch_controls = now_touch
-	fire_button.visible = _uses_touch_controls
-	inventory_button.visible = _uses_touch_controls
+	_beam_glow = Line2D.new()
+	_beam_glow.name = "LaserGlow"
+	_beam_glow.antialiased = true
+	_beam_glow.begin_cap_mode = Line2D.LINE_CAP_ROUND
+	_beam_glow.end_cap_mode = Line2D.LINE_CAP_ROUND
+	_beam_glow.visible = false
+	add_child(_beam_glow)
+	move_child(_beam_glow, laser.get_index())
+
+func _setup_mars_background() -> void:
+	if _mars_background and is_instance_valid(_mars_background):
+		return
+	_mars_background = TextureRect.new()
+	_mars_background.name = "MarsPixelBackground"
+	_mars_background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_mars_background.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_mars_background.stretch_mode = TextureRect.STRETCH_SCALE
+	_mars_background.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_mars_background.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_mars_background)
+	move_child(_mars_background, 0)
+	_apply_base_bg_color()
+	_refresh_mars_background()
+
+func _refresh_mars_background() -> void:
+	if _mars_background == null:
+		return
+	var viewport := get_viewport_rect().size
+	var pixel_w: int = max(PIXEL_BG_MIN_WIDTH, int(round(viewport.x / 8.0)))
+	var pixel_h: int = max(PIXEL_BG_MIN_HEIGHT, int(round(viewport.y / 8.0)))
+	var next_size := Vector2i(pixel_w, pixel_h)
+	if _mars_bg_size == next_size and _mars_background.texture != null:
+		return
+	_mars_bg_size = next_size
+	var image := Image.create(pixel_w, pixel_h, false, Image.FORMAT_RGBA8)
+	_fill_mars_gradient(image)
+	_draw_mars_stars(image)
+	_draw_planet_disc(image)
+	_draw_cloud_haze(image)
+	_draw_layered_ridges(image)
+	_draw_foreground_flora(image)
+	_apply_theme_tint(image)
+	_apply_pixel_texture(image)
+	var tex := ImageTexture.create_from_image(image)
+	_mars_background.texture = tex
+
+func _apply_base_bg_color() -> void:
+	var base_bg = get_node_or_null("Background") as ColorRect
+	if base_bg == null:
+		return
+	var theme = _theme_palette(_target_theme)
+	base_bg.color = theme.get("base_bg", Color(0.06, 0.04, 0.08, 1.0))
+
+func _apply_theme_tint(image: Image) -> void:
+	var theme = _theme_palette(_target_theme)
+	var tint: Color = theme.get("bg_tint", Color(1, 1, 1, 1))
+	var strength: float = float(theme.get("bg_tint_strength", 0.0))
+	if strength <= 0.001:
+		return
+	var width := image.get_width()
+	var height := image.get_height()
+	for y in range(height):
+		for x in range(width):
+			var src := image.get_pixel(x, y)
+			image.set_pixel(x, y, src.lerp(tint, strength))
+
+func _fill_mars_gradient(image: Image) -> void:
+	var width := image.get_width()
+	var height := image.get_height()
+	var colors := [
+		Color8(30, 35, 54),
+		Color8(42, 46, 71),
+		Color8(62, 52, 76),
+		Color8(78, 57, 79)
+	]
+	for y in range(height):
+		var t := float(y) / float(max(height - 1, 1))
+		var c := _sample_palette(colors, pow(t, 0.85))
+		for x in range(width):
+			image.set_pixel(x, y, c)
+
+func _sample_palette(colors: Array, t: float) -> Color:
+	if colors.size() <= 1:
+		return colors[0] if colors.size() == 1 else Color.BLACK
+	var scaled := clampf(t, 0.0, 1.0) * float(colors.size() - 1)
+	var index := int(floor(scaled))
+	var next_index: int = min(index + 1, colors.size() - 1)
+	var local_t := scaled - float(index)
+	return (colors[index] as Color).lerp(colors[next_index] as Color, local_t)
+
+func _theme_palette(theme_name: String) -> Dictionary:
+	if theme_name == _target_theme and not _target_palette.is_empty():
+		return _target_palette
+	return MiningTargetTheme.build_palette(theme_name, _current_target_id, _session_context)
+
+func _resolve_target_theme() -> String:
+	return MiningTargetTheme.resolve_theme(_session_context, _is_planet)
+
+func _draw_planet_disc(image: Image) -> void:
+	var width := image.get_width()
+	var height := image.get_height()
+	var center := Vector2(float(width) * 0.34, float(height) * 0.34)
+	var radius: float = float(min(width, height)) * 0.23
+	var planet_colors := [
+		Color8(114, 82, 116, 220),
+		Color8(138, 91, 126, 220),
+		Color8(88, 66, 101, 225)
+	]
+	for y in range(max(0, int(center.y - radius * 1.2)), min(height, int(center.y + radius * 1.2))):
+		for x in range(max(0, int(center.x - radius * 1.2)), min(width, int(center.x + radius * 1.2))):
+			var dx: float = float(x) - center.x
+			var dy: float = float(y) - center.y
+			var dist: float = sqrt(dx * dx + dy * dy) / max(radius, 1.0)
+			if dist <= 1.0:
+				var shade_t: float = clampf((dy / radius + 1.0) * 0.5, 0.0, 1.0)
+				var base := _sample_palette(planet_colors, shade_t)
+				if ((x + y) % 11) == 0:
+					base = base.lightened(0.1)
+				if ((x * 2 + y) % 13) == 0:
+					base = base.darkened(0.14)
+				var src := image.get_pixel(x, y)
+				image.set_pixel(x, y, src.lerp(base, 0.78))
+				if absf(dy + radius * 0.26) < 1.5 or absf(dy - radius * 0.02) < 1.5:
+					image.set_pixel(x, y, src.lerp(Color8(168, 132, 172, 200), 0.6))
+				elif dist <= 1.08:
+					var alpha: float = 1.0 - ((dist - 1.0) / 0.08)
+					var edge_src := image.get_pixel(x, y)
+					image.set_pixel(x, y, edge_src.lerp(Color8(169, 140, 182, int(alpha * 160.0)), alpha * 0.35))
+
+func _draw_layered_ridges(image: Image) -> void:
+	var width := image.get_width()
+	var height := image.get_height()
+	var horizon_y: int = int(height * 0.63)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 0x41355374
+	var ridge_colors := [Color8(132, 119, 152), Color8(116, 100, 136), Color8(98, 84, 120)]
+	for layer in range(3):
+		var y_base: int = horizon_y + layer * 8
+		var color: Color = ridge_colors[layer]
+		var x: int = 0
+		var peak_y: int = y_base
+		while x < width + 16:
+			var seg_w: int = rng.randi_range(6, 14)
+			var y_delta: int = rng.randi_range(-8 - layer * 2, 10 + layer * 2)
+			peak_y = clampi(peak_y + y_delta, y_base - (28 + layer * 8), y_base + 4)
+			for ix in range(x, min(width, x + seg_w)):
+				for iy in range(max(0, peak_y), height):
+					var c := color
+					if ((ix + iy + layer) % 9) == 0:
+						c = c.lightened(0.06)
+					image.set_pixel(ix, iy, c)
+			x += seg_w
+	for y in range(horizon_y, height):
+		var dust := Color8(82, 66, 100)
+		for x in range(width):
+			var c := dust
+			if ((x + y) % 8) == 0:
+				c = c.lightened(0.1)
+			elif ((x * 3 + y) % 13) == 0:
+				c = c.darkened(0.12)
+			image.set_pixel(x, y, c)
+
+func _draw_cloud_haze(image: Image) -> void:
+	var width := image.get_width()
+	var height := image.get_height()
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 0x434C4453
+	for _band in range(14):
+		var y: int = rng.randi_range(int(height * 0.14), int(height * 0.62))
+		var x_start: int = rng.randi_range(-20, width - 20)
+		var cloud_w: int = rng.randi_range(16, 46)
+		var cloud_h: int = rng.randi_range(2, 5)
+		var haze := Color8(214, 205, 220, rng.randi_range(35, 75))
+		for ix in range(max(0, x_start), min(width, x_start + cloud_w)):
+			for iy in range(max(0, y - cloud_h), min(height, y + cloud_h)):
+				if absf(float(iy - y)) <= float(cloud_h) * (1.0 - absf(float(ix - x_start - cloud_w / 2)) / max(float(cloud_w) * 0.5, 1.0)):
+					var src := image.get_pixel(ix, iy)
+					image.set_pixel(ix, iy, src.lerp(haze, 0.35))
+
+func _draw_foreground_flora(image: Image) -> void:
+	var width := image.get_width()
+	var height := image.get_height()
+	var ground_y: int = int(height * 0.78)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 0x464C4F52
+	for _i in range(max(10, width / 22)):
+		var x: int = rng.randi_range(0, width - 1)
+		var y: int = rng.randi_range(ground_y - 2, min(height - 4, ground_y + 8))
+		var stem_h: int = rng.randi_range(2, 6)
+		for sy in range(0, stem_h):
+			if y + sy < height:
+				image.set_pixel(x, y + sy, Color8(38, 22, 44))
+		var crown_w: int = rng.randi_range(3, 6)
+		for cx in range(-crown_w, crown_w + 1):
+			var px: int = x + cx
+			if px < 0 or px >= width:
+				continue
+			var py: int = y - stem_h + int(absf(float(cx)) * 0.25)
+			if py >= 0 and py < height:
+				image.set_pixel(px, py, Color8(121, 32, 70))
+				if py + 1 < height and (cx % 2 == 0):
+					image.set_pixel(px, py + 1, Color8(90, 24, 58))
+	for _patch in range(max(4, width / 80)):
+		var px0: int = rng.randi_range(0, width - 10)
+		var py0: int = rng.randi_range(ground_y + 2, min(height - 2, ground_y + 14))
+		var pw: int = rng.randi_range(4, 14)
+		for px in range(px0, min(width, px0 + pw)):
+			if py0 < height:
+				image.set_pixel(px, py0, Color8(182, 106, 84))
+				if py0 + 1 < height and (px % 3) == 0:
+					image.set_pixel(px, py0 + 1, Color8(200, 132, 98))
+
+func _apply_pixel_texture(image: Image) -> void:
+	var width := image.get_width()
+	var height := image.get_height()
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 0x50495845
+	for y in range(height):
+		for x in range(width):
+			var n := rng.randf()
+			if n < 0.065:
+				image.set_pixel(x, y, image.get_pixel(x, y).darkened(0.08))
+			elif n > 0.935:
+				image.set_pixel(x, y, image.get_pixel(x, y).lightened(0.07))
+
+func _draw_mars_sun(image: Image, center: Vector2i, radius: int) -> void:
+	# Legacy function kept for compatibility with old callsites.
+	_draw_planet_disc(image)
+
+func _draw_mars_horizon(image: Image) -> void:
+	# Legacy function kept for compatibility with old callsites.
+	_draw_layered_ridges(image)
+
+func _draw_mars_stars(image: Image) -> void:
+	var width := image.get_width()
+	var height := image.get_height()
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 0x534B5931
+	for _i in range(90):
+		var x := rng.randi_range(0, width - 1)
+		var y := rng.randi_range(0, int(height * 0.5))
+		var c := Color8(209, 216, 238, rng.randi_range(90, 190))
+		image.set_pixel(x, y, c)
+
+func _apply_responsive_layout() -> void:
+	var viewport := get_viewport_rect().size
+	var is_mobile := viewport.x < 900.0
+	var is_portrait_mobile := is_mobile and viewport.y > viewport.x
+	_compact_layout_active = _is_compact_layout(viewport)
+	var edge := 12.0 if is_mobile else 20.0
+	var top := 12.0 if is_mobile else 20.0
+	_set_hud_typography(is_mobile, is_portrait_mobile)
+	_ensure_right_stats_parent(ui_root if is_portrait_mobile else top_bar)
+	top_spacer.visible = not is_portrait_mobile
+
+	top_bar.offset_left = edge
+	top_bar.offset_top = top
+	top_bar.offset_right = -edge
+	top_bar.offset_bottom = top + (72.0 if is_mobile else 84.0)
+	top_bar.add_theme_constant_override("separation", 8 if is_portrait_mobile else (12 if is_mobile else 18))
+	left_gauges.add_theme_constant_override("separation", 6 if is_portrait_mobile else (10 if is_mobile else 14))
+	right_stats.add_theme_constant_override("separation", 5 if is_portrait_mobile else (8 if is_mobile else 10))
+	contract_order_vbox.add_theme_constant_override("separation", 6 if is_mobile else 4)
+
+	if is_portrait_mobile:
+		_apply_portrait_layout(viewport)
+	else:
+		_apply_landscape_layout(is_mobile)
+	_update_room_panel_visibility(viewport)
+	_position_rocket_lane()
+
+func _is_compact_layout(viewport: Vector2) -> bool:
+	return viewport.y > viewport.x or viewport.x < 1600.0 or viewport.y < 900.0
+
+func _set_hud_typography(is_mobile: bool, is_portrait_mobile: bool) -> void:
+	var gauge_font_size = 12 if is_portrait_mobile else (14 if is_mobile else (15 if _compact_layout_active else 18))
+	var score_font_size = 14 if is_portrait_mobile else (16 if is_mobile else (17 if _compact_layout_active else 20))
+	var stat_font_size = 12 if is_portrait_mobile else (14 if is_mobile else (15 if _compact_layout_active else 18))
+	var instructions_font_size = 13 if is_portrait_mobile else (16 if is_mobile else (17 if _compact_layout_active else 22))
+	var contract_title_font_size = 13 if is_portrait_mobile else (15 if is_mobile else 17)
+	var contract_progress_font_size = 12 if is_portrait_mobile else (14 if is_mobile else 15)
+	fuel_label.add_theme_font_size_override("font_size", gauge_font_size)
+	heat_label.add_theme_font_size_override("font_size", gauge_font_size)
+	beam_label.add_theme_font_size_override("font_size", gauge_font_size)
+	drone_label.add_theme_font_size_override("font_size", gauge_font_size)
+	score_label.add_theme_font_size_override("font_size", score_font_size)
+	rocket_label.add_theme_font_size_override("font_size", stat_font_size)
+	value_label.add_theme_font_size_override("font_size", stat_font_size)
+	instructions.add_theme_font_size_override("font_size", instructions_font_size)
+	contract_order_title.add_theme_font_size_override("font_size", contract_title_font_size)
+	contract_order_progress.add_theme_font_size_override("font_size", contract_progress_font_size)
+
+func _ensure_right_stats_parent(parent_node: Node) -> void:
+	if parent_node == null:
+		return
+	if right_stats.get_parent() == parent_node:
+		return
+	var existing_parent = right_stats.get_parent()
+	if existing_parent:
+		existing_parent.remove_child(right_stats)
+	parent_node.add_child(right_stats)
+
+func _apply_portrait_layout(viewport: Vector2) -> void:
+	var edge := 10.0
+	left_gauges.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	rocket_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	score_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	value_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	right_stats.layout_mode = 1
+	right_stats.anchor_left = 0.0
+	right_stats.anchor_top = 0.0
+	right_stats.anchor_right = 1.0
+	right_stats.anchor_bottom = 0.0
+	right_stats.offset_left = edge
+	right_stats.offset_top = top_bar.offset_bottom + 6.0
+	right_stats.offset_right = -edge
+	right_stats.offset_bottom = right_stats.offset_top + 120.0
+	contract_order_panel.anchor_left = 0.0
+	contract_order_panel.anchor_right = 1.0
+	contract_order_panel.offset_left = edge
+	contract_order_panel.offset_right = -edge
+	contract_order_panel.offset_top = right_stats.offset_bottom + 6.0
+	contract_order_panel.offset_bottom = contract_order_panel.offset_top + 76.0
+	instructions.offset_left = -((viewport.x * 0.48))
+	instructions.offset_right = viewport.x * 0.48
+	instructions.offset_top = contract_order_panel.offset_bottom + 6.0
+	instructions.offset_bottom = instructions.offset_top + 54.0
+	fire_button.offset_left = -88.0
+	fire_button.offset_right = 88.0
+	fire_button.offset_top = -102.0
+	fire_button.offset_bottom = -28.0
+	inventory_button.anchor_left = 0.0
+	inventory_button.anchor_right = 0.0
+	inventory_button.offset_left = 12.0
+	inventory_button.offset_top = -100.0
+	inventory_button.offset_right = 136.0
+	inventory_button.offset_bottom = -44.0
+	return_button.anchor_left = 1.0
+	return_button.anchor_right = 1.0
+	return_button.offset_left = -136.0
+	return_button.offset_top = -100.0
+	return_button.offset_right = -12.0
+	return_button.offset_bottom = -44.0
+	inventory_panel.offset_left = -((viewport.x * 0.48))
+	inventory_panel.offset_right = viewport.x * 0.48
+	inventory_panel.offset_top = -(viewport.y * 0.34)
+	inventory_panel.offset_bottom = viewport.y * 0.34
+	if _room_panel and is_instance_valid(_room_panel):
+		_room_panel.anchor_left = 1.0
+		_room_panel.anchor_top = 0.0
+		_room_panel.anchor_right = 1.0
+		_room_panel.anchor_bottom = 0.0
+		_layout_room_panel(viewport)
+	if _room_toggle_button and is_instance_valid(_room_toggle_button):
+		_room_toggle_button.anchor_left = 1.0
+		_room_toggle_button.anchor_right = 1.0
+		_room_toggle_button.anchor_top = 0.0
+		_room_toggle_button.anchor_bottom = 0.0
+		_room_toggle_button.offset_left = -118.0
+		_room_toggle_button.offset_top = top_bar.offset_bottom + 6.0
+		_room_toggle_button.offset_right = -10.0
+		_room_toggle_button.offset_bottom = _room_toggle_button.offset_top + 32.0
+
+func _apply_landscape_layout(is_mobile: bool) -> void:
+	right_stats.layout_mode = 2
+	right_stats.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	right_stats.size_flags_stretch_ratio = 0.5
+	rocket_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	score_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	value_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	left_gauges.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	instructions.offset_left = -340 if is_mobile else -400
+	instructions.offset_right = 340 if is_mobile else 400
+	instructions.offset_top = 180 if is_mobile else 200
+	instructions.offset_bottom = instructions.offset_top + 40.0
+	contract_order_panel.anchor_left = 0.5
+	contract_order_panel.anchor_right = 0.5
+	contract_order_panel.offset_left = -260 if is_mobile else -300
+	contract_order_panel.offset_right = 260 if is_mobile else 300
+	contract_order_panel.offset_top = 92 if is_mobile else 100
+	contract_order_panel.offset_bottom = 188
+	fire_button.offset_left = -76 if is_mobile else -60
+	fire_button.offset_right = 76 if is_mobile else 60
+	fire_button.offset_top = -88 if is_mobile else -70
+	fire_button.offset_bottom = -22 if is_mobile else -20
+	inventory_button.anchor_left = 1.0
+	inventory_button.anchor_right = 1.0
+	inventory_button.offset_left = -126 if is_mobile else -120
+	inventory_button.offset_top = -116 if is_mobile else -100
+	inventory_button.offset_right = -12 if is_mobile else -10
+	inventory_button.offset_bottom = -64 if is_mobile else -60
+	return_button.anchor_left = 1.0
+	return_button.anchor_right = 1.0
+	return_button.offset_left = -150 if is_mobile else -140
+	return_button.offset_top = -64 if is_mobile else -50
+	return_button.offset_right = -12 if is_mobile else -10
+	return_button.offset_bottom = -12 if is_mobile else -10
+	if _room_panel and is_instance_valid(_room_panel):
+		_room_panel.anchor_left = 1.0
+		_room_panel.anchor_top = 0.0
+		_room_panel.anchor_right = 1.0
+		_room_panel.anchor_bottom = 0.0
+		_layout_room_panel(get_viewport_rect().size)
+	if _room_toggle_button and is_instance_valid(_room_toggle_button):
+		_room_toggle_button.anchor_left = 1.0
+		_room_toggle_button.anchor_right = 1.0
+		_room_toggle_button.anchor_top = 0.0
+		_room_toggle_button.anchor_bottom = 0.0
+		_room_toggle_button.offset_left = -132.0
+		_room_toggle_button.offset_top = top_bar.offset_bottom + 8.0
+		_room_toggle_button.offset_right = -20.0
+		_room_toggle_button.offset_bottom = _room_toggle_button.offset_top + 34.0
+
+func _update_room_panel_visibility(viewport: Vector2) -> void:
+	if _room_panel == null:
+		return
+	var compact = _is_compact_layout(viewport)
+	if _room_toggle_button and is_instance_valid(_room_toggle_button):
+		_room_toggle_button.visible = true
+		_room_toggle_button.text = "ROOMS: ON" if _room_panel_visible else "ROOMS"
+		_room_toggle_button.custom_minimum_size = Vector2(96, 30 if compact else 34)
+	_room_panel.visible = _room_panel_visible
+	_layout_room_panel(viewport)
+	_render_room_panel()
+
+func _toggle_room_panel() -> void:
+	_room_panel_visible = not _room_panel_visible
+	if _room_panel:
+		_room_panel.visible = _room_panel_visible
+	if _room_toggle_button:
+		_room_toggle_button.text = "ROOMS: ON" if _room_panel_visible else "ROOMS"
+
+func _layout_room_panel(viewport: Vector2) -> void:
+	if _room_panel == null:
+		return
+	var margin := 10.0
+	var panel_w: float = clampf(viewport.x * 0.22, 190.0, 290.0)
+	var panel_h: float = clampf(viewport.y * 0.34, 150.0, 260.0)
+	var top_y: float = top_bar.offset_bottom + 48.0
+	var max_top: float = maxf(margin, viewport.y - panel_h - 110.0)
+	top_y = minf(top_y, max_top)
+	_room_panel.offset_right = -margin
+	_room_panel.offset_left = _room_panel.offset_right - panel_w
+	_room_panel.offset_top = top_y
+	_room_panel.offset_bottom = top_y + panel_h
 
 func start_mining(is_planet: bool = false, difficulty: int = 1, target_id: String = "", minerals: Dictionary = {}, mineable_pct: float = 0.5, session_context: Dictionary = {}):
 	_is_planet = is_planet
@@ -178,6 +719,16 @@ func start_mining(is_planet: bool = false, difficulty: int = 1, target_id: Strin
 	_target_minerals = minerals
 	_target_mineable_pct = mineable_pct
 	_session_context = session_context.duplicate(true)
+	var signature_any = _session_context.get("generation_signature", {})
+	if typeof(signature_any) == TYPE_DICTIONARY:
+		_generation_signature = (signature_any as Dictionary).duplicate(true)
+	else:
+		_generation_signature = {}
+	_target_theme = _resolve_target_theme()
+	_target_palette = _theme_palette(_target_theme)
+	_target_palette_key = str(_target_palette.get("palette_key", "%s:default" % _target_theme))
+	_apply_base_bg_color()
+	_refresh_mars_background()
 	_completion_report = {}
 	_resolve_starter_contract_context()
 	_collection_by_tool = {"laser": 0, "drone": 0}
@@ -260,11 +811,14 @@ func _setup_room_panel() -> void:
 
 	var title := Label.new()
 	title.text = "Rocket Rooms"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	vbox.add_child(title)
 
 	_room_grid = GridContainer.new()
 	_room_grid.columns = 2
 	_room_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_room_grid.add_theme_constant_override("h_separation", 8)
+	_room_grid.add_theme_constant_override("v_separation", 4)
 	vbox.add_child(_room_grid)
 
 	_room_debug_overlay = Control.new()
@@ -275,9 +829,17 @@ func _setup_room_panel() -> void:
 	_room_debug_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	ui_root.add_child(_room_debug_overlay)
 
+	_room_toggle_button = Button.new()
+	_room_toggle_button.name = "RoomPanelToggle"
+	_room_toggle_button.text = "ROOMS"
+	_room_toggle_button.focus_mode = Control.FOCUS_NONE
+	_room_toggle_button.pressed.connect(_toggle_room_panel)
+	ui_root.add_child(_room_toggle_button)
+
 func _render_room_panel() -> void:
 	if _room_grid == null:
 		return
+	_room_grid.columns = 2
 	for child in _room_grid.get_children():
 		child.queue_free()
 	var rooms = RoomCatalog.get_installed_rooms(_rocket_room_layout)
@@ -289,17 +851,25 @@ func _render_room_panel() -> void:
 		var tile := TextureRect.new()
 		tile.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		tile.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		tile.custom_minimum_size = Vector2(ROOM_ICON_WIDTH, ROOM_ICON_HEIGHT)
+		tile.custom_minimum_size = Vector2(56, 24)
 		tile.texture = RoomSpriteAtlas.texture_for_room(room_id)
 		if tile.texture == null:
 			tile.modulate = Color(0.16, 0.22, 0.34, 1.0)
 		_room_grid.add_child(tile)
-
 		var label := Label.new()
-		var status_suffix := " (offline)" if bool(room_row.get("offline", false)) else ""
-		label.text = "%s T%d%s" % [str(room_def.get("name", room_id)), int(room_row.get("tier", 1)), status_suffix]
+		var room_name = _truncate_room_name(str(room_def.get("name", room_id)))
+		var tier = int(room_row.get("tier", 1))
+		label.text = "%s T%d" % [room_name, tier]
+		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		label.add_theme_font_size_override("font_size", 12 if _compact_layout_active else 14)
 		_room_grid.add_child(label)
 	_refresh_room_debug_overlay()
+
+func _truncate_room_name(name: String) -> String:
+	var max_len := 14
+	if name.length() <= max_len:
+		return name
+	return "%s..." % name.substr(0, max_len - 3)
 
 func _refresh_room_debug_overlay() -> void:
 	if _room_debug_overlay == null:
@@ -362,6 +932,15 @@ func _setup_rocket():
 	rocket.position = Vector2(250, ROCKET_Y)
 	rocket.scale = Vector2(0.27, 0.27)  # 80% larger (0.15 * 1.8)
 	rocket.rotation = deg_to_rad(90)
+	_position_rocket_lane()
+
+func _position_rocket_lane() -> void:
+	if rocket == null:
+		return
+	var viewport := get_viewport_rect().size
+	var hud_clearance: float = maxf(top_bar.offset_bottom + 220.0, instructions.offset_bottom + 90.0)
+	var target_y: float = clampf(hud_clearance, 320.0, maxf(viewport.y * 0.66, 360.0))
+	rocket.position.y = target_y
 
 func _generate_terrain():
 	var rng = RandomNumberGenerator.new()
@@ -389,10 +968,17 @@ func _generate_terrain():
 				mineral.modulate = Color(1, 1, 1, 1)
 	
 	var base_height = screen_height - 250
+	var terrain_sig = _generation_signature.get("terrain", {})
+	if typeof(terrain_sig) != TYPE_DICTIONARY:
+		terrain_sig = {}
+	base_height += float((terrain_sig as Dictionary).get("height_bias", 0.0))
 	var prev_height = base_height
 	
 	# Higher difficulty = more varied terrain
-	var difficulty_multiplier = 1.0 + (_rocket_level * 0.15)
+	var roughness = float((terrain_sig as Dictionary).get("roughness", 1.0))
+	var difficulty_multiplier = (1.0 + (_rocket_level * 0.15)) * roughness
+	var peak_boost = float((terrain_sig as Dictionary).get("peak_chance_boost", 0.0))
+	var valley_boost = float((terrain_sig as Dictionary).get("valley_chance_boost", 0.0))
 	
 	for i in range(segments + 1):
 		var x = i * TERRAIN_SEGMENT_WIDTH
@@ -401,31 +987,65 @@ func _generate_terrain():
 		var height_change = rng.randf_range(-25, 25) * difficulty_multiplier
 		
 		# Occasional sharp peaks/valleys (more frequent at higher difficulty)
-		var peak_chance = 0.08 + (_rocket_level * 0.01)
+		var peak_chance = max(0.02, 0.08 + (_rocket_level * 0.01) + peak_boost)
 		if rng.randf() < peak_chance:
 			height_change = rng.randf_range(-100, -60) * difficulty_multiplier  # Sharp peak up
-		elif rng.randf() < (0.05 + _rocket_level * 0.005):
+		elif rng.randf() < max(0.01, 0.05 + _rocket_level * 0.005 + valley_boost):
 			height_change = rng.randf_range(40, 80) * difficulty_multiplier  # Valley down
 		
 		prev_height = clamp(prev_height + height_change, screen_height - 380, screen_height - 120)
+		prev_height = floor(prev_height / 6.0) * 6.0
 		_terrain_points.append(Vector2(x, prev_height))
 	
 	terrain_line.points = _terrain_points
-	terrain_line.width = 4
-	terrain_line.default_color = Color(0.85, 0.55, 0.35, 0.9)  # Orange desert outline
+	terrain_line.width = 3
+	terrain_line.default_color = _theme_palette(_target_theme).get("terrain_line", Color(0.95, 0.74, 0.48, 0.95))
 	terrain_line.joint_mode = Line2D.LINE_JOINT_SHARP
-	terrain_line.antialiased = true
+	terrain_line.antialiased = false
 	
 	var fill_points = PackedVector2Array()
 	fill_points.append_array(_terrain_points)
 	fill_points.append(Vector2(_terrain_width, screen_height))
 	fill_points.append(Vector2(0, screen_height))
 	terrain_fill.polygon = fill_points
-	terrain_fill.color = Color(0.65, 0.35, 0.25, 1.0)  # Orange-brown desert ground
+	_apply_pixel_terrain_style(fill_points)
 	
 	_add_surface_rocks(rng)
 	_generate_minerals(rng)
 	_rebuild_loop_container()
+
+func _apply_pixel_terrain_style(fill_points: PackedVector2Array) -> void:
+	if not _terrain_pixel_textures.has(_target_palette_key):
+		_terrain_pixel_textures[_target_palette_key] = _build_terrain_pixel_texture(_target_theme)
+	terrain_fill.texture = _terrain_pixel_textures.get(_target_palette_key)
+	terrain_fill.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	terrain_fill.color = Color(1, 1, 1, 1)
+	var uv := PackedVector2Array()
+	for p in fill_points:
+		uv.append(Vector2(p.x / 28.0, p.y / 20.0))
+	terrain_fill.uv = uv
+	terrain_line.default_color = _theme_palette(_target_theme).get("terrain_line", Color(0.95, 0.74, 0.48, 0.95))
+
+func _build_terrain_pixel_texture(theme_name: String) -> Texture2D:
+	var width := 96
+	var height := 96
+	var image := Image.create(width, height, false, Image.FORMAT_RGBA8)
+	var theme = _theme_palette(theme_name)
+	var base_a: Color = theme.get("terrain_a", Color8(162, 95, 66, 255))
+	var base_b: Color = theme.get("terrain_b", Color8(178, 111, 74, 255))
+	var shade: Color = theme.get("terrain_shade", Color8(132, 78, 57, 255))
+	var highlight: Color = theme.get("terrain_highlight", Color8(220, 149, 88, 255))
+	for y in range(height):
+		for x in range(width):
+			var checker = ((x / 2) + (y / 2)) % 2
+			var c = base_a if checker == 0 else base_b
+			if ((x + y) % 11) == 0:
+				c = shade
+			elif ((x * 3 + y) % 17) == 0:
+				c = highlight
+			image.set_pixel(x, y, c)
+	var tex := ImageTexture.create_from_image(image)
+	return tex
 
 func _rebuild_loop_container() -> void:
 	if _terrain_loop_container and is_instance_valid(_terrain_loop_container):
@@ -447,13 +1067,24 @@ func _add_surface_rocks(rng: RandomNumberGenerator):
 	
 	var rocks = rock_pool.get_children()
 	var rock_count = min(50, rocks.size())
+	var terrain_sig = _generation_signature.get("terrain", {})
+	if typeof(terrain_sig) != TYPE_DICTIONARY:
+		terrain_sig = {}
+	var sig = terrain_sig as Dictionary
+	var cluster_count = clampi(int(sig.get("landmark_cluster_count", 3)), 1, 8)
+	var cluster_bias = clampf(float(sig.get("landmark_cluster_bias", 0.5)), 0.0, 1.0)
+	var cluster_centers: Array = []
+	for _i in range(cluster_count):
+		cluster_centers.append(rng.randf_range(160, _terrain_width - 160))
 	
 	for i in range(rock_count):
 		var rock = rocks[i]
 		if not rock is Polygon2D:
 			continue
-			
-		var x = rng.randf_range(100, _terrain_width - 100)
+		var center = float(cluster_centers[i % cluster_centers.size()])
+		var spread = lerpf(220.0, 70.0, cluster_bias)
+		var clustered_x = center + rng.randf_range(-spread, spread)
+		var x = clampf(lerpf(rng.randf_range(100, _terrain_width - 100), clustered_x, cluster_bias), 100.0, _terrain_width - 100.0)
 		var y = _get_terrain_y_at(x)
 		var size = rng.randf_range(10, 25)
 		
@@ -588,6 +1219,7 @@ func _get_terrain_y_at(x: float) -> float:
 	return lerp(y1, y2, t)
 
 func _process(delta):
+	_enforce_tutorial_overlay_hidden()
 	_elapsed_time += delta
 	
 	# Animate particles from pool
@@ -661,6 +1293,8 @@ func _process(delta):
 	else:
 		_heat = max(0, _heat - HEAT_COOL_RATE * delta)
 		laser.visible = false
+		if _beam_glow:
+			_beam_glow.visible = false
 		if _heat == 0 and _combo > 0:
 			_combo = 0
 			score_label.text = "Score: %d" % _score
@@ -693,16 +1327,45 @@ func _process(delta):
 
 func _fire_laser():
 	laser.visible = true
-	var laser_start = rocket.position
-	var laser_end = Vector2(rocket.position.x, get_viewport_rect().size.y)
-	
+	if _beam_glow:
+		_beam_glow.visible = true
+	var laser_start := rocket.position + Vector2(0, 8)
+	var laser_end := Vector2(rocket.position.x, get_viewport_rect().size.y)
+	var points := _build_beam_points(laser_start, laser_end)
 	laser.clear_points()
-	laser.add_point(laser_start)
-	laser.add_point(laser_end)
-	laser.width = 6
-	laser.default_color = Color(0.2, 0.9, 1.0).lerp(Color(1.0, 0.2, 0.2), _heat / 100.0)
-	
+	for point in points:
+		laser.add_point(point)
+	var heat_pct: float = _heat / 100.0
+	laser.width = lerpf(6.0, 9.5, heat_pct)
+	laser.default_color = Color(0.20, 0.92, 1.0, 0.95).lerp(Color(1.0, 0.34, 0.22, 0.98), heat_pct)
+	if _beam_glow:
+		_beam_glow.clear_points()
+		for point in points:
+			_beam_glow.add_point(point)
+		_beam_glow.width = laser.width * 2.4
+		_beam_glow.default_color = Color(
+			min(laser.default_color.r + 0.22, 1.0),
+			min(laser.default_color.g + 0.22, 1.0),
+			min(laser.default_color.b + 0.22, 1.0),
+			0.35
+		)
 	_check_mineral_hit()
+
+func _build_beam_points(laser_start: Vector2, laser_end: Vector2) -> PackedVector2Array:
+	var points := PackedVector2Array()
+	var heat_pct: float = _heat / 100.0
+	var amp_primary := lerpf(4.0, 12.0, heat_pct)
+	var amp_secondary := amp_primary * 0.5
+	for i in range(BEAM_SEGMENTS + 1):
+		var t := float(i) / float(BEAM_SEGMENTS)
+		var y := lerpf(laser_start.y, laser_end.y, t)
+		var taper := sin(t * PI)
+		var phase: float = _elapsed_time * 15.0
+		var wave_a := sin((t * 13.0) + phase) * amp_primary
+		var wave_b := sin((t * 27.0) - (phase * 0.62)) * amp_secondary
+		var x := laser_start.x + (wave_a + wave_b) * taper
+		points.append(Vector2(x, y))
+	return points
 
 func _check_mineral_hit():
 	var rocket_x = fmod(rocket.position.x + _scroll_offset, _terrain_width)
@@ -950,38 +1613,38 @@ func _show_guide_step():
 	match _guide_step:
 		GuideStep.INTRO:
 			if _uses_touch_controls:
-				instructions.text = "Welcome to mining. Hold FIRE to mine, tap DRONE for drones, tap RETURN to head back to debrief."
+				instructions.text = "Hold FIRE to mine. Tap DRONE for subsurface. Tap RETURN to leave."
 			else:
-				instructions.text = "Welcome to mining. Hold SPACE to mine, press D for drones, press RETURN to head back to debrief."
+				instructions.text = "Hold SPACE to mine. Press D for drones. Press RETURN to leave."
 			if _starter_contract_active and _starter_order_targets.size() > 0:
-				instructions.text += " Follow the order panel at the top: mine listed minerals and ignore non-order deposits."
+				instructions.text += " Follow contract order minerals only."
 			_guide_paused = false  # Keep flying
 		GuideStep.MINE_SURFACE_IRON:
 			if _starter_contract_active and _starter_order_targets.size() > 0:
-				instructions.text = "Mine only surface deposits that match your active order. Ignore off-order colors."
+				instructions.text = "Mine only requested surface minerals."
 			else:
-				instructions.text = "ORANGE = Iron (10pts). Hold SPACE to mine surface deposits!"
+				instructions.text = "Mine orange surface deposits (iron)."
 			_guide_paused = false  # Keep flying until near deposit
 		GuideStep.MINE_SURFACE_NICKEL:
 			if _starter_contract_active and _starter_order_targets.size() > 0:
-				instructions.text = "Good. Keep prioritizing order minerals and skip anything not requested."
+				instructions.text = "Good. Keep prioritizing requested minerals."
 			else:
-				instructions.text = "YELLOW = Nickel (15pts). Mine another surface deposit!"
+				instructions.text = "Mine yellow surface deposits (nickel)."
 			_guide_paused = false  # Keep flying until near deposit
 		GuideStep.EXPLAIN_SUBSURFACE:
-			instructions.text = "DARKER deposits are underground — your laser can't reach them. Drones can!"
+			instructions.text = "Dark deposits are subsurface. Use drones."
 			_guide_paused = false  # Keep flying
 		GuideStep.DEPLOY_DRONE:
 			if _uses_touch_controls:
-				instructions.text = "Tap DRONE to drop a drone. It lands directly below your rocket — position over the dark deposit first!"
+				instructions.text = "Tap DRONE while over a dark deposit."
 			else:
-				instructions.text = "Press D to deploy a drone. It drops straight down from your rocket — position over the dark deposit first!"
+				instructions.text = "Press D while over a dark deposit."
 			_guide_paused = false  # Keep flying until near subsurface
 		GuideStep.COMPLETE:
 			if _uses_touch_controls:
-				instructions.text = "Great! Continue mining. FIRE mine, DRONE deploy, RETURN debrief. Watch FUEL and HEAT!"
+				instructions.text = "Continue: FIRE mine, DRONE deploy, RETURN exit."
 			else:
-				instructions.text = "Great! Continue mining. Controls: SPACE mine, D drone, RETURN debrief. Watch FUEL and HEAT!"
+				instructions.text = "Continue: SPACE mine, D drone, RETURN exit."
 			_guide_paused = false
 			_guide_active = false
 	
@@ -1107,7 +1770,47 @@ func _update_drone_display():
 	var cooldown_text = ""
 	if _drone_cooldown_timer > 0:
 		cooldown_text = " (%.1fs)" % _drone_cooldown_timer
-	drone_label.text = "DRONES: %d/%d%s\n[D] to deploy" % [_drones_available, MAX_DRONES, cooldown_text]
+	if _compact_layout_active:
+		drone_label.text = "DRONES: %d/%d%s" % [_drones_available, MAX_DRONES, cooldown_text]
+	elif _uses_touch_controls:
+		drone_label.text = "DRONES: %d/%d%s\n[TAP DRONE]" % [_drones_available, MAX_DRONES, cooldown_text]
+	else:
+		drone_label.text = "DRONES: %d/%d%s\n[D] deploy" % [_drones_available, MAX_DRONES, cooldown_text]
+
+func _suspend_tutorial_overlay() -> void:
+	var root = get_tree().root if get_tree() else null
+	if root == null:
+		return
+	var overlay = root.find_child("TutorialCoachOverlay", true, false)
+	if overlay == null:
+		return
+	_tutorial_overlay_was_visible = bool(overlay.visible)
+	overlay.visible = false
+	overlay.process_mode = Node.PROCESS_MODE_DISABLED
+
+func _restore_tutorial_overlay() -> void:
+	var root = get_tree().root if get_tree() else null
+	if root == null:
+		return
+	var overlay = root.find_child("TutorialCoachOverlay", true, false)
+	if overlay == null:
+		return
+	overlay.process_mode = Node.PROCESS_MODE_INHERIT
+	overlay.visible = _tutorial_overlay_was_visible
+	if overlay.has_method("_refresh"):
+		overlay.call_deferred("_refresh")
+
+func _enforce_tutorial_overlay_hidden() -> void:
+	var root = get_tree().root if get_tree() else null
+	if root == null:
+		return
+	var overlay = root.find_child("TutorialCoachOverlay", true, false)
+	if overlay == null:
+		return
+	if overlay.visible:
+		overlay.visible = false
+	if overlay.process_mode != Node.PROCESS_MODE_DISABLED:
+		overlay.process_mode = Node.PROCESS_MODE_DISABLED
 
 func _reset_minerals():
 	# Reset collected state and regenerate positions

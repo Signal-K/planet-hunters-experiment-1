@@ -1,0 +1,637 @@
+{
+  "taskId": "lhysnf",
+  "currentVersion": 12,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "lhysnf",
+      "version": 1,
+      "timestamp": "2026-03-06T06:54:06.318Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Feedback pass: spacing, mining beam, and Mars background polish",
+        "description": "Implement user feedback from latest review while preserving current color palette, fonts, and rocket/mineral animations.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "feedback",
+          "mining",
+          "visual-polish"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Core UI spacing is visually consistent across key gameplay screens"
+          },
+          {
+            "completed": false,
+            "text": "Mining beam reads as a beam effect (not a straight line)"
+          },
+          {
+            "completed": false,
+            "text": "Mining scene includes a 2D pixelated Mars background"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "lhysnf",
+      "version": 2,
+      "timestamp": "2026-03-06T06:54:29.622Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "newValue": "1. Spacing pass: update Earth nav button container and mining HUD/action panel spacing for consistent gaps/padding across desktop and mobile widths while preserving existing colors/fonts.\n2. Mining beam VFX: replace single straight laser line rendering with a layered beam effect (core + glow + slight animated width/noise) while keeping existing hit detection and gameplay logic.\n3. Pixelated Mars background: add a procedurally generated pixel-art Mars sky/horizon layer behind terrain in SidescrollMining that scales to viewport sizes.\n4. Verify + polish: run targeted checks (lint/parse where available), verify no regressions in mining collection loop, and tune constants for readability.\n5. Task closeout: update notes, check AC, stop timer, and mark done."
+        }
+      ],
+      "snapshot": {
+        "title": "Feedback pass: spacing, mining beam, and Mars background polish",
+        "description": "Implement user feedback from latest review while preserving current color palette, fonts, and rocket/mineral animations.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "feedback",
+          "mining",
+          "visual-polish"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Core UI spacing is visually consistent across key gameplay screens"
+          },
+          {
+            "completed": false,
+            "text": "Mining beam reads as a beam effect (not a straight line)"
+          },
+          {
+            "completed": false,
+            "text": "Mining scene includes a 2D pixelated Mars background"
+          }
+        ],
+        "implementationPlan": "1. Spacing pass: update Earth nav button container and mining HUD/action panel spacing for consistent gaps/padding across desktop and mobile widths while preserving existing colors/fonts.\n2. Mining beam VFX: replace single straight laser line rendering with a layered beam effect (core + glow + slight animated width/noise) while keeping existing hit detection and gameplay logic.\n3. Pixelated Mars background: add a procedurally generated pixel-art Mars sky/horizon layer behind terrain in SidescrollMining that scales to viewport sizes.\n4. Verify + polish: run targeted checks (lint/parse where available), verify no regressions in mining collection loop, and tune constants for readability.\n5. Task closeout: update notes, check AC, stop timer, and mark done."
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "lhysnf",
+      "version": 3,
+      "timestamp": "2026-03-06T07:05:04.283Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "Implemented spacing pass (Earth nav + mining HUD/buttons), replaced straight mining line with layered beam effect, and added procedural 2D pixel Mars background in mining scene. Preserved palette/font choices. ./run_tests_clean.sh passes except existing outbound transit distance-label assertion."
+        }
+      ],
+      "snapshot": {
+        "title": "Feedback pass: spacing, mining beam, and Mars background polish",
+        "description": "Implement user feedback from latest review while preserving current color palette, fonts, and rocket/mineral animations.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "feedback",
+          "mining",
+          "visual-polish"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Core UI spacing is visually consistent across key gameplay screens"
+          },
+          {
+            "completed": false,
+            "text": "Mining beam reads as a beam effect (not a straight line)"
+          },
+          {
+            "completed": false,
+            "text": "Mining scene includes a 2D pixelated Mars background"
+          }
+        ],
+        "implementationPlan": "1. Spacing pass: update Earth nav button container and mining HUD/action panel spacing for consistent gaps/padding across desktop and mobile widths while preserving existing colors/fonts.\n2. Mining beam VFX: replace single straight laser line rendering with a layered beam effect (core + glow + slight animated width/noise) while keeping existing hit detection and gameplay logic.\n3. Pixelated Mars background: add a procedurally generated pixel-art Mars sky/horizon layer behind terrain in SidescrollMining that scales to viewport sizes.\n4. Verify + polish: run targeted checks (lint/parse where available), verify no regressions in mining collection loop, and tune constants for readability.\n5. Task closeout: update notes, check AC, stop timer, and mark done.",
+        "implementationNotes": "Implemented spacing pass (Earth nav + mining HUD/buttons), replaced straight mining line with layered beam effect, and added procedural 2D pixel Mars background in mining scene. Preserved palette/font choices. ./run_tests_clean.sh passes except existing outbound transit distance-label assertion."
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "lhysnf",
+      "version": 4,
+      "timestamp": "2026-03-06T07:05:04.296Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Core UI spacing is visually consistent across key gameplay screens"
+            },
+            {
+              "completed": false,
+              "text": "Mining beam reads as a beam effect (not a straight line)"
+            },
+            {
+              "completed": false,
+              "text": "Mining scene includes a 2D pixelated Mars background"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Core UI spacing is visually consistent across key gameplay screens"
+            },
+            {
+              "completed": false,
+              "text": "Mining beam reads as a beam effect (not a straight line)"
+            },
+            {
+              "completed": false,
+              "text": "Mining scene includes a 2D pixelated Mars background"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Feedback pass: spacing, mining beam, and Mars background polish",
+        "description": "Implement user feedback from latest review while preserving current color palette, fonts, and rocket/mineral animations.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "feedback",
+          "mining",
+          "visual-polish"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Core UI spacing is visually consistent across key gameplay screens"
+          },
+          {
+            "completed": false,
+            "text": "Mining beam reads as a beam effect (not a straight line)"
+          },
+          {
+            "completed": false,
+            "text": "Mining scene includes a 2D pixelated Mars background"
+          }
+        ],
+        "implementationPlan": "1. Spacing pass: update Earth nav button container and mining HUD/action panel spacing for consistent gaps/padding across desktop and mobile widths while preserving existing colors/fonts.\n2. Mining beam VFX: replace single straight laser line rendering with a layered beam effect (core + glow + slight animated width/noise) while keeping existing hit detection and gameplay logic.\n3. Pixelated Mars background: add a procedurally generated pixel-art Mars sky/horizon layer behind terrain in SidescrollMining that scales to viewport sizes.\n4. Verify + polish: run targeted checks (lint/parse where available), verify no regressions in mining collection loop, and tune constants for readability.\n5. Task closeout: update notes, check AC, stop timer, and mark done."
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "lhysnf",
+      "version": 5,
+      "timestamp": "2026-03-06T07:05:06.526Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Core UI spacing is visually consistent across key gameplay screens"
+            },
+            {
+              "completed": false,
+              "text": "Mining beam reads as a beam effect (not a straight line)"
+            },
+            {
+              "completed": false,
+              "text": "Mining scene includes a 2D pixelated Mars background"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Core UI spacing is visually consistent across key gameplay screens"
+            },
+            {
+              "completed": true,
+              "text": "Mining beam reads as a beam effect (not a straight line)"
+            },
+            {
+              "completed": false,
+              "text": "Mining scene includes a 2D pixelated Mars background"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Feedback pass: spacing, mining beam, and Mars background polish",
+        "description": "Implement user feedback from latest review while preserving current color palette, fonts, and rocket/mineral animations.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "feedback",
+          "mining",
+          "visual-polish"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Core UI spacing is visually consistent across key gameplay screens"
+          },
+          {
+            "completed": true,
+            "text": "Mining beam reads as a beam effect (not a straight line)"
+          },
+          {
+            "completed": false,
+            "text": "Mining scene includes a 2D pixelated Mars background"
+          }
+        ],
+        "implementationPlan": "1. Spacing pass: update Earth nav button container and mining HUD/action panel spacing for consistent gaps/padding across desktop and mobile widths while preserving existing colors/fonts.\n2. Mining beam VFX: replace single straight laser line rendering with a layered beam effect (core + glow + slight animated width/noise) while keeping existing hit detection and gameplay logic.\n3. Pixelated Mars background: add a procedurally generated pixel-art Mars sky/horizon layer behind terrain in SidescrollMining that scales to viewport sizes.\n4. Verify + polish: run targeted checks (lint/parse where available), verify no regressions in mining collection loop, and tune constants for readability.\n5. Task closeout: update notes, check AC, stop timer, and mark done."
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "lhysnf",
+      "version": 6,
+      "timestamp": "2026-03-06T07:05:08.768Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Core UI spacing is visually consistent across key gameplay screens"
+            },
+            {
+              "completed": true,
+              "text": "Mining beam reads as a beam effect (not a straight line)"
+            },
+            {
+              "completed": false,
+              "text": "Mining scene includes a 2D pixelated Mars background"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Core UI spacing is visually consistent across key gameplay screens"
+            },
+            {
+              "completed": true,
+              "text": "Mining beam reads as a beam effect (not a straight line)"
+            },
+            {
+              "completed": true,
+              "text": "Mining scene includes a 2D pixelated Mars background"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Feedback pass: spacing, mining beam, and Mars background polish",
+        "description": "Implement user feedback from latest review while preserving current color palette, fonts, and rocket/mineral animations.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "feedback",
+          "mining",
+          "visual-polish"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Core UI spacing is visually consistent across key gameplay screens"
+          },
+          {
+            "completed": true,
+            "text": "Mining beam reads as a beam effect (not a straight line)"
+          },
+          {
+            "completed": true,
+            "text": "Mining scene includes a 2D pixelated Mars background"
+          }
+        ],
+        "implementationPlan": "1. Spacing pass: update Earth nav button container and mining HUD/action panel spacing for consistent gaps/padding across desktop and mobile widths while preserving existing colors/fonts.\n2. Mining beam VFX: replace single straight laser line rendering with a layered beam effect (core + glow + slight animated width/noise) while keeping existing hit detection and gameplay logic.\n3. Pixelated Mars background: add a procedurally generated pixel-art Mars sky/horizon layer behind terrain in SidescrollMining that scales to viewport sizes.\n4. Verify + polish: run targeted checks (lint/parse where available), verify no regressions in mining collection loop, and tune constants for readability.\n5. Task closeout: update notes, check AC, stop timer, and mark done."
+      }
+    },
+    {
+      "id": "v7",
+      "taskId": "lhysnf",
+      "version": 7,
+      "timestamp": "2026-03-06T07:05:24.850Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Feedback pass: spacing, mining beam, and Mars background polish",
+        "description": "Implement user feedback from latest review while preserving current color palette, fonts, and rocket/mineral animations.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "feedback",
+          "mining",
+          "visual-polish"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Core UI spacing is visually consistent across key gameplay screens"
+          },
+          {
+            "completed": true,
+            "text": "Mining beam reads as a beam effect (not a straight line)"
+          },
+          {
+            "completed": true,
+            "text": "Mining scene includes a 2D pixelated Mars background"
+          }
+        ],
+        "implementationPlan": "1. Spacing pass: update Earth nav button container and mining HUD/action panel spacing for consistent gaps/padding across desktop and mobile widths while preserving existing colors/fonts.\n2. Mining beam VFX: replace single straight laser line rendering with a layered beam effect (core + glow + slight animated width/noise) while keeping existing hit detection and gameplay logic.\n3. Pixelated Mars background: add a procedurally generated pixel-art Mars sky/horizon layer behind terrain in SidescrollMining that scales to viewport sizes.\n4. Verify + polish: run targeted checks (lint/parse where available), verify no regressions in mining collection loop, and tune constants for readability.\n5. Task closeout: update notes, check AC, stop timer, and mark done."
+      }
+    },
+    {
+      "id": "v8",
+      "taskId": "lhysnf",
+      "version": 8,
+      "timestamp": "2026-03-06T07:10:33.473Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "done",
+          "newValue": "in-progress"
+        }
+      ],
+      "snapshot": {
+        "title": "Feedback pass: spacing, mining beam, and Mars background polish",
+        "description": "Implement user feedback from latest review while preserving current color palette, fonts, and rocket/mineral animations.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "feedback",
+          "mining",
+          "visual-polish"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Core UI spacing is visually consistent across key gameplay screens"
+          },
+          {
+            "completed": true,
+            "text": "Mining beam reads as a beam effect (not a straight line)"
+          },
+          {
+            "completed": true,
+            "text": "Mining scene includes a 2D pixelated Mars background"
+          }
+        ],
+        "implementationPlan": "1. Spacing pass: update Earth nav button container and mining HUD/action panel spacing for consistent gaps/padding across desktop and mobile widths while preserving existing colors/fonts.\n2. Mining beam VFX: replace single straight laser line rendering with a layered beam effect (core + glow + slight animated width/noise) while keeping existing hit detection and gameplay logic.\n3. Pixelated Mars background: add a procedurally generated pixel-art Mars sky/horizon layer behind terrain in SidescrollMining that scales to viewport sizes.\n4. Verify + polish: run targeted checks (lint/parse where available), verify no regressions in mining collection loop, and tune constants for readability.\n5. Task closeout: update notes, check AC, stop timer, and mark done."
+      }
+    },
+    {
+      "id": "v9",
+      "taskId": "lhysnf",
+      "version": 9,
+      "timestamp": "2026-03-06T07:10:37.935Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Core UI spacing is visually consistent across key gameplay screens"
+            },
+            {
+              "completed": true,
+              "text": "Mining beam reads as a beam effect (not a straight line)"
+            },
+            {
+              "completed": true,
+              "text": "Mining scene includes a 2D pixelated Mars background"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Core UI spacing is visually consistent across key gameplay screens"
+            },
+            {
+              "completed": true,
+              "text": "Mining beam reads as a beam effect (not a straight line)"
+            },
+            {
+              "completed": true,
+              "text": "Mining scene includes a 2D pixelated Mars background"
+            },
+            {
+              "text": "Procedural mining background visually matches Mars-style reference (planet disc, layered mountains, atmospheric haze/clouds)",
+              "completed": false
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Feedback pass: spacing, mining beam, and Mars background polish",
+        "description": "Implement user feedback from latest review while preserving current color palette, fonts, and rocket/mineral animations.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "feedback",
+          "mining",
+          "visual-polish"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Core UI spacing is visually consistent across key gameplay screens"
+          },
+          {
+            "completed": true,
+            "text": "Mining beam reads as a beam effect (not a straight line)"
+          },
+          {
+            "completed": true,
+            "text": "Mining scene includes a 2D pixelated Mars background"
+          },
+          {
+            "text": "Procedural mining background visually matches Mars-style reference (planet disc, layered mountains, atmospheric haze/clouds)",
+            "completed": false
+          }
+        ],
+        "implementationPlan": "1. Spacing pass: update Earth nav button container and mining HUD/action panel spacing for consistent gaps/padding across desktop and mobile widths while preserving existing colors/fonts.\n2. Mining beam VFX: replace single straight laser line rendering with a layered beam effect (core + glow + slight animated width/noise) while keeping existing hit detection and gameplay logic.\n3. Pixelated Mars background: add a procedurally generated pixel-art Mars sky/horizon layer behind terrain in SidescrollMining that scales to viewport sizes.\n4. Verify + polish: run targeted checks (lint/parse where available), verify no regressions in mining collection loop, and tune constants for readability.\n5. Task closeout: update notes, check AC, stop timer, and mark done."
+      }
+    },
+    {
+      "id": "v10",
+      "taskId": "lhysnf",
+      "version": 10,
+      "timestamp": "2026-03-06T07:11:28.337Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "oldValue": "1. Spacing pass: update Earth nav button container and mining HUD/action panel spacing for consistent gaps/padding across desktop and mobile widths while preserving existing colors/fonts.\n2. Mining beam VFX: replace single straight laser line rendering with a layered beam effect (core + glow + slight animated width/noise) while keeping existing hit detection and gameplay logic.\n3. Pixelated Mars background: add a procedurally generated pixel-art Mars sky/horizon layer behind terrain in SidescrollMining that scales to viewport sizes.\n4. Verify + polish: run targeted checks (lint/parse where available), verify no regressions in mining collection loop, and tune constants for readability.\n5. Task closeout: update notes, check AC, stop timer, and mark done.",
+          "newValue": "1. Rework Mars palette + sky layering in SidescrollMining background generator to match reference tone (golden upper sky, red-orange mid, dusty lower atmosphere).\n2. Replace current small sun with a large semi-transparent planet disc and subtle banding/noise overlays to match the focal style from reference image.\n3. Replace mesa-strip horizon with layered jagged mountain silhouettes (far/mid/near) and atmospheric haze/cloud wisps crossing both sky and planet.\n4. Add sparse stylized foreground accents (small red shrubs/patches) above ground horizon to approximate the illustrated pixel-art depth cues.\n5. Verify viewport scaling + performance (no per-frame regeneration), run tests, then update AC/notes and close task."
+        }
+      ],
+      "snapshot": {
+        "title": "Feedback pass: spacing, mining beam, and Mars background polish",
+        "description": "Implement user feedback from latest review while preserving current color palette, fonts, and rocket/mineral animations.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "feedback",
+          "mining",
+          "visual-polish"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Core UI spacing is visually consistent across key gameplay screens"
+          },
+          {
+            "completed": true,
+            "text": "Mining beam reads as a beam effect (not a straight line)"
+          },
+          {
+            "completed": true,
+            "text": "Mining scene includes a 2D pixelated Mars background"
+          },
+          {
+            "completed": false,
+            "text": "Procedural mining background visually matches Mars-style reference (planet disc, layered mountains, atmospheric haze/clouds)"
+          }
+        ],
+        "implementationPlan": "1. Rework Mars palette + sky layering in SidescrollMining background generator to match reference tone (golden upper sky, red-orange mid, dusty lower atmosphere).\n2. Replace current small sun with a large semi-transparent planet disc and subtle banding/noise overlays to match the focal style from reference image.\n3. Replace mesa-strip horizon with layered jagged mountain silhouettes (far/mid/near) and atmospheric haze/cloud wisps crossing both sky and planet.\n4. Add sparse stylized foreground accents (small red shrubs/patches) above ground horizon to approximate the illustrated pixel-art depth cues.\n5. Verify viewport scaling + performance (no per-frame regeneration), run tests, then update AC/notes and close task."
+      }
+    },
+    {
+      "id": "v11",
+      "taskId": "lhysnf",
+      "version": 11,
+      "timestamp": "2026-03-06T07:18:45.961Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "Updated mining procedural background to asteroid-tone palette with reference-style composition: large translucent planet disc, layered jagged ridges, haze/cloud streaks, and pixel-texture pass with stylized foreground flora accents."
+        }
+      ],
+      "snapshot": {
+        "title": "Feedback pass: spacing, mining beam, and Mars background polish",
+        "description": "Implement user feedback from latest review while preserving current color palette, fonts, and rocket/mineral animations.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "feedback",
+          "mining",
+          "visual-polish"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Core UI spacing is visually consistent across key gameplay screens"
+          },
+          {
+            "completed": true,
+            "text": "Mining beam reads as a beam effect (not a straight line)"
+          },
+          {
+            "completed": true,
+            "text": "Mining scene includes a 2D pixelated Mars background"
+          },
+          {
+            "completed": false,
+            "text": "Procedural mining background visually matches Mars-style reference (planet disc, layered mountains, atmospheric haze/clouds)"
+          }
+        ],
+        "implementationPlan": "1. Rework Mars palette + sky layering in SidescrollMining background generator to match reference tone (golden upper sky, red-orange mid, dusty lower atmosphere).\n2. Replace current small sun with a large semi-transparent planet disc and subtle banding/noise overlays to match the focal style from reference image.\n3. Replace mesa-strip horizon with layered jagged mountain silhouettes (far/mid/near) and atmospheric haze/cloud wisps crossing both sky and planet.\n4. Add sparse stylized foreground accents (small red shrubs/patches) above ground horizon to approximate the illustrated pixel-art depth cues.\n5. Verify viewport scaling + performance (no per-frame regeneration), run tests, then update AC/notes and close task.",
+        "implementationNotes": "Updated mining procedural background to asteroid-tone palette with reference-style composition: large translucent planet disc, layered jagged ridges, haze/cloud streaks, and pixel-texture pass with stylized foreground flora accents."
+      }
+    },
+    {
+      "id": "v12",
+      "taskId": "lhysnf",
+      "version": 12,
+      "timestamp": "2026-03-06T07:18:48.214Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Feedback pass: spacing, mining beam, and Mars background polish",
+        "description": "Implement user feedback from latest review while preserving current color palette, fonts, and rocket/mineral animations.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "feedback",
+          "mining",
+          "visual-polish"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Core UI spacing is visually consistent across key gameplay screens"
+          },
+          {
+            "completed": true,
+            "text": "Mining beam reads as a beam effect (not a straight line)"
+          },
+          {
+            "completed": true,
+            "text": "Mining scene includes a 2D pixelated Mars background"
+          },
+          {
+            "completed": false,
+            "text": "Procedural mining background visually matches Mars-style reference (planet disc, layered mountains, atmospheric haze/clouds)"
+          }
+        ],
+        "implementationPlan": "1. Rework Mars palette + sky layering in SidescrollMining background generator to match reference tone (golden upper sky, red-orange mid, dusty lower atmosphere).\n2. Replace current small sun with a large semi-transparent planet disc and subtle banding/noise overlays to match the focal style from reference image.\n3. Replace mesa-strip horizon with layered jagged mountain silhouettes (far/mid/near) and atmospheric haze/cloud wisps crossing both sky and planet.\n4. Add sparse stylized foreground accents (small red shrubs/patches) above ground horizon to approximate the illustrated pixel-art depth cues.\n5. Verify viewport scaling + performance (no per-frame regeneration), run tests, then update AC/notes and close task.",
+        "implementationNotes": "Updated mining procedural background to asteroid-tone palette with reference-style composition: large translucent planet disc, layered jagged ridges, haze/cloud streaks, and pixel-texture pass with stylized foreground flora accents."
+      }
+    }
+  ]
+}e includes a 2D pixelated Mars background"
+          },
+          {
+            "completed": true,
+            "text": "Procedural mining background visually matches Mars-style reference (planet disc, layered mountains, atmospheric haze/clouds)"
+          }
+        ],
+        "implementationPlan": "1. Rework Mars palette + sky layering in SidescrollMining background generator to match reference tone (golden upper sky, red-orange mid, dusty lower atmosphere).\n2. Replace current small sun with a large semi-transparent planet disc and subtle banding/noise overlays to match the focal style from reference image.\n3. Replace mesa-strip horizon with layered jagged mountain silhouettes (far/mid/near) and atmospheric haze/cloud wisps crossing both sky and planet.\n4. Add sparse stylized foreground accents (small red shrubs/patches) above ground horizon to approximate the illustrated pixel-art depth cues.\n5. Verify viewport scaling + performance (no per-frame regeneration), run tests, then update AC/notes and close task.",
+        "implementationNotes": "Updated mining procedural background to asteroid-tone palette with reference-style composition: large translucent planet disc, layered jagged ridges, haze/cloud streaks, and pixel-texture pass with stylized foreground flora accents."
+      }
+    }
+  ]
+}

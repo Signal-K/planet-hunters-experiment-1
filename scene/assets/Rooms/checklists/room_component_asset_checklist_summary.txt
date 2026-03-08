@@ -1,0 +1,8 @@
+Generated: 2026-03-07
+Rooms: 22
+Total assets: 674
+Base components: 123
+State variants: 525
+Room composites: 22
+JSON: /Users/scroobz/Navigation/Native/planet-hunters-experiment-1/scene/assets/Rooms/checklists/room_component_asset_checklist.json
+CSV: /Users/scroobz/Navigation/Native/planet-hunters-experiment-1/scene/assets/Rooms/checklists/room_component_asset_checklist.csv

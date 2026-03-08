@@ -1,4 +1,4 @@
-[gd_scene load_steps=19 format=3 uid="uid://bl5h6pq4ns86t"]
+[gd_scene load_steps=20 format=3 uid="uid://bl5h6pq4ns86t"]
 
 [ext_resource type="Texture2D" uid="uid://bni1814mlo7mv" path="res://assets/Backdrops/Earth1.png" id="0"]
 [ext_resource type="Script" uid="uid://eoqjev5txcu5" path="res://Scenes/Earth/earth_base_1.gd" id="1"]
@@ -12,6 +12,7 @@
 [ext_resource type="Script" path="res://Scripts/Earth/Environment/EarthSkyNightFilterEvent.gd" id="9"]
 [ext_resource type="Script" path="res://Scripts/Earth/Environment/EarthStarFieldEvent.gd" id="10"]
 [ext_resource type="Script" path="res://Scripts/Earth/Environment/EarthCloudDriftEvent.gd" id="11"]
+[ext_resource type="Script" path="res://Scripts/Earth/Environment/EarthSkyMapEvent.gd" id="12"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_control"]
 size = Vector2(200, 200)
@@ -95,6 +96,9 @@ backdrop_paths = Array[NodePath]([NodePath("../BackgroundSprite"), NodePath("../
 
 [node name="StarFieldEvent" type="Node2D" parent="BackgroundLayer"]
 script = ExtResource("10")
+
+[node name="SkyMapEvent" type="Node2D" parent="BackgroundLayer"]
+script = ExtResource("12")
 
 [node name="CloudDriftEvent" type="Node2D" parent="BackgroundLayer"]
 script = ExtResource("11")

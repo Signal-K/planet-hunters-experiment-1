@@ -1,0 +1,28 @@
+{
+  "name": "Planet Hunters: Mining Loop Feel",
+  "type": "external_survey",
+  "schedule": "always",
+  "enable_partial_responses": true,
+  "appearance": {
+    "displayThankYouMessage": true,
+    "thankYouMessageHeader": "Thanks!",
+    "thankYouMessageDescription": "You are helping us make mining better."
+  },
+  "questions": [
+    {
+      "type": "rating",
+      "scale": 5,
+      "display": "number",
+      "question": "How fun was that mining run?",
+      "lowerBoundLabel": "Tedious",
+      "upperBoundLabel": "Great fun",
+      "descriptionContentType": "text"
+    },
+    {
+      "type": "multiple_choice",
+      "question": "What felt off about mining?",
+      "choices": ["Too slow", "Unclear what to collect", "Hard to control", "Nothing - felt good"],
+      "descriptionContentType": "text"
+    }
+  ]
+}

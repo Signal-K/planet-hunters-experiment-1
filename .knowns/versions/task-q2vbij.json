@@ -1,0 +1,43 @@
+{
+  "taskId": "q2vbij",
+  "currentVersion": 1,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "q2vbij",
+      "version": 1,
+      "timestamp": "2026-03-06T07:05:22.585Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Normalize spacing for buttons, text, and panels on core scenes",
+        "description": "Address feedback on inconsistent spacing by tightening and standardizing layout spacing in Earth navigation and mining HUD/action controls while keeping existing visual identity.",
+        "status": "done",
+        "priority": "high",
+        "labels": [
+          "ui",
+          "spacing"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Earth base navigation buttons have consistent spacing and tap targets"
+          },
+          {
+            "completed": false,
+            "text": "Mining HUD/panels/buttons use consistent gaps and offsets"
+          },
+          {
+            "completed": false,
+            "text": "No overlap or cramped controls on mobile-width viewport"
+          }
+        ]
+      }
+    }
+  ]
+}

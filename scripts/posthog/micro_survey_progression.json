@@ -1,0 +1,28 @@
+{
+  "name": "Planet Hunters: Mission Progression Clarity",
+  "type": "external_survey",
+  "schedule": "always",
+  "enable_partial_responses": true,
+  "appearance": {
+    "displayThankYouMessage": true,
+    "thankYouMessageHeader": "Thanks!",
+    "thankYouMessageDescription": "You are helping us tune mission progression."
+  },
+  "questions": [
+    {
+      "type": "rating",
+      "scale": 5,
+      "display": "number",
+      "question": "How clear was it what was new or different about this mission?",
+      "lowerBoundLabel": "Totally unclear",
+      "upperBoundLabel": "Perfectly clear",
+      "descriptionContentType": "text"
+    },
+    {
+      "type": "multiple_choice",
+      "question": "What would make you want to play the next mission?",
+      "choices": ["Bigger rewards", "New mechanics to try", "Curiosity about the story", "Seeing my progress grow", "Nothing yet"],
+      "descriptionContentType": "text"
+    }
+  ]
+}

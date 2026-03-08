@@ -1,6 +1,6 @@
 {
   "taskId": "5l30r4",
-  "currentVersion": 1,
+  "currentVersion": 5,
   "versions": [
     {
       "id": "v1",
@@ -26,6 +26,125 @@
           "Images"
         ],
         "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "5l30r4",
+      "version": 2,
+      "timestamp": "2026-03-07T01:23:18.478Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-review",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Weather events & skymap?",
+        "description": "Explore adding weather events and dynamic skymap to Earth Base scenes. See @doc/specs/user-flow-and-citizen-science-specification for Earth Base context.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "Weather",
+          "Backgrounds",
+          "Earth",
+          "Events",
+          "Images"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "5l30r4",
+      "version": 3,
+      "timestamp": "2026-03-07T01:23:18.874Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "newValue": "1. Add dedicated Earth sky-map event renderer tied to night cycle\n2. Integrate skymap event into Earth base/debrief/orbit/template scenes\n3. Validate Earth scenes load with weather+skymap stack\n4. Document implementation and close review task"
+        }
+      ],
+      "snapshot": {
+        "title": "Weather events & skymap?",
+        "description": "Explore adding weather events and dynamic skymap to Earth Base scenes. See @doc/specs/user-flow-and-citizen-science-specification for Earth Base context.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "Weather",
+          "Backgrounds",
+          "Earth",
+          "Events",
+          "Images"
+        ],
+        "acceptanceCriteria": [],
+        "implementationPlan": "1. Add dedicated Earth sky-map event renderer tied to night cycle\n2. Integrate skymap event into Earth base/debrief/orbit/template scenes\n3. Validate Earth scenes load with weather+skymap stack\n4. Document implementation and close review task"
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "5l30r4",
+      "version": 4,
+      "timestamp": "2026-03-07T01:25:36.923Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "✓ Added EarthSkyMapEvent (constellation overlay tied to night factor), wired into Earth base + orbit_sale_preview + mission_debrief + earth scene template, and validated scene loads headlessly."
+        }
+      ],
+      "snapshot": {
+        "title": "Weather events & skymap?",
+        "description": "Explore adding weather events and dynamic skymap to Earth Base scenes. See @doc/specs/user-flow-and-citizen-science-specification for Earth Base context.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "Weather",
+          "Backgrounds",
+          "Earth",
+          "Events",
+          "Images"
+        ],
+        "acceptanceCriteria": [],
+        "implementationPlan": "1. Add dedicated Earth sky-map event renderer tied to night cycle\n2. Integrate skymap event into Earth base/debrief/orbit/template scenes\n3. Validate Earth scenes load with weather+skymap stack\n4. Document implementation and close review task",
+        "implementationNotes": "✓ Added EarthSkyMapEvent (constellation overlay tied to night factor), wired into Earth base + orbit_sale_preview + mission_debrief + earth scene template, and validated scene loads headlessly."
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "5l30r4",
+      "version": 5,
+      "timestamp": "2026-03-07T01:25:37.338Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Weather events & skymap?",
+        "description": "Explore adding weather events and dynamic skymap to Earth Base scenes. See @doc/specs/user-flow-and-citizen-science-specification for Earth Base context.",
+        "status": "done",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "Weather",
+          "Backgrounds",
+          "Earth",
+          "Events",
+          "Images"
+        ],
+        "acceptanceCriteria": [],
+        "implementationPlan": "1. Add dedicated Earth sky-map event renderer tied to night cycle\n2. Integrate skymap event into Earth base/debrief/orbit/template scenes\n3. Validate Earth scenes load with weather+skymap stack\n4. Document implementation and close review task",
+        "implementationNotes": "✓ Added EarthSkyMapEvent (constellation overlay tied to night factor), wired into Earth base + orbit_sale_preview + mission_debrief + earth scene template, and validated scene loads headlessly."
       }
     }
   ]

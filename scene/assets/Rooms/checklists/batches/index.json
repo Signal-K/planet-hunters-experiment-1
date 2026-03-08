@@ -1,0 +1,116 @@
+{
+  "generated_on": "2026-03-07T01:41:00.858Z",
+  "source": "scene/assets/Rooms/checklists/room_component_asset_checklist.json",
+  "batches": [
+    {
+      "batch_id": "batch_l1_m1_starterrocket1",
+      "title": "L1_M1 starterrocket1 Core Production",
+      "note": "First launch loop",
+      "totals": {
+        "assets": 165,
+        "components": 39,
+        "states": 115,
+        "composites": 7
+      },
+      "files": {
+        "json": "batch_l1_m1_starterrocket1.json",
+        "csv": "batch_l1_m1_starterrocket1.csv",
+        "md": "batch_l1_m1_starterrocket1.md"
+      }
+    },
+    {
+      "batch_id": "batch_l2_m2_starterrocket2",
+      "title": "L2_M2 starterrocket2 Core Production",
+      "note": "Upgrade path loop",
+      "totals": {
+        "assets": 263,
+        "components": 63,
+        "states": 185,
+        "composites": 11
+      },
+      "files": {
+        "json": "batch_l2_m2_starterrocket2.json",
+        "csv": "batch_l2_m2_starterrocket2.csv",
+        "md": "batch_l2_m2_starterrocket2.md"
+      }
+    },
+    {
+      "batch_id": "batch_l2_m3_starterrocket2",
+      "title": "L2_M3 starterrocket2 Core Production",
+      "note": "Scanner unlock prep",
+      "totals": {
+        "assets": 284,
+        "components": 68,
+        "states": 200,
+        "composites": 12
+      },
+      "files": {
+        "json": "batch_l2_m3_starterrocket2.json",
+        "csv": "batch_l2_m3_starterrocket2.csv",
+        "md": "batch_l2_m3_starterrocket2.md"
+      }
+    },
+    {
+      "batch_id": "batch_l3_m4_starterrocket3",
+      "title": "L3_M4 starterrocket3 Core Production",
+      "note": "Planetary exploration",
+      "totals": {
+        "assets": 365,
+        "components": 86,
+        "states": 260,
+        "composites": 15
+      },
+      "files": {
+        "json": "batch_l3_m4_starterrocket3.json",
+        "csv": "batch_l3_m4_starterrocket3.csv",
+        "md": "batch_l3_m4_starterrocket3.md"
+      }
+    },
+    {
+      "batch_id": "batch_l3_m5_starterrocket3",
+      "title": "L3_M5 starterrocket3 Core Production",
+      "note": "Contractor/optimization prep",
+      "totals": {
+        "assets": 428,
+        "components": 101,
+        "states": 305,
+        "composites": 18
+      },
+      "files": {
+        "json": "batch_l3_m5_starterrocket3.json",
+        "csv": "batch_l3_m5_starterrocket3.csv",
+        "md": "batch_l3_m5_starterrocket3.md"
+      }
+    },
+    {
+      "batch_id": "batch_advanced_rnd_t3_and_future",
+      "title": "Advanced R&D Rooms (T3/Future)",
+      "note": "Future-ready room coverage beyond currently installed layouts",
+      "totals": {
+        "assets": 148,
+        "components": 37,
+        "states": 100,
+        "composites": 7
+      },
+      "files": {
+        "json": "batch_advanced_rnd_t3_and_future.json",
+        "csv": "batch_advanced_rnd_t3_and_future.csv",
+        "md": "batch_advanced_rnd_t3_and_future.md"
+      }
+    },
+    {
+      "batch_id": "batch_usage_state_variants_all_rooms",
+      "title": "Usage-State Variants (All Rooms)",
+      "note": "Deferred p2 pack for runtime wear/consumption visuals",
+      "totals": {
+        "assets": 165,
+        "states": 165
+      },
+      "files": {
+        "json": "batch_usage_state_variants_all_rooms.json",
+        "csv": "batch_usage_state_variants_all_rooms.csv",
+        "md": "batch_usage_state_variants_all_rooms.md"
+      }
+    }
+  ]
+}

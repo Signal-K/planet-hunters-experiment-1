@@ -1,0 +1,17 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://bbe0va2laekxy"
+
+[deps]
+
+files=["res://assets/Rooms/checklists/batches/batch_l1_m1_starterrocket1.asset.translation", "res://assets/Rooms/checklists/batches/batch_l1_m1_starterrocket1.room.translation", "res://assets/Rooms/checklists/batches/batch_l1_m1_starterrocket1.room.translation", "res://assets/Rooms/checklists/batches/batch_l1_m1_starterrocket1.category.translation", "res://assets/Rooms/checklists/batches/batch_l1_m1_starterrocket1.tier.translation", "res://assets/Rooms/checklists/batches/batch_l1_m1_starterrocket1.component.translation", "res://assets/Rooms/checklists/batches/batch_l1_m1_starterrocket1.component.translation", "res://assets/Rooms/checklists/batches/batch_l1_m1_starterrocket1.component.translation", "res://assets/Rooms/checklists/batches/batch_l1_m1_starterrocket1.state.translation", "res://assets/Rooms/checklists/batches/batch_l1_m1_starterrocket1.priority.translation", "res://assets/Rooms/checklists/batches/batch_l1_m1_starterrocket1.prompt.translation"]
+
+source_file="res://assets/Rooms/checklists/batches/batch_l1_m1_starterrocket1.csv"
+dest_files=["res://assets/Rooms/checklists/batches/batch_l1_m1_starterrocket1.asset.translation", "res://assets/Rooms/checklists/batches/batch_l1_m1_starterrocket1.room.translation", "res://assets/Rooms/checklists/batches/batch_l1_m1_starterrocket1.room.translation", "res://assets/Rooms/checklists/batches/batch_l1_m1_starterrocket1.category.translation", "res://assets/Rooms/checklists/batches/batch_l1_m1_starterrocket1.tier.translation", "res://assets/Rooms/checklists/batches/batch_l1_m1_starterrocket1.component.translation", "res://assets/Rooms/checklists/batches/batch_l1_m1_starterrocket1.component.translation", "res://assets/Rooms/checklists/batches/batch_l1_m1_starterrocket1.component.translation", "res://assets/Rooms/checklists/batches/batch_l1_m1_starterrocket1.state.translation", "res://assets/Rooms/checklists/batches/batch_l1_m1_starterrocket1.priority.translation", "res://assets/Rooms/checklists/batches/batch_l1_m1_starterrocket1.prompt.translation"]
+
+[params]
+
+compress=true
+delimiter=0
