@@ -56,6 +56,7 @@ var _current_target_id := ""
 var _current_target_label := ""
 var _current_target_type := ""
 var _current_rocket_id := ""
+var _current_science_blurb := ""
 var _earth_pivot: Node3D
 var _earth_mesh: MeshInstance3D
 # Science image panel shown during TRAVEL phase
@@ -150,6 +151,12 @@ func _load_target_data() -> void:
 	_current_target_label = str(target.get("label", ""))
 	_current_target_type = str(target.get("type", "asteroid"))
 	_current_rocket_id = str(target.get("rocket_id", ""))
+	# Look up science blurb from persisted detected targets
+	if rm and _current_target_id != "":
+		for dt in rm.get_detected_targets():
+			if str(dt.get("id", "")) == _current_target_id:
+				_current_science_blurb = str(dt.get("science_blurb", ""))
+				break
 
 func _update_target_label() -> void:
 	if target_label == null:
@@ -492,11 +499,14 @@ func _show_science_panel() -> void:
 	_science_panel.visible = true
 	var t = create_tween()
 	t.tween_property(_science_panel, "modulate:a", 1.0, 0.8).set_delay(1.5)
-	var dataset = "Active Asteroids Programme"
-	if _current_target_type == "planet" or _current_target_type == "tess":
-		dataset = "NASA TESS dataset"
 	var label_text = _current_target_label if _current_target_label != "" else "Target %s" % _current_target_id
-	_science_caption.text = "Observing: %s\nData source: %s" % [label_text, dataset]
+	if _current_science_blurb != "":
+		_science_caption.text = "Observing: %s\n%s" % [label_text, _current_science_blurb]
+	else:
+		var dataset = "Active Asteroids Programme"
+		if _current_target_type == "planet" or _current_target_type == "tess":
+			dataset = "NASA TESS dataset"
+		_science_caption.text = "Observing: %s\nData source: %s" % [label_text, dataset]
 	if _current_target_id != "":
 		_fetch_science_image(_current_target_id, _current_target_type)
 

@@ -6,6 +6,7 @@ const GameplayAnalytics = preload("res://Scripts/Systems/GameplayAnalytics.gd")
 const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
 const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd")
 const TimeHelper = preload("res://Scripts/Earth/TimeHelper.gd")
+const RoomCatalog = preload("res://Scripts/Utils/RoomCatalog.gd")
 var _launchpad: Node
 var _on_show_selector: Callable
 var _launch_btn_connected: bool = false
@@ -177,6 +178,18 @@ func _on_launch_button_pressed() -> void:
 		if _launch_button:
 			_launch_button.disabled = false
 		return
+	# Room config warning (non-blocking): warn if no mining room installed
+	var layout = RoomCatalog.create_layout_for_rocket_type(rocket.name)
+	var installed_rooms = RoomCatalog.get_installed_rooms(layout)
+	var has_mining_room := false
+	for room_inst in installed_rooms:
+		var room_def = RoomCatalog.get_room(str(room_inst.get("room_id", "")))
+		if str(room_def.get("category", "")) == "mining":
+			has_mining_room = true
+			break
+	if not has_mining_room:
+		AppLogger.w("Launchpad: rocket has no mining room — cargo collection may be impaired")
+		RocketsManager.set_launch_guidance_notice("⚠ No mining room installed. You can still launch, but mineral collection will be very limited.")
 	if _launch_button:
 		_launch_button.disabled = true
 	# Countdown before routing to outbound transit

@@ -154,7 +154,23 @@ func _update_mission_guidance() -> void:
 		_mission_guidance_label.text = "Mission %d: Select a mission target before launch." % _mission_guidance_id
 	else:
 		target_button = _find_button_by_text(launchpad_root, "Launch")
-		_mission_guidance_label.text = "Mission %d: Press Launch to start the mission." % _mission_guidance_id
+		var launch_hint = "Mission %d: Press Launch to start the mission." % _mission_guidance_id
+		# Show room requirements for the mission
+		if not rockets.is_empty():
+			var rocket = rockets[0]
+			var layout = RoomCatalog.create_layout_for_rocket_type(rocket.name)
+			var installed = RoomCatalog.get_installed_rooms(layout)
+			var has_mining := false
+			for room_inst in installed:
+				var room_def = RoomCatalog.get_room(str(room_inst.get("room_id", "")))
+				if str(room_def.get("category", "")) == "mining":
+					has_mining = true
+					break
+			if not has_mining:
+				launch_hint += "\n⚠ No mining room installed — cargo collection will be limited."
+			else:
+				launch_hint += "\nRequired: Mining room ✓"
+		_mission_guidance_label.text = launch_hint
 	_position_mission_pointer(target_button)
 
 func _position_mission_pointer(target_button: Control) -> void:

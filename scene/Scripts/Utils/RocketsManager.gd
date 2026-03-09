@@ -69,8 +69,7 @@ const PREDEFINED_MISSION_TARGETS := {
 	}
 }
 
-# Mission 3: Scanner-driven target selection
-# Spec: Shows 5 untargeted asteroids, 1 reachable by SR2
+# Mission 3: TESS exoplanet candidate targets (player picks from short list)
 const MISSION3_VISIBLE_TARGET_COUNT := 5
 const MISSION2_VISIBLE_TARGET_COUNT := 3
 const MISSION2_FALLBACK_TARGETS := [
@@ -98,25 +97,31 @@ const MISSION2_FALLBACK_TARGETS := [
 ]
 const MISSION3_FALLBACK_TARGETS := [
 	{
-		"id": "mission-3-scanner-fallback-primary",
-		"label": "Fallback Scan Asteroid Alpha",
-		"type": "asteroid",
+		"id": "mission-3-tess-candidate-alpha",
+		"label": "TOI-700 d",
+		"type": "planet",
 		"distance_au": 12.0,
-		"required_level": 2
+		"required_level": 2,
+		"science_source": "NASA TESS",
+		"science_blurb": "Confirmed exoplanet in habitable zone"
 	},
 	{
-		"id": "mission-3-scanner-fallback-delta",
-		"label": "Fallback Scan Asteroid Delta",
-		"type": "asteroid",
-		"distance_au": 24.0,
-		"required_level": 2
+		"id": "mission-3-tess-candidate-beta",
+		"label": "TOI-1452 b",
+		"type": "planet",
+		"distance_au": 18.0,
+		"required_level": 2,
+		"science_source": "NASA TESS",
+		"science_blurb": "Water world candidate"
 	},
 	{
-		"id": "mission-3-scanner-fallback-epsilon",
-		"label": "Fallback Scan Asteroid Epsilon",
-		"type": "asteroid",
+		"id": "mission-3-tess-candidate-gamma",
+		"label": "TOI-561 b",
+		"type": "planet",
 		"distance_au": 24.0,
-		"required_level": 2
+		"required_level": 2,
+		"science_source": "NASA TESS",
+		"science_blurb": "Ultra-short period planet"
 	}
 ]
 
@@ -327,7 +332,7 @@ static func get_mission3_targets(detected_targets: Array = []) -> Array:
 	return RocketsTargeting.select_visible_targets(
 		source,
 		get_targeted_target_ids(),
-		"asteroid",
+		"planet",
 		MISSION3_VISIBLE_TARGET_COUNT,
 		_primary_fallback_target_for_stage(3)
 	)
@@ -686,24 +691,18 @@ static func build_target_profile(target_id: String, target_type: String = "aster
 				"required_level": int(variant.get("required_level", 2)),
 				"type": "asteroid"
 			}
-	if get_mission_stage() == 3 and normalized_type == "asteroid":
+	if get_mission_stage() == 3 and (normalized_type == "planet" or normalized_type == "asteroid"):
 		var mission3_targets = get_mission3_targets()
 		for i in range(mission3_targets.size()):
 			var item = mission3_targets[i]
 			if str(item.get("id", "")) != target_id:
 				continue
-			if i == 0:
-				return {
-					"distance_au": 12.0,
-					"distance_km": 12.0 * AU_IN_KM,
-					"required_level": 2,
-					"type": "asteroid"
-				}
+			var dist_au = float(item.get("distance_au", 12.0))
 			return {
-				"distance_au": 24.0,
-				"distance_km": 24.0 * AU_IN_KM,
+				"distance_au": dist_au,
+				"distance_km": dist_au * AU_IN_KM,
 				"required_level": 2,
-				"type": "asteroid"
+				"type": "planet"
 			}
 	if get_mission_stage() == 4 and normalized_type == "planet":
 		var mission4_targets = get_mission4_targets()
@@ -973,9 +972,11 @@ static func ensure_selected_target_for_launch(rocket_id: String = "") -> Diction
 		"notice": notice
 	}
 
-static func get_mission_exposure_reward(stage: int) -> int:
-	var safe_stage = max(stage, 1)
-	return 4 + (safe_stage - 1)
+static func get_mission_exposure_reward(_stage: int) -> int:
+	# Flat rate: M1 gives exactly 11 XP (5 launch + 4 exposure + 1 completion + 1 affinity)
+	# to reach Level 2. Subsequent missions give the same 11 XP, which falls short of the
+	# increasing level thresholds (L2→L3 needs 12, L3→L4 needs 13, etc.).
+	return 4
 
 static func get_target_details(target_id: String) -> Dictionary:
 	if target_id == "":
@@ -1455,6 +1456,24 @@ static func clear_preview_target() -> void:
 	_preview_target = {}
 	var s = load_state()
 	s["preview_target"] = {}
+	save_state(s)
+
+static func set_tess_classification(target_id: String, verdict: String) -> void:
+	var s = load_state()
+	var map: Dictionary = s.get("tess_classifications", {})
+	map[target_id] = verdict
+	s["tess_classifications"] = map
+	save_state(s)
+
+static func get_tess_classification(target_id: String) -> String:
+	var s = load_state()
+	return str(s.get("tess_classifications", {}).get(target_id, ""))
+
+static func clear_tess_classification(target_id: String) -> void:
+	var s = load_state()
+	var map: Dictionary = s.get("tess_classifications", {})
+	map.erase(target_id)
+	s["tess_classifications"] = map
 	save_state(s)
 
 static func set_returned_mission(rocket_id: String, target_id: String, target_label: String, target_type: String, operation_mode: String = "", extra: Dictionary = {}) -> void:

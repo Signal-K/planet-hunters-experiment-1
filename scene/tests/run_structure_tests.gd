@@ -328,15 +328,15 @@ func test_level2_completion_unlocks_level3_systems() -> void:
 	reporter.pass_test()
 
 func test_mission_exposure_reward_progression() -> void:
-	reporter.start_test("[SPEC] Mission exposure reward scales by stage")
+	reporter.start_test("[SPEC] Mission exposure reward is flat 4 (M1 gives exactly 11 XP for Level 2)")
 	if RocketsManager.get_mission_exposure_reward(1) != 4:
 		reporter.fail_test("Stage 1 exposure reward should be 4")
 		return
-	if RocketsManager.get_mission_exposure_reward(2) != 5:
-		reporter.fail_test("Stage 2 exposure reward should be 5")
+	if RocketsManager.get_mission_exposure_reward(2) != 4:
+		reporter.fail_test("Stage 2 exposure reward should be 4 (flat rate)")
 		return
-	if RocketsManager.get_mission_exposure_reward(3) != 6:
-		reporter.fail_test("Stage 3 exposure reward should be 6")
+	if RocketsManager.get_mission_exposure_reward(3) != 4:
+		reporter.fail_test("Stage 3 exposure reward should be 4 (flat rate)")
 		return
 	reporter.pass_test()
 

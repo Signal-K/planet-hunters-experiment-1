@@ -7,6 +7,8 @@ const VisualSync = preload("res://Scripts/UI/SidescrollMiningVisualSync.gd")
 const RoomCatalog = preload("res://Scripts/Utils/RoomCatalog.gd")
 const RoomSpriteAtlas = preload("res://Scripts/UI/RoomSpriteAtlas.gd")
 const MiningTargetTheme = preload("res://Scripts/UI/MiningTargetTheme.gd")
+const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
+const SubcontractorManager = preload("res://Scripts/Utils/SubcontractorManager.gd")
 
 signal mining_completed(minerals: Dictionary, score: int)
 
@@ -43,6 +45,8 @@ var _loop_count = 0
 var _is_mining = false
 var _fuel = 100.0
 var _heat = 0.0
+var _heat_warned := false
+var _signpost_timer := 0.0  # Seconds remaining in pre-mining signpost pause
 var _beam_charges = 100.0
 var _max_beam_charges = 100.0
 var _score = 0
@@ -713,6 +717,8 @@ func start_mining(is_planet: bool = false, difficulty: int = 1, target_id: Strin
 	_last_progress_elapsed = 0.0
 	_fuel = 100.0
 	_heat = 0.0
+	_heat_warned = false
+	_signpost_timer = 0.0
 	_current_target_id = target_id
 	_rocket_level = difficulty
 	_configure_rocket_rooms(difficulty)
@@ -759,7 +765,9 @@ func start_mining(is_planet: bool = false, difficulty: int = 1, target_id: Strin
 	})
 	GameplayAnalytics.start_mining_session(analytics_payload)
 	_refresh_contract_order_tracker()
-	
+	_refresh_contractor_bonus_label()
+	_show_mineral_signpost()
+
 	# Update UI after scene is ready
 	call_deferred("_update_rocket_ui")
 
@@ -1259,7 +1267,13 @@ func _process(delta):
 		_frame_index = (_frame_index + 1) % _rocket_frames.size()
 		rocket.texture = _rocket_frames[_frame_index]
 	
-	_fuel -= FUEL_DRAIN_RATE * delta
+	if _signpost_timer > 0.0:
+		_signpost_timer -= delta
+		if _signpost_timer <= 0.0:
+			_signpost_timer = 0.0
+			instructions.modulate.a = 0.0
+	else:
+		_fuel -= FUEL_DRAIN_RATE * delta
 	fuel_bar.value = _fuel
 	
 	beam_bar.value = (_beam_charges / _max_beam_charges) * 100.0
@@ -1300,7 +1314,12 @@ func _process(delta):
 			score_label.text = "Score: %d" % _score
 	
 	heat_bar.value = _heat
-	
+
+	if not _heat_warned and _heat >= 50.0:
+		_heat_warned = true
+		instructions.text = "Heat rising — release FIRE to cool"
+		instructions.modulate.a = 1.0
+
 	# Allow inventory check anytime
 	if Input.is_key_pressed(KEY_E):
 		if not inventory_panel.visible:
@@ -1878,10 +1897,63 @@ func _refresh_contract_order_tracker() -> void:
 	for key in keys:
 		var required_amount = int(_starter_order_targets.get(key, 0))
 		var collected_amount = int(_collected_minerals.get(key, 0))
-		lines.append("%s: %d/%d kg" % [str(key), collected_amount, required_amount])
+		var done = collected_amount >= required_amount
+		var prefix = "✓ " if done else "► "
+		lines.append("%s%s: %d/%d kg" % [prefix, str(key), collected_amount, required_amount])
 	if _is_starter_contract_complete():
-		lines.append("Order complete. Return to debrief.")
+		lines.append("★ Order complete. Return to debrief.")
 	contract_order_progress.text = "\n".join(lines)
+
+func _refresh_contractor_bonus_label() -> void:
+	var rm = RocketsManager
+	var sm = SubcontractorManager
+	if not rm or not sm:
+		value_label.text = ""
+		return
+	var stage = int(rm.get_mission_stage())
+	var bonus_map: Dictionary = {}
+	var contractor_name := ""
+	if stage >= 5:
+		var sub = rm.get_mission5_selected_contractor()
+		if not sub.is_empty():
+			contractor_name = str(sub.get("name", ""))
+			bonus_map = sub.get("bonus", {})
+	if bonus_map.is_empty():
+		value_label.text = ""
+		return
+	var parts := []
+	for mineral in bonus_map.keys():
+		var mult = float(bonus_map[mineral])
+		var pct = int(round((mult - 1.0) * 100))
+		if pct > 0:
+			parts.append("%s +%d%%" % [mineral, pct])
+	if parts.is_empty():
+		value_label.text = ""
+		return
+	var label_text = "%s: %s" % [contractor_name, ", ".join(parts)] if contractor_name != "" else ", ".join(parts)
+	value_label.text = label_text
+
+func _show_mineral_signpost() -> void:
+	const SIGNPOST_DURATION := 3.5
+	_signpost_timer = SIGNPOST_DURATION
+	# Build mineral list from the unique minerals in the terrain
+	var seen := {}
+	var mineral_lines := []
+	for region in _mineral_regions:
+		var mineral = region.get("mineral", {})
+		var name = str(mineral.get("name", ""))
+		if name != "" and not seen.has(name):
+			seen[name] = true
+			var surface_tag = "surface" if region.get("is_surface", true) else "subsurface"
+			var ordered_tag = " ★ (ordered)" if _is_order_target_mineral(name) else ""
+			mineral_lines.append("%s — %s%s" % [name, surface_tag, ordered_tag])
+	var signpost_text: String
+	if mineral_lines.is_empty():
+		signpost_text = "Fly over coloured terrain to mine. Fuel starts burning now."
+	else:
+		signpost_text = "Minerals ahead: %s" % " | ".join(mineral_lines)
+	instructions.text = signpost_text
+	instructions.modulate.a = 1.0
 
 func _is_order_target_mineral(mineral_name: String) -> bool:
 	if not _starter_contract_active or _starter_order_targets.is_empty():

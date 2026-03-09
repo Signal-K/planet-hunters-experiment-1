@@ -1,0 +1,481 @@
+{
+  "taskId": "9zc5kc",
+  "currentVersion": 8,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "9zc5kc",
+      "version": 1,
+      "timestamp": "2026-03-09T08:51:40.677Z",
+      "changes": [
+        {
+          "field": "description",
+          "oldValue": "When a player classifies a TESS candidate, the verdict and any lightcurve annotations should be posted to the tic_annotations table in Supabase so real citizen science data is collected.",
+          "newValue": "When a player classifies a TESS planet candidate, the verdict and any lightcurve annotations should be posted to the existing 'classifications' table in Supabase (classificationtype='tess-lightcurve') so real citizen science data is collected. No new table is needed."
+        }
+      ],
+      "snapshot": {
+        "title": "Submit TESS classifications to Supabase",
+        "description": "When a player classifies a TESS planet candidate, the verdict and any lightcurve annotations should be posted to the existing 'classifications' table in Supabase (classificationtype='tess-lightcurve') so real citizen science data is collected. No new table is needed.",
+        "status": "todo",
+        "priority": "high",
+        "labels": [
+          "citizen-science",
+          "supabase",
+          "tess"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "SupabaseClient gains a post_json method (POST to REST /rest/v1/tic_annotations)"
+          },
+          {
+            "completed": false,
+            "text": "Classification (verdict + annotation stroke count) is submitted on button press"
+          },
+          {
+            "completed": false,
+            "text": "Submission failure is silent to the player (retry not required) but logged"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "9zc5kc",
+      "version": 2,
+      "timestamp": "2026-03-09T08:51:43.412Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "SupabaseClient gains a post_json method (POST to REST /rest/v1/tic_annotations)"
+            },
+            {
+              "completed": false,
+              "text": "Classification (verdict + annotation stroke count) is submitted on button press"
+            },
+            {
+              "completed": false,
+              "text": "Submission failure is silent to the player (retry not required) but logged"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": false,
+              "text": "SupabaseClient gains a post_json method (POST to REST /rest/v1/tic_annotations)"
+            },
+            {
+              "completed": false,
+              "text": "Classification (verdict + annotation stroke count) is submitted on button press"
+            },
+            {
+              "completed": false,
+              "text": "Submission failure is silent to the player (retry not required) but logged"
+            },
+            {
+              "text": "SupabaseClient gains a post_json(table, row, callback) method (POST to /rest/v1/:table)",
+              "completed": false
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Submit TESS classifications to Supabase",
+        "description": "When a player classifies a TESS planet candidate, the verdict and any lightcurve annotations should be posted to the existing 'classifications' table in Supabase (classificationtype='tess-lightcurve') so real citizen science data is collected. No new table is needed.",
+        "status": "todo",
+        "priority": "high",
+        "labels": [
+          "citizen-science",
+          "supabase",
+          "tess"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "SupabaseClient gains a post_json method (POST to REST /rest/v1/tic_annotations)"
+          },
+          {
+            "completed": false,
+            "text": "Classification (verdict + annotation stroke count) is submitted on button press"
+          },
+          {
+            "completed": false,
+            "text": "Submission failure is silent to the player (retry not required) but logged"
+          },
+          {
+            "text": "SupabaseClient gains a post_json(table, row, callback) method (POST to /rest/v1/:table)",
+            "completed": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "9zc5kc",
+      "version": 3,
+      "timestamp": "2026-03-09T08:56:42.148Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Submit TESS classifications to Supabase",
+        "description": "When a player classifies a TESS planet candidate, the verdict and any lightcurve annotations should be posted to the existing 'classifications' table in Supabase (classificationtype='tess-lightcurve') so real citizen science data is collected. No new table is needed.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "citizen-science",
+          "supabase",
+          "tess"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "SupabaseClient gains a post_json method (POST to REST /rest/v1/tic_annotations)"
+          },
+          {
+            "completed": false,
+            "text": "Classification (verdict + annotation stroke count) is submitted on button press"
+          },
+          {
+            "completed": false,
+            "text": "Submission failure is silent to the player (retry not required) but logged"
+          },
+          {
+            "completed": false,
+            "text": "SupabaseClient gains a post_json(table, row, callback) method (POST to /rest/v1/:table)"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "9zc5kc",
+      "version": 4,
+      "timestamp": "2026-03-09T08:56:47.513Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "SupabaseClient gains a post_json method (POST to REST /rest/v1/tic_annotations)"
+            },
+            {
+              "completed": false,
+              "text": "Classification (verdict + annotation stroke count) is submitted on button press"
+            },
+            {
+              "completed": false,
+              "text": "Submission failure is silent to the player (retry not required) but logged"
+            },
+            {
+              "completed": false,
+              "text": "SupabaseClient gains a post_json(table, row, callback) method (POST to /rest/v1/:table)"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "SupabaseClient gains a post_json method (POST to REST /rest/v1/tic_annotations)"
+            },
+            {
+              "completed": false,
+              "text": "Classification (verdict + annotation stroke count) is submitted on button press"
+            },
+            {
+              "completed": false,
+              "text": "Submission failure is silent to the player (retry not required) but logged"
+            },
+            {
+              "completed": false,
+              "text": "SupabaseClient gains a post_json(table, row, callback) method (POST to /rest/v1/:table)"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Submit TESS classifications to Supabase",
+        "description": "When a player classifies a TESS planet candidate, the verdict and any lightcurve annotations should be posted to the existing 'classifications' table in Supabase (classificationtype='tess-lightcurve') so real citizen science data is collected. No new table is needed.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "citizen-science",
+          "supabase",
+          "tess"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "SupabaseClient gains a post_json method (POST to REST /rest/v1/tic_annotations)"
+          },
+          {
+            "completed": false,
+            "text": "Classification (verdict + annotation stroke count) is submitted on button press"
+          },
+          {
+            "completed": false,
+            "text": "Submission failure is silent to the player (retry not required) but logged"
+          },
+          {
+            "completed": false,
+            "text": "SupabaseClient gains a post_json(table, row, callback) method (POST to /rest/v1/:table)"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "9zc5kc",
+      "version": 5,
+      "timestamp": "2026-03-09T08:56:50.277Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "SupabaseClient gains a post_json method (POST to REST /rest/v1/tic_annotations)"
+            },
+            {
+              "completed": false,
+              "text": "Classification (verdict + annotation stroke count) is submitted on button press"
+            },
+            {
+              "completed": false,
+              "text": "Submission failure is silent to the player (retry not required) but logged"
+            },
+            {
+              "completed": false,
+              "text": "SupabaseClient gains a post_json(table, row, callback) method (POST to /rest/v1/:table)"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "SupabaseClient gains a post_json method (POST to REST /rest/v1/tic_annotations)"
+            },
+            {
+              "completed": true,
+              "text": "Classification (verdict + annotation stroke count) is submitted on button press"
+            },
+            {
+              "completed": false,
+              "text": "Submission failure is silent to the player (retry not required) but logged"
+            },
+            {
+              "completed": false,
+              "text": "SupabaseClient gains a post_json(table, row, callback) method (POST to /rest/v1/:table)"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Submit TESS classifications to Supabase",
+        "description": "When a player classifies a TESS planet candidate, the verdict and any lightcurve annotations should be posted to the existing 'classifications' table in Supabase (classificationtype='tess-lightcurve') so real citizen science data is collected. No new table is needed.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "citizen-science",
+          "supabase",
+          "tess"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "SupabaseClient gains a post_json method (POST to REST /rest/v1/tic_annotations)"
+          },
+          {
+            "completed": true,
+            "text": "Classification (verdict + annotation stroke count) is submitted on button press"
+          },
+          {
+            "completed": false,
+            "text": "Submission failure is silent to the player (retry not required) but logged"
+          },
+          {
+            "completed": false,
+            "text": "SupabaseClient gains a post_json(table, row, callback) method (POST to /rest/v1/:table)"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "9zc5kc",
+      "version": 6,
+      "timestamp": "2026-03-09T08:56:53.031Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "SupabaseClient gains a post_json method (POST to REST /rest/v1/tic_annotations)"
+            },
+            {
+              "completed": true,
+              "text": "Classification (verdict + annotation stroke count) is submitted on button press"
+            },
+            {
+              "completed": false,
+              "text": "Submission failure is silent to the player (retry not required) but logged"
+            },
+            {
+              "completed": false,
+              "text": "SupabaseClient gains a post_json(table, row, callback) method (POST to /rest/v1/:table)"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "SupabaseClient gains a post_json method (POST to REST /rest/v1/tic_annotations)"
+            },
+            {
+              "completed": true,
+              "text": "Classification (verdict + annotation stroke count) is submitted on button press"
+            },
+            {
+              "completed": true,
+              "text": "Submission failure is silent to the player (retry not required) but logged"
+            },
+            {
+              "completed": false,
+              "text": "SupabaseClient gains a post_json(table, row, callback) method (POST to /rest/v1/:table)"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Submit TESS classifications to Supabase",
+        "description": "When a player classifies a TESS planet candidate, the verdict and any lightcurve annotations should be posted to the existing 'classifications' table in Supabase (classificationtype='tess-lightcurve') so real citizen science data is collected. No new table is needed.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "citizen-science",
+          "supabase",
+          "tess"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "SupabaseClient gains a post_json method (POST to REST /rest/v1/tic_annotations)"
+          },
+          {
+            "completed": true,
+            "text": "Classification (verdict + annotation stroke count) is submitted on button press"
+          },
+          {
+            "completed": true,
+            "text": "Submission failure is silent to the player (retry not required) but logged"
+          },
+          {
+            "completed": false,
+            "text": "SupabaseClient gains a post_json(table, row, callback) method (POST to /rest/v1/:table)"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v7",
+      "taskId": "9zc5kc",
+      "version": 7,
+      "timestamp": "2026-03-09T08:56:55.771Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "## Summary\n- SupabaseClient.post_json(table, row, callback): native HTTPRequest for non-web, JS fetch bridge for web\n- classificationtype=\"tess-lightcurve\" with verdict+annotation_count in classificationConfiguration\n- Fire-and-forget (callback optional); failures logged but not surfaced to player"
+        }
+      ],
+      "snapshot": {
+        "title": "Submit TESS classifications to Supabase",
+        "description": "When a player classifies a TESS planet candidate, the verdict and any lightcurve annotations should be posted to the existing 'classifications' table in Supabase (classificationtype='tess-lightcurve') so real citizen science data is collected. No new table is needed.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "citizen-science",
+          "supabase",
+          "tess"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "SupabaseClient gains a post_json method (POST to REST /rest/v1/tic_annotations)"
+          },
+          {
+            "completed": true,
+            "text": "Classification (verdict + annotation stroke count) is submitted on button press"
+          },
+          {
+            "completed": true,
+            "text": "Submission failure is silent to the player (retry not required) but logged"
+          },
+          {
+            "completed": false,
+            "text": "SupabaseClient gains a post_json(table, row, callback) method (POST to /rest/v1/:table)"
+          }
+        ],
+        "implementationNotes": "## Summary\n- SupabaseClient.post_json(table, row, callback): native HTTPRequest for non-web, JS fetch bridge for web\n- classificationtype=\"tess-lightcurve\" with verdict+annotation_count in classificationConfiguration\n- Fire-and-forget (callback optional); failures logged but not surfaced to player"
+      }
+    },
+    {
+      "id": "v8",
+      "taskId": "9zc5kc",
+      "version": 8,
+      "timestamp": "2026-03-09T08:57:01.237Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Submit TESS classifications to Supabase",
+        "description": "When a player classifies a TESS planet candidate, the verdict and any lightcurve annotations should be posted to the existing 'classifications' table in Supabase (classificationtype='tess-lightcurve') so real citizen science data is collected. No new table is needed.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "citizen-science",
+          "supabase",
+          "tess"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "SupabaseClient gains a post_json method (POST to REST /rest/v1/tic_annotations)"
+          },
+          {
+            "completed": true,
+            "text": "Classification (verdict + annotation stroke count) is submitted on button press"
+          },
+          {
+            "completed": true,
+            "text": "Submission failure is silent to the player (retry not required) but logged"
+          },
+          {
+            "completed": false,
+            "text": "SupabaseClient gains a post_json(table, row, callback) method (POST to /rest/v1/:table)"
+          }
+        ],
+        "implementationNotes": "## Summary\n- SupabaseClient.post_json(table, row, callback): native HTTPRequest for non-web, JS fetch bridge for web\n- classificationtype=\"tess-lightcurve\" with verdict+annotation_count in classificationConfiguration\n- Fire-and-forget (callback optional); failures logged but not surfaced to player"
+      }
+    }
+  ]
+}

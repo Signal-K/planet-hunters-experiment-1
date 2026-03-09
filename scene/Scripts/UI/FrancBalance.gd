@@ -70,6 +70,7 @@ func _update_display() -> void:
 	"""Update the balance display"""
 	if balance_button:
 		balance_button.text = _format_balance(balance) + " F"
+		balance_button.tooltip_text = "Francs (F) — the in-game currency.\nEarned by selling mission cargo.\nSpend on rockets, drones, and upgrades."
 
 func _format_balance(value: int) -> String:
 	"""Format balance with K/M/B/T suffixes"""
