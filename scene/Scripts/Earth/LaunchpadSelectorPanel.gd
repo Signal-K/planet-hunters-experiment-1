@@ -38,10 +38,10 @@ const MISSION_BRIEFINGS := {
 		"unlocks": "Mission 3 and Scanner station access"
 	},
 	3: {
-		"objective": "Build scanner station and launch toward a scanned target.",
-		"mechanics": "First scanner-driven target selection mission.",
+		"objective": "Visit a confirmed TESS exoplanet candidate.",
+		"mechanics": "Pick from a short list of real NASA TESS planet candidates.",
 		"required_rocket_level": 2,
-		"target_type": "Asteroid (scanned)",
+		"target_type": "TESS Planet Candidate",
 		"reward_ratio": 1.3,
 		"unlocks": "Mission 4 and Starter Rocket 3"
 	},
@@ -304,7 +304,9 @@ func populate_targets() -> void:
 
 	if targets.size() == 0:
 		var lbl: Label = EmptyLabelScene.instantiate()
-		if mission_stage >= 3:
+		if mission_stage == 3:
+			lbl.text = "No TESS planet candidates available. Check back shortly or restart the game."
+		elif mission_stage >= 4:
 			lbl.text = "No scanned targets available. Open Scanner Station, run a scan, and select a target."
 		else:
 			lbl.text = "No detected targets available."
@@ -382,6 +384,12 @@ func populate_targets() -> void:
 		elif mission_stage == 5:
 			var profile_text = "Survey Route" if operation_mode == "survey" else "Contract Route"
 			details_text += " • %s" % profile_text
+		var science_source = str(t.get("science_source", ""))
+		var science_blurb = str(t.get("science_blurb", ""))
+		if science_source != "":
+			details_text += "\n%s" % science_source
+			if science_blurb != "":
+				details_text += " — %s" % science_blurb
 		details_lbl.text = details_text
 		details_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		PanelStyle.apply_muted(details_lbl)

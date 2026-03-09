@@ -83,7 +83,7 @@ func _build_ui() -> void:
 
 	# Body
 	var body = Label.new()
-	body.text = "You've joined a real citizen science mission.\n\nYour rockets travel to asteroids and planetary candidates drawn from NASA's TESS telescope and the Active Asteroids programme. Every mission you complete contributes genuine observation data to the Planet Hunters network.\n\nThis is Experiment 1. Your feedback will shape what comes next."
+	body.text = "Fly missions to NASA TESS planet candidates and real asteroids. Your data contributes to Planet Hunters citizen science.\n\nExperiment 1 — your feedback shapes what's next."
 	body.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	body.add_theme_color_override("font_color", Color(0.78, 0.83, 0.95))

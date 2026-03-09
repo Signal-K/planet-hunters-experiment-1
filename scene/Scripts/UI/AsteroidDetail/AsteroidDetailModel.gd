@@ -36,6 +36,14 @@ func is_planet(anomaly: Dictionary) -> bool:
 	var anomaly_set = str(anomaly.get("anomalySet", "active-asteroids")).to_lower()
 	return anomaly_set == "telescope-tess" or anomaly_set == "planets" or anomaly_set == "planet"
 
+func is_candidate(anomaly: Dictionary) -> bool:
+	# A classifiable candidate is a TESS planet target that hasn't been confirmed.
+	# tess_disposition "PC" (or null/empty before migration backfill) = candidate.
+	if not is_planet(anomaly):
+		return false
+	var disposition = str(anomaly.get("tess_disposition", ""))
+	return disposition == "" or disposition == "PC"
+
 func build_title(anomaly: Dictionary, anomaly_id: String, is_planet: bool) -> String:
 	var tic_id = anomaly.get("ticId", "")
 	if tic_id != "" and tic_id != null:

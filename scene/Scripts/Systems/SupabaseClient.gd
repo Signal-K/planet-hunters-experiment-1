@@ -258,3 +258,58 @@ func _on_web_fetch_completed(args, callback_id: String) -> void:
 		return
 
 	callback.call(json.data, "")
+
+func post_json(table: String, row: Dictionary, callback: Callable = Callable()) -> void:
+	var api_base = _resolve_api_base_url()
+	var url = "%s/rest/v1/%s" % [api_base, table]
+	var headers = [
+		"apikey: " + SUPABASE_KEY,
+		"Authorization: Bearer " + SUPABASE_KEY,
+		"Content-Type: application/json",
+		"Prefer: return=minimal"
+	]
+	var body = JSON.stringify(row)
+	if OS.has_feature("web"):
+		_post_json_web(url, headers, body, callback)
+		return
+	var http = HTTPRequest.new()
+	var scene_tree = Engine.get_main_loop()
+	if scene_tree and scene_tree.root:
+		scene_tree.root.add_child(http)
+	http.request_completed.connect(func(result, response_code, _hdrs, _body):
+		http.queue_free()
+		if not callback.is_valid():
+			return
+		if result != HTTPRequest.RESULT_SUCCESS or response_code >= 300:
+			callback.call(false, "post failed: result=%d code=%d" % [result, response_code])
+		else:
+			callback.call(true, "")
+	)
+	http.request(url, headers, HTTPClient.METHOD_POST, body)
+
+func _post_json_web(url: String, headers: Array, body: String, callback: Callable) -> void:
+	var window = JavaScriptBridge.get_interface("window")
+	if window == null:
+		if callback.is_valid():
+			callback.call(false, "window unavailable")
+		return
+	var callback_id = "__ph_post_%d" % Time.get_ticks_usec()
+	var bridge = JavaScriptBridge.create_callback(func(args):
+		var ok = args.size() > 0 and str(args[0]) == "ok"
+		if callback.is_valid():
+			callback.call(ok, "" if ok else "post failed")
+		var w = JavaScriptBridge.get_interface("window")
+		if w:
+			w.set(callback_id, null)
+	)
+	window.set(callback_id, bridge)
+	var headers_js := ""
+	for h in headers:
+		var parts = h.split(": ", true, 1)
+		if parts.size() == 2:
+			headers_js += "'%s':'%s'," % [parts[0].replace("'", "\\'"), parts[1].replace("'", "\\'")]
+	var url_js = JSON.stringify(url)
+	var body_js = JSON.stringify(body)
+	var cb_js = JSON.stringify(callback_id)
+	var js = "(async function(){try{const r=await fetch(%s,{method:'POST',headers:{%s},body:%s});window[%s](r.ok||r.status===201?'ok':'err_'+r.status);}catch(e){window[%s]('err');}})();" % [url_js, headers_js, body_js, cb_js, cb_js]
+	JavaScriptBridge.eval(js, true)

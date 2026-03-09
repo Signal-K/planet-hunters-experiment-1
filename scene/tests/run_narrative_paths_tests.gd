@@ -6,8 +6,8 @@ extends SceneTree
 #
 # P01  Mission 1 full linear path (includes new arrived_at_mining_site step)
 # P02  Mission 2 semi-open completion
-# P03  Mission 3 scanner-driven (no mining step)
-# P04  Mission 4 planet mode
+# P03  Mission 3 TESS planet candidates (select, mine, debrief)
+# P04  Mission 4 scanner + annotator
 # P05  Mission 5 contractor path
 # P06  Mission 5 survey path (no contractor, survey operation mode)
 # P07  Skip tutorial at Mission 1 then resume and complete
@@ -167,7 +167,7 @@ func test_p02_mission2_semi_open_completion() -> void:
 	await _teardown(c)
 
 func test_p03_mission3_scanner_no_mining() -> void:
-	reporter.start_test("P03: Mission 3 scanner path (no mine_target step)")
+	reporter.start_test("P03: Mission 3 TESS planet candidate path")
 	_reset()
 	for s in [1, 2]:
 		_mark_stage_complete(s)
@@ -176,27 +176,19 @@ func test_p03_mission3_scanner_no_mining() -> void:
 
 	if not _assert_stage(c, 3, "P03 start"): await _teardown(c); return
 
-	var m3_actions = ["build_scanner_station", "scan_targets", "select_launch_target",
-		"launch_rocket_from_earth", "resolve_mission_debrief"]
+	var m3_actions = ["select_launch_target", "launch_rocket_from_earth",
+		"mine_target", "return_rocket_home", "resolve_mission_debrief"]
 	for action in m3_actions:
 		var before = c.get_tutorial_state()
 		c.record_action(action)
 		if not _assert_no_regression(before, c.get_tutorial_state(), action):
 			await _teardown(c); return
 
-	# Confirm mine_target is NOT part of M3 — recording it should not advance stage
-	var state_before_mine = c.get_tutorial_state()
-	c.record_action("mine_target")
-	var state_after_mine = c.get_tutorial_state()
-	if int(state_after_mine.get("current_stage", 3)) > int(state_before_mine.get("current_stage", 3)):
-		reporter.fail_test("P03: mine_target unexpectedly advanced stage in M3 (no-mine mission)")
-		await _teardown(c); return
-
 	reporter.pass_test()
 	await _teardown(c)
 
 func test_p04_mission4_planet_mode() -> void:
-	reporter.start_test("P04: Mission 4 planet mode path")
+	reporter.start_test("P04: Mission 4 scanner + annotator path")
 	_reset()
 	for s in [1, 2, 3]:
 		_mark_stage_complete(s)
@@ -205,7 +197,7 @@ func test_p04_mission4_planet_mode() -> void:
 
 	if not _assert_stage(c, 4, "P04 start"): await _teardown(c); return
 
-	var m4_actions = ["toggle_planet_scanner", "select_launch_target",
+	var m4_actions = ["build_scanner_station", "scan_targets", "select_launch_target",
 		"launch_rocket_from_earth", "mine_target", "resolve_mission_debrief"]
 	for action in m4_actions:
 		var before = c.get_tutorial_state()

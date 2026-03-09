@@ -134,7 +134,7 @@ func _setup_button_handbook() -> void:
 	vbox.add_child(title)
 	var body = Label.new()
 	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	body.text = "Step 1 — Cargo: sell resources to contractor.\nSell in Orbit: quick payout (0.8x).\nSell on Earth: full market value (unlocks Lvl 3).\nKeep Cargo: store for later (unlocks Lvl 3).\n\nStep 2 — Ship: scrap after cargo resolved.\nScrap Ship: 20% refund.\nSalvage Ship: 10% refund (unlocks Lvl 3).\nLeave in Orbit: keep ship (unlocks Lvl 3)."
+	body.text = "Sell Orbit: 0.8x payout.\nSell Earth / Keep: full value (Lvl 3+).\n\nScrap Ship: 20% refund.\nSalvage / Leave in Orbit: (Lvl 3+)."
 	PanelStyle.apply_body(body)
 	vbox.add_child(body)
 
@@ -224,7 +224,17 @@ func _update_labels() -> void:
 		_refresh_action_buttons()
 		return
 	var subcontractor_name = str(_subcontractor.get("name", "Subcontractor"))
-	status_label.text = _build_progress_feedback_text("Estimated orbit sale (%s): %s F" % [subcontractor_name, str(_total_value)])
+	var bonus_map: Dictionary = _subcontractor.get("bonus", {})
+	var bonus_preview := ""
+	for mineral in bonus_map.keys():
+		var mult = float(bonus_map[mineral])
+		var pct = int(round((mult - 1.0) * 100))
+		if pct > 0:
+			bonus_preview += " • %s +%d%%" % [mineral, pct]
+	var orbit_line = "Estimated orbit sale (%s): %s F" % [subcontractor_name, str(_total_value)]
+	if bonus_preview != "":
+		orbit_line += "\nBonus minerals:%s" % bonus_preview
+	status_label.text = _build_progress_feedback_text(orbit_line)
 	var mining_accuracy_block = _build_mining_accuracy_text()
 	if mining_accuracy_block != "":
 		status_label.text += "\n" + mining_accuracy_block
@@ -385,9 +395,21 @@ func _sell(to_earth: bool) -> void:
 	if rm:
 		net = int(rm.apply_mission5_payout_terms(net, str(_subcontractor.get("id", ""))))
 		net = int(rm.calibrate_onboarding_payout(net, str(_returned.get("rocket_id", ""))))
+	# TESS discovery bonus: +10% if the player pre-classified this target as a planet
+	var target_id = str(_returned.get("target_id", ""))
+	var discovery_bonus := false
+	if rm and target_id != "":
+		var verdict = rm.get_tess_classification(target_id)
+		if verdict == "planet":
+			var bonus = int(round(net * 0.1))
+			net += bonus
+			discovery_bonus = true
+			rm.clear_tess_classification(target_id)
 	var app = _get_app_controller()
 	if app:
 		app.add_franc_balance(net, "mission_sale")
+		if discovery_bonus:
+			app.add_experience(1, "tess_discovery")
 	var sm = SubcontractorManager
 	if sm:
 		var affinity_gain = MISSION5_AFFINITY_GAIN if rm and int(rm.get_mission_stage()) >= 5 else 1
@@ -400,7 +422,22 @@ func _sell(to_earth: bool) -> void:
 	})
 	_sold = true
 	_cargo_resolved = true
-	status_label.text = "Sale complete. Credited %s F. Now scrap your ship to finish the mission." % str(net)
+	var sale_text = "Sale complete. Credited %s F (Francs — spend on rockets & upgrades)." % str(net)
+	var contractor_bonus_map: Dictionary = _subcontractor.get("bonus", {})
+	if not contractor_bonus_map.is_empty():
+		var bonus_parts := []
+		for mineral in contractor_bonus_map.keys():
+			var mult = float(contractor_bonus_map[mineral])
+			var pct = int(round((mult - 1.0) * 100))
+			if pct > 0 and _collected.get(mineral, 0) > 0:
+				bonus_parts.append("%s +%d%%" % [mineral, pct])
+		if not bonus_parts.is_empty():
+			var contractor_name = str(_subcontractor.get("name", "Contractor"))
+			sale_text += "\n%s bonus applied: %s." % [contractor_name, ", ".join(bonus_parts)]
+	if discovery_bonus:
+		sale_text += " Includes +10% discovery bonus for classifying this TESS target!"
+	sale_text += " Now scrap your ship to finish the mission."
+	status_label.text = sale_text
 	_clear_cargo()
 	if rm:
 		if int(rm.get_mission_stage()) >= 5:
@@ -628,6 +665,8 @@ func _add_mission_log(action: String, payout: int) -> void:
 	if completed_count == 1:
 		GameplayAnalytics.emit_event("first_mission_completed", event_payload)
 		call_deferred("_show_mission_complete_beat")
+	if completed_count == 3:
+		call_deferred("_show_post_mission3_beat")
 	if rm and int(rm.get_mission_stage()) >= 5:
 		AppControllerHelper.record_tutorial_action("complete_contractor_mission", {
 			"badge": badge
@@ -842,6 +881,65 @@ func _show_mission_complete_beat() -> void:
 	tween.tween_interval(2.2)
 	tween.tween_property(panel, "modulate:a", 0.0, 0.4)
 	tween.tween_callback(canvas.queue_free)
+
+func _show_post_mission3_beat() -> void:
+	var canvas = CanvasLayer.new()
+	canvas.layer = 150
+	add_child(canvas)
+
+	var overlay = ColorRect.new()
+	overlay.color = Color(0.0, 0.0, 0.0, 0.0)
+	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	canvas.add_child(overlay)
+
+	var center = CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	canvas.add_child(center)
+
+	var panel = PanelContainer.new()
+	panel.custom_minimum_size = Vector2(560, 0)
+	panel.modulate.a = 0.0
+	center.add_child(panel)
+
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.04, 0.10, 0.20, 0.97)
+	style.border_color = Color(0.55, 0.85, 1.0, 1.0)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(10)
+	style.content_margin_left = 32
+	style.content_margin_right = 32
+	style.content_margin_top = 28
+	style.content_margin_bottom = 28
+	panel.add_theme_stylebox_override("panel", style)
+
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 12)
+	panel.add_child(vbox)
+
+	var panel_style = PanelStyle
+
+	var title = Label.new()
+	title.text = "Guided missions complete!"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	panel_style.apply_title(title)
+	title.add_theme_color_override("font_color", Color(0.55, 0.85, 1.0))
+	vbox.add_child(title)
+
+	var body = Label.new()
+	body.text = "Missions 4 and 5 are available to explore — they introduce the scanner and annotation tools — but are still being refined. Expect rough edges."
+	body.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	panel_style.apply_body(body)
+	vbox.add_child(body)
+
+	var tween = create_tween()
+	tween.tween_property(panel, "modulate:a", 1.0, 0.4)
+	tween.tween_interval(4.0)
+	tween.tween_property(panel, "modulate:a", 0.0, 0.4)
+	tween.tween_callback(canvas.queue_free)
+
 
 func _build_science_card() -> void:
 	var vbox = $UI/Root/Panel/VBox

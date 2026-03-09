@@ -1,0 +1,597 @@
+{
+  "taskId": "sx6soe",
+  "currentVersion": 8,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "sx6soe",
+      "version": 1,
+      "timestamp": "2026-03-09T08:57:12.873Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Apply 10% Francs bonus + extra XP for pre-classified TESS discoveries",
+        "description": "If a player classified a TESS PC target as 'planet' before visiting it, they should earn a 10% Francs bonus and extra XP at mission debrief. This rewards the citizen science loop.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "citizen-science",
+          "rewards",
+          "tess"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "MissionDebrief checks RocketsManager for a 'planet' classification on the returned mission target"
+          },
+          {
+            "completed": false,
+            "text": "If found, net payout is multiplied by 1.1 (10% bonus)"
+          },
+          {
+            "completed": false,
+            "text": "add_experience is called once extra with reason 'tess_discovery'"
+          },
+          {
+            "completed": false,
+            "text": "Debrief status text includes 'Discovery bonus: +10% applied' so player knows why"
+          },
+          {
+            "completed": false,
+            "text": "Bonus only triggers once per target (cleared after debrief)"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "sx6soe",
+      "version": 2,
+      "timestamp": "2026-03-09T08:57:18.300Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "MissionDebrief checks RocketsManager for a 'planet' classification on the returned mission target"
+            },
+            {
+              "completed": false,
+              "text": "If found, net payout is multiplied by 1.1 (10% bonus)"
+            },
+            {
+              "completed": false,
+              "text": "add_experience is called once extra with reason 'tess_discovery'"
+            },
+            {
+              "completed": false,
+              "text": "Debrief status text includes 'Discovery bonus: +10% applied' so player knows why"
+            },
+            {
+              "completed": false,
+              "text": "Bonus only triggers once per target (cleared after debrief)"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "MissionDebrief checks RocketsManager for a 'planet' classification on the returned mission target"
+            },
+            {
+              "completed": false,
+              "text": "If found, net payout is multiplied by 1.1 (10% bonus)"
+            },
+            {
+              "completed": false,
+              "text": "add_experience is called once extra with reason 'tess_discovery'"
+            },
+            {
+              "completed": false,
+              "text": "Debrief status text includes 'Discovery bonus: +10% applied' so player knows why"
+            },
+            {
+              "completed": false,
+              "text": "Bonus only triggers once per target (cleared after debrief)"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Apply 10% Francs bonus + extra XP for pre-classified TESS discoveries",
+        "description": "If a player classified a TESS PC target as 'planet' before visiting it, they should earn a 10% Francs bonus and extra XP at mission debrief. This rewards the citizen science loop.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "citizen-science",
+          "rewards",
+          "tess"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "MissionDebrief checks RocketsManager for a 'planet' classification on the returned mission target"
+          },
+          {
+            "completed": false,
+            "text": "If found, net payout is multiplied by 1.1 (10% bonus)"
+          },
+          {
+            "completed": false,
+            "text": "add_experience is called once extra with reason 'tess_discovery'"
+          },
+          {
+            "completed": false,
+            "text": "Debrief status text includes 'Discovery bonus: +10% applied' so player knows why"
+          },
+          {
+            "completed": false,
+            "text": "Bonus only triggers once per target (cleared after debrief)"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "sx6soe",
+      "version": 3,
+      "timestamp": "2026-03-09T08:57:21.077Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "MissionDebrief checks RocketsManager for a 'planet' classification on the returned mission target"
+            },
+            {
+              "completed": false,
+              "text": "If found, net payout is multiplied by 1.1 (10% bonus)"
+            },
+            {
+              "completed": false,
+              "text": "add_experience is called once extra with reason 'tess_discovery'"
+            },
+            {
+              "completed": false,
+              "text": "Debrief status text includes 'Discovery bonus: +10% applied' so player knows why"
+            },
+            {
+              "completed": false,
+              "text": "Bonus only triggers once per target (cleared after debrief)"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "MissionDebrief checks RocketsManager for a 'planet' classification on the returned mission target"
+            },
+            {
+              "completed": true,
+              "text": "If found, net payout is multiplied by 1.1 (10% bonus)"
+            },
+            {
+              "completed": false,
+              "text": "add_experience is called once extra with reason 'tess_discovery'"
+            },
+            {
+              "completed": false,
+              "text": "Debrief status text includes 'Discovery bonus: +10% applied' so player knows why"
+            },
+            {
+              "completed": false,
+              "text": "Bonus only triggers once per target (cleared after debrief)"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Apply 10% Francs bonus + extra XP for pre-classified TESS discoveries",
+        "description": "If a player classified a TESS PC target as 'planet' before visiting it, they should earn a 10% Francs bonus and extra XP at mission debrief. This rewards the citizen science loop.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "citizen-science",
+          "rewards",
+          "tess"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "MissionDebrief checks RocketsManager for a 'planet' classification on the returned mission target"
+          },
+          {
+            "completed": true,
+            "text": "If found, net payout is multiplied by 1.1 (10% bonus)"
+          },
+          {
+            "completed": false,
+            "text": "add_experience is called once extra with reason 'tess_discovery'"
+          },
+          {
+            "completed": false,
+            "text": "Debrief status text includes 'Discovery bonus: +10% applied' so player knows why"
+          },
+          {
+            "completed": false,
+            "text": "Bonus only triggers once per target (cleared after debrief)"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "sx6soe",
+      "version": 4,
+      "timestamp": "2026-03-09T08:57:23.837Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "MissionDebrief checks RocketsManager for a 'planet' classification on the returned mission target"
+            },
+            {
+              "completed": true,
+              "text": "If found, net payout is multiplied by 1.1 (10% bonus)"
+            },
+            {
+              "completed": false,
+              "text": "add_experience is called once extra with reason 'tess_discovery'"
+            },
+            {
+              "completed": false,
+              "text": "Debrief status text includes 'Discovery bonus: +10% applied' so player knows why"
+            },
+            {
+              "completed": false,
+              "text": "Bonus only triggers once per target (cleared after debrief)"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "MissionDebrief checks RocketsManager for a 'planet' classification on the returned mission target"
+            },
+            {
+              "completed": true,
+              "text": "If found, net payout is multiplied by 1.1 (10% bonus)"
+            },
+            {
+              "completed": true,
+              "text": "add_experience is called once extra with reason 'tess_discovery'"
+            },
+            {
+              "completed": false,
+              "text": "Debrief status text includes 'Discovery bonus: +10% applied' so player knows why"
+            },
+            {
+              "completed": false,
+              "text": "Bonus only triggers once per target (cleared after debrief)"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Apply 10% Francs bonus + extra XP for pre-classified TESS discoveries",
+        "description": "If a player classified a TESS PC target as 'planet' before visiting it, they should earn a 10% Francs bonus and extra XP at mission debrief. This rewards the citizen science loop.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "citizen-science",
+          "rewards",
+          "tess"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "MissionDebrief checks RocketsManager for a 'planet' classification on the returned mission target"
+          },
+          {
+            "completed": true,
+            "text": "If found, net payout is multiplied by 1.1 (10% bonus)"
+          },
+          {
+            "completed": true,
+            "text": "add_experience is called once extra with reason 'tess_discovery'"
+          },
+          {
+            "completed": false,
+            "text": "Debrief status text includes 'Discovery bonus: +10% applied' so player knows why"
+          },
+          {
+            "completed": false,
+            "text": "Bonus only triggers once per target (cleared after debrief)"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "sx6soe",
+      "version": 5,
+      "timestamp": "2026-03-09T08:57:26.575Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "MissionDebrief checks RocketsManager for a 'planet' classification on the returned mission target"
+            },
+            {
+              "completed": true,
+              "text": "If found, net payout is multiplied by 1.1 (10% bonus)"
+            },
+            {
+              "completed": true,
+              "text": "add_experience is called once extra with reason 'tess_discovery'"
+            },
+            {
+              "completed": false,
+              "text": "Debrief status text includes 'Discovery bonus: +10% applied' so player knows why"
+            },
+            {
+              "completed": false,
+              "text": "Bonus only triggers once per target (cleared after debrief)"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "MissionDebrief checks RocketsManager for a 'planet' classification on the returned mission target"
+            },
+            {
+              "completed": true,
+              "text": "If found, net payout is multiplied by 1.1 (10% bonus)"
+            },
+            {
+              "completed": true,
+              "text": "add_experience is called once extra with reason 'tess_discovery'"
+            },
+            {
+              "completed": true,
+              "text": "Debrief status text includes 'Discovery bonus: +10% applied' so player knows why"
+            },
+            {
+              "completed": false,
+              "text": "Bonus only triggers once per target (cleared after debrief)"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Apply 10% Francs bonus + extra XP for pre-classified TESS discoveries",
+        "description": "If a player classified a TESS PC target as 'planet' before visiting it, they should earn a 10% Francs bonus and extra XP at mission debrief. This rewards the citizen science loop.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "citizen-science",
+          "rewards",
+          "tess"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "MissionDebrief checks RocketsManager for a 'planet' classification on the returned mission target"
+          },
+          {
+            "completed": true,
+            "text": "If found, net payout is multiplied by 1.1 (10% bonus)"
+          },
+          {
+            "completed": true,
+            "text": "add_experience is called once extra with reason 'tess_discovery'"
+          },
+          {
+            "completed": true,
+            "text": "Debrief status text includes 'Discovery bonus: +10% applied' so player knows why"
+          },
+          {
+            "completed": false,
+            "text": "Bonus only triggers once per target (cleared after debrief)"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "sx6soe",
+      "version": 6,
+      "timestamp": "2026-03-09T08:57:29.342Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "MissionDebrief checks RocketsManager for a 'planet' classification on the returned mission target"
+            },
+            {
+              "completed": true,
+              "text": "If found, net payout is multiplied by 1.1 (10% bonus)"
+            },
+            {
+              "completed": true,
+              "text": "add_experience is called once extra with reason 'tess_discovery'"
+            },
+            {
+              "completed": true,
+              "text": "Debrief status text includes 'Discovery bonus: +10% applied' so player knows why"
+            },
+            {
+              "completed": false,
+              "text": "Bonus only triggers once per target (cleared after debrief)"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "MissionDebrief checks RocketsManager for a 'planet' classification on the returned mission target"
+            },
+            {
+              "completed": true,
+              "text": "If found, net payout is multiplied by 1.1 (10% bonus)"
+            },
+            {
+              "completed": true,
+              "text": "add_experience is called once extra with reason 'tess_discovery'"
+            },
+            {
+              "completed": true,
+              "text": "Debrief status text includes 'Discovery bonus: +10% applied' so player knows why"
+            },
+            {
+              "completed": true,
+              "text": "Bonus only triggers once per target (cleared after debrief)"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Apply 10% Francs bonus + extra XP for pre-classified TESS discoveries",
+        "description": "If a player classified a TESS PC target as 'planet' before visiting it, they should earn a 10% Francs bonus and extra XP at mission debrief. This rewards the citizen science loop.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "citizen-science",
+          "rewards",
+          "tess"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "MissionDebrief checks RocketsManager for a 'planet' classification on the returned mission target"
+          },
+          {
+            "completed": true,
+            "text": "If found, net payout is multiplied by 1.1 (10% bonus)"
+          },
+          {
+            "completed": true,
+            "text": "add_experience is called once extra with reason 'tess_discovery'"
+          },
+          {
+            "completed": true,
+            "text": "Debrief status text includes 'Discovery bonus: +10% applied' so player knows why"
+          },
+          {
+            "completed": true,
+            "text": "Bonus only triggers once per target (cleared after debrief)"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v7",
+      "taskId": "sx6soe",
+      "version": 7,
+      "timestamp": "2026-03-09T08:57:32.105Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "## Summary\n- MissionDebrief._sell(): after calibrate_onboarding_payout, checks get_tess_classification(target_id)\n- If verdict==\"planet\": net+=int(net*0.1), discovery_bonus=true, clear_tess_classification(target_id)\n- add_experience(1, \"tess_discovery\") called on app controller\n- Status text includes \"Includes +10% discovery bonus for classifying this TESS target\\!\""
+        }
+      ],
+      "snapshot": {
+        "title": "Apply 10% Francs bonus + extra XP for pre-classified TESS discoveries",
+        "description": "If a player classified a TESS PC target as 'planet' before visiting it, they should earn a 10% Francs bonus and extra XP at mission debrief. This rewards the citizen science loop.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "citizen-science",
+          "rewards",
+          "tess"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "MissionDebrief checks RocketsManager for a 'planet' classification on the returned mission target"
+          },
+          {
+            "completed": true,
+            "text": "If found, net payout is multiplied by 1.1 (10% bonus)"
+          },
+          {
+            "completed": true,
+            "text": "add_experience is called once extra with reason 'tess_discovery'"
+          },
+          {
+            "completed": true,
+            "text": "Debrief status text includes 'Discovery bonus: +10% applied' so player knows why"
+          },
+          {
+            "completed": true,
+            "text": "Bonus only triggers once per target (cleared after debrief)"
+          }
+        ],
+        "implementationNotes": "## Summary\n- MissionDebrief._sell(): after calibrate_onboarding_payout, checks get_tess_classification(target_id)\n- If verdict==\"planet\": net+=int(net*0.1), discovery_bonus=true, clear_tess_classification(target_id)\n- add_experience(1, \"tess_discovery\") called on app controller\n- Status text includes \"Includes +10% discovery bonus for classifying this TESS target\\!\""
+      }
+    },
+    {
+      "id": "v8",
+      "taskId": "sx6soe",
+      "version": 8,
+      "timestamp": "2026-03-09T08:57:37.619Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Apply 10% Francs bonus + extra XP for pre-classified TESS discoveries",
+        "description": "If a player classified a TESS PC target as 'planet' before visiting it, they should earn a 10% Francs bonus and extra XP at mission debrief. This rewards the citizen science loop.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "citizen-science",
+          "rewards",
+          "tess"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "MissionDebrief checks RocketsManager for a 'planet' classification on the returned mission target"
+          },
+          {
+            "completed": true,
+            "text": "If found, net payout is multiplied by 1.1 (10% bonus)"
+          },
+          {
+            "completed": true,
+            "text": "add_experience is called once extra with reason 'tess_discovery'"
+          },
+          {
+            "completed": true,
+            "text": "Debrief status text includes 'Discovery bonus: +10% applied' so player knows why"
+          },
+          {
+            "completed": true,
+            "text": "Bonus only triggers once per target (cleared after debrief)"
+          }
+        ],
+        "implementationNotes": "## Summary\n- MissionDebrief._sell(): after calibrate_onboarding_payout, checks get_tess_classification(target_id)\n- If verdict==\"planet\": net+=int(net*0.1), discovery_bonus=true, clear_tess_classification(target_id)\n- add_experience(1, \"tess_discovery\") called on app controller\n- Status text includes \"Includes +10% discovery bonus for classifying this TESS target\\!\""
+      }
+    }
+  ]
+}
