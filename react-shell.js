@@ -720,7 +720,7 @@ function App() {
   const [progress, setProgress] = useState(() => parseProgress(readCookie(COOKIE_NAME)));
   const [storageStatus, setStorageStatus] = useState("Cookie storage active");
   const [gameSrc] = useState(() => "/game/index.html?v=" + Date.now());
-  const [isMobile, setIsMobile] = useState(() => typeof window !== "undefined" && window.innerWidth < 768);
+  const [isMobile, setIsMobile] = useState(() => typeof window !== "undefined" && Math.min(window.innerWidth, window.innerHeight) < 768);
   const [isPwa] = useState(() => isPwaMode());
   const [isIos] = useState(() => isIosDevice());
   const [installPrompt, setInstallPrompt] = useState(null);
@@ -735,7 +735,7 @@ function App() {
 
   useEffect(() => {
     function onResize() {
-      setIsMobile(window.innerWidth < 768);
+      setIsMobile(Math.min(window.innerWidth, window.innerHeight) < 768);
     }
     window.addEventListener("resize", onResize, { passive: true });
     return () => window.removeEventListener("resize", onResize);
@@ -747,6 +747,16 @@ function App() {
     mq.addEventListener("change", onChange);
     return () => mq.removeEventListener("change", onChange);
   }, []);
+
+  // Attempt to lock landscape orientation on PWA/mobile (no-ops silently where unsupported, e.g. iOS)
+  useEffect(() => {
+    if (!isPwa && !isMobile) return;
+    try {
+      if (screen.orientation && typeof screen.orientation.lock === "function") {
+        screen.orientation.lock("landscape").catch(() => {});
+      }
+    } catch (_) {}
+  }, [isPwa, isMobile]);
 
   useEffect(() => {
     loadActionLog();
@@ -950,9 +960,9 @@ function App() {
       )
     : null;
 
-  // Portrait overlay — covers the game when a mobile device is held portrait
+  // Portrait overlay — covers the game when a mobile/PWA device is held portrait
   const rotatePrompt =
-    isMobile && isPortrait
+    (isMobile || isPwa) && isPortrait
       ? React.createElement(
           "div",
           {
@@ -996,75 +1006,28 @@ function App() {
         )
       : null;
 
-  // PWA mode: minimal chrome — slim header + game fills remaining height
+  // PWA mode: game fills entire screen, no chrome
   if (isPwa) {
     return React.createElement(
       "div",
       {
         style: {
-          display: "flex",
-          flexDirection: "column",
-          height: "100svh",
-          minHeight: "100svh",
+          position: "fixed",
+          inset: 0,
           background: "#000",
         },
       },
-      React.createElement(
-        "div",
-        {
-          style: {
-            display: "flex",
-            alignItems: "center",
-            gap: "12px",
-            padding: "max(6px, env(safe-area-inset-top)) 14px 6px 14px",
-            background: "#05080f",
-            borderBottom: "1px solid #1a2340",
-            flexShrink: 0,
-          },
-        },
-        React.createElement(
-          "button",
-          {
-            style: {
-              background: "none",
-              border: "1px solid #2a3560",
-              color: "#8899cc",
-              borderRadius: "6px",
-              padding: "4px 12px",
-              cursor: "pointer",
-              fontSize: "13px",
-            },
-            onClick: () => {
-              if (document.exitFullscreen && document.fullscreenElement) {
-                document.exitFullscreen();
-              }
-              if (window.history.length > 1) {
-                window.history.back();
-              } else {
-                window.close();
-              }
-            },
-          },
-          "\u2190 Exit"
-        ),
-        React.createElement(
-          "span",
-          { style: { color: "#6677aa", fontSize: "13px" } },
-          "Star Sailors: Experiment 1"
-        )
-      ),
       React.createElement("iframe", {
         id: "game-frame",
         src: gameSrc,
         title: "Planet Hunters Game",
         allow: "fullscreen",
         style: {
-          flex: 1,
+          width: "100%",
+          height: "100%",
           border: 0,
           display: "block",
           background: "#000",
-          width: "100%",
-          height: "100%",
         },
         onError: () => setStorageStatus("Game load error"),
         onLoad: () => {

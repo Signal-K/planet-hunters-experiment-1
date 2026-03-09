@@ -232,7 +232,7 @@ func _update_travel() -> void:
 		travel_bar.value = pct
 	if travel_speed:
 		var remaining_km = max(int(round(TRAVEL_DISTANCE_TOTAL_KM * (1.0 - pct))), 0)
-		travel_speed.text = "Distance: %s km" % NumberFormat.commas(str(remaining_km))
+		travel_speed.text = "Distance to destination: %s km" % NumberFormat.commas(str(remaining_km))
 	if _travel_eta_label:
 		var remaining_secs = max(TRAVEL_TIME - _phase_time, 0.0)
 		var eta_min = int(remaining_secs / 60.0)

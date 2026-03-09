@@ -6,8 +6,8 @@ const PANEL_MARGIN := 20.0
 # Scenes where the tutorial overlay should be suppressed entirely — the player
 # is watching an automated transit animation and cannot act on any tutorial step.
 const TRANSIT_SCENE_BASENAMES := ["rocket_ascent", "rocket_transit", "rocket_return"]
-const PANEL_DEFAULT_SIZE := Vector2(420.0, 260.0)
-const PANEL_MIN_SIZE := Vector2(360.0, 200.0)
+const PANEL_DEFAULT_SIZE := Vector2(520.0, 340.0)
+const PANEL_MIN_SIZE := Vector2(440.0, 260.0)
 const LAYOUT_REFRESH_INTERVAL := 0.15
 const HIGHLIGHT_PADDING := 14.0
 const GUIDE_PULSE_SPEED := 4.8
@@ -163,14 +163,14 @@ func _apply_style() -> void:
 	PanelStyle.apply_title(title_label)
 	title_label.add_theme_font_size_override("font_size", 32)
 	PanelStyle.apply_muted(stage_label)
-	stage_label.add_theme_font_size_override("font_size", 22)
+	stage_label.add_theme_font_size_override("font_size", 26)
 	PanelStyle.apply_body(message_label)
-	message_label.add_theme_font_size_override("font_size", 26)
+	message_label.add_theme_font_size_override("font_size", 32)
 	if action_label:
 		action_label.add_theme_color_override("font_color", Color(0.62, 0.60, 0.58, 1.0))
-		action_label.add_theme_font_size_override("font_size", 22)
+		action_label.add_theme_font_size_override("font_size", 28)
 	PanelStyle.apply_muted(progress_label)
-	progress_label.add_theme_font_size_override("font_size", 22)
+	progress_label.add_theme_font_size_override("font_size", 28)
 
 	# Buttons — pill outline: cyan outline for secondary, amber for primary CTA
 	for btn in [skip_button, replay_mission_button, replay_all_button]:
@@ -211,7 +211,7 @@ func _apply_pill_outline_button(btn: Button, is_primary: bool) -> void:
 	btn.add_theme_color_override("font_hover_color",   col)
 	btn.add_theme_color_override("font_pressed_color", col)
 	btn.add_theme_color_override("font_disabled_color",col_d)
-	btn.add_theme_font_size_override("font_size", 22)
+	btn.add_theme_font_size_override("font_size", 28)
 
 func _apply_collapse_button_style() -> void:
 	if collapse_button == null:
@@ -238,7 +238,7 @@ func _apply_collapse_button_style() -> void:
 	collapse_button.add_theme_color_override("font_color", col)
 	collapse_button.add_theme_color_override("font_hover_color", col)
 	collapse_button.add_theme_color_override("font_pressed_color", col)
-	collapse_button.add_theme_font_size_override("font_size", 22)
+	collapse_button.add_theme_font_size_override("font_size", 28)
 
 func _on_collapse_pressed() -> void:
 	_collapsed = !_collapsed
@@ -287,7 +287,7 @@ func _setup_guide_nodes() -> void:
 	_guide_label.visible = false
 	_guide_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_guide_label.text = "Tap here"
-	_guide_label.add_theme_font_size_override("font_size", 26)
+	_guide_label.add_theme_font_size_override("font_size", 30)
 	_guide_label.add_theme_color_override("font_color", Color(CYAN.r, CYAN.g, CYAN.b, 0.90))
 	_guide_label.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.85))
 	_guide_label.add_theme_constant_override("shadow_offset_x", 2)
@@ -365,12 +365,19 @@ func _candidate_rects(viewport_rect: Rect2, size: Vector2, target_rect: Rect2) -
 	var top := viewport_rect.position.y + PANEL_MARGIN
 	var right := viewport_rect.position.x + viewport_rect.size.x - size.x - PANEL_MARGIN
 	var bottom := viewport_rect.position.y + viewport_rect.size.y - size.y - PANEL_MARGIN
-	var out: Array[Rect2] = [
+	var center_x := viewport_rect.position.x + (viewport_rect.size.x - size.x) * 0.5
+	# On mobile landscape viewports (wider than 16:9), prefer a centred position.
+	# The first candidate wins when overlap is equal, so centering is the default.
+	var out: Array[Rect2] = []
+	if viewport_rect.size.y > 0 and viewport_rect.size.x / viewport_rect.size.y > 1.85:
+		out.append(Rect2(Vector2(center_x, bottom), size))  # centre-bottom preferred
+		out.append(Rect2(Vector2(center_x, top), size))     # centre-top fallback
+	out.append_array([
 		Rect2(Vector2(left, top), size),
 		Rect2(Vector2(right, top), size),
 		Rect2(Vector2(left, bottom), size),
 		Rect2(Vector2(right, bottom), size)
-	]
+	])
 	if _has_rect(target_rect):
 		out.append(Rect2(Vector2(
 			clamp(target_rect.position.x - size.x - PANEL_MARGIN, left, right),
