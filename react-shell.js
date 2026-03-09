@@ -436,13 +436,21 @@ function showFeedbackDialog(context = {}) {
 
   const card = document.createElement("form");
   card.style.width = "min(560px, 100%)";
+  card.style.maxHeight = "calc(100svh - 40px)";
   card.style.background = "#08111d";
   card.style.border = "1px solid #233455";
   card.style.borderRadius = "18px";
   card.style.boxShadow = "0 24px 60px rgba(0, 0, 0, 0.45)";
-  card.style.padding = "22px";
-  card.style.display = "grid";
-  card.style.gap = "12px";
+  card.style.display = "flex";
+  card.style.flexDirection = "column";
+  card.style.overflow = "hidden";
+
+  const cardBody = document.createElement("div");
+  cardBody.style.padding = "22px 22px 0";
+  cardBody.style.display = "grid";
+  cardBody.style.gap = "12px";
+  cardBody.style.overflowY = "auto";
+  cardBody.style.flex = "1";
 
   const title = document.createElement("h2");
   title.textContent = "Where did you get stuck?";
@@ -473,12 +481,12 @@ function showFeedbackDialog(context = {}) {
   ].join("");
 
   const expectation = document.createElement("textarea");
-  expectation.rows = 5;
+  expectation.rows = 3;
   expectation.placeholder = "What were you trying to do, and what did you expect to happen?";
   expectation.style.resize = "vertical";
 
   const details = document.createElement("textarea");
-  details.rows = 4;
+  details.rows = 2;
   details.placeholder = "Anything else? Controls, tutorial, pacing, unclear text, bugs.";
   details.style.resize = "vertical";
 
@@ -527,12 +535,15 @@ function showFeedbackDialog(context = {}) {
   footer.appendChild(closeBtn);
   footer.appendChild(submitBtn);
 
-  card.appendChild(title);
-  card.appendChild(intro);
-  card.appendChild(blockerSelect);
-  card.appendChild(severitySelect);
-  card.appendChild(expectation);
-  card.appendChild(details);
+  cardBody.appendChild(title);
+  cardBody.appendChild(intro);
+  cardBody.appendChild(blockerSelect);
+  cardBody.appendChild(severitySelect);
+  cardBody.appendChild(expectation);
+  cardBody.appendChild(details);
+  footer.style.padding = "12px 22px 16px";
+  footer.style.borderTop = "1px solid #1a2a44";
+  card.appendChild(cardBody);
   card.appendChild(footer);
 
   card.onsubmit = async (event) => {

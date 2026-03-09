@@ -23,7 +23,7 @@ const STEPS_BY_MISSION := {
 		{"id": "m1_mine_intro", "action_key": "arrived_at_mining_site", "title": "You've Arrived!", "message": "Check the order panel, then hold FIRE (or SPACE) to mine requested minerals.", "mechanic": "mining-intro", "valid_scenes": MINING_SCENES},
 		{"id": "m1_mine", "action_key": "mine_target", "title": "Mine Resources", "message": "Mine requested minerals first. Return before Fuel or Heat is critical.", "mechanic": "mining", "valid_scenes": MINING_SCENES},
 		{"id": "m1_return", "action_key": "return_rocket_home", "title": "Return Home", "message": "Bring your rocket and cargo back for debrief.", "mechanic": "return", "valid_scenes": MINING_SCENES},
-		{"id": "m1_debrief", "action_key": "resolve_mission_debrief", "title": "Complete Debrief", "message": "Resolve debrief to claim Exposure and unlock Mission 2.", "mechanic": "debrief", "valid_scenes": DEBRIEF_SCENES}
+		{"id": "m1_debrief", "action_key": "resolve_mission_debrief", "title": "Complete Debrief", "message": "Sell your cargo to the contractor, then scrap your ship to claim Exposure and unlock Mission 2.", "mechanic": "debrief", "valid_scenes": DEBRIEF_SCENES}
 	],
 	2: [
 		{"id": "m2_create_rocket", "action_key": "create_rocket", "title": "Build Upgraded Rocket", "message": "Create or drag Starter Rocket 2.", "mechanic": "progression", "valid_scenes": BASE_SCENES},
@@ -31,27 +31,27 @@ const STEPS_BY_MISSION := {
 		{"id": "m2_launch", "action_key": "launch_rocket_from_earth", "title": "Launch Upgraded Mission", "message": "Press Launch to start Mission 2.", "mechanic": "launch", "valid_scenes": BASE_SCENES},
 		{"id": "m2_mine", "action_key": "mine_target", "title": "Mine With Better Equipment", "message": "Use improved equipment to increase yield.", "mechanic": "mining", "valid_scenes": MINING_SCENES},
 		{"id": "m2_return", "action_key": "return_rocket_home", "title": "Return To Debrief", "message": "Return with cargo to finish mission 2.", "mechanic": "return", "valid_scenes": MINING_SCENES},
-		{"id": "m2_debrief", "action_key": "resolve_mission_debrief", "title": "Finalize Mission 2", "message": "Complete debrief to unlock scanner-driven flow.", "mechanic": "debrief", "valid_scenes": DEBRIEF_SCENES}
+		{"id": "m2_debrief", "action_key": "resolve_mission_debrief", "title": "Finalize Mission 2", "message": "Sell your cargo and scrap your ship to unlock the scanner-driven flow.", "mechanic": "debrief", "valid_scenes": DEBRIEF_SCENES}
 	],
 	3: [
 		{"id": "m3_build_scanner", "action_key": "build_scanner_station", "title": "Build Scanner", "message": "Construct the scanner station to enable discovery.", "mechanic": "scanner", "valid_scenes": BASE_SCENES},
 		{"id": "m3_scan", "action_key": "scan_targets", "title": "Run Scan", "message": "Run a scan to discover launch targets.", "mechanic": "scanner", "valid_scenes": BASE_SCENES},
 		{"id": "m3_select", "action_key": "select_launch_target", "title": "Choose Scanned Target", "message": "Select a scanned target that matches your rocket capability.", "mechanic": "targeting", "valid_scenes": BASE_SCENES},
 		{"id": "m3_launch", "action_key": "launch_rocket_from_earth", "title": "Launch Scanned Mission", "message": "Launch the scanner-selected mission.", "mechanic": "launch", "valid_scenes": BASE_SCENES},
-		{"id": "m3_debrief", "action_key": "resolve_mission_debrief", "title": "Complete Scanner Mission", "message": "Debrief to advance into planetary exploration.", "mechanic": "debrief", "valid_scenes": DEBRIEF_SCENES}
+		{"id": "m3_debrief", "action_key": "resolve_mission_debrief", "title": "Complete Scanner Mission", "message": "Sell your cargo and scrap your ship to advance into planetary exploration.", "mechanic": "debrief", "valid_scenes": DEBRIEF_SCENES}
 	],
 	4: [
 		{"id": "m4_planet_toggle", "action_key": "toggle_planet_scanner", "title": "Switch To Planet Mode", "message": "Toggle scanner mode from asteroids to planets.", "mechanic": "scanner-mode", "valid_scenes": BASE_SCENES},
 		{"id": "m4_select", "action_key": "select_launch_target", "title": "Select Planetary Target", "message": "Pick a planetary destination within your unlock range.", "mechanic": "targeting", "valid_scenes": BASE_SCENES},
 		{"id": "m4_launch", "action_key": "launch_rocket_from_earth", "title": "Launch Planetary Mission", "message": "Press Launch to begin long-range exploration.", "mechanic": "launch", "valid_scenes": BASE_SCENES},
 		{"id": "m4_mine", "action_key": "mine_target", "title": "Mine Advanced Resources", "message": "Extract high-value resources from planetary targets.", "mechanic": "mining", "valid_scenes": MINING_SCENES},
-		{"id": "m4_debrief", "action_key": "resolve_mission_debrief", "title": "Complete Planetary Debrief", "message": "Finalize mission 4 to unlock contractor flow.", "mechanic": "debrief", "valid_scenes": DEBRIEF_SCENES}
+		{"id": "m4_debrief", "action_key": "resolve_mission_debrief", "title": "Complete Planetary Debrief", "message": "Sell your cargo and scrap your ship to unlock the contractor flow.", "mechanic": "debrief", "valid_scenes": DEBRIEF_SCENES}
 	],
 	5: [
 		{"id": "m5_accept_contract", "action_key": "accept_contractor_offer", "title": "Accept Contractor", "message": "Accept one contractor offer to activate mission modifiers.", "mechanic": "contractor", "valid_scenes": BASE_SCENES},
 		{"id": "m5_select", "action_key": "select_launch_target", "title": "Select Contract Target", "message": "Choose a target aligned with the contract.", "mechanic": "targeting", "valid_scenes": BASE_SCENES},
 		{"id": "m5_launch", "action_key": "launch_rocket_from_earth", "title": "Launch Contract Mission", "message": "Start the contractor mission.", "mechanic": "launch", "valid_scenes": BASE_SCENES},
-		{"id": "m5_complete_contract", "action_key": "complete_contractor_mission", "title": "Resolve Contract", "message": "Finish debrief to complete contract execution.", "mechanic": "contractor", "valid_scenes": DEBRIEF_SCENES}
+		{"id": "m5_complete_contract", "action_key": "complete_contractor_mission", "title": "Complete Contract", "message": "Sell your cargo to the contractor, then scrap your ship to complete the contract.", "mechanic": "contractor", "valid_scenes": DEBRIEF_SCENES}
 	]
 }
 

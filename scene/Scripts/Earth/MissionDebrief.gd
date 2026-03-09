@@ -4,6 +4,7 @@ const ORBIT_MULTIPLIER := 0.8
 const EARTH_MULTIPLIER := 1.0
 const SUBCONTRACTOR_FEE := 0
 const EARTH_SALE_MIN_LEVEL := 3
+const SALVAGE_MIN_LEVEL := 3
 const SCRAP_REFUND_PCT := 0.20
 const SALVAGE_REFUND_PCT := 0.10
 const MISSION4_AFFINITY_GATE := 3
@@ -41,6 +42,7 @@ var _returned := {}
 var _collected := {}
 var _total_value := 0
 var _sold := false
+var _cargo_resolved := false
 var _closed_out := false
 var _subcontractor := {}
 var _last_exposure_awarded := 0
@@ -132,7 +134,7 @@ func _setup_button_handbook() -> void:
 	vbox.add_child(title)
 	var body = Label.new()
 	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	body.text = "Sell in Orbit: quick payout now.\nBring to Earth: sell at Earth market value.\nKeep Cargo: store minerals for later.\nScrap/Salvage: convert ship to refunds.\nLeave in Orbit: keep ship for later missions.\nReturn to Base: exit debrief flow."
+	body.text = "Step 1 — Cargo: sell resources to contractor.\nSell in Orbit: quick payout (0.8x).\nSell on Earth: full market value (unlocks Lvl 3).\nKeep Cargo: store for later (unlocks Lvl 3).\n\nStep 2 — Ship: scrap after cargo resolved.\nScrap Ship: 20% refund.\nSalvage Ship: 10% refund (unlocks Lvl 3).\nLeave in Orbit: keep ship (unlocks Lvl 3)."
 	PanelStyle.apply_body(body)
 	vbox.add_child(body)
 
@@ -213,7 +215,7 @@ func _update_labels() -> void:
 		var logo = str(custom.get("logo", ""))
 		if flag != "" or logo != "":
 			custom_suffix = " • %s/%s" % [flag if flag != "" else "No Flag", logo if logo != "" else "No Logo"]
-	subtitle_label.text = "Rocket %s returning from %s%s" % [rocket_id if rocket_id != "" else "", label, custom_suffix]
+	subtitle_label.text = "Rocket %s orbiting Earth • from %s%s" % [rocket_id if rocket_id != "" else "", label, custom_suffix]
 	if _starter_contract_mode:
 		var contractor_name = str(_starter_contract.get("name", "Contractor"))
 		subtitle_label.text = "Starter contract debrief (%s)" % contractor_name
@@ -282,14 +284,17 @@ func _complete_starter_contract_debrief() -> void:
 		back_button.disabled = false
 		back_button.text = "Continue"
 	if not _starter_order_complete:
-		status_label.text = "Starter order is incomplete. Relaunch Mission 1, mine requested minerals, then resolve debrief again."
+		status_label.text = "Starter order is incomplete. Relaunch Mission 1, mine the requested minerals, then return to orbit to continue."
 		return
 	var app = _get_app_controller()
 	if app:
+		app.add_experience(1, "mission_completion")
 		_award_mission_exposure(app)
 	var sm = SubcontractorManager
 	if sm:
 		_starter_affinity_after = int(sm.add_affinity(str(_starter_contract.get("id", "")), 1))
+		if app:
+			app.add_experience(1, "affinity")
 	_add_mission_log("starter_contract_complete", 0)
 	AppControllerHelper.record_tutorial_action("resolve_mission_debrief", {
 		"mode": "starter_contract_recap"
@@ -383,45 +388,39 @@ func _sell(to_earth: bool) -> void:
 	var app = _get_app_controller()
 	if app:
 		app.add_franc_balance(net, "mission_sale")
-		_award_mission_exposure(app)
 	var sm = SubcontractorManager
 	if sm:
 		var affinity_gain = MISSION5_AFFINITY_GAIN if rm and int(rm.get_mission_stage()) >= 5 else 1
 		sm.add_affinity(str(_subcontractor.get("id", "")), affinity_gain)
+		if app:
+			app.add_experience(1, "affinity")
 	_add_mission_log("sell_earth" if to_earth else "sell_orbit", net)
 	AppControllerHelper.record_tutorial_action("resolve_mission_debrief", {
 		"mode": "sell_earth" if to_earth else "sell_orbit"
 	})
 	_sold = true
-	_closed_out = true
-	_last_exposure_awarded = _mission_exposure_reward()
-	status_label.text = _build_progress_feedback_text("Sale complete. Credited %s F. Exposure +%s." % [str(net), _last_exposure_awarded], _last_exposure_awarded)
+	_cargo_resolved = true
+	status_label.text = "Sale complete. Credited %s F. Now scrap your ship to finish the mission." % str(net)
 	_clear_cargo()
 	if rm:
-		rm.remove_orbiting_rocket(str(_returned.get("rocket_id", "")))
 		if int(rm.get_mission_stage()) >= 5:
 			rm.clear_mission5_contract_offer()
-	_lock_action_buttons()
-	_show_science_card()
+	_refresh_action_buttons()
 
 func _keep_cargo() -> void:
-	_last_exposure_awarded = _mission_exposure_reward()
-	status_label.text = _build_progress_feedback_text("Cargo stored. You can sell later.", _last_exposure_awarded)
-	var app = _get_app_controller()
-	if app:
-		_award_mission_exposure(app)
-	_add_mission_log("keep_cargo", 0)
+	_cargo_resolved = true
 	AppControllerHelper.record_tutorial_action("resolve_mission_debrief", {
 		"mode": "keep_cargo"
 	})
-	_closed_out = true
-	_show_science_card()
+	status_label.text = "Cargo stored. Now scrap your ship to finish the mission."
+	_refresh_action_buttons()
 
 func _archive_ship() -> void:
 	if _closed_out:
 		return
 	var app = _get_app_controller()
 	if app:
+		app.add_experience(1, "mission_completion")
 		_award_mission_exposure(app)
 	_add_mission_log("archive", 0)
 	AppControllerHelper.record_tutorial_action("resolve_mission_debrief", {
@@ -442,14 +441,16 @@ func _scrap_ship(refund_pct: float) -> void:
 	var app = _get_app_controller()
 	if app:
 		app.add_franc_balance(refund, "scrap")
+		app.add_experience(1, "mission_completion")
 		_award_mission_exposure(app)
 	var rm = RocketsManager
 	if rm:
 		rm.set_destroyed(rocket_id)
 		rm.remove_orbiting_rocket(rocket_id)
-	_add_mission_log("scrap" if refund_pct >= 0.2 else "salvage", refund)
+	var ship_action = "scrap" if refund_pct >= 0.2 else "salvage"
+	_add_mission_log(ship_action, refund)
 	AppControllerHelper.record_tutorial_action("resolve_mission_debrief", {
-		"mode": "scrap" if refund_pct >= 0.2 else "salvage"
+		"mode": ship_action
 	})
 	_last_exposure_awarded = _mission_exposure_reward()
 	status_label.text = _build_progress_feedback_text("Ship processed. Refund %s F. Exposure +%s." % [str(refund), _last_exposure_awarded], _last_exposure_awarded)
@@ -462,7 +463,11 @@ func _leave_in_orbit() -> void:
 		return
 	var app = _get_app_controller()
 	if app:
+		app.add_experience(1, "mission_completion")
 		_award_mission_exposure(app)
+	var rm = RocketsManager
+	if rm:
+		rm.remove_orbiting_rocket(str(_returned.get("rocket_id", "")))
 	_add_mission_log("leave_orbit", 0)
 	AppControllerHelper.record_tutorial_action("resolve_mission_debrief", {
 		"mode": "leave_orbit"
@@ -495,26 +500,59 @@ func _refresh_action_buttons() -> void:
 		if back_button:
 			back_button.disabled = false
 		return
-	var has_cargo = not _collected.is_empty()
-	var can_act = not _closed_out
-	sell_orbit_button.disabled = (not can_act) or (not has_cargo)
+
 	var app = _get_app_controller()
+	var level = 1
 	if app:
-		var level = int(app.get_experience_level())
-		if level < EARTH_SALE_MIN_LEVEL:
-			sell_earth_button.disabled = true
-			sell_earth_button.text = "Bring to Earth (Locked • Lvl %s)" % str(EARTH_SALE_MIN_LEVEL)
-		else:
-			sell_earth_button.disabled = (not can_act) or (not has_cargo)
+		level = int(app.get_experience_level())
+	var has_cargo = not _collected.is_empty()
+
+	if not _cargo_resolved:
+		# Step 1: Cargo — show only what's available at this level
+		if sell_row:
+			sell_row.visible = true
+		sell_orbit_button.visible = true
+		sell_orbit_button.disabled = not has_cargo
+
+		sell_earth_button.visible = level >= EARTH_SALE_MIN_LEVEL
+		if sell_earth_button.visible:
 			sell_earth_button.text = "Sell on Earth"
+			sell_earth_button.disabled = not has_cargo
+
+		keep_button.visible = level >= EARTH_SALE_MIN_LEVEL
+		if keep_button.visible:
+			keep_button.disabled = false
+
+		if ship_row:
+			ship_row.visible = false
+
+	elif not _closed_out:
+		# Step 2: Ship — show only what's available at this level
+		if sell_row:
+			sell_row.visible = false
+		keep_button.visible = false
+
+		if ship_row:
+			ship_row.visible = true
+
+		scrap_button.visible = true
+		scrap_button.disabled = false
+
+		salvage_button.visible = level >= SALVAGE_MIN_LEVEL
+		if salvage_button.visible:
+			salvage_button.disabled = false
+
+		leave_button.visible = level >= EARTH_SALE_MIN_LEVEL
+		if leave_button.visible:
+			leave_button.disabled = false
+
+		if archive_button:
+			archive_button.visible = level >= EARTH_SALE_MIN_LEVEL
+			if archive_button.visible:
+				archive_button.disabled = false
+
 	else:
-		sell_earth_button.disabled = (not can_act) or (not has_cargo)
-	keep_button.disabled = true
-	salvage_button.disabled = true
-	scrap_button.disabled = not can_act
-	leave_button.disabled = not can_act
-	if archive_button:
-		archive_button.disabled = not can_act
+		_lock_action_buttons()
 
 func _set_empty_state() -> void:
 	title_label.text = "Mission Debrief"

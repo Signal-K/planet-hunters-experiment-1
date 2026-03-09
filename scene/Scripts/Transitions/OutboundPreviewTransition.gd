@@ -32,6 +32,7 @@ const RoomCatalog = preload("res://Scripts/Utils/RoomCatalog.gd")
 @onready var orbit_circle: Line2D = $CanvasLayer/Orbit2D/OrbitCircle
 @onready var orbit_heading: Line2D = $CanvasLayer/Orbit2D/OrbitHeading
 @onready var orbit_rocket: AnimatedSprite2D = $CanvasLayer/Orbit2D/OrbitRocket2D
+@onready var _ui_margin: MarginContainer = $CanvasLayer/UI/Margin
 @onready var back_button: Button = $CanvasLayer/UI/Margin/VBox/Header/BackButton
 @onready var target_label: Label = $CanvasLayer/UI/Margin/VBox/Header/TargetLabel
 @onready var minerals_panel: Panel = $CanvasLayer/UI/Margin/VBox/MineralsPanel
@@ -419,7 +420,7 @@ func _build_science_panel() -> void:
 	var header = Label.new()
 	header.text = "INCOMING TELESCOPE DATA"
 	header.add_theme_color_override("font_color", Color(0.45, 0.70, 1.0))
-	header.add_theme_font_size_override("font_size", 11)
+	header.add_theme_font_size_override("font_size", PanelStyle.FONT_MUTED)
 	header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(header)
 
@@ -435,7 +436,7 @@ func _build_science_panel() -> void:
 	_science_caption.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_science_caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_science_caption.add_theme_color_override("font_color", Color(0.72, 0.78, 0.92))
-	_science_caption.add_theme_font_size_override("font_size", 12)
+	_science_caption.add_theme_font_size_override("font_size", PanelStyle.FONT_MUTED)
 	vbox.add_child(_science_caption)
 
 	canvas.add_child(_science_panel)
@@ -448,20 +449,28 @@ func _apply_responsive_layout() -> void:
 	var edge_margin = 16.0
 	var panel_width = clamp(viewport.x * (0.33 if compact else 0.28), 300.0, 420.0)
 	var panel_height = 120.0
+	# Safe area: compensate for Dynamic Island / notch (landscape iPhone aspect > 1.85)
+	var safe_top = 90.0 if viewport.x / max(viewport.y, 1.0) > 1.85 else 0.0
+	var safe_bottom = 90.0 if viewport.x / max(viewport.y, 1.0) > 1.85 else 0.0
+	if _ui_margin:
+		_ui_margin.offset_top = 24.0 + safe_top
 	if travel_panel:
 		travel_panel.anchor_left = 0.0
 		travel_panel.anchor_right = 0.0
 		travel_panel.anchor_top = 0.0
 		travel_panel.anchor_bottom = 0.0
 		travel_panel.offset_left = edge_margin
-		travel_panel.offset_top = 96.0
+		travel_panel.offset_top = 96.0 + safe_top
 		travel_panel.offset_right = edge_margin + panel_width
-		travel_panel.offset_bottom = 96.0 + panel_height
+		travel_panel.offset_bottom = 96.0 + panel_height + safe_top
+	if _shop_button:
+		_shop_button.offset_top = 24.0 + safe_top
+		_shop_button.offset_bottom = 68.0 + safe_top
 	if _science_panel:
 		var science_width = clamp(viewport.x * (0.72 if compact else 0.45), 320.0, 560.0)
-		var science_bottom = 24.0
+		var science_bottom = 24.0 + safe_bottom
 		if compact:
-			science_bottom = 12.0
+			science_bottom = 12.0 + safe_bottom
 		_science_panel.anchor_left = 0.5
 		_science_panel.anchor_right = 0.5
 		_science_panel.anchor_top = 1.0
@@ -622,18 +631,18 @@ func _build_ship_status_panel() -> void:
 	var title = Label.new()
 	title.text = "SHIP STATUS"
 	title.add_theme_color_override("font_color", Color(0.28, 0.88, 0.96))
-	title.add_theme_font_size_override("font_size", 12)
+	title.add_theme_font_size_override("font_size", PanelStyle.FONT_MUTED)
 	vbox.add_child(title)
 	vbox.add_child(HSeparator.new())
 	var vessel_lbl = Label.new()
 	vessel_lbl.text = "Vessel: %s" % (_current_rocket_id if _current_rocket_id != "" else "—")
 	vessel_lbl.add_theme_color_override("font_color", Color(0.85, 0.87, 0.92))
-	vessel_lbl.add_theme_font_size_override("font_size", 13)
+	vessel_lbl.add_theme_font_size_override("font_size", PanelStyle.FONT_BODY)
 	vbox.add_child(vessel_lbl)
 	var rooms_header = Label.new()
 	rooms_header.text = "Rooms:"
 	rooms_header.add_theme_color_override("font_color", Color(0.60, 0.65, 0.78))
-	rooms_header.add_theme_font_size_override("font_size", 12)
+	rooms_header.add_theme_font_size_override("font_size", PanelStyle.FONT_MUTED)
 	vbox.add_child(rooms_header)
 	var layout = RoomCatalog.create_layout_for_rocket_type(_current_rocket_id)
 	var installed = RoomCatalog.get_installed_rooms(layout)
@@ -642,7 +651,7 @@ func _build_ship_status_panel() -> void:
 		var row = Label.new()
 		row.text = "  • %s" % room_def.get("name", room_inst.get("room_id", "?"))
 		row.add_theme_color_override("font_color", Color(0.72, 0.78, 0.92))
-		row.add_theme_font_size_override("font_size", 12)
+		row.add_theme_font_size_override("font_size", PanelStyle.FONT_MUTED)
 		vbox.add_child(row)
 	canvas.add_child(_ship_status_panel)
 
