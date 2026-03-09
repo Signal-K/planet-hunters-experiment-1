@@ -34,6 +34,7 @@ const EARTH_MULTIPLIER := 1.35
 @onready var orbit_circle: Line2D = $CanvasLayer/Orbit2D/OrbitCircle
 @onready var orbit_heading: Line2D = $CanvasLayer/Orbit2D/OrbitHeading
 @onready var orbit_rocket: AnimatedSprite2D = $CanvasLayer/Orbit2D/OrbitRocket2D
+@onready var _ui_margin: MarginContainer = $CanvasLayer/UI/Margin
 @onready var back_button: Button = $CanvasLayer/UI/Margin/VBox/Header/BackButton
 @onready var target_label: Label = $CanvasLayer/UI/Margin/VBox/Header/TargetLabel
 @onready var minerals_panel: Panel = $CanvasLayer/UI/Margin/VBox/MineralsPanel
@@ -160,30 +161,41 @@ func _apply_responsive_layout() -> void:
 	var edge_margin = 16.0
 	var left_panel_width = clamp(viewport.x * (0.34 if compact else 0.30), 300.0, 420.0)
 	var right_panel_width = clamp(viewport.x * (0.34 if compact else 0.30), 300.0, 420.0)
+	# Safe area: compensate for Dynamic Island / notch and home indicator (landscape iPhone)
+	var safe_top = 90.0 if viewport.x / max(viewport.y, 1.0) > 1.85 else 0.0
+	var safe_bottom = 90.0 if viewport.x / max(viewport.y, 1.0) > 1.85 else 0.0
+	if _ui_margin:
+		_ui_margin.offset_top = 24.0 + safe_top
 	if travel_panel:
 		travel_panel.anchor_left = 0.0
 		travel_panel.anchor_right = 0.0
 		travel_panel.anchor_top = 0.0
 		travel_panel.anchor_bottom = 0.0
 		travel_panel.offset_left = edge_margin
-		travel_panel.offset_top = 96.0
+		travel_panel.offset_top = 96.0 + safe_top
 		travel_panel.offset_right = edge_margin + left_panel_width
-		travel_panel.offset_bottom = 216.0
+		travel_panel.offset_bottom = 216.0 + safe_top
 	if summary_panel:
 		summary_panel.anchor_left = 1.0
 		summary_panel.anchor_right = 1.0
 		summary_panel.anchor_top = 0.0
 		summary_panel.anchor_bottom = 0.0
 		summary_panel.offset_left = -edge_margin - right_panel_width
-		summary_panel.offset_top = 96.0 if compact else 128.0
+		var summary_top = (96.0 if compact else 128.0) + safe_top
+		summary_panel.offset_top = summary_top
 		summary_panel.offset_right = -edge_margin
-		summary_panel.offset_bottom = summary_panel.offset_top + (300.0 if compact else 360.0)
+		summary_panel.offset_bottom = summary_top + (300.0 if compact else 360.0)
 	if control_panel:
 		control_panel.offset_left = -edge_margin - right_panel_width
 		control_panel.offset_right = -edge_margin
 	if inventory_panel:
 		inventory_panel.offset_left = -edge_margin - right_panel_width
 		inventory_panel.offset_right = -edge_margin
+	# Bottom nav buttons: clear home indicator
+	if prev_button:
+		var btn_container = prev_button.get_parent()
+		if btn_container:
+			btn_container.offset_bottom = -safe_bottom
 
 func _load_target_data() -> void:
 	var rm = RocketsManager
