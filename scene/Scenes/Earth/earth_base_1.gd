@@ -43,6 +43,7 @@ func _ready() -> void:
 
 	call_deferred("_maybe_show_starterrocket2_unlock_popup")
 	call_deferred("_apply_tutorial_button_state")
+	call_deferred("_apply_nav_safe_area")
 	_build_earth_base_identity()
 
 func _setup_buttons() -> void:
@@ -507,3 +508,22 @@ func _mark_starterrocket2_unlock_popup_seen() -> void:
 	cfg.load(SR2_UNLOCK_POPUP_PATH)
 	cfg.set_value(SR2_UNLOCK_SECTION, SR2_UNLOCK_KEY, true)
 	cfg.save(SR2_UNLOCK_POPUP_PATH)
+
+func _apply_nav_safe_area() -> void:
+	# On mobile landscape viewports (wider than 16:9), shift the nav bar up to
+	# clear the iPhone home indicator. Design is 1920×1080; iPhone landscape
+	# expands the viewport to ~2337×1080 (aspect ~2.16). The home indicator is
+	# ~34 CSS px → ~94 Godot units at that scale. We use 90 as a round value.
+	var container := get_node_or_null("UILayer/ButtonContainer") as HBoxContainer
+	if container == null:
+		return
+	var vp := get_viewport()
+	if vp == null:
+		return
+	var vp_rect := vp.get_visible_rect()
+	if vp_rect.size.y <= 0:
+		return
+	if vp_rect.size.x / vp_rect.size.y > 1.85:
+		var inset := 90.0
+		container.offset_top -= inset
+		container.offset_bottom -= inset
