@@ -19,7 +19,6 @@ const SIDEBAR_VIEWPORT_RATIO := 0.44
 const MAX_VISIBLE_TARGETS := 3
 const MAX_VISIBLE_TARGETS_MISSION3 := 5
 const MAX_VISIBLE_TARGETS_MISSION4 := 5
-const MAX_VISIBLE_TARGETS_MISSION5 := 5
 const MISSION_BRIEFINGS := {
 	1: {
 		"objective": "Complete your first mining loop (launch, mine, return, debrief).",
@@ -51,15 +50,7 @@ const MISSION_BRIEFINGS := {
 		"required_rocket_level": 3,
 		"target_type": "Planet",
 		"reward_ratio": 1.4,
-		"unlocks": "Mission 5 and contractor flow"
-	},
-	5: {
-		"objective": "Accept a contractor offer and complete a contract mission.",
-		"mechanics": "Contractor effects modify discounts/payouts with capped rewards.",
-		"required_rocket_level": 1,
-		"target_type": "Asteroid (contract target)",
-		"reward_ratio": 1.1,
-		"unlocks": "Contractor affinity progression"
+		"unlocks": "Free Operations mode"
 	}
 }
 
@@ -184,6 +175,7 @@ func populate_targets() -> void:
 		return
 	var mission_stage_raw = int(rm.get_mission_stage())
 	var mission_stage = _effective_mission_stage_for_ui(mission_stage_raw)
+	var free_ops_unlocked = rm.is_free_operations_unlocked()
 	var targets: Array = []
 	if mission_stage <= 2:
 		if mission_stage == 1:
@@ -195,9 +187,7 @@ func populate_targets() -> void:
 	elif mission_stage == 3:
 		targets = rm.get_mission3_targets()
 	elif mission_stage == 4:
-		targets = rm.get_mission4_targets()
-	elif mission_stage == 5:
-		targets = rm.get_mission5_targets()
+		targets = rm.get_detected_targets() if free_ops_unlocked else rm.get_mission4_targets()
 	else:
 		targets = rm.get_detected_targets()
 	AppLogger.d("Launchpad: _populate_targets -> detected targets count=%s" % targets.size())
@@ -205,29 +195,9 @@ func populate_targets() -> void:
 	var awaiting_rocket_id = str(rm.get_primary_awaiting_rocket_id())
 	var awaiting_rocket_level = int(rm.get_rocket_level(awaiting_rocket_id))
 	var has_awaiting_rocket = awaiting_rocket_id != ""
-	var tutorial_action_key = _current_tutorial_action_key()
-	var starter_offer := {}
-	var starter_selected_contractor := ""
-	if mission_stage == 1:
-		starter_offer = rm.ensure_starter_contract_offer()
-		starter_selected_contractor = str(starter_offer.get("selected_contractor", ""))
-		if starter_selected_contractor != "":
-			# Reconcile tutorial state if contractor was already selected in persisted mission data.
-			_record_tutorial_action("accept_starter_contractor", {
-				"contractor_id": starter_selected_contractor,
-				"auto_reconciled": true
-			})
-	var requires_starter_contractor = (
-		(mission_stage == 1 and starter_selected_contractor == "")
-		or (tutorial_action_key == "accept_starter_contractor" and starter_selected_contractor == "")
-	)
 	_set_selector_panel_layout(has_awaiting_rocket)
-	_set_rocket_selector_visibility(vbox, not has_awaiting_rocket and not requires_starter_contractor)
+	_set_rocket_selector_visibility(vbox, not has_awaiting_rocket)
 	_set_title_for_state(panel, has_awaiting_rocket)
-	if requires_starter_contractor and not has_awaiting_rocket:
-		var title = panel.get_node_or_null("VBox/Title")
-		if title and title is Label:
-			title.text = "Sign Starter Contractor"
 
 	var targets_section = vbox.get_node_or_null("TargetsSection")
 	if targets_section == null:
@@ -236,28 +206,24 @@ func populate_targets() -> void:
 	for c in targets_section.get_children():
 		c.queue_free()
 
-	if not requires_starter_contractor:
-		var targets_title: Label = HeaderLabelScene.instantiate()
-		targets_title.text = "Mission Target"
-		targets_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-		PanelStyle.apply_muted(targets_title)
-		targets_title.add_theme_font_size_override("font_size", 24)
-		targets_section.add_child(targets_title)
+	var targets_title: Label = HeaderLabelScene.instantiate()
+	targets_title.text = "Free Operations Target" if free_ops_unlocked else "Mission Target"
+	targets_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	PanelStyle.apply_muted(targets_title)
+	targets_title.add_theme_font_size_override("font_size", 24)
+	targets_section.add_child(targets_title)
 	_render_launch_guidance_notice(targets_section)
 	_render_mining_practice_shortcut(targets_section)
 	var mission5_offer := {}
 	var mission5_selected_contractor := ""
 	var mission5_recommended_target_id := ""
 	var operation_mode := "contract"
-	if mission_stage == 1:
-		_render_starter_contract_brief(targets_section, starter_offer, starter_selected_contractor)
 	if not has_awaiting_rocket:
-		if not requires_starter_contractor:
-			var guidance: Label = EmptyLabelScene.instantiate()
-			guidance.text = "Create a rocket first. Target selection unlocks after a rocket is on the launchpad."
-			guidance.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-			PanelStyle.apply_muted(guidance)
-			targets_section.add_child(guidance)
+		var guidance: Label = EmptyLabelScene.instantiate()
+		guidance.text = "Create a rocket first. Target selection unlocks after a rocket is on the launchpad."
+		guidance.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		PanelStyle.apply_muted(guidance)
+		targets_section.add_child(guidance)
 		return
 	_render_rocket_customization_controls(targets_section, rm, awaiting_rocket_id)
 
@@ -279,28 +245,26 @@ func populate_targets() -> void:
 		mission4_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		PanelStyle.apply_muted(mission4_hint)
 		targets_section.add_child(mission4_hint)
-	if mission_stage == 5:
-		operation_mode = str(rm.get_operation_mode())
-		_render_open_operation_mode_picker(targets_section, operation_mode)
-		mission5_offer = rm.ensure_mission5_contract_offer(targets)
-		mission5_selected_contractor = str(mission5_offer.get("selected_contractor", ""))
-		mission5_recommended_target_id = str(mission5_offer.get("recommended_target_id", ""))
-		_render_mission5_contract_brief(targets_section, mission5_offer, mission5_selected_contractor)
-		if operation_mode == "contract" and mission5_selected_contractor == "":
-			var mission5_pick_hint: Label = EmptyLabelScene.instantiate()
-			mission5_pick_hint.text = "Accept one contractor request before selecting a target."
-			mission5_pick_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-			PanelStyle.apply_muted(mission5_pick_hint)
-			targets_section.add_child(mission5_pick_hint)
-		if awaiting_rocket_id != "":
-			var payout_cap = int(mission5_offer.get("payout_cap", rm.get_mission5_payout_cap()))
-			var current_cost = RocketSpecs.get_cost(awaiting_rocket_id)
-			if current_cost > payout_cap:
-				var mission5_cost_warning: Label = EmptyLabelScene.instantiate()
-				mission5_cost_warning.text = "Warning: mission payout is capped at %s F. Current rocket costs %s F." % [_fmt_francs(payout_cap), _fmt_francs(current_cost)]
-				mission5_cost_warning.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-				PanelStyle.apply_muted(mission5_cost_warning)
-				targets_section.add_child(mission5_cost_warning)
+	operation_mode = str(rm.get_operation_mode())
+	mission5_offer = rm.ensure_mission5_contract_offer(targets)
+	mission5_selected_contractor = str(mission5_offer.get("selected_contractor", ""))
+	mission5_recommended_target_id = str(mission5_offer.get("recommended_target_id", ""))
+	_render_mission5_contract_brief(targets_section, mission5_offer, mission5_selected_contractor)
+	if mission5_selected_contractor == "":
+		var mission5_pick_hint: Label = EmptyLabelScene.instantiate()
+		mission5_pick_hint.text = "Pick a contractor before selecting a target."
+		mission5_pick_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		PanelStyle.apply_muted(mission5_pick_hint)
+		targets_section.add_child(mission5_pick_hint)
+	if awaiting_rocket_id != "":
+		var payout_cap = int(mission5_offer.get("payout_cap", rm.get_mission5_payout_cap()))
+		var current_cost = RocketSpecs.get_cost(awaiting_rocket_id)
+		if current_cost > payout_cap:
+			var mission5_cost_warning: Label = EmptyLabelScene.instantiate()
+			mission5_cost_warning.text = "Warning: mission payout is capped at %s F. Current rocket costs %s F." % [_fmt_francs(payout_cap), _fmt_francs(current_cost)]
+			mission5_cost_warning.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+			PanelStyle.apply_muted(mission5_cost_warning)
+			targets_section.add_child(mission5_cost_warning)
 
 	if targets.size() == 0:
 		var lbl: Label = EmptyLabelScene.instantiate()
@@ -328,7 +292,7 @@ func populate_targets() -> void:
 			required_level,
 			operation_mode,
 			mission5_selected_contractor,
-			starter_selected_contractor
+			target_id
 		)
 		var blocked_reason = _blocked_reason_for_target(
 			mission_stage,
@@ -336,14 +300,14 @@ func populate_targets() -> void:
 			required_level,
 			operation_mode,
 			mission5_selected_contractor,
-			starter_selected_contractor
+			target_id
 		)
 		var is_planet = target_type == "planet" or target_type == "tess"
 		var entry_panel: PanelContainer = TargetCardScene.instantiate()
 		entry_panel.add_theme_stylebox_override("panel",
 			_planet_card_style() if is_planet else _target_card_style())
 		var name_lbl: Label = entry_panel.get_node("Entry/Header/NameLabel")
-		var is_recommended_target = mission_stage == 5 and mission5_recommended_target_id != "" and mission5_recommended_target_id == target_id
+		var is_recommended_target = mission5_recommended_target_id != "" and mission5_recommended_target_id == target_id
 		var label_text = str(t.get("label", target_id))
 		if is_planet:
 			label_text = "[PLANET] %s" % label_text
@@ -361,10 +325,8 @@ func populate_targets() -> void:
 			btn.text = "Target Selected"
 			btn.disabled = true
 		elif blocked:
-			if mission_stage == 1 and starter_selected_contractor == "":
-				btn.text = "Sign Contract"
-			elif mission_stage == 5 and operation_mode == "contract" and mission5_selected_contractor == "":
-				btn.text = "Accept Contractor"
+			if mission5_selected_contractor == "":
+				btn.text = "Select Contractor"
 			else:
 				btn.text = "Blocked"
 			btn.disabled = true
@@ -381,7 +343,7 @@ func populate_targets() -> void:
 				details_text += " • Fuel: in range"
 		if blocked:
 			details_text += " • %s" % blocked_reason
-		elif mission_stage == 5:
+		elif free_ops_unlocked:
 			var profile_text = "Survey Route" if operation_mode == "survey" else "Contract Route"
 			details_text += " • %s" % profile_text
 		var science_source = str(t.get("science_source", ""))
@@ -522,7 +484,7 @@ func _render_mission5_contract_brief(targets_section: VBoxContainer, offer: Dict
 	if targets_section == null or offer.is_empty():
 		return
 	var heading: Label = HeaderLabelScene.instantiate()
-	heading.text = "Contract"
+	heading.text = "Contractor"
 	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	PanelStyle.apply_muted(heading)
 	targets_section.add_child(heading)
@@ -534,29 +496,12 @@ func _render_mission5_contract_brief(targets_section: VBoxContainer, offer: Dict
 	requested_text.sort()
 	var recommended_label = str(offer.get("recommended_target_label", offer.get("recommended_target_id", "")))
 	var summary_lbl: Label = EmptyLabelScene.instantiate()
-	summary_lbl.text = "Order: %s • Target: %s" % [", ".join(requested_text), recommended_label]
+	summary_lbl.text = "Suggested order: %s • Suggested target: %s" % [", ".join(requested_text), recommended_label]
 	summary_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	PanelStyle.apply_muted(summary_lbl)
 	targets_section.add_child(summary_lbl)
 
 	var options: Array = offer.get("contractors", [])
-	if selected_contractor != "":
-		for entry_any in options:
-			if typeof(entry_any) != TYPE_DICTIONARY:
-				continue
-			var selected_entry: Dictionary = entry_any
-			if str(selected_entry.get("id", "")) != selected_contractor:
-				continue
-			var selected_effect = str(selected_entry.get("effect", ""))
-			var selected_effect_text = "15% ship discount" if selected_effect == "build_discount" else "15% mineral payout bonus"
-			var selected_lbl: Label = EmptyLabelScene.instantiate()
-			selected_lbl.text = "Accepted: %s (%s)" % [str(selected_entry.get("name", selected_contractor)), selected_effect_text]
-			selected_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-			PanelStyle.apply_muted(selected_lbl)
-			targets_section.add_child(selected_lbl)
-			return
-		return
-
 	for entry_any in options:
 		if typeof(entry_any) != TYPE_DICTIONARY:
 			continue
@@ -573,8 +518,8 @@ func _render_mission5_contract_brief(targets_section: VBoxContainer, offer: Dict
 		PanelStyle.apply_muted(label)
 		var btn: Button = row.get_node("ActionButton")
 		var is_selected = selected_contractor == contractor_id and contractor_id != ""
-		btn.text = "Accepted" if is_selected else "Accept"
-		btn.disabled = is_selected
+		btn.text = "Selected" if is_selected else "Select"
+		btn.disabled = false
 		PanelStyle.apply_button(btn, false)
 		btn.pressed.connect(Callable(self, "_on_mission5_contractor_pressed").bind(contractor_id))
 		targets_section.add_child(row)
@@ -941,8 +886,6 @@ func _target_visibility_limit_for_stage(mission_stage: int) -> int:
 		return MAX_VISIBLE_TARGETS_MISSION3
 	if mission_stage == 4:
 		return MAX_VISIBLE_TARGETS_MISSION4
-	if mission_stage == 5:
-		return MAX_VISIBLE_TARGETS_MISSION5
 	return MAX_VISIBLE_TARGETS
 
 func _is_target_blocked_for_selection(
@@ -951,13 +894,14 @@ func _is_target_blocked_for_selection(
 	required_level: int,
 	operation_mode: String,
 	mission5_selected_contractor: String,
-	starter_selected_contractor: String
+	target_id: String
 ) -> bool:
+	var rm = RocketsManager
 	if awaiting_rocket_level > 0 and required_level > awaiting_rocket_level:
 		return true
-	if mission_stage == 1 and starter_selected_contractor == "":
+	if mission5_selected_contractor == "":
 		return true
-	if mission_stage == 5 and operation_mode == "contract" and mission5_selected_contractor == "":
+	if rm and rm.is_candidate_visit_blocked(target_id):
 		return true
 	return false
 
@@ -967,12 +911,13 @@ func _blocked_reason_for_target(
 	required_level: int,
 	operation_mode: String,
 	mission5_selected_contractor: String,
-	starter_selected_contractor: String
+	target_id: String
 ) -> String:
-	if mission_stage == 1 and starter_selected_contractor == "":
-		return "Sign a starter contractor first"
-	if mission_stage == 5 and operation_mode == "contract" and mission5_selected_contractor == "":
-		return "Accept a contractor request first"
+	var rm = RocketsManager
+	if mission5_selected_contractor == "":
+		return "Select a contractor first"
+	if rm and rm.is_candidate_visit_blocked(target_id):
+		return "Candidate not confirmed yet; rescan and classify again"
 	if awaiting_rocket_level > 0 and required_level > awaiting_rocket_level:
 		return "Requires rocket level L%d" % required_level
 	return "Not selectable yet"

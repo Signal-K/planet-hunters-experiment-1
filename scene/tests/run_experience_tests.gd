@@ -133,7 +133,7 @@ func test_scanner_stage_requires_scanned_target_selection() -> void:
 	state["detected_targets"] = [{
 		"id": scanned_target_id,
 		"label": "Scanned Stage3 Target",
-		"type": "asteroid"
+		"type": "planet"
 	}]
 	state["missions"] = []
 	RocketsManager.set_override_state(state)

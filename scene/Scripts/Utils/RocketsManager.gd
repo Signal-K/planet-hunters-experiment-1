@@ -265,6 +265,9 @@ static func get_last_completed_target_id() -> String:
 static func get_mission_stage() -> int:
 	return RocketsMissionProgress.mission_stage_from_completed(get_completed_mission_count())
 
+static func is_free_operations_unlocked() -> bool:
+	return get_completed_mission_count() >= 4
+
 static func get_scanner_build_cost() -> int:
 	return SCANNER_BUILD_COST
 
@@ -474,8 +477,6 @@ static func get_starter_requested_minerals(contractor_id: String = "") -> Dictio
 	return requested.duplicate(true)
 
 static func ensure_mission5_contract_offer(detected_targets: Array = []) -> Dictionary:
-	if get_mission_stage() < 5:
-		return {}
 	var s = load_state()
 	var existing = s.get("mission5_contract_offer", {})
 	if typeof(existing) == TYPE_DICTIONARY and not existing.is_empty():
@@ -546,8 +547,6 @@ static func get_mission5_selected_contractor() -> Dictionary:
 
 static func get_mission5_purchase_cost(rocket_id_or_type: String) -> int:
 	var base_cost = RocketSpecs.get_cost(rocket_id_or_type)
-	if get_mission_stage() < 5:
-		return base_cost
 	var selected = get_mission5_selected_contractor()
 	if get_operation_mode() != "contract":
 		return base_cost
@@ -558,8 +557,6 @@ static func get_mission5_purchase_cost(rocket_id_or_type: String) -> int:
 
 static func apply_mission5_payout_terms(base_payout: int, contractor_id: String = "") -> int:
 	var payout = max(base_payout, 0)
-	if get_mission_stage() < 5:
-		return payout
 	if get_operation_mode() != "contract":
 		return payout
 	var selected := {}
@@ -723,19 +720,6 @@ static func build_target_profile(target_id: String, target_type: String = "aster
 				"required_level": 3,
 				"type": "planet"
 			}
-	if get_mission_stage() >= 5 and normalized_type == "asteroid":
-		var mission5_targets = get_mission5_targets()
-		for i in range(mission5_targets.size()):
-			var item = mission5_targets[i]
-			if str(item.get("id", "")) != target_id:
-				continue
-			var distance_au = 8.0 if i == 0 else 24.0
-			return {
-				"distance_au": distance_au,
-				"distance_km": distance_au * AU_IN_KM,
-				"required_level": 1 if i == 0 else 2,
-				"type": "asteroid"
-			}
 	if target_id == "":
 		if normalized_type == "planet":
 			return {
@@ -849,6 +833,8 @@ static func set_launched(rocket_id: String) -> bool:
 static func select_target(target_id: String) -> bool:
 	if target_id == "":
 		return false
+	if is_candidate_visit_blocked(target_id):
+		return false
 	if not is_target_selectable_for_current_stage(target_id):
 		return false
 	var s = load_state()
@@ -882,6 +868,8 @@ static func get_selected_target() -> String:
 static func is_target_selectable_for_current_stage(target_id: String) -> bool:
 	if target_id == "":
 		return false
+	if is_candidate_visit_blocked(target_id):
+		return false
 	var selectable = get_selectable_targets_for_stage(_effective_stage_for_target_selection())
 	for target in selectable:
 		if str(target.get("id", "")) == target_id:
@@ -898,14 +886,14 @@ static func get_selectable_targets_for_stage(stage: int = -1) -> Array:
 	if mission_stage == 3:
 		return get_mission3_targets()
 	if mission_stage == 4:
+		if is_free_operations_unlocked():
+			return get_detected_targets()
 		return get_mission4_targets()
-	if mission_stage == 5:
-		return get_mission5_targets()
 	return get_detected_targets()
 
 static func ensure_selected_target_for_launch(rocket_id: String = "") -> Dictionary:
 	var existing_target_id = get_selected_target()
-	if existing_target_id != "" and is_target_selectable_for_current_stage(existing_target_id):
+	if existing_target_id != "" and not is_candidate_visit_blocked(existing_target_id) and is_target_selectable_for_current_stage(existing_target_id):
 		var existing_details = get_target_details(existing_target_id)
 		return {
 			"ok": true,
@@ -929,6 +917,8 @@ static func ensure_selected_target_for_launch(rocket_id: String = "") -> Diction
 		var item: Dictionary = item_any
 		var tid = str(item.get("id", ""))
 		if tid == "":
+			continue
+		if is_candidate_visit_blocked(tid):
 			continue
 		var profile = build_target_profile(tid, str(item.get("type", "asteroid")))
 		if int(profile.get("required_level", 1)) <= rocket_level:
@@ -1120,16 +1110,95 @@ static func record_scan_pass(targets: Array) -> bool:
 	if typeof(counts) != TYPE_DICTIONARY:
 		counts = {}
 	var changed := false
+	var blocks = s.get("candidate_visit_blocks", {})
+	if typeof(blocks) != TYPE_DICTIONARY:
+		blocks = {}
 	for target in targets:
 		var target_id = str(target.get("id", ""))
 		if target_id == "":
 			continue
 		var key = _scan_count_key(target_id, str(target.get("type", "asteroid")))
 		counts[key] = int(counts.get(key, 0)) + 1
+		if blocks.has(target_id):
+			blocks.erase(target_id)
 		changed = true
 	if not changed:
 		return false
 	s["scan_counts"] = counts
+	s["candidate_visit_blocks"] = blocks
+	return save_state(s)
+
+static func set_target_annotation_level(target_id: String, level: int) -> bool:
+	if target_id == "":
+		return false
+	var s = load_state()
+	var levels = s.get("target_annotation_levels", {})
+	if typeof(levels) != TYPE_DICTIONARY:
+		levels = {}
+	levels[target_id] = max(level, 0)
+	s["target_annotation_levels"] = levels
+	return save_state(s)
+
+static func get_target_annotation_level(target_id: String) -> int:
+	if target_id == "":
+		return 0
+	var s = load_state()
+	var levels = s.get("target_annotation_levels", {})
+	if typeof(levels) != TYPE_DICTIONARY:
+		return 0
+	return max(int(levels.get(target_id, 0)), 0)
+
+static func mark_candidate_visit_blocked(target_id: String) -> bool:
+	if target_id == "":
+		return false
+	var s = load_state()
+	var blocks = s.get("candidate_visit_blocks", {})
+	if typeof(blocks) != TYPE_DICTIONARY:
+		blocks = {}
+	blocks[target_id] = true
+	s["candidate_visit_blocks"] = blocks
+	return save_state(s)
+
+static func clear_candidate_visit_block(target_id: String) -> bool:
+	if target_id == "":
+		return false
+	var s = load_state()
+	var blocks = s.get("candidate_visit_blocks", {})
+	if typeof(blocks) != TYPE_DICTIONARY:
+		blocks = {}
+	if not blocks.has(target_id):
+		return true
+	blocks.erase(target_id)
+	s["candidate_visit_blocks"] = blocks
+	return save_state(s)
+
+static func is_candidate_visit_blocked(target_id: String) -> bool:
+	if target_id == "":
+		return false
+	var s = load_state()
+	var blocks = s.get("candidate_visit_blocks", {})
+	if typeof(blocks) != TYPE_DICTIONARY:
+		return false
+	return bool(blocks.get(target_id, false))
+
+static func has_discovery_bonus_claimed(target_id: String) -> bool:
+	if target_id == "":
+		return false
+	var s = load_state()
+	var claimed = s.get("discovery_bonus_claimed", {})
+	if typeof(claimed) != TYPE_DICTIONARY:
+		return false
+	return bool(claimed.get(target_id, false))
+
+static func mark_discovery_bonus_claimed(target_id: String) -> bool:
+	if target_id == "":
+		return false
+	var s = load_state()
+	var claimed = s.get("discovery_bonus_claimed", {})
+	if typeof(claimed) != TYPE_DICTIONARY:
+		claimed = {}
+	claimed[target_id] = true
+	s["discovery_bonus_claimed"] = claimed
 	return save_state(s)
 
 static func get_target_level(target_id: String, target_type: String) -> int:
@@ -1812,7 +1881,7 @@ static func _effective_stage_for_target_selection() -> int:
 
 static func _build_mission5_contract_offer(detected_targets: Array = []) -> Dictionary:
 	return RocketsMissionProgress.build_mission5_contract_offer(
-		get_mission5_targets(detected_targets),
+		get_detected_targets() if detected_targets.is_empty() else detected_targets,
 		get_mission5_contractors(),
 		MISSION5_PAYOUT_CAP
 	)
@@ -1863,10 +1932,6 @@ static func _ensure_stage_fallback_targets(stage: int) -> bool:
 		var m4 = get_predefined_mission_target(4)
 		if not m4.is_empty():
 			fallback_rows = [m4]
-	elif stage >= 5:
-		var m5 = get_predefined_mission_target(5)
-		if not m5.is_empty():
-			fallback_rows = [m5]
 	if fallback_rows.is_empty():
 		return false
 
@@ -1906,8 +1971,6 @@ static func _primary_fallback_target_for_stage(stage: int) -> Dictionary:
 		return {}
 	if stage == 4:
 		return get_predefined_mission_target(4)
-	if stage >= 5:
-		return get_predefined_mission_target(5)
 	if stage == 1:
 		return get_predefined_mission_target(1)
 	return {}

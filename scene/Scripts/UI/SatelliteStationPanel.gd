@@ -356,7 +356,14 @@ func _persist_detected_targets_and_record_scan(anomalies: Array) -> void:
 		var a = anomalies[i]
 		var id = _data.normalize_anomaly_id(a, i + 1)
 		var label = "TIC %s" % str(a.get("ticId")) if a.has("ticId") and a.get("ticId") != null and str(a.get("ticId")) != "" else str(a.get("content", id))
-		targets.append({"id": id, "label": label, "type": target_kind})
+		targets.append({
+			"id": id,
+			"label": label,
+			"type": target_kind,
+			"anomalySet": str(a.get("anomalySet", "")),
+			"classification_status": str(a.get("classification_status", "")),
+			"tess_disposition": str(a.get("tess_disposition", ""))
+		})
 	if targets.is_empty():
 		return
 	var ok = rm.set_detected_targets(targets)
@@ -388,6 +395,8 @@ func _filter_mission3_untargeted_anomalies(anomalies: Array) -> Array:
 	if not rm:
 		return anomalies
 	var mission_stage = int(rm.get_mission_stage())
+	if rm.is_free_operations_unlocked():
+		return anomalies
 	if mission_stage == 3 and current_mode != "asteroids":
 		return anomalies
 	if mission_stage == 4 and current_mode != "planets":

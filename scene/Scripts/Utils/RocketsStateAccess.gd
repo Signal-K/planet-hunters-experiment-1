@@ -78,6 +78,9 @@ static func build_default_state(mission_progress_schema_version: int) -> Diction
     data["scanner_unlock_dialog_seen"] = false
     data["mission5_contract_offer"] = {}
     data["operation_mode"] = "contract"
+    data["candidate_visit_blocks"] = {}
+    data["target_annotation_levels"] = {}
+    data["discovery_bonus_claimed"] = {}
     data["rocket_customizations"] = {}
     data["mission_briefings_seen"] = {}
     data["mission_progress_schema_version"] = mission_progress_schema_version
@@ -143,6 +146,12 @@ static func _apply_defaults(data: Dictionary, scanner_unlock_completed_missions:
         data["mission5_contract_offer"] = {}
     if not data.has("operation_mode"):
         data["operation_mode"] = "contract"
+    if not data.has("candidate_visit_blocks"):
+        data["candidate_visit_blocks"] = {}
+    if not data.has("target_annotation_levels"):
+        data["target_annotation_levels"] = {}
+    if not data.has("discovery_bonus_claimed"):
+        data["discovery_bonus_claimed"] = {}
     if not data.has("rocket_customizations"):
         data["rocket_customizations"] = {}
     if not data.has("mission_briefings_seen"):

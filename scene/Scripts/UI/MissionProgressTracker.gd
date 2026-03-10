@@ -3,18 +3,16 @@ extends CanvasLayer
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
 const ROCKETS_MANAGER = preload("res://Scripts/Utils/RocketsManager.gd")
 const MISSION_OBJECTIVES := {
-	1: "Complete base tour, sign a contractor, and deliver the starter order.",
+	1: "Complete base tour, pick a contractor, and deliver the starter order.",
 	2: "Repeat loop with upgraded rocket.",
 	3: "Build scanner and launch from scanned targets.",
-	4: "Switch to planetary targets and complete mission.",
-	5: "Accept contractor request and complete contract mission."
+	4: "Switch to planetary targets and complete mission to unlock Free Operations."
 }
 const MISSION_STEP_KEYS := {
-	1: ["tour_open_control_station", "tour_close_control_station", "accept_starter_contractor", "create_rocket", "launch_rocket_from_earth", "mine_target", "return_rocket_home", "resolve_mission_debrief"],
+	1: ["tour_open_control_station", "tour_close_control_station", "accept_contractor_offer", "create_rocket", "launch_rocket_from_earth", "mine_target", "return_rocket_home", "resolve_mission_debrief"],
 	2: ["launch_rocket_from_earth", "mine_target", "return_rocket_home", "resolve_mission_debrief"],
 	3: ["build_scanner_station", "scan_targets", "select_launch_target"],
-	4: ["scan_targets", "select_launch_target", "mine_target", "return_rocket_home", "resolve_mission_debrief"],
-	5: ["select_launch_target", "mine_target", "return_rocket_home", "resolve_mission_debrief"]
+	4: ["scan_targets", "select_launch_target", "mine_target", "return_rocket_home", "resolve_mission_debrief"]
 }
 
 @onready var panel: PanelContainer = $Panel
@@ -89,7 +87,7 @@ func _refresh() -> void:
 	if keys.size() > 0:
 		percent = int(round(float(seen_count) / float(keys.size()) * 100.0))
 	if title_label:
-		title_label.text = "Mission %d Tracker" % stage
+		title_label.text = "Free Operations Tracker" if ROCKETS_MANAGER.is_free_operations_unlocked() else "Mission %d Tracker" % stage
 	if objective_label:
 		objective_label.text = "Objective: %s" % objective
 	if progress_label:
@@ -119,6 +117,8 @@ func _label_for_action(action_key: String) -> String:
 			return "Open launchpad"
 		"accept_starter_contractor":
 			return "Sign starter contractor"
+		"accept_contractor_offer":
+			return "Select contractor"
 		"create_rocket":
 			return "Create rocket"
 		"launch_rocket_from_earth":

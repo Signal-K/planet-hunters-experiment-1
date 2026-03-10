@@ -1910,10 +1910,9 @@ func _refresh_contractor_bonus_label() -> void:
 	if not rm or not sm:
 		value_label.text = ""
 		return
-	var stage = int(rm.get_mission_stage())
 	var bonus_map: Dictionary = {}
 	var contractor_name := ""
-	if stage >= 5:
+	if rm.is_free_operations_unlocked():
 		var sub = rm.get_mission5_selected_contractor()
 		if not sub.is_empty():
 			contractor_name = str(sub.get("name", ""))

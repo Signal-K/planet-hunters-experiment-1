@@ -1,7 +1,7 @@
 extends RefCounted
 class_name TutorialCatalog
 
-const MAX_MISSION_STAGE := 5
+const MAX_MISSION_STAGE := 4
 
 # valid_scenes: scene file basenames where this step is actionable.
 # Empty array = valid everywhere (e.g. mid-flight / mining steps).
@@ -16,7 +16,7 @@ const STEPS_BY_MISSION := {
 	1: [
 		{"id": "m1_tour_control_station", "action_key": "tour_open_control_station", "title": "Base Tour", "message": "Open Control Station.", "mechanic": "navigation", "valid_scenes": BASE_ONLY_SCENES},
 		{"id": "m1_tour_close_control_station", "action_key": "tour_close_control_station", "title": "Close Panel", "message": "Close Control Station.", "mechanic": "navigation", "valid_scenes": BASE_ONLY_SCENES},
-		{"id": "m1_pick_contractor", "action_key": "accept_starter_contractor", "title": "Sign Contractor", "message": "Sign a starter contractor in Launchpad.", "mechanic": "contractor", "valid_scenes": BASE_SCENES},
+		{"id": "m1_pick_contractor", "action_key": "accept_contractor_offer", "title": "Sign Contractor", "message": "Pick a contractor in Launchpad.", "mechanic": "contractor", "valid_scenes": BASE_SCENES},
 		{"id": "m1_create_rocket", "action_key": "create_rocket", "title": "Build Rocket", "message": "Build Starter Rocket 1.", "mechanic": "economy", "valid_scenes": BASE_SCENES},
 		{"id": "m1_select_target", "action_key": "select_launch_target", "title": "Select Target", "message": "Select the Mission 1 target.", "mechanic": "targeting", "valid_scenes": BASE_SCENES},
 		{"id": "m1_launch", "action_key": "launch_rocket_from_earth", "title": "Launch", "message": "Press Launch.", "mechanic": "launch", "valid_scenes": BASE_SCENES},
@@ -47,12 +47,6 @@ const STEPS_BY_MISSION := {
 		{"id": "m4_launch", "action_key": "launch_rocket_from_earth", "title": "Launch", "message": "Press Launch.", "mechanic": "launch", "valid_scenes": BASE_SCENES},
 		{"id": "m4_mine", "action_key": "mine_target", "title": "Mine", "message": "Mine resources.", "mechanic": "mining", "valid_scenes": MINING_SCENES},
 		{"id": "m4_debrief", "action_key": "resolve_mission_debrief", "title": "Debrief", "message": "Sell cargo. Scrap ship.", "mechanic": "debrief", "valid_scenes": DEBRIEF_SCENES}
-	],
-	5: [
-		{"id": "m5_accept_contract", "action_key": "accept_contractor_offer", "title": "Accept Contractor", "message": "Accept a contractor offer.", "mechanic": "contractor", "valid_scenes": BASE_SCENES},
-		{"id": "m5_select", "action_key": "select_launch_target", "title": "Select Target", "message": "Choose a target for the contract.", "mechanic": "targeting", "valid_scenes": BASE_SCENES},
-		{"id": "m5_launch", "action_key": "launch_rocket_from_earth", "title": "Launch", "message": "Press Launch.", "mechanic": "launch", "valid_scenes": BASE_SCENES},
-		{"id": "m5_complete_contract", "action_key": "complete_contractor_mission", "title": "Complete Contract", "message": "Sell cargo. Scrap ship.", "mechanic": "contractor", "valid_scenes": DEBRIEF_SCENES}
 	]
 }
 

@@ -8,6 +8,7 @@ const AsteroidAnnotationHelper = preload("res://Scripts/UI/AsteroidDetail/Astero
 const AsteroidImageHelper = preload("res://Scripts/UI/AsteroidDetail/AsteroidImageHelper.gd")
 const AsteroidDetailModel = preload("res://Scripts/UI/AsteroidDetail/AsteroidDetailModel.gd")
 const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
+const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd")
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
 
 var anomaly_id: String = ""
@@ -210,8 +211,31 @@ func _build_classification_row() -> void:
 	btn_not.pressed.connect(_on_classify.bind("not_planet", row))
 	row.add_child(btn_not)
 
+	var btn_mark_dip = Button.new()
+	btn_mark_dip.name = "BtnMarkDip"
+	btn_mark_dip.text = "Mark Dip"
+	btn_mark_dip.disabled = existing_verdict != ""
+	PanelStyle.apply_button(btn_mark_dip, false)
+	btn_mark_dip.pressed.connect(Callable(self, "_on_mark_dip_pressed"))
+	row.add_child(btn_mark_dip)
+
+func _on_mark_dip_pressed() -> void:
+	drawing_canvas.set_mode(3) # TRANSIT_DIP
+	if not drawing_canvas.is_pen_enabled():
+		drawing_canvas.toggle_pen()
+	_update_pen_button()
+	clear_button.visible = drawing_canvas.is_pen_enabled()
+
 func _on_classify(verdict: String, row: HBoxContainer) -> void:
+	var annotation_count = drawing_canvas.get_annotation_count() if drawing_canvas.has_method("get_annotation_count") else 0
+	RocketsManager.set_target_annotation_level(anomaly_id, annotation_count)
 	RocketsManager.set_tess_classification(anomaly_id, verdict)
+	if verdict == "planet":
+		RocketsManager.clear_candidate_visit_block(anomaly_id)
+	else:
+		RocketsManager.mark_candidate_visit_blocked(anomaly_id)
+		RocketsManager.clear_selected_target()
+		RocketsManager.set_launch_guidance_notice("Target not confirmed as a planet yet. Pick another target for launch, then rescan this candidate later.")
 
 	# Update button states immediately
 	var btn_planet = row.get_node_or_null("BtnPlanet")
@@ -229,14 +253,17 @@ func _on_classify(verdict: String, row: HBoxContainer) -> void:
 	var prompt = row.get_node_or_null(row.get_children()[0].name if row.get_child_count() > 0 else "")
 	for child in row.get_children():
 		if child is Label:
-			var bonus_text = " — discovery bonus unlocked!" if verdict == "planet" else ""
+			var bonus_text = " — discovery bonus unlocked!" if verdict == "planet" else " — visit blocked until reconfirmed"
 			child.text = "Classification submitted%s" % bonus_text
 			break
+
+	var app = AppControllerHelper.get_instance()
+	if app and app.has_method("add_experience"):
+		app.add_experience(1, "tess_classification")
 
 	# Submit to Supabase classifications table (fire-and-forget)
 	var supabase = preload("res://Scripts/Systems/SupabaseClient.gd").get_instance()
 	if supabase:
-		var annotation_count = drawing_canvas.get_annotation_count() if drawing_canvas.has_method("get_annotation_count") else 0
 		var row_data = {
 			"anomaly": int(anomaly_id) if anomaly_id.is_valid_int() else 0,
 			"classificationtype": "tess-lightcurve",
@@ -245,6 +272,7 @@ func _on_classify(verdict: String, row: HBoxContainer) -> void:
 			"classificationConfiguration": {
 				"verdict": verdict,
 				"annotation_count": annotation_count,
+				"transit_dips": drawing_canvas.get_transit_dips() if drawing_canvas.has_method("get_transit_dips") else [],
 				"source": "star-sailors-game"
 			}
 		}

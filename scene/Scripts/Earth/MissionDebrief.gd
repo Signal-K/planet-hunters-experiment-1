@@ -8,7 +8,6 @@ const SALVAGE_MIN_LEVEL := 3
 const SCRAP_REFUND_PCT := 0.20
 const SALVAGE_REFUND_PCT := 0.10
 const MISSION4_AFFINITY_GATE := 3
-const MISSION5_AFFINITY_GAIN := 2
 const GameplayAnalytics = preload("res://Scripts/Systems/GameplayAnalytics.gd")
 const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
 const NavigationMixin = preload("res://Scripts/Utils/NavigationMixin.gd")
@@ -395,15 +394,19 @@ func _sell(to_earth: bool) -> void:
 	if rm:
 		net = int(rm.apply_mission5_payout_terms(net, str(_subcontractor.get("id", ""))))
 		net = int(rm.calibrate_onboarding_payout(net, str(_returned.get("rocket_id", ""))))
-	# TESS discovery bonus: +10% if the player pre-classified this target as a planet
+	# TESS discovery bonus: +10% + annotation level, once per target.
 	var target_id = str(_returned.get("target_id", ""))
 	var discovery_bonus := false
+	var discovery_bonus_pct := 0
 	if rm and target_id != "":
 		var verdict = rm.get_tess_classification(target_id)
-		if verdict == "planet":
-			var bonus = int(round(net * 0.1))
+		if verdict == "planet" and not rm.has_discovery_bonus_claimed(target_id):
+			var annotation_level = rm.get_target_annotation_level(target_id)
+			discovery_bonus_pct = 10 + max(annotation_level, 0)
+			var bonus = int(round(net * (float(discovery_bonus_pct) / 100.0)))
 			net += bonus
 			discovery_bonus = true
+			rm.mark_discovery_bonus_claimed(target_id)
 			rm.clear_tess_classification(target_id)
 	var app = _get_app_controller()
 	if app:
@@ -412,8 +415,7 @@ func _sell(to_earth: bool) -> void:
 			app.add_experience(1, "tess_discovery")
 	var sm = SubcontractorManager
 	if sm:
-		var affinity_gain = MISSION5_AFFINITY_GAIN if rm and int(rm.get_mission_stage()) >= 5 else 1
-		sm.add_affinity(str(_subcontractor.get("id", "")), affinity_gain)
+		sm.add_affinity(str(_subcontractor.get("id", "")), 1)
 		if app:
 			app.add_experience(1, "affinity")
 	_add_mission_log("sell_earth" if to_earth else "sell_orbit", net)
@@ -435,13 +437,12 @@ func _sell(to_earth: bool) -> void:
 			var contractor_name = str(_subcontractor.get("name", "Contractor"))
 			sale_text += "\n%s bonus applied: %s." % [contractor_name, ", ".join(bonus_parts)]
 	if discovery_bonus:
-		sale_text += " Includes +10% discovery bonus for classifying this TESS target!"
+		sale_text += " Includes +%d%% discovery bonus for classifying this target!" % discovery_bonus_pct
 	sale_text += " Now scrap your ship to finish the mission."
 	status_label.text = sale_text
 	_clear_cargo()
 	if rm:
-		if int(rm.get_mission_stage()) >= 5:
-			rm.clear_mission5_contract_offer()
+		rm.clear_mission5_contract_offer()
 	_refresh_action_buttons()
 
 func _keep_cargo() -> void:
@@ -467,6 +468,9 @@ func _archive_ship() -> void:
 	_last_exposure_awarded = _mission_exposure_reward()
 	status_label.text = _build_progress_feedback_text("Ship archived.", _last_exposure_awarded)
 	_closed_out = true
+	var rm = RocketsManager
+	if rm:
+		rm.clear_mission5_contract_offer()
 	_lock_action_buttons()
 	_show_science_card()
 
@@ -492,6 +496,8 @@ func _scrap_ship(refund_pct: float) -> void:
 	_last_exposure_awarded = _mission_exposure_reward()
 	status_label.text = _build_progress_feedback_text("Ship processed. Refund %s F. Exposure +%s." % [str(refund), _last_exposure_awarded], _last_exposure_awarded)
 	_closed_out = true
+	if rm:
+		rm.clear_mission5_contract_offer()
 	_lock_action_buttons()
 	_show_science_card()
 
@@ -512,6 +518,8 @@ func _leave_in_orbit() -> void:
 	_last_exposure_awarded = _mission_exposure_reward()
 	status_label.text = _build_progress_feedback_text("Ship left in orbit.", _last_exposure_awarded)
 	_closed_out = true
+	if rm:
+		rm.clear_mission5_contract_offer()
 	_lock_action_buttons()
 	_show_science_card()
 
