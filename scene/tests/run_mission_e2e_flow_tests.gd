@@ -2,8 +2,8 @@ extends SceneTree
 
 # WHAT THESE TESTS COVER
 # ─────────────────────────────────────────────────────────────────────────────
-# This suite validates tutorial state-machine coherence across all 5 mission
-# stages: no step regressions, no duplicate completed-step entries, and that
+# This suite validates tutorial state-machine coherence across authored missions
+# and free operations readiness: no step regressions, no duplicate completed-step entries, and that
 # launch-target resolution succeeds at each stage.
 #
 # WHAT THEY DO NOT COVER (by design — tested in companion suites)
@@ -42,7 +42,7 @@ func _init() -> void:
 func run_all_tests() -> void:
 	await test_transit_and_mining_timing_delays_are_intentionally_non_trivial()
 	await test_fresh_start_to_open_operations_without_tutorial_duplicates_or_blockers()
-	await test_stage5_survey_route_remains_unblocked_without_contractor_selection()
+	await test_free_operations_launch_requires_contractor_selection()
 
 func test_transit_and_mining_timing_delays_are_intentionally_non_trivial() -> void:
 	reporter.start_test("Transit and mining timing constants enforce intentional real-time delays")
@@ -114,6 +114,14 @@ func _assert_launch_resolvable_for_stage(stage: int, rocket_id: String) -> Strin
 	var selectable = RocketsManager.get_selectable_targets_for_stage(stage)
 	if selectable.is_empty():
 		return "stage %s has no selectable targets" % stage
+	if RocketsManager.is_free_operations_unlocked() and RocketsManager.get_trip_selected_contractor().is_empty():
+		var offer = RocketsManager.ensure_trip_contract_offer(RocketsManager.get_detected_targets())
+		var contractors: Array = offer.get("contractors", [])
+		if contractors.is_empty():
+			return "stage %s missing contractor options for free operations" % stage
+		var contractor_id = str(contractors[0].get("id", ""))
+		if contractor_id == "" or not RocketsManager.select_trip_contractor(contractor_id):
+			return "stage %s failed to select contractor before launch resolution" % stage
 	RocketsManager.clear_selected_target()
 	var resolved = RocketsManager.ensure_selected_target_for_launch(rocket_id)
 	if not bool(resolved.get("ok", false)):
@@ -133,21 +141,19 @@ func test_fresh_start_to_open_operations_without_tutorial_duplicates_or_blockers
 	await create_timer(0.02).timeout
 
 	var stage_actions := {
-		1: ["tour_open_control_station", "tour_close_control_station", "accept_starter_contractor", "create_rocket", "select_launch_target", "launch_rocket_from_earth", "arrived_at_mining_site", "mine_target", "return_rocket_home", "resolve_mission_debrief"],
+		1: ["tour_open_control_station", "tour_close_control_station", "accept_contractor_offer", "create_rocket", "select_launch_target", "launch_rocket_from_earth", "arrived_at_mining_site", "mine_target", "return_rocket_home", "resolve_mission_debrief"],
 		2: ["create_rocket", "select_launch_target", "launch_rocket_from_earth", "mine_target", "return_rocket_home", "resolve_mission_debrief"],
 		3: ["select_launch_target", "launch_rocket_from_earth", "mine_target", "return_rocket_home", "resolve_mission_debrief"],
-		4: ["build_scanner_station", "scan_targets", "select_launch_target", "launch_rocket_from_earth", "mine_target", "resolve_mission_debrief"],
-		5: ["accept_contractor_offer", "select_launch_target", "launch_rocket_from_earth", "complete_contractor_mission"]
+		4: ["build_scanner_station", "scan_targets", "select_launch_target", "launch_rocket_from_earth", "mine_target", "resolve_mission_debrief"]
 	}
 	var stage_rocket := {
 		1: "starterrocket1-e2e",
 		2: "starterrocket2-e2e",
 		3: "starterrocket2-e2e",
-		4: "starterrocket3-e2e",
-		5: "starterrocket3-e2e"
+		4: "starterrocket3-e2e"
 	}
 
-	for stage in [1, 2, 3, 4, 5]:
+	for stage in [1, 2, 3, 4]:
 		var launch_error = _assert_launch_resolvable_for_stage(stage, str(stage_rocket[stage]))
 		if launch_error != "":
 			reporter.fail_test(launch_error)
@@ -193,7 +199,7 @@ func test_fresh_start_to_open_operations_without_tutorial_duplicates_or_blockers
 				await _teardown_controller(controller)
 				return
 
-		if stage < 5:
+		if stage < 4:
 			_mark_stage_complete(stage)
 			controller.record_action("mission_progress_sync_%s" % stage)
 			var after_stage = controller.get_tutorial_state()
@@ -203,40 +209,61 @@ func test_fresh_start_to_open_operations_without_tutorial_duplicates_or_blockers
 				return
 
 	var final_stage = int(controller.get_tutorial_state().get("current_stage", 1))
-	if final_stage < 5:
-		reporter.fail_test("Expected open-operations readiness at stage 5, got stage %s" % final_stage)
+	if final_stage < 4:
+		reporter.fail_test("Expected free-operations readiness at stage 4, got stage %s" % final_stage)
 		await _teardown_controller(controller)
 		return
 
 	await _teardown_controller(controller)
 	reporter.pass_test()
 
-func test_stage5_survey_route_remains_unblocked_without_contractor_selection() -> void:
-	reporter.start_test("Stage 5 survey route is launchable without contractor selection blocker")
+func test_free_operations_launch_requires_contractor_selection() -> void:
+	reporter.start_test("Free Operations launch flow requires contractor selection and resolves after selection")
 	_reset_runtime_state()
 	for stage in [1, 2, 3, 4]:
 		_mark_stage_complete(stage)
 	var mission_stage = int(RocketsManager.get_mission_stage())
-	if mission_stage < 5:
-		reporter.fail_test("Expected mission stage 5 after four completions, got %s" % mission_stage)
+	if mission_stage < 4:
+		reporter.fail_test("Expected mission stage 4 after four completions, got %s" % mission_stage)
 		return
 	var mode_ok = RocketsManager.set_operation_mode("survey")
 	if not mode_ok:
 		reporter.fail_test("Failed to set operation mode to survey")
 		return
-	var selectable = RocketsManager.get_selectable_targets_for_stage(5)
+	var target_id = "free-ops-survey-target"
+	var scan_ok = RocketsManager.set_detected_targets([{
+		"id": target_id,
+		"label": "Free Ops Survey Target",
+		"type": "asteroid"
+	}])
+	if not scan_ok:
+		reporter.fail_test("Failed to seed free-operations detected target")
+		return
+	var offer = RocketsManager.ensure_trip_contract_offer(RocketsManager.get_detected_targets())
+	var selectable = RocketsManager.get_selectable_targets_for_stage(4)
 	if selectable.is_empty():
-		reporter.fail_test("Expected selectable stage 5 targets for survey route")
+		reporter.fail_test("Expected selectable free-operations targets for survey route")
 		return
 	var first_target_id = str(selectable[0].get("id", ""))
 	if first_target_id == "":
-		reporter.fail_test("Stage 5 selectable target is missing id")
+		reporter.fail_test("Free-operations selectable target is missing id")
+		return
+	if RocketsManager.select_target(first_target_id):
+		reporter.fail_test("Expected target selection to be blocked before contractor selection")
+		return
+	var contractors: Array = offer.get("contractors", [])
+	if contractors.is_empty():
+		reporter.fail_test("Expected contractor options in free operations")
+		return
+	var contractor_id = str(contractors[0].get("id", ""))
+	if contractor_id == "" or not RocketsManager.select_trip_contractor(contractor_id):
+		reporter.fail_test("Failed to select contractor in free operations")
 		return
 	if not RocketsManager.select_target(first_target_id):
-		reporter.fail_test("Expected select_target to succeed in survey route without contractor")
+		reporter.fail_test("Expected target selection to succeed after contractor selection")
 		return
 	var resolved = RocketsManager.ensure_selected_target_for_launch("starterrocket3-survey-e2e")
 	if not bool(resolved.get("ok", false)):
-		reporter.fail_test("Expected launch resolution to succeed in survey route")
+		reporter.fail_test("Expected launch resolution to succeed in free operations")
 		return
 	reporter.pass_test()

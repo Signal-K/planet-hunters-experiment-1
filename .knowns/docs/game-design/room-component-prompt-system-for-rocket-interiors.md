@@ -1,10 +1,10 @@
 ---
 title: Room Component Prompt System for Rocket Interiors
 createdAt: '2026-03-07T01:22:37.272Z'
-updatedAt: '2026-03-07T01:23:48.678Z'
+updatedAt: '2026-03-10T08:56:38.794Z'
 description: >-
-  Component-level prompt and generation pipeline for interactive/stateful rocket
-  interior room assets using a shared style anchor
+  Legacy component prompt reference; active source of truth is
+  specs/unified-room-image-generation-super-sheet-slicing-plan
 ---
 # Room Component Prompt System (Rocket Interiors)
 
@@ -260,3 +260,34 @@ match this style exactly; side-view cutaway module language; no text/no labels/n
 - Rooms are only visible in interior zoom (dollhouse view), so prioritize readability and silhouette over micro-detail.
 - Keep each component visually separable for click targets and state swaps.
 - Parachute module remains an item icon/slot, not a persistent room tile.
+
+
+### Reinforced Hull Module (T2)
+- Structural: reinforced bulkhead segments, impact dampener ribs, composite bracing frame.
+- Interactive: stress monitor display, microfracture sensor array.
+- Stateful targets: structural stress trend, microfracture alert severity.
+
+### Life Support Core Room (T3)
+- Structural: air recycler column, atmosphere duct grid, humidity control manifold.
+- Interactive: oxygen scrubber bank, environment console, CO2 filter cartridge rack.
+- Stateful targets: scrubber wear, atmosphere stability, filter depletion.
+
+### Crew Quarters Module (T3)
+- Structural: bunk stack frame, privacy partition walls, personal storage lockers.
+- Interactive: bunk lighting controls, crew status terminal, hydration station.
+- Stateful targets: occupancy/activity cues, terminal alert states, resource depletion cues.
+
+
+
+## 2026-03-10 Contractor Theming Addendum
+- Contractor style is applied per mission and per rocket.
+- Allowed contractor channels: trims, decals, signage motifs, and accent lighting variants.
+- Do not alter functional silhouettes used for interaction hit readability.
+- Wear progression remains subtle and persists per rocket across runs.
+- Use rules in @doc/specs/contractor-visual-theming-rules-for-room-prompt-production when generating M4/Free Ops batches.
+
+
+
+## Consolidation Status (2026-03-10)
+This document is now reference-only.
+Use this active source of truth:\n@doc/specs/unified-room-image-generation-super-sheet-slicing-plan

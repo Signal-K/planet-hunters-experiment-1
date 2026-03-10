@@ -1,0 +1,407 @@
+{
+  "taskId": "qjmitn",
+  "currentVersion": 7,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "qjmitn",
+      "version": 1,
+      "timestamp": "2026-03-10T06:35:16.689Z",
+      "changes": [
+        {
+          "field": "title",
+          "oldValue": "Implement variable reward for failed candidate confirmation",
+          "newValue": "Enforce flat reward for failed candidate confirmation"
+        },
+        {
+          "field": "description",
+          "oldValue": "Replace flat failed-confirmation reward with context/stage-sensitive XP values while keeping failed candidates non-visitable until confirmed.",
+          "newValue": "Keep failed-confirmation reward as flat XP and ensure messaging is shown after result while candidate remains non-visitable until confirmed."
+        },
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Failed-confirmation XP varies by context/stage"
+            },
+            {
+              "completed": false,
+              "text": "Candidate visit remains blocked on failed confirmation"
+            },
+            {
+              "completed": false,
+              "text": "Reward + next-step messaging is shown in debrief/selection flow"
+            }
+          ],
+          "newValue": [
+            {
+              "text": "Failed-confirmation XP remains flat across contexts",
+              "completed": false
+            },
+            {
+              "text": "Candidate visit remains blocked on failed confirmation",
+              "completed": false
+            },
+            {
+              "text": "Reward + next-step messaging appears after result",
+              "completed": false
+            }
+          ]
+        },
+        {
+          "field": "implementationNotes",
+          "newValue": "Rescoped from variable reward to flat XP per product decision."
+        }
+      ],
+      "snapshot": {
+        "title": "Enforce flat reward for failed candidate confirmation",
+        "description": "Keep failed-confirmation reward as flat XP and ensure messaging is shown after result while candidate remains non-visitable until confirmed.",
+        "status": "todo",
+        "priority": "high",
+        "labels": [
+          "gameplay",
+          "rewards",
+          "citizen-science"
+        ],
+        "acceptanceCriteria": [
+          {
+            "text": "Failed-confirmation XP remains flat across contexts",
+            "completed": false
+          },
+          {
+            "text": "Candidate visit remains blocked on failed confirmation",
+            "completed": false
+          },
+          {
+            "text": "Reward + next-step messaging appears after result",
+            "completed": false
+          }
+        ],
+        "implementationNotes": "Rescoped from variable reward to flat XP per product decision."
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "qjmitn",
+      "version": 2,
+      "timestamp": "2026-03-10T06:37:09.538Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Enforce flat reward for failed candidate confirmation",
+        "description": "Keep failed-confirmation reward as flat XP and ensure messaging is shown after result while candidate remains non-visitable until confirmed.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "gameplay",
+          "rewards",
+          "citizen-science"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Failed-confirmation XP remains flat across contexts"
+          },
+          {
+            "completed": false,
+            "text": "Candidate visit remains blocked on failed confirmation"
+          },
+          {
+            "completed": false,
+            "text": "Reward + next-step messaging appears after result"
+          }
+        ],
+        "implementationNotes": "Rescoped from variable reward to flat XP per product decision."
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "qjmitn",
+      "version": 3,
+      "timestamp": "2026-03-10T06:37:14.033Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Failed-confirmation XP remains flat across contexts"
+            },
+            {
+              "completed": false,
+              "text": "Candidate visit remains blocked on failed confirmation"
+            },
+            {
+              "completed": false,
+              "text": "Reward + next-step messaging appears after result"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Failed-confirmation XP remains flat across contexts"
+            },
+            {
+              "completed": false,
+              "text": "Candidate visit remains blocked on failed confirmation"
+            },
+            {
+              "completed": false,
+              "text": "Reward + next-step messaging appears after result"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Enforce flat reward for failed candidate confirmation",
+        "description": "Keep failed-confirmation reward as flat XP and ensure messaging is shown after result while candidate remains non-visitable until confirmed.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "gameplay",
+          "rewards",
+          "citizen-science"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Failed-confirmation XP remains flat across contexts"
+          },
+          {
+            "completed": false,
+            "text": "Candidate visit remains blocked on failed confirmation"
+          },
+          {
+            "completed": false,
+            "text": "Reward + next-step messaging appears after result"
+          }
+        ],
+        "implementationNotes": "Rescoped from variable reward to flat XP per product decision."
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "qjmitn",
+      "version": 4,
+      "timestamp": "2026-03-10T06:37:16.284Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Failed-confirmation XP remains flat across contexts"
+            },
+            {
+              "completed": false,
+              "text": "Candidate visit remains blocked on failed confirmation"
+            },
+            {
+              "completed": false,
+              "text": "Reward + next-step messaging appears after result"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Failed-confirmation XP remains flat across contexts"
+            },
+            {
+              "completed": true,
+              "text": "Candidate visit remains blocked on failed confirmation"
+            },
+            {
+              "completed": false,
+              "text": "Reward + next-step messaging appears after result"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Enforce flat reward for failed candidate confirmation",
+        "description": "Keep failed-confirmation reward as flat XP and ensure messaging is shown after result while candidate remains non-visitable until confirmed.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "gameplay",
+          "rewards",
+          "citizen-science"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Failed-confirmation XP remains flat across contexts"
+          },
+          {
+            "completed": true,
+            "text": "Candidate visit remains blocked on failed confirmation"
+          },
+          {
+            "completed": false,
+            "text": "Reward + next-step messaging appears after result"
+          }
+        ],
+        "implementationNotes": "Rescoped from variable reward to flat XP per product decision."
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "qjmitn",
+      "version": 5,
+      "timestamp": "2026-03-10T06:37:18.541Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Failed-confirmation XP remains flat across contexts"
+            },
+            {
+              "completed": true,
+              "text": "Candidate visit remains blocked on failed confirmation"
+            },
+            {
+              "completed": false,
+              "text": "Reward + next-step messaging appears after result"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Failed-confirmation XP remains flat across contexts"
+            },
+            {
+              "completed": true,
+              "text": "Candidate visit remains blocked on failed confirmation"
+            },
+            {
+              "completed": true,
+              "text": "Reward + next-step messaging appears after result"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Enforce flat reward for failed candidate confirmation",
+        "description": "Keep failed-confirmation reward as flat XP and ensure messaging is shown after result while candidate remains non-visitable until confirmed.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "gameplay",
+          "rewards",
+          "citizen-science"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Failed-confirmation XP remains flat across contexts"
+          },
+          {
+            "completed": true,
+            "text": "Candidate visit remains blocked on failed confirmation"
+          },
+          {
+            "completed": true,
+            "text": "Reward + next-step messaging appears after result"
+          }
+        ],
+        "implementationNotes": "Rescoped from variable reward to flat XP per product decision."
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "qjmitn",
+      "version": 6,
+      "timestamp": "2026-03-10T06:37:20.801Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "Rescoped from variable reward to flat XP per product decision.",
+          "newValue": "## Summary\n- Verified failed-confirmation classification XP is flat (`add_experience(1, \"tess_classification\")`).\n- Verified failed confirmation marks candidate as blocked for visits and sets launch guidance to pick another target.\n- Verified post-result classification feedback message is shown immediately after verdict selection."
+        }
+      ],
+      "snapshot": {
+        "title": "Enforce flat reward for failed candidate confirmation",
+        "description": "Keep failed-confirmation reward as flat XP and ensure messaging is shown after result while candidate remains non-visitable until confirmed.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "gameplay",
+          "rewards",
+          "citizen-science"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Failed-confirmation XP remains flat across contexts"
+          },
+          {
+            "completed": true,
+            "text": "Candidate visit remains blocked on failed confirmation"
+          },
+          {
+            "completed": true,
+            "text": "Reward + next-step messaging appears after result"
+          }
+        ],
+        "implementationNotes": "## Summary\n- Verified failed-confirmation classification XP is flat (`add_experience(1, \"tess_classification\")`).\n- Verified failed confirmation marks candidate as blocked for visits and sets launch guidance to pick another target.\n- Verified post-result classification feedback message is shown immediately after verdict selection."
+      }
+    },
+    {
+      "id": "v7",
+      "taskId": "qjmitn",
+      "version": 7,
+      "timestamp": "2026-03-10T06:37:25.317Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Enforce flat reward for failed candidate confirmation",
+        "description": "Keep failed-confirmation reward as flat XP and ensure messaging is shown after result while candidate remains non-visitable until confirmed.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "gameplay",
+          "rewards",
+          "citizen-science"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Failed-confirmation XP remains flat across contexts"
+          },
+          {
+            "completed": true,
+            "text": "Candidate visit remains blocked on failed confirmation"
+          },
+          {
+            "completed": true,
+            "text": "Reward + next-step messaging appears after result"
+          }
+        ],
+        "implementationNotes": "## Summary\n- Verified failed-confirmation classification XP is flat (`add_experience(1, \"tess_classification\")`).\n- Verified failed confirmation marks candidate as blocked for visits and sets launch guidance to pick another target.\n- Verified post-result classification feedback message is shown immediately after verdict selection."
+      }
+    }
+  ]
+}

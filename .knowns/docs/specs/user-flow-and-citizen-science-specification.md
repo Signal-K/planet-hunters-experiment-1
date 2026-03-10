@@ -1,7 +1,7 @@
 ---
 title: 'spec,user-flow,citizen-science,gameplay,reference'
 createdAt: '2026-02-25T08:23:19.256Z'
-updatedAt: '2026-03-10T01:49:50.445Z'
+updatedAt: '2026-03-10T07:09:35.860Z'
 description: Hybrid resource management game and citizen science platform integration
 spec: true
 tags:
@@ -101,3 +101,20 @@ The post-tutorial shape is intentionally "sandbox-first":
 - Debrief reward calculations: `scene/Scripts/Earth/MissionDebrief.gd`
 - Candidate classification UX: `scene/Scripts/UI/AsteroidDetail/AsteroidDetailView.gd`
 - Scanner persistence/selection: `scene/Scripts/UI/SatelliteStationPanel.gd`
+
+
+
+## 2026-03-10 Clarification Update
+- Keep failed-confirmation reward flat XP.
+- "Every run" discovery target means candidate options should appear each run; confirmation remains uncertain by design.
+- Apply player-friendly language in player-facing prompts only.
+
+
+
+## 2026-03-10 Hands-on Clarifications
+- Free Ops routes are currently limited to `contract` and `survey`.
+- Contractor choice is required at run start before target selection.
+- Candidate failure handling remains manual (prompt to choose another target, no auto-pick).
+- Discovery bonus calculation is applied on net payout.
+- Scanner refresh now uses a soft cooldown to pace retries.
+- Messaging target: player-friendly and concise for users without exoplanet expertise.

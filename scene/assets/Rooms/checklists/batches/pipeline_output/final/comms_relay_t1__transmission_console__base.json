@@ -1,0 +1,14 @@
+{
+  "asset_id": "comms_relay_t1__transmission_console__base",
+  "room_id": "comms_relay_t1",
+  "component": "transmission_console",
+  "tier": "1",
+  "state": "base",
+  "prompt_version": "v1",
+  "generator": "chatgpt",
+  "generated_at_utc": "2026-03-10T10:16:29.065066",
+  "image_filename": "comms_relay_t1__transmission_console__base.png",
+  "width": 1024,
+  "height": 1024,
+  "notes": ""
+}

@@ -13,6 +13,7 @@ const AppLogger = preload("res://Scripts/Utils/Logger.gd")
 const GameplayAnalytics = preload("res://Scripts/Systems/GameplayAnalytics.gd")
 const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
 const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd")
+const RoomCatalog = preload("res://Scripts/Utils/RoomCatalog.gd")
 const SIDEBAR_WIDTH_MAX := 520.0
 const SIDEBAR_WIDTH_MIN := 420.0
 const SIDEBAR_VIEWPORT_RATIO := 0.44
@@ -37,10 +38,10 @@ const MISSION_BRIEFINGS := {
 		"unlocks": "Mission 3 and Scanner station access"
 	},
 	3: {
-		"objective": "Visit a confirmed TESS exoplanet candidate.",
-		"mechanics": "Pick from a short list of real NASA TESS planet candidates.",
+		"objective": "Visit a confirmed planet target from scanner results.",
+		"mechanics": "Pick from a short list of real NASA TESS possible planet targets.",
 		"required_rocket_level": 2,
-		"target_type": "TESS Planet Candidate",
+		"target_type": "Possible Planet Target",
 		"reward_ratio": 1.3,
 		"unlocks": "Mission 4 and Starter Rocket 3"
 	},
@@ -214,9 +215,9 @@ func populate_targets() -> void:
 	targets_section.add_child(targets_title)
 	_render_launch_guidance_notice(targets_section)
 	_render_mining_practice_shortcut(targets_section)
-	var mission5_offer := {}
-	var mission5_selected_contractor := ""
-	var mission5_recommended_target_id := ""
+	var trip_offer := {}
+	var trip_selected_contractor := ""
+	var trip_recommended_target_id := ""
 	var operation_mode := "contract"
 	if not has_awaiting_rocket:
 		var guidance: Label = EmptyLabelScene.instantiate()
@@ -226,6 +227,7 @@ func populate_targets() -> void:
 		targets_section.add_child(guidance)
 		return
 	_render_rocket_customization_controls(targets_section, rm, awaiting_rocket_id)
+	_render_required_room_guidance(targets_section, awaiting_rocket_id)
 
 	if mission_stage == 2 and awaiting_rocket_level < 2:
 		var mission2_hint: Label = EmptyLabelScene.instantiate()
@@ -246,32 +248,39 @@ func populate_targets() -> void:
 		PanelStyle.apply_muted(mission4_hint)
 		targets_section.add_child(mission4_hint)
 	operation_mode = str(rm.get_operation_mode())
-	mission5_offer = rm.ensure_mission5_contract_offer(targets)
-	mission5_selected_contractor = str(mission5_offer.get("selected_contractor", ""))
-	mission5_recommended_target_id = str(mission5_offer.get("recommended_target_id", ""))
-	_render_mission5_contract_brief(targets_section, mission5_offer, mission5_selected_contractor)
-	if mission5_selected_contractor == "":
-		var mission5_pick_hint: Label = EmptyLabelScene.instantiate()
-		mission5_pick_hint.text = "Pick a contractor before selecting a target."
-		mission5_pick_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-		PanelStyle.apply_muted(mission5_pick_hint)
-		targets_section.add_child(mission5_pick_hint)
+	trip_offer = rm.ensure_trip_contract_offer(targets)
+	var trip_selected = rm.get_trip_selected_contractor()
+	trip_selected_contractor = str(trip_selected.get("id", ""))
+	trip_recommended_target_id = str(trip_offer.get("recommended_target_id", ""))
+	_render_trip_contract_brief(targets_section, trip_offer, trip_selected_contractor)
+	if free_ops_unlocked:
+		var free_ops_label: Label = EmptyLabelScene.instantiate()
+		free_ops_label.text = "Free Operations unlocked: pick route + contractor, then choose any target."
+		free_ops_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		PanelStyle.apply_muted(free_ops_label)
+		targets_section.add_child(free_ops_label)
+	if trip_selected_contractor == "":
+		var trip_pick_hint: Label = EmptyLabelScene.instantiate()
+		trip_pick_hint.text = "Pick a contractor before selecting a target."
+		trip_pick_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		PanelStyle.apply_muted(trip_pick_hint)
+		targets_section.add_child(trip_pick_hint)
 	if awaiting_rocket_id != "":
-		var payout_cap = int(mission5_offer.get("payout_cap", rm.get_mission5_payout_cap()))
+		var payout_cap = int(trip_offer.get("payout_cap", rm.get_free_ops_payout_cap()))
 		var current_cost = RocketSpecs.get_cost(awaiting_rocket_id)
 		if current_cost > payout_cap:
-			var mission5_cost_warning: Label = EmptyLabelScene.instantiate()
-			mission5_cost_warning.text = "Warning: mission payout is capped at %s F. Current rocket costs %s F." % [_fmt_francs(payout_cap), _fmt_francs(current_cost)]
-			mission5_cost_warning.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-			PanelStyle.apply_muted(mission5_cost_warning)
-			targets_section.add_child(mission5_cost_warning)
+			var trip_cost_warning: Label = EmptyLabelScene.instantiate()
+			trip_cost_warning.text = "Warning: mission payout is capped at %s F. Current rocket costs %s F." % [_fmt_francs(payout_cap), _fmt_francs(current_cost)]
+			trip_cost_warning.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+			PanelStyle.apply_muted(trip_cost_warning)
+			targets_section.add_child(trip_cost_warning)
 
 	if targets.size() == 0:
 		var lbl: Label = EmptyLabelScene.instantiate()
 		if mission_stage == 3:
-			lbl.text = "No TESS planet candidates available. Check back shortly or restart the game."
+			lbl.text = "No possible planet targets right now. Scan again soon."
 		elif mission_stage >= 4:
-			lbl.text = "No scanned targets available. Open Scanner Station, run a scan, and select a target."
+			lbl.text = "No scanned targets right now. Open Scanner Station and run a scan."
 		else:
 			lbl.text = "No detected targets available."
 		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
@@ -291,7 +300,7 @@ func populate_targets() -> void:
 			awaiting_rocket_level,
 			required_level,
 			operation_mode,
-			mission5_selected_contractor,
+			trip_selected_contractor,
 			target_id
 		)
 		var blocked_reason = _blocked_reason_for_target(
@@ -299,7 +308,7 @@ func populate_targets() -> void:
 			awaiting_rocket_level,
 			required_level,
 			operation_mode,
-			mission5_selected_contractor,
+			trip_selected_contractor,
 			target_id
 		)
 		var is_planet = target_type == "planet" or target_type == "tess"
@@ -307,7 +316,7 @@ func populate_targets() -> void:
 		entry_panel.add_theme_stylebox_override("panel",
 			_planet_card_style() if is_planet else _target_card_style())
 		var name_lbl: Label = entry_panel.get_node("Entry/Header/NameLabel")
-		var is_recommended_target = mission5_recommended_target_id != "" and mission5_recommended_target_id == target_id
+		var is_recommended_target = trip_recommended_target_id != "" and trip_recommended_target_id == target_id
 		var label_text = str(t.get("label", target_id))
 		if is_planet:
 			label_text = "[PLANET] %s" % label_text
@@ -325,7 +334,7 @@ func populate_targets() -> void:
 			btn.text = "Target Selected"
 			btn.disabled = true
 		elif blocked:
-			if mission5_selected_contractor == "":
+			if trip_selected_contractor == "":
 				btn.text = "Select Contractor"
 			else:
 				btn.text = "Blocked"
@@ -333,14 +342,14 @@ func populate_targets() -> void:
 		# bind id
 		btn.pressed.connect(Callable(self, "on_selector_target_pressed").bind(target_id, btn))
 		var details_lbl: Label = entry_panel.get_node("Entry/DetailsLabel")
-		var details_text = "Distance: %.0f AU • Required: L%d" % [distance_au, required_level]
+		var details_text = "Dist %.0f AU • Need L%d" % [distance_au, required_level]
 		if awaiting_rocket_level > 0:
-			details_text += " • Current rocket: L%d" % awaiting_rocket_level
+			details_text += " • Rocket L%d" % awaiting_rocket_level
 			var max_range_au = RocketSpecs.get_max_range_au(awaiting_rocket_id)
 			if distance_au > max_range_au:
-				details_text += " • Fuel: out of range (max %.0f AU)" % max_range_au
+				details_text += " • Out of range (max %.0f AU)" % max_range_au
 			else:
-				details_text += " • Fuel: in range"
+				details_text += " • In range"
 		if blocked:
 			details_text += " • %s" % blocked_reason
 		elif free_ops_unlocked:
@@ -390,11 +399,11 @@ func on_selector_target_pressed(target_id: String, _btn: Button) -> void:
 	else:
 		AppLogger.w("Launchpad: failed to persist target selection from selector %s" % target_id)
 
-func _on_mission5_contractor_pressed(contractor_id: String) -> void:
+func _on_trip_contractor_pressed(contractor_id: String) -> void:
 	var rm = RocketsManager
 	if not rm:
 		return
-	var ok = rm.select_mission5_contractor(contractor_id)
+	var ok = rm.select_trip_contractor(contractor_id)
 	if ok:
 		_record_tutorial_action("accept_contractor_offer", {
 			"contractor_id": contractor_id
@@ -480,7 +489,7 @@ func _render_starter_contract_brief(targets_section: VBoxContainer, offer: Dicti
 		row.add_child(order_lbl)
 		targets_section.add_child(row)
 
-func _render_mission5_contract_brief(targets_section: VBoxContainer, offer: Dictionary, selected_contractor: String) -> void:
+func _render_trip_contract_brief(targets_section: VBoxContainer, offer: Dictionary, selected_contractor: String) -> void:
 	if targets_section == null or offer.is_empty():
 		return
 	var heading: Label = HeaderLabelScene.instantiate()
@@ -521,7 +530,7 @@ func _render_mission5_contract_brief(targets_section: VBoxContainer, offer: Dict
 		btn.text = "Selected" if is_selected else "Select"
 		btn.disabled = false
 		PanelStyle.apply_button(btn, false)
-		btn.pressed.connect(Callable(self, "_on_mission5_contractor_pressed").bind(contractor_id))
+		btn.pressed.connect(Callable(self, "_on_trip_contractor_pressed").bind(contractor_id))
 		targets_section.add_child(row)
 
 func _render_open_operation_mode_picker(targets_section: VBoxContainer, mode: String) -> void:
@@ -617,6 +626,13 @@ func _render_rocket_customization_controls(targets_section: VBoxContainer, rm, r
 	summary.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	PanelStyle.apply_muted(summary)
 	targets_section.add_child(summary)
+	var wear_points = int(rm.get_rocket_wear(rocket_id))
+	var wear_tier = int(rm.get_rocket_wear_tier(rocket_id))
+	var wear_label: Label = EmptyLabelScene.instantiate()
+	wear_label.text = "Wear: Tier %d (%d pts)" % [wear_tier, wear_points]
+	wear_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	PanelStyle.apply_muted(wear_label)
+	targets_section.add_child(wear_label)
 
 	var controls := HBoxContainer.new()
 	controls.add_theme_constant_override("separation", 8)
@@ -729,6 +745,47 @@ func _render_mining_practice_shortcut(targets_section: VBoxContainer) -> void:
 	helper.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	PanelStyle.apply_muted(helper)
 	targets_section.add_child(helper)
+
+func _render_required_room_guidance(targets_section: VBoxContainer, rocket_id: String) -> void:
+	if targets_section == null or rocket_id == "":
+		return
+	var layout = RoomCatalog.create_layout_for_rocket_type(rocket_id)
+	var installed = RoomCatalog.get_installed_rooms(layout)
+	var installed_categories := {}
+	for room_any in installed:
+		if typeof(room_any) != TYPE_DICTIONARY:
+			continue
+		var room_def = RoomCatalog.get_room(str(room_any.get("room_id", "")))
+		var category = str(room_def.get("category", ""))
+		if category != "":
+			installed_categories[category] = true
+
+	var required_categories = ["mining", "storage"]
+	var heading: Label = HeaderLabelScene.instantiate()
+	heading.text = "Required Rooms"
+	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	PanelStyle.apply_muted(heading)
+	targets_section.add_child(heading)
+
+	var lines := []
+	var missing := false
+	for category in required_categories:
+		var has_category = installed_categories.has(category)
+		var marker = "✓" if has_category else "!"
+		lines.append("%s %s" % [marker, category.capitalize()])
+		if not has_category:
+			missing = true
+	var body: Label = EmptyLabelScene.instantiate()
+	body.text = "\n".join(lines)
+	body.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	PanelStyle.apply_muted(body)
+	targets_section.add_child(body)
+	if missing:
+		var warn: Label = EmptyLabelScene.instantiate()
+		warn.text = "Warning: missing room categories reduce mission effectiveness (launch remains allowed)."
+		warn.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		PanelStyle.apply_muted(warn)
+		targets_section.add_child(warn)
 
 func _style_selector_panel(panel: Panel, vbox: VBoxContainer) -> void:
 	# Lock before UIConsistencyEnforcer deferred scan can overwrite.
@@ -893,13 +950,13 @@ func _is_target_blocked_for_selection(
 	awaiting_rocket_level: int,
 	required_level: int,
 	operation_mode: String,
-	mission5_selected_contractor: String,
+	trip_selected_contractor: String,
 	target_id: String
 ) -> bool:
 	var rm = RocketsManager
 	if awaiting_rocket_level > 0 and required_level > awaiting_rocket_level:
 		return true
-	if mission5_selected_contractor == "":
+	if trip_selected_contractor == "":
 		return true
 	if rm and rm.is_candidate_visit_blocked(target_id):
 		return true
@@ -910,14 +967,14 @@ func _blocked_reason_for_target(
 	awaiting_rocket_level: int,
 	required_level: int,
 	operation_mode: String,
-	mission5_selected_contractor: String,
+	trip_selected_contractor: String,
 	target_id: String
 ) -> String:
 	var rm = RocketsManager
-	if mission5_selected_contractor == "":
+	if trip_selected_contractor == "":
 		return "Select a contractor first"
 	if rm and rm.is_candidate_visit_blocked(target_id):
-		return "Candidate not confirmed yet; rescan and classify again"
+		return "Target not confirmed yet; run another scan and classify again"
 	if awaiting_rocket_level > 0 and required_level > awaiting_rocket_level:
 		return "Requires rocket level L%d" % required_level
 	return "Not selectable yet"

@@ -1,0 +1,14 @@
+{
+  "asset_id": "telescope_t2__circular_star_chart_display__active",
+  "room_id": "telescope_t2",
+  "component": "circular_star_chart_display",
+  "tier": "2",
+  "state": "active",
+  "prompt_version": "v1",
+  "generator": "chatgpt",
+  "generated_at_utc": "2026-03-10T10:16:33.916622",
+  "image_filename": "telescope_t2__circular_star_chart_display__active.png",
+  "width": 1024,
+  "height": 1024,
+  "notes": ""
+}

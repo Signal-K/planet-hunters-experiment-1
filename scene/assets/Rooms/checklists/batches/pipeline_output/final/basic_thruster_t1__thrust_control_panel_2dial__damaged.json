@@ -1,0 +1,14 @@
+{
+  "asset_id": "basic_thruster_t1__thrust_control_panel_2dial__damaged",
+  "room_id": "basic_thruster_t1",
+  "component": "thrust_control_panel_2dial",
+  "tier": "1",
+  "state": "damaged",
+  "prompt_version": "v1",
+  "generator": "chatgpt",
+  "generated_at_utc": "2026-03-10T10:16:27.801113",
+  "image_filename": "basic_thruster_t1__thrust_control_panel_2dial__damaged.png",
+  "width": 1024,
+  "height": 1024,
+  "notes": ""
+}

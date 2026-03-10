@@ -740,13 +740,20 @@ function App() {
   const [showInstallHint, setShowInstallHint] = useState(false);
   const [levelUpBanner, setLevelUpBanner] = useState(null); // { level, hint }
   const levelUpTimerRef = useRef(null);
+  const [showPwaHud, setShowPwaHud] = useState(false);
+  const pwaHudTimerRef = useRef(null);
   const [isPortrait, setIsPortrait] = useState(
     () => typeof window !== "undefined" && window.matchMedia("(orientation: portrait)").matches
   );
+  const [viewportWidth, setViewportWidth] = useState(
+    () => (typeof window !== "undefined" ? window.innerWidth : 1280)
+  );
+  const [showPwaHudMenu, setShowPwaHudMenu] = useState(false);
 
   useEffect(() => {
     function onResize() {
       setIsMobile(Math.min(window.innerWidth, window.innerHeight) < 768);
+      setViewportWidth(window.innerWidth);
     }
     window.addEventListener("resize", onResize, { passive: true });
     return () => window.removeEventListener("resize", onResize);
@@ -893,6 +900,14 @@ function App() {
     }
   }, [isMobile, isPwa]);
 
+  useEffect(() => {
+    return () => {
+      if (pwaHudTimerRef.current) {
+        clearTimeout(pwaHudTimerRef.current);
+      }
+    };
+  }, []);
+
   const handleOpenFullscreen = useCallback(() => {
     if (document.documentElement.requestFullscreen) {
       document.documentElement.requestFullscreen().catch(() => {});
@@ -918,6 +933,39 @@ function App() {
     setShowInstallHint(true);
   }, [installPrompt, isIos]);
 
+  const revealPwaHud = useCallback(() => {
+    if (!isPwa) return;
+    setShowPwaHud(true);
+    setShowPwaHudMenu(false);
+    if (pwaHudTimerRef.current) {
+      clearTimeout(pwaHudTimerRef.current);
+    }
+    pwaHudTimerRef.current = setTimeout(() => {
+      setShowPwaHud(false);
+      pwaHudTimerRef.current = null;
+    }, 3500);
+  }, [isPwa]);
+
+  const handlePwaSave = useCallback(() => {
+    const next = {
+      marker: "manual-save",
+      updatedAt: new Date().toISOString(),
+    };
+    saveProgress(next, setProgress);
+    setStorageStatus("Cookie saved");
+    setShowPwaHudMenu(false);
+  }, []);
+
+  const handlePwaExit = useCallback(() => {
+    try {
+      if (window.history.length > 1) {
+        window.history.back();
+        return;
+      }
+    } catch (_error) {}
+    window.location.href = "/";
+  }, []);
+
   const markerText = useMemo(() => {
     if (!progress) {
       return "pending";
@@ -932,6 +980,7 @@ function App() {
     display: "block",
     background: "#000",
   };
+  const isCompactPwaHud = isMobile && viewportWidth <= 430;
 
   // Level-up celebration banner (top-centre, auto-dismisses after 4s)
   const levelUpOverlay = levelUpBanner
@@ -1046,6 +1095,159 @@ function App() {
           setStorageStatus("Cookie saved");
         },
       }),
+      React.createElement(
+        "button",
+        {
+          onClick: revealPwaHud,
+          style: {
+            position: "fixed",
+            top: "max(0px, env(safe-area-inset-top))",
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: "min(48vw, calc(100vw - env(safe-area-inset-left) - env(safe-area-inset-right) - 16px))",
+            maxWidth: "220px",
+            height: "20px",
+            border: "none",
+            borderBottomLeftRadius: "12px",
+            borderBottomRightRadius: "12px",
+            background: "rgba(12, 20, 40, 0.35)",
+            color: "#d9e2ff",
+            fontSize: "11px",
+            zIndex: 10001,
+          },
+        },
+        "Show HUD"
+      ),
+      showPwaHud
+        ? React.createElement(
+            "div",
+            {
+              style: {
+                position: "fixed",
+                top: "max(8px, env(safe-area-inset-top))",
+                left: "50%",
+                transform: "translateX(-50%)",
+                display: "flex",
+                flexWrap: "wrap",
+                justifyContent: "center",
+                gap: "8px",
+                zIndex: 10002,
+                background: "rgba(5, 8, 15, 0.82)",
+                border: "1px solid #2a3560",
+                borderRadius: "12px",
+                padding: "8px",
+                maxWidth: "calc(100vw - env(safe-area-inset-left) - env(safe-area-inset-right) - 16px)",
+              },
+            },
+            isCompactPwaHud
+              ? React.createElement(
+                  React.Fragment,
+                  null,
+                  React.createElement(
+                    "button",
+                    {
+                      onClick: () => {
+                        setShowPwaHudMenu((open) => !open);
+                        if (pwaHudTimerRef.current) {
+                          clearTimeout(pwaHudTimerRef.current);
+                        }
+                        pwaHudTimerRef.current = setTimeout(() => {
+                          setShowPwaHud(false);
+                          setShowPwaHudMenu(false);
+                          pwaHudTimerRef.current = null;
+                        }, 3500);
+                      },
+                      style: {
+                        border: "1px solid #2a3560",
+                        borderRadius: "8px",
+                        padding: "8px 12px",
+                        color: "#fff",
+                        background: "#1a2550",
+                        fontSize: "12px",
+                      },
+                    },
+                    "Menu"
+                  ),
+                  showPwaHudMenu
+                    ? React.createElement(
+                        "div",
+                        {
+                          style: {
+                            width: "100%",
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "8px",
+                          },
+                        },
+                        React.createElement(
+                          "button",
+                          {
+                            onClick: handlePwaSave,
+                            style: {
+                              border: "1px solid #2a3560",
+                              borderRadius: "8px",
+                              padding: "8px 10px",
+                              color: "#fff",
+                              background: "#14204a",
+                              fontSize: "12px",
+                            },
+                          },
+                          "Save"
+                        ),
+                        React.createElement(
+                          "button",
+                          {
+                            onClick: handlePwaExit,
+                            style: {
+                              border: "1px solid #2a3560",
+                              borderRadius: "8px",
+                              padding: "8px 10px",
+                              color: "#fff",
+                              background: "#3a1724",
+                              fontSize: "12px",
+                            },
+                          },
+                          "Exit"
+                        )
+                      )
+                    : null
+                )
+              : React.createElement(
+                  React.Fragment,
+                  null,
+                  React.createElement(
+                    "button",
+                    {
+                      onClick: handlePwaSave,
+                      style: {
+                        border: "1px solid #2a3560",
+                        borderRadius: "8px",
+                        padding: "8px 10px",
+                        color: "#fff",
+                        background: "#14204a",
+                        fontSize: "12px",
+                      },
+                    },
+                    "Save"
+                  ),
+                  React.createElement(
+                    "button",
+                    {
+                      onClick: handlePwaExit,
+                      style: {
+                        border: "1px solid #2a3560",
+                        borderRadius: "8px",
+                        padding: "8px 10px",
+                        color: "#fff",
+                        background: "#3a1724",
+                        fontSize: "12px",
+                      },
+                    },
+                    "Exit"
+                  )
+                )
+          )
+        : null,
       rotatePrompt,
       levelUpOverlay
     );
@@ -1064,7 +1266,8 @@ function App() {
               right: 0,
               background: "#05080f",
               borderTop: "1px solid #1a2340",
-              padding: "12px 16px",
+              padding:
+                "12px calc(16px + env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left))",
               display: "flex",
               flexDirection: "column",
               gap: "8px",

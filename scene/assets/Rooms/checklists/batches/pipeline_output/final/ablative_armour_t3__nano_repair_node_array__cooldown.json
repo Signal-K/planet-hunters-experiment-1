@@ -1,0 +1,14 @@
+{
+  "asset_id": "ablative_armour_t3__nano_repair_node_array__cooldown",
+  "room_id": "ablative_armour_t3",
+  "component": "nano_repair_node_array",
+  "tier": "3",
+  "state": "cooldown",
+  "prompt_version": "v1",
+  "generator": "chatgpt",
+  "generated_at_utc": "2026-03-10T10:16:35.845170",
+  "image_filename": "ablative_armour_t3__nano_repair_node_array__cooldown.png",
+  "width": 1024,
+  "height": 1024,
+  "notes": ""
+}

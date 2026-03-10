@@ -1,0 +1,243 @@
+{
+  "batch_id": "batch_l3_m4_starterrocket3",
+  "packet_index": 15,
+  "packet_count": 31,
+  "asset_count": 12,
+  "instructions": {
+    "style_anchor_required": true,
+    "one_asset_per_prompt": true,
+    "filename_contract": "strict",
+    "no_extra_suffixes": true,
+    "no_text_or_ui": true
+  },
+  "assets": [
+    {
+      "asset_id": "fusion_drive_t2__monitoring_terminal__depleted",
+      "asset_type": "state_variant",
+      "room_id": "fusion_drive_t2",
+      "room_name": "Fusion Drive Room",
+      "category": "propulsion",
+      "tier": 2,
+      "component_id": "monitoring_terminal",
+      "component_name": "Monitoring Terminal",
+      "component_kind": "interactive",
+      "state_key": "depleted",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'depleted' for component 'Monitoring Terminal' in 'Fusion Drive Room'. Change only state cues: minimal or no glow, offline indicators, depleted resource cues. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "fusion_drive_t2__monitoring_terminal__depleted.png",
+        "sidecar": "fusion_drive_t2__monitoring_terminal__depleted.json",
+        "note_optional": "fusion_drive_t2__monitoring_terminal__depleted.txt"
+      }
+    },
+    {
+      "asset_id": "fusion_drive_t2__monitoring_terminal__idle",
+      "asset_type": "state_variant",
+      "room_id": "fusion_drive_t2",
+      "room_name": "Fusion Drive Room",
+      "category": "propulsion",
+      "tier": 2,
+      "component_id": "monitoring_terminal",
+      "component_name": "Monitoring Terminal",
+      "component_kind": "interactive",
+      "state_key": "idle",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'idle' for component 'Monitoring Terminal' in 'Fusion Drive Room'. Change only state cues: stable indicator lights, neutral glow, no motion cues. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "fusion_drive_t2__monitoring_terminal__idle.png",
+        "sidecar": "fusion_drive_t2__monitoring_terminal__idle.json",
+        "note_optional": "fusion_drive_t2__monitoring_terminal__idle.txt"
+      }
+    },
+    {
+      "asset_id": "fusion_drive_t2__plasma_chamber_core__active",
+      "asset_type": "state_variant",
+      "room_id": "fusion_drive_t2",
+      "room_name": "Fusion Drive Room",
+      "category": "propulsion",
+      "tier": 2,
+      "component_id": "plasma_chamber_core",
+      "component_name": "Plasma Chamber Core",
+      "component_kind": "interactive",
+      "state_key": "active",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'active' for component 'Plasma Chamber Core' in 'Fusion Drive Room'. Change only state cues: brighter active glow, subtle motion/energy cues, engaged indicators. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "fusion_drive_t2__plasma_chamber_core__active.png",
+        "sidecar": "fusion_drive_t2__plasma_chamber_core__active.json",
+        "note_optional": "fusion_drive_t2__plasma_chamber_core__active.txt"
+      }
+    },
+    {
+      "asset_id": "fusion_drive_t2__plasma_chamber_core__cooldown",
+      "asset_type": "state_variant",
+      "room_id": "fusion_drive_t2",
+      "room_name": "Fusion Drive Room",
+      "category": "propulsion",
+      "tier": 2,
+      "component_id": "plasma_chamber_core",
+      "component_name": "Plasma Chamber Core",
+      "component_kind": "interactive",
+      "state_key": "cooldown",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'cooldown' for component 'Plasma Chamber Core' in 'Fusion Drive Room'. Change only state cues: reduced glow with cooling/venting cues and amber warning flicker. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "fusion_drive_t2__plasma_chamber_core__cooldown.png",
+        "sidecar": "fusion_drive_t2__plasma_chamber_core__cooldown.json",
+        "note_optional": "fusion_drive_t2__plasma_chamber_core__cooldown.txt"
+      }
+    },
+    {
+      "asset_id": "fusion_drive_t2__plasma_chamber_core__damaged",
+      "asset_type": "state_variant",
+      "room_id": "fusion_drive_t2",
+      "room_name": "Fusion Drive Room",
+      "category": "propulsion",
+      "tier": 2,
+      "component_id": "plasma_chamber_core",
+      "component_name": "Plasma Chamber Core",
+      "component_kind": "interactive",
+      "state_key": "damaged",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'damaged' for component 'Plasma Chamber Core' in 'Fusion Drive Room'. Change only state cues: visible wear, sparks or cracks, warning lights and degraded output. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "fusion_drive_t2__plasma_chamber_core__damaged.png",
+        "sidecar": "fusion_drive_t2__plasma_chamber_core__damaged.json",
+        "note_optional": "fusion_drive_t2__plasma_chamber_core__damaged.txt"
+      }
+    },
+    {
+      "asset_id": "fusion_drive_t2__plasma_chamber_core__depleted",
+      "asset_type": "state_variant",
+      "room_id": "fusion_drive_t2",
+      "room_name": "Fusion Drive Room",
+      "category": "propulsion",
+      "tier": 2,
+      "component_id": "plasma_chamber_core",
+      "component_name": "Plasma Chamber Core",
+      "component_kind": "interactive",
+      "state_key": "depleted",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'depleted' for component 'Plasma Chamber Core' in 'Fusion Drive Room'. Change only state cues: minimal or no glow, offline indicators, depleted resource cues. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "fusion_drive_t2__plasma_chamber_core__depleted.png",
+        "sidecar": "fusion_drive_t2__plasma_chamber_core__depleted.json",
+        "note_optional": "fusion_drive_t2__plasma_chamber_core__depleted.txt"
+      }
+    },
+    {
+      "asset_id": "fusion_drive_t2__plasma_chamber_core__idle",
+      "asset_type": "state_variant",
+      "room_id": "fusion_drive_t2",
+      "room_name": "Fusion Drive Room",
+      "category": "propulsion",
+      "tier": 2,
+      "component_id": "plasma_chamber_core",
+      "component_name": "Plasma Chamber Core",
+      "component_kind": "interactive",
+      "state_key": "idle",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'idle' for component 'Plasma Chamber Core' in 'Fusion Drive Room'. Change only state cues: stable indicator lights, neutral glow, no motion cues. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "fusion_drive_t2__plasma_chamber_core__idle.png",
+        "sidecar": "fusion_drive_t2__plasma_chamber_core__idle.json",
+        "note_optional": "fusion_drive_t2__plasma_chamber_core__idle.txt"
+      }
+    },
+    {
+      "asset_id": "fusion_drive_t2__room_composite__v1",
+      "asset_type": "room_composite",
+      "room_id": "fusion_drive_t2",
+      "room_name": "Fusion Drive Room",
+      "category": "propulsion",
+      "tier": 2,
+      "component_id": "room_composite",
+      "component_name": "Room Composite",
+      "component_kind": "composite",
+      "state_key": "base",
+      "priority": "p0",
+      "prompt": "Using the attached style reference, compose one 2:1 spacecraft room tile for 'Fusion Drive Room' using these components: chamber_cradle, magnetic_containment_rings, cooling_pipe_network, plasma_chamber_core, monitoring_terminal. Keep module shell rectangular with flat top/bottom for stacking. Include only listed components and consistent accent lighting. No text, no labels, no UI, no rocket exterior. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "fusion_drive_t2__room_composite__v1.png",
+        "sidecar": "fusion_drive_t2__room_composite__v1.json",
+        "note_optional": "fusion_drive_t2__room_composite__v1.txt"
+      }
+    },
+    {
+      "asset_id": "style_anchor_v1",
+      "asset_type": "style_anchor",
+      "room_id": "global",
+      "room_name": "Global Style Anchor",
+      "category": "global",
+      "tier": "n/a",
+      "component_id": "style_anchor",
+      "component_name": "Style Anchor",
+      "component_kind": "reference",
+      "state_key": "base",
+      "priority": "p0",
+      "prompt": "Side-view cross-section cutaway of a single spacecraft interior room module. Illustrated sci-fi game asset style — clean detailed linework, metallic silver-grey interior walls with visible panel seams and riveted bolts, recessed floor lighting strips, equipment glowing with coloured sci-fi accent lights. Dark background (#0D0B14 deep space purple, near-black). No text, no labels, no UI. The module is a rectangular tile — flat top and bottom edges so it can stack with other modules. Landscape 2:1 ratio. Consistent illustrated style like a mobile space exploration game concept art, similar to how Pixel Starships looks but rendered in a modern illustrated style rather than retro pixel art. Single module only, no rocket exterior visible. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "style_anchor_v1.png",
+        "sidecar": "style_anchor_v1.json",
+        "note_optional": "style_anchor_v1.txt"
+      }
+    },
+    {
+      "asset_id": "shell_kit_high_v1",
+      "asset_type": "shell_kit",
+      "room_id": "global",
+      "room_name": "Global Shell Kit (high)",
+      "category": "global",
+      "tier": "n/a",
+      "component_id": "shell_high",
+      "component_name": "Room Shell high",
+      "component_kind": "structural",
+      "state_key": "base",
+      "priority": "p0",
+      "prompt": "Using the attached style reference, create an empty spacecraft interior room shell component variant 'high' with metallic panel seams, floor light strips, and stackable flat top/bottom module edges. No major equipment. 2:1 side-view cross-section. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "shell_kit_high_v1.png",
+        "sidecar": "shell_kit_high_v1.json",
+        "note_optional": "shell_kit_high_v1.txt"
+      }
+    },
+    {
+      "asset_id": "shell_kit_mid_v1",
+      "asset_type": "shell_kit",
+      "room_id": "global",
+      "room_name": "Global Shell Kit (mid)",
+      "category": "global",
+      "tier": "n/a",
+      "component_id": "shell_mid",
+      "component_name": "Room Shell mid",
+      "component_kind": "structural",
+      "state_key": "base",
+      "priority": "p0",
+      "prompt": "Using the attached style reference, create an empty spacecraft interior room shell component variant 'mid' with metallic panel seams, floor light strips, and stackable flat top/bottom module edges. No major equipment. 2:1 side-view cross-section. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "shell_kit_mid_v1.png",
+        "sidecar": "shell_kit_mid_v1.json",
+        "note_optional": "shell_kit_mid_v1.txt"
+      }
+    },
+    {
+      "asset_id": "shell_kit_starter_v1",
+      "asset_type": "shell_kit",
+      "room_id": "global",
+      "room_name": "Global Shell Kit (starter)",
+      "category": "global",
+      "tier": "n/a",
+      "component_id": "shell_starter",
+      "component_name": "Room Shell starter",
+      "component_kind": "structural",
+      "state_key": "base",
+      "priority": "p0",
+      "prompt": "Using the attached style reference, create an empty spacecraft interior room shell component variant 'starter' with metallic panel seams, floor light strips, and stackable flat top/bottom module edges. No major equipment. 2:1 side-view cross-section. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "shell_kit_starter_v1.png",
+        "sidecar": "shell_kit_starter_v1.json",
+        "note_optional": "shell_kit_starter_v1.txt"
+      }
+    }
+  ]
+}

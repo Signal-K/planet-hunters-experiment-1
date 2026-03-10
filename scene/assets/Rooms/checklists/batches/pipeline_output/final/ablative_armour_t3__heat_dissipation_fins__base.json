@@ -1,0 +1,14 @@
+{
+  "asset_id": "ablative_armour_t3__heat_dissipation_fins__base",
+  "room_id": "ablative_armour_t3",
+  "component": "heat_dissipation_fins",
+  "tier": "3",
+  "state": "base",
+  "prompt_version": "v1",
+  "generator": "chatgpt",
+  "generated_at_utc": "2026-03-10T10:16:35.761389",
+  "image_filename": "ablative_armour_t3__heat_dissipation_fins__base.png",
+  "width": 1024,
+  "height": 1024,
+  "notes": ""
+}

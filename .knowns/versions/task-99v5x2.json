@@ -1,0 +1,80 @@
+{
+  "taskId": "99v5x2",
+  "currentVersion": 1,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "99v5x2",
+      "version": 1,
+      "timestamp": "2026-03-10T05:42:37.038Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        },
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Exit button is reachable on mobile without permanently occupying screen space"
+            },
+            {
+              "completed": false,
+              "text": "HUD auto-hides after a short timeout"
+            },
+            {
+              "completed": false,
+              "text": "Works on both iOS and Android PWA"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Exit button is reachable on mobile without permanently occupying screen space"
+            },
+            {
+              "completed": true,
+              "text": "HUD auto-hides after a short timeout"
+            },
+            {
+              "completed": true,
+              "text": "Works on both iOS and Android PWA"
+            }
+          ]
+        },
+        {
+          "field": "implementationNotes",
+          "newValue": "✓ Added PWA top-edge HUD reveal handle with auto-hide (~3.5s), Save + Exit actions, and safe-area-aware HUD positioning for mobile PWA."
+        }
+      ],
+      "snapshot": {
+        "title": "Add accessible exit / HUD toggle for PWA mobile",
+        "description": "The PWA header (Exit button) is currently hidden on mobile. Users need a way to exit the PWA or access navigation without it cluttering the game screen. Implement a tap-to-show HUD pattern (e.g. tap top edge reveals header briefly, then auto-hides).",
+        "status": "done",
+        "priority": "low",
+        "labels": [
+          "mobile",
+          "pwa",
+          "ux"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Exit button is reachable on mobile without permanently occupying screen space"
+          },
+          {
+            "completed": true,
+            "text": "HUD auto-hides after a short timeout"
+          },
+          {
+            "completed": true,
+            "text": "Works on both iOS and Android PWA"
+          }
+        ],
+        "implementationNotes": "✓ Added PWA top-edge HUD reveal handle with auto-hide (~3.5s), Save + Exit actions, and safe-area-aware HUD positioning for mobile PWA."
+      }
+    }
+  ]
+}

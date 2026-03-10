@@ -1,7 +1,7 @@
 ---
 title: 'spec,missions,game-design,reference'
 createdAt: '2026-02-25T08:19:42.936Z'
-updatedAt: '2026-03-10T01:49:50.443Z'
+updatedAt: '2026-03-10T07:09:38.078Z'
 description: >-
   Complete specification for all 5 missions including objectives, mechanics,
   progression, rewards, and onboarding flow
@@ -126,3 +126,11 @@ Each authored mission keeps the same core loop:
 - Launch gating: `scene/Scripts/Earth/LaunchpadLaunchButton.gd`
 - Debrief rewards: `scene/Scripts/Earth/MissionDebrief.gd`
 - Classification behavior: `scene/Scripts/UI/AsteroidDetail/AsteroidDetailView.gd`
+
+
+
+## 2026-03-10 Hands-on Clarifications
+- Keep only two post-M4 route modes for now: `contract` and `survey`.
+- Contractor selection is required at mission start before target selection.
+- Discovery bonus (`10% + 1% per annotation level`) applies to net payout.
+- Mission 4 completion should explicitly communicate Free Operations unlock.

@@ -1,0 +1,68 @@
+{
+  "taskId": "a23wzd",
+  "currentVersion": 1,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "a23wzd",
+      "version": 1,
+      "timestamp": "2026-03-10T05:42:36.916Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        },
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Active contractor bonus is shown on the debrief payout breakdown"
+            },
+            {
+              "completed": false,
+              "text": "Mining scene shows active contractor modifier somewhere visible"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Active contractor bonus is shown on the debrief payout breakdown"
+            },
+            {
+              "completed": true,
+              "text": "Mining scene shows active contractor modifier somewhere visible"
+            }
+          ]
+        },
+        {
+          "field": "implementationNotes",
+          "newValue": "✓ Debrief shows contractor bonus breakdown; mining HUD now resolves selected contractor via SubcontractorManager so active modifier is visible in-run."
+        }
+      ],
+      "snapshot": {
+        "title": "Show contractor bonus effect during and after mission",
+        "description": "Contractor bonuses (+x% cobalt etc.) are visible at signup but completely silent during the mission and debrief. Players cannot tell if the contractor did anything.",
+        "status": "done",
+        "priority": "high",
+        "labels": [
+          "ux",
+          "contractors",
+          "debrief"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Active contractor bonus is shown on the debrief payout breakdown"
+          },
+          {
+            "completed": true,
+            "text": "Mining scene shows active contractor modifier somewhere visible"
+          }
+        ],
+        "implementationNotes": "✓ Debrief shows contractor bonus breakdown; mining HUD now resolves selected contractor via SubcontractorManager so active modifier is visible in-run."
+      }
+    }
+  ]
+}

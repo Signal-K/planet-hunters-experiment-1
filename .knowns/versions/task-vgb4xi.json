@@ -1,0 +1,323 @@
+{
+  "taskId": "vgb4xi",
+  "currentVersion": 6,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "vgb4xi",
+      "version": 1,
+      "timestamp": "2026-03-10T05:51:52.776Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Align mission E2E/narrative suites to M1-M4 + Free Ops",
+        "description": "Headless gameplay audit shows run_mission_e2e_flow_tests and run_narrative_paths_tests still assume stage 5 flow. Update test narratives and assertions to current spec (M1-M4 authored + Free Ops).",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "tests",
+          "missions",
+          "spec-alignment"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "run_mission_e2e_flow_tests passes without stage-5 assumptions"
+          },
+          {
+            "completed": false,
+            "text": "run_narrative_paths_tests passes with Free Ops replacing Mission 5 paths"
+          },
+          {
+            "completed": false,
+            "text": "Test docs reflect M1-M4 + Free Ops progression"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "vgb4xi",
+      "version": 2,
+      "timestamp": "2026-03-10T05:51:57.247Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "run_mission_e2e_flow_tests passes without stage-5 assumptions"
+            },
+            {
+              "completed": false,
+              "text": "run_narrative_paths_tests passes with Free Ops replacing Mission 5 paths"
+            },
+            {
+              "completed": false,
+              "text": "Test docs reflect M1-M4 + Free Ops progression"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "run_mission_e2e_flow_tests passes without stage-5 assumptions"
+            },
+            {
+              "completed": false,
+              "text": "run_narrative_paths_tests passes with Free Ops replacing Mission 5 paths"
+            },
+            {
+              "completed": false,
+              "text": "Test docs reflect M1-M4 + Free Ops progression"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Align mission E2E/narrative suites to M1-M4 + Free Ops",
+        "description": "Headless gameplay audit shows run_mission_e2e_flow_tests and run_narrative_paths_tests still assume stage 5 flow. Update test narratives and assertions to current spec (M1-M4 authored + Free Ops).",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "tests",
+          "missions",
+          "spec-alignment"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "run_mission_e2e_flow_tests passes without stage-5 assumptions"
+          },
+          {
+            "completed": false,
+            "text": "run_narrative_paths_tests passes with Free Ops replacing Mission 5 paths"
+          },
+          {
+            "completed": false,
+            "text": "Test docs reflect M1-M4 + Free Ops progression"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "vgb4xi",
+      "version": 3,
+      "timestamp": "2026-03-10T05:51:59.477Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "run_mission_e2e_flow_tests passes without stage-5 assumptions"
+            },
+            {
+              "completed": false,
+              "text": "run_narrative_paths_tests passes with Free Ops replacing Mission 5 paths"
+            },
+            {
+              "completed": false,
+              "text": "Test docs reflect M1-M4 + Free Ops progression"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "run_mission_e2e_flow_tests passes without stage-5 assumptions"
+            },
+            {
+              "completed": true,
+              "text": "run_narrative_paths_tests passes with Free Ops replacing Mission 5 paths"
+            },
+            {
+              "completed": false,
+              "text": "Test docs reflect M1-M4 + Free Ops progression"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Align mission E2E/narrative suites to M1-M4 + Free Ops",
+        "description": "Headless gameplay audit shows run_mission_e2e_flow_tests and run_narrative_paths_tests still assume stage 5 flow. Update test narratives and assertions to current spec (M1-M4 authored + Free Ops).",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "tests",
+          "missions",
+          "spec-alignment"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "run_mission_e2e_flow_tests passes without stage-5 assumptions"
+          },
+          {
+            "completed": true,
+            "text": "run_narrative_paths_tests passes with Free Ops replacing Mission 5 paths"
+          },
+          {
+            "completed": false,
+            "text": "Test docs reflect M1-M4 + Free Ops progression"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "vgb4xi",
+      "version": 4,
+      "timestamp": "2026-03-10T05:52:01.722Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "run_mission_e2e_flow_tests passes without stage-5 assumptions"
+            },
+            {
+              "completed": true,
+              "text": "run_narrative_paths_tests passes with Free Ops replacing Mission 5 paths"
+            },
+            {
+              "completed": false,
+              "text": "Test docs reflect M1-M4 + Free Ops progression"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "run_mission_e2e_flow_tests passes without stage-5 assumptions"
+            },
+            {
+              "completed": true,
+              "text": "run_narrative_paths_tests passes with Free Ops replacing Mission 5 paths"
+            },
+            {
+              "completed": true,
+              "text": "Test docs reflect M1-M4 + Free Ops progression"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Align mission E2E/narrative suites to M1-M4 + Free Ops",
+        "description": "Headless gameplay audit shows run_mission_e2e_flow_tests and run_narrative_paths_tests still assume stage 5 flow. Update test narratives and assertions to current spec (M1-M4 authored + Free Ops).",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "tests",
+          "missions",
+          "spec-alignment"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "run_mission_e2e_flow_tests passes without stage-5 assumptions"
+          },
+          {
+            "completed": true,
+            "text": "run_narrative_paths_tests passes with Free Ops replacing Mission 5 paths"
+          },
+          {
+            "completed": true,
+            "text": "Test docs reflect M1-M4 + Free Ops progression"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "vgb4xi",
+      "version": 5,
+      "timestamp": "2026-03-10T05:52:03.959Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "## Summary\n- Aligned mission E2E and narrative suites to M1-M4 + Free Ops progression.\n- Updated assertions for contractor-gated free-ops target selection.\n- Updated structure specs to remove legacy Mission 5 assumptions."
+        }
+      ],
+      "snapshot": {
+        "title": "Align mission E2E/narrative suites to M1-M4 + Free Ops",
+        "description": "Headless gameplay audit shows run_mission_e2e_flow_tests and run_narrative_paths_tests still assume stage 5 flow. Update test narratives and assertions to current spec (M1-M4 authored + Free Ops).",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "tests",
+          "missions",
+          "spec-alignment"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "run_mission_e2e_flow_tests passes without stage-5 assumptions"
+          },
+          {
+            "completed": true,
+            "text": "run_narrative_paths_tests passes with Free Ops replacing Mission 5 paths"
+          },
+          {
+            "completed": true,
+            "text": "Test docs reflect M1-M4 + Free Ops progression"
+          }
+        ],
+        "implementationNotes": "## Summary\n- Aligned mission E2E and narrative suites to M1-M4 + Free Ops progression.\n- Updated assertions for contractor-gated free-ops target selection.\n- Updated structure specs to remove legacy Mission 5 assumptions."
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "vgb4xi",
+      "version": 6,
+      "timestamp": "2026-03-10T05:52:06.342Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Align mission E2E/narrative suites to M1-M4 + Free Ops",
+        "description": "Headless gameplay audit shows run_mission_e2e_flow_tests and run_narrative_paths_tests still assume stage 5 flow. Update test narratives and assertions to current spec (M1-M4 authored + Free Ops).",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "tests",
+          "missions",
+          "spec-alignment"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "run_mission_e2e_flow_tests passes without stage-5 assumptions"
+          },
+          {
+            "completed": true,
+            "text": "run_narrative_paths_tests passes with Free Ops replacing Mission 5 paths"
+          },
+          {
+            "completed": true,
+            "text": "Test docs reflect M1-M4 + Free Ops progression"
+          }
+        ],
+        "implementationNotes": "## Summary\n- Aligned mission E2E and narrative suites to M1-M4 + Free Ops progression.\n- Updated assertions for contractor-gated free-ops target selection.\n- Updated structure specs to remove legacy Mission 5 assumptions."
+      }
+    }
+  ]
+}

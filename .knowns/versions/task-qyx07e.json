@@ -1,0 +1,455 @@
+{
+  "taskId": "qyx07e",
+  "currentVersion": 8,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "qyx07e",
+      "version": 1,
+      "timestamp": "2026-03-10T06:35:18.933Z",
+      "changes": [
+        {
+          "field": "description",
+          "oldValue": "Ensure each post-M4 run offers a discovery opportunity and refreshes mission/target variety without forcing authored rail progression.",
+          "newValue": "Ensure each post-M4 run offers candidate classification opportunities and refreshes mission/target variety without guaranteeing candidate truth and without forcing authored rail progression."
+        },
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Every Free Ops run offers at least one discovery candidate option"
+            },
+            {
+              "completed": false,
+              "text": "Known + candidate target mix remains available per run"
+            },
+            {
+              "completed": false,
+              "text": "System supports adding new mission/target templates over time"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": false,
+              "text": "Known + candidate target mix remains available per run"
+            },
+            {
+              "completed": false,
+              "text": "System supports adding new mission/target templates over time"
+            },
+            {
+              "text": "Every Free Ops run offers at least one unconfirmed candidate option (not guaranteed true transit)",
+              "completed": false
+            }
+          ]
+        },
+        {
+          "field": "implementationNotes",
+          "newValue": "Clarified: discovery cadence means candidate opportunities every run, not guaranteed confirmations."
+        }
+      ],
+      "snapshot": {
+        "title": "Add Free Ops target refresh with discovery opportunity every run",
+        "description": "Ensure each post-M4 run offers candidate classification opportunities and refreshes mission/target variety without guaranteeing candidate truth and without forcing authored rail progression.",
+        "status": "todo",
+        "priority": "high",
+        "labels": [
+          "gameplay",
+          "free-ops",
+          "targets",
+          "missions"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Known + candidate target mix remains available per run"
+          },
+          {
+            "completed": false,
+            "text": "System supports adding new mission/target templates over time"
+          },
+          {
+            "text": "Every Free Ops run offers at least one unconfirmed candidate option (not guaranteed true transit)",
+            "completed": false
+          }
+        ],
+        "implementationNotes": "Clarified: discovery cadence means candidate opportunities every run, not guaranteed confirmations."
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "qyx07e",
+      "version": 2,
+      "timestamp": "2026-03-10T06:39:16.653Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Add Free Ops target refresh with discovery opportunity every run",
+        "description": "Ensure each post-M4 run offers candidate classification opportunities and refreshes mission/target variety without guaranteeing candidate truth and without forcing authored rail progression.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "gameplay",
+          "free-ops",
+          "targets",
+          "missions"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Known + candidate target mix remains available per run"
+          },
+          {
+            "completed": false,
+            "text": "System supports adding new mission/target templates over time"
+          },
+          {
+            "completed": false,
+            "text": "Every Free Ops run offers at least one unconfirmed candidate option (not guaranteed true transit)"
+          }
+        ],
+        "implementationNotes": "Clarified: discovery cadence means candidate opportunities every run, not guaranteed confirmations."
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "qyx07e",
+      "version": 3,
+      "timestamp": "2026-03-10T06:39:21.147Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "newValue": "1. Trace scanner refresh and detected target generation paths.\n2. Ensure each run refresh provides at least one unconfirmed candidate option (without guaranteeing truth).\n3. Verify scanner-only sourcing and close task."
+        }
+      ],
+      "snapshot": {
+        "title": "Add Free Ops target refresh with discovery opportunity every run",
+        "description": "Ensure each post-M4 run offers candidate classification opportunities and refreshes mission/target variety without guaranteeing candidate truth and without forcing authored rail progression.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "gameplay",
+          "free-ops",
+          "targets",
+          "missions"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Known + candidate target mix remains available per run"
+          },
+          {
+            "completed": false,
+            "text": "System supports adding new mission/target templates over time"
+          },
+          {
+            "completed": false,
+            "text": "Every Free Ops run offers at least one unconfirmed candidate option (not guaranteed true transit)"
+          }
+        ],
+        "implementationPlan": "1. Trace scanner refresh and detected target generation paths.\n2. Ensure each run refresh provides at least one unconfirmed candidate option (without guaranteeing truth).\n3. Verify scanner-only sourcing and close task.",
+        "implementationNotes": "Clarified: discovery cadence means candidate opportunities every run, not guaranteed confirmations."
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "qyx07e",
+      "version": 4,
+      "timestamp": "2026-03-10T06:53:26.288Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Known + candidate target mix remains available per run"
+            },
+            {
+              "completed": false,
+              "text": "System supports adding new mission/target templates over time"
+            },
+            {
+              "completed": false,
+              "text": "Every Free Ops run offers at least one unconfirmed candidate option (not guaranteed true transit)"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Known + candidate target mix remains available per run"
+            },
+            {
+              "completed": false,
+              "text": "System supports adding new mission/target templates over time"
+            },
+            {
+              "completed": false,
+              "text": "Every Free Ops run offers at least one unconfirmed candidate option (not guaranteed true transit)"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Add Free Ops target refresh with discovery opportunity every run",
+        "description": "Ensure each post-M4 run offers candidate classification opportunities and refreshes mission/target variety without guaranteeing candidate truth and without forcing authored rail progression.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "gameplay",
+          "free-ops",
+          "targets",
+          "missions"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Known + candidate target mix remains available per run"
+          },
+          {
+            "completed": false,
+            "text": "System supports adding new mission/target templates over time"
+          },
+          {
+            "completed": false,
+            "text": "Every Free Ops run offers at least one unconfirmed candidate option (not guaranteed true transit)"
+          }
+        ],
+        "implementationPlan": "1. Trace scanner refresh and detected target generation paths.\n2. Ensure each run refresh provides at least one unconfirmed candidate option (without guaranteeing truth).\n3. Verify scanner-only sourcing and close task.",
+        "implementationNotes": "Clarified: discovery cadence means candidate opportunities every run, not guaranteed confirmations."
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "qyx07e",
+      "version": 5,
+      "timestamp": "2026-03-10T06:53:28.538Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Known + candidate target mix remains available per run"
+            },
+            {
+              "completed": false,
+              "text": "System supports adding new mission/target templates over time"
+            },
+            {
+              "completed": false,
+              "text": "Every Free Ops run offers at least one unconfirmed candidate option (not guaranteed true transit)"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Known + candidate target mix remains available per run"
+            },
+            {
+              "completed": true,
+              "text": "System supports adding new mission/target templates over time"
+            },
+            {
+              "completed": false,
+              "text": "Every Free Ops run offers at least one unconfirmed candidate option (not guaranteed true transit)"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Add Free Ops target refresh with discovery opportunity every run",
+        "description": "Ensure each post-M4 run offers candidate classification opportunities and refreshes mission/target variety without guaranteeing candidate truth and without forcing authored rail progression.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "gameplay",
+          "free-ops",
+          "targets",
+          "missions"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Known + candidate target mix remains available per run"
+          },
+          {
+            "completed": true,
+            "text": "System supports adding new mission/target templates over time"
+          },
+          {
+            "completed": false,
+            "text": "Every Free Ops run offers at least one unconfirmed candidate option (not guaranteed true transit)"
+          }
+        ],
+        "implementationPlan": "1. Trace scanner refresh and detected target generation paths.\n2. Ensure each run refresh provides at least one unconfirmed candidate option (without guaranteeing truth).\n3. Verify scanner-only sourcing and close task.",
+        "implementationNotes": "Clarified: discovery cadence means candidate opportunities every run, not guaranteed confirmations."
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "qyx07e",
+      "version": 6,
+      "timestamp": "2026-03-10T06:53:30.791Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Known + candidate target mix remains available per run"
+            },
+            {
+              "completed": true,
+              "text": "System supports adding new mission/target templates over time"
+            },
+            {
+              "completed": false,
+              "text": "Every Free Ops run offers at least one unconfirmed candidate option (not guaranteed true transit)"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Known + candidate target mix remains available per run"
+            },
+            {
+              "completed": true,
+              "text": "System supports adding new mission/target templates over time"
+            },
+            {
+              "completed": true,
+              "text": "Every Free Ops run offers at least one unconfirmed candidate option (not guaranteed true transit)"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Add Free Ops target refresh with discovery opportunity every run",
+        "description": "Ensure each post-M4 run offers candidate classification opportunities and refreshes mission/target variety without guaranteeing candidate truth and without forcing authored rail progression.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "gameplay",
+          "free-ops",
+          "targets",
+          "missions"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Known + candidate target mix remains available per run"
+          },
+          {
+            "completed": true,
+            "text": "System supports adding new mission/target templates over time"
+          },
+          {
+            "completed": true,
+            "text": "Every Free Ops run offers at least one unconfirmed candidate option (not guaranteed true transit)"
+          }
+        ],
+        "implementationPlan": "1. Trace scanner refresh and detected target generation paths.\n2. Ensure each run refresh provides at least one unconfirmed candidate option (without guaranteeing truth).\n3. Verify scanner-only sourcing and close task.",
+        "implementationNotes": "Clarified: discovery cadence means candidate opportunities every run, not guaranteed confirmations."
+      }
+    },
+    {
+      "id": "v7",
+      "taskId": "qyx07e",
+      "version": 7,
+      "timestamp": "2026-03-10T06:53:33.048Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "Clarified: discovery cadence means candidate opportunities every run, not guaranteed confirmations.",
+          "newValue": "## Summary\n- Added scanner persistence enrichment for Free Ops planet scans so each refresh includes candidate + known target options when needed.\n- Candidate outcome remains unconfirmed-first (no forced truth), aligned to scanner-driven discovery loop.\n- Kept target pipeline template-friendly (existing stage/target selection APIs unchanged, additive enrichment only).\n\n## Verification\n- Mission E2E, Narrative, and Structure test suites pass after change."
+        }
+      ],
+      "snapshot": {
+        "title": "Add Free Ops target refresh with discovery opportunity every run",
+        "description": "Ensure each post-M4 run offers candidate classification opportunities and refreshes mission/target variety without guaranteeing candidate truth and without forcing authored rail progression.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "gameplay",
+          "free-ops",
+          "targets",
+          "missions"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Known + candidate target mix remains available per run"
+          },
+          {
+            "completed": true,
+            "text": "System supports adding new mission/target templates over time"
+          },
+          {
+            "completed": true,
+            "text": "Every Free Ops run offers at least one unconfirmed candidate option (not guaranteed true transit)"
+          }
+        ],
+        "implementationPlan": "1. Trace scanner refresh and detected target generation paths.\n2. Ensure each run refresh provides at least one unconfirmed candidate option (without guaranteeing truth).\n3. Verify scanner-only sourcing and close task.",
+        "implementationNotes": "## Summary\n- Added scanner persistence enrichment for Free Ops planet scans so each refresh includes candidate + known target options when needed.\n- Candidate outcome remains unconfirmed-first (no forced truth), aligned to scanner-driven discovery loop.\n- Kept target pipeline template-friendly (existing stage/target selection APIs unchanged, additive enrichment only).\n\n## Verification\n- Mission E2E, Narrative, and Structure test suites pass after change."
+      }
+    },
+    {
+      "id": "v8",
+      "taskId": "qyx07e",
+      "version": 8,
+      "timestamp": "2026-03-10T06:53:35.307Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Add Free Ops target refresh with discovery opportunity every run",
+        "description": "Ensure each post-M4 run offers candidate classification opportunities and refreshes mission/target variety without guaranteeing candidate truth and without forcing authored rail progression.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "gameplay",
+          "free-ops",
+          "targets",
+          "missions"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Known + candidate target mix remains available per run"
+          },
+          {
+            "completed": true,
+            "text": "System supports adding new mission/target templates over time"
+          },
+          {
+            "completed": true,
+            "text": "Every Free Ops run offers at least one unconfirmed candidate option (not guaranteed true transit)"
+          }
+        ],
+        "implementationPlan": "1. Trace scanner refresh and detected target generation paths.\n2. Ensure each run refresh provides at least one unconfirmed candidate option (without guaranteeing truth).\n3. Verify scanner-only sourcing and close task.",
+        "implementationNotes": "## Summary\n- Added scanner persistence enrichment for Free Ops planet scans so each refresh includes candidate + known target options when needed.\n- Candidate outcome remains unconfirmed-first (no forced truth), aligned to scanner-driven discovery loop.\n- Kept target pipeline template-friendly (existing stage/target selection APIs unchanged, additive enrichment only).\n\n## Verification\n- Mission E2E, Narrative, and Structure test suites pass after change."
+      }
+    }
+  ]
+}

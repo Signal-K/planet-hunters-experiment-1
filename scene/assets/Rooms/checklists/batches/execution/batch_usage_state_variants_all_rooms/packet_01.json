@@ -1,0 +1,243 @@
+{
+  "batch_id": "batch_usage_state_variants_all_rooms",
+  "packet_index": 1,
+  "packet_count": 16,
+  "asset_count": 12,
+  "instructions": {
+    "style_anchor_required": true,
+    "one_asset_per_prompt": true,
+    "filename_contract": "strict",
+    "no_extra_suffixes": true,
+    "no_text_or_ui": true
+  },
+  "assets": [
+    {
+      "asset_id": "ablative_armour_t3__nano_repair_node_array__usage_0_24",
+      "asset_type": "state_variant",
+      "room_id": "ablative_armour_t3",
+      "room_name": "Ablative Armour Module",
+      "category": "hull",
+      "tier": 3,
+      "component_id": "nano_repair_node_array",
+      "component_name": "Nano-Repair Node Array",
+      "component_kind": "interactive",
+      "state_key": "usage_0_24",
+      "priority": "p2",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'usage_0_24' for component 'Nano-Repair Node Array' in 'Ablative Armour Module'. Change only state cues: clean surfaces, low heat bloom, minimal wear. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "ablative_armour_t3__nano_repair_node_array__usage_0_24.png",
+        "sidecar": "ablative_armour_t3__nano_repair_node_array__usage_0_24.json",
+        "note_optional": "ablative_armour_t3__nano_repair_node_array__usage_0_24.txt"
+      }
+    },
+    {
+      "asset_id": "ablative_armour_t3__nano_repair_node_array__usage_100",
+      "asset_type": "state_variant",
+      "room_id": "ablative_armour_t3",
+      "room_name": "Ablative Armour Module",
+      "category": "hull",
+      "tier": 3,
+      "component_id": "nano_repair_node_array",
+      "component_name": "Nano-Repair Node Array",
+      "component_kind": "interactive",
+      "state_key": "usage_100",
+      "priority": "p2",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'usage_100' for component 'Nano-Repair Node Array' in 'Ablative Armour Module'. Change only state cues: near-failure/depleted look, severe wear, emergency warning cues. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "ablative_armour_t3__nano_repair_node_array__usage_100.png",
+        "sidecar": "ablative_armour_t3__nano_repair_node_array__usage_100.json",
+        "note_optional": "ablative_armour_t3__nano_repair_node_array__usage_100.txt"
+      }
+    },
+    {
+      "asset_id": "ablative_armour_t3__nano_repair_node_array__usage_25_49",
+      "asset_type": "state_variant",
+      "room_id": "ablative_armour_t3",
+      "room_name": "Ablative Armour Module",
+      "category": "hull",
+      "tier": 3,
+      "component_id": "nano_repair_node_array",
+      "component_name": "Nano-Repair Node Array",
+      "component_kind": "interactive",
+      "state_key": "usage_25_49",
+      "priority": "p2",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'usage_25_49' for component 'Nano-Repair Node Array' in 'Ablative Armour Module'. Change only state cues: mild scorch marks and minor scratches, slightly warmer highlights. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "ablative_armour_t3__nano_repair_node_array__usage_25_49.png",
+        "sidecar": "ablative_armour_t3__nano_repair_node_array__usage_25_49.json",
+        "note_optional": "ablative_armour_t3__nano_repair_node_array__usage_25_49.txt"
+      }
+    },
+    {
+      "asset_id": "ablative_armour_t3__nano_repair_node_array__usage_50_74",
+      "asset_type": "state_variant",
+      "room_id": "ablative_armour_t3",
+      "room_name": "Ablative Armour Module",
+      "category": "hull",
+      "tier": 3,
+      "component_id": "nano_repair_node_array",
+      "component_name": "Nano-Repair Node Array",
+      "component_kind": "interactive",
+      "state_key": "usage_50_74",
+      "priority": "p2",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'usage_50_74' for component 'Nano-Repair Node Array' in 'Ablative Armour Module'. Change only state cues: moderate wear, heat bloom, visible scratches and warning tint. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "ablative_armour_t3__nano_repair_node_array__usage_50_74.png",
+        "sidecar": "ablative_armour_t3__nano_repair_node_array__usage_50_74.json",
+        "note_optional": "ablative_armour_t3__nano_repair_node_array__usage_50_74.txt"
+      }
+    },
+    {
+      "asset_id": "ablative_armour_t3__nano_repair_node_array__usage_75_99",
+      "asset_type": "state_variant",
+      "room_id": "ablative_armour_t3",
+      "room_name": "Ablative Armour Module",
+      "category": "hull",
+      "tier": 3,
+      "component_id": "nano_repair_node_array",
+      "component_name": "Nano-Repair Node Array",
+      "component_kind": "interactive",
+      "state_key": "usage_75_99",
+      "priority": "p2",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'usage_75_99' for component 'Nano-Repair Node Array' in 'Ablative Armour Module'. Change only state cues: heavy wear, strong warning glow, soot/scuffs and stressed materials. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "ablative_armour_t3__nano_repair_node_array__usage_75_99.png",
+        "sidecar": "ablative_armour_t3__nano_repair_node_array__usage_75_99.json",
+        "note_optional": "ablative_armour_t3__nano_repair_node_array__usage_75_99.txt"
+      }
+    },
+    {
+      "asset_id": "basic_hull_t1__damage_indicator_strip__usage_0_24",
+      "asset_type": "state_variant",
+      "room_id": "basic_hull_t1",
+      "room_name": "Basic Hull Plating Module",
+      "category": "hull",
+      "tier": 1,
+      "component_id": "damage_indicator_strip",
+      "component_name": "Damage Indicator Strip",
+      "component_kind": "interactive",
+      "state_key": "usage_0_24",
+      "priority": "p2",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'usage_0_24' for component 'Damage Indicator Strip' in 'Basic Hull Plating Module'. Change only state cues: clean surfaces, low heat bloom, minimal wear. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "basic_hull_t1__damage_indicator_strip__usage_0_24.png",
+        "sidecar": "basic_hull_t1__damage_indicator_strip__usage_0_24.json",
+        "note_optional": "basic_hull_t1__damage_indicator_strip__usage_0_24.txt"
+      }
+    },
+    {
+      "asset_id": "basic_hull_t1__damage_indicator_strip__usage_100",
+      "asset_type": "state_variant",
+      "room_id": "basic_hull_t1",
+      "room_name": "Basic Hull Plating Module",
+      "category": "hull",
+      "tier": 1,
+      "component_id": "damage_indicator_strip",
+      "component_name": "Damage Indicator Strip",
+      "component_kind": "interactive",
+      "state_key": "usage_100",
+      "priority": "p2",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'usage_100' for component 'Damage Indicator Strip' in 'Basic Hull Plating Module'. Change only state cues: near-failure/depleted look, severe wear, emergency warning cues. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "basic_hull_t1__damage_indicator_strip__usage_100.png",
+        "sidecar": "basic_hull_t1__damage_indicator_strip__usage_100.json",
+        "note_optional": "basic_hull_t1__damage_indicator_strip__usage_100.txt"
+      }
+    },
+    {
+      "asset_id": "basic_hull_t1__damage_indicator_strip__usage_25_49",
+      "asset_type": "state_variant",
+      "room_id": "basic_hull_t1",
+      "room_name": "Basic Hull Plating Module",
+      "category": "hull",
+      "tier": 1,
+      "component_id": "damage_indicator_strip",
+      "component_name": "Damage Indicator Strip",
+      "component_kind": "interactive",
+      "state_key": "usage_25_49",
+      "priority": "p2",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'usage_25_49' for component 'Damage Indicator Strip' in 'Basic Hull Plating Module'. Change only state cues: mild scorch marks and minor scratches, slightly warmer highlights. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "basic_hull_t1__damage_indicator_strip__usage_25_49.png",
+        "sidecar": "basic_hull_t1__damage_indicator_strip__usage_25_49.json",
+        "note_optional": "basic_hull_t1__damage_indicator_strip__usage_25_49.txt"
+      }
+    },
+    {
+      "asset_id": "basic_hull_t1__damage_indicator_strip__usage_50_74",
+      "asset_type": "state_variant",
+      "room_id": "basic_hull_t1",
+      "room_name": "Basic Hull Plating Module",
+      "category": "hull",
+      "tier": 1,
+      "component_id": "damage_indicator_strip",
+      "component_name": "Damage Indicator Strip",
+      "component_kind": "interactive",
+      "state_key": "usage_50_74",
+      "priority": "p2",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'usage_50_74' for component 'Damage Indicator Strip' in 'Basic Hull Plating Module'. Change only state cues: moderate wear, heat bloom, visible scratches and warning tint. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "basic_hull_t1__damage_indicator_strip__usage_50_74.png",
+        "sidecar": "basic_hull_t1__damage_indicator_strip__usage_50_74.json",
+        "note_optional": "basic_hull_t1__damage_indicator_strip__usage_50_74.txt"
+      }
+    },
+    {
+      "asset_id": "basic_hull_t1__damage_indicator_strip__usage_75_99",
+      "asset_type": "state_variant",
+      "room_id": "basic_hull_t1",
+      "room_name": "Basic Hull Plating Module",
+      "category": "hull",
+      "tier": 1,
+      "component_id": "damage_indicator_strip",
+      "component_name": "Damage Indicator Strip",
+      "component_kind": "interactive",
+      "state_key": "usage_75_99",
+      "priority": "p2",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'usage_75_99' for component 'Damage Indicator Strip' in 'Basic Hull Plating Module'. Change only state cues: heavy wear, strong warning glow, soot/scuffs and stressed materials. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "basic_hull_t1__damage_indicator_strip__usage_75_99.png",
+        "sidecar": "basic_hull_t1__damage_indicator_strip__usage_75_99.json",
+        "note_optional": "basic_hull_t1__damage_indicator_strip__usage_75_99.txt"
+      }
+    },
+    {
+      "asset_id": "basic_nav_t1__manual_flight_controls__usage_0_24",
+      "asset_type": "state_variant",
+      "room_id": "basic_nav_t1",
+      "room_name": "Basic Navigation Room",
+      "category": "navigation",
+      "tier": 1,
+      "component_id": "manual_flight_controls",
+      "component_name": "Manual Flight Controls",
+      "component_kind": "interactive",
+      "state_key": "usage_0_24",
+      "priority": "p2",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'usage_0_24' for component 'Manual Flight Controls' in 'Basic Navigation Room'. Change only state cues: clean surfaces, low heat bloom, minimal wear. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "basic_nav_t1__manual_flight_controls__usage_0_24.png",
+        "sidecar": "basic_nav_t1__manual_flight_controls__usage_0_24.json",
+        "note_optional": "basic_nav_t1__manual_flight_controls__usage_0_24.txt"
+      }
+    },
+    {
+      "asset_id": "basic_nav_t1__manual_flight_controls__usage_100",
+      "asset_type": "state_variant",
+      "room_id": "basic_nav_t1",
+      "room_name": "Basic Navigation Room",
+      "category": "navigation",
+      "tier": 1,
+      "component_id": "manual_flight_controls",
+      "component_name": "Manual Flight Controls",
+      "component_kind": "interactive",
+      "state_key": "usage_100",
+      "priority": "p2",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'usage_100' for component 'Manual Flight Controls' in 'Basic Navigation Room'. Change only state cues: near-failure/depleted look, severe wear, emergency warning cues. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "basic_nav_t1__manual_flight_controls__usage_100.png",
+        "sidecar": "basic_nav_t1__manual_flight_controls__usage_100.json",
+        "note_optional": "basic_nav_t1__manual_flight_controls__usage_100.txt"
+      }
+    }
+  ]
+}

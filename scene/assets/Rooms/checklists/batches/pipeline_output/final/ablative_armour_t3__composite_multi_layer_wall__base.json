@@ -1,0 +1,14 @@
+{
+  "asset_id": "ablative_armour_t3__composite_multi_layer_wall__base",
+  "room_id": "ablative_armour_t3",
+  "component": "composite_multi_layer_wall",
+  "tier": "3",
+  "state": "base",
+  "prompt_version": "v1",
+  "generator": "chatgpt",
+  "generated_at_utc": "2026-03-10T10:16:35.738382",
+  "image_filename": "ablative_armour_t3__composite_multi_layer_wall__base.png",
+  "width": 1024,
+  "height": 1024,
+  "notes": ""
+}

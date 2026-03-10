@@ -14,36 +14,47 @@
   ],
   "selected_target": "101445733",
   "preview_target": {
-    "id": "practice-asteroid-warmup",
-    "label": "Academy Warm-Up Asteroid",
-    "type": "asteroid",
-    "rocket_id": ""
   },
   "detected_targets": [
     {
       "id": "101445733",
       "label": "101445733",
-      "type": "asteroid"
+      "type": "asteroid",
+      "anomalySet": "active-asteroids",
+      "classification_status": "<null>",
+      "tess_disposition": "<null>"
     },
     {
       "id": "63768316",
       "label": "63768316",
-      "type": "asteroid"
+      "type": "asteroid",
+      "anomalySet": "active-asteroids",
+      "classification_status": "<null>",
+      "tess_disposition": "<null>"
     },
     {
       "id": "68115570",
       "label": "68115570",
-      "type": "asteroid"
+      "type": "asteroid",
+      "anomalySet": "active-asteroids",
+      "classification_status": "<null>",
+      "tess_disposition": "<null>"
     },
     {
       "id": "63768664",
       "label": "63768664",
-      "type": "asteroid"
+      "type": "asteroid",
+      "anomalySet": "active-asteroids",
+      "classification_status": "<null>",
+      "tess_disposition": "<null>"
     },
     {
       "id": "63769326",
       "label": "63769326",
-      "type": "asteroid"
+      "type": "asteroid",
+      "anomalySet": "active-asteroids",
+      "classification_status": "<null>",
+      "tess_disposition": "<null>"
     }
   ],
   "seen_asteroids": [
@@ -52,11 +63,11 @@
   "seen_planets": [
   ],
   "scan_counts": {
-    "asteroid:101445733": 3.0,
-    "asteroid:63768316": 3.0,
-    "asteroid:68115570": 3.0,
-    "asteroid:63768664": 3.0,
-    "asteroid:63769326": 3.0
+    "asteroid:101445733": 1.0,
+    "asteroid:63768316": 1.0,
+    "asteroid:68115570": 1.0,
+    "asteroid:63768664": 1.0,
+    "asteroid:63769326": 1.0
   },
   "status_changed_at": {
   },
@@ -66,12 +77,24 @@
   "scanner_station_built": false,
   "scanner_unlocked": false,
   "scanner_unlock_dialog_seen": false,
+  "scanner_next_scan_at": 0.0,
   "mission5_contract_offer": {
   },
   "operation_mode": "contract",
+  "candidate_visit_blocks": {
+  },
+  "target_annotation_levels": {
+  },
+  "discovery_bonus_claimed": {
+  },
   "rocket_customizations": {
   },
+  "rocket_wear": {
+  },
+  "archived_rocket_wear": {
+  },
   "mission_briefings_seen": {
+    "3": true
   },
   "mission_progress_schema_version": 2.0,
   "pending_mission_guidance_id": 0.0,
@@ -84,37 +107,7 @@
   },
   "returning_started": {
   },
-  "starter_contract_offer": {
-    "contractors": [
-      {
-        "id": "aegis_defense",
-        "name": "Aegis Defense Systems",
-        "focus": "Defense-grade avionics and hardened military systems",
-        "requested_minerals": {
-          "Iron": 130.0,
-          "Nickel": 95.0
-        }
-      },
-      {
-        "id": "lumen_consumer",
-        "name": "Lumen Consumer Labs",
-        "focus": "High-volume consumer electronics and smart devices",
-        "requested_minerals": {
-          "Iron": 115.0,
-          "Nickel": 110.0
-        }
-      },
-      {
-        "id": "helion_orbital",
-        "name": "Helion Orbital Works",
-        "focus": "Next-gen propulsion and frontier space innovation",
-        "requested_minerals": {
-          "Iron": 105.0,
-          "Nickel": 125.0
-        }
-      }
-    ],
-    "selected_contractor": ""
+  "trip_contract_offer": {
   },
   "launch_guidance_notice": ""
 }

@@ -182,11 +182,37 @@ const rooms = [
     ]
   },
   {
+    room_id: 'reinforced_hull_t2', room_name: 'Reinforced Hull Module', category: 'hull', tier: 2,
+    structural: ['reinforced_bulkhead_segments', 'impact_dampener_ribs', 'composite_bracing_frame'],
+    interactive: [
+      { id: 'stress_monitor_display', name: 'Stress Monitor Display', usageDriven: false },
+      { id: 'microfracture_sensor_array', name: 'Microfracture Sensor Array', usageDriven: true }
+    ]
+  },
+  {
     room_id: 'ablative_armour_t3', room_name: 'Ablative Armour Module', category: 'hull', tier: 3,
     structural: ['composite_multi_layer_wall', 'heat_dissipation_fins'],
     interactive: [
       { id: 'nano_repair_node_array', name: 'Nano-Repair Node Array', usageDriven: true },
       { id: 'self_diagnostics_panel', name: 'Self-Diagnostics Panel', usageDriven: false }
+    ]
+  },
+  {
+    room_id: 'life_support_t3', room_name: 'Life Support Core Room', category: 'life_support', tier: 3,
+    structural: ['air_recycler_column', 'atmosphere_duct_grid', 'humidity_control_manifold'],
+    interactive: [
+      { id: 'oxygen_scrubber_bank', name: 'Oxygen Scrubber Bank', usageDriven: true },
+      { id: 'environment_console', name: 'Environment Console', usageDriven: false },
+      { id: 'co2_filter_cartridge_rack', name: 'CO2 Filter Cartridge Rack', usageDriven: true }
+    ]
+  },
+  {
+    room_id: 'crew_quarters_t3', room_name: 'Crew Quarters Module', category: 'habitation', tier: 3,
+    structural: ['bunk_stack_frame', 'privacy_partition_walls', 'personal_storage_lockers'],
+    interactive: [
+      { id: 'bunk_lighting_controls', name: 'Bunk Lighting Controls', usageDriven: true },
+      { id: 'crew_status_terminal', name: 'Crew Status Terminal', usageDriven: false },
+      { id: 'hydration_station', name: 'Hydration Station', usageDriven: true }
     ]
   },
   {

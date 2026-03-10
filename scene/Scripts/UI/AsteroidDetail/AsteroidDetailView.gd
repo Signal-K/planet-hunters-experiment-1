@@ -235,7 +235,7 @@ func _on_classify(verdict: String, row: HBoxContainer) -> void:
 	else:
 		RocketsManager.mark_candidate_visit_blocked(anomaly_id)
 		RocketsManager.clear_selected_target()
-		RocketsManager.set_launch_guidance_notice("Target not confirmed as a planet yet. Pick another target for launch, then rescan this candidate later.")
+		RocketsManager.set_launch_guidance_notice("This target is not confirmed yet. Pick another target for launch, then scan this one again later.")
 
 	# Update button states immediately
 	var btn_planet = row.get_node_or_null("BtnPlanet")
@@ -253,7 +253,7 @@ func _on_classify(verdict: String, row: HBoxContainer) -> void:
 	var prompt = row.get_node_or_null(row.get_children()[0].name if row.get_child_count() > 0 else "")
 	for child in row.get_children():
 		if child is Label:
-			var bonus_text = " — discovery bonus unlocked!" if verdict == "planet" else " — visit blocked until reconfirmed"
+			var bonus_text = " — discovery bonus unlocked!" if verdict == "planet" else " — launch blocked until it is confirmed"
 			child.text = "Classification submitted%s" % bonus_text
 			break
 

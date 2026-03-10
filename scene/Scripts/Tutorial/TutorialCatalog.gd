@@ -33,10 +33,10 @@ const STEPS_BY_MISSION := {
 		{"id": "m2_return", "action_key": "return_rocket_home", "title": "Return Home", "message": "Return with cargo.", "mechanic": "return", "valid_scenes": MINING_SCENES},
 		{"id": "m2_debrief", "action_key": "resolve_mission_debrief", "title": "Debrief", "message": "Sell cargo. Scrap ship to unlock Mission 3.", "mechanic": "debrief", "valid_scenes": DEBRIEF_SCENES}
 	],
-	3: [
-		{"id": "m3_select", "action_key": "select_launch_target", "title": "Select TESS Target", "message": "Pick a confirmed exoplanet candidate.", "mechanic": "targeting", "valid_scenes": BASE_SCENES},
-		{"id": "m3_launch", "action_key": "launch_rocket_from_earth", "title": "Launch", "message": "Press Launch.", "mechanic": "launch", "valid_scenes": BASE_SCENES},
-		{"id": "m3_mine", "action_key": "mine_target", "title": "Mine", "message": "Mine resources from the planet candidate.", "mechanic": "mining", "valid_scenes": MINING_SCENES},
+		3: [
+			{"id": "m3_select", "action_key": "select_launch_target", "title": "Select Planet Target", "message": "Pick a likely planet target.", "mechanic": "targeting", "valid_scenes": BASE_SCENES},
+			{"id": "m3_launch", "action_key": "launch_rocket_from_earth", "title": "Launch", "message": "Press Launch.", "mechanic": "launch", "valid_scenes": BASE_SCENES},
+			{"id": "m3_mine", "action_key": "mine_target", "title": "Mine", "message": "Mine resources from the selected planet target.", "mechanic": "mining", "valid_scenes": MINING_SCENES},
 		{"id": "m3_return", "action_key": "return_rocket_home", "title": "Return Home", "message": "Return with cargo.", "mechanic": "return", "valid_scenes": MINING_SCENES},
 		{"id": "m3_debrief", "action_key": "resolve_mission_debrief", "title": "Debrief", "message": "Sell cargo. Scrap ship to complete Mission 3.", "mechanic": "debrief", "valid_scenes": DEBRIEF_SCENES}
 	],
@@ -46,7 +46,7 @@ const STEPS_BY_MISSION := {
 		{"id": "m4_select", "action_key": "select_launch_target", "title": "Select Target", "message": "Pick a scanned target.", "mechanic": "targeting", "valid_scenes": BASE_SCENES},
 		{"id": "m4_launch", "action_key": "launch_rocket_from_earth", "title": "Launch", "message": "Press Launch.", "mechanic": "launch", "valid_scenes": BASE_SCENES},
 		{"id": "m4_mine", "action_key": "mine_target", "title": "Mine", "message": "Mine resources.", "mechanic": "mining", "valid_scenes": MINING_SCENES},
-		{"id": "m4_debrief", "action_key": "resolve_mission_debrief", "title": "Debrief", "message": "Sell cargo. Scrap ship.", "mechanic": "debrief", "valid_scenes": DEBRIEF_SCENES}
+		{"id": "m4_debrief", "action_key": "resolve_mission_debrief", "title": "Debrief", "message": "Sell cargo. Scrap ship to unlock Free Operations.", "mechanic": "debrief", "valid_scenes": DEBRIEF_SCENES}
 	]
 }
 

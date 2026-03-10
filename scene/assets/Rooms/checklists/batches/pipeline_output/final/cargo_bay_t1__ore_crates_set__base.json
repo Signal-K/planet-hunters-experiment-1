@@ -1,0 +1,14 @@
+{
+  "asset_id": "cargo_bay_t1__ore_crates_set__base",
+  "room_id": "cargo_bay_t1",
+  "component": "ore_crates_set",
+  "tier": "1",
+  "state": "base",
+  "prompt_version": "v1",
+  "generator": "chatgpt",
+  "generated_at_utc": "2026-03-10T10:16:28.510221",
+  "image_filename": "cargo_bay_t1__ore_crates_set__base.png",
+  "width": 1024,
+  "height": 1024,
+  "notes": ""
+}

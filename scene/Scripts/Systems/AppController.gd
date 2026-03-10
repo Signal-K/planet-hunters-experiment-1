@@ -33,6 +33,7 @@ const TUTORIAL_CONTROLLER_SCENE := preload("res://Scripts/Tutorial/TutorialContr
 const TUTORIAL_OVERLAY_SCENE := preload("res://Scenes/UI/TutorialCoachOverlay.tscn")
 const FEEDBACK_BEACON_SCENE := preload("res://Scenes/UI/FeedbackBeacon.tscn")
 const INTRO_SPLASH_SCRIPT := preload("res://Scripts/UI/PlanetHuntersIntroSplash.gd")
+const INTRO_SPLASH_FLAG_PATH := "user://planet_hunters_intro_v1.cfg"
 const WEB_XP_STATE_KEY := "planet_hunters_xp_state_v1"
 var _tutorial_controller: Node = null
 # Actions recorded before the TutorialController's _ready() has run are queued
@@ -225,7 +226,7 @@ func _set_tutorial_overlay_suspended(suspended: bool) -> void:
 		overlay.call_deferred("_refresh")
 
 func _show_intro_splash_if_needed() -> void:
-	if INTRO_SPLASH_SCRIPT.has_been_shown():
+	if FileAccess.file_exists(INTRO_SPLASH_FLAG_PATH):
 		return
 	if get_tree() == null or get_tree().root == null:
 		return

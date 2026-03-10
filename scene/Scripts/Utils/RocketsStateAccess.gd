@@ -76,12 +76,15 @@ static func build_default_state(mission_progress_schema_version: int) -> Diction
     data["scanner_station_built"] = false
     data["scanner_unlocked"] = false
     data["scanner_unlock_dialog_seen"] = false
-    data["mission5_contract_offer"] = {}
+    data["scanner_next_scan_at"] = 0
+    data["trip_contract_offer"] = {}
     data["operation_mode"] = "contract"
     data["candidate_visit_blocks"] = {}
     data["target_annotation_levels"] = {}
     data["discovery_bonus_claimed"] = {}
     data["rocket_customizations"] = {}
+    data["rocket_wear"] = {}
+    data["archived_rocket_wear"] = {}
     data["mission_briefings_seen"] = {}
     data["mission_progress_schema_version"] = mission_progress_schema_version
     data["pending_mission_guidance_id"] = 0
@@ -142,8 +145,14 @@ static func _apply_defaults(data: Dictionary, scanner_unlock_completed_missions:
         data["scanner_unlocked"] = max(int(data.get("mission_progress_completed", 0)), 0) >= scanner_unlock_completed_missions
     if not data.has("scanner_unlock_dialog_seen"):
         data["scanner_unlock_dialog_seen"] = false
-    if not data.has("mission5_contract_offer"):
-        data["mission5_contract_offer"] = {}
+    if not data.has("scanner_next_scan_at"):
+        data["scanner_next_scan_at"] = 0
+    if not data.has("trip_contract_offer"):
+        # Backward compatibility with pre-Free Ops naming.
+        if data.has("mission5_contract_offer") and typeof(data.get("mission5_contract_offer")) == TYPE_DICTIONARY:
+            data["trip_contract_offer"] = data.get("mission5_contract_offer", {}).duplicate(true)
+        else:
+            data["trip_contract_offer"] = {}
     if not data.has("operation_mode"):
         data["operation_mode"] = "contract"
     if not data.has("candidate_visit_blocks"):
@@ -154,6 +163,10 @@ static func _apply_defaults(data: Dictionary, scanner_unlock_completed_missions:
         data["discovery_bonus_claimed"] = {}
     if not data.has("rocket_customizations"):
         data["rocket_customizations"] = {}
+    if not data.has("rocket_wear"):
+        data["rocket_wear"] = {}
+    if not data.has("archived_rocket_wear"):
+        data["archived_rocket_wear"] = {}
     if not data.has("mission_briefings_seen"):
         data["mission_briefings_seen"] = {}
     if not data.has("launch_fallback_notice"):

@@ -1,0 +1,243 @@
+{
+  "batch_id": "batch_advanced_rnd_t3_and_future",
+  "packet_index": 7,
+  "packet_count": 18,
+  "asset_count": 12,
+  "instructions": {
+    "style_anchor_required": true,
+    "one_asset_per_prompt": true,
+    "filename_contract": "strict",
+    "no_extra_suffixes": true,
+    "no_text_or_ui": true
+  },
+  "assets": [
+    {
+      "asset_id": "ion_drive_t3__precision_computer_terminal__depleted",
+      "asset_type": "state_variant",
+      "room_id": "ion_drive_t3",
+      "room_name": "Ion Drive Room",
+      "category": "propulsion",
+      "tier": 3,
+      "component_id": "precision_computer_terminal",
+      "component_name": "Precision Computer Terminal",
+      "component_kind": "interactive",
+      "state_key": "depleted",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'depleted' for component 'Precision Computer Terminal' in 'Ion Drive Room'. Change only state cues: minimal or no glow, offline indicators, depleted resource cues. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "ion_drive_t3__precision_computer_terminal__depleted.png",
+        "sidecar": "ion_drive_t3__precision_computer_terminal__depleted.json",
+        "note_optional": "ion_drive_t3__precision_computer_terminal__depleted.txt"
+      }
+    },
+    {
+      "asset_id": "ion_drive_t3__precision_computer_terminal__idle",
+      "asset_type": "state_variant",
+      "room_id": "ion_drive_t3",
+      "room_name": "Ion Drive Room",
+      "category": "propulsion",
+      "tier": 3,
+      "component_id": "precision_computer_terminal",
+      "component_name": "Precision Computer Terminal",
+      "component_kind": "interactive",
+      "state_key": "idle",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'idle' for component 'Precision Computer Terminal' in 'Ion Drive Room'. Change only state cues: stable indicator lights, neutral glow, no motion cues. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "ion_drive_t3__precision_computer_terminal__idle.png",
+        "sidecar": "ion_drive_t3__precision_computer_terminal__idle.json",
+        "note_optional": "ion_drive_t3__precision_computer_terminal__idle.txt"
+      }
+    },
+    {
+      "asset_id": "ion_drive_t3__xenon_canister_manifold__active",
+      "asset_type": "state_variant",
+      "room_id": "ion_drive_t3",
+      "room_name": "Ion Drive Room",
+      "category": "propulsion",
+      "tier": 3,
+      "component_id": "xenon_canister_manifold",
+      "component_name": "Xenon Canister Manifold",
+      "component_kind": "interactive",
+      "state_key": "active",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'active' for component 'Xenon Canister Manifold' in 'Ion Drive Room'. Change only state cues: brighter active glow, subtle motion/energy cues, engaged indicators. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "ion_drive_t3__xenon_canister_manifold__active.png",
+        "sidecar": "ion_drive_t3__xenon_canister_manifold__active.json",
+        "note_optional": "ion_drive_t3__xenon_canister_manifold__active.txt"
+      }
+    },
+    {
+      "asset_id": "ion_drive_t3__xenon_canister_manifold__cooldown",
+      "asset_type": "state_variant",
+      "room_id": "ion_drive_t3",
+      "room_name": "Ion Drive Room",
+      "category": "propulsion",
+      "tier": 3,
+      "component_id": "xenon_canister_manifold",
+      "component_name": "Xenon Canister Manifold",
+      "component_kind": "interactive",
+      "state_key": "cooldown",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'cooldown' for component 'Xenon Canister Manifold' in 'Ion Drive Room'. Change only state cues: reduced glow with cooling/venting cues and amber warning flicker. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "ion_drive_t3__xenon_canister_manifold__cooldown.png",
+        "sidecar": "ion_drive_t3__xenon_canister_manifold__cooldown.json",
+        "note_optional": "ion_drive_t3__xenon_canister_manifold__cooldown.txt"
+      }
+    },
+    {
+      "asset_id": "ion_drive_t3__xenon_canister_manifold__damaged",
+      "asset_type": "state_variant",
+      "room_id": "ion_drive_t3",
+      "room_name": "Ion Drive Room",
+      "category": "propulsion",
+      "tier": 3,
+      "component_id": "xenon_canister_manifold",
+      "component_name": "Xenon Canister Manifold",
+      "component_kind": "interactive",
+      "state_key": "damaged",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'damaged' for component 'Xenon Canister Manifold' in 'Ion Drive Room'. Change only state cues: visible wear, sparks or cracks, warning lights and degraded output. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "ion_drive_t3__xenon_canister_manifold__damaged.png",
+        "sidecar": "ion_drive_t3__xenon_canister_manifold__damaged.json",
+        "note_optional": "ion_drive_t3__xenon_canister_manifold__damaged.txt"
+      }
+    },
+    {
+      "asset_id": "ion_drive_t3__xenon_canister_manifold__depleted",
+      "asset_type": "state_variant",
+      "room_id": "ion_drive_t3",
+      "room_name": "Ion Drive Room",
+      "category": "propulsion",
+      "tier": 3,
+      "component_id": "xenon_canister_manifold",
+      "component_name": "Xenon Canister Manifold",
+      "component_kind": "interactive",
+      "state_key": "depleted",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'depleted' for component 'Xenon Canister Manifold' in 'Ion Drive Room'. Change only state cues: minimal or no glow, offline indicators, depleted resource cues. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "ion_drive_t3__xenon_canister_manifold__depleted.png",
+        "sidecar": "ion_drive_t3__xenon_canister_manifold__depleted.json",
+        "note_optional": "ion_drive_t3__xenon_canister_manifold__depleted.txt"
+      }
+    },
+    {
+      "asset_id": "ion_drive_t3__xenon_canister_manifold__idle",
+      "asset_type": "state_variant",
+      "room_id": "ion_drive_t3",
+      "room_name": "Ion Drive Room",
+      "category": "propulsion",
+      "tier": 3,
+      "component_id": "xenon_canister_manifold",
+      "component_name": "Xenon Canister Manifold",
+      "component_kind": "interactive",
+      "state_key": "idle",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'idle' for component 'Xenon Canister Manifold' in 'Ion Drive Room'. Change only state cues: stable indicator lights, neutral glow, no motion cues. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "ion_drive_t3__xenon_canister_manifold__idle.png",
+        "sidecar": "ion_drive_t3__xenon_canister_manifold__idle.json",
+        "note_optional": "ion_drive_t3__xenon_canister_manifold__idle.txt"
+      }
+    },
+    {
+      "asset_id": "ion_drive_t3__room_composite__v1",
+      "asset_type": "room_composite",
+      "room_id": "ion_drive_t3",
+      "room_name": "Ion Drive Room",
+      "category": "propulsion",
+      "tier": 3,
+      "component_id": "room_composite",
+      "component_name": "Room Composite",
+      "component_kind": "composite",
+      "state_key": "base",
+      "priority": "p0",
+      "prompt": "Using the attached style reference, compose one 2:1 spacecraft room tile for 'Ion Drive Room' using these components: ion_thruster_housing, electromagnetic_coil_casing, xenon_canister_rack, ion_thruster_array, precision_computer_terminal, xenon_canister_manifold. Keep module shell rectangular with flat top/bottom for stacking. Include only listed components and consistent accent lighting. No text, no labels, no UI, no rocket exterior. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "ion_drive_t3__room_composite__v1.png",
+        "sidecar": "ion_drive_t3__room_composite__v1.json",
+        "note_optional": "ion_drive_t3__room_composite__v1.txt"
+      }
+    },
+    {
+      "asset_id": "life_support_t3__air_recycler_column__base",
+      "asset_type": "component",
+      "room_id": "life_support_t3",
+      "room_name": "Life Support Core Room",
+      "category": "life_support",
+      "tier": 3,
+      "component_id": "air_recycler_column",
+      "component_name": "air recycler column",
+      "component_kind": "structural",
+      "state_key": "base",
+      "priority": "p1",
+      "prompt": "Using the attached style reference, create a single isolated room component sprite for a spacecraft dollhouse interior system. Component: air_recycler_column. Category: Life Support Core Room. Side-view cross-section, clean cutout silhouette, no text, no labels, no UI, no characters. Designed for 2:1 room tile composition. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "life_support_t3__air_recycler_column__base.png",
+        "sidecar": "life_support_t3__air_recycler_column__base.json",
+        "note_optional": "life_support_t3__air_recycler_column__base.txt"
+      }
+    },
+    {
+      "asset_id": "life_support_t3__atmosphere_duct_grid__base",
+      "asset_type": "component",
+      "room_id": "life_support_t3",
+      "room_name": "Life Support Core Room",
+      "category": "life_support",
+      "tier": 3,
+      "component_id": "atmosphere_duct_grid",
+      "component_name": "atmosphere duct grid",
+      "component_kind": "structural",
+      "state_key": "base",
+      "priority": "p1",
+      "prompt": "Using the attached style reference, create a single isolated room component sprite for a spacecraft dollhouse interior system. Component: atmosphere_duct_grid. Category: Life Support Core Room. Side-view cross-section, clean cutout silhouette, no text, no labels, no UI, no characters. Designed for 2:1 room tile composition. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "life_support_t3__atmosphere_duct_grid__base.png",
+        "sidecar": "life_support_t3__atmosphere_duct_grid__base.json",
+        "note_optional": "life_support_t3__atmosphere_duct_grid__base.txt"
+      }
+    },
+    {
+      "asset_id": "life_support_t3__co2_filter_cartridge_rack__base",
+      "asset_type": "component",
+      "room_id": "life_support_t3",
+      "room_name": "Life Support Core Room",
+      "category": "life_support",
+      "tier": 3,
+      "component_id": "co2_filter_cartridge_rack",
+      "component_name": "CO2 Filter Cartridge Rack",
+      "component_kind": "interactive",
+      "state_key": "base",
+      "priority": "p0",
+      "prompt": "Using the attached style reference, create a single isolated room component sprite for a spacecraft dollhouse interior system. Component: CO2 Filter Cartridge Rack. Category: Life Support Core Room. Side-view cross-section, clean cutout silhouette, no text, no labels, no UI, no characters. Designed for 2:1 room tile composition. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "life_support_t3__co2_filter_cartridge_rack__base.png",
+        "sidecar": "life_support_t3__co2_filter_cartridge_rack__base.json",
+        "note_optional": "life_support_t3__co2_filter_cartridge_rack__base.txt"
+      }
+    },
+    {
+      "asset_id": "life_support_t3__environment_console__base",
+      "asset_type": "component",
+      "room_id": "life_support_t3",
+      "room_name": "Life Support Core Room",
+      "category": "life_support",
+      "tier": 3,
+      "component_id": "environment_console",
+      "component_name": "Environment Console",
+      "component_kind": "interactive",
+      "state_key": "base",
+      "priority": "p0",
+      "prompt": "Using the attached style reference, create a single isolated room component sprite for a spacecraft dollhouse interior system. Component: Environment Console. Category: Life Support Core Room. Side-view cross-section, clean cutout silhouette, no text, no labels, no UI, no characters. Designed for 2:1 room tile composition. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "life_support_t3__environment_console__base.png",
+        "sidecar": "life_support_t3__environment_console__base.json",
+        "note_optional": "life_support_t3__environment_console__base.txt"
+      }
+    }
+  ]
+}

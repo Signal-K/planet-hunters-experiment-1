@@ -18,6 +18,7 @@ const LEVEL_UNLOCK_MISSIONS := [
 	{"level": 3, "name": "Sell cargo on Earth"}
 ]
 const LAUNCHPAD_SCENE_PATH := "res://Scenes/Earth/earth_launchpad.tscn"
+const REFRESH_BUTTON_BASE_TEXT := "Refresh Scan"
 
 const SatelliteStationPanelData = preload("res://Scripts/UI/SatelliteStationPanelData.gd")
 const SatelliteStationPanelList = preload("res://Scripts/UI/SatelliteStationPanelList.gd")
@@ -108,6 +109,7 @@ func _ready():
 	_refresh_planet_unlock_ui(false)
 	_ensure_citizen_science_hint()
 	_refresh_citizen_science_hint()
+	_refresh_scan_cooldown_ui()
 
 	# Start initial load (annotation features archived)
 	_start_loading(INITIAL_LOAD_TIME)
@@ -169,6 +171,7 @@ func _on_loading_finished() -> void:
 	pending_anomalies = []
 	# Stop processing once loading is finished
 	set_process(false)
+	_refresh_scan_cooldown_ui()
 
 func _fetch_anomalies():
 	AppLogger.d("SatelliteStationPanel: _fetch_anomalies called, mode=%s" % current_mode)
@@ -294,11 +297,12 @@ func _refresh_citizen_science_hint() -> void:
 	var enabled = AppControllerHelper.is_citizen_science_dialogue_enabled(true)
 	_citizen_science_hint_label.visible = enabled
 	if enabled:
-		_citizen_science_hint_label.text = "Citizen science note: saved annotations are used to improve target classification quality."
+		_citizen_science_hint_label.text = "Citizen science tip: your classifications improve how confident target results are."
 
 
 func _on_refresh_pressed():
-	_start_loading(REFRESH_LOAD_TIME)
+	if not _try_start_scan_with_cooldown(REFRESH_LOAD_TIME):
+		return
 	if local_only:
 		_apply_local_anomalies()
 		return
@@ -317,11 +321,13 @@ func _on_toggle_switch_pressed():
 		AppControllerHelper.record_tutorial_action("toggle_planet_scanner")
 		toggle_switch.text = "Switch to Asteroids"
 		if local_only:
-			_start_loading(REFRESH_LOAD_TIME)
+			if not _try_start_scan_with_cooldown(REFRESH_LOAD_TIME):
+				return
 			_apply_local_anomalies()
 			return
 		# Fetch and display planets
-		_start_loading(REFRESH_LOAD_TIME)
+		if not _try_start_scan_with_cooldown(REFRESH_LOAD_TIME):
+			return
 		_fetch_anomalies()
 	else:
 		current_mode = "asteroids"
@@ -330,11 +336,13 @@ func _on_toggle_switch_pressed():
 		})
 		toggle_switch.text = "Switch to Planets"
 		if local_only:
-			_start_loading(REFRESH_LOAD_TIME)
+			if not _try_start_scan_with_cooldown(REFRESH_LOAD_TIME):
+				return
 			_apply_local_anomalies()
 			return
 		# Fetch and display asteroids
-		_start_loading(REFRESH_LOAD_TIME)
+		if not _try_start_scan_with_cooldown(REFRESH_LOAD_TIME):
+			return
 		_fetch_anomalies()
 
 func _get_current_mode() -> String:
@@ -364,11 +372,53 @@ func _persist_detected_targets_and_record_scan(anomalies: Array) -> void:
 			"classification_status": str(a.get("classification_status", "")),
 			"tess_disposition": str(a.get("tess_disposition", ""))
 		})
+	targets = _ensure_free_ops_candidate_option(targets, rm)
 	if targets.is_empty():
 		return
 	var ok = rm.set_detected_targets(targets)
 	rm.record_scan_pass(targets)
 	AppLogger.d("SatelliteStationPanel: persisted detected_targets count=%s ok=%s" % [targets.size(), ok])
+
+func _ensure_free_ops_candidate_option(targets: Array, rm) -> Array:
+	if rm == null or not rm.is_free_operations_unlocked() or current_mode != "planets":
+		return targets
+	var has_candidate := false
+	var has_confirmed := false
+	for row_any in targets:
+		if typeof(row_any) != TYPE_DICTIONARY:
+			continue
+		var row: Dictionary = row_any
+		var disposition = str(row.get("tess_disposition", ""))
+		var status = str(row.get("classification_status", "")).to_lower()
+		if disposition == "" or disposition == "PC" or status == "candidate" or status == "unconfirmed":
+			has_candidate = true
+		if disposition == "CP" or status == "confirmed":
+			has_confirmed = true
+	var enriched = targets.duplicate(true)
+	var now = int(Time.get_unix_time_from_system())
+	if not has_candidate:
+		enriched.append({
+			"id": "free-ops-candidate-%s" % now,
+			"label": "Possible Planet Signal",
+			"type": "planet",
+			"anomalySet": PLANET_SET,
+			"classification_status": "candidate",
+			"tess_disposition": "PC",
+			"science_source": "TESS Candidate Feed",
+			"science_blurb": "Unconfirmed signal. Classify it to unlock travel."
+		})
+	if not has_confirmed:
+		enriched.append({
+			"id": "free-ops-confirmed-%s" % now,
+			"label": "Known Planet Target",
+			"type": "planet",
+			"anomalySet": PLANET_SET,
+			"classification_status": "confirmed",
+			"tess_disposition": "CP",
+			"science_source": "TESS Confirmed Archive",
+			"science_blurb": "Reliable destination while candidate checks continue."
+		})
+	return enriched
 
 func _build_local_anomalies() -> Array:
 	if current_mode == "planets":
@@ -420,6 +470,7 @@ func _filter_mission3_untargeted_anomalies(anomalies: Array) -> Array:
 
 func _process(delta: float) -> void:
 	_loading.on_process(delta)
+	_refresh_scan_cooldown_ui()
 
 func _on_close_button_pressed():
 	panel_closed.emit()
@@ -429,6 +480,42 @@ func _on_background_input(event: InputEvent):
 	if event is InputEventMouseButton and event.pressed:
 		panel_closed.emit()
 		queue_free()
+
+func _try_start_scan_with_cooldown(duration: float) -> bool:
+	var rm = RocketsManager
+	if rm == null:
+		_start_loading(duration)
+		return true
+	var now = int(Time.get_unix_time_from_system())
+	var next_scan_at = int(rm.get_scanner_next_scan_at())
+	if next_scan_at > now:
+		var remaining = next_scan_at - now
+		status_label.text = "Status: Scanner cooling down (%ss remaining)" % remaining
+		_refresh_scan_cooldown_ui()
+		return false
+	var cooldown = int(rm.get_scanner_soft_cooldown_seconds())
+	rm.set_scanner_next_scan_at(now + cooldown)
+	_start_loading(duration)
+	_refresh_scan_cooldown_ui()
+	return true
+
+func _refresh_scan_cooldown_ui() -> void:
+	var rm = RocketsManager
+	if refresh_button == null:
+		return
+	if rm == null:
+		refresh_button.disabled = false
+		refresh_button.text = REFRESH_BUTTON_BASE_TEXT
+		return
+	var now = int(Time.get_unix_time_from_system())
+	var next_scan_at = int(rm.get_scanner_next_scan_at())
+	var remaining = max(next_scan_at - now, 0)
+	if remaining > 0:
+		refresh_button.disabled = true
+		refresh_button.text = "Refresh (%ss)" % remaining
+		return
+	refresh_button.disabled = false
+	refresh_button.text = REFRESH_BUTTON_BASE_TEXT
 
 func _connect_experience_updates() -> void:
 	var app = _get_app_controller()
