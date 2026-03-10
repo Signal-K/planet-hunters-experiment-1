@@ -130,9 +130,9 @@ func _on_launch_button_pressed() -> void:
 	if not rm:
 		AppLogger.w("Launchpad: RocketsManager not available")
 		return
-	if int(rm.get_mission_stage()) == 1 and rm.get_starter_selected_contractor().is_empty():
-		AppLogger.w("Launchpad: starter contractor must be selected before launch")
-		RocketsManager.set_launch_guidance_notice("Launch blocked: sign one starter contractor, then select a mission target.")
+	if rm.get_mission5_selected_contractor().is_empty():
+		AppLogger.w("Launchpad: contractor must be selected before launch")
+		RocketsManager.set_launch_guidance_notice("Launch blocked: select a contractor for this trip, then choose a mission target.")
 		if _on_show_selector.is_valid():
 			_on_show_selector.call()
 		if _launchpad and _launchpad.has_method("_populate_targets"):
@@ -232,7 +232,7 @@ func _on_launch_button_pressed() -> void:
 	var launched_rocket_id = rocket.name
 	# Clear selected target after launch
 	rm.clear_selected_target()
-	if int(rm.get_mission_stage()) >= 3:
+	if int(rm.get_mission_stage()) >= 3 and not rm.is_free_operations_unlocked():
 		# Force a fresh scanner pass for scanner-gated mission flows.
 		rm.set_detected_targets([])
 	# Remove the rocket from the scene after launching
@@ -291,7 +291,7 @@ func _resolve_preview_target_meta(target_id: String) -> Dictionary:
 			return out
 	var predefined = rm.get_predefined_target_profile(target_id)
 	if not predefined.is_empty():
-		for stage in [1, 2, 4, 5]:
+		for stage in [1, 2, 4]:
 			var item = rm.get_predefined_mission_target(stage)
 			if str(item.get("id", "")) == target_id:
 				out["label"] = str(item.get("label", out["label"]))

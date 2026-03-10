@@ -1,7 +1,7 @@
 ---
 title: 'spec,user-flow,citizen-science,gameplay,reference'
 createdAt: '2026-02-25T08:23:19.256Z'
-updatedAt: '2026-02-25T08:30:06.609Z'
+updatedAt: '2026-03-10T01:49:50.445Z'
 description: Hybrid resource management game and citizen science platform integration
 spec: true
 tags:
@@ -12,22 +12,92 @@ tags:
 ---
 # Planet Hunters: User Flow & Citizen Science Integration
 
-## Overview
+## Product Intent
 
-Planet Hunters is a hybrid resource management game and citizen science platform where players explore the solar system and beyond, conducting mining missions to real astronomical targets while contributing to actual scientific discovery. The core gameplay loop interweaves economic progression with authentic data from space telescopes, creating an experience where entertainment and scientific contribution are inseparable. Players scan the cosmos using real TESS (Transiting Exoplanet Survey Satellite) telescope data and asteroid databases, select targets for resource extraction missions, and analyze celestial objects—activities that mirror real astronomical research workflows and can generate scientifically valuable classifications.
+Planet Hunters combines resource-mining gameplay with citizen-science style target classification. The first four missions teach mechanics; after that, players enter open-ended Free Operations.
 
-## Core User Flow & Citizen Science Touchpoints
+## End-to-End Player Flow
 
-The primary gameplay cycle begins at **Earth Base**, the player's planetary headquarters featuring three key structures: the **Satellite Station** (scanner/telescope), **Control Station** (mission command), and **Launchpad** (launch facility). Players initiate missions by visiting the Satellite Station to scan space for targets. This scanning process pulls real astronomical data from Supabase databases, including active asteroids and exoplanet candidates from the TESS telescope mission—the same data professional astronomers and citizen scientists use in real discovery programs. When scanning, players see authentic light curve data, object identifiers (TIC IDs for TESS objects), and positional information, presented through an in-game interface that abstracts the complexity while preserving scientific authenticity.
+1. Enter base and select launch flow.
+2. Pick contractor for this trip (required).
+3. Select target.
+4. Launch, mine, return.
+5. Resolve debrief rewards.
+6. Repeat with full freedom after Mission 4.
 
-Once scan results arrive, players can **view detailed information** about each celestial object, including distance (measured in Astronomical Units), object type (asteroid or exoplanet candidate), and visual data representations. The planned **annotation and classification system** enables players to mark interesting features on light curves or asteroid images, categorize anomalies, and flag objects for further review—activities that directly parallel Zooniverse-style citizen science projects like Planet Hunters TESS. These contributions can be saved locally and, in future iterations, uploaded to contribute to real scientific databases. Players who prefer purely goal-driven gameplay can toggle off the citizen science narrative explanations, while those interested in the research context receive educational overlays explaining how their in-game actions relate to actual astronomical discovery.
+## Mission Flow Phases
 
-After selecting a target, players transition to the **Mission Planning** phase at the Launchpad, where they configure their rocket (unlocking more capable spacecraft as they level up), review mission parameters including distance and estimated resource yield, and commit resources (Francs, the in-game currency) to launch. Missions progress through **Transit**, **Mining/Scanning**, and **Return** phases, simulating realistic timeframes for interplanetary travel. During mining operations at asteroids or data collection at exoplanet targets, players maximize resource extraction through timing-based mechanics while the game tracks their scan contributions in the background. Upon return to Earth, the **Mission Debrief** screen presents mining yields, experience gained (awarded for both launches and scans, reinforcing the dual gameplay/science loop), and options to sell cargo, salvage rocket components, or archive the mission's scientific data.
+### Authored Onboarding (M1-M4)
 
-## Citizen Science Mechanics & Planned Scope
+- Mission 1: baseline loop intro
+- Mission 2: upgrade/economy reinforcement
+- Mission 3: scanner + candidate context
+- Mission 4: planetary expansion
 
-The **Satellite Station** serves as the primary citizen science hub, where telescope scanning is framed not just as target acquisition but as meaningful participation in astronomical surveys. The game sources real anomaly data—unusual asteroids, potential exoplanet transits, and other celestial phenomena—from public astronomical databases via Supabase integration. When players examine these objects in detail, they encounter the same visual patterns researchers analyze: dips in stellar brightness curves indicating potential planets, irregular asteroid rotation signatures, or anomalous spectral features. The planned classification workflow allows players to mark these features, submit binary or multi-choice classifications (e.g., "Does this show a transit signal?"), and optionally provide free-text observations—all mechanics borrowed from successful citizen science platforms.
+### Free Operations (after M4)
 
-A key design consideration is **optional engagement**: players can treat scanning purely as a resource-gathering mechanic (finding profitable mining targets) or dive deep into the scientific layer by reading contextual explanations, comparing multiple light curves, and thoughtfully classifying objects. Tutorial flows gently introduce the classification interface during early missions, while a toggleable "science dialogue mode" provides richer explanations for engaged players without interrupting those focused on economic optimization. Experience points are awarded for both launching missions (XP_AWARD_LAUNCH) and completing scans (XP_AWARD_SCAN), mechanically equalizing science and mining activities to encourage exploration of both systems.
+- No authored mission chain beyond 4
+- Players can go anywhere valid and run unlimited trips
+- Progression remains via XP, upgrades, unlocks, and efficiency
 
-The backend architecture supports future expansion: annotated images and classifications are currently stored locally in a standardized format (`user://annotations/`) with plans to sync to Supabase tables mirroring Zooniverse data schemas. The normalization of anomaly IDs (preferring numeric TIC identifiers) and migration systems ensure compatibility with external datasets, positioning the game to eventually contribute aggregated player classifications back to the astronomical community. Mission-gated progression (e.g., planet scanning unlocks at Level 2, advanced contractors appear at higher levels) introduces increasingly complex celestial phenomena as players build expertise, naturally scaffolding scientific literacy. The ultimate vision is a feedback loop where player contributions inform real research, research discoveries unlock new in-game content, and the boundary between gaming and scientific participation becomes productively blurred—a model where millions of casual players collectively perform computational and pattern-recognition tasks that complement professional astronomy while enjoying a compelling strategy game.
+## Contractor UX Rules
+
+- Contractor choice occurs at mission start (before target selection)
+- Contractor choice required every trip
+- Player can switch contractors every mission
+- No forced cooldown or lockout
+
+## Target Types and Access Rules
+
+- Players can select known existing targets or newly discovered/unconfirmed targets
+- "Unconfirmed" includes TIC candidates and asteroid candidates
+- If classification does not confirm target validity:
+  - grant reward (fixed XP)
+  - block immediate visit to that candidate
+  - prompt player to choose another target
+- Candidate can be revisited later after additional scan/classification updates
+
+## Citizen Science Reward Rules
+
+- Discovery travel bonus: **10% + 1% per annotation level**
+- Bonus is one-time per target
+- Fixed XP for classification outcomes (current phase)
+- Penalty system for incorrect classifications is deferred to future design
+  - tracking: `task-lkzqm0`
+
+## Classification Interaction
+
+- Players can classify candidate targets (Planet / Not a Planet)
+- Annotation depth is persisted and feeds discovery bonus scaling
+- Transit dip marking is supported as explicit annotation input
+- Submission payload includes verdict + annotation metadata
+
+## Narrative / Guidance Behavior
+
+- First tutorial pass is required once per save
+- After first completion, narrative/tutorial flow can be skipped
+- Keep mission language simple and low-friction
+
+## Platform / QA Focus
+
+Primary device families for regression:
+- iPhone (regular + Pro Max)
+- Nothing Phone
+- Samsung Galaxy series
+- Google Pixel series
+
+## Open Design Direction
+
+The post-tutorial shape is intentionally "sandbox-first":
+- broad player agency
+- minimal hard gating
+- progression via capability expansion and convenience improvements
+
+## Implementation References
+
+- Mission and free-ops state: `scene/Scripts/Utils/RocketsManager.gd`
+- Launchpad mission prep UX: `scene/Scripts/Earth/LaunchpadSelectorPanel.gd`
+- Launch guardrails: `scene/Scripts/Earth/LaunchpadLaunchButton.gd`
+- Debrief reward calculations: `scene/Scripts/Earth/MissionDebrief.gd`
+- Candidate classification UX: `scene/Scripts/UI/AsteroidDetail/AsteroidDetailView.gd`
+- Scanner persistence/selection: `scene/Scripts/UI/SatelliteStationPanel.gd`
