@@ -108,7 +108,7 @@ func test_contractor_payout_bonus_calculation() -> void:
 	reporter.pass_test()
 
 func test_mission_reward_ratios_match_spec() -> void:
-	reporter.start_test("[SPEC] All mission reward ratios match specification")
+	reporter.start_test("[SPEC] Authored mission reward ratios match specification")
 	var m1 = RocketsManager.get_predefined_mission_target(1)
 	var m2 = RocketsManager.get_predefined_mission_target(2)
 	var m4 = RocketsManager.get_predefined_mission_target(4)
@@ -123,8 +123,8 @@ func test_mission_reward_ratios_match_spec() -> void:
 	if abs(m4.get("reward_ratio", 0.0) - 1.4) > 0.001:
 		reporter.fail_test("M4 ratio %s != 1.4" % m4.get("reward_ratio"))
 		return
-	if abs(m5.get("reward_ratio", 0.0) - 1.1) > 0.001:
-		reporter.fail_test("M5 ratio %s != 1.1" % m5.get("reward_ratio"))
+	if not m5.is_empty():
+		reporter.fail_test("Expected no authored mission target at stage 5")
 		return
 	
 	reporter.pass_test()
@@ -138,7 +138,7 @@ func test_rockets_state_default_shape() -> void:
 		"seen_asteroids", "seen_planets", "scan_counts", "status_changed_at",
 		"mission_progress_completed", "completed_mission_badges",
 		"scanner_station_built", "scanner_unlocked", "scanner_unlock_dialog_seen",
-		"mission5_contract_offer", "operation_mode", "launch_fallback_notice", "mission_briefings_seen",
+		"trip_contract_offer", "operation_mode", "launch_fallback_notice", "mission_briefings_seen",
 		"mission_progress_schema_version", "pending_mission_guidance_id"
 	]
 	for key in required_keys:
@@ -160,8 +160,8 @@ func test_rockets_mission_progress_mapping() -> void:
 		1: 2,
 		2: 3,
 		3: 4,
-		4: 5,
-		99: 5
+		4: 4,
+		99: 4
 	}
 	for completed in expectations.keys():
 		var expected_stage = int(expectations[completed])
@@ -283,7 +283,7 @@ func test_open_operation_mode_persists_and_applies_to_missions() -> void:
 	RocketsManager.set_override_state(state)
 	var set_ok = RocketsManager.set_operation_mode("survey")
 	var mode = RocketsManager.get_operation_mode()
-	RocketsManager.add_mission("starterrocket3-test-open-ops", "mission-5-contractor-target", int(Time.get_unix_time_from_system()), 60)
+	RocketsManager.add_mission("starterrocket3-test-open-ops", "free-ops-test-target", int(Time.get_unix_time_from_system()), 60)
 	var mission = RocketsManager.get_mission_for_rocket("starterrocket3-test-open-ops")
 	RocketsManager.clear_override_state()
 	if not set_ok:
@@ -298,15 +298,15 @@ func test_open_operation_mode_persists_and_applies_to_missions() -> void:
 	reporter.pass_test()
 
 func test_open_operation_survey_route_relaxes_contractor_block() -> void:
-	reporter.start_test("[UX] Survey route does not require contractor lock before target selection")
+	reporter.start_test("[UX] Both free-op routes require contractor selection before target selection")
 	var selector = LaunchpadSelectorPanel.new()
-	var blocked_in_contract = selector._is_target_blocked_for_selection(5, 3, 1, "contract", "")
-	var blocked_in_survey = selector._is_target_blocked_for_selection(5, 3, 1, "survey", "")
+	var blocked_in_contract = selector._is_target_blocked_for_selection(5, 3, 1, "contract", "", "structure-contract-target")
+	var blocked_in_survey = selector._is_target_blocked_for_selection(5, 3, 1, "survey", "", "structure-survey-target")
 	if not blocked_in_contract:
 		reporter.fail_test("Expected contract route to block target selection when contractor is missing")
 		return
-	if blocked_in_survey:
-		reporter.fail_test("Expected survey route to allow target selection without contractor")
+	if not blocked_in_survey:
+		reporter.fail_test("Expected survey route to block target selection when contractor is missing")
 		return
 	reporter.pass_test()
 
@@ -362,29 +362,11 @@ func test_mission_briefing_seen_persistence() -> void:
 	reporter.pass_test()
 
 func test_launchpad_briefing_gate_is_one_time() -> void:
-	reporter.start_test("[UX] Launchpad mission briefing gate appears once then unlocks target flow")
-	var state = RocketsStateAccess.build_default_state(2)
-	state["mission_briefings_seen"] = {}
-	RocketsManager.set_override_state(state)
+	reporter.start_test("[UX] Launchpad target flow has no hard mission briefing gate")
 	var selector = LaunchpadSelectorPanel.new()
-	var section = VBoxContainer.new()
-	var first_gate = selector._render_mission_briefing_gate(section, RocketsManager, 3)
-	if not first_gate:
-		reporter.fail_test("Expected briefing gate to render for unseen mission 3 briefing")
-		RocketsManager.clear_override_state()
+	if selector.has_method("_render_mission_briefing_gate"):
+		reporter.fail_test("Briefing gate method still present; target flow should stay simplified")
 		return
-	if section.get_child_count() <= 0:
-		reporter.fail_test("Expected briefing gate UI to populate target section")
-		RocketsManager.clear_override_state()
-		return
-	RocketsManager.mark_mission_briefing_seen(3)
-	var section_after = VBoxContainer.new()
-	var second_gate = selector._render_mission_briefing_gate(section_after, RocketsManager, 3)
-	if second_gate:
-		reporter.fail_test("Expected briefing gate to be skipped after seen flag is persisted")
-		RocketsManager.clear_override_state()
-		return
-	RocketsManager.clear_override_state()
 	reporter.pass_test()
 
 func test_sidescroll_mining_drone_pool_reuse() -> void:

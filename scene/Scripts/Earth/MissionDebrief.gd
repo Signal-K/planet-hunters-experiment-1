@@ -234,6 +234,10 @@ func _update_labels() -> void:
 	if bonus_preview != "":
 		orbit_line += "\nBonus minerals:%s" % bonus_preview
 	status_label.text = _build_progress_feedback_text(orbit_line)
+	var wear_points = int(_returned.get("rocket_wear_points", -1))
+	if wear_points >= 0:
+		var wear_tier = int(_returned.get("rocket_wear_tier", 0))
+		status_label.text += "\nWear update: Tier %d (%d pts)." % [wear_tier, wear_points]
 	var mining_accuracy_block = _build_mining_accuracy_text()
 	if mining_accuracy_block != "":
 		status_label.text += "\n" + mining_accuracy_block
@@ -392,7 +396,7 @@ func _sell(to_earth: bool) -> void:
 		net = max(gross - SUBCONTRACTOR_FEE, 0)
 	var rm = RocketsManager
 	if rm:
-		net = int(rm.apply_mission5_payout_terms(net, str(_subcontractor.get("id", ""))))
+		net = int(rm.apply_trip_payout_terms(net, str(_subcontractor.get("id", ""))))
 		net = int(rm.calibrate_onboarding_payout(net, str(_returned.get("rocket_id", ""))))
 	# TESS discovery bonus: +10% + annotation level, once per target.
 	var target_id = str(_returned.get("target_id", ""))
@@ -442,7 +446,7 @@ func _sell(to_earth: bool) -> void:
 	status_label.text = sale_text
 	_clear_cargo()
 	if rm:
-		rm.clear_mission5_contract_offer()
+		rm.clear_trip_contract_offer()
 	_refresh_action_buttons()
 
 func _keep_cargo() -> void:
@@ -470,7 +474,7 @@ func _archive_ship() -> void:
 	_closed_out = true
 	var rm = RocketsManager
 	if rm:
-		rm.clear_mission5_contract_offer()
+		rm.clear_trip_contract_offer()
 	_lock_action_buttons()
 	_show_science_card()
 
@@ -485,10 +489,10 @@ func _scrap_ship(refund_pct: float) -> void:
 		app.add_experience(1, "mission_completion")
 		_award_mission_exposure(app)
 	var rm = RocketsManager
-	if rm:
-		rm.set_destroyed(rocket_id)
-		rm.remove_orbiting_rocket(rocket_id)
 	var ship_action = "scrap" if refund_pct >= 0.2 else "salvage"
+	if rm:
+		rm.set_destroyed(rocket_id, ship_action)
+		rm.remove_orbiting_rocket(rocket_id)
 	_add_mission_log(ship_action, refund)
 	AppControllerHelper.record_tutorial_action("resolve_mission_debrief", {
 		"mode": ship_action
@@ -497,7 +501,7 @@ func _scrap_ship(refund_pct: float) -> void:
 	status_label.text = _build_progress_feedback_text("Ship processed. Refund %s F. Exposure +%s." % [str(refund), _last_exposure_awarded], _last_exposure_awarded)
 	_closed_out = true
 	if rm:
-		rm.clear_mission5_contract_offer()
+		rm.clear_trip_contract_offer()
 	_lock_action_buttons()
 	_show_science_card()
 
@@ -519,7 +523,7 @@ func _leave_in_orbit() -> void:
 	status_label.text = _build_progress_feedback_text("Ship left in orbit.", _last_exposure_awarded)
 	_closed_out = true
 	if rm:
-		rm.clear_mission5_contract_offer()
+		rm.clear_trip_contract_offer()
 	_lock_action_buttons()
 	_show_science_card()
 
@@ -673,9 +677,9 @@ func _add_mission_log(action: String, payout: int) -> void:
 	if completed_count == 1:
 		GameplayAnalytics.emit_event("first_mission_completed", event_payload)
 		call_deferred("_show_mission_complete_beat")
-	if completed_count == 3:
-		call_deferred("_show_post_mission3_beat")
-	if rm and int(rm.get_mission_stage()) >= 5:
+	if completed_count == 4:
+		call_deferred("_show_free_operations_unlock_beat")
+	if rm and rm.is_free_operations_unlocked():
 		AppControllerHelper.record_tutorial_action("complete_contractor_mission", {
 			"badge": badge
 		})
@@ -693,8 +697,8 @@ func _select_subcontractor() -> void:
 		level = int(app.get_experience_level())
 	var rm = RocketsManager
 	var sm = SubcontractorManager
-	if sm and rm and int(rm.get_mission_stage()) >= 5:
-		var selected = rm.get_mission5_selected_contractor()
+	if sm and rm and rm.is_free_operations_unlocked():
+		var selected = rm.get_trip_selected_contractor()
 		if not selected.is_empty():
 			var selected_id = str(selected.get("id", ""))
 			_subcontractor = sm.get_subcontractor(selected_id)
@@ -890,7 +894,7 @@ func _show_mission_complete_beat() -> void:
 	tween.tween_property(panel, "modulate:a", 0.0, 0.4)
 	tween.tween_callback(canvas.queue_free)
 
-func _show_post_mission3_beat() -> void:
+func _show_free_operations_unlock_beat() -> void:
 	var canvas = CanvasLayer.new()
 	canvas.layer = 150
 	add_child(canvas)
@@ -929,14 +933,14 @@ func _show_post_mission3_beat() -> void:
 	var panel_style = PanelStyle
 
 	var title = Label.new()
-	title.text = "Guided missions complete!"
+	title.text = "Free Operations Unlocked"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	panel_style.apply_title(title)
 	title.add_theme_color_override("font_color", Color(0.55, 0.85, 1.0))
 	vbox.add_child(title)
 
 	var body = Label.new()
-	body.text = "Missions 4 and 5 are available to explore — they introduce the scanner and annotation tools — but are still being refined. Expect rough edges."
+	body.text = "You can now choose route, contractor, and target each run."
 	body.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	panel_style.apply_body(body)

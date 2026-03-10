@@ -1,0 +1,68 @@
+{
+  "taskId": "m2wlh4",
+  "currentVersion": 1,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "m2wlh4",
+      "version": 1,
+      "timestamp": "2026-03-10T05:42:36.917Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        },
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Rocket builder shows which room categories are required for the active order"
+            },
+            {
+              "completed": false,
+              "text": "Invalid/incomplete room configs are flagged before launch (warning, not a hard block)"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Rocket builder shows which room categories are required for the active order"
+            },
+            {
+              "completed": true,
+              "text": "Invalid/incomplete room configs are flagged before launch (warning, not a hard block)"
+            }
+          ]
+        },
+        {
+          "field": "implementationNotes",
+          "newValue": "✓ Launchpad selector now shows Required Rooms checklist (mining/storage) with missing-category warning; launch flow keeps warning-only (non-blocking) room validation."
+        }
+      ],
+      "snapshot": {
+        "title": "Show required rooms for a mission order during rocket building",
+        "description": "Players build rockets without knowing which rooms are needed to fulfil the mission order. A player can launch with zero mining capacity and only discover the problem mid-mission.",
+        "status": "done",
+        "priority": "high",
+        "labels": [
+          "ux",
+          "onboarding",
+          "rocket-builder"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Rocket builder shows which room categories are required for the active order"
+          },
+          {
+            "completed": true,
+            "text": "Invalid/incomplete room configs are flagged before launch (warning, not a hard block)"
+          }
+        ],
+        "implementationNotes": "✓ Launchpad selector now shows Required Rooms checklist (mining/storage) with missing-category warning; launch flow keeps warning-only (non-blocking) room validation."
+      }
+    }
+  ]
+}

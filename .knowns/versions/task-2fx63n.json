@@ -1,0 +1,68 @@
+{
+  "taskId": "2fx63n",
+  "currentVersion": 1,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "2fx63n",
+      "version": 1,
+      "timestamp": "2026-03-10T05:37:37.132Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        },
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Screen Orientation API lock('landscape') called on PWA/mobile mount"
+            },
+            {
+              "completed": false,
+              "text": "Rotate-to-landscape overlay triggers for isPwa||isMobile when in portrait (not just narrow-viewport isMobile)"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Screen Orientation API lock('landscape') called on PWA/mobile mount"
+            },
+            {
+              "completed": true,
+              "text": "Rotate-to-landscape overlay triggers for isPwa||isMobile when in portrait (not just narrow-viewport isMobile)"
+            }
+          ]
+        },
+        {
+          "field": "implementationNotes",
+          "newValue": "✓ Verified in react-shell.js: landscape lock on mount and portrait rotate overlay for (isPwa||isMobile)."
+        }
+      ],
+      "snapshot": {
+        "title": "Force landscape orientation on PWA and mobile",
+        "description": "Game is designed for landscape. On mobile/PWA, lock orientation programmatically and show a rotate prompt when in portrait.",
+        "status": "done",
+        "priority": "high",
+        "labels": [
+          "pwa",
+          "mobile",
+          "orientation"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Screen Orientation API lock('landscape') called on PWA/mobile mount"
+          },
+          {
+            "completed": true,
+            "text": "Rotate-to-landscape overlay triggers for isPwa||isMobile when in portrait (not just narrow-viewport isMobile)"
+          }
+        ],
+        "implementationNotes": "✓ Verified in react-shell.js: landscape lock on mount and portrait rotate overlay for (isPwa||isMobile)."
+      }
+    }
+  ]
+}

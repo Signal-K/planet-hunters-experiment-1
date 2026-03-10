@@ -1913,10 +1913,13 @@ func _refresh_contractor_bonus_label() -> void:
 	var bonus_map: Dictionary = {}
 	var contractor_name := ""
 	if rm.is_free_operations_unlocked():
-		var sub = rm.get_mission5_selected_contractor()
-		if not sub.is_empty():
-			contractor_name = str(sub.get("name", ""))
-			bonus_map = sub.get("bonus", {})
+		var selected = rm.get_trip_selected_contractor()
+		var selected_id = str(selected.get("id", ""))
+		if selected_id != "":
+			var sub = sm.get_subcontractor(selected_id)
+			if not sub.is_empty():
+				contractor_name = str(sub.get("name", ""))
+				bonus_map = sub.get("bonus", {})
 	if bonus_map.is_empty():
 		value_label.text = ""
 		return

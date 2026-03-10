@@ -1,0 +1,14 @@
+{
+  "asset_id": "crew_quarters_t3__bunk_lighting_controls__usage_75_99",
+  "room_id": "crew_quarters_t3",
+  "component": "bunk_lighting_controls",
+  "tier": "3",
+  "state": "usage_75_99",
+  "prompt_version": "v1",
+  "generator": "chatgpt",
+  "generated_at_utc": "2026-03-10T10:16:41.815988",
+  "image_filename": "crew_quarters_t3__bunk_lighting_controls__usage_75_99.png",
+  "width": 1024,
+  "height": 1024,
+  "notes": ""
+}

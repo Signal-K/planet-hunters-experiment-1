@@ -133,7 +133,7 @@ func _dismiss() -> void:
 	if _shown:
 		return
 	_shown = true
-	PlanetHuntersIntroSplash.mark_shown()
+	mark_shown()
 	var tween = create_tween()
 	tween.tween_property(_overlay, "modulate:a", 0.0, 0.3)
 	tween.finished.connect(func():

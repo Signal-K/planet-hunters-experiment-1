@@ -139,10 +139,10 @@ func _request_purchase(rocket_id: String) -> void:
 	]
 	var rm = RocketsManager
 	if rm and rm.is_free_operations_unlocked():
-		var cap = int(rm.get_mission5_payout_cap())
+		var cap = int(rm.get_free_ops_payout_cap())
 		if cost > cap:
 			summary += "\nFree Operations payout cap is %s F. This purchase may lose money." % _format_francs(cap)
-		var selected = rm.get_mission5_selected_contractor()
+		var selected = rm.get_trip_selected_contractor()
 		if str(selected.get("effect", "")) == "build_discount":
 			summary += "\nContractor discount applied via %s." % str(selected.get("name", "contractor"))
 	_confirm_dialog.dialog_text = summary
@@ -229,7 +229,7 @@ func _effective_purchase_cost(rocket_id: String) -> int:
 	var rm = RocketsManager
 	if not rm:
 		return RocketSpecs.get_cost(rocket_id)
-	return int(rm.get_mission5_purchase_cost(rocket_id))
+	return int(rm.get_trip_purchase_cost(rocket_id))
 
 
 func _format_francs(value: int) -> String:

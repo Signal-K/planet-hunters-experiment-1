@@ -130,7 +130,7 @@ func _on_launch_button_pressed() -> void:
 	if not rm:
 		AppLogger.w("Launchpad: RocketsManager not available")
 		return
-	if rm.get_mission5_selected_contractor().is_empty():
+	if rm.get_trip_selected_contractor().is_empty():
 		AppLogger.w("Launchpad: contractor must be selected before launch")
 		RocketsManager.set_launch_guidance_notice("Launch blocked: select a contractor for this trip, then choose a mission target.")
 		if _on_show_selector.is_valid():

@@ -1,0 +1,243 @@
+{
+  "batch_id": "batch_advanced_rnd_t3_and_future",
+  "packet_index": 4,
+  "packet_count": 18,
+  "asset_count": 12,
+  "instructions": {
+    "style_anchor_required": true,
+    "one_asset_per_prompt": true,
+    "filename_contract": "strict",
+    "no_extra_suffixes": true,
+    "no_text_or_ui": true
+  },
+  "assets": [
+    {
+      "asset_id": "crew_quarters_t3__room_composite__v1",
+      "asset_type": "room_composite",
+      "room_id": "crew_quarters_t3",
+      "room_name": "Crew Quarters Module",
+      "category": "habitation",
+      "tier": 3,
+      "component_id": "room_composite",
+      "component_name": "Room Composite",
+      "component_kind": "composite",
+      "state_key": "base",
+      "priority": "p0",
+      "prompt": "Using the attached style reference, compose one 2:1 spacecraft room tile for 'Crew Quarters Module' using these components: bunk_stack_frame, privacy_partition_walls, personal_storage_lockers, bunk_lighting_controls, crew_status_terminal, hydration_station. Keep module shell rectangular with flat top/bottom for stacking. Include only listed components and consistent accent lighting. No text, no labels, no UI, no rocket exterior. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "crew_quarters_t3__room_composite__v1.png",
+        "sidecar": "crew_quarters_t3__room_composite__v1.json",
+        "note_optional": "crew_quarters_t3__room_composite__v1.txt"
+      }
+    },
+    {
+      "asset_id": "fusion_reactor_t2__bolted_floor_plate__base",
+      "asset_type": "component",
+      "room_id": "fusion_reactor_t2",
+      "room_name": "Fusion Reactor Room",
+      "category": "power",
+      "tier": 2,
+      "component_id": "bolted_floor_plate",
+      "component_name": "bolted floor plate",
+      "component_kind": "structural",
+      "state_key": "base",
+      "priority": "p1",
+      "prompt": "Using the attached style reference, create a single isolated room component sprite for a spacecraft dollhouse interior system. Component: bolted_floor_plate. Category: Fusion Reactor Room. Side-view cross-section, clean cutout silhouette, no text, no labels, no UI, no characters. Designed for 2:1 room tile composition. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "fusion_reactor_t2__bolted_floor_plate__base.png",
+        "sidecar": "fusion_reactor_t2__bolted_floor_plate__base.json",
+        "note_optional": "fusion_reactor_t2__bolted_floor_plate__base.txt"
+      }
+    },
+    {
+      "asset_id": "fusion_reactor_t2__containment_vessel_frame__base",
+      "asset_type": "component",
+      "room_id": "fusion_reactor_t2",
+      "room_name": "Fusion Reactor Room",
+      "category": "power",
+      "tier": 2,
+      "component_id": "containment_vessel_frame",
+      "component_name": "containment vessel frame",
+      "component_kind": "structural",
+      "state_key": "base",
+      "priority": "p1",
+      "prompt": "Using the attached style reference, create a single isolated room component sprite for a spacecraft dollhouse interior system. Component: containment_vessel_frame. Category: Fusion Reactor Room. Side-view cross-section, clean cutout silhouette, no text, no labels, no UI, no characters. Designed for 2:1 room tile composition. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "fusion_reactor_t2__containment_vessel_frame__base.png",
+        "sidecar": "fusion_reactor_t2__containment_vessel_frame__base.json",
+        "note_optional": "fusion_reactor_t2__containment_vessel_frame__base.txt"
+      }
+    },
+    {
+      "asset_id": "fusion_reactor_t2__magenta_energy_orb__base",
+      "asset_type": "component",
+      "room_id": "fusion_reactor_t2",
+      "room_name": "Fusion Reactor Room",
+      "category": "power",
+      "tier": 2,
+      "component_id": "magenta_energy_orb",
+      "component_name": "Magenta Energy Orb",
+      "component_kind": "interactive",
+      "state_key": "base",
+      "priority": "p0",
+      "prompt": "Using the attached style reference, create a single isolated room component sprite for a spacecraft dollhouse interior system. Component: Magenta Energy Orb. Category: Fusion Reactor Room. Side-view cross-section, clean cutout silhouette, no text, no labels, no UI, no characters. Designed for 2:1 room tile composition. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "fusion_reactor_t2__magenta_energy_orb__base.png",
+        "sidecar": "fusion_reactor_t2__magenta_energy_orb__base.json",
+        "note_optional": "fusion_reactor_t2__magenta_energy_orb__base.txt"
+      }
+    },
+    {
+      "asset_id": "fusion_reactor_t2__multi_screen_monitor_station__base",
+      "asset_type": "component",
+      "room_id": "fusion_reactor_t2",
+      "room_name": "Fusion Reactor Room",
+      "category": "power",
+      "tier": 2,
+      "component_id": "multi_screen_monitor_station",
+      "component_name": "Multi-Screen Monitoring Station",
+      "component_kind": "interactive",
+      "state_key": "base",
+      "priority": "p0",
+      "prompt": "Using the attached style reference, create a single isolated room component sprite for a spacecraft dollhouse interior system. Component: Multi-Screen Monitoring Station. Category: Fusion Reactor Room. Side-view cross-section, clean cutout silhouette, no text, no labels, no UI, no characters. Designed for 2:1 room tile composition. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "fusion_reactor_t2__multi_screen_monitor_station__base.png",
+        "sidecar": "fusion_reactor_t2__multi_screen_monitor_station__base.json",
+        "note_optional": "fusion_reactor_t2__multi_screen_monitor_station__base.txt"
+      }
+    },
+    {
+      "asset_id": "fusion_reactor_t2__reinforced_glass_window__base",
+      "asset_type": "component",
+      "room_id": "fusion_reactor_t2",
+      "room_name": "Fusion Reactor Room",
+      "category": "power",
+      "tier": 2,
+      "component_id": "reinforced_glass_window",
+      "component_name": "reinforced glass window",
+      "component_kind": "structural",
+      "state_key": "base",
+      "priority": "p1",
+      "prompt": "Using the attached style reference, create a single isolated room component sprite for a spacecraft dollhouse interior system. Component: reinforced_glass_window. Category: Fusion Reactor Room. Side-view cross-section, clean cutout silhouette, no text, no labels, no UI, no characters. Designed for 2:1 room tile composition. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "fusion_reactor_t2__reinforced_glass_window__base.png",
+        "sidecar": "fusion_reactor_t2__reinforced_glass_window__base.json",
+        "note_optional": "fusion_reactor_t2__reinforced_glass_window__base.txt"
+      }
+    },
+    {
+      "asset_id": "fusion_reactor_t2__thick_conduit_trunks__base",
+      "asset_type": "component",
+      "room_id": "fusion_reactor_t2",
+      "room_name": "Fusion Reactor Room",
+      "category": "power",
+      "tier": 2,
+      "component_id": "thick_conduit_trunks",
+      "component_name": "thick conduit trunks",
+      "component_kind": "structural",
+      "state_key": "base",
+      "priority": "p1",
+      "prompt": "Using the attached style reference, create a single isolated room component sprite for a spacecraft dollhouse interior system. Component: thick_conduit_trunks. Category: Fusion Reactor Room. Side-view cross-section, clean cutout silhouette, no text, no labels, no UI, no characters. Designed for 2:1 room tile composition. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "fusion_reactor_t2__thick_conduit_trunks__base.png",
+        "sidecar": "fusion_reactor_t2__thick_conduit_trunks__base.json",
+        "note_optional": "fusion_reactor_t2__thick_conduit_trunks__base.txt"
+      }
+    },
+    {
+      "asset_id": "fusion_reactor_t2__magenta_energy_orb__active",
+      "asset_type": "state_variant",
+      "room_id": "fusion_reactor_t2",
+      "room_name": "Fusion Reactor Room",
+      "category": "power",
+      "tier": 2,
+      "component_id": "magenta_energy_orb",
+      "component_name": "Magenta Energy Orb",
+      "component_kind": "interactive",
+      "state_key": "active",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'active' for component 'Magenta Energy Orb' in 'Fusion Reactor Room'. Change only state cues: brighter active glow, subtle motion/energy cues, engaged indicators. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "fusion_reactor_t2__magenta_energy_orb__active.png",
+        "sidecar": "fusion_reactor_t2__magenta_energy_orb__active.json",
+        "note_optional": "fusion_reactor_t2__magenta_energy_orb__active.txt"
+      }
+    },
+    {
+      "asset_id": "fusion_reactor_t2__magenta_energy_orb__cooldown",
+      "asset_type": "state_variant",
+      "room_id": "fusion_reactor_t2",
+      "room_name": "Fusion Reactor Room",
+      "category": "power",
+      "tier": 2,
+      "component_id": "magenta_energy_orb",
+      "component_name": "Magenta Energy Orb",
+      "component_kind": "interactive",
+      "state_key": "cooldown",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'cooldown' for component 'Magenta Energy Orb' in 'Fusion Reactor Room'. Change only state cues: reduced glow with cooling/venting cues and amber warning flicker. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "fusion_reactor_t2__magenta_energy_orb__cooldown.png",
+        "sidecar": "fusion_reactor_t2__magenta_energy_orb__cooldown.json",
+        "note_optional": "fusion_reactor_t2__magenta_energy_orb__cooldown.txt"
+      }
+    },
+    {
+      "asset_id": "fusion_reactor_t2__magenta_energy_orb__damaged",
+      "asset_type": "state_variant",
+      "room_id": "fusion_reactor_t2",
+      "room_name": "Fusion Reactor Room",
+      "category": "power",
+      "tier": 2,
+      "component_id": "magenta_energy_orb",
+      "component_name": "Magenta Energy Orb",
+      "component_kind": "interactive",
+      "state_key": "damaged",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'damaged' for component 'Magenta Energy Orb' in 'Fusion Reactor Room'. Change only state cues: visible wear, sparks or cracks, warning lights and degraded output. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "fusion_reactor_t2__magenta_energy_orb__damaged.png",
+        "sidecar": "fusion_reactor_t2__magenta_energy_orb__damaged.json",
+        "note_optional": "fusion_reactor_t2__magenta_energy_orb__damaged.txt"
+      }
+    },
+    {
+      "asset_id": "fusion_reactor_t2__magenta_energy_orb__depleted",
+      "asset_type": "state_variant",
+      "room_id": "fusion_reactor_t2",
+      "room_name": "Fusion Reactor Room",
+      "category": "power",
+      "tier": 2,
+      "component_id": "magenta_energy_orb",
+      "component_name": "Magenta Energy Orb",
+      "component_kind": "interactive",
+      "state_key": "depleted",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'depleted' for component 'Magenta Energy Orb' in 'Fusion Reactor Room'. Change only state cues: minimal or no glow, offline indicators, depleted resource cues. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "fusion_reactor_t2__magenta_energy_orb__depleted.png",
+        "sidecar": "fusion_reactor_t2__magenta_energy_orb__depleted.json",
+        "note_optional": "fusion_reactor_t2__magenta_energy_orb__depleted.txt"
+      }
+    },
+    {
+      "asset_id": "fusion_reactor_t2__magenta_energy_orb__idle",
+      "asset_type": "state_variant",
+      "room_id": "fusion_reactor_t2",
+      "room_name": "Fusion Reactor Room",
+      "category": "power",
+      "tier": 2,
+      "component_id": "magenta_energy_orb",
+      "component_name": "Magenta Energy Orb",
+      "component_kind": "interactive",
+      "state_key": "idle",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'idle' for component 'Magenta Energy Orb' in 'Fusion Reactor Room'. Change only state cues: stable indicator lights, neutral glow, no motion cues. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "fusion_reactor_t2__magenta_energy_orb__idle.png",
+        "sidecar": "fusion_reactor_t2__magenta_energy_orb__idle.json",
+        "note_optional": "fusion_reactor_t2__magenta_energy_orb__idle.txt"
+      }
+    }
+  ]
+}

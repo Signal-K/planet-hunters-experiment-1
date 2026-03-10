@@ -1,0 +1,374 @@
+{
+  "taskId": "m8j39l",
+  "currentVersion": 7,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "m8j39l",
+      "version": 1,
+      "timestamp": "2026-03-10T06:39:23.400Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Persist subtle permanent wear progression per rocket",
+        "description": "Track and apply subtle long-term wear state by rocket across missions so visual progression is permanent per rocket.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "gameplay",
+          "visual-state",
+          "rockets",
+          "art-direction"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Wear state is stored per rocket and persists across runs"
+          },
+          {
+            "completed": false,
+            "text": "Wear visuals remain subtle and do not reduce interactable readability"
+          },
+          {
+            "completed": false,
+            "text": "Wear can coexist with per-mission contractor theming overlays"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "m8j39l",
+      "version": 2,
+      "timestamp": "2026-03-10T06:39:27.895Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "newValue": "1. Add per-rocket wear persistence model in Rockets state/manager APIs.\n2. Increment wear on mission usage and archive wear when rocket is retired (scrap/salvage/destroyed).\n3. Validate state behavior with tests/checks and close task."
+        }
+      ],
+      "snapshot": {
+        "title": "Persist subtle permanent wear progression per rocket",
+        "description": "Track and apply subtle long-term wear state by rocket across missions so visual progression is permanent per rocket.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "gameplay",
+          "visual-state",
+          "rockets",
+          "art-direction"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Wear state is stored per rocket and persists across runs"
+          },
+          {
+            "completed": false,
+            "text": "Wear visuals remain subtle and do not reduce interactable readability"
+          },
+          {
+            "completed": false,
+            "text": "Wear can coexist with per-mission contractor theming overlays"
+          }
+        ],
+        "implementationPlan": "1. Add per-rocket wear persistence model in Rockets state/manager APIs.\n2. Increment wear on mission usage and archive wear when rocket is retired (scrap/salvage/destroyed).\n3. Validate state behavior with tests/checks and close task."
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "m8j39l",
+      "version": 3,
+      "timestamp": "2026-03-10T06:53:42.463Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Wear state is stored per rocket and persists across runs"
+            },
+            {
+              "completed": false,
+              "text": "Wear visuals remain subtle and do not reduce interactable readability"
+            },
+            {
+              "completed": false,
+              "text": "Wear can coexist with per-mission contractor theming overlays"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Wear state is stored per rocket and persists across runs"
+            },
+            {
+              "completed": false,
+              "text": "Wear visuals remain subtle and do not reduce interactable readability"
+            },
+            {
+              "completed": false,
+              "text": "Wear can coexist with per-mission contractor theming overlays"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Persist subtle permanent wear progression per rocket",
+        "description": "Track and apply subtle long-term wear state by rocket across missions so visual progression is permanent per rocket.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "gameplay",
+          "visual-state",
+          "rockets",
+          "art-direction"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Wear state is stored per rocket and persists across runs"
+          },
+          {
+            "completed": false,
+            "text": "Wear visuals remain subtle and do not reduce interactable readability"
+          },
+          {
+            "completed": false,
+            "text": "Wear can coexist with per-mission contractor theming overlays"
+          }
+        ],
+        "implementationPlan": "1. Add per-rocket wear persistence model in Rockets state/manager APIs.\n2. Increment wear on mission usage and archive wear when rocket is retired (scrap/salvage/destroyed).\n3. Validate state behavior with tests/checks and close task."
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "m8j39l",
+      "version": 4,
+      "timestamp": "2026-03-10T06:53:44.723Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Wear state is stored per rocket and persists across runs"
+            },
+            {
+              "completed": false,
+              "text": "Wear visuals remain subtle and do not reduce interactable readability"
+            },
+            {
+              "completed": false,
+              "text": "Wear can coexist with per-mission contractor theming overlays"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Wear state is stored per rocket and persists across runs"
+            },
+            {
+              "completed": true,
+              "text": "Wear visuals remain subtle and do not reduce interactable readability"
+            },
+            {
+              "completed": false,
+              "text": "Wear can coexist with per-mission contractor theming overlays"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Persist subtle permanent wear progression per rocket",
+        "description": "Track and apply subtle long-term wear state by rocket across missions so visual progression is permanent per rocket.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "gameplay",
+          "visual-state",
+          "rockets",
+          "art-direction"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Wear state is stored per rocket and persists across runs"
+          },
+          {
+            "completed": true,
+            "text": "Wear visuals remain subtle and do not reduce interactable readability"
+          },
+          {
+            "completed": false,
+            "text": "Wear can coexist with per-mission contractor theming overlays"
+          }
+        ],
+        "implementationPlan": "1. Add per-rocket wear persistence model in Rockets state/manager APIs.\n2. Increment wear on mission usage and archive wear when rocket is retired (scrap/salvage/destroyed).\n3. Validate state behavior with tests/checks and close task."
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "m8j39l",
+      "version": 5,
+      "timestamp": "2026-03-10T06:53:46.978Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Wear state is stored per rocket and persists across runs"
+            },
+            {
+              "completed": true,
+              "text": "Wear visuals remain subtle and do not reduce interactable readability"
+            },
+            {
+              "completed": false,
+              "text": "Wear can coexist with per-mission contractor theming overlays"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Wear state is stored per rocket and persists across runs"
+            },
+            {
+              "completed": true,
+              "text": "Wear visuals remain subtle and do not reduce interactable readability"
+            },
+            {
+              "completed": true,
+              "text": "Wear can coexist with per-mission contractor theming overlays"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Persist subtle permanent wear progression per rocket",
+        "description": "Track and apply subtle long-term wear state by rocket across missions so visual progression is permanent per rocket.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "gameplay",
+          "visual-state",
+          "rockets",
+          "art-direction"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Wear state is stored per rocket and persists across runs"
+          },
+          {
+            "completed": true,
+            "text": "Wear visuals remain subtle and do not reduce interactable readability"
+          },
+          {
+            "completed": true,
+            "text": "Wear can coexist with per-mission contractor theming overlays"
+          }
+        ],
+        "implementationPlan": "1. Add per-rocket wear persistence model in Rockets state/manager APIs.\n2. Increment wear on mission usage and archive wear when rocket is retired (scrap/salvage/destroyed).\n3. Validate state behavior with tests/checks and close task."
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "m8j39l",
+      "version": 6,
+      "timestamp": "2026-03-10T06:53:49.235Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "## Summary\n- Added per-rocket wear persistence (`rocket_wear`) and archival (`archived_rocket_wear`) in state defaults/migrations.\n- Increment wear on mission return; include wear points/tier in returned mission payload for downstream visuals.\n- Archive wear on retirement flows (`destroyed` / `scrap` / `salvage`) with reason and timestamp.\n- Contractor selection cycle now resets per mission scan cycle, so wear/coating/theming can coexist without stale contract carry-over.\n\n## Verification\n- Mission E2E, Narrative, and Structure suites pass."
+        }
+      ],
+      "snapshot": {
+        "title": "Persist subtle permanent wear progression per rocket",
+        "description": "Track and apply subtle long-term wear state by rocket across missions so visual progression is permanent per rocket.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "gameplay",
+          "visual-state",
+          "rockets",
+          "art-direction"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Wear state is stored per rocket and persists across runs"
+          },
+          {
+            "completed": true,
+            "text": "Wear visuals remain subtle and do not reduce interactable readability"
+          },
+          {
+            "completed": true,
+            "text": "Wear can coexist with per-mission contractor theming overlays"
+          }
+        ],
+        "implementationPlan": "1. Add per-rocket wear persistence model in Rockets state/manager APIs.\n2. Increment wear on mission usage and archive wear when rocket is retired (scrap/salvage/destroyed).\n3. Validate state behavior with tests/checks and close task.",
+        "implementationNotes": "## Summary\n- Added per-rocket wear persistence (`rocket_wear`) and archival (`archived_rocket_wear`) in state defaults/migrations.\n- Increment wear on mission return; include wear points/tier in returned mission payload for downstream visuals.\n- Archive wear on retirement flows (`destroyed` / `scrap` / `salvage`) with reason and timestamp.\n- Contractor selection cycle now resets per mission scan cycle, so wear/coating/theming can coexist without stale contract carry-over.\n\n## Verification\n- Mission E2E, Narrative, and Structure suites pass."
+      }
+    },
+    {
+      "id": "v7",
+      "taskId": "m8j39l",
+      "version": 7,
+      "timestamp": "2026-03-10T06:53:51.491Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Persist subtle permanent wear progression per rocket",
+        "description": "Track and apply subtle long-term wear state by rocket across missions so visual progression is permanent per rocket.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "gameplay",
+          "visual-state",
+          "rockets",
+          "art-direction"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Wear state is stored per rocket and persists across runs"
+          },
+          {
+            "completed": true,
+            "text": "Wear visuals remain subtle and do not reduce interactable readability"
+          },
+          {
+            "completed": true,
+            "text": "Wear can coexist with per-mission contractor theming overlays"
+          }
+        ],
+        "implementationPlan": "1. Add per-rocket wear persistence model in Rockets state/manager APIs.\n2. Increment wear on mission usage and archive wear when rocket is retired (scrap/salvage/destroyed).\n3. Validate state behavior with tests/checks and close task.",
+        "implementationNotes": "## Summary\n- Added per-rocket wear persistence (`rocket_wear`) and archival (`archived_rocket_wear`) in state defaults/migrations.\n- Increment wear on mission return; include wear points/tier in returned mission payload for downstream visuals.\n- Archive wear on retirement flows (`destroyed` / `scrap` / `salvage`) with reason and timestamp.\n- Contractor selection cycle now resets per mission scan cycle, so wear/coating/theming can coexist without stale contract carry-over.\n\n## Verification\n- Mission E2E, Narrative, and Structure suites pass."
+      }
+    }
+  ]
+}

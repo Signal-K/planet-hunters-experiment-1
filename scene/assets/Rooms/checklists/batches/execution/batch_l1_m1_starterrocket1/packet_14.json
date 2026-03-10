@@ -1,0 +1,186 @@
+{
+  "batch_id": "batch_l1_m1_starterrocket1",
+  "packet_index": 14,
+  "packet_count": 14,
+  "asset_count": 9,
+  "instructions": {
+    "style_anchor_required": true,
+    "one_asset_per_prompt": true,
+    "filename_contract": "strict",
+    "no_extra_suffixes": true,
+    "no_text_or_ui": true
+  },
+  "assets": [
+    {
+      "asset_id": "small_tank_t1__pressure_gauges_pair__damaged",
+      "asset_type": "state_variant",
+      "room_id": "small_tank_t1",
+      "room_name": "Small Fuel Tank Room",
+      "category": "fuel",
+      "tier": 1,
+      "component_id": "pressure_gauges_pair",
+      "component_name": "Pressure Gauges",
+      "component_kind": "interactive",
+      "state_key": "damaged",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'damaged' for component 'Pressure Gauges' in 'Small Fuel Tank Room'. Change only state cues: visible wear, sparks or cracks, warning lights and degraded output. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "small_tank_t1__pressure_gauges_pair__damaged.png",
+        "sidecar": "small_tank_t1__pressure_gauges_pair__damaged.json",
+        "note_optional": "small_tank_t1__pressure_gauges_pair__damaged.txt"
+      }
+    },
+    {
+      "asset_id": "small_tank_t1__pressure_gauges_pair__depleted",
+      "asset_type": "state_variant",
+      "room_id": "small_tank_t1",
+      "room_name": "Small Fuel Tank Room",
+      "category": "fuel",
+      "tier": 1,
+      "component_id": "pressure_gauges_pair",
+      "component_name": "Pressure Gauges",
+      "component_kind": "interactive",
+      "state_key": "depleted",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'depleted' for component 'Pressure Gauges' in 'Small Fuel Tank Room'. Change only state cues: minimal or no glow, offline indicators, depleted resource cues. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "small_tank_t1__pressure_gauges_pair__depleted.png",
+        "sidecar": "small_tank_t1__pressure_gauges_pair__depleted.json",
+        "note_optional": "small_tank_t1__pressure_gauges_pair__depleted.txt"
+      }
+    },
+    {
+      "asset_id": "small_tank_t1__pressure_gauges_pair__idle",
+      "asset_type": "state_variant",
+      "room_id": "small_tank_t1",
+      "room_name": "Small Fuel Tank Room",
+      "category": "fuel",
+      "tier": 1,
+      "component_id": "pressure_gauges_pair",
+      "component_name": "Pressure Gauges",
+      "component_kind": "interactive",
+      "state_key": "idle",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'idle' for component 'Pressure Gauges' in 'Small Fuel Tank Room'. Change only state cues: stable indicator lights, neutral glow, no motion cues. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "small_tank_t1__pressure_gauges_pair__idle.png",
+        "sidecar": "small_tank_t1__pressure_gauges_pair__idle.json",
+        "note_optional": "small_tank_t1__pressure_gauges_pair__idle.txt"
+      }
+    },
+    {
+      "asset_id": "small_tank_t1__valve_panel__active",
+      "asset_type": "state_variant",
+      "room_id": "small_tank_t1",
+      "room_name": "Small Fuel Tank Room",
+      "category": "fuel",
+      "tier": 1,
+      "component_id": "valve_panel",
+      "component_name": "Valve Panel",
+      "component_kind": "interactive",
+      "state_key": "active",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'active' for component 'Valve Panel' in 'Small Fuel Tank Room'. Change only state cues: brighter active glow, subtle motion/energy cues, engaged indicators. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "small_tank_t1__valve_panel__active.png",
+        "sidecar": "small_tank_t1__valve_panel__active.json",
+        "note_optional": "small_tank_t1__valve_panel__active.txt"
+      }
+    },
+    {
+      "asset_id": "small_tank_t1__valve_panel__cooldown",
+      "asset_type": "state_variant",
+      "room_id": "small_tank_t1",
+      "room_name": "Small Fuel Tank Room",
+      "category": "fuel",
+      "tier": 1,
+      "component_id": "valve_panel",
+      "component_name": "Valve Panel",
+      "component_kind": "interactive",
+      "state_key": "cooldown",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'cooldown' for component 'Valve Panel' in 'Small Fuel Tank Room'. Change only state cues: reduced glow with cooling/venting cues and amber warning flicker. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "small_tank_t1__valve_panel__cooldown.png",
+        "sidecar": "small_tank_t1__valve_panel__cooldown.json",
+        "note_optional": "small_tank_t1__valve_panel__cooldown.txt"
+      }
+    },
+    {
+      "asset_id": "small_tank_t1__valve_panel__damaged",
+      "asset_type": "state_variant",
+      "room_id": "small_tank_t1",
+      "room_name": "Small Fuel Tank Room",
+      "category": "fuel",
+      "tier": 1,
+      "component_id": "valve_panel",
+      "component_name": "Valve Panel",
+      "component_kind": "interactive",
+      "state_key": "damaged",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'damaged' for component 'Valve Panel' in 'Small Fuel Tank Room'. Change only state cues: visible wear, sparks or cracks, warning lights and degraded output. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "small_tank_t1__valve_panel__damaged.png",
+        "sidecar": "small_tank_t1__valve_panel__damaged.json",
+        "note_optional": "small_tank_t1__valve_panel__damaged.txt"
+      }
+    },
+    {
+      "asset_id": "small_tank_t1__valve_panel__depleted",
+      "asset_type": "state_variant",
+      "room_id": "small_tank_t1",
+      "room_name": "Small Fuel Tank Room",
+      "category": "fuel",
+      "tier": 1,
+      "component_id": "valve_panel",
+      "component_name": "Valve Panel",
+      "component_kind": "interactive",
+      "state_key": "depleted",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'depleted' for component 'Valve Panel' in 'Small Fuel Tank Room'. Change only state cues: minimal or no glow, offline indicators, depleted resource cues. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "small_tank_t1__valve_panel__depleted.png",
+        "sidecar": "small_tank_t1__valve_panel__depleted.json",
+        "note_optional": "small_tank_t1__valve_panel__depleted.txt"
+      }
+    },
+    {
+      "asset_id": "small_tank_t1__valve_panel__idle",
+      "asset_type": "state_variant",
+      "room_id": "small_tank_t1",
+      "room_name": "Small Fuel Tank Room",
+      "category": "fuel",
+      "tier": 1,
+      "component_id": "valve_panel",
+      "component_name": "Valve Panel",
+      "component_kind": "interactive",
+      "state_key": "idle",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'idle' for component 'Valve Panel' in 'Small Fuel Tank Room'. Change only state cues: stable indicator lights, neutral glow, no motion cues. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "small_tank_t1__valve_panel__idle.png",
+        "sidecar": "small_tank_t1__valve_panel__idle.json",
+        "note_optional": "small_tank_t1__valve_panel__idle.txt"
+      }
+    },
+    {
+      "asset_id": "small_tank_t1__room_composite__v1",
+      "asset_type": "room_composite",
+      "room_id": "small_tank_t1",
+      "room_name": "Small Fuel Tank Room",
+      "category": "fuel",
+      "tier": 1,
+      "component_id": "room_composite",
+      "component_name": "Room Composite",
+      "component_kind": "composite",
+      "state_key": "base",
+      "priority": "p0",
+      "prompt": "Using the attached style reference, compose one 2:1 spacecraft room tile for 'Small Fuel Tank Room' using these components: dual_tank_mounts, floor_fuel_line_routing, fuel_tanks_dual, pressure_gauges_pair, valve_panel, frosted_fuel_viewport_small. Keep module shell rectangular with flat top/bottom for stacking. Include only listed components and consistent accent lighting. No text, no labels, no UI, no rocket exterior. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "small_tank_t1__room_composite__v1.png",
+        "sidecar": "small_tank_t1__room_composite__v1.json",
+        "note_optional": "small_tank_t1__room_composite__v1.txt"
+      }
+    }
+  ]
+}

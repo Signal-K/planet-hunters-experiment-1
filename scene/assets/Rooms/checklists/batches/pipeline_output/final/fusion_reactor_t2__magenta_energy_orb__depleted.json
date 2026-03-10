@@ -1,0 +1,14 @@
+{
+  "asset_id": "fusion_reactor_t2__magenta_energy_orb__depleted",
+  "room_id": "fusion_reactor_t2",
+  "component": "magenta_energy_orb",
+  "tier": "2",
+  "state": "depleted",
+  "prompt_version": "v1",
+  "generator": "chatgpt",
+  "generated_at_utc": "2026-03-10T10:16:36.710114",
+  "image_filename": "fusion_reactor_t2__magenta_energy_orb__depleted.png",
+  "width": 1024,
+  "height": 1024,
+  "notes": ""
+}

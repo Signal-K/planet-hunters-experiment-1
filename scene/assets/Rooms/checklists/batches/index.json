@@ -1,5 +1,5 @@
 {
-  "generated_on": "2026-03-07T01:41:00.858Z",
+  "generated_on": "2026-03-10T05:54:21.229Z",
   "source": "scene/assets/Rooms/checklists/room_component_asset_checklist.json",
   "batches": [
     {
@@ -67,9 +67,9 @@
       }
     },
     {
-      "batch_id": "batch_l3_m5_starterrocket3",
-      "title": "L3_M5 starterrocket3 Core Production",
-      "note": "Contractor/optimization prep",
+      "batch_id": "batch_l3_free_ops_starterrocket3",
+      "title": "L3_FREE_OPS starterrocket3 Core Production",
+      "note": "Free operations contractor/optimization loop",
       "totals": {
         "assets": 428,
         "components": 101,
@@ -77,9 +77,9 @@
         "composites": 18
       },
       "files": {
-        "json": "batch_l3_m5_starterrocket3.json",
-        "csv": "batch_l3_m5_starterrocket3.csv",
-        "md": "batch_l3_m5_starterrocket3.md"
+        "json": "batch_l3_free_ops_starterrocket3.json",
+        "csv": "batch_l3_free_ops_starterrocket3.csv",
+        "md": "batch_l3_free_ops_starterrocket3.md"
       }
     },
     {
@@ -87,10 +87,10 @@
       "title": "Advanced R&D Rooms (T3/Future)",
       "note": "Future-ready room coverage beyond currently installed layouts",
       "totals": {
-        "assets": 148,
-        "components": 37,
-        "states": 100,
-        "composites": 7
+        "assets": 208,
+        "components": 54,
+        "states": 140,
+        "composites": 10
       },
       "files": {
         "json": "batch_advanced_rnd_t3_and_future.json",
@@ -103,8 +103,8 @@
       "title": "Usage-State Variants (All Rooms)",
       "note": "Deferred p2 pack for runtime wear/consumption visuals",
       "totals": {
-        "assets": 165,
-        "states": 165
+        "assets": 190,
+        "states": 190
       },
       "files": {
         "json": "batch_usage_state_variants_all_rooms.json",

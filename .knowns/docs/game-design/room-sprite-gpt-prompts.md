@@ -1,3 +1,11 @@
+---
+title: Room Sprite GPT Image Prompts
+createdAt: '2026-03-10T08:50:09.844Z'
+updatedAt: '2026-03-10T08:56:38.807Z'
+description: >-
+  Legacy full-room prompt catalog; active source of truth is
+  specs/unified-room-image-generation-super-sheet-slicing-plan
+---
 # Room Sprite GPT Image Prompts
 
 Prompts for generating the interior room module sprites for the dollhouse/cross-section view of the rocket.
@@ -179,3 +187,9 @@ Using the style reference: spacecraft interior room module, side-view cross-sect
 - The **parachute module** is a consumable item slot, not a persistent room — consider generating it as an item icon rather than a room tile.
 - Once the first few rooms are generated and looking consistent, consider generating a **sheet of 4 rooms in one image** to test how they look side by side in the hull grid.
 - The Nebula theme accent colours to stay consistent with: deep purple `#140D26`, nebula pink `#D9598C`, cyan `#40BFD9`, orange `#F2733D`, bright white `#F2F2FA`.
+
+
+
+## Consolidation Status (2026-03-10)
+This document is now reference-only for legacy full-room prompts.
+Use this active source of truth:\n@doc/specs/unified-room-image-generation-super-sheet-slicing-plan

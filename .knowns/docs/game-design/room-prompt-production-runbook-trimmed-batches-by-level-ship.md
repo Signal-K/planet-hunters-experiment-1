@@ -1,10 +1,10 @@
 ---
 title: Room Prompt Production Runbook (Trimmed Batches by Level + Ship)
 createdAt: '2026-03-07T01:42:05.643Z'
-updatedAt: '2026-03-07T01:42:32.855Z'
+updatedAt: '2026-03-10T08:57:39.633Z'
 description: >-
-  Ordered, formatted prompt batch execution plan using generated checklist
-  artifacts for each mission level and rocket type
+  Legacy runbook reference; active source of truth is
+  specs/unified-room-image-generation-super-sheet-slicing-plan
 ---
 # Room Prompt Production Runbook (Trimmed Batches by Level + Ship)
 
@@ -155,3 +155,14 @@ Each batch also has machine-readable exports:
 - Add prompt coverage for `crew_quarters_t3`.
 - Add ingestion tooling to map generated files to Godot runtime state keys.
 
+
+
+## 2026-03-10 Batch Scope + Contractor Theming Update
+
+- Replace legacy `batch_l3_m5_starterrocket3` with `batch_l3_free_ops_starterrocket3`.
+- Apply contractor theming rules from @doc/specs/contractor-visual-theming-rules-for-room-prompt-production
+- M4 batch should use light contractor signature; Free Ops batch can use stronger per-mission/per-rocket contractor cues.
+- Keep wear subtle and persistent per rocket; do not let theme overlays reduce interactable readability.
+## Consolidation Status (2026-03-10)
+This document is now reference-only.
+Use this active production runbook:\n@doc/specs/unified-room-image-generation-super-sheet-slicing-plan

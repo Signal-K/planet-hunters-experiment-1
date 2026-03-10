@@ -1,0 +1,68 @@
+{
+  "taskId": "44a83y",
+  "currentVersion": 1,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "44a83y",
+      "version": 1,
+      "timestamp": "2026-03-10T05:37:37.175Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        },
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "A brief pre-mining overlay or highlight shows which terrain zones contain the ordered minerals"
+            },
+            {
+              "completed": false,
+              "text": "Order panel during mining highlights the target mineral name more prominently"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "A brief pre-mining overlay or highlight shows which terrain zones contain the ordered minerals"
+            },
+            {
+              "completed": true,
+              "text": "Order panel during mining highlights the target mineral name more prominently"
+            }
+          ]
+        },
+        {
+          "field": "implementationNotes",
+          "newValue": "✓ Verified: _show_mineral_signpost() shows ordered mineral zones; order panel uses prominent ► and ★ ordered markers."
+        }
+      ],
+      "snapshot": {
+        "title": "Add mineral zone signposting before mining begins",
+        "description": "Players are told to mine specific minerals but there is no preview of where those minerals appear in the terrain before fuel starts burning. Combined with limited time, this causes immediate confusion and stuck detection.",
+        "status": "done",
+        "priority": "high",
+        "labels": [
+          "ux",
+          "mining",
+          "onboarding"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "A brief pre-mining overlay or highlight shows which terrain zones contain the ordered minerals"
+          },
+          {
+            "completed": true,
+            "text": "Order panel during mining highlights the target mineral name more prominently"
+          }
+        ],
+        "implementationNotes": "✓ Verified: _show_mineral_signpost() shows ordered mineral zones; order panel uses prominent ► and ★ ordered markers."
+      }
+    }
+  ]
+}
