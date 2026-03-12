@@ -1,0 +1,17 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://clnp3lk7qcqkt"
+
+[deps]
+
+files=["res://assets/Rooms/checklists/batches/execution/batch_l2_m2_starterrocket2/execution_checklist.packet.translation", "res://assets/Rooms/checklists/batches/execution/batch_l2_m2_starterrocket2/execution_checklist.status.translation", "res://assets/Rooms/checklists/batches/execution/batch_l2_m2_starterrocket2/execution_checklist.image.translation", "res://assets/Rooms/checklists/batches/execution/batch_l2_m2_starterrocket2/execution_checklist.json.translation", "res://assets/Rooms/checklists/batches/execution/batch_l2_m2_starterrocket2/execution_checklist.qa.translation", "res://assets/Rooms/checklists/batches/execution/batch_l2_m2_starterrocket2/execution_checklist.notes.translation"]
+
+source_file="res://assets/Rooms/checklists/batches/execution/batch_l2_m2_starterrocket2/execution_checklist.csv"
+dest_files=["res://assets/Rooms/checklists/batches/execution/batch_l2_m2_starterrocket2/execution_checklist.packet.translation", "res://assets/Rooms/checklists/batches/execution/batch_l2_m2_starterrocket2/execution_checklist.status.translation", "res://assets/Rooms/checklists/batches/execution/batch_l2_m2_starterrocket2/execution_checklist.image.translation", "res://assets/Rooms/checklists/batches/execution/batch_l2_m2_starterrocket2/execution_checklist.json.translation", "res://assets/Rooms/checklists/batches/execution/batch_l2_m2_starterrocket2/execution_checklist.qa.translation", "res://assets/Rooms/checklists/batches/execution/batch_l2_m2_starterrocket2/execution_checklist.notes.translation"]
+
+[params]
+
+compress=true
+delimiter=0
