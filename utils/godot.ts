@@ -133,4 +133,24 @@ export const syncBridge = (): any | null => {
   }
 };
 
+export function triggerInstantMining() {
+  runOnGodotThread(() => {
+    "worklet";
+    const controller = appController();
+    if (controller && (controller as any).trigger_instant_mining) {
+      (controller as any).trigger_instant_mining();
+    }
+  });
+}
+
+export function skipToMission(stage: number) {
+  runOnGodotThread(() => {
+    "worklet";
+    const controller = appController();
+    if (controller && (controller as any).debug_skip_to_mission) {
+      (controller as any).debug_skip_to_mission(stage);
+    }
+  });
+}
+
 export { runOnGodotThread };

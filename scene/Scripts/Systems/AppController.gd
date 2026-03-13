@@ -21,6 +21,9 @@ var _menu_layer: CanvasLayer = null
 var _game_paused: bool = false
 var _menu_request_version: int = 0
 var _menu_request_action: String = ""
+var _last_mining_result: Dictionary = {}
+var _last_mining_result_synced: bool = true
+var _auto_start_mining: bool = false
 const AppControllerPersistence = preload("res://Scripts/Systems/AppControllerPersistence.gd")
 const WebEventBridge = preload("res://Scripts/Systems/WebEventBridge.gd")
 const AppLogger = preload("res://Scripts/Utils/Logger.gd")
@@ -165,6 +168,64 @@ func get_menu_request_version() -> int:
 
 func get_menu_request_action() -> String:
 	return _menu_request_action
+
+func set_last_mining_result(result: Dictionary) -> void:
+	_last_mining_result = result
+	_last_mining_result_synced = false
+	AppLogger.d("AppController: New mining result set: %s" % str(result))
+
+func get_last_mining_result() -> Dictionary:
+	var result = _last_mining_result.duplicate(true)
+	result["synced"] = _last_mining_result_synced
+	return result
+
+func mark_mining_result_synced() -> void:
+	_last_mining_result_synced = true
+	AppLogger.d("AppController: Mining result marked as synced")
+
+func trigger_instant_mining() -> void:
+	AppLogger.d("AppController: Triggering instant mining...")
+	_auto_start_mining = true
+	set_game_paused(false)
+	get_tree().change_scene_to_file("res://test_mining.tscn")
+
+func check_auto_start_mining() -> bool:
+	var val = _auto_start_mining
+	_auto_start_mining = false
+	return val
+
+func debug_skip_to_mission(stage: int) -> void:
+	AppLogger.d("AppController Debug: Jumping to Mission %d" % stage)
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if not rm: return
+	
+	# 1. Reset state if jumping back to M1
+	if stage <= 1:
+		_on_reset_all()
+		set_game_paused(false)
+		return
+
+	# 2. Sequential completion up to stage-1
+	var target_completed = stage - 1
+	for i in range(target_completed):
+		rm.mark_mission_completed("debug-skip-%d" % (i + 1))
+	
+	# 3. Force Level and Francs for that stage
+	var target_francs = 1000000 * stage
+	set_franc_balance_from_react(target_francs)
+	set_experience_from_react(0, stage)
+	
+	# 4. Refresh tutorial state
+	if _tutorial_controller and _tutorial_controller.has_method("replay_current_mission"):
+		_tutorial_controller.replay_current_mission()
+	
+	# 5. Unpause and close menu
+	set_game_paused(false)
+	if current_menu_panel:
+		current_menu_panel.queue_free()
+		current_menu_panel = null
+	
+	AppLogger.d("AppController Debug: Jump Complete. Stage: %d" % rm.get_mission_stage())
 
 func show_menu_panel() -> void:
 	"""Show the main menu panel with counter"""

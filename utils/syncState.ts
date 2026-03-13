@@ -12,6 +12,7 @@
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState, useCallback } from "react";
+import { supabase } from "./supabase";
 
 // ============================================================================
 // Types
@@ -29,7 +30,7 @@ export type SyncStateKey = keyof SyncState;
 export interface SyncEvent {
   key: SyncStateKey;
   value: SyncState[SyncStateKey];
-  source: "react" | "godot";
+  source: "react" | "godot" | "cloud";
   timestamp: number;
 }
 
@@ -100,11 +101,11 @@ function notify(event?: SyncEvent): void {
 }
 
 // ============================================================================
-// Persistence
+// Persistence (Local & Cloud)
 // ============================================================================
 
 /**
- * Load state from AsyncStorage
+ * Load state from AsyncStorage and Supabase
  */
 export async function loadState(): Promise<SyncState> {
   if (_loaded) {
@@ -112,13 +113,30 @@ export async function loadState(): Promise<SyncState> {
   }
 
   try {
+    // 1. Load from local storage first (fast)
     const raw = await AsyncStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as Partial<SyncState>;
       _state = { ...DEFAULT_STATE, ...parsed };
     } else {
-      // Migrate from legacy keys if present
       _state = await migrateLegacyState();
+    }
+
+    // 2. Try to sync with Supabase cloud if logged in
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      const { data: cloudProfile, error } = await supabase
+        .from('player_profiles')
+        .select('franc_balance, xp, level')
+        .eq('id', session.user.id)
+        .single();
+
+      if (!error && cloudProfile) {
+        _state.francBalance = cloudProfile.franc_balance;
+        _state.experienceXp = cloudProfile.xp;
+        _state.experienceLevel = cloudProfile.level;
+        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(_state));
+      }
     }
   } catch (e) {
     console.error("[SyncState] Load error:", e);
@@ -126,16 +144,28 @@ export async function loadState(): Promise<SyncState> {
   }
 
   _loaded = true;
-  notify();
+  notify({ key: "counter", value: _state.counter, source: "cloud", timestamp: Date.now() });
   return { ..._state };
 }
 
 /**
- * Save state to AsyncStorage
+ * Save state to AsyncStorage and Supabase
  */
 async function saveState(): Promise<void> {
   try {
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(_state));
+
+    // Push to Supabase if authenticated
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      await supabase.from('player_profiles').upsert({
+        id: session.user.id,
+        franc_balance: _state.francBalance,
+        xp: _state.experienceXp,
+        level: _state.experienceLevel,
+        updated_at: new Date().toISOString()
+      });
+    }
   } catch (e) {
     console.error("[SyncState] Save error:", e);
   }
