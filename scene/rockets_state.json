@@ -71,12 +71,14 @@
   },
   "status_changed_at": {
   },
-  "mission_progress_completed": 0,
+  "mission_progress_completed": 2,
   "completed_mission_badges": [
+    "debug-skip-1",
+    "debug-skip-2"
   ],
   "scanner_station_built": false,
-  "scanner_unlocked": false,
-  "scanner_unlock_dialog_seen": false,
+  "scanner_unlocked": true,
+  "scanner_unlock_dialog_seen": true,
   "scanner_next_scan_at": 0.0,
   "mission5_contract_offer": {
   },
@@ -109,5 +111,11 @@
   },
   "trip_contract_offer": {
   },
-  "launch_guidance_notice": ""
+  "launch_guidance_notice": "",
+  "inventory": {
+    "Iron": 0.0,
+    "Nickel": 0.0,
+    "Cobalt": 0.0,
+    "Platinum": 0.0
+  }
 }

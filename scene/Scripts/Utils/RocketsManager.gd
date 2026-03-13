@@ -11,6 +11,7 @@ const RocketsStateAccess = preload("res://Scripts/Utils/RocketsStateAccess.gd")
 const RocketsMissionProgress = preload("res://Scripts/Utils/RocketsMissionProgress.gd")
 const RocketsTargeting = preload("res://Scripts/Utils/RocketsTargeting.gd")
 const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd")
+const SubcontractorManager = preload("res://Scripts/Utils/SubcontractorManager.gd")
 const KNOWN_ROCKET_TYPES := ["starterrocket1", "starterrocket2", "starterrocket3"]
 const ROCKET_UNLOCK_LEVELS := {
 	"starterrocket1": 1,
@@ -59,6 +60,14 @@ const PREDEFINED_MISSION_TARGETS := {
 		"distance_au": 120.0,
 		"required_level": 3,
 		"reward_ratio": 1.4  # Spec: M4 reward planetary exploration
+	},
+	5: {
+		"id": "mission-5-settlement-target",
+		"label": "Exoplanet Kepler-186f",
+		"type": "planet",
+		"distance_au": 240.0,
+		"required_level": 3,
+		"reward_ratio": 1.6
 	}
 }
 
@@ -299,8 +308,51 @@ static func get_scanner_next_scan_at() -> int:
 
 static func set_scanner_next_scan_at(epoch_seconds: int) -> bool:
 	var s = load_state()
-	s["scanner_next_scan_at"] = max(epoch_seconds, 0)
+	s["scanner_next_scan_at"] = epoch_seconds
 	return save_state(s)
+
+## Inventory Management
+static func get_inventory() -> Dictionary:
+	var s = load_state()
+	var inv = s.get("inventory", {})
+	if typeof(inv) != TYPE_DICTIONARY:
+		return {}
+	return inv.duplicate(true)
+
+static func add_to_inventory(minerals: Dictionary) -> bool:
+	var s = load_state()
+	var inv = s.get("inventory", {})
+	if typeof(inv) != TYPE_DICTIONARY:
+		inv = {}
+
+	for mineral in minerals.keys():
+		var amount = int(minerals[mineral])
+		inv[mineral] = int(inv.get(mineral, 0)) + amount
+
+	s["inventory"] = inv
+	return save_state(s)
+
+static func consume_from_inventory(requirements: Dictionary) -> bool:
+	var s = load_state()
+	var inv = s.get("inventory", {})
+	if typeof(inv) != TYPE_DICTIONARY:
+		return false
+
+	# Verify we have enough of everything first
+	for mineral in requirements.keys():
+		var required = int(requirements[mineral])
+		var available = int(inv.get(mineral, 0))
+		if available < required:
+			return false
+
+	# Consume
+	for mineral in requirements.keys():
+		var required = int(requirements[mineral])
+		inv[mineral] = int(inv.get(mineral, 0)) - required
+
+	s["inventory"] = inv
+	return save_state(s)
+
 
 static func get_predefined_mission_target(stage: int) -> Dictionary:
 	if PREDEFINED_MISSION_TARGETS.has(stage):
@@ -412,7 +464,12 @@ static func get_free_ops_payout_cap() -> int:
 	return FREE_OPS_PAYOUT_CAP
 
 static func get_trip_contractors() -> Array:
-	return FREE_OPS_CONTRACTOR_OFFERS.duplicate(true)
+	var available = []
+	for contractor in FREE_OPS_CONTRACTOR_OFFERS:
+		var id = str(contractor.get("id", ""))
+		if not SubcontractorManager.is_on_cooldown(id):
+			available.append(contractor.duplicate(true))
+	return available
 
 static func get_starter_contractors() -> Array:
 	return STARTER_CONTRACTOR_OFFERS.duplicate(true)
@@ -1399,12 +1456,36 @@ static func return_home(rocket_id: String) -> bool:
 		return save_state(s)
 	return true
 
+static func _apply_contractor_consequences(state: Dictionary) -> bool:
+	var offer = state.get("trip_contract_offer", {})
+	if typeof(offer) != TYPE_DICTIONARY or offer.is_empty():
+		return false
+	
+	var contractor_id = str(offer.get("selected_contractor", ""))
+	if contractor_id == "":
+		return false
+	
+	# Apply 5 minute cooldown
+	SubcontractorManager.set_cooldown(contractor_id, 300)
+	
+	# Award reputation XP (base 100 per successful trip)
+	SubcontractorManager.add_reputation(contractor_id, 100)
+	
+	# Clear the offer so they must pick a new one (or same one after cooldown)
+	state["trip_contract_offer"] = {}
+	return true
+
 static func finalize_return(rocket_id: String) -> bool:
 	if rocket_id == "":
 		return false
 	var s = load_state()
 	var changed = false
 	var now = int(Time.get_unix_time_from_system())
+	
+	# Handle contractor rewards and cooldowns
+	if _apply_contractor_consequences(s):
+		changed = true
+		
 	var placed = s.get("placed", [])
 	for i in range(placed.size()):
 		if str(placed[i].get("id", "")) == rocket_id:
@@ -1457,6 +1538,11 @@ static func mark_returned_if_due(rocket_id: String) -> bool:
 	var s = load_state()
 	var changed = false
 	var now = int(Time.get_unix_time_from_system())
+	
+	# Handle contractor rewards and cooldowns
+	if _apply_contractor_consequences(s):
+		changed = true
+		
 	var placed = s.get("placed", [])
 	for i in range(placed.size()):
 		if str(placed[i].get("id", "")) == rocket_id:

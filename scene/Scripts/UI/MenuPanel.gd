@@ -30,6 +30,9 @@ const NumberFormat = preload("res://Scripts/Utils/NumberFormat.gd")
 @onready var close_btn: Button = $PanelContainer/Panel/VBoxContainer/HeaderContainer/HeaderBackground/HeaderContent/CloseButton
 @onready var logbook_btn: Button = $PanelContainer/Panel/VBoxContainer/HeaderContainer/HeaderBackground/HeaderContent/LogbookButton
 @onready var reset_btn: Button = $PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/ResetButton
+var debug_mining_btn: Button
+var debug_money_btn: Button
+
 @onready var practice_mining_btn: Button = $PanelContainer/Panel/VBoxContainer/TabContainer/Settings/Content/PracticeMiningButton
 @onready var skip_tutorial_btn: Button = $PanelContainer/Panel/VBoxContainer/TabContainer/Settings/Content/SkipTutorialButton
 @onready var replay_mission_tutorial_btn: Button = $PanelContainer/Panel/VBoxContainer/TabContainer/Settings/Content/ReplayMissionTutorialButton
@@ -57,6 +60,7 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	$Overlay.mouse_filter = Control.MOUSE_FILTER_STOP
 	$PanelContainer.mouse_filter = Control.MOUSE_FILTER_STOP
+	_setup_debug_buttons()
 	_apply_style()
 	# Connect button signals
 	close_btn.pressed.connect(_on_close_button_pressed)
@@ -100,6 +104,9 @@ func _apply_style() -> void:
 	PanelStyle.apply_progress_bar(progress_bar)
 	PanelStyle.apply_button(citizen_science_dialogue_btn, false)
 	PanelStyle.apply_button(reset_btn, false)
+	PanelStyle.apply_button(debug_mining_btn, false)
+	PanelStyle.apply_button(debug_level_btn, false)
+	PanelStyle.apply_button(debug_money_btn, false)
 	PanelStyle.apply_button(practice_mining_btn, false)
 	PanelStyle.apply_button(skip_tutorial_btn, false)
 	PanelStyle.apply_button(replay_mission_tutorial_btn, false)
@@ -216,6 +223,62 @@ func _on_increase_button_pressed() -> void:
 func _on_reset_button_pressed() -> void:
 	AppLogger.d("MenuPanel reset button pressed")
 	reset_all.emit()
+
+func _setup_debug_buttons() -> void:
+	var container = $PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content
+	
+	debug_mining_btn = Button.new()
+	debug_mining_btn.text = "🚀 DEBUG: START INSTANT MINING"
+	container.add_child(debug_mining_btn)
+	container.move_child(debug_mining_btn, 0)
+	debug_mining_btn.pressed.connect(_on_debug_mining_pressed)
+	
+	var mission_label = Label.new()
+	mission_label.text = "JUMP TO MISSION:"
+	container.add_child(mission_label)
+	container.move_child(mission_label, 1)
+	
+	var h_box = HBoxContainer.new()
+	h_box.alignment = BoxContainer.ALIGNMENT_CENTER
+	container.add_child(h_box)
+	container.move_child(h_box, 2)
+	
+	for i in range(1, 6):
+		var btn = Button.new()
+		btn.text = "M%d" % i
+		btn.custom_minimum_size = Vector2(60, 40)
+		btn.pressed.connect(func(): _on_jump_to_mission(i))
+		h_box.add_child(btn)
+		PanelStyle.apply_button(btn, false)
+	
+	debug_money_btn = Button.new()
+	debug_money_btn.text = "💰 DEBUG: GRANT 10M FRANCS"
+	container.add_child(debug_money_btn)
+	container.move_child(debug_money_btn, 3)
+	debug_money_btn.pressed.connect(_on_debug_money_pressed)
+
+func _on_debug_mining_pressed() -> void:
+	AppLogger.d("Debug: Triggering instant mining")
+	var app = _get_app_controller()
+	if app and app.has_method("trigger_instant_mining"):
+		app.trigger_instant_mining()
+		# AppController will handle closing the panel and unpausing
+
+func _on_jump_to_mission(stage: int) -> void:
+	AppLogger.d("Debug: Jumping to Mission %d" % stage)
+	var app = _get_app_controller()
+	if app and app.has_method("debug_skip_to_mission"):
+		app.debug_skip_to_mission(stage)
+		# AppController handles unpause/close
+
+func _on_debug_level_pressed() -> void:
+	_on_jump_to_mission(3)
+
+func _on_debug_money_pressed() -> void:
+	AppLogger.d("Debug: Granting 10M Francs")
+	var app = _get_app_controller()
+	if app and app.has_method("set_franc_balance_from_react"):
+		app.set_franc_balance_from_react(10000000)
 
 func _on_practice_mining_pressed() -> void:
 	print("MenuPanel: Practice Mining pressed")

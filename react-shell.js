@@ -27,15 +27,14 @@ const SUPABASE_SESSION_STORAGE_KEY = "planet_hunters_supabase_guest";
 const XP_STATE_KEY = "planet_hunters_xp_state_v1";
 const DEFAULT_RUNTIME_CONFIG = {
   posthog: {
-    projectToken: "phc_65umDftbbTkrm1V6azue6OeU4u5c8iJcaHm4JtJ95di",
+    projectToken: "",
     apiHost: "https://us.i.posthog.com",
     uiHost: "https://us.posthog.com",
-    surveyId: "019c603e-d236-0000-85ce-f507635d2311",
+    surveyId: "",
   },
   supabase: {
-    url: "https://hlufptwhzkpkkjztimzo.supabase.co",
-    anonKey:
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhsdWZwdHdoemtwa2tqenRpbXpvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTYyOTk3NTUsImV4cCI6MjAzMTg3NTc1NX0.v_NDVWjIU_lJQSPbJ_Y6GkW3axrQWKXfXVsBEAbFv_I",
+    url: "",
+    anonKey: "",
   },
 };
 
@@ -427,42 +426,48 @@ function showFeedbackDialog(context = {}) {
   overlay.id = FEEDBACK_OVERLAY_ID;
   overlay.style.position = "fixed";
   overlay.style.inset = "0";
-  overlay.style.background = "rgba(2, 6, 15, 0.78)";
+  overlay.style.background = "rgba(2, 6, 15, 0.85)";
   overlay.style.zIndex = "2147482647";
   overlay.style.display = "flex";
   overlay.style.alignItems = "center";
   overlay.style.justifyContent = "center";
-  overlay.style.padding = "20px";
+  overlay.style.padding = "16px";
+  overlay.style.boxSizing = "border-box";
 
   const card = document.createElement("form");
   card.style.width = "min(560px, 100%)";
-  card.style.maxHeight = "calc(100svh - 40px)";
+  card.style.maxHeight = "min(calc(100svh - 32px), 800px)";
   card.style.background = "#08111d";
   card.style.border = "1px solid #233455";
   card.style.borderRadius = "18px";
-  card.style.boxShadow = "0 24px 60px rgba(0, 0, 0, 0.45)";
+  card.style.boxShadow = "0 24px 60px rgba(0, 0, 0, 0.6)";
   card.style.display = "flex";
   card.style.flexDirection = "column";
   card.style.overflow = "hidden";
+  card.style.boxSizing = "border-box";
 
   const cardBody = document.createElement("div");
-  cardBody.style.padding = "22px 22px 0";
+  cardBody.style.padding = "24px 24px 12px";
   cardBody.style.display = "grid";
   cardBody.style.gap = "12px";
   cardBody.style.overflowY = "auto";
   cardBody.style.flex = "1";
+  cardBody.style.boxSizing = "border-box";
+  cardBody.style.webkitOverflowScrolling = "touch";
 
   const title = document.createElement("h2");
   title.textContent = "Where did you get stuck?";
   title.style.margin = "0";
-  title.style.fontSize = "24px";
+  title.style.fontSize = "22px";
   title.style.color = "#e7edf9";
+  title.style.fontWeight = "700";
 
   const intro = document.createElement("p");
   intro.textContent = "Send quick feedback with your current context. We will line it up with replay and gameplay events.";
   intro.style.margin = "0";
   intro.style.color = "#a9b4cc";
   intro.style.lineHeight = "1.5";
+  intro.style.fontSize = "14px";
 
   const blockerSelect = document.createElement("select");
   blockerSelect.innerHTML = [
@@ -498,7 +503,8 @@ function showFeedbackDialog(context = {}) {
     element.style.background = "#101c30";
     element.style.color = "#e7edf9";
     element.style.padding = "12px";
-    element.style.font = "inherit";
+    element.style.fontSize = "15px";
+    element.style.fontFamily = "inherit";
   });
 
   const footer = document.createElement("div");
@@ -506,6 +512,10 @@ function showFeedbackDialog(context = {}) {
   footer.style.justifyContent = "space-between";
   footer.style.gap = "12px";
   footer.style.flexWrap = "wrap";
+  footer.style.padding = "16px 24px 20px";
+  footer.style.borderTop = "1px solid #1a2a44";
+  footer.style.background = "#0a1626";
+  footer.style.boxSizing = "border-box";
 
   const closeBtn = document.createElement("button");
   closeBtn.type = "button";
@@ -513,8 +523,10 @@ function showFeedbackDialog(context = {}) {
   closeBtn.style.border = "1px solid #30496f";
   closeBtn.style.background = "#12213a";
   closeBtn.style.color = "#dce7fb";
-  closeBtn.style.padding = "10px 14px";
+  closeBtn.style.padding = "10px 20px";
   closeBtn.style.borderRadius = "999px";
+  closeBtn.style.cursor = "pointer";
+  closeBtn.style.fontSize = "14px";
   closeBtn.onclick = () => {
     removeFeedbackOverlay();
     pushAction("feedback_dialog_closed", context);
@@ -527,10 +539,11 @@ function showFeedbackDialog(context = {}) {
   submitBtn.style.border = "0";
   submitBtn.style.background = "#4ad0ff";
   submitBtn.style.color = "#04101a";
-  submitBtn.style.padding = "10px 16px";
+  submitBtn.style.padding = "10px 24px";
   submitBtn.style.borderRadius = "999px";
   submitBtn.style.fontWeight = "700";
   submitBtn.style.cursor = "pointer";
+  submitBtn.style.fontSize = "14px";
 
   footer.appendChild(closeBtn);
   footer.appendChild(submitBtn);
@@ -541,8 +554,7 @@ function showFeedbackDialog(context = {}) {
   cardBody.appendChild(severitySelect);
   cardBody.appendChild(expectation);
   cardBody.appendChild(details);
-  footer.style.padding = "12px 22px 16px";
-  footer.style.borderTop = "1px solid #1a2a44";
+  
   card.appendChild(cardBody);
   card.appendChild(footer);
 
@@ -579,36 +591,45 @@ async function showInlineSurvey(params, surveyIdOverride) {
   overlay.id = SURVEY_OVERLAY_ID;
   overlay.style.position = "fixed";
   overlay.style.inset = "0";
-  overlay.style.background = "rgba(2, 6, 15, 0.78)";
+  overlay.style.background = "rgba(2, 6, 15, 0.85)";
   overlay.style.zIndex = "2147482646";
   overlay.style.display = "flex";
   overlay.style.alignItems = "center";
   overlay.style.justifyContent = "center";
-  overlay.style.padding = "20px";
+  overlay.style.padding = "min(20px, 4vw)";
+  overlay.style.boxSizing = "border-box";
 
   const card = document.createElement("div");
   card.style.width = "min(860px, 100%)";
-  card.style.height = "min(88vh, 900px)";
+  card.style.height = "min(calc(100svh - 32px), 900px)";
   card.style.background = "#0c1220";
   card.style.border = "1px solid #233455";
   card.style.borderRadius = "14px";
   card.style.overflow = "hidden";
-  card.style.boxShadow = "0 24px 60px rgba(0, 0, 0, 0.45)";
+  card.style.boxShadow = "0 24px 60px rgba(0, 0, 0, 0.6)";
   card.style.position = "relative";
+  card.style.display = "flex";
+  card.style.flexDirection = "column";
+  card.style.boxSizing = "border-box";
+
+  const header = document.createElement("div");
+  header.style.padding = "8px 12px";
+  header.style.display = "flex";
+  header.style.justifyContent = "flex-end";
+  header.style.background = "#0a101a";
+  header.style.borderBottom = "1px solid #1a2a44";
 
   const closeBtn = document.createElement("button");
   closeBtn.type = "button";
-  closeBtn.textContent = "Close";
-  closeBtn.style.position = "absolute";
-  closeBtn.style.top = "10px";
-  closeBtn.style.right = "10px";
+  closeBtn.textContent = "Close \u00d7";
   closeBtn.style.border = "1px solid #30496f";
   closeBtn.style.background = "#12213a";
   closeBtn.style.color = "#dce7fb";
-  closeBtn.style.padding = "6px 12px";
+  closeBtn.style.padding = "6px 16px";
   closeBtn.style.borderRadius = "999px";
   closeBtn.style.cursor = "pointer";
-  closeBtn.style.zIndex = "2";
+  closeBtn.style.fontSize = "13px";
+  closeBtn.style.fontWeight = "600";
   closeBtn.onclick = function closeSurvey() {
     removeSurveyOverlay();
     pushAction("survey_closed", {});
@@ -620,11 +641,12 @@ async function showInlineSurvey(params, surveyIdOverride) {
   iframe.src = `${surveyUrl}?${new URLSearchParams(params).toString()}`;
   iframe.title = params.survey_context ? "Planet Hunters Survey" : "Experiment 1 Exit Survey";
   iframe.style.width = "100%";
-  iframe.style.height = "100%";
+  iframe.style.flex = "1";
   iframe.style.border = "0";
   iframe.allow = "fullscreen";
 
-  card.appendChild(closeBtn);
+  header.appendChild(closeBtn);
+  card.appendChild(header);
   card.appendChild(iframe);
   overlay.appendChild(card);
   document.body.appendChild(overlay);

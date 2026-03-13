@@ -42,6 +42,7 @@ var _mineral_regions: Array = []
 var _scroll_offset = 0.0
 var _terrain_width = 4000
 var _loop_count = 0
+var _mineral_pool_index := 0
 var _is_mining = false
 var _fuel = 100.0
 var _heat = 0.0
@@ -274,27 +275,16 @@ func _setup_mars_background() -> void:
 	_apply_base_bg_color()
 	_refresh_mars_background()
 
+const MiningBackgroundGenerator = preload("res://Scripts/UI/MiningBackgroundGenerator.gd")
+const MiningTerrainGenerator = preload("res://Scripts/UI/MiningTerrainGenerator.gd")
+
 func _refresh_mars_background() -> void:
 	if _mars_background == null:
 		return
 	var viewport := get_viewport_rect().size
-	var pixel_w: int = max(PIXEL_BG_MIN_WIDTH, int(round(viewport.x / 8.0)))
-	var pixel_h: int = max(PIXEL_BG_MIN_HEIGHT, int(round(viewport.y / 8.0)))
-	var next_size := Vector2i(pixel_w, pixel_h)
-	if _mars_bg_size == next_size and _mars_background.texture != null:
-		return
-	_mars_bg_size = next_size
-	var image := Image.create(pixel_w, pixel_h, false, Image.FORMAT_RGBA8)
-	_fill_mars_gradient(image)
-	_draw_mars_stars(image)
-	_draw_planet_disc(image)
-	_draw_cloud_haze(image)
-	_draw_layered_ridges(image)
-	_draw_foreground_flora(image)
-	_apply_theme_tint(image)
-	_apply_pixel_texture(image)
-	var tex := ImageTexture.create_from_image(image)
-	_mars_background.texture = tex
+	var texture = MiningBackgroundGenerator.generate_background(viewport, _target_theme, _current_target_id, _session_context)
+	_mars_background.texture = texture
+	_mars_bg_size = texture.get_size()
 
 func _apply_base_bg_color() -> void:
 	var base_bg = get_node_or_null("Background") as ColorRect
@@ -303,196 +293,49 @@ func _apply_base_bg_color() -> void:
 	var theme = _theme_palette(_target_theme)
 	base_bg.color = theme.get("base_bg", Color(0.06, 0.04, 0.08, 1.0))
 
-func _apply_theme_tint(image: Image) -> void:
-	var theme = _theme_palette(_target_theme)
-	var tint: Color = theme.get("bg_tint", Color(1, 1, 1, 1))
-	var strength: float = float(theme.get("bg_tint_strength", 0.0))
-	if strength <= 0.001:
-		return
-	var width := image.get_width()
-	var height := image.get_height()
-	for y in range(height):
-		for x in range(width):
-			var src := image.get_pixel(x, y)
-			image.set_pixel(x, y, src.lerp(tint, strength))
-
-func _fill_mars_gradient(image: Image) -> void:
-	var width := image.get_width()
-	var height := image.get_height()
-	var colors := [
-		Color8(30, 35, 54),
-		Color8(42, 46, 71),
-		Color8(62, 52, 76),
-		Color8(78, 57, 79)
-	]
-	for y in range(height):
-		var t := float(y) / float(max(height - 1, 1))
-		var c := _sample_palette(colors, pow(t, 0.85))
-		for x in range(width):
-			image.set_pixel(x, y, c)
-
-func _sample_palette(colors: Array, t: float) -> Color:
-	if colors.size() <= 1:
-		return colors[0] if colors.size() == 1 else Color.BLACK
-	var scaled := clampf(t, 0.0, 1.0) * float(colors.size() - 1)
-	var index := int(floor(scaled))
-	var next_index: int = min(index + 1, colors.size() - 1)
-	var local_t := scaled - float(index)
-	return (colors[index] as Color).lerp(colors[next_index] as Color, local_t)
-
 func _theme_palette(theme_name: String) -> Dictionary:
 	if theme_name == _target_theme and not _target_palette.is_empty():
 		return _target_palette
 	return MiningTargetTheme.build_palette(theme_name, _current_target_id, _session_context)
 
+func _build_terrain_pixel_texture(theme_name: String) -> Texture2D:
+	var palette = _theme_palette(theme_name)
+	var base_a = palette.get("terrain_a", Color8(163, 96, 66, 255))
+	var base_b = palette.get("terrain_b", Color8(182, 114, 76, 255))
+	var shade = palette.get("terrain_shade", Color8(131, 77, 56, 255))
+	var highlight = palette.get("terrain_highlight", Color8(222, 151, 90, 255))
+	
+	var img_w := 28
+	var img_h := 20
+	var image := Image.create(img_w, img_h, false, Image.FORMAT_RGBA8)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash(_current_target_id) ^ 0x54455252 # "TERR"
+	
+	for y in range(img_h):
+		for x in range(img_w):
+			var noise := rng.randf()
+			var c: Color
+			if noise < 0.12:
+				c = shade
+			elif noise < 0.24:
+				c = highlight
+			elif noise < 0.62:
+				c = base_a
+			else:
+				c = base_b
+			
+			# Add subtle dither/grain
+			if (x + y) % 2 == 0:
+				c = c.lightened(rng.randf_range(0.0, 0.04))
+			else:
+				c = c.darkened(rng.randf_range(0.0, 0.04))
+				
+			image.set_pixel(x, y, c)
+			
+	return ImageTexture.create_from_image(image)
+
 func _resolve_target_theme() -> String:
 	return MiningTargetTheme.resolve_theme(_session_context, _is_planet)
-
-func _draw_planet_disc(image: Image) -> void:
-	var width := image.get_width()
-	var height := image.get_height()
-	var center := Vector2(float(width) * 0.34, float(height) * 0.34)
-	var radius: float = float(min(width, height)) * 0.23
-	var planet_colors := [
-		Color8(114, 82, 116, 220),
-		Color8(138, 91, 126, 220),
-		Color8(88, 66, 101, 225)
-	]
-	for y in range(max(0, int(center.y - radius * 1.2)), min(height, int(center.y + radius * 1.2))):
-		for x in range(max(0, int(center.x - radius * 1.2)), min(width, int(center.x + radius * 1.2))):
-			var dx: float = float(x) - center.x
-			var dy: float = float(y) - center.y
-			var dist: float = sqrt(dx * dx + dy * dy) / max(radius, 1.0)
-			if dist <= 1.0:
-				var shade_t: float = clampf((dy / radius + 1.0) * 0.5, 0.0, 1.0)
-				var base := _sample_palette(planet_colors, shade_t)
-				if ((x + y) % 11) == 0:
-					base = base.lightened(0.1)
-				if ((x * 2 + y) % 13) == 0:
-					base = base.darkened(0.14)
-				var src := image.get_pixel(x, y)
-				image.set_pixel(x, y, src.lerp(base, 0.78))
-				if absf(dy + radius * 0.26) < 1.5 or absf(dy - radius * 0.02) < 1.5:
-					image.set_pixel(x, y, src.lerp(Color8(168, 132, 172, 200), 0.6))
-				elif dist <= 1.08:
-					var alpha: float = 1.0 - ((dist - 1.0) / 0.08)
-					var edge_src := image.get_pixel(x, y)
-					image.set_pixel(x, y, edge_src.lerp(Color8(169, 140, 182, int(alpha * 160.0)), alpha * 0.35))
-
-func _draw_layered_ridges(image: Image) -> void:
-	var width := image.get_width()
-	var height := image.get_height()
-	var horizon_y: int = int(height * 0.63)
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 0x41355374
-	var ridge_colors := [Color8(132, 119, 152), Color8(116, 100, 136), Color8(98, 84, 120)]
-	for layer in range(3):
-		var y_base: int = horizon_y + layer * 8
-		var color: Color = ridge_colors[layer]
-		var x: int = 0
-		var peak_y: int = y_base
-		while x < width + 16:
-			var seg_w: int = rng.randi_range(6, 14)
-			var y_delta: int = rng.randi_range(-8 - layer * 2, 10 + layer * 2)
-			peak_y = clampi(peak_y + y_delta, y_base - (28 + layer * 8), y_base + 4)
-			for ix in range(x, min(width, x + seg_w)):
-				for iy in range(max(0, peak_y), height):
-					var c := color
-					if ((ix + iy + layer) % 9) == 0:
-						c = c.lightened(0.06)
-					image.set_pixel(ix, iy, c)
-			x += seg_w
-	for y in range(horizon_y, height):
-		var dust := Color8(82, 66, 100)
-		for x in range(width):
-			var c := dust
-			if ((x + y) % 8) == 0:
-				c = c.lightened(0.1)
-			elif ((x * 3 + y) % 13) == 0:
-				c = c.darkened(0.12)
-			image.set_pixel(x, y, c)
-
-func _draw_cloud_haze(image: Image) -> void:
-	var width := image.get_width()
-	var height := image.get_height()
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 0x434C4453
-	for _band in range(14):
-		var y: int = rng.randi_range(int(height * 0.14), int(height * 0.62))
-		var x_start: int = rng.randi_range(-20, width - 20)
-		var cloud_w: int = rng.randi_range(16, 46)
-		var cloud_h: int = rng.randi_range(2, 5)
-		var haze := Color8(214, 205, 220, rng.randi_range(35, 75))
-		for ix in range(max(0, x_start), min(width, x_start + cloud_w)):
-			for iy in range(max(0, y - cloud_h), min(height, y + cloud_h)):
-				if absf(float(iy - y)) <= float(cloud_h) * (1.0 - absf(float(ix - x_start - cloud_w / 2)) / max(float(cloud_w) * 0.5, 1.0)):
-					var src := image.get_pixel(ix, iy)
-					image.set_pixel(ix, iy, src.lerp(haze, 0.35))
-
-func _draw_foreground_flora(image: Image) -> void:
-	var width := image.get_width()
-	var height := image.get_height()
-	var ground_y: int = int(height * 0.78)
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 0x464C4F52
-	for _i in range(max(10, width / 22)):
-		var x: int = rng.randi_range(0, width - 1)
-		var y: int = rng.randi_range(ground_y - 2, min(height - 4, ground_y + 8))
-		var stem_h: int = rng.randi_range(2, 6)
-		for sy in range(0, stem_h):
-			if y + sy < height:
-				image.set_pixel(x, y + sy, Color8(38, 22, 44))
-		var crown_w: int = rng.randi_range(3, 6)
-		for cx in range(-crown_w, crown_w + 1):
-			var px: int = x + cx
-			if px < 0 or px >= width:
-				continue
-			var py: int = y - stem_h + int(absf(float(cx)) * 0.25)
-			if py >= 0 and py < height:
-				image.set_pixel(px, py, Color8(121, 32, 70))
-				if py + 1 < height and (cx % 2 == 0):
-					image.set_pixel(px, py + 1, Color8(90, 24, 58))
-	for _patch in range(max(4, width / 80)):
-		var px0: int = rng.randi_range(0, width - 10)
-		var py0: int = rng.randi_range(ground_y + 2, min(height - 2, ground_y + 14))
-		var pw: int = rng.randi_range(4, 14)
-		for px in range(px0, min(width, px0 + pw)):
-			if py0 < height:
-				image.set_pixel(px, py0, Color8(182, 106, 84))
-				if py0 + 1 < height and (px % 3) == 0:
-					image.set_pixel(px, py0 + 1, Color8(200, 132, 98))
-
-func _apply_pixel_texture(image: Image) -> void:
-	var width := image.get_width()
-	var height := image.get_height()
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 0x50495845
-	for y in range(height):
-		for x in range(width):
-			var n := rng.randf()
-			if n < 0.065:
-				image.set_pixel(x, y, image.get_pixel(x, y).darkened(0.08))
-			elif n > 0.935:
-				image.set_pixel(x, y, image.get_pixel(x, y).lightened(0.07))
-
-func _draw_mars_sun(image: Image, center: Vector2i, radius: int) -> void:
-	# Legacy function kept for compatibility with old callsites.
-	_draw_planet_disc(image)
-
-func _draw_mars_horizon(image: Image) -> void:
-	# Legacy function kept for compatibility with old callsites.
-	_draw_layered_ridges(image)
-
-func _draw_mars_stars(image: Image) -> void:
-	var width := image.get_width()
-	var height := image.get_height()
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 0x534B5931
-	for _i in range(90):
-		var x := rng.randi_range(0, width - 1)
-		var y := rng.randi_range(0, int(height * 0.5))
-		var c := Color8(209, 216, 238, rng.randi_range(90, 190))
-		image.set_pixel(x, y, c)
 
 func _apply_responsive_layout() -> void:
 	var viewport := get_viewport_rect().size
@@ -951,280 +794,48 @@ func _position_rocket_lane() -> void:
 	rocket.position.y = target_y
 
 func _generate_terrain():
-	var rng = RandomNumberGenerator.new()
-	
-	# Use target ID as seed if available
-	if _current_target_id != "":
-		rng.seed = _current_target_id.hash()
-	else:
-		rng.randomize()
-	
 	var screen_height = get_viewport_rect().size.y
-	var segments = int(_terrain_width / TERRAIN_SEGMENT_WIDTH)
-	
-	_terrain_points.clear()
-	_mineral_regions.clear()
-	_mineral_pool_index = 0
-	_total_deposit_count = 0
-	_surface_deposit_count = 0
-	_subsurface_deposit_count = 0
-	var mineral_pool = terrain_container.get_node_or_null("MineralPool")
-	if mineral_pool:
-		for mineral in mineral_pool.get_children():
-			if mineral is Polygon2D:
-				mineral.visible = false
-				mineral.modulate = Color(1, 1, 1, 1)
-	
-	var base_height = screen_height - 250
-	var terrain_sig = _generation_signature.get("terrain", {})
-	if typeof(terrain_sig) != TYPE_DICTIONARY:
-		terrain_sig = {}
-	base_height += float((terrain_sig as Dictionary).get("height_bias", 0.0))
-	var prev_height = base_height
-	
-	# Higher difficulty = more varied terrain
-	var roughness = float((terrain_sig as Dictionary).get("roughness", 1.0))
-	var difficulty_multiplier = (1.0 + (_rocket_level * 0.15)) * roughness
-	var peak_boost = float((terrain_sig as Dictionary).get("peak_chance_boost", 0.0))
-	var valley_boost = float((terrain_sig as Dictionary).get("valley_chance_boost", 0.0))
-	
-	for i in range(segments + 1):
-		var x = i * TERRAIN_SEGMENT_WIDTH
-		
-		# Random height variation (increases with difficulty)
-		var height_change = rng.randf_range(-25, 25) * difficulty_multiplier
-		
-		# Occasional sharp peaks/valleys (more frequent at higher difficulty)
-		var peak_chance = max(0.02, 0.08 + (_rocket_level * 0.01) + peak_boost)
-		if rng.randf() < peak_chance:
-			height_change = rng.randf_range(-100, -60) * difficulty_multiplier  # Sharp peak up
-		elif rng.randf() < max(0.01, 0.05 + _rocket_level * 0.005 + valley_boost):
-			height_change = rng.randf_range(40, 80) * difficulty_multiplier  # Valley down
-		
-		prev_height = clamp(prev_height + height_change, screen_height - 380, screen_height - 120)
-		prev_height = floor(prev_height / 6.0) * 6.0
-		_terrain_points.append(Vector2(x, prev_height))
-	
-	terrain_line.points = _terrain_points
-	terrain_line.width = 3
-	terrain_line.default_color = _theme_palette(_target_theme).get("terrain_line", Color(0.95, 0.74, 0.48, 0.95))
-	terrain_line.joint_mode = Line2D.LINE_JOINT_SHARP
-	terrain_line.antialiased = false
-	
-	var fill_points = PackedVector2Array()
-	fill_points.append_array(_terrain_points)
-	fill_points.append(Vector2(_terrain_width, screen_height))
-	fill_points.append(Vector2(0, screen_height))
-	terrain_fill.polygon = fill_points
-	_apply_pixel_terrain_style(fill_points)
-	
-	_add_surface_rocks(rng)
-	_generate_minerals(rng)
+	var result = MiningTerrainGenerator.generate_terrain(
+		_terrain_width, _current_target_id, screen_height, _generation_signature, _rocket_level,
+		terrain_container, _target_theme, _theme_palette, _target_palette_key,
+		_terrain_pixel_textures, _build_terrain_pixel_texture, _target_minerals,
+		_target_mineable_pct, _guide_active
+	)
+	_terrain_points = result.points
+	_mineral_regions = result.mineral_regions
+	_total_deposit_count = result.total_deposit_count
+	_surface_deposit_count = result.surface_deposit_count
+	_subsurface_deposit_count = result.subsurface_deposit_count
+	_mineral_pool_index = _mineral_regions.size()
 	_rebuild_loop_container()
 
-func _apply_pixel_terrain_style(fill_points: PackedVector2Array) -> void:
-	if not _terrain_pixel_textures.has(_target_palette_key):
-		_terrain_pixel_textures[_target_palette_key] = _build_terrain_pixel_texture(_target_theme)
-	terrain_fill.texture = _terrain_pixel_textures.get(_target_palette_key)
-	terrain_fill.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	terrain_fill.color = Color(1, 1, 1, 1)
-	var uv := PackedVector2Array()
-	for p in fill_points:
-		uv.append(Vector2(p.x / 28.0, p.y / 20.0))
-	terrain_fill.uv = uv
-	terrain_line.default_color = _theme_palette(_target_theme).get("terrain_line", Color(0.95, 0.74, 0.48, 0.95))
-
-func _build_terrain_pixel_texture(theme_name: String) -> Texture2D:
-	var width := 96
-	var height := 96
-	var image := Image.create(width, height, false, Image.FORMAT_RGBA8)
-	var theme = _theme_palette(theme_name)
-	var base_a: Color = theme.get("terrain_a", Color8(162, 95, 66, 255))
-	var base_b: Color = theme.get("terrain_b", Color8(178, 111, 74, 255))
-	var shade: Color = theme.get("terrain_shade", Color8(132, 78, 57, 255))
-	var highlight: Color = theme.get("terrain_highlight", Color8(220, 149, 88, 255))
-	for y in range(height):
-		for x in range(width):
-			var checker = ((x / 2) + (y / 2)) % 2
-			var c = base_a if checker == 0 else base_b
-			if ((x + y) % 11) == 0:
-				c = shade
-			elif ((x * 3 + y) % 17) == 0:
-				c = highlight
-			image.set_pixel(x, y, c)
-	var tex := ImageTexture.create_from_image(image)
-	return tex
+func _get_terrain_y_at(x: float) -> float:
+	return MiningTerrainGenerator._get_terrain_y_at(x, _terrain_points)
 
 func _rebuild_loop_container() -> void:
-	if _terrain_loop_container and is_instance_valid(_terrain_loop_container):
-		_terrain_loop_container.queue_free()
-		_terrain_loop_container = null
-	_terrain_loop_container = terrain_container.duplicate()
 	if _terrain_loop_container == null:
-		return
-	_terrain_loop_container.name = "TerrainContainerLoop"
-	add_child(_terrain_loop_container)
-	move_child(_terrain_loop_container, terrain_container.get_index() + 1)
+		_terrain_loop_container = Node2D.new()
+		_terrain_loop_container.name = "TerrainLoopContainer"
+		terrain_container.get_parent().add_child(_terrain_loop_container)
+		terrain_container.get_parent().move_child(_terrain_loop_container, terrain_container.get_index() + 1)
 
-func _add_surface_rocks(rng: RandomNumberGenerator):
-	# Use pre-created rock pool from scene instead of runtime creation
+	# Clear previous loop terrain
+	for child in _terrain_loop_container.get_children():
+		child.queue_free()
+
+	# Duplicate visuals for seamless loop
+	var fill_clone = terrain_fill.duplicate()
+	var line_clone = terrain_line.duplicate()
+	_terrain_loop_container.add_child(fill_clone)
+	_terrain_loop_container.add_child(line_clone)
+	
+	# Clone rocks and minerals
 	var rock_pool = terrain_container.get_node_or_null("RockPool")
-	if not rock_pool:
-		push_warning("RockPool not found in scene - rocks will not be generated")
-		return
-	
-	var rocks = rock_pool.get_children()
-	var rock_count = min(50, rocks.size())
-	var terrain_sig = _generation_signature.get("terrain", {})
-	if typeof(terrain_sig) != TYPE_DICTIONARY:
-		terrain_sig = {}
-	var sig = terrain_sig as Dictionary
-	var cluster_count = clampi(int(sig.get("landmark_cluster_count", 3)), 1, 8)
-	var cluster_bias = clampf(float(sig.get("landmark_cluster_bias", 0.5)), 0.0, 1.0)
-	var cluster_centers: Array = []
-	for _i in range(cluster_count):
-		cluster_centers.append(rng.randf_range(160, _terrain_width - 160))
-	
-	for i in range(rock_count):
-		var rock = rocks[i]
-		if not rock is Polygon2D:
-			continue
-		var center = float(cluster_centers[i % cluster_centers.size()])
-		var spread = lerpf(220.0, 70.0, cluster_bias)
-		var clustered_x = center + rng.randf_range(-spread, spread)
-		var x = clampf(lerpf(rng.randf_range(100, _terrain_width - 100), clustered_x, cluster_bias), 100.0, _terrain_width - 100.0)
-		var y = _get_terrain_y_at(x)
-		var size = rng.randf_range(10, 25)
-		
-		# Generate polygon points
-		var points = PackedVector2Array()
-		var num_points = rng.randi_range(4, 6)
-		
-		for j in range(num_points):
-			var angle = (float(j) / num_points) * TAU + rng.randf_range(-0.3, 0.3)
-			var radius = size * rng.randf_range(0.6, 1.2)
-			points.append(Vector2(x + cos(angle) * radius, y - abs(sin(angle) * radius) - size * 0.3))
-		
-		rock.polygon = points
-		rock.visible = true
-
-func _generate_minerals(rng: RandomNumberGenerator):
-	# Use target's actual minerals if available
-	var mineral_types = []
-	if not _target_minerals.is_empty():
-		for mineral_name in _target_minerals.keys():
-			var amount = _target_minerals[mineral_name]
-			if amount > 0:
-				mineral_types.append({
-					"name": mineral_name,
-					"color": _get_mineral_color(mineral_name),
-					"value": amount
-				})
-	
-	# Fallback to default minerals if none provided
-	if mineral_types.is_empty():
-		mineral_types = [
-			{"name": "Iron", "color": Color(0.9, 0.4, 0.2), "value": 10},
-			{"name": "Nickel", "color": Color(0.7, 0.7, 0.5), "value": 15},
-			{"name": "Cobalt", "color": Color(0.3, 0.5, 1.0), "value": 25},
-			{"name": "Platinum", "color": Color(1.0, 1.0, 0.8), "value": 50}
-		]
-	
-	var screen_height = get_viewport_rect().size.y
-	
-	# If guide active, place guaranteed deposits near start
-	if _guide_active:
-		# Surface deposit 1 (Iron) at 600px
-		_create_mineral_deposit(600, 100, mineral_types[0], true, screen_height)
-		# Surface deposit 2 (Nickel) at 1000px
-		if mineral_types.size() > 1:
-			_create_mineral_deposit(1000, 100, mineral_types[1], true, screen_height)
-		# Subsurface deposit (Cobalt) at 1400px
-		if mineral_types.size() > 2:
-			_create_mineral_deposit(1400, 100, mineral_types[2], false, screen_height)
-	
-	# Generate deposits based on mineable_pct (more mineable = more deposits)
-	var deposit_count = int(30 + (_target_mineable_pct * 20))
-	var start_x = 1800 if _guide_active else 300
-	
-	for i in range(deposit_count):
-		var x = rng.randf_range(start_x, _terrain_width - 200)
-		var width = rng.randf_range(60, 120)
-		var mineral = mineral_types[rng.randi() % mineral_types.size()]
-		var is_surface = rng.randf() < _target_mineable_pct
-		
-		_create_mineral_deposit(x, width, mineral, is_surface, screen_height)
-
-func _get_mineral_color(mineral_name: String) -> Color:
-	match mineral_name.to_lower():
-		"iron": return Color(0.9, 0.4, 0.2)
-		"nickel": return Color(0.7, 0.7, 0.5)
-		"cobalt": return Color(0.3, 0.5, 1.0)
-		"platinum": return Color(1.0, 1.0, 0.8)
-		"gold": return Color(1.0, 0.84, 0.0)
-		"silver": return Color(0.75, 0.75, 0.75)
-		"copper": return Color(0.72, 0.45, 0.2)
-		"titanium": return Color(0.5, 0.5, 0.6)
-		_: return Color(0.6, 0.6, 0.6)
-
-var _mineral_pool_index = 0
-
-func _create_mineral_deposit(x: float, width: float, mineral: Dictionary, is_surface: bool, screen_height: float):
-	# Use pre-created mineral pool from scene instead of runtime creation
+	if rock_pool:
+		_terrain_loop_container.add_child(rock_pool.duplicate())
 	var mineral_pool = terrain_container.get_node_or_null("MineralPool")
-	if not mineral_pool:
-		push_warning("MineralPool not found in scene - minerals will not be generated")
-		return
-	
-	var minerals = mineral_pool.get_children()
-	if _mineral_pool_index >= minerals.size():
-		push_warning("Mineral pool exhausted - increase pool size in scene")
-		return
-	
-	var poly = minerals[_mineral_pool_index]
-	_mineral_pool_index += 1
-	
-	if not poly is Polygon2D:
-		return
-	
-	var y_at_x = _get_terrain_y_at(x)
-	var depth = 0 if is_surface else randf_range(40, 120)
-	
-	poly.polygon = PackedVector2Array([
-		Vector2(x, y_at_x + depth - 10),
-		Vector2(x + width, _get_terrain_y_at(x + width) + depth - 10),
-		Vector2(x + width, screen_height),
-		Vector2(x, screen_height)
-	])
-	poly.color = mineral.color
-	if not is_surface:
-		poly.modulate = Color(0.7, 0.7, 0.7, 0.8)
-	poly.visible = true
-	
-	_mineral_regions.append({
-		"x": x,
-		"width": width,
-		"mineral": mineral,
-		"poly": poly,
-		"pool_index": _mineral_pool_index - 1,
-		"collected": false,
-		"is_surface": is_surface
-	})
-	_total_deposit_count += 1
-	if is_surface:
-		_surface_deposit_count += 1
-	else:
-		_subsurface_deposit_count += 1
-
-func _get_terrain_y_at(x: float) -> float:
-	var segment = int(x / TERRAIN_SEGMENT_WIDTH)
-	if segment >= _terrain_points.size() - 1:
-		return _terrain_points[-1].y
-	
-	var t = fmod(x, TERRAIN_SEGMENT_WIDTH) / TERRAIN_SEGMENT_WIDTH
-	var y1 = _terrain_points[segment].y
-	var y2 = _terrain_points[segment + 1].y
-	return lerp(y1, y2, t)
+	if mineral_pool:
+		_terrain_loop_container.add_child(mineral_pool.duplicate())
 
 func _process(delta):
 	_enforce_tutorial_overlay_hidden()
@@ -1620,6 +1231,18 @@ func _complete_mining():
 		"collected": _collected_minerals.duplicate(true),
 		"accuracy": accuracy_payload.duplicate(true)
 	}
+	
+	# Credit minerals to persistent inventory
+	if not _collected_minerals.is_empty():
+		RocketsManager.add_to_inventory(_collected_minerals)
+		
+	# Pass to AppController for React Native bridge sync
+	AppController.set_last_mining_result({
+		"minerals": _collected_minerals.duplicate(true),
+		"score": _score,
+		"target_id": _current_target_id
+	})
+		
 	mining_completed.emit(_collected_minerals, _score)
 
 func _show_guide_step():

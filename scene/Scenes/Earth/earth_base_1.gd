@@ -425,9 +425,16 @@ func _build_progression_cards() -> void:
 	ui_layer.add_child(cards_root)
 
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
-	if rm and int(rm.get_completed_mission_count()) >= 1:
+	if not rm:
+		return
+		
+	var completed_count = int(rm.get_completed_mission_count())
+	if completed_count >= 1:
 		cards_root.add_child(_build_next_mission_card())
-	cards_root.add_child(_build_star_map_card())
+		
+	# Only show star map if scanner is built
+	if rm.is_scanner_station_built():
+		cards_root.add_child(_build_star_map_card())
 
 func _build_next_mission_card() -> PanelContainer:
 	var panel = PanelContainer.new()

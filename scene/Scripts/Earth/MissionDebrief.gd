@@ -20,6 +20,8 @@ const MiningInventory = preload("res://Scripts/Utils/MiningInventory.gd")
 const SubcontractorManager = preload("res://Scripts/Utils/SubcontractorManager.gd")
 const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd")
 const MissionLogManager = preload("res://Scripts/Utils/MissionLogManager.gd")
+const ConstructionManager = preload("res://Scripts/Utils/ConstructionManager.gd")
+const ResearchManager = preload("res://Scripts/Utils/ResearchManager.gd")
 
 @onready var title_label: Label = $UI/Root/Panel/VBox/Title
 @onready var subtitle_label: Label = $UI/Root/Panel/VBox/Subtitle
@@ -46,6 +48,7 @@ var _closed_out := false
 var _subcontractor := {}
 var _last_exposure_awarded := 0
 var _science_card: PanelContainer = null
+var _construction_card: PanelContainer = null
 var _starter_contract_mode := false
 var _starter_contract := {}
 var _starter_order := {}
@@ -83,6 +86,7 @@ func _ready() -> void:
 	_select_subcontractor()
 	_resolve_starter_contract_mode()
 	_update_labels()
+	_build_construction_card()
 	_build_science_card()
 	_setup_button_handbook()
 
@@ -481,8 +485,14 @@ func _archive_ship() -> void:
 func _scrap_ship(refund_pct: float) -> void:
 	if _closed_out:
 		return
+	
+	# Use research multiplier if it's a standard scrap (0.20)
+	var effective_refund_pct = refund_pct
+	if is_equal_approx(refund_pct, SCRAP_REFUND_PCT):
+		effective_refund_pct = ResearchManager.get_salvage_refund_multiplier()
+		
 	var rocket_id = str(_returned.get("rocket_id", ""))
-	var refund = int(round(_rocket_cost(rocket_id) * refund_pct))
+	var refund = int(round(_rocket_cost(rocket_id) * effective_refund_pct))
 	var app = _get_app_controller()
 	if app:
 		app.add_franc_balance(refund, "scrap")
@@ -557,6 +567,8 @@ func _refresh_action_buttons() -> void:
 	var has_cargo = not _collected.is_empty()
 
 	if not _cargo_resolved:
+		if _construction_card:
+			_construction_card.visible = true
 		# Step 1: Cargo — show only what's available at this level
 		if sell_row:
 			sell_row.visible = true
@@ -576,6 +588,8 @@ func _refresh_action_buttons() -> void:
 			ship_row.visible = false
 
 	elif not _closed_out:
+		if _construction_card:
+			_construction_card.visible = false
 		# Step 2: Ship — show only what's available at this level
 		if sell_row:
 			sell_row.visible = false
@@ -952,6 +966,140 @@ func _show_free_operations_unlock_beat() -> void:
 	tween.tween_property(panel, "modulate:a", 0.0, 0.4)
 	tween.tween_callback(canvas.queue_free)
 
+
+func _build_construction_card() -> void:
+	var vbox = $UI/Root/Panel/VBox
+	if vbox == null:
+		return
+		
+	# Find first incomplete project
+	var projects = ConstructionManager.get_available_projects()
+	var active_project = null
+	for p in projects:
+		if not p.completed:
+			active_project = p
+			break
+			
+	if active_project == null:
+		return
+
+	_construction_card = PanelContainer.new()
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.08, 0.15, 0.12, 0.95) # Dark greenish for construction
+	style.border_color = Color(0.3, 0.8, 0.4, 0.8)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(6)
+	style.content_margin_left = 12
+	style.content_margin_right = 12
+	style.content_margin_top = 10
+	style.content_margin_bottom = 10
+	_construction_card.add_theme_stylebox_override("panel", style)
+	_construction_card.visible = false
+
+	var inner = VBoxContainer.new()
+	inner.add_theme_constant_override("separation", 6)
+	_construction_card.add_child(inner)
+
+	var header = Label.new()
+	header.text = "Construction Project: %s" % active_project.name
+	PanelStyle.apply_body(header)
+	header.add_theme_color_override("font_color", Color(0.5, 1.0, 0.6))
+	inner.add_child(header)
+
+	var progress_label = Label.new()
+	progress_label.name = "ProgressLabel"
+	PanelStyle.apply_muted(progress_label)
+	inner.add_child(progress_label)
+	
+	var contribute_btn = Button.new()
+	contribute_btn.name = "ContributeButton"
+	contribute_btn.text = "Contribute All Cargo to Project"
+	PanelStyle.apply_button(contribute_btn, true)
+	contribute_btn.pressed.connect(_contribute_to_construction)
+	inner.add_child(contribute_btn)
+
+	var footer = vbox.get_node_or_null("Footer")
+	if footer:
+		vbox.add_child(_construction_card)
+		vbox.move_child(_construction_card, footer.get_index())
+	else:
+		vbox.add_child(_construction_card)
+		
+	_refresh_construction_card()
+
+func _refresh_construction_card() -> void:
+	if _construction_card == null:
+		return
+		
+	var projects = ConstructionManager.get_available_projects()
+	var active_project = null
+	for p in projects:
+		if not p.completed:
+			active_project = p
+			break
+			
+	if active_project == null:
+		_construction_card.visible = false
+		return
+		
+	var progress_label = _construction_card.find_child("ProgressLabel") as Label
+	var contribute_btn = _construction_card.find_child("ContributeButton") as Button
+	
+	if progress_label:
+		var lines = []
+		var reqs = active_project.requirements
+		var current = active_project.progress
+		for m in reqs.keys():
+			var cur = int(current.get(m, 0))
+			var total = int(reqs[m])
+			lines.append("%s: %d/%d kg" % [m, cur, total])
+		progress_label.text = "\n".join(lines)
+		
+	if contribute_btn:
+		contribute_btn.disabled = _collected.is_empty() or _cargo_resolved
+
+func _contribute_to_construction() -> void:
+	if _collected.is_empty() or _cargo_resolved:
+		return
+		
+	var projects = ConstructionManager.get_available_projects()
+	var active_project = null
+	for p in projects:
+		if not p.completed:
+			active_project = p
+			break
+			
+	if active_project == null:
+		return
+		
+	# Only contribute what is requested
+	var to_contribute = {}
+	var reqs = active_project.requirements
+	for m in _collected.keys():
+		if reqs.has(m):
+			to_contribute[m] = _collected[m]
+			
+	if to_contribute.is_empty():
+		status_label.text = "None of your current cargo is needed for %s." % active_project.name
+		return
+		
+	# Actually add to project (ConstructionManager handles inventory subtraction)
+	# But wait - ConstructionManager.add_contribution subtracts from RocketsManager inventory.
+	# Our _collected minerals haven't been added to RocketsManager inventory yet if we are in debrief!
+	# Actually, I updated SidescrollMining.gd to add them to inventory on completion.
+	# So they ARE in the inventory now.
+	
+	if ConstructionManager.add_contribution(active_project.id, to_contribute):
+		_cargo_resolved = true
+		_refresh_construction_card()
+		_refresh_action_buttons()
+		
+		var msg = "Contributed minerals to %s." % active_project.name
+		if ConstructionManager.is_project_completed(active_project.id):
+			msg += " PROJECT COMPLETE!"
+		status_label.text = msg
+	else:
+		status_label.text = "Failed to contribute. Check inventory."
 
 func _build_science_card() -> void:
 	var vbox = $UI/Root/Panel/VBox

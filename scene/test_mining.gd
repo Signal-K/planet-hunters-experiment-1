@@ -9,6 +9,9 @@ var _minigame_instance = null
 func _ready() -> void:
 	button.pressed.connect(_on_mine_pressed)
 	result_label.text = "Click MINE to start"
+	
+	if AppController.check_auto_start_mining():
+		_on_mine_pressed()
 
 func _on_mine_pressed() -> void:
 	if _minigame_instance:
