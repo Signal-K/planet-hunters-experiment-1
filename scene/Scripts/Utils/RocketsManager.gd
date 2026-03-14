@@ -60,14 +60,6 @@ const PREDEFINED_MISSION_TARGETS := {
 		"distance_au": 120.0,
 		"required_level": 3,
 		"reward_ratio": 1.4  # Spec: M4 reward planetary exploration
-	},
-	5: {
-		"id": "mission-5-settlement-target",
-		"label": "Exoplanet Kepler-186f",
-		"type": "planet",
-		"distance_au": 240.0,
-		"required_level": 3,
-		"reward_ratio": 1.6
 	}
 }
 
@@ -1630,6 +1622,12 @@ static func add_placed(rocket_type: String, position: Vector2) -> String:
 static func reset_state() -> bool:
 	# Reset rockets state to defaults: only starter rocket unlocked, no placed rockets
 	var data = RocketsStateAccess.build_default_state(MISSION_PROGRESS_SCHEMA_VERSION)
+	_preview_target = {}
+	_return_to_new_mission_panel = false
+	_preview_index = 0
+	_returned_mission = {}
+	_orbiting_rockets = {}
+	_pending_mission_guidance_id = 0
 	_override_state = data.duplicate(true)
 	var ok = save_state(data)
 	if ok:

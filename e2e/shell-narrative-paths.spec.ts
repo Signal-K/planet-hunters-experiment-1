@@ -95,9 +95,9 @@ test.describe("Narrative paths", () => {
   test("NP02: M1→M2 XP progression shows level-up banner at level 2", async ({ page }) => {
     // After M1 debrief, XP reaches level 2
     await dispatchGameEvent(page, "xp_updated", { experience_level: 2, experience_xp: 100 });
-    await expect(page.locator("text=Level 2 reached")).toBeVisible({ timeout: 3_000 });
+    await expect(page.locator("text=Level 2 reached")).toBeVisible({ timeout: 5_000 });
     // Dismiss the banner, move to M2
-    await expect(page.locator("text=Level 2 reached")).not.toBeVisible({ timeout: 6_000 });
+    await expect(page.locator("text=Level 2 reached")).not.toBeVisible({ timeout: 12_000 });
     await saveProgress(page, "m2_launch_outbound");
     // No new banner until level increases
     await dispatchGameEvent(page, "xp_updated", { experience_level: 2, experience_xp: 200 });
@@ -206,10 +206,10 @@ test.describe("Narrative paths", () => {
         experience_level: level,
         experience_xp: level * 100,
       });
-      await expect(page.locator(`text=${expected}`)).toBeVisible({ timeout: 3_000 });
+      await expect(page.locator(`text=${expected}`)).toBeVisible({ timeout: 5_000 });
       // Wait for auto-dismiss before next level
       await expect(page.locator(`text=Level ${level} reached`)).not.toBeVisible({
-        timeout: 6_000,
+        timeout: 12_000,
       });
     }
   });

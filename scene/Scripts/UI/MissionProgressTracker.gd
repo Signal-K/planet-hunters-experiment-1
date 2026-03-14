@@ -26,6 +26,7 @@ const MISSION_STEP_KEYS := {
 var _collapsed := false
 var _accumulated_time := 0.0
 var _tutorial_active := false
+var _tutorial_skipped := false
 
 func _ready() -> void:
 	layer = 50
@@ -67,10 +68,38 @@ func _on_toggle_pressed() -> void:
 	if toggle_button:
 		toggle_button.text = "Show" if _collapsed else "Hide"
 
+const HIDE_SCENES := ["rocket_ascent", "rocket_transit", "rocket_return", "asteroid_preview", "orbit_sale_preview", "SidescrollMining"]
+
+func _get_current_scene_basename() -> String:
+	var tree = get_tree()
+	if tree and tree.current_scene:
+		return tree.current_scene.scene_file_path.get_file().get_basename()
+	return ""
+
 func _refresh() -> void:
 	if _tutorial_active:
 		visible = false
 		return
+	# This tracker is an auxiliary helper and should not compete with the
+	# authored linear tutorial. Only show it after tutorial is skipped or
+	# when free-operations has been unlocked.
+	if not _tutorial_skipped and not ROCKETS_MANAGER.is_free_operations_unlocked():
+		visible = false
+		return
+	var basename := _get_current_scene_basename()
+	# Always hide in transit/cinematic/gameplay scenes.
+	if basename in HIDE_SCENES:
+		visible = false
+		return
+	# Hide when the player is already in the right scene to complete the next step.
+	var app = get_node_or_null("/root/AppController")
+	if app and app.has_method("get_tutorial_state"):
+		var tstate: Dictionary = app.get_tutorial_state()
+		var step: Dictionary = tstate.get("current_step", {})
+		var valid_scenes: Array = step.get("valid_scenes", [])
+		if not valid_scenes.is_empty() and basename in valid_scenes:
+			visible = false
+			return
 	visible = true
 	var stage = int(ROCKETS_MANAGER.get_mission_stage())
 	var objective = str(MISSION_OBJECTIVES.get(stage, "Complete current mission objectives."))
@@ -79,7 +108,7 @@ func _refresh() -> void:
 	var checklist_lines := []
 	for key_any in keys:
 		var key = str(key_any)
-		var seen = _has_seen_guide_action(key)
+		var seen = _has_seen_guide_action_for_stage(key, stage)
 		if seen:
 			seen_count += 1
 		checklist_lines.append("%s %s" % ["[x]" if seen else "[ ]", _label_for_action(key)])
@@ -98,13 +127,25 @@ func _refresh() -> void:
 func _on_tutorial_state_updated(state: Dictionary) -> void:
 	var skipped = bool(state.get("skipped", false))
 	var step: Dictionary = state.get("current_step", {})
+	_tutorial_skipped = skipped
 	_tutorial_active = not skipped and not step.is_empty()
-	visible = not _tutorial_active
+	visible = not _tutorial_active and (_tutorial_skipped or ROCKETS_MANAGER.is_free_operations_unlocked())
 
 func _has_seen_guide_action(action_key: String) -> bool:
 	var app = get_node_or_null("/root/AppController")
 	if app and app.has_method("has_seen_guide_action"):
 		return bool(app.has_seen_guide_action(action_key))
+	return false
+
+func _has_seen_guide_action_for_stage(action_key: String, stage: int) -> bool:
+	var app = get_node_or_null("/root/AppController")
+	if app and app.has_method("has_seen_guide_action_for_stage"):
+		if bool(app.has_seen_guide_action_for_stage(action_key, stage)):
+			return true
+		# When tutorial is skipped, actions are recorded globally but never advance
+		# steps, so completed_actions_by_stage stays empty. Fall back to global.
+		if _tutorial_skipped and app.has_method("has_seen_guide_action"):
+			return bool(app.has_seen_guide_action(action_key))
 	return false
 
 func _label_for_action(action_key: String) -> String:

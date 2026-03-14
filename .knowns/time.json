@@ -1,3 +1,11 @@
 {
-  "active": []
+  "active": [
+    {
+      "taskId": "h40o91",
+      "taskTitle": "Rebuild menu from inventory (delete + restore)",
+      "startedAt": "2026-03-14T06:01:04.931Z",
+      "pausedAt": null,
+      "totalPausedMs": 0
+    }
+  ]
 }

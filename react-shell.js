@@ -751,6 +751,8 @@ async function maybeTriggerFirstMissionSurvey(eventPayload) {
 
 function App() {
   const [progress, setProgress] = useState(() => parseProgress(readCookie(COOKIE_NAME)));
+  const [xpState, setXpState] = useState(() => readXpState() || { experience_level: 1, experience_xp: 0, franc_balance: 0 });
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [storageStatus, setStorageStatus] = useState("Cookie storage active");
   const [gameSrc] = useState(() => "/game/index.html?v=" + Date.now());
   const [isMobile, setIsMobile] = useState(() => typeof window !== "undefined" && Math.min(window.innerWidth, window.innerHeight) < 768);
@@ -856,7 +858,7 @@ function App() {
       }
       pushAction(eventName, payload);
       captureAnalyticsEvent(eventName, payload);
-      if (typeof payload.experience_level !== "undefined" || typeof payload.experience_xp !== "undefined") {
+      if (typeof payload.experience_level !== "undefined" || typeof payload.experience_xp !== "undefined" || typeof payload.franc_balance !== "undefined") {
         const current = readXpState() || {};
         const prevLevel = Number(current.experience_level || 1);
         const snapshot = {
@@ -864,9 +866,11 @@ function App() {
             typeof payload.experience_level !== "undefined" ? payload.experience_level : prevLevel
           ),
           experience_xp: Number(typeof payload.experience_xp !== "undefined" ? payload.experience_xp : current.experience_xp || 0),
+          franc_balance: Number(typeof payload.franc_balance !== "undefined" ? payload.franc_balance : current.franc_balance || 0),
           updated_at: new Date().toISOString(),
         };
         writeXpState(snapshot);
+        setXpState(snapshot);
         syncExperienceToSupabase(snapshot);
         if (snapshot.experience_level > prevLevel) {
           const hint = LEVEL_UNLOCK_HINTS[snapshot.experience_level] || null;
@@ -986,6 +990,25 @@ function App() {
       }
     } catch (_error) {}
     window.location.href = "/";
+  }, []);
+
+  const handleSkipToLevel3 = useCallback(() => {
+    const next = {
+      experience_level: 3,
+      experience_xp: 0,
+      franc_balance: 250000,
+      updated_at: new Date().toISOString(),
+    };
+    writeXpState(next);
+    setXpState(next);
+    alert("Progress skipped to Level 3!");
+    setShowPwaHudMenu(false);
+  }, []);
+
+  const handleInstantMining = useCallback(() => {
+    // In web shell, we just pretend we triggered it and hide menu
+    setShowPwaHudMenu(false);
+    setShowAdvanced(false);
   }, []);
 
   const markerText = useMemo(() => {
@@ -1166,6 +1189,12 @@ function App() {
                   React.Fragment,
                   null,
                   React.createElement(
+                    "div",
+                    { style: { display: "flex", gap: "10px", alignItems: "center", marginRight: "10px" } },
+                    React.createElement("span", { style: { color: "#fff", fontSize: "12px" } }, `Lvl ${xpState.experience_level}`),
+                    React.createElement("span", { style: { color: "#4ad0ff", fontSize: "12px" } }, `${Math.round(xpState.franc_balance / 1000)}K F`)
+                  ),
+                  React.createElement(
                     "button",
                     {
                       onClick: () => {
@@ -1173,11 +1202,15 @@ function App() {
                         if (pwaHudTimerRef.current) {
                           clearTimeout(pwaHudTimerRef.current);
                         }
-                        pwaHudTimerRef.current = setTimeout(() => {
-                          setShowPwaHud(false);
-                          setShowPwaHudMenu(false);
-                          pwaHudTimerRef.current = null;
-                        }, 3500);
+                        if (!showPwaHudMenu) {
+                          // Keep open while menu is shown
+                        } else {
+                          pwaHudTimerRef.current = setTimeout(() => {
+                            setShowPwaHud(false);
+                            setShowPwaHudMenu(false);
+                            pwaHudTimerRef.current = null;
+                          }, 3500);
+                        }
                       },
                       style: {
                         border: "1px solid #2a3560",
@@ -1188,7 +1221,7 @@ function App() {
                         fontSize: "12px",
                       },
                     },
-                    "Menu"
+                    "Exit to Menu"
                   ),
                   showPwaHudMenu
                     ? React.createElement(
@@ -1199,6 +1232,9 @@ function App() {
                             display: "flex",
                             flexDirection: "column",
                             gap: "8px",
+                            marginTop: "8px",
+                            padding: "8px",
+                            borderTop: "1px solid #233455",
                           },
                         },
                         React.createElement(
@@ -1230,6 +1266,56 @@ function App() {
                             },
                           },
                           "Exit"
+                        ),
+                        React.createElement(
+                          "button",
+                          {
+                            onClick: () => setShowAdvanced(!showAdvanced),
+                            style: {
+                              background: "none",
+                              border: "none",
+                              color: "#007AFF",
+                              textDecoration: "underline",
+                              fontSize: "12px",
+                              marginTop: "4px",
+                              cursor: "pointer",
+                            },
+                          },
+                          showAdvanced ? "Hide Advanced Settings" : "Show Advanced Settings"
+                        ),
+                        showAdvanced && React.createElement(
+                          React.Fragment,
+                          null,
+                          React.createElement(
+                            "button",
+                            {
+                              onClick: handleInstantMining,
+                              style: {
+                                border: "1px solid #FF9F0A",
+                                borderRadius: "8px",
+                                padding: "8px 10px",
+                                color: "#fff",
+                                background: "#FF9F0A",
+                                fontSize: "11px",
+                              },
+                            },
+                            "🚀 Instant Mining (Auto-Setup)"
+                          ),
+                          React.createElement(
+                            "button",
+                            {
+                              onClick: handleSkipToLevel3,
+                              style: {
+                                border: "1px solid #64D2FF",
+                                borderRadius: "8px",
+                                padding: "8px 10px",
+                                color: "#fff",
+                                background: "#64D2FF",
+                                fontSize: "11px",
+                              },
+                            },
+                            "📈 Skip to Level 3 (Unlock Missions)"
+                          )
                         )
                       )
                     : null
@@ -1237,6 +1323,12 @@ function App() {
               : React.createElement(
                   React.Fragment,
                   null,
+                  React.createElement(
+                    "div",
+                    { style: { display: "flex", gap: "10px", alignItems: "center", marginRight: "10px" } },
+                    React.createElement("span", { style: { color: "#fff", fontSize: "13px", fontWeight: "bold" } }, `Lvl ${xpState.experience_level}`),
+                    React.createElement("span", { style: { color: "#4ad0ff", fontSize: "13px", fontWeight: "bold" } }, `${Math.round(xpState.franc_balance / 1000)}K F`)
+                  ),
                   React.createElement(
                     "button",
                     {
@@ -1255,17 +1347,103 @@ function App() {
                   React.createElement(
                     "button",
                     {
-                      onClick: handlePwaExit,
+                      onClick: () => {
+                        setShowPwaHudMenu(!showPwaHudMenu);
+                        if (pwaHudTimerRef.current) clearTimeout(pwaHudTimerRef.current);
+                      },
                       style: {
                         border: "1px solid #2a3560",
                         borderRadius: "8px",
                         padding: "8px 10px",
                         color: "#fff",
-                        background: "#3a1724",
+                        background: "#1a2550",
                         fontSize: "12px",
                       },
                     },
-                    "Exit"
+                    "Exit to Menu"
+                  ),
+                  showPwaHudMenu && React.createElement(
+                    "div",
+                    {
+                      style: {
+                        position: "absolute",
+                        top: "100%",
+                        right: 0,
+                        marginTop: "8px",
+                        background: "rgba(5, 8, 15, 0.95)",
+                        border: "1px solid #233455",
+                        borderRadius: "12px",
+                        padding: "12px",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "8px",
+                        minWidth: "200px",
+                      },
+                    },
+                    React.createElement(
+                      "button",
+                      {
+                        onClick: handlePwaExit,
+                        style: {
+                          border: "1px solid #2a3560",
+                          borderRadius: "8px",
+                          padding: "8px 10px",
+                          color: "#fff",
+                          background: "#3a1724",
+                          fontSize: "12px",
+                        },
+                      },
+                      "Exit Game"
+                    ),
+                    React.createElement(
+                      "button",
+                      {
+                        onClick: () => setShowAdvanced(!showAdvanced),
+                        style: {
+                          background: "none",
+                          border: "none",
+                          color: "#007AFF",
+                          textDecoration: "underline",
+                          fontSize: "12px",
+                          cursor: "pointer",
+                        },
+                      },
+                      showAdvanced ? "Hide Advanced Settings" : "Show Advanced Settings"
+                    ),
+                    showAdvanced && React.createElement(
+                      React.Fragment,
+                      null,
+                      React.createElement(
+                        "button",
+                        {
+                          onClick: handleInstantMining,
+                          style: {
+                            border: "1px solid #FF9F0A",
+                            borderRadius: "8px",
+                            padding: "8px 10px",
+                            color: "#fff",
+                            background: "#FF9F0A",
+                            fontSize: "11px",
+                          },
+                        },
+                        "🚀 Instant Mining (Auto-Setup)"
+                      ),
+                      React.createElement(
+                        "button",
+                        {
+                          onClick: handleSkipToLevel3,
+                          style: {
+                            border: "1px solid #64D2FF",
+                            borderRadius: "8px",
+                            padding: "8px 10px",
+                            color: "#fff",
+                            background: "#64D2FF",
+                            fontSize: "11px",
+                          },
+                        },
+                        "📈 Skip to Level 3 (Unlock Missions)"
+                      )
+                    )
                   )
                 )
           )
@@ -1433,6 +1611,24 @@ function App() {
           },
         },
         "Save Progress"
+      ),
+      React.createElement(
+        "button",
+        {
+          style: {
+            border: "1px solid var(--edge)",
+            borderRadius: "999px",
+            padding: "6px 12px",
+            color: "#fff",
+            background: "#1a2550",
+            cursor: "pointer",
+          },
+          onClick: () => {
+            setShowPwaHud(true);
+            setShowPwaHudMenu(true);
+          },
+        },
+        "Exit to Menu"
       )
     ),
     React.createElement(

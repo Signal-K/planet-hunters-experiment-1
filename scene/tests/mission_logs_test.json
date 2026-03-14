@@ -1,20 +1,4 @@
 {
   "missions": [
-    {
-      "timestamp": "2026-02-28T14:59:01",
-      "rocket_id": "starterrocket1-test",
-      "target_id": "A-TEST",
-      "label": "Asteroid A-TEST",
-      "operation_mode": "contract",
-      "subcontractor_id": "sub-test",
-      "subcontractor_name": "Sub Test",
-      "action": "scrap",
-      "payout": 200000000,
-      "cargo": {
-        "Iron": 10,
-        "Nickel": 2
-      },
-      "badge": "starterrocket1-test-A-TEST-1772261941"
-    }
   ]
 }

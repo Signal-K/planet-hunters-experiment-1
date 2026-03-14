@@ -1016,6 +1016,10 @@ func _check_mineral_hit():
 			
 			if _guide_active:
 				_surface_mined_count += 1
+				if _guide_step == GuideStep.MINE_SURFACE_IRON and _surface_mined_count >= 1:
+					_advance_guide_step(GuideStep.MINE_SURFACE_NICKEL)
+				elif _guide_step == GuideStep.MINE_SURFACE_NICKEL and _surface_mined_count >= 2:
+					_advance_guide_step(GuideStep.EXPLAIN_SUBSURFACE)
 			_record_region_collection(region, "laser")
 			_spawn_particles(region)
 			
@@ -1237,13 +1241,21 @@ func _complete_mining():
 		RocketsManager.add_to_inventory(_collected_minerals)
 		
 	# Pass to AppController for React Native bridge sync
-	AppController.set_last_mining_result({
-		"minerals": _collected_minerals.duplicate(true),
-		"score": _score,
-		"target_id": _current_target_id
-	})
+	var app = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
+	if app and app.has_method("set_last_mining_result"):
+		app.set_last_mining_result({
+			"minerals": _collected_minerals.duplicate(true),
+			"score": _score,
+			"target_id": _current_target_id
+		})
 		
 	mining_completed.emit(_collected_minerals, _score)
+
+func _advance_guide_step(next_step: GuideStep):
+	if _guide_step == next_step:
+		return
+	_guide_step = next_step
+	_show_guide_step()
 
 func _show_guide_step():
 	var tween = create_tween()
@@ -1300,31 +1312,15 @@ func _update_guide(delta):
 		_is_mining = false
 	
 	if Input.is_key_pressed(KEY_D) and _drones_available > 0 and _drone_cooldown_timer <= 0:
-		if _guide_step == GuideStep.DEPLOY_DRONE:
-			_deploy_drone()
-			await get_tree().create_timer(2.0).timeout
-			_guide_step = GuideStep.COMPLETE
-			_show_guide_step()
+		_deploy_drone()
 	
 	match _guide_step:
 		GuideStep.INTRO:
-			await get_tree().create_timer(3.0).timeout
-			_guide_step = GuideStep.MINE_SURFACE_IRON
-			_show_guide_step()
-		GuideStep.MINE_SURFACE_IRON:
-			if _surface_mined_count >= 1:
-				await get_tree().create_timer(1.0).timeout
-				_guide_step = GuideStep.MINE_SURFACE_NICKEL
-				_show_guide_step()
-		GuideStep.MINE_SURFACE_NICKEL:
-			if _surface_mined_count >= 2:
-				await get_tree().create_timer(1.0).timeout
-				_guide_step = GuideStep.EXPLAIN_SUBSURFACE
-				_show_guide_step()
+			if _elapsed_time >= 3.0:
+				_advance_guide_step(GuideStep.MINE_SURFACE_IRON)
 		GuideStep.EXPLAIN_SUBSURFACE:
-			await get_tree().create_timer(3.0).timeout
-			_guide_step = GuideStep.DEPLOY_DRONE
-			_show_guide_step()
+			if _elapsed_time >= _last_progress_elapsed + 2.0:
+				_advance_guide_step(GuideStep.DEPLOY_DRONE)
 
 func _deploy_drone():
 	var drone = _acquire_drone_from_pool()
@@ -1376,6 +1372,8 @@ func _on_drone_exploded(_pos: Vector2, region: Dictionary = {}):
 		_apply_region_visual_state(region)
 		_record_region_collection(region, "drone")
 		_spawn_particles(region)
+		if _guide_active and _guide_step == GuideStep.DEPLOY_DRONE:
+			_advance_guide_step(GuideStep.COMPLETE)
 	_score += 50
 	score_label.text = "Score: %d" % _score
 
@@ -1391,7 +1389,7 @@ func _check_guide_slowdown():
 		target_surface = true
 	elif _guide_step == GuideStep.MINE_SURFACE_NICKEL and _surface_mined_count == 1:
 		target_surface = true
-	elif _guide_step == GuideStep.DEPLOY_DRONE:
+	elif _guide_step == GuideStep.DEPLOY_DRONE and _subsurface_collected_count == 0:
 		target_surface = false
 
 	if target_surface == null:

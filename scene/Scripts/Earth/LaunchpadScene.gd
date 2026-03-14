@@ -109,6 +109,14 @@ func _recursive_find_by_name(node: Node, target_name: String) -> Node:
 	return null
 
 func _setup_mission_guidance() -> void:
+	var app = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
+	if app != null and app.has_method("get_tutorial_state"):
+		var state: Dictionary = app.get_tutorial_state()
+		var skipped = bool(state.get("skipped", false))
+		var step: Dictionary = state.get("current_step", {})
+		# During authored tutorial progression, rely on TutorialCoachOverlay only.
+		if not skipped and not step.is_empty():
+			return
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	if not rm:
 		return
@@ -133,6 +141,14 @@ func _setup_mission_guidance() -> void:
 func _update_mission_guidance() -> void:
 	if not _mission_guidance_active:
 		return
+	var app = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
+	if app != null and app.has_method("get_tutorial_state"):
+		var state: Dictionary = app.get_tutorial_state()
+		var skipped = bool(state.get("skipped", false))
+		var step: Dictionary = state.get("current_step", {})
+		if not skipped and not step.is_empty():
+			_clear_mission_guidance()
+			return
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	if not rm:
 		return
@@ -229,8 +245,27 @@ func _refresh_inspect_button_state() -> void:
 	if _inspect_rooms_btn == null:
 		return
 	var rocket = _get_primary_rocket()
-	_inspect_rooms_btn.visible = rocket != null
+	var selector_visible := _is_selector_panel_visible()
+	var tutorial_overlay_active := _is_tutorial_overlay_active()
+	_inspect_rooms_btn.visible = rocket != null and not selector_visible and not tutorial_overlay_active
 	_inspect_rooms_btn.text = "Exit Interior" if _camera_zoomed_in else "Inspect Rooms"
+
+func _is_selector_panel_visible() -> bool:
+	var root = get_tree().current_scene
+	if root == null:
+		return false
+	var panel = root.get_node_or_null("UILayer/SelectorPanel") as Control
+	return panel != null and panel.visible
+
+func _is_tutorial_overlay_active() -> bool:
+	var app = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
+	if app == null or not app.has_method("get_tutorial_state"):
+		return false
+	var state = app.get_tutorial_state()
+	if typeof(state) != TYPE_DICTIONARY or bool(state.get("skipped", false)):
+		return false
+	var step = state.get("current_step", {})
+	return typeof(step) == TYPE_DICTIONARY and not (step as Dictionary).is_empty()
 
 func _on_inspect_rooms_pressed() -> void:
 	var rocket = _get_primary_rocket()

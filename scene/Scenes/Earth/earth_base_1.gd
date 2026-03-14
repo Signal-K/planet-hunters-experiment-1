@@ -212,7 +212,7 @@ func _on_forward_button_pressed() -> void:
 
 func _on_menu_button_pressed() -> void:
 	print("Menu button pressed - showing menu panel")
-	ui_manager.show_panel(UIManager.PanelType.MENU)
+	preload("res://Scripts/UI/GameNavigationMenu.gd").toggle(self)
 
 func _on_market_button_pressed() -> void:
 	print("Market button pressed - showing market panel")
@@ -414,14 +414,24 @@ func _build_progression_cards() -> void:
 	var ui_layer = get_node_or_null("UILayer")
 	if ui_layer == null:
 		return
+	var app = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
+	if app != null and app.has_method("get_tutorial_state"):
+		var state: Dictionary = app.get_tutorial_state()
+		var skipped = bool(state.get("skipped", false))
+		var step: Dictionary = state.get("current_step", {})
+		# Keep the reserved tutorial lane clean: progression cards are post-tutorial
+		# helpers and should never overlap the active linear tutorial flow.
+		if not skipped and not step.is_empty():
+			return
 	var cards_root = VBoxContainer.new()
 	cards_root.name = "ProgressionCards"
 	cards_root.add_theme_constant_override("separation", 10)
 	cards_root.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	cards_root.offset_left = -400
+	cards_root.offset_left = -380
 	cards_root.offset_right = -20
 	cards_root.offset_top = 40
 	cards_root.offset_bottom = 320
+	cards_root.clip_contents = true
 	ui_layer.add_child(cards_root)
 
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
@@ -438,13 +448,14 @@ func _build_progression_cards() -> void:
 
 func _build_next_mission_card() -> PanelContainer:
 	var panel = PanelContainer.new()
-	panel.custom_minimum_size = Vector2(360, 110)
+	panel.size_flags_horizontal = Control.SIZE_FILL
 	PanelStyle.apply_panel(panel)
 	var body = VBoxContainer.new()
 	body.add_theme_constant_override("separation", 6)
 	panel.add_child(body)
 	var title = Label.new()
 	title.text = "Next Mission Available"
+	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	PanelStyle.apply_title(title)
 	title.add_theme_font_size_override("font_size", 20)
 	body.add_child(title)
@@ -462,19 +473,21 @@ func _build_next_mission_card() -> PanelContainer:
 
 func _build_star_map_card() -> PanelContainer:
 	var panel = PanelContainer.new()
-	panel.custom_minimum_size = Vector2(360, 120)
+	panel.size_flags_horizontal = Control.SIZE_FILL
 	PanelStyle.apply_panel(panel)
 	var body = VBoxContainer.new()
 	body.add_theme_constant_override("separation", 6)
 	panel.add_child(body)
 	var title = Label.new()
 	title.text = "Star Map"
+	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	PanelStyle.apply_title(title)
 	title.add_theme_font_size_override("font_size", 20)
 	body.add_child(title)
 	var discovered_count = _get_discovered_planet_count()
 	var subtitle = Label.new()
 	subtitle.text = "Discovered: %d / ??? planets" % discovered_count
+	subtitle.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	PanelStyle.apply_body(subtitle)
 	body.add_child(subtitle)
 	var hint = Label.new()

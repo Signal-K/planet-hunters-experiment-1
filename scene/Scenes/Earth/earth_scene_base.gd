@@ -124,7 +124,7 @@ func _on_forward_button_pressed() -> void:
 
 func _on_menu_button_pressed() -> void:
 	print("Menu button pressed - showing menu panel")
-	ui_manager.show_panel(UIManager.PanelType.MENU)
+	preload("res://Scripts/UI/GameNavigationMenu.gd").toggle(self)
 
 func _on_market_button_pressed() -> void:
 	print("Market button pressed - showing market panel")

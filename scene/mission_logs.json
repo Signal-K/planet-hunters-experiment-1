@@ -429,11 +429,46 @@
       "subcontractor_id": "rocketlab",
       "subcontractor_name": "Rocketlab",
       "action": "sell_orbit",
-      "payout": 236000000,
+      "payout": 236000000.0,
       "cargo": {
         "Iron": 50.0
       },
       "badge": "starterrocket1-m5-affinity-mission5-affinity-target-1772017107"
+    },
+    {
+      "timestamp": "2026-03-13T16:11:48",
+      "rocket_id": "starterrocket1-5825722",
+      "target_id": "mission-1-training-target",
+      "label": "Training Asteroid A",
+      "operation_mode": "contract",
+      "subcontractor_id": "astroforge",
+      "subcontractor_name": "Astroforge",
+      "action": "sell_orbit",
+      "payout": 1500000000.0,
+      "cargo": {
+        "Iron": 2.0,
+        "Nickel": 2.0,
+        "Cobalt": 3.0,
+        "Platinum": 1.0
+      },
+      "badge": "starterrocket1-5825722-mission-1-training-target-1773378708"
+    },
+    {
+      "timestamp": "2026-03-14T17:46:16",
+      "rocket_id": "starterrocket1-1533150129",
+      "target_id": "mission-1-training-target",
+      "label": "Training Asteroid A",
+      "operation_mode": "contract",
+      "subcontractor_id": "spacex",
+      "subcontractor_name": "SpaceX",
+      "action": "sell_orbit",
+      "payout": 1500000000,
+      "cargo": {
+        "Iron": 1,
+        "Nickel": 1,
+        "Cobalt": 1
+      },
+      "badge": "starterrocket1-1533150129-mission-1-training-target-1773470776"
     }
   ]
 }

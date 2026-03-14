@@ -45,6 +45,11 @@ func has_seen_tutorial_action(action_key: String) -> bool:
 		return true
 	return bool(_state.get("completed_actions", {}).get(action_key, false))
 
+func has_seen_tutorial_action_for_stage(action_key: String, stage: int) -> bool:
+	if action_key == "":
+		return true
+	return bool(_state.get("completed_actions_by_stage", {}).get(str(stage), {}).get(action_key, false))
+
 func record_action(action_key: String, metadata: Dictionary = {}) -> bool:
 	if action_key == "":
 		return false
