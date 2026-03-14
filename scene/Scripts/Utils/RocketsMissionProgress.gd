@@ -14,13 +14,9 @@ static func mission_stage_from_completed(completed: int) -> int:
         return 2
     if completed == 2:
         return 3
-    if completed == 3:
-        return 4
-    if completed == 4:
-        return 5
-    # Authored mission progression stops at Mission 5.
-    # Post-M5 gameplay is Free Operations while keeping stage 5 compatibility.
-    return 5
+    # Authored tutorial progression caps at Mission 4.
+    # Post-M4 gameplay remains free operations while keeping stage 4 UI contracts.
+    return 4
 
 static func sanitize_completed_badges(state: Dictionary, scanner_unlock_completed_missions: int) -> bool:
     var raw = state.get("completed_mission_badges", [])

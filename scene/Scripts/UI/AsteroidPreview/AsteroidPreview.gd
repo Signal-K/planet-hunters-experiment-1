@@ -174,11 +174,17 @@ func _on_return_pressed():
 	if not preview.is_empty():
 		target_label = str(preview.get("label", target_label))
 	var operation_mode = rm.get_operation_mode_for_rocket(_current_rocket_id)
+	var trip_contractor = rm.get_trip_selected_contractor()
+	var trip_offer = rm.get_trip_contract_offer()
 	rm.set_returned_mission(_current_rocket_id, _current_target_id, target_label, _current_target_type, operation_mode, {
 		"mining_run_collected": _last_mining_collected.duplicate(true),
 		"mining_report": _last_mining_report.duplicate(true),
 		"starter_contract_context": _starter_contract_context.duplicate(true),
-		"starter_contract_complete": _starter_requirements_met(_last_mining_collected)
+		"starter_contract_complete": _starter_requirements_met(_last_mining_collected),
+		"trip_contractor_id": str(trip_contractor.get("id", "")),
+		"trip_contractor_name": str(trip_contractor.get("name", "")),
+		"trip_contractor_effect": str(trip_contractor.get("effect", "")),
+		"trip_requested_minerals": trip_offer.get("requested_minerals", {}).duplicate(true)
 	})
 	rm.return_home(_current_rocket_id)
 	rm.clear_preview_target()

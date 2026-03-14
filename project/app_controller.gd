@@ -164,12 +164,6 @@ func set_last_mining_result(result: Dictionary) -> void:
 	_last_mining_result_synced = false
 	print("AppController: New mining result set: ", result)
 
-var _last_mining_result: Dictionary = {}
-var _last_mining_result_synced: bool = true
-var _auto_start_mining: bool = false
-
-const BASE_XP_TO_LEVEL := 10
-...
 func mark_mining_result_synced() -> void:
 	_last_mining_result_synced = true
 	print("AppController: Mining result marked as synced")
@@ -192,5 +186,4 @@ func check_auto_start_mining() -> bool:
 	return val
 
 func has_signal_connections(signal_name: String) -> bool:
-
 	return get_signal_connection_list(signal_name).size() > 0

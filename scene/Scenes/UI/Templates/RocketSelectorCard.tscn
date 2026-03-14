@@ -9,12 +9,12 @@ size_flags_vertical = 1
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-theme_override_constants/separation = 12
+theme_override_constants/separation = 8
 
 [node name="RocketTexture" type="TextureRect" parent="Body"]
 layout_mode = 2
 size_flags_horizontal = 3
-custom_minimum_size = Vector2(0, 180)
+custom_minimum_size = Vector2(0, 110)
 expand_mode = 1
 stretch_mode = 6
 
@@ -38,7 +38,7 @@ layout_mode = 2
 size_flags_vertical = 3
 
 [node name="CreateButton" type="Button" parent="Body"]
-custom_minimum_size = Vector2(0, 62)
+custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Create"

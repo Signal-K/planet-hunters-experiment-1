@@ -20,6 +20,7 @@ func _apply_style() -> void:
 	panel_style.apply_title(title)
 	panel_style.apply_button(close_btn, false)
 	panel_style.apply_body(subtitle)
+	subtitle.text = "Build partner standing to unlock rewards."
 	panel_style.apply_muted(hint)
 
 func _build_list() -> void:
@@ -71,15 +72,16 @@ func _build_list() -> void:
 
 		var role_lbl: Label = card.get_node("Row/RoleLabel")
 		if is_available:
-			role_lbl.text = str(entry.get("role", ""))
+			role_lbl.text = "Focus: " + str(entry.get("role", ""))
 		else:
-			role_lbl.text = "Locked until level %s" % str(unlock_level)
+			role_lbl.text = "Unlocks at level %s" % str(unlock_level)
 		role_lbl.add_theme_color_override("font_color", panel_style.TEXT_MUTED)
-		role_lbl.add_theme_font_size_override("font_size", 15)
+		role_lbl.add_theme_font_size_override("font_size", 14)
 
 		var affinity = int(sm.get_affinity(str(entry.get("id", ""))))
 		var affinity_row: HBoxContainer = card.get_node("Row/AffinityRow")
 		var affinity_lbl: Label = card.get_node("Row/AffinityRow/AffinityLabel")
+		affinity_lbl.text = "Standing:"
 		affinity_lbl.add_theme_color_override("font_color", panel_style.TEXT_MUTED)
 		affinity_lbl.add_theme_font_size_override("font_size", 13)
 		var bar: ProgressBar = card.get_node("Row/AffinityRow/AffinityBar")

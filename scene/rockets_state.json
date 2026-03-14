@@ -12,77 +12,65 @@
   ],
   "missions": [
   ],
-  "selected_target": "101445733",
+  "selected_target": "free-ops-survey-target",
   "preview_target": {
   },
   "detected_targets": [
     {
-      "id": "101445733",
-      "label": "101445733",
-      "type": "asteroid",
-      "anomalySet": "active-asteroids",
-      "classification_status": "<null>",
-      "tess_disposition": "<null>"
-    },
-    {
-      "id": "63768316",
-      "label": "63768316",
-      "type": "asteroid",
-      "anomalySet": "active-asteroids",
-      "classification_status": "<null>",
-      "tess_disposition": "<null>"
-    },
-    {
-      "id": "68115570",
-      "label": "68115570",
-      "type": "asteroid",
-      "anomalySet": "active-asteroids",
-      "classification_status": "<null>",
-      "tess_disposition": "<null>"
-    },
-    {
-      "id": "63768664",
-      "label": "63768664",
-      "type": "asteroid",
-      "anomalySet": "active-asteroids",
-      "classification_status": "<null>",
-      "tess_disposition": "<null>"
-    },
-    {
-      "id": "63769326",
-      "label": "63769326",
-      "type": "asteroid",
-      "anomalySet": "active-asteroids",
-      "classification_status": "<null>",
-      "tess_disposition": "<null>"
+      "id": "free-ops-survey-target",
+      "label": "Free Ops Survey Target",
+      "type": "asteroid"
     }
   ],
   "seen_asteroids": [
-    "101445733"
   ],
   "seen_planets": [
   ],
   "scan_counts": {
-    "asteroid:101445733": 1.0,
-    "asteroid:63768316": 1.0,
-    "asteroid:68115570": 1.0,
-    "asteroid:63768664": 1.0,
-    "asteroid:63769326": 1.0
   },
   "status_changed_at": {
   },
-  "mission_progress_completed": 2,
+  "mission_progress_completed": 7,
   "completed_mission_badges": [
-    "debug-skip-1",
-    "debug-skip-2"
+    "e2e-stage-1-340",
+    "e2e-stage-2-345",
+    "e2e-stage-3-351",
+    "e2e-stage-1-367",
+    "e2e-stage-2-367",
+    "e2e-stage-3-367",
+    "e2e-stage-4-368"
   ],
   "scanner_station_built": false,
   "scanner_unlocked": true,
-  "scanner_unlock_dialog_seen": true,
+  "scanner_unlock_dialog_seen": false,
   "scanner_next_scan_at": 0.0,
-  "mission5_contract_offer": {
+  "trip_contract_offer": {
+    "contractors": [
+      {
+        "id": "rocketlab",
+        "name": "Rocketlab",
+        "effect": "build_discount",
+        "build_discount_pct": 0.2
+      },
+      {
+        "id": "astroforge",
+        "name": "Astroforge",
+        "effect": "payout_bonus",
+        "payout_bonus_mult": 1.15
+      }
+    ],
+    "selected_contractor": "rocketlab",
+    "selection_required": false,
+    "requested_minerals": {
+      "Iron": 163.0,
+      "Nickel": 117.0
+    },
+    "recommended_target_id": "free-ops-survey-target",
+    "recommended_target_label": "Free Ops Survey Target",
+    "recommended_rocket": "starterrocket1",
+    "payout_cap": 1400000000.0
   },
-  "operation_mode": "contract",
+  "operation_mode": "survey",
   "candidate_visit_blocks": {
   },
   "target_annotation_levels": {
@@ -100,7 +88,13 @@
   },
   "mission_progress_schema_version": 2.0,
   "pending_mission_guidance_id": 0.0,
-  "launch_fallback_notice": "",
+  "launch_fallback_notice": "No target was selected, so mission control auto-selected Exoplanet Kepler-442b Proxy for this launch.",
+  "inventory": {
+    "Iron": 0.0,
+    "Nickel": 0.0,
+    "Cobalt": 0.0,
+    "Platinum": 0.0
+  },
   "returning": [
   ],
   "arrived": {
@@ -109,13 +103,5 @@
   },
   "returning_started": {
   },
-  "trip_contract_offer": {
-  },
-  "launch_guidance_notice": "",
-  "inventory": {
-    "Iron": 0.0,
-    "Nickel": 0.0,
-    "Cobalt": 0.0,
-    "Platinum": 0.0
-  }
+  "launch_guidance_notice": "Select a contractor first, then pick a mission target."
 }

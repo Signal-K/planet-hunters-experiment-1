@@ -105,7 +105,6 @@ func _apply_style() -> void:
 	PanelStyle.apply_button(citizen_science_dialogue_btn, false)
 	PanelStyle.apply_button(reset_btn, false)
 	PanelStyle.apply_button(debug_mining_btn, false)
-	PanelStyle.apply_button(debug_level_btn, false)
 	PanelStyle.apply_button(debug_money_btn, false)
 	PanelStyle.apply_button(practice_mining_btn, false)
 	PanelStyle.apply_button(skip_tutorial_btn, false)

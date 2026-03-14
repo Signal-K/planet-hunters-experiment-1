@@ -1,0 +1,88 @@
+{
+  "taskId": "h40o91",
+  "currentVersion": 2,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "h40o91",
+      "version": 1,
+      "timestamp": "2026-03-14T06:01:04.954Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Rebuild menu from inventory (delete + restore)",
+        "description": "Document every menu element/behavior, then rebuild menu panel implementation from scratch and restore all menu functions in a clean path.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "menu",
+          "ui",
+          "rebuild"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Full menu inventory captured (tabs, controls, actions)"
+          },
+          {
+            "completed": false,
+            "text": "Menu implementation rebuilt from clean baseline"
+          },
+          {
+            "completed": false,
+            "text": "All original menu functions restored and operational"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "h40o91",
+      "version": 2,
+      "timestamp": "2026-03-14T06:05:49.384Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "newValue": "1. Replace old menu open path with a new AppController-owned runtime menu implementation (no dependency on MenuPanel scene/script).\n2. Route Earth nav Menu action through UIManager -> AppController runtime menu only.\n3. Keep tutorial/reset/practice/dialogue controls in rebuilt menu and ensure close/hide lifecycle is stable.\n4. Remove old menu preload dependency from AppController to avoid loading legacy menu artifacts."
+        }
+      ],
+      "snapshot": {
+        "title": "Rebuild menu from inventory (delete + restore)",
+        "description": "Document every menu element/behavior, then rebuild menu panel implementation from scratch and restore all menu functions in a clean path.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "menu",
+          "ui",
+          "rebuild"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Full menu inventory captured (tabs, controls, actions)"
+          },
+          {
+            "completed": false,
+            "text": "Menu implementation rebuilt from clean baseline"
+          },
+          {
+            "completed": false,
+            "text": "All original menu functions restored and operational"
+          }
+        ],
+        "implementationPlan": "1. Replace old menu open path with a new AppController-owned runtime menu implementation (no dependency on MenuPanel scene/script).\n2. Route Earth nav Menu action through UIManager -> AppController runtime menu only.\n3. Keep tutorial/reset/practice/dialogue controls in rebuilt menu and ensure close/hide lifecycle is stable.\n4. Remove old menu preload dependency from AppController to avoid loading legacy menu artifacts."
+      }
+    }
+  ]
+}

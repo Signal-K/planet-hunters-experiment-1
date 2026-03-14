@@ -10,7 +10,7 @@
     "start": "react-native start",
     "test": "jest",
     "test:unit": "jest --runInBand --watchman=false",
-    "test:e2e": "npx playwright install chromium && playwright test",
+    "test:e2e": "npx playwright install && playwright test",
     "test:cypress:desktop": "TS_NODE_PROJECT=cypress/tsconfig.json cypress run --config viewportWidth=1280,viewportHeight=720 --spec cypress/e2e/desktop.cy.ts",
     "test:cypress:mobile": "TS_NODE_PROJECT=cypress/tsconfig.json cypress run --config viewportWidth=375,viewportHeight=812 --spec cypress/e2e/mobile.cy.ts",
     "test:all": "npm run test:unit && npm run test:e2e && npm run test:cypress:desktop && npm run test:cypress:mobile",

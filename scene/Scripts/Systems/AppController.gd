@@ -9,13 +9,13 @@ signal experience_updated(xp: int, level: int)
 signal rockets_reset()
 signal tutorial_state_updated(state: Dictionary)
 signal citizen_science_dialogue_toggled(enabled: bool)
+signal leveled_up(new_level: int)
 
 var counter: int = 0
 var franc_balance: int = 10000000000
 var experience_xp: int = 0
 var experience_level: int = 1
 var citizen_science_dialogue_enabled: bool = true
-var menu_panel_scene = preload("res://Scenes/UI/MenuPanel.tscn")
 var current_menu_panel: Control = null
 var _menu_layer: CanvasLayer = null
 var _game_paused: bool = false
@@ -228,43 +228,19 @@ func debug_skip_to_mission(stage: int) -> void:
 	AppLogger.d("AppController Debug: Jump Complete. Stage: %d" % rm.get_mission_stage())
 
 func show_menu_panel() -> void:
-	"""Show the main menu panel with counter"""
-	if current_menu_panel:
+	"""Show the runtime menu via the single menu service."""
+	if get_tree() == null or get_tree().root == null:
 		return
-
-	_ensure_menu_layer()
-	current_menu_panel = menu_panel_scene.instantiate()
-	_menu_layer.add_child(current_menu_panel)
-	current_menu_panel.process_mode = Node.PROCESS_MODE_WHEN_PAUSED
-	_set_tutorial_overlay_suspended(true)
-
-	if current_menu_panel.has_method("set_counter"):
-		current_menu_panel.set_counter(counter)
-
-	if current_menu_panel.has_signal("panel_closed"):
-		current_menu_panel.panel_closed.connect(_on_menu_panel_closed)
-
-	if current_menu_panel.has_signal("counter_changed"):
-		current_menu_panel.counter_changed.connect(_on_counter_changed)
-
-	if current_menu_panel.has_signal("reset_all"):
-		current_menu_panel.reset_all.connect(_on_reset_all)
-	if current_menu_panel.has_signal("skip_tutorial_requested"):
-		current_menu_panel.skip_tutorial_requested.connect(skip_tutorial)
-	if current_menu_panel.has_signal("replay_mission_tutorial_requested"):
-		current_menu_panel.replay_mission_tutorial_requested.connect(replay_tutorial_for_current_mission)
-	if current_menu_panel.has_signal("replay_all_tutorial_requested"):
-		current_menu_panel.replay_all_tutorial_requested.connect(replay_tutorial_from_mission1)
-
-	AppLogger.d("Menu panel shown with counter: %s" % counter)
+	var service = preload("res://Scripts/UI/GameNavigationMenu.gd")
+	service.open(self)
 
 func hide_menu_panel() -> void:
-	"""Hide the main menu panel"""
-	if current_menu_panel:
-		current_menu_panel.queue_free()
-		current_menu_panel = null
-		_set_tutorial_overlay_suspended(false)
-		AppLogger.d("Menu panel hidden")
+	"""Hide the runtime menu via the single menu service."""
+	if get_tree() == null or get_tree().root == null:
+		return
+	var service = preload("res://Scripts/UI/GameNavigationMenu.gd")
+	service.close(self)
+	current_menu_panel = null
 
 func _on_menu_panel_closed() -> void:
 	"""Handle menu panel being closed"""
@@ -273,7 +249,10 @@ func _on_menu_panel_closed() -> void:
 	window_status_update.emit("Menu panel closed")
 
 func is_menu_open() -> bool:
-	return current_menu_panel != null
+	if get_tree() == null:
+		return false
+	var service = preload("res://Scripts/UI/GameNavigationMenu.gd")
+	return service.is_open(get_tree())
 
 func _set_tutorial_overlay_suspended(suspended: bool) -> void:
 	var root = get_tree().root if get_tree() else null
@@ -307,7 +286,128 @@ func _ensure_menu_layer() -> void:
 	_menu_layer = CanvasLayer.new()
 	_menu_layer.name = "MenuOverlayLayer"
 	_menu_layer.layer = 120
+	_menu_layer.set_meta("tutorial_zone_exempt", true)
 	get_tree().root.add_child(_menu_layer)
+
+func _mark_tutorial_zone_exempt_recursive(node: Node) -> void:
+	if node == null:
+		return
+	if node is Control:
+		(node as Control).set_meta("tutorial_zone_exempt", true)
+	for child in node.get_children():
+		_mark_tutorial_zone_exempt_recursive(child)
+
+func _build_safe_menu_panel() -> Control:
+	var root = Control.new()
+	root.name = "SafeMenuPanel"
+	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	root.mouse_filter = Control.MOUSE_FILTER_STOP
+	root.set_meta("tutorial_zone_exempt", true)
+	root.process_mode = Node.PROCESS_MODE_WHEN_PAUSED
+
+	var overlay = ColorRect.new()
+	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	overlay.color = Color(0.094, 0.102, 0.122, 0.72)
+	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	overlay.set_meta("tutorial_zone_exempt", true)
+	root.add_child(overlay)
+
+	var center = CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	center.mouse_filter = Control.MOUSE_FILTER_STOP
+	center.set_meta("tutorial_zone_exempt", true)
+	root.add_child(center)
+
+	var panel = PanelContainer.new()
+	panel.custom_minimum_size = Vector2(760, 560)
+	panel.mouse_filter = Control.MOUSE_FILTER_STOP
+	panel.set_meta("tutorial_zone_exempt", true)
+	center.add_child(panel)
+
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.04, 0.06, 0.12, 0.95)
+	style.border_color = Color(0.28, 0.88, 0.96, 0.95)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(8)
+	style.content_margin_left = 24
+	style.content_margin_right = 24
+	style.content_margin_top = 20
+	style.content_margin_bottom = 20
+	panel.add_theme_stylebox_override("panel", style)
+
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 12)
+	panel.add_child(vbox)
+
+	var title = Label.new()
+	title.text = "Main Menu"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 34)
+	title.add_theme_color_override("font_color", Color(0.95, 0.93, 0.90, 1.0))
+	vbox.add_child(title)
+
+	var close_btn = Button.new()
+	close_btn.text = "Close"
+	close_btn.custom_minimum_size = Vector2(0, 52)
+	close_btn.pressed.connect(func():
+		hide_menu_panel()
+	)
+	vbox.add_child(close_btn)
+
+	var practice_btn = Button.new()
+	practice_btn.text = "Practice Mining"
+	practice_btn.custom_minimum_size = Vector2(0, 52)
+	practice_btn.pressed.connect(func():
+		preload("res://Scripts/Utils/AppControllerHelper.gd").open_mining_practice_panel("menu_panel")
+		hide_menu_panel()
+	)
+	vbox.add_child(practice_btn)
+
+	var skip_btn = Button.new()
+	skip_btn.text = "Skip Onboarding"
+	skip_btn.custom_minimum_size = Vector2(0, 52)
+	skip_btn.pressed.connect(func():
+		skip_tutorial()
+	)
+	vbox.add_child(skip_btn)
+
+	var replay_mission_btn = Button.new()
+	replay_mission_btn.text = "Replay This Mission Guide"
+	replay_mission_btn.custom_minimum_size = Vector2(0, 52)
+	replay_mission_btn.pressed.connect(func():
+		replay_tutorial_for_current_mission()
+	)
+	vbox.add_child(replay_mission_btn)
+
+	var replay_all_btn = Button.new()
+	replay_all_btn.text = "Replay Full Onboarding"
+	replay_all_btn.custom_minimum_size = Vector2(0, 52)
+	replay_all_btn.pressed.connect(func():
+		replay_tutorial_from_mission1()
+	)
+	vbox.add_child(replay_all_btn)
+
+	var dialogue_btn = Button.new()
+	var dialogue_on = is_citizen_science_dialogue_enabled()
+	dialogue_btn.text = "Citizen Science Dialogue: %s" % ("On" if dialogue_on else "Off")
+	dialogue_btn.custom_minimum_size = Vector2(0, 52)
+	dialogue_btn.pressed.connect(func():
+		var enabled = not is_citizen_science_dialogue_enabled()
+		set_citizen_science_dialogue_enabled(enabled)
+		dialogue_btn.text = "Citizen Science Dialogue: %s" % ("On" if enabled else "Off")
+	)
+	vbox.add_child(dialogue_btn)
+
+	var reset_btn = Button.new()
+	reset_btn.text = "Reset All Data"
+	reset_btn.custom_minimum_size = Vector2(0, 52)
+	reset_btn.pressed.connect(func():
+		_on_reset_all()
+	)
+	vbox.add_child(reset_btn)
+
+	_mark_tutorial_zone_exempt_recursive(root)
+	return root
 
 func _on_counter_changed(new_value: int) -> void:
 	"""Handle counter being changed in Godot UI"""
@@ -382,9 +482,11 @@ func add_experience(amount: int, source: String = "") -> void:
 	while experience_xp >= _xp_required_for_level(experience_level):
 		experience_xp -= _xp_required_for_level(experience_level)
 		experience_level += 1
-		leveled_up = true
+		leveled_up = leveled_up or true
 	if leveled_up:
 		_unlock_rockets_for_level(experience_level)
+		self.leveled_up.emit(experience_level)
+		_show_level_up_notification(experience_level)
 	_emit_experience_updated()
 	save_experience()
 	if source != "":
@@ -528,6 +630,11 @@ func has_seen_guide_action(action_key: String) -> bool:
 		return bool(_tutorial_controller.has_seen_tutorial_action(action_key))
 	return false
 
+func has_seen_guide_action_for_stage(action_key: String, stage: int) -> bool:
+	if _tutorial_controller and _tutorial_controller.has_method("has_seen_tutorial_action_for_stage"):
+		return bool(_tutorial_controller.has_seen_tutorial_action_for_stage(action_key, stage))
+	return false
+
 func get_tutorial_state() -> Dictionary:
 	if _tutorial_controller and _tutorial_controller.has_method("get_tutorial_state"):
 		return _tutorial_controller.get_tutorial_state()
@@ -547,3 +654,67 @@ func replay_tutorial_from_mission1() -> void:
 
 func _on_tutorial_state_updated(state: Dictionary) -> void:
 	tutorial_state_updated.emit(state)
+
+func _show_level_up_notification(level: int) -> void:
+	var canvas = CanvasLayer.new()
+	canvas.layer = 200
+	add_child(canvas)
+
+	var center = CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	canvas.add_child(center)
+
+	var panel = PanelContainer.new()
+	panel.custom_minimum_size = Vector2(400, 0)
+	panel.modulate.a = 0.0
+	center.add_child(panel)
+
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.05, 0.08, 0.15, 0.98)
+	style.border_color = Color(0.1, 0.6, 1.0, 1.0)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(12)
+	style.content_margin_left = 24
+	style.content_margin_right = 24
+	style.content_margin_top = 20
+	style.content_margin_bottom = 20
+	panel.add_theme_stylebox_override("panel", style)
+
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 10)
+	panel.add_child(vbox)
+
+	var title = Label.new()
+	title.text = "LEVEL UP!"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 28)
+	title.add_theme_color_override("font_color", Color(1.0, 0.8, 0.2))
+	vbox.add_child(title)
+
+	var level_lbl = Label.new()
+	level_lbl.text = "You reached Level %d" % level
+	level_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	level_lbl.add_theme_font_size_override("font_size", 20)
+	vbox.add_child(level_lbl)
+
+	# Show what's unlocked
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var unlocks = []
+	if rm:
+		for rocket_id in rm.ROCKET_UNLOCK_LEVELS.keys():
+			if int(rm.ROCKET_UNLOCK_LEVELS[rocket_id]) == level:
+				unlocks.append("Rocket: %s" % rocket_id)
+	
+	if unlocks.size() > 0:
+		var unlock_lbl = Label.new()
+		unlock_lbl.text = "New Unlocks:\n• " + "\n• ".join(unlocks)
+		unlock_lbl.add_theme_font_size_override("font_size", 16)
+		unlock_lbl.add_theme_color_override("font_color", Color(0.4, 1.0, 0.5))
+		vbox.add_child(unlock_lbl)
+
+	var tween = create_tween()
+	tween.tween_property(panel, "modulate:a", 1.0, 0.5).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tween.tween_interval(4.0)
+	tween.tween_property(panel, "modulate:a", 0.0, 0.5).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+	tween.tween_callback(canvas.queue_free)
