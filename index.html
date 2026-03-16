@@ -39,10 +39,18 @@
           background: #000;
         }
       }
-      /* Also cover mobile browsers in narrow viewports */
+      /* Cover mobile browsers in portrait narrow viewports */
       @media (max-width: 767px) {
         html, body, #root {
-          height: 100svh;
+          height: 100dvh;
+          overflow: hidden;
+          background: #000;
+        }
+      }
+      /* Cover mobile browsers in landscape (short height, wide width) */
+      @media (max-height: 500px) and (orientation: landscape) {
+        html, body, #root {
+          height: 100dvh;
           overflow: hidden;
           background: #000;
         }

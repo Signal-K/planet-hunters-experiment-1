@@ -103,6 +103,10 @@ func _setup_buttons() -> void:
 	space_map_btn.pressed.connect(_on_space_map_button_pressed)
 	new_mission_btn.pressed.connect(_on_new_mission_button_pressed)
 
+	# Prevent spacebar/enter from accidentally activating nav buttons via Godot's ui_accept
+	for btn in [back_btn, forward_btn, menu_btn, market_btn, space_map_btn, new_mission_btn]:
+		btn.focus_mode = Control.FOCUS_NONE
+
 
 const _AMBER        := Color(0.941, 0.690, 0.188, 1.0)
 const _CYAN_FAINT   := Color(0.28, 0.88, 0.96, 0.35)   # cyan divider

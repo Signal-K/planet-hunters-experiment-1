@@ -12,7 +12,7 @@ const SubcontractorManager = preload("res://Scripts/Utils/SubcontractorManager.g
 
 signal mining_completed(minerals: Dictionary, score: int)
 
-const SCROLL_SPEED = 120.0
+const SCROLL_SPEED = 75.0
 const TERRAIN_SEGMENT_WIDTH = 20
 const ROCKET_Y = 200
 const FUEL_DRAIN_RATE = 2.0
@@ -1383,7 +1383,7 @@ func _check_guide_pause():
 
 func _check_guide_slowdown():
 	var rocket_x = fmod(rocket.position.x + _scroll_offset, _terrain_width)
-	var slowdown_range = 120
+	var slowdown_range = 180
 	var target_surface: Variant = null
 	if _guide_step == GuideStep.MINE_SURFACE_IRON and _surface_mined_count == 0:
 		target_surface = true
@@ -1504,6 +1504,17 @@ func _is_starter_contract_complete() -> bool:
 			return false
 	return true
 
+const _MINERAL_COLOR_HINTS := {
+	"iron": "orange",
+	"nickel": "yellow",
+	"cobalt": "blue",
+	"platinum": "white",
+	"gold": "bright yellow",
+	"silver": "grey",
+	"copper": "brown",
+	"titanium": "grey-blue",
+}
+
 func _refresh_contract_order_tracker() -> void:
 	if contract_order_panel == null or contract_order_title == null or contract_order_progress == null:
 		return
@@ -1520,7 +1531,9 @@ func _refresh_contract_order_tracker() -> void:
 		var collected_amount = int(_collected_minerals.get(key, 0))
 		var done = collected_amount >= required_amount
 		var prefix = "✓ " if done else "► "
-		lines.append("%s%s: %d/%d kg" % [prefix, str(key), collected_amount, required_amount])
+		var color_hint = _MINERAL_COLOR_HINTS.get(str(key).to_lower(), "")
+		var label = "%s%s" % [str(key).capitalize(), " (%s)" % color_hint if color_hint else ""]
+		lines.append("%s%s: %d/%d kg" % [prefix, label, collected_amount, required_amount])
 	if _is_starter_contract_complete():
 		lines.append("★ Order complete. Return to debrief.")
 	contract_order_progress.text = "\n".join(lines)
