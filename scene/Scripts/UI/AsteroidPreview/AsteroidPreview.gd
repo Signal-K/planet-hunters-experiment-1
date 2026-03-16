@@ -141,23 +141,19 @@ func _on_mining_completed(minerals_collected: Dictionary, score: int):
 			"target_id": _current_target_id,
 			"score": score
 		})
-	
+
 	if _minigame_instance:
 		_minigame_instance.queue_free()
 		_minigame_instance = null
-	
-	if _should_restart_starter_run():
-		await _restart_starter_run("Order incomplete. Restarting mining run...")
-		return
-	
+
 	ui_container.visible = true
 	mine_btn.disabled = false
 	return_btn.disabled = false
 
-func _on_return_pressed():
 	if _is_starter_contract_active() and not _starter_requirements_met(_last_mining_collected):
-		await _restart_starter_run("Complete the contractor order before returning.")
-		return
+		target_label.text = "Order incomplete — mine again or return home."
+
+func _on_return_pressed():
 	print("[Preview] Return home pressed")
 	GameplayAnalytics.emit_event("mission_return_requested", {
 		"rocket_id": _current_rocket_id,
@@ -226,22 +222,6 @@ func _starter_requirements_met(collected: Dictionary) -> bool:
 			return false
 	return true
 
-func _should_restart_starter_run() -> bool:
-	if not _is_starter_contract_active():
-		return false
-	var reason = str(_last_mining_report.get("reason", ""))
-	if reason == "":
-		return not _starter_requirements_met(_last_mining_collected)
-	return not _starter_requirements_met(_last_mining_collected)
-
-func _restart_starter_run(message: String) -> void:
-	ui_container.visible = true
-	mine_btn.disabled = true
-	return_btn.disabled = true
-	target_label.text = message
-	await get_tree().create_timer(1.0).timeout
-	target_label.text = "Target: %s" % _current_target_id
-	_on_mine_pressed()
 
 func _persist_mining_result(collected: Dictionary) -> void:
 	if _current_target_id == "":

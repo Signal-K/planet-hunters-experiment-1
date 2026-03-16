@@ -55,6 +55,7 @@ var _ship_resolved := false
 
 func _ready() -> void:
 	_apply_style()
+	back_button.pressed.connect(_return_to_base)
 	_returned = RocketsManager.get_returned_mission()
 	if _returned.is_empty():
 		_set_empty_state()
@@ -74,7 +75,6 @@ func _ready() -> void:
 	scrap_button.pressed.connect(func(): _resolve_ship("scrap", SCRAP_REFUND_PCT))
 	salvage_button.pressed.connect(func(): _resolve_ship("salvage", SALVAGE_REFUND_PCT))
 	leave_button.pressed.connect(func(): _resolve_ship("leave_orbit", 0.0))
-	back_button.pressed.connect(_return_to_base)
 
 func _apply_style() -> void:
 	PanelStyle.apply_title(title_label)

@@ -1020,7 +1020,7 @@ function App() {
 
   const frameStyle = {
     width: "100%",
-    height: isMobile ? "100svh" : "min(75vh, 860px)",
+    height: isMobile ? "100dvh" : "min(75vh, 860px)",
     border: "0",
     display: "block",
     background: "#000",
