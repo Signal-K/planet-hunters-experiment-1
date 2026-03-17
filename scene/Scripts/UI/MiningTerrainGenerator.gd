@@ -1,6 +1,8 @@
 extends Node
 ## Static utility for generating mining terrain and minerals
 
+const MineralCatalog = preload("res://Scripts/Utils/MineralCatalog.gd")
+
 const TERRAIN_SEGMENT_WIDTH = 20
 
 static func generate_terrain(
@@ -161,12 +163,14 @@ static func _generate_minerals(
 				})
 	
 	if mineral_types.is_empty():
-		mineral_types = [
-			{"name": "Iron", "color": Color(0.9, 0.4, 0.2), "value": 10},
-			{"name": "Nickel", "color": Color(0.7, 0.7, 0.5), "value": 15},
-			{"name": "Cobalt", "color": Color(0.3, 0.5, 1.0), "value": 25},
-			{"name": "Platinum", "color": Color(1.0, 1.0, 0.8), "value": 50}
-		]
+		# Fallback: populate from catalog (tier 1-2 only; weighted by spawn_weight)
+		for entry in MineralCatalog.get_all_by_tier(1) + MineralCatalog.get_all_by_tier(2):
+			if bool(entry.get("in_economy", false)):
+				mineral_types.append({
+					"name": str(entry.get("id", "")),
+					"color": entry.get("color", Color(0.6, 0.6, 0.6)),
+					"value": int(float(entry.get("spawn_weight", 10.0)) / 5.0),
+				})
 	
 	var mineral_pool = terrain_container.get_node_or_null("MineralPool")
 	if mineral_pool:
@@ -229,13 +233,4 @@ static func _create_deposit(x: float, width: float, mineral: Dictionary, is_surf
 	return {"x": x, "width": width, "mineral": mineral, "poly": poly, "pool_index": pool_index, "collected": false, "is_surface": is_surface}
 
 static func _get_mineral_color(mineral_name: String) -> Color:
-	match mineral_name.to_lower():
-		"iron": return Color(0.9, 0.4, 0.2)
-		"nickel": return Color(0.7, 0.7, 0.5)
-		"cobalt": return Color(0.3, 0.5, 1.0)
-		"platinum": return Color(1.0, 1.0, 0.8)
-		"gold": return Color(1.0, 0.84, 0.0)
-		"silver": return Color(0.75, 0.75, 0.75)
-		"copper": return Color(0.72, 0.45, 0.2)
-		"titanium": return Color(0.5, 0.5, 0.6)
-		_: return Color(0.6, 0.6, 0.6)
+	return MineralCatalog.get_color(mineral_name)

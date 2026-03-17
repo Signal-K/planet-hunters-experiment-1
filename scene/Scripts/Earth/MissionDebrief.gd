@@ -1,104 +1,90 @@
 extends Node2D
+## MissionDebrief.gd
+## Simple single-action mission completion screen.
+## Shows cargo + payout, then the player taps one button to complete.
 
-const ORBIT_MULTIPLIER := 0.8
-const EARTH_MULTIPLIER := 1.0
 const SCRAP_REFUND_PCT := 0.20
-const SALVAGE_REFUND_PCT := 0.10
+const CONTRACTOR_ROUTE_MULT := 1.2
+const MARKET_ROUTE_MULT := 0.8
 const AFFINITY_BONUS_PER_POINT := 0.005
 const AFFINITY_BONUS_CAP := 0.25
 const ORDER_BONUS_CAP := 0.15
-const XP_AWARD_MISSION_COMPLETE := 1
+const DISCOVERY_BONUS_MULT := 1.10
+const XP_BY_MISSION_STAGE := {1: 80, 2: 120, 3: 160, 4: 200}
+const XP_AWARD_FREE_OPS_MISSION := 100
 
 const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
 const NavigationMixin = preload("res://Scripts/Utils/NavigationMixin.gd")
-const ResourceValueRowScene = preload("res://Scenes/UI/Templates/ResourceValueRow.tscn")
-const EmptyLabelScene = preload("res://Scenes/UI/Templates/MenuLogbookEmpty.tscn")
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
 const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
 const MineralPricing = preload("res://Scripts/Utils/MineralPricing.gd")
 const MiningInventory = preload("res://Scripts/Utils/MiningInventory.gd")
+const SectorRevealManager = preload("res://Scripts/Utils/SectorRevealManager.gd")
 const SubcontractorManager = preload("res://Scripts/Utils/SubcontractorManager.gd")
 const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd")
 const MissionLogManager = preload("res://Scripts/Utils/MissionLogManager.gd")
 
 @onready var title_label: Label = $UI/Root/Panel/VBox/Title
 @onready var subtitle_label: Label = $UI/Root/Panel/VBox/Subtitle
+@onready var hint_label: Label = $UI/Root/Panel/VBox/HintLabel
 @onready var minerals_list: VBoxContainer = $UI/Root/Panel/VBox/Minerals/MineralsList
-@onready var actions_container: VBoxContainer = $UI/Root/Panel/VBox/Actions
-@onready var sell_row: HBoxContainer = $UI/Root/Panel/VBox/Actions/SellRow
-@onready var sell_orbit_button: Button = $UI/Root/Panel/VBox/Actions/SellRow/SellOrbitButton
-@onready var sell_earth_button: Button = $UI/Root/Panel/VBox/Actions/SellRow/SellEarthButton
-@onready var keep_button: Button = $UI/Root/Panel/VBox/Actions/KeepButton
-@onready var ship_row: HBoxContainer = $UI/Root/Panel/VBox/Actions/ShipRow
-@onready var scrap_button: Button = $UI/Root/Panel/VBox/Actions/ShipRow/ScrapButton
-@onready var salvage_button: Button = $UI/Root/Panel/VBox/Actions/ShipRow/SalvageButton
-@onready var leave_button: Button = $UI/Root/Panel/VBox/Actions/ShipRow/LeaveButton
-@onready var back_button: Button = $UI/Root/Panel/VBox/Footer/BackButton
-@onready var status_label: Label = $UI/Root/Panel/VBox/Footer/Status
+@onready var payout_label: Label = $UI/Root/Panel/VBox/PayoutLabel
+@onready var complete_button: Button = $UI/Root/Panel/VBox/Actions/CompleteButton
+@onready var orbit_button: Button = $UI/Root/Panel/VBox/Actions/OrbitButton
+@onready var status_label: Label = $UI/Root/Panel/VBox/StatusLabel
 
 var _returned: Dictionary = {}
 var _cargo: Dictionary = {}
-var _cargo_base_value: int = 0
-
-var _contractor: Dictionary = {}
 var _contractor_id: String = ""
 var _contractor_name: String = "No Contractor"
-var _contractor_effect: String = ""
+var _operation_mode: String = "contract"
 var _requested_minerals: Dictionary = {}
-var _order_ratio: float = 0.0
-var _order_bonus_mult: float = 1.0
+var _order_ratio: float = 1.0
 var _affinity_before: int = 0
-var _affinity_bonus_mult: float = 1.0
-
-var _cargo_resolved := false
-var _ship_resolved := false
+var _earth_payout: int = 0
+var _scrap_refund: int = 0
+var _done := false
 
 func _ready() -> void:
 	_apply_style()
-	back_button.pressed.connect(_return_to_base)
 	_returned = RocketsManager.get_returned_mission()
 	if _returned.is_empty():
-		_set_empty_state()
+		_show_empty()
 		return
-
 	_cargo = _resolve_cargo(_returned)
-	_cargo_base_value = _base_cargo_value(_cargo)
+	_operation_mode = str(_returned.get("operation_mode", "contract")).strip_edges().to_lower()
+	if _operation_mode != "survey":
+		_operation_mode = "contract"
 	_resolve_contractor_context()
-	_build_minerals_list()
-	_update_header()
-	_update_status_for_review()
-	_update_action_states()
-
-	sell_orbit_button.pressed.connect(func(): _sell(false))
-	sell_earth_button.pressed.connect(func(): _sell(true))
-	keep_button.pressed.connect(_keep_cargo)
-	scrap_button.pressed.connect(func(): _resolve_ship("scrap", SCRAP_REFUND_PCT))
-	salvage_button.pressed.connect(func(): _resolve_ship("salvage", SALVAGE_REFUND_PCT))
-	leave_button.pressed.connect(func(): _resolve_ship("leave_orbit", 0.0))
+	_earth_payout = _calc_payout()
+	var rocket_id = str(_returned.get("rocket_id", ""))
+	_scrap_refund = int(round(float(RocketSpecs.get_cost(rocket_id)) * SCRAP_REFUND_PCT))
+	_build_ui()
+	complete_button.pressed.connect(_on_complete_pressed)
+	orbit_button.pressed.connect(_on_orbit_pressed)
 
 func _apply_style() -> void:
 	PanelStyle.apply_title(title_label)
+	title_label.add_theme_font_size_override("font_size", 26)
 	PanelStyle.apply_body(subtitle_label)
-	PanelStyle.apply_body(status_label)
+	PanelStyle.apply_body(hint_label)
+	hint_label.add_theme_color_override("font_color", Color(0.941, 0.690, 0.188, 1.0))
+	hint_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	PanelStyle.apply_muted(payout_label)
+	PanelStyle.apply_muted(status_label)
 	status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	PanelStyle.apply_button(sell_orbit_button, true)
-	PanelStyle.apply_button(sell_earth_button, true)
-	PanelStyle.apply_button(keep_button, false)
-	PanelStyle.apply_button(scrap_button, false)
-	PanelStyle.apply_button(salvage_button, false)
-	PanelStyle.apply_button(leave_button, false)
-	PanelStyle.apply_button(back_button, false)
+	PanelStyle.apply_button(complete_button, true)
+	PanelStyle.apply_button(orbit_button, false)
 
-func _resolve_cargo(returned_payload: Dictionary) -> Dictionary:
-	var run_collected = returned_payload.get("mining_run_collected", {})
+func _resolve_cargo(payload: Dictionary) -> Dictionary:
+	var run_collected = payload.get("mining_run_collected", {})
 	if typeof(run_collected) == TYPE_DICTIONARY and not run_collected.is_empty():
 		return run_collected.duplicate(true)
-	var target_id = str(returned_payload.get("target_id", ""))
+	var target_id = str(payload.get("target_id", ""))
 	if target_id == "":
 		return {}
 	var state = MiningInventory.load_state()
-	var targets = state.get("targets", {})
-	var entry = targets.get(target_id, {})
+	var entry = state.get("targets", {}).get(target_id, {})
 	var collected = entry.get("collected", {})
 	return collected.duplicate(true) if typeof(collected) == TYPE_DICTIONARY else {}
 
@@ -108,226 +94,201 @@ func _resolve_contractor_context() -> void:
 		_contractor_id = str(starter_ctx.get("id", ""))
 		_contractor_name = str(starter_ctx.get("name", "Contractor"))
 		_requested_minerals = starter_ctx.get("requested_minerals", {}).duplicate(true)
-		_contractor_effect = "starter_order"
 	else:
 		_contractor_id = str(_returned.get("trip_contractor_id", ""))
 		_contractor_name = str(_returned.get("trip_contractor_name", ""))
-		_contractor_effect = str(_returned.get("trip_contractor_effect", ""))
 		_requested_minerals = _returned.get("trip_requested_minerals", {}).duplicate(true)
 		if _contractor_id == "":
 			var selected = RocketsManager.get_trip_selected_contractor()
 			_contractor_id = str(selected.get("id", ""))
 			_contractor_name = str(selected.get("name", _contractor_name))
-			_contractor_effect = str(selected.get("effect", _contractor_effect))
 		if _requested_minerals.is_empty():
 			var offer = RocketsManager.get_trip_contract_offer()
 			if typeof(offer) == TYPE_DICTIONARY:
 				_requested_minerals = offer.get("requested_minerals", {}).duplicate(true)
-
-	_contractor = SubcontractorManager.get_subcontractor(_contractor_id)
 	if _contractor_name == "":
-		_contractor_name = str(_contractor.get("name", "No Contractor"))
+		var sub = SubcontractorManager.get_subcontractor(_contractor_id)
+		_contractor_name = str(sub.get("name", "No Contractor"))
 	_affinity_before = SubcontractorManager.get_affinity(_contractor_id)
-	_affinity_bonus_mult = 1.0 + min(float(_affinity_before) * AFFINITY_BONUS_PER_POINT, AFFINITY_BONUS_CAP)
-	_order_ratio = _compute_order_fulfillment_ratio(_cargo, _requested_minerals)
-	_order_bonus_mult = 1.0 + (ORDER_BONUS_CAP * _order_ratio)
+	_order_ratio = _compute_order_ratio(_cargo, _requested_minerals)
 
-func _compute_order_fulfillment_ratio(collected: Dictionary, requested: Dictionary) -> float:
+func _compute_order_ratio(collected: Dictionary, requested: Dictionary) -> float:
 	if requested.is_empty():
 		return 1.0
 	var req_total := 0
-	var matched_total := 0
+	var matched := 0
 	for k in requested.keys():
 		var req = max(int(requested.get(k, 0)), 0)
 		if req <= 0:
 			continue
 		req_total += req
-		var got = max(int(collected.get(str(k), 0)), 0)
-		matched_total += min(got, req)
+		matched += min(int(collected.get(str(k), 0)), req)
 	if req_total <= 0:
 		return 1.0
-	return clamp(float(matched_total) / float(req_total), 0.0, 1.0)
+	return clamp(float(matched) / float(req_total), 0.0, 1.0)
 
-func _build_minerals_list() -> void:
+func _calc_payout() -> int:
+	var base := 0
+	for mineral in _cargo.keys():
+		base += MineralPricing.price_for(str(mineral), int(_cargo.get(mineral, 0)))
+	var route_mult = CONTRACTOR_ROUTE_MULT if _operation_mode == "contract" else MARKET_ROUTE_MULT
+	var gross = int(round(float(base) * route_mult))
+	var tid = str(_returned.get("target_id", ""))
+	if tid != "" and not RocketsManager.has_discovery_bonus_claimed(tid):
+		gross = int(round(float(gross) * DISCOVERY_BONUS_MULT))
+	if _operation_mode == "contract":
+		var aff_mult = 1.0 + min(float(_affinity_before) * AFFINITY_BONUS_PER_POINT, AFFINITY_BONUS_CAP)
+		var ord_mult = 1.0 + (ORDER_BONUS_CAP * _order_ratio)
+		gross = int(round(float(gross) * ord_mult * aff_mult))
+	return min(gross, RocketsManager.get_free_ops_payout_cap())
+
+func _build_ui() -> void:
+	var rocket_id = str(_returned.get("rocket_id", ""))
+	var target_label = str(_returned.get("label", "Unknown Target"))
+	title_label.text = "Mission Complete!"
+	subtitle_label.text = "%s  •  %s  •  %s" % [rocket_id, target_label, _contractor_name]
+
+	var stage = int(RocketsManager.get_mission_stage())
+	hint_label.text = _next_mission_hint(stage)
+	hint_label.visible = hint_label.text != ""
+
 	for c in minerals_list.get_children():
 		c.queue_free()
 	if _cargo.is_empty():
-		var empty_label: Label = EmptyLabelScene.instantiate()
-		empty_label.text = "No cargo recorded."
-		PanelStyle.apply_muted(empty_label)
-		minerals_list.add_child(empty_label)
-		return
-	var keys = _cargo.keys()
-	keys.sort()
-	for mineral in keys:
-		var row: HBoxContainer = ResourceValueRowScene.instantiate()
-		var name_label: Label = row.get_node("NameLabel")
-		var value_label: Label = row.get_node("ValueLabel")
-		var kg = int(_cargo.get(mineral, 0))
-		var marker = ""
-		if not _requested_minerals.is_empty():
+		var empty = Label.new()
+		empty.text = "No cargo collected."
+		PanelStyle.apply_muted(empty)
+		minerals_list.add_child(empty)
+	else:
+		var keys = _cargo.keys()
+		keys.sort()
+		for mineral in keys:
+			var lbl = Label.new()
+			var kg = int(_cargo.get(mineral, 0))
 			var req = int(_requested_minerals.get(str(mineral), 0))
-			if req > 0:
-				marker = " (order %dkg)" % req
-		name_label.text = "%s%s" % [str(mineral), marker]
-		value_label.text = "%d kg" % kg
-		PanelStyle.apply_body(name_label)
-		PanelStyle.apply_muted(value_label)
-		minerals_list.add_child(row)
+			var suffix = (" (order: %d kg)" % req) if req > 0 else ""
+			lbl.text = "• %s: %d kg%s" % [str(mineral), kg, suffix]
+			PanelStyle.apply_body(lbl)
+			minerals_list.add_child(lbl)
 
-func _base_cargo_value(cargo: Dictionary) -> int:
-	var total := 0
-	for mineral in cargo.keys():
-		total += MineralPricing.price_for(str(mineral), int(cargo.get(mineral, 0)))
-	return total
+	payout_label.text = "Sale: %d F  •  Scrap: +%d F" % [_earth_payout, _scrap_refund]
+	complete_button.text = "Sell & Scrap Ship →"
+	orbit_button.text = "Leave Ship in Orbit"
+	status_label.text = ""
 
-func _update_header() -> void:
+func _next_mission_hint(stage: int) -> String:
+	match stage:
+		1: return "Complete this debrief to unlock Mission 2 (Starter Rocket 2)!"
+		2: return "Complete this debrief to unlock Mission 3 (Scanner Station)!"
+		3: return "Complete this debrief to unlock Mission 4 (Planet Targets)!"
+		4: return "Complete this debrief to unlock Free Operations!"
+	return ""
+
+func _on_complete_pressed() -> void:
+	if _done:
+		return
+	_do_complete("scrap")
+
+func _on_orbit_pressed() -> void:
+	if _done:
+		return
+	_do_complete("leave_orbit")
+
+func _do_complete(ship_mode: String) -> void:
+	_done = true
+	complete_button.disabled = true
+	orbit_button.disabled = true
 	var rocket_id = str(_returned.get("rocket_id", ""))
-	var target_label = str(_returned.get("label", "Unknown Target"))
-	title_label.text = "Mission Review"
-	subtitle_label.text = "Rocket %s • Target %s • Contractor %s" % [rocket_id, target_label, _contractor_name]
+	var target_id = str(_returned.get("target_id", ""))
+	var app = AppControllerHelper.get_instance()
 
-func _calc_payout(to_earth: bool) -> Dictionary:
-	var multiplier = EARTH_MULTIPLIER if to_earth else ORBIT_MULTIPLIER
-	var gross = int(round(float(_cargo_base_value) * multiplier))
-	var with_contractor = gross
-	if _contractor_effect == "payout_bonus":
-		with_contractor = RocketsManager.apply_trip_payout_terms(gross, _contractor_id)
-	var with_order = int(round(float(with_contractor) * _order_bonus_mult))
-	var with_affinity = int(round(float(with_order) * _affinity_bonus_mult))
-	var capped = min(with_affinity, RocketsManager.get_free_ops_payout_cap())
-	return {
-		"base": gross,
-		"contractor": with_contractor,
-		"order": with_order,
-		"final": capped
-	}
-
-func _update_status_for_review() -> void:
-	var orbit = _calc_payout(false)
-	var earth = _calc_payout(true)
-	var lines := []
-	lines.append("Contractor: %s (%s)" % [_contractor_name, _contractor_effect if _contractor_effect != "" else "no special effect"])
-	lines.append("Affinity: %d (bonus +%d%%)" % [_affinity_before, int(round((_affinity_bonus_mult - 1.0) * 100.0))])
-	lines.append("Order completion: %d%% (bonus +%d%%)" % [
-		int(round(_order_ratio * 100.0)),
-		int(round((_order_bonus_mult - 1.0) * 100.0))
-	])
-	lines.append("Orbit sale preview: %d F" % int(orbit.get("final", 0)))
-	lines.append("Earth sale preview: %d F" % int(earth.get("final", 0)))
-	if _contractor_id == "":
-		lines.append("Warning: No contractor bound to this run.")
-	status_label.text = "\n".join(lines)
-
-func _sell(to_earth: bool) -> void:
-	if _cargo_resolved or _cargo.is_empty():
-		return
-	var payout_data = _calc_payout(to_earth)
-	var payout = int(payout_data.get("final", 0))
-	var app = _get_app_controller()
-	if app:
-		app.add_franc_balance(payout, "mission_sale")
-	if _contractor_id != "":
-		var affinity_after = SubcontractorManager.add_affinity(_contractor_id, 1)
+	# Sell cargo — auto-repay any outstanding loan first
+	if not _cargo.is_empty():
+		RocketsManager.consume_from_inventory(_cargo)
+		for mineral in _cargo.keys():
+			MineralPricing.record_player_sale(str(mineral))
+		if target_id != "" and not RocketsManager.has_discovery_bonus_claimed(target_id):
+			RocketsManager.mark_discovery_bonus_claimed(target_id)
+		if target_id != "":
+			SectorRevealManager.reveal_for_target(target_id)
 		if app:
-			app.add_experience(1, "affinity")
-		status_label.text += "\nAffinity increased: %d -> %d" % [_affinity_before, affinity_after]
-	_add_mission_log("sell_earth" if to_earth else "sell_orbit", payout)
-	_cargo_resolved = true
-	_clear_cargo()
-	RocketsManager.clear_trip_contract_offer()
-	status_label.text = "Sale complete: +%d F.\nNow resolve the ship (scrap/salvage/leave)." % payout
-	_update_action_states()
+			var net_payout := _earth_payout
+			if app.has_outstanding_loan():
+				net_payout = app.repay_loan_from_payout(_earth_payout)
+			app.add_franc_balance(net_payout, "mission_sale")
+		if _operation_mode == "contract" and _contractor_id != "":
+			SubcontractorManager.add_affinity(_contractor_id, 1)
+			SubcontractorManager.record_mission_completion(_contractor_id)
+			if app:
+				app.add_experience(1, "affinity")
+		RocketsManager.clear_trip_contract_offer()
+		_clear_cargo(target_id)
 
-func _keep_cargo() -> void:
-	if _cargo_resolved:
-		return
-	_cargo_resolved = true
-	_add_mission_log("keep_cargo", 0)
-	status_label.text = "Cargo kept. Now resolve the ship (scrap/salvage/leave)."
-	_update_action_states()
-
-func _resolve_ship(mode: String, refund_pct: float) -> void:
-	if _ship_resolved:
-		return
-	var rocket_id = str(_returned.get("rocket_id", ""))
-	var refund = 0
-	if mode == "scrap" or mode == "salvage":
-		refund = int(round(float(RocketSpecs.get_cost(rocket_id)) * refund_pct))
-		var app = _get_app_controller()
-		if app:
-			app.add_franc_balance(refund, mode)
-	if mode == "scrap" or mode == "salvage":
-		RocketsManager.set_destroyed(rocket_id, mode)
+	# Resolve ship
+	var refund := 0
+	if ship_mode == "scrap":
+		refund = _scrap_refund
+		RocketsManager.set_destroyed(rocket_id, "scrap")
+		if app and refund > 0:
+			app.add_franc_balance(refund, "scrap")
 	else:
 		RocketsManager.remove_orbiting_rocket(rocket_id)
-	_ship_resolved = true
-	_add_mission_log(mode, refund)
-	var app = _get_app_controller()
+
+	# XP — tutorial stages get fixed values; free ops uses flat award
 	if app:
-		app.add_experience(XP_AWARD_MISSION_COMPLETE, "mission_completion")
-	status_label.text = "Ship resolved via %s%s. Press Return to Base." % [mode, (" (+%d F)" % refund) if refund > 0 else ""]
-	_update_action_states()
+		var stage = int(RocketsManager.get_mission_stage())
+		var xp_amount: int = XP_BY_MISSION_STAGE.get(stage, XP_AWARD_FREE_OPS_MISSION)
+		app.add_experience(xp_amount, "mission_completion")
 
-func _update_action_states() -> void:
-	var has_cargo = not _cargo.is_empty()
-	sell_orbit_button.disabled = _cargo_resolved or not has_cargo
-	sell_earth_button.disabled = _cargo_resolved or not has_cargo
-	keep_button.disabled = _cargo_resolved
-	var can_resolve_ship = _cargo_resolved and not _ship_resolved
-	scrap_button.disabled = not can_resolve_ship
-	salvage_button.disabled = not can_resolve_ship
-	leave_button.disabled = not can_resolve_ship
-	back_button.disabled = not _ship_resolved
-	if _ship_resolved:
-		back_button.text = "Return to Base"
+	# Log
+	_add_mission_log(ship_mode, refund)
 
-func _add_mission_log(action: String, payout: int) -> void:
-	var entry = {
+	# Tutorial action — fire before finalize_return so stage advance sees the completed debrief
+	AppControllerHelper.record_tutorial_action("resolve_mission_debrief")
+
+	# Finalize
+	RocketsManager.finalize_return(rocket_id)
+	RocketsManager.clear_returned_mission()
+	_return_to_base()
+
+func _add_mission_log(ship_mode: String, refund: int) -> void:
+	MissionLogManager.add_mission({
 		"timestamp": Time.get_datetime_string_from_system(),
 		"rocket_id": str(_returned.get("rocket_id", "")),
 		"target_id": str(_returned.get("target_id", "")),
 		"label": str(_returned.get("label", "")),
-		"operation_mode": str(_returned.get("operation_mode", "contract")),
+		"target_type": str(_returned.get("target_type", "asteroid")),
+		"operation_mode": _operation_mode,
 		"subcontractor_id": _contractor_id,
 		"subcontractor_name": _contractor_name,
-		"action": action,
-		"payout": payout,
+		"action": ship_mode,
+		"payout": _earth_payout,
 		"cargo": _cargo.duplicate(true),
 		"requested_minerals": _requested_minerals.duplicate(true),
 		"order_completion_pct": int(round(_order_ratio * 100.0)),
 		"affinity_before": _affinity_before
-	}
-	MissionLogManager.add_mission(entry)
+	})
 
-func _clear_cargo() -> void:
-	var target_id = str(_returned.get("target_id", ""))
+func _clear_cargo(target_id: String) -> void:
 	if target_id == "":
 		return
 	var data = MiningInventory.load_state()
 	var targets = data.get("targets", {})
-	if targets.has(target_id):
-		targets.erase(target_id)
-		data["targets"] = targets
-		MiningInventory.save_state(data)
+	targets.erase(target_id)
+	data["targets"] = targets
+	MiningInventory.save_state(data)
 
-func _set_empty_state() -> void:
-	title_label.text = "Mission Review"
-	subtitle_label.text = "No returned mission data found."
-	status_label.text = "Open Launchpad and run a mission."
-	sell_orbit_button.disabled = true
-	sell_earth_button.disabled = true
-	keep_button.disabled = true
-	scrap_button.disabled = true
-	salvage_button.disabled = true
-	leave_button.disabled = true
-	back_button.disabled = false
+func _show_empty() -> void:
+	title_label.text = "No Mission Data"
+	subtitle_label.text = "No returned mission found."
+	hint_label.visible = false
+	payout_label.text = ""
+	complete_button.text = "Return to Base"
+	complete_button.pressed.connect(_return_to_base)
+	orbit_button.visible = false
+	status_label.text = "Open Launchpad and run a mission first."
 
 func _return_to_base() -> void:
-	var rocket_id = str(_returned.get("rocket_id", ""))
-	if rocket_id != "":
-		RocketsManager.finalize_return(rocket_id)
-	RocketsManager.clear_returned_mission()
 	var tree = Engine.get_main_loop() as SceneTree
 	if tree == null:
 		return
@@ -338,6 +299,3 @@ func _return_to_base() -> void:
 		scene_manager.change_to_scene("res://Scenes/Earth/earth_base_1.tscn")
 	else:
 		NavigationMixin.go_back_to_earth(tree)
-
-func _get_app_controller() -> Node:
-	return AppControllerHelper.get_instance()

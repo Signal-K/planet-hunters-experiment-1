@@ -462,13 +462,80 @@
       "subcontractor_id": "spacex",
       "subcontractor_name": "SpaceX",
       "action": "sell_orbit",
-      "payout": 1500000000,
+      "payout": 1500000000.0,
       "cargo": {
-        "Iron": 1,
-        "Nickel": 1,
-        "Cobalt": 1
+        "Iron": 1.0,
+        "Nickel": 1.0,
+        "Cobalt": 1.0
       },
       "badge": "starterrocket1-1533150129-mission-1-training-target-1773470776"
+    },
+    {
+      "timestamp": "2026-03-18T18:58:58",
+      "rocket_id": "starterrocket1-3446872354",
+      "target_id": "mission-1-training-target",
+      "label": "Training Asteroid A",
+      "operation_mode": "contract",
+      "subcontractor_id": "",
+      "subcontractor_name": "No Contractor",
+      "action": "sell_orbit",
+      "payout": 50881959.0,
+      "cargo": {
+        "Iron": 3.0,
+        "Nickel": 2.0,
+        "Cobalt": 3.0
+      },
+      "requested_minerals": {
+        "Iron": 105.0,
+        "Nickel": 91.0
+      },
+      "order_completion_pct": 3.0,
+      "affinity_before": 0.0
+    },
+    {
+      "timestamp": "2026-03-18T18:59:00",
+      "rocket_id": "starterrocket1-3446872354",
+      "target_id": "mission-1-training-target",
+      "label": "Training Asteroid A",
+      "operation_mode": "contract",
+      "subcontractor_id": "",
+      "subcontractor_name": "No Contractor",
+      "action": "scrap",
+      "payout": 200000000.0,
+      "cargo": {
+        "Iron": 3.0,
+        "Nickel": 2.0,
+        "Cobalt": 3.0
+      },
+      "requested_minerals": {
+        "Iron": 105.0,
+        "Nickel": 91.0
+      },
+      "order_completion_pct": 3.0,
+      "affinity_before": 0.0
+    },
+    {
+      "timestamp": "2026-03-18T19:24:39",
+      "rocket_id": "starterrocket1-3937482880",
+      "target_id": "mission-1-training-target",
+      "label": "Training Asteroid A",
+      "operation_mode": "contract",
+      "subcontractor_id": "",
+      "subcontractor_name": "No Contractor",
+      "action": "scrap",
+      "payout": 79721258,
+      "cargo": {
+        "Iron": 3,
+        "Nickel": 3,
+        "Cobalt": 3,
+        "Platinum": 1
+      },
+      "requested_minerals": {
+        "Iron": 158.0,
+        "Nickel": 120.0
+      },
+      "order_completion_pct": 2,
+      "affinity_before": 0
     }
   ]
 }

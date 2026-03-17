@@ -5,6 +5,7 @@ extends Node
 signal window_status_update(message: String)
 signal counter_updated(new_value: int)
 signal franc_balance_updated(new_value: int)
+signal loan_updated(loan_balance: int)
 signal experience_updated(xp: int, level: int)
 signal rockets_reset()
 signal tutorial_state_updated(state: Dictionary)
@@ -13,11 +14,10 @@ signal leveled_up(new_level: int)
 
 var counter: int = 0
 var franc_balance: int = 10000000000
+var loan_balance: int = 0
 var experience_xp: int = 0
 var experience_level: int = 1
 var citizen_science_dialogue_enabled: bool = true
-var current_menu_panel: Control = null
-var _menu_layer: CanvasLayer = null
 var _game_paused: bool = false
 var _menu_request_version: int = 0
 var _menu_request_action: String = ""
@@ -28,7 +28,6 @@ const AppControllerPersistence = preload("res://Scripts/Systems/AppControllerPer
 const WebEventBridge = preload("res://Scripts/Systems/WebEventBridge.gd")
 const AppLogger = preload("res://Scripts/Utils/Logger.gd")
 var _persistence := AppControllerPersistence.new()
-const BASE_XP_TO_LEVEL := 10
 const XP_AWARD_LAUNCH := 5
 const XP_AWARD_SCAN := 2
 const MISSION_PROGRESS_TRACKER_SCENE := preload("res://Scenes/UI/MissionProgressTracker.tscn")
@@ -112,9 +111,6 @@ func set_counter_from_react(value: int) -> void:
 	AppLogger.d("[AppController] set_counter_from_react CALLED with value: %s" % value)
 	counter = value
 	counter_updated.emit(counter)
-	if current_menu_panel and current_menu_panel.has_method("set_counter"):
-		current_menu_panel.set_counter(counter)
-		AppLogger.d("[AppController] Updated open menu panel with counter: %s" % counter)
 	AppLogger.d("[AppController] Counter now set to: %s" % counter)
 
 func get_counter() -> int:
@@ -221,10 +217,7 @@ func debug_skip_to_mission(stage: int) -> void:
 	
 	# 5. Unpause and close menu
 	set_game_paused(false)
-	if current_menu_panel:
-		current_menu_panel.queue_free()
-		current_menu_panel = null
-	
+	hide_menu_panel()
 	AppLogger.d("AppController Debug: Jump Complete. Stage: %d" % rm.get_mission_stage())
 
 func show_menu_panel() -> void:
@@ -240,13 +233,6 @@ func hide_menu_panel() -> void:
 		return
 	var service = preload("res://Scripts/UI/GameNavigationMenu.gd")
 	service.close(self)
-	current_menu_panel = null
-
-func _on_menu_panel_closed() -> void:
-	"""Handle menu panel being closed"""
-	current_menu_panel = null
-	_set_tutorial_overlay_suspended(false)
-	window_status_update.emit("Menu panel closed")
 
 func is_menu_open() -> bool:
 	if get_tree() == null:
@@ -278,17 +264,6 @@ func _show_intro_splash_if_needed() -> void:
 	_set_tutorial_overlay_suspended(true)
 	get_tree().root.call_deferred("add_child", splash)
 
-func _ensure_menu_layer() -> void:
-	if _menu_layer and is_instance_valid(_menu_layer):
-		return
-	if get_tree() == null or get_tree().root == null:
-		return
-	_menu_layer = CanvasLayer.new()
-	_menu_layer.name = "MenuOverlayLayer"
-	_menu_layer.layer = 120
-	_menu_layer.set_meta("tutorial_zone_exempt", true)
-	get_tree().root.add_child(_menu_layer)
-
 func _mark_tutorial_zone_exempt_recursive(node: Node) -> void:
 	if node == null:
 		return
@@ -296,124 +271,6 @@ func _mark_tutorial_zone_exempt_recursive(node: Node) -> void:
 		(node as Control).set_meta("tutorial_zone_exempt", true)
 	for child in node.get_children():
 		_mark_tutorial_zone_exempt_recursive(child)
-
-func _build_safe_menu_panel() -> Control:
-	var root = Control.new()
-	root.name = "SafeMenuPanel"
-	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	root.mouse_filter = Control.MOUSE_FILTER_STOP
-	root.set_meta("tutorial_zone_exempt", true)
-	root.process_mode = Node.PROCESS_MODE_WHEN_PAUSED
-
-	var overlay = ColorRect.new()
-	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	overlay.color = Color(0.094, 0.102, 0.122, 0.72)
-	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
-	overlay.set_meta("tutorial_zone_exempt", true)
-	root.add_child(overlay)
-
-	var center = CenterContainer.new()
-	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	center.mouse_filter = Control.MOUSE_FILTER_STOP
-	center.set_meta("tutorial_zone_exempt", true)
-	root.add_child(center)
-
-	var panel = PanelContainer.new()
-	panel.custom_minimum_size = Vector2(760, 560)
-	panel.mouse_filter = Control.MOUSE_FILTER_STOP
-	panel.set_meta("tutorial_zone_exempt", true)
-	center.add_child(panel)
-
-	var style = StyleBoxFlat.new()
-	style.bg_color = Color(0.04, 0.06, 0.12, 0.95)
-	style.border_color = Color(0.28, 0.88, 0.96, 0.95)
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(8)
-	style.content_margin_left = 24
-	style.content_margin_right = 24
-	style.content_margin_top = 20
-	style.content_margin_bottom = 20
-	panel.add_theme_stylebox_override("panel", style)
-
-	var vbox = VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 12)
-	panel.add_child(vbox)
-
-	var title = Label.new()
-	title.text = "Main Menu"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 34)
-	title.add_theme_color_override("font_color", Color(0.95, 0.93, 0.90, 1.0))
-	vbox.add_child(title)
-
-	var close_btn = Button.new()
-	close_btn.text = "Close"
-	close_btn.custom_minimum_size = Vector2(0, 52)
-	close_btn.pressed.connect(func():
-		hide_menu_panel()
-	)
-	vbox.add_child(close_btn)
-
-	var practice_btn = Button.new()
-	practice_btn.text = "Practice Mining"
-	practice_btn.custom_minimum_size = Vector2(0, 52)
-	practice_btn.pressed.connect(func():
-		preload("res://Scripts/Utils/AppControllerHelper.gd").open_mining_practice_panel("menu_panel")
-		hide_menu_panel()
-	)
-	vbox.add_child(practice_btn)
-
-	var skip_btn = Button.new()
-	skip_btn.text = "Skip Onboarding"
-	skip_btn.custom_minimum_size = Vector2(0, 52)
-	skip_btn.pressed.connect(func():
-		skip_tutorial()
-	)
-	vbox.add_child(skip_btn)
-
-	var replay_mission_btn = Button.new()
-	replay_mission_btn.text = "Replay This Mission Guide"
-	replay_mission_btn.custom_minimum_size = Vector2(0, 52)
-	replay_mission_btn.pressed.connect(func():
-		replay_tutorial_for_current_mission()
-	)
-	vbox.add_child(replay_mission_btn)
-
-	var replay_all_btn = Button.new()
-	replay_all_btn.text = "Replay Full Onboarding"
-	replay_all_btn.custom_minimum_size = Vector2(0, 52)
-	replay_all_btn.pressed.connect(func():
-		replay_tutorial_from_mission1()
-	)
-	vbox.add_child(replay_all_btn)
-
-	var dialogue_btn = Button.new()
-	var dialogue_on = is_citizen_science_dialogue_enabled()
-	dialogue_btn.text = "Citizen Science Dialogue: %s" % ("On" if dialogue_on else "Off")
-	dialogue_btn.custom_minimum_size = Vector2(0, 52)
-	dialogue_btn.pressed.connect(func():
-		var enabled = not is_citizen_science_dialogue_enabled()
-		set_citizen_science_dialogue_enabled(enabled)
-		dialogue_btn.text = "Citizen Science Dialogue: %s" % ("On" if enabled else "Off")
-	)
-	vbox.add_child(dialogue_btn)
-
-	var reset_btn = Button.new()
-	reset_btn.text = "Reset All Data"
-	reset_btn.custom_minimum_size = Vector2(0, 52)
-	reset_btn.pressed.connect(func():
-		_on_reset_all()
-	)
-	vbox.add_child(reset_btn)
-
-	_mark_tutorial_zone_exempt_recursive(root)
-	return root
-
-func _on_counter_changed(new_value: int) -> void:
-	"""Handle counter being changed in Godot UI"""
-	counter = new_value
-	counter_updated.emit(counter)
-	AppLogger.d("Counter changed in Godot UI: %s" % counter)
 
 func _on_reset_all() -> void:
 	"""Handle reset all action from menu panel"""
@@ -423,8 +280,6 @@ func _on_reset_all() -> void:
 	experience_xp = 0
 	experience_level = 1
 	citizen_science_dialogue_enabled = true
-	if current_menu_panel and current_menu_panel.has_method("set_counter"):
-		current_menu_panel.set_counter(counter)
 	counter_updated.emit(counter)
 	save_franc_balance()
 	save_experience()
@@ -465,14 +320,52 @@ func get_franc_balance() -> int:
 	"""Get franc balance"""
 	return franc_balance
 
+const LOAN_AMOUNT := 1500000000      # 1.5 B F — covers SR1 plus fuel margin
+const LOAN_REPAY_MULT := 1.03        # 3% interest
+
 func save_franc_balance() -> void:
-	_persistence.save_franc_balance(franc_balance)
+	_persistence.save_franc_balance(franc_balance, loan_balance)
 
 func load_franc_balance() -> void:
 	var result = _persistence.load_franc_balance(franc_balance)
 	if result.get("loaded", false):
 		franc_balance = result.get("value", franc_balance)
+		loan_balance = int(result.get("loan", 0))
 		franc_balance_updated.emit(franc_balance)
+		if loan_balance > 0:
+			loan_updated.emit(loan_balance)
+
+func get_loan_balance() -> int:
+	return loan_balance
+
+func has_outstanding_loan() -> bool:
+	return loan_balance > 0
+
+func can_take_loan() -> bool:
+	var cheapest = preload("res://Scripts/Utils/RocketSpecs.gd").get_cost("starterrocket1")
+	return franc_balance < cheapest and not has_outstanding_loan()
+
+func take_loan() -> bool:
+	if not can_take_loan():
+		return false
+	var repay_amount := int(ceil(float(LOAN_AMOUNT) * LOAN_REPAY_MULT))
+	loan_balance = repay_amount
+	add_franc_balance(LOAN_AMOUNT, "loan")
+	loan_updated.emit(loan_balance)
+	_persistence.save_franc_balance(franc_balance, loan_balance)
+	AppLogger.d("[AppController] Loan taken: %s F, repay: %s F" % [LOAN_AMOUNT, repay_amount])
+	return true
+
+func repay_loan_from_payout(payout: int) -> int:
+	if loan_balance <= 0:
+		return payout
+	var repay: int = mini(payout, loan_balance)
+	loan_balance -= repay
+	var remainder: int = payout - repay
+	_persistence.save_franc_balance(franc_balance, loan_balance)
+	loan_updated.emit(loan_balance)
+	AppLogger.d("[AppController] Loan repaid: %s F, remaining loan: %s F" % [repay, loan_balance])
+	return remainder
 
 func add_experience(amount: int, source: String = "") -> void:
 	if amount <= 0:
@@ -599,7 +492,9 @@ func _total_experience_for(xp: int, level: int) -> int:
 	return total
 
 func _xp_required_for_level(level: int) -> int:
-	return BASE_XP_TO_LEVEL + max(level, 1)
+	# Exponential curve: L1→L2=100, L2→L3=150, L3→L4=225, L4→L5=337, …
+	# Tutorial arc (M1–M4, ~580 XP) puts player solidly at L3.
+	return int(floor(100.0 * pow(1.5, max(level, 1) - 1)))
 
 func _unlock_rockets_for_level(level: int) -> void:
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")

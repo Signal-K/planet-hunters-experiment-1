@@ -9,6 +9,7 @@ const RoomSpriteAtlas = preload("res://Scripts/UI/RoomSpriteAtlas.gd")
 const MiningTargetTheme = preload("res://Scripts/UI/MiningTargetTheme.gd")
 const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
 const SubcontractorManager = preload("res://Scripts/Utils/SubcontractorManager.gd")
+const UILayout = preload("res://Scripts/UI/UILayout.gd")
 
 signal mining_completed(minerals: Dictionary, score: int)
 
@@ -60,6 +61,7 @@ var _target_duration = ASTEROID_DURATION
 var _is_planet = false
 var _rocket_name = "StarterRocket1"
 var _rocket_level = 1
+var _drones_enabled := false
 var _current_target_id = ""
 var _terrain_loop_container: Node2D = null
 
@@ -102,12 +104,10 @@ var _terrain_loop_container: Node2D = null
 var _rocket_frames = []
 var _guide_step = GuideStep.INTRO
 var _guide_active = true
-var _guide_paused = false
 var _drones_available = MAX_DRONES
 var _drone_cooldown_timer = 0.0
 var _active_drones = []
 var _surface_mined_count = 0
-var _scroll_speed_multiplier = 1.0
 var _target_minerals: Dictionary = {}
 var _target_mineable_pct: float = 0.5
 var _session_context: Dictionary = {}
@@ -163,7 +163,6 @@ func _ready():
 	_load_rocket_frames()
 	_setup_rocket()
 	_generate_terrain()
-	_setup_room_panel()
 	_configure_rocket_rooms(1)
 	_setup_beam_visuals()
 	_apply_responsive_layout()
@@ -188,22 +187,15 @@ func _ready():
 func _setup_button_handbook() -> void:
 	_handbook_button = Button.new()
 	_handbook_button.text = "? Guide"
-	_handbook_button.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	_handbook_button.offset_left = -150
-	_handbook_button.offset_right = -22
-	_handbook_button.offset_top = 14
-	_handbook_button.offset_bottom = 54
+	_handbook_button.size_flags_horizontal = Control.SIZE_SHRINK_END
 	_handbook_button.mouse_filter = Control.MOUSE_FILTER_STOP
-	ui_root.add_child(_handbook_button)
+	top_bar.add_child(_handbook_button)
 	_handbook_button.pressed.connect(_toggle_button_handbook)
 
 	_handbook_panel = PanelContainer.new()
 	_handbook_panel.visible = false
-	_handbook_panel.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	_handbook_panel.offset_left = -420
-	_handbook_panel.offset_right = -22
-	_handbook_panel.offset_top = 62
-	_handbook_panel.offset_bottom = 292
+	# Position is applied by _reposition_handbook_panel() via UILayout.MINING_HANDBOOK.
+	# This ensures it always stays within the viewport regardless of screen size.
 	_handbook_panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	ui_root.add_child(_handbook_panel)
 	var panel_style = StyleBoxFlat.new()
@@ -224,7 +216,8 @@ func _setup_button_handbook() -> void:
 	var body = Label.new()
 	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	body.add_theme_color_override("font_color", Color(0.80, 0.90, 1.0, 1.0))
-	body.text = "Mine: hold SPACE (or FIRE) to collect surface deposits.\nDrone: press D (or DRONE) for subsurface dark deposits.\nInventory: check collected minerals and value.\nReturn to Earth: end run and open mission debrief.\nScore/Value: track run performance and payout potential."
+	var drone_line = "\nDrone: press D (or DRONE) to collect dark subsurface deposits." if _drones_enabled else ""
+	body.text = "Mine: hold SPACE (or FIRE) to collect surface deposits.%s\nInventory: check collected minerals and value.\nReturn to Earth: end run and open mission debrief.\nScore/Value: track run performance and payout potential." % drone_line
 	vbox.add_child(body)
 
 func _toggle_button_handbook() -> void:
@@ -342,16 +335,16 @@ func _apply_responsive_layout() -> void:
 	var is_mobile := viewport.x < 900.0
 	var is_portrait_mobile := is_mobile and viewport.y > viewport.x
 	_compact_layout_active = _is_compact_layout(viewport)
-	var edge := 12.0 if is_mobile else 20.0
-	var top := 12.0 if is_mobile else 20.0
 	_set_hud_typography(is_mobile, is_portrait_mobile)
 	_ensure_right_stats_parent(ui_root if is_portrait_mobile else top_bar)
 	top_spacer.visible = not is_portrait_mobile
 
-	top_bar.offset_left = edge
-	top_bar.offset_top = top
-	top_bar.offset_right = -edge
-	top_bar.offset_bottom = top + (72.0 if is_mobile else 84.0)
+	# TOP_HUD zone — top bar spans the full HUD rect from UILayout.
+	var hud := UILayout.zone(UILayout.Zone.MINING_HUD, viewport)
+	top_bar.offset_left   = hud.position.x
+	top_bar.offset_top    = hud.position.y
+	top_bar.offset_right  = -(viewport.x - hud.end.x)
+	top_bar.offset_bottom = hud.end.y
 	top_bar.add_theme_constant_override("separation", 8 if is_portrait_mobile else (12 if is_mobile else 18))
 	left_gauges.add_theme_constant_override("separation", 6 if is_portrait_mobile else (10 if is_mobile else 14))
 	right_stats.add_theme_constant_override("separation", 5 if is_portrait_mobile else (8 if is_mobile else 10))
@@ -362,6 +355,7 @@ func _apply_responsive_layout() -> void:
 	else:
 		_apply_landscape_layout(is_mobile)
 	_update_room_panel_visibility(viewport)
+	_reposition_handbook_panel(viewport)
 	_position_rocket_lane()
 
 func _is_compact_layout(viewport: Vector2) -> bool:
@@ -396,67 +390,66 @@ func _ensure_right_stats_parent(parent_node: Node) -> void:
 	parent_node.add_child(right_stats)
 
 func _apply_portrait_layout(viewport: Vector2) -> void:
-	var edge := 10.0
 	left_gauges.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	rocket_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	score_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	value_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	# right_stats drops below the top bar in portrait.
+	var hud := UILayout.zone(UILayout.Zone.MINING_HUD, viewport)
 	right_stats.layout_mode = 1
-	right_stats.anchor_left = 0.0
-	right_stats.anchor_top = 0.0
-	right_stats.anchor_right = 1.0
+	right_stats.anchor_left   = 0.0
+	right_stats.anchor_top    = 0.0
+	right_stats.anchor_right  = 1.0
 	right_stats.anchor_bottom = 0.0
-	right_stats.offset_left = edge
-	right_stats.offset_top = top_bar.offset_bottom + 6.0
-	right_stats.offset_right = -edge
+	right_stats.offset_left   = UILayout.EDGE
+	right_stats.offset_top    = hud.end.y + 6.0
+	right_stats.offset_right  = -UILayout.EDGE
 	right_stats.offset_bottom = right_stats.offset_top + 120.0
-	contract_order_panel.anchor_left = 0.0
+	# CONTRACT zone — centered, below right_stats in portrait.
+	var contract_zone := UILayout.zone(UILayout.Zone.MINING_CONTRACT, viewport)
+	contract_order_panel.anchor_left  = 0.0
 	contract_order_panel.anchor_right = 1.0
-	contract_order_panel.offset_left = edge
-	contract_order_panel.offset_right = -edge
-	contract_order_panel.offset_top = right_stats.offset_bottom + 6.0
+	contract_order_panel.offset_left   = UILayout.EDGE
+	contract_order_panel.offset_right  = -UILayout.EDGE
+	contract_order_panel.offset_top    = right_stats.offset_bottom + 6.0
 	contract_order_panel.offset_bottom = contract_order_panel.offset_top + 76.0
-	instructions.offset_left = -((viewport.x * 0.48))
-	instructions.offset_right = viewport.x * 0.48
-	instructions.offset_top = contract_order_panel.offset_bottom + 6.0
+	# INSTRUCTION zone — centered, below contract in portrait.
+	var instr_zone := UILayout.zone(UILayout.Zone.MINING_INSTRUCTION, viewport)
+	instructions.offset_left   = -(instr_zone.size.x * 0.5)
+	instructions.offset_right  =   instr_zone.size.x * 0.5
+	instructions.offset_top    = contract_order_panel.offset_bottom + 6.0
 	instructions.offset_bottom = instructions.offset_top + 54.0
-	fire_button.offset_left = -88.0
-	fire_button.offset_right = 88.0
-	fire_button.offset_top = -102.0
-	fire_button.offset_bottom = -28.0
-	inventory_button.anchor_left = 0.0
+	# BOTTOM_CONTROLS zone — fire/inventory/return.
+	var bot := UILayout.zone(UILayout.Zone.MINING_BOTTOM, viewport)
+	fire_button.offset_left   = -88.0
+	fire_button.offset_right  =  88.0
+	fire_button.offset_top    = -(bot.size.y + 14.0)
+	fire_button.offset_bottom = -14.0
+	inventory_button.anchor_left  = 0.0
 	inventory_button.anchor_right = 0.0
-	inventory_button.offset_left = 12.0
-	inventory_button.offset_top = -100.0
-	inventory_button.offset_right = 136.0
-	inventory_button.offset_bottom = -44.0
-	return_button.anchor_left = 1.0
+	inventory_button.offset_left   = UILayout.EDGE
+	inventory_button.offset_top    = bot.position.y - viewport.y - 56.0
+	inventory_button.offset_right  = UILayout.EDGE + 124.0
+	inventory_button.offset_bottom = inventory_button.offset_top + 44.0
+	return_button.anchor_left  = 1.0
 	return_button.anchor_right = 1.0
-	return_button.offset_left = -136.0
-	return_button.offset_top = -100.0
-	return_button.offset_right = -12.0
-	return_button.offset_bottom = -44.0
-	inventory_panel.offset_left = -((viewport.x * 0.48))
-	inventory_panel.offset_right = viewport.x * 0.48
-	inventory_panel.offset_top = -(viewport.y * 0.34)
-	inventory_panel.offset_bottom = viewport.y * 0.34
+	return_button.offset_left   = -(UILayout.EDGE + 124.0)
+	return_button.offset_top    = -(UILayout.EDGE + 56.0)
+	return_button.offset_right  = -UILayout.EDGE
+	return_button.offset_bottom = -UILayout.EDGE
+	# MINING_MODAL (inventory overlay) — centered.
+	inventory_panel.offset_left   = -(viewport.x * 0.48)
+	inventory_panel.offset_right  =  viewport.x * 0.48
+	inventory_panel.offset_top    = -(viewport.y * 0.34)
+	inventory_panel.offset_bottom =  viewport.y * 0.34
+	# ROOMS — positioned via shared helper.
 	if _room_panel and is_instance_valid(_room_panel):
-		_room_panel.anchor_left = 1.0
-		_room_panel.anchor_top = 0.0
-		_room_panel.anchor_right = 1.0
-		_room_panel.anchor_bottom = 0.0
 		_layout_room_panel(viewport)
 	if _room_toggle_button and is_instance_valid(_room_toggle_button):
-		_room_toggle_button.anchor_left = 1.0
-		_room_toggle_button.anchor_right = 1.0
-		_room_toggle_button.anchor_top = 0.0
-		_room_toggle_button.anchor_bottom = 0.0
-		_room_toggle_button.offset_left = -118.0
-		_room_toggle_button.offset_top = top_bar.offset_bottom + 6.0
-		_room_toggle_button.offset_right = -10.0
-		_room_toggle_button.offset_bottom = _room_toggle_button.offset_top + 32.0
+		_layout_room_toggle_button(viewport)
 
 func _apply_landscape_layout(is_mobile: bool) -> void:
+	var viewport := get_viewport_rect().size
 	right_stats.layout_mode = 2
 	right_stats.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	right_stats.size_flags_stretch_ratio = 0.5
@@ -464,58 +457,56 @@ func _apply_landscape_layout(is_mobile: bool) -> void:
 	score_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	value_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	left_gauges.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	instructions.offset_left = -340 if is_mobile else -400
-	instructions.offset_right = 340 if is_mobile else 400
-	instructions.offset_top = 180 if is_mobile else 200
-	instructions.offset_bottom = instructions.offset_top + 40.0
-	contract_order_panel.anchor_left = 0.5
+	# INSTRUCTION zone — centered horizontal band below HUD.
+	var instr := UILayout.zone(UILayout.Zone.MINING_INSTRUCTION, viewport)
+	instructions.offset_left   = -(instr.size.x * 0.5)
+	instructions.offset_right  =  (instr.size.x * 0.5)
+	instructions.offset_top    = instr.position.y
+	instructions.offset_bottom = instr.end.y
+	# CONTRACT zone — centered panel below instruction.
+	var contract := UILayout.zone(UILayout.Zone.MINING_CONTRACT, viewport)
+	contract_order_panel.anchor_left  = 0.5
 	contract_order_panel.anchor_right = 0.5
-	contract_order_panel.offset_left = -260 if is_mobile else -300
-	contract_order_panel.offset_right = 260 if is_mobile else 300
-	contract_order_panel.offset_top = 92 if is_mobile else 100
-	contract_order_panel.offset_bottom = 188
-	fire_button.offset_left = -76 if is_mobile else -60
-	fire_button.offset_right = 76 if is_mobile else 60
-	fire_button.offset_top = -88 if is_mobile else -70
-	fire_button.offset_bottom = -22 if is_mobile else -20
-	inventory_button.anchor_left = 1.0
+	contract_order_panel.offset_left   = -(contract.size.x * 0.5)
+	contract_order_panel.offset_right  =  (contract.size.x * 0.5)
+	contract_order_panel.offset_top    = contract.position.y
+	contract_order_panel.offset_bottom = contract.end.y
+	# BOTTOM_CONTROLS zone — fire/inventory/return.
+	var bot := UILayout.zone(UILayout.Zone.MINING_BOTTOM, viewport)
+	var btn_h := 44.0
+	fire_button.offset_left   = -60.0 if is_mobile else -52.0
+	fire_button.offset_right  =  60.0 if is_mobile else  52.0
+	fire_button.offset_top    = -(UILayout.EDGE + btn_h)
+	fire_button.offset_bottom = -UILayout.EDGE
+	inventory_button.anchor_left  = 1.0
 	inventory_button.anchor_right = 1.0
-	inventory_button.offset_left = -126 if is_mobile else -120
-	inventory_button.offset_top = -116 if is_mobile else -100
-	inventory_button.offset_right = -12 if is_mobile else -10
-	inventory_button.offset_bottom = -64 if is_mobile else -60
-	return_button.anchor_left = 1.0
+	inventory_button.offset_left   = -(UILayout.EDGE + 114.0)
+	inventory_button.offset_top    = -(UILayout.EDGE + btn_h + 48.0)
+	inventory_button.offset_right  = -UILayout.EDGE
+	inventory_button.offset_bottom = -(UILayout.EDGE + 48.0)
+	return_button.anchor_left  = 1.0
 	return_button.anchor_right = 1.0
-	return_button.offset_left = -150 if is_mobile else -140
-	return_button.offset_top = -64 if is_mobile else -50
-	return_button.offset_right = -12 if is_mobile else -10
-	return_button.offset_bottom = -12 if is_mobile else -10
+	return_button.offset_left   = -(UILayout.EDGE + 130.0)
+	return_button.offset_top    = -(UILayout.EDGE + btn_h)
+	return_button.offset_right  = -UILayout.EDGE
+	return_button.offset_bottom = -UILayout.EDGE
+	# ROOMS — positioned via shared helper.
 	if _room_panel and is_instance_valid(_room_panel):
-		_room_panel.anchor_left = 1.0
-		_room_panel.anchor_top = 0.0
-		_room_panel.anchor_right = 1.0
-		_room_panel.anchor_bottom = 0.0
-		_layout_room_panel(get_viewport_rect().size)
+		_layout_room_panel(viewport)
 	if _room_toggle_button and is_instance_valid(_room_toggle_button):
-		_room_toggle_button.anchor_left = 1.0
-		_room_toggle_button.anchor_right = 1.0
-		_room_toggle_button.anchor_top = 0.0
-		_room_toggle_button.anchor_bottom = 0.0
-		_room_toggle_button.offset_left = -132.0
-		_room_toggle_button.offset_top = top_bar.offset_bottom + 8.0
-		_room_toggle_button.offset_right = -20.0
-		_room_toggle_button.offset_bottom = _room_toggle_button.offset_top + 34.0
+		_layout_room_toggle_button(viewport)
 
 func _update_room_panel_visibility(viewport: Vector2) -> void:
 	if _room_panel == null:
 		return
-	var compact = _is_compact_layout(viewport)
+	var compact := _is_compact_layout(viewport)
 	if _room_toggle_button and is_instance_valid(_room_toggle_button):
 		_room_toggle_button.visible = true
 		_room_toggle_button.text = "ROOMS: ON" if _room_panel_visible else "ROOMS"
-		_room_toggle_button.custom_minimum_size = Vector2(96, 30 if compact else 34)
+		_room_toggle_button.custom_minimum_size = Vector2(96, 28 if compact else 30)
 	_room_panel.visible = _room_panel_visible
 	_layout_room_panel(viewport)
+	_layout_room_toggle_button(viewport)
 	_render_room_panel()
 
 func _toggle_room_panel() -> void:
@@ -528,16 +519,30 @@ func _toggle_room_panel() -> void:
 func _layout_room_panel(viewport: Vector2) -> void:
 	if _room_panel == null:
 		return
-	var margin := 10.0
-	var panel_w: float = clampf(viewport.x * 0.22, 190.0, 290.0)
-	var panel_h: float = clampf(viewport.y * 0.34, 150.0, 260.0)
-	var top_y: float = top_bar.offset_bottom + 48.0
-	var max_top: float = maxf(margin, viewport.y - panel_h - 110.0)
-	top_y = minf(top_y, max_top)
-	_room_panel.offset_right = -margin
-	_room_panel.offset_left = _room_panel.offset_right - panel_w
-	_room_panel.offset_top = top_y
-	_room_panel.offset_bottom = top_y + panel_h
+	# MINING_ROOMS zone: top-LEFT, below HUD — never conflicts with
+	# MINING_HANDBOOK (top-right) or TUTORIAL_COACH (top-right, Earth only).
+	var r := UILayout.zone(UILayout.Zone.MINING_ROOMS, viewport)
+	# Leave room above for the toggle button (28px + 4px gap).
+	r.position.y += 32.0
+	r.size.y      -= 32.0
+	UILayout.place(_room_panel, UILayout.clamp_to_viewport(r, viewport))
+
+func _layout_room_toggle_button(viewport: Vector2) -> void:
+	if _room_toggle_button == null or not is_instance_valid(_room_toggle_button):
+		return
+	# Toggle sits just above the rooms panel in the MINING_ROOMS zone.
+	var rooms := UILayout.zone(UILayout.Zone.MINING_ROOMS, viewport)
+	var btn_h  := 28.0
+	var btn_r  := Rect2(rooms.position.x, rooms.position.y, rooms.size.x, btn_h)
+	UILayout.place(_room_toggle_button, UILayout.clamp_to_viewport(btn_r, viewport))
+
+func _reposition_handbook_panel(viewport: Vector2) -> void:
+	if _handbook_panel == null or not is_instance_valid(_handbook_panel):
+		return
+	# MINING_HANDBOOK zone: top-right dropdown.  Tutorial is suspended during
+	# mining so this zone is uncontested.
+	var r := UILayout.zone(UILayout.Zone.MINING_HANDBOOK, viewport)
+	UILayout.place(_handbook_panel, UILayout.clamp_to_viewport(r, viewport))
 
 func start_mining(is_planet: bool = false, difficulty: int = 1, target_id: String = "", minerals: Dictionary = {}, mineable_pct: float = 0.5, session_context: Dictionary = {}):
 	_is_planet = is_planet
@@ -565,8 +570,13 @@ func start_mining(is_planet: bool = false, difficulty: int = 1, target_id: Strin
 	_current_target_id = target_id
 	_rocket_level = difficulty
 	_configure_rocket_rooms(difficulty)
+	if _rocket_level >= 5 and _room_panel == null:
+		_setup_room_panel()
 	_target_minerals = minerals
 	_target_mineable_pct = mineable_pct
+	_drones_enabled = int(RocketsManager.get_mission_stage()) >= 4
+	if not _drones_enabled:
+		_target_mineable_pct = 1.0  # force all-surface deposits; drones not available yet
 	_session_context = session_context.duplicate(true)
 	var signature_any = _session_context.get("generation_signature", {})
 	if typeof(signature_any) == TYPE_DICTIONARY:
@@ -587,6 +597,7 @@ func start_mining(is_planet: bool = false, difficulty: int = 1, target_id: Strin
 	
 	# Regenerate terrain with target seed and difficulty
 	_generate_terrain()
+	_tag_order_target_minerals()
 	
 	# Beam charges based on difficulty level
 	_max_beam_charges = 20.0 + (difficulty * 10.0)
@@ -844,12 +855,7 @@ func _process(delta):
 	# Animate particles from pool
 	_animate_particles(delta)
 	
-	# Check if we should slow down for guide
-	if _guide_active:
-		_check_guide_slowdown()
-	
-	# Apply speed multiplier
-	_scroll_offset += SCROLL_SPEED * _scroll_speed_multiplier * delta
+	_scroll_offset += SCROLL_SPEED * delta
 	
 	# Loop terrain seamlessly
 	if _scroll_offset >= _terrain_width:
@@ -944,8 +950,8 @@ func _process(delta):
 			_is_mining = true
 		elif Input.is_action_just_released("ui_accept"):
 			_is_mining = false
-		
-		if Input.is_key_pressed(KEY_D) and _drones_available > 0 and _drone_cooldown_timer <= 0:
+
+		if _drones_enabled and Input.is_key_pressed(KEY_D) and _drones_available > 0 and _drone_cooldown_timer <= 0:
 			_deploy_drone()
 	
 	if _elapsed_time >= _target_duration:
@@ -960,7 +966,9 @@ func _fire_laser():
 	if _beam_glow:
 		_beam_glow.visible = true
 	var laser_start := rocket.position + Vector2(0, 8)
-	var laser_end := Vector2(rocket.position.x, get_viewport_rect().size.y)
+	var rocket_terrain_x := fmod(rocket.position.x + _scroll_offset, _terrain_width)
+	var terrain_y := _get_terrain_y_at(rocket_terrain_x)
+	var laser_end := Vector2(rocket.position.x, terrain_y)
 	var points := _build_beam_points(laser_start, laser_end)
 	laser.clear_points()
 	for point in points:
@@ -1019,7 +1027,7 @@ func _check_mineral_hit():
 				if _guide_step == GuideStep.MINE_SURFACE_IRON and _surface_mined_count >= 1:
 					_advance_guide_step(GuideStep.MINE_SURFACE_NICKEL)
 				elif _guide_step == GuideStep.MINE_SURFACE_NICKEL and _surface_mined_count >= 2:
-					_advance_guide_step(GuideStep.EXPLAIN_SUBSURFACE)
+					_advance_guide_step(GuideStep.EXPLAIN_SUBSURFACE if _drones_enabled else GuideStep.COMPLETE)
 			_record_region_collection(region, "laser")
 			_spawn_particles(region)
 			
@@ -1264,42 +1272,52 @@ func _show_guide_step():
 	instructions.modulate.a = 0.0
 	instructions.scale = Vector2(0.8, 0.8)
 	
+	# If drones aren't unlocked yet, skip the subsurface guide steps entirely.
+	if not _drones_enabled and (_guide_step == GuideStep.EXPLAIN_SUBSURFACE or _guide_step == GuideStep.DEPLOY_DRONE):
+		_guide_step = GuideStep.COMPLETE
+
 	match _guide_step:
 		GuideStep.INTRO:
-			if _uses_touch_controls:
-				instructions.text = "Hold FIRE to mine. Tap DRONE for subsurface. Tap RETURN to leave."
+			if _drones_enabled:
+				if _uses_touch_controls:
+					instructions.text = "Hold FIRE to mine. Tap DRONE for subsurface. Tap RETURN to leave."
+				else:
+					instructions.text = "Hold SPACE to mine. Press D for drones. Press RETURN to leave."
 			else:
-				instructions.text = "Hold SPACE to mine. Press D for drones. Press RETURN to leave."
+				if _uses_touch_controls:
+					instructions.text = "Hold FIRE to mine surface deposits. Tap RETURN to leave."
+				else:
+					instructions.text = "Hold SPACE to mine surface deposits. Press RETURN to leave."
 			if _starter_contract_active and _starter_order_targets.size() > 0:
-				instructions.text += " Follow contract order minerals only."
-			_guide_paused = false  # Keep flying
+				instructions.text += " Prioritise your contractor's requested minerals."
 		GuideStep.MINE_SURFACE_IRON:
 			if _starter_contract_active and _starter_order_targets.size() > 0:
 				instructions.text = "Mine only requested surface minerals."
 			else:
 				instructions.text = "Mine orange surface deposits (iron)."
-			_guide_paused = false  # Keep flying until near deposit
 		GuideStep.MINE_SURFACE_NICKEL:
 			if _starter_contract_active and _starter_order_targets.size() > 0:
-				instructions.text = "Good. Keep prioritizing requested minerals."
+				instructions.text = "Good. Keep prioritising requested minerals."
 			else:
 				instructions.text = "Mine yellow surface deposits (nickel)."
-			_guide_paused = false  # Keep flying until near deposit
 		GuideStep.EXPLAIN_SUBSURFACE:
-			instructions.text = "Dark deposits are subsurface. Use drones."
-			_guide_paused = false  # Keep flying
+			instructions.text = "Dark deposits are subsurface — deploy a drone to collect them."
 		GuideStep.DEPLOY_DRONE:
 			if _uses_touch_controls:
 				instructions.text = "Tap DRONE while over a dark deposit."
 			else:
 				instructions.text = "Press D while over a dark deposit."
-			_guide_paused = false  # Keep flying until near subsurface
 		GuideStep.COMPLETE:
-			if _uses_touch_controls:
-				instructions.text = "Continue: FIRE mine, DRONE deploy, RETURN exit."
+			if _drones_enabled:
+				if _uses_touch_controls:
+					instructions.text = "Continue: FIRE mine, DRONE deploy, RETURN exit."
+				else:
+					instructions.text = "Continue: SPACE mine, D drone, RETURN exit."
 			else:
-				instructions.text = "Continue: SPACE mine, D drone, RETURN exit."
-			_guide_paused = false
+				if _uses_touch_controls:
+					instructions.text = "Continue: FIRE mine, RETURN to exit."
+				else:
+					instructions.text = "Continue: SPACE mine, RETURN to exit."
 			_guide_active = false
 	
 	tween.tween_property(instructions, "modulate:a", 1.0, 0.4).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
@@ -1310,8 +1328,8 @@ func _update_guide(delta):
 		_is_mining = true
 	elif Input.is_action_just_released("ui_accept"):
 		_is_mining = false
-	
-	if Input.is_key_pressed(KEY_D) and _drones_available > 0 and _drone_cooldown_timer <= 0:
+
+	if _drones_enabled and Input.is_key_pressed(KEY_D) and _drones_available > 0 and _drone_cooldown_timer <= 0:
 		_deploy_drone()
 	
 	match _guide_step:
@@ -1377,36 +1395,13 @@ func _on_drone_exploded(_pos: Vector2, region: Dictionary = {}):
 	_score += 50
 	score_label.text = "Score: %d" % _score
 
-func _check_guide_pause():
-	# Renamed to _check_guide_slowdown - see below
-	pass
-
-func _check_guide_slowdown():
-	var rocket_x = fmod(rocket.position.x + _scroll_offset, _terrain_width)
-	var slowdown_range = 180
-	var target_surface: Variant = null
-	if _guide_step == GuideStep.MINE_SURFACE_IRON and _surface_mined_count == 0:
-		target_surface = true
-	elif _guide_step == GuideStep.MINE_SURFACE_NICKEL and _surface_mined_count == 1:
-		target_surface = true
-	elif _guide_step == GuideStep.DEPLOY_DRONE and _subsurface_collected_count == 0:
-		target_surface = false
-
-	if target_surface == null:
-		_scroll_speed_multiplier = 1.0
-		return
-
-	var target_region = RegionMath.find_nearest_region(rocket_x, target_surface, _mineral_regions, _terrain_width)
-	if not target_region.is_empty():
-		var distance = RegionMath.distance_to_region_edges(rocket_x, target_region, _terrain_width)
-		if distance < slowdown_range:
-			_scroll_speed_multiplier = 0.3
-			return
-
-	# No relevant deposit nearby, normal speed
-	_scroll_speed_multiplier = 1.0
 
 func _update_drone_display():
+	var drone_panel = drone_label.get_parent().get_parent() if drone_label else null
+	if drone_panel:
+		drone_panel.visible = _drones_enabled
+	if not _drones_enabled:
+		return
 	var cooldown_text = ""
 	if _drone_cooldown_timer > 0:
 		cooldown_text = " (%.1fs)" % _drone_cooldown_timer
@@ -1590,6 +1585,13 @@ func _show_mineral_signpost() -> void:
 		signpost_text = "Minerals ahead: %s" % " | ".join(mineral_lines)
 	instructions.text = signpost_text
 	instructions.modulate.a = 1.0
+
+func _tag_order_target_minerals() -> void:
+	for region in _mineral_regions:
+		var mineral = region.get("mineral", {})
+		var mineral_name = str(mineral.get("name", ""))
+		region["is_order_target"] = _is_order_target_mineral(mineral_name)
+		_apply_region_visual_state(region)
 
 func _is_order_target_mineral(mineral_name: String) -> bool:
 	if not _starter_contract_active or _starter_order_targets.is_empty():

@@ -32,6 +32,12 @@ class MockAppController:
 	func get_xp_required_for_next_level() -> int:
 		return 10 + max(_level, 1)
 
+	func has_outstanding_loan() -> bool:
+		return false
+
+	func repay_loan_from_payout(amount: int) -> int:
+		return amount
+
 func _init():
 	MissionLogManager.set_path_overrides(TEST_LOG_PATH, TEST_LOG_PATH)
 	reporter.start_suite("Mission Log", {
@@ -58,7 +64,7 @@ func run_all_tests() -> void:
 	await test_salvage_action_recorded()
 	await test_sell_orbit_closes_out_actions()
 	await test_scrap_only_applies_when_selected()
-	await test_debrief_progress_feedback_shows_objective_exposure_and_unlock_progress()
+	await test_debrief_ui_builds_correctly_with_mission_data()
 
 func _setup_mission_debrief() -> Dictionary:
 	var existing = get_root().get_node_or_null("AppController")
@@ -71,10 +77,10 @@ func _setup_mission_debrief() -> Dictionary:
 	var scene = MissionDebriefScene.instantiate()
 	get_root().add_child(scene)
 	await create_timer(0.02).timeout
-	scene._returned = {"rocket_id": "starterrocket1-test", "target_id": "A-TEST", "label": "Asteroid A-TEST", "type": "asteroid"}
-	scene._collected = {"Iron": 10, "Nickel": 2}
-	scene._total_value = 10000
-	scene._subcontractor = {"id": "sub-test", "name": "Sub Test", "bonus": {}}
+	scene._returned = {"rocket_id": "starterrocket1-test", "target_id": "A-TEST", "label": "Asteroid A-TEST", "target_type": "asteroid"}
+	scene._cargo = {"Iron": 10, "Nickel": 2}
+	scene._earth_payout = 10000
+	scene._scrap_refund = 200000000
 	return {"scene": scene, "app": app}
 
 func _teardown_mission_debrief(ctx: Dictionary) -> void:
@@ -298,13 +304,13 @@ func test_sell_orbit_closes_out_actions() -> void:
 	var ctx = await _setup_mission_debrief()
 	var scene = ctx["scene"]
 	var app = ctx["app"]
-	scene._sell(false)
+	scene._on_orbit_pressed()
 	var after_sell = int(app.get_franc_balance())
 	if after_sell <= 0:
 		reporter.fail_test("Expected orbit sale to credit balance")
 		await _teardown_mission_debrief(ctx)
 		return
-	scene._scrap_ship(0.20)
+	scene._on_complete_pressed()  # should be blocked because _done = true
 	var after_scrap_attempt = int(app.get_franc_balance())
 	if after_scrap_attempt != after_sell:
 		reporter.fail_test("Expected scrap attempt after sale to be blocked")
@@ -317,10 +323,10 @@ func test_sell_orbit_closes_out_actions() -> void:
 			continue
 		if str(row.get("rocket_id", "")) != "starterrocket1-test":
 			continue
-		if str(row.get("action", "")).contains("sell_orbit"):
+		if str(row.get("action", "")).contains("leave_orbit"):
 			action_count += 1
 	if action_count != 1:
-		reporter.fail_test("Expected one sell_orbit log entry for mission, got %s" % str(action_count))
+		reporter.fail_test("Expected one leave_orbit log entry for mission, got %s" % str(action_count))
 		await _teardown_mission_debrief(ctx)
 		return
 	await _teardown_mission_debrief(ctx)
@@ -333,7 +339,7 @@ func test_scrap_only_applies_when_selected() -> void:
 	var scene = ctx["scene"]
 	var app = ctx["app"]
 	var before = int(app.get_franc_balance())
-	scene._scrap_ship(0.20)
+	scene._do_complete("scrap")
 	var after = int(app.get_franc_balance())
 	if after <= before:
 		reporter.fail_test("Expected scrap action to credit balance when selected")
@@ -356,37 +362,27 @@ func test_scrap_only_applies_when_selected() -> void:
 	await _teardown_mission_debrief(ctx)
 	reporter.pass_test()
 
-func test_debrief_progress_feedback_shows_objective_exposure_and_unlock_progress() -> void:
-	reporter.start_test("Debrief progress feedback shows objective, exposure, and next unlock progress")
+func test_debrief_ui_builds_correctly_with_mission_data() -> void:
+	reporter.start_test("Debrief UI builds correctly with mission data")
 	var ctx = await _setup_mission_debrief()
 	var scene = ctx["scene"]
-	scene._returned = {"rocket_id": "starterrocket1-test", "target_id": "A-FEEDBACK", "label": "Asteroid Feedback", "type": "asteroid", "operation_mode": "survey"}
-	scene._collected = {"Iron": 10, "Nickel": 2}
-	scene._total_value = 10000
-	scene._update_labels()
-	var text = str(scene.status_label.text)
-	if text.find("Objective: Completed") == -1:
-		reporter.fail_test("Expected objective completion line in debrief feedback")
+	scene._returned = {"rocket_id": "starterrocket1-test", "target_id": "A-FEEDBACK", "label": "Asteroid Feedback", "target_type": "asteroid"}
+	scene._cargo = {"Iron": 10, "Nickel": 2}
+	scene._earth_payout = 9999
+	scene._scrap_refund = 200000000
+	scene._build_ui()
+	var title = str(scene.title_label.text)
+	if title != "Mission Complete!":
+		reporter.fail_test("Expected title 'Mission Complete!', got '%s'" % title)
 		await _teardown_mission_debrief(ctx)
 		return
-	if text.find("Exposure on resolve: +") == -1:
-		reporter.fail_test("Expected exposure line in debrief feedback")
+	var payout_text = str(scene.payout_label.text)
+	if not payout_text.contains("9999"):
+		reporter.fail_test("Expected payout label to include payout amount, got '%s'" % payout_text)
 		await _teardown_mission_debrief(ctx)
 		return
-	if text.find("Next unlock progress: L") == -1:
-		reporter.fail_test("Expected next unlock progress line in debrief feedback")
-		await _teardown_mission_debrief(ctx)
-		return
-	if text.find("Operation mode: Survey Route") == -1:
-		reporter.fail_test("Expected operation mode line in advanced debrief feedback")
-		await _teardown_mission_debrief(ctx)
-		return
-	if text.find("Target profile:") == -1:
-		reporter.fail_test("Expected target profile line in advanced debrief feedback")
-		await _teardown_mission_debrief(ctx)
-		return
-	if text.find("Cargo efficiency:") == -1:
-		reporter.fail_test("Expected cargo efficiency line in advanced debrief feedback")
+	if not payout_text.contains("200000000"):
+		reporter.fail_test("Expected payout label to include scrap refund, got '%s'" % payout_text)
 		await _teardown_mission_debrief(ctx)
 		return
 	await _teardown_mission_debrief(ctx)

@@ -1,6 +1,9 @@
 extends RefCounted
 class_name SubcontractorManager
 
+const MineralCatalog = preload("res://Scripts/Utils/MineralCatalog.gd")
+const PushNotificationHelper = preload("res://Scripts/Utils/PushNotificationHelper.gd")
+
 const STATE_PATH := "user://subcontractors.json"
 const DEFAULT_STATE_PATH := "res://subcontractors.json"
 
@@ -100,12 +103,14 @@ static func load_state() -> Dictionary:
 		data = {
 			"affinity": {},
 			"reputation": {},
-			"cooldowns": {}
+			"cooldowns": {},
+			"consecutive_use": {},
+			"last_mission_sub": ""
 		}
 		json.save_json(STATE_PATH, data)
 	else:
 		data = json.load_json(STATE_PATH)
-	
+
 	if typeof(data) != TYPE_DICTIONARY:
 		data = {}
 	if not data.has("affinity"):
@@ -114,6 +119,10 @@ static func load_state() -> Dictionary:
 		data["reputation"] = {}
 	if not data.has("cooldowns"):
 		data["cooldowns"] = {}
+	if not data.has("consecutive_use"):
+		data["consecutive_use"] = {}
+	if not data.has("last_mission_sub"):
+		data["last_mission_sub"] = ""
 	return data
 
 static func save_state(data: Dictionary) -> bool:
@@ -239,6 +248,26 @@ static func is_on_cooldown(sub_id: String) -> bool:
 	var until = get_cooldown_until(sub_id)
 	return until > Time.get_unix_time_from_system()
 
+## Returns enriched bonus info for a contractor, adding mineral tier/rarity from the catalog.
+## Result Array items: { mineral, multiplier, tier, rarity, tier_label }
+static func get_bonus_details(sub_id: String) -> Array:
+	var sub := get_subcontractor(sub_id)
+	var bonus: Dictionary = sub.get("bonus", {})
+	var result: Array = []
+	for mineral in bonus.keys():
+		var mult := float(bonus.get(mineral, 1.0))
+		var tier := MineralCatalog.get_tier(str(mineral))
+		result.append({
+			"mineral": str(mineral),
+			"multiplier": mult,
+			"tier": tier,
+			"rarity": MineralCatalog.get_rarity(str(mineral)),
+			"tier_label": MineralCatalog.tier_label(tier),
+			"tier_color": MineralCatalog.tier_color(tier),
+		})
+	result.sort_custom(func(a, b): return int(a["tier"]) < int(b["tier"]))
+	return result
+
 static func get_subcontractor(sub_id: String) -> Dictionary:
 	for entry in SUBCONTRACTORS:
 		if str(entry.get("id", "")) == sub_id:
@@ -252,3 +281,54 @@ static func pick_subcontractor(level: int) -> Dictionary:
 	var rng = RandomNumberGenerator.new()
 	rng.randomize()
 	return available[rng.randi_range(0, available.size() - 1)]
+
+## Record a completed mission with this contractor.
+## Awards reputation XP, tracks consecutive use, and triggers a 30-min cooldown
+## after 2 consecutive missions with the same contractor.
+## Returns the new reputation XP total.
+const REPUTATION_XP_PER_MISSION := 100
+const CONSECUTIVE_COOLDOWN_THRESHOLD := 2
+const COOLDOWN_DURATION_SECONDS := 30 * 60
+
+static func record_mission_completion(sub_id: String) -> int:
+	if sub_id == "":
+		return 0
+	var s = load_state()
+
+	# Award reputation XP
+	var rep = s.get("reputation", {})
+	var current_rep = int(rep.get(sub_id, 0))
+	current_rep += REPUTATION_XP_PER_MISSION
+	rep[sub_id] = current_rep
+	s["reputation"] = rep
+
+	# Track consecutive use
+	var consecutive = s.get("consecutive_use", {})
+	var last_sub = str(s.get("last_mission_sub", ""))
+	if last_sub == sub_id:
+		consecutive[sub_id] = int(consecutive.get(sub_id, 1)) + 1
+	else:
+		# Reset the previous contractor's streak
+		if last_sub != "":
+			consecutive[last_sub] = 0
+		consecutive[sub_id] = 1
+	s["consecutive_use"] = consecutive
+	s["last_mission_sub"] = sub_id
+
+	# Trigger cooldown if threshold reached
+	if int(consecutive.get(sub_id, 0)) >= CONSECUTIVE_COOLDOWN_THRESHOLD:
+		var cooldowns = s.get("cooldowns", {})
+		cooldowns[sub_id] = int(Time.get_unix_time_from_system()) + COOLDOWN_DURATION_SECONDS
+		s["cooldowns"] = cooldowns
+		consecutive[sub_id] = 0
+		s["consecutive_use"] = consecutive
+		PushNotificationHelper.schedule_contractor_cooldown_end(sub_id, float(COOLDOWN_DURATION_SECONDS))
+
+	save_state(s)
+	return current_rep
+
+## Returns remaining cooldown in seconds (0 if not on cooldown).
+static func get_cooldown_remaining(sub_id: String) -> int:
+	var until = get_cooldown_until(sub_id)
+	var now = int(Time.get_unix_time_from_system())
+	return max(0, until - now)

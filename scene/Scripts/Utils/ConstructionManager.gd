@@ -2,6 +2,7 @@ extends RefCounted
 class_name ConstructionManager
 
 const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
+const PushNotificationHelper = preload("res://Scripts/Utils/PushNotificationHelper.gd")
 
 const PROJECTS := {
 	"relay_1": {
@@ -85,6 +86,7 @@ static func add_contribution(project_id: String, minerals: Dictionary) -> bool:
 		if not completed.has(project_id):
 			completed.append(project_id)
 			s["completed_projects"] = completed
+			PushNotificationHelper.schedule_construction_complete(project_id, 0.0)
 			
 	RocketsManager.save_state(s)
 	return true

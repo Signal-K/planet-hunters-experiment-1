@@ -1,5 +1,5 @@
 # Use Node 20 as the base image (mimics ubuntu-latest with setup-node@v4)
-FROM node:20-bullseye
+FROM --platform=linux/amd64 node:20-bullseye
 
 # Install system dependencies
 # These include dependencies for Godot (headless) and Playwright

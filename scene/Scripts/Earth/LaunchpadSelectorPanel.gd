@@ -13,8 +13,11 @@ const AppLogger = preload("res://Scripts/Utils/Logger.gd")
 const GameplayAnalytics = preload("res://Scripts/Systems/GameplayAnalytics.gd")
 const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
 const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd")
+const NumberFormat = preload("res://Scripts/Utils/NumberFormat.gd")
 const RoomCatalog = preload("res://Scripts/Utils/RoomCatalog.gd")
 const TutorialLayoutZone = preload("res://Scripts/UI/TutorialLayoutZone.gd")
+const SubcontractorManager = preload("res://Scripts/Utils/SubcontractorManager.gd")
+const MissionNarrativeAPI = preload("res://Scripts/Utils/MissionNarrativeAPI.gd")
 const SIDEBAR_WIDTH_MAX := 560.0
 const SIDEBAR_WIDTH_MIN := 420.0
 const SIDEBAR_VIEWPORT_RATIO := 0.42
@@ -231,7 +234,7 @@ func populate_targets() -> void:
 	_set_rocket_selector_visibility(vbox, show_rocket)
 	_apply_rocket_creation_gate(vbox, trip_selected_contractor != "")
 
-	_render_trip_contract_brief(contractor_section, trip_offer, trip_selected_contractor)
+	_render_trip_contract_brief(contractor_section, trip_offer, trip_selected_contractor, awaiting_rocket_id)
 	if flow_phase == "contractor":
 		_boost_label_contrast(contractor_section)
 		return
@@ -269,6 +272,20 @@ func populate_targets() -> void:
 		free_ops_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		PanelStyle.apply_muted(free_ops_label)
 		target_section.add_child(free_ops_label)
+		# First Settlement guidance: show at L5+ if relay_1 not yet completed
+		var app_for_lvl = AppControllerHelper.get_instance()
+		var player_lvl := 1
+		if app_for_lvl and app_for_lvl.has_method("get_experience_level"):
+			player_lvl = int(app_for_lvl.get_experience_level())
+		if player_lvl >= 5:
+			var ConstMgr = preload("res://Scripts/Utils/ConstructionManager.gd")
+			if not ConstMgr.is_project_completed("relay_1"):
+				var settlement_hint: Label = EmptyLabelScene.instantiate()
+				settlement_hint.text = "🏗 First Settlement: mine Iron (500 kg) + Nickel (200 kg) to build your Scanning Relay. Contribute minerals via the Construction menu after each mission."
+				settlement_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+				settlement_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+				settlement_hint.add_theme_color_override("font_color", Color(0.6, 1.0, 0.7, 1.0))
+				target_section.add_child(settlement_hint)
 	if awaiting_rocket_id != "":
 		var payout_cap = int(trip_offer.get("payout_cap", rm.get_free_ops_payout_cap()))
 		var current_cost = RocketSpecs.get_cost(awaiting_rocket_id)
@@ -496,13 +513,16 @@ func _render_starter_contract_brief(targets_section: VBoxContainer, offer: Dicti
 		row.add_child(order_lbl)
 		targets_section.add_child(row)
 
-func _render_trip_contract_brief(targets_section: VBoxContainer, offer: Dictionary, selected_contractor: String) -> void:
+func _render_trip_contract_brief(targets_section: VBoxContainer, offer: Dictionary, selected_contractor: String, rocket_id: String = "") -> void:
 	if targets_section == null or offer.is_empty():
 		return
 	var requested: Dictionary = offer.get("requested_minerals", {})
 	var requested_text := []
+	var required_kg := 0
 	for key in requested.keys():
-		requested_text.append("%s %skg" % [str(key), str(requested.get(key, 0))])
+		var kg = int(requested.get(key, 0))
+		required_kg += kg
+		requested_text.append("%s %dkg" % [str(key), kg])
 	requested_text.sort()
 	var recommended_label = str(offer.get("recommended_target_label", offer.get("recommended_target_id", "")))
 	var summary_lbl: Label = EmptyLabelScene.instantiate()
@@ -511,6 +531,23 @@ func _render_trip_contract_brief(targets_section: VBoxContainer, offer: Dictiona
 	summary_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	PanelStyle.apply_body(summary_lbl)
 	targets_section.add_child(summary_lbl)
+
+	# AI mission briefing — shown when a contractor is selected
+	if selected_contractor != "":
+		_render_mission_briefing(targets_section, offer, selected_contractor, recommended_label)
+
+	# Cargo capacity gate: warn if order exceeds what this rocket can haul in one trip
+	if rocket_id != "" and required_kg > 0:
+		var cargo_mult = RocketSpecs.get_cargo_multiplier(rocket_id)
+		var max_haul_kg = int(2000.0 * 0.50 * cargo_mult)  # PLANET_CAPACITY*ASTEROID_RATIO*MAX_MINEABLE_PCT
+		if required_kg > max_haul_kg:
+			var warn_lbl: Label = EmptyLabelScene.instantiate()
+			warn_lbl.text = "⚠ Cargo capacity insufficient — this rocket can haul ~%d kg max (order needs %d kg). Upgrade your Cargo Bay." % [max_haul_kg, required_kg]
+			warn_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+			warn_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			PanelStyle.apply_body(warn_lbl)
+			warn_lbl.add_theme_color_override("font_color", Color(1.0, 0.6, 0.2, 1.0))
+			targets_section.add_child(warn_lbl)
 
 	var options: Array = offer.get("contractors", [])
 	for entry_any in options:
@@ -521,15 +558,22 @@ func _render_trip_contract_brief(targets_section: VBoxContainer, offer: Dictiona
 		var effect = str(entry.get("effect", ""))
 		var effect_text = "15% rocket build discount" if effect == "build_discount" else "15% mineral payout bonus"
 		var is_selected = selected_contractor == contractor_id and contractor_id != ""
+		var cooldown_remaining = int(SubcontractorManager.get_cooldown_remaining(contractor_id))
+		var on_cooldown = cooldown_remaining > 0
 
 		var card := PanelContainer.new()
 		card.add_theme_stylebox_override("panel", _target_card_style())
 		targets_section.add_child(card)
 
+		var card_col := VBoxContainer.new()
+		card_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		card_col.add_theme_constant_override("separation", 4)
+		card.add_child(card_col)
+
 		var card_row := HBoxContainer.new()
 		card_row.add_theme_constant_override("separation", 10)
 		card_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		card.add_child(card_row)
+		card_col.add_child(card_row)
 
 		var text_col := VBoxContainer.new()
 		text_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -541,6 +585,8 @@ func _render_trip_contract_brief(targets_section: VBoxContainer, offer: Dictiona
 		name_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		PanelStyle.apply_body(name_lbl)
+		if on_cooldown:
+			name_lbl.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6, 1.0))
 		text_col.add_child(name_lbl)
 
 		var effect_lbl := Label.new()
@@ -548,16 +594,120 @@ func _render_trip_contract_brief(targets_section: VBoxContainer, offer: Dictiona
 		effect_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		effect_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		PanelStyle.apply_body(effect_lbl)
+		if on_cooldown:
+			effect_lbl.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5, 1.0))
 		text_col.add_child(effect_lbl)
 
 		var btn := Button.new()
-		btn.text = "Selected" if is_selected else "Select"
+		if is_selected:
+			btn.text = "Selected"
+		elif on_cooldown:
+			btn.text = "Unavailable"
+		else:
+			btn.text = "Select"
 		btn.custom_minimum_size = Vector2(120, 44)
-		btn.disabled = is_selected
+		btn.disabled = is_selected or on_cooldown
 		PanelStyle.apply_button(btn, false)
 		_style_selector_action_button(btn, true)
 		btn.pressed.connect(Callable(self, "_on_trip_contractor_pressed").bind(contractor_id))
 		card_row.add_child(btn)
+
+		if on_cooldown:
+			var mins = int(ceil(float(cooldown_remaining) / 60.0))
+			var cd_lbl := Label.new()
+			cd_lbl.text = "I don't have any missions for you right now. (%dm remaining)" % mins
+			cd_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			cd_lbl.add_theme_color_override("font_color", Color(1.0, 0.55, 0.35, 1.0))
+			cd_lbl.add_theme_font_size_override("font_size", 13)
+			card_col.add_child(cd_lbl)
+
+func _render_mission_briefing(targets_section: VBoxContainer, offer: Dictionary, contractor_id: String, target_label: String) -> void:
+	var sub_info = SubcontractorManager.get_subcontractor(contractor_id)
+	var sub_name := str(sub_info.get("name", contractor_id))
+	var sub_role := str(sub_info.get("role", "Resource acquisition"))
+	var affinity := int(SubcontractorManager.get_affinity(contractor_id))
+	var requested: Dictionary = offer.get("requested_minerals", {})
+	# Pick the mineral with the largest quantity as primary
+	var primary_mineral := "Iron"
+	var primary_qty := 0
+	for m in requested.keys():
+		var q := int(requested.get(m, 0))
+		if q > primary_qty:
+			primary_qty = q
+			primary_mineral = str(m)
+
+	var params := {
+		"contractor_id": contractor_id,
+		"contractor_name": sub_name,
+		"contractor_role": sub_role,
+		"mission_type": "extraction",
+		"mineral": primary_mineral,
+		"quantity": primary_qty,
+		"target_label": target_label,
+		"target_type": str(offer.get("recommended_target_type", "asteroid")),
+		"narrative_tone": "professional",
+		"payout_tier": "standard",
+		"affinity_level": affinity,
+	}
+
+	# Briefing card container
+	var card := PanelContainer.new()
+	var card_style := StyleBoxFlat.new()
+	card_style.bg_color = Color(0.08, 0.12, 0.18, 0.85)
+	card_style.border_color = Color(0.25, 0.50, 0.75, 0.6)
+	card_style.set_border_width_all(1)
+	card_style.set_corner_radius_all(6)
+	card_style.content_margin_left = 12
+	card_style.content_margin_right = 12
+	card_style.content_margin_top = 10
+	card_style.content_margin_bottom = 10
+	card.add_theme_stylebox_override("panel", card_style)
+	targets_section.add_child(card)
+
+	var col := VBoxContainer.new()
+	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.add_child(col)
+
+	var header_lbl := Label.new()
+	header_lbl.text = "MISSION BRIEFING"
+	header_lbl.add_theme_color_override("font_color", Color(0.4, 0.7, 1.0, 1.0))
+	header_lbl.add_theme_font_size_override("font_size", 12)
+	col.add_child(header_lbl)
+
+	# Narrative labels — created first with placeholder text, updated by callback
+	var title_lbl := Label.new()
+	var desc_lbl := Label.new()
+	var quote_lbl := Label.new()
+
+	title_lbl.text = "…"
+	title_lbl.add_theme_color_override("font_color", Color(0.95, 0.95, 1.0, 1.0))
+	title_lbl.add_theme_font_size_override("font_size", 15)
+	title_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	col.add_child(title_lbl)
+
+	desc_lbl.text = "Fetching mission briefing…"
+	desc_lbl.add_theme_color_override("font_color", Color(0.78, 0.82, 0.88, 1.0))
+	desc_lbl.add_theme_font_size_override("font_size", 13)
+	desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	col.add_child(desc_lbl)
+
+	quote_lbl.text = ""
+	quote_lbl.add_theme_color_override("font_color", Color(0.65, 0.85, 0.65, 1.0))
+	quote_lbl.add_theme_font_size_override("font_size", 12)
+	quote_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	col.add_child(quote_lbl)
+
+	MissionNarrativeAPI.generate(params, func(narrative: Dictionary) -> void:
+		if not is_instance_valid(title_lbl):
+			return
+		title_lbl.text = str(narrative.get("title", ""))
+		desc_lbl.text = str(narrative.get("description", ""))
+		var q := str(narrative.get("contractor_quote", ""))
+		if q != "":
+			quote_lbl.text = '"%s"  \u2014 %s' % [q, sub_name]
+		else:
+			quote_lbl.text = ""
+	)
 
 func _apply_rocket_creation_gate(vbox: VBoxContainer, contractor_selected: bool) -> void:
 	if vbox == null:
@@ -702,12 +852,7 @@ func _next_option(options: Array, current: String) -> String:
 	return str(options[(index + 1) % options.size()])
 
 func _fmt_francs(value: int) -> String:
-	var abs_value = abs(value)
-	if abs_value >= 1000000000:
-		return "%.1fB" % (float(value) / 1000000000.0)
-	if abs_value >= 1000000:
-		return "%.1fM" % (float(value) / 1000000.0)
-	return str(value)
+	return NumberFormat.compact(value)
 
 func _build_stage2_checklist_text() -> String:
 	var app = AppControllerHelper.get_instance()

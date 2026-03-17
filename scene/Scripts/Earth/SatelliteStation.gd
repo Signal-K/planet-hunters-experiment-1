@@ -2,6 +2,7 @@ class_name SatelliteStation extends Structure
 
 const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
 const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd")
+const NumberFormat = preload("res://Scripts/Utils/NumberFormat.gd")
 
 var _build_dialog: ConfirmationDialog = null
 var _info_dialog: AcceptDialog = null
@@ -150,11 +151,4 @@ func _show_info(message: String) -> void:
 		_info_dialog.call_deferred("popup_centered")
 
 func _format_francs(value: int) -> String:
-	var abs_value = abs(value)
-	if abs_value >= 1000000000:
-		var billions = float(value) / 1000000000.0
-		return "%.1fB" % billions
-	if abs_value >= 1000000:
-		var millions = float(value) / 1000000.0
-		return "%.1fM" % millions
-	return str(value)
+	return NumberFormat.compact(value)

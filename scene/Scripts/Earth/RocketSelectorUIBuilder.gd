@@ -7,6 +7,7 @@ const SelectorRootScene = preload("res://Scenes/UI/Templates/RocketSelectorRoot.
 const RocketCardScene = preload("res://Scenes/UI/Templates/RocketSelectorCard.tscn")
 const StatChipScene = preload("res://Scenes/UI/Templates/RocketSelectorStatChip.tscn")
 const EmptyLabelScene = preload("res://Scenes/UI/Templates/MenuLogbookEmpty.tscn")
+const NumberFormat = preload("res://Scripts/Utils/NumberFormat.gd")
 
 var _parent: Node
 var _ui_size: Vector2
@@ -210,9 +211,4 @@ func _fmt_one_decimal(value: float) -> String:
 	return "%.1f" % value
 
 func _fmt_francs(value: int) -> String:
-	var abs_value = abs(value)
-	if abs_value >= 1000000000:
-		return "%.1fB" % (float(value) / 1000000000.0)
-	if abs_value >= 1000000:
-		return "%.1fM" % (float(value) / 1000000.0)
-	return str(value)
+	return NumberFormat.compact(value)

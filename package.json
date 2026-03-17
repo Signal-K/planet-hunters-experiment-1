@@ -11,6 +11,7 @@
     "test": "jest",
     "test:unit": "jest --runInBand --watchman=false",
     "test:e2e": "npx playwright install && playwright test",
+    "test:mechanics": "npx playwright test --config=playwright.mechanics.config.ts",
     "test:cypress:desktop": "TS_NODE_PROJECT=cypress/tsconfig.json cypress run --config viewportWidth=1280,viewportHeight=720 --spec cypress/e2e/desktop.cy.ts",
     "test:cypress:mobile": "TS_NODE_PROJECT=cypress/tsconfig.json cypress run --config viewportWidth=375,viewportHeight=812 --spec cypress/e2e/mobile.cy.ts",
     "test:all": "npm run test:unit && npm run test:e2e && npm run test:cypress:desktop && npm run test:cypress:mobile",
@@ -41,7 +42,8 @@
     "react-native-svg": "^15.15.1",
     "react-native-worklets": "^0.7.1",
     "react-native-worklets-core": "1.6.2",
-    "setimmediate": "~1.0.5"
+    "setimmediate": "~1.0.5",
+    "web-push": "^3.6.7"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
@@ -50,7 +52,6 @@
     "@babel/preset-env": "^7.25.3",
     "@babel/runtime": "^7.25.0",
     "@playwright/test": "^1.51.1",
-    "cypress": "^13.13.0",
     "@react-native-community/cli": "^20.0.0",
     "@react-native-community/cli-platform-android": "^20.0.0",
     "@react-native-community/cli-platform-ios": "^20.0.0",
@@ -64,6 +65,7 @@
     "@types/react-test-renderer": "^19.0.0",
     "babel-jest": "^30.0.4",
     "babel-preset-expo": "^54.0.10",
+    "cypress": "^13.13.0",
     "electron": "^30.5.1",
     "electron-builder": "^24.13.3",
     "eslint": "^8.19.0",

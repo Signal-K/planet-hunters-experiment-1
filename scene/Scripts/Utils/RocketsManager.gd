@@ -611,15 +611,40 @@ static func get_trip_selected_contractor() -> Dictionary:
 		return {}
 	return _find_trip_contractor(selected).duplicate(true)
 
+## Reusable Rockets Research tier (0 = none, 1–3 = progressively cheaper launches).
+static func get_reusable_research_tier() -> int:
+	var s = load_state()
+	return clamp(int(s.get("reusable_research_tier", 0)), 0, 3)
+
+static func set_reusable_research_tier(tier: int) -> bool:
+	var s = load_state()
+	s["reusable_research_tier"] = clamp(tier, 0, 3)
+	return save_state(s)
+
+## Discount per research tier: tier 1=10%, 2=20%, 3=30%.
+static func get_reusable_research_cost_mult() -> float:
+	var tier := get_reusable_research_tier()
+	match tier:
+		1: return 0.90
+		2: return 0.80
+		3: return 0.70
+		_: return 1.0
+
+## Cost to upgrade to each research tier.
+const REUSABLE_RESEARCH_UPGRADE_COSTS := {1: 500_000_000, 2: 2_000_000_000, 3: 5_000_000_000}
+
 static func get_trip_purchase_cost(rocket_id_or_type: String) -> int:
 	var base_cost = RocketSpecs.get_cost(rocket_id_or_type)
+	# Apply reusable research discount first
+	var research_mult = get_reusable_research_cost_mult()
+	var after_research = int(round(float(base_cost) * research_mult))
 	var selected = get_trip_selected_contractor()
 	if get_operation_mode() != "contract":
-		return base_cost
+		return after_research
 	if str(selected.get("effect", "")) != "build_discount":
-		return base_cost
+		return after_research
 	var discount_pct = clamp(float(selected.get("build_discount_pct", 0.0)), 0.0, 0.95)
-	return int(round(float(base_cost) * (1.0 - discount_pct)))
+	return int(round(float(after_research) * (1.0 - discount_pct)))
 
 static func apply_trip_payout_terms(base_payout: int, contractor_id: String = "") -> int:
 	var payout = max(base_payout, 0)
@@ -727,6 +752,51 @@ static func mark_mission_completed(badge: String = "") -> bool:
 static func get_rocket_level(rocket_id_or_type: String) -> int:
 	var rocket_type = RocketSpecs.rocket_type_from_id(rocket_id_or_type)
 	return int(ROCKET_UNLOCK_LEVELS.get(rocket_type, 1))
+
+## Returns the mining laser level for a rocket.
+## Currently always 1 until room-upgrade system is implemented (L5+).
+## When room upgrades land, this should read laser_level from rocket state.
+static func get_laser_level(_rocket_id: String = "") -> int:
+	var s = load_state()
+	var laser_levels: Dictionary = s.get("laser_levels", {})
+	if _rocket_id != "" and laser_levels.has(_rocket_id):
+		return max(int(laser_levels.get(_rocket_id, 1)), 1)
+	return 1
+
+## Sets the mining laser level for a specific rocket (used by room upgrade system).
+static func set_laser_level(rocket_id: String, level: int) -> bool:
+	if rocket_id == "" or level < 1:
+		return false
+	var s = load_state()
+	var laser_levels: Dictionary = s.get("laser_levels", {}).duplicate(true)
+	laser_levels[rocket_id] = max(level, 1)
+	s["laser_levels"] = laser_levels
+	return save_state(s)
+
+## Returns the room upgrade tiers for a rocket type (keyed by category).
+## e.g. {"mining": 2, "cargo": 1, "propulsion": 1, ...}
+static func get_type_room_upgrades(rocket_type: String) -> Dictionary:
+	var s = load_state()
+	var all_upgrades: Dictionary = s.get("type_room_upgrades", {})
+	return all_upgrades.get(rocket_type, {}).duplicate(true)
+
+## Sets a single category's tier for a rocket type and persists.
+## Returns true on success.
+static func set_type_room_tier(rocket_type: String, category: String, tier: int) -> bool:
+	if rocket_type == "" or category == "" or tier < 1:
+		return false
+	var s = load_state()
+	var all_upgrades: Dictionary = s.get("type_room_upgrades", {}).duplicate(true)
+	var type_upgrades: Dictionary = all_upgrades.get(rocket_type, {}).duplicate(true)
+	type_upgrades[category] = max(tier, 1)
+	all_upgrades[rocket_type] = type_upgrades
+	s["type_room_upgrades"] = all_upgrades
+	# Sync laser level if mining tier changed
+	if category == "mining":
+		var laser_levels: Dictionary = s.get("laser_levels", {}).duplicate(true)
+		laser_levels[rocket_type] = max(tier, 1)
+		s["laser_levels"] = laser_levels
+	return save_state(s)
 
 static func get_primary_awaiting_rocket_id() -> String:
 	var placed = get_placed()
@@ -1706,6 +1776,11 @@ static func clear_tess_classification(target_id: String) -> void:
 	map.erase(target_id)
 	s["tess_classifications"] = map
 	save_state(s)
+
+## Returns all targets the player has classified, as { anomaly_id: verdict }.
+static func get_all_tess_classifications() -> Dictionary:
+	var s = load_state()
+	return s.get("tess_classifications", {}).duplicate(true)
 
 static func set_returned_mission(rocket_id: String, target_id: String, target_label: String, target_type: String, operation_mode: String = "", extra: Dictionary = {}) -> void:
 	var wear_points = add_rocket_wear(rocket_id, 1)

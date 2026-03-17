@@ -78,7 +78,25 @@ func _build_list() -> void:
 		role_lbl.add_theme_color_override("font_color", panel_style.TEXT_MUTED)
 		role_lbl.add_theme_font_size_override("font_size", 14)
 
-		var affinity = int(sm.get_affinity(str(entry.get("id", ""))))
+		# Show what this contractor wants (their bonus minerals)
+		if is_available and not is_hidden:
+			var bonus_map = entry.get("bonus", {})
+			var wants_parts := []
+			for mineral in bonus_map.keys():
+				var mult = float(bonus_map[mineral])
+				var pct = int(round((mult - 1.0) * 100))
+				if pct > 0:
+					wants_parts.append("%s +%d%%" % [mineral, pct])
+			if not wants_parts.is_empty():
+				var wants_lbl := Label.new()
+				wants_lbl.text = "Wants: %s" % ", ".join(wants_parts)
+				wants_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3, 1.0))
+				wants_lbl.add_theme_font_size_override("font_size", 14)
+				row.add_child(wants_lbl)
+				row.move_child(wants_lbl, role_lbl.get_index() + 1)
+
+		var sub_id = str(entry.get("id", ""))
+		var affinity = int(sm.get_affinity(sub_id))
 		var affinity_row: HBoxContainer = card.get_node("Row/AffinityRow")
 		var affinity_lbl: Label = card.get_node("Row/AffinityRow/AffinityLabel")
 		affinity_lbl.text = "Standing:"
@@ -93,6 +111,28 @@ func _build_list() -> void:
 		val_lbl.text = "%s/100" % str(affinity)
 		val_lbl.add_theme_color_override("font_color", panel_style.TEXT_MUTED)
 		val_lbl.add_theme_font_size_override("font_size", 13)
+
+		# Reputation level
+		if is_available and not is_hidden:
+			var rep_xp = int(sm.get_reputation(sub_id))
+			var rep_data = sm.get_level_data(rep_xp)
+			var rep_lbl := Label.new()
+			rep_lbl.text = "Rep: %s (Lvl %d)" % [str(rep_data.get("title", "New Partner")), int(rep_data.get("level", 1))]
+			rep_lbl.add_theme_color_override("font_color", panel_style.ACCENT)
+			rep_lbl.add_theme_font_size_override("font_size", 13)
+			row.add_child(rep_lbl)
+
+		# Cooldown indicator
+		if is_available and not is_hidden:
+			var remaining = int(sm.get_cooldown_remaining(sub_id))
+			if remaining > 0:
+				var mins = int(ceil(float(remaining) / 60.0))
+				var cd_lbl := Label.new()
+				cd_lbl.text = "Not available — cooldown: %dm remaining" % mins
+				cd_lbl.add_theme_color_override("font_color", Color(1.0, 0.45, 0.35, 1.0))
+				cd_lbl.add_theme_font_size_override("font_size", 13)
+				row.add_child(cd_lbl)
+
 		list.add_child(card)
 
 func _on_close() -> void:

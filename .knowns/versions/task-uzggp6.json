@@ -1,0 +1,448 @@
+{
+  "taskId": "uzggp6",
+  "currentVersion": 7,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "uzggp6",
+      "version": 1,
+      "timestamp": "2026-03-16T21:29:21.466Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Marketplace panel: show market prices at Level 5",
+        "description": "Economy doc specifies Marketplace unlocks at Level 5. Shows live mineral market prices. Prices fluctuate based on supply (player selling drives price down). Allows players to time sales strategically.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "economy",
+          "gameplay",
+          "ui"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Marketplace section added to game menu (or Earth base screen)"
+          },
+          {
+            "completed": false,
+            "text": "Marketplace is hidden/locked before Level 5 with 'Unlocks at L5' indicator"
+          },
+          {
+            "completed": false,
+            "text": "Prices shown for each mineral type"
+          },
+          {
+            "completed": false,
+            "text": "Selling minerals causes price to dip (simple supply effect per mineral)"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "uzggp6",
+      "version": 2,
+      "timestamp": "2026-03-16T21:38:18.284Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Marketplace section added to game menu (or Earth base screen)"
+            },
+            {
+              "completed": false,
+              "text": "Marketplace is hidden/locked before Level 5 with 'Unlocks at L5' indicator"
+            },
+            {
+              "completed": false,
+              "text": "Prices shown for each mineral type"
+            },
+            {
+              "completed": false,
+              "text": "Selling minerals causes price to dip (simple supply effect per mineral)"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Marketplace section added to game menu (or Earth base screen)"
+            },
+            {
+              "completed": false,
+              "text": "Marketplace is hidden/locked before Level 5 with 'Unlocks at L5' indicator"
+            },
+            {
+              "completed": false,
+              "text": "Prices shown for each mineral type"
+            },
+            {
+              "completed": false,
+              "text": "Selling minerals causes price to dip (simple supply effect per mineral)"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Marketplace panel: show market prices at Level 5",
+        "description": "Economy doc specifies Marketplace unlocks at Level 5. Shows live mineral market prices. Prices fluctuate based on supply (player selling drives price down). Allows players to time sales strategically.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "economy",
+          "gameplay",
+          "ui"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Marketplace section added to game menu (or Earth base screen)"
+          },
+          {
+            "completed": false,
+            "text": "Marketplace is hidden/locked before Level 5 with 'Unlocks at L5' indicator"
+          },
+          {
+            "completed": false,
+            "text": "Prices shown for each mineral type"
+          },
+          {
+            "completed": false,
+            "text": "Selling minerals causes price to dip (simple supply effect per mineral)"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "uzggp6",
+      "version": 3,
+      "timestamp": "2026-03-16T21:38:18.542Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Marketplace section added to game menu (or Earth base screen)"
+            },
+            {
+              "completed": false,
+              "text": "Marketplace is hidden/locked before Level 5 with 'Unlocks at L5' indicator"
+            },
+            {
+              "completed": false,
+              "text": "Prices shown for each mineral type"
+            },
+            {
+              "completed": false,
+              "text": "Selling minerals causes price to dip (simple supply effect per mineral)"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Marketplace section added to game menu (or Earth base screen)"
+            },
+            {
+              "completed": true,
+              "text": "Marketplace is hidden/locked before Level 5 with 'Unlocks at L5' indicator"
+            },
+            {
+              "completed": false,
+              "text": "Prices shown for each mineral type"
+            },
+            {
+              "completed": false,
+              "text": "Selling minerals causes price to dip (simple supply effect per mineral)"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Marketplace panel: show market prices at Level 5",
+        "description": "Economy doc specifies Marketplace unlocks at Level 5. Shows live mineral market prices. Prices fluctuate based on supply (player selling drives price down). Allows players to time sales strategically.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "economy",
+          "gameplay",
+          "ui"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Marketplace section added to game menu (or Earth base screen)"
+          },
+          {
+            "completed": true,
+            "text": "Marketplace is hidden/locked before Level 5 with 'Unlocks at L5' indicator"
+          },
+          {
+            "completed": false,
+            "text": "Prices shown for each mineral type"
+          },
+          {
+            "completed": false,
+            "text": "Selling minerals causes price to dip (simple supply effect per mineral)"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "uzggp6",
+      "version": 4,
+      "timestamp": "2026-03-16T21:38:18.789Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Marketplace section added to game menu (or Earth base screen)"
+            },
+            {
+              "completed": true,
+              "text": "Marketplace is hidden/locked before Level 5 with 'Unlocks at L5' indicator"
+            },
+            {
+              "completed": false,
+              "text": "Prices shown for each mineral type"
+            },
+            {
+              "completed": false,
+              "text": "Selling minerals causes price to dip (simple supply effect per mineral)"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Marketplace section added to game menu (or Earth base screen)"
+            },
+            {
+              "completed": true,
+              "text": "Marketplace is hidden/locked before Level 5 with 'Unlocks at L5' indicator"
+            },
+            {
+              "completed": true,
+              "text": "Prices shown for each mineral type"
+            },
+            {
+              "completed": false,
+              "text": "Selling minerals causes price to dip (simple supply effect per mineral)"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Marketplace panel: show market prices at Level 5",
+        "description": "Economy doc specifies Marketplace unlocks at Level 5. Shows live mineral market prices. Prices fluctuate based on supply (player selling drives price down). Allows players to time sales strategically.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "economy",
+          "gameplay",
+          "ui"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Marketplace section added to game menu (or Earth base screen)"
+          },
+          {
+            "completed": true,
+            "text": "Marketplace is hidden/locked before Level 5 with 'Unlocks at L5' indicator"
+          },
+          {
+            "completed": true,
+            "text": "Prices shown for each mineral type"
+          },
+          {
+            "completed": false,
+            "text": "Selling minerals causes price to dip (simple supply effect per mineral)"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "uzggp6",
+      "version": 5,
+      "timestamp": "2026-03-16T21:38:19.040Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Marketplace section added to game menu (or Earth base screen)"
+            },
+            {
+              "completed": true,
+              "text": "Marketplace is hidden/locked before Level 5 with 'Unlocks at L5' indicator"
+            },
+            {
+              "completed": true,
+              "text": "Prices shown for each mineral type"
+            },
+            {
+              "completed": false,
+              "text": "Selling minerals causes price to dip (simple supply effect per mineral)"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Marketplace section added to game menu (or Earth base screen)"
+            },
+            {
+              "completed": true,
+              "text": "Marketplace is hidden/locked before Level 5 with 'Unlocks at L5' indicator"
+            },
+            {
+              "completed": true,
+              "text": "Prices shown for each mineral type"
+            },
+            {
+              "completed": true,
+              "text": "Selling minerals causes price to dip (simple supply effect per mineral)"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Marketplace panel: show market prices at Level 5",
+        "description": "Economy doc specifies Marketplace unlocks at Level 5. Shows live mineral market prices. Prices fluctuate based on supply (player selling drives price down). Allows players to time sales strategically.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "economy",
+          "gameplay",
+          "ui"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Marketplace section added to game menu (or Earth base screen)"
+          },
+          {
+            "completed": true,
+            "text": "Marketplace is hidden/locked before Level 5 with 'Unlocks at L5' indicator"
+          },
+          {
+            "completed": true,
+            "text": "Prices shown for each mineral type"
+          },
+          {
+            "completed": true,
+            "text": "Selling minerals causes price to dip (simple supply effect per mineral)"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "uzggp6",
+      "version": 6,
+      "timestamp": "2026-03-16T21:38:19.285Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "Marketplace card added to GameNavigationMenu. Locked with 'Unlocks at L5' when level<5. Shows live per-mineral prices with % change vs base. MineralPricing.record_player_sale() called on each sell in MissionDebrief to dip prices. All MECH09-12 pass."
+        }
+      ],
+      "snapshot": {
+        "title": "Marketplace panel: show market prices at Level 5",
+        "description": "Economy doc specifies Marketplace unlocks at Level 5. Shows live mineral market prices. Prices fluctuate based on supply (player selling drives price down). Allows players to time sales strategically.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "economy",
+          "gameplay",
+          "ui"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Marketplace section added to game menu (or Earth base screen)"
+          },
+          {
+            "completed": true,
+            "text": "Marketplace is hidden/locked before Level 5 with 'Unlocks at L5' indicator"
+          },
+          {
+            "completed": true,
+            "text": "Prices shown for each mineral type"
+          },
+          {
+            "completed": true,
+            "text": "Selling minerals causes price to dip (simple supply effect per mineral)"
+          }
+        ],
+        "implementationNotes": "Marketplace card added to GameNavigationMenu. Locked with 'Unlocks at L5' when level<5. Shows live per-mineral prices with % change vs base. MineralPricing.record_player_sale() called on each sell in MissionDebrief to dip prices. All MECH09-12 pass."
+      }
+    },
+    {
+      "id": "v7",
+      "taskId": "uzggp6",
+      "version": 7,
+      "timestamp": "2026-03-16T21:38:19.529Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Marketplace panel: show market prices at Level 5",
+        "description": "Economy doc specifies Marketplace unlocks at Level 5. Shows live mineral market prices. Prices fluctuate based on supply (player selling drives price down). Allows players to time sales strategically.",
+        "status": "done",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "economy",
+          "gameplay",
+          "ui"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Marketplace section added to game menu (or Earth base screen)"
+          },
+          {
+            "completed": true,
+            "text": "Marketplace is hidden/locked before Level 5 with 'Unlocks at L5' indicator"
+          },
+          {
+            "completed": true,
+            "text": "Prices shown for each mineral type"
+          },
+          {
+            "completed": true,
+            "text": "Selling minerals causes price to dip (simple supply effect per mineral)"
+          }
+        ],
+        "implementationNotes": "Marketplace card added to GameNavigationMenu. Locked with 'Unlocks at L5' when level<5. Shows live per-mineral prices with % change vs base. MineralPricing.record_player_sale() called on each sell in MissionDebrief to dip prices. All MECH09-12 pass."
+      }
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "taskId": "358qlf",
+  "currentVersion": 1,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "358qlf",
+      "version": 1,
+      "timestamp": "2026-03-16T06:49:28.590Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        },
+        {
+          "field": "implementationNotes",
+          "newValue": "Fixed: back_button.pressed.connect(_return_to_base) moved before the _returned.is_empty() early-return in MissionDebrief._ready(). Previously the button was enabled but unconnected in the empty state."
+        }
+      ],
+      "snapshot": {
+        "title": "Bug: Exit to menu button not working",
+        "description": "The Exit to Menu button in the game does not function — pressing it has no effect or fails silently. Player cannot return to the main menu.",
+        "status": "done",
+        "priority": "high",
+        "labels": [
+          "bug",
+          "ui",
+          "navigation"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Exit to Menu button navigates the player back to the main menu"
+          },
+          {
+            "completed": false,
+            "text": "Button responds visually to press (hover/active state)"
+          },
+          {
+            "completed": false,
+            "text": "No errors in console when button is pressed"
+          }
+        ],
+        "implementationNotes": "Fixed: back_button.pressed.connect(_return_to_base) moved before the _returned.is_empty() early-return in MissionDebrief._ready(). Previously the button was enabled but unconnected in the empty state."
+      }
+    }
+  ]
+}

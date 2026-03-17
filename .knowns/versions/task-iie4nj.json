@@ -1,0 +1,217 @@
+{
+  "taskId": "iie4nj",
+  "currentVersion": 4,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "iie4nj",
+      "version": 1,
+      "timestamp": "2026-03-18T14:16:11.329Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Personal discoveries log (day 1)",
+        "description": "Player profile/star map screen showing all personally discovered targets with name attribution. Required from day 1.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "citizen-science",
+          "star-map"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Accessible from star map or player profile from day 1"
+          },
+          {
+            "completed": false,
+            "text": "Shows: target name/ID, date discovered, classification status, player name attached"
+          },
+          {
+            "completed": false,
+            "text": "Visually distinct from visited-only targets"
+          },
+          {
+            "completed": false,
+            "text": "Works when empty (starts sparse, grows with player)"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "iie4nj",
+      "version": 2,
+      "timestamp": "2026-03-18T14:20:25.177Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Accessible from star map or player profile from day 1"
+            },
+            {
+              "completed": false,
+              "text": "Shows: target name/ID, date discovered, classification status, player name attached"
+            },
+            {
+              "completed": false,
+              "text": "Visually distinct from visited-only targets"
+            },
+            {
+              "completed": false,
+              "text": "Works when empty (starts sparse, grows with player)"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Accessible from star map or player profile from day 1"
+            },
+            {
+              "completed": true,
+              "text": "Shows: target name/ID, date discovered, classification status, player name attached"
+            },
+            {
+              "completed": true,
+              "text": "Visually distinct from visited-only targets"
+            },
+            {
+              "completed": true,
+              "text": "Works when empty (starts sparse, grows with player)"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Personal discoveries log (day 1)",
+        "description": "Player profile/star map screen showing all personally discovered targets with name attribution. Required from day 1.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "citizen-science",
+          "star-map"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Accessible from star map or player profile from day 1"
+          },
+          {
+            "completed": true,
+            "text": "Shows: target name/ID, date discovered, classification status, player name attached"
+          },
+          {
+            "completed": true,
+            "text": "Visually distinct from visited-only targets"
+          },
+          {
+            "completed": true,
+            "text": "Works when empty (starts sparse, grows with player)"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "iie4nj",
+      "version": 3,
+      "timestamp": "2026-03-18T14:20:25.561Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "Added 'Discoveries' button to GameNavigationMenu header. _build_discoveries_overlay() + _get_personal_discoveries() show targets from mission log where discovery_bonus_claimed. Sorted newest-first, planet/asteroid icons, date + badge. MissionDebrief now logs target_type to enable icon. Empty state shown when no discoveries."
+        }
+      ],
+      "snapshot": {
+        "title": "Personal discoveries log (day 1)",
+        "description": "Player profile/star map screen showing all personally discovered targets with name attribution. Required from day 1.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "citizen-science",
+          "star-map"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Accessible from star map or player profile from day 1"
+          },
+          {
+            "completed": true,
+            "text": "Shows: target name/ID, date discovered, classification status, player name attached"
+          },
+          {
+            "completed": true,
+            "text": "Visually distinct from visited-only targets"
+          },
+          {
+            "completed": true,
+            "text": "Works when empty (starts sparse, grows with player)"
+          }
+        ],
+        "implementationNotes": "Added 'Discoveries' button to GameNavigationMenu header. _build_discoveries_overlay() + _get_personal_discoveries() show targets from mission log where discovery_bonus_claimed. Sorted newest-first, planet/asteroid icons, date + badge. MissionDebrief now logs target_type to enable icon. Empty state shown when no discoveries."
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "iie4nj",
+      "version": 4,
+      "timestamp": "2026-03-18T14:20:26.340Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Personal discoveries log (day 1)",
+        "description": "Player profile/star map screen showing all personally discovered targets with name attribution. Required from day 1.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "citizen-science",
+          "star-map"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Accessible from star map or player profile from day 1"
+          },
+          {
+            "completed": true,
+            "text": "Shows: target name/ID, date discovered, classification status, player name attached"
+          },
+          {
+            "completed": true,
+            "text": "Visually distinct from visited-only targets"
+          },
+          {
+            "completed": true,
+            "text": "Works when empty (starts sparse, grows with player)"
+          }
+        ],
+        "implementationNotes": "Added 'Discoveries' button to GameNavigationMenu header. _build_discoveries_overlay() + _get_personal_discoveries() show targets from mission log where discovery_bonus_claimed. Sorted newest-first, planet/asteroid icons, date + badge. MissionDebrief now logs target_type to enable icon. Empty state shown when no discoveries."
+      }
+    }
+  ]
+}

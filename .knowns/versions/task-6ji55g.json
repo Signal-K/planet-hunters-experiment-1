@@ -1,0 +1,323 @@
+{
+  "taskId": "6ji55g",
+  "currentVersion": 6,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "6ji55g",
+      "version": 1,
+      "timestamp": "2026-03-16T22:04:54.691Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Scanner station soft cooldown",
+        "description": "Scanner can be used infinitely — no cooldown exists. Free Ops spec (2026-03-10) decision lock specifies a soft cooldown (not hard lock). Players should feel pacing between scans. Suggested: 3-scan daily limit that resets, or a timer (e.g. 15 min between scans) shown in scanner UI.",
+        "status": "in-progress",
+        "priority": "low",
+        "assignee": "@me",
+        "labels": [
+          "scanner",
+          "free-ops",
+          "pacing"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Scanner has a soft cooldown (e.g. max 3 scans per session or timed cooldown between scans)"
+          },
+          {
+            "completed": false,
+            "text": "Scanner UI shows cooldown timer or remaining scan count"
+          },
+          {
+            "completed": false,
+            "text": "Cooldown is soft: player sees a warning but can still scan after dismissing (per spec decision)"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "6ji55g",
+      "version": 2,
+      "timestamp": "2026-03-16T22:06:07.134Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Scanner has a soft cooldown (e.g. max 3 scans per session or timed cooldown between scans)"
+            },
+            {
+              "completed": false,
+              "text": "Scanner UI shows cooldown timer or remaining scan count"
+            },
+            {
+              "completed": false,
+              "text": "Cooldown is soft: player sees a warning but can still scan after dismissing (per spec decision)"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Scanner has a soft cooldown (e.g. max 3 scans per session or timed cooldown between scans)"
+            },
+            {
+              "completed": false,
+              "text": "Scanner UI shows cooldown timer or remaining scan count"
+            },
+            {
+              "completed": false,
+              "text": "Cooldown is soft: player sees a warning but can still scan after dismissing (per spec decision)"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Scanner station soft cooldown",
+        "description": "Scanner can be used infinitely — no cooldown exists. Free Ops spec (2026-03-10) decision lock specifies a soft cooldown (not hard lock). Players should feel pacing between scans. Suggested: 3-scan daily limit that resets, or a timer (e.g. 15 min between scans) shown in scanner UI.",
+        "status": "in-progress",
+        "priority": "low",
+        "assignee": "@me",
+        "labels": [
+          "scanner",
+          "free-ops",
+          "pacing"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Scanner has a soft cooldown (e.g. max 3 scans per session or timed cooldown between scans)"
+          },
+          {
+            "completed": false,
+            "text": "Scanner UI shows cooldown timer or remaining scan count"
+          },
+          {
+            "completed": false,
+            "text": "Cooldown is soft: player sees a warning but can still scan after dismissing (per spec decision)"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "6ji55g",
+      "version": 3,
+      "timestamp": "2026-03-16T22:06:07.372Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Scanner has a soft cooldown (e.g. max 3 scans per session or timed cooldown between scans)"
+            },
+            {
+              "completed": false,
+              "text": "Scanner UI shows cooldown timer or remaining scan count"
+            },
+            {
+              "completed": false,
+              "text": "Cooldown is soft: player sees a warning but can still scan after dismissing (per spec decision)"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Scanner has a soft cooldown (e.g. max 3 scans per session or timed cooldown between scans)"
+            },
+            {
+              "completed": true,
+              "text": "Scanner UI shows cooldown timer or remaining scan count"
+            },
+            {
+              "completed": false,
+              "text": "Cooldown is soft: player sees a warning but can still scan after dismissing (per spec decision)"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Scanner station soft cooldown",
+        "description": "Scanner can be used infinitely — no cooldown exists. Free Ops spec (2026-03-10) decision lock specifies a soft cooldown (not hard lock). Players should feel pacing between scans. Suggested: 3-scan daily limit that resets, or a timer (e.g. 15 min between scans) shown in scanner UI.",
+        "status": "in-progress",
+        "priority": "low",
+        "assignee": "@me",
+        "labels": [
+          "scanner",
+          "free-ops",
+          "pacing"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Scanner has a soft cooldown (e.g. max 3 scans per session or timed cooldown between scans)"
+          },
+          {
+            "completed": true,
+            "text": "Scanner UI shows cooldown timer or remaining scan count"
+          },
+          {
+            "completed": false,
+            "text": "Cooldown is soft: player sees a warning but can still scan after dismissing (per spec decision)"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "6ji55g",
+      "version": 4,
+      "timestamp": "2026-03-16T22:06:07.611Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Scanner has a soft cooldown (e.g. max 3 scans per session or timed cooldown between scans)"
+            },
+            {
+              "completed": true,
+              "text": "Scanner UI shows cooldown timer or remaining scan count"
+            },
+            {
+              "completed": false,
+              "text": "Cooldown is soft: player sees a warning but can still scan after dismissing (per spec decision)"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Scanner has a soft cooldown (e.g. max 3 scans per session or timed cooldown between scans)"
+            },
+            {
+              "completed": true,
+              "text": "Scanner UI shows cooldown timer or remaining scan count"
+            },
+            {
+              "completed": true,
+              "text": "Cooldown is soft: player sees a warning but can still scan after dismissing (per spec decision)"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Scanner station soft cooldown",
+        "description": "Scanner can be used infinitely — no cooldown exists. Free Ops spec (2026-03-10) decision lock specifies a soft cooldown (not hard lock). Players should feel pacing between scans. Suggested: 3-scan daily limit that resets, or a timer (e.g. 15 min between scans) shown in scanner UI.",
+        "status": "in-progress",
+        "priority": "low",
+        "assignee": "@me",
+        "labels": [
+          "scanner",
+          "free-ops",
+          "pacing"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Scanner has a soft cooldown (e.g. max 3 scans per session or timed cooldown between scans)"
+          },
+          {
+            "completed": true,
+            "text": "Scanner UI shows cooldown timer or remaining scan count"
+          },
+          {
+            "completed": true,
+            "text": "Cooldown is soft: player sees a warning but can still scan after dismissing (per spec decision)"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "6ji55g",
+      "version": 5,
+      "timestamp": "2026-03-16T22:06:07.849Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "Scanner cooldown was already fully implemented (SCANNER_SOFT_COOLDOWN_SECONDS=120, _try_start_scan_with_cooldown, button countdown). Added soft bypass: 'Scan early' button appears when cooldown active, resets cooldown and triggers scan immediately."
+        }
+      ],
+      "snapshot": {
+        "title": "Scanner station soft cooldown",
+        "description": "Scanner can be used infinitely — no cooldown exists. Free Ops spec (2026-03-10) decision lock specifies a soft cooldown (not hard lock). Players should feel pacing between scans. Suggested: 3-scan daily limit that resets, or a timer (e.g. 15 min between scans) shown in scanner UI.",
+        "status": "in-progress",
+        "priority": "low",
+        "assignee": "@me",
+        "labels": [
+          "scanner",
+          "free-ops",
+          "pacing"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Scanner has a soft cooldown (e.g. max 3 scans per session or timed cooldown between scans)"
+          },
+          {
+            "completed": true,
+            "text": "Scanner UI shows cooldown timer or remaining scan count"
+          },
+          {
+            "completed": true,
+            "text": "Cooldown is soft: player sees a warning but can still scan after dismissing (per spec decision)"
+          }
+        ],
+        "implementationNotes": "Scanner cooldown was already fully implemented (SCANNER_SOFT_COOLDOWN_SECONDS=120, _try_start_scan_with_cooldown, button countdown). Added soft bypass: 'Scan early' button appears when cooldown active, resets cooldown and triggers scan immediately."
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "6ji55g",
+      "version": 6,
+      "timestamp": "2026-03-16T22:06:08.088Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Scanner station soft cooldown",
+        "description": "Scanner can be used infinitely — no cooldown exists. Free Ops spec (2026-03-10) decision lock specifies a soft cooldown (not hard lock). Players should feel pacing between scans. Suggested: 3-scan daily limit that resets, or a timer (e.g. 15 min between scans) shown in scanner UI.",
+        "status": "done",
+        "priority": "low",
+        "assignee": "@me",
+        "labels": [
+          "scanner",
+          "free-ops",
+          "pacing"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Scanner has a soft cooldown (e.g. max 3 scans per session or timed cooldown between scans)"
+          },
+          {
+            "completed": true,
+            "text": "Scanner UI shows cooldown timer or remaining scan count"
+          },
+          {
+            "completed": true,
+            "text": "Cooldown is soft: player sees a warning but can still scan after dismissing (per spec decision)"
+          }
+        ],
+        "implementationNotes": "Scanner cooldown was already fully implemented (SCANNER_SOFT_COOLDOWN_SECONDS=120, _try_start_scan_with_cooldown, button countdown). Added soft bypass: 'Scan early' button appears when cooldown active, resets cooldown and triggers scan immediately."
+      }
+    }
+  ]
+}

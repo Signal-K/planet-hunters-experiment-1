@@ -1,9 +1,30 @@
-# Ignore local-only heavy folders
+# Dependencies and local metadata
 node_modules/
-android/
-ios/
-dist/
-build/
 .git/
 .knowns/
+.vercel/
 .DS_Store
+
+# Native/mobile build trees (not needed for web deploy)
+android/
+ios/
+electron/
+electron-dist/
+
+# Godot/editor/tooling artifacts
+.godot-bin/
+scene/
+project/.godot/
+GodotTest/
+GodotTest.pck
+
+# Test and CI output
+coverage/
+test-results/
+cypress/
+playwright-report/
+
+# Local/generated bundles not served in production
+dist/
+build/
+tmp/

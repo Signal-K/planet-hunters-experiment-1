@@ -1,0 +1,265 @@
+{
+  "taskId": "wefqvb",
+  "currentVersion": 4,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "wefqvb",
+      "version": 1,
+      "timestamp": "2026-03-19T03:36:42.358Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Star map sector reveal system",
+        "description": "Star map showing solar system (asteroids) vs other star systems (planets). Sector-based fog-of-war reveal. Solar/star icons per system.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "star-map",
+          "ui",
+          "art"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Solar system view: asteroids at real positions within our system"
+          },
+          {
+            "completed": false,
+            "text": "Star systems view: TESS planet candidates at correct star systems"
+          },
+          {
+            "completed": false,
+            "text": "Sector reveal mechanic (fog of war, expands on visit or scan)"
+          },
+          {
+            "completed": false,
+            "text": "Star/solar icons generated for each host star (art task)"
+          },
+          {
+            "completed": false,
+            "text": "Personal discoveries highlighted distinctly on map"
+          },
+          {
+            "completed": false,
+            "text": "Star map visible after M1 completion"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "wefqvb",
+      "version": 2,
+      "timestamp": "2026-03-19T03:42:00.285Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Solar system view: asteroids at real positions within our system"
+            },
+            {
+              "completed": false,
+              "text": "Star systems view: TESS planet candidates at correct star systems"
+            },
+            {
+              "completed": false,
+              "text": "Sector reveal mechanic (fog of war, expands on visit or scan)"
+            },
+            {
+              "completed": false,
+              "text": "Star/solar icons generated for each host star (art task)"
+            },
+            {
+              "completed": false,
+              "text": "Personal discoveries highlighted distinctly on map"
+            },
+            {
+              "completed": false,
+              "text": "Star map visible after M1 completion"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Solar system view: asteroids at real positions within our system"
+            },
+            {
+              "completed": true,
+              "text": "Star systems view: TESS planet candidates at correct star systems"
+            },
+            {
+              "completed": true,
+              "text": "Sector reveal mechanic (fog of war, expands on visit or scan)"
+            },
+            {
+              "completed": false,
+              "text": "Star/solar icons generated for each host star (art task)"
+            },
+            {
+              "completed": true,
+              "text": "Personal discoveries highlighted distinctly on map"
+            },
+            {
+              "completed": true,
+              "text": "Star map visible after M1 completion"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Star map sector reveal system",
+        "description": "Star map showing solar system (asteroids) vs other star systems (planets). Sector-based fog-of-war reveal. Solar/star icons per system.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "star-map",
+          "ui",
+          "art"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Solar system view: asteroids at real positions within our system"
+          },
+          {
+            "completed": true,
+            "text": "Star systems view: TESS planet candidates at correct star systems"
+          },
+          {
+            "completed": true,
+            "text": "Sector reveal mechanic (fog of war, expands on visit or scan)"
+          },
+          {
+            "completed": false,
+            "text": "Star/solar icons generated for each host star (art task)"
+          },
+          {
+            "completed": true,
+            "text": "Personal discoveries highlighted distinctly on map"
+          },
+          {
+            "completed": true,
+            "text": "Star map visible after M1 completion"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "wefqvb",
+      "version": 3,
+      "timestamp": "2026-03-19T03:42:00.632Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "## Summary\nSectorRevealManager.gd: 8 sectors, SECTOR_POSITIONS/NAMES/ADJACENCY constants, get_sector_for_target (hash-based), reveal_for_target (sector + neighbours), is_target_revealed, persists to rockets_state[\"revealed_sectors\"].\nSpaceMap.gd: Full rewrite — two view modes (Solar System / Star Systems), toggle buttons, fog-of-war on unrevealed star sectors, personal discoveries highlighted gold (★), legend in both views, programmatic star color by spectral class hash.\nMissionDebrief.gd: calls SectorRevealManager.reveal_for_target(target_id) on mission completion.\nearth_base_1.gd: star map card shown after completed_count >= 1 (M1 done), not just after scanner station built.\nAC#4 (art: star/solar icons) deferred — using programmatic spectral-class colors as placeholder."
+        }
+      ],
+      "snapshot": {
+        "title": "Star map sector reveal system",
+        "description": "Star map showing solar system (asteroids) vs other star systems (planets). Sector-based fog-of-war reveal. Solar/star icons per system.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "star-map",
+          "ui",
+          "art"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Solar system view: asteroids at real positions within our system"
+          },
+          {
+            "completed": true,
+            "text": "Star systems view: TESS planet candidates at correct star systems"
+          },
+          {
+            "completed": true,
+            "text": "Sector reveal mechanic (fog of war, expands on visit or scan)"
+          },
+          {
+            "completed": false,
+            "text": "Star/solar icons generated for each host star (art task)"
+          },
+          {
+            "completed": true,
+            "text": "Personal discoveries highlighted distinctly on map"
+          },
+          {
+            "completed": true,
+            "text": "Star map visible after M1 completion"
+          }
+        ],
+        "implementationNotes": "## Summary\nSectorRevealManager.gd: 8 sectors, SECTOR_POSITIONS/NAMES/ADJACENCY constants, get_sector_for_target (hash-based), reveal_for_target (sector + neighbours), is_target_revealed, persists to rockets_state[\"revealed_sectors\"].\nSpaceMap.gd: Full rewrite — two view modes (Solar System / Star Systems), toggle buttons, fog-of-war on unrevealed star sectors, personal discoveries highlighted gold (★), legend in both views, programmatic star color by spectral class hash.\nMissionDebrief.gd: calls SectorRevealManager.reveal_for_target(target_id) on mission completion.\nearth_base_1.gd: star map card shown after completed_count >= 1 (M1 done), not just after scanner station built.\nAC#4 (art: star/solar icons) deferred — using programmatic spectral-class colors as placeholder."
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "wefqvb",
+      "version": 4,
+      "timestamp": "2026-03-19T03:42:01.350Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Star map sector reveal system",
+        "description": "Star map showing solar system (asteroids) vs other star systems (planets). Sector-based fog-of-war reveal. Solar/star icons per system.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "star-map",
+          "ui",
+          "art"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Solar system view: asteroids at real positions within our system"
+          },
+          {
+            "completed": true,
+            "text": "Star systems view: TESS planet candidates at correct star systems"
+          },
+          {
+            "completed": true,
+            "text": "Sector reveal mechanic (fog of war, expands on visit or scan)"
+          },
+          {
+            "completed": false,
+            "text": "Star/solar icons generated for each host star (art task)"
+          },
+          {
+            "completed": true,
+            "text": "Personal discoveries highlighted distinctly on map"
+          },
+          {
+            "completed": true,
+            "text": "Star map visible after M1 completion"
+          }
+        ],
+        "implementationNotes": "## Summary\nSectorRevealManager.gd: 8 sectors, SECTOR_POSITIONS/NAMES/ADJACENCY constants, get_sector_for_target (hash-based), reveal_for_target (sector + neighbours), is_target_revealed, persists to rockets_state[\"revealed_sectors\"].\nSpaceMap.gd: Full rewrite — two view modes (Solar System / Star Systems), toggle buttons, fog-of-war on unrevealed star sectors, personal discoveries highlighted gold (★), legend in both views, programmatic star color by spectral class hash.\nMissionDebrief.gd: calls SectorRevealManager.reveal_for_target(target_id) on mission completion.\nearth_base_1.gd: star map card shown after completed_count >= 1 (M1 done), not just after scanner station built.\nAC#4 (art: star/solar icons) deferred — using programmatic spectral-class colors as placeholder."
+      }
+    }
+  ]
+}

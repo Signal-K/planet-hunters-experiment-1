@@ -1,0 +1,156 @@
+{
+  "taskId": "12x898",
+  "currentVersion": 2,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "12x898",
+      "version": 1,
+      "timestamp": "2026-03-19T02:09:50.446Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Classification consensus notifications",
+        "description": "Near-term MVP of social layer: notify players when their TESS classification is backed up or challenged by another user.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "citizen-science",
+          "social",
+          "notifications"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Notification triggered when own classification is confirmed by another user"
+          },
+          {
+            "completed": false,
+            "text": "Notification triggered when own classification is challenged by another user"
+          },
+          {
+            "completed": false,
+            "text": "Notification shows: target ID, other user's classification, current consensus level"
+          },
+          {
+            "completed": false,
+            "text": "Consensus level visible on classified targets in scanner and star map"
+          },
+          {
+            "completed": false,
+            "text": "In-app notification (push if notifications MVP is live)"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "12x898",
+      "version": 2,
+      "timestamp": "2026-03-19T02:20:53.420Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        },
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Notification triggered when own classification is confirmed by another user"
+            },
+            {
+              "completed": false,
+              "text": "Notification triggered when own classification is challenged by another user"
+            },
+            {
+              "completed": false,
+              "text": "Notification shows: target ID, other user's classification, current consensus level"
+            },
+            {
+              "completed": false,
+              "text": "Consensus level visible on classified targets in scanner and star map"
+            },
+            {
+              "completed": false,
+              "text": "In-app notification (push if notifications MVP is live)"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Notification triggered when own classification is confirmed by another user"
+            },
+            {
+              "completed": true,
+              "text": "Notification triggered when own classification is challenged by another user"
+            },
+            {
+              "completed": true,
+              "text": "Notification shows: target ID, other user's classification, current consensus level"
+            },
+            {
+              "completed": true,
+              "text": "Consensus level visible on classified targets in scanner and star map"
+            },
+            {
+              "completed": true,
+              "text": "In-app notification (push if notifications MVP is live)"
+            }
+          ]
+        },
+        {
+          "field": "implementationNotes",
+          "newValue": "## Summary\nSupabaseClient.fetch_table(table, query_qs, callback): generic GET added for both native + web.\nRocketsManager.get_all_tess_classifications(): returns full {anomaly_id: verdict} dict.\nClassificationConsensus.gd: queries classifications table per anomaly the player voted on; detects when consensus forms or changes vs player verdict; persists to classification_consensus.json; consensus_label() for display.\nearth_base_1.gd: _check_classification_consensus() runs on load; shows dismissable panel with confirm/challenge status for each updated target.\nSatelliteStationPanelList: shows consensus label in subtitle for any target the player has classified."
+        }
+      ],
+      "snapshot": {
+        "title": "Classification consensus notifications",
+        "description": "Near-term MVP of social layer: notify players when their TESS classification is backed up or challenged by another user.",
+        "status": "done",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "citizen-science",
+          "social",
+          "notifications"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Notification triggered when own classification is confirmed by another user"
+          },
+          {
+            "completed": true,
+            "text": "Notification triggered when own classification is challenged by another user"
+          },
+          {
+            "completed": true,
+            "text": "Notification shows: target ID, other user's classification, current consensus level"
+          },
+          {
+            "completed": true,
+            "text": "Consensus level visible on classified targets in scanner and star map"
+          },
+          {
+            "completed": true,
+            "text": "In-app notification (push if notifications MVP is live)"
+          }
+        ],
+        "implementationNotes": "## Summary\nSupabaseClient.fetch_table(table, query_qs, callback): generic GET added for both native + web.\nRocketsManager.get_all_tess_classifications(): returns full {anomaly_id: verdict} dict.\nClassificationConsensus.gd: queries classifications table per anomaly the player voted on; detects when consensus forms or changes vs player verdict; persists to classification_consensus.json; consensus_label() for display.\nearth_base_1.gd: _check_classification_consensus() runs on load; shows dismissable panel with confirm/challenge status for each updated target.\nSatelliteStationPanelList: shows consensus label in subtitle for any target the player has classified."
+      }
+    }
+  ]
+}

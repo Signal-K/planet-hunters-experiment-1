@@ -1,7 +1,7 @@
 ---
 title: Mission System Specification
 createdAt: '2026-02-25T08:19:42.936Z'
-updatedAt: '2026-03-10T06:35:23.359Z'
+updatedAt: '2026-03-17T06:46:41.354Z'
 description: >-
   Complete specification for all 5 missions including objectives, mechanics,
   progression, rewards, and onboarding flow
@@ -84,3 +84,23 @@ Primary reference:
 - Failed-confirmation reward remains flat XP.
 - Discovery cadence target refers to candidate opportunity availability every run, not guaranteed confirmation outcomes.
 - Player-friendly wording should be applied only in player-facing prompts; internal/canonical terminology can remain technical.
+
+## Design Round 3 — 2026-03-17
+
+### End-of-Rocket Debrief (Q13)
+- Debrief is a **universal end-of-rocket review**, not per-mission.
+- Triggered when a rocket is empty, destroyed, salvaged, or scrapped.
+- Shows everything the rocket did: all runs, total minerals harvested, total payout, XP gained.
+- Applies whether missions were contractor-attached, free-launch, or mixed.
+- Post-L5: includes market comparison for minerals delivered.
+- Post-M4: includes contractor affinity change if applicable.
+
+### Free-Launch Missions (Q17)
+- Free-launch (no contractor) is a **full autonomy mode** — player mines for personal goals.
+- Use cases: gathering materials for own construction, exploration, personal discovery.
+- Not just "selling to market" — it is a distinct intent: building for yourself.
+- Same debrief applies (end-of-rocket review).
+- Discovery XP bonus still applies if a new target is found.
+
+### Naming Note
+- Previous references to "Planet Hunters" in this document mean the citizen science workflow within Star Sailors: Experiment 1, not the game name.

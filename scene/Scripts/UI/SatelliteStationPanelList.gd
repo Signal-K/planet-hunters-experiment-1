@@ -3,6 +3,7 @@ class_name SatelliteStationPanelList
 
 const AnomalyItemScene = preload("res://Scenes/UI/Templates/SatelliteAnomalyItem.tscn")
 const EmptyLabelScene = preload("res://Scenes/UI/Templates/MenuLogbookEmpty.tscn")
+const ClassificationConsensus = preload("res://Scripts/Utils/ClassificationConsensus.gd")
 
 var _anomaly_list: VBoxContainer
 var _get_mode: Callable
@@ -111,6 +112,11 @@ func _create_anomaly_item(anomaly: Dictionary, index: int) -> Control:
 	var classification = anomaly.get("classification_status", "")
 	if scan_count >= 3 and classification != "" and classification != null:
 		properties.append(classification)
+
+	# Consensus badge — if the player has classified this target, show consensus level
+	var consensus_label_text := ClassificationConsensus.consensus_label(str(normalized))
+	if consensus_label_text != "":
+		properties.append("Consensus: " + consensus_label_text)
 
 	subtitle_label.text = " • ".join(properties)
 	panel_style.apply_muted(subtitle_label)

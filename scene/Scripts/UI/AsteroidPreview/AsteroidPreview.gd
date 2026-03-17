@@ -9,6 +9,8 @@ const ResourceYield = preload("res://Scripts/Utils/ResourceYield.gd")
 const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd")
 const MiningInventory = preload("res://Scripts/Utils/MiningInventory.gd")
 
+const RETRY_PENALTY_FRANCS := 50000000  # 50M franc penalty for retry after fuel depletion
+
 @onready var ui_container: Control = $CanvasLayer/UI
 @onready var mine_btn: Button = $CanvasLayer/UI/MineButton
 @onready var return_btn: Button = $CanvasLayer/UI/ReturnButton
@@ -72,7 +74,11 @@ func _ready():
 		var logo = str(rocket_custom.get("logo", ""))
 		if flag != "" or logo != "":
 			custom_text = " • %s/%s" % [flag if flag != "" else "No Flag", logo if logo != "" else "No Logo"]
-	target_label.text = "Target: %s (Level %d)%s" % [_current_target_id, level, custom_text]
+	var laser_level = RocketsManager.get_laser_level(_current_rocket_id)
+	var depletion_note = ""
+	if MiningInventory.is_depleted_for_laser(_current_target_id, laser_level):
+		depletion_note = "\n⚠ Depleted at laser level %d — upgrade your laser to mine more" % laser_level
+	target_label.text = "Target: %s (Level %d)%s%s" % [_current_target_id, level, custom_text, depletion_note]
 	GameplayAnalytics.emit_event("mission_target_preview_opened", {
 		"target_id": _current_target_id,
 		"target_type": _current_target_type,
@@ -146,12 +152,95 @@ func _on_mining_completed(minerals_collected: Dictionary, score: int):
 		_minigame_instance.queue_free()
 		_minigame_instance = null
 
+	# Post-tutorial fuel depletion: offer partial salvage or retry with penalty
+	var completion_reason = str(_last_mining_report.get("reason", ""))
+	var is_tutorial = _is_starter_contract_active() or RocketsManager.get_mission_stage() <= 1
+	if completion_reason == "fuel_depleted" and not is_tutorial:
+		_show_salvage_or_retry_dialog(minerals_collected)
+		return
+
 	ui_container.visible = true
 	mine_btn.disabled = false
 	return_btn.disabled = false
 
 	if _is_starter_contract_active() and not _starter_requirements_met(_last_mining_collected):
 		target_label.text = "Order incomplete — mine again or return home."
+
+func _show_salvage_or_retry_dialog(minerals_collected: Dictionary) -> void:
+	var overlay = PanelContainer.new()
+	overlay.set_anchors_preset(Control.PRESET_CENTER)
+	overlay.set_meta("salvage_overlay", true)
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.08, 0.10, 0.15, 0.96)
+	style.border_width_left = 2; style.border_width_right = 2
+	style.border_width_top = 2; style.border_width_bottom = 2
+	style.border_color = Color(0.8, 0.4, 0.1, 1.0)
+	style.corner_radius_top_left = 8; style.corner_radius_top_right = 8
+	style.corner_radius_bottom_left = 8; style.corner_radius_bottom_right = 8
+	overlay.add_theme_stylebox_override("panel", style)
+
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 12)
+	overlay.add_child(vbox)
+
+	var title = Label.new()
+	title.text = "Fuel Depleted"
+	PanelStyle.apply_title(title)
+	vbox.add_child(title)
+
+	var msg = Label.new()
+	if minerals_collected.is_empty():
+		msg.text = "You ran out of fuel with nothing collected.\nRetry or return home empty-handed."
+	else:
+		var total_kg := 0
+		for k in minerals_collected:
+			total_kg += int(minerals_collected.get(k, 0))
+		msg.text = "You ran out of fuel with %d kg collected.\nKeep the partial haul or retry with a penalty." % total_kg
+	msg.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	PanelStyle.apply_body(msg)
+	vbox.add_child(msg)
+
+	var btn_row = HBoxContainer.new()
+	btn_row.add_theme_constant_override("separation", 8)
+	vbox.add_child(btn_row)
+
+	var salvage_btn = Button.new()
+	salvage_btn.text = "Keep Partial Haul"
+	salvage_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	PanelStyle.apply_button(salvage_btn, true)
+	btn_row.add_child(salvage_btn)
+
+	var retry_btn = Button.new()
+	retry_btn.text = "Retry (-%dM F penalty)" % (RETRY_PENALTY_FRANCS / 1000000)
+	retry_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	PanelStyle.apply_button(retry_btn, false)
+	btn_row.add_child(retry_btn)
+
+	$CanvasLayer.add_child(overlay)
+
+	salvage_btn.pressed.connect(func():
+		overlay.queue_free()
+		ui_container.visible = true
+		mine_btn.disabled = false
+		return_btn.disabled = false
+		target_label.text = "Partial haul saved — return home or mine again."
+	)
+	retry_btn.pressed.connect(func():
+		overlay.queue_free()
+		# Reverse the minerals that were auto-added by _complete_mining
+		if not minerals_collected.is_empty():
+			RocketsManager.consume_from_inventory(minerals_collected)
+		_last_mining_collected = {}
+		_persist_mining_result({})
+		# Apply franc penalty
+		var app = AppControllerHelper.get_instance()
+		if app and app.has_method("add_franc_balance"):
+			app.add_franc_balance(-RETRY_PENALTY_FRANCS, "retry_penalty")
+		ui_container.visible = true
+		mine_btn.disabled = false
+		return_btn.disabled = false
+		target_label.text = "Fuel penalty applied. Mine again to collect resources."
+	)
 
 func _on_return_pressed():
 	print("[Preview] Return home pressed")
@@ -231,13 +320,20 @@ func _persist_mining_result(collected: Dictionary) -> void:
 		return
 	var data = inv.load_state()
 	var targets: Dictionary = data.get("targets", {})
+	# Preserve existing target metadata (e.g. depleted_laser_levels) when updating
+	var existing: Dictionary = targets.get(_current_target_id, {}).duplicate(true)
 	var total_collected := 0
 	for value in collected.values():
 		total_collected += int(value)
-	targets[_current_target_id] = {
-		"original_mass": total_collected,
-		"remaining_mass": 0,
-		"collected": collected.duplicate(true)
-	}
+	existing["original_mass"] = total_collected
+	existing["remaining_mass"] = 0
+	existing["collected"] = collected.duplicate(true)
+	if not existing.has("depleted_laser_levels"):
+		existing["depleted_laser_levels"] = []
+	targets[_current_target_id] = existing
 	data["targets"] = targets
 	inv.save_state(data)
+
+## Returns the player's current mining laser level (1 until room upgrades land).
+func _get_laser_level() -> int:
+	return RocketsManager.get_laser_level(_current_rocket_id)

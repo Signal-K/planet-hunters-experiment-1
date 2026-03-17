@@ -1,7 +1,7 @@
 ---
 title: Level Progression and Unlocks
 createdAt: '2026-02-25T00:28:33.561Z'
-updatedAt: '2026-02-25T00:28:59.889Z'
+updatedAt: '2026-03-17T06:46:17.164Z'
 description: >-
   Complete reference for all mechanics, features, and content unlocked as
   players level up
@@ -14,7 +14,9 @@ tags:
 ---
 # Level Progression and Unlocks
 
-Complete reference for all game mechanics, features, and content unlocked as players progress through experience levels.
+Complete reference for all mechanics, features, and content unlocked as players level up. **Authoritative — last updated 2026-03-17.**
+
+---
 
 ## Experience System
 
@@ -24,94 +26,151 @@ Complete reference for all game mechanics, features, and content unlocked as pla
 - **Mining Operations**: Bonus XP for successful mining
 
 ### Level Thresholds
-Managed by `AppController.gd`:
-- Level progression follows standard XP curve
+- Standard XP curve managed by `AppController.gd`
 - XP persists across sessions
 - Level-up triggers unlock checks
+
+---
 
 ## Unlocks by Level
 
 ### Level 1 (Starting Level)
-**Rockets:**
-- Starter Rocket 1 (starterrocket1)
+**Rockets:** Starter Rocket 1 (starterrocket1) — unibody
 
-**Targets:**
-- Asteroids (close range: 3-24 AU)
+**Targets:** Asteroids (close range: 3–24 AU)
 
-**Subcontractors:**
-- First 3 subcontractors available
+**Subcontractors:** 3 available
 
 **Features:**
 - Basic mining operations
-- Scanner Station (must be purchased for 2.0B F at Mission 3)
-- Mission 1 & 2 progression
+- M1 and M2 progression
+- Star map visible (shows Earth + discovered targets; expands as player discovers more)
+- Contractor panel visible from M1 (choice is present even while tutorial is scripted)
+
+---
 
 ### Level 2
-**Rockets:**
-- Starter Rocket 2 (starterrocket2)
-  - 2x speed increase
-  - 2x range increase
-  - Costs 1.3B francs
+**Rockets:** Starter Rocket 2 — 2× speed + 2× range — Cost: 1.3B F — unibody
 
 **Targets:**
-- Planets unlocked (telescope-tess anomalies)
+- Planets (TESS candidates)
 - Far asteroids (24+ AU)
 
-**Subcontractors:**
-- 4 subcontractors available (1 new unlock)
+**Subcontractors:** 4 available
 
 **Features:**
 - Planet discovery toggle in Scanner Station
-- Level 2 unlock overlay with feature summary
-- Mission 3 progression
+- Level 2 unlock overlay
+- M3 progression
+
+---
 
 ### Level 3
-**Rockets:**
-- Starter Rocket 3 (starterrocket3)
-  - Further improved stats
-  - Costs 4.0B francs
+**Rockets:** Starter Rocket 3 — Cost: 4.0B F — unibody
 
-**Targets:**
-- All planet distance bands (120-340 AU)
-- Requires Mission 3 completion
+**Targets:** All planet distance bands (120–340 AU) — requires Mission 3 completion
 
-**Subcontractors:**
-- 6 subcontractors available (2 new unlocks)
+**Subcontractors:** 6 available
 
 **Features:**
-- Scanner Station becomes available for purchase
-- Mission 4 progression
-- Advanced mining operations
+- Scanner Station purchasable (2.0B F) — requires Mission 3 completion
+- M4 progression (transition to Free Operations)
+
+---
 
 ### Level 4
-**Subcontractors:**
-- 8 subcontractors available (2 new unlocks)
+**Subcontractors:** 8 available
 
-### Level 5+
-**Subcontractors:**
-- All 10 subcontractors available (2 new unlocks at L5)
+**Features:**
+- **Upgrade existing Earth structures** (cannot yet build new ones)
+- Non-starter rockets may have slot selection when purchasing
+
+---
+
+### Level 5
+**Subcontractors:** 10 available (all)
+
+**Features:**
+- **Room upgrades** unlock (mining laser tier, cargo bay expansion — accessed via room management screen, not launchpad)
+- **Marketplace** becomes visible (live market prices, timing sell windows)
+- **Build new structures** (first time player can place a new structure — Earth-based first)
+
+---
+
+### Level 6
+**Features:**
+- **Earth-based refineries** available
+- Refinery upgrades increase capacity and performance at each tier
+
+---
+
+### Level 7
+**Features:**
+- **Off-world refineries** available (build at asteroids, planets, relay stations)
+- Same upgrade path as Earth refineries
+
+---
+
+### Level 8
+**Features:**
+- **Scanner range increase** (measured in light-years; relay stations amplify further)
+- Visual reveal: scan radius animates expanding on the star map
+- **Two simultaneous missions** unlock
+
+---
+
+## Mission Cap
+
+| Level | Active Missions |
+|-------|----------------|
+| 1–7 | 1 |
+| 8+ | 2 |
+
+- Cancelling a mission **auto-scraps the rocket** — no partial recovery.
+- Free-launch rockets (no contractor attached) limited by port/launchpad capacity.
+- Future: orbital permit tiers may cap total rockets/satellites in Earth orbit.
+
+---
 
 ## Mission-Gated Content
 
-Some features unlock based on mission progression rather than level:
+| Milestone | What Unlocks |
+|-----------|-------------|
+| M1 complete | Star map accessible |
+| M3 complete | Scanner Station purchasable (2.0B F) |
+| M4 complete | Free Operations loop begins |
 
-### Mission 3 Completion
-- Scanner Station becomes purchasable (2.0B F)
-- Starter Rocket 3 becomes available (if Level 3+)
+---
 
-### Mission Stage Progression
-Tracked separately from XP level:
-- Mission 1: Tutorial completion
-- Mission 2: Introduces second rocket
-- Mission 3: Scanner Station unlock
-- Mission 4: Advanced features
-- Mission 5: Contractors introduction
+## Rocket System
 
-## Implementation Details
+### StarterRocket Family (Unibody)
+All StarterRocket family rockets are prebuilt with a fixed internal layout — no room selection:
+- Mining laser, drones, storage, engine/reactor are all integrated
+- SR1, SR2, SR3 are the initial three; additional tiers visible as locked in hangar
 
-### Code References
+### Non-Starter Rockets (Slot-Based)
+From non-starter rocket classes, players choose their room loadout when purchasing:
+- Available room types depend on rocket class and player level
+- E.g. at certain class levels, a second mining laser slot becomes available
+- Long-term: Minecraft-level per-component granularity (deferred — see roadmap)
 
-**Rocket Unlocks:**
+---
+
+## Subcontractor Tiers
+
+| Level | Contractors Available |
+|-------|----------------------|
+| 1 | 3 |
+| 2 | 4 |
+| 3 | 6 |
+| 4 | 8 |
+| 5+ | 10 (all) |
+
+---
+
+## Implementation Notes
+
 ```gdscript
 # RocketsManager.gd
 const ROCKET_UNLOCK_LEVELS := {
@@ -119,79 +178,50 @@ const ROCKET_UNLOCK_LEVELS := {
     "starterrocket2": 2,
     "starterrocket3": 3
 }
-```
 
-**Planet Unlock:**
-```gdscript
 # SatelliteStationPanel.gd
 const PLANET_UNLOCK_LEVEL := 2
-```
 
-**Subcontractor Tiers:**
-```gdscript
 # SubcontractorManager.gd
-const UNLOCK_TIERS := {
-    1: 3,  # 3 contractors at L1
-    2: 4,  # 4 contractors at L2
-    3: 6,  # 6 contractors at L3
-    4: 8,  # 8 contractors at L4
-    5: 10  # All 10 at L5
-}
-```
+const UNLOCK_TIERS := { 1: 3, 2: 4, 3: 6, 4: 8, 5: 10 }
 
-**Target Distance Gating:**
-```gdscript
 # RocketsManager.gd
 const ASTEROID_DISTANCE_BANDS_AU := [3.0, 24.0]
-const ASTEROID_REQUIRED_LEVEL_BY_BAND := [1, 2]
 const PLANET_DISTANCE_BANDS_AU := [120.0, 220.0, 340.0]
-const PLANET_REQUIRED_LEVEL_BY_BAND := [3, 3, 3]
 ```
 
-### Unlock Flow
+---
 
-1. **Player gains XP** → `AppController.add_experience()`
-2. **Level threshold crossed** → `experience_updated` signal emitted
-3. **Unlock check triggered** → `_unlock_rockets_for_level()`
-4. **RocketsManager.unlock_for_level()** → Checks all rocket unlock levels
-5. **UI updates** → Rocket selector, scanner panel, subcontractor panel refresh
+## Related Docs
+- @doc/game-design/gameplay-vision-20-questions
+- @doc/game-design/rocket-and-room-system
+- @doc/game-design/contractor-system
+- @doc/game-design/economy-and-minerals
+- @doc/game-design/construction-and-settlements
+- @doc/game-design/long-term-features-roadmap
 
-### UI Indicators
+## Design Round 3 — 2026-03-17
 
-**Locked Content Display:**
-- Rockets: Grayed out with "Unlock at Level X" text
-- Planets: Toggle disabled with "Planets unlock at Level 2"
-- Subcontractors: "Locked until level X" status
-- Scanner Station: Hidden until Mission 3
+### Non-Starter Rockets (Q9 — confirmed)
+- Non-starter rockets (slot-based room selection) become available at **Level 5**, aligned with room upgrade unlock.
+- All rockets before L5 are StarterRocket unibody family.
 
-**Unlock Notifications:**
-- Level 2: Special overlay showing planet discovery + new unlocks
-- New rockets: Notification on level-up
-- Subcontractors: Available count updates in panel
+### XP Curve (Q18)
+**Design target:** Tutorial arc (M1–M4) gets player to approximately Level 3.
+After L3: progressive slowdown.
 
-## Testing
+**Proposed curve (needs balance validation):**
 
-**Test Suite:** `run_experience_tests.gd`
-- XP gain validation
-- Level-up threshold checks
-- Rocket unlock verification (SR2 at L2, SR3 at L3)
-- Scanner unlock gating (Mission 3)
-- Subcontractor tier progression
+| Transition | XP Required | Sessions (approx) |
+|------------|-------------|-------------------|
+| L1 → L2 | 200 XP | Same session (M1+M2) |
+| L2 → L3 | 500 XP | Same/next session (M3+M4) |
+| L3 → L4 | 1,200 XP | ~4–6 sessions |
+| L4 → L5 | 3,000 XP | ~2 weeks casual |
+| L5 → L6 | 7,500 XP | — |
+| L6 → L7 | 18,000 XP | — |
+| L7 → L8 | 45,000 XP | — |
 
-## Design Notes
+**XP per mission (base):** Tutorial M1=80, M2=120, M3=160, M4=200. Free ops: 150–400 XP based on distance, minerals, discovery bonus.
 
-### Progression Pacing
-- Early game (L1-2): Focus on learning mechanics
-- Mid game (L3-4): Expanded options and strategic depth
-- Late game (L5+): Full roster for optimization
-
-### Economic Balance
-- Rocket costs scale with capability
-- Mining yields tuned for ~115% return (full mine + scrap)
-- Scanner Station (2.0B F) is major mid-game investment
-
-### Future Expansion
-- Additional rocket tiers beyond L3
-- More subcontractor specializations
-- Advanced mission types at higher levels
-- Prestige/endgame progression systems
+> Needs implementation and balance validation — see XP curve task.
