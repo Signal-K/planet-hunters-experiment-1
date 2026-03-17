@@ -1,0 +1,265 @@
+{
+  "taskId": "2vstrv",
+  "currentVersion": 4,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "2vstrv",
+      "version": 1,
+      "timestamp": "2026-03-18T14:09:24.232Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Loan system for bankruptcy protection",
+        "description": "Low-interest loan system prevents softlock when player runs out of Francs. Auto-repaid from next mission payout.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "economy",
+          "balance",
+          "ui"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Loan available when Francs < cost of cheapest available rocket"
+          },
+          {
+            "completed": false,
+            "text": "Loan amount covers one basic mission"
+          },
+          {
+            "completed": false,
+            "text": "Very low interest rate (TBD in balance pass)"
+          },
+          {
+            "completed": false,
+            "text": "Loan auto-repaid from next mission payout"
+          },
+          {
+            "completed": false,
+            "text": "UI shows outstanding loan balance prominently"
+          },
+          {
+            "completed": false,
+            "text": "Player cannot take a second loan while one is outstanding"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "2vstrv",
+      "version": 2,
+      "timestamp": "2026-03-18T14:15:54.264Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Loan available when Francs < cost of cheapest available rocket"
+            },
+            {
+              "completed": false,
+              "text": "Loan amount covers one basic mission"
+            },
+            {
+              "completed": false,
+              "text": "Very low interest rate (TBD in balance pass)"
+            },
+            {
+              "completed": false,
+              "text": "Loan auto-repaid from next mission payout"
+            },
+            {
+              "completed": false,
+              "text": "UI shows outstanding loan balance prominently"
+            },
+            {
+              "completed": false,
+              "text": "Player cannot take a second loan while one is outstanding"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Loan available when Francs < cost of cheapest available rocket"
+            },
+            {
+              "completed": true,
+              "text": "Loan amount covers one basic mission"
+            },
+            {
+              "completed": true,
+              "text": "Very low interest rate (TBD in balance pass)"
+            },
+            {
+              "completed": true,
+              "text": "Loan auto-repaid from next mission payout"
+            },
+            {
+              "completed": true,
+              "text": "UI shows outstanding loan balance prominently"
+            },
+            {
+              "completed": true,
+              "text": "Player cannot take a second loan while one is outstanding"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Loan system for bankruptcy protection",
+        "description": "Low-interest loan system prevents softlock when player runs out of Francs. Auto-repaid from next mission payout.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "economy",
+          "balance",
+          "ui"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Loan available when Francs < cost of cheapest available rocket"
+          },
+          {
+            "completed": true,
+            "text": "Loan amount covers one basic mission"
+          },
+          {
+            "completed": true,
+            "text": "Very low interest rate (TBD in balance pass)"
+          },
+          {
+            "completed": true,
+            "text": "Loan auto-repaid from next mission payout"
+          },
+          {
+            "completed": true,
+            "text": "UI shows outstanding loan balance prominently"
+          },
+          {
+            "completed": true,
+            "text": "Player cannot take a second loan while one is outstanding"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "2vstrv",
+      "version": 3,
+      "timestamp": "2026-03-18T14:15:54.615Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "AppController: LOAN_AMOUNT=1.5B, LOAN_REPAY_MULT=1.03, take_loan/repay_loan_from_payout/can_take_loan/has_outstanding_loan. MissionDebrief: auto-repay on sell. earth_base_1: _maybe_offer_loan shows dialog when balance<SR1 cost and no outstanding loan. FrancBalance: loan label shows owed amount in red."
+        }
+      ],
+      "snapshot": {
+        "title": "Loan system for bankruptcy protection",
+        "description": "Low-interest loan system prevents softlock when player runs out of Francs. Auto-repaid from next mission payout.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "economy",
+          "balance",
+          "ui"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Loan available when Francs < cost of cheapest available rocket"
+          },
+          {
+            "completed": true,
+            "text": "Loan amount covers one basic mission"
+          },
+          {
+            "completed": true,
+            "text": "Very low interest rate (TBD in balance pass)"
+          },
+          {
+            "completed": true,
+            "text": "Loan auto-repaid from next mission payout"
+          },
+          {
+            "completed": true,
+            "text": "UI shows outstanding loan balance prominently"
+          },
+          {
+            "completed": true,
+            "text": "Player cannot take a second loan while one is outstanding"
+          }
+        ],
+        "implementationNotes": "AppController: LOAN_AMOUNT=1.5B, LOAN_REPAY_MULT=1.03, take_loan/repay_loan_from_payout/can_take_loan/has_outstanding_loan. MissionDebrief: auto-repay on sell. earth_base_1: _maybe_offer_loan shows dialog when balance<SR1 cost and no outstanding loan. FrancBalance: loan label shows owed amount in red."
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "2vstrv",
+      "version": 4,
+      "timestamp": "2026-03-18T14:15:55.344Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Loan system for bankruptcy protection",
+        "description": "Low-interest loan system prevents softlock when player runs out of Francs. Auto-repaid from next mission payout.",
+        "status": "done",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "economy",
+          "balance",
+          "ui"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Loan available when Francs < cost of cheapest available rocket"
+          },
+          {
+            "completed": true,
+            "text": "Loan amount covers one basic mission"
+          },
+          {
+            "completed": true,
+            "text": "Very low interest rate (TBD in balance pass)"
+          },
+          {
+            "completed": true,
+            "text": "Loan auto-repaid from next mission payout"
+          },
+          {
+            "completed": true,
+            "text": "UI shows outstanding loan balance prominently"
+          },
+          {
+            "completed": true,
+            "text": "Player cannot take a second loan while one is outstanding"
+          }
+        ],
+        "implementationNotes": "AppController: LOAN_AMOUNT=1.5B, LOAN_REPAY_MULT=1.03, take_loan/repay_loan_from_payout/can_take_loan/has_outstanding_loan. MissionDebrief: auto-repay on sell. earth_base_1: _maybe_offer_loan shows dialog when balance<SR1 cost and no outstanding loan. FrancBalance: loan label shows owed amount in red."
+      }
+    }
+  ]
+}

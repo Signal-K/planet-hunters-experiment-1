@@ -9,14 +9,14 @@ enum PanelType {
 	NEW_MISSION
 }
 
+var current_menu_panel = null
+
 var panel_titles = {
 	PanelType.MENU: "Main Menu",
 	PanelType.MARKET: "Market",
 	PanelType.SPACE_MAP: "Space Map",
 	PanelType.NEW_MISSION: "New Mission"
 }
-
-var current_menu_panel: Control = null
 
 func _ready() -> void:
 	# Set layer above the main UI
@@ -54,10 +54,6 @@ func _show_menu_panel() -> void:
 		app_controller.show_menu_panel()
 		return
 	AppLogger.w("UIManager: AppController not available for menu open")
-
-func _setup_menu_panel_integration() -> void:
-	"""Legacy menu scene integration removed; menu is AppController-owned."""
-	return
 
 func _show_new_mission_panel() -> void:
 	"""Show the New Mission panel (SatelliteStationPanel)"""

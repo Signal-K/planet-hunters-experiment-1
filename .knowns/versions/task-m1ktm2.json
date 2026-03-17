@@ -1,0 +1,49 @@
+{
+  "taskId": "m1ktm2",
+  "currentVersion": 1,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "m1ktm2",
+      "version": 1,
+      "timestamp": "2026-03-16T06:49:18.049Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        },
+        {
+          "field": "implementationNotes",
+          "newValue": "Fixed by removing forced restart loop in AsteroidPreview.gd. _on_mining_completed and _on_return_pressed no longer call _restart_starter_run. Player now sees an 'Order incomplete' message but can return home freely."
+        }
+      ],
+      "snapshot": {
+        "title": "Bug: Mission continues looping after player opts to return home with incomplete order",
+        "description": "When a player chooses to return home mid-mission before completing the full ore order, the mission loop continues rather than cleanly exiting. The return-home flow should terminate the mission state.",
+        "status": "done",
+        "priority": "high",
+        "labels": [
+          "bug",
+          "mission",
+          "mining"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Selecting return home with an incomplete order exits the mission cleanly"
+          },
+          {
+            "completed": false,
+            "text": "Mission does not restart or loop after the player confirms return home"
+          },
+          {
+            "completed": false,
+            "text": "Partial order state is correctly resolved or discarded on exit"
+          }
+        ],
+        "implementationNotes": "Fixed by removing forced restart loop in AsteroidPreview.gd. _on_mining_completed and _on_return_pressed no longer call _restart_starter_run. Player now sees an 'Order incomplete' message but can return home freely."
+      }
+    }
+  ]
+}

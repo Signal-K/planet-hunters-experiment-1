@@ -54,6 +54,63 @@ const LEVEL_UNLOCK_HINTS = {
   5: "Advanced scanner unlocked",
 };
 
+// ── Push notifications ────────────────────────────────────────────────────────
+
+function _urlBase64ToUint8Array(base64String) {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const rawData = atob(base64);
+  return Uint8Array.from([...rawData].map((c) => c.charCodeAt(0)));
+}
+
+async function initPushNotifications() {
+  if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
+  try {
+    const registration = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
+    window.__swRegistration = registration;
+
+    const config = await getRuntimeConfig();
+    const vapidPublicKey = config && config.push && config.push.vapidPublicKey;
+    if (!vapidPublicKey) return;
+
+    const permission = await Notification.requestPermission();
+    if (permission !== "granted") return;
+
+    const existing = await registration.pushManager.getSubscription();
+    const subscription = existing || (await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: _urlBase64ToUint8Array(vapidPublicKey),
+    }));
+
+    await fetch("/api/push-subscribe", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(subscription.toJSON()),
+    });
+
+    // Expose for GDScript → postMessage bridge
+    window.__schedulePush = async function(event, delayMs, payload) {
+      try {
+        await fetch("/api/push-notify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: (payload && payload.title) || "Planet Hunters",
+            message: (payload && payload.body) || "",
+            tag: event || "planet-hunters",
+            url: (payload && payload.url) || "/",
+            schedule_after_secs: Math.round((delayMs || 0) / 1000),
+          }),
+        });
+      } catch (e) {
+        console.warn("[push] schedule failed:", e);
+      }
+    };
+  } catch (e) {
+    console.warn("[push] init failed:", e);
+  }
+}
+
 function vibrate(pattern) {
   if (typeof navigator !== "undefined" && navigator.vibrate) {
     try { navigator.vibrate(pattern); } catch (_) {}
@@ -639,7 +696,7 @@ async function showInlineSurvey(params, surveyIdOverride) {
   const iframe = document.createElement("iframe");
   iframe.id = SURVEY_IFRAME_ID;
   iframe.src = `${surveyUrl}?${new URLSearchParams(params).toString()}`;
-  iframe.title = params.survey_context ? "Planet Hunters Survey" : "Experiment 1 Exit Survey";
+  iframe.title = params.survey_context ? "Star Sailors Survey" : "Experiment 1 Exit Survey";
   iframe.style.width = "100%";
   iframe.style.flex = "1";
   iframe.style.border = "0";
@@ -817,6 +874,7 @@ function App() {
         experience_xp: Number(persistedXp.experience_xp || 0),
       });
     }
+    initPushNotifications();
   }, []);
 
   useEffect(() => {
@@ -888,6 +946,13 @@ function App() {
       }
       if (eventName === "feedback_requested") {
         showFeedbackDialog(payload);
+      }
+      if (eventName === "schedule_push" && typeof window.__schedulePush === "function") {
+        window.__schedulePush(
+          payload.tag || "planet-hunters",
+          Number(payload.delay_ms || 0),
+          { title: payload.title, body: payload.body, url: payload.url }
+        );
       }
       if (eventName === "first_mission_completed" || eventName === "mission_debrief_resolved") {
         maybeTriggerFirstMissionSurvey(payload);
@@ -1125,7 +1190,7 @@ function App() {
       React.createElement("iframe", {
         id: "game-frame",
         src: gameSrc,
-        title: "Planet Hunters Game",
+        title: "Star Sailors: Experiment 1",
         allow: "fullscreen",
         style: {
           width: "100%",
@@ -1647,7 +1712,7 @@ function App() {
       React.createElement("iframe", {
         id: "game-frame",
         src: gameSrc,
-        title: "Planet Hunters Game",
+        title: "Star Sailors: Experiment 1",
         allow: "fullscreen",
         style: frameStyle,
         onError: () => {

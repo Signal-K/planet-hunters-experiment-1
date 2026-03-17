@@ -12,15 +12,10 @@
   ],
   "missions": [
   ],
-  "selected_target": "free-ops-survey-target",
+  "selected_target": "",
   "preview_target": {
   },
   "detected_targets": [
-    {
-      "id": "free-ops-survey-target",
-      "label": "Free Ops Survey Target",
-      "type": "asteroid"
-    }
   ],
   "seen_asteroids": [
   ],
@@ -30,47 +25,18 @@
   },
   "status_changed_at": {
   },
-  "mission_progress_completed": 7,
+  "mission_progress_completed": 2,
   "completed_mission_badges": [
-    "e2e-stage-1-340",
-    "e2e-stage-2-345",
-    "e2e-stage-3-351",
-    "e2e-stage-1-367",
-    "e2e-stage-2-367",
-    "e2e-stage-3-367",
-    "e2e-stage-4-368"
+    "debug-skip-1",
+    "debug-skip-2"
   ],
   "scanner_station_built": false,
   "scanner_unlocked": true,
   "scanner_unlock_dialog_seen": false,
   "scanner_next_scan_at": 0.0,
   "trip_contract_offer": {
-    "contractors": [
-      {
-        "id": "rocketlab",
-        "name": "Rocketlab",
-        "effect": "build_discount",
-        "build_discount_pct": 0.2
-      },
-      {
-        "id": "astroforge",
-        "name": "Astroforge",
-        "effect": "payout_bonus",
-        "payout_bonus_mult": 1.15
-      }
-    ],
-    "selected_contractor": "rocketlab",
-    "selection_required": false,
-    "requested_minerals": {
-      "Iron": 163.0,
-      "Nickel": 117.0
-    },
-    "recommended_target_id": "free-ops-survey-target",
-    "recommended_target_label": "Free Ops Survey Target",
-    "recommended_rocket": "starterrocket1",
-    "payout_cap": 1400000000.0
   },
-  "operation_mode": "survey",
+  "operation_mode": "contract",
   "candidate_visit_blocks": {
   },
   "target_annotation_levels": {
@@ -88,7 +54,7 @@
   },
   "mission_progress_schema_version": 2.0,
   "pending_mission_guidance_id": 0.0,
-  "launch_fallback_notice": "No target was selected, so mission control auto-selected Exoplanet Kepler-442b Proxy for this launch.",
+  "launch_fallback_notice": "",
   "inventory": {
     "Iron": 0.0,
     "Nickel": 0.0,
@@ -103,5 +69,8 @@
   },
   "returning_started": {
   },
-  "launch_guidance_notice": "Select a contractor first, then pick a mission target."
+  "type_room_upgrades": {
+  },
+  "laser_levels": {
+  }
 }

@@ -259,6 +259,80 @@ func _on_web_fetch_completed(args, callback_id: String) -> void:
 
 	callback.call(json.data, "")
 
+## Generic GET from any Supabase REST table.
+## query_string: raw PostgREST filter query string e.g. "anomaly=eq.42&limit=20"
+## Callback signature: func(data: Array, error: String)
+func fetch_table(table: String, query_string: String, callback: Callable) -> void:
+	var api_base = _resolve_api_base_url()
+	var url = "%s/rest/v1/%s?%s" % [api_base, table, query_string]
+	var headers = [
+		"apikey: " + SUPABASE_KEY,
+		"Authorization: Bearer " + SUPABASE_KEY,
+		"Content-Type: application/json",
+	]
+	if OS.has_feature("web"):
+		_fetch_table_web(url, headers, callback)
+		return
+	var http := HTTPRequest.new()
+	for prop in http.get_property_list():
+		if str(prop.get("name", "")) == "accept_gzip":
+			http.set("accept_gzip", false)
+			break
+	var scene_tree = Engine.get_main_loop()
+	if scene_tree and scene_tree.root:
+		scene_tree.root.add_child(http)
+	http.request_completed.connect(func(result: int, _code: int, _hdrs: PackedStringArray, body: PackedByteArray) -> void:
+		http.queue_free()
+		if result != HTTPRequest.RESULT_SUCCESS:
+			if callback.is_valid():
+				callback.call([], "fetch_table network error: result=%d" % result)
+			return
+		var text := body.get_string_from_utf8()
+		var parsed = JSON.parse_string(text)
+		if typeof(parsed) == TYPE_ARRAY:
+			if callback.is_valid():
+				callback.call(parsed, "")
+		else:
+			if callback.is_valid():
+				callback.call([], "fetch_table parse error")
+	)
+	http.request(url, headers, HTTPClient.METHOD_GET)
+
+func _fetch_table_web(url: String, headers: Array, callback: Callable) -> void:
+	var window = JavaScriptBridge.get_interface("window")
+	if window == null:
+		if callback.is_valid():
+			callback.call([], "window unavailable")
+		return
+	var callback_id = "__ph_ftw_%d" % Time.get_ticks_usec()
+	var bridge = JavaScriptBridge.create_callback(func(args):
+		var ok = args.size() > 0 and typeof(args[0]) == TYPE_STRING
+		var data_str = str(args[0]) if ok else "[]"
+		var parsed = JSON.parse_string(data_str)
+		var rows: Array = parsed if typeof(parsed) == TYPE_ARRAY else []
+		if callback.is_valid():
+			callback.call(rows, "" if ok else "web fetch failed")
+		var w = JavaScriptBridge.get_interface("window")
+		if w:
+			w.set(callback_id, null)
+	)
+	window.set(callback_id, bridge)
+	var headers_js := ""
+	for h in headers:
+		var parts = h.split(": ", true, 1)
+		if parts.size() == 2:
+			headers_js += '"%s": "%s",' % [parts[0].strip_edges(), parts[1].strip_edges()]
+	var js = """
+(async function() {
+  try {
+    var r = await fetch(%s, { headers: { %s } });
+    var j = await r.json();
+    window[%s](JSON.stringify(j));
+  } catch(e) { window[%s]("[]"); }
+})();
+""" % [JSON.stringify(url), headers_js, JSON.stringify(callback_id), JSON.stringify(callback_id)]
+	JavaScriptBridge.eval(js)
+
 func post_json(table: String, row: Dictionary, callback: Callable = Callable()) -> void:
 	var api_base = _resolve_api_base_url()
 	var url = "%s/rest/v1/%s" % [api_base, table]

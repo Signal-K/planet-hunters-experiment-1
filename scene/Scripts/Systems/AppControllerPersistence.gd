@@ -5,15 +5,19 @@ const FRANC_BALANCE_CONFIG_PATH := "user://franc_balance.cfg"
 const EXPERIENCE_CONFIG_PATH := "user://experience.cfg"
 const FRANC_BALANCE_SECTION := "currency"
 const FRANC_BALANCE_KEY := "balance"
+const LOAN_KEY := "loan_balance"
 const EXPERIENCE_SECTION := "experience"
 const EXPERIENCE_XP_KEY := "xp"
 const EXPERIENCE_LEVEL_KEY := "level"
 const PREFERENCES_SECTION := "preferences"
 const CITIZEN_SCIENCE_DIALOGUE_KEY := "citizen_science_dialogue_enabled"
 
-func save_franc_balance(value: int) -> void:
+func save_franc_balance(value: int, loan: int = -1) -> void:
 	var cfg = ConfigFile.new()
+	cfg.load(FRANC_BALANCE_CONFIG_PATH)
 	cfg.set_value(FRANC_BALANCE_SECTION, FRANC_BALANCE_KEY, value)
+	if loan >= 0:
+		cfg.set_value(FRANC_BALANCE_SECTION, LOAN_KEY, loan)
 	var err = cfg.save(FRANC_BALANCE_CONFIG_PATH)
 	if err != OK:
 		print("[AppController] Failed to save franc balance: ", err)
@@ -26,12 +30,13 @@ func load_franc_balance(default_value: int) -> Dictionary:
 	if err == OK:
 		if cfg.has_section_key(FRANC_BALANCE_SECTION, FRANC_BALANCE_KEY):
 			var value = int(cfg.get_value(FRANC_BALANCE_SECTION, FRANC_BALANCE_KEY))
+			var loan = int(cfg.get_value(FRANC_BALANCE_SECTION, LOAN_KEY, 0))
 			print("[AppController] Loaded franc balance from disk: ", value)
-			return {"loaded": true, "value": value}
+			return {"loaded": true, "value": value, "loan": loan}
 		print("[AppController] No franc balance key in config; using default: ", default_value)
-		return {"loaded": false, "value": default_value}
+		return {"loaded": false, "value": default_value, "loan": 0}
 	print("[AppController] No saved franc balance config (or failed to load): ", err)
-	return {"loaded": false, "value": default_value}
+	return {"loaded": false, "value": default_value, "loan": 0}
 
 func save_experience(xp: int, level: int) -> void:
 	var cfg = ConfigFile.new()

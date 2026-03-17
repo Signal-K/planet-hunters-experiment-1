@@ -1,0 +1,323 @@
+{
+  "taskId": "pgh3xl",
+  "currentVersion": 6,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "pgh3xl",
+      "version": 1,
+      "timestamp": "2026-03-16T21:29:21.985Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Per-player per-laser-level target depletion tracking",
+        "description": "Target system doc: depletion is always laser-level relative and per-player (your extractions don't block others). A target depleted at laser L1 can still be mined at laser L2. Currently targets may use a simple boolean depletion. Need per-player, per-laser-level depletion state.",
+        "status": "in-progress",
+        "priority": "low",
+        "assignee": "@me",
+        "labels": [
+          "gameplay",
+          "mining",
+          "targets"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Target depletion state is tracked per player per laser level (not a global boolean)"
+          },
+          {
+            "completed": false,
+            "text": "'Depleted' label shows only when current laser level cannot extract more; label removed when laser is upgraded"
+          },
+          {
+            "completed": false,
+            "text": "Visiting a previously-depleted target at higher laser level resumes mining normally"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "pgh3xl",
+      "version": 2,
+      "timestamp": "2026-03-16T21:38:31.530Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Target depletion state is tracked per player per laser level (not a global boolean)"
+            },
+            {
+              "completed": false,
+              "text": "'Depleted' label shows only when current laser level cannot extract more; label removed when laser is upgraded"
+            },
+            {
+              "completed": false,
+              "text": "Visiting a previously-depleted target at higher laser level resumes mining normally"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Target depletion state is tracked per player per laser level (not a global boolean)"
+            },
+            {
+              "completed": false,
+              "text": "'Depleted' label shows only when current laser level cannot extract more; label removed when laser is upgraded"
+            },
+            {
+              "completed": false,
+              "text": "Visiting a previously-depleted target at higher laser level resumes mining normally"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Per-player per-laser-level target depletion tracking",
+        "description": "Target system doc: depletion is always laser-level relative and per-player (your extractions don't block others). A target depleted at laser L1 can still be mined at laser L2. Currently targets may use a simple boolean depletion. Need per-player, per-laser-level depletion state.",
+        "status": "in-progress",
+        "priority": "low",
+        "assignee": "@me",
+        "labels": [
+          "gameplay",
+          "mining",
+          "targets"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Target depletion state is tracked per player per laser level (not a global boolean)"
+          },
+          {
+            "completed": false,
+            "text": "'Depleted' label shows only when current laser level cannot extract more; label removed when laser is upgraded"
+          },
+          {
+            "completed": false,
+            "text": "Visiting a previously-depleted target at higher laser level resumes mining normally"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "pgh3xl",
+      "version": 3,
+      "timestamp": "2026-03-16T21:38:31.768Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Target depletion state is tracked per player per laser level (not a global boolean)"
+            },
+            {
+              "completed": false,
+              "text": "'Depleted' label shows only when current laser level cannot extract more; label removed when laser is upgraded"
+            },
+            {
+              "completed": false,
+              "text": "Visiting a previously-depleted target at higher laser level resumes mining normally"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Target depletion state is tracked per player per laser level (not a global boolean)"
+            },
+            {
+              "completed": true,
+              "text": "'Depleted' label shows only when current laser level cannot extract more; label removed when laser is upgraded"
+            },
+            {
+              "completed": false,
+              "text": "Visiting a previously-depleted target at higher laser level resumes mining normally"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Per-player per-laser-level target depletion tracking",
+        "description": "Target system doc: depletion is always laser-level relative and per-player (your extractions don't block others). A target depleted at laser L1 can still be mined at laser L2. Currently targets may use a simple boolean depletion. Need per-player, per-laser-level depletion state.",
+        "status": "in-progress",
+        "priority": "low",
+        "assignee": "@me",
+        "labels": [
+          "gameplay",
+          "mining",
+          "targets"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Target depletion state is tracked per player per laser level (not a global boolean)"
+          },
+          {
+            "completed": true,
+            "text": "'Depleted' label shows only when current laser level cannot extract more; label removed when laser is upgraded"
+          },
+          {
+            "completed": false,
+            "text": "Visiting a previously-depleted target at higher laser level resumes mining normally"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "pgh3xl",
+      "version": 4,
+      "timestamp": "2026-03-16T21:38:32.006Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Target depletion state is tracked per player per laser level (not a global boolean)"
+            },
+            {
+              "completed": true,
+              "text": "'Depleted' label shows only when current laser level cannot extract more; label removed when laser is upgraded"
+            },
+            {
+              "completed": false,
+              "text": "Visiting a previously-depleted target at higher laser level resumes mining normally"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Target depletion state is tracked per player per laser level (not a global boolean)"
+            },
+            {
+              "completed": true,
+              "text": "'Depleted' label shows only when current laser level cannot extract more; label removed when laser is upgraded"
+            },
+            {
+              "completed": true,
+              "text": "Visiting a previously-depleted target at higher laser level resumes mining normally"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Per-player per-laser-level target depletion tracking",
+        "description": "Target system doc: depletion is always laser-level relative and per-player (your extractions don't block others). A target depleted at laser L1 can still be mined at laser L2. Currently targets may use a simple boolean depletion. Need per-player, per-laser-level depletion state.",
+        "status": "in-progress",
+        "priority": "low",
+        "assignee": "@me",
+        "labels": [
+          "gameplay",
+          "mining",
+          "targets"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Target depletion state is tracked per player per laser level (not a global boolean)"
+          },
+          {
+            "completed": true,
+            "text": "'Depleted' label shows only when current laser level cannot extract more; label removed when laser is upgraded"
+          },
+          {
+            "completed": true,
+            "text": "Visiting a previously-depleted target at higher laser level resumes mining normally"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "pgh3xl",
+      "version": 5,
+      "timestamp": "2026-03-16T21:38:32.245Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "MiningInventory: is_depleted_for_laser/mark_depleted_for_laser added with JSON-safe int comparison. AsteroidPreview: depletion label shown per laser level. RocketsManager: get/set_laser_level API added (default 1). MECH13-15 pass."
+        }
+      ],
+      "snapshot": {
+        "title": "Per-player per-laser-level target depletion tracking",
+        "description": "Target system doc: depletion is always laser-level relative and per-player (your extractions don't block others). A target depleted at laser L1 can still be mined at laser L2. Currently targets may use a simple boolean depletion. Need per-player, per-laser-level depletion state.",
+        "status": "in-progress",
+        "priority": "low",
+        "assignee": "@me",
+        "labels": [
+          "gameplay",
+          "mining",
+          "targets"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Target depletion state is tracked per player per laser level (not a global boolean)"
+          },
+          {
+            "completed": true,
+            "text": "'Depleted' label shows only when current laser level cannot extract more; label removed when laser is upgraded"
+          },
+          {
+            "completed": true,
+            "text": "Visiting a previously-depleted target at higher laser level resumes mining normally"
+          }
+        ],
+        "implementationNotes": "MiningInventory: is_depleted_for_laser/mark_depleted_for_laser added with JSON-safe int comparison. AsteroidPreview: depletion label shown per laser level. RocketsManager: get/set_laser_level API added (default 1). MECH13-15 pass."
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "pgh3xl",
+      "version": 6,
+      "timestamp": "2026-03-16T21:38:32.486Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Per-player per-laser-level target depletion tracking",
+        "description": "Target system doc: depletion is always laser-level relative and per-player (your extractions don't block others). A target depleted at laser L1 can still be mined at laser L2. Currently targets may use a simple boolean depletion. Need per-player, per-laser-level depletion state.",
+        "status": "done",
+        "priority": "low",
+        "assignee": "@me",
+        "labels": [
+          "gameplay",
+          "mining",
+          "targets"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Target depletion state is tracked per player per laser level (not a global boolean)"
+          },
+          {
+            "completed": true,
+            "text": "'Depleted' label shows only when current laser level cannot extract more; label removed when laser is upgraded"
+          },
+          {
+            "completed": true,
+            "text": "Visiting a previously-depleted target at higher laser level resumes mining normally"
+          }
+        ],
+        "implementationNotes": "MiningInventory: is_depleted_for_laser/mark_depleted_for_laser added with JSON-safe int comparison. AsteroidPreview: depletion label shown per laser level. RocketsManager: get/set_laser_level API added (default 1). MECH13-15 pass."
+      }
+    }
+  ]
+}

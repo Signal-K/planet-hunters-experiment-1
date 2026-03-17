@@ -62,11 +62,15 @@ http
 
     const ext = path.extname(fp).toLowerCase();
     // Never cache game assets in dev — forces the browser to always fetch fresh files.
+    // COOP/COEP are required for Godot 4 WASM threading (SharedArrayBuffer).
     res.writeHead(200, {
       "Content-Type": MIME[ext] || "application/octet-stream",
       "Cache-Control": "no-store, no-cache, must-revalidate",
       "Pragma": "no-cache",
       "Expires": "0",
+      "Cross-Origin-Opener-Policy": "same-origin",
+      "Cross-Origin-Embedder-Policy": "require-corp",
+      "Cross-Origin-Resource-Policy": "same-site",
     });
     if (req.method === "HEAD") { res.end(); return; }
     fs.createReadStream(fp).pipe(res);

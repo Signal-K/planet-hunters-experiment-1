@@ -5,6 +5,7 @@ const TutorialLayoutZone = preload("res://Scripts/UI/TutorialLayoutZone.gd")
 const TutorialCoachTargeting = preload("res://Scripts/UI/TutorialCoachTargeting.gd")
 
 const TRANSIT_SCENE_BASENAMES := ["rocket_ascent", "rocket_transit", "rocket_return"]
+const PreviewRouting = preload("res://Scripts/UI/NewMissionPreviewRouting.gd")
 const LAYOUT_REFRESH_INTERVAL := 0.15
 const CYAN := Color(0.28, 0.88, 0.96, 1.0)
 const AMBER := Color(0.941, 0.690, 0.188, 1.0)
@@ -34,6 +35,7 @@ var _current_step: Dictionary = {}
 var _transit_suppressed := false
 var _off_course := false
 var _open_launchpad_button: Button = null
+var _resume_mission_button: Button = null
 var _pointer_line: Line2D = null
 var _pointer_head: Polygon2D = null
 var _target_highlight: Panel = null
@@ -71,6 +73,15 @@ func _setup_context_action_button() -> void:
 	_open_launchpad_button.pressed.connect(_on_open_launchpad_pressed)
 	buttons_row.add_child(_open_launchpad_button)
 
+	_resume_mission_button = Button.new()
+	_resume_mission_button.name = "ResumeMissionButton"
+	_resume_mission_button.text = "Resume Mission"
+	_resume_mission_button.visible = false
+	_resume_mission_button.mouse_filter = Control.MOUSE_FILTER_STOP
+	_apply_pill_button(_resume_mission_button, true)
+	_resume_mission_button.pressed.connect(_on_resume_mission_pressed)
+	buttons_row.add_child(_resume_mission_button)
+
 func _configure_mouse_passthrough() -> void:
 	var margin = $Root/Panel/Margin
 	var vbox = $Root/Panel/Margin/VBox
@@ -87,7 +98,7 @@ func _configure_mouse_passthrough() -> void:
 	var buttons_row = $Root/Panel/Margin/VBox/Buttons
 	if buttons_row:
 		buttons_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	for btn in [collapse_button, skip_button, practice_mining_button, replay_mission_button, replay_all_button]:
+	for btn in [collapse_button, skip_button, practice_mining_button, replay_mission_button, replay_all_button, _resume_mission_button]:
 		if btn:
 			btn.mouse_filter = Control.MOUSE_FILTER_STOP
 
@@ -128,12 +139,36 @@ func _apply_off_course_check() -> void:
 	var in_valid_scene: bool = basename in valid_scenes
 	if not in_valid_scene and not _off_course:
 		_off_course = true
-		message_label.text = "Continue in Launchpad."
-		action_label.text = _action_copy_for_step(_current_step)
-		_update_context_action_button()
+		_apply_off_course_display()
 	elif in_valid_scene and _off_course:
 		_off_course = false
 		_on_tutorial_state_updated(_current_state)
+
+func _apply_off_course_display() -> void:
+	stage_label.visible = false
+	progress_label.visible = false
+	action_label.visible = false
+	message_label.text = _resume_hint_for_step(_current_step)
+	message_label.visible = true
+	skip_button.visible = false
+	replay_mission_button.visible = false
+	replay_all_button.visible = false
+	practice_mining_button.visible = false
+	var valid_scenes: Array = _current_step.get("valid_scenes", [])
+	var is_inflight_step = "SidescrollMining" in valid_scenes
+	if _resume_mission_button:
+		_resume_mission_button.visible = is_inflight_step
+	_update_context_action_button()
+
+func _resume_hint_for_step(step: Dictionary) -> String:
+	var valid_scenes: Array = step.get("valid_scenes", [])
+	if "earth_launchpad" in valid_scenes:
+		return "Open the Launchpad to continue."
+	if "SidescrollMining" in valid_scenes:
+		return "Your mission is in flight."
+	if "mission_debrief" in valid_scenes:
+		return "Return to base to complete your debrief."
+	return "Navigate to continue your mission."
 
 func _is_transit_scene() -> bool:
 	var tree = get_tree()
@@ -223,6 +258,12 @@ func _on_tutorial_state_updated(state: Dictionary) -> void:
 		_hide_target_pointer()
 		return
 	visible = true
+	if not _collapsed:
+		stage_label.visible = true
+		message_label.visible = true
+		action_label.visible = true
+		progress_label.visible = true
+		skip_button.visible = true
 	var stage = int(state.get("current_stage", 1))
 	var current_idx = int(state.get("current_step_index", 0))
 	var total = int(state.get("total_steps", 0))
@@ -377,7 +418,7 @@ func _action_copy_for_step(step: Dictionary) -> String:
 		"accept_contractor_offer", "accept_starter_contractor":
 			if on_base:
 				return "Press New Mission to open Launchpad, then select a contractor."
-			return "In Launchpad, select exactly one contractor offer."
+			return "Tap a contractor card and press Select. They give you a target order — delivering it earns a payout bonus on top of the base price."
 		"create_rocket":
 			if on_base:
 				return "Press New Mission to open Launchpad, then build the required rocket."
@@ -444,8 +485,11 @@ func _update_context_action_button() -> void:
 	var show_cta = _needs_launchpad_cta()
 	_open_launchpad_button.visible = show_cta
 	# Avoid right-edge overflow: when CTA is shown, compress action row.
-	replay_mission_button.visible = not show_cta
-	replay_all_button.visible = not show_cta
+	if not _off_course:
+		replay_mission_button.visible = not show_cta
+		replay_all_button.visible = not show_cta
+		if _resume_mission_button:
+			_resume_mission_button.visible = false
 
 func _needs_launchpad_cta() -> bool:
 	if _current_step.is_empty():
@@ -469,3 +513,28 @@ func _on_open_launchpad_pressed() -> void:
 		scene_manager.change_to_scene("res://Scenes/Earth/earth_launchpad.tscn")
 		return
 	tree.change_scene_to_file("res://Scenes/Earth/earth_launchpad.tscn")
+
+func _on_resume_mission_pressed() -> void:
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var missions: Array = rm.get_missions()
+	if missions.is_empty():
+		return
+	var m: Dictionary = missions[0]
+	var rocket_id := str(m.get("rocket_id", ""))
+	var target_id := str(m.get("target", ""))
+	var target_type := str(m.get("target_type", "asteroid"))
+	if rocket_id == "" or target_id == "":
+		return
+	rm.set_preview_target(target_id, target_id, target_type, rocket_id)
+	rm.mark_returned_if_due(rocket_id)
+	var status := rm.get_rocket_status(rocket_id)
+	var arrived := rm.has_arrived(rocket_id, target_id)
+	var scene_path := PreviewRouting.resolve_scene_path(status, arrived)
+	var tree = get_tree()
+	if tree == null:
+		return
+	var scene_manager = tree.get_first_node_in_group("scene_manager")
+	if scene_manager and scene_manager.has_method("change_to_scene"):
+		scene_manager.change_to_scene(scene_path)
+	else:
+		tree.change_scene_to_file(scene_path)

@@ -166,7 +166,7 @@ static func _find_target_for_action(action_key: String, tree: SceneTree) -> Node
 				if btn.disabled:
 					return false
 				var key = btn.name
-				return key == "SellOrbitButton" or key == "SellEarthButton" or key == "KeepButton" or key == "ScrapButton" or key == "SalvageButton" or key == "LeaveButton" or key == "ArchiveButton"
+				return key == "CompleteButton" or key == "OrbitButton"
 			)
 		"accept_contractor_offer":
 			if on_base:

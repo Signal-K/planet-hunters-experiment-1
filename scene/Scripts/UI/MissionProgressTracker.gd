@@ -2,16 +2,17 @@ extends CanvasLayer
 
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
 const ROCKETS_MANAGER = preload("res://Scripts/Utils/RocketsManager.gd")
+const UILayout = preload("res://Scripts/UI/UILayout.gd")
 const MISSION_OBJECTIVES := {
 	1: "Complete base tour, pick a contractor, and deliver the starter order.",
-	2: "Repeat loop with upgraded rocket.",
-	3: "Build scanner and launch from scanned targets.",
+	2: "Pick a contractor, build SR2, and complete the delivery loop.",
+	3: "Pick a contractor, build scanner, and launch from scanned targets.",
 	4: "Switch to planetary targets and complete mission to unlock Free Operations."
 }
 const MISSION_STEP_KEYS := {
 	1: ["tour_open_control_station", "tour_close_control_station", "accept_contractor_offer", "create_rocket", "launch_rocket_from_earth", "mine_target", "return_rocket_home", "resolve_mission_debrief"],
-	2: ["launch_rocket_from_earth", "mine_target", "return_rocket_home", "resolve_mission_debrief"],
-	3: ["build_scanner_station", "scan_targets", "select_launch_target"],
+	2: ["accept_contractor_offer", "create_rocket", "launch_rocket_from_earth", "mine_target", "return_rocket_home", "resolve_mission_debrief"],
+	3: ["accept_contractor_offer", "build_scanner_station", "scan_targets", "select_launch_target", "mine_target", "return_rocket_home", "resolve_mission_debrief"],
 	4: ["scan_targets", "select_launch_target", "mine_target", "return_rocket_home", "resolve_mission_debrief"]
 }
 
@@ -27,6 +28,14 @@ var _collapsed := false
 var _accumulated_time := 0.0
 var _tutorial_active := false
 var _tutorial_skipped := false
+
+func _apply_layout() -> void:
+	var vp := get_viewport()
+	if vp == null or panel == null:
+		return
+	var r := UILayout.zone(UILayout.Zone.TUTORIAL_COACH, vp.get_visible_rect().size)
+	panel.position = r.position
+	panel.size = r.size
 
 func _ready() -> void:
 	layer = 50
@@ -50,6 +59,7 @@ func _ready() -> void:
 		app.tutorial_state_updated.connect(_on_tutorial_state_updated)
 		if app.has_method("get_tutorial_state"):
 			_on_tutorial_state_updated(app.get_tutorial_state())
+	_apply_layout()
 	_refresh()
 
 func _process(delta: float) -> void:
@@ -101,6 +111,7 @@ func _refresh() -> void:
 			visible = false
 			return
 	visible = true
+	_apply_layout()
 	var stage = int(ROCKETS_MANAGER.get_mission_stage())
 	var objective = str(MISSION_OBJECTIVES.get(stage, "Complete current mission objectives."))
 	var keys: Array = MISSION_STEP_KEYS.get(stage, [])

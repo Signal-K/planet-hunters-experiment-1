@@ -7,6 +7,7 @@ const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
 const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd")
 const TimeHelper = preload("res://Scripts/Earth/TimeHelper.gd")
 const RoomCatalog = preload("res://Scripts/Utils/RoomCatalog.gd")
+const PushNotificationHelper = preload("res://Scripts/Utils/PushNotificationHelper.gd")
 var _launchpad: Node
 var _on_show_selector: Callable
 var _launch_btn_connected: bool = false
@@ -205,6 +206,8 @@ func _on_launch_button_pressed() -> void:
 	var mission_travel_seconds = rm.get_mission_duration_seconds_for_rocket(rocket.name)
 
 	var mission_ok = rm.add_mission(rocket.name, target, int(launch_time), mission_travel_seconds)
+	if mission_ok and mission_travel_seconds > 0:
+		PushNotificationHelper.schedule_rocket_arrival(target, float(mission_travel_seconds))
 	if not mission_ok:
 		AppLogger.w("Launchpad: failed to record mission for rocket %s" % rocket.name)
 		RocketsManager.set_launch_guidance_notice("Launch blocked: mission record failed to save. Retry launch in a moment.")

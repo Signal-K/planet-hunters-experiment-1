@@ -70,7 +70,7 @@ func test_xp_accumulates() -> void:
 func test_level_up_threshold() -> void:
 	reporter.start_test("Level up at 10 + level XP")
 	var app = _new_controller()
-	app.add_experience(11, "test")
+	app.add_experience(100, "test")  # L1→L2 threshold is 100 (exponential curve: 100 * 1.5^0)
 	if app.get_experience_level() != 2:
 		reporter.fail_test("Expected level 2 after +11 XP from level 1")
 		return
@@ -82,7 +82,7 @@ func test_level_up_threshold() -> void:
 func test_multi_level_up() -> void:
 	reporter.start_test("Multiple level-ups in one grant")
 	var app = _new_controller()
-	app.add_experience(40, "test")
+	app.add_experience(250, "test")  # L1→L2=100, L2→L3=150, total 250 reaches L3
 	if app.get_experience_level() < 3:
 		reporter.fail_test("Expected at least level 3 after +40 XP")
 		return

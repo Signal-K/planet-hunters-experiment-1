@@ -18,6 +18,9 @@ module.exports = (req, res) => {
       url: process.env.SUPABASE_URL || "",
       anonKey: process.env.SUPABASE_ANON || process.env.SUPABASE_ANON_KEY || "",
     },
+    push: {
+      vapidPublicKey: process.env.VAPID_PUBLIC_KEY || "",
+    },
   };
 
   res.setHeader("Cache-Control", "public, max-age=300");

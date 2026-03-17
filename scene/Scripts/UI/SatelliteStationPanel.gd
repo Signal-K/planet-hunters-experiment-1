@@ -1,6 +1,7 @@
 extends Control
 
 const GameplayAnalytics = preload("res://Scripts/Systems/GameplayAnalytics.gd")
+const FirstTimeMechanicTracker = preload("res://Scripts/Utils/FirstTimeMechanicTracker.gd")
 
 signal panel_closed
 
@@ -10,6 +11,7 @@ const MAX_ANOMALIES := 5
 const ASTEROID_SET := "active-asteroids"
 const PLANET_SET := "telescope-tess"
 const PLANET_UNLOCK_LEVEL := 2
+const SCANNER_RANGE_UNLOCK_LEVEL := 8
 const MIN_DISPLAY_TIME := 0.5
 const UNLOCK_CONFIG_PATH := "user://satellite_station.cfg"
 const UNLOCK_CONFIG_SECTION := "unlocks"
@@ -73,6 +75,8 @@ func _ready():
 	)
 	_detail.apply_panel_style()
 	_apply_panel_style()
+	# First-time scanner station intro
+	FirstTimeMechanicTracker.maybe_show("scanner_station", get_tree())
 
 	_list.setup(
 		anomaly_list,
@@ -197,7 +201,8 @@ func _on_anomalies_fetched(data: Array, error: String):
 	# No error
 	pending_anomalies = data
 	var target_type = "planets" if current_mode == "planets" else "asteroids"
-	status_label.text = "Status: %d %s detected" % [data.size(), target_type]
+	var range_note = " • Range: %s" % get_scanner_range_label() if _player_level >= PLANET_UNLOCK_LEVEL else ""
+	status_label.text = "Status: %d %s detected%s" % [data.size(), target_type, range_note]
 	_loading.mark_anomalies_ready()
 	_award_scan_experience()
 
@@ -351,7 +356,8 @@ func _get_current_mode() -> String:
 func _apply_local_anomalies() -> void:
 	pending_anomalies = _build_local_anomalies()
 	var target_type = "planets" if current_mode == "planets" else "asteroids"
-	status_label.text = "Status: %d local %s loaded" % [pending_anomalies.size(), target_type]
+	var local_range_note = " • Range: %s" % get_scanner_range_label() if _player_level >= PLANET_UNLOCK_LEVEL else ""
+	status_label.text = "Status: %d local %s loaded%s" % [pending_anomalies.size(), target_type, local_range_note]
 	_loading.mark_anomalies_ready()
 
 func _persist_detected_targets_and_record_scan(anomalies: Array) -> void:
@@ -503,6 +509,10 @@ func _refresh_scan_cooldown_ui() -> void:
 	var rm = RocketsManager
 	if refresh_button == null:
 		return
+	# Remove any previous early-scan button
+	var existing_early = refresh_button.get_parent().get_node_or_null("EarlyScanButton") if refresh_button.get_parent() else null
+	if existing_early:
+		existing_early.queue_free()
 	if rm == null:
 		refresh_button.disabled = false
 		refresh_button.text = REFRESH_BUTTON_BASE_TEXT
@@ -513,6 +523,20 @@ func _refresh_scan_cooldown_ui() -> void:
 	if remaining > 0:
 		refresh_button.disabled = true
 		refresh_button.text = "Refresh (%ss)" % remaining
+		# Soft cooldown: add an override button so player can scan early if they choose
+		var parent = refresh_button.get_parent()
+		if parent:
+			var early_btn := Button.new()
+			early_btn.name = "EarlyScanButton"
+			early_btn.text = "Scan early (cooldown active)"
+			early_btn.add_theme_font_size_override("font_size", 14)
+			early_btn.modulate = Color(0.9, 0.8, 0.4, 0.85)
+			early_btn.tooltip_text = "Scanner quality may be lower when used before cooldown completes."
+			parent.add_child(early_btn)
+			early_btn.pressed.connect(func():
+				RocketsManager.set_scanner_next_scan_at(0)
+				_try_start_scan_with_cooldown(REFRESH_LOAD_TIME)
+			)
 		return
 	refresh_button.disabled = false
 	refresh_button.text = REFRESH_BUTTON_BASE_TEXT
@@ -554,6 +578,16 @@ func _refresh_planet_unlock_ui(show_overlay_if_needed: bool) -> void:
 	var has_seen_overlay = _has_seen_level2_unlock_overlay()
 	if show_overlay_if_needed or not has_seen_overlay:
 		_show_level2_unlock_overlay()
+
+## Returns true if the player has the L8 scanner range upgrade.
+func has_extended_scanner_range() -> bool:
+	return _player_level >= SCANNER_RANGE_UNLOCK_LEVEL
+
+## Returns a human-readable range descriptor for the current scanner.
+func get_scanner_range_label() -> String:
+	if has_extended_scanner_range():
+		return "Extended (light-year scale)"
+	return "Standard (stellar neighbourhood)"
 
 func _show_level2_unlock_overlay() -> void:
 	if _unlock_overlay and is_instance_valid(_unlock_overlay):
