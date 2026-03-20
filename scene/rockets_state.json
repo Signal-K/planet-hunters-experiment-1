@@ -14,14 +14,27 @@
   ],
   "selected_target": "",
   "preview_target": {
+    "id": "practice-asteroid-warmup",
+    "label": "Academy Warm-Up Asteroid",
+    "type": "asteroid",
+    "rocket_id": ""
   },
   "detected_targets": [
+    {
+      "id": "4201",
+      "label": "4201",
+      "type": "asteroid",
+      "anomalySet": "",
+      "classification_status": "confirmed",
+      "tess_disposition": ""
+    }
   ],
   "seen_asteroids": [
   ],
   "seen_planets": [
   ],
   "scan_counts": {
+    "asteroid:4201": 2.0
   },
   "status_changed_at": {
   },
@@ -32,7 +45,7 @@
   ],
   "scanner_station_built": false,
   "scanner_unlocked": true,
-  "scanner_unlock_dialog_seen": false,
+  "scanner_unlock_dialog_seen": true,
   "scanner_next_scan_at": 0.0,
   "trip_contract_offer": {
   },
