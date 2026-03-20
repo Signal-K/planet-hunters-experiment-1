@@ -17,14 +17,12 @@ func _build(content: Dictionary) -> void:
 	# Full-screen dim
 	var bg := ColorRect.new()
 	bg.color = Color(0.0, 0.0, 0.0, 0.72)
-	bg.anchor_right = 1.0
-	bg.anchor_bottom = 1.0
+	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(bg)
 
 	# Centre panel
 	var centre := CenterContainer.new()
-	centre.anchor_right = 1.0
-	centre.anchor_bottom = 1.0
+	centre.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(centre)
 
 	var panel := PanelContainer.new()

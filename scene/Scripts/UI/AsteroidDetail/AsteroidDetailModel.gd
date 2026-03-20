@@ -63,15 +63,15 @@ func build_info_text(anomaly_data: Dictionary) -> String:
 
 	var radius = anomaly_data.get("radius")
 	if radius != null:
-		properties.append("Radius: %.2f" % radius)
+		properties.append("Radius: %.2f R☉" % radius)
 
 	var mass = anomaly_data.get("mass")
 	if mass != null:
-		properties.append("Mass: %.2f" % mass)
+		properties.append("Mass: %.2f M☉" % mass)
 
 	var temp = anomaly_data.get("temperature")
 	if temp != null:
-		properties.append("Temperature: %.0fK" % temp)
+		properties.append("Temperature: %.0f K" % temp)
 
 	var classification = anomaly_data.get("classification_status", "")
 	if classification != "" and classification != null:

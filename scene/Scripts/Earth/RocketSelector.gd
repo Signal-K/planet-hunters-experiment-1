@@ -133,7 +133,7 @@ func _request_purchase(rocket_id: String) -> void:
 		var required_level = int(range_check.get("required_level", 1))
 		var rocket_level = int(range_check.get("rocket_level", 1))
 		var distance_au = float(range_check.get("distance_au", 0.0))
-		_show_info("%s is %.0f AU away and requires rocket level L%d. %s is L%d and cannot reach this target." % [
+		_show_info("%s is %.0f AU away and requires Level %d. %s is Level %d and cannot reach this target." % [
 			target_label,
 			distance_au,
 			required_level,

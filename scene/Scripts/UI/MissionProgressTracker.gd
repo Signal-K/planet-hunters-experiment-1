@@ -5,15 +5,15 @@ const ROCKETS_MANAGER = preload("res://Scripts/Utils/RocketsManager.gd")
 const UILayout = preload("res://Scripts/UI/UILayout.gd")
 const MISSION_OBJECTIVES := {
 	1: "Complete base tour, pick a contractor, and deliver the starter order.",
-	2: "Pick a contractor, build SR2, and complete the delivery loop.",
-	3: "Pick a contractor, build scanner, and launch from scanned targets.",
-	4: "Switch to planetary targets and complete mission to unlock Free Operations."
+	2: "Pick a contractor, build Starter Rocket 2, and complete the delivery loop.",
+	3: "Pick a contractor, fly to a NASA TESS planet candidate, and complete the run.",
+	4: "Build the Scanner Station, scan for targets, then mine with drone assistance."
 }
 const MISSION_STEP_KEYS := {
 	1: ["tour_open_control_station", "tour_close_control_station", "accept_contractor_offer", "create_rocket", "launch_rocket_from_earth", "mine_target", "return_rocket_home", "resolve_mission_debrief"],
 	2: ["accept_contractor_offer", "create_rocket", "launch_rocket_from_earth", "mine_target", "return_rocket_home", "resolve_mission_debrief"],
-	3: ["accept_contractor_offer", "build_scanner_station", "scan_targets", "select_launch_target", "mine_target", "return_rocket_home", "resolve_mission_debrief"],
-	4: ["scan_targets", "select_launch_target", "mine_target", "return_rocket_home", "resolve_mission_debrief"]
+	3: ["accept_contractor_offer", "select_launch_target", "launch_rocket_from_earth", "mine_target", "return_rocket_home", "resolve_mission_debrief"],
+	4: ["build_scanner_station", "scan_targets", "select_launch_target", "launch_rocket_from_earth", "mine_target", "return_rocket_home", "resolve_mission_debrief"]
 }
 
 @onready var panel: PanelContainer = $Panel
@@ -168,15 +168,15 @@ func _label_for_action(action_key: String) -> String:
 		"open_launchpad":
 			return "Open launchpad"
 		"accept_starter_contractor":
-			return "Sign starter contractor"
+			return "Pick a contractor"
 		"accept_contractor_offer":
-			return "Select contractor"
+			return "Pick a contractor"
 		"create_rocket":
-			return "Create rocket"
+			return "Build rocket"
 		"launch_rocket_from_earth":
 			return "Launch mission"
 		"mine_target":
-			return "Mine target"
+			return "Mine the target"
 		"return_rocket_home":
 			return "Return to Earth"
 		"resolve_mission_debrief":

@@ -23,42 +23,42 @@ const SUBCONTRACTORS := [
 	{
 		"id": "spacex",
 		"name": "SpaceX",
-		"role": "Launch facilities and heavy spacecraft",
+		"role": "Heavy lift launch — buys rare metals at premium",
 		"min_level": 1,
 		"bonus": {"Platinum": 1.18, "Cobalt": 1.08}
 	},
 	{
 		"id": "rocketlab",
 		"name": "Rocketlab",
-		"role": "Spacecraft and launch services",
+		"role": "Small satellite launch — buys common ores at premium",
 		"min_level": 1,
 		"bonus": {"Nickel": 1.12, "Iron": 1.08}
 	},
 	{
 		"id": "astroforge",
 		"name": "Astroforge",
-		"role": "Mining & smelting capacity",
+		"role": "In-space smelting — buys Cobalt and Silicates at premium",
 		"min_level": 1,
 		"bonus": {"Cobalt": 1.2, "Silicates": 1.1}
 	},
 	{
 		"id": "swinburne_auto",
 		"name": "Swinburne Automotive",
-		"role": "Rover components",
+		"role": "Aerospace components — buys Iron feedstock at premium",
 		"min_level": 2,
 		"bonus": {"Iron": 1.12}
 	},
 	{
 		"id": "karman_plus",
 		"name": "Karman+",
-		"role": "Mining hardware & rigs",
+		"role": "Deep-space mining hardware — buys Platinum at premium",
 		"min_level": 2,
 		"bonus": {"Platinum": 1.22}
 	},
 	{
 		"id": "skybus",
 		"name": "Skybus Transport",
-		"role": "Cargo transfer & logistics",
+		"role": "Bulk cargo logistics — buys Nickel and Silicates at premium",
 		"min_level": 3,
 		"bonus": {"Nickel": 1.15, "Silicates": 1.12}
 	},

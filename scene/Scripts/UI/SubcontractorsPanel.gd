@@ -65,7 +65,7 @@ func _build_list() -> void:
 		name_lbl.add_theme_color_override("font_color", panel_style.TEXT_PRIMARY)
 		name_lbl.add_theme_font_size_override("font_size", 20)
 		var level_lbl: Label = card.get_node("Row/Header/LevelLabel")
-		level_lbl.text = "Lvl %s" % str(unlock_level)
+		level_lbl.text = "Level %s" % str(unlock_level)
 		level_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		level_lbl.add_theme_color_override("font_color", panel_style.ACCENT)
 		level_lbl.add_theme_font_size_override("font_size", 16)
@@ -117,7 +117,7 @@ func _build_list() -> void:
 			var rep_xp = int(sm.get_reputation(sub_id))
 			var rep_data = sm.get_level_data(rep_xp)
 			var rep_lbl := Label.new()
-			rep_lbl.text = "Rep: %s (Lvl %d)" % [str(rep_data.get("title", "New Partner")), int(rep_data.get("level", 1))]
+			rep_lbl.text = "Reputation: %s (Level %d)" % [str(rep_data.get("title", "New Partner")), int(rep_data.get("level", 1))]
 			rep_lbl.add_theme_color_override("font_color", panel_style.ACCENT)
 			rep_lbl.add_theme_font_size_override("font_size", 13)
 			row.add_child(rep_lbl)

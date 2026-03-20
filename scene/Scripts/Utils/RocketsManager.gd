@@ -24,7 +24,7 @@ const ASTEROID_REQUIRED_LEVEL_BY_BAND := [1, 2]
 const PLANET_DISTANCE_BANDS_AU := [120.0, 220.0, 340.0]
 const PLANET_REQUIRED_LEVEL_BY_BAND := [3, 3, 3]
 const MISSION_PROGRESS_SCHEMA_VERSION := 2
-const SCANNER_UNLOCK_COMPLETED_MISSIONS := 2
+const SCANNER_UNLOCK_COMPLETED_MISSIONS := 3  # Scanner introduced in M4, which starts after 3 completed missions
 
 ## Mission System Constants
 ## See: @doc/specs/mission-system-specification for complete mission design
@@ -39,7 +39,7 @@ const SCANNER_SOFT_COOLDOWN_SECONDS := 120
 const PREDEFINED_MISSION_TARGETS := {
 	1: {
 		"id": "mission-1-training-target",
-		"label": "Training Asteroid A",
+		"label": "433 Eros",
 		"type": "asteroid",
 		"distance_au": 3.0,
 		"required_level": 1,
@@ -68,25 +68,31 @@ const MISSION3_VISIBLE_TARGET_COUNT := 5
 const MISSION2_VISIBLE_TARGET_COUNT := 3
 const MISSION2_FALLBACK_TARGETS := [
 	{
-		"id": "mission-2-upgrade-target",
-		"label": "Training Asteroid B",
+		"id": "mission-2-active-asteroid-133p",
+		"label": "133P/Elst-Pizarro",
 		"type": "asteroid",
-		"distance_au": 12.0,
-		"required_level": 2
+		"distance_au": 3.2,
+		"required_level": 2,
+		"science_source": "Active Asteroids Programme",
+		"science_blurb": "First known main-belt comet"
 	},
 	{
-		"id": "mission-2-variant-near",
-		"label": "Survey Asteroid Delta",
+		"id": "mission-2-active-asteroid-238p",
+		"label": "238P/Read",
 		"type": "asteroid",
-		"distance_au": 8.0,
-		"required_level": 2
+		"distance_au": 8.4,
+		"required_level": 2,
+		"science_source": "Active Asteroids Programme",
+		"science_blurb": "Confirmed water-ice sublimation"
 	},
 	{
-		"id": "mission-2-variant-mid",
-		"label": "Survey Asteroid Epsilon",
+		"id": "mission-2-active-asteroid-259p",
+		"label": "259P/Garradd",
 		"type": "asteroid",
-		"distance_au": 18.0,
-		"required_level": 2
+		"distance_au": 15.7,
+		"required_level": 2,
+		"science_source": "Active Asteroids Programme",
+		"science_blurb": "Main-belt comet with recurrent activity"
 	}
 ]
 const MISSION3_FALLBACK_TARGETS := [
@@ -135,19 +141,25 @@ const ROCKET_LOGO_OPTIONS := ["Star", "Wave", "Miner", "Pulse"]
 const FREE_OPS_PAYOUT_CAP := 1400000000
 
 # Free Ops contractor offers.
-# Spec: Rocketlab (20% build discount) vs Astroforge (1.15x payout bonus)
+# Each contractor specifies mineral_ranges used to generate their specific order at offer time.
 const FREE_OPS_CONTRACTOR_OFFERS := [
 	{
 		"id": "rocketlab",
 		"name": "Rocketlab",
-		"effect": "build_discount",
-		"build_discount_pct": 0.20  # Spec: 20% off rocket purchase
+		"role": "Small satellite launch systems — common ore feedstock",
+		"mineral_ranges": {"Iron": [120, 200], "Nickel": [80, 150]}
 	},
 	{
 		"id": "astroforge",
 		"name": "Astroforge",
-		"effect": "payout_bonus",
-		"payout_bonus_mult": 1.15  # Spec: 1.15x payout (capped at 1.4B)
+		"role": "In-space smelting and refining — specialist materials",
+		"mineral_ranges": {"Cobalt": [40, 90], "Silicates": [80, 160]}
+	},
+	{
+		"id": "spacex",
+		"name": "SpaceX",
+		"role": "Heavy lift launch systems — structural metals",
+		"mineral_ranges": {"Iron": [100, 180], "Nickel": [60, 120]}
 	}
 ]
 const FIRST_MISSION_PAYOUT_MULT := 1.5

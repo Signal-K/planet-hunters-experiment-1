@@ -72,6 +72,8 @@ func _ready() -> void:
 	_maybe_auto_start_when_no_rocket_in_play()
 
 func _apply_style() -> void:
+	var vp_w := get_viewport().get_visible_rect().size.x
+	panel.custom_minimum_size.x = clampf(vp_w - 48.0, 300.0, 480.0)
 	PanelStyle.apply_panel(panel)
 	PanelStyle.apply_title(title_label)
 	PanelStyle.apply_muted(subtitle_label)

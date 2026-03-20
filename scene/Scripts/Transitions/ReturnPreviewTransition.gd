@@ -436,7 +436,9 @@ func _build_minerals_list() -> void:
 	var minerals: Dictionary = yield_data.get("minerals", {})
 	var capacity = int(yield_data.get("capacity", 0))
 	minerals_title.text = "Minerals Available"
-	minerals_summary.text = "Asteroid Level 1 • Mineable: %d%% • %s units" % [
+	var body_type = "Planet" if _current_target_type == "planet" else "Asteroid"
+	minerals_summary.text = "%s • Mineable: %d%% • %s units" % [
+		body_type,
 		int(round(float(yield_data.get("mineable_pct", 0.1)) * 100.0)),
 		NumberFormat.commas(str(capacity))
 	]

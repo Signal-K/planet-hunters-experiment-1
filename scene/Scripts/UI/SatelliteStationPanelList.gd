@@ -91,7 +91,7 @@ func _create_anomaly_item(anomaly: Dictionary, index: int) -> Control:
 	var required_level = int(profile.get("required_level", 1))
 	var scan_count = int(rm.get_target_scan_count(normalized, target_type)) if rm else 0
 	properties.append("Distance: %.0f AU" % distance_au)
-	properties.append("Requires: L%d" % required_level)
+	properties.append("Requires: Level %d" % required_level)
 
 	var anomaly_type = anomaly.get("anomalytype", "")
 	if scan_count >= 1 and anomaly_type != "" and anomaly_type != null:
@@ -99,15 +99,15 @@ func _create_anomaly_item(anomaly: Dictionary, index: int) -> Control:
 
 	var radius = anomaly.get("radius")
 	if scan_count >= 2 and radius != null:
-		properties.append("R: %.2f" % radius)
+		properties.append("Radius: %.2f R☉" % radius)
 
 	var mass = anomaly.get("mass")
 	if scan_count >= 3 and mass != null:
-		properties.append("M: %.2f" % mass)
+		properties.append("Mass: %.2f M☉" % mass)
 
 	var temp = anomaly.get("temperature")
 	if scan_count >= 2 and temp != null:
-		properties.append("T: %.0fK" % temp)
+		properties.append("Temp: %.0f K" % temp)
 
 	var classification = anomaly.get("classification_status", "")
 	if scan_count >= 3 and classification != "" and classification != null:

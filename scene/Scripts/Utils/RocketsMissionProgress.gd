@@ -92,15 +92,26 @@ static func build_trip_contract_offer(
     var hash_seed = hash_utils.simple_hash("%s:%d" % [recommended_target_id, int(Time.get_unix_time_from_system())])
     var rng = RandomNumberGenerator.new()
     rng.seed = hash_seed
-    var requested_minerals := {
-        "Iron": rng.randi_range(80, 220),
-        "Nickel": rng.randi_range(60, 180)
-    }
+    # Build per-contractor mineral orders from their mineral_ranges
+    var contractors_with_orders: Array = []
+    for entry_any in contractor_offers:
+        if typeof(entry_any) != TYPE_DICTIONARY:
+            continue
+        var entry: Dictionary = entry_any.duplicate(true)
+        var ranges: Dictionary = entry.get("mineral_ranges", {})
+        var order: Dictionary = {}
+        for mineral in ranges.keys():
+            var r = ranges[mineral]
+            if typeof(r) == TYPE_ARRAY and r.size() >= 2:
+                order[mineral] = rng.randi_range(int(r[0]), int(r[1]))
+            else:
+                order[mineral] = 100
+        entry["requested_minerals"] = order
+        contractors_with_orders.append(entry)
     return {
-        "contractors": contractor_offers.duplicate(true),
+        "contractors": contractors_with_orders,
         "selected_contractor": "",
         "selection_required": true,
-        "requested_minerals": requested_minerals,
         "recommended_target_id": recommended_target_id,
         "recommended_target_label": recommended_target_label,
         "recommended_rocket": "starterrocket1",

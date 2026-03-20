@@ -156,7 +156,7 @@ func _on_loading_finished() -> void:
 	if pending_anomalies.is_empty():
 		pending_anomalies = _build_local_anomalies()
 		var fallback_type = "planets" if current_mode == "planets" else "asteroids"
-		status_label.text = "Status: Using offline %s" % fallback_type
+		status_label.text = "Offline catalog — showing local %s" % fallback_type
 		_award_scan_experience()
 	pending_anomalies = _filter_mission3_untargeted_anomalies(pending_anomalies)
 	AppControllerHelper.record_tutorial_action("scan_targets", {
@@ -193,7 +193,7 @@ func _on_anomalies_fetched(data: Array, error: String):
 		# Fallback to deterministic local anomalies so scan always produces targets.
 		pending_anomalies = _build_local_anomalies()
 		var fallback_type = "planets" if current_mode == "planets" else "asteroids"
-		status_label.text = "Status: Using offline %s (%s)" % [fallback_type, error.left(80)]
+		status_label.text = "Network unavailable — showing local %s" % fallback_type
 		_loading.mark_anomalies_ready()
 		_award_scan_experience()
 		return
@@ -202,7 +202,7 @@ func _on_anomalies_fetched(data: Array, error: String):
 	pending_anomalies = data
 	var target_type = "planets" if current_mode == "planets" else "asteroids"
 	var range_note = " • Range: %s" % get_scanner_range_label() if _player_level >= PLANET_UNLOCK_LEVEL else ""
-	status_label.text = "Status: %d %s detected%s" % [data.size(), target_type, range_note]
+	status_label.text = "%d %s found%s" % [data.size(), target_type, range_note]
 	_loading.mark_anomalies_ready()
 	_award_scan_experience()
 
@@ -230,7 +230,7 @@ func _select_target_and_launch(bound_anomaly: Dictionary, index: int, btn: Butto
 	var rm = RocketsManager
 	if not rm:
 		AppLogger.w("SatelliteStationPanel: RocketsManager not available")
-		status_label.text = "Status: Unable to select target"
+		status_label.text = "Target selection failed — try again"
 		return
 	var target_type = "planet" if current_mode == "planets" else "asteroid"
 	rm.register_target_interaction(target_id, target_type)
@@ -245,7 +245,8 @@ func _select_target_and_launch(bound_anomaly: Dictionary, index: int, btn: Butto
 			"target_id": target_id,
 			"source": "scanner"
 		})
-		status_label.text = "Target selected: %s" % target_id
+		var display_label = str(bound_anomaly.get("label", bound_anomaly.get("name", target_id)))
+		status_label.text = "Target selected: %s" % display_label
 		AppLogger.d("SatelliteStationPanel: target selected: %s" % target_id)
 		if btn:
 			btn.text = "Target Selected"
@@ -253,7 +254,7 @@ func _select_target_and_launch(bound_anomaly: Dictionary, index: int, btn: Butto
 		_change_to_launchpad_scene()
 	else:
 		AppLogger.w("SatelliteStationPanel: failed to persist selected target: %s" % target_id)
-		status_label.text = "Status: Failed to select target"
+		status_label.text = "Could not confirm target — try again"
 
 func _change_to_launchpad_scene() -> void:
 	var tree = Engine.get_main_loop() as SceneTree
@@ -302,7 +303,7 @@ func _refresh_citizen_science_hint() -> void:
 	var enabled = AppControllerHelper.is_citizen_science_dialogue_enabled(true)
 	_citizen_science_hint_label.visible = enabled
 	if enabled:
-		_citizen_science_hint_label.text = "Citizen science tip: your classifications improve how confident target results are."
+		_citizen_science_hint_label.text = "Your annotations and classifications feed into the real NASA TESS dataset — every scan counts."
 
 
 func _on_refresh_pressed():
@@ -316,7 +317,7 @@ func _on_refresh_pressed():
 func _on_toggle_switch_pressed():
 	"""Handle toggle switch between asteroids and planets"""
 	if _player_level < PLANET_UNLOCK_LEVEL:
-		status_label.text = "Status: Planets unlock at Level %d" % PLANET_UNLOCK_LEVEL
+		status_label.text = "Planet targets unlock at Level %d" % PLANET_UNLOCK_LEVEL
 		return
 	if current_mode == "asteroids":
 		current_mode = "planets"
@@ -357,7 +358,7 @@ func _apply_local_anomalies() -> void:
 	pending_anomalies = _build_local_anomalies()
 	var target_type = "planets" if current_mode == "planets" else "asteroids"
 	var local_range_note = " • Range: %s" % get_scanner_range_label() if _player_level >= PLANET_UNLOCK_LEVEL else ""
-	status_label.text = "Status: %d local %s loaded%s" % [pending_anomalies.size(), target_type, local_range_note]
+	status_label.text = "%d local %s loaded%s" % [pending_anomalies.size(), target_type, local_range_note]
 	_loading.mark_anomalies_ready()
 
 func _persist_detected_targets_and_record_scan(anomalies: Array) -> void:
@@ -496,7 +497,8 @@ func _try_start_scan_with_cooldown(duration: float) -> bool:
 	var next_scan_at = int(rm.get_scanner_next_scan_at())
 	if next_scan_at > now:
 		var remaining = next_scan_at - now
-		status_label.text = "Status: Scanner cooling down (%ss remaining)" % remaining
+		var cd_text = "%d min" % int(ceil(float(remaining) / 60.0)) if remaining >= 60 else "%d sec" % remaining
+		status_label.text = "Scanner cooling down — %s remaining" % cd_text
 		_refresh_scan_cooldown_ui()
 		return false
 	var cooldown = int(rm.get_scanner_soft_cooldown_seconds())
@@ -522,7 +524,8 @@ func _refresh_scan_cooldown_ui() -> void:
 	var remaining = max(next_scan_at - now, 0)
 	if remaining > 0:
 		refresh_button.disabled = true
-		refresh_button.text = "Refresh (%ss)" % remaining
+		var btn_cd = "%d min" % int(ceil(float(remaining) / 60.0)) if remaining >= 60 else "%ds" % remaining
+		refresh_button.text = "Refresh (%s)" % btn_cd
 		# Soft cooldown: add an override button so player can scan early if they choose
 		var parent = refresh_button.get_parent()
 		if parent:
@@ -566,7 +569,7 @@ func _refresh_planet_unlock_ui(show_overlay_if_needed: bool) -> void:
 		toggle_switch.disabled = true
 		toggle_switch.text = "Planets unlock at Level %d" % PLANET_UNLOCK_LEVEL
 		if not _loading.is_loading():
-			status_label.text = "Status: Reach Level %d to unlock planet discovery" % PLANET_UNLOCK_LEVEL
+			status_label.text = "Reach Level %d to unlock planet targets" % PLANET_UNLOCK_LEVEL
 		return
 
 	toggle_switch.disabled = false
@@ -594,9 +597,10 @@ func _show_level2_unlock_overlay() -> void:
 		return
 
 	_unlock_overlay = Level2UnlockOverlayScene.instantiate()
-	add_child(_unlock_overlay)
-
 	var panel: PanelContainer = _unlock_overlay.get_node("Center/Panel")
+	var vp_w := get_viewport().get_visible_rect().size.x
+	panel.custom_minimum_size.x = clampf(vp_w - 48.0, 300.0, 640.0)
+	add_child(_unlock_overlay)
 	var panel_style = PanelStyle
 	panel_style.apply_panel(panel)
 
@@ -645,7 +649,7 @@ func _focus_planets_after_unlock() -> void:
 func _get_unlocks_for_level(level: int) -> Array:
 	var items := []
 	if level == PLANET_UNLOCK_LEVEL:
-		items.append("Planet discovery targets (telescope-tess anomalies)")
+		items.append("NASA TESS planet candidates unlocked as mission targets")
 
 	var rm = RocketsManager
 	if rm:

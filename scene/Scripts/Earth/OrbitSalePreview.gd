@@ -14,6 +14,7 @@ const MiningInventory = preload("res://Scripts/Utils/MiningInventory.gd")
 const SubcontractorManager = preload("res://Scripts/Utils/SubcontractorManager.gd")
 const MineralPricing = preload("res://Scripts/Utils/MineralPricing.gd")
 const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd")
+const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
 
 @onready var title_label: Label = $UI/Root/Panel/VBox/Title
 @onready var subtitle_label: Label = $UI/Root/Panel/VBox/Subtitle
@@ -111,7 +112,7 @@ func _select_subcontractor(idx: int) -> void:
 func _update_header() -> void:
 	var rocket_id = str(_orbit_entry.get("rocket_id", ""))
 	var label = str(_orbit_entry.get("label", "Unknown Target"))
-	subtitle_label.text = "Rocket %s • %s" % [rocket_id, label]
+	subtitle_label.text = "%s  •  %s" % [RocketSpecs.get_display_name(rocket_id), label]
 	var payout = _preview_payout()
 	status_label.text = "Contract preview payout: %d F" % payout
 
@@ -168,7 +169,15 @@ func _ship_action(mode: String) -> void:
 		RocketsManager.set_destroyed(rocket_id, mode)
 	else:
 		RocketsManager.remove_orbiting_rocket(rocket_id)
-	status_label.text = "Ship action applied: %s." % mode
+	match mode:
+		"scrap":
+			status_label.text = "Ship scrapped and refund applied."
+		"salvage":
+			status_label.text = "Ship salvaged."
+		"archive":
+			status_label.text = "Ship archived in orbit."
+		_:
+			status_label.text = "Ship action complete."
 
 func _back_to_missions() -> void:
 	var tree = Engine.get_main_loop() as SceneTree

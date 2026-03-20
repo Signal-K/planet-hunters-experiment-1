@@ -4,13 +4,14 @@ signal panel_closed
 
 const PREVIEW_SCENE := "res://Scenes/UI/AsteroidPreview/asteroid_preview.tscn"
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
+const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
 
 const STORY_MISSIONS := [
-	{"id": 1, "title": "First Launch", "desc": "Launch your first mission"},
-	{"id": 2, "title": "Upgrade Path", "desc": "Re-run with upgraded rocket"},
-	{"id": 3, "title": "Scanner Online", "desc": "Unlock system scanner"},
-	{"id": 4, "title": "Deep Space", "desc": "Mine exoplanets with L3 rocket"},
-	{"id": 5, "title": "Fleet Ops", "desc": "Multi-rocket operations"}
+	{"id": 1, "title": "First Contact", "desc": "Your first run to the asteroid belt — pick a contractor and launch."},
+	{"id": 2, "title": "Extended Range", "desc": "Push further with Starter Rocket 2 — better range, heavier load."},
+	{"id": 3, "title": "Planet Fall", "desc": "Fly to a real NASA TESS exoplanet candidate and mine what's there."},
+	{"id": 4, "title": "Scanner Active", "desc": "Build the scanner station and unlock drone-assisted mining."},
+	{"id": 5, "title": "Free Operations", "desc": "Tutorial complete — run missions on your own terms."}
 ]
 
 @onready var bg: ColorRect = $Background
@@ -75,7 +76,7 @@ func _create_mission_card(rocket_id: String, target_label: String, target_id: St
 	hbox.add_child(vbox)
 	
 	var rocket_lbl = Label.new()
-	rocket_lbl.text = rocket_id
+	rocket_lbl.text = RocketSpecs.get_display_name(rocket_id)
 	PanelStyle.apply_body(rocket_lbl)
 	vbox.add_child(rocket_lbl)
 	
@@ -135,7 +136,7 @@ func _populate_active_missions():
 	
 	if missions.is_empty():
 		var empty = Label.new()
-		empty.text = "No active missions"
+		empty.text = "No missions in progress — launch from the Launchpad."
 		PanelStyle.apply_muted(empty)
 		empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		missions_list.add_child(empty)

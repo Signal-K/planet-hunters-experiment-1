@@ -32,10 +32,12 @@ func _build_ui() -> void:
 	_overlay = overlay
 	add_child(overlay)
 
-	# Centred content panel
+	# Centred content panel — width adapts to viewport
+	var vp_size := get_viewport().get_visible_rect().size
+	var panel_w := clampf(vp_size.x - 48.0, 300.0, 680.0)
 	_panel = PanelContainer.new()
 	_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-	_panel.custom_minimum_size = Vector2(680, 0)
+	_panel.custom_minimum_size = Vector2(panel_w, 0)
 	var style = StyleBoxFlat.new()
 	style.bg_color = Color(0.08, 0.10, 0.18, 0.97)
 	style.border_color = Color(0.25, 0.40, 0.80, 0.9)
@@ -81,13 +83,13 @@ func _build_ui() -> void:
 	sep.add_theme_color_override("color", Color(0.25, 0.40, 0.80, 0.5))
 	vbox.add_child(sep)
 
-	# Body
+	# Body — three beats: what you do / why it matters / the experiment
 	var body = Label.new()
-	body.text = "Fly missions to NASA TESS planet candidates and real asteroids. Your data contributes to Planet Hunters citizen science.\n\nExperiment 1 — your feedback shapes what's next."
+	body.text = "Take contracts from mining outfits and government agencies. Build rockets, fly to real asteroids and NASA TESS planet candidates, and haul back what you find.\n\nYour scan data isn't just gameplay — it feeds the Planet Hunters citizen science project. Every mission contributes to real astronomical research.\n\nThis is Experiment 1. We're building it alongside you — your feedback shapes what comes next."
 	body.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	body.add_theme_color_override("font_color", Color(0.78, 0.83, 0.95))
-	body.add_theme_font_size_override("font_size", 16)
+	body.add_theme_font_size_override("font_size", 15)
 	vbox.add_child(body)
 
 	# Spacer

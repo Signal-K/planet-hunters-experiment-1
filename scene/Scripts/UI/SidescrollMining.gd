@@ -10,6 +10,7 @@ const MiningTargetTheme = preload("res://Scripts/UI/MiningTargetTheme.gd")
 const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
 const SubcontractorManager = preload("res://Scripts/Utils/SubcontractorManager.gd")
 const UILayout = preload("res://Scripts/UI/UILayout.gd")
+const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd")
 
 signal mining_completed(minerals: Dictionary, score: int)
 
@@ -154,6 +155,13 @@ var _handbook_panel: PanelContainer = null
 # True when touch/on-screen buttons should be shown: native mobile OR small viewport
 # (web users on phones report OS.has_feature("mobile") as false, so we fall back to width)
 var _uses_touch_controls := false
+# Mission mode: "contractor", "tutorial", or "free"
+var _mission_mode := "free"
+# Per-mineral ProgressBar nodes inside the contract order panel.
+var _mineral_progress_bars: Dictionary = {}
+var _mineral_bar_rows: Dictionary = {}  # key → HBoxContainer row
+# Cached tutorial step message shown in the MISSION GOAL panel when no contractor order is active.
+var _tutorial_step_message := ""
 
 func _ready():
 	_suspend_tutorial_overlay()
@@ -182,7 +190,7 @@ func _ready():
 
 	if not Engine.is_editor_hint():
 		_show_guide_step()
-		preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("arrived_at_mining_site")
+		AppControllerHelper.record_tutorial_action("arrived_at_mining_site")
 
 func _setup_button_handbook() -> void:
 	_handbook_button = Button.new()
@@ -412,7 +420,7 @@ func _apply_portrait_layout(viewport: Vector2) -> void:
 	contract_order_panel.offset_left   = UILayout.EDGE
 	contract_order_panel.offset_right  = -UILayout.EDGE
 	contract_order_panel.offset_top    = right_stats.offset_bottom + 6.0
-	contract_order_panel.offset_bottom = contract_order_panel.offset_top + 76.0
+	contract_order_panel.offset_bottom = contract_order_panel.offset_top + 130.0
 	# INSTRUCTION zone — centered, below contract in portrait.
 	var instr_zone := UILayout.zone(UILayout.Zone.MINING_INSTRUCTION, viewport)
 	instructions.offset_left   = -(instr_zone.size.x * 0.5)
@@ -590,6 +598,9 @@ func start_mining(is_planet: bool = false, difficulty: int = 1, target_id: Strin
 	_refresh_mars_background()
 	_completion_report = {}
 	_resolve_starter_contract_context()
+	_mission_mode = str(_session_context.get("mission_mode", "free"))
+	_tutorial_step_message = _resolve_tutorial_step_message()
+	_setup_contract_panel_style()
 	_collection_by_tool = {"laser": 0, "drone": 0}
 	_order_matches_by_tool = {"laser": 0, "drone": 0}
 	_order_match_total = 0
@@ -628,7 +639,7 @@ func start_mining(is_planet: bool = false, difficulty: int = 1, target_id: Strin
 func _update_rocket_ui():
 	if rocket_label:
 		var parachute_ready := "Yes" if RoomCatalog.has_parachute(_rocket_room_layout) else "No"
-		rocket_label.text = "Level %d | Chute: %s" % [_rocket_level, parachute_ready]
+		rocket_label.text = "Level %d | Parachute: %s" % [_rocket_level, parachute_ready]
 	if beam_bar:
 		beam_bar.value = 100.0
 
@@ -721,7 +732,7 @@ func _render_room_panel() -> void:
 		var label := Label.new()
 		var room_name = _truncate_room_name(str(room_def.get("name", room_id)))
 		var tier = int(room_row.get("tier", 1))
-		label.text = "%s T%d" % [room_name, tier]
+		label.text = "%s Tier %d" % [room_name, tier]
 		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		label.add_theme_font_size_override("font_size", 12 if _compact_layout_active else 14)
 		_room_grid.add_child(label)
@@ -1510,28 +1521,119 @@ const _MINERAL_COLOR_HINTS := {
 	"titanium": "grey-blue",
 }
 
+func _setup_contract_panel_style() -> void:
+	if contract_order_panel == null:
+		return
+	var style := StyleBoxFlat.new()
+	style.set_corner_radius_all(8)
+	style.content_margin_left = 12
+	style.content_margin_right = 12
+	style.content_margin_top = 8
+	style.content_margin_bottom = 8
+	match _mission_mode:
+		"contractor":
+			style.bg_color = Color(0.08, 0.10, 0.04, 0.94)
+			style.border_color = Color(0.88, 0.70, 0.08, 0.95)
+			style.set_border_width_all(2)
+		"tutorial":
+			style.bg_color = Color(0.04, 0.08, 0.16, 0.94)
+			style.border_color = Color(0.28, 0.80, 0.95, 0.95)
+			style.set_border_width_all(2)
+		_:
+			style.bg_color = Color(0.06, 0.08, 0.14, 0.80)
+			style.border_color = Color(0.30, 0.35, 0.50, 0.55)
+			style.set_border_width_all(1)
+	contract_order_panel.add_theme_stylebox_override("panel", style)
+	# Reset per-mineral bar tracking so they're rebuilt on next refresh.
+	for row in _mineral_bar_rows.values():
+		if is_instance_valid(row):
+			row.queue_free()
+	_mineral_progress_bars.clear()
+	_mineral_bar_rows.clear()
+
 func _refresh_contract_order_tracker() -> void:
 	if contract_order_panel == null or contract_order_title == null or contract_order_progress == null:
 		return
-	var show_order = _starter_contract_active and not _starter_order_targets.is_empty()
+	# Show for contractor orders or tutorial missions with a known goal.
+	var show_order := (_starter_contract_active and not _starter_order_targets.is_empty()) \
+		or _mission_mode == "tutorial"
 	contract_order_panel.visible = show_order
 	if not show_order:
 		return
-	contract_order_title.text = "%s Order" % _starter_contractor_name
-	var lines := []
-	var keys = _starter_order_targets.keys()
-	keys.sort()
-	for key in keys:
-		var required_amount = int(_starter_order_targets.get(key, 0))
-		var collected_amount = int(_collected_minerals.get(key, 0))
-		var done = collected_amount >= required_amount
-		var prefix = "✓ " if done else "► "
-		var color_hint = _MINERAL_COLOR_HINTS.get(str(key).to_lower(), "")
-		var label = "%s%s" % [str(key).capitalize(), " (%s)" % color_hint if color_hint else ""]
-		lines.append("%s%s: %d/%d kg" % [prefix, label, collected_amount, required_amount])
-	if _is_starter_contract_complete():
-		lines.append("★ Order complete. Return to debrief.")
-	contract_order_progress.text = "\n".join(lines)
+
+	if _starter_contract_active and not _starter_order_targets.is_empty():
+		# Contractor mission — show per-mineral progress bars.
+		contract_order_title.text = "%s Order" % _starter_contractor_name
+		contract_order_progress.visible = false  # replaced by bar rows
+		var keys = _starter_order_targets.keys()
+		keys.sort()
+		for key in keys:
+			var required_amount := int(_starter_order_targets.get(key, 0))
+			var collected_amount := int(_collected_minerals.get(key, 0))
+			var done := collected_amount >= required_amount
+			# Create row on first call.
+			if not _mineral_bar_rows.has(key):
+				var row := HBoxContainer.new()
+				row.add_theme_constant_override("separation", 6)
+				contract_order_vbox.add_child(row)
+				var name_lbl := Label.new()
+				var color_hint = _MINERAL_COLOR_HINTS.get(str(key).to_lower(), "")
+				name_lbl.text = "%s%s" % [str(key).capitalize(), " (%s)" % color_hint if color_hint else ""]
+				name_lbl.add_theme_color_override("font_color", Color(0.90, 0.90, 0.70))
+				name_lbl.add_theme_font_size_override("font_size", 13)
+				name_lbl.custom_minimum_size = Vector2(110, 0)
+				row.add_child(name_lbl)
+				var bar := ProgressBar.new()
+				bar.min_value = 0.0
+				bar.max_value = float(required_amount)
+				bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+				bar.custom_minimum_size = Vector2(0, 14)
+				bar.show_percentage = false
+				row.add_child(bar)
+				var qty_lbl := Label.new()
+				qty_lbl.add_theme_color_override("font_color", Color(1.0, 1.0, 0.85))
+				qty_lbl.add_theme_font_size_override("font_size", 13)
+				qty_lbl.custom_minimum_size = Vector2(72, 0)
+				qty_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+				row.add_child(qty_lbl)
+				_mineral_bar_rows[key] = row
+				_mineral_progress_bars[key] = bar
+				row.set_meta("qty_label", qty_lbl)
+			# Update bar and label values.
+			var bar: ProgressBar = _mineral_progress_bars.get(key)
+			if bar and is_instance_valid(bar):
+				bar.value = float(collected_amount)
+				var tint := Color(0.20, 0.80, 0.25) if done else Color(0.60, 0.45, 0.10)
+				bar.modulate = tint
+			var row = _mineral_bar_rows.get(key)
+			if row and is_instance_valid(row):
+				var qty_lbl: Label = row.get_meta("qty_label") if row.has_meta("qty_label") else null
+				if qty_lbl and is_instance_valid(qty_lbl):
+					qty_lbl.text = "%d/%d" % [collected_amount, required_amount]
+					qty_lbl.add_theme_color_override("font_color",
+						Color(0.30, 1.0, 0.45) if done else Color(1.0, 1.0, 0.85))
+		if _is_starter_contract_complete():
+			contract_order_title.text = "★ Order Complete — Return Home"
+			contract_order_title.add_theme_color_override("font_color", Color(0.30, 1.0, 0.45))
+		else:
+			contract_order_title.add_theme_color_override("font_color", Color(0.90, 0.80, 0.30))
+	else:
+		# Tutorial mission — show the current tutorial step message dynamically.
+		contract_order_title.text = "MISSION GOAL"
+		contract_order_title.add_theme_color_override("font_color", Color(0.28, 0.88, 1.0))
+		contract_order_progress.visible = true
+		contract_order_progress.text = _tutorial_step_message if _tutorial_step_message != "" else "Mine minerals and return to base."
+
+func _resolve_tutorial_step_message() -> String:
+	if _mission_mode != "tutorial":
+		return ""
+	var app = AppControllerHelper.get_instance()
+	if app == null or not app.has_method("get_tutorial_state"):
+		return ""
+	var state: Dictionary = app.get_tutorial_state()
+	var step: Dictionary = state.get("current_step", {})
+	var msg := str(step.get("message", ""))
+	return msg if msg != "" else ""
 
 func _refresh_contractor_bonus_label() -> void:
 	var rm = RocketsManager
