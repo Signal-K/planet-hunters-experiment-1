@@ -292,8 +292,9 @@ func _show_starterrocket2_unlock_popup() -> void:
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	overlay.add_child(center)
 
+	var vp_w := get_viewport().get_visible_rect().size.x
 	var panel = PanelContainer.new()
-	panel.custom_minimum_size = Vector2(700, 0)
+	panel.custom_minimum_size = Vector2(clampf(vp_w - 48.0, 300.0, 700.0), 0)
 	panel.scale = Vector2(0.92, 0.92)
 	panel.modulate = Color(1, 1, 1, 0.0)
 	center.add_child(panel)
@@ -319,7 +320,7 @@ func _show_starterrocket2_unlock_popup() -> void:
 
 	var summary = Label.new()
 	summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	summary.text = "Starter Rocket 2 is now available. Faster travel and longer-range operations are now unlocked."
+	summary.text = "Starter Rocket 2 is now available. It's faster, hits further, and carries a heavier load — your operational range just expanded significantly."
 	panel_style.apply_body(summary)
 	body.add_child(summary)
 
@@ -386,8 +387,9 @@ func _show_free_ops_unlock_overlay() -> void:
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	overlay.add_child(center)
 
+	var vp_w2 := get_viewport().get_visible_rect().size.x
 	var panel = PanelContainer.new()
-	panel.custom_minimum_size = Vector2(720, 0)
+	panel.custom_minimum_size = Vector2(clampf(vp_w2 - 48.0, 300.0, 720.0), 0)
 	panel.scale = Vector2(0.92, 0.92)
 	panel.modulate = Color(1, 1, 1, 0.0)
 	center.add_child(panel)
@@ -405,7 +407,7 @@ func _show_free_ops_unlock_overlay() -> void:
 	body.add_child(title)
 
 	var desc = Label.new()
-	desc.text = "You've completed the tutorial missions. You're now free to run missions on your own terms.\n\nTwo routes are available each run:"
+	desc.text = "You've completed the initial mission series. The belt is now open — run operations on your own schedule and terms.\n\nTwo routes are available each run:"
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	panel_style.apply_body(desc)
 	body.add_child(desc)
@@ -528,10 +530,6 @@ func _show_loan_offer_dialog(app: Node) -> void:
 	decline_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn_row.add_child(decline_btn)
 
-	ui_layer.add_child(panel)
-	panel.set_anchors_preset(Control.PRESET_CENTER)
-	await panel.ready
-
 	accept_btn.pressed.connect(func():
 		app.take_loan()
 		ui_layer.queue_free()
@@ -539,6 +537,9 @@ func _show_loan_offer_dialog(app: Node) -> void:
 	decline_btn.pressed.connect(func():
 		ui_layer.queue_free()
 	)
+
+	ui_layer.add_child(panel)
+	panel.set_anchors_preset(Control.PRESET_CENTER)
 
 func _apply_tutorial_button_state() -> void:
 	var app = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
@@ -648,7 +649,14 @@ func _build_next_mission_card() -> PanelContainer:
 	title.add_theme_font_size_override("font_size", 20)
 	body.add_child(title)
 	var subtitle = Label.new()
-	subtitle.text = "Continue progression and launch your next run."
+	var _rm_ref = preload("res://Scripts/Utils/RocketsManager.gd")
+	var _stage = int(_rm_ref.get_mission_stage()) if _rm_ref else 0
+	match _stage:
+		1: subtitle.text = "Launch your first mission — pick a contractor, select a target, deploy."
+		2: subtitle.text = "Starter Rocket 2 is ready — push further with extended range."
+		3: subtitle.text = "Mission 3 is available — fly to a real NASA TESS planet candidate."
+		4: subtitle.text = "Mission 4 is ready — build the Scanner Station and try drone mining."
+		_: subtitle.text = "Free Operations are open — pick any target and contractor."
 	subtitle.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	PanelStyle.apply_body(subtitle)
 	body.add_child(subtitle)
@@ -674,7 +682,7 @@ func _build_star_map_card() -> PanelContainer:
 	body.add_child(title)
 	var discovered_count = _get_discovered_planet_count()
 	var subtitle = Label.new()
-	subtitle.text = "Discovered: %d / ??? planets" % discovered_count
+	subtitle.text = "%d planet candidate%s charted" % [discovered_count, "" if discovered_count == 1 else "s"]
 	subtitle.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	PanelStyle.apply_body(subtitle)
 	body.add_child(subtitle)

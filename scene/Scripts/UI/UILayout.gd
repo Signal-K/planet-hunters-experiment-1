@@ -111,7 +111,8 @@ static func _mining_instruction(vp: Vector2) -> Rect2:
 static func _mining_contract(vp: Vector2) -> Rect2:
 	var instr := _mining_instruction(vp)
 	var w     := clampf(vp.x * 0.52, 300.0, 620.0)
-	return Rect2((vp.x - w) * 0.5, instr.end.y + 6.0, w, 88.0)
+	# Taller to accommodate per-mineral progress bar rows (up to ~4 minerals).
+	return Rect2((vp.x - w) * 0.5, instr.end.y + 6.0, w, 130.0)
 
 static func _mining_rooms(vp: Vector2) -> Rect2:
 	# TOP-LEFT so it never conflicts with TUTORIAL_COACH or MINING_HANDBOOK.

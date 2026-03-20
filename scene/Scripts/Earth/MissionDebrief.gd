@@ -144,9 +144,13 @@ func _calc_payout() -> int:
 
 func _build_ui() -> void:
 	var rocket_id = str(_returned.get("rocket_id", ""))
+	var rocket_display = RocketSpecs.get_display_name(rocket_id)
 	var target_label = str(_returned.get("label", "Unknown Target"))
 	title_label.text = "Mission Complete!"
-	subtitle_label.text = "%s  •  %s  •  %s" % [rocket_id, target_label, _contractor_name]
+	var sub_parts = [rocket_display, target_label]
+	if _contractor_name != "" and _contractor_name != "No Contractor":
+		sub_parts.append(_contractor_name)
+	subtitle_label.text = "  •  ".join(sub_parts)
 
 	var stage = int(RocketsManager.get_mission_stage())
 	hint_label.text = _next_mission_hint(stage)
@@ -178,10 +182,10 @@ func _build_ui() -> void:
 
 func _next_mission_hint(stage: int) -> String:
 	match stage:
-		1: return "Complete this debrief to unlock Mission 2 (Starter Rocket 2)!"
-		2: return "Complete this debrief to unlock Mission 3 (Scanner Station)!"
-		3: return "Complete this debrief to unlock Mission 4 (Planet Targets)!"
-		4: return "Complete this debrief to unlock Free Operations!"
+		1: return "Debrief to unlock Mission 2 — Starter Rocket 2 with extended range."
+		2: return "Debrief to unlock Mission 3 — fly to a real NASA TESS planet candidate."
+		3: return "Debrief to unlock Mission 4 — install the Scanner Station and try drone mining."
+		4: return "Debrief to unlock Free Operations — run missions on your own terms."
 	return ""
 
 func _on_complete_pressed() -> void:

@@ -13,12 +13,22 @@ const MICRO_SURVEY_KEYS = {
   progression2: "planet_hunters_micro_survey_progression_stage2_v1",
   progression3: "planet_hunters_micro_survey_progression_stage3_v1",
   progression4: "planet_hunters_micro_survey_progression_stage4_v1",
+  launch:       "planet_hunters_micro_survey_first_launch_v1",
+  pwa_install:  "planet_hunters_micro_survey_pwa_install_v1",
+  m4_complete:  "planet_hunters_micro_survey_m4_complete_v1",
+  return_visit: "planet_hunters_micro_survey_return_visit_v1",
 };
+const SESSION_COUNT_KEY = "planet_hunters_session_count_v1";
 const MICRO_SURVEY_IDS = {
   contractor:  "019ccaf8-4299-0000-b3ad-92a57ab75b95",
   mining:      "019ccaf8-c4d8-0000-901b-aa850dfd43c5",
   science:     "019ccaf9-0259-0000-d411-e11fdc643d97",
   progression: "019ccaf9-3453-0000-b6b9-0e41fcae8f1c",
+  // New surveys — create in PostHog and paste IDs here:
+  launch:      "",  // "How did your first launch feel?" — fires after rocket_launched (M1)
+  pwa_install: "",  // "Why did you install the app?" — fires after PWA install prompt accepted
+  m4_complete: "",  // "You've reached the end — what would keep you playing?" — fires at M4 debrief
+  return_visit: "", // "What brought you back?" — fires on 2nd+ session start
 };
 const SURVEY_OVERLAY_ID = "planet-hunters-survey-overlay";
 const SURVEY_IFRAME_ID = "planet-hunters-survey-iframe";
@@ -48,10 +58,13 @@ let _xpSyncInFlight = false;
 let _pendingXpSnapshot = null;
 
 const LEVEL_UNLOCK_HINTS = {
-  2: "Longer range unlocked",
-  3: "Faster mining speed unlocked",
-  4: "Cargo capacity increased",
-  5: "Advanced scanner unlocked",
+  2: "Starter Rocket 2 unlocked — extended range and heavier payload",
+  3: "Starter Rocket 3 unlocked — faster and further",
+  4: "Mission 4 unlocked — Scanner Station and drone mining",
+  5: "Free Operations unlocked — run missions on your own terms",
+  6: "Refinery unlocked — refine minerals before selling for higher returns",
+  7: "Off-world refinery unlocked — process minerals at the source",
+  8: "Extended scanner range and dedicated refinery slot unlocked",
 };
 
 // ── Push notifications ────────────────────────────────────────────────────────
@@ -726,6 +739,8 @@ async function maybeTriggerMicroSurvey(storageKey, surveyId, context, eventPaylo
   if (_surveyShownInThisBoot) return;
   if (document.getElementById(SURVEY_OVERLAY_ID)) return;
   if (localStorage.getItem(storageKey)) return;
+  // Skip if no survey ID configured yet.
+  if (!surveyId) return;
   try {
     const distinctId = await resolveSurveyDistinctId();
     const params = {
@@ -735,6 +750,8 @@ async function maybeTriggerMicroSurvey(storageKey, surveyId, context, eventPaylo
       mission_stage: String((eventPayload && eventPayload.mission_stage) || ""),
     };
     await showInlineSurvey(params, surveyId);
+    // Block any further surveys this session — one survey per boot is enough.
+    _surveyShownInThisBoot = true;
     localStorage.setItem(storageKey, new Date().toISOString());
   } catch (err) {
     console.error("Micro-survey trigger failed:", storageKey, err);
@@ -770,16 +787,65 @@ function maybeShowScienceSurvey(payload) {
 
 function maybeShowProgressionSurvey(payload) {
   const stage = Number((payload && payload.mission_stage) || 0);
-  if (stage < 2 || stage > 4) return;
+  if (stage < 2 || stage > 3) return; // M4 gets its own dedicated survey below
   const key = MICRO_SURVEY_KEYS["progression" + stage];
   if (!key) return;
   maybeTriggerMicroSurvey(key, MICRO_SURVEY_IDS.progression, "micro_mission_progression_clarity", payload);
+}
+
+function maybeShowLaunchSurvey(payload) {
+  // Fires after the first rocket launch in M1.
+  const stage = Number((payload && payload.mission_stage) || 0);
+  if (stage !== 1) return;
+  maybeTriggerMicroSurvey(
+    MICRO_SURVEY_KEYS.launch,
+    MICRO_SURVEY_IDS.launch,
+    "micro_first_launch_feel",
+    payload
+  );
+}
+
+function maybeShowM4CompleteSurvey(payload) {
+  // Fires at M4 debrief — end of current content.
+  const stage = Number((payload && payload.mission_stage) || 0);
+  if (stage !== 4) return;
+  maybeTriggerMicroSurvey(
+    MICRO_SURVEY_KEYS.m4_complete,
+    MICRO_SURVEY_IDS.m4_complete,
+    "micro_m4_end_of_content",
+    payload
+  );
+}
+
+function maybeShowPwaInstallSurvey() {
+  maybeTriggerMicroSurvey(
+    MICRO_SURVEY_KEYS.pwa_install,
+    MICRO_SURVEY_IDS.pwa_install,
+    "micro_pwa_install_motivation",
+    {}
+  );
+}
+
+function maybeShowReturnVisitSurvey() {
+  // Show on second session start — only once ever.
+  try {
+    const count = Number(localStorage.getItem(SESSION_COUNT_KEY) || "0") + 1;
+    localStorage.setItem(SESSION_COUNT_KEY, String(count));
+    if (count !== 2) return; // only on exactly the 2nd session
+    maybeTriggerMicroSurvey(
+      MICRO_SURVEY_KEYS.return_visit,
+      MICRO_SURVEY_IDS.return_visit,
+      "micro_return_visit_motivation",
+      {}
+    );
+  } catch (_) {}
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 
 async function maybeTriggerFirstMissionSurvey(eventPayload) {
   if (_surveyShownInThisBoot) return;
+  if (document.getElementById(SURVEY_OVERLAY_ID)) return;
   if (localStorage.getItem(SURVEY_SHOWN_KEY)) return;
 
   try {
@@ -867,6 +933,8 @@ function App() {
         shell_entry: "react_shell",
       });
     });
+    // Return-visit survey — delayed 3s so the game has time to load first.
+    setTimeout(maybeShowReturnVisitSurvey, 3000);
     const persistedXp = readXpState();
     if (persistedXp && typeof persistedXp.experience_level !== "undefined") {
       registerAnalyticsContext({
@@ -968,6 +1036,10 @@ function App() {
       }
       if (eventName === "mission_debrief_resolved") {
         maybeShowProgressionSurvey(payload);
+        maybeShowM4CompleteSurvey(payload);
+      }
+      if (eventName === "rocket_launched") {
+        maybeShowLaunchSurvey(payload);
       }
     }
 
@@ -1015,7 +1087,10 @@ function App() {
     if (installPrompt) {
       await installPrompt.prompt();
       try {
-        await installPrompt.userChoice;
+        const choice = await installPrompt.userChoice;
+        if (choice && choice.outcome === "accepted") {
+          setTimeout(maybeShowPwaInstallSurvey, 2000);
+        }
       } catch (_error) {}
       setInstallPrompt(null);
       setShowMobileBanner(false);
@@ -1099,31 +1174,32 @@ function App() {
         {
           style: {
             position: "fixed",
-            top: "24px",
+            top: isPwa ? "max(32px, calc(env(safe-area-inset-top) + 12px))" : "24px",
             left: "50%",
             transform: "translateX(-50%)",
-            background: "linear-gradient(135deg, #1a3a6e, #0f2040)",
-            border: "1px solid #3a6abf",
-            borderRadius: "12px",
-            padding: "14px 24px",
+            background: "linear-gradient(135deg, #0f2040, #1a3a6e)",
+            border: "1px solid rgba(58,106,191,0.7)",
+            borderRadius: "14px",
+            padding: "12px 22px",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            gap: "4px",
+            gap: "3px",
             zIndex: 99998,
             pointerEvents: "none",
-            boxShadow: "0 4px 24px rgba(58,106,191,0.4)",
+            boxShadow: "0 4px 32px rgba(58,106,191,0.5), 0 0 0 1px rgba(58,106,191,0.15)",
+            whiteSpace: "nowrap",
           },
         },
         React.createElement(
           "span",
-          { style: { color: "#a0c0ff", fontSize: "11px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase" } },
-          `Level ${levelUpBanner.level} reached`
+          { style: { color: "#5a8fff", fontSize: "10px", fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase" } },
+          `Level ${levelUpBanner.level} Reached`
         ),
         levelUpBanner.hint
           ? React.createElement(
               "span",
-              { style: { color: "#ffffff", fontSize: "15px", fontWeight: 700 } },
+              { style: { color: "#e8f0ff", fontSize: "14px", fontWeight: 700 } },
               levelUpBanner.hint
             )
           : null
@@ -1214,19 +1290,22 @@ function App() {
             top: "max(0px, env(safe-area-inset-top))",
             left: "50%",
             transform: "translateX(-50%)",
-            width: "min(48vw, calc(100vw - env(safe-area-inset-left) - env(safe-area-inset-right) - 16px))",
-            maxWidth: "220px",
-            height: "20px",
+            width: "min(52vw, calc(100vw - env(safe-area-inset-left) - env(safe-area-inset-right) - 16px))",
+            maxWidth: "240px",
+            height: "22px",
             border: "none",
             borderBottomLeftRadius: "12px",
             borderBottomRightRadius: "12px",
-            background: "rgba(12, 20, 40, 0.35)",
-            color: "#d9e2ff",
-            fontSize: "11px",
+            background: "rgba(10, 18, 40, 0.55)",
+            color: "rgba(200,215,255,0.7)",
+            fontSize: "10px",
+            letterSpacing: "0.06em",
+            textTransform: "uppercase",
             zIndex: 10001,
+            backdropFilter: "blur(4px)",
           },
         },
-        "Show HUD"
+        "Menu"
       ),
       showPwaHud
         ? React.createElement(
@@ -1540,9 +1619,38 @@ function App() {
             },
           },
           React.createElement(
-            "p",
-            { style: { margin: 0, fontSize: "13px", color: "#9cb0e8", textAlign: "center" } },
-            "Install for fullscreen play and faster relaunch."
+            "div",
+            { style: { display: "flex", alignItems: "center", justifyContent: "space-between" } },
+            React.createElement(
+              "div",
+              null,
+              React.createElement(
+                "p",
+                { style: { margin: "0 0 2px", fontSize: "14px", fontWeight: 700, color: "#e7edf9" } },
+                "Planet Hunters"
+              ),
+              React.createElement(
+                "p",
+                { style: { margin: 0, fontSize: "12px", color: "#9cb0e8" } },
+                "Install for fullscreen play and offline access."
+              )
+            ),
+            React.createElement(
+              "button",
+              {
+                style: {
+                  background: "none",
+                  border: "none",
+                  color: "#556080",
+                  fontSize: "20px",
+                  cursor: "pointer",
+                  padding: "4px 8px",
+                  lineHeight: 1,
+                },
+                onClick: () => setShowMobileBanner(false),
+              },
+              "\u00d7"
+            )
           ),
           React.createElement(
             "div",
@@ -1580,22 +1688,6 @@ function App() {
                 onClick: handleInstallApp,
               },
               isIos ? "Add to Home Screen" : "Install App"
-            ),
-            React.createElement(
-              "button",
-              {
-                style: {
-                  padding: "10px 14px",
-                  background: "none",
-                  color: "#6677aa",
-                  border: "1px solid #2a3560",
-                  borderRadius: "8px",
-                  fontSize: "14px",
-                  cursor: "pointer",
-                },
-                onClick: () => setShowMobileBanner(false),
-              },
-              "\u00d7"
             )
           ),
           showIosHint
@@ -1619,81 +1711,171 @@ function App() {
     "main",
     { style: isMobile ? { margin: 0, padding: 0 } : { maxWidth: "1200px", margin: "0 auto", padding: "20px" } },
     !isMobile && React.createElement(
-      "h1",
-      { style: { margin: "0 0 8px", fontSize: "clamp(24px, 4vw, 38px)", letterSpacing: "0.02em" } },
-      "Star Sailors: Experiment 1"
-    ),
-    !isMobile && React.createElement(
-      "p",
+      "header",
       {
         style: {
           display: "flex",
-          flexWrap: "wrap",
-          gap: "10px 14px",
-          margin: "0 0 14px",
-          color: "var(--muted)",
-          fontSize: "14px",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
+          gap: "24px",
+          marginBottom: "20px",
         },
       },
       React.createElement(
-        "span",
-        { style: { border: "1px solid var(--edge)", borderRadius: "999px", padding: "6px 10px" } },
-        "Build: Godot Web"
+        "div",
+        { style: { flex: 1, minWidth: 0 } },
+        React.createElement(
+          "p",
+          {
+            style: {
+              margin: "0 0 6px",
+              fontSize: "11px",
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+              color: "var(--accent)",
+              fontWeight: 600,
+            },
+          },
+          "Star Sailors \u00b7 Experiment 1"
+        ),
+        React.createElement(
+          "h1",
+          {
+            style: {
+              margin: "0 0 8px",
+              fontSize: "clamp(28px, 4vw, 44px)",
+              letterSpacing: "-0.01em",
+              fontWeight: 800,
+              lineHeight: 1.1,
+              color: "var(--ink)",
+            },
+          },
+          "Planet Hunters"
+        ),
+        React.createElement(
+          "p",
+          {
+            style: {
+              margin: 0,
+              fontSize: "14px",
+              color: "var(--muted)",
+              lineHeight: 1.5,
+            },
+          },
+          "Mine asteroids \u00b7 Discover planets \u00b7 Contribute to real citizen science"
+        )
       ),
       React.createElement(
-        "span",
-        { style: { border: "1px solid var(--edge)", borderRadius: "999px", padding: "6px 10px", color: "var(--accent)" } },
-        storageStatus
-      ),
-      React.createElement(
-        "span",
-        { style: { border: "1px solid var(--edge)", borderRadius: "999px", padding: "6px 10px" } },
-        `Progress: ${markerText}`
-      ),
-      React.createElement(
-        "span",
-        { style: { border: "1px solid var(--edge)", borderRadius: "999px", padding: "6px 10px" } },
-        `Game path: ${gameSrc}`
-      ),
-      React.createElement(
-        "button",
+        "div",
         {
           style: {
-            border: "1px solid var(--edge)",
-            borderRadius: "999px",
-            padding: "6px 12px",
-            color: "var(--ink)",
-            background: "transparent",
-            cursor: "pointer",
-          },
-          onClick: () => {
-            const next = {
-              marker: "manual-save",
-              updatedAt: new Date().toISOString(),
-            };
-            saveProgress(next, setProgress);
-            setStorageStatus("Cookie saved");
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "flex-end",
+            gap: "8px",
+            flexShrink: 0,
+            paddingTop: "4px",
           },
         },
-        "Save Progress"
-      ),
-      React.createElement(
-        "button",
-        {
-          style: {
-            border: "1px solid var(--edge)",
-            borderRadius: "999px",
-            padding: "6px 12px",
-            color: "#fff",
-            background: "#1a2550",
-            cursor: "pointer",
-          },
-          onClick: () => {
-            setShowPwaHud(true);
-            setShowPwaHudMenu(true);
-          },
-        },
-        "Exit to Menu"
+        (xpState.experience_level > 1 || xpState.franc_balance > 0)
+          ? React.createElement(
+              "div",
+              { style: { display: "flex", gap: "6px", alignItems: "center" } },
+              React.createElement(
+                "span",
+                {
+                  style: {
+                    background: "rgba(255,255,255,0.04)",
+                    border: "1px solid var(--edge)",
+                    borderRadius: "6px",
+                    padding: "3px 10px",
+                    fontSize: "13px",
+                    color: "var(--ink)",
+                    fontWeight: 600,
+                    fontVariantNumeric: "tabular-nums",
+                  },
+                },
+                `Lv ${xpState.experience_level}`
+              ),
+              React.createElement(
+                "span",
+                {
+                  style: {
+                    background: "rgba(74,208,255,0.07)",
+                    border: "1px solid rgba(74,208,255,0.25)",
+                    borderRadius: "6px",
+                    padding: "3px 10px",
+                    fontSize: "13px",
+                    color: "var(--accent)",
+                    fontWeight: 600,
+                    fontVariantNumeric: "tabular-nums",
+                  },
+                },
+                `${Math.round(xpState.franc_balance).toLocaleString()} F`
+              )
+            )
+          : null,
+        storageStatus === "Game load error"
+          ? React.createElement(
+              "span",
+              {
+                style: {
+                  fontSize: "12px",
+                  color: "#ff6b6b",
+                  padding: "2px 8px",
+                  background: "rgba(255,60,60,0.1)",
+                  border: "1px solid rgba(255,60,60,0.3)",
+                  borderRadius: "4px",
+                },
+              },
+              "Game load error"
+            )
+          : null,
+        React.createElement(
+          "div",
+          { style: { display: "flex", gap: "8px" } },
+          React.createElement(
+            "button",
+            {
+              style: {
+                border: "1px solid var(--edge)",
+                borderRadius: "8px",
+                padding: "6px 14px",
+                fontSize: "13px",
+                color: storageStatus === "Saved \u2713" || storageStatus === "Cookie saved" ? "var(--accent)" : "var(--muted)",
+                background: "transparent",
+                cursor: "pointer",
+              },
+              onClick: () => {
+                const next = {
+                  marker: "manual-save",
+                  updatedAt: new Date().toISOString(),
+                };
+                saveProgress(next, setProgress);
+                setStorageStatus("Saved \u2713");
+              },
+            },
+            storageStatus === "Saved \u2713" || storageStatus === "Cookie saved" ? "Saved \u2713" : "Save Progress"
+          ),
+          installPrompt
+            ? React.createElement(
+                "button",
+                {
+                  style: {
+                    border: "1px solid #2a5040",
+                    borderRadius: "8px",
+                    padding: "6px 14px",
+                    fontSize: "13px",
+                    color: "#6fd4b0",
+                    background: "#0e2420",
+                    cursor: "pointer",
+                  },
+                  onClick: handleInstallApp,
+                },
+                "Install App"
+              )
+            : null
+        )
       )
     ),
     React.createElement(

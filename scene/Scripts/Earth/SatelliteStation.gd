@@ -14,6 +14,11 @@ func _ready():
 	_ensure_scanner_state_consistency()
 	_refresh_visibility()
 	call_deferred("_maybe_show_unlock_dialog")
+	# Re-evaluate visibility whenever all data is reset so the station hides
+	# immediately without requiring a scene reload.
+	var app = AppControllerHelper.get_instance()
+	if app and app.has_signal("rockets_reset"):
+		app.rockets_reset.connect(_on_rockets_reset)
 
 func on_interact():
 	_refresh_visibility()
@@ -48,6 +53,9 @@ func on_interact():
 	else:
 		print("ERROR: UIManager not found for Satellite Station")
 
+
+func _on_rockets_reset() -> void:
+	_refresh_visibility()
 
 func _refresh_visibility() -> void:
 	var rm = RocketsManager
@@ -97,7 +105,7 @@ func _maybe_show_unlock_dialog() -> void:
 	if not rm.is_scanner_unlock_dialog_seen():
 		if _info_dialog and is_instance_valid(_info_dialog):
 			var cost_text = _format_francs(rm.get_scanner_build_cost())
-			_info_dialog.dialog_text = "Scanner Station unlocked. Build it for %s F to start scanning." % cost_text
+			_info_dialog.dialog_text = "Mission 4 unlocked: Scanner Station. Build it for %s F to begin detecting targets across the stellar neighbourhood." % cost_text
 			_info_dialog.call_deferred("popup_centered")
 		rm.set_scanner_unlock_dialog_seen(true)
 	return
@@ -142,7 +150,7 @@ func _on_confirm_build_scanner() -> void:
 	rm.set_scanner_station_built(true)
 	AppControllerHelper.record_tutorial_action("build_scanner_station")
 	_refresh_visibility()
-	_show_info("Scanner Station constructed. You can now run scans.")
+	_show_info("Scanner Station constructed. Open it to start detecting asteroid and planet targets.")
 
 func _show_info(message: String) -> void:
 	_ensure_dialogs()

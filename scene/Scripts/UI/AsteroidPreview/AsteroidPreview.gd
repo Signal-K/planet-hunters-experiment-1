@@ -88,6 +88,8 @@ func _ready():
 	})
 	
 	print("[Preview] Ready - target=%s, rocket=%s, yield=%s" % [_current_target_id, _current_rocket_id, str(_current_yield)])
+	# Auto-start mining to skip the blank preview screen entirely.
+	call_deferred("_on_mine_pressed")
 
 func _on_mine_pressed():
 	print("[Preview] Mine button pressed")
@@ -130,6 +132,13 @@ func _on_mine_pressed():
 		session_context["generation_signature"] = generation_signature.duplicate(true)
 	if not _starter_contract_context.is_empty():
 		session_context["starter_contract"] = _starter_contract_context.duplicate(true)
+	# Tag mission mode so the mining HUD can show the right goal.
+	if _is_starter_contract_active():
+		session_context["mission_mode"] = "contractor"
+	elif RocketsManager.get_mission_stage() <= 4:
+		session_context["mission_mode"] = "tutorial"
+	else:
+		session_context["mission_mode"] = "free"
 	
 	print("[Preview] Starting mining: level=%d, minerals=%s, mineable=%f" % [level, str(minerals), mineable_pct])
 	_minigame_instance.start_mining(is_planet, level, _current_target_id, minerals, mineable_pct, session_context)
@@ -278,20 +287,46 @@ func _on_return_pressed():
 func _build_starter_contract_context(rm) -> Dictionary:
 	if rm == null:
 		return {}
-	if int(rm.get_mission_stage()) != 1:
+	var stage := int(rm.get_mission_stage())
+	if stage == 1:
+		# M1 starter contract
+		var selected = rm.get_starter_selected_contractor()
+		if selected.is_empty():
+			return {}
+		var requested = rm.get_starter_requested_minerals(str(selected.get("id", "")))
+		if requested.is_empty():
+			return {}
+		return {
+			"active": true,
+			"id": str(selected.get("id", "")),
+			"name": str(selected.get("name", "Contractor")),
+			"requested_minerals": requested.duplicate(true)
+		}
+	# M2+ trip contractor: read requested_minerals from the offer's contractors array
+	var offer := rm.get_trip_contract_offer()
+	if offer.is_empty():
 		return {}
-	var selected = rm.get_starter_selected_contractor()
-	if selected.is_empty():
+	var selected_id := str(offer.get("selected_contractor", ""))
+	if selected_id == "":
 		return {}
-	var requested = rm.get_starter_requested_minerals(str(selected.get("id", "")))
-	if requested.is_empty():
+	var contractors_any = offer.get("contractors", [])
+	if typeof(contractors_any) != TYPE_ARRAY:
 		return {}
-	return {
-		"active": true,
-		"id": str(selected.get("id", "")),
-		"name": str(selected.get("name", "Contractor")),
-		"requested_minerals": requested.duplicate(true)
-	}
+	for c_any in contractors_any:
+		if typeof(c_any) != TYPE_DICTIONARY:
+			continue
+		if str(c_any.get("id", "")) != selected_id:
+			continue
+		var requested: Dictionary = c_any.get("requested_minerals", {})
+		if typeof(requested) != TYPE_DICTIONARY or requested.is_empty():
+			return {}
+		return {
+			"active": true,
+			"id": selected_id,
+			"name": str(c_any.get("name", "Contractor")),
+			"requested_minerals": requested.duplicate(true)
+		}
+	return {}
 
 func _is_starter_contract_active() -> bool:
 	return bool(_starter_contract_context.get("active", false)) and typeof(_starter_contract_context.get("requested_minerals", {})) == TYPE_DICTIONARY

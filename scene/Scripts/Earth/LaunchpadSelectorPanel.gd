@@ -205,7 +205,6 @@ func populate_targets() -> void:
 	var awaiting_rocket_id = str(rm.get_primary_awaiting_rocket_id())
 	var awaiting_rocket_level = int(rm.get_rocket_level(awaiting_rocket_id))
 	var has_awaiting_rocket = awaiting_rocket_id != ""
-	_set_selector_panel_layout(has_awaiting_rocket)
 	_set_rocket_selector_visibility(vbox, not has_awaiting_rocket)
 	_set_title_for_state(panel, has_awaiting_rocket)
 
@@ -227,6 +226,7 @@ func populate_targets() -> void:
 		trip_recommended_target_id = str(trip_offer.get("recommended_target_id", ""))
 	var flow_phase = _selector_flow_phase(trip_selected_contractor, has_awaiting_rocket)
 	flow_phase = _resolve_tutorial_flow_phase(flow_phase, trip_selected_contractor, has_awaiting_rocket)
+	_set_selector_panel_layout(has_awaiting_rocket, flow_phase)
 	_set_section_visibility(panel, flow_phase)
 	if flow_phase == "rocket":
 		_ensure_rocket_selector_ready(panel)
@@ -250,7 +250,7 @@ func populate_targets() -> void:
 
 	if mission_stage == 2 and awaiting_rocket_level < 2:
 		var mission2_hint: Label = EmptyLabelScene.instantiate()
-		mission2_hint.text = "Mission 2 requires Starter Rocket 2 (L2)."
+		mission2_hint.text = "Mission 2 requires Starter Rocket 2 (Level 2)."
 		mission2_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		PanelStyle.apply_muted(mission2_hint)
 		target_section.add_child(mission2_hint)
@@ -262,7 +262,7 @@ func populate_targets() -> void:
 		target_section.add_child(mission2_checklist)
 	if mission_stage == 4 and awaiting_rocket_level < 3:
 		var mission4_hint: Label = EmptyLabelScene.instantiate()
-		mission4_hint.text = "Mission 4 requires Starter Rocket 3 (L3) for planetary range."
+		mission4_hint.text = "Mission 4 requires Starter Rocket 3 (Level 3) for planetary range."
 		mission4_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		PanelStyle.apply_muted(mission4_hint)
 		target_section.add_child(mission4_hint)
@@ -364,9 +364,9 @@ func populate_targets() -> void:
 		# bind id
 		btn.pressed.connect(Callable(self, "on_selector_target_pressed").bind(target_id, btn))
 		var details_lbl: Label = entry_panel.get_node("Entry/DetailsLabel")
-		var details_text = "Dist %.0f AU • Need L%d" % [distance_au, required_level]
+		var details_text = "%.0f AU • Level %d required" % [distance_au, required_level]
 		if awaiting_rocket_level > 0:
-			details_text += " • Rocket L%d" % awaiting_rocket_level
+			details_text += " • Ship: Level %d" % awaiting_rocket_level
 			var max_range_au = RocketSpecs.get_max_range_au(awaiting_rocket_id)
 			if distance_au > max_range_au:
 				details_text += " • Out of range (max %.0f AU)" % max_range_au
@@ -386,6 +386,16 @@ func populate_targets() -> void:
 		details_lbl.text = details_text
 		details_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		PanelStyle.apply_muted(details_lbl)
+
+		# Estimated mineral composition readout
+		var comp_lbl := Label.new()
+		comp_lbl.text = _estimate_target_composition(target_id, is_planet)
+		comp_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		comp_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		comp_lbl.add_theme_color_override("font_color", Color(0.5, 0.95, 0.65, 1.0))
+		comp_lbl.add_theme_font_size_override("font_size", 13)
+		entry_panel.get_node("Entry").add_child(comp_lbl)
+
 		target_section.add_child(entry_panel)
 
 	var hidden_count = max(targets.size() - visible_targets.size(), 0)
@@ -516,38 +526,14 @@ func _render_starter_contract_brief(targets_section: VBoxContainer, offer: Dicti
 func _render_trip_contract_brief(targets_section: VBoxContainer, offer: Dictionary, selected_contractor: String, rocket_id: String = "") -> void:
 	if targets_section == null or offer.is_empty():
 		return
-	var requested: Dictionary = offer.get("requested_minerals", {})
-	var requested_text := []
-	var required_kg := 0
-	for key in requested.keys():
-		var kg = int(requested.get(key, 0))
-		required_kg += kg
-		requested_text.append("%s %dkg" % [str(key), kg])
-	requested_text.sort()
 	var recommended_label = str(offer.get("recommended_target_label", offer.get("recommended_target_id", "")))
-	var summary_lbl: Label = EmptyLabelScene.instantiate()
-	summary_lbl.text = "Order request: %s\nSuggested target: %s" % [", ".join(requested_text), recommended_label]
-	summary_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	summary_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	PanelStyle.apply_body(summary_lbl)
-	targets_section.add_child(summary_lbl)
-
-	# AI mission briefing — shown when a contractor is selected
-	if selected_contractor != "":
-		_render_mission_briefing(targets_section, offer, selected_contractor, recommended_label)
-
-	# Cargo capacity gate: warn if order exceeds what this rocket can haul in one trip
-	if rocket_id != "" and required_kg > 0:
-		var cargo_mult = RocketSpecs.get_cargo_multiplier(rocket_id)
-		var max_haul_kg = int(2000.0 * 0.50 * cargo_mult)  # PLANET_CAPACITY*ASTEROID_RATIO*MAX_MINEABLE_PCT
-		if required_kg > max_haul_kg:
-			var warn_lbl: Label = EmptyLabelScene.instantiate()
-			warn_lbl.text = "⚠ Cargo capacity insufficient — this rocket can haul ~%d kg max (order needs %d kg). Upgrade your Cargo Bay." % [max_haul_kg, required_kg]
-			warn_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-			warn_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			PanelStyle.apply_body(warn_lbl)
-			warn_lbl.add_theme_color_override("font_color", Color(1.0, 0.6, 0.2, 1.0))
-			targets_section.add_child(warn_lbl)
+	if recommended_label != "":
+		var target_lbl: Label = EmptyLabelScene.instantiate()
+		target_lbl.text = "Suggested target: %s" % recommended_label
+		target_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		target_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		PanelStyle.apply_muted(target_lbl)
+		targets_section.add_child(target_lbl)
 
 	var options: Array = offer.get("contractors", [])
 	for entry_any in options:
@@ -555,8 +541,6 @@ func _render_trip_contract_brief(targets_section: VBoxContainer, offer: Dictiona
 			continue
 		var entry: Dictionary = entry_any
 		var contractor_id = str(entry.get("id", ""))
-		var effect = str(entry.get("effect", ""))
-		var effect_text = "15% rocket build discount" if effect == "build_discount" else "15% mineral payout bonus"
 		var is_selected = selected_contractor == contractor_id and contractor_id != ""
 		var cooldown_remaining = int(SubcontractorManager.get_cooldown_remaining(contractor_id))
 		var on_cooldown = cooldown_remaining > 0
@@ -589,14 +573,32 @@ func _render_trip_contract_brief(targets_section: VBoxContainer, offer: Dictiona
 			name_lbl.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6, 1.0))
 		text_col.add_child(name_lbl)
 
-		var effect_lbl := Label.new()
-		effect_lbl.text = effect_text
-		effect_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		effect_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-		PanelStyle.apply_body(effect_lbl)
-		if on_cooldown:
-			effect_lbl.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5, 1.0))
-		text_col.add_child(effect_lbl)
+		var contractor_requested: Dictionary = entry.get("requested_minerals", {})
+		if not contractor_requested.is_empty():
+			var order_parts := []
+			for mineral in contractor_requested.keys():
+				order_parts.append("%dkg %s" % [int(contractor_requested.get(mineral, 0)), str(mineral)])
+			order_parts.sort()
+			var order_lbl := Label.new()
+			order_lbl.text = "Order: %s" % ", ".join(order_parts)
+			order_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			order_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+			if on_cooldown:
+				order_lbl.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5, 1.0))
+			else:
+				order_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3, 1.0))
+			text_col.add_child(order_lbl)
+
+		var role_text = str(entry.get("role", ""))
+		if role_text != "":
+			var role_lbl := Label.new()
+			role_lbl.text = role_text
+			role_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			role_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+			PanelStyle.apply_muted(role_lbl)
+			if on_cooldown:
+				role_lbl.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5, 1.0))
+			text_col.add_child(role_lbl)
 
 		var btn := Button.new()
 		if is_selected:
@@ -607,15 +609,16 @@ func _render_trip_contract_brief(targets_section: VBoxContainer, offer: Dictiona
 			btn.text = "Select"
 		btn.custom_minimum_size = Vector2(120, 44)
 		btn.disabled = is_selected or on_cooldown
-		PanelStyle.apply_button(btn, false)
-		_style_selector_action_button(btn, true)
+		PanelStyle.apply_button(btn, not btn.disabled)
+		if btn.disabled:
+			_style_selector_action_button(btn, false)
 		btn.pressed.connect(Callable(self, "_on_trip_contractor_pressed").bind(contractor_id))
 		card_row.add_child(btn)
 
 		if on_cooldown:
 			var mins = int(ceil(float(cooldown_remaining) / 60.0))
 			var cd_lbl := Label.new()
-			cd_lbl.text = "I don't have any missions for you right now. (%dm remaining)" % mins
+			cd_lbl.text = "I don't have any missions for you right now. (%d min remaining)" % mins
 			cd_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			cd_lbl.add_theme_color_override("font_color", Color(1.0, 0.55, 0.35, 1.0))
 			cd_lbl.add_theme_font_size_override("font_size", 13)
@@ -794,7 +797,7 @@ func _render_rocket_customization_controls(targets_section: VBoxContainer, rm, r
 	var wear_points = int(rm.get_rocket_wear(rocket_id))
 	var wear_tier = int(rm.get_rocket_wear_tier(rocket_id))
 	var wear_label: Label = EmptyLabelScene.instantiate()
-	wear_label.text = "Wear: Tier %d (%d pts)" % [wear_tier, wear_points]
+	wear_label.text = "Wear: Tier %d (%d points)" % [wear_tier, wear_points]
 	wear_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	PanelStyle.apply_muted(wear_label)
 	targets_section.add_child(wear_label)
@@ -981,7 +984,7 @@ func _style_selector_panel(panel: Panel, vbox: VBoxContainer) -> void:
 		PanelStyle.apply_button(back, false)
 		_style_selector_action_button(back, false)
 
-func _set_selector_panel_layout(_has_awaiting: bool) -> void:
+func _set_selector_panel_layout(_has_awaiting: bool, flow_phase: String = "") -> void:
 	var root_scene = _launchpad.get_tree().current_scene
 	if not root_scene:
 		return
@@ -990,11 +993,14 @@ func _set_selector_panel_layout(_has_awaiting: bool) -> void:
 		return
 	var viewport_size = _launchpad.get_viewport().get_visible_rect().size
 	var content_rect = TutorialLayoutZone.content_rect(_launchpad.get_viewport().get_visible_rect())
-	# Always use a sidebar footprint so launchpad/world/nav remain visible and
-	# interactive while selecting rockets/contractors/targets.
-	var sidebar_width = clamp(viewport_size.x * SIDEBAR_VIEWPORT_RATIO, SIDEBAR_WIDTH_MIN, SIDEBAR_WIDTH_MAX)
+	# Contractor selection phase gets a wider panel so mineral/bonus info fits.
+	# All other phases use the standard sidebar so the world remains visible.
+	var width_ratio := 0.68 if flow_phase == "contractor" else SIDEBAR_VIEWPORT_RATIO
+	var width_min := 520.0 if flow_phase == "contractor" else SIDEBAR_WIDTH_MIN
+	var width_max := 860.0 if flow_phase == "contractor" else SIDEBAR_WIDTH_MAX
+	var sidebar_width = clamp(viewport_size.x * width_ratio, width_min, width_max)
 	sidebar_width = min(sidebar_width, max(320.0, content_rect.size.x - 32.0))
-	var panel_height = clamp(content_rect.size.y * 0.78, 520.0, 760.0)
+	var panel_height = clamp(content_rect.size.y * 0.84, 520.0, 880.0)
 	panel.anchor_left = 0.0
 	panel.anchor_top = 0.0
 	panel.anchor_right = 0.0
@@ -1143,7 +1149,7 @@ func _blocked_reason_for_target(
 	if rm and rm.is_candidate_visit_blocked(target_id):
 		return "Target not confirmed yet; run another scan and classify again"
 	if awaiting_rocket_level > 0 and required_level > awaiting_rocket_level:
-		return "Requires rocket level L%d" % required_level
+		return "Requires Level %d rocket" % required_level
 	return "Not selectable yet"
 
 func _ensure_selector_panel_exists(root_scene: Node) -> Panel:
@@ -1509,3 +1515,36 @@ func _on_back_to_base_pressed() -> void:
 		scene_manager.change_to_scene("res://Scenes/Earth/earth_base_1.tscn")
 	else:
 		tree.change_scene_to_file("res://Scenes/Earth/earth_base_1.tscn")
+
+## Returns a deterministic estimated mineral composition string for a target.
+## Asteroids are metal-rich; planets are silicate/rock-dominant.
+func _estimate_target_composition(target_id: String, is_planet: bool) -> String:
+	var h := absi(target_id.hash())
+	var parts: Array = []
+	if is_planet:
+		# Planets: silicate/rock dominant, trace metals
+		var silicates_pct := 35 + (h % 20)        # 35–54%
+		var rock_pct := 25 + ((h >> 4) % 18)       # 25–42%
+		var remaining := 100 - silicates_pct - rock_pct
+		var rare_names: Array[String] = ["Iron", "Nickel", "Cobalt", "Titanium"]
+		var rare_pct := maxi(remaining, 5)
+		var rare_name: String = rare_names[(h >> 8) % rare_names.size()]
+		parts = [
+			"Silicates %d%%" % silicates_pct,
+			"Rock %d%%" % rock_pct,
+			"%s %d%%" % [rare_name, rare_pct]
+		]
+	else:
+		# Asteroids: iron/nickel core, with 1-2 rarer minerals
+		var iron_pct := 30 + (h % 22)              # 30–51%
+		var nickel_pct := 20 + ((h >> 5) % 18)     # 20–37%
+		var remaining := 100 - iron_pct - nickel_pct
+		var rare_names: Array[String] = ["Cobalt", "Silicates", "Titanium", "Platinum"]
+		var rare_name: String = rare_names[(h >> 10) % rare_names.size()]
+		var rare_pct := remaining
+		parts = [
+			"Iron %d%%" % iron_pct,
+			"Nickel %d%%" % nickel_pct,
+			"%s %d%%" % [rare_name, rare_pct]
+		]
+	return "Est: " + ", ".join(parts)

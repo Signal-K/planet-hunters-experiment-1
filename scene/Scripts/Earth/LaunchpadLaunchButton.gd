@@ -175,7 +175,7 @@ func _on_launch_button_pressed() -> void:
 	var required_level = int(target_profile.get("required_level", 1))
 	if required_level > rocket_level:
 		AppLogger.w("Launchpad: target %s blocked for rocket %s (requires L%d, current L%d)" % [target, rocket.name, required_level, rocket_level])
-		RocketsManager.set_launch_guidance_notice("Launch blocked: selected target requires rocket level L%d. Current rocket is L%d." % [required_level, rocket_level])
+		RocketsManager.set_launch_guidance_notice("Launch blocked: selected target requires Level %d. Current rocket is Level %d." % [required_level, rocket_level])
 		if _launch_button:
 			_launch_button.disabled = false
 		return

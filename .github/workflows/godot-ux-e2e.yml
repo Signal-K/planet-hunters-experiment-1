@@ -8,15 +8,18 @@ on:
 
 permissions:
   contents: read
+  packages: read
+
+env:
+  REGISTRY: ghcr.io
+  UX_TOUR_IMAGE: ghcr.io/${{ github.repository }}/ux-tour:latest
+  # Artifact names cannot contain slashes; sanitise the branch name once here.
+  SAFE_REF: ""
 
 jobs:
   godot-ux-tour:
     name: UX Screenshot Tour (Godot 4.5)
     runs-on: ubuntu-latest
-    env:
-      GODOT_VERSION: "4.5-stable"
-      # Artifact names cannot contain slashes; sanitise the branch name once here.
-      SAFE_REF: ""
 
     steps:
       - name: Checkout
@@ -27,86 +30,42 @@ jobs:
       - name: Sanitise branch name for artifact
         shell: bash
         run: |
-          # Replace any characters illegal in artifact names (/ : * ? " < > | \)
           SAFE="$(echo '${{ github.ref_name }}' | tr '/\\:*?"<>|' '---------')"
           echo "SAFE_REF=$SAFE" >> "$GITHUB_ENV"
 
-      - name: Install system dependencies
-        shell: bash
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends \
-            xvfb \
-            libgl1 \
-            libgles2 \
-            libx11-6 \
-            libxcursor1 \
-            libxinerama1 \
-            libxrandr2 \
-            libxrender1 \
-            libxi6
-          # Audio packages are intentionally omitted — Godot falls back to the
-          # dummy audio driver automatically when no audio device is present.
-
-      - name: Cache Godot
-        id: cache-godot-ux
-        uses: actions/cache@v4
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
         with:
-          path: ~/godot-linux
-          key: ${{ runner.os }}-godot-4.5-stable
-          restore-keys: |
-            ${{ runner.os }}-godot-4.5-
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Download Godot
-        if: steps.cache-godot-ux.outputs.cache-hit != 'true'
+      - name: Pull pre-built ux-tour image (fall back to local build)
         shell: bash
         run: |
-          set -euo pipefail
-          mkdir -p ~/godot-linux
-          curl -fsSL -o ~/godot-linux/godot.zip \
-            "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/Godot_v4.5-stable_linux.x86_64.zip"
-          unzip -q ~/godot-linux/godot.zip -d ~/godot-linux
-          mv ~/godot-linux/Godot_v4.5-stable_linux.x86_64 ~/godot-linux/godot
-          chmod +x ~/godot-linux/godot
+          if docker pull "$UX_TOUR_IMAGE" 2>/dev/null; then
+            echo "IMAGE_SOURCE=registry" >> "$GITHUB_ENV"
+            echo "✓ Pulled pre-built image from ghcr.io"
+          else
+            echo "⚠️  Pre-built image not available — building locally (first run or Dockerfile changed)"
+            docker build --platform linux/amd64 -t "$UX_TOUR_IMAGE" -f Dockerfile.ux-tour .
+            echo "IMAGE_SOURCE=local-build" >> "$GITHUB_ENV"
+          fi
 
-      - name: Import Godot project
+      - name: Run UX E2E tour in Docker
         shell: bash
-        run: |
-          set -euo pipefail
-          cd scene
-          # Run in headless mode to build the .godot/ import cache
-          timeout 120s ~/godot-linux/godot --headless --path . --import --quit || true
-          echo "✓ Project imported"
-
-      - name: Start virtual display (Xvfb)
-        shell: bash
-        run: |
-          Xvfb :99 -screen 0 1920x1080x24 -ac +extension GLX &
-          echo "XVFB_PID=$!" >> "$GITHUB_ENV"
-          sleep 1
-          echo "DISPLAY=:99" >> "$GITHUB_ENV"
-          echo "✓ Xvfb started on display :99"
-
-      - name: Run UX E2E tour
-        shell: bash
-        env:
-          DISPLAY: ":99"
-          GODOT_UX_TOUR: "1"
         run: |
           set -euo pipefail
           mkdir -p /tmp/ux_screenshots
 
-          # Run the UX tour scene; allow up to 10 minutes for the full tour
-          # (mining minigame runs for ~30 s of actual gameplay time)
-          timeout 600s ~/godot-linux/godot \
-            --path ./scene \
-            res://tests/UXTour.tscn \
+          docker run --rm \
+            --platform linux/amd64 \
+            -v "${{ github.workspace }}/scene:/app/scene" \
+            -v "/tmp/ux_screenshots:/output" \
+            "$UX_TOUR_IMAGE" \
             2>&1 | tee /tmp/godot_ux_tour.log || {
             EXIT=$?
-            echo "⚠️ Godot exited with code $EXIT"
-            # exit 0 = tour completed cleanly
-            # exit 1 = quit() called with code 0 via the shell (timeout maps to 124)
-            # We treat any exit ≤ 1 as success (tour script calls quit(0))
+            # exit <=1 treated as success (tour calls quit(0))
             if [ $EXIT -le 1 ]; then
               echo "Tour completed (exit $EXIT treated as success)"
             else
@@ -115,45 +74,6 @@ jobs:
             fi
           }
           echo "✓ UX tour finished"
-
-      - name: Stop virtual display
-        if: always()
-        shell: bash
-        run: |
-          if [ -n "${XVFB_PID:-}" ]; then
-            kill "$XVFB_PID" 2>/dev/null || true
-          fi
-
-      - name: Collect screenshots from Godot user dir
-        if: always()
-        shell: bash
-        run: |
-          set -euo pipefail
-          # project.godot sets config/use_custom_user_dir=true and
-          # config/custom_user_dir_name="PlanetHuntersExperiment1", so Godot
-          # writes user:// data to ~/.local/share/PlanetHuntersExperiment1/
-          # (not the default godot/app_userdata path).
-          GODOT_USER_DIR="$HOME/.local/share/PlanetHuntersExperiment1"
-          TOUR_OUT="/tmp/ux_screenshots"
-          mkdir -p "$TOUR_OUT"
-
-          # Screenshots written by the tour script via user:// land here
-          if [ -d "$GODOT_USER_DIR/ux_screenshots" ]; then
-            cp -r "$GODOT_USER_DIR/ux_screenshots/." "$TOUR_OUT/"
-            echo "✓ Copied $(ls "$TOUR_OUT" | wc -l) files from Godot user dir"
-          else
-            echo "⚠️ No ux_screenshots dir found in Godot user dir ($GODOT_USER_DIR)"
-            ls -la "$GODOT_USER_DIR" 2>/dev/null || echo "  (user dir missing)"
-          fi
-
-          # Also include the tour log and markdown report if present
-          cp /tmp/godot_ux_tour.log "$TOUR_OUT/godot_output.log" 2>/dev/null || true
-          if [ -f "$GODOT_USER_DIR/ux_report.md" ]; then
-            cp "$GODOT_USER_DIR/ux_report.md" "$TOUR_OUT/ux_report.md"
-          fi
-
-          echo "--- Files collected ---"
-          ls -lh "$TOUR_OUT" || true
 
       - name: Upload UX screenshots and report
         if: always()
@@ -176,6 +96,7 @@ jobs:
             cat "$REPORT"
           else
             echo "No UX report generated — check godot_output.log in the artifact."
+            cat /tmp/ux_screenshots/godot_output.log 2>/dev/null | tail -50 || \
             cat /tmp/godot_ux_tour.log 2>/dev/null | tail -50 || true
           fi
 

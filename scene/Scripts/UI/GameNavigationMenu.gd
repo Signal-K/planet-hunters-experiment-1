@@ -27,9 +27,9 @@ const PANEL_BG := Color(0.04, 0.06, 0.12, 0.96)
 const CARD_BG := Color(0.08, 0.11, 0.20, 0.88)
 
 const MISSION_UNLOCKS := [
-	{"level": 1, "name": "Asteroid mining missions"},
-	{"level": 1, "name": "Sell cargo in orbit"},
-	{"level": 3, "name": "Sell cargo on Earth"}
+	{"level": 1, "name": "Asteroid mining missions (belt targets)"},
+	{"level": 1, "name": "Orbit sales (80% market rate)"},
+	{"level": 3, "name": "Earth-side sales (full market rate)"}
 ]
 
 static func toggle(owner: Node) -> void:
@@ -102,9 +102,12 @@ static func _build_menu_root(owner: Node) -> Control:
 	center.set_meta("tutorial_zone_exempt", true)
 	root.add_child(center)
 
+	var vp_w := 1280.0
+	if owner != null and owner.get_viewport() != null:
+		vp_w = owner.get_viewport().get_visible_rect().size.x
 	var panel := PanelContainer.new()
 	panel.name = MENU_PANEL_NAME
-	panel.custom_minimum_size = Vector2(760.0, 0.0)
+	panel.custom_minimum_size = Vector2(clampf(vp_w - 48.0, 320.0, 760.0), 0.0)
 	panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	panel.set_meta("tutorial_zone_exempt", true)
 	center.add_child(panel)
@@ -120,9 +123,12 @@ static func _build_menu_root(owner: Node) -> Control:
 	panel_style.content_margin_bottom = 20
 	panel.add_theme_stylebox_override("panel", panel_style)
 
-	# Scroll wrapper so content never overflows on small screens
+	# Scroll wrapper — height adapts to viewport
+	var vp_h := 768.0
+	if owner != null and owner.get_viewport() != null:
+		vp_h = owner.get_viewport().get_visible_rect().size.y
 	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(0, 560)
+	scroll.custom_minimum_size = Vector2(0, clampf(vp_h * 0.78, 400.0, 680.0))
 	scroll.set_meta("tutorial_zone_exempt", true)
 	panel.add_child(scroll)
 
@@ -132,28 +138,38 @@ static func _build_menu_root(owner: Node) -> Control:
 	shell.set_meta("tutorial_zone_exempt", true)
 	scroll.add_child(shell)
 
-	# Header
+	# Header — game identity + action buttons
 	var header := HBoxContainer.new()
 	header.add_theme_constant_override("separation", 12)
 	shell.add_child(header)
 
+	var title_col := VBoxContainer.new()
+	title_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title_col.add_theme_constant_override("separation", 2)
+	header.add_child(title_col)
+
+	var eyebrow := Label.new()
+	eyebrow.text = "PLANET HUNTERS"
+	eyebrow.add_theme_font_size_override("font_size", 11)
+	eyebrow.add_theme_color_override("font_color", CYAN)
+	title_col.add_child(eyebrow)
+
 	var title := Label.new()
-	title.text = "Main Menu"
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	title.add_theme_font_size_override("font_size", 34)
+	title.text = "Base of Operations"
+	title.add_theme_font_size_override("font_size", 28)
 	title.add_theme_color_override("font_color", TITLE_COLOR)
-	header.add_child(title)
+	title_col.add_child(title)
 
 	var logbook_btn := _build_button("Logbook", false)
-	logbook_btn.custom_minimum_size = Vector2(120, 50)
+	logbook_btn.custom_minimum_size = Vector2(110, 50)
 	header.add_child(logbook_btn)
 
 	var discoveries_btn := _build_button("Discoveries", false)
-	discoveries_btn.custom_minimum_size = Vector2(140, 50)
+	discoveries_btn.custom_minimum_size = Vector2(130, 50)
 	header.add_child(discoveries_btn)
 
 	var close_btn := _build_button("Close", false)
-	close_btn.custom_minimum_size = Vector2(120, 50)
+	close_btn.custom_minimum_size = Vector2(110, 50)
 	close_btn.pressed.connect(func():
 		preload("res://Scripts/UI/GameNavigationMenu.gd").close(owner)
 	)
@@ -163,63 +179,26 @@ static func _build_menu_root(owner: Node) -> Control:
 	sep.add_theme_color_override("separator", Color(CYAN.r, CYAN.g, CYAN.b, 0.3))
 	shell.add_child(sep)
 
-	# Stats
+	# Player stats
 	shell.add_child(_build_stats_card())
-
-	# Progress
-	shell.add_child(_build_section_header("PROGRESS"))
-	shell.add_child(_build_progress_card())
 
 	# Settings / Actions
 	shell.add_child(_build_section_header("SETTINGS"))
 	shell.add_child(_build_actions_section(owner))
-
-	# Unlocks
-	shell.add_child(_build_section_header("UNLOCKS"))
-	shell.add_child(_build_unlocks_card())
-
-	# Marketplace
-	shell.add_child(_build_section_header("MARKETPLACE"))
-	shell.add_child(_build_marketplace_card())
-
-	# Room Upgrades
-	shell.add_child(_build_section_header("ROOM UPGRADES"))
-	shell.add_child(_build_room_upgrades_card(owner))
-
-	# Job Board
-	shell.add_child(_build_section_header("JOB BOARD"))
-	shell.add_child(_build_job_board_card())
-
-	# Inventory
-	shell.add_child(_build_section_header("INVENTORY"))
-	shell.add_child(_build_inventory_card())
-
-	# Construction
-	shell.add_child(_build_section_header("CONSTRUCTION"))
-	shell.add_child(_build_construction_card(root))
-
-	# Rocket Research (unlocks at L5+)
-	var app_for_research = AppControllerHelper.get_instance()
-	var player_lvl_for_research := 1
-	if app_for_research and app_for_research.has_method("get_experience_level"):
-		player_lvl_for_research = int(app_for_research.get_experience_level())
-	if player_lvl_for_research >= 5:
-		shell.add_child(_build_section_header("ROCKET RESEARCH"))
-		shell.add_child(_build_rocket_research_card(owner))
 
 	# Debug
 	shell.add_child(_build_section_header("DEBUG"))
 	shell.add_child(_build_debug_section(owner))
 
 	# Logbook overlay (hidden until logbook_btn pressed)
-	var logbook_overlay := _build_logbook_overlay()
+	var logbook_overlay := _build_logbook_overlay(vp_w)
 	root.add_child(logbook_overlay)
 	logbook_btn.pressed.connect(func():
 		logbook_overlay.visible = true
 	)
 
 	# Discoveries overlay (hidden until discoveries_btn pressed)
-	var discoveries_overlay := _build_discoveries_overlay()
+	var discoveries_overlay := _build_discoveries_overlay(vp_w)
 	root.add_child(discoveries_overlay)
 	discoveries_btn.pressed.connect(func():
 		discoveries_overlay.visible = true
@@ -237,24 +216,51 @@ static func _build_stats_card() -> PanelContainer:
 	card.add_theme_stylebox_override("panel", style)
 
 	var app = AppControllerHelper.get_instance()
-	var francs := "?"
-	var level := "?"
-	var xp := "?"
+	var francs := 0
+	var francs_str := "?"
+	var level := 1
+	var level_str := "?"
+	var xp := 0
+	var xp_str := "?"
+	var missions := 0
 	if app:
 		if app.has_method("get_franc_balance"):
-			var bal: int = app.get_franc_balance()
-			francs = NumberFormat.commas(str(bal)) + " F"
+			francs = int(app.get_franc_balance())
+			francs_str = NumberFormat.commas(str(francs)) + " F"
 		if app.has_method("get_experience_level"):
-			level = str(app.get_experience_level())
+			level = int(app.get_experience_level())
+			level_str = str(level)
 		if app.has_method("get_experience_xp"):
-			xp = str(app.get_experience_xp())
+			xp = int(app.get_experience_xp())
+			xp_str = str(xp)
+	missions = int(RocketsManager.get_completed_mission_count())
 
-	var lbl := Label.new()
-	lbl.text = "Level %s   |   XP %s   |   Francs %s" % [level, xp, francs]
-	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	lbl.add_theme_font_size_override("font_size", 20)
-	lbl.add_theme_color_override("font_color", TEXT_COLOR)
-	card.add_child(lbl)
+	var hbox := HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 20)
+	card.add_child(hbox)
+
+	for stat_pair in [
+		["LEVEL", level_str, CYAN],
+		["XP", xp_str, TEXT_COLOR],
+		["FRANCS", francs_str, AMBER],
+		["MISSIONS", str(missions), TEXT_COLOR],
+	]:
+		var col := VBoxContainer.new()
+		col.add_theme_constant_override("separation", 3)
+		col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		hbox.add_child(col)
+		var key_lbl := Label.new()
+		key_lbl.text = stat_pair[0]
+		key_lbl.add_theme_font_size_override("font_size", 10)
+		key_lbl.add_theme_color_override("font_color", TEXT_MUTED)
+		col.add_child(key_lbl)
+		var val_lbl := Label.new()
+		val_lbl.text = stat_pair[1]
+		val_lbl.add_theme_font_size_override("font_size", 20)
+		val_lbl.add_theme_color_override("font_color", stat_pair[2])
+		val_lbl.clip_text = true
+		col.add_child(val_lbl)
+
 	return card
 
 # ---------------------------------------------------------------------------
@@ -402,11 +408,17 @@ static func _build_unlocks_card() -> PanelContainer:
 	card.add_child(list)
 
 	var unlocks_by_level := {}
+	const ROCKET_DISPLAY_NAMES := {
+		"starterrocket1": "Starter Rocket 1",
+		"starterrocket2": "Starter Rocket 2",
+		"starterrocket3": "Starter Rocket 3",
+	}
 	for rocket_id in RocketsManager.ROCKET_UNLOCK_LEVELS.keys():
 		var lvl := int(RocketsManager.ROCKET_UNLOCK_LEVELS.get(rocket_id, 1))
 		if not unlocks_by_level.has(lvl):
 			unlocks_by_level[lvl] = []
-		unlocks_by_level[lvl].append("Rocket: %s" % rocket_id)
+		var display_name: String = str(ROCKET_DISPLAY_NAMES.get(str(rocket_id), str(rocket_id)))
+		unlocks_by_level[lvl].append("Ship: %s" % display_name)
 
 	for idx in range(SubcontractorManager.SUBCONTRACTORS.size()):
 		var c = SubcontractorManager.SUBCONTRACTORS[idx]
@@ -416,7 +428,7 @@ static func _build_unlocks_card() -> PanelContainer:
 		var cname = str(c.get("name", ""))
 		if c.get("hidden", false):
 			cname = "Classified Subcontractor"
-		unlocks_by_level[lvl].append("Contractor: %s" % cname)
+		unlocks_by_level[lvl].append("Partner: %s" % cname)
 
 	for m in MISSION_UNLOCKS:
 		var lvl := int(m.get("level", 1))
@@ -495,7 +507,7 @@ static func _build_debug_section(owner: Node) -> VBoxContainer:
 # Logbook overlay (full-screen modal, built once, toggled visible)
 # ---------------------------------------------------------------------------
 
-static func _build_logbook_overlay() -> ColorRect:
+static func _build_logbook_overlay(vp_w: float = 1280.0) -> ColorRect:
 	var overlay := ColorRect.new()
 	overlay.name = "LogbookOverlay"
 	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -510,7 +522,7 @@ static func _build_logbook_overlay() -> ColorRect:
 	overlay.add_child(center)
 
 	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(720.0, 520.0)
+	panel.custom_minimum_size = Vector2(clampf(vp_w - 48.0, 320.0, 720.0), 520.0)
 	panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	center.add_child(panel)
 
@@ -616,7 +628,7 @@ static func _populate_logbook_entries(entries: VBoxContainer) -> void:
 		header_lbl.add_theme_color_override("font_color", CYAN)
 		body.add_child(header_lbl)
 
-		for key in ["target_id", "rocket_id", "payout", "xp_awarded"]:
+		for key in ["target_id", "rocket_id", "subcontractor_name", "operation_mode", "payout", "order_completion_pct"]:
 			if not entry.has(key):
 				continue
 			var row := HBoxContainer.new()
@@ -637,7 +649,7 @@ static func _populate_logbook_entries(entries: VBoxContainer) -> void:
 # Discoveries overlay
 # ---------------------------------------------------------------------------
 
-static func _build_discoveries_overlay() -> ColorRect:
+static func _build_discoveries_overlay(vp_w: float = 1280.0) -> ColorRect:
 	var overlay := ColorRect.new()
 	overlay.name = "DiscoveriesOverlay"
 	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -652,7 +664,7 @@ static func _build_discoveries_overlay() -> ColorRect:
 	overlay.add_child(center)
 
 	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(720.0, 520.0)
+	panel.custom_minimum_size = Vector2(clampf(vp_w - 48.0, 320.0, 720.0), 520.0)
 	panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	center.add_child(panel)
 
@@ -815,19 +827,19 @@ static func _build_job_board_card() -> PanelContainer:
 	var legend_row := HBoxContainer.new()
 	legend_row.add_theme_constant_override("separation", 8)
 	vbox.add_child(legend_row)
-	for col_text in ["Contractor", "Specialises in", "Payout vs Market", "Status"]:
+	for col_text in ["Contractor", "Buys", "Payout", "Status"]:
 		var lbl := Label.new()
 		lbl.text = col_text
 		lbl.add_theme_font_size_override("font_size", 13)
 		lbl.add_theme_color_override("font_color", TEXT_MUTED)
 		if col_text == "Contractor":
-			lbl.custom_minimum_size = Vector2(160, 0)
-		elif col_text == "Specialises in":
+			lbl.custom_minimum_size = Vector2(130, 0)
+		elif col_text == "Buys":
 			lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		elif col_text == "Payout vs Market":
-			lbl.custom_minimum_size = Vector2(150, 0)
+		elif col_text == "Payout":
+			lbl.custom_minimum_size = Vector2(100, 0)
 		else:
-			lbl.custom_minimum_size = Vector2(110, 0)
+			lbl.custom_minimum_size = Vector2(90, 0)
 		legend_row.add_child(lbl)
 
 	var sep := HSeparator.new()
@@ -857,7 +869,7 @@ static func _build_job_board_card() -> PanelContainer:
 			name_lbl.add_theme_font_size_override("font_size", 15)
 			var name_col = TEXT_MUTED if on_cooldown else TEXT_COLOR
 			name_lbl.add_theme_color_override("font_color", name_col)
-			name_lbl.custom_minimum_size = Vector2(160, 0)
+			name_lbl.custom_minimum_size = Vector2(130, 0)
 			row.add_child(name_lbl)
 
 			var mineral_lbl := Label.new()
@@ -869,30 +881,30 @@ static func _build_job_board_card() -> PanelContainer:
 			row.add_child(mineral_lbl)
 
 			var payout_lbl := Label.new()
-			payout_lbl.text = "+%d%% vs market (%d%%)" % [contractor_pct - market_pct, contractor_pct]
+			payout_lbl.text = "+%d%% (vs %d%%)" % [contractor_pct - market_pct, market_pct]
 			payout_lbl.add_theme_font_size_override("font_size", 14)
 			payout_lbl.add_theme_color_override("font_color", Color(0.3, 0.85, 0.55) if not on_cooldown else TEXT_MUTED)
-			payout_lbl.custom_minimum_size = Vector2(150, 0)
+			payout_lbl.custom_minimum_size = Vector2(100, 0)
 			row.add_child(payout_lbl)
 
 			var status_lbl := Label.new()
 			if on_cooldown:
 				var remaining := int(sm.get_cooldown_remaining(cid))
 				var mins := int(ceil(float(remaining) / 60.0))
-				status_lbl.text = "Cooldown: %dm" % mins
+				status_lbl.text = "%d min" % mins
 				status_lbl.add_theme_color_override("font_color", Color(0.9, 0.45, 0.2))
 			elif affinity > 0:
-				status_lbl.text = "Affinity: %d ★" % affinity
+				status_lbl.text = "%d ★" % affinity
 				status_lbl.add_theme_color_override("font_color", AMBER)
 			else:
-				status_lbl.text = "Available"
+				status_lbl.text = "Ready"
 				status_lbl.add_theme_color_override("font_color", Color(0.3, 0.85, 0.55))
 			status_lbl.add_theme_font_size_override("font_size", 14)
-			status_lbl.custom_minimum_size = Vector2(110, 0)
+			status_lbl.custom_minimum_size = Vector2(90, 0)
 			row.add_child(status_lbl)
 
 	var note_lbl := Label.new()
-	note_lbl.text = "Select a contractor in the Launchpad before launch to earn the %d%% premium." % contractor_pct
+	note_lbl.text = "Contract route pays %d%% vs open market %d%% — pick a contractor at the Launchpad." % [contractor_pct, market_pct]
 	note_lbl.add_theme_font_size_override("font_size", 13)
 	note_lbl.add_theme_color_override("font_color", TEXT_MUTED)
 	note_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -1068,7 +1080,7 @@ static func _build_room_upgrades_card(owner: Node) -> PanelContainer:
 	var upgradeable = RoomCatalog.get_upgradeable_rooms(rocket_type, type_upgrades)
 
 	var header_lbl := Label.new()
-	header_lbl.text = "Rocket: %s" % rocket_type.replace("starter", "SR").replace("rocket", " ")
+	header_lbl.text = RocketSpecs.get_display_name(rocket_type)
 	header_lbl.add_theme_font_size_override("font_size", 14)
 	header_lbl.add_theme_color_override("font_color", TEXT_MUTED)
 	vbox.add_child(header_lbl)
@@ -1300,7 +1312,8 @@ static func _open_contribute_overlay(root: Control, proj_id: String, proj_name: 
 	overlay.add_child(center)
 
 	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(560.0, 0.0)
+	var _cvp_w := root.get_viewport().get_visible_rect().size.x if root.get_viewport() else 1280.0
+	panel.custom_minimum_size = Vector2(clampf(_cvp_w - 48.0, 300.0, 560.0), 0.0)
 	panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	center.add_child(panel)
 
@@ -1551,6 +1564,18 @@ static func _set_tutorial_overlay_visible(tree: SceneTree, visible: bool) -> voi
 		overlay.call_deferred("_refresh")
 
 static func _format_key(key: String) -> String:
+	const KEY_LABELS := {
+		"target_id": "Target",
+		"rocket_id": "Ship",
+		"payout": "Earnings",
+		"xp_awarded": "XP earned",
+		"action": "Outcome",
+		"subcontractor_name": "Contractor",
+		"operation_mode": "Route",
+		"order_completion_pct": "Order filled",
+	}
+	if KEY_LABELS.has(key):
+		return KEY_LABELS[key]
 	var words := key.replace("_", " ").split(" ")
 	for i in range(words.size()):
 		var w := str(words[i])
@@ -1563,4 +1588,15 @@ static func _format_value(key: String, value) -> String:
 		return "-"
 	if key in ["payout", "payout_total"]:
 		return "%s F" % NumberFormat.commas(str(int(value)))
+	if key == "action":
+		match str(value):
+			"scrap": return "Sold & scrapped"
+			"leave_orbit": return "Left in orbit"
+			"survey": return "Survey run"
+	if key == "operation_mode":
+		match str(value):
+			"contract": return "Contract route"
+			"survey": return "Survey route"
+	if key == "order_completion_pct":
+		return "%d%%" % int(value)
 	return str(value)

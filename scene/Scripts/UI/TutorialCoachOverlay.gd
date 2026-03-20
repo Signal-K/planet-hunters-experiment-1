@@ -39,6 +39,8 @@ var _resume_mission_button: Button = null
 var _pointer_line: Line2D = null
 var _pointer_head: Polygon2D = null
 var _target_highlight: Panel = null
+var _highlight_style: StyleBoxFlat = null
+var _highlight_tween: Tween = null
 
 func _ready() -> void:
 	layer = 70
@@ -303,12 +305,12 @@ func _setup_pointer_indicator() -> void:
 	_target_highlight.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_target_highlight.z_index = 239
 	_target_highlight.visible = false
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(CYAN.r, CYAN.g, CYAN.b, 0.0)
-	style.border_color = Color(CYAN.r, CYAN.g, CYAN.b, 0.92)
-	style.set_border_width_all(4)
-	style.set_corner_radius_all(8)
-	_target_highlight.add_theme_stylebox_override("panel", style)
+	_highlight_style = StyleBoxFlat.new()
+	_highlight_style.bg_color = Color(CYAN.r, CYAN.g, CYAN.b, 0.12)
+	_highlight_style.border_color = Color(CYAN.r, CYAN.g, CYAN.b, 0.95)
+	_highlight_style.set_border_width_all(3)
+	_highlight_style.set_corner_radius_all(8)
+	_target_highlight.add_theme_stylebox_override("panel", _highlight_style)
 	$Root.add_child(_target_highlight)
 
 func _refresh_target_pointer() -> void:
@@ -355,6 +357,9 @@ func _hide_target_pointer() -> void:
 		_pointer_head.visible = false
 	if _target_highlight:
 		_target_highlight.visible = false
+	if _highlight_tween != null:
+		_highlight_tween.kill()
+		_highlight_tween = null
 
 func _update_target_highlight(target_rect: Rect2) -> void:
 	if _target_highlight == null:
@@ -362,7 +367,25 @@ func _update_target_highlight(target_rect: Rect2) -> void:
 	var padded = target_rect.grow(6.0)
 	_target_highlight.position = padded.position
 	_target_highlight.size = padded.size
-	_target_highlight.visible = true
+	if not _target_highlight.visible:
+		_target_highlight.visible = true
+		_start_highlight_pulse()
+
+func _start_highlight_pulse() -> void:
+	if _highlight_style == null:
+		return
+	if _highlight_tween != null:
+		_highlight_tween.kill()
+	_highlight_tween = create_tween()
+	_highlight_tween.set_loops()
+	_highlight_tween.tween_method(
+		func(a: float) -> void: _highlight_style.bg_color.a = a,
+		0.08, 0.30, 0.75
+	).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_highlight_tween.tween_method(
+		func(a: float) -> void: _highlight_style.bg_color.a = a,
+		0.30, 0.08, 0.75
+	).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 func _update_pointer_head(tip: Vector2, direction: Vector2) -> void:
 	if _pointer_head == null:

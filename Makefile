@@ -1,5 +1,5 @@
 # Local development targets
-.PHONY: kanban supabase-check godot godot-dev godot-env ci-build ci-test ci-godot ci-playwright ci-export ci-all ci-clean ci-full-run sync-lock ghactions
+.PHONY: kanban supabase-check godot godot-dev godot-env ci-build ci-test ci-godot ci-playwright ci-export ci-all ci-clean ci-full-run sync-lock ghactions ux-tour ux-tour-build
 
 kanban:
 	@echo "Starting knowns browser without opening a browser tab..."
@@ -93,6 +93,45 @@ ghactions:
 		-W .github/workflows/electron_release.yml \
 		$(if $(SECRETS_FILE),--secret-file $(SECRETS_FILE),) \
 		$(ACT_FLAGS)
+
+# ── Godot UX E2E screenshot tour (local Docker) ───────────────────────────────
+# Runs the full UX tour scene in a headless Docker container with Xvfb and
+# dumps screenshots + a report into ./ux-screenshots/ on your host.
+#
+#   make ux-tour          — build image (if needed) then run the tour
+#   make ux-tour-build    — (re)build the image only, e.g. after a Godot upgrade
+#
+UX_TOUR_IMAGE=planet-hunters-ux-tour
+UX_TOUR_OUT=$(PWD)/ux-screenshots
+
+GHCR_UX_TOUR_IMAGE=ghcr.io/signal-k/planet-hunters-experiment-1/ux-tour:latest
+
+ux-tour-build:
+	@echo "Building UX tour Docker image..."
+	docker build --platform linux/amd64 -t $(UX_TOUR_IMAGE) -f Dockerfile.ux-tour .
+
+# Pull pre-built image from ghcr.io, fall back to local build
+ux-tour-pull:
+	@echo "Pulling pre-built UX tour image from ghcr.io..."
+	@if docker pull $(GHCR_UX_TOUR_IMAGE) 2>/dev/null; then \
+		docker tag $(GHCR_UX_TOUR_IMAGE) $(UX_TOUR_IMAGE); \
+		echo "✓ Using pre-built image (no rebuild needed)"; \
+	else \
+		echo "⚠️  Pre-built image unavailable — building locally..."; \
+		$(MAKE) ux-tour-build; \
+	fi
+
+ux-tour: ux-tour-pull
+	@mkdir -p $(UX_TOUR_OUT)
+	@echo "Running Godot UX E2E tour in Docker..."
+	@echo "Screenshots will appear in ./ux-screenshots/ when the tour finishes."
+	docker run --rm \
+		--platform linux/amd64 \
+		-v "$(PWD)/scene:/app/scene" \
+		-v "$(UX_TOUR_OUT):/output" \
+		$(UX_TOUR_IMAGE)
+	@echo ""
+	@echo "Tour complete. Open ./ux-screenshots/ to view screenshots and ux_report.md."
 
 # Sync package-lock.json (to fix npm ci issues)
 sync-lock:

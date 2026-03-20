@@ -252,17 +252,12 @@ func _set_tutorial_overlay_suspended(suspended: bool) -> void:
 		overlay.call_deferred("_refresh")
 
 func _show_intro_splash_if_needed() -> void:
-	if FileAccess.file_exists(INTRO_SPLASH_FLAG_PATH):
-		return
-	if get_tree() == null or get_tree().root == null:
-		return
-	var splash = INTRO_SPLASH_SCRIPT.new()
-	splash.name = "PlanetHuntersIntroSplash"
-	splash.splash_dismissed.connect(func():
-		_set_tutorial_overlay_suspended(false)
-	)
-	_set_tutorial_overlay_suspended(true)
-	get_tree().root.call_deferred("add_child", splash)
+	# Splash removed — start directly in-game. Mark flag so it stays gone.
+	if not FileAccess.file_exists(INTRO_SPLASH_FLAG_PATH):
+		var f = FileAccess.open(INTRO_SPLASH_FLAG_PATH, FileAccess.WRITE)
+		if f:
+			f.store_string("1")
+	_set_tutorial_overlay_suspended(false)
 
 func _mark_tutorial_zone_exempt_recursive(node: Node) -> void:
 	if node == null:
@@ -597,9 +592,10 @@ func _show_level_up_notification(level: int) -> void:
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	var unlocks = []
 	if rm:
+		var rocket_specs = preload("res://Scripts/Utils/RocketSpecs.gd")
 		for rocket_id in rm.ROCKET_UNLOCK_LEVELS.keys():
 			if int(rm.ROCKET_UNLOCK_LEVELS[rocket_id]) == level:
-				unlocks.append("Rocket: %s" % rocket_id)
+				unlocks.append("Rocket: %s" % rocket_specs.get_display_name(str(rocket_id)))
 	
 	if unlocks.size() > 0:
 		var unlock_lbl = Label.new()
