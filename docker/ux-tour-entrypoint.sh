@@ -11,7 +11,7 @@ GODOT_USER_DIR="$HOME/.local/share/PlanetHuntersExperiment1"
 
 # ── 1. Import project (builds .godot/ cache; required before running any scene) ─
 echo "==> Importing Godot project..."
-timeout 120s "$GODOT" --headless --path "$SCENE_DIR" --import --quit 2>&1 || true
+GALLIUM_DRIVER=softpipe timeout 120s "$GODOT" --headless --path "$SCENE_DIR" --import --quit 2>&1 || true
 echo "    Import done."
 
 # ── 2. Start virtual display ─────────────────────────────────────────────────────
@@ -24,7 +24,7 @@ echo "    Xvfb PID=$XVFB_PID"
 
 # ── 3. Run the UX tour scene ──────────────────────────────────────────────────────
 echo "==> Running UX tour (timeout 10 min)..."
-GODOT_UX_TOUR=1 timeout 600s "$GODOT" \
+GALLIUM_DRIVER=softpipe GODOT_UX_TOUR=1 timeout 600s "$GODOT" \
     --path "$SCENE_DIR" \
     res://tests/UXTour.tscn \
     2>&1 | tee /tmp/godot_ux_tour.log || {
@@ -61,6 +61,18 @@ if [ -f "$GODOT_USER_DIR/ux_report.md" ]; then
     echo ""
     echo "=== UX REPORT ==="
     cat "$GODOT_USER_DIR/ux_report.md"
+fi
+
+if [ -f "$GODOT_USER_DIR/tour_manifest.json" ]; then
+    cp "$GODOT_USER_DIR/tour_manifest.json" "$OUT/tour_manifest.json"
+    echo "    ✓ tour_manifest.json copied."
+else
+    echo "    WARNING: tour_manifest.json not found at $GODOT_USER_DIR"
+fi
+
+if [ -f "$GODOT_USER_DIR/tour_ai_context.md" ]; then
+    cp "$GODOT_USER_DIR/tour_ai_context.md" "$OUT/tour_ai_context.md"
+    echo "    ✓ tour_ai_context.md copied."
 fi
 
 echo ""
