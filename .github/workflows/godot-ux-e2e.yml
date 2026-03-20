@@ -12,7 +12,7 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
-  UX_TOUR_IMAGE: ghcr.io/${{ github.repository }}/ux-tour:latest
+  UX_TOUR_IMAGE: ""
   # Artifact names cannot contain slashes; sanitise the branch name once here.
   SAFE_REF: ""
 
@@ -32,6 +32,8 @@ jobs:
         run: |
           SAFE="$(echo '${{ github.ref_name }}' | tr '/\\:*?"<>|' '---------')"
           echo "SAFE_REF=$SAFE" >> "$GITHUB_ENV"
+          REPO_LC="$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')"
+          echo "UX_TOUR_IMAGE=ghcr.io/${REPO_LC}/ux-tour:latest" >> "$GITHUB_ENV"
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
@@ -80,22 +82,50 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ux-tour-${{ env.SAFE_REF }}-${{ github.run_number }}
-          path: /tmp/ux_screenshots/**
+          path: /tmp/ux_screenshots/
           if-no-files-found: warn
           retention-days: 30
 
-      - name: Print UX report summary
+      - name: Write UX report to job summary
         if: always()
         shell: bash
         run: |
           REPORT="/tmp/ux_screenshots/ux_report.md"
+          MANIFEST="/tmp/ux_screenshots/tour_manifest.json"
+          AI_CTX="/tmp/ux_screenshots/tour_ai_context.md"
+
+          echo "## UX Tour Results — run \`${{ github.run_number }}\` (\`${{ github.ref_name }}\`)" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+
+          if [ -f "$AI_CTX" ]; then
+            cat "$AI_CTX" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "---" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
           if [ -f "$REPORT" ]; then
-            echo "========================================="
-            echo "UX TOUR REPORT"
-            echo "========================================="
+            cat "$REPORT" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "⚠️ No ux_report.md generated." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          if [ -f "$MANIFEST" ]; then
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "---" >> "$GITHUB_STEP_SUMMARY"
+            echo "## Screenshot Manifest (structured context for AI review)" >> "$GITHUB_STEP_SUMMARY"
+            echo '```json' >> "$GITHUB_STEP_SUMMARY"
+            cat "$MANIFEST" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          echo "========================================="
+          echo "UX TOUR REPORT"
+          echo "========================================="
+          if [ -f "$REPORT" ]; then
             cat "$REPORT"
           else
-            echo "No UX report generated — check godot_output.log in the artifact."
+            echo "No report generated — check godot_output.log in the artifact."
             cat /tmp/ux_screenshots/godot_output.log 2>/dev/null | tail -50 || \
             cat /tmp/godot_ux_tour.log 2>/dev/null | tail -50 || true
           fi
