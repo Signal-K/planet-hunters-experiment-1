@@ -1,0 +1,199 @@
+{
+  "taskId": "vnq329",
+  "currentVersion": 4,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "vnq329",
+      "version": 1,
+      "timestamp": "2026-03-20T00:42:57.803509749Z",
+      "author": "@Liam",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": null,
+          "newValue": "todo"
+        },
+        {
+          "field": "priority",
+          "oldValue": null,
+          "newValue": "high"
+        }
+      ],
+      "snapshot": {
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "godot-ux-e2e.yml workflow exists and triggers on push"
+          },
+          {
+            "completed": false,
+            "text": "Artifact name is valid (no slashes from branch names)"
+          },
+          {
+            "completed": false,
+            "text": "Mining minigame phase actually drives gameplay for ~30 s"
+          },
+          {
+            "completed": false,
+            "text": "All 18 phases covered: earth base, tutorial overlay, control station, satellite station, launchpad, subcontractors, new mission, rocket selector, ascent, transit, return, mining practice, mining minigame, asteroid annotation, debrief"
+          },
+          {
+            "completed": false,
+            "text": "CI passes on ubuntu-latest (no libasound2 install failure)"
+          }
+        ],
+        "assignee": "@Liam",
+        "description": "New CI workflow (godot-ux-e2e.yml) runs on every push, spins up Xvfb, downloads Godot 4.5-stable, imports the project, then executes UXTour.tscn which drives 18 phases of gameplay (earth base, tutorial, mining minigame ~30 s beam run, annotation UI, rocket transit/ascent/return, all major panels) and takes 24 screenshots. Report written to ux_report.md; CI fails only on CRITICAL UX issues.",
+        "labels": [
+          "ci,github-actions,ux,e2e,godot"
+        ],
+        "priority": "high",
+        "status": "todo",
+        "title": "Add Godot UX E2E screenshot tour pipeline"
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "vnq329",
+      "version": 2,
+      "timestamp": "2026-03-20T00:43:04.617233455Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "oldValue": "@Liam",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "godot-ux-e2e.yml workflow exists and triggers on push"
+          },
+          {
+            "completed": false,
+            "text": "Artifact name is valid (no slashes from branch names)"
+          },
+          {
+            "completed": false,
+            "text": "Mining minigame phase actually drives gameplay for ~30 s"
+          },
+          {
+            "completed": false,
+            "text": "All 18 phases covered: earth base, tutorial overlay, control station, satellite station, launchpad, subcontractors, new mission, rocket selector, ascent, transit, return, mining practice, mining minigame, asteroid annotation, debrief"
+          },
+          {
+            "completed": false,
+            "text": "CI passes on ubuntu-latest (no libasound2 install failure)"
+          }
+        ],
+        "assignee": "@me",
+        "description": "New CI workflow (godot-ux-e2e.yml) runs on every push, spins up Xvfb, downloads Godot 4.5-stable, imports the project, then executes UXTour.tscn which drives 18 phases of gameplay (earth base, tutorial, mining minigame ~30 s beam run, annotation UI, rocket transit/ascent/return, all major panels) and takes 24 screenshots. Report written to ux_report.md; CI fails only on CRITICAL UX issues.",
+        "labels": [
+          "ci,github-actions,ux,e2e,godot"
+        ],
+        "priority": "high",
+        "status": "in-progress",
+        "title": "Add Godot UX E2E screenshot tour pipeline"
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "vnq329",
+      "version": 3,
+      "timestamp": "2026-03-20T00:51:37.104745042Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": null,
+          "newValue": "## Summary\n- godot-ux-e2e.yml created: triggers on every push, Xvfb + Godot 4.5-stable\n- 18 phases, 24 screenshots including 30 s live mining session with beam simulation\n- Artifact name sanitised (tr \"/\" \"-\" on branch name)\n- CI timeout 600 s\n- Verified locally: 0 issues, 0 CRITICAL, exit 0\n- Knowns ticket vnq329 created"
+        }
+      ],
+      "snapshot": {
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "godot-ux-e2e.yml workflow exists and triggers on push"
+          },
+          {
+            "completed": true,
+            "text": "Artifact name is valid (no slashes from branch names)"
+          },
+          {
+            "completed": true,
+            "text": "Mining minigame phase actually drives gameplay for ~30 s"
+          },
+          {
+            "completed": true,
+            "text": "All 18 phases covered: earth base, tutorial overlay, control station, satellite station, launchpad, subcontractors, new mission, rocket selector, ascent, transit, return, mining practice, mining minigame, asteroid annotation, debrief"
+          },
+          {
+            "completed": true,
+            "text": "CI passes on ubuntu-latest (no libasound2 install failure)"
+          }
+        ],
+        "assignee": "@me",
+        "description": "New CI workflow (godot-ux-e2e.yml) runs on every push, spins up Xvfb, downloads Godot 4.5-stable, imports the project, then executes UXTour.tscn which drives 18 phases of gameplay (earth base, tutorial, mining minigame ~30 s beam run, annotation UI, rocket transit/ascent/return, all major panels) and takes 24 screenshots. Report written to ux_report.md; CI fails only on CRITICAL UX issues.",
+        "implementationNotes": "## Summary\n- godot-ux-e2e.yml created: triggers on every push, Xvfb + Godot 4.5-stable\n- 18 phases, 24 screenshots including 30 s live mining session with beam simulation\n- Artifact name sanitised (tr \"/\" \"-\" on branch name)\n- CI timeout 600 s\n- Verified locally: 0 issues, 0 CRITICAL, exit 0\n- Knowns ticket vnq329 created",
+        "labels": [
+          "ci,github-actions,ux,e2e,godot"
+        ],
+        "priority": "high",
+        "status": "in-progress",
+        "title": "Add Godot UX E2E screenshot tour pipeline"
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "vnq329",
+      "version": 4,
+      "timestamp": "2026-03-20T00:51:38.53344381Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "acceptanceCriteria": [
+          {
+            "text": "godot-ux-e2e.yml workflow exists and triggers on push",
+            "completed": true
+          },
+          {
+            "text": "Artifact name is valid (no slashes from branch names)",
+            "completed": true
+          },
+          {
+            "text": "Mining minigame phase actually drives gameplay for ~30 s",
+            "completed": true
+          },
+          {
+            "text": "All 18 phases covered: earth base, tutorial overlay, control station, satellite station, launchpad, subcontractors, new mission, rocket selector, ascent, transit, return, mining practice, mining minigame, asteroid annotation, debrief",
+            "completed": true
+          },
+          {
+            "text": "CI passes on ubuntu-latest (no libasound2 install failure)",
+            "completed": true
+          }
+        ],
+        "assignee": "@me",
+        "description": "New CI workflow (godot-ux-e2e.yml) runs on every push, spins up Xvfb, downloads Godot 4.5-stable, imports the project, then executes UXTour.tscn which drives 18 phases of gameplay (earth base, tutorial, mining minigame ~30 s beam run, annotation UI, rocket transit/ascent/return, all major panels) and takes 24 screenshots. Report written to ux_report.md; CI fails only on CRITICAL UX issues.",
+        "implementationNotes": "## Summary\n- godot-ux-e2e.yml created: triggers on every push, Xvfb + Godot 4.5-stable\n- 18 phases, 24 screenshots including 30 s live mining session with beam simulation\n- Artifact name sanitised (tr \"/\" \"-\" on branch name)\n- CI timeout 600 s\n- Verified locally: 0 issues, 0 CRITICAL, exit 0\n- Knowns ticket vnq329 created",
+        "labels": [
+          "ci,github-actions,ux,e2e,godot"
+        ],
+        "priority": "high",
+        "status": "done",
+        "title": "Add Godot UX E2E screenshot tour pipeline"
+      }
+    }
+  ]
+}
