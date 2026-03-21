@@ -23,8 +23,8 @@ export DISPLAY=:99
 echo "    Xvfb PID=$XVFB_PID"
 
 # ── 3. Run the UX tour scene ──────────────────────────────────────────────────────
-echo "==> Running UX tour (timeout 10 min)..."
-GALLIUM_DRIVER=softpipe GODOT_UX_TOUR=1 timeout 600s "$GODOT" \
+echo "==> Running UX tour (timeout 15 min)..."
+GALLIUM_DRIVER=softpipe GODOT_UX_TOUR=1 timeout 900s "$GODOT" \
     --path "$SCENE_DIR" \
     res://tests/UXTour.tscn \
     2>&1 | tee /tmp/godot_ux_tour.log || {

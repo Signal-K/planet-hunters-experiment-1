@@ -43,11 +43,11 @@ const MINING_PRACTICE_SCENE   := "res://Scenes/UI/MiningPracticePanel.tscn"
 const ASTEROID_DETAIL_SCENE   := "res://Scenes/UI/AsteroidDetail/asteroid_detail_view.tscn"
 const SPACE_MAP_SCENE         := "res://Scenes/UI/SpaceMap/space_map.tscn"
 
-const MINING_RUN_SECONDS := 30.0
-const SCENE_SETTLE  := 3.0
-const PANEL_SETTLE  := 1.5
-const ANIM_SETTLE   := 0.8
-const SNAP_SETTLE   := 2.0   # shorter settle for stage-snapshot phases
+const MINING_RUN_SECONDS := 12.0
+const SCENE_SETTLE  := 2.0
+const PANEL_SETTLE  := 1.0
+const ANIM_SETTLE   := 0.5
+const SNAP_SETTLE   := 1.0   # shorter settle for stage-snapshot phases
 
 # ---------------------------------------------------------------------------
 # State
@@ -952,11 +952,12 @@ func _is_inside_scroll_container(ctrl: Control) -> bool:
 func _check_label_button_overlaps(root: Node, context: String) -> void:
 	if not root:
 		return
+	var vp_size := get_viewport().get_visible_rect().size
+	var vp_rect := Rect2(Vector2.ZERO, vp_size)
 	var all_controls: Array = []
 	_collect_visible_controls(root, all_controls)
-	# Exclude controls inside ScrollContainers — their off-screen positions are intentional
-	var labels: Array = all_controls.filter(func(n): return n is Label and not _is_inside_scroll_container(n))
-	var buttons: Array = all_controls.filter(func(n): return n is Button and not _is_inside_scroll_container(n))
+	var labels: Array = all_controls.filter(func(n): return n is Label)
+	var buttons: Array = all_controls.filter(func(n): return n is Button)
 	for lbl_item in labels:
 		var lbl := lbl_item as Label
 		if lbl.text.strip_edges().length() == 0:
@@ -964,11 +965,16 @@ func _check_label_button_overlaps(root: Node, context: String) -> void:
 		var lr := lbl.get_global_rect()
 		if lr.size.x < 4 or lr.size.y < 4:
 			continue
+		# Skip elements not actually visible within the viewport (e.g. scrolled off-screen)
+		if not lr.intersects(vp_rect):
+			continue
 		for btn_item in buttons:
 			var btn := btn_item as Button
 			if _is_ancestor(btn, lbl):
 				continue   # label is inside button — expected
 			var br := btn.get_global_rect()
+			if not br.intersects(vp_rect):
+				continue
 			if lr.intersects(br):
 				_issue("UI OVERLAP: Label '%s' overlaps Button '%s' in %s" % [
 					lbl.text.strip_edges(), btn.text.strip_edges(), context

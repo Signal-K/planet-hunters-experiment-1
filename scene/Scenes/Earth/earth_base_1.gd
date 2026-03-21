@@ -574,8 +574,9 @@ func _build_wordmark() -> void:
 	wordmark.add_theme_color_override("font_color", Color(0.90, 0.87, 0.82, 0.45))
 	wordmark.set_anchors_preset(Control.PRESET_TOP_WIDE)
 	wordmark.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	wordmark.offset_top = 10.0
-	wordmark.offset_bottom = 30.0
+	# Position below the EARTH_WIDGET zone (FrancBalance at y=12-62) to avoid overlap
+	wordmark.offset_top = 66.0
+	wordmark.offset_bottom = 86.0
 	wordmark.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	ui_layer.add_child(wordmark)
 
