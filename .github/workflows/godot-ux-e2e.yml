@@ -3,7 +3,8 @@ name: Godot UX End-to-End Tour
 on:
   push:
     branches:
-      - '**'
+      - main
+  pull_request:
   workflow_dispatch:
 
 permissions:
@@ -17,7 +18,77 @@ env:
   SAFE_REF: ""
 
 jobs:
+  export-web:
+    name: Export Godot Web
+    runs-on: ubuntu-latest
+    env:
+      GODOT_VERSION: "4.5-stable"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        shell: bash
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: 1
+        run: npm ci
+
+      - name: Install Godot + templates for web export
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          cd .godot-bin
+          curl -fsSL -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/Godot_v4.5-stable_linux.x86_64.zip"
+          unzip -q godot.zip
+          GODOT_PATH="$PWD/Godot_v4.5-stable_linux.x86_64"
+          chmod +x "$GODOT_PATH"
+          echo "GODOT_EDITOR=$GODOT_PATH" >> "$GITHUB_ENV"
+
+          TEMPLATE_DIR="$HOME/.local/share/godot/export_templates/4.5.stable"
+          curl -fsSL -o templates.tpz "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/Godot_v4.5-stable_export_templates.tpz"
+          rm -rf .godot-templates && mkdir -p .godot-templates
+          unzip -q templates.tpz -d .godot-templates
+          mkdir -p "$TEMPLATE_DIR"
+          TEMPLATE_SOURCE_DIR="$(find .godot-templates -type f -name 'web_nothreads_release.zip' -print -quit | xargs -I{} dirname "{}")"
+          if [ -z "$TEMPLATE_SOURCE_DIR" ]; then
+            echo "Could not locate Godot web export templates in downloaded archive"
+            exit 1
+          fi
+          cp -R "$TEMPLATE_SOURCE_DIR"/* "$TEMPLATE_DIR/"
+
+      - name: Import Godot project
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd scene
+          timeout 90s "$GODOT_EDITOR" --headless --path . --import --quit || true
+
+      - name: Export Godot web build
+        shell: bash
+        run: npm run godot:export:desktop
+
+      - name: Upload web export artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: godot-web-export-${{ github.run_number }}
+          path: electron-dist/godot-web/**
+          if-no-files-found: error
+          retention-days: 14
+
   godot-ux-tour:
+    if: >
+      github.event_name == 'pull_request' ||
+      github.event_name == 'workflow_dispatch' ||
+      contains(github.event.head_commit.message, 'tour')
     name: UX Screenshot Tour (Godot 4.5)
     runs-on: ubuntu-latest
 

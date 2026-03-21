@@ -91,13 +91,13 @@ func test_multi_level_up() -> void:
 func test_scanner_unlock_gating_by_progress() -> void:
 	reporter.start_test("Scanner unlock gated by mission progress")
 	var state = RocketsManager.load_state()
-	state["mission_progress_completed"] = 1
-	state["completed_mission_badges"] = ["mission-1"]
+	state["mission_progress_completed"] = 2
+	state["completed_mission_badges"] = ["mission-1", "mission-2"]
 	state["scanner_unlocked"] = false
 	RocketsManager.set_override_state(state)
 	var locked = RocketsManager.is_scanner_unlocked()
-	state["mission_progress_completed"] = 2
-	state["completed_mission_badges"] = ["mission-1", "mission-2"]
+	state["mission_progress_completed"] = 3
+	state["completed_mission_badges"] = ["mission-1", "mission-2", "mission-3"]
 	state["scanner_unlocked"] = false
 	RocketsManager.set_override_state(state)
 	var unlocked = RocketsManager.is_scanner_unlocked()
