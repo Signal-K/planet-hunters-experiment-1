@@ -84,6 +84,14 @@ func _load_scene(path: String) -> Node:
 		return null
 	var instance := packed.instantiate()
 	add_child(instance)
+	# For full-screen Control panels loaded into a plain Node parent, the anchor
+	# layout may not compute the correct size until the node has been in the tree
+	# for a frame. Force the rect so children compute positions against the real
+	# viewport size from the start.
+	if instance is Control:
+		var vp := get_viewport().get_visible_rect()
+		(instance as Control).position = vp.position
+		(instance as Control).size = vp.size
 	_active_scene = instance
 	return instance
 
@@ -1076,7 +1084,12 @@ func _meta(phase: String, mission_stage: int, description: String, what_to_check
 
 
 func _screenshot(label: String) -> void:
+	# Force a fresh render frame so the viewport texture reflects the current scene.
+	# Without this, softpipe/CI renders can return a stale cached texture.
+	RenderingServer.force_draw(false)
 	await get_tree().process_frame
+	await get_tree().process_frame
+	RenderingServer.force_draw(false)
 	await get_tree().process_frame
 
 	var image := get_viewport().get_texture().get_image()
