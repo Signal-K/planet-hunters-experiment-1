@@ -53,8 +53,10 @@ func _build_view_toggle() -> void:
 
 	var container := HBoxContainer.new()
 	container.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	container.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	container.offset_right = -24.0
 	container.offset_top = 24.0
+	container.offset_bottom = 68.0
 	container.add_theme_constant_override("separation", 6)
 	ui.add_child(container)
 
