@@ -33,12 +33,21 @@
     "rocket_id": "starterrocket1-675492285"
   },
   "detected_targets": [
+    {
+      "id": "4201",
+      "label": "4201",
+      "type": "asteroid",
+      "anomalySet": "",
+      "classification_status": "confirmed",
+      "tess_disposition": ""
+    }
   ],
   "seen_asteroids": [
   ],
   "seen_planets": [
   ],
   "scan_counts": {
+    "asteroid:4201": 2
   },
   "status_changed_at": {
     "starterrocket1-675492285": {
