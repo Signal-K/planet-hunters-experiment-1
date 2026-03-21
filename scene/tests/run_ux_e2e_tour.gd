@@ -897,6 +897,9 @@ func _check_for_placeholder_text(root: Node, context: String) -> void:
 func _collect_visible_controls(root: Node, out: Array) -> void:
 	if not root:
 		return
+	# Skip children of non-visible Windows (e.g. AcceptDialog debug popups)
+	if root is Window and not (root as Window).visible:
+		return
 	if root is Control:
 		var ctrl := root as Control
 		if ctrl.visible and ctrl.size.x > 2 and ctrl.size.y > 2:
@@ -913,6 +916,9 @@ func _check_offscreen_elements(root: Node, context: String) -> void:
 	_collect_visible_controls(root, controls)
 	for item in controls:
 		var ctrl := item as Control
+		# ScrollContainers intentionally clip content that extends beyond the viewport
+		if _is_inside_scroll_container(ctrl):
+			continue
 		var r := ctrl.get_global_rect()
 		if r.size.x < 4 or r.size.y < 4:
 			continue
@@ -934,13 +940,23 @@ func _is_ancestor(ancestor: Node, node: Node) -> bool:
 	return false
 
 
+func _is_inside_scroll_container(ctrl: Control) -> bool:
+	var parent := ctrl.get_parent()
+	while parent:
+		if parent is ScrollContainer:
+			return true
+		parent = parent.get_parent()
+	return false
+
+
 func _check_label_button_overlaps(root: Node, context: String) -> void:
 	if not root:
 		return
 	var all_controls: Array = []
 	_collect_visible_controls(root, all_controls)
-	var labels: Array = all_controls.filter(func(n): return n is Label)
-	var buttons: Array = all_controls.filter(func(n): return n is Button)
+	# Exclude controls inside ScrollContainers — their off-screen positions are intentional
+	var labels: Array = all_controls.filter(func(n): return n is Label and not _is_inside_scroll_container(n))
+	var buttons: Array = all_controls.filter(func(n): return n is Button and not _is_inside_scroll_container(n))
 	for lbl_item in labels:
 		var lbl := lbl_item as Label
 		if lbl.text.strip_edges().length() == 0:
