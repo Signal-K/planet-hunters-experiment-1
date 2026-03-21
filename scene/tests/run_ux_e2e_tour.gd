@@ -161,11 +161,6 @@ func _run_tour() -> void:
 		 "Is the FrancBalance (currency) HUD element shown?"])
 	_screenshot("02_after_splash_dismissed")
 	_report("  - Second screenshot taken.")
-		"Earth base hub immediately after the intro splash is dismissed.",
-		["Is the tutorial coach overlay visible, guiding the user to the Control Station?",
-		 "Are navigation buttons (menu, forward, back) visible?",
-		 "Is the FrancBalance (currency) HUD element shown?"])
-	_screenshot("02_after_splash_dismissed")
 
 	# ==================================================================
 	# Phase 2 — Earth Base (Mission 1 state)
