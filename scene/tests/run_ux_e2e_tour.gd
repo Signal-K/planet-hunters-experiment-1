@@ -653,7 +653,22 @@ func _run_tour() -> void:
 					else:
 						_issue("Mining HUD missing '%s' — players can't track resource state." % hud_name)
 				sidescroll.set("_is_mining", true)
-				await get_tree().create_timer(5.0).timeout
+				await get_tree().create_timer(4.0).timeout
+				
+				# Deploy a drone (Mission 4+ mechanic)
+				_report("  - Testing Drone mechanic (Mission 4+)...")
+				sidescroll.set("_drones_enabled", true)
+				sidescroll.call("_deploy_drone")
+				await get_tree().create_timer(1.0).timeout
+				
+				_meta("Phase 14 - Mining Minigame (drone deployed)", 4,
+					"Mining minigame with a drone deployed — Mission 4+ mechanic. Drones target dark subsurface deposits.",
+					["Is the drone visible and moving towards a target?",
+					 "Is the drone HUD (count/cooldown) updating?",
+					 "Does the drone contrast well with the terrain?"])
+				_screenshot("19b_mining_drone_deployed")
+				
+				await get_tree().create_timer(2.0).timeout
 				_meta("Phase 14 - Mining Minigame (beam active)", 1,
 					"Mining beam active — terrain is being excavated. The main mining gameplay loop.",
 					["Is the mining beam visually clear?",
@@ -669,6 +684,21 @@ func _run_tour() -> void:
 					 "Is the RETURN button visible and accessible?",
 					 "Is the score/haul total updating?"])
 				_screenshot("20_mining_mid_run")
+				
+				# Check inventory panel (HUD overlay)
+				_report("  - Checking Mining Inventory panel...")
+				sidescroll.call("_toggle_inventory")
+				await get_tree().create_timer(1.0).timeout
+				_meta("Phase 14 - Mining Inventory Overlay", 1,
+					"Mining minigame with the inventory panel open — showing current fuel, heat, beam, and minerals collected.",
+					["Is the inventory list populated with collected minerals?",
+					 "Are fuel/heat/beam percentages readable?",
+					 "Is the score/total value visible?",
+					 "Does the panel obscure too much of the gameplay area (is it dismissible)?"])
+				_screenshot("20b_mining_inventory_overlay")
+				sidescroll.call("_toggle_inventory") # dismiss
+				await get_tree().create_timer(0.5).timeout
+				
 				sidescroll.set("_is_mining", false)
 				await get_tree().create_timer(1.0).timeout
 				_meta("Phase 14 - Mining Minigame (beam released)", 1,
