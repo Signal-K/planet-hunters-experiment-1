@@ -1,0 +1,243 @@
+{
+  "batch_id": "batch_usage_state_variants_all_rooms",
+  "packet_index": 12,
+  "packet_count": 16,
+  "asset_count": 12,
+  "instructions": {
+    "style_anchor_required": true,
+    "one_asset_per_prompt": true,
+    "filename_contract": "strict",
+    "no_extra_suffixes": true,
+    "no_text_or_ui": true
+  },
+  "assets": [
+    {
+      "asset_id": "power_capacitor_t2__capacitor_cell_bank__usage_25_49",
+      "asset_type": "state_variant",
+      "room_id": "power_capacitor_t2",
+      "room_name": "Power Capacitor Room",
+      "category": "power",
+      "tier": 2,
+      "component_id": "capacitor_cell_bank",
+      "component_name": "Capacitor Cell Bank",
+      "component_kind": "interactive",
+      "state_key": "usage_25_49",
+      "priority": "p2",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'usage_25_49' for component 'Capacitor Cell Bank' in 'Power Capacitor Room'. Change only state cues: mild scorch marks and minor scratches, slightly warmer highlights. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "power_capacitor_t2__capacitor_cell_bank__usage_25_49.png",
+        "sidecar": "power_capacitor_t2__capacitor_cell_bank__usage_25_49.json",
+        "note_optional": "power_capacitor_t2__capacitor_cell_bank__usage_25_49.txt"
+      }
+    },
+    {
+      "asset_id": "power_capacitor_t2__capacitor_cell_bank__usage_50_74",
+      "asset_type": "state_variant",
+      "room_id": "power_capacitor_t2",
+      "room_name": "Power Capacitor Room",
+      "category": "power",
+      "tier": 2,
+      "component_id": "capacitor_cell_bank",
+      "component_name": "Capacitor Cell Bank",
+      "component_kind": "interactive",
+      "state_key": "usage_50_74",
+      "priority": "p2",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'usage_50_74' for component 'Capacitor Cell Bank' in 'Power Capacitor Room'. Change only state cues: moderate wear, heat bloom, visible scratches and warning tint. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "power_capacitor_t2__capacitor_cell_bank__usage_50_74.png",
+        "sidecar": "power_capacitor_t2__capacitor_cell_bank__usage_50_74.json",
+        "note_optional": "power_capacitor_t2__capacitor_cell_bank__usage_50_74.txt"
+      }
+    },
+    {
+      "asset_id": "power_capacitor_t2__capacitor_cell_bank__usage_75_99",
+      "asset_type": "state_variant",
+      "room_id": "power_capacitor_t2",
+      "room_name": "Power Capacitor Room",
+      "category": "power",
+      "tier": 2,
+      "component_id": "capacitor_cell_bank",
+      "component_name": "Capacitor Cell Bank",
+      "component_kind": "interactive",
+      "state_key": "usage_75_99",
+      "priority": "p2",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'usage_75_99' for component 'Capacitor Cell Bank' in 'Power Capacitor Room'. Change only state cues: heavy wear, strong warning glow, soot/scuffs and stressed materials. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "power_capacitor_t2__capacitor_cell_bank__usage_75_99.png",
+        "sidecar": "power_capacitor_t2__capacitor_cell_bank__usage_75_99.json",
+        "note_optional": "power_capacitor_t2__capacitor_cell_bank__usage_75_99.txt"
+      }
+    },
+    {
+      "asset_id": "reinforced_hull_t2__microfracture_sensor_array__usage_0_24",
+      "asset_type": "state_variant",
+      "room_id": "reinforced_hull_t2",
+      "room_name": "Reinforced Hull Module",
+      "category": "hull",
+      "tier": 2,
+      "component_id": "microfracture_sensor_array",
+      "component_name": "Microfracture Sensor Array",
+      "component_kind": "interactive",
+      "state_key": "usage_0_24",
+      "priority": "p2",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'usage_0_24' for component 'Microfracture Sensor Array' in 'Reinforced Hull Module'. Change only state cues: clean surfaces, low heat bloom, minimal wear. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "reinforced_hull_t2__microfracture_sensor_array__usage_0_24.png",
+        "sidecar": "reinforced_hull_t2__microfracture_sensor_array__usage_0_24.json",
+        "note_optional": "reinforced_hull_t2__microfracture_sensor_array__usage_0_24.txt"
+      }
+    },
+    {
+      "asset_id": "reinforced_hull_t2__microfracture_sensor_array__usage_100",
+      "asset_type": "state_variant",
+      "room_id": "reinforced_hull_t2",
+      "room_name": "Reinforced Hull Module",
+      "category": "hull",
+      "tier": 2,
+      "component_id": "microfracture_sensor_array",
+      "component_name": "Microfracture Sensor Array",
+      "component_kind": "interactive",
+      "state_key": "usage_100",
+      "priority": "p2",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'usage_100' for component 'Microfracture Sensor Array' in 'Reinforced Hull Module'. Change only state cues: near-failure/depleted look, severe wear, emergency warning cues. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "reinforced_hull_t2__microfracture_sensor_array__usage_100.png",
+        "sidecar": "reinforced_hull_t2__microfracture_sensor_array__usage_100.json",
+        "note_optional": "reinforced_hull_t2__microfracture_sensor_array__usage_100.txt"
+      }
+    },
+    {
+      "asset_id": "reinforced_hull_t2__microfracture_sensor_array__usage_25_49",
+      "asset_type": "state_variant",
+      "room_id": "reinforced_hull_t2",
+      "room_name": "Reinforced Hull Module",
+      "category": "hull",
+      "tier": 2,
+      "component_id": "microfracture_sensor_array",
+      "component_name": "Microfracture Sensor Array",
+      "component_kind": "interactive",
+      "state_key": "usage_25_49",
+      "priority": "p2",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'usage_25_49' for component 'Microfracture Sensor Array' in 'Reinforced Hull Module'. Change only state cues: mild scorch marks and minor scratches, slightly warmer highlights. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "reinforced_hull_t2__microfracture_sensor_array__usage_25_49.png",
+        "sidecar": "reinforced_hull_t2__microfracture_sensor_array__usage_25_49.json",
+        "note_optional": "reinforced_hull_t2__microfracture_sensor_array__usage_25_49.txt"
+      }
+    },
+    {
+      "asset_id": "reinforced_hull_t2__microfracture_sensor_array__usage_50_74",
+      "asset_type": "state_variant",
+      "room_id": "reinforced_hull_t2",
+      "room_name": "Reinforced Hull Module",
+      "category": "hull",
+      "tier": 2,
+      "component_id": "microfracture_sensor_array",
+      "component_name": "Microfracture Sensor Array",
+      "component_kind": "interactive",
+      "state_key": "usage_50_74",
+      "priority": "p2",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'usage_50_74' for component 'Microfracture Sensor Array' in 'Reinforced Hull Module'. Change only state cues: moderate wear, heat bloom, visible scratches and warning tint. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "reinforced_hull_t2__microfracture_sensor_array__usage_50_74.png",
+        "sidecar": "reinforced_hull_t2__microfracture_sensor_array__usage_50_74.json",
+        "note_optional": "reinforced_hull_t2__microfracture_sensor_array__usage_50_74.txt"
+      }
+    },
+    {
+      "asset_id": "reinforced_hull_t2__microfracture_sensor_array__usage_75_99",
+      "asset_type": "state_variant",
+      "room_id": "reinforced_hull_t2",
+      "room_name": "Reinforced Hull Module",
+      "category": "hull",
+      "tier": 2,
+      "component_id": "microfracture_sensor_array",
+      "component_name": "Microfracture Sensor Array",
+      "component_kind": "interactive",
+      "state_key": "usage_75_99",
+      "priority": "p2",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'usage_75_99' for component 'Microfracture Sensor Array' in 'Reinforced Hull Module'. Change only state cues: heavy wear, strong warning glow, soot/scuffs and stressed materials. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "reinforced_hull_t2__microfracture_sensor_array__usage_75_99.png",
+        "sidecar": "reinforced_hull_t2__microfracture_sensor_array__usage_75_99.json",
+        "note_optional": "reinforced_hull_t2__microfracture_sensor_array__usage_75_99.txt"
+      }
+    },
+    {
+      "asset_id": "resource_vault_t2__reinforced_containers__usage_0_24",
+      "asset_type": "state_variant",
+      "room_id": "resource_vault_t2",
+      "room_name": "Pressurised Resource Vault Room",
+      "category": "storage",
+      "tier": 2,
+      "component_id": "reinforced_containers",
+      "component_name": "Reinforced Containers",
+      "component_kind": "interactive",
+      "state_key": "usage_0_24",
+      "priority": "p2",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'usage_0_24' for component 'Reinforced Containers' in 'Pressurised Resource Vault Room'. Change only state cues: clean surfaces, low heat bloom, minimal wear. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "resource_vault_t2__reinforced_containers__usage_0_24.png",
+        "sidecar": "resource_vault_t2__reinforced_containers__usage_0_24.json",
+        "note_optional": "resource_vault_t2__reinforced_containers__usage_0_24.txt"
+      }
+    },
+    {
+      "asset_id": "resource_vault_t2__reinforced_containers__usage_100",
+      "asset_type": "state_variant",
+      "room_id": "resource_vault_t2",
+      "room_name": "Pressurised Resource Vault Room",
+      "category": "storage",
+      "tier": 2,
+      "component_id": "reinforced_containers",
+      "component_name": "Reinforced Containers",
+      "component_kind": "interactive",
+      "state_key": "usage_100",
+      "priority": "p2",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'usage_100' for component 'Reinforced Containers' in 'Pressurised Resource Vault Room'. Change only state cues: near-failure/depleted look, severe wear, emergency warning cues. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "resource_vault_t2__reinforced_containers__usage_100.png",
+        "sidecar": "resource_vault_t2__reinforced_containers__usage_100.json",
+        "note_optional": "resource_vault_t2__reinforced_containers__usage_100.txt"
+      }
+    },
+    {
+      "asset_id": "resource_vault_t2__reinforced_containers__usage_25_49",
+      "asset_type": "state_variant",
+      "room_id": "resource_vault_t2",
+      "room_name": "Pressurised Resource Vault Room",
+      "category": "storage",
+      "tier": 2,
+      "component_id": "reinforced_containers",
+      "component_name": "Reinforced Containers",
+      "component_kind": "interactive",
+      "state_key": "usage_25_49",
+      "priority": "p2",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'usage_25_49' for component 'Reinforced Containers' in 'Pressurised Resource Vault Room'. Change only state cues: mild scorch marks and minor scratches, slightly warmer highlights. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "resource_vault_t2__reinforced_containers__usage_25_49.png",
+        "sidecar": "resource_vault_t2__reinforced_containers__usage_25_49.json",
+        "note_optional": "resource_vault_t2__reinforced_containers__usage_25_49.txt"
+      }
+    },
+    {
+      "asset_id": "resource_vault_t2__reinforced_containers__usage_50_74",
+      "asset_type": "state_variant",
+      "room_id": "resource_vault_t2",
+      "room_name": "Pressurised Resource Vault Room",
+      "category": "storage",
+      "tier": 2,
+      "component_id": "reinforced_containers",
+      "component_name": "Reinforced Containers",
+      "component_kind": "interactive",
+      "state_key": "usage_50_74",
+      "priority": "p2",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'usage_50_74' for component 'Reinforced Containers' in 'Pressurised Resource Vault Room'. Change only state cues: moderate wear, heat bloom, visible scratches and warning tint. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "resource_vault_t2__reinforced_containers__usage_50_74.png",
+        "sidecar": "resource_vault_t2__reinforced_containers__usage_50_74.json",
+        "note_optional": "resource_vault_t2__reinforced_containers__usage_50_74.txt"
+      }
+    }
+  ]
+}

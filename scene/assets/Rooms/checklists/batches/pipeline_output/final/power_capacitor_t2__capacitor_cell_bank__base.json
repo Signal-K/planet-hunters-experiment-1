@@ -1,0 +1,14 @@
+{
+  "asset_id": "power_capacitor_t2__capacitor_cell_bank__base",
+  "room_id": "power_capacitor_t2",
+  "component": "capacitor_cell_bank",
+  "tier": "2",
+  "state": "base",
+  "prompt_version": "v1",
+  "generator": "chatgpt",
+  "generated_at_utc": "2026-03-10T10:16:37.853316",
+  "image_filename": "power_capacitor_t2__capacitor_cell_bank__base.png",
+  "width": 1024,
+  "height": 1024,
+  "notes": ""
+}

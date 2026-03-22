@@ -37,10 +37,10 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 
 [node name="Panel" type="Panel" parent="UI/Root"]
-anchor_left = 0.08
-anchor_top = 0.08
-anchor_right = 0.92
-anchor_bottom = 0.92
+anchor_left = 0.03
+anchor_top = 0.04
+anchor_right = 0.64
+anchor_bottom = 0.96
 
 [node name="VBox" type="VBoxContainer" parent="UI/Root/Panel"]
 anchor_right = 1.0
@@ -49,12 +49,16 @@ offset_left = 24.0
 offset_top = 24.0
 offset_right = -24.0
 offset_bottom = -24.0
+theme_override_constants/separation = 10
 
 [node name="Title" type="Label" parent="UI/Root/Panel/VBox"]
-text = "Mission Debrief"
+text = "Mission Complete!"
 
 [node name="Subtitle" type="Label" parent="UI/Root/Panel/VBox"]
-text = "Review cargo, sell minerals, and close out mission."
+text = ""
+
+[node name="HintLabel" type="Label" parent="UI/Root/Panel/VBox"]
+text = ""
 
 [node name="Minerals" type="ScrollContainer" parent="UI/Root/Panel/VBox"]
 size_flags_vertical = 3
@@ -62,36 +66,19 @@ size_flags_vertical = 3
 [node name="MineralsList" type="VBoxContainer" parent="UI/Root/Panel/VBox/Minerals"]
 anchor_right = 1.0
 
+[node name="PayoutLabel" type="Label" parent="UI/Root/Panel/VBox"]
+text = ""
+
 [node name="Actions" type="VBoxContainer" parent="UI/Root/Panel/VBox"]
+theme_override_constants/separation = 8
 
-[node name="SellRow" type="HBoxContainer" parent="UI/Root/Panel/VBox/Actions"]
+[node name="CompleteButton" type="Button" parent="UI/Root/Panel/VBox/Actions"]
+text = "Sell & Scrap Ship →"
 
-[node name="SellOrbitButton" type="Button" parent="UI/Root/Panel/VBox/Actions/SellRow"]
-text = "Sell in Orbit"
+[node name="OrbitButton" type="Button" parent="UI/Root/Panel/VBox/Actions"]
+text = "Leave Ship in Orbit"
 
-[node name="SellEarthButton" type="Button" parent="UI/Root/Panel/VBox/Actions/SellRow"]
-text = "Bring to Earth (Fee)"
-
-[node name="KeepButton" type="Button" parent="UI/Root/Panel/VBox/Actions"]
-text = "Keep Cargo"
-
-[node name="ShipRow" type="HBoxContainer" parent="UI/Root/Panel/VBox/Actions"]
-
-[node name="ScrapButton" type="Button" parent="UI/Root/Panel/VBox/Actions/ShipRow"]
-text = "Scrap Ship (20%)"
-
-[node name="SalvageButton" type="Button" parent="UI/Root/Panel/VBox/Actions/ShipRow"]
-text = "Salvage Ship (10%)"
-
-[node name="LeaveButton" type="Button" parent="UI/Root/Panel/VBox/Actions/ShipRow"]
-text = "Leave in Orbit"
-
-[node name="Footer" type="HBoxContainer" parent="UI/Root/Panel/VBox"]
-
-[node name="BackButton" type="Button" parent="UI/Root/Panel/VBox/Footer"]
-text = "Return to Base"
-
-[node name="Status" type="Label" parent="UI/Root/Panel/VBox/Footer"]
+[node name="StatusLabel" type="Label" parent="UI/Root/Panel/VBox"]
 text = ""
 
 [node name="EnvironmentEngine" type="Node" parent="."]

@@ -16,6 +16,8 @@ var ui_position: Vector2 = Vector2(80, 160)
 var ui_size: Vector2 = Vector2(720, 360)
 
 var _creation_locked: bool = false
+var _contractor_gate_locked: bool = false
+var _contractor_gate_reason: String = "Select a contractor before building a rocket."
 var _pending_rocket_id: String = ""
 var _pending_purchase_cost: int = 0
 var _confirm_dialog: ConfirmationDialog = null
@@ -47,6 +49,8 @@ func _ready():
 		if p.get("status", "") == "awaitingLaunch":
 			_creation_locked = true
 			break
+	var selected_contractor = rm.get_trip_selected_contractor()
+	_contractor_gate_locked = str(selected_contractor.get("id", "")) == ""
 	_rocket_textures["starterrocket1"] = load("res://assets/Vehicles/StarterRocket1.png")
 	_rocket_textures["starterrocket2"] = load("res://assets/Vehicles/Starter Rocket L2.png")
 	_rocket_textures["starterrocket3"] = load("res://assets/Vehicles/Starter Rocket L2.png")
@@ -61,7 +65,9 @@ func _ready():
 		Callable(self, "_on_texture_gui_input")
 	)
 	_ui_builder.build_ui(unlocked_rockets)
+	set_meta("selector_ui_built", true)
 	_drag_helper.setup(self, Callable(self, "_request_purchase"))
+	_refresh_creation_buttons_state()
 	set_process(true)
 
 func _find_app_controller() -> void:
@@ -93,7 +99,16 @@ func _init_dialogs() -> void:
 # Public method to unlock creation (called from Launchpad when showing the panel after launch)
 func unlock_creation() -> void:
 	_creation_locked = false
-	_set_create_buttons_disabled(false)
+	_refresh_creation_buttons_state()
+
+func set_contractor_gate_enabled(enabled: bool, reason: String = "") -> void:
+	_contractor_gate_locked = not enabled
+	if reason != "":
+		_contractor_gate_reason = reason
+	_refresh_creation_buttons_state()
+
+func _refresh_creation_buttons_state() -> void:
+	_set_create_buttons_disabled(_creation_locked or _contractor_gate_locked)
 
 func _on_create_pressed(rocket_id):
 	print("Create rocket requested:", rocket_id)
@@ -105,6 +120,9 @@ func _request_purchase(rocket_id: String) -> void:
 	if _creation_locked:
 		print("RocketSelector: creation locked; cannot purchase")
 		return
+	if _contractor_gate_locked:
+		_show_info(_contractor_gate_reason)
+		return
 	var mission_stage = _effective_mission_stage_for_ui()
 	if not _is_rocket_allowed_for_stage(rocket_id, mission_stage):
 		_show_info("%s unlocks later in the mission path. Complete current missions first." % RocketSpecs.get_display_name(rocket_id))
@@ -115,7 +133,7 @@ func _request_purchase(rocket_id: String) -> void:
 		var required_level = int(range_check.get("required_level", 1))
 		var rocket_level = int(range_check.get("rocket_level", 1))
 		var distance_au = float(range_check.get("distance_au", 0.0))
-		_show_info("%s is %.0f AU away and requires rocket level L%d. %s is L%d and cannot reach this target." % [
+		_show_info("%s is %.0f AU away and requires Level %d. %s is Level %d and cannot reach this target." % [
 			target_label,
 			distance_au,
 			required_level,
@@ -138,13 +156,13 @@ func _request_purchase(rocket_id: String) -> void:
 		_format_francs(cost)
 	]
 	var rm = RocketsManager
-	if rm and int(rm.get_mission_stage()) >= 5:
-		var cap = int(rm.get_mission5_payout_cap())
+	if rm and rm.is_free_operations_unlocked():
+		var cap = int(rm.get_free_ops_payout_cap())
 		if cost > cap:
-			summary += "\nMission 5 payout cap is %s F. This purchase may lose money." % _format_francs(cap)
-		var selected = rm.get_mission5_selected_contractor()
+			summary += "\nFree Operations payout cap is %s F. This purchase may lose money." % _format_francs(cap)
+		var selected = rm.get_trip_selected_contractor()
 		if str(selected.get("effect", "")) == "build_discount":
-			summary += "\nMission discount applied via %s." % str(selected.get("name", "contractor"))
+			summary += "\nContractor discount applied via %s." % str(selected.get("name", "contractor"))
 	_confirm_dialog.dialog_text = summary
 	_confirm_dialog.popup_centered()
 
@@ -158,7 +176,7 @@ func _on_purchase_confirmed() -> void:
 		})
 		_modify_balance(-_pending_purchase_cost)
 		_creation_locked = true
-		_set_create_buttons_disabled(true)
+		_refresh_creation_buttons_state()
 		visible = false
 		var root = get_tree().current_scene
 		if root:
@@ -229,7 +247,7 @@ func _effective_purchase_cost(rocket_id: String) -> int:
 	var rm = RocketsManager
 	if not rm:
 		return RocketSpecs.get_cost(rocket_id)
-	return int(rm.get_mission5_purchase_cost(rocket_id))
+	return int(rm.get_trip_purchase_cost(rocket_id))
 
 
 func _format_francs(value: int) -> String:

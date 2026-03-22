@@ -1,0 +1,14 @@
+{
+  "asset_id": "reinforced_hull_t2__impact_dampener_ribs__base",
+  "room_id": "reinforced_hull_t2",
+  "component": "impact_dampener_ribs",
+  "tier": "2",
+  "state": "base",
+  "prompt_version": "v1",
+  "generator": "chatgpt",
+  "generated_at_utc": "2026-03-10T10:16:38.176124",
+  "image_filename": "reinforced_hull_t2__impact_dampener_ribs__base.png",
+  "width": 1024,
+  "height": 1024,
+  "notes": ""
+}

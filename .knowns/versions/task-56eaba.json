@@ -1,0 +1,124 @@
+{
+  "taskId": "56eaba",
+  "currentVersion": 2,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "56eaba",
+      "version": 1,
+      "timestamp": "2026-03-16T17:53:13.440Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Mining failure: partial salvage option (post-tutorial)",
+        "description": "Mining doc specifies two failure states: tutorial = failure message + restart. Post-tutorial = partial salvage available + restart option with penalty. Currently there is no partial salvage path implemented. Entry point: SidescrollMining.gd failure handling.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "gameplay",
+          "mining",
+          "ux"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Post-tutorial mining failure shows two options: 'Partial salvage' (keep what was mined, no retry) and 'Retry with penalty' (reset progress, small franc penalty)"
+          },
+          {
+            "completed": false,
+            "text": "Tutorial missions still show simple failure + restart (no salvage option)"
+          },
+          {
+            "completed": false,
+            "text": "Partial salvage minerals are added to inventory as normal"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "56eaba",
+      "version": 2,
+      "timestamp": "2026-03-16T21:23:23.520Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        },
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Post-tutorial mining failure shows two options: 'Partial salvage' (keep what was mined, no retry) and 'Retry with penalty' (reset progress, small franc penalty)"
+            },
+            {
+              "completed": false,
+              "text": "Tutorial missions still show simple failure + restart (no salvage option)"
+            },
+            {
+              "completed": false,
+              "text": "Partial salvage minerals are added to inventory as normal"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Post-tutorial mining failure shows two options: 'Partial salvage' (keep what was mined, no retry) and 'Retry with penalty' (reset progress, small franc penalty)"
+            },
+            {
+              "completed": true,
+              "text": "Tutorial missions still show simple failure + restart (no salvage option)"
+            },
+            {
+              "completed": true,
+              "text": "Partial salvage minerals are added to inventory as normal"
+            }
+          ]
+        },
+        {
+          "field": "implementationNotes",
+          "newValue": "AsteroidPreview.gd: when completion_reason=fuel_depleted and not tutorial (not starter contract, mission_stage > 1), shows salvage-or-retry dialog. Salvage: keep minerals, show message. Retry: consume_from_inventory to undo auto-add, apply -50M F penalty, re-enable mine button."
+        }
+      ],
+      "snapshot": {
+        "title": "Mining failure: partial salvage option (post-tutorial)",
+        "description": "Mining doc specifies two failure states: tutorial = failure message + restart. Post-tutorial = partial salvage available + restart option with penalty. Currently there is no partial salvage path implemented. Entry point: SidescrollMining.gd failure handling.",
+        "status": "done",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "gameplay",
+          "mining",
+          "ux"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Post-tutorial mining failure shows two options: 'Partial salvage' (keep what was mined, no retry) and 'Retry with penalty' (reset progress, small franc penalty)"
+          },
+          {
+            "completed": true,
+            "text": "Tutorial missions still show simple failure + restart (no salvage option)"
+          },
+          {
+            "completed": true,
+            "text": "Partial salvage minerals are added to inventory as normal"
+          }
+        ],
+        "implementationNotes": "AsteroidPreview.gd: when completion_reason=fuel_depleted and not tutorial (not starter contract, mission_stage > 1), shows salvage-or-retry dialog. Salvage: keep minerals, show message. Retry: consume_from_inventory to undo auto-add, apply -50M F penalty, re-enable mine button."
+      }
+    }
+  ]
+}

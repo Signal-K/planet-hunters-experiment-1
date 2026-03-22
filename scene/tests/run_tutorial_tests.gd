@@ -57,7 +57,7 @@ func test_progression_advances_on_expected_actions() -> void:
 
 	controller.record_action("tour_open_control_station")
 	controller.record_action("tour_close_control_station")
-	controller.record_action("accept_starter_contractor")
+	controller.record_action("accept_contractor_offer")
 	var after = controller.get_tutorial_state()
 	if int(after.get("current_step_index", 0)) < 3:
 		reporter.fail_test("Expected current_step_index >= 3 after first actions")
@@ -195,7 +195,7 @@ func test_advance_if_match_skips_past_out_of_order_completed_actions() -> void:
 	# Advance normally through the first four steps to reach select_launch_target:
 	controller.record_action("tour_open_control_station")
 	controller.record_action("tour_close_control_station")
-	controller.record_action("accept_starter_contractor")
+	controller.record_action("accept_contractor_offer")
 	controller.record_action("create_rocket")
 	var pre_state = controller.get_tutorial_state()
 	var step_idx_before = int(pre_state.get("current_step_index", 0))

@@ -116,8 +116,10 @@ func _ensure_targets_loaded_for_launchpad() -> void:
 func _on_rockets_reset() -> void:
 	AppLogger.d("Launchpad: rockets reset event received, clearing rockets")
 	clear_rockets()
-	# Show selector panel again after reset so user can create new rockets
-	_show_selector_panel()
+	# Only show selector panel if we are actually in the launchpad scene.
+	# Earth base also has a Launchpad node and receives rockets_reset.
+	if _is_launchpad_scene():
+		_show_selector_panel()
 
 func clear_rockets() -> void:
 	var nodes = get_tree().get_nodes_in_group("rocket")

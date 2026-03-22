@@ -29,6 +29,8 @@ const GodotHost = ({ interactive }: GodotHostProps) => {
   useEffect(() => {
     initGodot("GodotTest");
     const stopSync = startSyncLoop(700);
+    const { MissionService } = require("./utils/missionService");
+    MissionService.startListening();
 
     return () => {
       stopSync();

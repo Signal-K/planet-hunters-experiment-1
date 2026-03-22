@@ -1,0 +1,14 @@
+{
+  "asset_id": "ablative_armour_t3__self_diagnostics_panel__cooldown",
+  "room_id": "ablative_armour_t3",
+  "component": "self_diagnostics_panel",
+  "tier": "3",
+  "state": "cooldown",
+  "prompt_version": "v1",
+  "generator": "chatgpt",
+  "generated_at_utc": "2026-03-10T10:16:35.953421",
+  "image_filename": "ablative_armour_t3__self_diagnostics_panel__cooldown.png",
+  "width": 1024,
+  "height": 1024,
+  "notes": ""
+}

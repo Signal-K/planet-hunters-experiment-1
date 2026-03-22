@@ -32,6 +32,7 @@ const RoomCatalog = preload("res://Scripts/Utils/RoomCatalog.gd")
 @onready var orbit_circle: Line2D = $CanvasLayer/Orbit2D/OrbitCircle
 @onready var orbit_heading: Line2D = $CanvasLayer/Orbit2D/OrbitHeading
 @onready var orbit_rocket: AnimatedSprite2D = $CanvasLayer/Orbit2D/OrbitRocket2D
+@onready var _ui_margin: MarginContainer = $CanvasLayer/UI/Margin
 @onready var back_button: Button = $CanvasLayer/UI/Margin/VBox/Header/BackButton
 @onready var target_label: Label = $CanvasLayer/UI/Margin/VBox/Header/TargetLabel
 @onready var minerals_panel: Panel = $CanvasLayer/UI/Margin/VBox/MineralsPanel
@@ -55,6 +56,7 @@ var _current_target_id := ""
 var _current_target_label := ""
 var _current_target_type := ""
 var _current_rocket_id := ""
+var _current_science_blurb := ""
 var _earth_pivot: Node3D
 var _earth_mesh: MeshInstance3D
 # Science image panel shown during TRAVEL phase
@@ -88,10 +90,11 @@ var _phase := Phase.EARTH_ORBIT
 func _ready() -> void:
 	_setup_ui()
 	_load_target_data()
-	_generate_target_asteroid(_current_target_id)
+	_build_starfield()
+	_generate_target_body(_current_target_id, _current_target_type)
 	_setup_earth()
 	_setup_orbit_visual()
-	_build_science_panel()
+	_build_travel_caption()
 	_enhance_travel_dashboard()
 	_build_shop_button()
 	_apply_responsive_layout()
@@ -127,7 +130,8 @@ func _setup_ui() -> void:
 	panel_style.apply_button(return_home_button, false)
 	panel_style.apply_button(mine_button, true)
 	panel_style.apply_panel(travel_panel)
-	panel_style.apply_title(travel_title)
+	panel_style.apply_muted(travel_title)
+	travel_title.text = "EN ROUTE"
 	panel_style.apply_body(travel_speed)
 	panel_style.apply_progress_bar(travel_bar)
 	travel_panel.visible = false
@@ -149,6 +153,12 @@ func _load_target_data() -> void:
 	_current_target_label = str(target.get("label", ""))
 	_current_target_type = str(target.get("type", "asteroid"))
 	_current_rocket_id = str(target.get("rocket_id", ""))
+	# Look up science blurb from persisted detected targets
+	if rm and _current_target_id != "":
+		for dt in rm.get_detected_targets():
+			if str(dt.get("id", "")) == _current_target_id:
+				_current_science_blurb = str(dt.get("science_blurb", ""))
+				break
 
 func _update_target_label() -> void:
 	if target_label == null:
@@ -156,7 +166,8 @@ func _update_target_label() -> void:
 	if _current_target_label != "":
 		target_label.text = "En route to %s" % _current_target_label
 	elif _current_target_id != "":
-		target_label.text = "En route to Asteroid %s" % _current_target_id
+		var body_name = "Planet" if _current_target_type == "planet" else "Asteroid"
+		target_label.text = "En route to %s %s" % [body_name, _current_target_id]
 	else:
 		target_label.text = "En route to target"
 
@@ -220,9 +231,6 @@ func _start_travel() -> void:
 	_travel_start_pos = orbit_rocket.position
 	var viewport_size = get_viewport().get_visible_rect().size
 	_travel_end_pos = (viewport_size * 0.5) - orbit_root.position
-	# Show ship status button during transit
-	if _shop_button:
-		_shop_button.visible = true
 
 func _update_travel() -> void:
 	if not _traveling:
@@ -259,7 +267,7 @@ func _start_target_approach() -> void:
 	_target_alpha = 1.0
 	if asteroid_mesh:
 		asteroid_mesh.visible = true
-		asteroid_pivot.scale = Vector3(0.35, 0.35, 0.35)
+		# Continue from whatever scale the body reached during travel.
 		var grow = get_tree().create_tween()
 		grow.tween_property(asteroid_pivot, "scale", Vector3.ONE, TARGET_APPROACH_TIME)\
 			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
@@ -320,7 +328,9 @@ func _build_minerals_list() -> void:
 	var minerals: Dictionary = yield_data.get("minerals", {})
 	var capacity = int(yield_data.get("capacity", 0))
 	minerals_title.text = "Minerals Available"
-	minerals_summary.text = "Asteroid Level 1 • Mineable: %d%% • %s units" % [
+	var body_type = "Planet" if _current_target_type == "planet" else "Asteroid"
+	minerals_summary.text = "%s • Mineable: %d%% • %s units" % [
+		body_type,
 		int(round(float(yield_data.get("mineable_pct", 0.1)) * 100.0)),
 		NumberFormat.commas(str(capacity))
 	]
@@ -337,11 +347,14 @@ func _build_minerals_list() -> void:
 		panel_style.apply_muted(amount_lbl)
 		minerals_list.add_child(row)
 
-func _generate_target_asteroid(target_id: String) -> void:
+func _generate_target_body(target_id: String, target_type: String) -> void:
 	if asteroid_mesh == null:
 		return
 	var builder = ProceduralBodyBuilder
-	builder.build_asteroid(asteroid_mesh, target_id, 0.72, 0.96, Color(0.35, 0.35, 0.35))
+	if target_type == "planet" or target_type == "tess":
+		builder.build_planet(asteroid_mesh, target_id)
+	else:
+		builder.build_asteroid(asteroid_mesh, target_id, 0.72, 0.96, Color(0.35, 0.35, 0.35))
 
 func _generate_earth() -> void:
 	if _earth_mesh == null:
@@ -375,70 +388,76 @@ func _advance_to_preview() -> void:
 	else:
 		tree.change_scene_to_file(PREVIEW_SCENE_PATH)
 
-func _build_science_panel() -> void:
-	# Build a science image panel that sits over the transit UI.
-	# It is hidden initially and revealed during the TRAVEL phase.
+func _build_travel_caption() -> void:
+	# Minimal label shown during TRAVEL phase — no science/dataset text.
 	var canvas = $CanvasLayer
 	if canvas == null:
 		return
 	_science_panel = PanelContainer.new()
-	_science_panel.name = "SciencePanel"
+	_science_panel.name = "TravelCaption"
 	_science_panel.visible = false
 	_science_panel.modulate.a = 0.0
-	_science_panel.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	_science_panel.anchor_top = 0.0
-	_science_panel.anchor_bottom = 0.0
-	_science_panel.anchor_left = 0.5
-	_science_panel.anchor_right = 0.5
-	_science_panel.offset_left = -220
-	_science_panel.offset_right = 220
-	_science_panel.offset_top = 24
-	_science_panel.offset_bottom = 24
+	_science_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	var style = StyleBoxFlat.new()
-	style.bg_color = Color(0.06, 0.08, 0.16, 0.92)
-	style.border_color = Color(0.30, 0.50, 0.90, 0.8)
-	style.border_width_left = 1
-	style.border_width_right = 1
-	style.border_width_top = 1
-	style.border_width_bottom = 1
-	style.corner_radius_top_left = 10
-	style.corner_radius_top_right = 10
-	style.corner_radius_bottom_left = 10
-	style.corner_radius_bottom_right = 10
-	style.content_margin_left = 12
-	style.content_margin_right = 12
-	style.content_margin_top = 12
-	style.content_margin_bottom = 12
+	style.bg_color = Color(0.04, 0.06, 0.14, 0.80)
+	style.border_color = Color(0.28, 0.60, 1.00, 0.55)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(8)
+	style.content_margin_left = 20
+	style.content_margin_right = 20
+	style.content_margin_top = 10
+	style.content_margin_bottom = 10
 	_science_panel.add_theme_stylebox_override("panel", style)
 
-	var vbox = VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 8)
-	_science_panel.add_child(vbox)
-
-	var header = Label.new()
-	header.text = "INCOMING TELESCOPE DATA"
-	header.add_theme_color_override("font_color", Color(0.45, 0.70, 1.0))
-	header.add_theme_font_size_override("font_size", 11)
-	header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vbox.add_child(header)
-
-	_science_image = TextureRect.new()
-	_science_image.custom_minimum_size = Vector2(320, 200)
-	_science_image.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
-	_science_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	_science_image.visible = false
-	vbox.add_child(_science_image)
-
 	_science_caption = Label.new()
-	_science_caption.text = "Tuning telescope... connecting to target..."
-	_science_caption.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_science_caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_science_caption.add_theme_color_override("font_color", Color(0.72, 0.78, 0.92))
-	_science_caption.add_theme_font_size_override("font_size", 12)
-	vbox.add_child(_science_caption)
+	_science_caption.add_theme_color_override("font_color", Color(0.75, 0.85, 1.0))
+	_science_caption.add_theme_font_size_override("font_size", PanelStyle.FONT_MUTED)
+	_science_panel.add_child(_science_caption)
 
 	canvas.add_child(_science_panel)
+
+func _build_starfield() -> void:
+	# Draw a dark background + procedural star texture behind all CanvasLayer UI.
+	var canvas = $CanvasLayer
+	if canvas == null:
+		return
+	var bg := ColorRect.new()
+	bg.name = "StarfieldBg"
+	bg.color = Color(0.02, 0.02, 0.06, 1.0)
+	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	canvas.add_child(bg)
+	canvas.move_child(bg, 0)
+
+	# Generate a static star texture and display it as a full-screen TextureRect.
+	var vp_size := Vector2(1920, 1080)  # generated at fixed res; stretched to screen
+	var img := Image.create(int(vp_size.x), int(vp_size.y), false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 99
+	for _i in range(320):
+		var px := int(rng.randi() % int(vp_size.x))
+		var py := int(rng.randi() % int(vp_size.y))
+		var b := rng.randf_range(0.30, 1.0)
+		var radius := int(rng.randi() % 2)  # 0 or 1 px
+		for dy in range(-radius, radius + 1):
+			for dx in range(-radius, radius + 1):
+				var nx := px + dx
+				var ny := py + dy
+				if nx >= 0 and nx < int(vp_size.x) and ny >= 0 and ny < int(vp_size.y):
+					img.set_pixel(nx, ny, Color(b, b, b + 0.06, b))
+	var star_tex := ImageTexture.create_from_image(img)
+	var stars_rect := TextureRect.new()
+	stars_rect.name = "StarfieldDots"
+	stars_rect.texture = star_tex
+	stars_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	stars_rect.stretch_mode = TextureRect.STRETCH_SCALE
+	stars_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	stars_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	canvas.add_child(stars_rect)
+	canvas.move_child(stars_rect, 1)
 
 func _apply_responsive_layout() -> void:
 	var viewport = get_viewport().get_visible_rect().size
@@ -448,33 +467,35 @@ func _apply_responsive_layout() -> void:
 	var edge_margin = 16.0
 	var panel_width = clamp(viewport.x * (0.33 if compact else 0.28), 300.0, 420.0)
 	var panel_height = 120.0
+	# Safe area: compensate for Dynamic Island / notch (landscape iPhone aspect > 1.85)
+	var safe_top = 90.0 if viewport.x / max(viewport.y, 1.0) > 1.85 else 0.0
+	var safe_bottom = 90.0 if viewport.x / max(viewport.y, 1.0) > 1.85 else 0.0
+	if _ui_margin:
+		_ui_margin.offset_top = 24.0 + safe_top
 	if travel_panel:
 		travel_panel.anchor_left = 0.0
 		travel_panel.anchor_right = 0.0
 		travel_panel.anchor_top = 0.0
 		travel_panel.anchor_bottom = 0.0
 		travel_panel.offset_left = edge_margin
-		travel_panel.offset_top = 96.0
+		travel_panel.offset_top = 96.0 + safe_top
 		travel_panel.offset_right = edge_margin + panel_width
-		travel_panel.offset_bottom = 96.0 + panel_height
+		travel_panel.offset_bottom = 96.0 + panel_height + safe_top
+	if _shop_button:
+		_shop_button.offset_top = 24.0 + safe_top
+		_shop_button.offset_bottom = 68.0 + safe_top
 	if _science_panel:
-		var science_width = clamp(viewport.x * (0.72 if compact else 0.45), 320.0, 560.0)
-		var science_bottom = 24.0
-		if compact:
-			science_bottom = 12.0
+		# Simple caption strip at the bottom-centre.
+		var caption_width = clamp(viewport.x * 0.50, 240.0, 480.0)
+		var caption_bottom = 28.0 + safe_bottom
 		_science_panel.anchor_left = 0.5
 		_science_panel.anchor_right = 0.5
 		_science_panel.anchor_top = 1.0
 		_science_panel.anchor_bottom = 1.0
-		_science_panel.offset_left = -science_width * 0.5
-		_science_panel.offset_right = science_width * 0.5
-		_science_panel.offset_top = -260.0 - science_bottom
-		_science_panel.offset_bottom = -science_bottom
-	if _science_image:
-		_science_image.custom_minimum_size = Vector2(
-			clamp(viewport.x * (0.56 if compact else 0.28), 280.0, 360.0),
-			clamp(viewport.y * 0.24, 160.0, 220.0)
-		)
+		_science_panel.offset_left = -caption_width * 0.5
+		_science_panel.offset_right = caption_width * 0.5
+		_science_panel.offset_top = -(44.0 + caption_bottom)
+		_science_panel.offset_bottom = -caption_bottom
 
 func _show_science_panel() -> void:
 	if _science_panel == null or _science_image_requested:
@@ -482,14 +503,17 @@ func _show_science_panel() -> void:
 	_science_image_requested = true
 	_science_panel.visible = true
 	var t = create_tween()
-	t.tween_property(_science_panel, "modulate:a", 1.0, 0.8).set_delay(1.5)
-	var dataset = "Active Asteroids Programme"
-	if _current_target_type == "planet" or _current_target_type == "tess":
-		dataset = "NASA TESS dataset"
+	t.tween_property(_science_panel, "modulate:a", 1.0, 0.8).set_delay(1.0)
 	var label_text = _current_target_label if _current_target_label != "" else "Target %s" % _current_target_id
-	_science_caption.text = "Observing: %s\nData source: %s" % [label_text, dataset]
-	if _current_target_id != "":
-		_fetch_science_image(_current_target_id, _current_target_type)
+	_science_caption.text = label_text
+	# Show the procedural target body at reduced scale during travel so there
+	# is always something visual on screen — it grows to full size on approach.
+	if asteroid_mesh:
+		asteroid_mesh.visible = true
+		asteroid_pivot.scale = Vector3(0.04, 0.04, 0.04)
+		var grow = get_tree().create_tween()
+		grow.tween_property(asteroid_pivot, "scale", Vector3(0.32, 0.32, 0.32), TRAVEL_TIME)\
+			.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 
 func _fetch_science_image(target_id: String, target_type: String) -> void:
 	var image_url := ""
@@ -543,18 +567,7 @@ func _update_shake(delta: float) -> void:
 	)
 
 func _enhance_travel_dashboard() -> void:
-	var vbox = travel_panel.get_node_or_null("TravelMargin/TravelContent")
-	if vbox == null:
-		return
-	var panel_style = PanelStyle
-	_travel_eta_label = Label.new()
-	_travel_eta_label.text = "ETA: --:--"
-	panel_style.apply_body(_travel_eta_label)
-	vbox.add_child(_travel_eta_label)
-	_travel_info_label = Label.new()
-	_travel_info_label.text = "Vessel: %s" % (_current_rocket_id if _current_rocket_id != "" else "—")
-	panel_style.apply_muted(_travel_info_label)
-	vbox.add_child(_travel_info_label)
+	pass  # Travel dashboard kept minimal: just title + progress bar + pct label.
 
 func _build_shop_button() -> void:
 	var canvas = $CanvasLayer
@@ -622,18 +635,19 @@ func _build_ship_status_panel() -> void:
 	var title = Label.new()
 	title.text = "SHIP STATUS"
 	title.add_theme_color_override("font_color", Color(0.28, 0.88, 0.96))
-	title.add_theme_font_size_override("font_size", 12)
+	title.add_theme_font_size_override("font_size", PanelStyle.FONT_MUTED)
 	vbox.add_child(title)
 	vbox.add_child(HSeparator.new())
 	var vessel_lbl = Label.new()
-	vessel_lbl.text = "Vessel: %s" % (_current_rocket_id if _current_rocket_id != "" else "—")
+	var vessel_name = RocketSpecs.get_display_name(_current_rocket_id) if _current_rocket_id != "" else "—"
+	vessel_lbl.text = "Vessel: %s" % vessel_name
 	vessel_lbl.add_theme_color_override("font_color", Color(0.85, 0.87, 0.92))
-	vessel_lbl.add_theme_font_size_override("font_size", 13)
+	vessel_lbl.add_theme_font_size_override("font_size", PanelStyle.FONT_BODY)
 	vbox.add_child(vessel_lbl)
 	var rooms_header = Label.new()
 	rooms_header.text = "Rooms:"
 	rooms_header.add_theme_color_override("font_color", Color(0.60, 0.65, 0.78))
-	rooms_header.add_theme_font_size_override("font_size", 12)
+	rooms_header.add_theme_font_size_override("font_size", PanelStyle.FONT_MUTED)
 	vbox.add_child(rooms_header)
 	var layout = RoomCatalog.create_layout_for_rocket_type(_current_rocket_id)
 	var installed = RoomCatalog.get_installed_rooms(layout)
@@ -642,7 +656,7 @@ func _build_ship_status_panel() -> void:
 		var row = Label.new()
 		row.text = "  • %s" % room_def.get("name", room_inst.get("room_id", "?"))
 		row.add_theme_color_override("font_color", Color(0.72, 0.78, 0.92))
-		row.add_theme_font_size_override("font_size", 12)
+		row.add_theme_font_size_override("font_size", PanelStyle.FONT_MUTED)
 		vbox.add_child(row)
 	canvas.add_child(_ship_status_panel)
 

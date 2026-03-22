@@ -13,12 +13,22 @@ const MICRO_SURVEY_KEYS = {
   progression2: "planet_hunters_micro_survey_progression_stage2_v1",
   progression3: "planet_hunters_micro_survey_progression_stage3_v1",
   progression4: "planet_hunters_micro_survey_progression_stage4_v1",
+  launch:       "planet_hunters_micro_survey_first_launch_v1",
+  pwa_install:  "planet_hunters_micro_survey_pwa_install_v1",
+  m4_complete:  "planet_hunters_micro_survey_m4_complete_v1",
+  return_visit: "planet_hunters_micro_survey_return_visit_v1",
 };
+const SESSION_COUNT_KEY = "planet_hunters_session_count_v1";
 const MICRO_SURVEY_IDS = {
   contractor:  "019ccaf8-4299-0000-b3ad-92a57ab75b95",
   mining:      "019ccaf8-c4d8-0000-901b-aa850dfd43c5",
   science:     "019ccaf9-0259-0000-d411-e11fdc643d97",
   progression: "019ccaf9-3453-0000-b6b9-0e41fcae8f1c",
+  // New surveys — create in PostHog and paste IDs here:
+  launch:      "",  // "How did your first launch feel?" — fires after rocket_launched (M1)
+  pwa_install: "",  // "Why did you install the app?" — fires after PWA install prompt accepted
+  m4_complete: "",  // "You've reached the end — what would keep you playing?" — fires at M4 debrief
+  return_visit: "", // "What brought you back?" — fires on 2nd+ session start
 };
 const SURVEY_OVERLAY_ID = "planet-hunters-survey-overlay";
 const SURVEY_IFRAME_ID = "planet-hunters-survey-iframe";
@@ -27,15 +37,14 @@ const SUPABASE_SESSION_STORAGE_KEY = "planet_hunters_supabase_guest";
 const XP_STATE_KEY = "planet_hunters_xp_state_v1";
 const DEFAULT_RUNTIME_CONFIG = {
   posthog: {
-    projectToken: "phc_65umDftbbTkrm1V6azue6OeU4u5c8iJcaHm4JtJ95di",
+    projectToken: "",
     apiHost: "https://us.i.posthog.com",
     uiHost: "https://us.posthog.com",
-    surveyId: "019c603e-d236-0000-85ce-f507635d2311",
+    surveyId: "",
   },
   supabase: {
-    url: "https://hlufptwhzkpkkjztimzo.supabase.co",
-    anonKey:
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhsdWZwdHdoemtwa2tqenRpbXpvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTYyOTk3NTUsImV4cCI6MjAzMTg3NTc1NX0.v_NDVWjIU_lJQSPbJ_Y6GkW3axrQWKXfXVsBEAbFv_I",
+    url: "",
+    anonKey: "",
   },
 };
 
@@ -49,11 +58,71 @@ let _xpSyncInFlight = false;
 let _pendingXpSnapshot = null;
 
 const LEVEL_UNLOCK_HINTS = {
-  2: "Longer range unlocked",
-  3: "Faster mining speed unlocked",
-  4: "Cargo capacity increased",
-  5: "Advanced scanner unlocked",
+  2: "Starter Rocket 2 unlocked — extended range and heavier payload",
+  3: "Starter Rocket 3 unlocked — faster and further",
+  4: "Mission 4 unlocked — Scanner Station and drone mining",
+  5: "Free Operations unlocked — run missions on your own terms",
+  6: "Refinery unlocked — refine minerals before selling for higher returns",
+  7: "Off-world refinery unlocked — process minerals at the source",
+  8: "Extended scanner range and dedicated refinery slot unlocked",
 };
+
+// ── Push notifications ────────────────────────────────────────────────────────
+
+function _urlBase64ToUint8Array(base64String) {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const rawData = atob(base64);
+  return Uint8Array.from([...rawData].map((c) => c.charCodeAt(0)));
+}
+
+async function initPushNotifications() {
+  if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
+  try {
+    const registration = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
+    window.__swRegistration = registration;
+
+    const config = await getRuntimeConfig();
+    const vapidPublicKey = config && config.push && config.push.vapidPublicKey;
+    if (!vapidPublicKey) return;
+
+    const permission = await Notification.requestPermission();
+    if (permission !== "granted") return;
+
+    const existing = await registration.pushManager.getSubscription();
+    const subscription = existing || (await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: _urlBase64ToUint8Array(vapidPublicKey),
+    }));
+
+    await fetch("/api/push-subscribe", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(subscription.toJSON()),
+    });
+
+    // Expose for GDScript → postMessage bridge
+    window.__schedulePush = async function(event, delayMs, payload) {
+      try {
+        await fetch("/api/push-notify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: (payload && payload.title) || "Planet Hunters",
+            message: (payload && payload.body) || "",
+            tag: event || "planet-hunters",
+            url: (payload && payload.url) || "/",
+            schedule_after_secs: Math.round((delayMs || 0) / 1000),
+          }),
+        });
+      } catch (e) {
+        console.warn("[push] schedule failed:", e);
+      }
+    };
+  } catch (e) {
+    console.warn("[push] init failed:", e);
+  }
+}
 
 function vibrate(pattern) {
   if (typeof navigator !== "undefined" && navigator.vibrate) {
@@ -427,34 +496,48 @@ function showFeedbackDialog(context = {}) {
   overlay.id = FEEDBACK_OVERLAY_ID;
   overlay.style.position = "fixed";
   overlay.style.inset = "0";
-  overlay.style.background = "rgba(2, 6, 15, 0.78)";
+  overlay.style.background = "rgba(2, 6, 15, 0.85)";
   overlay.style.zIndex = "2147482647";
   overlay.style.display = "flex";
   overlay.style.alignItems = "center";
   overlay.style.justifyContent = "center";
-  overlay.style.padding = "20px";
+  overlay.style.padding = "16px";
+  overlay.style.boxSizing = "border-box";
 
   const card = document.createElement("form");
   card.style.width = "min(560px, 100%)";
+  card.style.maxHeight = "min(calc(100svh - 32px), 800px)";
   card.style.background = "#08111d";
   card.style.border = "1px solid #233455";
   card.style.borderRadius = "18px";
-  card.style.boxShadow = "0 24px 60px rgba(0, 0, 0, 0.45)";
-  card.style.padding = "22px";
-  card.style.display = "grid";
-  card.style.gap = "12px";
+  card.style.boxShadow = "0 24px 60px rgba(0, 0, 0, 0.6)";
+  card.style.display = "flex";
+  card.style.flexDirection = "column";
+  card.style.overflow = "hidden";
+  card.style.boxSizing = "border-box";
+
+  const cardBody = document.createElement("div");
+  cardBody.style.padding = "24px 24px 12px";
+  cardBody.style.display = "grid";
+  cardBody.style.gap = "12px";
+  cardBody.style.overflowY = "auto";
+  cardBody.style.flex = "1";
+  cardBody.style.boxSizing = "border-box";
+  cardBody.style.webkitOverflowScrolling = "touch";
 
   const title = document.createElement("h2");
   title.textContent = "Where did you get stuck?";
   title.style.margin = "0";
-  title.style.fontSize = "24px";
+  title.style.fontSize = "22px";
   title.style.color = "#e7edf9";
+  title.style.fontWeight = "700";
 
   const intro = document.createElement("p");
   intro.textContent = "Send quick feedback with your current context. We will line it up with replay and gameplay events.";
   intro.style.margin = "0";
   intro.style.color = "#a9b4cc";
   intro.style.lineHeight = "1.5";
+  intro.style.fontSize = "14px";
 
   const blockerSelect = document.createElement("select");
   blockerSelect.innerHTML = [
@@ -473,12 +556,12 @@ function showFeedbackDialog(context = {}) {
   ].join("");
 
   const expectation = document.createElement("textarea");
-  expectation.rows = 5;
+  expectation.rows = 3;
   expectation.placeholder = "What were you trying to do, and what did you expect to happen?";
   expectation.style.resize = "vertical";
 
   const details = document.createElement("textarea");
-  details.rows = 4;
+  details.rows = 2;
   details.placeholder = "Anything else? Controls, tutorial, pacing, unclear text, bugs.";
   details.style.resize = "vertical";
 
@@ -490,7 +573,8 @@ function showFeedbackDialog(context = {}) {
     element.style.background = "#101c30";
     element.style.color = "#e7edf9";
     element.style.padding = "12px";
-    element.style.font = "inherit";
+    element.style.fontSize = "15px";
+    element.style.fontFamily = "inherit";
   });
 
   const footer = document.createElement("div");
@@ -498,6 +582,10 @@ function showFeedbackDialog(context = {}) {
   footer.style.justifyContent = "space-between";
   footer.style.gap = "12px";
   footer.style.flexWrap = "wrap";
+  footer.style.padding = "16px 24px 20px";
+  footer.style.borderTop = "1px solid #1a2a44";
+  footer.style.background = "#0a1626";
+  footer.style.boxSizing = "border-box";
 
   const closeBtn = document.createElement("button");
   closeBtn.type = "button";
@@ -505,8 +593,10 @@ function showFeedbackDialog(context = {}) {
   closeBtn.style.border = "1px solid #30496f";
   closeBtn.style.background = "#12213a";
   closeBtn.style.color = "#dce7fb";
-  closeBtn.style.padding = "10px 14px";
+  closeBtn.style.padding = "10px 20px";
   closeBtn.style.borderRadius = "999px";
+  closeBtn.style.cursor = "pointer";
+  closeBtn.style.fontSize = "14px";
   closeBtn.onclick = () => {
     removeFeedbackOverlay();
     pushAction("feedback_dialog_closed", context);
@@ -519,20 +609,23 @@ function showFeedbackDialog(context = {}) {
   submitBtn.style.border = "0";
   submitBtn.style.background = "#4ad0ff";
   submitBtn.style.color = "#04101a";
-  submitBtn.style.padding = "10px 16px";
+  submitBtn.style.padding = "10px 24px";
   submitBtn.style.borderRadius = "999px";
   submitBtn.style.fontWeight = "700";
   submitBtn.style.cursor = "pointer";
+  submitBtn.style.fontSize = "14px";
 
   footer.appendChild(closeBtn);
   footer.appendChild(submitBtn);
 
-  card.appendChild(title);
-  card.appendChild(intro);
-  card.appendChild(blockerSelect);
-  card.appendChild(severitySelect);
-  card.appendChild(expectation);
-  card.appendChild(details);
+  cardBody.appendChild(title);
+  cardBody.appendChild(intro);
+  cardBody.appendChild(blockerSelect);
+  cardBody.appendChild(severitySelect);
+  cardBody.appendChild(expectation);
+  cardBody.appendChild(details);
+  
+  card.appendChild(cardBody);
   card.appendChild(footer);
 
   card.onsubmit = async (event) => {
@@ -568,36 +661,45 @@ async function showInlineSurvey(params, surveyIdOverride) {
   overlay.id = SURVEY_OVERLAY_ID;
   overlay.style.position = "fixed";
   overlay.style.inset = "0";
-  overlay.style.background = "rgba(2, 6, 15, 0.78)";
+  overlay.style.background = "rgba(2, 6, 15, 0.85)";
   overlay.style.zIndex = "2147482646";
   overlay.style.display = "flex";
   overlay.style.alignItems = "center";
   overlay.style.justifyContent = "center";
-  overlay.style.padding = "20px";
+  overlay.style.padding = "min(20px, 4vw)";
+  overlay.style.boxSizing = "border-box";
 
   const card = document.createElement("div");
   card.style.width = "min(860px, 100%)";
-  card.style.height = "min(88vh, 900px)";
+  card.style.height = "min(calc(100svh - 32px), 900px)";
   card.style.background = "#0c1220";
   card.style.border = "1px solid #233455";
   card.style.borderRadius = "14px";
   card.style.overflow = "hidden";
-  card.style.boxShadow = "0 24px 60px rgba(0, 0, 0, 0.45)";
+  card.style.boxShadow = "0 24px 60px rgba(0, 0, 0, 0.6)";
   card.style.position = "relative";
+  card.style.display = "flex";
+  card.style.flexDirection = "column";
+  card.style.boxSizing = "border-box";
+
+  const header = document.createElement("div");
+  header.style.padding = "8px 12px";
+  header.style.display = "flex";
+  header.style.justifyContent = "flex-end";
+  header.style.background = "#0a101a";
+  header.style.borderBottom = "1px solid #1a2a44";
 
   const closeBtn = document.createElement("button");
   closeBtn.type = "button";
-  closeBtn.textContent = "Close";
-  closeBtn.style.position = "absolute";
-  closeBtn.style.top = "10px";
-  closeBtn.style.right = "10px";
+  closeBtn.textContent = "Close \u00d7";
   closeBtn.style.border = "1px solid #30496f";
   closeBtn.style.background = "#12213a";
   closeBtn.style.color = "#dce7fb";
-  closeBtn.style.padding = "6px 12px";
+  closeBtn.style.padding = "6px 16px";
   closeBtn.style.borderRadius = "999px";
   closeBtn.style.cursor = "pointer";
-  closeBtn.style.zIndex = "2";
+  closeBtn.style.fontSize = "13px";
+  closeBtn.style.fontWeight = "600";
   closeBtn.onclick = function closeSurvey() {
     removeSurveyOverlay();
     pushAction("survey_closed", {});
@@ -607,13 +709,14 @@ async function showInlineSurvey(params, surveyIdOverride) {
   const iframe = document.createElement("iframe");
   iframe.id = SURVEY_IFRAME_ID;
   iframe.src = `${surveyUrl}?${new URLSearchParams(params).toString()}`;
-  iframe.title = params.survey_context ? "Planet Hunters Survey" : "Experiment 1 Exit Survey";
+  iframe.title = params.survey_context ? "Star Sailors Survey" : "Experiment 1 Exit Survey";
   iframe.style.width = "100%";
-  iframe.style.height = "100%";
+  iframe.style.flex = "1";
   iframe.style.border = "0";
   iframe.allow = "fullscreen";
 
-  card.appendChild(closeBtn);
+  header.appendChild(closeBtn);
+  card.appendChild(header);
   card.appendChild(iframe);
   overlay.appendChild(card);
   document.body.appendChild(overlay);
@@ -636,6 +739,8 @@ async function maybeTriggerMicroSurvey(storageKey, surveyId, context, eventPaylo
   if (_surveyShownInThisBoot) return;
   if (document.getElementById(SURVEY_OVERLAY_ID)) return;
   if (localStorage.getItem(storageKey)) return;
+  // Skip if no survey ID configured yet.
+  if (!surveyId) return;
   try {
     const distinctId = await resolveSurveyDistinctId();
     const params = {
@@ -645,6 +750,8 @@ async function maybeTriggerMicroSurvey(storageKey, surveyId, context, eventPaylo
       mission_stage: String((eventPayload && eventPayload.mission_stage) || ""),
     };
     await showInlineSurvey(params, surveyId);
+    // Block any further surveys this session — one survey per boot is enough.
+    _surveyShownInThisBoot = true;
     localStorage.setItem(storageKey, new Date().toISOString());
   } catch (err) {
     console.error("Micro-survey trigger failed:", storageKey, err);
@@ -680,16 +787,65 @@ function maybeShowScienceSurvey(payload) {
 
 function maybeShowProgressionSurvey(payload) {
   const stage = Number((payload && payload.mission_stage) || 0);
-  if (stage < 2 || stage > 4) return;
+  if (stage < 2 || stage > 3) return; // M4 gets its own dedicated survey below
   const key = MICRO_SURVEY_KEYS["progression" + stage];
   if (!key) return;
   maybeTriggerMicroSurvey(key, MICRO_SURVEY_IDS.progression, "micro_mission_progression_clarity", payload);
+}
+
+function maybeShowLaunchSurvey(payload) {
+  // Fires after the first rocket launch in M1.
+  const stage = Number((payload && payload.mission_stage) || 0);
+  if (stage !== 1) return;
+  maybeTriggerMicroSurvey(
+    MICRO_SURVEY_KEYS.launch,
+    MICRO_SURVEY_IDS.launch,
+    "micro_first_launch_feel",
+    payload
+  );
+}
+
+function maybeShowM4CompleteSurvey(payload) {
+  // Fires at M4 debrief — end of current content.
+  const stage = Number((payload && payload.mission_stage) || 0);
+  if (stage !== 4) return;
+  maybeTriggerMicroSurvey(
+    MICRO_SURVEY_KEYS.m4_complete,
+    MICRO_SURVEY_IDS.m4_complete,
+    "micro_m4_end_of_content",
+    payload
+  );
+}
+
+function maybeShowPwaInstallSurvey() {
+  maybeTriggerMicroSurvey(
+    MICRO_SURVEY_KEYS.pwa_install,
+    MICRO_SURVEY_IDS.pwa_install,
+    "micro_pwa_install_motivation",
+    {}
+  );
+}
+
+function maybeShowReturnVisitSurvey() {
+  // Show on second session start — only once ever.
+  try {
+    const count = Number(localStorage.getItem(SESSION_COUNT_KEY) || "0") + 1;
+    localStorage.setItem(SESSION_COUNT_KEY, String(count));
+    if (count !== 2) return; // only on exactly the 2nd session
+    maybeTriggerMicroSurvey(
+      MICRO_SURVEY_KEYS.return_visit,
+      MICRO_SURVEY_IDS.return_visit,
+      "micro_return_visit_motivation",
+      {}
+    );
+  } catch (_) {}
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 
 async function maybeTriggerFirstMissionSurvey(eventPayload) {
   if (_surveyShownInThisBoot) return;
+  if (document.getElementById(SURVEY_OVERLAY_ID)) return;
   if (localStorage.getItem(SURVEY_SHOWN_KEY)) return;
 
   try {
@@ -718,9 +874,11 @@ async function maybeTriggerFirstMissionSurvey(eventPayload) {
 
 function App() {
   const [progress, setProgress] = useState(() => parseProgress(readCookie(COOKIE_NAME)));
+  const [xpState, setXpState] = useState(() => readXpState() || { experience_level: 1, experience_xp: 0, franc_balance: 0 });
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [storageStatus, setStorageStatus] = useState("Cookie storage active");
   const [gameSrc] = useState(() => "/game/index.html?v=" + Date.now());
-  const [isMobile, setIsMobile] = useState(() => typeof window !== "undefined" && window.innerWidth < 768);
+  const [isMobile, setIsMobile] = useState(() => typeof window !== "undefined" && Math.min(window.innerWidth, window.innerHeight) < 768);
   const [isPwa] = useState(() => isPwaMode());
   const [isIos] = useState(() => isIosDevice());
   const [installPrompt, setInstallPrompt] = useState(null);
@@ -729,13 +887,20 @@ function App() {
   const [showInstallHint, setShowInstallHint] = useState(false);
   const [levelUpBanner, setLevelUpBanner] = useState(null); // { level, hint }
   const levelUpTimerRef = useRef(null);
+  const [showPwaHud, setShowPwaHud] = useState(false);
+  const pwaHudTimerRef = useRef(null);
   const [isPortrait, setIsPortrait] = useState(
     () => typeof window !== "undefined" && window.matchMedia("(orientation: portrait)").matches
   );
+  const [viewportWidth, setViewportWidth] = useState(
+    () => (typeof window !== "undefined" ? window.innerWidth : 1280)
+  );
+  const [showPwaHudMenu, setShowPwaHudMenu] = useState(false);
 
   useEffect(() => {
     function onResize() {
-      setIsMobile(window.innerWidth < 768);
+      setIsMobile(Math.min(window.innerWidth, window.innerHeight) < 768);
+      setViewportWidth(window.innerWidth);
     }
     window.addEventListener("resize", onResize, { passive: true });
     return () => window.removeEventListener("resize", onResize);
@@ -768,6 +933,8 @@ function App() {
         shell_entry: "react_shell",
       });
     });
+    // Return-visit survey — delayed 3s so the game has time to load first.
+    setTimeout(maybeShowReturnVisitSurvey, 3000);
     const persistedXp = readXpState();
     if (persistedXp && typeof persistedXp.experience_level !== "undefined") {
       registerAnalyticsContext({
@@ -775,6 +942,7 @@ function App() {
         experience_xp: Number(persistedXp.experience_xp || 0),
       });
     }
+    initPushNotifications();
   }, []);
 
   useEffect(() => {
@@ -816,7 +984,7 @@ function App() {
       }
       pushAction(eventName, payload);
       captureAnalyticsEvent(eventName, payload);
-      if (typeof payload.experience_level !== "undefined" || typeof payload.experience_xp !== "undefined") {
+      if (typeof payload.experience_level !== "undefined" || typeof payload.experience_xp !== "undefined" || typeof payload.franc_balance !== "undefined") {
         const current = readXpState() || {};
         const prevLevel = Number(current.experience_level || 1);
         const snapshot = {
@@ -824,9 +992,11 @@ function App() {
             typeof payload.experience_level !== "undefined" ? payload.experience_level : prevLevel
           ),
           experience_xp: Number(typeof payload.experience_xp !== "undefined" ? payload.experience_xp : current.experience_xp || 0),
+          franc_balance: Number(typeof payload.franc_balance !== "undefined" ? payload.franc_balance : current.franc_balance || 0),
           updated_at: new Date().toISOString(),
         };
         writeXpState(snapshot);
+        setXpState(snapshot);
         syncExperienceToSupabase(snapshot);
         if (snapshot.experience_level > prevLevel) {
           const hint = LEVEL_UNLOCK_HINTS[snapshot.experience_level] || null;
@@ -845,6 +1015,13 @@ function App() {
       if (eventName === "feedback_requested") {
         showFeedbackDialog(payload);
       }
+      if (eventName === "schedule_push" && typeof window.__schedulePush === "function") {
+        window.__schedulePush(
+          payload.tag || "planet-hunters",
+          Number(payload.delay_ms || 0),
+          { title: payload.title, body: payload.body, url: payload.url }
+        );
+      }
       if (eventName === "first_mission_completed" || eventName === "mission_debrief_resolved") {
         maybeTriggerFirstMissionSurvey(payload);
       }
@@ -859,6 +1036,10 @@ function App() {
       }
       if (eventName === "mission_debrief_resolved") {
         maybeShowProgressionSurvey(payload);
+        maybeShowM4CompleteSurvey(payload);
+      }
+      if (eventName === "rocket_launched") {
+        maybeShowLaunchSurvey(payload);
       }
     }
 
@@ -882,6 +1063,14 @@ function App() {
     }
   }, [isMobile, isPwa]);
 
+  useEffect(() => {
+    return () => {
+      if (pwaHudTimerRef.current) {
+        clearTimeout(pwaHudTimerRef.current);
+      }
+    };
+  }, []);
+
   const handleOpenFullscreen = useCallback(() => {
     if (document.documentElement.requestFullscreen) {
       document.documentElement.requestFullscreen().catch(() => {});
@@ -898,7 +1087,10 @@ function App() {
     if (installPrompt) {
       await installPrompt.prompt();
       try {
-        await installPrompt.userChoice;
+        const choice = await installPrompt.userChoice;
+        if (choice && choice.outcome === "accepted") {
+          setTimeout(maybeShowPwaInstallSurvey, 2000);
+        }
       } catch (_error) {}
       setInstallPrompt(null);
       setShowMobileBanner(false);
@@ -906,6 +1098,58 @@ function App() {
     }
     setShowInstallHint(true);
   }, [installPrompt, isIos]);
+
+  const revealPwaHud = useCallback(() => {
+    if (!isPwa) return;
+    setShowPwaHud(true);
+    setShowPwaHudMenu(false);
+    if (pwaHudTimerRef.current) {
+      clearTimeout(pwaHudTimerRef.current);
+    }
+    pwaHudTimerRef.current = setTimeout(() => {
+      setShowPwaHud(false);
+      pwaHudTimerRef.current = null;
+    }, 3500);
+  }, [isPwa]);
+
+  const handlePwaSave = useCallback(() => {
+    const next = {
+      marker: "manual-save",
+      updatedAt: new Date().toISOString(),
+    };
+    saveProgress(next, setProgress);
+    setStorageStatus("Cookie saved");
+    setShowPwaHudMenu(false);
+  }, []);
+
+  const handlePwaExit = useCallback(() => {
+    try {
+      if (window.history.length > 1) {
+        window.history.back();
+        return;
+      }
+    } catch (_error) {}
+    window.location.href = "/";
+  }, []);
+
+  const handleSkipToLevel3 = useCallback(() => {
+    const next = {
+      experience_level: 3,
+      experience_xp: 0,
+      franc_balance: 250000,
+      updated_at: new Date().toISOString(),
+    };
+    writeXpState(next);
+    setXpState(next);
+    alert("Progress skipped to Level 3!");
+    setShowPwaHudMenu(false);
+  }, []);
+
+  const handleInstantMining = useCallback(() => {
+    // In web shell, we just pretend we triggered it and hide menu
+    setShowPwaHudMenu(false);
+    setShowAdvanced(false);
+  }, []);
 
   const markerText = useMemo(() => {
     if (!progress) {
@@ -916,11 +1160,12 @@ function App() {
 
   const frameStyle = {
     width: "100%",
-    height: isMobile ? "100svh" : "min(75vh, 860px)",
+    height: isMobile ? "100dvh" : "min(75vh, 860px)",
     border: "0",
     display: "block",
     background: "#000",
   };
+  const isCompactPwaHud = isMobile && viewportWidth <= 430;
 
   // Level-up celebration banner (top-centre, auto-dismisses after 4s)
   const levelUpOverlay = levelUpBanner
@@ -929,31 +1174,32 @@ function App() {
         {
           style: {
             position: "fixed",
-            top: "24px",
+            top: isPwa ? "max(32px, calc(env(safe-area-inset-top) + 12px))" : "24px",
             left: "50%",
             transform: "translateX(-50%)",
-            background: "linear-gradient(135deg, #1a3a6e, #0f2040)",
-            border: "1px solid #3a6abf",
-            borderRadius: "12px",
-            padding: "14px 24px",
+            background: "linear-gradient(135deg, #0f2040, #1a3a6e)",
+            border: "1px solid rgba(58,106,191,0.7)",
+            borderRadius: "14px",
+            padding: "12px 22px",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            gap: "4px",
+            gap: "3px",
             zIndex: 99998,
             pointerEvents: "none",
-            boxShadow: "0 4px 24px rgba(58,106,191,0.4)",
+            boxShadow: "0 4px 32px rgba(58,106,191,0.5), 0 0 0 1px rgba(58,106,191,0.15)",
+            whiteSpace: "nowrap",
           },
         },
         React.createElement(
           "span",
-          { style: { color: "#a0c0ff", fontSize: "11px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase" } },
-          `Level ${levelUpBanner.level} reached`
+          { style: { color: "#5a8fff", fontSize: "10px", fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase" } },
+          `Level ${levelUpBanner.level} Reached`
         ),
         levelUpBanner.hint
           ? React.createElement(
               "span",
-              { style: { color: "#ffffff", fontSize: "15px", fontWeight: 700 } },
+              { style: { color: "#e8f0ff", fontSize: "14px", fontWeight: 700 } },
               levelUpBanner.hint
             )
           : null
@@ -1006,67 +1252,21 @@ function App() {
         )
       : null;
 
-  // PWA mode: minimal chrome — slim header + game fills remaining height
+  // PWA mode: game fills entire screen, no chrome
   if (isPwa) {
     return React.createElement(
       "div",
       {
         style: {
-          display: "flex",
-          flexDirection: "column",
-          height: "100svh",
-          minHeight: "100svh",
+          position: "fixed",
+          inset: 0,
           background: "#000",
         },
       },
-      React.createElement(
-        "div",
-        {
-          style: {
-            display: "flex",
-            alignItems: "center",
-            gap: "12px",
-            padding: "max(6px, env(safe-area-inset-top)) 14px 6px 14px",
-            background: "#05080f",
-            borderBottom: "1px solid #1a2340",
-            flexShrink: 0,
-          },
-        },
-        React.createElement(
-          "button",
-          {
-            style: {
-              background: "none",
-              border: "1px solid #2a3560",
-              color: "#8899cc",
-              borderRadius: "6px",
-              padding: "4px 12px",
-              cursor: "pointer",
-              fontSize: "13px",
-            },
-            onClick: () => {
-              if (document.exitFullscreen && document.fullscreenElement) {
-                document.exitFullscreen();
-              }
-              if (window.history.length > 1) {
-                window.history.back();
-              } else {
-                window.close();
-              }
-            },
-          },
-          "\u2190 Exit"
-        ),
-        React.createElement(
-          "span",
-          { style: { color: "#6677aa", fontSize: "13px" } },
-          "Star Sailors: Experiment 1"
-        )
-      ),
       React.createElement("iframe", {
         id: "game-frame",
         src: gameSrc,
-        title: "Planet Hunters Game",
+        title: "Star Sailors: Experiment 1",
         allow: "fullscreen",
         style: {
           flex: 1,
@@ -1082,6 +1282,317 @@ function App() {
           setStorageStatus("Cookie saved");
         },
       }),
+      React.createElement(
+        "button",
+        {
+          onClick: revealPwaHud,
+          style: {
+            position: "fixed",
+            top: "max(0px, env(safe-area-inset-top))",
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: "min(52vw, calc(100vw - env(safe-area-inset-left) - env(safe-area-inset-right) - 16px))",
+            maxWidth: "240px",
+            height: "22px",
+            border: "none",
+            borderBottomLeftRadius: "12px",
+            borderBottomRightRadius: "12px",
+            background: "rgba(10, 18, 40, 0.55)",
+            color: "rgba(200,215,255,0.7)",
+            fontSize: "10px",
+            letterSpacing: "0.06em",
+            textTransform: "uppercase",
+            zIndex: 10001,
+            backdropFilter: "blur(4px)",
+          },
+        },
+        "Menu"
+      ),
+      showPwaHud
+        ? React.createElement(
+            "div",
+            {
+              style: {
+                position: "fixed",
+                top: "max(8px, env(safe-area-inset-top))",
+                left: "50%",
+                transform: "translateX(-50%)",
+                display: "flex",
+                flexWrap: "wrap",
+                justifyContent: "center",
+                gap: "8px",
+                zIndex: 10002,
+                background: "rgba(5, 8, 15, 0.82)",
+                border: "1px solid #2a3560",
+                borderRadius: "12px",
+                padding: "8px",
+                maxWidth: "calc(100vw - env(safe-area-inset-left) - env(safe-area-inset-right) - 16px)",
+              },
+            },
+            isCompactPwaHud
+              ? React.createElement(
+                  React.Fragment,
+                  null,
+                  React.createElement(
+                    "div",
+                    { style: { display: "flex", gap: "10px", alignItems: "center", marginRight: "10px" } },
+                    React.createElement("span", { style: { color: "#fff", fontSize: "12px" } }, `Lvl ${xpState.experience_level}`),
+                    React.createElement("span", { style: { color: "#4ad0ff", fontSize: "12px" } }, `${Math.round(xpState.franc_balance / 1000)}K F`)
+                  ),
+                  React.createElement(
+                    "button",
+                    {
+                      onClick: () => {
+                        setShowPwaHudMenu((open) => !open);
+                        if (pwaHudTimerRef.current) {
+                          clearTimeout(pwaHudTimerRef.current);
+                        }
+                        if (!showPwaHudMenu) {
+                          // Keep open while menu is shown
+                        } else {
+                          pwaHudTimerRef.current = setTimeout(() => {
+                            setShowPwaHud(false);
+                            setShowPwaHudMenu(false);
+                            pwaHudTimerRef.current = null;
+                          }, 3500);
+                        }
+                      },
+                      style: {
+                        border: "1px solid #2a3560",
+                        borderRadius: "8px",
+                        padding: "8px 12px",
+                        color: "#fff",
+                        background: "#1a2550",
+                        fontSize: "12px",
+                      },
+                    },
+                    "Exit to Menu"
+                  ),
+                  showPwaHudMenu
+                    ? React.createElement(
+                        "div",
+                        {
+                          style: {
+                            width: "100%",
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "8px",
+                            marginTop: "8px",
+                            padding: "8px",
+                            borderTop: "1px solid #233455",
+                          },
+                        },
+                        React.createElement(
+                          "button",
+                          {
+                            onClick: handlePwaSave,
+                            style: {
+                              border: "1px solid #2a3560",
+                              borderRadius: "8px",
+                              padding: "8px 10px",
+                              color: "#fff",
+                              background: "#14204a",
+                              fontSize: "12px",
+                            },
+                          },
+                          "Save"
+                        ),
+                        React.createElement(
+                          "button",
+                          {
+                            onClick: handlePwaExit,
+                            style: {
+                              border: "1px solid #2a3560",
+                              borderRadius: "8px",
+                              padding: "8px 10px",
+                              color: "#fff",
+                              background: "#3a1724",
+                              fontSize: "12px",
+                            },
+                          },
+                          "Exit"
+                        ),
+                        React.createElement(
+                          "button",
+                          {
+                            onClick: () => setShowAdvanced(!showAdvanced),
+                            style: {
+                              background: "none",
+                              border: "none",
+                              color: "#007AFF",
+                              textDecoration: "underline",
+                              fontSize: "12px",
+                              marginTop: "4px",
+                              cursor: "pointer",
+                            },
+                          },
+                          showAdvanced ? "Hide Advanced Settings" : "Show Advanced Settings"
+                        ),
+                        showAdvanced && React.createElement(
+                          React.Fragment,
+                          null,
+                          React.createElement(
+                            "button",
+                            {
+                              onClick: handleInstantMining,
+                              style: {
+                                border: "1px solid #FF9F0A",
+                                borderRadius: "8px",
+                                padding: "8px 10px",
+                                color: "#fff",
+                                background: "#FF9F0A",
+                                fontSize: "11px",
+                              },
+                            },
+                            "🚀 Instant Mining (Auto-Setup)"
+                          ),
+                          React.createElement(
+                            "button",
+                            {
+                              onClick: handleSkipToLevel3,
+                              style: {
+                                border: "1px solid #64D2FF",
+                                borderRadius: "8px",
+                                padding: "8px 10px",
+                                color: "#fff",
+                                background: "#64D2FF",
+                                fontSize: "11px",
+                              },
+                            },
+                            "📈 Skip to Level 3 (Unlock Missions)"
+                          )
+                        )
+                      )
+                    : null
+                )
+              : React.createElement(
+                  React.Fragment,
+                  null,
+                  React.createElement(
+                    "div",
+                    { style: { display: "flex", gap: "10px", alignItems: "center", marginRight: "10px" } },
+                    React.createElement("span", { style: { color: "#fff", fontSize: "13px", fontWeight: "bold" } }, `Lvl ${xpState.experience_level}`),
+                    React.createElement("span", { style: { color: "#4ad0ff", fontSize: "13px", fontWeight: "bold" } }, `${Math.round(xpState.franc_balance / 1000)}K F`)
+                  ),
+                  React.createElement(
+                    "button",
+                    {
+                      onClick: handlePwaSave,
+                      style: {
+                        border: "1px solid #2a3560",
+                        borderRadius: "8px",
+                        padding: "8px 10px",
+                        color: "#fff",
+                        background: "#14204a",
+                        fontSize: "12px",
+                      },
+                    },
+                    "Save"
+                  ),
+                  React.createElement(
+                    "button",
+                    {
+                      onClick: () => {
+                        setShowPwaHudMenu(!showPwaHudMenu);
+                        if (pwaHudTimerRef.current) clearTimeout(pwaHudTimerRef.current);
+                      },
+                      style: {
+                        border: "1px solid #2a3560",
+                        borderRadius: "8px",
+                        padding: "8px 10px",
+                        color: "#fff",
+                        background: "#1a2550",
+                        fontSize: "12px",
+                      },
+                    },
+                    "Exit to Menu"
+                  ),
+                  showPwaHudMenu && React.createElement(
+                    "div",
+                    {
+                      style: {
+                        position: "absolute",
+                        top: "100%",
+                        right: 0,
+                        marginTop: "8px",
+                        background: "rgba(5, 8, 15, 0.95)",
+                        border: "1px solid #233455",
+                        borderRadius: "12px",
+                        padding: "12px",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "8px",
+                        minWidth: "200px",
+                      },
+                    },
+                    React.createElement(
+                      "button",
+                      {
+                        onClick: handlePwaExit,
+                        style: {
+                          border: "1px solid #2a3560",
+                          borderRadius: "8px",
+                          padding: "8px 10px",
+                          color: "#fff",
+                          background: "#3a1724",
+                          fontSize: "12px",
+                        },
+                      },
+                      "Exit Game"
+                    ),
+                    React.createElement(
+                      "button",
+                      {
+                        onClick: () => setShowAdvanced(!showAdvanced),
+                        style: {
+                          background: "none",
+                          border: "none",
+                          color: "#007AFF",
+                          textDecoration: "underline",
+                          fontSize: "12px",
+                          cursor: "pointer",
+                        },
+                      },
+                      showAdvanced ? "Hide Advanced Settings" : "Show Advanced Settings"
+                    ),
+                    showAdvanced && React.createElement(
+                      React.Fragment,
+                      null,
+                      React.createElement(
+                        "button",
+                        {
+                          onClick: handleInstantMining,
+                          style: {
+                            border: "1px solid #FF9F0A",
+                            borderRadius: "8px",
+                            padding: "8px 10px",
+                            color: "#fff",
+                            background: "#FF9F0A",
+                            fontSize: "11px",
+                          },
+                        },
+                        "🚀 Instant Mining (Auto-Setup)"
+                      ),
+                      React.createElement(
+                        "button",
+                        {
+                          onClick: handleSkipToLevel3,
+                          style: {
+                            border: "1px solid #64D2FF",
+                            borderRadius: "8px",
+                            padding: "8px 10px",
+                            color: "#fff",
+                            background: "#64D2FF",
+                            fontSize: "11px",
+                          },
+                        },
+                        "📈 Skip to Level 3 (Unlock Missions)"
+                      )
+                    )
+                  )
+                )
+          )
+        : null,
       rotatePrompt,
       levelUpOverlay
     );
@@ -1100,7 +1611,8 @@ function App() {
               right: 0,
               background: "#05080f",
               borderTop: "1px solid #1a2340",
-              padding: "12px 16px",
+              padding:
+                "12px calc(16px + env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left))",
               display: "flex",
               flexDirection: "column",
               gap: "8px",
@@ -1108,9 +1620,38 @@ function App() {
             },
           },
           React.createElement(
-            "p",
-            { style: { margin: 0, fontSize: "13px", color: "#9cb0e8", textAlign: "center" } },
-            "Install for fullscreen play and faster relaunch."
+            "div",
+            { style: { display: "flex", alignItems: "center", justifyContent: "space-between" } },
+            React.createElement(
+              "div",
+              null,
+              React.createElement(
+                "p",
+                { style: { margin: "0 0 2px", fontSize: "14px", fontWeight: 700, color: "#e7edf9" } },
+                "Planet Hunters"
+              ),
+              React.createElement(
+                "p",
+                { style: { margin: 0, fontSize: "12px", color: "#9cb0e8" } },
+                "Install for fullscreen play and offline access."
+              )
+            ),
+            React.createElement(
+              "button",
+              {
+                style: {
+                  background: "none",
+                  border: "none",
+                  color: "#556080",
+                  fontSize: "20px",
+                  cursor: "pointer",
+                  padding: "4px 8px",
+                  lineHeight: 1,
+                },
+                onClick: () => setShowMobileBanner(false),
+              },
+              "\u00d7"
+            )
           ),
           React.createElement(
             "div",
@@ -1148,22 +1689,6 @@ function App() {
                 onClick: handleInstallApp,
               },
               isIos ? "Add to Home Screen" : "Install App"
-            ),
-            React.createElement(
-              "button",
-              {
-                style: {
-                  padding: "10px 14px",
-                  background: "none",
-                  color: "#6677aa",
-                  border: "1px solid #2a3560",
-                  borderRadius: "8px",
-                  fontSize: "14px",
-                  cursor: "pointer",
-                },
-                onClick: () => setShowMobileBanner(false),
-              },
-              "\u00d7"
             )
           ),
           showIosHint
@@ -1187,63 +1712,171 @@ function App() {
     "main",
     { style: isMobile ? { margin: 0, padding: 0 } : { maxWidth: "1200px", margin: "0 auto", padding: "20px" } },
     !isMobile && React.createElement(
-      "h1",
-      { style: { margin: "0 0 8px", fontSize: "clamp(24px, 4vw, 38px)", letterSpacing: "0.02em" } },
-      "Star Sailors: Experiment 1"
-    ),
-    !isMobile && React.createElement(
-      "p",
+      "header",
       {
         style: {
           display: "flex",
-          flexWrap: "wrap",
-          gap: "10px 14px",
-          margin: "0 0 14px",
-          color: "var(--muted)",
-          fontSize: "14px",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
+          gap: "24px",
+          marginBottom: "20px",
         },
       },
       React.createElement(
-        "span",
-        { style: { border: "1px solid var(--edge)", borderRadius: "999px", padding: "6px 10px" } },
-        "Build: Godot Web"
+        "div",
+        { style: { flex: 1, minWidth: 0 } },
+        React.createElement(
+          "p",
+          {
+            style: {
+              margin: "0 0 6px",
+              fontSize: "11px",
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+              color: "var(--accent)",
+              fontWeight: 600,
+            },
+          },
+          "Star Sailors \u00b7 Experiment 1"
+        ),
+        React.createElement(
+          "h1",
+          {
+            style: {
+              margin: "0 0 8px",
+              fontSize: "clamp(28px, 4vw, 44px)",
+              letterSpacing: "-0.01em",
+              fontWeight: 800,
+              lineHeight: 1.1,
+              color: "var(--ink)",
+            },
+          },
+          "Planet Hunters"
+        ),
+        React.createElement(
+          "p",
+          {
+            style: {
+              margin: 0,
+              fontSize: "14px",
+              color: "var(--muted)",
+              lineHeight: 1.5,
+            },
+          },
+          "Mine asteroids \u00b7 Discover planets \u00b7 Contribute to real citizen science"
+        )
       ),
       React.createElement(
-        "span",
-        { style: { border: "1px solid var(--edge)", borderRadius: "999px", padding: "6px 10px", color: "var(--accent)" } },
-        storageStatus
-      ),
-      React.createElement(
-        "span",
-        { style: { border: "1px solid var(--edge)", borderRadius: "999px", padding: "6px 10px" } },
-        `Progress: ${markerText}`
-      ),
-      React.createElement(
-        "span",
-        { style: { border: "1px solid var(--edge)", borderRadius: "999px", padding: "6px 10px" } },
-        `Game path: ${gameSrc}`
-      ),
-      React.createElement(
-        "button",
+        "div",
         {
           style: {
-            border: "1px solid var(--edge)",
-            borderRadius: "999px",
-            padding: "6px 12px",
-            color: "var(--ink)",
-            background: "transparent",
-            cursor: "pointer",
-          },
-          onClick: () => {
-            const next = {
-              marker: "manual-save",
-              updatedAt: new Date().toISOString(),
-            };
-            saveProgress(next, setProgress);
-            setStorageStatus("Cookie saved");
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "flex-end",
+            gap: "8px",
+            flexShrink: 0,
+            paddingTop: "4px",
           },
         },
-        "Save Progress"
+        (xpState.experience_level > 1 || xpState.franc_balance > 0)
+          ? React.createElement(
+              "div",
+              { style: { display: "flex", gap: "6px", alignItems: "center" } },
+              React.createElement(
+                "span",
+                {
+                  style: {
+                    background: "rgba(255,255,255,0.04)",
+                    border: "1px solid var(--edge)",
+                    borderRadius: "6px",
+                    padding: "3px 10px",
+                    fontSize: "13px",
+                    color: "var(--ink)",
+                    fontWeight: 600,
+                    fontVariantNumeric: "tabular-nums",
+                  },
+                },
+                `Lv ${xpState.experience_level}`
+              ),
+              React.createElement(
+                "span",
+                {
+                  style: {
+                    background: "rgba(74,208,255,0.07)",
+                    border: "1px solid rgba(74,208,255,0.25)",
+                    borderRadius: "6px",
+                    padding: "3px 10px",
+                    fontSize: "13px",
+                    color: "var(--accent)",
+                    fontWeight: 600,
+                    fontVariantNumeric: "tabular-nums",
+                  },
+                },
+                `${Math.round(xpState.franc_balance).toLocaleString()} F`
+              )
+            )
+          : null,
+        storageStatus === "Game load error"
+          ? React.createElement(
+              "span",
+              {
+                style: {
+                  fontSize: "12px",
+                  color: "#ff6b6b",
+                  padding: "2px 8px",
+                  background: "rgba(255,60,60,0.1)",
+                  border: "1px solid rgba(255,60,60,0.3)",
+                  borderRadius: "4px",
+                },
+              },
+              "Game load error"
+            )
+          : null,
+        React.createElement(
+          "div",
+          { style: { display: "flex", gap: "8px" } },
+          React.createElement(
+            "button",
+            {
+              style: {
+                border: "1px solid var(--edge)",
+                borderRadius: "8px",
+                padding: "6px 14px",
+                fontSize: "13px",
+                color: storageStatus === "Saved \u2713" || storageStatus === "Cookie saved" ? "var(--accent)" : "var(--muted)",
+                background: "transparent",
+                cursor: "pointer",
+              },
+              onClick: () => {
+                const next = {
+                  marker: "manual-save",
+                  updatedAt: new Date().toISOString(),
+                };
+                saveProgress(next, setProgress);
+                setStorageStatus("Saved \u2713");
+              },
+            },
+            storageStatus === "Saved \u2713" || storageStatus === "Cookie saved" ? "Saved \u2713" : "Save Progress"
+          ),
+          installPrompt
+            ? React.createElement(
+                "button",
+                {
+                  style: {
+                    border: "1px solid #2a5040",
+                    borderRadius: "8px",
+                    padding: "6px 14px",
+                    fontSize: "13px",
+                    color: "#6fd4b0",
+                    background: "#0e2420",
+                    cursor: "pointer",
+                  },
+                  onClick: handleInstallApp,
+                },
+                "Install App"
+              )
+            : null
+        )
       )
     ),
     React.createElement(
@@ -1262,7 +1895,7 @@ function App() {
       React.createElement("iframe", {
         id: "game-frame",
         src: gameSrc,
-        title: "Planet Hunters Game",
+        title: "Star Sailors: Experiment 1",
         allow: "fullscreen",
         style: frameStyle,
         onError: () => {

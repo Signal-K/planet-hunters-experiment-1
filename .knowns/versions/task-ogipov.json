@@ -1,0 +1,124 @@
+{
+  "taskId": "ogipov",
+  "currentVersion": 2,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "ogipov",
+      "version": 1,
+      "timestamp": "2026-03-16T17:53:13.203Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Show 'Free Operations unlocked' messaging when M4 completes",
+        "description": "Post-M4 spec (2026-03-10) explicitly states: 'Free Operations unlock should be shown explicitly in UI messaging.' When mission stage crosses into Free Ops (post-M4), show clear messaging that free operations are now available with brief explanation of the two routes (contract, survey).",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "gameplay",
+          "ux",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "When M4 completes, player sees a clear 'Free Operations unlocked' moment (overlay, banner, or debrief callout)"
+          },
+          {
+            "completed": false,
+            "text": "Messaging explains the two routes: contract (work for a contractor) and survey (scan and discover)"
+          },
+          {
+            "completed": false,
+            "text": "Shown only once; persisted so it does not re-trigger on subsequent sessions"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "ogipov",
+      "version": 2,
+      "timestamp": "2026-03-16T21:23:37.147Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        },
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "When M4 completes, player sees a clear 'Free Operations unlocked' moment (overlay, banner, or debrief callout)"
+            },
+            {
+              "completed": false,
+              "text": "Messaging explains the two routes: contract (work for a contractor) and survey (scan and discover)"
+            },
+            {
+              "completed": false,
+              "text": "Shown only once; persisted so it does not re-trigger on subsequent sessions"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "When M4 completes, player sees a clear 'Free Operations unlocked' moment (overlay, banner, or debrief callout)"
+            },
+            {
+              "completed": true,
+              "text": "Messaging explains the two routes: contract (work for a contractor) and survey (scan and discover)"
+            },
+            {
+              "completed": true,
+              "text": "Shown only once; persisted so it does not re-trigger on subsequent sessions"
+            }
+          ]
+        },
+        {
+          "field": "implementationNotes",
+          "newValue": "earth_base_1.gd: _maybe_show_free_ops_unlock() called deferred from _ready. Triggers when completed_mission_count >= 4. Shows animated overlay with route cards (Contract/Survey) and CTA to launchpad. Persisted in rocket_unlock_popups.cfg under free_ops_unlock_seen key. Shows once only."
+        }
+      ],
+      "snapshot": {
+        "title": "Show 'Free Operations unlocked' messaging when M4 completes",
+        "description": "Post-M4 spec (2026-03-10) explicitly states: 'Free Operations unlock should be shown explicitly in UI messaging.' When mission stage crosses into Free Ops (post-M4), show clear messaging that free operations are now available with brief explanation of the two routes (contract, survey).",
+        "status": "done",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "gameplay",
+          "ux",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "When M4 completes, player sees a clear 'Free Operations unlocked' moment (overlay, banner, or debrief callout)"
+          },
+          {
+            "completed": true,
+            "text": "Messaging explains the two routes: contract (work for a contractor) and survey (scan and discover)"
+          },
+          {
+            "completed": true,
+            "text": "Shown only once; persisted so it does not re-trigger on subsequent sessions"
+          }
+        ],
+        "implementationNotes": "earth_base_1.gd: _maybe_show_free_ops_unlock() called deferred from _ready. Triggers when completed_mission_count >= 4. Shows animated overlay with route cards (Contract/Survey) and CTA to launchpad. Persisted in rocket_unlock_popups.cfg under free_ops_unlock_seen key. Shows once only."
+      }
+    }
+  ]
+}

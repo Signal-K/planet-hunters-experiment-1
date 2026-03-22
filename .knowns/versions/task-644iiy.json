@@ -1,0 +1,313 @@
+{
+  "taskId": "644iiy",
+  "currentVersion": 7,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "644iiy",
+      "version": 1,
+      "timestamp": "2026-03-14T04:12:32.815Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix menu crash caused by tutorial-zone enforcer",
+        "description": "Prevent UIConsistencyEnforcer reserved-zone logic from mutating menu controls during menu open/instantiation.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "menu",
+          "crash",
+          "ui"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Opening Menu no longer crashes"
+          },
+          {
+            "completed": false,
+            "text": "Menu controls are exempt from tutorial reserved-zone relocation"
+          },
+          {
+            "completed": false,
+            "text": "Tutorial reserved-zone behavior still applies outside menu"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "644iiy",
+      "version": 2,
+      "timestamp": "2026-03-14T04:12:46.534Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Opening Menu no longer crashes"
+            },
+            {
+              "completed": false,
+              "text": "Menu controls are exempt from tutorial reserved-zone relocation"
+            },
+            {
+              "completed": false,
+              "text": "Tutorial reserved-zone behavior still applies outside menu"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Opening Menu no longer crashes"
+            },
+            {
+              "completed": true,
+              "text": "Menu controls are exempt from tutorial reserved-zone relocation"
+            },
+            {
+              "completed": true,
+              "text": "Tutorial reserved-zone behavior still applies outside menu"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Fix menu crash caused by tutorial-zone enforcer",
+        "description": "Prevent UIConsistencyEnforcer reserved-zone logic from mutating menu controls during menu open/instantiation.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "menu",
+          "crash",
+          "ui"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Opening Menu no longer crashes"
+          },
+          {
+            "completed": true,
+            "text": "Menu controls are exempt from tutorial reserved-zone relocation"
+          },
+          {
+            "completed": true,
+            "text": "Tutorial reserved-zone behavior still applies outside menu"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "644iiy",
+      "version": 3,
+      "timestamp": "2026-03-14T04:12:48.804Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "## Summary\n- Marked instantiated menu panel as `tutorial_zone_exempt` in AppController before adding to menu layer.\n- UIConsistencyEnforcer now skips tutorial reserved-zone enforcement while menu is open.\n- Added guard checks to avoid relocating controls that are queued for deletion or not in tree.\n\n## Validation\n- Crash path addressed at menu-open + enforcer intersection point.\n- Please verify in runtime: press Menu from earth base and launchpad scenes repeatedly."
+        }
+      ],
+      "snapshot": {
+        "title": "Fix menu crash caused by tutorial-zone enforcer",
+        "description": "Prevent UIConsistencyEnforcer reserved-zone logic from mutating menu controls during menu open/instantiation.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "menu",
+          "crash",
+          "ui"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Opening Menu no longer crashes"
+          },
+          {
+            "completed": true,
+            "text": "Menu controls are exempt from tutorial reserved-zone relocation"
+          },
+          {
+            "completed": true,
+            "text": "Tutorial reserved-zone behavior still applies outside menu"
+          }
+        ],
+        "implementationNotes": "## Summary\n- Marked instantiated menu panel as `tutorial_zone_exempt` in AppController before adding to menu layer.\n- UIConsistencyEnforcer now skips tutorial reserved-zone enforcement while menu is open.\n- Added guard checks to avoid relocating controls that are queued for deletion or not in tree.\n\n## Validation\n- Crash path addressed at menu-open + enforcer intersection point.\n- Please verify in runtime: press Menu from earth base and launchpad scenes repeatedly."
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "644iiy",
+      "version": 4,
+      "timestamp": "2026-03-14T04:12:53.341Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix menu crash caused by tutorial-zone enforcer",
+        "description": "Prevent UIConsistencyEnforcer reserved-zone logic from mutating menu controls during menu open/instantiation.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "menu",
+          "crash",
+          "ui"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Opening Menu no longer crashes"
+          },
+          {
+            "completed": true,
+            "text": "Menu controls are exempt from tutorial reserved-zone relocation"
+          },
+          {
+            "completed": true,
+            "text": "Tutorial reserved-zone behavior still applies outside menu"
+          }
+        ],
+        "implementationNotes": "## Summary\n- Marked instantiated menu panel as `tutorial_zone_exempt` in AppController before adding to menu layer.\n- UIConsistencyEnforcer now skips tutorial reserved-zone enforcement while menu is open.\n- Added guard checks to avoid relocating controls that are queued for deletion or not in tree.\n\n## Validation\n- Crash path addressed at menu-open + enforcer intersection point.\n- Please verify in runtime: press Menu from earth base and launchpad scenes repeatedly."
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "644iiy",
+      "version": 5,
+      "timestamp": "2026-03-14T04:16:03.091Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "done",
+          "newValue": "in-progress"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix menu crash caused by tutorial-zone enforcer",
+        "description": "Prevent UIConsistencyEnforcer reserved-zone logic from mutating menu controls during menu open/instantiation.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "menu",
+          "crash",
+          "ui"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Opening Menu no longer crashes"
+          },
+          {
+            "completed": true,
+            "text": "Menu controls are exempt from tutorial reserved-zone relocation"
+          },
+          {
+            "completed": true,
+            "text": "Tutorial reserved-zone behavior still applies outside menu"
+          }
+        ],
+        "implementationNotes": "## Summary\n- Marked instantiated menu panel as `tutorial_zone_exempt` in AppController before adding to menu layer.\n- UIConsistencyEnforcer now skips tutorial reserved-zone enforcement while menu is open.\n- Added guard checks to avoid relocating controls that are queued for deletion or not in tree.\n\n## Validation\n- Crash path addressed at menu-open + enforcer intersection point.\n- Please verify in runtime: press Menu from earth base and launchpad scenes repeatedly."
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "644iiy",
+      "version": 6,
+      "timestamp": "2026-03-14T04:16:12.384Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "## Summary\n- Marked instantiated menu panel as `tutorial_zone_exempt` in AppController before adding to menu layer.\n- UIConsistencyEnforcer now skips tutorial reserved-zone enforcement while menu is open.\n- Added guard checks to avoid relocating controls that are queued for deletion or not in tree.\n\n## Validation\n- Crash path addressed at menu-open + enforcer intersection point.\n- Please verify in runtime: press Menu from earth base and launchpad scenes repeatedly.",
+          "newValue": "## Summary\n- Marked instantiated menu panel as `tutorial_zone_exempt` in AppController before adding to menu layer.\n- UIConsistencyEnforcer now skips tutorial reserved-zone enforcement while menu is open.\n- Added guard checks to avoid relocating controls that are queued for deletion or not in tree.\n\n## Validation\n- Crash path addressed at menu-open + enforcer intersection point.\n- Please verify in runtime: press Menu from earth base and launchpad scenes repeatedly.\n\nReopened: hard-bypassed MenuOverlayLayer from tutorial-zone enforcer and recursively set tutorial_zone_exempt on all menu controls."
+        }
+      ],
+      "snapshot": {
+        "title": "Fix menu crash caused by tutorial-zone enforcer",
+        "description": "Prevent UIConsistencyEnforcer reserved-zone logic from mutating menu controls during menu open/instantiation.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "menu",
+          "crash",
+          "ui"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Opening Menu no longer crashes"
+          },
+          {
+            "completed": true,
+            "text": "Menu controls are exempt from tutorial reserved-zone relocation"
+          },
+          {
+            "completed": true,
+            "text": "Tutorial reserved-zone behavior still applies outside menu"
+          }
+        ],
+        "implementationNotes": "## Summary\n- Marked instantiated menu panel as `tutorial_zone_exempt` in AppController before adding to menu layer.\n- UIConsistencyEnforcer now skips tutorial reserved-zone enforcement while menu is open.\n- Added guard checks to avoid relocating controls that are queued for deletion or not in tree.\n\n## Validation\n- Crash path addressed at menu-open + enforcer intersection point.\n- Please verify in runtime: press Menu from earth base and launchpad scenes repeatedly.\n\nReopened: hard-bypassed MenuOverlayLayer from tutorial-zone enforcer and recursively set tutorial_zone_exempt on all menu controls."
+      }
+    },
+    {
+      "id": "v7",
+      "taskId": "644iiy",
+      "version": 7,
+      "timestamp": "2026-03-14T04:16:16.922Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix menu crash caused by tutorial-zone enforcer",
+        "description": "Prevent UIConsistencyEnforcer reserved-zone logic from mutating menu controls during menu open/instantiation.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "menu",
+          "crash",
+          "ui"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Opening Menu no longer crashes"
+          },
+          {
+            "completed": true,
+            "text": "Menu controls are exempt from tutorial reserved-zone relocation"
+          },
+          {
+            "completed": true,
+            "text": "Tutorial reserved-zone behavior still applies outside menu"
+          }
+        ],
+        "implementationNotes": "## Summary\n- Marked instantiated menu panel as `tutorial_zone_exempt` in AppController before adding to menu layer.\n- UIConsistencyEnforcer now skips tutorial reserved-zone enforcement while menu is open.\n- Added guard checks to avoid relocating controls that are queued for deletion or not in tree.\n\n## Validation\n- Crash path addressed at menu-open + enforcer intersection point.\n- Please verify in runtime: press Menu from earth base and launchpad scenes repeatedly.\n\nReopened: hard-bypassed MenuOverlayLayer from tutorial-zone enforcer and recursively set tutorial_zone_exempt on all menu controls."
+      }
+    }
+  ]
+}

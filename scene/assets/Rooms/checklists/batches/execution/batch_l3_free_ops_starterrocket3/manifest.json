@@ -1,0 +1,13 @@
+{
+  "batch_id": "batch_l3_free_ops_starterrocket3",
+  "source_file": "scene/assets/Rooms/checklists/batches/batch_l3_free_ops_starterrocket3.json",
+  "generated_at_utc": "2026-03-10T07:16:05.194Z",
+  "packet_size": 12,
+  "total_assets": 428,
+  "packet_count": 36,
+  "required_output_schema": {
+    "image": "<asset_id>.png",
+    "sidecar": "<asset_id>.json",
+    "note_optional": "<asset_id>.txt"
+  }
+}

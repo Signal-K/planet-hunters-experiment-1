@@ -48,6 +48,7 @@ const PRACTICE_PRESETS := {
 @onready var status_label: Label = $Dock/Panel/VBox/StatusLabel
 @onready var summary_label: RichTextLabel = $Dock/Panel/VBox/SummaryLabel
 @onready var close_button: Button = $Dock/Panel/VBox/FooterButtons/CloseButton
+@onready var dock: Control = $Dock
 @onready var mining_container: Control = $MiningContainer
 
 var _mining_instance: Control = null
@@ -71,6 +72,8 @@ func _ready() -> void:
 	_maybe_auto_start_when_no_rocket_in_play()
 
 func _apply_style() -> void:
+	var vp_w := get_viewport().get_visible_rect().size.x
+	panel.custom_minimum_size.x = clampf(vp_w - 48.0, 300.0, 480.0)
 	PanelStyle.apply_panel(panel)
 	PanelStyle.apply_title(title_label)
 	PanelStyle.apply_muted(subtitle_label)
@@ -103,6 +106,7 @@ func _start_preset(preset_key: String) -> void:
 	var target_id = str(preset.get("target_id", preset_key))
 	var target_label = str(preset.get("target_label", preset.get("title", preset_key)))
 	RocketsManager.set_preview_target(target_id, target_label, target_type, "")
+	dock.visible = false
 	_mining_instance = MiningScene.instantiate()
 	mining_container.add_child(_mining_instance)
 	_mining_instance.mining_completed.connect(_on_mining_completed)
@@ -135,6 +139,7 @@ func _start_preset(preset_key: String) -> void:
 	})
 
 func _on_mining_completed(minerals: Dictionary, score: int) -> void:
+	dock.visible = true
 	var mineral_lines := []
 	for key in minerals.keys():
 		mineral_lines.append("%s x%s" % [str(key), str(minerals.get(key, 0))])
@@ -173,6 +178,8 @@ func _clear_active_run() -> void:
 	if _mining_instance and is_instance_valid(_mining_instance):
 		_mining_instance.queue_free()
 	_mining_instance = null
+	if dock and is_instance_valid(dock):
+		dock.visible = true
 
 func _restore_previous_preview_target() -> void:
 	if _previous_preview_target.is_empty():

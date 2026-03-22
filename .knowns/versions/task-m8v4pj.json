@@ -1,0 +1,263 @@
+{
+  "taskId": "m8v4pj",
+  "currentVersion": 5,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "m8v4pj",
+      "version": 1,
+      "timestamp": "2026-03-16T17:39:15.634Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Implement contractor cooldowns and reputation levels",
+        "description": "Expand the contractor system to include cooldowns (they're not always available) and reputation/leveling (more use = better bonuses).",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "gameplay",
+          "contractors"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "m8v4pj",
+      "version": 2,
+      "timestamp": "2026-03-16T17:39:21.311Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [],
+          "newValue": [
+            {
+              "text": "Reputation XP awarded after each mission; level/title visible in SubcontractorsPanel",
+              "completed": false
+            },
+            {
+              "text": "After 2 consecutive missions with same contractor, 30-min cooldown is triggered",
+              "completed": false
+            },
+            {
+              "text": "Contractor on cooldown shows 'Not available' in LaunchpadSelectorPanel, button disabled",
+              "completed": false
+            },
+            {
+              "text": "Cooldown countdown visible in SubcontractorsPanel",
+              "completed": false
+            }
+          ]
+        },
+        {
+          "field": "implementationPlan",
+          "newValue": "1. Add record_mission_completion(sub_id) to SubcontractorManager (rep XP + consecutive tracking + cooldown trigger)\n2. Call it from MissionDebrief after add_affinity\n3. Show reputation level/title + cooldown in SubcontractorsPanel\n4. Disable on-cooldown contractors in LaunchpadSelectorPanel"
+        }
+      ],
+      "snapshot": {
+        "title": "Implement contractor cooldowns and reputation levels",
+        "description": "Expand the contractor system to include cooldowns (they're not always available) and reputation/leveling (more use = better bonuses).",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "gameplay",
+          "contractors"
+        ],
+        "acceptanceCriteria": [
+          {
+            "text": "Reputation XP awarded after each mission; level/title visible in SubcontractorsPanel",
+            "completed": false
+          },
+          {
+            "text": "After 2 consecutive missions with same contractor, 30-min cooldown is triggered",
+            "completed": false
+          },
+          {
+            "text": "Contractor on cooldown shows 'Not available' in LaunchpadSelectorPanel, button disabled",
+            "completed": false
+          },
+          {
+            "text": "Cooldown countdown visible in SubcontractorsPanel",
+            "completed": false
+          }
+        ],
+        "implementationPlan": "1. Add record_mission_completion(sub_id) to SubcontractorManager (rep XP + consecutive tracking + cooldown trigger)\n2. Call it from MissionDebrief after add_affinity\n3. Show reputation level/title + cooldown in SubcontractorsPanel\n4. Disable on-cooldown contractors in LaunchpadSelectorPanel"
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "m8v4pj",
+      "version": 3,
+      "timestamp": "2026-03-16T17:41:42.260Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Reputation XP awarded after each mission; level/title visible in SubcontractorsPanel"
+            },
+            {
+              "completed": false,
+              "text": "After 2 consecutive missions with same contractor, 30-min cooldown is triggered"
+            },
+            {
+              "completed": false,
+              "text": "Contractor on cooldown shows 'Not available' in LaunchpadSelectorPanel, button disabled"
+            },
+            {
+              "completed": false,
+              "text": "Cooldown countdown visible in SubcontractorsPanel"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Reputation XP awarded after each mission; level/title visible in SubcontractorsPanel"
+            },
+            {
+              "completed": true,
+              "text": "After 2 consecutive missions with same contractor, 30-min cooldown is triggered"
+            },
+            {
+              "completed": true,
+              "text": "Contractor on cooldown shows 'Not available' in LaunchpadSelectorPanel, button disabled"
+            },
+            {
+              "completed": true,
+              "text": "Cooldown countdown visible in SubcontractorsPanel"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Implement contractor cooldowns and reputation levels",
+        "description": "Expand the contractor system to include cooldowns (they're not always available) and reputation/leveling (more use = better bonuses).",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "gameplay",
+          "contractors"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Reputation XP awarded after each mission; level/title visible in SubcontractorsPanel"
+          },
+          {
+            "completed": true,
+            "text": "After 2 consecutive missions with same contractor, 30-min cooldown is triggered"
+          },
+          {
+            "completed": true,
+            "text": "Contractor on cooldown shows 'Not available' in LaunchpadSelectorPanel, button disabled"
+          },
+          {
+            "completed": true,
+            "text": "Cooldown countdown visible in SubcontractorsPanel"
+          }
+        ],
+        "implementationPlan": "1. Add record_mission_completion(sub_id) to SubcontractorManager (rep XP + consecutive tracking + cooldown trigger)\n2. Call it from MissionDebrief after add_affinity\n3. Show reputation level/title + cooldown in SubcontractorsPanel\n4. Disable on-cooldown contractors in LaunchpadSelectorPanel"
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "m8v4pj",
+      "version": 4,
+      "timestamp": "2026-03-16T17:41:50.507Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "SubcontractorManager.record_mission_completion(sub_id): awards 100 rep XP, tracks consecutive use, triggers 30-min cooldown after 2 consecutive missions.\nWired from MissionDebrief._sell() after add_affinity.\nSubcontractorsPanel shows reputation level/title + cooldown countdown per card.\nLaunchpadSelectorPanel disables on-cooldown contractors with \"Not available\" + flavour message.\n3 new regression tests (MFIX11-13) all pass, 13/13 total."
+        }
+      ],
+      "snapshot": {
+        "title": "Implement contractor cooldowns and reputation levels",
+        "description": "Expand the contractor system to include cooldowns (they're not always available) and reputation/leveling (more use = better bonuses).",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "gameplay",
+          "contractors"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Reputation XP awarded after each mission; level/title visible in SubcontractorsPanel"
+          },
+          {
+            "completed": true,
+            "text": "After 2 consecutive missions with same contractor, 30-min cooldown is triggered"
+          },
+          {
+            "completed": true,
+            "text": "Contractor on cooldown shows 'Not available' in LaunchpadSelectorPanel, button disabled"
+          },
+          {
+            "completed": true,
+            "text": "Cooldown countdown visible in SubcontractorsPanel"
+          }
+        ],
+        "implementationPlan": "1. Add record_mission_completion(sub_id) to SubcontractorManager (rep XP + consecutive tracking + cooldown trigger)\n2. Call it from MissionDebrief after add_affinity\n3. Show reputation level/title + cooldown in SubcontractorsPanel\n4. Disable on-cooldown contractors in LaunchpadSelectorPanel",
+        "implementationNotes": "SubcontractorManager.record_mission_completion(sub_id): awards 100 rep XP, tracks consecutive use, triggers 30-min cooldown after 2 consecutive missions.\nWired from MissionDebrief._sell() after add_affinity.\nSubcontractorsPanel shows reputation level/title + cooldown countdown per card.\nLaunchpadSelectorPanel disables on-cooldown contractors with \"Not available\" + flavour message.\n3 new regression tests (MFIX11-13) all pass, 13/13 total."
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "m8v4pj",
+      "version": 5,
+      "timestamp": "2026-03-16T17:41:51.004Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Implement contractor cooldowns and reputation levels",
+        "description": "Expand the contractor system to include cooldowns (they're not always available) and reputation/leveling (more use = better bonuses).",
+        "status": "done",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "gameplay",
+          "contractors"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Reputation XP awarded after each mission; level/title visible in SubcontractorsPanel"
+          },
+          {
+            "completed": true,
+            "text": "After 2 consecutive missions with same contractor, 30-min cooldown is triggered"
+          },
+          {
+            "completed": true,
+            "text": "Contractor on cooldown shows 'Not available' in LaunchpadSelectorPanel, button disabled"
+          },
+          {
+            "completed": true,
+            "text": "Cooldown countdown visible in SubcontractorsPanel"
+          }
+        ],
+        "implementationPlan": "1. Add record_mission_completion(sub_id) to SubcontractorManager (rep XP + consecutive tracking + cooldown trigger)\n2. Call it from MissionDebrief after add_affinity\n3. Show reputation level/title + cooldown in SubcontractorsPanel\n4. Disable on-cooldown contractors in LaunchpadSelectorPanel",
+        "implementationNotes": "SubcontractorManager.record_mission_completion(sub_id): awards 100 rep XP, tracks consecutive use, triggers 30-min cooldown after 2 consecutive missions.\nWired from MissionDebrief._sell() after add_affinity.\nSubcontractorsPanel shows reputation level/title + cooldown countdown per card.\nLaunchpadSelectorPanel disables on-cooldown contractors with \"Not available\" + flavour message.\n3 new regression tests (MFIX11-13) all pass, 13/13 total."
+      }
+    }
+  ]
+}

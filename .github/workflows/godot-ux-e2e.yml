@@ -1,0 +1,143 @@
+name: Godot UX End-to-End Tour
+
+on:
+  push:
+    branches:
+      - '**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: read
+
+env:
+  REGISTRY: ghcr.io
+  UX_TOUR_IMAGE: ""
+  # Artifact names cannot contain slashes; sanitise the branch name once here.
+  SAFE_REF: ""
+
+jobs:
+  godot-ux-tour:
+    name: UX Screenshot Tour (Godot 4.5)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Sanitise branch name for artifact
+        shell: bash
+        run: |
+          SAFE="$(echo '${{ github.ref_name }}' | tr '/\\:*?"<>|' '---------')"
+          echo "SAFE_REF=$SAFE" >> "$GITHUB_ENV"
+          REPO_LC="$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')"
+          echo "UX_TOUR_IMAGE=ghcr.io/${REPO_LC}/ux-tour:latest" >> "$GITHUB_ENV"
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull pre-built ux-tour image (fall back to local build)
+        shell: bash
+        run: |
+          if docker pull "$UX_TOUR_IMAGE" 2>/dev/null; then
+            echo "IMAGE_SOURCE=registry" >> "$GITHUB_ENV"
+            echo "✓ Pulled pre-built image from ghcr.io"
+          else
+            echo "⚠️  Pre-built image not available — building locally (first run or Dockerfile changed)"
+            docker build --platform linux/amd64 -t "$UX_TOUR_IMAGE" -f Dockerfile.ux-tour .
+            echo "IMAGE_SOURCE=local-build" >> "$GITHUB_ENV"
+          fi
+
+      - name: Run UX E2E tour in Docker
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/ux_screenshots
+
+          docker run --rm \
+            --platform linux/amd64 \
+            -v "${{ github.workspace }}/scene:/app/scene" \
+            -v "/tmp/ux_screenshots:/output" \
+            "$UX_TOUR_IMAGE" \
+            2>&1 | tee /tmp/godot_ux_tour.log || {
+            EXIT=$?
+            # exit <=1 treated as success (tour calls quit(0))
+            if [ $EXIT -le 1 ]; then
+              echo "Tour completed (exit $EXIT treated as success)"
+            else
+              echo "Tour failed or timed out (exit $EXIT)"
+              exit $EXIT
+            fi
+          }
+          echo "✓ UX tour finished"
+
+      - name: Upload UX screenshots and report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ux-tour-${{ env.SAFE_REF }}-${{ github.run_number }}
+          path: /tmp/ux_screenshots/
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Write UX report to job summary
+        if: always()
+        shell: bash
+        run: |
+          REPORT="/tmp/ux_screenshots/ux_report.md"
+          MANIFEST="/tmp/ux_screenshots/tour_manifest.json"
+          AI_CTX="/tmp/ux_screenshots/tour_ai_context.md"
+
+          echo "## UX Tour Results — run \`${{ github.run_number }}\` (\`${{ github.ref_name }}\`)" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+
+          if [ -f "$AI_CTX" ]; then
+            cat "$AI_CTX" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "---" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          if [ -f "$REPORT" ]; then
+            cat "$REPORT" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "⚠️ No ux_report.md generated." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          if [ -f "$MANIFEST" ]; then
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "---" >> "$GITHUB_STEP_SUMMARY"
+            echo "## Screenshot Manifest (structured context for AI review)" >> "$GITHUB_STEP_SUMMARY"
+            echo '```json' >> "$GITHUB_STEP_SUMMARY"
+            cat "$MANIFEST" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          echo "========================================="
+          echo "UX TOUR REPORT"
+          echo "========================================="
+          if [ -f "$REPORT" ]; then
+            cat "$REPORT"
+          else
+            echo "No report generated — check godot_output.log in the artifact."
+            cat /tmp/ux_screenshots/godot_output.log 2>/dev/null | tail -50 || \
+            cat /tmp/godot_ux_tour.log 2>/dev/null | tail -50 || true
+          fi
+
+      - name: Fail if critical UX issues found
+        if: always()
+        shell: bash
+        run: |
+          REPORT="/tmp/ux_screenshots/ux_report.md"
+          if [ -f "$REPORT" ] && grep -q "CRITICAL:" "$REPORT"; then
+            echo "❌ Critical UX issues detected — see ux_report.md in the artifact."
+            grep "CRITICAL:" "$REPORT"
+            exit 1
+          fi
+          echo "✓ No critical UX issues"

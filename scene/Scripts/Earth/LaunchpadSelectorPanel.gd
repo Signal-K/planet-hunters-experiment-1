@@ -13,13 +13,18 @@ const AppLogger = preload("res://Scripts/Utils/Logger.gd")
 const GameplayAnalytics = preload("res://Scripts/Systems/GameplayAnalytics.gd")
 const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
 const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd")
-const SIDEBAR_WIDTH_MAX := 520.0
+const NumberFormat = preload("res://Scripts/Utils/NumberFormat.gd")
+const RoomCatalog = preload("res://Scripts/Utils/RoomCatalog.gd")
+const TutorialLayoutZone = preload("res://Scripts/UI/TutorialLayoutZone.gd")
+const SubcontractorManager = preload("res://Scripts/Utils/SubcontractorManager.gd")
+const MissionNarrativeAPI = preload("res://Scripts/Utils/MissionNarrativeAPI.gd")
+const SIDEBAR_WIDTH_MAX := 560.0
 const SIDEBAR_WIDTH_MIN := 420.0
-const SIDEBAR_VIEWPORT_RATIO := 0.44
+const SIDEBAR_VIEWPORT_RATIO := 0.42
+const SELECTOR_LAYOUT_VERSION := "launchpad_selector_v3"
 const MAX_VISIBLE_TARGETS := 3
 const MAX_VISIBLE_TARGETS_MISSION3 := 5
 const MAX_VISIBLE_TARGETS_MISSION4 := 5
-const MAX_VISIBLE_TARGETS_MISSION5 := 5
 const MISSION_BRIEFINGS := {
 	1: {
 		"objective": "Complete your first mining loop (launch, mine, return, debrief).",
@@ -38,10 +43,10 @@ const MISSION_BRIEFINGS := {
 		"unlocks": "Mission 3 and Scanner station access"
 	},
 	3: {
-		"objective": "Build scanner station and launch toward a scanned target.",
-		"mechanics": "First scanner-driven target selection mission.",
+		"objective": "Visit a confirmed planet target from scanner results.",
+		"mechanics": "Pick from a short list of real NASA TESS possible planet targets.",
 		"required_rocket_level": 2,
-		"target_type": "Asteroid (scanned)",
+		"target_type": "Possible Planet Target",
 		"reward_ratio": 1.3,
 		"unlocks": "Mission 4 and Starter Rocket 3"
 	},
@@ -51,15 +56,7 @@ const MISSION_BRIEFINGS := {
 		"required_rocket_level": 3,
 		"target_type": "Planet",
 		"reward_ratio": 1.4,
-		"unlocks": "Mission 5 and contractor flow"
-	},
-	5: {
-		"objective": "Accept a contractor offer and complete a contract mission.",
-		"mechanics": "Contractor effects modify discounts/payouts with capped rewards.",
-		"required_rocket_level": 1,
-		"target_type": "Asteroid (contract target)",
-		"reward_ratio": 1.1,
-		"unlocks": "Contractor affinity progression"
+		"unlocks": "Free Operations mode"
 	}
 }
 
@@ -126,7 +123,7 @@ func show_selector_panel() -> void:
 					break
 		_set_selector_panel_layout(has_awaiting)
 		if not has_awaiting and root_scene:
-			var rocket_selector = root_scene.get_node_or_null("UILayer/SelectorPanel/VBox/RocketSelector")
+			var rocket_selector = _get_rocket_selector(root_scene.get_node_or_null("UILayer/SelectorPanel"))
 			if rocket_selector:
 				rocket_selector.visible = true
 				rocket_selector.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -171,19 +168,24 @@ func populate_targets() -> void:
 	var vbox = panel.get_node_or_null("VBox")
 	if not vbox:
 		return
+	var contractor_section = panel.get_node_or_null("VBox/SectionsScroll/Sections/ContractorSection/Content")
+	var rocket_section = panel.get_node_or_null("VBox/SectionsScroll/Sections/RocketSection/Content")
+	var target_section = panel.get_node_or_null("VBox/SectionsScroll/Sections/TargetSection/Content")
+	if contractor_section == null or rocket_section == null or target_section == null:
+		push_error("Launchpad: dedicated section nodes missing from selector panel")
+		return
 	_style_selector_panel(panel, vbox)
 	AppLogger.d("Launchpad: found SelectorPanel VBox")
-	# Clear existing entries except the core nodes.
-	for child in vbox.get_children():
-		if child.name in ["Title", "BackButton", "RocketSelector", "LaunchedList", "TargetsSection"]:
-			continue
-		child.queue_free()
+	_clear_container(contractor_section)
+	_clear_rocket_section_extras(rocket_section)
+	_clear_container(target_section)
 
 	var rm = RocketsManager
 	if not rm:
 		return
 	var mission_stage_raw = int(rm.get_mission_stage())
 	var mission_stage = _effective_mission_stage_for_ui(mission_stage_raw)
+	var free_ops_unlocked = rm.is_free_operations_unlocked()
 	var targets: Array = []
 	if mission_stage <= 2:
 		if mission_stage == 1:
@@ -195,9 +197,7 @@ func populate_targets() -> void:
 	elif mission_stage == 3:
 		targets = rm.get_mission3_targets()
 	elif mission_stage == 4:
-		targets = rm.get_mission4_targets()
-	elif mission_stage == 5:
-		targets = rm.get_mission5_targets()
+		targets = rm.get_detected_targets() if free_ops_unlocked else rm.get_mission4_targets()
 	else:
 		targets = rm.get_detected_targets()
 	AppLogger.d("Launchpad: _populate_targets -> detected targets count=%s" % targets.size())
@@ -205,112 +205,108 @@ func populate_targets() -> void:
 	var awaiting_rocket_id = str(rm.get_primary_awaiting_rocket_id())
 	var awaiting_rocket_level = int(rm.get_rocket_level(awaiting_rocket_id))
 	var has_awaiting_rocket = awaiting_rocket_id != ""
-	var tutorial_action_key = _current_tutorial_action_key()
-	var starter_offer := {}
-	var starter_selected_contractor := ""
-	if mission_stage == 1:
-		starter_offer = rm.ensure_starter_contract_offer()
-		starter_selected_contractor = str(starter_offer.get("selected_contractor", ""))
-		if starter_selected_contractor != "":
-			# Reconcile tutorial state if contractor was already selected in persisted mission data.
-			_record_tutorial_action("accept_starter_contractor", {
-				"contractor_id": starter_selected_contractor,
-				"auto_reconciled": true
-			})
-	var requires_starter_contractor = (
-		(mission_stage == 1 and starter_selected_contractor == "")
-		or (tutorial_action_key == "accept_starter_contractor" and starter_selected_contractor == "")
-	)
-	_set_selector_panel_layout(has_awaiting_rocket)
-	_set_rocket_selector_visibility(vbox, not has_awaiting_rocket and not requires_starter_contractor)
+	_set_rocket_selector_visibility(vbox, not has_awaiting_rocket)
 	_set_title_for_state(panel, has_awaiting_rocket)
-	if requires_starter_contractor and not has_awaiting_rocket:
-		var title = panel.get_node_or_null("VBox/Title")
-		if title and title is Label:
-			title.text = "Sign Starter Contractor"
 
-	var targets_section = vbox.get_node_or_null("TargetsSection")
-	if targets_section == null:
-		push_error("Launchpad: TargetsSection node missing from selector panel")
-		return
-	for c in targets_section.get_children():
-		c.queue_free()
+	_render_launch_guidance_notice(target_section)
+	if not _is_linear_tutorial_active():
+		_render_mining_practice_shortcut(target_section)
+	var operation_mode := str(rm.get_operation_mode())
+	var trip_offer := rm.ensure_trip_contract_offer(targets)
+	var trip_selected = rm.get_trip_selected_contractor()
+	var trip_selected_contractor := str(trip_selected.get("id", ""))
+	var trip_recommended_target_id := str(trip_offer.get("recommended_target_id", ""))
+	var forced_phase = _tutorial_forced_phase()
+	if forced_phase == "contractor" and trip_selected_contractor != "":
+		rm.clear_trip_contract_offer()
+		rm.clear_selected_target()
+		trip_offer = rm.ensure_trip_contract_offer(targets)
+		trip_selected = rm.get_trip_selected_contractor()
+		trip_selected_contractor = str(trip_selected.get("id", ""))
+		trip_recommended_target_id = str(trip_offer.get("recommended_target_id", ""))
+	var flow_phase = _selector_flow_phase(trip_selected_contractor, has_awaiting_rocket)
+	flow_phase = _resolve_tutorial_flow_phase(flow_phase, trip_selected_contractor, has_awaiting_rocket)
+	_set_selector_panel_layout(has_awaiting_rocket, flow_phase)
+	_set_section_visibility(panel, flow_phase)
+	if flow_phase == "rocket":
+		_ensure_rocket_selector_ready(panel)
+	var show_rocket = flow_phase == "rocket"
+	_set_rocket_selector_visibility(vbox, show_rocket)
+	_apply_rocket_creation_gate(vbox, trip_selected_contractor != "")
 
-	if not requires_starter_contractor:
-		var targets_title: Label = HeaderLabelScene.instantiate()
-		targets_title.text = "Mission Target"
-		targets_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-		PanelStyle.apply_muted(targets_title)
-		targets_title.add_theme_font_size_override("font_size", 24)
-		targets_section.add_child(targets_title)
-	_render_launch_guidance_notice(targets_section)
-	_render_mining_practice_shortcut(targets_section)
-	var mission5_offer := {}
-	var mission5_selected_contractor := ""
-	var mission5_recommended_target_id := ""
-	var operation_mode := "contract"
-	if mission_stage == 1:
-		_render_starter_contract_brief(targets_section, starter_offer, starter_selected_contractor)
-	if not has_awaiting_rocket:
-		if not requires_starter_contractor:
-			var guidance: Label = EmptyLabelScene.instantiate()
-			guidance.text = "Create a rocket first. Target selection unlocks after a rocket is on the launchpad."
-			guidance.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-			PanelStyle.apply_muted(guidance)
-			targets_section.add_child(guidance)
+	_render_trip_contract_brief(contractor_section, trip_offer, trip_selected_contractor, awaiting_rocket_id)
+	if flow_phase == "contractor":
+		_boost_label_contrast(contractor_section)
 		return
-	_render_rocket_customization_controls(targets_section, rm, awaiting_rocket_id)
+
+	if flow_phase == "rocket":
+		_boost_label_contrast(rocket_section)
+		return
+
+	var tutorial_complete = mission_stage > 3
+	if tutorial_complete:
+		_render_rocket_customization_controls(target_section, rm, awaiting_rocket_id)
+		_render_required_room_guidance(target_section, awaiting_rocket_id)
 
 	if mission_stage == 2 and awaiting_rocket_level < 2:
 		var mission2_hint: Label = EmptyLabelScene.instantiate()
-		mission2_hint.text = "Mission 2 requires Starter Rocket 2 (L2)."
+		mission2_hint.text = "Mission 2 requires Starter Rocket 2 (Level 2)."
 		mission2_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		PanelStyle.apply_muted(mission2_hint)
-		targets_section.add_child(mission2_hint)
+		target_section.add_child(mission2_hint)
 	if mission_stage == 2:
 		var mission2_checklist: Label = EmptyLabelScene.instantiate()
 		mission2_checklist.text = _build_stage2_checklist_text()
 		mission2_checklist.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		PanelStyle.apply_muted(mission2_checklist)
-		targets_section.add_child(mission2_checklist)
+		target_section.add_child(mission2_checklist)
 	if mission_stage == 4 and awaiting_rocket_level < 3:
 		var mission4_hint: Label = EmptyLabelScene.instantiate()
-		mission4_hint.text = "Mission 4 requires Starter Rocket 3 (L3) for planetary range."
+		mission4_hint.text = "Mission 4 requires Starter Rocket 3 (Level 3) for planetary range."
 		mission4_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		PanelStyle.apply_muted(mission4_hint)
-		targets_section.add_child(mission4_hint)
-	if mission_stage == 5:
-		operation_mode = str(rm.get_operation_mode())
-		_render_open_operation_mode_picker(targets_section, operation_mode)
-		mission5_offer = rm.ensure_mission5_contract_offer(targets)
-		mission5_selected_contractor = str(mission5_offer.get("selected_contractor", ""))
-		mission5_recommended_target_id = str(mission5_offer.get("recommended_target_id", ""))
-		_render_mission5_contract_brief(targets_section, mission5_offer, mission5_selected_contractor)
-		if operation_mode == "contract" and mission5_selected_contractor == "":
-			var mission5_pick_hint: Label = EmptyLabelScene.instantiate()
-			mission5_pick_hint.text = "Accept one contractor request before selecting a target."
-			mission5_pick_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-			PanelStyle.apply_muted(mission5_pick_hint)
-			targets_section.add_child(mission5_pick_hint)
-		if awaiting_rocket_id != "":
-			var payout_cap = int(mission5_offer.get("payout_cap", rm.get_mission5_payout_cap()))
-			var current_cost = RocketSpecs.get_cost(awaiting_rocket_id)
-			if current_cost > payout_cap:
-				var mission5_cost_warning: Label = EmptyLabelScene.instantiate()
-				mission5_cost_warning.text = "Warning: mission payout is capped at %s F. Current rocket costs %s F." % [_fmt_francs(payout_cap), _fmt_francs(current_cost)]
-				mission5_cost_warning.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-				PanelStyle.apply_muted(mission5_cost_warning)
-				targets_section.add_child(mission5_cost_warning)
+		target_section.add_child(mission4_hint)
+	if free_ops_unlocked:
+		var free_ops_label: Label = EmptyLabelScene.instantiate()
+		free_ops_label.text = "Free Operations unlocked: pick route + contractor, then choose any target."
+		free_ops_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		PanelStyle.apply_muted(free_ops_label)
+		target_section.add_child(free_ops_label)
+		# First Settlement guidance: show at L5+ if relay_1 not yet completed
+		var app_for_lvl = AppControllerHelper.get_instance()
+		var player_lvl := 1
+		if app_for_lvl and app_for_lvl.has_method("get_experience_level"):
+			player_lvl = int(app_for_lvl.get_experience_level())
+		if player_lvl >= 5:
+			var ConstMgr = preload("res://Scripts/Utils/ConstructionManager.gd")
+			if not ConstMgr.is_project_completed("relay_1"):
+				var settlement_hint: Label = EmptyLabelScene.instantiate()
+				settlement_hint.text = "🏗 First Settlement: mine Iron (500 kg) + Nickel (200 kg) to build your Scanning Relay. Contribute minerals via the Construction menu after each mission."
+				settlement_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+				settlement_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+				settlement_hint.add_theme_color_override("font_color", Color(0.6, 1.0, 0.7, 1.0))
+				target_section.add_child(settlement_hint)
+	if awaiting_rocket_id != "":
+		var payout_cap = int(trip_offer.get("payout_cap", rm.get_free_ops_payout_cap()))
+		var current_cost = RocketSpecs.get_cost(awaiting_rocket_id)
+		if current_cost > payout_cap:
+			var trip_cost_warning: Label = EmptyLabelScene.instantiate()
+			trip_cost_warning.text = "Warning: mission payout is capped at %s F. Current rocket costs %s F." % [_fmt_francs(payout_cap), _fmt_francs(current_cost)]
+			trip_cost_warning.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+			PanelStyle.apply_muted(trip_cost_warning)
+			target_section.add_child(trip_cost_warning)
 
 	if targets.size() == 0:
 		var lbl: Label = EmptyLabelScene.instantiate()
-		if mission_stage >= 3:
-			lbl.text = "No scanned targets available. Open Scanner Station, run a scan, and select a target."
+		if mission_stage == 3:
+			lbl.text = "No possible planet targets right now. Scan again soon."
+		elif mission_stage >= 4:
+			lbl.text = "No scanned targets right now. Open Scanner Station and run a scan."
 		else:
 			lbl.text = "No detected targets available."
 		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		PanelStyle.apply_muted(lbl)
-		targets_section.add_child(lbl)
+		target_section.add_child(lbl)
 		return
 
 	var visible_targets = _build_visible_targets(targets, selected_target, mission_stage, awaiting_rocket_level, rm)
@@ -325,23 +321,23 @@ func populate_targets() -> void:
 			awaiting_rocket_level,
 			required_level,
 			operation_mode,
-			mission5_selected_contractor,
-			starter_selected_contractor
+			trip_selected_contractor,
+			target_id
 		)
 		var blocked_reason = _blocked_reason_for_target(
 			mission_stage,
 			awaiting_rocket_level,
 			required_level,
 			operation_mode,
-			mission5_selected_contractor,
-			starter_selected_contractor
+			trip_selected_contractor,
+			target_id
 		)
 		var is_planet = target_type == "planet" or target_type == "tess"
 		var entry_panel: PanelContainer = TargetCardScene.instantiate()
 		entry_panel.add_theme_stylebox_override("panel",
 			_planet_card_style() if is_planet else _target_card_style())
 		var name_lbl: Label = entry_panel.get_node("Entry/Header/NameLabel")
-		var is_recommended_target = mission_stage == 5 and mission5_recommended_target_id != "" and mission5_recommended_target_id == target_id
+		var is_recommended_target = trip_recommended_target_id != "" and trip_recommended_target_id == target_id
 		var label_text = str(t.get("label", target_id))
 		if is_planet:
 			label_text = "[PLANET] %s" % label_text
@@ -359,33 +355,48 @@ func populate_targets() -> void:
 			btn.text = "Target Selected"
 			btn.disabled = true
 		elif blocked:
-			if mission_stage == 1 and starter_selected_contractor == "":
-				btn.text = "Sign Contract"
-			elif mission_stage == 5 and operation_mode == "contract" and mission5_selected_contractor == "":
-				btn.text = "Accept Contractor"
+			if trip_selected_contractor == "":
+				btn.text = "Select Contractor"
 			else:
 				btn.text = "Blocked"
 			btn.disabled = true
+		_style_selector_action_button(btn, not btn.disabled)
 		# bind id
 		btn.pressed.connect(Callable(self, "on_selector_target_pressed").bind(target_id, btn))
 		var details_lbl: Label = entry_panel.get_node("Entry/DetailsLabel")
-		var details_text = "Distance: %.0f AU • Required: L%d" % [distance_au, required_level]
+		var details_text = "%.0f AU • Level %d required" % [distance_au, required_level]
 		if awaiting_rocket_level > 0:
-			details_text += " • Current rocket: L%d" % awaiting_rocket_level
+			details_text += " • Ship: Level %d" % awaiting_rocket_level
 			var max_range_au = RocketSpecs.get_max_range_au(awaiting_rocket_id)
 			if distance_au > max_range_au:
-				details_text += " • Fuel: out of range (max %.0f AU)" % max_range_au
+				details_text += " • Out of range (max %.0f AU)" % max_range_au
 			else:
-				details_text += " • Fuel: in range"
+				details_text += " • In range"
 		if blocked:
 			details_text += " • %s" % blocked_reason
-		elif mission_stage == 5:
+		elif free_ops_unlocked:
 			var profile_text = "Survey Route" if operation_mode == "survey" else "Contract Route"
 			details_text += " • %s" % profile_text
+		var science_source = str(t.get("science_source", ""))
+		var science_blurb = str(t.get("science_blurb", ""))
+		if science_source != "":
+			details_text += "\n%s" % science_source
+			if science_blurb != "":
+				details_text += " — %s" % science_blurb
 		details_lbl.text = details_text
 		details_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		PanelStyle.apply_muted(details_lbl)
-		targets_section.add_child(entry_panel)
+
+		# Estimated mineral composition readout
+		var comp_lbl := Label.new()
+		comp_lbl.text = _estimate_target_composition(target_id, is_planet)
+		comp_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		comp_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		comp_lbl.add_theme_color_override("font_color", Color(0.5, 0.95, 0.65, 1.0))
+		comp_lbl.add_theme_font_size_override("font_size", 13)
+		entry_panel.get_node("Entry").add_child(comp_lbl)
+
+		target_section.add_child(entry_panel)
 
 	var hidden_count = max(targets.size() - visible_targets.size(), 0)
 	if hidden_count > 0:
@@ -394,7 +405,9 @@ func populate_targets() -> void:
 		hidden_lbl.text = "%d additional targets hidden for clarity." % hidden_count
 		hidden_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		PanelStyle.apply_muted(hidden_lbl)
-		targets_section.add_child(hidden_lbl)
+		target_section.add_child(hidden_lbl)
+	_boost_label_contrast(target_section)
+	_normalize_selector_typography(panel)
 
 
 func on_selector_target_pressed(target_id: String, _btn: Button) -> void:
@@ -420,11 +433,11 @@ func on_selector_target_pressed(target_id: String, _btn: Button) -> void:
 	else:
 		AppLogger.w("Launchpad: failed to persist target selection from selector %s" % target_id)
 
-func _on_mission5_contractor_pressed(contractor_id: String) -> void:
+func _on_trip_contractor_pressed(contractor_id: String) -> void:
 	var rm = RocketsManager
 	if not rm:
 		return
-	var ok = rm.select_mission5_contractor(contractor_id)
+	var ok = rm.select_trip_contractor(contractor_id)
 	if ok:
 		_record_tutorial_action("accept_contractor_offer", {
 			"contractor_id": contractor_id
@@ -510,66 +523,203 @@ func _render_starter_contract_brief(targets_section: VBoxContainer, offer: Dicti
 		row.add_child(order_lbl)
 		targets_section.add_child(row)
 
-func _render_mission5_contract_brief(targets_section: VBoxContainer, offer: Dictionary, selected_contractor: String) -> void:
+func _render_trip_contract_brief(targets_section: VBoxContainer, offer: Dictionary, selected_contractor: String, rocket_id: String = "") -> void:
 	if targets_section == null or offer.is_empty():
 		return
-	var heading: Label = HeaderLabelScene.instantiate()
-	heading.text = "Contract"
-	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	PanelStyle.apply_muted(heading)
-	targets_section.add_child(heading)
-
-	var requested: Dictionary = offer.get("requested_minerals", {})
-	var requested_text := []
-	for key in requested.keys():
-		requested_text.append("%s %skg" % [str(key), str(requested.get(key, 0))])
-	requested_text.sort()
 	var recommended_label = str(offer.get("recommended_target_label", offer.get("recommended_target_id", "")))
-	var summary_lbl: Label = EmptyLabelScene.instantiate()
-	summary_lbl.text = "Order: %s • Target: %s" % [", ".join(requested_text), recommended_label]
-	summary_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	PanelStyle.apply_muted(summary_lbl)
-	targets_section.add_child(summary_lbl)
+	if recommended_label != "":
+		var target_lbl: Label = EmptyLabelScene.instantiate()
+		target_lbl.text = "Suggested target: %s" % recommended_label
+		target_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		target_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		PanelStyle.apply_muted(target_lbl)
+		targets_section.add_child(target_lbl)
 
 	var options: Array = offer.get("contractors", [])
-	if selected_contractor != "":
-		for entry_any in options:
-			if typeof(entry_any) != TYPE_DICTIONARY:
-				continue
-			var selected_entry: Dictionary = entry_any
-			if str(selected_entry.get("id", "")) != selected_contractor:
-				continue
-			var selected_effect = str(selected_entry.get("effect", ""))
-			var selected_effect_text = "15% ship discount" if selected_effect == "build_discount" else "15% mineral payout bonus"
-			var selected_lbl: Label = EmptyLabelScene.instantiate()
-			selected_lbl.text = "Accepted: %s (%s)" % [str(selected_entry.get("name", selected_contractor)), selected_effect_text]
-			selected_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-			PanelStyle.apply_muted(selected_lbl)
-			targets_section.add_child(selected_lbl)
-			return
-		return
-
 	for entry_any in options:
 		if typeof(entry_any) != TYPE_DICTIONARY:
 			continue
 		var entry: Dictionary = entry_any
-		var row: HBoxContainer = LabelActionRowScene.instantiate()
-		row.add_theme_constant_override("separation", 8)
-		var label: Label = row.get_node("TextLabel")
 		var contractor_id = str(entry.get("id", ""))
-		var effect = str(entry.get("effect", ""))
-		var effect_text = "15% ship discount" if effect == "build_discount" else "15% mineral payout bonus"
-		label.text = "%s - %s" % [str(entry.get("name", contractor_id)), effect_text]
-		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-		PanelStyle.apply_muted(label)
-		var btn: Button = row.get_node("ActionButton")
 		var is_selected = selected_contractor == contractor_id and contractor_id != ""
-		btn.text = "Accepted" if is_selected else "Accept"
-		btn.disabled = is_selected
-		PanelStyle.apply_button(btn, false)
-		btn.pressed.connect(Callable(self, "_on_mission5_contractor_pressed").bind(contractor_id))
-		targets_section.add_child(row)
+		var cooldown_remaining = int(SubcontractorManager.get_cooldown_remaining(contractor_id))
+		var on_cooldown = cooldown_remaining > 0
+
+		var card := PanelContainer.new()
+		card.add_theme_stylebox_override("panel", _target_card_style())
+		targets_section.add_child(card)
+
+		var card_col := VBoxContainer.new()
+		card_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		card_col.add_theme_constant_override("separation", 4)
+		card.add_child(card_col)
+
+		var card_row := HBoxContainer.new()
+		card_row.add_theme_constant_override("separation", 10)
+		card_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		card_col.add_child(card_row)
+
+		var text_col := VBoxContainer.new()
+		text_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		text_col.add_theme_constant_override("separation", 2)
+		card_row.add_child(text_col)
+
+		var name_lbl := Label.new()
+		name_lbl.text = str(entry.get("name", contractor_id))
+		name_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		PanelStyle.apply_body(name_lbl)
+		if on_cooldown:
+			name_lbl.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6, 1.0))
+		text_col.add_child(name_lbl)
+
+		var contractor_requested: Dictionary = entry.get("requested_minerals", {})
+		if not contractor_requested.is_empty():
+			var order_parts := []
+			for mineral in contractor_requested.keys():
+				order_parts.append("%dkg %s" % [int(contractor_requested.get(mineral, 0)), str(mineral)])
+			order_parts.sort()
+			var order_lbl := Label.new()
+			order_lbl.text = "Order: %s" % ", ".join(order_parts)
+			order_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			order_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+			if on_cooldown:
+				order_lbl.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5, 1.0))
+			else:
+				order_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3, 1.0))
+			text_col.add_child(order_lbl)
+
+		var role_text = str(entry.get("role", ""))
+		if role_text != "":
+			var role_lbl := Label.new()
+			role_lbl.text = role_text
+			role_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			role_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+			PanelStyle.apply_muted(role_lbl)
+			if on_cooldown:
+				role_lbl.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5, 1.0))
+			text_col.add_child(role_lbl)
+
+		var btn := Button.new()
+		if is_selected:
+			btn.text = "Selected"
+		elif on_cooldown:
+			btn.text = "Unavailable"
+		else:
+			btn.text = "Select"
+		btn.custom_minimum_size = Vector2(120, 44)
+		btn.disabled = is_selected or on_cooldown
+		PanelStyle.apply_button(btn, not btn.disabled)
+		if btn.disabled:
+			_style_selector_action_button(btn, false)
+		btn.pressed.connect(Callable(self, "_on_trip_contractor_pressed").bind(contractor_id))
+		card_row.add_child(btn)
+
+		if on_cooldown:
+			var mins = int(ceil(float(cooldown_remaining) / 60.0))
+			var cd_lbl := Label.new()
+			cd_lbl.text = "I don't have any missions for you right now. (%d min remaining)" % mins
+			cd_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			cd_lbl.add_theme_color_override("font_color", Color(1.0, 0.55, 0.35, 1.0))
+			cd_lbl.add_theme_font_size_override("font_size", 13)
+			card_col.add_child(cd_lbl)
+
+func _render_mission_briefing(targets_section: VBoxContainer, offer: Dictionary, contractor_id: String, target_label: String) -> void:
+	var sub_info = SubcontractorManager.get_subcontractor(contractor_id)
+	var sub_name := str(sub_info.get("name", contractor_id))
+	var sub_role := str(sub_info.get("role", "Resource acquisition"))
+	var affinity := int(SubcontractorManager.get_affinity(contractor_id))
+	var requested: Dictionary = offer.get("requested_minerals", {})
+	# Pick the mineral with the largest quantity as primary
+	var primary_mineral := "Iron"
+	var primary_qty := 0
+	for m in requested.keys():
+		var q := int(requested.get(m, 0))
+		if q > primary_qty:
+			primary_qty = q
+			primary_mineral = str(m)
+
+	var params := {
+		"contractor_id": contractor_id,
+		"contractor_name": sub_name,
+		"contractor_role": sub_role,
+		"mission_type": "extraction",
+		"mineral": primary_mineral,
+		"quantity": primary_qty,
+		"target_label": target_label,
+		"target_type": str(offer.get("recommended_target_type", "asteroid")),
+		"narrative_tone": "professional",
+		"payout_tier": "standard",
+		"affinity_level": affinity,
+	}
+
+	# Briefing card container
+	var card := PanelContainer.new()
+	var card_style := StyleBoxFlat.new()
+	card_style.bg_color = Color(0.08, 0.12, 0.18, 0.85)
+	card_style.border_color = Color(0.25, 0.50, 0.75, 0.6)
+	card_style.set_border_width_all(1)
+	card_style.set_corner_radius_all(6)
+	card_style.content_margin_left = 12
+	card_style.content_margin_right = 12
+	card_style.content_margin_top = 10
+	card_style.content_margin_bottom = 10
+	card.add_theme_stylebox_override("panel", card_style)
+	targets_section.add_child(card)
+
+	var col := VBoxContainer.new()
+	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.add_child(col)
+
+	var header_lbl := Label.new()
+	header_lbl.text = "MISSION BRIEFING"
+	header_lbl.add_theme_color_override("font_color", Color(0.4, 0.7, 1.0, 1.0))
+	header_lbl.add_theme_font_size_override("font_size", 12)
+	col.add_child(header_lbl)
+
+	# Narrative labels — created first with placeholder text, updated by callback
+	var title_lbl := Label.new()
+	var desc_lbl := Label.new()
+	var quote_lbl := Label.new()
+
+	title_lbl.text = "…"
+	title_lbl.add_theme_color_override("font_color", Color(0.95, 0.95, 1.0, 1.0))
+	title_lbl.add_theme_font_size_override("font_size", 15)
+	title_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	col.add_child(title_lbl)
+
+	desc_lbl.text = "Fetching mission briefing…"
+	desc_lbl.add_theme_color_override("font_color", Color(0.78, 0.82, 0.88, 1.0))
+	desc_lbl.add_theme_font_size_override("font_size", 13)
+	desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	col.add_child(desc_lbl)
+
+	quote_lbl.text = ""
+	quote_lbl.add_theme_color_override("font_color", Color(0.65, 0.85, 0.65, 1.0))
+	quote_lbl.add_theme_font_size_override("font_size", 12)
+	quote_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	col.add_child(quote_lbl)
+
+	MissionNarrativeAPI.generate(params, func(narrative: Dictionary) -> void:
+		if not is_instance_valid(title_lbl):
+			return
+		title_lbl.text = str(narrative.get("title", ""))
+		desc_lbl.text = str(narrative.get("description", ""))
+		var q := str(narrative.get("contractor_quote", ""))
+		if q != "":
+			quote_lbl.text = '"%s"  \u2014 %s' % [q, sub_name]
+		else:
+			quote_lbl.text = ""
+	)
+
+func _apply_rocket_creation_gate(vbox: VBoxContainer, contractor_selected: bool) -> void:
+	if vbox == null:
+		return
+	var rocket_selector = _get_rocket_selector(vbox.get_parent())
+	if rocket_selector == null:
+		return
+	if rocket_selector.has_method("set_contractor_gate_enabled"):
+		rocket_selector.set_contractor_gate_enabled(contractor_selected, "Select a contractor first, then build a rocket.")
 
 func _render_open_operation_mode_picker(targets_section: VBoxContainer, mode: String) -> void:
 	if targets_section == null:
@@ -621,26 +771,6 @@ func _record_tutorial_action(action_key: String, metadata: Dictionary = {}) -> v
 	if tutorial_controller and tutorial_controller.has_method("record_action"):
 		tutorial_controller.record_action(action_key, metadata)
 
-func _current_tutorial_action_key() -> String:
-	var app = AppControllerHelper.get_instance()
-	if app and app.has_method("get_tutorial_state"):
-		var state = app.get_tutorial_state()
-		if typeof(state) == TYPE_DICTIONARY:
-			var step_any = state.get("current_step", {})
-			if typeof(step_any) == TYPE_DICTIONARY:
-				return str(step_any.get("action_key", ""))
-	if _launchpad == null:
-		return ""
-	var tree = _launchpad.get_tree()
-	if tree == null or tree.root == null:
-		return ""
-	var tutorial_controller = tree.root.get_node_or_null("TutorialController")
-	if tutorial_controller and tutorial_controller.has_method("get_current_step"):
-		var step = tutorial_controller.get_current_step()
-		if typeof(step) == TYPE_DICTIONARY:
-			return str(step.get("action_key", ""))
-	return ""
-
 func _effective_mission_stage_for_ui(raw_stage: int) -> int:
 	var stage = max(raw_stage, 1)
 	var app = AppControllerHelper.get_instance()
@@ -664,17 +794,26 @@ func _render_rocket_customization_controls(targets_section: VBoxContainer, rm, r
 	summary.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	PanelStyle.apply_muted(summary)
 	targets_section.add_child(summary)
+	var wear_points = int(rm.get_rocket_wear(rocket_id))
+	var wear_tier = int(rm.get_rocket_wear_tier(rocket_id))
+	var wear_label: Label = EmptyLabelScene.instantiate()
+	wear_label.text = "Wear: Tier %d (%d points)" % [wear_tier, wear_points]
+	wear_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	PanelStyle.apply_muted(wear_label)
+	targets_section.add_child(wear_label)
 
 	var controls := HBoxContainer.new()
 	controls.add_theme_constant_override("separation", 8)
 	var flag_btn := Button.new()
 	flag_btn.text = "Flag"
 	PanelStyle.apply_button(flag_btn, false)
+	_style_selector_action_button(flag_btn, true)
 	flag_btn.pressed.connect(Callable(self, "_on_cycle_rocket_flag").bind(rocket_id))
 	controls.add_child(flag_btn)
 	var logo_btn := Button.new()
 	logo_btn.text = "Logo"
 	PanelStyle.apply_button(logo_btn, false)
+	_style_selector_action_button(logo_btn, true)
 	logo_btn.pressed.connect(Callable(self, "_on_cycle_rocket_logo").bind(rocket_id))
 	controls.add_child(logo_btn)
 	targets_section.add_child(controls)
@@ -716,12 +855,7 @@ func _next_option(options: Array, current: String) -> String:
 	return str(options[(index + 1) % options.size()])
 
 func _fmt_francs(value: int) -> String:
-	var abs_value = abs(value)
-	if abs_value >= 1000000000:
-		return "%.1fB" % (float(value) / 1000000000.0)
-	if abs_value >= 1000000:
-		return "%.1fM" % (float(value) / 1000000.0)
-	return str(value)
+	return NumberFormat.compact(value)
 
 func _build_stage2_checklist_text() -> String:
 	var app = AppControllerHelper.get_instance()
@@ -760,6 +894,18 @@ func _on_open_mining_practice_pressed() -> void:
 	if opened:
 		hide_selector_panel(true)
 
+func _is_linear_tutorial_active() -> bool:
+	var app = AppControllerHelper.get_instance()
+	if app == null or not app.has_method("get_tutorial_state"):
+		return false
+	var state = app.get_tutorial_state()
+	if typeof(state) != TYPE_DICTIONARY:
+		return false
+	if bool(state.get("skipped", false)):
+		return false
+	var step = state.get("current_step", {})
+	return typeof(step) == TYPE_DICTIONARY and not (step as Dictionary).is_empty()
+
 func _render_mining_practice_shortcut(targets_section: VBoxContainer) -> void:
 	if targets_section == null:
 		return
@@ -777,26 +923,68 @@ func _render_mining_practice_shortcut(targets_section: VBoxContainer) -> void:
 	PanelStyle.apply_muted(helper)
 	targets_section.add_child(helper)
 
+func _render_required_room_guidance(targets_section: VBoxContainer, rocket_id: String) -> void:
+	if targets_section == null or rocket_id == "":
+		return
+	var layout = RoomCatalog.create_layout_for_rocket_type(rocket_id)
+	var installed = RoomCatalog.get_installed_rooms(layout)
+	var installed_categories := {}
+	for room_any in installed:
+		if typeof(room_any) != TYPE_DICTIONARY:
+			continue
+		var room_def = RoomCatalog.get_room(str(room_any.get("room_id", "")))
+		var category = str(room_def.get("category", ""))
+		if category != "":
+			installed_categories[category] = true
+
+	var required_categories = ["mining", "storage"]
+	var heading: Label = HeaderLabelScene.instantiate()
+	heading.text = "Required Rooms"
+	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	PanelStyle.apply_muted(heading)
+	targets_section.add_child(heading)
+
+	var lines := []
+	var missing := false
+	for category in required_categories:
+		var has_category = installed_categories.has(category)
+		var marker = "✓" if has_category else "!"
+		lines.append("%s %s" % [marker, category.capitalize()])
+		if not has_category:
+			missing = true
+	var body: Label = EmptyLabelScene.instantiate()
+	body.text = "\n".join(lines)
+	body.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	PanelStyle.apply_muted(body)
+	targets_section.add_child(body)
+	if missing:
+		var warn: Label = EmptyLabelScene.instantiate()
+		warn.text = "Warning: missing room categories reduce mission effectiveness (launch remains allowed)."
+		warn.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		PanelStyle.apply_muted(warn)
+		targets_section.add_child(warn)
+
 func _style_selector_panel(panel: Panel, vbox: VBoxContainer) -> void:
 	# Lock before UIConsistencyEnforcer deferred scan can overwrite.
 	panel.set_meta("ui_style_locked", true)
-	PanelStyle.apply_panel(panel, Color(0.04, 0.06, 0.12, 0.88))
+	PanelStyle.apply_panel(panel, Color(0.0, 0.0, 0.0, 0.0))
 	if vbox:
 		vbox.add_theme_constant_override("separation", 12)
 	var title = panel.get_node_or_null("VBox/Title")
 	if title and title is Label:
-		PanelStyle.apply_title(title)
-		title.text = "Select Your Rocket"
+		PanelStyle.apply_body(title)
+		title.text = "Launchpad Mission Setup"
 		title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-		title.add_theme_font_size_override("font_size", 36)
+		title.add_theme_font_size_override("font_size", 22)
 	var back = panel.get_node_or_null("VBox/BackButton")
 	if back and back is Button:
 		back.set_meta("ui_style_locked", true)
-		back.custom_minimum_size = Vector2(0, 56)
+		back.custom_minimum_size = Vector2(0, 52)
 		back.text = "Back to Base"
 		PanelStyle.apply_button(back, false)
+		_style_selector_action_button(back, false)
 
-func _set_selector_panel_layout(has_awaiting: bool) -> void:
+func _set_selector_panel_layout(_has_awaiting: bool, flow_phase: String = "") -> void:
 	var root_scene = _launchpad.get_tree().current_scene
 	if not root_scene:
 		return
@@ -804,27 +992,24 @@ func _set_selector_panel_layout(has_awaiting: bool) -> void:
 	if panel == null:
 		return
 	var viewport_size = _launchpad.get_viewport().get_visible_rect().size
-	if has_awaiting:
-		# Narrow sidebar with full-height anchoring to avoid clipping/overlap on shorter viewports.
-		var sidebar_width = clamp(viewport_size.x * SIDEBAR_VIEWPORT_RATIO, SIDEBAR_WIDTH_MIN, SIDEBAR_WIDTH_MAX)
-		panel.anchor_left = 0.0
-		panel.anchor_top = 0.0
-		panel.anchor_right = 0.0
-		panel.anchor_bottom = 1.0
-		panel.offset_left = 16.0
-		panel.offset_top = 16.0
-		panel.offset_right = sidebar_width
-		panel.offset_bottom = -16.0
-	else:
-		# Full-width creation mode before rocket exists.
-		panel.anchor_left = 0.0
-		panel.anchor_top = 0.0
-		panel.anchor_right = 1.0
-		panel.anchor_bottom = 1.0
-		panel.offset_left = 16.0
-		panel.offset_top = 16.0
-		panel.offset_right = -16.0
-		panel.offset_bottom = -16.0
+	var content_rect = TutorialLayoutZone.content_rect(_launchpad.get_viewport().get_visible_rect())
+	# Contractor selection phase gets a wider panel so mineral/bonus info fits.
+	# All other phases use the standard sidebar so the world remains visible.
+	var width_ratio := 0.68 if flow_phase == "contractor" else SIDEBAR_VIEWPORT_RATIO
+	var width_min := 520.0 if flow_phase == "contractor" else SIDEBAR_WIDTH_MIN
+	var width_max := 860.0 if flow_phase == "contractor" else SIDEBAR_WIDTH_MAX
+	var sidebar_width = clamp(viewport_size.x * width_ratio, width_min, width_max)
+	sidebar_width = min(sidebar_width, max(320.0, content_rect.size.x - 32.0))
+	var panel_height = clamp(content_rect.size.y * 0.84, 520.0, 880.0)
+	panel.anchor_left = 0.0
+	panel.anchor_top = 0.0
+	panel.anchor_right = 0.0
+	panel.anchor_bottom = 0.0
+	panel.offset_left = content_rect.position.x
+	panel.offset_top = content_rect.position.y
+	panel.offset_right = content_rect.position.x + sidebar_width
+	panel.offset_bottom = content_rect.position.y + panel_height
+	panel.clip_contents = true
 
 	var vbox = panel.get_node_or_null("VBox")
 	if vbox:
@@ -849,7 +1034,7 @@ func _render_launch_guidance_notice(targets_section: VBoxContainer) -> void:
 
 func _target_card_style() -> StyleBoxFlat:
 	var style = StyleBoxFlat.new()
-	style.bg_color    = Color(0.06, 0.10, 0.16, 0.70)
+	style.bg_color    = Color(0.05, 0.08, 0.14, 0.12)
 	style.border_color = Color(0.28, 0.88, 0.96, 0.70)   # cyan, partial opacity
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(4)
@@ -861,7 +1046,7 @@ func _target_card_style() -> StyleBoxFlat:
 
 func _planet_card_style() -> StyleBoxFlat:
 	var style = StyleBoxFlat.new()
-	style.bg_color     = Color(0.05, 0.12, 0.22, 0.85)   # deeper blue tint for planets
+	style.bg_color     = Color(0.05, 0.12, 0.22, 0.16)   # deeper blue tint for planets
 	style.border_color = Color(0.55, 0.85, 1.0, 0.90)    # bright sky-blue border
 	style.set_border_width_all(2)
 	style.set_corner_radius_all(4)
@@ -872,9 +1057,7 @@ func _planet_card_style() -> StyleBoxFlat:
 	return style
 
 func _set_rocket_selector_visibility(vbox: VBoxContainer, visible: bool) -> void:
-	if vbox == null:
-		return
-	var rocket_selector = vbox.get_node_or_null("RocketSelector")
+	var rocket_selector = _get_rocket_selector(vbox.get_parent() if vbox else null)
 	if rocket_selector:
 		rocket_selector.visible = visible
 
@@ -933,8 +1116,6 @@ func _target_visibility_limit_for_stage(mission_stage: int) -> int:
 		return MAX_VISIBLE_TARGETS_MISSION3
 	if mission_stage == 4:
 		return MAX_VISIBLE_TARGETS_MISSION4
-	if mission_stage == 5:
-		return MAX_VISIBLE_TARGETS_MISSION5
 	return MAX_VISIBLE_TARGETS
 
 func _is_target_blocked_for_selection(
@@ -942,14 +1123,15 @@ func _is_target_blocked_for_selection(
 	awaiting_rocket_level: int,
 	required_level: int,
 	operation_mode: String,
-	mission5_selected_contractor: String,
-	starter_selected_contractor: String
+	trip_selected_contractor: String,
+	target_id: String
 ) -> bool:
+	var rm = RocketsManager
 	if awaiting_rocket_level > 0 and required_level > awaiting_rocket_level:
 		return true
-	if mission_stage == 1 and starter_selected_contractor == "":
+	if trip_selected_contractor == "":
 		return true
-	if mission_stage == 5 and operation_mode == "contract" and mission5_selected_contractor == "":
+	if rm and rm.is_candidate_visit_blocked(target_id):
 		return true
 	return false
 
@@ -958,15 +1140,16 @@ func _blocked_reason_for_target(
 	awaiting_rocket_level: int,
 	required_level: int,
 	operation_mode: String,
-	mission5_selected_contractor: String,
-	starter_selected_contractor: String
+	trip_selected_contractor: String,
+	target_id: String
 ) -> String:
-	if mission_stage == 1 and starter_selected_contractor == "":
-		return "Sign a starter contractor first"
-	if mission_stage == 5 and operation_mode == "contract" and mission5_selected_contractor == "":
-		return "Accept a contractor request first"
+	var rm = RocketsManager
+	if trip_selected_contractor == "":
+		return "Select one contractor in the Contractor section first"
+	if rm and rm.is_candidate_visit_blocked(target_id):
+		return "Target not confirmed yet; run another scan and classify again"
 	if awaiting_rocket_level > 0 and required_level > awaiting_rocket_level:
-		return "Requires rocket level L%d" % required_level
+		return "Requires Level %d rocket" % required_level
 	return "Not selectable yet"
 
 func _ensure_selector_panel_exists(root_scene: Node) -> Panel:
@@ -998,51 +1181,318 @@ func _ensure_selector_panel_exists(root_scene: Node) -> Panel:
 		panel.offset_bottom = -16.0
 		ui_layer.add_child(panel)
 
-		var vbox := VBoxContainer.new()
-		vbox.name = "VBox"
-		vbox.anchor_left = 0.0
-		vbox.anchor_top = 0.0
-		vbox.anchor_right = 1.0
-		vbox.anchor_bottom = 1.0
-		vbox.offset_left = 20.0
-		vbox.offset_top = 16.0
-		vbox.offset_right = -20.0
-		vbox.offset_bottom = -16.0
-		vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		panel.add_child(vbox)
-
-		var title := Label.new()
-		title.name = "Title"
-		title.text = "Select Your Rocket"
-		title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-		vbox.add_child(title)
-
-		var back_button := Button.new()
-		back_button.name = "BackButton"
-		back_button.text = "Back to Base"
-		back_button.size_flags_horizontal = Control.SIZE_FILL
-		vbox.add_child(back_button)
-
-		if RocketSelectorOverlayScene:
-			var rocket_selector = RocketSelectorOverlayScene.instantiate()
-			if rocket_selector:
-				rocket_selector.name = "RocketSelector"
-				if rocket_selector is Control:
-					var rocket_control := rocket_selector as Control
-					rocket_control.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-					rocket_control.size_flags_vertical = Control.SIZE_EXPAND_FILL
-				vbox.add_child(rocket_selector)
-
-		var targets_section := VBoxContainer.new()
-		targets_section.name = "TargetsSection"
-		targets_section.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		targets_section.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		vbox.add_child(targets_section)
-
-		_wire_back_button(panel)
+	_rebuild_selector_panel_layout(panel)
+	_wire_back_button(panel)
 	panel.z_index = 120
 	return panel
+
+func _rebuild_selector_panel_layout(panel: Panel) -> void:
+	if panel == null:
+		return
+	if str(panel.get_meta("layout_version", "")) == SELECTOR_LAYOUT_VERSION:
+		return
+	for child in panel.get_children():
+		panel.remove_child(child)
+		child.queue_free()
+
+	var vbox := VBoxContainer.new()
+	vbox.name = "VBox"
+	vbox.anchor_left = 0.0
+	vbox.anchor_top = 0.0
+	vbox.anchor_right = 1.0
+	vbox.anchor_bottom = 1.0
+	vbox.offset_left = 20.0
+	vbox.offset_top = 16.0
+	vbox.offset_right = -20.0
+	vbox.offset_bottom = -16.0
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	vbox.add_theme_constant_override("separation", 10)
+	panel.add_child(vbox)
+
+	var title := Label.new()
+	title.name = "Title"
+	title.text = "Launchpad Mission Setup"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	vbox.add_child(title)
+
+	var back_button := Button.new()
+	back_button.name = "BackButton"
+	back_button.text = "Back to Base"
+	back_button.size_flags_horizontal = Control.SIZE_FILL
+	vbox.add_child(back_button)
+
+	var sections_scroll := ScrollContainer.new()
+	sections_scroll.name = "SectionsScroll"
+	sections_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	sections_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	sections_scroll.clip_contents = true
+	vbox.add_child(sections_scroll)
+
+	var sections := VBoxContainer.new()
+	sections.name = "Sections"
+	sections.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	sections.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	sections.add_theme_constant_override("separation", 10)
+	sections_scroll.add_child(sections)
+
+	var contractor_content := _create_selector_section(sections, "ContractorSection", "Contractor")
+	contractor_content.custom_minimum_size = Vector2(0, 120)
+
+	var rocket_content := _create_selector_section(sections, "RocketSection", "Rocket")
+	rocket_content.custom_minimum_size = Vector2(0, 340)
+	if RocketSelectorOverlayScene:
+		var rocket_selector = RocketSelectorOverlayScene.instantiate()
+		if rocket_selector:
+			rocket_selector.name = "RocketSelector"
+			if rocket_selector is Control:
+				var rocket_control := rocket_selector as Control
+				rocket_control.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+				rocket_control.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+				rocket_control.custom_minimum_size = Vector2(0, 260)
+			rocket_content.add_child(rocket_selector)
+
+	var target_content := _create_selector_section(sections, "TargetSection", "Mission Target")
+	target_content.custom_minimum_size = Vector2(0, 220)
+
+	panel.set_meta("layout_version", SELECTOR_LAYOUT_VERSION)
+
+func _create_selector_section(parent: VBoxContainer, section_name: String, section_title: String) -> VBoxContainer:
+	var card := PanelContainer.new()
+	card.name = section_name
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.add_theme_stylebox_override("panel", _target_card_style())
+	parent.add_child(card)
+
+	var content := VBoxContainer.new()
+	content.name = "Content"
+	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	content.add_theme_constant_override("separation", 8)
+	card.add_child(content)
+
+	var heading := Label.new()
+	heading.text = section_title
+	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	PanelStyle.apply_body(heading)
+	heading.add_theme_font_size_override("font_size", 18)
+	content.add_child(heading)
+	return content
+
+func _get_rocket_selector(panel: Node) -> Control:
+	if panel == null:
+		return null
+	return panel.get_node_or_null("VBox/SectionsScroll/Sections/RocketSection/Content/RocketSelector") as Control
+
+func _ensure_rocket_selector_ready(panel: Panel) -> void:
+	if panel == null:
+		return
+	var rocket_content = panel.get_node_or_null("VBox/SectionsScroll/Sections/RocketSection/Content")
+	if rocket_content == null:
+		return
+	var rocket_selector = _get_rocket_selector(panel)
+	if rocket_selector == null:
+		_attach_fresh_rocket_selector(rocket_content)
+		return
+	# Let freshly-instanced selectors finish _ready() and build their UI first.
+	if not bool(rocket_selector.get_meta("selector_ui_built", false)):
+		return
+	if _count_create_buttons(rocket_selector) > 0:
+		return
+	# If selector exists but has no actionable buttons, recreate it to recover from stale/blank state.
+	rocket_content.remove_child(rocket_selector)
+	rocket_selector.queue_free()
+	_attach_fresh_rocket_selector(rocket_content)
+
+func _attach_fresh_rocket_selector(rocket_content: Node) -> void:
+	if RocketSelectorOverlayScene == null or rocket_content == null:
+		return
+	var fresh = RocketSelectorOverlayScene.instantiate()
+	if fresh == null:
+		return
+	fresh.name = "RocketSelector"
+	if fresh is Control:
+		var ctrl := fresh as Control
+		ctrl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		ctrl.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+		ctrl.custom_minimum_size = Vector2(0, 260)
+	rocket_content.add_child(fresh)
+
+func _count_create_buttons(root: Node) -> int:
+	if root == null:
+		return 0
+	var count := 0
+	var stack: Array[Node] = [root]
+	while not stack.is_empty():
+		var node = stack.pop_back()
+		if node is Button and node.name.begins_with("CreateButton_"):
+			count += 1
+		for child in node.get_children():
+			stack.append(child)
+	return count
+
+func _clear_container(container: Node) -> void:
+	if container == null:
+		return
+	for child in container.get_children():
+		if child is Label and (child as Label).text in ["Contractor", "Rocket", "Mission Target"]:
+			continue
+		container.remove_child(child)
+		child.queue_free()
+
+func _clear_rocket_section_extras(container: Node) -> void:
+	if container == null:
+		return
+	for child in container.get_children():
+		if child.name == "RocketSelector":
+			continue
+		if child is Label and (child as Label).text == "Rocket":
+			continue
+		container.remove_child(child)
+		child.queue_free()
+
+func _selector_flow_phase(selected_contractor_id: String, has_awaiting_rocket: bool) -> String:
+	if selected_contractor_id == "":
+		return "contractor"
+	if not has_awaiting_rocket:
+		return "rocket"
+	return "target"
+
+func _resolve_tutorial_flow_phase(default_phase: String, selected_contractor_id: String, has_awaiting_rocket: bool) -> String:
+	var forced = _tutorial_forced_phase()
+	if forced == "":
+		return default_phase
+	if forced == "contractor":
+		return "contractor"
+	if forced == "rocket":
+		return "rocket" if selected_contractor_id != "" else "contractor"
+	if forced == "target":
+		if selected_contractor_id == "":
+			return "contractor"
+		if not has_awaiting_rocket:
+			return "rocket"
+		return "target"
+	return default_phase
+
+func _tutorial_forced_phase() -> String:
+	var state = _read_tutorial_state()
+	if typeof(state) != TYPE_DICTIONARY:
+		return ""
+	if bool(state.get("skipped", false)):
+		return ""
+	var step = state.get("current_step", {})
+	if typeof(step) != TYPE_DICTIONARY or (step as Dictionary).is_empty():
+		return ""
+	var action_key = str((step as Dictionary).get("action_key", ""))
+	match action_key:
+		"accept_contractor_offer", "accept_starter_contractor":
+			return "contractor"
+		"create_rocket":
+			return "rocket"
+		"select_launch_target", "launch_rocket_from_earth":
+			return "target"
+		_:
+			var current_stage = int(state.get("current_stage", 1))
+			if current_stage <= 1:
+				return "contractor"
+			return ""
+
+func _read_tutorial_state() -> Dictionary:
+	var app = AppControllerHelper.get_instance()
+	if app != null and app.has_method("get_tutorial_state"):
+		var from_app = app.get_tutorial_state()
+		if typeof(from_app) == TYPE_DICTIONARY:
+			return from_app
+	if _launchpad != null and _launchpad.get_tree() != null and _launchpad.get_tree().root != null:
+		var tc = _launchpad.get_tree().root.get_node_or_null("TutorialController")
+		if tc != null and tc.has_method("get_tutorial_state"):
+			var from_controller = tc.get_tutorial_state()
+			if typeof(from_controller) == TYPE_DICTIONARY:
+				return from_controller
+	return {}
+
+func _set_section_visibility(panel: Panel, phase: String) -> void:
+	if panel == null:
+		return
+	var contractor_card = panel.get_node_or_null("VBox/SectionsScroll/Sections/ContractorSection") as Control
+	var rocket_card = panel.get_node_or_null("VBox/SectionsScroll/Sections/RocketSection") as Control
+	var target_card = panel.get_node_or_null("VBox/SectionsScroll/Sections/TargetSection") as Control
+	if contractor_card:
+		contractor_card.visible = phase == "contractor"
+	if rocket_card:
+		rocket_card.visible = phase == "rocket"
+	if target_card:
+		target_card.visible = phase == "target"
+
+func _boost_label_contrast(container: Node) -> void:
+	if container == null:
+		return
+	var stack: Array[Node] = [container]
+	while not stack.is_empty():
+		var node = stack.pop_back()
+		if node is Label:
+			var label := node as Label
+			label.add_theme_color_override("font_color", PanelStyle.TEXT_PRIMARY)
+		for child in node.get_children():
+			stack.append(child)
+
+func _normalize_selector_typography(panel: Panel) -> void:
+	if panel == null:
+		return
+	var stack: Array[Node] = [panel]
+	while not stack.is_empty():
+		var node = stack.pop_back()
+		if node is Label:
+			var label := node as Label
+			var text_size := 15
+			if label.name == "Title":
+				text_size = 22
+			elif label.text in ["Contractor", "Rocket", "Mission Target", "Required Rooms"]:
+				text_size = 18
+			elif label.text.begins_with("Step "):
+				text_size = 16
+			label.add_theme_font_size_override("font_size", text_size)
+			label.add_theme_color_override("font_color", PanelStyle.TEXT_PRIMARY)
+		elif node is Button:
+			var btn := node as Button
+			btn.custom_minimum_size.y = max(btn.custom_minimum_size.y, 48.0)
+			btn.add_theme_font_size_override("font_size", 20)
+			# Keep RocketSelector create buttons on their dedicated warm CTA palette.
+			if not btn.disabled and not btn.name.begins_with("CreateButton_"):
+				btn.add_theme_color_override("font_color", PanelStyle.TEXT_PRIMARY)
+				btn.add_theme_color_override("font_hover_color", PanelStyle.TEXT_PRIMARY)
+				btn.add_theme_color_override("font_pressed_color", PanelStyle.TEXT_PRIMARY)
+		for child in node.get_children():
+			stack.append(child)
+
+func _style_selector_action_button(btn: Button, emphasize: bool) -> void:
+	if btn == null:
+		return
+	btn.set_meta("ui_style_locked", true)
+	var normal := StyleBoxFlat.new()
+	normal.bg_color = Color(0.11, 0.18, 0.30, 0.92) if not emphasize else Color(0.16, 0.22, 0.36, 0.95)
+	normal.border_color = Color(0.28, 0.88, 0.96, 0.80)
+	normal.set_border_width_all(1)
+	normal.set_corner_radius_all(6)
+	normal.content_margin_left = 16
+	normal.content_margin_right = 16
+	normal.content_margin_top = 10
+	normal.content_margin_bottom = 10
+	var hover := normal.duplicate()
+	hover.bg_color = Color(0.18, 0.30, 0.48, 0.96)
+	var pressed := normal.duplicate()
+	pressed.bg_color = Color(0.10, 0.16, 0.28, 0.96)
+	var disabled := normal.duplicate()
+	disabled.bg_color = Color(0.08, 0.12, 0.20, 0.88)
+	disabled.border_color = Color(0.34, 0.52, 0.70, 0.78)
+	btn.add_theme_stylebox_override("normal", normal)
+	btn.add_theme_stylebox_override("hover", hover)
+	btn.add_theme_stylebox_override("pressed", pressed)
+	btn.add_theme_stylebox_override("focus", hover)
+	btn.add_theme_stylebox_override("disabled", disabled)
+	btn.add_theme_color_override("font_color", PanelStyle.TEXT_PRIMARY)
+	btn.add_theme_color_override("font_hover_color", PanelStyle.TEXT_PRIMARY)
+	btn.add_theme_color_override("font_pressed_color", PanelStyle.TEXT_PRIMARY)
+	btn.add_theme_color_override("font_disabled_color", Color(0.78, 0.86, 0.94, 1.0))
 
 func _wire_back_button(panel: Panel) -> void:
 	if panel == null:
@@ -1065,3 +1515,36 @@ func _on_back_to_base_pressed() -> void:
 		scene_manager.change_to_scene("res://Scenes/Earth/earth_base_1.tscn")
 	else:
 		tree.change_scene_to_file("res://Scenes/Earth/earth_base_1.tscn")
+
+## Returns a deterministic estimated mineral composition string for a target.
+## Asteroids are metal-rich; planets are silicate/rock-dominant.
+func _estimate_target_composition(target_id: String, is_planet: bool) -> String:
+	var h := absi(target_id.hash())
+	var parts: Array = []
+	if is_planet:
+		# Planets: silicate/rock dominant, trace metals
+		var silicates_pct := 35 + (h % 20)        # 35–54%
+		var rock_pct := 25 + ((h >> 4) % 18)       # 25–42%
+		var remaining := 100 - silicates_pct - rock_pct
+		var rare_names: Array[String] = ["Iron", "Nickel", "Cobalt", "Titanium"]
+		var rare_pct := maxi(remaining, 5)
+		var rare_name: String = rare_names[(h >> 8) % rare_names.size()]
+		parts = [
+			"Silicates %d%%" % silicates_pct,
+			"Rock %d%%" % rock_pct,
+			"%s %d%%" % [rare_name, rare_pct]
+		]
+	else:
+		# Asteroids: iron/nickel core, with 1-2 rarer minerals
+		var iron_pct := 30 + (h % 22)              # 30–51%
+		var nickel_pct := 20 + ((h >> 5) % 18)     # 20–37%
+		var remaining := 100 - iron_pct - nickel_pct
+		var rare_names: Array[String] = ["Cobalt", "Silicates", "Titanium", "Platinum"]
+		var rare_name: String = rare_names[(h >> 10) % rare_names.size()]
+		var rare_pct := remaining
+		parts = [
+			"Iron %d%%" % iron_pct,
+			"Nickel %d%%" % nickel_pct,
+			"%s %d%%" % [rare_name, rare_pct]
+		]
+	return "Est: " + ", ".join(parts)

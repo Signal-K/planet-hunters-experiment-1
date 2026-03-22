@@ -1,11 +1,14 @@
 ---
 title: Remaining open tickets — context and entry points
 createdAt: '2026-03-06T04:39:41.218Z'
-updatedAt: '2026-03-06T04:41:04.044Z'
+updatedAt: '2026-03-10T08:50:26.753Z'
 tags:
   - backlog
   - context
   - session-handoff
+description: >-
+  Operational map of remaining open tickets and where to start implementation in
+  code
 ---
 ## Status at end of 2026-03-06 session
 

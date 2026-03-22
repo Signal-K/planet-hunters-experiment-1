@@ -1,0 +1,243 @@
+{
+  "batch_id": "batch_advanced_rnd_t3_and_future",
+  "packet_index": 1,
+  "packet_count": 18,
+  "asset_count": 12,
+  "instructions": {
+    "style_anchor_required": true,
+    "one_asset_per_prompt": true,
+    "filename_contract": "strict",
+    "no_extra_suffixes": true,
+    "no_text_or_ui": true
+  },
+  "assets": [
+    {
+      "asset_id": "ablative_armour_t3__composite_multi_layer_wall__base",
+      "asset_type": "component",
+      "room_id": "ablative_armour_t3",
+      "room_name": "Ablative Armour Module",
+      "category": "hull",
+      "tier": 3,
+      "component_id": "composite_multi_layer_wall",
+      "component_name": "composite multi layer wall",
+      "component_kind": "structural",
+      "state_key": "base",
+      "priority": "p1",
+      "prompt": "Using the attached style reference, create a single isolated room component sprite for a spacecraft dollhouse interior system. Component: composite_multi_layer_wall. Category: Ablative Armour Module. Side-view cross-section, clean cutout silhouette, no text, no labels, no UI, no characters. Designed for 2:1 room tile composition. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "ablative_armour_t3__composite_multi_layer_wall__base.png",
+        "sidecar": "ablative_armour_t3__composite_multi_layer_wall__base.json",
+        "note_optional": "ablative_armour_t3__composite_multi_layer_wall__base.txt"
+      }
+    },
+    {
+      "asset_id": "ablative_armour_t3__heat_dissipation_fins__base",
+      "asset_type": "component",
+      "room_id": "ablative_armour_t3",
+      "room_name": "Ablative Armour Module",
+      "category": "hull",
+      "tier": 3,
+      "component_id": "heat_dissipation_fins",
+      "component_name": "heat dissipation fins",
+      "component_kind": "structural",
+      "state_key": "base",
+      "priority": "p1",
+      "prompt": "Using the attached style reference, create a single isolated room component sprite for a spacecraft dollhouse interior system. Component: heat_dissipation_fins. Category: Ablative Armour Module. Side-view cross-section, clean cutout silhouette, no text, no labels, no UI, no characters. Designed for 2:1 room tile composition. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "ablative_armour_t3__heat_dissipation_fins__base.png",
+        "sidecar": "ablative_armour_t3__heat_dissipation_fins__base.json",
+        "note_optional": "ablative_armour_t3__heat_dissipation_fins__base.txt"
+      }
+    },
+    {
+      "asset_id": "ablative_armour_t3__nano_repair_node_array__base",
+      "asset_type": "component",
+      "room_id": "ablative_armour_t3",
+      "room_name": "Ablative Armour Module",
+      "category": "hull",
+      "tier": 3,
+      "component_id": "nano_repair_node_array",
+      "component_name": "Nano-Repair Node Array",
+      "component_kind": "interactive",
+      "state_key": "base",
+      "priority": "p0",
+      "prompt": "Using the attached style reference, create a single isolated room component sprite for a spacecraft dollhouse interior system. Component: Nano-Repair Node Array. Category: Ablative Armour Module. Side-view cross-section, clean cutout silhouette, no text, no labels, no UI, no characters. Designed for 2:1 room tile composition. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "ablative_armour_t3__nano_repair_node_array__base.png",
+        "sidecar": "ablative_armour_t3__nano_repair_node_array__base.json",
+        "note_optional": "ablative_armour_t3__nano_repair_node_array__base.txt"
+      }
+    },
+    {
+      "asset_id": "ablative_armour_t3__self_diagnostics_panel__base",
+      "asset_type": "component",
+      "room_id": "ablative_armour_t3",
+      "room_name": "Ablative Armour Module",
+      "category": "hull",
+      "tier": 3,
+      "component_id": "self_diagnostics_panel",
+      "component_name": "Self-Diagnostics Panel",
+      "component_kind": "interactive",
+      "state_key": "base",
+      "priority": "p0",
+      "prompt": "Using the attached style reference, create a single isolated room component sprite for a spacecraft dollhouse interior system. Component: Self-Diagnostics Panel. Category: Ablative Armour Module. Side-view cross-section, clean cutout silhouette, no text, no labels, no UI, no characters. Designed for 2:1 room tile composition. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "ablative_armour_t3__self_diagnostics_panel__base.png",
+        "sidecar": "ablative_armour_t3__self_diagnostics_panel__base.json",
+        "note_optional": "ablative_armour_t3__self_diagnostics_panel__base.txt"
+      }
+    },
+    {
+      "asset_id": "ablative_armour_t3__nano_repair_node_array__active",
+      "asset_type": "state_variant",
+      "room_id": "ablative_armour_t3",
+      "room_name": "Ablative Armour Module",
+      "category": "hull",
+      "tier": 3,
+      "component_id": "nano_repair_node_array",
+      "component_name": "Nano-Repair Node Array",
+      "component_kind": "interactive",
+      "state_key": "active",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'active' for component 'Nano-Repair Node Array' in 'Ablative Armour Module'. Change only state cues: brighter active glow, subtle motion/energy cues, engaged indicators. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "ablative_armour_t3__nano_repair_node_array__active.png",
+        "sidecar": "ablative_armour_t3__nano_repair_node_array__active.json",
+        "note_optional": "ablative_armour_t3__nano_repair_node_array__active.txt"
+      }
+    },
+    {
+      "asset_id": "ablative_armour_t3__nano_repair_node_array__cooldown",
+      "asset_type": "state_variant",
+      "room_id": "ablative_armour_t3",
+      "room_name": "Ablative Armour Module",
+      "category": "hull",
+      "tier": 3,
+      "component_id": "nano_repair_node_array",
+      "component_name": "Nano-Repair Node Array",
+      "component_kind": "interactive",
+      "state_key": "cooldown",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'cooldown' for component 'Nano-Repair Node Array' in 'Ablative Armour Module'. Change only state cues: reduced glow with cooling/venting cues and amber warning flicker. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "ablative_armour_t3__nano_repair_node_array__cooldown.png",
+        "sidecar": "ablative_armour_t3__nano_repair_node_array__cooldown.json",
+        "note_optional": "ablative_armour_t3__nano_repair_node_array__cooldown.txt"
+      }
+    },
+    {
+      "asset_id": "ablative_armour_t3__nano_repair_node_array__damaged",
+      "asset_type": "state_variant",
+      "room_id": "ablative_armour_t3",
+      "room_name": "Ablative Armour Module",
+      "category": "hull",
+      "tier": 3,
+      "component_id": "nano_repair_node_array",
+      "component_name": "Nano-Repair Node Array",
+      "component_kind": "interactive",
+      "state_key": "damaged",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'damaged' for component 'Nano-Repair Node Array' in 'Ablative Armour Module'. Change only state cues: visible wear, sparks or cracks, warning lights and degraded output. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "ablative_armour_t3__nano_repair_node_array__damaged.png",
+        "sidecar": "ablative_armour_t3__nano_repair_node_array__damaged.json",
+        "note_optional": "ablative_armour_t3__nano_repair_node_array__damaged.txt"
+      }
+    },
+    {
+      "asset_id": "ablative_armour_t3__nano_repair_node_array__depleted",
+      "asset_type": "state_variant",
+      "room_id": "ablative_armour_t3",
+      "room_name": "Ablative Armour Module",
+      "category": "hull",
+      "tier": 3,
+      "component_id": "nano_repair_node_array",
+      "component_name": "Nano-Repair Node Array",
+      "component_kind": "interactive",
+      "state_key": "depleted",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'depleted' for component 'Nano-Repair Node Array' in 'Ablative Armour Module'. Change only state cues: minimal or no glow, offline indicators, depleted resource cues. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "ablative_armour_t3__nano_repair_node_array__depleted.png",
+        "sidecar": "ablative_armour_t3__nano_repair_node_array__depleted.json",
+        "note_optional": "ablative_armour_t3__nano_repair_node_array__depleted.txt"
+      }
+    },
+    {
+      "asset_id": "ablative_armour_t3__nano_repair_node_array__idle",
+      "asset_type": "state_variant",
+      "room_id": "ablative_armour_t3",
+      "room_name": "Ablative Armour Module",
+      "category": "hull",
+      "tier": 3,
+      "component_id": "nano_repair_node_array",
+      "component_name": "Nano-Repair Node Array",
+      "component_kind": "interactive",
+      "state_key": "idle",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'idle' for component 'Nano-Repair Node Array' in 'Ablative Armour Module'. Change only state cues: stable indicator lights, neutral glow, no motion cues. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "ablative_armour_t3__nano_repair_node_array__idle.png",
+        "sidecar": "ablative_armour_t3__nano_repair_node_array__idle.json",
+        "note_optional": "ablative_armour_t3__nano_repair_node_array__idle.txt"
+      }
+    },
+    {
+      "asset_id": "ablative_armour_t3__self_diagnostics_panel__active",
+      "asset_type": "state_variant",
+      "room_id": "ablative_armour_t3",
+      "room_name": "Ablative Armour Module",
+      "category": "hull",
+      "tier": 3,
+      "component_id": "self_diagnostics_panel",
+      "component_name": "Self-Diagnostics Panel",
+      "component_kind": "interactive",
+      "state_key": "active",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'active' for component 'Self-Diagnostics Panel' in 'Ablative Armour Module'. Change only state cues: brighter active glow, subtle motion/energy cues, engaged indicators. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "ablative_armour_t3__self_diagnostics_panel__active.png",
+        "sidecar": "ablative_armour_t3__self_diagnostics_panel__active.json",
+        "note_optional": "ablative_armour_t3__self_diagnostics_panel__active.txt"
+      }
+    },
+    {
+      "asset_id": "ablative_armour_t3__self_diagnostics_panel__cooldown",
+      "asset_type": "state_variant",
+      "room_id": "ablative_armour_t3",
+      "room_name": "Ablative Armour Module",
+      "category": "hull",
+      "tier": 3,
+      "component_id": "self_diagnostics_panel",
+      "component_name": "Self-Diagnostics Panel",
+      "component_kind": "interactive",
+      "state_key": "cooldown",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'cooldown' for component 'Self-Diagnostics Panel' in 'Ablative Armour Module'. Change only state cues: reduced glow with cooling/venting cues and amber warning flicker. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "ablative_armour_t3__self_diagnostics_panel__cooldown.png",
+        "sidecar": "ablative_armour_t3__self_diagnostics_panel__cooldown.json",
+        "note_optional": "ablative_armour_t3__self_diagnostics_panel__cooldown.txt"
+      }
+    },
+    {
+      "asset_id": "ablative_armour_t3__self_diagnostics_panel__damaged",
+      "asset_type": "state_variant",
+      "room_id": "ablative_armour_t3",
+      "room_name": "Ablative Armour Module",
+      "category": "hull",
+      "tier": 3,
+      "component_id": "self_diagnostics_panel",
+      "component_name": "Self-Diagnostics Panel",
+      "component_kind": "interactive",
+      "state_key": "damaged",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'damaged' for component 'Self-Diagnostics Panel' in 'Ablative Armour Module'. Change only state cues: visible wear, sparks or cracks, warning lights and degraded output. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "ablative_armour_t3__self_diagnostics_panel__damaged.png",
+        "sidecar": "ablative_armour_t3__self_diagnostics_panel__damaged.json",
+        "note_optional": "ablative_armour_t3__self_diagnostics_panel__damaged.txt"
+      }
+    }
+  ]
+}

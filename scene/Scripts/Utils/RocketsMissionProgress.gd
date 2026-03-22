@@ -14,9 +14,9 @@ static func mission_stage_from_completed(completed: int) -> int:
         return 2
     if completed == 2:
         return 3
-    if completed == 3:
-        return 4
-    return 5
+    # Authored tutorial progression caps at Mission 4.
+    # Post-M4 gameplay remains free operations while keeping stage 4 UI contracts.
+    return 4
 
 static func sanitize_completed_badges(state: Dictionary, scanner_unlock_completed_missions: int) -> bool:
     var raw = state.get("completed_mission_badges", [])
@@ -70,7 +70,7 @@ static func is_progress_badge_valid(badge: String) -> bool:
     var stamp = str(parts[parts.size() - 1]).strip_edges()
     return stamp.is_valid_int()
 
-static func find_mission5_contractor(contractor_id: String, contractor_offers: Array) -> Dictionary:
+static func find_trip_contractor(contractor_id: String, contractor_offers: Array) -> Dictionary:
     if contractor_id == "":
         return {}
     for entry in contractor_offers:
@@ -78,28 +78,40 @@ static func find_mission5_contractor(contractor_id: String, contractor_offers: A
             return entry.duplicate(true)
     return {}
 
-static func build_mission5_contract_offer(
-    mission5_targets: Array,
+static func build_trip_contract_offer(
+    candidate_targets: Array,
     contractor_offers: Array,
     payout_cap: int
 ) -> Dictionary:
     var recommended_target := {}
-    if not mission5_targets.is_empty():
-        recommended_target = mission5_targets[0]
+    if not candidate_targets.is_empty():
+        recommended_target = candidate_targets[0]
     var recommended_target_id = str(recommended_target.get("id", ""))
     var recommended_target_label = str(recommended_target.get("label", recommended_target_id))
     var hash_utils = preload("res://Scripts/Utils/HashUtils.gd")
     var hash_seed = hash_utils.simple_hash("%s:%d" % [recommended_target_id, int(Time.get_unix_time_from_system())])
     var rng = RandomNumberGenerator.new()
     rng.seed = hash_seed
-    var requested_minerals := {
-        "Iron": rng.randi_range(80, 220),
-        "Nickel": rng.randi_range(60, 180)
-    }
+    # Build per-contractor mineral orders from their mineral_ranges
+    var contractors_with_orders: Array = []
+    for entry_any in contractor_offers:
+        if typeof(entry_any) != TYPE_DICTIONARY:
+            continue
+        var entry: Dictionary = entry_any.duplicate(true)
+        var ranges: Dictionary = entry.get("mineral_ranges", {})
+        var order: Dictionary = {}
+        for mineral in ranges.keys():
+            var r = ranges[mineral]
+            if typeof(r) == TYPE_ARRAY and r.size() >= 2:
+                order[mineral] = rng.randi_range(int(r[0]), int(r[1]))
+            else:
+                order[mineral] = 100
+        entry["requested_minerals"] = order
+        contractors_with_orders.append(entry)
     return {
-        "contractors": contractor_offers.duplicate(true),
+        "contractors": contractors_with_orders,
         "selected_contractor": "",
-        "requested_minerals": requested_minerals,
+        "selection_required": true,
         "recommended_target_id": recommended_target_id,
         "recommended_target_label": recommended_target_label,
         "recommended_rocket": "starterrocket1",

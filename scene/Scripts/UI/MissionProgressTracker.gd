@@ -2,19 +2,18 @@ extends CanvasLayer
 
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
 const ROCKETS_MANAGER = preload("res://Scripts/Utils/RocketsManager.gd")
+const UILayout = preload("res://Scripts/UI/UILayout.gd")
 const MISSION_OBJECTIVES := {
-	1: "Complete base tour, sign a contractor, and deliver the starter order.",
-	2: "Repeat loop with upgraded rocket.",
-	3: "Build scanner and launch from scanned targets.",
-	4: "Switch to planetary targets and complete mission.",
-	5: "Accept contractor request and complete contract mission."
+	1: "Complete base tour, pick a contractor, and deliver the starter order.",
+	2: "Pick a contractor, build Starter Rocket 2, and complete the delivery loop.",
+	3: "Pick a contractor, fly to a NASA TESS planet candidate, and complete the run.",
+	4: "Build the Scanner Station, scan for targets, then mine with drone assistance."
 }
 const MISSION_STEP_KEYS := {
-	1: ["tour_open_control_station", "tour_close_control_station", "accept_starter_contractor", "create_rocket", "launch_rocket_from_earth", "mine_target", "return_rocket_home", "resolve_mission_debrief"],
-	2: ["launch_rocket_from_earth", "mine_target", "return_rocket_home", "resolve_mission_debrief"],
-	3: ["build_scanner_station", "scan_targets", "select_launch_target"],
-	4: ["scan_targets", "select_launch_target", "mine_target", "return_rocket_home", "resolve_mission_debrief"],
-	5: ["select_launch_target", "mine_target", "return_rocket_home", "resolve_mission_debrief"]
+	1: ["tour_open_control_station", "tour_close_control_station", "accept_contractor_offer", "create_rocket", "launch_rocket_from_earth", "mine_target", "return_rocket_home", "resolve_mission_debrief"],
+	2: ["accept_contractor_offer", "create_rocket", "launch_rocket_from_earth", "mine_target", "return_rocket_home", "resolve_mission_debrief"],
+	3: ["accept_contractor_offer", "select_launch_target", "launch_rocket_from_earth", "mine_target", "return_rocket_home", "resolve_mission_debrief"],
+	4: ["build_scanner_station", "scan_targets", "select_launch_target", "launch_rocket_from_earth", "mine_target", "return_rocket_home", "resolve_mission_debrief"]
 }
 
 @onready var panel: PanelContainer = $Panel
@@ -28,6 +27,15 @@ const MISSION_STEP_KEYS := {
 var _collapsed := false
 var _accumulated_time := 0.0
 var _tutorial_active := false
+var _tutorial_skipped := false
+
+func _apply_layout() -> void:
+	var vp := get_viewport()
+	if vp == null or panel == null:
+		return
+	var r := UILayout.zone(UILayout.Zone.TUTORIAL_COACH, vp.get_visible_rect().size)
+	panel.position = r.position
+	panel.size = r.size
 
 func _ready() -> void:
 	layer = 50
@@ -51,6 +59,7 @@ func _ready() -> void:
 		app.tutorial_state_updated.connect(_on_tutorial_state_updated)
 		if app.has_method("get_tutorial_state"):
 			_on_tutorial_state_updated(app.get_tutorial_state())
+	_apply_layout()
 	_refresh()
 
 func _process(delta: float) -> void:
@@ -69,11 +78,40 @@ func _on_toggle_pressed() -> void:
 	if toggle_button:
 		toggle_button.text = "Show" if _collapsed else "Hide"
 
+const HIDE_SCENES := ["rocket_ascent", "rocket_transit", "rocket_return", "asteroid_preview", "orbit_sale_preview", "SidescrollMining"]
+
+func _get_current_scene_basename() -> String:
+	var tree = get_tree()
+	if tree and tree.current_scene:
+		return tree.current_scene.scene_file_path.get_file().get_basename()
+	return ""
+
 func _refresh() -> void:
 	if _tutorial_active:
 		visible = false
 		return
+	# This tracker is an auxiliary helper and should not compete with the
+	# authored linear tutorial. Only show it after tutorial is skipped or
+	# when free-operations has been unlocked.
+	if not _tutorial_skipped and not ROCKETS_MANAGER.is_free_operations_unlocked():
+		visible = false
+		return
+	var basename := _get_current_scene_basename()
+	# Always hide in transit/cinematic/gameplay scenes.
+	if basename in HIDE_SCENES:
+		visible = false
+		return
+	# Hide when the player is already in the right scene to complete the next step.
+	var app = get_node_or_null("/root/AppController")
+	if app and app.has_method("get_tutorial_state"):
+		var tstate: Dictionary = app.get_tutorial_state()
+		var step: Dictionary = tstate.get("current_step", {})
+		var valid_scenes: Array = step.get("valid_scenes", [])
+		if not valid_scenes.is_empty() and basename in valid_scenes:
+			visible = false
+			return
 	visible = true
+	_apply_layout()
 	var stage = int(ROCKETS_MANAGER.get_mission_stage())
 	var objective = str(MISSION_OBJECTIVES.get(stage, "Complete current mission objectives."))
 	var keys: Array = MISSION_STEP_KEYS.get(stage, [])
@@ -81,7 +119,7 @@ func _refresh() -> void:
 	var checklist_lines := []
 	for key_any in keys:
 		var key = str(key_any)
-		var seen = _has_seen_guide_action(key)
+		var seen = _has_seen_guide_action_for_stage(key, stage)
 		if seen:
 			seen_count += 1
 		checklist_lines.append("%s %s" % ["[x]" if seen else "[ ]", _label_for_action(key)])
@@ -89,7 +127,7 @@ func _refresh() -> void:
 	if keys.size() > 0:
 		percent = int(round(float(seen_count) / float(keys.size()) * 100.0))
 	if title_label:
-		title_label.text = "Mission %d Tracker" % stage
+		title_label.text = "Free Operations Tracker" if ROCKETS_MANAGER.is_free_operations_unlocked() else "Mission %d Tracker" % stage
 	if objective_label:
 		objective_label.text = "Objective: %s" % objective
 	if progress_label:
@@ -100,13 +138,25 @@ func _refresh() -> void:
 func _on_tutorial_state_updated(state: Dictionary) -> void:
 	var skipped = bool(state.get("skipped", false))
 	var step: Dictionary = state.get("current_step", {})
+	_tutorial_skipped = skipped
 	_tutorial_active = not skipped and not step.is_empty()
-	visible = not _tutorial_active
+	visible = not _tutorial_active and (_tutorial_skipped or ROCKETS_MANAGER.is_free_operations_unlocked())
 
 func _has_seen_guide_action(action_key: String) -> bool:
 	var app = get_node_or_null("/root/AppController")
 	if app and app.has_method("has_seen_guide_action"):
 		return bool(app.has_seen_guide_action(action_key))
+	return false
+
+func _has_seen_guide_action_for_stage(action_key: String, stage: int) -> bool:
+	var app = get_node_or_null("/root/AppController")
+	if app and app.has_method("has_seen_guide_action_for_stage"):
+		if bool(app.has_seen_guide_action_for_stage(action_key, stage)):
+			return true
+		# When tutorial is skipped, actions are recorded globally but never advance
+		# steps, so completed_actions_by_stage stays empty. Fall back to global.
+		if _tutorial_skipped and app.has_method("has_seen_guide_action"):
+			return bool(app.has_seen_guide_action(action_key))
 	return false
 
 func _label_for_action(action_key: String) -> String:
@@ -118,13 +168,15 @@ func _label_for_action(action_key: String) -> String:
 		"open_launchpad":
 			return "Open launchpad"
 		"accept_starter_contractor":
-			return "Sign starter contractor"
+			return "Pick a contractor"
+		"accept_contractor_offer":
+			return "Pick a contractor"
 		"create_rocket":
-			return "Create rocket"
+			return "Build rocket"
 		"launch_rocket_from_earth":
 			return "Launch mission"
 		"mine_target":
-			return "Mine target"
+			return "Mine the target"
 		"return_rocket_home":
 			return "Return to Earth"
 		"resolve_mission_debrief":

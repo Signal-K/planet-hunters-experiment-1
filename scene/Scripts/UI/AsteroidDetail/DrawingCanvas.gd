@@ -6,7 +6,7 @@ extends Control
 
 signal drawing_changed(count)
 
-enum Mode { FREEFORM, RECT, CIRCLE }
+enum Mode { FREEFORM, RECT, CIRCLE, TRANSIT_DIP }
 
 var mode := Mode.FREEFORM
 var pen_enabled := false
@@ -18,7 +18,7 @@ var start_point := Vector2.ZERO
 var current_point := Vector2.ZERO
 
 # Each stroke is a Dictionary describing the annotation
-# { type: "freeform"/"rect"/"circle", points: [Vector2,..], color: Color, width: float, rect: Rect2, center: Vector2, radius: float }
+# { type: "freeform"/"rect"/"circle"/"transit_dip", points: [Vector2,..], color: Color, width: float, rect: Rect2, center: Vector2, radius: float }
 var all_strokes := []
 
 func _ready():
@@ -55,6 +55,22 @@ func get_annotation_count() -> int:
 
 func get_drawing_data() -> Array:
 	return all_strokes.duplicate()
+
+func get_transit_dips() -> Array:
+	var dips := []
+	for stroke_any in all_strokes:
+		if typeof(stroke_any) != TYPE_DICTIONARY:
+			continue
+		var stroke: Dictionary = stroke_any
+		if str(stroke.get("type", "")) != "transit_dip":
+			continue
+		var r: Rect2 = stroke.get("rect", Rect2())
+		dips.append({
+			"x_start": r.position.x,
+			"x_end": r.position.x + r.size.x,
+			"width": r.size.x
+		})
+	return dips
 
 func set_drawing_data(strokes: Array):
 	all_strokes.clear()
@@ -111,7 +127,7 @@ func _end_drawing():
 	if not is_drawing:
 		return
 	is_drawing = false
-	# finalize shape for rect/circle
+	# finalize shape for rect/circle/transit dip
 	if mode == Mode.RECT:
 		var r = Rect2(start_point, current_point - start_point)
 		var stroke = {"type":"rect", "rect": r.abs(), "color": pen_color, "width": pen_width}
@@ -120,6 +136,12 @@ func _end_drawing():
 		var center = (start_point + current_point) * 0.5
 		var radius = start_point.distance_to(current_point) * 0.5
 		var stroke = {"type":"circle", "center": center, "radius": radius, "color": pen_color, "width": pen_width}
+		all_strokes.append(stroke)
+	elif mode == Mode.TRANSIT_DIP:
+		var left = min(start_point.x, current_point.x)
+		var right = max(start_point.x, current_point.x)
+		var dip_rect = Rect2(Vector2(left, 0.0), Vector2(max(right - left, 2.0), size.y))
+		var stroke = {"type":"transit_dip", "rect": dip_rect, "color": pen_color, "width": pen_width}
 		all_strokes.append(stroke)
 
 	emit_signal("drawing_changed", all_strokes.size())
@@ -151,6 +173,10 @@ func _draw():
 			w = s.get("width", pen_width)
 			# Draw circle outline using an arc
 			draw_arc(center, radius, 0.0, TAU, 64, c, w)
+		elif t == "transit_dip":
+			var dip_rect: Rect2 = s.get("rect", Rect2())
+			draw_rect(dip_rect, Color(c.r, c.g, c.b, 0.16), true)
+			draw_rect(dip_rect, c, false, w)
 
 	# Draw preview for current shape
 	if is_drawing:
@@ -173,3 +199,9 @@ func _draw():
 			var radius = start_point.distance_to(current_point) * 0.5
 			# Draw preview as outline
 			draw_arc(center, radius, 0.0, TAU, 64, pen_color, pen_width)
+		elif mode == Mode.TRANSIT_DIP:
+			var left = min(start_point.x, current_point.x)
+			var right = max(start_point.x, current_point.x)
+			var preview_rect = Rect2(Vector2(left, 0.0), Vector2(max(right - left, 2.0), size.y))
+			draw_rect(preview_rect, Color(pen_color.r, pen_color.g, pen_color.b, 0.16), true)
+			draw_rect(preview_rect, pen_color, false, pen_width)

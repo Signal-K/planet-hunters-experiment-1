@@ -1,0 +1,222 @@
+{
+  "taskId": "f5o81u",
+  "currentVersion": 5,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "f5o81u",
+      "version": 1,
+      "timestamp": "2026-03-09T01:36:53.521Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Clarify debrief Resolve action with plain language",
+        "description": "The debrief CTA says Resolve which is internal game language. First-time players hesitate unsure whether it is destructive, optional, or time-limited.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "ux",
+          "debrief",
+          "copy"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Resolve button is relabelled to something self-explanatory (e.g. Collect Payout or Complete Mission)"
+          },
+          {
+            "completed": false,
+            "text": "Debrief screen shows a one-line summary of what the player will receive before they click"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "f5o81u",
+      "version": 2,
+      "timestamp": "2026-03-09T01:37:51.814Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Resolve button is relabelled to something self-explanatory (e.g. Collect Payout or Complete Mission)"
+            },
+            {
+              "completed": false,
+              "text": "Debrief screen shows a one-line summary of what the player will receive before they click"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Resolve button is relabelled to something self-explanatory (e.g. Collect Payout or Complete Mission)"
+            },
+            {
+              "completed": false,
+              "text": "Debrief screen shows a one-line summary of what the player will receive before they click"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Clarify debrief Resolve action with plain language",
+        "description": "The debrief CTA says Resolve which is internal game language. First-time players hesitate unsure whether it is destructive, optional, or time-limited.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "ux",
+          "debrief",
+          "copy"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Resolve button is relabelled to something self-explanatory (e.g. Collect Payout or Complete Mission)"
+          },
+          {
+            "completed": false,
+            "text": "Debrief screen shows a one-line summary of what the player will receive before they click"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "f5o81u",
+      "version": 3,
+      "timestamp": "2026-03-09T01:37:54.596Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Resolve button is relabelled to something self-explanatory (e.g. Collect Payout or Complete Mission)"
+            },
+            {
+              "completed": false,
+              "text": "Debrief screen shows a one-line summary of what the player will receive before they click"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Resolve button is relabelled to something self-explanatory (e.g. Collect Payout or Complete Mission)"
+            },
+            {
+              "completed": true,
+              "text": "Debrief screen shows a one-line summary of what the player will receive before they click"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Clarify debrief Resolve action with plain language",
+        "description": "The debrief CTA says Resolve which is internal game language. First-time players hesitate unsure whether it is destructive, optional, or time-limited.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "ux",
+          "debrief",
+          "copy"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Resolve button is relabelled to something self-explanatory (e.g. Collect Payout or Complete Mission)"
+          },
+          {
+            "completed": true,
+            "text": "Debrief screen shows a one-line summary of what the player will receive before they click"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "f5o81u",
+      "version": 4,
+      "timestamp": "2026-03-09T01:37:57.370Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "Updated all 5 tutorial step messages to use plain 'sell cargo / scrap ship' language instead of 'resolve'. Also fixed error message in MissionDebrief.gd. AC #2 already satisfied by status_label showing estimated payout."
+        }
+      ],
+      "snapshot": {
+        "title": "Clarify debrief Resolve action with plain language",
+        "description": "The debrief CTA says Resolve which is internal game language. First-time players hesitate unsure whether it is destructive, optional, or time-limited.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "ux",
+          "debrief",
+          "copy"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Resolve button is relabelled to something self-explanatory (e.g. Collect Payout or Complete Mission)"
+          },
+          {
+            "completed": true,
+            "text": "Debrief screen shows a one-line summary of what the player will receive before they click"
+          }
+        ],
+        "implementationNotes": "Updated all 5 tutorial step messages to use plain 'sell cargo / scrap ship' language instead of 'resolve'. Also fixed error message in MissionDebrief.gd. AC #2 already satisfied by status_label showing estimated payout."
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "f5o81u",
+      "version": 5,
+      "timestamp": "2026-03-09T01:38:02.955Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Clarify debrief Resolve action with plain language",
+        "description": "The debrief CTA says Resolve which is internal game language. First-time players hesitate unsure whether it is destructive, optional, or time-limited.",
+        "status": "done",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "ux",
+          "debrief",
+          "copy"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Resolve button is relabelled to something self-explanatory (e.g. Collect Payout or Complete Mission)"
+          },
+          {
+            "completed": true,
+            "text": "Debrief screen shows a one-line summary of what the player will receive before they click"
+          }
+        ],
+        "implementationNotes": "Updated all 5 tutorial step messages to use plain 'sell cargo / scrap ship' language instead of 'resolve'. Also fixed error message in MissionDebrief.gd. AC #2 already satisfied by status_label showing estimated payout."
+      }
+    }
+  ]
+}

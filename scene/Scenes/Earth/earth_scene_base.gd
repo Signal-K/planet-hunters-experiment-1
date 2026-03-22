@@ -46,6 +46,7 @@ func _ready() -> void:
 	_ui_helper.setup(self)
 	_ui_helper.setup_buttons()
 	call_deferred("_apply_tutorial_button_state")
+	call_deferred("_apply_nav_safe_area")
 
 	# Create ground guide lines if enabled
 	if show_ground_guide:
@@ -123,7 +124,7 @@ func _on_forward_button_pressed() -> void:
 
 func _on_menu_button_pressed() -> void:
 	print("Menu button pressed - showing menu panel")
-	ui_manager.show_panel(UIManager.PanelType.MENU)
+	preload("res://Scripts/UI/GameNavigationMenu.gd").toggle(self)
 
 func _on_market_button_pressed() -> void:
 	print("Market button pressed - showing market panel")
@@ -143,3 +144,22 @@ func _on_new_mission_button_pressed() -> void:
 		scene_manager.change_to_scene("res://Scenes/Earth/earth_launchpad.tscn")
 	else:
 		get_tree().change_scene_to_file("res://Scenes/Earth/earth_launchpad.tscn")
+
+func _apply_nav_safe_area() -> void:
+	# On mobile landscape viewports (wider than 16:9), shift the nav bar up to
+	# clear the iPhone home indicator. Design is 1920×1080; iPhone landscape
+	# expands the viewport to ~2337×1080 (aspect ~2.16). The home indicator is
+	# ~34 CSS px → ~94 Godot units at that scale. We use 90 as a round value.
+	var container := get_node_or_null("UILayer/ButtonContainer") as HBoxContainer
+	if container == null:
+		return
+	var vp := get_viewport()
+	if vp == null:
+		return
+	var vp_rect := vp.get_visible_rect()
+	if vp_rect.size.y <= 0:
+		return
+	if vp_rect.size.x / vp_rect.size.y > 1.85:
+		var inset := 90.0
+		container.offset_top -= inset
+		container.offset_bottom -= inset

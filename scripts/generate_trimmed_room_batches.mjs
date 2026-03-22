@@ -18,13 +18,13 @@ const progression = [
   { level: 'L2_M2', ship: 'starterrocket2', includeRooms: ships.starterrocket2, includePriorities: new Set(['p0', 'p1']), includeUsageStates: false, note: 'Upgrade path loop' },
   { level: 'L2_M3', ship: 'starterrocket2', includeRooms: [...ships.starterrocket2, 'scanner_array_t2'], includePriorities: new Set(['p0', 'p1']), includeUsageStates: false, note: 'Scanner unlock prep' },
   { level: 'L3_M4', ship: 'starterrocket3', includeRooms: ships.starterrocket3, includePriorities: new Set(['p0', 'p1']), includeUsageStates: false, note: 'Planetary exploration' },
-  { level: 'L3_M5', ship: 'starterrocket3', includeRooms: [...ships.starterrocket3, 'resource_vault_t2', 'power_capacitor_t2', 'subsurface_probe_t2'], includePriorities: new Set(['p0', 'p1']), includeUsageStates: false, note: 'Contractor/optimization prep' }
+  { level: 'L3_FREE_OPS', ship: 'starterrocket3', includeRooms: [...ships.starterrocket3, 'resource_vault_t2', 'power_capacitor_t2', 'subsurface_probe_t2'], includePriorities: new Set(['p0', 'p1']), includeUsageStates: false, note: 'Free operations contractor/optimization loop' }
 ];
 
 const advancedRND = {
   batch_id: 'batch_advanced_rnd_t3_and_future',
   title: 'Advanced R&D Rooms (T3/Future)',
-  includeRooms: ['ion_drive_t3', 'spectral_analyser_t3', 'subsurface_probe_t2', 'resource_vault_t2', 'power_capacitor_t2', 'fusion_reactor_t2', 'ablative_armour_t3'],
+  includeRooms: ['ion_drive_t3', 'spectral_analyser_t3', 'subsurface_probe_t2', 'resource_vault_t2', 'power_capacitor_t2', 'fusion_reactor_t2', 'reinforced_hull_t2', 'ablative_armour_t3', 'life_support_t3', 'crew_quarters_t3'],
   includePriorities: new Set(['p0', 'p1']),
   includeUsageStates: false,
   note: 'Future-ready room coverage beyond currently installed layouts'

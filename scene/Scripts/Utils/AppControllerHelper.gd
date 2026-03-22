@@ -2,6 +2,7 @@ extends RefCounted
 class_name AppControllerHelper
 
 const MINING_PRACTICE_PANEL_SCENE := preload("res://Scenes/UI/MiningPracticePanel.tscn")
+const FirstTimeMechanicTracker = preload("res://Scripts/Utils/FirstTimeMechanicTracker.gd")
 const MINING_PRACTICE_LAYER_NAME := "MiningPracticeOverlayLayer"
 const MINING_PRACTICE_LAYER_INDEX := 130
 
@@ -27,6 +28,13 @@ static func is_menu_open() -> bool:
 	if app and app.has_method("is_menu_open"):
 		return bool(app.is_menu_open())
 	return false
+
+## Show a first-time mechanic introduction overlay exactly once per key.
+## Key must have an entry in MechanicIntroCatalog.
+## Call this from any scene that introduces a new game mechanic.
+static func maybe_show_mechanic_intro(mechanic_key: String) -> void:
+	var tree := Engine.get_main_loop() as SceneTree
+	FirstTimeMechanicTracker.maybe_show(mechanic_key, tree)
 
 static func open_mining_practice_panel(entry_point: String = "menu_panel") -> bool:
 	var tree = Engine.get_main_loop() as SceneTree

@@ -1,0 +1,323 @@
+{
+  "taskId": "u5tpj6",
+  "currentVersion": 6,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "u5tpj6",
+      "version": 1,
+      "timestamp": "2026-03-10T05:52:30.780Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix intro splash script API mismatch causing AppController compile/runtime errors",
+        "description": "Headless audit reports PlanetHuntersIntroSplash identifier/has_been_shown mismatch in AppController startup path. Restore valid preload/API contract so AppController loads cleanly.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "runtime",
+          "startup",
+          "bug"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "AppController no longer reports PlanetHuntersIntroSplash compile error"
+          },
+          {
+            "completed": false,
+            "text": "No invalid call to has_been_shown during startup"
+          },
+          {
+            "completed": false,
+            "text": "Relevant tutorial/startup tests pass without splash-related script errors"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "u5tpj6",
+      "version": 2,
+      "timestamp": "2026-03-10T05:52:35.241Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "AppController no longer reports PlanetHuntersIntroSplash compile error"
+            },
+            {
+              "completed": false,
+              "text": "No invalid call to has_been_shown during startup"
+            },
+            {
+              "completed": false,
+              "text": "Relevant tutorial/startup tests pass without splash-related script errors"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "AppController no longer reports PlanetHuntersIntroSplash compile error"
+            },
+            {
+              "completed": false,
+              "text": "No invalid call to has_been_shown during startup"
+            },
+            {
+              "completed": false,
+              "text": "Relevant tutorial/startup tests pass without splash-related script errors"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Fix intro splash script API mismatch causing AppController compile/runtime errors",
+        "description": "Headless audit reports PlanetHuntersIntroSplash identifier/has_been_shown mismatch in AppController startup path. Restore valid preload/API contract so AppController loads cleanly.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "runtime",
+          "startup",
+          "bug"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "AppController no longer reports PlanetHuntersIntroSplash compile error"
+          },
+          {
+            "completed": false,
+            "text": "No invalid call to has_been_shown during startup"
+          },
+          {
+            "completed": false,
+            "text": "Relevant tutorial/startup tests pass without splash-related script errors"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "u5tpj6",
+      "version": 3,
+      "timestamp": "2026-03-10T05:52:37.482Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "AppController no longer reports PlanetHuntersIntroSplash compile error"
+            },
+            {
+              "completed": false,
+              "text": "No invalid call to has_been_shown during startup"
+            },
+            {
+              "completed": false,
+              "text": "Relevant tutorial/startup tests pass without splash-related script errors"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "AppController no longer reports PlanetHuntersIntroSplash compile error"
+            },
+            {
+              "completed": true,
+              "text": "No invalid call to has_been_shown during startup"
+            },
+            {
+              "completed": false,
+              "text": "Relevant tutorial/startup tests pass without splash-related script errors"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Fix intro splash script API mismatch causing AppController compile/runtime errors",
+        "description": "Headless audit reports PlanetHuntersIntroSplash identifier/has_been_shown mismatch in AppController startup path. Restore valid preload/API contract so AppController loads cleanly.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "runtime",
+          "startup",
+          "bug"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "AppController no longer reports PlanetHuntersIntroSplash compile error"
+          },
+          {
+            "completed": true,
+            "text": "No invalid call to has_been_shown during startup"
+          },
+          {
+            "completed": false,
+            "text": "Relevant tutorial/startup tests pass without splash-related script errors"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "u5tpj6",
+      "version": 4,
+      "timestamp": "2026-03-10T05:52:39.719Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "AppController no longer reports PlanetHuntersIntroSplash compile error"
+            },
+            {
+              "completed": true,
+              "text": "No invalid call to has_been_shown during startup"
+            },
+            {
+              "completed": false,
+              "text": "Relevant tutorial/startup tests pass without splash-related script errors"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "AppController no longer reports PlanetHuntersIntroSplash compile error"
+            },
+            {
+              "completed": true,
+              "text": "No invalid call to has_been_shown during startup"
+            },
+            {
+              "completed": true,
+              "text": "Relevant tutorial/startup tests pass without splash-related script errors"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Fix intro splash script API mismatch causing AppController compile/runtime errors",
+        "description": "Headless audit reports PlanetHuntersIntroSplash identifier/has_been_shown mismatch in AppController startup path. Restore valid preload/API contract so AppController loads cleanly.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "runtime",
+          "startup",
+          "bug"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "AppController no longer reports PlanetHuntersIntroSplash compile error"
+          },
+          {
+            "completed": true,
+            "text": "No invalid call to has_been_shown during startup"
+          },
+          {
+            "completed": true,
+            "text": "Relevant tutorial/startup tests pass without splash-related script errors"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "u5tpj6",
+      "version": 5,
+      "timestamp": "2026-03-10T05:52:41.960Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "## Summary\n- Repaired intro splash startup contract by fixing splash dismissal call and AppController splash-shown check path.\n- Verified no has_been_shown invalid-call errors during headless startup test runs.\n- Mission and narrative suites now compile/load cleanly through startup."
+        }
+      ],
+      "snapshot": {
+        "title": "Fix intro splash script API mismatch causing AppController compile/runtime errors",
+        "description": "Headless audit reports PlanetHuntersIntroSplash identifier/has_been_shown mismatch in AppController startup path. Restore valid preload/API contract so AppController loads cleanly.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "runtime",
+          "startup",
+          "bug"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "AppController no longer reports PlanetHuntersIntroSplash compile error"
+          },
+          {
+            "completed": true,
+            "text": "No invalid call to has_been_shown during startup"
+          },
+          {
+            "completed": true,
+            "text": "Relevant tutorial/startup tests pass without splash-related script errors"
+          }
+        ],
+        "implementationNotes": "## Summary\n- Repaired intro splash startup contract by fixing splash dismissal call and AppController splash-shown check path.\n- Verified no has_been_shown invalid-call errors during headless startup test runs.\n- Mission and narrative suites now compile/load cleanly through startup."
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "u5tpj6",
+      "version": 6,
+      "timestamp": "2026-03-10T05:52:46.446Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix intro splash script API mismatch causing AppController compile/runtime errors",
+        "description": "Headless audit reports PlanetHuntersIntroSplash identifier/has_been_shown mismatch in AppController startup path. Restore valid preload/API contract so AppController loads cleanly.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "runtime",
+          "startup",
+          "bug"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "AppController no longer reports PlanetHuntersIntroSplash compile error"
+          },
+          {
+            "completed": true,
+            "text": "No invalid call to has_been_shown during startup"
+          },
+          {
+            "completed": true,
+            "text": "Relevant tutorial/startup tests pass without splash-related script errors"
+          }
+        ],
+        "implementationNotes": "## Summary\n- Repaired intro splash startup contract by fixing splash dismissal call and AppController splash-shown check path.\n- Verified no has_been_shown invalid-call errors during headless startup test runs.\n- Mission and narrative suites now compile/load cleanly through startup."
+      }
+    }
+  ]
+}

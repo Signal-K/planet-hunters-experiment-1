@@ -1,0 +1,14 @@
+{
+  "asset_id": "small_reactor_t1__wall_conduit_trunk_lines__base",
+  "room_id": "small_reactor_t1",
+  "component": "wall_conduit_trunk_lines",
+  "tier": "1",
+  "state": "base",
+  "prompt_version": "v1",
+  "generator": "chatgpt",
+  "generated_at_utc": "2026-03-10T10:16:32.822860",
+  "image_filename": "small_reactor_t1__wall_conduit_trunk_lines__base.png",
+  "width": 1024,
+  "height": 1024,
+  "notes": ""
+}

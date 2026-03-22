@@ -1,0 +1,323 @@
+{
+  "taskId": "0cf8ow",
+  "currentVersion": 6,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "0cf8ow",
+      "version": 1,
+      "timestamp": "2026-03-10T05:52:48.690Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Repair missing asset references for StarterRocketStage2Frame1 and Earth1 backdrops",
+        "description": "Headless audit reports missing resource imports for StarterRocketStage2Frame1.png and Earth1.png referenced by scenes/transitions. Fix paths/assets to remove parse/load errors.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "assets",
+          "stability",
+          "tests"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "SidescrollMining scene loads without missing StarterRocketStage2Frame1 resource error"
+          },
+          {
+            "completed": false,
+            "text": "mission_debrief and transition scenes resolve Earth1 backdrop resource"
+          },
+          {
+            "completed": false,
+            "text": "Headless test runs no longer emit these missing-asset parse errors"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "0cf8ow",
+      "version": 2,
+      "timestamp": "2026-03-10T05:52:53.143Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "SidescrollMining scene loads without missing StarterRocketStage2Frame1 resource error"
+            },
+            {
+              "completed": false,
+              "text": "mission_debrief and transition scenes resolve Earth1 backdrop resource"
+            },
+            {
+              "completed": false,
+              "text": "Headless test runs no longer emit these missing-asset parse errors"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "SidescrollMining scene loads without missing StarterRocketStage2Frame1 resource error"
+            },
+            {
+              "completed": false,
+              "text": "mission_debrief and transition scenes resolve Earth1 backdrop resource"
+            },
+            {
+              "completed": false,
+              "text": "Headless test runs no longer emit these missing-asset parse errors"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Repair missing asset references for StarterRocketStage2Frame1 and Earth1 backdrops",
+        "description": "Headless audit reports missing resource imports for StarterRocketStage2Frame1.png and Earth1.png referenced by scenes/transitions. Fix paths/assets to remove parse/load errors.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "assets",
+          "stability",
+          "tests"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "SidescrollMining scene loads without missing StarterRocketStage2Frame1 resource error"
+          },
+          {
+            "completed": false,
+            "text": "mission_debrief and transition scenes resolve Earth1 backdrop resource"
+          },
+          {
+            "completed": false,
+            "text": "Headless test runs no longer emit these missing-asset parse errors"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "0cf8ow",
+      "version": 3,
+      "timestamp": "2026-03-10T05:52:55.383Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "SidescrollMining scene loads without missing StarterRocketStage2Frame1 resource error"
+            },
+            {
+              "completed": false,
+              "text": "mission_debrief and transition scenes resolve Earth1 backdrop resource"
+            },
+            {
+              "completed": false,
+              "text": "Headless test runs no longer emit these missing-asset parse errors"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "SidescrollMining scene loads without missing StarterRocketStage2Frame1 resource error"
+            },
+            {
+              "completed": true,
+              "text": "mission_debrief and transition scenes resolve Earth1 backdrop resource"
+            },
+            {
+              "completed": false,
+              "text": "Headless test runs no longer emit these missing-asset parse errors"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Repair missing asset references for StarterRocketStage2Frame1 and Earth1 backdrops",
+        "description": "Headless audit reports missing resource imports for StarterRocketStage2Frame1.png and Earth1.png referenced by scenes/transitions. Fix paths/assets to remove parse/load errors.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "assets",
+          "stability",
+          "tests"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "SidescrollMining scene loads without missing StarterRocketStage2Frame1 resource error"
+          },
+          {
+            "completed": true,
+            "text": "mission_debrief and transition scenes resolve Earth1 backdrop resource"
+          },
+          {
+            "completed": false,
+            "text": "Headless test runs no longer emit these missing-asset parse errors"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "0cf8ow",
+      "version": 4,
+      "timestamp": "2026-03-10T05:52:57.622Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "SidescrollMining scene loads without missing StarterRocketStage2Frame1 resource error"
+            },
+            {
+              "completed": true,
+              "text": "mission_debrief and transition scenes resolve Earth1 backdrop resource"
+            },
+            {
+              "completed": false,
+              "text": "Headless test runs no longer emit these missing-asset parse errors"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "SidescrollMining scene loads without missing StarterRocketStage2Frame1 resource error"
+            },
+            {
+              "completed": true,
+              "text": "mission_debrief and transition scenes resolve Earth1 backdrop resource"
+            },
+            {
+              "completed": true,
+              "text": "Headless test runs no longer emit these missing-asset parse errors"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Repair missing asset references for StarterRocketStage2Frame1 and Earth1 backdrops",
+        "description": "Headless audit reports missing resource imports for StarterRocketStage2Frame1.png and Earth1.png referenced by scenes/transitions. Fix paths/assets to remove parse/load errors.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "assets",
+          "stability",
+          "tests"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "SidescrollMining scene loads without missing StarterRocketStage2Frame1 resource error"
+          },
+          {
+            "completed": true,
+            "text": "mission_debrief and transition scenes resolve Earth1 backdrop resource"
+          },
+          {
+            "completed": true,
+            "text": "Headless test runs no longer emit these missing-asset parse errors"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "0cf8ow",
+      "version": 5,
+      "timestamp": "2026-03-10T05:52:59.862Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "## Summary\n- Ran headless Godot import to regenerate missing texture imports for StarterRocketStage2Frame1 and Earth1 resources.\n- Confirmed SidescrollMining, mission debrief, and transition scripts load those textures without missing-resource parse errors.\n- Re-ran mission, narrative, and structure headless suites successfully."
+        }
+      ],
+      "snapshot": {
+        "title": "Repair missing asset references for StarterRocketStage2Frame1 and Earth1 backdrops",
+        "description": "Headless audit reports missing resource imports for StarterRocketStage2Frame1.png and Earth1.png referenced by scenes/transitions. Fix paths/assets to remove parse/load errors.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "assets",
+          "stability",
+          "tests"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "SidescrollMining scene loads without missing StarterRocketStage2Frame1 resource error"
+          },
+          {
+            "completed": true,
+            "text": "mission_debrief and transition scenes resolve Earth1 backdrop resource"
+          },
+          {
+            "completed": true,
+            "text": "Headless test runs no longer emit these missing-asset parse errors"
+          }
+        ],
+        "implementationNotes": "## Summary\n- Ran headless Godot import to regenerate missing texture imports for StarterRocketStage2Frame1 and Earth1 resources.\n- Confirmed SidescrollMining, mission debrief, and transition scripts load those textures without missing-resource parse errors.\n- Re-ran mission, narrative, and structure headless suites successfully."
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "0cf8ow",
+      "version": 6,
+      "timestamp": "2026-03-10T05:53:04.343Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Repair missing asset references for StarterRocketStage2Frame1 and Earth1 backdrops",
+        "description": "Headless audit reports missing resource imports for StarterRocketStage2Frame1.png and Earth1.png referenced by scenes/transitions. Fix paths/assets to remove parse/load errors.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "assets",
+          "stability",
+          "tests"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "SidescrollMining scene loads without missing StarterRocketStage2Frame1 resource error"
+          },
+          {
+            "completed": true,
+            "text": "mission_debrief and transition scenes resolve Earth1 backdrop resource"
+          },
+          {
+            "completed": true,
+            "text": "Headless test runs no longer emit these missing-asset parse errors"
+          }
+        ],
+        "implementationNotes": "## Summary\n- Ran headless Godot import to regenerate missing texture imports for StarterRocketStage2Frame1 and Earth1 resources.\n- Confirmed SidescrollMining, mission debrief, and transition scripts load those textures without missing-resource parse errors.\n- Re-ran mission, narrative, and structure headless suites successfully."
+      }
+    }
+  ]
+}

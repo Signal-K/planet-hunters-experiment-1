@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3 uid="uid://bvx8m3qp4nwc"]
+[gd_scene load_steps=9 format=3 uid="uid://bvx8m3qp4nwd"]
 
 [ext_resource type="Script" uid="uid://duab3b5ak0b7w" path="res://Scripts/UI/SidescrollMining.gd" id="1"]
 [ext_resource type="PackedScene" uid="uid://c8yv3qbxmh7wd" path="res://Scenes/UI/MiningDrone.tscn" id="2"]

@@ -9,14 +9,14 @@ enum PanelType {
 	NEW_MISSION
 }
 
+var current_menu_panel = null
+
 var panel_titles = {
 	PanelType.MENU: "Main Menu",
 	PanelType.MARKET: "Market",
 	PanelType.SPACE_MAP: "Space Map",
 	PanelType.NEW_MISSION: "New Mission"
 }
-
-var current_menu_panel: Control = null
 
 func _ready() -> void:
 	# Set layer above the main UI
@@ -48,37 +48,12 @@ func show_panel(panel_type: PanelType) -> void:
 			_show_generic_panel(panel_type)
 
 func _show_menu_panel() -> void:
-	"""Show the Menu panel with counter integration"""
-	if current_menu_panel != null:
-		AppLogger.d("Menu panel already open")
-		return
-	
-	var menu_scene = load("res://Scenes/UI/MenuPanel.tscn")
-	if menu_scene:
-		current_menu_panel = menu_scene.instantiate()
-		add_child(current_menu_panel)
-		_setup_menu_panel_integration()
-		var app_controller = _get_app_controller()
-		if app_controller and app_controller.has_method("request_menu_open"):
-			app_controller.request_menu_open()
-	else:
-		AppLogger.w("Failed to load MenuPanel scene")
-
-func _setup_menu_panel_integration() -> void:
-	"""Setup counter integration and signal connections for menu panel"""
+	"""Show menu through AppController-owned runtime menu."""
 	var app_controller = _get_app_controller()
-	if app_controller and current_menu_panel.has_method("set_counter"):
-		var counter_value = app_controller.get_counter()
-		current_menu_panel.set_counter(counter_value)
-		AppLogger.d("Menu panel opened with counter: %s" % counter_value)
-	
-	# Connect signals
-	if current_menu_panel.has_signal("panel_closed"):
-		current_menu_panel.panel_closed.connect(_on_menu_panel_closed)
-	if current_menu_panel.has_signal("counter_changed"):
-		current_menu_panel.counter_changed.connect(_on_menu_counter_changed)
-	if current_menu_panel.has_signal("reset_all"):
-		current_menu_panel.reset_all.connect(_on_reset_all)
+	if app_controller and app_controller.has_method("show_menu_panel"):
+		app_controller.show_menu_panel()
+		return
+	AppLogger.w("UIManager: AppController not available for menu open")
 
 func _show_new_mission_panel() -> void:
 	"""Show the New Mission panel (SatelliteStationPanel)"""
@@ -127,8 +102,8 @@ func _on_menu_panel_closed() -> void:
 	AppLogger.d("Menu panel closed")
 	current_menu_panel = null
 	var app_controller = _get_app_controller()
-	if app_controller and app_controller.has_method("request_menu_close"):
-		app_controller.request_menu_close()
+	if app_controller and app_controller.has_method("hide_menu_panel"):
+		app_controller.hide_menu_panel()
 
 func _on_menu_counter_changed(new_value: int) -> void:
 	"""Update AppController when counter changes in menu"""
