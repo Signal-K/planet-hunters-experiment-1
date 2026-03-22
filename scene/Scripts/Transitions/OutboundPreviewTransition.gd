@@ -239,7 +239,13 @@ func _update_travel() -> void:
 	if travel_bar:
 		travel_bar.value = pct
 	if travel_speed:
-		travel_speed.text = "En Route  •  %d%%" % int(pct * 100.0)
+		var remaining_km = max(int(round(TRAVEL_DISTANCE_TOTAL_KM * (1.0 - pct))), 0)
+		travel_speed.text = "Distance to destination: %s km" % NumberFormat.commas(str(remaining_km))
+	if _travel_eta_label:
+		var remaining_secs = max(TRAVEL_TIME - _phase_time, 0.0)
+		var eta_min = int(remaining_secs / 60.0)
+		var eta_sec = int(fmod(remaining_secs, 60.0))
+		_travel_eta_label.text = "ETA: %02d:%02d" % [eta_min, eta_sec]
 	if pct >= 1.0:
 		_start_target_approach()
 
