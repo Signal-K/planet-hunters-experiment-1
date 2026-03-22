@@ -43,11 +43,11 @@ const MINING_PRACTICE_SCENE   := "res://Scenes/UI/MiningPracticePanel.tscn"
 const ASTEROID_DETAIL_SCENE   := "res://Scenes/UI/AsteroidDetail/asteroid_detail_view.tscn"
 const SPACE_MAP_SCENE         := "res://Scenes/UI/SpaceMap/space_map.tscn"
 
-const MINING_RUN_SECONDS := 30.0
-const SCENE_SETTLE  := 3.0
-const PANEL_SETTLE  := 1.5
-const ANIM_SETTLE   := 0.8
-const SNAP_SETTLE   := 2.0   # shorter settle for stage-snapshot phases
+const MINING_RUN_SECONDS := 12.0
+const SCENE_SETTLE  := 2.0
+const PANEL_SETTLE  := 1.0
+const ANIM_SETTLE   := 0.5
+const SNAP_SETTLE   := 1.0   # shorter settle for stage-snapshot phases
 
 # ---------------------------------------------------------------------------
 # State
@@ -84,6 +84,14 @@ func _load_scene(path: String) -> Node:
 		return null
 	var instance := packed.instantiate()
 	add_child(instance)
+	# For full-screen Control panels loaded into a plain Node parent, the anchor
+	# layout may not compute the correct size until the node has been in the tree
+	# for a frame. Force the rect so children compute positions against the real
+	# viewport size from the start.
+	if instance is Control:
+		var vp := get_viewport().get_visible_rect()
+		(instance as Control).position = vp.position
+		(instance as Control).size = vp.size
 	_active_scene = instance
 	return instance
 
@@ -161,11 +169,6 @@ func _run_tour() -> void:
 		 "Is the FrancBalance (currency) HUD element shown?"])
 	_screenshot("02_after_splash_dismissed")
 	_report("  - Second screenshot taken.")
-		"Earth base hub immediately after the intro splash is dismissed.",
-		["Is the tutorial coach overlay visible, guiding the user to the Control Station?",
-		 "Are navigation buttons (menu, forward, back) visible?",
-		 "Is the FrancBalance (currency) HUD element shown?"])
-	_screenshot("02_after_splash_dismissed")
 
 	# ==================================================================
 	# Phase 2 — Earth Base (Mission 1 state)
@@ -650,7 +653,22 @@ func _run_tour() -> void:
 					else:
 						_issue("Mining HUD missing '%s' — players can't track resource state." % hud_name)
 				sidescroll.set("_is_mining", true)
-				await get_tree().create_timer(5.0).timeout
+				await get_tree().create_timer(4.0).timeout
+				
+				# Deploy a drone (Mission 4+ mechanic)
+				_report("  - Testing Drone mechanic (Mission 4+)...")
+				sidescroll.set("_drones_enabled", true)
+				sidescroll.call("_deploy_drone")
+				await get_tree().create_timer(1.0).timeout
+				
+				_meta("Phase 14 - Mining Minigame (drone deployed)", 4,
+					"Mining minigame with a drone deployed — Mission 4+ mechanic. Drones target dark subsurface deposits.",
+					["Is the drone visible and moving towards a target?",
+					 "Is the drone HUD (count/cooldown) updating?",
+					 "Does the drone contrast well with the terrain?"])
+				_screenshot("19b_mining_drone_deployed")
+				
+				await get_tree().create_timer(2.0).timeout
 				_meta("Phase 14 - Mining Minigame (beam active)", 1,
 					"Mining beam active — terrain is being excavated. The main mining gameplay loop.",
 					["Is the mining beam visually clear?",
@@ -666,6 +684,21 @@ func _run_tour() -> void:
 					 "Is the RETURN button visible and accessible?",
 					 "Is the score/haul total updating?"])
 				_screenshot("20_mining_mid_run")
+				
+				# Check inventory panel (HUD overlay)
+				_report("  - Checking Mining Inventory panel...")
+				sidescroll.call("_toggle_inventory")
+				await get_tree().create_timer(1.0).timeout
+				_meta("Phase 14 - Mining Inventory Overlay", 1,
+					"Mining minigame with the inventory panel open — showing current fuel, heat, beam, and minerals collected.",
+					["Is the inventory list populated with collected minerals?",
+					 "Are fuel/heat/beam percentages readable?",
+					 "Is the score/total value visible?",
+					 "Does the panel obscure too much of the gameplay area (is it dismissible)?"])
+				_screenshot("20b_mining_inventory_overlay")
+				sidescroll.call("_toggle_inventory") # dismiss
+				await get_tree().create_timer(0.5).timeout
+				
 				sidescroll.set("_is_mining", false)
 				await get_tree().create_timer(1.0).timeout
 				_meta("Phase 14 - Mining Minigame (beam released)", 1,
@@ -902,6 +935,9 @@ func _check_for_placeholder_text(root: Node, context: String) -> void:
 func _collect_visible_controls(root: Node, out: Array) -> void:
 	if not root:
 		return
+	# Skip children of non-visible Windows (e.g. AcceptDialog debug popups)
+	if root is Window and not (root as Window).visible:
+		return
 	if root is Control:
 		var ctrl := root as Control
 		if ctrl.visible and ctrl.size.x > 2 and ctrl.size.y > 2:
@@ -918,6 +954,9 @@ func _check_offscreen_elements(root: Node, context: String) -> void:
 	_collect_visible_controls(root, controls)
 	for item in controls:
 		var ctrl := item as Control
+		# ScrollContainers intentionally clip content that extends beyond the viewport
+		if _is_inside_scroll_container(ctrl):
+			continue
 		var r := ctrl.get_global_rect()
 		if r.size.x < 4 or r.size.y < 4:
 			continue
@@ -939,9 +978,20 @@ func _is_ancestor(ancestor: Node, node: Node) -> bool:
 	return false
 
 
+func _is_inside_scroll_container(ctrl: Control) -> bool:
+	var parent := ctrl.get_parent()
+	while parent:
+		if parent is ScrollContainer:
+			return true
+		parent = parent.get_parent()
+	return false
+
+
 func _check_label_button_overlaps(root: Node, context: String) -> void:
 	if not root:
 		return
+	var vp_size := get_viewport().get_visible_rect().size
+	var vp_rect := Rect2(Vector2.ZERO, vp_size)
 	var all_controls: Array = []
 	_collect_visible_controls(root, all_controls)
 	var labels: Array = all_controls.filter(func(n): return n is Label)
@@ -953,11 +1003,16 @@ func _check_label_button_overlaps(root: Node, context: String) -> void:
 		var lr := lbl.get_global_rect()
 		if lr.size.x < 4 or lr.size.y < 4:
 			continue
+		# Skip elements not actually visible within the viewport (e.g. scrolled off-screen)
+		if not lr.intersects(vp_rect):
+			continue
 		for btn_item in buttons:
 			var btn := btn_item as Button
 			if _is_ancestor(btn, lbl):
 				continue   # label is inside button — expected
 			var br := btn.get_global_rect()
+			if not br.intersects(vp_rect):
+				continue
 			if lr.intersects(br):
 				_issue("UI OVERLAP: Label '%s' overlaps Button '%s' in %s" % [
 					lbl.text.strip_edges(), btn.text.strip_edges(), context
@@ -1059,7 +1114,12 @@ func _meta(phase: String, mission_stage: int, description: String, what_to_check
 
 
 func _screenshot(label: String) -> void:
+	# Force a fresh render frame so the viewport texture reflects the current scene.
+	# Without this, softpipe/CI renders can return a stale cached texture.
+	RenderingServer.force_draw(false)
 	await get_tree().process_frame
+	await get_tree().process_frame
+	RenderingServer.force_draw(false)
 	await get_tree().process_frame
 
 	var image := get_viewport().get_texture().get_image()

@@ -51,10 +51,10 @@ func set_local_only(val: bool) -> void:
 	local_only = val
 
 @onready var loading_container: VBoxContainer = $PanelContainer/Panel/VBoxContainer/ContentContainer/LoadingContainer
-@onready var anomaly_list: VBoxContainer = $PanelContainer/Panel/VBoxContainer/ContentContainer/AnomalyList
+@onready var anomaly_scroll: ScrollContainer = $PanelContainer/Panel/VBoxContainer/ContentContainer/AnomalyScroll
+@onready var anomaly_list: VBoxContainer = $PanelContainer/Panel/VBoxContainer/ContentContainer/AnomalyScroll/AnomalyList
 @onready var progress_bar: ProgressBar = $PanelContainer/Panel/VBoxContainer/ContentContainer/LoadingContainer/ProgressBar
 @onready var loading_label: Label = $PanelContainer/Panel/VBoxContainer/ContentContainer/LoadingContainer/LoadingLabel
-			# Preload the asteroid detail view
 @onready var refresh_button: Button = $PanelContainer/Panel/VBoxContainer/ContentContainer/RefreshContainer/RefreshButton
 @onready var status_label: Label = $PanelContainer/Panel/VBoxContainer/ContentContainer/StatusContainer/StatusLabel
 @onready var content_container: VBoxContainer = $PanelContainer/Panel/VBoxContainer/ContentContainer
@@ -67,7 +67,7 @@ func _ready():
 	_detail.setup(
 		$PanelContainer/Panel,
 		loading_container,
-		anomaly_list,
+		anomaly_scroll,
 		content_container,
 		toggle_switch,
 		title_label,
@@ -88,7 +88,7 @@ func _ready():
 
 	_loading.setup(
 		loading_container,
-		anomaly_list,
+		anomaly_scroll,
 		progress_bar,
 		status_label,
 		refresh_button,
