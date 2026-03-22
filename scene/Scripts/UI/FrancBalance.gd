@@ -4,7 +4,9 @@ extends Control
 @onready var debug_popup: AcceptDialog = $DebugPopup
 
 var balance: int = 10000000000  # Default 10B
+var loan_balance: int = 0
 var app_controller: Node = null
+var _loan_label: Label = null
 
 func _ready() -> void:
 	print("FrancBalance: _ready called")
@@ -27,9 +29,12 @@ func _find_app_controller() -> void:
 	app_controller = root.find_child("AppController", true, false)
 	if app_controller:
 		print("FrancBalance: Found AppController")
-		# Connect to balance update signal if it exists
 		if app_controller.has_signal("franc_balance_updated"):
 			app_controller.franc_balance_updated.connect(_on_balance_updated_from_controller)
+		if app_controller.has_signal("loan_updated"):
+			app_controller.loan_updated.connect(_on_loan_updated)
+		if app_controller.has_method("get_loan_balance"):
+			loan_balance = app_controller.get_loan_balance()
 	else:
 		print("FrancBalance: AppController not found in scene tree")
 
@@ -42,10 +47,12 @@ func _load_balance() -> void:
 		print("FrancBalance: AppController not available, using default")
 
 func _on_balance_updated_from_controller(new_balance: int) -> void:
-	"""Handle balance updates from AppController (e.g., from React Native)"""
 	balance = new_balance
 	_update_display()
-	print("FrancBalance: Balance updated from controller: ", balance)
+
+func _on_loan_updated(new_loan: int) -> void:
+	loan_balance = new_loan
+	_update_loan_label()
 
 func _setup_ui_connections() -> void:
 	"""Setup all UI button connections"""
@@ -67,9 +74,23 @@ func _setup_ui_connections() -> void:
 		print("FrancBalance: Sub button connected")
 
 func _update_display() -> void:
-	"""Update the balance display"""
 	if balance_button:
 		balance_button.text = _format_balance(balance) + " F"
+		balance_button.tooltip_text = "Francs (F) — the in-game currency.\nEarned by selling mission cargo.\nSpend on rockets, drones, and upgrades."
+	_update_loan_label()
+
+func _update_loan_label() -> void:
+	if loan_balance <= 0:
+		if _loan_label:
+			_loan_label.visible = false
+		return
+	if _loan_label == null:
+		_loan_label = Label.new()
+		_loan_label.add_theme_color_override("font_color", Color(0.94, 0.35, 0.35))
+		_loan_label.add_theme_font_size_override("font_size", 16)
+		$Container.add_child(_loan_label)
+	_loan_label.text = "Loan: %s F owed" % _format_balance(loan_balance)
+	_loan_label.visible = true
 
 func _format_balance(value: int) -> String:
 	"""Format balance with K/M/B/T suffixes"""

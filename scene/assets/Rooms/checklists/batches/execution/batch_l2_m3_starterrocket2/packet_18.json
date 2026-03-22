@@ -1,0 +1,243 @@
+{
+  "batch_id": "batch_l2_m3_starterrocket2",
+  "packet_index": 18,
+  "packet_count": 24,
+  "asset_count": 12,
+  "instructions": {
+    "style_anchor_required": true,
+    "one_asset_per_prompt": true,
+    "filename_contract": "strict",
+    "no_extra_suffixes": true,
+    "no_text_or_ui": true
+  },
+  "assets": [
+    {
+      "asset_id": "sample_lab_t2__microscope_arm__active",
+      "asset_type": "state_variant",
+      "room_id": "sample_lab_t2",
+      "room_name": "Sample Analysis Lab Room",
+      "category": "science",
+      "tier": 2,
+      "component_id": "microscope_arm",
+      "component_name": "Microscope Arm",
+      "component_kind": "interactive",
+      "state_key": "active",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'active' for component 'Microscope Arm' in 'Sample Analysis Lab Room'. Change only state cues: brighter active glow, subtle motion/energy cues, engaged indicators. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "sample_lab_t2__microscope_arm__active.png",
+        "sidecar": "sample_lab_t2__microscope_arm__active.json",
+        "note_optional": "sample_lab_t2__microscope_arm__active.txt"
+      }
+    },
+    {
+      "asset_id": "sample_lab_t2__microscope_arm__cooldown",
+      "asset_type": "state_variant",
+      "room_id": "sample_lab_t2",
+      "room_name": "Sample Analysis Lab Room",
+      "category": "science",
+      "tier": 2,
+      "component_id": "microscope_arm",
+      "component_name": "Microscope Arm",
+      "component_kind": "interactive",
+      "state_key": "cooldown",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'cooldown' for component 'Microscope Arm' in 'Sample Analysis Lab Room'. Change only state cues: reduced glow with cooling/venting cues and amber warning flicker. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "sample_lab_t2__microscope_arm__cooldown.png",
+        "sidecar": "sample_lab_t2__microscope_arm__cooldown.json",
+        "note_optional": "sample_lab_t2__microscope_arm__cooldown.txt"
+      }
+    },
+    {
+      "asset_id": "sample_lab_t2__microscope_arm__damaged",
+      "asset_type": "state_variant",
+      "room_id": "sample_lab_t2",
+      "room_name": "Sample Analysis Lab Room",
+      "category": "science",
+      "tier": 2,
+      "component_id": "microscope_arm",
+      "component_name": "Microscope Arm",
+      "component_kind": "interactive",
+      "state_key": "damaged",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'damaged' for component 'Microscope Arm' in 'Sample Analysis Lab Room'. Change only state cues: visible wear, sparks or cracks, warning lights and degraded output. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "sample_lab_t2__microscope_arm__damaged.png",
+        "sidecar": "sample_lab_t2__microscope_arm__damaged.json",
+        "note_optional": "sample_lab_t2__microscope_arm__damaged.txt"
+      }
+    },
+    {
+      "asset_id": "sample_lab_t2__microscope_arm__depleted",
+      "asset_type": "state_variant",
+      "room_id": "sample_lab_t2",
+      "room_name": "Sample Analysis Lab Room",
+      "category": "science",
+      "tier": 2,
+      "component_id": "microscope_arm",
+      "component_name": "Microscope Arm",
+      "component_kind": "interactive",
+      "state_key": "depleted",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'depleted' for component 'Microscope Arm' in 'Sample Analysis Lab Room'. Change only state cues: minimal or no glow, offline indicators, depleted resource cues. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "sample_lab_t2__microscope_arm__depleted.png",
+        "sidecar": "sample_lab_t2__microscope_arm__depleted.json",
+        "note_optional": "sample_lab_t2__microscope_arm__depleted.txt"
+      }
+    },
+    {
+      "asset_id": "sample_lab_t2__microscope_arm__idle",
+      "asset_type": "state_variant",
+      "room_id": "sample_lab_t2",
+      "room_name": "Sample Analysis Lab Room",
+      "category": "science",
+      "tier": 2,
+      "component_id": "microscope_arm",
+      "component_name": "Microscope Arm",
+      "component_kind": "interactive",
+      "state_key": "idle",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'idle' for component 'Microscope Arm' in 'Sample Analysis Lab Room'. Change only state cues: stable indicator lights, neutral glow, no motion cues. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "sample_lab_t2__microscope_arm__idle.png",
+        "sidecar": "sample_lab_t2__microscope_arm__idle.json",
+        "note_optional": "sample_lab_t2__microscope_arm__idle.txt"
+      }
+    },
+    {
+      "asset_id": "sample_lab_t2__specimen_trays__active",
+      "asset_type": "state_variant",
+      "room_id": "sample_lab_t2",
+      "room_name": "Sample Analysis Lab Room",
+      "category": "science",
+      "tier": 2,
+      "component_id": "specimen_trays",
+      "component_name": "Specimen Trays",
+      "component_kind": "interactive",
+      "state_key": "active",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'active' for component 'Specimen Trays' in 'Sample Analysis Lab Room'. Change only state cues: brighter active glow, subtle motion/energy cues, engaged indicators. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "sample_lab_t2__specimen_trays__active.png",
+        "sidecar": "sample_lab_t2__specimen_trays__active.json",
+        "note_optional": "sample_lab_t2__specimen_trays__active.txt"
+      }
+    },
+    {
+      "asset_id": "sample_lab_t2__specimen_trays__cooldown",
+      "asset_type": "state_variant",
+      "room_id": "sample_lab_t2",
+      "room_name": "Sample Analysis Lab Room",
+      "category": "science",
+      "tier": 2,
+      "component_id": "specimen_trays",
+      "component_name": "Specimen Trays",
+      "component_kind": "interactive",
+      "state_key": "cooldown",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'cooldown' for component 'Specimen Trays' in 'Sample Analysis Lab Room'. Change only state cues: reduced glow with cooling/venting cues and amber warning flicker. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "sample_lab_t2__specimen_trays__cooldown.png",
+        "sidecar": "sample_lab_t2__specimen_trays__cooldown.json",
+        "note_optional": "sample_lab_t2__specimen_trays__cooldown.txt"
+      }
+    },
+    {
+      "asset_id": "sample_lab_t2__specimen_trays__damaged",
+      "asset_type": "state_variant",
+      "room_id": "sample_lab_t2",
+      "room_name": "Sample Analysis Lab Room",
+      "category": "science",
+      "tier": 2,
+      "component_id": "specimen_trays",
+      "component_name": "Specimen Trays",
+      "component_kind": "interactive",
+      "state_key": "damaged",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'damaged' for component 'Specimen Trays' in 'Sample Analysis Lab Room'. Change only state cues: visible wear, sparks or cracks, warning lights and degraded output. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "sample_lab_t2__specimen_trays__damaged.png",
+        "sidecar": "sample_lab_t2__specimen_trays__damaged.json",
+        "note_optional": "sample_lab_t2__specimen_trays__damaged.txt"
+      }
+    },
+    {
+      "asset_id": "sample_lab_t2__specimen_trays__depleted",
+      "asset_type": "state_variant",
+      "room_id": "sample_lab_t2",
+      "room_name": "Sample Analysis Lab Room",
+      "category": "science",
+      "tier": 2,
+      "component_id": "specimen_trays",
+      "component_name": "Specimen Trays",
+      "component_kind": "interactive",
+      "state_key": "depleted",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'depleted' for component 'Specimen Trays' in 'Sample Analysis Lab Room'. Change only state cues: minimal or no glow, offline indicators, depleted resource cues. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "sample_lab_t2__specimen_trays__depleted.png",
+        "sidecar": "sample_lab_t2__specimen_trays__depleted.json",
+        "note_optional": "sample_lab_t2__specimen_trays__depleted.txt"
+      }
+    },
+    {
+      "asset_id": "sample_lab_t2__specimen_trays__idle",
+      "asset_type": "state_variant",
+      "room_id": "sample_lab_t2",
+      "room_name": "Sample Analysis Lab Room",
+      "category": "science",
+      "tier": 2,
+      "component_id": "specimen_trays",
+      "component_name": "Specimen Trays",
+      "component_kind": "interactive",
+      "state_key": "idle",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'idle' for component 'Specimen Trays' in 'Sample Analysis Lab Room'. Change only state cues: stable indicator lights, neutral glow, no motion cues. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "sample_lab_t2__specimen_trays__idle.png",
+        "sidecar": "sample_lab_t2__specimen_trays__idle.json",
+        "note_optional": "sample_lab_t2__specimen_trays__idle.txt"
+      }
+    },
+    {
+      "asset_id": "sample_lab_t2__room_composite__v1",
+      "asset_type": "room_composite",
+      "room_id": "sample_lab_t2",
+      "room_name": "Sample Analysis Lab Room",
+      "category": "science",
+      "tier": 2,
+      "component_id": "room_composite",
+      "component_name": "Room Composite",
+      "component_kind": "composite",
+      "state_key": "base",
+      "priority": "p0",
+      "prompt": "Using the attached style reference, compose one 2:1 spacecraft room tile for 'Sample Analysis Lab Room' using these components: central_workbench, wall_vial_rack, specimen_trays, microscope_arm, containment_tubes_pair, composition_readout_screen. Keep module shell rectangular with flat top/bottom for stacking. Include only listed components and consistent accent lighting. No text, no labels, no UI, no rocket exterior. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "sample_lab_t2__room_composite__v1.png",
+        "sidecar": "sample_lab_t2__room_composite__v1.json",
+        "note_optional": "sample_lab_t2__room_composite__v1.txt"
+      }
+    },
+    {
+      "asset_id": "scanner_array_t2__anomaly_hologram_core__base",
+      "asset_type": "component",
+      "room_id": "scanner_array_t2",
+      "room_name": "Scanner Array Room",
+      "category": "navigation",
+      "tier": 2,
+      "component_id": "anomaly_hologram_core",
+      "component_name": "Anomaly Hologram Core",
+      "component_kind": "interactive",
+      "state_key": "base",
+      "priority": "p0",
+      "prompt": "Using the attached style reference, create a single isolated room component sprite for a spacecraft dollhouse interior system. Component: Anomaly Hologram Core. Category: Scanner Array Room. Side-view cross-section, clean cutout silhouette, no text, no labels, no UI, no characters. Designed for 2:1 room tile composition. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "scanner_array_t2__anomaly_hologram_core__base.png",
+        "sidecar": "scanner_array_t2__anomaly_hologram_core__base.json",
+        "note_optional": "scanner_array_t2__anomaly_hologram_core__base.txt"
+      }
+    }
+  ]
+}

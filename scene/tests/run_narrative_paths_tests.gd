@@ -6,10 +6,10 @@ extends SceneTree
 #
 # P01  Mission 1 full linear path (includes new arrived_at_mining_site step)
 # P02  Mission 2 semi-open completion
-# P03  Mission 3 scanner-driven (no mining step)
-# P04  Mission 4 planet mode
-# P05  Mission 5 contractor path
-# P06  Mission 5 survey path (no contractor, survey operation mode)
+# P03  Mission 3 TESS planet candidates (select, mine, debrief)
+# P04  Mission 4 scanner + annotator
+# P05  Free Operations contractor-required path
+# P06  Free Operations survey path with contractor gate
 # P07  Skip tutorial at Mission 1 then resume and complete
 # P08  Skip tutorial at Mission 2 then resume
 # P09  Replay current mission then re-complete
@@ -41,8 +41,8 @@ func run_all_tests() -> void:
 	await test_p02_mission2_semi_open_completion()
 	await test_p03_mission3_scanner_no_mining()
 	await test_p04_mission4_planet_mode()
-	await test_p05_mission5_contractor_path()
-	await test_p06_mission5_survey_path()
+	await test_p05_free_operations_contractor_path()
+	await test_p06_free_operations_survey_path()
 	await test_p07_skip_at_m1_then_resume_complete()
 	await test_p08_skip_at_m2_then_resume()
 	await test_p09_replay_current_mission_then_recomplete()
@@ -124,7 +124,7 @@ func test_p01_mission1_full_linear_path() -> void:
 	await create_timer(0.02).timeout
 
 	var m1_actions = ["tour_open_control_station", "tour_close_control_station",
-		"accept_starter_contractor", "create_rocket", "select_launch_target",
+		"accept_contractor_offer", "create_rocket", "select_launch_target",
 		"launch_rocket_from_earth", "arrived_at_mining_site", "mine_target",
 		"return_rocket_home", "resolve_mission_debrief"]
 
@@ -138,6 +138,7 @@ func test_p01_mission1_full_linear_path() -> void:
 			await _teardown(c); return
 
 	_mark_stage_complete(1)
+	c.record_action("mission_progress_sync_1")
 	var final_state = c.get_tutorial_state()
 	if int(final_state.get("current_stage", 0)) < 2:
 		reporter.fail_test("P01: expected stage >= 2 after M1 completion")
@@ -152,6 +153,7 @@ func test_p02_mission2_semi_open_completion() -> void:
 	_mark_stage_complete(1)
 	var c = await _setup()
 	await create_timer(0.02).timeout
+	c.record_action("mission_progress_sync_1")
 
 	if not _assert_stage(c, 2, "P02 start"): await _teardown(c); return
 
@@ -167,45 +169,39 @@ func test_p02_mission2_semi_open_completion() -> void:
 	await _teardown(c)
 
 func test_p03_mission3_scanner_no_mining() -> void:
-	reporter.start_test("P03: Mission 3 scanner path (no mine_target step)")
+	reporter.start_test("P03: Mission 3 TESS planet candidate path")
 	_reset()
 	for s in [1, 2]:
 		_mark_stage_complete(s)
 	var c = await _setup()
 	await create_timer(0.02).timeout
+	c.record_action("mission_progress_sync_2")
 
 	if not _assert_stage(c, 3, "P03 start"): await _teardown(c); return
 
-	var m3_actions = ["build_scanner_station", "scan_targets", "select_launch_target",
-		"launch_rocket_from_earth", "resolve_mission_debrief"]
+	var m3_actions = ["select_launch_target", "launch_rocket_from_earth",
+		"mine_target", "return_rocket_home", "resolve_mission_debrief"]
 	for action in m3_actions:
 		var before = c.get_tutorial_state()
 		c.record_action(action)
 		if not _assert_no_regression(before, c.get_tutorial_state(), action):
 			await _teardown(c); return
 
-	# Confirm mine_target is NOT part of M3 — recording it should not advance stage
-	var state_before_mine = c.get_tutorial_state()
-	c.record_action("mine_target")
-	var state_after_mine = c.get_tutorial_state()
-	if int(state_after_mine.get("current_stage", 3)) > int(state_before_mine.get("current_stage", 3)):
-		reporter.fail_test("P03: mine_target unexpectedly advanced stage in M3 (no-mine mission)")
-		await _teardown(c); return
-
 	reporter.pass_test()
 	await _teardown(c)
 
 func test_p04_mission4_planet_mode() -> void:
-	reporter.start_test("P04: Mission 4 planet mode path")
+	reporter.start_test("P04: Mission 4 scanner + annotator path")
 	_reset()
 	for s in [1, 2, 3]:
 		_mark_stage_complete(s)
 	var c = await _setup()
 	await create_timer(0.02).timeout
+	c.record_action("mission_progress_sync_3")
 
 	if not _assert_stage(c, 4, "P04 start"): await _teardown(c); return
 
-	var m4_actions = ["toggle_planet_scanner", "select_launch_target",
+	var m4_actions = ["build_scanner_station", "scan_targets", "select_launch_target",
 		"launch_rocket_from_earth", "mine_target", "resolve_mission_debrief"]
 	for action in m4_actions:
 		var before = c.get_tutorial_state()
@@ -216,19 +212,18 @@ func test_p04_mission4_planet_mode() -> void:
 	reporter.pass_test()
 	await _teardown(c)
 
-func test_p05_mission5_contractor_path() -> void:
-	reporter.start_test("P05: Mission 5 contractor path (accept offer → launch → complete)")
+func test_p05_free_operations_contractor_path() -> void:
+	reporter.start_test("P05: Free Operations contractor path (select offer → launch)")
 	_reset()
 	for s in [1, 2, 3, 4]:
 		_mark_stage_complete(s)
 	var c = await _setup()
 	await create_timer(0.02).timeout
 
-	if not _assert_stage(c, 5, "P05 start"): await _teardown(c); return
+	if not _assert_stage(c, 4, "P05 start"): await _teardown(c); return
 
-	var m5_actions = ["accept_contractor_offer", "select_launch_target",
-		"launch_rocket_from_earth", "complete_contractor_mission"]
-	for action in m5_actions:
+	var free_ops_actions = ["accept_contractor_offer", "select_launch_target", "launch_rocket_from_earth"]
+	for action in free_ops_actions:
 		var before = c.get_tutorial_state()
 		c.record_action(action)
 		if not _assert_no_regression(before, c.get_tutorial_state(), action):
@@ -237,22 +232,39 @@ func test_p05_mission5_contractor_path() -> void:
 	reporter.pass_test()
 	await _teardown(c)
 
-func test_p06_mission5_survey_path() -> void:
-	reporter.start_test("P06: Mission 5 survey route (no contractor selection)")
+func test_p06_free_operations_survey_path() -> void:
+	reporter.start_test("P06: Free Operations survey route requires contractor first")
 	_reset()
 	for s in [1, 2, 3, 4]:
 		_mark_stage_complete(s)
 	RocketsManager.set_operation_mode("survey")
-	var selectable = RocketsManager.get_selectable_targets_for_stage(5)
+	RocketsManager.set_detected_targets([{
+		"id": "p06-free-ops-target",
+		"label": "P06 Free Ops Target",
+		"type": "asteroid"
+	}])
+	var selectable = RocketsManager.get_selectable_targets_for_stage(4)
 	if selectable.is_empty():
-		reporter.fail_test("P06: no selectable targets for survey route at stage 5")
+		reporter.fail_test("P06: no selectable targets for free operations")
 		return
 	var target_id = str(selectable[0].get("id", ""))
 	if target_id == "":
 		reporter.fail_test("P06: selectable target missing id")
 		return
+	if RocketsManager.select_target(target_id):
+		reporter.fail_test("P06: target selection should be blocked before contractor selection")
+		return
+	var offer = RocketsManager.ensure_trip_contract_offer(RocketsManager.get_detected_targets())
+	var contractors: Array = offer.get("contractors", [])
+	if contractors.is_empty():
+		reporter.fail_test("P06: missing contractor options")
+		return
+	var contractor_id = str(contractors[0].get("id", ""))
+	if contractor_id == "" or not RocketsManager.select_trip_contractor(contractor_id):
+		reporter.fail_test("P06: failed to select contractor")
+		return
 	if not RocketsManager.select_target(target_id):
-		reporter.fail_test("P06: select_target failed in survey route")
+		reporter.fail_test("P06: select_target failed after contractor selection")
 		return
 	var resolved = RocketsManager.ensure_selected_target_for_launch("starterrocket3-p06")
 	if not bool(resolved.get("ok", false)):

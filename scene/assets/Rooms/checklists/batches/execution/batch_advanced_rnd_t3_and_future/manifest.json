@@ -1,0 +1,13 @@
+{
+  "batch_id": "batch_advanced_rnd_t3_and_future",
+  "source_file": "scene/assets/Rooms/checklists/batches/batch_advanced_rnd_t3_and_future.json",
+  "generated_at_utc": "2026-03-10T07:16:05.304Z",
+  "packet_size": 12,
+  "total_assets": 208,
+  "packet_count": 18,
+  "required_output_schema": {
+    "image": "<asset_id>.png",
+    "sidecar": "<asset_id>.json",
+    "note_optional": "<asset_id>.txt"
+  }
+}

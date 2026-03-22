@@ -16,6 +16,7 @@ const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
 const HashUtils = preload("res://Scripts/Utils/HashUtils.gd")
 const NumberFormat = preload("res://Scripts/Utils/NumberFormat.gd")
+const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
 
 func setup(launch_list_container: Node, on_refund: Callable) -> void:
 	_launch_list_container = launch_list_container
@@ -70,7 +71,7 @@ func display_launched_rockets() -> void:
 		var row: HBoxContainer = LaunchRowScene.instantiate()
 		var info: VBoxContainer = row.get_node("Info")
 		var title_lbl: Label = row.get_node("Info/TitleLabel")
-		title_lbl.text = "Rocket %s → %s" % [id, target_label]
+		title_lbl.text = "%s → %s" % [RocketSpecs.get_display_name(id), target_label]
 		panel_style.apply_body(title_lbl)
 		var dist_lbl: Label = row.get_node("Info/DistanceLabel")
 		dist_lbl.text = "Distance: %s" % distance_text
@@ -119,10 +120,10 @@ func display_launched_rockets() -> void:
 		var row: HBoxContainer = ReturningRowScene.instantiate()
 		var info: VBoxContainer = row.get_node("Info")
 		var title_lbl: Label = row.get_node("Info/TitleLabel")
-		title_lbl.text = "Rocket %s → %s" % [rocket_id, target_label]
+		title_lbl.text = "%s → %s" % [RocketSpecs.get_display_name(rocket_id), target_label]
 		panel_style.apply_body(title_lbl)
 		var dist_lbl: Label = row.get_node("Info/StatusLabel")
-		dist_lbl.text = "Status: Returning"
+		dist_lbl.text = "Returning to Earth"
 		panel_style.apply_muted(dist_lbl)
 
 		var preview_btn: Button = row.get_node("PreviewButton")

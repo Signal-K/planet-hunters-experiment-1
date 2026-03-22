@@ -1,0 +1,45 @@
+{
+  "taskId": "8ivyns",
+  "currentVersion": 1,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "8ivyns",
+      "version": 1,
+      "timestamp": "2026-03-16T06:49:17.826Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        },
+        {
+          "field": "implementationNotes",
+          "newValue": "Fixed by adding focus_mode = FOCUS_NONE to all nav buttons in earth_base_1.gd _setup_buttons(). Godot's ui_accept (spacebar) was activating focused buttons accidentally."
+        }
+      ],
+      "snapshot": {
+        "title": "Bug: Spacebar triggers base tour menu and blocks map view",
+        "description": "Pressing spacebar opens the quick base tour / menu UI in the bottom left, which overlaps and blocks the map. Keyboard shortcuts should not accidentally trigger UI elements during normal play.",
+        "status": "done",
+        "priority": "high",
+        "labels": [
+          "bug",
+          "keyboard",
+          "ui"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Spacebar does not trigger any menu or tour overlay during map/mission view"
+          },
+          {
+            "completed": false,
+            "text": "Menu can only be opened via explicit button press"
+          }
+        ],
+        "implementationNotes": "Fixed by adding focus_mode = FOCUS_NONE to all nav buttons in earth_base_1.gd _setup_buttons(). Godot's ui_accept (spacebar) was activating focused buttons accidentally."
+      }
+    }
+  ]
+}

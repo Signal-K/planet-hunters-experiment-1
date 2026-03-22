@@ -1,0 +1,14 @@
+{
+  "asset_id": "subsurface_probe_t2__subsurface_probe_body__active",
+  "room_id": "subsurface_probe_t2",
+  "component": "subsurface_probe_body",
+  "tier": "2",
+  "state": "active",
+  "prompt_version": "v1",
+  "generator": "chatgpt",
+  "generated_at_utc": "2026-03-10T10:16:39.801901",
+  "image_filename": "subsurface_probe_t2__subsurface_probe_body__active.png",
+  "width": 1024,
+  "height": 1024,
+  "notes": ""
+}

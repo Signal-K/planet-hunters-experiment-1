@@ -52,10 +52,33 @@ func _persist_detected_targets(anomalies: Array) -> void:
 		var anomaly = anomalies[i]
 		var target_id = _panel_data.normalize_anomaly_id(anomaly, i + 1)
 		var target_label = "TIC %s" % str(anomaly.get("ticId")) if anomaly.has("ticId") and anomaly.get("ticId") != null and str(anomaly.get("ticId")) != "" else str(anomaly.get("content", target_id))
+		var disposition = str(anomaly.get("tess_disposition", ""))
+		var tess_year = str(anomaly.get("tess_year", ""))
+		var tess_sector = str(anomaly.get("tess_sector", ""))
+		var science_source: String
+		var science_blurb: String
+		if disposition in ["KP", "CP"]:
+			science_source = "Confirmed Planet"
+			science_blurb = "Confirmed exoplanet via NASA TESS"
+		elif disposition == "PC":
+			science_source = "TESS Planet Candidate"
+			science_blurb = "Planet candidate detected by NASA TESS"
+		elif anomaly.has("ticId") and str(anomaly.get("ticId", "")) != "":
+			science_source = "TESS Target"
+			science_blurb = "TESS photometric target"
+		else:
+			science_source = "Active Asteroid"
+			science_blurb = "Catalogued by Active Asteroids Programme"
+		if tess_year != "" and tess_year != "0":
+			science_blurb += " in %s" % tess_year
+		if tess_sector != "" and tess_sector != "0":
+			science_blurb += " (Sector %s)" % tess_sector
 		targets.append({
 			"id": target_id,
 			"label": target_label,
-			"type": "asteroid"
+			"type": "asteroid",
+			"science_source": science_source,
+			"science_blurb": science_blurb
 		})
 	if targets.is_empty():
 		return

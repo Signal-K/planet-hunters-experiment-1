@@ -1,0 +1,323 @@
+{
+  "taskId": "82ysam",
+  "currentVersion": 6,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "82ysam",
+      "version": 1,
+      "timestamp": "2026-03-09T01:42:06.154Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix transit screen safe area and text size on mobile",
+        "description": "On iPhone, the Dynamic Island/notch clips the top-left UI (Exit button, tutorial overlay, stats). Bottom nav buttons too close to screen edges. All text is too small. Needs safe area padding on all sides and larger font sizes.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "mobile",
+          "pwa",
+          "layout"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Top content clears Dynamic Island / notch"
+          },
+          {
+            "completed": false,
+            "text": "Bottom buttons clear home indicator"
+          },
+          {
+            "completed": false,
+            "text": "Text is readable at mobile scale"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "82ysam",
+      "version": 2,
+      "timestamp": "2026-03-09T01:47:50.898Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Top content clears Dynamic Island / notch"
+            },
+            {
+              "completed": false,
+              "text": "Bottom buttons clear home indicator"
+            },
+            {
+              "completed": false,
+              "text": "Text is readable at mobile scale"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Top content clears Dynamic Island / notch"
+            },
+            {
+              "completed": false,
+              "text": "Bottom buttons clear home indicator"
+            },
+            {
+              "completed": false,
+              "text": "Text is readable at mobile scale"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Fix transit screen safe area and text size on mobile",
+        "description": "On iPhone, the Dynamic Island/notch clips the top-left UI (Exit button, tutorial overlay, stats). Bottom nav buttons too close to screen edges. All text is too small. Needs safe area padding on all sides and larger font sizes.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "mobile",
+          "pwa",
+          "layout"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Top content clears Dynamic Island / notch"
+          },
+          {
+            "completed": false,
+            "text": "Bottom buttons clear home indicator"
+          },
+          {
+            "completed": false,
+            "text": "Text is readable at mobile scale"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "82ysam",
+      "version": 3,
+      "timestamp": "2026-03-09T01:47:53.647Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Top content clears Dynamic Island / notch"
+            },
+            {
+              "completed": false,
+              "text": "Bottom buttons clear home indicator"
+            },
+            {
+              "completed": false,
+              "text": "Text is readable at mobile scale"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Top content clears Dynamic Island / notch"
+            },
+            {
+              "completed": true,
+              "text": "Bottom buttons clear home indicator"
+            },
+            {
+              "completed": false,
+              "text": "Text is readable at mobile scale"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Fix transit screen safe area and text size on mobile",
+        "description": "On iPhone, the Dynamic Island/notch clips the top-left UI (Exit button, tutorial overlay, stats). Bottom nav buttons too close to screen edges. All text is too small. Needs safe area padding on all sides and larger font sizes.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "mobile",
+          "pwa",
+          "layout"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Top content clears Dynamic Island / notch"
+          },
+          {
+            "completed": true,
+            "text": "Bottom buttons clear home indicator"
+          },
+          {
+            "completed": false,
+            "text": "Text is readable at mobile scale"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "82ysam",
+      "version": 4,
+      "timestamp": "2026-03-09T01:47:56.414Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Top content clears Dynamic Island / notch"
+            },
+            {
+              "completed": true,
+              "text": "Bottom buttons clear home indicator"
+            },
+            {
+              "completed": false,
+              "text": "Text is readable at mobile scale"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Top content clears Dynamic Island / notch"
+            },
+            {
+              "completed": true,
+              "text": "Bottom buttons clear home indicator"
+            },
+            {
+              "completed": true,
+              "text": "Text is readable at mobile scale"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Fix transit screen safe area and text size on mobile",
+        "description": "On iPhone, the Dynamic Island/notch clips the top-left UI (Exit button, tutorial overlay, stats). Bottom nav buttons too close to screen edges. All text is too small. Needs safe area padding on all sides and larger font sizes.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "mobile",
+          "pwa",
+          "layout"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Top content clears Dynamic Island / notch"
+          },
+          {
+            "completed": true,
+            "text": "Bottom buttons clear home indicator"
+          },
+          {
+            "completed": true,
+            "text": "Text is readable at mobile scale"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "82ysam",
+      "version": 5,
+      "timestamp": "2026-03-09T01:47:59.149Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "Added safe_top/safe_bottom (90 units) when aspect > 1.85 (landscape iPhone) in OutboundPreviewTransition and ReturnPreviewTransition. _ui_margin.offset_top adjusted for notch. travel/summary panels shifted down. bottom nav shifted up. Science panel and ship status panel font sizes upgraded from 11-13 to PanelStyle constants (34-40). PanelStyle title/body already at 52/40."
+        }
+      ],
+      "snapshot": {
+        "title": "Fix transit screen safe area and text size on mobile",
+        "description": "On iPhone, the Dynamic Island/notch clips the top-left UI (Exit button, tutorial overlay, stats). Bottom nav buttons too close to screen edges. All text is too small. Needs safe area padding on all sides and larger font sizes.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "mobile",
+          "pwa",
+          "layout"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Top content clears Dynamic Island / notch"
+          },
+          {
+            "completed": true,
+            "text": "Bottom buttons clear home indicator"
+          },
+          {
+            "completed": true,
+            "text": "Text is readable at mobile scale"
+          }
+        ],
+        "implementationNotes": "Added safe_top/safe_bottom (90 units) when aspect > 1.85 (landscape iPhone) in OutboundPreviewTransition and ReturnPreviewTransition. _ui_margin.offset_top adjusted for notch. travel/summary panels shifted down. bottom nav shifted up. Science panel and ship status panel font sizes upgraded from 11-13 to PanelStyle constants (34-40). PanelStyle title/body already at 52/40."
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "82ysam",
+      "version": 6,
+      "timestamp": "2026-03-09T01:48:04.702Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix transit screen safe area and text size on mobile",
+        "description": "On iPhone, the Dynamic Island/notch clips the top-left UI (Exit button, tutorial overlay, stats). Bottom nav buttons too close to screen edges. All text is too small. Needs safe area padding on all sides and larger font sizes.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "mobile",
+          "pwa",
+          "layout"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Top content clears Dynamic Island / notch"
+          },
+          {
+            "completed": true,
+            "text": "Bottom buttons clear home indicator"
+          },
+          {
+            "completed": true,
+            "text": "Text is readable at mobile scale"
+          }
+        ],
+        "implementationNotes": "Added safe_top/safe_bottom (90 units) when aspect > 1.85 (landscape iPhone) in OutboundPreviewTransition and ReturnPreviewTransition. _ui_margin.offset_top adjusted for notch. travel/summary panels shifted down. bottom nav shifted up. Science panel and ship status panel font sizes upgraded from 11-13 to PanelStyle constants (34-40). PanelStyle title/body already at 52/40."
+      }
+    }
+  ]
+}

@@ -1,36 +1,18 @@
 extends CanvasLayer
 
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
-const Targeting = preload("res://Scripts/UI/TutorialCoachTargeting.gd")
-const PANEL_MARGIN := 20.0
-# Scenes where the tutorial overlay should be suppressed entirely — the player
-# is watching an automated transit animation and cannot act on any tutorial step.
+const TutorialLayoutZone = preload("res://Scripts/UI/TutorialLayoutZone.gd")
+const TutorialCoachTargeting = preload("res://Scripts/UI/TutorialCoachTargeting.gd")
+
 const TRANSIT_SCENE_BASENAMES := ["rocket_ascent", "rocket_transit", "rocket_return"]
-const PANEL_DEFAULT_SIZE := Vector2(420.0, 260.0)
-const PANEL_MIN_SIZE := Vector2(360.0, 200.0)
+const PreviewRouting = preload("res://Scripts/UI/NewMissionPreviewRouting.gd")
 const LAYOUT_REFRESH_INTERVAL := 0.15
-const HIGHLIGHT_PADDING := 14.0
-const GUIDE_PULSE_SPEED := 4.8
-const GUIDE_LINE_ALPHA_MIN := 0.50
-const GUIDE_LINE_ALPHA_MAX := 1.0
-const GUIDE_ARROW_SWAY_PX := 10.0
-const HIGHLIGHT_BG_ALPHA_MIN := 0.05
-const HIGHLIGHT_BG_ALPHA_MAX := 0.18
-const HIGHLIGHT_BORDER_ALPHA_MIN := 0.65
-const HIGHLIGHT_BORDER_ALPHA_MAX := 1.0
-const TARGET_FLASH_BLEND := 0.38
-const LOW_INTENSITY_ACTIONS := [
-	"tour_open_control_station",
-	"tour_close_control_station",
-	"accept_starter_contractor",
-	"create_rocket"
-]
-# Accent colours — Out There: Omega palette
-const CYAN  := Color(0.28, 0.88, 0.96, 1.0)   # #47E0F5 — panel borders, guide line
-const AMBER := Color(0.941, 0.690, 0.188, 1.0) # #F0B030 — primary CTA only
-# Dashed guide line: segment length and gap length in viewport pixels
-const DASH_ON  := 22.0
-const DASH_OFF := 14.0
+const CYAN := Color(0.28, 0.88, 0.96, 1.0)
+const AMBER := Color(0.941, 0.690, 0.188, 1.0)
+const POINTER_ARROW_SIZE := 24.0
+const POINTER_TARGET_MARGIN := 12.0
+const POINTER_MAX_LENGTH := 170.0
+const POINTER_MIN_LENGTH := 84.0
 
 @onready var panel: PanelContainer = $Root/Panel
 @onready var title_label: Label = $Root/Panel/Margin/VBox/Header/TitleLabel
@@ -43,6 +25,7 @@ const DASH_OFF := 14.0
 @onready var practice_mining_button: Button = $Root/Panel/Margin/VBox/Buttons/PracticeMiningButton
 @onready var replay_mission_button: Button = $Root/Panel/Margin/VBox/Buttons/ReplayMissionButton
 @onready var replay_all_button: Button = $Root/Panel/Margin/VBox/Buttons/ReplayAllButton
+@onready var buttons_row: HBoxContainer = $Root/Panel/Margin/VBox/Buttons
 
 var _collapsed := false
 var _app_controller: Node = null
@@ -51,26 +34,24 @@ var _current_state: Dictionary = {}
 var _current_step: Dictionary = {}
 var _transit_suppressed := false
 var _off_course := false
-
-var _highlight_box: Panel = null
-var _guide_line: Line2D = null
-var _guide_arrow: Polygon2D = null
-var _guide_label: Label = null
-var _guide_target_rect := Rect2()
-var _guide_source_point := Vector2.ZERO
-var _guide_target_node: Node = null
+var _open_launchpad_button: Button = null
+var _resume_mission_button: Button = null
+var _pointer_line: Line2D = null
+var _pointer_head: Polygon2D = null
+var _target_highlight: Panel = null
 var _highlight_style: StyleBoxFlat = null
-var _pulse_elapsed := 0.0
-var _active_flash_target: CanvasItem = null
-var _active_flash_base_modulate := Color(1, 1, 1, 1)
+var _highlight_tween: Tween = null
 
 func _ready() -> void:
 	layer = 70
 	$Root.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	panel.mouse_filter = Control.MOUSE_FILTER_STOP
-	panel.size = PANEL_DEFAULT_SIZE
+	$Root.set_meta("tutorial_zone_exempt", true)
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.set_meta("tutorial_zone_exempt", true)
 	_apply_style()
-	_setup_guide_nodes()
+	_configure_mouse_passthrough()
+	_setup_context_action_button()
+	_setup_pointer_indicator()
 	_app_controller = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
 	if _app_controller and _app_controller.has_signal("tutorial_state_updated"):
 		_app_controller.tutorial_state_updated.connect(_on_tutorial_state_updated)
@@ -82,9 +63,48 @@ func _ready() -> void:
 	set_process(true)
 	_refresh()
 
+func _setup_context_action_button() -> void:
+	if buttons_row == null:
+		return
+	_open_launchpad_button = Button.new()
+	_open_launchpad_button.name = "OpenLaunchpadButton"
+	_open_launchpad_button.text = "Open Launchpad"
+	_open_launchpad_button.visible = false
+	_open_launchpad_button.mouse_filter = Control.MOUSE_FILTER_STOP
+	_apply_pill_button(_open_launchpad_button, true)
+	_open_launchpad_button.pressed.connect(_on_open_launchpad_pressed)
+	buttons_row.add_child(_open_launchpad_button)
+
+	_resume_mission_button = Button.new()
+	_resume_mission_button.name = "ResumeMissionButton"
+	_resume_mission_button.text = "Resume Mission"
+	_resume_mission_button.visible = false
+	_resume_mission_button.mouse_filter = Control.MOUSE_FILTER_STOP
+	_apply_pill_button(_resume_mission_button, true)
+	_resume_mission_button.pressed.connect(_on_resume_mission_pressed)
+	buttons_row.add_child(_resume_mission_button)
+
+func _configure_mouse_passthrough() -> void:
+	var margin = $Root/Panel/Margin
+	var vbox = $Root/Panel/Margin/VBox
+	var header = $Root/Panel/Margin/VBox/Header
+	if margin:
+		margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if vbox:
+		vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if header:
+		header.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for label_node in [title_label, stage_label, message_label, action_label, progress_label]:
+		if label_node:
+			label_node.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var buttons_row = $Root/Panel/Margin/VBox/Buttons
+	if buttons_row:
+		buttons_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for btn in [collapse_button, skip_button, practice_mining_button, replay_mission_button, replay_all_button, _resume_mission_button]:
+		if btn:
+			btn.mouse_filter = Control.MOUSE_FILTER_STOP
+
 func _process(delta: float) -> void:
-	_pulse_elapsed += delta
-	_animate_guidance_overlay()
 	_layout_elapsed += delta
 	if _layout_elapsed < LAYOUT_REFRESH_INTERVAL:
 		return
@@ -92,7 +112,7 @@ func _process(delta: float) -> void:
 	_apply_transit_suppression()
 	_apply_off_course_check()
 	_reposition_panel()
-	_update_guidance_overlay()
+	_refresh_target_pointer()
 
 func _apply_transit_suppression() -> void:
 	var in_transit = _is_transit_scene()
@@ -101,9 +121,7 @@ func _apply_transit_suppression() -> void:
 	_transit_suppressed = in_transit
 	if in_transit:
 		visible = false
-		_hide_guide_overlay()
 	else:
-		# Resuming from transit — re-read current state and restore the panel.
 		_off_course = false
 		_refresh()
 
@@ -123,13 +141,36 @@ func _apply_off_course_check() -> void:
 	var in_valid_scene: bool = basename in valid_scenes
 	if not in_valid_scene and not _off_course:
 		_off_course = true
-		message_label.text = "This area isn't part of the current step. Head back to the base to continue."
-		if action_label:
-			action_label.text = "← Return to the base"
-		_hide_guide_overlay()
+		_apply_off_course_display()
 	elif in_valid_scene and _off_course:
 		_off_course = false
 		_on_tutorial_state_updated(_current_state)
+
+func _apply_off_course_display() -> void:
+	stage_label.visible = false
+	progress_label.visible = false
+	action_label.visible = false
+	message_label.text = _resume_hint_for_step(_current_step)
+	message_label.visible = true
+	skip_button.visible = false
+	replay_mission_button.visible = false
+	replay_all_button.visible = false
+	practice_mining_button.visible = false
+	var valid_scenes: Array = _current_step.get("valid_scenes", [])
+	var is_inflight_step = "SidescrollMining" in valid_scenes
+	if _resume_mission_button:
+		_resume_mission_button.visible = is_inflight_step
+	_update_context_action_button()
+
+func _resume_hint_for_step(step: Dictionary) -> String:
+	var valid_scenes: Array = step.get("valid_scenes", [])
+	if "earth_launchpad" in valid_scenes:
+		return "Open the Launchpad to continue."
+	if "SidescrollMining" in valid_scenes:
+		return "Your mission is in flight."
+	if "mission_debrief" in valid_scenes:
+		return "Return to base to complete your debrief."
+	return "Navigate to continue your mission."
 
 func _is_transit_scene() -> bool:
 	var tree = get_tree()
@@ -139,106 +180,299 @@ func _is_transit_scene() -> bool:
 	return basename in TRANSIT_SCENE_BASENAMES
 
 func _apply_style() -> void:
-	# Lock panel and buttons so UIConsistencyEnforcer (which runs deferred) cannot
-	# overwrite these custom amber styles after _ready() completes.
 	panel.set_meta("ui_style_locked", true)
-
-	# Panel: dark translucent bg + bright cyan border — Out There: Omega style
 	var panel_style := StyleBoxFlat.new()
-	panel_style.bg_color     = Color(0.04, 0.06, 0.12, 0.82)  # dark, slightly transparent
-	panel_style.border_color = CYAN                            # full-opacity cyan, clearly visible
+	panel_style.bg_color = Color(0.04, 0.06, 0.12, 0.90)
+	panel_style.border_color = CYAN
 	panel_style.set_border_width_all(2)
-	panel_style.set_corner_radius_all(6)
-	panel_style.shadow_color  = Color(CYAN.r, CYAN.g, CYAN.b, 0.25)  # cyan glow shadow
-	panel_style.shadow_size   = 18
-	panel_style.shadow_offset = Vector2(0, 0)
-	panel_style.content_margin_left   = 28
-	panel_style.content_margin_right  = 28
-	panel_style.content_margin_top    = 22
-	panel_style.content_margin_bottom = 22
-	if panel.is_inside_tree():
-		panel.add_theme_stylebox_override("panel", panel_style)
+	panel_style.set_corner_radius_all(8)
+	panel_style.content_margin_left = 24
+	panel_style.content_margin_right = 24
+	panel_style.content_margin_top = 20
+	panel_style.content_margin_bottom = 20
+	panel.add_theme_stylebox_override("panel", panel_style)
 
-	# Text — use panel-appropriate sizes (panel is ~420px wide, not fullscreen)
 	PanelStyle.apply_title(title_label)
-	title_label.add_theme_font_size_override("font_size", 32)
+	title_label.add_theme_font_size_override("font_size", 24)
 	PanelStyle.apply_muted(stage_label)
-	stage_label.add_theme_font_size_override("font_size", 22)
+	stage_label.add_theme_font_size_override("font_size", 18)
 	PanelStyle.apply_body(message_label)
-	message_label.add_theme_font_size_override("font_size", 26)
-	if action_label:
-		action_label.add_theme_color_override("font_color", Color(0.62, 0.60, 0.58, 1.0))
-		action_label.add_theme_font_size_override("font_size", 22)
+	message_label.add_theme_font_size_override("font_size", 22)
+	message_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	PanelStyle.apply_muted(action_label)
+	action_label.add_theme_font_size_override("font_size", 19)
+	action_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	PanelStyle.apply_muted(progress_label)
-	progress_label.add_theme_font_size_override("font_size", 22)
+	progress_label.add_theme_font_size_override("font_size", 18)
 
-	# Buttons — pill outline: cyan outline for secondary, amber for primary CTA
 	for btn in [skip_button, replay_mission_button, replay_all_button]:
-		_apply_pill_outline_button(btn, false)
-	_apply_pill_outline_button(practice_mining_button, true)
-	_apply_collapse_button_style()
+		_apply_pill_button(btn, false)
+	_apply_pill_button(practice_mining_button, true)
+	if _open_launchpad_button:
+		_apply_pill_button(_open_launchpad_button, true)
+	_apply_pill_button(collapse_button, false)
+	collapse_button.custom_minimum_size = Vector2(56, 36)
 
-
-func _apply_pill_outline_button(btn: Button, is_primary: bool) -> void:
+func _apply_pill_button(btn: Button, is_primary: bool) -> void:
 	if btn == null:
 		return
-	# Prevent UIConsistencyEnforcer (deferred) from overwriting our pill style.
 	btn.set_meta("ui_style_locked", true)
-	var col: Color  = AMBER if is_primary else CYAN
-	var col_d: Color = Color(col.r, col.g, col.b, 0.5)
-
+	var col := AMBER if is_primary else CYAN
 	var normal := StyleBoxFlat.new()
 	normal.bg_color = Color(0, 0, 0, 0)
 	normal.border_color = col
 	normal.set_border_width_all(1)
-	normal.set_corner_radius_all(32)
-	normal.content_margin_left   = 24
-	normal.content_margin_right  = 24
-	normal.content_margin_top    = 10
-	normal.content_margin_bottom = 10
-
+	normal.set_corner_radius_all(28)
+	normal.content_margin_left = 18
+	normal.content_margin_right = 18
+	normal.content_margin_top = 9
+	normal.content_margin_bottom = 9
 	var hover := normal.duplicate()
 	hover.bg_color = Color(col.r, col.g, col.b, 0.12)
-
 	var pressed := normal.duplicate()
 	pressed.bg_color = Color(col.r, col.g, col.b, 0.22)
-
-	btn.add_theme_stylebox_override("normal",  normal)
-	btn.add_theme_stylebox_override("hover",   hover)
+	btn.add_theme_stylebox_override("normal", normal)
+	btn.add_theme_stylebox_override("hover", hover)
 	btn.add_theme_stylebox_override("pressed", pressed)
-	btn.add_theme_stylebox_override("focus",   hover)
-	btn.add_theme_color_override("font_color",         col)
-	btn.add_theme_color_override("font_hover_color",   col)
+	btn.add_theme_stylebox_override("focus", hover)
+	btn.add_theme_color_override("font_color", col)
+	btn.add_theme_color_override("font_hover_color", col)
 	btn.add_theme_color_override("font_pressed_color", col)
-	btn.add_theme_color_override("font_disabled_color",col_d)
-	btn.add_theme_font_size_override("font_size", 22)
+	btn.add_theme_font_size_override("font_size", 20)
 
-func _apply_collapse_button_style() -> void:
-	if collapse_button == null:
+func _refresh() -> void:
+	if not _app_controller or not _app_controller.has_method("get_tutorial_state"):
+		visible = false
 		return
-	collapse_button.set_meta("ui_style_locked", true)
-	var col := CYAN
-	var normal := StyleBoxFlat.new()
-	normal.bg_color = Color(0, 0, 0, 0)
-	normal.border_color = Color(col.r, col.g, col.b, 0.5)
-	normal.set_border_width_all(1)
-	normal.set_corner_radius_all(32)
-	normal.content_margin_left   = 14
-	normal.content_margin_right  = 14
-	normal.content_margin_top    = 6
-	normal.content_margin_bottom = 6
-	var hover := normal.duplicate()
-	hover.bg_color = Color(col.r, col.g, col.b, 0.12)
-	var pressed := normal.duplicate()
-	pressed.bg_color = Color(col.r, col.g, col.b, 0.22)
-	collapse_button.add_theme_stylebox_override("normal",  normal)
-	collapse_button.add_theme_stylebox_override("hover",   hover)
-	collapse_button.add_theme_stylebox_override("pressed", pressed)
-	collapse_button.add_theme_stylebox_override("focus",   hover)
-	collapse_button.add_theme_color_override("font_color", col)
-	collapse_button.add_theme_color_override("font_hover_color", col)
-	collapse_button.add_theme_color_override("font_pressed_color", col)
-	collapse_button.add_theme_font_size_override("font_size", 22)
+	_on_tutorial_state_updated(_app_controller.get_tutorial_state())
+
+func _on_tutorial_state_updated(state: Dictionary) -> void:
+	_off_course = false
+	_current_state = state.duplicate(true)
+	if state.is_empty():
+		visible = false
+		return
+	var skipped = bool(state.get("skipped", false))
+	var step: Dictionary = state.get("current_step", {})
+	_current_step = step.duplicate(true)
+	if skipped or step.is_empty():
+		visible = false
+		_hide_target_pointer()
+		return
+	visible = true
+	if not _collapsed:
+		stage_label.visible = true
+		message_label.visible = true
+		action_label.visible = true
+		progress_label.visible = true
+		skip_button.visible = true
+	var stage = int(state.get("current_stage", 1))
+	var current_idx = int(state.get("current_step_index", 0))
+	var total = int(state.get("total_steps", 0))
+	title_label.text = str(step.get("title", "Mission Guidance"))
+	stage_label.text = "Mission %d" % stage
+	message_label.text = str(step.get("message", ""))
+	action_label.text = _action_copy_for_step(step)
+	progress_label.text = "Step %d/%d" % [min(current_idx + 1, max(total, 1)), max(total, 1)]
+	practice_mining_button.visible = _step_supports_practice(step)
+	_update_context_action_button()
+	call_deferred("_reposition_panel")
+	call_deferred("_refresh_target_pointer")
+
+func _setup_pointer_indicator() -> void:
+	if _pointer_line and _pointer_head and _target_highlight:
+		return
+	_pointer_line = Line2D.new()
+	_pointer_line.name = "TargetPointerLine"
+	_pointer_line.width = 7.0
+	_pointer_line.default_color = CYAN
+	_pointer_line.begin_cap_mode = Line2D.LINE_CAP_ROUND
+	_pointer_line.end_cap_mode = Line2D.LINE_CAP_ROUND
+	_pointer_line.z_index = 240
+	_pointer_line.show_behind_parent = false
+	_pointer_line.visible = false
+	$Root.add_child(_pointer_line)
+
+	_pointer_head = Polygon2D.new()
+	_pointer_head.name = "TargetPointerHead"
+	_pointer_head.color = CYAN
+	_pointer_head.z_index = 241
+	_pointer_head.visible = false
+	$Root.add_child(_pointer_head)
+
+	_target_highlight = Panel.new()
+	_target_highlight.name = "TargetHighlight"
+	_target_highlight.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_target_highlight.z_index = 239
+	_target_highlight.visible = false
+	_highlight_style = StyleBoxFlat.new()
+	_highlight_style.bg_color = Color(CYAN.r, CYAN.g, CYAN.b, 0.12)
+	_highlight_style.border_color = Color(CYAN.r, CYAN.g, CYAN.b, 0.95)
+	_highlight_style.set_border_width_all(3)
+	_highlight_style.set_corner_radius_all(8)
+	_target_highlight.add_theme_stylebox_override("panel", _highlight_style)
+	$Root.add_child(_target_highlight)
+
+func _refresh_target_pointer() -> void:
+	if _pointer_line == null or _pointer_head == null:
+		return
+	if not visible or _collapsed or _current_step.is_empty():
+		_hide_target_pointer()
+		return
+	var tree := get_tree()
+	if tree == null:
+		_hide_target_pointer()
+		return
+	var target_rect: Rect2 = TutorialCoachTargeting.find_current_target_rect(_current_step, tree)
+	if target_rect.size == Vector2.ZERO:
+		_hide_target_pointer()
+		return
+	_update_target_highlight(target_rect)
+	var panel_rect = panel.get_global_rect()
+	var from = panel_rect.get_center()
+	var target_center = target_rect.get_center()
+	var to = target_center
+	var to_direction = (target_center - from).normalized()
+	if to_direction == Vector2.ZERO:
+		to_direction = Vector2.RIGHT
+	var panel_limit = _intersect_line_with_rect(from, to_direction, panel_rect.grow(4.0))
+	if panel_limit != Vector2.INF:
+		from = panel_limit
+	var target_limit = _intersect_line_with_rect(target_center, -to_direction, target_rect.grow(POINTER_TARGET_MARGIN))
+	if target_limit != Vector2.INF:
+		to = target_limit
+	var line_len = clamp(from.distance_to(to), POINTER_MIN_LENGTH, POINTER_MAX_LENGTH)
+	from = to - (to_direction * line_len)
+	_pointer_line.clear_points()
+	_pointer_line.add_point(from)
+	_pointer_line.add_point(to)
+	_pointer_line.visible = true
+	_update_pointer_head(to, to_direction)
+
+func _hide_target_pointer() -> void:
+	if _pointer_line:
+		_pointer_line.visible = false
+		_pointer_line.clear_points()
+	if _pointer_head:
+		_pointer_head.visible = false
+	if _target_highlight:
+		_target_highlight.visible = false
+	if _highlight_tween != null:
+		_highlight_tween.kill()
+		_highlight_tween = null
+
+func _update_target_highlight(target_rect: Rect2) -> void:
+	if _target_highlight == null:
+		return
+	var padded = target_rect.grow(6.0)
+	_target_highlight.position = padded.position
+	_target_highlight.size = padded.size
+	if not _target_highlight.visible:
+		_target_highlight.visible = true
+		_start_highlight_pulse()
+
+func _start_highlight_pulse() -> void:
+	if _highlight_style == null:
+		return
+	if _highlight_tween != null:
+		_highlight_tween.kill()
+	_highlight_tween = create_tween()
+	_highlight_tween.set_loops()
+	_highlight_tween.tween_method(
+		func(a: float) -> void: _highlight_style.bg_color.a = a,
+		0.08, 0.30, 0.75
+	).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_highlight_tween.tween_method(
+		func(a: float) -> void: _highlight_style.bg_color.a = a,
+		0.30, 0.08, 0.75
+	).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+func _update_pointer_head(tip: Vector2, direction: Vector2) -> void:
+	if _pointer_head == null:
+		return
+	var dir = direction.normalized()
+	if dir == Vector2.ZERO:
+		dir = Vector2.RIGHT
+	var side = dir.orthogonal()
+	var base = tip - (dir * POINTER_ARROW_SIZE)
+	var p1 = tip
+	var p2 = base + (side * (POINTER_ARROW_SIZE * 0.5))
+	var p3 = base - (side * (POINTER_ARROW_SIZE * 0.5))
+	_pointer_head.polygon = PackedVector2Array([p1, p2, p3])
+	_pointer_head.visible = true
+
+func _intersect_line_with_rect(origin: Vector2, direction: Vector2, rect: Rect2) -> Vector2:
+	var dir = direction.normalized()
+	if dir == Vector2.ZERO:
+		return Vector2.INF
+	var best_t := INF
+	var best_point := Vector2.INF
+	var edges = [
+		[rect.position, rect.position + Vector2(rect.size.x, 0)],
+		[rect.position + Vector2(rect.size.x, 0), rect.end],
+		[rect.end, rect.position + Vector2(0, rect.size.y)],
+		[rect.position + Vector2(0, rect.size.y), rect.position]
+	]
+	for edge in edges:
+		var a: Vector2 = edge[0]
+		var b: Vector2 = edge[1]
+		var hit = Geometry2D.segment_intersects_segment(origin, origin + (dir * 6000.0), a, b)
+		if hit == null:
+			continue
+		var point := hit as Vector2
+		var t = (point - origin).dot(dir)
+		if t > 0.0 and t < best_t:
+			best_t = t
+			best_point = point
+	return best_point
+
+func _action_copy_for_step(step: Dictionary) -> String:
+	var key = str(step.get("action_key", ""))
+	var stage = int(_current_state.get("current_stage", 1))
+	var scene_name := ""
+	if get_tree() and get_tree().current_scene:
+		scene_name = get_tree().current_scene.scene_file_path.get_file().get_basename()
+	var on_base := scene_name == "earth_base_1"
+	match key:
+		"tour_open_control_station":
+			return "Open Control Station on the base."
+		"tour_close_control_station":
+			return "Close the Control Station panel."
+		"accept_contractor_offer", "accept_starter_contractor":
+			if on_base:
+				return "Press New Mission to open Launchpad, then select a contractor."
+			return "Tap a contractor card and press Select. They give you a target order — delivering it earns a payout bonus on top of the base price."
+		"create_rocket":
+			if on_base:
+				return "Press New Mission to open Launchpad, then build the required rocket."
+			if stage <= 1:
+				return "Create Starter Rocket 1."
+			if stage == 2:
+				return "Create Starter Rocket 2."
+			return "Build a rocket that matches this mission."
+		"select_launch_target":
+			if on_base:
+				return "Press New Mission to open Launchpad, then select a target."
+			return "Select the highlighted Mission 1 target."
+		"launch_rocket_from_earth":
+			if on_base:
+				return "Press New Mission to open Launchpad, then launch."
+			return "Press Launch when contractor, rocket, and target are ready."
+		"mine_target":
+			return "Mine required cargo at the target."
+		"return_rocket_home":
+			return "Return to Earth with cargo."
+		"resolve_mission_debrief":
+			return "Complete the debrief to advance."
+		_:
+			return "Complete the current objective."
+
+func _reposition_panel() -> void:
+	if not visible:
+		return
+	var reserved = TutorialLayoutZone.reserved_rect(get_viewport().get_visible_rect())
+	panel.position = reserved.position
+	panel.size = reserved.size
 
 func _on_collapse_pressed() -> void:
 	_collapsed = !_collapsed
@@ -247,387 +481,6 @@ func _on_collapse_pressed() -> void:
 	action_label.visible = !_collapsed
 	progress_label.visible = !_collapsed
 	$Root/Panel/Margin/VBox/Buttons.visible = !_collapsed
-	call_deferred("_reposition_panel")
-
-func _setup_guide_nodes() -> void:
-	_highlight_box = Panel.new()
-	_highlight_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_highlight_box.visible = false
-	_highlight_box.set_meta("ui_style_locked", true)
-	# Cyan highlight box — Out There: Omega style
-	_highlight_style = StyleBoxFlat.new()
-	_highlight_style.bg_color     = Color(CYAN.r, CYAN.g, CYAN.b, 0.06)
-	_highlight_style.border_color = Color(CYAN.r, CYAN.g, CYAN.b, 0.96)
-	_highlight_style.set_border_width_all(2)
-	_highlight_style.set_corner_radius_all(4)
-	_highlight_box.add_theme_stylebox_override("panel", _highlight_style)
-	$Root.add_child(_highlight_box)
-
-	# Dashed guide line
-	_guide_line = Line2D.new()
-	_guide_line.visible = false
-	_guide_line.width = 2.5
-	_guide_line.default_color = Color(CYAN.r, CYAN.g, CYAN.b, 0.90)
-	_guide_line.antialiased = true
-	_guide_line.begin_cap_mode = Line2D.LINE_CAP_ROUND
-	_guide_line.end_cap_mode   = Line2D.LINE_CAP_ROUND
-	add_child(_guide_line)
-
-	_guide_arrow = Polygon2D.new()
-	_guide_arrow.visible = false
-	_guide_arrow.color = Color(CYAN.r, CYAN.g, CYAN.b, 0.96)
-	_guide_arrow.polygon = PackedVector2Array([
-		Vector2(0, 0),
-		Vector2(-18, -10),
-		Vector2(-18, 10)
-	])
-	add_child(_guide_arrow)
-
-	_guide_label = Label.new()
-	_guide_label.visible = false
-	_guide_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_guide_label.text = "Tap here"
-	_guide_label.add_theme_font_size_override("font_size", 26)
-	_guide_label.add_theme_color_override("font_color", Color(CYAN.r, CYAN.g, CYAN.b, 0.90))
-	_guide_label.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.85))
-	_guide_label.add_theme_constant_override("shadow_offset_x", 2)
-	_guide_label.add_theme_constant_override("shadow_offset_y", 2)
-	$Root.add_child(_guide_label)
-
-func _refresh() -> void:
-	if not _app_controller or not _app_controller.has_method("get_tutorial_state"):
-		visible = false
-		return
-	var state = _app_controller.get_tutorial_state()
-	_on_tutorial_state_updated(state)
-
-func _on_tutorial_state_updated(state: Dictionary) -> void:
-	_off_course = false
-	_current_state = state.duplicate(true)
-	if state.is_empty():
-		visible = false
-		_hide_guide_overlay()
-		return
-	var skipped = bool(state.get("skipped", false))
-	var step: Dictionary = state.get("current_step", {})
-	_current_step = step.duplicate(true)
-	if skipped:
-		visible = false
-		_hide_guide_overlay()
-		return
-	if step.is_empty():
-		visible = false
-		_hide_guide_overlay()
-		return
-	visible = true
-	var stage = int(state.get("current_stage", 1))
-	var current_idx = int(state.get("current_step_index", 0))
-	var total = int(state.get("total_steps", 0))
-	title_label.text = str(step.get("title", "Mission Guidance"))
-	stage_label.text = "Mission %d" % stage
-	message_label.text = str(step.get("message", ""))
-	var action_key = str(step.get("action_key", ""))
-	action_label.text = Targeting.navigation_hint_for_action(action_key)
-	progress_label.text = "Step %d/%d" % [min(current_idx + 1, max(total, 1)), max(total, 1)]
-	practice_mining_button.visible = _step_supports_practice(step)
-	call_deferred("_reposition_panel")
-	call_deferred("_update_guidance_overlay")
-
-func _reposition_panel() -> void:
-	if not visible:
-		return
-	var viewport_rect := get_viewport().get_visible_rect()
-	var panel_size = _panel_layout_size(viewport_rect)
-	var blockers: Array[Rect2] = []
-	_collect_blocking_rects(get_tree().root, blockers)
-	var target_rect = Targeting.find_current_target_rect(_current_step, get_tree())
-	if _has_rect(target_rect):
-		blockers.append(target_rect)
-	var best_overlap := INF
-	var best_rect := Rect2(Vector2.ZERO, panel_size)
-	for candidate in _candidate_rects(viewport_rect, panel_size, target_rect):
-		var overlap := _rect_overlap_area(candidate, blockers)
-		if overlap < best_overlap:
-			best_overlap = overlap
-			best_rect = candidate
-	# Hide when a menu/screen is covering the viewport — the user can't act on
-	# tutorial steps while another panel is open, so the overlay would only obstruct.
-	var panel_area: float = panel_size.x * panel_size.y
-	if best_overlap > panel_area * 0.15:
-		panel.visible = false
-		return
-	panel.visible = true
-	panel.size = panel_size
-	panel.position = _clamp_panel_position(best_rect.position, panel_size, viewport_rect)
-
-func _candidate_rects(viewport_rect: Rect2, size: Vector2, target_rect: Rect2) -> Array[Rect2]:
-	var left := viewport_rect.position.x + PANEL_MARGIN
-	var top := viewport_rect.position.y + PANEL_MARGIN
-	var right := viewport_rect.position.x + viewport_rect.size.x - size.x - PANEL_MARGIN
-	var bottom := viewport_rect.position.y + viewport_rect.size.y - size.y - PANEL_MARGIN
-	var out: Array[Rect2] = [
-		Rect2(Vector2(left, top), size),
-		Rect2(Vector2(right, top), size),
-		Rect2(Vector2(left, bottom), size),
-		Rect2(Vector2(right, bottom), size)
-	]
-	if _has_rect(target_rect):
-		out.append(Rect2(Vector2(
-			clamp(target_rect.position.x - size.x - PANEL_MARGIN, left, right),
-			clamp(target_rect.position.y, top, bottom)
-		), size))
-		out.append(Rect2(Vector2(
-			clamp(target_rect.end.x + PANEL_MARGIN, left, right),
-			clamp(target_rect.position.y, top, bottom)
-		), size))
-		out.append(Rect2(Vector2(
-			clamp(target_rect.position.x, left, right),
-			clamp(target_rect.position.y - size.y - PANEL_MARGIN, top, bottom)
-		), size))
-		out.append(Rect2(Vector2(
-			clamp(target_rect.position.x, left, right),
-			clamp(target_rect.end.y + PANEL_MARGIN, top, bottom)
-		), size))
-	return out
-
-func _panel_layout_size(viewport_rect: Rect2) -> Vector2:
-	var min_size = panel.get_combined_minimum_size()
-	if _collapsed:
-		return Vector2(max(PANEL_MIN_SIZE.x, min_size.x), min_size.y)
-	var size = Vector2(
-		max(PANEL_MIN_SIZE.x, max(PANEL_DEFAULT_SIZE.x, min_size.x)),
-		max(PANEL_MIN_SIZE.y, max(PANEL_DEFAULT_SIZE.y, min_size.y))
-	)
-	var max_width = max(viewport_rect.size.x - (PANEL_MARGIN * 2.0), PANEL_MIN_SIZE.x)
-	var max_height = max(viewport_rect.size.y - (PANEL_MARGIN * 2.0), PANEL_MIN_SIZE.y)
-	size.x = min(size.x, max_width)
-	size.y = min(size.y, max_height)
-	return size
-
-func _clamp_panel_position(position: Vector2, panel_size: Vector2, viewport_rect: Rect2) -> Vector2:
-	var min_x = viewport_rect.position.x + PANEL_MARGIN
-	var min_y = viewport_rect.position.y + PANEL_MARGIN
-	var max_x = max(viewport_rect.position.x + viewport_rect.size.x - panel_size.x - PANEL_MARGIN, min_x)
-	var max_y = max(viewport_rect.position.y + viewport_rect.size.y - panel_size.y - PANEL_MARGIN, min_y)
-	return Vector2(
-		clamp(position.x, min_x, max_x),
-		clamp(position.y, min_y, max_y)
-	)
-
-func _collect_blocking_rects(node: Node, blockers: Array[Rect2]) -> void:
-	if node == self:
-		return
-	if node is Control:
-		var control := node as Control
-		if control == $Root or $Root.is_ancestor_of(control):
-			return
-		if control.is_visible_in_tree() and _is_blocking_control(control):
-			var rect := control.get_global_rect()
-			if rect.size.x >= 56.0 and rect.size.y >= 40.0:
-				blockers.append(rect)
-	for child in node.get_children():
-		_collect_blocking_rects(child, blockers)
-
-func _is_blocking_control(control: Control) -> bool:
-	return (
-		control is PanelContainer
-		or control is ScrollContainer
-		or control is ItemList
-		or control is Tree
-		or control is TabContainer
-		or control is BaseButton
-	)
-
-func _rect_overlap_area(rect: Rect2, blockers: Array[Rect2]) -> float:
-	var total := 0.0
-	for blocker in blockers:
-		var overlap := rect.intersection(blocker)
-		if overlap.size.x > 0.0 and overlap.size.y > 0.0:
-			total += overlap.size.x * overlap.size.y
-	return total
-
-func _update_guidance_overlay() -> void:
-	if not visible or _current_step.is_empty():
-		_hide_guide_overlay()
-		return
-	_guide_target_node = Targeting.find_current_target(_current_step, get_tree())
-	var target_rect = Targeting.build_target_rect(_guide_target_node)
-	if not _has_rect(target_rect):
-		_hide_guide_overlay()
-		var action_key := str(_current_step.get("action_key", ""))
-		if action_key != "" and action_label != null:
-			action_label.text = Targeting.navigation_hint_for_action(action_key)
-		return
-	var action_key := str(_current_step.get("action_key", ""))
-	var low_intensity = _is_low_intensity_action(action_key)
-	if low_intensity:
-		_set_active_flash_target(null)
-	else:
-		_set_active_flash_target(_guide_target_node)
-	_guide_target_rect = target_rect
-	_highlight_box.visible = true
-	_highlight_box.position = target_rect.position - Vector2(HIGHLIGHT_PADDING, HIGHLIGHT_PADDING)
-	_highlight_box.size = target_rect.size + Vector2(HIGHLIGHT_PADDING * 2.0, HIGHLIGHT_PADDING * 2.0)
-	if low_intensity:
-		_guide_line.visible = false
-		_guide_arrow.visible = false
-		_guide_label.visible = false
-		return
-
-	var target_center = target_rect.position + (target_rect.size * 0.5)
-	_guide_source_point = target_center + Vector2(-240, -120)
-	if panel.visible:
-		var panel_rect = Rect2(panel.global_position, panel.size)
-		_guide_source_point = _closest_point_on_rect(panel_rect, target_center)
-	_guide_line.visible = true
-	_guide_line.points = _dashed_points(_guide_source_point, target_center)
-
-	var direction = (target_center - _guide_source_point).normalized()
-	_guide_arrow.visible = true
-	_guide_arrow.position = target_center
-	_guide_arrow.rotation = direction.angle()
-
-	_guide_label.visible = true
-	_guide_label.text = "Click here ->"
-	_guide_label.position = Vector2(
-		clamp(target_rect.position.x - 160.0, 8.0, get_viewport().get_visible_rect().size.x - 200.0),
-		max(target_rect.position.y - 36.0, 8.0)
-	)
-
-func _is_low_intensity_action(action_key: String) -> bool:
-	return action_key in LOW_INTENSITY_ACTIONS
-
-func _hide_guide_overlay() -> void:
-	_set_active_flash_target(null)
-	_highlight_box.visible = false
-	_guide_line.visible = false
-	_guide_arrow.visible = false
-	_guide_label.visible = false
-	_guide_target_rect = Rect2()
-	_guide_target_node = null
-
-func _animate_guidance_overlay() -> void:
-	if not _guide_line or not _guide_arrow or not _guide_label:
-		return
-	if not _guide_line.visible:
-		return
-	var pulse: float = (sin(_pulse_elapsed * GUIDE_PULSE_SPEED) + 1.0) * 0.5
-	var line_alpha: float = lerp(GUIDE_LINE_ALPHA_MIN, GUIDE_LINE_ALPHA_MAX, pulse)
-	var cyan_line: Color = Color(CYAN.r, CYAN.g, CYAN.b, line_alpha)
-
-	if _highlight_style:
-		_highlight_style.bg_color = Color(CYAN.r, CYAN.g, CYAN.b,
-			lerp(HIGHLIGHT_BG_ALPHA_MIN, HIGHLIGHT_BG_ALPHA_MAX, pulse))
-		_highlight_style.border_color = Color(CYAN.r, CYAN.g, CYAN.b,
-			lerp(HIGHLIGHT_BORDER_ALPHA_MIN, HIGHLIGHT_BORDER_ALPHA_MAX, pulse))
-		var bw := int(round(2.0 + pulse * 1.5))
-		_highlight_style.set_border_width_all(bw)
-
-	_guide_line.default_color = cyan_line
-	_guide_arrow.color = cyan_line
-	_guide_label.modulate = Color(1, 1, 1, lerp(0.55, 1.0, pulse))
-
-	if _has_rect(_guide_target_rect):
-		var target_center := _guide_target_rect.position + (_guide_target_rect.size * 0.5)
-		var direction := (target_center - _guide_source_point).normalized()
-		var orthogonal := Vector2(-direction.y, direction.x)
-		var sway := orthogonal * sin(_pulse_elapsed * GUIDE_PULSE_SPEED * 0.85) * GUIDE_ARROW_SWAY_PX
-		var animated_source := _guide_source_point + sway
-		# Build dashed points
-		_guide_line.points = _dashed_points(animated_source, target_center)
-		_guide_arrow.position = target_center
-		_guide_arrow.rotation = (target_center - animated_source).angle()
-	_apply_target_flash(pulse)
-
-
-# Build a PackedVector2Array that represents a dashed line from start → end.
-# Line2D draws each consecutive pair of points as a segment, so we alternate
-# real dash segments with zero-length "gap" segments (duplicate points).
-func _dashed_points(start: Vector2, end: Vector2) -> PackedVector2Array:
-	var pts := PackedVector2Array()
-	var dir := (end - start).normalized()
-	var total := start.distance_to(end)
-	var d := 0.0
-	var on := true
-	while d < total:
-		var p := start + dir * d
-		if on:
-			pts.append(p)
-			d += DASH_ON
-			var p2: Vector2 = start + dir * minf(d, total)
-			pts.append(p2)
-			# Duplicate to start a "gap" (zero-length invisible segment)
-			pts.append(p2)
-		else:
-			d += DASH_OFF
-			var p2: Vector2 = start + dir * minf(d, total)
-			# Duplicate at gap end to restart next dash segment
-			pts.append(p2)
-		on = !on
-	return pts
-
-func _set_active_flash_target(target: Node) -> void:
-	var resolved_target = _resolve_flash_target(target)
-	if resolved_target == _active_flash_target:
-		return
-	_clear_active_flash_target()
-	if resolved_target == null:
-		return
-	_active_flash_target = resolved_target
-	_active_flash_base_modulate = _active_flash_target.modulate
-
-func _resolve_flash_target(target: Node) -> CanvasItem:
-	if target == null:
-		return null
-	var candidate = target
-	if candidate is CollisionShape2D:
-		candidate = candidate.get_parent()
-	if candidate is Area2D:
-		var area_parent = candidate.get_parent()
-		if area_parent is CanvasItem:
-			return area_parent as CanvasItem
-	if candidate is CanvasItem:
-		return candidate as CanvasItem
-	var cursor = candidate
-	while cursor != null:
-		cursor = cursor.get_parent()
-		if cursor is CanvasItem:
-			return cursor as CanvasItem
-	return null
-
-func _apply_target_flash(pulse: float) -> void:
-	if _active_flash_target == null:
-		return
-	if not is_instance_valid(_active_flash_target):
-		_active_flash_target = null
-		return
-	var blend = pulse * TARGET_FLASH_BLEND
-	var base = _active_flash_base_modulate
-	var accent = PanelStyle.ACCENT
-	_active_flash_target.modulate = Color(
-		lerp(base.r, accent.r, blend),
-		lerp(base.g, accent.g, blend),
-		lerp(base.b, accent.b, blend),
-		base.a
-	)
-
-func _clear_active_flash_target() -> void:
-	if _active_flash_target and is_instance_valid(_active_flash_target):
-		_active_flash_target.modulate = _active_flash_base_modulate
-	_active_flash_target = null
-	_active_flash_base_modulate = Color(1, 1, 1, 1)
-
-func _exit_tree() -> void:
-	_clear_active_flash_target()
-
-func _closest_point_on_rect(rect: Rect2, point: Vector2) -> Vector2:
-	return Vector2(
-		clamp(point.x, rect.position.x, rect.end.x),
-		clamp(point.y, rect.position.y, rect.end.y)
-	)
-
-func _has_rect(rect: Rect2) -> bool:
-	return rect.size.x > 0.0 and rect.size.y > 0.0
 
 func _on_skip_pressed() -> void:
 	if _app_controller and _app_controller.has_method("skip_tutorial"):
@@ -648,3 +501,63 @@ func _step_supports_practice(step: Dictionary) -> bool:
 	var action_key = str(step.get("action_key", ""))
 	var mechanic = str(step.get("mechanic", ""))
 	return action_key == "mine_target" or mechanic == "mining"
+
+func _update_context_action_button() -> void:
+	if _open_launchpad_button == null:
+		return
+	var show_cta = _needs_launchpad_cta()
+	_open_launchpad_button.visible = show_cta
+	# Avoid right-edge overflow: when CTA is shown, compress action row.
+	if not _off_course:
+		replay_mission_button.visible = not show_cta
+		replay_all_button.visible = not show_cta
+		if _resume_mission_button:
+			_resume_mission_button.visible = false
+
+func _needs_launchpad_cta() -> bool:
+	if _current_step.is_empty():
+		return false
+	var tree = get_tree()
+	if tree == null or tree.current_scene == null:
+		return false
+	var scene_name = tree.current_scene.scene_file_path.get_file().get_basename()
+	if scene_name != "earth_base_1":
+		return false
+	var valid_scenes: Array = _current_step.get("valid_scenes", [])
+	return "earth_launchpad" in valid_scenes and not ("earth_base_1" in valid_scenes)
+
+func _on_open_launchpad_pressed() -> void:
+	var tree = get_tree()
+	if tree == null:
+		return
+	preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("open_launchpad")
+	var scene_manager = tree.get_first_node_in_group("scene_manager")
+	if scene_manager and scene_manager.has_method("change_to_scene"):
+		scene_manager.change_to_scene("res://Scenes/Earth/earth_launchpad.tscn")
+		return
+	tree.change_scene_to_file("res://Scenes/Earth/earth_launchpad.tscn")
+
+func _on_resume_mission_pressed() -> void:
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var missions: Array = rm.get_missions()
+	if missions.is_empty():
+		return
+	var m: Dictionary = missions[0]
+	var rocket_id := str(m.get("rocket_id", ""))
+	var target_id := str(m.get("target", ""))
+	var target_type := str(m.get("target_type", "asteroid"))
+	if rocket_id == "" or target_id == "":
+		return
+	rm.set_preview_target(target_id, target_id, target_type, rocket_id)
+	rm.mark_returned_if_due(rocket_id)
+	var status := rm.get_rocket_status(rocket_id)
+	var arrived := rm.has_arrived(rocket_id, target_id)
+	var scene_path := PreviewRouting.resolve_scene_path(status, arrived)
+	var tree = get_tree()
+	if tree == null:
+		return
+	var scene_manager = tree.get_first_node_in_group("scene_manager")
+	if scene_manager and scene_manager.has_method("change_to_scene"):
+		scene_manager.change_to_scene(scene_path)
+	else:
+		tree.change_scene_to_file(scene_path)

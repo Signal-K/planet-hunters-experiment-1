@@ -1,0 +1,88 @@
+{
+  "taskId": "lkzqm0",
+  "currentVersion": 2,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "lkzqm0",
+      "version": 1,
+      "timestamp": "2026-03-10T05:58:27.412Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "blocked"
+        },
+        {
+          "field": "implementationNotes",
+          "newValue": "Deferred by product direction ('not yet') pending balancing playtests; intentionally parked as future design item."
+        }
+      ],
+      "snapshot": {
+        "title": "Future: penalties for incorrect unconfirmed-target classifications",
+        "description": "Deferred design item: add soft penalties or confidence decay when players repeatedly submit incorrect classifications for unconfirmed TESS/asteroid candidates. Keep current behavior reward-only until validated in playtests.",
+        "status": "blocked",
+        "priority": "low",
+        "labels": [
+          "citizen-science",
+          "future",
+          "balancing"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Penalty mechanics are documented and tunable (no hard lockouts)."
+          },
+          {
+            "completed": false,
+            "text": "System avoids punishing first-time misclassifications and preserves onboarding flow."
+          },
+          {
+            "completed": false,
+            "text": "Telemetry captures penalty-trigger events for balancing."
+          }
+        ],
+        "implementationNotes": "Deferred by product direction ('not yet') pending balancing playtests; intentionally parked as future design item."
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "lkzqm0",
+      "version": 2,
+      "timestamp": "2026-03-10T07:10:34.329Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "Deferred by product direction ('not yet') pending balancing playtests; intentionally parked as future design item.",
+          "newValue": "Deferred by product direction ('not yet') pending balancing playtests; intentionally parked as future design item.\n\nProduct direction: keep novice-friendly approach; defer punitive mechanics and prefer guidance/confidence cues until post-playtest evidence supports penalties."
+        }
+      ],
+      "snapshot": {
+        "title": "Future: penalties for incorrect unconfirmed-target classifications",
+        "description": "Deferred design item: add soft penalties or confidence decay when players repeatedly submit incorrect classifications for unconfirmed TESS/asteroid candidates. Keep current behavior reward-only until validated in playtests.",
+        "status": "blocked",
+        "priority": "low",
+        "labels": [
+          "citizen-science",
+          "future",
+          "balancing"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Penalty mechanics are documented and tunable (no hard lockouts)."
+          },
+          {
+            "completed": false,
+            "text": "System avoids punishing first-time misclassifications and preserves onboarding flow."
+          },
+          {
+            "completed": false,
+            "text": "Telemetry captures penalty-trigger events for balancing."
+          }
+        ],
+        "implementationNotes": "Deferred by product direction ('not yet') pending balancing playtests; intentionally parked as future design item.\n\nProduct direction: keep novice-friendly approach; defer punitive mechanics and prefer guidance/confidence cues until post-playtest evidence supports penalties."
+      }
+    }
+  ]
+}

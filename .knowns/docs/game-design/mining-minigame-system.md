@@ -1,7 +1,7 @@
 ---
 title: Mining Minigame System
 createdAt: '2026-02-24T12:12:16.169Z'
-updatedAt: '2026-02-24T12:12:38.611Z'
+updatedAt: '2026-03-19T03:17:59.445Z'
 description: Documentation for the interactive mining minigame mechanics
 tags:
   - gameplay
@@ -134,3 +134,65 @@ final_yield = base_yield * mining_multiplier * bonus_multiplier
 - Adjust timing windows if too difficult/easy
 - Consider reducing miss limit for higher levels
 - Add practice mode for new players
+
+
+
+---
+
+## Design Clarification (2026-03-16)
+
+### Active vs. Passive
+- Mining is an **active minigame**, not passive. Players must be present.
+- Multiple rockets can be on simultaneous missions, but each target requires its own active mining session.
+
+### Implementation
+- The active mining implementation is a **side-scrolling minigame** (see `SidescrollMining.gd`).
+- The ring-based rotating indicator system documented above is a legacy design reference.
+
+### Laser & Resource Access
+- Mining laser level determines access to material tiers, not just speed.
+- Stronger laser → deeper extraction + harder/rarer materials unlocked.
+- A "depleted" target at laser level N can be mined again at laser level N+1.
+
+### Failure States
+- Tutorial: failure message → restart.
+- Post-tutorial: partial salvage available → restart option with penalty.
+
+### Session Duration
+- Laser charge and fuel limits bound how long mining can continue per visit.
+- Cargo Bay capacity limits total haul weight (see @doc/game-design/rocket-and-room-system).
+
+## Design Review Round 2 — 2026-03-17
+
+### Planet vs Asteroid Differentiation
+- Planets should have **different mineral types and quantities** vs. asteroids — not just a longer asteroid.
+- Planets have 5–20× more capacity; the mining *experience* should feel proportionally different.
+- Exact mechanical differences (zone pattern, laser behaviour, multi-session) to be specced when planet mining is implemented.
+
+### Variety Mechanics — Planned
+To address minigame repetition after many sessions:
+- **Different zone shapes per mineral type** — silicon vs. iron vs. platinum have distinct zone patterns.
+- **Variable laser ranges** — some minerals require precision at different depth bands.
+- **Environmental disruptions** — solar flares or other events alter zone stability mid-session.
+- **Puzzle elements** — light "figure out the pattern" moments on higher-tier targets.
+- Open to further suggestions; no single mechanism selected yet.
+
+### Target Depletion — Visual Indicator
+- When a target's mineral quantity is exhausted **at the current laser level**, a clear visual indicator is shown.
+- Indicator should suggest future value (e.g. "Deeper extraction requires Laser L3").
+- The first time a player re-mines a previously depleted target with a higher laser = designed as a satisfying "aha" moment.
+
+## Order Clarity UX — 2026-03-19
+
+### Contract Order Highlighting
+When a player has an active contractor order during mining, the mineral patches on the surface that match the order are visually highlighted with a **golden tint** (`Color(1.5, 1.25, 0.4)` modulate). This makes it immediately obvious which terrain deposits to target without having to cross-reference the order panel.
+
+- Only surface deposits are highlighted (subsurface order minerals remain at standard dim modulate).
+- Once a mineral is collected, it fades to the standard grey collected state regardless of order status.
+- The `is_order_target` flag is written onto each region dict after terrain generation, before the first frame is rendered.
+
+### Contract Order Panel
+The contract order progress panel (`$UI/ContractOrderPanel`) is visible from the **moment mining begins** — not only after the first collection. This ensures the player always knows what they are working towards, even before they mine anything.
+
+### Signpost
+The pre-mining signpost (shown at mission start for ~3.5s) also marks order-target minerals with a `★ (ordered)` suffix in the mineral list.

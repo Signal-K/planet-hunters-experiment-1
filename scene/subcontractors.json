@@ -1,5 +1,14 @@
 {
   "affinity": {
-    "sub-test": 12
-  }
+    "sub-test": 14.0,
+    "astroforge": 1.0,
+    "spacex": 1.0
+  },
+  "reputation": {
+  },
+  "cooldowns": {
+  },
+  "consecutive_use": {
+  },
+  "last_mission_sub": ""
 }

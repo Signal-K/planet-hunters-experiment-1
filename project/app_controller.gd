@@ -11,6 +11,9 @@ var experience_level: int = 1
 var _game_paused: bool = false
 var _menu_request_version: int = 0
 var _menu_request_action: String = ""
+var _last_mining_result: Dictionary = {}
+var _last_mining_result_synced: bool = true
+
 const BASE_XP_TO_LEVEL := 10
 const XP_AWARD_LAUNCH := 5
 const XP_AWARD_SCAN := 2
@@ -155,6 +158,32 @@ func get_menu_request_version() -> int:
 
 func get_menu_request_action() -> String:
 	return _menu_request_action
+
+func set_last_mining_result(result: Dictionary) -> void:
+	_last_mining_result = result
+	_last_mining_result_synced = false
+	print("AppController: New mining result set: ", result)
+
+func mark_mining_result_synced() -> void:
+	_last_mining_result_synced = true
+	print("AppController: Mining result marked as synced")
+
+func trigger_instant_mining() -> void:
+	print("AppController: Triggering instant mining...")
+	var root = get_tree().root
+	var current_scene = root.get_child(root.get_child_count() - 1)
+
+	if current_scene.has_method("_on_mine_pressed"):
+		current_scene._on_mine_pressed()
+	else:
+		print("AppController: Current scene doesn't support mining. Loading test_mining...")
+		_auto_start_mining = true
+		get_tree().change_scene_to_file("res://test_mining.tscn")
+
+func check_auto_start_mining() -> bool:
+	var val = _auto_start_mining
+	_auto_start_mining = false
+	return val
 
 func has_signal_connections(signal_name: String) -> bool:
 	return get_signal_connection_list(signal_name).size() > 0

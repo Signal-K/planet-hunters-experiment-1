@@ -1,0 +1,243 @@
+{
+  "batch_id": "batch_l1_m1_starterrocket1",
+  "packet_index": 3,
+  "packet_count": 14,
+  "asset_count": 12,
+  "instructions": {
+    "style_anchor_required": true,
+    "one_asset_per_prompt": true,
+    "filename_contract": "strict",
+    "no_extra_suffixes": true,
+    "no_text_or_ui": true
+  },
+  "assets": [
+    {
+      "asset_id": "basic_nav_t1__holographic_star_map_emitter__idle",
+      "asset_type": "state_variant",
+      "room_id": "basic_nav_t1",
+      "room_name": "Basic Navigation Room",
+      "category": "navigation",
+      "tier": 1,
+      "component_id": "holographic_star_map_emitter",
+      "component_name": "Holographic Star Map Emitter",
+      "component_kind": "interactive",
+      "state_key": "idle",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'idle' for component 'Holographic Star Map Emitter' in 'Basic Navigation Room'. Change only state cues: stable indicator lights, neutral glow, no motion cues. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "basic_nav_t1__holographic_star_map_emitter__idle.png",
+        "sidecar": "basic_nav_t1__holographic_star_map_emitter__idle.json",
+        "note_optional": "basic_nav_t1__holographic_star_map_emitter__idle.txt"
+      }
+    },
+    {
+      "asset_id": "basic_nav_t1__manual_flight_controls__active",
+      "asset_type": "state_variant",
+      "room_id": "basic_nav_t1",
+      "room_name": "Basic Navigation Room",
+      "category": "navigation",
+      "tier": 1,
+      "component_id": "manual_flight_controls",
+      "component_name": "Manual Flight Controls",
+      "component_kind": "interactive",
+      "state_key": "active",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'active' for component 'Manual Flight Controls' in 'Basic Navigation Room'. Change only state cues: brighter active glow, subtle motion/energy cues, engaged indicators. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "basic_nav_t1__manual_flight_controls__active.png",
+        "sidecar": "basic_nav_t1__manual_flight_controls__active.json",
+        "note_optional": "basic_nav_t1__manual_flight_controls__active.txt"
+      }
+    },
+    {
+      "asset_id": "basic_nav_t1__manual_flight_controls__cooldown",
+      "asset_type": "state_variant",
+      "room_id": "basic_nav_t1",
+      "room_name": "Basic Navigation Room",
+      "category": "navigation",
+      "tier": 1,
+      "component_id": "manual_flight_controls",
+      "component_name": "Manual Flight Controls",
+      "component_kind": "interactive",
+      "state_key": "cooldown",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'cooldown' for component 'Manual Flight Controls' in 'Basic Navigation Room'. Change only state cues: reduced glow with cooling/venting cues and amber warning flicker. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "basic_nav_t1__manual_flight_controls__cooldown.png",
+        "sidecar": "basic_nav_t1__manual_flight_controls__cooldown.json",
+        "note_optional": "basic_nav_t1__manual_flight_controls__cooldown.txt"
+      }
+    },
+    {
+      "asset_id": "basic_nav_t1__manual_flight_controls__damaged",
+      "asset_type": "state_variant",
+      "room_id": "basic_nav_t1",
+      "room_name": "Basic Navigation Room",
+      "category": "navigation",
+      "tier": 1,
+      "component_id": "manual_flight_controls",
+      "component_name": "Manual Flight Controls",
+      "component_kind": "interactive",
+      "state_key": "damaged",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'damaged' for component 'Manual Flight Controls' in 'Basic Navigation Room'. Change only state cues: visible wear, sparks or cracks, warning lights and degraded output. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "basic_nav_t1__manual_flight_controls__damaged.png",
+        "sidecar": "basic_nav_t1__manual_flight_controls__damaged.json",
+        "note_optional": "basic_nav_t1__manual_flight_controls__damaged.txt"
+      }
+    },
+    {
+      "asset_id": "basic_nav_t1__manual_flight_controls__depleted",
+      "asset_type": "state_variant",
+      "room_id": "basic_nav_t1",
+      "room_name": "Basic Navigation Room",
+      "category": "navigation",
+      "tier": 1,
+      "component_id": "manual_flight_controls",
+      "component_name": "Manual Flight Controls",
+      "component_kind": "interactive",
+      "state_key": "depleted",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'depleted' for component 'Manual Flight Controls' in 'Basic Navigation Room'. Change only state cues: minimal or no glow, offline indicators, depleted resource cues. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "basic_nav_t1__manual_flight_controls__depleted.png",
+        "sidecar": "basic_nav_t1__manual_flight_controls__depleted.json",
+        "note_optional": "basic_nav_t1__manual_flight_controls__depleted.txt"
+      }
+    },
+    {
+      "asset_id": "basic_nav_t1__manual_flight_controls__idle",
+      "asset_type": "state_variant",
+      "room_id": "basic_nav_t1",
+      "room_name": "Basic Navigation Room",
+      "category": "navigation",
+      "tier": 1,
+      "component_id": "manual_flight_controls",
+      "component_name": "Manual Flight Controls",
+      "component_kind": "interactive",
+      "state_key": "idle",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'idle' for component 'Manual Flight Controls' in 'Basic Navigation Room'. Change only state cues: stable indicator lights, neutral glow, no motion cues. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "basic_nav_t1__manual_flight_controls__idle.png",
+        "sidecar": "basic_nav_t1__manual_flight_controls__idle.json",
+        "note_optional": "basic_nav_t1__manual_flight_controls__idle.txt"
+      }
+    },
+    {
+      "asset_id": "basic_nav_t1__radar_sweep_display__active",
+      "asset_type": "state_variant",
+      "room_id": "basic_nav_t1",
+      "room_name": "Basic Navigation Room",
+      "category": "navigation",
+      "tier": 1,
+      "component_id": "radar_sweep_display",
+      "component_name": "Radar Sweep Display",
+      "component_kind": "interactive",
+      "state_key": "active",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'active' for component 'Radar Sweep Display' in 'Basic Navigation Room'. Change only state cues: brighter active glow, subtle motion/energy cues, engaged indicators. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "basic_nav_t1__radar_sweep_display__active.png",
+        "sidecar": "basic_nav_t1__radar_sweep_display__active.json",
+        "note_optional": "basic_nav_t1__radar_sweep_display__active.txt"
+      }
+    },
+    {
+      "asset_id": "basic_nav_t1__radar_sweep_display__cooldown",
+      "asset_type": "state_variant",
+      "room_id": "basic_nav_t1",
+      "room_name": "Basic Navigation Room",
+      "category": "navigation",
+      "tier": 1,
+      "component_id": "radar_sweep_display",
+      "component_name": "Radar Sweep Display",
+      "component_kind": "interactive",
+      "state_key": "cooldown",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'cooldown' for component 'Radar Sweep Display' in 'Basic Navigation Room'. Change only state cues: reduced glow with cooling/venting cues and amber warning flicker. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "basic_nav_t1__radar_sweep_display__cooldown.png",
+        "sidecar": "basic_nav_t1__radar_sweep_display__cooldown.json",
+        "note_optional": "basic_nav_t1__radar_sweep_display__cooldown.txt"
+      }
+    },
+    {
+      "asset_id": "basic_nav_t1__radar_sweep_display__damaged",
+      "asset_type": "state_variant",
+      "room_id": "basic_nav_t1",
+      "room_name": "Basic Navigation Room",
+      "category": "navigation",
+      "tier": 1,
+      "component_id": "radar_sweep_display",
+      "component_name": "Radar Sweep Display",
+      "component_kind": "interactive",
+      "state_key": "damaged",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'damaged' for component 'Radar Sweep Display' in 'Basic Navigation Room'. Change only state cues: visible wear, sparks or cracks, warning lights and degraded output. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "basic_nav_t1__radar_sweep_display__damaged.png",
+        "sidecar": "basic_nav_t1__radar_sweep_display__damaged.json",
+        "note_optional": "basic_nav_t1__radar_sweep_display__damaged.txt"
+      }
+    },
+    {
+      "asset_id": "basic_nav_t1__radar_sweep_display__depleted",
+      "asset_type": "state_variant",
+      "room_id": "basic_nav_t1",
+      "room_name": "Basic Navigation Room",
+      "category": "navigation",
+      "tier": 1,
+      "component_id": "radar_sweep_display",
+      "component_name": "Radar Sweep Display",
+      "component_kind": "interactive",
+      "state_key": "depleted",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'depleted' for component 'Radar Sweep Display' in 'Basic Navigation Room'. Change only state cues: minimal or no glow, offline indicators, depleted resource cues. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "basic_nav_t1__radar_sweep_display__depleted.png",
+        "sidecar": "basic_nav_t1__radar_sweep_display__depleted.json",
+        "note_optional": "basic_nav_t1__radar_sweep_display__depleted.txt"
+      }
+    },
+    {
+      "asset_id": "basic_nav_t1__radar_sweep_display__idle",
+      "asset_type": "state_variant",
+      "room_id": "basic_nav_t1",
+      "room_name": "Basic Navigation Room",
+      "category": "navigation",
+      "tier": 1,
+      "component_id": "radar_sweep_display",
+      "component_name": "Radar Sweep Display",
+      "component_kind": "interactive",
+      "state_key": "idle",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'idle' for component 'Radar Sweep Display' in 'Basic Navigation Room'. Change only state cues: stable indicator lights, neutral glow, no motion cues. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "basic_nav_t1__radar_sweep_display__idle.png",
+        "sidecar": "basic_nav_t1__radar_sweep_display__idle.json",
+        "note_optional": "basic_nav_t1__radar_sweep_display__idle.txt"
+      }
+    },
+    {
+      "asset_id": "basic_nav_t1__room_composite__v1",
+      "asset_type": "room_composite",
+      "room_id": "basic_nav_t1",
+      "room_name": "Basic Navigation Room",
+      "category": "navigation",
+      "tier": 1,
+      "component_id": "room_composite",
+      "component_name": "Room Composite",
+      "component_kind": "composite",
+      "state_key": "base",
+      "priority": "p0",
+      "prompt": "Using the attached style reference, compose one 2:1 spacecraft room tile for 'Basic Navigation Room' using these components: nav_console_station, viewport_frame_right, holographic_star_map_emitter, radar_sweep_display, manual_flight_controls. Keep module shell rectangular with flat top/bottom for stacking. Include only listed components and consistent accent lighting. No text, no labels, no UI, no rocket exterior. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "basic_nav_t1__room_composite__v1.png",
+        "sidecar": "basic_nav_t1__room_composite__v1.json",
+        "note_optional": "basic_nav_t1__room_composite__v1.txt"
+      }
+    }
+  ]
+}

@@ -1,5 +1,7 @@
 extends RefCounted
 
+const BASE_SCENE_NAME := "earth_base_1"
+
 static func find_current_target(current_step: Dictionary, tree: SceneTree) -> Node:
 	var action_key = str(current_step.get("action_key", ""))
 	if action_key == "":
@@ -44,9 +46,9 @@ static func navigation_hint_for_action(action_key: String) -> String:
 		"toggle_planet_scanner":
 			return "→ Open the Scanner Station to toggle modes"
 		"accept_contractor_offer":
-			return "→ Accept one contractor offer"
+			return "→ Click New Mission, then Select on one contractor"
 		"accept_starter_contractor":
-			return "→ Sign one starter contractor in Launchpad"
+			return "→ Click New Mission, then Sign one starter contractor"
 		"complete_contractor_mission":
 			return "→ Finish the debrief for your contractor mission"
 		"arrived_at_mining_site":
@@ -88,6 +90,7 @@ static func action_hint_for_step(action_key: String) -> String:
 	return action_key
 
 static func _find_target_for_action(action_key: String, tree: SceneTree) -> Node:
+	var on_base := _is_base_scene(tree)
 	match action_key:
 		"tour_open_control_station":
 			return _find_node_path_any(tree, [
@@ -113,13 +116,17 @@ static func _find_target_for_action(action_key: String, tree: SceneTree) -> Node
 				"StructuresLayer/SatelliteStation/InteractionArea"
 			])
 		"create_rocket":
+			if on_base:
+				return _find_new_mission_button(tree)
 			var create_btn = _find_visible_button(tree, func(btn: Button) -> bool:
 				return btn.name.begins_with("CreateButton_") and not btn.disabled
 			)
 			if create_btn:
 				return create_btn
-			return _find_node_path_any(tree, ["UILayer/SelectorPanel/VBox/RocketSelector"])
+			return _find_node_path_any(tree, ["UILayer/SelectorPanel"])
 		"select_launch_target":
+			if on_base:
+				return _find_new_mission_button(tree)
 			return _find_visible_button(tree, func(btn: Button) -> bool:
 				if btn.disabled:
 					return false
@@ -127,6 +134,8 @@ static func _find_target_for_action(action_key: String, tree: SceneTree) -> Node
 				return text.find("select") != -1 or text.find("target") != -1
 			)
 		"launch_rocket_from_earth":
+			if on_base:
+				return _find_new_mission_button(tree)
 			return _find_visible_button(tree, func(btn: Button) -> bool:
 				return not btn.disabled and (btn.name.ends_with("LaunchButton") or btn.text.to_lower().find("launch") != -1)
 			)
@@ -157,13 +166,23 @@ static func _find_target_for_action(action_key: String, tree: SceneTree) -> Node
 				if btn.disabled:
 					return false
 				var key = btn.name
-				return key == "SellOrbitButton" or key == "SellEarthButton" or key == "KeepButton" or key == "ScrapButton" or key == "SalvageButton" or key == "LeaveButton" or key == "ArchiveButton"
+				return key == "CompleteButton" or key == "OrbitButton"
 			)
 		"accept_contractor_offer":
+			if on_base:
+				return _find_new_mission_button(tree)
 			return _find_visible_button(tree, func(btn: Button) -> bool:
-				return not btn.disabled and btn.text.to_lower().find("accept") != -1
+				if btn.disabled:
+					return false
+				var text = btn.text.strip_edges().to_lower()
+				if text.find("accept") != -1 or text == "select":
+					var path = str(btn.get_path()).to_lower()
+					return path.find("selectorpanel") != -1 or path.find("targetssection") != -1
+				return false
 			)
 		"accept_starter_contractor":
+			if on_base:
+				return _find_new_mission_button(tree)
 			var sign_button = _find_visible_button(tree, func(btn: Button) -> bool:
 				if btn.disabled:
 					return false
@@ -177,6 +196,20 @@ static func _find_target_for_action(action_key: String, tree: SceneTree) -> Node
 				return sign_button
 			return null
 	return null
+
+static func _is_base_scene(tree: SceneTree) -> bool:
+	if tree == null or tree.current_scene == null:
+		return false
+	return tree.current_scene.scene_file_path.get_file().get_basename() == BASE_SCENE_NAME
+
+static func _find_new_mission_button(tree: SceneTree) -> Node:
+	return _find_visible_button(tree, func(btn: Button) -> bool:
+		if btn.disabled:
+			return false
+		var text = btn.text.strip_edges().to_lower()
+		var name = btn.name.to_lower()
+		return text.find("new mission") != -1 or name.find("newmission") != -1
+	)
 
 static func _build_target_rect(target: Node) -> Rect2:
 	if target is Control:

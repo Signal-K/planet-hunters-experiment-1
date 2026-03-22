@@ -11,6 +11,7 @@ const RocketsStateAccess = preload("res://Scripts/Utils/RocketsStateAccess.gd")
 const RocketsMissionProgress = preload("res://Scripts/Utils/RocketsMissionProgress.gd")
 const RocketsTargeting = preload("res://Scripts/Utils/RocketsTargeting.gd")
 const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd")
+const SubcontractorManager = preload("res://Scripts/Utils/SubcontractorManager.gd")
 const KNOWN_ROCKET_TYPES := ["starterrocket1", "starterrocket2", "starterrocket3"]
 const ROCKET_UNLOCK_LEVELS := {
 	"starterrocket1": 1,
@@ -23,7 +24,7 @@ const ASTEROID_REQUIRED_LEVEL_BY_BAND := [1, 2]
 const PLANET_DISTANCE_BANDS_AU := [120.0, 220.0, 340.0]
 const PLANET_REQUIRED_LEVEL_BY_BAND := [3, 3, 3]
 const MISSION_PROGRESS_SCHEMA_VERSION := 2
-const SCANNER_UNLOCK_COMPLETED_MISSIONS := 2
+const SCANNER_UNLOCK_COMPLETED_MISSIONS := 3  # Scanner introduced in M4, which starts after 3 completed missions
 
 ## Mission System Constants
 ## See: @doc/specs/mission-system-specification for complete mission design
@@ -31,13 +32,14 @@ const SCANNER_UNLOCK_COMPLETED_MISSIONS := 2
 # Scanner Station build cost (Mission 3 unlock)
 # Spec: M3 requires 2B F scanner construction before first scan
 const SCANNER_BUILD_COST := 2000000000
+const SCANNER_SOFT_COOLDOWN_SECONDS := 120
 
-# Predefined mission targets with reward ratios
-# Spec: M1=1.2x, M2=1.3x, M4=1.4x, M5=1.1x base
+# Predefined authored mission targets with reward ratios.
+# Spec: M1=1.2x, M2=1.3x, M4=1.4x.
 const PREDEFINED_MISSION_TARGETS := {
 	1: {
 		"id": "mission-1-training-target",
-		"label": "Training Asteroid A",
+		"label": "433 Eros",
 		"type": "asteroid",
 		"distance_au": 3.0,
 		"required_level": 1,
@@ -58,65 +60,68 @@ const PREDEFINED_MISSION_TARGETS := {
 		"distance_au": 120.0,
 		"required_level": 3,
 		"reward_ratio": 1.4  # Spec: M4 reward planetary exploration
-	},
-	5: {
-		"id": "mission-5-contractor-target",
-		"label": "Contract Asteroid C",
-		"type": "asteroid",
-		"distance_au": 8.0,
-		"required_level": 1,
-		"reward_ratio": 1.1  # Spec: M5 base ratio, contractor effects provide value
 	}
 }
 
-# Mission 3: Scanner-driven target selection
-# Spec: Shows 5 untargeted asteroids, 1 reachable by SR2
+# Mission 3: TESS exoplanet candidate targets (player picks from short list)
 const MISSION3_VISIBLE_TARGET_COUNT := 5
 const MISSION2_VISIBLE_TARGET_COUNT := 3
 const MISSION2_FALLBACK_TARGETS := [
 	{
-		"id": "mission-2-upgrade-target",
-		"label": "Training Asteroid B",
+		"id": "mission-2-active-asteroid-133p",
+		"label": "133P/Elst-Pizarro",
 		"type": "asteroid",
-		"distance_au": 12.0,
-		"required_level": 2
+		"distance_au": 3.2,
+		"required_level": 2,
+		"science_source": "Active Asteroids Programme",
+		"science_blurb": "First known main-belt comet"
 	},
 	{
-		"id": "mission-2-variant-near",
-		"label": "Survey Asteroid Delta",
+		"id": "mission-2-active-asteroid-238p",
+		"label": "238P/Read",
 		"type": "asteroid",
-		"distance_au": 8.0,
-		"required_level": 2
+		"distance_au": 8.4,
+		"required_level": 2,
+		"science_source": "Active Asteroids Programme",
+		"science_blurb": "Confirmed water-ice sublimation"
 	},
 	{
-		"id": "mission-2-variant-mid",
-		"label": "Survey Asteroid Epsilon",
+		"id": "mission-2-active-asteroid-259p",
+		"label": "259P/Garradd",
 		"type": "asteroid",
-		"distance_au": 18.0,
-		"required_level": 2
+		"distance_au": 15.7,
+		"required_level": 2,
+		"science_source": "Active Asteroids Programme",
+		"science_blurb": "Main-belt comet with recurrent activity"
 	}
 ]
 const MISSION3_FALLBACK_TARGETS := [
 	{
-		"id": "mission-3-scanner-fallback-primary",
-		"label": "Fallback Scan Asteroid Alpha",
-		"type": "asteroid",
+		"id": "mission-3-tess-candidate-alpha",
+		"label": "TOI-700 d",
+		"type": "planet",
 		"distance_au": 12.0,
-		"required_level": 2
+		"required_level": 2,
+		"science_source": "NASA TESS",
+		"science_blurb": "Confirmed exoplanet in habitable zone"
 	},
 	{
-		"id": "mission-3-scanner-fallback-delta",
-		"label": "Fallback Scan Asteroid Delta",
-		"type": "asteroid",
-		"distance_au": 24.0,
-		"required_level": 2
+		"id": "mission-3-tess-candidate-beta",
+		"label": "TOI-1452 b",
+		"type": "planet",
+		"distance_au": 18.0,
+		"required_level": 2,
+		"science_source": "NASA TESS",
+		"science_blurb": "Water world candidate"
 	},
 	{
-		"id": "mission-3-scanner-fallback-epsilon",
-		"label": "Fallback Scan Asteroid Epsilon",
-		"type": "asteroid",
+		"id": "mission-3-tess-candidate-gamma",
+		"label": "TOI-561 b",
+		"type": "planet",
 		"distance_au": 24.0,
-		"required_level": 2
+		"required_level": 2,
+		"science_source": "NASA TESS",
+		"science_blurb": "Ultra-short period planet"
 	}
 ]
 
@@ -124,31 +129,37 @@ const MISSION3_FALLBACK_TARGETS := [
 # Spec: Shows 5 untargeted planets, requires SR3
 const MISSION4_VISIBLE_TARGET_COUNT := 5
 
-# Mission 5: Contractor missions
-# Spec: Shows 5 asteroid targets matching contractor mineral requests
-const MISSION5_VISIBLE_TARGET_COUNT := 5
+# Free Ops: contractor-driven trips after Mission 4.
+# Spec: Show asteroid candidates that can be filtered by route + contractor selection.
+const FREE_OPS_VISIBLE_TARGET_COUNT := 5
 const OPEN_OPERATION_MODES := ["contract", "survey"]
 const ROCKET_FLAG_OPTIONS := ["Earth Union", "Signal-K", "Open Science", "Frontier Guild"]
 const ROCKET_LOGO_OPTIONS := ["Star", "Wave", "Miner", "Pulse"]
 
-# Mission 5 payout cap
-# Spec: Maximum 1.4B F payout to prevent over-earning
-const MISSION5_PAYOUT_CAP := 1400000000
+# Free Ops payout cap.
+# Spec: Maximum 1.4B F payout.
+const FREE_OPS_PAYOUT_CAP := 1400000000
 
-# Mission 5 contractor offers
-# Spec: Rocketlab (20% build discount) vs Astroforge (1.15x payout bonus)
-const MISSION5_CONTRACTOR_OFFERS := [
+# Free Ops contractor offers.
+# Each contractor specifies mineral_ranges used to generate their specific order at offer time.
+const FREE_OPS_CONTRACTOR_OFFERS := [
 	{
 		"id": "rocketlab",
 		"name": "Rocketlab",
-		"effect": "build_discount",
-		"build_discount_pct": 0.20  # Spec: 20% off rocket purchase
+		"role": "Small satellite launch systems — common ore feedstock",
+		"mineral_ranges": {"Iron": [120, 200], "Nickel": [80, 150]}
 	},
 	{
 		"id": "astroforge",
 		"name": "Astroforge",
-		"effect": "payout_bonus",
-		"payout_bonus_mult": 1.15  # Spec: 1.15x payout (capped at 1.4B)
+		"role": "In-space smelting and refining — specialist materials",
+		"mineral_ranges": {"Cobalt": [40, 90], "Silicates": [80, 160]}
+	},
+	{
+		"id": "spacex",
+		"name": "SpaceX",
+		"role": "Heavy lift launch systems — structural metals",
+		"mineral_ranges": {"Iron": [100, 180], "Nickel": [60, 120]}
 	}
 ]
 const FIRST_MISSION_PAYOUT_MULT := 1.5
@@ -260,6 +271,9 @@ static func get_last_completed_target_id() -> String:
 static func get_mission_stage() -> int:
 	return RocketsMissionProgress.mission_stage_from_completed(get_completed_mission_count())
 
+static func is_free_operations_unlocked() -> bool:
+	return get_completed_mission_count() >= 4
+
 static func get_scanner_build_cost() -> int:
 	return SCANNER_BUILD_COST
 
@@ -288,6 +302,61 @@ static func set_scanner_unlock_dialog_seen(seen: bool) -> bool:
 
 static func can_afford_scanner_build(balance: int) -> bool:
 	return balance >= SCANNER_BUILD_COST
+
+static func get_scanner_soft_cooldown_seconds() -> int:
+	return SCANNER_SOFT_COOLDOWN_SECONDS
+
+static func get_scanner_next_scan_at() -> int:
+	var s = load_state()
+	return max(int(s.get("scanner_next_scan_at", 0)), 0)
+
+static func set_scanner_next_scan_at(epoch_seconds: int) -> bool:
+	var s = load_state()
+	s["scanner_next_scan_at"] = epoch_seconds
+	return save_state(s)
+
+## Inventory Management
+static func get_inventory() -> Dictionary:
+	var s = load_state()
+	var inv = s.get("inventory", {})
+	if typeof(inv) != TYPE_DICTIONARY:
+		return {}
+	return inv.duplicate(true)
+
+static func add_to_inventory(minerals: Dictionary) -> bool:
+	var s = load_state()
+	var inv = s.get("inventory", {})
+	if typeof(inv) != TYPE_DICTIONARY:
+		inv = {}
+
+	for mineral in minerals.keys():
+		var amount = int(minerals[mineral])
+		inv[mineral] = int(inv.get(mineral, 0)) + amount
+
+	s["inventory"] = inv
+	return save_state(s)
+
+static func consume_from_inventory(requirements: Dictionary) -> bool:
+	var s = load_state()
+	var inv = s.get("inventory", {})
+	if typeof(inv) != TYPE_DICTIONARY:
+		return false
+
+	# Verify we have enough of everything first
+	for mineral in requirements.keys():
+		var required = int(requirements[mineral])
+		var available = int(inv.get(mineral, 0))
+		if available < required:
+			return false
+
+	# Consume
+	for mineral in requirements.keys():
+		var required = int(requirements[mineral])
+		inv[mineral] = int(inv.get(mineral, 0)) - required
+
+	s["inventory"] = inv
+	return save_state(s)
+
 
 static func get_predefined_mission_target(stage: int) -> Dictionary:
 	if PREDEFINED_MISSION_TARGETS.has(stage):
@@ -327,7 +396,7 @@ static func get_mission3_targets(detected_targets: Array = []) -> Array:
 	return RocketsTargeting.select_visible_targets(
 		source,
 		get_targeted_target_ids(),
-		"asteroid",
+		"planet",
 		MISSION3_VISIBLE_TARGET_COUNT,
 		_primary_fallback_target_for_stage(3)
 	)
@@ -383,7 +452,7 @@ static func get_mission4_targets(detected_targets: Array = []) -> Array:
 		get_predefined_mission_target(4)
 	)
 
-static func get_mission5_targets(detected_targets: Array = []) -> Array:
+static func get_free_ops_targets(detected_targets: Array = []) -> Array:
 	var source = detected_targets
 	if source.is_empty():
 		source = get_detected_targets()
@@ -391,15 +460,20 @@ static func get_mission5_targets(detected_targets: Array = []) -> Array:
 		source,
 		get_targeted_target_ids(),
 		"asteroid",
-		MISSION5_VISIBLE_TARGET_COUNT,
-		get_predefined_mission_target(5)
+		FREE_OPS_VISIBLE_TARGET_COUNT,
+		{}
 	)
 
-static func get_mission5_payout_cap() -> int:
-	return MISSION5_PAYOUT_CAP
+static func get_free_ops_payout_cap() -> int:
+	return FREE_OPS_PAYOUT_CAP
 
-static func get_mission5_contractors() -> Array:
-	return MISSION5_CONTRACTOR_OFFERS.duplicate(true)
+static func get_trip_contractors() -> Array:
+	var available = []
+	for contractor in FREE_OPS_CONTRACTOR_OFFERS:
+		var id = str(contractor.get("id", ""))
+		if not SubcontractorManager.is_on_cooldown(id):
+			available.append(contractor.duplicate(true))
+	return available
 
 static func get_starter_contractors() -> Array:
 	return STARTER_CONTRACTOR_OFFERS.duplicate(true)
@@ -468,33 +542,40 @@ static func get_starter_requested_minerals(contractor_id: String = "") -> Dictio
 		return {}
 	return requested.duplicate(true)
 
-static func ensure_mission5_contract_offer(detected_targets: Array = []) -> Dictionary:
-	if get_mission_stage() < 5:
-		return {}
+static func ensure_trip_contract_offer(detected_targets: Array = []) -> Dictionary:
 	var s = load_state()
-	var existing = s.get("mission5_contract_offer", {})
+	var existing = s.get("trip_contract_offer", {})
 	if typeof(existing) == TYPE_DICTIONARY and not existing.is_empty():
 		var recommended_id = str(existing.get("recommended_target_id", ""))
 		var selected_contractor = str(existing.get("selected_contractor", ""))
+		var selection_required = bool(existing.get("selection_required", true))
 		var has_recommended = recommended_id != ""
-		var has_valid_selected = selected_contractor == "" or _find_mission5_contractor(selected_contractor).size() > 0
+		var has_valid_selected = selected_contractor == "" or _find_trip_contractor(selected_contractor).size() > 0
 		if has_recommended and has_valid_selected:
+			if not existing.has("selection_required"):
+				existing["selection_required"] = true
+				s["trip_contract_offer"] = existing
+				save_state(s)
+			elif selection_required and selected_contractor != "":
+				existing["selected_contractor"] = ""
+				s["trip_contract_offer"] = existing
+				save_state(s)
 			return existing.duplicate(true)
-	var offer = _build_mission5_contract_offer(detected_targets)
-	s["mission5_contract_offer"] = offer.duplicate(true)
+	var offer = _build_trip_contract_offer(detected_targets)
+	s["trip_contract_offer"] = offer.duplicate(true)
 	save_state(s)
 	return offer
 
-static func get_mission5_contract_offer() -> Dictionary:
+static func get_trip_contract_offer() -> Dictionary:
 	var s = load_state()
-	var offer = s.get("mission5_contract_offer", {})
+	var offer = s.get("trip_contract_offer", {})
 	if typeof(offer) != TYPE_DICTIONARY:
 		return {}
 	return offer.duplicate(true)
 
-static func clear_mission5_contract_offer() -> bool:
+static func clear_trip_contract_offer() -> bool:
 	var s = load_state()
-	s["mission5_contract_offer"] = {}
+	s["trip_contract_offer"] = {}
 	return save_state(s)
 
 static func is_mission_briefing_seen(stage: int) -> bool:
@@ -517,55 +598,79 @@ static func mark_mission_briefing_seen(stage: int) -> bool:
 	s["mission_briefings_seen"] = seen
 	return save_state(s)
 
-static func select_mission5_contractor(contractor_id: String) -> bool:
+static func select_trip_contractor(contractor_id: String) -> bool:
 	if contractor_id == "":
 		return false
-	if _find_mission5_contractor(contractor_id).is_empty():
+	if _find_trip_contractor(contractor_id).is_empty():
 		return false
-	var offer = ensure_mission5_contract_offer()
+	var offer = ensure_trip_contract_offer()
 	if offer.is_empty():
 		return false
 	offer["selected_contractor"] = contractor_id
+	offer["selection_required"] = false
 	var s = load_state()
-	s["mission5_contract_offer"] = offer
+	s["trip_contract_offer"] = offer
 	return save_state(s)
 
-static func get_mission5_selected_contractor() -> Dictionary:
-	var offer = get_mission5_contract_offer()
+static func get_trip_selected_contractor() -> Dictionary:
+	var offer = get_trip_contract_offer()
 	if offer.is_empty():
+		return {}
+	if bool(offer.get("selection_required", true)):
 		return {}
 	var selected = str(offer.get("selected_contractor", ""))
 	if selected == "":
 		return {}
-	return _find_mission5_contractor(selected).duplicate(true)
+	return _find_trip_contractor(selected).duplicate(true)
 
-static func get_mission5_purchase_cost(rocket_id_or_type: String) -> int:
+## Reusable Rockets Research tier (0 = none, 1–3 = progressively cheaper launches).
+static func get_reusable_research_tier() -> int:
+	var s = load_state()
+	return clamp(int(s.get("reusable_research_tier", 0)), 0, 3)
+
+static func set_reusable_research_tier(tier: int) -> bool:
+	var s = load_state()
+	s["reusable_research_tier"] = clamp(tier, 0, 3)
+	return save_state(s)
+
+## Discount per research tier: tier 1=10%, 2=20%, 3=30%.
+static func get_reusable_research_cost_mult() -> float:
+	var tier := get_reusable_research_tier()
+	match tier:
+		1: return 0.90
+		2: return 0.80
+		3: return 0.70
+		_: return 1.0
+
+## Cost to upgrade to each research tier.
+const REUSABLE_RESEARCH_UPGRADE_COSTS := {1: 500_000_000, 2: 2_000_000_000, 3: 5_000_000_000}
+
+static func get_trip_purchase_cost(rocket_id_or_type: String) -> int:
 	var base_cost = RocketSpecs.get_cost(rocket_id_or_type)
-	if get_mission_stage() < 5:
-		return base_cost
-	var selected = get_mission5_selected_contractor()
+	# Apply reusable research discount first
+	var research_mult = get_reusable_research_cost_mult()
+	var after_research = int(round(float(base_cost) * research_mult))
+	var selected = get_trip_selected_contractor()
 	if get_operation_mode() != "contract":
-		return base_cost
+		return after_research
 	if str(selected.get("effect", "")) != "build_discount":
-		return base_cost
+		return after_research
 	var discount_pct = clamp(float(selected.get("build_discount_pct", 0.0)), 0.0, 0.95)
-	return int(round(float(base_cost) * (1.0 - discount_pct)))
+	return int(round(float(after_research) * (1.0 - discount_pct)))
 
-static func apply_mission5_payout_terms(base_payout: int, contractor_id: String = "") -> int:
+static func apply_trip_payout_terms(base_payout: int, contractor_id: String = "") -> int:
 	var payout = max(base_payout, 0)
-	if get_mission_stage() < 5:
-		return payout
 	if get_operation_mode() != "contract":
 		return payout
 	var selected := {}
 	if contractor_id != "":
-		selected = _find_mission5_contractor(contractor_id)
+		selected = _find_trip_contractor(contractor_id)
 	if selected.is_empty():
-		selected = get_mission5_selected_contractor()
+		selected = get_trip_selected_contractor()
 	if str(selected.get("effect", "")) == "payout_bonus":
 		var bonus_mult = max(float(selected.get("payout_bonus_mult", 1.0)), 1.0)
 		payout = int(round(float(payout) * bonus_mult))
-	return min(payout, MISSION5_PAYOUT_CAP)
+	return min(payout, FREE_OPS_PAYOUT_CAP)
 
 static func debug_complete_mission_for_progression() -> bool:
 	var mission_log = preload("res://Scripts/Utils/MissionLogManager.gd")
@@ -660,6 +765,51 @@ static func get_rocket_level(rocket_id_or_type: String) -> int:
 	var rocket_type = RocketSpecs.rocket_type_from_id(rocket_id_or_type)
 	return int(ROCKET_UNLOCK_LEVELS.get(rocket_type, 1))
 
+## Returns the mining laser level for a rocket.
+## Currently always 1 until room-upgrade system is implemented (L5+).
+## When room upgrades land, this should read laser_level from rocket state.
+static func get_laser_level(_rocket_id: String = "") -> int:
+	var s = load_state()
+	var laser_levels: Dictionary = s.get("laser_levels", {})
+	if _rocket_id != "" and laser_levels.has(_rocket_id):
+		return max(int(laser_levels.get(_rocket_id, 1)), 1)
+	return 1
+
+## Sets the mining laser level for a specific rocket (used by room upgrade system).
+static func set_laser_level(rocket_id: String, level: int) -> bool:
+	if rocket_id == "" or level < 1:
+		return false
+	var s = load_state()
+	var laser_levels: Dictionary = s.get("laser_levels", {}).duplicate(true)
+	laser_levels[rocket_id] = max(level, 1)
+	s["laser_levels"] = laser_levels
+	return save_state(s)
+
+## Returns the room upgrade tiers for a rocket type (keyed by category).
+## e.g. {"mining": 2, "cargo": 1, "propulsion": 1, ...}
+static func get_type_room_upgrades(rocket_type: String) -> Dictionary:
+	var s = load_state()
+	var all_upgrades: Dictionary = s.get("type_room_upgrades", {})
+	return all_upgrades.get(rocket_type, {}).duplicate(true)
+
+## Sets a single category's tier for a rocket type and persists.
+## Returns true on success.
+static func set_type_room_tier(rocket_type: String, category: String, tier: int) -> bool:
+	if rocket_type == "" or category == "" or tier < 1:
+		return false
+	var s = load_state()
+	var all_upgrades: Dictionary = s.get("type_room_upgrades", {}).duplicate(true)
+	var type_upgrades: Dictionary = all_upgrades.get(rocket_type, {}).duplicate(true)
+	type_upgrades[category] = max(tier, 1)
+	all_upgrades[rocket_type] = type_upgrades
+	s["type_room_upgrades"] = all_upgrades
+	# Sync laser level if mining tier changed
+	if category == "mining":
+		var laser_levels: Dictionary = s.get("laser_levels", {}).duplicate(true)
+		laser_levels[rocket_type] = max(tier, 1)
+		s["laser_levels"] = laser_levels
+	return save_state(s)
+
 static func get_primary_awaiting_rocket_id() -> String:
 	var placed = get_placed()
 	for item in placed:
@@ -686,24 +836,18 @@ static func build_target_profile(target_id: String, target_type: String = "aster
 				"required_level": int(variant.get("required_level", 2)),
 				"type": "asteroid"
 			}
-	if get_mission_stage() == 3 and normalized_type == "asteroid":
+	if get_mission_stage() == 3 and (normalized_type == "planet" or normalized_type == "asteroid"):
 		var mission3_targets = get_mission3_targets()
 		for i in range(mission3_targets.size()):
 			var item = mission3_targets[i]
 			if str(item.get("id", "")) != target_id:
 				continue
-			if i == 0:
-				return {
-					"distance_au": 12.0,
-					"distance_km": 12.0 * AU_IN_KM,
-					"required_level": 2,
-					"type": "asteroid"
-				}
+			var dist_au = float(item.get("distance_au", 12.0))
 			return {
-				"distance_au": 24.0,
-				"distance_km": 24.0 * AU_IN_KM,
+				"distance_au": dist_au,
+				"distance_km": dist_au * AU_IN_KM,
 				"required_level": 2,
-				"type": "asteroid"
+				"type": "planet"
 			}
 	if get_mission_stage() == 4 and normalized_type == "planet":
 		var mission4_targets = get_mission4_targets()
@@ -723,19 +867,6 @@ static func build_target_profile(target_id: String, target_type: String = "aster
 				"distance_km": 220.0 * AU_IN_KM,
 				"required_level": 3,
 				"type": "planet"
-			}
-	if get_mission_stage() >= 5 and normalized_type == "asteroid":
-		var mission5_targets = get_mission5_targets()
-		for i in range(mission5_targets.size()):
-			var item = mission5_targets[i]
-			if str(item.get("id", "")) != target_id:
-				continue
-			var distance_au = 8.0 if i == 0 else 24.0
-			return {
-				"distance_au": distance_au,
-				"distance_km": distance_au * AU_IN_KM,
-				"required_level": 1 if i == 0 else 2,
-				"type": "asteroid"
 			}
 	if target_id == "":
 		if normalized_type == "planet":
@@ -850,6 +981,11 @@ static func set_launched(rocket_id: String) -> bool:
 static func select_target(target_id: String) -> bool:
 	if target_id == "":
 		return false
+	if _requires_trip_contractor_for_selection() and get_trip_selected_contractor().is_empty():
+		set_launch_guidance_notice("Select a contractor first, then pick a mission target.")
+		return false
+	if is_candidate_visit_blocked(target_id):
+		return false
 	if not is_target_selectable_for_current_stage(target_id):
 		return false
 	var s = load_state()
@@ -883,6 +1019,10 @@ static func get_selected_target() -> String:
 static func is_target_selectable_for_current_stage(target_id: String) -> bool:
 	if target_id == "":
 		return false
+	if _requires_trip_contractor_for_selection() and get_trip_selected_contractor().is_empty():
+		return false
+	if is_candidate_visit_blocked(target_id):
+		return false
 	var selectable = get_selectable_targets_for_stage(_effective_stage_for_target_selection())
 	for target in selectable:
 		if str(target.get("id", "")) == target_id:
@@ -899,14 +1039,21 @@ static func get_selectable_targets_for_stage(stage: int = -1) -> Array:
 	if mission_stage == 3:
 		return get_mission3_targets()
 	if mission_stage == 4:
+		if is_free_operations_unlocked():
+			return get_detected_targets()
 		return get_mission4_targets()
-	if mission_stage == 5:
-		return get_mission5_targets()
 	return get_detected_targets()
 
 static func ensure_selected_target_for_launch(rocket_id: String = "") -> Dictionary:
+	if _requires_trip_contractor_for_selection() and get_trip_selected_contractor().is_empty():
+		return {
+			"ok": false,
+			"target_id": "",
+			"fallback_used": false,
+			"reason": "Select a contractor first"
+		}
 	var existing_target_id = get_selected_target()
-	if existing_target_id != "" and is_target_selectable_for_current_stage(existing_target_id):
+	if existing_target_id != "" and not is_candidate_visit_blocked(existing_target_id) and is_target_selectable_for_current_stage(existing_target_id):
 		var existing_details = get_target_details(existing_target_id)
 		return {
 			"ok": true,
@@ -930,6 +1077,8 @@ static func ensure_selected_target_for_launch(rocket_id: String = "") -> Diction
 		var item: Dictionary = item_any
 		var tid = str(item.get("id", ""))
 		if tid == "":
+			continue
+		if is_candidate_visit_blocked(tid):
 			continue
 		var profile = build_target_profile(tid, str(item.get("type", "asteroid")))
 		if int(profile.get("required_level", 1)) <= rocket_level:
@@ -973,9 +1122,11 @@ static func ensure_selected_target_for_launch(rocket_id: String = "") -> Diction
 		"notice": notice
 	}
 
-static func get_mission_exposure_reward(stage: int) -> int:
-	var safe_stage = max(stage, 1)
-	return 4 + (safe_stage - 1)
+static func get_mission_exposure_reward(_stage: int) -> int:
+	# Flat rate: M1 gives exactly 11 XP (5 launch + 4 exposure + 1 completion + 1 affinity)
+	# to reach Level 2. Subsequent missions give the same 11 XP, which falls short of the
+	# increasing level thresholds (L2→L3 needs 12, L3→L4 needs 13, etc.).
+	return 4
 
 static func get_target_details(target_id: String) -> Dictionary:
 	if target_id == "":
@@ -1041,6 +1192,11 @@ static func set_detected_targets(targets: Array) -> bool:
 	var s = load_state()
 	# store simplified detected targets array (array of dictionaries)
 	s["detected_targets"] = targets
+	var offer = s.get("trip_contract_offer", {})
+	if typeof(offer) == TYPE_DICTIONARY and not offer.is_empty():
+		offer["selected_contractor"] = ""
+		offer["selection_required"] = true
+		s["trip_contract_offer"] = offer
 	return save_state(s)
 
 static func get_detected_targets() -> Array:
@@ -1119,16 +1275,137 @@ static func record_scan_pass(targets: Array) -> bool:
 	if typeof(counts) != TYPE_DICTIONARY:
 		counts = {}
 	var changed := false
+	var blocks = s.get("candidate_visit_blocks", {})
+	if typeof(blocks) != TYPE_DICTIONARY:
+		blocks = {}
 	for target in targets:
 		var target_id = str(target.get("id", ""))
 		if target_id == "":
 			continue
 		var key = _scan_count_key(target_id, str(target.get("type", "asteroid")))
 		counts[key] = int(counts.get(key, 0)) + 1
+		if blocks.has(target_id):
+			blocks.erase(target_id)
 		changed = true
 	if not changed:
 		return false
 	s["scan_counts"] = counts
+	s["candidate_visit_blocks"] = blocks
+	return save_state(s)
+
+static func set_target_annotation_level(target_id: String, level: int) -> bool:
+	if target_id == "":
+		return false
+	var s = load_state()
+	var levels = s.get("target_annotation_levels", {})
+	if typeof(levels) != TYPE_DICTIONARY:
+		levels = {}
+	levels[target_id] = max(level, 0)
+	s["target_annotation_levels"] = levels
+	return save_state(s)
+
+static func get_target_annotation_level(target_id: String) -> int:
+	if target_id == "":
+		return 0
+	var s = load_state()
+	var levels = s.get("target_annotation_levels", {})
+	if typeof(levels) != TYPE_DICTIONARY:
+		return 0
+	return max(int(levels.get(target_id, 0)), 0)
+
+static func add_rocket_wear(rocket_id: String, amount: int = 1) -> int:
+	if rocket_id == "":
+		return 0
+	var s = load_state()
+	var wear = s.get("rocket_wear", {})
+	if typeof(wear) != TYPE_DICTIONARY:
+		wear = {}
+	var next_value = max(int(wear.get(rocket_id, 0)) + max(amount, 1), 0)
+	wear[rocket_id] = next_value
+	s["rocket_wear"] = wear
+	save_state(s)
+	return next_value
+
+static func get_rocket_wear(rocket_id: String) -> int:
+	if rocket_id == "":
+		return 0
+	var s = load_state()
+	var wear = s.get("rocket_wear", {})
+	if typeof(wear) != TYPE_DICTIONARY:
+		return 0
+	return max(int(wear.get(rocket_id, 0)), 0)
+
+static func get_rocket_wear_tier(rocket_id: String) -> int:
+	var points = get_rocket_wear(rocket_id)
+	if points >= 12:
+		return 3
+	if points >= 8:
+		return 2
+	if points >= 4:
+		return 1
+	return 0
+
+static func get_archived_rocket_wear(rocket_id: String) -> Dictionary:
+	if rocket_id == "":
+		return {}
+	var s = load_state()
+	var archived = s.get("archived_rocket_wear", {})
+	if typeof(archived) != TYPE_DICTIONARY:
+		return {}
+	var entry = archived.get(rocket_id, {})
+	return entry.duplicate(true) if typeof(entry) == TYPE_DICTIONARY else {}
+
+static func mark_candidate_visit_blocked(target_id: String) -> bool:
+	if target_id == "":
+		return false
+	var s = load_state()
+	var blocks = s.get("candidate_visit_blocks", {})
+	if typeof(blocks) != TYPE_DICTIONARY:
+		blocks = {}
+	blocks[target_id] = true
+	s["candidate_visit_blocks"] = blocks
+	return save_state(s)
+
+static func clear_candidate_visit_block(target_id: String) -> bool:
+	if target_id == "":
+		return false
+	var s = load_state()
+	var blocks = s.get("candidate_visit_blocks", {})
+	if typeof(blocks) != TYPE_DICTIONARY:
+		blocks = {}
+	if not blocks.has(target_id):
+		return true
+	blocks.erase(target_id)
+	s["candidate_visit_blocks"] = blocks
+	return save_state(s)
+
+static func is_candidate_visit_blocked(target_id: String) -> bool:
+	if target_id == "":
+		return false
+	var s = load_state()
+	var blocks = s.get("candidate_visit_blocks", {})
+	if typeof(blocks) != TYPE_DICTIONARY:
+		return false
+	return bool(blocks.get(target_id, false))
+
+static func has_discovery_bonus_claimed(target_id: String) -> bool:
+	if target_id == "":
+		return false
+	var s = load_state()
+	var claimed = s.get("discovery_bonus_claimed", {})
+	if typeof(claimed) != TYPE_DICTIONARY:
+		return false
+	return bool(claimed.get(target_id, false))
+
+static func mark_discovery_bonus_claimed(target_id: String) -> bool:
+	if target_id == "":
+		return false
+	var s = load_state()
+	var claimed = s.get("discovery_bonus_claimed", {})
+	if typeof(claimed) != TYPE_DICTIONARY:
+		claimed = {}
+	claimed[target_id] = true
+	s["discovery_bonus_claimed"] = claimed
 	return save_state(s)
 
 static func get_target_level(target_id: String, target_type: String) -> int:
@@ -1156,7 +1433,7 @@ static func calibrate_onboarding_payout(raw_net: int, rocket_id: String) -> int:
 	# Softly nudge early repeat runs back toward normal economy.
 	return int(round(lerp(float(base), float(target), 0.35)))
 
-static func set_destroyed(rocket_id: String) -> bool:
+static func set_destroyed(rocket_id: String, reason: String = "destroyed") -> bool:
 	var s = load_state()
 	var changed = false
 	# Ensure rocket_id is recorded in destroyed list
@@ -1178,6 +1455,8 @@ static func set_destroyed(rocket_id: String) -> bool:
 			placed[i]["status"] = "Destroyed"
 			changed = true
 	s["placed"] = placed
+	if _archive_rocket_wear_in_state(s, rocket_id, reason):
+		changed = true
 	_set_status_changed_at_in_state(s, rocket_id, "Destroyed")
 	if changed:
 		return save_state(s)
@@ -1251,12 +1530,36 @@ static func return_home(rocket_id: String) -> bool:
 		return save_state(s)
 	return true
 
+static func _apply_contractor_consequences(state: Dictionary) -> bool:
+	var offer = state.get("trip_contract_offer", {})
+	if typeof(offer) != TYPE_DICTIONARY or offer.is_empty():
+		return false
+	
+	var contractor_id = str(offer.get("selected_contractor", ""))
+	if contractor_id == "":
+		return false
+	
+	# Apply 5 minute cooldown
+	SubcontractorManager.set_cooldown(contractor_id, 300)
+	
+	# Award reputation XP (base 100 per successful trip)
+	SubcontractorManager.add_reputation(contractor_id, 100)
+	
+	# Clear the offer so they must pick a new one (or same one after cooldown)
+	state["trip_contract_offer"] = {}
+	return true
+
 static func finalize_return(rocket_id: String) -> bool:
 	if rocket_id == "":
 		return false
 	var s = load_state()
 	var changed = false
 	var now = int(Time.get_unix_time_from_system())
+	
+	# Handle contractor rewards and cooldowns
+	if _apply_contractor_consequences(s):
+		changed = true
+		
 	var placed = s.get("placed", [])
 	for i in range(placed.size()):
 		if str(placed[i].get("id", "")) == rocket_id:
@@ -1309,6 +1612,11 @@ static func mark_returned_if_due(rocket_id: String) -> bool:
 	var s = load_state()
 	var changed = false
 	var now = int(Time.get_unix_time_from_system())
+	
+	# Handle contractor rewards and cooldowns
+	if _apply_contractor_consequences(s):
+		changed = true
+		
 	var placed = s.get("placed", [])
 	for i in range(placed.size()):
 		if str(placed[i].get("id", "")) == rocket_id:
@@ -1396,6 +1704,12 @@ static func add_placed(rocket_type: String, position: Vector2) -> String:
 static func reset_state() -> bool:
 	# Reset rockets state to defaults: only starter rocket unlocked, no placed rockets
 	var data = RocketsStateAccess.build_default_state(MISSION_PROGRESS_SCHEMA_VERSION)
+	_preview_target = {}
+	_return_to_new_mission_panel = false
+	_preview_index = 0
+	_returned_mission = {}
+	_orbiting_rockets = {}
+	_pending_mission_guidance_id = 0
 	_override_state = data.duplicate(true)
 	var ok = save_state(data)
 	if ok:
@@ -1457,7 +1771,31 @@ static func clear_preview_target() -> void:
 	s["preview_target"] = {}
 	save_state(s)
 
+static func set_tess_classification(target_id: String, verdict: String) -> void:
+	var s = load_state()
+	var map: Dictionary = s.get("tess_classifications", {})
+	map[target_id] = verdict
+	s["tess_classifications"] = map
+	save_state(s)
+
+static func get_tess_classification(target_id: String) -> String:
+	var s = load_state()
+	return str(s.get("tess_classifications", {}).get(target_id, ""))
+
+static func clear_tess_classification(target_id: String) -> void:
+	var s = load_state()
+	var map: Dictionary = s.get("tess_classifications", {})
+	map.erase(target_id)
+	s["tess_classifications"] = map
+	save_state(s)
+
+## Returns all targets the player has classified, as { anomaly_id: verdict }.
+static func get_all_tess_classifications() -> Dictionary:
+	var s = load_state()
+	return s.get("tess_classifications", {}).duplicate(true)
+
 static func set_returned_mission(rocket_id: String, target_id: String, target_label: String, target_type: String, operation_mode: String = "", extra: Dictionary = {}) -> void:
+	var wear_points = add_rocket_wear(rocket_id, 1)
 	var resolved_mode = operation_mode.strip_edges().to_lower()
 	if not OPEN_OPERATION_MODES.has(resolved_mode):
 		resolved_mode = get_operation_mode_for_rocket(rocket_id)
@@ -1467,7 +1805,9 @@ static func set_returned_mission(rocket_id: String, target_id: String, target_la
 		"label": target_label,
 		"type": target_type,
 		"operation_mode": resolved_mode,
-		"rocket_customization": get_rocket_customization(rocket_id)
+		"rocket_customization": get_rocket_customization(rocket_id),
+		"rocket_wear_points": wear_points,
+		"rocket_wear_tier": get_rocket_wear_tier(rocket_id)
 	}
 	for key in extra.keys():
 		_returned_mission[key] = extra[key]
@@ -1764,11 +2104,33 @@ static func _set_status_changed_at_in_state(state: Dictionary, rocket_id: String
 	all_changes[rocket_id] = per_rocket
 	state["status_changed_at"] = all_changes
 
-static func _find_mission5_contractor(contractor_id: String) -> Dictionary:
-	return RocketsMissionProgress.find_mission5_contractor(contractor_id, MISSION5_CONTRACTOR_OFFERS)
+static func _archive_rocket_wear_in_state(state: Dictionary, rocket_id: String, reason: String = "retired") -> bool:
+	if rocket_id == "":
+		return false
+	var wear_map = state.get("rocket_wear", {})
+	if typeof(wear_map) != TYPE_DICTIONARY:
+		wear_map = {}
+	var wear_points = max(int(wear_map.get(rocket_id, 0)), 0)
+	var archived = state.get("archived_rocket_wear", {})
+	if typeof(archived) != TYPE_DICTIONARY:
+		archived = {}
+	archived[rocket_id] = {
+		"wear_points": wear_points,
+		"wear_tier": 3 if wear_points >= 12 else 2 if wear_points >= 8 else 1 if wear_points >= 4 else 0,
+		"archived_at": int(Time.get_unix_time_from_system()),
+		"reason": reason.strip_edges().to_lower()
+	}
+	if wear_map.has(rocket_id):
+		wear_map.erase(rocket_id)
+	state["rocket_wear"] = wear_map
+	state["archived_rocket_wear"] = archived
+	return true
+
+static func _find_trip_contractor(contractor_id: String) -> Dictionary:
+	return RocketsMissionProgress.find_trip_contractor(contractor_id, FREE_OPS_CONTRACTOR_OFFERS)
 
 static func _find_starter_contractor(contractor_id: String) -> Dictionary:
-	return RocketsMissionProgress.find_mission5_contractor(contractor_id, STARTER_CONTRACTOR_OFFERS)
+	return RocketsMissionProgress.find_trip_contractor(contractor_id, STARTER_CONTRACTOR_OFFERS)
 
 static func _build_starter_contract_offer() -> Dictionary:
 	return {
@@ -1777,6 +2139,8 @@ static func _build_starter_contract_offer() -> Dictionary:
 	}
 
 static func _is_tutorial_stage_one_active() -> bool:
+	if get_mission_stage() > 1:
+		return false
 	var app = AppControllerHelper.get_instance()
 	if app and app.has_method("get_tutorial_state"):
 		var state = app.get_tutorial_state()
@@ -1791,11 +2155,15 @@ static func _effective_stage_for_target_selection() -> int:
 		return 1
 	return get_mission_stage()
 
-static func _build_mission5_contract_offer(detected_targets: Array = []) -> Dictionary:
-	return RocketsMissionProgress.build_mission5_contract_offer(
-		get_mission5_targets(detected_targets),
-		get_mission5_contractors(),
-		MISSION5_PAYOUT_CAP
+static func _requires_trip_contractor_for_selection() -> bool:
+	var stage = _effective_stage_for_target_selection()
+	return stage >= 4 and is_free_operations_unlocked()
+
+static func _build_trip_contract_offer(detected_targets: Array = []) -> Dictionary:
+	return RocketsMissionProgress.build_trip_contract_offer(
+		get_detected_targets() if detected_targets.is_empty() else detected_targets,
+		get_trip_contractors(),
+		FREE_OPS_PAYOUT_CAP
 	)
 
 static func _sanitize_completed_badges(state: Dictionary) -> bool:
@@ -1844,10 +2212,6 @@ static func _ensure_stage_fallback_targets(stage: int) -> bool:
 		var m4 = get_predefined_mission_target(4)
 		if not m4.is_empty():
 			fallback_rows = [m4]
-	elif stage >= 5:
-		var m5 = get_predefined_mission_target(5)
-		if not m5.is_empty():
-			fallback_rows = [m5]
 	if fallback_rows.is_empty():
 		return false
 
@@ -1887,8 +2251,6 @@ static func _primary_fallback_target_for_stage(stage: int) -> Dictionary:
 		return {}
 	if stage == 4:
 		return get_predefined_mission_target(4)
-	if stage >= 5:
-		return get_predefined_mission_target(5)
 	if stage == 1:
 		return get_predefined_mission_target(1)
 	return {}

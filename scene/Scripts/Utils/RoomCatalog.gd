@@ -382,6 +382,67 @@ static func get_installed_rooms(layout: Dictionary) -> Array:
 			rows.append(row)
 	return rows
 
+## Upgrade cost in Francs per tier transition (T1→T2, T2→T3).
+const UPGRADE_COSTS := {1: 50000000, 2: 150000000}
+
+## Maps category → [t1_room_id, t2_room_id, t3_room_id] upgrade chain.
+const UPGRADE_CHAINS := {
+	"propulsion": ["basic_thruster_t1", "fusion_drive_t2", "ion_drive_t3"],
+	"power": ["small_reactor_t1", "fusion_reactor_t2"],
+	"fuel": ["small_tank_t1", "large_tank_t2"],
+	"storage": ["cargo_bay_t1", "resource_vault_t2"],
+	"mining": ["mining_drill_t1", "mining_laser_t2"],
+	"navigation": ["basic_nav_t1", "scanner_array_t2", "spectral_analyser_t3"],
+	"hull": ["basic_hull_t1", "reinforced_shell_t2", "ablative_armour_t3"],
+	"science": ["sample_lab_t2"],
+	"communication": ["comms_relay_t1", "broadcast_array_t2"]
+}
+
+## Returns the room_id for a given category at the requested tier (1-indexed).
+## Returns "" if no room exists at that tier for the category.
+static func get_room_at_tier(category: String, tier: int) -> String:
+	var chain: Array = UPGRADE_CHAINS.get(category, [])
+	var idx = tier - 1
+	if idx < 0 or idx >= chain.size():
+		return ""
+	return str(chain[idx])
+
+## Returns max tier for a category.
+static func get_max_tier(category: String) -> int:
+	return UPGRADE_CHAINS.get(category, []).size()
+
+## Returns upgrade cost (Francs) to go from current_tier → current_tier+1.
+## Returns 0 if already at max tier.
+static func get_upgrade_cost(category: String, current_tier: int) -> int:
+	if current_tier >= get_max_tier(category):
+		return 0
+	return int(UPGRADE_COSTS.get(current_tier, 0))
+
+## Returns list of upgradeable room categories with current tier, next tier, and cost.
+## Only includes categories where an upgrade path exists and current_tier < max_tier.
+static func get_upgradeable_rooms(rocket_type: String, type_upgrades: Dictionary) -> Array:
+	var result := []
+	for category in UPGRADE_CHAINS.keys():
+		var chain: Array = UPGRADE_CHAINS.get(category, [])
+		if chain.size() <= 1:
+			continue  # no upgrade path for this category
+		var current_tier = int(type_upgrades.get(category, 1))
+		var max_t = chain.size()
+		var room_id = get_room_at_tier(category, current_tier)
+		var room_def = get_room(room_id) if room_id != "" else {}
+		var display_name = str(room_def.get("name", category.capitalize())) if not room_def.is_empty() else category.capitalize()
+		result.append({
+			"category": category,
+			"display_name": display_name,
+			"current_tier": current_tier,
+			"max_tier": max_t,
+			"room_id": room_id,
+			"next_room_id": get_room_at_tier(category, current_tier + 1),
+			"upgrade_cost": get_upgrade_cost(category, current_tier),
+			"at_max": current_tier >= max_t
+		})
+	return result
+
 static func _make_room_instance(room_id: String, bay_id: String) -> Dictionary:
 	var room_def = get_room(room_id)
 	return {

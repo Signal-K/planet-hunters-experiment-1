@@ -1,14 +1,14 @@
 ---
 id: au0mke
 title: Explain Francs currency to the player
-status: todo
+status: done
 priority: high
 labels:
   - ux
   - onboarding
   - economy
 createdAt: '2026-03-08T02:33:06.834Z'
-updatedAt: '2026-03-08T02:33:06.834Z'
+updatedAt: '2026-03-10T05:37:37.174Z'
 timeSpent: 0
 ---
 # Explain Francs currency to the player
@@ -21,7 +21,13 @@ Francs are the in-game economy currency but are never explained. Players have no
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A tooltip or introductory callout explains Francs on first encounter
-- [ ] #2 The debrief payout screen labels the Francs amount with context (e.g. what it buys)
+- [x] #1 A tooltip or introductory callout explains Francs on first encounter
+- [x] #2 The debrief payout screen labels the Francs amount with context (e.g. what it buys)
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+✓ Verified: FrancBalance tooltip explains Francs; MissionDebrief labels payout with spending context.
+<!-- SECTION:NOTES:END -->
 

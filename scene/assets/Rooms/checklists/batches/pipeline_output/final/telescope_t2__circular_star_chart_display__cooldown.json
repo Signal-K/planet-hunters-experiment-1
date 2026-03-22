@@ -1,0 +1,14 @@
+{
+  "asset_id": "telescope_t2__circular_star_chart_display__cooldown",
+  "room_id": "telescope_t2",
+  "component": "circular_star_chart_display",
+  "tier": "2",
+  "state": "cooldown",
+  "prompt_version": "v1",
+  "generator": "chatgpt",
+  "generated_at_utc": "2026-03-10T10:16:33.936243",
+  "image_filename": "telescope_t2__circular_star_chart_display__cooldown.png",
+  "width": 1024,
+  "height": 1024,
+  "notes": ""
+}

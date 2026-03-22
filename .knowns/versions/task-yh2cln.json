@@ -1,0 +1,222 @@
+{
+  "taskId": "yh2cln",
+  "currentVersion": 5,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "yh2cln",
+      "version": 1,
+      "timestamp": "2026-03-09T01:32:19.133Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Award 2 XP for mission completion and affinity improvement to unblock M1→M2 progression",
+        "description": "After M1, players have 9/11 XP needed for Level 2. Award +1 XP on mission completion and +1 XP on affinity improvement to bridge the gap without changing the level threshold.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "gameplay",
+          "progression",
+          "xp"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Player reaches Level 2 after completing M1 normally"
+          },
+          {
+            "completed": false,
+            "text": "XP is awarded on debrief completion and affinity improvement events"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "yh2cln",
+      "version": 2,
+      "timestamp": "2026-03-09T01:35:30.104Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Player reaches Level 2 after completing M1 normally"
+            },
+            {
+              "completed": false,
+              "text": "XP is awarded on debrief completion and affinity improvement events"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Player reaches Level 2 after completing M1 normally"
+            },
+            {
+              "completed": false,
+              "text": "XP is awarded on debrief completion and affinity improvement events"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Award 2 XP for mission completion and affinity improvement to unblock M1→M2 progression",
+        "description": "After M1, players have 9/11 XP needed for Level 2. Award +1 XP on mission completion and +1 XP on affinity improvement to bridge the gap without changing the level threshold.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "gameplay",
+          "progression",
+          "xp"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Player reaches Level 2 after completing M1 normally"
+          },
+          {
+            "completed": false,
+            "text": "XP is awarded on debrief completion and affinity improvement events"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "yh2cln",
+      "version": 3,
+      "timestamp": "2026-03-09T01:35:32.925Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Player reaches Level 2 after completing M1 normally"
+            },
+            {
+              "completed": false,
+              "text": "XP is awarded on debrief completion and affinity improvement events"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Player reaches Level 2 after completing M1 normally"
+            },
+            {
+              "completed": true,
+              "text": "XP is awarded on debrief completion and affinity improvement events"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Award 2 XP for mission completion and affinity improvement to unblock M1→M2 progression",
+        "description": "After M1, players have 9/11 XP needed for Level 2. Award +1 XP on mission completion and +1 XP on affinity improvement to bridge the gap without changing the level threshold.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "gameplay",
+          "progression",
+          "xp"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Player reaches Level 2 after completing M1 normally"
+          },
+          {
+            "completed": true,
+            "text": "XP is awarded on debrief completion and affinity improvement events"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "yh2cln",
+      "version": 4,
+      "timestamp": "2026-03-09T01:35:44.234Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "Fixed double exposure bug (was 4+4=8 XP, now 4 only from ship step). Added +1 XP on affinity gain in _sell() and starter contract path. Added +1 XP on mission_completion in all three ship resolution methods (_scrap_ship, _leave_in_orbit, _archive_ship). M1 path: 5 launch + 2 scan + 1 affinity + 1 completion + 4 exposure = 13 XP → Level 2."
+        }
+      ],
+      "snapshot": {
+        "title": "Award 2 XP for mission completion and affinity improvement to unblock M1→M2 progression",
+        "description": "After M1, players have 9/11 XP needed for Level 2. Award +1 XP on mission completion and +1 XP on affinity improvement to bridge the gap without changing the level threshold.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "gameplay",
+          "progression",
+          "xp"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Player reaches Level 2 after completing M1 normally"
+          },
+          {
+            "completed": true,
+            "text": "XP is awarded on debrief completion and affinity improvement events"
+          }
+        ],
+        "implementationNotes": "Fixed double exposure bug (was 4+4=8 XP, now 4 only from ship step). Added +1 XP on affinity gain in _sell() and starter contract path. Added +1 XP on mission_completion in all three ship resolution methods (_scrap_ship, _leave_in_orbit, _archive_ship). M1 path: 5 launch + 2 scan + 1 affinity + 1 completion + 4 exposure = 13 XP → Level 2."
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "yh2cln",
+      "version": 5,
+      "timestamp": "2026-03-09T01:35:49.764Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Award 2 XP for mission completion and affinity improvement to unblock M1→M2 progression",
+        "description": "After M1, players have 9/11 XP needed for Level 2. Award +1 XP on mission completion and +1 XP on affinity improvement to bridge the gap without changing the level threshold.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "gameplay",
+          "progression",
+          "xp"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Player reaches Level 2 after completing M1 normally"
+          },
+          {
+            "completed": true,
+            "text": "XP is awarded on debrief completion and affinity improvement events"
+          }
+        ],
+        "implementationNotes": "Fixed double exposure bug (was 4+4=8 XP, now 4 only from ship step). Added +1 XP on affinity gain in _sell() and starter contract path. Added +1 XP on mission_completion in all three ship resolution methods (_scrap_ship, _leave_in_orbit, _archive_ship). M1 path: 5 launch + 2 scan + 1 affinity + 1 completion + 4 exposure = 13 XP → Level 2."
+      }
+    }
+  ]
+}

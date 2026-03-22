@@ -113,6 +113,8 @@ jobs:
 
       - name: Install dependencies
         shell: bash
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: 1
         run: npm ci
 
       - name: Run unit tests
@@ -138,9 +140,24 @@ jobs:
           unzip -q templates.tpz -d .godot-templates
           mkdir -p "$TEMPLATE_DIR"
           TEMPLATE_SOURCE_DIR="$(find .godot-templates -type f -name 'web_nothreads_release.zip' -print -quit | xargs -I{} dirname "{}")"
+          if [ -z "$TEMPLATE_SOURCE_DIR" ]; then
+            echo "Could not locate Godot web export templates in downloaded archive"
+            find .godot-templates -maxdepth 4 -type f | sed -n '1,40p'
+            exit 1
+          fi
           cp -R "$TEMPLATE_SOURCE_DIR"/* "$TEMPLATE_DIR/"
           mkdir -p /tmp/godot/export_templates/4.5.stable
           cp -R "$TEMPLATE_DIR"/* /tmp/godot/export_templates/4.5.stable/
+          test -f "$TEMPLATE_DIR/web_nothreads_release.zip"
+          test -f "$TEMPLATE_DIR/web_nothreads_debug.zip"
+
+      - name: Import Godot project
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd scene
+          timeout 90s "$GODOT_EDITOR" --headless --path . --import --quit || true
+          echo "✓ Project imported"
 
       - name: Export Godot web build for e2e
         shell: bash
@@ -275,6 +292,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          lfs: true
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -307,9 +326,22 @@ jobs:
           unzip -q templates.tpz -d .godot-templates
           mkdir -p "$TEMPLATE_DIR"
           TEMPLATE_SOURCE_DIR="$(find .godot-templates -type f -name 'web_nothreads_release.zip' -print -quit | xargs -I{} dirname "{}")"
+          if [ -z "$TEMPLATE_SOURCE_DIR" ]; then
+            echo "Could not locate Godot web export templates in downloaded archive"
+            find .godot-templates -maxdepth 4 -type f | sed -n '1,40p'
+            exit 1
+          fi
           cp -R "$TEMPLATE_SOURCE_DIR"/* "$TEMPLATE_DIR/"
           mkdir -p /tmp/godot/export_templates/4.5.stable
           cp -R "$TEMPLATE_DIR"/* /tmp/godot/export_templates/4.5.stable/
+
+      - name: Import Godot project
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd scene
+          timeout 90s "$GODOT_EDITOR" --headless --path . --import --quit || true
+          echo "✓ Project imported"
 
       - name: Export Godot desktop web assets
         shell: bash
@@ -335,6 +367,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          lfs: true
 
       - name: Setup Node.js
         uses: actions/setup-node@v4

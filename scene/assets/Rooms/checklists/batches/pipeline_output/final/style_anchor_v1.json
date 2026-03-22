@@ -1,0 +1,14 @@
+{
+  "asset_id": "style_anchor_v1",
+  "room_id": "global",
+  "component": "style_anchor",
+  "tier": "n/a",
+  "state": "base",
+  "prompt_version": "v1",
+  "generator": "chatgpt",
+  "generated_at_utc": "2026-03-10T10:16:36.869621",
+  "image_filename": "style_anchor_v1.png",
+  "width": 1024,
+  "height": 1024,
+  "notes": ""
+}

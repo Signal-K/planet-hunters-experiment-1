@@ -46,6 +46,40 @@ static func save_state(data: Dictionary) -> bool:
 		return true
 	return _direct_save_state(data)
 
+## Returns true if the target has been exhausted at the given laser level.
+## Depletion is per-player, per-laser-level: depleting at level 1 does NOT
+## block mining at level 2+.
+static func is_depleted_for_laser(target_id: String, laser_level: int = 1) -> bool:
+	var data = load_state()
+	var targets: Dictionary = data.get("targets", {})
+	var state: Dictionary = targets.get(target_id, {})
+	var depleted_levels: Array = state.get("depleted_laser_levels", [])
+	for lvl in depleted_levels:
+		if int(lvl) == int(laser_level):
+			return true
+	return false
+
+## Marks the target as depleted at the given laser level (per-player).
+## Calling again at a higher level re-opens the target for mining.
+static func mark_depleted_for_laser(target_id: String, laser_level: int = 1) -> void:
+	var data = load_state()
+	var targets: Dictionary = data.get("targets", {})
+	var state: Dictionary = targets.get(target_id, {}).duplicate(true)
+	if state.is_empty():
+		state = {"original_mass": 0.0, "remaining_mass": 0.0, "collected": {}}
+	var depleted_levels: Array = state.get("depleted_laser_levels", []).duplicate()
+	var already_marked := false
+	for lvl in depleted_levels:
+		if int(lvl) == int(laser_level):
+			already_marked = true
+			break
+	if not already_marked:
+		depleted_levels.append(int(laser_level))
+		state["depleted_laser_levels"] = depleted_levels
+		targets[target_id] = state
+		data["targets"] = targets
+		save_state(data)
+
 static func get_target_state(target_id: String, original_mass: float) -> Dictionary:
 	var data = load_state()
 	var targets: Dictionary = data.get("targets", {})
@@ -53,7 +87,8 @@ static func get_target_state(target_id: String, original_mass: float) -> Diction
 		targets[target_id] = {
 			"original_mass": original_mass,
 			"remaining_mass": original_mass,
-			"collected": {}
+			"collected": {},
+			"depleted_laser_levels": []
 		}
 		data["targets"] = targets
 		save_state(data)
@@ -105,6 +140,18 @@ static func apply_mining(target_id: String, original_mass: float, minerals: Dict
 	var mined = min(remaining, chunk)
 	if mined <= 0.0:
 		state["remaining_mass"] = remaining
+		# Auto-mark depleted for current laser level when nothing more can be extracted
+		var laser_level = int(extraction_multiplier + 0.5)  # multiplier ≈ laser_level, round to int
+		laser_level = max(laser_level, 1)
+		var depleted_levels: Array = state.get("depleted_laser_levels", []).duplicate()
+		var already_marked := false
+		for lvl in depleted_levels:
+			if int(lvl) == laser_level:
+				already_marked = true
+				break
+		if not already_marked:
+			depleted_levels.append(laser_level)
+			state["depleted_laser_levels"] = depleted_levels
 		targets[target_id] = state
 		data["targets"] = targets
 		save_state(data)

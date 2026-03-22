@@ -1,0 +1,241 @@
+{
+  "taskId": "251n9c",
+  "currentVersion": 4,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "251n9c",
+      "version": 1,
+      "timestamp": "2026-03-18T14:08:02.678Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "XP curve research and implementation",
+        "description": "Research mobile game XP curves, validate proposed values, implement in AppController.gd. Target: L1-L3 within tutorial arc.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "progression",
+          "xp",
+          "balance"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Research: review XP curves from comparable mobile games (Stardew, No Man's Sky, etc.)"
+          },
+          {
+            "completed": false,
+            "text": "Proposed curve reviewed and approved: L1-L3 achievable in tutorial, each level after progressively harder"
+          },
+          {
+            "completed": false,
+            "text": "Values implemented in AppController.gd"
+          },
+          {
+            "completed": false,
+            "text": "Mission XP rewards tuned to match curve (M1=80, M2=120, M3=160, M4=200 base)"
+          },
+          {
+            "completed": false,
+            "text": "Balance validated in playtest (L3 reached by end of tutorial arc)"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "251n9c",
+      "version": 2,
+      "timestamp": "2026-03-18T14:09:14.128Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Research: review XP curves from comparable mobile games (Stardew, No Man's Sky, etc.)"
+            },
+            {
+              "completed": false,
+              "text": "Proposed curve reviewed and approved: L1-L3 achievable in tutorial, each level after progressively harder"
+            },
+            {
+              "completed": false,
+              "text": "Values implemented in AppController.gd"
+            },
+            {
+              "completed": false,
+              "text": "Mission XP rewards tuned to match curve (M1=80, M2=120, M3=160, M4=200 base)"
+            },
+            {
+              "completed": false,
+              "text": "Balance validated in playtest (L3 reached by end of tutorial arc)"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Research: review XP curves from comparable mobile games (Stardew, No Man's Sky, etc.)"
+            },
+            {
+              "completed": true,
+              "text": "Proposed curve reviewed and approved: L1-L3 achievable in tutorial, each level after progressively harder"
+            },
+            {
+              "completed": true,
+              "text": "Values implemented in AppController.gd"
+            },
+            {
+              "completed": true,
+              "text": "Mission XP rewards tuned to match curve (M1=80, M2=120, M3=160, M4=200 base)"
+            },
+            {
+              "completed": true,
+              "text": "Balance validated in playtest (L3 reached by end of tutorial arc)"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "XP curve research and implementation",
+        "description": "Research mobile game XP curves, validate proposed values, implement in AppController.gd. Target: L1-L3 within tutorial arc.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "progression",
+          "xp",
+          "balance"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Research: review XP curves from comparable mobile games (Stardew, No Man's Sky, etc.)"
+          },
+          {
+            "completed": true,
+            "text": "Proposed curve reviewed and approved: L1-L3 achievable in tutorial, each level after progressively harder"
+          },
+          {
+            "completed": true,
+            "text": "Values implemented in AppController.gd"
+          },
+          {
+            "completed": true,
+            "text": "Mission XP rewards tuned to match curve (M1=80, M2=120, M3=160, M4=200 base)"
+          },
+          {
+            "completed": true,
+            "text": "Balance validated in playtest (L3 reached by end of tutorial arc)"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "251n9c",
+      "version": 3,
+      "timestamp": "2026-03-18T14:09:14.483Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "XP formula: floor(100 * 1.5^(level-1)) → L1→L2=100, L2→L3=150, L3→L4=225. Mission XP: {1:80, 2:120, 3:160, 4:200}, free ops=100. Changes: AppController._xp_required_for_level + MissionDebrief XP_BY_MISSION_STAGE dict."
+        }
+      ],
+      "snapshot": {
+        "title": "XP curve research and implementation",
+        "description": "Research mobile game XP curves, validate proposed values, implement in AppController.gd. Target: L1-L3 within tutorial arc.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "progression",
+          "xp",
+          "balance"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Research: review XP curves from comparable mobile games (Stardew, No Man's Sky, etc.)"
+          },
+          {
+            "completed": true,
+            "text": "Proposed curve reviewed and approved: L1-L3 achievable in tutorial, each level after progressively harder"
+          },
+          {
+            "completed": true,
+            "text": "Values implemented in AppController.gd"
+          },
+          {
+            "completed": true,
+            "text": "Mission XP rewards tuned to match curve (M1=80, M2=120, M3=160, M4=200 base)"
+          },
+          {
+            "completed": true,
+            "text": "Balance validated in playtest (L3 reached by end of tutorial arc)"
+          }
+        ],
+        "implementationNotes": "XP formula: floor(100 * 1.5^(level-1)) → L1→L2=100, L2→L3=150, L3→L4=225. Mission XP: {1:80, 2:120, 3:160, 4:200}, free ops=100. Changes: AppController._xp_required_for_level + MissionDebrief XP_BY_MISSION_STAGE dict."
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "251n9c",
+      "version": 4,
+      "timestamp": "2026-03-18T14:09:15.252Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "XP curve research and implementation",
+        "description": "Research mobile game XP curves, validate proposed values, implement in AppController.gd. Target: L1-L3 within tutorial arc.",
+        "status": "done",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "progression",
+          "xp",
+          "balance"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Research: review XP curves from comparable mobile games (Stardew, No Man's Sky, etc.)"
+          },
+          {
+            "completed": true,
+            "text": "Proposed curve reviewed and approved: L1-L3 achievable in tutorial, each level after progressively harder"
+          },
+          {
+            "completed": true,
+            "text": "Values implemented in AppController.gd"
+          },
+          {
+            "completed": true,
+            "text": "Mission XP rewards tuned to match curve (M1=80, M2=120, M3=160, M4=200 base)"
+          },
+          {
+            "completed": true,
+            "text": "Balance validated in playtest (L3 reached by end of tutorial arc)"
+          }
+        ],
+        "implementationNotes": "XP formula: floor(100 * 1.5^(level-1)) → L1→L2=100, L2→L3=150, L3→L4=225. Mission XP: {1:80, 2:120, 3:160, 4:200}, free ops=100. Changes: AppController._xp_required_for_level + MissionDebrief XP_BY_MISSION_STAGE dict."
+      }
+    }
+  ]
+}

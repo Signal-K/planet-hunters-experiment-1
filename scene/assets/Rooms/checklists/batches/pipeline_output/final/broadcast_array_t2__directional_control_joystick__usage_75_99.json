@@ -1,0 +1,14 @@
+{
+  "asset_id": "broadcast_array_t2__directional_control_joystick__usage_75_99",
+  "room_id": "broadcast_array_t2",
+  "component": "directional_control_joystick",
+  "tier": "2",
+  "state": "usage_75_99",
+  "prompt_version": "v1",
+  "generator": "chatgpt",
+  "generated_at_utc": "2026-03-10T10:16:41.199541",
+  "image_filename": "broadcast_array_t2__directional_control_joystick__usage_75_99.png",
+  "width": 1024,
+  "height": 1024,
+  "notes": ""
+}

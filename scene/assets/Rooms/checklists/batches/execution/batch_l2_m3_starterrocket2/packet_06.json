@@ -1,0 +1,243 @@
+{
+  "batch_id": "batch_l2_m3_starterrocket2",
+  "packet_index": 6,
+  "packet_count": 24,
+  "asset_count": 12,
+  "instructions": {
+    "style_anchor_required": true,
+    "one_asset_per_prompt": true,
+    "filename_contract": "strict",
+    "no_extra_suffixes": true,
+    "no_text_or_ui": true
+  },
+  "assets": [
+    {
+      "asset_id": "cargo_bay_t1__ceiling_robotic_arm__damaged",
+      "asset_type": "state_variant",
+      "room_id": "cargo_bay_t1",
+      "room_name": "Cargo Bay Room",
+      "category": "storage",
+      "tier": 1,
+      "component_id": "ceiling_robotic_arm",
+      "component_name": "Ceiling Robotic Arm",
+      "component_kind": "interactive",
+      "state_key": "damaged",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'damaged' for component 'Ceiling Robotic Arm' in 'Cargo Bay Room'. Change only state cues: visible wear, sparks or cracks, warning lights and degraded output. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "cargo_bay_t1__ceiling_robotic_arm__damaged.png",
+        "sidecar": "cargo_bay_t1__ceiling_robotic_arm__damaged.json",
+        "note_optional": "cargo_bay_t1__ceiling_robotic_arm__damaged.txt"
+      }
+    },
+    {
+      "asset_id": "cargo_bay_t1__ceiling_robotic_arm__depleted",
+      "asset_type": "state_variant",
+      "room_id": "cargo_bay_t1",
+      "room_name": "Cargo Bay Room",
+      "category": "storage",
+      "tier": 1,
+      "component_id": "ceiling_robotic_arm",
+      "component_name": "Ceiling Robotic Arm",
+      "component_kind": "interactive",
+      "state_key": "depleted",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'depleted' for component 'Ceiling Robotic Arm' in 'Cargo Bay Room'. Change only state cues: minimal or no glow, offline indicators, depleted resource cues. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "cargo_bay_t1__ceiling_robotic_arm__depleted.png",
+        "sidecar": "cargo_bay_t1__ceiling_robotic_arm__depleted.json",
+        "note_optional": "cargo_bay_t1__ceiling_robotic_arm__depleted.txt"
+      }
+    },
+    {
+      "asset_id": "cargo_bay_t1__ceiling_robotic_arm__idle",
+      "asset_type": "state_variant",
+      "room_id": "cargo_bay_t1",
+      "room_name": "Cargo Bay Room",
+      "category": "storage",
+      "tier": 1,
+      "component_id": "ceiling_robotic_arm",
+      "component_name": "Ceiling Robotic Arm",
+      "component_kind": "interactive",
+      "state_key": "idle",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'idle' for component 'Ceiling Robotic Arm' in 'Cargo Bay Room'. Change only state cues: stable indicator lights, neutral glow, no motion cues. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "cargo_bay_t1__ceiling_robotic_arm__idle.png",
+        "sidecar": "cargo_bay_t1__ceiling_robotic_arm__idle.json",
+        "note_optional": "cargo_bay_t1__ceiling_robotic_arm__idle.txt"
+      }
+    },
+    {
+      "asset_id": "cargo_bay_t1__inventory_terminal__active",
+      "asset_type": "state_variant",
+      "room_id": "cargo_bay_t1",
+      "room_name": "Cargo Bay Room",
+      "category": "storage",
+      "tier": 1,
+      "component_id": "inventory_terminal",
+      "component_name": "Inventory Terminal",
+      "component_kind": "interactive",
+      "state_key": "active",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'active' for component 'Inventory Terminal' in 'Cargo Bay Room'. Change only state cues: brighter active glow, subtle motion/energy cues, engaged indicators. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "cargo_bay_t1__inventory_terminal__active.png",
+        "sidecar": "cargo_bay_t1__inventory_terminal__active.json",
+        "note_optional": "cargo_bay_t1__inventory_terminal__active.txt"
+      }
+    },
+    {
+      "asset_id": "cargo_bay_t1__inventory_terminal__cooldown",
+      "asset_type": "state_variant",
+      "room_id": "cargo_bay_t1",
+      "room_name": "Cargo Bay Room",
+      "category": "storage",
+      "tier": 1,
+      "component_id": "inventory_terminal",
+      "component_name": "Inventory Terminal",
+      "component_kind": "interactive",
+      "state_key": "cooldown",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'cooldown' for component 'Inventory Terminal' in 'Cargo Bay Room'. Change only state cues: reduced glow with cooling/venting cues and amber warning flicker. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "cargo_bay_t1__inventory_terminal__cooldown.png",
+        "sidecar": "cargo_bay_t1__inventory_terminal__cooldown.json",
+        "note_optional": "cargo_bay_t1__inventory_terminal__cooldown.txt"
+      }
+    },
+    {
+      "asset_id": "cargo_bay_t1__inventory_terminal__damaged",
+      "asset_type": "state_variant",
+      "room_id": "cargo_bay_t1",
+      "room_name": "Cargo Bay Room",
+      "category": "storage",
+      "tier": 1,
+      "component_id": "inventory_terminal",
+      "component_name": "Inventory Terminal",
+      "component_kind": "interactive",
+      "state_key": "damaged",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'damaged' for component 'Inventory Terminal' in 'Cargo Bay Room'. Change only state cues: visible wear, sparks or cracks, warning lights and degraded output. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "cargo_bay_t1__inventory_terminal__damaged.png",
+        "sidecar": "cargo_bay_t1__inventory_terminal__damaged.json",
+        "note_optional": "cargo_bay_t1__inventory_terminal__damaged.txt"
+      }
+    },
+    {
+      "asset_id": "cargo_bay_t1__inventory_terminal__depleted",
+      "asset_type": "state_variant",
+      "room_id": "cargo_bay_t1",
+      "room_name": "Cargo Bay Room",
+      "category": "storage",
+      "tier": 1,
+      "component_id": "inventory_terminal",
+      "component_name": "Inventory Terminal",
+      "component_kind": "interactive",
+      "state_key": "depleted",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'depleted' for component 'Inventory Terminal' in 'Cargo Bay Room'. Change only state cues: minimal or no glow, offline indicators, depleted resource cues. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "cargo_bay_t1__inventory_terminal__depleted.png",
+        "sidecar": "cargo_bay_t1__inventory_terminal__depleted.json",
+        "note_optional": "cargo_bay_t1__inventory_terminal__depleted.txt"
+      }
+    },
+    {
+      "asset_id": "cargo_bay_t1__inventory_terminal__idle",
+      "asset_type": "state_variant",
+      "room_id": "cargo_bay_t1",
+      "room_name": "Cargo Bay Room",
+      "category": "storage",
+      "tier": 1,
+      "component_id": "inventory_terminal",
+      "component_name": "Inventory Terminal",
+      "component_kind": "interactive",
+      "state_key": "idle",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'idle' for component 'Inventory Terminal' in 'Cargo Bay Room'. Change only state cues: stable indicator lights, neutral glow, no motion cues. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "cargo_bay_t1__inventory_terminal__idle.png",
+        "sidecar": "cargo_bay_t1__inventory_terminal__idle.json",
+        "note_optional": "cargo_bay_t1__inventory_terminal__idle.txt"
+      }
+    },
+    {
+      "asset_id": "cargo_bay_t1__ore_crates_set__active",
+      "asset_type": "state_variant",
+      "room_id": "cargo_bay_t1",
+      "room_name": "Cargo Bay Room",
+      "category": "storage",
+      "tier": 1,
+      "component_id": "ore_crates_set",
+      "component_name": "Ore Crates",
+      "component_kind": "interactive",
+      "state_key": "active",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'active' for component 'Ore Crates' in 'Cargo Bay Room'. Change only state cues: brighter active glow, subtle motion/energy cues, engaged indicators. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "cargo_bay_t1__ore_crates_set__active.png",
+        "sidecar": "cargo_bay_t1__ore_crates_set__active.json",
+        "note_optional": "cargo_bay_t1__ore_crates_set__active.txt"
+      }
+    },
+    {
+      "asset_id": "cargo_bay_t1__ore_crates_set__cooldown",
+      "asset_type": "state_variant",
+      "room_id": "cargo_bay_t1",
+      "room_name": "Cargo Bay Room",
+      "category": "storage",
+      "tier": 1,
+      "component_id": "ore_crates_set",
+      "component_name": "Ore Crates",
+      "component_kind": "interactive",
+      "state_key": "cooldown",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'cooldown' for component 'Ore Crates' in 'Cargo Bay Room'. Change only state cues: reduced glow with cooling/venting cues and amber warning flicker. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "cargo_bay_t1__ore_crates_set__cooldown.png",
+        "sidecar": "cargo_bay_t1__ore_crates_set__cooldown.json",
+        "note_optional": "cargo_bay_t1__ore_crates_set__cooldown.txt"
+      }
+    },
+    {
+      "asset_id": "cargo_bay_t1__ore_crates_set__damaged",
+      "asset_type": "state_variant",
+      "room_id": "cargo_bay_t1",
+      "room_name": "Cargo Bay Room",
+      "category": "storage",
+      "tier": 1,
+      "component_id": "ore_crates_set",
+      "component_name": "Ore Crates",
+      "component_kind": "interactive",
+      "state_key": "damaged",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'damaged' for component 'Ore Crates' in 'Cargo Bay Room'. Change only state cues: visible wear, sparks or cracks, warning lights and degraded output. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "cargo_bay_t1__ore_crates_set__damaged.png",
+        "sidecar": "cargo_bay_t1__ore_crates_set__damaged.json",
+        "note_optional": "cargo_bay_t1__ore_crates_set__damaged.txt"
+      }
+    },
+    {
+      "asset_id": "cargo_bay_t1__ore_crates_set__depleted",
+      "asset_type": "state_variant",
+      "room_id": "cargo_bay_t1",
+      "room_name": "Cargo Bay Room",
+      "category": "storage",
+      "tier": 1,
+      "component_id": "ore_crates_set",
+      "component_name": "Ore Crates",
+      "component_kind": "interactive",
+      "state_key": "depleted",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'depleted' for component 'Ore Crates' in 'Cargo Bay Room'. Change only state cues: minimal or no glow, offline indicators, depleted resource cues. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "cargo_bay_t1__ore_crates_set__depleted.png",
+        "sidecar": "cargo_bay_t1__ore_crates_set__depleted.json",
+        "note_optional": "cargo_bay_t1__ore_crates_set__depleted.txt"
+      }
+    }
+  ]
+}

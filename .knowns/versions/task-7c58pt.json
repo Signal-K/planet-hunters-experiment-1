@@ -1,0 +1,323 @@
+{
+  "taskId": "7c58pt",
+  "currentVersion": 6,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "7c58pt",
+      "version": 1,
+      "timestamp": "2026-03-16T21:29:21.718Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Scanner range increase at Level 8",
+        "description": "Level progression doc specifies: at Level 8, scanner range increases (measured in light-years). Relay stations amplify this base increase further. Entry point: SatelliteStationPanel.gd or scanner target filtering.",
+        "status": "in-progress",
+        "priority": "low",
+        "assignee": "@me",
+        "labels": [
+          "gameplay",
+          "scanner",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Scanner range is extended at Level 8 (more distant targets become visible/selectable)"
+          },
+          {
+            "completed": false,
+            "text": "Scanner UI shows range indicator that updates when L8 is reached"
+          },
+          {
+            "completed": false,
+            "text": "Relay stations provide additional multiplier on top of the L8 base increase (stub OK for now)"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "7c58pt",
+      "version": 2,
+      "timestamp": "2026-03-16T21:38:24.163Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Scanner range is extended at Level 8 (more distant targets become visible/selectable)"
+            },
+            {
+              "completed": false,
+              "text": "Scanner UI shows range indicator that updates when L8 is reached"
+            },
+            {
+              "completed": false,
+              "text": "Relay stations provide additional multiplier on top of the L8 base increase (stub OK for now)"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Scanner range is extended at Level 8 (more distant targets become visible/selectable)"
+            },
+            {
+              "completed": false,
+              "text": "Scanner UI shows range indicator that updates when L8 is reached"
+            },
+            {
+              "completed": false,
+              "text": "Relay stations provide additional multiplier on top of the L8 base increase (stub OK for now)"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Scanner range increase at Level 8",
+        "description": "Level progression doc specifies: at Level 8, scanner range increases (measured in light-years). Relay stations amplify this base increase further. Entry point: SatelliteStationPanel.gd or scanner target filtering.",
+        "status": "in-progress",
+        "priority": "low",
+        "assignee": "@me",
+        "labels": [
+          "gameplay",
+          "scanner",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Scanner range is extended at Level 8 (more distant targets become visible/selectable)"
+          },
+          {
+            "completed": false,
+            "text": "Scanner UI shows range indicator that updates when L8 is reached"
+          },
+          {
+            "completed": false,
+            "text": "Relay stations provide additional multiplier on top of the L8 base increase (stub OK for now)"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "7c58pt",
+      "version": 3,
+      "timestamp": "2026-03-16T21:38:24.405Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Scanner range is extended at Level 8 (more distant targets become visible/selectable)"
+            },
+            {
+              "completed": false,
+              "text": "Scanner UI shows range indicator that updates when L8 is reached"
+            },
+            {
+              "completed": false,
+              "text": "Relay stations provide additional multiplier on top of the L8 base increase (stub OK for now)"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Scanner range is extended at Level 8 (more distant targets become visible/selectable)"
+            },
+            {
+              "completed": true,
+              "text": "Scanner UI shows range indicator that updates when L8 is reached"
+            },
+            {
+              "completed": false,
+              "text": "Relay stations provide additional multiplier on top of the L8 base increase (stub OK for now)"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Scanner range increase at Level 8",
+        "description": "Level progression doc specifies: at Level 8, scanner range increases (measured in light-years). Relay stations amplify this base increase further. Entry point: SatelliteStationPanel.gd or scanner target filtering.",
+        "status": "in-progress",
+        "priority": "low",
+        "assignee": "@me",
+        "labels": [
+          "gameplay",
+          "scanner",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Scanner range is extended at Level 8 (more distant targets become visible/selectable)"
+          },
+          {
+            "completed": true,
+            "text": "Scanner UI shows range indicator that updates when L8 is reached"
+          },
+          {
+            "completed": false,
+            "text": "Relay stations provide additional multiplier on top of the L8 base increase (stub OK for now)"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "7c58pt",
+      "version": 4,
+      "timestamp": "2026-03-16T21:38:24.643Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Scanner range is extended at Level 8 (more distant targets become visible/selectable)"
+            },
+            {
+              "completed": true,
+              "text": "Scanner UI shows range indicator that updates when L8 is reached"
+            },
+            {
+              "completed": false,
+              "text": "Relay stations provide additional multiplier on top of the L8 base increase (stub OK for now)"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Scanner range is extended at Level 8 (more distant targets become visible/selectable)"
+            },
+            {
+              "completed": true,
+              "text": "Scanner UI shows range indicator that updates when L8 is reached"
+            },
+            {
+              "completed": true,
+              "text": "Relay stations provide additional multiplier on top of the L8 base increase (stub OK for now)"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Scanner range increase at Level 8",
+        "description": "Level progression doc specifies: at Level 8, scanner range increases (measured in light-years). Relay stations amplify this base increase further. Entry point: SatelliteStationPanel.gd or scanner target filtering.",
+        "status": "in-progress",
+        "priority": "low",
+        "assignee": "@me",
+        "labels": [
+          "gameplay",
+          "scanner",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Scanner range is extended at Level 8 (more distant targets become visible/selectable)"
+          },
+          {
+            "completed": true,
+            "text": "Scanner UI shows range indicator that updates when L8 is reached"
+          },
+          {
+            "completed": true,
+            "text": "Relay stations provide additional multiplier on top of the L8 base increase (stub OK for now)"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "7c58pt",
+      "version": 5,
+      "timestamp": "2026-03-16T21:38:24.883Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "SCANNER_RANGE_UNLOCK_LEVEL=8 added to SatelliteStationPanel. has_extended_scanner_range() and get_scanner_range_label() implemented. Status labels updated with range note at L8. Relay station multiplier stubbed (AC3 fulfilled as stub per task). MECH19-20 pass."
+        }
+      ],
+      "snapshot": {
+        "title": "Scanner range increase at Level 8",
+        "description": "Level progression doc specifies: at Level 8, scanner range increases (measured in light-years). Relay stations amplify this base increase further. Entry point: SatelliteStationPanel.gd or scanner target filtering.",
+        "status": "in-progress",
+        "priority": "low",
+        "assignee": "@me",
+        "labels": [
+          "gameplay",
+          "scanner",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Scanner range is extended at Level 8 (more distant targets become visible/selectable)"
+          },
+          {
+            "completed": true,
+            "text": "Scanner UI shows range indicator that updates when L8 is reached"
+          },
+          {
+            "completed": true,
+            "text": "Relay stations provide additional multiplier on top of the L8 base increase (stub OK for now)"
+          }
+        ],
+        "implementationNotes": "SCANNER_RANGE_UNLOCK_LEVEL=8 added to SatelliteStationPanel. has_extended_scanner_range() and get_scanner_range_label() implemented. Status labels updated with range note at L8. Relay station multiplier stubbed (AC3 fulfilled as stub per task). MECH19-20 pass."
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "7c58pt",
+      "version": 6,
+      "timestamp": "2026-03-16T21:38:25.122Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Scanner range increase at Level 8",
+        "description": "Level progression doc specifies: at Level 8, scanner range increases (measured in light-years). Relay stations amplify this base increase further. Entry point: SatelliteStationPanel.gd or scanner target filtering.",
+        "status": "done",
+        "priority": "low",
+        "assignee": "@me",
+        "labels": [
+          "gameplay",
+          "scanner",
+          "progression"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Scanner range is extended at Level 8 (more distant targets become visible/selectable)"
+          },
+          {
+            "completed": true,
+            "text": "Scanner UI shows range indicator that updates when L8 is reached"
+          },
+          {
+            "completed": true,
+            "text": "Relay stations provide additional multiplier on top of the L8 base increase (stub OK for now)"
+          }
+        ],
+        "implementationNotes": "SCANNER_RANGE_UNLOCK_LEVEL=8 added to SatelliteStationPanel. has_extended_scanner_range() and get_scanner_range_label() implemented. Status labels updated with range note at L8. Relay station multiplier stubbed (AC3 fulfilled as stub per task). MECH19-20 pass."
+      }
+    }
+  ]
+}

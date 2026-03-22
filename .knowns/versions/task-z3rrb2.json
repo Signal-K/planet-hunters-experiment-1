@@ -1,0 +1,237 @@
+{
+  "taskId": "z3rrb2",
+  "currentVersion": 4,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "z3rrb2",
+      "version": 1,
+      "timestamp": "2026-03-18T14:20:38.557Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Job board contractor UI",
+        "description": "Contractor panel as a job board: all available missions visible simultaneously for comparison and selection.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "contractors"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "All unlocked contractors' missions visible on one screen"
+          },
+          {
+            "completed": false,
+            "text": "Missions show: contractor name, mineral required, quantity, payout, mission type"
+          },
+          {
+            "completed": false,
+            "text": "Market comparison legible (contractor premium vs open market)"
+          },
+          {
+            "completed": false,
+            "text": "Contractor cooldown status shown inline"
+          },
+          {
+            "completed": false,
+            "text": "Sorting or filtering by payout/type"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "z3rrb2",
+      "version": 2,
+      "timestamp": "2026-03-18T14:24:37.855Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "All unlocked contractors' missions visible on one screen"
+            },
+            {
+              "completed": false,
+              "text": "Missions show: contractor name, mineral required, quantity, payout, mission type"
+            },
+            {
+              "completed": false,
+              "text": "Market comparison legible (contractor premium vs open market)"
+            },
+            {
+              "completed": false,
+              "text": "Contractor cooldown status shown inline"
+            },
+            {
+              "completed": false,
+              "text": "Sorting or filtering by payout/type"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "All unlocked contractors' missions visible on one screen"
+            },
+            {
+              "completed": true,
+              "text": "Missions show: contractor name, mineral required, quantity, payout, mission type"
+            },
+            {
+              "completed": true,
+              "text": "Market comparison legible (contractor premium vs open market)"
+            },
+            {
+              "completed": true,
+              "text": "Contractor cooldown status shown inline"
+            },
+            {
+              "completed": true,
+              "text": "Sorting or filtering by payout/type"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Job board contractor UI",
+        "description": "Contractor panel as a job board: all available missions visible simultaneously for comparison and selection.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "contractors"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "All unlocked contractors' missions visible on one screen"
+          },
+          {
+            "completed": true,
+            "text": "Missions show: contractor name, mineral required, quantity, payout, mission type"
+          },
+          {
+            "completed": true,
+            "text": "Market comparison legible (contractor premium vs open market)"
+          },
+          {
+            "completed": true,
+            "text": "Contractor cooldown status shown inline"
+          },
+          {
+            "completed": true,
+            "text": "Sorting or filtering by payout/type"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "z3rrb2",
+      "version": 3,
+      "timestamp": "2026-03-18T14:24:38.201Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "Added JOB BOARD section to GameNavigationMenu. _build_job_board_card() shows all unlocked contractors (SubcontractorManager.get_roster) with: name, mineral specialisation (from bonus dict), payout vs market (+40%: 120% vs 80%), cooldown/affinity status. Legend row + note about selecting in Launchpad."
+        }
+      ],
+      "snapshot": {
+        "title": "Job board contractor UI",
+        "description": "Contractor panel as a job board: all available missions visible simultaneously for comparison and selection.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "contractors"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "All unlocked contractors' missions visible on one screen"
+          },
+          {
+            "completed": true,
+            "text": "Missions show: contractor name, mineral required, quantity, payout, mission type"
+          },
+          {
+            "completed": true,
+            "text": "Market comparison legible (contractor premium vs open market)"
+          },
+          {
+            "completed": true,
+            "text": "Contractor cooldown status shown inline"
+          },
+          {
+            "completed": true,
+            "text": "Sorting or filtering by payout/type"
+          }
+        ],
+        "implementationNotes": "Added JOB BOARD section to GameNavigationMenu. _build_job_board_card() shows all unlocked contractors (SubcontractorManager.get_roster) with: name, mineral specialisation (from bonus dict), payout vs market (+40%: 120% vs 80%), cooldown/affinity status. Legend row + note about selecting in Launchpad."
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "z3rrb2",
+      "version": 4,
+      "timestamp": "2026-03-18T14:24:38.929Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Job board contractor UI",
+        "description": "Contractor panel as a job board: all available missions visible simultaneously for comparison and selection.",
+        "status": "done",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "contractors"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "All unlocked contractors' missions visible on one screen"
+          },
+          {
+            "completed": true,
+            "text": "Missions show: contractor name, mineral required, quantity, payout, mission type"
+          },
+          {
+            "completed": true,
+            "text": "Market comparison legible (contractor premium vs open market)"
+          },
+          {
+            "completed": true,
+            "text": "Contractor cooldown status shown inline"
+          },
+          {
+            "completed": true,
+            "text": "Sorting or filtering by payout/type"
+          }
+        ],
+        "implementationNotes": "Added JOB BOARD section to GameNavigationMenu. _build_job_board_card() shows all unlocked contractors (SubcontractorManager.get_roster) with: name, mineral specialisation (from bonus dict), payout vs market (+40%: 120% vs 80%), cooldown/affinity status. Legend row + note about selecting in Launchpad."
+      }
+    }
+  ]
+}

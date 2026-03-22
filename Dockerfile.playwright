@@ -1,0 +1,17 @@
+# Playwright e2e image — runs natively on Apple Silicon via the cached amd64 node layer.
+# Uses Firefox only: Chrome crashes under QEMU due to AVX2 instruction emulation limits.
+# GitHub Actions uses Dockerfile.ci (native x86_64, all browsers).
+FROM --platform=linux/amd64 node:20-bullseye
+
+WORKDIR /app
+
+COPY package.json package-lock.json* yarn.lock* borndotcom-react-native-godot-v1.0.1.tgz* ./
+
+RUN npm install --legacy-peer-deps
+
+# Firefox only — avoids Chrome QEMU SIGTRAP crash on Apple Silicon
+RUN npx playwright install --with-deps firefox
+
+COPY . .
+
+CMD ["npx", "playwright", "test", "--config=playwright.docker.config.ts", "--reporter=line"]

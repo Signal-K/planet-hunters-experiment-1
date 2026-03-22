@@ -1,0 +1,80 @@
+{
+  "taskId": "a6enao",
+  "currentVersion": 1,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "a6enao",
+      "version": 1,
+      "timestamp": "2026-03-21T01:43:12.429Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        },
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Tutorial highlight overlay has a visible bg fill (not fully transparent)"
+            },
+            {
+              "completed": false,
+              "text": "Contractor 'Select' button uses amber/primary styling when active so it stands out"
+            },
+            {
+              "completed": false,
+              "text": "Highlight pulse animation makes the target visually obvious"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Tutorial highlight overlay has a visible bg fill (not fully transparent)"
+            },
+            {
+              "completed": true,
+              "text": "Contractor 'Select' button uses amber/primary styling when active so it stands out"
+            },
+            {
+              "completed": true,
+              "text": "Highlight pulse animation makes the target visually obvious"
+            }
+          ]
+        },
+        {
+          "field": "implementationNotes",
+          "newValue": "Fixed in TutorialCoachOverlay.gd: highlight now has 0.12 alpha fill + pulsing tween (0.08↔0.30 SINE). Fixed in LaunchpadSelectorPanel.gd: contractor Select button uses amber primary style (apply_button true) when not disabled."
+        }
+      ],
+      "snapshot": {
+        "title": "Fix tutorial highlight: Select button invisible against dark background",
+        "description": "During onboarding, the tutorial-highlighted 'Select' button blends into the dark panel background because both the highlight overlay and the button are the same dark cyan/navy palette. Player cannot tell it's clickable.",
+        "status": "done",
+        "priority": "high",
+        "labels": [
+          "tutorial",
+          "ux",
+          "onboarding"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Tutorial highlight overlay has a visible bg fill (not fully transparent)"
+          },
+          {
+            "completed": true,
+            "text": "Contractor 'Select' button uses amber/primary styling when active so it stands out"
+          },
+          {
+            "completed": true,
+            "text": "Highlight pulse animation makes the target visually obvious"
+          }
+        ],
+        "implementationNotes": "Fixed in TutorialCoachOverlay.gd: highlight now has 0.12 alpha fill + pulsing tween (0.08↔0.30 SINE). Fixed in LaunchpadSelectorPanel.gd: contractor Select button uses amber primary style (apply_button true) when not disabled."
+      }
+    }
+  ]
+}

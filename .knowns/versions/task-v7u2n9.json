@@ -1,0 +1,268 @@
+{
+  "taskId": "v7u2n9",
+  "currentVersion": 5,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "v7u2n9",
+      "version": 1,
+      "timestamp": "2026-03-16T17:44:22.634Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Implement persistent mineral inventory and construction manager",
+        "description": "Based on the vision from the 20 Questions, the game needs a way to store collected minerals (Iron, Nickel, etc.) across runs and use them for construction projects (settlements, outposts, refineries).",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "gameplay",
+          "inventory",
+          "construction"
+        ],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "v7u2n9",
+      "version": 2,
+      "timestamp": "2026-03-16T17:44:27.866Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [],
+          "newValue": [
+            {
+              "text": "Selling minerals in debrief removes them from persistent inventory",
+              "completed": false
+            },
+            {
+              "text": "Game menu shows current mineral inventory with per-mineral quantities",
+              "completed": false
+            },
+            {
+              "text": "Game menu shows construction projects with progress bars",
+              "completed": false
+            },
+            {
+              "text": "Player can contribute minerals from inventory toward a construction project",
+              "completed": false
+            }
+          ]
+        },
+        {
+          "field": "implementationPlan",
+          "newValue": "1. Fix MissionDebrief._sell() to consume_from_inventory(_cargo)\n2. Add INVENTORY section to GameNavigationMenu\n3. Add CONSTRUCTION section to GameNavigationMenu with contribute flow"
+        }
+      ],
+      "snapshot": {
+        "title": "Implement persistent mineral inventory and construction manager",
+        "description": "Based on the vision from the 20 Questions, the game needs a way to store collected minerals (Iron, Nickel, etc.) across runs and use them for construction projects (settlements, outposts, refineries).",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "gameplay",
+          "inventory",
+          "construction"
+        ],
+        "acceptanceCriteria": [
+          {
+            "text": "Selling minerals in debrief removes them from persistent inventory",
+            "completed": false
+          },
+          {
+            "text": "Game menu shows current mineral inventory with per-mineral quantities",
+            "completed": false
+          },
+          {
+            "text": "Game menu shows construction projects with progress bars",
+            "completed": false
+          },
+          {
+            "text": "Player can contribute minerals from inventory toward a construction project",
+            "completed": false
+          }
+        ],
+        "implementationPlan": "1. Fix MissionDebrief._sell() to consume_from_inventory(_cargo)\n2. Add INVENTORY section to GameNavigationMenu\n3. Add CONSTRUCTION section to GameNavigationMenu with contribute flow"
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "v7u2n9",
+      "version": 3,
+      "timestamp": "2026-03-16T17:46:50.679Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Selling minerals in debrief removes them from persistent inventory"
+            },
+            {
+              "completed": false,
+              "text": "Game menu shows current mineral inventory with per-mineral quantities"
+            },
+            {
+              "completed": false,
+              "text": "Game menu shows construction projects with progress bars"
+            },
+            {
+              "completed": false,
+              "text": "Player can contribute minerals from inventory toward a construction project"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Selling minerals in debrief removes them from persistent inventory"
+            },
+            {
+              "completed": true,
+              "text": "Game menu shows current mineral inventory with per-mineral quantities"
+            },
+            {
+              "completed": true,
+              "text": "Game menu shows construction projects with progress bars"
+            },
+            {
+              "completed": true,
+              "text": "Player can contribute minerals from inventory toward a construction project"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Implement persistent mineral inventory and construction manager",
+        "description": "Based on the vision from the 20 Questions, the game needs a way to store collected minerals (Iron, Nickel, etc.) across runs and use them for construction projects (settlements, outposts, refineries).",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "gameplay",
+          "inventory",
+          "construction"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Selling minerals in debrief removes them from persistent inventory"
+          },
+          {
+            "completed": true,
+            "text": "Game menu shows current mineral inventory with per-mineral quantities"
+          },
+          {
+            "completed": true,
+            "text": "Game menu shows construction projects with progress bars"
+          },
+          {
+            "completed": true,
+            "text": "Player can contribute minerals from inventory toward a construction project"
+          }
+        ],
+        "implementationPlan": "1. Fix MissionDebrief._sell() to consume_from_inventory(_cargo)\n2. Add INVENTORY section to GameNavigationMenu\n3. Add CONSTRUCTION section to GameNavigationMenu with contribute flow"
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "v7u2n9",
+      "version": 4,
+      "timestamp": "2026-03-16T17:46:50.924Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "Fixed: _sell() in MissionDebrief now calls consume_from_inventory(_cargo) so selling removes minerals from persistent store.\nAdded INVENTORY section to GameNavigationMenu: lists all minerals + quantities, or empty state message.\nAdded CONSTRUCTION section: per-project cards with requirement progress bars + Contribute button opening a modal with per-mineral SpinBox allocators.\nConstructionManager + RocketsManager inventory already existed — only wiring and UI were missing.\nAll 13 regression tests pass."
+        }
+      ],
+      "snapshot": {
+        "title": "Implement persistent mineral inventory and construction manager",
+        "description": "Based on the vision from the 20 Questions, the game needs a way to store collected minerals (Iron, Nickel, etc.) across runs and use them for construction projects (settlements, outposts, refineries).",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "gameplay",
+          "inventory",
+          "construction"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Selling minerals in debrief removes them from persistent inventory"
+          },
+          {
+            "completed": true,
+            "text": "Game menu shows current mineral inventory with per-mineral quantities"
+          },
+          {
+            "completed": true,
+            "text": "Game menu shows construction projects with progress bars"
+          },
+          {
+            "completed": true,
+            "text": "Player can contribute minerals from inventory toward a construction project"
+          }
+        ],
+        "implementationPlan": "1. Fix MissionDebrief._sell() to consume_from_inventory(_cargo)\n2. Add INVENTORY section to GameNavigationMenu\n3. Add CONSTRUCTION section to GameNavigationMenu with contribute flow",
+        "implementationNotes": "Fixed: _sell() in MissionDebrief now calls consume_from_inventory(_cargo) so selling removes minerals from persistent store.\nAdded INVENTORY section to GameNavigationMenu: lists all minerals + quantities, or empty state message.\nAdded CONSTRUCTION section: per-project cards with requirement progress bars + Contribute button opening a modal with per-mineral SpinBox allocators.\nConstructionManager + RocketsManager inventory already existed — only wiring and UI were missing.\nAll 13 regression tests pass."
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "v7u2n9",
+      "version": 5,
+      "timestamp": "2026-03-16T17:46:51.420Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Implement persistent mineral inventory and construction manager",
+        "description": "Based on the vision from the 20 Questions, the game needs a way to store collected minerals (Iron, Nickel, etc.) across runs and use them for construction projects (settlements, outposts, refineries).",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "gameplay",
+          "inventory",
+          "construction"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Selling minerals in debrief removes them from persistent inventory"
+          },
+          {
+            "completed": true,
+            "text": "Game menu shows current mineral inventory with per-mineral quantities"
+          },
+          {
+            "completed": true,
+            "text": "Game menu shows construction projects with progress bars"
+          },
+          {
+            "completed": true,
+            "text": "Player can contribute minerals from inventory toward a construction project"
+          }
+        ],
+        "implementationPlan": "1. Fix MissionDebrief._sell() to consume_from_inventory(_cargo)\n2. Add INVENTORY section to GameNavigationMenu\n3. Add CONSTRUCTION section to GameNavigationMenu with contribute flow",
+        "implementationNotes": "Fixed: _sell() in MissionDebrief now calls consume_from_inventory(_cargo) so selling removes minerals from persistent store.\nAdded INVENTORY section to GameNavigationMenu: lists all minerals + quantities, or empty state message.\nAdded CONSTRUCTION section: per-project cards with requirement progress bars + Contribute button opening a modal with per-mineral SpinBox allocators.\nConstructionManager + RocketsManager inventory already existed — only wiring and UI were missing.\nAll 13 regression tests pass."
+      }
+    }
+  ]
+}

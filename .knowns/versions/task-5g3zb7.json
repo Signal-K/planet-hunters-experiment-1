@@ -1,0 +1,341 @@
+{
+  "taskId": "5g3zb7",
+  "currentVersion": 6,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "5g3zb7",
+      "version": 1,
+      "timestamp": "2026-03-19T02:28:12.671Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "newValue": "## Implementation Plan\n\n### Dependencies\n- Install `web-push` via yarn (VAPID signing — not yet installed)\n- Node.js built-in `crypto` is alternative but web-push is much simpler\n\n### Files to create/modify\n\n1. **`web/public/sw.js`** (NEW) — Service worker\n   - `push` event listener → `self.registration.showNotification(title, options)`\n   - `notificationclick` → `clients.openWindow(event.notification.data.url || \"/\")`\n\n2. **`web/public/manifest.json`** (NEW) — PWA manifest\n   - Required for service worker scope + install prompt\n   - Already has favicon.ico / favicon.svg\n\n3. **`web/public/index.html`** — Add manifest link + SW registration script\n   - `<link rel=\"manifest\" href=\"/manifest.json\">`\n   - Register SW on load, subscribe to push, POST subscription to `/api/push-subscribe`\n   - Use VAPID public key from a `<meta name=\"vapid-public-key\">` tag (injected by server)\n\n4. **`web/server.js`** — Add endpoints\n   - `POST /api/push-subscribe` → store subscription in memory Map (or persist to file)\n   - `POST /api/push-notify` → internal endpoint (game calls this), sends push via web-push\n   - VAPID keys read from env vars `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY`\n   - Generate keys once with: `node -e \"const wp=require('web-push'); const k=wp.generateVAPIDKeys(); console.log(JSON.stringify(k))\"`\n   - In-memory subscription store: `const _pushSubscriptions = new Map()` (keyed by user_id or endpoint hash)\n   - Scheduled notifications: `const _scheduledPushes = new Map()` with `setTimeout` per event\n\n5. **`react-shell.js`** — Client-side push subscription\n   - After SW registers: call `swRegistration.pushManager.subscribe({userVisibleOnly:true, applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)})`\n   - POST subscription object to `/api/push-subscribe`\n   - Expose `window.__schedulePush(event, delayMs, payload)` for game postMessage bridge\n\n6. **GDScript: `scene/Scripts/Utils/PushNotificationHelper.gd`** (NEW)\n   - `static func schedule_rocket_arrival(mission_id, duration_secs)` → POST to `/api/push-notify` with `schedule_after_secs`\n   - `static func schedule_construction_complete(room_id, duration_secs)`\n   - `static func schedule_contractor_cooldown_end(contractor_id, duration_secs)`\n   - Uses same HTTPRequest pattern as MissionNarrativeAPI.gd\n\n### Hook points in existing GDScript\n- Rocket launch: `LaunchpadSelectorPanel.gd` after mission accepted → call `PushNotificationHelper.schedule_rocket_arrival()`\n- Construction: `GameNavigationMenu.gd` after `_do_room_upgrade()` → call `schedule_construction_complete()`\n- Contractor cooldown: `SubcontractorManager.gd` when cooldown is set → call `schedule_contractor_cooldown_end()`\n\n### AC#5 interpretation\n\"Backend trigger via Supabase\" means our self-hosted Node server reads from Supabase for event timing (e.g. mission launch records), NOT that Supabase sends pushes. The Node server sends pushes via web-push library. No OneSignal or external push service.\n\n### Key constraints\n- PWA only (service workers require HTTPS or localhost)\n- react-shell.js is the PWA shell; index.html is the standalone web viewer\n- Both need SW registration but push subscription only meaningful in PWA context\n- VAPID keys must be persisted as env vars (rotate = all existing subscriptions invalidated)"
+        }
+      ],
+      "snapshot": {
+        "title": "Push notifications MVP (self-hosted)",
+        "description": "Self-hosted push notifications via service worker + Supabase. Day 1 requirement. No external services (no OneSignal).",
+        "status": "todo",
+        "priority": "high",
+        "labels": [
+          "notifications",
+          "pwa",
+          "backend"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Service worker registered and active in PWA"
+          },
+          {
+            "completed": false,
+            "text": "Push notification on rocket arrival at destination"
+          },
+          {
+            "completed": false,
+            "text": "Push notification on construction completion"
+          },
+          {
+            "completed": false,
+            "text": "Push notification on contractor cooldown ending"
+          },
+          {
+            "completed": false,
+            "text": "Backend trigger via Supabase (no external notification service)"
+          }
+        ],
+        "implementationPlan": "## Implementation Plan\n\n### Dependencies\n- Install `web-push` via yarn (VAPID signing — not yet installed)\n- Node.js built-in `crypto` is alternative but web-push is much simpler\n\n### Files to create/modify\n\n1. **`web/public/sw.js`** (NEW) — Service worker\n   - `push` event listener → `self.registration.showNotification(title, options)`\n   - `notificationclick` → `clients.openWindow(event.notification.data.url || \"/\")`\n\n2. **`web/public/manifest.json`** (NEW) — PWA manifest\n   - Required for service worker scope + install prompt\n   - Already has favicon.ico / favicon.svg\n\n3. **`web/public/index.html`** — Add manifest link + SW registration script\n   - `<link rel=\"manifest\" href=\"/manifest.json\">`\n   - Register SW on load, subscribe to push, POST subscription to `/api/push-subscribe`\n   - Use VAPID public key from a `<meta name=\"vapid-public-key\">` tag (injected by server)\n\n4. **`web/server.js`** — Add endpoints\n   - `POST /api/push-subscribe` → store subscription in memory Map (or persist to file)\n   - `POST /api/push-notify` → internal endpoint (game calls this), sends push via web-push\n   - VAPID keys read from env vars `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY`\n   - Generate keys once with: `node -e \"const wp=require('web-push'); const k=wp.generateVAPIDKeys(); console.log(JSON.stringify(k))\"`\n   - In-memory subscription store: `const _pushSubscriptions = new Map()` (keyed by user_id or endpoint hash)\n   - Scheduled notifications: `const _scheduledPushes = new Map()` with `setTimeout` per event\n\n5. **`react-shell.js`** — Client-side push subscription\n   - After SW registers: call `swRegistration.pushManager.subscribe({userVisibleOnly:true, applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)})`\n   - POST subscription object to `/api/push-subscribe`\n   - Expose `window.__schedulePush(event, delayMs, payload)` for game postMessage bridge\n\n6. **GDScript: `scene/Scripts/Utils/PushNotificationHelper.gd`** (NEW)\n   - `static func schedule_rocket_arrival(mission_id, duration_secs)` → POST to `/api/push-notify` with `schedule_after_secs`\n   - `static func schedule_construction_complete(room_id, duration_secs)`\n   - `static func schedule_contractor_cooldown_end(contractor_id, duration_secs)`\n   - Uses same HTTPRequest pattern as MissionNarrativeAPI.gd\n\n### Hook points in existing GDScript\n- Rocket launch: `LaunchpadSelectorPanel.gd` after mission accepted → call `PushNotificationHelper.schedule_rocket_arrival()`\n- Construction: `GameNavigationMenu.gd` after `_do_room_upgrade()` → call `schedule_construction_complete()`\n- Contractor cooldown: `SubcontractorManager.gd` when cooldown is set → call `schedule_contractor_cooldown_end()`\n\n### AC#5 interpretation\n\"Backend trigger via Supabase\" means our self-hosted Node server reads from Supabase for event timing (e.g. mission launch records), NOT that Supabase sends pushes. The Node server sends pushes via web-push library. No OneSignal or external push service.\n\n### Key constraints\n- PWA only (service workers require HTTPS or localhost)\n- react-shell.js is the PWA shell; index.html is the standalone web viewer\n- Both need SW registration but push subscription only meaningful in PWA context\n- VAPID keys must be persisted as env vars (rotate = all existing subscriptions invalidated)"
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "5g3zb7",
+      "version": 2,
+      "timestamp": "2026-03-19T02:28:26.309Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "Research complete 2026-03-19. Ready to implement — no blockers. web-push not yet installed (yarn add web-push needed). See implementation plan for full file list."
+        }
+      ],
+      "snapshot": {
+        "title": "Push notifications MVP (self-hosted)",
+        "description": "Self-hosted push notifications via service worker + Supabase. Day 1 requirement. No external services (no OneSignal).",
+        "status": "todo",
+        "priority": "high",
+        "labels": [
+          "notifications",
+          "pwa",
+          "backend"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Service worker registered and active in PWA"
+          },
+          {
+            "completed": false,
+            "text": "Push notification on rocket arrival at destination"
+          },
+          {
+            "completed": false,
+            "text": "Push notification on construction completion"
+          },
+          {
+            "completed": false,
+            "text": "Push notification on contractor cooldown ending"
+          },
+          {
+            "completed": false,
+            "text": "Backend trigger via Supabase (no external notification service)"
+          }
+        ],
+        "implementationPlan": "## Implementation Plan\n\n### Dependencies\n- Install `web-push` via yarn (VAPID signing — not yet installed)\n- Node.js built-in `crypto` is alternative but web-push is much simpler\n\n### Files to create/modify\n\n1. **`web/public/sw.js`** (NEW) — Service worker\n   - `push` event listener → `self.registration.showNotification(title, options)`\n   - `notificationclick` → `clients.openWindow(event.notification.data.url || \"/\")`\n\n2. **`web/public/manifest.json`** (NEW) — PWA manifest\n   - Required for service worker scope + install prompt\n   - Already has favicon.ico / favicon.svg\n\n3. **`web/public/index.html`** — Add manifest link + SW registration script\n   - `<link rel=\"manifest\" href=\"/manifest.json\">`\n   - Register SW on load, subscribe to push, POST subscription to `/api/push-subscribe`\n   - Use VAPID public key from a `<meta name=\"vapid-public-key\">` tag (injected by server)\n\n4. **`web/server.js`** — Add endpoints\n   - `POST /api/push-subscribe` → store subscription in memory Map (or persist to file)\n   - `POST /api/push-notify` → internal endpoint (game calls this), sends push via web-push\n   - VAPID keys read from env vars `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY`\n   - Generate keys once with: `node -e \"const wp=require('web-push'); const k=wp.generateVAPIDKeys(); console.log(JSON.stringify(k))\"`\n   - In-memory subscription store: `const _pushSubscriptions = new Map()` (keyed by user_id or endpoint hash)\n   - Scheduled notifications: `const _scheduledPushes = new Map()` with `setTimeout` per event\n\n5. **`react-shell.js`** — Client-side push subscription\n   - After SW registers: call `swRegistration.pushManager.subscribe({userVisibleOnly:true, applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)})`\n   - POST subscription object to `/api/push-subscribe`\n   - Expose `window.__schedulePush(event, delayMs, payload)` for game postMessage bridge\n\n6. **GDScript: `scene/Scripts/Utils/PushNotificationHelper.gd`** (NEW)\n   - `static func schedule_rocket_arrival(mission_id, duration_secs)` → POST to `/api/push-notify` with `schedule_after_secs`\n   - `static func schedule_construction_complete(room_id, duration_secs)`\n   - `static func schedule_contractor_cooldown_end(contractor_id, duration_secs)`\n   - Uses same HTTPRequest pattern as MissionNarrativeAPI.gd\n\n### Hook points in existing GDScript\n- Rocket launch: `LaunchpadSelectorPanel.gd` after mission accepted → call `PushNotificationHelper.schedule_rocket_arrival()`\n- Construction: `GameNavigationMenu.gd` after `_do_room_upgrade()` → call `schedule_construction_complete()`\n- Contractor cooldown: `SubcontractorManager.gd` when cooldown is set → call `schedule_contractor_cooldown_end()`\n\n### AC#5 interpretation\n\"Backend trigger via Supabase\" means our self-hosted Node server reads from Supabase for event timing (e.g. mission launch records), NOT that Supabase sends pushes. The Node server sends pushes via web-push library. No OneSignal or external push service.\n\n### Key constraints\n- PWA only (service workers require HTTPS or localhost)\n- react-shell.js is the PWA shell; index.html is the standalone web viewer\n- Both need SW registration but push subscription only meaningful in PWA context\n- VAPID keys must be persisted as env vars (rotate = all existing subscriptions invalidated)",
+        "implementationNotes": "Research complete 2026-03-19. Ready to implement — no blockers. web-push not yet installed (yarn add web-push needed). See implementation plan for full file list."
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "5g3zb7",
+      "version": 3,
+      "timestamp": "2026-03-19T03:24:28.405Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Push notifications MVP (self-hosted)",
+        "description": "Self-hosted push notifications via service worker + Supabase. Day 1 requirement. No external services (no OneSignal).",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "notifications",
+          "pwa",
+          "backend"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Service worker registered and active in PWA"
+          },
+          {
+            "completed": false,
+            "text": "Push notification on rocket arrival at destination"
+          },
+          {
+            "completed": false,
+            "text": "Push notification on construction completion"
+          },
+          {
+            "completed": false,
+            "text": "Push notification on contractor cooldown ending"
+          },
+          {
+            "completed": false,
+            "text": "Backend trigger via Supabase (no external notification service)"
+          }
+        ],
+        "implementationPlan": "## Implementation Plan\n\n### Dependencies\n- Install `web-push` via yarn (VAPID signing — not yet installed)\n- Node.js built-in `crypto` is alternative but web-push is much simpler\n\n### Files to create/modify\n\n1. **`web/public/sw.js`** (NEW) — Service worker\n   - `push` event listener → `self.registration.showNotification(title, options)`\n   - `notificationclick` → `clients.openWindow(event.notification.data.url || \"/\")`\n\n2. **`web/public/manifest.json`** (NEW) — PWA manifest\n   - Required for service worker scope + install prompt\n   - Already has favicon.ico / favicon.svg\n\n3. **`web/public/index.html`** — Add manifest link + SW registration script\n   - `<link rel=\"manifest\" href=\"/manifest.json\">`\n   - Register SW on load, subscribe to push, POST subscription to `/api/push-subscribe`\n   - Use VAPID public key from a `<meta name=\"vapid-public-key\">` tag (injected by server)\n\n4. **`web/server.js`** — Add endpoints\n   - `POST /api/push-subscribe` → store subscription in memory Map (or persist to file)\n   - `POST /api/push-notify` → internal endpoint (game calls this), sends push via web-push\n   - VAPID keys read from env vars `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY`\n   - Generate keys once with: `node -e \"const wp=require('web-push'); const k=wp.generateVAPIDKeys(); console.log(JSON.stringify(k))\"`\n   - In-memory subscription store: `const _pushSubscriptions = new Map()` (keyed by user_id or endpoint hash)\n   - Scheduled notifications: `const _scheduledPushes = new Map()` with `setTimeout` per event\n\n5. **`react-shell.js`** — Client-side push subscription\n   - After SW registers: call `swRegistration.pushManager.subscribe({userVisibleOnly:true, applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)})`\n   - POST subscription object to `/api/push-subscribe`\n   - Expose `window.__schedulePush(event, delayMs, payload)` for game postMessage bridge\n\n6. **GDScript: `scene/Scripts/Utils/PushNotificationHelper.gd`** (NEW)\n   - `static func schedule_rocket_arrival(mission_id, duration_secs)` → POST to `/api/push-notify` with `schedule_after_secs`\n   - `static func schedule_construction_complete(room_id, duration_secs)`\n   - `static func schedule_contractor_cooldown_end(contractor_id, duration_secs)`\n   - Uses same HTTPRequest pattern as MissionNarrativeAPI.gd\n\n### Hook points in existing GDScript\n- Rocket launch: `LaunchpadSelectorPanel.gd` after mission accepted → call `PushNotificationHelper.schedule_rocket_arrival()`\n- Construction: `GameNavigationMenu.gd` after `_do_room_upgrade()` → call `schedule_construction_complete()`\n- Contractor cooldown: `SubcontractorManager.gd` when cooldown is set → call `schedule_contractor_cooldown_end()`\n\n### AC#5 interpretation\n\"Backend trigger via Supabase\" means our self-hosted Node server reads from Supabase for event timing (e.g. mission launch records), NOT that Supabase sends pushes. The Node server sends pushes via web-push library. No OneSignal or external push service.\n\n### Key constraints\n- PWA only (service workers require HTTPS or localhost)\n- react-shell.js is the PWA shell; index.html is the standalone web viewer\n- Both need SW registration but push subscription only meaningful in PWA context\n- VAPID keys must be persisted as env vars (rotate = all existing subscriptions invalidated)",
+        "implementationNotes": "Research complete 2026-03-19. Ready to implement — no blockers. web-push not yet installed (yarn add web-push needed). See implementation plan for full file list."
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "5g3zb7",
+      "version": 4,
+      "timestamp": "2026-03-19T03:35:28.172Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Service worker registered and active in PWA"
+            },
+            {
+              "completed": false,
+              "text": "Push notification on rocket arrival at destination"
+            },
+            {
+              "completed": false,
+              "text": "Push notification on construction completion"
+            },
+            {
+              "completed": false,
+              "text": "Push notification on contractor cooldown ending"
+            },
+            {
+              "completed": false,
+              "text": "Backend trigger via Supabase (no external notification service)"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Service worker registered and active in PWA"
+            },
+            {
+              "completed": true,
+              "text": "Push notification on rocket arrival at destination"
+            },
+            {
+              "completed": true,
+              "text": "Push notification on construction completion"
+            },
+            {
+              "completed": true,
+              "text": "Push notification on contractor cooldown ending"
+            },
+            {
+              "completed": true,
+              "text": "Backend trigger via Supabase (no external notification service)"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Push notifications MVP (self-hosted)",
+        "description": "Self-hosted push notifications via service worker + Supabase. Day 1 requirement. No external services (no OneSignal).",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "notifications",
+          "pwa",
+          "backend"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Service worker registered and active in PWA"
+          },
+          {
+            "completed": true,
+            "text": "Push notification on rocket arrival at destination"
+          },
+          {
+            "completed": true,
+            "text": "Push notification on construction completion"
+          },
+          {
+            "completed": true,
+            "text": "Push notification on contractor cooldown ending"
+          },
+          {
+            "completed": true,
+            "text": "Backend trigger via Supabase (no external notification service)"
+          }
+        ],
+        "implementationPlan": "## Implementation Plan\n\n### Dependencies\n- Install `web-push` via yarn (VAPID signing — not yet installed)\n- Node.js built-in `crypto` is alternative but web-push is much simpler\n\n### Files to create/modify\n\n1. **`web/public/sw.js`** (NEW) — Service worker\n   - `push` event listener → `self.registration.showNotification(title, options)`\n   - `notificationclick` → `clients.openWindow(event.notification.data.url || \"/\")`\n\n2. **`web/public/manifest.json`** (NEW) — PWA manifest\n   - Required for service worker scope + install prompt\n   - Already has favicon.ico / favicon.svg\n\n3. **`web/public/index.html`** — Add manifest link + SW registration script\n   - `<link rel=\"manifest\" href=\"/manifest.json\">`\n   - Register SW on load, subscribe to push, POST subscription to `/api/push-subscribe`\n   - Use VAPID public key from a `<meta name=\"vapid-public-key\">` tag (injected by server)\n\n4. **`web/server.js`** — Add endpoints\n   - `POST /api/push-subscribe` → store subscription in memory Map (or persist to file)\n   - `POST /api/push-notify` → internal endpoint (game calls this), sends push via web-push\n   - VAPID keys read from env vars `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY`\n   - Generate keys once with: `node -e \"const wp=require('web-push'); const k=wp.generateVAPIDKeys(); console.log(JSON.stringify(k))\"`\n   - In-memory subscription store: `const _pushSubscriptions = new Map()` (keyed by user_id or endpoint hash)\n   - Scheduled notifications: `const _scheduledPushes = new Map()` with `setTimeout` per event\n\n5. **`react-shell.js`** — Client-side push subscription\n   - After SW registers: call `swRegistration.pushManager.subscribe({userVisibleOnly:true, applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)})`\n   - POST subscription object to `/api/push-subscribe`\n   - Expose `window.__schedulePush(event, delayMs, payload)` for game postMessage bridge\n\n6. **GDScript: `scene/Scripts/Utils/PushNotificationHelper.gd`** (NEW)\n   - `static func schedule_rocket_arrival(mission_id, duration_secs)` → POST to `/api/push-notify` with `schedule_after_secs`\n   - `static func schedule_construction_complete(room_id, duration_secs)`\n   - `static func schedule_contractor_cooldown_end(contractor_id, duration_secs)`\n   - Uses same HTTPRequest pattern as MissionNarrativeAPI.gd\n\n### Hook points in existing GDScript\n- Rocket launch: `LaunchpadSelectorPanel.gd` after mission accepted → call `PushNotificationHelper.schedule_rocket_arrival()`\n- Construction: `GameNavigationMenu.gd` after `_do_room_upgrade()` → call `schedule_construction_complete()`\n- Contractor cooldown: `SubcontractorManager.gd` when cooldown is set → call `schedule_contractor_cooldown_end()`\n\n### AC#5 interpretation\n\"Backend trigger via Supabase\" means our self-hosted Node server reads from Supabase for event timing (e.g. mission launch records), NOT that Supabase sends pushes. The Node server sends pushes via web-push library. No OneSignal or external push service.\n\n### Key constraints\n- PWA only (service workers require HTTPS or localhost)\n- react-shell.js is the PWA shell; index.html is the standalone web viewer\n- Both need SW registration but push subscription only meaningful in PWA context\n- VAPID keys must be persisted as env vars (rotate = all existing subscriptions invalidated)",
+        "implementationNotes": "Research complete 2026-03-19. Ready to implement — no blockers. web-push not yet installed (yarn add web-push needed). See implementation plan for full file list."
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "5g3zb7",
+      "version": 5,
+      "timestamp": "2026-03-19T03:35:28.526Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "Research complete 2026-03-19. Ready to implement — no blockers. web-push not yet installed (yarn add web-push needed). See implementation plan for full file list.",
+          "newValue": "## Summary\nsw.js: push+click handlers, install+activate.\nmanifest.json: created (standalone, landscape).\nindex.html: manifest link added.\nserver.js: /api/push-subscribe, /api/push-notify (w/ scheduling), /api/runtime-config; web-push lib; graceful no-op if VAPID keys absent.\nreact-shell.js: initPushNotifications() on boot — SW reg, push subscribe, posts to /api/push-subscribe, exposes window.__schedulePush; schedule_push postMessage handler.\nPushNotificationHelper.gd: static helpers for rocket_arrival, construction_complete, contractor_cooldown_end; all via postMessage → shell → server.\nHook points: LaunchpadLaunchButton (rocket arrival), SubcontractorManager.record_mission_completion (cooldown), ConstructionManager.add_contribution (instant on complete).\napi/runtime-config.js: vapidPublicKey added.\nEnv vars needed: VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY."
+        }
+      ],
+      "snapshot": {
+        "title": "Push notifications MVP (self-hosted)",
+        "description": "Self-hosted push notifications via service worker + Supabase. Day 1 requirement. No external services (no OneSignal).",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "notifications",
+          "pwa",
+          "backend"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Service worker registered and active in PWA"
+          },
+          {
+            "completed": true,
+            "text": "Push notification on rocket arrival at destination"
+          },
+          {
+            "completed": true,
+            "text": "Push notification on construction completion"
+          },
+          {
+            "completed": true,
+            "text": "Push notification on contractor cooldown ending"
+          },
+          {
+            "completed": true,
+            "text": "Backend trigger via Supabase (no external notification service)"
+          }
+        ],
+        "implementationPlan": "## Implementation Plan\n\n### Dependencies\n- Install `web-push` via yarn (VAPID signing — not yet installed)\n- Node.js built-in `crypto` is alternative but web-push is much simpler\n\n### Files to create/modify\n\n1. **`web/public/sw.js`** (NEW) — Service worker\n   - `push` event listener → `self.registration.showNotification(title, options)`\n   - `notificationclick` → `clients.openWindow(event.notification.data.url || \"/\")`\n\n2. **`web/public/manifest.json`** (NEW) — PWA manifest\n   - Required for service worker scope + install prompt\n   - Already has favicon.ico / favicon.svg\n\n3. **`web/public/index.html`** — Add manifest link + SW registration script\n   - `<link rel=\"manifest\" href=\"/manifest.json\">`\n   - Register SW on load, subscribe to push, POST subscription to `/api/push-subscribe`\n   - Use VAPID public key from a `<meta name=\"vapid-public-key\">` tag (injected by server)\n\n4. **`web/server.js`** — Add endpoints\n   - `POST /api/push-subscribe` → store subscription in memory Map (or persist to file)\n   - `POST /api/push-notify` → internal endpoint (game calls this), sends push via web-push\n   - VAPID keys read from env vars `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY`\n   - Generate keys once with: `node -e \"const wp=require('web-push'); const k=wp.generateVAPIDKeys(); console.log(JSON.stringify(k))\"`\n   - In-memory subscription store: `const _pushSubscriptions = new Map()` (keyed by user_id or endpoint hash)\n   - Scheduled notifications: `const _scheduledPushes = new Map()` with `setTimeout` per event\n\n5. **`react-shell.js`** — Client-side push subscription\n   - After SW registers: call `swRegistration.pushManager.subscribe({userVisibleOnly:true, applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)})`\n   - POST subscription object to `/api/push-subscribe`\n   - Expose `window.__schedulePush(event, delayMs, payload)` for game postMessage bridge\n\n6. **GDScript: `scene/Scripts/Utils/PushNotificationHelper.gd`** (NEW)\n   - `static func schedule_rocket_arrival(mission_id, duration_secs)` → POST to `/api/push-notify` with `schedule_after_secs`\n   - `static func schedule_construction_complete(room_id, duration_secs)`\n   - `static func schedule_contractor_cooldown_end(contractor_id, duration_secs)`\n   - Uses same HTTPRequest pattern as MissionNarrativeAPI.gd\n\n### Hook points in existing GDScript\n- Rocket launch: `LaunchpadSelectorPanel.gd` after mission accepted → call `PushNotificationHelper.schedule_rocket_arrival()`\n- Construction: `GameNavigationMenu.gd` after `_do_room_upgrade()` → call `schedule_construction_complete()`\n- Contractor cooldown: `SubcontractorManager.gd` when cooldown is set → call `schedule_contractor_cooldown_end()`\n\n### AC#5 interpretation\n\"Backend trigger via Supabase\" means our self-hosted Node server reads from Supabase for event timing (e.g. mission launch records), NOT that Supabase sends pushes. The Node server sends pushes via web-push library. No OneSignal or external push service.\n\n### Key constraints\n- PWA only (service workers require HTTPS or localhost)\n- react-shell.js is the PWA shell; index.html is the standalone web viewer\n- Both need SW registration but push subscription only meaningful in PWA context\n- VAPID keys must be persisted as env vars (rotate = all existing subscriptions invalidated)",
+        "implementationNotes": "## Summary\nsw.js: push+click handlers, install+activate.\nmanifest.json: created (standalone, landscape).\nindex.html: manifest link added.\nserver.js: /api/push-subscribe, /api/push-notify (w/ scheduling), /api/runtime-config; web-push lib; graceful no-op if VAPID keys absent.\nreact-shell.js: initPushNotifications() on boot — SW reg, push subscribe, posts to /api/push-subscribe, exposes window.__schedulePush; schedule_push postMessage handler.\nPushNotificationHelper.gd: static helpers for rocket_arrival, construction_complete, contractor_cooldown_end; all via postMessage → shell → server.\nHook points: LaunchpadLaunchButton (rocket arrival), SubcontractorManager.record_mission_completion (cooldown), ConstructionManager.add_contribution (instant on complete).\napi/runtime-config.js: vapidPublicKey added.\nEnv vars needed: VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY."
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "5g3zb7",
+      "version": 6,
+      "timestamp": "2026-03-19T03:35:29.246Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Push notifications MVP (self-hosted)",
+        "description": "Self-hosted push notifications via service worker + Supabase. Day 1 requirement. No external services (no OneSignal).",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "notifications",
+          "pwa",
+          "backend"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Service worker registered and active in PWA"
+          },
+          {
+            "completed": true,
+            "text": "Push notification on rocket arrival at destination"
+          },
+          {
+            "completed": true,
+            "text": "Push notification on construction completion"
+          },
+          {
+            "completed": true,
+            "text": "Push notification on contractor cooldown ending"
+          },
+          {
+            "completed": true,
+            "text": "Backend trigger via Supabase (no external notification service)"
+          }
+        ],
+        "implementationPlan": "## Implementation Plan\n\n### Dependencies\n- Install `web-push` via yarn (VAPID signing — not yet installed)\n- Node.js built-in `crypto` is alternative but web-push is much simpler\n\n### Files to create/modify\n\n1. **`web/public/sw.js`** (NEW) — Service worker\n   - `push` event listener → `self.registration.showNotification(title, options)`\n   - `notificationclick` → `clients.openWindow(event.notification.data.url || \"/\")`\n\n2. **`web/public/manifest.json`** (NEW) — PWA manifest\n   - Required for service worker scope + install prompt\n   - Already has favicon.ico / favicon.svg\n\n3. **`web/public/index.html`** — Add manifest link + SW registration script\n   - `<link rel=\"manifest\" href=\"/manifest.json\">`\n   - Register SW on load, subscribe to push, POST subscription to `/api/push-subscribe`\n   - Use VAPID public key from a `<meta name=\"vapid-public-key\">` tag (injected by server)\n\n4. **`web/server.js`** — Add endpoints\n   - `POST /api/push-subscribe` → store subscription in memory Map (or persist to file)\n   - `POST /api/push-notify` → internal endpoint (game calls this), sends push via web-push\n   - VAPID keys read from env vars `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY`\n   - Generate keys once with: `node -e \"const wp=require('web-push'); const k=wp.generateVAPIDKeys(); console.log(JSON.stringify(k))\"`\n   - In-memory subscription store: `const _pushSubscriptions = new Map()` (keyed by user_id or endpoint hash)\n   - Scheduled notifications: `const _scheduledPushes = new Map()` with `setTimeout` per event\n\n5. **`react-shell.js`** — Client-side push subscription\n   - After SW registers: call `swRegistration.pushManager.subscribe({userVisibleOnly:true, applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)})`\n   - POST subscription object to `/api/push-subscribe`\n   - Expose `window.__schedulePush(event, delayMs, payload)` for game postMessage bridge\n\n6. **GDScript: `scene/Scripts/Utils/PushNotificationHelper.gd`** (NEW)\n   - `static func schedule_rocket_arrival(mission_id, duration_secs)` → POST to `/api/push-notify` with `schedule_after_secs`\n   - `static func schedule_construction_complete(room_id, duration_secs)`\n   - `static func schedule_contractor_cooldown_end(contractor_id, duration_secs)`\n   - Uses same HTTPRequest pattern as MissionNarrativeAPI.gd\n\n### Hook points in existing GDScript\n- Rocket launch: `LaunchpadSelectorPanel.gd` after mission accepted → call `PushNotificationHelper.schedule_rocket_arrival()`\n- Construction: `GameNavigationMenu.gd` after `_do_room_upgrade()` → call `schedule_construction_complete()`\n- Contractor cooldown: `SubcontractorManager.gd` when cooldown is set → call `schedule_contractor_cooldown_end()`\n\n### AC#5 interpretation\n\"Backend trigger via Supabase\" means our self-hosted Node server reads from Supabase for event timing (e.g. mission launch records), NOT that Supabase sends pushes. The Node server sends pushes via web-push library. No OneSignal or external push service.\n\n### Key constraints\n- PWA only (service workers require HTTPS or localhost)\n- react-shell.js is the PWA shell; index.html is the standalone web viewer\n- Both need SW registration but push subscription only meaningful in PWA context\n- VAPID keys must be persisted as env vars (rotate = all existing subscriptions invalidated)",
+        "implementationNotes": "## Summary\nsw.js: push+click handlers, install+activate.\nmanifest.json: created (standalone, landscape).\nindex.html: manifest link added.\nserver.js: /api/push-subscribe, /api/push-notify (w/ scheduling), /api/runtime-config; web-push lib; graceful no-op if VAPID keys absent.\nreact-shell.js: initPushNotifications() on boot — SW reg, push subscribe, posts to /api/push-subscribe, exposes window.__schedulePush; schedule_push postMessage handler.\nPushNotificationHelper.gd: static helpers for rocket_arrival, construction_complete, contractor_cooldown_end; all via postMessage → shell → server.\nHook points: LaunchpadLaunchButton (rocket arrival), SubcontractorManager.record_mission_completion (cooldown), ConstructionManager.add_contribution (instant on complete).\napi/runtime-config.js: vapidPublicKey added.\nEnv vars needed: VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY."
+      }
+    }
+  ]
+}

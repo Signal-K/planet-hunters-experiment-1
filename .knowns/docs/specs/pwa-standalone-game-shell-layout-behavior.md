@@ -1,7 +1,7 @@
 ---
 title: PWA standalone game shell layout behavior
 createdAt: '2026-03-07T01:13:55.727Z'
-updatedAt: '2026-03-07T01:18:48.959Z'
+updatedAt: '2026-03-10T06:12:31.851Z'
 description: Detection and layout rules for installed/mobile standalone experience
 tags:
   - pwa
@@ -44,3 +44,11 @@ Future iterations can add explicit fallback navigation target for environments t
   - Add to Home Screen (iOS): shows share-sheet instructions
   - Dismiss action (`×`) to hide banner
 - If `beforeinstallprompt` is unavailable, show fallback install guidance text.
+
+
+
+## 2026-03-10 Safe-Area Enforcement Update
+- Keep background full-screen/edge-to-edge.
+- Inset all fixed interactive controls from cutouts/notches/dynamic-island/gesture regions using top/right/bottom/left safe-area env vars.
+- Keep HUD compact and auto-hide to reduce gameplay obstruction.
+- Use matrix/checklist in @doc/specs/mobile-safe-area-compatibility-matrix-pwa-shell for regression coverage.

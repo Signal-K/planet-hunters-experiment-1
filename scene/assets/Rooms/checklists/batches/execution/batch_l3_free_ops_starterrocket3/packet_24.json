@@ -1,0 +1,243 @@
+{
+  "batch_id": "batch_l3_free_ops_starterrocket3",
+  "packet_index": 24,
+  "packet_count": 36,
+  "asset_count": 12,
+  "instructions": {
+    "style_anchor_required": true,
+    "one_asset_per_prompt": true,
+    "filename_contract": "strict",
+    "no_extra_suffixes": true,
+    "no_text_or_ui": true
+  },
+  "assets": [
+    {
+      "asset_id": "resource_vault_t2__reinforced_containers__depleted",
+      "asset_type": "state_variant",
+      "room_id": "resource_vault_t2",
+      "room_name": "Pressurised Resource Vault Room",
+      "category": "storage",
+      "tier": 2,
+      "component_id": "reinforced_containers",
+      "component_name": "Reinforced Containers",
+      "component_kind": "interactive",
+      "state_key": "depleted",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'depleted' for component 'Reinforced Containers' in 'Pressurised Resource Vault Room'. Change only state cues: minimal or no glow, offline indicators, depleted resource cues. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "resource_vault_t2__reinforced_containers__depleted.png",
+        "sidecar": "resource_vault_t2__reinforced_containers__depleted.json",
+        "note_optional": "resource_vault_t2__reinforced_containers__depleted.txt"
+      }
+    },
+    {
+      "asset_id": "resource_vault_t2__reinforced_containers__idle",
+      "asset_type": "state_variant",
+      "room_id": "resource_vault_t2",
+      "room_name": "Pressurised Resource Vault Room",
+      "category": "storage",
+      "tier": 2,
+      "component_id": "reinforced_containers",
+      "component_name": "Reinforced Containers",
+      "component_kind": "interactive",
+      "state_key": "idle",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'idle' for component 'Reinforced Containers' in 'Pressurised Resource Vault Room'. Change only state cues: stable indicator lights, neutral glow, no motion cues. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "resource_vault_t2__reinforced_containers__idle.png",
+        "sidecar": "resource_vault_t2__reinforced_containers__idle.json",
+        "note_optional": "resource_vault_t2__reinforced_containers__idle.txt"
+      }
+    },
+    {
+      "asset_id": "resource_vault_t2__status_indicator_cluster__active",
+      "asset_type": "state_variant",
+      "room_id": "resource_vault_t2",
+      "room_name": "Pressurised Resource Vault Room",
+      "category": "storage",
+      "tier": 2,
+      "component_id": "status_indicator_cluster",
+      "component_name": "Status Indicator Cluster",
+      "component_kind": "interactive",
+      "state_key": "active",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'active' for component 'Status Indicator Cluster' in 'Pressurised Resource Vault Room'. Change only state cues: brighter active glow, subtle motion/energy cues, engaged indicators. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "resource_vault_t2__status_indicator_cluster__active.png",
+        "sidecar": "resource_vault_t2__status_indicator_cluster__active.json",
+        "note_optional": "resource_vault_t2__status_indicator_cluster__active.txt"
+      }
+    },
+    {
+      "asset_id": "resource_vault_t2__status_indicator_cluster__cooldown",
+      "asset_type": "state_variant",
+      "room_id": "resource_vault_t2",
+      "room_name": "Pressurised Resource Vault Room",
+      "category": "storage",
+      "tier": 2,
+      "component_id": "status_indicator_cluster",
+      "component_name": "Status Indicator Cluster",
+      "component_kind": "interactive",
+      "state_key": "cooldown",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'cooldown' for component 'Status Indicator Cluster' in 'Pressurised Resource Vault Room'. Change only state cues: reduced glow with cooling/venting cues and amber warning flicker. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "resource_vault_t2__status_indicator_cluster__cooldown.png",
+        "sidecar": "resource_vault_t2__status_indicator_cluster__cooldown.json",
+        "note_optional": "resource_vault_t2__status_indicator_cluster__cooldown.txt"
+      }
+    },
+    {
+      "asset_id": "resource_vault_t2__status_indicator_cluster__damaged",
+      "asset_type": "state_variant",
+      "room_id": "resource_vault_t2",
+      "room_name": "Pressurised Resource Vault Room",
+      "category": "storage",
+      "tier": 2,
+      "component_id": "status_indicator_cluster",
+      "component_name": "Status Indicator Cluster",
+      "component_kind": "interactive",
+      "state_key": "damaged",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'damaged' for component 'Status Indicator Cluster' in 'Pressurised Resource Vault Room'. Change only state cues: visible wear, sparks or cracks, warning lights and degraded output. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "resource_vault_t2__status_indicator_cluster__damaged.png",
+        "sidecar": "resource_vault_t2__status_indicator_cluster__damaged.json",
+        "note_optional": "resource_vault_t2__status_indicator_cluster__damaged.txt"
+      }
+    },
+    {
+      "asset_id": "resource_vault_t2__status_indicator_cluster__depleted",
+      "asset_type": "state_variant",
+      "room_id": "resource_vault_t2",
+      "room_name": "Pressurised Resource Vault Room",
+      "category": "storage",
+      "tier": 2,
+      "component_id": "status_indicator_cluster",
+      "component_name": "Status Indicator Cluster",
+      "component_kind": "interactive",
+      "state_key": "depleted",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'depleted' for component 'Status Indicator Cluster' in 'Pressurised Resource Vault Room'. Change only state cues: minimal or no glow, offline indicators, depleted resource cues. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "resource_vault_t2__status_indicator_cluster__depleted.png",
+        "sidecar": "resource_vault_t2__status_indicator_cluster__depleted.json",
+        "note_optional": "resource_vault_t2__status_indicator_cluster__depleted.txt"
+      }
+    },
+    {
+      "asset_id": "resource_vault_t2__status_indicator_cluster__idle",
+      "asset_type": "state_variant",
+      "room_id": "resource_vault_t2",
+      "room_name": "Pressurised Resource Vault Room",
+      "category": "storage",
+      "tier": 2,
+      "component_id": "status_indicator_cluster",
+      "component_name": "Status Indicator Cluster",
+      "component_kind": "interactive",
+      "state_key": "idle",
+      "priority": "p1",
+      "prompt": "Using the attached style reference and matching the base component exactly, create state variant 'idle' for component 'Status Indicator Cluster' in 'Pressurised Resource Vault Room'. Change only state cues: stable indicator lights, neutral glow, no motion cues. Preserve camera, scale, line weight, material details. No text, no labels, no UI. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "resource_vault_t2__status_indicator_cluster__idle.png",
+        "sidecar": "resource_vault_t2__status_indicator_cluster__idle.json",
+        "note_optional": "resource_vault_t2__status_indicator_cluster__idle.txt"
+      }
+    },
+    {
+      "asset_id": "resource_vault_t2__room_composite__v1",
+      "asset_type": "room_composite",
+      "room_id": "resource_vault_t2",
+      "room_name": "Pressurised Resource Vault Room",
+      "category": "storage",
+      "tier": 2,
+      "component_id": "room_composite",
+      "component_name": "Room Composite",
+      "component_kind": "composite",
+      "state_key": "base",
+      "priority": "p0",
+      "prompt": "Using the attached style reference, compose one 2:1 spacecraft room tile for 'Pressurised Resource Vault Room' using these components: sealed_rack_system, gasketed_container_slots, reinforced_containers, circular_vault_door, environmental_control_unit, status_indicator_cluster. Keep module shell rectangular with flat top/bottom for stacking. Include only listed components and consistent accent lighting. No text, no labels, no UI, no rocket exterior. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "resource_vault_t2__room_composite__v1.png",
+        "sidecar": "resource_vault_t2__room_composite__v1.json",
+        "note_optional": "resource_vault_t2__room_composite__v1.txt"
+      }
+    },
+    {
+      "asset_id": "sample_lab_t2__central_workbench__base",
+      "asset_type": "component",
+      "room_id": "sample_lab_t2",
+      "room_name": "Sample Analysis Lab Room",
+      "category": "science",
+      "tier": 2,
+      "component_id": "central_workbench",
+      "component_name": "central workbench",
+      "component_kind": "structural",
+      "state_key": "base",
+      "priority": "p1",
+      "prompt": "Using the attached style reference, create a single isolated room component sprite for a spacecraft dollhouse interior system. Component: central_workbench. Category: Sample Analysis Lab Room. Side-view cross-section, clean cutout silhouette, no text, no labels, no UI, no characters. Designed for 2:1 room tile composition. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "sample_lab_t2__central_workbench__base.png",
+        "sidecar": "sample_lab_t2__central_workbench__base.json",
+        "note_optional": "sample_lab_t2__central_workbench__base.txt"
+      }
+    },
+    {
+      "asset_id": "sample_lab_t2__composition_readout_screen__base",
+      "asset_type": "component",
+      "room_id": "sample_lab_t2",
+      "room_name": "Sample Analysis Lab Room",
+      "category": "science",
+      "tier": 2,
+      "component_id": "composition_readout_screen",
+      "component_name": "Composition Readout Screen",
+      "component_kind": "interactive",
+      "state_key": "base",
+      "priority": "p0",
+      "prompt": "Using the attached style reference, create a single isolated room component sprite for a spacecraft dollhouse interior system. Component: Composition Readout Screen. Category: Sample Analysis Lab Room. Side-view cross-section, clean cutout silhouette, no text, no labels, no UI, no characters. Designed for 2:1 room tile composition. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "sample_lab_t2__composition_readout_screen__base.png",
+        "sidecar": "sample_lab_t2__composition_readout_screen__base.json",
+        "note_optional": "sample_lab_t2__composition_readout_screen__base.txt"
+      }
+    },
+    {
+      "asset_id": "sample_lab_t2__containment_tubes_pair__base",
+      "asset_type": "component",
+      "room_id": "sample_lab_t2",
+      "room_name": "Sample Analysis Lab Room",
+      "category": "science",
+      "tier": 2,
+      "component_id": "containment_tubes_pair",
+      "component_name": "Containment Tubes (x2)",
+      "component_kind": "interactive",
+      "state_key": "base",
+      "priority": "p0",
+      "prompt": "Using the attached style reference, create a single isolated room component sprite for a spacecraft dollhouse interior system. Component: Containment Tubes (x2). Category: Sample Analysis Lab Room. Side-view cross-section, clean cutout silhouette, no text, no labels, no UI, no characters. Designed for 2:1 room tile composition. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "sample_lab_t2__containment_tubes_pair__base.png",
+        "sidecar": "sample_lab_t2__containment_tubes_pair__base.json",
+        "note_optional": "sample_lab_t2__containment_tubes_pair__base.txt"
+      }
+    },
+    {
+      "asset_id": "sample_lab_t2__microscope_arm__base",
+      "asset_type": "component",
+      "room_id": "sample_lab_t2",
+      "room_name": "Sample Analysis Lab Room",
+      "category": "science",
+      "tier": 2,
+      "component_id": "microscope_arm",
+      "component_name": "Microscope Arm",
+      "component_kind": "interactive",
+      "state_key": "base",
+      "priority": "p0",
+      "prompt": "Using the attached style reference, create a single isolated room component sprite for a spacecraft dollhouse interior system. Component: Microscope Arm. Category: Sample Analysis Lab Room. Side-view cross-section, clean cutout silhouette, no text, no labels, no UI, no characters. Designed for 2:1 room tile composition. match this style exactly; side-view cutaway module language; no text/no labels/no UI; consistent line weight and colour temperature with reference.",
+      "expected_files": {
+        "image": "sample_lab_t2__microscope_arm__base.png",
+        "sidecar": "sample_lab_t2__microscope_arm__base.json",
+        "note_optional": "sample_lab_t2__microscope_arm__base.txt"
+      }
+    }
+  ]
+}

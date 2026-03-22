@@ -1,0 +1,14 @@
+{
+  "asset_id": "large_tank_t2__frosted_fuel_viewport_large__usage_100",
+  "room_id": "large_tank_t2",
+  "component": "frosted_fuel_viewport_large",
+  "tier": "2",
+  "state": "usage_100",
+  "prompt_version": "v1",
+  "generator": "chatgpt",
+  "generated_at_utc": "2026-03-10T10:16:42.669869",
+  "image_filename": "large_tank_t2__frosted_fuel_viewport_large__usage_100.png",
+  "width": 1024,
+  "height": 1024,
+  "notes": ""
+}

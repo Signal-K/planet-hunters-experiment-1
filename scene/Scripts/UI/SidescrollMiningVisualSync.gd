@@ -3,23 +3,27 @@ extends RefCounted
 static func apply_region_visual_state(region: Dictionary, terrain_loop_container: Node2D) -> void:
 	var collected := bool(region.get("collected", false))
 	var is_surface := bool(region.get("is_surface", false))
+	var is_order_target := bool(region.get("is_order_target", false))
 	var primary_poly = region.get("poly", null)
 	if primary_poly is Polygon2D:
-		_set_region_poly_visual(primary_poly, collected, is_surface)
+		_set_region_poly_visual(primary_poly, collected, is_surface, is_order_target)
 	var loop_poly := _get_loop_region_poly(region, terrain_loop_container)
-	_set_region_poly_visual(loop_poly, collected, is_surface)
+	_set_region_poly_visual(loop_poly, collected, is_surface, is_order_target)
 
 static func _region_default_modulate(is_surface: bool) -> Color:
 	if is_surface:
 		return Color(1, 1, 1, 1)
 	return Color(0.7, 0.7, 0.7, 0.8)
 
-static func _set_region_poly_visual(poly: Polygon2D, collected: bool, is_surface: bool) -> void:
+static func _set_region_poly_visual(poly: Polygon2D, collected: bool, is_surface: bool, is_order_target: bool = false) -> void:
 	if poly == null:
 		return
 	poly.visible = true
 	if collected:
 		poly.modulate = Color(0.4, 0.4, 0.4, 0.5)
+	elif is_order_target and is_surface:
+		# Golden highlight: makes order-target surface minerals visually distinct
+		poly.modulate = Color(1.5, 1.25, 0.4, 1.0)
 	else:
 		poly.modulate = _region_default_modulate(is_surface)
 

@@ -1,0 +1,14 @@
+{
+  "asset_id": "basic_thruster_t1__rocket_nozzle_assembly__usage_100",
+  "room_id": "basic_thruster_t1",
+  "component": "rocket_nozzle_assembly",
+  "tier": "1",
+  "state": "usage_100",
+  "prompt_version": "v1",
+  "generator": "chatgpt",
+  "generated_at_utc": "2026-03-10T10:16:41.039126",
+  "image_filename": "basic_thruster_t1__rocket_nozzle_assembly__usage_100.png",
+  "width": 1024,
+  "height": 1024,
+  "notes": ""
+}

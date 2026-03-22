@@ -1,0 +1,14 @@
+{
+  "asset_id": "large_tank_t2__pressure_readout_cluster__active",
+  "room_id": "large_tank_t2",
+  "component": "pressure_readout_cluster",
+  "tier": "2",
+  "state": "active",
+  "prompt_version": "v1",
+  "generator": "chatgpt",
+  "generated_at_utc": "2026-03-10T10:16:30.933308",
+  "image_filename": "large_tank_t2__pressure_readout_cluster__active.png",
+  "width": 1024,
+  "height": 1024,
+  "notes": ""
+}

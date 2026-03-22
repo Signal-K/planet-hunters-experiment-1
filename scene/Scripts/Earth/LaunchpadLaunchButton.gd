@@ -6,6 +6,8 @@ const GameplayAnalytics = preload("res://Scripts/Systems/GameplayAnalytics.gd")
 const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
 const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd")
 const TimeHelper = preload("res://Scripts/Earth/TimeHelper.gd")
+const RoomCatalog = preload("res://Scripts/Utils/RoomCatalog.gd")
+const PushNotificationHelper = preload("res://Scripts/Utils/PushNotificationHelper.gd")
 var _launchpad: Node
 var _on_show_selector: Callable
 var _launch_btn_connected: bool = false
@@ -129,9 +131,9 @@ func _on_launch_button_pressed() -> void:
 	if not rm:
 		AppLogger.w("Launchpad: RocketsManager not available")
 		return
-	if int(rm.get_mission_stage()) == 1 and rm.get_starter_selected_contractor().is_empty():
-		AppLogger.w("Launchpad: starter contractor must be selected before launch")
-		RocketsManager.set_launch_guidance_notice("Launch blocked: sign one starter contractor, then select a mission target.")
+	if rm.get_trip_selected_contractor().is_empty():
+		AppLogger.w("Launchpad: contractor must be selected before launch")
+		RocketsManager.set_launch_guidance_notice("Launch blocked: select a contractor for this trip, then choose a mission target.")
 		if _on_show_selector.is_valid():
 			_on_show_selector.call()
 		if _launchpad and _launchpad.has_method("_populate_targets"):
@@ -173,10 +175,22 @@ func _on_launch_button_pressed() -> void:
 	var required_level = int(target_profile.get("required_level", 1))
 	if required_level > rocket_level:
 		AppLogger.w("Launchpad: target %s blocked for rocket %s (requires L%d, current L%d)" % [target, rocket.name, required_level, rocket_level])
-		RocketsManager.set_launch_guidance_notice("Launch blocked: selected target requires rocket level L%d. Current rocket is L%d." % [required_level, rocket_level])
+		RocketsManager.set_launch_guidance_notice("Launch blocked: selected target requires Level %d. Current rocket is Level %d." % [required_level, rocket_level])
 		if _launch_button:
 			_launch_button.disabled = false
 		return
+	# Room config warning (non-blocking): warn if no mining room installed
+	var layout = RoomCatalog.create_layout_for_rocket_type(rocket.name)
+	var installed_rooms = RoomCatalog.get_installed_rooms(layout)
+	var has_mining_room := false
+	for room_inst in installed_rooms:
+		var room_def = RoomCatalog.get_room(str(room_inst.get("room_id", "")))
+		if str(room_def.get("category", "")) == "mining":
+			has_mining_room = true
+			break
+	if not has_mining_room:
+		AppLogger.w("Launchpad: rocket has no mining room — cargo collection may be impaired")
+		RocketsManager.set_launch_guidance_notice("⚠ No mining room installed. You can still launch, but mineral collection will be very limited.")
 	if _launch_button:
 		_launch_button.disabled = true
 	# Countdown before routing to outbound transit
@@ -192,6 +206,8 @@ func _on_launch_button_pressed() -> void:
 	var mission_travel_seconds = rm.get_mission_duration_seconds_for_rocket(rocket.name)
 
 	var mission_ok = rm.add_mission(rocket.name, target, int(launch_time), mission_travel_seconds)
+	if mission_ok and mission_travel_seconds > 0:
+		PushNotificationHelper.schedule_rocket_arrival(target, float(mission_travel_seconds))
 	if not mission_ok:
 		AppLogger.w("Launchpad: failed to record mission for rocket %s" % rocket.name)
 		RocketsManager.set_launch_guidance_notice("Launch blocked: mission record failed to save. Retry launch in a moment.")
@@ -219,7 +235,7 @@ func _on_launch_button_pressed() -> void:
 	var launched_rocket_id = rocket.name
 	# Clear selected target after launch
 	rm.clear_selected_target()
-	if int(rm.get_mission_stage()) >= 3:
+	if int(rm.get_mission_stage()) >= 3 and not rm.is_free_operations_unlocked():
 		# Force a fresh scanner pass for scanner-gated mission flows.
 		rm.set_detected_targets([])
 	# Remove the rocket from the scene after launching
@@ -278,7 +294,7 @@ func _resolve_preview_target_meta(target_id: String) -> Dictionary:
 			return out
 	var predefined = rm.get_predefined_target_profile(target_id)
 	if not predefined.is_empty():
-		for stage in [1, 2, 4, 5]:
+		for stage in [1, 2, 4]:
 			var item = rm.get_predefined_mission_target(stage)
 			if str(item.get("id", "")) == target_id:
 				out["label"] = str(item.get("label", out["label"]))
