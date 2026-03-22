@@ -1269,11 +1269,12 @@ function App() {
         title: "Star Sailors: Experiment 1",
         allow: "fullscreen",
         style: {
-          width: "100%",
-          height: "100%",
+          flex: 1,
+          minHeight: 0,
           border: 0,
           display: "block",
           background: "#000",
+          width: "100%",
         },
         onError: () => setStorageStatus("Game load error"),
         onLoad: () => {
