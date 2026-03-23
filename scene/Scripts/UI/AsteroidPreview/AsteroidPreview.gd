@@ -289,12 +289,17 @@ func _build_starter_contract_context(rm) -> Dictionary:
 		return {}
 	var stage := int(rm.get_mission_stage())
 	if stage == 1:
-		# M1 starter contract
+		# M1 starter contract — use selected contractor, or fall back to first available
 		var selected = rm.get_starter_selected_contractor()
 		if selected.is_empty():
-			return {}
+			var all_contractors = rm.get_starter_contractors()
+			if all_contractors.is_empty():
+				return {}
+			selected = all_contractors[0]
 		var requested = rm.get_starter_requested_minerals(str(selected.get("id", "")))
 		if requested.is_empty():
+			requested = selected.get("requested_minerals", {})
+		if typeof(requested) != TYPE_DICTIONARY or requested.is_empty():
 			return {}
 		return {
 			"active": true,
@@ -303,30 +308,34 @@ func _build_starter_contract_context(rm) -> Dictionary:
 			"requested_minerals": requested.duplicate(true)
 		}
 	# M2+ trip contractor: read requested_minerals from the offer's contractors array
-	var offer := rm.get_trip_contract_offer()
+	var offer: Dictionary = rm.get_trip_contract_offer()
 	if offer.is_empty():
 		return {}
-	var selected_id := str(offer.get("selected_contractor", ""))
-	if selected_id == "":
-		return {}
 	var contractors_any = offer.get("contractors", [])
-	if typeof(contractors_any) != TYPE_ARRAY:
+	if typeof(contractors_any) != TYPE_ARRAY or contractors_any.is_empty():
 		return {}
+	var selected_id := str(offer.get("selected_contractor", ""))
+	# Find the selected contractor, or fall back to the first available
+	var target_contractor: Dictionary = {}
 	for c_any in contractors_any:
 		if typeof(c_any) != TYPE_DICTIONARY:
 			continue
-		if str(c_any.get("id", "")) != selected_id:
-			continue
-		var requested: Dictionary = c_any.get("requested_minerals", {})
-		if typeof(requested) != TYPE_DICTIONARY or requested.is_empty():
-			return {}
-		return {
-			"active": true,
-			"id": selected_id,
-			"name": str(c_any.get("name", "Contractor")),
-			"requested_minerals": requested.duplicate(true)
-		}
-	return {}
+		if selected_id != "" and str(c_any.get("id", "")) == selected_id:
+			target_contractor = c_any
+			break
+	if target_contractor.is_empty() and typeof(contractors_any[0]) == TYPE_DICTIONARY:
+		target_contractor = contractors_any[0]
+	if target_contractor.is_empty():
+		return {}
+	var requested: Dictionary = target_contractor.get("requested_minerals", {})
+	if typeof(requested) != TYPE_DICTIONARY or requested.is_empty():
+		return {}
+	return {
+		"active": true,
+		"id": str(target_contractor.get("id", "")),
+		"name": str(target_contractor.get("name", "Contractor")),
+		"requested_minerals": requested.duplicate(true)
+	}
 
 func _is_starter_contract_active() -> bool:
 	return bool(_starter_contract_context.get("active", false)) and typeof(_starter_contract_context.get("requested_minerals", {})) == TYPE_DICTIONARY

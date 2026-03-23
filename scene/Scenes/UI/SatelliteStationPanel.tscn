@@ -17,7 +17,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 color = Color(0.094, 0.102, 0.122, 0.88)
 
-[node name="PanelContainer" type="Control" parent="."]
+[node name="PanelContainer" type="CenterContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -28,71 +28,80 @@ offset_right = -80.0
 offset_bottom = -80.0
 
 [node name="Panel" type="Panel" parent="PanelContainer"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-
-[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/Panel"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 32.0
-offset_top = 24.0
-offset_right = -32.0
-offset_bottom = -24.0
-
-[node name="HeaderContainer" type="HBoxContainer" parent="PanelContainer/Panel/VBoxContainer"]
+custom_minimum_size = Vector2(780, 0)
 layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
 
-[node name="Title" type="Label" parent="PanelContainer/Panel/VBoxContainer/HeaderContainer"]
+[node name="Scroll" type="ScrollContainer" parent="PanelContainer/Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = 24.0
+offset_right = -24.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_scroll_mode = 0
+scroll_horizontal_enabled = false
+follow_focus = true
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/Panel/Scroll"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 48
-text = "🛰️ Asteroid Detection Array"
+theme_override_constants/separation = 12
 
-[node name="CloseButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/HeaderContainer"]
+[node name="HeaderContainer" type="HBoxContainer" parent="PanelContainer/Panel/Scroll/VBoxContainer"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="PanelContainer/Panel/Scroll/VBoxContainer/HeaderContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 40
+text = "🛰️ Asteroid Detection Array"
+autowrap_mode = 3
+
+[node name="CloseButton" type="Button" parent="PanelContainer/Panel/Scroll/VBoxContainer/HeaderContainer"]
 custom_minimum_size = Vector2(60, 40)
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
 text = "✕"
 
-[node name="ToggleSwitch" type="Button" parent="PanelContainer/Panel/VBoxContainer/HeaderContainer"]
-custom_minimum_size = Vector2(150, 50)
+[node name="ToggleSwitch" type="Button" parent="PanelContainer/Panel/Scroll/VBoxContainer/HeaderContainer"]
+custom_minimum_size = Vector2(190, 50)
 layout_mode = 2
 text = "Switch to Planets"
 
-[node name="HSeparator" type="HSeparator" parent="PanelContainer/Panel/VBoxContainer"]
+[node name="HSeparator" type="HSeparator" parent="PanelContainer/Panel/Scroll/VBoxContainer"]
 layout_mode = 2
 
-[node name="ContentContainer" type="VBoxContainer" parent="PanelContainer/Panel/VBoxContainer"]
+[node name="ContentContainer" type="VBoxContainer" parent="PanelContainer/Panel/Scroll/VBoxContainer"]
 layout_mode = 2
-size_flags_vertical = 3
 theme_override_constants/separation = 16
 
-[node name="StatusContainer" type="HBoxContainer" parent="PanelContainer/Panel/VBoxContainer/ContentContainer"]
+[node name="StatusContainer" type="HBoxContainer" parent="PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer"]
 layout_mode = 2
 
-[node name="StatusLabel" type="Label" parent="PanelContainer/Panel/VBoxContainer/ContentContainer/StatusContainer"]
+[node name="StatusLabel" type="Label" parent="PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/StatusContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 22
 text = "Status: Initializing..."
 
-[node name="LoadingContainer" type="VBoxContainer" parent="PanelContainer/Panel/VBoxContainer/ContentContainer"]
+[node name="LoadingContainer" type="VBoxContainer" parent="PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer"]
 layout_mode = 2
-size_flags_vertical = 3
 theme_override_constants/separation = 24
 alignment = 1
 
-[node name="LoadingLabel" type="Label" parent="PanelContainer/Panel/VBoxContainer/ContentContainer/LoadingContainer"]
+[node name="LoadingLabel" type="Label" parent="PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/LoadingContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 28
 horizontal_alignment = 1
 text = "Scanning for asteroids..."
 
-[node name="ProgressBar" type="ProgressBar" parent="PanelContainer/Panel/VBoxContainer/ContentContainer/LoadingContainer"]
+[node name="ProgressBar" type="ProgressBar" parent="PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/LoadingContainer"]
 custom_minimum_size = Vector2(400, 24)
 layout_mode = 2
 size_flags_horizontal = 4
@@ -100,29 +109,30 @@ max_value = 100.0
 value = 0.0
 show_percentage = false
 
-[node name="ScanningHint" type="Label" parent="PanelContainer/Panel/VBoxContainer/ContentContainer/LoadingContainer"]
+[node name="ScanningHint" type="Label" parent="PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/LoadingContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 20
 horizontal_alignment = 1
 text = "Deep space scan in progress..."
 
-[node name="AnomalyScroll" type="ScrollContainer" parent="PanelContainer/Panel/VBoxContainer/ContentContainer"]
+[node name="AnomalyScroll" type="ScrollContainer" parent="PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer"]
 visible = false
 layout_mode = 2
+size_flags_horizontal = 3
 size_flags_vertical = 3
 scroll_horizontal_enabled = false
 follow_focus = true
 
-[node name="AnomalyList" type="VBoxContainer" parent="PanelContainer/Panel/VBoxContainer/ContentContainer/AnomalyScroll"]
+[node name="AnomalyList" type="VBoxContainer" parent="PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/AnomalyScroll"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 12
 
-[node name="RefreshContainer" type="HBoxContainer" parent="PanelContainer/Panel/VBoxContainer/ContentContainer"]
+[node name="RefreshContainer" type="HBoxContainer" parent="PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer"]
 layout_mode = 2
 alignment = 1
 
-[node name="RefreshButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/ContentContainer/RefreshContainer"]
+[node name="RefreshButton" type="Button" parent="PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/RefreshContainer"]
 custom_minimum_size = Vector2(200, 50)
 layout_mode = 2
 theme_override_font_sizes/font_size = 22

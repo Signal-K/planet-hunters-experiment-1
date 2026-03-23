@@ -78,7 +78,7 @@ func _on_toggle_pressed() -> void:
 	if toggle_button:
 		toggle_button.text = "Show" if _collapsed else "Hide"
 
-const HIDE_SCENES := ["rocket_ascent", "rocket_transit", "rocket_return", "asteroid_preview", "orbit_sale_preview", "SidescrollMining"]
+const HIDE_SCENES := ["rocket_ascent", "rocket_transit", "rocket_return", "asteroid_preview", "SidescrollMining"]
 
 func _get_current_scene_basename() -> String:
 	var tree = get_tree()

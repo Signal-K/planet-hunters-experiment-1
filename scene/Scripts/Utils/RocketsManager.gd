@@ -200,7 +200,6 @@ static var _return_to_new_mission_panel: bool = false
 static var _preview_index: int = 0
 static var _override_state: Dictionary = {}
 static var _returned_mission: Dictionary = {}
-static var _orbiting_rockets: Dictionary = {}
 static var _pending_mission_guidance_id: int = 0
 
 static func load_state() -> Dictionary:
@@ -1172,7 +1171,9 @@ static func add_mission(rocket_id: String, target_id: String, launch_time_epoch:
 		"target": target_id,
 		"launch_time": launch_time_epoch,
 		"arrival_time": arrival,
-		"operation_mode": get_operation_mode()
+		"operation_mode": get_operation_mode(),
+		"goingTo": target_id,
+		"location": [target_id]
 	}
 	missions.append(record)
 	s["missions"] = missions
@@ -1187,6 +1188,31 @@ static func add_mission(rocket_id: String, target_id: String, launch_time_epoch:
 static func get_missions() -> Array:
 	var s = load_state()
 	return s.get("missions", [])
+
+## Update the current destination for an in-flight mission.
+static func update_mission_going_to(rocket_id: String, going_to: String) -> void:
+	var s = load_state()
+	var missions: Array = s.get("missions", [])
+	for i in range(missions.size()):
+		if str(missions[i].get("rocket_id", "")) == rocket_id:
+			missions[i]["goingTo"] = going_to
+			break
+	s["missions"] = missions
+	save_state(s)
+
+## Append a visited location to a mission's location array.
+static func append_mission_location(rocket_id: String, location_id: String) -> void:
+	var s = load_state()
+	var missions: Array = s.get("missions", [])
+	for i in range(missions.size()):
+		if str(missions[i].get("rocket_id", "")) == rocket_id:
+			var locs: Array = missions[i].get("location", [])
+			if not locs.has(location_id):
+				locs.append(location_id)
+			missions[i]["location"] = locs
+			break
+	s["missions"] = missions
+	save_state(s)
 
 static func set_detected_targets(targets: Array) -> bool:
 	var s = load_state()
@@ -1708,7 +1734,6 @@ static func reset_state() -> bool:
 	_return_to_new_mission_panel = false
 	_preview_index = 0
 	_returned_mission = {}
-	_orbiting_rockets = {}
 	_pending_mission_guidance_id = 0
 	_override_state = data.duplicate(true)
 	var ok = save_state(data)
@@ -1830,27 +1855,7 @@ static func clear_returned_mission() -> void:
 	s["returned_mission"] = {}
 	save_state(s)
 
-static func add_orbiting_rocket(rocket_id: String, target_id: String, label: String, target_type: String) -> void:
-	if rocket_id == "":
-		return
-	_orbiting_rockets[rocket_id] = {
-		"rocket_id": rocket_id,
-		"target_id": target_id,
-		"label": label,
-		"type": target_type
-	}
-
-static func remove_orbiting_rocket(rocket_id: String) -> void:
-	if rocket_id == "":
-		return
-	if _orbiting_rockets.has(rocket_id):
-		_orbiting_rockets.erase(rocket_id)
-
-static func get_orbiting_rockets() -> Array:
-	var out := []
-	for key in _orbiting_rockets.keys():
-		out.append(_orbiting_rockets[key])
-	return out
+## Orbiting rocket functions removed — orbit flow retired in favour of the new debrief.
 
 static func get_returned_rockets() -> Array:
 	var out := []

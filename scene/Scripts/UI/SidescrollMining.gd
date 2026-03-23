@@ -83,24 +83,20 @@ var _terrain_loop_container: Node2D = null
 @onready var heat_bar: ProgressBar = $UI/TopBar/LeftGauges/HeatPanel/VBox/HeatBar
 @onready var beam_bar: ProgressBar = $UI/TopBar/LeftGauges/BeamPanel/VBox/BeamBar
 @onready var beam_label: Label = $UI/TopBar/LeftGauges/BeamPanel/VBox/Label
-@onready var rocket_panel: PanelContainer = $UI/TopBar/RightStats/RocketPanel
-@onready var score_panel: PanelContainer = $UI/TopBar/RightStats/ScorePanel
-@onready var value_panel: PanelContainer = $UI/TopBar/RightStats/ValuePanel
-@onready var score_label: Label = $UI/TopBar/RightStats/ScorePanel/ScoreLabel
-@onready var rocket_label: Label = $UI/TopBar/RightStats/RocketPanel/Label
-@onready var value_label: Label = $UI/TopBar/RightStats/ValuePanel/Label
+@onready var order_label: Label = $UI/TopBar/RightStats/OrderPanel/VBox/OrderLabel
 @onready var contract_order_panel: PanelContainer = $UI/ContractOrderPanel
 @onready var contract_order_title: Label = $UI/ContractOrderPanel/VBox/TitleLabel
 @onready var contract_order_progress: Label = $UI/ContractOrderPanel/VBox/ProgressLabel
-@onready var fire_button: Button = $UI/FireButton
+@onready var mine_button: Button = $UI/BottomBar/MineButton
+@onready var drone_button: Button = $UI/BottomBar/DroneButton
+@onready var return_button: Button = $UI/BottomBar/ReturnButton
+@onready var menu_button: Button = $UI/BottomBar/MenuButton
 @onready var instructions: Label = $UI/Instructions
 @onready var particles_container: Node2D = $ParticlesContainer
 @onready var drone_pool: Node2D = $DronePool
 @onready var inventory_panel: PanelContainer = $UI/InventoryPanel
 @onready var inventory_label: Label = $UI/InventoryPanel/InventoryLabel
-@onready var inventory_button: Button = $UI/InventoryButton
 @onready var drone_label: Label = $UI/TopBar/LeftGauges/DronePanel/VBox/DroneLabel
-@onready var return_button: Button = $UI/ReturnButton
 
 var _rocket_frames = []
 var _guide_step = GuideStep.INTRO
@@ -152,6 +148,7 @@ var _target_palette: Dictionary = {}
 var _target_palette_key := "asteroid:default"
 var _handbook_button: Button = null
 var _handbook_panel: PanelContainer = null
+var _handbook_body: Label = null
 # True when touch/on-screen buttons should be shown: native mobile OR small viewport
 # (web users on phones report OS.has_feature("mobile") as false, so we fall back to width)
 var _uses_touch_controls := false
@@ -175,15 +172,15 @@ func _ready():
 	_setup_beam_visuals()
 	_apply_responsive_layout()
 	laser.visible = false
-	fire_button.pressed.connect(_on_fire_pressed)
-	fire_button.button_up.connect(_on_fire_released)
-	inventory_button.pressed.connect(_toggle_inventory)
+	mine_button.pressed.connect(_on_fire_pressed)
+	mine_button.button_up.connect(_on_fire_released)
+	drone_button.pressed.connect(_deploy_drone)
 	return_button.pressed.connect(_on_return_pressed)
+	menu_button.pressed.connect(_toggle_inventory)
 	_setup_button_handbook()
 
 	_uses_touch_controls = OS.has_feature("mobile") or get_viewport_rect().size.x < 768
-	fire_button.visible = _uses_touch_controls
-	inventory_button.visible = _uses_touch_controls
+	_update_bottom_bar_visibility()
 	inventory_panel.visible = false
 	_update_drone_display()
 	get_viewport().size_changed.connect(_on_viewport_size_changed)
@@ -224,13 +221,25 @@ func _setup_button_handbook() -> void:
 	var body = Label.new()
 	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	body.add_theme_color_override("font_color", Color(0.80, 0.90, 1.0, 1.0))
-	var drone_line = "\nDrone: press D (or DRONE) to collect dark subsurface deposits." if _drones_enabled else ""
-	body.text = "Mine: hold SPACE (or FIRE) to collect surface deposits.%s\nInventory: check collected minerals and value.\nReturn to Earth: end run and open mission debrief.\nScore/Value: track run performance and payout potential." % drone_line
+	body.text = _build_button_handbook_text()
 	vbox.add_child(body)
+	_handbook_body = body
+
+func _build_button_handbook_text() -> String:
+	var entries := [
+		"Mine: Hold FIRE to cut into the surface and collect exposed minerals."
+	]
+	if _drones_enabled:
+		entries.append("Drone: Send a drone after deeper deposits the mining beam cannot reach.")
+	entries.append("Inventory: Check what you have collected and how much the load is worth.")
+	entries.append("Return to Base: End the run and move into mission debrief.")
+	return "\n".join(entries)
 
 func _toggle_button_handbook() -> void:
 	if _handbook_panel == null:
 		return
+	if _handbook_body and is_instance_valid(_handbook_body):
+		_handbook_body.text = _build_button_handbook_text()
 	_handbook_panel.visible = not _handbook_panel.visible
 
 func _exit_tree() -> void:
@@ -240,11 +249,15 @@ func _on_viewport_size_changed() -> void:
 	var now_touch = OS.has_feature("mobile") or get_viewport_rect().size.x < 768
 	if now_touch != _uses_touch_controls:
 		_uses_touch_controls = now_touch
-		fire_button.visible = _uses_touch_controls
-		inventory_button.visible = _uses_touch_controls
+		_update_bottom_bar_visibility()
 	_apply_responsive_layout()
 	_refresh_mars_background()
 	_position_rocket_lane()
+
+func _update_bottom_bar_visibility() -> void:
+	mine_button.visible = _uses_touch_controls
+	drone_button.visible = _uses_touch_controls and _drones_enabled
+	instructions.visible = not _uses_touch_controls
 
 func _setup_beam_visuals() -> void:
 	laser.begin_cap_mode = Line2D.LINE_CAP_ROUND
@@ -371,8 +384,7 @@ func _is_compact_layout(viewport: Vector2) -> bool:
 
 func _set_hud_typography(is_mobile: bool, is_portrait_mobile: bool) -> void:
 	var gauge_font_size = 12 if is_portrait_mobile else (14 if is_mobile else (15 if _compact_layout_active else 18))
-	var score_font_size = 14 if is_portrait_mobile else (16 if is_mobile else (17 if _compact_layout_active else 20))
-	var stat_font_size = 12 if is_portrait_mobile else (14 if is_mobile else (15 if _compact_layout_active else 18))
+	var order_font_size = 13 if is_portrait_mobile else (14 if is_mobile else (15 if _compact_layout_active else 17))
 	var instructions_font_size = 13 if is_portrait_mobile else (16 if is_mobile else (17 if _compact_layout_active else 22))
 	var contract_title_font_size = 13 if is_portrait_mobile else (15 if is_mobile else 17)
 	var contract_progress_font_size = 12 if is_portrait_mobile else (14 if is_mobile else 15)
@@ -380,9 +392,7 @@ func _set_hud_typography(is_mobile: bool, is_portrait_mobile: bool) -> void:
 	heat_label.add_theme_font_size_override("font_size", gauge_font_size)
 	beam_label.add_theme_font_size_override("font_size", gauge_font_size)
 	drone_label.add_theme_font_size_override("font_size", gauge_font_size)
-	score_label.add_theme_font_size_override("font_size", score_font_size)
-	rocket_label.add_theme_font_size_override("font_size", stat_font_size)
-	value_label.add_theme_font_size_override("font_size", stat_font_size)
+	order_label.add_theme_font_size_override("font_size", order_font_size)
 	instructions.add_theme_font_size_override("font_size", instructions_font_size)
 	contract_order_title.add_theme_font_size_override("font_size", contract_title_font_size)
 	contract_order_progress.add_theme_font_size_override("font_size", contract_progress_font_size)
@@ -399,9 +409,7 @@ func _ensure_right_stats_parent(parent_node: Node) -> void:
 
 func _apply_portrait_layout(viewport: Vector2) -> void:
 	left_gauges.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	rocket_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	score_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	value_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	order_label.get_parent().get_parent().size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	# right_stats drops below the top bar in portrait.
 	var hud := UILayout.zone(UILayout.Zone.MINING_HUD, viewport)
 	right_stats.layout_mode = 1
@@ -427,24 +435,6 @@ func _apply_portrait_layout(viewport: Vector2) -> void:
 	instructions.offset_right  =   instr_zone.size.x * 0.5
 	instructions.offset_top    = contract_order_panel.offset_bottom + 6.0
 	instructions.offset_bottom = instructions.offset_top + 54.0
-	# BOTTOM_CONTROLS zone — fire/inventory/return.
-	var bot := UILayout.zone(UILayout.Zone.MINING_BOTTOM, viewport)
-	fire_button.offset_left   = -88.0
-	fire_button.offset_right  =  88.0
-	fire_button.offset_top    = -(bot.size.y + 14.0)
-	fire_button.offset_bottom = -14.0
-	inventory_button.anchor_left  = 0.0
-	inventory_button.anchor_right = 0.0
-	inventory_button.offset_left   = UILayout.EDGE
-	inventory_button.offset_top    = bot.position.y - viewport.y - 56.0
-	inventory_button.offset_right  = UILayout.EDGE + 124.0
-	inventory_button.offset_bottom = inventory_button.offset_top + 44.0
-	return_button.anchor_left  = 1.0
-	return_button.anchor_right = 1.0
-	return_button.offset_left   = -(UILayout.EDGE + 124.0)
-	return_button.offset_top    = -(UILayout.EDGE + 56.0)
-	return_button.offset_right  = -UILayout.EDGE
-	return_button.offset_bottom = -UILayout.EDGE
 	# MINING_MODAL (inventory overlay) — centered.
 	inventory_panel.offset_left   = -(viewport.x * 0.48)
 	inventory_panel.offset_right  =  viewport.x * 0.48
@@ -461,9 +451,7 @@ func _apply_landscape_layout(is_mobile: bool) -> void:
 	right_stats.layout_mode = 2
 	right_stats.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	right_stats.size_flags_stretch_ratio = 0.5
-	rocket_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	score_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	value_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	order_label.get_parent().get_parent().size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	left_gauges.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	# INSTRUCTION zone — centered horizontal band below HUD.
 	var instr := UILayout.zone(UILayout.Zone.MINING_INSTRUCTION, viewport)
@@ -479,25 +467,6 @@ func _apply_landscape_layout(is_mobile: bool) -> void:
 	contract_order_panel.offset_right  =  (contract.size.x * 0.5)
 	contract_order_panel.offset_top    = contract.position.y
 	contract_order_panel.offset_bottom = contract.end.y
-	# BOTTOM_CONTROLS zone — fire/inventory/return.
-	var bot := UILayout.zone(UILayout.Zone.MINING_BOTTOM, viewport)
-	var btn_h := 44.0
-	fire_button.offset_left   = -60.0 if is_mobile else -52.0
-	fire_button.offset_right  =  60.0 if is_mobile else  52.0
-	fire_button.offset_top    = -(UILayout.EDGE + btn_h)
-	fire_button.offset_bottom = -UILayout.EDGE
-	inventory_button.anchor_left  = 1.0
-	inventory_button.anchor_right = 1.0
-	inventory_button.offset_left   = -(UILayout.EDGE + 114.0)
-	inventory_button.offset_top    = -(UILayout.EDGE + btn_h + 48.0)
-	inventory_button.offset_right  = -UILayout.EDGE
-	inventory_button.offset_bottom = -(UILayout.EDGE + 48.0)
-	return_button.anchor_left  = 1.0
-	return_button.anchor_right = 1.0
-	return_button.offset_left   = -(UILayout.EDGE + 130.0)
-	return_button.offset_top    = -(UILayout.EDGE + btn_h)
-	return_button.offset_right  = -UILayout.EDGE
-	return_button.offset_bottom = -UILayout.EDGE
 	# ROOMS — positioned via shared helper.
 	if _room_panel and is_instance_valid(_room_panel):
 		_layout_room_panel(viewport)
@@ -585,6 +554,7 @@ func start_mining(is_planet: bool = false, difficulty: int = 1, target_id: Strin
 	_drones_enabled = int(RocketsManager.get_mission_stage()) >= 4
 	if not _drones_enabled:
 		_target_mineable_pct = 1.0  # force all-surface deposits; drones not available yet
+	_update_bottom_bar_visibility()
 	_session_context = session_context.duplicate(true)
 	var signature_any = _session_context.get("generation_signature", {})
 	if typeof(signature_any) == TYPE_DICTIONARY:
@@ -637,9 +607,6 @@ func start_mining(is_planet: bool = false, difficulty: int = 1, target_id: Strin
 	call_deferred("_update_rocket_ui")
 
 func _update_rocket_ui():
-	if rocket_label:
-		var parachute_ready := "Yes" if RoomCatalog.has_parachute(_rocket_room_layout) else "No"
-		rocket_label.text = "Level %d | Parachute: %s" % [_rocket_level, parachute_ready]
 	if beam_bar:
 		beam_bar.value = 100.0
 
@@ -1405,10 +1372,8 @@ func _on_drone_exploded(_pos: Vector2, region: Dictionary = {}):
 
 
 func _update_drone_display():
-	var drone_panel = drone_label.get_parent().get_parent() if drone_label else null
-	if drone_panel:
-		drone_panel.visible = _drones_enabled
 	if not _drones_enabled:
+		drone_label.text = "DRONES: —"
 		return
 	var cooldown_text = ""
 	if _drone_cooldown_timer > 0:
@@ -1549,20 +1514,22 @@ func _setup_contract_panel_style() -> void:
 	_mineral_bar_rows.clear()
 
 func _update_mineral_header_label() -> void:
-	if not is_instance_valid(score_label):
+	if not is_instance_valid(order_label):
 		return
 	if _starter_contract_active and not _starter_order_targets.is_empty():
-		# Contractor order: show minerals matched vs total required.
-		var total_needed := 0
-		for v in _starter_order_targets.values():
-			total_needed += int(v)
-		score_label.text = "%d / %d  minerals" % [_order_match_total, total_needed]
+		var keys = _starter_order_targets.keys()
+		keys.sort()
+		var lines := []
+		for key in keys:
+			var required := int(_starter_order_targets.get(key, 0))
+			var collected := int(_collected_minerals.get(key, 0))
+			lines.append("%s: %d/%d" % [str(key).capitalize(), collected, required])
+		order_label.text = "\n".join(lines)
 	else:
-		# Tutorial or free mining: show total minerals collected so far.
 		var total := 0
 		for v in _collected_minerals.values():
 			total += int(v)
-		score_label.text = "%d  mineral%s" % [total, "" if total == 1 else "s"]
+		order_label.text = "%d  mineral%s" % [total, "" if total == 1 else "s"]
 
 func _refresh_contract_order_tracker() -> void:
 	if contract_order_panel == null or contract_order_title == null or contract_order_progress == null:
@@ -1649,35 +1616,7 @@ func _resolve_tutorial_step_message() -> String:
 	return msg if msg != "" else ""
 
 func _refresh_contractor_bonus_label() -> void:
-	var rm = RocketsManager
-	var sm = SubcontractorManager
-	if not rm or not sm:
-		value_label.text = ""
-		return
-	var bonus_map: Dictionary = {}
-	var contractor_name := ""
-	if rm.is_free_operations_unlocked():
-		var selected = rm.get_trip_selected_contractor()
-		var selected_id = str(selected.get("id", ""))
-		if selected_id != "":
-			var sub = sm.get_subcontractor(selected_id)
-			if not sub.is_empty():
-				contractor_name = str(sub.get("name", ""))
-				bonus_map = sub.get("bonus", {})
-	if bonus_map.is_empty():
-		value_label.text = ""
-		return
-	var parts := []
-	for mineral in bonus_map.keys():
-		var mult = float(bonus_map[mineral])
-		var pct = int(round((mult - 1.0) * 100))
-		if pct > 0:
-			parts.append("%s +%d%%" % [mineral, pct])
-	if parts.is_empty():
-		value_label.text = ""
-		return
-	var label_text = "%s: %s" % [contractor_name, ", ".join(parts)] if contractor_name != "" else ", ".join(parts)
-	value_label.text = label_text
+	pass
 
 func _show_mineral_signpost() -> void:
 	const SIGNPOST_DURATION := 3.5

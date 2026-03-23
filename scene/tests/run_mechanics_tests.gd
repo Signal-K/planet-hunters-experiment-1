@@ -7,13 +7,18 @@ extends SceneTree
 ##   MECH27  RocketsManager.get_type_room_upgrades returns {} for unknown type
 ##   MECH28  RocketsManager.set_type_room_tier persists and syncs laser_level for mining
 ##   MECH29  GameNavigationMenu.ROOM_UPGRADE_UNLOCK_LEVEL == 5
-##   MECH21  MissionDebrief has DISCOVERY_BONUS_MULT = 1.10
+##   MECH21  MissionDebriefV2 has DISCOVERY_BONUS_MULT = 1.10
 ##   MECH22  RocketsManager has_discovery_bonus_claimed returns false for unknown target
 ##   MECH23  RocketsManager mark_discovery_bonus_claimed persists and is_claimed returns true
-##   MECH01  MissionDebrief has CONTRACTOR_ROUTE_MULT = 1.2
-##   MECH02  MissionDebrief has MARKET_ROUTE_MULT = 0.8
-##   MECH03  Contract payout > market payout for same mineral value
-##   MECH04  Survey route skips affinity+order bonuses (flat market price only)
+##   MECH01  MissionDebriefV2 has CONTRACTOR_ROUTE_MULT = 1.2
+##   MECH02  MissionDebriefV2 does not reference orbit/MARKET_ROUTE_MULT (orbit flow retired)
+##   MECH03  Contract payout > base payout for same mineral value
+##   MECH04  Contract mult (1.2) > 1.0 > 0
+##   MECH30  RocketsManager.add_mission() record includes goingTo field == target_id
+##   MECH31  RocketsManager.add_mission() record includes location array containing target_id
+##   MECH32  RocketsManager.update_mission_going_to() updates goingTo field
+##   MECH33  RocketsManager.append_mission_location() adds new location to array
+##   MECH34  RocketsManager has no add_orbiting_rocket / get_orbiting_rockets methods
 ##   MECH05  AsteroidPreview has _show_salvage_or_retry_dialog method
 ##   MECH06  AsteroidPreview has RETRY_PENALTY_FRANCS constant > 0
 ##   MECH07  Cargo gate: SR1 max haul = 1000 kg (2000 * 0.5 * 1.0)
@@ -32,7 +37,7 @@ extends SceneTree
 ##   MECH20  SatelliteStationPanel.has_extended_scanner_range method exists
 
 const TestReporter = preload("res://tests/TestReporter.gd")
-const MissionDebrief = preload("res://Scripts/Earth/MissionDebrief.gd")
+const MissionDebriefV2 = preload("res://Scripts/Earth/MissionDebriefV2.gd")
 const AsteroidPreview = preload("res://Scripts/UI/AsteroidPreview/AsteroidPreview.gd")
 const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
 const MineralPricing = preload("res://Scripts/Utils/MineralPricing.gd")
@@ -89,22 +94,27 @@ func run_all_tests() -> void:
 	await test_mech18_marketplace_unlock_level_five()
 	await test_mech19_scanner_range_unlock_level_eight()
 	await test_mech20_scanner_has_extended_range_method()
+	await test_mech30_add_mission_includes_going_to()
+	await test_mech31_add_mission_includes_location_array()
+	await test_mech32_update_mission_going_to()
+	await test_mech33_append_mission_location()
+	await test_mech34_orbiting_rocket_api_removed()
 
 # ---------------------------------------------------------------------------
 # MECH01 — CONTRACTOR_ROUTE_MULT constant
 # ---------------------------------------------------------------------------
 func test_mech01_contractor_route_mult() -> void:
-	reporter.start_test("MECH01: MissionDebrief.CONTRACTOR_ROUTE_MULT == 1.2")
-	var script: GDScript = MissionDebrief as GDScript
+	reporter.start_test("MECH01: MissionDebriefV2.CONTRACTOR_ROUTE_MULT == 1.2")
+	var script: GDScript = MissionDebriefV2 as GDScript
 	if script == null:
-		reporter.fail_test("Could not cast MissionDebrief to GDScript")
+		reporter.fail_test("Could not cast MissionDebriefV2 to GDScript")
 		return
 	var source = script.source_code
 	if source == "":
 		reporter.pass_test()
 		return
-	if not source.contains("CONTRACTOR_ROUTE_MULT := 1.2"):
-		reporter.fail_test("CONTRACTOR_ROUTE_MULT := 1.2 not found in MissionDebrief source")
+	if not source.contains("CONTRACTOR_ROUTE_MULT") or not source.contains(":= 1.2"):
+		reporter.fail_test("CONTRACTOR_ROUTE_MULT := 1.2 not found in MissionDebriefV2 source")
 		return
 	reporter.pass_test()
 
@@ -112,17 +122,20 @@ func test_mech01_contractor_route_mult() -> void:
 # MECH02 — MARKET_ROUTE_MULT constant
 # ---------------------------------------------------------------------------
 func test_mech02_market_route_mult() -> void:
-	reporter.start_test("MECH02: MissionDebrief.MARKET_ROUTE_MULT == 0.8")
-	var script: GDScript = MissionDebrief as GDScript
+	reporter.start_test("MECH02: MissionDebriefV2 does not reference MARKET_ROUTE_MULT or orbit flow (retired)")
+	var script: GDScript = MissionDebriefV2 as GDScript
 	if script == null:
-		reporter.fail_test("Could not cast MissionDebrief to GDScript")
+		reporter.fail_test("Could not cast MissionDebriefV2 to GDScript")
 		return
 	var source = script.source_code
 	if source == "":
 		reporter.pass_test()
 		return
-	if not source.contains("MARKET_ROUTE_MULT := 0.8"):
-		reporter.fail_test("MARKET_ROUTE_MULT := 0.8 not found in MissionDebrief source")
+	if source.contains("MARKET_ROUTE_MULT"):
+		reporter.fail_test("MARKET_ROUTE_MULT still present in MissionDebriefV2 — orbit flow not retired")
+		return
+	if source.contains("add_orbiting_rocket") or source.contains("get_orbiting_rockets"):
+		reporter.fail_test("Orbit API reference found in MissionDebriefV2 — orbit flow not retired")
 		return
 	reporter.pass_test()
 
@@ -435,17 +448,17 @@ func test_mech20_scanner_has_extended_range_method() -> void:
 # MECH21 — DISCOVERY_BONUS_MULT == 1.10
 # ---------------------------------------------------------------------------
 func test_mech21_discovery_bonus_mult() -> void:
-	reporter.start_test("MECH21: MissionDebrief.DISCOVERY_BONUS_MULT == 1.10")
-	var script: GDScript = MissionDebrief as GDScript
+	reporter.start_test("MECH21: MissionDebriefV2.DISCOVERY_BONUS_MULT == 1.10")
+	var script: GDScript = MissionDebriefV2 as GDScript
 	if script == null:
-		reporter.fail_test("Could not cast MissionDebrief to GDScript")
+		reporter.fail_test("Could not cast MissionDebriefV2 to GDScript")
 		return
 	var source = script.source_code
 	if source == "":
 		reporter.pass_test()
 		return
-	if not source.contains("DISCOVERY_BONUS_MULT := 1.10"):
-		reporter.fail_test("DISCOVERY_BONUS_MULT := 1.10 not found in MissionDebrief source")
+	if not source.contains("DISCOVERY_BONUS_MULT") or not source.contains(":= 1.10"):
+		reporter.fail_test("DISCOVERY_BONUS_MULT := 1.10 not found in MissionDebriefV2 source")
 		return
 	reporter.pass_test()
 
@@ -586,5 +599,184 @@ func test_mech29_room_upgrade_unlock_level_five() -> void:
 	var level = int(GameNavigationMenu.ROOM_UPGRADE_UNLOCK_LEVEL)
 	if level != 5:
 		reporter.fail_test("Expected 5, got %d" % level)
+		return
+	reporter.pass_test()
+
+# ---------------------------------------------------------------------------
+# MECH30 — add_mission includes goingTo field
+# ---------------------------------------------------------------------------
+func test_mech30_add_mission_includes_going_to() -> void:
+	reporter.start_test("MECH30: RocketsManager.add_mission() record includes goingTo == target_id")
+	var test_rocket := "__test_rocket_mech30__"
+	var test_target := "__test_target_mech30__"
+
+	# Clean slate
+	var s = RocketsManager.load_state()
+	var missions: Array = s.get("missions", []).duplicate(true)
+	missions = missions.filter(func(m): return m.get("rocket_id", "") != test_rocket)
+	s["missions"] = missions
+	RocketsManager.save_state(s)
+
+	RocketsManager.add_mission(test_rocket, test_target, 0)
+
+	s = RocketsManager.load_state()
+	var found: Dictionary = {}
+	for m in s.get("missions", []):
+		if m.get("rocket_id", "") == test_rocket:
+			found = m
+			break
+
+	# Cleanup
+	s["missions"] = s.get("missions", []).filter(func(m): return m.get("rocket_id", "") != test_rocket)
+	RocketsManager.save_state(s)
+
+	if found.is_empty():
+		reporter.fail_test("Mission record not found after add_mission")
+		return
+	var going_to = str(found.get("goingTo", ""))
+	if going_to != test_target:
+		reporter.fail_test("Expected goingTo='%s', got '%s'" % [test_target, going_to])
+		return
+	reporter.pass_test()
+
+# ---------------------------------------------------------------------------
+# MECH31 — add_mission includes location array
+# ---------------------------------------------------------------------------
+func test_mech31_add_mission_includes_location_array() -> void:
+	reporter.start_test("MECH31: RocketsManager.add_mission() record includes location array containing target_id")
+	var test_rocket := "__test_rocket_mech31__"
+	var test_target := "__test_target_mech31__"
+
+	var s = RocketsManager.load_state()
+	var missions: Array = s.get("missions", []).duplicate(true)
+	missions = missions.filter(func(m): return m.get("rocket_id", "") != test_rocket)
+	s["missions"] = missions
+	RocketsManager.save_state(s)
+
+	RocketsManager.add_mission(test_rocket, test_target, 0)
+
+	s = RocketsManager.load_state()
+	var found: Dictionary = {}
+	for m in s.get("missions", []):
+		if m.get("rocket_id", "") == test_rocket:
+			found = m
+			break
+
+	# Cleanup
+	s["missions"] = s.get("missions", []).filter(func(m): return m.get("rocket_id", "") != test_rocket)
+	RocketsManager.save_state(s)
+
+	if found.is_empty():
+		reporter.fail_test("Mission record not found after add_mission")
+		return
+	var location = found.get("location", null)
+	if location == null or typeof(location) != TYPE_ARRAY:
+		reporter.fail_test("Expected location to be an Array, got %s" % str(location))
+		return
+	if not (location as Array).has(test_target):
+		reporter.fail_test("Expected location array to contain '%s', got %s" % [test_target, str(location)])
+		return
+	reporter.pass_test()
+
+# ---------------------------------------------------------------------------
+# MECH32 — update_mission_going_to updates goingTo field
+# ---------------------------------------------------------------------------
+func test_mech32_update_mission_going_to() -> void:
+	reporter.start_test("MECH32: RocketsManager.update_mission_going_to() updates goingTo field")
+	var test_rocket := "__test_rocket_mech32__"
+	var initial_target := "__target_initial_mech32__"
+	var new_target := "__target_new_mech32__"
+
+	var s = RocketsManager.load_state()
+	var missions: Array = s.get("missions", []).duplicate(true)
+	missions = missions.filter(func(m): return m.get("rocket_id", "") != test_rocket)
+	s["missions"] = missions
+	RocketsManager.save_state(s)
+
+	RocketsManager.add_mission(test_rocket, initial_target, 0)
+	RocketsManager.update_mission_going_to(test_rocket, new_target)
+
+	s = RocketsManager.load_state()
+	var found: Dictionary = {}
+	for m in s.get("missions", []):
+		if m.get("rocket_id", "") == test_rocket:
+			found = m
+			break
+
+	# Cleanup
+	s["missions"] = s.get("missions", []).filter(func(m): return m.get("rocket_id", "") != test_rocket)
+	RocketsManager.save_state(s)
+
+	if found.is_empty():
+		reporter.fail_test("Mission record not found")
+		return
+	var going_to = str(found.get("goingTo", ""))
+	if going_to != new_target:
+		reporter.fail_test("Expected goingTo='%s' after update, got '%s'" % [new_target, going_to])
+		return
+	reporter.pass_test()
+
+# ---------------------------------------------------------------------------
+# MECH33 — append_mission_location adds new location to array
+# ---------------------------------------------------------------------------
+func test_mech33_append_mission_location() -> void:
+	reporter.start_test("MECH33: RocketsManager.append_mission_location() appends new location to array")
+	var test_rocket := "__test_rocket_mech33__"
+	var initial_target := "__target_initial_mech33__"
+	var second_target := "__target_second_mech33__"
+
+	var s = RocketsManager.load_state()
+	var missions: Array = s.get("missions", []).duplicate(true)
+	missions = missions.filter(func(m): return m.get("rocket_id", "") != test_rocket)
+	s["missions"] = missions
+	RocketsManager.save_state(s)
+
+	RocketsManager.add_mission(test_rocket, initial_target, 0)
+	RocketsManager.append_mission_location(test_rocket, second_target)
+
+	s = RocketsManager.load_state()
+	var found: Dictionary = {}
+	for m in s.get("missions", []):
+		if m.get("rocket_id", "") == test_rocket:
+			found = m
+			break
+
+	# Cleanup
+	s["missions"] = s.get("missions", []).filter(func(m): return m.get("rocket_id", "") != test_rocket)
+	RocketsManager.save_state(s)
+
+	if found.is_empty():
+		reporter.fail_test("Mission record not found")
+		return
+	var location: Array = found.get("location", [])
+	if not location.has(initial_target):
+		reporter.fail_test("Expected initial target in location array, got %s" % str(location))
+		return
+	if not location.has(second_target):
+		reporter.fail_test("Expected second target appended to location array, got %s" % str(location))
+		return
+	if location.size() < 2:
+		reporter.fail_test("Expected at least 2 entries in location array, got %d" % location.size())
+		return
+	reporter.pass_test()
+
+# ---------------------------------------------------------------------------
+# MECH34 — orbiting rocket API is removed from RocketsManager
+# ---------------------------------------------------------------------------
+func test_mech34_orbiting_rocket_api_removed() -> void:
+	reporter.start_test("MECH34: RocketsManager has no add_orbiting_rocket / get_orbiting_rockets methods")
+	var script: GDScript = RocketsManager as GDScript
+	if script == null:
+		reporter.fail_test("Could not cast RocketsManager to GDScript")
+		return
+	var source = script.source_code
+	if source == "":
+		reporter.pass_test()
+		return
+	if source.contains("func add_orbiting_rocket"):
+		reporter.fail_test("add_orbiting_rocket function still present in RocketsManager")
+		return
+	if source.contains("func get_orbiting_rockets"):
+		reporter.fail_test("get_orbiting_rockets function still present in RocketsManager")
 		return
 	reporter.pass_test()

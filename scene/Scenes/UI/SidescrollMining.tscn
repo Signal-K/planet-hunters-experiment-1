@@ -679,37 +679,21 @@ size_flags_horizontal = 3
 size_flags_stretch_ratio = 0.5
 theme_override_constants/separation = 10
 
-[node name="RocketPanel" type="PanelContainer" parent="UI/TopBar/RightStats"]
+[node name="OrderPanel" type="PanelContainer" parent="UI/TopBar/RightStats"]
 layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_1")
 
-[node name="Label" type="Label" parent="UI/TopBar/RightStats/RocketPanel"]
+[node name="VBox" type="VBoxContainer" parent="UI/TopBar/RightStats/OrderPanel"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.8, 0.8, 1, 1)
-theme_override_font_sizes/font_size = 18
-text = "SR1 (L1)"
-horizontal_alignment = 1
+theme_override_constants/separation = 5
 
-[node name="ScorePanel" type="PanelContainer" parent="UI/TopBar/RightStats"]
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_1")
-
-[node name="ScoreLabel" type="Label" parent="UI/TopBar/RightStats/ScorePanel"]
+[node name="OrderLabel" type="Label" parent="UI/TopBar/RightStats/OrderPanel/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.3, 1, 0.4, 1)
-theme_override_font_sizes/font_size = 20
-text = "SCORE: 0"
-horizontal_alignment = 1
-
-[node name="ValuePanel" type="PanelContainer" parent="UI/TopBar/RightStats"]
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_1")
-
-[node name="Label" type="Label" parent="UI/TopBar/RightStats/ValuePanel"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.85, 0.3, 1)
-theme_override_font_sizes/font_size = 18
-text = "VALUE: ₣0"
+theme_override_font_sizes/font_size = 14
+text = "Minerals: 0"
 horizontal_alignment = 1
 
 [node name="Instructions" type="Label" parent="UI"]
@@ -727,37 +711,6 @@ theme_override_font_sizes/font_size = 22
 text = "HOLD SPACE (or FIRE) to mine | Press E for inventory"
 horizontal_alignment = 1
 
-[node name="FireButton" type="Button" parent="UI"]
-visible = false
-layout_mode = 1
-anchors_preset = 7
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
-anchor_bottom = 1.0
-offset_left = -60.0
-offset_top = -70.0
-offset_right = 60.0
-offset_bottom = -20.0
-grow_horizontal = 2
-grow_vertical = 0
-text = "FIRE"
-
-[node name="InventoryButton" type="Button" parent="UI"]
-visible = false
-layout_mode = 1
-anchors_preset = 3
-anchor_left = 1.0
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -120.0
-offset_top = -100.0
-offset_right = -10.0
-offset_bottom = -60.0
-grow_horizontal = 0
-grow_vertical = 0
-text = "INVENTORY"
 
 [node name="InventoryPanel" type="PanelContainer" parent="UI"]
 visible = false
@@ -784,17 +737,37 @@ Score: 0"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="ReturnButton" type="Button" parent="UI"]
+[node name="BottomBar" type="HBoxContainer" parent="UI"]
 layout_mode = 1
-anchors_preset = 3
-anchor_left = 1.0
+anchors_preset = 7
+anchor_left = 0.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -140.0
-offset_top = -50.0
+offset_left = 10.0
+offset_top = -58.0
 offset_right = -10.0
 offset_bottom = -10.0
-grow_horizontal = 0
+grow_horizontal = 2
 grow_vertical = 0
-text = "RETURN TO EARTH"
+theme_override_constants/separation = 8
+
+[node name="MineButton" type="Button" parent="UI/BottomBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "MINE"
+
+[node name="DroneButton" type="Button" parent="UI/BottomBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "DRONE"
+
+[node name="ReturnButton" type="Button" parent="UI/BottomBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "RETURN"
+
+[node name="MenuButton" type="Button" parent="UI/BottomBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "MENU"

@@ -1,0 +1,123 @@
+{
+  "taskId": "ogmedx",
+  "currentVersion": 2,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "ogmedx",
+      "version": 1,
+      "timestamp": "2026-03-28T00:10:13.282Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "newValue": "1. Audit asteroid detail layout on narrow/mobile-sized viewports and identify the header, image, and annotation controls that overflow.\n2. Refactor asteroid_detail_view.tscn and AsteroidDetailView.gd to use responsive wrapping/scrolling and viewport-aware sizing.\n3. Re-run targeted UI validation and document any linked overflow fixes or residual limits."
+        }
+      ],
+      "snapshot": {
+        "title": "Improve mobile UI panel for asteroid detail flow",
+        "description": "Make the asteroid detail / annotation panel usable on narrow and mobile-sized viewports. This appears to be the likely surface referenced as the asteroid bundler panel.",
+        "status": "todo",
+        "priority": "high",
+        "labels": [
+          "ux",
+          "ui",
+          "mobile",
+          "layout",
+          "asteroid-detail"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Asteroid detail header/actions stay reachable on narrow/mobile-sized viewports"
+          },
+          {
+            "completed": false,
+            "text": "Asteroid image and drawing canvas remain visible without horizontal overflow"
+          },
+          {
+            "completed": false,
+            "text": "Related overflow issues found during the mobile asteroid-detail pass are fixed or documented"
+          }
+        ],
+        "implementationPlan": "1. Audit asteroid detail layout on narrow/mobile-sized viewports and identify the header, image, and annotation controls that overflow.\n2. Refactor asteroid_detail_view.tscn and AsteroidDetailView.gd to use responsive wrapping/scrolling and viewport-aware sizing.\n3. Re-run targeted UI validation and document any linked overflow fixes or residual limits."
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "ogmedx",
+      "version": 2,
+      "timestamp": "2026-03-28T00:18:49.553Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        },
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Asteroid detail header/actions stay reachable on narrow/mobile-sized viewports"
+            },
+            {
+              "completed": false,
+              "text": "Asteroid image and drawing canvas remain visible without horizontal overflow"
+            },
+            {
+              "completed": false,
+              "text": "Related overflow issues found during the mobile asteroid-detail pass are fixed or documented"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Asteroid detail header/actions stay reachable on narrow/mobile-sized viewports"
+            },
+            {
+              "completed": true,
+              "text": "Asteroid image and drawing canvas remain visible without horizontal overflow"
+            },
+            {
+              "completed": true,
+              "text": "Related overflow issues found during the mobile asteroid-detail pass are fixed or documented"
+            }
+          ]
+        },
+        {
+          "field": "implementationNotes",
+          "newValue": "✓ Asteroid detail panel reworked for narrow/mobile layouts: wrapped tool row, scrollable body, viewport-aware image/canvas sizing, and classification actions moved into responsive flow containers. Validation: Docker smoke load confirmed new nodes render; full UX tour blocked by unrelated SidescrollMining parse errors."
+        }
+      ],
+      "snapshot": {
+        "title": "Improve mobile UI panel for asteroid detail flow",
+        "description": "Make the asteroid detail / annotation panel usable on narrow and mobile-sized viewports. This appears to be the likely surface referenced as the asteroid bundler panel.",
+        "status": "done",
+        "priority": "high",
+        "labels": [
+          "ux",
+          "ui",
+          "mobile",
+          "layout",
+          "asteroid-detail"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Asteroid detail header/actions stay reachable on narrow/mobile-sized viewports"
+          },
+          {
+            "completed": true,
+            "text": "Asteroid image and drawing canvas remain visible without horizontal overflow"
+          },
+          {
+            "completed": true,
+            "text": "Related overflow issues found during the mobile asteroid-detail pass are fixed or documented"
+          }
+        ],
+        "implementationPlan": "1. Audit asteroid detail layout on narrow/mobile-sized viewports and identify the header, image, and annotation controls that overflow.\n2. Refactor asteroid_detail_view.tscn and AsteroidDetailView.gd to use responsive wrapping/scrolling and viewport-aware sizing.\n3. Re-run targeted UI validation and document any linked overflow fixes or residual limits.",
+        "implementationNotes": "✓ Asteroid detail panel reworked for narrow/mobile layouts: wrapped tool row, scrollable body, viewport-aware image/canvas sizing, and classification actions moved into responsive flow containers. Validation: Docker smoke load confirmed new nodes render; full UX tour blocked by unrelated SidescrollMining parse errors."
+      }
+    }
+  ]
+}

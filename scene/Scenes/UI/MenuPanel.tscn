@@ -53,39 +53,50 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 16
 
-[node name="HeaderContainer" type="HBoxContainer" parent="PanelContainer/Panel/VBoxContainer"]
+[node name="HeaderContainer" type="VBoxContainer" parent="PanelContainer/Panel/VBoxContainer"]
 layout_mode = 2
+theme_override_constants/separation = 10
 
 [node name="HeaderBackground" type="Panel" parent="PanelContainer/Panel/VBoxContainer/HeaderContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
-custom_minimum_size = Vector2(0, 56)
+custom_minimum_size = Vector2(0, 96)
 
-[node name="HeaderContent" type="HBoxContainer" parent="PanelContainer/Panel/VBoxContainer/HeaderContainer/HeaderBackground"]
+[node name="HeaderContent" type="VBoxContainer" parent="PanelContainer/Panel/VBoxContainer/HeaderContainer/HeaderBackground"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 12
+offset_left = 16.0
+offset_top = 12.0
+offset_right = -16.0
+offset_bottom = -12.0
+theme_override_constants/separation = 8
 
 [node name="Title" type="Label" parent="PanelContainer/Panel/VBoxContainer/HeaderContainer/HeaderBackground/HeaderContent"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 30
+theme_override_font_sizes/font_size = 26
 text = "Main Menu"
+autowrap_mode = 3
 
-[node name="CloseButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/HeaderContainer/HeaderBackground/HeaderContent"]
-custom_minimum_size = Vector2(100, 50)
+[node name="HeaderButtons" type="HBoxContainer" parent="PanelContainer/Panel/VBoxContainer/HeaderContainer/HeaderBackground/HeaderContent"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 20
+alignment = 2
+theme_override_constants/separation = 12
+
+[node name="CloseButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/HeaderContainer/HeaderBackground/HeaderContent/HeaderButtons"]
+custom_minimum_size = Vector2(96, 46)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
 text = "Close"
 
-[node name="LogbookButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/HeaderContainer/HeaderBackground/HeaderContent"]
-custom_minimum_size = Vector2(120, 50)
+[node name="LogbookButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/HeaderContainer/HeaderBackground/HeaderContent/HeaderButtons"]
+custom_minimum_size = Vector2(110, 46)
 layout_mode = 2
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 18
 text = "Logbook"
 
 [node name="HSeparator" type="HSeparator" parent="PanelContainer/Panel/VBoxContainer"]
@@ -334,17 +345,23 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 16
 
-[node name="Header" type="HBoxContainer" parent="LogbookOverlay/LogbookPanelContainer/LogbookPanel/VBoxContainer"]
+[node name="Header" type="VBoxContainer" parent="LogbookOverlay/LogbookPanelContainer/LogbookPanel/VBoxContainer"]
 layout_mode = 2
+theme_override_constants/separation = 8
 
 [node name="Title" type="Label" parent="LogbookOverlay/LogbookPanelContainer/LogbookPanel/VBoxContainer/Header"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 26
 text = "Mission Logbook"
+autowrap_mode = 3
 
-[node name="CloseLogbookButton" type="Button" parent="LogbookOverlay/LogbookPanelContainer/LogbookPanel/VBoxContainer/Header"]
-custom_minimum_size = Vector2(100, 44)
+[node name="HeaderButtons" type="HBoxContainer" parent="LogbookOverlay/LogbookPanelContainer/LogbookPanel/VBoxContainer/Header"]
+layout_mode = 2
+alignment = 2
+
+[node name="CloseLogbookButton" type="Button" parent="LogbookOverlay/LogbookPanelContainer/LogbookPanel/VBoxContainer/Header/HeaderButtons"]
+custom_minimum_size = Vector2(96, 44)
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "Close"

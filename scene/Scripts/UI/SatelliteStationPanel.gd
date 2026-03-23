@@ -31,6 +31,7 @@ const UnlockItemScene = preload("res://Scenes/UI/Templates/MenuUnlockItem.tscn")
 const AppLogger = preload("res://Scripts/Utils/Logger.gd")
 const SupabaseClient = preload("res://Scripts/Systems/SupabaseClient.gd")
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
+const UILayout = preload("res://Scripts/UI/UILayout.gd")
 const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd")
 const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
 const SubcontractorManager = preload("res://Scripts/Utils/SubcontractorManager.gd")
@@ -50,20 +51,22 @@ var _loading := SatelliteStationPanelLoading.new()
 func set_local_only(val: bool) -> void:
 	local_only = val
 
-@onready var loading_container: VBoxContainer = $PanelContainer/Panel/VBoxContainer/ContentContainer/LoadingContainer
-@onready var anomaly_scroll: ScrollContainer = $PanelContainer/Panel/VBoxContainer/ContentContainer/AnomalyScroll
-@onready var anomaly_list: VBoxContainer = $PanelContainer/Panel/VBoxContainer/ContentContainer/AnomalyScroll/AnomalyList
-@onready var progress_bar: ProgressBar = $PanelContainer/Panel/VBoxContainer/ContentContainer/LoadingContainer/ProgressBar
-@onready var loading_label: Label = $PanelContainer/Panel/VBoxContainer/ContentContainer/LoadingContainer/LoadingLabel
-@onready var refresh_button: Button = $PanelContainer/Panel/VBoxContainer/ContentContainer/RefreshContainer/RefreshButton
-@onready var status_label: Label = $PanelContainer/Panel/VBoxContainer/ContentContainer/StatusContainer/StatusLabel
-@onready var content_container: VBoxContainer = $PanelContainer/Panel/VBoxContainer/ContentContainer
-@onready var toggle_switch: Button = $PanelContainer/Panel/VBoxContainer/HeaderContainer/ToggleSwitch
+@onready var scroll: ScrollContainer = $PanelContainer/Panel/Scroll
+@onready var scroll_content: VBoxContainer = $PanelContainer/Panel/Scroll/VBoxContainer
+@onready var loading_container: VBoxContainer = $PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/LoadingContainer
+@onready var anomaly_scroll: ScrollContainer = $PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/AnomalyScroll
+@onready var anomaly_list: VBoxContainer = $PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/AnomalyScroll/AnomalyList
+@onready var progress_bar: ProgressBar = $PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/LoadingContainer/ProgressBar
+@onready var loading_label: Label = $PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/LoadingContainer/LoadingLabel
+@onready var refresh_button: Button = $PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/RefreshContainer/RefreshButton
+@onready var status_label: Label = $PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/StatusContainer/StatusLabel
+@onready var content_container: VBoxContainer = $PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer
+@onready var toggle_switch: Button = $PanelContainer/Panel/Scroll/VBoxContainer/HeaderContainer/ToggleSwitch
 
 func _ready():
 	# Apply consistent panel styling
-	var title_label = $PanelContainer/Panel/VBoxContainer/HeaderContainer/Title
-	var close_button = $PanelContainer/Panel/VBoxContainer/HeaderContainer/CloseButton
+	var title_label = $PanelContainer/Panel/Scroll/VBoxContainer/HeaderContainer/Title
+	var close_button = $PanelContainer/Panel/Scroll/VBoxContainer/HeaderContainer/CloseButton
 	_detail.setup(
 		$PanelContainer/Panel,
 		loading_container,
@@ -74,7 +77,9 @@ func _ready():
 		close_button
 	)
 	_detail.apply_panel_style()
+	_apply_layout()
 	_apply_panel_style()
+	get_viewport().size_changed.connect(_apply_layout)
 	# First-time scanner station intro
 	FirstTimeMechanicTracker.maybe_show("scanner_station", get_tree())
 
@@ -134,15 +139,33 @@ func _ready():
 func _apply_panel_style() -> void:
 	var panel_style = PanelStyle
 	panel_style.apply_panel($PanelContainer/Panel)
-	panel_style.apply_title($PanelContainer/Panel/VBoxContainer/HeaderContainer/Title)
-	panel_style.apply_separator($PanelContainer/Panel/VBoxContainer/HSeparator)
-	panel_style.apply_button($PanelContainer/Panel/VBoxContainer/HeaderContainer/CloseButton, false)
-	panel_style.apply_button($PanelContainer/Panel/VBoxContainer/HeaderContainer/ToggleSwitch, false)
-	panel_style.apply_button($PanelContainer/Panel/VBoxContainer/ContentContainer/RefreshContainer/RefreshButton, true)
-	panel_style.apply_body($PanelContainer/Panel/VBoxContainer/ContentContainer/StatusContainer/StatusLabel)
-	panel_style.apply_muted($PanelContainer/Panel/VBoxContainer/ContentContainer/LoadingContainer/LoadingLabel)
-	panel_style.apply_muted($PanelContainer/Panel/VBoxContainer/ContentContainer/LoadingContainer/ScanningHint)
-	panel_style.apply_progress_bar($PanelContainer/Panel/VBoxContainer/ContentContainer/LoadingContainer/ProgressBar)
+	panel_style.apply_title($PanelContainer/Panel/Scroll/VBoxContainer/HeaderContainer/Title)
+	panel_style.apply_separator($PanelContainer/Panel/Scroll/VBoxContainer/HSeparator)
+	panel_style.apply_button($PanelContainer/Panel/Scroll/VBoxContainer/HeaderContainer/CloseButton, false)
+	panel_style.apply_button($PanelContainer/Panel/Scroll/VBoxContainer/HeaderContainer/ToggleSwitch, false)
+	panel_style.apply_button($PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/RefreshContainer/RefreshButton, true)
+	panel_style.apply_body($PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/StatusContainer/StatusLabel)
+	panel_style.apply_muted($PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/LoadingContainer/LoadingLabel)
+	panel_style.apply_muted($PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/LoadingContainer/ScanningHint)
+	panel_style.apply_progress_bar($PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/LoadingContainer/ProgressBar)
+
+func _apply_layout() -> void:
+	var viewport := get_viewport().get_visible_rect().size
+	var safe := UILayout.safe_rect(viewport)
+	var shell = $PanelContainer as Control
+	shell.offset_left = safe.position.x
+	shell.offset_top = safe.position.y
+	shell.offset_right = -(viewport.x - safe.end.x)
+	shell.offset_bottom = -(viewport.y - safe.end.y)
+	var panel = $PanelContainer/Panel as Control
+	panel.custom_minimum_size.x = clampf(viewport.x * 0.68, 720.0, 1120.0)
+	panel.custom_minimum_size.y = clampf(safe.size.y * 0.74, 420.0, 860.0)
+	scroll.custom_minimum_size = Vector2(0.0, 0.0)
+	scroll_content.custom_minimum_size.x = maxf(panel.size.x - 56.0, panel.custom_minimum_size.x - 56.0)
+	anomaly_scroll.custom_minimum_size = Vector2(0.0, clampf(panel.custom_minimum_size.y * 0.42, 180.0, 320.0))
+	var title := $PanelContainer/Panel/Scroll/VBoxContainer/HeaderContainer/Title as Label
+	title.add_theme_font_size_override("font_size", 30 if viewport.x < 1200.0 else 40)
+	toggle_switch.custom_minimum_size.x = 160.0 if viewport.x < 1200.0 else 190.0
 
 func _start_loading(duration: float):
 	AppLogger.d("SatelliteStationPanel: _start_loading duration=%s" % duration)
@@ -293,7 +316,7 @@ func _ensure_citizen_science_hint() -> void:
 	_citizen_science_hint_label.add_theme_font_size_override("font_size", 14)
 	var panel_style = PanelStyle
 	panel_style.apply_muted(_citizen_science_hint_label)
-	var status_container = $PanelContainer/Panel/VBoxContainer/ContentContainer/StatusContainer
+	var status_container = $PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/StatusContainer
 	if status_container:
 		status_container.add_child(_citizen_science_hint_label)
 

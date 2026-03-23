@@ -784,9 +784,13 @@ function renderBoard(tasks) {
     board.appendChild(div);
   }
   board.querySelectorAll('.card').forEach(el => {
-    el.addEventListener('click', e => {
+    let _mx = 0, _my = 0;
+    el.addEventListener('mousedown', e => { _mx = e.clientX; _my = e.clientY; });
+    el.addEventListener('mouseup', e => {
       if (e.target.classList.contains('card-del')) return;
-      openTask(el.dataset.project, el.dataset.id);
+      if (Math.abs(e.clientX - _mx) < 5 && Math.abs(e.clientY - _my) < 5) {
+        openTask(el.dataset.project, el.dataset.id);
+      }
     });
     el.addEventListener('dragstart', e => {
       e.dataTransfer.effectAllowed = 'move';
@@ -959,10 +963,9 @@ function openNewModal() {
   setTimeout(() => document.getElementById('m-title').focus(), 50);
 }
 
-async function openTask(project, id) {
-  const r = await fetch('/api/tasks/' + project + '/' + id);
-  if (!r.ok) return;
-  activeTask = await r.json();
+function openTask(project, id) {
+  activeTask = allTasks.find(t => t.id === id && t.project === project) || null;
+  if (!activeTask) return;
   document.getElementById('m-title').value    = activeTask.title || '';
   document.getElementById('m-status').value   = activeTask.status || 'todo';
   document.getElementById('m-priority').value = activeTask.priority || 'medium';

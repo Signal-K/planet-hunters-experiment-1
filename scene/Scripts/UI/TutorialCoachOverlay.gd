@@ -168,7 +168,7 @@ func _resume_hint_for_step(step: Dictionary) -> String:
 		return "Open the Launchpad to continue."
 	if "SidescrollMining" in valid_scenes:
 		return "Your mission is in flight."
-	if "mission_debrief" in valid_scenes:
+	if "mission_debrief_v2" in valid_scenes:
 		return "Return to base to complete your debrief."
 	return "Navigate to continue your mission."
 

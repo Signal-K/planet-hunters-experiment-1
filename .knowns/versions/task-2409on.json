@@ -6,32 +6,53 @@
       "id": "v1",
       "taskId": "2409on",
       "version": 1,
-      "timestamp": "2026-03-26T09:16:31.179Z",
+      "timestamp": "2026-03-27T12:09:05.367Z",
       "changes": [
         {
-          "field": "implementationNotes",
-          "newValue": "kanban: 275r0m"
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Layout sketch complete"
+            },
+            {
+              "completed": false,
+              "text": "Key visual elements identified"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Layout sketch complete"
+            },
+            {
+              "completed": true,
+              "text": "Key visual elements identified"
+            }
+          ]
         }
       ],
       "snapshot": {
         "title": "Sketch the SR2 unlock screen layout",
         "description": "When SR2 unlocks, a full-screen moment fires. Sketch the layout: what elements appear (rocket image, stats, copy), how they're arranged, and whether it feels like a reward or just a notification.",
-        "status": "todo",
+        "status": "done",
         "priority": "medium",
+        "assignee": "@me",
         "labels": [
           "sketch",
           "design"
         ],
         "acceptanceCriteria": [
           {
-            "completed": false,
+            "completed": true,
             "text": "Layout sketch complete"
           },
           {
-            "completed": false,
+            "completed": true,
             "text": "Key visual elements identified"
           }
         ],
+        "implementationPlan": "1. Read the SR2 sketch and compare it to the current earth-base unlock popup.\n2. Capture the layout decisions from the notebook in Knowns: two-step beat, left rocket art, right-side stat reveal, Earth-base background preserved, CTA into using SR2.\n3. Implement the SR2 unlock screen in earth_base_1.gd so the post-debrief flow matches the sketch and the written flow task.\n4. Add focused tests for the unlock overlay content and CTA presence.\n5. Write notes, stop the timer, and close the task if validation passes.",
         "implementationNotes": "kanban: 275r0m"
       }
     }

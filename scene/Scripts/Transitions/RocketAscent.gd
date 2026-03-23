@@ -100,17 +100,12 @@ func _build_ui() -> void:
 	add_child(ui_layer)
 	_skip_button = Button.new()
 	_skip_button.text = "Skip"
-	_skip_button.size = Vector2(80, 36)
-	_skip_button.anchor_right = 1.0
-	_skip_button.anchor_bottom = 0.0
-	_skip_button.offset_left = -96.0
-	_skip_button.offset_top = 16.0
-	_skip_button.offset_right = -16.0
-	_skip_button.offset_bottom = 52.0
+	_skip_button.custom_minimum_size = Vector2(80, 36)
 	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
 	panel_style.apply_button(_skip_button, false)
 	_skip_button.pressed.connect(_on_skip_pressed)
 	ui_layer.add_child(_skip_button)
+	_position_skip_button()
 
 func _start_ascent() -> void:
 	_tween = create_tween()
@@ -135,6 +130,14 @@ func _process(_delta: float) -> void:
 	_rocket_sprite.position = Vector2(vp.x * 0.5, lerp(vp.y * 0.65, vp.y * 0.22, _altitude))
 	_rocket_sprite.scale = Vector2.ONE * lerp(1.5, 0.3, _altitude)
 	_rocket_sprite.rotation = lerp(0.08, 0.0, _altitude)
+	_position_skip_button()
+
+func _position_skip_button() -> void:
+	if _skip_button == null:
+		return
+	var vp = get_viewport_rect().size
+	_skip_button.position = Vector2(vp.x - 144.0, 16.0)
+	_skip_button.size = Vector2(96.0, 36.0)
 
 func _update_horizon(vp: Vector2) -> void:
 	if _horizon_line == null:

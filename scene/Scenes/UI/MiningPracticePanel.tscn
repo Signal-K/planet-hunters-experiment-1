@@ -28,59 +28,65 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Dock" type="MarginContainer" parent="."]
+[node name="Dock" type="CenterContainer" parent="."]
 layout_mode = 1
-anchors_preset = 3
-anchor_top = 1.0
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 24.0
-offset_top = -372.0
+offset_top = 24.0
 offset_right = -24.0
 offset_bottom = -24.0
 grow_horizontal = 2
-grow_vertical = 0
+grow_vertical = 2
 
 [node name="Panel" type="PanelContainer" parent="Dock"]
 custom_minimum_size = Vector2(480, 0)
 layout_mode = 2
-size_flags_horizontal = 1
+size_flags_horizontal = 4
+size_flags_vertical = 4
 
-[node name="VBox" type="VBoxContainer" parent="Dock/Panel"]
+[node name="Scroll" type="ScrollContainer" parent="Dock/Panel"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="VBox" type="VBoxContainer" parent="Dock/Panel/Scroll"]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="TitleLabel" type="Label" parent="Dock/Panel/VBox"]
+[node name="TitleLabel" type="Label" parent="Dock/Panel/Scroll/VBox"]
 layout_mode = 2
 text = "Mining Academy"
 
-[node name="SubtitleLabel" type="Label" parent="Dock/Panel/VBox"]
+[node name="SubtitleLabel" type="Label" parent="Dock/Panel/Scroll/VBox"]
 layout_mode = 2
 autowrap_mode = 3
 text = "Subtitle"
 
-[node name="PresetButtons" type="HBoxContainer" parent="Dock/Panel/VBox"]
+[node name="PresetButtons" type="HBoxContainer" parent="Dock/Panel/Scroll/VBox"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="WarmupButton" type="Button" parent="Dock/Panel/VBox/PresetButtons"]
+[node name="WarmupButton" type="Button" parent="Dock/Panel/Scroll/VBox/PresetButtons"]
 layout_mode = 2
 text = "Warm-Up"
 
-[node name="DrillButton" type="Button" parent="Dock/Panel/VBox/PresetButtons"]
+[node name="DrillButton" type="Button" parent="Dock/Panel/Scroll/VBox/PresetButtons"]
 layout_mode = 2
 text = "Prospector"
 
-[node name="EnduranceButton" type="Button" parent="Dock/Panel/VBox/PresetButtons"]
+[node name="EnduranceButton" type="Button" parent="Dock/Panel/Scroll/VBox/PresetButtons"]
 layout_mode = 2
 text = "Endurance"
 
-[node name="StatusLabel" type="Label" parent="Dock/Panel/VBox"]
+[node name="StatusLabel" type="Label" parent="Dock/Panel/Scroll/VBox"]
 layout_mode = 2
 autowrap_mode = 3
 text = "Status"
 
-[node name="SummaryLabel" type="RichTextLabel" parent="Dock/Panel/VBox"]
+[node name="SummaryLabel" type="RichTextLabel" parent="Dock/Panel/Scroll/VBox"]
 custom_minimum_size = Vector2(0, 150)
 layout_mode = 2
 bbcode_enabled = false
@@ -88,10 +94,10 @@ scroll_active = false
 fit_content = true
 text = ""
 
-[node name="FooterButtons" type="HBoxContainer" parent="Dock/Panel/VBox"]
+[node name="FooterButtons" type="HBoxContainer" parent="Dock/Panel/Scroll/VBox"]
 layout_mode = 2
 alignment = 2
 
-[node name="CloseButton" type="Button" parent="Dock/Panel/VBox/FooterButtons"]
+[node name="CloseButton" type="Button" parent="Dock/Panel/Scroll/VBox/FooterButtons"]
 layout_mode = 2
 text = "Back To Game"

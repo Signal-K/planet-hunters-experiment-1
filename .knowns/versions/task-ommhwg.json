@@ -6,17 +6,18 @@
       "id": "v1",
       "taskId": "ommhwg",
       "version": 1,
-      "timestamp": "2026-03-26T09:16:31.536Z",
+      "timestamp": "2026-03-27T04:18:29.136Z",
       "changes": [
         {
-          "field": "implementationNotes",
-          "newValue": "kanban: 84qdog"
+          "field": "status",
+          "oldValue": "in-review",
+          "newValue": "done"
         }
       ],
       "snapshot": {
         "title": "Sketch a next-mission CTA for the post-debrief screen",
         "description": "After debrief, players have no clear path forward. Sketch a 'next mission' prompt — what does it look like, where does it sit, and how does it guide players back into the loop?",
-        "status": "todo",
+        "status": "done",
         "priority": "medium",
         "labels": [
           "sketch",
@@ -24,11 +25,11 @@
         ],
         "acceptanceCriteria": [
           {
-            "completed": false,
+            "completed": true,
             "text": "Sketch complete"
           },
           {
-            "completed": false,
+            "completed": true,
             "text": "CTA placement and copy direction identified"
           }
         ],
