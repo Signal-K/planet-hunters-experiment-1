@@ -1,9 +1,10 @@
 /* Star Sailors: Experiment 1 — Service Worker */
-const SW_VERSION = "v3";
+const SW_VERSION = "v4";
 const SHELL_CACHE = `star-sailors-shell-${SW_VERSION}`;
 const GAME_CACHE = `star-sailors-game-${SW_VERSION}`;
 
-const SHELL_FILES = ["/", "/react-shell.js", "/manifest.json"];
+// Pre-cache shell files so installed PWA loads instantly
+const SHELL_FILES = ["/", "/react-shell.js", "/manifest.json", "/game/index.html"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -32,8 +33,11 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
 
-  // Cache-first for large game assets (.pck, .wasm, .js, .png under /game/)
-  if (url.pathname.startsWith("/game/")) {
+  // Only handle same-origin requests
+  if (url.origin !== self.location.origin) return;
+
+  // Cache-first for large immutable game assets (.pck, .wasm, versioned .js/.png under /game/)
+  if (url.pathname.startsWith("/game/") && url.pathname !== "/game/index.html") {
     event.respondWith(
       caches.open(GAME_CACHE).then((cache) =>
         cache.match(event.request).then((cached) => {
@@ -48,8 +52,18 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Network-first for shell — fall back to cache when offline
+  // Stale-while-revalidate for shell (HTML, JS, manifest, game/index.html):
+  // Serve from cache immediately, then update cache in background.
+  // This gives PWA users instant loads on every visit.
   event.respondWith(
-    fetch(event.request).catch(() => caches.match(event.request))
+    caches.open(SHELL_CACHE).then((cache) =>
+      cache.match(event.request).then((cached) => {
+        const networkFetch = fetch(event.request).then((response) => {
+          if (response.ok) cache.put(event.request, response.clone());
+          return response;
+        }).catch(() => null);
+        return cached || networkFetch;
+      })
+    )
   );
 });

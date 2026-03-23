@@ -56,6 +56,8 @@ let _runtimeConfig = null;
 let _runtimeConfigPromise = null;
 let _xpSyncInFlight = false;
 let _pendingXpSnapshot = null;
+// Set to true when this is the 2nd session; cleared once the survey fires
+let _pendingReturnVisitSurvey = false;
 
 const LEVEL_UNLOCK_HINTS = {
   2: "Starter Rocket 2 unlocked — extended range and heavier payload",
@@ -827,17 +829,12 @@ function maybeShowPwaInstallSurvey() {
 }
 
 function maybeShowReturnVisitSurvey() {
-  // Show on second session start — only once ever.
+  // Increment session count and arm _pendingReturnVisitSurvey on the 2nd session.
+  // The survey fires when the player completes a meaningful mechanic — see onGameMessage.
   try {
     const count = Number(localStorage.getItem(SESSION_COUNT_KEY) || "0") + 1;
     localStorage.setItem(SESSION_COUNT_KEY, String(count));
-    if (count !== 2) return; // only on exactly the 2nd session
-    maybeTriggerMicroSurvey(
-      MICRO_SURVEY_KEYS.return_visit,
-      MICRO_SURVEY_IDS.return_visit,
-      "micro_return_visit_motivation",
-      {}
-    );
+    if (count === 2) _pendingReturnVisitSurvey = true;
   } catch (_) {}
 }
 
@@ -877,12 +874,12 @@ function App() {
   const [xpState, setXpState] = useState(() => readXpState() || { experience_level: 1, experience_xp: 0, franc_balance: 0 });
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [storageStatus, setStorageStatus] = useState("Cookie storage active");
-  const [gameSrc] = useState(() => "/game/index.html?v=" + Date.now());
+  // In PWA mode skip cache-busting so the service worker can cache the game
+  const [gameSrc] = useState(() => isPwaMode() ? "/game/index.html" : "/game/index.html?v=" + Date.now());
   const [isMobile, setIsMobile] = useState(() => typeof window !== "undefined" && Math.min(window.innerWidth, window.innerHeight) < 768);
   const [isPwa] = useState(() => isPwaMode());
   const [isIos] = useState(() => isIosDevice());
   const [installPrompt, setInstallPrompt] = useState(null);
-  const [showMobileBanner, setShowMobileBanner] = useState(false);
   const [showIosHint, setShowIosHint] = useState(false);
   const [showInstallHint, setShowInstallHint] = useState(false);
   const [levelUpBanner, setLevelUpBanner] = useState(null); // { level, hint }
@@ -933,8 +930,8 @@ function App() {
         shell_entry: "react_shell",
       });
     });
-    // Return-visit survey — delayed 3s so the game has time to load first.
-    setTimeout(maybeShowReturnVisitSurvey, 3000);
+    // Return-visit survey — fires only after player engagement (managed inside the function).
+    maybeShowReturnVisitSurvey();
     const persistedXp = readXpState();
     if (persistedXp && typeof persistedXp.experience_level !== "undefined") {
       registerAnalyticsContext({
@@ -1041,6 +1038,27 @@ function App() {
       if (eventName === "rocket_launched") {
         maybeShowLaunchSurvey(payload);
       }
+      // Return-visit survey: fires the first time the player completes a meaningful
+      // mechanic on their second session. We check after each completion event so
+      // the survey never appears before the player has actually done something.
+      if (_pendingReturnVisitSurvey && !localStorage.getItem(MICRO_SURVEY_KEYS.return_visit)) {
+        const isCompletionEvent = (
+          eventName === "rocket_landed" ||
+          eventName === "mining_run_completed" ||
+          eventName === "contractor_signed" ||
+          eventName === "mission_debrief_resolved" ||
+          eventName === "scanner_scan_completed"
+        );
+        if (isCompletionEvent) {
+          _pendingReturnVisitSurvey = false;
+          maybeTriggerMicroSurvey(
+            MICRO_SURVEY_KEYS.return_visit,
+            MICRO_SURVEY_IDS.return_visit,
+            "micro_return_visit_motivation",
+            payload
+          );
+        }
+      }
     }
 
     window.addEventListener("message", onGameMessage);
@@ -1057,13 +1075,6 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (isMobile && !isPwa) {
-      const t = setTimeout(() => setShowMobileBanner(true), 2000);
-      return () => clearTimeout(t);
-    }
-  }, [isMobile, isPwa]);
-
-  useEffect(() => {
     return () => {
       if (pwaHudTimerRef.current) {
         clearTimeout(pwaHudTimerRef.current);
@@ -1075,7 +1086,6 @@ function App() {
     if (document.documentElement.requestFullscreen) {
       document.documentElement.requestFullscreen().catch(() => {});
     }
-    setShowMobileBanner(false);
   }, []);
 
   const handleInstallApp = useCallback(async () => {
@@ -1093,14 +1103,13 @@ function App() {
         }
       } catch (_error) {}
       setInstallPrompt(null);
-      setShowMobileBanner(false);
       return;
     }
     setShowInstallHint(true);
   }, [installPrompt, isIos]);
 
   const revealPwaHud = useCallback(() => {
-    if (!isPwa) return;
+    if (!isPwa && !isMobile) return;
     setShowPwaHud(true);
     setShowPwaHudMenu(false);
     if (pwaHudTimerRef.current) {
@@ -1110,7 +1119,7 @@ function App() {
       setShowPwaHud(false);
       pwaHudTimerRef.current = null;
     }, 3500);
-  }, [isPwa]);
+  }, [isPwa, isMobile]);
 
   const handlePwaSave = useCallback(() => {
     const next = {
@@ -1160,7 +1169,7 @@ function App() {
 
   const frameStyle = {
     width: "100%",
-    height: isMobile ? "100dvh" : "min(75vh, 860px)",
+    height: "min(75vh, 860px)",
     border: "0",
     display: "block",
     background: "#000",
@@ -1174,7 +1183,7 @@ function App() {
         {
           style: {
             position: "fixed",
-            top: isPwa ? "max(32px, calc(env(safe-area-inset-top) + 12px))" : "24px",
+            top: (isPwa || isMobile) ? "max(32px, calc(env(safe-area-inset-top) + 12px))" : "24px",
             left: "50%",
             transform: "translateX(-50%)",
             background: "linear-gradient(135deg, #0f2040, #1a3a6e)",
@@ -1252,8 +1261,8 @@ function App() {
         )
       : null;
 
-  // PWA mode: game fills entire screen, no chrome
-  if (isPwa) {
+  // Full-screen mode: PWA installed or mobile browser — game fills entire screen, no chrome
+  if (isPwa || isMobile) {
     return React.createElement(
       "div",
       {
@@ -1261,6 +1270,8 @@ function App() {
           position: "fixed",
           inset: 0,
           background: "#000",
+          display: "flex",
+          flexDirection: "column",
         },
       },
       React.createElement("iframe", {
@@ -1275,6 +1286,7 @@ function App() {
           display: "block",
           background: "#000",
           width: "100%",
+          height: "100%",
         },
         onError: () => setStorageStatus("Game load error"),
         onLoad: () => {
@@ -1396,6 +1408,36 @@ function App() {
                             },
                           },
                           "Save"
+                        ),
+                        !isPwa && React.createElement(
+                          "button",
+                          {
+                            onClick: handleOpenFullscreen,
+                            style: {
+                              border: "1px solid #2a3560",
+                              borderRadius: "8px",
+                              padding: "8px 10px",
+                              color: "#fff",
+                              background: "#1a2550",
+                              fontSize: "12px",
+                            },
+                          },
+                          "Open Fullscreen"
+                        ),
+                        !isPwa && (installPrompt || isIos) && React.createElement(
+                          "button",
+                          {
+                            onClick: handleInstallApp,
+                            style: {
+                              border: "1px solid #2a3560",
+                              borderRadius: "8px",
+                              padding: "8px 10px",
+                              color: "#fff",
+                              background: "#0e4a2e",
+                              fontSize: "12px",
+                            },
+                          },
+                          isIos ? "Add to Home Screen" : "Install App"
                         ),
                         React.createElement(
                           "button",
@@ -1525,6 +1567,36 @@ function App() {
                         minWidth: "200px",
                       },
                     },
+                    !isPwa && React.createElement(
+                      "button",
+                      {
+                        onClick: handleOpenFullscreen,
+                        style: {
+                          border: "1px solid #2a3560",
+                          borderRadius: "8px",
+                          padding: "8px 10px",
+                          color: "#fff",
+                          background: "#1a2550",
+                          fontSize: "12px",
+                        },
+                      },
+                      "Open Fullscreen"
+                    ),
+                    !isPwa && (installPrompt || isIos) && React.createElement(
+                      "button",
+                      {
+                        onClick: handleInstallApp,
+                        style: {
+                          border: "1px solid #2a3560",
+                          borderRadius: "8px",
+                          padding: "8px 10px",
+                          color: "#fff",
+                          background: "#0e4a2e",
+                          fontSize: "12px",
+                        },
+                      },
+                      isIos ? "Add to Home Screen" : "Install App"
+                    ),
                     React.createElement(
                       "button",
                       {
@@ -1598,120 +1670,13 @@ function App() {
     );
   }
 
-  // Mobile banner: shown after 2s on mobile non-PWA
-  const mobileBanner =
-    isMobile && showMobileBanner
-      ? React.createElement(
-          "div",
-          {
-            style: {
-              position: "fixed",
-              bottom: 0,
-              left: 0,
-              right: 0,
-              background: "#05080f",
-              borderTop: "1px solid #1a2340",
-              padding:
-                "12px calc(16px + env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left))",
-              display: "flex",
-              flexDirection: "column",
-              gap: "8px",
-              zIndex: 9999,
-            },
-          },
-          React.createElement(
-            "div",
-            { style: { display: "flex", alignItems: "center", justifyContent: "space-between" } },
-            React.createElement(
-              "div",
-              null,
-              React.createElement(
-                "p",
-                { style: { margin: "0 0 2px", fontSize: "14px", fontWeight: 700, color: "#e7edf9" } },
-                "Planet Hunters"
-              ),
-              React.createElement(
-                "p",
-                { style: { margin: 0, fontSize: "12px", color: "#9cb0e8" } },
-                "Install for fullscreen play and offline access."
-              )
-            ),
-            React.createElement(
-              "button",
-              {
-                style: {
-                  background: "none",
-                  border: "none",
-                  color: "#556080",
-                  fontSize: "20px",
-                  cursor: "pointer",
-                  padding: "4px 8px",
-                  lineHeight: 1,
-                },
-                onClick: () => setShowMobileBanner(false),
-              },
-              "\u00d7"
-            )
-          ),
-          React.createElement(
-            "div",
-            { style: { display: "flex", gap: "8px" } },
-            React.createElement(
-              "button",
-              {
-                style: {
-                  flex: 1,
-                  padding: "10px",
-                  background: "#1a2a5e",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: "8px",
-                  fontSize: "14px",
-                  cursor: "pointer",
-                },
-                onClick: handleOpenFullscreen,
-              },
-              "Open Fullscreen"
-            ),
-            React.createElement(
-              "button",
-              {
-                style: {
-                  flex: 1,
-                  padding: "10px",
-                  background: "#1e3a1a",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: "8px",
-                  fontSize: "14px",
-                  cursor: "pointer",
-                },
-                onClick: handleInstallApp,
-              },
-              isIos ? "Add to Home Screen" : "Install App"
-            )
-          ),
-          showIosHint
-            ? React.createElement(
-                "p",
-                { style: { margin: 0, fontSize: "13px", color: "#8899cc", textAlign: "center" } },
-                "Tap the Share button (\uD83D\uDCE4) then \u201cAdd to Home Screen\u201d"
-              )
-            : null,
-          showInstallHint
-            ? React.createElement(
-                "p",
-                { style: { margin: 0, fontSize: "13px", color: "#8899cc", textAlign: "center" } },
-                "Install prompt unavailable in this browser session. Use your browser menu to install."
-              )
-            : null
-        )
-      : null;
-
+  // Desktop layout — mobile always takes the full-screen path above
   return React.createElement(
     "main",
-    { style: isMobile ? { margin: 0, padding: 0 } : { maxWidth: "1200px", margin: "0 auto", padding: "20px" } },
-    !isMobile && React.createElement(
+    {
+      style: { maxWidth: "1200px", margin: "0 auto", padding: "20px" },
+    },
+    React.createElement(
       "header",
       {
         style: {
@@ -1882,15 +1847,13 @@ function App() {
     React.createElement(
       "div",
       {
-        style: isMobile
-          ? { overflow: "hidden", background: "#000" }
-          : {
-              border: "1px solid var(--edge)",
-              borderRadius: "14px",
-              overflow: "hidden",
-              background: "linear-gradient(180deg, #0f1729, #090e19)",
-              boxShadow: "0 18px 48px rgba(0, 0, 0, 0.35)",
-            },
+        style: {
+          border: "1px solid var(--edge)",
+          borderRadius: "14px",
+          overflow: "hidden",
+          background: "linear-gradient(180deg, #0f1729, #090e19)",
+          boxShadow: "0 18px 48px rgba(0, 0, 0, 0.35)",
+        },
       },
       React.createElement("iframe", {
         id: "game-frame",
@@ -1911,7 +1874,6 @@ function App() {
         },
       })
     ),
-    mobileBanner,
     rotatePrompt,
     levelUpOverlay
   );

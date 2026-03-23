@@ -32,11 +32,16 @@ func _build_ui() -> void:
 	_overlay = overlay
 	add_child(overlay)
 
-	# Centred content panel — width adapts to viewport
+	# CenterContainer fills the overlay and centres the panel regardless of content size
+	var center = CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	center.mouse_filter = Control.MOUSE_FILTER_PASS
+	overlay.add_child(center)
+
+	# Content panel — width adapts to viewport
 	var vp_size := get_viewport().get_visible_rect().size
-	var panel_w := clampf(vp_size.x - 48.0, 300.0, 680.0)
+	var panel_w := clampf(vp_size.x - 48.0, 300.0, 560.0)
 	_panel = PanelContainer.new()
-	_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
 	_panel.custom_minimum_size = Vector2(panel_w, 0)
 	var style = StyleBoxFlat.new()
 	style.bg_color = Color(0.08, 0.10, 0.18, 0.97)
@@ -56,7 +61,7 @@ func _build_ui() -> void:
 	_panel.add_theme_stylebox_override("panel", style)
 	# Lock before add_child so UIConsistencyEnforcer's node_added handler can't overwrite.
 	_panel.set_meta("ui_style_locked", true)
-	overlay.add_child(_panel)
+	center.add_child(_panel)
 
 	var vbox = VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 20)
@@ -83,9 +88,9 @@ func _build_ui() -> void:
 	sep.add_theme_color_override("color", Color(0.25, 0.40, 0.80, 0.5))
 	vbox.add_child(sep)
 
-	# Body — three beats: what you do / why it matters / the experiment
+	# Body — short tagline
 	var body = Label.new()
-	body.text = "Take contracts from mining outfits and government agencies. Build rockets, fly to real asteroids and NASA TESS planet candidates, and haul back what you find.\n\nYour scan data isn't just gameplay — it feeds the Planet Hunters citizen science project. Every mission contributes to real astronomical research.\n\nThis is Experiment 1. We're building it alongside you — your feedback shapes what comes next."
+	body.text = "Fly missions. Mine asteroids. Build your fleet.\n\nExperiment 1 — your feedback shapes what's next."
 	body.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	body.add_theme_color_override("font_color", Color(0.78, 0.83, 0.95))

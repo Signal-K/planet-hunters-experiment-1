@@ -1,0 +1,100 @@
+{
+  "taskId": "nsr4af",
+  "currentVersion": 2,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "nsr4af",
+      "version": 1,
+      "timestamp": "2026-03-23T00:48:56.769404422Z",
+      "author": "@Liam",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": null,
+          "newValue": "todo"
+        },
+        {
+          "field": "priority",
+          "oldValue": null,
+          "newValue": "high"
+        }
+      ],
+      "snapshot": {
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Shell assets use stale-while-revalidate caching strategy"
+          },
+          {
+            "completed": false,
+            "text": "gameSrc in PWA mode does not include Date.now() cache-buster"
+          },
+          {
+            "completed": false,
+            "text": "SW version bumped and pre-caches game index.html"
+          },
+          {
+            "completed": false,
+            "text": "Service worker registers immediately (not waiting for load event)"
+          }
+        ],
+        "assignee": "@Liam",
+        "description": "PWA should load near-instantly when installed. Issues: 1) Shell uses network-first (slow offline), 2) gameSrc uses Date.now() cache-busting which prevents SW from caching game, 3) SW version needs bump for new strategies",
+        "labels": [
+          "pwa,performance,mobile"
+        ],
+        "priority": "high",
+        "status": "todo",
+        "title": "Improve PWA load performance: faster shell caching and no cache-busting"
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "nsr4af",
+      "version": 2,
+      "timestamp": "2026-03-23T00:51:05.785606674Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        },
+        {
+          "field": "implementationNotes",
+          "oldValue": null,
+          "newValue": "SW v4: stale-while-revalidate for shell (instant loads), cache-first for game assets, pre-caches game/index.html. gameSrc no longer cache-busts in PWA mode. SW registers immediately on page load."
+        }
+      ],
+      "snapshot": {
+        "acceptanceCriteria": [
+          {
+            "text": "Shell assets use stale-while-revalidate caching strategy",
+            "completed": true
+          },
+          {
+            "text": "gameSrc in PWA mode does not include Date.now() cache-buster",
+            "completed": true
+          },
+          {
+            "text": "SW version bumped and pre-caches game index.html",
+            "completed": true
+          },
+          {
+            "text": "Service worker registers immediately (not waiting for load event)",
+            "completed": true
+          }
+        ],
+        "assignee": "@Liam",
+        "description": "PWA should load near-instantly when installed. Issues: 1) Shell uses network-first (slow offline), 2) gameSrc uses Date.now() cache-busting which prevents SW from caching game, 3) SW version needs bump for new strategies",
+        "implementationNotes": "SW v4: stale-while-revalidate for shell (instant loads), cache-first for game assets, pre-caches game/index.html. gameSrc no longer cache-busts in PWA mode. SW registers immediately on page load.",
+        "labels": [
+          "pwa,performance,mobile"
+        ],
+        "priority": "high",
+        "status": "done",
+        "title": "Improve PWA load performance: faster shell caching and no cache-busting"
+      }
+    }
+  ]
+}
