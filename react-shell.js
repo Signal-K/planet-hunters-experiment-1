@@ -56,9 +56,8 @@ let _runtimeConfig = null;
 let _runtimeConfigPromise = null;
 let _xpSyncInFlight = false;
 let _pendingXpSnapshot = null;
-// Tracks whether the player has had meaningful game engagement before surveys fire
-let _gameEngagementTs = 0; // timestamp of first game event received
-const SURVEY_MIN_ENGAGEMENT_MS = 30000; // 30s of game time before any survey
+// Set to true when this is the 2nd session; cleared once the survey fires
+let _pendingReturnVisitSurvey = false;
 
 const LEVEL_UNLOCK_HINTS = {
   2: "Starter Rocket 2 unlocked — extended range and heavier payload",
@@ -744,8 +743,6 @@ async function maybeTriggerMicroSurvey(storageKey, surveyId, context, eventPaylo
   if (localStorage.getItem(storageKey)) return;
   // Skip if no survey ID configured yet.
   if (!surveyId) return;
-  // Don't fire surveys until the player has had meaningful game engagement.
-  if (!_gameEngagementTs || (Date.now() - _gameEngagementTs) < SURVEY_MIN_ENGAGEMENT_MS) return;
   try {
     const distinctId = await resolveSurveyDistinctId();
     const params = {
@@ -832,30 +829,12 @@ function maybeShowPwaInstallSurvey() {
 }
 
 function maybeShowReturnVisitSurvey() {
-  // Show on second session start — only once ever, and only after the player
-  // has had at least SURVEY_MIN_ENGAGEMENT_MS of game time (checked inside
-  // maybeTriggerMicroSurvey). We schedule the check to run repeatedly until
-  // the engagement threshold is met, giving up after 5 minutes.
+  // Increment session count and arm _pendingReturnVisitSurvey on the 2nd session.
+  // The survey fires when the player completes a meaningful mechanic — see onGameMessage.
   try {
     const count = Number(localStorage.getItem(SESSION_COUNT_KEY) || "0") + 1;
     localStorage.setItem(SESSION_COUNT_KEY, String(count));
-    if (count !== 2) return; // only on exactly the 2nd session
-    let attempts = 0;
-    const MAX_ATTEMPTS = 20; // check every 15s, give up after 5 min
-    function attempt() {
-      maybeTriggerMicroSurvey(
-        MICRO_SURVEY_KEYS.return_visit,
-        MICRO_SURVEY_IDS.return_visit,
-        "micro_return_visit_motivation",
-        {}
-      );
-      attempts++;
-      if (!localStorage.getItem(MICRO_SURVEY_KEYS.return_visit) && attempts < MAX_ATTEMPTS) {
-        setTimeout(attempt, 15000);
-      }
-    }
-    // First check after 30s — the game needs time to load and user needs to engage
-    setTimeout(attempt, 30000);
+    if (count === 2) _pendingReturnVisitSurvey = true;
   } catch (_) {}
 }
 
@@ -865,8 +844,6 @@ async function maybeTriggerFirstMissionSurvey(eventPayload) {
   if (_surveyShownInThisBoot) return;
   if (document.getElementById(SURVEY_OVERLAY_ID)) return;
   if (localStorage.getItem(SURVEY_SHOWN_KEY)) return;
-  // Don't fire until meaningful engagement (mission completion implies this, but guard anyway).
-  if (!_gameEngagementTs || (Date.now() - _gameEngagementTs) < SURVEY_MIN_ENGAGEMENT_MS) return;
 
   try {
     const distinctId = await resolveSurveyDistinctId();
@@ -1003,8 +980,6 @@ function App() {
       if (!eventName) {
         return;
       }
-      // Record first game engagement so surveys don't fire before the player acts.
-      if (!_gameEngagementTs) _gameEngagementTs = Date.now();
       pushAction(eventName, payload);
       captureAnalyticsEvent(eventName, payload);
       if (typeof payload.experience_level !== "undefined" || typeof payload.experience_xp !== "undefined" || typeof payload.franc_balance !== "undefined") {
@@ -1063,6 +1038,27 @@ function App() {
       }
       if (eventName === "rocket_launched") {
         maybeShowLaunchSurvey(payload);
+      }
+      // Return-visit survey: fires the first time the player completes a meaningful
+      // mechanic on their second session. We check after each completion event so
+      // the survey never appears before the player has actually done something.
+      if (_pendingReturnVisitSurvey && !localStorage.getItem(MICRO_SURVEY_KEYS.return_visit)) {
+        const isCompletionEvent = (
+          eventName === "rocket_landed" ||
+          eventName === "mining_run_completed" ||
+          eventName === "contractor_signed" ||
+          eventName === "mission_debrief_resolved" ||
+          eventName === "scanner_scan_completed"
+        );
+        if (isCompletionEvent) {
+          _pendingReturnVisitSurvey = false;
+          maybeTriggerMicroSurvey(
+            MICRO_SURVEY_KEYS.return_visit,
+            MICRO_SURVEY_IDS.return_visit,
+            "micro_return_visit_motivation",
+            payload
+          );
+        }
       }
     }
 

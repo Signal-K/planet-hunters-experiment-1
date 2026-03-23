@@ -6,7 +6,7 @@ priority: high
 labels:
   - surveys,ux,mobile
 createdAt: '2026-03-23T00:48:49.657Z'
-updatedAt: '2026-03-23T00:51:04.975Z'
+updatedAt: '2026-03-23T00:57:24.355Z'
 timeSpent: 0
 assignee: '@Liam'
 ---
@@ -29,5 +29,6 @@ Surveys appear too early. Return-visit survey fires 3s after load on 2nd session
 
 <!-- SECTION:NOTES:BEGIN -->
 Added _gameEngagementTs flag set on first game message. maybeTriggerMicroSurvey and maybeTriggerFirstMissionSurvey both gate on 30s engagement. maybeShowReturnVisitSurvey now checks every 15s starting at 30s (not 3s). Removed early setTimeout.
+Refined: removed broad 30s timer gate entirely. Return-visit survey now uses _pendingReturnVisitSurvey flag set on 2nd session load; fires only when a completion event fires (rocket_landed, mining_run_completed, contractor_signed, mission_debrief_resolved, scanner_scan_completed). All other surveys already event-gated.
 <!-- SECTION:NOTES:END -->
 
