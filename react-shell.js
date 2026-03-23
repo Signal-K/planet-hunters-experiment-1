@@ -56,6 +56,9 @@ let _runtimeConfig = null;
 let _runtimeConfigPromise = null;
 let _xpSyncInFlight = false;
 let _pendingXpSnapshot = null;
+// Tracks whether the player has had meaningful game engagement before surveys fire
+let _gameEngagementTs = 0; // timestamp of first game event received
+const SURVEY_MIN_ENGAGEMENT_MS = 30000; // 30s of game time before any survey
 
 const LEVEL_UNLOCK_HINTS = {
   2: "Starter Rocket 2 unlocked — extended range and heavier payload",
@@ -741,6 +744,8 @@ async function maybeTriggerMicroSurvey(storageKey, surveyId, context, eventPaylo
   if (localStorage.getItem(storageKey)) return;
   // Skip if no survey ID configured yet.
   if (!surveyId) return;
+  // Don't fire surveys until the player has had meaningful game engagement.
+  if (!_gameEngagementTs || (Date.now() - _gameEngagementTs) < SURVEY_MIN_ENGAGEMENT_MS) return;
   try {
     const distinctId = await resolveSurveyDistinctId();
     const params = {
@@ -827,17 +832,30 @@ function maybeShowPwaInstallSurvey() {
 }
 
 function maybeShowReturnVisitSurvey() {
-  // Show on second session start — only once ever.
+  // Show on second session start — only once ever, and only after the player
+  // has had at least SURVEY_MIN_ENGAGEMENT_MS of game time (checked inside
+  // maybeTriggerMicroSurvey). We schedule the check to run repeatedly until
+  // the engagement threshold is met, giving up after 5 minutes.
   try {
     const count = Number(localStorage.getItem(SESSION_COUNT_KEY) || "0") + 1;
     localStorage.setItem(SESSION_COUNT_KEY, String(count));
     if (count !== 2) return; // only on exactly the 2nd session
-    maybeTriggerMicroSurvey(
-      MICRO_SURVEY_KEYS.return_visit,
-      MICRO_SURVEY_IDS.return_visit,
-      "micro_return_visit_motivation",
-      {}
-    );
+    let attempts = 0;
+    const MAX_ATTEMPTS = 20; // check every 15s, give up after 5 min
+    function attempt() {
+      maybeTriggerMicroSurvey(
+        MICRO_SURVEY_KEYS.return_visit,
+        MICRO_SURVEY_IDS.return_visit,
+        "micro_return_visit_motivation",
+        {}
+      );
+      attempts++;
+      if (!localStorage.getItem(MICRO_SURVEY_KEYS.return_visit) && attempts < MAX_ATTEMPTS) {
+        setTimeout(attempt, 15000);
+      }
+    }
+    // First check after 30s — the game needs time to load and user needs to engage
+    setTimeout(attempt, 30000);
   } catch (_) {}
 }
 
@@ -847,6 +865,8 @@ async function maybeTriggerFirstMissionSurvey(eventPayload) {
   if (_surveyShownInThisBoot) return;
   if (document.getElementById(SURVEY_OVERLAY_ID)) return;
   if (localStorage.getItem(SURVEY_SHOWN_KEY)) return;
+  // Don't fire until meaningful engagement (mission completion implies this, but guard anyway).
+  if (!_gameEngagementTs || (Date.now() - _gameEngagementTs) < SURVEY_MIN_ENGAGEMENT_MS) return;
 
   try {
     const distinctId = await resolveSurveyDistinctId();
@@ -877,7 +897,8 @@ function App() {
   const [xpState, setXpState] = useState(() => readXpState() || { experience_level: 1, experience_xp: 0, franc_balance: 0 });
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [storageStatus, setStorageStatus] = useState("Cookie storage active");
-  const [gameSrc] = useState(() => "/game/index.html?v=" + Date.now());
+  // In PWA mode skip cache-busting so the service worker can cache the game
+  const [gameSrc] = useState(() => isPwaMode() ? "/game/index.html" : "/game/index.html?v=" + Date.now());
   const [isMobile, setIsMobile] = useState(() => typeof window !== "undefined" && Math.min(window.innerWidth, window.innerHeight) < 768);
   const [isPwa] = useState(() => isPwaMode());
   const [isIos] = useState(() => isIosDevice());
@@ -933,8 +954,8 @@ function App() {
         shell_entry: "react_shell",
       });
     });
-    // Return-visit survey — delayed 3s so the game has time to load first.
-    setTimeout(maybeShowReturnVisitSurvey, 3000);
+    // Return-visit survey — fires only after player engagement (managed inside the function).
+    maybeShowReturnVisitSurvey();
     const persistedXp = readXpState();
     if (persistedXp && typeof persistedXp.experience_level !== "undefined") {
       registerAnalyticsContext({
@@ -982,6 +1003,8 @@ function App() {
       if (!eventName) {
         return;
       }
+      // Record first game engagement so surveys don't fire before the player acts.
+      if (!_gameEngagementTs) _gameEngagementTs = Date.now();
       pushAction(eventName, payload);
       captureAnalyticsEvent(eventName, payload);
       if (typeof payload.experience_level !== "undefined" || typeof payload.experience_xp !== "undefined" || typeof payload.franc_balance !== "undefined") {
@@ -1160,7 +1183,7 @@ function App() {
 
   const frameStyle = {
     width: "100%",
-    height: isMobile ? "100dvh" : "min(75vh, 860px)",
+    height: isMobile ? "100%" : "min(75vh, 860px)",
     border: "0",
     display: "block",
     background: "#000",
@@ -1261,6 +1284,8 @@ function App() {
           position: "fixed",
           inset: 0,
           background: "#000",
+          display: "flex",
+          flexDirection: "column",
         },
       },
       React.createElement("iframe", {
@@ -1275,6 +1300,7 @@ function App() {
           display: "block",
           background: "#000",
           width: "100%",
+          height: "100%",
         },
         onError: () => setStorageStatus("Game load error"),
         onLoad: () => {
@@ -1710,7 +1736,11 @@ function App() {
 
   return React.createElement(
     "main",
-    { style: isMobile ? { margin: 0, padding: 0 } : { maxWidth: "1200px", margin: "0 auto", padding: "20px" } },
+    {
+      style: isMobile
+        ? { position: "fixed", inset: 0, margin: 0, padding: 0, overflow: "hidden", background: "#000" }
+        : { maxWidth: "1200px", margin: "0 auto", padding: "20px" },
+    },
     !isMobile && React.createElement(
       "header",
       {
@@ -1883,7 +1913,7 @@ function App() {
       "div",
       {
         style: isMobile
-          ? { overflow: "hidden", background: "#000" }
+          ? { overflow: "hidden", background: "#000", height: "100%", display: "flex", flexDirection: "column" }
           : {
               border: "1px solid var(--edge)",
               borderRadius: "14px",
