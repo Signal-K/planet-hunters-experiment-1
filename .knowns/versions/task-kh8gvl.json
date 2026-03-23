@@ -1,6 +1,6 @@
 {
   "taskId": "kh8gvl",
-  "currentVersion": 2,
+  "currentVersion": 5,
   "versions": [
     {
       "id": "v1",
@@ -69,6 +69,129 @@
           }
         ],
         "implementationNotes": "kanban: rlxdxi\n\nkanban: rlxdxi"
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "kh8gvl",
+      "version": 3,
+      "timestamp": "2026-03-26T09:47:59.888Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "kanban: rlxdxi\n\nkanban: rlxdxi",
+          "newValue": "kanban: rlxdxi\n\nkanban: rlxdxi\n\nNotebook analysis 2026-03-26:\n- Obsidian attachment: `/Users/scroobz/Navigation/quartz/content/Design/Experiment-1/Star Map Design V1.md`\n- Inspiration links in note: Interstellar Space: Genesis galaxy map update, Inkarnate solar system map\n- Handwritten inspiration list appears to reference Tiny Space Program and Star Citizen (handwriting inference)\n- Sketch shows a solar-system-first target picker: concentric local orbit rings around home, plus a broader field view for outer targets / other systems\n- Immediate data shown on selection should include target identity, distance, fuel / range reachability, and planet-vs-asteroid distinction\n- Reminder items on page: future launch-site + ship-range overlays, asteroid belt + Kuiper belt grouping, richer distant targets, other solar-system planets, expandable rings / other systems"
+        }
+      ],
+      "snapshot": {
+        "title": "Sketch star map UI for target selection",
+        "description": "The launchpad target selector currently shows a card list. Sketch an alternative star-map style target picker: candidates placed roughly at their sky coordinates, distance/fuel indicator when selecting a target, planet vs asteroid visual distinction, how TESS candidate data shows (magnitude, distance, disposition). This is a rough concept sketch — not a final design.",
+        "status": "in-review",
+        "priority": "medium",
+        "labels": [
+          "liam-sprint",
+          "sketch",
+          "design"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Star map concept sketch completed"
+          },
+          {
+            "completed": false,
+            "text": "Key data points identified for each target type"
+          }
+        ],
+        "implementationNotes": "kanban: rlxdxi\n\nkanban: rlxdxi\n\nNotebook analysis 2026-03-26:\n- Obsidian attachment: `/Users/scroobz/Navigation/quartz/content/Design/Experiment-1/Star Map Design V1.md`\n- Inspiration links in note: Interstellar Space: Genesis galaxy map update, Inkarnate solar system map\n- Handwritten inspiration list appears to reference Tiny Space Program and Star Citizen (handwriting inference)\n- Sketch shows a solar-system-first target picker: concentric local orbit rings around home, plus a broader field view for outer targets / other systems\n- Immediate data shown on selection should include target identity, distance, fuel / range reachability, and planet-vs-asteroid distinction\n- Reminder items on page: future launch-site + ship-range overlays, asteroid belt + Kuiper belt grouping, richer distant targets, other solar-system planets, expandable rings / other systems"
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "kh8gvl",
+      "version": 4,
+      "timestamp": "2026-03-26T09:57:20.503Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Star map concept sketch completed"
+            },
+            {
+              "completed": false,
+              "text": "Key data points identified for each target type"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Star map concept sketch completed"
+            },
+            {
+              "completed": true,
+              "text": "Key data points identified for each target type"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Sketch star map UI for target selection",
+        "description": "The launchpad target selector currently shows a card list. Sketch an alternative star-map style target picker: candidates placed roughly at their sky coordinates, distance/fuel indicator when selecting a target, planet vs asteroid visual distinction, how TESS candidate data shows (magnitude, distance, disposition). This is a rough concept sketch — not a final design.",
+        "status": "in-review",
+        "priority": "medium",
+        "labels": [
+          "liam-sprint",
+          "sketch",
+          "design"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Star map concept sketch completed"
+          },
+          {
+            "completed": true,
+            "text": "Key data points identified for each target type"
+          }
+        ],
+        "implementationNotes": "kanban: rlxdxi\n\nkanban: rlxdxi\n\nNotebook analysis 2026-03-26:\n- Obsidian attachment: `/Users/scroobz/Navigation/quartz/content/Design/Experiment-1/Star Map Design V1.md`\n- Inspiration links in note: Interstellar Space: Genesis galaxy map update, Inkarnate solar system map\n- Handwritten inspiration list appears to reference Tiny Space Program and Star Citizen (handwriting inference)\n- Sketch shows a solar-system-first target picker: concentric local orbit rings around home, plus a broader field view for outer targets / other systems\n- Immediate data shown on selection should include target identity, distance, fuel / range reachability, and planet-vs-asteroid distinction\n- Reminder items on page: future launch-site + ship-range overlays, asteroid belt + Kuiper belt grouping, richer distant targets, other solar-system planets, expandable rings / other systems"
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "kh8gvl",
+      "version": 5,
+      "timestamp": "2026-03-26T09:57:30.358Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-review",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Sketch star map UI for target selection",
+        "description": "The launchpad target selector currently shows a card list. Sketch an alternative star-map style target picker: candidates placed roughly at their sky coordinates, distance/fuel indicator when selecting a target, planet vs asteroid visual distinction, how TESS candidate data shows (magnitude, distance, disposition). This is a rough concept sketch — not a final design.",
+        "status": "done",
+        "priority": "medium",
+        "labels": [
+          "liam-sprint",
+          "sketch",
+          "design"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Star map concept sketch completed"
+          },
+          {
+            "completed": true,
+            "text": "Key data points identified for each target type"
+          }
+        ],
+        "implementationNotes": "kanban: rlxdxi\n\nkanban: rlxdxi\n\nNotebook analysis 2026-03-26:\n- Obsidian attachment: `/Users/scroobz/Navigation/quartz/content/Design/Experiment-1/Star Map Design V1.md`\n- Inspiration links in note: Interstellar Space: Genesis galaxy map update, Inkarnate solar system map\n- Handwritten inspiration list appears to reference Tiny Space Program and Star Citizen (handwriting inference)\n- Sketch shows a solar-system-first target picker: concentric local orbit rings around home, plus a broader field view for outer targets / other systems\n- Immediate data shown on selection should include target identity, distance, fuel / range reachability, and planet-vs-asteroid distinction\n- Reminder items on page: future launch-site + ship-range overlays, asteroid belt + Kuiper belt grouping, richer distant targets, other solar-system planets, expandable rings / other systems"
       }
     }
   ]

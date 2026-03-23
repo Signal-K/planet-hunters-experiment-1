@@ -107,7 +107,7 @@ static func _build_menu_root(owner: Node) -> Control:
 		vp_w = owner.get_viewport().get_visible_rect().size.x
 	var panel := PanelContainer.new()
 	panel.name = MENU_PANEL_NAME
-	panel.custom_minimum_size = Vector2(clampf(vp_w - 48.0, 320.0, 760.0), 0.0)
+	panel.custom_minimum_size = Vector2(clampf(vp_w - 48.0, 320.0, 920.0), 0.0)
 	panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	panel.set_meta("tutorial_zone_exempt", true)
 	center.add_child(panel)
@@ -128,7 +128,8 @@ static func _build_menu_root(owner: Node) -> Control:
 	if owner != null and owner.get_viewport() != null:
 		vp_h = owner.get_viewport().get_visible_rect().size.y
 	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(0, clampf(vp_h * 0.78, 400.0, 680.0))
+	scroll.custom_minimum_size = Vector2(0, clampf(vp_h * 0.82, 400.0, 740.0))
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.set_meta("tutorial_zone_exempt", true)
 	panel.add_child(scroll)
 
@@ -181,6 +182,16 @@ static func _build_menu_root(owner: Node) -> Control:
 
 	# Player stats
 	shell.add_child(_build_stats_card())
+
+	# Cargo — minerals currently in inventory
+	shell.add_child(_build_section_header("CARGO"))
+	shell.add_child(_build_inventory_card())
+
+	# Active mission requirements (only shown when a contractor order is active)
+	var req := _build_mission_requirements_card()
+	if req != null:
+		shell.add_child(_build_section_header("MISSION REQUIREMENTS"))
+		shell.add_child(req)
 
 	# Settings / Actions
 	shell.add_child(_build_section_header("SETTINGS"))
@@ -952,6 +963,48 @@ static func _build_inventory_card() -> PanelContainer:
 		qty_lbl.text = "%d kg" % amount
 		qty_lbl.add_theme_font_size_override("font_size", 17)
 		qty_lbl.add_theme_color_override("font_color", CYAN)
+		row.add_child(qty_lbl)
+
+	return card
+
+# ---------------------------------------------------------------------------
+# Mission requirements card
+# ---------------------------------------------------------------------------
+
+static func _build_mission_requirements_card() -> PanelContainer:
+	var required := RocketsManager.get_starter_requested_minerals()
+	if required.is_empty():
+		return null
+
+	var card := PanelContainer.new()
+	card.add_theme_stylebox_override("panel", _card_style(0.45))
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 6)
+	card.add_child(vbox)
+
+	var inv := RocketsManager.get_inventory()
+	var keys: Array = required.keys()
+	keys.sort()
+	for mineral in keys:
+		var need := int(required.get(mineral, 0))
+		var have := int(inv.get(mineral, 0))
+		var done := have >= need
+
+		var row := HBoxContainer.new()
+		vbox.add_child(row)
+
+		var name_lbl := Label.new()
+		name_lbl.text = str(mineral).capitalize()
+		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		name_lbl.add_theme_font_size_override("font_size", 17)
+		name_lbl.add_theme_color_override("font_color", TEXT_COLOR)
+		row.add_child(name_lbl)
+
+		var qty_lbl := Label.new()
+		qty_lbl.text = "%d / %d kg" % [have, need]
+		qty_lbl.add_theme_font_size_override("font_size", 17)
+		qty_lbl.add_theme_color_override("font_color", Color(0.30, 1.0, 0.45) if done else AMBER)
 		row.add_child(qty_lbl)
 
 	return card

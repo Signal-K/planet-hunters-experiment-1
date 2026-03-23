@@ -1,6 +1,6 @@
 extends Node2D
 
-const RETURN_DESTINATION := "res://Scenes/Earth/mission_debrief.tscn"
+const RETURN_DESTINATION := "res://Scenes/Earth/mission_debrief_v2.tscn"
 const MAIN_SCENE_PATH := "res://Scenes/Earth/earth_base_1.tscn"
 const SPACE_TOP := Color(0.02, 0.04, 0.08, 1.0)
 const SPACE_BOTTOM := Color(0.0, 0.0, 0.02, 1.0)

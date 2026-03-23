@@ -10,6 +10,10 @@ const RocketsTargeting = preload("res://Scripts/Utils/RocketsTargeting.gd")
 const CurrencyManager = preload("res://Scripts/Utils/CurrencyManager.gd")
 const LaunchpadSelectorPanel = preload("res://Scripts/Earth/LaunchpadSelectorPanel.gd")
 const SidescrollMiningScene = preload("res://Scenes/UI/SidescrollMining.tscn")
+const MiningPracticeScene = preload("res://Scenes/UI/MiningPracticePanel.tscn")
+const SatelliteStationScene = preload("res://Scenes/UI/SatelliteStationPanel.tscn")
+const RocketAscentScene = preload("res://Scenes/Transitions/rocket_ascent.tscn")
+const OutboundPreviewScene = preload("res://Scenes/Transitions/rocket_transit.tscn")
 
 var reporter := TestReporter.new()
 
@@ -47,6 +51,11 @@ func run_all_tests() -> void:
 	await test_mission_briefing_seen_persistence()
 	await test_launchpad_briefing_gate_is_one_time()
 	await test_sidescroll_mining_drone_pool_reuse()
+	await test_sidescroll_mining_button_handbook_copy_is_plain_language()
+	await test_mining_practice_panel_stays_on_screen_after_run_complete()
+	await test_satellite_station_panel_stays_on_screen()
+	await test_rocket_ascent_skip_button_stays_on_screen()
+	await test_outbound_preview_panels_stay_on_screen()
 
 func test_currency_manager_balance_operations() -> void:
 	reporter.start_test("[SPEC] Currency manager handles balance operations correctly")
@@ -405,4 +414,109 @@ func test_sidescroll_mining_drone_pool_reuse() -> void:
 		mining.queue_free()
 		return
 	mining.queue_free()
+	reporter.pass_test()
+
+func test_sidescroll_mining_button_handbook_copy_is_plain_language() -> void:
+	reporter.start_test("[UX] Sidescroll mining handbook uses plain-language button guide copy")
+	var mining = SidescrollMiningScene.instantiate()
+	get_root().add_child(mining)
+	await create_timer(0.05).timeout
+	var body_text = str(mining._build_button_handbook_text())
+	if body_text.find("Mine: Hold FIRE to cut into the surface and collect exposed minerals.") == -1:
+		reporter.fail_test("Expected plain-language Mine guide copy")
+		mining.queue_free()
+		return
+	if body_text.find("Inventory: Check what you have collected and how much the load is worth.") == -1:
+		reporter.fail_test("Expected plain-language Inventory guide copy")
+		mining.queue_free()
+		return
+	if body_text.find("Return to Base: End the run and move into mission debrief.") == -1:
+		reporter.fail_test("Expected plain-language Return to Base guide copy")
+		mining.queue_free()
+		return
+	mining.queue_free()
+	reporter.pass_test()
+
+func test_mining_practice_panel_stays_on_screen_after_run_complete() -> void:
+	reporter.start_test("[UX] Mining practice summary panel stays inside the viewport after a run completes")
+	var practice = MiningPracticeScene.instantiate()
+	practice._allow_auto_start = false
+	get_root().add_child(practice)
+	await create_timer(0.05).timeout
+	practice._on_mining_completed({"Iron": 10, "Nickel": 3, "Cobalt": 2, "Gold": 1}, 42)
+	await create_timer(0.05).timeout
+	if practice._mining_instance != null:
+		reporter.fail_test("Expected active mining instance to be cleared before showing practice summary")
+		practice.queue_free()
+		return
+	var viewport = practice.get_viewport_rect().size
+	var rect = practice.panel.get_global_rect()
+	if rect.position.x < 0.0 or rect.position.y < 0.0 or rect.end.x > viewport.x or rect.end.y > viewport.y:
+		reporter.fail_test("Practice summary panel extends outside viewport: %s vs %s" % [rect, viewport])
+		practice.queue_free()
+		return
+	practice.queue_free()
+	reporter.pass_test()
+
+func test_satellite_station_panel_stays_on_screen() -> void:
+	reporter.start_test("[UX] Satellite station panel stays inside the viewport")
+	var satellite = SatelliteStationScene.instantiate()
+	get_root().add_child(satellite)
+	await create_timer(0.08).timeout
+	var viewport = satellite.get_viewport_rect().size
+	var panel = satellite.get_node_or_null("PanelContainer/Panel") as Control
+	if panel == null:
+		reporter.fail_test("Satellite station panel node not found")
+		satellite.queue_free()
+		return
+	var rect = panel.get_global_rect()
+	if rect.position.x < 0.0 or rect.position.y < 0.0 or rect.end.x > viewport.x or rect.end.y > viewport.y:
+		reporter.fail_test("Satellite station panel extends outside viewport: %s vs %s" % [rect, viewport])
+		satellite.queue_free()
+		return
+	satellite.queue_free()
+	reporter.pass_test()
+
+func test_rocket_ascent_skip_button_stays_on_screen() -> void:
+	reporter.start_test("[UX] Rocket ascent skip button stays inside the viewport")
+	var ascent = RocketAscentScene.instantiate()
+	get_root().add_child(ascent)
+	await create_timer(0.05).timeout
+	var viewport = ascent.get_viewport().get_visible_rect().size
+	var button = ascent._skip_button as Button
+	if button == null:
+		reporter.fail_test("Rocket ascent skip button not found")
+		ascent.queue_free()
+		return
+	var rect = button.get_global_rect()
+	if rect.position.x < 0.0 or rect.position.y < 0.0 or rect.end.x > viewport.x or rect.end.y > viewport.y:
+		reporter.fail_test("Rocket ascent skip button extends outside viewport: %s vs %s" % [rect, viewport])
+		ascent.queue_free()
+		return
+	ascent.queue_free()
+	reporter.pass_test()
+
+func test_outbound_preview_panels_stay_on_screen() -> void:
+	reporter.start_test("[UX] Outbound preview transit panels stay inside the viewport")
+	var outbound = OutboundPreviewScene.instantiate()
+	get_root().add_child(outbound)
+	await create_timer(0.08).timeout
+	outbound._show_science_panel()
+	outbound._apply_responsive_layout()
+	await create_timer(0.05).timeout
+	var viewport = outbound.get_viewport().get_visible_rect().size
+	for node_name in ["ControlPanel", "InventoryPanel", "TravelPanel", "TravelCaption"]:
+		var node = outbound.get_node_or_null("CanvasLayer/UI/%s" % node_name) as Control
+		if node == null and node_name == "TravelCaption":
+			node = outbound.get_node_or_null("CanvasLayer/TravelCaption") as Control
+		if node == null:
+			reporter.fail_test("Outbound preview node missing: %s" % node_name)
+			outbound.queue_free()
+			return
+		var rect = node.get_global_rect()
+		if rect.position.x < 0.0 or rect.position.y < 0.0 or rect.end.x > viewport.x or rect.end.y > viewport.y:
+			reporter.fail_test("Outbound preview node extends outside viewport (%s): %s vs %s" % [node_name, rect, viewport])
+			outbound.queue_free()
+			return
+	outbound.queue_free()
 	reporter.pass_test()

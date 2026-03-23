@@ -1,6 +1,6 @@
 {
   "taskId": "gu5376",
-  "currentVersion": 1,
+  "currentVersion": 5,
   "versions": [
     {
       "id": "v1",
@@ -26,6 +26,121 @@
         ],
         "acceptanceCriteria": [],
         "implementationNotes": "## Screen reference\n\nSR2 unlocks immediately after Mission 1 completes. The screen below is the earth base state at that moment — this is where the unlock copy and CTA will appear (top area / overlay):\n\n![Earth base post-Mission 1 — SR2 unlock trigger point](https://raw.githubusercontent.com/Signal-K/planet-hunters-experiment-1/main/e2e/screenshots/ux-tour-earth-base-post-m1.png)\n\nVisible elements for context: francs counter (top-left), bottom nav bar (Back / Next / Menu / Market / Map / New Mission), earth base buildings in background."
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "gu5376",
+      "version": 2,
+      "timestamp": "2026-03-27T11:58:25.232Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "oldValue": "Liam",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Write copy and flow for the Starter Rocket 2 unlock screen",
+        "description": "When a player hits level 3, SR2 unlocks but nothing meaningful happens. Write the screen copy — headline, what stats to highlight (2x speed, 2x range, 1.5x cargo), and the CTA. Also describe the visual flow: what shows on screen, in what order, for how long. This is the spec the developer needs to implement it.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "liam-sprint",
+          "writing",
+          "design"
+        ],
+        "acceptanceCriteria": [],
+        "implementationNotes": "## Screen reference\n\nSR2 unlocks immediately after Mission 1 completes. The screen below is the earth base state at that moment — this is where the unlock copy and CTA will appear (top area / overlay):\n\n![Earth base post-Mission 1 — SR2 unlock trigger point](https://raw.githubusercontent.com/Signal-K/planet-hunters-experiment-1/main/e2e/screenshots/ux-tour-earth-base-post-m1.png)\n\nVisible elements for context: francs counter (top-left), bottom nav bar (Back / Next / Menu / Market / Map / New Mission), earth base buildings in background."
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "gu5376",
+      "version": 3,
+      "timestamp": "2026-03-27T11:59:21.486Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "newValue": "1. Read the SR2 sketch and compare it to the current earth-base unlock popup.\n2. Capture the layout decisions from the notebook in Knowns: two-step beat, left rocket art, right-side stat reveal, Earth-base background preserved, CTA into using SR2.\n3. Implement the SR2 unlock screen in earth_base_1.gd so the post-debrief flow matches the sketch and the written flow task.\n4. Add focused tests for the unlock overlay content and CTA presence.\n5. Write notes, stop the timer, and close the task if validation passes."
+        }
+      ],
+      "snapshot": {
+        "title": "Write copy and flow for the Starter Rocket 2 unlock screen",
+        "description": "When a player hits level 3, SR2 unlocks but nothing meaningful happens. Write the screen copy — headline, what stats to highlight (2x speed, 2x range, 1.5x cargo), and the CTA. Also describe the visual flow: what shows on screen, in what order, for how long. This is the spec the developer needs to implement it.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "liam-sprint",
+          "writing",
+          "design"
+        ],
+        "acceptanceCriteria": [],
+        "implementationPlan": "1. Read the SR2 sketch and compare it to the current earth-base unlock popup.\n2. Capture the layout decisions from the notebook in Knowns: two-step beat, left rocket art, right-side stat reveal, Earth-base background preserved, CTA into using SR2.\n3. Implement the SR2 unlock screen in earth_base_1.gd so the post-debrief flow matches the sketch and the written flow task.\n4. Add focused tests for the unlock overlay content and CTA presence.\n5. Write notes, stop the timer, and close the task if validation passes.",
+        "implementationNotes": "## Screen reference\n\nSR2 unlocks immediately after Mission 1 completes. The screen below is the earth base state at that moment — this is where the unlock copy and CTA will appear (top area / overlay):\n\n![Earth base post-Mission 1 — SR2 unlock trigger point](https://raw.githubusercontent.com/Signal-K/planet-hunters-experiment-1/main/e2e/screenshots/ux-tour-earth-base-post-m1.png)\n\nVisible elements for context: francs counter (top-left), bottom nav bar (Back / Next / Menu / Market / Map / New Mission), earth base buildings in background."
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "gu5376",
+      "version": 4,
+      "timestamp": "2026-03-27T12:04:55.983Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "## Screen reference\n\nSR2 unlocks immediately after Mission 1 completes. The screen below is the earth base state at that moment — this is where the unlock copy and CTA will appear (top area / overlay):\n\n![Earth base post-Mission 1 — SR2 unlock trigger point](https://raw.githubusercontent.com/Signal-K/planet-hunters-experiment-1/main/e2e/screenshots/ux-tour-earth-base-post-m1.png)\n\nVisible elements for context: francs counter (top-left), bottom nav bar (Back / Next / Menu / Market / Map / New Mission), earth base buildings in background.",
+          "newValue": "Implemented SR2 unlock copy and flow in earth_base_1.gd.\n\nCopy + flow\n- Intro copy: Mission complete. Starter Rocket 2 unlocked.\n- Main title: Starter Rocket 2\n- Summary copy explains that the first mission unlocks a faster ship with more range and cargo\n- Highlighted upgrades: Speed 2.0x, Range 2.0x, Cargo 1.5x\n- Secondary line includes cost, mining output, and salvage refund\n- CTA: Build Starter Rocket 2\n\nValidation\n- PASS: run_earth_base_unlock_tests.gd"
+        }
+      ],
+      "snapshot": {
+        "title": "Write copy and flow for the Starter Rocket 2 unlock screen",
+        "description": "When a player hits level 3, SR2 unlocks but nothing meaningful happens. Write the screen copy — headline, what stats to highlight (2x speed, 2x range, 1.5x cargo), and the CTA. Also describe the visual flow: what shows on screen, in what order, for how long. This is the spec the developer needs to implement it.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "liam-sprint",
+          "writing",
+          "design"
+        ],
+        "acceptanceCriteria": [],
+        "implementationPlan": "1. Read the SR2 sketch and compare it to the current earth-base unlock popup.\n2. Capture the layout decisions from the notebook in Knowns: two-step beat, left rocket art, right-side stat reveal, Earth-base background preserved, CTA into using SR2.\n3. Implement the SR2 unlock screen in earth_base_1.gd so the post-debrief flow matches the sketch and the written flow task.\n4. Add focused tests for the unlock overlay content and CTA presence.\n5. Write notes, stop the timer, and close the task if validation passes.",
+        "implementationNotes": "Implemented SR2 unlock copy and flow in earth_base_1.gd.\n\nCopy + flow\n- Intro copy: Mission complete. Starter Rocket 2 unlocked.\n- Main title: Starter Rocket 2\n- Summary copy explains that the first mission unlocks a faster ship with more range and cargo\n- Highlighted upgrades: Speed 2.0x, Range 2.0x, Cargo 1.5x\n- Secondary line includes cost, mining output, and salvage refund\n- CTA: Build Starter Rocket 2\n\nValidation\n- PASS: run_earth_base_unlock_tests.gd"
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "gu5376",
+      "version": 5,
+      "timestamp": "2026-03-27T12:09:05.310Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Write copy and flow for the Starter Rocket 2 unlock screen",
+        "description": "When a player hits level 3, SR2 unlocks but nothing meaningful happens. Write the screen copy — headline, what stats to highlight (2x speed, 2x range, 1.5x cargo), and the CTA. Also describe the visual flow: what shows on screen, in what order, for how long. This is the spec the developer needs to implement it.",
+        "status": "done",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "liam-sprint",
+          "writing",
+          "design"
+        ],
+        "acceptanceCriteria": [],
+        "implementationPlan": "1. Read the SR2 sketch and compare it to the current earth-base unlock popup.\n2. Capture the layout decisions from the notebook in Knowns: two-step beat, left rocket art, right-side stat reveal, Earth-base background preserved, CTA into using SR2.\n3. Implement the SR2 unlock screen in earth_base_1.gd so the post-debrief flow matches the sketch and the written flow task.\n4. Add focused tests for the unlock overlay content and CTA presence.\n5. Write notes, stop the timer, and close the task if validation passes.",
+        "implementationNotes": "Implemented SR2 unlock copy and flow in earth_base_1.gd.\n\nCopy + flow\n- Intro copy: Mission complete. Starter Rocket 2 unlocked.\n- Main title: Starter Rocket 2\n- Summary copy explains that the first mission unlocks a faster ship with more range and cargo\n- Highlighted upgrades: Speed 2.0x, Range 2.0x, Cargo 1.5x\n- Secondary line includes cost, mining output, and salvage refund\n- CTA: Build Starter Rocket 2\n\nValidation\n- PASS: run_earth_base_unlock_tests.gd"
       }
     }
   ]

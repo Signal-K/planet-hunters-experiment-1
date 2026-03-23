@@ -6,79 +6,92 @@
 [node name="AsteroidDetailView" type="VBoxContainer"]
 size_flags_horizontal = 3
 size_flags_vertical = 3
+theme_override_constants/separation = 16
 script = ExtResource("1_asteroid_detail")
 
-[node name="HeaderContainer" type="HBoxContainer" parent="."]
+[node name="HeaderContainer" type="VBoxContainer" parent="."]
 layout_mode = 2
-theme_override_constants/separation = 20
+theme_override_constants/separation = 12
 
-[node name="BackButton" type="Button" parent="HeaderContainer"]
+[node name="TopRow" type="HBoxContainer" parent="HeaderContainer"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="BackButton" type="Button" parent="HeaderContainer/TopRow"]
 custom_minimum_size = Vector2(100, 50)
 layout_mode = 2
 text = "← Back"
 
-[node name="Title" type="Label" parent="HeaderContainer"]
+[node name="Title" type="Label" parent="HeaderContainer/TopRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Asteroid Details"
 vertical_alignment = 1
 
-[node name="PenButton" type="Button" parent="HeaderContainer"]
+[node name="AnnotationCount" type="Label" parent="HeaderContainer/TopRow"]
+layout_mode = 2
+text = "Annotations: 0"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="ToolsRow" type="HFlowContainer" parent="HeaderContainer"]
+layout_mode = 2
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 10
+
+[node name="PenButton" type="Button" parent="HeaderContainer/ToolsRow"]
 custom_minimum_size = Vector2(120, 50)
 layout_mode = 2
 text = "✏️ Pen Tool"
 
-[node name="ClearButton" type="Button" parent="HeaderContainer"]
+[node name="ClearButton" type="Button" parent="HeaderContainer/ToolsRow"]
 visible = false
 custom_minimum_size = Vector2(100, 50)
 layout_mode = 2
 text = "Clear"
 
-[node name="SaveButton" type="Button" parent="HeaderContainer"]
+[node name="SaveButton" type="Button" parent="HeaderContainer/ToolsRow"]
 custom_minimum_size = Vector2(100, 50)
 layout_mode = 2
 text = "Save"
 
-[node name="PenFreeButton" type="Button" parent="HeaderContainer"]
+[node name="PenFreeButton" type="Button" parent="HeaderContainer/ToolsRow"]
 custom_minimum_size = Vector2(90, 40)
 layout_mode = 2
 text = "Free"
 
-[node name="PenRectButton" type="Button" parent="HeaderContainer"]
+[node name="PenRectButton" type="Button" parent="HeaderContainer/ToolsRow"]
 custom_minimum_size = Vector2(90, 40)
 layout_mode = 2
 text = "Rect"
 
-[node name="PenCircleButton" type="Button" parent="HeaderContainer"]
+[node name="PenCircleButton" type="Button" parent="HeaderContainer/ToolsRow"]
 custom_minimum_size = Vector2(90, 40)
 layout_mode = 2
 text = "Circle"
 
-[node name="ColorPickerButton" type="ColorPickerButton" parent="HeaderContainer"]
+[node name="ColorPickerButton" type="ColorPickerButton" parent="HeaderContainer/ToolsRow"]
 custom_minimum_size = Vector2(60, 40)
 layout_mode = 2
 
-[node name="AnnotationCount" type="Label" parent="HeaderContainer"]
+[node name="BodyScroll" type="ScrollContainer" parent="."]
 layout_mode = 2
-text = "Annotations: 0"
-vertical_alignment = 1
-
-[node name="Spacer" type="Control" parent="HeaderContainer"]
-custom_minimum_size = Vector2(20, 0)
-layout_mode = 2
-
-[node name="ContentContainer" type="VBoxContainer" parent="."]
-layout_mode = 2
+size_flags_horizontal = 3
 size_flags_vertical = 3
+
+[node name="ContentContainer" type="VBoxContainer" parent="BodyScroll"]
+custom_minimum_size = Vector2(0, 0)
+layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/separation = 20
 
-[node name="LoadingLabel" type="Label" parent="ContentContainer"]
+[node name="LoadingLabel" type="Label" parent="BodyScroll/ContentContainer"]
 layout_mode = 2
 text = "Loading..."
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="ErrorLabel" type="Label" parent="ContentContainer"]
+[node name="ErrorLabel" type="Label" parent="BodyScroll/ContentContainer"]
 visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 0.2, 0.2, 1)
@@ -86,23 +99,25 @@ text = "Error loading image"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="ImageContainer" type="CenterContainer" parent="ContentContainer"]
+[node name="ImageContainer" type="CenterContainer" parent="BodyScroll/ContentContainer"]
 layout_mode = 2
+size_flags_horizontal = 4
 size_flags_vertical = 3
 
-[node name="AsteroidImage" type="TextureRect" parent="ContentContainer/ImageContainer"]
+[node name="AsteroidImage" type="TextureRect" parent="BodyScroll/ContentContainer/ImageContainer"]
 custom_minimum_size = Vector2(768, 768)
 layout_mode = 2
 expand_mode = 1
 stretch_mode = 5
 
-[node name="DrawingCanvas" type="Control" parent="ContentContainer/ImageContainer"]
+[node name="DrawingCanvas" type="Control" parent="BodyScroll/ContentContainer/ImageContainer"]
 custom_minimum_size = Vector2(768, 768)
 layout_mode = 2
 script = ExtResource("2_drawing_canvas")
 
-[node name="InfoLabel" type="Label" parent="ContentContainer"]
+[node name="InfoLabel" type="Label" parent="BodyScroll/ContentContainer"]
 visible = false
 layout_mode = 2
 text = "Additional information will appear here"
 horizontal_alignment = 1
+autowrap_mode = 3

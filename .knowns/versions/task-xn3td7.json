@@ -1,0 +1,247 @@
+{
+  "taskId": "xn3td7",
+  "currentVersion": 4,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "xn3td7",
+      "version": 1,
+      "timestamp": "2026-03-27T06:26:40.803Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Implement post-debrief next mission handoff card",
+        "description": "Implement the flow defined by @task-ommhwg inside the debrief scene instead of relying only on the already-shipped base-screen CTA from @task-i5w6mi. After reward/feedback, the player should see a mission-briefing style handoff card that shows what mission/location/contractor is next and lets them move directly into the next loop.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "debrief",
+          "ux",
+          "progression",
+          "ui"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Post-debrief flow shows an in-game next-mission handoff card after rewards are resolved"
+          },
+          {
+            "completed": false,
+            "text": "Card surfaces at least location, contractor, and mission objective / next action"
+          },
+          {
+            "completed": false,
+            "text": "Primary CTA routes the player back into the next mission loop"
+          },
+          {
+            "completed": false,
+            "text": "Debrief flow includes an explicit scrap/salvage ship action without breaking current progression"
+          },
+          {
+            "completed": false,
+            "text": "Implementation leaves room for future reusable/repairable ships instead of assuming permanent scrapping forever"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "xn3td7",
+      "version": 2,
+      "timestamp": "2026-03-27T06:29:18.107Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "newValue": "1. Keep the existing reward/debrief calculation flow in `scene/Scripts/Earth/MissionDebriefV2.gd`, but split the UI into reward resolution first and mission handoff second.\n2. Add a post-reward handoff card matching @task-ommhwg with Location, Contractor, Mission, and a primary next-mission CTA that routes back into the loop.\n3. Add an explicit scrap/salvage ship action in the debrief flow using current salvage data, but structure it so reusable/repairable ships can replace the behavior later.\n4. Add focused validation/tests for the new debrief handoff state and confirm existing mission progression still passes."
+        }
+      ],
+      "snapshot": {
+        "title": "Implement post-debrief next mission handoff card",
+        "description": "Implement the flow defined by @task-ommhwg inside the debrief scene instead of relying only on the already-shipped base-screen CTA from @task-i5w6mi. After reward/feedback, the player should see a mission-briefing style handoff card that shows what mission/location/contractor is next and lets them move directly into the next loop.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "debrief",
+          "ux",
+          "progression",
+          "ui"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Post-debrief flow shows an in-game next-mission handoff card after rewards are resolved"
+          },
+          {
+            "completed": false,
+            "text": "Card surfaces at least location, contractor, and mission objective / next action"
+          },
+          {
+            "completed": false,
+            "text": "Primary CTA routes the player back into the next mission loop"
+          },
+          {
+            "completed": false,
+            "text": "Debrief flow includes an explicit scrap/salvage ship action without breaking current progression"
+          },
+          {
+            "completed": false,
+            "text": "Implementation leaves room for future reusable/repairable ships instead of assuming permanent scrapping forever"
+          }
+        ],
+        "implementationPlan": "1. Keep the existing reward/debrief calculation flow in `scene/Scripts/Earth/MissionDebriefV2.gd`, but split the UI into reward resolution first and mission handoff second.\n2. Add a post-reward handoff card matching @task-ommhwg with Location, Contractor, Mission, and a primary next-mission CTA that routes back into the loop.\n3. Add an explicit scrap/salvage ship action in the debrief flow using current salvage data, but structure it so reusable/repairable ships can replace the behavior later.\n4. Add focused validation/tests for the new debrief handoff state and confirm existing mission progression still passes."
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "xn3td7",
+      "version": 3,
+      "timestamp": "2026-03-27T06:43:26.280Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Post-debrief flow shows an in-game next-mission handoff card after rewards are resolved"
+            },
+            {
+              "completed": false,
+              "text": "Card surfaces at least location, contractor, and mission objective / next action"
+            },
+            {
+              "completed": false,
+              "text": "Primary CTA routes the player back into the next mission loop"
+            },
+            {
+              "completed": false,
+              "text": "Debrief flow includes an explicit scrap/salvage ship action without breaking current progression"
+            },
+            {
+              "completed": false,
+              "text": "Implementation leaves room for future reusable/repairable ships instead of assuming permanent scrapping forever"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Post-debrief flow shows an in-game next-mission handoff card after rewards are resolved"
+            },
+            {
+              "completed": true,
+              "text": "Card surfaces at least location, contractor, and mission objective / next action"
+            },
+            {
+              "completed": true,
+              "text": "Primary CTA routes the player back into the next mission loop"
+            },
+            {
+              "completed": true,
+              "text": "Debrief flow includes an explicit scrap/salvage ship action without breaking current progression"
+            },
+            {
+              "completed": true,
+              "text": "Implementation leaves room for future reusable/repairable ships instead of assuming permanent scrapping forever"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Implement post-debrief next mission handoff card",
+        "description": "Implement the flow defined by @task-ommhwg inside the debrief scene instead of relying only on the already-shipped base-screen CTA from @task-i5w6mi. After reward/feedback, the player should see a mission-briefing style handoff card that shows what mission/location/contractor is next and lets them move directly into the next loop.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "debrief",
+          "ux",
+          "progression",
+          "ui"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Post-debrief flow shows an in-game next-mission handoff card after rewards are resolved"
+          },
+          {
+            "completed": true,
+            "text": "Card surfaces at least location, contractor, and mission objective / next action"
+          },
+          {
+            "completed": true,
+            "text": "Primary CTA routes the player back into the next mission loop"
+          },
+          {
+            "completed": true,
+            "text": "Debrief flow includes an explicit scrap/salvage ship action without breaking current progression"
+          },
+          {
+            "completed": true,
+            "text": "Implementation leaves room for future reusable/repairable ships instead of assuming permanent scrapping forever"
+          }
+        ],
+        "implementationPlan": "1. Keep the existing reward/debrief calculation flow in `scene/Scripts/Earth/MissionDebriefV2.gd`, but split the UI into reward resolution first and mission handoff second.\n2. Add a post-reward handoff card matching @task-ommhwg with Location, Contractor, Mission, and a primary next-mission CTA that routes back into the loop.\n3. Add an explicit scrap/salvage ship action in the debrief flow using current salvage data, but structure it so reusable/repairable ships can replace the behavior later.\n4. Add focused validation/tests for the new debrief handoff state and confirm existing mission progression still passes."
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "xn3td7",
+      "version": 4,
+      "timestamp": "2026-03-27T12:09:05.310Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Implement post-debrief next mission handoff card",
+        "description": "Implement the flow defined by @task-ommhwg inside the debrief scene instead of relying only on the already-shipped base-screen CTA from @task-i5w6mi. After reward/feedback, the player should see a mission-briefing style handoff card that shows what mission/location/contractor is next and lets them move directly into the next loop.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "debrief",
+          "ux",
+          "progression",
+          "ui"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Post-debrief flow shows an in-game next-mission handoff card after rewards are resolved"
+          },
+          {
+            "completed": true,
+            "text": "Card surfaces at least location, contractor, and mission objective / next action"
+          },
+          {
+            "completed": true,
+            "text": "Primary CTA routes the player back into the next mission loop"
+          },
+          {
+            "completed": true,
+            "text": "Debrief flow includes an explicit scrap/salvage ship action without breaking current progression"
+          },
+          {
+            "completed": true,
+            "text": "Implementation leaves room for future reusable/repairable ships instead of assuming permanent scrapping forever"
+          }
+        ],
+        "implementationPlan": "1. Keep the existing reward/debrief calculation flow in `scene/Scripts/Earth/MissionDebriefV2.gd`, but split the UI into reward resolution first and mission handoff second.\n2. Add a post-reward handoff card matching @task-ommhwg with Location, Contractor, Mission, and a primary next-mission CTA that routes back into the loop.\n3. Add an explicit scrap/salvage ship action in the debrief flow using current salvage data, but structure it so reusable/repairable ships can replace the behavior later.\n4. Add focused validation/tests for the new debrief handoff state and confirm existing mission progression still passes.",
+        "implementationNotes": "## Summary\nImplemented the ommhwg notebook decisions in `scene/Scripts/Earth/MissionDebriefV2.gd` as a two-phase post-mission flow.\nPhase 1 remains reward resolution (sell cargo / payout). Phase 2 is an in-game handoff card that surfaces next mission location, contractor, and mission objective, then routes straight to the launchpad.\nAdded an explicit `Scrap / Salvage Ship` action in the handoff phase using current destroy/archive state plus salvage refund math, but kept it separate from the handoff card so future reusable/repairable ship logic can replace it cleanly.\nAdded focused coverage in `scene/tests/run_mission_debrief_v2_tests.gd`.\nValidated with:\n- `godot --headless --path scene --script res://tests/run_mission_debrief_v2_tests.gd`\n- `godot --headless --path scene --script res://tests/run_mission_e2e_flow_tests.gd`"
+      }
+    }
+  ]
+}

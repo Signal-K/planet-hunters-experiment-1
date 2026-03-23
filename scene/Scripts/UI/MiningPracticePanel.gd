@@ -5,6 +5,7 @@ const MiningScene = preload("res://Scenes/UI/SidescrollMining.tscn")
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
 const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
 const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd")
+const UILayout = preload("res://Scripts/UI/UILayout.gd")
 
 const PRACTICE_PRESETS := {
 	"warmup_asteroid": {
@@ -40,27 +41,31 @@ const PRACTICE_PRESETS := {
 }
 
 @onready var panel: PanelContainer = $Dock/Panel
-@onready var title_label: Label = $Dock/Panel/VBox/TitleLabel
-@onready var subtitle_label: Label = $Dock/Panel/VBox/SubtitleLabel
-@onready var warmup_button: Button = $Dock/Panel/VBox/PresetButtons/WarmupButton
-@onready var drill_button: Button = $Dock/Panel/VBox/PresetButtons/DrillButton
-@onready var endurance_button: Button = $Dock/Panel/VBox/PresetButtons/EnduranceButton
-@onready var status_label: Label = $Dock/Panel/VBox/StatusLabel
-@onready var summary_label: RichTextLabel = $Dock/Panel/VBox/SummaryLabel
-@onready var close_button: Button = $Dock/Panel/VBox/FooterButtons/CloseButton
+@onready var title_label: Label = $Dock/Panel/Scroll/VBox/TitleLabel
+@onready var subtitle_label: Label = $Dock/Panel/Scroll/VBox/SubtitleLabel
+@onready var warmup_button: Button = $Dock/Panel/Scroll/VBox/PresetButtons/WarmupButton
+@onready var drill_button: Button = $Dock/Panel/Scroll/VBox/PresetButtons/DrillButton
+@onready var endurance_button: Button = $Dock/Panel/Scroll/VBox/PresetButtons/EnduranceButton
+@onready var status_label: Label = $Dock/Panel/Scroll/VBox/StatusLabel
+@onready var summary_label: RichTextLabel = $Dock/Panel/Scroll/VBox/SummaryLabel
+@onready var close_button: Button = $Dock/Panel/Scroll/VBox/FooterButtons/CloseButton
 @onready var dock: Control = $Dock
 @onready var mining_container: Control = $MiningContainer
+@onready var scroll: ScrollContainer = $Dock/Panel/Scroll
+@onready var content_vbox: VBoxContainer = $Dock/Panel/Scroll/VBox
 
 var _mining_instance: Control = null
 var _current_preset_key := ""
 var _previous_preview_target: Dictionary = {}
 var _tutorial_overlay_was_visible: bool = false
+var _allow_auto_start := true
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	_previous_preview_target = RocketsManager.get_preview_target().duplicate(true)
 	_suspend_tutorial_overlay()
 	_apply_style()
+	get_viewport().size_changed.connect(_apply_style)
 	_connect_buttons()
 	_set_idle_copy()
 	AppControllerHelper.record_tutorial_action("open_mining_practice", {
@@ -72,8 +77,34 @@ func _ready() -> void:
 	_maybe_auto_start_when_no_rocket_in_play()
 
 func _apply_style() -> void:
-	var vp_w := get_viewport().get_visible_rect().size.x
-	panel.custom_minimum_size.x = clampf(vp_w - 48.0, 300.0, 480.0)
+	var viewport := get_viewport().get_visible_rect().size
+	var safe := UILayout.safe_rect(viewport)
+	dock.offset_left = safe.position.x
+	dock.offset_top = safe.position.y
+	dock.offset_right = -(viewport.x - safe.end.x)
+	dock.offset_bottom = -(viewport.y - safe.end.y)
+	panel.custom_minimum_size.x = clampf(viewport.x * 0.34, 320.0, 520.0)
+	panel.custom_minimum_size.y = 0.0
+	scroll.custom_minimum_size = Vector2(0.0, clampf(safe.size.y * 0.58, 260.0, 520.0))
+	summary_label.custom_minimum_size.y = clampf(scroll.custom_minimum_size.y * 0.34, 120.0, 220.0)
+	var compact := viewport.x < 1360.0
+	var narrow := viewport.x < 1120.0
+	var button_font := 28 if compact else PanelStyle.FONT_BUTTON
+	var body_font := 30 if compact else PanelStyle.FONT_BODY
+	var muted_font := 24 if compact else PanelStyle.FONT_MUTED
+	title_label.add_theme_font_size_override("font_size", 40 if compact else PanelStyle.FONT_TITLE)
+	subtitle_label.add_theme_font_size_override("font_size", muted_font)
+	status_label.add_theme_font_size_override("font_size", muted_font)
+	summary_label.add_theme_font_size_override("normal_font_size", body_font)
+	summary_label.add_theme_font_size_override("bold_font_size", body_font)
+	summary_label.add_theme_font_size_override("italic_font_size", body_font)
+	for btn in [warmup_button, drill_button, endurance_button, close_button]:
+		btn.add_theme_font_size_override("font_size", button_font)
+	if content_vbox:
+		content_vbox.add_theme_constant_override("separation", 8 if narrow else 10)
+	var preset_buttons = warmup_button.get_parent() as BoxContainer
+	if preset_buttons:
+		preset_buttons.add_theme_constant_override("separation", 6 if narrow else 8)
 	PanelStyle.apply_panel(panel)
 	PanelStyle.apply_title(title_label)
 	PanelStyle.apply_muted(subtitle_label)
@@ -139,6 +170,7 @@ func _start_preset(preset_key: String) -> void:
 	})
 
 func _on_mining_completed(minerals: Dictionary, score: int) -> void:
+	_clear_active_run()
 	dock.visible = true
 	var mineral_lines := []
 	for key in minerals.keys():
@@ -193,6 +225,8 @@ func _restore_previous_preview_target() -> void:
 	)
 
 func _maybe_auto_start_when_no_rocket_in_play() -> void:
+	if not _allow_auto_start:
+		return
 	var has_active_rocket = RocketsManager.get_primary_awaiting_rocket_id() != ""
 	if not has_active_rocket:
 		# Smart skip-ahead: if player has no rocket staged, jump directly into

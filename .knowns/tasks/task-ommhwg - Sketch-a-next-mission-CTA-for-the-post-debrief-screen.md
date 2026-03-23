@@ -1,13 +1,13 @@
 ---
 id: ommhwg
 title: Sketch a next-mission CTA for the post-debrief screen
-status: todo
+status: done
 priority: medium
 labels:
   - sketch
   - design
 createdAt: '2026-03-26T02:31:01.894Z'
-updatedAt: '2026-03-26T09:16:31.536Z'
+updatedAt: '2026-03-27T04:18:29.135Z'
 timeSpent: 0
 ---
 # Sketch a next-mission CTA for the post-debrief screen
@@ -20,8 +20,8 @@ After debrief, players have no clear path forward. Sketch a 'next mission' promp
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Sketch complete
-- [ ] #2 CTA placement and copy direction identified
+- [x] #1 Sketch complete
+- [x] #2 CTA placement and copy direction identified
 <!-- AC:END -->
 
 ## Implementation Notes

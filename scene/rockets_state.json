@@ -1,41 +1,42 @@
 {
   "unlocked": [
-    "starterrocket1",
-    "starterrocket2",
-    "starterrocket3"
+    "starterrocket1"
   ],
   "placed": [
     {
       "type": "starterrocket1",
-      "id": "starterrocket1-675492285",
+      "id": "starterrocket1-2719509597",
       "x": -110.0,
       "y": -178.0,
       "status": "launched"
     }
   ],
   "launched": [
-    "starterrocket1-675492285"
+    "starterrocket1-2719509597"
   ],
   "destroyed": [
   ],
   "missions": [
     {
-      "rocket_id": "starterrocket1-675492285",
+      "rocket_id": "starterrocket1-2719509597",
       "target": "mission-1-training-target",
-      "launch_time": 1774058248.0,
-      "arrival_time": 1774058308.0,
-      "operation_mode": "contract"
+      "launch_time": 1774662728.0,
+      "arrival_time": 1774662788.0,
+      "operation_mode": "contract",
+      "goingTo": "mission-1-training-target",
+      "location": [
+        "mission-1-training-target"
+      ]
     }
   ],
-  "selected_target": "free-ops-survey-target",
+  "selected_target": "",
   "preview_target": {
+    "id": "mission-1-training-target",
+    "label": "433 Eros",
+    "type": "asteroid",
+    "rocket_id": "starterrocket1-2719509597"
   },
   "detected_targets": [
-    {
-      "id": "free-ops-survey-target",
-      "label": "Free Ops Survey Target",
-      "type": "asteroid"
-    }
   ],
   "seen_asteroids": [
   ],
@@ -44,48 +45,16 @@
   "scan_counts": {
   },
   "status_changed_at": {
-    "starterrocket1-675492285": {
-      "awaitingLaunch": 1774058241.0,
-      "launched": 1774058248.0
+    "starterrocket1-2719509597": {
+      "awaitingLaunch": 1774662723.0,
+      "launched": 1774662728.0
     }
   },
-  "mission_progress_completed": 32,
+  "mission_progress_completed": 0,
   "completed_mission_badges": [
-    "narrative-stage-1-1837",
-    "narrative-stage-1-1867",
-    "narrative-stage-1-1997",
-    "narrative-stage-2-1998",
-    "narrative-stage-1-2103",
-    "narrative-stage-2-2104",
-    "narrative-stage-3-2105",
-    "narrative-stage-1-2218",
-    "narrative-stage-2-2220",
-    "narrative-stage-3-2221",
-    "narrative-stage-4-2221",
-    "narrative-stage-1-2330",
-    "narrative-stage-2-2330",
-    "narrative-stage-3-2331",
-    "narrative-stage-4-2332",
-    "narrative-stage-1-2429",
-    "narrative-stage-1-2688",
-    "narrative-stage-2-2690",
-    "e2e-stage-1-1586",
-    "e2e-stage-2-1604",
-    "e2e-stage-3-1622",
-    "e2e-stage-1-1646",
-    "e2e-stage-2-1647",
-    "e2e-stage-3-1648",
-    "e2e-stage-4-1649",
-    "e2e-stage-1-505",
-    "e2e-stage-2-514",
-    "e2e-stage-3-523",
-    "e2e-stage-1-534",
-    "e2e-stage-2-535",
-    "e2e-stage-3-536",
-    "e2e-stage-4-536"
   ],
-  "scanner_station_built": true,
-  "scanner_unlocked": true,
+  "scanner_station_built": false,
+  "scanner_unlocked": false,
   "scanner_unlock_dialog_seen": false,
   "scanner_next_scan_at": 0.0,
   "trip_contract_offer": {
@@ -105,8 +74,8 @@
           ]
         },
         "requested_minerals": {
-          "Iron": 179.0,
-          "Nickel": 131.0
+          "Iron": 165.0,
+          "Nickel": 148.0
         }
       },
       {
@@ -124,8 +93,8 @@
           ]
         },
         "requested_minerals": {
-          "Cobalt": 69.0,
-          "Silicates": 126.0
+          "Cobalt": 50.0,
+          "Silicates": 138.0
         }
       },
       {
@@ -143,19 +112,19 @@
           ]
         },
         "requested_minerals": {
-          "Iron": 116.0,
-          "Nickel": 65.0
+          "Iron": 177.0,
+          "Nickel": 102.0
         }
       }
     ],
-    "selected_contractor": "rocketlab",
-    "selection_required": false,
+    "selected_contractor": "",
+    "selection_required": true,
     "recommended_target_id": "mission-1-training-target",
     "recommended_target_label": "433 Eros",
     "recommended_rocket": "starterrocket1",
     "payout_cap": 1400000000.0
   },
-  "operation_mode": "survey",
+  "operation_mode": "contract",
   "candidate_visit_blocks": {
   },
   "target_annotation_levels": {
@@ -163,7 +132,7 @@
   "discovery_bonus_claimed": {
   },
   "rocket_customizations": {
-    "starterrocket1-675492285": {
+    "starterrocket1-2719509597": {
       "flag": "Earth Union",
       "logo": "Star",
       "rocket_type": "starterrocket1"
@@ -177,7 +146,7 @@
   },
   "mission_progress_schema_version": 2.0,
   "pending_mission_guidance_id": 0.0,
-  "launch_fallback_notice": "No target was selected, so mission control auto-selected Free Ops Survey Target for this launch.",
+  "launch_fallback_notice": "",
   "inventory": {
     "Iron": 0.0,
     "Nickel": 0.0,
@@ -192,5 +161,5 @@
   },
   "returning_started": {
   },
-  "launch_guidance_notice": "Select a contractor first, then pick a mission target."
+  "launch_guidance_notice": ""
 }

@@ -1,7 +1,11 @@
 extends RefCounted
 class_name LaunchpadSelectorPanel
 
+signal selected_target(target_id)
+signal target_confirmed(target_id)
+
 var _launchpad: Node
+var _pending_target_id := ""
 const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
 const TargetCardScene = preload("res://Scenes/UI/Templates/LaunchpadTargetCard.tscn")
@@ -9,6 +13,7 @@ const HeaderLabelScene = preload("res://Scenes/UI/Templates/MenuUnlockHeader.tsc
 const EmptyLabelScene = preload("res://Scenes/UI/Templates/MenuLogbookEmpty.tscn")
 const LabelActionRowScene = preload("res://Scenes/UI/Templates/LabelActionRow.tscn")
 const RocketSelectorOverlayScene = preload("res://Scenes/UI/RocketSelectorOverlay.tscn")
+const LaunchpadStarMap = preload("res://Scripts/Earth/LaunchpadStarMap.gd")
 const AppLogger = preload("res://Scripts/Utils/Logger.gd")
 const GameplayAnalytics = preload("res://Scripts/Systems/GameplayAnalytics.gd")
 const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
@@ -310,93 +315,19 @@ func populate_targets() -> void:
 		return
 
 	var visible_targets = _build_visible_targets(targets, selected_target, mission_stage, awaiting_rocket_level, rm)
-	for t in visible_targets:
-		var target_id = str(t.get("id", ""))
-		var target_type = str(t.get("type", "asteroid"))
-		var profile = rm.build_target_profile(target_id, target_type)
-		var required_level = int(profile.get("required_level", 1))
-		var distance_au = float(profile.get("distance_au", 0.0))
-		var blocked = _is_target_blocked_for_selection(
-			mission_stage,
-			awaiting_rocket_level,
-			required_level,
-			operation_mode,
-			trip_selected_contractor,
-			target_id
-		)
-		var blocked_reason = _blocked_reason_for_target(
-			mission_stage,
-			awaiting_rocket_level,
-			required_level,
-			operation_mode,
-			trip_selected_contractor,
-			target_id
-		)
-		var is_planet = target_type == "planet" or target_type == "tess"
-		var entry_panel: PanelContainer = TargetCardScene.instantiate()
-		entry_panel.add_theme_stylebox_override("panel",
-			_planet_card_style() if is_planet else _target_card_style())
-		var name_lbl: Label = entry_panel.get_node("Entry/Header/NameLabel")
-		var is_recommended_target = trip_recommended_target_id != "" and trip_recommended_target_id == target_id
-		var label_text = str(t.get("label", target_id))
-		if is_planet:
-			label_text = "[PLANET] %s" % label_text
-		if is_recommended_target:
-			label_text = "%s (Recommended)" % label_text
-		name_lbl.text = label_text
-		if is_planet:
-			name_lbl.add_theme_color_override("font_color", Color(0.55, 0.85, 1.0))
-		else:
-			PanelStyle.apply_body(name_lbl)
-		var btn: Button = entry_panel.get_node("Entry/Header/SelectButton")
-		btn.focus_mode = Control.FOCUS_NONE
-		PanelStyle.apply_button(btn, false)
-		if selected_target == target_id:
-			btn.text = "Target Selected"
-			btn.disabled = true
-		elif blocked:
-			if trip_selected_contractor == "":
-				btn.text = "Select Contractor"
-			else:
-				btn.text = "Blocked"
-			btn.disabled = true
-		_style_selector_action_button(btn, not btn.disabled)
-		# bind id
-		btn.pressed.connect(Callable(self, "on_selector_target_pressed").bind(target_id, btn))
-		var details_lbl: Label = entry_panel.get_node("Entry/DetailsLabel")
-		var details_text = "%.0f AU • Level %d required" % [distance_au, required_level]
-		if awaiting_rocket_level > 0:
-			details_text += " • Ship: Level %d" % awaiting_rocket_level
-			var max_range_au = RocketSpecs.get_max_range_au(awaiting_rocket_id)
-			if distance_au > max_range_au:
-				details_text += " • Out of range (max %.0f AU)" % max_range_au
-			else:
-				details_text += " • In range"
-		if blocked:
-			details_text += " • %s" % blocked_reason
-		elif free_ops_unlocked:
-			var profile_text = "Survey Route" if operation_mode == "survey" else "Contract Route"
-			details_text += " • %s" % profile_text
-		var science_source = str(t.get("science_source", ""))
-		var science_blurb = str(t.get("science_blurb", ""))
-		if science_source != "":
-			details_text += "\n%s" % science_source
-			if science_blurb != "":
-				details_text += " — %s" % science_blurb
-		details_lbl.text = details_text
-		details_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-		PanelStyle.apply_muted(details_lbl)
-
-		# Estimated mineral composition readout
-		var comp_lbl := Label.new()
-		comp_lbl.text = _estimate_target_composition(target_id, is_planet)
-		comp_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-		comp_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		comp_lbl.add_theme_color_override("font_color", Color(0.5, 0.95, 0.65, 1.0))
-		comp_lbl.add_theme_font_size_override("font_size", 13)
-		entry_panel.get_node("Entry").add_child(comp_lbl)
-
-		target_section.add_child(entry_panel)
+	_render_starmap_target_picker(
+		target_section,
+		visible_targets,
+		selected_target,
+		mission_stage,
+		awaiting_rocket_id,
+		awaiting_rocket_level,
+		operation_mode,
+		trip_selected_contractor,
+		trip_recommended_target_id,
+		free_ops_unlocked,
+		rm
+	)
 
 	var hidden_count = max(targets.size() - visible_targets.size(), 0)
 	if hidden_count > 0:
@@ -410,28 +341,38 @@ func populate_targets() -> void:
 	_normalize_selector_typography(panel)
 
 
-func on_selector_target_pressed(target_id: String, _btn: Button) -> void:
+func on_selector_target_pressed(target_id: String, _btn: Button = null) -> void:
+	_pending_target_id = target_id
+	selected_target.emit(target_id)
+	AppLogger.d("Launchpad: target selected in starmap: %s" % target_id)
+	populate_targets()
+
+func _on_confirm_target_pressed() -> void:
+	var target_id = _pending_target_id
+	if target_id == "":
+		return
 	var rm = RocketsManager
 	if not rm:
 		return
 	var ok = rm.select_target(target_id)
-	if ok:
-		var target = rm.get_target_details(target_id)
-		GameplayAnalytics.emit_target_selected(
-			target_id,
-			str(target.get("type", "asteroid")),
-			"launchpad_selector",
-			{
-				"target_label": str(target.get("label", target_id))
-			}
-		)
-		_record_tutorial_action("select_launch_target", {
-			"target_id": target_id
-		})
-		AppLogger.d("Launchpad: target selected from selector: %s" % target_id)
-		populate_targets()
-	else:
-		AppLogger.w("Launchpad: failed to persist target selection from selector %s" % target_id)
+	if not ok:
+		AppLogger.w("Launchpad: failed to persist confirmed target selection %s" % target_id)
+		return
+	var target = rm.get_target_details(target_id)
+	GameplayAnalytics.emit_target_selected(
+		target_id,
+		str(target.get("type", "asteroid")),
+		"launchpad_selector",
+		{
+			"target_label": str(target.get("label", target_id))
+		}
+	)
+	_record_tutorial_action("select_launch_target", {
+		"target_id": target_id
+	})
+	target_confirmed.emit(target_id)
+	AppLogger.d("Launchpad: target confirmed from starmap: %s" % target_id)
+	populate_targets()
 
 func _on_trip_contractor_pressed(contractor_id: String) -> void:
 	var rm = RocketsManager
@@ -1031,6 +972,218 @@ func _render_launch_guidance_notice(targets_section: VBoxContainer) -> void:
 	guidance.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	PanelStyle.apply_muted(guidance)
 	targets_section.add_child(guidance)
+
+func _render_starmap_target_picker(
+	target_section: VBoxContainer,
+	visible_targets: Array,
+	selected_target: String,
+	mission_stage: int,
+	awaiting_rocket_id: String,
+	awaiting_rocket_level: int,
+	operation_mode: String,
+	trip_selected_contractor: String,
+	trip_recommended_target_id: String,
+	free_ops_unlocked: bool,
+	rm
+) -> void:
+	if target_section == null:
+		return
+	var available_ids := {}
+	for item_any in visible_targets:
+		if typeof(item_any) != TYPE_DICTIONARY:
+			continue
+		var item: Dictionary = item_any
+		available_ids[str(item.get("id", ""))] = true
+	if _pending_target_id == "" or not available_ids.has(_pending_target_id):
+		_pending_target_id = selected_target if available_ids.has(selected_target) else str(visible_targets[0].get("id", "")) if not visible_targets.is_empty() else ""
+
+	var map_entries := []
+	for t_any in visible_targets:
+		if typeof(t_any) != TYPE_DICTIONARY:
+			continue
+		var t: Dictionary = t_any
+		var target_id = str(t.get("id", ""))
+		var target_type = str(t.get("type", "asteroid"))
+		var profile = rm.build_target_profile(target_id, target_type)
+		var required_level = int(profile.get("required_level", 1))
+		var distance_au = float(profile.get("distance_au", 0.0))
+		var blocked = _is_target_blocked_for_selection(
+			mission_stage,
+			awaiting_rocket_level,
+			required_level,
+			operation_mode,
+			trip_selected_contractor,
+			target_id
+		)
+		var disposition = _planet_disposition_text(t)
+		map_entries.append({
+			"id": target_id,
+			"label": str(t.get("label", target_id)),
+			"type": _normalize_target_type(target_type),
+			"blocked": blocked,
+			"distance_au": distance_au,
+			"recommended": trip_recommended_target_id == target_id,
+			"disposition": disposition,
+		})
+
+	var map_card := PanelContainer.new()
+	map_card.add_theme_stylebox_override("panel", _target_card_style())
+	target_section.add_child(map_card)
+	var map_column := VBoxContainer.new()
+	map_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	map_column.add_theme_constant_override("separation", 8)
+	map_card.add_child(map_column)
+
+	var map_view := LaunchpadStarMap.new()
+	map_view.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	map_view.custom_minimum_size = Vector2(0.0, 320.0)
+	map_view.setup(map_entries, _pending_target_id)
+	map_view.target_pressed.connect(Callable(self, "on_selector_target_pressed"))
+	map_column.add_child(map_view)
+
+	var selected_entry = _find_target_entry_by_id(visible_targets, _pending_target_id)
+	if selected_entry.is_empty():
+		return
+	var info_card := PanelContainer.new()
+	info_card.add_theme_stylebox_override("panel", _planet_card_style() if _is_planet_target(selected_entry) else _target_card_style())
+	target_section.add_child(info_card)
+	var info_column := VBoxContainer.new()
+	info_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	info_column.add_theme_constant_override("separation", 6)
+	info_card.add_child(info_column)
+
+	var title := Label.new()
+	var title_text = str(selected_entry.get("label", _pending_target_id))
+	if trip_recommended_target_id == _pending_target_id:
+		title_text = "%s (Recommended)" % title_text
+	title.text = title_text
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	PanelStyle.apply_body(title)
+	title.add_theme_font_size_override("font_size", 18)
+	title.add_theme_color_override("font_color", Color(0.88, 0.96, 1.0, 1.0))
+	info_column.add_child(title)
+
+	var summary := Label.new()
+	summary.text = _build_starmap_info_text(
+		selected_entry,
+		mission_stage,
+		awaiting_rocket_id,
+		awaiting_rocket_level,
+		operation_mode,
+		trip_selected_contractor,
+		free_ops_unlocked,
+		rm
+	)
+	summary.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	PanelStyle.apply_muted(summary)
+	info_column.add_child(summary)
+
+	var composition := Label.new()
+	composition.text = _estimate_target_composition(_pending_target_id, _is_planet_target(selected_entry))
+	composition.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	composition.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	composition.add_theme_color_override("font_color", Color(0.5, 0.95, 0.65, 1.0))
+	composition.add_theme_font_size_override("font_size", 13)
+	info_column.add_child(composition)
+
+	var action_row := HBoxContainer.new()
+	action_row.add_theme_constant_override("separation", 8)
+	info_column.add_child(action_row)
+
+	var confirm_btn := Button.new()
+	var persisted_selected = selected_target == _pending_target_id and selected_target != ""
+	var blocked = _is_target_blocked_for_selection(
+		mission_stage,
+		awaiting_rocket_level,
+		int(rm.build_target_profile(_pending_target_id, str(selected_entry.get("type", "asteroid"))).get("required_level", 1)),
+		operation_mode,
+		trip_selected_contractor,
+		_pending_target_id
+	)
+	confirm_btn.text = "Route Confirmed" if persisted_selected else "Confirm Target"
+	confirm_btn.disabled = blocked or persisted_selected
+	PanelStyle.apply_button(confirm_btn, not confirm_btn.disabled)
+	_style_selector_action_button(confirm_btn, not confirm_btn.disabled)
+	if not confirm_btn.disabled:
+		confirm_btn.pressed.connect(Callable(self, "_on_confirm_target_pressed"))
+	action_row.add_child(confirm_btn)
+
+func _build_starmap_info_text(
+	target: Dictionary,
+	mission_stage: int,
+	awaiting_rocket_id: String,
+	awaiting_rocket_level: int,
+	operation_mode: String,
+	trip_selected_contractor: String,
+	free_ops_unlocked: bool,
+	rm
+) -> String:
+	var target_id = str(target.get("id", ""))
+	var target_type = str(target.get("type", "asteroid"))
+	var normalized_type = _normalize_target_type(target_type)
+	var profile = rm.build_target_profile(target_id, target_type)
+	var required_level = int(profile.get("required_level", 1))
+	var distance_au = float(profile.get("distance_au", 0.0))
+	var lines := [
+		"Distance: %.0f AU" % distance_au,
+	]
+	var fuel_text = _estimated_fuel_cost_text(distance_au, awaiting_rocket_id)
+	if fuel_text != "":
+		lines.append(fuel_text)
+	if _is_target_blocked_for_selection(
+		mission_stage,
+		awaiting_rocket_level,
+		required_level,
+		operation_mode,
+		trip_selected_contractor,
+		target_id
+	):
+		lines.append(_blocked_reason_for_target(
+			mission_stage,
+			awaiting_rocket_level,
+			required_level,
+			operation_mode,
+			trip_selected_contractor,
+			target_id
+		))
+	return "\n".join(lines)
+
+func _estimated_fuel_cost_text(distance_au: float, awaiting_rocket_id: String) -> String:
+	if awaiting_rocket_id == "":
+		return "Fuel cost: awaiting ship selection"
+	var max_range_au = max(RocketSpecs.get_max_range_au(awaiting_rocket_id), 0.01)
+	var load_pct = int(round((distance_au / max_range_au) * 100.0))
+	if distance_au > max_range_au:
+		return "Fuel cost: %d%% of range budget (out of range)" % load_pct
+	return "Fuel cost: %d%% of range budget" % load_pct
+
+func _planet_disposition_text(target: Dictionary) -> String:
+	var explicit_value = str(target.get("disposition", ""))
+	if explicit_value != "":
+		return explicit_value
+	var blurb = str(target.get("science_blurb", "")).to_lower()
+	if blurb.find("confirmed") != -1:
+		return "Confirmed"
+	if blurb.find("candidate") != -1:
+		return "Candidate"
+	return "Candidate"
+
+func _find_target_entry_by_id(targets: Array, target_id: String) -> Dictionary:
+	for target_any in targets:
+		if typeof(target_any) != TYPE_DICTIONARY:
+			continue
+		var target: Dictionary = target_any
+		if str(target.get("id", "")) == target_id:
+			return target
+	return {}
+
+func _is_planet_target(target: Dictionary) -> bool:
+	return _normalize_target_type(str(target.get("type", "asteroid"))) == "planet"
+
+func _normalize_target_type(target_type: String) -> String:
+	var normalized = target_type.to_lower()
+	return "planet" if normalized == "planet" or normalized == "tess" else "asteroid"
 
 func _target_card_style() -> StyleBoxFlat:
 	var style = StyleBoxFlat.new()

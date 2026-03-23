@@ -467,6 +467,7 @@ func _apply_responsive_layout() -> void:
 	var edge_margin = 16.0
 	var panel_width = clamp(viewport.x * (0.33 if compact else 0.28), 300.0, 420.0)
 	var panel_height = 120.0
+	var right_panel_width = clamp(viewport.x * (0.30 if compact else 0.26), 420.0, 520.0)
 	# Safe area: compensate for Dynamic Island / notch (landscape iPhone aspect > 1.85)
 	var safe_top = 90.0 if viewport.x / max(viewport.y, 1.0) > 1.85 else 0.0
 	var safe_bottom = 90.0 if viewport.x / max(viewport.y, 1.0) > 1.85 else 0.0
@@ -481,20 +482,29 @@ func _apply_responsive_layout() -> void:
 		travel_panel.offset_top = 96.0 + safe_top
 		travel_panel.offset_right = edge_margin + panel_width
 		travel_panel.offset_bottom = 96.0 + panel_height + safe_top
+		travel_panel.custom_minimum_size.x = panel_width
+	if control_panel:
+		control_panel.custom_minimum_size.x = right_panel_width
+		control_panel.offset_left = -edge_margin - right_panel_width
+		control_panel.offset_right = -edge_margin
+	if inventory_panel:
+		inventory_panel.custom_minimum_size.x = right_panel_width
+		inventory_panel.offset_left = -edge_margin - right_panel_width
+		inventory_panel.offset_right = -edge_margin
 	if _shop_button:
 		_shop_button.offset_top = 24.0 + safe_top
 		_shop_button.offset_bottom = 68.0 + safe_top
 	if _science_panel:
 		# Simple caption strip at the bottom-centre.
 		var caption_width = clamp(viewport.x * 0.50, 240.0, 480.0)
-		var caption_bottom = 28.0 + safe_bottom
+		var caption_bottom = 88.0 + safe_bottom
 		_science_panel.anchor_left = 0.5
 		_science_panel.anchor_right = 0.5
 		_science_panel.anchor_top = 1.0
 		_science_panel.anchor_bottom = 1.0
 		_science_panel.offset_left = -caption_width * 0.5
 		_science_panel.offset_right = caption_width * 0.5
-		_science_panel.offset_top = -(44.0 + caption_bottom)
+		_science_panel.offset_top = -(92.0 + caption_bottom)
 		_science_panel.offset_bottom = -caption_bottom
 
 func _show_science_panel() -> void:

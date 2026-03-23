@@ -1,6 +1,6 @@
 {
   "taskId": "ps6nfy",
-  "currentVersion": 4,
+  "currentVersion": 7,
   "versions": [
     {
       "id": "v1",
@@ -160,6 +160,165 @@
           }
         ],
         "implementationNotes": "## Screen reference\n\nThe SR2 unlock celebration fires from this earth base state. The visual treatment (pulse, burst, animation) overlays this screen:\n\n![Earth base post-Mission 1 — SR2 celebration context](https://raw.githubusercontent.com/Signal-K/planet-hunters-experiment-1/main/e2e/screenshots/ux-tour-earth-base-post-m1.png)\n\nDesign the celebration to work on top of this dark-sky / sci-fi aesthetic. The level-up banner appears in the top-right area of the shell (outside the game iframe)."
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "ps6nfy",
+      "version": 5,
+      "timestamp": "2026-03-28T00:09:55.509Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "oldValue": "Liam",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Design the SR2 unlock milestone moment",
+        "description": "SR2 unlock is the first major progression reward. Decide: what does the 2–3s flash look like (gold pulse, star burst, or something else)? What copy appears? The shell already has a level-up banner. Write the exact headline + stats reveal copy (SR2: 2× speed · 2× range · 1.5× cargo) and any flavour text. Optionally sketch the visual idea. This directly unblocks ticket o59h32 for agent implementation.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "design",
+          "creative"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Celebration copy written (headline + stats)"
+          },
+          {
+            "completed": false,
+            "text": "Visual direction described (even just words)"
+          },
+          {
+            "completed": false,
+            "text": "Notes added to task for agent to implement"
+          }
+        ],
+        "implementationNotes": "## Screen reference\n\nThe SR2 unlock celebration fires from this earth base state. The visual treatment (pulse, burst, animation) overlays this screen:\n\n![Earth base post-Mission 1 — SR2 celebration context](https://raw.githubusercontent.com/Signal-K/planet-hunters-experiment-1/main/e2e/screenshots/ux-tour-earth-base-post-m1.png)\n\nDesign the celebration to work on top of this dark-sky / sci-fi aesthetic. The level-up banner appears in the top-right area of the shell (outside the game iframe)."
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "ps6nfy",
+      "version": 6,
+      "timestamp": "2026-03-28T00:10:13.284Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "newValue": "1. Cross-reference the Knowns brief with the local board copy/flow and sketch tasks.\n2. Replace the current SR2 popup in earth_base_1.gd with the designed two-step unlock moment, preserving the Earth-base background and adding the CTA.\n3. Add validation for the SR2 unlock content and record the final copy/visual notes in the task."
+        }
+      ],
+      "snapshot": {
+        "title": "Design the SR2 unlock milestone moment",
+        "description": "SR2 unlock is the first major progression reward. Decide: what does the 2–3s flash look like (gold pulse, star burst, or something else)? What copy appears? The shell already has a level-up banner. Write the exact headline + stats reveal copy (SR2: 2× speed · 2× range · 1.5× cargo) and any flavour text. Optionally sketch the visual idea. This directly unblocks ticket o59h32 for agent implementation.",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "design",
+          "creative"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Celebration copy written (headline + stats)"
+          },
+          {
+            "completed": false,
+            "text": "Visual direction described (even just words)"
+          },
+          {
+            "completed": false,
+            "text": "Notes added to task for agent to implement"
+          }
+        ],
+        "implementationPlan": "1. Cross-reference the Knowns brief with the local board copy/flow and sketch tasks.\n2. Replace the current SR2 popup in earth_base_1.gd with the designed two-step unlock moment, preserving the Earth-base background and adding the CTA.\n3. Add validation for the SR2 unlock content and record the final copy/visual notes in the task.",
+        "implementationNotes": "## Screen reference\n\nThe SR2 unlock celebration fires from this earth base state. The visual treatment (pulse, burst, animation) overlays this screen:\n\n![Earth base post-Mission 1 — SR2 celebration context](https://raw.githubusercontent.com/Signal-K/planet-hunters-experiment-1/main/e2e/screenshots/ux-tour-earth-base-post-m1.png)\n\nDesign the celebration to work on top of this dark-sky / sci-fi aesthetic. The level-up banner appears in the top-right area of the shell (outside the game iframe)."
+      }
+    },
+    {
+      "id": "v7",
+      "taskId": "ps6nfy",
+      "version": 7,
+      "timestamp": "2026-03-28T00:18:49.551Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        },
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Celebration copy written (headline + stats)"
+            },
+            {
+              "completed": false,
+              "text": "Visual direction described (even just words)"
+            },
+            {
+              "completed": false,
+              "text": "Notes added to task for agent to implement"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Celebration copy written (headline + stats)"
+            },
+            {
+              "completed": true,
+              "text": "Visual direction described (even just words)"
+            },
+            {
+              "completed": true,
+              "text": "Notes added to task for agent to implement"
+            }
+          ]
+        },
+        {
+          "field": "implementationNotes",
+          "oldValue": "## Screen reference\n\nThe SR2 unlock celebration fires from this earth base state. The visual treatment (pulse, burst, animation) overlays this screen:\n\n![Earth base post-Mission 1 — SR2 celebration context](https://raw.githubusercontent.com/Signal-K/planet-hunters-experiment-1/main/e2e/screenshots/ux-tour-earth-base-post-m1.png)\n\nDesign the celebration to work on top of this dark-sky / sci-fi aesthetic. The level-up banner appears in the top-right area of the shell (outside the game iframe).",
+          "newValue": "## Screen reference\n\nThe SR2 unlock celebration fires from this earth base state. The visual treatment (pulse, burst, animation) overlays this screen:\n\n![Earth base post-Mission 1 — SR2 celebration context](https://raw.githubusercontent.com/Signal-K/planet-hunters-experiment-1/main/e2e/screenshots/ux-tour-earth-base-post-m1.png)\n\nDesign the celebration to work on top of this dark-sky / sci-fi aesthetic. The level-up banner appears in the top-right area of the shell (outside the game iframe).\n\n✓ Implemented the SR2 unlock milestone in earth_base_1.gd using the board sketch + copy brief: two-step reveal over the Earth base, mission-complete intro, left rocket art, right-side stats/copy, and CTA into the next mission flow. Copy now calls out 2x speed, 24 AU range vs SR1's 12 AU, and 1.5x cargo. Validation: run_earth_base_unlock_tests passes in the Docker Godot environment."
+        }
+      ],
+      "snapshot": {
+        "title": "Design the SR2 unlock milestone moment",
+        "description": "SR2 unlock is the first major progression reward. Decide: what does the 2–3s flash look like (gold pulse, star burst, or something else)? What copy appears? The shell already has a level-up banner. Write the exact headline + stats reveal copy (SR2: 2× speed · 2× range · 1.5× cargo) and any flavour text. Optionally sketch the visual idea. This directly unblocks ticket o59h32 for agent implementation.",
+        "status": "done",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "design",
+          "creative"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Celebration copy written (headline + stats)"
+          },
+          {
+            "completed": true,
+            "text": "Visual direction described (even just words)"
+          },
+          {
+            "completed": true,
+            "text": "Notes added to task for agent to implement"
+          }
+        ],
+        "implementationPlan": "1. Cross-reference the Knowns brief with the local board copy/flow and sketch tasks.\n2. Replace the current SR2 popup in earth_base_1.gd with the designed two-step unlock moment, preserving the Earth-base background and adding the CTA.\n3. Add validation for the SR2 unlock content and record the final copy/visual notes in the task.",
+        "implementationNotes": "## Screen reference\n\nThe SR2 unlock celebration fires from this earth base state. The visual treatment (pulse, burst, animation) overlays this screen:\n\n![Earth base post-Mission 1 — SR2 celebration context](https://raw.githubusercontent.com/Signal-K/planet-hunters-experiment-1/main/e2e/screenshots/ux-tour-earth-base-post-m1.png)\n\nDesign the celebration to work on top of this dark-sky / sci-fi aesthetic. The level-up banner appears in the top-right area of the shell (outside the game iframe).\n\n✓ Implemented the SR2 unlock milestone in earth_base_1.gd using the board sketch + copy brief: two-step reveal over the Earth base, mission-complete intro, left rocket art, right-side stats/copy, and CTA into the next mission flow. Copy now calls out 2x speed, 24 AU range vs SR1's 12 AU, and 1.5x cargo. Validation: run_earth_base_unlock_tests passes in the Docker Godot environment."
       }
     }
   ]

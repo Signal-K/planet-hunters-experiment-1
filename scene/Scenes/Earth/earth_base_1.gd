@@ -8,11 +8,13 @@ var ui_manager: UIManager
 const PREVIEW_SCENE_PATH := "res://Scenes/UI/AsteroidPreview/asteroid_preview.tscn"
 const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
+const UILayout = preload("res://Scripts/UI/UILayout.gd")
 const ClassificationConsensus = preload("res://Scripts/Utils/ClassificationConsensus.gd")
 const SR2_UNLOCK_POPUP_PATH := "user://rocket_unlock_popups.cfg"
 const SR2_UNLOCK_SECTION := "popups"
 const SR2_UNLOCK_KEY := "starterrocket2_seen"
 const FREE_OPS_UNLOCK_KEY := "free_ops_unlock_seen"
+const SR2_UNLOCK_INTRO_SECONDS := 0.9
 
 func _ready() -> void:
 	# Initialize camera controller
@@ -281,6 +283,8 @@ func _maybe_show_starterrocket2_unlock_popup() -> void:
 	_show_starterrocket2_unlock_popup()
 
 func _show_starterrocket2_unlock_popup() -> void:
+	var sr2_range := RocketSpecs.get_max_range_au("starterrocket2")
+	var sr1_range := RocketSpecs.get_max_range_au("starterrocket1")
 	var overlay = ColorRect.new()
 	overlay.name = "StarterRocket2UnlockOverlay"
 	overlay.color = Color(0, 0, 0, 0.0)
@@ -292,61 +296,134 @@ func _show_starterrocket2_unlock_popup() -> void:
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	overlay.add_child(center)
 
-	var vp_w := get_viewport().get_visible_rect().size.x
+	var stack = VBoxContainer.new()
+	stack.name = "StarterRocket2UnlockStack"
+	stack.alignment = BoxContainer.ALIGNMENT_CENTER
+	stack.add_theme_constant_override("separation", 18)
+	center.add_child(stack)
+
+	var intro = Label.new()
+	intro.name = "StarterRocket2UnlockIntro"
+	intro.text = "Mission one complete.\nStarter Rocket 2 is flight-ready."
+	intro.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	intro.modulate = Color(1, 1, 1, 0.0)
+	PanelStyle.apply_title(intro)
+	intro.add_theme_font_size_override("font_size", 36 if get_viewport().get_visible_rect().size.x < 1200.0 else 42)
+	stack.add_child(intro)
+
+	var viewport := get_viewport().get_visible_rect().size
+	var vp_w := viewport.x
+	var compact := viewport.x < 1200.0
+	var stacked := viewport.x < 980.0
 	var panel = PanelContainer.new()
+	panel.name = "StarterRocket2UnlockCard"
 	panel.custom_minimum_size = Vector2(clampf(vp_w - 48.0, 300.0, 700.0), 0)
 	panel.scale = Vector2(0.92, 0.92)
 	panel.modulate = Color(1, 1, 1, 0.0)
-	center.add_child(panel)
+	stack.add_child(panel)
 
-	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
-	panel_style.apply_panel(panel)
+	PanelStyle.apply_panel(panel)
 
 	var body = VBoxContainer.new()
-	body.add_theme_constant_override("separation", 10)
+	body.name = "StarterRocket2UnlockBody"
+	body.add_theme_constant_override("separation", 14)
 	panel.add_child(body)
 
-	var title = Label.new()
-	title.text = "Mission Milestone: Starter Rocket 2"
-	panel_style.apply_title(title)
-	body.add_child(title)
+	var eyebrow = Label.new()
+	eyebrow.name = "StarterRocket2UnlockEyebrow"
+	eyebrow.text = "MISSION REWARD  •  NEW SHIP UNLOCKED"
+	eyebrow.add_theme_color_override("font_color", Color(0.28, 0.88, 0.96, 1.0))
+	eyebrow.add_theme_font_size_override("font_size", 18 if compact else 20)
+	body.add_child(eyebrow)
+
+	var content = VBoxContainer.new() if stacked else HBoxContainer.new()
+	content.name = "StarterRocket2UnlockContent"
+	content.add_theme_constant_override("separation", 18)
+	body.add_child(content)
+
+	var icon_shell = PanelContainer.new()
+	icon_shell.name = "StarterRocket2UnlockIconShell"
+	icon_shell.custom_minimum_size = Vector2(200 if compact else 240, 220 if compact else 260)
+	icon_shell.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	PanelStyle.apply_panel(icon_shell, Color(0.08, 0.11, 0.16, 0.92))
+	content.add_child(icon_shell)
 
 	var icon = TextureRect.new()
+	icon.name = "StarterRocket2UnlockIcon"
 	icon.texture = RocketSpecs.get_icon_texture("starterrocket2")
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	icon.custom_minimum_size = Vector2(180, 180)
+	icon.custom_minimum_size = Vector2(160 if compact else 180, 190 if compact else 220)
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	body.add_child(icon)
+	icon_shell.add_child(icon)
+
+	var details = VBoxContainer.new()
+	details.name = "StarterRocket2UnlockDetails"
+	details.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	details.add_theme_constant_override("separation", 10)
+	content.add_child(details)
+
+	var title = Label.new()
+	title.name = "StarterRocket2UnlockTitle"
+	title.text = "Starter Rocket 2"
+	PanelStyle.apply_title(title)
+	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	details.add_child(title)
 
 	var summary = Label.new()
+	summary.name = "StarterRocket2UnlockSummary"
 	summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	summary.text = "Starter Rocket 2 is now available. It's faster, hits further, and carries a heavier load — your operational range just expanded significantly."
-	panel_style.apply_body(summary)
-	body.add_child(summary)
+	summary.text = "You proved the first route works. SR2 doubles your speed, stretches your operating radius to %.0f AU, and carries a bigger haul for the next belt run." % sr2_range
+	PanelStyle.apply_body(summary)
+	summary.add_theme_font_size_override("font_size", 24 if compact else 28)
+	details.add_child(summary)
 
-	var highlights = HBoxContainer.new()
+	var flavour = Label.new()
+	flavour.name = "StarterRocket2UnlockFlavour"
+	flavour.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	flavour.text = "Mission 2 is no longer out of reach. Build the upgrade, then push your operation deeper into the belt."
+	PanelStyle.apply_muted(flavour)
+	details.add_child(flavour)
+
+	var highlights = VBoxContainer.new()
+	highlights.name = "StarterRocket2UnlockHighlights"
 	highlights.add_theme_constant_override("separation", 8)
-	body.add_child(highlights)
-	for text in ["SPEED 2.0x", "RANGE 2.0x", "CARGO 1.5x"]:
+	details.add_child(highlights)
+	for text in [
+		"2x SPEED  •  Turn the next route around in half the time.",
+		"%.0f AU RANGE  •  Reach targets beyond SR1's %.0f AU ceiling." % [sr2_range, sr1_range],
+		"1.5x CARGO  •  Bring home a larger load every launch."
+	]:
 		var chip = PanelContainer.new()
 		chip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		panel_style.apply_panel(chip)
+		PanelStyle.apply_panel(chip, Color(0.08, 0.12, 0.20, 0.92))
 		var chip_label = Label.new()
+		chip_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		chip_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		chip_label.text = text
-		panel_style.apply_body(chip_label)
+		PanelStyle.apply_body(chip_label)
+		chip_label.add_theme_font_size_override("font_size", 20 if compact else 24)
 		chip.add_child(chip_label)
 		highlights.add_child(chip)
 
 	var stats = Label.new()
+	stats.name = "StarterRocket2UnlockStats"
 	stats.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	stats.text = "Mining Laser: 1.5x | Cost: 1.3B F | Salvage Refund: 20%"
-	panel_style.apply_muted(stats)
-	body.add_child(stats)
+	stats.text = "2x speed  •  2x range  •  1.5x cargo  •  Cost: 1.3B F"
+	PanelStyle.apply_muted(stats)
+	details.add_child(stats)
+
+	var footer = Label.new()
+	footer.name = "StarterRocket2UnlockFooter"
+	footer.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	footer.text = "Longer targets are now reachable. Open the launchpad to build SR2 and line up your next mission."
+	PanelStyle.apply_muted(footer)
+	details.add_child(footer)
 
 	var cta = Button.new()
-	cta.text = "View Rockets"
-	panel_style.apply_button(cta, true)
+	cta.name = "StarterRocket2UnlockCTA"
+	cta.text = "Plan Mission 2 with SR2"
+	PanelStyle.apply_button(cta, true)
 	cta.pressed.connect(func():
 		if is_instance_valid(overlay):
 			overlay.queue_free()
@@ -354,10 +431,13 @@ func _show_starterrocket2_unlock_popup() -> void:
 	)
 	body.add_child(cta)
 
-	var intro = create_tween()
-	intro.tween_property(overlay, "color:a", 0.68, 0.25)
-	intro.parallel().tween_property(panel, "modulate:a", 1.0, 0.28)
-	intro.parallel().tween_property(panel, "scale", Vector2(1.0, 1.0), 0.28).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	var intro_tween = create_tween()
+	intro_tween.tween_property(overlay, "color:a", 0.58, 0.22)
+	intro_tween.parallel().tween_property(intro, "modulate:a", 1.0, 0.22)
+	intro_tween.tween_interval(SR2_UNLOCK_INTRO_SECONDS)
+	intro_tween.tween_property(intro, "modulate:a", 0.28, 0.18)
+	intro_tween.parallel().tween_property(panel, "modulate:a", 1.0, 0.30)
+	intro_tween.parallel().tween_property(panel, "scale", Vector2(1.0, 1.0), 0.30).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	var pulse = create_tween()
 	pulse.set_loops()
 	pulse.tween_property(icon, "modulate:a", 0.78, 0.65).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
@@ -567,18 +647,38 @@ func _build_wordmark() -> void:
 	var ui_layer = get_node_or_null("UILayer")
 	if ui_layer == null:
 		return
+	var existing := ui_layer.get_node_or_null("PlanetHuntersWordmark") as Label
+	if existing:
+		_apply_wordmark_layout(existing)
+		return
 	var wordmark = Label.new()
 	wordmark.name = "PlanetHuntersWordmark"
 	wordmark.text = "PLANET HUNTERS"
-	wordmark.add_theme_font_size_override("font_size", 15)
 	wordmark.add_theme_color_override("font_color", Color(0.90, 0.87, 0.82, 0.45))
 	wordmark.set_anchors_preset(Control.PRESET_TOP_WIDE)
 	wordmark.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	# Position below the EARTH_WIDGET zone (FrancBalance at y=12-62) to avoid overlap
-	wordmark.offset_top = 66.0
-	wordmark.offset_bottom = 86.0
 	wordmark.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	ui_layer.add_child(wordmark)
+	_apply_wordmark_layout(wordmark)
+	if not get_viewport().size_changed.is_connected(_on_earth_base_viewport_resized):
+		get_viewport().size_changed.connect(_on_earth_base_viewport_resized)
+
+func _on_earth_base_viewport_resized() -> void:
+	var ui_layer = get_node_or_null("UILayer")
+	if ui_layer == null:
+		return
+	var wordmark := ui_layer.get_node_or_null("PlanetHuntersWordmark") as Label
+	if wordmark:
+		_apply_wordmark_layout(wordmark)
+
+func _apply_wordmark_layout(wordmark: Label) -> void:
+	var viewport := get_viewport_rect().size
+	var widget_rect := UILayout.zone(UILayout.Zone.EARTH_WIDGET, viewport)
+	wordmark.add_theme_font_size_override("font_size", 12 if viewport.x < 1200.0 else 15)
+	wordmark.offset_left = widget_rect.end.x + 16.0
+	wordmark.offset_right = -20.0
+	wordmark.offset_top = widget_rect.position.y + 2.0
+	wordmark.offset_bottom = widget_rect.end.y - 2.0
 
 func _build_ambient_stars() -> void:
 	var star_layer = CanvasLayer.new()

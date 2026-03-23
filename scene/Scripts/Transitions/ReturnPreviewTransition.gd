@@ -1,6 +1,6 @@
 extends Node3D
 
-const RETURN_DESTINATION := "res://Scenes/Earth/mission_debrief.tscn"
+const RETURN_DESTINATION := "res://Scenes/Earth/mission_debrief_v2.tscn"
 
 const TARGET_ORBIT_TIME := 2.5
 const TARGET_FADE_TIME := 2.5
@@ -160,7 +160,7 @@ func _apply_responsive_layout() -> void:
 	var compact = viewport.x < 1360.0 or viewport.y < 860.0
 	var edge_margin = 16.0
 	var left_panel_width = clamp(viewport.x * (0.34 if compact else 0.30), 300.0, 420.0)
-	var right_panel_width = clamp(viewport.x * (0.34 if compact else 0.30), 300.0, 420.0)
+	var right_panel_width = clamp(viewport.x * (0.30 if compact else 0.26), 420.0, 520.0)
 	# Safe area: compensate for Dynamic Island / notch and home indicator (landscape iPhone)
 	var safe_top = 90.0 if viewport.x / max(viewport.y, 1.0) > 1.85 else 0.0
 	var safe_bottom = 90.0 if viewport.x / max(viewport.y, 1.0) > 1.85 else 0.0
@@ -175,7 +175,9 @@ func _apply_responsive_layout() -> void:
 		travel_panel.offset_top = 96.0 + safe_top
 		travel_panel.offset_right = edge_margin + left_panel_width
 		travel_panel.offset_bottom = 216.0 + safe_top
+		travel_panel.custom_minimum_size.x = left_panel_width
 	if summary_panel:
+		summary_panel.custom_minimum_size.x = right_panel_width
 		summary_panel.anchor_left = 1.0
 		summary_panel.anchor_right = 1.0
 		summary_panel.anchor_top = 0.0
@@ -186,9 +188,11 @@ func _apply_responsive_layout() -> void:
 		summary_panel.offset_right = -edge_margin
 		summary_panel.offset_bottom = summary_top + (300.0 if compact else 360.0)
 	if control_panel:
+		control_panel.custom_minimum_size.x = right_panel_width
 		control_panel.offset_left = -edge_margin - right_panel_width
 		control_panel.offset_right = -edge_margin
 	if inventory_panel:
+		inventory_panel.custom_minimum_size.x = right_panel_width
 		inventory_panel.offset_left = -edge_margin - right_panel_width
 		inventory_panel.offset_right = -edge_margin
 	# Bottom nav buttons: clear home indicator

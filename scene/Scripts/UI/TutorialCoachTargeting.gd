@@ -38,7 +38,7 @@ static func navigation_hint_for_action(action_key: String) -> String:
 		"return_rocket_home":
 			return "→ Press Return Home"
 		"resolve_mission_debrief":
-			return "→ Complete the debrief when your rocket lands"
+			return "→ Sell your cargo then press Complete Mission"
 		"build_scanner_station":
 			return "→ Click the Scanner Station structure"
 		"scan_targets":
@@ -74,7 +74,7 @@ static func action_hint_for_step(action_key: String) -> String:
 		"return_rocket_home":
 			return "RETURN HOME button"
 		"resolve_mission_debrief":
-			return "Choose any enabled debrief action"
+			return "Complete Mission button"
 		"build_scanner_station":
 			return "Scanner Station structure"
 		"scan_targets":

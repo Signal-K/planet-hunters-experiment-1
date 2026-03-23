@@ -18,6 +18,7 @@ const LogbookSectionHeaderScene = preload("res://Scenes/UI/Templates/MenuLogbook
 const LogbookKeyValueRowScene = preload("res://Scenes/UI/Templates/MenuLogbookKeyValueRow.tscn")
 const AppLogger = preload("res://Scripts/Utils/Logger.gd")
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
+const UILayout = preload("res://Scripts/UI/UILayout.gd")
 const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
 const SubcontractorManager = preload("res://Scripts/Utils/SubcontractorManager.gd")
 const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd")
@@ -27,11 +28,13 @@ const NumberFormat = preload("res://Scripts/Utils/NumberFormat.gd")
 @onready var counter_label: Label = $PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/CounterCard/CounterContainer/CounterLabel
 @onready var decrease_btn: Button = $PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/CounterCard/CounterContainer/ButtonsContainer/DecreaseButton
 @onready var increase_btn: Button = $PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/CounterCard/CounterContainer/ButtonsContainer/IncreaseButton
-@onready var close_btn: Button = $PanelContainer/Panel/VBoxContainer/HeaderContainer/HeaderBackground/HeaderContent/CloseButton
-@onready var logbook_btn: Button = $PanelContainer/Panel/VBoxContainer/HeaderContainer/HeaderBackground/HeaderContent/LogbookButton
+@onready var close_btn: Button = $PanelContainer/Panel/VBoxContainer/HeaderContainer/HeaderBackground/HeaderContent/HeaderButtons/CloseButton
+@onready var logbook_btn: Button = $PanelContainer/Panel/VBoxContainer/HeaderContainer/HeaderBackground/HeaderContent/HeaderButtons/LogbookButton
 @onready var reset_btn: Button = $PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/ResetButton
 var debug_mining_btn: Button
 var debug_money_btn: Button
+var mission_jump_label: Label
+var mission_jump_row: HBoxContainer
 
 @onready var practice_mining_btn: Button = $PanelContainer/Panel/VBoxContainer/TabContainer/Settings/Content/PracticeMiningButton
 @onready var skip_tutorial_btn: Button = $PanelContainer/Panel/VBoxContainer/TabContainer/Settings/Content/SkipTutorialButton
@@ -45,7 +48,7 @@ var debug_money_btn: Button
 @onready var info_label: Label = $PanelContainer/Panel/VBoxContainer/TabContainer/Settings/Content/InfoLabel
 @onready var citizen_science_dialogue_btn: Button = $PanelContainer/Panel/VBoxContainer/TabContainer/Settings/Content/CitizenScienceDialogueButton
 @onready var logbook_overlay: ColorRect = $LogbookOverlay
-@onready var logbook_close_btn: Button = $LogbookOverlay/LogbookPanelContainer/LogbookPanel/VBoxContainer/Header/CloseLogbookButton
+@onready var logbook_close_btn: Button = $LogbookOverlay/LogbookPanelContainer/LogbookPanel/VBoxContainer/Header/HeaderButtons/CloseLogbookButton
 @onready var logbook_title: Label = $LogbookOverlay/LogbookPanelContainer/LogbookPanel/VBoxContainer/Header/Title
 @onready var logbook_entries: VBoxContainer = $LogbookOverlay/LogbookPanelContainer/LogbookPanel/VBoxContainer/LogbookScroll/Entries
 
@@ -62,6 +65,8 @@ func _ready() -> void:
 	$PanelContainer.mouse_filter = Control.MOUSE_FILTER_STOP
 	_setup_debug_buttons()
 	_apply_style()
+	_apply_layout()
+	get_viewport().size_changed.connect(_apply_layout)
 	# Connect button signals
 	close_btn.pressed.connect(_on_close_button_pressed)
 	logbook_btn.pressed.connect(_on_logbook_button_pressed)
@@ -114,6 +119,28 @@ func _apply_style() -> void:
 	PanelStyle.apply_button(logbook_close_btn, false)
 	PanelStyle.apply_separator($LogbookOverlay/LogbookPanelContainer/LogbookPanel/VBoxContainer/HSeparator)
 	$LogbookOverlay/LogbookPanelContainer/LogbookPanel/VBoxContainer/Subtitle.add_theme_color_override("font_color", PanelStyle.TEXT_MUTED)
+
+func _apply_layout() -> void:
+	var viewport := get_viewport().get_visible_rect().size
+	var safe := UILayout.safe_rect(viewport)
+	var panel_shell := $PanelContainer as Control
+	panel_shell.offset_left = safe.position.x + maxf(24.0, safe.size.x * 0.07)
+	panel_shell.offset_top = safe.position.y + maxf(24.0, safe.size.y * 0.05)
+	panel_shell.offset_right = -(viewport.x - safe.end.x + maxf(24.0, safe.size.x * 0.07))
+	panel_shell.offset_bottom = -(viewport.y - safe.end.y + maxf(24.0, safe.size.y * 0.05))
+
+	var title := $PanelContainer/Panel/VBoxContainer/HeaderContainer/HeaderBackground/HeaderContent/Title as Label
+	title.add_theme_font_size_override("font_size", 22 if viewport.x < 1200.0 else 26)
+
+	var logbook_shell := $LogbookOverlay/LogbookPanelContainer as Control
+	logbook_shell.offset_left = safe.position.x + maxf(40.0, safe.size.x * 0.08)
+	logbook_shell.offset_top = safe.position.y + maxf(30.0, safe.size.y * 0.08)
+	logbook_shell.offset_right = -(viewport.x - safe.end.x + maxf(40.0, safe.size.x * 0.08))
+	logbook_shell.offset_bottom = -(viewport.y - safe.end.y + maxf(30.0, safe.size.y * 0.08))
+	logbook_title.add_theme_font_size_override("font_size", 22 if viewport.x < 1200.0 else 26)
+
+	if mission_jump_row:
+		mission_jump_row.alignment = BoxContainer.ALIGNMENT_BEGIN if viewport.x < 1280.0 else BoxContainer.ALIGNMENT_CENTER
 
 func _unhandled_input(_event: InputEvent) -> void:
 	get_viewport().set_input_as_handled()
@@ -232,22 +259,24 @@ func _setup_debug_buttons() -> void:
 	container.move_child(debug_mining_btn, 0)
 	debug_mining_btn.pressed.connect(_on_debug_mining_pressed)
 	
-	var mission_label = Label.new()
-	mission_label.text = "JUMP TO MISSION:"
-	container.add_child(mission_label)
-	container.move_child(mission_label, 1)
+	mission_jump_label = Label.new()
+	mission_jump_label.text = "JUMP TO MISSION:"
+	container.add_child(mission_jump_label)
+	container.move_child(mission_jump_label, 1)
 	
-	var h_box = HBoxContainer.new()
-	h_box.alignment = BoxContainer.ALIGNMENT_CENTER
-	container.add_child(h_box)
-	container.move_child(h_box, 2)
+	mission_jump_row = HBoxContainer.new()
+	mission_jump_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	mission_jump_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	mission_jump_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	container.add_child(mission_jump_row)
+	container.move_child(mission_jump_row, 2)
 	
 	for i in range(1, 6):
 		var btn = Button.new()
 		btn.text = "M%d" % i
 		btn.custom_minimum_size = Vector2(60, 40)
 		btn.pressed.connect(func(): _on_jump_to_mission(i))
-		h_box.add_child(btn)
+		mission_jump_row.add_child(btn)
 		PanelStyle.apply_button(btn, false)
 	
 	debug_money_btn = Button.new()

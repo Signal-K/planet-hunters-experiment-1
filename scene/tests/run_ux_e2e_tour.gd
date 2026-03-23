@@ -634,8 +634,16 @@ func _run_tour() -> void:
 			mining.call(
 				"start_mining",
 				false, 1, "ux-tour-warmup",
-				{"Iron": 8, "Nickel": 5, "Cobalt": 2},
-				0.78, {}
+				{"Iron": 8, "Nickel": 5, "Cobalt": 2, "Silicate": 4},
+				0.78,
+				{
+					"starter_contract": {
+						"active": true,
+						"name": "Axiom Mining Co.",
+						"requested_minerals": {"Iron": 4, "Nickel": 3, "Silicate": 2}
+					},
+					"mission_mode": "contractor"
+				}
 			)
 			await get_tree().create_timer(SCENE_SETTLE).timeout
 			_meta("Phase 14 - Mining Minigame (initial terrain)", 1,
@@ -653,11 +661,11 @@ func _run_tour() -> void:
 				sidescroll = mining.get_node_or_null("SidescrollMiningCompat")
 			if sidescroll:
 				_report("  - SidescrollMining delegate found. ✓")
-				for hud_name in ["FuelBar", "HeatBar", "BeamBar", "ScoreLabel"]:
+				for hud_name in ["FuelBar", "HeatBar", "BeamBar", "OrderLabel"]:
 					if _find_node_by_name(sidescroll, hud_name):
 						_report("    • %s present. ✓" % hud_name)
 					else:
-						_issue("Mining HUD missing '%s' — players can't track resource state." % hud_name)
+						_issue("Mining HUD missing '%s' — players can't track delivery order progress." % hud_name)
 				sidescroll.set("_is_mining", true)
 				await get_tree().create_timer(4.0).timeout
 				
@@ -946,7 +954,7 @@ func _collect_visible_controls(root: Node, out: Array) -> void:
 		return
 	if root is Control:
 		var ctrl := root as Control
-		if ctrl.visible and ctrl.size.x > 2 and ctrl.size.y > 2:
+		if ctrl.is_visible_in_tree() and ctrl.size.x > 2 and ctrl.size.y > 2:
 			out.append(ctrl)
 	for child in root.get_children():
 		_collect_visible_controls(child, out)
