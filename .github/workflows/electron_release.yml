@@ -178,9 +178,13 @@ jobs:
           timeout 90s "$GODOT_EDITOR" --headless --path . --import --quit || true
           echo "✓ Project imported"
 
+      - name: Install Xvfb
+        shell: bash
+        run: sudo apt-get install -y xvfb
+
       - name: Export Godot desktop web assets
         shell: bash
-        run: npm run godot:export:desktop
+        run: xvfb-run --auto-servernum npm run godot:export:desktop
 
       - name: Upload Godot web export (preview)
         uses: actions/upload-artifact@v4
@@ -265,9 +269,21 @@ jobs:
           test -f "$TEMPLATE_DIR/web_nothreads_release.zip"
           test -f "$TEMPLATE_DIR/web_nothreads_debug.zip"
 
+      - name: Import Godot project
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd scene
+          timeout 90s "$GODOT_EDITOR" --headless --path . --import --quit || true
+          echo "✓ Project imported"
+
+      - name: Install Xvfb
+        shell: bash
+        run: sudo apt-get install -y xvfb
+
       - name: Export Godot desktop web assets
         shell: bash
-        run: npm run godot:export:desktop
+        run: xvfb-run --auto-servernum npm run godot:export:desktop
 
       - name: Upload Godot web export
         uses: actions/upload-artifact@v4
