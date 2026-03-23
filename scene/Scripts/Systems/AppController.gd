@@ -252,12 +252,28 @@ func _set_tutorial_overlay_suspended(suspended: bool) -> void:
 		overlay.call_deferred("_refresh")
 
 func _show_intro_splash_if_needed() -> void:
-	# Splash removed — start directly in-game. Mark flag so it stays gone.
-	if not FileAccess.file_exists(INTRO_SPLASH_FLAG_PATH):
-		var f = FileAccess.open(INTRO_SPLASH_FLAG_PATH, FileAccess.WRITE)
-		if f:
-			f.store_string("1")
-	_set_tutorial_overlay_suspended(false)
+	# Skip if we've already shown it this browser (file flag written on first dismiss).
+	if FileAccess.file_exists(INTRO_SPLASH_FLAG_PATH):
+		_set_tutorial_overlay_suspended(false)
+		return
+	# Skip for returning users: if localStorage holds saved XP state the player
+	# has already played in this browser, even if IndexedDB was cleared.
+	if OS.has_feature("web"):
+		var xp_raw = JavaScriptBridge.eval(
+			"(function(){try{return window.localStorage.getItem('planet_hunters_xp_state_v1')||'';}catch(_e){return '';}})()",
+			true
+		)
+		if xp_raw != null and str(xp_raw) != "":
+			# Returning user — write the flag so we never check again, then skip.
+			var f = FileAccess.open(INTRO_SPLASH_FLAG_PATH, FileAccess.WRITE)
+			if f:
+				f.store_string("1")
+			_set_tutorial_overlay_suspended(false)
+			return
+	# New user — show the splash; unsuspend tutorial after player dismisses it.
+	var splash = INTRO_SPLASH_SCRIPT.new()
+	get_tree().root.call_deferred("add_child", splash)
+	splash.splash_dismissed.connect(func(): _set_tutorial_overlay_suspended(false), CONNECT_ONE_SHOT)
 
 func _mark_tutorial_zone_exempt_recursive(node: Node) -> void:
 	if node == null:

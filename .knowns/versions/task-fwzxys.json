@@ -1,0 +1,130 @@
+{
+  "taskId": "fwzxys",
+  "currentVersion": 3,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "fwzxys",
+      "version": 1,
+      "timestamp": "2026-03-23T00:48:49.657938325Z",
+      "author": "@Liam",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": null,
+          "newValue": "todo"
+        },
+        {
+          "field": "priority",
+          "oldValue": null,
+          "newValue": "high"
+        }
+      ],
+      "snapshot": {
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Return-visit survey only fires after 30s+ of active gameplay"
+          },
+          {
+            "completed": false,
+            "text": "No survey fires within first 10s of page load"
+          },
+          {
+            "completed": false,
+            "text": "Mechanic-specific surveys only fire after those mechanics are used"
+          }
+        ],
+        "assignee": "@Liam",
+        "description": "Surveys appear too early. Return-visit survey fires 3s after load on 2nd session regardless of game state. Need to gate all surveys behind actual gameplay engagement and increase minimum delay.",
+        "labels": [
+          "surveys,ux,mobile"
+        ],
+        "priority": "high",
+        "status": "todo",
+        "title": "Fix survey triggers: gate surveys behind mechanic use"
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "fwzxys",
+      "version": 2,
+      "timestamp": "2026-03-23T00:51:04.976400558Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        },
+        {
+          "field": "implementationNotes",
+          "oldValue": null,
+          "newValue": "Added _gameEngagementTs flag set on first game message. maybeTriggerMicroSurvey and maybeTriggerFirstMissionSurvey both gate on 30s engagement. maybeShowReturnVisitSurvey now checks every 15s starting at 30s (not 3s). Removed early setTimeout."
+        }
+      ],
+      "snapshot": {
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Return-visit survey only fires after 30s+ of active gameplay"
+          },
+          {
+            "completed": true,
+            "text": "No survey fires within first 10s of page load"
+          },
+          {
+            "completed": true,
+            "text": "Mechanic-specific surveys only fire after those mechanics are used"
+          }
+        ],
+        "assignee": "@Liam",
+        "description": "Surveys appear too early. Return-visit survey fires 3s after load on 2nd session regardless of game state. Need to gate all surveys behind actual gameplay engagement and increase minimum delay.",
+        "implementationNotes": "Added _gameEngagementTs flag set on first game message. maybeTriggerMicroSurvey and maybeTriggerFirstMissionSurvey both gate on 30s engagement. maybeShowReturnVisitSurvey now checks every 15s starting at 30s (not 3s). Removed early setTimeout.",
+        "labels": [
+          "surveys,ux,mobile"
+        ],
+        "priority": "high",
+        "status": "done",
+        "title": "Fix survey triggers: gate surveys behind mechanic use"
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "fwzxys",
+      "version": 3,
+      "timestamp": "2026-03-23T00:57:24.356528454Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "Added _gameEngagementTs flag set on first game message. maybeTriggerMicroSurvey and maybeTriggerFirstMissionSurvey both gate on 30s engagement. maybeShowReturnVisitSurvey now checks every 15s starting at 30s (not 3s). Removed early setTimeout.",
+          "newValue": "Added _gameEngagementTs flag set on first game message. maybeTriggerMicroSurvey and maybeTriggerFirstMissionSurvey both gate on 30s engagement. maybeShowReturnVisitSurvey now checks every 15s starting at 30s (not 3s). Removed early setTimeout.\nRefined: removed broad 30s timer gate entirely. Return-visit survey now uses _pendingReturnVisitSurvey flag set on 2nd session load; fires only when a completion event fires (rocket_landed, mining_run_completed, contractor_signed, mission_debrief_resolved, scanner_scan_completed). All other surveys already event-gated."
+        }
+      ],
+      "snapshot": {
+        "acceptanceCriteria": [
+          {
+            "text": "Return-visit survey only fires after 30s+ of active gameplay",
+            "completed": true
+          },
+          {
+            "text": "No survey fires within first 10s of page load",
+            "completed": true
+          },
+          {
+            "text": "Mechanic-specific surveys only fire after those mechanics are used",
+            "completed": true
+          }
+        ],
+        "assignee": "@Liam",
+        "description": "Surveys appear too early. Return-visit survey fires 3s after load on 2nd session regardless of game state. Need to gate all surveys behind actual gameplay engagement and increase minimum delay.",
+        "implementationNotes": "Added _gameEngagementTs flag set on first game message. maybeTriggerMicroSurvey and maybeTriggerFirstMissionSurvey both gate on 30s engagement. maybeShowReturnVisitSurvey now checks every 15s starting at 30s (not 3s). Removed early setTimeout.\nRefined: removed broad 30s timer gate entirely. Return-visit survey now uses _pendingReturnVisitSurvey flag set on 2nd session load; fires only when a completion event fires (rocket_landed, mining_run_completed, contractor_signed, mission_debrief_resolved, scanner_scan_completed). All other surveys already event-gated.",
+        "labels": [
+          "surveys,ux,mobile"
+        ],
+        "priority": "high",
+        "status": "done",
+        "title": "Fix survey triggers: gate surveys behind mechanic use"
+      }
+    }
+  ]
+}

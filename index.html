@@ -9,6 +9,9 @@
     <meta name="apple-mobile-web-app-title" content="Star Sailors" />
     <link rel="manifest" href="/manifest.json" />
     <link rel="apple-touch-icon" href="/game/index.apple-touch-icon.png" />
+    <!-- Preconnect to external module CDN used by react-shell.js -->
+    <link rel="preconnect" href="https://esm.sh" crossorigin />
+    <link rel="dns-prefetch" href="https://us.i.posthog.com" />
     <title>Star Sailors: Experiment 1</title>
     <style>
       :root {
@@ -62,10 +65,9 @@
     <script defer src="/_vercel/insights/script.js"></script>
     <script type="module" src="/react-shell.js"></script>
     <script>
+      // Register SW immediately — don't wait for load so the cache activates faster
       if ("serviceWorker" in navigator) {
-        window.addEventListener("load", function () {
-          navigator.serviceWorker.register("/sw.js").catch(console.error);
-        });
+        navigator.serviceWorker.register("/sw.js").catch(console.error);
       }
     </script>
   </body>
