@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "builds": [
+    { "src": "api/index.go", "use": "@vercel/go" },
+    { "src": "public/**", "use": "@vercel/static" }
+  ],
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/index" },
+    {
+      "src": "/sw.js",
+      "headers": { "cache-control": "no-cache, no-store", "service-worker-allowed": "/" },
+      "dest": "/public/sw.js"
+    },
+    { "src": "/manifest.json", "dest": "/public/manifest.json" },
+    { "src": "/(.*\\.(js|css|png|ico|svg|webmanifest))", "dest": "/public/$1" },
+    { "src": "/(.*)", "dest": "/public/index.html" }
+  ]
+}
