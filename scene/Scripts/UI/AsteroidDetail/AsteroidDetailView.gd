@@ -77,7 +77,7 @@ func _ready():
 		asteroid_image,
 		loading_label,
 		info_label,
-		get_parent(),
+		content_container,
 		ANIMATION_DURATION,
 		Callable(self, "_show_error")
 	)

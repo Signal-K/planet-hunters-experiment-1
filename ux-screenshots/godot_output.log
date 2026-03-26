@@ -1,25 +1,7 @@
-ERROR: Condition "!FileAccess::exists(path)" is true. Returning: ERR_FILE_NOT_FOUND
-   at: open_dynamic_library (drivers/unix/os_unix.cpp:1057)
-ERROR: GDExtension dynamic library not found: 'res://addons/ziva_agent/ziva_agent.gdextension'.
-   at: open_library (core/extension/gdextension.cpp:727)
-ERROR: Error loading extension: 'res://addons/ziva_agent/ziva_agent.gdextension'.
-   at: load_extensions (core/extension/gdextension_manager.cpp:321)
 Godot Engine v4.5.stable.official.876b29033 - https://godotengine.org
 WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
      at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:364)
 OpenGL API 3.3 (Core Profile) Mesa 23.2.1-1ubuntu3.1~22.04.3 - Compatibility - Using Device: Mesa - softpipe
-ALSA lib confmisc.c:855:(parse_card) cannot find card '0'
-ALSA lib conf.c:5178:(_snd_config_evaluate) function snd_func_card_inum returned error: No such file or directory
-ALSA lib confmisc.c:422:(snd_func_concat) error evaluating strings
-ALSA lib conf.c:5178:(_snd_config_evaluate) function snd_func_concat returned error: No such file or directory
-ALSA lib confmisc.c:1334:(snd_func_refer) error evaluating name
-ALSA lib conf.c:5178:(_snd_config_evaluate) function snd_func_refer returned error: No such file or directory
-ALSA lib conf.c:5701:(snd_config_expand) Evaluate error: No such file or directory
-ALSA lib pcm.c:2664:(snd_pcm_open_noupdate) Unknown PCM default
-ERROR: Condition "status < 0" is true. Returning: ERR_CANT_OPEN
-   at: init_output_device (drivers/alsa/audio_driver_alsa.cpp:90)
-WARNING: All audio drivers failed, falling back to the dummy driver.
-     at: initialize (servers/audio_server.cpp:244)
 
 [AppController] No saved franc balance config (or failed to load): 7
 [AppController] No saved experience config (or failed to load): 7
@@ -43,29 +25,31 @@ FrancBalance: Add button connected
 FrancBalance: Sub button connected
 FrancBalance: Setup complete
 [UX_TOUR]   - Scene loaded, waiting for settle (2 s)...
-[WARN] Launchpad: LaunchButton not found when attempting to connect
 [UX_TOUR]   - Taking first screenshot: 01_startup_intro_splash
+[UX_TOUR]   📸 01_01_startup_intro_splash.png
 [UX_TOUR]   - First screenshot taken.
 [UX_TOUR]   - Searching for IntroSplash...
 [UX_TOUR]   - Intro splash not found (expected: splash was removed from AppController).
 [UX_TOUR]   - Searching for Begin Mission button anywhere...
 [UX_TOUR]   - Begin Mission button not found, proceeding directly.
 [UX_TOUR]   - Taking second screenshot: 02_after_splash_dismissed
+[UX_TOUR]   📸 02_02_after_splash_dismissed.png
 [UX_TOUR]   - Second screenshot taken.
 [UX_TOUR] ## Phase 2 — Earth Base (Mission 1 state)
-[UX_TOUR]   📸 01_01_startup_intro_splash.png
-[UX_TOUR]   📸 02_02_after_splash_dismissed.png
+[UX_TOUR]   📸 03_03_earth_base_m1_overview.png
 [UX_TOUR]   - MenuButton present. ✓
 [UX_TOUR]   - ForwardButton present. ✓
 [UX_TOUR]   - BackButton present. ✓
 [UX_TOUR]   - FrancBalance HUD present. ✓
-WARNING: [UX_TOUR] ISSUE: Tutorial coach overlay not visible on first visit — new users may not know what to do.
-     at: push_warning (core/variant/variant_utility.cpp:1034)
-     GDScript backtrace (most recent call first):
-         [0] _issue (res://tests/run_ux_e2e_tour.gd:1171)
-         [1] _run_tour (res://tests/run_ux_e2e_tour.gd:217)
+[UX_TOUR]   - Tutorial coach overlay visible. ✓
+[UX_TOUR]   📸 04_04_tutorial_coach_m1_step1.png
+[UX_TOUR]   - Tutorial overlay has 5 non-empty text labels.
+[UX_TOUR]     • "Base Tour"
+[UX_TOUR]     • "Mission 1"
+[UX_TOUR]     • "Navigate to continue your mission."
+[UX_TOUR]     • "Open Control Station on the base."
+[UX_TOUR]     • "Step 1/10"
 [UX_TOUR] ## Phase 2b — Mission Stage Progression Snapshots
-[UX_TOUR]   📸 03_03_earth_base_m1_overview.png
 Satellite Station initialized: Scanner Station
 Control Station initialized: Control Station
 FrancBalance: _ready called
@@ -76,10 +60,8 @@ FrancBalance: Balance button connected
 FrancBalance: Add button connected
 FrancBalance: Sub button connected
 FrancBalance: Setup complete
-[WARN] Launchpad: LaunchButton not found when attempting to connect
-[UX_TOUR]   📸 04_stage2_earth_base.png
-LaunchpadScene: instanced LaunchHUD
-[UX_TOUR]   📸 05_stage2_launchpad.png
+[UX_TOUR]   📸 05_stage2_earth_base.png
+[UX_TOUR]   📸 06_stage2_launchpad.png
 Satellite Station initialized: Scanner Station
 Control Station initialized: Control Station
 FrancBalance: _ready called
@@ -90,9 +72,8 @@ FrancBalance: Balance button connected
 FrancBalance: Add button connected
 FrancBalance: Sub button connected
 FrancBalance: Setup complete
-[UX_TOUR]   📸 06_stage3_earth_base.png
-LaunchpadScene: LaunchHUD already present, skipping instancing
-[UX_TOUR]   📸 07_stage3_launchpad.png
+[UX_TOUR]   📸 07_stage3_earth_base.png
+[UX_TOUR]   📸 08_stage3_launchpad.png
 Satellite Station initialized: Scanner Station
 Control Station initialized: Control Station
 FrancBalance: _ready called
@@ -103,9 +84,8 @@ FrancBalance: Balance button connected
 FrancBalance: Add button connected
 FrancBalance: Sub button connected
 FrancBalance: Setup complete
-[UX_TOUR]   📸 08_stage4_earth_base.png
-LaunchpadScene: LaunchHUD already present, skipping instancing
-[UX_TOUR]   📸 09_stage4_launchpad.png
+[UX_TOUR]   📸 09_stage4_earth_base.png
+[UX_TOUR]   📸 10_stage4_launchpad.png
 Satellite Station initialized: Scanner Station
 Control Station initialized: Control Station
 FrancBalance: _ready called
@@ -116,24 +96,23 @@ FrancBalance: Balance button connected
 FrancBalance: Add button connected
 FrancBalance: Sub button connected
 FrancBalance: Setup complete
-[UX_TOUR]   📸 10_stage5_earth_base.png
-LaunchpadScene: LaunchHUD already present, skipping instancing
+[UX_TOUR]   📸 11_stage5_earth_base.png
+[UX_TOUR]   📸 12_stage5_launchpad.png
 [UX_TOUR] ## Phase 3 — Menu Panel
-[UX_TOUR]   📸 11_stage5_launchpad.png
 WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
 If you want to set size, change the anchors or consider using set_deferred().
      at: _set_size (scene/gui/control.cpp:1476)
      GDScript backtrace (most recent call first):
          [0] _load_scene (res://tests/run_ux_e2e_tour.gd:100)
+[UX_TOUR]   📸 13_05_menu_panel.png
 [UX_TOUR]   - 'Menu Panel' shows 34 visible text elements. ✓
 [UX_TOUR]   - Menu Panel has a close/dismiss button. ✓
 [UX_TOUR] ## Phase 4 — Tutorial Coach Overlay
-[UX_TOUR]   📸 12_05_menu_panel.png
+[UX_TOUR]   📸 14_06_tutorial_coach_overlay.png
 [UX_TOUR]   - 'Tutorial Coach Overlay' shows 2 visible text elements. ✓
 [UX_TOUR]   - TitleLabel node present. ✓
 [UX_TOUR]   - Message/ActionLabel present. ✓
 [UX_TOUR] ## Phase 5 — Control Station Panel
-[UX_TOUR]   📸 13_06_tutorial_coach_overlay.png
 RocketsManager: get_detected_targets -> count=0
 [ControlStation] Active missions count: 0
 WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
@@ -141,15 +120,15 @@ If you want to set size, change the anchors or consider using set_deferred().
      at: _set_size (scene/gui/control.cpp:1476)
      GDScript backtrace (most recent call first):
          [0] _load_scene (res://tests/run_ux_e2e_tour.gd:100)
+[UX_TOUR]   📸 15_07_control_station_panel.png
 [UX_TOUR]   - 'Control Station Panel' shows 2 visible text elements. ✓
 [UX_TOUR]   - Control Station Panel has a close button. ✓
 [UX_TOUR] ## Phase 5b — Space Map
-[UX_TOUR]   📸 14_07_control_station_panel.png
 RocketsManager: get_detected_targets -> count=0
+[UX_TOUR]   📸 16_08_space_map.png
 [UX_TOUR]   - 'Space Map' shows 1 visible text elements. ✓
 [UX_TOUR]   - Space Map has a back/close button. ✓
 [UX_TOUR] ## Phase 6 — Satellite Station Panel
-[UX_TOUR]   📸 15_08_space_map.png
 SupabaseClient: credentials_source=runtime-config url=https://hlufptwhzkpkkjztimzo.supabase.co
 SupabaseClient: resolved SUPABASE_URL=https://hlufptwhzkpkkjztimzo.supabase.co key_present=true
 WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
@@ -157,46 +136,43 @@ If you want to set size, change the anchors or consider using set_deferred().
      at: _set_size (scene/gui/control.cpp:1476)
      GDScript backtrace (most recent call first):
          [0] _load_scene (res://tests/run_ux_e2e_tour.gd:100)
+[AppController] Experience saved: xp=2 level=1
+[UX_TOUR]   📸 17_09_satellite_station_panel.png
 [UX_TOUR]   - 'Satellite Station Panel' shows 5 visible text elements. ✓
 [UX_TOUR]   - Satellite Station Panel has a scan/refresh button. ✓
 [UX_TOUR] ## Phase 7 — Launchpad Panel
-SCRIPT ERROR: Attempt to call function 'null::_on_anomalies_fetched (Callable)' on a null instance.
-          at: <anonymous lambda> (res://Scripts/Systems/SupabaseClient.gd:171)
-          GDScript backtrace (most recent call first):
-              [0] <anonymous lambda> (res://Scripts/Systems/SupabaseClient.gd:171)
-[UX_TOUR]   📸 16_09_satellite_station_panel.png
 WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
 If you want to set size, change the anchors or consider using set_deferred().
      at: _set_size (scene/gui/control.cpp:1476)
      GDScript backtrace (most recent call first):
          [0] _load_scene (res://tests/run_ux_e2e_tour.gd:100)
+[UX_TOUR]   📸 18_10_launchpad_panel.png
 [UX_TOUR]   - 'Launch Facility' title visible. ✓
 [UX_TOUR]   - Close (✕) button present. ✓
 [UX_TOUR] ## Phase 8 — Subcontractors / Contractors Panel
-[UX_TOUR]   📸 17_10_launchpad_panel.png
 JSONFileManager: Successfully saved data to: user://subcontractors.json
 WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
 If you want to set size, change the anchors or consider using set_deferred().
      at: _set_size (scene/gui/control.cpp:1476)
      GDScript backtrace (most recent call first):
          [0] _load_scene (res://tests/run_ux_e2e_tour.gd:100)
+[UX_TOUR]   📸 19_11_subcontractors_panel.png
 [UX_TOUR]   - 'Subcontractors' heading visible. ✓
 [UX_TOUR]   - Subcontractors Panel has progression explanation. ✓
 [UX_TOUR]   - Close button present. ✓
 [UX_TOUR] ## Phase 9 — New Mission Panel (target selection)
-[UX_TOUR]   📸 18_11_subcontractors_panel.png
 RocketsManager: get_detected_targets -> count=0
 WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
 If you want to set size, change the anchors or consider using set_deferred().
      at: _set_size (scene/gui/control.cpp:1476)
      GDScript backtrace (most recent call first):
          [0] _load_scene (res://tests/run_ux_e2e_tour.gd:100)
+[UX_TOUR]   📸 20_12_new_mission_panel.png
 [UX_TOUR]   - 'New Mission' heading visible. ✓
 [UX_TOUR]   - 'Select Rocket' button visible. ✓
 [UX_TOUR]   - Close button present. ✓
 [UX_TOUR]   - AnomalyList present but empty (CI / no Supabase — expected).
 [UX_TOUR] ## Phase 10 — Rocket Selector
-[UX_TOUR]   📸 19_12_new_mission_panel.png
 WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
 If you want to set size, change the anchors or consider using set_deferred().
      at: _set_size (scene/gui/control.cpp:1476)
@@ -209,12 +185,12 @@ If you want to set size, change the anchors or consider using set_deferred().
      at: _set_size (scene/gui/control.cpp:1476)
      GDScript backtrace (most recent call first):
          [0] _load_scene (res://tests/run_ux_e2e_tour.gd:100)
+[UX_TOUR]   📸 21_13_rocket_selector.png
 [UX_TOUR]   - 'Rocket Selector' shows 4 visible text elements. ✓
 [UX_TOUR] ## Phase 11 — Rocket Ascent
-[UX_TOUR]   📸 20_13_rocket_selector.png
+[UX_TOUR]   📸 22_14_rocket_ascent.png
 [UX_TOUR]   - 'Rocket Ascent' shows 0 visible text elements. ✓
 [UX_TOUR] ## Phase 12 — Rocket Transit
-[UX_TOUR]   📸 21_14_rocket_ascent.png
 ERROR: Condition "p_style.is_null()" is true.
    at: add_theme_style_override (scene/gui/control.cpp:3312)
    GDScript backtrace (most recent call first):
@@ -224,12 +200,12 @@ ERROR: Condition "p_style.is_null()" is true.
    GDScript backtrace (most recent call first):
        [0] _load_scene (res://tests/run_ux_e2e_tour.gd:91)
 RocketsManager: get_detected_targets -> count=0
+[UX_TOUR]   📸 23_15_rocket_transit_initial.png
 [UX_TOUR]   - Transit target/status label present. ✓
 [UX_TOUR]   - TravelBar present. ✓
-[UX_TOUR]   📸 22_15_rocket_transit_initial.png
+[UX_TOUR]   📸 24_16_rocket_transit_midway.png
 [UX_TOUR]   - Transit has a back/skip button. ✓
 [UX_TOUR] ## Phase 13 — Mining Practice Panel
-[UX_TOUR]   📸 23_16_rocket_transit_midway.png
 MiningPracticePanel: no rocket in play, auto-starting warm-up drill
 JSONFileManager: Successfully saved data to: user://rockets_state.json
 JSONFileManager: Successfully saved data to: res://rockets_state.json
@@ -238,61 +214,73 @@ If you want to set size, change the anchors or consider using set_deferred().
      at: _set_size (scene/gui/control.cpp:1476)
      GDScript backtrace (most recent call first):
          [0] _load_scene (res://tests/run_ux_e2e_tour.gd:100)
-[UX_TOUR]   - 'Mining Practice Panel' shows 15 visible text elements. ✓
-[UX_TOUR]   - Mining Practice Panel has 6 visible buttons. ✓
+[UX_TOUR]   📸 25_17_mining_practice_panel.png
+[UX_TOUR]   - 'Mining Practice Panel' shows 14 visible text elements. ✓
+[UX_TOUR]   - Mining Practice Panel has 7 visible buttons. ✓
 [UX_TOUR] ## Phase 14 — Mining Minigame (12 s run)
-[UX_TOUR]   📸 24_17_mining_practice_panel.png
 WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
 If you want to set size, change the anchors or consider using set_deferred().
      at: _set_size (scene/gui/control.cpp:1476)
      GDScript backtrace (most recent call first):
          [0] _load_scene (res://tests/run_ux_e2e_tour.gd:100)
+[UX_TOUR]   📸 26_18_mining_initial_terrain.png
 [UX_TOUR]   - SidescrollMining delegate found. ✓
 [UX_TOUR]     • FuelBar present. ✓
 [UX_TOUR]     • HeatBar present. ✓
 [UX_TOUR]     • BeamBar present. ✓
-[UX_TOUR]     • ScoreLabel present. ✓
-[UX_TOUR]   📸 25_18_mining_initial_terrain.png
+[UX_TOUR]     • OrderLabel present. ✓
 [UX_TOUR]   - Testing Drone mechanic (Mission 4+)...
-[UX_TOUR]   📸 26_19b_mining_drone_deployed.png
-[UX_TOUR]   📸 27_19_mining_beam_active.png
+[UX_TOUR]   📸 27_19b_mining_drone_deployed.png
+[UX_TOUR]   📸 28_19_mining_beam_active.png
+[UX_TOUR]   📸 29_20_mining_mid_run.png
 [UX_TOUR]   - Checking Mining Inventory panel...
-[UX_TOUR]   📸 28_20_mining_mid_run.png
-[UX_TOUR]   📸 29_20b_mining_inventory_overlay.png
-[UX_TOUR]   - RETURN button present. ✓
-[UX_TOUR] ## Phase 15 — Rocket Return
-[UX_TOUR]   📸 30_21_mining_beam_released.png
-ERROR: Condition "p_style.is_null()" is true.
-   at: add_theme_style_override (scene/gui/control.cpp:3312)
-   GDScript backtrace (most recent call first):
-       [0] _load_scene (res://tests/run_ux_e2e_tour.gd:91)
-ERROR: Condition "p_style.is_null()" is true.
-   at: add_theme_style_override (scene/gui/control.cpp:3312)
-   GDScript backtrace (most recent call first):
-       [0] _load_scene (res://tests/run_ux_e2e_tour.gd:91)
-[UX_TOUR] ## Phase 16 — Mission Debrief
-[UX_TOUR]   📸 31_22_rocket_return.png
-ERROR: Cannot open file 'res://Scenes/Earth/mission_debrief.tscn'.
-   at: load (scene/resources/resource_format_text.cpp:1387)
-   GDScript backtrace (most recent call first):
-       [0] _load_scene (res://tests/run_ux_e2e_tour.gd:87)
-ERROR: Failed loading resource: res://Scenes/Earth/mission_debrief.tscn.
-   at: _load (core/io/resource_loader.cpp:343)
-   GDScript backtrace (most recent call first):
-       [0] _load_scene (res://tests/run_ux_e2e_tour.gd:87)
-WARNING: [UX_TOUR] ISSUE: CRITICAL: Could not load scene: res://Scenes/Earth/mission_debrief.tscn
+[UX_TOUR]   📸 30_20b_mining_inventory_overlay.png
+[UX_TOUR]   📸 31_21_mining_beam_released.png
+WARNING: [UX_TOUR] ISSUE: UI OVERLAP: Label 'Level 1 Target' overlaps Button 'RETURN' in Mining Minigame
      at: push_warning (core/variant/variant_utility.cpp:1034)
      GDScript backtrace (most recent call first):
-         [0] _issue (res://tests/run_ux_e2e_tour.gd:1171)
-         [1] _load_scene (res://tests/run_ux_e2e_tour.gd:89)
+         [0] _issue (res://tests/run_ux_e2e_tour.gd:1179)
+         [1] _check_label_button_overlaps (res://tests/run_ux_e2e_tour.gd:1031)
+         [2] _run_tour (res://tests/run_ux_e2e_tour.gd:724)
+         [3] _screenshot (res://tests/run_ux_e2e_tour.gd:1159)
+[UX_TOUR]   - RETURN button present. ✓
+[UX_TOUR] ## Phase 15 — Rocket Return
+JSONFileManager: File does not exist: user://mining_inventory.json
+[UX_TOUR]   📸 32_22_rocket_return.png
+[UX_TOUR] ## Phase 16 — Mission Debrief
+RocketsManager: get_detected_targets -> count=0
+JSONFileManager: File does not exist: user://mission_logs.json
+WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
+If you want to set size, change the anchors or consider using set_deferred().
+     at: _set_size (scene/gui/control.cpp:1476)
+     GDScript backtrace (most recent call first):
+         [0] _load_scene (res://tests/run_ux_e2e_tour.gd:100)
+[UX_TOUR]   📸 33_23_mission_debrief.png
+WARNING: [UX_TOUR] ISSUE: Debrief scene missing Title label node.
+     at: push_warning (core/variant/variant_utility.cpp:1034)
+     GDScript backtrace (most recent call first):
+         [0] _issue (res://tests/run_ux_e2e_tour.gd:1179)
+         [1] _run_tour (res://tests/run_ux_e2e_tour.gd:788)
+         [2] _screenshot (res://tests/run_ux_e2e_tour.gd:1159)
+WARNING: [UX_TOUR] ISSUE: Debrief scene missing CompleteButton — primary action not visible.
+     at: push_warning (core/variant/variant_utility.cpp:1034)
+     GDScript backtrace (most recent call first):
+         [0] _issue (res://tests/run_ux_e2e_tour.gd:1179)
+         [1] _run_tour (res://tests/run_ux_e2e_tour.gd:793)
+         [2] _screenshot (res://tests/run_ux_e2e_tour.gd:1159)
+WARNING: [UX_TOUR] ISSUE: Debrief scene missing OrbitButton — secondary action not visible.
+     at: push_warning (core/variant/variant_utility.cpp:1034)
+     GDScript backtrace (most recent call first):
+         [0] _issue (res://tests/run_ux_e2e_tour.gd:1179)
+         [1] _run_tour (res://tests/run_ux_e2e_tour.gd:798)
+         [2] _screenshot (res://tests/run_ux_e2e_tour.gd:1159)
 [UX_TOUR] ## Phase 17 — Asteroid Detail & Annotation (citizen science)
 SCRIPT ERROR: Invalid type in function 'setup' in base 'RefCounted (AsteroidImageHelper)'. The Object-derived class of argument 5 (Node (run_ux_e2e_tour.gd)) is not a subclass of the expected argument class.
-          at: _ready (res://Scripts/UI/AsteroidDetail/AsteroidDetailView.gd:78)
+          at: _ready (res://Scripts/UI/AsteroidDetail/AsteroidDetailView.gd:75)
           GDScript backtrace (most recent call first):
-              [0] _ready (res://Scripts/UI/AsteroidDetail/AsteroidDetailView.gd:78)
+              [0] _ready (res://Scripts/UI/AsteroidDetail/AsteroidDetailView.gd:75)
               [1] _load_scene (res://tests/run_ux_e2e_tour.gd:92)
-              [2] _run_tour (res://tests/run_ux_e2e_tour.gd:798)
-              [3] _load_scene (res://tests/run_ux_e2e_tour.gd:90)
+[UX_TOUR]   📸 34_24_candidate_detail_empty_canvas.png
 [UX_TOUR]   - 'Pen' annotation button present. ✓
 [UX_TOUR]   - 'Clear' annotation button present. ✓
 [UX_TOUR]   - 'Save' annotation button present. ✓
@@ -301,9 +289,8 @@ SCRIPT ERROR: Invalid type in function 'setup' in base 'RefCounted (AsteroidImag
 [UX_TOUR]   - PenCircleButton present. ✓
 [UX_TOUR]   - Back button present. ✓
 [UX_TOUR]   - DrawingCanvas node present. ✓
-[UX_TOUR]   📸 32_24_candidate_detail_empty_canvas.png
+[UX_TOUR]   📸 35_25_candidate_detail_annotated.png
 [UX_TOUR] ## Phase 18 — Earth Base (returning from Mission 1 debrief)
-[UX_TOUR]   📸 33_25_candidate_detail_annotated.png
 Satellite Station initialized: Scanner Station
 Control Station initialized: Control Station
 FrancBalance: _ready called
@@ -314,22 +301,24 @@ FrancBalance: Balance button connected
 FrancBalance: Add button connected
 FrancBalance: Sub button connected
 FrancBalance: Setup complete
+[UX_TOUR]   📸 36_26_earth_base_post_m1_debrief.png
 [UX_TOUR] 
 [UX_TOUR] ---
 [UX_TOUR] ## Summary
-[UX_TOUR] - Screenshots taken: 33
-[UX_TOUR] - Issues found: 2
+[UX_TOUR] - Screenshots taken: 36
+[UX_TOUR] - Issues found: 4
 [UX_TOUR] 
 [UX_TOUR] ### All Issues
-[UX_TOUR] - Tutorial coach overlay not visible on first visit — new users may not know what to do.
-[UX_TOUR] - CRITICAL: Could not load scene: res://Scenes/Earth/mission_debrief.tscn
+[UX_TOUR] - UI OVERLAP: Label 'Level 1 Target' overlaps Button 'RETURN' in Mining Minigame
+[UX_TOUR] - Debrief scene missing Title label node.
+[UX_TOUR] - Debrief scene missing CompleteButton — primary action not visible.
+[UX_TOUR] - Debrief scene missing OrbitButton — secondary action not visible.
 [UX_TOUR] 
 [UX_TOUR] ### Critical Issues (CI will fail on these)
-[UX_TOUR] CRITICAL: CRITICAL: Could not load scene: res://Scenes/Earth/mission_debrief.tscn
+[UX_TOUR] None.
 [UX_TOUR] Report written to: user://ux_report.md
 [UX_TOUR] Manifest written to: user://tour_manifest.json
 [UX_TOUR] AI context written to: user://tour_ai_context.md
-[UX_TOUR]   📸 34_26_earth_base_post_m1_debrief.png
 WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
      at: cleanup (core/object/object.cpp:2514)
 ERROR: 1 resources still in use at exit (run with --verbose for details).

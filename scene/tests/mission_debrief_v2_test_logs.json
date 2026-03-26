@@ -85,7 +85,83 @@
       "operation_mode": "contract",
       "subcontractor_id": "rocketlab",
       "subcontractor_name": "Rocketlab",
-      "payout": 83862600,
+      "payout": 83862600.0,
+      "cargo": {
+        "Iron": 10.0
+      },
+      "requested_minerals": {
+        "Iron": 10.0
+      },
+      "order_completion_pct": 100.0,
+      "affinity_before": 6.0
+    },
+    {
+      "timestamp": "2026-03-28T13:05:14",
+      "rocket_id": "starterrocket1-sketch-test",
+      "target_id": "mission-1-training-target",
+      "label": "433 Eros",
+      "target_type": "asteroid",
+      "operation_mode": "contract",
+      "subcontractor_id": "rocketlab",
+      "subcontractor_name": "Rocketlab",
+      "payout": 92696670.0,
+      "cargo": {
+        "Iron": 10.0
+      },
+      "requested_minerals": {
+        "Iron": 10.0
+      },
+      "order_completion_pct": 100.0,
+      "affinity_before": 7.0
+    },
+    {
+      "timestamp": "2026-03-28T13:05:14",
+      "rocket_id": "starterrocket1-sketch-test",
+      "target_id": "mission-1-training-target",
+      "label": "433 Eros",
+      "target_type": "asteroid",
+      "operation_mode": "contract",
+      "subcontractor_id": "rocketlab",
+      "subcontractor_name": "Rocketlab",
+      "payout": 84676800.0,
+      "cargo": {
+        "Iron": 10.0
+      },
+      "requested_minerals": {
+        "Iron": 10.0
+      },
+      "order_completion_pct": 100.0,
+      "affinity_before": 8.0
+    },
+    {
+      "timestamp": "2026-03-28T13:07:04",
+      "rocket_id": "starterrocket1-sketch-test",
+      "target_id": "mission-1-training-target",
+      "label": "433 Eros",
+      "target_type": "asteroid",
+      "operation_mode": "contract",
+      "subcontractor_id": "rocketlab",
+      "subcontractor_name": "Rocketlab",
+      "payout": 85083900.0,
+      "cargo": {
+        "Iron": 10.0
+      },
+      "requested_minerals": {
+        "Iron": 10.0
+      },
+      "order_completion_pct": 100.0,
+      "affinity_before": 9.0
+    },
+    {
+      "timestamp": "2026-03-28T13:07:04",
+      "rocket_id": "starterrocket1-sketch-test",
+      "target_id": "mission-1-training-target",
+      "label": "433 Eros",
+      "target_type": "asteroid",
+      "operation_mode": "contract",
+      "subcontractor_id": "rocketlab",
+      "subcontractor_name": "Rocketlab",
+      "payout": 85491000,
       "cargo": {
         "Iron": 10
       },
@@ -93,7 +169,7 @@
         "Iron": 10
       },
       "order_completion_pct": 100,
-      "affinity_before": 6
+      "affinity_before": 10
     }
   ]
 }

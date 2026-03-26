@@ -1,14 +1,30 @@
 {
   "all_issues": [
-    "Tutorial coach overlay not visible on first visit — new users may not know what to do.",
-    "CRITICAL: Could not load scene: res://Scenes/Earth/mission_debrief.tscn"
+    "UI OVERLAP: Label 'Level 1 Target' overlaps Button 'RETURN' in Mining Minigame",
+    "Debrief scene missing Title label node.",
+    "Debrief scene missing CompleteButton — primary action not visible.",
+    "Debrief scene missing OrbitButton — secondary action not visible."
   ],
-  "generated_at": "2026-03-27T12:58:17",
+  "generated_at": "2026-03-28T05:29:16",
   "screenshots": [
     {
-      "description": "Earth base hub immediately after the intro splash is dismissed.",
+      "description": "The very first screen a brand-new user sees when launching the game.",
       "filename": "01_01_startup_intro_splash.png",
       "index": 1,
+      "issues_detected_at_this_point": [],
+      "mission_stage": 0,
+      "phase": "Phase 1 - Startup / Intro Splash",
+      "what_to_check": [
+        "Is there a clear Begin Mission CTA?",
+        "Is the game title / branding visible?",
+        "Are any UI elements cut off or hanging off screen edges?",
+        "Would a new user immediately know what to do?"
+      ]
+    },
+    {
+      "description": "Earth base hub immediately after the intro splash is dismissed.",
+      "filename": "02_02_after_splash_dismissed.png",
+      "index": 2,
       "issues_detected_at_this_point": [],
       "mission_stage": 0,
       "phase": "Phase 1 - After Splash Dismissed",
@@ -19,17 +35,10 @@
       ]
     },
     {
-      "filename": "02_02_after_splash_dismissed.png",
-      "index": 2,
-      "issues_detected_at_this_point": []
-    },
-    {
       "description": "Earth base hub with Mission 1 tutorial active — what a brand-new user sees after dismissing the splash.",
       "filename": "03_03_earth_base_m1_overview.png",
       "index": 3,
-      "issues_detected_at_this_point": [
-        "Tutorial coach overlay not visible on first visit — new users may not know what to do."
-      ],
+      "issues_detected_at_this_point": [],
       "mission_stage": 1,
       "phase": "Phase 2 - Earth Base Overview (M1)",
       "what_to_check": [
@@ -40,12 +49,24 @@
       ]
     },
     {
-      "description": "Earth base after completing M1. User is now on M2 — contractor bonuses unlocked. Tutorial should prompt a new step.",
-      "filename": "04_stage2_earth_base.png",
+      "description": "Tutorial coach overlay active on earth base, prompting the user to open the Control Station.",
+      "filename": "04_04_tutorial_coach_m1_step1.png",
       "index": 4,
-      "issues_detected_at_this_point": [
-        "Tutorial coach overlay not visible on first visit — new users may not know what to do."
-      ],
+      "issues_detected_at_this_point": [],
+      "mission_stage": 1,
+      "phase": "Phase 2 - Tutorial Coach (M1 Step 1: Control Station)",
+      "what_to_check": [
+        "Is the step title readable and specific?",
+        "Is the instruction text clear and actionable for a new user?",
+        "Does the coach indicator point at the right element?",
+        "Is any tutorial text obscured by another UI element?"
+      ]
+    },
+    {
+      "description": "Earth base after completing M1. User is now on M2 — contractor bonuses unlocked. Tutorial should prompt a new step.",
+      "filename": "05_stage2_earth_base.png",
+      "index": 5,
+      "issues_detected_at_this_point": [],
       "mission_stage": 2,
       "phase": "Phase 2b - Earth Base Stage 2 (Mission 2 (Contractor Bonus))",
       "what_to_check": [
@@ -56,11 +77,9 @@
     },
     {
       "description": "Launchpad scene at Mission 2 state — shows rocket build options, target list, and contractor selection available at this progression point.",
-      "filename": "05_stage2_launchpad.png",
-      "index": 5,
-      "issues_detected_at_this_point": [
-        "Tutorial coach overlay not visible on first visit — new users may not know what to do."
-      ],
+      "filename": "06_stage2_launchpad.png",
+      "index": 6,
+      "issues_detected_at_this_point": [],
       "mission_stage": 2,
       "phase": "Phase 2b - Launchpad Stage 2 (Mission 2 (Contractor Bonus))",
       "what_to_check": [
@@ -72,11 +91,9 @@
     },
     {
       "description": "Earth base after completing M2. M3 introduces real TESS planet candidates as targets — the citizen science hook.",
-      "filename": "06_stage3_earth_base.png",
-      "index": 6,
-      "issues_detected_at_this_point": [
-        "Tutorial coach overlay not visible on first visit — new users may not know what to do."
-      ],
+      "filename": "07_stage3_earth_base.png",
+      "index": 7,
+      "issues_detected_at_this_point": [],
       "mission_stage": 3,
       "phase": "Phase 2b - Earth Base Stage 3 (Mission 3 (TESS Planet Candidates))",
       "what_to_check": [
@@ -87,11 +104,9 @@
     },
     {
       "description": "Launchpad scene at Mission 3 state — shows rocket build options, target list, and contractor selection available at this progression point.",
-      "filename": "07_stage3_launchpad.png",
-      "index": 7,
-      "issues_detected_at_this_point": [
-        "Tutorial coach overlay not visible on first visit — new users may not know what to do."
-      ],
+      "filename": "08_stage3_launchpad.png",
+      "index": 8,
+      "issues_detected_at_this_point": [],
       "mission_stage": 3,
       "phase": "Phase 2b - Launchpad Stage 3 (Mission 3 (TESS Planet Candidates))",
       "what_to_check": [
@@ -103,11 +118,9 @@
     },
     {
       "description": "Earth base after completing M3. M4 introduces the Scanner Station build objective — a new base structure appears.",
-      "filename": "08_stage4_earth_base.png",
-      "index": 8,
-      "issues_detected_at_this_point": [
-        "Tutorial coach overlay not visible on first visit — new users may not know what to do."
-      ],
+      "filename": "09_stage4_earth_base.png",
+      "index": 9,
+      "issues_detected_at_this_point": [],
       "mission_stage": 4,
       "phase": "Phase 2b - Earth Base Stage 4 (Mission 4 (Scanner Station + Drones))",
       "what_to_check": [
@@ -118,11 +131,9 @@
     },
     {
       "description": "Launchpad scene at Mission 4 state — shows rocket build options, target list, and contractor selection available at this progression point.",
-      "filename": "09_stage4_launchpad.png",
-      "index": 9,
-      "issues_detected_at_this_point": [
-        "Tutorial coach overlay not visible on first visit — new users may not know what to do."
-      ],
+      "filename": "10_stage4_launchpad.png",
+      "index": 10,
+      "issues_detected_at_this_point": [],
       "mission_stage": 4,
       "phase": "Phase 2b - Launchpad Stage 4 (Mission 4 (Scanner Station + Drones))",
       "what_to_check": [
@@ -134,11 +145,9 @@
     },
     {
       "description": "Earth base in Free Operations mode — all tutorial missions complete. User is in free-play with all mechanics unlocked.",
-      "filename": "10_stage5_earth_base.png",
-      "index": 10,
-      "issues_detected_at_this_point": [
-        "Tutorial coach overlay not visible on first visit — new users may not know what to do."
-      ],
+      "filename": "11_stage5_earth_base.png",
+      "index": 11,
+      "issues_detected_at_this_point": [],
       "mission_stage": 5,
       "phase": "Phase 2b - Earth Base Stage 5 (Sandbox / Free Operations)",
       "what_to_check": [
@@ -150,11 +159,9 @@
     },
     {
       "description": "Launchpad scene at Mission 5 state — shows rocket build options, target list, and contractor selection available at this progression point.",
-      "filename": "11_stage5_launchpad.png",
-      "index": 11,
-      "issues_detected_at_this_point": [
-        "Tutorial coach overlay not visible on first visit — new users may not know what to do."
-      ],
+      "filename": "12_stage5_launchpad.png",
+      "index": 12,
+      "issues_detected_at_this_point": [],
       "mission_stage": 5,
       "phase": "Phase 2b - Launchpad Stage 5 (Sandbox / Free Operations)",
       "what_to_check": [
@@ -166,11 +173,9 @@
     },
     {
       "description": "The main menu / settings panel, accessible from the earth base.",
-      "filename": "12_05_menu_panel.png",
-      "index": 12,
-      "issues_detected_at_this_point": [
-        "Tutorial coach overlay not visible on first visit — new users may not know what to do."
-      ],
+      "filename": "13_05_menu_panel.png",
+      "index": 13,
+      "issues_detected_at_this_point": [],
       "mission_stage": -1,
       "phase": "Phase 3 - Menu Panel",
       "what_to_check": [
@@ -181,11 +186,9 @@
     },
     {
       "description": "The tutorial coach overlay UI in isolation — appears throughout the game to guide new users step by step.",
-      "filename": "13_06_tutorial_coach_overlay.png",
-      "index": 13,
-      "issues_detected_at_this_point": [
-        "Tutorial coach overlay not visible on first visit — new users may not know what to do."
-      ],
+      "filename": "14_06_tutorial_coach_overlay.png",
+      "index": 14,
+      "issues_detected_at_this_point": [],
       "mission_stage": -1,
       "phase": "Phase 4 - Tutorial Coach Overlay (standalone)",
       "what_to_check": [
@@ -197,11 +200,9 @@
     },
     {
       "description": "The Control Station panel — shows active missions and fleet status. First panel M1 tutorial directs users to open.",
-      "filename": "14_07_control_station_panel.png",
-      "index": 14,
-      "issues_detected_at_this_point": [
-        "Tutorial coach overlay not visible on first visit — new users may not know what to do."
-      ],
+      "filename": "15_07_control_station_panel.png",
+      "index": 15,
+      "issues_detected_at_this_point": [],
       "mission_stage": -1,
       "phase": "Phase 5 - Control Station Panel",
       "what_to_check": [
@@ -213,11 +214,9 @@
     },
     {
       "description": "The Space Map — shows the operational zone, scanned targets, and reachable destinations. Key navigation surface after Mission 4.",
-      "filename": "15_08_space_map.png",
-      "index": 15,
-      "issues_detected_at_this_point": [
-        "Tutorial coach overlay not visible on first visit — new users may not know what to do."
-      ],
+      "filename": "16_08_space_map.png",
+      "index": 16,
+      "issues_detected_at_this_point": [],
       "mission_stage": -1,
       "phase": "Phase 5b - Space Map",
       "what_to_check": [
@@ -230,11 +229,9 @@
     },
     {
       "description": "The Satellite Station panel — scans for new targets. In CI: no Supabase data, so the list will be empty.",
-      "filename": "16_09_satellite_station_panel.png",
-      "index": 16,
-      "issues_detected_at_this_point": [
-        "Tutorial coach overlay not visible on first visit — new users may not know what to do."
-      ],
+      "filename": "17_09_satellite_station_panel.png",
+      "index": 17,
+      "issues_detected_at_this_point": [],
       "mission_stage": -1,
       "phase": "Phase 6 - Satellite Station Panel",
       "what_to_check": [
@@ -246,11 +243,9 @@
     },
     {
       "description": "The Launchpad panel — where users build and configure rockets before launching on a mission.",
-      "filename": "17_10_launchpad_panel.png",
-      "index": 17,
-      "issues_detected_at_this_point": [
-        "Tutorial coach overlay not visible on first visit — new users may not know what to do."
-      ],
+      "filename": "18_10_launchpad_panel.png",
+      "index": 18,
+      "issues_detected_at_this_point": [],
       "mission_stage": -1,
       "phase": "Phase 7 - Launchpad Panel",
       "what_to_check": [
@@ -262,11 +257,9 @@
     },
     {
       "description": "The Subcontractors panel — users pick a contractor for a delivery bonus before launching. First introduced in M1.",
-      "filename": "18_11_subcontractors_panel.png",
-      "index": 18,
-      "issues_detected_at_this_point": [
-        "Tutorial coach overlay not visible on first visit — new users may not know what to do."
-      ],
+      "filename": "19_11_subcontractors_panel.png",
+      "index": 19,
+      "issues_detected_at_this_point": [],
       "mission_stage": 1,
       "phase": "Phase 8 - Subcontractors Panel",
       "what_to_check": [
@@ -278,11 +271,9 @@
     },
     {
       "description": "The New Mission panel where users select their destination (asteroid or TESS planet candidate). In CI: target list will be empty (no Supabase).",
-      "filename": "19_12_new_mission_panel.png",
-      "index": 19,
-      "issues_detected_at_this_point": [
-        "Tutorial coach overlay not visible on first visit — new users may not know what to do."
-      ],
+      "filename": "20_12_new_mission_panel.png",
+      "index": 20,
+      "issues_detected_at_this_point": [],
       "mission_stage": -1,
       "phase": "Phase 9 - New Mission Panel",
       "what_to_check": [
@@ -294,11 +285,9 @@
     },
     {
       "description": "The Rocket Selector overlay — users choose which rocket to use for a mission.",
-      "filename": "20_13_rocket_selector.png",
-      "index": 20,
-      "issues_detected_at_this_point": [
-        "Tutorial coach overlay not visible on first visit — new users may not know what to do."
-      ],
+      "filename": "21_13_rocket_selector.png",
+      "index": 21,
+      "issues_detected_at_this_point": [],
       "mission_stage": -1,
       "phase": "Phase 10 - Rocket Selector",
       "what_to_check": [
@@ -310,11 +299,9 @@
     },
     {
       "description": "The rocket ascent animation — plays when a rocket launches from Earth.",
-      "filename": "21_14_rocket_ascent.png",
-      "index": 21,
-      "issues_detected_at_this_point": [
-        "Tutorial coach overlay not visible on first visit — new users may not know what to do."
-      ],
+      "filename": "22_14_rocket_ascent.png",
+      "index": 22,
+      "issues_detected_at_this_point": [],
       "mission_stage": -1,
       "phase": "Phase 11 - Rocket Ascent",
       "what_to_check": [
@@ -325,11 +312,9 @@
     },
     {
       "description": "Rocket transit animation at the start of flight — the 'in-flight waiting' state users see between Earth and their target.",
-      "filename": "22_15_rocket_transit_initial.png",
-      "index": 22,
-      "issues_detected_at_this_point": [
-        "Tutorial coach overlay not visible on first visit — new users may not know what to do."
-      ],
+      "filename": "23_15_rocket_transit_initial.png",
+      "index": 23,
+      "issues_detected_at_this_point": [],
       "mission_stage": -1,
       "phase": "Phase 12 - Rocket Transit (initial)",
       "what_to_check": [
@@ -341,11 +326,9 @@
     },
     {
       "description": "Rocket transit animation a few seconds into the journey.",
-      "filename": "23_16_rocket_transit_midway.png",
-      "index": 23,
-      "issues_detected_at_this_point": [
-        "Tutorial coach overlay not visible on first visit — new users may not know what to do."
-      ],
+      "filename": "24_16_rocket_transit_midway.png",
+      "index": 24,
+      "issues_detected_at_this_point": [],
       "mission_stage": -1,
       "phase": "Phase 12 - Rocket Transit (mid-flight)",
       "what_to_check": [
@@ -356,11 +339,9 @@
     },
     {
       "description": "The Mining Practice panel — lets users try mining on preset scenarios before a real mission.",
-      "filename": "24_17_mining_practice_panel.png",
-      "index": 24,
-      "issues_detected_at_this_point": [
-        "Tutorial coach overlay not visible on first visit — new users may not know what to do."
-      ],
+      "filename": "25_17_mining_practice_panel.png",
+      "index": 25,
+      "issues_detected_at_this_point": [],
       "mission_stage": -1,
       "phase": "Phase 13 - Mining Practice Panel",
       "what_to_check": [
@@ -371,11 +352,9 @@
     },
     {
       "description": "Mining minigame just after starting — asteroid terrain generated, beam not yet active. First thing a user sees when they arrive at an asteroid.",
-      "filename": "25_18_mining_initial_terrain.png",
-      "index": 25,
-      "issues_detected_at_this_point": [
-        "Tutorial coach overlay not visible on first visit — new users may not know what to do."
-      ],
+      "filename": "26_18_mining_initial_terrain.png",
+      "index": 26,
+      "issues_detected_at_this_point": [],
       "mission_stage": 1,
       "phase": "Phase 14 - Mining Minigame (initial terrain)",
       "what_to_check": [
@@ -388,11 +367,9 @@
     },
     {
       "description": "Mining minigame with a drone deployed — Mission 4+ mechanic. Drones target dark subsurface deposits.",
-      "filename": "26_19b_mining_drone_deployed.png",
-      "index": 26,
-      "issues_detected_at_this_point": [
-        "Tutorial coach overlay not visible on first visit — new users may not know what to do."
-      ],
+      "filename": "27_19b_mining_drone_deployed.png",
+      "index": 27,
+      "issues_detected_at_this_point": [],
       "mission_stage": 4,
       "phase": "Phase 14 - Mining Minigame (drone deployed)",
       "what_to_check": [
@@ -403,11 +380,9 @@
     },
     {
       "description": "Mining beam active — terrain is being excavated. The main mining gameplay loop.",
-      "filename": "27_19_mining_beam_active.png",
-      "index": 27,
-      "issues_detected_at_this_point": [
-        "Tutorial coach overlay not visible on first visit — new users may not know what to do."
-      ],
+      "filename": "28_19_mining_beam_active.png",
+      "index": 28,
+      "issues_detected_at_this_point": [],
       "mission_stage": 1,
       "phase": "Phase 14 - Mining Minigame (beam active)",
       "what_to_check": [
@@ -419,11 +394,9 @@
     },
     {
       "description": "Mining mid-run — significant terrain excavated. Shows visual progression of a full mining session.",
-      "filename": "28_20_mining_mid_run.png",
-      "index": 28,
-      "issues_detected_at_this_point": [
-        "Tutorial coach overlay not visible on first visit — new users may not know what to do."
-      ],
+      "filename": "29_20_mining_mid_run.png",
+      "index": 29,
+      "issues_detected_at_this_point": [],
       "mission_stage": 1,
       "phase": "Phase 14 - Mining Minigame (mid-run)",
       "what_to_check": [
@@ -435,11 +408,9 @@
     },
     {
       "description": "Mining minigame with the inventory panel open — showing current fuel, heat, beam, and minerals collected.",
-      "filename": "29_20b_mining_inventory_overlay.png",
-      "index": 29,
-      "issues_detected_at_this_point": [
-        "Tutorial coach overlay not visible on first visit — new users may not know what to do."
-      ],
+      "filename": "30_20b_mining_inventory_overlay.png",
+      "index": 30,
+      "issues_detected_at_this_point": [],
       "mission_stage": 1,
       "phase": "Phase 14 - Mining Inventory Overlay",
       "what_to_check": [
@@ -451,11 +422,9 @@
     },
     {
       "description": "Mining beam released — player stopped mining. Post-mining state before returning to Earth.",
-      "filename": "30_21_mining_beam_released.png",
-      "index": 30,
-      "issues_detected_at_this_point": [
-        "Tutorial coach overlay not visible on first visit — new users may not know what to do."
-      ],
+      "filename": "31_21_mining_beam_released.png",
+      "index": 31,
+      "issues_detected_at_this_point": [],
       "mission_stage": 1,
       "phase": "Phase 14 - Mining Minigame (beam released)",
       "what_to_check": [
@@ -466,10 +435,10 @@
     },
     {
       "description": "The rocket return animation — plays as the rocket flies back to Earth after a mission.",
-      "filename": "31_22_rocket_return.png",
-      "index": 31,
+      "filename": "32_22_rocket_return.png",
+      "index": 32,
       "issues_detected_at_this_point": [
-        "Tutorial coach overlay not visible on first visit — new users may not know what to do."
+        "UI OVERLAP: Label 'Level 1 Target' overlaps Button 'RETURN' in Mining Minigame"
       ],
       "mission_stage": -1,
       "phase": "Phase 15 - Rocket Return",
@@ -480,11 +449,28 @@
       ]
     },
     {
-      "description": "The annotation view for reviewing asteroid or TESS planet candidate images. Users draw on this canvas to mark transit dips or notable features — the citizen science component. This screenshot shows the view before any annotation.",
-      "filename": "32_24_candidate_detail_empty_canvas.png",
-      "index": 32,
+      "description": "The Mission Debrief scene — shows mission results and lets users scrap the rocket to unlock the next mission. In CI: payout data will be empty.",
+      "filename": "33_23_mission_debrief.png",
+      "index": 33,
       "issues_detected_at_this_point": [
-        "CRITICAL: Could not load scene: res://Scenes/Earth/mission_debrief.tscn"
+        "UI OVERLAP: Label 'Level 1 Target' overlaps Button 'RETURN' in Mining Minigame"
+      ],
+      "mission_stage": -1,
+      "phase": "Phase 16 - Mission Debrief",
+      "what_to_check": [
+        "Is there a visible title (e.g., 'Mission Complete')?",
+        "Is the CompleteButton visible and accessible?",
+        "Is the OrbitButton (secondary action) visible?",
+        "Does the debrief feel like a clear 'end of mission' moment?",
+        "Even with no payout data (CI), does the UI look intentional?"
+      ]
+    },
+    {
+      "description": "The annotation view for reviewing asteroid or TESS planet candidate images. Users draw on this canvas to mark transit dips or notable features — the citizen science component. This screenshot shows the view before any annotation.",
+      "filename": "34_24_candidate_detail_empty_canvas.png",
+      "index": 34,
+      "issues_detected_at_this_point": [
+        "Debrief scene missing OrbitButton — secondary action not visible."
       ],
       "mission_stage": 3,
       "phase": "Phase 17 - Candidate Detail View (empty canvas)",
@@ -499,10 +485,10 @@
     },
     {
       "description": "The annotation view after a simulated drawing stroke — shows the citizen science workflow in action.",
-      "filename": "33_25_candidate_detail_annotated.png",
-      "index": 33,
+      "filename": "35_25_candidate_detail_annotated.png",
+      "index": 35,
       "issues_detected_at_this_point": [
-        "CRITICAL: Could not load scene: res://Scenes/Earth/mission_debrief.tscn"
+        "Debrief scene missing OrbitButton — secondary action not visible."
       ],
       "mission_stage": 3,
       "phase": "Phase 17 - Candidate Detail View (after annotation stroke)",
@@ -512,9 +498,25 @@
         "Is the Save button clearly visible so the user knows how to submit?",
         "Does the overall annotation experience feel intuitive for a new user?"
       ]
+    },
+    {
+      "description": "Earth base after completing Mission 1 and returning from debrief. Tutorial should advance to Mission 2 instructions.",
+      "filename": "36_26_earth_base_post_m1_debrief.png",
+      "index": 36,
+      "issues_detected_at_this_point": [
+        "Debrief scene missing OrbitButton — secondary action not visible."
+      ],
+      "mission_stage": 2,
+      "phase": "Phase 18 - Earth Base (post-M1 debrief, M2 state)",
+      "what_to_check": [
+        "Does the tutorial overlay update to reflect Mission 2?",
+        "Are all navigation buttons still present?",
+        "Does the base feel different from the M1 start state?",
+        "Does anything overlap or get clipped?"
+      ]
     }
   ],
-  "total_issues": 2,
-  "total_screenshots": 33,
+  "total_issues": 4,
+  "total_screenshots": 36,
   "tour_version": "2"
 }

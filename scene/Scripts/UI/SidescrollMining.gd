@@ -74,6 +74,7 @@ var _terrain_loop_container: Node2D = null
 @onready var ui_root: Control = $UI
 @onready var top_bar: HBoxContainer = $UI/TopBar
 @onready var top_spacer: Control = $UI/TopBar/Spacer
+@onready var handbook_button: Button = $UI/TopBar/HandbookButton
 @onready var left_gauges: HBoxContainer = $UI/TopBar/LeftGauges
 @onready var right_stats: VBoxContainer = $UI/TopBar/RightStats
 @onready var fuel_label: Label = $UI/TopBar/LeftGauges/FuelPanel/VBox/Label
@@ -92,6 +93,8 @@ var _terrain_loop_container: Node2D = null
 @onready var return_button: Button = $UI/BottomBar/ReturnButton
 @onready var menu_button: Button = $UI/BottomBar/MenuButton
 @onready var instructions: Label = $UI/Instructions
+@onready var handbook_panel: PanelContainer = $UI/HandbookPanel
+@onready var handbook_body: Label = $UI/HandbookPanel/VBox/BodyLabel
 @onready var particles_container: Node2D = $ParticlesContainer
 @onready var drone_pool: Node2D = $DronePool
 @onready var inventory_panel: PanelContainer = $UI/InventoryPanel
@@ -146,9 +149,6 @@ var _terrain_pixel_textures: Dictionary = {}
 var _target_theme := "asteroid"
 var _target_palette: Dictionary = {}
 var _target_palette_key := "asteroid:default"
-var _handbook_button: Button = null
-var _handbook_panel: PanelContainer = null
-var _handbook_body: Label = null
 # True when touch/on-screen buttons should be shown: native mobile OR small viewport
 # (web users on phones report OS.has_feature("mobile") as false, so we fall back to width)
 var _uses_touch_controls := false
@@ -190,40 +190,11 @@ func _ready():
 		AppControllerHelper.record_tutorial_action("arrived_at_mining_site")
 
 func _setup_button_handbook() -> void:
-	_handbook_button = Button.new()
-	_handbook_button.text = "? Guide"
-	_handbook_button.size_flags_horizontal = Control.SIZE_SHRINK_END
-	_handbook_button.mouse_filter = Control.MOUSE_FILTER_STOP
-	top_bar.add_child(_handbook_button)
-	_handbook_button.pressed.connect(_toggle_button_handbook)
-
-	_handbook_panel = PanelContainer.new()
-	_handbook_panel.visible = false
-	# Position is applied by _reposition_handbook_panel() via UILayout.MINING_HANDBOOK.
-	# This ensures it always stays within the viewport regardless of screen size.
-	_handbook_panel.mouse_filter = Control.MOUSE_FILTER_STOP
-	ui_root.add_child(_handbook_panel)
-	var panel_style = StyleBoxFlat.new()
-	panel_style.bg_color = Color(0.05, 0.10, 0.18, 0.94)
-	panel_style.border_color = Color(0.26, 0.88, 0.95, 0.95)
-	panel_style.set_border_width_all(1)
-	panel_style.set_corner_radius_all(10)
-	_handbook_panel.add_theme_stylebox_override("panel", panel_style)
-
-	var vbox = VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 6)
-	_handbook_panel.add_child(vbox)
-	var title = Label.new()
-	title.text = "Mining Controls Guide"
-	title.add_theme_color_override("font_color", Color(0.95, 1.0, 1.0, 1.0))
-	title.add_theme_font_size_override("font_size", 18)
-	vbox.add_child(title)
-	var body = Label.new()
-	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	body.add_theme_color_override("font_color", Color(0.80, 0.90, 1.0, 1.0))
-	body.text = _build_button_handbook_text()
-	vbox.add_child(body)
-	_handbook_body = body
+	if handbook_button == null or handbook_panel == null or handbook_body == null:
+		return
+	handbook_panel.visible = false
+	handbook_button.pressed.connect(_toggle_button_handbook)
+	handbook_body.text = _build_button_handbook_text()
 
 func _build_button_handbook_text() -> String:
 	var entries := [
@@ -236,11 +207,11 @@ func _build_button_handbook_text() -> String:
 	return "\n".join(entries)
 
 func _toggle_button_handbook() -> void:
-	if _handbook_panel == null:
+	if handbook_panel == null:
 		return
-	if _handbook_body and is_instance_valid(_handbook_body):
-		_handbook_body.text = _build_button_handbook_text()
-	_handbook_panel.visible = not _handbook_panel.visible
+	if handbook_body and is_instance_valid(handbook_body):
+		handbook_body.text = _build_button_handbook_text()
+	handbook_panel.visible = not handbook_panel.visible
 
 func _exit_tree() -> void:
 	_restore_tutorial_overlay()
@@ -514,12 +485,12 @@ func _layout_room_toggle_button(viewport: Vector2) -> void:
 	UILayout.place(_room_toggle_button, UILayout.clamp_to_viewport(btn_r, viewport))
 
 func _reposition_handbook_panel(viewport: Vector2) -> void:
-	if _handbook_panel == null or not is_instance_valid(_handbook_panel):
+	if handbook_panel == null or not is_instance_valid(handbook_panel):
 		return
 	# MINING_HANDBOOK zone: top-right dropdown.  Tutorial is suspended during
 	# mining so this zone is uncontested.
 	var r := UILayout.zone(UILayout.Zone.MINING_HANDBOOK, viewport)
-	UILayout.place(_handbook_panel, UILayout.clamp_to_viewport(r, viewport))
+	UILayout.place(handbook_panel, UILayout.clamp_to_viewport(r, viewport))
 
 func start_mining(is_planet: bool = false, difficulty: int = 1, target_id: String = "", minerals: Dictionary = {}, mineable_pct: float = 0.5, session_context: Dictionary = {}):
 	_is_planet = is_planet

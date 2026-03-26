@@ -25,7 +25,7 @@ const MANIFEST_PATH   := "user://tour_manifest.json"
 const AI_CONTEXT_PATH := "user://tour_ai_context.md"
 
 const EARTH_MAIN_SCENE        := "res://Scenes/Earth/earth_base_1.tscn"
-const DEBRIEF_SCENE           := "res://Scenes/Earth/mission_debrief.tscn"
+const DEBRIEF_SCENE           := "res://Scenes/Earth/mission_debrief_v2.tscn"
 const LAUNCHPAD_SCENE         := "res://Scenes/Earth/earth_launchpad.tscn"
 const TRANSIT_SCENE           := "res://Scenes/Transitions/rocket_transit.tscn"
 const ASCENT_SCENE            := "res://Scenes/Transitions/rocket_ascent.tscn"
@@ -44,10 +44,10 @@ const ASTEROID_DETAIL_SCENE   := "res://Scenes/UI/AsteroidDetail/asteroid_detail
 const SPACE_MAP_SCENE         := "res://Scenes/UI/SpaceMap/space_map.tscn"
 
 const MINING_RUN_SECONDS := 12.0
-const SCENE_SETTLE  := 2.0
-const PANEL_SETTLE  := 1.0
-const ANIM_SETTLE   := 0.5
-const SNAP_SETTLE   := 1.0   # shorter settle for stage-snapshot phases
+const SCENE_SETTLE  := 2.5
+const PANEL_SETTLE  := 2.0
+const ANIM_SETTLE   := 1.0
+const SNAP_SETTLE   := 2.0   # shorter settle for stage-snapshot phases
 
 # ---------------------------------------------------------------------------
 # State
@@ -96,8 +96,8 @@ func _load_scene(path: String) -> Node:
 	# viewport size from the start.
 	if instance is Control:
 		var vp := get_viewport().get_visible_rect()
-		(instance as Control).position = vp.position
-		(instance as Control).size = vp.size
+		(instance as Control).set_deferred("position", vp.position)
+		(instance as Control).set_deferred("size", vp.size)
 	_active_scene = instance
 	return instance
 
@@ -144,7 +144,7 @@ func _run_tour() -> void:
 		 "Are any UI elements cut off or hanging off screen edges?",
 		 "Would a new user immediately know what to do?"])
 	_report("  - Taking first screenshot: 01_startup_intro_splash")
-	_screenshot("01_startup_intro_splash")
+	await _screenshot("01_startup_intro_splash")
 	_report("  - First screenshot taken.")
 
 	_report("  - Searching for IntroSplash...")
@@ -173,7 +173,7 @@ func _run_tour() -> void:
 		["Is the tutorial coach overlay visible, guiding the user to the Control Station?",
 		 "Are navigation buttons (menu, forward, back) visible?",
 		 "Is the FrancBalance (currency) HUD element shown?"])
-	_screenshot("02_after_splash_dismissed")
+	await _screenshot("02_after_splash_dismissed")
 	_report("  - Second screenshot taken.")
 
 	# ==================================================================
@@ -187,7 +187,7 @@ func _run_tour() -> void:
 		 "Are all main navigation elements visible and unobscured?",
 		 "Is the FrancBalance HUD shown?",
 		 "Does anything overlap or hang off the screen?"])
-	_screenshot("03_earth_base_m1_overview")
+	await _screenshot("03_earth_base_m1_overview")
 	_check_offscreen_elements(earth, "Earth Base M1")
 	_check_label_button_overlaps(earth, "Earth Base M1")
 
@@ -211,7 +211,7 @@ func _run_tour() -> void:
 			 "Is the instruction text clear and actionable for a new user?",
 			 "Does the coach indicator point at the right element?",
 			 "Is any tutorial text obscured by another UI element?"])
-		_screenshot("04_tutorial_coach_m1_step1")
+		await _screenshot("04_tutorial_coach_m1_step1")
 		_inspect_tutorial_overlay(tut)
 	else:
 		_issue("Tutorial coach overlay not visible on first visit — new users may not know what to do.")
@@ -263,7 +263,7 @@ func _run_tour() -> void:
 			var sm: Dictionary = _stage_meta[stage]
 			_meta("Phase 2b - Earth Base Stage %d (%s)" % [stage, sm["label"]], stage,
 				sm["desc"], sm["checks"])
-			_screenshot("stage%d_earth_base" % stage)
+			await _screenshot("stage%d_earth_base" % stage)
 			_check_offscreen_elements(earth_s, "Earth Base Stage %d" % stage)
 
 			# Also snapshot the launchpad at this stage
@@ -276,7 +276,7 @@ func _run_tour() -> void:
 					 "Are contractor options visible?",
 					 "Does the tutorial overlay show the correct step for this stage?",
 					 "Does anything overlap or hang off screen?"])
-				_screenshot("stage%d_launchpad" % stage)
+				await _screenshot("stage%d_launchpad" % stage)
 				_check_offscreen_elements(lpad_s, "Launchpad Stage %d" % stage)
 				_check_label_button_overlaps(lpad_s, "Launchpad Stage %d" % stage)
 
@@ -292,7 +292,7 @@ func _run_tour() -> void:
 			["Is there a visible close/dismiss button so users can exit?",
 			 "Are menu options clearly labelled?",
 			 "Does any text overflow or get clipped?"])
-		_screenshot("05_menu_panel")
+		await _screenshot("05_menu_panel")
 		_check_visible_labels(menu, "Menu Panel", 1)
 		_check_for_placeholder_text(menu, "Menu Panel")
 		_check_offscreen_elements(menu, "Menu Panel")
@@ -318,7 +318,7 @@ func _run_tour() -> void:
 			 "Is the instruction message readable?",
 			 "Does the overlay have enough contrast against game backgrounds?",
 			 "Are any labels empty or showing placeholder text?"])
-		_screenshot("06_tutorial_coach_overlay")
+		await _screenshot("06_tutorial_coach_overlay")
 		_check_visible_labels(tut_overlay, "Tutorial Coach Overlay", 1)
 		_check_offscreen_elements(tut_overlay, "Tutorial Coach Overlay")
 		_check_for_placeholder_text(tut_overlay, "Tutorial Coach Overlay")
@@ -347,7 +347,7 @@ func _run_tour() -> void:
 			 "Is the panel title clear?",
 			 "Does a new user understand what this panel is for?",
 			 "Does anything overlap or get clipped at panel edges?"])
-		_screenshot("07_control_station_panel")
+		await _screenshot("07_control_station_panel")
 		_check_visible_labels(csp, "Control Station Panel", 1)
 		_check_offscreen_elements(csp, "Control Station Panel")
 		_check_label_button_overlaps(csp, "Control Station Panel")
@@ -378,7 +378,7 @@ func _run_tour() -> void:
 			 "Is there a close/back button?",
 			 "Are any UI elements clipped at screen edges?",
 			 "Does the map feel navigable and understandable to a new user?"])
-		_screenshot("08_space_map")
+		await _screenshot("08_space_map")
 		_check_visible_labels(space_map, "Space Map", 1)
 		_check_offscreen_elements(space_map, "Space Map")
 		_check_label_button_overlaps(space_map, "Space Map")
@@ -410,7 +410,7 @@ func _run_tour() -> void:
 			 "Does the panel explain what it does?",
 			 "In the empty-data state (CI), does the UI look intentional rather than broken?",
 			 "Any text clipped or off-screen?"])
-		_screenshot("09_satellite_station_panel")
+		await _screenshot("09_satellite_station_panel")
 		_check_visible_labels(ssp, "Satellite Station Panel", 1)
 		_check_offscreen_elements(ssp, "Satellite Station Panel")
 		_check_for_placeholder_text(ssp, "Satellite Station Panel")
@@ -435,7 +435,7 @@ func _run_tour() -> void:
 			 "Is there a description explaining what to do here?",
 			 "Is there a close button?",
 			 "Does anything overlap the main action area?"])
-		_screenshot("10_launchpad_panel")
+		await _screenshot("10_launchpad_panel")
 		_check_offscreen_elements(lp, "Launchpad Panel")
 		_check_label_button_overlaps(lp, "Launchpad Panel")
 		if _find_label_with_text(lp, "Launch Facility"):
@@ -463,7 +463,7 @@ func _run_tour() -> void:
 			 "Is there explanatory text about what contractors do / the bonus system?",
 			 "Is there a close button?",
 			 "Is the progression / unlock logic explained?"])
-		_screenshot("11_subcontractors_panel")
+		await _screenshot("11_subcontractors_panel")
 		_check_offscreen_elements(sub, "Subcontractors Panel")
 		_check_label_button_overlaps(sub, "Subcontractors Panel")
 		if _find_label_with_text(sub, "Subcontractor"):
@@ -493,7 +493,7 @@ func _run_tour() -> void:
 			 "Is there a 'Select Rocket' button?",
 			 "Is there a close button?",
 			 "Even with an empty target list (CI), does the UI communicate why or look intentional?"])
-		_screenshot("12_new_mission_panel")
+		await _screenshot("12_new_mission_panel")
 		_check_offscreen_elements(nm, "New Mission Panel")
 		_check_label_button_overlaps(nm, "New Mission Panel")
 		if _find_label_with_text(nm, "New Mission"):
@@ -531,7 +531,7 @@ func _run_tour() -> void:
 			 "Is there a close/cancel button?",
 			 "Does any text overflow?",
 			 "Are elements clipped at screen edges?"])
-		_screenshot("13_rocket_selector")
+		await _screenshot("13_rocket_selector")
 		_check_visible_labels(rs, "Rocket Selector", 1)
 		_check_offscreen_elements(rs, "Rocket Selector")
 		_check_for_placeholder_text(rs, "Rocket Selector")
@@ -550,7 +550,7 @@ func _run_tour() -> void:
 			["Is the ascent animation visually clear?",
 			 "Is any status text readable?",
 			 "Are any UI elements in unexpected positions?"])
-		_screenshot("14_rocket_ascent")
+		await _screenshot("14_rocket_ascent")
 		_check_visible_labels(ascent, "Rocket Ascent", 0)
 		_check_offscreen_elements(ascent, "Rocket Ascent")
 		_check_for_placeholder_text(ascent, "Rocket Ascent")
@@ -568,7 +568,7 @@ func _run_tour() -> void:
 			 "Is there a travel progress bar?",
 			 "Is there a back/skip button so users aren't stuck watching the full animation?",
 			 "Is the flight status readable?"])
-		_screenshot("15_rocket_transit_initial")
+		await _screenshot("15_rocket_transit_initial")
 		var status_lbl := _find_node_by_name(transit, "TargetLabel")
 		if not status_lbl:
 			status_lbl = _find_node_by_name(transit, "StatusLabel")
@@ -587,7 +587,7 @@ func _run_tour() -> void:
 			["Has the animation progressed? Is the rocket visibly moving?",
 			 "Is the travel progress bar updating?",
 			 "Is the back/skip button still visible and accessible?"])
-		_screenshot("16_rocket_transit_midway")
+		await _screenshot("16_rocket_transit_midway")
 		_check_offscreen_elements(transit, "Rocket Transit")
 
 		var back_btn := _find_button_with_text(transit, "Back")
@@ -611,7 +611,7 @@ func _run_tour() -> void:
 			["Are practice preset buttons visible?",
 			 "Is it clear this is 'practice' vs. a real mission?",
 			 "Any text truncated or clipped?"])
-		_screenshot("17_mining_practice_panel")
+		await _screenshot("17_mining_practice_panel")
 		_check_visible_labels(mpp, "Mining Practice Panel", 1)
 		_check_offscreen_elements(mpp, "Mining Practice Panel")
 		var preset_count := 0
@@ -653,7 +653,7 @@ func _run_tour() -> void:
 				 "Is there a RETURN button?",
 				 "Is the tutorial overlay present, explaining how to mine?",
 				 "Does anything overlap the main gameplay area?"])
-			_screenshot("18_mining_initial_terrain")
+			await _screenshot("18_mining_initial_terrain")
 			_check_offscreen_elements(mining, "Mining Minigame")
 
 			var sidescroll := _find_node_by_name(mining, "SidescrollMiningCompat")
@@ -680,7 +680,7 @@ func _run_tour() -> void:
 					["Is the drone visible and moving towards a target?",
 					 "Is the drone HUD (count/cooldown) updating?",
 					 "Does the drone contrast well with the terrain?"])
-				_screenshot("19b_mining_drone_deployed")
+				await _screenshot("19b_mining_drone_deployed")
 				
 				await get_tree().create_timer(2.0).timeout
 				_meta("Phase 14 - Mining Minigame (beam active)", 1,
@@ -689,7 +689,7 @@ func _run_tour() -> void:
 					 "Is terrain being excavated (pixels removed)?",
 					 "Are HUD bars updating (heat rising, fuel depleting)?",
 					 "Is any UI element obscured by the beam effect?"])
-				_screenshot("19_mining_beam_active")
+				await _screenshot("19_mining_beam_active")
 				await get_tree().create_timer(MINING_RUN_SECONDS - 8.0).timeout
 				_meta("Phase 14 - Mining Minigame (mid-run)", 1,
 					"Mining mid-run — significant terrain excavated. Shows visual progression of a full mining session.",
@@ -697,7 +697,7 @@ func _run_tour() -> void:
 					 "Is the cargo/inventory filling up?",
 					 "Is the RETURN button visible and accessible?",
 					 "Is the score/haul total updating?"])
-				_screenshot("20_mining_mid_run")
+				await _screenshot("20_mining_mid_run")
 				
 				# Check inventory panel (HUD overlay)
 				_report("  - Checking Mining Inventory panel...")
@@ -709,7 +709,7 @@ func _run_tour() -> void:
 					 "Are fuel/heat/beam percentages readable?",
 					 "Is the score/total value visible?",
 					 "Does the panel obscure too much of the gameplay area (is it dismissible)?"])
-				_screenshot("20b_mining_inventory_overlay")
+				await _screenshot("20b_mining_inventory_overlay")
 				sidescroll.call("_toggle_inventory") # dismiss
 				await get_tree().create_timer(0.5).timeout
 				
@@ -720,12 +720,12 @@ func _run_tour() -> void:
 					["Is the beam clearly off?",
 					 "Is the RETURN button prominent, prompting the user to go home?",
 					 "Is the final haul/cargo count visible?"])
-				_screenshot("21_mining_beam_released")
+				await _screenshot("21_mining_beam_released")
 				_check_label_button_overlaps(mining, "Mining Minigame")
 			else:
 				_issue("SidescrollMining delegate not found — cannot drive beam simulation.")
 				await get_tree().create_timer(MINING_RUN_SECONDS).timeout
-				_screenshot("18_mining_static")
+				await _screenshot("18_mining_static")
 
 			var return_btn := _find_button_with_text(mining, "RETURN")
 			if not return_btn:
@@ -737,7 +737,7 @@ func _run_tour() -> void:
 		else:
 			_issue("CRITICAL: MiningMinigame has no start_mining() method — minigame is broken.")
 			await get_tree().create_timer(2.0).timeout
-			_screenshot("18_mining_no_start")
+			await _screenshot("18_mining_no_start")
 
 	# ==================================================================
 	# Phase 15 — Rocket Return
@@ -751,7 +751,7 @@ func _run_tour() -> void:
 			["Is the animation visually clear?",
 			 "Is there any text indicating the rocket is heading home?",
 			 "Any UI elements out of place?"])
-		_screenshot("22_rocket_return")
+		await _screenshot("22_rocket_return")
 		_check_offscreen_elements(ret, "Rocket Return")
 		_check_for_placeholder_text(ret, "Rocket Return")
 
@@ -769,7 +769,7 @@ func _run_tour() -> void:
 			 "Is the OrbitButton (secondary action) visible?",
 			 "Does the debrief feel like a clear 'end of mission' moment?",
 			 "Even with no payout data (CI), does the UI look intentional?"])
-		_screenshot("23_mission_debrief")
+		await _screenshot("23_mission_debrief")
 		_check_offscreen_elements(debrief, "Mission Debrief")
 		_check_label_button_overlaps(debrief, "Mission Debrief")
 
@@ -814,7 +814,7 @@ func _run_tour() -> void:
 			 "Is the drawing canvas area clearly defined?",
 			 "Would a new user understand they're supposed to draw/annotate something here?",
 			 "Is there any explanatory text about what to annotate and why?"])
-		_screenshot("24_candidate_detail_empty_canvas")
+		await _screenshot("24_candidate_detail_empty_canvas")
 		_check_offscreen_elements(detail, "Asteroid Detail View")
 		_check_label_button_overlaps(detail, "Asteroid Detail View")
 
@@ -877,7 +877,7 @@ func _run_tour() -> void:
 				 "Is the annotation toolbar still accessible?",
 				 "Is the Save button clearly visible so the user knows how to submit?",
 				 "Does the overall annotation experience feel intuitive for a new user?"])
-			_screenshot("25_candidate_detail_annotated")
+			await _screenshot("25_candidate_detail_annotated")
 		else:
 			_issue("Asteroid detail view missing DrawingCanvas — annotation drawing is broken.")
 
@@ -897,7 +897,7 @@ func _run_tour() -> void:
 			 "Are all navigation buttons still present?",
 			 "Does the base feel different from the M1 start state?",
 			 "Does anything overlap or get clipped?"])
-		_screenshot("26_earth_base_post_m1_debrief")
+		await _screenshot("26_earth_base_post_m1_debrief")
 		_check_offscreen_elements(earth2, "Earth Base Post-M1")
 		_check_label_button_overlaps(earth2, "Earth Base Post-M1")
 		for btn_name in ["MenuButton", "ForwardButton", "BackButton"]:
@@ -1128,13 +1128,13 @@ func _meta(phase: String, mission_stage: int, description: String, what_to_check
 
 
 func _screenshot(label: String) -> void:
-	# Force a fresh render frame so the viewport texture reflects the current scene.
-	# Without this, softpipe/CI renders can return a stale cached texture.
-	RenderingServer.force_draw(false)
+	# process_frame is emitted at the START of each frame, before rendering.
+	# We must wait for frame_post_draw to ensure the viewport texture has been
+	# committed before reading it — otherwise we get a stale (black) frame.
 	await get_tree().process_frame
 	await get_tree().process_frame
 	RenderingServer.force_draw(false)
-	await get_tree().process_frame
+	await RenderingServer.frame_post_draw
 
 	var image := get_viewport().get_texture().get_image()
 	if not image:

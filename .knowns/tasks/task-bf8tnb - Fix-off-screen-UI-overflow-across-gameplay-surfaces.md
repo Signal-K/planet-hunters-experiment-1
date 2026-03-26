@@ -1,7 +1,7 @@
 ---
 id: bf8tnb
 title: Fix off-screen UI overflow across gameplay surfaces
-status: blocked
+status: done
 priority: high
 labels:
   - ux
@@ -9,7 +9,7 @@ labels:
   - layout
   - overflow
 createdAt: '2026-03-27T12:12:34.946Z'
-updatedAt: '2026-03-28T00:18:49.550Z'
+updatedAt: '2026-03-28T04:06:48.881Z'
 timeSpent: 0
 assignee: '@me'
 ---
@@ -49,5 +49,8 @@ Audit and fix UI components that render off-screen or become inaccessible across
 Reopened alongside ogmedx to cover any overflow fixes exposed by the asteroid-detail mobile pass.
 
 Asteroid-detail/mobile overflow fixes landed, but full verification remains blocked by unrelated parse errors in Scripts/UI/SidescrollMining.gd during project load and UX tour startup. Focused SR2 validation passed; UX tour could not be used to close this task cleanly.
+
+$
+SidescrollMining.gd parse errors no longer present (verified 2026-03-28). All 3 ACs were already done; unblocking and closing.
 <!-- SECTION:NOTES:END -->
 

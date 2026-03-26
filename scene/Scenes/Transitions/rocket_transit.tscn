@@ -198,7 +198,7 @@ offset_left = -360.0
 offset_top = -140.0
 offset_right = -24.0
 offset_bottom = -24.0
-theme_override_styles/panel = SubResource("1")
+theme_override_styles/panel = SubResource("2")
 
 [node name="ControlPanelMargin" type="MarginContainer" parent="CanvasLayer/UI/ControlPanel"]
 theme_override_constants/margin_left = 12
@@ -255,7 +255,7 @@ offset_left = -360.0
 offset_top = 140.0
 offset_right = -24.0
 offset_bottom = 310.0
-theme_override_styles/panel = SubResource("1")
+theme_override_styles/panel = SubResource("2")
 
 [node name="InventoryMargin" type="MarginContainer" parent="CanvasLayer/UI/InventoryPanel"]
 theme_override_constants/margin_left = 12
