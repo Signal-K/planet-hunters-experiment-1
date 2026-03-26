@@ -1,6 +1,8 @@
 {
   "unlocked": [
-    "starterrocket1"
+    "starterrocket1",
+    "starterrocket2",
+    "starterrocket3"
   ],
   "placed": [
     {
@@ -25,21 +27,14 @@
       "operation_mode": "contract"
     }
   ],
-  "selected_target": "",
+  "selected_target": "free-ops-survey-target",
   "preview_target": {
-    "id": "mission-1-training-target",
-    "label": "433 Eros",
-    "type": "asteroid",
-    "rocket_id": "starterrocket1-675492285"
   },
   "detected_targets": [
     {
-      "id": "4201",
-      "label": "4201",
-      "type": "asteroid",
-      "anomalySet": "",
-      "classification_status": "confirmed",
-      "tess_disposition": ""
+      "id": "free-ops-survey-target",
+      "label": "Free Ops Survey Target",
+      "type": "asteroid"
     }
   ],
   "seen_asteroids": [
@@ -47,7 +42,6 @@
   "seen_planets": [
   ],
   "scan_counts": {
-    "asteroid:4201": 2
   },
   "status_changed_at": {
     "starterrocket1-675492285": {
@@ -55,11 +49,43 @@
       "launched": 1774058248.0
     }
   },
-  "mission_progress_completed": 0,
+  "mission_progress_completed": 32,
   "completed_mission_badges": [
+    "narrative-stage-1-1837",
+    "narrative-stage-1-1867",
+    "narrative-stage-1-1997",
+    "narrative-stage-2-1998",
+    "narrative-stage-1-2103",
+    "narrative-stage-2-2104",
+    "narrative-stage-3-2105",
+    "narrative-stage-1-2218",
+    "narrative-stage-2-2220",
+    "narrative-stage-3-2221",
+    "narrative-stage-4-2221",
+    "narrative-stage-1-2330",
+    "narrative-stage-2-2330",
+    "narrative-stage-3-2331",
+    "narrative-stage-4-2332",
+    "narrative-stage-1-2429",
+    "narrative-stage-1-2688",
+    "narrative-stage-2-2690",
+    "e2e-stage-1-1586",
+    "e2e-stage-2-1604",
+    "e2e-stage-3-1622",
+    "e2e-stage-1-1646",
+    "e2e-stage-2-1647",
+    "e2e-stage-3-1648",
+    "e2e-stage-4-1649",
+    "e2e-stage-1-505",
+    "e2e-stage-2-514",
+    "e2e-stage-3-523",
+    "e2e-stage-1-534",
+    "e2e-stage-2-535",
+    "e2e-stage-3-536",
+    "e2e-stage-4-536"
   ],
-  "scanner_station_built": false,
-  "scanner_unlocked": false,
+  "scanner_station_built": true,
+  "scanner_unlocked": true,
   "scanner_unlock_dialog_seen": false,
   "scanner_next_scan_at": 0.0,
   "trip_contract_offer": {
@@ -122,14 +148,14 @@
         }
       }
     ],
-    "selected_contractor": "",
-    "selection_required": true,
+    "selected_contractor": "rocketlab",
+    "selection_required": false,
     "recommended_target_id": "mission-1-training-target",
     "recommended_target_label": "433 Eros",
     "recommended_rocket": "starterrocket1",
     "payout_cap": 1400000000.0
   },
-  "operation_mode": "contract",
+  "operation_mode": "survey",
   "candidate_visit_blocks": {
   },
   "target_annotation_levels": {
@@ -151,7 +177,7 @@
   },
   "mission_progress_schema_version": 2.0,
   "pending_mission_guidance_id": 0.0,
-  "launch_fallback_notice": "",
+  "launch_fallback_notice": "No target was selected, so mission control auto-selected Free Ops Survey Target for this launch.",
   "inventory": {
     "Iron": 0.0,
     "Nickel": 0.0,
@@ -166,5 +192,5 @@
   },
   "returning_started": {
   },
-  "launch_guidance_notice": ""
+  "launch_guidance_notice": "Select a contractor first, then pick a mission target."
 }

@@ -613,7 +613,7 @@ func start_mining(is_planet: bool = false, difficulty: int = 1, target_id: Strin
 	# Beam charges based on difficulty level
 	_max_beam_charges = 20.0 + (difficulty * 10.0)
 	_beam_charges = _max_beam_charges
-	score_label.text = "Score: 0"
+	_update_mineral_header_label()
 	return_button.text = "RETURN"
 	return_button.modulate = Color(1, 1, 1, 1)
 	var analytics_payload := _with_session_context({
@@ -939,7 +939,7 @@ func _process(delta):
 			_beam_glow.visible = false
 		if _heat == 0 and _combo > 0:
 			_combo = 0
-			score_label.text = "Score: %d" % _score
+			_update_mineral_header_label()
 	
 	heat_bar.value = _heat
 
@@ -1117,10 +1117,7 @@ func _record_region_collection(region: Dictionary, source: String) -> void:
 	if not _collected_minerals.has(mineral_name):
 		_collected_minerals[mineral_name] = 0
 	_collected_minerals[mineral_name] += 1
-	if _combo > 1:
-		score_label.text = "Score: %d (x%d COMBO)" % [_score, _combo]
-	else:
-		score_label.text = "Score: %d" % _score
+	_update_mineral_header_label()
 	if _collected_deposit_count == 1:
 		GameplayAnalytics.emit_event("mining_first_collection", _with_session_context({
 			"collection_source": source,
@@ -1404,7 +1401,7 @@ func _on_drone_exploded(_pos: Vector2, region: Dictionary = {}):
 		if _guide_active and _guide_step == GuideStep.DEPLOY_DRONE:
 			_advance_guide_step(GuideStep.COMPLETE)
 	_score += 50
-	score_label.text = "Score: %d" % _score
+	_update_mineral_header_label()
 
 
 func _update_drone_display():
@@ -1550,6 +1547,22 @@ func _setup_contract_panel_style() -> void:
 			row.queue_free()
 	_mineral_progress_bars.clear()
 	_mineral_bar_rows.clear()
+
+func _update_mineral_header_label() -> void:
+	if not is_instance_valid(score_label):
+		return
+	if _starter_contract_active and not _starter_order_targets.is_empty():
+		# Contractor order: show minerals matched vs total required.
+		var total_needed := 0
+		for v in _starter_order_targets.values():
+			total_needed += int(v)
+		score_label.text = "%d / %d  minerals" % [_order_match_total, total_needed]
+	else:
+		# Tutorial or free mining: show total minerals collected so far.
+		var total := 0
+		for v in _collected_minerals.values():
+			total += int(v)
+		score_label.text = "%d  mineral%s" % [total, "" if total == 1 else "s"]
 
 func _refresh_contract_order_tracker() -> void:
 	if contract_order_panel == null or contract_order_title == null or contract_order_progress == null:

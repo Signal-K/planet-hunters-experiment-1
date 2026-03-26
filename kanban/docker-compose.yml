@@ -1,0 +1,12 @@
+services:
+  kanban:
+    build: .
+    ports:
+      - "4444:4444"
+    volumes:
+      # Mount the project root so the server can read/write .knowns/tasks
+      - ..:/data:rw
+    environment:
+      KNOWNS_DIR: /data/.knowns
+      PORT: 4444
+    restart: unless-stopped

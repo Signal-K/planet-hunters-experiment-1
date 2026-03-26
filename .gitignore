@@ -66,3 +66,4 @@ node_modules/
 
 # Local tooling/runtime state
 .godot-bin/
+.claude/worktrees/

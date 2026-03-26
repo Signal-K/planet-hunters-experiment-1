@@ -1,0 +1,32 @@
+{
+  "taskId": "49fr2b",
+  "currentVersion": 1,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "49fr2b",
+      "version": 1,
+      "timestamp": "2026-03-25T11:51:25.100Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "## Screen references\n\n### Mining screen (target for button copy — fuel, heat, beam, drone controls top-bar):\n![Mining — beam active](https://raw.githubusercontent.com/Signal-K/planet-hunters-experiment-1/main/e2e/screenshots/ux-tour-mining-active.png)\n\n### Debrief screen is not available from UX tour screenshots (renders black headless).\n### Earth base state after Mission 1 (context for debrief flow entry point):\n![Earth base post-Mission 1](https://raw.githubusercontent.com/Signal-K/planet-hunters-experiment-1/main/e2e/screenshots/ux-tour-earth-base-post-m1.png)"
+        }
+      ],
+      "snapshot": {
+        "title": "Write button guide copy for mining and debrief screens",
+        "description": "Players don't know what the buttons do. Write plain-language labels and a one-sentence description for each key button on the mining screen (sell, scrap, keep, drone, return to base) and the mission debrief screen. Short, clear, no jargon. These will render inside a small help overlay.",
+        "status": "todo",
+        "priority": "medium",
+        "assignee": "Liam",
+        "labels": [
+          "liam-sprint",
+          "writing",
+          "design"
+        ],
+        "acceptanceCriteria": [],
+        "implementationNotes": "## Screen references\n\n### Mining screen (target for button copy — fuel, heat, beam, drone controls top-bar):\n![Mining — beam active](https://raw.githubusercontent.com/Signal-K/planet-hunters-experiment-1/main/e2e/screenshots/ux-tour-mining-active.png)\n\n### Debrief screen is not available from UX tour screenshots (renders black headless).\n### Earth base state after Mission 1 (context for debrief flow entry point):\n![Earth base post-Mission 1](https://raw.githubusercontent.com/Signal-K/planet-hunters-experiment-1/main/e2e/screenshots/ux-tour-earth-base-post-m1.png)"
+      }
+    }
+  ]
+}

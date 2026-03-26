@@ -1,5 +1,13 @@
 # Local development targets
-.PHONY: kanban supabase-check godot godot-dev godot-env ci-build ci-test ci-godot ci-playwright ci-export ci-all ci-clean ci-full-run sync-lock ghactions ux-tour ux-tour-build
+.PHONY: up down kanban supabase-check godot godot-dev godot-env ci-build ci-test ci-godot ci-playwright ci-export ci-all ci-clean ci-full-run sync-lock ghactions ux-tour ux-tour-build
+
+## ── Kanban board (Go) ────────────────────────────────────────────────────────
+up:
+	@echo "⭐  Kanban board → http://localhost:4444"
+	@cd kanban-go && KNOWNS_DIR=$(CURDIR)/.knowns PORT=4444 go run .
+
+down:
+	@lsof -ti :4444 | xargs kill -9 2>/dev/null && echo "Stopped kanban on :4444" || echo "Nothing running on :4444"
 
 kanban:
 	@echo "Starting knowns browser without opening a browser tab..."
@@ -108,7 +116,7 @@ GHCR_UX_TOUR_IMAGE=ghcr.io/signal-k/planet-hunters-experiment-1/ux-tour:latest
 
 ux-tour-build:
 	@echo "Building UX tour Docker image..."
-	docker build --platform linux/amd64 -t $(UX_TOUR_IMAGE) -f Dockerfile.ux-tour .
+	docker build -t $(UX_TOUR_IMAGE) -f Dockerfile.ux-tour .
 
 # Pull pre-built image from ghcr.io, fall back to local build
 ux-tour-pull:
@@ -126,7 +134,6 @@ ux-tour: ux-tour-pull
 	@echo "Running Godot UX E2E tour in Docker..."
 	@echo "Screenshots will appear in ./ux-screenshots/ when the tour finishes."
 	docker run --rm \
-		--platform linux/amd64 \
 		-v "$(PWD)/scene:/app/scene" \
 		-v "$(UX_TOUR_OUT):/output" \
 		$(UX_TOUR_IMAGE)

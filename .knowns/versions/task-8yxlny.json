@@ -1,0 +1,38 @@
+{
+  "taskId": "8yxlny",
+  "currentVersion": 1,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "8yxlny",
+      "version": 1,
+      "timestamp": "2026-03-26T09:16:31.897Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "kanban: way1gr"
+        }
+      ],
+      "snapshot": {
+        "title": "Write mining tutorial step messages (all 6 steps)",
+        "description": "The mining tutorial has 6 coach steps. Write the message copy for each step — concise, action-oriented, fits within the coach bubble.",
+        "status": "todo",
+        "priority": "medium",
+        "labels": [
+          "writing"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Copy written for all 6 tutorial steps"
+          },
+          {
+            "completed": false,
+            "text": "Each message is ≤ 120 characters"
+          }
+        ],
+        "implementationNotes": "kanban: way1gr"
+      }
+    }
+  ]
+}

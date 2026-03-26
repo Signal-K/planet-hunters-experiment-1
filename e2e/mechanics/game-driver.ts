@@ -155,6 +155,10 @@ export class GameDriver {
   /**
    * Simulate a game event as if it came from the Godot iframe.
    * Useful for testing shell responses without needing the full game path.
+   *
+   * Uses window.postMessage (async, task-queued) rather than dispatchEvent
+   * (which has unreliable message-listener triggering in headless WebKit).
+   * Includes a built-in 150ms settle wait so callers don't need extra timeouts.
    */
   async simulateGameEvent(
     eventName: string,
@@ -162,15 +166,15 @@ export class GameDriver {
   ): Promise<void> {
     await this.page.evaluate(
       ({ eventName, payload }: { eventName: string; payload: Record<string, unknown> }) => {
-        window.dispatchEvent(
-          new MessageEvent("message", {
-            data: { source: "planet-hunters", event: eventName, payload },
-            origin: window.location.origin,
-          })
+        window.postMessage(
+          { source: "planet-hunters", event: eventName, payload },
+          window.location.origin
         );
       },
       { eventName, payload }
     );
+    // Allow the async postMessage event to be processed before the caller reads state
+    await this.page.waitForTimeout(150);
   }
 
   /**

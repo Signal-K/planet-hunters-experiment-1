@@ -60,10 +60,10 @@ let _pendingXpSnapshot = null;
 let _pendingReturnVisitSurvey = false;
 
 const LEVEL_UNLOCK_HINTS = {
-  2: "Starter Rocket 2 unlocked — extended range and heavier payload",
-  3: "Starter Rocket 3 unlocked — faster and further",
-  4: "Mission 4 unlocked — Scanner Station and drone mining",
-  5: "Free Operations unlocked — run missions on your own terms",
+  2: "Longer range unlocked",
+  3: "Faster mining speed unlocked",
+  4: "Cargo capacity increased",
+  5: "Advanced scanner unlocked",
   6: "Refinery unlocked — refine minerals before selling for higher returns",
   7: "Off-world refinery unlocked — process minerals at the source",
   8: "Extended scanner range and dedicated refinery slot unlocked",
@@ -198,6 +198,7 @@ function readXpState() {
 
 function writeXpState(snapshot) {
   if (!snapshot || typeof snapshot !== "object") return;
+  console.log("[XP_DEBUG] writeXpState level=" + snapshot.experience_level + " xp=" + snapshot.experience_xp + " stack=" + new Error().stack.split("\n")[1]);
   localStorage.setItem(XP_STATE_KEY, JSON.stringify(snapshot));
 }
 
@@ -968,7 +969,7 @@ function App() {
         pushAction("save_progress_message", { marker: next.marker });
         return;
       }
-      if (event.origin !== window.location.origin) {
+      if (event.origin !== window.location.origin && event.origin !== "") {
         return;
       }
       if (data.source !== "planet-hunters") {
@@ -1081,6 +1082,14 @@ function App() {
       }
     };
   }, []);
+
+  // Auto-show install banner on mobile non-PWA after 2s (dismissible, suppressed after dismiss)
+  useEffect(() => {
+    if (!isMobile || isPwa) return;
+    if (localStorage.getItem("planet_hunters_install_banner_dismissed_v1")) return;
+    const timer = setTimeout(() => setShowInstallHint(true), 2000);
+    return () => clearTimeout(timer);
+  }, [isMobile, isPwa]);
 
   const handleOpenFullscreen = useCallback(() => {
     if (document.documentElement.requestFullscreen) {
@@ -1286,7 +1295,7 @@ function App() {
           display: "block",
           background: "#000",
           width: "100%",
-          height: "100%",
+          height: "100dvh",
         },
         onError: () => setStorageStatus("Game load error"),
         onLoad: () => {
@@ -1318,7 +1327,7 @@ function App() {
             backdropFilter: "blur(4px)",
           },
         },
-        "Menu"
+        "Show HUD"
       ),
       showPwaHud
         ? React.createElement(
@@ -1666,7 +1675,65 @@ function App() {
           )
         : null,
       rotatePrompt,
-      levelUpOverlay
+      levelUpOverlay,
+      showInstallHint && !isPwa
+        ? React.createElement(
+            "div",
+            {
+              style: {
+                position: "fixed",
+                bottom: "max(16px, env(safe-area-inset-bottom))",
+                left: "50%",
+                transform: "translateX(-50%)",
+                background: "rgba(5, 8, 15, 0.92)",
+                border: "1px solid #2a3560",
+                borderRadius: "12px",
+                padding: "10px 14px",
+                display: "flex",
+                gap: "8px",
+                alignItems: "center",
+                zIndex: 10003,
+                backdropFilter: "blur(8px)",
+                whiteSpace: "nowrap",
+              },
+            },
+            React.createElement(
+              "button",
+              {
+                onClick: handleOpenFullscreen,
+                style: {
+                  border: "1px solid #2a3560",
+                  borderRadius: "8px",
+                  padding: "8px 12px",
+                  color: "#fff",
+                  background: "#1a2550",
+                  fontSize: "12px",
+                  cursor: "pointer",
+                },
+              },
+              "Open Fullscreen"
+            ),
+            React.createElement(
+              "button",
+              {
+                onClick: () => {
+                  setShowInstallHint(false);
+                  localStorage.setItem("planet_hunters_install_banner_dismissed_v1", "1");
+                },
+                style: {
+                  border: "none",
+                  background: "none",
+                  color: "rgba(200,215,255,0.6)",
+                  fontSize: "16px",
+                  cursor: "pointer",
+                  padding: "4px 6px",
+                  lineHeight: 1,
+                },
+              },
+              "\u00d7"
+            )
+          )
+        : null
     );
   }
 
@@ -1716,7 +1783,7 @@ function App() {
               color: "var(--ink)",
             },
           },
-          "Planet Hunters"
+          "Star Sailors"
         ),
         React.createElement(
           "p",

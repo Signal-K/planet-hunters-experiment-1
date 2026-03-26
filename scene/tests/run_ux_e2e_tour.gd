@@ -77,6 +77,12 @@ func _load_scene(path: String) -> Node:
 		_active_scene.queue_free()
 		_active_scene = null
 		await get_tree().create_timer(0.3).timeout
+	# Remove any CanvasLayer overlays (e.g. MechanicIntroOverlay) that were
+	# parented to tree.root by game systems rather than to the active scene.
+	# These persist across _load_scene() calls and bleed into later screenshots.
+	for child in get_tree().root.get_children():
+		if child is CanvasLayer and child != self and not child.is_ancestor_of(self):
+			child.queue_free()
 
 	var packed: PackedScene = load(path)
 	if not packed:

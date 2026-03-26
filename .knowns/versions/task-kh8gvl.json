@@ -1,0 +1,75 @@
+{
+  "taskId": "kh8gvl",
+  "currentVersion": 2,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "kh8gvl",
+      "version": 1,
+      "timestamp": "2026-03-26T02:27:06.034Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "kanban: rlxdxi"
+        }
+      ],
+      "snapshot": {
+        "title": "Sketch star map UI for target selection",
+        "description": "The launchpad target selector currently shows a card list. Sketch an alternative star-map style target picker: candidates placed roughly at their sky coordinates, distance/fuel indicator when selecting a target, planet vs asteroid visual distinction, how TESS candidate data shows (magnitude, distance, disposition). This is a rough concept sketch — not a final design.",
+        "status": "in-review",
+        "priority": "medium",
+        "labels": [
+          "liam-sprint",
+          "sketch",
+          "design"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Star map concept sketch completed"
+          },
+          {
+            "completed": false,
+            "text": "Key data points identified for each target type"
+          }
+        ],
+        "implementationNotes": "kanban: rlxdxi"
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "kh8gvl",
+      "version": 2,
+      "timestamp": "2026-03-26T09:17:05.204Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "kanban: rlxdxi",
+          "newValue": "kanban: rlxdxi\n\nkanban: rlxdxi"
+        }
+      ],
+      "snapshot": {
+        "title": "Sketch star map UI for target selection",
+        "description": "The launchpad target selector currently shows a card list. Sketch an alternative star-map style target picker: candidates placed roughly at their sky coordinates, distance/fuel indicator when selecting a target, planet vs asteroid visual distinction, how TESS candidate data shows (magnitude, distance, disposition). This is a rough concept sketch — not a final design.",
+        "status": "in-review",
+        "priority": "medium",
+        "labels": [
+          "liam-sprint",
+          "sketch",
+          "design"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Star map concept sketch completed"
+          },
+          {
+            "completed": false,
+            "text": "Key data points identified for each target type"
+          }
+        ],
+        "implementationNotes": "kanban: rlxdxi\n\nkanban: rlxdxi"
+      }
+    }
+  ]
+}

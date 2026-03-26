@@ -1,6 +1,6 @@
 ---
 id: o59h32
-title: Starter Rocket 2 unlock celebration beat
+title: SR2 unlock screen — milestone moment
 status: done
 priority: medium
 labels:
@@ -8,11 +8,11 @@ labels:
   - progression
   - feel
 createdAt: '2026-03-01T16:16:06.223Z'
-updatedAt: '2026-03-07T01:34:55.262Z'
+updatedAt: '2026-03-26T00:23:56.486Z'
 timeSpent: 38
 assignee: '@me'
 ---
-# Starter Rocket 2 unlock celebration beat
+# SR2 unlock screen — milestone moment
 
 ## Description
 
