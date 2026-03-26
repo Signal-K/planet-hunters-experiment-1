@@ -52,9 +52,11 @@ static func save_state(
         data["mission_progress_schema_version"] = mission_progress_schema_version
     var json = preload("res://Scripts/Utils/JSONFileManager.gd")
     var ok = json.save_json(state_path, data)
-    # Best-effort dev sync: update res:// file when writable (editor)
-    # Ignore failures since res:// can be read-only in tests/exports.
-    json.save_json(default_state_path, data)
+    # Best-effort dev sync: update res:// file only when running in the Godot
+    # editor. Skipped in exported builds, headless tests, and Docker to prevent
+    # the seed file from being overwritten with live player state.
+    if OS.has_feature("editor"):
+        json.save_json(default_state_path, data)
     return ok
 
 static func build_default_state(mission_progress_schema_version: int) -> Dictionary:

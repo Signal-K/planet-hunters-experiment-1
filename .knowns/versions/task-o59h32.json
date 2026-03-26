@@ -1,6 +1,6 @@
 {
   "taskId": "o59h32",
-  "currentVersion": 6,
+  "currentVersion": 7,
   "versions": [
     {
       "id": "v1",
@@ -236,6 +236,43 @@
       ],
       "snapshot": {
         "title": "Starter Rocket 2 unlock celebration beat",
+        "description": "The SR2 unlock popup currently looks like a plain notification. It should feel like a real milestone: visual flash, hold, clear reward summary.",
+        "status": "done",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "ux",
+          "progression",
+          "feel"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Unlock popup has a distinct visual treatment (animation or highlight) vs generic notifications"
+          },
+          {
+            "completed": true,
+            "text": "Popup communicates what SR2 unlocks (speed, range)"
+          }
+        ],
+        "implementationPlan": "1. Add visual celebration treatment to SR2 unlock popup (animated glow/entrance)\n2. Present SR2 unlock benefits as clear highlighted stats\n3. Validate Earth base scene load\n4. Close task",
+        "implementationNotes": "✓ Upgraded SR2 unlock popup with milestone treatment: animated fade/scale intro, pulsing rocket icon, and highlight chips for Speed/Range/Cargo unlocks. Existing stat summary retained with clearer reward framing."
+      }
+    },
+    {
+      "id": "v7",
+      "taskId": "o59h32",
+      "version": 7,
+      "timestamp": "2026-03-26T00:23:56.488Z",
+      "changes": [
+        {
+          "field": "title",
+          "oldValue": "Starter Rocket 2 unlock celebration beat",
+          "newValue": "SR2 unlock screen — milestone moment"
+        }
+      ],
+      "snapshot": {
+        "title": "SR2 unlock screen — milestone moment",
         "description": "The SR2 unlock popup currently looks like a plain notification. It should feel like a real milestone: visual flash, hold, clear reward summary.",
         "status": "done",
         "priority": "medium",

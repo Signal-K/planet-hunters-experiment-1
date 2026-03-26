@@ -1,0 +1,166 @@
+{
+  "taskId": "ps6nfy",
+  "currentVersion": 4,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "ps6nfy",
+      "version": 1,
+      "timestamp": "2026-03-25T11:51:35.639Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "## Screen reference\n\nThe SR2 unlock celebration fires from this earth base state. The visual treatment (pulse, burst, animation) overlays this screen:\n\n![Earth base post-Mission 1 — SR2 celebration context](https://raw.githubusercontent.com/Signal-K/planet-hunters-experiment-1/main/e2e/screenshots/ux-tour-earth-base-post-m1.png)\n\nDesign the celebration to work on top of this dark-sky / sci-fi aesthetic. The level-up banner appears in the top-right area of the shell (outside the game iframe)."
+        }
+      ],
+      "snapshot": {
+        "title": "Design the Starter Rocket 2 unlock celebration beat",
+        "description": "SR2 unlock is a milestone — the first major progression reward. It needs a celebration moment. Decide: what does the 2–3s flash look like (gold pulse, star burst, or something else)? What copy appears? The shell already has a level-up banner. Write the exact headline + stats reveal copy (SR2: 2× speed · 2× range · 1.5× cargo) and any flavour text. Optionally sketch the visual idea. This directly unblocks ticket o59h32 for agent implementation. ~1h.",
+        "status": "todo",
+        "priority": "medium",
+        "assignee": "Liam",
+        "labels": [
+          "design",
+          "creative"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Celebration copy written (headline + stats)"
+          },
+          {
+            "completed": false,
+            "text": "Visual direction described (even just words)"
+          },
+          {
+            "completed": false,
+            "text": "Notes added to task for agent to implement"
+          }
+        ],
+        "implementationNotes": "## Screen reference\n\nThe SR2 unlock celebration fires from this earth base state. The visual treatment (pulse, burst, animation) overlays this screen:\n\n![Earth base post-Mission 1 — SR2 celebration context](https://raw.githubusercontent.com/Signal-K/planet-hunters-experiment-1/main/e2e/screenshots/ux-tour-earth-base-post-m1.png)\n\nDesign the celebration to work on top of this dark-sky / sci-fi aesthetic. The level-up banner appears in the top-right area of the shell (outside the game iframe)."
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "ps6nfy",
+      "version": 2,
+      "timestamp": "2026-03-26T00:23:39.299Z",
+      "changes": [
+        {
+          "field": "title",
+          "oldValue": "Design the Starter Rocket 2 unlock celebration beat",
+          "newValue": "Write SR2 unlock screen copy and visual direction"
+        }
+      ],
+      "snapshot": {
+        "title": "Write SR2 unlock screen copy and visual direction",
+        "description": "SR2 unlock is a milestone — the first major progression reward. It needs a celebration moment. Decide: what does the 2–3s flash look like (gold pulse, star burst, or something else)? What copy appears? The shell already has a level-up banner. Write the exact headline + stats reveal copy (SR2: 2× speed · 2× range · 1.5× cargo) and any flavour text. Optionally sketch the visual idea. This directly unblocks ticket o59h32 for agent implementation. ~1h.",
+        "status": "todo",
+        "priority": "medium",
+        "assignee": "Liam",
+        "labels": [
+          "design",
+          "creative"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Celebration copy written (headline + stats)"
+          },
+          {
+            "completed": false,
+            "text": "Visual direction described (even just words)"
+          },
+          {
+            "completed": false,
+            "text": "Notes added to task for agent to implement"
+          }
+        ],
+        "implementationNotes": "## Screen reference\n\nThe SR2 unlock celebration fires from this earth base state. The visual treatment (pulse, burst, animation) overlays this screen:\n\n![Earth base post-Mission 1 — SR2 celebration context](https://raw.githubusercontent.com/Signal-K/planet-hunters-experiment-1/main/e2e/screenshots/ux-tour-earth-base-post-m1.png)\n\nDesign the celebration to work on top of this dark-sky / sci-fi aesthetic. The level-up banner appears in the top-right area of the shell (outside the game iframe)."
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "ps6nfy",
+      "version": 3,
+      "timestamp": "2026-03-26T00:23:56.141Z",
+      "changes": [
+        {
+          "field": "description",
+          "oldValue": "SR2 unlock is a milestone — the first major progression reward. It needs a celebration moment. Decide: what does the 2–3s flash look like (gold pulse, star burst, or something else)? What copy appears? The shell already has a level-up banner. Write the exact headline + stats reveal copy (SR2: 2× speed · 2× range · 1.5× cargo) and any flavour text. Optionally sketch the visual idea. This directly unblocks ticket o59h32 for agent implementation. ~1h.",
+          "newValue": "SR2 unlock is the first major progression milestone. Decide what the 2–3s flash looks like (gold pulse, star burst, etc.), write the exact headline and stats reveal copy (SR2: 2× speed · 2× range · 1.5× cargo), and any flavour text. Optionally sketch the visual direction. This directly unblocks implementation. ~1h."
+        }
+      ],
+      "snapshot": {
+        "title": "Write SR2 unlock screen copy and visual direction",
+        "description": "SR2 unlock is the first major progression milestone. Decide what the 2–3s flash looks like (gold pulse, star burst, etc.), write the exact headline and stats reveal copy (SR2: 2× speed · 2× range · 1.5× cargo), and any flavour text. Optionally sketch the visual direction. This directly unblocks implementation. ~1h.",
+        "status": "todo",
+        "priority": "medium",
+        "assignee": "Liam",
+        "labels": [
+          "design",
+          "creative"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Celebration copy written (headline + stats)"
+          },
+          {
+            "completed": false,
+            "text": "Visual direction described (even just words)"
+          },
+          {
+            "completed": false,
+            "text": "Notes added to task for agent to implement"
+          }
+        ],
+        "implementationNotes": "## Screen reference\n\nThe SR2 unlock celebration fires from this earth base state. The visual treatment (pulse, burst, animation) overlays this screen:\n\n![Earth base post-Mission 1 — SR2 celebration context](https://raw.githubusercontent.com/Signal-K/planet-hunters-experiment-1/main/e2e/screenshots/ux-tour-earth-base-post-m1.png)\n\nDesign the celebration to work on top of this dark-sky / sci-fi aesthetic. The level-up banner appears in the top-right area of the shell (outside the game iframe)."
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "ps6nfy",
+      "version": 4,
+      "timestamp": "2026-03-26T02:30:15.549Z",
+      "changes": [
+        {
+          "field": "title",
+          "oldValue": "Design the Starter Rocket 2 unlock celebration beat",
+          "newValue": "Design the SR2 unlock milestone moment"
+        },
+        {
+          "field": "description",
+          "oldValue": "SR2 unlock is a milestone — the first major progression reward. It needs a celebration moment. Decide: what does the 2–3s flash look like (gold pulse, star burst, or something else)? What copy appears? The shell already has a level-up banner. Write the exact headline + stats reveal copy (SR2: 2× speed · 2× range · 1.5× cargo) and any flavour text. Optionally sketch the visual idea. This directly unblocks ticket o59h32 for agent implementation. ~1h.",
+          "newValue": "SR2 unlock is the first major progression reward. Decide: what does the 2–3s flash look like (gold pulse, star burst, or something else)? What copy appears? The shell already has a level-up banner. Write the exact headline + stats reveal copy (SR2: 2× speed · 2× range · 1.5× cargo) and any flavour text. Optionally sketch the visual idea. This directly unblocks ticket o59h32 for agent implementation."
+        }
+      ],
+      "snapshot": {
+        "title": "Design the SR2 unlock milestone moment",
+        "description": "SR2 unlock is the first major progression reward. Decide: what does the 2–3s flash look like (gold pulse, star burst, or something else)? What copy appears? The shell already has a level-up banner. Write the exact headline + stats reveal copy (SR2: 2× speed · 2× range · 1.5× cargo) and any flavour text. Optionally sketch the visual idea. This directly unblocks ticket o59h32 for agent implementation.",
+        "status": "todo",
+        "priority": "medium",
+        "assignee": "Liam",
+        "labels": [
+          "design",
+          "creative"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Celebration copy written (headline + stats)"
+          },
+          {
+            "completed": false,
+            "text": "Visual direction described (even just words)"
+          },
+          {
+            "completed": false,
+            "text": "Notes added to task for agent to implement"
+          }
+        ],
+        "implementationNotes": "## Screen reference\n\nThe SR2 unlock celebration fires from this earth base state. The visual treatment (pulse, burst, animation) overlays this screen:\n\n![Earth base post-Mission 1 — SR2 celebration context](https://raw.githubusercontent.com/Signal-K/planet-hunters-experiment-1/main/e2e/screenshots/ux-tour-earth-base-post-m1.png)\n\nDesign the celebration to work on top of this dark-sky / sci-fi aesthetic. The level-up banner appears in the top-right area of the shell (outside the game iframe)."
+      }
+    }
+  ]
+}

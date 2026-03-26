@@ -1,0 +1,1068 @@
+{
+  "tasks": [
+    {
+      "id": "lccgj7",
+      "project": "saily",
+      "projectName": "Daily Game",
+      "title": "Write briefing dialogue for all 4 character arcs",
+      "status": "todo",
+      "priority": "medium",
+      "labels": [
+        "liam-sprint",
+        "narrative",
+        "writing"
+      ],
+      "assignee": "Liam",
+      "description": "Each character has a one-liner that plays before the daily puzzle \u2014 their briefing expression. Several chapters are missing these lines. Go through each of the 4 characters (Zix, Brix, Pip, The Cartographer) and write the missing ones. ~20-30 short lines total. Match each character's established voice and arc position.",
+      "notes": "knowns: task-lccgj7",
+      "plan": "",
+      "ac": [],
+      "attachments": [],
+      "createdAt": "2026-03-24T00:00:00Z",
+      "updatedAt": "2026-03-26T20:16:21.301210+11:00",
+      "timeSpent": 0
+    },
+    {
+      "id": "magq2n",
+      "project": "saily",
+      "projectName": "Daily Game",
+      "title": "Write arc 1 completion screen copy for each character",
+      "status": "todo",
+      "priority": "medium",
+      "labels": [
+        "liam-sprint",
+        "narrative",
+        "writing"
+      ],
+      "assignee": "Liam",
+      "description": "When a player finishes a character's arc, a reward screen marks the moment. Write the copy for all 4 characters: a short headline and 2-3 sentences. Should feel personal to each character and earned. This is the last thing a player sees for arc 1 \u2014 it needs to land.",
+      "notes": "knowns: task-magq2n",
+      "plan": "",
+      "ac": [],
+      "attachments": [],
+      "createdAt": "2026-03-24T00:00:00Z",
+      "updatedAt": "2026-03-26T20:16:21.301210+11:00",
+      "timeSpent": 0
+    },
+    {
+      "id": "gu5376",
+      "project": "planet-hunters-experiment-1",
+      "projectName": "Experiment 1",
+      "title": "Write copy and flow for the Starter Rocket 2 unlock screen",
+      "status": "todo",
+      "priority": "medium",
+      "labels": [
+        "liam-sprint",
+        "writing",
+        "design"
+      ],
+      "assignee": "Liam",
+      "description": "After Mission 1 debrief, the player unlocks Starter Rocket 2 (range: 18 AU vs SR1's 12 AU). There is currently no proper unlock ceremony \u2014 write the copy and help define the flow:\n\n\u2022 Unlock headline: 'Starter Rocket 2 is ready' \u2014 improve this\n\u2022 Stats to communicate: extended range, new targets now reachable\n\u2022 CTA copy: 'Launch now' / 'Inspect rocket' \u2014 what's the right framing?\n\u2022 Flavour text: 2 sentences that make the new rocket feel like an achievement\n\nRelated: there's a sketch ticket for the visual layout of this screen.\n\nThe screenshot below shows the shell state immediately after Mission 1 completes \u2014 this is the moment just before SR2 unlock would trigger:\n\n![Shell after Mission 1 complete](https://raw.githubusercontent.com/Signal-K/planet-hunters-experiment-1/main/e2e/screenshots/shell-mission1-complete.png)",
+      "notes": "knowns: task-gu5376",
+      "plan": "",
+      "ac": [],
+      "attachments": [],
+      "createdAt": "2026-03-24T00:00:00Z",
+      "updatedAt": "2026-03-26T20:16:21.301210+11:00",
+      "timeSpent": 0
+    },
+    {
+      "id": "hac32h",
+      "project": "coral",
+      "projectName": "Coral",
+      "title": "Write visual personality notes for 3 fish species",
+      "status": "todo",
+      "priority": "medium",
+      "labels": [
+        "liam-sprint",
+        "art",
+        "concept"
+      ],
+      "assignee": "Liam",
+      "description": "The artist needs direction before animating the fish. For 3 early-level species (e.g. Blue Chromis, Parrotfish, Clownfish), write a short profile for each: how it moves, how it reacts to the player, what mood it gives off. ~150 words each. This goes directly to the artist as a brief \u2014 be visual and specific.",
+      "notes": "knowns: task-hac32h",
+      "plan": "",
+      "ac": [],
+      "attachments": [],
+      "createdAt": "2026-03-24T00:00:00Z",
+      "updatedAt": "2026-03-26T20:16:21.301210+11:00",
+      "timeSpent": 0
+    },
+    {
+      "id": "aaigmw",
+      "project": "client",
+      "projectName": "Web",
+      "title": "Document typography and colour tokens for the 3.0 redesign",
+      "status": "in-review",
+      "priority": "high",
+      "labels": [
+        "liam-sprint",
+        "design"
+      ],
+      "assignee": "Liam",
+      "description": "The 3.0 redesign is blocked without a locked design token foundation. Document the decisions: which fonts at which weights, colour palette with hex values (teal/amber/sky + neutrals), spacing scale, and dark/light mode variants. Write it as a short markdown spec \u2014 not a full design system, just the decisions locked down so the developer can build from them.",
+      "notes": "knowns: task-aaigmw",
+      "plan": "",
+      "ac": [],
+      "attachments": [
+        "/Users/scroobz/Navigation/quartz/content/Design/Star-Sailors/3.0 Colour Tokens.md"
+      ],
+      "createdAt": "2026-03-24T00:00:00Z",
+      "updatedAt": "2026-03-26T20:16:21.301210+11:00",
+      "timeSpent": 0
+    },
+    {
+      "id": "kown0y",
+      "project": "planet-hunters-experiment-1",
+      "projectName": "Experiment 1",
+      "title": "Write copy for the mining button guide panel",
+      "status": "todo",
+      "priority": "high",
+      "labels": [
+        "liam-sprint",
+        "writing"
+      ],
+      "assignee": "Liam",
+      "description": "The '? Guide' button (top-right of mining screen) opens a handbook panel. It currently reads placeholder/dev text. Needs proper copy for all 3 control modes:\n\nKEYBOARD:\n  \u2022 SPACE \u2014 hold to fire mining laser at surface deposits\n  \u2022 D \u2014 deploy a drone to collect dark subsurface deposits (when unlocked)\n  \u2022 RETURN/ENTER \u2014 end run and open mission debrief\n\nTOUCH (on-screen buttons):\n  \u2022 FIRE button (large, bottom-centre) \u2014 hold to mine\n  \u2022 DRONE button \u2014 tap while over a dark deposit\n  \u2022 RETURN button (top-right) \u2014 end run\n\nAlso needs: brief explanation of surface (orange) vs subsurface (dark) deposits, and what the fuel/heat/beam gauges mean in one sentence each.\n\nThe '? Guide' button is visible in the top-right corner of the mining minigame screen. The shell (what the player sees before entering the game) in landscape / active-game mode:\n\n![Shell in mobile landscape \u2014 game active](https://raw.githubusercontent.com/Signal-K/planet-hunters-experiment-1/main/e2e/screenshots/shell-mobile-landscape.png)",
+      "notes": "knowns: task-1ybfhm",
+      "plan": "",
+      "ac": [
+        {
+          "index": 1,
+          "done": false,
+          "text": "Keyboard control descriptions written"
+        },
+        {
+          "index": 2,
+          "done": false,
+          "text": "Touch control descriptions written"
+        },
+        {
+          "index": 3,
+          "done": false,
+          "text": "Gauge explanations (fuel/heat/beam) written"
+        },
+        {
+          "index": 4,
+          "done": false,
+          "text": "Surface vs subsurface deposit explanation written"
+        }
+      ],
+      "attachments": [],
+      "createdAt": "2026-03-25T03:00:00Z",
+      "updatedAt": "2026-03-26T13:32:15.004773+11:00",
+      "timeSpent": 0
+    },
+    {
+      "id": "0sgxzk",
+      "project": "planet-hunters-experiment-1",
+      "projectName": "Experiment 1",
+      "title": "Write mission debrief screen copy",
+      "status": "todo",
+      "priority": "high",
+      "labels": [
+        "liam-sprint",
+        "writing"
+      ],
+      "assignee": "Liam",
+      "description": "The debrief screen appears after every mining run. It currently shows 'Mission Complete!' with a list of minerals, payout, and two buttons.\n\nScreens to write for:\n  \u2022 Mission 1 debrief \u2014 congratulatory tone, hint that SR2 unlocks next\n  \u2022 Mission 2 debrief \u2014 TESS planet teaser\n  \u2022 Mission 3 debrief \u2014 scanner station unlock teaser\n  \u2022 Mission 4 debrief \u2014 Free Operations unlock\n\nButtons needing copy review:\n  \u2022 'Sell & Scrap Ship \u2192' \u2014 confirm this is the right action label\n  \u2022 'Leave Ship in Orbit' \u2014 needs tooltip or sub-label explaining what this means\n\nHintLabel currently reads: 'Debrief to unlock Mission X \u2014 [description]'. All 4 variants need a pass.\n\nThe debrief is triggered from within the game iframe. The shell state shown below is what the player returns to after debriefing Mission 1:\n\n![Shell state post-Mission 1](https://raw.githubusercontent.com/Signal-K/planet-hunters-experiment-1/main/e2e/screenshots/shell-mission1-complete.png)\n\n_(Full in-game debrief screenshots will be available from the CI ux-tour run at: `e2e/screenshots/` after the next CI run)_",
+      "notes": "knowns: task-g3ty55",
+      "plan": "",
+      "ac": [
+        {
+          "index": 1,
+          "done": false,
+          "text": "All 4 mission HintLabel variants written"
+        },
+        {
+          "index": 2,
+          "done": false,
+          "text": "Button labels reviewed and confirmed"
+        },
+        {
+          "index": 3,
+          "done": false,
+          "text": "'Leave Ship in Orbit' sub-label or tooltip written"
+        }
+      ],
+      "attachments": [],
+      "createdAt": "2026-03-25T03:00:00Z",
+      "updatedAt": "2026-03-26T13:32:15.004773+11:00",
+      "timeSpent": 0
+    },
+    {
+      "id": "drohey",
+      "project": "planet-hunters-experiment-1",
+      "projectName": "Experiment 1",
+      "title": "Write level-up banner copy for levels 2\u20135",
+      "status": "todo",
+      "priority": "medium",
+      "labels": [
+        "liam-sprint",
+        "writing"
+      ],
+      "assignee": "Liam",
+      "description": "The shell shows a banner when the player levels up. Each level has a hint message in LEVEL_UNLOCK_HINTS. Need short (max 12 words), punchy descriptions of what each level unlocks. Current placeholders are dry/technical.\n\nLevel 2: something about longer range / second mission\nLevel 3: TESS planets / real NASA data\nLevel 4: scanner station / drone mining\nLevel 5: Free Operations / full control\n\n![Level-up banner (level 3 shown)](https://raw.githubusercontent.com/Signal-K/planet-hunters-experiment-1/main/e2e/screenshots/shell-level-up-banner.png)",
+      "notes": "knowns: task-dgnqj1",
+      "plan": "",
+      "ac": [
+        {
+          "index": 1,
+          "done": false,
+          "text": "Copy written for levels 2\u20135 banners"
+        },
+        {
+          "index": 2,
+          "done": false,
+          "text": "Each hint is \u226412 words and reads as a reward, not a feature list"
+        }
+      ],
+      "attachments": [],
+      "createdAt": "2026-03-25T03:00:00Z",
+      "updatedAt": "2026-03-26T13:32:15.004773+11:00",
+      "timeSpent": 0
+    },
+    {
+      "id": "275r0m",
+      "project": "planet-hunters-experiment-1",
+      "projectName": "Experiment 1",
+      "title": "Sketch the Starter Rocket 2 unlock screen layout",
+      "status": "todo",
+      "priority": "high",
+      "labels": [
+        "liam-sprint",
+        "sketch",
+        "design"
+      ],
+      "assignee": "Liam",
+      "description": "SR2 unlocks after Mission 1 debrief. Currently it jumps straight to a screen with a new rocket but no ceremony. Sketch a layout for a proper unlock moment:\n\n\u2022 Where does the rocket illustration sit?\n\u2022 What stats / specs are shown (range: 18 AU, vs SR1's 12 AU)?\n\u2022 Is there an animation or just a static reveal?\n\u2022 What are the CTAs \u2014 'Launch now' vs 'Customise'?\n\nThis is a sketch only \u2014 no need to spec every pixel, just the flow and rough layout.\n\nCurrent state of the shell after Mission 1 (what this screen should replace / follow):\n\n![Shell after Mission 1 complete](https://raw.githubusercontent.com/Signal-K/planet-hunters-experiment-1/main/e2e/screenshots/shell-mission1-complete.png)",
+      "notes": "knowns: task-2409on",
+      "plan": "",
+      "ac": [
+        {
+          "index": 1,
+          "done": false,
+          "text": "Rough layout sketch showing rocket position, stats, CTAs"
+        },
+        {
+          "index": 2,
+          "done": false,
+          "text": "Flow mapped: where does user come from / go next"
+        }
+      ],
+      "attachments": [],
+      "createdAt": "2026-03-25T03:00:00Z",
+      "updatedAt": "2026-03-26T13:32:15.004773+11:00",
+      "timeSpent": 0
+    },
+    {
+      "id": "84qdog",
+      "project": "planet-hunters-experiment-1",
+      "projectName": "Experiment 1",
+      "title": "Sketch a 'next mission' CTA for post-debrief screen",
+      "status": "todo",
+      "priority": "medium",
+      "labels": [
+        "liam-sprint",
+        "sketch"
+      ],
+      "assignee": "Liam",
+      "description": "After completing a mission debrief, the player currently lands back at the shell with no clear next step. Sketch a CTA overlay or card that appears after debrief:\n\n\u2022 'Your next mission is ready' \u2014 with mission name and target planet\n\u2022 Should feel like a mission briefing card, not a system notification\n\u2022 Consider: does it appear in the shell or within the game?\n\nThis is what the player sees when they return to the shell after Mission 1 \u2014 there's no next-step prompt:\n\n![Shell after Mission 1 \u2014 no next-step CTA](https://raw.githubusercontent.com/Signal-K/planet-hunters-experiment-1/main/e2e/screenshots/shell-mission1-complete.png)",
+      "notes": "knowns: task-ommhwg",
+      "plan": "",
+      "ac": [
+        {
+          "index": 1,
+          "done": false,
+          "text": "Sketch showing CTA placement and rough content"
+        },
+        {
+          "index": 2,
+          "done": false,
+          "text": "Decision on shell vs in-game placement noted"
+        }
+      ],
+      "attachments": [],
+      "createdAt": "2026-03-25T03:00:00Z",
+      "updatedAt": "2026-03-26T13:32:15.004773+11:00",
+      "timeSpent": 0
+    },
+    {
+      "id": "way1gr",
+      "project": "planet-hunters-experiment-1",
+      "projectName": "Experiment 1",
+      "title": "Write mining tutorial step messages (all 6 steps)",
+      "status": "todo",
+      "priority": "medium",
+      "labels": [
+        "liam-sprint",
+        "writing"
+      ],
+      "assignee": "Liam",
+      "description": "The tutorial guide shows instruction text at each step. Current messages are functional but dry. Review and rewrite all 6 steps for both keyboard and touch modes:\n\nINTRO \u2192 MINE_SURFACE_IRON \u2192 MINE_SURFACE_NICKEL \u2192 EXPLAIN_SUBSURFACE \u2192 DEPLOY_DRONE \u2192 COMPLETE\n\nEach message should feel like a voice \u2014 curious and enthusiastic, not a manual. 'Mine orange surface deposits (iron).' \u2192 something more alive.\n\nThis is the shell when a fresh user arrives \u2014 the tutorial guide coach overlay appears inside the game iframe shortly after:\n\n![Shell fresh load \u2014 game not yet started](https://raw.githubusercontent.com/Signal-K/planet-hunters-experiment-1/main/e2e/screenshots/shell-fresh.png)",
+      "notes": "knowns: task-8yxlny",
+      "plan": "",
+      "ac": [
+        {
+          "index": 1,
+          "done": false,
+          "text": "All 6 step messages rewritten for keyboard mode"
+        },
+        {
+          "index": 2,
+          "done": false,
+          "text": "Touch variants written (where different)"
+        },
+        {
+          "index": 3,
+          "done": false,
+          "text": "Tone is consistent and not manual-like"
+        }
+      ],
+      "attachments": [],
+      "createdAt": "2026-03-25T03:00:00Z",
+      "updatedAt": "2026-03-26T13:32:15.004773+11:00",
+      "timeSpent": 0
+    },
+    {
+      "id": "rlxdxi",
+      "project": "planet-hunters-experiment-1",
+      "projectName": "Experiment 1",
+      "title": "Sketch star map UI for target selection",
+      "status": "in-review",
+      "priority": "medium",
+      "labels": [
+        "liam-sprint",
+        "sketch",
+        "design"
+      ],
+      "assignee": "Liam",
+      "description": "The launchpad target selector currently shows a card list. Sketch an alternative star-map style target picker:\n\n\u2022 Candidates placed roughly at their sky coordinates\n\u2022 Distance/fuel indicator when selecting a target\n\u2022 Planet vs asteroid visual distinction\n\u2022 How does the TESS candidate data show \u2014 magnitude, distance, disposition?\n\nThis is a rough sketch exploring the concept \u2014 not a final design.",
+      "notes": "knowns: task-kh8gvl",
+      "plan": "",
+      "ac": [
+        {
+          "index": 1,
+          "done": false,
+          "text": "Star map concept sketch completed"
+        },
+        {
+          "index": 2,
+          "done": false,
+          "text": "Key data points identified for each target type"
+        }
+      ],
+      "attachments": [
+        "/Users/scroobz/Navigation/quartz/content/Design/Experiment-1/Star Map Design V1.md"
+      ],
+      "createdAt": "2026-03-25T03:00:00Z",
+      "updatedAt": "2026-03-26T13:32:15.004773+11:00",
+      "timeSpent": 0
+    },
+    {
+      "id": "kw8lqs",
+      "project": "saily",
+      "projectName": "Daily Game",
+      "title": "Write arc 2\u20134 completion screen copy",
+      "status": "todo",
+      "priority": "medium",
+      "labels": [
+        "liam-sprint",
+        "writing"
+      ],
+      "assignee": "Liam",
+      "description": "Arc 1 completion copy is done. Need the same treatment for arcs 2, 3, and 4. Each arc has a different character and emotional payoff:\n\nArc 2: [character name] \u2014 theme TBD\nArc 3: [character name] \u2014 theme TBD\nArc 4: [character name] \u2014 theme TBD\n\nEach completion screen needs: headline, 2-3 lines of outcome text, and a 'what unlocks next' hook.",
+      "notes": "knowns: task-rsf3f3",
+      "plan": "",
+      "ac": [
+        {
+          "index": 1,
+          "done": false,
+          "text": "Arc 2 completion copy written"
+        },
+        {
+          "index": 2,
+          "done": false,
+          "text": "Arc 3 completion copy written"
+        },
+        {
+          "index": 3,
+          "done": false,
+          "text": "Arc 4 completion copy written"
+        }
+      ],
+      "attachments": [],
+      "createdAt": "2026-03-25T03:00:00Z",
+      "updatedAt": "2026-03-26T13:32:15.004773+11:00",
+      "timeSpent": 0
+    },
+    {
+      "id": "t0rrwh",
+      "project": "saily",
+      "projectName": "Daily Game",
+      "title": "Write in-game notification copy for daily reminders",
+      "status": "todo",
+      "priority": "low",
+      "labels": [
+        "liam-sprint",
+        "writing"
+      ],
+      "assignee": "Liam",
+      "description": "Saily sends daily push notifications to bring players back. Need 8\u201310 rotation variants that feel like they come from the characters, not a system. Avoid 'Your daily game is ready!' style.\n\nEach variant should hint at a specific character or event in the story, so players feel like they're missing something specific, not just a generic reminder.",
+      "notes": "knowns: task-gfwp1i",
+      "plan": "",
+      "ac": [
+        {
+          "index": 1,
+          "done": false,
+          "text": "8\u201310 notification copy variants written"
+        },
+        {
+          "index": 2,
+          "done": false,
+          "text": "Each variant references a character or story beat"
+        },
+        {
+          "index": 3,
+          "done": false,
+          "text": "None read as generic system messages"
+        }
+      ],
+      "attachments": [],
+      "createdAt": "2026-03-25T03:00:00Z",
+      "updatedAt": "2026-03-26T13:32:15.004773+11:00",
+      "timeSpent": 0
+    },
+    {
+      "id": "gh3sgu",
+      "project": "saily",
+      "projectName": "Daily Game",
+      "title": "Sketch the character selection / briefing screen layout",
+      "status": "todo",
+      "priority": "high",
+      "labels": [
+        "liam-sprint",
+        "sketch",
+        "design"
+      ],
+      "assignee": "Liam",
+      "description": "The briefing screen is where players choose which character arc to continue each day. Sketch the layout for:\n\n\u2022 How are 4 character cards displayed? Grid? Carousel?\n\u2022 What info is shown per card: name, arc progress, today's prompt preview?\n\u2022 What does the locked/unavailable state look like?\n\u2022 Where does the dialogue actually happen \u2014 same screen or a sub-screen?\n\nThink about how it feels different from a typical 'choose your character' screen.",
+      "notes": "knowns: task-5hakbo",
+      "plan": "",
+      "ac": [
+        {
+          "index": 1,
+          "done": false,
+          "text": "Layout sketch for character grid/list"
+        },
+        {
+          "index": 2,
+          "done": false,
+          "text": "Card states sketched: active, locked, complete"
+        },
+        {
+          "index": 3,
+          "done": false,
+          "text": "Dialogue entry flow noted"
+        }
+      ],
+      "attachments": [],
+      "createdAt": "2026-03-25T03:00:00Z",
+      "updatedAt": "2026-03-26T13:32:15.004773+11:00",
+      "timeSpent": 0
+    },
+    {
+      "id": "7eqy6z",
+      "project": "saily",
+      "projectName": "Daily Game",
+      "title": "Write loading / splash screen copy",
+      "status": "todo",
+      "priority": "low",
+      "labels": [
+        "liam-sprint",
+        "writing"
+      ],
+      "assignee": "Liam",
+      "description": "The loading/splash screen shows while assets load. Instead of a spinner and blank screen, write 5\u20136 rotating micro-copy lines that set the tone: quiet, slightly poetic, personal. Like opening lines of a letter rather than a loading tip.",
+      "notes": "knowns: task-gg8ol2",
+      "plan": "",
+      "ac": [
+        {
+          "index": 1,
+          "done": false,
+          "text": "5\u20136 loading micro-copy lines written"
+        },
+        {
+          "index": 2,
+          "done": false,
+          "text": "Tone is distinct from game tips \u2014 more like atmosphere"
+        }
+      ],
+      "attachments": [],
+      "createdAt": "2026-03-25T03:00:00Z",
+      "updatedAt": "2026-03-26T13:32:15.004773+11:00",
+      "timeSpent": 0
+    },
+    {
+      "id": "pr392y",
+      "project": "saily",
+      "projectName": "Daily Game",
+      "title": "Sketch the end-of-arc celebration / reward screen",
+      "status": "todo",
+      "priority": "medium",
+      "labels": [
+        "liam-sprint",
+        "sketch"
+      ],
+      "assignee": "Liam",
+      "description": "When a player completes a full character arc, they get a reward. Sketch what this screen looks like:\n\n\u2022 Is there an illustration of the character?\n\u2022 Does the UI feel different from the regular briefing screen? How?\n\u2022 What's the reward \u2014 a collectible? A quote? An unlockable?\n\u2022 How does the player know this is a 'moment' worth celebrating?\n\nThink about the emotional register \u2014 this should feel earned.",
+      "notes": "knowns: task-tohsuq",
+      "plan": "",
+      "ac": [
+        {
+          "index": 1,
+          "done": false,
+          "text": "Celebration screen layout sketched"
+        },
+        {
+          "index": 2,
+          "done": false,
+          "text": "Reward type decided and noted"
+        }
+      ],
+      "attachments": [],
+      "createdAt": "2026-03-25T03:00:00Z",
+      "updatedAt": "2026-03-26T13:32:15.004773+11:00",
+      "timeSpent": 0
+    },
+    {
+      "id": "s3mgg4",
+      "project": "coral",
+      "projectName": "Coral",
+      "title": "Write discover copy for 5 coral species",
+      "status": "todo",
+      "priority": "medium",
+      "labels": [
+        "liam-sprint",
+        "writing"
+      ],
+      "assignee": "Liam",
+      "description": "When a player first discovers a coral species, a panel appears with its name and a short description. Need copy for 5 coral species:\n\n\u2022 Name (scientific + common if relevant)\n\u2022 2\u20133 sentences: what it looks like, where it lives, one surprising fact\n\u2022 Tone: naturalist field notes \u2014 observational, not encyclopedic\n\nSpecies to write: [TBD \u2014 check coral species catalog in codebase]",
+      "notes": "knowns: task-y8boqc",
+      "plan": "",
+      "ac": [
+        {
+          "index": 1,
+          "done": false,
+          "text": "Copy written for 5 coral species"
+        },
+        {
+          "index": 2,
+          "done": false,
+          "text": "Each entry has scientific name + common name"
+        },
+        {
+          "index": 3,
+          "done": false,
+          "text": "Tone is field-notes, not encyclopedia"
+        }
+      ],
+      "attachments": [],
+      "createdAt": "2026-03-25T03:00:00Z",
+      "updatedAt": "2026-03-26T13:32:15.004773+11:00",
+      "timeSpent": 0
+    },
+    {
+      "id": "pbbr01",
+      "project": "coral",
+      "projectName": "Coral",
+      "title": "Sketch the coral health / ecosystem status HUD",
+      "status": "todo",
+      "priority": "high",
+      "labels": [
+        "liam-sprint",
+        "sketch",
+        "design"
+      ],
+      "assignee": "Liam",
+      "description": "The coral game needs a HUD that shows ecosystem health without feeling like a bar chart. Sketch an approach:\n\n\u2022 Temperature, pH, nutrients \u2014 how to show these without numbers feeling clinical?\n\u2022 Could health be shown through the visuals themselves (coral color, fish behaviour)?\n\u2022 What minimal UI overlay is actually needed?\n\nThink about how a diver would perceive reef health \u2014 through feel and sight, not a dashboard.",
+      "notes": "knowns: task-wxmjoe",
+      "plan": "",
+      "ac": [
+        {
+          "index": 1,
+          "done": false,
+          "text": "HUD concept sketch showing which data is shown and how"
+        },
+        {
+          "index": 2,
+          "done": false,
+          "text": "At least one alternative to numeric bar approach explored"
+        }
+      ],
+      "attachments": [],
+      "createdAt": "2026-03-25T03:00:00Z",
+      "updatedAt": "2026-03-26T13:32:15.004773+11:00",
+      "timeSpent": 0
+    },
+    {
+      "id": "lzyyrl",
+      "project": "coral",
+      "projectName": "Coral",
+      "title": "Write fish species personality notes (remaining 5)",
+      "status": "todo",
+      "priority": "medium",
+      "labels": [
+        "liam-sprint",
+        "writing"
+      ],
+      "assignee": "Liam",
+      "description": "3 fish species visual personality notes are in progress. Need the same for the remaining 5 species in the catalog. Each entry: movement style, behavioural quirk, relationship to reef, and a one-line 'personality' that animators can use as a brief.",
+      "notes": "knowns: task-wtwycm",
+      "plan": "",
+      "ac": [
+        {
+          "index": 1,
+          "done": false,
+          "text": "5 additional fish personality notes written"
+        },
+        {
+          "index": 2,
+          "done": false,
+          "text": "Each has a movement descriptor and personality line"
+        }
+      ],
+      "attachments": [],
+      "createdAt": "2026-03-25T03:00:00Z",
+      "updatedAt": "2026-03-26T13:32:15.004773+11:00",
+      "timeSpent": 0
+    },
+    {
+      "id": "uw3lor",
+      "project": "coral",
+      "projectName": "Coral",
+      "title": "Sketch the bleaching / restoration event UI",
+      "status": "todo",
+      "priority": "medium",
+      "labels": [
+        "liam-sprint",
+        "sketch"
+      ],
+      "assignee": "Liam",
+      "description": "When a coral bleaching event occurs, the game needs to communicate it without being heavy-handed or panic-inducing. Sketch:\n\n\u2022 How does the visual environment change (colour shift, fish behaviour)?\n\u2022 Is there a notification? What does it say?\n\u2022 What actions can the player take, and how are they presented?\n\u2022 How does recovery look when the player intervenes successfully?\n\nThis is about the emotional and visual arc of a bleaching event, not the mechanics.",
+      "notes": "knowns: task-qp0w5k",
+      "plan": "",
+      "ac": [
+        {
+          "index": 1,
+          "done": false,
+          "text": "Bleaching event visual/UI sketch completed"
+        },
+        {
+          "index": 2,
+          "done": false,
+          "text": "Recovery state sketched"
+        },
+        {
+          "index": 3,
+          "done": false,
+          "text": "Player action options noted"
+        }
+      ],
+      "attachments": [],
+      "createdAt": "2026-03-25T03:00:00Z",
+      "updatedAt": "2026-03-26T13:32:15.004773+11:00",
+      "timeSpent": 0
+    },
+    {
+      "id": "f7k41f",
+      "project": "client",
+      "projectName": "Web",
+      "title": "Sketch the 3.0 homepage hero section",
+      "status": "todo",
+      "priority": "high",
+      "labels": [
+        "liam-sprint",
+        "sketch",
+        "design"
+      ],
+      "assignee": "Liam",
+      "description": "The client website 3.0 redesign needs a new homepage hero. Sketch concepts for:\n\n\u2022 Headline placement and size hierarchy\n\u2022 Background treatment \u2014 is it dark/space-themed? Abstract? Photography?\n\u2022 Primary CTA placement and label\n\u2022 Does the hero animate? What's the first-frame vs loaded state?\n\nConsider: the client works at the intersection of science and games. The hero should feel credible and exciting \u2014 not pure startup vibes.",
+      "notes": "knowns: task-7kznko",
+      "plan": "",
+      "ac": [
+        {
+          "index": 1,
+          "done": false,
+          "text": "At least 2 hero concept sketches"
+        },
+        {
+          "index": 2,
+          "done": false,
+          "text": "Headline and CTA copy drafted (even rough)"
+        }
+      ],
+      "attachments": [],
+      "createdAt": "2026-03-25T03:00:00Z",
+      "updatedAt": "2026-03-26T13:32:15.004773+11:00",
+      "timeSpent": 0
+    },
+    {
+      "id": "k0drei",
+      "project": "client",
+      "projectName": "Web",
+      "title": "Write homepage headline and subhead variants",
+      "status": "todo",
+      "priority": "high",
+      "labels": [
+        "liam-sprint",
+        "writing"
+      ],
+      "assignee": "Liam",
+      "description": "Need 4\u20135 headline + subhead pairs for the homepage hero. The client turns real NASA data into games that teach real science.\n\nAvoid:\n  \u2022 'Gamifying science' (clich\u00e9)\n  \u2022 'Learn by playing' (feels educational, not exciting)\n  \u2022 Anything with 'reimagine' or 'transforming'\n\nAim for: something that makes you want to know more. The headline should have tension \u2014 a gap between what you expect games to be and what this is.",
+      "notes": "knowns: task-u6zo6x",
+      "plan": "",
+      "ac": [
+        {
+          "index": 1,
+          "done": false,
+          "text": "4\u20135 headline variants written"
+        },
+        {
+          "index": 2,
+          "done": false,
+          "text": "Each has a matching subhead (1 sentence max)"
+        },
+        {
+          "index": 3,
+          "done": false,
+          "text": "None use the banned phrases above"
+        }
+      ],
+      "attachments": [],
+      "createdAt": "2026-03-25T03:00:00Z",
+      "updatedAt": "2026-03-26T13:32:15.004773+11:00",
+      "timeSpent": 0
+    },
+    {
+      "id": "s5j08d",
+      "project": "client",
+      "projectName": "Web",
+      "title": "Sketch the 3.0 navigation and top-level IA",
+      "status": "todo",
+      "priority": "medium",
+      "labels": [
+        "liam-sprint",
+        "sketch"
+      ],
+      "assignee": "Liam",
+      "description": "The current site navigation is flat and doesn't reflect the 3.0 product structure. Sketch the new information architecture:\n\n\u2022 What are the top-level sections? (Games, Science, About, Blog?)\n\u2022 Desktop nav vs mobile nav \u2014 same structure or different?\n\u2022 Is there a persistent game launcher / CTA in the nav?\n\u2022 How does logged-in state change the nav (if at all)?\n\nThis is a sitemap + rough nav sketch, not pixel-perfect design.",
+      "notes": "knowns: task-uayboz",
+      "plan": "",
+      "ac": [
+        {
+          "index": 1,
+          "done": false,
+          "text": "Top-level IA agreed and sketched"
+        },
+        {
+          "index": 2,
+          "done": false,
+          "text": "Mobile nav approach noted"
+        },
+        {
+          "index": 3,
+          "done": false,
+          "text": "CTA placement in nav decided"
+        }
+      ],
+      "attachments": [],
+      "createdAt": "2026-03-25T03:00:00Z",
+      "updatedAt": "2026-03-26T13:32:15.004773+11:00",
+      "timeSpent": 0
+    },
+    {
+      "id": "vgwltf",
+      "project": "client",
+      "projectName": "Web",
+      "title": "Write the 'about / mission' page copy",
+      "status": "done",
+      "priority": "medium",
+      "labels": [
+        "liam-sprint",
+        "writing"
+      ],
+      "assignee": "Liam",
+      "description": "The about page needs a complete rewrite for 3.0. It should answer: what is this, why does it exist, who makes it.\n\nCurrent page is too long and reads like a grant application. Target: 300\u2013400 words total. Should be readable in under 90 seconds. Voice: first person plural, direct, a little proud but not boastful.\n\nSections needed:\n1. The one-paragraph version of what we do\n2. The 'why games' explanation (make it interesting, not obvious)\n3. Team / who we are (brief)\n4. The NASA connection \u2014 what it actually means",
+      "notes": "I actually don't think this is needed. There's only one landing page, there's no about page. It's minimal. This is absolutely, 100% not needed.\nknowns: task-xdbtg8",
+      "plan": "",
+      "ac": [
+        {
+          "index": 1,
+          "done": false,
+          "text": "All 4 sections drafted"
+        },
+        {
+          "index": 2,
+          "done": false,
+          "text": "Total word count \u2264400"
+        },
+        {
+          "index": 3,
+          "done": false,
+          "text": "No grant-application language"
+        }
+      ],
+      "attachments": [],
+      "createdAt": "2026-03-25T03:00:00Z",
+      "updatedAt": "2026-03-26T13:32:15.004773+11:00",
+      "timeSpent": 0
+    },
+    {
+      "id": "33dtin",
+      "project": "saily",
+      "projectName": "Daily Game",
+      "title": "Write missing briefingExpression dialogue for all 4 character arcs",
+      "status": "todo",
+      "priority": "medium",
+      "labels": [
+        "writing",
+        "narrative",
+        "creative"
+      ],
+      "assignee": "Liam",
+      "description": "Write 1\u20132 sentence briefing lines for every chapter missing a briefingExpression. Tone should match each character's voice (Zix, Brix, Pip, Carta). ~2h. Output: plain-text lines ready to drop into lib/storylines.ts.",
+      "notes": "knowns: task-33dtin",
+      "plan": "",
+      "ac": [
+        {
+          "index": 0,
+          "done": false,
+          "text": "Every chapter has non-empty briefingExpression"
+        },
+        {
+          "index": 1,
+          "done": false,
+          "text": "Lines match each character's voice"
+        },
+        {
+          "index": 2,
+          "done": false,
+          "text": "No placeholder text visible in production"
+        }
+      ],
+      "attachments": [],
+      "createdAt": "2026-03-25T20:54:21Z",
+      "updatedAt": "2026-03-26T20:16:21.301210+11:00",
+      "timeSpent": 0
+    },
+    {
+      "id": "2pqc1e",
+      "project": "saily",
+      "projectName": "Daily Game",
+      "title": "Draft Story Arc 2 chapter outlines for one character (chapters 6-10)",
+      "status": "todo",
+      "priority": "medium",
+      "labels": [
+        "writing",
+        "narrative",
+        "creative"
+      ],
+      "assignee": "Liam",
+      "description": "Outline second arc for one of the 4 characters. 5 chapters (6\u201310), 2\u20133 sentence scene summary per chapter, core choice/tension, emotional beat. Don't write full dialogue \u2014 just beats and intent. ~2\u20133h. Pick whichever character you want to develop first.",
+      "notes": "knowns: task-2pqc1e",
+      "plan": "",
+      "ac": [
+        {
+          "index": 0,
+          "done": false,
+          "text": "One character chosen and noted"
+        },
+        {
+          "index": 1,
+          "done": false,
+          "text": "5 chapter beat outlines written"
+        },
+        {
+          "index": 2,
+          "done": false,
+          "text": "Each beat has: scene summary, core tension, emotional tone"
+        }
+      ],
+      "attachments": [],
+      "createdAt": "2026-03-25T20:54:21Z",
+      "updatedAt": "2026-03-26T20:16:21.301210+11:00",
+      "timeSpent": 0
+    },
+    {
+      "id": "nm3efx",
+      "project": "saily",
+      "projectName": "Daily Game",
+      "title": "Write arc-completion reward screen copy for all characters (arcs 1+)",
+      "status": "todo",
+      "priority": "medium",
+      "labels": [
+        "writing",
+        "copy",
+        "creative"
+      ],
+      "assignee": "Liam",
+      "description": "When a player completes a character arc, write the reward screen copy: closing line from the character + 1 flavour sentence about the earned reward. 4 characters \u00d7 1\u20132 lines each. Keep it punchy and in-universe. ~1h.",
+      "notes": "knowns: task-nm3efx",
+      "plan": "",
+      "ac": [
+        {
+          "index": 0,
+          "done": false,
+          "text": "4 reward screen messages written (one per character)"
+        },
+        {
+          "index": 1,
+          "done": false,
+          "text": "Each has character voice + reward flavour"
+        },
+        {
+          "index": 2,
+          "done": false,
+          "text": "Copy added to task notes or relevant scene file"
+        }
+      ],
+      "attachments": [],
+      "createdAt": "2026-03-25T20:54:21Z",
+      "updatedAt": "2026-03-26T20:16:21.301210+11:00",
+      "timeSpent": 0
+    },
+    {
+      "id": "wnmktw",
+      "project": "saily",
+      "projectName": "Daily Game",
+      "title": "Write mission control helper copy for puzzle actions",
+      "status": "todo",
+      "priority": "medium",
+      "labels": [
+        "copy",
+        "ux-writing",
+        "creative"
+      ],
+      "assignee": "Liam",
+      "description": "Write plain-language helper copy for confusing player actions in Saily: daily mission controls, archive unlocks, discussion gating, science annotation tools. Short, friendly, low-jargon. Notes should identify which screen each line targets.",
+      "notes": "knowns: task-ekn72o\nknowns: task-wnmktw",
+      "plan": "",
+      "ac": [
+        {
+          "index": 0,
+          "done": false,
+          "text": "Copy covers primary action sets"
+        },
+        {
+          "index": 1,
+          "done": false,
+          "text": "Tone is short, friendly, and low-jargon"
+        },
+        {
+          "index": 2,
+          "done": false,
+          "text": "Each line is annotated with its target screen"
+        }
+      ],
+      "attachments": [],
+      "createdAt": "2026-03-25T20:54:21Z",
+      "updatedAt": "2026-03-26T20:16:21.301210+11:00",
+      "timeSpent": 0
+    },
+    {
+      "id": "8rv9kf",
+      "project": "saily",
+      "projectName": "Daily Game",
+      "title": "Design the arc-complete reward moment for storyline milestones",
+      "status": "todo",
+      "priority": "medium",
+      "labels": [
+        "design",
+        "ux",
+        "creative"
+      ],
+      "assignee": "Liam",
+      "description": "Define visual treatment, timing, and final copy for storyline-complete and reward moments. Should feel meaningful without becoming a full cutscene. Fits Saily's restrained puzzle-console aesthetic.",
+      "notes": "knowns: task-8rv9kf",
+      "plan": "",
+      "ac": [
+        {
+          "index": 0,
+          "done": false,
+          "text": "Spec includes: headline, supporting line, timing, visual sequence"
+        },
+        {
+          "index": 1,
+          "done": false,
+          "text": "Direction fits the restrained console aesthetic"
+        },
+        {
+          "index": 2,
+          "done": false,
+          "text": "Maps explicitly to existing reward surfaces in the codebase"
+        }
+      ],
+      "attachments": [],
+      "createdAt": "2026-03-25T20:54:21Z",
+      "updatedAt": "2026-03-26T20:16:21.301210+11:00",
+      "timeSpent": 0
+    },
+    {
+      "id": "z6m85p",
+      "project": "saily",
+      "projectName": "Daily Game",
+      "title": "Write second story arc (chapters 6\u201310) for all 4 characters",
+      "status": "todo",
+      "priority": "medium",
+      "labels": [
+        "writing",
+        "narrative",
+        "creative"
+      ],
+      "assignee": "Liam",
+      "description": "Add 5-chapter arc continuation for each character (Zix, Brix, Pip, Carta) after arc 1 ends. Each arc should continue their story naturally from where arc 1 left off. Full chapter content including dialogue, briefingExpression, and narrative transitions.",
+      "notes": "knowns: task-jkfi6x\nknowns: task-z6m85p",
+      "plan": "",
+      "ac": [
+        {
+          "index": 0,
+          "done": false,
+          "text": "All 4 characters have arc 2 chapters 6\u201310 written"
+        },
+        {
+          "index": 1,
+          "done": false,
+          "text": "Content added to STORYLINES in lib/storylines.ts"
+        },
+        {
+          "index": 2,
+          "done": false,
+          "text": "Doc updated with arc 2 summaries"
+        }
+      ],
+      "attachments": [],
+      "createdAt": "2026-03-25T20:54:21Z",
+      "updatedAt": "2026-03-26T20:16:21.301210+11:00",
+      "timeSpent": 0
+    }
+  ],
+  "projects": [
+    {
+      "slug": "saily",
+      "name": "Daily Game"
+    },
+    {
+      "slug": "planet-hunters-experiment-1",
+      "name": "Experiment 1"
+    },
+    {
+      "slug": "client",
+      "name": "Web"
+    },
+    {
+      "slug": "coral",
+      "name": "Coral"
+    }
+  ]
+}

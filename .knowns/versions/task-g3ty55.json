@@ -1,0 +1,38 @@
+{
+  "taskId": "g3ty55",
+  "currentVersion": 1,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "g3ty55",
+      "version": 1,
+      "timestamp": "2026-03-26T09:16:30.463Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "kanban: 0sgxzk"
+        }
+      ],
+      "snapshot": {
+        "title": "Write mission debrief screen copy",
+        "description": "The debrief screen shows after each mission completes. Write the copy: result header (success/partial/fail), XP summary line, payout line, and next-step prompt. Needs to work for M1–M4 outcomes.",
+        "status": "todo",
+        "priority": "medium",
+        "labels": [
+          "writing"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Copy written for success, partial, and fail debrief states"
+          },
+          {
+            "completed": false,
+            "text": "XP and payout summary lines drafted"
+          }
+        ],
+        "implementationNotes": "kanban: 0sgxzk"
+      }
+    }
+  ]
+}
