@@ -5,6 +5,7 @@ const TutorialLayoutZone = preload("res://Scripts/UI/TutorialLayoutZone.gd")
 const TutorialCoachTargeting = preload("res://Scripts/UI/TutorialCoachTargeting.gd")
 
 const TRANSIT_SCENE_BASENAMES := ["rocket_ascent", "rocket_transit", "rocket_return"]
+const DEBRIEF_SCENE_BASENAMES := ["mission_debrief_v2"]
 const PreviewRouting = preload("res://Scripts/UI/NewMissionPreviewRouting.gd")
 const LAYOUT_REFRESH_INTERVAL := 0.15
 const CYAN := Color(0.28, 0.88, 0.96, 1.0)
@@ -25,6 +26,9 @@ const POINTER_MIN_LENGTH := 84.0
 @onready var practice_mining_button: Button = $Root/Panel/Margin/VBox/Buttons/PracticeMiningButton
 @onready var replay_mission_button: Button = $Root/Panel/Margin/VBox/Buttons/ReplayMissionButton
 @onready var replay_all_button: Button = $Root/Panel/Margin/VBox/Buttons/ReplayAllButton
+@onready var open_launchpad_button: Button = $Root/Panel/Margin/VBox/Buttons/OpenLaunchpadButton
+@onready var go_to_debrief_button: Button = $Root/Panel/Margin/VBox/Buttons/GoToDebriefButton
+@onready var resume_mission_button: Button = $Root/Panel/Margin/VBox/Buttons/ResumeMissionButton
 @onready var buttons_row: HBoxContainer = $Root/Panel/Margin/VBox/Buttons
 
 var _collapsed := false
@@ -34,8 +38,6 @@ var _current_state: Dictionary = {}
 var _current_step: Dictionary = {}
 var _transit_suppressed := false
 var _off_course := false
-var _open_launchpad_button: Button = null
-var _resume_mission_button: Button = null
 var _pointer_line: Line2D = null
 var _pointer_head: Polygon2D = null
 var _target_highlight: Panel = null
@@ -66,23 +68,18 @@ func _ready() -> void:
 func _setup_context_action_button() -> void:
 	if buttons_row == null:
 		return
-	_open_launchpad_button = Button.new()
-	_open_launchpad_button.name = "OpenLaunchpadButton"
-	_open_launchpad_button.text = "Open Launchpad"
-	_open_launchpad_button.visible = false
-	_open_launchpad_button.mouse_filter = Control.MOUSE_FILTER_STOP
-	_apply_pill_button(_open_launchpad_button, true)
-	_open_launchpad_button.pressed.connect(_on_open_launchpad_pressed)
-	buttons_row.add_child(_open_launchpad_button)
-
-	_resume_mission_button = Button.new()
-	_resume_mission_button.name = "ResumeMissionButton"
-	_resume_mission_button.text = "Resume Mission"
-	_resume_mission_button.visible = false
-	_resume_mission_button.mouse_filter = Control.MOUSE_FILTER_STOP
-	_apply_pill_button(_resume_mission_button, true)
-	_resume_mission_button.pressed.connect(_on_resume_mission_pressed)
-	buttons_row.add_child(_resume_mission_button)
+	for btn in [open_launchpad_button, go_to_debrief_button, resume_mission_button]:
+		if btn == null:
+			continue
+		btn.visible = false
+		btn.mouse_filter = Control.MOUSE_FILTER_STOP
+		_apply_pill_button(btn, true)
+	if open_launchpad_button:
+		open_launchpad_button.pressed.connect(_on_open_launchpad_pressed)
+	if go_to_debrief_button:
+		go_to_debrief_button.pressed.connect(_on_go_to_debrief_pressed)
+	if resume_mission_button:
+		resume_mission_button.pressed.connect(_on_resume_mission_pressed)
 
 func _configure_mouse_passthrough() -> void:
 	var margin = $Root/Panel/Margin
@@ -100,7 +97,7 @@ func _configure_mouse_passthrough() -> void:
 	var buttons_row = $Root/Panel/Margin/VBox/Buttons
 	if buttons_row:
 		buttons_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	for btn in [collapse_button, skip_button, practice_mining_button, replay_mission_button, replay_all_button, _resume_mission_button]:
+	for btn in [collapse_button, skip_button, practice_mining_button, replay_mission_button, replay_all_button, open_launchpad_button, go_to_debrief_button, resume_mission_button]:
 		if btn:
 			btn.mouse_filter = Control.MOUSE_FILTER_STOP
 
@@ -115,15 +112,24 @@ func _process(delta: float) -> void:
 	_refresh_target_pointer()
 
 func _apply_transit_suppression() -> void:
-	var in_transit = _is_transit_scene()
-	if in_transit == _transit_suppressed:
+	var in_transit := _is_transit_scene()
+	var in_debrief := _is_debrief_scene()
+	var should_suppress := in_transit or in_debrief
+	if should_suppress == _transit_suppressed:
 		return
-	_transit_suppressed = in_transit
-	if in_transit:
+	_transit_suppressed = should_suppress
+	if should_suppress:
 		visible = false
 	else:
 		_off_course = false
 		_refresh()
+
+func _is_debrief_scene() -> bool:
+	var tree := get_tree()
+	if tree == null or tree.current_scene == null:
+		return false
+	var basename := tree.current_scene.scene_file_path.get_file().get_basename().to_lower()
+	return basename in DEBRIEF_SCENE_BASENAMES
 
 func _apply_off_course_check() -> void:
 	if not visible:
@@ -158,8 +164,8 @@ func _apply_off_course_display() -> void:
 	practice_mining_button.visible = false
 	var valid_scenes: Array = _current_step.get("valid_scenes", [])
 	var is_inflight_step = "SidescrollMining" in valid_scenes
-	if _resume_mission_button:
-		_resume_mission_button.visible = is_inflight_step
+	if resume_mission_button:
+		resume_mission_button.visible = is_inflight_step
 	_update_context_action_button()
 
 func _resume_hint_for_step(step: Dictionary) -> String:
@@ -208,8 +214,6 @@ func _apply_style() -> void:
 	for btn in [skip_button, replay_mission_button, replay_all_button]:
 		_apply_pill_button(btn, false)
 	_apply_pill_button(practice_mining_button, true)
-	if _open_launchpad_button:
-		_apply_pill_button(_open_launchpad_button, true)
 	_apply_pill_button(collapse_button, false)
 	collapse_button.custom_minimum_size = Vector2(56, 36)
 
@@ -503,16 +507,20 @@ func _step_supports_practice(step: Dictionary) -> bool:
 	return action_key == "mine_target" or mechanic == "mining"
 
 func _update_context_action_button() -> void:
-	if _open_launchpad_button == null:
+	if open_launchpad_button == null:
 		return
-	var show_cta = _needs_launchpad_cta()
-	_open_launchpad_button.visible = show_cta
-	# Avoid right-edge overflow: when CTA is shown, compress action row.
+	var show_launchpad := _needs_launchpad_cta()
+	var show_debrief   := _needs_debrief_cta()
+	var show_any_cta   := show_launchpad or show_debrief
+	open_launchpad_button.visible = show_launchpad
+	if go_to_debrief_button:
+		go_to_debrief_button.visible = show_debrief
+	# Avoid right-edge overflow: when a CTA is shown, hide replay buttons.
 	if not _off_course:
-		replay_mission_button.visible = not show_cta
-		replay_all_button.visible = not show_cta
-		if _resume_mission_button:
-			_resume_mission_button.visible = false
+		replay_mission_button.visible = not show_any_cta
+		replay_all_button.visible = not show_any_cta
+		if resume_mission_button:
+			resume_mission_button.visible = false
 
 func _needs_launchpad_cta() -> bool:
 	if _current_step.is_empty():
@@ -525,6 +533,28 @@ func _needs_launchpad_cta() -> bool:
 		return false
 	var valid_scenes: Array = _current_step.get("valid_scenes", [])
 	return "earth_launchpad" in valid_scenes and not ("earth_base_1" in valid_scenes)
+
+func _needs_debrief_cta() -> bool:
+	if _current_step.is_empty():
+		return false
+	var tree := get_tree()
+	if tree == null or tree.current_scene == null:
+		return false
+	var scene_name := tree.current_scene.scene_file_path.get_file().get_basename()
+	if scene_name != "earth_base_1":
+		return false
+	var valid_scenes: Array = _current_step.get("valid_scenes", [])
+	return "mission_debrief_v2" in valid_scenes
+
+func _on_go_to_debrief_pressed() -> void:
+	var tree := get_tree()
+	if tree == null:
+		return
+	var scene_manager := tree.get_first_node_in_group("scene_manager")
+	if scene_manager and scene_manager.has_method("change_to_scene"):
+		scene_manager.change_to_scene("res://Scenes/Earth/mission_debrief_v2.tscn")
+	else:
+		tree.change_scene_to_file("res://Scenes/Earth/mission_debrief_v2.tscn")
 
 func _on_open_launchpad_pressed() -> void:
 	var tree = get_tree()

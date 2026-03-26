@@ -44,8 +44,8 @@ func _ready():
 	# Try to connect the Launch button; primary location: separate LaunchHUD scene.
 	# If the HUD hasn't been instanced yet (by LaunchpadScene), this can be called
 	# again later via `connect_launch_button()` which is public.
-	connect_launch_button()
 	if _is_launchpad_scene():
+		connect_launch_button()
 		call_deferred("_show_selector_panel")
 
 func connect_launch_button() -> void:

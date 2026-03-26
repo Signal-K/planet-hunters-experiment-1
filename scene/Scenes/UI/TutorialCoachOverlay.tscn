@@ -82,3 +82,18 @@ text = "Replay Mission"
 [node name="ReplayAllButton" type="Button" parent="Root/Panel/Margin/VBox/Buttons"]
 layout_mode = 2
 text = "Replay All"
+
+[node name="OpenLaunchpadButton" type="Button" parent="Root/Panel/Margin/VBox/Buttons"]
+layout_mode = 2
+visible = false
+text = "Open Launchpad"
+
+[node name="GoToDebriefButton" type="Button" parent="Root/Panel/Margin/VBox/Buttons"]
+layout_mode = 2
+visible = false
+text = "Go to Debrief"
+
+[node name="ResumeMissionButton" type="Button" parent="Root/Panel/Margin/VBox/Buttons"]
+layout_mode = 2
+visible = false
+text = "Resume Mission"

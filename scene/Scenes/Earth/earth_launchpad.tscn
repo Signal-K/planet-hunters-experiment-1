@@ -1,10 +1,11 @@
-[gd_scene load_steps=6 format=3 uid="uid://dkn5ffejmhljs"]
+[gd_scene load_steps=7 format=3 uid="uid://dkn5ffejmhljs"]
 
 [ext_resource type="Script" uid="uid://dtrksapur77k2" path="res://Scripts/Earth/LaunchpadScene.gd" id="1"]
 [ext_resource type="Script" uid="uid://ce1a85vrjyh7x" path="res://Scripts/Earth/Launchpad.gd" id="2"]
 [ext_resource type="Texture2D" uid="uid://ciqmrddebyxh1" path="res://assets/Backdrops/Earth2.png" id="3"]
 [ext_resource type="Texture2D" uid="uid://ctuf1c3mi4pat" path="res://assets/Structures/launchpad.png" id="4"]
 [ext_resource type="Script" uid="uid://bmhjgrsylq0hk" path="res://Scripts/Earth/LaunchpadSpriteDropHandler.gd" id="9"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/launch_hud.tscn" id="10"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_launchpad"]
 size = Vector2(300, 220)
@@ -45,4 +46,4 @@ shape = SubResource("RectangleShape2D_launchpad")
 
 [node name="UILayer" type="CanvasLayer" parent="."]
 
-[node name="LaunchHUDInstance" type="Node" parent="."]
+[node name="LaunchHUD" parent="." instance=ExtResource("10")]

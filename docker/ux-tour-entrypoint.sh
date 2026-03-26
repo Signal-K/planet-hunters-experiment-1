@@ -4,14 +4,25 @@
 # Screenshots and the log are written to /output (mounted from the host).
 set -euo pipefail
 
-SCENE_DIR="/app/scene"
+SCENE_SRC="/app/scene"
+SCENE_DIR="/tmp/scene"
 OUT="/output"
 GODOT="/opt/godot/godot"
 GODOT_USER_DIR="$HOME/.local/share/PlanetHuntersExperiment1"
 
+rm -rf "$SCENE_DIR"
+cp -a "$SCENE_SRC" "$SCENE_DIR"
+
+ZIVA_GDEXT="$SCENE_DIR/addons/ziva_agent/ziva_agent.gdextension"
+if [ -f "$ZIVA_GDEXT" ] && ! find "$SCENE_DIR/addons/ziva_agent/bin" -type f -name '*.so' 2>/dev/null | grep -q .; then
+    echo "==> Disabling ziva_agent GDExtension for UX tour (Linux binary missing)..."
+    rm -rf "$SCENE_DIR/addons/ziva_agent"
+    rm -f "$SCENE_DIR/.godot/extension_list.cfg"
+fi
+
 # ── 1. Import project (builds .godot/ cache; required before running any scene) ─
 echo "==> Importing Godot project..."
-GALLIUM_DRIVER=softpipe timeout 120s "$GODOT" --headless --path "$SCENE_DIR" --import --quit 2>&1 || true
+GALLIUM_DRIVER=softpipe timeout 120s "$GODOT" --headless --audio-driver Dummy --path "$SCENE_DIR" --import --quit 2>&1 || true
 echo "    Import done."
 
 # ── 2. Start virtual display ─────────────────────────────────────────────────────
@@ -25,6 +36,7 @@ echo "    Xvfb PID=$XVFB_PID"
 # ── 3. Run the UX tour scene ──────────────────────────────────────────────────────
 echo "==> Running UX tour (timeout 30 min)..."
 GALLIUM_DRIVER=softpipe GODOT_UX_TOUR=1 timeout 1800s "$GODOT" \
+    --audio-driver Dummy \
     --path "$SCENE_DIR" \
     res://tests/UXTour.tscn \
     2>&1 | tee /tmp/godot_ux_tour.log || {

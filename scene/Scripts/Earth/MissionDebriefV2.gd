@@ -171,7 +171,7 @@ func _build_ui() -> void:
 	var vp_h := vp.get_visible_rect().size.y if vp else 768.0
 
 	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(clampf(vp_w - 64.0, 320.0, 820.0), 0.0)
+	panel.custom_minimum_size = Vector2(clampf(vp_w - 48.0, 480.0, 1100.0), 0.0)
 	var style := StyleBoxFlat.new()
 	style.bg_color          = Color(0.06, 0.09, 0.16, 0.98)
 	style.border_color      = CYAN
@@ -185,7 +185,7 @@ func _build_ui() -> void:
 	center.add_child(panel)
 
 	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size        = Vector2(0, clampf(vp_h * 0.82, 400.0, 700.0))
+	scroll.custom_minimum_size        = Vector2(0, clampf(vp_h * 0.88, 480.0, 820.0))
 	scroll.horizontal_scroll_mode     = ScrollContainer.SCROLL_MODE_DISABLED
 	panel.add_child(scroll)
 
@@ -195,7 +195,6 @@ func _build_ui() -> void:
 	scroll.add_child(vbox)
 
 	_add_header(vbox)
-	_add_button_guide(vbox)
 	_add_sep(vbox, CYAN)
 	_add_summary(vbox)
 	if not _requested.is_empty():
@@ -248,13 +247,14 @@ func _add_header(vbox: VBoxContainer) -> void:
 
 	var eyebrow := Label.new()
 	eyebrow.text = "MISSION COMPLETE"
-	eyebrow.add_theme_font_size_override("font_size", 11)
+	eyebrow.add_theme_font_size_override("font_size", 14)
 	eyebrow.add_theme_color_override("font_color", CYAN)
 	col.add_child(eyebrow)
 
 	var title := Label.new()
+	title.name = "Title"
 	title.text = "Debrief"
-	title.add_theme_font_size_override("font_size", 28)
+	title.add_theme_font_size_override("font_size", 36)
 	title.add_theme_color_override("font_color", TITLE_COLOR)
 	col.add_child(title)
 
@@ -331,13 +331,13 @@ func _add_summary(vbox: VBoxContainer) -> void:
 		vbox.add_child(row)
 		var k := Label.new()
 		k.text = pair[0]
-		k.custom_minimum_size = Vector2(120, 0)
-		k.add_theme_font_size_override("font_size", 15)
+		k.custom_minimum_size = Vector2(140, 0)
+		k.add_theme_font_size_override("font_size", 18)
 		k.add_theme_color_override("font_color", TEXT_MUTED)
 		row.add_child(k)
 		var v := Label.new()
 		v.text = pair[1]
-		v.add_theme_font_size_override("font_size", 15)
+		v.add_theme_font_size_override("font_size", 18)
 		v.add_theme_color_override("font_color", TEXT_COLOR)
 		row.add_child(v)
 
@@ -347,7 +347,7 @@ func _add_summary(vbox: VBoxContainer) -> void:
 	if hint != "":
 		var hint_lbl := Label.new()
 		hint_lbl.text = hint
-		hint_lbl.add_theme_font_size_override("font_size", 14)
+		hint_lbl.add_theme_font_size_override("font_size", 17)
 		hint_lbl.add_theme_color_override("font_color", AMBER)
 		hint_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		vbox.add_child(hint_lbl)
@@ -356,7 +356,7 @@ func _add_summary(vbox: VBoxContainer) -> void:
 func _add_goal_section(vbox: VBoxContainer) -> void:
 	var header := Label.new()
 	header.text = "MISSION GOAL"
-	header.add_theme_font_size_override("font_size", 12)
+	header.add_theme_font_size_override("font_size", 15)
 	header.add_theme_color_override("font_color", AMBER)
 	vbox.add_child(header)
 
@@ -377,20 +377,20 @@ func _add_goal_section(vbox: VBoxContainer) -> void:
 		var name_lbl := Label.new()
 		name_lbl.text = str(mineral).capitalize()
 		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		name_lbl.add_theme_font_size_override("font_size", 16)
+		name_lbl.add_theme_font_size_override("font_size", 19)
 		name_lbl.add_theme_color_override("font_color", TEXT_COLOR)
 		row.add_child(name_lbl)
 
 		var qty_lbl := Label.new()
 		qty_lbl.text = "%d / %d kg  %s" % [min(have, need), need, "✓" if done else "✗"]
-		qty_lbl.add_theme_font_size_override("font_size", 16)
+		qty_lbl.add_theme_font_size_override("font_size", 19)
 		qty_lbl.add_theme_color_override("font_color", GREEN if done else RED)
 		row.add_child(qty_lbl)
 
 	var verdict := Label.new()
 	verdict.text = "Order fulfilled — bonus payout applied." if all_met \
 		else "Order incomplete — standard payout."
-	verdict.add_theme_font_size_override("font_size", 14)
+	verdict.add_theme_font_size_override("font_size", 17)
 	verdict.add_theme_color_override("font_color", GREEN if all_met else TEXT_MUTED)
 	verdict.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(verdict)
@@ -399,14 +399,14 @@ func _add_goal_section(vbox: VBoxContainer) -> void:
 func _add_cargo_section(vbox: VBoxContainer) -> void:
 	var header := Label.new()
 	header.text = "CARGO"
-	header.add_theme_font_size_override("font_size", 12)
+	header.add_theme_font_size_override("font_size", 15)
 	header.add_theme_color_override("font_color", CYAN)
 	vbox.add_child(header)
 
 	if _cargo.is_empty():
 		var empty := Label.new()
 		empty.text = "No minerals collected."
-		empty.add_theme_font_size_override("font_size", 15)
+		empty.add_theme_font_size_override("font_size", 18)
 		empty.add_theme_color_override("font_color", TEXT_MUTED)
 		vbox.add_child(empty)
 		return
@@ -447,12 +447,18 @@ func _add_reward_actions(vbox: VBoxContainer) -> void:
 		acts.add_child(sell_btn)
 
 	var complete_btn := _make_button("Review Next Mission →", false)
+	complete_btn.name = "CompleteButton"
 	complete_btn.disabled = not _reward_resolved
 	if not complete_btn.disabled:
 		complete_btn.pressed.connect(_on_complete_pressed)
 	else:
 		complete_btn.add_theme_color_override("font_disabled_color", TEXT_MUTED)
 	acts.add_child(complete_btn)
+
+	var orbit_btn := _make_button("Return to Base", false)
+	orbit_btn.name = "OrbitButton"
+	orbit_btn.pressed.connect(_return_to_base)
+	acts.add_child(orbit_btn)
 
 	if not _reward_resolved:
 		var note := Label.new()
@@ -550,6 +556,7 @@ func _add_handoff_actions(vbox: VBoxContainer) -> void:
 	vbox.add_child(acts)
 
 	var launchpad_btn := _make_button("Open Launchpad →", true)
+	launchpad_btn.name = "CompleteButton"
 	launchpad_btn.pressed.connect(_on_open_launchpad_pressed)
 	acts.add_child(launchpad_btn)
 
@@ -563,6 +570,7 @@ func _add_handoff_actions(vbox: VBoxContainer) -> void:
 	acts.add_child(salvage_btn)
 
 	var return_btn := _make_button("Return to Base", false)
+	return_btn.name = "OrbitButton"
 	return_btn.pressed.connect(_return_to_base)
 	acts.add_child(return_btn)
 

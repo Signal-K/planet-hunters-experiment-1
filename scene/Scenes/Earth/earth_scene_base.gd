@@ -45,6 +45,7 @@ func _ready() -> void:
 	# Style and connect button signals
 	_ui_helper.setup(self)
 	_ui_helper.setup_buttons()
+	_ensure_tutorial_runtime()
 	call_deferred("_apply_tutorial_button_state")
 	call_deferred("_apply_nav_safe_area")
 
@@ -59,6 +60,11 @@ func _ready() -> void:
 ## Override this in derived scripts for custom initialization
 func _custom_ready() -> void:
 	pass
+
+func _ensure_tutorial_runtime() -> void:
+	var app = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
+	if app != null and app.has_method("_ensure_tutorial_runtime"):
+		app._ensure_tutorial_runtime()
 
 func _apply_tutorial_button_state() -> void:
 	var app = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()

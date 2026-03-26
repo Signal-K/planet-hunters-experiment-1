@@ -1037,7 +1037,7 @@ func _render_starmap_target_picker(
 	var map_view := LaunchpadStarMap.new()
 	map_view.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	map_view.custom_minimum_size = Vector2(0.0, 320.0)
-	map_view.setup(map_entries, _pending_target_id)
+	map_view.setup(map_entries, _pending_target_id, _build_rocket_range_data())
 	map_view.target_pressed.connect(Callable(self, "on_selector_target_pressed"))
 	map_column.add_child(map_view)
 
@@ -1180,6 +1180,21 @@ func _find_target_entry_by_id(targets: Array, target_id: String) -> Dictionary:
 
 func _is_planet_target(target: Dictionary) -> bool:
 	return _normalize_target_type(str(target.get("type", "asteroid"))) == "planet"
+
+## Returns [{name, max_range_au}] for each unlocked rocket, ordered by range.
+## Passed to LaunchpadStarMap.setup() so range overlays stay in sync with player progress.
+func _build_rocket_range_data() -> Array:
+	var ranges := []
+	var unlocked: Array = RocketsManager.get_unlocked()
+	for rocket_id in unlocked:
+		var spec = RocketSpecs.get_spec(rocket_id)
+		ranges.append({
+			"name": str(spec.get("display_name", rocket_id.to_upper())),
+			"max_range_au": RocketSpecs.get_max_range_au(rocket_id),
+		})
+	ranges.sort_custom(func(a, b): return float(a.get("max_range_au", 0)) < float(b.get("max_range_au", 0)))
+	return ranges
+
 
 func _normalize_target_type(target_type: String) -> String:
 	var normalized = target_type.to_lower()

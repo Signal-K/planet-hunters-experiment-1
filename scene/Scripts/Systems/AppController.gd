@@ -52,9 +52,9 @@ func _ready() -> void:
 	_sync_experience_from_web_storage()
 	load_preferences()
 	_ensure_mission_progress_tracker()
-	_ensure_tutorial_runtime()
+	_ensure_tutorial_controller()
 	_ensure_feedback_beacon()
-	_show_intro_splash_if_needed()
+	_set_tutorial_overlay_suspended(false)
 	WebEventBridge.emit("app_ready", {
 		"experience_level": experience_level,
 		"experience_xp": experience_xp,
@@ -63,10 +63,26 @@ func _ready() -> void:
 	})
 
 func _ensure_tutorial_runtime() -> void:
+	_ensure_tutorial_controller()
+	if get_tree() == null or get_tree().root == null:
+		return
+	var root = get_tree().root
+	var overlay = root.get_node_or_null("TutorialCoachOverlay")
+	if overlay != null and overlay.is_queued_for_deletion():
+		overlay = null
+	if overlay == null:
+		var overlay_instance = TUTORIAL_OVERLAY_SCENE.instantiate()
+		if overlay_instance:
+			overlay_instance.name = "TutorialCoachOverlay"
+			root.call_deferred("add_child", overlay_instance)
+
+func _ensure_tutorial_controller() -> void:
 	if get_tree() == null or get_tree().root == null:
 		return
 	var root = get_tree().root
 	_tutorial_controller = root.get_node_or_null("TutorialController")
+	if _tutorial_controller != null and _tutorial_controller.is_queued_for_deletion():
+		_tutorial_controller = null
 	if _tutorial_controller == null:
 		_tutorial_controller = TUTORIAL_CONTROLLER_SCENE.new()
 		_tutorial_controller.name = "TutorialController"
@@ -75,14 +91,8 @@ func _ensure_tutorial_runtime() -> void:
 		# tree (and therefore before its _ready() loaded persisted state).
 		# Using the `ready` signal guarantees _ready() has already run.
 		_tutorial_controller.ready.connect(_drain_pending_tutorial_actions, CONNECT_ONE_SHOT)
-	if _tutorial_controller and _tutorial_controller.has_signal("tutorial_state_updated"):
+	if _tutorial_controller and _tutorial_controller.has_signal("tutorial_state_updated") and not _tutorial_controller.tutorial_state_updated.is_connected(_on_tutorial_state_updated):
 		_tutorial_controller.tutorial_state_updated.connect(_on_tutorial_state_updated)
-	var overlay = root.get_node_or_null("TutorialCoachOverlay")
-	if overlay == null:
-		var overlay_instance = TUTORIAL_OVERLAY_SCENE.instantiate()
-		if overlay_instance:
-			overlay_instance.name = "TutorialCoachOverlay"
-			root.call_deferred("add_child", overlay_instance)
 
 func _ensure_mission_progress_tracker() -> void:
 	if get_tree() == null or get_tree().root == null:
@@ -252,28 +262,7 @@ func _set_tutorial_overlay_suspended(suspended: bool) -> void:
 		overlay.call_deferred("_refresh")
 
 func _show_intro_splash_if_needed() -> void:
-	# Skip if we've already shown it this browser (file flag written on first dismiss).
-	if FileAccess.file_exists(INTRO_SPLASH_FLAG_PATH):
-		_set_tutorial_overlay_suspended(false)
-		return
-	# Skip for returning users: if localStorage holds saved XP state the player
-	# has already played in this browser, even if IndexedDB was cleared.
-	if OS.has_feature("web"):
-		var xp_raw = JavaScriptBridge.eval(
-			"(function(){try{return window.localStorage.getItem('planet_hunters_xp_state_v1')||'';}catch(_e){return '';}})()",
-			true
-		)
-		if xp_raw != null and str(xp_raw) != "":
-			# Returning user — write the flag so we never check again, then skip.
-			var f = FileAccess.open(INTRO_SPLASH_FLAG_PATH, FileAccess.WRITE)
-			if f:
-				f.store_string("1")
-			_set_tutorial_overlay_suspended(false)
-			return
-	# New user — show the splash; unsuspend tutorial after player dismisses it.
-	var splash = INTRO_SPLASH_SCRIPT.new()
-	get_tree().root.call_deferred("add_child", splash)
-	splash.splash_dismissed.connect(func(): _set_tutorial_overlay_suspended(false), CONNECT_ONE_SHOT)
+	_set_tutorial_overlay_suspended(false)
 
 func _mark_tutorial_zone_exempt_recursive(node: Node) -> void:
 	if node == null:

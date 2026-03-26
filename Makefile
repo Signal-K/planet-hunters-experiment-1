@@ -139,6 +139,12 @@ ux-tour: ux-tour-pull
 		$(UX_TOUR_IMAGE)
 	@echo ""
 	@echo "Tour complete. Open ./ux-screenshots/ to view screenshots and ux_report.md."
+	@echo "Cleaning up Docker resources..."
+	@docker container prune -f 2>/dev/null || true
+	@docker image rm -f $(UX_TOUR_IMAGE) 2>/dev/null || true
+	@docker volume prune -f 2>/dev/null || true
+	@docker builder prune -f 2>/dev/null || true
+	@echo "Docker cleanup done."
 
 # Sync package-lock.json (to fix npm ci issues)
 sync-lock:

@@ -673,6 +673,12 @@ show_percentage = false
 custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 
+[node name="HandbookButton" type="Button" parent="UI/TopBar"]
+layout_mode = 2
+size_flags_horizontal = 8
+mouse_filter = 1
+text = "? Guide"
+
 [node name="RightStats" type="VBoxContainer" parent="UI/TopBar"]
 layout_mode = 2
 size_flags_horizontal = 3
@@ -710,6 +716,31 @@ theme_override_colors/font_color = Color(1, 1, 0.8, 1)
 theme_override_font_sizes/font_size = 22
 text = "HOLD SPACE (or FIRE) to mine | Press E for inventory"
 horizontal_alignment = 1
+
+[node name="HandbookPanel" type="PanelContainer" parent="UI"]
+visible = false
+layout_mode = 1
+offset_left = 1336.0
+offset_top = 120.0
+offset_right = 1888.0
+offset_bottom = 436.0
+mouse_filter = 1
+theme_override_styles/panel = SubResource("StyleBoxFlat_1")
+
+[node name="VBox" type="VBoxContainer" parent="UI/HandbookPanel"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="TitleLabel" type="Label" parent="UI/HandbookPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 1, 1, 1)
+theme_override_font_sizes/font_size = 18
+text = "Mining Controls Guide"
+
+[node name="BodyLabel" type="Label" parent="UI/HandbookPanel/VBox"]
+layout_mode = 2
+autowrap_mode = 3
+theme_override_colors/font_color = Color(0.8, 0.9, 1, 1)
 
 
 [node name="InventoryPanel" type="PanelContainer" parent="UI"]

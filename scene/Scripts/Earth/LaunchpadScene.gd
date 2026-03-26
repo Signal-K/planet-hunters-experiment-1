@@ -23,24 +23,11 @@ const ROOM_TILE_COLUMNS := 3
 const ZOOM_IN_LEVEL := Vector2(1.25, 1.25)
 
 func _ready():
-	# Auto-instance the external Launch HUD so the Launch button is available
-	# when this scene is loaded. Avoid creating duplicate instances.
 	var root_scene = get_tree().current_scene
 	if root_scene:
-		if not root_scene.get_node_or_null("LaunchHUD"):
-			var hud_packed = load("res://Scenes/UI/launch_hud.tscn")
-			if hud_packed:
-				var hud_inst = hud_packed.instantiate()
-				root_scene.add_child(hud_inst)
-				print("LaunchpadScene: instanced LaunchHUD")
-				# If a Launchpad node exists in this scene, ask it to connect to the HUD button
-				var lp = root_scene.get_node_or_null("StructuresLayer/Launchpad")
-				if lp and lp.has_method("connect_launch_button"):
-					lp.connect_launch_button()
-			else:
-				print("LaunchpadScene: failed to load launch_hud.tscn")
-		else:
-			print("LaunchpadScene: LaunchHUD already present, skipping instancing")
+		var lp = root_scene.get_node_or_null("StructuresLayer/Launchpad")
+		if lp and lp.has_method("connect_launch_button"):
+			lp.connect_launch_button()
 	_setup_mission_guidance()
 	_setup_room_inspection()
 	set_process_unhandled_input(true)

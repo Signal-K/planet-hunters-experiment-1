@@ -17,6 +17,7 @@ const FREE_OPS_UNLOCK_KEY := "free_ops_unlock_seen"
 const SR2_UNLOCK_INTRO_SECONDS := 0.9
 
 func _ready() -> void:
+	_ensure_tutorial_runtime()
 	# Initialize camera controller
 	var CameraController = preload("res://Scripts/Earth/CameraController.gd")
 	camera_controller = CameraController.new()
@@ -53,6 +54,11 @@ func _ready() -> void:
 	call_deferred("_check_classification_consensus")
 	call_deferred("_apply_structure_visual_evolution")
 	_build_earth_base_identity()
+
+func _ensure_tutorial_runtime() -> void:
+	var app = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
+	if app != null and app.has_method("_ensure_tutorial_runtime"):
+		app._ensure_tutorial_runtime()
 
 func _setup_buttons() -> void:
 	var back_btn        := $UILayer/ButtonContainer/BackButton       as Button
