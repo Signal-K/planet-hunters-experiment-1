@@ -676,6 +676,7 @@ func _on_earth_base_viewport_resized() -> void:
 	var wordmark := ui_layer.get_node_or_null("PlanetHuntersWordmark") as Label
 	if wordmark:
 		_apply_wordmark_layout(wordmark)
+	_apply_nav_safe_area()
 
 func _apply_wordmark_layout(wordmark: Label) -> void:
 	var viewport := get_viewport_rect().size
@@ -833,10 +834,9 @@ func _mark_starterrocket2_unlock_popup_seen() -> void:
 	cfg.save(SR2_UNLOCK_POPUP_PATH)
 
 func _apply_nav_safe_area() -> void:
-	# On mobile landscape viewports (wider than 16:9), shift the nav bar up to
-	# clear the iPhone home indicator. Design is 1920×1080; iPhone landscape
-	# expands the viewport to ~2337×1080 (aspect ~2.16). The home indicator is
-	# ~34 CSS px → ~94 Godot units at that scale. We use 90 as a round value.
+	# Reposition the navigation ButtonContainer so it is always anchored to the
+	# bottom of the viewport and spans its full width.  This replaces the old
+	# single-case patch (aspect > 1.85) with a fully responsive layout.
 	var container := get_node_or_null("UILayer/ButtonContainer") as HBoxContainer
 	if container == null:
 		return
@@ -846,10 +846,35 @@ func _apply_nav_safe_area() -> void:
 	var vp_rect := vp.get_visible_rect()
 	if vp_rect.size.y <= 0:
 		return
-	if vp_rect.size.x / vp_rect.size.y > 1.85:
-		var inset := 90.0
-		container.offset_top -= inset
-		container.offset_bottom -= inset
+
+	var vp_w := vp_rect.size.x
+	var vp_h := vp_rect.size.y
+	var margin_h := 24.0
+	var bar_h := 120.0
+	# On ultra-wide landscape (phone home indicator), leave a small bottom margin.
+	var bottom_margin := 34.0 if vp_w / vp_h > 1.85 else 0.0
+
+	# Anchor to bottom-full-width so the bar tracks the actual viewport height.
+	container.anchor_left   = 0.0
+	container.anchor_top    = 1.0
+	container.anchor_right  = 1.0
+	container.anchor_bottom = 1.0
+	container.offset_left   = margin_h
+	container.offset_top    = -(bar_h + bottom_margin)
+	container.offset_right  = -margin_h
+	container.offset_bottom = -bottom_margin
+
+	# Zoom the camera so the designed 1920-unit world fills the full width on
+	# wide-aspect (mobile landscape) viewports instead of leaving empty edges.
+	var camera := get_node_or_null("Camera2D") as Camera2D
+	if camera != null:
+		var design_aspect := 1920.0 / 1080.0
+		var actual_aspect := vp_w / vp_h
+		if actual_aspect > design_aspect:
+			var z := actual_aspect / design_aspect
+			camera.zoom = Vector2(z, z)
+		else:
+			camera.zoom = Vector2(1.0, 1.0)
 
 func _check_classification_consensus() -> void:
 	ClassificationConsensus.check_for_updates(get_tree(), func(updates: Array) -> void:

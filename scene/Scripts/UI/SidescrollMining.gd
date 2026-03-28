@@ -88,6 +88,7 @@ var _terrain_loop_container: Node2D = null
 @onready var contract_order_panel: PanelContainer = $UI/ContractOrderPanel
 @onready var contract_order_title: Label = $UI/ContractOrderPanel/VBox/TitleLabel
 @onready var contract_order_progress: Label = $UI/ContractOrderPanel/VBox/ProgressLabel
+@onready var bottom_bar: HBoxContainer = $UI/BottomBar
 @onready var mine_button: Button = $UI/BottomBar/MineButton
 @onready var drone_button: Button = $UI/BottomBar/DroneButton
 @onready var return_button: Button = $UI/BottomBar/ReturnButton
@@ -179,7 +180,13 @@ func _ready():
 	menu_button.pressed.connect(_toggle_inventory)
 	_setup_button_handbook()
 
-	_uses_touch_controls = OS.has_feature("mobile") or get_viewport_rect().size.x < 768
+	var _vp := get_viewport_rect().size
+	# canvas_items+expand on a phone in landscape yields a wide viewport in game
+	# units (~2300×1080) so the "<768" fallback does not trigger.  Catch this by
+	# also enabling touch controls when running in a web context with an aspect
+	# ratio wider than 16:9 (common on phones; rare on desktop/tablet).
+	var _is_web_landscape_phone := OS.has_feature("web") and _vp.x / maxf(_vp.y, 1.0) > 1.85
+	_uses_touch_controls = OS.has_feature("mobile") or _vp.x < 768 or _is_web_landscape_phone
 	_update_bottom_bar_visibility()
 	inventory_panel.visible = false
 	_update_drone_display()
@@ -217,7 +224,9 @@ func _exit_tree() -> void:
 	_restore_tutorial_overlay()
 
 func _on_viewport_size_changed() -> void:
-	var now_touch = OS.has_feature("mobile") or get_viewport_rect().size.x < 768
+	var _rsz := get_viewport_rect().size
+	var _is_web_lp := OS.has_feature("web") and _rsz.x / maxf(_rsz.y, 1.0) > 1.85
+	var now_touch = OS.has_feature("mobile") or _rsz.x < 768 or _is_web_lp
 	if now_touch != _uses_touch_controls:
 		_uses_touch_controls = now_touch
 		_update_bottom_bar_visibility()
@@ -349,6 +358,10 @@ func _apply_responsive_layout() -> void:
 	_update_room_panel_visibility(viewport)
 	_reposition_handbook_panel(viewport)
 	_position_rocket_lane()
+	# MINING_BOTTOM zone — position the BottomBar via UILayout so it tracks the
+	# actual viewport bottom on every screen size (fixes mobile landscape gap).
+	if bottom_bar != null:
+		UILayout.place(bottom_bar, UILayout.zone(UILayout.Zone.MINING_BOTTOM, viewport))
 
 func _is_compact_layout(viewport: Vector2) -> bool:
 	return viewport.y > viewport.x or viewport.x < 1600.0 or viewport.y < 900.0
