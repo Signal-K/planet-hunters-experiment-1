@@ -85,6 +85,7 @@ test("shell · mobile landscape (game active)", async ({ page }) => {
 const GAME_TIMEOUT = 90_000;
 
 test("game · mining minigame header + button guide", async ({ page }) => {
+  test.skip(!!process.env.CI, "WASM requires WebGL2 — not available in headless CI");
   test.slow(); // allow extra time for WASM
   await page.goto("/");
   await page.waitForSelector("#game-frame", { timeout: 10_000 });
