@@ -105,7 +105,10 @@ static func _mining_hud(vp: Vector2) -> Rect2:
 
 static func _mining_instruction(vp: Vector2) -> Rect2:
 	var hud := _mining_hud(vp)
-	var w   := vp.x * 0.75
+	# Cap right edge so the instruction band never enters the handbook zone.
+	var handbook_x := vp.x - EDGE - clampf(vp.x * 0.30, 280.0, 420.0)
+	var safe_right := handbook_x - EDGE
+	var w := minf(vp.x * 0.75, maxf((safe_right - vp.x * 0.5) * 2.0, 280.0))
 	return Rect2((vp.x - w) * 0.5, hud.end.y + 8.0, w, 48.0)
 
 static func _mining_contract(vp: Vector2) -> Rect2:

@@ -3,7 +3,7 @@ extends SceneTree
 const TestReporter = preload("res://tests/TestReporter.gd")
 const MissionLogManager = preload("res://Scripts/Utils/MissionLogManager.gd")
 const SubcontractorManager = preload("res://Scripts/Utils/SubcontractorManager.gd")
-const MissionDebriefScene = preload("res://Scenes/Earth/mission_debrief.tscn")
+const MissionDebriefScene = preload("res://Scenes/Earth/mission_debrief_v2.tscn")
 const TEST_LOG_PATH := "res://tests/mission_logs_test.json"
 
 var reporter := TestReporter.new()

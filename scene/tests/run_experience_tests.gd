@@ -217,12 +217,12 @@ func test_return_transit_distance_label_decreases() -> void:
 		return
 	scene._start_travel()
 	scene._phase_time = 5.0
-	scene._update_travel()
-	var first_text = str(scene.travel_speed.text)
+	scene._tick_travel()
+	var first_text = str(scene.travel_dist.text)
 	var first_value = _extract_distance_km(first_text, "Distance to Earth: ")
 	scene._phase_time = 15.0
-	scene._update_travel()
-	var second_text = str(scene.travel_speed.text)
+	scene._tick_travel()
+	var second_text = str(scene.travel_dist.text)
 	var second_value = _extract_distance_km(second_text, "Distance to Earth: ")
 	if first_value < 0 or second_value < 0:
 		reporter.fail_test("Unexpected return distance labels: first=%s second=%s" % [first_text, second_text])
@@ -248,12 +248,12 @@ func test_return_preview_auto_advances_to_debrief() -> void:
 		reporter.fail_test("No current scene after loading rocket_return.tscn")
 		return
 	scene._start_earth_orbit()
-	await create_timer(1.5).timeout
+	await create_timer(2.5).timeout
 	if current_scene == null:
 		reporter.fail_test("Current scene missing after auto-advance window")
 		return
 	var loaded_path = str(current_scene.scene_file_path)
-	if loaded_path != "res://Scenes/Earth/mission_debrief.tscn":
+	if loaded_path != "res://Scenes/Earth/mission_debrief_v2.tscn":
 		reporter.fail_test("Expected auto-advance to mission_debrief.tscn, got %s" % loaded_path)
 		return
 	reporter.pass_test()

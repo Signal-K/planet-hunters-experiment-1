@@ -77,7 +77,7 @@ static func generate_terrain(
 		uv.append(Vector2(p.x / 56.0, p.y / 40.0))
 	terrain_fill.uv = uv
 	
-	var palette = theme_palette_func.call(target_theme)
+	# palette is already declared above (used for terrain_line colour) — reuse it.
 	_add_surface_rocks(rng, terrain_container, terrain_width, terrain_points, generation_signature, palette)
 	
 	var mineral_data = _generate_minerals(

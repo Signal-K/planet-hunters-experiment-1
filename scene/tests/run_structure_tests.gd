@@ -322,17 +322,17 @@ func test_open_operation_survey_route_relaxes_contractor_block() -> void:
 func test_level2_completion_unlocks_level3_systems() -> void:
 	reporter.start_test("[SPEC] Completing Level 2 unlocks stage 3 scanner systems")
 	var state = RocketsStateAccess.build_default_state(2)
-	state["mission_progress_completed"] = 2
-	state["completed_mission_badges"] = ["mission-1", "mission-2"]
+	state["mission_progress_completed"] = 3
+	state["completed_mission_badges"] = ["mission-1", "mission-2", "mission-3"]
 	RocketsManager.set_override_state(state)
 	var stage = RocketsManager.get_mission_stage()
 	var scanner_unlocked = RocketsManager.is_scanner_unlocked()
 	RocketsManager.clear_override_state()
-	if stage != 3:
-		reporter.fail_test("Expected mission stage 3 after two completions, got %s" % stage)
+	if stage != 4:
+		reporter.fail_test("Expected mission stage 4 after three completions, got %s" % stage)
 		return
 	if not scanner_unlocked:
-		reporter.fail_test("Expected scanner systems unlocked at mission stage 3")
+		reporter.fail_test("Expected scanner systems unlocked at mission stage 4")
 		return
 	reporter.pass_test()
 

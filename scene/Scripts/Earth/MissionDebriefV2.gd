@@ -211,6 +211,7 @@ func _build_ui() -> void:
 		_add_next_mission_handoff(vbox)
 		_add_sep(vbox, CYAN)
 		_add_handoff_actions(vbox)
+	_add_button_guide(vbox)
 
 
 func _build_empty_ui() -> void:
