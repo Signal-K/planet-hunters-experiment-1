@@ -224,15 +224,34 @@ func _build_empty_ui() -> void:
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(center)
 
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 16)
+	center.add_child(vbox)
+
+	var title := Label.new()
+	title.name = "Title"
+	title.text = "Debrief"
+	title.add_theme_font_size_override("font_size", 36)
+	title.add_theme_color_override("font_color", TITLE_COLOR)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(title)
+
 	var lbl := Label.new()
-	lbl.text = "No mission data found. Return to base."
+	lbl.text = "No mission data found."
 	lbl.add_theme_font_size_override("font_size", 18)
 	lbl.add_theme_color_override("font_color", TEXT_MUTED)
-	center.add_child(lbl)
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(lbl)
 
-	var btn := _make_button("Return to Base", false)
-	btn.pressed.connect(_return_to_base)
-	center.add_child(btn)
+	var complete_btn := _make_button("Return to Base", false)
+	complete_btn.name = "CompleteButton"
+	complete_btn.pressed.connect(_return_to_base)
+	vbox.add_child(complete_btn)
+
+	var orbit_btn := _make_button("Open Launchpad →", false)
+	orbit_btn.name = "OrbitButton"
+	orbit_btn.pressed.connect(_on_open_launchpad_pressed)
+	vbox.add_child(orbit_btn)
 
 
 func _add_sep(vbox: VBoxContainer, color: Color) -> void:

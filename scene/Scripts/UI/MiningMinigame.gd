@@ -44,9 +44,12 @@ func _attach_delegate() -> void:
 	add_child(_mining_instance)
 	if _mining_instance.has_signal("mining_completed"):
 		_mining_instance.mining_completed.connect(_on_delegate_completed)
-	var legacy_bg = get_node_or_null("Background") as CanvasItem
-	if legacy_bg:
-		legacy_bg.visible = false
+	# Hide all legacy ring-minigame nodes — SidescrollMining covers the full screen.
+	for node_name in ["Background", "RingContainer", "ProgressPanel",
+			"InstructionLabel", "FeedbackLabel", "DifficultyLabel"]:
+		var n = get_node_or_null(node_name) as CanvasItem
+		if n:
+			n.visible = false
 
 
 func _on_delegate_completed(minerals: Dictionary, score: int) -> void:
