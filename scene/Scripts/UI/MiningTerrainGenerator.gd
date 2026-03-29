@@ -73,10 +73,12 @@ static func generate_terrain(
 	terrain_fill.texture = terrain_pixel_textures.get(target_palette_key)
 	var uv := PackedVector2Array()
 	for p in fill_points:
-		uv.append(Vector2(p.x / 28.0, p.y / 20.0))
+		# Tile the 56×40 texture across the terrain polygon.
+		uv.append(Vector2(p.x / 56.0, p.y / 40.0))
 	terrain_fill.uv = uv
 	
-	_add_surface_rocks(rng, terrain_container, terrain_width, terrain_points, generation_signature)
+	var palette = theme_palette_func.call(target_theme)
+	_add_surface_rocks(rng, terrain_container, terrain_width, terrain_points, generation_signature, palette)
 	
 	var mineral_data = _generate_minerals(
 		rng, 
@@ -107,10 +109,14 @@ static func _get_terrain_y_at(x: float, terrain_points: PackedVector2Array) -> f
 	var y2 = terrain_points[segment + 1].y
 	return lerp(y1, y2, t)
 
-static func _add_surface_rocks(rng: RandomNumberGenerator, terrain_container: Node2D, terrain_width: float, terrain_points: PackedVector2Array, generation_signature: Dictionary):
+static func _add_surface_rocks(rng: RandomNumberGenerator, terrain_container: Node2D, terrain_width: float, terrain_points: PackedVector2Array, generation_signature: Dictionary, palette: Dictionary = {}):
 	var rock_pool = terrain_container.get_node_or_null("RockPool")
 	if not rock_pool: return
-	
+
+	# Theme-aware rock colours: use terrain palette so rocks blend naturally.
+	var rock_base  := palette.get("terrain_shade",     Color(0.32, 0.28, 0.25, 1.0)) as Color
+	var rock_light := palette.get("terrain_highlight", Color(0.48, 0.42, 0.36, 1.0)) as Color
+
 	var rocks = rock_pool.get_children()
 	var rock_count = min(50, rocks.size())
 	var terrain_sig = generation_signature.get("terrain", {})
@@ -121,7 +127,7 @@ static func _add_surface_rocks(rng: RandomNumberGenerator, terrain_container: No
 	var cluster_centers: Array = []
 	for _i in range(cluster_count):
 		cluster_centers.append(rng.randf_range(160, terrain_width - 160))
-	
+
 	for i in range(rock_count):
 		var rock = rocks[i]
 		if not rock is Polygon2D: continue
@@ -130,13 +136,17 @@ static func _add_surface_rocks(rng: RandomNumberGenerator, terrain_container: No
 		var clustered_x = center + rng.randf_range(-spread, spread)
 		var x = clampf(lerpf(rng.randf_range(100, terrain_width - 100), clustered_x, cluster_bias), 100.0, terrain_width - 100.0)
 		var y = _get_terrain_y_at(x, terrain_points)
-		var size = rng.randf_range(10, 25)
-		
+		var size = rng.randf_range(12, 30)
+
+		# Alternate between shadow and highlight variants for depth.
+		var is_lit := (i % 3) != 0
+		rock.color = rock_light.darkened(rng.randf_range(0.0, 0.12)) if is_lit else rock_base.darkened(rng.randf_range(0.05, 0.25))
+
 		var points = PackedVector2Array()
-		var num_points = rng.randi_range(4, 6)
+		var num_points = rng.randi_range(5, 7)
 		for j in range(num_points):
-			var angle = (float(j) / num_points) * TAU + rng.randf_range(-0.3, 0.3)
-			var radius = size * rng.randf_range(0.6, 1.2)
+			var angle = (float(j) / num_points) * TAU + rng.randf_range(-0.35, 0.35)
+			var radius = size * rng.randf_range(0.55, 1.25)
 			points.append(Vector2(x + cos(angle) * radius, y - abs(sin(angle) * radius) - size * 0.3))
 		rock.polygon = points
 		rock.visible = true

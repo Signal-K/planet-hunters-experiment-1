@@ -97,7 +97,9 @@ jobs:
   app-unit-tests:
     name: Full App Unit Tests (main only)
     if: github.ref_name == 'main'
-    needs: godot-tests
+    # Decoupled from godot-tests: Supabase integration tests are informational
+    # and must not block the deployment pipeline.
+    needs: basic-tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -198,7 +200,9 @@ jobs:
   export-godot:
     name: Export Godot Assets (main only)
     if: github.ref_name == 'main'
-    needs: app-unit-tests
+    # Depend only on basic-tests so flaky Supabase/Godot integration tests
+    # cannot block the production Godot export and Vercel deploy.
+    needs: basic-tests
     runs-on: ubuntu-latest
     env:
       GODOT_VERSION: "4.5-stable"

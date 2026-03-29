@@ -299,33 +299,69 @@ func _build_terrain_pixel_texture(theme_name: String) -> Texture2D:
 	var shade = palette.get("terrain_shade", Color8(131, 77, 56, 255))
 	var highlight = palette.get("terrain_highlight", Color8(222, 151, 90, 255))
 	
-	var img_w := 28
-	var img_h := 20
+	# Larger tile for more visible rocky detail.
+	var img_w := 56
+	var img_h := 40
 	var image := Image.create(img_w, img_h, false, Image.FORMAT_RGBA8)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash(_current_target_id) ^ 0x54455252 # "TERR"
-	
+
+	# Pre-generate a crack/vein map: vertical dark fissures + angled hairlines.
+	var crack_rng := RandomNumberGenerator.new()
+	crack_rng.seed = hash(_current_target_id) ^ 0xC4AC4AC4
+	var crack_map := PackedByteArray()
+	crack_map.resize(img_w * img_h)
+	for _i in range(crack_map.size()):
+		crack_map[_i] = 0
+	# Place 8 random fissure segments across the tile.
+	for _crack in range(8):
+		var cx := crack_rng.randi_range(2, img_w - 3)
+		var cy := crack_rng.randi_range(0, img_h - 1)
+		var length := crack_rng.randi_range(3, 10)
+		var dx := crack_rng.randi_range(-1, 1)
+		for s in range(length):
+			var px := clampi(cx + dx * s, 0, img_w - 1)
+			var py := clampi(cy + s, 0, img_h - 1)
+			crack_map[py * img_w + px] = 1
+			# Thin hairline: one adjacent pixel at 50% strength.
+			if px + 1 < img_w:
+				crack_map[py * img_w + px + 1] = 2
+
 	for y in range(img_h):
+		# Stratification: upper rows are lighter (near-surface), lower rows darker.
+		var strata_t := float(y) / float(img_h - 1)
+		var strata_darken := strata_t * 0.18  # up to 18% darker at the bottom
+
 		for x in range(img_w):
 			var noise := rng.randf()
 			var c: Color
-			if noise < 0.12:
+			if noise < 0.10:
 				c = shade
-			elif noise < 0.24:
+			elif noise < 0.20:
 				c = highlight
-			elif noise < 0.62:
+			elif noise < 0.58:
 				c = base_a
 			else:
 				c = base_b
-			
-			# Add subtle dither/grain
+
+			# Apply stratification darkening.
+			c = c.darkened(strata_darken)
+
+			# Crack/fissure overlay.
+			var crack_val := crack_map[y * img_w + x]
+			if crack_val == 1:
+				c = shade.darkened(0.35)  # deep fissure
+			elif crack_val == 2:
+				c = c.darkened(0.18)       # hairline shadow
+
+			# Dither grain.
 			if (x + y) % 2 == 0:
-				c = c.lightened(rng.randf_range(0.0, 0.04))
+				c = c.lightened(rng.randf_range(0.0, 0.05))
 			else:
-				c = c.darkened(rng.randf_range(0.0, 0.04))
-				
+				c = c.darkened(rng.randf_range(0.0, 0.05))
+
 			image.set_pixel(x, y, c)
-			
+
 	return ImageTexture.create_from_image(image)
 
 func _resolve_target_theme() -> String:
@@ -362,6 +398,7 @@ func _apply_responsive_layout() -> void:
 	# actual viewport bottom on every screen size (fixes mobile landscape gap).
 	if bottom_bar != null:
 		UILayout.place(bottom_bar, UILayout.zone(UILayout.Zone.MINING_BOTTOM, viewport))
+	_style_bottom_buttons(is_mobile)
 
 func _is_compact_layout(viewport: Vector2) -> bool:
 	return viewport.y > viewport.x or viewport.x < 1600.0 or viewport.y < 900.0
@@ -380,6 +417,51 @@ func _set_hud_typography(is_mobile: bool, is_portrait_mobile: bool) -> void:
 	instructions.add_theme_font_size_override("font_size", instructions_font_size)
 	contract_order_title.add_theme_font_size_override("font_size", contract_title_font_size)
 	contract_order_progress.add_theme_font_size_override("font_size", contract_progress_font_size)
+
+## Style the bottom action buttons with an "Out There: Omega" sci-fi aesthetic:
+## dark translucent panels, function-coded accent borders, touch-friendly sizing.
+func _style_bottom_buttons(is_mobile: bool) -> void:
+	var font_size := 18 if is_mobile else 15
+	# colour palette: [bg, border]
+	var specs := {
+		mine_button:   [Color(0.05, 0.14, 0.32, 0.92), Color(0.25, 0.60, 1.00)],
+		drone_button:  [Color(0.04, 0.22, 0.26, 0.92), Color(0.20, 0.85, 0.90)],
+		return_button: [Color(0.04, 0.22, 0.10, 0.92), Color(0.20, 0.90, 0.40)],
+		menu_button:   [Color(0.10, 0.10, 0.18, 0.92), Color(0.45, 0.50, 0.70)],
+	}
+	for btn_ref in specs:
+		var btn := btn_ref as Button
+		if btn == null or not is_instance_valid(btn):
+			continue
+		var colors: Array = specs[btn_ref]
+		var bg_col: Color  = colors[0]
+		var brd_col: Color = colors[1]
+
+		var normal_box := StyleBoxFlat.new()
+		normal_box.bg_color = bg_col
+		normal_box.border_color = brd_col
+		normal_box.set_border_width_all(2)
+		normal_box.set_corner_radius_all(6)
+		normal_box.content_margin_left   = 10.0
+		normal_box.content_margin_right  = 10.0
+		normal_box.content_margin_top    = 6.0
+		normal_box.content_margin_bottom = 6.0
+
+		var hover_box := normal_box.duplicate() as StyleBoxFlat
+		hover_box.bg_color = bg_col.lightened(0.15)
+		hover_box.border_color = brd_col.lightened(0.2)
+
+		var pressed_box := normal_box.duplicate() as StyleBoxFlat
+		pressed_box.bg_color = bg_col.darkened(0.1)
+		pressed_box.set_border_width_all(3)
+
+		btn.add_theme_stylebox_override("normal",  normal_box)
+		btn.add_theme_stylebox_override("hover",   hover_box)
+		btn.add_theme_stylebox_override("pressed", pressed_box)
+		btn.add_theme_color_override("font_color", Color(0.92, 0.95, 1.00))
+		btn.add_theme_color_override("font_hover_color",   brd_col.lightened(0.1))
+		btn.add_theme_color_override("font_pressed_color", Color.WHITE)
+		btn.add_theme_font_size_override("font_size", font_size)
 
 func _ensure_right_stats_parent(parent_node: Node) -> void:
 	if parent_node == null:

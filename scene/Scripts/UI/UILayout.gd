@@ -129,7 +129,9 @@ static func _mining_handbook(vp: Vector2) -> Rect2:
 	return Rect2(vp.x - EDGE - w, hud.end.y + 4.0, w, 240.0)
 
 static func _mining_bottom(vp: Vector2) -> Rect2:
-	var h := 60.0
+	# Taller bar on wide/mobile viewports (phones in landscape) so touch targets
+	# are large enough.  Anything wider than 16:9 is treated as mobile landscape.
+	var h := 88.0 if vp.x / maxf(vp.y, 1.0) > 1.78 else 68.0
 	return Rect2(EDGE, vp.y - h - EDGE, vp.x - EDGE * 2, h)
 
 ## ─── Global / multi-scene zones ──────────────────────────────────────────────
