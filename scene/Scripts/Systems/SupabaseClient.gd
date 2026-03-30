@@ -168,7 +168,7 @@ func fetch_anomalies(anomaly_set: String, limit: int, callback: Callable) -> HTT
 				else:
 					error_message = "Failed to parse JSON response"
 			
-			callback.call(response_data, error_message)
+			_invoke_array_callback(callback, response_data, error_message)
 			http_request.queue_free()
 	)
 
@@ -197,7 +197,7 @@ func _start_fetch_request(http_request: HTTPRequest, url: String, headers: Array
 				CONNECT_ONE_SHOT
 			)
 			return
-	callback.call([], "Failed to create HTTP request: %d" % error)
+	_invoke_array_callback(callback, [], "Failed to create HTTP request: %d" % error)
 	http_request.queue_free()
 
 func _deferred_start_fetch_request(http_request: HTTPRequest, url: String, headers: Array, callback: Callable, attempt: int) -> void:
@@ -244,20 +244,25 @@ func _on_web_fetch_completed(args, callback_id: String) -> void:
 		payload = str(args[0])
 
 	if payload.begins_with("__ERR__"):
-		callback.call([], payload.substr(7))
+		_invoke_array_callback(callback, [], payload.substr(7))
 		return
 
 	var json = JSON.new()
 	var parse_result = json.parse(payload)
 	if parse_result != OK:
-		callback.call([], "Failed to parse JSON response")
+		_invoke_array_callback(callback, [], "Failed to parse JSON response")
 		return
 
 	if typeof(json.data) != TYPE_ARRAY:
-		callback.call([], "Unexpected response payload type")
+		_invoke_array_callback(callback, [], "Unexpected response payload type")
 		return
 
-	callback.call(json.data, "")
+	_invoke_array_callback(callback, json.data, "")
+
+func _invoke_array_callback(callback: Callable, data: Array, error_message: String) -> void:
+	if not callback.is_valid():
+		return
+	callback.call(data, error_message)
 
 ## Generic GET from any Supabase REST table.
 ## query_string: raw PostgREST filter query string e.g. "anomaly=eq.42&limit=20"
