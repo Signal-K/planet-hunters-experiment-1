@@ -20,8 +20,6 @@ var _contractor_gate_locked: bool = false
 var _contractor_gate_reason: String = "Select a contractor before building a rocket."
 var _pending_rocket_id: String = ""
 var _pending_purchase_cost: int = 0
-var _confirm_dialog: ConfirmationDialog = null
-var _info_dialog: AcceptDialog = null
 var _app_controller: Node = null
 var _rocket_textures := {
 	"starterrocket1": null,
@@ -30,14 +28,17 @@ var _rocket_textures := {
 }
 var _ui_builder := RocketSelectorUIBuilder.new()
 var _drag_helper := RocketSelectorDragHelper.new()
+@onready var _confirm_dialog: ConfirmationDialog = $ConfirmDialog
+@onready var _info_dialog: AcceptDialog = $InfoDialog
 
 func _ready():
 	if get_parent() is Container:
 		size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		size_flags_vertical = Control.SIZE_EXPAND_FILL
 	else:
-		position = ui_position
-		size = ui_size
+		set_anchors_preset(Control.PRESET_TOP_LEFT)
+		set_deferred("position", ui_position)
+		set_deferred("size", ui_size)
 	# Load unlocked rockets from RocketsManager if available
 	var rm = RocketsManager
 	unlocked_rockets = rm.get_unlocked()
@@ -79,22 +80,13 @@ func _find_app_controller() -> void:
 		print("RocketSelector: AppController not found")
 
 func _init_dialogs() -> void:
-	if _confirm_dialog and is_instance_valid(_confirm_dialog) and _info_dialog and is_instance_valid(_info_dialog):
-		return
-	var dialog_host: Node = self
-	var tree = get_tree()
-	if tree and tree.current_scene:
-		dialog_host = tree.current_scene
-	if not (_confirm_dialog and is_instance_valid(_confirm_dialog)):
-		_confirm_dialog = ConfirmationDialog.new()
-		_confirm_dialog.title = "Confirm Purchase"
-		dialog_host.call_deferred("add_child", _confirm_dialog)
+	if _confirm_dialog and not _confirm_dialog.confirmed.is_connected(_on_purchase_confirmed):
 		_confirm_dialog.confirmed.connect(_on_purchase_confirmed)
-		_confirm_dialog.canceled.connect(func(): _pending_rocket_id = "")
-	if not (_info_dialog and is_instance_valid(_info_dialog)):
-		_info_dialog = AcceptDialog.new()
-		_info_dialog.title = "Notice"
-		dialog_host.call_deferred("add_child", _info_dialog)
+	if _confirm_dialog and not _confirm_dialog.canceled.is_connected(_on_purchase_canceled):
+		_confirm_dialog.canceled.connect(_on_purchase_canceled)
+
+func _on_purchase_canceled() -> void:
+	_pending_rocket_id = ""
 
 # Public method to unlock creation (called from Launchpad when showing the panel after launch)
 func unlock_creation() -> void:

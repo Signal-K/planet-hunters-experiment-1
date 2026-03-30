@@ -5,6 +5,8 @@ signal panel_closed
 const PREVIEW_SCENE := "res://Scenes/UI/AsteroidPreview/asteroid_preview.tscn"
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
 const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
+const StoryCardScene = preload("res://Scenes/UI/Templates/ControlStationStoryCard.tscn")
+const ActiveMissionCardScene = preload("res://Scenes/UI/Templates/ControlStationActiveMissionCard.tscn")
 
 const STORY_MISSIONS := [
 	{"id": 1, "title": "First Contact", "desc": "Your first run to the asteroid belt — pick a contractor and launch."},
@@ -46,51 +48,28 @@ func _populate_missions():
 	_populate_active_missions()
 
 func _create_story_card(mission: Dictionary) -> PanelContainer:
-	var card = PanelContainer.new()
+	var card: PanelContainer = StoryCardScene.instantiate()
 	card.add_theme_stylebox_override("panel", PanelStyle.create_card_style())
-	
-	var vbox = VBoxContainer.new()
-	card.add_child(vbox)
-	
-	var title_lbl = Label.new()
+	var title_lbl: Label = card.get_node("Margin/VBox/TitleLabel")
 	title_lbl.text = "Mission %d: %s" % [mission.id, mission.title]
 	PanelStyle.apply_body(title_lbl)
-	vbox.add_child(title_lbl)
-	
-	var desc_lbl = Label.new()
+	var desc_lbl: Label = card.get_node("Margin/VBox/DescriptionLabel")
 	desc_lbl.text = mission.desc
 	PanelStyle.apply_muted(desc_lbl)
-	vbox.add_child(desc_lbl)
-	
 	return card
 
 func _create_mission_card(rocket_id: String, target_label: String, target_id: String, target_type: String) -> PanelContainer:
-	var card = PanelContainer.new()
+	var card: PanelContainer = ActiveMissionCardScene.instantiate()
 	card.add_theme_stylebox_override("panel", PanelStyle.create_card_style())
-	
-	var hbox = HBoxContainer.new()
-	card.add_child(hbox)
-	
-	var vbox = VBoxContainer.new()
-	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hbox.add_child(vbox)
-	
-	var rocket_lbl = Label.new()
+	var rocket_lbl: Label = card.get_node("Margin/HBox/ContentVBox/RocketLabel")
 	rocket_lbl.text = RocketSpecs.get_display_name(rocket_id)
 	PanelStyle.apply_body(rocket_lbl)
-	vbox.add_child(rocket_lbl)
-	
-	var target_lbl = Label.new()
+	var target_lbl: Label = card.get_node("Margin/HBox/ContentVBox/TargetLabel")
 	target_lbl.text = "→ " + target_label
 	target_lbl.add_theme_color_override("font_color", PanelStyle.ACCENT)
-	vbox.add_child(target_lbl)
-	
-	var btn = Button.new()
-	btn.text = "RESUME"
+	var btn: Button = card.get_node("Margin/HBox/ResumeButton")
 	PanelStyle.apply_button(btn, true)
 	btn.pressed.connect(_resume_mission.bind(rocket_id, target_id, target_type))
-	hbox.add_child(btn)
-	
 	return card
 
 func _resume_mission(rocket_id: String, target_id: String, target_type: String):
@@ -137,6 +116,8 @@ func _populate_active_missions():
 	if missions.is_empty():
 		var empty = Label.new()
 		empty.text = "No missions in progress — launch from the Launchpad."
+		empty.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		empty.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		PanelStyle.apply_muted(empty)
 		empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		missions_list.add_child(empty)

@@ -26,7 +26,7 @@ const DISCOVERY_BONUS_MULT      := 1.10
 const XP_BY_MISSION_STAGE       := {1: 80, 2: 120, 3: 160, 4: 200}
 const XP_FREE_OPS               := 100
 
-const PANEL_BG    := Color(0.04, 0.06, 0.12, 0.97)
+const PANEL_BG    := Color(0.08, 0.10, 0.16, 0.97)
 const CYAN        := Color(0.28, 0.88, 0.96, 1.0)
 const AMBER       := Color(0.941, 0.690, 0.188, 1.0)
 const GREEN       := Color(0.30, 1.0, 0.45, 1.0)
@@ -52,10 +52,18 @@ var _salvage_refund := 0
 var _next_mission_brief: Dictionary = {}
 var _phase := "reward"
 var _guide_visible := false
+@onready var _background: ColorRect = $Background
+@onready var _center: CenterContainer = $Center
+@onready var _panel: PanelContainer = $Center/Panel
+@onready var _content_vbox: VBoxContainer = $Center/Panel/Margin/ContentVBox
+@onready var _empty_state: VBoxContainer = $Center/EmptyState
+@onready var _empty_label: Label = $Center/EmptyState/EmptyLabel
+@onready var _empty_button: Button = $Center/EmptyState/EmptyButton
 
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_empty_button.pressed.connect(_return_to_base)
 	_returned = RocketsManager.get_returned_mission()
 	if _returned.is_empty():
 		_build_empty_ui()
@@ -147,9 +155,11 @@ func _calc_payout() -> int:
 # ---------------------------------------------------------------------------
 
 func _render_ui() -> void:
-	for child in get_children():
-		remove_child(child)
+	for child in _content_vbox.get_children():
+		_content_vbox.remove_child(child)
 		child.queue_free()
+	_panel.visible = false
+	_empty_state.visible = false
 	if _returned.is_empty():
 		_build_empty_ui()
 		return
@@ -157,23 +167,16 @@ func _render_ui() -> void:
 
 
 func _build_ui() -> void:
-	var bg := ColorRect.new()
-	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	bg.color = PANEL_BG
-	add_child(bg)
-
-	var center := CenterContainer.new()
-	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	add_child(center)
-
 	var vp := get_viewport()
 	var vp_w := vp.get_visible_rect().size.x if vp else 1280.0
 	var vp_h := vp.get_visible_rect().size.y if vp else 768.0
 
-	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(clampf(vp_w - 48.0, 480.0, 1100.0), 0.0)
+	_background.color = PANEL_BG
+	_panel.visible = true
+	_empty_state.visible = false
+	_panel.custom_minimum_size = Vector2(clampf(vp_w - 64.0, 620.0, 1100.0), clampf(vp_h - 72.0, 520.0, 820.0))
 	var style := StyleBoxFlat.new()
-	style.bg_color          = Color(0.06, 0.09, 0.16, 0.98)
+	style.bg_color          = Color(0.11, 0.15, 0.22, 0.98)
 	style.border_color      = CYAN
 	style.set_border_width_all(2)
 	style.set_corner_radius_all(8)
@@ -181,57 +184,53 @@ func _build_ui() -> void:
 	style.content_margin_right  = 28
 	style.content_margin_top    = 24
 	style.content_margin_bottom = 24
-	panel.add_theme_stylebox_override("panel", style)
-	center.add_child(panel)
+	_panel.add_theme_stylebox_override("panel", style)
 
-	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size        = Vector2(0, clampf(vp_h * 0.88, 480.0, 820.0))
-	scroll.horizontal_scroll_mode     = ScrollContainer.SCROLL_MODE_DISABLED
-	panel.add_child(scroll)
-
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 16)
-	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.add_child(vbox)
-
-	_add_header(vbox)
-	_add_sep(vbox, CYAN)
-	_add_summary(vbox)
-	if not _requested.is_empty():
-		_add_sep(vbox, AMBER)
-		_add_goal_section(vbox)
-	_add_sep(vbox, CYAN)
+	_add_header(_content_vbox)
+	_add_sep(_content_vbox, CYAN)
+	_add_summary(_content_vbox)
 	if _phase == "reward":
-		_add_cargo_section(vbox)
-		_add_sep(vbox, CYAN)
-		_add_reward_actions(vbox)
+		_add_sep(_content_vbox, AMBER)
+		_add_reward_snapshot(_content_vbox)
+		_add_sep(_content_vbox, CYAN)
+		_add_reward_actions(_content_vbox)
 	else:
-		_add_reward_feedback(vbox)
-		_add_sep(vbox, CYAN)
-		_add_next_mission_handoff(vbox)
-		_add_sep(vbox, CYAN)
-		_add_handoff_actions(vbox)
+		_add_reward_feedback(_content_vbox)
+		_add_sep(_content_vbox, CYAN)
+		_add_next_mission_handoff(_content_vbox)
+		_add_sep(_content_vbox, CYAN)
+		_add_handoff_actions(_content_vbox)
 
 
 func _build_empty_ui() -> void:
-	var bg := ColorRect.new()
-	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	bg.color = PANEL_BG
-	add_child(bg)
-
-	var center := CenterContainer.new()
-	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	add_child(center)
-
-	var lbl := Label.new()
-	lbl.text = "No mission data found. Return to base."
-	lbl.add_theme_font_size_override("font_size", 18)
-	lbl.add_theme_color_override("font_color", TEXT_MUTED)
-	center.add_child(lbl)
-
-	var btn := _make_button("Return to Base", false)
-	btn.pressed.connect(_return_to_base)
-	center.add_child(btn)
+	_background.color = PANEL_BG
+	_panel.visible = false
+	_empty_state.visible = true
+	_empty_label.add_theme_font_size_override("font_size", 18)
+	_empty_label.add_theme_color_override("font_color", TEXT_MUTED)
+	var empty_btn := _empty_button
+	empty_btn.custom_minimum_size = Vector2(220, 52)
+	var normal := StyleBoxFlat.new()
+	normal.bg_color = Color(0, 0, 0, 0)
+	normal.border_color = CYAN
+	normal.set_border_width_all(1)
+	normal.set_corner_radius_all(28)
+	normal.content_margin_left = 18
+	normal.content_margin_right = 18
+	normal.content_margin_top = 10
+	normal.content_margin_bottom = 10
+	var hover := normal.duplicate()
+	hover.bg_color = Color(CYAN.r, CYAN.g, CYAN.b, 0.12)
+	var pressed_style := normal.duplicate()
+	pressed_style.bg_color = Color(CYAN.r, CYAN.g, CYAN.b, 0.22)
+	empty_btn.add_theme_stylebox_override("normal", normal)
+	empty_btn.add_theme_stylebox_override("hover", hover)
+	empty_btn.add_theme_stylebox_override("pressed", pressed_style)
+	empty_btn.add_theme_stylebox_override("focus", hover)
+	empty_btn.add_theme_color_override("font_color", CYAN)
+	empty_btn.add_theme_color_override("font_hover_color", CYAN)
+	empty_btn.add_theme_color_override("font_pressed_color", CYAN)
+	empty_btn.add_theme_font_size_override("font_size", 18)
 
 
 func _add_sep(vbox: VBoxContainer, color: Color) -> void:
@@ -253,8 +252,8 @@ func _add_header(vbox: VBoxContainer) -> void:
 
 	var title := Label.new()
 	title.name = "Title"
-	title.text = "Debrief"
-	title.add_theme_font_size_override("font_size", 36)
+	title.text = "◎ Debrief"
+	title.add_theme_font_size_override("font_size", 30)
 	title.add_theme_color_override("font_color", TITLE_COLOR)
 	col.add_child(title)
 
@@ -319,27 +318,16 @@ func _build_button_guide_text() -> String:
 func _add_summary(vbox: VBoxContainer) -> void:
 	var target_label := str(_returned.get("label", str(_returned.get("target_id", "Unknown"))))
 	var rocket_id    := str(_returned.get("rocket_id", ""))
+	var grid := GridContainer.new()
+	grid.columns = 3
+	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	grid.add_theme_constant_override("h_separation", 12)
+	grid.add_theme_constant_override("v_separation", 12)
+	vbox.add_child(grid)
 
-	var rows := [
-		["Target",     target_label],
-		["Rocket",     RocketSpecs.get_display_name(rocket_id) if rocket_id != "" else "—"],
-		["Contractor", _contractor_name if _contractor_name != "" else "—"],
-	]
-	for pair in rows:
-		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 12)
-		vbox.add_child(row)
-		var k := Label.new()
-		k.text = pair[0]
-		k.custom_minimum_size = Vector2(140, 0)
-		k.add_theme_font_size_override("font_size", 18)
-		k.add_theme_color_override("font_color", TEXT_MUTED)
-		row.add_child(k)
-		var v := Label.new()
-		v.text = pair[1]
-		v.add_theme_font_size_override("font_size", 18)
-		v.add_theme_color_override("font_color", TEXT_COLOR)
-		row.add_child(v)
+	_add_summary_card(grid, "◎", "Target", target_label)
+	_add_summary_card(grid, "▲", "Rocket", RocketSpecs.get_display_name(rocket_id) if rocket_id != "" else "—")
+	_add_summary_card(grid, "◆", "Contractor", _contractor_name if _contractor_name != "" else "—")
 
 	# Next-mission hint
 	var stage := int(RocketsManager.get_mission_stage())
@@ -347,10 +335,174 @@ func _add_summary(vbox: VBoxContainer) -> void:
 	if hint != "":
 		var hint_lbl := Label.new()
 		hint_lbl.text = hint
-		hint_lbl.add_theme_font_size_override("font_size", 17)
+		hint_lbl.add_theme_font_size_override("font_size", 15)
 		hint_lbl.add_theme_color_override("font_color", AMBER)
 		hint_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		vbox.add_child(hint_lbl)
+
+func _add_summary_card(grid: GridContainer, icon_text: String, label_text: String, value_text: String) -> void:
+	var card := PanelContainer.new()
+	card.add_theme_stylebox_override("panel", _soft_card_style())
+	grid.add_child(card)
+
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	card.add_child(row)
+
+	var icon := Label.new()
+	icon.text = icon_text
+	icon.add_theme_font_size_override("font_size", 22)
+	icon.add_theme_color_override("font_color", CYAN)
+	row.add_child(icon)
+
+	var col := VBoxContainer.new()
+	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	col.add_theme_constant_override("separation", 2)
+	row.add_child(col)
+
+	var k := Label.new()
+	k.text = label_text
+	k.add_theme_font_size_override("font_size", 13)
+	k.add_theme_color_override("font_color", TEXT_MUTED)
+	col.add_child(k)
+
+	var v := Label.new()
+	v.text = value_text
+	v.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	v.add_theme_font_size_override("font_size", 17)
+	v.add_theme_color_override("font_color", TEXT_COLOR)
+	col.add_child(v)
+
+func _add_reward_snapshot(vbox: VBoxContainer) -> void:
+	var viewport := get_viewport_rect().size
+	var compact := viewport.x < 1100.0
+	var layout_parent: BoxContainer = VBoxContainer.new() if compact else HBoxContainer.new()
+	layout_parent.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	layout_parent.add_theme_constant_override("separation", 12)
+	vbox.add_child(layout_parent)
+
+	if not _requested.is_empty():
+		layout_parent.add_child(_build_goal_card())
+	layout_parent.add_child(_build_cargo_card())
+	vbox.add_child(_build_payout_card())
+
+func _build_goal_card() -> PanelContainer:
+	var card := PanelContainer.new()
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.add_theme_stylebox_override("panel", _soft_card_style())
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 8)
+	card.add_child(col)
+
+	var header := Label.new()
+	header.text = "◎ Goal"
+	header.add_theme_font_size_override("font_size", 15)
+	header.add_theme_color_override("font_color", AMBER)
+	col.add_child(header)
+
+	var all_met := true
+	var keys := _requested.keys()
+	keys.sort()
+	for mineral in keys:
+		var need := int(_requested.get(mineral, 0))
+		var have := int(_cargo.get(str(mineral), 0))
+		var done := have >= need
+		if not done:
+			all_met = false
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 8)
+		col.add_child(row)
+		var name_lbl := Label.new()
+		name_lbl.text = "%s %s" % ["✓" if done else "•", str(mineral).capitalize()]
+		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		name_lbl.add_theme_font_size_override("font_size", 17)
+		name_lbl.add_theme_color_override("font_color", GREEN if done else TEXT_COLOR)
+		row.add_child(name_lbl)
+		var qty_lbl := Label.new()
+		qty_lbl.text = "%d/%d kg" % [have, need]
+		qty_lbl.add_theme_font_size_override("font_size", 17)
+		qty_lbl.add_theme_color_override("font_color", GREEN if done else RED)
+		row.add_child(qty_lbl)
+
+	var verdict := Label.new()
+	verdict.text = "Bonus payout ready." if all_met else "Partial order. Standard payout."
+	verdict.add_theme_font_size_override("font_size", 14)
+	verdict.add_theme_color_override("font_color", GREEN if all_met else TEXT_MUTED)
+	col.add_child(verdict)
+	return card
+
+func _build_cargo_card() -> PanelContainer:
+	var card := PanelContainer.new()
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.add_theme_stylebox_override("panel", _soft_card_style())
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 8)
+	card.add_child(col)
+
+	var header := Label.new()
+	header.text = "◌ Cargo"
+	header.add_theme_font_size_override("font_size", 15)
+	header.add_theme_color_override("font_color", CYAN)
+	col.add_child(header)
+
+	if _cargo.is_empty():
+		var empty := Label.new()
+		empty.text = "No minerals collected."
+		empty.add_theme_font_size_override("font_size", 16)
+		empty.add_theme_color_override("font_color", TEXT_MUTED)
+		col.add_child(empty)
+		return card
+
+	var keys := _cargo.keys()
+	keys.sort_custom(func(a, b): return int(_cargo.get(a, 0)) > int(_cargo.get(b, 0)))
+	var visible_count := mini(keys.size(), 4)
+	for idx in range(visible_count):
+		var mineral = keys[idx]
+		var amt := int(_cargo.get(mineral, 0))
+		if amt <= 0:
+			continue
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 8)
+		col.add_child(row)
+		var name_lbl := Label.new()
+		name_lbl.text = str(mineral).capitalize()
+		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		name_lbl.add_theme_font_size_override("font_size", 16)
+		name_lbl.add_theme_color_override("font_color", TEXT_COLOR)
+		row.add_child(name_lbl)
+		var qty_lbl := Label.new()
+		qty_lbl.text = "%d kg" % amt
+		qty_lbl.add_theme_font_size_override("font_size", 16)
+		qty_lbl.add_theme_color_override("font_color", CYAN)
+		row.add_child(qty_lbl)
+
+	if keys.size() > visible_count:
+		var more := Label.new()
+		more.text = "+%d more mineral types" % (keys.size() - visible_count)
+		more.add_theme_font_size_override("font_size", 14)
+		more.add_theme_color_override("font_color", TEXT_MUTED)
+		col.add_child(more)
+	return card
+
+func _build_payout_card() -> PanelContainer:
+	var card := PanelContainer.new()
+	card.add_theme_stylebox_override("panel", _highlight_card_style())
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 4)
+	card.add_child(col)
+
+	var label := Label.new()
+	label.text = "₣ PAYOUT"
+	label.add_theme_font_size_override("font_size", 13)
+	label.add_theme_color_override("font_color", Color(0.10, 0.14, 0.18, 0.92))
+	col.add_child(label)
+
+	var value := Label.new()
+	value.text = "+%s F" % NumberFormat.commas(str(_payout))
+	value.add_theme_font_size_override("font_size", 30)
+	value.add_theme_color_override("font_color", Color(0.06, 0.10, 0.14, 1.0))
+	col.add_child(value)
+	return card
 
 
 func _add_goal_section(vbox: VBoxContainer) -> void:
@@ -434,20 +586,23 @@ func _add_cargo_section(vbox: VBoxContainer) -> void:
 
 
 func _add_reward_actions(vbox: VBoxContainer) -> void:
-	var acts := VBoxContainer.new()
+	var acts := HBoxContainer.new()
 	acts.add_theme_constant_override("separation", 10)
+	acts.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vbox.add_child(acts)
 
 	if not _cargo.is_empty():
-		var label := "Sell Minerals to %s  (+%s F)" % [_contractor_name, NumberFormat.commas(str(_payout))] \
+		var label := "₣ Sell Cargo to %s" % _contractor_name \
 			if _contractor_name != "" \
-			else "Sell Minerals  (+%s F)" % NumberFormat.commas(str(_payout))
+			else "₣ Sell Cargo"
 		var sell_btn := _make_button(label, true)
+		sell_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		sell_btn.pressed.connect(_on_sell_pressed.bind(sell_btn))
 		acts.add_child(sell_btn)
 
-	var complete_btn := _make_button("Review Next Mission →", false)
+	var complete_btn := _make_button("Next Mission →", false)
 	complete_btn.name = "CompleteButton"
+	complete_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	complete_btn.disabled = not _reward_resolved
 	if not complete_btn.disabled:
 		complete_btn.pressed.connect(_on_complete_pressed)
@@ -455,18 +610,19 @@ func _add_reward_actions(vbox: VBoxContainer) -> void:
 		complete_btn.add_theme_color_override("font_disabled_color", TEXT_MUTED)
 	acts.add_child(complete_btn)
 
-	var orbit_btn := _make_button("Return to Base", false)
+	var orbit_btn := _make_button("Base", false)
 	orbit_btn.name = "OrbitButton"
+	orbit_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	orbit_btn.pressed.connect(_return_to_base)
 	acts.add_child(orbit_btn)
 
 	if not _reward_resolved:
 		var note := Label.new()
-		note.text = "Resolve cargo payout first, then the next mission briefing unlocks."
+		note.text = "Sell cargo to unlock the next mission."
 		note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		note.add_theme_font_size_override("font_size", 14)
 		note.add_theme_color_override("font_color", TEXT_MUTED)
-		acts.add_child(note)
+		vbox.add_child(note)
 
 
 func _add_reward_feedback(vbox: VBoxContainer) -> void:
@@ -478,12 +634,12 @@ func _add_reward_feedback(vbox: VBoxContainer) -> void:
 
 	var payout_lbl := Label.new()
 	payout_lbl.text = "Payout delivered: +%s F" % NumberFormat.commas(str(_payout))
-	payout_lbl.add_theme_font_size_override("font_size", 18)
+	payout_lbl.add_theme_font_size_override("font_size", 20)
 	payout_lbl.add_theme_color_override("font_color", GREEN)
 	vbox.add_child(payout_lbl)
 
 	var feedback := Label.new()
-	feedback.text = "Mission closed. Use this handoff to choose the next objective before leaving the debrief."
+	feedback.text = "Mission closed. Choose the next destination before leaving debrief."
 	feedback.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	feedback.add_theme_font_size_override("font_size", 14)
 	feedback.add_theme_color_override("font_color", TEXT_MUTED)
@@ -499,7 +655,7 @@ func _add_next_mission_handoff(vbox: VBoxContainer) -> void:
 
 	var card := PanelContainer.new()
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.08, 0.12, 0.20, 0.96)
+	style.bg_color = Color(0.15, 0.18, 0.25, 0.96)
 	style.border_color = AMBER
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(8)
@@ -551,12 +707,14 @@ func _add_next_mission_handoff(vbox: VBoxContainer) -> void:
 
 
 func _add_handoff_actions(vbox: VBoxContainer) -> void:
-	var acts := VBoxContainer.new()
+	var acts := HBoxContainer.new()
 	acts.add_theme_constant_override("separation", 10)
+	acts.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vbox.add_child(acts)
 
 	var launchpad_btn := _make_button("Open Launchpad →", true)
 	launchpad_btn.name = "CompleteButton"
+	launchpad_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	launchpad_btn.pressed.connect(_on_open_launchpad_pressed)
 	acts.add_child(launchpad_btn)
 
@@ -564,13 +722,15 @@ func _add_handoff_actions(vbox: VBoxContainer) -> void:
 		"Scrap / Salvage Ship  (+%s F)" % NumberFormat.commas(str(_salvage_refund)),
 		false
 	)
+	salvage_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	salvage_btn.disabled = _salvage_applied or _salvage_refund <= 0
 	if not salvage_btn.disabled:
 		salvage_btn.pressed.connect(_on_salvage_pressed.bind(salvage_btn))
 	acts.add_child(salvage_btn)
 
-	var return_btn := _make_button("Return to Base", false)
+	var return_btn := _make_button("Base", false)
 	return_btn.name = "OrbitButton"
+	return_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	return_btn.pressed.connect(_return_to_base)
 	acts.add_child(return_btn)
 
@@ -584,13 +744,13 @@ func _add_handoff_actions(vbox: VBoxContainer) -> void:
 	else:
 		explain.text = "No salvage value is available for this ship."
 	explain.add_theme_color_override("font_color", TEXT_MUTED)
-	acts.add_child(explain)
+	vbox.add_child(explain)
 
 
 func _make_button(text: String, primary: bool) -> Button:
 	var btn := Button.new()
 	btn.text = text
-	btn.custom_minimum_size = Vector2(0, 56)
+	btn.custom_minimum_size = Vector2(0, 52)
 	var color := AMBER if primary else CYAN
 	var normal := StyleBoxFlat.new()
 	normal.bg_color = Color(0, 0, 0, 0)
@@ -612,8 +772,32 @@ func _make_button(text: String, primary: bool) -> Button:
 	btn.add_theme_color_override("font_color", color)
 	btn.add_theme_color_override("font_hover_color", color)
 	btn.add_theme_color_override("font_pressed_color", color)
-	btn.add_theme_font_size_override("font_size", 20)
+	btn.add_theme_font_size_override("font_size", 18)
 	return btn
+
+func _soft_card_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.15, 0.18, 0.25, 0.92)
+	style.border_color = Color(CYAN.r, CYAN.g, CYAN.b, 0.55)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(8)
+	style.content_margin_left = 14
+	style.content_margin_right = 14
+	style.content_margin_top = 12
+	style.content_margin_bottom = 12
+	return style
+
+func _highlight_card_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(AMBER.r, AMBER.g, AMBER.b, 0.96)
+	style.border_color = Color(1.0, 0.94, 0.78, 1.0)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(10)
+	style.content_margin_left = 18
+	style.content_margin_right = 18
+	style.content_margin_top = 14
+	style.content_margin_bottom = 14
+	return style
 
 
 func _toggle_button_guide() -> void:
