@@ -41,6 +41,8 @@ var _classification_row: Control
 @onready var annotation_count_label: Label = $HeaderContainer/TopRow/AnnotationCount
 
 func _ready():
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	custom_minimum_size = Vector2.ZERO
 	back_button.pressed.connect(Callable(self, "_on_back_pressed"))
 	pen_button.pressed.connect(Callable(self, "_on_pen_pressed"))
 	clear_button.pressed.connect(Callable(self, "_on_clear_pressed"))
@@ -187,7 +189,13 @@ func _apply_layout() -> void:
 	tools_row.add_theme_constant_override("h_separation", 8 if is_mobile else 10)
 	tools_row.add_theme_constant_override("v_separation", 8 if is_mobile else 10)
 	content_container.add_theme_constant_override("separation", 16 if is_mobile else 20)
-	body_scroll.custom_minimum_size.y = clampf(safe.size.y - (170.0 if is_mobile else 190.0), 280.0, safe.size.y)
+	var header_height := maxf(
+		header_container.get_combined_minimum_size().y,
+		158.0 if is_mobile else 176.0
+	)
+	var body_height := maxf(220.0, safe.size.y - header_height - float(get_theme_constant("separation")))
+	body_scroll.custom_minimum_size.y = body_height
+	custom_minimum_size = safe.size
 	image_container.custom_minimum_size = Vector2(image_side, image_side)
 	asteroid_image.custom_minimum_size = Vector2(image_side, image_side)
 	drawing_canvas.custom_minimum_size = Vector2(image_side, image_side)

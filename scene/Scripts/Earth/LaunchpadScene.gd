@@ -4,6 +4,7 @@ const MissionGuidanceOverlayScene = preload("res://Scenes/UI/Templates/Launchpad
 const RoomCatalog = preload("res://Scripts/Utils/RoomCatalog.gd")
 const RoomSpriteAtlas = preload("res://Scripts/UI/RoomSpriteAtlas.gd")
 const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
+const TutorialCoachTargeting = preload("res://Scripts/UI/TutorialCoachTargeting.gd")
 
 var _mission_guidance_id: int = 0
 var _mission_guidance_layer: CanvasLayer = null
@@ -23,6 +24,7 @@ const ROOM_TILE_COLUMNS := 3
 const ZOOM_IN_LEVEL := Vector2(1.25, 1.25)
 
 func _ready():
+	super._ready()
 	var root_scene = get_tree().current_scene
 	if root_scene:
 		var lp = root_scene.get_node_or_null("StructuresLayer/Launchpad")
@@ -121,9 +123,12 @@ func _setup_mission_guidance() -> void:
 	_mission_guidance_pointer = _mission_guidance_layer.get_node_or_null("PointerLabel")
 	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
 	if mission_panel:
-		panel_style.apply_panel(mission_panel)
+		mission_panel.add_theme_stylebox_override(
+			"panel",
+			panel_style.create_glass_panel_style(Color(0.05, 0.09, 0.14, 0.95), 0.68, 18, 20, 16)
+		)
 	if _mission_guidance_label:
-		panel_style.apply_body(_mission_guidance_label)
+		panel_style.apply_body_on_dark(_mission_guidance_label)
 
 func _update_mission_guidance() -> void:
 	if not _mission_guidance_active:
@@ -150,13 +155,19 @@ func _update_mission_guidance() -> void:
 	var selected_target = str(rm.get_selected_target())
 	var rockets = get_tree().get_nodes_in_group("rocket")
 	if rockets.is_empty():
-		target_button = _find_button_by_text(launchpad_root, "Create")
+		target_button = TutorialCoachTargeting.find_current_target({"action_key": "create_rocket"}, get_tree()) as Control
+		if target_button == null:
+			target_button = _find_button_by_text(launchpad_root, "Create")
 		_mission_guidance_label.text = "Mission %d: Create a rocket to begin." % _mission_guidance_id
 	elif selected_target == "":
-		target_button = _find_button_by_text(launchpad_root, "Select")
+		target_button = TutorialCoachTargeting.find_current_target({"action_key": "select_launch_target"}, get_tree()) as Control
+		if target_button == null:
+			target_button = _find_button_by_text(launchpad_root, "Target")
 		_mission_guidance_label.text = "Mission %d: Select a mission target before launch." % _mission_guidance_id
 	else:
-		target_button = _find_button_by_text(launchpad_root, "Launch")
+		target_button = TutorialCoachTargeting.find_current_target({"action_key": "launch_rocket_from_earth"}, get_tree()) as Control
+		if target_button == null:
+			target_button = _find_button_by_text(launchpad_root, "Launch")
 		var launch_hint = "Mission %d: Press Launch to start the mission." % _mission_guidance_id
 		# Show room requirements for the mission
 		if not rockets.is_empty():

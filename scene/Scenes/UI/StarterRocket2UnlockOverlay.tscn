@@ -1,0 +1,83 @@
+[gd_scene format=3]
+
+[node name="StarterRocket2UnlockOverlay" type="ColorRect"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 1
+color = Color(0, 0, 0, 0)
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="Stack" type="VBoxContainer" parent="Center"]
+layout_mode = 2
+theme_override_constants/separation = 18
+alignment = 1
+
+[node name="IntroLabel" type="Label" parent="Center/Stack"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "Mission one complete.\nStarter Rocket 2 is flight-ready."
+
+[node name="Card" type="PanelContainer" parent="Center/Stack"]
+layout_mode = 2
+modulate = Color(1, 1, 1, 0)
+scale = Vector2(0.92, 0.92)
+
+[node name="Body" type="VBoxContainer" parent="Center/Stack/Card"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Eyebrow" type="Label" parent="Center/Stack/Card/Body"]
+layout_mode = 2
+text = "MISSION REWARD  •  NEW SHIP UNLOCKED"
+
+[node name="Content" type="HBoxContainer" parent="Center/Stack/Card/Body"]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="IconShell" type="PanelContainer" parent="Center/Stack/Card/Body/Content"]
+layout_mode = 2
+
+[node name="Icon" type="TextureRect" parent="Center/Stack/Card/Body/Content/IconShell"]
+layout_mode = 2
+stretch_mode = 5
+expand_mode = 1
+
+[node name="Details" type="VBoxContainer" parent="Center/Stack/Card/Body/Content"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="Center/Stack/Card/Body/Content/Details"]
+layout_mode = 2
+text = "Starter Rocket 2"
+
+[node name="Summary" type="Label" parent="Center/Stack/Card/Body/Content/Details"]
+layout_mode = 2
+text = "Summary"
+
+[node name="Flavour" type="Label" parent="Center/Stack/Card/Body/Content/Details"]
+layout_mode = 2
+text = "Flavour"
+
+[node name="Highlights" type="VBoxContainer" parent="Center/Stack/Card/Body/Content/Details"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Stats" type="Label" parent="Center/Stack/Card/Body/Content/Details"]
+layout_mode = 2
+text = "Stats"
+
+[node name="Footer" type="Label" parent="Center/Stack/Card/Body/Content/Details"]
+layout_mode = 2
+text = "Footer"
+
+[node name="CTAButton" type="Button" parent="Center/Stack/Card/Body"]
+layout_mode = 2
+text = "Plan Mission 2 with SR2"

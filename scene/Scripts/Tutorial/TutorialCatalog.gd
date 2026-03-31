@@ -15,8 +15,6 @@ const DEBRIEF_SCENES := ["earth_base_1", "mission_debrief_v2"]
 
 const STEPS_BY_MISSION := {
 	1: [
-		{"id": "m1_tour_control_station", "action_key": "tour_open_control_station", "title": "Base Tour", "message": "Check the Control Station — it shows active missions and your fleet status.", "mechanic": "navigation", "valid_scenes": BASE_ONLY_SCENES},
-		{"id": "m1_tour_close_control_station", "action_key": "tour_close_control_station", "title": "Close Panel", "message": "Good. Close the panel — the Launchpad is your next stop.", "mechanic": "navigation", "valid_scenes": BASE_ONLY_SCENES},
 		{"id": "m1_pick_contractor", "action_key": "accept_contractor_offer", "title": "Pick Contractor", "message": "Contractors pay a bonus when you deliver their requested minerals. Pick one before building your rocket.", "mechanic": "contractor", "valid_scenes": LAUNCHPAD_SCENES},
 		{"id": "m1_create_rocket", "action_key": "create_rocket", "title": "Build Rocket", "message": "Build your first rocket here in the Launchpad. Starter Rocket 1 is ready to kit out.", "mechanic": "economy", "valid_scenes": LAUNCHPAD_SCENES},
 		{"id": "m1_select_target", "action_key": "select_launch_target", "title": "Select Target", "message": "Select the Mission 1 asteroid as your destination.", "mechanic": "targeting", "valid_scenes": LAUNCHPAD_SCENES},
@@ -27,6 +25,7 @@ const STEPS_BY_MISSION := {
 		{"id": "m1_debrief", "action_key": "resolve_mission_debrief", "title": "Debrief", "message": "Sell your cargo and complete the debrief. Mission 2 unlocks when you're done.", "mechanic": "debrief", "valid_scenes": DEBRIEF_SCENES}
 	],
 	2: [
+		{"id": "m2_build_control_station", "action_key": "build_control_station", "title": "Build Control Station", "message": "Build the Control Station on your base before starting Mission 2. It becomes your fleet and route hub from here on.", "mechanic": "progression", "valid_scenes": BASE_ONLY_SCENES},
 		{"id": "m2_pick_contractor", "action_key": "accept_contractor_offer", "title": "Pick Contractor", "message": "Pick a contractor — their delivery order gives you a bonus payout on top of the standard haul price.", "mechanic": "contractor", "valid_scenes": LAUNCHPAD_SCENES},
 		{"id": "m2_create_rocket", "action_key": "create_rocket", "title": "Build Rocket 2", "message": "Starter Rocket 2 has better range and cargo capacity. Build it in the Launchpad.", "mechanic": "progression", "valid_scenes": LAUNCHPAD_SCENES},
 		{"id": "m2_select_target", "action_key": "select_launch_target", "title": "Target", "message": "Choose your mission target from the list.", "mechanic": "targeting", "valid_scenes": LAUNCHPAD_SCENES},
@@ -44,8 +43,8 @@ const STEPS_BY_MISSION := {
 		{"id": "m3_debrief", "action_key": "resolve_mission_debrief", "title": "Debrief", "message": "Deliver and debrief. You're building operational range.", "mechanic": "debrief", "valid_scenes": DEBRIEF_SCENES}
 	],
 	4: [
-		{"id": "m4_build_scanner", "action_key": "build_scanner_station", "title": "Scanner", "message": "Build the Scanner Station at your base — it will reveal new targets across your operational zone.", "mechanic": "scanner", "valid_scenes": BASE_SCENES},
-		{"id": "m4_scan", "action_key": "scan_targets", "title": "Scan", "message": "Activate the scanner. It will map asteroid fields and flag high-value planet candidates.", "mechanic": "scanner", "valid_scenes": BASE_SCENES},
+		{"id": "m4_build_scanner", "action_key": "build_scanner_station", "title": "Scanner", "message": "Build the Scanner Station at your base — it will reveal new targets across your operational zone.", "mechanic": "scanner", "valid_scenes": BASE_ONLY_SCENES},
+		{"id": "m4_scan", "action_key": "scan_targets", "title": "Scan", "message": "Activate the scanner. It will map asteroid fields and flag high-value planet candidates.", "mechanic": "scanner", "valid_scenes": BASE_ONLY_SCENES},
 		{"id": "m4_select", "action_key": "select_launch_target", "title": "Target", "message": "Select a scanned target from the Launchpad list.", "mechanic": "targeting", "valid_scenes": LAUNCHPAD_SCENES},
 		{"id": "m4_launch", "action_key": "launch_rocket_from_earth", "title": "Launch", "message": "Press Launch to begin the mission.", "mechanic": "launch", "valid_scenes": LAUNCHPAD_SCENES},
 		{"id": "m4_mine", "action_key": "mine_target", "title": "Mine + Drones", "message": "Drones are unlocked. Press DRONE (or D) to target dark subsurface deposits for bonus yield on top of your surface haul.", "mechanic": "mining", "valid_scenes": MINING_SCENES},

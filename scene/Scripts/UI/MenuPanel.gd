@@ -91,34 +91,72 @@ func _ready() -> void:
 	AppLogger.d("MenuPanel ready with counter: %s" % current_counter)
 
 func _apply_style() -> void:
-	PanelStyle.apply_panel($PanelContainer/Panel)
-	$PanelContainer/Panel/VBoxContainer/HeaderContainer/HeaderBackground.add_theme_stylebox_override("panel", PanelStyle.create_card_style())
-	$PanelContainer/Panel/VBoxContainer/HeaderContainer/HeaderBackground/HeaderContent/Title.add_theme_color_override("font_color", PanelStyle.ACCENT)
-	PanelStyle.apply_button(close_btn, false)
-	PanelStyle.apply_button(logbook_btn, false)
+	$Overlay.color = Color(0.03, 0.06, 0.10, 0.80)
+	$PanelContainer/Panel.add_theme_stylebox_override(
+		"panel",
+		PanelStyle.create_glass_panel_style(Color(0.05, 0.09, 0.14, 0.95), 0.70, 22, 24, 20)
+	)
+	$PanelContainer/Panel/VBoxContainer/HeaderContainer/HeaderBackground.add_theme_stylebox_override(
+		"panel",
+		PanelStyle.create_glass_card_style(Color(0.08, 0.13, 0.20, 0.92), 0.54, 16, 16, 12)
+	)
+	PanelStyle.apply_title_on_dark($PanelContainer/Panel/VBoxContainer/HeaderContainer/HeaderBackground/HeaderContent/Title)
+	PanelStyle.apply_outline_button(close_btn)
+	PanelStyle.apply_button(logbook_btn, true)
 	PanelStyle.apply_separator($PanelContainer/Panel/VBoxContainer/HSeparator)
-	$PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/CounterCard.add_theme_stylebox_override("panel", PanelStyle.create_card_style())
-	PanelStyle.apply_muted($PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/CounterCard/CounterContainer/CounterTitle)
+	$PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/CounterCard.add_theme_stylebox_override(
+		"panel",
+		PanelStyle.create_glass_card_style()
+	)
+	$PanelContainer/Panel/VBoxContainer/TabContainer/Progress/Content/ProgressCard.add_theme_stylebox_override(
+		"panel",
+		PanelStyle.create_glass_card_style()
+	)
+	var progress_title: Label = $PanelContainer/Panel/VBoxContainer/TabContainer/Progress/Content/ProgressCard/ProgressContainer/ProgressTitle
+	var tutorial_section: Label = $PanelContainer/Panel/VBoxContainer/TabContainer/Settings/Content/TutorialSectionLabel
+	var unlocks_hint: Label = $PanelContainer/Panel/VBoxContainer/TabContainer/Unlocks/Content/UnlocksHint
+	var subtitle: Label = $LogbookOverlay/LogbookPanelContainer/LogbookPanel/VBoxContainer/Subtitle
+	PanelStyle.apply_muted_on_dark($PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/CounterCard/CounterContainer/CounterTitle)
 	counter_label.add_theme_color_override("font_color", PanelStyle.ACCENT)
-	PanelStyle.apply_button(decrease_btn, false)
-	PanelStyle.apply_button(increase_btn, false)
-	$PanelContainer/Panel/VBoxContainer/TabContainer/Progress/Content/ProgressCard.add_theme_stylebox_override("panel", PanelStyle.create_card_style())
-	PanelStyle.apply_muted(info_label)
-	PanelStyle.apply_muted($PanelContainer/Panel/VBoxContainer/TabContainer/Unlocks/Content/UnlocksHint)
-	PanelStyle.apply_muted($PanelContainer/Panel/VBoxContainer/TabContainer/Settings/Content/TutorialSectionLabel)
+	PanelStyle.apply_outline_button(decrease_btn)
+	PanelStyle.apply_button(increase_btn, true)
+	PanelStyle.apply_body_on_dark(progress_title)
+	progress_title.add_theme_font_size_override("font_size", 20)
+	PanelStyle.apply_body_on_dark(level_label)
+	level_label.add_theme_font_size_override("font_size", 18)
+	PanelStyle.apply_muted_on_dark(xp_label)
+	xp_label.add_theme_font_size_override("font_size", 16)
+	PanelStyle.apply_muted_on_dark(next_level_label)
+	PanelStyle.apply_muted_on_dark(info_label)
+	PanelStyle.apply_muted_on_dark(unlocks_hint)
+	PanelStyle.apply_muted_on_dark(tutorial_section)
 	PanelStyle.apply_progress_bar(progress_bar)
-	PanelStyle.apply_button(citizen_science_dialogue_btn, false)
-	PanelStyle.apply_button(reset_btn, false)
-	PanelStyle.apply_button(debug_mining_btn, false)
-	PanelStyle.apply_button(debug_money_btn, false)
-	PanelStyle.apply_button(practice_mining_btn, false)
-	PanelStyle.apply_button(skip_tutorial_btn, false)
-	PanelStyle.apply_button(replay_mission_tutorial_btn, false)
-	PanelStyle.apply_button(replay_all_tutorial_btn, false)
-	PanelStyle.apply_panel($LogbookOverlay/LogbookPanelContainer/LogbookPanel)
-	PanelStyle.apply_button(logbook_close_btn, false)
+	PanelStyle.apply_outline_button(citizen_science_dialogue_btn)
+	PanelStyle.apply_outline_button(reset_btn, Color(PanelStyle.ACCENT_WARM.r, PanelStyle.ACCENT_WARM.g, PanelStyle.ACCENT_WARM.b, 0.80))
+	PanelStyle.apply_outline_button(debug_mining_btn, Color(PanelStyle.ACCENT_WARM.r, PanelStyle.ACCENT_WARM.g, PanelStyle.ACCENT_WARM.b, 0.80))
+	PanelStyle.apply_outline_button(debug_money_btn, Color(PanelStyle.ACCENT_WARM.r, PanelStyle.ACCENT_WARM.g, PanelStyle.ACCENT_WARM.b, 0.80))
+	PanelStyle.apply_button(practice_mining_btn, true)
+	PanelStyle.apply_outline_button(skip_tutorial_btn)
+	PanelStyle.apply_outline_button(replay_mission_tutorial_btn)
+	PanelStyle.apply_outline_button(replay_all_tutorial_btn)
+	$LogbookOverlay.color = Color(0.03, 0.06, 0.10, 0.84)
+	$LogbookOverlay/LogbookPanelContainer/LogbookPanel.add_theme_stylebox_override(
+		"panel",
+		PanelStyle.create_glass_panel_style(Color(0.05, 0.09, 0.14, 0.96), 0.70, 22, 24, 20)
+	)
+	PanelStyle.apply_outline_button(logbook_close_btn)
 	PanelStyle.apply_separator($LogbookOverlay/LogbookPanelContainer/LogbookPanel/VBoxContainer/HSeparator)
-	$LogbookOverlay/LogbookPanelContainer/LogbookPanel/VBoxContainer/Subtitle.add_theme_color_override("font_color", PanelStyle.TEXT_MUTED)
+	PanelStyle.apply_title_on_dark(logbook_title)
+	PanelStyle.apply_muted_on_dark(subtitle)
+	var tab_container: TabContainer = $PanelContainer/Panel/VBoxContainer/TabContainer
+	tab_container.add_theme_color_override("font_selected_color", PanelStyle.TEXT_ON_DARK)
+	tab_container.add_theme_color_override("font_unselected_color", PanelStyle.MUTED_ON_DARK)
+	tab_container.add_theme_color_override("font_hovered_color", PanelStyle.TEXT_ON_DARK)
+	tab_container.add_theme_color_override("font_disabled_color", Color(PanelStyle.MUTED_ON_DARK.r, PanelStyle.MUTED_ON_DARK.g, PanelStyle.MUTED_ON_DARK.b, 0.45))
+	tab_container.add_theme_stylebox_override("tab_selected", PanelStyle.create_glass_pill_style(Color(0.08, 0.13, 0.20, 0.96), 0.60, 14))
+	tab_container.add_theme_stylebox_override("tab_unselected", PanelStyle.create_glass_pill_style(Color(0.05, 0.09, 0.14, 0.84), 0.28, 14))
+	tab_container.add_theme_stylebox_override("tab_hovered", PanelStyle.create_glass_pill_style(Color(0.09, 0.15, 0.22, 0.92), 0.48, 14))
+	tab_container.add_theme_stylebox_override("panel", PanelStyle.create_glass_card_style(Color(0.06, 0.10, 0.16, 0.58), 0.22, 16, 16, 14))
 
 func _apply_layout() -> void:
 	var viewport := get_viewport().get_visible_rect().size
@@ -261,6 +299,8 @@ func _setup_debug_buttons() -> void:
 	
 	mission_jump_label = Label.new()
 	mission_jump_label.text = "JUMP TO MISSION:"
+	PanelStyle.apply_muted_on_dark(mission_jump_label)
+	mission_jump_label.add_theme_font_size_override("font_size", 14)
 	container.add_child(mission_jump_label)
 	container.move_child(mission_jump_label, 1)
 	
@@ -363,7 +403,7 @@ func _rebuild_logbook_entries() -> void:
 		var empty: Label = LogbookEmptyScene.instantiate()
 		empty.text = "No mission records yet."
 		var panel_style = PanelStyle
-		empty.add_theme_color_override("font_color", panel_style.TEXT_MUTED)
+		empty.add_theme_color_override("font_color", panel_style.MUTED_ON_DARK)
 		empty.add_theme_font_size_override("font_size", 16)
 		logbook_entries.add_child(empty)
 		return
@@ -374,7 +414,7 @@ func _rebuild_logbook_entries() -> void:
 			continue
 		var card: PanelContainer = LogbookCardScene.instantiate()
 		var panel_style = PanelStyle
-		card.add_theme_stylebox_override("panel", panel_style.create_card_style())
+		card.add_theme_stylebox_override("panel", panel_style.create_glass_card_style())
 		logbook_entries.add_child(card)
 
 		var body: VBoxContainer = card.get_node("Body")
@@ -395,7 +435,7 @@ func _rebuild_logbook_entries() -> void:
 
 			var section_header: Label = LogbookSectionHeaderScene.instantiate()
 			section_header.text = str(section.get("title", "Details"))
-			section_header.add_theme_color_override("font_color", panel_style.TEXT_MUTED)
+			section_header.add_theme_color_override("font_color", panel_style.MUTED_ON_DARK)
 			section_header.add_theme_font_size_override("font_size", 14)
 			body.add_child(section_header)
 
@@ -405,17 +445,17 @@ func _rebuild_logbook_entries() -> void:
 
 				var key_label: Label = row.get_node("KeyLabel")
 				key_label.text = "%s:" % _format_logbook_key(str(section_key))
-				key_label.add_theme_color_override("font_color", panel_style.TEXT_MUTED)
+				key_label.add_theme_color_override("font_color", panel_style.MUTED_ON_DARK)
 				key_label.add_theme_font_size_override("font_size", 14)
 
 				var value_label: Label = row.get_node("ValueLabel")
-				value_label.add_theme_color_override("font_color", panel_style.TEXT_PRIMARY)
+				value_label.add_theme_color_override("font_color", panel_style.TEXT_ON_DARK)
 				value_label.add_theme_font_size_override("font_size", 15)
 				value_label.text = _format_logbook_value(str(section_key), entry.get(section_key))
 
 		if idx > 0:
 			var divider = HSeparator.new()
-			divider.add_theme_color_override("separator", panel_style.PANEL_BORDER)
+			divider.add_theme_color_override("separator", Color(panel_style.ACCENT.r, panel_style.ACCENT.g, panel_style.ACCENT.b, 0.28))
 			body.add_child(divider)
 
 func _logbook_sections() -> Array:

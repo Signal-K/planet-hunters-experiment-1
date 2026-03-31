@@ -1,6 +1,22 @@
-[gd_scene load_steps=2 format=3 uid="uid://mission_debrief_v2"]
+[gd_scene load_steps=3 format=3 uid="uid://mission_debrief_v2"]
 
 [ext_resource type="Script" path="res://Scripts/Earth/MissionDebriefV2.gd" id="1_debriefv2"]
+
+[sub_resource type="StyleBoxFlat" id="1"]
+bg_color = Color(0.0588235, 0.101961, 0.14902, 0.96)
+border_color = Color(0.47451, 0.862745, 0.941176, 0.86)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+corner_radius_bottom_right = 18
+corner_radius_bottom_left = 18
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+content_margin_left = 28.0
+content_margin_top = 24.0
+content_margin_right = 28.0
+content_margin_bottom = 24.0
 
 [node name="MissionDebriefV2" type="Control"]
 layout_mode = 3
@@ -15,6 +31,64 @@ anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 
+[node name="UILayer" type="CanvasLayer" parent="."]
+layer = 2
+
+[node name="ButtonContainer" type="HBoxContainer" parent="UILayer"]
+custom_minimum_size = Vector2(0, 80)
+offset_left = 24.0
+offset_top = 976.0
+offset_right = 1896.0
+offset_bottom = 1056.0
+
+[node name="BackButton" type="Button" parent="UILayer/ButtonContainer"]
+custom_minimum_size = Vector2(160, 80)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
+theme_override_font_sizes/font_size = 24
+text = "<<"
+
+[node name="ForwardButton" type="Button" parent="UILayer/ButtonContainer"]
+custom_minimum_size = Vector2(160, 80)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
+theme_override_font_sizes/font_size = 24
+text = ">>"
+
+[node name="MenuButton" type="Button" parent="UILayer/ButtonContainer"]
+custom_minimum_size = Vector2(220, 80)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
+theme_override_font_sizes/font_size = 20
+text = "Menu"
+
+[node name="MarketButton" type="Button" parent="UILayer/ButtonContainer"]
+custom_minimum_size = Vector2(220, 80)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
+theme_override_font_sizes/font_size = 20
+text = "Market"
+
+[node name="SpaceMapButton" type="Button" parent="UILayer/ButtonContainer"]
+custom_minimum_size = Vector2(260, 80)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
+theme_override_font_sizes/font_size = 20
+text = "Space Map"
+
+[node name="NewMissionButton" type="Button" parent="UILayer/ButtonContainer"]
+custom_minimum_size = Vector2(300, 80)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
+theme_override_font_sizes/font_size = 20
+text = "New Mission"
+
 [node name="Center" type="CenterContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
@@ -23,6 +97,7 @@ anchor_bottom = 1.0
 
 [node name="Panel" type="PanelContainer" parent="Center"]
 layout_mode = 2
+theme_override_styles/panel = SubResource("1")
 
 [node name="Margin" type="MarginContainer" parent="Center/Panel"]
 layout_mode = 2
@@ -45,6 +120,7 @@ alignment = 1
 
 [node name="EmptyLabel" type="Label" parent="Center/EmptyState"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.70, 0.78, 0.86, 1)
 text = "No mission data found. Return to base."
 
 [node name="EmptyButton" type="Button" parent="Center/EmptyState"]

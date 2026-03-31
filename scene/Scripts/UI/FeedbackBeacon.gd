@@ -14,7 +14,7 @@ func _ready() -> void:
 		return
 	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
 	panel_style.apply_button(feedback_button, true)
-	panel_style.apply_muted(hint_label)
+	panel_style.apply_muted_on_dark(hint_label)
 	feedback_button.pressed.connect(_on_feedback_pressed)
 
 func _on_feedback_pressed() -> void:

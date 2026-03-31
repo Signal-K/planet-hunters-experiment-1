@@ -18,6 +18,10 @@ static var _cache: Dictionary = {}
 ## history: contractor_id → Array[String] of last-5 contractor_quotes (mirrors server)
 static var _history: Dictionary = {}
 
+static func reset_session_state() -> void:
+	_cache.clear()
+	_history.clear()
+
 static func _make_cache_key(p: Dictionary) -> String:
 	return "%s|%s|%s|%s|%s|%s" % [
 		str(p.get("contractor_id", "")),

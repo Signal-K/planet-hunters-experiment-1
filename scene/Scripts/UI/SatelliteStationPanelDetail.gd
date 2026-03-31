@@ -2,6 +2,7 @@ extends RefCounted
 class_name SatelliteStationPanelDetail
 
 const AsteroidDetailView = preload("res://Scenes/UI/AsteroidDetail/asteroid_detail_view.tscn")
+const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
 
 var _panel: Control
 var _loading_container: Control
@@ -33,16 +34,16 @@ func is_active() -> bool:
 	return _detail_view_active
 
 func apply_panel_style() -> void:
-	"""Apply polished panel styling"""
-	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
-	panel_style.apply_panel(_panel)
+	"""Apply scanner-aligned shell styling."""
+	if _panel:
+		_panel.add_theme_stylebox_override("panel", PanelStyle.create_glass_panel_style(Color(0.06, 0.10, 0.16, 0.96), 0.86, 18, 20, 16))
 	if _title_label:
-		panel_style.apply_title(_title_label)
+		PanelStyle.apply_title_on_dark(_title_label)
 	if _close_button:
-		panel_style.apply_button(_close_button, false)
+		PanelStyle.apply_outline_button(_close_button, PanelStyle.ACCENT, PanelStyle.TEXT_ON_DARK)
 
 func show_detail(anomaly: Dictionary) -> void:
-	"""Show the asteroid detail view"""
+	"""Show the asteroid detail view."""
 	if _detail_view_active:
 		return  # Prevent multiple detail views
 
@@ -51,9 +52,8 @@ func show_detail(anomaly: Dictionary) -> void:
 	# Hide toggle switch
 	_toggle_switch.visible = false
 
-	# Keep detail view on the same dark panel palette as the rest of the UI.
-	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
-	panel_style.apply_panel(_panel, panel_style.ACCENT_SOFT)
+	# Keep the drill-down shell on the same dark-glass palette as the scanner.
+	apply_panel_style()
 
 	# Hide the list container contents
 	_loading_container.visible = false
@@ -76,7 +76,7 @@ func _on_detail_view_back() -> void:
 	# Show toggle switch again
 	_toggle_switch.visible = true
 
-	# Restore original white panel background
+	# Restore the scanner shell styling.
 	apply_panel_style()
 
 	_loading_container.visible = false

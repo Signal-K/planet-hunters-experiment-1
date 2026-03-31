@@ -79,6 +79,7 @@ func _ready() -> void:
 func _apply_style() -> void:
 	var viewport := get_viewport().get_visible_rect().size
 	var safe := UILayout.safe_rect(viewport)
+	var background: ColorRect = $Background
 	dock.offset_left = safe.position.x
 	dock.offset_top = safe.position.y
 	dock.offset_right = -(viewport.x - safe.end.x)
@@ -105,15 +106,20 @@ func _apply_style() -> void:
 	var preset_buttons = warmup_button.get_parent() as BoxContainer
 	if preset_buttons:
 		preset_buttons.add_theme_constant_override("separation", 6 if narrow else 8)
-	PanelStyle.apply_panel(panel)
-	PanelStyle.apply_title(title_label)
-	PanelStyle.apply_muted(subtitle_label)
+	background.color = Color(0.02, 0.04, 0.07, 0.94)
+	panel.add_theme_stylebox_override(
+		"panel",
+		PanelStyle.create_glass_panel_style(Color(0.05, 0.09, 0.14, 0.96), 0.72, 22, 22, 18)
+	)
+	PanelStyle.apply_title_on_dark(title_label)
+	PanelStyle.apply_muted_on_dark(subtitle_label)
 	PanelStyle.apply_button(warmup_button, true)
-	PanelStyle.apply_button(drill_button, false)
-	PanelStyle.apply_button(endurance_button, false)
-	PanelStyle.apply_muted(status_label)
+	PanelStyle.apply_outline_button(drill_button)
+	PanelStyle.apply_outline_button(endurance_button)
+	PanelStyle.apply_muted_on_dark(status_label)
 	PanelStyle.apply_richtext(summary_label)
-	PanelStyle.apply_button(close_button, false)
+	summary_label.add_theme_color_override("default_color", PanelStyle.TEXT_ON_DARK)
+	PanelStyle.apply_outline_button(close_button)
 
 func _connect_buttons() -> void:
 	warmup_button.pressed.connect(func(): _start_preset("warmup_asteroid"))

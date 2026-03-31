@@ -74,7 +74,7 @@ var _terrain_loop_container: Node2D = null
 @onready var ui_root: Control = $UI
 @onready var top_bar: HBoxContainer = $UI/TopBar
 @onready var top_spacer: Control = $UI/TopBar/Spacer
-@onready var handbook_button: Button = $UI/TopBar/HandbookButton
+@onready var handbook_button: Button = $UI/HandbookButton
 @onready var left_gauges: HBoxContainer = $UI/TopBar/LeftGauges
 @onready var right_stats: VBoxContainer = $UI/TopBar/RightStats
 @onready var fuel_label: Label = $UI/TopBar/LeftGauges/FuelPanel/VBox/Label
@@ -179,14 +179,7 @@ func _ready():
 	return_button.pressed.connect(_on_return_pressed)
 	menu_button.pressed.connect(_toggle_inventory)
 	_setup_button_handbook()
-
-	var _vp := get_viewport_rect().size
-	# canvas_items+expand on a phone in landscape yields a wide viewport in game
-	# units (~2300×1080) so the "<768" fallback does not trigger.  Catch this by
-	# also enabling touch controls when running in a web context with an aspect
-	# ratio wider than 16:9 (common on phones; rare on desktop/tablet).
-	var _is_web_landscape_phone := OS.has_feature("web") and _vp.x / maxf(_vp.y, 1.0) > 1.85
-	_uses_touch_controls = OS.has_feature("mobile") or _vp.x < 768 or _is_web_landscape_phone
+	_uses_touch_controls = _should_use_touch_controls()
 	_update_bottom_bar_visibility()
 	inventory_panel.visible = false
 	_update_drone_display()
@@ -224,9 +217,7 @@ func _exit_tree() -> void:
 	_restore_tutorial_overlay()
 
 func _on_viewport_size_changed() -> void:
-	var _rsz := get_viewport_rect().size
-	var _is_web_lp := OS.has_feature("web") and _rsz.x / maxf(_rsz.y, 1.0) > 1.85
-	var now_touch = OS.has_feature("mobile") or _rsz.x < 768 or _is_web_lp
+	var now_touch = _should_use_touch_controls()
 	if now_touch != _uses_touch_controls:
 		_uses_touch_controls = now_touch
 		_update_bottom_bar_visibility()
@@ -238,6 +229,21 @@ func _update_bottom_bar_visibility() -> void:
 	mine_button.visible = _uses_touch_controls
 	drone_button.visible = _uses_touch_controls and _drones_enabled
 	instructions.visible = not _uses_touch_controls
+
+func _should_use_touch_controls() -> bool:
+	var viewport_size := get_viewport_rect().size
+	# canvas_items+expand on phones in landscape can expose a wide virtual width
+	# even when the device is touch-first, so catch that web case explicitly.
+	var is_web_landscape_phone := OS.has_feature("web") and viewport_size.x / maxf(viewport_size.y, 1.0) > 1.85
+	if OS.has_feature("mobile") or viewport_size.x < 768.0 or is_web_landscape_phone:
+		return true
+	return _is_mobile_pwa()
+
+func _is_mobile_pwa() -> bool:
+	if not OS.has_feature("web"):
+		return false
+	var js := "(function(){try{var standalone=false; if(window.matchMedia){standalone=window.matchMedia('(display-mode: standalone)').matches;} var iosStandalone=!!(window.navigator && window.navigator.standalone); var coarse=false; if(window.matchMedia){coarse=window.matchMedia('(pointer: coarse)').matches;} if(!coarse){coarse=('ontouchstart' in window) || ((window.navigator && window.navigator.maxTouchPoints) || 0) > 0;} var narrow=Math.min(window.innerWidth||0, window.innerHeight||0) < 900; return ((standalone||iosStandalone) && (coarse||narrow)) ? '1' : '0';}catch(_e){return '0';}})();"
+	return str(JavaScriptBridge.eval(js, true)) == "1"
 
 func _setup_beam_visuals() -> void:
 	laser.begin_cap_mode = Line2D.LINE_CAP_ROUND
@@ -356,6 +362,7 @@ func _apply_responsive_layout() -> void:
 	else:
 		_apply_landscape_layout(is_mobile)
 	_update_room_panel_visibility(viewport)
+	_reposition_handbook_button(viewport)
 	_reposition_handbook_panel(viewport)
 	_position_rocket_lane()
 	# MINING_BOTTOM zone — position the BottomBar via UILayout so it tracks the
@@ -500,10 +507,28 @@ func _layout_room_toggle_button(viewport: Vector2) -> void:
 func _reposition_handbook_panel(viewport: Vector2) -> void:
 	if handbook_panel == null or not is_instance_valid(handbook_panel):
 		return
-	# MINING_HANDBOOK zone: top-right dropdown.  Tutorial is suspended during
-	# mining so this zone is uncontested.
+	# MINING_HANDBOOK zone: top-right dropdown. Tutorial is suspended during
+	# mining so this zone is uncontested. Anchor the panel below the guide
+	# button so the button never collides with the order summary in the HUD.
 	var r := UILayout.zone(UILayout.Zone.MINING_HANDBOOK, viewport)
+	var button_h := maxf(maxf(handbook_button.size.y, handbook_button.custom_minimum_size.y), 40.0)
+	r.position.y += button_h + 8.0
+	r.size.y = maxf(120.0, r.size.y - (button_h + 8.0))
 	UILayout.place(handbook_panel, UILayout.clamp_to_viewport(r, viewport))
+
+func _reposition_handbook_button(viewport: Vector2) -> void:
+	if handbook_button == null or not is_instance_valid(handbook_button):
+		return
+	var handbook_zone := UILayout.zone(UILayout.Zone.MINING_HANDBOOK, viewport)
+	var button_width := 128.0 if viewport.x >= 900.0 else 112.0
+	var button_height := 40.0
+	var button_rect := Rect2(
+		handbook_zone.end.x - button_width,
+		handbook_zone.position.y,
+		button_width,
+		button_height
+	)
+	UILayout.place(handbook_button, UILayout.clamp_to_viewport(button_rect, viewport))
 
 func start_mining(is_planet: bool = false, difficulty: int = 1, target_id: String = "", minerals: Dictionary = {}, mineable_pct: float = 0.5, session_context: Dictionary = {}):
 	_is_planet = is_planet

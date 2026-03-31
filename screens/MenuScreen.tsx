@@ -51,14 +51,20 @@ export const MenuScreen: React.FC<MenuScreenProps> = ({ navigation }) => {
     return String(val);
   }, [syncState.francBalance]);
 
-  const handleSkipToLevel3 = async () => {
+  const handleSkipToMission = async (stage: number) => {
+    const balances: Record<number, number> = {
+      2: 120000,
+      3: 250000,
+      4: 500000,
+      5: 1000000
+    };
     await updateManyFromReact({
-      experienceLevel: 3,
+      experienceLevel: stage,
       experienceXp: 0,
-      francBalance: 250000,
+      francBalance: balances[stage] || 1000000,
     });
-    skipToMission(3);
-    alert('Progress skipped to Level 3!');
+    skipToMission(stage);
+    alert(`Progress skipped to Mission ${stage}!`);
   };
 
   const handleInstantMining = () => {
@@ -130,9 +136,25 @@ export const MenuScreen: React.FC<MenuScreenProps> = ({ navigation }) => {
 
             <View style={{ marginBottom: 12 }}>
               <Button
-                title="📈 Skip to Level 3 (Unlock Missions)"
-                onPress={handleSkipToLevel3}
+                title="📈 Skip to Mission 3 (Scanner)"
+                onPress={() => handleSkipToMission(3)}
                 color="#64D2FF"
+              />
+            </View>
+
+            <View style={{ marginBottom: 12 }}>
+              <Button
+                title="📈 Skip to Mission 4 (Autonomy)"
+                onPress={() => handleSkipToMission(4)}
+                color="#BF5AF2"
+              />
+            </View>
+
+            <View style={{ marginBottom: 12 }}>
+              <Button
+                title="📈 Skip to Free Ops (M5)"
+                onPress={() => handleSkipToMission(5)}
+                color="#5E5CE6"
               />
             </View>
 

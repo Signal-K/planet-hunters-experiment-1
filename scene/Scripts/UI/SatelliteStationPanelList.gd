@@ -4,6 +4,15 @@ class_name SatelliteStationPanelList
 const AnomalyItemScene = preload("res://Scenes/UI/Templates/SatelliteAnomalyItem.tscn")
 const EmptyLabelScene = preload("res://Scenes/UI/Templates/MenuLogbookEmpty.tscn")
 const ClassificationConsensus = preload("res://Scripts/Utils/ClassificationConsensus.gd")
+const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
+
+const STATION_CARD_BG := Color(0.08, 0.13, 0.20, 0.94)
+const STATION_CARD_BORDER := Color(PanelStyle.ACCENT.r, PanelStyle.ACCENT.g, PanelStyle.ACCENT.b, 0.46)
+const STATION_CARD_HOVER := Color(0.12, 0.18, 0.26, 0.98)
+const STATION_ICON_BG := Color(PanelStyle.ACCENT.r, PanelStyle.ACCENT.g, PanelStyle.ACCENT.b, 0.22)
+const STATION_TEXT := PanelStyle.TEXT_ON_DARK
+const STATION_MUTED := PanelStyle.MUTED_ON_DARK
+const STATION_TELEMETRY := PanelStyle.ACCENT
 
 var _anomaly_list: VBoxContainer
 var _get_mode: Callable
@@ -33,8 +42,8 @@ func display_anomalies(anomalies: Array) -> void:
 		var empty_label: Label = EmptyLabelScene.instantiate()
 		var target_type = "planets" if _get_mode.call() == "planets" else "asteroids"
 		empty_label.text = "No %s detected in current scan range." % target_type
-		var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
-		panel_style.apply_muted(empty_label)
+		empty_label.add_theme_color_override("font_color", STATION_MUTED)
+		empty_label.add_theme_font_size_override("font_size", 16)
 		empty_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		_anomaly_list.add_child(empty_label)
 		return
@@ -46,28 +55,30 @@ func display_anomalies(anomalies: Array) -> void:
 
 func _create_anomaly_item(anomaly: Dictionary, index: int) -> Control:
 	var item_container: PanelContainer = AnomalyItemScene.instantiate()
-	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
-
-	item_container.add_theme_stylebox_override("panel", panel_style.create_list_item_style())
+	item_container.add_theme_stylebox_override("panel", _create_station_item_style())
 
 	var icon_container: PanelContainer = item_container.get_node("HBox/IconContainer")
-	icon_container.add_theme_stylebox_override("panel", panel_style.create_icon_circle_style())
+	icon_container.add_theme_stylebox_override("panel", _create_station_icon_style())
 
 	var icon_label: Label = item_container.get_node("HBox/IconContainer/IconLabel")
 	# Use planet icon for planets, asteroid icon for asteroids (annotation thumbnails archived)
 	var icon_text = "🪐" if _get_mode.call() == "planets" else "☄"
 	icon_label.text = icon_text
 	icon_label.add_theme_font_size_override("font_size", 30)
-	icon_label.add_theme_color_override("font_color", panel_style.TEXT_ON_ACCENT)
+	icon_label.add_theme_color_override("font_color", STATION_TELEMETRY)
 	icon_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	icon_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	icon_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	icon_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
 	# Title - use TIC ID or content (asteroid ID)
-	var title_label: Label = item_container.get_node("HBox/ContentVBox/TitleLabel")
-	var tic_id = anomaly.get("ticId", "")
-	var content_text = anomaly.get("content", "")
+	var title_label: Label = item_container.get_node("HBox/ContentVBox/TitleRow/TitleLabel")
+	var badge_label: Label = item_container.get_node("HBox/ContentVBox/TitleRow/BadgeLabel")
+	var meta_label: Label = item_container.get_node("HBox/ContentVBox/MetaLabel")
+	var card_backdrop: ColorRect = item_container.get_node("CardBackdrop")
+	card_backdrop.color = Color(0.05, 0.08, 0.13, 0.26)
+	var tic_id = _clean_text(anomaly.get("ticId", ""))
+	var content_text = _clean_text(anomaly.get("content", ""))
 	var anomaly_id = anomaly.get("id", index)
 
 	if tic_id != "" and tic_id != null:
@@ -78,57 +89,84 @@ func _create_anomaly_item(anomaly: Dictionary, index: int) -> Control:
 	else:
 		var item_type = "Planet" if _get_mode.call() == "planets" else "Asteroid"
 		title_label.text = "%s #%d" % [item_type, anomaly_id]
-	panel_style.apply_body(title_label)
+	title_label.add_theme_color_override("font_color", STATION_TEXT)
+	title_label.add_theme_font_size_override("font_size", 17)
 
-	# Subtitle with properties
-	var subtitle_label: Label = item_container.get_node("HBox/ContentVBox/SubtitleLabel")
-	var properties = []
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	var normalized = _normalize_cb.call(anomaly, index)
 	var target_type = "planet" if _get_mode.call() == "planets" else "asteroid"
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	var profile = rm.build_target_profile(normalized, target_type) if rm else {}
 	var distance_au = float(profile.get("distance_au", 0.0))
 	var required_level = int(profile.get("required_level", 1))
 	var scan_count = int(rm.get_target_scan_count(normalized, target_type)) if rm else 0
-	properties.append("Distance: %.0f AU" % distance_au)
-	properties.append("Requires: Level %d" % required_level)
+	var scan_pass_text = "%d scan%s" % [max(scan_count, 1), "" if max(scan_count, 1) == 1 else "s"]
 
-	var anomaly_type = anomaly.get("anomalytype", "")
-	if scan_count >= 1 and anomaly_type != "" and anomaly_type != null:
-		properties.append(anomaly_type.capitalize().replace("Telescope", "").strip_edges())
+	var badge_text := ""
+	var tess_disposition = _clean_text(anomaly.get("tess_disposition", ""))
+	var classification = _clean_text(anomaly.get("classification_status", ""))
+	var anomaly_type = _clean_text(anomaly.get("anomalytype", ""))
+	if tess_disposition != "":
+		badge_text = tess_disposition
+	elif classification != "":
+		badge_text = classification.to_upper()
+	elif anomaly_type != "":
+		badge_text = anomaly_type.replace("_", " ").replace("telescope", "").strip_edges().to_upper()
+	else:
+		badge_text = "SCANNED"
+	badge_label.text = badge_text
+	badge_label.add_theme_color_override("font_color", STATION_TELEMETRY)
+	badge_label.add_theme_font_size_override("font_size", 12)
+	badge_label.uppercase = true
 
+	var meta_parts := [
+		"%.0f AU" % distance_au,
+		"Lv %d clearance" % required_level,
+		scan_pass_text
+	]
+	var science_source = _clean_text(anomaly.get("science_source", ""))
+	if science_source == "":
+		science_source = _clean_text(profile.get("science_source", ""))
+	if science_source != "":
+		meta_parts.append(science_source)
+	meta_label.text = "  ·  ".join(meta_parts)
+	meta_label.add_theme_color_override("font_color", STATION_MUTED)
+	meta_label.add_theme_font_size_override("font_size", 13)
+
+	# Secondary synopsis for richer DB-backed detail without turning the card into a wall of text.
+	var subtitle_label: Label = item_container.get_node("HBox/ContentVBox/SubtitleLabel")
+	var summary_parts := []
+	var science_blurb = _clean_text(anomaly.get("science_blurb", ""))
+	if science_blurb == "":
+		science_blurb = _clean_text(profile.get("science_blurb", ""))
+	if science_blurb != "":
+		summary_parts.append(science_blurb)
 	var radius = anomaly.get("radius")
 	if scan_count >= 2 and radius != null:
-		properties.append("Radius: %.2f R☉" % radius)
-
+		summary_parts.append("R %.2f" % float(radius))
 	var mass = anomaly.get("mass")
 	if scan_count >= 3 and mass != null:
-		properties.append("Mass: %.2f M☉" % mass)
-
+		summary_parts.append("M %.2f" % float(mass))
 	var temp = anomaly.get("temperature")
 	if scan_count >= 2 and temp != null:
-		properties.append("Temp: %.0f K" % temp)
-
-	var classification = anomaly.get("classification_status", "")
-	if scan_count >= 3 and classification != "" and classification != null:
-		properties.append(classification)
-
-	# Consensus badge — if the player has classified this target, show consensus level
+		summary_parts.append("%.0f K" % float(temp))
+	if classification != "":
+		summary_parts.append(classification.capitalize())
 	var consensus_label_text := ClassificationConsensus.consensus_label(str(normalized))
 	if consensus_label_text != "":
-		properties.append("Consensus: " + consensus_label_text)
-
-	subtitle_label.text = " • ".join(properties)
-	panel_style.apply_muted(subtitle_label)
+		summary_parts.append("Consensus " + consensus_label_text)
+	subtitle_label.text = "  ·  ".join(summary_parts)
+	subtitle_label.visible = not subtitle_label.text.is_empty()
+	subtitle_label.add_theme_color_override("font_color", STATION_MUTED)
+	subtitle_label.add_theme_font_size_override("font_size", 12)
 
 	# Select target button (only for detected anomalies)
 	var select_btn: Button = item_container.get_node("HBox/ContentVBox/Controls/SelectButton")
 	select_btn.focus_mode = Control.FOCUS_NONE
-	panel_style.apply_button(select_btn, true)
+	_apply_station_button(select_btn, true)
 
 	var detail_btn: Button = item_container.get_node("HBox/ContentVBox/Controls/DetailButton")
 	detail_btn.focus_mode = Control.FOCUS_NONE
-	panel_style.apply_button(detail_btn, false)
+	_apply_station_button(detail_btn, false)
 
 	# Display selected marker if this matches currently selected target
 	var current_target = ""
@@ -143,12 +181,12 @@ func _create_anomaly_item(anomaly: Dictionary, index: int) -> Control:
 	detail_btn.pressed.connect(_on_detail_cb.bind(anomaly, index))
 
 	# Store the base style for hover effects
-	var base_style = panel_style.create_list_item_style()
+	var base_style = _create_station_item_style()
 	
 	# Add hover effect
 	item_container.mouse_entered.connect(func():
 		var hover_style = base_style.duplicate()
-		hover_style.bg_color = panel_style.BUTTON_PRESSED
+		hover_style.bg_color = STATION_CARD_HOVER
 		item_container.add_theme_stylebox_override("panel", hover_style)
 	)
 	item_container.mouse_exited.connect(func():
@@ -156,3 +194,31 @@ func _create_anomaly_item(anomaly: Dictionary, index: int) -> Control:
 	)
 
 	return item_container
+
+func _create_station_item_style() -> StyleBoxFlat:
+	return PanelStyle.create_glass_card_style(STATION_CARD_BG, 0.46, 12, 18, 14)
+
+func _create_station_icon_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = STATION_ICON_BG
+	style.border_color = Color(STATION_TELEMETRY.r, STATION_TELEMETRY.g, STATION_TELEMETRY.b, 0.42)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(36)
+	return style
+
+func _apply_station_button(button: Button, is_primary: bool) -> void:
+	if button == null:
+		return
+	if is_primary:
+		PanelStyle.apply_button(button, true)
+	else:
+		PanelStyle.apply_outline_button(button, STATION_TELEMETRY, STATION_TEXT)
+	button.add_theme_font_size_override("font_size", 15)
+
+func _clean_text(value) -> String:
+	if value == null:
+		return ""
+	var text := str(value).strip_edges()
+	if text == "<null>":
+		return ""
+	return text

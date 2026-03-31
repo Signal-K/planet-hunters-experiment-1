@@ -10,11 +10,23 @@ const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
 const UILayout = preload("res://Scripts/UI/UILayout.gd")
 const ClassificationConsensus = preload("res://Scripts/Utils/ClassificationConsensus.gd")
+const StarterRocket2UnlockOverlayScene = preload("res://Scenes/UI/StarterRocket2UnlockOverlay.tscn")
+const FreeOpsUnlockOverlayScene = preload("res://Scenes/UI/FreeOpsUnlockOverlay.tscn")
+const EmergencyLoanOfferDialogScene = preload("res://Scenes/UI/EmergencyLoanOfferDialog.tscn")
+const ClassificationConsensusNotificationScene = preload("res://Scenes/UI/ClassificationConsensusNotification.tscn")
+const EarthBaseActionCardScene = preload("res://Scenes/UI/Templates/EarthBaseActionCard.tscn")
+const ControlStationScript = preload("res://Scripts/Earth/ControlStation.gd")
+const ControlStationTexture = preload("res://assets/Structures/ControlStation.png")
 const SR2_UNLOCK_POPUP_PATH := "user://rocket_unlock_popups.cfg"
 const SR2_UNLOCK_SECTION := "popups"
 const SR2_UNLOCK_KEY := "starterrocket2_seen"
 const FREE_OPS_UNLOCK_KEY := "free_ops_unlock_seen"
 const SR2_UNLOCK_INTRO_SECONDS := 0.9
+const CONTROL_STATION_POSITION := Vector2(1600, 800)
+const CONTROL_STATION_LABEL_POSITION := Vector2(1600, 620)
+const CONTROL_STATION_COLLISION_SIZE := Vector2(200, 200)
+const GLASS_CARD_BG := Color(0.06, 0.10, 0.16, 0.95)
+const GLASS_CARD_SUBTLE_BG := Color(0.08, 0.12, 0.20, 0.93)
 
 func _ready() -> void:
 	_ensure_tutorial_runtime()
@@ -40,6 +52,8 @@ func _ready() -> void:
 	
 	# Connect button signals
 	_setup_buttons()
+	_sync_control_station_presence()
+	_connect_app_runtime_signals()
 	
 	# Create ground guide lines if enabled
 	if show_ground_guide:
@@ -60,6 +74,13 @@ func _ensure_tutorial_runtime() -> void:
 	if app != null and app.has_method("_ensure_tutorial_runtime"):
 		app._ensure_tutorial_runtime()
 
+func _connect_app_runtime_signals() -> void:
+	var app = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
+	if app == null:
+		return
+	if app.has_signal("rockets_reset") and not app.rockets_reset.is_connected(_on_rockets_reset):
+		app.rockets_reset.connect(_on_rockets_reset)
+
 func _setup_buttons() -> void:
 	var back_btn        := $UILayer/ButtonContainer/BackButton       as Button
 	var forward_btn     := $UILayer/ButtonContainer/ForwardButton    as Button
@@ -70,17 +91,13 @@ func _setup_buttons() -> void:
 	var container       := $UILayer/ButtonContainer                  as HBoxContainer
 
 	# ── Unified pill background behind all buttons ───────────────────────────
-	var bg := Panel.new()
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var bg := $UILayer/ButtonContainer/NavBackground as Panel
 	var bg_style := StyleBoxFlat.new()
 	bg_style.bg_color     = Color(0.03, 0.03, 0.04, 0.94)
 	bg_style.border_color = Color(0.28, 0.88, 0.96, 0.35)   # cyan, low-opacity border
 	bg_style.set_border_width_all(1)
 	bg_style.set_corner_radius_all(12)
 	bg.add_theme_stylebox_override("panel", bg_style)
-	container.add_child(bg)
-	container.move_child(bg, 0)
 	container.add_theme_constant_override("separation", 0)
 
 	# ── Style buttons as transparent slots with divider on the right ─────────
@@ -244,6 +261,9 @@ func _on_space_map_button_pressed() -> void:
 		get_tree().change_scene_to_file("res://Scenes/UI/SpaceMap/space_map.tscn")
 
 func _on_new_mission_button_pressed() -> void:
+	if _control_station_build_required():
+		_build_progression_cards()
+		return
 	print("New Mission button pressed - opening launchpad scene")
 	preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("open_launchpad")
 	if scene_manager:
@@ -291,110 +311,52 @@ func _maybe_show_starterrocket2_unlock_popup() -> void:
 func _show_starterrocket2_unlock_popup() -> void:
 	var sr2_range := RocketSpecs.get_max_range_au("starterrocket2")
 	var sr1_range := RocketSpecs.get_max_range_au("starterrocket1")
-	var overlay = ColorRect.new()
+	var overlay: ColorRect = StarterRocket2UnlockOverlayScene.instantiate()
 	overlay.name = "StarterRocket2UnlockOverlay"
-	overlay.color = Color(0, 0, 0, 0.0)
-	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
-	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(overlay)
-
-	var center = CenterContainer.new()
-	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	overlay.add_child(center)
-
-	var stack = VBoxContainer.new()
-	stack.name = "StarterRocket2UnlockStack"
-	stack.alignment = BoxContainer.ALIGNMENT_CENTER
-	stack.add_theme_constant_override("separation", 18)
-	center.add_child(stack)
-
-	var intro = Label.new()
-	intro.name = "StarterRocket2UnlockIntro"
-	intro.text = "Mission one complete.\nStarter Rocket 2 is flight-ready."
-	intro.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var intro: Label = overlay.get_node("Center/Stack/IntroLabel")
 	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	intro.modulate = Color(1, 1, 1, 0.0)
-	PanelStyle.apply_title(intro)
+	PanelStyle.apply_title_on_dark(intro)
 	intro.add_theme_font_size_override("font_size", 36 if get_viewport().get_visible_rect().size.x < 1200.0 else 42)
-	stack.add_child(intro)
 
 	var viewport := get_viewport().get_visible_rect().size
 	var vp_w := viewport.x
 	var compact := viewport.x < 1200.0
-	var stacked := viewport.x < 980.0
-	var panel = PanelContainer.new()
-	panel.name = "StarterRocket2UnlockCard"
+	var panel: PanelContainer = overlay.get_node("Center/Stack/Card")
 	panel.custom_minimum_size = Vector2(clampf(vp_w - 48.0, 300.0, 700.0), 0)
-	panel.scale = Vector2(0.92, 0.92)
-	panel.modulate = Color(1, 1, 1, 0.0)
-	stack.add_child(panel)
-
-	PanelStyle.apply_panel(panel)
-
-	var body = VBoxContainer.new()
-	body.name = "StarterRocket2UnlockBody"
-	body.add_theme_constant_override("separation", 14)
-	panel.add_child(body)
-
-	var eyebrow = Label.new()
-	eyebrow.name = "StarterRocket2UnlockEyebrow"
-	eyebrow.text = "MISSION REWARD  •  NEW SHIP UNLOCKED"
+	_apply_glass_callout_panel(panel)
+	var body: VBoxContainer = overlay.get_node("Center/Stack/Card/Body")
+	var eyebrow: Label = overlay.get_node("Center/Stack/Card/Body/Eyebrow")
 	eyebrow.add_theme_color_override("font_color", Color(0.28, 0.88, 0.96, 1.0))
 	eyebrow.add_theme_font_size_override("font_size", 18 if compact else 20)
-	body.add_child(eyebrow)
-
-	var content = VBoxContainer.new() if stacked else HBoxContainer.new()
-	content.name = "StarterRocket2UnlockContent"
-	content.add_theme_constant_override("separation", 18)
-	body.add_child(content)
-
-	var icon_shell = PanelContainer.new()
-	icon_shell.name = "StarterRocket2UnlockIconShell"
+	var content: HBoxContainer = overlay.get_node("Center/Stack/Card/Body/Content")
+	var icon_shell: PanelContainer = overlay.get_node("Center/Stack/Card/Body/Content/IconShell")
 	icon_shell.custom_minimum_size = Vector2(200 if compact else 240, 220 if compact else 260)
 	icon_shell.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	PanelStyle.apply_panel(icon_shell, Color(0.08, 0.11, 0.16, 0.92))
-	content.add_child(icon_shell)
-
-	var icon = TextureRect.new()
-	icon.name = "StarterRocket2UnlockIcon"
+	_apply_glass_callout_panel(icon_shell, Color(0.08, 0.11, 0.16, 0.92), 0.46, 18, 18, 16)
+	var icon: TextureRect = overlay.get_node("Center/Stack/Card/Body/Content/IconShell/Icon")
 	icon.texture = RocketSpecs.get_icon_texture("starterrocket2")
-	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon.custom_minimum_size = Vector2(160 if compact else 180, 190 if compact else 220)
-	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	icon_shell.add_child(icon)
-
-	var details = VBoxContainer.new()
-	details.name = "StarterRocket2UnlockDetails"
-	details.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	details.add_theme_constant_override("separation", 10)
-	content.add_child(details)
-
-	var title = Label.new()
-	title.name = "StarterRocket2UnlockTitle"
-	title.text = "Starter Rocket 2"
-	PanelStyle.apply_title(title)
+	var details: VBoxContainer = overlay.get_node("Center/Stack/Card/Body/Content/Details")
+	var title: Label = overlay.get_node("Center/Stack/Card/Body/Content/Details/Title")
+	PanelStyle.apply_title_on_dark(title)
 	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	details.add_child(title)
-
-	var summary = Label.new()
-	summary.name = "StarterRocket2UnlockSummary"
+	var summary: Label = overlay.get_node("Center/Stack/Card/Body/Content/Details/Summary")
 	summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	summary.text = "You proved the first route works. SR2 doubles your speed, stretches your operating radius to %.0f AU, and carries a bigger haul for the next belt run." % sr2_range
-	PanelStyle.apply_body(summary)
+	PanelStyle.apply_body_on_dark(summary)
 	summary.add_theme_font_size_override("font_size", 24 if compact else 28)
-	details.add_child(summary)
 
-	var flavour = Label.new()
-	flavour.name = "StarterRocket2UnlockFlavour"
+	var flavour: Label = overlay.get_node("Center/Stack/Card/Body/Content/Details/Flavour")
 	flavour.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	flavour.text = "Mission 2 is no longer out of reach. Build the upgrade, then push your operation deeper into the belt."
-	PanelStyle.apply_muted(flavour)
-	details.add_child(flavour)
+	PanelStyle.apply_muted_on_dark(flavour)
 
-	var highlights = VBoxContainer.new()
-	highlights.name = "StarterRocket2UnlockHighlights"
-	highlights.add_theme_constant_override("separation", 8)
-	details.add_child(highlights)
+	var highlights: VBoxContainer = overlay.get_node("Center/Stack/Card/Body/Content/Details/Highlights")
+	for child in highlights.get_children():
+		highlights.remove_child(child)
+		child.queue_free()
 	for text in [
 		"2x SPEED  •  Turn the next route around in half the time.",
 		"%.0f AU RANGE  •  Reach targets beyond SR1's %.0f AU ceiling." % [sr2_range, sr1_range],
@@ -402,40 +364,48 @@ func _show_starterrocket2_unlock_popup() -> void:
 	]:
 		var chip = PanelContainer.new()
 		chip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		PanelStyle.apply_panel(chip, Color(0.08, 0.12, 0.20, 0.92))
+		_apply_glass_callout_panel(chip, GLASS_CARD_SUBTLE_BG, 0.42, 16, 18, 16)
 		var chip_label = Label.new()
 		chip_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		chip_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		chip_label.text = text
-		PanelStyle.apply_body(chip_label)
+		PanelStyle.apply_body_on_dark(chip_label)
 		chip_label.add_theme_font_size_override("font_size", 20 if compact else 24)
 		chip.add_child(chip_label)
 		highlights.add_child(chip)
 
-	var stats = Label.new()
-	stats.name = "StarterRocket2UnlockStats"
+	var stats: Label = overlay.get_node("Center/Stack/Card/Body/Content/Details/Stats")
 	stats.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	stats.text = "2x speed  •  2x range  •  1.5x cargo  •  Cost: 1.3B F"
-	PanelStyle.apply_muted(stats)
-	details.add_child(stats)
+	PanelStyle.apply_muted_on_dark(stats)
 
-	var footer = Label.new()
-	footer.name = "StarterRocket2UnlockFooter"
+	var footer: Label = overlay.get_node("Center/Stack/Card/Body/Content/Details/Footer")
 	footer.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	footer.text = "Longer targets are now reachable. Open the launchpad to build SR2 and line up your next mission."
-	PanelStyle.apply_muted(footer)
-	details.add_child(footer)
+	PanelStyle.apply_muted_on_dark(footer)
 
-	var cta = Button.new()
-	cta.name = "StarterRocket2UnlockCTA"
-	cta.text = "Plan Mission 2 with SR2"
+	var cta: Button = overlay.get_node("Center/Stack/Card/Body/CTAButton")
 	PanelStyle.apply_button(cta, true)
 	cta.pressed.connect(func():
 		if is_instance_valid(overlay):
 			overlay.queue_free()
 		_on_new_mission_button_pressed()
 	)
-	body.add_child(cta)
+
+	intro.name = "StarterRocket2UnlockIntro"
+	body.name = "StarterRocket2UnlockBody"
+	eyebrow.name = "StarterRocket2UnlockEyebrow"
+	content.name = "StarterRocket2UnlockContent"
+	icon_shell.name = "StarterRocket2UnlockIconShell"
+	icon.name = "StarterRocket2UnlockIcon"
+	details.name = "StarterRocket2UnlockDetails"
+	title.name = "StarterRocket2UnlockTitle"
+	summary.name = "StarterRocket2UnlockSummary"
+	flavour.name = "StarterRocket2UnlockFlavour"
+	highlights.name = "StarterRocket2UnlockHighlights"
+	stats.name = "StarterRocket2UnlockStats"
+	footer.name = "StarterRocket2UnlockFooter"
+	cta.name = "StarterRocket2UnlockCTA"
 
 	var intro_tween = create_tween()
 	intro_tween.tween_property(overlay, "color:a", 0.58, 0.22)
@@ -462,70 +432,49 @@ func _maybe_show_free_ops_unlock() -> void:
 	_show_free_ops_unlock_overlay()
 
 func _show_free_ops_unlock_overlay() -> void:
-	var overlay = ColorRect.new()
+	var overlay: ColorRect = FreeOpsUnlockOverlayScene.instantiate()
 	overlay.name = "FreeOpsUnlockOverlay"
-	overlay.color = Color(0, 0, 0, 0.0)
-	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
-	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(overlay)
 
-	var center = CenterContainer.new()
-	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	overlay.add_child(center)
-
 	var vp_w2 := get_viewport().get_visible_rect().size.x
-	var panel = PanelContainer.new()
+	var panel: PanelContainer = overlay.get_node("Center/Card")
 	panel.custom_minimum_size = Vector2(clampf(vp_w2 - 48.0, 300.0, 720.0), 0)
-	panel.scale = Vector2(0.92, 0.92)
-	panel.modulate = Color(1, 1, 1, 0.0)
-	center.add_child(panel)
-
-	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
-	panel_style.apply_panel(panel)
-
-	var body = VBoxContainer.new()
-	body.add_theme_constant_override("separation", 12)
-	panel.add_child(body)
-
-	var title = Label.new()
-	title.text = "Free Operations Unlocked"
-	panel_style.apply_title(title)
-	body.add_child(title)
-
-	var desc = Label.new()
+	_apply_glass_callout_panel(panel)
+	var body: VBoxContainer = overlay.get_node("Center/Card/Body")
+	var title: Label = overlay.get_node("Center/Card/Body/Title")
+	PanelStyle.apply_title_on_dark(title)
+	var desc: Label = overlay.get_node("Center/Card/Body/Description")
 	desc.text = "You've completed the initial mission series. The belt is now open — run operations on your own schedule and terms.\n\nTwo routes are available each run:"
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	panel_style.apply_body(desc)
-	body.add_child(desc)
-
-	var routes = VBoxContainer.new()
-	routes.add_theme_constant_override("separation", 8)
-	body.add_child(routes)
+	PanelStyle.apply_body_on_dark(desc)
+	var routes: VBoxContainer = overlay.get_node("Center/Card/Body/Routes")
+	for child in routes.get_children():
+		routes.remove_child(child)
+		child.queue_free()
 	for route_info in [
 		["Contract", "Work for a contractor. Complete their mineral order for a 20% bonus above market rate."],
 		["Survey", "Scan and discover. Sell collected minerals on the open market at 80% of base value."]
 	]:
 		var chip = PanelContainer.new()
 		chip.size_flags_horizontal = Control.SIZE_FILL
-		panel_style.apply_panel(chip)
+		_apply_glass_callout_panel(chip, GLASS_CARD_SUBTLE_BG, 0.42, 16, 18, 16)
 		var chip_body = VBoxContainer.new()
 		chip_body.add_theme_constant_override("separation", 4)
 		chip.add_child(chip_body)
 		var chip_title = Label.new()
 		chip_title.text = route_info[0]
-		panel_style.apply_body(chip_title)
+		PanelStyle.apply_body_on_dark(chip_title)
 		chip_title.add_theme_color_override("font_color", Color(0.94, 0.69, 0.19, 1.0))
 		chip_body.add_child(chip_title)
 		var chip_desc = Label.new()
 		chip_desc.text = route_info[1]
 		chip_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		panel_style.apply_muted(chip_desc)
+		PanelStyle.apply_muted_on_dark(chip_desc)
 		chip_body.add_child(chip_desc)
 		routes.add_child(chip)
 
-	var cta = Button.new()
-	cta.text = "Start a Free Run"
-	panel_style.apply_button(cta, true)
+	var cta: Button = overlay.get_node("Center/Card/Body/CTAButton")
+	PanelStyle.apply_button(cta, true)
 	cta.pressed.connect(func():
 		if is_instance_valid(overlay):
 			overlay.queue_free()
@@ -560,61 +509,28 @@ func _maybe_offer_loan() -> void:
 	_show_loan_offer_dialog(app)
 
 func _show_loan_offer_dialog(app: Node) -> void:
-	var PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
-	var viewport_size := get_viewport().get_visible_rect().size
-	var bg := ColorRect.new()
-	bg.color = Color(0, 0, 0, 0.65)
-	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	bg.mouse_filter = Control.MOUSE_FILTER_STOP
-	var ui_layer := CanvasLayer.new()
-	ui_layer.layer = 80
+	var ui_layer: CanvasLayer = EmergencyLoanOfferDialogScene.instantiate()
 	add_child(ui_layer)
-	ui_layer.add_child(bg)
+	var panel: PanelContainer = ui_layer.get_node("Center/Panel")
+	_apply_glass_callout_panel(panel)
+	var vbox: VBoxContainer = ui_layer.get_node("Center/Panel/Margin/Body")
+	var title: Label = ui_layer.get_node("Center/Panel/Margin/Body/Title")
+	PanelStyle.apply_title_on_dark(title)
 
-	var panel := PanelContainer.new()
-	PanelStyle.apply_panel(panel)
-	panel.custom_minimum_size = Vector2(420, 0)
-	var margin := MarginContainer.new()
-	margin.add_theme_constant_override("margin_left", 28)
-	margin.add_theme_constant_override("margin_right", 28)
-	margin.add_theme_constant_override("margin_top", 28)
-	margin.add_theme_constant_override("margin_bottom", 28)
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 18)
-	margin.add_child(vbox)
-	panel.add_child(margin)
-
-	var title := Label.new()
-	PanelStyle.apply_title(title)
-	title.text = "Emergency Loan Available"
-	vbox.add_child(title)
-
-	var body := Label.new()
-	PanelStyle.apply_body(body)
+	var body: Label = ui_layer.get_node("Center/Panel/Margin/Body/Description")
+	PanelStyle.apply_body_on_dark(body)
 	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	body.text = "Your balance is too low to launch another mission. The Space Bank offers a 1.5B F emergency loan at 3% interest, auto-repaid from your next payout."
-	vbox.add_child(body)
 
-	var loan_amount_label := Label.new()
-	PanelStyle.apply_muted(loan_amount_label)
+	var loan_amount_label: Label = ui_layer.get_node("Center/Panel/Margin/Body/LoanAmount")
+	PanelStyle.apply_muted_on_dark(loan_amount_label)
 	loan_amount_label.text = "Loan: 1.50B F  •  Repay: 1.545B F from next mission"
-	vbox.add_child(loan_amount_label)
 
-	var btn_row := HBoxContainer.new()
-	btn_row.add_theme_constant_override("separation", 12)
-	vbox.add_child(btn_row)
-
-	var accept_btn := Button.new()
+	var accept_btn: Button = ui_layer.get_node("Center/Panel/Margin/Body/ButtonRow/AcceptButton")
 	PanelStyle.apply_button(accept_btn, true)
-	accept_btn.text = "Accept Loan"
-	accept_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	btn_row.add_child(accept_btn)
 
-	var decline_btn := Button.new()
-	PanelStyle.apply_button(decline_btn, false)
-	decline_btn.text = "No Thanks"
-	decline_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	btn_row.add_child(decline_btn)
+	var decline_btn: Button = ui_layer.get_node("Center/Panel/Margin/Body/ButtonRow/DeclineButton")
+	PanelStyle.apply_outline_button(decline_btn)
 
 	accept_btn.pressed.connect(func():
 		app.take_loan()
@@ -624,8 +540,17 @@ func _show_loan_offer_dialog(app: Node) -> void:
 		ui_layer.queue_free()
 	)
 
-	ui_layer.add_child(panel)
-	panel.set_anchors_preset(Control.PRESET_CENTER)
+func _control_station_build_required() -> bool:
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if not rm:
+		return false
+	return int(rm.get_completed_mission_count()) >= 1 and not rm.is_control_station_built()
+
+func _scanner_station_build_required() -> bool:
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if not rm:
+		return false
+	return int(rm.get_completed_mission_count()) >= 3 and not rm.is_scanner_station_built()
 
 func _apply_tutorial_button_state() -> void:
 	var app = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
@@ -643,6 +568,17 @@ func _apply_tutorial_button_state() -> void:
 		var btn := get_node_or_null(btn_path) as Button
 		if btn:
 			btn.disabled = tutorial_active
+	var new_mission_btn := get_node_or_null("UILayer/ButtonContainer/NewMissionButton") as Button
+	if new_mission_btn:
+		var control_station_required := _control_station_build_required()
+		var scanner_station_required := _scanner_station_build_required()
+		new_mission_btn.disabled = control_station_required or scanner_station_required
+		if control_station_required:
+			new_mission_btn.tooltip_text = "Build the Control Station first."
+		elif scanner_station_required:
+			new_mission_btn.tooltip_text = "Build the Scanner Station first."
+		else:
+			new_mission_btn.tooltip_text = ""
 
 func _build_earth_base_identity() -> void:
 	_build_wordmark()
@@ -711,52 +647,117 @@ func _build_progression_cards() -> void:
 	var ui_layer = get_node_or_null("UILayer")
 	if ui_layer == null:
 		return
+	var cards_root := ui_layer.get_node_or_null("ProgressionCards") as VBoxContainer
+	if cards_root == null:
+		return
 	var app = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
 	if app != null and app.has_method("get_tutorial_state"):
 		var state: Dictionary = app.get_tutorial_state()
 		var skipped = bool(state.get("skipped", false))
 		var step: Dictionary = state.get("current_step", {})
+		var base_build_required := _control_station_build_required() or _scanner_station_build_required()
 		# Keep the reserved tutorial lane clean: progression cards are post-tutorial
-		# helpers and should never overlap the active linear tutorial flow.
-		if not skipped and not step.is_empty():
+		# helpers and should never overlap the active linear tutorial flow, unless
+		# the base itself is blocked on an authored structure build.
+		if not skipped and not base_build_required and not step.is_empty() and not ["build_control_station", "build_scanner_station"].has(str(step.get("action_key", ""))):
+			cards_root.visible = false
 			return
-	var cards_root = VBoxContainer.new()
-	cards_root.name = "ProgressionCards"
-	cards_root.add_theme_constant_override("separation", 10)
-	cards_root.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	cards_root.offset_left = -380
-	cards_root.offset_right = -20
-	cards_root.offset_top = 40
-	cards_root.offset_bottom = 320
-	cards_root.clip_contents = true
-	ui_layer.add_child(cards_root)
+	for child in cards_root.get_children():
+		cards_root.remove_child(child)
+		child.queue_free()
+	cards_root.visible = true
 
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	if not rm:
+		cards_root.visible = false
 		return
 		
 	var completed_count = int(rm.get_completed_mission_count())
-	if completed_count >= 1:
+	if _control_station_build_required():
+		cards_root.add_child(_build_control_station_card())
+	elif _scanner_station_build_required():
+		cards_root.add_child(_build_scanner_station_card())
+	elif completed_count >= 1:
 		cards_root.add_child(_build_next_mission_card())
 		
 	# Show star map after M1 completion (regardless of scanner station)
 	if completed_count >= 1:
 		cards_root.add_child(_build_star_map_card())
 
-func _build_next_mission_card() -> PanelContainer:
-	var panel = PanelContainer.new()
+func _build_control_station_card() -> PanelContainer:
+	var panel: PanelContainer = EarthBaseActionCardScene.instantiate()
 	panel.size_flags_horizontal = Control.SIZE_FILL
-	PanelStyle.apply_panel(panel)
-	var body = VBoxContainer.new()
-	body.add_theme_constant_override("separation", 6)
-	panel.add_child(body)
-	var title = Label.new()
+	_apply_glass_action_card(panel)
+	var title: Label = panel.get_node("Body/Title")
+	title.text = "Build Control Station"
+	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	PanelStyle.apply_title_on_dark(title)
+	title.add_theme_font_size_override("font_size", 20)
+	var subtitle: Label = panel.get_node("Body/Subtitle")
+	subtitle.text = "Mission 2 starts here. Construct the Control Station first so your base has a fleet and route hub."
+	subtitle.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	PanelStyle.apply_body_on_dark(subtitle)
+	var hint: Label = panel.get_node("Body/Hint")
+	hint.visible = true
+	hint.text = "This replaces the old early tutorial tour. Build it once, then the Launchpad reopens."
+	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	PanelStyle.apply_muted_on_dark(hint)
+	var cta: Button = panel.get_node("Body/CTAButton")
+	cta.text = "Build Control Station"
+	PanelStyle.apply_button(cta, true)
+	cta.pressed.connect(_on_build_control_station_pressed)
+	return panel
+
+func _on_build_control_station_pressed() -> void:
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if not rm or rm.is_control_station_built():
+		return
+	rm.set_control_station_built(true)
+	preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("build_control_station")
+	_sync_control_station_presence()
+	_apply_control_station_visual_tier()
+	_apply_tutorial_button_state()
+	_build_progression_cards()
+
+func _build_scanner_station_card() -> PanelContainer:
+	var panel: PanelContainer = EarthBaseActionCardScene.instantiate()
+	panel.size_flags_horizontal = Control.SIZE_FILL
+	_apply_glass_action_card(panel)
+	var title: Label = panel.get_node("Body/Title")
+	title.text = "Build Scanner Station"
+	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	PanelStyle.apply_title_on_dark(title)
+	title.add_theme_font_size_override("font_size", 20)
+	var subtitle: Label = panel.get_node("Body/Subtitle")
+	subtitle.text = "Mission 4 starts here. Build the Scanner Station on your base, then run a scan before opening the Launchpad."
+	subtitle.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	PanelStyle.apply_body_on_dark(subtitle)
+	var hint: Label = panel.get_node("Body/Hint")
+	hint.visible = true
+	hint.text = "Build cost: %s F. The scanner reveals new mission routes and unlocks the next mining loop." % NumberFormat.compact(RocketsManager.get_scanner_build_cost())
+	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	PanelStyle.apply_muted_on_dark(hint)
+	var cta: Button = panel.get_node("Body/CTAButton")
+	cta.text = "Build Scanner Station"
+	PanelStyle.apply_button(cta, true)
+	cta.pressed.connect(_on_build_scanner_station_pressed)
+	return panel
+
+func _on_build_scanner_station_pressed() -> void:
+	var scanner = get_node_or_null("StructuresLayer/SatelliteStation")
+	if scanner and scanner.has_method("on_interact"):
+		scanner.on_interact()
+
+func _build_next_mission_card() -> PanelContainer:
+	var panel: PanelContainer = EarthBaseActionCardScene.instantiate()
+	panel.size_flags_horizontal = Control.SIZE_FILL
+	_apply_glass_action_card(panel)
+	var title: Label = panel.get_node("Body/Title")
 	title.text = "Next Mission Available"
 	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	PanelStyle.apply_title(title)
+	PanelStyle.apply_title_on_dark(title)
 	title.add_theme_font_size_override("font_size", 20)
-	body.add_child(title)
-	var subtitle = Label.new()
+	var subtitle: Label = panel.get_node("Body/Subtitle")
 	var _rm_ref = preload("res://Scripts/Utils/RocketsManager.gd")
 	var _stage = int(_rm_ref.get_mission_stage()) if _rm_ref else 0
 	match _stage:
@@ -766,45 +767,57 @@ func _build_next_mission_card() -> PanelContainer:
 		4: subtitle.text = "Mission 4 is ready — build the Scanner Station and try drone mining."
 		_: subtitle.text = "Free Operations are open — pick any target and contractor."
 	subtitle.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	PanelStyle.apply_body(subtitle)
-	body.add_child(subtitle)
-	var cta = Button.new()
+	PanelStyle.apply_body_on_dark(subtitle)
+	var hint: Label = panel.get_node("Body/Hint")
+	hint.visible = false
+	var cta: Button = panel.get_node("Body/CTAButton")
 	cta.text = "Open Launchpad"
 	PanelStyle.apply_button(cta, true)
 	cta.pressed.connect(_on_new_mission_button_pressed)
-	body.add_child(cta)
 	return panel
 
 func _build_star_map_card() -> PanelContainer:
-	var panel = PanelContainer.new()
+	var panel: PanelContainer = EarthBaseActionCardScene.instantiate()
 	panel.size_flags_horizontal = Control.SIZE_FILL
-	PanelStyle.apply_panel(panel)
-	var body = VBoxContainer.new()
-	body.add_theme_constant_override("separation", 6)
-	panel.add_child(body)
-	var title = Label.new()
+	_apply_glass_action_card(panel)
+	var title: Label = panel.get_node("Body/Title")
 	title.text = "Star Map"
 	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	PanelStyle.apply_title(title)
+	PanelStyle.apply_title_on_dark(title)
 	title.add_theme_font_size_override("font_size", 20)
-	body.add_child(title)
 	var discovered_count = _get_discovered_planet_count()
-	var subtitle = Label.new()
+	var subtitle: Label = panel.get_node("Body/Subtitle")
 	subtitle.text = "%d planet candidate%s charted" % [discovered_count, "" if discovered_count == 1 else "s"]
 	subtitle.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	PanelStyle.apply_body(subtitle)
-	body.add_child(subtitle)
-	var hint = Label.new()
+	PanelStyle.apply_body_on_dark(subtitle)
+	var hint: Label = panel.get_node("Body/Hint")
+	hint.visible = true
 	hint.text = "Track discoveries and unlock distant targets."
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	PanelStyle.apply_muted(hint)
-	body.add_child(hint)
-	var cta = Button.new()
+	PanelStyle.apply_muted_on_dark(hint)
+	var cta: Button = panel.get_node("Body/CTAButton")
 	cta.text = "Open Star Map"
-	PanelStyle.apply_button(cta, false)
+	PanelStyle.apply_outline_button(cta)
 	cta.pressed.connect(_on_space_map_button_pressed)
-	body.add_child(cta)
 	return panel
+
+func _apply_glass_callout_panel(
+	panel: Control,
+	bg_color: Color = GLASS_CARD_BG,
+	border_alpha: float = 0.72,
+	corner_radius: int = 18,
+	padding_x: int = 24,
+	padding_y: int = 20
+) -> void:
+	if panel == null:
+		return
+	panel.add_theme_stylebox_override(
+		"panel",
+		PanelStyle.create_glass_panel_style(bg_color, border_alpha, corner_radius, padding_x, padding_y)
+	)
+
+func _apply_glass_action_card(panel: PanelContainer) -> void:
+	_apply_glass_callout_panel(panel, GLASS_CARD_BG, 0.58, 18, 22, 18)
 
 func _get_discovered_planet_count() -> int:
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
@@ -887,11 +900,10 @@ func _show_consensus_notifications(updates: Array) -> void:
 	if updates.is_empty():
 		return
 	# Build a single dismissable notification panel listing all updates
-	var layer := CanvasLayer.new()
-	layer.layer = 90
+	var layer: CanvasLayer = ClassificationConsensusNotificationScene.instantiate()
 	add_child(layer)
 
-	var panel := PanelContainer.new()
+	var panel: PanelContainer = layer.get_node("Panel")
 	var pstyle := StyleBoxFlat.new()
 	pstyle.bg_color = Color(0.06, 0.10, 0.18, 0.97)
 	pstyle.border_color = Color(0.3, 0.65, 1.0, 0.8)
@@ -903,24 +915,14 @@ func _show_consensus_notifications(updates: Array) -> void:
 	pstyle.content_margin_bottom = 14
 	panel.add_theme_stylebox_override("panel", pstyle)
 	panel.custom_minimum_size = Vector2(320, 0)
-	panel.anchor_left = 0.5
-	panel.anchor_right = 0.5
-	panel.anchor_top = 0.0
-	panel.anchor_bottom = 0.0
-	panel.offset_left = -160.0
-	panel.offset_top = 60.0
-	panel.offset_right = 160.0
-	layer.add_child(panel)
-
-	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", 8)
-	panel.add_child(col)
-
-	var hdr := Label.new()
-	hdr.text = "📡  Classification Update"
+	var col: VBoxContainer = layer.get_node("Panel/Body")
+	var hdr: Label = layer.get_node("Panel/Body/Header")
 	hdr.add_theme_color_override("font_color", Color(0.4, 0.75, 1.0, 1.0))
 	hdr.add_theme_font_size_override("font_size", 15)
-	col.add_child(hdr)
+	var updates_box: VBoxContainer = layer.get_node("Panel/Body/Updates")
+	for child in updates_box.get_children():
+		updates_box.remove_child(child)
+		child.queue_free()
 
 	var rm := preload("res://Scripts/Utils/RocketsManager.gd")
 	for entry_any in updates:
@@ -943,10 +945,9 @@ func _show_consensus_notifications(updates: Array) -> void:
 		row_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		row_lbl.add_theme_color_override("font_color",
 			Color(0.5, 1.0, 0.6, 1.0) if matches else Color(1.0, 0.55, 0.4, 1.0))
-		col.add_child(row_lbl)
+		updates_box.add_child(row_lbl)
 
-	var dismiss_btn := Button.new()
-	dismiss_btn.text = "Got it"
+	var dismiss_btn: Button = layer.get_node("Panel/Body/DismissButton")
 	PanelStyle.apply_button(dismiss_btn, false)
 	dismiss_btn.pressed.connect(func() -> void:
 		ClassificationConsensus.mark_all_notified()
@@ -987,7 +988,7 @@ func _apply_structure_visual_evolution() -> void:
 	var scanner_tier: int = clamp(1 + int(rm.is_scanner_station_built()), 1, 2)
 	_scale_structure("SatelliteStation", scanner_tier)
 	_scale_structure("Launchpad", mining_tier)
-	_scale_structure("ControlStation", cargo_tier)
+	_apply_control_station_visual_tier(cargo_tier)
 
 	# Show construction-project structures when completed
 	if player_level >= 5:
@@ -1004,6 +1005,23 @@ func _scale_structure(node_name: String, tier: int) -> void:
 		return
 	var scale_mult: float = _STRUCTURE_SCALE_PER_TIER.get(clamp(tier, 1, 4), 1.0)
 	structure.scale = structure.scale * scale_mult
+
+func _apply_control_station_visual_tier(tier: int = -1) -> void:
+	var cargo_tier := tier
+	if cargo_tier < 0:
+		var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+		if rm == null:
+			return
+		var upgrades: Dictionary = rm.get_type_room_upgrades("starterrocket1")
+		cargo_tier = int(upgrades.get("cargo", 1))
+	var layers := get_node_or_null("StructuresLayer")
+	if layers == null:
+		return
+	var structure := layers.get_node_or_null("ControlStation") as Node2D
+	if structure == null:
+		return
+	var scale_mult: float = _STRUCTURE_SCALE_PER_TIER.get(clamp(cargo_tier, 1, 4), 1.0)
+	structure.scale = Vector2.ONE * scale_mult
 
 func _ensure_construction_structure_visible(proj_id: String) -> void:
 	var layers := get_node_or_null("StructuresLayer")
@@ -1039,3 +1057,91 @@ func _ensure_construction_structure_visible(proj_id: String) -> void:
 		tween.tween_property(sprite, "scale", target_scale, 0.6)
 		cfg.set_value("seen", proj_id, true)
 		cfg.save(_STRUCTURE_SEEN_CFG)
+
+func _on_rockets_reset() -> void:
+	_sync_control_station_presence()
+	_apply_tutorial_button_state()
+	_build_progression_cards()
+
+func _sync_control_station_presence() -> void:
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if rm == null:
+		return
+	if rm.is_control_station_built():
+		_ensure_control_station_visible()
+	else:
+		_remove_control_station()
+
+func _ensure_control_station_visible() -> void:
+	var layers := get_node_or_null("StructuresLayer")
+	if layers == null:
+		return
+	if layers.get_node_or_null("ControlStation") != null:
+		if layers.get_node_or_null("ControlStationLabel") == null:
+			layers.add_child(_build_control_station_label())
+		return
+	var structure := Node2D.new()
+	structure.name = "ControlStation"
+	structure.position = CONTROL_STATION_POSITION
+	structure.set_script(ControlStationScript)
+
+	var sprite := Sprite2D.new()
+	sprite.name = "Sprite2D"
+	sprite.position = Vector2(-29.00003, 5.9999847)
+	sprite.scale = Vector2(0.5, 0.5)
+	sprite.texture = ControlStationTexture
+	structure.add_child(sprite)
+
+	var area := Area2D.new()
+	area.name = "InteractionArea"
+	area.input_pickable = true
+	var shape := CollisionShape2D.new()
+	shape.name = "CollisionShape2D"
+	var rect := RectangleShape2D.new()
+	rect.size = CONTROL_STATION_COLLISION_SIZE
+	shape.shape = rect
+	area.add_child(shape)
+	structure.add_child(area)
+
+	layers.add_child(structure)
+	if layers.get_node_or_null("ControlStationLabel") == null:
+		layers.add_child(_build_control_station_label())
+
+func _build_control_station_label() -> Node2D:
+	var label_root := Node2D.new()
+	label_root.name = "ControlStationLabel"
+	label_root.position = CONTROL_STATION_LABEL_POSITION
+
+	var label := Label.new()
+	label.name = "Label"
+	label.offset_left = -120.0
+	label.offset_top = -20.0
+	label.offset_right = 120.0
+	label.offset_bottom = 20.0
+	label.add_theme_color_override("font_color", Color(1, 1, 1, 1))
+	label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.7))
+	label.add_theme_constant_override("outline_size", 4)
+	label.add_theme_font_size_override("font_size", 26)
+	label.text = "Control Station"
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label_root.add_child(label)
+
+	var pointer := Line2D.new()
+	pointer.name = "Pointer"
+	pointer.points = PackedVector2Array([Vector2(0, 30), Vector2(0, 170)])
+	pointer.width = 4.0
+	pointer.default_color = Color(1, 1, 1, 0.9)
+	pointer.antialiased = true
+	label_root.add_child(pointer)
+	return label_root
+
+func _remove_control_station() -> void:
+	var layers := get_node_or_null("StructuresLayer")
+	if layers == null:
+		return
+	var structure := layers.get_node_or_null("ControlStation")
+	if structure != null:
+		structure.queue_free()
+	var label := layers.get_node_or_null("ControlStationLabel")
+	if label != null:
+		label.queue_free()

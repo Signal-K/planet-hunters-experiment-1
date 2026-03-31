@@ -54,7 +54,7 @@ var _au_px_scale := 1.0   # pixels per AU at the current viewport size
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	focus_mode = Control.FOCUS_NONE
-	custom_minimum_size = Vector2(0.0, 320.0)
+	custom_minimum_size.y = max(custom_minimum_size.y, 140.0)
 	_label_font = ThemeDB.fallback_font
 	_rebuild_layout()
 

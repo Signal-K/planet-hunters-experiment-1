@@ -3,6 +3,7 @@
 
 ## ── Kanban board (Go) ────────────────────────────────────────────────────────
 up:
+	@lsof -ti :4444 | xargs kill -9 2>/dev/null || true
 	@echo "⭐  Kanban board → http://localhost:4444"
 	@cd kanban-go && KNOWNS_DIR=$(CURDIR)/.knowns PORT=4444 go run .
 
@@ -113,10 +114,21 @@ UX_TOUR_IMAGE=planet-hunters-ux-tour
 UX_TOUR_OUT=$(PWD)/ux-screenshots
 
 GHCR_UX_TOUR_IMAGE=ghcr.io/signal-k/planet-hunters-experiment-1/ux-tour:latest
+UX_TOUR_PLATFORM:=$(shell \
+	if [ -x .godot-bin/Godot_v4.5-stable_linux.arm64 ]; then \
+		echo linux/arm64; \
+	elif [ -x .godot-bin/Godot_v4.5-stable_linux.x86_64 ]; then \
+		echo linux/amd64; \
+	fi)
 
 ux-tour-build:
 	@echo "Building UX tour Docker image..."
-	docker build -t $(UX_TOUR_IMAGE) -f Dockerfile.ux-tour .
+	@if [ -n "$(UX_TOUR_PLATFORM)" ]; then \
+		echo "Using cached Godot binary for $(UX_TOUR_PLATFORM)"; \
+		docker build --platform $(UX_TOUR_PLATFORM) -t $(UX_TOUR_IMAGE) -f Dockerfile.ux-tour .; \
+	else \
+		docker build -t $(UX_TOUR_IMAGE) -f Dockerfile.ux-tour .; \
+	fi
 
 # Pull pre-built image from ghcr.io, fall back to local build
 ux-tour-pull:

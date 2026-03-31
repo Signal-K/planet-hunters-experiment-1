@@ -29,7 +29,7 @@ func run_all_tests() -> void:
 	await test_sr2_mining_laser_extracts_more_per_cycle()
 	await test_sr2_cargo_capacity_multiplier_applies_to_yield()
 	await test_mission1_full_mine_plus_scrap_is_near_120_percent()
-	await test_mission2_full_mine_plus_scrap_is_near_130_percent()
+	await test_mission2_full_mine_plus_scrap_is_near_120_percent()
 	await test_mission4_full_mine_plus_scrap_is_near_140_percent()
 	await test_sr1_rocket_specs_validation()
 	await test_sr2_rocket_specs_validation()
@@ -129,11 +129,11 @@ func test_mission1_full_mine_plus_scrap_is_near_120_percent() -> void:
 		return
 	reporter.pass_test()
 
-func test_mission2_full_mine_plus_scrap_is_near_130_percent() -> void:
-	reporter.start_test("Mission 2 full mine + scrap lands near 130% of SR2 cost")
+func test_mission2_full_mine_plus_scrap_is_near_120_percent() -> void:
+	reporter.start_test("Mission 2 full mine + scrap lands near 120% of SR2 cost")
 	var ratio = _full_mine_plus_scrap_ratio("mission-2-upgrade-target", "starterrocket2", "asteroid")
-	if ratio < 1.28 or ratio > 1.32:
-		reporter.fail_test("Expected Mission 2 ratio near 1.30, got %s" % str(ratio))
+	if ratio < 1.18 or ratio > 1.22:
+		reporter.fail_test("Expected Mission 2 ratio near 1.20, got %s" % str(ratio))
 		return
 	reporter.pass_test()
 

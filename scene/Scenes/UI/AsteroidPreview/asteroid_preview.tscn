@@ -30,6 +30,45 @@ anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 
+[node name="SalvageDialog" type="PanelContainer" parent="CanvasLayer"]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -260.0
+offset_top = -120.0
+offset_right = 260.0
+offset_bottom = 120.0
+
+[node name="DialogVBox" type="VBoxContainer" parent="CanvasLayer/SalvageDialog"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="CanvasLayer/SalvageDialog/DialogVBox"]
+layout_mode = 2
+text = "Fuel Depleted"
+
+[node name="Message" type="Label" parent="CanvasLayer/SalvageDialog/DialogVBox"]
+layout_mode = 2
+autowrap_mode = 3
+text = "You ran out of fuel."
+
+[node name="ButtonRow" type="HBoxContainer" parent="CanvasLayer/SalvageDialog/DialogVBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="SalvageButton" type="Button" parent="CanvasLayer/SalvageDialog/DialogVBox/ButtonRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Keep Partial Haul"
+
+[node name="RetryButton" type="Button" parent="CanvasLayer/SalvageDialog/DialogVBox/ButtonRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Retry"
+
 [node name="TargetLabel" type="Label" parent="CanvasLayer/UI"]
 layout_mode = 1
 anchors_preset = 10

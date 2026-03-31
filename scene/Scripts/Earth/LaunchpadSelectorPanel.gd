@@ -6,13 +6,18 @@ signal target_confirmed(target_id)
 
 var _launchpad: Node
 var _pending_target_id := ""
+var _map_overlay_open := false
 const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
 const TargetCardScene = preload("res://Scenes/UI/Templates/LaunchpadTargetCard.tscn")
 const HeaderLabelScene = preload("res://Scenes/UI/Templates/MenuUnlockHeader.tscn")
 const EmptyLabelScene = preload("res://Scenes/UI/Templates/MenuLogbookEmpty.tscn")
 const LabelActionRowScene = preload("res://Scenes/UI/Templates/LabelActionRow.tscn")
+const LaunchpadContractorCardScene = preload("res://Scenes/UI/Templates/LaunchpadContractorCard.tscn")
+const LaunchpadTargetInfoCardScene = preload("res://Scenes/UI/Templates/LaunchpadTargetInfoCard.tscn")
+const LaunchpadMissionBriefingCardScene = preload("res://Scenes/UI/Templates/LaunchpadMissionBriefingCard.tscn")
 const RocketSelectorOverlayScene = preload("res://Scenes/UI/RocketSelectorOverlay.tscn")
+const SelectorPanelScene = preload("res://Scenes/UI/LaunchpadSelectorPanel.tscn")
 const LaunchpadStarMap = preload("res://Scripts/Earth/LaunchpadStarMap.gd")
 const AppLogger = preload("res://Scripts/Utils/Logger.gd")
 const GameplayAnalytics = preload("res://Scripts/Systems/GameplayAnalytics.gd")
@@ -21,12 +26,13 @@ const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd"
 const NumberFormat = preload("res://Scripts/Utils/NumberFormat.gd")
 const RoomCatalog = preload("res://Scripts/Utils/RoomCatalog.gd")
 const TutorialLayoutZone = preload("res://Scripts/UI/TutorialLayoutZone.gd")
+const UILayout = preload("res://Scripts/UI/UILayout.gd")
 const SubcontractorManager = preload("res://Scripts/Utils/SubcontractorManager.gd")
 const MissionNarrativeAPI = preload("res://Scripts/Utils/MissionNarrativeAPI.gd")
 const SIDEBAR_WIDTH_MAX := 560.0
 const SIDEBAR_WIDTH_MIN := 420.0
 const SIDEBAR_VIEWPORT_RATIO := 0.42
-const SELECTOR_LAYOUT_VERSION := "launchpad_selector_v3"
+const SELECTOR_LAYOUT_VERSION := "launchpad_selector_v5"
 const MAX_VISIBLE_TARGETS := 3
 const MAX_VISIBLE_TARGETS_MISSION3 := 5
 const MAX_VISIBLE_TARGETS_MISSION4 := 5
@@ -44,7 +50,7 @@ const MISSION_BRIEFINGS := {
 		"mechanics": "Upgrade path mission with stronger rocket requirement.",
 		"required_rocket_level": 2,
 		"target_type": "Asteroid",
-		"reward_ratio": 1.3,
+		"reward_ratio": 1.2,
 		"unlocks": "Mission 3 and Scanner station access"
 	},
 	3: {
@@ -56,12 +62,12 @@ const MISSION_BRIEFINGS := {
 		"unlocks": "Mission 4 and Starter Rocket 3"
 	},
 	4: {
-		"objective": "Switch to planets and complete long-range exploration mission.",
-		"mechanics": "Planet target flow with higher mining yield.",
+		"objective": "Planetary expansion: mine for your own goals or the open market.",
+		"mechanics": "Take your own initiative: explore planets or trade on the open market.",
 		"required_rocket_level": 3,
 		"target_type": "Planet",
 		"reward_ratio": 1.4,
-		"unlocks": "Free Operations mode"
+		"unlocks": "Full autonomy: Free Operations mode"
 	}
 }
 
@@ -173,9 +179,9 @@ func populate_targets() -> void:
 	var vbox = panel.get_node_or_null("VBox")
 	if not vbox:
 		return
-	var contractor_section = panel.get_node_or_null("VBox/SectionsScroll/Sections/ContractorSection/Content")
-	var rocket_section = panel.get_node_or_null("VBox/SectionsScroll/Sections/RocketSection/Content")
-	var target_section = panel.get_node_or_null("VBox/SectionsScroll/Sections/TargetSection/Content")
+	var contractor_section = panel.get_node_or_null("VBox/Body/LeftColumn/ContractorSection/SectionVBox/Content")
+	var rocket_section = panel.get_node_or_null("VBox/Body/RightColumn/RocketSection/SectionVBox/Content")
+	var target_section = panel.get_node_or_null("MapOverlay/OverlayVBox/TargetSection/SectionVBox/Content")
 	if contractor_section == null or rocket_section == null or target_section == null:
 		push_error("Launchpad: dedicated section nodes missing from selector panel")
 		return
@@ -213,9 +219,6 @@ func populate_targets() -> void:
 	_set_rocket_selector_visibility(vbox, not has_awaiting_rocket)
 	_set_title_for_state(panel, has_awaiting_rocket)
 
-	_render_launch_guidance_notice(target_section)
-	if not _is_linear_tutorial_active():
-		_render_mining_practice_shortcut(target_section)
 	var operation_mode := str(rm.get_operation_mode())
 	var trip_offer := rm.ensure_trip_contract_offer(targets)
 	var trip_selected = rm.get_trip_selected_contractor()
@@ -231,75 +234,42 @@ func populate_targets() -> void:
 		trip_recommended_target_id = str(trip_offer.get("recommended_target_id", ""))
 	var flow_phase = _selector_flow_phase(trip_selected_contractor, has_awaiting_rocket)
 	flow_phase = _resolve_tutorial_flow_phase(flow_phase, trip_selected_contractor, has_awaiting_rocket)
+	if flow_phase != "target":
+		_map_overlay_open = false
+	_set_map_overlay_visible(panel, _map_overlay_open and flow_phase == "target")
 	_set_selector_panel_layout(has_awaiting_rocket, flow_phase)
 	_set_section_visibility(panel, flow_phase)
-	if flow_phase == "rocket":
+	if flow_phase == "contractor" or flow_phase == "rocket":
 		_ensure_rocket_selector_ready(panel)
-	var show_rocket = flow_phase == "rocket"
+	var show_rocket = not has_awaiting_rocket
 	_set_rocket_selector_visibility(vbox, show_rocket)
 	_apply_rocket_creation_gate(vbox, trip_selected_contractor != "")
+	_update_status_strip(panel, mission_stage, trip_selected, awaiting_rocket_id, selected_target, flow_phase, rm)
 
 	_render_trip_contract_brief(contractor_section, trip_offer, trip_selected_contractor, awaiting_rocket_id)
 	if flow_phase == "contractor":
 		_boost_label_contrast(contractor_section)
-		return
+		_render_phase_placeholder(rocket_section, "Pick a contractor first, then drag your purchased rocket onto the pad.")
+		_normalize_selector_typography(panel)
 
 	if flow_phase == "rocket":
 		_boost_label_contrast(rocket_section)
-		return
+		_normalize_selector_typography(panel)
 
-	var tutorial_complete = mission_stage > 3
-	if tutorial_complete:
-		_render_rocket_customization_controls(target_section, rm, awaiting_rocket_id)
-		_render_required_room_guidance(target_section, awaiting_rocket_id)
-
-	if mission_stage == 2 and awaiting_rocket_level < 2:
-		var mission2_hint: Label = EmptyLabelScene.instantiate()
-		mission2_hint.text = "Mission 2 requires Starter Rocket 2 (Level 2)."
-		mission2_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-		PanelStyle.apply_muted(mission2_hint)
-		target_section.add_child(mission2_hint)
-	if mission_stage == 2:
-		var mission2_checklist: Label = EmptyLabelScene.instantiate()
-		mission2_checklist.text = _build_stage2_checklist_text()
-		mission2_checklist.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-		PanelStyle.apply_muted(mission2_checklist)
-		target_section.add_child(mission2_checklist)
-	if mission_stage == 4 and awaiting_rocket_level < 3:
-		var mission4_hint: Label = EmptyLabelScene.instantiate()
-		mission4_hint.text = "Mission 4 requires Starter Rocket 3 (Level 3) for planetary range."
-		mission4_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-		PanelStyle.apply_muted(mission4_hint)
-		target_section.add_child(mission4_hint)
-	if free_ops_unlocked:
-		var free_ops_label: Label = EmptyLabelScene.instantiate()
-		free_ops_label.text = "Free Operations unlocked: pick route + contractor, then choose any target."
-		free_ops_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-		PanelStyle.apply_muted(free_ops_label)
-		target_section.add_child(free_ops_label)
-		# First Settlement guidance: show at L5+ if relay_1 not yet completed
-		var app_for_lvl = AppControllerHelper.get_instance()
-		var player_lvl := 1
-		if app_for_lvl and app_for_lvl.has_method("get_experience_level"):
-			player_lvl = int(app_for_lvl.get_experience_level())
-		if player_lvl >= 5:
-			var ConstMgr = preload("res://Scripts/Utils/ConstructionManager.gd")
-			if not ConstMgr.is_project_completed("relay_1"):
-				var settlement_hint: Label = EmptyLabelScene.instantiate()
-				settlement_hint.text = "🏗 First Settlement: mine Iron (500 kg) + Nickel (200 kg) to build your Scanning Relay. Contribute minerals via the Construction menu after each mission."
-				settlement_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-				settlement_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-				settlement_hint.add_theme_color_override("font_color", Color(0.6, 1.0, 0.7, 1.0))
-				target_section.add_child(settlement_hint)
-	if awaiting_rocket_id != "":
-		var payout_cap = int(trip_offer.get("payout_cap", rm.get_free_ops_payout_cap()))
-		var current_cost = RocketSpecs.get_cost(awaiting_rocket_id)
-		if current_cost > payout_cap:
-			var trip_cost_warning: Label = EmptyLabelScene.instantiate()
-			trip_cost_warning.text = "Warning: mission payout is capped at %s F. Current rocket costs %s F." % [_fmt_francs(payout_cap), _fmt_francs(current_cost)]
-			trip_cost_warning.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-			PanelStyle.apply_muted(trip_cost_warning)
-			target_section.add_child(trip_cost_warning)
+	if not _map_overlay_open:
+		var tutorial_complete = mission_stage > 3
+		if tutorial_complete:
+			_render_rocket_customization_controls(target_section, rm, awaiting_rocket_id)
+			_render_required_room_guidance(target_section, awaiting_rocket_id)
+		_render_target_prep_card(
+			target_section,
+			mission_stage,
+			awaiting_rocket_id,
+			awaiting_rocket_level,
+			free_ops_unlocked,
+			trip_offer,
+			rm
+		)
 
 	if targets.size() == 0:
 		var lbl: Label = EmptyLabelScene.instantiate()
@@ -310,7 +280,7 @@ func populate_targets() -> void:
 		else:
 			lbl.text = "No detected targets available."
 		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-		PanelStyle.apply_muted(lbl)
+		PanelStyle.apply_muted_on_dark(lbl)
 		target_section.add_child(lbl)
 		return
 
@@ -335,7 +305,7 @@ func populate_targets() -> void:
 		hidden_lbl.name = "HiddenTargetsNotice"
 		hidden_lbl.text = "%d additional targets hidden for clarity." % hidden_count
 		hidden_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-		PanelStyle.apply_muted(hidden_lbl)
+		PanelStyle.apply_muted_on_dark(hidden_lbl)
 		target_section.add_child(hidden_lbl)
 	_boost_label_contrast(target_section)
 	_normalize_selector_typography(panel)
@@ -371,6 +341,7 @@ func _on_confirm_target_pressed() -> void:
 		"target_id": target_id
 	})
 	target_confirmed.emit(target_id)
+	_map_overlay_open = false
 	AppLogger.d("Launchpad: target confirmed from starmap: %s" % target_id)
 	populate_targets()
 
@@ -419,12 +390,12 @@ func _render_starter_contract_brief(targets_section: VBoxContainer, offer: Dicti
 			var signed_lbl: Label = EmptyLabelScene.instantiate()
 			signed_lbl.text = "Signed: %s" % str(selected_entry.get("name", selected_contractor))
 			signed_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-			PanelStyle.apply_muted(signed_lbl)
+			PanelStyle.apply_muted_on_dark(signed_lbl)
 			targets_section.add_child(signed_lbl)
 			var order_summary: Label = EmptyLabelScene.instantiate()
 			order_summary.text = "Order: %s" % ", ".join(selected_parts)
 			order_summary.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-			PanelStyle.apply_muted(order_summary)
+			PanelStyle.apply_muted_on_dark(order_summary)
 			targets_section.add_child(order_summary)
 			return
 		return
@@ -440,15 +411,17 @@ func _render_starter_contract_brief(targets_section: VBoxContainer, offer: Dicti
 			request_parts.append("%s %s kg" % [str(key), str(requested.get(key, 0))])
 		request_parts.sort()
 		var row: VBoxContainer = VBoxContainer.new()
+		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_theme_constant_override("separation", 4)
 
 		var action_row: HBoxContainer = LabelActionRowScene.instantiate()
+		action_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		action_row.add_theme_constant_override("separation", 8)
 		var label: Label = action_row.get_node("TextLabel")
 		label.text = str(entry.get("name", contractor_id))
 		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-		PanelStyle.apply_muted(label)
+		PanelStyle.apply_muted_on_dark(label)
 		var btn: Button = action_row.get_node("ActionButton")
 		var is_selected = selected_contractor == contractor_id and contractor_id != ""
 		btn.text = "Signed" if is_selected else "Sign"
@@ -460,7 +433,7 @@ func _render_starter_contract_brief(targets_section: VBoxContainer, offer: Dicti
 		var order_lbl: Label = EmptyLabelScene.instantiate()
 		order_lbl.text = "Order: %s" % ", ".join(request_parts)
 		order_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-		PanelStyle.apply_muted(order_lbl)
+		PanelStyle.apply_muted_on_dark(order_lbl)
 		row.add_child(order_lbl)
 		targets_section.add_child(row)
 
@@ -473,7 +446,7 @@ func _render_trip_contract_brief(targets_section: VBoxContainer, offer: Dictiona
 		target_lbl.text = "Suggested target: %s" % recommended_label
 		target_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		target_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		PanelStyle.apply_muted(target_lbl)
+		PanelStyle.apply_muted_on_dark(target_lbl)
 		targets_section.add_child(target_lbl)
 
 	var options: Array = offer.get("contractors", [])
@@ -486,84 +459,67 @@ func _render_trip_contract_brief(targets_section: VBoxContainer, offer: Dictiona
 		var cooldown_remaining = int(SubcontractorManager.get_cooldown_remaining(contractor_id))
 		var on_cooldown = cooldown_remaining > 0
 
-		var card := PanelContainer.new()
+		var card: PanelContainer = LaunchpadContractorCardScene.instantiate()
+		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		card.set_meta("ui_style_locked", true)
 		card.add_theme_stylebox_override("panel", _target_card_style())
 		targets_section.add_child(card)
-
-		var card_col := VBoxContainer.new()
-		card_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		card_col.add_theme_constant_override("separation", 4)
-		card.add_child(card_col)
-
-		var card_row := HBoxContainer.new()
-		card_row.add_theme_constant_override("separation", 10)
-		card_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		card_col.add_child(card_row)
-
-		var text_col := VBoxContainer.new()
-		text_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		text_col.add_theme_constant_override("separation", 2)
-		card_row.add_child(text_col)
-
-		var name_lbl := Label.new()
+		var card_col: VBoxContainer = card.get_node("Body")
+		var name_lbl: Label = card.get_node("Body/MainRow/TextColumn/NameLabel")
 		name_lbl.text = str(entry.get("name", contractor_id))
 		name_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-		PanelStyle.apply_body(name_lbl)
+		PanelStyle.apply_body_on_dark(name_lbl)
 		if on_cooldown:
 			name_lbl.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6, 1.0))
-		text_col.add_child(name_lbl)
 
 		var contractor_requested: Dictionary = entry.get("requested_minerals", {})
+		var order_lbl: Label = card.get_node("Body/MainRow/TextColumn/OrderLabel")
 		if not contractor_requested.is_empty():
-			var order_parts := []
-			for mineral in contractor_requested.keys():
-				order_parts.append("%dkg %s" % [int(contractor_requested.get(mineral, 0)), str(mineral)])
-			order_parts.sort()
-			var order_lbl := Label.new()
-			order_lbl.text = "Order: %s" % ", ".join(order_parts)
+			order_lbl.text = _compact_order_text(contractor_requested)
 			order_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			order_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 			if on_cooldown:
 				order_lbl.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5, 1.0))
 			else:
 				order_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3, 1.0))
-			text_col.add_child(order_lbl)
+		else:
+			order_lbl.visible = false
 
 		var role_text = str(entry.get("role", ""))
+		var role_lbl: Label = card.get_node("Body/MainRow/TextColumn/RoleLabel")
 		if role_text != "":
-			var role_lbl := Label.new()
-			role_lbl.text = role_text
+			role_lbl.text = _compact_role_text(role_text)
 			role_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			role_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-			PanelStyle.apply_muted(role_lbl)
+			PanelStyle.apply_muted_on_dark(role_lbl)
 			if on_cooldown:
 				role_lbl.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5, 1.0))
-			text_col.add_child(role_lbl)
+		else:
+			role_lbl.visible = false
 
-		var btn := Button.new()
+		var btn: Button = card.get_node("Body/MainRow/ActionButton")
 		if is_selected:
 			btn.text = "Selected"
 		elif on_cooldown:
 			btn.text = "Unavailable"
 		else:
 			btn.text = "Select"
-		btn.custom_minimum_size = Vector2(120, 44)
+		btn.custom_minimum_size = Vector2(104, 40)
 		btn.disabled = is_selected or on_cooldown
 		PanelStyle.apply_button(btn, not btn.disabled)
 		if btn.disabled:
 			_style_selector_action_button(btn, false)
 		btn.pressed.connect(Callable(self, "_on_trip_contractor_pressed").bind(contractor_id))
-		card_row.add_child(btn)
 
 		if on_cooldown:
+			var cd_lbl: Label = card.get_node("Body/CooldownLabel")
+			cd_lbl.visible = true
 			var mins = int(ceil(float(cooldown_remaining) / 60.0))
-			var cd_lbl := Label.new()
 			cd_lbl.text = "I don't have any missions for you right now. (%d min remaining)" % mins
 			cd_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			cd_lbl.add_theme_color_override("font_color", Color(1.0, 0.55, 0.35, 1.0))
 			cd_lbl.add_theme_font_size_override("font_size", 13)
-			card_col.add_child(cd_lbl)
 
 func _render_mission_briefing(targets_section: VBoxContainer, offer: Dictionary, contractor_id: String, target_label: String) -> void:
 	var sub_info = SubcontractorManager.get_subcontractor(contractor_id)
@@ -595,51 +551,33 @@ func _render_mission_briefing(targets_section: VBoxContainer, offer: Dictionary,
 	}
 
 	# Briefing card container
-	var card := PanelContainer.new()
-	var card_style := StyleBoxFlat.new()
-	card_style.bg_color = Color(0.08, 0.12, 0.18, 0.85)
-	card_style.border_color = Color(0.25, 0.50, 0.75, 0.6)
-	card_style.set_border_width_all(1)
-	card_style.set_corner_radius_all(6)
-	card_style.content_margin_left = 12
-	card_style.content_margin_right = 12
-	card_style.content_margin_top = 10
-	card_style.content_margin_bottom = 10
-	card.add_theme_stylebox_override("panel", card_style)
+	var card: PanelContainer = LaunchpadMissionBriefingCardScene.instantiate()
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.set_meta("ui_style_locked", true)
+	card.add_theme_stylebox_override("panel", _target_card_style())
 	targets_section.add_child(card)
-
-	var col := VBoxContainer.new()
-	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	card.add_child(col)
-
-	var header_lbl := Label.new()
-	header_lbl.text = "MISSION BRIEFING"
-	header_lbl.add_theme_color_override("font_color", Color(0.4, 0.7, 1.0, 1.0))
-	header_lbl.add_theme_font_size_override("font_size", 12)
-	col.add_child(header_lbl)
+	var col: VBoxContainer = card.get_node("Body")
+	col.add_theme_constant_override("separation", 6)
+	var header_lbl: Label = card.get_node("Body/HeaderLabel")
+	PanelStyle.apply_muted_on_dark(header_lbl)
+	header_lbl.add_theme_color_override("font_color", Color(0.55, 0.86, 0.98, 0.98))
+	header_lbl.add_theme_font_size_override("font_size", 11)
 
 	# Narrative labels — created first with placeholder text, updated by callback
-	var title_lbl := Label.new()
-	var desc_lbl := Label.new()
-	var quote_lbl := Label.new()
-
-	title_lbl.text = "…"
-	title_lbl.add_theme_color_override("font_color", Color(0.95, 0.95, 1.0, 1.0))
-	title_lbl.add_theme_font_size_override("font_size", 15)
+	var title_lbl: Label = card.get_node("Body/TitleLabel")
+	PanelStyle.apply_body_on_dark(title_lbl)
+	title_lbl.add_theme_font_size_override("font_size", 16)
 	title_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	col.add_child(title_lbl)
 
-	desc_lbl.text = "Fetching mission briefing…"
-	desc_lbl.add_theme_color_override("font_color", Color(0.78, 0.82, 0.88, 1.0))
+	var desc_lbl: Label = card.get_node("Body/DescriptionLabel")
+	PanelStyle.apply_muted_on_dark(desc_lbl)
 	desc_lbl.add_theme_font_size_override("font_size", 13)
 	desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	col.add_child(desc_lbl)
 
-	quote_lbl.text = ""
-	quote_lbl.add_theme_color_override("font_color", Color(0.65, 0.85, 0.65, 1.0))
+	var quote_lbl: Label = card.get_node("Body/QuoteLabel")
+	quote_lbl.add_theme_color_override("font_color", Color(0.66, 0.94, 0.78, 1.0))
 	quote_lbl.add_theme_font_size_override("font_size", 12)
 	quote_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	col.add_child(quote_lbl)
 
 	MissionNarrativeAPI.generate(params, func(narrative: Dictionary) -> void:
 		if not is_instance_valid(title_lbl):
@@ -653,7 +591,32 @@ func _render_mission_briefing(targets_section: VBoxContainer, offer: Dictionary,
 			quote_lbl.text = ""
 	)
 
-func _apply_rocket_creation_gate(vbox: VBoxContainer, contractor_selected: bool) -> void:
+func _compact_order_text(requested: Dictionary) -> String:
+	var order_parts := []
+	for mineral in requested.keys():
+		order_parts.append("%dkg %s" % [int(requested.get(mineral, 0)), _mineral_short_name(str(mineral))])
+	order_parts.sort()
+	return "Order: %s" % ", ".join(order_parts)
+
+func _compact_role_text(role_text: String) -> String:
+	var compact = role_text.strip_edges()
+	compact = compact.replace(" — ", " / ")
+	return compact
+
+func _mineral_short_name(mineral: String) -> String:
+	match mineral.to_lower():
+		"nickel":
+			return "Ni"
+		"iron":
+			return "Fe"
+		"cobalt":
+			return "Co"
+		"silicates":
+			return "Si"
+		_:
+			return mineral
+
+func _apply_rocket_creation_gate(vbox: Control, contractor_selected: bool) -> void:
 	if vbox == null:
 		return
 	var rocket_selector = _get_rocket_selector(vbox.get_parent())
@@ -668,17 +631,21 @@ func _render_open_operation_mode_picker(targets_section: VBoxContainer, mode: St
 	var heading: Label = HeaderLabelScene.instantiate()
 	heading.text = "Route"
 	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	PanelStyle.apply_muted(heading)
+	PanelStyle.apply_muted_on_dark(heading)
 	targets_section.add_child(heading)
 
-	var row := HBoxContainer.new()
+	var row: HBoxContainer = LabelActionRowScene.instantiate()
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_theme_constant_override("separation", 8)
-	var survey_btn := Button.new()
+	var survey_btn: Button = row.get_node("ActionButton")
 	survey_btn.text = "Survey Route"
 	survey_btn.disabled = mode == "survey"
 	PanelStyle.apply_button(survey_btn, mode == "survey")
 	survey_btn.pressed.connect(Callable(self, "_on_open_operation_mode_selected").bind("survey"))
-	row.add_child(survey_btn)
+	var left_label: Label = row.get_node("TextLabel")
+	left_label.text = "Choose run type"
+	left_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	PanelStyle.apply_muted_on_dark(left_label)
 	var contract_btn := Button.new()
 	contract_btn.text = "Contract Route"
 	contract_btn.disabled = mode == "contract"
@@ -733,17 +700,18 @@ func _render_rocket_customization_controls(targets_section: VBoxContainer, rm, r
 		str(customization.get("logo", "Star"))
 	]
 	summary.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	PanelStyle.apply_muted(summary)
+	PanelStyle.apply_muted_on_dark(summary)
 	targets_section.add_child(summary)
 	var wear_points = int(rm.get_rocket_wear(rocket_id))
 	var wear_tier = int(rm.get_rocket_wear_tier(rocket_id))
 	var wear_label: Label = EmptyLabelScene.instantiate()
 	wear_label.text = "Wear: Tier %d (%d points)" % [wear_tier, wear_points]
 	wear_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	PanelStyle.apply_muted(wear_label)
+	PanelStyle.apply_muted_on_dark(wear_label)
 	targets_section.add_child(wear_label)
 
 	var controls := HBoxContainer.new()
+	controls.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	controls.add_theme_constant_override("separation", 8)
 	var flag_btn := Button.new()
 	flag_btn.text = "Flag"
@@ -851,6 +819,7 @@ func _render_mining_practice_shortcut(targets_section: VBoxContainer) -> void:
 	if targets_section == null:
 		return
 	var row := HBoxContainer.new()
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_theme_constant_override("separation", 8)
 	var btn := Button.new()
 	btn.text = "Open Mining Academy"
@@ -861,7 +830,7 @@ func _render_mining_practice_shortcut(targets_section: VBoxContainer) -> void:
 	var helper: Label = EmptyLabelScene.instantiate()
 	helper.text = "Practice side-scrolling mining directly without mission progression."
 	helper.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	PanelStyle.apply_muted(helper)
+	PanelStyle.apply_muted_on_dark(helper)
 	targets_section.add_child(helper)
 
 func _render_required_room_guidance(targets_section: VBoxContainer, rocket_id: String) -> void:
@@ -882,7 +851,7 @@ func _render_required_room_guidance(targets_section: VBoxContainer, rocket_id: S
 	var heading: Label = HeaderLabelScene.instantiate()
 	heading.text = "Required Rooms"
 	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	PanelStyle.apply_muted(heading)
+	PanelStyle.apply_muted_on_dark(heading)
 	targets_section.add_child(heading)
 
 	var lines := []
@@ -896,34 +865,237 @@ func _render_required_room_guidance(targets_section: VBoxContainer, rocket_id: S
 	var body: Label = EmptyLabelScene.instantiate()
 	body.text = "\n".join(lines)
 	body.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	PanelStyle.apply_muted(body)
+	PanelStyle.apply_muted_on_dark(body)
 	targets_section.add_child(body)
 	if missing:
 		var warn: Label = EmptyLabelScene.instantiate()
 		warn.text = "Warning: missing room categories reduce mission effectiveness (launch remains allowed)."
 		warn.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-		PanelStyle.apply_muted(warn)
+		PanelStyle.apply_muted_on_dark(warn)
 		targets_section.add_child(warn)
 
-func _style_selector_panel(panel: Panel, vbox: VBoxContainer) -> void:
+func _render_target_prep_card(
+	targets_section: VBoxContainer,
+	mission_stage: int,
+	awaiting_rocket_id: String,
+	awaiting_rocket_level: int,
+	free_ops_unlocked: bool,
+	trip_offer: Dictionary,
+	rm
+) -> void:
+	if targets_section == null:
+		return
+	var prep_items = _build_target_prep_items(
+		mission_stage,
+		awaiting_rocket_id,
+		awaiting_rocket_level,
+		free_ops_unlocked,
+		trip_offer,
+		rm
+	)
+	if prep_items.is_empty():
+		return
+	var card := PanelContainer.new()
+	card.name = "TargetPrepCard"
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.set_meta("ui_style_locked", true)
+	card.add_theme_stylebox_override("panel", _target_card_style())
+	targets_section.add_child(card)
+
+	var body := VBoxContainer.new()
+	body.name = "Body"
+	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	body.add_theme_constant_override("separation", 6)
+	card.add_child(body)
+
+	var title := Label.new()
+	title.name = "Title"
+	title.text = "Route Prep"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	PanelStyle.apply_body_on_dark(title)
+	title.add_theme_color_override("font_color", Color(0.90, 0.96, 1.0, 1.0))
+	title.add_theme_font_size_override("font_size", 16)
+	body.add_child(title)
+
+	for item_any in prep_items:
+		if typeof(item_any) != TYPE_DICTIONARY:
+			continue
+		var item: Dictionary = item_any
+		var line := Label.new()
+		line.text = str(item.get("text", ""))
+		line.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		line.add_theme_font_size_override("font_size", 13)
+		var tone = str(item.get("tone", "muted"))
+		match tone:
+			"warning":
+				line.add_theme_color_override("font_color", Color(1.0, 0.74, 0.44, 1.0))
+			"positive":
+				line.add_theme_color_override("font_color", Color(0.62, 0.98, 0.76, 1.0))
+			"accent":
+				line.add_theme_color_override("font_color", Color(0.78, 0.90, 1.0, 0.98))
+			_:
+				PanelStyle.apply_muted_on_dark(line)
+		body.add_child(line)
+
+func _build_target_prep_items(
+	mission_stage: int,
+	awaiting_rocket_id: String,
+	awaiting_rocket_level: int,
+	free_ops_unlocked: bool,
+	trip_offer: Dictionary,
+	rm
+) -> Array:
+	var items: Array = []
+	if mission_stage == 2 and awaiting_rocket_level < 2:
+		items.append({
+			"tone": "warning",
+			"text": "Mission 2 needs Starter Rocket 2 on the pad before you can lock a route."
+		})
+	if mission_stage == 2:
+		items.append({
+			"tone": "muted",
+			"text": _build_stage2_checklist_text().replace("\n", "  •  ")
+		})
+	if mission_stage == 4 and awaiting_rocket_level < 3:
+		items.append({
+			"tone": "warning",
+			"text": "Mission 4 targets need Starter Rocket 3 for planetary range."
+		})
+	if free_ops_unlocked:
+		items.append({
+			"tone": "accent",
+			"text": "Free Operations is live: choose a route, lock a contractor, then confirm any scanned target."
+		})
+		var app_for_lvl = AppControllerHelper.get_instance()
+		var player_lvl := 1
+		if app_for_lvl and app_for_lvl.has_method("get_experience_level"):
+			player_lvl = int(app_for_lvl.get_experience_level())
+		if player_lvl >= 5:
+			var ConstMgr = preload("res://Scripts/Utils/ConstructionManager.gd")
+			if not ConstMgr.is_project_completed("relay_1"):
+				items.append({
+					"tone": "positive",
+					"text": "First Settlement: mine Iron (500 kg) and Nickel (200 kg), then contribute them from Construction after the run."
+				})
+	if awaiting_rocket_id != "":
+		var payout_cap = int(trip_offer.get("payout_cap", rm.get_free_ops_payout_cap()))
+		var current_cost = RocketSpecs.get_cost(awaiting_rocket_id)
+		if current_cost > payout_cap:
+			items.append({
+				"tone": "warning",
+				"text": "Mission payout caps at %s F, but this ship costs %s F." % [_fmt_francs(payout_cap), _fmt_francs(current_cost)]
+			})
+	return items
+
+func _style_selector_panel(panel: Panel, vbox: Control) -> void:
 	# Lock before UIConsistencyEnforcer deferred scan can overwrite.
 	panel.set_meta("ui_style_locked", true)
-	PanelStyle.apply_panel(panel, Color(0.0, 0.0, 0.0, 0.0))
+	var shell := StyleBoxFlat.new()
+	shell.bg_color = Color(0, 0, 0, 0)
+	shell.border_color = Color(0, 0, 0, 0)
+	shell.set_border_width_all(0)
+	shell.set_corner_radius_all(0)
+	panel.add_theme_stylebox_override("panel", shell)
 	if vbox:
-		vbox.add_theme_constant_override("separation", 12)
-	var title = panel.get_node_or_null("VBox/Title")
+		vbox.set_meta("ui_style_locked", true)
+	_apply_selector_surface_styles(panel)
+	_ensure_selector_template_defaults(panel)
+	var title = panel.get_node_or_null("VBox/HeaderBar/HeaderCopy/Title")
 	if title and title is Label:
-		PanelStyle.apply_body(title)
+		PanelStyle.apply_title_on_dark(title)
 		title.text = "Launchpad Mission Setup"
 		title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-		title.add_theme_font_size_override("font_size", 22)
-	var back = panel.get_node_or_null("VBox/BackButton")
+		title.add_theme_font_size_override("font_size", 28)
+	var eyebrow = panel.get_node_or_null("VBox/HeaderBar/HeaderCopy/Eyebrow")
+	if eyebrow and eyebrow is Label:
+		eyebrow.add_theme_color_override("font_color", Color(PanelStyle.ACCENT.r, PanelStyle.ACCENT.g, PanelStyle.ACCENT.b, 0.94))
+		eyebrow.add_theme_font_size_override("font_size", 12)
+	var subtitle = panel.get_node_or_null("VBox/HeaderBar/HeaderCopy/Subtitle")
+	if subtitle and subtitle is Label:
+		PanelStyle.apply_muted_on_dark(subtitle)
+		subtitle.text = "Use the side rails for contractor, rocket, and route setup. Keep the pad clear for staging."
+		subtitle.add_theme_font_size_override("font_size", 13)
+	var back = panel.get_node_or_null("VBox/HeaderBar/BackButton")
 	if back and back is Button:
 		back.set_meta("ui_style_locked", true)
-		back.custom_minimum_size = Vector2(0, 52)
+		back.custom_minimum_size = Vector2(170, 46)
 		back.text = "Back to Base"
-		PanelStyle.apply_button(back, false)
 		_style_selector_action_button(back, false)
+
+func _apply_selector_surface_styles(panel: Panel) -> void:
+	if panel == null:
+		return
+	for path in [
+		"VBox/Body/LeftColumn/ContractorSection",
+		"VBox/Body/RightColumn/RocketSection",
+		"VBox/BottomDock",
+		"MapOverlay/OverlayVBox/TargetSection",
+	]:
+		var node = panel.get_node_or_null(path) as Control
+		if node:
+			node.set_meta("ui_style_locked", true)
+			node.add_theme_stylebox_override("panel", PanelStyle.create_glass_panel_style(Color(0.05, 0.09, 0.14, 0.94), 0.44, 18, 18, 16))
+
+	var overlay = panel.get_node_or_null("MapOverlay") as PanelContainer
+	if overlay:
+		overlay.add_theme_stylebox_override("panel", PanelStyle.create_glass_panel_style(Color(0.03, 0.06, 0.10, 0.96), 0.58, 20, 24, 20))
+
+	for path in [
+		"VBox/BottomDock/DockVBox/StatusRow/RoutePill",
+		"VBox/BottomDock/DockVBox/StatusRow/ContractorPill",
+		"VBox/BottomDock/DockVBox/StatusRow/RocketPill",
+		"VBox/BottomDock/DockVBox/ActionRow/TargetPill",
+	]:
+		var pill = panel.get_node_or_null(path) as PanelContainer
+		if pill:
+			pill.add_theme_stylebox_override("panel", PanelStyle.create_glass_pill_style())
+
+	for path in [
+		"VBox/BottomDock/DockVBox/ActionRow/OpenMapButton",
+		"MapOverlay/OverlayVBox/Toolbar/MapBackButton",
+	]:
+		var btn = panel.get_node_or_null(path) as Button
+		if btn:
+			_style_selector_action_button(btn, false)
+
+	var launch_message = panel.get_node_or_null("VBox/BottomDock/DockVBox/LaunchMessage") as Label
+	if launch_message:
+		launch_message.add_theme_color_override("font_color", PanelStyle.MUTED_ON_DARK)
+		launch_message.add_theme_font_size_override("font_size", 14)
+
+func _ensure_selector_template_defaults(panel: Panel) -> void:
+	if panel == null:
+		return
+	for path in [
+		"VBox/Body/LeftColumn/ContractorSection/SectionVBox/Header/Title",
+		"VBox/Body/RightColumn/RocketSection/SectionVBox/Header/Title",
+		"VBox/BottomDock/DockVBox/Header/Title",
+		"MapOverlay/OverlayVBox/TargetSection/SectionVBox/Header/Title",
+	]:
+		var label = panel.get_node_or_null(path) as Label
+		if label:
+			PanelStyle.apply_title_on_dark(label)
+	for path in [
+		"VBox/Body/LeftColumn/ContractorSection/SectionVBox/Blurb",
+		"VBox/Body/RightColumn/RocketSection/SectionVBox/Blurb",
+		"VBox/BottomDock/DockVBox/LaunchMessage",
+		"MapOverlay/OverlayVBox/Toolbar/MapHint",
+		"MapOverlay/OverlayVBox/TargetSection/SectionVBox/Blurb",
+	]:
+		var label = panel.get_node_or_null(path) as Label
+		if label:
+			PanelStyle.apply_muted_on_dark(label)
+	for path in [
+		"VBox/BottomDock/DockVBox/StatusRow/RoutePill/Label",
+		"VBox/BottomDock/DockVBox/StatusRow/ContractorPill/Label",
+		"VBox/BottomDock/DockVBox/StatusRow/RocketPill/Label",
+		"VBox/BottomDock/DockVBox/ActionRow/TargetPill/Label",
+		"MapOverlay/OverlayVBox/Toolbar/MapTitle",
+	]:
+		var label = panel.get_node_or_null(path) as Label
+		if label:
+			PanelStyle.apply_body_on_dark(label)
 
 func _set_selector_panel_layout(_has_awaiting: bool, flow_phase: String = "") -> void:
 	var root_scene = _launchpad.get_tree().current_scene
@@ -933,29 +1105,149 @@ func _set_selector_panel_layout(_has_awaiting: bool, flow_phase: String = "") ->
 	if panel == null:
 		return
 	var viewport_size = _launchpad.get_viewport().get_visible_rect().size
-	var content_rect = TutorialLayoutZone.content_rect(_launchpad.get_viewport().get_visible_rect())
-	# Contractor selection phase gets a wider panel so mineral/bonus info fits.
-	# All other phases use the standard sidebar so the world remains visible.
-	var width_ratio := 0.68 if flow_phase == "contractor" else SIDEBAR_VIEWPORT_RATIO
-	var width_min := 520.0 if flow_phase == "contractor" else SIDEBAR_WIDTH_MIN
-	var width_max := 860.0 if flow_phase == "contractor" else SIDEBAR_WIDTH_MAX
-	var sidebar_width = clamp(viewport_size.x * width_ratio, width_min, width_max)
-	sidebar_width = min(sidebar_width, max(320.0, content_rect.size.x - 32.0))
-	var panel_height = clamp(content_rect.size.y * 0.84, 520.0, 880.0)
+	var content_rect = _launchpad.get_viewport().get_visible_rect()
+	# Keep the stage nearly full-width so the right dock can sit on the screen edge
+	# while the launchpad remains clear in the center lane.
+	var width_ratio := 0.992
+	var width_min := 1320.0
+	var width_max := 1880.0
+	var panel_width = clamp(viewport_size.x * width_ratio, width_min, width_max)
+	panel_width = min(panel_width, max(420.0, content_rect.size.x - 8.0))
+	var widget_zone := UILayout.zone(UILayout.Zone.EARTH_WIDGET, viewport_size)
+	var panel_top = max(content_rect.position.y + 8.0, widget_zone.end.y + 18.0)
+	var panel_height = clamp(content_rect.size.y - (panel_top - content_rect.position.y) - 28.0, 620.0, 940.0)
+	var panel_left = content_rect.position.x + 4.0
 	panel.anchor_left = 0.0
 	panel.anchor_top = 0.0
 	panel.anchor_right = 0.0
 	panel.anchor_bottom = 0.0
-	panel.offset_left = content_rect.position.x
-	panel.offset_top = content_rect.position.y
-	panel.offset_right = content_rect.position.x + sidebar_width
-	panel.offset_bottom = content_rect.position.y + panel_height
+	panel.offset_left = panel_left
+	panel.offset_top = panel_top
+	panel.offset_right = panel_left + panel_width
+	panel.offset_bottom = panel_top + panel_height
 	panel.clip_contents = true
 
-	var vbox = panel.get_node_or_null("VBox")
+	var vbox = panel.get_node_or_null("VBox") as Control
 	if vbox:
-		vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		vbox.anchor_left = 0.0
+		vbox.anchor_top = 0.0
+		vbox.anchor_right = 1.0
+		vbox.anchor_bottom = 1.0
+		vbox.offset_left = 0.0
+		vbox.offset_top = 0.0
+		vbox.offset_right = 0.0
+		vbox.offset_bottom = 0.0
+	var body = panel.get_node_or_null("VBox/Body") as Control
+	var left_column = panel.get_node_or_null("VBox/Body/LeftColumn") as VBoxContainer
+	var left_section = panel.get_node_or_null("VBox/Body/LeftColumn/ContractorSection") as Control
+	var center_spacer = panel.get_node_or_null("VBox/Body/CenterSpacer") as Control
+	var right_column = panel.get_node_or_null("VBox/Body/RightColumn") as VBoxContainer
+	var right_section = panel.get_node_or_null("VBox/Body/RightColumn/RocketSection") as Control
+	var bottom_dock = panel.get_node_or_null("VBox/BottomDock") as Control
+	var header_bar = panel.get_node_or_null("VBox/HeaderBar") as Control
+	var step_rail = panel.get_node_or_null("VBox/StepRail") as Control
+	var left_width = clamp(panel_width * 0.245, 360.0, 440.0)
+	var right_width = clamp(panel_width * 0.145, 240.0, 290.0)
+	var header_width: float = clampf(left_width + 160.0, 520.0, 620.0)
+	var rail_width: float = clampf(left_width + 130.0, 500.0, 600.0)
+	var header_height: float = 56.0
+	var rail_top: float = 74.0
+	var rail_height: float = 30.0
+	var body_top: float = rail_top + rail_height + 16.0
+	var bottom_height: float = 164.0
+	var body_height: float = max(panel_height - body_top - bottom_height - 24.0, 380.0)
+	var left_margin: float = 18.0
+	var right_margin: float = 12.0
+	var center_left: float = left_margin + left_width + 34.0
+	var center_right: float = panel_width - right_margin - right_width - 34.0
+	var center_gap: float = max(center_right - center_left, 520.0)
+	if header_bar:
+		header_bar.anchor_left = 0.0
+		header_bar.anchor_top = 0.0
+		header_bar.anchor_right = 0.0
+		header_bar.anchor_bottom = 0.0
+		header_bar.offset_left = left_margin
+		header_bar.offset_top = 8.0
+		header_bar.offset_right = left_margin + header_width
+		header_bar.offset_bottom = 8.0 + header_height
+		header_bar.custom_minimum_size = Vector2(header_width, header_height)
+	if step_rail:
+		step_rail.anchor_left = 0.0
+		step_rail.anchor_top = 0.0
+		step_rail.anchor_right = 0.0
+		step_rail.anchor_bottom = 0.0
+		step_rail.offset_left = left_margin
+		step_rail.offset_top = rail_top
+		step_rail.offset_right = left_margin + rail_width
+		step_rail.offset_bottom = rail_top + rail_height
+		step_rail.custom_minimum_size = Vector2(rail_width, rail_height)
+	if body:
+		body.anchor_left = 0.0
+		body.anchor_top = 0.0
+		body.anchor_right = 1.0
+		body.anchor_bottom = 0.0
+		body.offset_left = 0.0
+		body.offset_top = body_top
+		body.offset_right = 0.0
+		body.offset_bottom = body_top + body_height
+	if left_column:
+		left_column.anchor_left = 0.0
+		left_column.anchor_top = 0.0
+		left_column.anchor_right = 0.0
+		left_column.anchor_bottom = 0.0
+		left_column.offset_left = left_margin
+		left_column.offset_top = 0.0
+		left_column.offset_right = left_margin + left_width
+		left_column.offset_bottom = body_height
+		left_column.custom_minimum_size.x = left_width
+	if left_section:
+		left_section.custom_minimum_size.x = left_width
+		left_section.custom_minimum_size.y = clamp(body_height * 0.72, 360.0, 560.0)
+	if right_column:
+		right_column.anchor_left = 1.0
+		right_column.anchor_top = 0.0
+		right_column.anchor_right = 1.0
+		right_column.anchor_bottom = 0.0
+		right_column.offset_left = -right_width - right_margin
+		right_column.offset_top = 26.0
+		right_column.offset_right = -right_margin
+		right_column.offset_bottom = min(body_height, 520.0)
+		right_column.custom_minimum_size.x = right_width
+	if right_section:
+		right_section.custom_minimum_size.x = right_width
+		right_section.custom_minimum_size.y = clamp(body_height * 0.74, 340.0, 500.0)
+	if center_spacer:
+		center_spacer.anchor_left = 0.0
+		center_spacer.anchor_top = 0.0
+		center_spacer.anchor_right = 0.0
+		center_spacer.anchor_bottom = 0.0
+		center_spacer.offset_left = center_left
+		center_spacer.offset_top = 0.0
+		center_spacer.offset_right = center_left + center_gap
+		center_spacer.offset_bottom = body_height
+		center_spacer.custom_minimum_size = Vector2(center_gap, body_height)
+	if bottom_dock:
+		var dock_width: float = clampf(left_width + 72.0, 440.0, 540.0)
+		bottom_dock.anchor_left = 0.0
+		bottom_dock.anchor_top = 0.0
+		bottom_dock.anchor_right = 0.0
+		bottom_dock.anchor_bottom = 0.0
+		bottom_dock.offset_left = left_margin
+		bottom_dock.offset_top = body_top + body_height + 12.0
+		bottom_dock.offset_right = left_margin + dock_width
+		bottom_dock.offset_bottom = body_top + body_height + bottom_height
+		bottom_dock.custom_minimum_size = Vector2(dock_width, bottom_height)
+		bottom_dock.size_flags_horizontal = Control.SIZE_FILL
+	var map_overlay = panel.get_node_or_null("MapOverlay") as Control
+	if map_overlay:
+		map_overlay.anchor_left = 0.0
+		map_overlay.anchor_top = 0.0
+		map_overlay.anchor_right = 1.0
+		map_overlay.anchor_bottom = 1.0
+		map_overlay.offset_left = 0.0
+		map_overlay.offset_top = 0.0
+		map_overlay.offset_right = 0.0
+		map_overlay.offset_bottom = 0.0
 
 func _render_launch_guidance_notice(targets_section: VBoxContainer) -> void:
 	if targets_section == null:
@@ -970,7 +1262,7 @@ func _render_launch_guidance_notice(targets_section: VBoxContainer) -> void:
 	guidance.text = notice
 	guidance.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	guidance.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	PanelStyle.apply_muted(guidance)
+	PanelStyle.apply_muted_on_dark(guidance)
 	targets_section.add_child(guidance)
 
 func _render_starmap_target_picker(
@@ -1027,6 +1319,8 @@ func _render_starmap_target_picker(
 		})
 
 	var map_card := PanelContainer.new()
+	map_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	map_card.set_meta("ui_style_locked", true)
 	map_card.add_theme_stylebox_override("panel", _target_card_style())
 	target_section.add_child(map_card)
 	var map_column := VBoxContainer.new()
@@ -1036,7 +1330,7 @@ func _render_starmap_target_picker(
 
 	var map_view := LaunchpadStarMap.new()
 	map_view.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	map_view.custom_minimum_size = Vector2(0.0, 320.0)
+	map_view.custom_minimum_size = Vector2(0.0, 140.0)
 	map_view.setup(map_entries, _pending_target_id, _build_rocket_range_data())
 	map_view.target_pressed.connect(Callable(self, "on_selector_target_pressed"))
 	map_column.add_child(map_view)
@@ -1044,26 +1338,27 @@ func _render_starmap_target_picker(
 	var selected_entry = _find_target_entry_by_id(visible_targets, _pending_target_id)
 	if selected_entry.is_empty():
 		return
-	var info_card := PanelContainer.new()
+	var info_card: PanelContainer = LaunchpadTargetInfoCardScene.instantiate()
+	info_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	info_card.set_meta("ui_style_locked", true)
 	info_card.add_theme_stylebox_override("panel", _planet_card_style() if _is_planet_target(selected_entry) else _target_card_style())
 	target_section.add_child(info_card)
-	var info_column := VBoxContainer.new()
-	info_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	info_column.add_theme_constant_override("separation", 6)
-	info_card.add_child(info_column)
-
-	var title := Label.new()
+	var info_column: VBoxContainer = info_card.get_node("Body")
+	var title: Label = info_card.get_node("Body/TitleLabel")
 	var title_text = str(selected_entry.get("label", _pending_target_id))
 	if trip_recommended_target_id == _pending_target_id:
 		title_text = "%s (Recommended)" % title_text
 	title.text = title_text
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	PanelStyle.apply_body(title)
+	PanelStyle.apply_body_on_dark(title)
 	title.add_theme_font_size_override("font_size", 18)
 	title.add_theme_color_override("font_color", Color(0.88, 0.96, 1.0, 1.0))
-	info_column.add_child(title)
 
-	var summary := Label.new()
+	var chip_row: HBoxContainer = info_card.get_node("Body/ChipRow")
+	for chip_text in _build_target_preview_chips(selected_entry, rm, trip_recommended_target_id == _pending_target_id):
+		chip_row.add_child(_make_preview_chip(chip_text))
+
+	var summary: Label = info_card.get_node("Body/SummaryLabel")
 	summary.text = _build_starmap_info_text(
 		selected_entry,
 		mission_stage,
@@ -1076,22 +1371,23 @@ func _render_starmap_target_picker(
 	)
 	summary.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	PanelStyle.apply_muted(summary)
-	info_column.add_child(summary)
+	PanelStyle.apply_muted_on_dark(summary)
 
-	var composition := Label.new()
+	var science_preview: Label = info_card.get_node("Body/SciencePreviewLabel")
+	science_preview.text = _build_target_science_preview(selected_entry)
+	science_preview.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	science_preview.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	science_preview.add_theme_color_override("font_color", Color(0.80, 0.88, 0.96, 0.96))
+	science_preview.add_theme_font_size_override("font_size", 12)
+
+	var composition: Label = info_card.get_node("Body/CompositionLabel")
 	composition.text = _estimate_target_composition(_pending_target_id, _is_planet_target(selected_entry))
 	composition.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	composition.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	composition.add_theme_color_override("font_color", Color(0.5, 0.95, 0.65, 1.0))
 	composition.add_theme_font_size_override("font_size", 13)
-	info_column.add_child(composition)
 
-	var action_row := HBoxContainer.new()
-	action_row.add_theme_constant_override("separation", 8)
-	info_column.add_child(action_row)
-
-	var confirm_btn := Button.new()
+	var confirm_btn: Button = info_card.get_node("Body/ActionRow/ConfirmButton")
 	var persisted_selected = selected_target == _pending_target_id and selected_target != ""
 	var blocked = _is_target_blocked_for_selection(
 		mission_stage,
@@ -1107,7 +1403,7 @@ func _render_starmap_target_picker(
 	_style_selector_action_button(confirm_btn, not confirm_btn.disabled)
 	if not confirm_btn.disabled:
 		confirm_btn.pressed.connect(Callable(self, "_on_confirm_target_pressed"))
-	action_row.add_child(confirm_btn)
+	_update_target_summary_card(selected_entry, persisted_selected, blocked, rm, awaiting_rocket_id)
 
 func _build_starmap_info_text(
 	target: Dictionary,
@@ -1126,6 +1422,7 @@ func _build_starmap_info_text(
 	var required_level = int(profile.get("required_level", 1))
 	var distance_au = float(profile.get("distance_au", 0.0))
 	var lines := [
+		"Profile: %s" % _target_profile_summary(normalized_type, required_level),
 		"Distance: %.0f AU" % distance_au,
 	]
 	var fuel_text = _estimated_fuel_cost_text(distance_au, awaiting_rocket_id)
@@ -1148,6 +1445,10 @@ func _build_starmap_info_text(
 			target_id
 		))
 	return "\n".join(lines)
+
+func _target_profile_summary(normalized_type: String, required_level: int) -> String:
+	var type_label = "Planetary scan" if normalized_type == "planet" else "Asteroid run"
+	return "%s • Level %d+" % [type_label, required_level]
 
 func _estimated_fuel_cost_text(distance_au: float, awaiting_rocket_id: String) -> String:
 	if awaiting_rocket_id == "":
@@ -1201,30 +1502,12 @@ func _normalize_target_type(target_type: String) -> String:
 	return "planet" if normalized == "planet" or normalized == "tess" else "asteroid"
 
 func _target_card_style() -> StyleBoxFlat:
-	var style = StyleBoxFlat.new()
-	style.bg_color    = Color(0.05, 0.08, 0.14, 0.12)
-	style.border_color = Color(0.28, 0.88, 0.96, 0.70)   # cyan, partial opacity
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(4)
-	style.content_margin_left   = 14
-	style.content_margin_top    = 10
-	style.content_margin_right  = 14
-	style.content_margin_bottom = 10
-	return style
+	return PanelStyle.create_glass_card_style(Color(0.06, 0.10, 0.15, 0.97), 0.38, 14, 16, 12)
 
 func _planet_card_style() -> StyleBoxFlat:
-	var style = StyleBoxFlat.new()
-	style.bg_color     = Color(0.05, 0.12, 0.22, 0.16)   # deeper blue tint for planets
-	style.border_color = Color(0.55, 0.85, 1.0, 0.90)    # bright sky-blue border
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(4)
-	style.content_margin_left   = 14
-	style.content_margin_top    = 10
-	style.content_margin_right  = 14
-	style.content_margin_bottom = 10
-	return style
+	return PanelStyle.create_glass_card_style(Color(0.08, 0.14, 0.20, 0.97), 0.52, 14, 16, 12)
 
-func _set_rocket_selector_visibility(vbox: VBoxContainer, visible: bool) -> void:
+func _set_rocket_selector_visibility(vbox: Control, visible: bool) -> void:
 	var rocket_selector = _get_rocket_selector(vbox.get_parent() if vbox else null)
 	if rocket_selector:
 		rocket_selector.visible = visible
@@ -1232,9 +1515,12 @@ func _set_rocket_selector_visibility(vbox: VBoxContainer, visible: bool) -> void
 func _set_title_for_state(panel: Panel, has_awaiting_rocket: bool) -> void:
 	if panel == null:
 		return
-	var title = panel.get_node_or_null("VBox/Title")
+	var title = panel.get_node_or_null("VBox/HeaderBar/HeaderCopy/Title")
 	if title and title is Label:
-		title.text = "Select Mission Target" if has_awaiting_rocket else "Select Your Rocket"
+		title.text = "Launchpad Mission Setup"
+	var subtitle = panel.get_node_or_null("VBox/HeaderBar/HeaderCopy/Subtitle")
+	if subtitle and subtitle is Label:
+		subtitle.text = "Mission-control setup for contractor, ship, target, and launch."
 
 func _build_visible_targets(targets: Array, selected_target: String, mission_stage: int, awaiting_rocket_level: int, rm) -> Array:
 	if targets.is_empty():
@@ -1336,21 +1622,14 @@ func _ensure_selector_panel_exists(root_scene: Node) -> Panel:
 
 	var panel = existing as Panel
 	if panel == null:
-		panel = Panel.new()
+		panel = SelectorPanelScene.instantiate() as Panel
+		if panel == null:
+			return null
 		panel.name = "SelectorPanel"
-		panel.z_index = 120
-		panel.anchor_left = 0.0
-		panel.anchor_top = 0.0
-		panel.anchor_right = 1.0
-		panel.anchor_bottom = 1.0
-		panel.offset_left = 16.0
-		panel.offset_top = 16.0
-		panel.offset_right = -16.0
-		panel.offset_bottom = -16.0
 		ui_layer.add_child(panel)
 
 	_rebuild_selector_panel_layout(panel)
-	_wire_back_button(panel)
+	_wire_panel_buttons(panel)
 	panel.z_index = 120
 	return panel
 
@@ -1359,102 +1638,28 @@ func _rebuild_selector_panel_layout(panel: Panel) -> void:
 		return
 	if str(panel.get_meta("layout_version", "")) == SELECTOR_LAYOUT_VERSION:
 		return
-	for child in panel.get_children():
-		panel.remove_child(child)
-		child.queue_free()
-
-	var vbox := VBoxContainer.new()
-	vbox.name = "VBox"
-	vbox.anchor_left = 0.0
-	vbox.anchor_top = 0.0
-	vbox.anchor_right = 1.0
-	vbox.anchor_bottom = 1.0
-	vbox.offset_left = 20.0
-	vbox.offset_top = 16.0
-	vbox.offset_right = -20.0
-	vbox.offset_bottom = -16.0
-	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	vbox.add_theme_constant_override("separation", 10)
-	panel.add_child(vbox)
-
-	var title := Label.new()
-	title.name = "Title"
-	title.text = "Launchpad Mission Setup"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	vbox.add_child(title)
-
-	var back_button := Button.new()
-	back_button.name = "BackButton"
-	back_button.text = "Back to Base"
-	back_button.size_flags_horizontal = Control.SIZE_FILL
-	vbox.add_child(back_button)
-
-	var sections_scroll := ScrollContainer.new()
-	sections_scroll.name = "SectionsScroll"
-	sections_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	sections_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	sections_scroll.clip_contents = true
-	vbox.add_child(sections_scroll)
-
-	var sections := VBoxContainer.new()
-	sections.name = "Sections"
-	sections.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	sections.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	sections.add_theme_constant_override("separation", 10)
-	sections_scroll.add_child(sections)
-
-	var contractor_content := _create_selector_section(sections, "ContractorSection", "Contractor")
-	contractor_content.custom_minimum_size = Vector2(0, 120)
-
-	var rocket_content := _create_selector_section(sections, "RocketSection", "Rocket")
-	rocket_content.custom_minimum_size = Vector2(0, 340)
-	if RocketSelectorOverlayScene:
+	var rocket_content = panel.get_node_or_null("VBox/Body/RightColumn/RocketSection/SectionVBox/Content")
+	if rocket_content and _get_rocket_selector(panel) == null and RocketSelectorOverlayScene:
 		var rocket_selector = RocketSelectorOverlayScene.instantiate()
 		if rocket_selector:
 			rocket_selector.name = "RocketSelector"
 			if rocket_selector is Control:
 				var rocket_control := rocket_selector as Control
 				rocket_control.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-				rocket_control.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-				rocket_control.custom_minimum_size = Vector2(0, 260)
+				rocket_control.size_flags_vertical = Control.SIZE_EXPAND_FILL
+				rocket_control.custom_minimum_size = Vector2(0, 280)
 			rocket_content.add_child(rocket_selector)
-
-	var target_content := _create_selector_section(sections, "TargetSection", "Mission Target")
-	target_content.custom_minimum_size = Vector2(0, 220)
-
 	panel.set_meta("layout_version", SELECTOR_LAYOUT_VERSION)
-
-func _create_selector_section(parent: VBoxContainer, section_name: String, section_title: String) -> VBoxContainer:
-	var card := PanelContainer.new()
-	card.name = section_name
-	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	card.add_theme_stylebox_override("panel", _target_card_style())
-	parent.add_child(card)
-
-	var content := VBoxContainer.new()
-	content.name = "Content"
-	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	content.add_theme_constant_override("separation", 8)
-	card.add_child(content)
-
-	var heading := Label.new()
-	heading.text = section_title
-	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	PanelStyle.apply_body(heading)
-	heading.add_theme_font_size_override("font_size", 18)
-	content.add_child(heading)
-	return content
 
 func _get_rocket_selector(panel: Node) -> Control:
 	if panel == null:
 		return null
-	return panel.get_node_or_null("VBox/SectionsScroll/Sections/RocketSection/Content/RocketSelector") as Control
+	return panel.get_node_or_null("VBox/Body/RightColumn/RocketSection/SectionVBox/Content/RocketSelector") as Control
 
 func _ensure_rocket_selector_ready(panel: Panel) -> void:
 	if panel == null:
 		return
-	var rocket_content = panel.get_node_or_null("VBox/SectionsScroll/Sections/RocketSection/Content")
+	var rocket_content = panel.get_node_or_null("VBox/Body/RightColumn/RocketSection/SectionVBox/Content")
 	if rocket_content == null:
 		return
 	var rocket_selector = _get_rocket_selector(panel)
@@ -1481,8 +1686,8 @@ func _attach_fresh_rocket_selector(rocket_content: Node) -> void:
 	if fresh is Control:
 		var ctrl := fresh as Control
 		ctrl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		ctrl.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-		ctrl.custom_minimum_size = Vector2(0, 260)
+		ctrl.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		ctrl.custom_minimum_size = Vector2(0, 280)
 	rocket_content.add_child(fresh)
 
 func _count_create_buttons(root: Node) -> int:
@@ -1502,8 +1707,6 @@ func _clear_container(container: Node) -> void:
 	if container == null:
 		return
 	for child in container.get_children():
-		if child is Label and (child as Label).text in ["Contractor", "Rocket", "Mission Target"]:
-			continue
 		container.remove_child(child)
 		child.queue_free()
 
@@ -1559,8 +1762,7 @@ func _tutorial_forced_phase() -> String:
 		"select_launch_target", "launch_rocket_from_earth":
 			return "target"
 		_:
-			var current_stage = int(state.get("current_stage", 1))
-			if current_stage <= 1:
+			if RocketsManager.get_mission_stage() <= 1:
 				return "contractor"
 			return ""
 
@@ -1581,15 +1783,20 @@ func _read_tutorial_state() -> Dictionary:
 func _set_section_visibility(panel: Panel, phase: String) -> void:
 	if panel == null:
 		return
-	var contractor_card = panel.get_node_or_null("VBox/SectionsScroll/Sections/ContractorSection") as Control
-	var rocket_card = panel.get_node_or_null("VBox/SectionsScroll/Sections/RocketSection") as Control
-	var target_card = panel.get_node_or_null("VBox/SectionsScroll/Sections/TargetSection") as Control
-	if contractor_card:
-		contractor_card.visible = phase == "contractor"
-	if rocket_card:
-		rocket_card.visible = phase == "rocket"
-	if target_card:
-		target_card.visible = phase == "target"
+	var contractor_card = panel.get_node_or_null("VBox/Body/LeftColumn/ContractorSection") as Control
+	var center_card = panel.get_node_or_null("VBox/BottomDock") as Control
+	var rocket_card = panel.get_node_or_null("VBox/Body/RightColumn/RocketSection") as Control
+	var target_card = panel.get_node_or_null("MapOverlay/OverlayVBox/TargetSection") as Control
+	if center_card:
+		center_card.visible = phase != "contractor"
+	_apply_section_state(contractor_card, phase == "contractor", phase != "contractor")
+	_apply_section_state(center_card, phase == "target", phase != "contractor")
+	_apply_section_state(rocket_card, phase == "rocket", phase == "target")
+	_apply_section_state(target_card, phase == "target" and _map_overlay_open, false)
+	_update_step_chip(panel.get_node_or_null("VBox/StepRail/ContractorStep") as PanelContainer, phase == "contractor", phase != "contractor")
+	_update_step_chip(panel.get_node_or_null("VBox/StepRail/RocketStep") as PanelContainer, phase == "rocket", phase == "target")
+	_update_step_chip(panel.get_node_or_null("VBox/StepRail/TargetStep") as PanelContainer, phase == "target", false)
+	_update_step_chip(panel.get_node_or_null("VBox/StepRail/LaunchStep") as PanelContainer, false, phase == "target" and RocketsManager.get_selected_target() != "")
 
 func _boost_label_contrast(container: Node) -> void:
 	if container == null:
@@ -1599,7 +1806,7 @@ func _boost_label_contrast(container: Node) -> void:
 		var node = stack.pop_back()
 		if node is Label:
 			var label := node as Label
-			label.add_theme_color_override("font_color", PanelStyle.TEXT_PRIMARY)
+			label.add_theme_color_override("font_color", PanelStyle.TEXT_ON_DARK)
 		for child in node.get_children():
 			stack.append(child)
 
@@ -1613,22 +1820,24 @@ func _normalize_selector_typography(panel: Panel) -> void:
 			var label := node as Label
 			var text_size := 15
 			if label.name == "Title":
-				text_size = 22
+				text_size = 20
 			elif label.text in ["Contractor", "Rocket", "Mission Target", "Required Rooms"]:
-				text_size = 18
-			elif label.text.begins_with("Step "):
 				text_size = 16
+			elif label.text.begins_with("Step "):
+				text_size = 14
 			label.add_theme_font_size_override("font_size", text_size)
-			label.add_theme_color_override("font_color", PanelStyle.TEXT_PRIMARY)
+			var lowered := "%s %s" % [label.name.to_lower(), label.text.to_lower()]
+			var muted := lowered.contains("subtitle") or lowered.contains("blurb") or lowered.contains("hint") or lowered.contains("message")
+			label.add_theme_color_override("font_color", PanelStyle.MUTED_ON_DARK if muted else PanelStyle.TEXT_ON_DARK)
 		elif node is Button:
 			var btn := node as Button
-			btn.custom_minimum_size.y = max(btn.custom_minimum_size.y, 48.0)
-			btn.add_theme_font_size_override("font_size", 20)
+			btn.custom_minimum_size.y = max(btn.custom_minimum_size.y, 42.0)
+			btn.add_theme_font_size_override("font_size", 16)
 			# Keep RocketSelector create buttons on their dedicated warm CTA palette.
 			if not btn.disabled and not btn.name.begins_with("CreateButton_"):
-				btn.add_theme_color_override("font_color", PanelStyle.TEXT_PRIMARY)
-				btn.add_theme_color_override("font_hover_color", PanelStyle.TEXT_PRIMARY)
-				btn.add_theme_color_override("font_pressed_color", PanelStyle.TEXT_PRIMARY)
+				btn.add_theme_color_override("font_color", PanelStyle.TEXT_ON_DARK)
+				btn.add_theme_color_override("font_hover_color", PanelStyle.TEXT_ON_DARK)
+				btn.add_theme_color_override("font_pressed_color", PanelStyle.TEXT_ON_DARK)
 		for child in node.get_children():
 			stack.append(child)
 
@@ -1657,20 +1866,213 @@ func _style_selector_action_button(btn: Button, emphasize: bool) -> void:
 	btn.add_theme_stylebox_override("pressed", pressed)
 	btn.add_theme_stylebox_override("focus", hover)
 	btn.add_theme_stylebox_override("disabled", disabled)
-	btn.add_theme_color_override("font_color", PanelStyle.TEXT_PRIMARY)
-	btn.add_theme_color_override("font_hover_color", PanelStyle.TEXT_PRIMARY)
-	btn.add_theme_color_override("font_pressed_color", PanelStyle.TEXT_PRIMARY)
+	btn.add_theme_color_override("font_color", PanelStyle.TEXT_ON_DARK)
+	btn.add_theme_color_override("font_hover_color", PanelStyle.TEXT_ON_DARK)
+	btn.add_theme_color_override("font_pressed_color", PanelStyle.TEXT_ON_DARK)
 	btn.add_theme_color_override("font_disabled_color", Color(0.78, 0.86, 0.94, 1.0))
 
-func _wire_back_button(panel: Panel) -> void:
+func _wire_panel_buttons(panel: Panel) -> void:
 	if panel == null:
 		return
-	var back_button = panel.get_node_or_null("VBox/BackButton") as Button
-	if back_button == null:
-		return
+	var back_button = panel.get_node_or_null("VBox/HeaderBar/BackButton") as Button
+	var open_map_button = panel.get_node_or_null("VBox/BottomDock/DockVBox/ActionRow/OpenMapButton") as Button
+	var map_back_button = panel.get_node_or_null("MapOverlay/OverlayVBox/Toolbar/MapBackButton") as Button
 	var cb = Callable(self, "_on_back_to_base_pressed")
-	if not back_button.pressed.is_connected(cb):
+	if back_button and not back_button.pressed.is_connected(cb):
 		back_button.pressed.connect(cb)
+	var open_cb = Callable(self, "_on_open_target_map_pressed")
+	if open_map_button and not open_map_button.pressed.is_connected(open_cb):
+		open_map_button.pressed.connect(open_cb)
+	var map_back_cb = Callable(self, "_on_close_target_map_pressed")
+	if map_back_button and not map_back_button.pressed.is_connected(map_back_cb):
+		map_back_button.pressed.connect(map_back_cb)
+
+func _set_map_overlay_visible(panel: Panel, visible: bool) -> void:
+	if panel == null:
+		return
+	var overlay = panel.get_node_or_null("MapOverlay") as Control
+	if overlay:
+		overlay.visible = visible
+		overlay.mouse_filter = Control.MOUSE_FILTER_STOP if visible else Control.MOUSE_FILTER_IGNORE
+
+func _on_open_target_map_pressed() -> void:
+	if _launchpad == null or _launchpad.get_tree() == null:
+		return
+	var panel = _launchpad.get_tree().current_scene.get_node_or_null("UILayer/SelectorPanel") as Panel
+	if panel == null:
+		return
+	_map_overlay_open = true
+	_set_map_overlay_visible(panel, true)
+	populate_targets()
+
+func _on_close_target_map_pressed() -> void:
+	if _launchpad == null or _launchpad.get_tree() == null:
+		return
+	var panel = _launchpad.get_tree().current_scene.get_node_or_null("UILayer/SelectorPanel") as Panel
+	if panel == null:
+		return
+	_map_overlay_open = false
+	_set_map_overlay_visible(panel, false)
+
+func _render_phase_placeholder(container: VBoxContainer, message: String) -> void:
+	if container == null:
+		return
+	var lbl: Label = EmptyLabelScene.instantiate()
+	lbl.text = message
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	PanelStyle.apply_muted_on_dark(lbl)
+	container.add_child(lbl)
+
+func _build_target_preview_chips(target: Dictionary, rm, recommended: bool = false) -> Array[String]:
+	var chips: Array[String] = []
+	var target_type = _normalize_target_type(str(target.get("type", "asteroid")))
+	chips.append("Type: %s" % ("Planet" if target_type == "planet" else "Asteroid"))
+	var target_id = str(target.get("id", ""))
+	var profile = rm.build_target_profile(target_id, str(target.get("type", "asteroid")))
+	chips.append("Range: %.0f AU" % float(profile.get("distance_au", 0.0)))
+	var science_source = str(target.get("science_source", "")).strip_edges()
+	if science_source != "":
+		chips.append(science_source)
+	var scan_count = max(int(rm.get_target_scan_count(target_id, str(target.get("type", "asteroid")))), 1)
+	chips.append("%d scan%s" % [scan_count, "" if scan_count == 1 else "s"])
+	var status = _target_status_chip_text(target, rm)
+	if status != "":
+		chips.append(status)
+	if recommended:
+		chips.append("Recommended")
+	return chips
+
+func _make_preview_chip(text: String) -> PanelContainer:
+	var chip := PanelContainer.new()
+	var style := PanelStyle.create_glass_pill_style(Color(0.08, 0.14, 0.22, 0.94), 0.52, 8)
+	chip.add_theme_stylebox_override("panel", style)
+	var lbl := Label.new()
+	lbl.text = text
+	lbl.add_theme_font_size_override("font_size", 11)
+	lbl.add_theme_color_override("font_color", PanelStyle.TEXT_ON_DARK)
+	chip.add_child(lbl)
+	return chip
+
+func _build_target_science_preview(target: Dictionary) -> String:
+	var blurb = str(target.get("science_blurb", "")).strip_edges()
+	if blurb != "":
+		var source = str(target.get("science_source", "")).strip_edges()
+		if source != "":
+			return "%s. Source: %s." % [blurb.trim_suffix("."), source]
+		return blurb
+	if _is_planet_target(target):
+		return "Live scan preview: atmospheric and orbital readings are still being refined before contract lock."
+	return "Live scan preview: ore profile is extrapolated from remote returns and will sharpen after confirmation."
+
+func _target_status_chip_text(target: Dictionary, rm) -> String:
+	var classification = str(target.get("classification_status", "")).strip_edges()
+	if classification != "":
+		return "Status: %s" % classification.capitalize()
+	var target_id = str(target.get("id", ""))
+	if _is_planet_target(target):
+		var verdict = str(rm.get_tess_classification(target_id)).strip_edges()
+		if verdict != "":
+			return "Classified: %s" % verdict.capitalize()
+	return "Status: %s" % _planet_disposition_text(target)
+
+func _update_status_strip(panel: Panel, mission_stage: int, selected_contractor: Dictionary, awaiting_rocket_id: String, selected_target: String, flow_phase: String, rm) -> void:
+	if panel == null:
+		return
+	var route_value = panel.get_node_or_null("VBox/BottomDock/DockVBox/StatusRow/RoutePill/Label") as Label
+	var contractor_value = panel.get_node_or_null("VBox/BottomDock/DockVBox/StatusRow/ContractorPill/Label") as Label
+	var rocket_value = panel.get_node_or_null("VBox/BottomDock/DockVBox/StatusRow/RocketPill/Label") as Label
+	var target_value = panel.get_node_or_null("VBox/BottomDock/DockVBox/ActionRow/TargetPill/Label") as Label
+	var open_map_button = panel.get_node_or_null("VBox/BottomDock/DockVBox/ActionRow/OpenMapButton") as Button
+	var launch_message = panel.get_node_or_null("VBox/BottomDock/DockVBox/LaunchMessage") as Label
+	if route_value:
+		route_value.text = "Mission %d" % mission_stage if not rm.is_free_operations_unlocked() else "Free Ops"
+	if contractor_value:
+		contractor_value.text = str(selected_contractor.get("name", "Awaiting contractor")) if not selected_contractor.is_empty() else "Awaiting contractor"
+	if target_value:
+		target_value.text = str(rm.get_target_details(selected_target).get("label", "No target locked")) if selected_target != "" else "No target locked"
+	if open_map_button:
+		open_map_button.disabled = flow_phase != "target"
+		if flow_phase == "contractor":
+			open_map_button.text = "Sign Contractor First"
+		elif flow_phase == "rocket":
+			open_map_button.text = "Drag Rocket To Pad"
+		elif selected_target != "":
+			open_map_button.text = "Reopen Target Map"
+		else:
+			open_map_button.text = "Open Target Map"
+	if launch_message:
+		if flow_phase == "contractor":
+			launch_message.text = "Pick one contractor to unlock route planning."
+		elif flow_phase == "rocket":
+			launch_message.text = "Drag a rocket onto the pad, then move to target planning."
+		elif selected_target == "":
+			launch_message.text = "Open Target Map, confirm a route, then return to the pad to launch."
+		else:
+			launch_message.text = "Route locked. Return from the map and press Launch on the pad when ready."
+	if rocket_value:
+		rocket_value.text = RocketSpecs.get_display_name(awaiting_rocket_id) if awaiting_rocket_id != "" else "No ship armed"
+
+func _update_target_summary_card(selected_entry: Dictionary, persisted_selected: bool, blocked: bool, rm, awaiting_rocket_id: String) -> void:
+	var root_scene = _launchpad.get_tree().current_scene
+	if root_scene == null:
+		return
+	var panel = root_scene.get_node_or_null("UILayer/SelectorPanel") as Panel
+	if panel == null:
+		return
+	var launch_message = panel.get_node_or_null("VBox/BottomDock/DockVBox/LaunchMessage") as Label
+	var rocket_pill = panel.get_node_or_null("VBox/BottomDock/DockVBox/StatusRow/RocketPill/Label") as Label
+	var target_pill = panel.get_node_or_null("VBox/BottomDock/DockVBox/ActionRow/TargetPill/Label") as Label
+	if launch_message:
+		if blocked:
+			launch_message.text = _blocked_reason_for_target(
+				int(rm.get_mission_stage()),
+				int(rm.get_rocket_level(awaiting_rocket_id)),
+				int(rm.build_target_profile(str(selected_entry.get("id", "")), str(selected_entry.get("type", "asteroid"))).get("required_level", 1)),
+				str(rm.get_operation_mode()),
+				str(rm.get_trip_selected_contractor().get("id", "")),
+				str(selected_entry.get("id", ""))
+			)
+		elif persisted_selected:
+			launch_message.text = "Target lock confirmed. Press Launch on the pad when the crew is ready."
+		else:
+			launch_message.text = "Review route fit, then confirm this target to arm the launch sequence."
+	if rocket_pill:
+		rocket_pill.text = RocketSpecs.get_display_name(awaiting_rocket_id) if awaiting_rocket_id != "" else "No ship armed"
+	if target_pill:
+		var label = str(selected_entry.get("label", selected_entry.get("id", "")))
+		target_pill.text = "%s%s" % [label, " locked" if persisted_selected else ""]
+
+func _apply_section_state(card: Control, active: bool, complete: bool) -> void:
+	if card == null:
+		return
+	card.modulate = Color(1, 1, 1, 1.0) if active else (Color(1, 1, 1, 0.94) if complete else Color(1, 1, 1, 0.76))
+
+func _update_step_chip(chip: PanelContainer, active: bool, complete: bool) -> void:
+	if chip == null:
+		return
+	chip.modulate = Color(1, 1, 1, 1)
+	var bg := Color(0.08, 0.13, 0.19, 0.88)
+	var border_alpha := 0.30
+	var badge_color := PanelStyle.MUTED_ON_DARK
+	var label_color := PanelStyle.MUTED_ON_DARK
+	if active:
+		bg = Color(0.11, 0.20, 0.30, 0.96)
+		border_alpha = 0.78
+		badge_color = PanelStyle.ACCENT_WARM
+		label_color = PanelStyle.TEXT_ON_DARK
+	elif complete:
+		bg = Color(0.08, 0.15, 0.22, 0.92)
+		border_alpha = 0.54
+		badge_color = Color(PanelStyle.ACCENT.r, PanelStyle.ACCENT.g, PanelStyle.ACCENT.b, 0.88)
+		label_color = PanelStyle.TEXT_ON_DARK
+	chip.add_theme_stylebox_override("panel", PanelStyle.create_glass_pill_style(bg, border_alpha, 14))
+	var badge := chip.get_node_or_null("HBox/Badge") as Label
+	var label := chip.get_node_or_null("HBox/Label") as Label
+	if badge:
+		badge.add_theme_color_override("font_color", badge_color)
+	if label:
+		label.add_theme_color_override("font_color", label_color)
 
 func _on_back_to_base_pressed() -> void:
 	if _launchpad == null:

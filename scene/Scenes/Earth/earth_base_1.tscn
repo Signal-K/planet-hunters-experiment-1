@@ -1,4 +1,4 @@
-[gd_scene load_steps=20 format=3 uid="uid://bl5h6pq4ns86t"]
+[gd_scene load_steps=17 format=3 uid="uid://bl5h6pq4ns86t"]
 
 [ext_resource type="Texture2D" uid="uid://bni1814mlo7mv" path="res://assets/Backdrops/Earth1.png" id="0"]
 [ext_resource type="Script" uid="uid://eoqjev5txcu5" path="res://Scenes/Earth/earth_base_1.gd" id="1"]
@@ -6,16 +6,11 @@
 [ext_resource type="Script" uid="uid://c5hj8es22yg8x" path="res://Scripts/Earth/SatelliteStation.gd" id="3"]
 [ext_resource type="Script" uid="uid://ce1a85vrjyh7x" path="res://Scripts/Earth/Launchpad.gd" id="4"]
 [ext_resource type="Texture2D" uid="uid://ctuf1c3mi4pat" path="res://assets/Structures/launchpad.png" id="5"]
-[ext_resource type="Script" uid="uid://dys0ofbnycpy0" path="res://Scripts/Earth/ControlStation.gd" id="6"]
-[ext_resource type="Texture2D" uid="uid://bhjh4wo2yo046" path="res://assets/Structures/ControlStation.png" id="7"]
 [ext_resource type="Script" path="res://Scripts/Earth/Environment/EarthWeatherEngine.gd" id="8"]
 [ext_resource type="Script" path="res://Scripts/Earth/Environment/EarthSkyNightFilterEvent.gd" id="9"]
 [ext_resource type="Script" path="res://Scripts/Earth/Environment/EarthStarFieldEvent.gd" id="10"]
 [ext_resource type="Script" path="res://Scripts/Earth/Environment/EarthCloudDriftEvent.gd" id="11"]
 [ext_resource type="Script" path="res://Scripts/Earth/Environment/EarthSkyMapEvent.gd" id="12"]
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_control"]
-size = Vector2(200, 200)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_satellite"]
 size = Vector2(300, 220)
@@ -121,6 +116,12 @@ input_pickable = true
 [node name="CollisionShape2D" type="CollisionShape2D" parent="StructuresLayer/SatelliteStation/InteractionArea"]
 shape = SubResource("RectangleShape2D_satellite")
 
+[node name="BuildDialog" type="ConfirmationDialog" parent="StructuresLayer/SatelliteStation"]
+title = "Build Scanner Station"
+
+[node name="InfoDialog" type="AcceptDialog" parent="StructuresLayer/SatelliteStation"]
+title = "Scanner Station"
+
 [node name="Launchpad" type="Node2D" parent="StructuresLayer"]
 position = Vector2(1100, 800)
 script = ExtResource("4")
@@ -137,42 +138,6 @@ input_pickable = true
 [node name="CollisionShape2D" type="CollisionShape2D" parent="StructuresLayer/Launchpad/InteractionArea"]
 shape = SubResource("RectangleShape2D_launchpad")
 
-[node name="ControlStation" type="Node2D" parent="StructuresLayer"]
-position = Vector2(1600, 800)
-script = ExtResource("6")
-
-[node name="Sprite2D" type="Sprite2D" parent="StructuresLayer/ControlStation"]
-position = Vector2(-29.00003, 5.9999847)
-scale = Vector2(0.5, 0.5)
-texture = ExtResource("7")
-
-[node name="InteractionArea" type="Area2D" parent="StructuresLayer/ControlStation"]
-input_pickable = true
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="StructuresLayer/ControlStation/InteractionArea"]
-shape = SubResource("RectangleShape2D_control")
-
-[node name="ControlStationLabel" type="Node2D" parent="StructuresLayer"]
-position = Vector2(1600, 620)
-
-[node name="Label" type="Label" parent="StructuresLayer/ControlStationLabel"]
-offset_left = -120.0
-offset_top = -20.0
-offset_right = 120.0
-offset_bottom = 20.0
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 0.7)
-theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 26
-text = "Control Station"
-horizontal_alignment = 1
-
-[node name="Pointer" type="Line2D" parent="StructuresLayer/ControlStationLabel"]
-points = PackedVector2Array(0, 30, 0, 170)
-width = 4.0
-default_color = Color(1, 1, 1, 0.9)
-antialiased = true
-
 [node name="UILayer" type="CanvasLayer" parent="."]
 layer = 2
 
@@ -182,6 +147,10 @@ offset_left = 24.0
 offset_top = 944.0
 offset_right = 1896.0
 offset_bottom = 1072.0
+
+[node name="NavBackground" type="Panel" parent="UILayer/ButtonContainer"]
+layout_mode = 2
+mouse_filter = 1
 
 [node name="BackButton" type="Button" parent="UILayer/ButtonContainer"]
 custom_minimum_size = Vector2(160, 120)
@@ -224,6 +193,15 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
 text = "New Mission"
+
+[node name="ProgressionCards" type="VBoxContainer" parent="UILayer"]
+visible = false
+offset_left = 1520.0
+offset_top = 40.0
+offset_right = 1880.0
+offset_bottom = 320.0
+clip_contents = true
+theme_override_constants/separation = 10
 
 [node name="EnvironmentEngine" type="Node" parent="."]
 script = ExtResource("8")

@@ -238,9 +238,24 @@ func _reconcile_step_index() -> void:
 		if step.is_empty():
 			break
 		var key = str(step.get("action_key", ""))
-		if key == "" or not _stage_action_completed(stage, key):
+		if key != "" and not _stage_action_completed(stage, key) and not _step_satisfied_from_game_state(step):
 			break
+		_mark_step_complete(stage, int(_state.get("current_step_index", 0)))
 		_state["current_step_index"] = int(_state.get("current_step_index", 0)) + 1
+
+func _step_satisfied_from_game_state(step: Dictionary) -> bool:
+	var action_key := str(step.get("action_key", ""))
+	if action_key == "":
+		return true
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if not rm:
+		return false
+	match action_key:
+		"build_control_station":
+			return rm.is_control_station_built()
+		"build_scanner_station":
+			return rm.is_scanner_station_built()
+	return false
 
 func _build_progress_percent() -> int:
 	var stage = int(_state.get("current_stage", 1))

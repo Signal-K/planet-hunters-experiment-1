@@ -1,6 +1,22 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://Scripts/UI/ControlStationPanel.gd" id="1"]
+
+[sub_resource type="StyleBoxFlat" id="1"]
+bg_color = Color(0.0470588, 0.0862745, 0.133333, 0.94)
+border_color = Color(0.47451, 0.862745, 0.941176, 0.68)
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+content_margin_left = 24.0
+content_margin_top = 20.0
+content_margin_right = 24.0
+content_margin_bottom = 20.0
 
 [node name="ControlStationPanel" type="Control"]
 layout_mode = 3
@@ -14,7 +30,7 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-color = Color(0, 0, 0, 0.7)
+color = Color(0.0470588, 0.0705882, 0.0901961, 0.34)
 
 [node name="Panel" type="Panel" parent="."]
 layout_mode = 1
@@ -23,12 +39,13 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -400.0
-offset_top = -300.0
-offset_right = 400.0
-offset_bottom = 300.0
+offset_left = -560.0
+offset_top = -330.0
+offset_right = 560.0
+offset_bottom = 330.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_styles/panel = SubResource("1")
 
 [node name="Margin" type="MarginContainer" parent="Panel"]
 layout_mode = 1
@@ -49,7 +66,13 @@ layout_mode = 2
 
 [node name="Title" type="Label" parent="Panel/Margin/VBox"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.92, 0.95, 0.98, 1)
 text = "CONTROL STATION"
+
+[node name="Subtitle" type="Label" parent="Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.70, 0.78, 0.86, 1)
+text = "Track active routes and the next mission milestone."
 
 [node name="CloseButton" type="Button" parent="Panel/Margin/VBox/Header"]
 layout_mode = 2

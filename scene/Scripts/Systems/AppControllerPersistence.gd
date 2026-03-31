@@ -83,3 +83,7 @@ func load_citizen_science_dialogue_enabled(default_value: bool = true) -> bool:
 		return default_value
 	print("[AppController] No saved preferences config (or failed to load): ", err)
 	return default_value
+
+func reset_all() -> void:
+	DirAccess.remove_absolute(FRANC_BALANCE_CONFIG_PATH)
+	DirAccess.remove_absolute(EXPERIENCE_CONFIG_PATH)

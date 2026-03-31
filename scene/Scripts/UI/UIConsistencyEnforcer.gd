@@ -95,20 +95,33 @@ func _apply_label_color(label: Label) -> void:
 	if label.has_theme_color_override("font_color"):
 		return
 	if _is_muted_label(label):
-		label.add_theme_color_override("font_color", PanelStyle.TEXT_MUTED)
+		label.add_theme_color_override("font_color", PanelStyle.MUTED_ON_DARK if _is_on_dark_surface(label) else PanelStyle.TEXT_MUTED)
 		if not label.has_theme_font_size_override("font_size"):
 			label.add_theme_font_size_override("font_size", PanelStyle.FONT_MUTED)
 	else:
-		label.add_theme_color_override("font_color", PanelStyle.TEXT_PRIMARY)
+		label.add_theme_color_override("font_color", PanelStyle.TEXT_ON_DARK if _is_on_dark_surface(label) else PanelStyle.TEXT_PRIMARY)
 		if not label.has_theme_font_size_override("font_size"):
 			label.add_theme_font_size_override("font_size", PanelStyle.FONT_BODY)
 
 func _apply_richtext_color(label: RichTextLabel) -> void:
 	if label.has_theme_color_override("default_color"):
 		return
-	label.add_theme_color_override("default_color", PanelStyle.TEXT_PRIMARY)
+	label.add_theme_color_override("default_color", PanelStyle.TEXT_ON_DARK if _is_on_dark_surface(label) else PanelStyle.TEXT_PRIMARY)
 	if not label.has_theme_font_size_override("normal_font_size"):
 		label.add_theme_font_size_override("normal_font_size", PanelStyle.FONT_BODY)
+
+func _is_on_dark_surface(control: Control) -> bool:
+	var node: Node = control
+	while node != null:
+		if node is PanelContainer or node is Panel:
+			var panel_control := node as Control
+			var style := panel_control.get_theme_stylebox("panel")
+			if style is StyleBoxFlat:
+				var bg := (style as StyleBoxFlat).bg_color
+				var luminance := (bg.r * 0.299) + (bg.g * 0.587) + (bg.b * 0.114)
+				return bg.a > 0.25 and luminance < 0.46
+		node = node.get_parent()
+	return false
 
 func _is_muted_label(label: Label) -> bool:
 	var name_lower := label.name.to_lower()

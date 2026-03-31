@@ -2,8 +2,10 @@ extends RefCounted
 class_name EarthSceneUIHelper
 
 var _owner: Node
+var _nav_layout_connected := false
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
 const AppLogger  = preload("res://Scripts/Utils/Logger.gd")
+const UILayout   = preload("res://Scripts/UI/UILayout.gd")
 
 # Icon paths
 const ICON_BACK    := "res://Resources/Icons/nav_back.svg"
@@ -13,12 +15,15 @@ const ICON_MARKET  := "res://Resources/Icons/nav_market.svg"
 const ICON_MAP     := "res://Resources/Icons/nav_map.svg"
 const ICON_MISSION := "res://Resources/Icons/nav_mission.svg"
 
-# Out There: Omega palette
-const AMBER       := Color(0.941, 0.690, 0.188, 1.0)   # #F0B030 — CTA only
-const AMBER_DIM   := Color(0.941, 0.690, 0.188, 0.65)
-const CYAN        := Color(0.28, 0.88, 0.96, 1.0)      # #47E0F5 — nav border + dividers
-const CYAN_FAINT  := Color(0.28, 0.88, 0.96, 0.35)     # subtle divider
-const NAV_BG      := Color(0.03, 0.03, 0.04, 0.94)
+const AMBER       := PanelStyle.ACCENT_WARM
+const AMBER_DIM   := Color(AMBER.r, AMBER.g, AMBER.b, 0.68)
+const CYAN        := PanelStyle.ACCENT
+const CYAN_FAINT  := Color(CYAN.r, CYAN.g, CYAN.b, 0.34)
+const NAV_BG      := Color(0.04, 0.07, 0.11, 0.90)
+const NAV_TEXT    := PanelStyle.TEXT_ON_DARK
+const NAV_BOTTOM_MARGIN := 12.0
+const NAV_SIDE_MARGIN := 12.0
+const ULTRAWIDE_LIFT := 74.0
 
 
 func setup(owner: Node) -> void:
@@ -26,18 +31,17 @@ func setup(owner: Node) -> void:
 
 
 func setup_buttons() -> void:
-	var back_btn        := _owner.get_node("UILayer/ButtonContainer/BackButton")
-	var forward_btn     := _owner.get_node("UILayer/ButtonContainer/ForwardButton")
-	var menu_btn        := _owner.get_node("UILayer/ButtonContainer/MenuButton")
-	var market_btn      := _owner.get_node("UILayer/ButtonContainer/MarketButton")
-	var space_map_btn   := _owner.get_node("UILayer/ButtonContainer/SpaceMapButton")
-	var new_mission_btn := _owner.get_node("UILayer/ButtonContainer/NewMissionButton")
-	var container       := _owner.get_node("UILayer/ButtonContainer") as HBoxContainer
+	var container := _resolve_button_container()
+	if container == null:
+		return
+	var back_btn := container.get_node_or_null("BackButton") as Button
+	var forward_btn := container.get_node_or_null("ForwardButton") as Button
+	var menu_btn := container.get_node_or_null("MenuButton") as Button
+	var market_btn := container.get_node_or_null("MarketButton") as Button
+	var space_map_btn := container.get_node_or_null("SpaceMapButton") as Button
+	var new_mission_btn := container.get_node_or_null("NewMissionButton") as Button
 
-	# ── Add the unified pill background panel behind all buttons ────────────
 	_inject_nav_background(container)
-
-	# ── Style each button as a transparent "slot" with a right-divider ──────
 	_style_nav_btn(back_btn,        false, false)
 	_style_nav_btn(forward_btn,     false, false)
 	_style_nav_btn(menu_btn,        false, false)
@@ -54,89 +58,116 @@ func setup_buttons() -> void:
 	_set_icon(new_mission_btn, ICON_MISSION, "New Mission",true)
 
 	# ── Enforce minimum tap-target heights for mobile ────────────────────────
-	for btn in [back_btn, forward_btn, menu_btn, market_btn, space_map_btn]:
-		_set_min(btn, 152, 108)
-	_set_min(new_mission_btn, 210, 108)
+	for btn in [back_btn, forward_btn]:
+		_set_min(btn, 160, 120)
+	for btn in [menu_btn, market_btn, space_map_btn]:
+		_set_min(btn, 220, 120)
+	_set_min(new_mission_btn, 280, 120)
 
-	# Remove the gap between buttons so dividers butt up cleanly
 	container.add_theme_constant_override("separation", 0)
+	apply_nav_layout()
+	_connect_nav_layout_updates()
 
-	# ── Connect signals ──────────────────────────────────────────────────────
-	back_btn.pressed.connect(Callable(_owner, "_on_back_button_pressed"))
-	forward_btn.pressed.connect(Callable(_owner, "_on_forward_button_pressed"))
-	menu_btn.pressed.connect(Callable(_owner, "_on_menu_button_pressed"))
-	market_btn.pressed.connect(Callable(_owner, "_on_market_button_pressed"))
-	space_map_btn.pressed.connect(Callable(_owner, "_on_space_map_button_pressed"))
-	new_mission_btn.pressed.connect(Callable(_owner, "_on_new_mission_button_pressed"))
+	_connect_if_needed(back_btn, "_on_back_button_pressed")
+	_connect_if_needed(forward_btn, "_on_forward_button_pressed")
+	_connect_if_needed(menu_btn, "_on_menu_button_pressed")
+	_connect_if_needed(market_btn, "_on_market_button_pressed")
+	_connect_if_needed(space_map_btn, "_on_space_map_button_pressed")
+	_connect_if_needed(new_mission_btn, "_on_new_mission_button_pressed")
 
 	AppLogger.d("Nav buttons set up with unified pill style")
+
+func apply_nav_layout() -> void:
+	var container := _resolve_button_container()
+	if container == null:
+		return
+	var vp := _owner.get_viewport()
+	if vp == null:
+		return
+	var vp_size := vp.get_visible_rect().size
+	if vp_size.x <= 0.0 or vp_size.y <= 0.0:
+		return
+	var safe := UILayout.safe_rect(vp_size)
+	var bar_height := maxf(container.custom_minimum_size.y, 80.0)
+	for child in container.get_children():
+		if child is Button:
+			bar_height = maxf(bar_height, (child as Button).custom_minimum_size.y)
+	var bottom_margin := NAV_BOTTOM_MARGIN + (ULTRAWIDE_LIFT if vp_size.x / maxf(vp_size.y, 1.0) > 1.85 else 0.0)
+	var rect := Rect2(
+		safe.position.x + NAV_SIDE_MARGIN,
+		safe.end.y - bar_height - bottom_margin,
+		safe.size.x - NAV_SIDE_MARGIN * 2.0,
+		bar_height
+	)
+	rect = UILayout.clamp_to_viewport(rect, vp_size)
+	container.anchor_left = 0.0
+	container.anchor_top = 0.0
+	container.anchor_right = 0.0
+	container.anchor_bottom = 0.0
+	container.offset_left = rect.position.x
+	container.offset_top = rect.position.y
+	container.offset_right = rect.position.x + rect.size.x
+	container.offset_bottom = rect.position.y + rect.size.y
 
 
 # ── Private helpers ──────────────────────────────────────────────────────────
 
+func _resolve_button_container() -> HBoxContainer:
+	if _owner == null:
+		return null
+	return _owner.get_node_or_null("UILayer/ButtonContainer") as HBoxContainer
+
+func _connect_nav_layout_updates() -> void:
+	if _nav_layout_connected or _owner == null:
+		return
+	var vp := _owner.get_viewport()
+	if vp == null:
+		return
+	var cb := Callable(self, "_on_viewport_size_changed")
+	if not vp.size_changed.is_connected(cb):
+		vp.size_changed.connect(cb)
+	_nav_layout_connected = true
+
+func _on_viewport_size_changed() -> void:
+	apply_nav_layout()
+
+func _connect_if_needed(btn: Button, method_name: String) -> void:
+	if btn == null or _owner == null or not _owner.has_method(method_name):
+		return
+	var cb := Callable(_owner, method_name)
+	if not btn.pressed.is_connected(cb):
+		btn.pressed.connect(cb)
+
 func _inject_nav_background(container: HBoxContainer) -> void:
-	# Insert a Panel as first child so it sits behind the buttons visually.
-	# It stretches to fill the HBoxContainer via anchors.
-	var bg := Panel.new()
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	# Lock before add_child: UIConsistencyEnforcer listens to tree.node_added
-	# and would immediately overwrite the custom style otherwise.
-	bg.set_meta("ui_style_locked", true)
-	var s := StyleBoxFlat.new()
-	s.bg_color = NAV_BG
-	s.border_color = CYAN_FAINT
-	s.set_border_width_all(1)
-	s.set_corner_radius_all(12)
+	var bg := container.get_node_or_null("NavBackground") as Panel
+	if bg == null:
+		bg = Panel.new()
+		bg.name = "NavBackground"
+		bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		bg.set_meta("ui_style_locked", true)
+		container.add_child(bg)
+		container.move_child(bg, 0)
+	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	bg.z_index = -1
+	var s := PanelStyle.create_glass_panel_style(NAV_BG, 0.42, 18, 0, 0)
+	s.shadow_size = 20
+	s.shadow_offset = Vector2(0, 8)
 	bg.add_theme_stylebox_override("panel", s)
-	container.add_child(bg)
-	container.move_child(bg, 0)
+	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bg.set_meta("ui_style_locked", true)
 
 
 func _style_nav_btn(btn: Button, is_amber: bool, no_right_divider: bool) -> void:
 	if btn == null:
 		return
-	# Prevent UIConsistencyEnforcer (deferred) from overwriting our nav style.
 	btn.set_meta("ui_style_locked", true)
-
-	var divider_color := AMBER_DIM if is_amber else CYAN_FAINT
-
-	# Normal: transparent bg, right-border divider only
-	var normal := StyleBoxFlat.new()
-	normal.bg_color = Color(0, 0, 0, 0)
-	normal.border_width_right = 0 if no_right_divider else 1
-	normal.border_color = divider_color
-	normal.set_corner_radius_all(0)
-	normal.content_margin_left   = 12
-	normal.content_margin_right  = 12
-	normal.content_margin_top    = 8
-	normal.content_margin_bottom = 8
-
-	# Hover: subtle amber/white tint fill
-	var hover := StyleBoxFlat.new()
-	hover.bg_color = AMBER.darkened(0.6) if is_amber else Color(1, 1, 1, 0.06)
-	hover.border_width_right = normal.border_width_right
-	hover.border_color = divider_color
-	hover.set_corner_radius_all(0)
-	hover.content_margin_left   = 12
-	hover.content_margin_right  = 12
-	hover.content_margin_top    = 8
-	hover.content_margin_bottom = 8
-
-	# Pressed
-	var pressed := hover.duplicate()
-	pressed.bg_color = AMBER.darkened(0.4) if is_amber else Color(1, 1, 1, 0.12)
-
-	btn.add_theme_stylebox_override("normal",  normal)
-	btn.add_theme_stylebox_override("hover",   hover)
-	btn.add_theme_stylebox_override("pressed", pressed)
-	btn.add_theme_stylebox_override("focus",   hover)
-
-	var col := AMBER if is_amber else Color(0.95, 0.93, 0.90, 1.0)
-	btn.add_theme_color_override("font_color",         col)
-	btn.add_theme_color_override("font_hover_color",   col)
-	btn.add_theme_color_override("font_pressed_color", col)
-	btn.add_theme_color_override("font_focus_color",   col)
+	PanelStyle.apply_nav_slot_button(
+		btn,
+		AMBER_DIM if is_amber else CYAN_FAINT,
+		AMBER if is_amber else NAV_TEXT,
+		is_amber,
+		no_right_divider
+	)
 	btn.add_theme_font_size_override("font_size", 28)
 
 
@@ -148,15 +179,14 @@ func _set_icon(btn: Button, icon_path: String, label: String, is_amber: bool) ->
 		var tex := load(icon_path) as Texture2D
 		if tex:
 			btn.icon = tex
-			# Tint amber icons at load time via modulate on the button
 			if is_amber:
 				btn.add_theme_color_override("icon_normal_color",  AMBER)
 				btn.add_theme_color_override("icon_hover_color",   AMBER)
 				btn.add_theme_color_override("icon_pressed_color", AMBER)
 			else:
-				btn.add_theme_color_override("icon_normal_color",  Color(0.95, 0.93, 0.90, 1.0))
+				btn.add_theme_color_override("icon_normal_color",  NAV_TEXT)
 				btn.add_theme_color_override("icon_hover_color",   Color(1, 1, 1, 1.0))
-				btn.add_theme_color_override("icon_pressed_color", Color(1, 1, 1, 0.75))
+				btn.add_theme_color_override("icon_pressed_color", Color(1, 1, 1, 0.78))
 	else:
 		AppLogger.w("EarthSceneUIHelper: icon not found: %s" % icon_path)
 

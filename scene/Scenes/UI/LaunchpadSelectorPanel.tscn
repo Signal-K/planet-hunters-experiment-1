@@ -1,0 +1,490 @@
+[gd_scene load_steps=7 format=3]
+
+[sub_resource type="StyleBoxFlat" id="1"]
+bg_color = Color(0, 0, 0, 0)
+content_margin_left = 14.0
+content_margin_top = 14.0
+content_margin_right = 14.0
+content_margin_bottom = 14.0
+
+[sub_resource type="StyleBoxFlat" id="2"]
+bg_color = Color(0.0470588, 0.0862745, 0.133333, 0.94)
+border_color = Color(0.47451, 0.862745, 0.941176, 0.44)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+corner_radius_bottom_right = 18
+corner_radius_bottom_left = 18
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+content_margin_left = 18.0
+content_margin_top = 18.0
+content_margin_right = 18.0
+content_margin_bottom = 18.0
+
+[sub_resource type="StyleBoxFlat" id="3"]
+bg_color = Color(0.0784314, 0.12549, 0.180392, 0.96)
+border_color = Color(0.47451, 0.862745, 0.941176, 0.78)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+content_margin_left = 14.0
+content_margin_top = 12.0
+content_margin_right = 14.0
+content_margin_bottom = 12.0
+
+[sub_resource type="StyleBoxFlat" id="4"]
+bg_color = Color(0.0588235, 0.101961, 0.14902, 0.88)
+border_color = Color(0.47451, 0.862745, 0.941176, 0.28)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+content_margin_left = 14.0
+content_margin_top = 12.0
+content_margin_right = 14.0
+content_margin_bottom = 12.0
+
+[sub_resource type="StyleBoxFlat" id="5"]
+bg_color = Color(0.0705882, 0.117647, 0.176471, 0.94)
+border_color = Color(0.47451, 0.862745, 0.941176, 0.34)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+content_margin_left = 12.0
+content_margin_top = 8.0
+content_margin_right = 12.0
+content_margin_bottom = 8.0
+
+[sub_resource type="StyleBoxFlat" id="6"]
+bg_color = Color(0.027451, 0.054902, 0.0901961, 0.96)
+border_color = Color(0.47451, 0.862745, 0.941176, 0.46)
+corner_radius_top_left = 22
+corner_radius_top_right = 22
+corner_radius_bottom_right = 22
+corner_radius_bottom_left = 22
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+content_margin_left = 24.0
+content_margin_top = 24.0
+content_margin_right = 24.0
+content_margin_bottom = 24.0
+
+[node name="SelectorPanel" type="Panel"]
+z_index = 120
+theme_override_styles/panel = SubResource("1")
+
+[node name="VBox" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HeaderBar" type="HBoxContainer" parent="VBox"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="HeaderCopy" type="VBoxContainer" parent="VBox/HeaderBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 2
+
+[node name="Eyebrow" type="Label" parent="VBox/HeaderBar/HeaderCopy"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.219608, 0.611765, 0.701961, 0.98)
+theme_override_font_sizes/font_size = 12
+text = "MISSION CONTROL"
+
+[node name="Title" type="Label" parent="VBox/HeaderBar/HeaderCopy"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.92, 0.96, 1, 1)
+theme_override_font_sizes/font_size = 28
+text = "Launchpad Mission Setup"
+
+[node name="Subtitle" type="Label" parent="VBox/HeaderBar/HeaderCopy"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.76, 0.83, 0.9, 0.96)
+theme_override_font_sizes/font_size = 12
+text = "Contractor left, rocket right, then move to the full-screen target map."
+
+[node name="BackButton" type="Button" parent="VBox/HeaderBar"]
+custom_minimum_size = Vector2(170, 44)
+layout_mode = 2
+text = "Back to Base"
+
+[node name="StepRail" type="HBoxContainer" parent="VBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="ContractorStep" type="PanelContainer" parent="VBox/StepRail"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("3")
+
+[node name="HBox" type="HBoxContainer" parent="VBox/StepRail/ContractorStep"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Badge" type="Label" parent="VBox/StepRail/ContractorStep/HBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.843137, 0.556863, 0.196078, 1)
+theme_override_font_sizes/font_size = 12
+text = "01"
+
+[node name="Label" type="Label" parent="VBox/StepRail/ContractorStep/HBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.92, 0.96, 1, 1)
+theme_override_font_sizes/font_size = 12
+text = "Contractor"
+
+[node name="RocketStep" type="PanelContainer" parent="VBox/StepRail"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("4")
+
+[node name="HBox" type="HBoxContainer" parent="VBox/StepRail/RocketStep"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Badge" type="Label" parent="VBox/StepRail/RocketStep/HBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.392157, 0.521569, 0.615686, 0.92)
+theme_override_font_sizes/font_size = 12
+text = "02"
+
+[node name="Label" type="Label" parent="VBox/StepRail/RocketStep/HBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.76, 0.83, 0.9, 0.92)
+theme_override_font_sizes/font_size = 12
+text = "Rocket"
+
+[node name="TargetStep" type="PanelContainer" parent="VBox/StepRail"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("4")
+
+[node name="HBox" type="HBoxContainer" parent="VBox/StepRail/TargetStep"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Badge" type="Label" parent="VBox/StepRail/TargetStep/HBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.392157, 0.521569, 0.615686, 0.92)
+theme_override_font_sizes/font_size = 12
+text = "03"
+
+[node name="Label" type="Label" parent="VBox/StepRail/TargetStep/HBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.76, 0.83, 0.9, 0.92)
+theme_override_font_sizes/font_size = 12
+text = "Target"
+
+[node name="LaunchStep" type="PanelContainer" parent="VBox/StepRail"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("4")
+
+[node name="HBox" type="HBoxContainer" parent="VBox/StepRail/LaunchStep"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Badge" type="Label" parent="VBox/StepRail/LaunchStep/HBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.392157, 0.521569, 0.615686, 0.92)
+theme_override_font_sizes/font_size = 12
+text = "04"
+
+[node name="Label" type="Label" parent="VBox/StepRail/LaunchStep/HBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.76, 0.83, 0.9, 0.92)
+theme_override_font_sizes/font_size = 12
+text = "Launch"
+
+[node name="Body" type="Control" parent="VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="LeftColumn" type="VBoxContainer" parent="VBox/Body"]
+layout_mode = 1
+custom_minimum_size = Vector2(360, 0)
+theme_override_constants/separation = 10
+
+[node name="ContractorSection" type="PanelContainer" parent="VBox/Body/LeftColumn"]
+layout_mode = 2
+size_flags_horizontal = 4
+custom_minimum_size = Vector2(0, 430)
+theme_override_styles/panel = SubResource("2")
+
+[node name="SectionVBox" type="VBoxContainer" parent="VBox/Body/LeftColumn/ContractorSection"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="Header" type="HBoxContainer" parent="VBox/Body/LeftColumn/ContractorSection/SectionVBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Number" type="Label" parent="VBox/Body/LeftColumn/ContractorSection/SectionVBox/Header"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.843137, 0.556863, 0.196078, 1)
+theme_override_font_sizes/font_size = 12
+text = "01"
+
+[node name="Title" type="Label" parent="VBox/Body/LeftColumn/ContractorSection/SectionVBox/Header"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.92, 0.96, 1, 1)
+theme_override_font_sizes/font_size = 18
+text = "Contractor"
+
+[node name="Blurb" type="Label" parent="VBox/Body/LeftColumn/ContractorSection/SectionVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.76, 0.83, 0.9, 0.96)
+theme_override_font_sizes/font_size = 13
+autowrap_mode = 3
+text = "Choose who funds the run and which minerals matter."
+
+[node name="Content" type="VBoxContainer" parent="VBox/Body/LeftColumn/ContractorSection/SectionVBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="CenterSpacer" type="Control" parent="VBox/Body"]
+layout_mode = 1
+mouse_filter = 2
+
+[node name="RightColumn" type="VBoxContainer" parent="VBox/Body"]
+layout_mode = 1
+custom_minimum_size = Vector2(320, 0)
+theme_override_constants/separation = 10
+
+[node name="RocketSection" type="PanelContainer" parent="VBox/Body/RightColumn"]
+layout_mode = 2
+size_flags_horizontal = 4
+custom_minimum_size = Vector2(0, 430)
+theme_override_styles/panel = SubResource("2")
+
+[node name="SectionVBox" type="VBoxContainer" parent="VBox/Body/RightColumn/RocketSection"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="Header" type="HBoxContainer" parent="VBox/Body/RightColumn/RocketSection/SectionVBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Number" type="Label" parent="VBox/Body/RightColumn/RocketSection/SectionVBox/Header"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.843137, 0.556863, 0.196078, 1)
+theme_override_font_sizes/font_size = 12
+text = "02"
+
+[node name="Title" type="Label" parent="VBox/Body/RightColumn/RocketSection/SectionVBox/Header"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.92, 0.96, 1, 1)
+theme_override_font_sizes/font_size = 18
+text = "Rocket"
+
+[node name="Blurb" type="Label" parent="VBox/Body/RightColumn/RocketSection/SectionVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.76, 0.83, 0.9, 0.96)
+theme_override_font_sizes/font_size = 13
+autowrap_mode = 3
+text = "Build or inspect the ship that will carry this mission."
+
+[node name="Content" type="VBoxContainer" parent="VBox/Body/RightColumn/RocketSection/SectionVBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="BottomDock" type="PanelContainer" parent="VBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("2")
+
+[node name="DockVBox" type="VBoxContainer" parent="VBox/BottomDock"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="Header" type="HBoxContainer" parent="VBox/BottomDock/DockVBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Number" type="Label" parent="VBox/BottomDock/DockVBox/Header"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.988, 0.796, 0.314, 1)
+theme_override_font_sizes/font_size = 12
+text = "03"
+
+[node name="Title" type="Label" parent="VBox/BottomDock/DockVBox/Header"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.92, 0.96, 1, 1)
+theme_override_font_sizes/font_size = 16
+text = "Target + Launch"
+
+[node name="StatusRow" type="HBoxContainer" parent="VBox/BottomDock/DockVBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="RoutePill" type="PanelContainer" parent="VBox/BottomDock/DockVBox/StatusRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("5")
+
+[node name="Label" type="Label" parent="VBox/BottomDock/DockVBox/StatusRow/RoutePill"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.92, 0.96, 1, 0.96)
+theme_override_font_sizes/font_size = 12
+text = "Mission setup"
+
+[node name="ContractorPill" type="PanelContainer" parent="VBox/BottomDock/DockVBox/StatusRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("5")
+
+[node name="Label" type="Label" parent="VBox/BottomDock/DockVBox/StatusRow/ContractorPill"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.92, 0.96, 1, 0.96)
+theme_override_font_sizes/font_size = 12
+text = "Awaiting contractor"
+
+[node name="RocketPill" type="PanelContainer" parent="VBox/BottomDock/DockVBox/StatusRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("5")
+
+[node name="Label" type="Label" parent="VBox/BottomDock/DockVBox/StatusRow/RocketPill"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.92, 0.96, 1, 0.96)
+theme_override_font_sizes/font_size = 12
+text = "No ship armed"
+
+[node name="ActionRow" type="HBoxContainer" parent="VBox/BottomDock/DockVBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="OpenMapButton" type="Button" parent="VBox/BottomDock/DockVBox/ActionRow"]
+custom_minimum_size = Vector2(220, 46)
+layout_mode = 2
+text = "Open Target Map"
+
+[node name="TargetPill" type="PanelContainer" parent="VBox/BottomDock/DockVBox/ActionRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("5")
+
+[node name="Label" type="Label" parent="VBox/BottomDock/DockVBox/ActionRow/TargetPill"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.92, 0.96, 1, 0.96)
+theme_override_font_sizes/font_size = 12
+text = "No target locked"
+
+[node name="LaunchMessage" type="Label" parent="VBox/BottomDock/DockVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.76, 0.83, 0.9, 0.96)
+theme_override_font_sizes/font_size = 13
+autowrap_mode = 3
+text = "Select a contractor, drag a rocket onto the launchpad, then open the target map."
+
+[node name="MapOverlay" type="PanelContainer" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("6")
+
+[node name="OverlayVBox" type="VBoxContainer" parent="MapOverlay"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+[node name="Toolbar" type="HBoxContainer" parent="MapOverlay/OverlayVBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="MapBackButton" type="Button" parent="MapOverlay/OverlayVBox/Toolbar"]
+custom_minimum_size = Vector2(180, 42)
+layout_mode = 2
+text = "Back to Setup"
+
+[node name="MapTitle" type="Label" parent="MapOverlay/OverlayVBox/Toolbar"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.92, 0.96, 1, 1)
+theme_override_font_sizes/font_size = 20
+text = "Target Map"
+
+[node name="MapHint" type="Label" parent="MapOverlay/OverlayVBox/Toolbar"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.76, 0.83, 0.9, 0.92)
+theme_override_font_sizes/font_size = 12
+text = "Navigate targets full-screen, then return to launch."
+
+[node name="TargetSection" type="PanelContainer" parent="MapOverlay/OverlayVBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("2")
+
+[node name="SectionVBox" type="VBoxContainer" parent="MapOverlay/OverlayVBox/TargetSection"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="Header" type="HBoxContainer" parent="MapOverlay/OverlayVBox/TargetSection/SectionVBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Number" type="Label" parent="MapOverlay/OverlayVBox/TargetSection/SectionVBox/Header"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.988, 0.796, 0.314, 1)
+theme_override_font_sizes/font_size = 12
+text = "03"
+
+[node name="Title" type="Label" parent="MapOverlay/OverlayVBox/TargetSection/SectionVBox/Header"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.92, 0.96, 1, 1)
+theme_override_font_sizes/font_size = 16
+text = "Target"
+
+[node name="Blurb" type="Label" parent="MapOverlay/OverlayVBox/TargetSection/SectionVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.76, 0.83, 0.9, 0.92)
+theme_override_font_sizes/font_size = 12
+autowrap_mode = 3
+text = "Review route map, range fit, and scan detail before confirming a target."
+
+[node name="Content" type="VBoxContainer" parent="MapOverlay/OverlayVBox/TargetSection/SectionVBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 8

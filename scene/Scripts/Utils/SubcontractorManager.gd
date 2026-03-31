@@ -96,17 +96,20 @@ const SUBCONTRACTORS := [
 	}
 ]
 
+static func build_default_state() -> Dictionary:
+	return {
+		"affinity": {},
+		"reputation": {},
+		"cooldowns": {},
+		"consecutive_use": {},
+		"last_mission_sub": ""
+	}
+
 static func load_state() -> Dictionary:
 	var json = preload("res://Scripts/Utils/JSONFileManager.gd")
 	var data = {}
 	if not FileAccess.file_exists(STATE_PATH):
-		data = {
-			"affinity": {},
-			"reputation": {},
-			"cooldowns": {},
-			"consecutive_use": {},
-			"last_mission_sub": ""
-		}
+		data = build_default_state()
 		json.save_json(STATE_PATH, data)
 	else:
 		data = json.load_json(STATE_PATH)
@@ -128,8 +131,12 @@ static func load_state() -> Dictionary:
 static func save_state(data: Dictionary) -> bool:
 	var json = preload("res://Scripts/Utils/JSONFileManager.gd")
 	var ok = json.save_json(STATE_PATH, data)
-	json.save_json(DEFAULT_STATE_PATH, data)
+	if OS.has_feature("editor"):
+		json.save_json(DEFAULT_STATE_PATH, data)
 	return ok
+
+static func reset_state() -> bool:
+	return save_state(build_default_state())
 
 static func get_all() -> Array:
 	return SUBCONTRACTORS.duplicate(true)

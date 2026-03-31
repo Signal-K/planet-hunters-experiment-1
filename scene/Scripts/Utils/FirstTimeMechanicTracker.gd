@@ -13,7 +13,7 @@ extends RefCounted
 const STATE_PATH := "user://mechanic_intros_seen.json"
 
 const MechanicIntroCatalog = preload("res://Scripts/Utils/MechanicIntroCatalog.gd")
-const MechanicIntroOverlay = preload("res://Scripts/UI/MechanicIntroOverlay.gd")
+const MechanicIntroOverlayScene = preload("res://Scenes/UI/MechanicIntroOverlay.tscn")
 
 ## Check whether the player has already seen the intro for a mechanic.
 static func has_seen(mechanic_key: String) -> bool:
@@ -42,7 +42,7 @@ static func maybe_show(mechanic_key: String, tree: SceneTree) -> void:
 		return
 	mark_seen(mechanic_key)
 	var content := MechanicIntroCatalog.get_entry(mechanic_key)
-	var overlay := MechanicIntroOverlay.new()
+	var overlay := MechanicIntroOverlayScene.instantiate()
 	tree.root.add_child(overlay)
 	overlay.show_intro(content)
 

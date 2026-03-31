@@ -20,6 +20,8 @@ var _contractor_gate_locked: bool = false
 var _contractor_gate_reason: String = "Select a contractor before building a rocket."
 var _pending_rocket_id: String = ""
 var _pending_purchase_cost: int = 0
+var _armed_rocket_id: String = ""
+var _armed_purchase_cost: int = 0
 var _app_controller: Node = null
 var _rocket_textures := {
 	"starterrocket1": null,
@@ -67,8 +69,9 @@ func _ready():
 	)
 	_ui_builder.build_ui(unlocked_rockets)
 	set_meta("selector_ui_built", true)
-	_drag_helper.setup(self, Callable(self, "_request_purchase"))
+	_drag_helper.setup(self, Callable(self, "_on_drag_drop_requested"))
 	_refresh_creation_buttons_state()
+	_refresh_create_buttons_copy()
 	set_process(true)
 
 func _find_app_controller() -> void:
@@ -87,11 +90,15 @@ func _init_dialogs() -> void:
 
 func _on_purchase_canceled() -> void:
 	_pending_rocket_id = ""
+	_pending_purchase_cost = 0
 
 # Public method to unlock creation (called from Launchpad when showing the panel after launch)
 func unlock_creation() -> void:
 	_creation_locked = false
+	_armed_rocket_id = ""
+	_armed_purchase_cost = 0
 	_refresh_creation_buttons_state()
+	_refresh_create_buttons_copy()
 
 func set_contractor_gate_enabled(enabled: bool, reason: String = "") -> void:
 	_contractor_gate_locked = not enabled
@@ -100,11 +107,11 @@ func set_contractor_gate_enabled(enabled: bool, reason: String = "") -> void:
 	_refresh_creation_buttons_state()
 
 func _refresh_creation_buttons_state() -> void:
-	_set_create_buttons_disabled(_creation_locked or _contractor_gate_locked)
+	var disable_all = _contractor_gate_locked or (_creation_locked and _armed_rocket_id == "")
+	_set_create_buttons_disabled(disable_all)
 
 func _on_create_pressed(rocket_id):
 	print("Create rocket requested:", rocket_id)
-	emit_signal("create_rocket", rocket_id)
 	_request_purchase(rocket_id)
 
 func _request_purchase(rocket_id: String) -> void:
@@ -161,27 +168,47 @@ func _request_purchase(rocket_id: String) -> void:
 func _on_purchase_confirmed() -> void:
 	if _pending_rocket_id == "":
 		return
-	var spawn_ok = _spawn_rocket(_pending_rocket_id)
-	if spawn_ok:
-		AppControllerHelper.record_tutorial_action("create_rocket", {
-			"rocket_id": _pending_rocket_id
-		})
-		_modify_balance(-_pending_purchase_cost)
-		_creation_locked = true
-		_refresh_creation_buttons_state()
-		visible = false
-		var root = get_tree().current_scene
-		if root:
-			var launchpad = root.get_node_or_null("StructuresLayer/Launchpad")
-			if launchpad:
-				if launchpad.has_method("_show_selector_panel"):
-					launchpad._show_selector_panel()
-				if launchpad.has_method("_populate_targets"):
-					launchpad._populate_targets()
-	else:
-		_show_info("Rocket could not be created.")
+	_armed_rocket_id = _pending_rocket_id
+	_armed_purchase_cost = _pending_purchase_cost
+	_creation_locked = true
 	_pending_rocket_id = ""
 	_pending_purchase_cost = 0
+	_refresh_creation_buttons_state()
+	_refresh_create_buttons_copy()
+	_show_info("Purchase approved. Drag %s from the right panel onto the launchpad to arm this mission." % RocketSpecs.get_display_name(_armed_rocket_id))
+
+func _on_drag_drop_requested(rocket_id: String) -> void:
+	if rocket_id == "":
+		return
+	if _armed_rocket_id == "":
+		_show_info("Buy a rocket first, then drag it onto the launchpad.")
+		return
+	if rocket_id != _armed_rocket_id:
+		_show_info("Drag the purchased rocket onto the launchpad to continue.")
+		return
+	var spawn_ok = _spawn_rocket(rocket_id)
+	if not spawn_ok:
+		_show_info("Rocket could not be placed on the launchpad.")
+		return
+	emit_signal("create_rocket", rocket_id)
+	AppControllerHelper.record_tutorial_action("create_rocket", {
+		"rocket_id": rocket_id
+	})
+	_modify_balance(-_armed_purchase_cost)
+	_armed_rocket_id = ""
+	_armed_purchase_cost = 0
+	_creation_locked = true
+	_refresh_creation_buttons_state()
+	_refresh_create_buttons_copy()
+	visible = false
+	var root = get_tree().current_scene
+	if root:
+		var launchpad = root.get_node_or_null("StructuresLayer/Launchpad")
+		if launchpad:
+			if launchpad.has_method("_show_selector_panel"):
+				launchpad._show_selector_panel()
+			if launchpad.has_method("_populate_targets"):
+				launchpad._populate_targets()
 
 func _spawn_rocket(rocket_id: String) -> bool:
 	# Try to find the Launchpad node in the current scene and call spawn_rocket
@@ -256,6 +283,12 @@ func _on_texture_gui_input(rocket_id, tex, event):
 	# Start drag on left button press
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+			if _armed_rocket_id != rocket_id:
+				if _armed_rocket_id == "":
+					_show_info("Buy this rocket first, then drag it onto the launchpad.")
+				else:
+					_show_info("Drag %s onto the launchpad to continue." % RocketSpecs.get_display_name(_armed_rocket_id))
+				return
 			_drag_helper.start_drag(rocket_id, tex)
 
 func _process(delta):
@@ -267,7 +300,22 @@ func _set_create_buttons_disabled(disabled: bool) -> void:
 		var node = stack.pop_back()
 		for child in node.get_children():
 			if child is Button and child.name.begins_with("CreateButton_"):
-				child.disabled = disabled
+				var rocket_id = child.name.trim_prefix("CreateButton_")
+				child.disabled = disabled or (_armed_rocket_id != "" and rocket_id != _armed_rocket_id)
+			stack.append(child)
+
+func _refresh_create_buttons_copy() -> void:
+	var stack = [self]
+	while stack.size() > 0:
+		var node = stack.pop_back()
+		for child in node.get_children():
+			if child is Button and child.name.begins_with("CreateButton_"):
+				var rocket_id = child.name.trim_prefix("CreateButton_")
+				var display_name = RocketSpecs.get_display_name(rocket_id)
+				if _armed_rocket_id == rocket_id:
+					child.text = "Drag %s To Pad" % display_name
+				else:
+					child.text = "Create %s" % display_name
 			stack.append(child)
 
 func _validate_target_range_for_rocket(rocket_id: String) -> Dictionary:

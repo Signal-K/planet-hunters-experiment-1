@@ -9,6 +9,10 @@ const RocketsMissionProgress = preload("res://Scripts/Utils/RocketsMissionProgre
 const RocketsTargeting = preload("res://Scripts/Utils/RocketsTargeting.gd")
 const CurrencyManager = preload("res://Scripts/Utils/CurrencyManager.gd")
 const LaunchpadSelectorPanel = preload("res://Scripts/Earth/LaunchpadSelectorPanel.gd")
+const EarthBaseScene = preload("res://Scenes/Earth/earth_base_1.tscn")
+const EarthLaunchpadScene = preload("res://Scenes/Earth/earth_launchpad.tscn")
+const MissionDebriefScene = preload("res://Scenes/Earth/mission_debrief_v2.tscn")
+const SpaceMapScene = preload("res://Scenes/UI/SpaceMap/space_map.tscn")
 const SidescrollMiningScene = preload("res://Scenes/UI/SidescrollMining.tscn")
 const MiningPracticeScene = preload("res://Scenes/UI/MiningPracticePanel.tscn")
 const SatelliteStationScene = preload("res://Scenes/UI/SatelliteStationPanel.tscn")
@@ -43,13 +47,19 @@ func run_all_tests() -> void:
 	await test_level1_target_route_is_strict()
 	await test_level2_has_limited_variants_with_fallback()
 	await test_level3_scanner_targets_have_fallback_when_scan_empty()
-	await test_level2_completion_unlocks_level3_systems()
+	await test_level2_completion_advances_to_stage3_but_keeps_scanner_locked()
 	await test_launch_target_resolution_applies_playable_fallback()
 	await test_open_operation_mode_persists_and_applies_to_missions()
 	await test_open_operation_survey_route_relaxes_contractor_block()
+	await test_launchpad_target_prep_items_merge_mission_guidance()
 	await test_mission_exposure_reward_progression()
 	await test_mission_briefing_seen_persistence()
 	await test_launchpad_briefing_gate_is_one_time()
+	await test_scanner_station_requires_explicit_build_step()
+	await test_earth_base_disables_new_mission_until_scanner_station_is_built()
+	await test_launchpad_scene_has_shared_bottom_nav()
+	await test_space_map_scene_has_shared_bottom_nav()
+	await test_mission_debrief_scene_has_shared_bottom_nav()
 	await test_sidescroll_mining_drone_pool_reuse()
 	await test_sidescroll_mining_button_handbook_copy_is_plain_language()
 	await test_mining_practice_panel_stays_on_screen_after_run_complete()
@@ -126,8 +136,8 @@ func test_mission_reward_ratios_match_spec() -> void:
 	if abs(m1.get("reward_ratio", 0.0) - 1.2) > 0.001:
 		reporter.fail_test("M1 ratio %s != 1.2" % m1.get("reward_ratio"))
 		return
-	if abs(m2.get("reward_ratio", 0.0) - 1.3) > 0.001:
-		reporter.fail_test("M2 ratio %s != 1.3" % m2.get("reward_ratio"))
+	if abs(m2.get("reward_ratio", 0.0) - 1.2) > 0.001:
+		reporter.fail_test("M2 ratio %s != 1.2" % m2.get("reward_ratio"))
 		return
 	if abs(m4.get("reward_ratio", 0.0) - 1.4) > 0.001:
 		reporter.fail_test("M4 ratio %s != 1.4" % m4.get("reward_ratio"))
@@ -285,16 +295,17 @@ func test_launch_target_resolution_applies_playable_fallback() -> void:
 
 func test_open_operation_mode_persists_and_applies_to_missions() -> void:
 	reporter.start_test("[UX] Open operation mode persists and is stored on mission records")
-	var state = RocketsStateAccess.build_default_state(2)
+	RocketsManager.reset_state()
+	var state = RocketsManager.load_state()
 	state["mission_progress_completed"] = 4
 	state["completed_mission_badges"] = ["mission-1", "mission-2", "mission-3", "mission-4"]
 	state["operation_mode"] = "contract"
-	RocketsManager.set_override_state(state)
+	RocketsManager.save_state(state)
 	var set_ok = RocketsManager.set_operation_mode("survey")
 	var mode = RocketsManager.get_operation_mode()
 	RocketsManager.add_mission("starterrocket3-test-open-ops", "free-ops-test-target", int(Time.get_unix_time_from_system()), 60)
 	var mission = RocketsManager.get_mission_for_rocket("starterrocket3-test-open-ops")
-	RocketsManager.clear_override_state()
+	RocketsManager.reset_state()
 	if not set_ok:
 		reporter.fail_test("Expected set_operation_mode(\"survey\") to succeed")
 		return
@@ -319,8 +330,39 @@ func test_open_operation_survey_route_relaxes_contractor_block() -> void:
 		return
 	reporter.pass_test()
 
-func test_level2_completion_unlocks_level3_systems() -> void:
-	reporter.start_test("[SPEC] Completing Level 2 unlocks stage 3 scanner systems")
+func test_launchpad_target_prep_items_merge_mission_guidance() -> void:
+	reporter.start_test("[UX] Launchpad target prep merges mission guidance into one structured list")
+	var selector = LaunchpadSelectorPanel.new()
+	var items: Array = selector._build_target_prep_items(
+		2,
+		"starterrocket1",
+		1,
+		false,
+		{"payout_cap": 900000000},
+		RocketsManager
+	)
+	if items.size() < 3:
+		reporter.fail_test("Expected mission 2 prep to include multiple summary items, got %s" % items.size())
+		return
+	var joined := []
+	for item_any in items:
+		if typeof(item_any) != TYPE_DICTIONARY:
+			continue
+		joined.append(str((item_any as Dictionary).get("text", "")))
+	var combined_text = "\n".join(joined)
+	if combined_text.find("Mission 2 needs Starter Rocket 2") == -1:
+		reporter.fail_test("Expected mission 2 ship warning in prep summary")
+		return
+	if combined_text.find("Mission 2 Checklist:") == -1:
+		reporter.fail_test("Expected mission 2 checklist in prep summary")
+		return
+	if combined_text.find("Mission payout caps at") == -1:
+		reporter.fail_test("Expected payout cap warning in prep summary")
+		return
+	reporter.pass_test()
+
+func test_level2_completion_advances_to_stage3_but_keeps_scanner_locked() -> void:
+	reporter.start_test("[SPEC] Completing Level 2 advances to stage 3 while scanner stays locked until stage 4")
 	var state = RocketsStateAccess.build_default_state(2)
 	state["mission_progress_completed"] = 2
 	state["completed_mission_badges"] = ["mission-1", "mission-2"]
@@ -331,8 +373,8 @@ func test_level2_completion_unlocks_level3_systems() -> void:
 	if stage != 3:
 		reporter.fail_test("Expected mission stage 3 after two completions, got %s" % stage)
 		return
-	if not scanner_unlocked:
-		reporter.fail_test("Expected scanner systems unlocked at mission stage 3")
+	if scanner_unlocked:
+		reporter.fail_test("Expected scanner systems to remain locked until stage 4")
 		return
 	reporter.pass_test()
 
@@ -376,6 +418,115 @@ func test_launchpad_briefing_gate_is_one_time() -> void:
 	if selector.has_method("_render_mission_briefing_gate"):
 		reporter.fail_test("Briefing gate method still present; target flow should stay simplified")
 		return
+	reporter.pass_test()
+
+func test_scanner_station_requires_explicit_build_step() -> void:
+	reporter.start_test("[UX] Scanner station stays unbuilt after Mission 3 until the player builds it")
+	var state = RocketsStateAccess.build_default_state(2)
+	state["mission_progress_completed"] = 3
+	state["completed_mission_badges"] = ["mission-1", "mission-2", "mission-3"]
+	state["control_station_built"] = true
+	state["scanner_unlocked"] = true
+	state["scanner_station_built"] = false
+	RocketsManager.set_override_state(state)
+	var base = EarthBaseScene.instantiate()
+	get_root().add_child(base)
+	await create_timer(0.08).timeout
+	var station = base.get_node_or_null("StructuresLayer/SatelliteStation")
+	if station == null:
+		reporter.fail_test("Expected SatelliteStation node on Earth base")
+		base.queue_free()
+		RocketsManager.clear_override_state()
+		return
+	if RocketsManager.is_scanner_station_built():
+		reporter.fail_test("Scanner station should remain unbuilt until the player confirms construction")
+		base.queue_free()
+		RocketsManager.clear_override_state()
+		return
+	base.queue_free()
+	RocketsManager.clear_override_state()
+	reporter.pass_test()
+
+func test_earth_base_disables_new_mission_until_scanner_station_is_built() -> void:
+	reporter.start_test("[UX] Earth base blocks New Mission until Scanner Station is built for Mission 4")
+	var state = RocketsStateAccess.build_default_state(2)
+	state["mission_progress_completed"] = 3
+	state["completed_mission_badges"] = ["mission-1", "mission-2", "mission-3"]
+	state["control_station_built"] = true
+	state["scanner_unlocked"] = true
+	state["scanner_station_built"] = false
+	RocketsManager.set_override_state(state)
+	var base = EarthBaseScene.instantiate()
+	get_root().add_child(base)
+	await create_timer(0.08).timeout
+	base._apply_tutorial_button_state()
+	base._build_progression_cards()
+	await create_timer(0.02).timeout
+	var new_mission_btn = base.get_node_or_null("UILayer/ButtonContainer/NewMissionButton") as Button
+	if new_mission_btn == null:
+		reporter.fail_test("Earth base missing NewMissionButton")
+		base.queue_free()
+		RocketsManager.clear_override_state()
+		return
+	if not new_mission_btn.disabled:
+		reporter.fail_test("Expected New Mission to stay disabled while scanner build is still pending")
+		base.queue_free()
+		RocketsManager.clear_override_state()
+		return
+	if _find_label_in_subtree(base.get_node_or_null("UILayer/ProgressionCards"), "Build Scanner Station") == null:
+		reporter.fail_test("Expected scanner build progression card while Mission 4 setup is pending")
+		base.queue_free()
+		RocketsManager.clear_override_state()
+		return
+	base.queue_free()
+	RocketsManager.clear_override_state()
+	reporter.pass_test()
+
+func _find_label_in_subtree(root: Node, snippet: String) -> Label:
+	if root == null:
+		return null
+	var stack: Array[Node] = [root]
+	while not stack.is_empty():
+		var node = stack.pop_back()
+		if node is Label and str((node as Label).text).find(snippet) != -1:
+			return node as Label
+		for child in node.get_children():
+			stack.append(child)
+	return null
+
+func test_launchpad_scene_has_shared_bottom_nav() -> void:
+	reporter.start_test("[UX] Launchpad scene includes the shared bottom navigation shell")
+	await _assert_scene_has_bottom_nav(EarthLaunchpadScene.instantiate(), "Launchpad")
+
+func test_space_map_scene_has_shared_bottom_nav() -> void:
+	reporter.start_test("[UX] Space map scene includes the shared bottom navigation shell")
+	await _assert_scene_has_bottom_nav(SpaceMapScene.instantiate(), "SpaceMap")
+
+func test_mission_debrief_scene_has_shared_bottom_nav() -> void:
+	reporter.start_test("[UX] Mission debrief scene includes the shared bottom navigation shell")
+	await _assert_scene_has_bottom_nav(MissionDebriefScene.instantiate(), "MissionDebriefV2")
+
+func _assert_scene_has_bottom_nav(scene: Node, expected_name: String) -> void:
+	if scene == null:
+		reporter.fail_test("%s scene failed to instantiate" % expected_name)
+		return
+	get_root().add_child(scene)
+	await create_timer(0.05).timeout
+	var container := scene.get_node_or_null("UILayer/ButtonContainer") as HBoxContainer
+	if container == null:
+		reporter.fail_test("%s scene missing UILayer/ButtonContainer" % expected_name)
+		scene.queue_free()
+		return
+	if container.get_node_or_null("NavBackground") == null:
+		reporter.fail_test("%s scene missing NavBackground under ButtonContainer" % expected_name)
+		scene.queue_free()
+		return
+	for button_name in ["BackButton", "ForwardButton", "MenuButton", "MarketButton", "SpaceMapButton", "NewMissionButton"]:
+		if container.get_node_or_null(button_name) == null:
+			reporter.fail_test("%s scene missing %s in shared bottom nav" % [expected_name, button_name])
+			scene.queue_free()
+			return
+	scene.queue_free()
 	reporter.pass_test()
 
 func test_sidescroll_mining_drone_pool_reuse() -> void:

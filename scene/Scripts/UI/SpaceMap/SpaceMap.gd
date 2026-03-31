@@ -3,6 +3,7 @@ extends Node2D
 const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
 const SectorRevealManager = preload("res://Scripts/Utils/SectorRevealManager.gd")
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
+const EarthSceneUIHelper = preload("res://Scripts/Earth/EarthSceneUIHelper.gd")
 
 const ORBIT_COUNT := 6
 const STAR_COUNT := 220
@@ -16,6 +17,9 @@ const ORBIT_COLOR := Color(0.6, 0.65, 0.75, 0.35)
 const STAR_COLOR := Color(0.9, 0.9, 0.9, 0.8)
 
 var _view_mode: String = "solar"  # "solar" or "stars"
+var scene_manager: SceneManager
+var ui_manager: UIManager
+var _ui_helper := EarthSceneUIHelper.new()
 var _orbit_radii: Array = []
 var _stars: Array = []
 var _targets: Array = []
@@ -33,67 +37,76 @@ const EARTH_CLICK_RADIUS := 26.0
 const TARGET_CLICK_RADIUS := 22.0
 
 @onready var back_button: Button = $CanvasLayer/UI/BackButton
+@onready var solar_btn: Button = $CanvasLayer/UI/ModeToggle/SolarBtn
+@onready var stars_btn: Button = $CanvasLayer/UI/ModeToggle/StarsBtn
 
 func _ready() -> void:
+	scene_manager = SceneManager.new()
+	add_child(scene_manager)
+	scene_manager.add_to_group("scene_manager")
+	ui_manager = UIManager.new()
+	add_child(ui_manager)
+	ui_manager.add_to_group("ui_manager")
+	_ui_helper.setup(self)
+	_ui_helper.setup_buttons()
+	call_deferred("_apply_nav_safe_area")
 	if back_button:
 		back_button.pressed.connect(_on_back_pressed)
 		PanelStyle.apply_button(back_button, false)
-	_build_view_toggle()
+		back_button.visible = false
+	if solar_btn:
+		solar_btn.pressed.connect(func(): _set_view_mode("solar"))
+	if stars_btn:
+		stars_btn.pressed.connect(func(): _set_view_mode("stars"))
+	_apply_view_toggle_style()
 	set_process_unhandled_input(true)
 	set_process_input(true)
 	_label_font = ThemeDB.fallback_font
 	_ignore_click_until = Time.get_ticks_msec() + 200
 	_refresh_targets()
 	_rebuild_layout()
+	_apply_scene_nav_state()
 
-func _build_view_toggle() -> void:
-	var ui = $CanvasLayer/UI as Control
-	if ui == null:
-		return
+func _apply_scene_nav_state() -> void:
+	var forward_btn := get_node_or_null("UILayer/ButtonContainer/ForwardButton") as Button
+	if forward_btn:
+		forward_btn.disabled = true
 
-	var container := HBoxContainer.new()
-	container.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	container.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-	container.offset_right = -24.0
-	container.offset_top = 24.0
-	container.offset_bottom = 68.0
-	container.add_theme_constant_override("separation", 6)
-	ui.add_child(container)
+func _apply_nav_safe_area() -> void:
+	_ui_helper.apply_nav_layout()
 
-	var solar_btn := Button.new()
-	solar_btn.text = "Solar System"
-	solar_btn.name = "SolarBtn"
-	PanelStyle.apply_button(solar_btn, true)
-	solar_btn.pressed.connect(func(): _set_view_mode("solar"))
-	container.add_child(solar_btn)
+func _on_back_button_pressed() -> void:
+	_change_scene_to_base()
 
-	var stars_btn := Button.new()
-	stars_btn.text = "Star Systems"
-	stars_btn.name = "StarsBtn"
-	PanelStyle.apply_button(stars_btn, false)
-	stars_btn.pressed.connect(func(): _set_view_mode("stars"))
-	container.add_child(stars_btn)
+func _on_forward_button_pressed() -> void:
+	pass
+
+func _on_menu_button_pressed() -> void:
+	preload("res://Scripts/UI/GameNavigationMenu.gd").toggle(self)
+
+func _on_market_button_pressed() -> void:
+	if ui_manager:
+		ui_manager.show_panel(UIManager.PanelType.MARKET)
+
+func _on_space_map_button_pressed() -> void:
+	pass
+
+func _on_new_mission_button_pressed() -> void:
+	if scene_manager:
+		scene_manager.change_to_scene("res://Scenes/Earth/earth_launchpad.tscn")
+	else:
+		get_tree().change_scene_to_file("res://Scenes/Earth/earth_launchpad.tscn")
 
 func _set_view_mode(mode: String) -> void:
 	_view_mode = mode
-	# Update button styles
-	var ui = $CanvasLayer/UI as Control
-	if ui:
-		var container = ui.get_node_or_null("HBoxContainer") as HBoxContainer
-		if container == null:
-			# find by position in children
-			for child in ui.get_children():
-				if child is HBoxContainer:
-					container = child
-					break
-		if container:
-			var solar_btn = container.get_node_or_null("SolarBtn") as Button
-			var stars_btn = container.get_node_or_null("StarsBtn") as Button
-			if solar_btn:
-				PanelStyle.apply_button(solar_btn, mode == "solar")
-			if stars_btn:
-				PanelStyle.apply_button(stars_btn, mode == "stars")
+	_apply_view_toggle_style()
 	_rebuild_layout()
+
+func _apply_view_toggle_style() -> void:
+	if solar_btn:
+		PanelStyle.apply_button(solar_btn, _view_mode == "solar")
+	if stars_btn:
+		PanelStyle.apply_button(stars_btn, _view_mode == "stars")
 
 func _process(_delta: float) -> void:
 	var size = get_viewport_rect().size
