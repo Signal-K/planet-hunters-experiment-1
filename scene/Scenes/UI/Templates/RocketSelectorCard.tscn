@@ -9,28 +9,30 @@ size_flags_vertical = 1
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-theme_override_constants/separation = 8
+theme_override_constants/separation = 10
 
 [node name="RocketTexture" type="TextureRect" parent="Body"]
 layout_mode = 2
 size_flags_horizontal = 3
-custom_minimum_size = Vector2(0, 110)
+custom_minimum_size = Vector2(0, 96)
 expand_mode = 1
 stretch_mode = 6
 
 [node name="NameLabel" type="Label" parent="Body"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 18
 horizontal_alignment = 1
 
 [node name="Chips" type="GridContainer" parent="Body"]
 layout_mode = 2
 columns = 2
 size_flags_horizontal = 3
-theme_override_constants/h_separation = 10
-theme_override_constants/v_separation = 8
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 6
 
 [node name="EconomyLabel" type="Label" parent="Body"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 14
 horizontal_alignment = 1
 
 [node name="Spacer" type="Control" parent="Body"]
@@ -38,7 +40,7 @@ layout_mode = 2
 size_flags_vertical = 3
 
 [node name="CreateButton" type="Button" parent="Body"]
-custom_minimum_size = Vector2(0, 56)
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Create"

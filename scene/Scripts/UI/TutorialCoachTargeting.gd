@@ -21,10 +21,8 @@ static func build_target_rect(target: Node) -> Rect2:
 
 static func navigation_hint_for_action(action_key: String) -> String:
 	match action_key:
-		"tour_open_control_station":
-			return "→ Click the Control Station"
-		"tour_close_control_station":
-			return "→ Close the Control Station panel"
+		"build_control_station":
+			return "→ Build the Control Station from the base card"
 		"open_launchpad":
 			return "→ Click the Launchpad structure on the base"
 		"create_rocket":
@@ -57,10 +55,8 @@ static func navigation_hint_for_action(action_key: String) -> String:
 
 static func action_hint_for_step(action_key: String) -> String:
 	match action_key:
-		"tour_open_control_station":
-			return "Control Station"
-		"tour_close_control_station":
-			return "Control Station close button"
+		"build_control_station":
+			return "Build Control Station button"
 		"open_launchpad":
 			return "Launchpad"
 		"create_rocket":
@@ -92,18 +88,12 @@ static func action_hint_for_step(action_key: String) -> String:
 static func _find_target_for_action(action_key: String, tree: SceneTree) -> Node:
 	var on_base := _is_base_scene(tree)
 	match action_key:
-		"tour_open_control_station":
-			return _find_node_path_any(tree, [
-				"StructuresLayer/ControlStation",
-				"StructuresLayer/ControlStation/InteractionArea"
-			])
-		"tour_close_control_station":
+		"build_control_station":
 			return _find_visible_button(tree, func(btn: Button) -> bool:
-				var key = btn.name.to_lower()
-				if key.find("close") == -1:
+				if btn.disabled:
 					return false
-				var path = str(btn.get_path()).to_lower()
-				return path.find("controlstationpanel") != -1
+				var text = btn.text.strip_edges().to_lower()
+				return text == "build control station"
 			)
 		"open_launchpad":
 			return _find_node_path_any(tree, [
@@ -127,11 +117,14 @@ static func _find_target_for_action(action_key: String, tree: SceneTree) -> Node
 		"select_launch_target":
 			if on_base:
 				return _find_new_mission_button(tree)
+			var target_button = _find_launchpad_target_button(tree)
+			if target_button:
+				return target_button
 			return _find_visible_button(tree, func(btn: Button) -> bool:
 				if btn.disabled:
 					return false
 				var text = btn.text.to_lower()
-				return text.find("select") != -1 or text.find("target") != -1
+				return text.find("target") != -1
 			)
 		"launch_rocket_from_earth":
 			if on_base:
@@ -171,27 +164,11 @@ static func _find_target_for_action(action_key: String, tree: SceneTree) -> Node
 		"accept_contractor_offer":
 			if on_base:
 				return _find_new_mission_button(tree)
-			return _find_visible_button(tree, func(btn: Button) -> bool:
-				if btn.disabled:
-					return false
-				var text = btn.text.strip_edges().to_lower()
-				if text.find("accept") != -1 or text == "select":
-					var path = str(btn.get_path()).to_lower()
-					return path.find("selectorpanel") != -1 or path.find("targetssection") != -1
-				return false
-			)
+			return _find_launchpad_contractor_button(tree, false)
 		"accept_starter_contractor":
 			if on_base:
 				return _find_new_mission_button(tree)
-			var sign_button = _find_visible_button(tree, func(btn: Button) -> bool:
-				if btn.disabled:
-					return false
-				var text = btn.text.strip_edges().to_lower()
-				if text.find("sign") == -1:
-					return false
-				var path = str(btn.get_path()).to_lower()
-				return path.find("selectorpanel") != -1 or path.find("targetssection") != -1
-			)
+			var sign_button = _find_launchpad_contractor_button(tree, true)
 			if sign_button:
 				return sign_button
 			return null
@@ -209,6 +186,42 @@ static func _find_new_mission_button(tree: SceneTree) -> Node:
 		var text = btn.text.strip_edges().to_lower()
 		var name = btn.name.to_lower()
 		return text.find("new mission") != -1 or name.find("newmission") != -1
+	)
+
+static func _find_launchpad_target_button(tree: SceneTree) -> Button:
+	var confirm_button = _find_visible_button(tree, func(btn: Button) -> bool:
+		if btn.disabled:
+			return false
+		if btn.name != "ConfirmButton":
+			return false
+		var path = str(btn.get_path()).to_lower()
+		return path.find("selectorpanel") != -1 and path.find("targetsection") != -1
+	)
+	if confirm_button:
+		return confirm_button
+	return _find_visible_button(tree, func(btn: Button) -> bool:
+		if btn.disabled:
+			return false
+		var path = str(btn.get_path()).to_lower()
+		if path.find("selectorpanel") == -1:
+			return false
+		if btn.name == "OpenMapButton":
+			return true
+		var text = btn.text.strip_edges().to_lower()
+		return path.find("actionrow/openmapbutton") != -1 or text.find("target map") != -1
+	)
+
+static func _find_launchpad_contractor_button(tree: SceneTree, starter_only: bool) -> Button:
+	return _find_visible_button(tree, func(btn: Button) -> bool:
+		if btn.disabled:
+			return false
+		var path = str(btn.get_path()).to_lower()
+		if path.find("selectorpanel") == -1 or path.find("contractorsection") == -1:
+			return false
+		var text = btn.text.strip_edges().to_lower()
+		if starter_only:
+			return text.find("sign") != -1
+		return text.find("accept") != -1 or text == "select"
 	)
 
 static func _build_target_rect(target: Node) -> Rect2:

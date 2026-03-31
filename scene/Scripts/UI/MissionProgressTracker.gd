@@ -4,14 +4,14 @@ const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
 const ROCKETS_MANAGER = preload("res://Scripts/Utils/RocketsManager.gd")
 const UILayout = preload("res://Scripts/UI/UILayout.gd")
 const MISSION_OBJECTIVES := {
-	1: "Complete base tour, pick a contractor, and deliver the starter order.",
-	2: "Pick a contractor, build Starter Rocket 2, and complete the delivery loop.",
+	1: "Pick a contractor, launch the starter rocket, and deliver the first order.",
+	2: "Build the Control Station, then prep Starter Rocket 2 and complete the delivery loop.",
 	3: "Pick a contractor, fly to a NASA TESS planet candidate, and complete the run.",
 	4: "Build the Scanner Station, scan for targets, then mine with drone assistance."
 }
 const MISSION_STEP_KEYS := {
-	1: ["tour_open_control_station", "tour_close_control_station", "accept_contractor_offer", "create_rocket", "launch_rocket_from_earth", "mine_target", "return_rocket_home", "resolve_mission_debrief"],
-	2: ["accept_contractor_offer", "create_rocket", "launch_rocket_from_earth", "mine_target", "return_rocket_home", "resolve_mission_debrief"],
+	1: ["accept_contractor_offer", "create_rocket", "select_launch_target", "launch_rocket_from_earth", "mine_target", "return_rocket_home", "resolve_mission_debrief"],
+	2: ["build_control_station", "accept_contractor_offer", "create_rocket", "select_launch_target", "launch_rocket_from_earth", "mine_target", "return_rocket_home", "resolve_mission_debrief"],
 	3: ["accept_contractor_offer", "select_launch_target", "launch_rocket_from_earth", "mine_target", "return_rocket_home", "resolve_mission_debrief"],
 	4: ["build_scanner_station", "scan_targets", "select_launch_target", "launch_rocket_from_earth", "mine_target", "return_rocket_home", "resolve_mission_debrief"]
 }
@@ -40,18 +40,21 @@ func _apply_layout() -> void:
 func _ready() -> void:
 	layer = 50
 	if panel:
-		PanelStyle.apply_panel(panel)
+		panel.add_theme_stylebox_override(
+			"panel",
+			PanelStyle.create_glass_panel_style(Color(0.05, 0.09, 0.14, 0.94), 0.64, 18, 20, 16)
+		)
 	if title_label:
-		PanelStyle.apply_body(title_label)
+		PanelStyle.apply_body_on_dark(title_label)
 		title_label.add_theme_font_size_override("font_size", 16)
 	if objective_label:
-		PanelStyle.apply_muted(objective_label)
+		PanelStyle.apply_muted_on_dark(objective_label)
 	if progress_label:
-		PanelStyle.apply_muted(progress_label)
+		PanelStyle.apply_muted_on_dark(progress_label)
 	if checklist_label:
-		PanelStyle.apply_muted(checklist_label)
+		PanelStyle.apply_muted_on_dark(checklist_label)
 	if toggle_button:
-		PanelStyle.apply_button(toggle_button, false)
+		PanelStyle.apply_outline_button(toggle_button)
 		toggle_button.text = "Hide"
 		toggle_button.pressed.connect(_on_toggle_pressed)
 	var app = get_node_or_null("/root/AppController")
@@ -161,10 +164,8 @@ func _has_seen_guide_action_for_stage(action_key: String, stage: int) -> bool:
 
 func _label_for_action(action_key: String) -> String:
 	match action_key:
-		"tour_open_control_station":
-			return "Open control station"
-		"tour_close_control_station":
-			return "Close control station panel"
+		"build_control_station":
+			return "Build control station"
 		"open_launchpad":
 			return "Open launchpad"
 		"accept_starter_contractor":

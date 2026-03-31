@@ -35,7 +35,8 @@ const SCANNER_BUILD_COST := 2000000000
 const SCANNER_SOFT_COOLDOWN_SECONDS := 120
 
 # Predefined authored mission targets with reward ratios.
-# Spec: M1=1.2x, M2=1.3x, M4=1.4x.
+# Current onboarding target: M1/M2 aim for a single successful run at ~1.2x,
+# while M4 keeps the higher-risk planetary upside.
 const PREDEFINED_MISSION_TARGETS := {
 	1: {
 		"id": "mission-1-training-target",
@@ -51,7 +52,7 @@ const PREDEFINED_MISSION_TARGETS := {
 		"type": "asteroid",
 		"distance_au": 12.0,
 		"required_level": 2,
-		"reward_ratio": 1.3  # Spec: M2 reward upgrade investment
+		"reward_ratio": 1.2  # Early-game remains single-run and forgiving
 	},
 	4: {
 		"id": "mission-4-exoplanet-target",
@@ -162,8 +163,8 @@ const FREE_OPS_CONTRACTOR_OFFERS := [
 		"mineral_ranges": {"Iron": [100, 180], "Nickel": [60, 120]}
 	}
 ]
-const FIRST_MISSION_PAYOUT_MULT := 1.5
-const EARLY_MISSION_PAYOUT_TARGET_MULT := 1.15
+const FIRST_MISSION_PAYOUT_MULT := 1.2
+const EARLY_MISSION_PAYOUT_TARGET_MULT := 1.2
 
 const STARTER_CONTRACTOR_OFFERS := [
 	{
@@ -171,8 +172,8 @@ const STARTER_CONTRACTOR_OFFERS := [
 		"name": "Aegis Defense Systems",
 		"focus": "Defense-grade avionics and hardened military systems",
 		"requested_minerals": {
-			"Iron": 130,
-			"Nickel": 95
+			"Iron": 12,
+			"Nickel": 8
 		}
 	},
 	{
@@ -180,8 +181,8 @@ const STARTER_CONTRACTOR_OFFERS := [
 		"name": "Lumen Consumer Labs",
 		"focus": "High-volume consumer electronics and smart devices",
 		"requested_minerals": {
-			"Iron": 115,
-			"Nickel": 110
+			"Iron": 10,
+			"Nickel": 10
 		}
 	},
 	{
@@ -189,8 +190,8 @@ const STARTER_CONTRACTOR_OFFERS := [
 		"name": "Helion Orbital Works",
 		"focus": "Next-gen propulsion and frontier space innovation",
 		"requested_minerals": {
-			"Iron": 105,
-			"Nickel": 125
+			"Iron": 9,
+			"Nickel": 11
 		}
 	}
 ]
@@ -280,6 +281,15 @@ static func is_scanner_unlocked() -> bool:
 	var s = load_state()
 	var progress_unlock = max(int(s.get("mission_progress_completed", 0)), 0) >= SCANNER_UNLOCK_COMPLETED_MISSIONS
 	return bool(s.get("scanner_unlocked", false)) or progress_unlock
+
+static func is_control_station_built() -> bool:
+	var s = load_state()
+	return bool(s.get("control_station_built", false))
+
+static func set_control_station_built(built: bool) -> bool:
+	var s = load_state()
+	s["control_station_built"] = built
+	return save_state(s)
 
 static func is_scanner_station_built() -> bool:
 	var s = load_state()
@@ -749,6 +759,19 @@ static func mark_mission_completed(badge: String = "") -> bool:
 	_sanitize_completed_badges(s)
 	s["mission_progress_completed"] = s.get("completed_mission_badges", []).size()
 	s["scanner_unlocked"] = int(s.get("mission_progress_completed", 0)) >= SCANNER_UNLOCK_COMPLETED_MISSIONS
+	if s["scanner_unlocked"]:
+		# Ensure we have at least some detected targets so annotation station works
+		var current_targets = s.get("detected_targets", [])
+		if typeof(current_targets) != TYPE_ARRAY or current_targets.is_empty():
+			var fallback = []
+			for i in range(MISSION4_VISIBLE_TARGET_COUNT):
+				var target = MISSION3_FALLBACK_TARGETS[i % MISSION3_FALLBACK_TARGETS.size()].duplicate(true)
+				target["id"] = "init-planet-%d" % i
+				target["anomalySet"] = "telescope-tess"
+				target["tess_disposition"] = "PC" # Force to Candidate
+				fallback.append(target)
+			s["detected_targets"] = fallback
+
 	if int(s.get("mission_progress_completed", 0)) >= 1:
 		var unlocked = s.get("unlocked", [])
 		if typeof(unlocked) != TYPE_ARRAY:

@@ -49,6 +49,7 @@ const RocketSpriteHelper    = preload("res://Scripts/Utils/RocketSpriteHelper.gd
 @onready var travel_title: Label        = $CanvasLayer/UI/TravelPanel/TC/TravelContent/TravelTitle
 @onready var travel_bar:   ProgressBar  = $CanvasLayer/UI/TravelPanel/TC/TravelContent/TravelBar
 @onready var travel_dist:  Label        = $CanvasLayer/UI/TravelPanel/TC/TravelContent/TravelDist
+@onready var travel_speed: Label        = $CanvasLayer/UI/TravelPanel/TC/TravelContent/TravelDist
 
 # ── Cargo panel (right — visible during TRAVEL and EARTH_ORBIT) ───────────────
 @onready var cargo_panel: Panel         = $CanvasLayer/UI/CargoPanel
@@ -327,6 +328,9 @@ func _tick_travel() -> void:
 	if pct >= 1.0:
 		_start_earth_approach()
 
+func _update_travel() -> void:
+	_tick_travel()
+
 
 func _start_earth_approach() -> void:
 	_phase        = Phase.EARTH_APPROACH
@@ -357,7 +361,7 @@ func _start_earth_orbit() -> void:
 	_show_cargo_panel()
 	if not _auto_advance_started:
 		_auto_advance_started = true
-		get_tree().create_timer(1.5).timeout.connect(_on_skip_pressed)
+		get_tree().create_timer(1.35).timeout.connect(func(): call_deferred("_on_skip_pressed"))
 
 
 # ── UI helpers ────────────────────────────────────────────────────────────────

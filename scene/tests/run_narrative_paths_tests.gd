@@ -117,14 +117,13 @@ func _assert_no_duplicate_steps(state: Dictionary, label: String) -> bool:
 # ─── Tests ───────────────────────────────────────────────────────────────────
 
 func test_p01_mission1_full_linear_path() -> void:
-	reporter.start_test("P01: Mission 1 full linear path (10 steps including tour and arrived_at_mining_site)")
+	reporter.start_test("P01: Mission 1 full linear path (8 steps including arrived_at_mining_site)")
 	_reset()
 	var c = await _setup()
 	c.replay_full()
 	await create_timer(0.02).timeout
 
-	var m1_actions = ["tour_open_control_station", "tour_close_control_station",
-		"accept_contractor_offer", "create_rocket", "select_launch_target",
+	var m1_actions = ["accept_contractor_offer", "create_rocket", "select_launch_target",
 		"launch_rocket_from_earth", "arrived_at_mining_site", "mine_target",
 		"return_rocket_home", "resolve_mission_debrief"]
 
@@ -148,7 +147,7 @@ func test_p01_mission1_full_linear_path() -> void:
 	await _teardown(c)
 
 func test_p02_mission2_semi_open_completion() -> void:
-	reporter.start_test("P02: Mission 2 semi-open path (SR2, 6 steps)")
+	reporter.start_test("P02: Mission 2 semi-open path (build Control Station, then SR2 loop)")
 	_reset()
 	_mark_stage_complete(1)
 	var c = await _setup()
@@ -157,7 +156,7 @@ func test_p02_mission2_semi_open_completion() -> void:
 
 	if not _assert_stage(c, 2, "P02 start"): await _teardown(c); return
 
-	var m2_actions = ["create_rocket", "select_launch_target", "launch_rocket_from_earth",
+	var m2_actions = ["build_control_station", "accept_contractor_offer", "create_rocket", "select_launch_target", "launch_rocket_from_earth",
 		"arrived_at_mining_site", "mine_target", "return_rocket_home", "resolve_mission_debrief"]
 	for action in m2_actions:
 		var before = c.get_tutorial_state()

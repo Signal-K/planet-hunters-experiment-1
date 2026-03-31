@@ -36,81 +36,6 @@
       "timeSpent": 0
     },
     {
-      "id": "uw3lor",
-      "project": "coral",
-      "projectName": "Coral",
-      "title": "Sketch the bleaching / restoration event UI",
-      "status": "todo",
-      "priority": "medium",
-      "labels": [
-        "liam-sprint",
-        "sketch"
-      ],
-      "assignee": "Liam",
-      "description": "When a coral bleaching event occurs, the game needs to communicate it without being heavy-handed or panic-inducing. Sketch:\n\n• How does the visual environment change (colour shift, fish behaviour)?\n• Is there a notification? What does it say?\n• What actions can the player take, and how are they presented?\n• How does recovery look when the player intervenes successfully?\n\nThis is about the emotional and visual arc of a bleaching event, not the mechanics.",
-      "notes": "knowns: task-qp0w5k",
-      "plan": "",
-      "ac": [
-        {
-          "index": 1,
-          "done": false,
-          "text": "Bleaching event visual/UI sketch completed"
-        },
-        {
-          "index": 2,
-          "done": false,
-          "text": "Recovery state sketched"
-        },
-        {
-          "index": 3,
-          "done": false,
-          "text": "Player action options noted"
-        }
-      ],
-      "attachments": [],
-      "createdAt": "2026-03-25T03:00:00Z",
-      "updatedAt": "2026-03-26T13:32:15.004773+11:00",
-      "timeSpent": 0
-    },
-    {
-      "id": "gh3sgu",
-      "project": "saily",
-      "projectName": "Daily Game",
-      "title": "Sketch the character selection / briefing screen layout",
-      "status": "todo",
-      "priority": "high",
-      "labels": [
-        "liam-sprint",
-        "sketch",
-        "design"
-      ],
-      "assignee": "Liam",
-      "description": "The briefing screen is where players choose which character arc to continue each day. Sketch the layout for:\n\n• How are 4 character cards displayed? Grid? Carousel?\n• What info is shown per card: name, arc progress, today's prompt preview?\n• What does the locked/unavailable state look like?\n• Where does the dialogue actually happen — same screen or a sub-screen?\n\nThink about how it feels different from a typical 'choose your character' screen.",
-      "notes": "knowns: task-5hakbo",
-      "plan": "",
-      "ac": [
-        {
-          "index": 1,
-          "done": false,
-          "text": "Layout sketch for character grid/list"
-        },
-        {
-          "index": 2,
-          "done": false,
-          "text": "Card states sketched: active, locked, complete"
-        },
-        {
-          "index": 3,
-          "done": false,
-          "text": "Dialogue entry flow noted"
-        }
-      ],
-      "attachments": [],
-      "createdAt": "2026-03-25T03:00:00Z",
-      "updatedAt": "2026-03-26T13:32:15.004773+11:00",
-      "timeSpent": 0
-    },
-    {
       "id": "s3mgg4",
       "project": "coral",
       "projectName": "Coral",
@@ -144,7 +69,7 @@
       ],
       "attachments": [],
       "createdAt": "2026-03-25T03:00:00Z",
-      "updatedAt": "2026-03-28T13:08:03+11:00",
+      "updatedAt": "2026-04-01T16:37:21+11:00",
       "timeSpent": 0
     },
     {
@@ -152,7 +77,7 @@
       "project": "saily",
       "projectName": "Daily Game",
       "title": "Write arc-completion reward screen copy for all characters (arcs 1+)",
-      "status": "todo",
+      "status": "done",
       "priority": "medium",
       "labels": [
         "writing",
@@ -182,7 +107,7 @@
       ],
       "attachments": [],
       "createdAt": "2026-03-25T20:54:21Z",
-      "updatedAt": "2026-03-25T20:54:21Z",
+      "updatedAt": "2026-04-01T08:00:11+11:00",
       "timeSpent": 0
     },
     {
@@ -190,7 +115,7 @@
       "project": "saily",
       "projectName": "Daily Game",
       "title": "Write second story arc (chapters 6–10) for all 4 characters",
-      "status": "todo",
+      "status": "done",
       "priority": "medium",
       "labels": [
         "writing",
@@ -220,45 +145,7 @@
       ],
       "attachments": [],
       "createdAt": "2026-03-25T20:54:21Z",
-      "updatedAt": "2026-03-26T13:32:15.004773+11:00",
-      "timeSpent": 0
-    },
-    {
-      "id": "2pqc1e",
-      "project": "saily",
-      "projectName": "Daily Game",
-      "title": "Draft Story Arc 2 chapter outlines for one character (chapters 6-10)",
-      "status": "todo",
-      "priority": "medium",
-      "labels": [
-        "writing",
-        "narrative",
-        "creative"
-      ],
-      "assignee": "Liam",
-      "description": "Outline second arc for one of the 4 characters. 5 chapters (6–10), 2–3 sentence scene summary per chapter, core choice/tension, emotional beat. Don't write full dialogue — just beats and intent. ~2–3h. Pick whichever character you want to develop first.",
-      "notes": "",
-      "plan": "",
-      "ac": [
-        {
-          "index": 0,
-          "done": false,
-          "text": "One character chosen and noted"
-        },
-        {
-          "index": 1,
-          "done": false,
-          "text": "5 chapter beat outlines written"
-        },
-        {
-          "index": 2,
-          "done": false,
-          "text": "Each beat has: scene summary, core tension, emotional tone"
-        }
-      ],
-      "attachments": [],
-      "createdAt": "2026-03-25T20:54:21Z",
-      "updatedAt": "2026-03-26T13:32:15.004773+11:00",
+      "updatedAt": "2026-04-01T07:58:31+11:00",
       "timeSpent": 0
     },
     {
@@ -266,7 +153,7 @@
       "project": "saily",
       "projectName": "Daily Game",
       "title": "Write arc 2–4 completion screen copy",
-      "status": "todo",
+      "status": "done",
       "priority": "medium",
       "labels": [
         "liam-sprint",
@@ -295,7 +182,7 @@
       ],
       "attachments": [],
       "createdAt": "2026-03-25T03:00:00Z",
-      "updatedAt": "2026-03-26T13:32:15.004773+11:00",
+      "updatedAt": "2026-04-01T07:58:31+11:00",
       "timeSpent": 0
     },
     {
@@ -303,7 +190,7 @@
       "project": "saily",
       "projectName": "Daily Game",
       "title": "Write in-game notification copy for daily reminders",
-      "status": "todo",
+      "status": "done",
       "priority": "low",
       "labels": [
         "liam-sprint",
@@ -332,7 +219,7 @@
       ],
       "attachments": [],
       "createdAt": "2026-03-25T03:00:00Z",
-      "updatedAt": "2026-03-26T13:32:15.004773+11:00",
+      "updatedAt": "2026-04-01T07:58:31+11:00",
       "timeSpent": 0
     },
     {
@@ -340,7 +227,7 @@
       "project": "saily",
       "projectName": "Daily Game",
       "title": "Write missing briefingExpression dialogue for all 4 character arcs",
-      "status": "todo",
+      "status": "done",
       "priority": "medium",
       "labels": [
         "writing",
@@ -370,7 +257,7 @@
       ],
       "attachments": [],
       "createdAt": "2026-03-25T20:54:21Z",
-      "updatedAt": "2026-03-25T20:54:21Z",
+      "updatedAt": "2026-04-01T08:00:11+11:00",
       "timeSpent": 0
     },
     {
@@ -412,7 +299,7 @@
       "project": "saily",
       "projectName": "Daily Game",
       "title": "Write briefing dialogue for all 4 character arcs",
-      "status": "todo",
+      "status": "done",
       "priority": "medium",
       "labels": [
         "liam-sprint",
@@ -426,7 +313,7 @@
       "ac": [],
       "attachments": [],
       "createdAt": "2026-03-24T00:00:00Z",
-      "updatedAt": "2026-03-24T00:00:00Z",
+      "updatedAt": "2026-04-01T08:00:11+11:00",
       "timeSpent": 0
     },
     {
@@ -434,7 +321,7 @@
       "project": "saily",
       "projectName": "Daily Game",
       "title": "Write loading / splash screen copy",
-      "status": "todo",
+      "status": "done",
       "priority": "low",
       "labels": [
         "liam-sprint",
@@ -458,44 +345,7 @@
       ],
       "attachments": [],
       "createdAt": "2026-03-25T03:00:00Z",
-      "updatedAt": "2026-03-26T13:32:15.004773+11:00",
-      "timeSpent": 0
-    },
-    {
-      "id": "s5j08d",
-      "project": "client",
-      "projectName": "Web",
-      "title": "Sketch the 3.0 navigation and top-level IA",
-      "status": "todo",
-      "priority": "medium",
-      "labels": [
-        "liam-sprint",
-        "sketch"
-      ],
-      "assignee": "Liam",
-      "description": "The current site navigation is flat and doesn't reflect the 3.0 product structure. Sketch the new information architecture:\n\n• What are the top-level sections? (Games, Science, About, Blog?)\n• Desktop nav vs mobile nav — same structure or different?\n• Is there a persistent game launcher / CTA in the nav?\n• How does logged-in state change the nav (if at all)?\n\nThis is a sitemap + rough nav sketch, not pixel-perfect design.",
-      "notes": "knowns: task-uayboz",
-      "plan": "",
-      "ac": [
-        {
-          "index": 1,
-          "done": false,
-          "text": "Top-level IA agreed and sketched"
-        },
-        {
-          "index": 2,
-          "done": false,
-          "text": "Mobile nav approach noted"
-        },
-        {
-          "index": 3,
-          "done": false,
-          "text": "CTA placement in nav decided"
-        }
-      ],
-      "attachments": [],
-      "createdAt": "2026-03-25T03:00:00Z",
-      "updatedAt": "2026-03-26T13:32:15.004773+11:00",
+      "updatedAt": "2026-04-01T07:58:31+11:00",
       "timeSpent": 0
     },
     {
@@ -517,7 +367,7 @@
       "ac": [],
       "attachments": [],
       "createdAt": "2026-03-24T00:00:00Z",
-      "updatedAt": "2026-03-28T11:15:20+11:00",
+      "updatedAt": "2026-04-01T16:37:21+11:00",
       "timeSpent": 0
     },
     {
@@ -525,7 +375,7 @@
       "project": "saily",
       "projectName": "Daily Game",
       "title": "Write arc 1 completion screen copy for each character",
-      "status": "in-progress",
+      "status": "done",
       "priority": "medium",
       "labels": [
         "liam-sprint",
@@ -539,7 +389,7 @@
       "ac": [],
       "attachments": [],
       "createdAt": "2026-03-24T00:00:00Z",
-      "updatedAt": "2026-03-28T13:07:49+11:00",
+      "updatedAt": "2026-04-01T08:00:11+11:00",
       "timeSpent": 0
     },
     {
@@ -547,7 +397,7 @@
       "project": "saily",
       "projectName": "Daily Game",
       "title": "Write mission control helper copy for puzzle actions",
-      "status": "todo",
+      "status": "done",
       "priority": "medium",
       "labels": [
         "copy",
@@ -577,7 +427,7 @@
       ],
       "attachments": [],
       "createdAt": "2026-03-25T20:54:21Z",
-      "updatedAt": "2026-03-26T13:32:15.004773+11:00",
+      "updatedAt": "2026-04-01T07:58:31+11:00",
       "timeSpent": 0
     },
     {
@@ -585,7 +435,7 @@
       "project": "saily",
       "projectName": "Daily Game",
       "title": "Design the arc-complete reward moment for storyline milestones",
-      "status": "todo",
+      "status": "done",
       "priority": "medium",
       "labels": [
         "design",
@@ -615,39 +465,7 @@
       ],
       "attachments": [],
       "createdAt": "2026-03-25T20:54:21Z",
-      "updatedAt": "2026-03-25T20:54:21Z",
-      "timeSpent": 0
-    },
-    {
-      "id": "lzyyrl",
-      "project": "coral",
-      "projectName": "Coral",
-      "title": "Write fish species personality notes (remaining 5)",
-      "status": "todo",
-      "priority": "medium",
-      "labels": [
-        "liam-sprint",
-        "writing"
-      ],
-      "assignee": "Liam",
-      "description": "3 fish species visual personality notes are in progress. Need the same for the remaining 5 species in the catalog. Each entry: movement style, behavioural quirk, relationship to reef, and a one-line 'personality' that animators can use as a brief.",
-      "notes": "knowns: task-wtwycm",
-      "plan": "",
-      "ac": [
-        {
-          "index": 1,
-          "done": false,
-          "text": "5 additional fish personality notes written"
-        },
-        {
-          "index": 2,
-          "done": false,
-          "text": "Each has a movement descriptor and personality line"
-        }
-      ],
-      "attachments": [],
-      "createdAt": "2026-03-25T03:00:00Z",
-      "updatedAt": "2026-03-26T13:32:15.004773+11:00",
+      "updatedAt": "2026-04-01T08:00:11+11:00",
       "timeSpent": 0
     },
     {
@@ -655,7 +473,7 @@
       "project": "saily",
       "projectName": "Daily Game",
       "title": "Sketch the end-of-arc celebration / reward screen",
-      "status": "todo",
+      "status": "done",
       "priority": "medium",
       "labels": [
         "liam-sprint",
@@ -679,40 +497,7 @@
       ],
       "attachments": [],
       "createdAt": "2026-03-25T03:00:00Z",
-      "updatedAt": "2026-03-26T13:32:15.004773+11:00",
-      "timeSpent": 0
-    },
-    {
-      "id": "pbbr01",
-      "project": "coral",
-      "projectName": "Coral",
-      "title": "Sketch the coral health / ecosystem status HUD",
-      "status": "todo",
-      "priority": "high",
-      "labels": [
-        "liam-sprint",
-        "sketch",
-        "design"
-      ],
-      "assignee": "Liam",
-      "description": "The coral game needs a HUD that shows ecosystem health without feeling like a bar chart. Sketch an approach:\n\n• Temperature, pH, nutrients — how to show these without numbers feeling clinical?\n• Could health be shown through the visuals themselves (coral color, fish behaviour)?\n• What minimal UI overlay is actually needed?\n\nThink about how a diver would perceive reef health — through feel and sight, not a dashboard.",
-      "notes": "knowns: task-wxmjoe",
-      "plan": "",
-      "ac": [
-        {
-          "index": 1,
-          "done": false,
-          "text": "HUD concept sketch showing which data is shown and how"
-        },
-        {
-          "index": 2,
-          "done": false,
-          "text": "At least one alternative to numeric bar approach explored"
-        }
-      ],
-      "attachments": [],
-      "createdAt": "2026-03-25T03:00:00Z",
-      "updatedAt": "2026-03-26T13:32:15.004773+11:00",
+      "updatedAt": "2026-04-01T08:00:11+11:00",
       "timeSpent": 0
     },
     {
@@ -816,6 +601,409 @@
       "createdAt": "2026-03-28T15:11:52+11:00",
       "updatedAt": "2026-03-28T15:11:55+11:00",
       "timeSpent": 0
+    },
+    {
+      "id": "kraozi",
+      "project": "planet-hunters-experiment-1",
+      "projectName": "Experiment 1",
+      "title": "Design Launchpad mission-setup screen for populated DB-backed targets",
+      "status": "in-review",
+      "priority": "medium",
+      "labels": [
+        "creative",
+        "design",
+        "launchpad",
+        "dbed",
+        "ux",
+        "liam-sprint"
+      ],
+      "assignee": "@me",
+      "description": "Create design direction for the full Launchpad mission-setup state when contractor, rocket, and target data are populated from saved/DB-backed state. Cover information hierarchy, section choreography, rocket slots/card treatment, target-list readability, and how the screen should look in tutorial stages versus free operations.",
+      "notes": "",
+      "plan": "",
+      "ac": [],
+      "attachments": [
+        "/api/attachments/kraozi/IMG_2061.jpeg"
+      ],
+      "createdAt": "2026-03-29T23:27:28+11:00",
+      "updatedAt": "2026-04-01T07:29:26+11:00",
+      "timeSpent": 0
+    },
+    {
+      "id": "ex77py",
+      "project": "planet-hunters-experiment-1",
+      "projectName": "Experiment 1",
+      "title": "Design Satellite Station populated anomaly list for DB-backed scan results",
+      "status": "in-review",
+      "priority": "high",
+      "labels": [
+        "creative",
+        "design",
+        "satellite",
+        "dbed",
+        "ux",
+        "liam-sprint"
+      ],
+      "assignee": "@me",
+      "description": "Design the populated Satellite Station panel state for real scan results coming from DB-backed anomaly data. Focus on card width, scroll behavior, edge padding, text wrapping, scan-status hierarchy, and how list/detail actions should read at 1920x1080 without clipping.",
+      "notes": "",
+      "plan": "",
+      "ac": [],
+      "attachments": [
+        "/api/attachments/ex77py/IMG_2049.jpeg"
+      ],
+      "createdAt": "2026-03-29T23:27:28+11:00",
+      "updatedAt": "2026-03-30T20:16:41+11:00",
+      "timeSpent": 0
+    },
+    {
+      "id": "cv8e1i",
+      "project": "8rv9kf",
+      "projectName": "",
+      "title": "test",
+      "status": "done",
+      "priority": "medium",
+      "labels": [
+        "liam-sprint"
+      ],
+      "assignee": "Liam",
+      "description": "",
+      "notes": "",
+      "plan": "",
+      "ac": [],
+      "attachments": [],
+      "createdAt": "2026-04-01T07:41:13+11:00",
+      "updatedAt": "2026-04-01T15:13:52+11:00",
+      "timeSpent": 0
+    },
+    {
+      "id": "i2mj6e",
+      "project": "saily",
+      "projectName": "Daily Game",
+      "title": "Write arc completion and reward screen copy for all characters",
+      "status": "in-progress",
+      "priority": "medium",
+      "labels": [
+        "writing",
+        "narrative",
+        "creative",
+        "liam-sprint"
+      ],
+      "assignee": "Liam",
+      "description": "When a player completes all 10 chapters of a character arc, mission-complete.tsx shows isStorylineComplete=true — this triggers the postcard reward reveal. Write copy for all 4 characters covering: (1) the arc completion screen headline + 2–3 sentence outcome, and (2) the postcard title + message (postcardTitle + postcardMessage fields in lib/storylines.ts).\n\nThe 4 characters and their full arc:\n\nZIX — Warm, self-deprecating tourist. Arc 1: sent to wrong star system, spends 5 chapters finding the right one. Arc 2: arrives at Verdant Paradise, discovers it is real but deeply strange, acquires a creature called Gerald. Voice: wry, warm, slightly exasperated. Current postcard: \"Greetings from Verdant Paradise — I finally found the beach.\"\n\nBRIX (Commander) — Serious, efficient Supply Corps officer. Arc 1: survey run of 12 depot candidate planets. Arc 2: expanded run of 20 candidates across binary systems, corrects database errors, navigates deadline politics. Voice: formal, precise, dry humour through understatement. Current postcard: \"Depot Survey Log: Complete.\"\n\nPIP — Warm, nervous cadet on first solo certification. Arc 1: passes certification exam. Arc 2: builds a client practice, handles rush jobs, eventually asked to help write the new exam criteria. Voice: eager, self-aware, growing confidence. Current postcard: \"Certification: High Distinction.\"\n\nCARTA (The Cartographer) — Serious, meticulous mapper. Arc 1: charts a blank sector with old, error-filled data. Arc 2: charts sector two, corrects 47 entries, finds an unmapped cluster, files a finding. Voice: precise, careful, finds deep satisfaction in correction. Current postcard: \"Charting the Void: Sector Clear.\"\n\nOutput: for each character — headline, 2–3 sentence outcome, postcard title, postcard message. Ready to drop directly into lib/storylines.ts.",
+      "notes": "",
+      "plan": "",
+      "ac": [],
+      "attachments": [],
+      "createdAt": "2026-04-01T07:59:34+11:00",
+      "updatedAt": "2026-04-01T22:54:45+11:00",
+      "timeSpent": 0
+    },
+    {
+      "id": "w8f4l5",
+      "project": "planet-hunters-experiment-1",
+      "projectName": "Experiment 1",
+      "title": "Write in-universe project briefs for the 6 named contractors",
+      "status": "todo",
+      "priority": "medium",
+      "labels": [
+        "writing",
+        "creative",
+        "contractors",
+        "liam-sprint"
+      ],
+      "assignee": "Liam",
+      "description": "The SubcontractorsPanel shows each contractor with their name, standing, and mineral preferences. Currently each has a 1-line role (e.g. \"Heavy lift launch — buys rare metals at premium\") but no in-universe project context. Write 2–3 sentences per contractor explaining what they are actually building, why they need those specific minerals, and what working with them feels like as a player relationship.\n\nThe 6 contractors (from SubcontractorManager.gd):\n- SpaceX — Heavy lift launch, buys rare metals at premium\n- Rocketlab — Small satellite launch, buys common ores at premium\n- Astroforge — In-space smelting, buys Cobalt and Silicates\n- Swinburne Automotive — Aerospace components, buys Iron feedstock\n- Karman+ — Deep-space mining hardware, buys Platinum\n- Skybus Transport — Bulk cargo logistics, buys Nickel and Silicates\n\nThis text appears in the contractor detail card in SubcontractorsPanel.tscn. Output: 2–3 sentences per contractor, ready to drop in as the description field in SubcontractorManager.gd.\n\nTone: citizen science, real companies doing real things — grounded, not cartoonish.",
+      "notes": "",
+      "plan": "",
+      "ac": [],
+      "attachments": [],
+      "createdAt": "2026-04-01T16:59:09+11:00",
+      "updatedAt": "2026-04-01T16:59:09+11:00",
+      "timeSpent": 0
+    },
+    {
+      "id": "zpo0t2",
+      "project": "planet-hunters-experiment-1",
+      "projectName": "Experiment 1",
+      "title": "Design the Control Station active mission card",
+      "status": "todo",
+      "priority": "high",
+      "labels": [
+        "design",
+        "creative",
+        "control-station",
+        "liam-sprint"
+      ],
+      "assignee": "Liam",
+      "description": "The Control Station panel (ControlStationPanel.tscn, Active Tab) lists in-flight missions — rockets in orbit or returning. Each card currently shows rocket ID, target label, and a resume button. Missing: contractor name, their order (mineral + quantity), and return status.\n\nDesign the compact card layout: what 3–4 data points appear, how they are hierarchized, and how the card differs between the two states: in-orbit (mission ongoing) and returning (rocket inbound, no more mining).\n\nCard must fit the same width as the Satellite Station list cards — compact, scannable, no scrolling within a single card.\n\nData available per card:\n- rockets table: rocket_type_id, status (in-orbit / returning)\n- missions table: contractor_id, requested_minerals (JSON: mineral + quantity)\n- contractors table: name, role\n- affinity_scores: affinity_points (for standing badge)\n\nOutput: sketch or written spec covering layout, data hierarchy, and both state variants.",
+      "notes": "",
+      "plan": "",
+      "ac": [],
+      "attachments": [],
+      "createdAt": "2026-04-01T16:59:46+11:00",
+      "updatedAt": "2026-04-01T16:59:46+11:00",
+      "timeSpent": 0
+    },
+    {
+      "id": "01905l",
+      "project": "planet-hunters-experiment-1",
+      "projectName": "Experiment 1",
+      "title": "Design the debrief payout breakdown panel",
+      "status": "todo",
+      "priority": "medium",
+      "labels": [
+        "design",
+        "creative",
+        "debrief",
+        "liam-sprint"
+      ],
+      "assignee": "Liam",
+      "description": "The mission debrief (mission_debrief_v2.tscn, Reward phase) calculates a multi-tier payout. The button copy is done. What is missing is the visual hierarchy of the breakdown — how the tiers stack so the player understands both the total and why.\n\nThe 4 tiers (all calculated post-mission):\n- Base: sum(mineral_qty × market_price) per mineral collected\n- Order bonus: base × 0.20 × order_ratio — only applies if contractor mission and player delivered the requested minerals (order_ratio from missions table)\n- Affinity bonus: base × (affinity_points × 0.005), capped at 25% (from affinity_scores)\n- Discovery bonus: base × (0.10 + annotation_depth × 0.01) — only if new target was first-discovered\n\nThree states to design:\n1. Order filled — all 4 tiers active, order bonus highlighted\n2. Order missed — contractor mission but wrong minerals, order bonus shown as 0 (not hidden)\n3. Free ops — no contractor, no order row at all, only base + discovery\n\nOutput: layout spec or sketch covering: total at top, tier breakdown below, and the 3 order states.",
+      "notes": "",
+      "plan": "",
+      "ac": [],
+      "attachments": [],
+      "createdAt": "2026-04-01T17:00:16+11:00",
+      "updatedAt": "2026-04-01T17:00:16+11:00",
+      "timeSpent": 0
+    },
+    {
+      "id": "tekgjn",
+      "project": "coral",
+      "projectName": "Coral",
+      "title": "Write visual personality notes for remaining 5 fish species",
+      "status": "todo",
+      "priority": "medium",
+      "labels": [
+        "writing",
+        "creative",
+        "animation",
+        "liam-sprint"
+      ],
+      "assignee": "Liam",
+      "description": "The hac32h task covers the first 3 fish species. The remaining 5 need the same treatment before animation begins. For each, write a profile (~100–150 words) covering: how it moves through water, how it behaves near coral patches or other fish, how it reacts under stress, and a one-line animator brief. These profiles are the direct input for sprite animation in FishCard.tscn and the ReefViewport swim zones.\n\nThe 5 species (ecological roles from species_reference.json):\n- Creole Wrasse (Clepticus parrae) — aids corals, grazes zooplankton, fast open-water swimmer, urchin predator trait\n- French Angelfish (Pomacanthus paru) — aids corals, territorial, slow elegant movement, kills sponges\n- Sergeant Major (Abudefduf saxatilis) — neutral, highly territorial, farms algae patches, aggressive toward intruders\n- Red Lionfish (Pterois volitans) — kills reef fish, slow ambush predator, venomous, introduced as stressor Level 4+\n- Longspine Sea Urchin (Diadema antillarum) — stressor species, kills stony corals at −2/turn, slow crawler, grazes algae\n\nOutput: one profile per species, ~100–150 words each, written as animator briefs. Match the tone of the hac32h profiles already in progress.",
+      "notes": "",
+      "plan": "",
+      "ac": [],
+      "attachments": [],
+      "createdAt": "2026-04-01T17:00:36+11:00",
+      "updatedAt": "2026-04-01T17:00:36+11:00",
+      "timeSpent": 0
+    },
+    {
+      "id": "nqgfn8",
+      "project": "coral",
+      "projectName": "Coral",
+      "title": "Design the turn results panel layout for 3-species vs 6-species reefs",
+      "status": "todo",
+      "priority": "high",
+      "labels": [
+        "design",
+        "creative",
+        "game-ui",
+        "liam-sprint"
+      ],
+      "assignee": "Liam",
+      "description": "The TurnResultsPanel.tscn is a modal that blocks input after every turn. It shows per-species population vs target, a coral health bar, and turns remaining. The current layout works for early levels (2–3 species). By Level 6+ there are up to 8 species on screen simultaneously.\n\nDesign how the panel scales across these two states:\n1. Early game (2–3 species): spacious, readable, each row has room for species name + current/target + status pill (on-target / surplus / needs-growth)\n2. Late game (6–8 species): same modal, same data, more rows — does it scroll? Compress? Collapse species that are on-target?\n\nAlso: the panel currently has no visual distinction between a STRESSOR species (Longspine Sea Urchin, Red Lionfish — things you want to eliminate, not grow) and a TARGET species (things you want to reach a population count for). These have opposite goals but look identical in the current layout.\n\nData per row (from TurnResultRow.tscn):\n- Species name\n- Current population / target population\n- Status: on-target, surplus, needs-growth, or STRESSOR (eliminate)\n- Optional: extinct label\n\nOutput: layout spec or annotated sketch covering both scale states and the stressor vs target visual distinction.",
+      "notes": "",
+      "plan": "",
+      "ac": [],
+      "attachments": [],
+      "createdAt": "2026-04-01T22:54:08+11:00",
+      "updatedAt": "2026-04-01T22:54:08+11:00",
+      "timeSpent": 0
+    },
+    {
+      "id": "4zn18a",
+      "project": "client",
+      "projectName": "Web",
+      "title": "Decide the persistent HUD strip composition for the game hub",
+      "status": "todo",
+      "priority": "high",
+      "labels": [
+        "design",
+        "creative",
+        "hub",
+        "3.0",
+        "liam-sprint"
+      ],
+      "assignee": "Liam",
+      "description": "The 3.0 game hub spec (specs/redesign/3-0-unified-web-client.md) calls for a persistent strip showing 2–3 numbers at a glance — always visible, either top or bottom of the /game hub. The spec deliberately leaves the exact metrics unresolved. This ticket resolves that.\n\nThe current /game hub at /game shows structure cards (Telescope, Rover, Satellite, Inventory, Solar) as the primary navigation. The HUD strip sits above or below these.\n\nDecide and spec out:\n1. Which 2–3 metrics appear in the strip? Options from the spec:\n   - Active signals (anomalies awaiting classification across all your structures)\n   - Pending anomalies (subset: anomalies you have started but not submitted)\n   - Stardust delta (how much stardust you earned in the last session)\n   - Structures deployed count\n2. Does the strip sit top (persistent header) or bottom (persistent bar above mobile nav)?\n3. What does the strip look like when all values are 0 — empty state or hidden?\n\nThis is a decision ticket, not an open-ended design. Pick the metrics, document the rationale, and sketch the strip. Engineering will implement directly from this output.\n\nConstraint: the strip must work on 375px wide mobile. Max 3 data points. No charts.",
+      "notes": "",
+      "plan": "",
+      "ac": [],
+      "attachments": [],
+      "createdAt": "2026-04-01T22:54:24+11:00",
+      "updatedAt": "2026-04-01T22:54:24+11:00",
+      "timeSpent": 0
+    },
+    {
+      "id": "4pvk4o",
+      "project": "bumble",
+      "projectName": "",
+      "title": "Creative direction and content handoff for Bumble v0",
+      "status": "todo",
+      "priority": "high",
+      "labels": [
+        "creative",
+        "writing",
+        "design",
+        "bumble",
+        "liam-sprint"
+      ],
+      "assignee": "Liam",
+      "description": "Translate current Bumble product decisions into concrete creative deliverables that unblock UX copy, tutorial/help tone, and near-term content implementation for the bee-farming loop. Include cosy mobile farm sim framing, planets hidden for now, NPCs as flavour names, and bee/honey identity as the differentiator.",
+      "notes": "",
+      "plan": "",
+      "ac": [],
+      "attachments": [],
+      "createdAt": "2026-04-03T09:57:14+11:00",
+      "updatedAt": "2026-04-03T09:57:14+11:00",
+      "timeSpent": 0
+    },
+    {
+      "id": "u1u6o9",
+      "project": "bumble",
+      "projectName": "",
+      "title": "Rewrite Bumble help and tutorial copy in a manual voice",
+      "status": "todo",
+      "priority": "high",
+      "labels": [
+        "creative",
+        "writing",
+        "ux",
+        "bumble",
+        "liam-sprint"
+      ],
+      "assignee": "Liam",
+      "description": "Provide a revised help and tutorial copy set that reads like a clear in-game manual instead of character dialogue. Keep the tone cosy but practical, remove references that overpromise on hidden systems, and align help text with current design decisions such as short hatch moments, simple progression, and retired bees as the eventual production sink.",
+      "notes": "",
+      "plan": "",
+      "ac": [],
+      "attachments": [],
+      "createdAt": "2026-04-03T09:57:15+11:00",
+      "updatedAt": "2026-04-03T09:57:15+11:00",
+      "timeSpent": 0
+    },
+    {
+      "id": "s7blv8",
+      "project": "bumble",
+      "projectName": "",
+      "title": "Write Bumble microcopy pack for core farm loop states",
+      "status": "todo",
+      "priority": "high",
+      "labels": [
+        "creative",
+        "writing",
+        "ux",
+        "bumble",
+        "liam-sprint"
+      ],
+      "assignee": "Liam",
+      "description": "Create tight player-facing copy for the current loop: harvest feedback, order fulfilled alerts, bee hatch moments, hive-full or no-capacity states, levelling feedback, empty states, and daily completion beats. Keep hatch moments small, levelling mostly a UI effect, and avoid honey quality or planet references.",
+      "notes": "",
+      "plan": "",
+      "ac": [],
+      "attachments": [],
+      "createdAt": "2026-04-03T09:57:16+11:00",
+      "updatedAt": "2026-04-03T09:57:16+11:00",
+      "timeSpent": 0
+    },
+    {
+      "id": "nf9okq",
+      "project": "bumble",
+      "projectName": "",
+      "title": "Write Bumble v0 creative brief and scope guardrails",
+      "status": "todo",
+      "priority": "high",
+      "labels": [
+        "creative",
+        "writing",
+        "design",
+        "bumble",
+        "liam-sprint"
+      ],
+      "assignee": "Liam",
+      "description": "Document Bumble current product identity in one concise brief: target player is casual gamers, canonical title is Bumble / Star Sailors: Bumble, planets stay hidden in current UX, NPCs are light-flavour order names, and copy should stay practical rather than lore-heavy. Include explicit do and do-not rules for future writing and design work.",
+      "notes": "",
+      "plan": "",
+      "ac": [],
+      "attachments": [],
+      "createdAt": "2026-04-03T09:57:16+11:00",
+      "updatedAt": "2026-04-03T09:57:16+11:00",
+      "timeSpent": 0
+    },
+    {
+      "id": "iluwqq",
+      "project": "bumble",
+      "projectName": "",
+      "title": "Write short NPC order request and reaction lines for Bumble",
+      "status": "todo",
+      "priority": "medium",
+      "labels": [
+        "creative",
+        "writing",
+        "bumble",
+        "liam-sprint"
+      ],
+      "assignee": "Liam",
+      "description": "Create a compact bank of order-request and fulfilment-reaction lines for the named NPCs used in honey orders. Treat them as recognisable names with the same general register rather than distinct personalities. Keep lines tight and reusable so orders feel alive without turning the game into a narrative system.",
+      "notes": "",
+      "plan": "",
+      "ac": [],
+      "attachments": [],
+      "createdAt": "2026-04-03T09:58:55+11:00",
+      "updatedAt": "2026-04-03T09:58:55+11:00",
+      "timeSpent": 0
+    },
+    {
+      "id": "2dkabf",
+      "project": "bumble",
+      "projectName": "",
+      "title": "Research citizen-science data and image sources for Bumble",
+      "status": "todo",
+      "priority": "high",
+      "labels": [
+        "creative",
+        "research",
+        "api",
+        "bumble",
+        "liam-sprint"
+      ],
+      "assignee": "Liam",
+      "description": "Evaluate lightweight external sources Bumble could draw from for future bee, pollinator, plant, or horticulture content. Focus on sources realistic to integrate through public APIs or openly reusable media libraries, and note licensing and reliability tradeoffs. Initial candidates: iNaturalist, GBIF, Zooniverse or Panoptes, and Smithsonian Open Access.",
+      "notes": "",
+      "plan": "",
+      "ac": [],
+      "attachments": [],
+      "createdAt": "2026-04-03T09:58:56+11:00",
+      "updatedAt": "2026-04-03T09:58:56+11:00",
+      "timeSpent": 0
+    },
+    {
+      "id": "52n29w",
+      "project": "bumble",
+      "projectName": "",
+      "title": "Define simple building concepts and player-facing descriptions",
+      "status": "todo",
+      "priority": "medium",
+      "labels": [
+        "creative",
+        "design",
+        "writing",
+        "bumble",
+        "liam-sprint"
+      ],
+      "assignee": "Liam",
+      "description": "Write a light content and design brief for the first simple buildings Bumble should support, including what each one means to the player, what fantasy it adds, and how it should be described in UI. Start from practical structures like greenhouse, silo, water tank, and hive-related expansion rather than large management systems.",
+      "notes": "",
+      "plan": "",
+      "ac": [],
+      "attachments": [],
+      "createdAt": "2026-04-03T09:58:56+11:00",
+      "updatedAt": "2026-04-03T09:58:56+11:00",
+      "timeSpent": 0
     }
   ],
   "projects": [
@@ -834,6 +1022,10 @@
     {
       "slug": "coral",
       "name": "Coral"
+    },
+    {
+      "slug": "bumble",
+      "name": "Bumble"
     }
   ],
   "syncedAt": "2026-03-27T01:12:51Z"

@@ -2,6 +2,7 @@ extends Control
 
 signal panel_closed
 
+const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
 const SimpleDetailView = preload("res://Scenes/UI/SimpleDetail/simple_detail_view.tscn")
 const RocketSelectorOverlay = preload("res://Scenes/UI/RocketSelectorOverlay.tscn")
 const NewMissionAnnotations = preload("res://Scripts/UI/NewMissionAnnotations.gd")
@@ -91,16 +92,18 @@ func _add_refund(rocket_id: String) -> void:
 		print("NewMissionPanel: AppController not available for refund")
 
 func _apply_panel_style() -> void:
-	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
 	var panel = $PanelContainer/Panel
-	panel_style.apply_panel(panel)
-	panel_style.apply_title($PanelContainer/Panel/VBoxContainer/HeaderContainer/Title)
-	panel_style.apply_separator($PanelContainer/Panel/VBoxContainer/HSeparator)
-	panel_style.apply_button($PanelContainer/Panel/VBoxContainer/HeaderContainer/CloseButton, false)
-	panel_style.apply_button($PanelContainer/Panel/VBoxContainer/HeaderContainer/SelectRocketButton, true)
+	panel.add_theme_stylebox_override(
+		"panel",
+		PanelStyle.create_glass_panel_style(Color(0.05, 0.09, 0.14, 0.94), 0.68, 20, 24, 20)
+	)
+	PanelStyle.apply_title_on_dark($PanelContainer/Panel/VBoxContainer/HeaderContainer/Title)
+	PanelStyle.apply_separator($PanelContainer/Panel/VBoxContainer/HSeparator)
+	PanelStyle.apply_outline_button($PanelContainer/Panel/VBoxContainer/HeaderContainer/CloseButton)
+	PanelStyle.apply_button($PanelContainer/Panel/VBoxContainer/HeaderContainer/SelectRocketButton, true)
 	var refresh_btn = $PanelContainer/Panel/VBoxContainer/ContentContainer/RefreshContainer/RefreshButton
 	if refresh_btn:
-		panel_style.apply_button(refresh_btn, true)
+		PanelStyle.apply_outline_button(refresh_btn)
 
 func _get_app_controller() -> Node:
 	return preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()

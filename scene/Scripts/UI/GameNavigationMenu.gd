@@ -12,6 +12,13 @@ const MineralPricing = preload("res://Scripts/Utils/MineralPricing.gd")
 const RoomCatalog = preload("res://Scripts/Utils/RoomCatalog.gd")
 const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
 const FirstTimeMechanicTracker = preload("res://Scripts/Utils/FirstTimeMechanicTracker.gd")
+const GameMenuRootScene = preload("res://Scenes/UI/Templates/GameNavigationMenuRoot.tscn")
+const GameNavigationOverlayScene = preload("res://Scenes/UI/Templates/GameNavigationOverlay.tscn")
+const GameMenuStatsCardScene = preload("res://Scenes/UI/Templates/GameMenuStatsCard.tscn")
+const GameMenuProgressCardScene = preload("res://Scenes/UI/Templates/GameMenuProgressCard.tscn")
+const ResourceValueRowScene = preload("res://Scenes/UI/Templates/ResourceValueRow.tscn")
+const MenuUnlockHeaderScene = preload("res://Scenes/UI/Templates/MenuUnlockHeader.tscn")
+const MenuUnlockItemScene = preload("res://Scenes/UI/Templates/MenuUnlockItem.tscn")
 
 const MENU_LAYER_NAME := "GameMenuLayer"
 const MENU_ROOT_NAME := "GameMenuRoot"
@@ -81,36 +88,24 @@ static func is_open(tree: SceneTree) -> bool:
 # ---------------------------------------------------------------------------
 
 static func _build_menu_root(owner: Node) -> Control:
-	var root := Control.new()
+	var root: Control = GameMenuRootScene.instantiate()
 	root.name = MENU_ROOT_NAME
-	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	root.mouse_filter = Control.MOUSE_FILTER_STOP
 	root.process_mode = Node.PROCESS_MODE_ALWAYS
 	root.set_meta("tutorial_zone_exempt", true)
 
-	var backdrop := ColorRect.new()
-	backdrop.name = "Backdrop"
-	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	backdrop.mouse_filter = Control.MOUSE_FILTER_STOP
+	var backdrop: ColorRect = root.get_node("Backdrop")
 	backdrop.color = Color(0.03, 0.05, 0.09, 0.70)
 	backdrop.set_meta("tutorial_zone_exempt", true)
-	root.add_child(backdrop)
 
-	var center := CenterContainer.new()
-	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	center.mouse_filter = Control.MOUSE_FILTER_STOP
+	var center: CenterContainer = root.get_node("Center")
 	center.set_meta("tutorial_zone_exempt", true)
-	root.add_child(center)
 
 	var vp_w := 1280.0
 	if owner != null and owner.get_viewport() != null:
 		vp_w = owner.get_viewport().get_visible_rect().size.x
-	var panel := PanelContainer.new()
-	panel.name = MENU_PANEL_NAME
+	var panel: PanelContainer = root.get_node("Center/%s" % MENU_PANEL_NAME)
 	panel.custom_minimum_size = Vector2(clampf(vp_w - 48.0, 320.0, 920.0), 0.0)
-	panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	panel.set_meta("tutorial_zone_exempt", true)
-	center.add_child(panel)
 
 	var panel_style := StyleBoxFlat.new()
 	panel_style.bg_color = PANEL_BG
@@ -127,58 +122,37 @@ static func _build_menu_root(owner: Node) -> Control:
 	var vp_h := 768.0
 	if owner != null and owner.get_viewport() != null:
 		vp_h = owner.get_viewport().get_visible_rect().size.y
-	var scroll := ScrollContainer.new()
+	var scroll: ScrollContainer = root.get_node("Center/%s/Scroll" % MENU_PANEL_NAME)
 	scroll.custom_minimum_size = Vector2(0, clampf(vp_h * 0.82, 400.0, 740.0))
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.set_meta("tutorial_zone_exempt", true)
-	panel.add_child(scroll)
 
-	var shell := VBoxContainer.new()
-	shell.add_theme_constant_override("separation", 14)
-	shell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var shell: VBoxContainer = root.get_node("Center/%s/Scroll/Shell" % MENU_PANEL_NAME)
 	shell.set_meta("tutorial_zone_exempt", true)
-	scroll.add_child(shell)
-
-	# Header — game identity + action buttons
-	var header := HBoxContainer.new()
-	header.add_theme_constant_override("separation", 12)
-	shell.add_child(header)
-
-	var title_col := VBoxContainer.new()
-	title_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	title_col.add_theme_constant_override("separation", 2)
-	header.add_child(title_col)
-
-	var eyebrow := Label.new()
-	eyebrow.text = "PLANET HUNTERS"
+	var eyebrow: Label = root.get_node("Center/%s/Scroll/Shell/Header/TitleColumn/Eyebrow" % MENU_PANEL_NAME)
 	eyebrow.add_theme_font_size_override("font_size", 11)
 	eyebrow.add_theme_color_override("font_color", CYAN)
-	title_col.add_child(eyebrow)
 
-	var title := Label.new()
-	title.text = "Base of Operations"
+	var title: Label = root.get_node("Center/%s/Scroll/Shell/Header/TitleColumn/Title" % MENU_PANEL_NAME)
 	title.add_theme_font_size_override("font_size", 28)
 	title.add_theme_color_override("font_color", TITLE_COLOR)
-	title_col.add_child(title)
-
-	var logbook_btn := _build_button("Logbook", false)
+	var logbook_btn: Button = root.get_node("Center/%s/Scroll/Shell/Header/LogbookButton" % MENU_PANEL_NAME)
+	_apply_button_style(logbook_btn, false)
 	logbook_btn.custom_minimum_size = Vector2(110, 50)
-	header.add_child(logbook_btn)
 
-	var discoveries_btn := _build_button("Discoveries", false)
+	var discoveries_btn: Button = root.get_node("Center/%s/Scroll/Shell/Header/DiscoveriesButton" % MENU_PANEL_NAME)
+	_apply_button_style(discoveries_btn, false)
 	discoveries_btn.custom_minimum_size = Vector2(130, 50)
-	header.add_child(discoveries_btn)
 
-	var close_btn := _build_button("Close", false)
+	var close_btn: Button = root.get_node("Center/%s/Scroll/Shell/Header/CloseButton" % MENU_PANEL_NAME)
+	_apply_button_style(close_btn, false)
 	close_btn.custom_minimum_size = Vector2(110, 50)
 	close_btn.pressed.connect(func():
 		preload("res://Scripts/UI/GameNavigationMenu.gd").close(owner)
 	)
-	header.add_child(close_btn)
 
-	var sep := HSeparator.new()
+	var sep: HSeparator = root.get_node("Center/%s/Scroll/Shell/Separator" % MENU_PANEL_NAME)
 	sep.add_theme_color_override("separator", Color(CYAN.r, CYAN.g, CYAN.b, 0.3))
-	shell.add_child(sep)
 
 	# Player stats
 	shell.add_child(_build_stats_card())
@@ -222,7 +196,7 @@ static func _build_menu_root(owner: Node) -> Control:
 # ---------------------------------------------------------------------------
 
 static func _build_stats_card() -> PanelContainer:
-	var card := PanelContainer.new()
+	var card: PanelContainer = GameMenuStatsCardScene.instantiate()
 	var style := _card_style(0.45)
 	card.add_theme_stylebox_override("panel", style)
 
@@ -246,9 +220,7 @@ static func _build_stats_card() -> PanelContainer:
 			xp_str = str(xp)
 	missions = int(RocketsManager.get_completed_mission_count())
 
-	var hbox := HBoxContainer.new()
-	hbox.add_theme_constant_override("separation", 20)
-	card.add_child(hbox)
+	var hbox: HBoxContainer = card.get_node("StatsRow")
 
 	for stat_pair in [
 		["LEVEL", level_str, CYAN],
@@ -279,7 +251,7 @@ static func _build_stats_card() -> PanelContainer:
 # ---------------------------------------------------------------------------
 
 static func _build_progress_card() -> PanelContainer:
-	var card := PanelContainer.new()
+	var card: PanelContainer = GameMenuProgressCardScene.instantiate()
 	card.add_theme_stylebox_override("panel", _card_style(0.45))
 
 	var app = AppControllerHelper.get_instance()
@@ -293,31 +265,19 @@ static func _build_progress_card() -> PanelContainer:
 		total_xp = int(app.get_total_experience()) if app.has_method("get_total_experience") else xp
 		next_req = int(app.get_xp_required_for_next_level()) if app.has_method("get_xp_required_for_next_level") else max(10, xp + 1)
 
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 8)
-	card.add_child(vbox)
-
-	var level_row := HBoxContainer.new()
-	vbox.add_child(level_row)
-
-	var level_lbl := Label.new()
+	var level_lbl: Label = card.get_node("Body/LevelRow/LevelLabel")
 	level_lbl.text = "Level %d" % level
-	level_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	level_lbl.add_theme_font_size_override("font_size", 22)
 	level_lbl.add_theme_color_override("font_color", CYAN)
-	level_row.add_child(level_lbl)
 
-	var xp_lbl := Label.new()
+	var xp_lbl: Label = card.get_node("Body/LevelRow/XPLabel")
 	xp_lbl.text = "Total XP: %d  •  Current: %d" % [total_xp, xp]
 	xp_lbl.add_theme_font_size_override("font_size", 16)
 	xp_lbl.add_theme_color_override("font_color", TEXT_MUTED)
-	level_row.add_child(xp_lbl)
 
-	var bar := ProgressBar.new()
+	var bar: ProgressBar = card.get_node("Body/ProgressBar")
 	bar.max_value = max(next_req, 1)
 	bar.value = clamp(xp, 0, bar.max_value)
-	bar.show_percentage = false
-	bar.custom_minimum_size = Vector2(0, 12)
 	var bar_fill := StyleBoxFlat.new()
 	bar_fill.bg_color = CYAN
 	bar_fill.set_corner_radius_all(4)
@@ -326,13 +286,11 @@ static func _build_progress_card() -> PanelContainer:
 	bar_bg.set_corner_radius_all(4)
 	bar.add_theme_stylebox_override("fill", bar_fill)
 	bar.add_theme_stylebox_override("background", bar_bg)
-	vbox.add_child(bar)
 
-	var next_lbl := Label.new()
+	var next_lbl: Label = card.get_node("Body/NextLabel")
 	next_lbl.text = "%d XP to next level" % max(next_req - xp, 0)
 	next_lbl.add_theme_font_size_override("font_size", 15)
 	next_lbl.add_theme_color_override("font_color", TEXT_MUTED)
-	vbox.add_child(next_lbl)
 
 	return card
 
@@ -351,15 +309,6 @@ static func _build_actions_section(owner: Node) -> VBoxContainer:
 			preload("res://Scripts/UI/GameNavigationMenu.gd").close(owner)
 	)
 	vbox.add_child(practice_btn)
-
-	var skip_btn := _build_button("Skip Onboarding", false)
-	skip_btn.pressed.connect(func():
-		var app = AppControllerHelper.get_instance()
-		if app and app.has_method("skip_tutorial"):
-			app.skip_tutorial()
-		preload("res://Scripts/UI/GameNavigationMenu.gd").close(owner)
-	)
-	vbox.add_child(skip_btn)
 
 	var replay_mission_btn := _build_button("Replay This Mission Guide", false)
 	replay_mission_btn.pressed.connect(func():
@@ -392,14 +341,31 @@ static func _build_actions_section(owner: Node) -> VBoxContainer:
 
 	var reset_btn := _build_button("Reset All Data", false)
 	reset_btn.pressed.connect(func():
-		var app = AppControllerHelper.get_instance()
-		if app and app.has_method("_on_reset_all"):
-			app._on_reset_all()
+		_request_reset_all(owner)
 		preload("res://Scripts/UI/GameNavigationMenu.gd").close(owner)
 	)
 	vbox.add_child(reset_btn)
 
 	return vbox
+
+static func _request_reset_all(owner: Node) -> void:
+	var app = AppControllerHelper.get_instance()
+	if app and app.has_method("_on_reset_all"):
+		app._on_reset_all()
+		return
+	if owner != null:
+		var ui_manager = owner.get_node_or_null("UIManager")
+		if ui_manager and ui_manager.has_method("_on_reset_all"):
+			ui_manager._on_reset_all()
+			return
+		if owner.has_method("_on_reset_all"):
+			owner._on_reset_all()
+			return
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree and tree.root:
+		var fallback = tree.root.find_child("AppController", true, false)
+		if fallback and fallback.has_method("_on_reset_all"):
+			fallback._on_reset_all()
 
 # ---------------------------------------------------------------------------
 # Unlocks card
@@ -450,7 +416,7 @@ static func _build_unlocks_card() -> PanelContainer:
 	var levels: Array = unlocks_by_level.keys()
 	levels.sort()
 	for lvl in levels:
-		var header_lbl := Label.new()
+		var header_lbl: Label = MenuUnlockHeaderScene.instantiate()
 		header_lbl.text = "Level %d" % lvl
 		header_lbl.add_theme_font_size_override("font_size", 16)
 		header_lbl.add_theme_color_override("font_color", CYAN if lvl <= current_level else TEXT_MUTED)
@@ -459,7 +425,7 @@ static func _build_unlocks_card() -> PanelContainer:
 		var items: Array = unlocks_by_level[lvl].duplicate()
 		items.sort()
 		for item in items:
-			var row := Label.new()
+			var row: Label = MenuUnlockItemScene.instantiate()
 			row.text = "  • %s" % str(item)
 			row.add_theme_font_size_override("font_size", 15)
 			row.add_theme_color_override("font_color", TEXT_COLOR if lvl <= current_level else TEXT_MUTED)
@@ -519,23 +485,14 @@ static func _build_debug_section(owner: Node) -> VBoxContainer:
 # ---------------------------------------------------------------------------
 
 static func _build_logbook_overlay(vp_w: float = 1280.0) -> ColorRect:
-	var overlay := ColorRect.new()
+	var overlay: ColorRect = GameNavigationOverlayScene.instantiate()
 	overlay.name = "LogbookOverlay"
-	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	overlay.color = Color(0.0, 0.0, 0.0, 0.55)
-	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
 	overlay.set_meta("tutorial_zone_exempt", true)
 	overlay.visible = false
 
-	var center := CenterContainer.new()
-	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	center.mouse_filter = Control.MOUSE_FILTER_STOP
-	overlay.add_child(center)
-
-	var panel := PanelContainer.new()
+	var panel: PanelContainer = overlay.get_node("Center/Panel")
 	panel.custom_minimum_size = Vector2(clampf(vp_w - 48.0, 320.0, 720.0), 520.0)
-	panel.mouse_filter = Control.MOUSE_FILTER_STOP
-	center.add_child(panel)
 
 	var style := StyleBoxFlat.new()
 	style.bg_color = PANEL_BG
@@ -548,48 +505,28 @@ static func _build_logbook_overlay(vp_w: float = 1280.0) -> ColorRect:
 	style.content_margin_bottom = 16
 	panel.add_theme_stylebox_override("panel", style)
 
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 10)
-	panel.add_child(vbox)
-
-	# Header row
-	var header := HBoxContainer.new()
-	vbox.add_child(header)
-
-	var title := Label.new()
+	var vbox: VBoxContainer = overlay.get_node("Center/Panel/Content")
+	var title: Label = overlay.get_node("Center/Panel/Content/Header/Title")
 	title.text = "Mission Logbook"
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title.add_theme_font_size_override("font_size", 28)
 	title.add_theme_color_override("font_color", TITLE_COLOR)
-	header.add_child(title)
 
-	var close_btn := _build_button("Close", false)
+	var close_btn: Button = overlay.get_node("Center/Panel/Content/Header/CloseButton")
+	_apply_button_style(close_btn, false)
 	close_btn.custom_minimum_size = Vector2(120, 46)
 	close_btn.pressed.connect(func():
 		overlay.visible = false
 	)
-	header.add_child(close_btn)
 
-	var sep := HSeparator.new()
+	var sep: HSeparator = overlay.get_node("Center/Panel/Content/Separator")
 	sep.add_theme_color_override("separator", Color(CYAN.r, CYAN.g, CYAN.b, 0.3))
-	vbox.add_child(sep)
 
-	# Subtitle
-	var subtitle := Label.new()
+	var subtitle: Label = overlay.get_node("Center/Panel/Content/Subtitle")
 	subtitle.text = "Your mission history — most recent first."
 	subtitle.add_theme_font_size_override("font_size", 15)
 	subtitle.add_theme_color_override("font_color", TEXT_MUTED)
-	vbox.add_child(subtitle)
 
-	# Scroll area for entries
-	var scroll := ScrollContainer.new()
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	vbox.add_child(scroll)
-
-	var entries := VBoxContainer.new()
-	entries.add_theme_constant_override("separation", 8)
-	entries.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.add_child(entries)
+	var entries: VBoxContainer = overlay.get_node("Center/Panel/Content/Scroll/Body")
 
 	_populate_logbook_entries(entries)
 
@@ -661,23 +598,14 @@ static func _populate_logbook_entries(entries: VBoxContainer) -> void:
 # ---------------------------------------------------------------------------
 
 static func _build_discoveries_overlay(vp_w: float = 1280.0) -> ColorRect:
-	var overlay := ColorRect.new()
+	var overlay: ColorRect = GameNavigationOverlayScene.instantiate()
 	overlay.name = "DiscoveriesOverlay"
-	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	overlay.color = Color(0.0, 0.0, 0.0, 0.55)
-	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
 	overlay.set_meta("tutorial_zone_exempt", true)
 	overlay.visible = false
 
-	var center := CenterContainer.new()
-	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	center.mouse_filter = Control.MOUSE_FILTER_STOP
-	overlay.add_child(center)
-
-	var panel := PanelContainer.new()
+	var panel: PanelContainer = overlay.get_node("Center/Panel")
 	panel.custom_minimum_size = Vector2(clampf(vp_w - 48.0, 320.0, 720.0), 520.0)
-	panel.mouse_filter = Control.MOUSE_FILTER_STOP
-	center.add_child(panel)
 
 	var style := StyleBoxFlat.new()
 	style.bg_color = PANEL_BG
@@ -690,46 +618,30 @@ static func _build_discoveries_overlay(vp_w: float = 1280.0) -> ColorRect:
 	style.content_margin_bottom = 16
 	panel.add_theme_stylebox_override("panel", style)
 
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 10)
-	panel.add_child(vbox)
-
-	var header := HBoxContainer.new()
-	vbox.add_child(header)
-
-	var title := Label.new()
+	var vbox: VBoxContainer = overlay.get_node("Center/Panel/Content")
+	var title: Label = overlay.get_node("Center/Panel/Content/Header/Title")
 	title.text = "Personal Discoveries"
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title.add_theme_font_size_override("font_size", 28)
 	title.add_theme_color_override("font_color", AMBER)
-	header.add_child(title)
 
-	var close_btn := _build_button("Close", false)
+	var close_btn: Button = overlay.get_node("Center/Panel/Content/Header/CloseButton")
+	_apply_button_style(close_btn, false)
 	close_btn.custom_minimum_size = Vector2(120, 46)
 	close_btn.pressed.connect(func():
 		overlay.visible = false
 	)
-	header.add_child(close_btn)
 
-	var sep := HSeparator.new()
+	var sep: HSeparator = overlay.get_node("Center/Panel/Content/Separator")
 	sep.add_theme_color_override("separator", Color(AMBER.r, AMBER.g, AMBER.b, 0.3))
-	vbox.add_child(sep)
 
-	var subtitle := Label.new()
+	var subtitle: Label = overlay.get_node("Center/Panel/Content/Subtitle")
 	subtitle.text = "Targets you personally discovered — tagged with your name."
 	subtitle.add_theme_font_size_override("font_size", 15)
 	subtitle.add_theme_color_override("font_color", TEXT_MUTED)
-	vbox.add_child(subtitle)
 
-	var scroll := ScrollContainer.new()
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	var scroll: ScrollContainer = overlay.get_node("Center/Panel/Content/Scroll")
 	scroll.custom_minimum_size = Vector2(0, 320)
-	vbox.add_child(scroll)
-
-	var list := VBoxContainer.new()
-	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	list.add_theme_constant_override("separation", 8)
-	scroll.add_child(list)
+	var list: VBoxContainer = overlay.get_node("Center/Panel/Content/Scroll/Body")
 
 	var discoveries := _get_personal_discoveries()
 	if discoveries.is_empty():
@@ -951,19 +863,17 @@ static func _build_inventory_card() -> PanelContainer:
 		var amount := int(inv.get(mineral, 0))
 		if amount <= 0:
 			continue
-		var row := HBoxContainer.new()
+		var row: HBoxContainer = ResourceValueRowScene.instantiate()
 		vbox.add_child(row)
-		var name_lbl := Label.new()
+		var name_lbl: Label = row.get_node("NameLabel")
 		name_lbl.text = str(mineral)
-		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		name_lbl.add_theme_font_size_override("font_size", 17)
 		name_lbl.add_theme_color_override("font_color", TEXT_COLOR)
-		row.add_child(name_lbl)
-		var qty_lbl := Label.new()
+		var qty_lbl: Label = row.get_node("ValueLabel")
 		qty_lbl.text = "%d kg" % amount
 		qty_lbl.add_theme_font_size_override("font_size", 17)
 		qty_lbl.add_theme_color_override("font_color", CYAN)
-		row.add_child(qty_lbl)
+		qty_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 
 	return card
 
@@ -991,21 +901,17 @@ static func _build_mission_requirements_card() -> PanelContainer:
 		var have := int(inv.get(mineral, 0))
 		var done := have >= need
 
-		var row := HBoxContainer.new()
+		var row: HBoxContainer = ResourceValueRowScene.instantiate()
 		vbox.add_child(row)
-
-		var name_lbl := Label.new()
+		var name_lbl: Label = row.get_node("NameLabel")
 		name_lbl.text = str(mineral).capitalize()
-		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		name_lbl.add_theme_font_size_override("font_size", 17)
 		name_lbl.add_theme_color_override("font_color", TEXT_COLOR)
-		row.add_child(name_lbl)
-
-		var qty_lbl := Label.new()
+		var qty_lbl: Label = row.get_node("ValueLabel")
 		qty_lbl.text = "%d / %d kg" % [have, need]
 		qty_lbl.add_theme_font_size_override("font_size", 17)
 		qty_lbl.add_theme_color_override("font_color", Color(0.30, 1.0, 0.45) if done else AMBER)
-		row.add_child(qty_lbl)
+		qty_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 
 	return card
 
@@ -1575,6 +1481,12 @@ static func _card_style(border_alpha: float) -> StyleBoxFlat:
 static func _build_button(text: String, primary: bool) -> Button:
 	var btn := Button.new()
 	btn.text = text
+	_apply_button_style(btn, primary)
+	return btn
+
+static func _apply_button_style(btn: Button, primary: bool) -> void:
+	if btn == null:
+		return
 	btn.custom_minimum_size = Vector2(0, 56)
 	var color := AMBER if primary else CYAN
 	var normal := StyleBoxFlat.new()
@@ -1598,7 +1510,6 @@ static func _build_button(text: String, primary: bool) -> Button:
 	btn.add_theme_color_override("font_hover_color", color)
 	btn.add_theme_color_override("font_pressed_color", color)
 	btn.add_theme_font_size_override("font_size", 22)
-	return btn
 
 static func _refresh_dialogue_button_text(btn: Button) -> void:
 	if btn == null:

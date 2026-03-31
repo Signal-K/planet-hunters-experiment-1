@@ -1,11 +1,6 @@
 {
-  "all_issues": [
-    "UI OVERLAP: Label 'Level 1 Target' overlaps Button 'RETURN' in Mining Minigame",
-    "Debrief scene missing Title label node.",
-    "Debrief scene missing CompleteButton — primary action not visible.",
-    "Debrief scene missing OrbitButton — secondary action not visible."
-  ],
-  "generated_at": "2026-03-28T05:29:16",
+  "all_issues": [],
+  "generated_at": "2026-04-02T20:13:16",
   "screenshots": [
     {
       "description": "The very first screen a brand-new user sees when launching the game.",
@@ -242,17 +237,17 @@
       ]
     },
     {
-      "description": "The Launchpad panel — where users build and configure rockets before launching on a mission.",
+      "description": "The full Launchpad mission-setup scene with contractor, rocket, and target state injected so the setup UI is visible.",
       "filename": "18_10_launchpad_panel.png",
       "index": 18,
       "issues_detected_at_this_point": [],
       "mission_stage": -1,
       "phase": "Phase 7 - Launchpad Panel",
       "what_to_check": [
-        "Is the 'Launch Facility' title visible?",
-        "Is there a description explaining what to do here?",
-        "Is there a close button?",
-        "Does anything overlap the main action area?"
+        "Is the mission setup UI populated instead of showing an empty shell?",
+        "Are contractor/rocket/target affordances visible?",
+        "Does anything overlap the main action area?",
+        "Does the flow read clearly as a pre-launch setup screen?"
       ]
     },
     {
@@ -284,7 +279,7 @@
       ]
     },
     {
-      "description": "The Rocket Selector overlay — users choose which rocket to use for a mission.",
+      "description": "The Rocket Selector mounted inside a presentation frame so the card list renders in a realistic launchpad-like container.",
       "filename": "21_13_rocket_selector.png",
       "index": 21,
       "issues_detected_at_this_point": [],
@@ -292,7 +287,7 @@
       "phase": "Phase 10 - Rocket Selector",
       "what_to_check": [
         "Are rocket options visible and labelled?",
-        "Is there a close/cancel button?",
+        "Does the selector feel like a complete panel rather than a floating fragment?",
         "Does any text overflow?",
         "Are elements clipped at screen edges?"
       ]
@@ -437,9 +432,7 @@
       "description": "The rocket return animation — plays as the rocket flies back to Earth after a mission.",
       "filename": "32_22_rocket_return.png",
       "index": 32,
-      "issues_detected_at_this_point": [
-        "UI OVERLAP: Label 'Level 1 Target' overlaps Button 'RETURN' in Mining Minigame"
-      ],
+      "issues_detected_at_this_point": [],
       "mission_stage": -1,
       "phase": "Phase 15 - Rocket Return",
       "what_to_check": [
@@ -452,9 +445,7 @@
       "description": "The Mission Debrief scene — shows mission results and lets users scrap the rocket to unlock the next mission. In CI: payout data will be empty.",
       "filename": "33_23_mission_debrief.png",
       "index": 33,
-      "issues_detected_at_this_point": [
-        "UI OVERLAP: Label 'Level 1 Target' overlaps Button 'RETURN' in Mining Minigame"
-      ],
+      "issues_detected_at_this_point": [],
       "mission_stage": -1,
       "phase": "Phase 16 - Mission Debrief",
       "what_to_check": [
@@ -469,9 +460,7 @@
       "description": "The annotation view for reviewing asteroid or TESS planet candidate images. Users draw on this canvas to mark transit dips or notable features — the citizen science component. This screenshot shows the view before any annotation.",
       "filename": "34_24_candidate_detail_empty_canvas.png",
       "index": 34,
-      "issues_detected_at_this_point": [
-        "Debrief scene missing OrbitButton — secondary action not visible."
-      ],
+      "issues_detected_at_this_point": [],
       "mission_stage": 3,
       "phase": "Phase 17 - Candidate Detail View (empty canvas)",
       "what_to_check": [
@@ -487,9 +476,7 @@
       "description": "The annotation view after a simulated drawing stroke — shows the citizen science workflow in action.",
       "filename": "35_25_candidate_detail_annotated.png",
       "index": 35,
-      "issues_detected_at_this_point": [
-        "Debrief scene missing OrbitButton — secondary action not visible."
-      ],
+      "issues_detected_at_this_point": [],
       "mission_stage": 3,
       "phase": "Phase 17 - Candidate Detail View (after annotation stroke)",
       "what_to_check": [
@@ -503,9 +490,7 @@
       "description": "Earth base after completing Mission 1 and returning from debrief. Tutorial should advance to Mission 2 instructions.",
       "filename": "36_26_earth_base_post_m1_debrief.png",
       "index": 36,
-      "issues_detected_at_this_point": [
-        "Debrief scene missing OrbitButton — secondary action not visible."
-      ],
+      "issues_detected_at_this_point": [],
       "mission_stage": 2,
       "phase": "Phase 18 - Earth Base (post-M1 debrief, M2 state)",
       "what_to_check": [
@@ -516,7 +501,7 @@
       ]
     }
   ],
-  "total_issues": 4,
+  "total_issues": 0,
   "total_screenshots": 36,
   "tour_version": "2"
 }

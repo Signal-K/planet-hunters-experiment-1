@@ -58,7 +58,7 @@ func _ready() -> void:
 	if _app_controller and _app_controller.has_signal("tutorial_state_updated"):
 		_app_controller.tutorial_state_updated.connect(_on_tutorial_state_updated)
 	collapse_button.pressed.connect(_on_collapse_pressed)
-	skip_button.pressed.connect(_on_skip_pressed)
+	skip_button.hide()
 	practice_mining_button.pressed.connect(_on_practice_mining_pressed)
 	replay_mission_button.pressed.connect(_on_replay_mission_pressed)
 	replay_all_button.pressed.connect(_on_replay_all_pressed)
@@ -198,20 +198,20 @@ func _apply_style() -> void:
 	panel_style.content_margin_bottom = 20
 	panel.add_theme_stylebox_override("panel", panel_style)
 
-	PanelStyle.apply_title(title_label)
+	PanelStyle.apply_title_on_dark(title_label)
 	title_label.add_theme_font_size_override("font_size", 24)
-	PanelStyle.apply_muted(stage_label)
+	PanelStyle.apply_muted_on_dark(stage_label)
 	stage_label.add_theme_font_size_override("font_size", 18)
-	PanelStyle.apply_body(message_label)
+	PanelStyle.apply_body_on_dark(message_label)
 	message_label.add_theme_font_size_override("font_size", 22)
 	message_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	PanelStyle.apply_muted(action_label)
+	PanelStyle.apply_muted_on_dark(action_label)
 	action_label.add_theme_font_size_override("font_size", 19)
 	action_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	PanelStyle.apply_muted(progress_label)
+	PanelStyle.apply_muted_on_dark(progress_label)
 	progress_label.add_theme_font_size_override("font_size", 18)
 
-	for btn in [skip_button, replay_mission_button, replay_all_button]:
+	for btn in [replay_mission_button, replay_all_button]:
 		_apply_pill_button(btn, false)
 	_apply_pill_button(practice_mining_button, true)
 	_apply_pill_button(collapse_button, false)
@@ -269,7 +269,6 @@ func _on_tutorial_state_updated(state: Dictionary) -> void:
 		message_label.visible = true
 		action_label.visible = true
 		progress_label.visible = true
-		skip_button.visible = true
 	var stage = int(state.get("current_stage", 1))
 	var current_idx = int(state.get("current_step_index", 0))
 	var total = int(state.get("total_steps", 0))
@@ -438,10 +437,8 @@ func _action_copy_for_step(step: Dictionary) -> String:
 		scene_name = get_tree().current_scene.scene_file_path.get_file().get_basename()
 	var on_base := scene_name == "earth_base_1"
 	match key:
-		"tour_open_control_station":
-			return "Open Control Station on the base."
-		"tour_close_control_station":
-			return "Close the Control Station panel."
+		"build_control_station":
+			return "Build the Control Station from the base card before starting Mission 2."
 		"accept_contractor_offer", "accept_starter_contractor":
 			if on_base:
 				return "Press New Mission to open Launchpad, then select a contractor."
@@ -474,9 +471,40 @@ func _action_copy_for_step(step: Dictionary) -> String:
 func _reposition_panel() -> void:
 	if not visible:
 		return
-	var reserved = TutorialLayoutZone.reserved_rect(get_viewport().get_visible_rect())
+	var viewport_rect := get_viewport().get_visible_rect()
+	var reserved := _reserved_rect_for_scene(viewport_rect)
 	panel.position = reserved.position
 	panel.size = reserved.size
+
+func _reserved_rect_for_scene(viewport_rect: Rect2) -> Rect2:
+	var tree := get_tree()
+	if tree == null or tree.current_scene == null:
+		return TutorialLayoutZone.reserved_rect(viewport_rect)
+	var scene_name := tree.current_scene.scene_file_path.get_file().get_basename()
+	if scene_name == "earth_launchpad":
+		return _launchpad_reserved_rect(viewport_rect)
+	return TutorialLayoutZone.reserved_rect(viewport_rect)
+
+func _launchpad_reserved_rect(viewport_rect: Rect2) -> Rect2:
+	var vp := viewport_rect.size
+	var widget_zone := UILayout.zone(UILayout.Zone.EARTH_WIDGET, vp)
+	var width: float = minf(460.0, maxf(280.0, vp.x * 0.28))
+	var height: float = minf(280.0, maxf(180.0, vp.y * 0.34))
+	var panel_width: float = clampf(vp.x * 0.992, 1320.0, 1880.0)
+	panel_width = minf(panel_width, maxf(420.0, vp.x - 8.0))
+	var left_width: float = clampf(panel_width * 0.255, 380.0, 470.0)
+	var right_width: float = clampf(panel_width * 0.18, 290.0, 340.0)
+	var panel_left: float = viewport_rect.position.x + 4.0
+	var left_margin: float = 18.0
+	var right_margin: float = 18.0
+	var center_left: float = panel_left + left_margin + left_width + 26.0
+	var center_right: float = panel_left + panel_width - right_margin - right_width - 26.0
+	var center_width: float = maxf(320.0, center_right - center_left)
+	width = minf(width, center_width - 16.0)
+	var x: float = center_left + maxf((center_width - width) * 0.5, 0.0)
+	var y: float = maxf(viewport_rect.position.y + 18.0, widget_zone.end.y + 18.0)
+	var reserved := Rect2(Vector2(x, y), Vector2(width, height))
+	return UILayout.clamp_to_viewport(reserved, vp)
 
 func _on_collapse_pressed() -> void:
 	_collapsed = !_collapsed

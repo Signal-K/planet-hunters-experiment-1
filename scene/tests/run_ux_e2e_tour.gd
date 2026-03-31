@@ -23,6 +23,8 @@ const SCREENSHOT_DIR  := "user://ux_screenshots"
 const REPORT_PATH     := "user://ux_report.md"
 const MANIFEST_PATH   := "user://tour_manifest.json"
 const AI_CONTEXT_PATH := "user://tour_ai_context.md"
+const RocketsManager  := preload("res://Scripts/Utils/RocketsManager.gd")
+const FirstTimeMechanicTracker := preload("res://Scripts/Utils/FirstTimeMechanicTracker.gd")
 
 const EARTH_MAIN_SCENE        := "res://Scenes/Earth/earth_base_1.tscn"
 const DEBRIEF_SCENE           := "res://Scenes/Earth/mission_debrief_v2.tscn"
@@ -59,6 +61,21 @@ var _active_scene: Node = null
 var _manifest_entries: Array = []
 var _cur_meta: Dictionary = {}   # set before each _screenshot() call
 
+const _STAGE_TUTORIAL_BASE_STEP := {
+	1: {"step": 0, "skipped": false},
+	2: {"step": 0, "skipped": false},
+	3: {"step": 0, "skipped": false},
+	4: {"step": 1, "skipped": false},
+	5: {"step": 0, "skipped": true}
+}
+
+const _STAGE_TUTORIAL_LAUNCHPAD_STEP := {
+	2: {"step": 0, "skipped": false},
+	3: {"step": 1, "skipped": false},
+	4: {"step": 2, "skipped": false},
+	5: {"step": 0, "skipped": true}
+}
+
 # ---------------------------------------------------------------------------
 # Entry
 # ---------------------------------------------------------------------------
@@ -73,9 +90,12 @@ func _ready() -> void:
 # ---------------------------------------------------------------------------
 func _load_scene(path: String) -> Node:
 	if _active_scene and is_instance_valid(_active_scene):
-		remove_child(_active_scene)
+		if _active_scene.get_parent():
+			_active_scene.get_parent().remove_child(_active_scene)
 		_active_scene.queue_free()
 		_active_scene = null
+		if get_tree() != null:
+			get_tree().current_scene = self
 		await get_tree().create_timer(0.3).timeout
 	# Remove any CanvasLayer overlays (e.g. MechanicIntroOverlay) that were
 	# parented to tree.root by game systems rather than to the active scene.
@@ -89,7 +109,8 @@ func _load_scene(path: String) -> Node:
 		_issue("CRITICAL: Could not load scene: %s" % path)
 		return null
 	var instance := packed.instantiate()
-	add_child(instance)
+	get_tree().root.add_child(instance)
+	get_tree().current_scene = instance
 	# For full-screen Control panels loaded into a plain Node parent, the anchor
 	# layout may not compute the correct size until the node has been in the tree
 	# for a frame. Force the rect so children compute positions against the real
@@ -106,16 +127,183 @@ func _load_scene(path: String) -> Node:
 # Tutorial state injection
 # Writes tutorial_v2.cfg so the next TutorialController._ready() picks it up.
 # ---------------------------------------------------------------------------
-func _inject_tutorial_state(stage: int, step: int = 0) -> void:
+func _inject_tutorial_state(stage: int, step: int = 0, skipped: bool = false) -> void:
 	var cfg := ConfigFile.new()
 	cfg.set_value("state", "current_stage", stage)
 	cfg.set_value("state", "current_step_index", step)
 	cfg.set_value("state", "stage_lock", 0)
-	cfg.set_value("state", "skipped", false)
+	cfg.set_value("state", "skipped", skipped)
 	cfg.set_value("state", "completed_actions", {})
 	cfg.set_value("state", "completed_actions_by_stage", {})
 	cfg.set_value("state", "completed_steps_by_stage", {})
 	cfg.save("user://tutorial_v2.cfg")
+
+func _stage_targets(stage: int) -> Array:
+	match stage:
+		1:
+			var predefined := RocketsManager.get_predefined_mission_target(1)
+			return [predefined] if not predefined.is_empty() else []
+		2:
+			return RocketsManager.get_mission2_targets()
+		3:
+			return RocketsManager.get_mission3_targets()
+		4:
+			return RocketsManager.get_mission4_targets()
+		_:
+			var targets := RocketsManager.get_mission4_targets()
+			targets.append_array([
+				{
+					"id": "free-ops-asteroid-117",
+					"label": "117 Lomia",
+					"type": "asteroid",
+					"distance_au": 17.5,
+					"required_level": 3,
+					"science_blurb": "Nickel-rich belt object with stable contractor routes."
+				},
+				{
+					"id": "free-ops-tess-901",
+					"label": "TOI-901 b",
+					"type": "planet",
+					"distance_au": 24.0,
+					"required_level": 3,
+					"science_blurb": "Confirmed TESS candidate with high-value silicate layers."
+				}
+			])
+			return targets
+
+func _inject_progress_state(stage: int, with_launchpad_targeting: bool = false) -> void:
+	RocketsManager.reset_state()
+	RocketsManager.clear_returned_mission()
+	RocketsManager.clear_preview_target()
+	var state := RocketsManager.load_state()
+	var completed: int = maxi(stage - 1, 0)
+	var badges: Array = []
+	for idx in range(completed):
+		badges.append("mission_%d" % (idx + 1))
+	state["completed_mission_badges"] = badges
+	state["mission_progress_completed"] = completed
+	state["scanner_unlocked"] = completed >= 3
+	state["scanner_station_built"] = stage >= 4
+	state["operation_mode"] = "contract"
+	state["unlocked"] = ["starterrocket1"]
+	if stage >= 2 and not state["unlocked"].has("starterrocket2"):
+		state["unlocked"].append("starterrocket2")
+	if stage >= 4 and not state["unlocked"].has("starterrocket3"):
+		state["unlocked"].append("starterrocket3")
+	state["detected_targets"] = _stage_targets(stage)
+	state["selected_target"] = ""
+	state["trip_contract_offer"] = {}
+	state["placed"] = []
+	if with_launchpad_targeting:
+		var rocket_type := "starterrocket1"
+		if stage >= 4:
+			rocket_type = "starterrocket3"
+		elif stage >= 2:
+			rocket_type = "starterrocket2"
+		state["placed"] = [{
+			"type": rocket_type,
+			"id": "%s-ux-tour-stage-%d" % [rocket_type, stage],
+			"x": 960.0,
+			"y": 850.0,
+			"status": "awaitingLaunch"
+		}]
+	RocketsManager.save_state(state)
+	var trip_targets: Array = state.get("detected_targets", [])
+	RocketsManager.ensure_trip_contract_offer(trip_targets)
+	if with_launchpad_targeting:
+		RocketsManager.select_trip_contractor("aegis_defense")
+
+func _reset_root_tutorial_runtime() -> void:
+	var root := get_tree().root
+	if root == null:
+		return
+	for node_name in ["TutorialCoachOverlay", "TutorialController"]:
+		var node = root.get_node_or_null(node_name)
+		if node != null:
+			node.queue_free()
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+func _prime_launchpad_scene(scene_root: Node) -> void:
+	if scene_root == null:
+		return
+	var launchpad = scene_root.get_node_or_null("StructuresLayer/Launchpad")
+	if launchpad == null:
+		return
+	if launchpad.has_method("_populate_targets"):
+		launchpad._populate_targets()
+	if launchpad.has_method("_show_selector_panel"):
+		launchpad._show_selector_panel()
+
+func _inject_stage_snapshot_state(stage: int, launchpad_view: bool = false) -> void:
+	var tutorial_cfg: Dictionary = _STAGE_TUTORIAL_LAUNCHPAD_STEP.get(stage, {"step": 0, "skipped": false}) if launchpad_view else _STAGE_TUTORIAL_BASE_STEP.get(stage, {"step": 0, "skipped": false})
+	_inject_progress_state(stage, launchpad_view)
+	_inject_tutorial_state(stage, int(tutorial_cfg.get("step", 0)), bool(tutorial_cfg.get("skipped", false)))
+	await _reset_root_tutorial_runtime()
+
+func _inject_debrief_state() -> void:
+	_inject_progress_state(1, false)
+	RocketsManager.set_returned_mission(
+		"starterrocket1-ux-tour",
+		"mission-1-training-target",
+		"433 Eros",
+		"asteroid",
+		"contract",
+		{
+			"trip_contractor_id": "aegis_defense",
+			"trip_contractor_name": "Aegis Defense Systems",
+			"trip_requested_minerals": {"Iron": 130, "Nickel": 95},
+			"mining_run_collected": {"Iron": 148, "Nickel": 104}
+		}
+	)
+
+func _load_rocket_selector_showcase() -> Node:
+	if _active_scene and is_instance_valid(_active_scene):
+		if _active_scene.get_parent():
+			_active_scene.get_parent().remove_child(_active_scene)
+		_active_scene.queue_free()
+		_active_scene = null
+		if get_tree() != null:
+			get_tree().current_scene = self
+		await get_tree().create_timer(0.3).timeout
+	var shell := Control.new()
+	shell.name = "RocketSelectorShowcase"
+	shell.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	get_tree().root.add_child(shell)
+	get_tree().current_scene = shell
+	var bg := ColorRect.new()
+	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	bg.color = Color(0.03, 0.04, 0.08, 1.0)
+	shell.add_child(bg)
+	var frame := PanelContainer.new()
+	frame.set_anchors_preset(Control.PRESET_CENTER)
+	frame.anchor_left = 0.12
+	frame.anchor_top = 0.10
+	frame.anchor_right = 0.88
+	frame.anchor_bottom = 0.90
+	frame.offset_left = 0.0
+	frame.offset_top = 0.0
+	frame.offset_right = 0.0
+	frame.offset_bottom = 0.0
+	shell.add_child(frame)
+	var panel_style = StyleBoxFlat.new()
+	panel_style.bg_color = Color(0.06, 0.09, 0.16, 0.98)
+	panel_style.border_color = Color(0.28, 0.88, 0.96, 1.0)
+	panel_style.set_border_width_all(2)
+	panel_style.set_corner_radius_all(10)
+	panel_style.content_margin_left = 24
+	panel_style.content_margin_top = 24
+	panel_style.content_margin_right = 24
+	panel_style.content_margin_bottom = 24
+	frame.add_theme_stylebox_override("panel", panel_style)
+	var packed: PackedScene = load(ROCKET_SELECTOR_SCENE)
+	if packed == null:
+		_issue("CRITICAL: Could not load rocket selector showcase scene.")
+		return null
+	var selector := packed.instantiate()
+	frame.add_child(selector)
+	_active_scene = shell
+	return shell
 
 
 # ---------------------------------------------------------------------------
@@ -127,7 +315,7 @@ func _run_tour() -> void:
 	# Phase 1 — Startup / Intro Splash (fresh first-time user)
 	# ==================================================================
 	_report("## Phase 1 — Startup / Intro Splash")
-	_inject_tutorial_state(1, 0)
+	await _inject_stage_snapshot_state(1, false)
 	_report("  - Loading EARTH_MAIN_SCENE: %s" % EARTH_MAIN_SCENE)
 	var earth := await _load_scene(EARTH_MAIN_SCENE)
 	if not earth:
@@ -170,7 +358,7 @@ func _run_tour() -> void:
 	_report("  - Taking second screenshot: 02_after_splash_dismissed")
 	_meta("Phase 1 - After Splash Dismissed", 0,
 		"Earth base hub immediately after the intro splash is dismissed.",
-		["Is the tutorial coach overlay visible, guiding the user to the Control Station?",
+		["Is the tutorial coach overlay visible, guiding the user toward the Launchpad flow?",
 		 "Are navigation buttons (menu, forward, back) visible?",
 		 "Is the FrancBalance (currency) HUD element shown?"])
 	await _screenshot("02_after_splash_dismissed")
@@ -183,7 +371,7 @@ func _run_tour() -> void:
 	await get_tree().create_timer(ANIM_SETTLE).timeout
 	_meta("Phase 2 - Earth Base Overview (M1)", 1,
 		"Earth base hub with Mission 1 tutorial active — what a brand-new user sees after dismissing the splash.",
-		["Is the tutorial overlay pointing the user to the Control Station?",
+		["Is the tutorial overlay pointing the user toward the Mission 1 next step?",
 		 "Are all main navigation elements visible and unobscured?",
 		 "Is the FrancBalance HUD shown?",
 		 "Does anything overlap or hang off the screen?"])
@@ -205,8 +393,8 @@ func _run_tour() -> void:
 	var tut := get_tree().root.get_node_or_null("TutorialCoachOverlay")
 	if tut and tut.visible:
 		_report("  - Tutorial coach overlay visible. ✓")
-		_meta("Phase 2 - Tutorial Coach (M1 Step 1: Control Station)", 1,
-			"Tutorial coach overlay active on earth base, prompting the user to open the Control Station.",
+		_meta("Phase 2 - Tutorial Coach (M1 Step 1)", 1,
+			"Tutorial coach overlay active on earth base, prompting the user into the Mission 1 launch flow.",
 			["Is the step title readable and specific?",
 			 "Is the instruction text clear and actionable for a new user?",
 			 "Does the coach indicator point at the right element?",
@@ -219,15 +407,16 @@ func _run_tour() -> void:
 	_check_for_placeholder_text(earth, "Earth Base")
 
 	# ==================================================================
-	# Phase 2b — Mission Stage Progression Snapshots (M2 → Sandbox)
-	# Injects state so the AI can see how the UI evolves across all stages.
+	# Phase 2b — Mission Stage Progression Snapshots (base-only, M2 → Sandbox)
+	# Keep this on Earth base so the tour follows authored progression rather
+	# than bouncing into setup scenes between every mission stage.
 	# ==================================================================
 	_report("## Phase 2b — Mission Stage Progression Snapshots")
 	var _stage_meta := {
 		2: {
 			"label": "Mission 2 (Contractor Bonus)",
-			"desc": "Earth base after completing M1. User is now on M2 — contractor bonuses unlocked. Tutorial should prompt a new step.",
-			"checks": ["Does the tutorial prompt reflect M2 (contractor pick)?",
+			"desc": "Earth base after completing M1. User is now on M2 — the Control Station must be built before the next launch.",
+			"checks": ["Does the tutorial prompt reflect the Control Station build requirement?",
 			           "Is any new UI element visible vs. M1?",
 			           "Does anything overlap or hang off screen?"]
 		},
@@ -256,7 +445,7 @@ func _run_tour() -> void:
 	}
 
 	for stage in [2, 3, 4, 5]:
-		_inject_tutorial_state(stage, 0)
+		await _inject_stage_snapshot_state(stage, false)
 		var earth_s := await _load_scene(EARTH_MAIN_SCENE)
 		if earth_s:
 			await get_tree().create_timer(SNAP_SETTLE).timeout
@@ -265,20 +454,6 @@ func _run_tour() -> void:
 				sm["desc"], sm["checks"])
 			await _screenshot("stage%d_earth_base" % stage)
 			_check_offscreen_elements(earth_s, "Earth Base Stage %d" % stage)
-
-			# Also snapshot the launchpad at this stage
-			var lpad_s := await _load_scene(LAUNCHPAD_SCENE)
-			if lpad_s:
-				await get_tree().create_timer(SNAP_SETTLE).timeout
-				_meta("Phase 2b - Launchpad Stage %d (%s)" % [stage, sm["label"]], stage,
-					"Launchpad scene at Mission %d state — shows rocket build options, target list, and contractor selection available at this progression point." % stage,
-					["Is the target list populated (or empty with explanation)?",
-					 "Are contractor options visible?",
-					 "Does the tutorial overlay show the correct step for this stage?",
-					 "Does anything overlap or hang off screen?"])
-				await _screenshot("stage%d_launchpad" % stage)
-				_check_offscreen_elements(lpad_s, "Launchpad Stage %d" % stage)
-				_check_label_button_overlaps(lpad_s, "Launchpad Stage %d" % stage)
 
 	# ==================================================================
 	# Phase 3 — Menu Panel
@@ -342,7 +517,7 @@ func _run_tour() -> void:
 	if csp:
 		await get_tree().create_timer(PANEL_SETTLE).timeout
 		_meta("Phase 5 - Control Station Panel", -1,
-			"The Control Station panel — shows active missions and fleet status. First panel M1 tutorial directs users to open.",
+			"The Control Station panel — shows active missions and fleet status once the player has built the structure.",
 			["Is there a visible close button?",
 			 "Is the panel title clear?",
 			 "Does a new user understand what this panel is for?",
@@ -396,58 +571,31 @@ func _run_tour() -> void:
 		_report("  - Space Map not loadable (scene may not yet be wired in).")
 
 	# ==================================================================
-	# Phase 6 — Satellite Station Panel
-	# ==================================================================
-	_report("## Phase 6 — Satellite Station Panel")
-	var ssp := await _load_scene(SATELLITE_STATION_SCENE)
-	if ssp:
-		if ssp.has_method("set_local_only"):
-			ssp.set_local_only(true)
-		await get_tree().create_timer(PANEL_SETTLE).timeout
-		_meta("Phase 6 - Satellite Station Panel", -1,
-			"The Satellite Station panel — scans for new targets. In CI: no Supabase data, so the list will be empty.",
-			["Is there a scan/refresh button?",
-			 "Does the panel explain what it does?",
-			 "In the empty-data state (CI), does the UI look intentional rather than broken?",
-			 "Any text clipped or off-screen?"])
-		await _screenshot("09_satellite_station_panel")
-		_check_visible_labels(ssp, "Satellite Station Panel", 1)
-		_check_offscreen_elements(ssp, "Satellite Station Panel")
-		_check_for_placeholder_text(ssp, "Satellite Station Panel")
-		var scan_btn := _find_button_with_text(ssp, "Scan")
-		if not scan_btn:
-			scan_btn = _find_button_with_text(ssp, "Refresh")
-		if scan_btn:
-			_report("  - Satellite Station Panel has a scan/refresh button. ✓")
-		else:
-			_issue("Satellite Station Panel has no scan/refresh button — users cannot discover targets.")
-
-	# ==================================================================
 	# Phase 7 — Launchpad Panel
 	# ==================================================================
 	_report("## Phase 7 — Launchpad Panel")
-	var lp := await _load_scene(LAUNCHPAD_PANEL_SCENE)
+	await _inject_stage_snapshot_state(1, true)
+	var lp := await _load_scene(LAUNCHPAD_SCENE)
 	if lp:
+		_prime_launchpad_scene(lp)
 		await get_tree().create_timer(PANEL_SETTLE).timeout
 		_meta("Phase 7 - Launchpad Panel", -1,
-			"The Launchpad panel — where users build and configure rockets before launching on a mission.",
-			["Is the 'Launch Facility' title visible?",
-			 "Is there a description explaining what to do here?",
-			 "Is there a close button?",
-			 "Does anything overlap the main action area?"])
+			"The first launchpad mission-setup scene in the authored flow: contractor first, rocket on the pad, then target planning.",
+			["Is the mission setup UI populated instead of showing an empty shell?",
+			 "Are contractor/rocket/target affordances visible?",
+			 "Does anything overlap the main action area?",
+			 "Does the flow read clearly as a pre-launch setup screen?"])
 		await _screenshot("10_launchpad_panel")
 		_check_offscreen_elements(lp, "Launchpad Panel")
 		_check_label_button_overlaps(lp, "Launchpad Panel")
-		if _find_label_with_text(lp, "Launch Facility"):
-			_report("  - 'Launch Facility' title visible. ✓")
+		if _find_label_with_text(lp, "Launchpad Mission Setup"):
+			_report("  - 'Launchpad Mission Setup' title visible. ✓")
 		else:
-			_issue("Launchpad Panel has no 'Launch Facility' title — users may not know where they are.")
-		if not _find_node_by_name(lp, "Description"):
-			_issue("Launchpad Panel missing description node — users don't know what to do here.")
-		if _find_button_with_text(lp, "✕"):
-			_report("  - Close (✕) button present. ✓")
+			_issue("Launchpad scene missing mission setup title — users may not know where they are.")
+		if _find_node_by_name(lp, "SelectorPanel"):
+			_report("  - SelectorPanel present. ✓")
 		else:
-			_issue("Launchpad Panel missing close button.")
+			_issue("Launchpad scene missing SelectorPanel — mission setup is not visible.")
 		_check_for_placeholder_text(lp, "Launchpad Panel")
 
 	# ==================================================================
@@ -522,13 +670,14 @@ func _run_tour() -> void:
 	# Phase 10 — Rocket Selector
 	# ==================================================================
 	_report("## Phase 10 — Rocket Selector")
-	var rs := await _load_scene(ROCKET_SELECTOR_SCENE)
+	_inject_progress_state(5, false)
+	var rs := await _load_rocket_selector_showcase()
 	if rs:
 		await get_tree().create_timer(PANEL_SETTLE).timeout
 		_meta("Phase 10 - Rocket Selector", -1,
-			"The Rocket Selector overlay — users choose which rocket to use for a mission.",
+			"The Rocket Selector mounted inside a presentation frame so the card list renders in a realistic launchpad-like container.",
 			["Are rocket options visible and labelled?",
-			 "Is there a close/cancel button?",
+			 "Does the selector feel like a complete panel rather than a floating fragment?",
 			 "Does any text overflow?",
 			 "Are elements clipped at screen edges?"])
 		await _screenshot("13_rocket_selector")
@@ -759,6 +908,7 @@ func _run_tour() -> void:
 	# Phase 16 — Mission Debrief
 	# ==================================================================
 	_report("## Phase 16 — Mission Debrief")
+	_inject_debrief_state()
 	var debrief := await _load_scene(DEBRIEF_SCENE)
 	if debrief:
 		await get_tree().create_timer(SCENE_SETTLE).timeout
@@ -887,7 +1037,7 @@ func _run_tour() -> void:
 	# Phase 18 — Earth Base (post-M1 debrief / M2 state)
 	# ==================================================================
 	_report("## Phase 18 — Earth Base (returning from Mission 1 debrief)")
-	_inject_tutorial_state(2, 0)
+	await _inject_stage_snapshot_state(2, false)
 	var earth2 := await _load_scene(EARTH_MAIN_SCENE)
 	if earth2:
 		await get_tree().create_timer(SCENE_SETTLE).timeout
@@ -904,6 +1054,35 @@ func _run_tour() -> void:
 			if not _find_node_by_name(earth2, btn_name):
 				_issue("Earth base missing '%s' on second load — possible state corruption." % btn_name)
 		_check_for_placeholder_text(earth2, "Earth Base (final)")
+
+	# ==================================================================
+	# Phase 19 — Satellite Station Panel (post-unlock)
+	# ==================================================================
+	_report("## Phase 19 — Satellite Station Panel (post-unlock)")
+	await _inject_stage_snapshot_state(4, false)
+	FirstTimeMechanicTracker.mark_seen("scanner_station")
+	var ssp := await _load_scene(SATELLITE_STATION_SCENE)
+	if ssp:
+		if ssp.has_method("set_local_only"):
+			ssp.set_local_only(true)
+		await get_tree().create_timer(PANEL_SETTLE).timeout
+		_meta("Phase 19 - Satellite Station Panel", 4,
+			"The Satellite Station panel after Mission 4 unlock. It should appear late in the tour, after the player has reached scanner progression.",
+			["Is there a scan/refresh button?",
+			 "Does the panel explain what it does?",
+			 "In the empty-data state (CI), does the UI look intentional rather than broken?",
+			 "Any text clipped or off-screen?"])
+		await _screenshot("27_satellite_station_panel")
+		_check_visible_labels(ssp, "Satellite Station Panel", 1)
+		_check_offscreen_elements(ssp, "Satellite Station Panel")
+		_check_for_placeholder_text(ssp, "Satellite Station Panel")
+		var scan_btn := _find_button_with_text(ssp, "Scan")
+		if not scan_btn:
+			scan_btn = _find_button_with_text(ssp, "Refresh")
+		if scan_btn:
+			_report("  - Satellite Station Panel has a scan/refresh button. ✓")
+		else:
+			_issue("Satellite Station Panel has no scan/refresh button — users cannot discover targets.")
 
 	# ==================================================================
 	# Done
@@ -1267,7 +1446,7 @@ func _write_ai_context() -> void:
 		"",
 		"| Stage | Name | Key mechanics introduced |",
 		"|-------|------|--------------------------|",
-		"| M1    | First Mining Trip | Control Station, Launchpad, basic mining, debrief |",
+		"| M1    | First Mining Trip | Launchpad, basic mining, debrief |",
 		"| M2    | Contractor Missions | Contractor bonus system, better rockets |",
 		"| M3    | TESS Planet Candidates | Real exoplanet data as targets, annotation view |",
 		"| M4    | Scanner + Drones | Scanner Station build objective, drone mining mode |",

@@ -4,13 +4,17 @@ const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
 const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd")
 const NumberFormat = preload("res://Scripts/Utils/NumberFormat.gd")
 
-var _build_dialog: ConfirmationDialog = null
-var _info_dialog: AcceptDialog = null
+@onready var _build_dialog: ConfirmationDialog = $BuildDialog
+@onready var _info_dialog: AcceptDialog = $InfoDialog
 
 func _ready():
 	super._ready()
 	structure_name = "Scanner Station"
 	print("Satellite Station initialized: " + structure_name)
+	if _build_dialog and not _build_dialog.confirmed.is_connected(_on_confirm_build_scanner):
+		_build_dialog.confirmed.connect(_on_confirm_build_scanner)
+	if _info_dialog and not _info_dialog.confirmed.is_connected(_on_unlock_info_confirmed):
+		_info_dialog.confirmed.connect(_on_unlock_info_confirmed)
 	_ensure_scanner_state_consistency()
 	_refresh_visibility()
 	call_deferred("_maybe_show_unlock_dialog")
@@ -67,21 +71,8 @@ func _refresh_visibility() -> void:
 			sprite.visible = unlocked
 
 func _ensure_dialogs() -> void:
-	if _build_dialog and is_instance_valid(_build_dialog) and _info_dialog and is_instance_valid(_info_dialog):
-		return
-	var host: Node = self
-	if get_tree() and get_tree().current_scene:
-		host = get_tree().current_scene
-	if not (_build_dialog and is_instance_valid(_build_dialog)):
-		_build_dialog = ConfirmationDialog.new()
-		_build_dialog.title = "Build Scanner Station"
-		host.call_deferred("add_child", _build_dialog)
-		_build_dialog.confirmed.connect(_on_confirm_build_scanner)
-	if not (_info_dialog and is_instance_valid(_info_dialog)):
-		_info_dialog = AcceptDialog.new()
-		_info_dialog.title = "Scanner Station"
-		host.call_deferred("add_child", _info_dialog)
-		_info_dialog.confirmed.connect(_on_unlock_info_confirmed)
+	if _build_dialog == null or _info_dialog == null:
+		push_warning("SatelliteStation: expected scene-owned dialogs are missing")
 
 func _on_unlock_info_confirmed() -> void:
 	var rm = RocketsManager
@@ -129,9 +120,6 @@ func _ensure_scanner_state_consistency(rm = null) -> void:
 		rockets_manager = RocketsManager
 	if not rockets_manager:
 		return
-	# Mission 4+ implies scanner flow was already completed.
-	if not rockets_manager.is_scanner_station_built() and int(rockets_manager.get_mission_stage()) >= 4:
-		rockets_manager.set_scanner_station_built(true)
 
 func _on_confirm_build_scanner() -> void:
 	var rm = RocketsManager
@@ -150,6 +138,12 @@ func _on_confirm_build_scanner() -> void:
 	rm.set_scanner_station_built(true)
 	AppControllerHelper.record_tutorial_action("build_scanner_station")
 	_refresh_visibility()
+	var current_scene = get_tree().current_scene
+	if current_scene:
+		if current_scene.has_method("_apply_tutorial_button_state"):
+			current_scene.call_deferred("_apply_tutorial_button_state")
+		if current_scene.has_method("_build_progression_cards"):
+			current_scene.call_deferred("_build_progression_cards")
 	_show_info("Scanner Station constructed. Open it to start detecting asteroid and planet targets.")
 
 func _show_info(message: String) -> void:

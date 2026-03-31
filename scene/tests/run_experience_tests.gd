@@ -248,12 +248,12 @@ func test_return_preview_auto_advances_to_debrief() -> void:
 		reporter.fail_test("No current scene after loading rocket_return.tscn")
 		return
 	scene._start_earth_orbit()
-	await create_timer(1.5).timeout
+	await create_timer(1.8).timeout
 	if current_scene == null:
 		reporter.fail_test("Current scene missing after auto-advance window")
 		return
 	var loaded_path = str(current_scene.scene_file_path)
-	if loaded_path != "res://Scenes/Earth/mission_debrief.tscn":
-		reporter.fail_test("Expected auto-advance to mission_debrief.tscn, got %s" % loaded_path)
+	if loaded_path != "res://Scenes/Earth/mission_debrief_v2.tscn":
+		reporter.fail_test("Expected auto-advance to mission_debrief_v2.tscn, got %s" % loaded_path)
 		return
 	reporter.pass_test()

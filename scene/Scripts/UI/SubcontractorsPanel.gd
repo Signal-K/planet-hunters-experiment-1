@@ -3,6 +3,7 @@ extends Control
 signal panel_closed
 
 const SubcontractorCardScene = preload("res://Scenes/UI/Templates/SubcontractorCard.tscn")
+const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
 
 @onready var close_btn: Button = $PanelContainer/Panel/VBox/Header/HeaderBar/HeaderContent/CloseButton
 @onready var subtitle: Label = $PanelContainer/Panel/VBox/Subtitle
@@ -11,17 +12,28 @@ const SubcontractorCardScene = preload("res://Scenes/UI/Templates/SubcontractorC
 
 func _ready() -> void:
 	_apply_style()
+	$Overlay.gui_input.connect(_on_overlay_input)
 	close_btn.pressed.connect(_on_close)
 	_build_list()
 
 func _apply_style() -> void:
-	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
+	$Overlay.color = Color(0.03, 0.06, 0.10, 0.80)
+	$PanelContainer/Panel.add_theme_stylebox_override(
+		"panel",
+		PanelStyle.create_glass_panel_style(Color(0.05, 0.09, 0.14, 0.95), 0.70, 22, 24, 20)
+	)
+	$PanelContainer/Panel/VBox/Header/HeaderBar.add_theme_stylebox_override(
+		"panel",
+		PanelStyle.create_glass_card_style(Color(0.08, 0.13, 0.20, 0.92), 0.56, 16, 14, 8)
+	)
 	var title = $PanelContainer/Panel/VBox/Header/HeaderBar/HeaderContent/Title
-	panel_style.apply_title(title)
-	panel_style.apply_button(close_btn, false)
-	panel_style.apply_body(subtitle)
+	PanelStyle.apply_title_on_dark(title)
+	title.add_theme_font_size_override("font_size", 28)
+	PanelStyle.apply_outline_button(close_btn)
+	PanelStyle.apply_body_on_dark(subtitle)
+	subtitle.add_theme_font_size_override("font_size", 16)
 	subtitle.text = "Build partner standing to unlock rewards."
-	panel_style.apply_muted(hint)
+	PanelStyle.apply_muted_on_dark(hint)
 
 func _build_list() -> void:
 	for child in list.get_children():
@@ -41,17 +53,12 @@ func _build_list() -> void:
 		var unlock_level = int(entry.get("unlock_level", entry.get("min_level", 1)))
 
 		var card: PanelContainer = SubcontractorCardScene.instantiate()
-		card.add_theme_constant_override("content_margin_left", 16)
-		card.add_theme_constant_override("content_margin_right", 16)
-		card.add_theme_constant_override("content_margin_top", 12)
-		card.add_theme_constant_override("content_margin_bottom", 12)
-
-		var style = panel_style.create_card_style()
+		var style = PanelStyle.create_glass_card_style()
 		if is_available:
-			style.border_color = Color(panel_style.ACCENT.r, panel_style.ACCENT.g, panel_style.ACCENT.b, 0.7)
+			style.border_color = Color(PanelStyle.ACCENT.r, PanelStyle.ACCENT.g, PanelStyle.ACCENT.b, 0.7)
 		else:
-			style.bg_color = Color(panel_style.PANEL_BG.r, panel_style.PANEL_BG.g, panel_style.PANEL_BG.b, 0.94)
-			style.border_color = panel_style.PANEL_BORDER
+			style.bg_color = Color(0.06, 0.10, 0.16, 0.92)
+			style.border_color = Color(PanelStyle.ACCENT.r, PanelStyle.ACCENT.g, PanelStyle.ACCENT.b, 0.30)
 		card.add_theme_stylebox_override("panel", style)
 
 		var row: VBoxContainer = card.get_node("Row")
@@ -62,12 +69,12 @@ func _build_list() -> void:
 			display_name = "Classified Subcontractor"
 		name_lbl.text = display_name
 		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		name_lbl.add_theme_color_override("font_color", panel_style.TEXT_PRIMARY)
+		name_lbl.add_theme_color_override("font_color", PanelStyle.TEXT_ON_DARK)
 		name_lbl.add_theme_font_size_override("font_size", 20)
 		var level_lbl: Label = card.get_node("Row/Header/LevelLabel")
 		level_lbl.text = "Level %s" % str(unlock_level)
 		level_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		level_lbl.add_theme_color_override("font_color", panel_style.ACCENT)
+		level_lbl.add_theme_color_override("font_color", PanelStyle.ACCENT)
 		level_lbl.add_theme_font_size_override("font_size", 16)
 
 		var role_lbl: Label = card.get_node("Row/RoleLabel")
@@ -75,7 +82,7 @@ func _build_list() -> void:
 			role_lbl.text = "Focus: " + str(entry.get("role", ""))
 		else:
 			role_lbl.text = "Unlocks at level %s" % str(unlock_level)
-		role_lbl.add_theme_color_override("font_color", panel_style.TEXT_MUTED)
+		role_lbl.add_theme_color_override("font_color", PanelStyle.MUTED_ON_DARK)
 		role_lbl.add_theme_font_size_override("font_size", 14)
 
 		# Show what this contractor wants (their bonus minerals)
@@ -100,16 +107,16 @@ func _build_list() -> void:
 		var affinity_row: HBoxContainer = card.get_node("Row/AffinityRow")
 		var affinity_lbl: Label = card.get_node("Row/AffinityRow/AffinityLabel")
 		affinity_lbl.text = "Standing:"
-		affinity_lbl.add_theme_color_override("font_color", panel_style.TEXT_MUTED)
+		affinity_lbl.add_theme_color_override("font_color", PanelStyle.MUTED_ON_DARK)
 		affinity_lbl.add_theme_font_size_override("font_size", 13)
 		var bar: ProgressBar = card.get_node("Row/AffinityRow/AffinityBar")
 		bar.max_value = 100
 		bar.value = affinity
 		bar.show_percentage = false
-		panel_style.apply_progress_bar(bar)
+		PanelStyle.apply_progress_bar(bar)
 		var val_lbl: Label = card.get_node("Row/AffinityRow/AffinityValueLabel")
 		val_lbl.text = "%s/100" % str(affinity)
-		val_lbl.add_theme_color_override("font_color", panel_style.TEXT_MUTED)
+		val_lbl.add_theme_color_override("font_color", PanelStyle.MUTED_ON_DARK)
 		val_lbl.add_theme_font_size_override("font_size", 13)
 
 		# Reputation level
@@ -118,7 +125,7 @@ func _build_list() -> void:
 			var rep_data = sm.get_level_data(rep_xp)
 			var rep_lbl := Label.new()
 			rep_lbl.text = "Reputation: %s (Level %d)" % [str(rep_data.get("title", "New Partner")), int(rep_data.get("level", 1))]
-			rep_lbl.add_theme_color_override("font_color", panel_style.ACCENT)
+			rep_lbl.add_theme_color_override("font_color", PanelStyle.ACCENT)
 			rep_lbl.add_theme_font_size_override("font_size", 13)
 			row.add_child(rep_lbl)
 
@@ -134,6 +141,12 @@ func _build_list() -> void:
 				row.add_child(cd_lbl)
 
 		list.add_child(card)
+
+func _on_overlay_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.pressed:
+		var panel_rect := ($PanelContainer as Control).get_global_rect()
+		if not panel_rect.has_point(event.global_position):
+			_on_close()
 
 func _on_close() -> void:
 	panel_closed.emit()

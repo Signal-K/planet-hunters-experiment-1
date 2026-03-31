@@ -75,6 +75,7 @@ static func build_default_state(mission_progress_schema_version: int) -> Diction
     data["status_changed_at"] = {}
     data["mission_progress_completed"] = 0
     data["completed_mission_badges"] = []
+    data["control_station_built"] = false
     data["scanner_station_built"] = false
     data["scanner_unlocked"] = false
     data["scanner_unlock_dialog_seen"] = false
@@ -145,6 +146,8 @@ static func _apply_defaults(data: Dictionary, scanner_unlock_completed_missions:
         data["mission_progress_completed"] = 0
     if not data.has("completed_mission_badges"):
         data["completed_mission_badges"] = []
+    if not data.has("control_station_built"):
+        data["control_station_built"] = max(int(data.get("mission_progress_completed", 0)), 0) >= 1
     if not data.has("pending_mission_guidance_id"):
         data["pending_mission_guidance_id"] = 0
     if not data.has("scanner_station_built"):

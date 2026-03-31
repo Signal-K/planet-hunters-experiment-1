@@ -141,8 +141,8 @@ func test_fresh_start_to_open_operations_without_tutorial_duplicates_or_blockers
 	await create_timer(0.02).timeout
 
 	var stage_actions := {
-		1: ["tour_open_control_station", "tour_close_control_station", "accept_contractor_offer", "create_rocket", "select_launch_target", "launch_rocket_from_earth", "arrived_at_mining_site", "mine_target", "return_rocket_home", "resolve_mission_debrief"],
-		2: ["accept_contractor_offer", "create_rocket", "select_launch_target", "launch_rocket_from_earth", "mine_target", "return_rocket_home", "resolve_mission_debrief"],
+		1: ["accept_contractor_offer", "create_rocket", "select_launch_target", "launch_rocket_from_earth", "arrived_at_mining_site", "mine_target", "return_rocket_home", "resolve_mission_debrief"],
+		2: ["build_control_station", "accept_contractor_offer", "create_rocket", "select_launch_target", "launch_rocket_from_earth", "mine_target", "return_rocket_home", "resolve_mission_debrief"],
 		3: ["accept_contractor_offer", "select_launch_target", "launch_rocket_from_earth", "mine_target", "return_rocket_home", "resolve_mission_debrief"],
 		4: ["build_scanner_station", "scan_targets", "select_launch_target", "launch_rocket_from_earth", "mine_target", "resolve_mission_debrief"]
 	}

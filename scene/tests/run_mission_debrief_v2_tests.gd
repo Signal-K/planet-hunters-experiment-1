@@ -50,21 +50,35 @@ func run_all_tests() -> void:
 	await test_reward_phase_promotes_to_handoff_card()
 	await test_salvage_action_marks_rocket_destroyed_and_refunds()
 	await test_button_guide_copy_matches_reward_and_handoff_actions()
+	await test_mission1_handoff_routes_back_to_base_build_step()
+	await test_mission3_handoff_routes_back_to_scanner_build_step()
 
-func _setup_scene() -> Dictionary:
+func _setup_scene(completed_missions: int = 0, returned_override: Dictionary = {}) -> Dictionary:
 	RocketsManager.reset_state()
+	for mission_idx in range(completed_missions):
+		RocketsManager.mark_mission_completed("mission-%d-debrief-setup" % (mission_idx + 1))
+	var rocket_id := str(returned_override.get("rocket_id", "starterrocket1-debrief-test"))
+	var target_id := str(returned_override.get("target_id", "mission-1-training-target"))
+	var target_label := str(returned_override.get("target_label", "433 Eros"))
+	var target_type := str(returned_override.get("target_type", "asteroid"))
+	var operation_mode := str(returned_override.get("operation_mode", "contract"))
+	var extra := {
+		"trip_contractor_id": "rocketlab",
+		"trip_contractor_name": "Rocketlab",
+		"trip_requested_minerals": {"Iron": 10},
+		"mining_run_collected": {"Iron": 10}
+	}
+	for key in returned_override.keys():
+		if ["rocket_id", "target_id", "target_label", "target_type", "operation_mode"].has(str(key)):
+			continue
+		extra[key] = returned_override[key]
 	RocketsManager.set_returned_mission(
-		"starterrocket1-debrief-test",
-		"mission-1-training-target",
-		"433 Eros",
-		"asteroid",
-		"contract",
-		{
-			"trip_contractor_id": "rocketlab",
-			"trip_contractor_name": "Rocketlab",
-			"trip_requested_minerals": {"Iron": 10},
-			"mining_run_collected": {"Iron": 10}
-		}
+		rocket_id,
+		target_id,
+		target_label,
+		target_type,
+		operation_mode,
+		extra
 	)
 	var existing = get_root().get_node_or_null("AppController")
 	if existing:
@@ -128,13 +142,13 @@ func test_reward_phase_promotes_to_handoff_card() -> void:
 	reporter.start_test("Debrief V2 promotes reward phase into next-mission handoff")
 	var ctx = await _setup_scene()
 	var scene = ctx.get("scene")
-	var sell_btn = _find_button_containing(scene, "Sell Minerals")
+	var sell_btn = _find_button_containing(scene, "Sell Cargo")
 	if sell_btn == null:
 		reporter.fail_test("Expected sell button in reward phase")
 		await _teardown_scene(ctx)
 		return
 	scene._on_sell_pressed(sell_btn)
-	var continue_btn = _find_button_by_text(scene, "Review Next Mission →")
+	var continue_btn = _find_button_by_text(scene, "Next Mission →")
 	if continue_btn == null or continue_btn.disabled:
 		reporter.fail_test("Expected enabled handoff button after reward resolution")
 		await _teardown_scene(ctx)
@@ -148,8 +162,8 @@ func test_reward_phase_promotes_to_handoff_card() -> void:
 		reporter.fail_test("Expected next mission handoff card heading")
 		await _teardown_scene(ctx)
 		return
-	if _find_button_by_text(scene, "Open Launchpad →") == null:
-		reporter.fail_test("Expected launchpad CTA in handoff phase")
+	if _find_button_by_text(scene, "Build Control Station →") == null:
+		reporter.fail_test("Expected Mission 2 handoff CTA to send the player back to the base build step")
 		await _teardown_scene(ctx)
 		return
 	await _teardown_scene(ctx)
@@ -187,26 +201,69 @@ func test_button_guide_copy_matches_reward_and_handoff_actions() -> void:
 	var ctx = await _setup_scene()
 	var scene = ctx.get("scene")
 	scene._toggle_button_guide()
-	if _find_label_containing(scene, "Sell Minerals: Convert this run's cargo into francs and lock in the payout.") == null:
-		reporter.fail_test("Expected reward-phase guide copy for Sell Minerals")
+	if _find_label_containing(scene, "Sell Cargo: Convert this run's cargo into francs and lock in the payout.") == null:
+		reporter.fail_test("Expected reward-phase guide copy for Sell Cargo")
 		await _teardown_scene(ctx)
 		return
-	if _find_label_containing(scene, "Review Next Mission: Move from reward resolution into the next-mission briefing.") == null:
-		reporter.fail_test("Expected reward-phase guide copy for Review Next Mission")
+	if _find_label_containing(scene, "Next Mission: Move from reward resolution into the next-mission briefing.") == null:
+		reporter.fail_test("Expected reward-phase guide copy for Next Mission")
 		await _teardown_scene(ctx)
 		return
 	scene._on_sell_pressed(Button.new())
 	scene._on_complete_pressed()
-	if _find_label_containing(scene, "Open Launchpad: Leave debrief and start setting up the next mission.") == null:
-		reporter.fail_test("Expected handoff guide copy for Open Launchpad")
+	if _find_label_containing(scene, "Build Control Station: Return to Earth base and construct the Control Station before reopening the Launchpad.") == null:
+		reporter.fail_test("Expected build-step guide copy for Mission 2 handoff")
 		await _teardown_scene(ctx)
 		return
 	if _find_label_containing(scene, "Scrap / Salvage Ship: Retire this ship now and receive the listed salvage refund.") == null:
 		reporter.fail_test("Expected handoff guide copy for salvage action")
 		await _teardown_scene(ctx)
 		return
-	if _find_label_containing(scene, "Return to Base: Leave debrief and go back to Earth base without opening launchpad.") == null:
-		reporter.fail_test("Expected handoff guide copy for Return to Base")
+	if _find_label_containing(scene, "Return to Base: Leave debrief and go back to Earth base without opening launchpad.") != null:
+		reporter.fail_test("Return to Base copy should be hidden when the primary CTA already routes back to Earth base")
+		await _teardown_scene(ctx)
+		return
+	await _teardown_scene(ctx)
+	reporter.pass_test()
+
+func test_mission1_handoff_routes_back_to_base_build_step() -> void:
+	reporter.start_test("Debrief V2 routes Mission 1 completion back to Control Station build step")
+	var ctx = await _setup_scene()
+	var scene = ctx.get("scene")
+	scene._on_sell_pressed(Button.new())
+	scene._on_complete_pressed()
+	if _find_label_containing(scene, "Mission 2 starts at the Control Station") == null:
+		reporter.fail_test("Expected Mission 2 handoff card title to explain the Control Station requirement")
+		await _teardown_scene(ctx)
+		return
+	if _find_label_containing(scene, "Once the Control Station is online, reopen the Launchpad to build Starter Rocket 2.") == null:
+		reporter.fail_test("Expected Mission 2 note to explain the follow-up after building the Control Station")
+		await _teardown_scene(ctx)
+		return
+	await _teardown_scene(ctx)
+	reporter.pass_test()
+
+func test_mission3_handoff_routes_back_to_scanner_build_step() -> void:
+	reporter.start_test("Debrief V2 routes Mission 3 completion back to Scanner Station build step")
+	var ctx = await _setup_scene(2, {
+		"rocket_id": "starterrocket2-debrief-test",
+		"target_id": "mission-3-tess-candidate-alpha",
+		"target_label": "TOI-700 d",
+		"target_type": "planet"
+	})
+	var scene = ctx.get("scene")
+	scene._on_sell_pressed(Button.new())
+	scene._on_complete_pressed()
+	if _find_button_by_text(scene, "Build Scanner Station →") == null:
+		reporter.fail_test("Expected Mission 4 handoff CTA to send the player back to build the Scanner Station")
+		await _teardown_scene(ctx)
+		return
+	if _find_label_containing(scene, "Mission 4 starts at the Scanner Station") == null:
+		reporter.fail_test("Expected Mission 4 handoff title to explain the Scanner Station requirement")
+		await _teardown_scene(ctx)
+		return
+	if _find_label_containing(scene, "The scanner build costs 2.0B F. After it is online, scan once and reopen the Launchpad.") == null:
+		reporter.fail_test("Expected Mission 4 note to explain the scanner build and follow-up scan")
 		await _teardown_scene(ctx)
 		return
 	await _teardown_scene(ctx)

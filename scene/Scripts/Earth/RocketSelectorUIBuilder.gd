@@ -57,12 +57,12 @@ func build_ui(unlocked_rockets: Array) -> void:
 	cards_wrap.scroll_vertical = 0
 	var cards: VBoxContainer = root.get_node("CardsWrap/Cards")
 	cards.set_meta("ui_style_locked", true)
-	cards.add_theme_constant_override("separation", 12)
+	cards.add_theme_constant_override("separation", 14)
 
 	if unlocked_rockets.is_empty():
 		var empty: Label = EmptyLabelScene.instantiate()
 		empty.text = "No rockets unlocked."
-		PanelStyle.apply_muted(empty)
+		PanelStyle.apply_muted_on_dark(empty)
 		cards.add_child(empty)
 		return
 
@@ -77,7 +77,7 @@ func _build_rocket_card(rocket_id: String, _total_cards: int) -> Control:
 	card.set_meta("ui_style_locked", true)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	card.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	card.custom_minimum_size = Vector2(0, 200)
+	card.custom_minimum_size = Vector2(0, 176)
 	card.add_theme_stylebox_override("panel", _card_style())
 
 	var body: VBoxContainer = card.get_node("Body")
@@ -96,7 +96,7 @@ func _build_rocket_card(rocket_id: String, _total_cards: int) -> Control:
 		tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		tr.mouse_default_cursor_shape = Control.CURSOR_DRAG
-		tr.custom_minimum_size = Vector2(0, 110)
+		tr.custom_minimum_size = Vector2(0, 96)
 		tr.connect("gui_input", _on_texture_input.bind(rocket_id, tex))
 	else:
 		var tr_missing: Label = Label.new()
@@ -104,7 +104,7 @@ func _build_rocket_card(rocket_id: String, _total_cards: int) -> Control:
 		tr_missing.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		tr_missing.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		tr_missing.custom_minimum_size = Vector2(0, 70)
-		tr_missing.add_theme_color_override("font_color", PanelStyle.TEXT_PRIMARY)
+		tr_missing.add_theme_color_override("font_color", PanelStyle.MUTED_ON_DARK)
 		tr_missing.add_theme_font_size_override("font_size", 16)
 		body.add_child(tr_missing)
 
@@ -112,8 +112,8 @@ func _build_rocket_card(rocket_id: String, _total_cards: int) -> Control:
 	name_label.set_meta("ui_style_locked", true)
 	var display_name = RocketSpecs.get_display_name(rocket_id)
 	name_label.text = display_name if display_name != "" else rocket_id.capitalize()
-	name_label.add_theme_color_override("font_color", PanelStyle.TEXT_PRIMARY)
-	name_label.add_theme_font_size_override("font_size", 24)
+	name_label.add_theme_color_override("font_color", PanelStyle.TEXT_ON_DARK)
+	name_label.add_theme_font_size_override("font_size", 18)
 
 	var chips: GridContainer = card.get_node("Body/Chips")
 
@@ -130,15 +130,15 @@ func _build_rocket_card(rocket_id: String, _total_cards: int) -> Control:
 	economy.text = "Cost: %s F" % [
 		_fmt_francs(int(spec.get("cost", 0))),
 	]
-	economy.add_theme_color_override("font_color", PanelStyle.TEXT_PRIMARY)
-	economy.add_theme_font_size_override("font_size", 18)
+	economy.add_theme_color_override("font_color", PanelStyle.MUTED_ON_DARK)
+	economy.add_theme_font_size_override("font_size", 14)
 
 	var btn: Button = card.get_node("Body/CreateButton")
 	btn.set_meta("ui_style_locked", true)
 	btn.name = "CreateButton_%s" % rocket_id
 	btn.text = "Create %s" % (display_name if display_name != "" else "Rocket")
 	btn.disabled = _creation_locked
-	btn.custom_minimum_size = Vector2(0, 56)
+	btn.custom_minimum_size = Vector2(0, 48)
 	_apply_create_button_style(btn)
 	btn.pressed.connect(_on_create.bind(rocket_id))
 
@@ -149,63 +149,20 @@ func _stat_chip(text: String) -> Control:
 	chip.add_theme_stylebox_override("panel", _chip_style())
 	var lbl: Label = chip.get_node("Label")
 	lbl.text = text
-	lbl.add_theme_color_override("font_color", PanelStyle.TEXT_PRIMARY)
-	lbl.add_theme_font_size_override("font_size", 16)
+	lbl.add_theme_color_override("font_color", PanelStyle.TEXT_ON_DARK)
+	lbl.add_theme_font_size_override("font_size", 13)
 	return chip
 
 func _card_style() -> StyleBoxFlat:
-	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
-	var style = panel_style.create_card_style()
-	style.bg_color = Color(0.08, 0.12, 0.16, 0.86)
-	style.corner_radius_top_left = 20
-	style.corner_radius_top_right = 20
-	style.corner_radius_bottom_left = 20
-	style.corner_radius_bottom_right = 20
-	style.shadow_color = Color(0, 0, 0, 0.3)
-	style.shadow_size = 10
-	style.shadow_offset = Vector2(0, 4)
+	var style = PanelStyle.create_glass_card_style(Color(0.08, 0.13, 0.20, 0.92), 0.56, 20, 18, 16)
 	return style
 
 func _chip_style() -> StyleBoxFlat:
-	var style = StyleBoxFlat.new()
-	style.bg_color = Color(0.20, 0.27, 0.34, 0.65)
-	style.corner_radius_top_left = 8
-	style.corner_radius_top_right = 8
-	style.corner_radius_bottom_left = 8
-	style.corner_radius_bottom_right = 8
-	style.content_margin_left = 8
-	style.content_margin_top = 5
-	style.content_margin_right = 8
-	style.content_margin_bottom = 5
-	return style
+	return PanelStyle.create_glass_pill_style(Color(0.09, 0.15, 0.22, 0.92), 0.34, 12)
 
 func _apply_create_button_style(btn: Button) -> void:
-	var normal := StyleBoxFlat.new()
-	normal.bg_color = PanelStyle.ACCENT_WARM
-	normal.border_color = PanelStyle.PANEL_BORDER
-	normal.set_border_width_all(1)
-	normal.set_corner_radius_all(6)
-	normal.content_margin_left = 16
-	normal.content_margin_right = 16
-	normal.content_margin_top = 10
-	normal.content_margin_bottom = 10
-	var hover := normal.duplicate()
-	hover.bg_color = Color(1.0, 0.78, 0.34, 1.0)
-	var pressed := normal.duplicate()
-	pressed.bg_color = Color(0.88, 0.64, 0.16, 1.0)
-	var disabled := normal.duplicate()
-	disabled.bg_color = Color(0.10, 0.15, 0.24, 0.96)
-	disabled.border_color = Color(0.44, 0.62, 0.82, 0.85)
-	btn.add_theme_stylebox_override("normal", normal)
-	btn.add_theme_stylebox_override("hover", hover)
-	btn.add_theme_stylebox_override("pressed", pressed)
-	btn.add_theme_stylebox_override("focus", hover)
-	btn.add_theme_stylebox_override("disabled", disabled)
-	btn.add_theme_color_override("font_color", Color(0.04, 0.08, 0.12, 1.0))
-	btn.add_theme_color_override("font_hover_color", Color(0.04, 0.08, 0.12, 1.0))
-	btn.add_theme_color_override("font_pressed_color", Color(0.04, 0.08, 0.12, 1.0))
-	btn.add_theme_color_override("font_disabled_color", Color(0.88, 0.94, 0.98, 1.0))
-	btn.add_theme_font_size_override("font_size", 24)
+	PanelStyle.apply_button(btn, true)
+	btn.add_theme_font_size_override("font_size", 18)
 
 func _fmt_one_decimal(value: float) -> String:
 	return "%.1f" % value

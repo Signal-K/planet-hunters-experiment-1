@@ -12,12 +12,18 @@ signal tutorial_state_updated(state: Dictionary)
 signal citizen_science_dialogue_toggled(enabled: bool)
 signal leveled_up(new_level: int)
 
+const DEFAULT_FRANC_BALANCE := 10000000000
+const DEFAULT_EXPERIENCE_XP := 0
+const DEFAULT_EXPERIENCE_LEVEL := 1
+const DEFAULT_CITIZEN_SCIENCE_DIALOGUE_ENABLED := true
+const MAIN_SCENE_PATH := "res://Scenes/Earth/earth_base_1.tscn"
+
 var counter: int = 0
-var franc_balance: int = 10000000000
+var franc_balance: int = DEFAULT_FRANC_BALANCE
 var loan_balance: int = 0
-var experience_xp: int = 0
-var experience_level: int = 1
-var citizen_science_dialogue_enabled: bool = true
+var experience_xp: int = DEFAULT_EXPERIENCE_XP
+var experience_level: int = DEFAULT_EXPERIENCE_LEVEL
+var citizen_science_dialogue_enabled: bool = DEFAULT_CITIZEN_SCIENCE_DIALOGUE_ENABLED
 var _game_paused: bool = false
 var _menu_request_version: int = 0
 var _menu_request_action: String = ""
@@ -27,6 +33,10 @@ var _auto_start_mining: bool = false
 const AppControllerPersistence = preload("res://Scripts/Systems/AppControllerPersistence.gd")
 const WebEventBridge = preload("res://Scripts/Systems/WebEventBridge.gd")
 const AppLogger = preload("res://Scripts/Utils/Logger.gd")
+const MissionLogManager = preload("res://Scripts/Utils/MissionLogManager.gd")
+const SubcontractorManager = preload("res://Scripts/Utils/SubcontractorManager.gd")
+const FirstTimeMechanicTracker = preload("res://Scripts/Utils/FirstTimeMechanicTracker.gd")
+const MissionNarrativeAPI = preload("res://Scripts/Utils/MissionNarrativeAPI.gd")
 var _persistence := AppControllerPersistence.new()
 const XP_AWARD_LAUNCH := 5
 const XP_AWARD_SCAN := 2
@@ -34,8 +44,9 @@ const MISSION_PROGRESS_TRACKER_SCENE := preload("res://Scenes/UI/MissionProgress
 const TUTORIAL_CONTROLLER_SCENE := preload("res://Scripts/Tutorial/TutorialController.gd")
 const TUTORIAL_OVERLAY_SCENE := preload("res://Scenes/UI/TutorialCoachOverlay.tscn")
 const FEEDBACK_BEACON_SCENE := preload("res://Scenes/UI/FeedbackBeacon.tscn")
-const INTRO_SPLASH_SCRIPT := preload("res://Scripts/UI/PlanetHuntersIntroSplash.gd")
+const INTRO_SPLASH_SCENE := preload("res://Scenes/UI/PlanetHuntersIntroSplash.tscn")
 const INTRO_SPLASH_FLAG_PATH := "user://planet_hunters_intro_v1.cfg"
+const LEVEL_UP_NOTIFICATION_SCENE := preload("res://Scenes/UI/LevelUpNotification.tscn")
 const WEB_XP_STATE_KEY := "planet_hunters_xp_state_v1"
 var _tutorial_controller: Node = null
 # Actions recorded before the TutorialController's _ready() has run are queued
@@ -212,23 +223,50 @@ func debug_skip_to_mission(stage: int) -> void:
 		return
 
 	# 2. Sequential completion up to stage-1
+	# Clear existing badges to avoid duplicates and ensure clean jump
+	var s = rm.load_state()
+	s["completed_mission_badges"] = []
+	s["mission_progress_completed"] = 0
+	rm.save_state(s)
+
 	var target_completed = stage - 1
 	for i in range(target_completed):
 		rm.mark_mission_completed("debug-skip-%d" % (i + 1))
 	
 	# 3. Force Level and Francs for that stage
-	var target_francs = 1000000 * stage
+	# M1 (Start): 0
+	# M2 (Upgrade): ~120k
+	# M3 (Scanner): 250k (Matches React handleSkipToLevel3)
+	# M4 (Planetary): 500k
+	# M5 (Free Ops): 1.0M
+	var balances = {
+		2: 120000,
+		3: 250000,
+		4: 500000,
+		5: 1000000
+	}
+	var target_francs = balances.get(stage, 1000000)
+
 	set_franc_balance_from_react(target_francs)
 	set_experience_from_react(0, stage)
-	
-	# 4. Refresh tutorial state
+
+	# 4. Special unlocks for later stages
+	if stage >= 2:
+		rm.set_control_station_built(true)
+	if stage >= 3:
+		rm.unlock("starterrocket2")
+	if stage >= 4:
+		rm.unlock("starterrocket3")
+		rm.set_scanner_station_built(true)
+
+	# 5. Refresh tutorial state
 	if _tutorial_controller and _tutorial_controller.has_method("replay_current_mission"):
 		_tutorial_controller.replay_current_mission()
-	
-	# 5. Unpause and close menu
+
+	# 6. Unpause and close menu
 	set_game_paused(false)
 	hide_menu_panel()
-	AppLogger.d("AppController Debug: Jump Complete. Stage: %d" % rm.get_mission_stage())
+	AppLogger.d("AppController Debug: Jump Complete. Stage: %d, Francs: %d" % [rm.get_mission_stage(), target_francs])
 
 func show_menu_panel() -> void:
 	"""Show the runtime menu via the single menu service."""
@@ -275,16 +313,26 @@ func _mark_tutorial_zone_exempt_recursive(node: Node) -> void:
 func _on_reset_all() -> void:
 	"""Handle reset all action from menu panel"""
 	AppLogger.d("Reset all requested from Godot UI")
+	_persistence.reset_all()
 	counter = 0
-	franc_balance = 10000000000
-	experience_xp = 0
-	experience_level = 1
-	citizen_science_dialogue_enabled = true
+	franc_balance = DEFAULT_FRANC_BALANCE
+	loan_balance = 0
+	experience_xp = DEFAULT_EXPERIENCE_XP
+	experience_level = DEFAULT_EXPERIENCE_LEVEL
+	citizen_science_dialogue_enabled = DEFAULT_CITIZEN_SCIENCE_DIALOGUE_ENABLED
+	_menu_request_version = 0
+	_menu_request_action = ""
+	_last_mining_result = {}
+	_last_mining_result_synced = true
+	_auto_start_mining = false
 	counter_updated.emit(counter)
 	save_franc_balance()
 	save_experience()
 	save_preferences()
+	loan_updated.emit(loan_balance)
+	_clear_runtime_progression_state()
 	DirAccess.remove_absolute("user://rocket_unlock_popups.cfg")
+	DirAccess.remove_absolute(INTRO_SPLASH_FLAG_PATH)
 	franc_balance_updated.emit(franc_balance)
 	_emit_experience_updated()
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
@@ -294,7 +342,30 @@ func _on_reset_all() -> void:
 	if _tutorial_controller and _tutorial_controller.has_method("reset_all"):
 		_tutorial_controller.reset_all()
 	rockets_reset.emit()
+	_return_to_fresh_player_scene()
 	AppLogger.d("All state reset in Godot. Signals emitted to notify React Native.")
+
+func _clear_runtime_progression_state() -> void:
+	var json = preload("res://Scripts/Utils/JSONFileManager.gd")
+	json.save_json("user://mission_logs.json", MissionLogManager.build_default_state())
+	json.save_json("user://subcontractors.json", SubcontractorManager.build_default_state())
+	if OS.has_feature("editor"):
+		json.save_json("res://mission_logs.json", MissionLogManager.build_default_state())
+		json.save_json("res://subcontractors.json", SubcontractorManager.build_default_state())
+	FirstTimeMechanicTracker.reset_all()
+	MissionNarrativeAPI.reset_session_state()
+	_clear_web_experience_storage()
+
+func _clear_web_experience_storage() -> void:
+	if not OS.has_feature("web"):
+		return
+	JavaScriptBridge.eval("(function(){try{window.localStorage.removeItem('%s');}catch(_e){}})();" % WEB_XP_STATE_KEY, true)
+
+func _return_to_fresh_player_scene() -> void:
+	set_game_paused(false)
+	if get_tree() == null or get_tree().current_scene == null:
+		return
+	get_tree().call_deferred("change_scene_to_file", MAIN_SCENE_PATH)
 
 func has_signal_connections(signal_name: String) -> bool:
 	"""Check if signal has connections (for React Native compatibility)"""
@@ -551,49 +622,6 @@ func _on_tutorial_state_updated(state: Dictionary) -> void:
 	tutorial_state_updated.emit(state)
 
 func _show_level_up_notification(level: int) -> void:
-	var canvas = CanvasLayer.new()
-	canvas.layer = 200
-	add_child(canvas)
-
-	var center = CenterContainer.new()
-	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	canvas.add_child(center)
-
-	var panel = PanelContainer.new()
-	panel.custom_minimum_size = Vector2(400, 0)
-	panel.modulate.a = 0.0
-	center.add_child(panel)
-
-	var style = StyleBoxFlat.new()
-	style.bg_color = Color(0.05, 0.08, 0.15, 0.98)
-	style.border_color = Color(0.1, 0.6, 1.0, 1.0)
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(12)
-	style.content_margin_left = 24
-	style.content_margin_right = 24
-	style.content_margin_top = 20
-	style.content_margin_bottom = 20
-	panel.add_theme_stylebox_override("panel", style)
-
-	var vbox = VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 10)
-	panel.add_child(vbox)
-
-	var title = Label.new()
-	title.text = "LEVEL UP!"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 28)
-	title.add_theme_color_override("font_color", Color(1.0, 0.8, 0.2))
-	vbox.add_child(title)
-
-	var level_lbl = Label.new()
-	level_lbl.text = "You reached Level %d" % level
-	level_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	level_lbl.add_theme_font_size_override("font_size", 20)
-	vbox.add_child(level_lbl)
-
-	# Show what's unlocked
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	var unlocks = []
 	if rm:
@@ -601,16 +629,8 @@ func _show_level_up_notification(level: int) -> void:
 		for rocket_id in rm.ROCKET_UNLOCK_LEVELS.keys():
 			if int(rm.ROCKET_UNLOCK_LEVELS[rocket_id]) == level:
 				unlocks.append("Rocket: %s" % rocket_specs.get_display_name(str(rocket_id)))
-	
-	if unlocks.size() > 0:
-		var unlock_lbl = Label.new()
-		unlock_lbl.text = "New Unlocks:\n• " + "\n• ".join(unlocks)
-		unlock_lbl.add_theme_font_size_override("font_size", 16)
-		unlock_lbl.add_theme_color_override("font_color", Color(0.4, 1.0, 0.5))
-		vbox.add_child(unlock_lbl)
 
-	var tween = create_tween()
-	tween.tween_property(panel, "modulate:a", 1.0, 0.5).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	tween.tween_interval(4.0)
-	tween.tween_property(panel, "modulate:a", 0.0, 0.5).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
-	tween.tween_callback(canvas.queue_free)
+	var notification = LEVEL_UP_NOTIFICATION_SCENE.instantiate()
+	if notification:
+		add_child(notification)
+		notification.show_level(level, unlocks)

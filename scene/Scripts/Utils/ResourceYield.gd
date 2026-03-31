@@ -10,7 +10,7 @@ const MINEABLE_PCT_STEP := 0.05
 const MAX_MINEABLE_PCT := 0.50
 const TARGET_CAPACITY_MULTIPLIER := {
 	"mission-1-training-target": 0.615,  # Calibrated so full-mine+scrap ≈ 120% of SR1 cost
-	"mission-2-upgrade-target": 1.0,
+	"mission-2-upgrade-target": 0.917,   # Calibrated so full-mine+scrap ≈ 120% of SR2 cost
 	"mission-4-exoplanet-target": 0.133
 }
 

@@ -1,0 +1,79 @@
+[gd_scene load_steps=2 format=3]
+
+[sub_resource type="StyleBoxFlat" id="1"]
+bg_color = Color(0.0588235, 0.101961, 0.14902, 0.96)
+border_color = Color(0.47451, 0.862745, 0.941176, 0.68)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+corner_radius_bottom_right = 18
+corner_radius_bottom_left = 18
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+content_margin_left = 24.0
+content_margin_top = 20.0
+content_margin_right = 24.0
+content_margin_bottom = 20.0
+
+[node name="EmergencyLoanOfferDialog" type="CanvasLayer"]
+layer = 80
+
+[node name="Backdrop" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 1
+color = Color(0, 0, 0, 0.65)
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="Panel" type="PanelContainer" parent="Center"]
+layout_mode = 2
+custom_minimum_size = Vector2(420, 0)
+theme_override_styles/panel = SubResource("1")
+
+[node name="Margin" type="MarginContainer" parent="Center/Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_top = 28
+theme_override_constants/margin_right = 28
+theme_override_constants/margin_bottom = 28
+
+[node name="Body" type="VBoxContainer" parent="Center/Panel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="Title" type="Label" parent="Center/Panel/Margin/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.92, 0.95, 0.98, 1)
+text = "Emergency Loan Available"
+
+[node name="Description" type="Label" parent="Center/Panel/Margin/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.92, 0.95, 0.98, 1)
+text = "Description"
+
+[node name="LoanAmount" type="Label" parent="Center/Panel/Margin/Body"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.70, 0.78, 0.86, 1)
+text = "Loan"
+
+[node name="ButtonRow" type="HBoxContainer" parent="Center/Panel/Margin/Body"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="AcceptButton" type="Button" parent="Center/Panel/Margin/Body/ButtonRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Accept Loan"
+
+[node name="DeclineButton" type="Button" parent="Center/Panel/Margin/Body/ButtonRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "No Thanks"

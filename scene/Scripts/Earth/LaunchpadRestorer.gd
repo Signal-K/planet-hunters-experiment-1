@@ -4,6 +4,8 @@ const STARTERROCKET1_LAUNCHPAD_POS := Vector2(-110.0, -178.0)
 const AppLogger = preload("res://Scripts/Utils/Logger.gd")
 
 func restore_if_needed(launchpad: Node, selector_panel: Object, launch_button: Object) -> void:
+	if launchpad == null or launchpad.get_tree() == null or launchpad.get_tree().current_scene == null:
+		return
 	# Clear any existing rockets from the "rocket" group (cleanup baked-in or leftover nodes)
 	var existing_rockets = launchpad.get_tree().get_nodes_in_group("rocket")
 	if existing_rockets.size() > 0:

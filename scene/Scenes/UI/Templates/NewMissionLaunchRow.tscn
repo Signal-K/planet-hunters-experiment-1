@@ -1,31 +1,43 @@
 [gd_scene format=3]
 
-[node name="LaunchRow" type="HBoxContainer"]
+[node name="LaunchRow" type="PanelContainer"]
 custom_minimum_size = Vector2(0, 88)
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="Info" type="VBoxContainer" parent="."]
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 14
+
+[node name="HBox" type="HBoxContainer" parent="Margin"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 18
+
+[node name="Info" type="VBoxContainer" parent="Margin/HBox"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="TitleLabel" type="Label" parent="Info"]
+[node name="TitleLabel" type="Label" parent="Margin/HBox/Info"]
 layout_mode = 2
 
-[node name="DistanceLabel" type="Label" parent="Info"]
+[node name="DistanceLabel" type="Label" parent="Margin/HBox/Info"]
 layout_mode = 2
 
-[node name="Progress" type="ProgressBar" parent="Info"]
+[node name="Progress" type="ProgressBar" parent="Margin/HBox/Info"]
 custom_minimum_size = Vector2(260, 18)
 layout_mode = 2
 max_value = 100.0
 
-[node name="PreviewButton" type="Button" parent="."]
+[node name="PreviewButton" type="Button" parent="Margin/HBox"]
 custom_minimum_size = Vector2(120, 40)
 layout_mode = 2
 text = "Preview"
 
-[node name="ActionButton" type="Button" parent="."]
+[node name="ActionButton" type="Button" parent="Margin/HBox"]
 custom_minimum_size = Vector2(160, 40)
 layout_mode = 2
 text = "Self-Destruct"

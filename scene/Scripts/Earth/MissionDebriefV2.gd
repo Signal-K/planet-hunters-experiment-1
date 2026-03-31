@@ -15,6 +15,12 @@ const NumberFormat          = preload("res://Scripts/Utils/NumberFormat.gd")
 const NavigationMixin       = preload("res://Scripts/Utils/NavigationMixin.gd")
 const AppLogger             = preload("res://Scripts/Utils/Logger.gd")
 const ResearchManager       = preload("res://Scripts/Utils/ResearchManager.gd")
+const EarthSceneUIHelper    = preload("res://Scripts/Earth/EarthSceneUIHelper.gd")
+const ResourceValueRowScene = preload("res://Scenes/UI/Templates/ResourceValueRow.tscn")
+const SummaryCardScene      = preload("res://Scenes/UI/Templates/MissionDebriefSummaryCard.tscn")
+const SectionCardScene      = preload("res://Scenes/UI/Templates/MissionDebriefSectionCard.tscn")
+const PayoutCardScene       = preload("res://Scenes/UI/Templates/MissionDebriefPayoutCard.tscn")
+const PanelStyle           = preload("res://Scripts/UI/PanelStyle.gd")
 
 const EARTH_SCENE               := "res://Scenes/Earth/earth_base_1.tscn"
 const LAUNCHPAD_SCENE           := "res://Scenes/Earth/earth_launchpad.tscn"
@@ -26,14 +32,14 @@ const DISCOVERY_BONUS_MULT      := 1.10
 const XP_BY_MISSION_STAGE       := {1: 80, 2: 120, 3: 160, 4: 200}
 const XP_FREE_OPS               := 100
 
-const PANEL_BG    := Color(0.08, 0.10, 0.16, 0.97)
-const CYAN        := Color(0.28, 0.88, 0.96, 1.0)
-const AMBER       := Color(0.941, 0.690, 0.188, 1.0)
+const PANEL_BG    := Color(0.03, 0.05, 0.09, 0.98)
+const CYAN        := PanelStyle.ACCENT
+const AMBER       := PanelStyle.ACCENT_WARM
 const GREEN       := Color(0.30, 1.0, 0.45, 1.0)
 const RED         := Color(1.0, 0.35, 0.35, 1.0)
-const TEXT_COLOR  := Color(0.82, 0.84, 0.88, 1.0)
-const TEXT_MUTED  := Color(0.55, 0.60, 0.68, 1.0)
-const TITLE_COLOR := Color(0.95, 0.93, 0.90, 1.0)
+const TEXT_COLOR  := PanelStyle.TEXT_ON_DARK
+const TEXT_MUTED  := PanelStyle.MUTED_ON_DARK
+const TITLE_COLOR := PanelStyle.TEXT_ON_DARK
 
 var _returned: Dictionary       = {}
 var _cargo: Dictionary          = {}
@@ -52,6 +58,9 @@ var _salvage_refund := 0
 var _next_mission_brief: Dictionary = {}
 var _phase := "reward"
 var _guide_visible := false
+var scene_manager: SceneManager
+var ui_manager: UIManager
+var _ui_helper := EarthSceneUIHelper.new()
 @onready var _background: ColorRect = $Background
 @onready var _center: CenterContainer = $Center
 @onready var _panel: PanelContainer = $Center/Panel
@@ -63,6 +72,16 @@ var _guide_visible := false
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	scene_manager = SceneManager.new()
+	add_child(scene_manager)
+	scene_manager.add_to_group("scene_manager")
+	ui_manager = UIManager.new()
+	add_child(ui_manager)
+	ui_manager.add_to_group("ui_manager")
+	_ui_helper.setup(self)
+	_ui_helper.setup_buttons()
+	call_deferred("_apply_nav_safe_area")
+	_apply_scene_nav_state()
 	_empty_button.pressed.connect(_return_to_base)
 	_returned = RocketsManager.get_returned_mission()
 	if _returned.is_empty():
@@ -76,6 +95,39 @@ func _ready() -> void:
 	_salvage_refund = _calc_salvage_refund()
 	_next_mission_brief = _build_next_mission_brief()
 	_render_ui()
+
+func _apply_scene_nav_state() -> void:
+	var forward_btn := get_node_or_null("UILayer/ButtonContainer/ForwardButton") as Button
+	if forward_btn:
+		forward_btn.disabled = true
+
+func _apply_nav_safe_area() -> void:
+	_ui_helper.apply_nav_layout()
+
+func _on_back_button_pressed() -> void:
+	_return_to_base()
+
+func _on_forward_button_pressed() -> void:
+	pass
+
+func _on_menu_button_pressed() -> void:
+	preload("res://Scripts/UI/GameNavigationMenu.gd").toggle(self)
+
+func _on_market_button_pressed() -> void:
+	if ui_manager:
+		ui_manager.show_panel(UIManager.PanelType.MARKET)
+
+func _on_space_map_button_pressed() -> void:
+	if scene_manager:
+		scene_manager.change_to_scene("res://Scenes/UI/SpaceMap/space_map.tscn")
+	else:
+		get_tree().change_scene_to_file("res://Scenes/UI/SpaceMap/space_map.tscn")
+
+func _on_new_mission_button_pressed() -> void:
+	if scene_manager:
+		scene_manager.change_to_scene(LAUNCHPAD_SCENE)
+	else:
+		get_tree().change_scene_to_file(LAUNCHPAD_SCENE)
 
 
 # ---------------------------------------------------------------------------
@@ -147,7 +199,8 @@ func _calc_payout() -> int:
 		var aff_mult: float = 1.0 + min(float(_affinity_before) * AFFINITY_BONUS_PER_POINT, float(AFFINITY_BONUS_CAP))
 		var ord_mult := 1.0 + (ORDER_BONUS_CAP * _order_ratio)
 		gross = int(round(float(gross) * ord_mult * aff_mult))
-	return min(gross, RocketsManager.get_free_ops_payout_cap())
+	gross = min(gross, RocketsManager.get_free_ops_payout_cap())
+	return RocketsManager.calibrate_onboarding_payout(gross, str(_returned.get("rocket_id", "")))
 
 
 # ---------------------------------------------------------------------------
@@ -175,20 +228,13 @@ func _build_ui() -> void:
 	_panel.visible = true
 	_empty_state.visible = false
 	_panel.custom_minimum_size = Vector2(clampf(vp_w - 64.0, 620.0, 1100.0), clampf(vp_h - 72.0, 520.0, 820.0))
-	var style := StyleBoxFlat.new()
-	style.bg_color          = Color(0.11, 0.15, 0.22, 0.98)
-	style.border_color      = CYAN
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(8)
-	style.content_margin_left   = 28
-	style.content_margin_right  = 28
-	style.content_margin_top    = 24
-	style.content_margin_bottom = 24
+	var style := PanelStyle.create_glass_panel_style(Color(0.06, 0.10, 0.16, 0.96), 0.86, 18, 28, 24)
 	_panel.add_theme_stylebox_override("panel", style)
 
 	_add_header(_content_vbox)
 	_add_sep(_content_vbox, CYAN)
 	_add_summary(_content_vbox)
+	_add_button_guide(_content_vbox)
 	if _phase == "reward":
 		_add_sep(_content_vbox, AMBER)
 		_add_reward_snapshot(_content_vbox)
@@ -206,30 +252,11 @@ func _build_empty_ui() -> void:
 	_background.color = PANEL_BG
 	_panel.visible = false
 	_empty_state.visible = true
+	PanelStyle.apply_muted_on_dark(_empty_label)
 	_empty_label.add_theme_font_size_override("font_size", 18)
-	_empty_label.add_theme_color_override("font_color", TEXT_MUTED)
 	var empty_btn := _empty_button
 	empty_btn.custom_minimum_size = Vector2(220, 52)
-	var normal := StyleBoxFlat.new()
-	normal.bg_color = Color(0, 0, 0, 0)
-	normal.border_color = CYAN
-	normal.set_border_width_all(1)
-	normal.set_corner_radius_all(28)
-	normal.content_margin_left = 18
-	normal.content_margin_right = 18
-	normal.content_margin_top = 10
-	normal.content_margin_bottom = 10
-	var hover := normal.duplicate()
-	hover.bg_color = Color(CYAN.r, CYAN.g, CYAN.b, 0.12)
-	var pressed_style := normal.duplicate()
-	pressed_style.bg_color = Color(CYAN.r, CYAN.g, CYAN.b, 0.22)
-	empty_btn.add_theme_stylebox_override("normal", normal)
-	empty_btn.add_theme_stylebox_override("hover", hover)
-	empty_btn.add_theme_stylebox_override("pressed", pressed_style)
-	empty_btn.add_theme_stylebox_override("focus", hover)
-	empty_btn.add_theme_color_override("font_color", CYAN)
-	empty_btn.add_theme_color_override("font_hover_color", CYAN)
-	empty_btn.add_theme_color_override("font_pressed_color", CYAN)
+	PanelStyle.apply_outline_button(empty_btn, CYAN, TEXT_COLOR)
 	empty_btn.add_theme_font_size_override("font_size", 18)
 
 
@@ -277,15 +304,7 @@ func _add_button_guide(vbox: VBoxContainer) -> void:
 		return
 
 	var panel := PanelContainer.new()
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.05, 0.10, 0.18, 0.94)
-	style.border_color = CYAN
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(10)
-	style.content_margin_left = 18
-	style.content_margin_right = 18
-	style.content_margin_top = 14
-	style.content_margin_bottom = 14
+	var style := PanelStyle.create_glass_card_style(Color(0.07, 0.11, 0.18, 0.94), 0.62, 12, 18, 14)
 	panel.add_theme_stylebox_override("panel", style)
 	vbox.add_child(panel)
 
@@ -301,17 +320,18 @@ func _build_button_guide_text() -> String:
 	var entries: Array[String] = []
 	if _phase == "reward":
 		if not _cargo.is_empty():
-			entries.append("Sell Minerals: Convert this run's cargo into francs and lock in the payout.")
-		entries.append("Review Next Mission: Move from reward resolution into the next-mission briefing.")
+			entries.append("Sell Cargo: Convert this run's cargo into francs and lock in the payout.")
+		entries.append("Next Mission: Move from reward resolution into the next-mission briefing.")
 		if not _reward_resolved:
-			entries.append("Review Next Mission stays locked until the cargo payout is resolved.")
+			entries.append("Next Mission stays locked until the cargo payout is resolved.")
 	else:
-		entries.append("Open Launchpad: Leave debrief and start setting up the next mission.")
+		entries.append("%s: %s" % [_primary_handoff_action_label().trim_suffix(" →"), _primary_handoff_action_description()])
 		if _salvage_refund > 0:
 			entries.append("Scrap / Salvage Ship: Retire this ship now and receive the listed salvage refund.")
 		else:
 			entries.append("Scrap / Salvage Ship: No salvage value is available for this ship on this run.")
-		entries.append("Return to Base: Leave debrief and go back to Earth base without opening launchpad.")
+		if _should_show_return_to_base_action():
+			entries.append("Return to Base: Leave debrief and go back to Earth base without opening launchpad.")
 	return "\n".join(entries)
 
 
@@ -341,37 +361,22 @@ func _add_summary(vbox: VBoxContainer) -> void:
 		vbox.add_child(hint_lbl)
 
 func _add_summary_card(grid: GridContainer, icon_text: String, label_text: String, value_text: String) -> void:
-	var card := PanelContainer.new()
+	var card: PanelContainer = SummaryCardScene.instantiate()
 	card.add_theme_stylebox_override("panel", _soft_card_style())
 	grid.add_child(card)
-
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 10)
-	card.add_child(row)
-
-	var icon := Label.new()
+	var icon: Label = card.get_node("Row/IconLabel")
 	icon.text = icon_text
 	icon.add_theme_font_size_override("font_size", 22)
 	icon.add_theme_color_override("font_color", CYAN)
-	row.add_child(icon)
-
-	var col := VBoxContainer.new()
-	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	col.add_theme_constant_override("separation", 2)
-	row.add_child(col)
-
-	var k := Label.new()
+	var k: Label = card.get_node("Row/Content/KeyLabel")
 	k.text = label_text
 	k.add_theme_font_size_override("font_size", 13)
 	k.add_theme_color_override("font_color", TEXT_MUTED)
-	col.add_child(k)
-
-	var v := Label.new()
+	var v: Label = card.get_node("Row/Content/ValueLabel")
 	v.text = value_text
 	v.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	v.add_theme_font_size_override("font_size", 17)
 	v.add_theme_color_override("font_color", TEXT_COLOR)
-	col.add_child(v)
 
 func _add_reward_snapshot(vbox: VBoxContainer) -> void:
 	var viewport := get_viewport_rect().size
@@ -387,18 +392,15 @@ func _add_reward_snapshot(vbox: VBoxContainer) -> void:
 	vbox.add_child(_build_payout_card())
 
 func _build_goal_card() -> PanelContainer:
-	var card := PanelContainer.new()
+	var card: PanelContainer = SectionCardScene.instantiate()
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	card.add_theme_stylebox_override("panel", _soft_card_style())
-	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", 8)
-	card.add_child(col)
-
-	var header := Label.new()
+	var col: VBoxContainer = card.get_node("Content")
+	var header: Label = card.get_node("Content/HeaderLabel")
 	header.text = "◎ Goal"
 	header.add_theme_font_size_override("font_size", 15)
 	header.add_theme_color_override("font_color", AMBER)
-	col.add_child(header)
+	var rows: VBoxContainer = card.get_node("Content/Rows")
 
 	var all_met := true
 	var keys := _requested.keys()
@@ -409,48 +411,43 @@ func _build_goal_card() -> PanelContainer:
 		var done := have >= need
 		if not done:
 			all_met = false
-		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 8)
-		col.add_child(row)
-		var name_lbl := Label.new()
+		var row: HBoxContainer = ResourceValueRowScene.instantiate()
+		rows.add_child(row)
+		var name_lbl: Label = row.get_node("NameLabel")
 		name_lbl.text = "%s %s" % ["✓" if done else "•", str(mineral).capitalize()]
-		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		name_lbl.add_theme_font_size_override("font_size", 17)
 		name_lbl.add_theme_color_override("font_color", GREEN if done else TEXT_COLOR)
-		row.add_child(name_lbl)
-		var qty_lbl := Label.new()
+		var qty_lbl: Label = row.get_node("ValueLabel")
 		qty_lbl.text = "%d/%d kg" % [have, need]
 		qty_lbl.add_theme_font_size_override("font_size", 17)
 		qty_lbl.add_theme_color_override("font_color", GREEN if done else RED)
-		row.add_child(qty_lbl)
+		var value_align := qty_lbl
+		value_align.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 
-	var verdict := Label.new()
+	var verdict: Label = card.get_node("Content/FooterLabel")
+	verdict.visible = true
 	verdict.text = "Bonus payout ready." if all_met else "Partial order. Standard payout."
 	verdict.add_theme_font_size_override("font_size", 14)
 	verdict.add_theme_color_override("font_color", GREEN if all_met else TEXT_MUTED)
-	col.add_child(verdict)
 	return card
 
 func _build_cargo_card() -> PanelContainer:
-	var card := PanelContainer.new()
+	var card: PanelContainer = SectionCardScene.instantiate()
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	card.add_theme_stylebox_override("panel", _soft_card_style())
-	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", 8)
-	card.add_child(col)
-
-	var header := Label.new()
+	var header: Label = card.get_node("Content/HeaderLabel")
 	header.text = "◌ Cargo"
 	header.add_theme_font_size_override("font_size", 15)
 	header.add_theme_color_override("font_color", CYAN)
-	col.add_child(header)
+	var rows: VBoxContainer = card.get_node("Content/Rows")
+	var footer: Label = card.get_node("Content/FooterLabel")
 
 	if _cargo.is_empty():
 		var empty := Label.new()
 		empty.text = "No minerals collected."
 		empty.add_theme_font_size_override("font_size", 16)
 		empty.add_theme_color_override("font_color", TEXT_MUTED)
-		col.add_child(empty)
+		rows.add_child(empty)
 		return card
 
 	var keys := _cargo.keys()
@@ -461,47 +458,36 @@ func _build_cargo_card() -> PanelContainer:
 		var amt := int(_cargo.get(mineral, 0))
 		if amt <= 0:
 			continue
-		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 8)
-		col.add_child(row)
-		var name_lbl := Label.new()
+		var row: HBoxContainer = ResourceValueRowScene.instantiate()
+		rows.add_child(row)
+		var name_lbl: Label = row.get_node("NameLabel")
 		name_lbl.text = str(mineral).capitalize()
-		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		name_lbl.add_theme_font_size_override("font_size", 16)
 		name_lbl.add_theme_color_override("font_color", TEXT_COLOR)
-		row.add_child(name_lbl)
-		var qty_lbl := Label.new()
+		var qty_lbl: Label = row.get_node("ValueLabel")
 		qty_lbl.text = "%d kg" % amt
 		qty_lbl.add_theme_font_size_override("font_size", 16)
 		qty_lbl.add_theme_color_override("font_color", CYAN)
-		row.add_child(qty_lbl)
+		qty_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 
 	if keys.size() > visible_count:
-		var more := Label.new()
-		more.text = "+%d more mineral types" % (keys.size() - visible_count)
-		more.add_theme_font_size_override("font_size", 14)
-		more.add_theme_color_override("font_color", TEXT_MUTED)
-		col.add_child(more)
+		footer.visible = true
+		footer.text = "+%d more mineral types" % (keys.size() - visible_count)
+		footer.add_theme_font_size_override("font_size", 14)
+		footer.add_theme_color_override("font_color", TEXT_MUTED)
 	return card
 
 func _build_payout_card() -> PanelContainer:
-	var card := PanelContainer.new()
+	var card: PanelContainer = PayoutCardScene.instantiate()
 	card.add_theme_stylebox_override("panel", _highlight_card_style())
-	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", 4)
-	card.add_child(col)
-
-	var label := Label.new()
+	var label: Label = card.get_node("Content/Label")
 	label.text = "₣ PAYOUT"
 	label.add_theme_font_size_override("font_size", 13)
 	label.add_theme_color_override("font_color", Color(0.10, 0.14, 0.18, 0.92))
-	col.add_child(label)
-
-	var value := Label.new()
+	var value: Label = card.get_node("Content/Value")
 	value.text = "+%s F" % NumberFormat.commas(str(_payout))
 	value.add_theme_font_size_override("font_size", 30)
 	value.add_theme_color_override("font_color", Color(0.06, 0.10, 0.14, 1.0))
-	col.add_child(value)
 	return card
 
 
@@ -712,11 +698,11 @@ func _add_handoff_actions(vbox: VBoxContainer) -> void:
 	acts.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vbox.add_child(acts)
 
-	var launchpad_btn := _make_button("Open Launchpad →", true)
-	launchpad_btn.name = "CompleteButton"
-	launchpad_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	launchpad_btn.pressed.connect(_on_open_launchpad_pressed)
-	acts.add_child(launchpad_btn)
+	var primary_btn := _make_button(_primary_handoff_action_label(), true)
+	primary_btn.name = "CompleteButton"
+	primary_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	primary_btn.pressed.connect(_on_primary_handoff_pressed)
+	acts.add_child(primary_btn)
 
 	var salvage_btn := _make_button(
 		"Scrap / Salvage Ship  (+%s F)" % NumberFormat.commas(str(_salvage_refund)),
@@ -728,11 +714,12 @@ func _add_handoff_actions(vbox: VBoxContainer) -> void:
 		salvage_btn.pressed.connect(_on_salvage_pressed.bind(salvage_btn))
 	acts.add_child(salvage_btn)
 
-	var return_btn := _make_button("Base", false)
-	return_btn.name = "OrbitButton"
-	return_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	return_btn.pressed.connect(_return_to_base)
-	acts.add_child(return_btn)
+	if _should_show_return_to_base_action():
+		var return_btn := _make_button("Base", false)
+		return_btn.name = "OrbitButton"
+		return_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		return_btn.pressed.connect(_return_to_base)
+		acts.add_child(return_btn)
 
 	var explain := Label.new()
 	explain.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -751,48 +738,25 @@ func _make_button(text: String, primary: bool) -> Button:
 	var btn := Button.new()
 	btn.text = text
 	btn.custom_minimum_size = Vector2(0, 52)
-	var color := AMBER if primary else CYAN
-	var normal := StyleBoxFlat.new()
-	normal.bg_color = Color(0, 0, 0, 0)
-	normal.border_color = color
-	normal.set_border_width_all(1)
-	normal.set_corner_radius_all(28)
-	normal.content_margin_left  = 18
-	normal.content_margin_right = 18
-	normal.content_margin_top    = 10
-	normal.content_margin_bottom = 10
-	var hover := normal.duplicate()
-	hover.bg_color = Color(color.r, color.g, color.b, 0.12)
-	var pressed_style := normal.duplicate()
-	pressed_style.bg_color = Color(color.r, color.g, color.b, 0.22)
-	btn.add_theme_stylebox_override("normal", normal)
-	btn.add_theme_stylebox_override("hover", hover)
-	btn.add_theme_stylebox_override("pressed", pressed_style)
-	btn.add_theme_stylebox_override("focus", hover)
-	btn.add_theme_color_override("font_color", color)
-	btn.add_theme_color_override("font_hover_color", color)
-	btn.add_theme_color_override("font_pressed_color", color)
+	if primary:
+		PanelStyle.apply_button(btn, true)
+	else:
+		PanelStyle.apply_outline_button(btn, CYAN, TEXT_COLOR)
 	btn.add_theme_font_size_override("font_size", 18)
 	return btn
 
 func _soft_card_style() -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.15, 0.18, 0.25, 0.92)
-	style.border_color = Color(CYAN.r, CYAN.g, CYAN.b, 0.55)
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(8)
-	style.content_margin_left = 14
-	style.content_margin_right = 14
-	style.content_margin_top = 12
-	style.content_margin_bottom = 12
-	return style
+	return PanelStyle.create_glass_card_style(Color(0.10, 0.15, 0.22, 0.94), 0.60, 12, 16, 14)
 
 func _highlight_card_style() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(AMBER.r, AMBER.g, AMBER.b, 0.96)
-	style.border_color = Color(1.0, 0.94, 0.78, 1.0)
+	style.border_color = Color(1.0, 0.95, 0.82, 1.0)
 	style.set_border_width_all(1)
-	style.set_corner_radius_all(10)
+	style.set_corner_radius_all(12)
+	style.shadow_color = Color(AMBER.r, AMBER.g, AMBER.b, 0.22)
+	style.shadow_size = 20
+	style.shadow_offset = Vector2(0, 6)
 	style.content_margin_left = 18
 	style.content_margin_right = 18
 	style.content_margin_top = 14
@@ -830,7 +794,7 @@ func _on_sell_pressed(btn: Button) -> void:
 	if app:
 		var net := _payout
 		if app.has_outstanding_loan():
-			net = app.repay_loan_from_payout(_payout)
+			net = app.repay_loan_from_payout(net)
 		app.add_franc_balance(net, "mission_sale")
 
 	if _contractor_id != "" and app:
@@ -962,8 +926,22 @@ func _calc_salvage_refund() -> int:
 
 
 func _build_next_mission_brief() -> Dictionary:
-	var current_stage = int(RocketsManager.get_mission_stage())
+	var current_stage = _infer_returned_mission_stage()
 	var next_stage = current_stage + 1 if current_stage < 4 else 4
+	var base_setup_key := _next_stage_base_setup_key(current_stage)
+	if base_setup_key != "":
+		return {
+			"stage": next_stage,
+			"target_id": "",
+			"location": "Earth Base",
+			"contractor": "Base Operations",
+			"title": _next_mission_title(current_stage),
+			"objective": _next_mission_objective(current_stage, "Earth Base"),
+			"note": _next_mission_note(current_stage),
+			"requires_base_setup": true,
+			"base_setup_key": base_setup_key,
+			"primary_cta": _primary_handoff_label_for_base_setup(base_setup_key),
+		}
 	var targets = RocketsManager.get_selectable_targets_for_stage(next_stage)
 	var target: Dictionary = {}
 	if not targets.is_empty() and typeof(targets[0]) == TYPE_DICTIONARY:
@@ -972,16 +950,7 @@ func _build_next_mission_brief() -> Dictionary:
 		target = RocketsManager.get_predefined_mission_target(next_stage)
 	var target_id = str(target.get("id", ""))
 	var target_label = str(target.get("label", "Earth Launchpad"))
-	var contractor = _contractor_name if _contractor_name != "" else "Mission Control"
-	if current_stage >= 4:
-		var offer = RocketsManager.ensure_trip_contract_offer()
-		var selected = RocketsManager.get_trip_selected_contractor()
-		if not selected.is_empty():
-			contractor = str(selected.get("name", contractor))
-		else:
-			var contractors: Array = offer.get("contractors", [])
-			if not contractors.is_empty() and typeof(contractors[0]) == TYPE_DICTIONARY:
-				contractor = str((contractors[0] as Dictionary).get("name", contractor))
+	var contractor = "Choose in Launchpad"
 	return {
 		"stage": next_stage,
 		"target_id": target_id,
@@ -989,18 +958,21 @@ func _build_next_mission_brief() -> Dictionary:
 		"contractor": contractor,
 		"title": _next_mission_title(current_stage),
 		"objective": _next_mission_objective(current_stage, target_label),
-		"note": _next_mission_note(current_stage)
+		"note": _next_mission_note(current_stage),
+		"requires_base_setup": false,
+		"base_setup_key": "",
+		"primary_cta": "Open Launchpad →",
 	}
 
 
 func _next_mission_title(current_stage: int) -> String:
 	match current_stage:
 		1:
-			return "Mission 2 is ready"
+			return "Mission 2 starts at the Control Station"
 		2:
 			return "Mission 3 is ready"
 		3:
-			return "Mission 4 is ready"
+			return "Mission 4 starts at the Scanner Station"
 		_:
 			return "Your next mission is ready"
 
@@ -1008,11 +980,11 @@ func _next_mission_title(current_stage: int) -> String:
 func _next_mission_objective(current_stage: int, target_label: String) -> String:
 	match current_stage:
 		1:
-			return "Upgrade to Starter Rocket 2 and launch the next asteroid run toward %s." % target_label
+			return "Return to Earth base and build the Control Station so Mission 2 launch prep can begin."
 		2:
 			return "Prepare the first planet-target mission and route toward %s." % target_label
 		3:
-			return "Build scanner capability and push toward the long-range objective at %s." % target_label
+			return "Return to Earth base, build the Scanner Station, and run a scan before preparing the route to %s." % target_label
 		_:
 			return "Open the launchpad, pick a contractor, and line up the next operation."
 
@@ -1020,18 +992,88 @@ func _next_mission_objective(current_stage: int, target_label: String) -> String
 func _next_mission_note(current_stage: int) -> String:
 	match current_stage:
 		1:
-			return "This should feel like a briefing card, not a system toast."
+			return "Once the Control Station is online, reopen the Launchpad to build Starter Rocket 2."
 		2:
-			return "Planet targets are now part of the loop; route choice matters more."
+			return "Contractor choice still happens first on every run. Target lock comes after the ship is ready."
 		3:
-			return "The next handoff moves you into scanner-led mission prep."
+			return "The scanner build costs 2.0B F. After it is online, scan once and reopen the Launchpad."
 		_:
 			return "Free Operations is open; use the launchpad to continue the loop."
 
 
 func _prepare_launchpad_handoff() -> void:
-	var target_id = str(_next_mission_brief.get("target_id", ""))
+	RocketsManager.clear_selected_target()
 	var location = str(_next_mission_brief.get("location", "the next mission"))
-	if target_id != "":
-		RocketsManager.select_target(target_id)
-	RocketsManager.set_launch_guidance_notice("Next mission briefing loaded: %s." % location)
+	RocketsManager.set_launch_guidance_notice("Next mission ready: %s. Pick a contractor, build a ship, then choose the route." % location)
+
+func _infer_returned_mission_stage() -> int:
+	var target_id := str(_returned.get("target_id", ""))
+	var target_type := str(_returned.get("type", "asteroid")).strip_edges().to_lower()
+	var rocket_type := RocketSpecs.rocket_type_from_id(str(_returned.get("rocket_id", "")))
+	var mission1_id := str(RocketsManager.get_predefined_mission_target(1).get("id", ""))
+	var mission2_id := str(RocketsManager.get_predefined_mission_target(2).get("id", ""))
+	var mission4_id := str(RocketsManager.get_predefined_mission_target(4).get("id", ""))
+	if target_id == mission1_id:
+		return 1
+	if target_id == mission2_id or target_id.begins_with("mission-2-"):
+		return 2
+	if target_id == mission4_id:
+		return 4
+	if target_id.begins_with("mission-3-"):
+		return 3
+	match rocket_type:
+		"starterrocket1":
+			return 1
+		"starterrocket3":
+			return 4
+		"starterrocket2":
+			return 3 if target_type == "planet" else 2
+	return max(int(RocketsManager.get_mission_stage()), 1)
+
+func _next_stage_base_setup_key(current_stage: int) -> String:
+	match current_stage:
+		1:
+			return "control_station" if not RocketsManager.is_control_station_built() else ""
+		3:
+			return "scanner_station" if not RocketsManager.is_scanner_station_built() else ""
+		_:
+			return ""
+
+func _primary_handoff_label_for_base_setup(base_setup_key: String) -> String:
+	match base_setup_key:
+		"control_station":
+			return "Build Control Station →"
+		"scanner_station":
+			return "Build Scanner Station →"
+		_:
+			return "Return to Base →"
+
+func _primary_handoff_action_label() -> String:
+	return str(_next_mission_brief.get("primary_cta", "Open Launchpad →"))
+
+func _primary_handoff_action_description() -> String:
+	var base_setup_key := str(_next_mission_brief.get("base_setup_key", ""))
+	match base_setup_key:
+		"control_station":
+			return "Return to Earth base and construct the Control Station before reopening the Launchpad."
+		"scanner_station":
+			return "Return to Earth base, pay the scanner build cost, then run a scan before launch prep."
+		_:
+			return "Leave debrief and start setting up the next mission in the Launchpad."
+
+func _should_show_return_to_base_action() -> bool:
+	return not bool(_next_mission_brief.get("requires_base_setup", false))
+
+func _on_primary_handoff_pressed() -> void:
+	_resolve_debrief_once()
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree == null:
+		return
+	var destination := EARTH_SCENE if bool(_next_mission_brief.get("requires_base_setup", false)) else LAUNCHPAD_SCENE
+	if destination == LAUNCHPAD_SCENE:
+		_prepare_launchpad_handoff()
+	var sm = tree.current_scene.get_node_or_null("SceneManager") if tree.current_scene else null
+	if sm and sm.has_method("change_to_scene"):
+		sm.change_to_scene(destination)
+	else:
+		tree.change_scene_to_file(destination)

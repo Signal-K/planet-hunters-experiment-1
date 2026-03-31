@@ -3,6 +3,7 @@ extends SceneTree
 const TestReporter = preload("res://tests/TestReporter.gd")
 const TutorialControllerScript = preload("res://Scripts/Tutorial/TutorialController.gd")
 const TutorialTargeting = preload("res://Scripts/UI/TutorialCoachTargeting.gd")
+const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
 
 var reporter := TestReporter.new()
 
@@ -24,6 +25,7 @@ func run_all_tests() -> void:
 	await test_state_persists_across_controller_recreation()
 	await test_targeting_prefers_structure_nodes_for_world_actions()
 	await test_targeting_finds_launch_button_for_launch_action()
+	await test_targeting_prefers_target_map_cta_over_contractor_select()
 	await test_advance_if_match_skips_past_out_of_order_completed_actions()
 	await test_reconcile_step_index_fast_forwards_past_completed_actions()
 
@@ -41,6 +43,10 @@ func _teardown_controller(controller: Node) -> void:
 
 func _reset_tutorial_state() -> void:
 	DirAccess.remove_absolute("user://tutorial_v2.cfg")
+	RocketsManager.reset_state()
+	RocketsManager.clear_selected_target()
+	RocketsManager.clear_preview_target()
+	RocketsManager.clear_returned_mission()
 
 func test_progression_advances_on_expected_actions() -> void:
 	reporter.start_test("Tutorial progression advances on ordered mission actions")
@@ -50,14 +56,14 @@ func test_progression_advances_on_expected_actions() -> void:
 	controller.replay_full()
 	await create_timer(0.02).timeout
 	var before = controller.get_tutorial_state()
-	if str(before.get("current_step", {}).get("action_key", "")) != "tour_open_control_station":
-		reporter.fail_test("Expected first action tour_open_control_station")
+	if str(before.get("current_step", {}).get("action_key", "")) != "accept_contractor_offer":
+		reporter.fail_test("Expected first action accept_contractor_offer")
 		await _teardown_controller(controller)
 		return
 
-	controller.record_action("tour_open_control_station")
-	controller.record_action("tour_close_control_station")
 	controller.record_action("accept_contractor_offer")
+	controller.record_action("create_rocket")
+	controller.record_action("select_launch_target")
 	var after = controller.get_tutorial_state()
 	if int(after.get("current_step_index", 0)) < 3:
 		reporter.fail_test("Expected current_step_index >= 3 after first actions")
@@ -102,8 +108,8 @@ func test_state_persists_across_controller_recreation() -> void:
 	_reset_tutorial_state()
 	var controller = await _setup_controller()
 	controller.replay_full()
-	controller.record_action("tour_open_control_station")
-	controller.record_action("tour_close_control_station")
+	controller.record_action("accept_contractor_offer")
+	controller.record_action("create_rocket")
 	await create_timer(0.02).timeout
 	await _teardown_controller(controller)
 
@@ -185,6 +191,43 @@ func test_targeting_finds_launch_button_for_launch_action() -> void:
 	reporter.pass_test()
 	await _teardown_mock_scene_root(scene_root)
 
+func test_targeting_prefers_target_map_cta_over_contractor_select() -> void:
+	reporter.start_test("Tutorial targeting resolves target-selection CTA before contractor select buttons")
+	var scene_root = await _setup_mock_scene_root()
+	var selector_panel := Panel.new()
+	selector_panel.name = "SelectorPanel"
+	var contractor_section := VBoxContainer.new()
+	contractor_section.name = "ContractorSection"
+	selector_panel.add_child(contractor_section)
+	var contractor_select := Button.new()
+	contractor_select.name = "ContractorSelectButton"
+	contractor_select.text = "Select"
+	contractor_section.add_child(contractor_select)
+	var bottom_dock := VBoxContainer.new()
+	bottom_dock.name = "BottomDock"
+	selector_panel.add_child(bottom_dock)
+	var action_row := HBoxContainer.new()
+	action_row.name = "ActionRow"
+	bottom_dock.add_child(action_row)
+	var open_map := Button.new()
+	open_map.name = "OpenMapButton"
+	open_map.text = "Open Target Map"
+	action_row.add_child(open_map)
+	var ui_layer := scene_root.get_node("UIRoot")
+	ui_layer.add_child(selector_panel)
+	await create_timer(0.02).timeout
+	var target = TutorialTargeting.find_current_target({"action_key": "select_launch_target"}, self)
+	if target == null or not (target is Button):
+		reporter.fail_test("Expected target-selection CTA to resolve to a Button")
+		await _teardown_mock_scene_root(scene_root)
+		return
+	if str((target as Button).name) != "OpenMapButton":
+		reporter.fail_test("Expected target-selection CTA to resolve to OpenMapButton, got %s" % str((target as Button).name))
+		await _teardown_mock_scene_root(scene_root)
+		return
+	reporter.pass_test()
+	await _teardown_mock_scene_root(scene_root)
+
 func test_advance_if_match_skips_past_out_of_order_completed_actions() -> void:
 	reporter.start_test("Tutorial advances past stuck steps whose action is already in completed_actions")
 	_reset_tutorial_state()
@@ -192,9 +235,7 @@ func test_advance_if_match_skips_past_out_of_order_completed_actions() -> void:
 	controller.replay_full()
 	await create_timer(0.02).timeout
 
-	# Advance normally through the first four steps to reach select_launch_target:
-	controller.record_action("tour_open_control_station")
-	controller.record_action("tour_close_control_station")
+	# Advance normally through the first two steps to reach select_launch_target:
 	controller.record_action("accept_contractor_offer")
 	controller.record_action("create_rocket")
 	var pre_state = controller.get_tutorial_state()
@@ -226,7 +267,7 @@ func test_reconcile_step_index_fast_forwards_past_completed_actions() -> void:
 	await create_timer(0.02).timeout
 
 	# Complete the first two steps then capture the index:
-	controller.record_action("open_launchpad")
+	controller.record_action("accept_contractor_offer")
 	controller.record_action("create_rocket")
 	var mid_state = controller.get_tutorial_state()
 	var idx_after_two = int(mid_state.get("current_step_index", 0))
@@ -244,7 +285,7 @@ func test_reconcile_step_index_fast_forwards_past_completed_actions() -> void:
 		await _teardown_controller(controller2)
 		return
 	var restored_key = str(restored.get("current_step", {}).get("action_key", ""))
-	if restored_key in ["open_launchpad", "create_rocket"]:
+	if restored_key in ["accept_contractor_offer", "create_rocket"]:
 		reporter.fail_test("Tutorial shows already-completed step (%s) after restart" % restored_key)
 		await _teardown_controller(controller2)
 		return

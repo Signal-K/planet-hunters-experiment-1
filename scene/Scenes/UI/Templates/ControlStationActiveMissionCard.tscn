@@ -1,36 +1,53 @@
-[gd_scene format=3]
+[gd_scene load_steps=2 format=3]
+
+[sub_resource type="StyleBoxFlat" id="1"]
+bg_color = Color(0.0705882, 0.117647, 0.176471, 0.96)
+border_color = Color(0.47451, 0.862745, 0.941176, 0.42)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
 
 [node name="ControlStationActiveMissionCard" type="PanelContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("1")
 
 [node name="Margin" type="MarginContainer" parent="."]
 layout_mode = 2
-theme_override_constants/margin_left = 18
-theme_override_constants/margin_top = 16
-theme_override_constants/margin_right = 18
-theme_override_constants/margin_bottom = 16
+theme_override_constants/margin_left = 22
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 22
+theme_override_constants/margin_bottom = 18
 
 [node name="HBox" type="HBoxContainer" parent="Margin"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 16
+theme_override_constants/separation = 20
 
 [node name="ContentVBox" type="VBoxContainer" parent="Margin/HBox"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 6
+theme_override_constants/separation = 8
 
 [node name="RocketLabel" type="Label" parent="Margin/HBox/ContentVBox"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.92, 0.95, 0.98, 1)
+theme_override_font_sizes/font_size = 18
 text = "Rocket"
 
 [node name="TargetLabel" type="Label" parent="Margin/HBox/ContentVBox"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.28, 0.88, 0.96, 1)
+theme_override_font_sizes/font_size = 14
 autowrap_mode = 3
 text = "Target"
 
 [node name="ResumeButton" type="Button" parent="Margin/HBox"]
-custom_minimum_size = Vector2(150, 44)
+custom_minimum_size = Vector2(138, 42)
 layout_mode = 2
 text = "RESUME"

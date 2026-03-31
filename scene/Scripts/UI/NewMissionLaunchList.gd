@@ -43,7 +43,7 @@ func display_launched_rockets() -> void:
 	if launched.size() == 0 and not has_returning:
 		var lbl: Label = EmptyLabelScene.instantiate()
 		lbl.text = "No missions in flight."
-		panel_style.apply_muted(lbl)
+		panel_style.apply_muted_on_dark(lbl)
 		_launch_list_container.add_child(lbl)
 		return
 
@@ -51,7 +51,8 @@ func display_launched_rockets() -> void:
 		var header: Label = HeaderLabelScene.instantiate()
 		header.text = "Missions in flight"
 		header.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-		panel_style.apply_title(header)
+		panel_style.apply_title_on_dark(header)
+		header.add_theme_font_size_override("font_size", 18)
 		_launch_list_container.add_child(header)
 
 	var target_map := _build_target_map(targets)
@@ -68,31 +69,33 @@ func display_launched_rockets() -> void:
 			var distance_km = _distance_for_target(target_id)
 			distance_text = _format_distance_km(distance_km)
 
-		var row: HBoxContainer = LaunchRowScene.instantiate()
-		var info: VBoxContainer = row.get_node("Info")
-		var title_lbl: Label = row.get_node("Info/TitleLabel")
+		var row: PanelContainer = LaunchRowScene.instantiate()
+		row.add_theme_stylebox_override("panel", panel_style.create_glass_card_style())
+		var title_lbl: Label = row.get_node("Margin/HBox/Info/TitleLabel")
 		title_lbl.text = "%s → %s" % [RocketSpecs.get_display_name(id), target_label]
-		panel_style.apply_body(title_lbl)
-		var dist_lbl: Label = row.get_node("Info/DistanceLabel")
+		panel_style.apply_body_on_dark(title_lbl)
+		title_lbl.add_theme_font_size_override("font_size", 17)
+		var dist_lbl: Label = row.get_node("Margin/HBox/Info/DistanceLabel")
 		dist_lbl.text = "Distance: %s" % distance_text
-		panel_style.apply_muted(dist_lbl)
-		var progress: ProgressBar = row.get_node("Info/Progress")
+		panel_style.apply_muted_on_dark(dist_lbl)
+		dist_lbl.add_theme_font_size_override("font_size", 13)
+		var progress: ProgressBar = row.get_node("Margin/HBox/Info/Progress")
 		progress.min_value = 0
 		progress.max_value = 100
 		panel_style.apply_progress_bar(progress)
 
-		var preview_btn: Button = row.get_node("PreviewButton")
+		var preview_btn: Button = row.get_node("Margin/HBox/PreviewButton")
 		if target_id == "":
 			preview_btn.disabled = true
 		else:
 			var target_type = _get_target_type(target_map, target_id)
 			preview_btn.pressed.connect(Callable(self, "_on_preview_pressed").bind(target_id, target_label, target_type, id))
-		panel_style.apply_button(preview_btn, true)
+		panel_style.apply_outline_button(preview_btn)
 
-		var btn: Button = row.get_node("ActionButton")
+		var btn: Button = row.get_node("Margin/HBox/ActionButton")
 		btn.text = "Self-Destruct"
 		btn.pressed.connect(Callable(self, "_on_self_destruct_pressed").bind(id))
-		panel_style.apply_button(btn, false)
+		panel_style.apply_button(btn, true)
 
 		_launch_list_container.add_child(row)
 		_mission_rows[id] = {
@@ -105,7 +108,8 @@ func display_launched_rockets() -> void:
 		var returning_header: Label = HeaderLabelScene.instantiate()
 		returning_header.text = "Returning to Earth"
 		returning_header.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-		panel_style.apply_title(returning_header)
+		panel_style.apply_title_on_dark(returning_header)
+		returning_header.add_theme_font_size_override("font_size", 18)
 		_launch_list_container.add_child(returning_header)
 
 		var rocket_id = str(returning.get("rocket_id", ""))
@@ -117,21 +121,23 @@ func display_launched_rockets() -> void:
 		if target_label == "":
 			target_label = "Unknown target"
 
-		var row: HBoxContainer = ReturningRowScene.instantiate()
-		var info: VBoxContainer = row.get_node("Info")
-		var title_lbl: Label = row.get_node("Info/TitleLabel")
+		var row: PanelContainer = ReturningRowScene.instantiate()
+		row.add_theme_stylebox_override("panel", panel_style.create_glass_card_style())
+		var title_lbl: Label = row.get_node("Margin/HBox/Info/TitleLabel")
 		title_lbl.text = "%s → %s" % [RocketSpecs.get_display_name(rocket_id), target_label]
-		panel_style.apply_body(title_lbl)
-		var dist_lbl: Label = row.get_node("Info/StatusLabel")
+		panel_style.apply_body_on_dark(title_lbl)
+		title_lbl.add_theme_font_size_override("font_size", 17)
+		var dist_lbl: Label = row.get_node("Margin/HBox/Info/StatusLabel")
 		dist_lbl.text = "Returning to Earth"
-		panel_style.apply_muted(dist_lbl)
+		panel_style.apply_muted_on_dark(dist_lbl)
+		dist_lbl.add_theme_font_size_override("font_size", 13)
 
-		var preview_btn: Button = row.get_node("PreviewButton")
+		var preview_btn: Button = row.get_node("Margin/HBox/PreviewButton")
 		if target_id == "":
 			preview_btn.disabled = true
 		else:
 			preview_btn.pressed.connect(Callable(self, "_on_preview_pressed").bind(target_id, target_label, target_type, rocket_id))
-		panel_style.apply_button(preview_btn, true)
+		panel_style.apply_outline_button(preview_btn)
 
 		_launch_list_container.add_child(row)
 

@@ -30,9 +30,7 @@ static func load_state() -> Dictionary:
 	if typeof(data) != TYPE_DICTIONARY:
 		data = {}
 	if data.is_empty():
-		var fallback = json.load_json(_get_default_state_path())
-		if typeof(fallback) == TYPE_DICTIONARY and not fallback.is_empty():
-			data = fallback
+		data = build_default_state()
 	if not data.has("missions"):
 		data["missions"] = []
 	var normalized = _normalize_missions(data.get("missions", []))
@@ -41,15 +39,21 @@ static func load_state() -> Dictionary:
 		save_state(data)
 	return data
 
+static func build_default_state() -> Dictionary:
+	return {"missions": []}
+
 static func save_state(data: Dictionary) -> bool:
 	var json = preload("res://Scripts/Utils/JSONFileManager.gd")
 	var state_path = _get_state_path()
 	var default_path = _get_default_state_path()
 	var primary_ok = json.save_json(state_path, data)
 	var default_ok = true
-	if default_path != "":
+	if OS.has_feature("editor") and default_path != "":
 		default_ok = json.save_json(default_path, data)
 	return primary_ok or default_ok
+
+static func reset_state() -> bool:
+	return save_state(build_default_state())
 
 static func add_mission(entry: Dictionary) -> bool:
 	var data = load_state()

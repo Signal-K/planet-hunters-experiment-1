@@ -36,6 +36,22 @@ const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd"
 const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
 const SubcontractorManager = preload("res://Scripts/Utils/SubcontractorManager.gd")
 
+const STATION_BACKDROP := Color(0.03, 0.05, 0.09, 0.72)
+const STATION_PANEL_BG := Color(0.06, 0.10, 0.16, 0.96)
+const STATION_PANEL_EDGE := Color(PanelStyle.ACCENT.r, PanelStyle.ACCENT.g, PanelStyle.ACCENT.b, 0.86)
+const STATION_PANEL_INNER := Color(0.08, 0.13, 0.19, 0.94)
+const STATION_CARD_BG := Color(0.08, 0.13, 0.20, 0.92)
+const STATION_CARD_ALT := Color(0.10, 0.16, 0.24, 0.92)
+const STATION_TEXT := PanelStyle.TEXT_ON_DARK
+const STATION_MUTED := PanelStyle.MUTED_ON_DARK
+const STATION_TELEMETRY := PanelStyle.ACCENT
+const STATION_PRIMARY := PanelStyle.ACCENT_WARM
+const STATION_PRIMARY_HOVER := Color(1.0, 0.78, 0.34, 1.0)
+const STATION_PRIMARY_PRESSED := Color(0.86, 0.60, 0.16, 1.0)
+const STATION_BUTTON_BG := Color(0.09, 0.15, 0.22, 0.94)
+const STATION_BUTTON_HOVER := Color(0.15, 0.24, 0.34, 0.98)
+const STATION_BUTTON_PRESSED := Color(0.07, 0.12, 0.18, 0.98)
+
 var pending_anomalies := []
 var current_mode: String = "asteroids"  # Default mode
 var local_only: bool = false
@@ -60,6 +76,23 @@ func set_local_only(val: bool) -> void:
 @onready var loading_label: Label = $PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/LoadingContainer/LoadingLabel
 @onready var refresh_button: Button = $PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/RefreshContainer/RefreshButton
 @onready var status_label: Label = $PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/StatusContainer/StatusLabel
+@onready var status_container: HBoxContainer = $PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/StatusContainer
+@onready var scan_summary_card: PanelContainer = $PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/StatusContainer/ScanSummaryCard
+@onready var summary_vbox: VBoxContainer = $PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/StatusContainer/ScanSummaryCard/SummaryMargin/SummaryVBox
+@onready var mode_badge: Label = $PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/StatusContainer/ScanSummaryCard/SummaryMargin/SummaryVBox/SummaryTopRow/ModeBadge
+@onready var count_label: Label = $PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/StatusContainer/ScanSummaryCard/SummaryMargin/SummaryVBox/SummaryTopRow/CountLabel
+@onready var range_label: Label = $PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/StatusContainer/ScanSummaryCard/SummaryMargin/SummaryVBox/SummaryTopRow/RangeLabel
+@onready var guidance_label: Label = $PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/StatusContainer/ScanSummaryCard/SummaryMargin/SummaryVBox/GuidanceLabel
+@onready var art_underlay: Control = $PanelContainer/Panel/ArtUnderlay
+@onready var warm_glow: ColorRect = $PanelContainer/Panel/ArtUnderlay/WarmGlow
+@onready var cool_glow: ColorRect = $PanelContainer/Panel/ArtUnderlay/CoolGlow
+@onready var top_wash: ColorRect = $PanelContainer/Panel/ArtUnderlay/TopWash
+@onready var telemetry_strip: HBoxContainer = $PanelContainer/Panel/Scroll/VBoxContainer/TelemetryStrip
+@onready var telemetry_label: Label = $PanelContainer/Panel/Scroll/VBoxContainer/TelemetryStrip/TelemetryLabel
+@onready var telemetry_separator: VSeparator = $PanelContainer/Panel/Scroll/VBoxContainer/TelemetryStrip/TelemetrySeparator
+@onready var sweep_label: Label = $PanelContainer/Panel/Scroll/VBoxContainer/TelemetryStrip/SweepLabel
+@onready var sync_separator: VSeparator = $PanelContainer/Panel/Scroll/VBoxContainer/TelemetryStrip/SyncSeparator
+@onready var sync_label: Label = $PanelContainer/Panel/Scroll/VBoxContainer/TelemetryStrip/SyncLabel
 @onready var content_container: VBoxContainer = $PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer
 @onready var toggle_switch: Button = $PanelContainer/Panel/Scroll/VBoxContainer/HeaderContainer/ToggleSwitch
 
@@ -119,6 +152,7 @@ func _ready():
 	_ensure_citizen_science_hint()
 	_refresh_citizen_science_hint()
 	_refresh_scan_cooldown_ui()
+	_refresh_scan_summary()
 
 	# Start initial load (annotation features archived)
 	_start_loading(INITIAL_LOAD_TIME)
@@ -137,17 +171,45 @@ func _ready():
 	_fetch_anomalies()
 
 func _apply_panel_style() -> void:
-	var panel_style = PanelStyle
-	panel_style.apply_panel($PanelContainer/Panel)
-	panel_style.apply_title($PanelContainer/Panel/Scroll/VBoxContainer/HeaderContainer/Title)
-	panel_style.apply_separator($PanelContainer/Panel/Scroll/VBoxContainer/HSeparator)
-	panel_style.apply_button($PanelContainer/Panel/Scroll/VBoxContainer/HeaderContainer/CloseButton, false)
-	panel_style.apply_button($PanelContainer/Panel/Scroll/VBoxContainer/HeaderContainer/ToggleSwitch, false)
-	panel_style.apply_button($PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/RefreshContainer/RefreshButton, true)
-	panel_style.apply_body($PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/StatusContainer/StatusLabel)
-	panel_style.apply_muted($PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/LoadingContainer/LoadingLabel)
-	panel_style.apply_muted($PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/LoadingContainer/ScanningHint)
-	panel_style.apply_progress_bar($PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/LoadingContainer/ProgressBar)
+	var title_label := $PanelContainer/Panel/Scroll/VBoxContainer/HeaderContainer/Title as Label
+	var close_button := $PanelContainer/Panel/Scroll/VBoxContainer/HeaderContainer/CloseButton as Button
+	var divider := $PanelContainer/Panel/Scroll/VBoxContainer/HSeparator as HSeparator
+	$Background.color = STATION_BACKDROP
+	_apply_station_panel($PanelContainer/Panel, STATION_PANEL_BG, STATION_PANEL_EDGE, 1, 18)
+	_apply_station_panel(scan_summary_card, STATION_CARD_BG, Color(STATION_PANEL_EDGE.r, STATION_PANEL_EDGE.g, STATION_PANEL_EDGE.b, 0.55), 1, 14, 18)
+	PanelStyle.apply_title_on_dark(title_label)
+	title_label.add_theme_font_size_override("font_size", 42)
+	status_label.add_theme_color_override("font_color", STATION_MUTED)
+	status_label.add_theme_font_size_override("font_size", 16)
+	status_label.uppercase = true
+	divider.add_theme_color_override("separator", Color(STATION_PANEL_EDGE.r, STATION_PANEL_EDGE.g, STATION_PANEL_EDGE.b, 0.45))
+	telemetry_separator.add_theme_color_override("separator", Color(STATION_MUTED.r, STATION_MUTED.g, STATION_MUTED.b, 0.28))
+	sync_separator.add_theme_color_override("separator", Color(STATION_MUTED.r, STATION_MUTED.g, STATION_MUTED.b, 0.28))
+	for label in [telemetry_label, sweep_label, sync_label]:
+		label.add_theme_color_override("font_color", STATION_MUTED)
+		label.add_theme_font_size_override("font_size", 12)
+		label.uppercase = true
+	mode_badge.add_theme_color_override("font_color", STATION_TELEMETRY)
+	mode_badge.add_theme_font_size_override("font_size", 14)
+	mode_badge.uppercase = true
+	count_label.add_theme_color_override("font_color", STATION_TEXT)
+	count_label.add_theme_font_size_override("font_size", 18)
+	range_label.add_theme_color_override("font_color", STATION_MUTED)
+	range_label.add_theme_font_size_override("font_size", 14)
+	guidance_label.add_theme_color_override("font_color", STATION_MUTED)
+	guidance_label.add_theme_font_size_override("font_size", 14)
+	loading_label.add_theme_color_override("font_color", STATION_TEXT)
+	loading_label.add_theme_font_size_override("font_size", 24)
+	var scanning_hint := $PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/LoadingContainer/ScanningHint as Label
+	scanning_hint.add_theme_color_override("font_color", STATION_MUTED)
+	scanning_hint.add_theme_font_size_override("font_size", 16)
+	_apply_station_button(close_button, false)
+	_apply_station_button(toggle_switch, false)
+	_apply_station_button(refresh_button, true)
+	_apply_station_progress_bar(progress_bar)
+	warm_glow.color = Color(PanelStyle.ACCENT_WARM.r, PanelStyle.ACCENT_WARM.g, PanelStyle.ACCENT_WARM.b, 0.06)
+	cool_glow.color = Color(PanelStyle.ACCENT.r, PanelStyle.ACCENT.g, PanelStyle.ACCENT.b, 0.12)
+	top_wash.color = Color(0.22, 0.32, 0.44, 0.22)
 
 func _apply_layout() -> void:
 	var viewport := get_viewport().get_visible_rect().size
@@ -158,14 +220,20 @@ func _apply_layout() -> void:
 	shell.offset_right = -(viewport.x - safe.end.x)
 	shell.offset_bottom = -(viewport.y - safe.end.y)
 	var panel = $PanelContainer/Panel as Control
-	panel.custom_minimum_size.x = clampf(viewport.x * 0.68, 720.0, 1120.0)
-	panel.custom_minimum_size.y = clampf(safe.size.y * 0.74, 420.0, 860.0)
+	panel.custom_minimum_size.x = clampf(viewport.x * 0.78, 920.0, 1320.0)
+	panel.custom_minimum_size.y = clampf(safe.size.y * 0.72, 420.0, 820.0)
 	scroll.custom_minimum_size = Vector2(0.0, 0.0)
 	scroll_content.custom_minimum_size.x = maxf(panel.size.x - 56.0, panel.custom_minimum_size.x - 56.0)
-	anomaly_scroll.custom_minimum_size = Vector2(0.0, clampf(panel.custom_minimum_size.y * 0.42, 180.0, 320.0))
+	anomaly_scroll.custom_minimum_size = Vector2(0.0, clampf(panel.custom_minimum_size.y * 0.40, 180.0, 300.0))
 	var title := $PanelContainer/Panel/Scroll/VBoxContainer/HeaderContainer/Title as Label
 	title.add_theme_font_size_override("font_size", 30 if viewport.x < 1200.0 else 40)
 	toggle_switch.custom_minimum_size.x = 160.0 if viewport.x < 1200.0 else 190.0
+	status_container.alignment = BoxContainer.ALIGNMENT_BEGIN
+	scan_summary_card.custom_minimum_size = Vector2(340.0 if viewport.x >= 1120.0 else 0.0, 0.0)
+	status_label.custom_minimum_size.x = 220.0 if viewport.x >= 1120.0 else 0.0
+	telemetry_strip.visible = viewport.x >= 960.0
+	warm_glow.visible = viewport.x >= 960.0
+	cool_glow.visible = viewport.x >= 960.0
 
 func _start_loading(duration: float):
 	AppLogger.d("SatelliteStationPanel: _start_loading duration=%s" % duration)
@@ -195,6 +263,7 @@ func _on_loading_finished() -> void:
 
 	# Display the pending anomalies
 	_list.display_anomalies(pending_anomalies)
+	_refresh_scan_summary(pending_anomalies)
 	pending_anomalies = []
 	# Stop processing once loading is finished
 	set_process(false)
@@ -217,6 +286,7 @@ func _on_anomalies_fetched(data: Array, error: String):
 		pending_anomalies = _build_local_anomalies()
 		var fallback_type = "planets" if current_mode == "planets" else "asteroids"
 		status_label.text = "Network unavailable — showing local %s" % fallback_type
+		_refresh_scan_summary(pending_anomalies)
 		_loading.mark_anomalies_ready()
 		_award_scan_experience()
 		return
@@ -226,6 +296,7 @@ func _on_anomalies_fetched(data: Array, error: String):
 	var target_type = "planets" if current_mode == "planets" else "asteroids"
 	var range_note = " • Range: %s" % get_scanner_range_label() if _player_level >= PLANET_UNLOCK_LEVEL else ""
 	status_label.text = "%d %s found%s" % [data.size(), target_type, range_note]
+	_refresh_scan_summary(data)
 	_loading.mark_anomalies_ready()
 	_award_scan_experience()
 
@@ -313,12 +384,10 @@ func _ensure_citizen_science_hint() -> void:
 	_citizen_science_hint_label = Label.new()
 	_citizen_science_hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_citizen_science_hint_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_citizen_science_hint_label.add_theme_font_size_override("font_size", 14)
-	var panel_style = PanelStyle
-	panel_style.apply_muted(_citizen_science_hint_label)
-	var status_container = $PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/StatusContainer
-	if status_container:
-		status_container.add_child(_citizen_science_hint_label)
+	_citizen_science_hint_label.add_theme_color_override("font_color", STATION_MUTED)
+	_citizen_science_hint_label.add_theme_font_size_override("font_size", 13)
+	if summary_vbox:
+		summary_vbox.add_child(_citizen_science_hint_label)
 
 func _refresh_citizen_science_hint() -> void:
 	if not _citizen_science_hint_label:
@@ -332,6 +401,7 @@ func _refresh_citizen_science_hint() -> void:
 func _on_refresh_pressed():
 	if not _try_start_scan_with_cooldown(REFRESH_LOAD_TIME):
 		return
+	_refresh_scan_summary()
 	if local_only:
 		_apply_local_anomalies()
 		return
@@ -349,6 +419,7 @@ func _on_toggle_switch_pressed():
 		})
 		AppControllerHelper.record_tutorial_action("toggle_planet_scanner")
 		toggle_switch.text = "Switch to Asteroids"
+		_refresh_scan_summary()
 		if local_only:
 			if not _try_start_scan_with_cooldown(REFRESH_LOAD_TIME):
 				return
@@ -364,6 +435,7 @@ func _on_toggle_switch_pressed():
 			"scanner_mode": "asteroids"
 		})
 		toggle_switch.text = "Switch to Planets"
+		_refresh_scan_summary()
 		if local_only:
 			if not _try_start_scan_with_cooldown(REFRESH_LOAD_TIME):
 				return
@@ -382,7 +454,74 @@ func _apply_local_anomalies() -> void:
 	var target_type = "planets" if current_mode == "planets" else "asteroids"
 	var local_range_note = " • Range: %s" % get_scanner_range_label() if _player_level >= PLANET_UNLOCK_LEVEL else ""
 	status_label.text = "%d local %s loaded%s" % [pending_anomalies.size(), target_type, local_range_note]
+	_refresh_scan_summary(pending_anomalies)
 	_loading.mark_anomalies_ready()
+
+func _refresh_scan_summary(anomalies: Array = []) -> void:
+	if not is_instance_valid(mode_badge):
+		return
+	var is_planet_mode := current_mode == "planets"
+	var target_label := "planet" if is_planet_mode else "asteroid"
+	var count := anomalies.size()
+	mode_badge.text = "PLANET SWEEP" if is_planet_mode else "ASTEROID SWEEP"
+	count_label.text = "%d %s%s" % [count, target_label, "" if count == 1 else "s"]
+	if _player_level >= PLANET_UNLOCK_LEVEL:
+		range_label.text = get_scanner_range_label()
+	else:
+		range_label.text = "Level %d unlocks planets" % PLANET_UNLOCK_LEVEL
+	if count > 0:
+		guidance_label.text = "Route a contact to the Launchpad or inspect it for mission fit and citizen-science detail."
+	elif _loading.is_loading():
+		guidance_label.text = "Sweep in progress. Fresh contacts will populate here when the scan resolves."
+	elif is_planet_mode:
+		guidance_label.text = "No planetary contacts in this pass. Refresh for another sweep or switch back to asteroids."
+	else:
+		guidance_label.text = "No asteroid contacts in this pass. Refresh for another sweep or inspect prior detections."
+
+func _apply_station_panel(panel: Control, bg_color: Color, border_color: Color, border_width: int = 1, corner_radius: int = 10, shadow_size: int = 12) -> void:
+	if panel == null:
+		return
+	var style := PanelStyle.create_glass_panel_style(bg_color, border_color.a, corner_radius, 20, 16)
+	style.set_border_width_all(border_width)
+	style.shadow_size = shadow_size
+	style.shadow_offset = Vector2(0, 6)
+	panel.add_theme_stylebox_override("panel", style)
+
+func _apply_station_button(button: Button, is_primary: bool) -> void:
+	if button == null:
+		return
+	if is_primary:
+		PanelStyle.apply_button(button, true)
+	else:
+		PanelStyle.apply_outline_button(button, STATION_TELEMETRY, STATION_TEXT)
+	button.add_theme_font_size_override("font_size", 18)
+
+func _build_station_button_style(bg_color: Color, border_color: Color) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = bg_color
+	style.border_color = border_color
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(8)
+	style.content_margin_left = 18
+	style.content_margin_right = 18
+	style.content_margin_top = 12
+	style.content_margin_bottom = 12
+	return style
+
+func _apply_station_progress_bar(bar: ProgressBar) -> void:
+	if bar == null:
+		return
+	var bg := StyleBoxFlat.new()
+	bg.bg_color = Color(0.07, 0.12, 0.18, 0.94)
+	bg.border_color = Color(STATION_MUTED.r, STATION_MUTED.g, STATION_MUTED.b, 0.26)
+	bg.set_border_width_all(1)
+	bg.set_corner_radius_all(10)
+	var fill := StyleBoxFlat.new()
+	fill.bg_color = STATION_TELEMETRY
+	fill.set_corner_radius_all(10)
+	bar.add_theme_stylebox_override("background", bg)
+	bar.add_theme_stylebox_override("fill", fill)
+	bar.show_percentage = false
 
 func _persist_detected_targets_and_record_scan(anomalies: Array) -> void:
 	var rm = RocketsManager
@@ -555,10 +694,10 @@ func _refresh_scan_cooldown_ui() -> void:
 			var early_btn := Button.new()
 			early_btn.name = "EarlyScanButton"
 			early_btn.text = "Scan early (cooldown active)"
-			early_btn.add_theme_font_size_override("font_size", 14)
-			early_btn.modulate = Color(0.9, 0.8, 0.4, 0.85)
 			early_btn.tooltip_text = "Scanner quality may be lower when used before cooldown completes."
 			parent.add_child(early_btn)
+			_apply_station_button(early_btn, false)
+			early_btn.add_theme_font_size_override("font_size", 14)
 			early_btn.pressed.connect(func():
 				RocketsManager.set_scanner_next_scan_at(0)
 				_try_start_scan_with_cooldown(REFRESH_LOAD_TIME)
