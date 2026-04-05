@@ -24,7 +24,14 @@ func setup(launchpad: Node, on_show_selector: Callable) -> void:
 func connect_launch_button() -> void:
 	if _launch_btn_connected:
 		return
+	if _launchpad == null or _launchpad.get_tree() == null:
+		return
 	var root = _launchpad.get_tree().current_scene
+	if root == null:
+		_connect_attempts += 1
+		if _connect_attempts < MAX_CONNECT_ATTEMPTS:
+			_launchpad.call_deferred("connect_launch_button")
+		return
 	AppLogger.d("Launchpad: connect_launch_button called, root scene=%s" % root.name)
 	var children_names = []
 	for c in root.get_children():
@@ -76,14 +83,7 @@ func connect_launch_button() -> void:
 	_launch_button = btn
 	_launch_button.disabled = false
 	_launch_btn_connected = true
-	# set visibility based on rocket presence
-	var nodes = _launchpad.get_tree().get_nodes_in_group("rocket")
-	if nodes.size() > 0:
-		btn.position = _resolve_safe_launch_button_position(btn)
-		btn.visible = true
-		btn.z_index = 1000
-	else:
-		btn.visible = false
+	refresh_visibility()
 	AppLogger.d("Launchpad: connected LaunchButton pressed signal (node=%s)" % btn.get_path())
 
 	# Debug: Final count of what's actually in scene
@@ -93,30 +93,58 @@ func connect_launch_button() -> void:
 		AppLogger.d("  - Rocket node: %s at position %s" % [r.name, r.global_position])
 
 func show_standalone_launch_button() -> void:
-	var lb = _resolve_launch_button()
-	if lb:
-		lb.position = _resolve_safe_launch_button_position(lb)
-		lb.visible = true
-		lb.z_index = 1000
-		lb.disabled = false
-		AppLogger.d("Launchpad: showing standalone LaunchButton at %s" % [lb.position])
+	refresh_visibility()
 
 func hide_launch_button() -> void:
 	var lb = _resolve_launch_button()
 	if lb:
 		lb.visible = false
 
+func refresh_visibility() -> void:
+	var lb = _resolve_launch_button()
+	if lb == null:
+		return
+	var should_show := _should_show_launch_button()
+	lb.visible = should_show
+	lb.disabled = not should_show
+	if should_show:
+		lb.position = _resolve_safe_launch_button_position(lb)
+		lb.z_index = 1000
+		AppLogger.d("Launchpad: showing standalone LaunchButton at %s" % [lb.position])
+
+func _should_show_launch_button() -> bool:
+	if _launchpad == null or _launchpad.get_tree() == null:
+		return false
+	if _launchpad.get_tree().get_nodes_in_group("rocket").is_empty():
+		return false
+	var rm = RocketsManager
+	if rm == null:
+		return false
+	if rm.get_trip_selected_contractor().is_empty():
+		return false
+	if str(rm.get_selected_target()).strip_edges() == "":
+		return false
+	return true
+
 func _resolve_safe_launch_button_position(btn: Button) -> Vector2:
-	var viewport_size = _launchpad.get_viewport().get_visible_rect().size
-	var pos = viewport_size - Vector2(180, 100)
+	var viewport_rect = _launchpad.get_viewport().get_visible_rect()
+	var viewport_size = viewport_rect.size
+	var pos = viewport_size - Vector2(btn.size.x + 24.0, btn.size.y + 24.0)
+	var max_x := maxf(viewport_size.x - btn.size.x - 24.0, 24.0)
+	var max_y := maxf(viewport_size.y - btn.size.y - 24.0, 24.0)
 	var scene = _launchpad.get_tree().current_scene
 	if scene:
-		var selector_panel = scene.get_node_or_null("UILayer/SelectorPanel")
-		if selector_panel and selector_panel is Control and selector_panel.visible:
-			var selector_rect = (selector_panel as Control).get_global_rect()
-			pos.x = max(pos.x, selector_rect.end.x + 24.0)
-	pos.x = clamp(pos.x, 24.0, max(viewport_size.x - btn.size.x - 24.0, 24.0))
-	pos.y = clamp(pos.y, 24.0, max(viewport_size.y - btn.size.y - 24.0, 24.0))
+		var anchor := scene.get_node_or_null("UILayer/LayoutScaffold/LaunchButtonAnchor") as Control
+		if anchor and anchor.get_global_rect().size.x > 0.0:
+			var anchor_rect := anchor.get_global_rect()
+			var anchor_center := anchor_rect.get_center()
+			pos = Vector2(anchor_center.x - btn.size.x * 0.5, anchor_center.y - btn.size.y * 0.5)
+		var nav_container = scene.get_node_or_null("UILayer/ButtonContainer") as Control
+		if nav_container and nav_container.visible:
+			var nav_rect = nav_container.get_global_rect()
+			max_y = minf(max_y, nav_rect.position.y - btn.size.y - 18.0)
+	pos.x = clamp(pos.x, 24.0, max_x)
+	pos.y = clamp(minf(pos.y, max_y), 24.0, max_y)
 	return pos
 
 func _on_launch_button_pressed() -> void:

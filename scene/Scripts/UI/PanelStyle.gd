@@ -94,6 +94,7 @@ static func apply_button(button: Button, is_primary: bool = false) -> void:
 		return
 
 	var NebulaRef = preload("res://Resources/NebulaSciTheme.gd")
+	var base_bg: Color = NebulaRef.ACCENT_WARM if is_primary else NebulaRef.BUTTON_BG
 
 	var normal := StyleBoxFlat.new()
 	normal.set_corner_radius_all(14)
@@ -101,15 +102,15 @@ static func apply_button(button: Button, is_primary: bool = false) -> void:
 	normal.content_margin_right  = 22
 	normal.content_margin_top    = 14
 	normal.content_margin_bottom = 14
-	normal.bg_color     = NebulaRef.ACCENT_WARM if is_primary else NebulaRef.BUTTON_BG
+	normal.bg_color     = base_bg
 	normal.border_color = PANEL_BORDER
 	normal.set_border_width_all(1)
 
 	var hover    := normal.duplicate()
-	hover.bg_color = NebulaRef.BUTTON_HOVER
+	hover.bg_color = base_bg.lightened(0.10) if is_primary else NebulaRef.BUTTON_HOVER
 
 	var pressed  := normal.duplicate()
-	pressed.bg_color = NebulaRef.BUTTON_PRESSED
+	pressed.bg_color = base_bg.darkened(0.12) if is_primary else NebulaRef.BUTTON_PRESSED
 
 	var disabled := normal.duplicate()
 	disabled.bg_color    = Color(0.88, 0.91, 0.94, 0.54)

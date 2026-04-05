@@ -40,8 +40,7 @@ var _transit_suppressed := false
 var _off_course := false
 var _pointer_line: Line2D = null
 var _pointer_head: Polygon2D = null
-var _target_highlight: Panel = null
-var _highlight_style: StyleBoxFlat = null
+var _target_highlight: ReferenceRect = null
 var _highlight_tween: Tween = null
 
 func _ready() -> void:
@@ -102,6 +101,13 @@ func _configure_mouse_passthrough() -> void:
 			btn.mouse_filter = Control.MOUSE_FILTER_STOP
 
 func _process(delta: float) -> void:
+	if _is_launchpad_scene_with_embedded_guidance():
+		if visible:
+			visible = false
+			_hide_target_pointer()
+		return
+	elif not visible and not _current_state.is_empty() and not _transit_suppressed:
+		_on_tutorial_state_updated(_current_state)
 	_layout_elapsed += delta
 	if _layout_elapsed < LAYOUT_REFRESH_INTERVAL:
 		return
@@ -256,6 +262,10 @@ func _on_tutorial_state_updated(state: Dictionary) -> void:
 	if state.is_empty():
 		visible = false
 		return
+	if _is_launchpad_scene_with_embedded_guidance():
+		visible = false
+		_hide_target_pointer()
+		return
 	var skipped = bool(state.get("skipped", false))
 	var step: Dictionary = state.get("current_step", {})
 	_current_step = step.duplicate(true)
@@ -282,6 +292,12 @@ func _on_tutorial_state_updated(state: Dictionary) -> void:
 	call_deferred("_reposition_panel")
 	call_deferred("_refresh_target_pointer")
 
+func _is_launchpad_scene_with_embedded_guidance() -> bool:
+	var tree := get_tree()
+	if tree == null or tree.current_scene == null:
+		return false
+	return tree.current_scene.scene_file_path.get_file().get_basename() == "earth_launchpad"
+
 func _setup_pointer_indicator() -> void:
 	if _pointer_line and _pointer_head and _target_highlight:
 		return
@@ -303,17 +319,14 @@ func _setup_pointer_indicator() -> void:
 	_pointer_head.visible = false
 	$Root.add_child(_pointer_head)
 
-	_target_highlight = Panel.new()
+	_target_highlight = ReferenceRect.new()
 	_target_highlight.name = "TargetHighlight"
 	_target_highlight.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_target_highlight.z_index = 239
 	_target_highlight.visible = false
-	_highlight_style = StyleBoxFlat.new()
-	_highlight_style.bg_color = Color(CYAN.r, CYAN.g, CYAN.b, 0.12)
-	_highlight_style.border_color = Color(CYAN.r, CYAN.g, CYAN.b, 0.95)
-	_highlight_style.set_border_width_all(3)
-	_highlight_style.set_corner_radius_all(8)
-	_target_highlight.add_theme_stylebox_override("panel", _highlight_style)
+	_target_highlight.editor_only = false
+	_target_highlight.border_color = Color(CYAN.r, CYAN.g, CYAN.b, 0.95)
+	_target_highlight.border_width = 4.0
 	$Root.add_child(_target_highlight)
 
 func _refresh_target_pointer() -> void:
@@ -367,7 +380,7 @@ func _hide_target_pointer() -> void:
 func _update_target_highlight(target_rect: Rect2) -> void:
 	if _target_highlight == null:
 		return
-	var padded = target_rect.grow(6.0)
+	var padded = target_rect.grow(8.0)
 	_target_highlight.position = padded.position
 	_target_highlight.size = padded.size
 	if not _target_highlight.visible:
@@ -375,19 +388,21 @@ func _update_target_highlight(target_rect: Rect2) -> void:
 		_start_highlight_pulse()
 
 func _start_highlight_pulse() -> void:
-	if _highlight_style == null:
+	if _target_highlight == null:
 		return
 	if _highlight_tween != null:
 		_highlight_tween.kill()
 	_highlight_tween = create_tween()
 	_highlight_tween.set_loops()
 	_highlight_tween.tween_method(
-		func(a: float) -> void: _highlight_style.bg_color.a = a,
-		0.08, 0.30, 0.75
+		func(a: float) -> void:
+			_target_highlight.border_color = Color(CYAN.r, CYAN.g, CYAN.b, a),
+		0.42, 0.95, 0.75
 	).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	_highlight_tween.tween_method(
-		func(a: float) -> void: _highlight_style.bg_color.a = a,
-		0.30, 0.08, 0.75
+		func(a: float) -> void:
+			_target_highlight.border_color = Color(CYAN.r, CYAN.g, CYAN.b, a),
+		0.95, 0.42, 0.75
 	).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 func _update_pointer_head(tip: Vector2, direction: Vector2) -> void:
@@ -488,23 +503,13 @@ func _reserved_rect_for_scene(viewport_rect: Rect2) -> Rect2:
 func _launchpad_reserved_rect(viewport_rect: Rect2) -> Rect2:
 	var vp := viewport_rect.size
 	var widget_zone := UILayout.zone(UILayout.Zone.EARTH_WIDGET, vp)
-	var width: float = minf(460.0, maxf(280.0, vp.x * 0.28))
-	var height: float = minf(280.0, maxf(180.0, vp.y * 0.34))
-	var panel_width: float = clampf(vp.x * 0.992, 1320.0, 1880.0)
-	panel_width = minf(panel_width, maxf(420.0, vp.x - 8.0))
-	var left_width: float = clampf(panel_width * 0.255, 380.0, 470.0)
-	var right_width: float = clampf(panel_width * 0.18, 290.0, 340.0)
-	var panel_left: float = viewport_rect.position.x + 4.0
-	var left_margin: float = 18.0
-	var right_margin: float = 18.0
-	var center_left: float = panel_left + left_margin + left_width + 26.0
-	var center_right: float = panel_left + panel_width - right_margin - right_width - 26.0
-	var center_width: float = maxf(320.0, center_right - center_left)
-	width = minf(width, center_width - 16.0)
-	var x: float = center_left + maxf((center_width - width) * 0.5, 0.0)
+	var reserved := TutorialLayoutZone.reserved_rect(viewport_rect)
+	var margin := 12.0
+	var width: float = clampf(minf(reserved.size.x, vp.x * 0.31), 300.0, 360.0)
+	var height: float = reserved.size.y
+	var x: float = viewport_rect.end.x - width - margin
 	var y: float = maxf(viewport_rect.position.y + 18.0, widget_zone.end.y + 18.0)
-	var reserved := Rect2(Vector2(x, y), Vector2(width, height))
-	return UILayout.clamp_to_viewport(reserved, vp)
+	return UILayout.clamp_to_viewport(Rect2(Vector2(x, y), Vector2(width, height)), vp)
 
 func _on_collapse_pressed() -> void:
 	_collapsed = !_collapsed

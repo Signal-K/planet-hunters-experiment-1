@@ -43,6 +43,7 @@ func _init():
 func run_all_tests() -> void:
 	await test_project_uses_linear_canvas_filter()
 	await test_franc_balance_button_has_readable_text_color()
+	await test_primary_button_hover_state_keeps_warm_fill()
 	await test_weather_cycle_and_event_hooks()
 	await test_ui_consistency_enforcer_applies_expected_defaults()
 
@@ -76,6 +77,23 @@ func test_franc_balance_button_has_readable_text_color() -> void:
 		node.queue_free()
 		return
 	node.queue_free()
+	reporter.pass_test()
+
+func test_primary_button_hover_state_keeps_warm_fill() -> void:
+	reporter.start_test("Primary buttons keep warm fill across hover and pressed states")
+	var button := Button.new()
+	PanelStyle.apply_button(button, true)
+	var hover := button.get_theme_stylebox("hover") as StyleBoxFlat
+	var pressed := button.get_theme_stylebox("pressed") as StyleBoxFlat
+	if hover == null or pressed == null:
+		reporter.fail_test("Primary button missing hover/pressed styleboxes")
+		return
+	if hover.bg_color.r <= hover.bg_color.b:
+		reporter.fail_test("Primary hover color drifted away from warm accent: %s" % str(hover.bg_color))
+		return
+	if pressed.bg_color.r <= pressed.bg_color.b:
+		reporter.fail_test("Primary pressed color drifted away from warm accent: %s" % str(pressed.bg_color))
+		return
 	reporter.pass_test()
 
 func test_weather_cycle_and_event_hooks() -> void:

@@ -25,14 +25,28 @@ const ZOOM_IN_LEVEL := Vector2(1.25, 1.25)
 
 func _ready():
 	super._ready()
-	var root_scene = get_tree().current_scene
-	if root_scene:
-		var lp = root_scene.get_node_or_null("StructuresLayer/Launchpad")
-		if lp and lp.has_method("connect_launch_button"):
-			lp.connect_launch_button()
+	call_deferred("_sync_launchpad_scene_ui")
 	_setup_mission_guidance()
 	_setup_room_inspection()
 	set_process_unhandled_input(true)
+
+func _sync_launchpad_scene_ui() -> void:
+	var root_scene = get_tree().current_scene if get_tree() != null else null
+	if root_scene == null:
+		root_scene = self
+	var lp = root_scene.get_node_or_null("StructuresLayer/Launchpad")
+	if lp == null:
+		lp = get_node_or_null("StructuresLayer/Launchpad")
+	if lp:
+		if lp.has_method("_open_launchpad_scene_ui"):
+			lp._open_launchpad_scene_ui()
+		else:
+			if lp.has_method("center_visual_in_viewport"):
+				lp.center_visual_in_viewport()
+			if lp.has_method("connect_launch_button"):
+				lp.connect_launch_button()
+			if lp.has_method("_show_selector_panel"):
+				lp._show_selector_panel()
 
 func _process(_delta: float) -> void:
 	_update_mission_guidance()

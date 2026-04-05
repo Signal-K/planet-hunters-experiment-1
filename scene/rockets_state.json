@@ -5,7 +5,7 @@
   "placed": [
     {
       "type": "starterrocket1",
-      "id": "starterrocket1-ux-tour-stage-1",
+      "id": "starterrocket1-snapshot",
       "x": 960.0,
       "y": 850.0,
       "status": "awaitingLaunch"
@@ -17,7 +17,7 @@
   ],
   "missions": [
   ],
-  "selected_target": "",
+  "selected_target": "mission-1-training-target",
   "preview_target": {
   },
   "detected_targets": [
@@ -37,20 +37,11 @@
   "scan_counts": {
   },
   "status_changed_at": {
-    "starterrocket2-ux-tour-stage-2": {
-      "awaitingLaunch": 1775186671.0
+    "starterrocket1-cta-test": {
+      "awaitingLaunch": 1775543023.0
     },
-    "starterrocket2-ux-tour-stage-3": {
-      "awaitingLaunch": 1775186677.0
-    },
-    "starterrocket3-ux-tour-stage-4": {
-      "awaitingLaunch": 1775186682.0
-    },
-    "starterrocket3-ux-tour-stage-5": {
-      "awaitingLaunch": 1775186688.0
-    },
-    "starterrocket1-ux-tour-stage-1": {
-      "awaitingLaunch": 1775186971
+    "starterrocket1-snapshot": {
+      "awaitingLaunch": 1775543025.0
     }
   },
   "mission_progress_completed": 0,
@@ -64,22 +55,41 @@
   "trip_contract_offer": {
     "contractors": [
       {
+        "id": "rocketlab",
+        "name": "Rocketlab",
+        "role": "Small satellite launch systems — common ore feedstock",
+        "mineral_ranges": {
+          "Iron": [
+            120.0,
+            200.0
+          ],
+          "Nickel": [
+            80.0,
+            150.0
+          ]
+        },
+        "requested_minerals": {
+          "Iron": 185.0,
+          "Nickel": 85.0
+        }
+      },
+      {
         "id": "astroforge",
         "name": "Astroforge",
         "role": "In-space smelting and refining — specialist materials",
         "mineral_ranges": {
           "Cobalt": [
-            40,
-            90
+            40.0,
+            90.0
           ],
           "Silicates": [
-            80,
-            160
+            80.0,
+            160.0
           ]
         },
         "requested_minerals": {
-          "Cobalt": 84,
-          "Silicates": 156
+          "Cobalt": 45.0,
+          "Silicates": 132.0
         }
       },
       {
@@ -88,26 +98,26 @@
         "role": "Heavy lift launch systems — structural metals",
         "mineral_ranges": {
           "Iron": [
-            100,
-            180
+            100.0,
+            180.0
           ],
           "Nickel": [
-            60,
-            120
+            60.0,
+            120.0
           ]
         },
         "requested_minerals": {
-          "Iron": 139,
-          "Nickel": 95
+          "Iron": 167.0,
+          "Nickel": 118.0
         }
       }
     ],
-    "selected_contractor": "",
-    "selection_required": true,
+    "selected_contractor": "rocketlab",
+    "selection_required": false,
     "recommended_target_id": "mission-1-training-target",
     "recommended_target_label": "433 Eros",
     "recommended_rocket": "starterrocket1",
-    "payout_cap": 1400000000
+    "payout_cap": 1400000000.0
   },
   "operation_mode": "contract",
   "candidate_visit_blocks": {
@@ -115,12 +125,10 @@
   "target_annotation_levels": {
   },
   "discovery_bonus_claimed": {
-    "mission-1-training-target": true
   },
   "rocket_customizations": {
   },
   "rocket_wear": {
-    "starterrocket1-sketch-test": 2.0
   },
   "archived_rocket_wear": {
   },
@@ -142,14 +150,5 @@
   "returned_mission": {
   },
   "returning_started": {
-  },
-  "revealed_sectors": [
-    0.0,
-    7.0,
-    3.0,
-    6.0,
-    7.0,
-    3.0,
-    6.0
-  ]
+  }
 }

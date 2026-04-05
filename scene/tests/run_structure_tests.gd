@@ -9,6 +9,7 @@ const RocketsMissionProgress = preload("res://Scripts/Utils/RocketsMissionProgre
 const RocketsTargeting = preload("res://Scripts/Utils/RocketsTargeting.gd")
 const CurrencyManager = preload("res://Scripts/Utils/CurrencyManager.gd")
 const LaunchpadSelectorPanel = preload("res://Scripts/Earth/LaunchpadSelectorPanel.gd")
+const LaunchpadLaunchButton = preload("res://Scripts/Earth/LaunchpadLaunchButton.gd")
 const EarthBaseScene = preload("res://Scenes/Earth/earth_base_1.tscn")
 const EarthLaunchpadScene = preload("res://Scenes/Earth/earth_launchpad.tscn")
 const MissionDebriefScene = preload("res://Scenes/Earth/mission_debrief_v2.tscn")
@@ -58,6 +59,10 @@ func run_all_tests() -> void:
 	await test_scanner_station_requires_explicit_build_step()
 	await test_earth_base_disables_new_mission_until_scanner_station_is_built()
 	await test_launchpad_scene_has_shared_bottom_nav()
+	await test_launchpad_structure_centers_on_screen()
+	await test_launchpad_selector_panel_stays_clear_of_bottom_nav()
+	await test_launchpad_target_map_cta_stays_readable_in_target_phase()
+	await test_launch_button_waits_for_target_lock()
 	await test_space_map_scene_has_shared_bottom_nav()
 	await test_mission_debrief_scene_has_shared_bottom_nav()
 	await test_sidescroll_mining_drone_pool_reuse()
@@ -497,6 +502,295 @@ func _find_label_in_subtree(root: Node, snippet: String) -> Label:
 func test_launchpad_scene_has_shared_bottom_nav() -> void:
 	reporter.start_test("[UX] Launchpad scene includes the shared bottom navigation shell")
 	await _assert_scene_has_bottom_nav(EarthLaunchpadScene.instantiate(), "Launchpad")
+
+func test_launchpad_structure_centers_on_screen() -> void:
+	reporter.start_test("[UX] Launchpad structure recenters from its visible art bounds")
+	RocketsManager.reset_state()
+	var scene = EarthLaunchpadScene.instantiate()
+	if scene == null:
+		reporter.fail_test("Launchpad scene failed to instantiate")
+		return
+	get_root().add_child(scene)
+	current_scene = scene
+	await create_timer(0.18).timeout
+	var launchpad = scene.get_node_or_null("StructuresLayer/Launchpad")
+	if launchpad == null or not launchpad.has_method("get_visual_bounds_rect_in_viewport"):
+		reporter.fail_test("Launchpad scene missing launchpad visual-bounds helper")
+		current_scene = null
+		scene.queue_free()
+		return
+	var structure_rect: Rect2 = launchpad.get_visual_bounds_rect_in_viewport()
+	if structure_rect.size.x <= 0.0:
+		reporter.fail_test("Launchpad visual bounds rect was empty")
+		current_scene = null
+		scene.queue_free()
+		return
+	var viewport := scene.get_viewport().get_visible_rect().size
+	var center_delta := absf(structure_rect.get_center().x - (viewport.x * 0.5))
+	if center_delta > 18.0:
+		reporter.fail_test("Launchpad visible bounds are not centered (delta=%s rect=%s viewport=%s)" % [center_delta, structure_rect, viewport])
+		current_scene = null
+		scene.queue_free()
+		return
+	current_scene = null
+	scene.queue_free()
+	reporter.pass_test()
+
+func test_launchpad_selector_panel_stays_clear_of_bottom_nav() -> void:
+	reporter.start_test("[UX] Launchpad selector stays in a sidebar footprint and clears the bottom nav")
+	RocketsManager.reset_state()
+	RocketsManager.clear_selected_target()
+	RocketsManager.clear_preview_target()
+	var scene = EarthLaunchpadScene.instantiate()
+	if scene == null:
+		reporter.fail_test("Launchpad scene failed to instantiate")
+		return
+	get_root().add_child(scene)
+	current_scene = scene
+	await create_timer(0.18).timeout
+	var nav := scene.get_node_or_null("UILayer/ButtonContainer") as Control
+	var launchpad = scene.get_node_or_null("StructuresLayer/Launchpad")
+	if nav == null or launchpad == null:
+		reporter.fail_test("Launchpad scene missing nav shell or Launchpad node")
+		scene.queue_free()
+		return
+	var selector_logic := LaunchpadSelectorPanel.new()
+	selector_logic.setup(launchpad)
+	selector_logic.show_selector_panel()
+	selector_logic._set_selector_panel_layout(false, "contractor")
+	await create_timer(0.08).timeout
+	var selector := scene.get_node_or_null("UILayer/SelectorPanel") as Control
+	if selector == null:
+		reporter.fail_test("Launchpad selector panel did not instantiate")
+		scene.queue_free()
+		return
+	selector.visible = true
+	var selector_rect := selector.get_global_rect()
+	var nav_rect := nav.get_global_rect()
+	var viewport := scene.get_viewport().get_visible_rect().size
+	var structure_rect := Rect2()
+	var contractor_section := scene.get_node_or_null("UILayer/SelectorPanel/VBox/Body/LeftColumn/ContractorSection") as Control
+	var rocket_section := scene.get_node_or_null("UILayer/SelectorPanel/VBox/Body/RightColumn/RocketSection") as Control
+	var open_map_button := scene.get_node_or_null("UILayer/SelectorPanel/VBox/Body/RightColumn/RocketSection/SectionVBox/PrimaryActionRow/OpenMapButton") as Control
+	if launchpad.has_method("get_visual_bounds_rect_in_viewport"):
+		structure_rect = launchpad.get_visual_bounds_rect_in_viewport()
+	if contractor_section == null or rocket_section == null or open_map_button == null:
+		reporter.fail_test("Launchpad selector panel missing expected contractor/rocket/action controls")
+		scene.queue_free()
+		return
+	var contractor_rect := contractor_section.get_global_rect()
+	var rocket_rect := rocket_section.get_global_rect()
+	var action_rect := open_map_button.get_global_rect()
+	var content_left := minf(contractor_rect.position.x, rocket_rect.position.x)
+	var content_right := maxf(rocket_rect.end.x, action_rect.end.x)
+	var content_width := content_right - content_left
+	if action_rect.end.y > nav_rect.position.y - 8.0:
+		reporter.fail_test("Right-panel map action overlaps bottom nav: %s vs %s" % [action_rect, nav_rect])
+		scene.queue_free()
+		return
+	if content_left > 18.0:
+		reporter.fail_test("Selector content drifted inboard from the left screen edge: left=%s" % content_left)
+		scene.queue_free()
+		return
+	if content_width >= viewport.x * 0.62:
+		reporter.fail_test("Selector content regressed out of sidebar footprint: %s vs viewport %s (selector root=%s)" % [content_width, viewport.x, selector_rect.size.x])
+		scene.queue_free()
+		return
+	if structure_rect.size.x > 0.0:
+		var launch_lane_left := structure_rect.position.x - structure_rect.size.x * 0.06
+		if contractor_rect.end.x > launch_lane_left:
+			reporter.fail_test("Contractor panel pushed too far into the central launch lane (contractor=%s max_right=%s structure=%s)" % [contractor_rect, launch_lane_left, structure_rect])
+			scene.queue_free()
+			return
+		if rocket_rect.position.x < structure_rect.get_center().x:
+			reporter.fail_test("Right mission panel pushed too far into the centered launch lane (rocket=%s structure=%s)" % [rocket_rect, structure_rect])
+			scene.queue_free()
+			return
+	if rocket_rect.end.x < viewport.x - 48.0:
+		reporter.fail_test("Right mission panel drifted too far from the right screen edge: %s vs viewport %s" % [rocket_rect, viewport])
+		scene.queue_free()
+		return
+	var rocket := Node2D.new()
+	rocket.name = "starterrocket1-layout-test"
+	launchpad.add_child(rocket)
+	rocket.add_to_group("rocket")
+	var launch_button := scene.get_node_or_null("LaunchHUD/LaunchButton") as Button
+	if launch_button == null:
+		reporter.fail_test("Launch button node not found in LaunchHUD")
+		scene.queue_free()
+		return
+	var launch_logic := LaunchpadLaunchButton.new()
+	launch_logic.setup(launchpad, Callable())
+	launch_button.position = launch_logic._resolve_safe_launch_button_position(launch_button)
+	await create_timer(0.02).timeout
+	var launch_rect := launch_button.get_global_rect()
+	if launch_rect.intersects(nav_rect.grow(-8.0)):
+		reporter.fail_test("Standalone launch button overlaps bottom nav: %s vs %s" % [launch_rect, nav_rect])
+		scene.queue_free()
+		current_scene = null
+		return
+	current_scene = null
+	scene.queue_free()
+	reporter.pass_test()
+
+func test_launch_button_waits_for_target_lock() -> void:
+	reporter.start_test("[UX] Launch button stays hidden until contractor and target are locked")
+	RocketsManager.reset_state()
+	RocketsManager.clear_selected_target()
+	RocketsManager.clear_preview_target()
+	var scene = EarthLaunchpadScene.instantiate()
+	if scene == null:
+		reporter.fail_test("Launchpad scene failed to instantiate")
+		return
+	get_root().add_child(scene)
+	current_scene = scene
+	await create_timer(0.18).timeout
+	var launchpad = scene.get_node_or_null("StructuresLayer/Launchpad")
+	var launch_button := scene.get_node_or_null("LaunchHUD/LaunchButton") as Button
+	if launchpad == null or launch_button == null:
+		reporter.fail_test("Launchpad scene missing launchpad node or launch button")
+		current_scene = null
+		scene.queue_free()
+		return
+	var rocket := Node2D.new()
+	rocket.name = "starterrocket1-launch-visibility"
+	launchpad.add_child(rocket)
+	rocket.add_to_group("rocket")
+	var launch_logic := LaunchpadLaunchButton.new()
+	launch_logic.setup(launchpad, Callable())
+	launch_logic.refresh_visibility()
+	if launch_button.visible:
+		reporter.fail_test("Launch button should stay hidden before contractor/target selection")
+		current_scene = null
+		scene.queue_free()
+		return
+	var offer = RocketsManager.ensure_trip_contract_offer()
+	var contractors: Array = offer.get("contractors", [])
+	if contractors.is_empty():
+		reporter.fail_test("Expected at least one contractor offer")
+		current_scene = null
+		scene.queue_free()
+		return
+	var contractor_id = str((contractors[0] as Dictionary).get("id", ""))
+	if contractor_id == "" or not RocketsManager.select_trip_contractor(contractor_id):
+		reporter.fail_test("Failed to select launchpad contractor in test")
+		current_scene = null
+		scene.queue_free()
+		return
+	launch_logic.refresh_visibility()
+	if launch_button.visible:
+		reporter.fail_test("Launch button should stay hidden until target selection is confirmed")
+		current_scene = null
+		scene.queue_free()
+		return
+	var target_id = str(RocketsManager.get_predefined_mission_target(1).get("id", ""))
+	if target_id == "":
+		reporter.fail_test("Mission 1 predefined target missing in test")
+		current_scene = null
+		scene.queue_free()
+		return
+	var state := RocketsManager.load_state()
+	state["selected_target"] = target_id
+	RocketsManager.save_state(state)
+	launch_logic.refresh_visibility()
+	if not launch_button.visible:
+		reporter.fail_test("Launch button should appear after contractor and target are locked")
+		current_scene = null
+		scene.queue_free()
+		return
+	current_scene = null
+	scene.queue_free()
+	reporter.pass_test()
+
+func test_launchpad_target_map_cta_stays_readable_in_target_phase() -> void:
+	reporter.start_test("[UX] Target map CTA stays enabled and readable during target selection")
+	RocketsManager.reset_state()
+	RocketsManager.clear_selected_target()
+	RocketsManager.clear_preview_target()
+	var tutorial_cfg := ConfigFile.new()
+	tutorial_cfg.set_value("state", "current_stage", 1)
+	tutorial_cfg.set_value("state", "current_step_index", 2)
+	tutorial_cfg.set_value("state", "stage_lock", 0)
+	tutorial_cfg.set_value("state", "skipped", false)
+	tutorial_cfg.set_value("state", "completed_actions", {})
+	tutorial_cfg.set_value("state", "completed_actions_by_stage", {})
+	tutorial_cfg.set_value("state", "completed_steps_by_stage", {})
+	tutorial_cfg.save("user://tutorial_v2.cfg")
+	var mission1 = RocketsManager.get_predefined_mission_target(1)
+	var state = RocketsManager.load_state()
+	state["mission_progress_completed"] = 0
+	state["completed_mission_badges"] = []
+	state["detected_targets"] = [mission1] if not mission1.is_empty() else []
+	state["placed"] = [{
+		"type": "starterrocket1",
+		"id": "starterrocket1-cta-test",
+		"x": 960.0,
+		"y": 850.0,
+		"status": "awaitingLaunch"
+	}]
+	RocketsManager.save_state(state)
+	var offer = RocketsManager.ensure_trip_contract_offer(state["detected_targets"])
+	var contractors: Array = offer.get("contractors", [])
+	if contractors.is_empty():
+		reporter.fail_test("Expected contractor offer for launchpad CTA test")
+		return
+	var contractor_id = str((contractors[0] as Dictionary).get("id", ""))
+	if contractor_id == "" or not RocketsManager.select_trip_contractor(contractor_id):
+		reporter.fail_test("Failed to select contractor for launchpad CTA test")
+		return
+	var scene = EarthLaunchpadScene.instantiate()
+	if scene == null:
+		reporter.fail_test("Launchpad scene failed to instantiate")
+		return
+	get_root().add_child(scene)
+	current_scene = scene
+	await create_timer(0.22).timeout
+	var launchpad = scene.get_node_or_null("StructuresLayer/Launchpad")
+	if launchpad == null:
+		reporter.fail_test("Launchpad node missing in CTA test")
+		current_scene = null
+		scene.queue_free()
+		return
+	var selector_logic := LaunchpadSelectorPanel.new()
+	selector_logic.setup(launchpad)
+	selector_logic.show_selector_panel()
+	await create_timer(0.08).timeout
+	var open_map_button := scene.get_node_or_null("UILayer/SelectorPanel/VBox/Body/RightColumn/RocketSection/SectionVBox/PrimaryActionRow/OpenMapButton") as Button
+	if open_map_button == null:
+		reporter.fail_test("Open Target Map button not found")
+		current_scene = null
+		scene.queue_free()
+		return
+	if open_map_button.disabled:
+		reporter.fail_test("Open Target Map button should be enabled in target phase (awaiting=%s contractor=%s selected_target=%s text=%s)" % [
+			RocketsManager.get_primary_awaiting_rocket_id(),
+			str(RocketsManager.get_trip_selected_contractor().get("id", "")),
+			RocketsManager.get_selected_target(),
+			open_map_button.text
+		])
+		current_scene = null
+		scene.queue_free()
+		return
+	if _find_label_in_subtree(scene.get_node_or_null("UILayer/SelectorPanel/VBox/Body/RightColumn/RocketSection"), "Starter Rocket 1") == null:
+		reporter.fail_test("Target phase should show an armed rocket summary in the right slab")
+		current_scene = null
+		scene.queue_free()
+		return
+	var normal := open_map_button.get_theme_stylebox("normal") as StyleBoxFlat
+	if normal == null:
+		reporter.fail_test("Open Target Map button missing styled normal state")
+		current_scene = null
+		scene.queue_free()
+		return
+	var bg := normal.bg_color
+	if bg.r <= bg.b:
+		reporter.fail_test("Open Target Map CTA lost its warm primary emphasis: %s" % str(bg))
+		current_scene = null
+		scene.queue_free()
+		return
+	current_scene = null
+	scene.queue_free()
+	reporter.pass_test()
 
 func test_space_map_scene_has_shared_bottom_nav() -> void:
 	reporter.start_test("[UX] Space map scene includes the shared bottom navigation shell")
