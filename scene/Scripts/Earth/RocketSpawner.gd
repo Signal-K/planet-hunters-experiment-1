@@ -66,29 +66,6 @@ static func spawn(launchpad_node: Node, rocket_id: String) -> bool:
         if launchpad_node.has_method("_populate_targets"):
             launchpad_node._populate_targets()
 
-    # Show the launch button
-    var root = launchpad_node.get_tree().current_scene
-    var vs = launchpad_node.get_viewport().get_visible_rect().size
-    var shown = false
-    if root:
-        var lb = root.get_node_or_null("UILayer/LaunchButton")
-        if lb:
-            lb.position = vs - Vector2(180, 100)
-            lb.visible = true
-            lb.z_index = 1000
-            AppLogger.d("Launchpad: showing standalone LaunchButton at %s" % [lb.position])
-            shown = true
-        else:
-            var hud = root.get_node_or_null("LaunchHUD")
-            if hud:
-                for c in hud.get_children():
-                    if c is Button or c.name.ends_with("LaunchButton"):
-                        c.position = vs - Vector2(180, 100)
-                        c.visible = true
-                        c.z_index = 1000
-                        AppLogger.d("Launchpad: showing LaunchHUD's LaunchButton (node=%s) at %s" % [c.get_path(), c.position])
-                        shown = true
-                        break
-    if not shown:
-        AppLogger.w("Launchpad: could not find a LaunchButton to show after spawn")
+    if launchpad_node.has_method("refresh_launch_button_visibility"):
+        launchpad_node.refresh_launch_button_visibility()
     return true

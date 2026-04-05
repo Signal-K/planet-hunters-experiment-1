@@ -1,17 +1,11 @@
 {
   "affinity": {
-    "rocketlab": 29.0
   },
   "reputation": {
-    "rocketlab": 2900,
-    "astroforge": 100.0
   },
   "cooldowns": {
-    "rocketlab": 1775187844.0,
-    "astroforge": 1775183637.0
   },
   "consecutive_use": {
-    "rocketlab": 1
   },
-  "last_mission_sub": "rocketlab"
+  "last_mission_sub": ""
 }

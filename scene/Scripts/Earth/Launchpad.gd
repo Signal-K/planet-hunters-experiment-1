@@ -15,6 +15,8 @@ var _selector_panel := LaunchpadSelectorPanel.new()
 var _anomaly_fetcher := LaunchpadAnomalyFetcher.new()
 var _launch_button := LaunchpadLaunchButton.new()
 var _restorer := LaunchpadRestorer.new()
+var _cached_visible_texture_rect := Rect2()
+var _cached_texture_rid := RID()
 
 func _ready():
 	super._ready()
@@ -45,11 +47,105 @@ func _ready():
 	# If the HUD hasn't been instanced yet (by LaunchpadScene), this can be called
 	# again later via `connect_launch_button()` which is public.
 	if _is_launchpad_scene():
-		connect_launch_button()
-		call_deferred("_show_selector_panel")
+		call_deferred("_open_launchpad_scene_ui")
+
+func _open_launchpad_scene_ui() -> void:
+	_restorer.restore_if_needed(self, _selector_panel, _launch_button)
+	center_visual_in_viewport()
+	connect_launch_button()
+	_show_selector_panel()
 
 func connect_launch_button() -> void:
 	_launch_button.connect_launch_button()
+
+func refresh_launch_button_visibility() -> void:
+	_launch_button.refresh_visibility()
+
+func center_visual_in_viewport() -> void:
+	if not _is_launchpad_scene():
+		return
+	var visual_rect := get_visual_bounds_rect_in_viewport()
+	if visual_rect.size.x <= 0.0:
+		return
+	var viewport_center_x := _launchpad_viewport_center_x()
+	var delta_screen_x := viewport_center_x - visual_rect.get_center().x
+	if absf(delta_screen_x) < 1.0:
+		return
+	var screen_per_world_x := _screen_units_per_world_x()
+	if screen_per_world_x <= 0.0001:
+		return
+	position.x += delta_screen_x / screen_per_world_x
+
+func get_visual_bounds_rect_in_viewport() -> Rect2:
+	var sprite := _get_launchpad_sprite()
+	if sprite == null or sprite.texture == null:
+		return Rect2()
+	var local_visible_rect := _get_sprite_visible_local_rect(sprite)
+	if local_visible_rect.size.x <= 0.0 or local_visible_rect.size.y <= 0.0:
+		return Rect2()
+	var transform := sprite.global_transform
+	var top_left := _world_to_viewport(transform * local_visible_rect.position)
+	var top_right := _world_to_viewport(transform * Vector2(local_visible_rect.end.x, local_visible_rect.position.y))
+	var bottom_left := _world_to_viewport(transform * Vector2(local_visible_rect.position.x, local_visible_rect.end.y))
+	var bottom_right := _world_to_viewport(transform * local_visible_rect.end)
+	var min_x := minf(minf(top_left.x, top_right.x), minf(bottom_left.x, bottom_right.x))
+	var max_x := maxf(maxf(top_left.x, top_right.x), maxf(bottom_left.x, bottom_right.x))
+	var min_y := minf(minf(top_left.y, top_right.y), minf(bottom_left.y, bottom_right.y))
+	var max_y := maxf(maxf(top_left.y, top_right.y), maxf(bottom_left.y, bottom_right.y))
+	return Rect2(Vector2(min_x, min_y), Vector2(max_x - min_x, max_y - min_y))
+
+func _get_launchpad_sprite() -> Sprite2D:
+	return get_node_or_null("Sprite2D") as Sprite2D
+
+func _get_sprite_visible_local_rect(sprite: Sprite2D) -> Rect2:
+	var base_rect := sprite.get_rect()
+	var used_rect := _get_visible_texture_rect(sprite.texture)
+	if used_rect.size.x <= 0.0 or used_rect.size.y <= 0.0:
+		return base_rect
+	return Rect2(base_rect.position + used_rect.position, used_rect.size)
+
+func _get_visible_texture_rect(texture: Texture2D) -> Rect2:
+	if texture == null:
+		return Rect2()
+	var rid := texture.get_rid()
+	if rid == _cached_texture_rid and _cached_visible_texture_rect.size.x > 0.0:
+		return _cached_visible_texture_rect
+	var visible_rect := Rect2(Vector2.ZERO, texture.get_size())
+	var image := texture.get_image()
+	if image != null and not image.is_empty():
+		var used_rect := image.get_used_rect()
+		if used_rect.size.x > 0 and used_rect.size.y > 0:
+			visible_rect = Rect2(used_rect.position, used_rect.size)
+	_cached_texture_rid = rid
+	_cached_visible_texture_rect = visible_rect
+	return visible_rect
+
+func _launchpad_viewport_center_x() -> float:
+	var viewport := get_viewport()
+	if viewport == null:
+		return 960.0
+	return viewport.get_visible_rect().get_center().x
+
+func _screen_units_per_world_x() -> float:
+	var camera := _active_camera()
+	if camera != null:
+		return maxf(1.0 / maxf(camera.zoom.x, 0.0001), 0.0001)
+	return 1.0
+
+func _world_to_viewport(world_pos: Vector2) -> Vector2:
+	var viewport := get_viewport()
+	if viewport == null:
+		return world_pos
+	var camera := _active_camera()
+	if camera == null:
+		return world_pos
+	return ((world_pos - camera.global_position) / camera.zoom) + viewport.get_visible_rect().get_center()
+
+func _active_camera() -> Camera2D:
+	var viewport := get_viewport()
+	if viewport == null:
+		return null
+	return viewport.get_camera_2d()
 
 func _can_drop_data(_pos, data):
 	return data.has("rocket_id")

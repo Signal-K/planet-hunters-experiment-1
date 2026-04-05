@@ -98,8 +98,7 @@ func restore_if_needed(launchpad: Node, selector_panel: Object, launch_button: O
 			# Populate targets so the player can choose a detected target for the restored rocket
 			if selector_panel:
 				selector_panel.populate_targets()
-			# show standalone launch button if present so user can launch restored rocket
 			if launch_button:
-				launch_button.show_standalone_launch_button()
+				launch_button.refresh_visibility()
 	else:
 		AppLogger.d("Launchpad: skipping rocket restoration (unsupported scene)")
