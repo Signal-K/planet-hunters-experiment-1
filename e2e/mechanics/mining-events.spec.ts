@@ -28,11 +28,9 @@ test.describe("Mining events shell integration", () => {
     const driver = new GameDriver(page);
     await driver.clearGameState();
     await driver.load();
-    // Wait for React to mount message listener (useEffect runs after mount)
-    await page.waitForTimeout(300);
   });
 
-  test("MIN-01: mine_hit event — shell handles without error", async ({ page }) => {
+  test("MIN-01: mine_hit event \u2014 shell handles without error", async ({ page }) => {
     const driver = new GameDriver(page);
 
     const errors: string[] = [];
@@ -47,11 +45,10 @@ test.describe("Mining events shell integration", () => {
       y: 100,
     });
 
-    await page.waitForTimeout(200);
     expect(errors).toHaveLength(0);
   });
 
-  test("MIN-02: mining_run_completed → shell stores updated XP", async ({ page }) => {
+  test("MIN-02: mining_run_completed \u2192 shell stores updated XP", async ({ page }) => {
     const driver = new GameDriver(page);
 
     // Game emits mining completion then XP update
@@ -64,7 +61,6 @@ test.describe("Mining events shell integration", () => {
       experience_xp: 25,
     });
 
-    await page.waitForTimeout(300);
     const stored = await driver.readXpState();
     expect(stored).not.toBeNull();
     expect(stored!.experience_xp).toBe(25);
@@ -83,7 +79,6 @@ test.describe("Mining events shell integration", () => {
       await driver.simulateGameEvent("mine_hit", { mineral: "Iron", amount: 1 });
     }
 
-    await page.waitForTimeout(500);
     expect(errors).toHaveLength(0);
   });
 });

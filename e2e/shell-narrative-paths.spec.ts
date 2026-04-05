@@ -72,6 +72,20 @@ test.describe("Narrative paths", () => {
       localStorage.removeItem("planet_hunters_action_log_v1");
     });
     await page.waitForSelector("#game-frame");
+    // Wait for the game's own ready signal before we start simulating events
+    // This ensures no boot-time race condition overwrites our simulated state.
+    await page.evaluate(
+      () =>
+        new Promise<void>((resolve, reject) => {
+          const timer = setTimeout(() => reject(new Error("Timed out waiting for app_ready")), 30000);
+          window.addEventListener("message", (e) => {
+            if (e.data?.source === "planet-hunters" && e.data?.event === "app_ready") {
+              clearTimeout(timer);
+              resolve();
+            }
+          });
+        })
+    );
   });
 
   // NP01 — Mission 1 full completion path

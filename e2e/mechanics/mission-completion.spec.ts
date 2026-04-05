@@ -24,10 +24,9 @@ test.describe("Mission completion shell integration", () => {
     const driver = new GameDriver(page);
     await driver.clearGameState();
     await driver.load();
-    await page.waitForTimeout(300);
   });
 
-  test("MIS-01: mission_debrief_resolved → XP stored in localStorage", async ({ page }) => {
+  test("MIS-01: mission_debrief_resolved \u2192 XP stored in localStorage", async ({ page }) => {
     const driver = new GameDriver(page);
 
     await driver.simulateGameEvent("mission_debrief_resolved", {
@@ -42,13 +41,12 @@ test.describe("Mission completion shell integration", () => {
       experience_xp: 10,
     });
 
-    await page.waitForTimeout(300);
     const stored = await driver.readXpState();
     expect(stored).not.toBeNull();
     expect(stored!.experience_xp).toBe(10);
   });
 
-  test("MIS-02: mission_debrief_resolved → recorded in shell action log", async ({ page }) => {
+  test("MIS-02: mission_debrief_resolved \u2192 recorded in shell action log", async ({ page }) => {
     const driver = new GameDriver(page);
 
     await driver.simulateGameEvent("mission_debrief_resolved", {
@@ -58,8 +56,6 @@ test.describe("Mission completion shell integration", () => {
       payout: 500_000_000,
       mission_stage: 1,
     });
-
-    await page.waitForTimeout(300);
 
     const log = await page.evaluate((key: string) => {
       const raw = localStorage.getItem(key);
@@ -78,7 +74,7 @@ test.describe("Mission completion shell integration", () => {
     expect(found).toBe(true);
   });
 
-  test("MIS-03: contractor_mission_complete → no shell JS errors", async ({ page }) => {
+  test("MIS-03: contractor_mission_complete \u2192 no shell JS errors", async ({ page }) => {
     const driver = new GameDriver(page);
 
     const errors: string[] = [];
@@ -92,21 +88,17 @@ test.describe("Mission completion shell integration", () => {
       mission_stage: 2,
     });
 
-    await page.waitForTimeout(300);
     expect(errors).toHaveLength(0);
   });
 
-  test("MIS-04: seeded level 3 + debrief XP event → shell stores correct state", async ({
+  test("MIS-04: seeded level 3 + debrief XP event \u2192 shell stores correct state", async ({
     page,
   }) => {
     const driver = new GameDriver(page);
-    // This test requires a fresh page load with the seeded state,
-    // so re-seed and reload (beforeEach already cleared state)
+    // Seed state BEFORE load
     await driver.seedXpState({ experience_level: 3, experience_xp: 20 });
-    // Reload with seeded state
-    await page.reload();
-    await page.waitForSelector("#game-frame");
-    await page.waitForTimeout(300);
+    // Load will wait for app_ready, ensuring game sees the seeded state
+    await driver.load();
 
     // Game sends XP update after debrief
     await driver.simulateGameEvent("experience_state_updated", {
@@ -114,7 +106,6 @@ test.describe("Mission completion shell integration", () => {
       experience_xp: 40,
     });
 
-    await page.waitForTimeout(200);
     const stored = await driver.readXpState();
     expect(stored!.experience_level).toBe(3);
     expect(stored!.experience_xp).toBe(40);

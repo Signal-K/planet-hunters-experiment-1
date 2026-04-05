@@ -74,9 +74,9 @@ jobs:
         shell: bash
         run: npm run godot:export:desktop
 
-      - name: Install Playwright browser
+      - name: Install Playwright browsers and deps
         shell: bash
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install --with-deps
 
       - name: Run e2e tests
         shell: bash

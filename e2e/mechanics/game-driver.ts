@@ -72,12 +72,14 @@ export class GameDriver {
   }
 
   /**
-   * Load the game page and start collecting postMessage events from the game.
-   * Returns a handle to the collected events array (live reference).
+   * Load the game page and wait for the WASM to be ready.
    */
   async load(url: string = "/"): Promise<void> {
     await this.page.goto(url);
     await this.page.waitForSelector("#game-frame");
+    // WASM boot can be slow in CI; wait for the explicit "app_ready" signal
+    // from AppController.gd before proceeding with simulated events.
+    await this.waitForGameReady(60_000);
   }
 
   /**

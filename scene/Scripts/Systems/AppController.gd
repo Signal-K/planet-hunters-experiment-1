@@ -550,10 +550,12 @@ func _sync_experience_to_web_storage() -> void:
 	var payload = {
 		"experience_xp": experience_xp,
 		"experience_level": experience_level,
+		"franc_balance": franc_balance,
 		"updated_at_unix": Time.get_unix_time_from_system()
 	}
 	var json_payload = JSON.stringify(payload)
-	JavaScriptBridge.eval("(function(){try{window.localStorage.setItem('%s', %s);}catch(_e){}})();" % [WEB_XP_STATE_KEY, JSON.stringify(json_payload)], true)
+	# Wrap in a try-catch to avoid breaking if localStorage is blocked
+	JavaScriptBridge.eval("(function(){try{window.localStorage.setItem('%s', '%s');}catch(_e){}})();" % [WEB_XP_STATE_KEY, json_payload.replace("'", "\\'")], true)
 
 func _total_experience_for(xp: int, level: int) -> int:
 	var total = 0
