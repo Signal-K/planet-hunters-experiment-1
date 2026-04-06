@@ -5,9 +5,9 @@
   "placed": [
     {
       "type": "starterrocket1",
-      "id": "starterrocket1-snapshot",
-      "x": 960.0,
-      "y": 850.0,
+      "id": "starterrocket1-761917673",
+      "x": -110.0,
+      "y": -170.0,
       "status": "awaitingLaunch"
     }
   ],
@@ -21,14 +21,6 @@
   "preview_target": {
   },
   "detected_targets": [
-    {
-      "id": "mission-1-training-target",
-      "label": "433 Eros",
-      "type": "asteroid",
-      "distance_au": 3.0,
-      "required_level": 1.0,
-      "reward_ratio": 1.2
-    }
   ],
   "seen_asteroids": [
   ],
@@ -37,20 +29,32 @@
   "scan_counts": {
   },
   "status_changed_at": {
-    "starterrocket1-cta-test": {
-      "awaitingLaunch": 1775543023.0
+    "starterrocket1-98496380": {
+      "awaitingLaunch": 1775650225.0
     },
-    "starterrocket1-snapshot": {
-      "awaitingLaunch": 1775543025.0
+    "starterrocket1-3897475385": {
+      "awaitingLaunch": 1775650225.0
+    },
+    "starterrocket1-3828361560": {
+      "awaitingLaunch": 1775650225.0
+    },
+    "starterrocket1-4048636881": {
+      "awaitingLaunch": 1775650225.0
+    },
+    "starterrocket1-2565877276": {
+      "awaitingLaunch": 1775650226.0
+    },
+    "starterrocket1-761917673": {
+      "awaitingLaunch": 1775650226.0
     }
   },
   "mission_progress_completed": 0,
   "completed_mission_badges": [
   ],
-  "control_station_built": true,
+  "control_station_built": false,
   "scanner_station_built": false,
   "scanner_unlocked": false,
-  "scanner_unlock_dialog_seen": true,
+  "scanner_unlock_dialog_seen": false,
   "scanner_next_scan_at": 0.0,
   "trip_contract_offer": {
     "contractors": [
@@ -69,8 +73,8 @@
           ]
         },
         "requested_minerals": {
-          "Iron": 185.0,
-          "Nickel": 85.0
+          "Iron": 166.0,
+          "Nickel": 122.0
         }
       },
       {
@@ -88,8 +92,8 @@
           ]
         },
         "requested_minerals": {
-          "Cobalt": 45.0,
-          "Silicates": 132.0
+          "Cobalt": 89.0,
+          "Silicates": 90.0
         }
       },
       {
@@ -107,8 +111,8 @@
           ]
         },
         "requested_minerals": {
-          "Iron": 167.0,
-          "Nickel": 118.0
+          "Iron": 176.0,
+          "Nickel": 103.0
         }
       }
     ],
@@ -127,6 +131,36 @@
   "discovery_bonus_claimed": {
   },
   "rocket_customizations": {
+    "starterrocket1-98496380": {
+      "flag": "Earth Union",
+      "logo": "Star",
+      "rocket_type": "starterrocket1"
+    },
+    "starterrocket1-3897475385": {
+      "flag": "Earth Union",
+      "logo": "Star",
+      "rocket_type": "starterrocket1"
+    },
+    "starterrocket1-3828361560": {
+      "flag": "Earth Union",
+      "logo": "Star",
+      "rocket_type": "starterrocket1"
+    },
+    "starterrocket1-4048636881": {
+      "flag": "Earth Union",
+      "logo": "Star",
+      "rocket_type": "starterrocket1"
+    },
+    "starterrocket1-2565877276": {
+      "flag": "Earth Union",
+      "logo": "Star",
+      "rocket_type": "starterrocket1"
+    },
+    "starterrocket1-761917673": {
+      "flag": "Earth Union",
+      "logo": "Star",
+      "rocket_type": "starterrocket1"
+    }
   },
   "rocket_wear": {
   },

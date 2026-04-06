@@ -1,11 +1,11 @@
-[gd_scene load_steps=8 format=3 uid="uid://dkn5ffejmhljs"]
+[gd_scene load_steps=9 format=3 uid="uid://dkn5ffejmhljs"]
 
 [ext_resource type="Script" uid="uid://dtrksapur77k2" path="res://Scripts/Earth/LaunchpadScene.gd" id="1"]
 [ext_resource type="Script" uid="uid://ce1a85vrjyh7x" path="res://Scripts/Earth/Launchpad.gd" id="2"]
 [ext_resource type="Texture2D" uid="uid://ciqmrddebyxh1" path="res://assets/Backdrops/Earth2.png" id="3"]
 [ext_resource type="Texture2D" uid="uid://ctuf1c3mi4pat" path="res://assets/Structures/launchpad.png" id="4"]
 [ext_resource type="Script" uid="uid://bmhjgrsylq0hk" path="res://Scripts/Earth/LaunchpadSpriteDropHandler.gd" id="9"]
-[ext_resource type="PackedScene" path="res://Scenes/UI/launch_hud.tscn" id="10"]
+[ext_resource type="PackedScene" uid="uid://launchhud123" path="res://Scenes/UI/launch_hud.tscn" id="10"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/LaunchpadSelectorPanel.tscn" id="11"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_launchpad"]
@@ -48,8 +48,7 @@ shape = SubResource("RectangleShape2D_launchpad")
 [node name="UILayer" type="CanvasLayer" parent="."]
 
 [node name="LayoutScaffold" type="Control" parent="UILayer"]
-visible = false
-layout_mode = 1
+layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -59,22 +58,22 @@ mouse_filter = 2
 
 [node name="LeftPanelAnchor" type="Control" parent="UILayer/LayoutScaffold"]
 layout_mode = 1
-offset_left = 36.0
-offset_top = 158.0
-offset_right = 458.0
-offset_bottom = 690.0
+anchors_preset = 0
+offset_right = 420.0
+offset_bottom = 944.0
 mouse_filter = 2
 
 [node name="RightPanelAnchor" type="Control" parent="UILayer/LayoutScaffold"]
 layout_mode = 1
-offset_left = 1460.0
-offset_top = 238.0
-offset_right = 1884.0
-offset_bottom = 706.0
+anchors_preset = 0
+offset_left = 1500.0
+offset_right = 1920.0
+offset_bottom = 944.0
 mouse_filter = 2
 
 [node name="LaunchButtonAnchor" type="Control" parent="UILayer/LayoutScaffold"]
 layout_mode = 1
+anchors_preset = 0
 offset_left = 1720.0
 offset_top = 810.0
 offset_right = 1896.0
@@ -82,7 +81,7 @@ offset_bottom = 926.0
 mouse_filter = 2
 
 [node name="SelectorPanel" parent="UILayer" instance=ExtResource("11")]
-visible = false
+layout_mode = 3
 
 [node name="ButtonContainer" type="HBoxContainer" parent="UILayer"]
 custom_minimum_size = Vector2(0, 120)

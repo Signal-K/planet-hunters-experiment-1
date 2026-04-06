@@ -30,8 +30,6 @@ var _rocket_textures := {
 }
 var _ui_builder := RocketSelectorUIBuilder.new()
 var _drag_helper := RocketSelectorDragHelper.new()
-@onready var _confirm_dialog: ConfirmationDialog = $ConfirmDialog
-@onready var _info_dialog: AcceptDialog = $InfoDialog
 
 func _ready():
 	if get_parent() is Container:
@@ -58,7 +56,6 @@ func _ready():
 	_rocket_textures["starterrocket2"] = load("res://assets/Vehicles/Starter Rocket L2.png")
 	_rocket_textures["starterrocket3"] = load("res://assets/Vehicles/Starter Rocket L2.png")
 	_find_app_controller()
-	_init_dialogs()
 	_ui_builder.setup(
 		self,
 		ui_size,
@@ -81,12 +78,6 @@ func _find_app_controller() -> void:
 		print("RocketSelector: Found AppController")
 	else:
 		print("RocketSelector: AppController not found")
-
-func _init_dialogs() -> void:
-	if _confirm_dialog and not _confirm_dialog.confirmed.is_connected(_on_purchase_confirmed):
-		_confirm_dialog.confirmed.connect(_on_purchase_confirmed)
-	if _confirm_dialog and not _confirm_dialog.canceled.is_connected(_on_purchase_canceled):
-		_confirm_dialog.canceled.connect(_on_purchase_canceled)
 
 func _on_purchase_canceled() -> void:
 	_pending_rocket_id = ""
@@ -115,9 +106,8 @@ func _on_create_pressed(rocket_id):
 	_request_purchase(rocket_id)
 
 func _request_purchase(rocket_id: String) -> void:
-	_init_dialogs()
 	if _creation_locked:
-		print("RocketSelector: creation locked; cannot purchase")
+		_show_info("A rocket is already on the launchpad. Use the Mission Target panel to launch it, or remove it to build a different one.")
 		return
 	if _contractor_gate_locked:
 		_show_info(_contractor_gate_reason)
@@ -147,9 +137,6 @@ func _request_purchase(rocket_id: String) -> void:
 		return
 	_pending_rocket_id = rocket_id
 	_pending_purchase_cost = cost
-	if not (_confirm_dialog and is_instance_valid(_confirm_dialog)):
-		_show_info("Unable to open purchase confirmation dialog.")
-		return
 	var summary = "Buy %s for %s Francs?" % [
 		RocketSpecs.get_display_name(rocket_id),
 		_format_francs(cost)
@@ -162,30 +149,28 @@ func _request_purchase(rocket_id: String) -> void:
 		var selected = rm.get_trip_selected_contractor()
 		if str(selected.get("effect", "")) == "build_discount":
 			summary += "\nContractor discount applied via %s." % str(selected.get("name", "contractor"))
-	_confirm_dialog.dialog_text = summary
-	_confirm_dialog.popup_centered()
+	var dlg := ConfirmationDialog.new()
+	dlg.title = "Confirm Purchase"
+	dlg.dialog_text = summary
+	var scene_root = get_tree().current_scene
+	if scene_root == null:
+		_pending_rocket_id = ""
+		_pending_purchase_cost = 0
+		return
+	scene_root.add_child(dlg)
+	dlg.popup_centered()
+	dlg.confirmed.connect(_on_purchase_confirmed)
+	dlg.confirmed.connect(dlg.queue_free)
+	dlg.canceled.connect(_on_purchase_canceled)
+	dlg.canceled.connect(dlg.queue_free)
 
 func _on_purchase_confirmed() -> void:
 	if _pending_rocket_id == "":
 		return
-	_armed_rocket_id = _pending_rocket_id
-	_armed_purchase_cost = _pending_purchase_cost
-	_creation_locked = true
+	var rocket_id = _pending_rocket_id
+	var cost = _pending_purchase_cost
 	_pending_rocket_id = ""
 	_pending_purchase_cost = 0
-	_refresh_creation_buttons_state()
-	_refresh_create_buttons_copy()
-	_show_info("Purchase approved. Drag %s from the right panel onto the launchpad to arm this mission." % RocketSpecs.get_display_name(_armed_rocket_id))
-
-func _on_drag_drop_requested(rocket_id: String) -> void:
-	if rocket_id == "":
-		return
-	if _armed_rocket_id == "":
-		_show_info("Buy a rocket first, then drag it onto the launchpad.")
-		return
-	if rocket_id != _armed_rocket_id:
-		_show_info("Drag the purchased rocket onto the launchpad to continue.")
-		return
 	var spawn_ok = _spawn_rocket(rocket_id)
 	if not spawn_ok:
 		_show_info("Rocket could not be placed on the launchpad.")
@@ -194,10 +179,10 @@ func _on_drag_drop_requested(rocket_id: String) -> void:
 	AppControllerHelper.record_tutorial_action("create_rocket", {
 		"rocket_id": rocket_id
 	})
-	_modify_balance(-_armed_purchase_cost)
+	_modify_balance(-cost)
+	_creation_locked = true
 	_armed_rocket_id = ""
 	_armed_purchase_cost = 0
-	_creation_locked = true
 	_refresh_creation_buttons_state()
 	_refresh_create_buttons_copy()
 	visible = false
@@ -209,6 +194,9 @@ func _on_drag_drop_requested(rocket_id: String) -> void:
 				launchpad._show_selector_panel()
 			if launchpad.has_method("_populate_targets"):
 				launchpad._populate_targets()
+
+func _on_drag_drop_requested(_rocket_id: String) -> void:
+	pass # drag-to-place replaced by direct placement on purchase confirm
 
 func _spawn_rocket(rocket_id: String) -> bool:
 	# Try to find the Launchpad node in the current scene and call spawn_rocket
@@ -257,10 +245,16 @@ func _modify_balance(delta: int) -> void:
 	_set_balance(next_value)
 
 func _show_info(message: String) -> void:
-	_init_dialogs()
-	if _info_dialog and is_instance_valid(_info_dialog):
-		_info_dialog.dialog_text = message
-		_info_dialog.popup_centered()
+	var scene_root = get_tree().current_scene
+	if scene_root == null:
+		push_warning("RocketSelector._show_info: no current scene, cannot show dialog")
+		return
+	var dlg := AcceptDialog.new()
+	dlg.title = "Notice"
+	dlg.dialog_text = message
+	scene_root.add_child(dlg)
+	dlg.popup_centered()
+	dlg.confirmed.connect(dlg.queue_free)
 
 func _effective_purchase_cost(rocket_id: String) -> int:
 	var rm = RocketsManager
@@ -279,17 +273,8 @@ func _format_francs(value: int) -> String:
 		return "%.1fM" % millions
 	return str(value)
 
-func _on_texture_gui_input(rocket_id, tex, event):
-	# Start drag on left button press
-	if event is InputEventMouseButton:
-		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-			if _armed_rocket_id != rocket_id:
-				if _armed_rocket_id == "":
-					_show_info("Buy this rocket first, then drag it onto the launchpad.")
-				else:
-					_show_info("Drag %s onto the launchpad to continue." % RocketSpecs.get_display_name(_armed_rocket_id))
-				return
-			_drag_helper.start_drag(rocket_id, tex)
+func _on_texture_gui_input(_rocket_id, _tex, _event):
+	pass # drag-to-place replaced by direct placement on purchase confirm
 
 func _process(delta):
 	_drag_helper.process(delta)
@@ -312,10 +297,7 @@ func _refresh_create_buttons_copy() -> void:
 			if child is Button and child.name.begins_with("CreateButton_"):
 				var rocket_id = child.name.trim_prefix("CreateButton_")
 				var display_name = RocketSpecs.get_display_name(rocket_id)
-				if _armed_rocket_id == rocket_id:
-					child.text = "Drag %s To Pad" % display_name
-				else:
-					child.text = "Create %s" % display_name
+				child.text = "Create %s" % display_name
 			stack.append(child)
 
 func _validate_target_range_for_rocket(rocket_id: String) -> Dictionary:
