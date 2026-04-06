@@ -192,6 +192,7 @@ func populate_targets() -> void:
 	var vbox = panel.get_node_or_null("VBox")
 	if not vbox:
 		return
+	var mission_section = panel.get_node_or_null("VBox/Body/LeftColumn/MissionSection/SectionVBox/Content")
 	var contractor_section = panel.get_node_or_null("VBox/Body/LeftColumn/ContractorSection/SectionVBox/Content")
 	var rocket_section = panel.get_node_or_null("VBox/Body/RightColumn/RocketSection/SectionVBox/Content")
 	var target_section = panel.get_node_or_null("MapOverlay/OverlayVBox/TargetSection/SectionVBox/Content")
@@ -200,6 +201,8 @@ func populate_targets() -> void:
 		return
 	_style_selector_panel(panel, vbox)
 	AppLogger.d("Launchpad: found SelectorPanel VBox")
+	if mission_section:
+		_clear_container(mission_section)
 	_clear_container(contractor_section)
 	_clear_rocket_section_extras(rocket_section)
 	_clear_container(target_section)
@@ -261,10 +264,12 @@ func populate_targets() -> void:
 	if _launchpad != null and _launchpad.has_method("refresh_launch_button_visibility"):
 		_launchpad.refresh_launch_button_visibility()
 
+	if mission_section:
+		_render_mission_summary(mission_section, mission_stage, trip_offer)
 	_render_trip_contract_brief(contractor_section, trip_offer, trip_selected_contractor, awaiting_rocket_id)
 	if flow_phase == "contractor":
 		_boost_label_contrast(contractor_section)
-		_render_phase_placeholder(rocket_section, "Pick a contractor first, then drag your purchased rocket onto the pad.")
+		_render_phase_placeholder(rocket_section, "Pick a contractor first, then choose and purchase a rocket.")
 	elif flow_phase == "rocket":
 		_boost_label_contrast(rocket_section)
 	_normalize_selector_typography(panel)
@@ -453,18 +458,54 @@ func _render_starter_contract_brief(targets_section: VBoxContainer, offer: Dicti
 		row.add_child(order_lbl)
 		targets_section.add_child(row)
 
-func _render_trip_contract_brief(targets_section: VBoxContainer, offer: Dictionary, selected_contractor: String, rocket_id: String = "") -> void:
-	if targets_section == null or offer.is_empty():
+func _render_mission_summary(content: VBoxContainer, mission_stage: int, offer: Dictionary) -> void:
+	if content == null:
 		return
-	var recommended_label = str(offer.get("recommended_target_label", offer.get("recommended_target_id", "")))
+	var briefing: Dictionary = MISSION_BRIEFINGS.get(mission_stage, {}) as Dictionary
+	if briefing.is_empty():
+		return
+
+	var objective := str(briefing.get("objective", ""))
+	if objective != "":
+		var obj_lbl := Label.new()
+		obj_lbl.text = objective
+		obj_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		obj_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		obj_lbl.add_theme_color_override("font_color", PanelStyle.TEXT_PRIMARY)
+		obj_lbl.add_theme_font_size_override("font_size", 14)
+		content.add_child(obj_lbl)
+
+	var unlocks := str(briefing.get("unlocks", ""))
+	if unlocks != "":
+		var unlock_lbl := Label.new()
+		unlock_lbl.text = "Unlocks: %s" % unlocks
+		unlock_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		unlock_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		unlock_lbl.add_theme_color_override("font_color", PanelStyle.TEXT_MUTED)
+		unlock_lbl.add_theme_font_size_override("font_size", 13)
+		content.add_child(unlock_lbl)
+
+	var recommended_label := str(offer.get("recommended_target_label", offer.get("recommended_target_id", "")))
 	if recommended_label != "":
-		var target_lbl: Label = EmptyLabelScene.instantiate()
+		var target_lbl := Label.new()
 		target_lbl.text = "Suggested target: %s" % recommended_label
 		target_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		target_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		PanelStyle.apply_muted_on_dark(target_lbl)
-		targets_section.add_child(target_lbl)
+		target_lbl.add_theme_color_override("font_color", Color(0.15, 0.48, 0.72, 1.0))
+		target_lbl.add_theme_font_size_override("font_size", 13)
+		content.add_child(target_lbl)
 
+func _render_trip_contract_brief(targets_section: VBoxContainer, offer: Dictionary, selected_contractor: String, rocket_id: String = "") -> void:
+	if targets_section == null or offer.is_empty():
+		return
+	# Context blurb — helps first-time users understand why they need a contractor
+	var context_lbl := Label.new()
+	context_lbl.text = "Pick a contractor below. They'll fund your mission and buy the minerals you return with."
+	context_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	context_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	PanelStyle.apply_muted(context_lbl)
+	targets_section.add_child(context_lbl)
+	# Suggested target is now shown in the MissionSection above; skip here.
 	var options: Array = offer.get("contractors", [])
 	for entry_any in options:
 		if typeof(entry_any) != TYPE_DICTIONARY:
@@ -478,16 +519,18 @@ func _render_trip_contract_brief(targets_section: VBoxContainer, offer: Dictiona
 		var card: PanelContainer = LaunchpadContractorCardScene.instantiate()
 		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		card.set_meta("ui_style_locked", true)
-		card.add_theme_stylebox_override("panel", _target_card_style())
 		targets_section.add_child(card)
 		var card_col: VBoxContainer = card.get_node("Body")
+		card_col.add_theme_constant_override("separation", 8)
+		var text_col: VBoxContainer = card.get_node("Body/MainRow/TextColumn")
+		text_col.add_theme_constant_override("separation", 4)
 		var name_lbl: Label = card.get_node("Body/MainRow/TextColumn/NameLabel")
 		name_lbl.text = str(entry.get("name", contractor_id))
 		name_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-		PanelStyle.apply_body_on_dark(name_lbl)
+		PanelStyle.apply_body(name_lbl)
 		if on_cooldown:
-			name_lbl.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6, 1.0))
+			name_lbl.add_theme_color_override("font_color", Color(0.5, 0.5, 0.55, 1.0))
 
 		var contractor_requested: Dictionary = entry.get("requested_minerals", {})
 		var order_lbl: Label = card.get_node("Body/MainRow/TextColumn/OrderLabel")
@@ -508,9 +551,9 @@ func _render_trip_contract_brief(targets_section: VBoxContainer, offer: Dictiona
 			role_lbl.text = _compact_role_text(role_text)
 			role_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			role_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-			PanelStyle.apply_muted_on_dark(role_lbl)
+			PanelStyle.apply_muted(role_lbl)
 			if on_cooldown:
-				role_lbl.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5, 1.0))
+				role_lbl.add_theme_color_override("font_color", Color(0.5, 0.5, 0.55, 1.0))
 		else:
 			role_lbl.visible = false
 
@@ -521,7 +564,7 @@ func _render_trip_contract_brief(targets_section: VBoxContainer, offer: Dictiona
 			btn.text = "Unavailable"
 		else:
 			btn.text = "Select"
-		btn.custom_minimum_size = Vector2(104, 40)
+		btn.custom_minimum_size = Vector2(112, 44)
 		btn.disabled = is_selected or on_cooldown
 		PanelStyle.apply_button(btn, not btn.disabled)
 		if btn.disabled:
@@ -1026,19 +1069,49 @@ func _style_selector_panel(panel: Panel, vbox: Control) -> void:
 func _apply_selector_surface_styles(panel: Panel) -> void:
 	if panel == null:
 		return
+	# Side panels use the light instrument-surface theme
+	var light_style := StyleBoxFlat.new()
+	light_style.bg_color = PanelStyle.PANEL_BG
+	light_style.border_color = Color(PanelStyle.PANEL_BORDER.r, PanelStyle.PANEL_BORDER.g, PanelStyle.PANEL_BORDER.b, 0.55)
+	light_style.border_width_right = 1
+	light_style.set_corner_radius_all(0)
+	light_style.content_margin_left = 20
+	light_style.content_margin_right = 20
+	light_style.content_margin_top = 20
+	light_style.content_margin_bottom = 20
+
+	var mission_style := StyleBoxFlat.new()
+	mission_style.bg_color = Color(0.86, 0.92, 0.97, 0.97)
+	mission_style.border_color = Color(PanelStyle.PANEL_BORDER.r, PanelStyle.PANEL_BORDER.g, PanelStyle.PANEL_BORDER.b, 0.65)
+	mission_style.border_width_bottom = 1
+	mission_style.set_corner_radius_all(0)
+	mission_style.content_margin_left = 20
+	mission_style.content_margin_right = 20
+	mission_style.content_margin_top = 16
+	mission_style.content_margin_bottom = 16
+
 	for path in [
 		"VBox/Body/LeftColumn/ContractorSection",
 		"VBox/Body/RightColumn/RocketSection",
-		"MapOverlay/OverlayVBox/TargetSection",
 	]:
 		var node = panel.get_node_or_null(path) as Control
 		if node:
 			node.set_meta("ui_style_locked", true)
-			node.add_theme_stylebox_override("panel", PanelStyle.create_glass_panel_style(Color(0.05, 0.09, 0.14, 0.94), 0.44, 18, 18, 16))
+			node.add_theme_stylebox_override("panel", light_style)
 
+	var mission_node = panel.get_node_or_null("VBox/Body/LeftColumn/MissionSection") as Control
+	if mission_node:
+		mission_node.set_meta("ui_style_locked", true)
+		mission_node.add_theme_stylebox_override("panel", mission_style)
+
+	# Map overlay and its target section stay dark (they cover the full screen)
 	var overlay = panel.get_node_or_null("MapOverlay") as PanelContainer
 	if overlay:
 		overlay.add_theme_stylebox_override("panel", PanelStyle.create_glass_panel_style(Color(0.03, 0.06, 0.10, 0.96), 0.58, 20, 24, 20))
+	var target_section = panel.get_node_or_null("MapOverlay/OverlayVBox/TargetSection") as Control
+	if target_section:
+		target_section.set_meta("ui_style_locked", true)
+		target_section.add_theme_stylebox_override("panel", PanelStyle.create_glass_panel_style(Color(0.05, 0.09, 0.14, 0.94), 0.44, 18, 18, 16))
 
 	for path in [
 		"VBox/Body/RightColumn/RocketSection/SectionVBox/PrimaryActionRow/OpenMapButton",
@@ -1061,40 +1134,62 @@ func _apply_selector_surface_styles(panel: Panel) -> void:
 func _ensure_selector_template_defaults(panel: Panel) -> void:
 	if panel == null:
 		return
+	# Light-panel titles (dark text)
 	for path in [
+		"VBox/Body/LeftColumn/MissionSection/SectionVBox/Header/Title",
 		"VBox/Body/LeftColumn/ContractorSection/SectionVBox/Header/Title",
 		"VBox/Body/RightColumn/RocketSection/SectionVBox/Header/Title",
-		"MapOverlay/OverlayVBox/TargetSection/SectionVBox/Header/Title",
 	]:
 		var label = panel.get_node_or_null(path) as Label
 		if label:
-			PanelStyle.apply_title_on_dark(label)
+			PanelStyle.apply_title(label)
+	# Dark-overlay title (light text)
+	var map_title = panel.get_node_or_null("MapOverlay/OverlayVBox/TargetSection/SectionVBox/Header/Title") as Label
+	if map_title:
+		PanelStyle.apply_title_on_dark(map_title)
+
+	# Number badges — amber on all panels
 	for path in [
+		"VBox/Body/LeftColumn/MissionSection/SectionVBox/Header/Number",
 		"VBox/Body/LeftColumn/ContractorSection/SectionVBox/Header/Number",
 		"VBox/Body/RightColumn/RocketSection/SectionVBox/Header/Number",
 		"MapOverlay/OverlayVBox/TargetSection/SectionVBox/Header/Number",
 	]:
 		var badge = panel.get_node_or_null(path) as Label
 		if badge:
-			badge.add_theme_color_override("font_color", Color(PanelStyle.ACCENT.r, PanelStyle.ACCENT.g, PanelStyle.ACCENT.b, 0.96))
+			badge.add_theme_color_override("font_color", Color(PanelStyle.ACCENT_WARM.r, PanelStyle.ACCENT_WARM.g, PanelStyle.ACCENT_WARM.b, 0.96))
 			badge.add_theme_font_size_override("font_size", 12)
+
+	# Light-panel blurbs (muted dark text)
 	for path in [
+		"VBox/Body/LeftColumn/MissionSection/SectionVBox/Blurb",
 		"VBox/Body/LeftColumn/ContractorSection/SectionVBox/Blurb",
 		"VBox/Body/RightColumn/RocketSection/SectionVBox/Blurb",
 		"VBox/Body/RightColumn/RocketSection/SectionVBox/CoachMessage",
+	]:
+		var label = panel.get_node_or_null(path) as Label
+		if label:
+			PanelStyle.apply_muted(label)
+
+	# Dark-overlay blurbs (light text)
+	for path in [
 		"MapOverlay/OverlayVBox/Toolbar/MapHint",
 		"MapOverlay/OverlayVBox/TargetSection/SectionVBox/Blurb",
 	]:
 		var label = panel.get_node_or_null(path) as Label
 		if label:
 			PanelStyle.apply_muted_on_dark(label)
-	for path in [
-		"VBox/Body/RightColumn/RocketSection/SectionVBox/CoachProgress",
-		"MapOverlay/OverlayVBox/Toolbar/MapTitle",
-	]:
-		var label = panel.get_node_or_null(path) as Label
-		if label:
-			PanelStyle.apply_body_on_dark(label)
+
+	# CoachProgress on light panel — use a darker teal/blue instead of bright cyan
+	var coach_progress = panel.get_node_or_null("VBox/Body/RightColumn/RocketSection/SectionVBox/CoachProgress") as Label
+	if coach_progress:
+		coach_progress.add_theme_color_override("font_color", Color(0.15, 0.48, 0.72, 1.0))
+		coach_progress.add_theme_font_size_override("font_size", 13)
+
+	# Map overlay title
+	var map_toolbar_title = panel.get_node_or_null("MapOverlay/OverlayVBox/Toolbar/MapTitle") as Label
+	if map_toolbar_title:
+		PanelStyle.apply_body_on_dark(map_toolbar_title)
 
 func _set_selector_panel_layout(_has_awaiting: bool, flow_phase: String = "") -> void:
 	var root_scene = _launchpad.get_tree().current_scene
@@ -1103,44 +1198,7 @@ func _set_selector_panel_layout(_has_awaiting: bool, flow_phase: String = "") ->
 	var panel = _ensure_selector_panel_exists(root_scene)
 	if panel == null:
 		return
-	var viewport_rect = _launchpad.get_viewport().get_visible_rect()
-	var viewport_size = viewport_rect.size
-	var panel_left = viewport_rect.position.x
-	var panel_top = viewport_rect.position.y
-	var panel_width = viewport_rect.size.x
-	var panel_height = viewport_rect.size.y
-	panel.anchor_left = 0.0
-	panel.anchor_top = 0.0
-	panel.anchor_right = 0.0
-	panel.anchor_bottom = 0.0
-	panel.offset_left = panel_left
-	panel.offset_top = panel_top
-	panel.offset_right = panel_left + panel_width
-	panel.offset_bottom = panel_top + panel_height
 	panel.clip_contents = false
-
-	var vbox = panel.get_node_or_null("VBox") as Control
-	if vbox:
-		vbox.anchor_left = 0.0
-		vbox.anchor_top = 0.0
-		vbox.anchor_right = 0.0
-		vbox.anchor_bottom = 0.0
-		vbox.offset_left = 0.0
-		vbox.offset_top = 0.0
-		vbox.offset_right = panel_width
-		vbox.offset_bottom = panel_height
-		vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var body = panel.get_node_or_null("VBox/Body") as Control
-	if body:
-		body.anchor_left = 0.0
-		body.anchor_top = 0.0
-		body.anchor_right = 0.0
-		body.anchor_bottom = 0.0
-		body.offset_left = 0.0
-		body.offset_top = 0.0
-		body.offset_right = panel_width
-		body.offset_bottom = panel_height
-		body.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var map_overlay = panel.get_node_or_null("MapOverlay") as Control
 	if map_overlay:
 		map_overlay.anchor_left = 0.0
@@ -1741,40 +1799,60 @@ func _boost_label_contrast(container: Node) -> void:
 		var node = stack.pop_back()
 		if node is Label:
 			var label := node as Label
-			label.add_theme_color_override("font_color", PanelStyle.TEXT_ON_DARK)
+			label.add_theme_color_override("font_color", PanelStyle.TEXT_PRIMARY)
 		for child in node.get_children():
 			stack.append(child)
 
 func _normalize_selector_typography(panel: Panel) -> void:
 	if panel == null:
 		return
+	# Nodes inside the dark MapOverlay keep light-on-dark text; everything else uses dark-on-light
+	var map_overlay = panel.get_node_or_null("MapOverlay")
 	var stack: Array[Node] = [panel]
 	while not stack.is_empty():
 		var node = stack.pop_back()
+		var in_overlay: bool = map_overlay != null and (node == map_overlay or _is_ancestor(map_overlay, node))
 		if node is Label:
 			var label := node as Label
-			var text_size := 15
+			var text_size := 17
 			if label.name == "Title":
-				text_size = 20
-			elif label.text in ["Contractor", "Rocket", "Mission Target", "Required Rooms"]:
+				text_size = 22
+			elif label.name == "NameLabel":
+				text_size = 21
+			elif label.text in ["Contractor", "Rocket", "Mission Target", "Required Rooms", "Mission"]:
+				text_size = 19
+			elif label.name in ["OrderLabel", "CooldownLabel"]:
 				text_size = 16
+			elif label.name == "RoleLabel":
+				text_size = 15
 			elif label.text.begins_with("Step "):
-				text_size = 14
+				text_size = 15
 			label.add_theme_font_size_override("font_size", text_size)
 			var lowered := "%s %s" % [label.name.to_lower(), label.text.to_lower()]
 			var muted := lowered.contains("subtitle") or lowered.contains("blurb") or lowered.contains("hint") or lowered.contains("message")
-			label.add_theme_color_override("font_color", PanelStyle.MUTED_ON_DARK if muted else PanelStyle.TEXT_ON_DARK)
+			if in_overlay:
+				label.add_theme_color_override("font_color", PanelStyle.MUTED_ON_DARK if muted else PanelStyle.TEXT_ON_DARK)
+			else:
+				label.add_theme_color_override("font_color", PanelStyle.TEXT_MUTED if muted else PanelStyle.TEXT_PRIMARY)
 		elif node is Button:
 			var btn := node as Button
-			btn.custom_minimum_size.y = max(btn.custom_minimum_size.y, 42.0)
-			btn.add_theme_font_size_override("font_size", 16)
-			# Keep RocketSelector create buttons on their dedicated warm CTA palette.
+			btn.custom_minimum_size.y = max(btn.custom_minimum_size.y, 44.0)
+			btn.add_theme_font_size_override("font_size", 18)
 			if not btn.disabled and not btn.name.begins_with("CreateButton_"):
-				btn.add_theme_color_override("font_color", PanelStyle.TEXT_ON_DARK)
-				btn.add_theme_color_override("font_hover_color", PanelStyle.TEXT_ON_DARK)
-				btn.add_theme_color_override("font_pressed_color", PanelStyle.TEXT_ON_DARK)
+				var text_col := PanelStyle.TEXT_ON_DARK if in_overlay else PanelStyle.TEXT_PRIMARY
+				btn.add_theme_color_override("font_color", text_col)
+				btn.add_theme_color_override("font_hover_color", text_col)
+				btn.add_theme_color_override("font_pressed_color", text_col)
 		for child in node.get_children():
 			stack.append(child)
+
+func _is_ancestor(ancestor: Node, node: Node) -> bool:
+	var current = node.get_parent()
+	while current != null:
+		if current == ancestor:
+			return true
+		current = current.get_parent()
+	return false
 
 func _style_selector_action_button(btn: Button, emphasize: bool) -> void:
 	if btn == null:
@@ -1785,31 +1863,32 @@ func _style_selector_action_button(btn: Button, emphasize: bool) -> void:
 		normal.bg_color = Color(0.97, 0.73, 0.19, 0.98)
 		normal.border_color = Color(1.0, 0.86, 0.46, 1.0)
 	else:
-		normal.bg_color = Color(0.11, 0.18, 0.30, 0.92)
-		normal.border_color = Color(0.28, 0.88, 0.96, 0.80)
+		# Light button on light panel (colours from NebulaSciTheme)
+		normal.bg_color = Color(0.85, 0.90, 0.94, 0.94)
+		normal.border_color = PanelStyle.PANEL_BORDER
 	normal.set_border_width_all(1)
-	normal.set_corner_radius_all(6)
+	normal.set_corner_radius_all(8)
 	normal.content_margin_left = 16
 	normal.content_margin_right = 16
 	normal.content_margin_top = 10
 	normal.content_margin_bottom = 10
 	var hover := normal.duplicate()
-	hover.bg_color = Color(1.0, 0.79, 0.28, 1.0) if emphasize else Color(0.18, 0.30, 0.48, 0.96)
+	hover.bg_color = Color(1.0, 0.79, 0.28, 1.0) if emphasize else Color(0.90, 0.94, 0.97, 0.98)
 	var pressed := normal.duplicate()
-	pressed.bg_color = Color(0.88, 0.66, 0.14, 0.98) if emphasize else Color(0.10, 0.16, 0.28, 0.96)
+	pressed.bg_color = Color(0.88, 0.66, 0.14, 0.98) if emphasize else PanelStyle.BUTTON_PRESSED
 	var disabled := normal.duplicate()
-	disabled.bg_color = Color(0.08, 0.12, 0.20, 0.88)
-	disabled.border_color = Color(0.34, 0.52, 0.70, 0.78)
+	disabled.bg_color = Color(0.88, 0.91, 0.94, 0.54)
+	disabled.border_color = Color(PanelStyle.PANEL_BORDER.r, PanelStyle.PANEL_BORDER.g, PanelStyle.PANEL_BORDER.b, 0.28)
 	btn.add_theme_stylebox_override("normal", normal)
 	btn.add_theme_stylebox_override("hover", hover)
 	btn.add_theme_stylebox_override("pressed", pressed)
 	btn.add_theme_stylebox_override("focus", hover)
 	btn.add_theme_stylebox_override("disabled", disabled)
-	var active_font := Color(0.05, 0.08, 0.12, 1.0) if emphasize else PanelStyle.TEXT_ON_DARK
+	var active_font := PanelStyle.TEXT_ON_ACCENT if emphasize else PanelStyle.TEXT_PRIMARY
 	btn.add_theme_color_override("font_color", active_font)
 	btn.add_theme_color_override("font_hover_color", active_font)
 	btn.add_theme_color_override("font_pressed_color", active_font)
-	btn.add_theme_color_override("font_disabled_color", Color(0.78, 0.86, 0.94, 1.0))
+	btn.add_theme_color_override("font_disabled_color", Color(PanelStyle.TEXT_MUTED.r, PanelStyle.TEXT_MUTED.g, PanelStyle.TEXT_MUTED.b, 0.82))
 
 func _wire_panel_buttons(panel: Panel) -> void:
 	if panel == null:
@@ -1857,6 +1936,14 @@ func _on_close_target_map_pressed() -> void:
 		return
 	_map_overlay_open = false
 	_set_map_overlay_visible(panel, false)
+	populate_targets()
+
+func _on_remove_rocket_pressed() -> void:
+	var rm = RocketsManager
+	if rm:
+		rm.remove_awaiting_rocket()
+	if _launchpad != null and _launchpad.has_method("clear_rockets"):
+		_launchpad.clear_rockets()
 	populate_targets()
 
 func _on_replay_mission_pressed() -> void:
@@ -1960,7 +2047,8 @@ func _sync_right_panel_surface(
 			max(int(tutorial_state.get("total_steps", 1)), 1)
 		]
 	if replay_row:
-		replay_row.visible = tutorial_active and flow_phase == "target"
+		# Only show replay buttons when tutorial is stuck and no rocket is armed yet
+		replay_row.visible = tutorial_active and flow_phase == "target" and awaiting_rocket_id == ""
 	if blurb:
 		match flow_phase:
 			"contractor":
@@ -1975,7 +2063,27 @@ func _sync_right_panel_surface(
 		rocket_content.visible = flow_phase == "rocket"
 		rocket_content.size_flags_vertical = Control.SIZE_EXPAND_FILL if flow_phase == "rocket" else 0
 	if preview_mount:
-		preview_mount.visible = flow_phase == "target"
+		preview_mount.visible = flow_phase == "target" and selected_target != ""
+	# "Remove rocket" secondary action — always visible in target phase when a rocket is armed
+	var rocket_section_vbox = panel.get_node_or_null("VBox/Body/RightColumn/RocketSection/SectionVBox")
+	if rocket_section_vbox:
+		var existing_remove = rocket_section_vbox.get_node_or_null("RemoveRocketRow")
+		if flow_phase == "target" and awaiting_rocket_id != "":
+			if existing_remove == null:
+				var remove_row := HBoxContainer.new()
+				remove_row.name = "RemoveRocketRow"
+				remove_row.add_theme_constant_override("separation", 8)
+				var remove_btn := Button.new()
+				remove_btn.name = "RemoveRocketButton"
+				remove_btn.text = "Remove Rocket from Pad"
+				remove_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+				remove_btn.custom_minimum_size = Vector2(0, 42)
+				_style_selector_action_button(remove_btn, false)
+				remove_btn.pressed.connect(Callable(self, "_on_remove_rocket_pressed"))
+				remove_row.add_child(remove_btn)
+				rocket_section_vbox.add_child(remove_row)
+		elif existing_remove != null:
+			existing_remove.queue_free()
 	var show_map_cta := flow_phase == "target" and selected_target == ""
 	if primary_action_row:
 		primary_action_row.visible = show_map_cta
@@ -1985,13 +2093,11 @@ func _sync_right_panel_surface(
 		open_map_button.text = "Open Target Map"
 		PanelStyle.apply_button(open_map_button, show_map_cta)
 		_style_selector_action_button(open_map_button, show_map_cta)
-	if preview_mount == null or flow_phase != "target":
+	if preview_mount == null or flow_phase != "target" or selected_target == "":
 		return
 	var preview_entry := _find_target_entry_by_id(visible_targets, selected_target)
 	if preview_entry.is_empty() and _pending_target_id != "":
 		preview_entry = _find_target_entry_by_id(visible_targets, _pending_target_id)
-	if preview_entry.is_empty() and not visible_targets.is_empty():
-		preview_entry = visible_targets[0] as Dictionary
 	if preview_entry.is_empty():
 		return
 	var preview_card := PanelContainer.new()
@@ -2011,18 +2117,18 @@ func _sync_right_panel_surface(
 	route_title.add_theme_font_size_override("font_size", 16)
 	preview_vbox.add_child(route_title)
 
-	var map_view := LaunchpadStarMap.new()
-	map_view.custom_minimum_size = Vector2(0.0, 164.0)
-	map_view.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	map_view.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	map_view.setup(_build_inline_preview_map_entries(visible_targets, rm), str(preview_entry.get("id", "")), _build_rocket_range_data())
-	preview_vbox.add_child(map_view)
+	var chips := _build_target_preview_chips(preview_entry, rm)
+	var chips_row := HBoxContainer.new()
+	chips_row.add_theme_constant_override("separation", 6)
+	preview_vbox.add_child(chips_row)
+	for chip_text in chips:
+		chips_row.add_child(_make_preview_chip(chip_text))
 
 	var route_footer := Label.new()
 	var rocket_name := "Awaiting ship"
 	if awaiting_rocket_id != "":
 		rocket_name = RocketSpecs.get_display_name(awaiting_rocket_id)
-	route_footer.text = "%s ready on pad" % rocket_name if selected_target != "" else "Select the highlighted Mission %d target." % mission_stage
+	route_footer.text = "%s ready on pad" % rocket_name
 	route_footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	route_footer.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	PanelStyle.apply_muted_on_dark(route_footer)

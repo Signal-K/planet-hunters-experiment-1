@@ -62,7 +62,7 @@ func build_ui(unlocked_rockets: Array) -> void:
 	if unlocked_rockets.is_empty():
 		var empty: Label = EmptyLabelScene.instantiate()
 		empty.text = "No rockets unlocked."
-		PanelStyle.apply_muted_on_dark(empty)
+		PanelStyle.apply_muted(empty)
 		cards.add_child(empty)
 		return
 
@@ -112,7 +112,7 @@ func _build_rocket_card(rocket_id: String, _total_cards: int) -> Control:
 	name_label.set_meta("ui_style_locked", true)
 	var display_name = RocketSpecs.get_display_name(rocket_id)
 	name_label.text = display_name if display_name != "" else rocket_id.capitalize()
-	name_label.add_theme_color_override("font_color", PanelStyle.TEXT_ON_DARK)
+	name_label.add_theme_color_override("font_color", PanelStyle.TEXT_PRIMARY)
 	name_label.add_theme_font_size_override("font_size", 18)
 
 	var chips: GridContainer = card.get_node("Body/Chips")
@@ -130,7 +130,7 @@ func _build_rocket_card(rocket_id: String, _total_cards: int) -> Control:
 	economy.text = "Cost: %s F" % [
 		_fmt_francs(int(spec.get("cost", 0))),
 	]
-	economy.add_theme_color_override("font_color", PanelStyle.MUTED_ON_DARK)
+	economy.add_theme_color_override("font_color", PanelStyle.TEXT_MUTED)
 	economy.add_theme_font_size_override("font_size", 14)
 
 	var btn: Button = card.get_node("Body/CreateButton")
@@ -149,16 +149,31 @@ func _stat_chip(text: String) -> Control:
 	chip.add_theme_stylebox_override("panel", _chip_style())
 	var lbl: Label = chip.get_node("Label")
 	lbl.text = text
-	lbl.add_theme_color_override("font_color", PanelStyle.TEXT_ON_DARK)
+	lbl.add_theme_color_override("font_color", PanelStyle.TEXT_PRIMARY)
 	lbl.add_theme_font_size_override("font_size", 13)
 	return chip
 
 func _card_style() -> StyleBoxFlat:
-	var style = PanelStyle.create_glass_card_style(Color(0.08, 0.13, 0.20, 0.92), 0.56, 20, 18, 16)
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.86, 0.89, 0.93, 0.97)
+	style.border_color = Color(0.38, 0.83, 0.93, 0.40)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(8)
+	style.content_margin_left = 16
+	style.content_margin_right = 16
+	style.content_margin_top = 14
+	style.content_margin_bottom = 14
 	return style
 
 func _chip_style() -> StyleBoxFlat:
-	return PanelStyle.create_glass_pill_style(Color(0.09, 0.15, 0.22, 0.92), 0.34, 12)
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.78, 0.83, 0.89, 0.90)
+	style.set_corner_radius_all(12)
+	style.content_margin_left = 10
+	style.content_margin_right = 10
+	style.content_margin_top = 4
+	style.content_margin_bottom = 4
+	return style
 
 func _apply_create_button_style(btn: Button) -> void:
 	PanelStyle.apply_button(btn, true)

@@ -33,6 +33,9 @@ func _add_franc_balance_ui() -> void:
 	if franc_scene:
 		var franc_instance = franc_scene.instantiate()
 		add_child(franc_instance)
+		# Shift right of the 420 px left selector panel (420 + 12 px gap = 432)
+		franc_instance.offset_left = 432.0
+		franc_instance.offset_right = 632.0
 		AppLogger.d("UIManager: FrancBalance added")
 	else:
 		AppLogger.w("UIManager: failed to load FrancBalance scene")

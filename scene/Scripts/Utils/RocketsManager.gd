@@ -1750,6 +1750,21 @@ static func add_placed(rocket_type: String, position: Vector2) -> String:
 	save_state(s)
 	return uid
 
+static func remove_awaiting_rocket() -> bool:
+	var s = load_state()
+	var placed: Array = s.get("placed", [])
+	var new_placed := []
+	var removed := false
+	for item in placed:
+		if str(item.get("status", "")) == "awaitingLaunch":
+			removed = true
+		else:
+			new_placed.append(item)
+	if not removed:
+		return false
+	s["placed"] = new_placed
+	return save_state(s)
+
 static func reset_state() -> bool:
 	# Reset rockets state to defaults: only starter rocket unlocked, no placed rockets
 	var data = RocketsStateAccess.build_default_state(MISSION_PROGRESS_SCHEMA_VERSION)
