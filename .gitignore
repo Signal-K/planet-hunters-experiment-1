@@ -67,3 +67,7 @@ node_modules/
 # Local tooling/runtime state
 .godot-bin/
 .claude/worktrees/
+
+# UX tour outputs (generated, not source)
+ux-screenshots/
+test-results/
