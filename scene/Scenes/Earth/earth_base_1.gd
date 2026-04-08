@@ -589,18 +589,9 @@ func _build_wordmark() -> void:
 	var ui_layer = get_node_or_null("UILayer")
 	if ui_layer == null:
 		return
-	var existing := ui_layer.get_node_or_null("PlanetHuntersWordmark") as Label
-	if existing:
-		_apply_wordmark_layout(existing)
+	var wordmark := ui_layer.get_node_or_null("PlanetHuntersWordmark") as Label
+	if wordmark == null:
 		return
-	var wordmark = Label.new()
-	wordmark.name = "PlanetHuntersWordmark"
-	wordmark.text = "PLANET HUNTERS"
-	wordmark.add_theme_color_override("font_color", Color(0.90, 0.87, 0.82, 0.45))
-	wordmark.set_anchors_preset(Control.PRESET_TOP_WIDE)
-	wordmark.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	wordmark.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	ui_layer.add_child(wordmark)
 	_apply_wordmark_layout(wordmark)
 	if not get_viewport().size_changed.is_connected(_on_earth_base_viewport_resized):
 		get_viewport().size_changed.connect(_on_earth_base_viewport_resized)
@@ -624,12 +615,11 @@ func _apply_wordmark_layout(wordmark: Label) -> void:
 	wordmark.offset_bottom = widget_rect.end.y - 2.0
 
 func _build_ambient_stars() -> void:
-	var star_layer = CanvasLayer.new()
-	star_layer.name = "AmbientStarLayer"
-	star_layer.layer = -1
-	add_child(star_layer)
-	var star_root = Node2D.new()
-	star_layer.add_child(star_root)
+	var star_root = get_node_or_null("AmbientStarLayer/StarRoot")
+	if star_root == null:
+		return
+	if star_root.get_child_count() > 0:
+		return
 	var vp = get_viewport_rect().size
 	var sky_h = vp.y * 0.50
 	var rng = RandomNumberGenerator.new()
@@ -655,11 +645,11 @@ func _build_progression_cards() -> void:
 		var state: Dictionary = app.get_tutorial_state()
 		var skipped = bool(state.get("skipped", false))
 		var step: Dictionary = state.get("current_step", {})
-		var base_build_required := _control_station_build_required() or _scanner_station_build_required()
-		# Keep the reserved tutorial lane clean: progression cards are post-tutorial
-		# helpers and should never overlap the active linear tutorial flow, unless
-		# the base itself is blocked on an authored structure build.
-		if not skipped and not base_build_required and not step.is_empty() and not ["build_control_station", "build_scanner_station"].has(str(step.get("action_key", ""))):
+		# Keep the tutorial lane clean: progression cards are post-tutorial helpers
+		# and must not appear unless the current tutorial step IS the build action.
+		# "base_build_required" is intentionally NOT checked here — the tutorial
+		# step is the source of truth, not the game-state gate.
+		if not skipped and not step.is_empty() and not ["build_control_station", "build_scanner_station"].has(str(step.get("action_key", ""))):
 			cards_root.visible = false
 			return
 	for child in cards_root.get_children():
@@ -699,7 +689,7 @@ func _build_control_station_card() -> PanelContainer:
 	PanelStyle.apply_body_on_dark(subtitle)
 	var hint: Label = panel.get_node("Body/Hint")
 	hint.visible = true
-	hint.text = "This replaces the old early tutorial tour. Build it once, then the Launchpad reopens."
+	hint.text = "One-time construction. Your Launchpad reopens for new missions once it's in place."
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	PanelStyle.apply_muted_on_dark(hint)
 	var cta: Button = panel.get_node("Body/CTAButton")

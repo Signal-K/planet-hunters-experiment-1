@@ -390,11 +390,15 @@ func _advance_to_preview() -> void:
 
 func _build_travel_caption() -> void:
 	# Minimal label shown during TRAVEL phase — no science/dataset text.
-	var canvas = $CanvasLayer
-	if canvas == null:
-		return
-	_science_panel = PanelContainer.new()
-	_science_panel.name = "TravelCaption"
+	_science_panel = get_node_or_null("TransitUI/HUD/SciencePanel") as PanelContainer
+	if _science_panel == null:
+		_science_panel = PanelContainer.new()
+		_science_panel.name = "SciencePanel"
+		var hud = get_node_or_null("TransitUI/HUD")
+		if hud:
+			hud.add_child(_science_panel)
+		else:
+			$CanvasLayer.add_child(_science_panel)
 	_science_panel.visible = false
 	_science_panel.modulate.a = 0.0
 	_science_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -410,26 +414,27 @@ func _build_travel_caption() -> void:
 	style.content_margin_bottom = 10
 	_science_panel.add_theme_stylebox_override("panel", style)
 
-	_science_caption = Label.new()
-	_science_caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_science_caption.add_theme_color_override("font_color", Color(0.75, 0.85, 1.0))
-	_science_caption.add_theme_font_size_override("font_size", PanelStyle.FONT_MUTED)
-	_science_panel.add_child(_science_caption)
-
-	canvas.add_child(_science_panel)
+	_science_caption = _science_panel.get_node_or_null("ScienceCaption") as Label
+	if _science_caption == null:
+		_science_caption = Label.new()
+		_science_caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_science_caption.add_theme_color_override("font_color", Color(0.75, 0.85, 1.0))
+		_science_caption.add_theme_font_size_override("font_size", PanelStyle.FONT_MUTED)
+		_science_panel.add_child(_science_caption)
 
 func _build_starfield() -> void:
 	# Draw a dark background + procedural star texture behind all CanvasLayer UI.
+	var star_bg_root = get_node_or_null("TransitUI/StarBackground")
 	var canvas = $CanvasLayer
-	if canvas == null:
-		return
+	var bg_parent: Node = star_bg_root if star_bg_root != null else canvas
 	var bg := ColorRect.new()
 	bg.name = "StarfieldBg"
 	bg.color = Color(0.02, 0.02, 0.06, 1.0)
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	canvas.add_child(bg)
-	canvas.move_child(bg, 0)
+	bg_parent.add_child(bg)
+	if bg_parent == canvas:
+		canvas.move_child(bg, 0)
 
 	# Generate a static star texture and display it as a full-screen TextureRect.
 	var vp_size := Vector2(1920, 1080)  # generated at fixed res; stretched to screen
@@ -456,8 +461,9 @@ func _build_starfield() -> void:
 	stars_rect.stretch_mode = TextureRect.STRETCH_SCALE
 	stars_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	stars_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	canvas.add_child(stars_rect)
-	canvas.move_child(stars_rect, 1)
+	bg_parent.add_child(stars_rect)
+	if bg_parent == canvas:
+		canvas.move_child(stars_rect, 1)
 
 func _apply_responsive_layout() -> void:
 	var viewport = get_viewport().get_visible_rect().size
@@ -580,11 +586,15 @@ func _enhance_travel_dashboard() -> void:
 	pass  # Travel dashboard kept minimal: just title + progress bar + pct label.
 
 func _build_shop_button() -> void:
-	var canvas = $CanvasLayer
-	if canvas == null:
-		return
-	_shop_button = Button.new()
-	_shop_button.name = "ShipStatusButton"
+	_shop_button = get_node_or_null("TransitUI/HUD/ShopButton") as Button
+	if _shop_button == null:
+		_shop_button = Button.new()
+		_shop_button.name = "ShopButton"
+		var hud = get_node_or_null("TransitUI/HUD")
+		if hud:
+			hud.add_child(_shop_button)
+		else:
+			$CanvasLayer.add_child(_shop_button)
 	_shop_button.text = "Ship Status"
 	_shop_button.custom_minimum_size = Vector2(130, 44)
 	_shop_button.visible = false
@@ -598,8 +608,8 @@ func _build_shop_button() -> void:
 	_shop_button.offset_right = -24.0
 	_shop_button.offset_top = 24.0
 	_shop_button.offset_bottom = 68.0
-	canvas.add_child(_shop_button)
-	_shop_button.pressed.connect(_on_ship_status_pressed)
+	if not _shop_button.pressed.is_connected(_on_ship_status_pressed):
+		_shop_button.pressed.connect(_on_ship_status_pressed)
 
 func _on_ship_status_pressed() -> void:
 	_ship_status_visible = not _ship_status_visible
@@ -609,11 +619,15 @@ func _on_ship_status_pressed() -> void:
 		_ship_status_panel.visible = _ship_status_visible
 
 func _build_ship_status_panel() -> void:
-	var canvas = $CanvasLayer
-	if canvas == null:
-		return
-	_ship_status_panel = PanelContainer.new()
-	_ship_status_panel.name = "ShipStatusPanel"
+	_ship_status_panel = get_node_or_null("TransitUI/HUD/ShipStatusPanel") as PanelContainer
+	if _ship_status_panel == null:
+		_ship_status_panel = PanelContainer.new()
+		_ship_status_panel.name = "ShipStatusPanel"
+		var hud = get_node_or_null("TransitUI/HUD")
+		if hud:
+			hud.add_child(_ship_status_panel)
+		else:
+			$CanvasLayer.add_child(_ship_status_panel)
 	_ship_status_panel.visible = false
 	_ship_status_panel.anchor_left = 1.0
 	_ship_status_panel.anchor_right = 1.0
@@ -668,7 +682,6 @@ func _build_ship_status_panel() -> void:
 		row.add_theme_color_override("font_color", Color(0.72, 0.78, 0.92))
 		row.add_theme_font_size_override("font_size", PanelStyle.FONT_MUTED)
 		vbox.add_child(row)
-	canvas.add_child(_ship_status_panel)
 
 func _on_return_home_pressed() -> void:
 	# Keep behavior deterministic even if player presses return during transit preview:
