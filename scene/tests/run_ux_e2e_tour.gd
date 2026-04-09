@@ -512,17 +512,19 @@ func _run_tour() -> void:
 	# ==================================================================
 	# Phase 5 — Control Station Panel
 	# ==================================================================
-	_report("## Phase 5 — Control Station Panel")
+	_report("## Phase 5 — Control Station Panel (empty state)")
+	_inject_progress_state(2, false)
 	var csp := await _load_scene(CONTROL_STATION_SCENE)
 	if csp:
 		await get_tree().create_timer(PANEL_SETTLE).timeout
-		_meta("Phase 5 - Control Station Panel", -1,
-			"The Control Station panel — shows active missions and fleet status once the player has built the structure.",
+		_meta("Phase 5 - Control Station Panel (empty queue)", 2,
+			"The Control Station panel with no missions in progress — empty queue state. First thing a user sees before their first launch.",
 			["Is there a visible close button?",
-			 "Is the panel title clear?",
-			 "Does a new user understand what this panel is for?",
+			 "Is the panel title 'CONTROL STATION' readable?",
+			 "Does the empty queue message guide the user toward the Launchpad?",
+			 "Are the ACTIVE and STORY tabs both visible?",
 			 "Does anything overlap or get clipped at panel edges?"])
-		await _screenshot("07_control_station_panel")
+		await _screenshot("07_control_station_empty")
 		_check_visible_labels(csp, "Control Station Panel", 1)
 		_check_offscreen_elements(csp, "Control Station Panel")
 		_check_label_button_overlaps(csp, "Control Station Panel")
@@ -538,6 +540,170 @@ func _run_tour() -> void:
 			_report("  - Control Station Panel has a close button. ✓")
 		else:
 			_issue("Control Station Panel has no close button — users may feel trapped.")
+		var active_tab := _find_button_with_text(csp, "ACTIVE")
+		if active_tab:
+			_report("  - ACTIVE tab visible. ✓")
+		else:
+			_issue("Control Station Panel missing ACTIVE tab — users cannot see flight missions.")
+		var story_tab := _find_button_with_text(csp, "STORY")
+		if story_tab:
+			_report("  - STORY tab visible. ✓")
+		else:
+			_issue("Control Station Panel missing STORY tab.")
+		if _find_label_with_text(csp, "No missions"):
+			_report("  - Empty queue message present. ✓")
+		elif _find_label_with_text(csp, "Launchpad"):
+			_report("  - Empty state directs user to Launchpad. ✓")
+		else:
+			_issue("Control Station Panel empty queue state has no guidance text — user may be confused.")
+
+	# ==================================================================
+	# Phase 5b — Control Station Panel (in-orbit mission)
+	# ==================================================================
+	_report("## Phase 5b — Control Station Panel (in-orbit mission card)")
+	# Inject: stage 2, trip contractor selected (Rocketlab), one rocket in-orbit
+	_inject_progress_state(2, false)
+	RocketsManager.select_trip_contractor("rocketlab")
+	var orbit_state := RocketsManager.load_state()
+	var orbit_rocket_id := "starterrocket1-tour-orbit"
+	orbit_state["placed"] = [{
+		"type": "starterrocket1",
+		"id": orbit_rocket_id,
+		"x": 960.0, "y": 850.0,
+		"status": "in-orbit"
+	}]
+	orbit_state["missions"] = [{
+		"rocket_id": orbit_rocket_id,
+		"target": "mission-1-training-target",
+		"launch_time": int(Time.get_unix_time_from_system()) - 30,
+		"arrival_time": int(Time.get_unix_time_from_system()) + 30,
+		"operation_mode": "contract",
+		"goingTo": "mission-1-training-target",
+		"location": ["mission-1-training-target"]
+	}]
+	orbit_state["detected_targets"] = [{"id": "mission-1-training-target", "label": "433 Eros", "type": "asteroid"}]
+	RocketsManager.save_state(orbit_state)
+	var csp_orbit := await _load_scene(CONTROL_STATION_SCENE)
+	if csp_orbit:
+		await get_tree().create_timer(PANEL_SETTLE).timeout
+		_meta("Phase 5b - Control Station Panel (in-orbit mission card)", 2,
+			"Control Station showing one rocket in orbit. Card should display: rocket name, IN-ORBIT badge, target, contractor name (Rocketlab), mineral chips (Fe/Ni), and a RESUME button.",
+			["Is the rocket name visible on the card?",
+			 "Is the IN-ORBIT status badge visible and correctly coloured (cyan)?",
+			 "Is the target label shown with a forward arrow (→)?",
+			 "Is the contractor name (e.g. Rocketlab) visible?",
+			 "Are mineral chips visible (e.g. Fe, Ni with quantities)?",
+			 "Is the RESUME button visible and styled as a primary CTA?",
+			 "Does the card fit within the panel without scrolling or clipping?"])
+		await _screenshot("07b_control_station_in_orbit")
+		_check_offscreen_elements(csp_orbit, "Control Station In-Orbit")
+		_check_label_button_overlaps(csp_orbit, "Control Station In-Orbit")
+		_check_for_placeholder_text(csp_orbit, "Control Station In-Orbit")
+		if _find_label_with_text(csp_orbit, "IN-ORBIT"):
+			_report("  - IN-ORBIT status badge visible. ✓")
+		else:
+			_issue("Control Station in-orbit card missing IN-ORBIT status badge — status not scannable at a glance.")
+		if _find_button_with_text(csp_orbit, "RESUME"):
+			_report("  - RESUME button present on in-orbit card. ✓")
+		else:
+			_issue("Control Station in-orbit card missing RESUME button — user cannot navigate to mission.")
+		if _find_label_with_text(csp_orbit, "433 Eros") or _find_label_with_text(csp_orbit, "→"):
+			_report("  - Target label visible on in-orbit card. ✓")
+		else:
+			_issue("Control Station in-orbit card missing target label.")
+		if _find_label_with_text(csp_orbit, "Rocketlab"):
+			_report("  - Contractor name (Rocketlab) visible on card. ✓")
+		else:
+			_issue("Control Station in-orbit card missing contractor name — user cannot see who ordered this mission.")
+		# Check for at least one mineral chip (Fe or Ni)
+		if _find_label_with_text(csp_orbit, "Fe") or _find_label_with_text(csp_orbit, "Ni"):
+			_report("  - Mineral order chips visible on in-orbit card. ✓")
+		else:
+			_issue("Control Station in-orbit card missing mineral chips — user cannot see the delivery order.")
+
+	# ==================================================================
+	# Phase 5c — Control Station Panel (returning mission)
+	# ==================================================================
+	_report("## Phase 5c — Control Station Panel (returning mission card)")
+	# Inject: same setup but rocket status = returning
+	_inject_progress_state(2, false)
+	RocketsManager.select_trip_contractor("rocketlab")
+	var ret_state := RocketsManager.load_state()
+	var ret_rocket_id := "starterrocket1-tour-return"
+	ret_state["placed"] = [{
+		"type": "starterrocket1",
+		"id": ret_rocket_id,
+		"x": 960.0, "y": 850.0,
+		"status": "returning"
+	}]
+	ret_state["missions"] = [{
+		"rocket_id": ret_rocket_id,
+		"target": "mission-1-training-target",
+		"launch_time": int(Time.get_unix_time_from_system()) - 90,
+		"arrival_time": int(Time.get_unix_time_from_system()) - 30,
+		"operation_mode": "contract",
+		"goingTo": "home",
+		"location": ["mission-1-training-target"]
+	}]
+	ret_state["detected_targets"] = [{"id": "mission-1-training-target", "label": "433 Eros", "type": "asteroid"}]
+	RocketsManager.save_state(ret_state)
+	var csp_ret := await _load_scene(CONTROL_STATION_SCENE)
+	if csp_ret:
+		await get_tree().create_timer(PANEL_SETTLE).timeout
+		_meta("Phase 5c - Control Station Panel (returning mission card)", 2,
+			"Control Station showing one rocket returning to Earth. Card should show: rocket name, RETURNING badge (amber), target with back-arrow (⟵), contractor name, dimmed mineral chips, and a RECALL button.",
+			["Is the RETURNING badge visible and amber/warm-coloured (not cyan)?",
+			 "Is the target shown with a back arrow (⟵)?",
+			 "Is the contractor name still visible?",
+			 "Are mineral chips present but visually dimmed?",
+			 "Is the RECALL button visible (distinct from RESUME)?",
+			 "Does the card visually differ from the in-orbit state so users can tell it apart?"])
+		await _screenshot("07c_control_station_returning")
+		_check_offscreen_elements(csp_ret, "Control Station Returning")
+		_check_label_button_overlaps(csp_ret, "Control Station Returning")
+		if _find_label_with_text(csp_ret, "RETURNING"):
+			_report("  - RETURNING status badge visible. ✓")
+		else:
+			_issue("Control Station returning card missing RETURNING status badge — user cannot tell rocket is inbound.")
+		if _find_button_with_text(csp_ret, "RECALL"):
+			_report("  - RECALL button present on returning card. ✓")
+		else:
+			_issue("Control Station returning card missing RECALL button — card looks identical to in-orbit.")
+		if _find_label_with_text(csp_ret, "Rocketlab"):
+			_report("  - Contractor name still visible on returning card. ✓")
+		else:
+			_issue("Control Station returning card missing contractor name.")
+
+	# ==================================================================
+	# Phase 5d — Control Station Panel (Story tab)
+	# ==================================================================
+	_report("## Phase 5d — Control Station Panel (Story tab)")
+	_inject_progress_state(2, false)
+	var csp_story := await _load_scene(CONTROL_STATION_SCENE)
+	if csp_story:
+		await get_tree().create_timer(PANEL_SETTLE).timeout
+		var story_tab_btn := _find_button_with_text(csp_story, "STORY")
+		if story_tab_btn:
+			_click(story_tab_btn)
+			await get_tree().create_timer(ANIM_SETTLE).timeout
+			_meta("Phase 5d - Control Station Panel (Story tab)", 2,
+				"Control Station with the STORY tab active — shows the mission roadmap cards (First Contact → Free Operations).",
+				["Are story mission cards visible (at least 3)?",
+				 "Is there a 'First Contact' mission card?",
+				 "Are mission descriptions readable?",
+				 "Does the tab switch feel responsive?"])
+			await _screenshot("07d_control_station_story_tab")
+			_check_offscreen_elements(csp_story, "Control Station Story Tab")
+			if _find_label_with_text(csp_story, "First Contact"):
+				_report("  - 'First Contact' story card visible. ✓")
+			else:
+				_issue("Control Station Story tab missing 'First Contact' — roadmap is empty or broken.")
+			if _find_label_with_text(csp_story, "Free Operations"):
+				_report("  - 'Free Operations' story card visible. ✓")
+			else:
+				_issue("Control Station Story tab missing 'Free Operations' final milestone.")
+		else:
+			_issue("Control Station Panel missing STORY tab button — cannot switch to story view.")
 
 	# ==================================================================
 	# Phase 5b — Space Map
