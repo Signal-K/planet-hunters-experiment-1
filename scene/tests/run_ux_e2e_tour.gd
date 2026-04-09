@@ -600,7 +600,7 @@ func _run_tour() -> void:
 		_check_label_button_overlaps(csp_orbit, "Control Station In-Orbit")
 		_check_for_placeholder_text(csp_orbit, "Control Station In-Orbit")
 		if _find_label_with_text(csp_orbit, "IN-ORBIT"):
-			_report("  - IN-ORBIT status badge visible. ✓")
+			_report("  - IN-ORBIT status badge visible (with dot prefix). ✓")
 		else:
 			_issue("Control Station in-orbit card missing IN-ORBIT status badge — status not scannable at a glance.")
 		if _find_button_with_text(csp_orbit, "RESUME"):
@@ -665,10 +665,11 @@ func _run_tour() -> void:
 			_report("  - RETURNING status badge visible. ✓")
 		else:
 			_issue("Control Station returning card missing RETURNING status badge — user cannot tell rocket is inbound.")
-		if _find_button_with_text(csp_ret, "RECALL"):
-			_report("  - RECALL button present on returning card. ✓")
+		# Button is disabled and shows INBOUND (with optional ETA) instead of RECALL
+		if _find_button_with_text(csp_ret, "INBOUND"):
+			_report("  - INBOUND button present and disabled on returning card. ✓")
 		else:
-			_issue("Control Station returning card missing RECALL button — card looks identical to in-orbit.")
+			_issue("Control Station returning card missing INBOUND button — returning state not communicated.")
 		if _find_label_with_text(csp_ret, "Rocketlab"):
 			_report("  - Contractor name still visible on returning card. ✓")
 		else:
