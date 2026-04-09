@@ -16,6 +16,19 @@ const STORY_MISSIONS := [
 	{"id": 5, "title": "Free Operations", "desc": "Tutorial complete — run missions on your own terms."}
 ]
 
+const MINERAL_ABBREV := {
+	"Iron": "Fe",
+	"Nickel": "Ni",
+	"Cobalt": "Co",
+	"Platinum": "Pt",
+	"Silicates": "SiO",
+	"Rare Earth Elements": "REE",
+	"Water Ice": "H₂O",
+	"Titanium": "Ti",
+	"Chromium": "Cr",
+	"Manganese": "Mn",
+}
+
 @onready var bg: ColorRect = $Background
 @onready var panel: Panel = $Panel
 @onready var title: Label = $Panel/Margin/VBox/Title
@@ -39,18 +52,18 @@ func _ready():
 	title.add_theme_font_size_override("font_size", 28)
 	subtitle.add_theme_font_size_override("font_size", 14)
 	close_btn.pressed.connect(_close)
-	
+
 	# Setup tabs
 	_apply_tab_styles()
 	active_tab.pressed.connect(_show_active_tab)
 	story_tab.pressed.connect(_show_story_tab)
 	active_tab.add_theme_font_size_override("font_size", 14)
 	story_tab.add_theme_font_size_override("font_size", 14)
-	
+
 	bg.color = Color(0.03, 0.06, 0.10, 0.44)
 	bg.gui_input.connect(_on_bg_input)
 	missions_list.add_theme_constant_override("separation", 14)
-	
+
 	_show_active_tab()
 
 func _apply_tab_styles() -> void:
@@ -77,21 +90,117 @@ func _create_story_card(mission: Dictionary) -> PanelContainer:
 	desc_lbl.add_theme_font_size_override("font_size", 14)
 	return card
 
-func _create_mission_card(rocket_id: String, target_label: String, target_id: String, target_type: String) -> PanelContainer:
+## Returns the contractor dict (with requested_minerals) for a given mission record.
+## Checks trip offer first (free ops), then falls back to starter offer (tutorial).
+func _get_contractor_for_mission(mission: Dictionary) -> Dictionary:
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var op_mode = str(mission.get("operation_mode", ""))
+
+	# Try the trip contract offer (has randomised requested_minerals per contractor)
+	var trip_offer = rm.get_trip_contract_offer()
+	if not trip_offer.is_empty():
+		var selected_id = str(trip_offer.get("selected_contractor", ""))
+		if selected_id != "":
+			for c in trip_offer.get("contractors", []):
+				if str(c.get("id", "")) == selected_id:
+					return c.duplicate(true)
+
+	# Fall back to starter contractor
+	if op_mode == "tutorial" or op_mode == "":
+		var starter = rm.get_starter_selected_contractor()
+		if not starter.is_empty():
+			return starter.duplicate(true)
+
+	return {}
+
+## Adds mineral chips (e.g. "Fe ×12") to the given HBoxContainer.
+func _populate_mineral_chips(row: HBoxContainer, minerals: Dictionary, is_returning: bool) -> void:
+	if minerals.is_empty():
+		return
+	for mineral_name in minerals:
+		var qty = minerals[mineral_name]
+		var abbrev = MINERAL_ABBREV.get(mineral_name, mineral_name.substr(0, 3))
+		var chip_label = Label.new()
+		chip_label.text = "%s ×%d" % [abbrev, qty]
+		var text_alpha = 0.5 if is_returning else 1.0
+		chip_label.add_theme_color_override("font_color", Color(PanelStyle.ACCENT.r, PanelStyle.ACCENT.g, PanelStyle.ACCENT.b, text_alpha))
+		chip_label.add_theme_font_size_override("font_size", 11)
+
+		var chip = PanelContainer.new()
+		var chip_style = StyleBoxFlat.new()
+		chip_style.bg_color = Color(PanelStyle.ACCENT.r, PanelStyle.ACCENT.g, PanelStyle.ACCENT.b, 0.06 if is_returning else 0.12)
+		chip_style.border_color = Color(PanelStyle.ACCENT.r, PanelStyle.ACCENT.g, PanelStyle.ACCENT.b, 0.18 if is_returning else 0.36)
+		chip_style.set_border_width_all(1)
+		chip_style.set_corner_radius_all(6)
+		chip_style.content_margin_left = 8
+		chip_style.content_margin_right = 8
+		chip_style.content_margin_top = 4
+		chip_style.content_margin_bottom = 4
+		chip.add_theme_stylebox_override("panel", chip_style)
+		chip.add_child(chip_label)
+		row.add_child(chip)
+
+func _create_mission_card(rocket_id: String, target_label: String, target_id: String, target_type: String, rocket_status: String, contractor: Dictionary) -> PanelContainer:
 	var card: PanelContainer = ActiveMissionCardScene.instantiate()
-	card.add_theme_stylebox_override("panel", PanelStyle.create_glass_card_style(Color(0.07, 0.12, 0.18, 0.96), 0.42))
-	var rocket_lbl: Label = card.get_node("Margin/HBox/ContentVBox/RocketLabel")
+	var is_returning = rocket_status == "returning"
+
+	# Card border: amber tint for returning, cyan for in-orbit
+	var bg_color = Color(0.10, 0.11, 0.14, 0.96) if is_returning else Color(0.07, 0.12, 0.18, 0.96)
+	var border_alpha = 0.60 if is_returning else 0.42
+	card.add_theme_stylebox_override("panel", PanelStyle.create_glass_card_style(bg_color, border_alpha))
+
+	# Rocket label
+	var rocket_lbl: Label = card.get_node("Margin/VBox/HeaderRow/RocketLabel")
 	rocket_lbl.text = RocketSpecs.get_display_name(rocket_id)
 	PanelStyle.apply_body_on_dark(rocket_lbl)
 	rocket_lbl.add_theme_font_size_override("font_size", 18)
-	var target_lbl: Label = card.get_node("Margin/HBox/ContentVBox/TargetLabel")
-	target_lbl.text = "→ " + target_label
-	target_lbl.add_theme_color_override("font_color", PanelStyle.ACCENT)
+
+	# Status badge
+	var status_badge: Label = card.get_node("Margin/VBox/HeaderRow/StatusBadge")
+	if is_returning:
+		status_badge.text = "RETURNING"
+		status_badge.add_theme_color_override("font_color", PanelStyle.ACCENT_WARM)
+	else:
+		status_badge.text = "IN-ORBIT"
+		status_badge.add_theme_color_override("font_color", PanelStyle.ACCENT)
+	status_badge.add_theme_font_size_override("font_size", 11)
+
+	# Target label — arrow direction reflects mission direction
+	var target_lbl: Label = card.get_node("Margin/VBox/TargetLabel")
+	target_lbl.text = ("⟵ " if is_returning else "→ ") + target_label
+	if is_returning:
+		target_lbl.add_theme_color_override("font_color", PanelStyle.MUTED_ON_DARK)
+	else:
+		target_lbl.add_theme_color_override("font_color", PanelStyle.ACCENT)
 	target_lbl.add_theme_font_size_override("font_size", 14)
-	var btn: Button = card.get_node("Margin/HBox/ResumeButton")
-	PanelStyle.apply_button(btn, true)
+
+	# Contractor label
+	var contractor_lbl: Label = card.get_node("Margin/VBox/ContractorLabel")
+	var contractor_name = str(contractor.get("name", ""))
+	contractor_lbl.text = contractor_name if contractor_name != "" else "Open Market"
+	PanelStyle.apply_muted_on_dark(contractor_lbl)
+	contractor_lbl.add_theme_font_size_override("font_size", 12)
+
+	# Mineral order chips
+	var minerals_row: HBoxContainer = card.get_node("Margin/VBox/MineralsRow")
+	var minerals: Dictionary = contractor.get("requested_minerals", {})
+	_populate_mineral_chips(minerals_row, minerals, is_returning)
+
+	# Action button
+	var btn: Button = card.get_node("Margin/VBox/ActionButton")
 	btn.add_theme_font_size_override("font_size", 14)
-	btn.pressed.connect(_resume_mission.bind(rocket_id, target_id, target_type))
+	if is_returning:
+		btn.text = "RECALL"
+		PanelStyle.apply_outline_button(
+			btn,
+			Color(PanelStyle.ACCENT_WARM.r, PanelStyle.ACCENT_WARM.g, PanelStyle.ACCENT_WARM.b, 0.80)
+		)
+		btn.pressed.connect(_recall_mission.bind(rocket_id))
+	else:
+		btn.text = "RESUME"
+		PanelStyle.apply_button(btn, true)
+		btn.pressed.connect(_resume_mission.bind(rocket_id, target_id, target_type))
+
 	return card
 
 func _resume_mission(rocket_id: String, target_id: String, target_type: String):
@@ -100,6 +209,9 @@ func _resume_mission(rocket_id: String, target_id: String, target_type: String):
 	rm.set_preview_target(target_id, target_id, target_type, rocket_id)
 	print("[ControlStation] Preview target set, changing scene...")
 	get_tree().change_scene_to_file(PREVIEW_SCENE)
+
+func _recall_mission(rocket_id: String) -> void:
+	print("[ControlStation] _recall_mission: rocket=%s is already returning — no action." % rocket_id)
 
 func _close():
 	panel_closed.emit()
@@ -122,16 +234,16 @@ func _show_story_tab():
 func _populate_active_missions():
 	for child in missions_list.get_children():
 		child.queue_free()
-	
+
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	var missions = rm.get_missions()
 	var targets = rm.get_detected_targets()
 	var target_map := {}
 	for t in targets:
 		target_map[str(t.get("id", ""))] = str(t.get("label", ""))
-	
+
 	print("[ControlStation] Active missions count: ", missions.size())
-	
+
 	if missions.is_empty():
 		var empty_card := PanelContainer.new()
 		empty_card.add_theme_stylebox_override("panel", PanelStyle.create_glass_card_style(Color(0.07, 0.11, 0.16, 0.97), 0.36))
@@ -165,21 +277,23 @@ func _populate_active_missions():
 		vbox.add_child(hint)
 		missions_list.add_child(empty_card)
 		return
-	
+
 	for m in missions:
 		var rocket_id = str(m.get("rocket_id", ""))
 		var target_id = str(m.get("target", ""))
 		var target_label = target_map.get(target_id, target_id)
-		
-		print("[ControlStation] Mission: rocket=%s, target=%s, label=%s" % [rocket_id, target_id, target_label])
-		
-		var card = _create_mission_card(rocket_id, target_label, target_id, str(m.get("target_type", "asteroid")))
+		var rocket_status = rm.get_rocket_status(rocket_id)
+		var contractor = _get_contractor_for_mission(m)
+
+		print("[ControlStation] Mission: rocket=%s, target=%s, label=%s, status=%s" % [rocket_id, target_id, target_label, rocket_status])
+
+		var card = _create_mission_card(rocket_id, target_label, target_id, str(m.get("target_type", "asteroid")), rocket_status, contractor)
 		missions_list.add_child(card)
 
 func _populate_story_missions():
 	for child in missions_list.get_children():
 		child.queue_free()
-	
+
 	for mission in STORY_MISSIONS:
 		var card = _create_story_card(mission)
 		missions_list.add_child(card)
