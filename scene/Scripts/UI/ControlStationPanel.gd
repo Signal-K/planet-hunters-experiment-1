@@ -113,23 +113,60 @@ func _get_contractor_for_mission(mission: Dictionary) -> Dictionary:
 
 	return {}
 
+## Formats a seconds-until-arrival value into a compact ETA string.
+func _format_eta(seconds: int) -> String:
+	if seconds <= 0:
+		return "arriving soon"
+	if seconds < 60:
+		return "~%ds" % seconds
+	var mins := seconds / 60
+	if mins < 60:
+		return "~%dm" % mins
+	return "~%dh" % (mins / 60)
+
 ## Adds mineral chips (e.g. "Fe ×12") to the given HBoxContainer.
+## Caps at MAX_CHIPS; shows overflow count if more exist.
+## Falls back to an "open market" indicator when no minerals are ordered.
+const MAX_MINERAL_CHIPS := 4
+
 func _populate_mineral_chips(row: HBoxContainer, minerals: Dictionary, is_returning: bool) -> void:
 	if minerals.is_empty():
+		# Open-market sale — no specific order placed
+		var lbl = Label.new()
+		lbl.text = "open market"
+		lbl.add_theme_color_override("font_color",
+			Color(PanelStyle.MUTED_ON_DARK.r, PanelStyle.MUTED_ON_DARK.g, PanelStyle.MUTED_ON_DARK.b,
+				  0.50 if is_returning else 0.72))
+		lbl.add_theme_font_size_override("font_size", 13)
+		row.add_child(lbl)
 		return
+
+	var shown := 0
 	for mineral_name in minerals:
+		if shown >= MAX_MINERAL_CHIPS:
+			var overflow_lbl = Label.new()
+			overflow_lbl.text = "+%d" % (minerals.size() - MAX_MINERAL_CHIPS)
+			overflow_lbl.add_theme_color_override("font_color",
+				Color(PanelStyle.MUTED_ON_DARK.r, PanelStyle.MUTED_ON_DARK.g, PanelStyle.MUTED_ON_DARK.b, 0.6))
+			overflow_lbl.add_theme_font_size_override("font_size", 13)
+			row.add_child(overflow_lbl)
+			break
+
 		var qty = minerals[mineral_name]
 		var abbrev = MINERAL_ABBREV.get(mineral_name, mineral_name.substr(0, 3))
 		var chip_label = Label.new()
 		chip_label.text = "%s ×%d" % [abbrev, qty]
-		var text_alpha = 0.5 if is_returning else 1.0
-		chip_label.add_theme_color_override("font_color", Color(PanelStyle.ACCENT.r, PanelStyle.ACCENT.g, PanelStyle.ACCENT.b, text_alpha))
-		chip_label.add_theme_font_size_override("font_size", 11)
+		var text_alpha = 0.45 if is_returning else 1.0
+		chip_label.add_theme_color_override("font_color",
+			Color(PanelStyle.ACCENT.r, PanelStyle.ACCENT.g, PanelStyle.ACCENT.b, text_alpha))
+		chip_label.add_theme_font_size_override("font_size", 13)
 
 		var chip = PanelContainer.new()
 		var chip_style = StyleBoxFlat.new()
-		chip_style.bg_color = Color(PanelStyle.ACCENT.r, PanelStyle.ACCENT.g, PanelStyle.ACCENT.b, 0.06 if is_returning else 0.12)
-		chip_style.border_color = Color(PanelStyle.ACCENT.r, PanelStyle.ACCENT.g, PanelStyle.ACCENT.b, 0.18 if is_returning else 0.36)
+		chip_style.bg_color = Color(PanelStyle.ACCENT.r, PanelStyle.ACCENT.g, PanelStyle.ACCENT.b,
+									0.05 if is_returning else 0.12)
+		chip_style.border_color = Color(PanelStyle.ACCENT.r, PanelStyle.ACCENT.g, PanelStyle.ACCENT.b,
+										0.14 if is_returning else 0.36)
 		chip_style.set_border_width_all(1)
 		chip_style.set_corner_radius_all(6)
 		chip_style.content_margin_left = 8
@@ -139,8 +176,9 @@ func _populate_mineral_chips(row: HBoxContainer, minerals: Dictionary, is_return
 		chip.add_theme_stylebox_override("panel", chip_style)
 		chip.add_child(chip_label)
 		row.add_child(chip)
+		shown += 1
 
-func _create_mission_card(rocket_id: String, target_label: String, target_id: String, target_type: String, rocket_status: String, contractor: Dictionary) -> PanelContainer:
+func _create_mission_card(rocket_id: String, target_label: String, target_id: String, target_type: String, rocket_status: String, contractor: Dictionary, eta_seconds: int = 0) -> PanelContainer:
 	var card: PanelContainer = ActiveMissionCardScene.instantiate()
 	var is_returning = rocket_status == "returning"
 
@@ -155,13 +193,13 @@ func _create_mission_card(rocket_id: String, target_label: String, target_id: St
 	PanelStyle.apply_body_on_dark(rocket_lbl)
 	rocket_lbl.add_theme_font_size_override("font_size", 18)
 
-	# Status badge
+	# Status badge — dot prefix adds visual weight without a wrapper element
 	var status_badge: Label = card.get_node("Margin/VBox/HeaderRow/StatusBadge")
 	if is_returning:
-		status_badge.text = "RETURNING"
+		status_badge.text = "● RETURNING"
 		status_badge.add_theme_color_override("font_color", PanelStyle.ACCENT_WARM)
 	else:
-		status_badge.text = "IN-ORBIT"
+		status_badge.text = "● IN-ORBIT"
 		status_badge.add_theme_color_override("font_color", PanelStyle.ACCENT)
 	status_badge.add_theme_font_size_override("font_size", 11)
 
@@ -174,10 +212,15 @@ func _create_mission_card(rocket_id: String, target_label: String, target_id: St
 		target_lbl.add_theme_color_override("font_color", PanelStyle.ACCENT)
 	target_lbl.add_theme_font_size_override("font_size", 14)
 
-	# Contractor label
+	# Contractor label — append ETA for returning rockets so the row carries context
 	var contractor_lbl: Label = card.get_node("Margin/VBox/ContractorLabel")
 	var contractor_name = str(contractor.get("name", ""))
-	contractor_lbl.text = contractor_name if contractor_name != "" else "Open Market"
+	if contractor_name == "":
+		contractor_name = "Open Market"
+	if is_returning and eta_seconds != 0:
+		contractor_lbl.text = contractor_name + " · " + _format_eta(eta_seconds)
+	else:
+		contractor_lbl.text = contractor_name
 	PanelStyle.apply_muted_on_dark(contractor_lbl)
 	contractor_lbl.add_theme_font_size_override("font_size", 12)
 
@@ -190,12 +233,22 @@ func _create_mission_card(rocket_id: String, target_label: String, target_id: St
 	var btn: Button = card.get_node("Margin/VBox/ActionButton")
 	btn.add_theme_font_size_override("font_size", 14)
 	if is_returning:
-		btn.text = "RECALL"
-		PanelStyle.apply_outline_button(
-			btn,
-			Color(PanelStyle.ACCENT_WARM.r, PanelStyle.ACCENT_WARM.g, PanelStyle.ACCENT_WARM.b, 0.80)
-		)
-		btn.pressed.connect(_recall_mission.bind(rocket_id))
+		# Disabled — rocket is already inbound, no action is possible
+		var eta_str = _format_eta(eta_seconds) if eta_seconds != 0 else ""
+		btn.text = "INBOUND" + (" · " + eta_str if eta_str != "" else " ↓")
+		btn.disabled = true
+		var disabled_style = StyleBoxFlat.new()
+		disabled_style.bg_color = Color(0.12, 0.13, 0.16, 0.72)
+		disabled_style.border_color = Color(PanelStyle.ACCENT_WARM.r, PanelStyle.ACCENT_WARM.g, PanelStyle.ACCENT_WARM.b, 0.22)
+		disabled_style.set_border_width_all(1)
+		disabled_style.set_corner_radius_all(14)
+		disabled_style.content_margin_left = 18
+		disabled_style.content_margin_right = 18
+		disabled_style.content_margin_top = 12
+		disabled_style.content_margin_bottom = 12
+		btn.add_theme_stylebox_override("disabled", disabled_style)
+		btn.add_theme_color_override("font_disabled_color",
+			Color(PanelStyle.ACCENT_WARM.r, PanelStyle.ACCENT_WARM.g, PanelStyle.ACCENT_WARM.b, 0.45))
 	else:
 		btn.text = "RESUME"
 		PanelStyle.apply_button(btn, true)
@@ -209,9 +262,6 @@ func _resume_mission(rocket_id: String, target_id: String, target_type: String):
 	rm.set_preview_target(target_id, target_id, target_type, rocket_id)
 	print("[ControlStation] Preview target set, changing scene...")
 	get_tree().change_scene_to_file(PREVIEW_SCENE)
-
-func _recall_mission(rocket_id: String) -> void:
-	print("[ControlStation] _recall_mission: rocket=%s is already returning — no action." % rocket_id)
 
 func _close():
 	panel_closed.emit()
@@ -278,16 +328,19 @@ func _populate_active_missions():
 		missions_list.add_child(empty_card)
 		return
 
+	var now := int(Time.get_unix_time_from_system())
 	for m in missions:
 		var rocket_id = str(m.get("rocket_id", ""))
 		var target_id = str(m.get("target", ""))
 		var target_label = target_map.get(target_id, target_id)
 		var rocket_status = rm.get_rocket_status(rocket_id)
 		var contractor = _get_contractor_for_mission(m)
+		var arrival_time = int(m.get("arrival_time", 0))
+		var eta_seconds = arrival_time - now if arrival_time > 0 else 0
 
-		print("[ControlStation] Mission: rocket=%s, target=%s, label=%s, status=%s" % [rocket_id, target_id, target_label, rocket_status])
+		print("[ControlStation] Mission: rocket=%s, target=%s, label=%s, status=%s, eta=%ds" % [rocket_id, target_id, target_label, rocket_status, eta_seconds])
 
-		var card = _create_mission_card(rocket_id, target_label, target_id, str(m.get("target_type", "asteroid")), rocket_status, contractor)
+		var card = _create_mission_card(rocket_id, target_label, target_id, str(m.get("target_type", "asteroid")), rocket_status, contractor, eta_seconds)
 		missions_list.add_child(card)
 
 func _populate_story_missions():
