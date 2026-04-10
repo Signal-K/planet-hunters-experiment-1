@@ -508,37 +508,10 @@ func _maybe_offer_loan() -> void:
 		return
 	_show_loan_offer_dialog(app)
 
-func _show_loan_offer_dialog(app: Node) -> void:
+func _show_loan_offer_dialog(_app: Node) -> void:
+	# EmergencyLoanOfferDialog.gd extends BaseDialogLayer and self-styles on _ready().
 	var ui_layer: CanvasLayer = EmergencyLoanOfferDialogScene.instantiate()
 	add_child(ui_layer)
-	var panel: PanelContainer = ui_layer.get_node("Center/Panel")
-	_apply_glass_callout_panel(panel)
-	var vbox: VBoxContainer = ui_layer.get_node("Center/Panel/Margin/Body")
-	var title: Label = ui_layer.get_node("Center/Panel/Margin/Body/Title")
-	PanelStyle.apply_title_on_dark(title)
-
-	var body: Label = ui_layer.get_node("Center/Panel/Margin/Body/Description")
-	PanelStyle.apply_body_on_dark(body)
-	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	body.text = "Your balance is too low to launch another mission. The Space Bank offers a 1.5B F emergency loan at 3% interest, auto-repaid from your next payout."
-
-	var loan_amount_label: Label = ui_layer.get_node("Center/Panel/Margin/Body/LoanAmount")
-	PanelStyle.apply_muted_on_dark(loan_amount_label)
-	loan_amount_label.text = "Loan: 1.50B F  •  Repay: 1.545B F from next mission"
-
-	var accept_btn: Button = ui_layer.get_node("Center/Panel/Margin/Body/ButtonRow/AcceptButton")
-	PanelStyle.apply_button(accept_btn, true)
-
-	var decline_btn: Button = ui_layer.get_node("Center/Panel/Margin/Body/ButtonRow/DeclineButton")
-	PanelStyle.apply_outline_button(decline_btn)
-
-	accept_btn.pressed.connect(func():
-		app.take_loan()
-		ui_layer.queue_free()
-	)
-	decline_btn.pressed.connect(func():
-		ui_layer.queue_free()
-	)
 
 func _control_station_build_required() -> bool:
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
