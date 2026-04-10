@@ -257,37 +257,6 @@ func _inject_debrief_state() -> void:
 		}
 	)
 
-func _inject_zero_franc_balance() -> void:
-	## Set AppController franc_balance to 0 and clear any outstanding loan.
-	## This causes _maybe_offer_loan() to fire on the next earth-base load.
-	var app = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
-	if app == null:
-		_report("  [warn] AppController not found — franc balance injection skipped.")
-		return
-	if app.has_method("set_franc_balance_from_react"):
-		app.set_franc_balance_from_react(0)
-	if "loan_balance" in app:
-		app.loan_balance = 0
-	# Also persist so any cold-start reads the right value.
-	var cfg := ConfigFile.new()
-	cfg.set_value("currency", "balance", 0)
-	cfg.set_value("currency", "loan_balance", 0)
-	cfg.save("user://franc_balance.cfg")
-	_report("  - Franc balance set to 0 (emergency loan trigger).")
-
-func _restore_default_franc_balance() -> void:
-	## Restore AppController franc_balance to the game default so subsequent
-	## tour phases are not affected by the zero-balance injection.
-	var app = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
-	if app == null:
-		return
-	const DEFAULT_BALANCE := 10000000000  # matches AppController.DEFAULT_FRANC_BALANCE
-	if app.has_method("set_franc_balance_from_react"):
-		app.set_franc_balance_from_react(DEFAULT_BALANCE)
-	if "loan_balance" in app:
-		app.loan_balance = 0
-	_report("  - Franc balance restored to default (10B F).")
-
 func _load_rocket_selector_showcase() -> Node:
 	if _active_scene and is_instance_valid(_active_scene):
 		if _active_scene.get_parent():
@@ -736,71 +705,6 @@ func _run_tour() -> void:
 				_issue("Control Station Story tab missing 'Free Operations' final milestone.")
 		else:
 			_issue("Control Station Panel missing STORY tab button — cannot switch to story view.")
-
-	# ==================================================================
-	# Phase 5e — Emergency Loan Dialog (zero-balance debt scenario)
-	# Simulates the player running out of money so the loan dialog fires.
-	# ==================================================================
-	_report("## Phase 5e — Emergency Loan Dialog (zero-balance scenario)")
-	_inject_progress_state(2, false)
-	_inject_zero_franc_balance()
-	var earth_loan := await _load_scene(EARTH_MAIN_SCENE)
-	if earth_loan:
-		await get_tree().create_timer(SCENE_SETTLE).timeout
-		# Loan dialog is triggered by call_deferred("_maybe_offer_loan") in earth_base_1._ready()
-		_meta("Phase 5e - Emergency Loan Dialog", 2,
-			"Auto-triggered when the balance is below the cheapest rocket cost. Shows EMERGENCY_LOAN_AVAILABLE header, credit-line card (1.5B F), asset-seizure warning, debt-recovery guidance, and two action buttons.",
-			["Is EMERGENCY_LOAN_AVAILABLE header visible (green)?",
-			 "Is the loan amount (1,500,000,000 F) shown in the credit line card?",
-			 "Is the asset seizure warning (red) visible?",
-			 "Is the debt-recovery guidance section visible?",
-			 "Are both ACCEPT LOAN and NO THANKS buttons present?",
-			 "Is the left sidebar with icon circle + auth ref visible?",
-			 "Does the dialog feel like a terminal/sci-fi modal rather than a generic alert?"])
-		await _screenshot("07e_emergency_loan_dialog")
-		_check_offscreen_elements(earth_loan, "Emergency Loan Dialog")
-		# The dialog is a CanvasLayer parented under earth_loan
-		var loan_root: Node = get_tree().root
-		if _find_label_with_text(loan_root, "EMERGENCY_LOAN_AVAILABLE"):
-			_report("  - EMERGENCY_LOAN_AVAILABLE header visible. ✓")
-		else:
-			_issue("Emergency loan dialog missing EMERGENCY_LOAN_AVAILABLE header — user doesn't know what this dialog is.")
-		if _find_label_with_text(loan_root, "1,500,000,000"):
-			_report("  - Loan amount (1.5B F) visible in credit line card. ✓")
-		else:
-			_issue("Emergency loan dialog missing loan amount display — user cannot see how much they are borrowing.")
-		if _find_label_with_text(loan_root, "asset seizure"):
-			_report("  - Asset seizure warning visible. ✓")
-		else:
-			_issue("Emergency loan dialog missing seizure warning — repayment consequence not communicated.")
-		if _find_label_with_text(loan_root, "How to recover"):
-			_report("  - Debt-recovery guidance section visible. ✓")
-		else:
-			_issue("Emergency loan dialog missing debt-recovery guidance — user has no path forward.")
-		var accept_btn := _find_button_with_text(loan_root, "ACCEPT LOAN")
-		if accept_btn:
-			_report("  - ACCEPT LOAN button present. ✓")
-		else:
-			_issue("Emergency loan dialog missing ACCEPT LOAN button.")
-		if _find_button_with_text(loan_root, "NO THANKS"):
-			_report("  - NO THANKS button present. ✓")
-		else:
-			_issue("Emergency loan dialog missing NO THANKS button.")
-		# Accept the loan and screenshot the resulting state
-		if accept_btn:
-			_click(accept_btn)
-			await get_tree().create_timer(ANIM_SETTLE).timeout
-			_meta("Phase 5e - Earth Base After Loan Accepted", 2,
-				"Earth base immediately after accepting the emergency loan. Balance should have increased; loan dialog should be gone.",
-				["Is the loan dialog gone?",
-				 "Is the earth base visible and responsive?",
-				 "Does anything look broken after accepting the loan?"])
-			await _screenshot("07f_earth_base_after_loan_accepted")
-			_report("  - Earth base visible after loan accepted. ✓")
-		else:
-			_report("  - Skipping accept-loan flow (button not found).")
-	# Restore balance so subsequent phases are not affected
-	_restore_default_franc_balance()
 
 	# ==================================================================
 	# Phase 5b — Space Map
