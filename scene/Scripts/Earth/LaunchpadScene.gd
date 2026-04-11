@@ -19,16 +19,33 @@ var _active_rocket_path := NodePath("")
 var _interior_overlay: Node2D = null
 var _interior_outline_fill: Polygon2D = null
 var _interior_outline_line: Line2D = null
+var _nav_suppressed_until_msec: int = 0
+var _nav_buttons_locked := false
+var _modal_input_blocked := false
 
 const ROOM_TILE_COLUMNS := 3
 const ZOOM_IN_LEVEL := Vector2(1.25, 1.25)
 
 func _ready():
 	super._ready()
+	_configure_launchpad_nav_buttons()
 	call_deferred("_sync_launchpad_scene_ui")
 	_setup_mission_guidance()
 	_setup_room_inspection()
 	set_process_unhandled_input(true)
+
+func _configure_launchpad_nav_buttons() -> void:
+	var container = get_node_or_null("UILayer/ButtonContainer") as HBoxContainer
+	if container == null:
+		return
+	for child in container.get_children():
+		if child is Button:
+			var btn := child as Button
+			btn.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
+			if btn.name == "BackButton":
+				btn.disabled = true
+				btn.focus_mode = Control.FOCUS_NONE
+				btn.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 func _sync_launchpad_scene_ui() -> void:
 	var root_scene = get_tree().current_scene if get_tree() != null else null
@@ -52,6 +69,7 @@ func _process(_delta: float) -> void:
 	_update_mission_guidance()
 	_refresh_inspect_button_state()
 	_validate_zoom_target()
+	_sync_navigation_lock_state()
 
 ## Earth Launchpad Scene
 ##
@@ -59,6 +77,11 @@ func _process(_delta: float) -> void:
 ## to return to the earth base scene when the back button is pressed.
 
 func _on_back_button_pressed() -> void:
+	if _is_navigation_locked():
+		var vp = get_viewport()
+		if vp:
+			vp.set_input_as_handled()
+		return
 	if _camera_zoomed_in:
 		_set_zoom_mode(false)
 	print("Launchpad back button pressed - returning to earth base")
@@ -110,6 +133,35 @@ func _recursive_find_by_name(node: Node, target_name: String) -> Node:
 		if found:
 			return found
 	return null
+
+func suppress_navigation_input(duration_ms: int = 220) -> void:
+	_nav_suppressed_until_msec = max(_nav_suppressed_until_msec, Time.get_ticks_msec() + max(duration_ms, 0))
+	_sync_navigation_lock_state()
+
+func set_modal_input_blocked(blocked: bool) -> void:
+	_modal_input_blocked = blocked
+	_sync_navigation_lock_state()
+
+func _is_navigation_locked() -> bool:
+	return _modal_input_blocked or Time.get_ticks_msec() < _nav_suppressed_until_msec
+
+func _sync_navigation_lock_state() -> void:
+	var locked := _is_navigation_locked()
+	if locked == _nav_buttons_locked:
+		return
+	_nav_buttons_locked = locked
+	var container = get_node_or_null("UILayer/ButtonContainer") as HBoxContainer
+	if container == null:
+		return
+	for child in container.get_children():
+		if child is Button:
+			var btn := child as Button
+			if btn.name == "BackButton":
+				btn.disabled = true
+				btn.focus_mode = Control.FOCUS_NONE
+				btn.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			else:
+				btn.disabled = locked
 
 func _setup_mission_guidance() -> void:
 	var app = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
@@ -287,6 +339,11 @@ func _on_inspect_rooms_pressed() -> void:
 	_set_zoom_mode(not _camera_zoomed_in, rocket)
 
 func _unhandled_input(event: InputEvent) -> void:
+	if _modal_input_blocked:
+		var vp = get_viewport()
+		if vp:
+			vp.set_input_as_handled()
+		return
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		if _try_open_inspect_from_click(event.position):
 			get_viewport().set_input_as_handled()

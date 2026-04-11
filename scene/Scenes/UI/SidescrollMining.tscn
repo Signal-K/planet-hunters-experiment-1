@@ -648,48 +648,25 @@ size_flags_horizontal = 3
 size_flags_stretch_ratio = 0.5
 theme_override_constants/separation = 10
 
-[node name="OrderPanel" type="PanelContainer" parent="UI/TopBar/RightStats"]
+[node name="ContractOrderPanel" type="PanelContainer" parent="UI/TopBar/RightStats"]
+visible = false
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_1")
 
-[node name="VBox" type="VBoxContainer" parent="UI/TopBar/RightStats/OrderPanel"]
-layout_mode = 2
-theme_override_constants/separation = 5
-
-[node name="OrderLabel" type="Label" parent="UI/TopBar/RightStats/OrderPanel/VBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.3, 1, 0.4, 1)
-theme_override_font_sizes/font_size = 14
-text = "Minerals: 0"
-horizontal_alignment = 1
-
-[node name="ContractOrderPanel" type="PanelContainer" parent="UI"]
-visible = false
-layout_mode = 1
-anchors_preset = 5
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -300.0
-offset_top = 100.0
-offset_right = 300.0
-offset_bottom = 188.0
-grow_horizontal = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_1")
-
-[node name="VBox" type="VBoxContainer" parent="UI/ContractOrderPanel"]
+[node name="VBox" type="VBoxContainer" parent="UI/TopBar/RightStats/ContractOrderPanel"]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="TitleLabel" type="Label" parent="UI/ContractOrderPanel/VBox"]
+[node name="TitleLabel" type="Label" parent="UI/TopBar/RightStats/ContractOrderPanel/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 0.93, 1, 1)
 theme_override_font_sizes/font_size = 17
 text = "Contract Order"
 horizontal_alignment = 1
 
-[node name="ProgressLabel" type="Label" parent="UI/ContractOrderPanel/VBox"]
+[node name="ProgressLabel" type="Label" parent="UI/TopBar/RightStats/ContractOrderPanel/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 0.84, 1)
 theme_override_font_sizes/font_size = 15

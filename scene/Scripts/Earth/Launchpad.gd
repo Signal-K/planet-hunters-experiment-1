@@ -226,6 +226,12 @@ func clear_rockets() -> void:
 	# hide standalone launch button when rockets are cleared
 	_launch_button.hide_launch_button()
 
+func set_interaction_enabled(enabled: bool) -> void:
+	var area = get_node_or_null("InteractionArea") as Area2D
+	if area == null:
+		return
+	area.input_pickable = enabled
+
 func _is_launchpad_scene() -> bool:
 	var tree = get_tree()
 	if tree == null or tree.current_scene == null:

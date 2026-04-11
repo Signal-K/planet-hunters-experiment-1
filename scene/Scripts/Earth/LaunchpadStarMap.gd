@@ -79,15 +79,19 @@ func _notification(what: int) -> void:
 
 
 func _gui_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		var click_pos: Vector2 = event.position
-		for target_id in _marker_positions.keys():
-			var marker: Dictionary = _marker_positions[target_id]
-			var radius = float(marker.get("click_radius", 18.0))
-			if click_pos.distance_to(marker.get("pos", Vector2.ZERO)) <= radius:
-				target_pressed.emit(str(target_id))
-				accept_event()
-				return
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		if event.pressed:
+			var click_pos: Vector2 = event.position
+			for target_id in _marker_positions.keys():
+				var marker: Dictionary = _marker_positions[target_id]
+				var radius = float(marker.get("click_radius", 18.0))
+				if click_pos.distance_to(marker.get("pos", Vector2.ZERO)) <= radius:
+					target_pressed.emit(str(target_id))
+					accept_event()
+					return
+			accept_event()
+			return
+		accept_event()
 
 
 func _rebuild_layout() -> void:

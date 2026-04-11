@@ -10,13 +10,16 @@ extends SceneTree
 # WHAT THEY DO NOT COVER (by design)
 # ─────────────────────────────────────────────────────────────────────────────
 # • Scene rendering, Control layout, or visual appearance
-# • Actual Godot Input events (those require a running viewport)
+# • Full freeform viewport interaction; one focused regression calls the star-map
+#   control directly to guard the modal click-through path.
 # • Network calls (Supabase) — mocked via RocketsManager predefined targets
 
 const TestReporter     = preload("res://tests/TestReporter.gd")
 const RocketsManager   = preload("res://Scripts/Utils/RocketsManager.gd")
 const SubcontractorMgr = preload("res://Scripts/Utils/SubcontractorManager.gd")
 const RocketSpecs      = preload("res://Scripts/Utils/RocketSpecs.gd")
+const LaunchpadSelectorPanel = preload("res://Scripts/Earth/LaunchpadSelectorPanel.gd")
+const EarthLaunchpadScene = preload("res://Scenes/Earth/earth_launchpad.tscn")
 
 var reporter := TestReporter.new()
 
@@ -47,6 +50,8 @@ func run_all_tests() -> void:
 	await test_mission1_predefined_target_is_available()
 	await test_contractor_offer_contains_valid_contractors()
 	await test_launch_readiness_requires_target_and_rocket()
+	await test_tutorial_force_does_not_downgrade_completed_launchpad_progress()
+	await test_target_map_modal_blocks_underlying_input_and_accepts_marker_click()
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Helpers
@@ -60,6 +65,15 @@ func _reset() -> void:
 	RocketsManager.clear_returned_mission()
 	RocketsManager.set_operation_mode("contract")
 	RocketsManager.clear_trip_contract_offer()
+	var state := RocketsManager.load_state()
+	state["trip_contract_offer"] = {}
+	state["mission_progress_completed"] = 0
+	state["completed_mission_badges"] = []
+	state["candidate_visit_blocks"] = {}
+	state["selected_target"] = ""
+	state["detected_targets"] = []
+	state["operation_mode"] = "contract"
+	RocketsManager.save_state(state)
 	# Explicitly remove any awaiting rocket that reset_state may not have flushed in time
 	RocketsManager.remove_awaiting_rocket()
 	await create_timer(0.04).timeout
@@ -91,6 +105,22 @@ func _get_flow_phase(selected_contractor: String, has_awaiting: bool) -> String:
 
 func _place_dummy_rocket() -> String:
 	return RocketsManager.add_placed("starterrocket1", Vector2(-110, -170))
+
+func _instantiate_launchpad_scene() -> Node:
+	var scene = EarthLaunchpadScene.instantiate()
+	if scene == null:
+		return null
+	get_root().add_child(scene)
+	current_scene = scene
+	await create_timer(0.22).timeout
+	return scene
+
+func _free_launchpad_scene(scene: Node) -> void:
+	if scene == null:
+		return
+	current_scene = null
+	scene.queue_free()
+	await create_timer(0.05).timeout
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Tests
@@ -379,4 +409,113 @@ func test_launch_readiness_requires_target_and_rocket() -> void:
 	if not launch_ready:
 		reporter.fail_test("Expected launch-ready=true when contractor+rocket+target all set")
 		return
+	reporter.pass_test()
+
+func test_tutorial_force_does_not_downgrade_completed_launchpad_progress() -> void:
+	reporter.start_test("Tutorial forcing does not downgrade launchpad flow after contractor + rocket are already set")
+	await _reset()
+	var contractor_id = await _select_first_contractor()
+	if contractor_id == "":
+		reporter.fail_test("No contractor available")
+		return
+	var rocket_uid = _place_dummy_rocket()
+	if rocket_uid == "":
+		reporter.fail_test("No rocket was armed")
+		return
+	var selector := LaunchpadSelectorPanel.new()
+	var resolved = selector._resolve_tutorial_flow_phase("target", contractor_id, true)
+	if resolved != "target":
+		reporter.fail_test("Expected tutorial override to preserve 'target' phase, got '%s'" % resolved)
+		return
+	reporter.pass_test()
+
+func test_target_map_modal_blocks_underlying_input_and_accepts_marker_click() -> void:
+	reporter.start_test("Target map modal blocks underlying launchpad input and asteroid clicks stay inside the modal")
+	await _reset()
+	var contractor_id = await _select_first_contractor()
+	if contractor_id == "":
+		reporter.fail_test("No contractor available")
+		return
+	var rocket_uid = _place_dummy_rocket()
+	if rocket_uid == "":
+		reporter.fail_test("No rocket was armed")
+		return
+	var scene = await _instantiate_launchpad_scene()
+	if scene == null:
+		reporter.fail_test("Launchpad scene failed to instantiate")
+		return
+	var launchpad = scene.get_node_or_null("StructuresLayer/Launchpad")
+	if launchpad == null:
+		await _free_launchpad_scene(scene)
+		reporter.fail_test("Launchpad node missing in modal test")
+		return
+	var selector := LaunchpadSelectorPanel.new()
+	selector.setup(launchpad)
+	selector.show_selector_panel()
+	await create_timer(0.08).timeout
+	selector._on_open_target_map_pressed()
+	await create_timer(0.05).timeout
+	var panel = scene.get_node_or_null("UILayer/SelectorPanel") as Panel
+	var overlay = scene.get_node_or_null("UILayer/SelectorPanel/MapOverlay") as Control
+	var body = scene.get_node_or_null("UILayer/SelectorPanel/VBox/Body") as Control
+	var overlay_split = scene.get_node_or_null("UILayer/SelectorPanel/MapOverlay/OverlayVBox/TargetSection/SectionVBox/Content/OverlaySplit") as HBoxContainer
+	var launchpad_area = scene.get_node_or_null("StructuresLayer/Launchpad/InteractionArea") as Area2D
+	var map_view: LaunchpadStarMap = null
+	if overlay_split != null and overlay_split.get_child_count() > 0:
+		var map_card = overlay_split.get_child(0)
+		if map_card != null and map_card.get_child_count() > 0:
+			var map_column = map_card.get_child(0)
+			if map_column != null and map_column.get_child_count() > 0:
+				map_view = map_column.get_child(0) as LaunchpadStarMap
+	if panel == null or overlay == null or body == null or map_view == null or launchpad_area == null:
+		await _free_launchpad_scene(scene)
+		reporter.fail_test("Modal test could not resolve overlay nodes")
+		return
+	if not overlay.visible or overlay.mouse_filter != Control.MOUSE_FILTER_STOP:
+		await _free_launchpad_scene(scene)
+		reporter.fail_test("Map overlay is not configured as a modal blocker")
+		return
+	if body.visible or body.mouse_filter != Control.MOUSE_FILTER_IGNORE:
+		await _free_launchpad_scene(scene)
+		reporter.fail_test("Selector body is still interactive while map modal is open")
+		return
+	if launchpad_area.input_pickable:
+		await _free_launchpad_scene(scene)
+		reporter.fail_test("Launchpad world interaction remains enabled behind the modal")
+		return
+	if not bool(scene.get("_modal_input_blocked")):
+		await _free_launchpad_scene(scene)
+		reporter.fail_test("Scene navigation lock is not active while map modal is open")
+		return
+	var targets = _get_m1_targets()
+	if targets.is_empty():
+		await _free_launchpad_scene(scene)
+		reporter.fail_test("No M1 target available for modal click test")
+		return
+	var target_id = str(targets[0].get("id", ""))
+	var marker = map_view.get("_marker_positions").get(target_id, {})
+	if marker.is_empty():
+		await _free_launchpad_scene(scene)
+		reporter.fail_test("Could not resolve marker position for target '%s'" % target_id)
+		return
+	var press := InputEventMouseButton.new()
+	press.button_index = MOUSE_BUTTON_LEFT
+	press.pressed = true
+	press.position = marker.get("pos", Vector2.ZERO)
+	map_view._gui_input(press)
+	var release := InputEventMouseButton.new()
+	release.button_index = MOUSE_BUTTON_LEFT
+	release.pressed = false
+	release.position = marker.get("pos", Vector2.ZERO)
+	map_view._gui_input(release)
+	await create_timer(0.05).timeout
+	if selector._pending_target_id != target_id:
+		await _free_launchpad_scene(scene)
+		reporter.fail_test("Marker click did not stay inside the modal (pending='%s' target='%s')" % [selector._pending_target_id, target_id])
+		return
+	if not overlay.visible or body.visible:
+		await _free_launchpad_scene(scene)
+		reporter.fail_test("Marker click collapsed the modal or reactivated the setup UI")
+		return
+	await _free_launchpad_scene(scene)
 	reporter.pass_test()

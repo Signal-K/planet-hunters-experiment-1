@@ -9,7 +9,7 @@ extends Node
 ##   3. Tour screenshots the dialog (header, credit card, warning, guidance)
 ##   4. User accepts the loan
 ##   5. Tour screenshots earth base after acceptance (dialog dismissed)
-##   6. Tour screenshots the NO THANKS path (decline + guidance remains on screen)
+##   6. Tour screenshots the DISMISS path (decline + guidance remains on screen)
 ##
 ## Produces:
 ##   user://ux_screenshots/loan_debt_tour/*.png
@@ -53,7 +53,7 @@ func _run_tour() -> void:
 	# Represents a player who has spent everything and can't afford a rocket.
 	# ==================================================================
 	_report("## Phase 1 — Earth base, balance exhausted (dialog should auto-appear)")
-	_setup_broke_state()
+	await _setup_broke_state()
 	var earth := await _load_scene(EARTH_MAIN_SCENE)
 	if earth == null:
 		_issue("CRITICAL: Could not load earth_base_1 — aborting.")
@@ -64,7 +64,7 @@ func _run_tour() -> void:
 
 	# Verify loan dialog appeared
 	var root := get_tree().root
-	var dialog_visible := _find_label_with_text(root, "EMERGENCY_LOAN_AVAILABLE") != null
+	var dialog_visible := _find_label_with_text(root, "LOAN AVAILABLE") != null
 	if dialog_visible:
 		_report("  ✓ EmergencyLoanOfferDialog auto-appeared (balance < rocket cost).")
 	else:
@@ -78,10 +78,10 @@ func _run_tour() -> void:
 	# -------------------------------------------------------------------
 	_report("  Checking dialog sections...")
 
-	if _find_label_with_text(root, "EMERGENCY_LOAN_AVAILABLE"):
-		_report("  ✓ Header: EMERGENCY_LOAN_AVAILABLE visible (green).")
+	if _find_label_with_text(root, "LOAN AVAILABLE"):
+		_report("  ✓ Header: LOAN AVAILABLE visible.")
 	else:
-		_issue("Dialog missing EMERGENCY_LOAN_AVAILABLE header.")
+		_issue("Dialog missing LOAN AVAILABLE header.")
 
 	if _find_label_with_text(root, "AUTH_REF"):
 		_report("  ✓ Sidebar: AUTH_REF label visible.")
@@ -103,7 +103,7 @@ func _run_tour() -> void:
 	else:
 		_issue("Dialog credit card missing loan amount — player can't see what they're borrowing.")
 
-	if _find_label_with_text(root, "DEDUCTED FROM YOUR NEXT MISSION PAYOUT"):
+	if _find_label_with_text(root, "AUTO-DEDUCTED FROM NEXT MISSION PAYOUT"):
 		_report("  ✓ Credit card: Repayment note visible.")
 	else:
 		_issue("Dialog credit card missing repayment note.")
@@ -118,18 +118,18 @@ func _run_tour() -> void:
 	else:
 		_issue("Dialog missing debt-recovery guidance — player has no path forward.")
 
-	var accept_btn := _find_button_with_text(root, "ACCEPT LOAN")
-	var decline_btn := _find_button_with_text(root, "NO THANKS")
+	var accept_btn := _find_button_with_text(root, "ACCEPT LINE")
+	var decline_btn := _find_button_with_text(root, "DISMISS")
 
 	if accept_btn:
-		_report("  ✓ ACCEPT LOAN button present.")
+		_report("  ✓ ACCEPT LINE button present.")
 	else:
-		_issue("Dialog missing ACCEPT LOAN button.")
+		_issue("Dialog missing ACCEPT LINE button.")
 
 	if decline_btn:
-		_report("  ✓ NO THANKS button present.")
+		_report("  ✓ DISMISS button present.")
 	else:
-		_issue("Dialog missing NO THANKS button.")
+		_issue("Dialog missing DISMISS button.")
 
 	# ==================================================================
 	# Phase 2 — Zoom in on dialog (closer crop feel via same screenshot)
@@ -145,8 +145,8 @@ func _run_tour() -> void:
 		_click(accept_btn)
 		await get_tree().create_timer(ANIM_SETTLE).timeout
 		# Verify dialog is gone
-		if _find_label_with_text(get_tree().root, "EMERGENCY_LOAN_AVAILABLE") == null:
-			_report("  ✓ Dialog dismissed after ACCEPT LOAN.")
+		if _find_label_with_text(get_tree().root, "LOAN AVAILABLE") == null:
+			_report("  ✓ Dialog dismissed after ACCEPT LINE.")
 		else:
 			_issue("Dialog still visible after accepting — close() may not have fired.")
 		# Verify balance increased (AppController should have loan_balance > 0)
@@ -157,28 +157,28 @@ func _run_tour() -> void:
 			_issue("AppController shows no outstanding loan after accept — take_loan() may not have run.")
 		await _screenshot("03_earth_base_after_accept")
 	else:
-		_report("  [skip] ACCEPT LOAN button not available — skipping accept path.")
+		_report("  [skip] ACCEPT LINE button not available — skipping accept path.")
 
 	# ==================================================================
-	# Phase 4 — Decline path: re-load with zero balance, click NO THANKS
+	# Phase 4 — Decline path: re-load with zero balance, click DISMISS
 	# ==================================================================
 	_report("\n## Phase 4 — Decline loan → dialog dismissed, balance still zero")
-	_setup_broke_state()
+	await _setup_broke_state()
 	var earth2 := await _load_scene(EARTH_MAIN_SCENE)
 	if earth2:
 		await get_tree().create_timer(SCENE_SETTLE).timeout
 		await _screenshot("04_loan_dialog_decline_view")
-		var decline := _find_button_with_text(get_tree().root, "NO THANKS")
+		var decline := _find_button_with_text(get_tree().root, "DISMISS")
 		if decline and is_instance_valid(decline):
 			_click(decline)
 			await get_tree().create_timer(ANIM_SETTLE).timeout
-			if _find_label_with_text(get_tree().root, "EMERGENCY_LOAN_AVAILABLE") == null:
-				_report("  ✓ Dialog dismissed after NO THANKS.")
+			if _find_label_with_text(get_tree().root, "LOAN AVAILABLE") == null:
+				_report("  ✓ Dialog dismissed after DISMISS.")
 			else:
-				_issue("Dialog still visible after NO THANKS — decline handler broken.")
+				_issue("Dialog still visible after DISMISS — decline handler broken.")
 			await _screenshot("05_earth_base_after_decline")
 		else:
-			_report("  [skip] NO THANKS button not found in reload.")
+			_report("  [skip] DISMISS button not found in reload.")
 
 	_finish()
 
@@ -219,8 +219,10 @@ func _setup_broke_state() -> void:
 	var app := AppControllerHelper.get_instance()
 	if app and app.has_method("set_franc_balance_from_react"):
 		app.set_franc_balance_from_react(0)
-	if app and "loan_balance" in app:
+	if app != null:
 		app.loan_balance = 0
+		if app.has_method("save_franc_balance"):
+			app.save_franc_balance()
 	var cfg := ConfigFile.new()
 	cfg.set_value("currency", "balance", 0)
 	cfg.set_value("currency", "loan_balance", 0)
@@ -275,7 +277,7 @@ func _click(btn: Button) -> void:
 func _find_button_with_text(root: Node, search_text: String) -> Button:
 	if not root:
 		return null
-	if root is Button and search_text.to_lower() in (root as Button).text.to_lower():
+	if root is Button and (root as Button).is_visible_in_tree() and search_text.to_lower() in (root as Button).text.to_lower():
 		return root as Button
 	for child in root.get_children():
 		var found := _find_button_with_text(child, search_text)
@@ -286,7 +288,7 @@ func _find_button_with_text(root: Node, search_text: String) -> Button:
 func _find_label_with_text(root: Node, search_text: String) -> Label:
 	if not root:
 		return null
-	if root is Label and search_text.to_lower() in (root as Label).text.to_lower():
+	if root is Label and (root as Label).is_visible_in_tree() and search_text.to_lower() in (root as Label).text.to_lower():
 		return root as Label
 	for child in root.get_children():
 		var found := _find_label_with_text(child, search_text)
@@ -297,12 +299,31 @@ func _find_label_with_text(root: Node, search_text: String) -> Label:
 # ---------------------------------------------------------------------------
 # Screenshot
 # ---------------------------------------------------------------------------
-func _screenshot(label: String) -> void:
-	await get_tree().process_frame
-	await get_tree().process_frame
+func _capture_viewport_image() -> Image:
+	var renderer_name := DisplayServer.get_name().to_lower()
+	if renderer_name.find("headless") != -1:
+		return null
+	for _i in range(3):
+		await get_tree().process_frame
 	RenderingServer.force_draw(false)
-	await RenderingServer.frame_post_draw
-	var image := get_viewport().get_texture().get_image()
+	var texture := get_viewport().get_texture()
+	if texture == null:
+		return null
+	var image := texture.get_image()
+	var attempts := 0
+	while (image == null or image.get_width() <= 0 or image.get_height() <= 0) and attempts < 6:
+		await get_tree().create_timer(0.05).timeout
+		await get_tree().process_frame
+		RenderingServer.force_draw(false)
+		texture = get_viewport().get_texture()
+		if texture == null:
+			return null
+		image = texture.get_image()
+		attempts += 1
+	return image
+
+func _screenshot(label: String) -> void:
+	var image := await _capture_viewport_image()
 	if not image:
 		_issue("Failed to capture viewport for '%s'." % label)
 		return

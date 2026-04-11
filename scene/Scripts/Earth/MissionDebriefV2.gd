@@ -227,24 +227,21 @@ func _build_ui() -> void:
 	_background.color = PANEL_BG
 	_panel.visible = true
 	_empty_state.visible = false
-	_panel.custom_minimum_size = Vector2(clampf(vp_w - 64.0, 620.0, 1100.0), clampf(vp_h - 72.0, 520.0, 820.0))
+	_panel.custom_minimum_size = Vector2(clampf(vp_w - 140.0, 700.0, 1180.0), clampf(vp_h - 260.0, 480.0, 760.0))
 	var style := PanelStyle.create_glass_panel_style(Color(0.06, 0.10, 0.16, 0.96), 0.86, 18, 28, 24)
 	_panel.add_theme_stylebox_override("panel", style)
+	_content_vbox.add_theme_constant_override("separation", 10)
 
 	_add_header(_content_vbox)
-	_add_sep(_content_vbox, CYAN)
+	if _guide_visible:
+		_add_button_guide(_content_vbox)
 	_add_summary(_content_vbox)
-	_add_button_guide(_content_vbox)
 	if _phase == "reward":
-		_add_sep(_content_vbox, AMBER)
 		_add_reward_snapshot(_content_vbox)
-		_add_sep(_content_vbox, CYAN)
 		_add_reward_actions(_content_vbox)
 	else:
 		_add_reward_feedback(_content_vbox)
-		_add_sep(_content_vbox, CYAN)
 		_add_next_mission_handoff(_content_vbox)
-		_add_sep(_content_vbox, CYAN)
 		_add_handoff_actions(_content_vbox)
 
 
@@ -267,9 +264,19 @@ func _add_sep(vbox: VBoxContainer, color: Color) -> void:
 
 
 func _add_header(vbox: VBoxContainer) -> void:
+	var shell := VBoxContainer.new()
+	shell.add_theme_constant_override("separation", 10)
+	vbox.add_child(shell)
+
+	var row := HBoxContainer.new()
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_theme_constant_override("separation", 12)
+	shell.add_child(row)
+
 	var col := VBoxContainer.new()
+	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	col.add_theme_constant_override("separation", 2)
-	vbox.add_child(col)
+	row.add_child(col)
 
 	var eyebrow := Label.new()
 	eyebrow.text = "MISSION COMPLETE"
@@ -284,36 +291,56 @@ func _add_header(vbox: VBoxContainer) -> void:
 	title.add_theme_color_override("font_color", TITLE_COLOR)
 	col.add_child(title)
 
+	var stage := int(RocketsManager.get_mission_stage())
+	var hint := _stage_hint(stage)
+	if hint != "":
+		var hint_lbl := Label.new()
+		hint_lbl.text = hint
+		hint_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		hint_lbl.add_theme_font_size_override("font_size", 14)
+		hint_lbl.add_theme_color_override("font_color", AMBER)
+		col.add_child(hint_lbl)
+
+	var controls := HBoxContainer.new()
+	controls.alignment = BoxContainer.ALIGNMENT_END
+	controls.add_theme_constant_override("separation", 10)
+	row.add_child(controls)
+
+	var phase_chip := _make_header_chip("Reward Pending" if _phase == "reward" and not _reward_resolved else ("Reward Cleared" if _phase == "handoff" else "Mission Summary"), AMBER if _phase == "reward" and not _reward_resolved else CYAN)
+	controls.add_child(phase_chip)
+
+	var guide_btn := _make_button("Guide", false)
+	guide_btn.custom_minimum_size = Vector2(112, 42)
+	guide_btn.add_theme_font_size_override("font_size", 15)
+	guide_btn.pressed.connect(_toggle_button_guide)
+	controls.add_child(guide_btn)
+
+	_add_sep(shell, CYAN)
+
 
 func _add_button_guide(vbox: VBoxContainer) -> void:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 10)
-	vbox.add_child(row)
-
-	var spacer := Control.new()
-	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(spacer)
-
-	var guide_btn := _make_button("? Guide", false)
-	guide_btn.custom_minimum_size = Vector2(160, 44)
-	guide_btn.add_theme_font_size_override("font_size", 16)
-	guide_btn.pressed.connect(_toggle_button_guide)
-	row.add_child(guide_btn)
-
-	if not _guide_visible:
-		return
-
 	var panel := PanelContainer.new()
-	var style := PanelStyle.create_glass_card_style(Color(0.07, 0.11, 0.18, 0.94), 0.62, 12, 18, 14)
+	var style := PanelStyle.create_glass_card_style(Color(0.08, 0.12, 0.19, 0.98), 0.56, 12, 18, 14)
 	panel.add_theme_stylebox_override("panel", style)
 	vbox.add_child(panel)
 
-	var body := Label.new()
-	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	body.add_theme_color_override("font_color", TEXT_COLOR)
-	body.add_theme_font_size_override("font_size", 14)
-	body.text = _build_button_guide_text()
+	var body := VBoxContainer.new()
+	body.add_theme_constant_override("separation", 6)
 	panel.add_child(body)
+
+	var title := Label.new()
+	title.text = "Debrief Controls"
+	title.add_theme_font_size_override("font_size", 14)
+	title.add_theme_color_override("font_color", CYAN)
+	body.add_child(title)
+
+	for line in _build_button_guide_text().split("\n", false):
+		var item := Label.new()
+		item.text = "• %s" % line
+		item.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		item.add_theme_color_override("font_color", TEXT_COLOR)
+		item.add_theme_font_size_override("font_size", 14)
+		body.add_child(item)
 
 
 func _build_button_guide_text() -> String:
@@ -338,8 +365,9 @@ func _build_button_guide_text() -> String:
 func _add_summary(vbox: VBoxContainer) -> void:
 	var target_label := str(_returned.get("label", str(_returned.get("target_id", "Unknown"))))
 	var rocket_id    := str(_returned.get("rocket_id", ""))
+	var vp_w := get_viewport().get_visible_rect().size.x if get_viewport() else 1280.0
 	var grid := GridContainer.new()
-	grid.columns = 3
+	grid.columns = 1 if vp_w < 900.0 else 3
 	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	grid.add_theme_constant_override("h_separation", 12)
 	grid.add_theme_constant_override("v_separation", 12)
@@ -348,17 +376,6 @@ func _add_summary(vbox: VBoxContainer) -> void:
 	_add_summary_card(grid, "◎", "Target", target_label)
 	_add_summary_card(grid, "▲", "Rocket", RocketSpecs.get_display_name(rocket_id) if rocket_id != "" else "—")
 	_add_summary_card(grid, "◆", "Contractor", _contractor_name if _contractor_name != "" else "—")
-
-	# Next-mission hint
-	var stage := int(RocketsManager.get_mission_stage())
-	var hint   := _stage_hint(stage)
-	if hint != "":
-		var hint_lbl := Label.new()
-		hint_lbl.text = hint
-		hint_lbl.add_theme_font_size_override("font_size", 15)
-		hint_lbl.add_theme_color_override("font_color", AMBER)
-		hint_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		vbox.add_child(hint_lbl)
 
 func _add_summary_card(grid: GridContainer, icon_text: String, label_text: String, value_text: String) -> void:
 	var card: PanelContainer = SummaryCardScene.instantiate()
@@ -375,21 +392,12 @@ func _add_summary_card(grid: GridContainer, icon_text: String, label_text: Strin
 	var v: Label = card.get_node("Row/Content/ValueLabel")
 	v.text = value_text
 	v.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	v.add_theme_font_size_override("font_size", 17)
+	v.add_theme_font_size_override("font_size", 18)
 	v.add_theme_color_override("font_color", TEXT_COLOR)
 
 func _add_reward_snapshot(vbox: VBoxContainer) -> void:
-	var viewport := get_viewport_rect().size
-	var compact := viewport.x < 1100.0
-	var layout_parent: BoxContainer = VBoxContainer.new() if compact else HBoxContainer.new()
-	layout_parent.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	layout_parent.add_theme_constant_override("separation", 12)
-	vbox.add_child(layout_parent)
-
-	if not _requested.is_empty():
-		layout_parent.add_child(_build_goal_card())
-	layout_parent.add_child(_build_cargo_card())
 	vbox.add_child(_build_payout_card())
+	vbox.add_child(_build_combined_cargo_card())
 
 func _build_goal_card() -> PanelContainer:
 	var card: PanelContainer = SectionCardScene.instantiate()
@@ -415,11 +423,11 @@ func _build_goal_card() -> PanelContainer:
 		rows.add_child(row)
 		var name_lbl: Label = row.get_node("NameLabel")
 		name_lbl.text = "%s %s" % ["✓" if done else "•", str(mineral).capitalize()]
-		name_lbl.add_theme_font_size_override("font_size", 17)
+		name_lbl.add_theme_font_size_override("font_size", 16)
 		name_lbl.add_theme_color_override("font_color", GREEN if done else TEXT_COLOR)
 		var qty_lbl: Label = row.get_node("ValueLabel")
 		qty_lbl.text = "%d/%d kg" % [have, need]
-		qty_lbl.add_theme_font_size_override("font_size", 17)
+		qty_lbl.add_theme_font_size_override("font_size", 16)
 		qty_lbl.add_theme_color_override("font_color", GREEN if done else RED)
 		var value_align := qty_lbl
 		value_align.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
@@ -462,11 +470,11 @@ func _build_cargo_card() -> PanelContainer:
 		rows.add_child(row)
 		var name_lbl: Label = row.get_node("NameLabel")
 		name_lbl.text = str(mineral).capitalize()
-		name_lbl.add_theme_font_size_override("font_size", 16)
+		name_lbl.add_theme_font_size_override("font_size", 15)
 		name_lbl.add_theme_color_override("font_color", TEXT_COLOR)
 		var qty_lbl: Label = row.get_node("ValueLabel")
 		qty_lbl.text = "%d kg" % amt
-		qty_lbl.add_theme_font_size_override("font_size", 16)
+		qty_lbl.add_theme_font_size_override("font_size", 15)
 		qty_lbl.add_theme_color_override("font_color", CYAN)
 		qty_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 
@@ -480,14 +488,106 @@ func _build_cargo_card() -> PanelContainer:
 func _build_payout_card() -> PanelContainer:
 	var card: PanelContainer = PayoutCardScene.instantiate()
 	card.add_theme_stylebox_override("panel", _highlight_card_style())
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var label: Label = card.get_node("Content/Label")
 	label.text = "₣ PAYOUT"
-	label.add_theme_font_size_override("font_size", 13)
-	label.add_theme_color_override("font_color", Color(0.10, 0.14, 0.18, 0.92))
+	label.add_theme_font_size_override("font_size", 12)
+	label.add_theme_color_override("font_color", AMBER)
 	var value: Label = card.get_node("Content/Value")
 	value.text = "+%s F" % NumberFormat.commas(str(_payout))
-	value.add_theme_font_size_override("font_size", 30)
-	value.add_theme_color_override("font_color", Color(0.06, 0.10, 0.14, 1.0))
+	value.add_theme_font_size_override("font_size", 36)
+	value.add_theme_color_override("font_color", GREEN)
+	var content := card.get_node("Content") as VBoxContainer
+	content.add_theme_constant_override("separation", 4)
+	return card
+
+
+func _build_combined_cargo_card() -> PanelContainer:
+	var card: PanelContainer = SectionCardScene.instantiate()
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.add_theme_stylebox_override("panel", _soft_card_style())
+	var header: Label = card.get_node("Content/HeaderLabel")
+	var rows: VBoxContainer = card.get_node("Content/Rows")
+	rows.add_theme_constant_override("separation", 10)
+	var footer: Label = card.get_node("Content/FooterLabel")
+
+	if _cargo.is_empty():
+		header.text = "◌ Cargo"
+		header.add_theme_font_size_override("font_size", 17)
+		header.add_theme_color_override("font_color", CYAN)
+		var empty := Label.new()
+		empty.text = "No minerals collected."
+		empty.add_theme_font_size_override("font_size", 17)
+		empty.add_theme_color_override("font_color", TEXT_COLOR)
+		rows.add_child(empty)
+		return card
+
+	if not _requested.is_empty():
+		header.text = "◎ Cargo & Order"
+		header.add_theme_font_size_override("font_size", 17)
+		header.add_theme_color_override("font_color", AMBER)
+		var all_met := true
+		var req_keys := _requested.keys()
+		req_keys.sort()
+		for mineral in req_keys:
+			var need := int(_requested.get(mineral, 0))
+			var have := int(_cargo.get(str(mineral), 0))
+			var done := have >= need
+			if not done:
+				all_met = false
+			var row: HBoxContainer = ResourceValueRowScene.instantiate()
+			rows.add_child(row)
+			var name_lbl: Label = row.get_node("NameLabel")
+			name_lbl.text = "%s  %s" % ["✓" if done else "—", str(mineral).capitalize()]
+			name_lbl.add_theme_font_size_override("font_size", 18)
+			name_lbl.add_theme_color_override("font_color", GREEN if done else TEXT_COLOR)
+			var qty_lbl: Label = row.get_node("ValueLabel")
+			qty_lbl.text = "%d / %d kg" % [have, need]
+			qty_lbl.add_theme_font_size_override("font_size", 18)
+			qty_lbl.add_theme_color_override("font_color", GREEN if done else RED)
+			qty_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		for mineral in _cargo.keys():
+			if _requested.has(mineral):
+				continue
+			var amt := int(_cargo.get(mineral, 0))
+			if amt <= 0:
+				continue
+			var row: HBoxContainer = ResourceValueRowScene.instantiate()
+			rows.add_child(row)
+			var name_lbl: Label = row.get_node("NameLabel")
+			name_lbl.text = str(mineral).capitalize()
+			name_lbl.add_theme_font_size_override("font_size", 18)
+			name_lbl.add_theme_color_override("font_color", TEXT_COLOR)
+			var qty_lbl: Label = row.get_node("ValueLabel")
+			qty_lbl.text = "%d kg" % amt
+			qty_lbl.add_theme_font_size_override("font_size", 18)
+			qty_lbl.add_theme_color_override("font_color", CYAN)
+			qty_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		footer.visible = true
+		footer.text = "Order filled — bonus applied." if all_met else "Partial order — standard payout."
+		footer.add_theme_font_size_override("font_size", 16)
+		footer.add_theme_color_override("font_color", GREEN if all_met else AMBER)
+	else:
+		header.text = "◌ Cargo"
+		header.add_theme_font_size_override("font_size", 17)
+		header.add_theme_color_override("font_color", CYAN)
+		var cargo_keys := _cargo.keys()
+		cargo_keys.sort_custom(func(a, b): return int(_cargo.get(a, 0)) > int(_cargo.get(b, 0)))
+		for mineral in cargo_keys:
+			var amt := int(_cargo.get(mineral, 0))
+			if amt <= 0:
+				continue
+			var row: HBoxContainer = ResourceValueRowScene.instantiate()
+			rows.add_child(row)
+			var name_lbl: Label = row.get_node("NameLabel")
+			name_lbl.text = str(mineral).capitalize()
+			name_lbl.add_theme_font_size_override("font_size", 18)
+			name_lbl.add_theme_color_override("font_color", TEXT_COLOR)
+			var qty_lbl: Label = row.get_node("ValueLabel")
+			qty_lbl.text = "%d kg" % amt
+			qty_lbl.add_theme_font_size_override("font_size", 18)
+			qty_lbl.add_theme_color_override("font_color", CYAN)
+			qty_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	return card
 
 
@@ -588,7 +688,7 @@ func _add_reward_actions(vbox: VBoxContainer) -> void:
 
 	var complete_btn := _make_button("Next Mission →", false)
 	complete_btn.name = "CompleteButton"
-	complete_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	complete_btn.custom_minimum_size = Vector2(220, 0)
 	complete_btn.disabled = not _reward_resolved
 	if not complete_btn.disabled:
 		complete_btn.pressed.connect(_on_complete_pressed)
@@ -596,65 +696,56 @@ func _add_reward_actions(vbox: VBoxContainer) -> void:
 		complete_btn.add_theme_color_override("font_disabled_color", TEXT_MUTED)
 	acts.add_child(complete_btn)
 
-	var orbit_btn := _make_button("Base", false)
+	var orbit_btn := _make_button("Return to Base", false)
 	orbit_btn.name = "OrbitButton"
-	orbit_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	orbit_btn.custom_minimum_size = Vector2(170, 0)
 	orbit_btn.pressed.connect(_return_to_base)
 	acts.add_child(orbit_btn)
 
-	if not _reward_resolved:
-		var note := Label.new()
-		note.text = "Sell cargo to unlock the next mission."
-		note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		note.add_theme_font_size_override("font_size", 14)
-		note.add_theme_color_override("font_color", TEXT_MUTED)
-		vbox.add_child(note)
-
 
 func _add_reward_feedback(vbox: VBoxContainer) -> void:
+	var card := PanelContainer.new()
+	card.add_theme_stylebox_override("panel", _soft_card_style())
+	vbox.add_child(card)
+
+	var body := VBoxContainer.new()
+	body.add_theme_constant_override("separation", 6)
+	card.add_child(body)
+
 	var header := Label.new()
 	header.text = "REWARD CONFIRMED"
 	header.add_theme_font_size_override("font_size", 12)
 	header.add_theme_color_override("font_color", AMBER)
-	vbox.add_child(header)
+	body.add_child(header)
 
 	var payout_lbl := Label.new()
 	payout_lbl.text = "Payout delivered: +%s F" % NumberFormat.commas(str(_payout))
-	payout_lbl.add_theme_font_size_override("font_size", 20)
+	payout_lbl.add_theme_font_size_override("font_size", 24)
 	payout_lbl.add_theme_color_override("font_color", GREEN)
-	vbox.add_child(payout_lbl)
+	body.add_child(payout_lbl)
 
 	var feedback := Label.new()
 	feedback.text = "Mission closed. Choose the next destination before leaving debrief."
 	feedback.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	feedback.add_theme_font_size_override("font_size", 14)
 	feedback.add_theme_color_override("font_color", TEXT_MUTED)
-	vbox.add_child(feedback)
+	body.add_child(feedback)
 
 
 func _add_next_mission_handoff(vbox: VBoxContainer) -> void:
-	var header := Label.new()
-	header.text = "NEXT MISSION"
-	header.add_theme_font_size_override("font_size", 12)
-	header.add_theme_color_override("font_color", CYAN)
-	vbox.add_child(header)
-
 	var card := PanelContainer.new()
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.15, 0.18, 0.25, 0.96)
-	style.border_color = AMBER
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(8)
-	style.content_margin_left = 18
-	style.content_margin_right = 18
-	style.content_margin_top = 16
-	style.content_margin_bottom = 16
-	card.add_theme_stylebox_override("panel", style)
+	card.add_theme_stylebox_override("panel", _soft_card_style())
 	vbox.add_child(card)
 
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 10)
 	card.add_child(col)
+
+	var header := Label.new()
+	header.text = "NEXT MISSION"
+	header.add_theme_font_size_override("font_size", 12)
+	header.add_theme_color_override("font_color", CYAN)
+	col.add_child(header)
 
 	var title := Label.new()
 	title.text = str(_next_mission_brief.get("title", "Your next mission is ready"))
@@ -693,10 +784,18 @@ func _add_next_mission_handoff(vbox: VBoxContainer) -> void:
 
 
 func _add_handoff_actions(vbox: VBoxContainer) -> void:
+	var shell := PanelContainer.new()
+	shell.add_theme_stylebox_override("panel", _soft_card_style())
+	vbox.add_child(shell)
+
+	var dock := VBoxContainer.new()
+	dock.add_theme_constant_override("separation", 10)
+	shell.add_child(dock)
+
 	var acts := HBoxContainer.new()
 	acts.add_theme_constant_override("separation", 10)
 	acts.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	vbox.add_child(acts)
+	dock.add_child(acts)
 
 	var primary_btn := _make_button(_primary_handoff_action_label(), true)
 	primary_btn.name = "CompleteButton"
@@ -708,60 +807,105 @@ func _add_handoff_actions(vbox: VBoxContainer) -> void:
 		"Scrap / Salvage Ship  (+%s F)" % NumberFormat.commas(str(_salvage_refund)),
 		false
 	)
-	salvage_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	salvage_btn.custom_minimum_size = Vector2(280, 0)
 	salvage_btn.disabled = _salvage_applied or _salvage_refund <= 0
 	if not salvage_btn.disabled:
 		salvage_btn.pressed.connect(_on_salvage_pressed.bind(salvage_btn))
 	acts.add_child(salvage_btn)
 
 	if _should_show_return_to_base_action():
-		var return_btn := _make_button("Base", false)
+		var return_btn := _make_button("Return to Base", false)
 		return_btn.name = "OrbitButton"
-		return_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		return_btn.custom_minimum_size = Vector2(170, 0)
 		return_btn.pressed.connect(_return_to_base)
 		acts.add_child(return_btn)
 
-	var explain := Label.new()
-	explain.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	explain.add_theme_font_size_override("font_size", 14)
-	if _salvage_applied:
-		explain.text = "Ship salvage has been applied. Future reusable/repairable ships can replace this action without changing the handoff flow."
-	elif _salvage_refund > 0:
-		explain.text = "Scrap/salvage is explicit here, but the debrief flow keeps it separate so reusable/repairable ships can replace this behavior later."
-	else:
-		explain.text = "No salvage value is available for this ship."
-	explain.add_theme_color_override("font_color", TEXT_MUTED)
-	vbox.add_child(explain)
+	pass
 
 
 func _make_button(text: String, primary: bool) -> Button:
 	var btn := Button.new()
 	btn.text = text
-	btn.custom_minimum_size = Vector2(0, 52)
+	btn.custom_minimum_size = Vector2(0, 48)
 	if primary:
 		PanelStyle.apply_button(btn, true)
 	else:
 		PanelStyle.apply_outline_button(btn, CYAN, TEXT_COLOR)
-	btn.add_theme_font_size_override("font_size", 18)
+	btn.add_theme_font_size_override("font_size", 16)
 	return btn
 
 func _soft_card_style() -> StyleBoxFlat:
-	return PanelStyle.create_glass_card_style(Color(0.10, 0.15, 0.22, 0.94), 0.60, 12, 16, 14)
+	# Distinctly lighter than panel background so cards are visible
+	return PanelStyle.create_glass_card_style(Color(0.14, 0.20, 0.30, 1.0), 0.72, 12, 18, 14)
 
 func _highlight_card_style() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(AMBER.r, AMBER.g, AMBER.b, 0.96)
-	style.border_color = Color(1.0, 0.95, 0.82, 1.0)
-	style.set_border_width_all(1)
+	style.bg_color = Color(0.14, 0.18, 0.26, 1.0)
+	style.border_color = Color(AMBER.r, AMBER.g, AMBER.b, 1.0)
+	style.border_width_left = 4
+	style.border_width_top = 1
+	style.border_width_right = 1
+	style.border_width_bottom = 1
 	style.set_corner_radius_all(12)
-	style.shadow_color = Color(AMBER.r, AMBER.g, AMBER.b, 0.22)
-	style.shadow_size = 20
-	style.shadow_offset = Vector2(0, 6)
-	style.content_margin_left = 18
-	style.content_margin_right = 18
-	style.content_margin_top = 14
-	style.content_margin_bottom = 14
+	style.shadow_color = Color(AMBER.r, AMBER.g, AMBER.b, 0.18)
+	style.shadow_size = 16
+	style.shadow_offset = Vector2(0, 4)
+	style.content_margin_left = 20
+	style.content_margin_right = 20
+	style.content_margin_top = 16
+	style.content_margin_bottom = 16
 	return style
+
+func _make_header_chip(text: String, color: Color) -> PanelContainer:
+	var pill := PanelContainer.new()
+	pill.add_theme_stylebox_override("panel", PanelStyle.create_glass_pill_style(Color(0.10, 0.15, 0.22, 0.96), 0.46, 9))
+	var label := Label.new()
+	label.text = text
+	label.add_theme_font_size_override("font_size", 13)
+	label.add_theme_color_override("font_color", color)
+	pill.add_child(label)
+	return pill
+
+func _build_payout_breakdown_rows() -> Array[Dictionary]:
+	var rows: Array[Dictionary] = []
+	var base_value := 0
+	for mineral in _cargo.keys():
+		base_value += MineralPricing.price_for(str(mineral), int(_cargo.get(mineral, 0)))
+	rows.append({"label": "Cargo base value", "amount": base_value})
+
+	var route_total := int(round(float(base_value) * CONTRACTOR_ROUTE_MULT))
+	rows.append({"label": "Contractor route uplift", "amount": route_total - base_value})
+
+	var discovered_total := route_total
+	var tid := str(_returned.get("target_id", ""))
+	if tid != "" and not RocketsManager.has_discovery_bonus_claimed(tid):
+		discovered_total = int(round(float(route_total) * DISCOVERY_BONUS_MULT))
+		rows.append({"label": "Discovery bonus", "amount": discovered_total - route_total})
+
+	var after_order := discovered_total
+	if _contractor_id != "":
+		var ord_mult := 1.0 + (ORDER_BONUS_CAP * _order_ratio)
+		after_order = int(round(float(discovered_total) * ord_mult))
+		rows.append({"label": "Order completion bonus", "amount": after_order - discovered_total})
+
+		var aff_mult: float = 1.0 + min(float(_affinity_before) * AFFINITY_BONUS_PER_POINT, float(AFFINITY_BONUS_CAP))
+		var after_affinity := int(round(float(after_order) * aff_mult))
+		rows.append({"label": "Affinity bonus", "amount": after_affinity - after_order})
+		var adjusted := _payout - after_affinity
+		if adjusted > 0:
+			rows.append({"label": "Onboarding payout floor", "amount": adjusted})
+	else:
+		var adjusted := _payout - discovered_total
+		if adjusted > 0:
+			rows.append({"label": "Onboarding payout floor", "amount": adjusted})
+	return rows
+
+func _build_payout_explainer_text() -> String:
+	if _reward_resolved:
+		return "Cargo has already been resolved. This payout is locked in."
+	if _contractor_id == "":
+		return "Free Operations payout uses cargo value, discovery bonuses, and early-run calibration when needed."
+	return "Payout is built from cargo value, contractor route uplift, order progress, affinity, and any discovery bonus."
 
 
 func _toggle_button_guide() -> void:

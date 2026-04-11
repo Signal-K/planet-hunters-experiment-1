@@ -107,7 +107,13 @@ ghactions:
 # Runs the full UX tour scene in a headless Docker container with Xvfb and
 # dumps screenshots + a report into ./ux-screenshots/ on your host.
 #
-#   make ux-tour          — build image (if needed) then run the tour
+#   make ux-tour          — build image (if needed) then run the full tour
+#   make ux-tour-m1       — run tour for Mission 1 only
+#   make ux-tour-m2       — run tour for Mission 2 only
+#   make ux-tour-m3       — run tour for Mission 3 only
+#   make ux-tour-m4       — run tour for Mission 4 only
+#   make ux-tour-sandbox  — run tour in free-ops sandbox mode
+#   make ux-tour-mining   — run mining-only sandbox tour
 #   make ux-tour-build    — (re)build the image only, e.g. after a Godot upgrade
 #
 UX_TOUR_IMAGE=planet-hunters-ux-tour
@@ -148,7 +154,7 @@ ux-tour: ux-tour-pull
 	docker run --rm \
 		-v "$(PWD)/scene:/app/scene" \
 		-v "$(UX_TOUR_OUT):/output" \
-		$(UX_TOUR_IMAGE)
+		$(UX_TOUR_IMAGE) $(ARGS)
 	@echo ""
 	@echo "Tour complete. Open ./ux-screenshots/ to view screenshots and ux_report.md."
 	@echo "Cleaning up Docker resources..."
@@ -157,6 +163,24 @@ ux-tour: ux-tour-pull
 	@docker volume prune -f 2>/dev/null || true
 	@docker builder prune -f 2>/dev/null || true
 	@echo "Docker cleanup done."
+
+ux-tour-m1:
+	$(MAKE) ux-tour ARGS="--mission=M1"
+
+ux-tour-m2:
+	$(MAKE) ux-tour ARGS="--mission=M2"
+
+ux-tour-m3:
+	$(MAKE) ux-tour ARGS="--mission=M3"
+
+ux-tour-m4:
+	$(MAKE) ux-tour ARGS="--mission=M4"
+
+ux-tour-sandbox:
+	$(MAKE) ux-tour ARGS="--sandbox"
+
+ux-tour-mining:
+	$(MAKE) ux-tour ARGS="--mining-only"
 
 # Sync package-lock.json (to fix npm ci issues)
 sync-lock:

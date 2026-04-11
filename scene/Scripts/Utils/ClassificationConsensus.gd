@@ -69,68 +69,80 @@ static func check_for_updates(tree: SceneTree, callback: Callable = Callable()) 
 
 	# Fetch one anomaly at a time (PostgREST doesn't easily support IN queries
 	# without server-side RPC; keep it simple with sequential requests)
-	var ids := classifications.keys()
+	var pending: Array = classifications.keys()
 	var all_stored := _load()
-	var pending := ids.duplicate()
 	var updated: Array = []
+	_process_next_consensus_fetch(supabase, pending, classifications, all_stored, updated, callback)
 
-	var _process_next: Callable
-	_process_next = func() -> void:
-		if pending.is_empty():
-			if not updated.is_empty():
-				_save(all_stored)
-			if callback.is_valid():
-				callback.call(updated)
-			return
+static func _process_next_consensus_fetch(
+	supabase,
+	pending: Array,
+	classifications: Dictionary,
+	all_stored: Dictionary,
+	updated: Array,
+	callback: Callable
+) -> void:
+	if pending.is_empty():
+		if not updated.is_empty():
+			_save(all_stored)
+		if callback.is_valid():
+			callback.call(updated)
+		return
 
-		var anomaly_id := str(pending.pop_front())
-		var player_verdict := str(classifications.get(anomaly_id, ""))
-		var query := "anomaly=eq.%s&limit=50" % anomaly_id
+	var anomaly_id := str(pending.pop_front())
+	var player_verdict := str(classifications.get(anomaly_id, ""))
+	var query := "anomaly=eq.%s&limit=50" % anomaly_id
 
-		supabase.fetch_table("classifications", query, func(rows: Array, error: String) -> void:
-			if error == "" and not rows.is_empty():
-				var planet_count := 0
-				var not_planet_count := 0
-				for row_any in rows:
-					if typeof(row_any) != TYPE_DICTIONARY:
-						continue
-					var cfg = row_any.get("classificationConfiguration", {})
-					if typeof(cfg) == TYPE_DICTIONARY:
-						var v := str(cfg.get("verdict", ""))
-						if v == "planet":
-							planet_count += 1
-						elif v == "not_planet":
-							not_planet_count += 1
-				# Total votes excluding the player's own submission
-				var others: int = maxi(0, planet_count + not_planet_count - 1)
-				var consensus_verdict := ""
-				if others >= MIN_VOTES_FOR_CONSENSUS:
-					consensus_verdict = "planet" if planet_count > not_planet_count else "not_planet"
+	supabase.fetch_table("classifications", query, func(rows: Array, error: String) -> void:
+		if error == "" and not rows.is_empty():
+			_apply_consensus_rows(anomaly_id, player_verdict, rows, all_stored, updated)
+		_process_next_consensus_fetch(supabase, pending, classifications, all_stored, updated, callback)
+	)
 
-				var prev: Dictionary = all_stored.get(anomaly_id, {})
-				var prev_consensus := str(prev.get("consensus_verdict", ""))
-				var was_notified := bool(prev.get("notified", false))
+static func _apply_consensus_rows(
+	anomaly_id: String,
+	player_verdict: String,
+	rows: Array,
+	all_stored: Dictionary,
+	updated: Array
+) -> void:
+	var planet_count := 0
+	var not_planet_count := 0
+	for row_any in rows:
+		if typeof(row_any) != TYPE_DICTIONARY:
+			continue
+		var cfg = row_any.get("classificationConfiguration", {})
+		if typeof(cfg) != TYPE_DICTIONARY:
+			continue
+		var verdict := str(cfg.get("verdict", ""))
+		if verdict == "planet":
+			planet_count += 1
+		elif verdict == "not_planet":
+			not_planet_count += 1
 
-				var entry := {
-					"anomaly_id": anomaly_id,
-					"player_verdict": player_verdict,
-					"consensus_verdict": consensus_verdict,
-					"planet_count": planet_count,
-					"not_planet_count": not_planet_count,
-					"last_checked": int(Time.get_unix_time_from_system()),
-					"notified": was_notified and consensus_verdict == prev_consensus,
-				}
-				all_stored[anomaly_id] = entry
+	var others: int = maxi(0, planet_count + not_planet_count - 1)
+	var consensus_verdict := ""
+	if others >= MIN_VOTES_FOR_CONSENSUS:
+		consensus_verdict = "planet" if planet_count > not_planet_count else "not_planet"
 
-				# Mark as needing notification if consensus newly formed or changed
-				if consensus_verdict != "" and (consensus_verdict != prev_consensus or not was_notified):
-					entry["notified"] = false
-					updated.append(entry)
+	var prev: Dictionary = all_stored.get(anomaly_id, {})
+	var prev_consensus := str(prev.get("consensus_verdict", ""))
+	var was_notified := bool(prev.get("notified", false))
 
-			_process_next.call()
-		)
+	var entry := {
+		"anomaly_id": anomaly_id,
+		"player_verdict": player_verdict,
+		"consensus_verdict": consensus_verdict,
+		"planet_count": planet_count,
+		"not_planet_count": not_planet_count,
+		"last_checked": int(Time.get_unix_time_from_system()),
+		"notified": was_notified and consensus_verdict == prev_consensus,
+	}
+	all_stored[anomaly_id] = entry
 
-	_process_next.call()
+	if consensus_verdict != "" and (consensus_verdict != prev_consensus or not was_notified):
+		entry["notified"] = false
+		updated.append(entry)
 
 ## Consensus label for display (e.g. "3 agree · 1 disagree").
 static func consensus_label(anomaly_id: String) -> String:

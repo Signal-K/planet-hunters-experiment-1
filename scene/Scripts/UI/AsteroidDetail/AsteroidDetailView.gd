@@ -18,6 +18,9 @@ var _annotations := AsteroidAnnotationHelper.new()
 var _image_helper := AsteroidImageHelper.new()
 var _model := AsteroidDetailModel.new()
 var _classification_row: Control
+var _science_summary_card: PanelContainer
+var _science_summary_body: Label
+var _science_summary_meta: Label
 
 @onready var header_container: VBoxContainer = $HeaderContainer
 @onready var tools_row: HFlowContainer = $HeaderContainer/ToolsRow
@@ -62,6 +65,8 @@ func _ready():
 	asteroid_image.scale = Vector2.ZERO
 	asteroid_image.pivot_offset = BASE_IMAGE_SIZE / 2
 
+	_build_science_summary()
+	_apply_visual_style()
 	_update_pen_button()
 	color_picker.color = Color(0, 1, 0)
 	drawing_canvas.set_pen_color(color_picker.color)
@@ -99,6 +104,7 @@ func initialize(anomaly: Dictionary, force_controls_visible := false):
 	anomaly_id = _model.normalize_anomaly_id(anomaly, is_planet)
 	title_label.text = _model.build_title(anomaly, anomaly_id, is_planet)
 	info_label.text = _model.build_info_text(anomaly_data)
+	_refresh_science_summary()
 
 	if anomaly_id != "":
 		_load_anomaly_image(is_planet)
@@ -121,6 +127,128 @@ func initialize(anomaly: Dictionary, force_controls_visible := false):
 		_build_classification_row()
 
 	call_deferred("_apply_layout")
+
+func _build_science_summary() -> void:
+	_science_summary_card = PanelContainer.new()
+	_science_summary_card.name = "ScienceSummaryCard"
+	content_container.add_child(_science_summary_card)
+	content_container.move_child(_science_summary_card, 0)
+
+	var card_style := StyleBoxFlat.new()
+	card_style.bg_color = Color(0.96, 0.98, 0.98, 1.0)
+	card_style.border_color = Color(0.79, 0.88, 0.89, 1.0)
+	card_style.set_border_width_all(1)
+	card_style.set_corner_radius_all(20)
+	card_style.content_margin_left = 18
+	card_style.content_margin_top = 18
+	card_style.content_margin_right = 18
+	card_style.content_margin_bottom = 18
+	_science_summary_card.add_theme_stylebox_override("panel", card_style)
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 8)
+	_science_summary_card.add_child(vbox)
+
+	var eyebrow := Label.new()
+	eyebrow.text = "SCIENCE REVIEW"
+	eyebrow.add_theme_color_override("font_color", Color(0.05, 0.49, 0.45, 1.0))
+	eyebrow.add_theme_font_size_override("font_size", 12)
+	vbox.add_child(eyebrow)
+
+	_science_summary_body = Label.new()
+	_science_summary_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_science_summary_body.add_theme_color_override("font_color", Color(0.18, 0.22, 0.24, 1.0))
+	_science_summary_body.add_theme_font_size_override("font_size", 15)
+	vbox.add_child(_science_summary_body)
+
+	_science_summary_meta = Label.new()
+	_science_summary_meta.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_science_summary_meta.add_theme_color_override("font_color", Color(0.40, 0.46, 0.49, 1.0))
+	_science_summary_meta.add_theme_font_size_override("font_size", 13)
+	vbox.add_child(_science_summary_meta)
+
+func _apply_visual_style() -> void:
+	add_theme_constant_override("separation", 14)
+	header_container.add_theme_constant_override("separation", 12)
+	content_container.add_theme_constant_override("separation", 18)
+	title_label.add_theme_color_override("font_color", Color(0.16, 0.20, 0.22, 1.0))
+	back_button.add_theme_font_size_override("font_size", 14)
+	annotation_count_label.add_theme_color_override("font_color", Color(0.05, 0.49, 0.45, 1.0))
+	annotation_count_label.add_theme_font_size_override("font_size", 14)
+	loading_label.text = "Loading science frame..."
+	loading_label.add_theme_color_override("font_color", Color(0.33, 0.41, 0.46, 1.0))
+	loading_label.add_theme_font_size_override("font_size", 16)
+	error_label.add_theme_font_size_override("font_size", 15)
+	info_label.add_theme_color_override("font_color", Color(0.32, 0.38, 0.42, 1.0))
+	info_label.add_theme_font_size_override("font_size", 14)
+	_style_button(back_button, false)
+	_style_button(pen_button, true)
+	_style_button(clear_button, false)
+	_style_button(save_button, false)
+	_style_button(pen_free_button, false)
+	_style_button(pen_rect_button, false)
+	_style_button(pen_circle_button, false)
+	var color_style := StyleBoxFlat.new()
+	color_style.bg_color = Color(0.97, 0.985, 0.985, 1.0)
+	color_style.border_color = Color(0.77, 0.86, 0.87, 1.0)
+	color_style.set_border_width_all(1)
+	color_style.set_corner_radius_all(12)
+	color_picker.add_theme_stylebox_override("normal", color_style)
+	color_picker.add_theme_stylebox_override("hover", color_style)
+	if image_container.get_node_or_null("ImageShell") == null:
+		var shell := PanelContainer.new()
+		shell.name = "ImageShell"
+		shell.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		var shell_style := StyleBoxFlat.new()
+		shell_style.bg_color = Color(0.93, 0.96, 0.97, 1.0)
+		shell_style.border_color = Color(0.78, 0.86, 0.88, 1.0)
+		shell_style.set_border_width_all(1)
+		shell_style.set_corner_radius_all(26)
+		shell.add_theme_stylebox_override("panel", shell_style)
+		image_container.add_child(shell)
+		image_container.move_child(shell, 0)
+
+func _style_button(button: Button, primary: bool) -> void:
+	var normal := StyleBoxFlat.new()
+	normal.bg_color = Color(0.06, 0.54, 0.49, 1.0) if primary else Color(0.98, 0.99, 0.99, 1.0)
+	normal.border_color = Color(0.79, 0.87, 0.88, 1.0) if not primary else Color(0.30, 0.89, 0.82, 0.55)
+	normal.set_border_width_all(1)
+	normal.set_corner_radius_all(14)
+	normal.content_margin_left = 16
+	normal.content_margin_top = 12
+	normal.content_margin_right = 16
+	normal.content_margin_bottom = 12
+	var hover := normal.duplicate()
+	hover.bg_color = normal.bg_color.lightened(0.06)
+	var pressed := normal.duplicate()
+	pressed.bg_color = normal.bg_color.darkened(0.06)
+	button.add_theme_stylebox_override("normal", normal)
+	button.add_theme_stylebox_override("hover", hover)
+	button.add_theme_stylebox_override("pressed", pressed)
+	button.add_theme_stylebox_override("focus", hover)
+	button.add_theme_color_override("font_color", Color(0.97, 0.99, 0.99, 1.0) if primary else Color(0.28, 0.34, 0.37, 1.0))
+	button.add_theme_color_override("font_hover_color", Color(0.97, 0.99, 0.99, 1.0) if primary else Color(0.28, 0.34, 0.37, 1.0))
+	button.add_theme_color_override("font_pressed_color", Color(0.97, 0.99, 0.99, 1.0) if primary else Color(0.28, 0.34, 0.37, 1.0))
+	button.add_theme_font_size_override("font_size", 13)
+
+func _refresh_science_summary() -> void:
+	if _science_summary_body == null:
+		return
+	var is_planet := _model.is_planet(anomaly_data)
+	var category := "candidate exoplanet light curve" if is_planet else "asteroid prospecting frame"
+	_science_summary_body.text = "Review this %s, annotate the strongest signal, and lock a verdict before routing it into operations." % category
+	var meta_parts := []
+	if anomaly_id != "":
+		meta_parts.append("Target ID: %s" % anomaly_id)
+	var source := str(anomaly_data.get("science_source", anomaly_data.get("anomalytype", "")))
+	if source != "":
+		meta_parts.append("Source: %s" % source.replace("_", " "))
+	var blurb := str(anomaly_data.get("science_blurb", ""))
+	if blurb == "":
+		blurb = _model.build_info_text(anomaly_data)
+	if blurb != "":
+		meta_parts.append(blurb)
+	_science_summary_meta.text = "  •  ".join(meta_parts)
 
 func _load_saved_annotations():
 	_annotations.load_saved_annotations(anomaly_id)
@@ -166,10 +294,10 @@ func _update_annotation_count():
 
 func _update_pen_button():
 	if drawing_canvas.is_pen_enabled():
-		pen_button.text = "✓ Pen Tool"
-		pen_button.modulate = Color(0.5, 1.0, 0.5)
+		pen_button.text = "✓ Annotation On"
+		pen_button.modulate = Color.WHITE
 	else:
-		pen_button.text = "✏️ Pen Tool"
+		pen_button.text = "Enable Annotation"
 		pen_button.modulate = Color.WHITE
 
 func _apply_layout() -> void:
@@ -213,11 +341,12 @@ func _apply_layout() -> void:
 	pen_rect_button.custom_minimum_size = Vector2(76.0 if is_mobile else 90.0, tool_h)
 	pen_circle_button.custom_minimum_size = Vector2(76.0 if is_mobile else 90.0, tool_h)
 	color_picker.custom_minimum_size = Vector2(56.0 if is_mobile else 64.0, tool_h)
+	_science_summary_card.custom_minimum_size = Vector2(0.0, 0.0 if is_mobile else 110.0)
 
 func _show_error(message: String) -> void:
 	loading_label.visible = false
 	error_label.visible = true
-	error_label.text = "Could not load image: %s" % message
+	error_label.text = "Science frame unavailable: %s" % message
 
 func _build_classification_row() -> void:
 	if is_instance_valid(_classification_row):
@@ -234,6 +363,13 @@ func _build_classification_row() -> void:
 	prompt.text = "Classify this target:"
 	PanelStyle.apply_muted(prompt)
 	row.add_child(prompt)
+
+	var note = Label.new()
+	note.text = "A confirmed verdict unlocks safer routing. A rejection blocks travel until the signal is revisited."
+	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	note.add_theme_color_override("font_color", Color(0.36, 0.42, 0.45, 1.0))
+	note.add_theme_font_size_override("font_size", 13)
+	row.add_child(note)
 
 	var button_row = HFlowContainer.new()
 	button_row.name = "ClassificationButtons"
@@ -308,19 +444,24 @@ func _on_classify(verdict: String, row: VBoxContainer) -> void:
 
 	var supabase = preload("res://Scripts/Systems/SupabaseClient.gd").get_instance()
 	if supabase:
-		var row_data = {
-			"anomaly": int(anomaly_id) if anomaly_id.is_valid_int() else 0,
-			"classificationtype": "tess-lightcurve",
-			"content": "%s — %d annotation(s)" % [verdict.replace("_", " ").capitalize(), annotation_count],
-			"author": "00000000-0000-0000-0000-000000000000",
-			"classificationConfiguration": {
-				"verdict": verdict,
-				"annotation_count": annotation_count,
-				"transit_dips": drawing_canvas.get_transit_dips() if drawing_canvas.has_method("get_transit_dips") else [],
-				"source": "star-sailors-game"
+		supabase.ensure_authenticated(func(ok: bool, _err: String) -> void:
+			if not ok:
+				return
+			var normalized_anomaly_id := int(floor(anomaly_id.to_float())) if anomaly_id.to_float() > 0.0 else 0
+			var row_data = {
+				"anomaly": normalized_anomaly_id,
+				"classificationtype": "tess-lightcurve",
+				"content": "%s — %d annotation(s)" % [verdict.replace("_", " ").capitalize(), annotation_count],
+				"author": supabase.get_authenticated_user_id(),
+				"classificationConfiguration": {
+					"verdict": verdict,
+					"annotation_count": annotation_count,
+					"transit_dips": drawing_canvas.get_transit_dips() if drawing_canvas.has_method("get_transit_dips") else [],
+					"source": "star-sailors-game"
+				}
 			}
-		}
-		supabase.post_json("classifications", row_data)
+			supabase.post_json("classifications", row_data)
+		)
 
 func _on_back_pressed():
 	back_pressed.emit()

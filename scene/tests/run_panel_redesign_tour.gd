@@ -139,7 +139,7 @@ func _run_tour() -> void:
 	_active = ctrl
 	await get_tree().create_timer(SETTLE).timeout
 
-	var ctrl_present := _find_label_with_text(get_tree().root, "CONTROL PANEL") != null
+	var ctrl_present := _find_label_with_text(get_tree().root, "CONTROL STATION") != null
 	if ctrl_present:
 		_report("  ✓ ControlStationPanel rendered.")
 	else:
@@ -186,6 +186,29 @@ func _find_label_with_text(root: Node, search: String) -> Label:
 		if found: return found
 	return null
 
+func _capture_viewport_image() -> Image:
+	var renderer_name := DisplayServer.get_name().to_lower()
+	if renderer_name.find("headless") != -1:
+		return null
+	for _i in range(3):
+		await get_tree().process_frame
+	RenderingServer.force_draw(false)
+	var texture := get_viewport().get_texture()
+	if texture == null:
+		return null
+	var image := texture.get_image()
+	var attempts := 0
+	while (image == null or image.get_width() <= 0 or image.get_height() <= 0) and attempts < 6:
+		await get_tree().create_timer(0.05).timeout
+		await get_tree().process_frame
+		RenderingServer.force_draw(false)
+		texture = get_viewport().get_texture()
+		if texture == null:
+			return null
+		image = texture.get_image()
+		attempts += 1
+	return image
+
 func _screenshot(label: String) -> void:
 	# Suppress all game UI except our active panel (CanvasLayer + Control overlays)
 	for child in get_tree().root.get_children():
@@ -195,11 +218,7 @@ func _screenshot(label: String) -> void:
 			(child as CanvasLayer).visible = false
 		elif child is Control:
 			(child as Control).visible = false
-	await get_tree().process_frame
-	await get_tree().process_frame
-	RenderingServer.force_draw(false)
-	await RenderingServer.frame_post_draw
-	var image := get_viewport().get_texture().get_image()
+	var image := await _capture_viewport_image()
 	if not image:
 		_issue("Failed to capture viewport for '%s'." % label)
 		return

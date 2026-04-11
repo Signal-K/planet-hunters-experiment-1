@@ -159,6 +159,23 @@ func _apply_off_course_check() -> void:
 		_on_tutorial_state_updated(_current_state)
 
 func _apply_off_course_display() -> void:
+	var mission_ctx := _get_earth_base_mission_context()
+	if not mission_ctx.is_empty():
+		title_label.text = str(mission_ctx.get("title", "Mission In Progress"))
+		stage_label.visible = false
+		progress_label.visible = false
+		action_label.text = str(mission_ctx.get("hint", ""))
+		action_label.visible = action_label.text != ""
+		message_label.text = str(mission_ctx.get("subtitle", "Resume the active mission."))
+		message_label.visible = true
+		skip_button.visible = false
+		replay_mission_button.visible = false
+		replay_all_button.visible = false
+		practice_mining_button.visible = false
+		if resume_mission_button:
+			resume_mission_button.visible = false
+		_update_context_action_button()
+		return
 	stage_label.visible = false
 	progress_label.visible = false
 	action_label.visible = false
@@ -542,6 +559,28 @@ func _step_supports_practice(step: Dictionary) -> bool:
 func _update_context_action_button() -> void:
 	if open_launchpad_button == null:
 		return
+	open_launchpad_button.text = "Open Launchpad"
+	if go_to_debrief_button:
+		go_to_debrief_button.text = "Open Debrief"
+	if resume_mission_button:
+		resume_mission_button.text = "Resume Mission"
+	var mission_ctx := _get_earth_base_mission_context()
+	if _off_course and not mission_ctx.is_empty():
+		var mode := str(mission_ctx.get("mode", ""))
+		open_launchpad_button.visible = mode == "launchpad"
+		if mode == "launchpad":
+			open_launchpad_button.text = str(mission_ctx.get("cta", "Open Launchpad"))
+		if go_to_debrief_button:
+			go_to_debrief_button.visible = mode == "debrief"
+			if mode == "debrief":
+				go_to_debrief_button.text = str(mission_ctx.get("cta", "Open Debrief"))
+		if resume_mission_button:
+			resume_mission_button.visible = mode == "resume"
+			if mode == "resume":
+				resume_mission_button.text = str(mission_ctx.get("cta", "Resume Mission"))
+		replay_mission_button.visible = false
+		replay_all_button.visible = false
+		return
 	var show_launchpad := _needs_launchpad_cta()
 	var show_debrief   := _needs_debrief_cta()
 	var show_any_cta   := show_launchpad or show_debrief
@@ -554,6 +593,19 @@ func _update_context_action_button() -> void:
 		replay_all_button.visible = not show_any_cta
 		if resume_mission_button:
 			resume_mission_button.visible = false
+
+func _get_earth_base_mission_context() -> Dictionary:
+	var tree := get_tree()
+	if tree == null or tree.current_scene == null:
+		return {}
+	var scene := tree.current_scene
+	if scene.scene_file_path.get_file().get_basename() != "earth_base_1":
+		return {}
+	if scene.has_method("get_active_mission_context"):
+		var context = scene.call("get_active_mission_context")
+		if typeof(context) == TYPE_DICTIONARY:
+			return context
+	return {}
 
 func _needs_launchpad_cta() -> bool:
 	if _current_step.is_empty():
