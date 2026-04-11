@@ -1,0 +1,27 @@
+{
+  "taskId": "xh84lt",
+  "currentVersion": 1,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "xh84lt",
+      "version": 1,
+      "timestamp": "2026-04-11T03:59:49.8080438Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": null,
+          "newValue": "## ControlStationPanel redesign complete (branch: claude/redesign-control-panel-siBXM)\nPanel fully redesigned (scene-first):\n- Light-themed main area with dark green sidebar (5 nav icon buttons)\n- Header: MOD-04 / CONTROL PANEL / TEMP / UPTIME / × close\n- MissionsList is now HBoxContainer (horizontal cards side-by-side)\n- Mission cards: rocket name, IN-ORBIT (cyan badge) / RETURNING (green badge), Target row, mineral chips\n- Globe placeholder panel (dark) + FLEET OPERATIONAL status bar\nScreenshot: user://ux_screenshots/panel_redesign/04_04_control_station.png\n\nNote: empty-state shown in screenshot (no active missions in test state).\nCard design spec from this task is now implemented — see _create_mission_card() in ControlStationPanel.gd."
+        }
+      ],
+      "snapshot": {
+        "assignee": "@Liam",
+        "description": "The Control Station Active Tab (ControlStationPanel.tscn) lists in-flight missions. Cards currently show rocket ID, target label, resume button. Missing: contractor name, their mineral order, return status. Design the compact card layout for two states: in-orbit and returning. Must match width of Satellite Station list cards. Data available: rockets.status, missions.requested_minerals, contractors.name + role, affinity_scores.affinity_points. Output: layout spec or sketch covering data hierarchy and both states. Kanban: zpo0t2",
+        "implementationNotes": "## ControlStationPanel redesign complete (branch: claude/redesign-control-panel-siBXM)\nPanel fully redesigned (scene-first):\n- Light-themed main area with dark green sidebar (5 nav icon buttons)\n- Header: MOD-04 / CONTROL PANEL / TEMP / UPTIME / × close\n- MissionsList is now HBoxContainer (horizontal cards side-by-side)\n- Mission cards: rocket name, IN-ORBIT (cyan badge) / RETURNING (green badge), Target row, mineral chips\n- Globe placeholder panel (dark) + FLEET OPERATIONAL status bar\nScreenshot: user://ux_screenshots/panel_redesign/04_04_control_station.png\n\nNote: empty-state shown in screenshot (no active missions in test state).\nCard design spec from this task is now implemented — see _create_mission_card() in ControlStationPanel.gd.",
+        "priority": "high",
+        "status": "todo",
+        "title": "Design the Control Station active mission card"
+      }
+    }
+  ]
+}

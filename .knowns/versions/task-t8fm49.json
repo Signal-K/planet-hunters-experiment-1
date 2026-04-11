@@ -1,0 +1,95 @@
+{
+  "taskId": "t8fm49",
+  "currentVersion": 2,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "t8fm49",
+      "version": 1,
+      "timestamp": "2026-04-11T04:07:40.473022663Z",
+      "author": "@Liam",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": null,
+          "newValue": "todo"
+        },
+        {
+          "field": "priority",
+          "oldValue": null,
+          "newValue": "high"
+        }
+      ],
+      "snapshot": {
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "POST to classifications table succeeds from the game (anon or authenticated user)"
+          },
+          {
+            "completed": false,
+            "text": "ClassificationConsensus.check_for_updates() returns real rows from live data after a classification is submitted"
+          },
+          {
+            "completed": false,
+            "text": "At least one classification visible in Supabase after a full game run"
+          },
+          {
+            "completed": false,
+            "text": "author field populated with real user ID (or guest ID) rather than all-zeros UUID"
+          }
+        ],
+        "assignee": "@Liam",
+        "description": "All player classifications (planet/not_planet verdicts + annotations) silently fail to save in Supabase because the anon key violates the RLS policy on the classifications table. Tested live against api.starsailors.space: POST returns 401 'new row violates row-level security policy'. Consequence: consensus system never has real data; ClassificationConsensus.check_for_updates() always returns empty. The game appears to work locally (local annotation JSON saved) but no data reaches the database.",
+        "labels": [
+          "supabase,rls,citizen-science,bug"
+        ],
+        "priority": "high",
+        "status": "todo",
+        "title": "Fix classification writes failing due to Supabase RLS (anon key blocked)"
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "t8fm49",
+      "version": 2,
+      "timestamp": "2026-04-11T04:07:56.457533181Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": null,
+          "newValue": "## Live Diagnostic (2026-04-11)\n\n### Supabase URL: https://api.starsailors.space (hlufptwhzkpkkjztimzo.supabase.co)\n\n### 1. Anomaly fetch — WORKS\nGET /rest/v1/anomalies?anomalySet=eq.tess\u0026limit=2 → 200 OK\nReturns 2 real TESS anomalies: id=21720215 (planet), id=57299130 (planet)\n\n### 2. Lightcurve image — ACCESSIBLE\nGET /storage/v1/object/public/anomalies/21720215/Sector1.png → 200 OK, 75,018 bytes\nReal TESS lightcurve: TIC 21720215, Sector 79, shows transit dip ~BTJD 3490\nPre-annotated \"Boxed\" marker already present in image\n\n### 3. Classification POST — FAILS (RLS violation)\nPOST /rest/v1/classifications with anon key → 401\nResponse: {\"code\":\"42501\",\"message\":\"new row violates row-level security policy for table \\\"classifications\\\"\"}\nPayload: anomaly=21720215, classificationtype=tess-lightcurve, author=00000000-..., classificationConfiguration.verdict=planet\n\n### 4. Classification read-back — EMPTY\nGET /rest/v1/classifications?anomaly=eq.21720215 → 200, 0 rows\n(RLS also hides rows from anon readers — consensus system sees nothing)\n\n### Root cause\n- SupabaseClient.post_json() uses the anon key for POST\n- RLS on classifications table requires auth.uid() to be valid (not null/anon)\n- author hardcoded as \"00000000-0000-0000-0000-000000000000\" — not a real Supabase auth UID\n- The game has no authentication flow for users before classification\n\n### Local annotation save — WORKS\n- user://annotations/\u003canomaly_id\u003e.json saved correctly\n- user://annotations/\u003canomaly_id\u003e-annotated.png composite saved correctly\n- These are local-only; never reach Supabase\n\n### Options for fix\nA. Add Supabase RLS policy: allow INSERT for anon role (simplest, but risks spam)\nB. Create a Supabase Edge Function that accepts unauthenticated classification submissions (server-side uses service role key)\nC. Implement guest auth (anonymous Supabase auth) to generate a real auth.uid() per session\nD. Pass a verified game session token in the request headers and add matching RLS policy\n\nRecommended: Option C — use supabase.auth.signInAnonymously() to get a real auth UID per session, then set author to auth.uid(). This also enables real consensus tracking per player."
+        }
+      ],
+      "snapshot": {
+        "acceptanceCriteria": [
+          {
+            "text": "POST to classifications table succeeds from the game (anon or authenticated user)",
+            "completed": false
+          },
+          {
+            "text": "ClassificationConsensus.check_for_updates() returns real rows from live data after a classification is submitted",
+            "completed": false
+          },
+          {
+            "text": "At least one classification visible in Supabase after a full game run",
+            "completed": false
+          },
+          {
+            "text": "author field populated with real user ID (or guest ID) rather than all-zeros UUID",
+            "completed": false
+          }
+        ],
+        "assignee": "@Liam",
+        "description": "All player classifications (planet/not_planet verdicts + annotations) silently fail to save in Supabase because the anon key violates the RLS policy on the classifications table. Tested live against api.starsailors.space: POST returns 401 'new row violates row-level security policy'. Consequence: consensus system never has real data; ClassificationConsensus.check_for_updates() always returns empty. The game appears to work locally (local annotation JSON saved) but no data reaches the database.",
+        "implementationNotes": "## Live Diagnostic (2026-04-11)\n\n### Supabase URL: https://api.starsailors.space (hlufptwhzkpkkjztimzo.supabase.co)\n\n### 1. Anomaly fetch — WORKS\nGET /rest/v1/anomalies?anomalySet=eq.tess\u0026limit=2 → 200 OK\nReturns 2 real TESS anomalies: id=21720215 (planet), id=57299130 (planet)\n\n### 2. Lightcurve image — ACCESSIBLE\nGET /storage/v1/object/public/anomalies/21720215/Sector1.png → 200 OK, 75,018 bytes\nReal TESS lightcurve: TIC 21720215, Sector 79, shows transit dip ~BTJD 3490\nPre-annotated \"Boxed\" marker already present in image\n\n### 3. Classification POST — FAILS (RLS violation)\nPOST /rest/v1/classifications with anon key → 401\nResponse: {\"code\":\"42501\",\"message\":\"new row violates row-level security policy for table \\\"classifications\\\"\"}\nPayload: anomaly=21720215, classificationtype=tess-lightcurve, author=00000000-..., classificationConfiguration.verdict=planet\n\n### 4. Classification read-back — EMPTY\nGET /rest/v1/classifications?anomaly=eq.21720215 → 200, 0 rows\n(RLS also hides rows from anon readers — consensus system sees nothing)\n\n### Root cause\n- SupabaseClient.post_json() uses the anon key for POST\n- RLS on classifications table requires auth.uid() to be valid (not null/anon)\n- author hardcoded as \"00000000-0000-0000-0000-000000000000\" — not a real Supabase auth UID\n- The game has no authentication flow for users before classification\n\n### Local annotation save — WORKS\n- user://annotations/\u003canomaly_id\u003e.json saved correctly\n- user://annotations/\u003canomaly_id\u003e-annotated.png composite saved correctly\n- These are local-only; never reach Supabase\n\n### Options for fix\nA. Add Supabase RLS policy: allow INSERT for anon role (simplest, but risks spam)\nB. Create a Supabase Edge Function that accepts unauthenticated classification submissions (server-side uses service role key)\nC. Implement guest auth (anonymous Supabase auth) to generate a real auth.uid() per session\nD. Pass a verified game session token in the request headers and add matching RLS policy\n\nRecommended: Option C — use supabase.auth.signInAnonymously() to get a real auth UID per session, then set author to auth.uid(). This also enables real consensus tracking per player.",
+        "labels": [
+          "supabase,rls,citizen-science,bug"
+        ],
+        "priority": "high",
+        "status": "todo",
+        "title": "Fix classification writes failing due to Supabase RLS (anon key blocked)"
+      }
+    }
+  ]
+}
