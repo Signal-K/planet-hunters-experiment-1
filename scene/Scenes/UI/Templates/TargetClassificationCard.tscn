@@ -1,0 +1,118 @@
+[gd_scene format=3]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card"]
+bg_color = Color(0.07, 0.11, 0.17, 0.96)
+border_color = Color(0.28, 0.88, 0.96, 0.35)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+content_margin_left = 14.0
+content_margin_top = 12.0
+content_margin_right = 14.0
+content_margin_bottom = 14.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_chart"]
+bg_color = Color(0.04, 0.07, 0.11, 1.0)
+border_color = Color(0.20, 0.60, 0.78, 0.28)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_badge"]
+bg_color = Color(0.10, 0.36, 0.22, 0.88)
+border_color = Color(0.28, 0.90, 0.58, 0.55)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+content_margin_left = 8.0
+content_margin_top = 3.0
+content_margin_right = 8.0
+content_margin_bottom = 3.0
+
+[node name="TargetClassificationCard" type="PanelContainer"]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="VBox" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="HeaderRow" type="HBoxContainer" parent="VBox"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="TargetIdLabel" type="Label" parent="VBox/HeaderRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.92, 0.95, 0.98, 1.0)
+theme_override_font_sizes/font_size = 14
+text = "TIC-0000"
+
+[node name="TypeIcon" type="Label" parent="VBox/HeaderRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.68, 0.80, 0.72)
+theme_override_font_sizes/font_size = 14
+text = "◎"
+
+[node name="ChartPanel" type="PanelContainer" parent="VBox"]
+custom_minimum_size = Vector2(0, 86)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_chart")
+
+[node name="ChartWave" type="Label" parent="VBox/ChartPanel"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.28, 0.70, 0.88, 0.45)
+theme_override_font_sizes/font_size = 11
+text = "~ ~ ~ ~ ~"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Separator" type="HSeparator" parent="VBox"]
+layout_mode = 2
+
+[node name="ConsensusLabel" type="Label" parent="VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.50, 0.62, 0.72, 1.0)
+theme_override_font_sizes/font_size = 10
+text = "CONSENSUS"
+
+[node name="VerdictLabel" type="Label" parent="VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.28, 0.90, 0.65, 1.0)
+theme_override_font_sizes/font_size = 14
+text = "Agreement"
+
+[node name="ActiveMissionBadge" type="PanelContainer" parent="VBox"]
+visible = false
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_badge")
+
+[node name="BadgeLabel" type="Label" parent="VBox/ActiveMissionBadge"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.30, 0.92, 0.60, 1.0)
+theme_override_font_sizes/font_size = 10
+text = "△ ACTIVE MISSION"
+horizontal_alignment = 1
