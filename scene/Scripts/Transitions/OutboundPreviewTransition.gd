@@ -377,6 +377,8 @@ func _set_orbit_rocket_visual(rocket_id: String) -> void:
 	helper.apply_orbit_sprite(orbit_rocket, rocket_id)
 
 func _advance_to_preview() -> void:
+	if _current_rocket_id != "" and _current_target_id != "":
+		RocketsManager.mark_arrived(_current_rocket_id, _current_target_id)
 	var tree = Engine.get_main_loop() as SceneTree
 	if tree == null:
 		return

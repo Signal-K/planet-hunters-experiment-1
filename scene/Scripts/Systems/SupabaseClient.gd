@@ -17,6 +17,14 @@ const AppLogger = preload("res://Scripts/Utils/Logger.gd")
 var SUPABASE_URL: String = LOCAL_SUPABASE_URL
 var SUPABASE_KEY: String = LOCAL_SUPABASE_KEY
 var _web_pending_callbacks: Dictionary = {}
+const AUTH_SESSION_PATH: String = "user://supabase_auth_session.json"
+const AUTH_SESSION_SKEW_SECONDS: int = 30
+var _auth_access_token: String = ""
+var _auth_refresh_token: String = ""
+var _auth_user_id: String = ""
+var _auth_expires_at: int = 0
+var _auth_request_in_flight: bool = false
+var _auth_pending_callbacks: Array = []
 
 const RUNTIME_CONFIG_PATH: String = "res://supabase.runtime.json"
 # Force local mode - set this to true if you want to always use local development server
@@ -53,6 +61,7 @@ static func get_instance() -> SupabaseClient:
 		else:
 			# Exported/bundled runtime must never silently use localhost.
 			_apply_credentials(_instance, PROD_SUPABASE_URL, PROD_SUPABASE_KEY, "production-fallback")
+		_instance._load_auth_session()
 
 		# Always print resolved URL for easier debugging
 		print("SupabaseClient: resolved SUPABASE_URL=", _instance.SUPABASE_URL, " key_present=", _instance.SUPABASE_KEY != "")
@@ -104,6 +113,190 @@ func _resolve_api_base_url() -> String:
 	if base_url.ends_with("/"):
 		base_url = base_url.substr(0, base_url.length() - 1)
 	return base_url
+
+func get_authenticated_user_id() -> String:
+	return _auth_user_id
+
+func has_authenticated_session() -> bool:
+	return _has_valid_auth_session()
+
+func ensure_authenticated(callback: Callable) -> void:
+	if _has_valid_auth_session():
+		if callback.is_valid():
+			callback.call(true, "")
+		return
+
+	if callback.is_valid():
+		_auth_pending_callbacks.append(callback)
+	if _auth_request_in_flight:
+		return
+
+	_auth_request_in_flight = true
+	if OS.has_feature("web"):
+		_sign_up_anonymously_web()
+	else:
+		_sign_up_anonymously_native()
+
+func _has_valid_auth_session() -> bool:
+	var now := int(Time.get_unix_time_from_system())
+	return _auth_access_token != "" and _auth_user_id != "" and _auth_expires_at > now + AUTH_SESSION_SKEW_SECONDS
+
+func _load_auth_session() -> void:
+	if not FileAccess.file_exists(AUTH_SESSION_PATH):
+		return
+	var file := FileAccess.open(AUTH_SESSION_PATH, FileAccess.READ)
+	if file == null:
+		return
+	var parsed_any = JSON.parse_string(file.get_as_text())
+	file.close()
+	if typeof(parsed_any) != TYPE_DICTIONARY:
+		return
+	var parsed: Dictionary = parsed_any
+	_auth_access_token = str(parsed.get("access_token", "")).strip_edges()
+	_auth_refresh_token = str(parsed.get("refresh_token", "")).strip_edges()
+	_auth_user_id = str(parsed.get("user_id", "")).strip_edges()
+	_auth_expires_at = int(parsed.get("expires_at", 0))
+	if not _has_valid_auth_session():
+		_clear_auth_session()
+
+func _persist_auth_session() -> void:
+	var file := FileAccess.open(AUTH_SESSION_PATH, FileAccess.WRITE)
+	if file == null:
+		return
+	file.store_string(JSON.stringify({
+		"access_token": _auth_access_token,
+		"refresh_token": _auth_refresh_token,
+		"user_id": _auth_user_id,
+		"expires_at": _auth_expires_at,
+	}))
+	file.close()
+
+func _clear_auth_session() -> void:
+	_auth_access_token = ""
+	_auth_refresh_token = ""
+	_auth_user_id = ""
+	_auth_expires_at = 0
+	if FileAccess.file_exists(AUTH_SESSION_PATH):
+		DirAccess.remove_absolute(AUTH_SESSION_PATH)
+
+func _apply_auth_payload(payload: Dictionary) -> bool:
+	var access_token := str(payload.get("access_token", "")).strip_edges()
+	var refresh_token := str(payload.get("refresh_token", "")).strip_edges()
+	var expires_at := int(payload.get("expires_at", 0))
+	if expires_at <= 0:
+		expires_at = int(Time.get_unix_time_from_system()) + int(payload.get("expires_in", 3600))
+	var user_any = payload.get("user", {})
+	if typeof(user_any) != TYPE_DICTIONARY:
+		return false
+	var user: Dictionary = user_any
+	var user_id := str(user.get("id", "")).strip_edges()
+	if access_token == "" or user_id == "":
+		return false
+	_auth_access_token = access_token
+	_auth_refresh_token = refresh_token
+	_auth_user_id = user_id
+	_auth_expires_at = expires_at
+	_persist_auth_session()
+	return true
+
+func _finish_auth_request(ok: bool, error_message: String) -> void:
+	_auth_request_in_flight = false
+	var callbacks := _auth_pending_callbacks.duplicate()
+	_auth_pending_callbacks.clear()
+	for cb_any in callbacks:
+		if typeof(cb_any) == TYPE_CALLABLE:
+			var cb: Callable = cb_any
+			if cb.is_valid():
+				cb.call(ok, error_message)
+
+func _sign_up_anonymously_native() -> void:
+	var http := HTTPRequest.new()
+	var scene_tree = Engine.get_main_loop()
+	if scene_tree and scene_tree.root:
+		scene_tree.root.add_child(http)
+	var url := "%s/auth/v1/signup" % _resolve_api_base_url()
+	var headers := [
+		"apikey: " + SUPABASE_KEY,
+		"Content-Type: application/json",
+	]
+	var body := JSON.stringify({
+		"data": {
+			"source": "planet-hunters-game",
+			"client": "godot",
+		}
+	})
+	http.request_completed.connect(func(result: int, response_code: int, _hdrs: PackedStringArray, body_bytes: PackedByteArray) -> void:
+		http.queue_free()
+		if result != HTTPRequest.RESULT_SUCCESS:
+			_finish_auth_request(false, "auth request failed: result=%d" % result)
+			return
+		if response_code < 200 or response_code >= 300:
+			_finish_auth_request(false, "auth request failed: code=%d" % response_code)
+			return
+		var parsed_any = JSON.parse_string(body_bytes.get_string_from_utf8())
+		if typeof(parsed_any) != TYPE_DICTIONARY:
+			_finish_auth_request(false, "auth response parse error")
+			return
+		var payload: Dictionary = parsed_any
+		if not _apply_auth_payload(payload):
+			_finish_auth_request(false, "auth payload missing session fields")
+			return
+		_finish_auth_request(true, "")
+	)
+	var request_error := http.request(url, headers, HTTPClient.METHOD_POST, body)
+	if request_error != OK:
+		http.queue_free()
+		_finish_auth_request(false, "auth request setup failed: %d" % request_error)
+
+func _sign_up_anonymously_web() -> void:
+	var window = JavaScriptBridge.get_interface("window")
+	if window == null:
+		_finish_auth_request(false, "window unavailable")
+		return
+	var callback_id = "__ph_auth_%d" % Time.get_ticks_usec()
+	var bridge = JavaScriptBridge.create_callback(func(args):
+		var payload := ""
+		if args.size() > 0:
+			payload = str(args[0])
+		var w = JavaScriptBridge.get_interface("window")
+		if w:
+			w.set(callback_id, null)
+		if payload.begins_with("__ERR__"):
+			_finish_auth_request(false, payload.substr(7))
+			return
+		var parsed_any = JSON.parse_string(payload)
+		if typeof(parsed_any) != TYPE_DICTIONARY:
+			_finish_auth_request(false, "auth response parse error")
+			return
+		var parsed: Dictionary = parsed_any
+		if not _apply_auth_payload(parsed):
+			_finish_auth_request(false, "auth payload missing session fields")
+			return
+		_finish_auth_request(true, "")
+	)
+	window.set(callback_id, bridge)
+	var js = "(async function(){try{const r=await fetch(%s,{method:'POST',headers:{'apikey':%s,'Content-Type':'application/json'},body:%s});const t=await r.text();if(!r.ok){window[%s]('__ERR__auth request failed: code='+r.status+' body='+t.slice(0,260));return;}window[%s](t);}catch(e){window[%s]('__ERR__'+(e&&e.message?e.message:String(e)));}})();" % [
+		JSON.stringify("%s/auth/v1/signup" % _resolve_api_base_url()),
+		JSON.stringify(SUPABASE_KEY),
+		JSON.stringify(JSON.stringify({"data": {"source": "planet-hunters-game", "client": "godot"}})),
+		JSON.stringify(callback_id),
+		JSON.stringify(callback_id),
+		JSON.stringify(callback_id),
+	]
+	JavaScriptBridge.eval(js, true)
+
+func _build_rest_headers(require_auth: bool = false, include_prefer_minimal: bool = false) -> Array:
+	var bearer := SUPABASE_KEY
+	if require_auth and _auth_access_token != "":
+		bearer = _auth_access_token
+	var headers := [
+		"apikey: " + SUPABASE_KEY,
+		"Authorization: Bearer " + bearer,
+		"Content-Type: application/json",
+	]
+	if include_prefer_minimal:
+		headers.append("Prefer: return=minimal")
+	return headers
 
 ## Fetch anomalies from Supabase with a specific anomalySet
 ## Returns array of anomaly dictionaries via callback
@@ -268,13 +461,19 @@ func _invoke_array_callback(callback: Callable, data: Array, error_message: Stri
 ## query_string: raw PostgREST filter query string e.g. "anomaly=eq.42&limit=20"
 ## Callback signature: func(data: Array, error: String)
 func fetch_table(table: String, query_string: String, callback: Callable) -> void:
+	var require_auth := table == "classifications"
+	if require_auth and not _has_valid_auth_session():
+		ensure_authenticated(func(ok: bool, err: String) -> void:
+			if not ok:
+				if callback.is_valid():
+					callback.call([], "auth error: %s" % err)
+				return
+			fetch_table(table, query_string, callback)
+		)
+		return
 	var api_base = _resolve_api_base_url()
 	var url = "%s/rest/v1/%s?%s" % [api_base, table, query_string]
-	var headers = [
-		"apikey: " + SUPABASE_KEY,
-		"Authorization: Bearer " + SUPABASE_KEY,
-		"Content-Type: application/json",
-	]
+	var headers = _build_rest_headers(require_auth)
 	if OS.has_feature("web"):
 		_fetch_table_web(url, headers, callback)
 		return
@@ -339,14 +538,19 @@ func _fetch_table_web(url: String, headers: Array, callback: Callable) -> void:
 	JavaScriptBridge.eval(js)
 
 func post_json(table: String, row: Dictionary, callback: Callable = Callable()) -> void:
+	var require_auth := table == "classifications"
+	if require_auth and not _has_valid_auth_session():
+		ensure_authenticated(func(ok: bool, err: String) -> void:
+			if not ok:
+				if callback.is_valid():
+					callback.call(false, "auth error: %s" % err)
+				return
+			post_json(table, row, callback)
+		)
+		return
 	var api_base = _resolve_api_base_url()
 	var url = "%s/rest/v1/%s" % [api_base, table]
-	var headers = [
-		"apikey: " + SUPABASE_KEY,
-		"Authorization: Bearer " + SUPABASE_KEY,
-		"Content-Type: application/json",
-		"Prefer: return=minimal"
-	]
+	var headers = _build_rest_headers(require_auth, true)
 	var body = JSON.stringify(row)
 	if OS.has_feature("web"):
 		_post_json_web(url, headers, body, callback)

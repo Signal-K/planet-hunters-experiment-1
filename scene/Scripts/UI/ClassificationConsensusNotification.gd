@@ -1,4 +1,4 @@
-extends BaseDialogLayer
+extends "res://Scripts/UI/BaseDialogLayer.gd"
 ## ClassificationConsensusNotification.gd
 ## Dark sci-fi modal: shows batch classification consensus results.
 ##

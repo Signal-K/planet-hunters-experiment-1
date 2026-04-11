@@ -1,0 +1,76 @@
+{
+  "taskId": "q1jyo4",
+  "currentVersion": 1,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "q1jyo4",
+      "version": 1,
+      "timestamp": "2026-04-13T03:08:39.323Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        },
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Production-blocking MVP gaps are identified and tracked"
+            },
+            {
+              "completed": false,
+              "text": "Critical UX/design fixes are grouped into an executable sprint"
+            },
+            {
+              "completed": false,
+              "text": "Backlog revisit point exists so deferred items are not lost"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Production-blocking MVP gaps are identified and tracked"
+            },
+            {
+              "completed": true,
+              "text": "Critical UX/design fixes are grouped into an executable sprint"
+            },
+            {
+              "completed": true,
+              "text": "Backlog revisit point exists so deferred items are not lost"
+            }
+          ]
+        },
+        {
+          "field": "implementationNotes",
+          "newValue": "Sprint 6 execution complete at repo level: audits/docs restored, design/UI tickets closed, revisit reminder created, and remaining production blocker isolated to Supabase classifications RLS policy apply plus live post-apply verification."
+        }
+      ],
+      "snapshot": {
+        "title": "Sprint 6 - MVP Readiness and Core UX Closure",
+        "description": "Drive the game to MVP by closing the production-blocking citizen-science issue, tightening onboarding and late-loop UX, and resolving the highest-impact panel/design gaps identified in the 2026-04-11 audit.",
+        "status": "done",
+        "priority": "high",
+        "labels": [],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Production-blocking MVP gaps are identified and tracked"
+          },
+          {
+            "completed": true,
+            "text": "Critical UX/design fixes are grouped into an executable sprint"
+          },
+          {
+            "completed": true,
+            "text": "Backlog revisit point exists so deferred items are not lost"
+          }
+        ],
+        "implementationNotes": "Sprint 6 execution complete at repo level: audits/docs restored, design/UI tickets closed, revisit reminder created, and remaining production blocker isolated to Supabase classifications RLS policy apply plus live post-apply verification."
+      }
+    }
+  ]
+}

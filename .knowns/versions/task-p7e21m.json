@@ -1,0 +1,52 @@
+{
+  "taskId": "p7e21m",
+  "currentVersion": 1,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "p7e21m",
+      "version": 1,
+      "timestamp": "2026-04-12T12:54:33.209Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        },
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "A dated revisit point exists for deferred backlog items"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "A dated revisit point exists for deferred backlog items"
+            }
+          ]
+        },
+        {
+          "field": "implementationNotes",
+          "newValue": "Deferred backlog revisit point created as part of Sprint 6 restoration/reorg; task exists as dated reminder under q1jyo4."
+        }
+      ],
+      "snapshot": {
+        "title": "Revisit deferred MVP backlog after Sprint 6",
+        "description": "Time-boxed reminder to review archived/deferred tickets after the MVP-critical Sprint 6 work lands, so non-MVP design and systems work is not lost.",
+        "status": "done",
+        "priority": "medium",
+        "labels": [],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "A dated revisit point exists for deferred backlog items"
+          }
+        ],
+        "implementationNotes": "Deferred backlog revisit point created as part of Sprint 6 restoration/reorg; task exists as dated reminder under q1jyo4."
+      }
+    }
+  ]
+}

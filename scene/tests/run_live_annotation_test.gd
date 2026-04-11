@@ -64,9 +64,9 @@ func _run_test() -> void:
         if fetch_done:
             break
         _report("  Trying anomalySet = '%s' ..." % set_name)
-        var fetched := false
+        var fetch_state := {"done": false}
         supabase.fetch_anomalies(set_name, 3, func(rows: Array, err: String) -> void:
-            fetched = true
+            fetch_state["done"] = true
             if err != "":
                 _report("  ✗ %s: %s" % [set_name, err])
                 return
@@ -79,10 +79,10 @@ func _run_test() -> void:
         )
         # Wait up to 10 seconds for the HTTP response
         var t := 0.0
-        while not fetched and t < 10.0:
+        while not bool(fetch_state.get("done", false)) and t < 10.0:
             await get_tree().create_timer(0.2).timeout
             t += 0.2
-        if not fetched:
+        if not bool(fetch_state.get("done", false)):
             _report("  ✗ %s: timed out after 10s" % set_name)
 
     if _anomaly.is_empty():
@@ -121,14 +121,34 @@ func _run_test() -> void:
 
     # ── Step 4: POST classification to Supabase ───────────────────────────────
     _report("\n## Step 4 — POST to classifications Table")
-    var anomaly_int := int(anomaly_id) if anomaly_id.is_valid_int() else 0
+    var anomaly_int := int(floor(anomaly_id.to_float())) if anomaly_id.to_float() > 0.0 else 0
+    var auth_state := {"done": false, "ok": false, "error": ""}
+    supabase.ensure_authenticated(func(ok: bool, err: String) -> void:
+        auth_state["ok"] = ok
+        auth_state["error"] = err
+        auth_state["done"] = true
+    )
+    var wait := 0.0
+    while not bool(auth_state.get("done", false)) and wait < 15.0:
+        await get_tree().create_timer(0.3).timeout
+        wait += 0.3
+
+    if not bool(auth_state.get("done", false)):
+        _issue("Anonymous auth timed out after 15s.")
+        _finish()
+        return
+    elif not bool(auth_state.get("ok", false)):
+        _issue("Anonymous auth failed: %s" % str(auth_state.get("error", "")))
+        _finish()
+        return
+
     var row_data := {
         "anomaly"              : anomaly_int,
         "classificationtype"   : "tess-lightcurve",
         "content"              : "%s — %d annotation(s)" % [
                                     verdict.replace("_", " ").capitalize(),
                                     annotation_count],
-        "author"               : "00000000-0000-0000-0000-000000000000",
+        "author"               : supabase.get_authenticated_user_id(),
         "classificationConfiguration": {
             "verdict"          : verdict,
             "annotation_count" : annotation_count,
@@ -137,43 +157,41 @@ func _run_test() -> void:
         }
     }
 
-    var post_ok     := false
-    var post_done   := false
-    var post_error  := ""
+    var post_state := {"done": false, "ok": false, "error": ""}
     supabase.post_json("classifications", row_data, func(ok: bool, err: String) -> void:
-        post_ok   = ok
-        post_error = err
-        post_done  = true
+        post_state["ok"] = ok
+        post_state["error"] = err
+        post_state["done"] = true
     )
-    var wait := 0.0
-    while not post_done and wait < 15.0:
+    wait = 0.0
+    while not bool(post_state.get("done", false)) and wait < 15.0:
         await get_tree().create_timer(0.3).timeout
         wait += 0.3
 
-    if not post_done:
+    if not bool(post_state.get("done", false)):
         _issue("POST timed out after 15s.")
-    elif not post_ok:
-        _issue("POST failed: %s" % post_error)
+    elif not bool(post_state.get("ok", false)):
+        _issue("POST failed: %s" % str(post_state.get("error", "")))
     else:
         _report("  ✓ POST returned 201/ok — row sent to Supabase.")
 
     # ── Step 5: READ BACK the saved classification ────────────────────────────
     _report("\n## Step 5 — Read Back Saved Classification")
     var query := "anomaly=eq.%s&classificationtype=eq.tess-lightcurve&order=id.desc&limit=1" % anomaly_int
-    var read_done  := false
-    var read_rows  : Array = []
-    var read_error := ""
+    var read_state := {"done": false, "rows": [], "error": ""}
     supabase.fetch_table("classifications", query, func(rows: Array, err: String) -> void:
-        read_rows  = rows
-        read_error = err
-        read_done  = true
+        read_state["rows"] = rows
+        read_state["error"] = err
+        read_state["done"] = true
     )
     wait = 0.0
-    while not read_done and wait < 15.0:
+    while not bool(read_state.get("done", false)) and wait < 15.0:
         await get_tree().create_timer(0.3).timeout
         wait += 0.3
 
-    if not read_done:
+    var read_rows: Array = read_state.get("rows", [])
+    var read_error := str(read_state.get("error", ""))
+    if not bool(read_state.get("done", false)):
         _issue("Read-back timed out after 15s.")
     elif read_error != "":
         _issue("Read-back error: %s" % read_error)
@@ -201,9 +219,9 @@ func _run_test() -> void:
         "consensus_verdict": verdict,
         "active_mission"   : false,
     }]
-    var notify = ClassificationConsensusNotificationScene.instantiate()
+    var notify: Node = ClassificationConsensusNotificationScene.instantiate()
     get_tree().root.add_child(notify)
-    var _active := notify
+    var _active: Node = notify
     await get_tree().create_timer(SETTLE).timeout
     if notify.has_method("show_results"):
         notify.show_results(notify_entries, 640, "TEST_PILOT")
@@ -214,11 +232,32 @@ func _run_test() -> void:
         if child == self or child == _active: continue
         if child is CanvasLayer: (child as CanvasLayer).visible = false
         elif child is Control: (child as Control).visible = false
-    await get_tree().process_frame
-    await get_tree().process_frame
+    var renderer_name := DisplayServer.get_name().to_lower()
+    if renderer_name.find("headless") != -1:
+        _issue("Screenshot capture unavailable under headless renderer.")
+        _finish()
+        return
+    for _i in range(3):
+        await get_tree().process_frame
     RenderingServer.force_draw(false)
-    await RenderingServer.frame_post_draw
-    var img := get_viewport().get_texture().get_image()
+    var texture := get_viewport().get_texture()
+    if texture == null:
+        _issue("Viewport texture unavailable under current renderer.")
+        _finish()
+        return
+    var img := texture.get_image()
+    var attempts := 0
+    while (img == null or img.get_width() <= 0 or img.get_height() <= 0) and attempts < 6:
+        await get_tree().create_timer(0.05).timeout
+        await get_tree().process_frame
+        RenderingServer.force_draw(false)
+        texture = get_viewport().get_texture()
+        if texture == null:
+            _issue("Viewport texture unavailable under current renderer.")
+            _finish()
+            return
+        img = texture.get_image()
+        attempts += 1
     if img:
         var path := "%s/live_annotation_result.png" % SCREENSHOT_DIR
         if img.save_png(path) == OK:

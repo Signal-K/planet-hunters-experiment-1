@@ -1,0 +1,35 @@
+{
+  "taskId": "sprint-mvp-01",
+  "currentVersion": 1,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "sprint-mvp-01",
+      "version": 1,
+      "timestamp": "2026-04-13T05:37:28.810Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        },
+        {
+          "field": "implementationNotes",
+          "newValue": "## Summary\n- Closed the MVP narrative/economy polish pass across launchpad, debrief, emergency-loan, scanner, candidate-detail, and control/control-station surfaces.\n- Launchpad flow was corrected so contractor, rocket, and target setup no longer conflict with the shared bottom nav.\n- Remaining production-critical blockers are tracked separately: t8fm49 (apply Supabase RLS migration in prod) and fwf2jt (verify live consensus/rewards after that fix).\n\n## Validation\n- /Applications/Godot4.5.app/Contents/MacOS/Godot --headless --path scene -s tests/run_launchpad_ui_tests.gd\n- /Applications/Godot4.5.app/Contents/MacOS/Godot --headless --path scene -s tests/run_structure_tests.gd\n- /Applications/Godot4.5.app/Contents/MacOS/Godot --headless --path scene -s tests/run_narrative_paths_tests.gd"
+        }
+      ],
+      "snapshot": {
+        "title": "MVP Readiness: Narrative and Economy Polish",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "sprint",
+          "mvp"
+        ],
+        "acceptanceCriteria": [],
+        "implementationNotes": "## Summary\n- Closed the MVP narrative/economy polish pass across launchpad, debrief, emergency-loan, scanner, candidate-detail, and control/control-station surfaces.\n- Launchpad flow was corrected so contractor, rocket, and target setup no longer conflict with the shared bottom nav.\n- Remaining production-critical blockers are tracked separately: t8fm49 (apply Supabase RLS migration in prod) and fwf2jt (verify live consensus/rewards after that fix).\n\n## Validation\n- /Applications/Godot4.5.app/Contents/MacOS/Godot --headless --path scene -s tests/run_launchpad_ui_tests.gd\n- /Applications/Godot4.5.app/Contents/MacOS/Godot --headless --path scene -s tests/run_structure_tests.gd\n- /Applications/Godot4.5.app/Contents/MacOS/Godot --headless --path scene -s tests/run_narrative_paths_tests.gd"
+      }
+    }
+  ]
+}

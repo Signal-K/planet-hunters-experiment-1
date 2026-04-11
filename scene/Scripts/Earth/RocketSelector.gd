@@ -32,6 +32,7 @@ var _ui_builder := RocketSelectorUIBuilder.new()
 var _drag_helper := RocketSelectorDragHelper.new()
 
 func _ready():
+	mouse_filter = Control.MOUSE_FILTER_STOP
 	if get_parent() is Container:
 		size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -80,6 +81,7 @@ func _find_app_controller() -> void:
 		print("RocketSelector: AppController not found")
 
 func _on_purchase_canceled() -> void:
+	_suppress_launchpad_navigation()
 	_pending_rocket_id = ""
 	_pending_purchase_cost = 0
 
@@ -102,6 +104,10 @@ func _refresh_creation_buttons_state() -> void:
 	_set_create_buttons_disabled(disable_all)
 
 func _on_create_pressed(rocket_id):
+	_suppress_launchpad_navigation()
+	var vp = get_viewport()
+	if vp:
+		vp.set_input_as_handled()
 	print("Create rocket requested:", rocket_id)
 	_request_purchase(rocket_id)
 
@@ -167,6 +173,10 @@ func _request_purchase(rocket_id: String) -> void:
 func _on_purchase_confirmed() -> void:
 	if _pending_rocket_id == "":
 		return
+	_suppress_launchpad_navigation(700)
+	var vp = get_viewport()
+	if vp:
+		vp.set_input_as_handled()
 	var rocket_id = _pending_rocket_id
 	var cost = _pending_purchase_cost
 	_pending_rocket_id = ""
@@ -185,15 +195,25 @@ func _on_purchase_confirmed() -> void:
 	_armed_purchase_cost = 0
 	_refresh_creation_buttons_state()
 	_refresh_create_buttons_copy()
+	call_deferred("_finish_purchase_transition")
+
+func _finish_purchase_transition() -> void:
 	visible = false
 	var root = get_tree().current_scene
-	if root:
-		var launchpad = root.get_node_or_null("StructuresLayer/Launchpad")
-		if launchpad:
-			if launchpad.has_method("_show_selector_panel"):
-				launchpad._show_selector_panel()
-			if launchpad.has_method("_populate_targets"):
-				launchpad._populate_targets()
+	if root == null:
+		return
+	var launchpad = root.get_node_or_null("StructuresLayer/Launchpad")
+	if launchpad == null:
+		return
+	if launchpad.has_method("_show_selector_panel"):
+		launchpad._show_selector_panel()
+	if launchpad.has_method("_populate_targets"):
+		launchpad._populate_targets()
+
+func _suppress_launchpad_navigation(duration_ms: int = 220) -> void:
+	var scene_root = get_tree().current_scene if get_tree() != null else null
+	if scene_root and scene_root.has_method("suppress_navigation_input"):
+		scene_root.suppress_navigation_input(duration_ms)
 
 func _on_drag_drop_requested(_rocket_id: String) -> void:
 	pass # drag-to-place replaced by direct placement on purchase confirm

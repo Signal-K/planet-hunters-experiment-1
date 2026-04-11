@@ -23,11 +23,11 @@ theme_override_styles/panel = SubResource("1")
 
 [node name="Body" type="VBoxContainer" parent="."]
 layout_mode = 2
-theme_override_constants/separation = 6
+theme_override_constants/separation = 10
 
 [node name="Title" type="Label" parent="Body"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.92, 0.95, 0.98, 1)
+theme_override_colors/font_color = Color(0.28, 0.88, 0.96, 1)
 text = "Title"
 
 [node name="Subtitle" type="Label" parent="Body"]
@@ -40,6 +40,10 @@ layout_mode = 2
 visible = false
 theme_override_colors/font_color = Color(0.70, 0.78, 0.86, 1)
 text = "Hint"
+
+[node name="Spacer" type="Control" parent="Body"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 4)
 
 [node name="CTAButton" type="Button" parent="Body"]
 layout_mode = 2

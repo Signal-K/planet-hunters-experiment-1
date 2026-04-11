@@ -17,6 +17,7 @@ const ClassificationConsensusNotificationScene = preload("res://Scenes/UI/Classi
 const EarthBaseActionCardScene = preload("res://Scenes/UI/Templates/EarthBaseActionCard.tscn")
 const ControlStationScript = preload("res://Scripts/Earth/ControlStation.gd")
 const ControlStationTexture = preload("res://assets/Structures/ControlStation.png")
+const PreviewRouting = preload("res://Scripts/UI/NewMissionPreviewRouting.gd")
 const SR2_UNLOCK_POPUP_PATH := "user://rocket_unlock_popups.cfg"
 const SR2_UNLOCK_SECTION := "popups"
 const SR2_UNLOCK_KEY := "starterrocket2_seen"
@@ -60,12 +61,17 @@ func _ready() -> void:
 		var DebugVisualizer = preload("res://Scripts/Earth/DebugVisualizer.gd")
 		DebugVisualizer.create_ground_guides(self)
 
-	call_deferred("_maybe_show_starterrocket2_unlock_popup")
-	call_deferred("_maybe_show_free_ops_unlock")
-	call_deferred("_maybe_offer_loan")
+	var app_ctrl = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
+	var ux_tour_running = app_ctrl != null and app_ctrl.get("is_ux_tour_running") == true
+
+	if not ux_tour_running:
+		call_deferred("_maybe_show_starterrocket2_unlock_popup")
+		call_deferred("_maybe_show_free_ops_unlock")
+		call_deferred("_maybe_offer_loan")
+		call_deferred("_check_classification_consensus")
+
 	call_deferred("_apply_tutorial_button_state")
 	call_deferred("_apply_nav_safe_area")
-	call_deferred("_check_classification_consensus")
 	call_deferred("_apply_structure_visual_evolution")
 	_build_earth_base_identity()
 
@@ -432,7 +438,7 @@ func _maybe_show_free_ops_unlock() -> void:
 	_show_free_ops_unlock_overlay()
 
 func _show_free_ops_unlock_overlay() -> void:
-	var overlay: ColorRect = FreeOpsUnlockOverlayScene.instantiate()
+	var overlay: Control = FreeOpsUnlockOverlayScene.instantiate()
 	overlay.name = "FreeOpsUnlockOverlay"
 	add_child(overlay)
 
@@ -590,11 +596,17 @@ func _on_earth_base_viewport_resized() -> void:
 func _apply_wordmark_layout(wordmark: Label) -> void:
 	var viewport := get_viewport_rect().size
 	var widget_rect := UILayout.zone(UILayout.Zone.EARTH_WIDGET, viewport)
-	wordmark.add_theme_font_size_override("font_size", 12 if viewport.x < 1200.0 else 15)
-	wordmark.offset_left = widget_rect.end.x + 16.0
-	wordmark.offset_right = -20.0
-	wordmark.offset_top = widget_rect.position.y + 2.0
-	wordmark.offset_bottom = widget_rect.end.y - 2.0
+	wordmark.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	wordmark.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	wordmark.add_theme_font_size_override("font_size", 10 if viewport.x < 1200.0 else 12)
+	if viewport.x < 1200.0:
+		wordmark.offset_left = widget_rect.position.x + 6.0
+		wordmark.offset_top = widget_rect.end.y + 10.0
+	else:
+		wordmark.offset_left = widget_rect.end.x + 28.0
+		wordmark.offset_top = widget_rect.position.y + 10.0
+	wordmark.offset_right = wordmark.offset_left + 150.0
+	wordmark.offset_bottom = wordmark.offset_top + 24.0
 
 func _build_ambient_stars() -> void:
 	var star_layer = CanvasLayer.new()
@@ -623,6 +635,7 @@ func _build_progression_cards() -> void:
 	var cards_root := ui_layer.get_node_or_null("ProgressionCards") as VBoxContainer
 	if cards_root == null:
 		return
+	var active_context := get_active_mission_context()
 	var app = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
 	if app != null and app.has_method("get_tutorial_state"):
 		var state: Dictionary = app.get_tutorial_state()
@@ -632,7 +645,7 @@ func _build_progression_cards() -> void:
 		# Keep the reserved tutorial lane clean: progression cards are post-tutorial
 		# helpers and should never overlap the active linear tutorial flow, unless
 		# the base itself is blocked on an authored structure build.
-		if not skipped and not base_build_required and not step.is_empty() and not ["build_control_station", "build_scanner_station"].has(str(step.get("action_key", ""))):
+		if active_context.is_empty() and not skipped and not base_build_required and not step.is_empty() and not ["build_control_station", "build_scanner_station"].has(str(step.get("action_key", ""))):
 			cards_root.visible = false
 			return
 	for child in cards_root.get_children():
@@ -646,7 +659,10 @@ func _build_progression_cards() -> void:
 		return
 		
 	var completed_count = int(rm.get_completed_mission_count())
-	if _control_station_build_required():
+	if not active_context.is_empty():
+		cards_root.add_child(_build_active_mission_card(active_context))
+		return
+	elif _control_station_build_required():
 		cards_root.add_child(_build_control_station_card())
 	elif _scanner_station_build_required():
 		cards_root.add_child(_build_scanner_station_card())
@@ -657,6 +673,189 @@ func _build_progression_cards() -> void:
 	if completed_count >= 1:
 		cards_root.add_child(_build_star_map_card())
 
+func get_active_mission_context() -> Dictionary:
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if not rm:
+		return {}
+
+	var returned: Dictionary = rm.get_returned_mission()
+	if not returned.is_empty():
+		return _build_returned_mission_context(returned)
+
+	var awaiting_rocket_id := str(rm.get_primary_awaiting_rocket_id())
+	if awaiting_rocket_id != "":
+		return _build_awaiting_mission_context(rm, awaiting_rocket_id)
+
+	var missions: Array = rm.get_missions()
+	if missions.is_empty():
+		return {}
+	var latest_mission: Dictionary = {}
+	var latest_launch := -1.0
+	for mission_any in missions:
+		if typeof(mission_any) != TYPE_DICTIONARY:
+			continue
+		var mission: Dictionary = mission_any
+		var rocket_id := str(mission.get("rocket_id", ""))
+		if rocket_id == "":
+			continue
+		var launch_time := float(mission.get("launch_time", 0.0))
+		if launch_time >= latest_launch:
+			latest_launch = launch_time
+			latest_mission = mission.duplicate(true)
+	if latest_mission.is_empty():
+		return {}
+
+	var rocket_id := str(latest_mission.get("rocket_id", ""))
+	rm.mark_returned_if_due(rocket_id)
+	returned = rm.get_returned_mission()
+	if not returned.is_empty() and str(returned.get("rocket_id", "")) == rocket_id:
+		return _build_returned_mission_context(returned)
+
+	var target_id := str(latest_mission.get("target", ""))
+	var target_details: Dictionary = rm.get_target_details(target_id)
+	var target_label := str(target_details.get("label", target_id if target_id != "" else "mission target"))
+	var target_type := str(target_details.get("type", "asteroid"))
+	var status := str(rm.get_rocket_status(rocket_id))
+	var arrived := rm.has_arrived(rocket_id, target_id)
+	var rocket_name := RocketSpecs.get_display_name(rocket_id)
+
+	if status == "returningHome":
+		return {
+			"mode": "resume",
+			"title": "Mission Returning",
+			"subtitle": "%s is returning from %s." % [rocket_name, target_label],
+			"hint": "Open the live mission view to track the return leg or wait for debrief.",
+			"cta": "Resume Return",
+			"rocket_id": rocket_id,
+			"target_id": target_id,
+			"target_label": target_label,
+			"target_type": target_type,
+		}
+	if arrived:
+		return {
+			"mode": "resume",
+			"title": "Mission At Target",
+			"subtitle": "%s has arrived at %s. Resume the mission to mine, scan, or classify." % [rocket_name, target_label],
+			"hint": "This run is already live. Resume it instead of starting a new setup flow.",
+			"cta": "Resume Mission",
+			"rocket_id": rocket_id,
+			"target_id": target_id,
+			"target_label": target_label,
+			"target_type": target_type,
+		}
+	return {
+		"mode": "resume",
+		"title": "Mission In Flight",
+		"subtitle": "%s is en route to %s." % [rocket_name, target_label],
+		"hint": "Resume the outbound leg from the live mission view.",
+		"cta": "Resume Mission",
+		"rocket_id": rocket_id,
+		"target_id": target_id,
+		"target_label": target_label,
+		"target_type": target_type,
+	}
+
+func _build_returned_mission_context(returned: Dictionary) -> Dictionary:
+	var rocket_name := RocketSpecs.get_display_name(str(returned.get("rocket_id", "")))
+	var target_label := str(returned.get("label", str(returned.get("target_id", "mission target"))))
+	return {
+		"mode": "debrief",
+		"title": "Mission Debrief Ready",
+		"subtitle": "%s has returned from %s. Resolve the debrief before setting up anything else." % [rocket_name, target_label],
+		"hint": "Payout, unlocks, and the next mission handoff stay locked until debrief is complete.",
+		"cta": "Open Debrief",
+		"rocket_id": str(returned.get("rocket_id", "")),
+		"target_id": str(returned.get("target_id", "")),
+		"target_label": target_label,
+		"target_type": str(returned.get("type", "asteroid")),
+	}
+
+func _build_awaiting_mission_context(rm, rocket_id: String) -> Dictionary:
+	var rocket_name := RocketSpecs.get_display_name(rocket_id)
+	var target_id := str(rm.get_selected_target())
+	var target_details: Dictionary = rm.get_target_details(target_id) if target_id != "" else {}
+	var target_label := str(target_details.get("label", target_id if target_id != "" else "route selection"))
+	var target_type := str(target_details.get("type", "asteroid"))
+	var contractor: Dictionary = rm.get_trip_selected_contractor()
+	var contractor_name := str(contractor.get("name", ""))
+	var subtitle := "%s is armed on the pad. Return to the Launchpad to finish setup and launch." % rocket_name
+	if contractor_name != "" and target_id != "":
+		subtitle = "%s is armed for %s via %s. Return to the Launchpad to confirm and launch." % [rocket_name, target_label, contractor_name]
+	elif target_id != "":
+		subtitle = "%s is armed for %s. Return to the Launchpad to finish setup and launch." % [rocket_name, target_label]
+	elif contractor_name != "":
+		subtitle = "%s is armed. Return to the Launchpad to finish routing with %s." % [rocket_name, contractor_name]
+	return {
+		"mode": "launchpad",
+		"title": "Launch Ready on Pad",
+		"subtitle": subtitle,
+		"hint": "This mission already has a ship committed. Resume the launch flow instead of starting another card-driven prompt.",
+		"cta": "Open Launchpad",
+		"rocket_id": rocket_id,
+		"target_id": target_id,
+		"target_label": target_label,
+		"target_type": target_type,
+	}
+
+func _build_active_mission_card(context: Dictionary) -> PanelContainer:
+	var panel: PanelContainer = EarthBaseActionCardScene.instantiate()
+	panel.size_flags_horizontal = Control.SIZE_FILL
+	_apply_glass_action_card(panel)
+	var title: Label = panel.get_node("Body/Title")
+	title.text = str(context.get("title", "Mission In Progress"))
+	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_apply_card_category_label(title)
+	var subtitle: Label = panel.get_node("Body/Subtitle")
+	subtitle.text = str(context.get("subtitle", "Resume the active mission from here."))
+	subtitle.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	PanelStyle.apply_body_on_dark(subtitle)
+	var hint: Label = panel.get_node("Body/Hint")
+	hint.visible = true
+	hint.text = str(context.get("hint", ""))
+	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	PanelStyle.apply_muted_on_dark(hint)
+	var cta: Button = panel.get_node("Body/CTAButton")
+	cta.text = str(context.get("cta", "Resume Mission"))
+	PanelStyle.apply_button(cta, true)
+	cta.pressed.connect(_on_active_mission_cta_pressed)
+	return panel
+
+func _on_active_mission_cta_pressed() -> void:
+	var context := get_active_mission_context()
+	if context.is_empty():
+		return
+	var mode := str(context.get("mode", ""))
+	if mode == "launchpad":
+		if scene_manager:
+			scene_manager.change_to_scene("res://Scenes/Earth/earth_launchpad.tscn")
+		else:
+			get_tree().change_scene_to_file("res://Scenes/Earth/earth_launchpad.tscn")
+		return
+	if mode == "debrief":
+		if scene_manager:
+			scene_manager.change_to_scene("res://Scenes/Earth/mission_debrief_v2.tscn")
+		else:
+			get_tree().change_scene_to_file("res://Scenes/Earth/mission_debrief_v2.tscn")
+		return
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if not rm:
+		return
+	var rocket_id := str(context.get("rocket_id", ""))
+	var target_id := str(context.get("target_id", ""))
+	var target_label := str(context.get("target_label", target_id))
+	var target_type := str(context.get("target_type", "asteroid"))
+	if rocket_id == "" or target_id == "":
+		return
+	rm.set_preview_target(target_id, target_label, target_type, rocket_id)
+	rm.mark_returned_if_due(rocket_id)
+	var status := rm.get_rocket_status(rocket_id)
+	var arrived := rm.has_arrived(rocket_id, target_id)
+	var scene_path := PreviewRouting.resolve_scene_path(status, arrived)
+	if scene_manager:
+		scene_manager.change_to_scene(scene_path)
+	else:
+		get_tree().change_scene_to_file(scene_path)
+
 func _build_control_station_card() -> PanelContainer:
 	var panel: PanelContainer = EarthBaseActionCardScene.instantiate()
 	panel.size_flags_horizontal = Control.SIZE_FILL
@@ -664,8 +863,7 @@ func _build_control_station_card() -> PanelContainer:
 	var title: Label = panel.get_node("Body/Title")
 	title.text = "Build Control Station"
 	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	PanelStyle.apply_title_on_dark(title)
-	title.add_theme_font_size_override("font_size", 20)
+	_apply_card_category_label(title)
 	var subtitle: Label = panel.get_node("Body/Subtitle")
 	subtitle.text = "Mission 2 starts here. Construct the Control Station first so your base has a fleet and route hub."
 	subtitle.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -699,8 +897,7 @@ func _build_scanner_station_card() -> PanelContainer:
 	var title: Label = panel.get_node("Body/Title")
 	title.text = "Build Scanner Station"
 	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	PanelStyle.apply_title_on_dark(title)
-	title.add_theme_font_size_override("font_size", 20)
+	_apply_card_category_label(title)
 	var subtitle: Label = panel.get_node("Body/Subtitle")
 	subtitle.text = "Mission 4 starts here. Build the Scanner Station on your base, then run a scan before opening the Launchpad."
 	subtitle.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -728,8 +925,7 @@ func _build_next_mission_card() -> PanelContainer:
 	var title: Label = panel.get_node("Body/Title")
 	title.text = "Next Mission Available"
 	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	PanelStyle.apply_title_on_dark(title)
-	title.add_theme_font_size_override("font_size", 20)
+	_apply_card_category_label(title)
 	var subtitle: Label = panel.get_node("Body/Subtitle")
 	var _rm_ref = preload("res://Scripts/Utils/RocketsManager.gd")
 	var _stage = int(_rm_ref.get_mission_stage()) if _rm_ref else 0
@@ -756,8 +952,7 @@ func _build_star_map_card() -> PanelContainer:
 	var title: Label = panel.get_node("Body/Title")
 	title.text = "Star Map"
 	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	PanelStyle.apply_title_on_dark(title)
-	title.add_theme_font_size_override("font_size", 20)
+	_apply_card_category_label(title)
 	var discovered_count = _get_discovered_planet_count()
 	var subtitle: Label = panel.get_node("Body/Subtitle")
 	subtitle.text = "%d planet candidate%s charted" % [discovered_count, "" if discovered_count == 1 else "s"]
@@ -784,6 +979,7 @@ func _apply_glass_callout_panel(
 ) -> void:
 	if panel == null:
 		return
+	panel.set_meta("ui_style_locked", true)
 	panel.add_theme_stylebox_override(
 		"panel",
 		PanelStyle.create_glass_panel_style(bg_color, border_alpha, corner_radius, padding_x, padding_y)
@@ -791,6 +987,11 @@ func _apply_glass_callout_panel(
 
 func _apply_glass_action_card(panel: PanelContainer) -> void:
 	_apply_glass_callout_panel(panel, GLASS_CARD_BG, 0.58, 18, 22, 18)
+
+func _apply_card_category_label(label: Label) -> void:
+	const CYAN := Color(0.28, 0.88, 0.96, 1.0)
+	label.add_theme_color_override("font_color", CYAN)
+	label.add_theme_font_size_override("font_size", 26)
 
 func _get_discovered_planet_count() -> int:
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")

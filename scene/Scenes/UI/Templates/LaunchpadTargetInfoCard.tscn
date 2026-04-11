@@ -31,10 +31,11 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0.92, 0.96, 1, 1)
 text = "Target"
 
-[node name="ChipRow" type="HBoxContainer" parent="Body"]
+[node name="ChipRow" type="FlowContainer" parent="Body"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 8
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 8
 
 [node name="SummaryLabel" type="Label" parent="Body"]
 layout_mode = 2

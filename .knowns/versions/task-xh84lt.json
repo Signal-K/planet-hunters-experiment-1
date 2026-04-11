@@ -1,12 +1,12 @@
 {
   "taskId": "xh84lt",
-  "currentVersion": 1,
+  "currentVersion": 6,
   "versions": [
     {
       "id": "v1",
       "taskId": "xh84lt",
       "version": 1,
-      "timestamp": "2026-04-11T03:59:49.8080438Z",
+      "timestamp": "2026-04-11T03:59:49.808Z",
       "changes": [
         {
           "field": "implementationNotes",
@@ -21,6 +21,126 @@
         "priority": "high",
         "status": "todo",
         "title": "Design the Control Station active mission card"
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "xh84lt",
+      "version": 2,
+      "timestamp": "2026-04-12T10:14:59.321Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        }
+      ],
+      "snapshot": {
+        "title": "Design the Control Station active mission card",
+        "description": "The Control Station Active Tab (ControlStationPanel.tscn) lists in-flight missions. Cards currently show rocket ID, target label, resume button. Missing: contractor name, their mineral order, return status. Design the compact card layout for two states: in-orbit and returning. Must match width of Satellite Station list cards. Data available: rockets.status, missions.requested_minerals, contractors.name + role, affinity_scores.affinity_points. Output: layout spec or sketch covering data hierarchy and both states. Kanban: zpo0t2",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@Liam",
+        "labels": [],
+        "acceptanceCriteria": [],
+        "implementationNotes": "## ControlStationPanel redesign complete (branch: claude/redesign-control-panel-siBXM)\nPanel fully redesigned (scene-first):\n- Light-themed main area with dark green sidebar (5 nav icon buttons)\n- Header: MOD-04 / CONTROL PANEL / TEMP / UPTIME / × close\n- MissionsList is now HBoxContainer (horizontal cards side-by-side)\n- Mission cards: rocket name, IN-ORBIT (cyan badge) / RETURNING (green badge), Target row, mineral chips\n- Globe placeholder panel (dark) + FLEET OPERATIONAL status bar\nScreenshot: user://ux_screenshots/panel_redesign/04_04_control_station.png\n\nNote: empty-state shown in screenshot (no active missions in test state).\nCard design spec from this task is now implemented — see _create_mission_card() in ControlStationPanel.gd."
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "xh84lt",
+      "version": 3,
+      "timestamp": "2026-04-12T10:15:00.150Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "in-review"
+        }
+      ],
+      "snapshot": {
+        "title": "Design the Control Station active mission card",
+        "description": "The Control Station Active Tab (ControlStationPanel.tscn) lists in-flight missions. Cards currently show rocket ID, target label, resume button. Missing: contractor name, their mineral order, return status. Design the compact card layout for two states: in-orbit and returning. Must match width of Satellite Station list cards. Data available: rockets.status, missions.requested_minerals, contractors.name + role, affinity_scores.affinity_points. Output: layout spec or sketch covering data hierarchy and both states. Kanban: zpo0t2",
+        "status": "in-review",
+        "priority": "high",
+        "assignee": "@Liam",
+        "labels": [],
+        "acceptanceCriteria": [],
+        "implementationNotes": "## ControlStationPanel redesign complete (branch: claude/redesign-control-panel-siBXM)\nPanel fully redesigned (scene-first):\n- Light-themed main area with dark green sidebar (5 nav icon buttons)\n- Header: MOD-04 / CONTROL PANEL / TEMP / UPTIME / × close\n- MissionsList is now HBoxContainer (horizontal cards side-by-side)\n- Mission cards: rocket name, IN-ORBIT (cyan badge) / RETURNING (green badge), Target row, mineral chips\n- Globe placeholder panel (dark) + FLEET OPERATIONAL status bar\nScreenshot: user://ux_screenshots/panel_redesign/04_04_control_station.png\n\nNote: empty-state shown in screenshot (no active missions in test state).\nCard design spec from this task is now implemented — see _create_mission_card() in ControlStationPanel.gd."
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "xh84lt",
+      "version": 4,
+      "timestamp": "2026-04-12T10:22:20.301Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "## ControlStationPanel redesign complete (branch: claude/redesign-control-panel-siBXM)\nPanel fully redesigned (scene-first):\n- Light-themed main area with dark green sidebar (5 nav icon buttons)\n- Header: MOD-04 / CONTROL PANEL / TEMP / UPTIME / × close\n- MissionsList is now HBoxContainer (horizontal cards side-by-side)\n- Mission cards: rocket name, IN-ORBIT (cyan badge) / RETURNING (green badge), Target row, mineral chips\n- Globe placeholder panel (dark) + FLEET OPERATIONAL status bar\nScreenshot: user://ux_screenshots/panel_redesign/04_04_control_station.png\n\nNote: empty-state shown in screenshot (no active missions in test state).\nCard design spec from this task is now implemented — see _create_mission_card() in ControlStationPanel.gd.",
+          "newValue": "## ControlStationPanel redesign complete (branch: claude/redesign-control-panel-siBXM)\nPanel fully redesigned (scene-first):\n- Light-themed main area with dark green sidebar (5 nav icon buttons)\n- Header: MOD-04 / CONTROL PANEL / TEMP / UPTIME / × close\n- MissionsList is now HBoxContainer (horizontal cards side-by-side)\n- Mission cards: rocket name, IN-ORBIT (cyan badge) / RETURNING (green badge), Target row, mineral chips\n- Globe placeholder panel (dark) + FLEET OPERATIONAL status bar\nScreenshot: user://ux_screenshots/panel_redesign/04_04_control_station.png\n\nNote: empty-state shown in screenshot (no active missions in test state).\nCard design spec from this task is now implemented — see _create_mission_card() in ControlStationPanel.gd.\n\nReference image attached in workspace cache:\n- [Control Station reference](</Users/scroobz/Library/Caches/com.raycast.macos/Clipboard/a950b421a5dd45596a769048229d4eb95573af227048ce954e46904b435f7a5d.png>)\nDesign cues to carry into implementation: telemetry strip, mission cards with strong state badges, construction queue/sidebar, log panel, bottom mode tabs, light technical surface with teal/olive accents."
+        }
+      ],
+      "snapshot": {
+        "title": "Design the Control Station active mission card",
+        "description": "The Control Station Active Tab (ControlStationPanel.tscn) lists in-flight missions. Cards currently show rocket ID, target label, resume button. Missing: contractor name, their mineral order, return status. Design the compact card layout for two states: in-orbit and returning. Must match width of Satellite Station list cards. Data available: rockets.status, missions.requested_minerals, contractors.name + role, affinity_scores.affinity_points. Output: layout spec or sketch covering data hierarchy and both states. Kanban: zpo0t2",
+        "status": "in-review",
+        "priority": "high",
+        "assignee": "@Liam",
+        "labels": [],
+        "acceptanceCriteria": [],
+        "implementationNotes": "## ControlStationPanel redesign complete (branch: claude/redesign-control-panel-siBXM)\nPanel fully redesigned (scene-first):\n- Light-themed main area with dark green sidebar (5 nav icon buttons)\n- Header: MOD-04 / CONTROL PANEL / TEMP / UPTIME / × close\n- MissionsList is now HBoxContainer (horizontal cards side-by-side)\n- Mission cards: rocket name, IN-ORBIT (cyan badge) / RETURNING (green badge), Target row, mineral chips\n- Globe placeholder panel (dark) + FLEET OPERATIONAL status bar\nScreenshot: user://ux_screenshots/panel_redesign/04_04_control_station.png\n\nNote: empty-state shown in screenshot (no active missions in test state).\nCard design spec from this task is now implemented — see _create_mission_card() in ControlStationPanel.gd.\n\nReference image attached in workspace cache:\n- [Control Station reference](</Users/scroobz/Library/Caches/com.raycast.macos/Clipboard/a950b421a5dd45596a769048229d4eb95573af227048ce954e46904b435f7a5d.png>)\nDesign cues to carry into implementation: telemetry strip, mission cards with strong state badges, construction queue/sidebar, log panel, bottom mode tabs, light technical surface with teal/olive accents."
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "xh84lt",
+      "version": 5,
+      "timestamp": "2026-04-12T10:40:04.216Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "## ControlStationPanel redesign complete (branch: claude/redesign-control-panel-siBXM)\nPanel fully redesigned (scene-first):\n- Light-themed main area with dark green sidebar (5 nav icon buttons)\n- Header: MOD-04 / CONTROL PANEL / TEMP / UPTIME / × close\n- MissionsList is now HBoxContainer (horizontal cards side-by-side)\n- Mission cards: rocket name, IN-ORBIT (cyan badge) / RETURNING (green badge), Target row, mineral chips\n- Globe placeholder panel (dark) + FLEET OPERATIONAL status bar\nScreenshot: user://ux_screenshots/panel_redesign/04_04_control_station.png\n\nNote: empty-state shown in screenshot (no active missions in test state).\nCard design spec from this task is now implemented — see _create_mission_card() in ControlStationPanel.gd.\n\nReference image attached in workspace cache:\n- [Control Station reference](</Users/scroobz/Library/Caches/com.raycast.macos/Clipboard/a950b421a5dd45596a769048229d4eb95573af227048ce954e46904b435f7a5d.png>)\nDesign cues to carry into implementation: telemetry strip, mission cards with strong state badges, construction queue/sidebar, log panel, bottom mode tabs, light technical surface with teal/olive accents.",
+          "newValue": "## ControlStationPanel redesign complete (branch: claude/redesign-control-panel-siBXM)\nPanel fully redesigned (scene-first):\n- Light-themed main area with dark green sidebar (5 nav icon buttons)\n- Header: MOD-04 / CONTROL PANEL / TEMP / UPTIME / × close\n- MissionsList is now HBoxContainer (horizontal cards side-by-side)\n- Mission cards: rocket name, IN-ORBIT (cyan badge) / RETURNING (green badge), Target row, mineral chips\n- Globe placeholder panel (dark) + FLEET OPERATIONAL status bar\nScreenshot: user://ux_screenshots/panel_redesign/04_04_control_station.png\n\nNote: empty-state shown in screenshot (no active missions in test state).\nCard design spec from this task is now implemented — see _create_mission_card() in ControlStationPanel.gd.\n\nReference image attached in workspace cache:\n- [Control Station reference](</Users/scroobz/Library/Caches/com.raycast.macos/Clipboard/a950b421a5dd45596a769048229d4eb95573af227048ce954e46904b435f7a5d.png>)\nDesign cues to carry into implementation: telemetry strip, mission cards with strong state badges, construction queue/sidebar, log panel, bottom mode tabs, light technical surface with teal/olive accents.\n\n✓ Implemented light diagnostic console direction for Control Station using attached reference. Added telemetry strip, mission cards, queue/log sidebar, and story roadmap mode."
+        }
+      ],
+      "snapshot": {
+        "title": "Design the Control Station active mission card",
+        "description": "The Control Station Active Tab (ControlStationPanel.tscn) lists in-flight missions. Cards currently show rocket ID, target label, resume button. Missing: contractor name, their mineral order, return status. Design the compact card layout for two states: in-orbit and returning. Must match width of Satellite Station list cards. Data available: rockets.status, missions.requested_minerals, contractors.name + role, affinity_scores.affinity_points. Output: layout spec or sketch covering data hierarchy and both states. Kanban: zpo0t2",
+        "status": "in-review",
+        "priority": "high",
+        "assignee": "@Liam",
+        "labels": [],
+        "acceptanceCriteria": [],
+        "implementationNotes": "## ControlStationPanel redesign complete (branch: claude/redesign-control-panel-siBXM)\nPanel fully redesigned (scene-first):\n- Light-themed main area with dark green sidebar (5 nav icon buttons)\n- Header: MOD-04 / CONTROL PANEL / TEMP / UPTIME / × close\n- MissionsList is now HBoxContainer (horizontal cards side-by-side)\n- Mission cards: rocket name, IN-ORBIT (cyan badge) / RETURNING (green badge), Target row, mineral chips\n- Globe placeholder panel (dark) + FLEET OPERATIONAL status bar\nScreenshot: user://ux_screenshots/panel_redesign/04_04_control_station.png\n\nNote: empty-state shown in screenshot (no active missions in test state).\nCard design spec from this task is now implemented — see _create_mission_card() in ControlStationPanel.gd.\n\nReference image attached in workspace cache:\n- [Control Station reference](</Users/scroobz/Library/Caches/com.raycast.macos/Clipboard/a950b421a5dd45596a769048229d4eb95573af227048ce954e46904b435f7a5d.png>)\nDesign cues to carry into implementation: telemetry strip, mission cards with strong state badges, construction queue/sidebar, log panel, bottom mode tabs, light technical surface with teal/olive accents.\n\n✓ Implemented light diagnostic console direction for Control Station using attached reference. Added telemetry strip, mission cards, queue/log sidebar, and story roadmap mode."
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "xh84lt",
+      "version": 6,
+      "timestamp": "2026-04-13T03:07:39.249Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-review",
+          "newValue": "done"
+        },
+        {
+          "field": "implementationNotes",
+          "oldValue": "## ControlStationPanel redesign complete (branch: claude/redesign-control-panel-siBXM)\nPanel fully redesigned (scene-first):\n- Light-themed main area with dark green sidebar (5 nav icon buttons)\n- Header: MOD-04 / CONTROL PANEL / TEMP / UPTIME / × close\n- MissionsList is now HBoxContainer (horizontal cards side-by-side)\n- Mission cards: rocket name, IN-ORBIT (cyan badge) / RETURNING (green badge), Target row, mineral chips\n- Globe placeholder panel (dark) + FLEET OPERATIONAL status bar\nScreenshot: user://ux_screenshots/panel_redesign/04_04_control_station.png\n\nNote: empty-state shown in screenshot (no active missions in test state).\nCard design spec from this task is now implemented — see _create_mission_card() in ControlStationPanel.gd.\n\nReference image attached in workspace cache:\n- [Control Station reference](</Users/scroobz/Library/Caches/com.raycast.macos/Clipboard/a950b421a5dd45596a769048229d4eb95573af227048ce954e46904b435f7a5d.png>)\nDesign cues to carry into implementation: telemetry strip, mission cards with strong state badges, construction queue/sidebar, log panel, bottom mode tabs, light technical surface with teal/olive accents.\n\n✓ Implemented light diagnostic console direction for Control Station using attached reference. Added telemetry strip, mission cards, queue/log sidebar, and story roadmap mode.",
+          "newValue": "Implemented Control Station redesign from attached reference: telemetry strip, active/story views, stronger mission state cards, queue/log sidebar, and optional non-onboarding positioning. Verified in ControlStationPanel.gd and focused loan/control flows."
+        }
+      ],
+      "snapshot": {
+        "title": "Design the Control Station active mission card",
+        "description": "The Control Station Active Tab (ControlStationPanel.tscn) lists in-flight missions. Cards currently show rocket ID, target label, resume button. Missing: contractor name, their mineral order, return status. Design the compact card layout for two states: in-orbit and returning. Must match width of Satellite Station list cards. Data available: rockets.status, missions.requested_minerals, contractors.name + role, affinity_scores.affinity_points. Output: layout spec or sketch covering data hierarchy and both states. Kanban: zpo0t2",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@Liam",
+        "labels": [],
+        "acceptanceCriteria": [],
+        "implementationNotes": "Implemented Control Station redesign from attached reference: telemetry strip, active/story views, stronger mission state cards, queue/log sidebar, and optional non-onboarding positioning. Verified in ControlStationPanel.gd and focused loan/control flows."
       }
     }
   ]

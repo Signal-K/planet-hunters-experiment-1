@@ -582,8 +582,8 @@ func test_launchpad_selector_panel_stays_clear_of_bottom_nav() -> void:
 	var rocket_rect := rocket_section.get_global_rect()
 	var action_rect := open_map_button.get_global_rect()
 	var content_left := minf(contractor_rect.position.x, rocket_rect.position.x)
-	var content_right := maxf(rocket_rect.end.x, action_rect.end.x)
-	var content_width := content_right - content_left
+	var right_dock_width := maxf(rocket_rect.size.x, action_rect.size.x)
+	var combined_sidebar_width := contractor_rect.size.x + right_dock_width
 	if action_rect.end.y > nav_rect.position.y - 8.0:
 		reporter.fail_test("Right-panel map action overlaps bottom nav: %s vs %s" % [action_rect, nav_rect])
 		scene.queue_free()
@@ -592,8 +592,8 @@ func test_launchpad_selector_panel_stays_clear_of_bottom_nav() -> void:
 		reporter.fail_test("Selector content drifted inboard from the left screen edge: left=%s" % content_left)
 		scene.queue_free()
 		return
-	if content_width >= viewport.x * 0.62:
-		reporter.fail_test("Selector content regressed out of sidebar footprint: %s vs viewport %s (selector root=%s)" % [content_width, viewport.x, selector_rect.size.x])
+	if combined_sidebar_width >= viewport.x * 0.62:
+		reporter.fail_test("Combined launchpad sidebars regressed too wide: %s vs viewport %s (left=%s right=%s selector root=%s)" % [combined_sidebar_width, viewport.x, contractor_rect.size.x, right_dock_width, selector_rect.size.x])
 		scene.queue_free()
 		return
 	if structure_rect.size.x > 0.0:

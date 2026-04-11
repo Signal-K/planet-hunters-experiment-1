@@ -157,11 +157,27 @@ func _screenshot(label: String) -> void:
 			(child as CanvasLayer).visible = false
 		elif child is Control:
 			(child as Control).visible = false
-	await get_tree().process_frame
-	await get_tree().process_frame
+	var renderer_name := DisplayServer.get_name().to_lower()
+	if renderer_name.find("headless") != -1:
+		_issue("Screenshot capture unavailable under headless renderer for '%s'." % label)
+		return
+	for _i in range(3):
+		await get_tree().process_frame
 	RenderingServer.force_draw(false)
-	await RenderingServer.frame_post_draw
-	var image := get_viewport().get_texture().get_image()
+	var texture := get_viewport().get_texture()
+	if texture == null:
+		return null
+	var image := texture.get_image()
+	var attempts := 0
+	while (image == null or image.get_width() <= 0 or image.get_height() <= 0) and attempts < 6:
+		await get_tree().create_timer(0.05).timeout
+		await get_tree().process_frame
+		RenderingServer.force_draw(false)
+		texture = get_viewport().get_texture()
+		if texture == null:
+			return null
+		image = texture.get_image()
+		attempts += 1
 	if not image:
 		_issue("Failed to capture viewport for '%s'." % label)
 		return
