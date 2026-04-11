@@ -8,7 +8,7 @@ labels:
   - social
   - notifications
 createdAt: '2026-03-17T06:48:09.102Z'
-updatedAt: '2026-03-19T02:21:10.984Z'
+updatedAt: '2026-04-11T03:59:42.330Z'
 timeSpent: 680
 assignee: '@me'
 ---
@@ -38,5 +38,19 @@ RocketsManager.get_all_tess_classifications(): returns full {anomaly_id: verdict
 ClassificationConsensus.gd: queries classifications table per anomaly the player voted on; detects when consensus forms or changes vs player verdict; persists to classification_consensus.json; consensus_label() for display.
 earth_base_1.gd: _check_classification_consensus() runs on load; shows dismissable panel with confirm/challenge status for each updated target.
 SatelliteStationPanelList: shows consensus label in subtitle for any target the player has classified.
+## ClassificationConsensusNotification redesign (branch: claude/redesign-control-panel-siBXM)
+Dark sci-fi modal fully redesigned with scene-first approach:
+- StatusBar strip: BUFFER_STATE · SYNCHRONIZING... · PROTOCOL_V_9.2 ●
+- CLASSIFICATION RESULTS title + × close button  
+- "— BATCH UPDATE: N TARGET(S) PROCESSED" batch label
+- TargetClassificationCard template (dark glass, chart placeholder, CONSENSUS / Agreement/Disagreement label, ActiveMissionBadge)
+- EXP_GAINED / RANK_STATUS panel + ACKNOWLEDGE_RESULTS CTA
+Screenshot: user://ux_screenshots/panel_redesign/01_01_classification_results.png
+
+Dual-instance test verified (run_consensus_dual_test.sh):
+- PILOT_ALPHA: TIC-4501, planet consensus, +840 EXP
+- PILOT_BETA: TIC-4501, planet consensus, +720 EXP  
+Both instances run simultaneously on separate Xvfb displays, exit 0.
+Screenshots: user://ux_screenshots/consensus_dual/pilot_alpha/ and pilot_beta/
 <!-- SECTION:NOTES:END -->
 

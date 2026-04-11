@@ -1,6 +1,6 @@
 ---
 id: ogipov
-title: Show 'Free Operations unlocked' messaging when M4 completes
+title: 'Show ''Free Operations unlocked'' messaging when M4 completes'
 status: done
 priority: medium
 labels:
@@ -8,7 +8,7 @@ labels:
   - ux
   - progression
 createdAt: '2026-03-16T17:52:06.585Z'
-updatedAt: '2026-03-16T21:23:37.146Z'
+updatedAt: '2026-04-11T03:59:56.395Z'
 timeSpent: 0
 assignee: '@me'
 ---
@@ -31,5 +31,14 @@ Post-M4 spec (2026-03-10) explicitly states: 'Free Operations unlock should be s
 
 <!-- SECTION:NOTES:BEGIN -->
 earth_base_1.gd: _maybe_show_free_ops_unlock() called deferred from _ready. Triggers when completed_mission_count >= 4. Shows animated overlay with route cards (Contract/Survey) and CTA to launchpad. Persisted in rocket_unlock_popups.cfg under free_ops_unlock_seen key. Shows once only.
+## FreeOpsUnlockOverlay redesign (branch: claude/redesign-control-panel-siBXM)
+Full-screen overlay redesigned to match Google Stitch prototype:
+- TopBar (dark green): telemetry readouts
+- Header: "SYSTEM STATE: UNRESTRICTED_ACCESS" + "FREE OPERATIONS" big title
+- 2×3 grid of cards:
+  Row 1: SectorsCard (LOCAL_SECTORS, 3 sectors), QueuesCard (CONSTRUCTION_QUEUES), AssetCard (X-97 CERES)
+  Row 2: GaugeCard (dark green, 99.8% INTEGRITY), PartnersCard (CORPORATE_PARTNERS), TelemetryCard (FLEET_TELEMETRY with progress bars)
+- BottomBar: ● OPTIMAL FLIGHT PATH: CALCULATED | LOGS | START RUN 🚀
+Screenshot: user://ux_screenshots/panel_redesign/05_05_free_operations.png
 <!-- SECTION:NOTES:END -->
 

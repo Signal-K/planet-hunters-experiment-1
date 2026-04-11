@@ -10,7 +10,7 @@ labels:
   - architecture
   - citizen-science
 createdAt: '2026-04-02T11:52:15.355Z'
-updatedAt: '2026-04-03T02:09:15.019Z'
+updatedAt: '2026-04-11T03:59:33.313Z'
 timeSpent: 0
 assignee: '@me'
 ---
@@ -63,5 +63,44 @@ Started UI foundation: shared glass surface helpers plus launchpad/debrief reada
 ✓ Launchpad coach moved to center lane in earth_launchpad; hardened launchpad template defaults + dark-card briefing styling; normalized selector muted text to on-dark; validated with git diff --check, tutorial 7/7, mission e2e 3/3, sync 7/7
 
 ✓ Launchpad selector root moved off VBoxContainer into manual free-layout geometry (v5); narrowed right rail + compact header/step rail. Fixed selector runtime type regression from Control root. Converted emergency loan dialog, base progression cards, and debrief/control-station templates to dark-glass defaults. Added headless-safe launchpad snapshot helper. Validated with git diff --check, tutorial 7/7, mission e2e 3/3, structure 27/27.
+## Panel Redesign — 5 UI surfaces (branch: claude/redesign-control-panel-siBXM)
+Redesigned all 5 panels scene-first (layout/colors/fonts in .tscn, scripts handle only data injection):
+
+**1. ClassificationConsensusNotification** (dark sci-fi modal)
+- Extends BaseDialogLayer; TargetClassificationCard template for each result
+- Status bar: BUFFER_STATE / SYNCHRONIZING... / PROTOCOL_V_9.2 ●
+- EXP_GAINED + RANK_STATUS row, ACKNOWLEDGE_RESULTS CTA
+- Screenshot: user://ux_screenshots/panel_redesign/01_01_classification_results.png
+- Task ref: #12x898
+
+**2. MiningAcademyDialog** (light two-column)
+- Left: trophy icon + pilot rank + debrief text
+- Right: accuracy %, resources, last score stats card; training note with left-border accent
+- BACK TO GAME button (dark teal)
+- Screenshot: user://ux_screenshots/panel_redesign/02_02_mining_academy.png
+
+**3. MechanicIntroOverlay** (light two-column)
+- HeaderBar protocol label + coord label
+- Left: overview + 2 stat cards + numbered steps
+- Right: SchematicPanel with gear circle + stability/thermal ProgressBars
+- ACKNOWLEDGE + COMMENCE BRIEFING buttons
+- Screenshot: user://ux_screenshots/panel_redesign/03_03_mechanic_intro.png
+
+**4. ControlStationPanel** (light dashboard + dark sidebar)
+- Dark green sidebar with 5 nav icon buttons
+- Light main area with horizontal mission cards (IN-ORBIT cyan badge / RETURNING green badge)
+- Globe placeholder + FLEET OPERATIONAL status bar
+- Screenshot: user://ux_screenshots/panel_redesign/04_04_control_station.png
+- Task ref: #xh84lt
+
+**5. FreeOpsUnlockOverlay** (full-screen light grid)
+- TopBar telemetry readouts; SYSTEM STATE: UNRESTRICTED_ACCESS header
+- 2×3 grid: SectorsCard, QueuesCard, AssetCard, GaugeCard (dark), PartnersCard, TelemetryCard
+- LOGS + START RUN 🚀 buttons in BottomBar
+- Screenshot: user://ux_screenshots/panel_redesign/05_05_free_operations.png
+- Task ref: #ogipov
+
+All 5 panels: PanelRedesignTour.tscn confirms 5/5 screenshots, 0 issues.
+Dual-instance consensus test: run_consensus_dual_test.sh confirms PILOT_ALPHA+PILOT_BETA both receive notification simultaneously (exit 0 each).
 <!-- SECTION:NOTES:END -->
 
