@@ -1,11 +1,14 @@
 {
   "affinity": {
+    "lumen_consumer": 1.0
   },
   "reputation": {
+    "lumen_consumer": 100
   },
   "cooldowns": {
   },
   "consecutive_use": {
+    "lumen_consumer": 1
   },
-  "last_mission_sub": ""
+  "last_mission_sub": "lumen_consumer"
 }

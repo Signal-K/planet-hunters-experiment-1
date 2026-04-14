@@ -990,6 +990,9 @@ func _resolve_debrief_once() -> void:
 		"affinity_before":     _affinity_before
 	})
 
+	var now_ts := int(Time.get_unix_time_from_system())
+	var mission_badge := "mission-%s-%d" % [tid if tid != "" else "unknown", now_ts]
+	RocketsManager.mark_mission_completed(mission_badge)
 	AppControllerHelper.record_tutorial_action("resolve_mission_debrief")
 	RocketsManager.finalize_return(rid)
 	RocketsManager.clear_returned_mission()
