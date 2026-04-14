@@ -52,6 +52,7 @@ var _heat_warned := false
 var _signpost_timer := 0.0  # Seconds remaining in pre-mining signpost pause
 var _beam_charges = 100.0
 var _max_beam_charges = 100.0
+var _just_looped := false  # Skip laser hit-check the frame minerals reset to prevent instant re-collection
 var _score = 0
 var _combo = 0
 var _collected_minerals = {}
@@ -558,6 +559,7 @@ func start_mining(is_planet: bool = false, difficulty: int = 1, target_id: Strin
 	_apply_base_bg_color()
 	_refresh_mars_background()
 	_completion_report = {}
+	_just_looped = false
 	_resolve_starter_contract_context()
 	_mission_mode = str(_session_context.get("mission_mode", "free"))
 	_tutorial_step_message = _resolve_tutorial_step_message()
@@ -801,7 +803,8 @@ func _process(delta):
 			"drones_deployed": _drones_deployed
 		})
 		_reset_minerals()
-	
+		_just_looped = true
+
 	# Position both terrain instances for seamless loop
 	terrain_container.position.x = -_scroll_offset
 	if _terrain_loop_container and is_instance_valid(_terrain_loop_container):
@@ -852,7 +855,7 @@ func _process(delta):
 	if _guide_active:
 		_update_guide(delta)
 	
-	if _is_mining and _beam_charges > 0:
+	if _is_mining and _beam_charges > 0 and not _just_looped:
 		_heat = min(100, _heat + HEAT_GAIN_RATE * delta)
 		_fire_laser()
 	else:
@@ -893,6 +896,7 @@ func _process(delta):
 		_complete_mining()
 		return
 
+	_just_looped = false
 	_maybe_emit_stuck_signals()
 
 func _fire_laser():

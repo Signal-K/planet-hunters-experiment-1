@@ -174,6 +174,11 @@ func _on_mining_completed(minerals_collected: Dictionary, score: int):
 		_show_salvage_or_retry_dialog(minerals_collected)
 		return
 
+	# User pressed Return — skip the choice screen and go straight home
+	if completion_reason == "manual_return" or completion_reason == "beam_depleted":
+		_on_return_pressed()
+		return
+
 	ui_container.visible = true
 	mine_btn.disabled = false
 	return_btn.disabled = false

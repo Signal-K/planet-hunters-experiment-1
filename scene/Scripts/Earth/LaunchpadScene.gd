@@ -1,5 +1,7 @@
 extends Node2D
 
+const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
+
 func _ready() -> void:
 	var wizard := get_node_or_null("UILayer/LaunchWizard")
 	if wizard:
@@ -7,6 +9,7 @@ func _ready() -> void:
 		wizard.launched.connect(_on_launched)
 
 func _go_back() -> void:
+	RocketsManager.remove_awaiting_rocket()
 	var sm := get_tree().get_first_node_in_group("scene_manager")
 	if sm:
 		sm.navigate_backward()
