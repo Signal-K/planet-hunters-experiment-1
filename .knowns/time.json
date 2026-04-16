@@ -1,11 +1,3 @@
 {
-  "active": [
-    {
-      "taskId": "5ierg4",
-      "taskTitle": "Fix ux-tour failures and perform scene/script hygiene sweep",
-      "startedAt": "2026-04-13T05:46:09.465Z",
-      "pausedAt": null,
-      "totalPausedMs": 0
-    }
-  ]
+  "active": []
 }

@@ -1,0 +1,259 @@
+{
+  "taskId": "66njw3",
+  "currentVersion": 5,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "66njw3",
+      "version": 1,
+      "timestamp": "2026-04-21T08:17:48.587Z",
+      "changes": [
+        {
+          "field": "labels",
+          "oldValue": [],
+          "newValue": [
+            "ui",
+            "ux",
+            "construction",
+            "visual-feedback",
+            "sandbox-build"
+          ]
+        },
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [],
+          "newValue": [
+            {
+              "text": "Clearer visual indication of completed rocket assembly",
+              "completed": false
+            },
+            {
+              "text": "Icon/Asset generation for rocket parts",
+              "completed": false
+            }
+          ]
+        },
+        {
+          "field": "implementationNotes",
+          "newValue": "Related to @task-p9x3kw (Launchpad UI)"
+        }
+      ],
+      "snapshot": {
+        "title": "Make construction page clearer",
+        "description": "When building a rocket, it should be made clearer what parts are there, maybe generate some icons/assets.\n\nOr how about - build what I originally wrote - a sandbox environment/layout where the user drags parts or entire rockets onto a launchpad, and we see the rocket there.\n\nWhen I ran this scene past testers the assembley section wasn't clear that that was the rocket, finished, ready to go - they tried clicking on the assembley section",
+        "status": "todo",
+        "priority": "medium",
+        "labels": [
+          "ui",
+          "ux",
+          "construction",
+          "visual-feedback",
+          "sandbox-build"
+        ],
+        "acceptanceCriteria": [
+          {
+            "text": "Clearer visual indication of completed rocket assembly",
+            "completed": false
+          },
+          {
+            "text": "Icon/Asset generation for rocket parts",
+            "completed": false
+          }
+        ],
+        "implementationNotes": "Related to @task-p9x3kw (Launchpad UI)"
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "66njw3",
+      "version": 2,
+      "timestamp": "2026-04-21T11:15:20.851Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Make construction page clearer",
+        "description": "When building a rocket, it should be made clearer what parts are there, maybe generate some icons/assets.\n\nOr how about - build what I originally wrote - a sandbox environment/layout where the user drags parts or entire rockets onto a launchpad, and we see the rocket there.\n\nWhen I ran this scene past testers the assembley section wasn't clear that that was the rocket, finished, ready to go - they tried clicking on the assembley section",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "ux",
+          "construction",
+          "visual-feedback",
+          "sandbox-build"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Clearer visual indication of completed rocket assembly"
+          },
+          {
+            "completed": false,
+            "text": "Icon/Asset generation for rocket parts"
+          }
+        ],
+        "implementationNotes": "Related to @task-p9x3kw (Launchpad UI)"
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "66njw3",
+      "version": 3,
+      "timestamp": "2026-04-21T11:19:22.146Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Clearer visual indication of completed rocket assembly"
+            },
+            {
+              "completed": false,
+              "text": "Icon/Asset generation for rocket parts"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Clearer visual indication of completed rocket assembly"
+            },
+            {
+              "completed": false,
+              "text": "Icon/Asset generation for rocket parts"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Make construction page clearer",
+        "description": "When building a rocket, it should be made clearer what parts are there, maybe generate some icons/assets.\n\nOr how about - build what I originally wrote - a sandbox environment/layout where the user drags parts or entire rockets onto a launchpad, and we see the rocket there.\n\nWhen I ran this scene past testers the assembley section wasn't clear that that was the rocket, finished, ready to go - they tried clicking on the assembley section",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "ux",
+          "construction",
+          "visual-feedback",
+          "sandbox-build"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Clearer visual indication of completed rocket assembly"
+          },
+          {
+            "completed": false,
+            "text": "Icon/Asset generation for rocket parts"
+          }
+        ],
+        "implementationNotes": "Related to @task-p9x3kw (Launchpad UI)"
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "66njw3",
+      "version": 4,
+      "timestamp": "2026-04-21T11:19:22.536Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Clearer visual indication of completed rocket assembly"
+            },
+            {
+              "completed": false,
+              "text": "Icon/Asset generation for rocket parts"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Clearer visual indication of completed rocket assembly"
+            },
+            {
+              "completed": true,
+              "text": "Icon/Asset generation for rocket parts"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Make construction page clearer",
+        "description": "When building a rocket, it should be made clearer what parts are there, maybe generate some icons/assets.\n\nOr how about - build what I originally wrote - a sandbox environment/layout where the user drags parts or entire rockets onto a launchpad, and we see the rocket there.\n\nWhen I ran this scene past testers the assembley section wasn't clear that that was the rocket, finished, ready to go - they tried clicking on the assembley section",
+        "status": "in-progress",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "ux",
+          "construction",
+          "visual-feedback",
+          "sandbox-build"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Clearer visual indication of completed rocket assembly"
+          },
+          {
+            "completed": true,
+            "text": "Icon/Asset generation for rocket parts"
+          }
+        ],
+        "implementationNotes": "Related to @task-p9x3kw (Launchpad UI)"
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "66njw3",
+      "version": 5,
+      "timestamp": "2026-04-21T11:19:30.316Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Make construction page clearer",
+        "description": "When building a rocket, it should be made clearer what parts are there, maybe generate some icons/assets.\n\nOr how about - build what I originally wrote - a sandbox environment/layout where the user drags parts or entire rockets onto a launchpad, and we see the rocket there.\n\nWhen I ran this scene past testers the assembley section wasn't clear that that was the rocket, finished, ready to go - they tried clicking on the assembley section",
+        "status": "done",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "ux",
+          "construction",
+          "visual-feedback",
+          "sandbox-build"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Clearer visual indication of completed rocket assembly"
+          },
+          {
+            "completed": true,
+            "text": "Icon/Asset generation for rocket parts"
+          }
+        ],
+        "implementationNotes": "Related to @task-p9x3kw (Launchpad UI)"
+      }
+    }
+  ]
+}

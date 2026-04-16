@@ -12,9 +12,14 @@ const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
 
 func _ready() -> void:
 	_apply_style()
+	$Overlay.mouse_filter = Control.MOUSE_FILTER_STOP
 	$Overlay.gui_input.connect(_on_overlay_input)
 	close_btn.pressed.connect(_on_close)
 	_build_list()
+
+func _input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
+		_on_close()
 
 func _apply_style() -> void:
 	$Overlay.color = Color(0.03, 0.06, 0.10, 0.80)

@@ -17,6 +17,10 @@ const MICRO_SURVEY_KEYS = {
   pwa_install:  "planet_hunters_micro_survey_pwa_install_v1",
   m4_complete:  "planet_hunters_micro_survey_m4_complete_v1",
   return_visit: "planet_hunters_micro_survey_return_visit_v1",
+  level_up:     "planet_hunters_micro_survey_level_up_v1",
+  upgrade:      "planet_hunters_micro_survey_upgrade_v1",
+  planet_found: "planet_hunters_micro_survey_planet_found_v1",
+  difficulty:   "planet_hunters_micro_survey_difficulty_v1",
 };
 const SESSION_COUNT_KEY = "planet_hunters_session_count_v1";
 const MICRO_SURVEY_IDS = {
@@ -29,6 +33,10 @@ const MICRO_SURVEY_IDS = {
   pwa_install: "",  // "Why did you install the app?" — fires after PWA install prompt accepted
   m4_complete: "",  // "You've reached the end — what would keep you playing?" — fires at M4 debrief
   return_visit: "", // "What brought you back?" — fires on 2nd+ session start
+  level_up:     "", // "How does the progression speed feel?" — fires after level up
+  upgrade:      "", // "Was this upgrade worth the price?" — fires after room upgrade
+  planet_found: "", // "How exciting was it to find your first planet?" — fires after planet candidate found
+  difficulty:   "", // "What part of the mission was most difficult?" — fires after failed/stuck run
 };
 const SURVEY_OVERLAY_ID = "planet-hunters-survey-overlay";
 const SURVEY_IFRAME_ID = "planet-hunters-survey-iframe";
@@ -440,9 +448,19 @@ function localDistinctId() {
 
 async function resolveSurveyDistinctId() {
   try {
-    const distinctId = await ensureGuestUser();
-    syncAnalyticsIdentity(distinctId);
-    return distinctId;
+    const client = await loadSupabaseClient();
+    const { data: { user: currentUser } } = await client.auth.getUser();
+    
+    if (currentUser && currentUser.id) {
+      // If we have a real user, ensure PostHog knows about them
+      syncAnalyticsIdentity(currentUser.id);
+      return currentUser.id;
+    }
+
+    // Fall back to anonymous guest
+    const guestId = await ensureGuestUser();
+    syncAnalyticsIdentity(guestId);
+    return guestId;
   } catch (error) {
     console.warn("Falling back to local distinct id for survey:", error);
     const fallback = localDistinctId();
@@ -829,6 +847,42 @@ function maybeShowPwaInstallSurvey() {
   );
 }
 
+function maybeShowLevelUpSurvey(payload) {
+  maybeTriggerMicroSurvey(
+    MICRO_SURVEY_KEYS.level_up,
+    MICRO_SURVEY_IDS.level_up,
+    "micro_level_up_progression_speed",
+    payload
+  );
+}
+
+function maybeShowUpgradeSurvey(payload) {
+  maybeTriggerMicroSurvey(
+    MICRO_SURVEY_KEYS.upgrade,
+    MICRO_SURVEY_IDS.upgrade,
+    "micro_room_upgrade_value",
+    payload
+  );
+}
+
+function maybeShowPlanetFoundSurvey(payload) {
+  maybeTriggerMicroSurvey(
+    MICRO_SURVEY_KEYS.planet_found,
+    MICRO_SURVEY_IDS.planet_found,
+    "micro_planet_discovery_excitement",
+    payload
+  );
+}
+
+function maybeShowDifficultySurvey(payload) {
+  maybeTriggerMicroSurvey(
+    MICRO_SURVEY_KEYS.difficulty,
+    MICRO_SURVEY_IDS.difficulty,
+    "micro_mission_difficulty_friction",
+    payload
+  );
+}
+
 function maybeShowReturnVisitSurvey() {
   // Increment session count and arm _pendingReturnVisitSurvey on the 2nd session.
   // The survey fires when the player completes a meaningful mechanic — see onGameMessage.
@@ -870,9 +924,148 @@ async function maybeTriggerFirstMissionSurvey(eventPayload) {
   }
 }
 
+function AuthModal({ isOpen, onClose, onAuthSuccess }) {
+  const [isLogin, setIsLogin] = useState(true);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  if (!isOpen) return null;
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    try {
+      const client = await loadSupabaseClient();
+      let result;
+      if (isLogin) {
+        result = await client.auth.signInWithPassword({ email, password });
+      } else {
+        result = await client.auth.signUp({ email, password });
+      }
+
+      if (result.error) throw result.error;
+
+      const user = result.data.user;
+      if (user) {
+        syncAnalyticsIdentity(user.id);
+        captureAnalyticsEvent(isLogin ? "login_success" : "signup_success", {
+          method: "email",
+          user_id: user.id,
+        });
+        onAuthSuccess(user);
+        onClose();
+      }
+    } catch (err) {
+      setError(err.message);
+      captureAnalyticsEvent("auth_error", {
+        message: err.message,
+        type: isLogin ? "login" : "signup",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return React.createElement(
+    "div",
+    {
+      style: {
+        position: "fixed",
+        inset: 0,
+        background: "rgba(2, 6, 15, 0.9)",
+        zIndex: 200000,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "20px",
+      },
+      onClick: onClose,
+    },
+    React.createElement(
+      "div",
+      {
+        style: {
+          width: "min(420px, 100%)",
+          background: "#0c1220",
+          border: "1px solid #233455",
+          borderRadius: "16px",
+          padding: "32px",
+          boxShadow: "0 24px 60px rgba(0, 0, 0, 0.6)",
+        },
+        onClick: (e) => e.stopPropagation(),
+      },
+      React.createElement(
+        "h2",
+        { style: { margin: "0 0 12px", fontSize: "24px", color: "#e7edf9" } },
+        isLogin ? "Welcome Back" : "Create Account"
+      ),
+      React.createElement(
+        "p",
+        { style: { margin: "0 0 24px", fontSize: "14px", color: "#a9b4cc", lineHeight: 1.5 } },
+        "Save your progress and access points across all games in the Star Sailors ecosystem (Planet Hunters, Star Sailors, and more!)."
+      ),
+      error && React.createElement(
+        "div",
+        { style: { padding: "12px", background: "rgba(255, 69, 58, 0.1)", border: "1px solid #ff453a", borderRadius: "8px", marginBottom: "20px", color: "#ff453a", fontSize: "14px" } },
+        error
+      ),
+      React.createElement(
+        "form",
+        { onSubmit: handleSubmit, style: { display: "flex", flexDirection: "column", gap: "16px" } },
+        React.createElement("input", {
+          type: "email",
+          placeholder: "Email address",
+          value: email,
+          onChange: (e) => setEmail(e.target.value),
+          required: true,
+          style: { padding: "12px", borderRadius: "8px", border: "1px solid #233455", background: "#05080f", color: "#fff", outline: "none" },
+        }),
+        React.createElement("input", {
+          type: "password",
+          placeholder: "Password",
+          value: password,
+          onChange: (e) => setPassword(e.target.value),
+          required: true,
+          style: { padding: "12px", borderRadius: "8px", border: "1px solid #233455", background: "#05080f", color: "#fff", outline: "none" },
+        }),
+        React.createElement(
+          "button",
+          {
+            type: "submit",
+            disabled: loading,
+            style: { padding: "14px", borderRadius: "8px", border: "none", background: "#4ad0ff", color: "#05080f", fontWeight: 700, cursor: "pointer", opacity: loading ? 0.7 : 1 },
+          },
+          loading ? "Processing..." : isLogin ? "Sign In" : "Sign Up"
+        )
+      ),
+      React.createElement(
+        "button",
+        {
+          onClick: () => setIsLogin(!isLogin),
+          style: { background: "none", border: "none", color: "#4ad0ff", marginTop: "20px", width: "100%", textAlign: "center", cursor: "pointer", fontSize: "14px" },
+        },
+        isLogin ? "Don't have an account? Sign Up" : "Already have an account? Sign In"
+      ),
+      React.createElement(
+        "button",
+        {
+          onClick: onClose,
+          style: { background: "none", border: "none", color: "#a9b4cc", marginTop: "12px", width: "100%", textAlign: "center", cursor: "pointer", fontSize: "13px" },
+        },
+        "Continue as Guest"
+      )
+    )
+  );
+}
+
 function App() {
   const [progress, setProgress] = useState(() => parseProgress(readCookie(COOKIE_NAME)));
   const [xpState, setXpState] = useState(() => readXpState() || { experience_level: 1, experience_xp: 0, franc_balance: 0 });
+  const [user, setUser] = useState(null);
+  const [showAuth, setShowAuth] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [storageStatus, setStorageStatus] = useState("Cookie storage active");
   // In PWA mode skip cache-busting so the service worker can cache the game
@@ -894,6 +1087,17 @@ function App() {
     () => (typeof window !== "undefined" ? window.innerWidth : 1280)
   );
   const [showPwaHudMenu, setShowPwaHudMenu] = useState(false);
+
+  useEffect(() => {
+    loadSupabaseClient().then((client) => {
+      client.auth.getUser().then(({ data: { user: currentUser } }) => {
+        if (currentUser) {
+          setUser(currentUser);
+          syncAnalyticsIdentity(currentUser.id);
+        }
+      });
+    });
+  }, []);
 
   useEffect(() => {
     function onResize() {
@@ -1002,10 +1206,23 @@ function App() {
           vibrate([80, 60, 120]);
           clearTimeout(levelUpTimerRef.current);
           levelUpTimerRef.current = setTimeout(() => setLevelUpBanner(null), 4000);
+          maybeShowLevelUpSurvey(payload);
         }
       }
       if (eventName === "mine_hit") {
         vibrate([30]);
+      }
+      if (eventName === "player_stuck_detected") {
+        maybeShowDifficultySurvey(payload);
+      }
+      if (eventName === "franc_balance_updated" && String(payload.source || "").startsWith("room_upgrade")) {
+        maybeShowUpgradeSurvey(payload);
+      }
+      if (eventName === "scanner_scan_completed") {
+        maybeShowScienceSurvey(payload);
+        if (payload.detected_count > 0 && payload.scanner_mode === "planets") {
+          maybeShowPlanetFoundSurvey(payload);
+        }
       }
       if (eventName === "rocket_landed" || eventName === "first_mission_completed" || eventName === "mission_debrief_resolved") {
         vibrate([60, 40, 60]);
@@ -1129,6 +1346,17 @@ function App() {
       pwaHudTimerRef.current = null;
     }, 3500);
   }, [isPwa, isMobile]);
+
+  const handleSignout = useCallback(async () => {
+    try {
+      const client = await loadSupabaseClient();
+      await client.auth.signOut();
+      setUser(null);
+      captureAnalyticsEvent("logout_success");
+    } catch (err) {
+      console.warn("Signout failed:", err);
+    }
+  }, []);
 
   const handlePwaSave = useCallback(() => {
     const next = {
@@ -1447,6 +1675,21 @@ function App() {
                             },
                           },
                           isIos ? "Add to Home Screen" : "Install App"
+                        ),
+                        React.createElement(
+                          "button",
+                          {
+                            onClick: user ? handleSignout : () => setShowAuth(true),
+                            style: {
+                              border: "1px solid #2a3560",
+                              borderRadius: "8px",
+                              padding: "8px 10px",
+                              color: "#fff",
+                              background: user ? "#3a1724" : "#14204a",
+                              fontSize: "12px",
+                            },
+                          },
+                          user ? "Sign Out" : "Sign In"
                         ),
                         React.createElement(
                           "button",
@@ -1875,6 +2118,22 @@ function App() {
                 borderRadius: "8px",
                 padding: "6px 14px",
                 fontSize: "13px",
+                color: "var(-- ink)",
+                background: user ? "rgba(255,69,58,0.1)" : "rgba(74,208,255,0.1)",
+                cursor: "pointer",
+              },
+              onClick: user ? handleSignout : () => setShowAuth(true),
+            },
+            user ? `Sign Out (${user.email})` : "Sign In"
+          ),
+          React.createElement(
+            "button",
+            {
+              style: {
+                border: "1px solid var(--edge)",
+                borderRadius: "8px",
+                padding: "6px 14px",
+                fontSize: "13px",
                 color: storageStatus === "Saved \u2713" || storageStatus === "Cookie saved" ? "var(--accent)" : "var(--muted)",
                 background: "transparent",
                 cursor: "pointer",
@@ -1942,7 +2201,12 @@ function App() {
       })
     ),
     rotatePrompt,
-    levelUpOverlay
+    levelUpOverlay,
+    React.createElement(AuthModal, {
+      isOpen: showAuth,
+      onClose: () => setShowAuth(false),
+      onAuthSuccess: (u) => setUser(u),
+    })
   );
 }
 

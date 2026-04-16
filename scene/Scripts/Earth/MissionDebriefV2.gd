@@ -114,6 +114,11 @@ func _on_menu_button_pressed() -> void:
 	preload("res://Scripts/UI/GameNavigationMenu.gd").toggle(self)
 
 func _on_market_button_pressed() -> void:
+	var app = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
+	if app and app.has_method("get_experience_level"):
+		if int(app.get_experience_level()) < 5:
+			AppLogger.w("Market unlocks at Level 5")
+			return
 	if ui_manager:
 		ui_manager.show_panel(UIManager.PanelType.MARKET)
 
@@ -1098,6 +1103,21 @@ func _build_next_mission_brief() -> Dictionary:
 	var target_id = str(target.get("id", ""))
 	var target_label = str(target.get("label", "Earth Launchpad"))
 	var contractor = "Choose in Launchpad"
+	# Launchpad shortcut is only available once free ops are unlocked (post-M4).
+	# Before that, players must return to base and launch manually.
+	if not RocketsManager.is_free_operations_unlocked():
+		return {
+			"stage": next_stage,
+			"target_id": target_id,
+			"location": target_label,
+			"contractor": contractor,
+			"title": _next_mission_title(current_stage),
+			"objective": _next_mission_objective(current_stage, target_label),
+			"note": _next_mission_note(current_stage),
+			"requires_base_setup": true,
+			"base_setup_key": "",
+			"primary_cta": "Return to Base →",
+		}
 	return {
 		"stage": next_stage,
 		"target_id": target_id,
@@ -1115,7 +1135,7 @@ func _build_next_mission_brief() -> Dictionary:
 func _next_mission_title(current_stage: int) -> String:
 	match current_stage:
 		1:
-			return "Mission 2 starts at the Control Station"
+			return "Build the Control Station to unlock Mission 2"
 		2:
 			return "Mission 3 is ready"
 		3:

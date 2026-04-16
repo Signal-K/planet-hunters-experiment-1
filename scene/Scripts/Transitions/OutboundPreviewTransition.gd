@@ -153,6 +153,8 @@ func _load_target_data() -> void:
 	_current_target_label = str(target.get("label", ""))
 	_current_target_type = str(target.get("type", "asteroid"))
 	_current_rocket_id = str(target.get("rocket_id", ""))
+	if _current_rocket_id == "":
+		_current_rocket_id = "starterrocket1"
 	# Look up science blurb from persisted detected targets
 	if rm and _current_target_id != "":
 		for dt in rm.get_detected_targets():

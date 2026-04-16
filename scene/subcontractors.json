@@ -1,14 +1,15 @@
 {
   "affinity": {
-    "lumen_consumer": 1.0
+    "aegis_defense": 2.0
   },
   "reputation": {
-    "lumen_consumer": 100
+    "aegis_defense": 200
   },
   "cooldowns": {
+    "aegis_defense": 1776774942
   },
   "consecutive_use": {
-    "lumen_consumer": 1
+    "aegis_defense": 0
   },
-  "last_mission_sub": "lumen_consumer"
+  "last_mission_sub": "aegis_defense"
 }

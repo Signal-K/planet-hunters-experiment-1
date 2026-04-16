@@ -173,11 +173,11 @@ func _ready():
 	_setup_beam_visuals()
 	_apply_responsive_layout()
 	laser.visible = false
-	mine_button.pressed.connect(_on_fire_pressed)
+	mine_button.button_down.connect(_on_fire_pressed)
 	mine_button.button_up.connect(_on_fire_released)
 	drone_button.pressed.connect(_deploy_drone)
 	return_button.pressed.connect(_on_return_pressed)
-	menu_button.pressed.connect(_toggle_inventory)
+	menu_button.pressed.connect(_on_menu_pressed)
 	_setup_button_handbook()
 	_uses_touch_controls = _should_use_touch_controls()
 	_update_bottom_bar_visibility()
@@ -226,8 +226,9 @@ func _on_viewport_size_changed() -> void:
 	_position_rocket_lane()
 
 func _update_bottom_bar_visibility() -> void:
-	mine_button.visible = _uses_touch_controls
-	drone_button.visible = _uses_touch_controls and _drones_enabled
+	mine_button.visible = true
+	drone_button.visible = _drones_enabled
+	# On desktop show spacebar hint alongside the on-screen buttons
 	instructions.visible = not _uses_touch_controls
 
 func _should_use_touch_controls() -> bool:
@@ -1217,12 +1218,12 @@ func _show_guide_step():
 				if _uses_touch_controls:
 					instructions.text = "Hold FIRE to mine. Tap DRONE for subsurface. Tap RETURN to leave."
 				else:
-					instructions.text = "Hold SPACE to mine. Press D for drones. Press RETURN to leave."
+					instructions.text = "Hold SPACE (or click FIRE) to mine. Press D for drones."
 			else:
 				if _uses_touch_controls:
 					instructions.text = "Hold FIRE to mine surface deposits. Tap RETURN to leave."
 				else:
-					instructions.text = "Hold SPACE to mine surface deposits. Press RETURN to leave."
+					instructions.text = "Hold SPACE (or click FIRE) to mine surface deposits."
 			if _starter_contract_active and _starter_order_targets.size() > 0:
 				instructions.text += " Prioritise your contractor's requested minerals."
 		GuideStep.MINE_SURFACE_IRON:
@@ -1247,12 +1248,12 @@ func _show_guide_step():
 				if _uses_touch_controls:
 					instructions.text = "Continue: FIRE mine, DRONE deploy, RETURN exit."
 				else:
-					instructions.text = "Continue: SPACE mine, D drone, RETURN exit."
+					instructions.text = "SPACE/FIRE to mine  |  D to deploy drone"
 			else:
 				if _uses_touch_controls:
 					instructions.text = "Continue: FIRE mine, RETURN to exit."
 				else:
-					instructions.text = "Continue: SPACE mine, RETURN to exit."
+					instructions.text = "SPACE or FIRE button to mine"
 			_guide_active = false
 	
 	tween.tween_property(instructions, "modulate:a", 1.0, 0.4).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
@@ -1399,6 +1400,13 @@ func _on_return_pressed():
 	else:
 		_completion_reason = "manual_return"
 	_complete_mining()
+
+func _on_menu_pressed() -> void:
+	var sm := get_tree().get_first_node_in_group("scene_manager")
+	if sm and sm.has_method("change_to_scene"):
+		sm.change_to_scene("res://Scenes/Earth/earth_base_1.tscn")
+	else:
+		get_tree().change_scene_to_file("res://Scenes/Earth/earth_base_1.tscn")
 
 func get_completion_report() -> Dictionary:
 	return _completion_report.duplicate(true)

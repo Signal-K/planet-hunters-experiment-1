@@ -17,6 +17,8 @@ const SOIL_BOTTOM: float = 950.0
 const SKY_LEVEL: float = 400.0
 const UI_LEVEL: float = 1000.0
 
+const AppLogger = preload("res://Scripts/Utils/Logger.gd")
+
 @export var show_ground_guide: bool = false
 
 var camera_controller: Node
@@ -133,6 +135,13 @@ func _on_menu_button_pressed() -> void:
 	preload("res://Scripts/UI/GameNavigationMenu.gd").toggle(self)
 
 func _on_market_button_pressed() -> void:
+	var app = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
+	if app and app.has_method("get_experience_level"):
+		var level = int(app.get_experience_level())
+		if level < 5:
+			AppLogger.w("Market unlocks at Level 5 (Current: %d)" % level)
+			return
+	
 	print("Market button pressed - showing market panel")
 	ui_manager.show_panel(UIManager.PanelType.MARKET)
 

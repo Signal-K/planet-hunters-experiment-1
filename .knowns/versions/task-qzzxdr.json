@@ -1,0 +1,295 @@
+{
+  "taskId": "qzzxdr",
+  "currentVersion": 7,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "qzzxdr",
+      "version": 1,
+      "timestamp": "2026-04-21T07:49:39.081Z",
+      "changes": [
+        {
+          "field": "description",
+          "oldValue": "![image](https://ibb.co/ZRVV8P84)\n\nBy default, we should also have one target selected by default",
+          "newValue": "![image](https://ibb.co/ZRVV8P84)\n![](https://ibb.co/ZRVV8P84)\n\n\nBy default, we should also have one target selected by default"
+        }
+      ],
+      "snapshot": {
+        "title": "Make map page bigger",
+        "description": "![image](https://ibb.co/ZRVV8P84)\n![](https://ibb.co/ZRVV8P84)\n\n\nBy default, we should also have one target selected by default",
+        "status": "todo",
+        "priority": "low",
+        "labels": [],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "qzzxdr",
+      "version": 2,
+      "timestamp": "2026-04-21T07:50:12.502Z",
+      "changes": [
+        {
+          "field": "description",
+          "oldValue": "![image](https://ibb.co/ZRVV8P84)\n![](https://ibb.co/ZRVV8P84)\n\n\nBy default, we should also have one target selected by default",
+          "newValue": "![image](https://i.ibb.co/FkKKwMwZ/Screenshot-2026-04-21-at-17-48-35.png)\n\n\nBy default, we should also have one target selected by default"
+        }
+      ],
+      "snapshot": {
+        "title": "Make map page bigger",
+        "description": "![image](https://i.ibb.co/FkKKwMwZ/Screenshot-2026-04-21-at-17-48-35.png)\n\n\nBy default, we should also have one target selected by default",
+        "status": "todo",
+        "priority": "low",
+        "labels": [],
+        "acceptanceCriteria": []
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "qzzxdr",
+      "version": 3,
+      "timestamp": "2026-04-21T08:18:46.555Z",
+      "changes": [
+        {
+          "field": "labels",
+          "oldValue": [],
+          "newValue": [
+            "ui",
+            "map",
+            "ux",
+            "pwa-layout"
+          ]
+        },
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [],
+          "newValue": [
+            {
+              "text": "Map page covers at least 80% of viewport",
+              "completed": false
+            },
+            {
+              "text": "Default target is auto-selected on map open",
+              "completed": false
+            }
+          ]
+        },
+        {
+          "field": "implementationNotes",
+          "newValue": "Related to @task-ls9pkd"
+        }
+      ],
+      "snapshot": {
+        "title": "Make map page bigger",
+        "description": "![image](https://i.ibb.co/FkKKwMwZ/Screenshot-2026-04-21-at-17-48-35.png)\n\n\nBy default, we should also have one target selected by default",
+        "status": "todo",
+        "priority": "low",
+        "labels": [
+          "ui",
+          "map",
+          "ux",
+          "pwa-layout"
+        ],
+        "acceptanceCriteria": [
+          {
+            "text": "Map page covers at least 80% of viewport",
+            "completed": false
+          },
+          {
+            "text": "Default target is auto-selected on map open",
+            "completed": false
+          }
+        ],
+        "implementationNotes": "Related to @task-ls9pkd"
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "qzzxdr",
+      "version": 4,
+      "timestamp": "2026-04-21T11:44:19.415Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Make map page bigger",
+        "description": "![image](https://i.ibb.co/FkKKwMwZ/Screenshot-2026-04-21-at-17-48-35.png)\n\n\nBy default, we should also have one target selected by default",
+        "status": "in-progress",
+        "priority": "low",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "map",
+          "ux",
+          "pwa-layout"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Map page covers at least 80% of viewport"
+          },
+          {
+            "completed": false,
+            "text": "Default target is auto-selected on map open"
+          }
+        ],
+        "implementationNotes": "Related to @task-ls9pkd"
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "qzzxdr",
+      "version": 5,
+      "timestamp": "2026-04-21T11:44:20.135Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Map page covers at least 80% of viewport"
+            },
+            {
+              "completed": false,
+              "text": "Default target is auto-selected on map open"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Map page covers at least 80% of viewport"
+            },
+            {
+              "completed": false,
+              "text": "Default target is auto-selected on map open"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Make map page bigger",
+        "description": "![image](https://i.ibb.co/FkKKwMwZ/Screenshot-2026-04-21-at-17-48-35.png)\n\n\nBy default, we should also have one target selected by default",
+        "status": "in-progress",
+        "priority": "low",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "map",
+          "ux",
+          "pwa-layout"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Map page covers at least 80% of viewport"
+          },
+          {
+            "completed": false,
+            "text": "Default target is auto-selected on map open"
+          }
+        ],
+        "implementationNotes": "Related to @task-ls9pkd"
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "qzzxdr",
+      "version": 6,
+      "timestamp": "2026-04-21T11:44:20.525Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Map page covers at least 80% of viewport"
+            },
+            {
+              "completed": false,
+              "text": "Default target is auto-selected on map open"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Map page covers at least 80% of viewport"
+            },
+            {
+              "completed": true,
+              "text": "Default target is auto-selected on map open"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Make map page bigger",
+        "description": "![image](https://i.ibb.co/FkKKwMwZ/Screenshot-2026-04-21-at-17-48-35.png)\n\n\nBy default, we should also have one target selected by default",
+        "status": "in-progress",
+        "priority": "low",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "map",
+          "ux",
+          "pwa-layout"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Map page covers at least 80% of viewport"
+          },
+          {
+            "completed": true,
+            "text": "Default target is auto-selected on map open"
+          }
+        ],
+        "implementationNotes": "Related to @task-ls9pkd"
+      }
+    },
+    {
+      "id": "v7",
+      "taskId": "qzzxdr",
+      "version": 7,
+      "timestamp": "2026-04-21T11:44:21.319Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Make map page bigger",
+        "description": "![image](https://i.ibb.co/FkKKwMwZ/Screenshot-2026-04-21-at-17-48-35.png)\n\n\nBy default, we should also have one target selected by default",
+        "status": "done",
+        "priority": "low",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "map",
+          "ux",
+          "pwa-layout"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Map page covers at least 80% of viewport"
+          },
+          {
+            "completed": true,
+            "text": "Default target is auto-selected on map open"
+          }
+        ],
+        "implementationNotes": "Related to @task-ls9pkd"
+      }
+    }
+  ]
+}
