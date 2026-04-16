@@ -1,5 +1,5 @@
 extends Control
-## Mobile-first launch wizard — Contractor → Target → Rocket → Confirm.
+## Mobile-first launch wizard — Contractor > Target > Rocket > Confirm.
 ## Static scaffold (header / scroll / footer) is defined in LaunchWizard.tscn
 ## so designers can adjust layout in the Godot editor without touching this file.
 ## Dynamic card content is built here at runtime.
@@ -67,9 +67,11 @@ var _targets:             Array      = []
 var _rockets:             Array      = []
 
 # Live-update widget refs
-var _map_step:        MapStepScript = null
-var _target_detail:   PanelContainer      = null
-var _assembly_vbox:   VBoxContainer       = null
+var _map_step:          MapStepScript  = null
+var _target_detail:     PanelContainer = null
+var _assembly_vbox:     VBoxContainer  = null
+var _asm_status_label:  Label          = null
+var _asm_tweens:        Array          = []
 
 signal back_pressed
 signal launched(rocket_id: String, target_id: String)
@@ -140,10 +142,15 @@ func _wire_buttons() -> void:
 # ── Step management ───────────────────────────────────────────────────────────
 
 func _show_step(s: Step) -> void:
-	_step          = s
-	_map_step      = null
-	_target_detail = null
-	_assembly_vbox = null
+	for t in _asm_tweens:
+		if t and t.is_valid():
+			t.kill()
+	_asm_tweens.clear()
+	_step              = s
+	_map_step          = null
+	_target_detail     = null
+	_assembly_vbox     = null
+	_asm_status_label  = null
 	_update_header()
 	_update_dots()
 	_update_footer()
@@ -167,18 +174,18 @@ func _update_footer() -> void:
 	match _step:
 		Step.CONTRACTOR:
 			_cancel_btn.text   = "Cancel"
-			_next_btn.text     = "Next →"
+			_next_btn.text     = "Next >"
 			_next_btn.disabled = _selected_contractor.is_empty()
 		Step.TARGET:
-			_cancel_btn.text   = "← Back"
-			_next_btn.text     = "Next →"
+			_cancel_btn.text   = "< Back"
+			_next_btn.text     = "Next >"
 			_next_btn.disabled = _selected_target.is_empty()
 		Step.ROCKET:
-			_cancel_btn.text   = "← Back"
-			_next_btn.text     = "Next →"
+			_cancel_btn.text   = "< Back"
+			_next_btn.text     = "Next >"
 			_next_btn.disabled = _selected_rocket.is_empty()
 		Step.CONFIRM:
-			_cancel_btn.text   = "← Back"
+			_cancel_btn.text   = "< Back"
 			_next_btn.text     = "Launch Mission"
 			_next_btn.disabled = false
 
@@ -374,10 +381,17 @@ func _build_target_step() -> void:
 		_add_empty_msg("No targets available. Complete a scan mission first.")
 		return
 
+	# Auto-select first target if none chosen yet
+	if _selected_target.is_empty() and not _targets.is_empty():
+		_selected_target = _targets[0]
+		RocketsManager.select_target(str(_selected_target.get("id", "")))
+		_update_footer()
+
 	# ── Orbital map ──
 	var map_wrap := PanelContainer.new()
 	map_wrap.size_flags_horizontal = SIZE_EXPAND_FILL
-	map_wrap.custom_minimum_size   = Vector2(0, 420)
+	var _vp_h := get_viewport_rect().size.y
+	map_wrap.custom_minimum_size   = Vector2(0, max(420.0, _vp_h * 0.62))
 	var mws := StyleBoxFlat.new()
 	mws.bg_color                  = Color(0.028, 0.047, 0.118, 1.0)
 	mws.corner_radius_top_left    = 12
@@ -400,7 +414,7 @@ func _build_target_step() -> void:
 	_card_list.add_child(_target_detail)
 
 	if _selected_target.is_empty():
-		var hint := _label("← Tap a target on the map above", C_ON_SURF_VAR, 14)
+		var hint := _label("< Tap a target on the map above", C_ON_SURF_VAR, 14)
 		hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		_target_detail.add_child(hint)
 	else:
@@ -496,15 +510,26 @@ func _build_rocket_step() -> void:
 	asm_outer.add_theme_constant_override("separation", 6)
 	asm_margin.add_child(asm_outer)
 
-	var asm_title := _label("ASSEMBLY", Color(0.82, 0.92, 0.97, 0.50), 14)
+	var asm_title := _label("ASSEMBLY PREVIEW", Color(0.82, 0.92, 0.97, 0.50), 13)
 	asm_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	asm_outer.add_child(asm_title)
+
+	var asm_hint := _label("Select a rocket to see its parts", Color(0.55, 0.65, 0.78, 0.70), 11)
+	asm_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	asm_outer.add_child(asm_hint)
 
 	_assembly_vbox = VBoxContainer.new()
 	_assembly_vbox.add_theme_constant_override("separation", 3)
 	_assembly_vbox.size_flags_vertical = SIZE_EXPAND_FILL
 	_assembly_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
 	asm_outer.add_child(_assembly_vbox)
+
+	_asm_status_label = Label.new()
+	_asm_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_asm_status_label.add_theme_font_size_override("font_size", 13)
+	_asm_status_label.add_theme_color_override("font_color", Color(0.22, 0.80, 0.45, 0.0))
+	_asm_status_label.text = "ASSEMBLED ✓  READY TO LAUNCH"
+	asm_outer.add_child(_asm_status_label)
 
 	# Launchpad bar at the bottom
 	var pad := ColorRect.new()
@@ -515,7 +540,7 @@ func _build_rocket_step() -> void:
 	if _selected_rocket:
 		_refresh_assembly(_selected_rocket)
 	else:
-		var hint := _label("← Select\na rocket", Color(0.82, 0.92, 0.97, 0.30), 13)
+		var hint := _label("Select\na rocket", Color(0.82, 0.92, 0.97, 0.30), 13)
 		hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		_assembly_vbox.add_child(hint)
@@ -573,8 +598,14 @@ func _rebuild_rocket_tiles(parent: VBoxContainer) -> void:
 func _refresh_assembly(rtype: String) -> void:
 	if not _assembly_vbox or not is_instance_valid(_assembly_vbox):
 		return
+	for t in _asm_tweens:
+		if t and t.is_valid():
+			t.kill()
+	_asm_tweens.clear()
 	for c in _assembly_vbox.get_children():
 		c.queue_free()
+	if _asm_status_label and is_instance_valid(_asm_status_label):
+		_asm_status_label.add_theme_color_override("font_color", Color(0.22, 0.80, 0.45, 0.0))
 
 	var parts: Array = ROCKET_PARTS.get(rtype, [
 		{"name": "CMD POD", "color": Color(0.66, 0.76, 0.88), "h": 40},
@@ -587,6 +618,7 @@ func _refresh_assembly(rtype: String) -> void:
 		var pbox := PanelContainer.new()
 		pbox.size_flags_horizontal = SIZE_EXPAND_FILL
 		pbox.custom_minimum_size   = Vector2(0, int(part.get("h", 40)))
+		pbox.mouse_filter          = Control.MOUSE_FILTER_IGNORE
 		var ps := StyleBoxFlat.new()
 		var pc: Color = part.get("color", C_ACCENT)
 		ps.bg_color                  = pc
@@ -605,18 +637,31 @@ func _refresh_assembly(rtype: String) -> void:
 		ps.content_margin_bottom     = 4
 		pbox.add_theme_stylebox_override("panel", ps)
 
-		var plbl := _label(str(part.get("name", "")), Color(1, 1, 1, 0.88), 14)
+		var icon := _part_icon(str(part.get("name", "")))
+		var part_text := "%s  %s" % [icon, str(part.get("name", ""))] if icon != "" else str(part.get("name", ""))
+		var plbl := _label(part_text, Color(1, 1, 1, 0.88), 13)
 		plbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		plbl.vertical_alignment   = VERTICAL_ALIGNMENT_CENTER
+		plbl.mouse_filter         = Control.MOUSE_FILTER_IGNORE
 		pbox.add_child(plbl)
 		_assembly_vbox.add_child(pbox)
 
-		# Snap-in animation: fade in sequentially (no position tween — VBoxContainer overrides it)
+		# Snap-in animation: fade in sequentially
 		pbox.modulate.a = 0.0
 		var tw := create_tween()
+		_asm_tweens.append(tw)
 		tw.tween_interval(delay)
 		tw.tween_property(pbox, "modulate:a", 1.0, 0.22).set_ease(Tween.EASE_OUT)
 		delay += 0.12
+
+	# Reveal the "assembled & ready" status label after parts appear
+	if _asm_status_label and is_instance_valid(_asm_status_label):
+		_asm_status_label.add_theme_color_override("font_color", Color(0.22, 0.80, 0.45, 0.0))
+		var status_tween := create_tween()
+		_asm_tweens.append(status_tween)
+		status_tween.tween_interval(delay + 0.1)
+		status_tween.tween_property(_asm_status_label, "theme_override_colors/font_color",
+			Color(0.22, 0.80, 0.45, 1.0), 0.3).set_ease(Tween.EASE_OUT)
 
 # ── Step: Confirm ─────────────────────────────────────────────────────────────
 
@@ -732,6 +777,14 @@ func _label(text: String, color: Color, size: int) -> Label:
 	l.add_theme_color_override("font_color", color)
 	l.add_theme_font_size_override("font_size", size)
 	return l
+
+func _part_icon(part_name: String) -> String:
+	var n := part_name.to_lower()
+	if "cmd" in n or "command" in n: return "◉"
+	if "tank" in n: return "▬"
+	if "engine" in n or "drive" in n or "core" in n: return "▽"
+	if "ion" in n: return "⚡"
+	return "▪"
 
 func _action_btn(text: String, is_selected: bool) -> Button:
 	var btn := Button.new()

@@ -1,0 +1,64 @@
+[gd_scene load_steps=2 format=3 uid="uid://subcontractor_card"]
+
+[sub_resource type="StyleBoxFlat" id="1"]
+bg_color = Color(0.07, 0.11, 0.17, 0.94)
+border_color = Color(0.25, 0.55, 0.78, 0.45)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_left = 12
+corner_radius_bottom_right = 12
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+content_margin_left = 14.0
+content_margin_top = 12.0
+content_margin_right = 14.0
+content_margin_bottom = 12.0
+
+[node name="SubcontractorCard" type="PanelContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("1")
+
+[node name="Row" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Header" type="HBoxContainer" parent="Row"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="NameLabel" type="Label" parent="Row/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Contractor"
+
+[node name="LevelLabel" type="Label" parent="Row/Header"]
+layout_mode = 2
+horizontal_alignment = 2
+text = "Level 1"
+
+[node name="RoleLabel" type="Label" parent="Row"]
+layout_mode = 2
+text = "Role"
+
+[node name="AffinityRow" type="HBoxContainer" parent="Row"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="AffinityLabel" type="Label" parent="Row/AffinityRow"]
+layout_mode = 2
+text = "Standing:"
+
+[node name="AffinityBar" type="ProgressBar" parent="Row/AffinityRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 0.0
+max_value = 100.0
+value = 0.0
+show_percentage = false
+
+[node name="AffinityValueLabel" type="Label" parent="Row/AffinityRow"]
+layout_mode = 2
+text = "0/100"

@@ -616,6 +616,11 @@ func _needs_launchpad_cta() -> bool:
 	var scene_name = tree.current_scene.scene_file_path.get_file().get_basename()
 	if scene_name != "earth_base_1":
 		return false
+	
+	# Don't show launchpad CTA if a mission is already launched/active
+	if RocketsManager.get_missions().size() > 0:
+		return false
+
 	var valid_scenes: Array = _current_step.get("valid_scenes", [])
 	return "earth_launchpad" in valid_scenes and not ("earth_base_1" in valid_scenes)
 
@@ -628,6 +633,11 @@ func _needs_debrief_cta() -> bool:
 	var scene_name := tree.current_scene.scene_file_path.get_file().get_basename()
 	if scene_name != "earth_base_1":
 		return false
+
+	# Only show debrief CTA if there is actually a returned mission awaiting resolution
+	if RocketsManager.get_returned_mission().is_empty():
+		return false
+
 	var valid_scenes: Array = _current_step.get("valid_scenes", [])
 	return "mission_debrief_v2" in valid_scenes
 

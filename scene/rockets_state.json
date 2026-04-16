@@ -1,18 +1,12 @@
 {
   "unlocked": [
-    "starterrocket1"
+    "starterrocket1",
+    "starterrocket2"
   ],
   "placed": [
     {
       "type": "starterrocket1",
-      "id": "starterrocket1-1518331223",
-      "x": 0.0,
-      "y": 0.0,
-      "status": "awaitingLaunch"
-    },
-    {
-      "type": "starterrocket1",
-      "id": "starterrocket1-2324870151",
+      "id": "starterrocket1-2235453858",
       "x": 0.0,
       "y": 0.0,
       "status": "returned"
@@ -23,17 +17,6 @@
   "destroyed": [
   ],
   "missions": [
-    {
-      "rocket_id": "starterrocket1-1518331223",
-      "target": "mission-1-training-target",
-      "launch_time": 1776647277.0,
-      "arrival_time": 1776647337.0,
-      "operation_mode": "contract",
-      "goingTo": "mission-1-training-target",
-      "location": [
-        "mission-1-training-target"
-      ]
-    }
   ],
   "selected_target": "mission-1-training-target",
   "preview_target": {
@@ -47,19 +30,16 @@
   "scan_counts": {
   },
   "status_changed_at": {
-    "starterrocket1-1518331223": {
-      "awaitingLaunch": 1776647277.0,
-      "launched": 1776647277.0
-    },
-    "starterrocket1-2324870151": {
-      "awaitingLaunch": 1776652989.0,
-      "launched": 1776652989.0,
-      "returningHome": 1776653093.0,
-      "returned": 1776653195.0
+    "starterrocket1-2235453858": {
+      "awaitingLaunch": 1776773094.0,
+      "launched": 1776773094.0,
+      "returningHome": 1776773130.0,
+      "returned": 1776773144.0
     }
   },
-  "mission_progress_completed": 0,
+  "mission_progress_completed": 1,
   "completed_mission_badges": [
+    "mission-mission-1-training-target-1776773144"
   ],
   "control_station_built": false,
   "scanner_station_built": false,
@@ -77,19 +57,14 @@
     "mission-1-training-target": true
   },
   "rocket_customizations": {
-    "starterrocket1-1518331223": {
-      "flag": "Earth Union",
-      "logo": "Star",
-      "rocket_type": "starterrocket1"
-    },
-    "starterrocket1-2324870151": {
+    "starterrocket1-2235453858": {
       "flag": "Earth Union",
       "logo": "Star",
       "rocket_type": "starterrocket1"
     }
   },
   "rocket_wear": {
-    "starterrocket1-2324870151": 1.0
+    "starterrocket1-2235453858": 1.0
   },
   "archived_rocket_wear": {
   },
@@ -107,10 +82,6 @@
   "returning": [
   ],
   "arrived": {
-    "starterrocket1-1518331223": {
-      "target_id": "mission-1-training-target",
-      "arrived_at": 1776647280.65345
-    }
   },
   "returned_mission": {
   },
@@ -123,8 +94,8 @@
         "name": "Aegis Defense Systems",
         "focus": "Defense-grade avionics and hardened military systems",
         "requested_minerals": {
-          "Iron": 12.0,
-          "Nickel": 8.0
+          "Iron": 6.0,
+          "Nickel": 4.0
         }
       },
       {
@@ -132,8 +103,8 @@
         "name": "Lumen Consumer Labs",
         "focus": "High-volume consumer electronics and smart devices",
         "requested_minerals": {
-          "Iron": 10.0,
-          "Nickel": 10.0
+          "Iron": 5.0,
+          "Nickel": 5.0
         }
       },
       {
@@ -141,15 +112,18 @@
         "name": "Helion Orbital Works",
         "focus": "Next-gen propulsion and frontier space innovation",
         "requested_minerals": {
-          "Iron": 9.0,
-          "Nickel": 11.0
+          "Iron": 4.0,
+          "Nickel": 6.0
         }
       }
     ],
-    "selected_contractor": "lumen_consumer"
+    "selected_contractor": "aegis_defense"
   },
   "revealed_sectors": [
     0.0,
+    7.0,
+    3.0,
+    6.0,
     7.0,
     3.0,
     6.0

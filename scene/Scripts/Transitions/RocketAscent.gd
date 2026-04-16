@@ -168,7 +168,7 @@ func _on_skip_pressed() -> void:
 	_altitude = 1.0
 	if _tween and _tween.is_valid():
 		_tween.kill()
-	_transition_to_transit()
+	call_deferred("_transition_to_transit")
 
 func _transition_to_transit() -> void:
 	if _transitioning:

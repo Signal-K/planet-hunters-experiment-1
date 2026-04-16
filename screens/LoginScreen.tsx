@@ -68,6 +68,9 @@ export const LoginScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
           {isSignup ? 'Create Account' : 'Planet Hunters'}
         </Text>
         <Text style={styles.subtitle}>
+          Save your progress and access points across all games in the Star Sailors ecosystem (Planet Hunters, Star Sailors, and more!).
+        </Text>
+        <Text style={styles.subtitle}>
           {isSignup ? 'Sign up to play' : 'Log in to play'}
         </Text>
 

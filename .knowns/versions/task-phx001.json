@@ -1,0 +1,64 @@
+{
+  "taskId": "phx001",
+  "currentVersion": 1,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "phx001",
+      "version": 1,
+      "timestamp": "2026-04-21T08:17:14.288Z",
+      "changes": [
+        {
+          "field": "labels",
+          "oldValue": [
+            "mvp",
+            "planning",
+            "scope-lock"
+          ],
+          "newValue": [
+            "mvp",
+            "planning",
+            "scope-lock",
+            "rebaseline",
+            "mission-mapping"
+          ]
+        },
+        {
+          "field": "implementationNotes",
+          "oldValue": "Created by project-management reset on 2026-04-20.",
+          "newValue": "Created by project-management reset on 2026-04-20.\n\nRelated to @task-q8bgdg, @task-vcrxs5"
+        }
+      ],
+      "snapshot": {
+        "title": "Rebaseline Planet Hunters MVP scope to M1-M4 plus Free Ops",
+        "description": "This is part of the 2026-04-20 Star Sailors MVP/project-management reset. Project: Planet Hunters Experiment 1. Work must stay tied to MVP closure, distribution, testing, or agent handoff for this week.",
+        "status": "todo",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "mvp",
+          "planning",
+          "scope-lock",
+          "rebaseline",
+          "mission-mapping"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "No authored Mission 5 work is active."
+          },
+          {
+            "completed": false,
+            "text": "MVP scope is visible from the repo docs and this command center."
+          },
+          {
+            "completed": false,
+            "text": "Deferred room/art/construction work is clearly marked."
+          }
+        ],
+        "implementationPlan": "1. Confirm M1-M4 authored onboarding plus Free Operations is the only active MVP scope.\n2. Update the open-task handoff notes if they contradict this scope.",
+        "implementationNotes": "Created by project-management reset on 2026-04-20.\n\nRelated to @task-q8bgdg, @task-vcrxs5"
+      }
+    }
+  ]
+}

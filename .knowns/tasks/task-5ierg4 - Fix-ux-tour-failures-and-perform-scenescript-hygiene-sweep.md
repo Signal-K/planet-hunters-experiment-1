@@ -9,8 +9,8 @@ labels:
   - ux-tour
   - tech-debt
 createdAt: '2026-03-28T04:40:26.281Z'
-updatedAt: '2026-04-13T14:03:46.889Z'
-timeSpent: 1385840
+updatedAt: '2026-04-21T08:18:47.951Z'
+timeSpent: 2084080
 assignee: '@me'
 ---
 # Fix ux-tour failures and perform scene/script hygiene sweep
@@ -55,5 +55,7 @@ Address all issues surfaced by make ux-tour, remove or disable broken UX-tour bl
 - `make ux-tour` still stalls in Docker during Phase 1
 
 2026-04-14: Earth base now prioritizes active/armed mission context over build/next-mission cards; tutorial coach on Earth base reads active mission context instead of stale launchpad step copy. Verified run_earth_base_unlock_tests 3/3.
+
+High correlation with @task-uchxcz (broken scenes on skip)
 <!-- SECTION:NOTES:END -->
 

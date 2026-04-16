@@ -175,8 +175,8 @@ const STARTER_CONTRACTOR_OFFERS := [
 		"name": "Aegis Defense Systems",
 		"focus": "Defense-grade avionics and hardened military systems",
 		"requested_minerals": {
-			"Iron": 12,
-			"Nickel": 8
+			"Iron": 6,
+			"Nickel": 4
 		}
 	},
 	{
@@ -184,8 +184,8 @@ const STARTER_CONTRACTOR_OFFERS := [
 		"name": "Lumen Consumer Labs",
 		"focus": "High-volume consumer electronics and smart devices",
 		"requested_minerals": {
-			"Iron": 10,
-			"Nickel": 10
+			"Iron": 5,
+			"Nickel": 5
 		}
 	},
 	{
@@ -193,8 +193,8 @@ const STARTER_CONTRACTOR_OFFERS := [
 		"name": "Helion Orbital Works",
 		"focus": "Next-gen propulsion and frontier space innovation",
 		"requested_minerals": {
-			"Iron": 9,
-			"Nickel": 11
+			"Iron": 4,
+			"Nickel": 6
 		}
 	}
 ]
@@ -492,6 +492,7 @@ static func get_trip_contractors() -> Array:
 
 # Scale mineral order ranges down for early missions so they're achievable in one trip.
 # M2 (completed=1): ~35%,  M3 (completed=2): ~60%,  M4 (completed=3): ~80%,  Free ops: 100%
+# M2/M3 are additionally capped at 10 total minerals across all types.
 static func _scale_mineral_ranges_for_stage(ranges: Dictionary, completed_count: int) -> Dictionary:
 	if completed_count >= 4:
 		return ranges.duplicate(true)
@@ -504,7 +505,26 @@ static func _scale_mineral_ranges_for_stage(ranges: Dictionary, completed_count:
 			scaled[mineral] = [maxi(4, int(float(r[0]) * scale)), maxi(8, int(float(r[1]) * scale))]
 		else:
 			scaled[mineral] = r
+	if completed_count <= 2:
+		scaled = _cap_total_minerals(scaled, 10)
 	return scaled
+
+static func _cap_total_minerals(ranges: Dictionary, cap: int) -> Dictionary:
+	var total_max := 0
+	for r in ranges.values():
+		if typeof(r) == TYPE_ARRAY and r.size() >= 2:
+			total_max += int(r[1])
+	if total_max <= cap:
+		return ranges
+	var ratio := float(cap) / float(total_max)
+	var capped := {}
+	for mineral in ranges.keys():
+		var r = ranges[mineral]
+		if typeof(r) == TYPE_ARRAY and r.size() >= 2:
+			capped[mineral] = [maxi(1, int(float(r[0]) * ratio)), maxi(2, int(float(r[1]) * ratio))]
+		else:
+			capped[mineral] = r
+	return capped
 
 static func get_starter_contractors() -> Array:
 	return STARTER_CONTRACTOR_OFFERS.duplicate(true)
@@ -1259,6 +1279,24 @@ static func add_mission(rocket_id: String, target_id: String, launch_time_epoch:
 	if arrived.has(rocket_id):
 		arrived.erase(rocket_id)
 		s["arrived"] = arrived
+	
+	# Proactively set preview target for better state persistence across refreshes
+	var target_label = ""
+	var target_type = "asteroid"
+	var targets = s.get("detected_targets", [])
+	for t in targets:
+		if str(t.get("id", "")) == target_id:
+			target_label = str(t.get("label", t.get("name", "")))
+			target_type = str(t.get("type", "asteroid"))
+			break
+	_preview_target = {
+		"id": target_id,
+		"label": target_label,
+		"type": target_type,
+		"rocket_id": rocket_id
+	}
+	s["preview_target"] = _preview_target.duplicate(true)
+	
 	return save_state(s)
 
 static func get_missions() -> Array:
