@@ -1073,61 +1073,14 @@ func _check_classification_consensus() -> void:
 func _show_consensus_notifications(updates: Array) -> void:
 	if updates.is_empty():
 		return
-	# Build a single dismissable notification panel listing all updates
-	var layer: CanvasLayer = ClassificationConsensusNotificationScene.instantiate()
+	# Use the redesigned ClassificationConsensusNotification via its show_results() API.
+	var layer = ClassificationConsensusNotificationScene.instantiate()
 	add_child(layer)
-
-	var panel: PanelContainer = layer.get_node("Panel")
-	var pstyle := StyleBoxFlat.new()
-	pstyle.bg_color = Color(0.06, 0.10, 0.18, 0.97)
-	pstyle.border_color = Color(0.3, 0.65, 1.0, 0.8)
-	pstyle.set_border_width_all(2)
-	pstyle.set_corner_radius_all(8)
-	pstyle.content_margin_left = 18
-	pstyle.content_margin_right = 18
-	pstyle.content_margin_top = 14
-	pstyle.content_margin_bottom = 14
-	panel.add_theme_stylebox_override("panel", pstyle)
-	panel.custom_minimum_size = Vector2(320, 0)
-	var col: VBoxContainer = layer.get_node("Panel/Body")
-	var hdr: Label = layer.get_node("Panel/Body/Header")
-	hdr.add_theme_color_override("font_color", Color(0.4, 0.75, 1.0, 1.0))
-	hdr.add_theme_font_size_override("font_size", 15)
-	var updates_box: VBoxContainer = layer.get_node("Panel/Body/Updates")
-	for child in updates_box.get_children():
-		updates_box.remove_child(child)
-		child.queue_free()
-
-	var rm := preload("res://Scripts/Utils/RocketsManager.gd")
-	for entry_any in updates:
-		if typeof(entry_any) != TYPE_DICTIONARY:
-			continue
-		var entry: Dictionary = entry_any
-		var anomaly_id := str(entry.get("anomaly_id", ""))
-		var player_verdict := str(entry.get("player_verdict", ""))
-		var consensus_verdict := str(entry.get("consensus_verdict", ""))
-		var target_label: String = str(rm.get_target_details(anomaly_id).get("label", anomaly_id))
-
-		var row_lbl := Label.new()
-		var matches := player_verdict == consensus_verdict
-		var pv_display := "Planet" if player_verdict == "planet" else "Not a Planet"
-		var cv_display := "Planet" if consensus_verdict == "planet" else "Not a Planet"
-		var agree_icon := "✓" if matches else "✗"
-		var consensus_label := ClassificationConsensus.consensus_label(anomaly_id)
-		row_lbl.text = "%s %s — consensus: %s\n  %s" % [agree_icon, target_label, cv_display, consensus_label]
-		row_lbl.add_theme_font_size_override("font_size", 13)
-		row_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		row_lbl.add_theme_color_override("font_color",
-			Color(0.5, 1.0, 0.6, 1.0) if matches else Color(1.0, 0.55, 0.4, 1.0))
-		updates_box.add_child(row_lbl)
-
-	var dismiss_btn: Button = layer.get_node("Panel/Body/DismissButton")
-	PanelStyle.apply_button(dismiss_btn, false)
-	dismiss_btn.pressed.connect(func() -> void:
-		ClassificationConsensus.mark_all_notified()
-		layer.queue_free()
-	)
-	col.add_child(dismiss_btn)
+	var app = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
+	var exp_gained := int(app.get_experience()) if app and app.has_method("get_experience") else 0
+	var rank := str(app.get_player_rank_label()) if app and app.has_method("get_player_rank_label") else ""
+	if layer.has_method("show_results"):
+		layer.show_results(updates, exp_gained, rank)
 
 # ── Earth base visual evolution ───────────────────────────────────────────────
 ## Structure visual evolution: scales existing sprites to reflect upgrade tiers,
