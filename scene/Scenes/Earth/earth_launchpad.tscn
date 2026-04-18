@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3 uid="uid://dkn5ffejmhljs"]
+[gd_scene load_steps=10 format=3 uid="uid://dkn5ffejmhljs"]
 
 [ext_resource type="Script" uid="uid://dtrksapur77k2" path="res://Scripts/Earth/LaunchpadScene.gd" id="1"]
 [ext_resource type="Script" uid="uid://ce1a85vrjyh7x" path="res://Scripts/Earth/Launchpad.gd" id="2"]
@@ -10,6 +10,10 @@
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_launchpad"]
 size = Vector2(300, 220)
+
+; Terminal Ethereal — SURFACE_LOW nav bar strip, no border.
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_navbg"]
+bg_color = Color(0.941, 0.957, 0.953, 1.0)
 
 [node name="LaunchpadScene" type="Node2D"]
 script = ExtResource("1")
@@ -91,15 +95,21 @@ offset_right = 1896.0
 offset_bottom = 1072.0
 
 [node name="NavBackground" type="Panel" parent="UILayer/ButtonContainer"]
-layout_mode = 2
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 mouse_filter = 1
+theme_override_styles/panel = SubResource("StyleBoxFlat_navbg")
 
 [node name="BackButton" type="Button" parent="UILayer/ButtonContainer"]
 custom_minimum_size = Vector2(160, 120)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
-theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
+theme_override_colors/font_color = Color(0.176, 0.204, 0.200, 1.0)
 theme_override_font_sizes/font_size = 24
 text = "<<"
 
@@ -108,7 +118,7 @@ custom_minimum_size = Vector2(160, 120)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
-theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
+theme_override_colors/font_color = Color(0.176, 0.204, 0.200, 1.0)
 theme_override_font_sizes/font_size = 24
 text = ">>"
 
@@ -117,7 +127,7 @@ custom_minimum_size = Vector2(220, 120)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
-theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
+theme_override_colors/font_color = Color(0.176, 0.204, 0.200, 1.0)
 theme_override_font_sizes/font_size = 20
 text = "Menu"
 
@@ -126,7 +136,7 @@ custom_minimum_size = Vector2(220, 120)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
-theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
+theme_override_colors/font_color = Color(0.176, 0.204, 0.200, 1.0)
 theme_override_font_sizes/font_size = 20
 text = "Market"
 
@@ -135,7 +145,7 @@ custom_minimum_size = Vector2(220, 120)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
-theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
+theme_override_colors/font_color = Color(0.176, 0.204, 0.200, 1.0)
 theme_override_font_sizes/font_size = 20
 text = "Map"
 
@@ -144,7 +154,7 @@ custom_minimum_size = Vector2(280, 120)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
-theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
+theme_override_colors/font_color = Color(0.176, 0.204, 0.200, 1.0)
 theme_override_font_sizes/font_size = 20
 text = "New Mission"
 
