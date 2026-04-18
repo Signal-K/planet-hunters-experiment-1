@@ -1,0 +1,45 @@
+[gd_scene load_steps=2 format=3]
+
+; Compact stat display: icon + label on top row, large value below.
+; e.g.  ◎ SONAR_RANGE        or   ♨ CORE_TEMP
+;           1,240m                     420°K
+; Override IconLabel.text, NameLabel.text, ValueLabel.text in parent scene.
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_chip"]
+bg_color = Color(0.945, 0.961, 0.976, 1)
+border_color = Color(0.886, 0.910, 0.941, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+content_margin_left = 16.0
+content_margin_top = 12.0
+content_margin_right = 16.0
+content_margin_bottom = 12.0
+
+[node name="StatChip" type="PanelContainer"]
+theme_override_styles/panel = SubResource("StyleBoxFlat_chip")
+
+[node name="VBox" type="VBoxContainer" parent="."]
+theme_override_constants/separation = 4
+
+[node name="TopRow" type="HBoxContainer" parent="VBox"]
+theme_override_constants/separation = 6
+
+[node name="IconLabel" type="Label" parent="VBox/TopRow"]
+text = "◎"
+theme_override_colors/font_color = Color(0.008, 0.518, 0.780, 1)
+theme_override_font_sizes/font_size = 22
+
+[node name="NameLabel" type="Label" parent="VBox/TopRow"]
+text = "STAT_NAME"
+theme_override_colors/font_color = Color(0.392, 0.455, 0.545, 1)
+theme_override_font_sizes/font_size = 22
+
+[node name="ValueLabel" type="Label" parent="VBox"]
+text = "—"
+theme_override_font_sizes/font_size = 42

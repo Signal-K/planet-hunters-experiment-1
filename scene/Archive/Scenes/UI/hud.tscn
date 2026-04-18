@@ -1,9 +1,0 @@
-[gd_scene load_steps=2 format=3 uid="uid://c8sqphvguvmsa"]
-
-[ext_resource type="Script" path="res://Scripts/UI/hud.gd" id="1_5055i"]
-
-[node name="HUD" type="CanvasLayer"]
-script = ExtResource("1_5055i")
-expand_mode = 1
-
-[connection signal="button_down" from="TextureButton" to="." method="_on_texture_button_button_down"]
