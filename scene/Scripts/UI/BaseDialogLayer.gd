@@ -2,7 +2,8 @@ extends CanvasLayer
 class_name BaseDialogLayer
 
 ## Base class for all modal dialogs (CanvasLayer-based overlays).
-## Provides a light-mode backdrop + white panel, close() method, dialog_closed signal.
+## Terminal Ethereal: SURFACE_BRIGHT frosted backdrop, SURFACE_LOWEST panel,
+## xl radius (24px), Cyan-Mist shadow. No border.
 ## Required scene tree:
 ##   CanvasLayer
 ##   ├── Backdrop  (ColorRect, full-screen)
@@ -10,7 +11,7 @@ class_name BaseDialogLayer
 ##       └── Panel (PanelContainer)
 
 const DIALOG_LAYER   := 80
-const BACKDROP_ALPHA := 0.50
+const BACKDROP_ALPHA := 0.82
 
 signal dialog_closed
 
@@ -24,7 +25,7 @@ func _setup_backdrop() -> void:
 	var bg := get_node_or_null("Backdrop") as ColorRect
 	if bg == null:
 		return
-	bg.color = Color(0.059, 0.090, 0.165, BACKDROP_ALPHA)
+	bg.color = Color(0.988, 0.996, 0.992, BACKDROP_ALPHA)
 	bg.mouse_filter = Control.MOUSE_FILTER_STOP
 
 func _setup_panel_style() -> void:
@@ -33,12 +34,11 @@ func _setup_panel_style() -> void:
 		return
 	var s := StyleBoxFlat.new()
 	s.bg_color     = Color(1.0, 1.0, 1.0, 1.0)
-	s.border_color = Color(0.886, 0.910, 0.941, 1.0)
-	s.set_border_width_all(1)
-	s.set_corner_radius_all(12)
-	s.shadow_color  = Color(0.059, 0.090, 0.165, 0.20)
-	s.shadow_size   = 32
-	s.shadow_offset = Vector2(0, 8)
+	s.set_border_width_all(0)
+	s.set_corner_radius_all(24)
+	s.shadow_color  = Color(0.0, 0.424, 0.361, 0.12)
+	s.shadow_size   = 40
+	s.shadow_offset = Vector2(0, 16)
 	s.content_margin_left   = 0
 	s.content_margin_right  = 0
 	s.content_margin_top    = 0
