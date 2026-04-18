@@ -1,0 +1,10 @@
+[gd_scene format=3]
+
+; Accent-coloured monospace-style section label.
+; Used for "01. ACTUATORS"-style headings inside cards.
+; Override .text in the parent scene.
+
+[node name="SectionLabel" type="Label"]
+text = "01. SECTION"
+theme_override_colors/font_color = Color(0.008, 0.518, 0.780, 1)
+theme_override_font_sizes/font_size = 22

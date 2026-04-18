@@ -1,0 +1,38 @@
+[gd_scene load_steps=2 format=3]
+
+; White card with a cyan section label header and a content VBoxContainer.
+; Change SectionHeader.text to e.g. "01. ACTUATORS".
+; Add children to Content node.
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card"]
+bg_color = Color(1, 1, 1, 1)
+border_color = Color(0.886, 0.910, 0.941, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(0.059, 0.090, 0.165, 0.06)
+shadow_size = 6
+shadow_offset = Vector2(0, 2)
+content_margin_left = 20.0
+content_margin_top = 16.0
+content_margin_right = 20.0
+content_margin_bottom = 16.0
+
+[node name="CardSection" type="PanelContainer"]
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="VBox" type="VBoxContainer" parent="."]
+theme_override_constants/separation = 12
+
+[node name="SectionHeader" type="Label" parent="VBox"]
+text = "01. SECTION"
+theme_override_colors/font_color = Color(0.008, 0.518, 0.780, 1)
+theme_override_font_sizes/font_size = 22
+
+[node name="Content" type="VBoxContainer" parent="VBox"]
+theme_override_constants/separation = 8
