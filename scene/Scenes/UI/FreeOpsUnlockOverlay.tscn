@@ -3,8 +3,8 @@
 [ext_resource type="Script" path="res://Scripts/UI/FreeOpsUnlockOverlay.gd" id="1_freeops"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_top_bar"]
-bg_color = Color(0.10, 0.16, 0.14, 1.0)
-border_color = Color(0.28, 0.60, 0.44, 0.30)
+bg_color = Color(0.973, 0.980, 0.988, 1.0)
+border_color = Color(0.886, 0.910, 0.941, 1.0)
 border_width_left = 0
 border_width_top = 0
 border_width_right = 0
@@ -50,8 +50,8 @@ content_margin_right = 10.0
 content_margin_bottom = 6.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_gauge_bg"]
-bg_color = Color(0.10, 0.16, 0.14, 1.0)
-border_color = Color(0.22, 0.55, 0.40, 0.45)
+bg_color = Color(0.973, 0.980, 0.988, 1.0)
+border_color = Color(0.886, 0.910, 0.941, 1.0)
 border_width_left = 1
 border_width_top = 1
 border_width_right = 1
@@ -80,8 +80,8 @@ corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_start_btn"]
-bg_color = Color(0.10, 0.24, 0.20, 1.0)
-border_color = Color(0.22, 0.68, 0.50, 0.50)
+bg_color = Color(0.008, 0.518, 0.780, 1.0)
+border_color = Color(0.012, 0.412, 0.631, 1.0)
 border_width_left = 1
 border_width_top = 1
 border_width_right = 1
@@ -157,19 +157,19 @@ theme_override_constants/separation = 16
 
 [node name="CoreTempLabel" type="Label" parent="RootVBox/TopBar/TopBarRow"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.60, 0.82, 0.68, 0.90)
+theme_override_colors/font_color = Color(0.392, 0.455, 0.545, 1.0)
 theme_override_font_sizes/font_size = 10
 text = "CORE_TEMP: 32.4°C"
 
 [node name="SyncDot" type="Label" parent="RootVBox/TopBar/TopBarRow"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.28, 0.80, 0.52, 1.0)
+theme_override_colors/font_color = Color(0.086, 0.639, 0.290, 1.0)
 theme_override_font_sizes/font_size = 10
 text = "●"
 
 [node name="SyncFreqLabel" type="Label" parent="RootVBox/TopBar/TopBarRow"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.60, 0.82, 0.68, 0.90)
+theme_override_colors/font_color = Color(0.392, 0.455, 0.545, 1.0)
 theme_override_font_sizes/font_size = 10
 text = "SYNC_FREQ: 142.2 MHz"
 
@@ -179,13 +179,13 @@ size_flags_horizontal = 3
 
 [node name="UplinkLabel" type="Label" parent="RootVBox/TopBar/TopBarRow"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.60, 0.82, 0.68, 0.90)
+theme_override_colors/font_color = Color(0.392, 0.455, 0.545, 1.0)
 theme_override_font_sizes/font_size = 10
 text = "UPLINK: ACTIVE"
 
 [node name="LatencyLabel" type="Label" parent="RootVBox/TopBar/TopBarRow"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.60, 0.82, 0.68, 0.70)
+theme_override_colors/font_color = Color(0.392, 0.455, 0.545, 0.80)
 theme_override_font_sizes/font_size = 10
 text = "LATENCY: 0.04ms"
 
@@ -203,7 +203,7 @@ theme_override_constants/separation = 12
 
 [node name="SystemStateLabel" type="Label" parent="RootVBox/ContentMargin/ContentVBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.20, 0.50, 0.36, 1.0)
+theme_override_colors/font_color = Color(0.008, 0.518, 0.780, 1.0)
 theme_override_font_sizes/font_size = 11
 text = "SYSTEM STATE: UNRESTRICTED_ACCESS"
 
@@ -428,21 +428,21 @@ theme_override_constants/separation = 4
 
 [node name="GaugeIcon" type="Label" parent="RootVBox/ContentMargin/ContentVBox/GridRow2/GaugeCard/GaugeVBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.28, 0.80, 0.52, 0.90)
+theme_override_colors/font_color = Color(0.008, 0.518, 0.780, 0.90)
 theme_override_font_sizes/font_size = 22
 text = "◉  ◉"
 horizontal_alignment = 1
 
 [node name="GaugePctLabel" type="Label" parent="RootVBox/ContentMargin/ContentVBox/GridRow2/GaugeCard/GaugeVBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.28, 0.90, 0.58, 1.0)
+theme_override_colors/font_color = Color(0.059, 0.090, 0.165, 1.0)
 theme_override_font_sizes/font_size = 20
 text = "99.8%"
 horizontal_alignment = 1
 
 [node name="GaugeSubLabel" type="Label" parent="RootVBox/ContentMargin/ContentVBox/GridRow2/GaugeCard/GaugeVBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.50, 0.75, 0.60, 0.80)
+theme_override_colors/font_color = Color(0.392, 0.455, 0.545, 1.0)
 theme_override_font_sizes/font_size = 10
 text = "INTEGRITY"
 horizontal_alignment = 1
@@ -454,7 +454,7 @@ theme_override_constants/separation = 12
 [node name="BufferLabel" type="Label" parent="RootVBox/ContentMargin/ContentVBox/GridRow2/GaugeCard/GaugeVBox/GaugeRow2"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.50, 0.75, 0.60, 0.60)
+theme_override_colors/font_color = Color(0.392, 0.455, 0.545, 0.80)
 theme_override_font_sizes/font_size = 9
 text = "BUFFER"
 horizontal_alignment = 1
@@ -462,7 +462,7 @@ horizontal_alignment = 1
 [node name="SyncLabel2" type="Label" parent="RootVBox/ContentMargin/ContentVBox/GridRow2/GaugeCard/GaugeVBox/GaugeRow2"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.50, 0.75, 0.60, 0.60)
+theme_override_colors/font_color = Color(0.392, 0.455, 0.545, 0.80)
 theme_override_font_sizes/font_size = 9
 text = "SYNC"
 horizontal_alignment = 1
@@ -665,6 +665,6 @@ text = "⊙  LOGS"
 [node name="StartRunButton" type="Button" parent="RootVBox/BottomBar/BottomRow"]
 layout_mode = 2
 theme_override_styles/normal = SubResource("StyleBoxFlat_start_btn")
-theme_override_colors/font_color = Color(0.80, 0.97, 0.88, 1.0)
+theme_override_colors/font_color = Color(1.0, 1.0, 1.0, 1.0)
 theme_override_font_sizes/font_size = 14
 text = "START RUN  🚀"
