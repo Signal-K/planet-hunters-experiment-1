@@ -1,79 +1,74 @@
 [gd_scene load_steps=6 format=3]
 
-; Base modal: dark backdrop + centred white panel.
-; Extend or instance this for all confirmation dialogs.
+; System overlay modal — frosted SURFACE_BRIGHT backdrop, xl-radius panel.
+; No border; Cyan-Mist shadow distinguishes panel from backdrop.
 ; Wire CancelBtn.pressed and ConfirmBtn.pressed in the parent scene.
-; Set TitleLabel.text, BodyLabel.text, and button texts.
+; Set TitleLabel.text, BodyLabel.text, and button label texts.
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
-bg_color = Color(1, 1, 1, 1)
-border_color = Color(0.886, 0.910, 0.941, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
+bg_color = Color(1.0, 1.0, 1.0, 1.0)
+corner_radius_top_left = 24
+corner_radius_top_right = 24
+corner_radius_bottom_right = 24
+corner_radius_bottom_left = 24
+shadow_color = Color(0.0, 0.424, 0.361, 0.12)
+shadow_size = 40
+shadow_offset = Vector2(0, 16)
+content_margin_left = 36.0
+content_margin_top = 32.0
+content_margin_right = 36.0
+content_margin_bottom = 32.0
+
+; ConfirmBtn primary (teal)
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_confirm_normal"]
+bg_color = Color(0.0, 0.424, 0.361, 1.0)
 corner_radius_top_left = 12
 corner_radius_top_right = 12
 corner_radius_bottom_right = 12
 corner_radius_bottom_left = 12
-shadow_color = Color(0.059, 0.090, 0.165, 0.20)
-shadow_size = 32
-shadow_offset = Vector2(0, 8)
-content_margin_left = 32.0
-content_margin_top = 28.0
-content_margin_right = 32.0
-content_margin_bottom = 28.0
-
-; ConfirmBtn primary style (cyan)
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_confirm_normal"]
-bg_color = Color(0.008, 0.518, 0.780, 1)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
-content_margin_left = 20.0
-content_margin_top = 12.0
-content_margin_right = 20.0
-content_margin_bottom = 12.0
+content_margin_left = 24.0
+content_margin_top = 14.0
+content_margin_right = 24.0
+content_margin_bottom = 14.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_confirm_hover"]
-bg_color = Color(0.012, 0.412, 0.631, 1)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
-content_margin_left = 20.0
-content_margin_top = 12.0
-content_margin_right = 20.0
-content_margin_bottom = 12.0
+bg_color = Color(0.0, 0.353, 0.298, 1.0)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+content_margin_left = 24.0
+content_margin_top = 14.0
+content_margin_right = 24.0
+content_margin_bottom = 14.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_confirm_pressed"]
-bg_color = Color(0.027, 0.349, 0.522, 1)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
-content_margin_left = 20.0
-content_margin_top = 12.0
-content_margin_right = 20.0
-content_margin_bottom = 12.0
+bg_color = Color(0.0, 0.282, 0.235, 1.0)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+content_margin_left = 24.0
+content_margin_top = 14.0
+content_margin_right = 24.0
+content_margin_bottom = 14.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_confirm_disabled"]
-bg_color = Color(0.008, 0.518, 0.780, 0.35)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
-content_margin_left = 20.0
-content_margin_top = 12.0
-content_margin_right = 20.0
-content_margin_bottom = 12.0
+bg_color = Color(0.0, 0.424, 0.361, 0.35)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+content_margin_left = 24.0
+content_margin_top = 14.0
+content_margin_right = 24.0
+content_margin_bottom = 14.0
 
 [node name="ModalBase" type="CanvasLayer"]
 layer = 80
 
 [node name="Backdrop" type="ColorRect" parent="."]
-color = Color(0.059, 0.090, 0.165, 0.50)
+color = Color(0.988, 0.996, 0.992, 0.82)
 anchors_preset = 15
 grow_horizontal = 2
 grow_vertical = 2
@@ -85,41 +80,48 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Panel" type="PanelContainer" parent="Center"]
-custom_minimum_size = Vector2(560, 0)
+custom_minimum_size = Vector2(580, 0)
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
 [node name="VBox" type="VBoxContainer" parent="Center/Panel"]
-theme_override_constants/separation = 20
+layout_mode = 2
+theme_override_constants/separation = 24
 
 [node name="TitleLabel" type="Label" parent="Center/Panel/VBox"]
+layout_mode = 2
 text = "MODAL TITLE"
+theme_override_colors/font_color = Color(0.176, 0.204, 0.200, 1.0)
 theme_override_font_sizes/font_size = 42
 
 [node name="BodyLabel" type="Label" parent="Center/Panel/VBox"]
+layout_mode = 2
 text = "Confirm this action?"
 autowrap_mode = 3
-theme_override_colors/font_color = Color(0.392, 0.455, 0.545, 1)
-theme_override_font_sizes/font_size = 30
+theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 1.0)
+theme_override_font_sizes/font_size = 28
 
 [node name="ButtonRow" type="HBoxContainer" parent="Center/Panel/VBox"]
+layout_mode = 2
 theme_override_constants/separation = 12
 alignment = 2
 
 [node name="CancelBtn" type="Button" parent="Center/Panel/VBox/ButtonRow"]
-custom_minimum_size = Vector2(120, 44)
+layout_mode = 2
+custom_minimum_size = Vector2(120, 48)
 text = "CANCEL"
 
 [node name="ConfirmBtn" type="Button" parent="Center/Panel/VBox/ButtonRow"]
-custom_minimum_size = Vector2(140, 44)
+layout_mode = 2
+custom_minimum_size = Vector2(140, 48)
 text = "CONFIRM"
 theme_override_styles/normal = SubResource("StyleBoxFlat_confirm_normal")
 theme_override_styles/hover = SubResource("StyleBoxFlat_confirm_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_confirm_pressed")
 theme_override_styles/disabled = SubResource("StyleBoxFlat_confirm_disabled")
 theme_override_styles/focus = SubResource("StyleBoxFlat_confirm_normal")
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
-theme_override_colors/font_pressed_color = Color(1, 1, 1, 1)
-theme_override_colors/font_disabled_color = Color(1, 1, 1, 0.5)
-theme_override_colors/font_focus_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 34
+theme_override_colors/font_color = Color(1.0, 1.0, 1.0, 1.0)
+theme_override_colors/font_hover_color = Color(1.0, 1.0, 1.0, 1.0)
+theme_override_colors/font_pressed_color = Color(1.0, 1.0, 1.0, 1.0)
+theme_override_colors/font_disabled_color = Color(1.0, 1.0, 1.0, 0.5)
+theme_override_colors/font_focus_color = Color(1.0, 1.0, 1.0, 1.0)
+theme_override_font_sizes/font_size = 28
