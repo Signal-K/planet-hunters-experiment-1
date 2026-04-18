@@ -1,30 +1,28 @@
-[gd_scene load_steps=16 format=3]
+[gd_scene load_steps=13 format=3]
 
 [ext_resource type="Script" path="res://Scripts/UI/MechanicIntroOverlay.gd" id="1_mechanic"]
 
+; Terminal Ethereal — SURFACE_LOWEST panel, 24px radius, Cyan-Mist shadow, no border.
+; Header/footer: SURFACE_LOW tonal bands. Stat cards: SURFACE_LOW.
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bg"]
-bg_color = Color(0.97, 0.975, 0.980, 1.0)
-corner_radius_top_left = 18
-corner_radius_top_right = 18
-corner_radius_bottom_right = 18
-corner_radius_bottom_left = 18
-shadow_color = Color(0.06, 0.12, 0.20, 0.22)
-shadow_size = 40
-shadow_offset = Vector2(0, 16)
+bg_color = Color(1.0, 1.0, 1.0, 1.0)
+corner_radius_top_left = 24
+corner_radius_top_right = 24
+corner_radius_bottom_right = 24
+corner_radius_bottom_left = 24
+shadow_color = Color(0.0, 0.424, 0.361, 0.10)
+shadow_size = 32
+shadow_offset = Vector2(0, 12)
 content_margin_left = 0
 content_margin_top = 0
 content_margin_right = 0
 content_margin_bottom = 0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_headerbar"]
-bg_color = Color(0.92, 0.94, 0.96, 1.0)
-border_color = Color(0.70, 0.78, 0.84, 0.40)
-border_width_left = 0
-border_width_top = 0
-border_width_right = 0
-border_width_bottom = 1
-corner_radius_top_left = 18
-corner_radius_top_right = 18
+bg_color = Color(0.941, 0.957, 0.953, 1.0)
+corner_radius_top_left = 24
+corner_radius_top_right = 24
 corner_radius_bottom_right = 0
 corner_radius_bottom_left = 0
 content_margin_left = 20.0
@@ -33,15 +31,10 @@ content_margin_right = 20.0
 content_margin_bottom = 10.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sep"]
-bg_color = Color(0.14, 0.55, 0.80, 0.70)
+bg_color = Color(0.675, 0.702, 0.698, 0.18)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_stat_card"]
-bg_color = Color(0.93, 0.96, 1.0, 1.0)
-border_color = Color(0.22, 0.58, 0.82, 0.35)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
+bg_color = Color(0.941, 0.957, 0.953, 1.0)
 corner_radius_top_left = 12
 corner_radius_top_right = 12
 corner_radius_bottom_right = 12
@@ -52,28 +45,18 @@ content_margin_right = 16.0
 content_margin_bottom = 12.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_schematic"]
-bg_color = Color(0.93, 0.95, 0.97, 1.0)
-border_color = Color(0.65, 0.74, 0.82, 0.55)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-corner_radius_top_left = 14
-corner_radius_top_right = 14
-corner_radius_bottom_right = 14
-corner_radius_bottom_left = 14
+bg_color = Color(0.941, 0.957, 0.953, 1.0)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
 content_margin_left = 20.0
 content_margin_top = 16.0
 content_margin_right = 20.0
 content_margin_bottom = 16.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_gear_circle"]
-bg_color = Color(0.88, 0.91, 0.94, 1.0)
-border_color = Color(0.60, 0.72, 0.82, 0.50)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
+bg_color = Color(0.878, 0.906, 0.898, 1.0)
 corner_radius_top_left = 60
 corner_radius_top_right = 60
 corner_radius_bottom_right = 60
@@ -84,33 +67,28 @@ content_margin_right = 22.0
 content_margin_bottom = 22.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_prog_bg"]
-bg_color = Color(0.80, 0.86, 0.90, 0.80)
+bg_color = Color(0.878, 0.906, 0.898, 1.0)
 corner_radius_top_left = 4
 corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_stab_fill"]
-bg_color = Color(0.22, 0.80, 0.50, 1.0)
+bg_color = Color(0.086, 0.639, 0.290, 1.0)
 corner_radius_top_left = 4
 corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_therm_fill"]
-bg_color = Color(0.85, 0.52, 0.15, 1.0)
+bg_color = Color(0.851, 0.467, 0.024, 1.0)
 corner_radius_top_left = 4
 corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_commence_btn"]
-bg_color = Color(0.10, 0.26, 0.36, 1.0)
-border_color = Color(0.22, 0.65, 0.88, 0.50)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
+bg_color = Color(0.0, 0.424, 0.361, 1.0)
 corner_radius_top_left = 12
 corner_radius_top_right = 12
 corner_radius_bottom_right = 12
@@ -121,12 +99,7 @@ content_margin_right = 20.0
 content_margin_bottom = 14.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ack_btn"]
-bg_color = Color(0.0, 0.0, 0.0, 0.0)
-border_color = Color(0.40, 0.55, 0.68, 0.60)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
+bg_color = Color(0.878, 0.906, 0.898, 1.0)
 corner_radius_top_left = 12
 corner_radius_top_right = 12
 corner_radius_bottom_right = 12
@@ -137,16 +110,11 @@ content_margin_right = 24.0
 content_margin_bottom = 14.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_footerbar"]
-bg_color = Color(0.90, 0.92, 0.94, 1.0)
-border_color = Color(0.70, 0.78, 0.84, 0.40)
-border_width_left = 0
-border_width_top = 1
-border_width_right = 0
-border_width_bottom = 0
+bg_color = Color(0.941, 0.957, 0.953, 1.0)
 corner_radius_top_left = 0
 corner_radius_top_right = 0
-corner_radius_bottom_right = 18
-corner_radius_bottom_left = 18
+corner_radius_bottom_right = 24
+corner_radius_bottom_left = 24
 content_margin_left = 20.0
 content_margin_top = 10.0
 content_margin_right = 20.0
@@ -163,7 +131,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 1
-color = Color(0.0, 0.02, 0.06, 0.70)
+color = Color(0.988, 0.996, 0.992, 0.82)
 
 [node name="Center" type="CenterContainer" parent="."]
 anchors_preset = 15
@@ -192,14 +160,14 @@ layout_mode = 2
 [node name="ProtocolLabel" type="Label" parent="Center/Panel/OuterVBox/HeaderBar/HeaderRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.22, 0.32, 0.42, 1.0)
-theme_override_font_sizes/font_size = 11
+theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 1.0)
+theme_override_font_sizes/font_size = 14
 text = "🚀  MISSION PROTOCOL // INDUSTRIAL_EXP"
 
 [node name="CoordLabel" type="Label" parent="Center/Panel/OuterVBox/HeaderBar/HeaderRow"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.40, 0.52, 0.62, 0.80)
-theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 0.60)
+theme_override_font_sizes/font_size = 14
 text = "LAT: 04.22  LND: 08.15  •••"
 
 [node name="Content" type="MarginContainer" parent="Center/Panel/OuterVBox"]
@@ -219,14 +187,14 @@ theme_override_constants/separation = 8
 
 [node name="TitleLabel" type="Label" parent="Center/Panel/OuterVBox/Content/ContentVBox/TitleRow"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.10, 0.16, 0.24, 1.0)
+theme_override_colors/font_color = Color(0.176, 0.204, 0.200, 1.0)
 theme_override_font_sizes/font_size = 28
 text = "MECHANIC UNLOCKED:"
 
 [node name="MechanicName" type="Label" parent="Center/Panel/OuterVBox/Content/ContentVBox/TitleRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.10, 0.55, 0.80, 1.0)
+theme_override_colors/font_color = Color(0.0, 0.424, 0.361, 1.0)
 theme_override_font_sizes/font_size = 28
 text = "OFF-WORLD REFINERIES"
 
@@ -245,14 +213,14 @@ theme_override_constants/separation = 14
 
 [node name="OverviewMuted" type="Label" parent="Center/Panel/OuterVBox/Content/ContentVBox/MainHBox/LeftCol"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.40, 0.52, 0.62, 1.0)
-theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 1.0)
+theme_override_font_sizes/font_size = 14
 text = "— OVERVIEW"
 
 [node name="OverviewBody" type="Label" parent="Center/Panel/OuterVBox/Content/ContentVBox/MainHBox/LeftCol"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.16, 0.26, 0.38, 1.0)
+theme_override_colors/font_color = Color(0.176, 0.204, 0.200, 1.0)
 theme_override_font_sizes/font_size = 14
 text = "Deploy autonomous isotope harvesters to asteroid clusters. Transitions colony focus from atmospheric survival to deep-space industrial hegemony."
 autowrap_mode = 3
@@ -272,19 +240,19 @@ theme_override_constants/separation = 4
 
 [node name="StatIcon" type="Label" parent="Center/Panel/OuterVBox/Content/ContentVBox/MainHBox/LeftCol/StatRow/TargetingCard/StatVBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.22, 0.58, 0.82, 1.0)
+theme_override_colors/font_color = Color(0.0, 0.424, 0.361, 1.0)
 theme_override_font_sizes/font_size = 18
 text = "◎"
 
 [node name="StatMuted" type="Label" parent="Center/Panel/OuterVBox/Content/ContentVBox/MainHBox/LeftCol/StatRow/TargetingCard/StatVBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.40, 0.52, 0.62, 1.0)
-theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 1.0)
+theme_override_font_sizes/font_size = 14
 text = "TARGETING"
 
 [node name="StatValue" type="Label" parent="Center/Panel/OuterVBox/Content/ContentVBox/MainHBox/LeftCol/StatRow/TargetingCard/StatVBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.10, 0.18, 0.28, 1.0)
+theme_override_colors/font_color = Color(0.176, 0.204, 0.200, 1.0)
 theme_override_font_sizes/font_size = 14
 text = "Asteroid Clusters"
 autowrap_mode = 3
@@ -300,19 +268,19 @@ theme_override_constants/separation = 4
 
 [node name="StatIcon" type="Label" parent="Center/Panel/OuterVBox/Content/ContentVBox/MainHBox/LeftCol/StatRow/EfficiencyCard/StatVBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.22, 0.70, 0.44, 1.0)
+theme_override_colors/font_color = Color(0.086, 0.639, 0.290, 1.0)
 theme_override_font_sizes/font_size = 18
 text = "⚡"
 
 [node name="StatMuted" type="Label" parent="Center/Panel/OuterVBox/Content/ContentVBox/MainHBox/LeftCol/StatRow/EfficiencyCard/StatVBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.40, 0.52, 0.62, 1.0)
-theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 1.0)
+theme_override_font_sizes/font_size = 14
 text = "EFFICIENCY"
 
 [node name="StatValue" type="Label" parent="Center/Panel/OuterVBox/Content/ContentVBox/MainHBox/LeftCol/StatRow/EfficiencyCard/StatVBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.10, 0.18, 0.28, 1.0)
+theme_override_colors/font_color = Color(0.176, 0.204, 0.200, 1.0)
 theme_override_font_sizes/font_size = 14
 text = "+14.2% Fleet Yield"
 
@@ -336,8 +304,8 @@ theme_override_constants/separation = 12
 
 [node name="SchematicTitle" type="Label" parent="Center/Panel/OuterVBox/Content/ContentVBox/MainHBox/RightCol/SchematicPanel/SchematicVBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.35, 0.46, 0.56, 1.0)
-theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 1.0)
+theme_override_font_sizes/font_size = 14
 text = "REFINERY_V4_SCHEMATIC"
 
 [node name="GearCircle" type="PanelContainer" parent="Center/Panel/OuterVBox/Content/ContentVBox/MainHBox/RightCol/SchematicPanel/SchematicVBox"]
@@ -347,13 +315,14 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_gear_circle")
 
 [node name="GearLabel" type="Label" parent="Center/Panel/OuterVBox/Content/ContentVBox/MainHBox/RightCol/SchematicPanel/SchematicVBox/GearCircle"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.30, 0.44, 0.58, 0.80)
+theme_override_colors/font_color = Color(0.0, 0.424, 0.361, 0.60)
 theme_override_font_sizes/font_size = 32
 text = "⚙✦"
 horizontal_alignment = 1
 
 [node name="SchematicSep" type="HSeparator" parent="Center/Panel/OuterVBox/Content/ContentVBox/MainHBox/RightCol/SchematicPanel/SchematicVBox"]
 layout_mode = 2
+theme_override_styles/separator = SubResource("StyleBoxFlat_sep")
 
 [node name="StabilityRow" type="HBoxContainer" parent="Center/Panel/OuterVBox/Content/ContentVBox/MainHBox/RightCol/SchematicPanel/SchematicVBox"]
 layout_mode = 2
@@ -362,8 +331,8 @@ theme_override_constants/separation = 8
 [node name="StabilityMuted" type="Label" parent="Center/Panel/OuterVBox/Content/ContentVBox/MainHBox/RightCol/SchematicPanel/SchematicVBox/StabilityRow"]
 layout_mode = 2
 custom_minimum_size = Vector2(72, 0)
-theme_override_colors/font_color = Color(0.40, 0.52, 0.62, 1.0)
-theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 1.0)
+theme_override_font_sizes/font_size = 14
 text = "STABILITY"
 
 [node name="StabilityBar" type="ProgressBar" parent="Center/Panel/OuterVBox/Content/ContentVBox/MainHBox/RightCol/SchematicPanel/SchematicVBox/StabilityRow"]
@@ -380,8 +349,8 @@ show_percentage = false
 [node name="PctLabel" type="Label" parent="Center/Panel/OuterVBox/Content/ContentVBox/MainHBox/RightCol/SchematicPanel/SchematicVBox/StabilityRow"]
 layout_mode = 2
 custom_minimum_size = Vector2(36, 0)
-theme_override_colors/font_color = Color(0.22, 0.70, 0.44, 1.0)
-theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(0.086, 0.639, 0.290, 1.0)
+theme_override_font_sizes/font_size = 14
 text = "88%"
 horizontal_alignment = 2
 
@@ -392,8 +361,8 @@ theme_override_constants/separation = 8
 [node name="ThermalMuted" type="Label" parent="Center/Panel/OuterVBox/Content/ContentVBox/MainHBox/RightCol/SchematicPanel/SchematicVBox/ThermalRow"]
 layout_mode = 2
 custom_minimum_size = Vector2(72, 0)
-theme_override_colors/font_color = Color(0.40, 0.52, 0.62, 1.0)
-theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 1.0)
+theme_override_font_sizes/font_size = 14
 text = "THERMAL"
 
 [node name="ThermalBar" type="ProgressBar" parent="Center/Panel/OuterVBox/Content/ContentVBox/MainHBox/RightCol/SchematicPanel/SchematicVBox/ThermalRow"]
@@ -410,8 +379,8 @@ show_percentage = false
 [node name="PctLabel" type="Label" parent="Center/Panel/OuterVBox/Content/ContentVBox/MainHBox/RightCol/SchematicPanel/SchematicVBox/ThermalRow"]
 layout_mode = 2
 custom_minimum_size = Vector2(36, 0)
-theme_override_colors/font_color = Color(0.85, 0.52, 0.15, 1.0)
-theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(0.851, 0.467, 0.024, 1.0)
+theme_override_font_sizes/font_size = 14
 text = "42%"
 horizontal_alignment = 2
 
@@ -433,15 +402,15 @@ size_flags_horizontal = 3
 [node name="AcknowledgeButton" type="Button" parent="Center/Panel/OuterVBox/ButtonBar/ButtonRow"]
 layout_mode = 2
 theme_override_styles/normal = SubResource("StyleBoxFlat_ack_btn")
-theme_override_colors/font_color = Color(0.28, 0.40, 0.54, 1.0)
-theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.176, 0.204, 0.200, 1.0)
+theme_override_font_sizes/font_size = 16
 text = "ACKNOWLEDGE"
 
 [node name="CommenceButton" type="Button" parent="Center/Panel/OuterVBox/ButtonBar/ButtonRow"]
 layout_mode = 2
 theme_override_styles/normal = SubResource("StyleBoxFlat_commence_btn")
-theme_override_colors/font_color = Color(0.90, 0.96, 1.0, 1.0)
-theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(1.0, 1.0, 1.0, 1.0)
+theme_override_font_sizes/font_size = 16
 text = "COMMENCE BRIEFING  ›"
 
 [node name="FooterBar" type="PanelContainer" parent="Center/Panel/OuterVBox"]
@@ -454,12 +423,12 @@ layout_mode = 2
 [node name="AuthLabel" type="Label" parent="Center/Panel/OuterVBox/FooterBar/FooterRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.35, 0.46, 0.56, 1.0)
-theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 1.0)
+theme_override_font_sizes/font_size = 14
 text = "LINK_STATE: 100%  AUTH: CMD_07"
 
 [node name="OSLabel" type="Label" parent="Center/Panel/OuterVBox/FooterBar/FooterRow"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.40, 0.52, 0.62, 1.0)
-theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 0.70)
+theme_override_font_sizes/font_size = 14
 text = "AETHER5_OS_v4.0.1  ▪"
