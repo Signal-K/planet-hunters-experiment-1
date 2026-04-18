@@ -1,15 +1,9 @@
 {
   "unlocked": [
-    "starterrocket1"
+    "starterrocket1",
+    "starterrocket2"
   ],
   "placed": [
-    {
-      "type": "starterrocket1",
-      "id": "starterrocket1-97069801",
-      "x": -110.0,
-      "y": -178.0,
-      "status": "returned"
-    }
   ],
   "launched": [
   ],
@@ -29,12 +23,6 @@
   "scan_counts": {
   },
   "status_changed_at": {
-    "starterrocket1-97069801": {
-      "awaitingLaunch": 1776226500.0,
-      "launched": 1776226511.0,
-      "returningHome": 1776232140.0,
-      "returned": 1776232591
-    }
   },
   "mission_progress_completed": 0,
   "completed_mission_badges": [
@@ -52,17 +40,17 @@
         "role": "Small satellite launch systems — common ore feedstock",
         "mineral_ranges": {
           "Iron": [
-            14.0,
-            24.0
+            14,
+            24
           ],
           "Nickel": [
-            8.0,
-            17.0
+            8,
+            17
           ]
         },
         "requested_minerals": {
-          "Iron": 17.0,
-          "Nickel": 15.0
+          "Iron": 17,
+          "Nickel": 12
         }
       },
       {
@@ -71,17 +59,17 @@
         "role": "In-space smelting and refining — specialist materials",
         "mineral_ranges": {
           "Cobalt": [
-            4.0,
-            9.0
+            4,
+            9
           ],
           "Silicates": [
-            7.0,
-            15.0
+            7,
+            15
           ]
         },
         "requested_minerals": {
-          "Cobalt": 8.0,
-          "Silicates": 8.0
+          "Cobalt": 7,
+          "Silicates": 7
         }
       },
       {
@@ -90,26 +78,26 @@
         "role": "Heavy lift launch systems — structural metals",
         "mineral_ranges": {
           "Iron": [
-            12.0,
-            21.0
+            12,
+            21
           ],
           "Nickel": [
-            7.0,
-            14.0
+            7,
+            14
           ]
         },
         "requested_minerals": {
-          "Iron": 20.0,
-          "Nickel": 14.0
+          "Iron": 21,
+          "Nickel": 14
         }
       }
     ],
-    "selected_contractor": "astroforge",
-    "selection_required": false,
+    "selected_contractor": "",
+    "selection_required": true,
     "recommended_target_id": "mission-1-training-target",
     "recommended_target_label": "433 Eros",
     "recommended_rocket": "starterrocket1",
-    "payout_cap": 1400000000.0
+    "payout_cap": 1400000000
   },
   "operation_mode": "contract",
   "candidate_visit_blocks": {
@@ -119,135 +107,28 @@
   "discovery_bonus_claimed": {
   },
   "rocket_customizations": {
-    "starterrocket1-97069801": {
-      "flag": "Earth Union",
-      "logo": "Star",
-      "rocket_type": "starterrocket1"
-    }
   },
   "rocket_wear": {
-    "starterrocket1-97069801": 1.0
   },
   "archived_rocket_wear": {
   },
   "mission_briefings_seen": {
   },
-  "mission_progress_schema_version": 2.0,
-  "pending_mission_guidance_id": 0.0,
-  "launch_fallback_notice": "",
-  "inventory": {
-    "Iron": 1.0,
-    "Nickel": 0.0,
-    "Cobalt": 0.0,
-    "Platinum": 0.0
+  "returned_mission": {
   },
+  "mission_progress_schema_version": 2.0,
   "returning": [
   ],
   "arrived": {
   },
-  "returned_mission": {
-    "rocket_id": "starterrocket1-97069801",
-    "target_id": "mission-1-training-target",
-    "label": "433 Eros",
-    "type": "asteroid",
-    "operation_mode": "contract",
-    "rocket_customization": {
-      "flag": "Earth Union",
-      "logo": "Star",
-      "rocket_type": "starterrocket1"
-    },
-    "rocket_wear_points": 1.0,
-    "rocket_wear_tier": 0.0,
-    "mining_run_collected": {
-      "Iron": 1.0
-    },
-    "mining_report": {
-      "reason": "manual_return",
-      "starter_contract_active": true,
-      "starter_contract_complete": false,
-      "starter_order": {
-        "Iron": 12.0,
-        "Nickel": 8.0
-      },
-      "collected": {
-        "Iron": 1.0
-      },
-      "accuracy": {
-        "total_collections": 1.0,
-        "laser_collections": 1.0,
-        "drone_collections": 0.0,
-        "drones_deployed": 0.0,
-        "drone_effective_hit_rate_pct": 0.0,
-        "starter_order_active": true,
-        "order_match_count": 1.0,
-        "non_order_count": 0.0,
-        "order_precision_pct": 100.0,
-        "laser_order_precision_pct": 100.0,
-        "drone_order_precision_pct": 0.0,
-        "science_payout_multiplier": 1.0,
-        "science_xp_multiplier": 1.0,
-        "rooms": [
-          {
-            "bay_id": "core_engine",
-            "room_id": "basic_thruster_t1",
-            "tier": 1.0,
-            "offline": false
-          },
-          {
-            "bay_id": "core_engine",
-            "room_id": "cargo_bay_t1",
-            "tier": 1.0,
-            "offline": false
-          },
-          {
-            "bay_id": "core_engine",
-            "room_id": "basic_hull_t1",
-            "tier": 1.0,
-            "offline": false
-          },
-          {
-            "bay_id": "core_mid",
-            "room_id": "small_reactor_t1",
-            "tier": 1.0,
-            "offline": false
-          },
-          {
-            "bay_id": "core_mid",
-            "room_id": "mining_drill_t1",
-            "tier": 1.0,
-            "offline": false
-          },
-          {
-            "bay_id": "core_aft",
-            "room_id": "small_tank_t1",
-            "tier": 1.0,
-            "offline": false
-          },
-          {
-            "bay_id": "core_aft",
-            "room_id": "basic_nav_t1",
-            "tier": 1.0,
-            "offline": false
-          }
-        ]
-      }
-    },
-    "starter_contract_context": {
-      "active": true,
-      "id": "aegis_defense",
-      "name": "Aegis Defense Systems",
-      "requested_minerals": {
-        "Iron": 12.0,
-        "Nickel": 8.0
-      }
-    },
-    "starter_contract_complete": false,
-    "trip_contractor_id": "astroforge",
-    "trip_contractor_name": "Astroforge",
-    "trip_contractor_effect": "",
-    "trip_requested_minerals": {
-    }
-  },
   "returning_started": {
+  },
+  "pending_mission_guidance_id": 0.0,
+  "launch_fallback_notice": "",
+  "inventory": {
+    "Iron": 0.0,
+    "Nickel": 0.0,
+    "Cobalt": 0.0,
+    "Platinum": 0.0
   }
 }
