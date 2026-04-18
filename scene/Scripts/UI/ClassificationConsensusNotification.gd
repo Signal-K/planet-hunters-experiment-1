@@ -60,13 +60,13 @@ func _populate_card(card: PanelContainer, entry: Dictionary) -> void:
 		match cv:
 			"planet":
 				verdict.text = "Agreement"
-				verdict.add_theme_color_override("font_color", Color(0.28, 0.90, 0.65, 1.0))
+				verdict.add_theme_color_override("font_color", Color(0.086, 0.639, 0.290, 1.0))
 			"not_planet":
 				verdict.text = "Disagreement"
-				verdict.add_theme_color_override("font_color", Color(1.0, 0.35, 0.35, 1.0))
+				verdict.add_theme_color_override("font_color", Color(0.863, 0.149, 0.149, 1.0))
 			_:
 				verdict.text = "Pending"
-				verdict.add_theme_color_override("font_color", Color(0.62, 0.72, 0.82, 1.0))
+				verdict.add_theme_color_override("font_color", Color(0.392, 0.455, 0.545, 1.0))
 
 	if badge:
 		badge.visible = is_active
