@@ -873,10 +873,17 @@ static func set_type_room_tier(rocket_type: String, category: String, tier: int)
 	return save_state(s)
 
 static func get_primary_awaiting_rocket_id() -> String:
-	var placed = get_placed()
+	var s = load_state()
+	var placed: Array = s.get("placed", [])
+	var missions: Array = s.get("missions", [])
+	var launched_ids := {}
+	for m in missions:
+		launched_ids[str(m.get("rocket_id", ""))] = true
 	for item in placed:
 		if str(item.get("status", "")) == "awaitingLaunch":
-			return str(item.get("id", ""))
+			var rid := str(item.get("id", ""))
+			if not launched_ids.has(rid):
+				return rid
 	return ""
 
 static func build_target_profile(target_id: String, target_type: String = "asteroid") -> Dictionary:
