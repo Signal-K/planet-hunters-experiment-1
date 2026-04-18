@@ -323,7 +323,7 @@ layout_mode = 2
 text = "Speed: 0 km/h"
 
 [node name="TransitUI" type="CanvasLayer" parent="."]
-layer = 5
+layer = 3
 
 [node name="StarBackground" type="Control" parent="TransitUI"]
 anchors_preset = 15
