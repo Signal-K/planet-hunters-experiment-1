@@ -1241,6 +1241,12 @@ static func add_mission(rocket_id: String, target_id: String, launch_time_epoch:
 	missions.append(record)
 	s["missions"] = missions
 	_set_status_changed_at_in_state(s, rocket_id, "launched", launch_time_epoch)
+	# Clear awaitingLaunch so get_primary_awaiting_rocket_id() doesn't persist after launch
+	var placed_arr = s.get("placed", [])
+	for i in range(placed_arr.size()):
+		if str(placed_arr[i].get("id", "")) == rocket_id:
+			placed_arr[i]["status"] = "launched"
+	s["placed"] = placed_arr
 	# Reset arrival flag for new mission
 	var arrived = s.get("arrived", {})
 	if arrived.has(rocket_id):
