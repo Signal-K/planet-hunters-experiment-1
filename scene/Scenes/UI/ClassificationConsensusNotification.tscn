@@ -3,8 +3,8 @@
 [ext_resource type="Script" path="res://Scripts/UI/ClassificationConsensusNotification.gd" id="1_classify"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
-bg_color = Color(0.055, 0.090, 0.140, 0.98)
-border_color = Color(0.28, 0.88, 0.96, 0.62)
+bg_color = Color(1.0, 1.0, 1.0, 1.0)
+border_color = Color(0.886, 0.910, 0.941, 1.0)
 border_width_left = 1
 border_width_top = 1
 border_width_right = 1
@@ -13,17 +13,17 @@ corner_radius_top_left = 18
 corner_radius_top_right = 18
 corner_radius_bottom_right = 18
 corner_radius_bottom_left = 18
-shadow_color = Color(0.01, 0.03, 0.06, 0.40)
-shadow_size = 32
-shadow_offset = Vector2(0, 12)
+shadow_color = Color(0.059, 0.090, 0.165, 0.12)
+shadow_size = 24
+shadow_offset = Vector2(0, 8)
 content_margin_left = 0
 content_margin_top = 0
 content_margin_right = 0
 content_margin_bottom = 0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_statusbar"]
-bg_color = Color(0.038, 0.060, 0.094, 1.0)
-border_color = Color(0.28, 0.88, 0.96, 0.22)
+bg_color = Color(0.973, 0.980, 0.988, 1.0)
+border_color = Color(0.886, 0.910, 0.941, 1.0)
 border_width_left = 0
 border_width_top = 0
 border_width_right = 0
@@ -38,11 +38,11 @@ content_margin_right = 20.0
 content_margin_bottom = 10.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sep"]
-bg_color = Color(0.28, 0.88, 0.96, 0.18)
+bg_color = Color(0.886, 0.910, 0.941, 1.0)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_close"]
-bg_color = Color(0.10, 0.15, 0.22, 0.86)
-border_color = Color(0.28, 0.88, 0.96, 0.45)
+bg_color = Color(1.0, 1.0, 1.0, 1.0)
+border_color = Color(0.796, 0.835, 0.882, 1.0)
 border_width_left = 1
 border_width_top = 1
 border_width_right = 1
@@ -57,8 +57,8 @@ content_margin_right = 10.0
 content_margin_bottom = 4.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ack"]
-bg_color = Color(0.07, 0.11, 0.17, 0.90)
-border_color = Color(0.28, 0.88, 0.96, 0.72)
+bg_color = Color(0.008, 0.518, 0.780, 1.0)
+border_color = Color(0.012, 0.412, 0.631, 1.0)
 border_width_left = 1
 border_width_top = 1
 border_width_right = 1
@@ -73,8 +73,8 @@ content_margin_right = 22.0
 content_margin_bottom = 12.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_exp"]
-bg_color = Color(0.06, 0.10, 0.16, 0.88)
-border_color = Color(0.28, 0.88, 0.96, 0.28)
+bg_color = Color(0.973, 0.980, 0.988, 1.0)
+border_color = Color(0.886, 0.910, 0.941, 1.0)
 border_width_left = 1
 border_width_top = 1
 border_width_right = 1
@@ -99,7 +99,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 1
-color = Color(0, 0, 0, 0.72)
+color = Color(0, 0, 0, 0.50)
 
 [node name="Center" type="CenterContainer" parent="."]
 anchors_preset = 15
@@ -128,27 +128,27 @@ theme_override_constants/separation = 10
 
 [node name="BufferLabel" type="Label" parent="Center/Panel/VBox/StatusBar/Row"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.40, 0.54, 0.65, 1.0)
-theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(0.392, 0.455, 0.545, 1.0)
+theme_override_font_sizes/font_size = 14
 text = "BUFFER_STATE"
 
 [node name="SyncLabel" type="Label" parent="Center/Panel/VBox/StatusBar/Row"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.28, 0.88, 0.96, 0.85)
-theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(0.008, 0.518, 0.780, 1.0)
+theme_override_font_sizes/font_size = 14
 text = "● SYNCHRONIZING..."
 
 [node name="ProtocolLabel" type="Label" parent="Center/Panel/VBox/StatusBar/Row"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.45, 0.58, 0.68, 1.0)
-theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(0.392, 0.455, 0.545, 1.0)
+theme_override_font_sizes/font_size = 14
 text = "PROTOCOL_V_9.2"
 
 [node name="GreenDot" type="Label" parent="Center/Panel/VBox/StatusBar/Row"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.28, 0.90, 0.55, 1.0)
-theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.086, 0.639, 0.290, 1.0)
+theme_override_font_sizes/font_size = 14
 text = "●"
 
 [node name="Content" type="MarginContainer" parent="Center/Panel/VBox"]
@@ -168,7 +168,7 @@ layout_mode = 2
 [node name="TitleLabel" type="Label" parent="Center/Panel/VBox/Content/VBox/TitleRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.92, 0.95, 0.98, 1.0)
+theme_override_colors/font_color = Color(0.059, 0.090, 0.165, 1.0)
 theme_override_font_sizes/font_size = 28
 text = "CLASSIFICATION RESULTS"
 
@@ -176,14 +176,14 @@ text = "CLASSIFICATION RESULTS"
 layout_mode = 2
 size_flags_horizontal = 8
 theme_override_styles/normal = SubResource("StyleBoxFlat_close")
-theme_override_colors/font_color = Color(0.72, 0.82, 0.90, 1.0)
-theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.392, 0.455, 0.545, 1.0)
+theme_override_font_sizes/font_size = 18
 text = "×"
 
 [node name="BatchLabel" type="Label" parent="Center/Panel/VBox/Content/VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.55, 0.68, 0.78, 1.0)
-theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.392, 0.455, 0.545, 1.0)
+theme_override_font_sizes/font_size = 14
 text = "— BATCH UPDATE: 0 TARGETS PROCESSED"
 
 [node name="Sep1" type="HSeparator" parent="Center/Panel/VBox/Content/VBox"]
@@ -216,14 +216,14 @@ theme_override_constants/separation = 8
 
 [node name="ExpMuted" type="Label" parent="Center/Panel/VBox/Content/VBox/BottomRow/ExpCol/ExpVBox/ExpRow"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.50, 0.62, 0.72, 1.0)
-theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(0.392, 0.455, 0.545, 1.0)
+theme_override_font_sizes/font_size = 14
 text = "EXP_GAINED"
 
 [node name="RankMuted" type="Label" parent="Center/Panel/VBox/Content/VBox/BottomRow/ExpCol/ExpVBox/ExpRow"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.50, 0.62, 0.72, 1.0)
-theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(0.392, 0.455, 0.545, 1.0)
+theme_override_font_sizes/font_size = 14
 text = "RANK_STATUS"
 
 [node name="ValueRow" type="HBoxContainer" parent="Center/Panel/VBox/Content/VBox/BottomRow/ExpCol/ExpVBox"]
@@ -232,13 +232,13 @@ theme_override_constants/separation = 12
 
 [node name="ExpLabel" type="Label" parent="Center/Panel/VBox/Content/VBox/BottomRow/ExpCol/ExpVBox/ValueRow"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.28, 0.88, 0.96, 1.0)
+theme_override_colors/font_color = Color(0.008, 0.518, 0.780, 1.0)
 theme_override_font_sizes/font_size = 22
 text = "+1,240"
 
 [node name="RankLabel" type="Label" parent="Center/Panel/VBox/Content/VBox/BottomRow/ExpCol/ExpVBox/ValueRow"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.92, 0.95, 0.98, 1.0)
+theme_override_colors/font_color = Color(0.059, 0.090, 0.165, 1.0)
 theme_override_font_sizes/font_size = 22
 text = "Expert_IV"
 
@@ -250,6 +250,6 @@ size_flags_horizontal = 3
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_styles/normal = SubResource("StyleBoxFlat_ack")
-theme_override_colors/font_color = Color(0.28, 0.88, 0.96, 1.0)
-theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(1.0, 1.0, 1.0, 1.0)
+theme_override_font_sizes/font_size = 16
 text = "ACKNOWLEDGE_RESULTS"
