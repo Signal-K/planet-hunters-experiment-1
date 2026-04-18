@@ -2,6 +2,10 @@
 
 [ext_resource type="PackedScene" path="res://Scenes/UI/Templates/LaunchpadContractorCard.tscn" id="7"]
 
+; Terminal Ethereal — tonal surface layering, no borders.
+; Sections: SURFACE_LOWEST card (mission) + SURFACE_LOW (contractor/rocket).
+; MapOverlay: PAGE_BG fullscreen, TargetSection SURFACE_LOWEST card.
+
 [sub_resource type="StyleBoxFlat" id="1"]
 bg_color = Color(0, 0, 0, 0)
 content_margin_left = 14.0
@@ -10,82 +14,63 @@ content_margin_right = 14.0
 content_margin_bottom = 14.0
 
 [sub_resource type="StyleBoxFlat" id="2"]
-bg_color = Color(0.93, 0.95, 0.96, 0.96)
-border_color = Color(0.38, 0.83, 0.93, 0.60)
-border_width_right = 1
+bg_color = Color(0.941, 0.957, 0.953, 1.0)
 content_margin_left = 20.0
 content_margin_top = 20.0
 content_margin_right = 20.0
 content_margin_bottom = 20.0
 
 [sub_resource type="StyleBoxFlat" id="3"]
-bg_color = Color(0.0784314, 0.12549, 0.180392, 0.96)
-border_color = Color(0.47451, 0.862745, 0.941176, 0.78)
-corner_radius_top_left = 16
-corner_radius_top_right = 16
-corner_radius_bottom_right = 16
-corner_radius_bottom_left = 16
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
+bg_color = Color(1.0, 1.0, 1.0, 1.0)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(0.0, 0.424, 0.361, 0.06)
+shadow_size = 8
+shadow_offset = Vector2(0, 3)
 content_margin_left = 14.0
 content_margin_top = 12.0
 content_margin_right = 14.0
 content_margin_bottom = 12.0
 
 [sub_resource type="StyleBoxFlat" id="4"]
-bg_color = Color(0.0588235, 0.101961, 0.14902, 0.88)
-border_color = Color(0.47451, 0.862745, 0.941176, 0.28)
-corner_radius_top_left = 16
-corner_radius_top_right = 16
-corner_radius_bottom_right = 16
-corner_radius_bottom_left = 16
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
+bg_color = Color(0.941, 0.957, 0.953, 1.0)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
 content_margin_left = 14.0
 content_margin_top = 12.0
 content_margin_right = 14.0
 content_margin_bottom = 12.0
 
 [sub_resource type="StyleBoxFlat" id="5"]
-bg_color = Color(0.0705882, 0.117647, 0.176471, 0.94)
-border_color = Color(0.47451, 0.862745, 0.941176, 0.34)
-corner_radius_top_left = 14
-corner_radius_top_right = 14
-corner_radius_bottom_right = 14
-corner_radius_bottom_left = 14
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
+bg_color = Color(1.0, 1.0, 1.0, 1.0)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+shadow_color = Color(0.0, 0.424, 0.361, 0.06)
+shadow_size = 12
+shadow_offset = Vector2(0, 4)
 content_margin_left = 12.0
 content_margin_top = 8.0
 content_margin_right = 12.0
 content_margin_bottom = 8.0
 
 [sub_resource type="StyleBoxFlat" id="6"]
-bg_color = Color(0.027451, 0.054902, 0.0901961, 0.96)
-border_color = Color(0.47451, 0.862745, 0.941176, 0.46)
-corner_radius_top_left = 22
-corner_radius_top_right = 22
-corner_radius_bottom_right = 22
-corner_radius_bottom_left = 22
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
+bg_color = Color(0.973, 0.980, 0.976, 1.0)
 content_margin_left = 24.0
 content_margin_top = 24.0
 content_margin_right = 24.0
 content_margin_bottom = 24.0
 
 [sub_resource type="StyleBoxFlat" id="9"]
-bg_color = Color(0.86, 0.92, 0.97, 0.97)
-border_color = Color(0.38, 0.83, 0.93, 0.70)
-border_width_bottom = 1
+bg_color = Color(1.0, 1.0, 1.0, 1.0)
+shadow_color = Color(0.0, 0.424, 0.361, 0.06)
+shadow_size = 8
+shadow_offset = Vector2(0, 2)
 content_margin_left = 20.0
 content_margin_top = 16.0
 content_margin_right = 20.0
@@ -155,20 +140,20 @@ theme_override_constants/separation = 8
 
 [node name="Number" type="Label" parent="VBox/Body/LeftColumn/MissionSection/SectionVBox/Header"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.843137, 0.556863, 0.196078, 1)
-theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.0, 0.424, 0.361, 1.0)
+theme_override_font_sizes/font_size = 14
 text = "M"
 
 [node name="Title" type="Label" parent="VBox/Body/LeftColumn/MissionSection/SectionVBox/Header"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.12, 0.18, 0.24, 1)
+theme_override_colors/font_color = Color(0.176, 0.204, 0.200, 1.0)
 theme_override_font_sizes/font_size = 18
 text = "Mission"
 
 [node name="Blurb" type="Label" parent="VBox/Body/LeftColumn/MissionSection/SectionVBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.39, 0.47, 0.55, 1)
-theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 1.0)
+theme_override_font_sizes/font_size = 14
 autowrap_mode = 3
 text = "Your current mission objective and requirements."
 
@@ -200,20 +185,20 @@ theme_override_constants/separation = 8
 
 [node name="Number" type="Label" parent="VBox/Body/LeftColumn/ContractorSection/SectionVBox/Header"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.843137, 0.556863, 0.196078, 1)
-theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.0, 0.424, 0.361, 1.0)
+theme_override_font_sizes/font_size = 14
 text = "01"
 
 [node name="Title" type="Label" parent="VBox/Body/LeftColumn/ContractorSection/SectionVBox/Header"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.12, 0.18, 0.24, 1)
+theme_override_colors/font_color = Color(0.176, 0.204, 0.200, 1.0)
 theme_override_font_sizes/font_size = 18
 text = "Contractor"
 
 [node name="Blurb" type="Label" parent="VBox/Body/LeftColumn/ContractorSection/SectionVBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.39, 0.47, 0.55, 1)
-theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 1.0)
+theme_override_font_sizes/font_size = 14
 autowrap_mode = 3
 text = "Choose who funds the run and which minerals matter."
 
@@ -268,27 +253,27 @@ theme_override_constants/separation = 8
 
 [node name="Number" type="Label" parent="VBox/Body/RightColumn/RocketSection/SectionVBox/Header"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.843137, 0.556863, 0.196078, 1)
-theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.0, 0.424, 0.361, 1.0)
+theme_override_font_sizes/font_size = 14
 text = "02"
 
 [node name="Title" type="Label" parent="VBox/Body/RightColumn/RocketSection/SectionVBox/Header"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.12, 0.18, 0.24, 1)
+theme_override_colors/font_color = Color(0.176, 0.204, 0.200, 1.0)
 theme_override_font_sizes/font_size = 18
 text = "Rocket"
 
 [node name="Blurb" type="Label" parent="VBox/Body/RightColumn/RocketSection/SectionVBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.39, 0.47, 0.55, 1)
-theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 1.0)
+theme_override_font_sizes/font_size = 14
 autowrap_mode = 3
 text = "Build or select the ship for this mission."
 
 [node name="CoachMessage" type="Label" parent="VBox/Body/RightColumn/RocketSection/SectionVBox"]
 visible = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.12, 0.18, 0.24, 1)
+theme_override_colors/font_color = Color(0.176, 0.204, 0.200, 1.0)
 theme_override_font_sizes/font_size = 15
 autowrap_mode = 3
 text = "Mission setup guidance"
@@ -296,8 +281,8 @@ text = "Mission setup guidance"
 [node name="CoachProgress" type="Label" parent="VBox/Body/RightColumn/RocketSection/SectionVBox"]
 visible = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.15, 0.48, 0.72, 1)
-theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.0, 0.424, 0.361, 1.0)
+theme_override_font_sizes/font_size = 14
 text = "Step 1/8"
 
 [node name="Content" type="VBoxContainer" parent="VBox/Body/RightColumn/RocketSection/SectionVBox"]
@@ -370,14 +355,14 @@ text = "Back to Setup"
 [node name="MapTitle" type="Label" parent="MapOverlay/OverlayVBox/Toolbar"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.92, 0.96, 1, 1)
+theme_override_colors/font_color = Color(0.176, 0.204, 0.200, 1.0)
 theme_override_font_sizes/font_size = 20
 text = "Target Map"
 
 [node name="MapHint" type="Label" parent="MapOverlay/OverlayVBox/Toolbar"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.76, 0.83, 0.9, 0.92)
-theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 1.0)
+theme_override_font_sizes/font_size = 14
 text = "Navigate targets full-screen, then return to launch."
 
 [node name="TargetSection" type="PanelContainer" parent="MapOverlay/OverlayVBox"]
@@ -398,20 +383,20 @@ theme_override_constants/separation = 8
 
 [node name="Number" type="Label" parent="MapOverlay/OverlayVBox/TargetSection/SectionVBox/Header"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.988, 0.796, 0.314, 1)
-theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.0, 0.424, 0.361, 1.0)
+theme_override_font_sizes/font_size = 14
 text = "03"
 
 [node name="Title" type="Label" parent="MapOverlay/OverlayVBox/TargetSection/SectionVBox/Header"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.92, 0.96, 1, 1)
-theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.176, 0.204, 0.200, 1.0)
+theme_override_font_sizes/font_size = 18
 text = "Target"
 
 [node name="Blurb" type="Label" parent="MapOverlay/OverlayVBox/TargetSection/SectionVBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.76, 0.83, 0.9, 0.92)
-theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 1.0)
+theme_override_font_sizes/font_size = 14
 autowrap_mode = 3
 text = "Review route map, range fit, and scan detail before confirming a target."
 
