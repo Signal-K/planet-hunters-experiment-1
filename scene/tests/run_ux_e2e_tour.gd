@@ -1736,10 +1736,10 @@ func _run_tour() -> void:
 		_check_label_button_overlaps(detail, "Asteroid Detail View")
 
 		# Pen button text is set dynamically by _update_pen_button(): "Enable Annotation" / "✓ Annotation On"
-		var pen_btn := _find_button_with_text(detail, "Pen")
-		if not pen_btn:
-			pen_btn = _find_button_with_text(detail, "Annotation")
-		if pen_btn:
+		var annotation_pen_btn := _find_button_with_text(detail, "Pen")
+		if not annotation_pen_btn:
+			annotation_pen_btn = _find_button_with_text(detail, "Annotation")
+		if annotation_pen_btn:
 			_report("  - 'Pen' annotation button present. ✓")
 		else:
 			_issue("Asteroid detail view missing 'Pen' annotation button.")
