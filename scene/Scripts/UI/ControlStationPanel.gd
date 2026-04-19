@@ -617,7 +617,7 @@ func _create_mission_card(
 	info_row.add_child(button_col)
 
 	var action_button := Button.new()
-	action_button.text = "INTERCEPT SYSTEM" if not is_returning else "INBOUND %s" % _format_eta(eta_seconds)
+	action_button.text = "RESUME →" if not is_returning else "INBOUND %s" % _format_eta(eta_seconds)
 	action_button.custom_minimum_size = Vector2(210, 68)
 	if is_returning:
 		_apply_secondary_button(action_button)

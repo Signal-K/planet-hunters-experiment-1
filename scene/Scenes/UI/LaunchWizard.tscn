@@ -2,7 +2,10 @@
 
 [ext_resource type="Script" path="res://Scripts/UI/LaunchWizard.gd" id="1"]
 
-; Terminal Ethereal — mobile-first launch wizard, full-width step flow.
+; Terminal Ethereal — mobile-first launch wizard.
+; Static scaffold defined here so designers can adjust layout in the Godot editor.
+; Dynamic card content (contractor / target / rocket cards) is built at runtime
+; in LaunchWizard.gd — only edit that file for data-driven content.
 
 [node name="LaunchWizard" type="Control"]
 layout_mode = 3
@@ -12,3 +15,122 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Scaffold" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 0
+
+; ── Header (72 px tall, primary-colour bar) ──────────────────────────────────
+
+[node name="Header" type="Control" parent="Scaffold"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 72)
+size_flags_horizontal = 3
+
+[node name="HeaderBg" type="ColorRect" parent="Scaffold/Header"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HeaderRow" type="HBoxContainer" parent="Scaffold/Header"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_right = -16.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 0
+theme_override_constants/separation = 8
+
+[node name="BackBtn" type="Button" parent="Scaffold/Header/HeaderRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(44, 44)
+flat = true
+text = "\u2039"
+
+[node name="StepTitle" type="Label" parent="Scaffold/Header/HeaderRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+vertical_alignment = 1
+
+[node name="DotBox" type="HBoxContainer" parent="Scaffold/Header/HeaderRow"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 7
+
+; ── Scroll area (fills remaining space) ──────────────────────────────────────
+
+[node name="Scroll" type="ScrollContainer" parent="Scaffold"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 2
+
+[node name="ScrollMargin" type="MarginContainer" parent="Scaffold/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="CardList" type="VBoxContainer" parent="Scaffold/Scroll/ScrollMargin"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+
+; ── Footer (88 px tall, surface-low bar with Cancel + Next buttons) ──────────
+
+[node name="Footer" type="Control" parent="Scaffold"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 88)
+size_flags_horizontal = 3
+
+[node name="FooterBg" type="ColorRect" parent="Scaffold/Footer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="FooterRow" type="HBoxContainer" parent="Scaffold/Footer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_right = -20.0
+offset_top = 16.0
+offset_bottom = -16.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 12
+
+[node name="CancelBtn" type="Button" parent="Scaffold/Footer/FooterRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(110, 56)
+text = "Cancel"
+
+[node name="NextBtn" type="Button" parent="Scaffold/Footer/FooterRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 56)
+text = "Next \u2192"

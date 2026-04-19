@@ -253,6 +253,7 @@ func _inject_progress_state(stage: int, with_launchpad_targeting: bool = false) 
 	state["selected_target"] = ""
 	state["trip_contract_offer"] = {}
 	state["placed"] = []
+	state["missions"] = []
 	
 	if with_launchpad_targeting:
 		var rocket_type := "starterrocket1"
@@ -1576,7 +1577,7 @@ func _run_tour() -> void:
 				sidescroll = mining.get_node_or_null("SidescrollMiningCompat")
 			if sidescroll:
 				_report("  - SidescrollMining delegate found. ✓")
-				for hud_name in ["FuelBar", "HeatBar", "BeamBar", "OrderLabel"]:
+				for hud_name in ["FuelBar", "HeatBar", "BeamBar", "ProgressLabel"]:
 					if _find_node_by_name(sidescroll, hud_name):
 						_report("    • %s present. ✓" % hud_name)
 					else:
@@ -1734,7 +1735,15 @@ func _run_tour() -> void:
 		_check_offscreen_elements(detail, "Asteroid Detail View")
 		_check_label_button_overlaps(detail, "Asteroid Detail View")
 
-		for btn_text in ["Pen", "Clear", "Save"]:
+		# Pen button text is set dynamically by _update_pen_button(): "Enable Annotation" / "✓ Annotation On"
+		var pen_btn := _find_button_with_text(detail, "Pen")
+		if not pen_btn:
+			pen_btn = _find_button_with_text(detail, "Annotation")
+		if pen_btn:
+			_report("  - 'Pen' annotation button present. ✓")
+		else:
+			_issue("Asteroid detail view missing 'Pen' annotation button.")
+		for btn_text in ["Clear", "Save"]:
 			if _find_button_with_text(detail, btn_text):
 				_report("  - '%s' annotation button present. ✓" % btn_text)
 			else:
