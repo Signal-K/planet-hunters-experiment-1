@@ -58,7 +58,8 @@ func _run_tour() -> void:
 		classify.show_results(entries, 1240, "Expert_IV")
 		await get_tree().create_timer(SETTLE).timeout
 
-	var dialog_present := _find_label_with_text(get_tree().root, "CLASSIFICATION RESULTS") != null
+	var dialog_present := _find_label_with_text(get_tree().root, "BATCH UPDATE") != null \
+		or _find_label_with_text(get_tree().root, "ACKNOWLEDGE_RESULTS") != null
 	if dialog_present:
 		_report("  ✓ ClassificationConsensusNotification rendered.")
 	else:
@@ -156,7 +157,8 @@ func _run_tour() -> void:
 	_active = freeops
 	await get_tree().create_timer(SETTLE).timeout
 
-	var freeops_present := _find_label_with_text(get_tree().root, "FREE OPERATIONS") != null
+	var freeops_present := _find_label_with_text(get_tree().root, "UNRESTRICTED_ACCESS") != null \
+		or _find_label_with_text(get_tree().root, "Tutorial complete") != null
 	if freeops_present:
 		_report("  ✓ FreeOpsUnlockOverlay rendered.")
 	else:
