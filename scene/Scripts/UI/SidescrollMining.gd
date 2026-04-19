@@ -228,11 +228,6 @@ func _update_bottom_bar_visibility() -> void:
 	mine_button.visible = _uses_touch_controls
 	drone_button.visible = _uses_touch_controls and _drones_enabled
 	instructions.visible = not _uses_touch_controls
-	if handbook_button:
-		# Position guide button below the top-bar stats row on all viewport sizes
-		# to prevent it overlapping the contract order title/progress labels.
-		handbook_button.offset_top    = 90.0
-		handbook_button.offset_bottom = 130.0
 
 func _should_use_touch_controls() -> bool:
 	var viewport_size := get_viewport_rect().size
