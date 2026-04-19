@@ -1,6 +1,8 @@
 {
   "unlocked": [
-    "starterrocket1"
+    "starterrocket1",
+    "starterrocket2",
+    "starterrocket3"
   ],
   "placed": [
   ],
@@ -14,14 +16,44 @@
   "preview_target": {
   },
   "detected_targets": [
+    {
+      "id": "4201",
+      "label": "4201",
+      "type": "asteroid",
+      "anomalySet": "",
+      "classification_status": "confirmed",
+      "tess_disposition": ""
+    }
   ],
   "seen_asteroids": [
   ],
   "seen_planets": [
   ],
   "scan_counts": {
+    "asteroid:4201": 4
   },
   "status_changed_at": {
+    "__test_rocket_mech30__": {
+      "launched": 1776589514.0
+    },
+    "__test_rocket_mech31__": {
+      "launched": 1776589514.0
+    },
+    "__test_rocket_mech32__": {
+      "launched": 1776589514.0
+    },
+    "__test_rocket_mech33__": {
+      "launched": 1776589514.0
+    },
+    "starterrocket1-tour-orbit": {
+      "in-orbit": 1776590432.0
+    },
+    "starterrocket1-tour-return": {
+      "returning": 1776590432.0
+    },
+    "starterrocket1-ux-tour-stage-1": {
+      "awaitingLaunch": 1776590435.0
+    }
   },
   "mission_progress_completed": 3,
   "completed_mission_badges": [
@@ -30,11 +62,76 @@
     "mission-3"
   ],
   "control_station_built": true,
-  "scanner_station_built": false,
+  "scanner_station_built": true,
   "scanner_unlocked": true,
   "scanner_unlock_dialog_seen": true,
-  "scanner_next_scan_at": 0,
+  "scanner_next_scan_at": 0.0,
   "trip_contract_offer": {
+    "contractors": [
+      {
+        "id": "rocketlab",
+        "name": "Rocketlab",
+        "role": "Small satellite launch systems — common ore feedstock",
+        "mineral_ranges": {
+          "Iron": [
+            32.0,
+            56.0
+          ],
+          "Nickel": [
+            20.0,
+            40.0
+          ]
+        },
+        "requested_minerals": {
+          "Iron": 38.0,
+          "Nickel": 39.0
+        }
+      },
+      {
+        "id": "astroforge",
+        "name": "Astroforge",
+        "role": "In-space smelting and refining — specialist materials",
+        "mineral_ranges": {
+          "Cobalt": [
+            9.0,
+            22.0
+          ],
+          "Silicates": [
+            16.0,
+            36.0
+          ]
+        },
+        "requested_minerals": {
+          "Cobalt": 15.0,
+          "Silicates": 36.0
+        }
+      },
+      {
+        "id": "spacex",
+        "name": "SpaceX",
+        "role": "Heavy lift launch systems — structural metals",
+        "mineral_ranges": {
+          "Iron": [
+            28.0,
+            48.0
+          ],
+          "Nickel": [
+            16.0,
+            32.0
+          ]
+        },
+        "requested_minerals": {
+          "Iron": 32.0,
+          "Nickel": 32.0
+        }
+      }
+    ],
+    "selected_contractor": "",
+    "selection_required": true,
+    "recommended_target_id": "mission-4-exoplanet-target",
+    "recommended_target_label": "Exoplanet Kepler-442b Proxy",
+    "recommended_rocket": "starterrocket1",
+    "payout_cap": 1400000000.0
   },
   "operation_mode": "contract",
   "candidate_visit_blocks": {
@@ -46,18 +143,64 @@
   "rocket_customizations": {
   },
   "rocket_wear": {
+    "starterrocket1-ux-tour": 4.0
   },
   "archived_rocket_wear": {
   },
   "mission_briefings_seen": {
   },
-  "mission_progress_schema_version": 2,
-  "pending_mission_guidance_id": 0,
-  "launch_fallback_notice": "",
+  "mission_progress_schema_version": 2.0,
+  "pending_mission_guidance_id": 0.0,
+  "launch_fallback_notice": "No target was selected, so mission control auto-selected TOI-700 d for this launch.",
   "inventory": {
-    "Iron": 0,
-    "Nickel": 0,
-    "Cobalt": 0,
-    "Platinum": 0
+    "Iron": 0.0,
+    "Nickel": 0.0,
+    "Cobalt": 0.0,
+    "Platinum": 0.0
+  },
+  "returning": [
+  ],
+  "arrived": {
+  },
+  "returned_mission": {
+  },
+  "returning_started": {
+  },
+  "type_room_upgrades": {
+  },
+  "laser_levels": {
+  },
+  "launch_guidance_notice": "Select a contractor first, then pick a mission target.",
+  "starter_contract_offer": {
+    "contractors": [
+      {
+        "id": "aegis_defense",
+        "name": "Aegis Defense Systems",
+        "focus": "Defense-grade avionics and hardened military systems",
+        "requested_minerals": {
+          "Iron": 12.0,
+          "Nickel": 8.0
+        }
+      },
+      {
+        "id": "lumen_consumer",
+        "name": "Lumen Consumer Labs",
+        "focus": "High-volume consumer electronics and smart devices",
+        "requested_minerals": {
+          "Iron": 10.0,
+          "Nickel": 10.0
+        }
+      },
+      {
+        "id": "helion_orbital",
+        "name": "Helion Orbital Works",
+        "focus": "Next-gen propulsion and frontier space innovation",
+        "requested_minerals": {
+          "Iron": 9.0,
+          "Nickel": 11.0
+        }
+      }
+    ],
+    "selected_contractor": ""
   }
 }
