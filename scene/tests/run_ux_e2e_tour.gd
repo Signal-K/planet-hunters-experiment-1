@@ -1354,14 +1354,14 @@ func _run_tour() -> void:
 		await _screenshot("10_launchpad_panel")
 		_check_offscreen_elements(lp, "Launchpad Panel")
 		_check_label_button_overlaps(lp, "Launchpad Panel")
-		if _find_label_with_text(lp, "Launchpad Mission Setup"):
-			_report("  - 'Launchpad Mission Setup' title visible. ✓")
+		if _find_label_with_text(lp, "Select Contractor") or _find_label_with_text(lp, "Mission"):
+			_report("  - Wizard step title visible. ✓")
 		else:
-			_issue("Launchpad scene missing mission setup title — users may not know where they are.")
-		if _find_node_by_name(lp, "SelectorPanel"):
-			_report("  - SelectorPanel present. ✓")
+			_issue("Launchpad scene missing wizard title — users may not know where they are.")
+		if _find_node_by_name(lp, "LaunchWizard"):
+			_report("  - LaunchWizard present. ✓")
 		else:
-			_issue("Launchpad scene missing SelectorPanel — mission setup is not visible.")
+			_issue("Launchpad scene missing LaunchWizard — mission setup is not visible.")
 		_check_for_placeholder_text(lp, "Launchpad Panel")
 
 	# ==================================================================
