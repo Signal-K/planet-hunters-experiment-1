@@ -1,7 +1,0 @@
-[gd_scene format=3]
-
-[node name="RocketDragPreview" type="TextureRect"]
-expand_mode = 1
-stretch_mode = 5
-custom_minimum_size = Vector2(160, 320)
-z_index = 200
