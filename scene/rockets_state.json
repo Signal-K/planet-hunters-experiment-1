@@ -14,8 +14,8 @@
     {
       "rocket_id": "starterrocket1-tour-return",
       "target": "mission-1-training-target",
-      "launch_time": 1776569514.0,
-      "arrival_time": 1776569574.0,
+      "launch_time": 1776570374.0,
+      "arrival_time": 1776570434.0,
       "operation_mode": "contract",
       "goingTo": "home",
       "location": [
@@ -41,7 +41,7 @@
   "seen_planets": [
   ],
   "scan_counts": {
-    "asteroid:4201": 1
+    "asteroid:4201": 3
   },
   "status_changed_at": {
     "starterrocket1-tour-orbit": {
@@ -82,8 +82,8 @@
           ]
         },
         "requested_minerals": {
-          "Iron": 49.0,
-          "Nickel": 27.0
+          "Iron": 56.0,
+          "Nickel": 30.0
         }
       },
       {
@@ -101,8 +101,8 @@
           ]
         },
         "requested_minerals": {
-          "Cobalt": 14.0,
-          "Silicates": 22.0
+          "Cobalt": 18.0,
+          "Silicates": 36.0
         }
       },
       {
@@ -120,8 +120,8 @@
           ]
         },
         "requested_minerals": {
-          "Iron": 31.0,
-          "Nickel": 27.0
+          "Iron": 42.0,
+          "Nickel": 20.0
         }
       }
     ],
@@ -142,7 +142,7 @@
   "rocket_customizations": {
   },
   "rocket_wear": {
-    "starterrocket1-ux-tour": 1.0
+    "starterrocket1-ux-tour": 3.0
   },
   "archived_rocket_wear": {
   },
