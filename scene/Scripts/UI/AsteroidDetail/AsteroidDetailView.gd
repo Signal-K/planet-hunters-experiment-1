@@ -410,7 +410,7 @@ func _on_mark_dip_pressed() -> void:
 
 func _on_classify(verdict: String, row: VBoxContainer) -> void:
 	var annotation_count = drawing_canvas.get_annotation_count() if drawing_canvas.has_method("get_annotation_count") else 0
-	# Persist annotations locally before any network call so they are never lost.
+	var target_type = "planet" if _model.is_planet(anomaly_data) else "asteroid"
 	_annotations.save_annotations(anomaly_id, target_type, title_label.text if title_label else "")
 	RocketsManager.set_target_annotation_level(anomaly_id, annotation_count)
 	RocketsManager.set_tess_classification(anomaly_id, verdict)

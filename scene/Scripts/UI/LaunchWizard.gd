@@ -1,6 +1,8 @@
 extends Control
-## Mobile-first launch wizard — Contractor → Target → Rocket → Confirm
-## Full-width step-by-step flow; all UI built in code (no sub-scenes needed).
+## Mobile-first launch wizard — Contractor → Target → Rocket → Confirm.
+## Static scaffold (header / scroll / footer) is defined in LaunchWizard.tscn
+## so designers can adjust layout in the Godot editor without touching this file.
+## Dynamic card content is built here at runtime.
 
 const RocketSpecs        = preload("res://Scripts/Utils/RocketSpecs.gd")
 const RocketsManager     = preload("res://Scripts/Utils/RocketsManager.gd")
@@ -36,140 +38,42 @@ var _rockets:             Array      = []
 signal back_pressed
 signal launched(rocket_id: String, target_id: String)
 
-# ── Node refs (built in code) ─────────────────────────────────────────────────
-var _header_title: Label
-var _step_dots:    Array  = []
-var _card_list:    VBoxContainer
-var _scroll:       ScrollContainer
-var _next_btn:     Button
-var _cancel_btn:   Button
+# ── Scene nodes (from LaunchWizard.tscn — tweak layout there in the editor) ──
+@onready var _background:   ColorRect       = $Background
+@onready var _header_bg:    ColorRect       = $Scaffold/Header/HeaderBg
+@onready var _header_title: Label           = $Scaffold/Header/HeaderRow/StepTitle
+@onready var _dot_box:      HBoxContainer   = $Scaffold/Header/HeaderRow/DotBox
+@onready var _back_btn:     Button          = $Scaffold/Header/HeaderRow/BackBtn
+@onready var _scroll:       ScrollContainer = $Scaffold/Scroll
+@onready var _card_list:    VBoxContainer   = $Scaffold/Scroll/ScrollMargin/CardList
+@onready var _footer_bg:    ColorRect       = $Scaffold/Footer/FooterBg
+@onready var _cancel_btn:   Button          = $Scaffold/Footer/FooterRow/CancelBtn
+@onready var _next_btn:     Button          = $Scaffold/Footer/FooterRow/NextBtn
+
+var _step_dots: Array = []
 
 # ── Lifecycle ─────────────────────────────────────────────────────────────────
 
 func _ready() -> void:
-	_build_ui()
+	_apply_styles()
+	_create_dots()
+	_wire_buttons()
 	_show_step(Step.CONTRACTOR)
 
-# ── UI construction ───────────────────────────────────────────────────────────
-
-func _build_ui() -> void:
-	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-
-	var bg := ColorRect.new()
-	bg.color = C_PAGE_BG
-	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	add_child(bg)
-
-	var scaffold := VBoxContainer.new()
-	scaffold.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	scaffold.add_theme_constant_override("separation", 0)
-	add_child(scaffold)
-
-	scaffold.add_child(_build_header())
-
-	_scroll = ScrollContainer.new()
-	_scroll.size_flags_vertical = SIZE_EXPAND_FILL
-	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	scaffold.add_child(_scroll)
-
-	var scroll_margin := MarginContainer.new()
-	scroll_margin.size_flags_horizontal = SIZE_EXPAND_FILL
-	scroll_margin.add_theme_constant_override("margin_left", 20)
-	scroll_margin.add_theme_constant_override("margin_right", 20)
-	scroll_margin.add_theme_constant_override("margin_top", 20)
-	scroll_margin.add_theme_constant_override("margin_bottom", 20)
-	_scroll.add_child(scroll_margin)
-
-	_card_list = VBoxContainer.new()
-	_card_list.size_flags_horizontal = SIZE_EXPAND_FILL
-	_card_list.add_theme_constant_override("separation", 12)
-	scroll_margin.add_child(_card_list)
-
-	scaffold.add_child(_build_footer())
-
-func _build_header() -> Control:
-	var c := Control.new()
-	c.custom_minimum_size = Vector2(0, 72)
-	c.size_flags_horizontal = SIZE_EXPAND_FILL
-
-	var bg := ColorRect.new()
-	bg.color = C_PRIMARY
-	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	c.add_child(bg)
-
-	var hbox := HBoxContainer.new()
-	hbox.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	hbox.add_theme_constant_override("separation", 8)
-	hbox.offset_left   = 16.0
-	hbox.offset_right  = -16.0
-	c.add_child(hbox)
-
-	var back_btn := Button.new()
-	back_btn.custom_minimum_size = Vector2(44, 44)
-	back_btn.text = "‹"
-	back_btn.flat = true
-	back_btn.add_theme_color_override("font_color", C_WHITE)
-	back_btn.add_theme_font_size_override("font_size", 32)
-	back_btn.pressed.connect(_on_back)
-	hbox.add_child(back_btn)
-
-	_header_title = Label.new()
-	_header_title.size_flags_horizontal = SIZE_EXPAND_FILL
+func _apply_styles() -> void:
+	_background.color = C_PAGE_BG
+	_header_bg.color  = C_PRIMARY
+	_footer_bg.color  = C_SURF_LOW
+	_back_btn.add_theme_color_override("font_color", C_WHITE)
+	_back_btn.add_theme_font_size_override("font_size", 32)
 	_header_title.add_theme_color_override("font_color", C_WHITE)
 	_header_title.add_theme_font_size_override("font_size", 20)
-	_header_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	hbox.add_child(_header_title)
-
-	var dot_box := HBoxContainer.new()
-	dot_box.add_theme_constant_override("separation", 7)
-	dot_box.alignment = BoxContainer.ALIGNMENT_CENTER
-	hbox.add_child(dot_box)
-
-	_step_dots.clear()
-	for _i in 4:
-		var d := ColorRect.new()
-		d.custom_minimum_size = Vector2(8, 8)
-		d.color = Color(1, 1, 1, 0.3)
-		dot_box.add_child(d)
-		_step_dots.append(d)
-
-	return c
-
-func _build_footer() -> Control:
-	var c := Control.new()
-	c.custom_minimum_size = Vector2(0, 88)
-	c.size_flags_horizontal = SIZE_EXPAND_FILL
-
-	var bg := ColorRect.new()
-	bg.color = C_SURF_LOW
-	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	c.add_child(bg)
-
-	var hbox := HBoxContainer.new()
-	hbox.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	hbox.add_theme_constant_override("separation", 12)
-	hbox.offset_left   = 20.0
-	hbox.offset_right  = -20.0
-	hbox.offset_top    = 16.0
-	hbox.offset_bottom = -16.0
-	c.add_child(hbox)
-
-	_cancel_btn = Button.new()
-	_cancel_btn.custom_minimum_size = Vector2(110, 56)
-	_cancel_btn.text = "Cancel"
 	_cancel_btn.add_theme_color_override("font_color", C_ON_SURF_VAR)
 	_cancel_btn.add_theme_font_size_override("font_size", 16)
 	_cancel_btn.add_theme_stylebox_override("normal",  _box(C_SURF_LOWEST, 12))
 	_cancel_btn.add_theme_stylebox_override("hover",   _box(C_ICE_BLUE, 12))
 	_cancel_btn.add_theme_stylebox_override("pressed", _box(C_ICE_BLUE_DIM, 12))
 	_cancel_btn.add_theme_stylebox_override("focus",   _box(C_SURF_LOWEST, 12))
-	_cancel_btn.pressed.connect(_on_cancel)
-	hbox.add_child(_cancel_btn)
-
-	_next_btn = Button.new()
-	_next_btn.size_flags_horizontal = SIZE_EXPAND_FILL
-	_next_btn.custom_minimum_size = Vector2(0, 56)
-	_next_btn.text = "Next →"
 	_next_btn.add_theme_color_override("font_color", C_WHITE)
 	_next_btn.add_theme_font_size_override("font_size", 17)
 	_next_btn.add_theme_stylebox_override("normal",   _box(C_PRIMARY, 12))
@@ -177,10 +81,20 @@ func _build_footer() -> Control:
 	_next_btn.add_theme_stylebox_override("pressed",  _box(C_PRIMARY_DIM, 12))
 	_next_btn.add_theme_stylebox_override("focus",    _box(C_PRIMARY, 12))
 	_next_btn.add_theme_stylebox_override("disabled", _box(Color(0.6, 0.6, 0.6, 1.0), 12))
-	_next_btn.pressed.connect(_on_next)
-	hbox.add_child(_next_btn)
 
-	return c
+func _create_dots() -> void:
+	_step_dots.clear()
+	for _i in 4:
+		var d := ColorRect.new()
+		d.custom_minimum_size = Vector2(8, 8)
+		d.color = Color(1, 1, 1, 0.3)
+		_dot_box.add_child(d)
+		_step_dots.append(d)
+
+func _wire_buttons() -> void:
+	_back_btn.pressed.connect(_on_back)
+	_cancel_btn.pressed.connect(_on_cancel)
+	_next_btn.pressed.connect(_on_next)
 
 # ── Step management ───────────────────────────────────────────────────────────
 
@@ -188,10 +102,15 @@ func _show_step(s: Step) -> void:
 	_step = s
 	_update_header()
 	_update_dots()
-	_rebuild_cards()
 	_update_footer()
 	if _scroll:
 		_scroll.scroll_vertical = 0
+	# Fade out → rebuild cards → fade in
+	var tw := create_tween()
+	tw.set_ease(Tween.EASE_IN_OUT)
+	tw.tween_property(_card_list, "modulate:a", 0.0, 0.10)
+	tw.tween_callback(_rebuild_cards)
+	tw.tween_property(_card_list, "modulate:a", 1.0, 0.16)
 
 func _update_header() -> void:
 	const TITLES := ["Select Contractor", "Select Target", "Select Rocket", "Confirm Launch"]
