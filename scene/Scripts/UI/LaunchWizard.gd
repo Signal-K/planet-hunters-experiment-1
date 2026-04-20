@@ -680,6 +680,9 @@ func _execute_launch() -> void:
 	if not RocketsManager.add_mission(rocket_id, target_id, launch_time):
 		push_error("LaunchWizard: add_mission failed")
 		return
+	var target_label := _selected_target.get("label", target_id) as String
+	var target_type  := _selected_target.get("type",  "asteroid") as String
+	RocketsManager.set_preview_target(target_id, target_label, target_type, rocket_id)
 	launched.emit(rocket_id, target_id)
 
 # ── Widget helpers ────────────────────────────────────────────────────────────
