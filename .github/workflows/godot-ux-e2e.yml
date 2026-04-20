@@ -121,6 +121,7 @@ jobs:
             echo "✓ Pulled pre-built image from ghcr.io"
           else
             echo "⚠️  Pre-built image not available — building locally (first run or Dockerfile changed)"
+            mkdir -p .godot-bin
             docker build --platform linux/amd64 -t "$UX_TOUR_IMAGE" -f Dockerfile.ux-tour .
             echo "IMAGE_SOURCE=local-build" >> "$GITHUB_ENV"
           fi
