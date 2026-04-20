@@ -727,7 +727,7 @@
       "project": "planet-hunters-experiment-1",
       "projectName": "Experiment 1",
       "title": "Design the Control Station active mission card",
-      "status": "todo",
+      "status": "in-progress",
       "priority": "high",
       "labels": [
         "design",
@@ -742,7 +742,7 @@
       "ac": [],
       "attachments": [],
       "createdAt": "2026-04-01T16:59:46+11:00",
-      "updatedAt": "2026-04-01T16:59:46+11:00",
+      "updatedAt": "2026-04-09T17:50:23+10:00",
       "timeSpent": 0
     },
     {

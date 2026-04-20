@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=3 uid="uid://bl5h6pq4ns86t"]
+[gd_scene load_steps=14 format=3 uid="uid://bl5h6pq4ns86t"]
 
 [ext_resource type="Texture2D" uid="uid://bni1814mlo7mv" path="res://assets/Backdrops/Earth1.png" id="0"]
 [ext_resource type="Script" uid="uid://eoqjev5txcu5" path="res://Scenes/Earth/earth_base_1.gd" id="1"]
@@ -6,65 +6,17 @@
 [ext_resource type="Script" uid="uid://c5hj8es22yg8x" path="res://Scripts/Earth/SatelliteStation.gd" id="3"]
 [ext_resource type="Script" uid="uid://ce1a85vrjyh7x" path="res://Scripts/Earth/Launchpad.gd" id="4"]
 [ext_resource type="Texture2D" uid="uid://ctuf1c3mi4pat" path="res://assets/Structures/launchpad.png" id="5"]
-[ext_resource type="Script" path="res://Scripts/Earth/Environment/EarthWeatherEngine.gd" id="8"]
-[ext_resource type="Script" path="res://Scripts/Earth/Environment/EarthSkyNightFilterEvent.gd" id="9"]
-[ext_resource type="Script" path="res://Scripts/Earth/Environment/EarthStarFieldEvent.gd" id="10"]
-[ext_resource type="Script" path="res://Scripts/Earth/Environment/EarthCloudDriftEvent.gd" id="11"]
-[ext_resource type="Script" path="res://Scripts/Earth/Environment/EarthSkyMapEvent.gd" id="12"]
+[ext_resource type="Script" uid="uid://b0lu716w5xsl4" path="res://Scripts/Earth/Environment/EarthWeatherEngine.gd" id="8"]
+[ext_resource type="Script" uid="uid://bsfnqfos70rv1" path="res://Scripts/Earth/Environment/EarthSkyNightFilterEvent.gd" id="9"]
+[ext_resource type="Script" uid="uid://wbb4npqwk838" path="res://Scripts/Earth/Environment/EarthStarFieldEvent.gd" id="10"]
+[ext_resource type="Script" uid="uid://bebqtkwv7bhxn" path="res://Scripts/Earth/Environment/EarthCloudDriftEvent.gd" id="11"]
+[ext_resource type="Script" uid="uid://b6grrjbuo2flq" path="res://Scripts/Earth/Environment/EarthSkyMapEvent.gd" id="12"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_satellite"]
 size = Vector2(300, 220)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_launchpad"]
 size = Vector2(300, 200)
-
-[sub_resource type="StyleBoxFlat" id="10"]
-content_margin_left = 20.0
-content_margin_top = 14.0
-content_margin_right = 20.0
-content_margin_bottom = 14.0
-bg_color = Color(0.04, 0.04, 0.06, 0.92)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.90, 0.87, 0.82, 0.70)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
-
-[sub_resource type="StyleBoxFlat" id="12"]
-content_margin_left = 20.0
-content_margin_top = 14.0
-content_margin_right = 20.0
-content_margin_bottom = 14.0
-bg_color = Color(0.22, 0.20, 0.26, 0.97)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.90, 0.87, 0.82, 0.70)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
-
-[sub_resource type="StyleBoxFlat" id="11"]
-content_margin_left = 20.0
-content_margin_top = 14.0
-content_margin_right = 20.0
-content_margin_bottom = 14.0
-bg_color = Color(0.14, 0.14, 0.18, 0.96)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.90, 0.87, 0.82, 0.80)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
 
 [node name="EarthBase1" type="Node2D"]
 script = ExtResource("1")
@@ -111,7 +63,6 @@ texture = ExtResource("2")
 
 [node name="InteractionArea" type="Area2D" parent="StructuresLayer/SatelliteStation"]
 position = Vector2(-321.00003, 23.999979)
-input_pickable = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="StructuresLayer/SatelliteStation/InteractionArea"]
 shape = SubResource("RectangleShape2D_satellite")
@@ -133,7 +84,6 @@ texture = ExtResource("5")
 
 [node name="InteractionArea" type="Area2D" parent="StructuresLayer/Launchpad"]
 position = Vector2(-303.00003, -12.000015)
-input_pickable = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="StructuresLayer/Launchpad/InteractionArea"]
 shape = SubResource("RectangleShape2D_launchpad")
@@ -194,19 +144,29 @@ size_flags_horizontal = 3
 size_flags_vertical = 4
 text = "New Mission"
 
+[node name="PlanetHuntersWordmark" type="Label" parent="UILayer"]
+mouse_filter = 2
+text = "PLANET HUNTERS"
+modulate = Color(0.9, 0.87, 0.82, 0.45)
+horizontal_alignment = 1
+
 [node name="ProgressionCards" type="VBoxContainer" parent="UILayer"]
 visible = false
-anchor_left = 0.5
+anchor_left = 1.0
 anchor_top = 0.0
-anchor_right = 0.5
+anchor_right = 1.0
 anchor_bottom = 0.0
-offset_left = -260.0
-offset_top = 40.0
-offset_right = 260.0
-offset_bottom = 480.0
-grow_horizontal = 2
+offset_left = -484.0
+offset_top = 316.0
+offset_right = -24.0
+offset_bottom = 620.0
 clip_contents = true
 theme_override_constants/separation = 10
+
+[node name="AmbientStarLayer" type="CanvasLayer" parent="."]
+layer = -1
+
+[node name="StarRoot" type="Node2D" parent="AmbientStarLayer"]
 
 [node name="EnvironmentEngine" type="Node" parent="."]
 script = ExtResource("8")
