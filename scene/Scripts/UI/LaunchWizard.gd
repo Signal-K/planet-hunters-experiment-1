@@ -94,6 +94,7 @@ func _ready() -> void:
 	_apply_styles()
 	_create_dots()
 	_wire_buttons()
+	_card_list.add_theme_constant_override("separation", 16)
 	_show_step(Step.CONTRACTOR)
 
 func _apply_styles() -> void:
@@ -376,7 +377,7 @@ func _build_target_step() -> void:
 	# ── Orbital map ──
 	var map_wrap := PanelContainer.new()
 	map_wrap.size_flags_horizontal = SIZE_EXPAND_FILL
-	map_wrap.custom_minimum_size   = Vector2(0, 300)
+	map_wrap.custom_minimum_size   = Vector2(0, 420)
 	var mws := StyleBoxFlat.new()
 	mws.bg_color                  = Color(0.028, 0.047, 0.118, 1.0)
 	mws.corner_radius_top_left    = 12
@@ -495,7 +496,7 @@ func _build_rocket_step() -> void:
 	asm_outer.add_theme_constant_override("separation", 6)
 	asm_margin.add_child(asm_outer)
 
-	var asm_title := _label("ASSEMBLY", Color(0.82, 0.92, 0.97, 0.50), 11)
+	var asm_title := _label("ASSEMBLY", Color(0.82, 0.92, 0.97, 0.50), 14)
 	asm_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	asm_outer.add_child(asm_title)
 
@@ -531,12 +532,12 @@ func _add_rocket_tile(rtype: String, parent: VBoxContainer) -> void:
 	var row1 := HBoxContainer.new()
 	row1.add_theme_constant_override("separation", 8)
 	vbox.add_child(row1)
-	row1.add_child(_label("🚀", C_ACCENT, 20))
-	var nlbl := _label(RocketSpecs.get_display_name(rtype), C_ON_SURF, 16)
+	row1.add_child(_label("🚀", C_ACCENT, 24))
+	var nlbl := _label(RocketSpecs.get_display_name(rtype), C_ON_SURF, 19)
 	nlbl.size_flags_horizontal = SIZE_EXPAND_FILL
 	row1.add_child(nlbl)
 	if selected:
-		row1.add_child(_label("✓", C_ACCENT, 16))
+		row1.add_child(_label("✓", C_ACCENT, 20))
 
 	var stats_row := HBoxContainer.new()
 	stats_row.add_theme_constant_override("separation", 12)
@@ -604,21 +605,18 @@ func _refresh_assembly(rtype: String) -> void:
 		ps.content_margin_bottom     = 4
 		pbox.add_theme_stylebox_override("panel", ps)
 
-		var plbl := _label(str(part.get("name", "")), Color(1, 1, 1, 0.88), 11)
+		var plbl := _label(str(part.get("name", "")), Color(1, 1, 1, 0.88), 14)
 		plbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		plbl.vertical_alignment   = VERTICAL_ALIGNMENT_CENTER
 		pbox.add_child(plbl)
 		_assembly_vbox.add_child(pbox)
 
-		# Snap-in animation: parts fade+slide in sequentially
+		# Snap-in animation: fade in sequentially (no position tween — VBoxContainer overrides it)
 		pbox.modulate.a = 0.0
-		pbox.position.y = -20.0
 		var tw := create_tween()
 		tw.tween_interval(delay)
-		tw.set_parallel(true)
-		tw.tween_property(pbox, "modulate:a", 1.0, 0.18).set_ease(Tween.EASE_OUT)
-		tw.tween_property(pbox, "position:y",   0.0, 0.18).set_ease(Tween.EASE_OUT)
-		delay += 0.10
+		tw.tween_property(pbox, "modulate:a", 1.0, 0.22).set_ease(Tween.EASE_OUT)
+		delay += 0.12
 
 # ── Step: Confirm ─────────────────────────────────────────────────────────────
 
@@ -749,8 +747,8 @@ func _action_btn(text: String, is_selected: bool) -> Button:
 func _stat_chip(key: String, val: String) -> VBoxContainer:
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 2)
-	v.add_child(_label(key, C_ON_SURF_VAR, 11))
-	v.add_child(_label(val, C_ON_SURF,     15))
+	v.add_child(_label(key, C_ON_SURF_VAR, 13))
+	v.add_child(_label(val, C_ON_SURF,     18))
 	return v
 
 func _mineral_chip(mineral: String, qty: Variant) -> PanelContainer:
@@ -779,9 +777,9 @@ func _mineral_chip(mineral: String, qty: Variant) -> PanelContainer:
 
 func _add_section_label(title: String, subtitle: String) -> void:
 	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 4)
-	vbox.add_child(_label(title,    C_ON_SURF,     24))
-	var sub := _label(subtitle, C_ON_SURF_VAR, 13)
+	vbox.add_theme_constant_override("separation", 6)
+	vbox.add_child(_label(title,    C_ON_SURF,     28))
+	var sub := _label(subtitle, C_ON_SURF_VAR, 15)
 	sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(sub)
 	_card_list.add_child(vbox)
