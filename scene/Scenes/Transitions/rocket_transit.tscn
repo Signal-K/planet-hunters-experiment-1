@@ -321,3 +321,35 @@ value = 0.0
 [node name="TravelSpeed" type="Label" parent="CanvasLayer/UI/TravelPanel/TravelMargin/TravelContent"]
 layout_mode = 2
 text = "Speed: 0 km/h"
+
+[node name="TransitUI" type="CanvasLayer" parent="."]
+layer = 5
+
+[node name="StarBackground" type="Control" parent="TransitUI"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HUD" type="Control" parent="TransitUI"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ShopButton" type="Button" parent="TransitUI/HUD"]
+text = "Ship Status"
+
+[node name="SciencePanel" type="PanelContainer" parent="TransitUI/HUD"]
+visible = false
+mouse_filter = 2
+
+[node name="ScienceCaption" type="Label" parent="TransitUI/HUD/SciencePanel"]
+layout_mode = 2
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.75, 0.85, 1.0, 1.0)
+
+[node name="ShipStatusPanel" type="PanelContainer" parent="TransitUI/HUD"]
+visible = false

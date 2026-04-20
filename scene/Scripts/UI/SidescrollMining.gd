@@ -624,54 +624,13 @@ func _refresh_science_room_context() -> void:
 	_science_xp_multiplier = float(science.get("xp_multiplier", 1.0))
 
 func _setup_room_panel() -> void:
-	var ui_root = get_node_or_null("UI")
-	if ui_root == null or not (ui_root is Control):
-		return
-	_room_panel = PanelContainer.new()
-	_room_panel.name = "RoomPanel"
-	_room_panel.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	_room_panel.offset_left = -340
-	_room_panel.offset_top = 120
-	_room_panel.offset_right = -20
-	_room_panel.offset_bottom = 320
-	ui_root.add_child(_room_panel)
-
-	var margin := MarginContainer.new()
-	margin.add_theme_constant_override("margin_left", 8)
-	margin.add_theme_constant_override("margin_top", 8)
-	margin.add_theme_constant_override("margin_right", 8)
-	margin.add_theme_constant_override("margin_bottom", 8)
-	_room_panel.add_child(margin)
-
-	var vbox := VBoxContainer.new()
-	margin.add_child(vbox)
-
-	var title := Label.new()
-	title.text = "Rocket Rooms"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	vbox.add_child(title)
-
-	_room_grid = GridContainer.new()
-	_room_grid.columns = 2
-	_room_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_room_grid.add_theme_constant_override("h_separation", 8)
-	_room_grid.add_theme_constant_override("v_separation", 4)
-	vbox.add_child(_room_grid)
-
-	_room_debug_overlay = Control.new()
-	_room_debug_overlay.name = "RoomDebugOverlay"
-	_room_debug_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_room_debug_overlay.visible = false
-	_room_debug_overlay.z_index = 20
-	_room_debug_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	ui_root.add_child(_room_debug_overlay)
-
-	_room_toggle_button = Button.new()
-	_room_toggle_button.name = "RoomPanelToggle"
-	_room_toggle_button.text = "ROOMS"
-	_room_toggle_button.focus_mode = Control.FOCUS_NONE
-	_room_toggle_button.pressed.connect(_toggle_room_panel)
-	ui_root.add_child(_room_toggle_button)
+	# All room UI nodes live in the scene; just wire them up.
+	_room_panel = get_node_or_null("UI/RoomPanel") as PanelContainer
+	_room_grid = get_node_or_null("UI/RoomPanel/RoomMargin/RoomVBox/RoomGrid") as GridContainer
+	_room_debug_overlay = get_node_or_null("UI/RoomDebugOverlay") as Control
+	_room_toggle_button = get_node_or_null("UI/RoomPanelToggle") as Button
+	if _room_toggle_button:
+		_room_toggle_button.pressed.connect(_toggle_room_panel)
 
 func _render_room_panel() -> void:
 	if _room_grid == null:

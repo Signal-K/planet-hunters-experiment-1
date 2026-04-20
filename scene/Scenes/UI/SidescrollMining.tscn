@@ -784,3 +784,52 @@ text = "RETURN"
 layout_mode = 2
 size_flags_horizontal = 3
 text = "MENU"
+
+[node name="RoomPanel" type="PanelContainer" parent="UI"]
+visible = false
+layout_mode = 1
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 320.0
+offset_bottom = 200.0
+
+[node name="RoomMargin" type="MarginContainer" parent="UI/RoomPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="RoomVBox" type="VBoxContainer" parent="UI/RoomPanel/RoomMargin"]
+layout_mode = 2
+
+[node name="RoomTitle" type="Label" parent="UI/RoomPanel/RoomMargin/RoomVBox"]
+layout_mode = 2
+text = "Rocket Rooms"
+
+[node name="RoomGrid" type="GridContainer" parent="UI/RoomPanel/RoomMargin/RoomVBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+columns = 2
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 4
+
+[node name="RoomPanelToggle" type="Button" parent="UI"]
+layout_mode = 1
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 96.0
+offset_bottom = 30.0
+text = "ROOMS"
+focus_mode = 0
+
+[node name="RoomDebugOverlay" type="Control" parent="UI"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+visible = false
+z_index = 20
+mouse_filter = 2
