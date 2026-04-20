@@ -1,0 +1,61 @@
+{
+  "jobs": [],
+  "recent": [
+    {
+      "jobId": "1776648184733345997-15336",
+      "key": "index-task::0h5ubk",
+      "kind": "index-task",
+      "target": "0h5ubk",
+      "success": true,
+      "completedAt": "2026-04-20T01:23:09.843369074Z",
+      "requestedAt": "2026-04-20T01:23:04.733345555Z",
+      "startedAt": "2026-04-20T01:23:09.840308552Z",
+      "attemptCount": 1
+    },
+    {
+      "jobId": "1776648173194087214-14902",
+      "key": "index-task::0h5ubk",
+      "kind": "index-task",
+      "target": "0h5ubk",
+      "success": true,
+      "completedAt": "2026-04-20T01:22:58.342271604Z",
+      "requestedAt": "2026-04-20T01:22:53.194086723Z",
+      "startedAt": "2026-04-20T01:22:58.339996219Z",
+      "attemptCount": 1
+    },
+    {
+      "jobId": "1776648163425394519-14486",
+      "key": "index-task::0h5ubk",
+      "kind": "index-task",
+      "target": "0h5ubk",
+      "success": true,
+      "completedAt": "2026-04-20T01:22:51.343526708Z",
+      "requestedAt": "2026-04-20T01:22:46.179456487Z",
+      "startedAt": "2026-04-20T01:22:51.340050512Z",
+      "attemptCount": 1
+    },
+    {
+      "jobId": "1776648135299592872-13328",
+      "key": "index-task::0h5ubk",
+      "kind": "index-task",
+      "target": "0h5ubk",
+      "success": true,
+      "completedAt": "2026-04-20T01:22:20.398836767Z",
+      "requestedAt": "2026-04-20T01:22:15.299592268Z",
+      "startedAt": "2026-04-20T01:22:20.396182388Z",
+      "attemptCount": 1
+    },
+    {
+      "jobId": "1776648128982257332-12939",
+      "key": "index-task::0h5ubk",
+      "kind": "index-task",
+      "target": "0h5ubk",
+      "success": true,
+      "completedAt": "2026-04-20T01:22:14.401060431Z",
+      "requestedAt": "2026-04-20T01:22:08.982256674Z",
+      "startedAt": "2026-04-20T01:22:14.396882888Z",
+      "attemptCount": 1
+    }
+  ],
+  "updatedAt": "2026-04-20T01:23:09.843370159Z"
+}
