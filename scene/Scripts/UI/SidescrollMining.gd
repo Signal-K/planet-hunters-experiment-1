@@ -14,7 +14,7 @@ const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd"
 
 signal mining_completed(minerals: Dictionary, score: int)
 
-const SCROLL_SPEED = 75.0
+const SCROLL_SPEED = 105.0
 const TERRAIN_SEGMENT_WIDTH = 20
 const ROCKET_Y = 200
 const FUEL_DRAIN_RATE = 2.0
