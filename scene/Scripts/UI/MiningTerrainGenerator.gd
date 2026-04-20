@@ -79,14 +79,15 @@ static func generate_terrain(
 	_add_surface_rocks(rng, terrain_container, terrain_width, terrain_points, generation_signature)
 	
 	var mineral_data = _generate_minerals(
-		rng, 
-		terrain_container, 
-		terrain_width, 
-		terrain_points, 
-		target_minerals, 
-		target_mineable_pct, 
-		guide_active, 
-		screen_height
+		rng,
+		terrain_container,
+		terrain_width,
+		terrain_points,
+		target_minerals,
+		target_mineable_pct,
+		guide_active,
+		screen_height,
+		rocket_level
 	)
 	
 	return {
@@ -142,14 +143,15 @@ static func _add_surface_rocks(rng: RandomNumberGenerator, terrain_container: No
 		rock.visible = true
 
 static func _generate_minerals(
-	rng: RandomNumberGenerator, 
-	terrain_container: Node2D, 
-	terrain_width: float, 
-	terrain_points: PackedVector2Array, 
-	target_minerals: Dictionary, 
-	target_mineable_pct: float, 
-	guide_active: bool, 
-	screen_height: float
+	rng: RandomNumberGenerator,
+	terrain_container: Node2D,
+	terrain_width: float,
+	terrain_points: PackedVector2Array,
+	target_minerals: Dictionary,
+	target_mineable_pct: float,
+	guide_active: bool,
+	screen_height: float,
+	rocket_level: int = 1
 ) -> Dictionary:
 	var mineral_types = []
 	if not target_minerals.is_empty():
@@ -197,7 +199,9 @@ static func _generate_minerals(
 			if cobalt:
 				regions.append(cobalt); pool_index += 1; total += 1; subsurface += 1
 	
-	var deposit_count = int(30 + (target_mineable_pct * 20))
+	# 80% of beam capacity (20 + level*10) so deposits fit within one beam's worth of charges
+	var beam_capacity := 20.0 + rocket_level * 10.0
+	var deposit_count := maxi(int(beam_capacity * 0.8), 10)
 	var start_x = 1800 if guide_active else 300
 	for i in range(deposit_count):
 		var x = rng.randf_range(start_x, terrain_width - 200)
