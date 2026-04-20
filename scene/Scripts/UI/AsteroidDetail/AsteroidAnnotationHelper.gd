@@ -27,7 +27,7 @@ func setup(
 
 func save_annotations(anomaly_id: String, target_type: String = "asteroid", title: String = "") -> void:
 	"""Save current annotations for this asteroid to user://annotations/<id>.json"""
-	print("_on_save_pressed called for anomaly_id:", anomaly_id)
+	print("save_annotations called for anomaly_id:", anomaly_id)
 	if anomaly_id == "":
 		_show_error("No asteroid ID to save annotations for")
 		return
@@ -46,7 +46,7 @@ func save_annotations(anomaly_id: String, target_type: String = "asteroid", titl
 			for p in s.get("points", []):
 				pts.append([p.x, p.y])
 			item["points"] = pts
-		elif item["type"] == "rect":
+		elif item["type"] == "rect" or item["type"] == "transit_dip":
 			var r = s.get("rect", Rect2())
 			item["rect"] = [r.position.x, r.position.y, r.size.x, r.size.y]
 		elif item["type"] == "circle":
@@ -137,7 +137,7 @@ func load_saved_annotations(anomaly_id: String) -> void:
 			for pp in item.get("points", []):
 				pts.append(Vector2(pp[0], pp[1]))
 			s["points"] = pts
-		elif s["type"] == "rect":
+		elif s["type"] == "rect" or s["type"] == "transit_dip":
 			var rarr = item.get("rect", [0,0,0,0])
 			s["rect"] = Rect2(Vector2(rarr[0], rarr[1]), Vector2(rarr[2], rarr[3]))
 		elif s["type"] == "circle":
@@ -165,7 +165,7 @@ func _render_annotated_image(anomaly_id: String) -> void:
 			canvas_size = _drawing_canvas.get_rect().size
 		elif _drawing_canvas.has_meta("rect_size"):
 			canvas_size = _drawing_canvas.get_meta("rect_size")
-		elif _drawing_canvas.has_property("size"):
+		else:
 			canvas_size = _drawing_canvas.size
 	if canvas_size == Vector2.ZERO:
 		canvas_size = _base_image_size

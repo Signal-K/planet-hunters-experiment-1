@@ -39,6 +39,7 @@ GALLIUM_DRIVER=softpipe GODOT_UX_TOUR=1 timeout 1800s "$GODOT" \
     --audio-driver Dummy \
     --path "$SCENE_DIR" \
     res://tests/UXTour.tscn \
+    "$@" \
     2>&1 | tee /tmp/godot_ux_tour.log || {
     EXIT=$?
     # quit(0) comes back as exit 1 from the shell pipeline; treat <=1 as success.

@@ -1,101 +1,321 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=12 format=3]
 
-[ext_resource type="Script" path="res://Scripts/UI/ControlStationPanel.gd" id="1"]
+[ext_resource type="Script" path="res://Scripts/UI/ControlStationPanel.gd" id="1_ctrl"]
 
-[sub_resource type="StyleBoxFlat" id="1"]
-bg_color = Color(0.0470588, 0.0862745, 0.133333, 0.94)
-border_color = Color(0.47451, 0.862745, 0.941176, 0.68)
-corner_radius_top_left = 20
-corner_radius_top_right = 20
-corner_radius_bottom_right = 20
-corner_radius_bottom_left = 20
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-content_margin_left = 24.0
-content_margin_top = 20.0
-content_margin_right = 24.0
-content_margin_bottom = 20.0
+; Terminal Ethereal — tonal surface layering, no layout borders.
+; Sidebar: SURFACE_LOW with PRIMARY active strip.
+; Globe panel: SURFACE_LOW tonal card. Header/status: SURFACE_LOWEST.
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_root"]
+bg_color = Color(0.973, 0.980, 0.976, 1.0)
+content_margin_left = 0
+content_margin_top = 0
+content_margin_right = 0
+content_margin_bottom = 0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sidebar"]
+bg_color = Color(0.941, 0.957, 0.953, 1.0)
+content_margin_left = 0
+content_margin_top = 0
+content_margin_right = 0
+content_margin_bottom = 0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sidebar_active"]
+bg_color = Color(0.310, 0.800, 0.710, 0.18)
+border_color = Color(0.0, 0.424, 0.361, 1.0)
+border_width_left = 3
+border_width_top = 0
+border_width_right = 0
+border_width_bottom = 0
+content_margin_left = 11.0
+content_margin_top = 14.0
+content_margin_right = 14.0
+content_margin_bottom = 14.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sidebar_btn"]
+bg_color = Color(0.0, 0.0, 0.0, 0.0)
+content_margin_left = 14.0
+content_margin_top = 14.0
+content_margin_right = 14.0
+content_margin_bottom = 14.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_header"]
+bg_color = Color(1.0, 1.0, 1.0, 1.0)
+content_margin_left = 20.0
+content_margin_top = 14.0
+content_margin_right = 20.0
+content_margin_bottom = 14.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_globe"]
+bg_color = Color(0.941, 0.957, 0.953, 1.0)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+shadow_color = Color(0.0, 0.424, 0.361, 0.06)
+shadow_size = 12
+shadow_offset = Vector2(0, 4)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_status_bar"]
+bg_color = Color(0.941, 0.957, 0.953, 1.0)
+content_margin_left = 20.0
+content_margin_top = 10.0
+content_margin_right = 20.0
+content_margin_bottom = 10.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mission_card"]
+bg_color = Color(1.0, 1.0, 1.0, 1.0)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+shadow_color = Color(0.0, 0.424, 0.361, 0.06)
+shadow_size = 10
+shadow_offset = Vector2(0, 3)
+content_margin_left = 18.0
+content_margin_top = 14.0
+content_margin_right = 18.0
+content_margin_bottom = 14.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_inorbit_badge"]
+bg_color = Color(0.310, 0.800, 0.710, 0.18)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+content_margin_left = 8.0
+content_margin_top = 3.0
+content_margin_right = 8.0
+content_margin_bottom = 3.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_returning_badge"]
+bg_color = Color(0.776, 0.933, 0.667, 1.0)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+content_margin_left = 8.0
+content_margin_top = 3.0
+content_margin_right = 8.0
+content_margin_bottom = 3.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mineral_chip"]
+bg_color = Color(0.310, 0.800, 0.710, 0.14)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+content_margin_left = 7.0
+content_margin_top = 3.0
+content_margin_right = 7.0
+content_margin_bottom = 3.0
 
 [node name="ControlStationPanel" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-script = ExtResource("1")
+script = ExtResource("1_ctrl")
 
 [node name="Background" type="ColorRect" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-color = Color(0.0470588, 0.0705882, 0.0901961, 0.34)
+color = Color(0.973, 0.980, 0.976, 1.0)
 
-[node name="Panel" type="Panel" parent="."]
+[node name="RootHBox" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/separation = 0
+
+[node name="Sidebar" type="PanelContainer" parent="RootHBox"]
+custom_minimum_size = Vector2(56, 0)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_sidebar")
+
+[node name="SidebarVBox" type="VBoxContainer" parent="RootHBox/Sidebar"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="NavBtn0" type="Button" parent="RootHBox/Sidebar/SidebarVBox"]
+layout_mode = 2
+theme_override_styles/normal = SubResource("StyleBoxFlat_sidebar_btn")
+theme_override_styles/hover = SubResource("StyleBoxFlat_sidebar_active")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_sidebar_active")
+theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 0.80)
+theme_override_font_sizes/font_size = 18
+text = "🚀"
+flat = true
+
+[node name="NavBtn1" type="Button" parent="RootHBox/Sidebar/SidebarVBox"]
+layout_mode = 2
+theme_override_styles/normal = SubResource("StyleBoxFlat_sidebar_active")
+theme_override_styles/hover = SubResource("StyleBoxFlat_sidebar_active")
+theme_override_colors/font_color = Color(0.0, 0.424, 0.361, 1.0)
+theme_override_font_sizes/font_size = 18
+text = "⌨"
+flat = true
+
+[node name="NavBtn2" type="Button" parent="RootHBox/Sidebar/SidebarVBox"]
+layout_mode = 2
+theme_override_styles/normal = SubResource("StyleBoxFlat_sidebar_btn")
+theme_override_styles/hover = SubResource("StyleBoxFlat_sidebar_active")
+theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 0.80)
+theme_override_font_sizes/font_size = 18
+text = "⛏"
+flat = true
+
+[node name="NavBtn3" type="Button" parent="RootHBox/Sidebar/SidebarVBox"]
+layout_mode = 2
+theme_override_styles/normal = SubResource("StyleBoxFlat_sidebar_btn")
+theme_override_styles/hover = SubResource("StyleBoxFlat_sidebar_active")
+theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 0.80)
+theme_override_font_sizes/font_size = 18
+text = "📡"
+flat = true
+
+[node name="NavBtn4" type="Button" parent="RootHBox/Sidebar/SidebarVBox"]
+layout_mode = 2
+theme_override_styles/normal = SubResource("StyleBoxFlat_sidebar_btn")
+theme_override_styles/hover = SubResource("StyleBoxFlat_sidebar_active")
+theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 0.80)
+theme_override_font_sizes/font_size = 18
+text = "🗄"
+flat = true
+
+[node name="MainArea" type="VBoxContainer" parent="RootHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 0
+
+[node name="Header" type="PanelContainer" parent="RootHBox/MainArea"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_header")
+
+[node name="HeaderRow" type="HBoxContainer" parent="RootHBox/MainArea/Header"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="BreadcrumbLabel" type="Label" parent="RootHBox/MainArea/Header/HeaderRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 0.80)
+theme_override_font_sizes/font_size = 14
+text = "MOD-04"
+
+[node name="BreadSep" type="Label" parent="RootHBox/MainArea/Header/HeaderRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 0.60)
+theme_override_font_sizes/font_size = 14
+text = "/"
+
+[node name="Title" type="Label" parent="RootHBox/MainArea/Header/HeaderRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.176, 0.204, 0.200, 1.0)
+theme_override_font_sizes/font_size = 18
+text = "CONTROL PANEL"
+
+[node name="TempLabel" type="Label" parent="RootHBox/MainArea/Header/HeaderRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 0.80)
+theme_override_font_sizes/font_size = 14
+text = "TEMP  294.1 K"
+
+[node name="UptimeLabel" type="Label" parent="RootHBox/MainArea/Header/HeaderRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 0.80)
+theme_override_font_sizes/font_size = 14
+text = "UPTIME  99.9%"
+
+[node name="CloseButton" parent="RootHBox/MainArea/Header/HeaderRow" type="Button"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 0.80)
+theme_override_font_sizes/font_size = 18
+text = "×"
+flat = true
+
+[node name="ContentMargin" type="MarginContainer" parent="RootHBox/MainArea"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 10
+
+[node name="ContentHBox" type="HBoxContainer" parent="RootHBox/MainArea/ContentMargin"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="MissionsArea" type="VBoxContainer" parent="RootHBox/MainArea/ContentMargin/ContentHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 14
+
+[node name="MissionsSectionLabel" type="Label" parent="RootHBox/MainArea/ContentMargin/ContentHBox/MissionsArea"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 0.80)
+theme_override_font_sizes/font_size = 14
+text = "ACTIVE MISSIONS"
+
+[node name="Subtitle" type="Label" parent="RootHBox/MainArea/ContentMargin/ContentHBox/MissionsArea"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 0.70)
+theme_override_font_sizes/font_size = 14
+text = "Track active routes and mission milestones."
+
+[node name="MissionsList" type="HBoxContainer" parent="RootHBox/MainArea/ContentMargin/ContentHBox/MissionsArea"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 14
+
+[node name="GlobePanel" type="PanelContainer" parent="RootHBox/MainArea/ContentMargin/ContentHBox"]
+custom_minimum_size = Vector2(220, 180)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_globe")
+
+[node name="GlobePlaceholder" type="Label" parent="RootHBox/MainArea/ContentMargin/ContentHBox/GlobePanel"]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -560.0
-offset_top = -330.0
-offset_right = 560.0
-offset_bottom = 330.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_styles/panel = SubResource("1")
+theme_override_colors/font_color = Color(0.0, 0.424, 0.361, 0.40)
+theme_override_font_sizes/font_size = 40
+text = "🌍"
+horizontal_alignment = 1
+vertical_alignment = 1
 
-[node name="Margin" type="MarginContainer" parent="Panel"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-theme_override_constants/margin_left = 24
-theme_override_constants/margin_top = 24
-theme_override_constants/margin_right = 24
-theme_override_constants/margin_bottom = 24
-
-[node name="VBox" type="VBoxContainer" parent="Panel/Margin"]
+[node name="StatusBar" type="PanelContainer" parent="RootHBox/MainArea"]
 layout_mode = 2
-theme_override_constants/separation = 16
+theme_override_styles/panel = SubResource("StyleBoxFlat_status_bar")
 
-[node name="Header" type="HBoxContainer" parent="Panel/Margin/VBox"]
+[node name="StatusRow" type="HBoxContainer" parent="RootHBox/MainArea/StatusBar"]
 layout_mode = 2
+theme_override_constants/separation = 20
 
-[node name="Title" type="Label" parent="Panel/Margin/VBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.92, 0.95, 0.98, 1)
-text = "CONTROL STATION"
-
-[node name="Subtitle" type="Label" parent="Panel/Margin/VBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.70, 0.78, 0.86, 1)
-text = "Track active routes and the next mission milestone."
-
-[node name="CloseButton" type="Button" parent="Panel/Margin/VBox/Header"]
-layout_mode = 2
-size_flags_horizontal = 8
-text = "×"
-
-[node name="Tabs" type="HBoxContainer" parent="Panel/Margin/VBox"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="ActiveTab" type="Button" parent="Panel/Margin/VBox/Tabs"]
-layout_mode = 2
-text = "ACTIVE"
-
-[node name="StoryTab" type="Button" parent="Panel/Margin/VBox/Tabs"]
-layout_mode = 2
-text = "STORY"
-
-[node name="Scroll" type="ScrollContainer" parent="Panel/Margin/VBox"]
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="MissionsList" type="VBoxContainer" parent="Panel/Margin/VBox/Scroll"]
+[node name="FleetLabel" type="Label" parent="RootHBox/MainArea/StatusBar/StatusRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 12
+theme_override_colors/font_color = Color(0.086, 0.639, 0.290, 1.0)
+theme_override_font_sizes/font_size = 14
+text = "● FLEET OPERATIONAL"
+
+[node name="DiagnosticsBtn" type="Button" parent="RootHBox/MainArea/StatusBar/StatusRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 0.80)
+theme_override_font_sizes/font_size = 14
+text = "DIAGNOSTICS"
+flat = true
+
+[node name="ReportBtn" type="Button" parent="RootHBox/MainArea/StatusBar/StatusRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 0.80)
+theme_override_font_sizes/font_size = 14
+text = "REPORT"
+flat = true

@@ -36,21 +36,21 @@ const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd"
 const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
 const SubcontractorManager = preload("res://Scripts/Utils/SubcontractorManager.gd")
 
-const STATION_BACKDROP := Color(0.03, 0.05, 0.09, 0.72)
-const STATION_PANEL_BG := Color(0.06, 0.10, 0.16, 0.96)
-const STATION_PANEL_EDGE := Color(PanelStyle.ACCENT.r, PanelStyle.ACCENT.g, PanelStyle.ACCENT.b, 0.86)
-const STATION_PANEL_INNER := Color(0.08, 0.13, 0.19, 0.94)
-const STATION_CARD_BG := Color(0.08, 0.13, 0.20, 0.92)
-const STATION_CARD_ALT := Color(0.10, 0.16, 0.24, 0.92)
-const STATION_TEXT := PanelStyle.TEXT_ON_DARK
-const STATION_MUTED := PanelStyle.MUTED_ON_DARK
-const STATION_TELEMETRY := PanelStyle.ACCENT
-const STATION_PRIMARY := PanelStyle.ACCENT_WARM
-const STATION_PRIMARY_HOVER := Color(1.0, 0.78, 0.34, 1.0)
-const STATION_PRIMARY_PRESSED := Color(0.86, 0.60, 0.16, 1.0)
-const STATION_BUTTON_BG := Color(0.09, 0.15, 0.22, 0.94)
-const STATION_BUTTON_HOVER := Color(0.15, 0.24, 0.34, 0.98)
-const STATION_BUTTON_PRESSED := Color(0.07, 0.12, 0.18, 0.98)
+const STATION_BACKDROP := Color(0.84, 0.90, 0.90, 0.54)
+const STATION_PANEL_BG := Color(0.98, 0.992, 0.992, 0.98)
+const STATION_PANEL_EDGE := Color(0.80, 0.88, 0.88, 1.0)
+const STATION_PANEL_INNER := Color(0.94, 0.97, 0.97, 1.0)
+const STATION_CARD_BG := Color(0.99, 0.995, 0.995, 1.0)
+const STATION_CARD_ALT := Color(0.95, 0.98, 0.98, 1.0)
+const STATION_TEXT := Color(0.16, 0.20, 0.22, 1.0)
+const STATION_MUTED := Color(0.40, 0.46, 0.49, 1.0)
+const STATION_TELEMETRY := Color(0.05, 0.49, 0.45, 1.0)
+const STATION_PRIMARY := Color(0.07, 0.55, 0.49, 1.0)
+const STATION_PRIMARY_HOVER := Color(0.12, 0.62, 0.56, 1.0)
+const STATION_PRIMARY_PRESSED := Color(0.05, 0.46, 0.41, 1.0)
+const STATION_BUTTON_BG := Color(0.99, 0.995, 0.995, 1.0)
+const STATION_BUTTON_HOVER := Color(0.96, 0.98, 0.98, 1.0)
+const STATION_BUTTON_PRESSED := Color(0.93, 0.95, 0.95, 1.0)
 
 var pending_anomalies := []
 var current_mode: String = "asteroids"  # Default mode
@@ -177,10 +177,10 @@ func _apply_panel_style() -> void:
 	$Background.color = STATION_BACKDROP
 	_apply_station_panel($PanelContainer/Panel, STATION_PANEL_BG, STATION_PANEL_EDGE, 1, 18)
 	_apply_station_panel(scan_summary_card, STATION_CARD_BG, Color(STATION_PANEL_EDGE.r, STATION_PANEL_EDGE.g, STATION_PANEL_EDGE.b, 0.55), 1, 14, 18)
-	PanelStyle.apply_title_on_dark(title_label)
-	title_label.add_theme_font_size_override("font_size", 42)
+	title_label.add_theme_color_override("font_color", STATION_TEXT)
+	title_label.add_theme_font_size_override("font_size", 38)
 	status_label.add_theme_color_override("font_color", STATION_MUTED)
-	status_label.add_theme_font_size_override("font_size", 16)
+	status_label.add_theme_font_size_override("font_size", 15)
 	status_label.uppercase = true
 	divider.add_theme_color_override("separator", Color(STATION_PANEL_EDGE.r, STATION_PANEL_EDGE.g, STATION_PANEL_EDGE.b, 0.45))
 	telemetry_separator.add_theme_color_override("separator", Color(STATION_MUTED.r, STATION_MUTED.g, STATION_MUTED.b, 0.28))
@@ -199,17 +199,17 @@ func _apply_panel_style() -> void:
 	guidance_label.add_theme_color_override("font_color", STATION_MUTED)
 	guidance_label.add_theme_font_size_override("font_size", 14)
 	loading_label.add_theme_color_override("font_color", STATION_TEXT)
-	loading_label.add_theme_font_size_override("font_size", 24)
+	loading_label.add_theme_font_size_override("font_size", 22)
 	var scanning_hint := $PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/LoadingContainer/ScanningHint as Label
 	scanning_hint.add_theme_color_override("font_color", STATION_MUTED)
-	scanning_hint.add_theme_font_size_override("font_size", 16)
+	scanning_hint.add_theme_font_size_override("font_size", 15)
 	_apply_station_button(close_button, false)
 	_apply_station_button(toggle_switch, false)
 	_apply_station_button(refresh_button, true)
 	_apply_station_progress_bar(progress_bar)
-	warm_glow.color = Color(PanelStyle.ACCENT_WARM.r, PanelStyle.ACCENT_WARM.g, PanelStyle.ACCENT_WARM.b, 0.06)
-	cool_glow.color = Color(PanelStyle.ACCENT.r, PanelStyle.ACCENT.g, PanelStyle.ACCENT.b, 0.12)
-	top_wash.color = Color(0.22, 0.32, 0.44, 0.22)
+	warm_glow.color = Color(0.81, 0.93, 0.89, 0.40)
+	cool_glow.color = Color(0.88, 0.96, 0.95, 0.50)
+	top_wash.color = Color(0.97, 0.99, 0.99, 0.84)
 
 func _apply_layout() -> void:
 	var viewport := get_viewport().get_visible_rect().size
@@ -226,7 +226,7 @@ func _apply_layout() -> void:
 	scroll_content.custom_minimum_size.x = maxf(panel.size.x - 56.0, panel.custom_minimum_size.x - 56.0)
 	anomaly_scroll.custom_minimum_size = Vector2(0.0, clampf(panel.custom_minimum_size.y * 0.40, 180.0, 300.0))
 	var title := $PanelContainer/Panel/Scroll/VBoxContainer/HeaderContainer/Title as Label
-	title.add_theme_font_size_override("font_size", 30 if viewport.x < 1200.0 else 40)
+	title.add_theme_font_size_override("font_size", 28 if viewport.x < 1200.0 else 36)
 	toggle_switch.custom_minimum_size.x = 160.0 if viewport.x < 1200.0 else 190.0
 	status_container.alignment = BoxContainer.ALIGNMENT_BEGIN
 	scan_summary_card.custom_minimum_size = Vector2(340.0 if viewport.x >= 1120.0 else 0.0, 0.0)
@@ -247,7 +247,7 @@ func _on_loading_finished() -> void:
 	if pending_anomalies.is_empty():
 		pending_anomalies = _build_local_anomalies()
 		var fallback_type = "planets" if current_mode == "planets" else "asteroids"
-		status_label.text = "Offline catalog — showing local %s" % fallback_type
+		status_label.text = "Offline catalog engaged — local %s contacts restored." % fallback_type
 		_award_scan_experience()
 	pending_anomalies = _filter_mission3_untargeted_anomalies(pending_anomalies)
 	AppControllerHelper.record_tutorial_action("scan_targets", {
@@ -295,7 +295,7 @@ func _on_anomalies_fetched(data: Array, error: String):
 	pending_anomalies = data
 	var target_type = "planets" if current_mode == "planets" else "asteroids"
 	var range_note = " • Range: %s" % get_scanner_range_label() if _player_level >= PLANET_UNLOCK_LEVEL else ""
-	status_label.text = "%d %s found%s" % [data.size(), target_type, range_note]
+	status_label.text = "%d %s detected%s" % [data.size(), target_type, range_note]
 	_refresh_scan_summary(data)
 	_loading.mark_anomalies_ready()
 	_award_scan_experience()
@@ -395,7 +395,7 @@ func _refresh_citizen_science_hint() -> void:
 	var enabled = AppControllerHelper.is_citizen_science_dialogue_enabled(true)
 	_citizen_science_hint_label.visible = enabled
 	if enabled:
-		_citizen_science_hint_label.text = "Your annotations and classifications feed into the real NASA TESS dataset — every scan counts."
+		_citizen_science_hint_label.text = "These scans feed the real TESS candidate review loop. The annotation surface is part of the game’s live science promise."
 
 
 func _on_refresh_pressed():
@@ -410,7 +410,7 @@ func _on_refresh_pressed():
 func _on_toggle_switch_pressed():
 	"""Handle toggle switch between asteroids and planets"""
 	if _player_level < PLANET_UNLOCK_LEVEL:
-		status_label.text = "Planet targets unlock at Level %d" % PLANET_UNLOCK_LEVEL
+		status_label.text = "Planet targets unlock at Level %d." % PLANET_UNLOCK_LEVEL
 		return
 	if current_mode == "asteroids":
 		current_mode = "planets"
@@ -453,7 +453,7 @@ func _apply_local_anomalies() -> void:
 	pending_anomalies = _build_local_anomalies()
 	var target_type = "planets" if current_mode == "planets" else "asteroids"
 	var local_range_note = " • Range: %s" % get_scanner_range_label() if _player_level >= PLANET_UNLOCK_LEVEL else ""
-	status_label.text = "%d local %s loaded%s" % [pending_anomalies.size(), target_type, local_range_note]
+	status_label.text = "%d local %s contacts loaded%s" % [pending_anomalies.size(), target_type, local_range_note]
 	_refresh_scan_summary(pending_anomalies)
 	_loading.mark_anomalies_ready()
 
@@ -470,18 +470,19 @@ func _refresh_scan_summary(anomalies: Array = []) -> void:
 	else:
 		range_label.text = "Level %d unlocks planets" % PLANET_UNLOCK_LEVEL
 	if count > 0:
-		guidance_label.text = "Route a contact to the Launchpad or inspect it for mission fit and citizen-science detail."
+		guidance_label.text = "Route a contact to the Launchpad, or inspect it first to confirm mission fit and science value."
 	elif _loading.is_loading():
-		guidance_label.text = "Sweep in progress. Fresh contacts will populate here when the scan resolves."
+		guidance_label.text = "Sweep in progress. Fresh contacts will populate here once telemetry resolves."
 	elif is_planet_mode:
-		guidance_label.text = "No planetary contacts in this pass. Refresh for another sweep or switch back to asteroids."
+		guidance_label.text = "No planetary contacts on this pass. Refresh for another sweep or pivot back to asteroids."
 	else:
-		guidance_label.text = "No asteroid contacts in this pass. Refresh for another sweep or inspect prior detections."
+		guidance_label.text = "No asteroid contacts on this pass. Refresh for another sweep or inspect prior detections."
 
 func _apply_station_panel(panel: Control, bg_color: Color, border_color: Color, border_width: int = 1, corner_radius: int = 10, shadow_size: int = 12) -> void:
 	if panel == null:
 		return
-	var style := PanelStyle.create_glass_panel_style(bg_color, border_color.a, corner_radius, 20, 16)
+	var style := PanelStyle.create_glass_panel_style(bg_color, 0.36, corner_radius, 20, 16)
+	style.border_color = border_color
 	style.set_border_width_all(border_width)
 	style.shadow_size = shadow_size
 	style.shadow_offset = Vector2(0, 6)
@@ -493,8 +494,8 @@ func _apply_station_button(button: Button, is_primary: bool) -> void:
 	if is_primary:
 		PanelStyle.apply_button(button, true)
 	else:
-		PanelStyle.apply_outline_button(button, STATION_TELEMETRY, STATION_TEXT)
-	button.add_theme_font_size_override("font_size", 18)
+		PanelStyle.apply_outline_button(button, STATION_PANEL_EDGE, STATION_TEXT)
+	button.add_theme_font_size_override("font_size", 16)
 
 func _build_station_button_style(bg_color: Color, border_color: Color) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
@@ -512,8 +513,8 @@ func _apply_station_progress_bar(bar: ProgressBar) -> void:
 	if bar == null:
 		return
 	var bg := StyleBoxFlat.new()
-	bg.bg_color = Color(0.07, 0.12, 0.18, 0.94)
-	bg.border_color = Color(STATION_MUTED.r, STATION_MUTED.g, STATION_MUTED.b, 0.26)
+	bg.bg_color = Color(0.92, 0.95, 0.95, 1.0)
+	bg.border_color = Color(STATION_PANEL_EDGE.r, STATION_PANEL_EDGE.g, STATION_PANEL_EDGE.b, 0.60)
 	bg.set_border_width_all(1)
 	bg.set_corner_radius_all(10)
 	var fill := StyleBoxFlat.new()

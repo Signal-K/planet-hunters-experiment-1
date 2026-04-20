@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://tests/run_panel_redesign_tour.gd" id="1_paneltour"]
+
+[node name="PanelRedesignTour" type="Node"]
+script = ExtResource("1_paneltour")

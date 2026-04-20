@@ -1,0 +1,65 @@
+[gd_scene load_steps=5 format=3]
+
+; Danger command trigger — red fill, white text, no border.
+; Reserve for destructive or irreversible actions only.
+; Set .text and connect .pressed in the parent scene.
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_normal"]
+bg_color = Color(0.863, 0.149, 0.149, 1.0)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+content_margin_left = 24.0
+content_margin_top = 14.0
+content_margin_right = 24.0
+content_margin_bottom = 14.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hover"]
+bg_color = Color(0.725, 0.110, 0.110, 1.0)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+content_margin_left = 24.0
+content_margin_top = 14.0
+content_margin_right = 24.0
+content_margin_bottom = 14.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pressed"]
+bg_color = Color(0.580, 0.086, 0.086, 1.0)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+content_margin_left = 24.0
+content_margin_top = 14.0
+content_margin_right = 24.0
+content_margin_bottom = 14.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_disabled"]
+bg_color = Color(0.863, 0.149, 0.149, 0.35)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+content_margin_left = 24.0
+content_margin_top = 14.0
+content_margin_right = 24.0
+content_margin_bottom = 14.0
+
+[node name="BtnDanger" type="Button"]
+custom_minimum_size = Vector2(0, 48)
+size_flags_horizontal = 3
+text = "ABORT"
+theme_override_styles/normal = SubResource("StyleBoxFlat_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_pressed")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_disabled")
+theme_override_styles/focus = SubResource("StyleBoxFlat_normal")
+theme_override_colors/font_color = Color(1.0, 1.0, 1.0, 1.0)
+theme_override_colors/font_hover_color = Color(1.0, 1.0, 1.0, 1.0)
+theme_override_colors/font_pressed_color = Color(1.0, 1.0, 1.0, 1.0)
+theme_override_colors/font_disabled_color = Color(1.0, 1.0, 1.0, 0.5)
+theme_override_colors/font_focus_color = Color(1.0, 1.0, 1.0, 1.0)
+theme_override_font_sizes/font_size = 28

@@ -14,7 +14,7 @@ const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd"
 
 signal mining_completed(minerals: Dictionary, score: int)
 
-const SCROLL_SPEED = 75.0
+const SCROLL_SPEED = 105.0
 const TERRAIN_SEGMENT_WIDTH = 20
 const ROCKET_Y = 200
 const FUEL_DRAIN_RATE = 2.0
@@ -79,15 +79,14 @@ var _terrain_loop_container: Node2D = null
 @onready var right_stats: VBoxContainer = $UI/TopBar/RightStats
 @onready var fuel_label: Label = $UI/TopBar/LeftGauges/FuelPanel/VBox/Label
 @onready var heat_label: Label = $UI/TopBar/LeftGauges/HeatPanel/VBox/Label
-@onready var contract_order_vbox: VBoxContainer = $UI/ContractOrderPanel/VBox
+@onready var contract_order_vbox: VBoxContainer = $UI/TopBar/RightStats/ContractOrderPanel/VBox
 @onready var fuel_bar: ProgressBar = $UI/TopBar/LeftGauges/FuelPanel/VBox/FuelBar
 @onready var heat_bar: ProgressBar = $UI/TopBar/LeftGauges/HeatPanel/VBox/HeatBar
 @onready var beam_bar: ProgressBar = $UI/TopBar/LeftGauges/BeamPanel/VBox/BeamBar
 @onready var beam_label: Label = $UI/TopBar/LeftGauges/BeamPanel/VBox/Label
-@onready var order_label: Label = $UI/TopBar/RightStats/OrderPanel/VBox/OrderLabel
-@onready var contract_order_panel: PanelContainer = $UI/ContractOrderPanel
-@onready var contract_order_title: Label = $UI/ContractOrderPanel/VBox/TitleLabel
-@onready var contract_order_progress: Label = $UI/ContractOrderPanel/VBox/ProgressLabel
+@onready var contract_order_panel: PanelContainer = $UI/TopBar/RightStats/ContractOrderPanel
+@onready var contract_order_title: Label = $UI/TopBar/RightStats/ContractOrderPanel/VBox/TitleLabel
+@onready var contract_order_progress: Label = $UI/TopBar/RightStats/ContractOrderPanel/VBox/ProgressLabel
 @onready var bottom_bar: HBoxContainer = $UI/BottomBar
 @onready var mine_button: Button = $UI/BottomBar/MineButton
 @onready var drone_button: Button = $UI/BottomBar/DroneButton
@@ -375,7 +374,6 @@ func _is_compact_layout(viewport: Vector2) -> bool:
 
 func _set_hud_typography(is_mobile: bool, is_portrait_mobile: bool) -> void:
 	var gauge_font_size = 12 if is_portrait_mobile else (14 if is_mobile else (15 if _compact_layout_active else 18))
-	var order_font_size = 13 if is_portrait_mobile else (14 if is_mobile else (15 if _compact_layout_active else 17))
 	var instructions_font_size = 13 if is_portrait_mobile else (16 if is_mobile else (17 if _compact_layout_active else 22))
 	var contract_title_font_size = 13 if is_portrait_mobile else (15 if is_mobile else 17)
 	var contract_progress_font_size = 12 if is_portrait_mobile else (14 if is_mobile else 15)
@@ -383,7 +381,6 @@ func _set_hud_typography(is_mobile: bool, is_portrait_mobile: bool) -> void:
 	heat_label.add_theme_font_size_override("font_size", gauge_font_size)
 	beam_label.add_theme_font_size_override("font_size", gauge_font_size)
 	drone_label.add_theme_font_size_override("font_size", gauge_font_size)
-	order_label.add_theme_font_size_override("font_size", order_font_size)
 	instructions.add_theme_font_size_override("font_size", instructions_font_size)
 	contract_order_title.add_theme_font_size_override("font_size", contract_title_font_size)
 	contract_order_progress.add_theme_font_size_override("font_size", contract_progress_font_size)
@@ -400,7 +397,7 @@ func _ensure_right_stats_parent(parent_node: Node) -> void:
 
 func _apply_portrait_layout(viewport: Vector2) -> void:
 	left_gauges.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	order_label.get_parent().get_parent().size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	contract_order_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	# right_stats drops below the top bar in portrait.
 	var hud := UILayout.zone(UILayout.Zone.MINING_HUD, viewport)
 	right_stats.layout_mode = 1
@@ -413,18 +410,11 @@ func _apply_portrait_layout(viewport: Vector2) -> void:
 	right_stats.offset_right  = -UILayout.EDGE
 	right_stats.offset_bottom = right_stats.offset_top + 120.0
 	# CONTRACT zone — centered, below right_stats in portrait.
-	var contract_zone := UILayout.zone(UILayout.Zone.MINING_CONTRACT, viewport)
-	contract_order_panel.anchor_left  = 0.0
-	contract_order_panel.anchor_right = 1.0
-	contract_order_panel.offset_left   = UILayout.EDGE
-	contract_order_panel.offset_right  = -UILayout.EDGE
-	contract_order_panel.offset_top    = right_stats.offset_bottom + 6.0
-	contract_order_panel.offset_bottom = contract_order_panel.offset_top + 130.0
-	# INSTRUCTION zone — centered, below contract in portrait.
+	# INSTRUCTION zone — centered, below right_stats in portrait.
 	var instr_zone := UILayout.zone(UILayout.Zone.MINING_INSTRUCTION, viewport)
 	instructions.offset_left   = -(instr_zone.size.x * 0.5)
 	instructions.offset_right  =   instr_zone.size.x * 0.5
-	instructions.offset_top    = contract_order_panel.offset_bottom + 6.0
+	instructions.offset_top    = right_stats.offset_bottom + 6.0
 	instructions.offset_bottom = instructions.offset_top + 54.0
 	# MINING_MODAL (inventory overlay) — centered.
 	inventory_panel.offset_left   = -(viewport.x * 0.48)
@@ -442,7 +432,7 @@ func _apply_landscape_layout(is_mobile: bool) -> void:
 	right_stats.layout_mode = 2
 	right_stats.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	right_stats.size_flags_stretch_ratio = 0.5
-	order_label.get_parent().get_parent().size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	contract_order_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	left_gauges.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	# INSTRUCTION zone — centered horizontal band below HUD.
 	var instr := UILayout.zone(UILayout.Zone.MINING_INSTRUCTION, viewport)
@@ -450,14 +440,6 @@ func _apply_landscape_layout(is_mobile: bool) -> void:
 	instructions.offset_right  =  (instr.size.x * 0.5)
 	instructions.offset_top    = instr.position.y
 	instructions.offset_bottom = instr.end.y
-	# CONTRACT zone — centered panel below instruction.
-	var contract := UILayout.zone(UILayout.Zone.MINING_CONTRACT, viewport)
-	contract_order_panel.anchor_left  = 0.5
-	contract_order_panel.anchor_right = 0.5
-	contract_order_panel.offset_left   = -(contract.size.x * 0.5)
-	contract_order_panel.offset_right  =  (contract.size.x * 0.5)
-	contract_order_panel.offset_top    = contract.position.y
-	contract_order_panel.offset_bottom = contract.end.y
 	# ROOMS — positioned via shared helper.
 	if _room_panel and is_instance_valid(_room_panel):
 		_layout_room_panel(viewport)
@@ -591,6 +573,12 @@ func start_mining(is_planet: bool = false, difficulty: int = 1, target_id: Strin
 	
 	# Beam charges based on difficulty level
 	_max_beam_charges = 20.0 + (difficulty * 10.0)
+	# Guarantee at least 1.4× the order total so the order is completable
+	var _order_total := 0
+	for _amt in _starter_order_targets.values():
+		_order_total += int(_amt)
+	if _order_total > 0:
+		_max_beam_charges = max(_max_beam_charges, ceil(_order_total * 1.4))
 	_beam_charges = _max_beam_charges
 	_update_mineral_header_label()
 	return_button.text = "RETURN"
@@ -1482,22 +1470,7 @@ func _setup_contract_panel_style() -> void:
 	_mineral_bar_rows.clear()
 
 func _update_mineral_header_label() -> void:
-	if not is_instance_valid(order_label):
-		return
-	if _starter_contract_active and not _starter_order_targets.is_empty():
-		var keys = _starter_order_targets.keys()
-		keys.sort()
-		var lines := []
-		for key in keys:
-			var required := int(_starter_order_targets.get(key, 0))
-			var collected := int(_collected_minerals.get(key, 0))
-			lines.append("%s: %d/%d" % [str(key).capitalize(), collected, required])
-		order_label.text = "\n".join(lines)
-	else:
-		var total := 0
-		for v in _collected_minerals.values():
-			total += int(v)
-		order_label.text = "%d  mineral%s" % [total, "" if total == 1 else "s"]
+	pass  # OrderPanel removed; mineral totals shown via ContractOrderPanel progress bars.
 
 func _refresh_contract_order_tracker() -> void:
 	if contract_order_panel == null or contract_order_title == null or contract_order_progress == null:

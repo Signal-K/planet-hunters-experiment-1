@@ -1,6 +1,6 @@
 {
   "taskId": "ogipov",
-  "currentVersion": 2,
+  "currentVersion": 3,
   "versions": [
     {
       "id": "v1",
@@ -15,20 +15,11 @@
         },
         {
           "field": "assignee",
+          "oldValue": null,
           "newValue": "@me"
         }
       ],
       "snapshot": {
-        "title": "Show 'Free Operations unlocked' messaging when M4 completes",
-        "description": "Post-M4 spec (2026-03-10) explicitly states: 'Free Operations unlock should be shown explicitly in UI messaging.' When mission stage crosses into Free Ops (post-M4), show clear messaging that free operations are now available with brief explanation of the two routes (contract, survey).",
-        "status": "in-progress",
-        "priority": "medium",
-        "assignee": "@me",
-        "labels": [
-          "gameplay",
-          "ux",
-          "progression"
-        ],
         "acceptanceCriteria": [
           {
             "completed": false,
@@ -42,7 +33,17 @@
             "completed": false,
             "text": "Shown only once; persisted so it does not re-trigger on subsequent sessions"
           }
-        ]
+        ],
+        "assignee": "@me",
+        "description": "Post-M4 spec (2026-03-10) explicitly states: 'Free Operations unlock should be shown explicitly in UI messaging.' When mission stage crosses into Free Ops (post-M4), show clear messaging that free operations are now available with brief explanation of the two routes (contract, survey).",
+        "labels": [
+          "gameplay",
+          "ux",
+          "progression"
+        ],
+        "priority": "medium",
+        "status": "in-progress",
+        "title": "Show 'Free Operations unlocked' messaging when M4 completes"
       }
     },
     {
@@ -89,20 +90,11 @@
         },
         {
           "field": "implementationNotes",
-          "newValue": "earth_base_1.gd: _maybe_show_free_ops_unlock() called deferred from _ready. Triggers when completed_mission_count >= 4. Shows animated overlay with route cards (Contract/Survey) and CTA to launchpad. Persisted in rocket_unlock_popups.cfg under free_ops_unlock_seen key. Shows once only."
+          "oldValue": null,
+          "newValue": "earth_base_1.gd: _maybe_show_free_ops_unlock() called deferred from _ready. Triggers when completed_mission_count \u003e= 4. Shows animated overlay with route cards (Contract/Survey) and CTA to launchpad. Persisted in rocket_unlock_popups.cfg under free_ops_unlock_seen key. Shows once only."
         }
       ],
       "snapshot": {
-        "title": "Show 'Free Operations unlocked' messaging when M4 completes",
-        "description": "Post-M4 spec (2026-03-10) explicitly states: 'Free Operations unlock should be shown explicitly in UI messaging.' When mission stage crosses into Free Ops (post-M4), show clear messaging that free operations are now available with brief explanation of the two routes (contract, survey).",
-        "status": "done",
-        "priority": "medium",
-        "assignee": "@me",
-        "labels": [
-          "gameplay",
-          "ux",
-          "progression"
-        ],
         "acceptanceCriteria": [
           {
             "completed": true,
@@ -117,7 +109,57 @@
             "text": "Shown only once; persisted so it does not re-trigger on subsequent sessions"
           }
         ],
-        "implementationNotes": "earth_base_1.gd: _maybe_show_free_ops_unlock() called deferred from _ready. Triggers when completed_mission_count >= 4. Shows animated overlay with route cards (Contract/Survey) and CTA to launchpad. Persisted in rocket_unlock_popups.cfg under free_ops_unlock_seen key. Shows once only."
+        "assignee": "@me",
+        "description": "Post-M4 spec (2026-03-10) explicitly states: 'Free Operations unlock should be shown explicitly in UI messaging.' When mission stage crosses into Free Ops (post-M4), show clear messaging that free operations are now available with brief explanation of the two routes (contract, survey).",
+        "implementationNotes": "earth_base_1.gd: _maybe_show_free_ops_unlock() called deferred from _ready. Triggers when completed_mission_count \u003e= 4. Shows animated overlay with route cards (Contract/Survey) and CTA to launchpad. Persisted in rocket_unlock_popups.cfg under free_ops_unlock_seen key. Shows once only.",
+        "labels": [
+          "gameplay",
+          "ux",
+          "progression"
+        ],
+        "priority": "medium",
+        "status": "done",
+        "title": "Show 'Free Operations unlocked' messaging when M4 completes"
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "ogipov",
+      "version": 3,
+      "timestamp": "2026-04-11T03:59:56.397390614Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "earth_base_1.gd: _maybe_show_free_ops_unlock() called deferred from _ready. Triggers when completed_mission_count \u003e= 4. Shows animated overlay with route cards (Contract/Survey) and CTA to launchpad. Persisted in rocket_unlock_popups.cfg under free_ops_unlock_seen key. Shows once only.",
+          "newValue": "earth_base_1.gd: _maybe_show_free_ops_unlock() called deferred from _ready. Triggers when completed_mission_count \u003e= 4. Shows animated overlay with route cards (Contract/Survey) and CTA to launchpad. Persisted in rocket_unlock_popups.cfg under free_ops_unlock_seen key. Shows once only.\n## FreeOpsUnlockOverlay redesign (branch: claude/redesign-control-panel-siBXM)\nFull-screen overlay redesigned to match Google Stitch prototype:\n- TopBar (dark green): telemetry readouts\n- Header: \"SYSTEM STATE: UNRESTRICTED_ACCESS\" + \"FREE OPERATIONS\" big title\n- 2×3 grid of cards:\n  Row 1: SectorsCard (LOCAL_SECTORS, 3 sectors), QueuesCard (CONSTRUCTION_QUEUES), AssetCard (X-97 CERES)\n  Row 2: GaugeCard (dark green, 99.8% INTEGRITY), PartnersCard (CORPORATE_PARTNERS), TelemetryCard (FLEET_TELEMETRY with progress bars)\n- BottomBar: ● OPTIMAL FLIGHT PATH: CALCULATED | LOGS | START RUN 🚀\nScreenshot: user://ux_screenshots/panel_redesign/05_05_free_operations.png"
+        }
+      ],
+      "snapshot": {
+        "acceptanceCriteria": [
+          {
+            "text": "When M4 completes, player sees a clear 'Free Operations unlocked' moment (overlay, banner, or debrief callout)",
+            "completed": true
+          },
+          {
+            "text": "Messaging explains the two routes: contract (work for a contractor) and survey (scan and discover)",
+            "completed": true
+          },
+          {
+            "text": "Shown only once; persisted so it does not re-trigger on subsequent sessions",
+            "completed": true
+          }
+        ],
+        "assignee": "@me",
+        "description": "Post-M4 spec (2026-03-10) explicitly states: 'Free Operations unlock should be shown explicitly in UI messaging.' When mission stage crosses into Free Ops (post-M4), show clear messaging that free operations are now available with brief explanation of the two routes (contract, survey).",
+        "implementationNotes": "earth_base_1.gd: _maybe_show_free_ops_unlock() called deferred from _ready. Triggers when completed_mission_count \u003e= 4. Shows animated overlay with route cards (Contract/Survey) and CTA to launchpad. Persisted in rocket_unlock_popups.cfg under free_ops_unlock_seen key. Shows once only.\n## FreeOpsUnlockOverlay redesign (branch: claude/redesign-control-panel-siBXM)\nFull-screen overlay redesigned to match Google Stitch prototype:\n- TopBar (dark green): telemetry readouts\n- Header: \"SYSTEM STATE: UNRESTRICTED_ACCESS\" + \"FREE OPERATIONS\" big title\n- 2×3 grid of cards:\n  Row 1: SectorsCard (LOCAL_SECTORS, 3 sectors), QueuesCard (CONSTRUCTION_QUEUES), AssetCard (X-97 CERES)\n  Row 2: GaugeCard (dark green, 99.8% INTEGRITY), PartnersCard (CORPORATE_PARTNERS), TelemetryCard (FLEET_TELEMETRY with progress bars)\n- BottomBar: ● OPTIMAL FLIGHT PATH: CALCULATED | LOGS | START RUN 🚀\nScreenshot: user://ux_screenshots/panel_redesign/05_05_free_operations.png",
+        "labels": [
+          "gameplay",
+          "ux",
+          "progression"
+        ],
+        "priority": "medium",
+        "status": "done",
+        "title": "Show 'Free Operations unlocked' messaging when M4 completes"
       }
     }
   ]

@@ -3,14 +3,7 @@
     {
       "taskId": "5ierg4",
       "taskTitle": "Fix ux-tour failures and perform scene/script hygiene sweep",
-      "startedAt": "2026-03-28T04:40:32.699Z",
-      "pausedAt": null,
-      "totalPausedMs": 0
-    },
-    {
-      "taskId": "9hgwj2",
-      "taskTitle": "Big UI pass + modular systems brainstorm",
-      "startedAt": "2026-04-02T11:52:28.432Z",
+      "startedAt": "2026-04-13T05:46:09.465Z",
       "pausedAt": null,
       "totalPausedMs": 0
     }

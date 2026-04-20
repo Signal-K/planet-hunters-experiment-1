@@ -6,13 +6,13 @@ const EmptyLabelScene = preload("res://Scenes/UI/Templates/MenuLogbookEmpty.tscn
 const ClassificationConsensus = preload("res://Scripts/Utils/ClassificationConsensus.gd")
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
 
-const STATION_CARD_BG := Color(0.08, 0.13, 0.20, 0.94)
-const STATION_CARD_BORDER := Color(PanelStyle.ACCENT.r, PanelStyle.ACCENT.g, PanelStyle.ACCENT.b, 0.46)
-const STATION_CARD_HOVER := Color(0.12, 0.18, 0.26, 0.98)
-const STATION_ICON_BG := Color(PanelStyle.ACCENT.r, PanelStyle.ACCENT.g, PanelStyle.ACCENT.b, 0.22)
-const STATION_TEXT := PanelStyle.TEXT_ON_DARK
-const STATION_MUTED := PanelStyle.MUTED_ON_DARK
-const STATION_TELEMETRY := PanelStyle.ACCENT
+const STATION_CARD_BG := Color(0.99, 0.995, 0.995, 1.0)
+const STATION_CARD_BORDER := Color(0.82, 0.89, 0.90, 1.0)
+const STATION_CARD_HOVER := Color(0.95, 0.98, 0.98, 1.0)
+const STATION_ICON_BG := Color(0.84, 0.97, 0.94, 1.0)
+const STATION_TEXT := Color(0.16, 0.20, 0.22, 1.0)
+const STATION_MUTED := Color(0.40, 0.46, 0.49, 1.0)
+const STATION_TELEMETRY := Color(0.05, 0.49, 0.45, 1.0)
 
 var _anomaly_list: VBoxContainer
 var _get_mode: Callable
@@ -76,7 +76,7 @@ func _create_anomaly_item(anomaly: Dictionary, index: int) -> Control:
 	var badge_label: Label = item_container.get_node("HBox/ContentVBox/TitleRow/BadgeLabel")
 	var meta_label: Label = item_container.get_node("HBox/ContentVBox/MetaLabel")
 	var card_backdrop: ColorRect = item_container.get_node("CardBackdrop")
-	card_backdrop.color = Color(0.05, 0.08, 0.13, 0.26)
+	card_backdrop.color = Color(0.92, 0.97, 0.96, 0.72)
 	var tic_id = _clean_text(anomaly.get("ticId", ""))
 	var content_text = _clean_text(anomaly.get("content", ""))
 	var anomaly_id = anomaly.get("id", index)
@@ -196,12 +196,14 @@ func _create_anomaly_item(anomaly: Dictionary, index: int) -> Control:
 	return item_container
 
 func _create_station_item_style() -> StyleBoxFlat:
-	return PanelStyle.create_glass_card_style(STATION_CARD_BG, 0.46, 12, 18, 14)
+	var style := PanelStyle.create_glass_card_style(STATION_CARD_BG, 0.34, 12, 18, 14)
+	style.border_color = STATION_CARD_BORDER
+	return style
 
 func _create_station_icon_style() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.bg_color = STATION_ICON_BG
-	style.border_color = Color(STATION_TELEMETRY.r, STATION_TELEMETRY.g, STATION_TELEMETRY.b, 0.42)
+	style.border_color = Color(STATION_TELEMETRY.r, STATION_TELEMETRY.g, STATION_TELEMETRY.b, 0.30)
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(36)
 	return style
@@ -212,7 +214,7 @@ func _apply_station_button(button: Button, is_primary: bool) -> void:
 	if is_primary:
 		PanelStyle.apply_button(button, true)
 	else:
-		PanelStyle.apply_outline_button(button, STATION_TELEMETRY, STATION_TEXT)
+		PanelStyle.apply_outline_button(button, STATION_CARD_BORDER, STATION_TEXT)
 	button.add_theme_font_size_override("font_size", 15)
 
 func _clean_text(value) -> String:

@@ -3,8 +3,7 @@ extends SceneTree
 const TestReporter = preload("res://tests/TestReporter.gd")
 const FrancBalanceScene = preload("res://Scenes/UI/FrancBalance.tscn")
 const EarthWeatherEngine = preload("res://Scripts/Earth/Environment/EarthWeatherEngine.gd")
-const UIConsistencyEnforcer = preload("res://Scripts/UI/UIConsistencyEnforcer.gd")
-const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
+const DS = preload("res://Scripts/UI/DS.gd")
 
 var reporter := TestReporter.new()
 
@@ -43,9 +42,9 @@ func _init():
 func run_all_tests() -> void:
 	await test_project_uses_linear_canvas_filter()
 	await test_franc_balance_button_has_readable_text_color()
-	await test_primary_button_hover_state_keeps_warm_fill()
+	await test_ds_palette_has_sufficient_contrast()
+	await test_ds_primary_is_cyan_not_warm()
 	await test_weather_cycle_and_event_hooks()
-	await test_ui_consistency_enforcer_applies_expected_defaults()
 
 func test_project_uses_linear_canvas_filter() -> void:
 	reporter.start_test("Project canvas texture filter is linear (not nearest)")
@@ -79,20 +78,22 @@ func test_franc_balance_button_has_readable_text_color() -> void:
 	node.queue_free()
 	reporter.pass_test()
 
-func test_primary_button_hover_state_keeps_warm_fill() -> void:
-	reporter.start_test("Primary buttons keep warm fill across hover and pressed states")
-	var button := Button.new()
-	PanelStyle.apply_button(button, true)
-	var hover := button.get_theme_stylebox("hover") as StyleBoxFlat
-	var pressed := button.get_theme_stylebox("pressed") as StyleBoxFlat
-	if hover == null or pressed == null:
-		reporter.fail_test("Primary button missing hover/pressed styleboxes")
+func test_ds_palette_has_sufficient_contrast() -> void:
+	reporter.start_test("DS palette: TEXT on PAGE_BG has sufficient luminance contrast")
+	var lum_text = 0.2126 * DS.TEXT.r + 0.7152 * DS.TEXT.g + 0.0722 * DS.TEXT.b
+	var lum_bg   = 0.2126 * DS.PAGE_BG.r + 0.7152 * DS.PAGE_BG.g + 0.0722 * DS.PAGE_BG.b
+	var lighter = max(lum_text, lum_bg)
+	var darker  = min(lum_text, lum_bg)
+	var ratio = (lighter + 0.05) / (darker + 0.05)
+	if ratio < 4.5:
+		reporter.fail_test("DS.TEXT on DS.PAGE_BG contrast ratio %.2f < 4.5 (WCAG AA)" % ratio)
 		return
-	if hover.bg_color.r <= hover.bg_color.b:
-		reporter.fail_test("Primary hover color drifted away from warm accent: %s" % str(hover.bg_color))
-		return
-	if pressed.bg_color.r <= pressed.bg_color.b:
-		reporter.fail_test("Primary pressed color drifted away from warm accent: %s" % str(pressed.bg_color))
+	reporter.pass_test()
+
+func test_ds_primary_is_cyan_not_warm() -> void:
+	reporter.start_test("DS.PRIMARY is cool/cyan (blue channel dominant)")
+	if DS.PRIMARY.b <= DS.PRIMARY.r:
+		reporter.fail_test("DS.PRIMARY has r>=b (%s); expected cyan accent" % str(DS.PRIMARY))
 		return
 	reporter.pass_test()
 
@@ -128,44 +129,6 @@ func test_weather_cycle_and_event_hooks() -> void:
 		host.queue_free()
 		return
 	host.queue_free()
-	reporter.pass_test()
-
-func test_ui_consistency_enforcer_applies_expected_defaults() -> void:
-	reporter.start_test("[Baseline] UI consistency enforcer applies defaults and respects style locks")
-	var root = Control.new()
-	var launch_button = Button.new()
-	launch_button.name = "LaunchButton"
-	launch_button.text = "Launch"
-	root.add_child(launch_button)
-	var muted_label = Label.new()
-	muted_label.name = "StatusHintLabel"
-	root.add_child(muted_label)
-	var title_label = Label.new()
-	title_label.name = "TitleLabel"
-	root.add_child(title_label)
-	var locked = Button.new()
-	locked.name = "LockedButton"
-	locked.set_meta(UIConsistencyEnforcer.META_LOCK, true)
-	root.add_child(locked)
-
-	var enforcer = UIConsistencyEnforcer.new()
-	enforcer._apply_tree(root)
-
-	if not launch_button.has_theme_stylebox_override("normal"):
-		reporter.fail_test("Expected LaunchButton to receive themed normal style")
-		return
-	if not muted_label.has_theme_color_override("font_color"):
-		reporter.fail_test("Expected muted label to receive font_color override")
-		return
-	if not _colors_close(muted_label.get_theme_color("font_color"), PanelStyle.TEXT_MUTED):
-		reporter.fail_test("Muted label color mismatch")
-		return
-	if not _colors_close(title_label.get_theme_color("font_color"), PanelStyle.TEXT_PRIMARY):
-		reporter.fail_test("Primary label color mismatch")
-		return
-	if locked.has_meta(UIConsistencyEnforcer.META_KEY):
-		reporter.fail_test("Locked control should not be marked as consistency-applied")
-		return
 	reporter.pass_test()
 
 func _colors_close(a: Color, b: Color) -> bool:

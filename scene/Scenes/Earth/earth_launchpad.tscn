@@ -1,15 +1,10 @@
-[gd_scene load_steps=9 format=3 uid="uid://dkn5ffejmhljs"]
+[gd_scene load_steps=4 format=3 uid="uid://dkn5ffejmhljs"]
 
-[ext_resource type="Script" uid="uid://dtrksapur77k2" path="res://Scripts/Earth/LaunchpadScene.gd" id="1"]
-[ext_resource type="Script" uid="uid://ce1a85vrjyh7x" path="res://Scripts/Earth/Launchpad.gd" id="2"]
-[ext_resource type="Texture2D" uid="uid://ciqmrddebyxh1" path="res://assets/Backdrops/Earth2.png" id="3"]
-[ext_resource type="Texture2D" uid="uid://ctuf1c3mi4pat" path="res://assets/Structures/launchpad.png" id="4"]
-[ext_resource type="Script" uid="uid://bmhjgrsylq0hk" path="res://Scripts/Earth/LaunchpadSpriteDropHandler.gd" id="9"]
-[ext_resource type="PackedScene" uid="uid://launchhud123" path="res://Scenes/UI/launch_hud.tscn" id="10"]
-[ext_resource type="PackedScene" path="res://Scenes/UI/LaunchpadSelectorPanel.tscn" id="11"]
+[ext_resource type="Script" path="res://Scripts/Earth/LaunchpadScene.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://ciqmrddebyxh1" path="res://assets/Backdrops/Earth2.png" id="2"]
+[ext_resource type="PackedScene" uid="uid://launch_wizard_scene" path="res://Scenes/UI/LaunchWizard.tscn" id="3"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_launchpad"]
-size = Vector2(300, 220)
+; Terminal Ethereal — mobile-first launch wizard over Earth backdrop.
 
 [node name="LaunchpadScene" type="Node2D"]
 script = ExtResource("1")
@@ -22,130 +17,15 @@ zoom = Vector2(2.2, 2.2)
 layer = 0
 
 [node name="BackgroundSprite" type="Sprite2D" parent="BackgroundLayer"]
-position = Vector2(596, 1.9999999)
+position = Vector2(596, 2.0)
 scale = Vector2(2.8, 2.8)
-texture = ExtResource("3")
-
-[node name="SoilLayer" type="CanvasLayer" parent="."]
-layer = 0
-
-[node name="StructuresLayer" type="CanvasLayer" parent="."]
-
-[node name="Launchpad" type="Node2D" parent="StructuresLayer"]
-position = Vector2(960, 850)
-script = ExtResource("2")
-
-[node name="Sprite2D" type="Sprite2D" parent="StructuresLayer/Launchpad"]
-position = Vector2(-180, -304)
-texture = ExtResource("4")
-script = ExtResource("9")
-
-[node name="InteractionArea" type="Area2D" parent="StructuresLayer/Launchpad"]
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="StructuresLayer/Launchpad/InteractionArea"]
-shape = SubResource("RectangleShape2D_launchpad")
+texture = ExtResource("2")
 
 [node name="UILayer" type="CanvasLayer" parent="."]
+layer = 10
 
-[node name="LayoutScaffold" type="Control" parent="UILayer"]
+[node name="LaunchWizard" parent="UILayer" instance=ExtResource("3")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-
-[node name="LeftPanelAnchor" type="Control" parent="UILayer/LayoutScaffold"]
-layout_mode = 1
-anchors_preset = 0
-offset_right = 420.0
-offset_bottom = 944.0
-mouse_filter = 2
-
-[node name="RightPanelAnchor" type="Control" parent="UILayer/LayoutScaffold"]
-layout_mode = 1
-anchors_preset = 0
-offset_left = 1500.0
-offset_right = 1920.0
-offset_bottom = 944.0
-mouse_filter = 2
-
-[node name="LaunchButtonAnchor" type="Control" parent="UILayer/LayoutScaffold"]
-layout_mode = 1
-anchors_preset = 0
-offset_left = 1720.0
-offset_top = 810.0
-offset_right = 1896.0
-offset_bottom = 926.0
-mouse_filter = 2
-
-[node name="SelectorPanel" parent="UILayer" instance=ExtResource("11")]
-layout_mode = 3
-
-[node name="ButtonContainer" type="HBoxContainer" parent="UILayer"]
-custom_minimum_size = Vector2(0, 120)
-offset_left = 24.0
-offset_top = 944.0
-offset_right = 1896.0
-offset_bottom = 1072.0
-
-[node name="NavBackground" type="Panel" parent="UILayer/ButtonContainer"]
-layout_mode = 2
-mouse_filter = 1
-
-[node name="BackButton" type="Button" parent="UILayer/ButtonContainer"]
-custom_minimum_size = Vector2(160, 120)
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 4
-theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
-theme_override_font_sizes/font_size = 24
-text = "<<"
-
-[node name="ForwardButton" type="Button" parent="UILayer/ButtonContainer"]
-custom_minimum_size = Vector2(160, 120)
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 4
-theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
-theme_override_font_sizes/font_size = 24
-text = ">>"
-
-[node name="MenuButton" type="Button" parent="UILayer/ButtonContainer"]
-custom_minimum_size = Vector2(220, 120)
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 4
-theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
-theme_override_font_sizes/font_size = 20
-text = "Menu"
-
-[node name="MarketButton" type="Button" parent="UILayer/ButtonContainer"]
-custom_minimum_size = Vector2(220, 120)
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 4
-theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
-theme_override_font_sizes/font_size = 20
-text = "Market"
-
-[node name="SpaceMapButton" type="Button" parent="UILayer/ButtonContainer"]
-custom_minimum_size = Vector2(220, 120)
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 4
-theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
-theme_override_font_sizes/font_size = 20
-text = "Map"
-
-[node name="NewMissionButton" type="Button" parent="UILayer/ButtonContainer"]
-custom_minimum_size = Vector2(280, 120)
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 4
-theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
-theme_override_font_sizes/font_size = 20
-text = "New Mission"
-
-[node name="LaunchHUD" parent="." instance=ExtResource("10")]

@@ -30,6 +30,8 @@ var _menu_request_action: String = ""
 var _last_mining_result: Dictionary = {}
 var _last_mining_result_synced: bool = true
 var _auto_start_mining: bool = false
+var is_ux_tour_running: bool = false
+
 const AppControllerPersistence = preload("res://Scripts/Systems/AppControllerPersistence.gd")
 const WebEventBridge = preload("res://Scripts/Systems/WebEventBridge.gd")
 const AppLogger = preload("res://Scripts/Utils/Logger.gd")
@@ -55,7 +57,8 @@ var _pending_tutorial_actions: Array = []
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	AppLogger.d("AppController ready, counter initialized to: %s" % counter)
+	is_ux_tour_running = OS.has_environment("GODOT_UX_TOUR")
+	AppLogger.d("AppController ready, counter initialized to: %s, is_ux_tour_running: %s" % [counter, is_ux_tour_running])
 	# Load persisted franc balance from disk (if present)
 	load_franc_balance()
 	# Load persisted experience from disk (if present)

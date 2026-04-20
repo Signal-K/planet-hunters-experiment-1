@@ -126,7 +126,7 @@ static func _mining_handbook(vp: Vector2) -> Rect2:
 	# this zone does not conflict with TUTORIAL_COACH during gameplay.
 	var hud := _mining_hud(vp)
 	var w   := clampf(vp.x * 0.30, 280.0, 420.0)
-	return Rect2(vp.x - EDGE - w, hud.end.y + 4.0, w, 240.0)
+	return Rect2(vp.x - EDGE - w, hud.end.y + 80.0, w, 240.0)
 
 static func _mining_bottom(vp: Vector2) -> Rect2:
 	var h := 60.0

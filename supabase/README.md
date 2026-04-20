@@ -21,6 +21,12 @@ Adds performance indexes and RLS policy for game-driven TESS lightcurve classifi
 - Ensures anon key can INSERT (conditional on RLS being enabled)
 - Safe to re-run (uses `CREATE INDEX IF NOT EXISTS`)
 
+### 20260413_classifications_authenticated_guest_policy.sql
+Adds the missing `authenticated` RLS policies for the game's anonymous-auth guest flow.
+- Anonymous Supabase sign-in yields the `authenticated` role, not `anon`
+- Allows inserts where `author = auth.uid()` for `tess-lightcurve`
+- Allows authenticated clients to read `tess-lightcurve` rows for consensus/read-back
+
 ## Classification Shape (game writes)
 
 ```json
