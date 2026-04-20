@@ -1,6 +1,16 @@
 {
   "unlocked": [
-    "starterrocket1"
+    "starterrocket1",
+    "starterrocket2",
+    "starterrocket3"
+  ],
+  "placed": [
+  ],
+  "launched": [
+  ],
+  "destroyed": [
+  ],
+  "missions": [
   ],
   "placed": [
   ],

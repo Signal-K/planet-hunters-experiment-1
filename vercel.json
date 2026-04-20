@@ -2,6 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "cleanUrls": false,
   "trailingSlash": false,
+  "ignoreCommand": "exit 0",
   "headers": [
     {
       "source": "/(.*)\\.wasm",

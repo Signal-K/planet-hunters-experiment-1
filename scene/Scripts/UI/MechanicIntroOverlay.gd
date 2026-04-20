@@ -1,44 +1,84 @@
 extends CanvasLayer
 ## MechanicIntroOverlay.gd
-## Self-building overlay that introduces a new game mechanic to the player.
+## Full-screen mechanic introduction overlay (light-themed, two-column layout).
 ## Shown exactly once per mechanic via FirstTimeMechanicTracker.
 ##
-## Content dict keys: title, icon, what, how, expect
+## Content dict keys: title, mechanic_name, icon, overview, steps (Array[String]),
+##                    targeting, efficiency, schematic_label, protocol, auth
 
-const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
+const DIALOG_LAYER := 128
 
-@onready var background: ColorRect = $Background
-@onready var panel: PanelContainer = $Center/Panel
-@onready var icon_label: Label = $Center/Panel/VBox/TitleRow/IconLabel
-@onready var title_label: Label = $Center/Panel/VBox/TitleRow/TitleLabel
-@onready var separator: HSeparator = $Center/Panel/VBox/Separator
-@onready var what_section: VBoxContainer = $Center/Panel/VBox/WhatSection
-@onready var what_body: Label = $Center/Panel/VBox/WhatSection/Body
-@onready var how_section: VBoxContainer = $Center/Panel/VBox/HowSection
-@onready var how_body: Label = $Center/Panel/VBox/HowSection/Body
-@onready var expect_section: VBoxContainer = $Center/Panel/VBox/ExpectSection
-@onready var expect_body: Label = $Center/Panel/VBox/ExpectSection/Body
-@onready var dismiss_button: Button = $Center/Panel/VBox/DismissButton
+@onready var protocol_label: Label   = $Center/Panel/OuterVBox/HeaderBar/HeaderRow/ProtocolLabel
+@onready var coord_label: Label      = $Center/Panel/OuterVBox/HeaderBar/HeaderRow/CoordLabel
+@onready var title_label: Label      = $Center/Panel/OuterVBox/Content/ContentVBox/TitleRow/TitleLabel
+@onready var mechanic_name: Label    = $Center/Panel/OuterVBox/Content/ContentVBox/TitleRow/MechanicName
+@onready var overview_body: Label    = $Center/Panel/OuterVBox/Content/ContentVBox/MainHBox/LeftCol/OverviewBody
+@onready var targeting_label: Label  = $Center/Panel/OuterVBox/Content/ContentVBox/MainHBox/LeftCol/StatRow/TargetingCard/StatVBox/StatValue
+@onready var efficiency_label: Label = $Center/Panel/OuterVBox/Content/ContentVBox/MainHBox/LeftCol/StatRow/EfficiencyCard/StatVBox/StatValue
+@onready var steps_list: VBoxContainer = $Center/Panel/OuterVBox/Content/ContentVBox/MainHBox/LeftCol/StepsList
+@onready var schematic_label: Label  = $Center/Panel/OuterVBox/Content/ContentVBox/MainHBox/RightCol/SchematicPanel/SchematicVBox/SchematicTitle
+@onready var stability_bar: ProgressBar = $Center/Panel/OuterVBox/Content/ContentVBox/MainHBox/RightCol/SchematicPanel/SchematicVBox/StabilityRow/StabilityBar
+@onready var thermal_bar: ProgressBar   = $Center/Panel/OuterVBox/Content/ContentVBox/MainHBox/RightCol/SchematicPanel/SchematicVBox/ThermalRow/ThermalBar
+@onready var commence_btn: Button    = $Center/Panel/OuterVBox/ButtonBar/ButtonRow/CommenceButton
+@onready var acknowledge_btn: Button = $Center/Panel/OuterVBox/ButtonBar/ButtonRow/AcknowledgeButton
+@onready var auth_label: Label       = $Center/Panel/OuterVBox/FooterBar/FooterRow/AuthLabel
 
 func _ready() -> void:
-	layer = 128  # above HUD, below system alerts
-	separator.add_theme_color_override("color", Color(0.3, 0.5, 0.8, 0.4))
-	PanelStyle.apply_button(dismiss_button, true)
-	dismiss_button.pressed.connect(_on_dismiss)
+	layer = DIALOG_LAYER
+	commence_btn.pressed.connect(_on_commence)
+	acknowledge_btn.pressed.connect(_on_dismiss)
 
+## Populate overlay from a content dictionary.
+## Minimum keys: title, mechanic_name (the cyan part)
 func show_intro(content: Dictionary) -> void:
-	var icon_str := str(content.get("icon", "")).strip_edges()
-	icon_label.visible = icon_str != ""
-	icon_label.text = icon_str
-	title_label.text = str(content.get("title", "New Mechanic"))
-	_set_section(what_section, what_body, str(content.get("what", "")))
-	_set_section(how_section, how_body, str(content.get("how", "")))
-	_set_section(expect_section, expect_body, str(content.get("expect", "")))
+	var proto := str(content.get("protocol", "MISSION PROTOCOL // INDUSTRIAL_EXP"))
+	var auth  := str(content.get("auth", "LINK_STATE: 100%  AUTH: CMD_07"))
+	protocol_label.text = "🚀  " + proto
+	auth_label.text = auth
 
-func _set_section(section: VBoxContainer, body_label: Label, body: String) -> void:
-	var trimmed := body.strip_edges()
-	section.visible = trimmed != ""
-	body_label.text = trimmed
+	title_label.text = str(content.get("title", "MECHANIC UNLOCKED:"))
+	mechanic_name.text = str(content.get("mechanic_name", "NEW FEATURE"))
+	overview_body.text = str(content.get("overview", ""))
+	targeting_label.text = str(content.get("targeting", "—"))
+	efficiency_label.text = str(content.get("efficiency", "—"))
+	schematic_label.text = str(content.get("schematic_label", "SCHEMATIC_V1"))
+
+	var stability := float(content.get("stability", 88))
+	var thermal   := float(content.get("thermal", 42))
+	stability_bar.value = stability
+	thermal_bar.value = thermal
+	_update_bar_label(stability_bar, stability)
+	_update_bar_label(thermal_bar, thermal)
+
+	# Populate steps
+	for child in steps_list.get_children():
+		child.queue_free()
+	var steps: Array = content.get("steps", [])
+	for i in steps.size():
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 10)
+		var num := Label.new()
+		num.text = "%02d" % (i + 1)
+		num.add_theme_color_override("font_color", Color(0.22, 0.60, 0.82, 1.0))
+		num.add_theme_font_size_override("font_size", 12)
+		num.custom_minimum_size = Vector2(28, 0)
+		row.add_child(num)
+		var txt := Label.new()
+		txt.text = str(steps[i])
+		txt.add_theme_color_override("font_color", Color(0.20, 0.30, 0.40, 1.0))
+		txt.add_theme_font_size_override("font_size", 13)
+		txt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		txt.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		row.add_child(txt)
+		steps_list.add_child(row)
+
+func _update_bar_label(bar: ProgressBar, val: float) -> void:
+	var pct_lbl: Label = bar.get_parent().get_node_or_null("PctLabel")
+	if pct_lbl:
+		pct_lbl.text = "%.0f%%" % val
+
+func _on_commence() -> void:
+	queue_free()
 
 func _on_dismiss() -> void:
 	queue_free()

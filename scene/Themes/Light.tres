@@ -1,0 +1,139 @@
+[gd_resource type="Theme" load_steps=12 format=3]
+
+; Terminal Ethereal theme — teal-green primary, tonal surfaces, no layout borders.
+; Cyan-Mist shadows: primary at 6% opacity instead of blue-slate.
+
+; ── Card / PanelContainer — SURFACE_LOWEST, 16px radius, no border ────────
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card"]
+bg_color = Color(1.0, 1.0, 1.0, 1.0)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+shadow_color = Color(0.0, 0.424, 0.361, 0.08)
+shadow_size = 20
+shadow_offset = Vector2(0, 8)
+content_margin_left = 20.0
+content_margin_top = 16.0
+content_margin_right = 20.0
+content_margin_bottom = 16.0
+
+; ── Button secondary (default) — SURFACE_HIGH, no border ─────────────────
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_normal"]
+bg_color = Color(0.878, 0.906, 0.898, 1.0)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+content_margin_left = 24.0
+content_margin_top = 14.0
+content_margin_right = 24.0
+content_margin_bottom = 14.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_hover"]
+bg_color = Color(0.835, 0.863, 0.855, 1.0)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+content_margin_left = 24.0
+content_margin_top = 14.0
+content_margin_right = 24.0
+content_margin_bottom = 14.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_pressed"]
+bg_color = Color(0.796, 0.827, 0.820, 1.0)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+content_margin_left = 24.0
+content_margin_top = 14.0
+content_margin_right = 24.0
+content_margin_bottom = 14.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_disabled"]
+bg_color = Color(0.941, 0.957, 0.953, 1.0)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+content_margin_left = 24.0
+content_margin_top = 14.0
+content_margin_right = 24.0
+content_margin_bottom = 14.0
+
+; Focus ring — PRIMARY ghost border (accessibility only) ───────────────────
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_focus"]
+bg_color = Color(0, 0, 0, 0)
+border_color = Color(0.0, 0.424, 0.361, 0.55)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+; ── ProgressBar — SURFACE_HIGH track, PRIMARY fill ────────────────────────
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_prog_bg"]
+bg_color = Color(0.878, 0.906, 0.898, 1.0)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_prog_fill"]
+bg_color = Color(0.0, 0.424, 0.361, 1.0)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+; ── Transparent (ScrollContainer) ────────────────────────────────────────
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_transparent"]
+
+; ── Separator — ghost border (dense grids only) ───────────────────────────
+[sub_resource type="StyleBoxLine" id="StyleBoxLine_sep"]
+color = Color(0.675, 0.702, 0.698, 0.25)
+thickness = 1
+
+[resource]
+; Panels
+Panel/styles/panel = SubResource("StyleBoxFlat_card")
+PanelContainer/styles/panel = SubResource("StyleBoxFlat_card")
+
+; Button (secondary / default) — no border, SURFACE_HIGH bg
+Button/styles/normal = SubResource("StyleBoxFlat_btn_normal")
+Button/styles/hover = SubResource("StyleBoxFlat_btn_hover")
+Button/styles/pressed = SubResource("StyleBoxFlat_btn_pressed")
+Button/styles/disabled = SubResource("StyleBoxFlat_btn_disabled")
+Button/styles/focus = SubResource("StyleBoxFlat_btn_focus")
+Button/colors/font_color = Color(0.176, 0.204, 0.200, 1.0)
+Button/colors/font_hover_color = Color(0.176, 0.204, 0.200, 1.0)
+Button/colors/font_pressed_color = Color(0.176, 0.204, 0.200, 1.0)
+Button/colors/font_disabled_color = Color(0.349, 0.376, 0.376, 0.5)
+Button/colors/font_focus_color = Color(0.176, 0.204, 0.200, 1.0)
+Button/font_sizes/font_size = 28
+
+; Label
+Label/colors/font_color = Color(0.176, 0.204, 0.200, 1.0)
+Label/font_sizes/font_size = 28
+
+; RichTextLabel
+RichTextLabel/colors/default_color = Color(0.176, 0.204, 0.200, 1.0)
+RichTextLabel/font_sizes/normal_font_size = 28
+RichTextLabel/font_sizes/bold_font_size = 28
+
+; ProgressBar
+ProgressBar/styles/background = SubResource("StyleBoxFlat_prog_bg")
+ProgressBar/styles/fill = SubResource("StyleBoxFlat_prog_fill")
+ProgressBar/colors/font_color = Color(0.176, 0.204, 0.200, 1.0)
+
+; ScrollContainer (transparent bg)
+ScrollContainer/styles/panel = SubResource("StyleBoxEmpty_transparent")
+
+; Separators (ghost — dense grids only; prefer spacing over separators)
+HSeparator/styles/separator = SubResource("StyleBoxLine_sep")
+VSeparator/styles/separator = SubResource("StyleBoxLine_sep")

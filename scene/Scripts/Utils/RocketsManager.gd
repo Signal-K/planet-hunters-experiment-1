@@ -143,24 +143,27 @@ const FREE_OPS_PAYOUT_CAP := 1400000000
 
 # Free Ops contractor offers.
 # Each contractor specifies mineral_ranges used to generate their specific order at offer time.
+# These are the FREE OPS (completed >= 4) maximums — a single level-1 asteroid yields
+# ~200 total minerals with Iron ~40%, so free-ops maximums are tuned to be achievable
+# in one good run. Earlier missions scale these down via get_trip_contractors().
 const FREE_OPS_CONTRACTOR_OFFERS := [
 	{
 		"id": "rocketlab",
 		"name": "Rocketlab",
 		"role": "Small satellite launch systems — common ore feedstock",
-		"mineral_ranges": {"Iron": [120, 200], "Nickel": [80, 150]}
+		"mineral_ranges": {"Iron": [40, 70], "Nickel": [25, 50]}
 	},
 	{
 		"id": "astroforge",
 		"name": "Astroforge",
 		"role": "In-space smelting and refining — specialist materials",
-		"mineral_ranges": {"Cobalt": [40, 90], "Silicates": [80, 160]}
+		"mineral_ranges": {"Cobalt": [12, 28], "Silicates": [20, 45]}
 	},
 	{
 		"id": "spacex",
 		"name": "SpaceX",
 		"role": "Heavy lift launch systems — structural metals",
-		"mineral_ranges": {"Iron": [100, 180], "Nickel": [60, 120]}
+		"mineral_ranges": {"Iron": [35, 60], "Nickel": [20, 40]}
 	}
 ]
 const FIRST_MISSION_PAYOUT_MULT := 1.2
@@ -478,11 +481,30 @@ static func get_free_ops_payout_cap() -> int:
 
 static func get_trip_contractors() -> Array:
 	var available = []
+	var completed := get_completed_mission_count()
 	for contractor in FREE_OPS_CONTRACTOR_OFFERS:
 		var id = str(contractor.get("id", ""))
 		if not SubcontractorManager.is_on_cooldown(id):
-			available.append(contractor.duplicate(true))
+			var c: Dictionary = contractor.duplicate(true)
+			c["mineral_ranges"] = _scale_mineral_ranges_for_stage(c.get("mineral_ranges", {}), completed)
+			available.append(c)
 	return available
+
+# Scale mineral order ranges down for early missions so they're achievable in one trip.
+# M2 (completed=1): ~35%,  M3 (completed=2): ~60%,  M4 (completed=3): ~80%,  Free ops: 100%
+static func _scale_mineral_ranges_for_stage(ranges: Dictionary, completed_count: int) -> Dictionary:
+	if completed_count >= 4:
+		return ranges.duplicate(true)
+	var t := clampf(float(completed_count - 1) / 2.0, 0.0, 1.0)
+	var scale := lerpf(0.35, 0.80, t)
+	var scaled := {}
+	for mineral in ranges.keys():
+		var r = ranges[mineral]
+		if typeof(r) == TYPE_ARRAY and r.size() >= 2:
+			scaled[mineral] = [maxi(4, int(float(r[0]) * scale)), maxi(8, int(float(r[1]) * scale))]
+		else:
+			scaled[mineral] = r
+	return scaled
 
 static func get_starter_contractors() -> Array:
 	return STARTER_CONTRACTOR_OFFERS.duplicate(true)
@@ -560,13 +582,13 @@ static func ensure_trip_contract_offer(detected_targets: Array = []) -> Dictiona
 		var selection_required = bool(existing.get("selection_required", true))
 		var has_recommended = recommended_id != ""
 		var has_valid_selected = selected_contractor == "" or _find_trip_contractor(selected_contractor).size() > 0
-		if has_recommended and has_valid_selected:
+		if has_recommended and has_valid_selected and not _trip_offer_quantities_too_high(existing):
 			if not existing.has("selection_required"):
-				existing["selection_required"] = true
+				existing["selection_required"] = selected_contractor == ""
 				s["trip_contract_offer"] = existing
 				save_state(s)
 			elif selection_required and selected_contractor != "":
-				existing["selected_contractor"] = ""
+				existing["selection_required"] = false
 				s["trip_contract_offer"] = existing
 				save_state(s)
 			return existing.duplicate(true)
@@ -574,6 +596,24 @@ static func ensure_trip_contract_offer(detected_targets: Array = []) -> Dictiona
 	s["trip_contract_offer"] = offer.duplicate(true)
 	save_state(s)
 	return offer
+
+# Returns true if a cached trip offer has quantities that exceed what's achievable
+# for the current mission stage, forcing a regeneration with correct scaled amounts.
+static func _trip_offer_quantities_too_high(offer: Dictionary) -> bool:
+	var completed := get_completed_mission_count()
+	# Per-stage max: what a single good mining run can realistically yield
+	var max_qty := 90 if completed >= 4 else (55 if completed >= 3 else (35 if completed >= 2 else 20))
+	var contractors_any = offer.get("contractors", [])
+	if typeof(contractors_any) != TYPE_ARRAY:
+		return false
+	for c_any in contractors_any:
+		if typeof(c_any) != TYPE_DICTIONARY:
+			continue
+		var requested = c_any.get("requested_minerals", {})
+		for mineral in requested.keys():
+			if int(requested[mineral]) > max_qty:
+				return true
+	return false
 
 static func get_trip_contract_offer() -> Dictionary:
 	var s = load_state()
@@ -1239,10 +1279,12 @@ static func append_mission_location(rocket_id: String, location_id: String) -> v
 
 static func set_detected_targets(targets: Array) -> bool:
 	var s = load_state()
+	var previous_targets: Array = s.get("detected_targets", [])
+	var targets_changed := _target_roster_signature(previous_targets) != _target_roster_signature(targets)
 	# store simplified detected targets array (array of dictionaries)
 	s["detected_targets"] = targets
 	var offer = s.get("trip_contract_offer", {})
-	if typeof(offer) == TYPE_DICTIONARY and not offer.is_empty():
+	if targets_changed and typeof(offer) == TYPE_DICTIONARY and not offer.is_empty():
 		offer["selected_contractor"] = ""
 		offer["selection_required"] = true
 		s["trip_contract_offer"] = offer
@@ -1253,6 +1295,18 @@ static func get_detected_targets() -> Array:
 	var targets = s.get("detected_targets", [])
 	print("RocketsManager: get_detected_targets -> count=", targets.size())
 	return targets
+
+static func _target_roster_signature(targets: Array) -> Array[String]:
+	var ids: Array[String] = []
+	for item_any in targets:
+		if typeof(item_any) != TYPE_DICTIONARY:
+			continue
+		var item: Dictionary = item_any
+		var target_id := str(item.get("id", "")).strip_edges()
+		if target_id != "":
+			ids.append(target_id)
+	ids.sort()
+	return ids
 
 static func set_launch_fallback_notice(message: String) -> bool:
 	var s = load_state()

@@ -2,6 +2,8 @@ extends SceneTree
 
 const TestReporter = preload("res://tests/TestReporter.gd")
 const EarthBaseScene = preload("res://Scenes/Earth/earth_base_1.tscn")
+const TutorialOverlayScene = preload("res://Scenes/UI/TutorialCoachOverlay.tscn")
+const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
 
 var reporter := TestReporter.new()
 
@@ -19,6 +21,8 @@ func _init() -> void:
 
 func run_all_tests() -> void:
 	await test_sr2_unlock_overlay_matches_layout_and_copy()
+	await test_earth_base_active_mission_card_overrides_build_prompt()
+	await test_tutorial_overlay_uses_active_mission_context_on_earth_base()
 
 func _find_descendant_by_name(root: Node, target_name: String) -> Node:
 	if root == null:
@@ -28,6 +32,30 @@ func _find_descendant_by_name(root: Node, target_name: String) -> Node:
 		var node = stack.pop_back()
 		if str(node.name) == target_name:
 			return node
+		for child in node.get_children():
+			stack.append(child)
+	return null
+
+func _find_label_containing(root: Node, snippet: String) -> Label:
+	if root == null:
+		return null
+	var stack: Array[Node] = [root]
+	while not stack.is_empty():
+		var node = stack.pop_back()
+		if node is Label and str((node as Label).text).find(snippet) != -1:
+			return node as Label
+		for child in node.get_children():
+			stack.append(child)
+	return null
+
+func _find_button_by_text(root: Node, text: String) -> Button:
+	if root == null:
+		return null
+	var stack: Array[Node] = [root]
+	while not stack.is_empty():
+		var node = stack.pop_back()
+		if node is Button and str((node as Button).text) == text:
+			return node as Button
 		for child in node.get_children():
 			stack.append(child)
 	return null
@@ -90,5 +118,101 @@ func test_sr2_unlock_overlay_matches_layout_and_copy() -> void:
 		return
 
 	scene.queue_free()
+	await create_timer(0.05).timeout
+	reporter.pass_test()
+
+func test_earth_base_active_mission_card_overrides_build_prompt() -> void:
+	reporter.start_test("Earth base shows active mission card instead of build prompt when a mission is already armed")
+	RocketsManager.reset_state()
+	RocketsManager.mark_mission_completed("mission-1-active-card-test")
+	RocketsManager.add_placed("starterrocket1", Vector2(-110.0, -170.0))
+	var scene = EarthBaseScene.instantiate()
+	get_root().add_child(scene)
+	current_scene = scene
+	await create_timer(0.10).timeout
+	scene._build_progression_cards()
+	await create_timer(0.03).timeout
+
+	var cards_root = scene.get_node_or_null("UILayer/ProgressionCards")
+	if cards_root == null:
+		reporter.fail_test("Expected ProgressionCards root on earth base")
+		scene.queue_free()
+		RocketsManager.reset_state()
+		return
+	if _find_label_containing(cards_root, "Build Control Station") != null:
+		reporter.fail_test("Build Control Station card should be suppressed while an active mission is already armed")
+		scene.queue_free()
+		RocketsManager.reset_state()
+		return
+	if _find_label_containing(cards_root, "Launch Ready on Pad") == null:
+		reporter.fail_test("Expected active mission card to replace the build prompt")
+		scene.queue_free()
+		RocketsManager.reset_state()
+		return
+	if _find_button_by_text(cards_root, "Open Launchpad") == null:
+		reporter.fail_test("Expected active mission card to route back into the launchpad flow")
+		scene.queue_free()
+		RocketsManager.reset_state()
+		return
+	scene.queue_free()
+	current_scene = null
+	RocketsManager.reset_state()
+	await create_timer(0.05).timeout
+	reporter.pass_test()
+
+func test_tutorial_overlay_uses_active_mission_context_on_earth_base() -> void:
+	reporter.start_test("Tutorial coach uses active mission context on Earth base instead of stale launchpad step copy")
+	RocketsManager.reset_state()
+	RocketsManager.mark_mission_completed("mission-1-overlay-context-test")
+	RocketsManager.add_placed("starterrocket1", Vector2(-110.0, -170.0))
+	var scene = EarthBaseScene.instantiate()
+	get_root().add_child(scene)
+	current_scene = scene
+	var overlay = TutorialOverlayScene.instantiate()
+	get_root().add_child(overlay)
+	await create_timer(0.10).timeout
+
+	overlay._current_step = {
+		"title": "Pick Contractor",
+		"action_key": "accept_contractor_offer",
+		"valid_scenes": ["earth_launchpad"]
+	}
+	overlay._off_course = true
+	overlay.visible = true
+	overlay._apply_off_course_display()
+	await create_timer(0.03).timeout
+
+	if overlay.title_label.text == "Pick Contractor":
+		reporter.fail_test("Expected overlay title to switch to the active mission context")
+		overlay.queue_free()
+		scene.queue_free()
+		current_scene = null
+		RocketsManager.reset_state()
+		return
+	if overlay.title_label.text.find("Launch Ready on Pad") == -1:
+		reporter.fail_test("Expected launch-ready title when a rocket is already armed on Earth base")
+		overlay.queue_free()
+		scene.queue_free()
+		current_scene = null
+		RocketsManager.reset_state()
+		return
+	if overlay.message_label.text.find("armed") == -1:
+		reporter.fail_test("Expected overlay message to describe the active mission state")
+		overlay.queue_free()
+		scene.queue_free()
+		current_scene = null
+		RocketsManager.reset_state()
+		return
+	if overlay.open_launchpad_button == null or not overlay.open_launchpad_button.visible:
+		reporter.fail_test("Expected overlay CTA to keep the player in the correct launchpad resume flow")
+		overlay.queue_free()
+		scene.queue_free()
+		current_scene = null
+		RocketsManager.reset_state()
+		return
+	overlay.queue_free()
+	scene.queue_free()
+	current_scene = null
+	RocketsManager.reset_state()
 	await create_timer(0.05).timeout
 	reporter.pass_test()

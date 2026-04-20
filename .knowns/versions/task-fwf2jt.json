@@ -1,0 +1,41 @@
+{
+  "taskId": "fwf2jt",
+  "currentVersion": 1,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "fwf2jt",
+      "version": 1,
+      "timestamp": "2026-04-13T03:07:39.247Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "blocked"
+        },
+        {
+          "field": "implementationNotes",
+          "newValue": "Blocked on applying supabase/migrations/20260413_classifications_authenticated_guest_policy.sql to production. Once live, rerun LiveAnnotationTour.tscn to verify POST/read-back/consensus and debrief reward flow."
+        }
+      ],
+      "snapshot": {
+        "title": "Verify live consensus and rewards after production classification fix",
+        "description": "After classification writes are restored in production, run a full live loop and verify that consensus updates and downstream rewards/debrief behavior reflect real submitted data.",
+        "status": "blocked",
+        "priority": "high",
+        "labels": [],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "A live production classification is submitted and visible in the backend"
+          },
+          {
+            "completed": false,
+            "text": "Consensus and downstream reward/debrief behavior are verified against live data"
+          }
+        ],
+        "implementationNotes": "Blocked on applying supabase/migrations/20260413_classifications_authenticated_guest_policy.sql to production. Once live, rerun LiveAnnotationTour.tscn to verify POST/read-back/consensus and debrief reward flow."
+      }
+    }
+  ]
+}

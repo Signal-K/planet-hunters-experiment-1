@@ -32,10 +32,9 @@ const LAUNCHPAD_SCENE         := "res://Scenes/Earth/earth_launchpad.tscn"
 const TRANSIT_SCENE           := "res://Scenes/Transitions/rocket_transit.tscn"
 const ASCENT_SCENE            := "res://Scenes/Transitions/rocket_ascent.tscn"
 const RETURN_SCENE            := "res://Scenes/Transitions/rocket_return.tscn"
-const LAUNCHPAD_PANEL_SCENE   := "res://Scenes/UI/LaunchpadPanel.tscn"
 const NEW_MISSION_PANEL_SCENE := "res://Scenes/UI/NewMissionPanel.tscn"
 const SUBCONTRACTORS_SCENE    := "res://Scenes/UI/SubcontractorsPanel.tscn"
-const ROCKET_SELECTOR_SCENE   := "res://Scenes/UI/RocketSelectorOverlay.tscn"
+const ROCKET_SELECTOR_SCENE   := "res://Scenes/UI/LaunchWizard.tscn"
 const MENU_PANEL_SCENE        := "res://Scenes/UI/MenuPanel.tscn"
 const TUTORIAL_OVERLAY_SCENE  := "res://Scenes/UI/TutorialCoachOverlay.tscn"
 const CONTROL_STATION_SCENE   := "res://Scenes/UI/ControlStationPanel.tscn"
@@ -45,11 +44,17 @@ const MINING_PRACTICE_SCENE   := "res://Scenes/UI/MiningPracticePanel.tscn"
 const ASTEROID_DETAIL_SCENE   := "res://Scenes/UI/AsteroidDetail/asteroid_detail_view.tscn"
 const SPACE_MAP_SCENE         := "res://Scenes/UI/SpaceMap/space_map.tscn"
 
-const MINING_RUN_SECONDS := 12.0
-const SCENE_SETTLE  := 2.5
-const PANEL_SETTLE  := 2.0
-const ANIM_SETTLE   := 1.0
-const SNAP_SETTLE   := 2.0   # shorter settle for stage-snapshot phases
+const DEFAULT_MINING_RUN_SECONDS := 12.0
+const DEFAULT_SCENE_SETTLE  := 2.5
+const DEFAULT_PANEL_SETTLE  := 2.0
+const DEFAULT_ANIM_SETTLE   := 1.0
+const DEFAULT_SNAP_SETTLE   := 2.0   # shorter settle for stage-snapshot phases
+
+var _mining_run_seconds := DEFAULT_MINING_RUN_SECONDS
+var _scene_settle := DEFAULT_SCENE_SETTLE
+var _panel_settle := DEFAULT_PANEL_SETTLE
+var _anim_settle := DEFAULT_ANIM_SETTLE
+var _snap_settle := DEFAULT_SNAP_SETTLE
 
 # ---------------------------------------------------------------------------
 # State
@@ -76,13 +81,32 @@ const _STAGE_TUTORIAL_LAUNCHPAD_STEP := {
 	5: {"step": 0, "skipped": true}
 }
 
+var _requested_mission := ""
+var _is_sandbox := false
+
 # ---------------------------------------------------------------------------
 # Entry
 # ---------------------------------------------------------------------------
 func _ready() -> void:
+	_parse_args()
+	_configure_runtime_timings()
 	DirAccess.make_dir_recursive_absolute(SCREENSHOT_DIR)
 	_log_header()
 	_run_tour.call_deferred()
+
+func _parse_args() -> void:
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--mission="):
+			_requested_mission = arg.split("=")[1].to_upper()
+		elif arg == "--sandbox":
+			_is_sandbox = true
+		elif arg == "--mining-only":
+			_requested_mission = "MINING"
+	
+	if _requested_mission != "":
+		print("[UX_TOUR] Requested mission: ", _requested_mission)
+	if _is_sandbox:
+		print("[UX_TOUR] Sandbox mode enabled.")
 
 
 # ---------------------------------------------------------------------------
@@ -96,7 +120,7 @@ func _load_scene(path: String) -> Node:
 		_active_scene = null
 		if get_tree() != null:
 			get_tree().current_scene = self
-		await get_tree().create_timer(0.3).timeout
+		await _wait(0.3)
 	# Remove any CanvasLayer overlays (e.g. MechanicIntroOverlay) that were
 	# parented to tree.root by game systems rather than to the active scene.
 	# These persist across _load_scene() calls and bleed into later screenshots.
@@ -121,6 +145,13 @@ func _load_scene(path: String) -> Node:
 		(instance as Control).set_deferred("size", vp.size)
 	_active_scene = instance
 	return instance
+
+func _wait(seconds: float) -> void:
+	var tree := get_tree()
+	if tree == null:
+		return
+	var timer := tree.create_timer(seconds, true, false, true)
+	await timer.timeout
 
 
 # ---------------------------------------------------------------------------
@@ -172,28 +203,58 @@ func _stage_targets(stage: int) -> Array:
 			return targets
 
 func _inject_progress_state(stage: int, with_launchpad_targeting: bool = false) -> void:
+	var app_node = get_tree().root.get_node_or_null("AppController")
+	if app_node:
+		app_node.set("is_ux_tour_running", true)
+
 	RocketsManager.reset_state()
 	RocketsManager.clear_returned_mission()
 	RocketsManager.clear_preview_target()
 	var state := RocketsManager.load_state()
-	var completed: int = maxi(stage - 1, 0)
-	var badges: Array = []
-	for idx in range(completed):
-		badges.append("mission_%d" % (idx + 1))
-	state["completed_mission_badges"] = badges
-	state["mission_progress_completed"] = completed
-	state["scanner_unlocked"] = completed >= 3
-	state["scanner_station_built"] = stage >= 4
+	
+	if _is_sandbox:
+		state["completed_mission_badges"] = ["mission-1", "mission-2", "mission-3", "mission-4"]
+		state["mission_progress_completed"] = 4
+		state["scanner_unlocked"] = true
+		state["scanner_station_built"] = true
+		state["control_station_built"] = true
+		state["unlocked"] = ["starterrocket1", "starterrocket2", "starterrocket3"]
+		# Add a billion francs for sandbox testing
+		if app_node and app_node.has_method("add_franc_balance"):
+			app_node.add_franc_balance(1000000000, "sandbox_tour")
+		state["detected_targets"] = _stage_targets(5)
+	else:
+		var completed: int = maxi(stage - 1, 0)
+		var badges: Array = []
+		for idx in range(completed):
+			badges.append("mission-%d" % (idx + 1))
+		state["completed_mission_badges"] = badges
+		state["mission_progress_completed"] = completed
+		state["scanner_unlocked"] = completed >= 3
+		state["scanner_station_built"] = stage >= 4
+		state["control_station_built"] = stage >= 2
+		state["unlocked"] = ["starterrocket1"]
+		if stage >= 2 and not state["unlocked"].has("starterrocket2"):
+			state["unlocked"].append("starterrocket2")
+		if stage >= 4 and not state["unlocked"].has("starterrocket3"):
+			state["unlocked"].append("starterrocket3")
+		state["detected_targets"] = _stage_targets(stage)
+		
+		# Give reasonable starting balance for 'sandbox play' of this stage
+		if app_node and app_node.has_method("add_franc_balance"):
+			var balance := 1000
+			match stage:
+				2: balance = 500000000 # 500M
+				3: balance = 1000000000 # 1B
+				4: balance = 3000000000 # 3B
+			app_node.add_franc_balance(balance, "sandbox_tour")
+
 	state["operation_mode"] = "contract"
-	state["unlocked"] = ["starterrocket1"]
-	if stage >= 2 and not state["unlocked"].has("starterrocket2"):
-		state["unlocked"].append("starterrocket2")
-	if stage >= 4 and not state["unlocked"].has("starterrocket3"):
-		state["unlocked"].append("starterrocket3")
-	state["detected_targets"] = _stage_targets(stage)
 	state["selected_target"] = ""
 	state["trip_contract_offer"] = {}
 	state["placed"] = []
+	state["missions"] = []
+	
 	if with_launchpad_targeting:
 		var rocket_type := "starterrocket1"
 		if stage >= 4:
@@ -207,6 +268,7 @@ func _inject_progress_state(stage: int, with_launchpad_targeting: bool = false) 
 			"y": 850.0,
 			"status": "awaitingLaunch"
 		}]
+	
 	RocketsManager.save_state(state)
 	var trip_targets: Array = state.get("detected_targets", [])
 	RocketsManager.ensure_trip_contract_offer(trip_targets)
@@ -265,7 +327,7 @@ func _load_rocket_selector_showcase() -> Node:
 		_active_scene = null
 		if get_tree() != null:
 			get_tree().current_scene = self
-		await get_tree().create_timer(0.3).timeout
+		await _wait(0.3)
 	var shell := Control.new()
 	shell.name = "RocketSelectorShowcase"
 	shell.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -307,9 +369,547 @@ func _load_rocket_selector_showcase() -> Node:
 
 
 # ---------------------------------------------------------------------------
+# Specific Mission Tours
+# ---------------------------------------------------------------------------
+func _run_specific_mission_tour(mission: String) -> void:
+	_report("## Specific Mission Tour: %s" % mission)
+	var stage := 1
+	match mission:
+		"M1": stage = 1
+		"M2": stage = 2
+		"M3": stage = 3
+		"M4": stage = 4
+		"FREE_OPS", "M5": stage = 5
+		"MINING":
+			await _run_mining_only_tour()
+			return
+		_:
+			_issue("Unknown mission requested: %s" % mission)
+			_finish()
+			return
+
+	_report("  - Injecting state for stage %d..." % stage)
+	await _inject_stage_snapshot_state(stage, false)
+	
+	_report("  - Loading EARTH_MAIN_SCENE...")
+	var earth := await _load_scene(EARTH_MAIN_SCENE)
+	if not earth:
+		_finish()
+		return
+	await _wait(_scene_settle)
+	await _screenshot("tour_%s_01_earth_base" % mission)
+	
+	_report("  - Moving to Launchpad...")
+	await _inject_stage_snapshot_state(stage, true)
+	var lp := await _load_scene(LAUNCHPAD_SCENE)
+	if lp:
+		_prime_launchpad_scene(lp)
+		await _wait(_panel_settle)
+		await _screenshot("tour_%s_02_launchpad" % mission)
+	
+	_report("  - Moving to Transit...")
+	var transit := await _load_scene(TRANSIT_SCENE)
+	if transit:
+		await _wait(_scene_settle)
+		await _screenshot("tour_%s_03_transit" % mission)
+	
+	_report("  - Moving to Mining...")
+	var mining := await _load_scene(MINING_MINIGAME_SCENE)
+	if mining:
+		var targets := _stage_targets(stage)
+		var target = targets[0] if not targets.is_empty() else {}
+		var target_id = str(target.get("id", "tour-target"))
+		if mining.has_method("start_mining"):
+			mining.call(
+				"start_mining",
+				false, 1, target_id,
+				{"Iron": 10, "Nickel": 10},
+				0.8,
+				{"mission_mode": "contractor"}
+			)
+			await _wait(_scene_settle)
+			await _screenshot("tour_%s_04_mining" % mission)
+	
+	_report("  - Tour for %s complete." % mission)
+	_finish()
+
+func _run_mining_only_tour() -> void:
+	_report("## Mining Only Tour")
+	_is_sandbox = true # ensure everything is unlocked
+	_inject_progress_state(5, false)
+	var mining := await _load_scene(MINING_MINIGAME_SCENE)
+	if mining:
+		if mining.has_method("start_mining"):
+			mining.call(
+				"start_mining",
+				false, 3, "sandbox-asteroid",
+				{"Iron": 50, "Gold": 20, "Platinum": 10},
+				0.9,
+				{"mission_mode": "free_ops"}
+			)
+			await _wait(_scene_settle)
+			await _screenshot("tour_mining_sandbox")
+	_finish()
+
+# ---------------------------------------------------------------------------
+# State wipe — clears all persisted user:// state so each sandbox tour run
+# starts from a fully clean environment, regardless of previous runs.
+# ---------------------------------------------------------------------------
+func _wipe_state() -> void:
+	_report("[SANDBOX] Wiping all persisted state for a clean run...")
+	var paths := [
+		"user://rockets_state.json",
+		"user://tutorial_v2.cfg",
+		"user://subcontractors.json",
+		"user://mission_logs.json",
+		"user://franc_balance.cfg",
+		"user://experience.cfg",
+		"user://mining_inventory.json",
+		"user://mineral_market.json",
+		"user://classification_consensus.json",
+		"user://earth_inventory.json",
+		"user://satellite_station.cfg",
+		"user://mechanic_intros_seen.json",
+		"user://planet_hunters_intro_v1.cfg",
+		"user://rocket_unlock_popups.cfg",
+	]
+	var wiped := 0
+	for path in paths:
+		if FileAccess.file_exists(path):
+			DirAccess.remove_absolute(path)
+			wiped += 1
+	_report("[SANDBOX] Wiped %d state file(s). Starting from clean environment." % wiped)
+
+
+# ---------------------------------------------------------------------------
+# Sandbox Tour — Free Operations / post-M4 exploration
+#
+# Covers every sandbox / post-M3-M4 feature in a structured way:
+#   S1  Earth Base (sandbox state, no tutorial overlay)
+#   S2  Launchpad — target selection cycle 1 (asteroid)
+#   S3  Transit — outbound to asteroid
+#   S4  Mining — free_ops mode, drone deploy + mid-run
+#   S5  Mission Debrief — cycle 1 results
+#   S6  Earth Base — post-debrief, new target has appeared in pool
+#   S7  Control Station — 2 concurrent missions (in-orbit + returning)
+#   S8  Launchpad — cycle 2 (TESS planet target, non-linear ordering)
+#   S9  Space Map — full free-ops target pool
+#   S10 Satellite Station — scanner fully unlocked
+#   S11 Menu Panel — all unlocks active
+# ---------------------------------------------------------------------------
+func _run_sandbox_tour() -> void:
+	_report("[SANDBOX] ============================================")
+	_report("[SANDBOX]  SANDBOX TOUR — Free Operations (post-M4)")
+	_report("[SANDBOX] ============================================")
+
+	# ------------------------------------------------------------------
+	# Wipe state: guarantees no bleed from any previous run in this
+	# container or on the host Godot userdata directory.
+	# ------------------------------------------------------------------
+	_wipe_state()
+
+	# ==================================================================
+	# Phase S1 — Earth Base (Full Sandbox State)
+	# ==================================================================
+	_report("[SANDBOX] ## Phase S1 — Earth Base (Sandbox State)")
+	_inject_progress_state(5, false)
+	_inject_tutorial_state(5, 0, true)
+	await _reset_root_tutorial_runtime()
+
+	var earth := await _load_scene(EARTH_MAIN_SCENE)
+	if not earth:
+		_report("[SANDBOX] FAILED to load EARTH_MAIN_SCENE — aborting sandbox tour.")
+		_finish()
+		return
+	await _wait(_scene_settle)
+	# Re-inject after settle: AppController._ready() can overwrite badges when
+	# the scene initialises.  A second inject locks in the sandbox values.
+	_inject_progress_state(5, false)
+	await _wait(0.5)
+
+	var state := RocketsManager.load_state()
+	var badges: Array = state.get("completed_mission_badges", [])
+	var unlocked: Array = state.get("unlocked", [])
+	var targets: Array = state.get("detected_targets", [])
+	_report("[SANDBOX]   Sandbox state confirmed:")
+	_report("[SANDBOX]     completed_mission_badges : %s" % str(badges))
+	_report("[SANDBOX]     unlocked rockets         : %s" % str(unlocked))
+	_report("[SANDBOX]     detected_targets count   : %d" % targets.size())
+	var asteroid_count := 0
+	var planet_count := 0
+	for t: Dictionary in targets:
+		var tt: String = str(t.get("type", ""))
+		if tt == "asteroid":
+			asteroid_count += 1
+			_report("[SANDBOX]       [asteroid] %s  %.1f AU" % [t.get("label", t.get("id", "?")), float(t.get("distance_au", 0.0))])
+		elif tt == "planet":
+			planet_count += 1
+			_report("[SANDBOX]       [planet]   %s  %.1f AU" % [t.get("label", t.get("id", "?")), float(t.get("distance_au", 0.0))])
+	_report("[SANDBOX]     asteroid targets: %d  |  planet targets: %d" % [asteroid_count, planet_count])
+	_report("[SANDBOX]     scanner_station_built : %s" % str(state.get("scanner_station_built", false)))
+	_report("[SANDBOX]     control_station_built : %s" % str(state.get("control_station_built", false)))
+
+	var tut_node := get_tree().root.get_node_or_null("TutorialCoachOverlay")
+	if tut_node and tut_node.visible:
+		_issue("[SANDBOX] Tutorial overlay is visible in sandbox mode — should be hidden once all missions are complete.")
+	else:
+		_report("[SANDBOX]   ✓ Tutorial overlay correctly hidden in sandbox mode.")
+
+	_meta("Sandbox S1 - Earth Base (Free Operations)", 5,
+		"Earth base in full sandbox / Free Operations mode — all 4 tutorial missions complete, scanner station built, all rockets unlocked. No tutorial overlay should be visible.",
+		["Is the tutorial overlay hidden?",
+		 "Are all base structures visible (scanner station, control station)?",
+		 "Is the FrancBalance HUD showing the sandbox balance?",
+		 "Does the base feel like 'free play' rather than tutorial mode?",
+		 "Does anything overlap or hang off screen?"])
+	await _screenshot("sandbox_S1_earth_base")
+	_check_offscreen_elements(earth, "Sandbox Earth Base")
+	_check_for_placeholder_text(earth, "Sandbox Earth Base")
+
+	# ==================================================================
+	# Phase S2 — Launchpad: Target Selection, Cycle 1 (Asteroid)
+	# ==================================================================
+	_report("[SANDBOX] ## Phase S2 — Launchpad: Target Selection (Cycle 1: Asteroid)")
+	_inject_progress_state(5, true)
+	var lp := await _load_scene(LAUNCHPAD_SCENE)
+	if lp:
+		_prime_launchpad_scene(lp)
+		await _wait(_panel_settle)
+		var lp_state := RocketsManager.load_state()
+		var lp_targets: Array = lp_state.get("detected_targets", [])
+		var lp_ast := 0
+		var lp_plan := 0
+		for t: Dictionary in lp_targets:
+			var tt := str(t.get("type", ""))
+			if tt == "asteroid": lp_ast += 1
+			elif tt == "planet": lp_plan += 1
+		_report("[SANDBOX]   Launchpad target pool: %d total  (%d asteroid, %d planet)" % [lp_targets.size(), lp_ast, lp_plan])
+		if lp_ast == 0:
+			_issue("[SANDBOX] No asteroid targets in sandbox launchpad — free-ops target pool is incomplete.")
+		if lp_plan == 0:
+			_issue("[SANDBOX] No planet/TESS targets in sandbox launchpad — free-ops target pool is incomplete.")
+		_meta("Sandbox S2 - Launchpad Target Selection (Cycle 1: Asteroid)", 5,
+			"Launchpad target selector in free-ops mode — should show the full mixed pool of asteroid and TESS planet targets. Player selects an asteroid for Cycle 1.",
+			["Are both asteroid and planet/TESS targets visible in the list?",
+			 "Is the distance (AU) shown for each target?",
+			 "Are planet targets visually distinct from asteroids (e.g. blue border)?",
+			 "Can the player freely choose any target (not locked to one path)?",
+			 "Does the list scroll without clipping?"])
+		await _screenshot("sandbox_S2_launchpad_target_selection_c1")
+		_check_offscreen_elements(lp, "Sandbox Launchpad C1")
+
+	# ==================================================================
+	# Phase S3 — Transit (Cycle 1: Outbound to Asteroid)
+	# ==================================================================
+	_report("[SANDBOX] ## Phase S3 — Transit (Cycle 1: Asteroid outbound)")
+	_inject_progress_state(5, true)
+	RocketsManager.set_preview_target("free-ops-asteroid-117", "117 Lomia", "asteroid")
+	var transit := await _load_scene(TRANSIT_SCENE)
+	if transit:
+		await _wait(_scene_settle)
+		_report("[SANDBOX]   Transit scene loaded — outbound to 117 Lomia (asteroid, 17.5 AU).")
+		_meta("Sandbox S3 - Transit (Asteroid Outbound, 17.5 AU)", 5,
+			"Outbound transit to free-ops asteroid 117 Lomia (17.5 AU). 4-phase animation: EARTH_ORBIT → TRAVEL → TARGET_APPROACH → TARGET_ORBIT.",
+			["Is the rocket animation playing?",
+			 "Is the target name (117 Lomia) shown?",
+			 "Is the current transit phase (EARTH_ORBIT / TRAVEL / etc.) indicated?",
+			 "Is there an ETA or distance indicator?",
+			 "Does the screen feel like meaningful travel rather than a loading screen?"])
+		await _screenshot("sandbox_S3_transit_asteroid_outbound")
+
+	# ==================================================================
+	# Phase S4 — Mining (Cycle 1: Free-Ops Asteroid)
+	# ==================================================================
+	_report("[SANDBOX] ## Phase S4 — Mining (Cycle 1: free_ops asteroid, level 3)")
+	var mining := await _load_scene(MINING_MINIGAME_SCENE)
+	if mining:
+		if mining.has_method("start_mining"):
+			mining.call(
+				"start_mining",
+				false, 3, "free-ops-asteroid-117",
+				{"Iron": 50, "Nickel": 30, "Gold": 15},
+				0.9,
+				{"mission_mode": "free_ops"}
+			)
+		await _wait(_scene_settle)
+		_report("[SANDBOX]   Mining started: level 3 asteroid, free_ops mode, targets = Iron/Nickel/Gold.")
+		_meta("Sandbox S4a - Mining (Asteroid, free_ops, initial terrain)", 5,
+			"Mining minigame in free-ops mode — level-3 asteroid with Iron/Nickel/Gold. Higher drone count and yield than tutorial mining.",
+			["Is the asteroid terrain rendered?",
+			 "Are the target minerals (Iron/Nickel/Gold) shown in the UI?",
+			 "Is the Deploy Drone button visible and enabled?",
+			 "Are there any empty label or broken node warnings?"])
+		await _screenshot("sandbox_S4a_mining_asteroid_initial")
+
+		var deploy_btn := _find_button_with_text(mining, "Deploy")
+		if not deploy_btn:
+			deploy_btn = _find_button_with_text(mining, "DEPLOY")
+		if deploy_btn and deploy_btn.visible:
+			_report("[SANDBOX]   ✓ Deploy Drone button visible and enabled.")
+			_click(deploy_btn)
+			await _wait(_anim_settle)
+			await _screenshot("sandbox_S4b_mining_asteroid_drone_deployed")
+			_report("[SANDBOX]   Drone deployed — screenshot taken.")
+		else:
+			_issue("[SANDBOX] Deploy Drone button not found or hidden — sandbox mining entry is blocked.")
+
+		await _wait(_mining_run_seconds)
+		await _screenshot("sandbox_S4c_mining_asteroid_mid_run")
+		_report("[SANDBOX]   Mining run complete (%.1f s)." % _mining_run_seconds)
+
+	# ==================================================================
+	# Phase S5 — Mission Debrief (Cycle 1)
+	# ==================================================================
+	_report("[SANDBOX] ## Phase S5 — Mission Debrief (Cycle 1: Asteroid)")
+	_inject_progress_state(5, false)
+	RocketsManager.set_returned_mission(
+		"starterrocket2-sandbox-c1",
+		"free-ops-asteroid-117",
+		"117 Lomia",
+		"asteroid",
+		"free_ops",
+		{
+			"trip_contractor_id": "aegis_defense",
+			"trip_contractor_name": "Aegis Defense Systems",
+			"trip_requested_minerals": {"Iron": 50, "Nickel": 30},
+			"mining_run_collected": {"Iron": 58, "Nickel": 34, "Gold": 12}
+		}
+	)
+	var debrief := await _load_scene(DEBRIEF_SCENE)
+	if debrief:
+		await _wait(_panel_settle)
+		_report("[SANDBOX]   Debrief loaded — returned from 117 Lomia (Iron 58, Nickel 34, Gold 12).")
+		_meta("Sandbox S5 - Mission Debrief (Cycle 1: Asteroid)", 5,
+			"Mission debrief after free-ops asteroid run. Should show minerals collected (Iron/Nickel/Gold), the franc payout, and a CTA to continue.",
+			["Are the collected minerals listed (Iron/Nickel/Gold with quantities)?",
+			 "Is the franc payout / bonus prominently shown?",
+			 "Is there a 'Next Mission' or 'Return to Base' CTA?",
+			 "Does the debrief show the free-ops contractor name (Aegis Defense)?",
+			 "Does anything overlap or get clipped?"])
+		await _screenshot("sandbox_S5_debrief_c1_asteroid")
+		_check_offscreen_elements(debrief, "Sandbox Debrief C1")
+
+	# ==================================================================
+	# Phase S6 — Earth Base (Post-Debrief: New Missions Available)
+	# Simulates the target pool refreshing with a newly-scanned TESS candidate.
+	# ==================================================================
+	_report("[SANDBOX] ## Phase S6 — Earth Base (Post-Debrief, new mission appeared)")
+	_inject_progress_state(5, false)
+	_inject_tutorial_state(5, 0, true)
+	await _reset_root_tutorial_runtime()
+	var refresh_state := RocketsManager.load_state()
+	var refreshed_targets := _stage_targets(5)
+	refreshed_targets.append({
+		"id": "sandbox-new-tess-201",
+		"label": "TOI-201 c",
+		"type": "planet",
+		"distance_au": 19.2,
+		"required_level": 3,
+		"science_blurb": "Newly scanned TESS candidate — potential biosignature markers."
+	})
+	refresh_state["detected_targets"] = refreshed_targets
+	RocketsManager.save_state(refresh_state)
+
+	var earth2 := await _load_scene(EARTH_MAIN_SCENE)
+	if earth2:
+		await _wait(_scene_settle)
+		_report("[SANDBOX]   Earth base reloaded post-debrief.")
+		_report("[SANDBOX]   Target pool now %d targets (added new TESS candidate TOI-201 c)." % refreshed_targets.size())
+		_meta("Sandbox S6 - Earth Base (Post-Debrief, New Target Appeared)", 5,
+			"Earth base after Cycle 1 debrief. The target pool has refreshed — a new TESS candidate (TOI-201 c) has been added, simulating the game offering new missions after each completed run.",
+			["Does the base render correctly after returning from debrief?",
+			 "Is the FrancBalance updated to reflect the Cycle 1 payout?",
+			 "Is there any visual hint that new missions are available (badge, notification, etc.)?",
+			 "Is the tutorial overlay still hidden?"])
+		await _screenshot("sandbox_S6_earth_base_post_debrief_new_target")
+
+	# ==================================================================
+	# Phase S7 — Control Station (Multiple Concurrent Missions)
+	# ==================================================================
+	_report("[SANDBOX] ## Phase S7 — Control Station (2 concurrent missions)")
+	_inject_progress_state(5, false)
+	var multi_state := RocketsManager.load_state()
+	var now_ts := int(Time.get_unix_time_from_system())
+	multi_state["placed"] = [
+		{"type": "starterrocket1", "id": "sr1-sandbox-orbit",     "x": 800.0, "y": 850.0, "status": "in-orbit"},
+		{"type": "starterrocket2", "id": "sr2-sandbox-returning", "x": 960.0, "y": 850.0, "status": "returning"},
+	]
+	multi_state["missions"] = [
+		{
+			"rocket_id": "sr1-sandbox-orbit",
+			"target": "free-ops-asteroid-117",
+			"launch_time": now_ts - 60,
+			"arrival_time": now_ts + 60,
+			"operation_mode": "free_ops",
+			"goingTo": "free-ops-asteroid-117",
+			"location": ["free-ops-asteroid-117"]
+		},
+		{
+			"rocket_id": "sr2-sandbox-returning",
+			"target": "free-ops-tess-901",
+			"launch_time": now_ts - 180,
+			"arrival_time": now_ts - 30,
+			"operation_mode": "free_ops",
+			"goingTo": "home",
+			"location": ["free-ops-tess-901"]
+		}
+	]
+	RocketsManager.save_state(multi_state)
+	_report("[SANDBOX]   Injected 2 concurrent missions: sr1 in-orbit @ 117 Lomia, sr2 returning from TOI-901 b.")
+	var csp := await _load_scene(CONTROL_STATION_SCENE)
+	if csp:
+		await _wait(_panel_settle)
+		_meta("Sandbox S7 - Control Station (2 Concurrent Missions)", 5,
+			"Control Station showing 2 concurrent sandbox missions: SR1 in-orbit at 117 Lomia, SR2 returning from TOI-901 b. Tests multi-card layout at scale.",
+			["Are both mission cards visible without scrolling?",
+			 "Can the user tell which rocket is in-orbit (cyan) vs. returning (amber)?",
+			 "Are the target names (117 Lomia, TOI-901 b) correct on each card?",
+			 "Is there a RESUME button for in-orbit and INBOUND for returning?",
+			 "Do cards fit without overflow at 2+ entries?"])
+		await _screenshot("sandbox_S7_control_station_multi_mission")
+		_check_offscreen_elements(csp, "Sandbox Control Station Multi")
+		_check_label_button_overlaps(csp, "Sandbox Control Station Multi")
+
+		if _find_label_with_text(csp, "IN-ORBIT"):
+			_report("[SANDBOX]   ✓ IN-ORBIT badge present (sr1).")
+		else:
+			_issue("[SANDBOX] IN-ORBIT badge missing — first rocket card status is unclear.")
+		if _find_label_with_text(csp, "RETURNING"):
+			_report("[SANDBOX]   ✓ RETURNING badge present (sr2).")
+		else:
+			_issue("[SANDBOX] RETURNING badge missing — second rocket card status is unclear.")
+		if _find_button_with_text(csp, "RESUME"):
+			_report("[SANDBOX]   ✓ RESUME button present for in-orbit card.")
+		else:
+			_issue("[SANDBOX] RESUME button missing — player cannot navigate to in-orbit mission.")
+
+	# Flush renderer after the heavy Control Station panel.  The panel rendered
+	# with nodes overflowing the viewport; freeing it takes several frames and
+	# can leave the render pipeline in a state where the next get_image() call
+	# returns null.  Explicit frame drain + force_draw resets it.
+	for _fi in range(12):
+		await get_tree().process_frame
+	RenderingServer.force_draw(false)
+	await _wait(1.5)
+	_report("[SANDBOX]   Renderer flush complete after Control Station.")
+
+	# ==================================================================
+	# Phase S8 — Launchpad: Cycle 2 (TESS Planet Target)
+	# Demonstrates non-linear mission ordering.
+	# ==================================================================
+	_report("[SANDBOX] ## Phase S8 — Launchpad: Target Selection (Cycle 2: TESS Planet)")
+	_inject_progress_state(5, true)
+	var lp2 := await _load_scene(LAUNCHPAD_SCENE)
+	if lp2:
+		_prime_launchpad_scene(lp2)
+		await _wait(_panel_settle)
+		var lp2_state := RocketsManager.load_state()
+		var lp2_targets: Array = lp2_state.get("detected_targets", [])
+		var has_planet_target := false
+		for t: Dictionary in lp2_targets:
+			if str(t.get("type", "")) == "planet":
+				has_planet_target = true
+				_report("[SANDBOX]   Planet/TESS target available: %s  %.1f AU" % [
+					t.get("label", t.get("id", "?")),
+					float(t.get("distance_au", 0.0))
+				])
+		if not has_planet_target:
+			_issue("[SANDBOX] No planet/TESS targets in Cycle 2 launchpad — non-linear mission ordering is broken.")
+		_meta("Sandbox S8 - Launchpad Target Selection (Cycle 2: TESS Planet)", 5,
+			"Launchpad re-opened for Cycle 2. Player can freely choose a TESS planet candidate this time, demonstrating non-linear mission ordering (not forced to repeat asteroid).",
+			["Are TESS planet targets selectable (not greyed out)?",
+			 "Is the TESS science blurb shown on the planet target card?",
+			 "Does the [PLANET] prefix or distinct style appear on planet cards?",
+			 "Is the fuel/range indicator shown for out-of-range targets?",
+			 "Can the player pick a different target than Cycle 1 without any lock-in?"])
+		await _screenshot("sandbox_S8_launchpad_tess_planet_c2")
+		_check_offscreen_elements(lp2, "Sandbox Launchpad C2 TESS")
+
+	# ==================================================================
+	# Phase S9 — Space Map (Full Free-Ops Target Pool)
+	# ==================================================================
+	_report("[SANDBOX] ## Phase S9 — Space Map (sandbox target pool)")
+	_inject_progress_state(5, false)
+	var smap := await _load_scene(SPACE_MAP_SCENE)
+	if smap:
+		await _wait(_panel_settle)
+		_report("[SANDBOX]   Space Map loaded — should show full asteroid + TESS planet mix.")
+		_meta("Sandbox S9 - Space Map (Full Free-Ops Pool)", 5,
+			"The star map in sandbox mode — shows all selectable asteroid and TESS planet candidate destinations across the full AU range.",
+			["Are multiple targets shown (at least 4)?",
+			 "Are planet and asteroid targets visually distinct on the map?",
+			 "Is the AU scale / distance indicator present?",
+			 "Does the map feel more populated than the tutorial's single-target view?",
+			 "Are any target labels clipped or overlapping?"])
+		await _screenshot("sandbox_S9_space_map")
+		_check_offscreen_elements(smap, "Sandbox Space Map")
+
+	# ==================================================================
+	# Phase S10 — Satellite Station (Scanner Fully Unlocked)
+	# ==================================================================
+	_report("[SANDBOX] ## Phase S10 — Satellite Station (scanner unlocked, post-M4)")
+	_inject_progress_state(5, false)
+	var sat := await _load_scene(SATELLITE_STATION_SCENE)
+	if sat:
+		await _wait(_panel_settle)
+		_report("[SANDBOX]   Satellite Station loaded (scanner_unlocked=true, station built=true).")
+		_meta("Sandbox S10 - Satellite Station (Scanner Fully Unlocked)", 5,
+			"Satellite Station panel in post-M4 sandbox state — the scanner is built and fully unlocked. The player can scan new TESS candidates to expand the target pool.",
+			["Is the Scan button visible and enabled?",
+			 "Are candidate images / anomaly thumbnails shown?",
+			 "Is the 'scanner unlocked' state clearly different from the locked tutorial state?",
+			 "Are there any broken images or empty placeholders?",
+			 "Does the panel scroll correctly if there are many candidates?"])
+		await _screenshot("sandbox_S10_satellite_station_unlocked")
+		_check_offscreen_elements(sat, "Sandbox Satellite Station")
+		_check_for_placeholder_text(sat, "Sandbox Satellite Station")
+
+	# ==================================================================
+	# Phase S11 — Menu Panel
+	# ==================================================================
+	_report("[SANDBOX] ## Phase S11 — Menu Panel")
+	var menu := await _load_scene(MENU_PANEL_SCENE)
+	if menu:
+		await _wait(_panel_settle)
+		_report("[SANDBOX]   Menu Panel loaded.")
+		_meta("Sandbox S11 - Menu Panel (All Unlocks Active)", 5,
+			"Main menu / settings panel from sandbox state — all unlocks complete. Should show all options without tutorial-gating.",
+			["Are all menu options visible (not hidden behind tutorial gates)?",
+			 "Is there a close/dismiss button?",
+			 "Does any label overflow or get clipped?"])
+		await _screenshot("sandbox_S11_menu_panel")
+
+	# Summary
+	_report("[SANDBOX] ============================================")
+	_report("[SANDBOX]  Sandbox Tour Complete — %d phases" % 11)
+	_report("[SANDBOX]  Phases covered:")
+	_report("[SANDBOX]    S1  Earth Base          — sandbox state, no tutorial")
+	_report("[SANDBOX]    S2  Launchpad C1         — target selection (asteroid)")
+	_report("[SANDBOX]    S3  Transit C1           — outbound to asteroid")
+	_report("[SANDBOX]    S4  Mining C1            — free_ops, drone + mid-run")
+	_report("[SANDBOX]    S5  Debrief C1           — asteroid results")
+	_report("[SANDBOX]    S6  Earth Base post-C1   — new TESS target appeared")
+	_report("[SANDBOX]    S7  Control Station      — 2 concurrent missions")
+	_report("[SANDBOX]    S8  Launchpad C2         — TESS planet, non-linear pick")
+	_report("[SANDBOX]    S9  Space Map            — full free-ops pool")
+	_report("[SANDBOX]    S10 Satellite Station    — scanner unlocked")
+	_report("[SANDBOX]    S11 Menu Panel           — all unlocks active")
+	_report("[SANDBOX] ============================================")
+
+	_finish()
+
+
+# ---------------------------------------------------------------------------
 # Tour
 # ---------------------------------------------------------------------------
 func _run_tour() -> void:
+	if _requested_mission != "":
+		await _run_specific_mission_tour(_requested_mission)
+		return
+
+	if _is_sandbox:
+		await _run_sandbox_tour()
+		return
 
 	# ==================================================================
 	# Phase 1 — Startup / Intro Splash (fresh first-time user)
@@ -323,8 +923,8 @@ func _run_tour() -> void:
 		_finish()
 		return
 
-	_report("  - Scene loaded, waiting for settle (%d s)..." % SCENE_SETTLE)
-	await get_tree().create_timer(SCENE_SETTLE).timeout
+	_report("  - Scene loaded, waiting for settle (%d s)..." % _scene_settle)
+	await _wait(_scene_settle)
 	_meta("Phase 1 - Startup / Intro Splash", 0,
 		"The very first screen a brand-new user sees when launching the game.",
 		["Is there a clear Begin Mission CTA?",
@@ -351,7 +951,7 @@ func _run_tour() -> void:
 	if splash_btn:
 		_report("  - Found Begin Mission button, clicking...")
 		_click(splash_btn)
-		await get_tree().create_timer(ANIM_SETTLE).timeout
+		await _wait(_anim_settle)
 	else:
 		_report("  - Begin Mission button not found, proceeding directly.")
 
@@ -368,7 +968,7 @@ func _run_tour() -> void:
 	# Phase 2 — Earth Base (Mission 1 state)
 	# ==================================================================
 	_report("## Phase 2 — Earth Base (Mission 1 state)")
-	await get_tree().create_timer(ANIM_SETTLE).timeout
+	await _wait(_anim_settle)
 	_meta("Phase 2 - Earth Base Overview (M1)", 1,
 		"Earth base hub with Mission 1 tutorial active — what a brand-new user sees after dismissing the splash.",
 		["Is the tutorial overlay pointing the user toward the Mission 1 next step?",
@@ -448,7 +1048,7 @@ func _run_tour() -> void:
 		await _inject_stage_snapshot_state(stage, false)
 		var earth_s := await _load_scene(EARTH_MAIN_SCENE)
 		if earth_s:
-			await get_tree().create_timer(SNAP_SETTLE).timeout
+			await _wait(_snap_settle)
 			var sm: Dictionary = _stage_meta[stage]
 			_meta("Phase 2b - Earth Base Stage %d (%s)" % [stage, sm["label"]], stage,
 				sm["desc"], sm["checks"])
@@ -461,7 +1061,7 @@ func _run_tour() -> void:
 	_report("## Phase 3 — Menu Panel")
 	var menu := await _load_scene(MENU_PANEL_SCENE)
 	if menu:
-		await get_tree().create_timer(PANEL_SETTLE).timeout
+		await _wait(_panel_settle)
 		_meta("Phase 3 - Menu Panel", -1,
 			"The main menu / settings panel, accessible from the earth base.",
 			["Is there a visible close/dismiss button so users can exit?",
@@ -486,7 +1086,7 @@ func _run_tour() -> void:
 	_report("## Phase 4 — Tutorial Coach Overlay")
 	var tut_overlay := await _load_scene(TUTORIAL_OVERLAY_SCENE)
 	if tut_overlay:
-		await get_tree().create_timer(PANEL_SETTLE).timeout
+		await _wait(_panel_settle)
 		_meta("Phase 4 - Tutorial Coach Overlay (standalone)", -1,
 			"The tutorial coach overlay UI in isolation — appears throughout the game to guide new users step by step.",
 			["Is there a clear step title?",
@@ -512,17 +1112,19 @@ func _run_tour() -> void:
 	# ==================================================================
 	# Phase 5 — Control Station Panel
 	# ==================================================================
-	_report("## Phase 5 — Control Station Panel")
+	_report("## Phase 5 — Control Station Panel (empty state)")
+	_inject_progress_state(4, false)
 	var csp := await _load_scene(CONTROL_STATION_SCENE)
 	if csp:
-		await get_tree().create_timer(PANEL_SETTLE).timeout
-		_meta("Phase 5 - Control Station Panel", -1,
-			"The Control Station panel — shows active missions and fleet status once the player has built the structure.",
+		await _wait(_panel_settle)
+		_meta("Phase 5 - Control Station Panel (empty queue)", 4,
+			"The Control Station panel with no missions in progress — optional fleet hub unlocked after Mission 3.",
 			["Is there a visible close button?",
-			 "Is the panel title clear?",
-			 "Does a new user understand what this panel is for?",
+			 "Is the panel title 'CONTROL STATION' readable?",
+			 "Does the empty queue message guide the user toward the Launchpad?",
+			 "Are the ACTIVE and STORY tabs both visible?",
 			 "Does anything overlap or get clipped at panel edges?"])
-		await _screenshot("07_control_station_panel")
+		await _screenshot("07_control_station_empty")
 		_check_visible_labels(csp, "Control Station Panel", 1)
 		_check_offscreen_elements(csp, "Control Station Panel")
 		_check_label_button_overlaps(csp, "Control Station Panel")
@@ -538,6 +1140,171 @@ func _run_tour() -> void:
 			_report("  - Control Station Panel has a close button. ✓")
 		else:
 			_issue("Control Station Panel has no close button — users may feel trapped.")
+		var active_tab := _find_button_with_text(csp, "ACTIVE")
+		if active_tab:
+			_report("  - ACTIVE tab visible. ✓")
+		else:
+			_issue("Control Station Panel missing ACTIVE tab — users cannot see flight missions.")
+		var story_tab := _find_button_with_text(csp, "STORY")
+		if story_tab:
+			_report("  - STORY tab visible. ✓")
+		else:
+			_issue("Control Station Panel missing STORY tab.")
+		if _find_label_with_text(csp, "No missions"):
+			_report("  - Empty queue message present. ✓")
+		elif _find_label_with_text(csp, "Launchpad"):
+			_report("  - Empty state directs user to Launchpad. ✓")
+		else:
+			_issue("Control Station Panel empty queue state has no guidance text — user may be confused.")
+
+	# ==================================================================
+	# Phase 5b — Control Station Panel (in-orbit mission)
+	# ==================================================================
+	_report("## Phase 5b — Control Station Panel (in-orbit mission card)")
+	# Inject: stage 2, trip contractor selected (Rocketlab), one rocket in-orbit
+	_inject_progress_state(4, false)
+	RocketsManager.select_trip_contractor("rocketlab")
+	var orbit_state := RocketsManager.load_state()
+	var orbit_rocket_id := "starterrocket1-tour-orbit"
+	orbit_state["placed"] = [{
+		"type": "starterrocket1",
+		"id": orbit_rocket_id,
+		"x": 960.0, "y": 850.0,
+		"status": "in-orbit"
+	}]
+	orbit_state["missions"] = [{
+		"rocket_id": orbit_rocket_id,
+		"target": "mission-1-training-target",
+		"launch_time": int(Time.get_unix_time_from_system()) - 30,
+		"arrival_time": int(Time.get_unix_time_from_system()) + 30,
+		"operation_mode": "contract",
+		"goingTo": "mission-1-training-target",
+		"location": ["mission-1-training-target"]
+	}]
+	orbit_state["detected_targets"] = [{"id": "mission-1-training-target", "label": "433 Eros", "type": "asteroid"}]
+	RocketsManager.save_state(orbit_state)
+	var csp_orbit := await _load_scene(CONTROL_STATION_SCENE)
+	if csp_orbit:
+		await _wait(_panel_settle)
+		_meta("Phase 5b - Control Station Panel (in-orbit mission card)", 4,
+			"Control Station showing one rocket in orbit. Card should display: rocket name, IN-ORBIT badge, target, contractor name (Rocketlab), mineral chips (Fe/Ni), and a RESUME button.",
+			["Is the rocket name visible on the card?",
+			 "Is the IN-ORBIT status badge visible and correctly coloured (cyan)?",
+			 "Is the target label shown with a forward arrow (→)?",
+			 "Is the contractor name (e.g. Rocketlab) visible?",
+			 "Are mineral chips visible (e.g. Fe, Ni with quantities)?",
+			 "Is the RESUME button visible and styled as a primary CTA?",
+			 "Does the card fit within the panel without scrolling or clipping?"])
+		await _screenshot("07b_control_station_in_orbit")
+		_check_offscreen_elements(csp_orbit, "Control Station In-Orbit")
+		_check_label_button_overlaps(csp_orbit, "Control Station In-Orbit")
+		_check_for_placeholder_text(csp_orbit, "Control Station In-Orbit")
+		if _find_label_with_text(csp_orbit, "IN-ORBIT"):
+			_report("  - IN-ORBIT status badge visible (with dot prefix). ✓")
+		else:
+			_issue("Control Station in-orbit card missing IN-ORBIT status badge — status not scannable at a glance.")
+		if _find_button_with_text(csp_orbit, "RESUME"):
+			_report("  - RESUME button present on in-orbit card. ✓")
+		else:
+			_issue("Control Station in-orbit card missing RESUME button — user cannot navigate to mission.")
+		if _find_label_with_text(csp_orbit, "433 Eros") or _find_label_with_text(csp_orbit, "→"):
+			_report("  - Target label visible on in-orbit card. ✓")
+		else:
+			_issue("Control Station in-orbit card missing target label.")
+		if _find_label_with_text(csp_orbit, "Rocketlab"):
+			_report("  - Contractor name (Rocketlab) visible on card. ✓")
+		else:
+			_issue("Control Station in-orbit card missing contractor name — user cannot see who ordered this mission.")
+		# Check for at least one mineral chip (Fe or Ni)
+		if _find_label_with_text(csp_orbit, "Fe") or _find_label_with_text(csp_orbit, "Ni"):
+			_report("  - Mineral order chips visible on in-orbit card. ✓")
+		else:
+			_issue("Control Station in-orbit card missing mineral chips — user cannot see the delivery order.")
+
+	# ==================================================================
+	# Phase 5c — Control Station Panel (returning mission)
+	# ==================================================================
+	_report("## Phase 5c — Control Station Panel (returning mission card)")
+	# Inject: same setup but rocket status = returning
+	_inject_progress_state(4, false)
+	RocketsManager.select_trip_contractor("rocketlab")
+	var ret_state := RocketsManager.load_state()
+	var ret_rocket_id := "starterrocket1-tour-return"
+	ret_state["placed"] = [{
+		"type": "starterrocket1",
+		"id": ret_rocket_id,
+		"x": 960.0, "y": 850.0,
+		"status": "returning"
+	}]
+	ret_state["missions"] = [{
+		"rocket_id": ret_rocket_id,
+		"target": "mission-1-training-target",
+		"launch_time": int(Time.get_unix_time_from_system()) - 90,
+		"arrival_time": int(Time.get_unix_time_from_system()) - 30,
+		"operation_mode": "contract",
+		"goingTo": "home",
+		"location": ["mission-1-training-target"]
+	}]
+	ret_state["detected_targets"] = [{"id": "mission-1-training-target", "label": "433 Eros", "type": "asteroid"}]
+	RocketsManager.save_state(ret_state)
+	var csp_ret := await _load_scene(CONTROL_STATION_SCENE)
+	if csp_ret:
+		await _wait(_panel_settle)
+		_meta("Phase 5c - Control Station Panel (returning mission card)", 4,
+			"Control Station showing one rocket returning to Earth. Card should show: rocket name, RETURNING badge (amber), target with back-arrow (⟵), contractor name, dimmed mineral chips, and a RECALL button.",
+			["Is the RETURNING badge visible and amber/warm-coloured (not cyan)?",
+			 "Is the target shown with a back arrow (⟵)?",
+			 "Is the contractor name still visible?",
+			 "Are mineral chips present but visually dimmed?",
+			 "Is the RECALL button visible (distinct from RESUME)?",
+			 "Does the card visually differ from the in-orbit state so users can tell it apart?"])
+		await _screenshot("07c_control_station_returning")
+		_check_offscreen_elements(csp_ret, "Control Station Returning")
+		_check_label_button_overlaps(csp_ret, "Control Station Returning")
+		if _find_label_with_text(csp_ret, "RETURNING"):
+			_report("  - RETURNING status badge visible. ✓")
+		else:
+			_issue("Control Station returning card missing RETURNING status badge — user cannot tell rocket is inbound.")
+		# Button is disabled and shows INBOUND (with optional ETA) instead of RECALL
+		if _find_button_with_text(csp_ret, "INBOUND"):
+			_report("  - INBOUND button present and disabled on returning card. ✓")
+		else:
+			_issue("Control Station returning card missing INBOUND button — returning state not communicated.")
+		if _find_label_with_text(csp_ret, "Rocketlab"):
+			_report("  - Contractor name still visible on returning card. ✓")
+		else:
+			_issue("Control Station returning card missing contractor name.")
+
+	# ==================================================================
+	# Phase 5d — Control Station Panel (Story tab)
+	# ==================================================================
+	_report("## Phase 5d — Control Station Panel (Story tab)")
+	_inject_progress_state(4, false)
+	var csp_story := await _load_scene(CONTROL_STATION_SCENE)
+	if csp_story:
+		await _wait(_panel_settle)
+		var story_tab_btn := _find_button_with_text(csp_story, "STORY")
+		if story_tab_btn:
+			_click(story_tab_btn)
+			await _wait(_anim_settle)
+			_meta("Phase 5d - Control Station Panel (Story tab)", 4,
+				"Control Station with the STORY tab active — shows the mission roadmap cards (First Contact → Free Operations).",
+				["Are story mission cards visible (at least 3)?",
+				 "Is there a 'First Contact' mission card?",
+				 "Are mission descriptions readable?",
+				 "Does the tab switch feel responsive?"])
+			await _screenshot("07d_control_station_story_tab")
+			_check_offscreen_elements(csp_story, "Control Station Story Tab")
+			if _find_label_with_text(csp_story, "First Contact"):
+				_report("  - 'First Contact' story card visible. ✓")
+			else:
+				_issue("Control Station Story tab missing 'First Contact' — roadmap is empty or broken.")
+			if _find_label_with_text(csp_story, "Free Operations"):
+				_report("  - 'Free Operations' story card visible. ✓")
+			else:
+				_issue("Control Station Story tab missing 'Free Operations' final milestone.")
+		else:
+			_issue("Control Station Panel missing STORY tab button — cannot switch to story view.")
 
 	# ==================================================================
 	# Phase 5b — Space Map
@@ -545,7 +1312,7 @@ func _run_tour() -> void:
 	_report("## Phase 5b — Space Map")
 	var space_map := await _load_scene(SPACE_MAP_SCENE)
 	if space_map:
-		await get_tree().create_timer(SCENE_SETTLE).timeout
+		await _wait(_scene_settle)
 		_meta("Phase 5b - Space Map", -1,
 			"The Space Map — shows the operational zone, scanned targets, and reachable destinations. Key navigation surface after Mission 4.",
 			["Is the map rendering correctly?",
@@ -578,7 +1345,7 @@ func _run_tour() -> void:
 	var lp := await _load_scene(LAUNCHPAD_SCENE)
 	if lp:
 		_prime_launchpad_scene(lp)
-		await get_tree().create_timer(PANEL_SETTLE).timeout
+		await _wait(_panel_settle)
 		_meta("Phase 7 - Launchpad Panel", -1,
 			"The first launchpad mission-setup scene in the authored flow: contractor first, rocket on the pad, then target planning.",
 			["Is the mission setup UI populated instead of showing an empty shell?",
@@ -588,14 +1355,14 @@ func _run_tour() -> void:
 		await _screenshot("10_launchpad_panel")
 		_check_offscreen_elements(lp, "Launchpad Panel")
 		_check_label_button_overlaps(lp, "Launchpad Panel")
-		if _find_label_with_text(lp, "Launchpad Mission Setup"):
-			_report("  - 'Launchpad Mission Setup' title visible. ✓")
+		if _find_label_with_text(lp, "Select Contractor") or _find_label_with_text(lp, "Mission"):
+			_report("  - Wizard step title visible. ✓")
 		else:
-			_issue("Launchpad scene missing mission setup title — users may not know where they are.")
-		if _find_node_by_name(lp, "SelectorPanel"):
-			_report("  - SelectorPanel present. ✓")
+			_issue("Launchpad scene missing wizard title — users may not know where they are.")
+		if _find_node_by_name(lp, "LaunchWizard"):
+			_report("  - LaunchWizard present. ✓")
 		else:
-			_issue("Launchpad scene missing SelectorPanel — mission setup is not visible.")
+			_issue("Launchpad scene missing LaunchWizard — mission setup is not visible.")
 		_check_for_placeholder_text(lp, "Launchpad Panel")
 
 	# ==================================================================
@@ -604,7 +1371,7 @@ func _run_tour() -> void:
 	_report("## Phase 8 — Subcontractors / Contractors Panel")
 	var sub := await _load_scene(SUBCONTRACTORS_SCENE)
 	if sub:
-		await get_tree().create_timer(PANEL_SETTLE).timeout
+		await _wait(_panel_settle)
 		_meta("Phase 8 - Subcontractors Panel", 1,
 			"The Subcontractors panel — users pick a contractor for a delivery bonus before launching. First introduced in M1.",
 			["Is the 'Subcontractors' heading visible?",
@@ -634,7 +1401,7 @@ func _run_tour() -> void:
 	_report("## Phase 9 — New Mission Panel (target selection)")
 	var nm := await _load_scene(NEW_MISSION_PANEL_SCENE)
 	if nm:
-		await get_tree().create_timer(PANEL_SETTLE).timeout
+		await _wait(_panel_settle)
 		_meta("Phase 9 - New Mission Panel", -1,
 			"The New Mission panel where users select their destination (asteroid or TESS planet candidate). In CI: target list will be empty (no Supabase).",
 			["Is the 'New Mission' heading visible?",
@@ -673,7 +1440,7 @@ func _run_tour() -> void:
 	_inject_progress_state(5, false)
 	var rs := await _load_rocket_selector_showcase()
 	if rs:
-		await get_tree().create_timer(PANEL_SETTLE).timeout
+		await _wait(_panel_settle)
 		_meta("Phase 10 - Rocket Selector", -1,
 			"The Rocket Selector mounted inside a presentation frame so the card list renders in a realistic launchpad-like container.",
 			["Are rocket options visible and labelled?",
@@ -693,7 +1460,7 @@ func _run_tour() -> void:
 	_report("## Phase 11 — Rocket Ascent")
 	var ascent := await _load_scene(ASCENT_SCENE)
 	if ascent:
-		await get_tree().create_timer(PANEL_SETTLE).timeout
+		await _wait(_panel_settle)
 		_meta("Phase 11 - Rocket Ascent", -1,
 			"The rocket ascent animation — plays when a rocket launches from Earth.",
 			["Is the ascent animation visually clear?",
@@ -710,7 +1477,7 @@ func _run_tour() -> void:
 	_report("## Phase 12 — Rocket Transit")
 	var transit := await _load_scene(TRANSIT_SCENE)
 	if transit:
-		await get_tree().create_timer(SCENE_SETTLE).timeout
+		await _wait(_scene_settle)
 		_meta("Phase 12 - Rocket Transit (initial)", -1,
 			"Rocket transit animation at the start of flight — the 'in-flight waiting' state users see between Earth and their target.",
 			["Is there a target/status label showing where the rocket is going?",
@@ -730,7 +1497,7 @@ func _run_tour() -> void:
 		else:
 			_issue("Rocket Transit missing TravelBar — users can't see travel progress.")
 
-		await get_tree().create_timer(SCENE_SETTLE).timeout
+		await _wait(_scene_settle)
 		_meta("Phase 12 - Rocket Transit (mid-flight)", -1,
 			"Rocket transit animation a few seconds into the journey.",
 			["Has the animation progressed? Is the rocket visibly moving?",
@@ -754,7 +1521,7 @@ func _run_tour() -> void:
 	_report("## Phase 13 — Mining Practice Panel")
 	var mpp := await _load_scene(MINING_PRACTICE_SCENE)
 	if mpp:
-		await get_tree().create_timer(PANEL_SETTLE).timeout
+		await _wait(_panel_settle)
 		_meta("Phase 13 - Mining Practice Panel", -1,
 			"The Mining Practice panel — lets users try mining on preset scenarios before a real mission.",
 			["Are practice preset buttons visible?",
@@ -776,7 +1543,7 @@ func _run_tour() -> void:
 	# ==================================================================
 	# Phase 14 — Mining Minigame (actual gameplay)
 	# ==================================================================
-	_report("## Phase 14 — Mining Minigame (%d s run)" % int(MINING_RUN_SECONDS))
+	_report("## Phase 14 — Mining Minigame (%d s run)" % int(_mining_run_seconds))
 	var mining := await _load_scene(MINING_MINIGAME_SCENE)
 	if mining:
 		if mining.has_method("start_mining"):
@@ -794,7 +1561,7 @@ func _run_tour() -> void:
 					"mission_mode": "contractor"
 				}
 			)
-			await get_tree().create_timer(SCENE_SETTLE).timeout
+			await _wait(_scene_settle)
 			_meta("Phase 14 - Mining Minigame (initial terrain)", 1,
 				"Mining minigame just after starting — asteroid terrain generated, beam not yet active. First thing a user sees when they arrive at an asteroid.",
 				["Is the terrain visually distinct and clearly mineable?",
@@ -810,19 +1577,19 @@ func _run_tour() -> void:
 				sidescroll = mining.get_node_or_null("SidescrollMiningCompat")
 			if sidescroll:
 				_report("  - SidescrollMining delegate found. ✓")
-				for hud_name in ["FuelBar", "HeatBar", "BeamBar", "OrderLabel"]:
+				for hud_name in ["FuelBar", "HeatBar", "BeamBar", "ProgressLabel"]:
 					if _find_node_by_name(sidescroll, hud_name):
 						_report("    • %s present. ✓" % hud_name)
 					else:
 						_issue("Mining HUD missing '%s' — players can't track delivery order progress." % hud_name)
 				sidescroll.set("_is_mining", true)
-				await get_tree().create_timer(4.0).timeout
+				await _wait(4.0)
 				
 				# Deploy a drone (Mission 4+ mechanic)
 				_report("  - Testing Drone mechanic (Mission 4+)...")
 				sidescroll.set("_drones_enabled", true)
 				sidescroll.call("_deploy_drone")
-				await get_tree().create_timer(1.0).timeout
+				await _wait(1.0)
 				
 				_meta("Phase 14 - Mining Minigame (drone deployed)", 4,
 					"Mining minigame with a drone deployed — Mission 4+ mechanic. Drones target dark subsurface deposits.",
@@ -831,7 +1598,7 @@ func _run_tour() -> void:
 					 "Does the drone contrast well with the terrain?"])
 				await _screenshot("19b_mining_drone_deployed")
 				
-				await get_tree().create_timer(2.0).timeout
+				await _wait(2.0)
 				_meta("Phase 14 - Mining Minigame (beam active)", 1,
 					"Mining beam active — terrain is being excavated. The main mining gameplay loop.",
 					["Is the mining beam visually clear?",
@@ -839,7 +1606,7 @@ func _run_tour() -> void:
 					 "Are HUD bars updating (heat rising, fuel depleting)?",
 					 "Is any UI element obscured by the beam effect?"])
 				await _screenshot("19_mining_beam_active")
-				await get_tree().create_timer(MINING_RUN_SECONDS - 8.0).timeout
+				await _wait(max(_mining_run_seconds - 4.0, 0.5))
 				_meta("Phase 14 - Mining Minigame (mid-run)", 1,
 					"Mining mid-run — significant terrain excavated. Shows visual progression of a full mining session.",
 					["Is there visibly less terrain (excavation progress)?",
@@ -851,7 +1618,7 @@ func _run_tour() -> void:
 				# Check inventory panel (HUD overlay)
 				_report("  - Checking Mining Inventory panel...")
 				sidescroll.call("_toggle_inventory")
-				await get_tree().create_timer(1.0).timeout
+				await _wait(1.0)
 				_meta("Phase 14 - Mining Inventory Overlay", 1,
 					"Mining minigame with the inventory panel open — showing current fuel, heat, beam, and minerals collected.",
 					["Is the inventory list populated with collected minerals?",
@@ -860,10 +1627,10 @@ func _run_tour() -> void:
 					 "Does the panel obscure too much of the gameplay area (is it dismissible)?"])
 				await _screenshot("20b_mining_inventory_overlay")
 				sidescroll.call("_toggle_inventory") # dismiss
-				await get_tree().create_timer(0.5).timeout
+				await _wait(0.5)
 				
 				sidescroll.set("_is_mining", false)
-				await get_tree().create_timer(1.0).timeout
+				await _wait(1.0)
 				_meta("Phase 14 - Mining Minigame (beam released)", 1,
 					"Mining beam released — player stopped mining. Post-mining state before returning to Earth.",
 					["Is the beam clearly off?",
@@ -873,7 +1640,7 @@ func _run_tour() -> void:
 				_check_label_button_overlaps(mining, "Mining Minigame")
 			else:
 				_issue("SidescrollMining delegate not found — cannot drive beam simulation.")
-				await get_tree().create_timer(MINING_RUN_SECONDS).timeout
+				await _wait(_mining_run_seconds)
 				await _screenshot("18_mining_static")
 
 			var return_btn := _find_button_with_text(mining, "RETURN")
@@ -885,7 +1652,7 @@ func _run_tour() -> void:
 				_issue("Mining screen missing RETURN button — players cannot end the run.")
 		else:
 			_issue("CRITICAL: MiningMinigame has no start_mining() method — minigame is broken.")
-			await get_tree().create_timer(2.0).timeout
+			await _wait(2.0)
 			await _screenshot("18_mining_no_start")
 
 	# ==================================================================
@@ -894,7 +1661,7 @@ func _run_tour() -> void:
 	_report("## Phase 15 — Rocket Return")
 	var ret := await _load_scene(RETURN_SCENE)
 	if ret:
-		await get_tree().create_timer(PANEL_SETTLE).timeout
+		await _wait(_panel_settle)
 		_meta("Phase 15 - Rocket Return", -1,
 			"The rocket return animation — plays as the rocket flies back to Earth after a mission.",
 			["Is the animation visually clear?",
@@ -911,7 +1678,7 @@ func _run_tour() -> void:
 	_inject_debrief_state()
 	var debrief := await _load_scene(DEBRIEF_SCENE)
 	if debrief:
-		await get_tree().create_timer(SCENE_SETTLE).timeout
+		await _wait(_scene_settle)
 		_meta("Phase 16 - Mission Debrief", -1,
 			"The Mission Debrief scene — shows mission results and lets users scrap the rocket to unlock the next mission. In CI: payout data will be empty.",
 			["Is there a visible title (e.g., 'Mission Complete')?",
@@ -955,7 +1722,7 @@ func _run_tour() -> void:
 	_report("## Phase 17 — Asteroid Detail & Annotation (citizen science)")
 	var detail := await _load_scene(ASTEROID_DETAIL_SCENE)
 	if detail:
-		await get_tree().create_timer(PANEL_SETTLE).timeout
+		await _wait(_panel_settle)
 		_meta("Phase 17 - Candidate Detail View (empty canvas)", 3,
 			"The annotation view for reviewing asteroid or TESS planet candidate images. Users draw on this canvas to mark transit dips or notable features — the citizen science component. This screenshot shows the view before any annotation.",
 			["Are the annotation toolbar buttons (Pen, Clear, Save) visible?",
@@ -968,7 +1735,15 @@ func _run_tour() -> void:
 		_check_offscreen_elements(detail, "Asteroid Detail View")
 		_check_label_button_overlaps(detail, "Asteroid Detail View")
 
-		for btn_text in ["Pen", "Clear", "Save"]:
+		# Pen button text is set dynamically by _update_pen_button(): "Enable Annotation" / "✓ Annotation On"
+		var annotation_pen_btn := _find_button_with_text(detail, "Pen")
+		if not annotation_pen_btn:
+			annotation_pen_btn = _find_button_with_text(detail, "Annotation")
+		if annotation_pen_btn:
+			_report("  - 'Pen' annotation button present. ✓")
+		else:
+			_issue("Asteroid detail view missing 'Pen' annotation button.")
+		for btn_text in ["Clear", "Save"]:
 			if _find_button_with_text(detail, btn_text):
 				_report("  - '%s' annotation button present. ✓" % btn_text)
 			else:
@@ -995,7 +1770,7 @@ func _run_tour() -> void:
 			var pen_btn := _find_button_with_text(detail, "Pen")
 			if pen_btn:
 				_click(pen_btn)
-				await get_tree().create_timer(0.3).timeout
+				await _wait(0.3)
 			var canvas_rect := (drawing_canvas as Control).get_global_rect()
 			var cx := canvas_rect.position.x + canvas_rect.size.x * 0.5
 			var cy := canvas_rect.position.y + canvas_rect.size.y * 0.5
@@ -1005,21 +1780,21 @@ func _run_tour() -> void:
 			press.pressed = true
 			press.position = Vector2(cx - 80, cy)
 			Input.parse_input_event(press)
-			await get_tree().create_timer(0.05).timeout
+			await _wait(0.05)
 			# Drag a transit-dip curve shape
 			for i in range(10):
 				var motion := InputEventMouseMotion.new()
 				motion.position = Vector2(cx - 80 + i * 16, cy + sin(float(i) / 2.5) * 28)
 				motion.button_mask = MOUSE_BUTTON_MASK_LEFT
 				Input.parse_input_event(motion)
-				await get_tree().create_timer(0.03).timeout
+				await _wait(0.03)
 			# Release
 			var release := InputEventMouseButton.new()
 			release.button_index = MOUSE_BUTTON_LEFT
 			release.pressed = false
 			release.position = Vector2(cx + 80, cy)
 			Input.parse_input_event(release)
-			await get_tree().create_timer(0.4).timeout
+			await _wait(0.4)
 
 			_meta("Phase 17 - Candidate Detail View (after annotation stroke)", 3,
 				"The annotation view after a simulated drawing stroke — shows the citizen science workflow in action.",
@@ -1040,7 +1815,7 @@ func _run_tour() -> void:
 	await _inject_stage_snapshot_state(2, false)
 	var earth2 := await _load_scene(EARTH_MAIN_SCENE)
 	if earth2:
-		await get_tree().create_timer(SCENE_SETTLE).timeout
+		await _wait(_scene_settle)
 		_meta("Phase 18 - Earth Base (post-M1 debrief, M2 state)", 2,
 			"Earth base after completing Mission 1 and returning from debrief. Tutorial should advance to Mission 2 instructions.",
 			["Does the tutorial overlay update to reflect Mission 2?",
@@ -1065,7 +1840,7 @@ func _run_tour() -> void:
 	if ssp:
 		if ssp.has_method("set_local_only"):
 			ssp.set_local_only(true)
-		await get_tree().create_timer(PANEL_SETTLE).timeout
+		await _wait(_panel_settle)
 		_meta("Phase 19 - Satellite Station Panel", 4,
 			"The Satellite Station panel after Mission 4 unlock. It should appear late in the tour, after the player has reached scanner progression.",
 			["Is there a scan/refresh button?",
@@ -1306,16 +2081,31 @@ func _meta(phase: String, mission_stage: int, description: String, what_to_check
 	}
 
 
-func _screenshot(label: String) -> void:
-	# process_frame is emitted at the START of each frame, before rendering.
-	# We must wait for frame_post_draw to ensure the viewport texture has been
-	# committed before reading it — otherwise we get a stale (black) frame.
-	await get_tree().process_frame
-	await get_tree().process_frame
+func _capture_viewport_image() -> Image:
+	var renderer_name := DisplayServer.get_name().to_lower()
+	if renderer_name.find("headless") != -1:
+		return null
+	for _i in range(3):
+		await get_tree().process_frame
 	RenderingServer.force_draw(false)
-	await RenderingServer.frame_post_draw
+	var texture := get_viewport().get_texture()
+	if texture == null:
+		return null
+	var image := texture.get_image()
+	var attempts := 0
+	while (image == null or image.get_width() <= 0 or image.get_height() <= 0) and attempts < 6:
+		await _wait(0.05)
+		await get_tree().process_frame
+		RenderingServer.force_draw(false)
+		texture = get_viewport().get_texture()
+		if texture == null:
+			return null
+		image = texture.get_image()
+		attempts += 1
+	return image
 
-	var image := get_viewport().get_texture().get_image()
+func _screenshot(label: String) -> void:
+	var image := await _capture_viewport_image()
 	if not image:
 		_issue("Failed to capture viewport for '%s'." % label)
 		return
@@ -1402,7 +2192,7 @@ func _finish() -> void:
 	_write_manifest()
 	_write_ai_context()
 
-	await get_tree().create_timer(0.5).timeout
+	await _wait(0.5)
 	get_tree().quit(0)
 
 
@@ -1507,3 +2297,14 @@ func _write_ai_context() -> void:
 		print("[UX_TOUR] AI context written to: " + AI_CONTEXT_PATH)
 	else:
 		push_error("[UX_TOUR] Could not write AI context: " + AI_CONTEXT_PATH)
+func _configure_runtime_timings() -> void:
+	var renderer_name := DisplayServer.get_name().to_lower()
+	var fast_headless := OS.has_feature("headless") or renderer_name.find("headless") != -1
+	if not fast_headless:
+		return
+	# The Docker/Xvfb harness does not need theatrical settle times.
+	_mining_run_seconds = 6.0
+	_scene_settle = 0.75
+	_panel_settle = 0.5
+	_anim_settle = 0.25
+	_snap_settle = 0.4

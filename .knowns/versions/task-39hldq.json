@@ -1,0 +1,229 @@
+{
+  "taskId": "39hldq",
+  "currentVersion": 6,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "39hldq",
+      "version": 1,
+      "timestamp": "2026-04-12T10:01:39.419Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Emergency loan modal design communicates stakes without overwhelming the base scene"
+            },
+            {
+              "completed": false,
+              "text": "Primary decision and consequences are visually clear"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Emergency loan modal design communicates stakes without overwhelming the base scene"
+            },
+            {
+              "completed": false,
+              "text": "Primary decision and consequences are visually clear"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Design the emergency loan modal",
+        "description": "Redesign the emergency loan modal so it stays important without feeling like a punitive hard-stop, and fits the base scene more cleanly.",
+        "status": "todo",
+        "priority": "high",
+        "labels": [],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Emergency loan modal design communicates stakes without overwhelming the base scene"
+          },
+          {
+            "completed": false,
+            "text": "Primary decision and consequences are visually clear"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "39hldq",
+      "version": 2,
+      "timestamp": "2026-04-12T10:01:42.065Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Emergency loan modal design communicates stakes without overwhelming the base scene"
+            },
+            {
+              "completed": false,
+              "text": "Primary decision and consequences are visually clear"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Emergency loan modal design communicates stakes without overwhelming the base scene"
+            },
+            {
+              "completed": true,
+              "text": "Primary decision and consequences are visually clear"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Design the emergency loan modal",
+        "description": "Redesign the emergency loan modal so it stays important without feeling like a punitive hard-stop, and fits the base scene more cleanly.",
+        "status": "todo",
+        "priority": "high",
+        "labels": [],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Emergency loan modal design communicates stakes without overwhelming the base scene"
+          },
+          {
+            "completed": true,
+            "text": "Primary decision and consequences are visually clear"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "39hldq",
+      "version": 3,
+      "timestamp": "2026-04-12T10:02:06.133Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-review"
+        }
+      ],
+      "snapshot": {
+        "title": "Design the emergency loan modal",
+        "description": "Redesign the emergency loan modal so it stays important without feeling like a punitive hard-stop, and fits the base scene more cleanly.",
+        "status": "in-review",
+        "priority": "high",
+        "labels": [],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Emergency loan modal design communicates stakes without overwhelming the base scene"
+          },
+          {
+            "completed": true,
+            "text": "Primary decision and consequences are visually clear"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "39hldq",
+      "version": 4,
+      "timestamp": "2026-04-12T10:22:19.884Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "Reference image attached in workspace cache:\n- [Emergency loan modal reference](</Users/scroobz/Library/Caches/com.raycast.macos/Clipboard/f441848d84ab4b505c2c5ef7e8833dbe6b9a0b95c87e4bcff92913c9a42091a3.png>)\nDesign cues to carry into implementation: large amount card, regulatory warning band, two-button decision row, soft glass panel, teal/olive accent hierarchy."
+        }
+      ],
+      "snapshot": {
+        "title": "Design the emergency loan modal",
+        "description": "Redesign the emergency loan modal so it stays important without feeling like a punitive hard-stop, and fits the base scene more cleanly.",
+        "status": "in-review",
+        "priority": "high",
+        "labels": [],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Emergency loan modal design communicates stakes without overwhelming the base scene"
+          },
+          {
+            "completed": true,
+            "text": "Primary decision and consequences are visually clear"
+          }
+        ],
+        "implementationNotes": "Reference image attached in workspace cache:\n- [Emergency loan modal reference](</Users/scroobz/Library/Caches/com.raycast.macos/Clipboard/f441848d84ab4b505c2c5ef7e8833dbe6b9a0b95c87e4bcff92913c9a42091a3.png>)\nDesign cues to carry into implementation: large amount card, regulatory warning band, two-button decision row, soft glass panel, teal/olive accent hierarchy."
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "39hldq",
+      "version": 5,
+      "timestamp": "2026-04-12T10:40:04.215Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "Reference image attached in workspace cache:\n- [Emergency loan modal reference](</Users/scroobz/Library/Caches/com.raycast.macos/Clipboard/f441848d84ab4b505c2c5ef7e8833dbe6b9a0b95c87e4bcff92913c9a42091a3.png>)\nDesign cues to carry into implementation: large amount card, regulatory warning band, two-button decision row, soft glass panel, teal/olive accent hierarchy.",
+          "newValue": "Reference image attached in workspace cache:\n- [Emergency loan modal reference](</Users/scroobz/Library/Caches/com.raycast.macos/Clipboard/f441848d84ab4b505c2c5ef7e8833dbe6b9a0b95c87e4bcff92913c9a42091a3.png>)\nDesign cues to carry into implementation: large amount card, regulatory warning band, two-button decision row, soft glass panel, teal/olive accent hierarchy.\n\n✓ Implemented attached loan reference direction: light financial-system modal, close affordance, regulatory warning card, revised primary/secondary actions, and cleaner recovery guidance."
+        }
+      ],
+      "snapshot": {
+        "title": "Design the emergency loan modal",
+        "description": "Redesign the emergency loan modal so it stays important without feeling like a punitive hard-stop, and fits the base scene more cleanly.",
+        "status": "in-review",
+        "priority": "high",
+        "labels": [],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Emergency loan modal design communicates stakes without overwhelming the base scene"
+          },
+          {
+            "completed": true,
+            "text": "Primary decision and consequences are visually clear"
+          }
+        ],
+        "implementationNotes": "Reference image attached in workspace cache:\n- [Emergency loan modal reference](</Users/scroobz/Library/Caches/com.raycast.macos/Clipboard/f441848d84ab4b505c2c5ef7e8833dbe6b9a0b95c87e4bcff92913c9a42091a3.png>)\nDesign cues to carry into implementation: large amount card, regulatory warning band, two-button decision row, soft glass panel, teal/olive accent hierarchy.\n\n✓ Implemented attached loan reference direction: light financial-system modal, close affordance, regulatory warning card, revised primary/secondary actions, and cleaner recovery guidance."
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "39hldq",
+      "version": 6,
+      "timestamp": "2026-04-12T12:54:33.209Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-review",
+          "newValue": "done"
+        },
+        {
+          "field": "implementationNotes",
+          "oldValue": "Reference image attached in workspace cache:\n- [Emergency loan modal reference](</Users/scroobz/Library/Caches/com.raycast.macos/Clipboard/f441848d84ab4b505c2c5ef7e8833dbe6b9a0b95c87e4bcff92913c9a42091a3.png>)\nDesign cues to carry into implementation: large amount card, regulatory warning band, two-button decision row, soft glass panel, teal/olive accent hierarchy.\n\n✓ Implemented attached loan reference direction: light financial-system modal, close affordance, regulatory warning card, revised primary/secondary actions, and cleaner recovery guidance.",
+          "newValue": "Implemented light emergency-loan modal from attached reference: large amount card, regulatory warning band, recovery guidance, and clear primary/secondary decision row. Verified code landed in EmergencyLoanOfferDialog.gd."
+        }
+      ],
+      "snapshot": {
+        "title": "Design the emergency loan modal",
+        "description": "Redesign the emergency loan modal so it stays important without feeling like a punitive hard-stop, and fits the base scene more cleanly.",
+        "status": "done",
+        "priority": "high",
+        "labels": [],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Emergency loan modal design communicates stakes without overwhelming the base scene"
+          },
+          {
+            "completed": true,
+            "text": "Primary decision and consequences are visually clear"
+          }
+        ],
+        "implementationNotes": "Implemented light emergency-loan modal from attached reference: large amount card, regulatory warning band, recovery guidance, and clear primary/secondary decision row. Verified code landed in EmergencyLoanOfferDialog.gd."
+      }
+    }
+  ]
+}

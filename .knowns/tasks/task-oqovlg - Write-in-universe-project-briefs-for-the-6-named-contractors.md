@@ -1,11 +1,11 @@
 ---
 id: oqovlg
 title: Write in-universe project briefs for the 6 named contractors
-status: todo
-priority: medium
+status: done
+priority: low
 labels: []
 createdAt: '2026-04-01T11:55:08.296Z'
-updatedAt: '2026-04-01T11:55:08.296Z'
+updatedAt: '2026-04-13T03:04:53.375Z'
 timeSpent: 0
 assignee: '@Liam'
 ---
@@ -24,4 +24,10 @@ Contractors (SubcontractorManager.gd):
 - Karman+ — Deep-space mining hardware, buys Platinum
 - Skybus Transport — Bulk cargo logistics, buys Nickel and Silicates
 <!-- SECTION:DESCRIPTION:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+I'm not doing this - we don't need a full brief or backstory yet. This is not required.
+<!-- SECTION:PLAN:END -->
 

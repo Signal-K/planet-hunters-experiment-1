@@ -1,23 +1,10 @@
 [gd_scene load_steps=2 format=3]
 
-[sub_resource type="StyleBoxFlat" id="1"]
-bg_color = Color(0.0588235, 0.101961, 0.14902, 0.96)
-border_color = Color(0.47451, 0.862745, 0.941176, 0.68)
-corner_radius_top_left = 18
-corner_radius_top_right = 18
-corner_radius_bottom_right = 18
-corner_radius_bottom_left = 18
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-content_margin_left = 24.0
-content_margin_top = 20.0
-content_margin_right = 24.0
-content_margin_bottom = 20.0
+[ext_resource type="Script" path="res://Scripts/UI/EmergencyLoanOfferDialog.gd" id="1"]
 
 [node name="EmergencyLoanOfferDialog" type="CanvasLayer"]
 layer = 80
+script = ExtResource("1")
 
 [node name="Backdrop" type="ColorRect" parent="."]
 layout_mode = 1
@@ -25,7 +12,7 @@ anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 mouse_filter = 1
-color = Color(0, 0, 0, 0.65)
+color = Color(0, 0, 0, 0.70)
 
 [node name="Center" type="CenterContainer" parent="."]
 layout_mode = 1
@@ -35,45 +22,153 @@ anchor_bottom = 1.0
 
 [node name="Panel" type="PanelContainer" parent="Center"]
 layout_mode = 2
-custom_minimum_size = Vector2(420, 0)
-theme_override_styles/panel = SubResource("1")
+custom_minimum_size = Vector2(600, 0)
 
-[node name="Margin" type="MarginContainer" parent="Center/Panel"]
+[node name="HBox" type="HBoxContainer" parent="Center/Panel"]
 layout_mode = 2
-theme_override_constants/margin_left = 28
-theme_override_constants/margin_top = 28
-theme_override_constants/margin_right = 28
-theme_override_constants/margin_bottom = 28
+theme_override_constants/separation = 0
 
-[node name="Body" type="VBoxContainer" parent="Center/Panel/Margin"]
+[node name="Sidebar" type="PanelContainer" parent="Center/Panel/HBox"]
 layout_mode = 2
-theme_override_constants/separation = 18
+custom_minimum_size = Vector2(168, 240)
 
-[node name="Title" type="Label" parent="Center/Panel/Margin/Body"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.92, 0.95, 0.98, 1)
-text = "Emergency Loan Available"
-
-[node name="Description" type="Label" parent="Center/Panel/Margin/Body"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.92, 0.95, 0.98, 1)
-text = "Description"
-
-[node name="LoanAmount" type="Label" parent="Center/Panel/Margin/Body"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.70, 0.78, 0.86, 1)
-text = "Loan"
-
-[node name="ButtonRow" type="HBoxContainer" parent="Center/Panel/Margin/Body"]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="AcceptButton" type="Button" parent="Center/Panel/Margin/Body/ButtonRow"]
+[node name="SidebarVBox" type="VBoxContainer" parent="Center/Panel/HBox/Sidebar"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Accept Loan"
+size_flags_vertical = 3
+alignment = 1
+theme_override_constants/separation = 14
 
-[node name="DeclineButton" type="Button" parent="Center/Panel/Margin/Body/ButtonRow"]
+[node name="IconCircle" type="PanelContainer" parent="Center/Panel/HBox/Sidebar/SidebarVBox"]
+layout_mode = 2
+size_flags_horizontal = 4
+
+[node name="IconLabel" type="Label" parent="Center/Panel/HBox/Sidebar/SidebarVBox/IconCircle"]
+layout_mode = 2
+text = "🏛"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="AuthLabel" type="Label" parent="Center/Panel/HBox/Sidebar/SidebarVBox"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "AUTH_REF: 882-X"
+
+[node name="TerminalLabel" type="Label" parent="Center/Panel/HBox/Sidebar/SidebarVBox"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "TERMINAL_STATION_04"
+
+[node name="RightMargin" type="MarginContainer" parent="Center/Panel/HBox"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "No Thanks"
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_bottom = 24
+
+[node name="RightContent" type="VBoxContainer" parent="Center/Panel/HBox/RightMargin"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="TitleRow" type="HBoxContainer" parent="Center/Panel/HBox/RightMargin/RightContent"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="AlertIcon" type="Label" parent="Center/Panel/HBox/RightMargin/RightContent/TitleRow"]
+layout_mode = 2
+text = "△"
+
+[node name="TitleLabel" type="Label" parent="Center/Panel/HBox/RightMargin/RightContent/TitleRow"]
+layout_mode = 2
+text = "EMERGENCY_LOAN_AVAILABLE"
+
+[node name="BodyLabel" type="Label" parent="Center/Panel/HBox/RightMargin/RightContent"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Your balance hit zero — you qualify for an emergency advance."
+
+[node name="CreditCard" type="PanelContainer" parent="Center/Panel/HBox/RightMargin/RightContent"]
+layout_mode = 2
+
+[node name="CreditCardBody" type="VBoxContainer" parent="Center/Panel/HBox/RightMargin/RightContent/CreditCard"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="CreditLineLabel" type="Label" parent="Center/Panel/HBox/RightMargin/RightContent/CreditCard/CreditCardBody"]
+layout_mode = 2
+text = "CREDIT_LINE_STATION_OMEGA"
+
+[node name="AmountRow" type="HBoxContainer" parent="Center/Panel/HBox/RightMargin/RightContent/CreditCard/CreditCardBody"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="CurrencyLabel" type="Label" parent="Center/Panel/HBox/RightMargin/RightContent/CreditCard/CreditCardBody/AmountRow"]
+layout_mode = 2
+vertical_alignment = 2
+text = "F"
+
+[node name="AmountLabel" type="Label" parent="Center/Panel/HBox/RightMargin/RightContent/CreditCard/CreditCardBody/AmountRow"]
+layout_mode = 2
+text = "1,500,000,000"
+
+[node name="DeductedLabel" type="Label" parent="Center/Panel/HBox/RightMargin/RightContent/CreditCard/CreditCardBody"]
+layout_mode = 2
+text = "DEDUCTED FROM YOUR NEXT MISSION PAYOUT."
+
+[node name="WarningCard" type="PanelContainer" parent="Center/Panel/HBox/RightMargin/RightContent"]
+layout_mode = 2
+
+[node name="WarningHBox" type="HBoxContainer" parent="Center/Panel/HBox/RightMargin/RightContent/WarningCard"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="WarnIcon" type="Label" parent="Center/Panel/HBox/RightMargin/RightContent/WarningCard/WarningHBox"]
+layout_mode = 2
+text = "⚠"
+
+[node name="WarnLabel" type="Label" parent="Center/Panel/HBox/RightMargin/RightContent/WarningCard/WarningHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+autowrap_mode = 3
+text = "Note: Failure to repay within 3 cycles will result in asset seizure."
+
+[node name="GuidanceCard" type="PanelContainer" parent="Center/Panel/HBox/RightMargin/RightContent"]
+layout_mode = 2
+
+[node name="GuidanceVBox" type="VBoxContainer" parent="Center/Panel/HBox/RightMargin/RightContent/GuidanceCard"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="GuidanceTitle" type="Label" parent="Center/Panel/HBox/RightMargin/RightContent/GuidanceCard/GuidanceVBox"]
+layout_mode = 2
+text = "How to recover from debt:"
+
+[node name="Tip1" type="Label" parent="Center/Panel/HBox/RightMargin/RightContent/GuidanceCard/GuidanceVBox"]
+layout_mode = 2
+autowrap_mode = 3
+text = "→ Accept the loan and launch immediately — missions still pay well above the 3% interest."
+
+[node name="Tip2" type="Label" parent="Center/Panel/HBox/RightMargin/RightContent/GuidanceCard/GuidanceVBox"]
+layout_mode = 2
+autowrap_mode = 3
+text = "→ The loan auto-repays from your next payout — no manual action needed."
+
+[node name="Tip3" type="Label" parent="Center/Panel/HBox/RightMargin/RightContent/GuidanceCard/GuidanceVBox"]
+layout_mode = 2
+autowrap_mode = 3
+text = "→ Target high-value contracts (Fe · Pt) to clear the balance in a single run."
+
+[node name="ButtonRow" type="HBoxContainer" parent="Center/Panel/HBox/RightMargin/RightContent"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="AcceptButton" type="Button" parent="Center/Panel/HBox/RightMargin/RightContent/ButtonRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "ACCEPT LOAN"
+
+[node name="DeclineButton" type="Button" parent="Center/Panel/HBox/RightMargin/RightContent/ButtonRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "NO THANKS"

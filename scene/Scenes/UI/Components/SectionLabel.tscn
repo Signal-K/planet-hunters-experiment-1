@@ -1,0 +1,21 @@
+[gd_scene format=3]
+
+; Indexed section heading — "01. SECTION TITLE" with PRIMARY index number.
+; Override IndexLabel.text (e.g. "02.") and TitleLabel.text in the parent scene.
+; Labels use uppercase instrument-panel style by convention.
+
+[node name="SectionLabel" type="HBoxContainer"]
+theme_override_constants/separation = 6
+
+[node name="IndexLabel" type="Label" parent="."]
+layout_mode = 2
+text = "01."
+theme_override_colors/font_color = Color(0.0, 0.424, 0.361, 1.0)
+theme_override_font_sizes/font_size = 22
+
+[node name="TitleLabel" type="Label" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "SECTION"
+theme_override_colors/font_color = Color(0.176, 0.204, 0.200, 1.0)
+theme_override_font_sizes/font_size = 22

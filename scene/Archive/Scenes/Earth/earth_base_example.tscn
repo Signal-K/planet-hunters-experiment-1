@@ -1,7 +1,0 @@
-[gd_scene load_steps=3 format=3 uid="uid://ckjb037ccw738"]
-
-[ext_resource type="PackedScene" path="res://Scenes/Earth/earth_scene_template.tscn" id="1_template"]
-[ext_resource type="Script" uid="uid://da01oi782utuw" path="res://Scenes/Earth/earth_base_example.gd" id="2_example_script"]
-
-[node name="EarthBaseExample" instance=ExtResource("1_template")]
-script = ExtResource("2_example_script")

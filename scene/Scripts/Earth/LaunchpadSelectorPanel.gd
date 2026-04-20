@@ -213,20 +213,7 @@ func populate_targets() -> void:
 	var mission_stage_raw = int(rm.get_mission_stage())
 	var mission_stage = _effective_mission_stage_for_ui(mission_stage_raw)
 	var free_ops_unlocked = rm.is_free_operations_unlocked()
-	var targets: Array = []
-	if mission_stage <= 2:
-		if mission_stage == 1:
-			var predefined = rm.get_predefined_mission_target(mission_stage)
-			if not predefined.is_empty():
-				targets = [predefined]
-		else:
-			targets = rm.get_mission2_targets()
-	elif mission_stage == 3:
-		targets = rm.get_mission3_targets()
-	elif mission_stage == 4:
-		targets = rm.get_detected_targets() if free_ops_unlocked else rm.get_mission4_targets()
-	else:
-		targets = rm.get_detected_targets()
+	var targets: Array = _resolve_targets_for_current_stage(rm, mission_stage, free_ops_unlocked)
 	AppLogger.d("Launchpad: _populate_targets -> detected targets count=%s" % targets.size())
 	var selected_target = rm.get_selected_target()
 	var awaiting_rocket_id = str(rm.get_primary_awaiting_rocket_id())
@@ -241,13 +228,6 @@ func populate_targets() -> void:
 	var trip_selected_contractor := str(trip_selected.get("id", ""))
 	var trip_recommended_target_id := str(trip_offer.get("recommended_target_id", ""))
 	var forced_phase = _tutorial_forced_phase()
-	if forced_phase == "contractor" and trip_selected_contractor != "":
-		rm.clear_trip_contract_offer()
-		rm.clear_selected_target()
-		trip_offer = rm.ensure_trip_contract_offer(targets)
-		trip_selected = rm.get_trip_selected_contractor()
-		trip_selected_contractor = str(trip_selected.get("id", ""))
-		trip_recommended_target_id = str(trip_offer.get("recommended_target_id", ""))
 	var flow_phase = _selector_flow_phase(trip_selected_contractor, has_awaiting_rocket)
 	flow_phase = _resolve_tutorial_flow_phase(flow_phase, trip_selected_contractor, has_awaiting_rocket)
 	if flow_phase != "target":
@@ -331,12 +311,33 @@ func populate_targets() -> void:
 	_normalize_selector_typography(panel)
 	_sync_right_panel_surface(panel, flow_phase, mission_stage, awaiting_rocket_id, selected_target, visible_targets, rm)
 
+func _resolve_targets_for_current_stage(rm, mission_stage: int, free_ops_unlocked: bool) -> Array:
+	var targets: Array = []
+	if rm == null:
+		return targets
+	if mission_stage <= 2:
+		if mission_stage == 1:
+			var predefined = rm.get_predefined_mission_target(mission_stage)
+			if not predefined.is_empty():
+				targets = [predefined]
+		else:
+			targets = rm.get_mission2_targets()
+	elif mission_stage == 3:
+		targets = rm.get_mission3_targets()
+	elif mission_stage == 4:
+		targets = rm.get_detected_targets() if free_ops_unlocked else rm.get_mission4_targets()
+	else:
+		targets = rm.get_detected_targets()
+	return targets
+
 
 func on_selector_target_pressed(target_id: String, _btn: Button = null) -> void:
 	_pending_target_id = target_id
-	selected_target.emit(target_id)
 	AppLogger.d("Launchpad: target selected in starmap: %s" % target_id)
-	populate_targets()
+	if _map_overlay_open:
+		_refresh_open_target_overlay()
+	else:
+		populate_targets()
 
 func _on_confirm_target_pressed() -> void:
 	var target_id = _pending_target_id
@@ -345,6 +346,10 @@ func _on_confirm_target_pressed() -> void:
 	var rm = RocketsManager
 	if not rm:
 		return
+	_suppress_launchpad_navigation(280)
+	var vp = _launchpad.get_viewport() if _launchpad != null else null
+	if vp:
+		vp.set_input_as_handled()
 	var ok = rm.select_target(target_id)
 	if not ok:
 		AppLogger.w("Launchpad: failed to persist confirmed target selection %s" % target_id)
@@ -364,23 +369,76 @@ func _on_confirm_target_pressed() -> void:
 	target_confirmed.emit(target_id)
 	_map_overlay_open = false
 	AppLogger.d("Launchpad: target confirmed from starmap: %s" % target_id)
-	populate_targets()
+	call_deferred("populate_targets")
+
+func _refresh_open_target_overlay() -> void:
+	if _launchpad == null or _launchpad.get_tree() == null:
+		return
+	var root_scene = _launchpad.get_tree().current_scene
+	if root_scene == null:
+		return
+	var panel = _ensure_selector_panel_exists(root_scene)
+	if panel == null:
+		return
+	var target_section = panel.get_node_or_null("MapOverlay/OverlayVBox/TargetSection/SectionVBox/Content") as VBoxContainer
+	if target_section == null:
+		return
+	var rm = RocketsManager
+	if rm == null:
+		return
+	var mission_stage_raw = int(rm.get_mission_stage())
+	var mission_stage = _effective_mission_stage_for_ui(mission_stage_raw)
+	var free_ops_unlocked = rm.is_free_operations_unlocked()
+	var targets = _resolve_targets_for_current_stage(rm, mission_stage, free_ops_unlocked)
+	var selected_target = rm.get_selected_target()
+	var awaiting_rocket_id = str(rm.get_primary_awaiting_rocket_id())
+	var awaiting_rocket_level = int(rm.get_rocket_level(awaiting_rocket_id))
+	var operation_mode := str(rm.get_operation_mode())
+	var trip_offer := rm.ensure_trip_contract_offer(targets)
+	var trip_selected = rm.get_trip_selected_contractor()
+	var trip_selected_contractor := str(trip_selected.get("id", ""))
+	var trip_recommended_target_id := str(trip_offer.get("recommended_target_id", ""))
+	var visible_targets = _build_visible_targets(targets, selected_target, mission_stage, awaiting_rocket_level, rm)
+	_clear_container(target_section)
+	_render_starmap_target_picker(
+		target_section,
+		visible_targets,
+		selected_target,
+		mission_stage,
+		awaiting_rocket_id,
+		awaiting_rocket_level,
+		operation_mode,
+		trip_selected_contractor,
+		trip_recommended_target_id,
+		free_ops_unlocked,
+		rm
+	)
+	_boost_label_contrast(target_section)
+	_normalize_selector_typography(panel)
 
 func _on_trip_contractor_pressed(contractor_id: String) -> void:
 	var rm = RocketsManager
 	if not rm:
 		return
+	_suppress_launchpad_navigation()
+	var vp = _launchpad.get_viewport() if _launchpad != null else null
+	if vp:
+		vp.set_input_as_handled()
 	var ok = rm.select_trip_contractor(contractor_id)
 	if ok:
 		_record_tutorial_action("accept_contractor_offer", {
 			"contractor_id": contractor_id
 		})
-		populate_targets()
+		call_deferred("populate_targets")
 
 func _on_starter_contractor_pressed(contractor_id: String) -> void:
 	var rm = RocketsManager
 	if not rm:
 		return
+	_suppress_launchpad_navigation()
+	var vp = _launchpad.get_viewport() if _launchpad != null else null
+	if vp:
+		vp.set_input_as_handled()
 	var ok = rm.select_starter_contractor(contractor_id)
 	if ok:
 		_record_tutorial_action("accept_starter_contractor", {
@@ -390,7 +448,7 @@ func _on_starter_contractor_pressed(contractor_id: String) -> void:
 			"contractor_id": contractor_id,
 			"contract_type": "starter",
 		})
-		populate_targets()
+		call_deferred("populate_targets")
 
 func _render_starter_contract_brief(targets_section: VBoxContainer, offer: Dictionary, selected_contractor: String) -> void:
 	if targets_section == null or offer.is_empty():
@@ -518,6 +576,7 @@ func _render_trip_contract_brief(targets_section: VBoxContainer, offer: Dictiona
 
 		var card: PanelContainer = LaunchpadContractorCardScene.instantiate()
 		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		card.clip_contents = true
 		card.set_meta("ui_style_locked", true)
 		targets_section.add_child(card)
 		var card_col: VBoxContainer = card.get_node("Body")
@@ -579,6 +638,10 @@ func _render_trip_contract_brief(targets_section: VBoxContainer, offer: Dictiona
 			cd_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			cd_lbl.add_theme_color_override("font_color", Color(1.0, 0.55, 0.35, 1.0))
 			cd_lbl.add_theme_font_size_override("font_size", 13)
+		_populate_contractor_detail(card, entry, is_selected, str(offer.get("recommended_target_label", "")))
+
+	if selected_contractor != "":
+		_render_mission_briefing(targets_section, offer, selected_contractor, str(offer.get("recommended_target_label", "")))
 
 func _render_mission_briefing(targets_section: VBoxContainer, offer: Dictionary, contractor_id: String, target_label: String) -> void:
 	var sub_info = SubcontractorManager.get_subcontractor(contractor_id)
@@ -612,6 +675,7 @@ func _render_mission_briefing(targets_section: VBoxContainer, offer: Dictionary,
 	# Briefing card container
 	var card: PanelContainer = LaunchpadMissionBriefingCardScene.instantiate()
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.clip_contents = true
 	card.set_meta("ui_style_locked", true)
 	card.add_theme_stylebox_override("panel", _target_card_style())
 	targets_section.add_child(card)
@@ -627,28 +691,84 @@ func _render_mission_briefing(targets_section: VBoxContainer, offer: Dictionary,
 	PanelStyle.apply_body_on_dark(title_lbl)
 	title_lbl.add_theme_font_size_override("font_size", 16)
 	title_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	title_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 	var desc_lbl: Label = card.get_node("Body/DescriptionLabel")
 	PanelStyle.apply_muted_on_dark(desc_lbl)
 	desc_lbl.add_theme_font_size_override("font_size", 13)
 	desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	desc_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 	var quote_lbl: Label = card.get_node("Body/QuoteLabel")
 	quote_lbl.add_theme_color_override("font_color", Color(0.66, 0.94, 0.78, 1.0))
 	quote_lbl.add_theme_font_size_override("font_size", 12)
 	quote_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	quote_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
+	var title_ref: WeakRef = weakref(title_lbl)
+	var desc_ref: WeakRef = weakref(desc_lbl)
+	var quote_ref: WeakRef = weakref(quote_lbl)
+	var contractor_name: String = sub_name
 	MissionNarrativeAPI.generate(params, func(narrative: Dictionary) -> void:
-		if not is_instance_valid(title_lbl):
+		var title_node = title_ref.get_ref() as Label
+		var desc_node = desc_ref.get_ref() as Label
+		var quote_node = quote_ref.get_ref() as Label
+		if title_node == null or desc_node == null or quote_node == null:
 			return
-		title_lbl.text = str(narrative.get("title", ""))
-		desc_lbl.text = str(narrative.get("description", ""))
+		title_node.text = str(narrative.get("title", ""))
+		desc_node.text = str(narrative.get("description", ""))
 		var q := str(narrative.get("contractor_quote", ""))
 		if q != "":
-			quote_lbl.text = '"%s"  \u2014 %s' % [q, sub_name]
+			quote_node.text = '"%s"  \u2014 %s' % [q, contractor_name]
 		else:
-			quote_lbl.text = ""
+			quote_node.text = ""
 	)
+
+func _populate_contractor_detail(card: PanelContainer, entry: Dictionary, is_selected: bool, target_label: String) -> void:
+	if card == null:
+		return
+	var detail_section = card.get_node_or_null("Body/DetailSection") as VBoxContainer
+	var summary_label = card.get_node_or_null("Body/DetailSection/DetailSummary") as Label
+	var meta_label = card.get_node_or_null("Body/DetailSection/DetailMeta") as Label
+	if detail_section == null or summary_label == null or meta_label == null:
+		return
+	detail_section.visible = is_selected
+	if not is_selected:
+		return
+	var contractor_id := str(entry.get("id", ""))
+	var catalog_entry := SubcontractorManager.get_subcontractor(contractor_id)
+	var role_text := str(entry.get("role", entry.get("focus", catalog_entry.get("role", "")))).strip_edges()
+	var requested: Dictionary = entry.get("requested_minerals", {})
+	if requested.is_empty():
+		requested = catalog_entry.get("requested_minerals", {})
+	var rep_xp := int(SubcontractorManager.get_reputation(contractor_id))
+	var rep_level := SubcontractorManager.get_level_data(rep_xp)
+	var rep_title := str(rep_level.get("title", "New Partner"))
+	var payout_mult := float(rep_level.get("bonus_mult", 1.0))
+	var bonus_details: Array = SubcontractorManager.get_bonus_details(contractor_id)
+	var premium_bits: Array[String] = []
+	for detail_any in bonus_details:
+		if typeof(detail_any) != TYPE_DICTIONARY:
+			continue
+		var detail: Dictionary = detail_any
+		var mineral := str(detail.get("mineral", ""))
+		var multiplier := float(detail.get("multiplier", 1.0))
+		var pct := int(round((multiplier - 1.0) * 100.0))
+		if pct > 0:
+			premium_bits.append("%s +%d%%" % [_mineral_short_name(mineral), pct])
+	premium_bits.sort()
+	var order_text := _compact_order_text(requested).trim_prefix("Order: ") if not requested.is_empty() else "Dynamic contract based on scanned route value"
+	var target_hint := target_label if target_label != "" else "the current route"
+	summary_label.text = "%s. Current order focus: %s. Best fit for %s." % [role_text, order_text, target_hint]
+	meta_label.text = "Rep: %s • Mission bonus x%.2f • Premiums: %s" % [
+		rep_title,
+		payout_mult,
+		", ".join(premium_bits) if not premium_bits.is_empty() else "none yet"
+	]
+	PanelStyle.apply_muted(summary_label)
+	PanelStyle.apply_body(meta_label)
+	summary_label.add_theme_font_size_override("font_size", 12)
+	meta_label.add_theme_font_size_override("font_size", 12)
 
 func _compact_order_text(requested: Dictionary) -> String:
 	var order_parts := []
@@ -1050,7 +1170,7 @@ func _build_target_prep_items(
 func _style_selector_panel(panel: Panel, vbox: Control) -> void:
 	# Lock before UIConsistencyEnforcer deferred scan can overwrite.
 	panel.set_meta("ui_style_locked", true)
-	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	var shell := StyleBoxFlat.new()
 	shell.bg_color = Color(0, 0, 0, 0)
 	shell.border_color = Color(0, 0, 0, 0)
@@ -1059,10 +1179,10 @@ func _style_selector_panel(panel: Panel, vbox: Control) -> void:
 	panel.add_theme_stylebox_override("panel", shell)
 	if vbox:
 		vbox.set_meta("ui_style_locked", true)
-		vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		vbox.mouse_filter = Control.MOUSE_FILTER_STOP
 	var body = panel.get_node_or_null("VBox/Body") as Control
 	if body:
-		body.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		body.mouse_filter = Control.MOUSE_FILTER_STOP
 	_apply_selector_surface_styles(panel)
 	_ensure_selector_template_defaults(panel)
 
@@ -1170,6 +1290,17 @@ func _ensure_selector_template_defaults(panel: Panel) -> void:
 		var label = panel.get_node_or_null(path) as Label
 		if label:
 			PanelStyle.apply_muted(label)
+			label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+
+	for path in [
+		"VBox/Body/LeftColumn/MissionSection/SectionVBox/Content",
+		"VBox/Body/LeftColumn/ContractorSection/SectionVBox/Content",
+		"VBox/Body/RightColumn/RocketSection/SectionVBox/Content",
+		"VBox/Body/RightColumn/RocketSection/SectionVBox/InlinePreview",
+	]:
+		var container = panel.get_node_or_null(path) as Control
+		if container:
+			container.clip_contents = true
 
 	# Dark-overlay blurbs (light text)
 	for path in [
@@ -1199,16 +1330,108 @@ func _set_selector_panel_layout(_has_awaiting: bool, flow_phase: String = "") ->
 	if panel == null:
 		return
 	panel.clip_contents = false
+	var vp_size: Vector2 = root_scene.get_viewport_rect().size
+	var body = panel.get_node_or_null("VBox/Body") as Control
+	var left_column = panel.get_node_or_null("VBox/Body/LeftColumn") as Control
+	var right_column = panel.get_node_or_null("VBox/Body/RightColumn") as Control
+	var left_section = panel.get_node_or_null("VBox/Body/LeftColumn/ContractorSection") as Control
+	var right_section = panel.get_node_or_null("VBox/Body/RightColumn/RocketSection") as Control
+	var horizontal_inset := 16.0 if vp_size.x >= 1200.0 else 10.0
+	var footer_reserve: float = 150.0 if vp_size.x < 1200.0 else 136.0
+	if body:
+		var widget_rect := UILayout.zone(UILayout.Zone.EARTH_WIDGET, vp_size)
+		var top_inset := widget_rect.end.y + (24.0 if vp_size.x < 1200.0 else 28.0)
+		body.anchor_left = 0.0
+		body.anchor_top = 0.0
+		body.anchor_right = 1.0
+		body.anchor_bottom = 1.0
+		body.offset_left = horizontal_inset
+		body.offset_top = top_inset
+		body.offset_right = -horizontal_inset
+		body.offset_bottom = -footer_reserve
+	if left_column and right_column:
+		var left_min := 280.0
+		var right_min := 300.0
+		if left_section:
+			left_min = maxf(left_min, left_section.get_combined_minimum_size().x + 18.0)
+		if right_section:
+			right_min = maxf(right_min, right_section.get_combined_minimum_size().x + 18.0)
+		var content_width: float = body.size.x if body and body.size.x > 0.0 else vp_size.x - (horizontal_inset * 2.0)
+		var left_width: float = clampf(content_width * 0.24, left_min, 380.0)
+		var right_width: float = clampf(content_width * 0.22, right_min, 520.0)
+		if vp_size.x < 1200.0:
+			left_width = clampf(content_width * 0.26, 240.0, maxf(left_min, 320.0))
+			right_width = clampf(content_width * 0.24, right_min, 420.0)
+		if vp_size.x < 1040.0:
+			left_width = clampf(content_width * 0.24, 220.0, 280.0)
+			right_width = clampf(content_width * 0.20, 240.0, 320.0)
+		var available_width: float = maxf(content_width, 640.0)
+		var center_min: float = 420.0 if vp_size.x >= 1200.0 else 260.0
+		var max_columns_width: float = maxf(available_width - center_min, 560.0)
+		var total_columns_width: float = left_width + right_width
+		if total_columns_width > max_columns_width:
+			var overshoot: float = total_columns_width - max_columns_width
+			var left_reducible: float = maxf(left_width - left_min, 0.0)
+			var left_cut: float = minf(left_reducible, overshoot)
+			left_width -= left_cut
+			overshoot -= left_cut
+			if overshoot > 0.0:
+				right_width = maxf(right_min, right_width - overshoot)
+		left_column.anchor_left = 0.0
+		left_column.anchor_right = 0.0
+		left_column.offset_left = 0.0
+		left_column.offset_right = left_width
+		left_column.offset_top = 0.0
+		left_column.offset_bottom = 0.0
+		left_column.custom_minimum_size.x = left_width
+		right_column.anchor_left = 1.0
+		right_column.anchor_right = 1.0
+		right_column.offset_left = -right_width
+		right_column.offset_right = 0.0
+		right_column.offset_top = 0.0
+		right_column.offset_bottom = 0.0
+		right_column.custom_minimum_size.x = right_width
+		var mission_section = panel.get_node_or_null("VBox/Body/LeftColumn/MissionSection") as Control
+		if mission_section:
+			mission_section.custom_minimum_size.y = 292.0 if vp_size.x >= 1280.0 else 324.0
+			mission_section.clip_contents = true
+		if left_section:
+			left_section.clip_contents = true
+		if right_section:
+			right_section.clip_contents = true
 	var map_overlay = panel.get_node_or_null("MapOverlay") as Control
 	if map_overlay:
+		map_overlay.z_index = 80
 		map_overlay.anchor_left = 0.0
 		map_overlay.anchor_top = 0.0
 		map_overlay.anchor_right = 1.0
 		map_overlay.anchor_bottom = 1.0
-		map_overlay.offset_left = 24.0
-		map_overlay.offset_top = 24.0
-		map_overlay.offset_right = -24.0
-		map_overlay.offset_bottom = -148.0
+		map_overlay.offset_left = 0.0
+		map_overlay.offset_top = 0.0
+		map_overlay.offset_right = 0.0
+		map_overlay.offset_bottom = 0.0
+	var overlay_vbox = panel.get_node_or_null("MapOverlay/OverlayVBox") as Control
+	if overlay_vbox:
+		overlay_vbox.anchor_left = 0.0
+		overlay_vbox.anchor_top = 0.0
+		overlay_vbox.anchor_right = 1.0
+		overlay_vbox.anchor_bottom = 1.0
+		overlay_vbox.offset_left = horizontal_inset
+		overlay_vbox.offset_top = maxf(16.0, UILayout.safe_rect(vp_size).position.y + 12.0)
+		overlay_vbox.offset_right = -horizontal_inset
+		overlay_vbox.offset_bottom = -maxf(16.0, (vp_size.y - UILayout.safe_rect(vp_size).end.y) + 12.0)
+	var overlay_target = panel.get_node_or_null("MapOverlay/OverlayVBox/TargetSection") as Control
+	if overlay_target:
+		overlay_target.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		overlay_target.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	var overlay_target_body = panel.get_node_or_null("MapOverlay/OverlayVBox/TargetSection/SectionVBox") as Control
+	if overlay_target_body:
+		overlay_target_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		overlay_target_body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	var overlay_target_content = panel.get_node_or_null("MapOverlay/OverlayVBox/TargetSection/SectionVBox/Content") as Control
+	if overlay_target_content:
+		overlay_target_content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		overlay_target_content.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
 func _render_launch_guidance_notice(targets_section: VBoxContainer) -> void:
 	if targets_section == null:
@@ -1241,6 +1464,7 @@ func _render_starmap_target_picker(
 ) -> void:
 	if target_section == null:
 		return
+	var overlay_mode := _map_overlay_open
 	var available_ids := {}
 	for item_any in visible_targets:
 		if typeof(item_any) != TYPE_DICTIONARY:
@@ -1279,19 +1503,34 @@ func _render_starmap_target_picker(
 			"disposition": disposition,
 		})
 
+	var layout_mount: Control = target_section
+	if overlay_mode:
+		var split := HBoxContainer.new()
+		split.name = "OverlaySplit"
+		split.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		split.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		split.add_theme_constant_override("separation", 16)
+		target_section.add_child(split)
+		layout_mount = split
+
 	var map_card := PanelContainer.new()
 	map_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	map_card.size_flags_vertical = Control.SIZE_EXPAND_FILL if overlay_mode else Control.SIZE_SHRINK_BEGIN
+	if overlay_mode:
+		map_card.custom_minimum_size = Vector2(720.0, 0.0)
 	map_card.set_meta("ui_style_locked", true)
 	map_card.add_theme_stylebox_override("panel", _target_card_style())
-	target_section.add_child(map_card)
+	layout_mount.add_child(map_card)
 	var map_column := VBoxContainer.new()
 	map_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	map_column.size_flags_vertical = Control.SIZE_EXPAND_FILL if overlay_mode else Control.SIZE_SHRINK_BEGIN
 	map_column.add_theme_constant_override("separation", 8)
 	map_card.add_child(map_column)
 
 	var map_view := LaunchpadStarMap.new()
 	map_view.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	map_view.custom_minimum_size = Vector2(0.0, 140.0)
+	map_view.size_flags_vertical = Control.SIZE_EXPAND_FILL if overlay_mode else Control.SIZE_SHRINK_BEGIN
+	map_view.custom_minimum_size = Vector2(640.0 if overlay_mode else 0.0, 520.0 if overlay_mode else 220.0)
 	map_view.setup(map_entries, _pending_target_id, _build_rocket_range_data())
 	map_view.target_pressed.connect(Callable(self, "on_selector_target_pressed"))
 	map_column.add_child(map_view)
@@ -1301,21 +1540,32 @@ func _render_starmap_target_picker(
 		return
 	var info_card: PanelContainer = LaunchpadTargetInfoCardScene.instantiate()
 	info_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	info_card.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	if overlay_mode:
+		info_card.size_flags_horizontal = Control.SIZE_FILL
+		info_card.custom_minimum_size = Vector2(380.0, 0.0)
 	info_card.set_meta("ui_style_locked", true)
 	info_card.add_theme_stylebox_override("panel", _planet_card_style() if _is_planet_target(selected_entry) else _target_card_style())
-	target_section.add_child(info_card)
+	layout_mount.add_child(info_card)
 	var info_column: VBoxContainer = info_card.get_node("Body")
+	info_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	info_column.add_theme_constant_override("separation", 8)
 	var title: Label = info_card.get_node("Body/TitleLabel")
 	var title_text = str(selected_entry.get("label", _pending_target_id))
 	if trip_recommended_target_id == _pending_target_id:
 		title_text = "%s (Recommended)" % title_text
 	title.text = title_text
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	PanelStyle.apply_body_on_dark(title)
 	title.add_theme_font_size_override("font_size", 18)
 	title.add_theme_color_override("font_color", Color(0.88, 0.96, 1.0, 1.0))
 
-	var chip_row: HBoxContainer = info_card.get_node("Body/ChipRow")
+	var chip_row := info_card.get_node("Body/ChipRow") as FlowContainer
+	chip_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	chip_row.add_theme_constant_override("h_separation", 8)
+	chip_row.add_theme_constant_override("v_separation", 8)
 	for chip_text in _build_target_preview_chips(selected_entry, rm, trip_recommended_target_id == _pending_target_id):
 		chip_row.add_child(_make_preview_chip(chip_text))
 
@@ -1330,12 +1580,14 @@ func _render_starmap_target_picker(
 		free_ops_unlocked,
 		rm
 	)
+	summary.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	summary.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	PanelStyle.apply_muted_on_dark(summary)
 
 	var science_preview: Label = info_card.get_node("Body/SciencePreviewLabel")
 	science_preview.text = _build_target_science_preview(selected_entry)
+	science_preview.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	science_preview.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	science_preview.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	science_preview.add_theme_color_override("font_color", Color(0.80, 0.88, 0.96, 0.96))
@@ -1343,12 +1595,15 @@ func _render_starmap_target_picker(
 
 	var composition: Label = info_card.get_node("Body/CompositionLabel")
 	composition.text = _estimate_target_composition(_pending_target_id, _is_planet_target(selected_entry))
+	composition.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	composition.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	composition.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	composition.add_theme_color_override("font_color", Color(0.5, 0.95, 0.65, 1.0))
 	composition.add_theme_font_size_override("font_size", 13)
 
 	var confirm_btn: Button = info_card.get_node("Body/ActionRow/ConfirmButton")
+	confirm_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	confirm_btn.custom_minimum_size = Vector2(0.0, 46.0)
 	var persisted_selected = selected_target == _pending_target_id and selected_target != ""
 	var blocked = _is_target_blocked_for_selection(
 		mission_stage,
@@ -1697,15 +1952,17 @@ func _resolve_tutorial_flow_phase(default_phase: String, selected_contractor_id:
 	if forced == "":
 		return default_phase
 	if forced == "contractor":
-		return "contractor"
+		return "contractor" if selected_contractor_id == "" else default_phase
 	if forced == "rocket":
-		return "rocket" if selected_contractor_id != "" else "contractor"
+		if selected_contractor_id == "":
+			return "contractor"
+		return "rocket" if not has_awaiting_rocket else default_phase
 	if forced == "target":
 		if selected_contractor_id == "":
 			return "contractor"
 		if not has_awaiting_rocket:
 			return "rocket"
-		return "target"
+		return default_phase
 	return default_phase
 
 func _tutorial_forced_phase() -> String:
@@ -1726,8 +1983,6 @@ func _tutorial_forced_phase() -> String:
 		"select_launch_target", "launch_rocket_from_earth":
 			return "target"
 		_:
-			if RocketsManager.get_mission_stage() <= 1:
-				return "contractor"
 			return ""
 
 func _read_tutorial_state() -> Dictionary:
@@ -1917,10 +2172,24 @@ func _set_map_overlay_visible(panel: Panel, visible: bool) -> void:
 	if overlay:
 		overlay.visible = visible
 		overlay.mouse_filter = Control.MOUSE_FILTER_STOP if visible else Control.MOUSE_FILTER_IGNORE
+	var body = panel.get_node_or_null("VBox/Body") as Control
+	if body:
+		body.visible = not visible
+		body.mouse_filter = Control.MOUSE_FILTER_IGNORE if visible else Control.MOUSE_FILTER_STOP
+	if _launchpad != null and _launchpad.has_method("set_interaction_enabled"):
+		_launchpad.set_interaction_enabled(not visible)
+	if _launchpad != null and _launchpad.get_tree() != null:
+		var scene_root = _launchpad.get_tree().current_scene
+		if scene_root and scene_root.has_method("set_modal_input_blocked"):
+			scene_root.set_modal_input_blocked(visible)
 
 func _on_open_target_map_pressed() -> void:
 	if _launchpad == null or _launchpad.get_tree() == null:
 		return
+	_suppress_launchpad_navigation()
+	var vp = _launchpad.get_viewport()
+	if vp:
+		vp.set_input_as_handled()
 	var panel = _launchpad.get_tree().current_scene.get_node_or_null("UILayer/SelectorPanel") as Panel
 	if panel == null:
 		return
@@ -1931,6 +2200,10 @@ func _on_open_target_map_pressed() -> void:
 func _on_close_target_map_pressed() -> void:
 	if _launchpad == null or _launchpad.get_tree() == null:
 		return
+	_suppress_launchpad_navigation()
+	var vp = _launchpad.get_viewport()
+	if vp:
+		vp.set_input_as_handled()
 	var panel = _launchpad.get_tree().current_scene.get_node_or_null("UILayer/SelectorPanel") as Panel
 	if panel == null:
 		return
@@ -1939,12 +2212,17 @@ func _on_close_target_map_pressed() -> void:
 	populate_targets()
 
 func _on_remove_rocket_pressed() -> void:
+	_suppress_launchpad_navigation()
 	var rm = RocketsManager
 	if rm:
 		rm.remove_awaiting_rocket()
-	if _launchpad != null and _launchpad.has_method("clear_rockets"):
-		_launchpad.clear_rockets()
-	populate_targets()
+
+func _suppress_launchpad_navigation(duration_ms: int = 220) -> void:
+	if _launchpad == null or _launchpad.get_tree() == null:
+		return
+	var scene_root = _launchpad.get_tree().current_scene
+	if scene_root and scene_root.has_method("suppress_navigation_input"):
+		scene_root.suppress_navigation_input(duration_ms)
 
 func _on_replay_mission_pressed() -> void:
 	var app = AppControllerHelper.get_instance()
@@ -2087,9 +2365,13 @@ func _sync_right_panel_surface(
 	var show_map_cta := flow_phase == "target" and selected_target == ""
 	if primary_action_row:
 		primary_action_row.visible = show_map_cta
+		primary_action_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		primary_action_row.custom_minimum_size = Vector2(0, 46) if show_map_cta else Vector2.ZERO
 	if open_map_button:
 		open_map_button.visible = show_map_cta
-		open_map_button.disabled = not show_map_cta
+		open_map_button.disabled = false if show_map_cta else true
+		open_map_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		open_map_button.custom_minimum_size = Vector2(220, 46) if show_map_cta else Vector2.ZERO
 		open_map_button.text = "Open Target Map"
 		PanelStyle.apply_button(open_map_button, show_map_cta)
 		_style_selector_action_button(open_map_button, show_map_cta)
@@ -2102,6 +2384,7 @@ func _sync_right_panel_surface(
 		return
 	var preview_card := PanelContainer.new()
 	preview_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	preview_card.clip_contents = true
 	preview_card.set_meta("ui_style_locked", true)
 	preview_card.add_theme_stylebox_override("panel", _target_card_style())
 	preview_mount.add_child(preview_card)
@@ -2113,13 +2396,15 @@ func _sync_right_panel_surface(
 	var route_title := Label.new()
 	route_title.text = "Mission %d → %s" % [mission_stage, str(preview_entry.get("label", preview_entry.get("id", "")))]
 	route_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	route_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	PanelStyle.apply_body_on_dark(route_title)
-	route_title.add_theme_font_size_override("font_size", 16)
+	route_title.add_theme_font_size_override("font_size", 14)
 	preview_vbox.add_child(route_title)
 
 	var chips := _build_target_preview_chips(preview_entry, rm)
-	var chips_row := HBoxContainer.new()
-	chips_row.add_theme_constant_override("separation", 6)
+	var chips_row := HFlowContainer.new()
+	chips_row.add_theme_constant_override("h_separation", 6)
+	chips_row.add_theme_constant_override("v_separation", 6)
 	preview_vbox.add_child(chips_row)
 	for chip_text in chips:
 		chips_row.add_child(_make_preview_chip(chip_text))
@@ -2177,10 +2462,15 @@ func _build_target_preview_chips(target: Dictionary, rm, recommended: bool = fal
 
 func _make_preview_chip(text: String) -> PanelContainer:
 	var chip := PanelContainer.new()
+	chip.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	chip.custom_minimum_size = Vector2(88.0, 0.0)
 	var style := PanelStyle.create_glass_pill_style(Color(0.08, 0.14, 0.22, 0.94), 0.52, 8)
 	chip.add_theme_stylebox_override("panel", style)
 	var lbl := Label.new()
 	lbl.text = text
+	lbl.autowrap_mode = TextServer.AUTOWRAP_OFF
+	lbl.clip_text = true
+	lbl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	lbl.add_theme_font_size_override("font_size", 11)
 	lbl.add_theme_color_override("font_color", PanelStyle.TEXT_ON_DARK)
 	chip.add_child(lbl)
@@ -2217,8 +2507,12 @@ func _update_status_strip(panel: Panel, mission_stage: int, selected_contractor:
 		var emphasize_map_cta := flow_phase == "target" and selected_target == ""
 		if action_row:
 			action_row.visible = emphasize_map_cta
+			action_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			action_row.custom_minimum_size = Vector2(0, 46) if emphasize_map_cta else Vector2.ZERO
 		open_map_button.visible = emphasize_map_cta
-		open_map_button.disabled = not emphasize_map_cta
+		open_map_button.disabled = false if emphasize_map_cta else true
+		open_map_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		open_map_button.custom_minimum_size = Vector2(220, 46) if emphasize_map_cta else Vector2.ZERO
 		PanelStyle.apply_button(open_map_button, emphasize_map_cta)
 		open_map_button.text = "Open Target Map"
 
