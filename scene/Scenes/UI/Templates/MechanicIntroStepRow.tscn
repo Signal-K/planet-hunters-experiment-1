@@ -1,0 +1,20 @@
+[gd_scene format=3]
+
+[node name="MechanicIntroStepRow" type="HBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="StepNumber" type="Label" parent="."]
+custom_minimum_size = Vector2(28, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.22, 0.60, 0.82, 1.0)
+theme_override_font_sizes/font_size = 12
+text = "01"
+
+[node name="StepText" type="Label" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.20, 0.30, 0.40, 1.0)
+theme_override_font_sizes/font_size = 13
+text = "Step text"
+autowrap_mode = 3

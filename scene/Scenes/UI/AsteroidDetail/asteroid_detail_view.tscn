@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" path="res://Scripts/UI/AsteroidDetail/AsteroidDetailView.gd" id="1_asteroid_detail"]
 [ext_resource type="Script" path="res://Scripts/UI/AsteroidDetail/DrawingCanvas.gd" id="2_drawing_canvas"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/Templates/AsteroidScienceSummaryCard.tscn" id="3_summary_card"]
 
 [node name="AsteroidDetailView" type="VBoxContainer"]
 size_flags_horizontal = 3
@@ -85,6 +86,9 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 20
 
+[node name="ScienceSummaryCard" parent="BodyScroll/ContentContainer" instance=ExtResource("3_summary_card")]
+layout_mode = 2
+
 [node name="LoadingLabel" type="Label" parent="BodyScroll/ContentContainer"]
 layout_mode = 2
 text = "Loading..."
@@ -103,6 +107,14 @@ vertical_alignment = 1
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 3
+
+[node name="ImageShell" type="PanelContainer" parent="BodyScroll/ContentContainer/ImageContainer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 
 [node name="AsteroidImage" type="TextureRect" parent="BodyScroll/ContentContainer/ImageContainer"]
 custom_minimum_size = Vector2(768, 768)

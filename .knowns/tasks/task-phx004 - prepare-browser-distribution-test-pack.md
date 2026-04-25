@@ -1,7 +1,7 @@
 ---
 id: phx004
 title: Prepare browser distribution test pack
-status: todo
+status: done
 priority: high
 labels:
   - release
@@ -10,7 +10,7 @@ labels:
   - distribution
   - test-pack
 createdAt: '2026-04-19T14:00:00.000Z'
-updatedAt: '2026-04-21T08:17:16.093Z'
+updatedAt: '2026-04-22T04:14:00.384Z'
 timeSpent: 0
 assignee: '@me'
 ---
@@ -24,9 +24,9 @@ This is part of the 2026-04-20 Star Sailors MVP/project-management reset. Projec
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 There is a playable URL or exported build path.
-- [ ] #2 Tester script covers launch, mine, debrief, next mission, and PWA behavior.
-- [ ] #3 Rollback/revert path is documented.
+- [x] #1 There is a playable URL or exported build path.
+- [x] #2 Tester script covers launch, mine, debrief, next mission, and PWA behavior.
+- [x] #3 Rollback/revert path is documented.
 <!-- AC:END -->
 
 ## Implementation Plan

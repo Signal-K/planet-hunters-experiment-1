@@ -20,18 +20,34 @@ const WARN_EDGE := Color(0.93, 0.72, 0.68, 0.82)
 const WARN_TEXT := Color(0.74, 0.29, 0.24, 1.0)
 
 @onready var _panel: PanelContainer = $Center/Panel
-@onready var _legacy_shell: Control = $Center/Panel/HBox
-
-var _accept_btn: Button
-var _decline_btn: Button
+@onready var _sidebar: PanelContainer = $Center/Panel/HBox/Sidebar
+@onready var _icon_circle: PanelContainer = $Center/Panel/HBox/Sidebar/SidebarVBox/IconCircle
+@onready var _icon_label: Label = $Center/Panel/HBox/Sidebar/SidebarVBox/IconCircle/IconLabel
+@onready var _auth_label: Label = $Center/Panel/HBox/Sidebar/SidebarVBox/AuthLabel
+@onready var _terminal_label: Label = $Center/Panel/HBox/Sidebar/SidebarVBox/TerminalLabel
+@onready var _alert_icon: Label = $Center/Panel/HBox/RightMargin/RightContent/TitleRow/AlertIcon
+@onready var _title_label: Label = $Center/Panel/HBox/RightMargin/RightContent/TitleRow/TitleLabel
+@onready var _body_label: Label = $Center/Panel/HBox/RightMargin/RightContent/BodyLabel
+@onready var _credit_card: PanelContainer = $Center/Panel/HBox/RightMargin/RightContent/CreditCard
+@onready var _credit_line_label: Label = $Center/Panel/HBox/RightMargin/RightContent/CreditCard/CreditCardBody/CreditLineLabel
+@onready var _currency_label: Label = $Center/Panel/HBox/RightMargin/RightContent/CreditCard/CreditCardBody/AmountRow/CurrencyLabel
+@onready var _amount_label: Label = $Center/Panel/HBox/RightMargin/RightContent/CreditCard/CreditCardBody/AmountRow/AmountLabel
+@onready var _deducted_label: Label = $Center/Panel/HBox/RightMargin/RightContent/CreditCard/CreditCardBody/DeductedLabel
+@onready var _warning_card: PanelContainer = $Center/Panel/HBox/RightMargin/RightContent/WarningCard
+@onready var _warn_icon: Label = $Center/Panel/HBox/RightMargin/RightContent/WarningCard/WarningHBox/WarnIcon
+@onready var _warn_label: Label = $Center/Panel/HBox/RightMargin/RightContent/WarningCard/WarningHBox/WarnLabel
+@onready var _guidance_card: PanelContainer = $Center/Panel/HBox/RightMargin/RightContent/GuidanceCard
+@onready var _guidance_title: Label = $Center/Panel/HBox/RightMargin/RightContent/GuidanceCard/GuidanceVBox/GuidanceTitle
+@onready var _tip_1: Label = $Center/Panel/HBox/RightMargin/RightContent/GuidanceCard/GuidanceVBox/Tip1
+@onready var _tip_2: Label = $Center/Panel/HBox/RightMargin/RightContent/GuidanceCard/GuidanceVBox/Tip2
+@onready var _tip_3: Label = $Center/Panel/HBox/RightMargin/RightContent/GuidanceCard/GuidanceVBox/Tip3
+@onready var _accept_btn: Button = $Center/Panel/HBox/RightMargin/RightContent/ButtonRow/AcceptButton
+@onready var _decline_btn: Button = $Center/Panel/HBox/RightMargin/RightContent/ButtonRow/DeclineButton
 
 func _on_dialog_ready() -> void:
 	$Backdrop.color = Color(0.84, 0.90, 0.88, 0.54)
-	if _legacy_shell:
-		_legacy_shell.queue_free()
-		_legacy_shell = null
 	_style_root_panel()
-	_build_layout()
+	_bind_layout()
 
 func _style_root_panel() -> void:
 	var style := StyleBoxFlat.new()
@@ -45,35 +61,7 @@ func _style_root_panel() -> void:
 	_panel.add_theme_stylebox_override("panel", style)
 	_panel.custom_minimum_size = Vector2(720, 0)
 
-func _build_layout() -> void:
-	for child in _panel.get_children():
-		if child != _legacy_shell:
-			child.queue_free()
-
-	var margin := MarginContainer.new()
-	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	margin.add_theme_constant_override("margin_left", 28)
-	margin.add_theme_constant_override("margin_top", 26)
-	margin.add_theme_constant_override("margin_right", 28)
-	margin.add_theme_constant_override("margin_bottom", 24)
-	_panel.add_child(margin)
-
-	var root := VBoxContainer.new()
-	root.add_theme_constant_override("separation", 18)
-	margin.add_child(root)
-
-	root.add_child(_build_header())
-	root.add_child(_build_body_text())
-	root.add_child(_build_credit_card())
-	root.add_child(_build_warning_card())
-	root.add_child(_build_guidance_card())
-	root.add_child(_build_button_row())
-
-func _build_header() -> Control:
-	var top := HBoxContainer.new()
-	top.add_theme_constant_override("separation", 16)
-
-	var icon_shell := PanelContainer.new()
+func _bind_layout() -> void:
 	var icon_style := StyleBoxFlat.new()
 	icon_style.bg_color = ACCENT_BG
 	icon_style.set_corner_radius_all(36)
@@ -81,60 +69,42 @@ func _build_header() -> Control:
 	icon_style.content_margin_top = 14
 	icon_style.content_margin_right = 18
 	icon_style.content_margin_bottom = 14
-	icon_shell.add_theme_stylebox_override("panel", icon_style)
-	top.add_child(icon_shell)
+	_icon_circle.add_theme_stylebox_override("panel", icon_style)
+	_icon_label.text = "🏛"
+	_icon_label.add_theme_font_size_override("font_size", 28)
+	_icon_label.add_theme_color_override("font_color", TITLE_COLOR)
+	_icon_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_icon_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_auth_label.text = "EMERGENCY_LOAN_AVAILABLE  //  AUTH_REF: 882-X"
+	_auth_label.add_theme_color_override("font_color", MUTED_COLOR)
+	_auth_label.add_theme_font_size_override("font_size", 12)
+	_terminal_label.text = "TERMINAL_STATION // Station Omega Command"
+	_terminal_label.add_theme_color_override("font_color", MUTED_COLOR)
+	_terminal_label.add_theme_font_size_override("font_size", 12)
+	_alert_icon.text = "△"
+	_alert_icon.add_theme_color_override("font_color", TITLE_COLOR)
+	_alert_icon.add_theme_font_size_override("font_size", 18)
+	_title_label.text = "LOAN AVAILABLE"
+	_title_label.add_theme_color_override("font_color", TITLE_COLOR)
+	_title_label.add_theme_font_size_override("font_size", 22)
+	_body_label.text = "Your account balance has reached critical depletion. Station Omega Command offers an emergency credit line to ensure continued operations."
+	_body_label.add_theme_color_override("font_color", BODY_COLOR)
+	_body_label.add_theme_font_size_override("font_size", 16)
+	_style_credit_card()
+	_style_warning_card()
+	_style_guidance_card()
+	_accept_btn.text = "ACCEPT LINE"
+	_decline_btn.text = "DISMISS"
+	_accept_btn.custom_minimum_size = Vector2(0, 60)
+	_decline_btn.custom_minimum_size = Vector2(0, 60)
+	_apply_primary_button(_accept_btn)
+	_apply_secondary_button(_decline_btn)
+	if not _accept_btn.pressed.is_connected(_on_accept):
+		_accept_btn.pressed.connect(_on_accept)
+	if not _decline_btn.pressed.is_connected(_on_decline):
+		_decline_btn.pressed.connect(_on_decline)
 
-	var icon := Label.new()
-	icon.text = "🏛"
-	icon.add_theme_font_size_override("font_size", 28)
-	icon.add_theme_color_override("font_color", TITLE_COLOR)
-	icon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	icon.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	icon_shell.add_child(icon)
-
-	var copy_col := VBoxContainer.new()
-	copy_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	copy_col.add_theme_constant_override("separation", 4)
-	top.add_child(copy_col)
-
-	var title := Label.new()
-	title.text = "LOAN AVAILABLE"
-	title.add_theme_color_override("font_color", TITLE_COLOR)
-	title.add_theme_font_size_override("font_size", 22)
-	copy_col.add_child(title)
-
-	var auth := Label.new()
-	auth.text = "EMERGENCY_LOAN_AVAILABLE  //  AUTH_REF: 882-X"
-	auth.add_theme_color_override("font_color", MUTED_COLOR)
-	auth.add_theme_font_size_override("font_size", 12)
-	copy_col.add_child(auth)
-
-	var station := Label.new()
-	station.text = "TERMINAL_STATION // Station Omega Command"
-	station.add_theme_color_override("font_color", MUTED_COLOR)
-	station.add_theme_font_size_override("font_size", 12)
-	copy_col.add_child(station)
-
-	var close_btn := Button.new()
-	close_btn.text = "✕"
-	close_btn.custom_minimum_size = Vector2(42, 42)
-	PanelStyle.apply_outline_button(close_btn, Color(0.78, 0.84, 0.86, 1.0), MUTED_COLOR)
-	close_btn.add_theme_font_size_override("font_size", 20)
-	close_btn.pressed.connect(close)
-	top.add_child(close_btn)
-
-	return top
-
-func _build_body_text() -> Control:
-	var label := Label.new()
-	label.text = "Your account balance has reached critical depletion. Station Omega Command offers an emergency credit line to ensure continued operations."
-	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	label.add_theme_color_override("font_color", BODY_COLOR)
-	label.add_theme_font_size_override("font_size", 16)
-	return label
-
-func _build_credit_card() -> Control:
-	var card := PanelContainer.new()
+func _style_credit_card() -> void:
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(0.98, 0.99, 0.99, 1.0)
 	style.border_color = Color(0.84, 0.90, 0.92, 1.0)
@@ -147,44 +117,21 @@ func _build_credit_card() -> Control:
 	style.content_margin_top = 18
 	style.content_margin_right = 20
 	style.content_margin_bottom = 18
-	card.add_theme_stylebox_override("panel", style)
+	_credit_card.add_theme_stylebox_override("panel", style)
+	_credit_line_label.text = "CREDIT_LINE_STATION_OMEGA"
+	_credit_line_label.add_theme_color_override("font_color", Color(0.37, 0.64, 0.61, 1.0))
+	_credit_line_label.add_theme_font_size_override("font_size", 12)
+	_currency_label.text = "F"
+	_currency_label.add_theme_color_override("font_color", Color(0.34, 0.64, 0.60, 0.84))
+	_currency_label.add_theme_font_size_override("font_size", 24)
+	_amount_label.text = _format_amount(int(AppControllerScript.LOAN_AMOUNT))
+	_amount_label.add_theme_color_override("font_color", TITLE_COLOR)
+	_amount_label.add_theme_font_size_override("font_size", 38)
+	_deducted_label.text = "AUTO-DEDUCTED FROM NEXT MISSION PAYOUT."
+	_deducted_label.add_theme_color_override("font_color", Color(0.36, 0.55, 0.10, 1.0))
+	_deducted_label.add_theme_font_size_override("font_size", 12)
 
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 10)
-	card.add_child(vbox)
-
-	var eyebrow := Label.new()
-	eyebrow.text = "CREDIT_LINE_STATION_OMEGA"
-	eyebrow.add_theme_color_override("font_color", Color(0.37, 0.64, 0.61, 1.0))
-	eyebrow.add_theme_font_size_override("font_size", 12)
-	vbox.add_child(eyebrow)
-
-	var amount_row := HBoxContainer.new()
-	amount_row.add_theme_constant_override("separation", 4)
-	vbox.add_child(amount_row)
-
-	var currency := Label.new()
-	currency.text = "F"
-	currency.add_theme_color_override("font_color", Color(0.34, 0.64, 0.60, 0.84))
-	currency.add_theme_font_size_override("font_size", 24)
-	amount_row.add_child(currency)
-
-	var amount := Label.new()
-	amount.text = _format_amount(int(AppControllerScript.LOAN_AMOUNT))
-	amount.add_theme_color_override("font_color", TITLE_COLOR)
-	amount.add_theme_font_size_override("font_size", 38)
-	amount_row.add_child(amount)
-
-	var note := Label.new()
-	note.text = "AUTO-DEDUCTED FROM NEXT MISSION PAYOUT."
-	note.add_theme_color_override("font_color", Color(0.36, 0.55, 0.10, 1.0))
-	note.add_theme_font_size_override("font_size", 12)
-	vbox.add_child(note)
-
-	return card
-
-func _build_warning_card() -> Control:
-	var card := PanelContainer.new()
+func _style_warning_card() -> void:
 	var style := StyleBoxFlat.new()
 	style.bg_color = WARN_BG
 	style.border_color = WARN_EDGE
@@ -194,30 +141,15 @@ func _build_warning_card() -> Control:
 	style.content_margin_top = 14
 	style.content_margin_right = 16
 	style.content_margin_bottom = 14
-	card.add_theme_stylebox_override("panel", style)
+	_warning_card.add_theme_stylebox_override("panel", style)
+	_warn_icon.text = "⚠"
+	_warn_icon.add_theme_color_override("font_color", WARN_TEXT)
+	_warn_icon.add_theme_font_size_override("font_size", 15)
+	_warn_label.text = "Regulatory Note: Repay within 3 standard cycles to avoid asset seizure protocols."
+	_warn_label.add_theme_color_override("font_color", WARN_TEXT)
+	_warn_label.add_theme_font_size_override("font_size", 13)
 
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 10)
-	card.add_child(row)
-
-	var icon := Label.new()
-	icon.text = "⚠"
-	icon.add_theme_color_override("font_color", WARN_TEXT)
-	icon.add_theme_font_size_override("font_size", 15)
-	row.add_child(icon)
-
-	var text := Label.new()
-	text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	text.text = "Regulatory Note: Repay within 3 standard cycles to avoid asset seizure protocols."
-	text.add_theme_color_override("font_color", WARN_TEXT)
-	text.add_theme_font_size_override("font_size", 13)
-	row.add_child(text)
-
-	return card
-
-func _build_guidance_card() -> Control:
-	var card := PanelContainer.new()
+func _style_guidance_card() -> void:
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(0.97, 0.985, 0.98, 1.0)
 	style.border_color = Color(0.84, 0.91, 0.90, 0.92)
@@ -227,53 +159,20 @@ func _build_guidance_card() -> Control:
 	style.content_margin_top = 14
 	style.content_margin_right = 16
 	style.content_margin_bottom = 14
-	card.add_theme_stylebox_override("panel", style)
-
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 8)
-	card.add_child(vbox)
-
-	var title := Label.new()
-	title.text = "How to recover"
-	title.add_theme_color_override("font_color", TITLE_COLOR)
-	title.add_theme_font_size_override("font_size", 14)
-	vbox.add_child(title)
-
-	for line in [
-		"Accept the line and launch again immediately. Missions still net positive even with the deduction.",
-		"Repayment is automatic. The next mission cycle clears the line before regular payout lands.",
-		"Prioritize contractor routes with heavier mineral orders if you want the debt gone in one run."
-	]:
-		var tip := Label.new()
-		tip.text = "• " + line
-		tip.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		tip.add_theme_color_override("font_color", BODY_COLOR)
-		tip.add_theme_font_size_override("font_size", 13)
-		vbox.add_child(tip)
-
-	return card
-
-func _build_button_row() -> Control:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 14)
-
-	_accept_btn = Button.new()
-	_accept_btn.text = "ACCEPT LINE"
-	_accept_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_accept_btn.custom_minimum_size = Vector2(0, 60)
-	_apply_primary_button(_accept_btn)
-	_accept_btn.pressed.connect(_on_accept)
-	row.add_child(_accept_btn)
-
-	_decline_btn = Button.new()
-	_decline_btn.text = "DISMISS"
-	_decline_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_decline_btn.custom_minimum_size = Vector2(0, 60)
-	_apply_secondary_button(_decline_btn)
-	_decline_btn.pressed.connect(_on_decline)
-	row.add_child(_decline_btn)
-
-	return row
+	_guidance_card.add_theme_stylebox_override("panel", style)
+	_guidance_title.text = "How to recover"
+	_guidance_title.add_theme_color_override("font_color", TITLE_COLOR)
+	_guidance_title.add_theme_font_size_override("font_size", 14)
+	var tips := [
+		"• Accept the line and launch again immediately. Missions still net positive even with the deduction.",
+		"• Repayment is automatic. The next mission cycle clears the line before regular payout lands.",
+		"• Prioritize contractor routes with heavier mineral orders if you want the debt gone in one run."
+	]
+	for idx in range(tips.size()):
+		var label: Label = [_tip_1, _tip_2, _tip_3][idx]
+		label.text = tips[idx]
+		label.add_theme_color_override("font_color", BODY_COLOR)
+		label.add_theme_font_size_override("font_size", 13)
 
 func _apply_primary_button(button: Button) -> void:
 	var normal := StyleBoxFlat.new()

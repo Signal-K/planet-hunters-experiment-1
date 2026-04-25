@@ -1,0 +1,396 @@
+{
+  "taskId": "dlephs",
+  "currentVersion": 6,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "dlephs",
+      "version": 1,
+      "timestamp": "2026-04-23T10:10:46.537Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix space map: dark background, target clicks open mission dialogue, remove stale scanner message",
+        "description": "Space map has multiple issues: (1) background renders white because NebulaSciTheme forwards to light-mode DS palette — needs forced dark colours, (2) no asteroid/planet targets visible, (3) clicking a target navigates away to asteroid preview instead of opening an inline mission-creation dialogue with relevant contractors, (4) free-missions gate needed (lock dialogue for players who haven't reached free-ops stage), (5) the TutorialCoachOverlay fallback 'Navigate to continue your mission.' message should be removed since it gives no actionable info.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "map",
+          "ux",
+          "missions"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Space map background is dark (space-like), not white"
+          },
+          {
+            "completed": false,
+            "text": "Asteroid targets are visible in solar view"
+          },
+          {
+            "completed": false,
+            "text": "Clicking a target opens an inline overlay dialogue — not a scene change"
+          },
+          {
+            "completed": false,
+            "text": "Dialogue shows target info, launch option, and any relevant active contractor missions"
+          },
+          {
+            "completed": false,
+            "text": "Launch option is disabled/locked for players below free-ops stage (mission stage < 4)"
+          },
+          {
+            "completed": false,
+            "text": "Navigate to continue your mission. fallback text is removed from TutorialCoachOverlay"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "dlephs",
+      "version": 2,
+      "timestamp": "2026-04-23T10:10:52.279Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "Screenshot showing white map background and Scanner overlay: /Users/scroobz/.claude/image-cache/c3040fdc-2b80-4837-bae9-e25746b9b393/1.png"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix space map: dark background, target clicks open mission dialogue, remove stale scanner message",
+        "description": "Space map has multiple issues: (1) background renders white because NebulaSciTheme forwards to light-mode DS palette — needs forced dark colours, (2) no asteroid/planet targets visible, (3) clicking a target navigates away to asteroid preview instead of opening an inline mission-creation dialogue with relevant contractors, (4) free-missions gate needed (lock dialogue for players who haven't reached free-ops stage), (5) the TutorialCoachOverlay fallback 'Navigate to continue your mission.' message should be removed since it gives no actionable info.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "map",
+          "ux",
+          "missions"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Space map background is dark (space-like), not white"
+          },
+          {
+            "completed": false,
+            "text": "Asteroid targets are visible in solar view"
+          },
+          {
+            "completed": false,
+            "text": "Clicking a target opens an inline overlay dialogue — not a scene change"
+          },
+          {
+            "completed": false,
+            "text": "Dialogue shows target info, launch option, and any relevant active contractor missions"
+          },
+          {
+            "completed": false,
+            "text": "Launch option is disabled/locked for players below free-ops stage (mission stage < 4)"
+          },
+          {
+            "completed": false,
+            "text": "Navigate to continue your mission. fallback text is removed from TutorialCoachOverlay"
+          }
+        ],
+        "implementationNotes": "Screenshot showing white map background and Scanner overlay: /Users/scroobz/.claude/image-cache/c3040fdc-2b80-4837-bae9-e25746b9b393/1.png"
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "dlephs",
+      "version": 3,
+      "timestamp": "2026-04-23T10:12:24.958Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Space map background is dark (space-like), not white"
+            },
+            {
+              "completed": false,
+              "text": "Asteroid targets are visible in solar view"
+            },
+            {
+              "completed": false,
+              "text": "Clicking a target opens an inline overlay dialogue — not a scene change"
+            },
+            {
+              "completed": false,
+              "text": "Dialogue shows target info, launch option, and any relevant active contractor missions"
+            },
+            {
+              "completed": false,
+              "text": "Launch option is disabled/locked for players below free-ops stage (mission stage < 4)"
+            },
+            {
+              "completed": false,
+              "text": "Navigate to continue your mission. fallback text is removed from TutorialCoachOverlay"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Space map background is dark (space-like), not white"
+            },
+            {
+              "completed": true,
+              "text": "Asteroid targets are visible in solar view"
+            },
+            {
+              "completed": true,
+              "text": "Clicking a target opens an inline overlay dialogue — not a scene change"
+            },
+            {
+              "completed": true,
+              "text": "Dialogue shows target info, launch option, and any relevant active contractor missions"
+            },
+            {
+              "completed": true,
+              "text": "Launch option is disabled/locked for players below free-ops stage (mission stage < 4)"
+            },
+            {
+              "completed": true,
+              "text": "Navigate to continue your mission. fallback text is removed from TutorialCoachOverlay"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Fix space map: dark background, target clicks open mission dialogue, remove stale scanner message",
+        "description": "Space map has multiple issues: (1) background renders white because NebulaSciTheme forwards to light-mode DS palette — needs forced dark colours, (2) no asteroid/planet targets visible, (3) clicking a target navigates away to asteroid preview instead of opening an inline mission-creation dialogue with relevant contractors, (4) free-missions gate needed (lock dialogue for players who haven't reached free-ops stage), (5) the TutorialCoachOverlay fallback 'Navigate to continue your mission.' message should be removed since it gives no actionable info.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "map",
+          "ux",
+          "missions"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Space map background is dark (space-like), not white"
+          },
+          {
+            "completed": true,
+            "text": "Asteroid targets are visible in solar view"
+          },
+          {
+            "completed": true,
+            "text": "Clicking a target opens an inline overlay dialogue — not a scene change"
+          },
+          {
+            "completed": true,
+            "text": "Dialogue shows target info, launch option, and any relevant active contractor missions"
+          },
+          {
+            "completed": true,
+            "text": "Launch option is disabled/locked for players below free-ops stage (mission stage < 4)"
+          },
+          {
+            "completed": true,
+            "text": "Navigate to continue your mission. fallback text is removed from TutorialCoachOverlay"
+          }
+        ],
+        "implementationNotes": "Screenshot showing white map background and Scanner overlay: /Users/scroobz/.claude/image-cache/c3040fdc-2b80-4837-bae9-e25746b9b393/1.png"
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "dlephs",
+      "version": 4,
+      "timestamp": "2026-04-23T10:12:32.955Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": "Screenshot showing white map background and Scanner overlay: /Users/scroobz/.claude/image-cache/c3040fdc-2b80-4837-bae9-e25746b9b393/1.png",
+          "newValue": "Fixed in one pass:\n- SpaceMap.gd: replaced DS/NebulaSciTheme gradient (light-mode palette) with BG_COLOR=dark constant\n- SpaceMap.gd: _open_target_preview now shows inline overlay (TargetDialogue on CanvasLayer) instead of scene change; includes target info, contractor roster, launch button (gated by is_free_operations_unlocked)\n- TutorialCoachOverlay.gd: _resume_hint_for_step() fallback returns \"\" (empty); message_label hidden when hint is empty"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix space map: dark background, target clicks open mission dialogue, remove stale scanner message",
+        "description": "Space map has multiple issues: (1) background renders white because NebulaSciTheme forwards to light-mode DS palette — needs forced dark colours, (2) no asteroid/planet targets visible, (3) clicking a target navigates away to asteroid preview instead of opening an inline mission-creation dialogue with relevant contractors, (4) free-missions gate needed (lock dialogue for players who haven't reached free-ops stage), (5) the TutorialCoachOverlay fallback 'Navigate to continue your mission.' message should be removed since it gives no actionable info.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "map",
+          "ux",
+          "missions"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Space map background is dark (space-like), not white"
+          },
+          {
+            "completed": true,
+            "text": "Asteroid targets are visible in solar view"
+          },
+          {
+            "completed": true,
+            "text": "Clicking a target opens an inline overlay dialogue — not a scene change"
+          },
+          {
+            "completed": true,
+            "text": "Dialogue shows target info, launch option, and any relevant active contractor missions"
+          },
+          {
+            "completed": true,
+            "text": "Launch option is disabled/locked for players below free-ops stage (mission stage < 4)"
+          },
+          {
+            "completed": true,
+            "text": "Navigate to continue your mission. fallback text is removed from TutorialCoachOverlay"
+          }
+        ],
+        "implementationNotes": "Fixed in one pass:\n- SpaceMap.gd: replaced DS/NebulaSciTheme gradient (light-mode palette) with BG_COLOR=dark constant\n- SpaceMap.gd: _open_target_preview now shows inline overlay (TargetDialogue on CanvasLayer) instead of scene change; includes target info, contractor roster, launch button (gated by is_free_operations_unlocked)\n- TutorialCoachOverlay.gd: _resume_hint_for_step() fallback returns \"\" (empty); message_label hidden when hint is empty"
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "dlephs",
+      "version": 5,
+      "timestamp": "2026-04-23T10:12:33.722Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Fix space map: dark background, target clicks open mission dialogue, remove stale scanner message",
+        "description": "Space map has multiple issues: (1) background renders white because NebulaSciTheme forwards to light-mode DS palette — needs forced dark colours, (2) no asteroid/planet targets visible, (3) clicking a target navigates away to asteroid preview instead of opening an inline mission-creation dialogue with relevant contractors, (4) free-missions gate needed (lock dialogue for players who haven't reached free-ops stage), (5) the TutorialCoachOverlay fallback 'Navigate to continue your mission.' message should be removed since it gives no actionable info.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "map",
+          "ux",
+          "missions"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Space map background is dark (space-like), not white"
+          },
+          {
+            "completed": true,
+            "text": "Asteroid targets are visible in solar view"
+          },
+          {
+            "completed": true,
+            "text": "Clicking a target opens an inline overlay dialogue — not a scene change"
+          },
+          {
+            "completed": true,
+            "text": "Dialogue shows target info, launch option, and any relevant active contractor missions"
+          },
+          {
+            "completed": true,
+            "text": "Launch option is disabled/locked for players below free-ops stage (mission stage < 4)"
+          },
+          {
+            "completed": true,
+            "text": "Navigate to continue your mission. fallback text is removed from TutorialCoachOverlay"
+          }
+        ],
+        "implementationNotes": "Fixed in one pass:\n- SpaceMap.gd: replaced DS/NebulaSciTheme gradient (light-mode palette) with BG_COLOR=dark constant\n- SpaceMap.gd: _open_target_preview now shows inline overlay (TargetDialogue on CanvasLayer) instead of scene change; includes target info, contractor roster, launch button (gated by is_free_operations_unlocked)\n- TutorialCoachOverlay.gd: _resume_hint_for_step() fallback returns \"\" (empty); message_label hidden when hint is empty"
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "dlephs",
+      "version": 6,
+      "timestamp": "2026-04-23T10:13:59.786Z",
+      "changes": [
+        {
+          "field": "title",
+          "oldValue": "Fix space map: dark background, target clicks open mission dialogue, remove stale scanner message",
+          "newValue": "Space map: fix white background, add asteroid targets, solar system navigation, target mission dialogue, build nav button"
+        },
+        {
+          "field": "description",
+          "oldValue": "Space map has multiple issues: (1) background renders white because NebulaSciTheme forwards to light-mode DS palette — needs forced dark colours, (2) no asteroid/planet targets visible, (3) clicking a target navigates away to asteroid preview instead of opening an inline mission-creation dialogue with relevant contractors, (4) free-missions gate needed (lock dialogue for players who haven't reached free-ops stage), (5) the TutorialCoachOverlay fallback 'Navigate to continue your mission.' message should be removed since it gives no actionable info.",
+          "newValue": "See screenshot (image attached in notes).\n\nIssue: the map is white, and has no asteroids or ability to navigate to other solar systems (to see the planet candidates), additionally we need to be able to see a map view of all solar systems.\n\nClicking on a target in the map should open a dialogue to create a mission to it, and also show any contractor missions that would be relevant. If the user hasn't unlocked free missions, then this should be locked.\n\nFinally, remove the 'navigate to continue your mission' dialogue and add more tags/labels to this ticket.\n\nThe main nav bar along the bottom should also show the option to construct new buildings — set up a starter dialogue that's functional, for now it only works for building new things on Earth."
+        },
+        {
+          "field": "labels",
+          "oldValue": [
+            "map",
+            "ux",
+            "missions"
+          ],
+          "newValue": [
+            "map",
+            "ux",
+            "missions",
+            "nav",
+            "build",
+            "space-map",
+            "earth"
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Space map: fix white background, add asteroid targets, solar system navigation, target mission dialogue, build nav button",
+        "description": "See screenshot (image attached in notes).\n\nIssue: the map is white, and has no asteroids or ability to navigate to other solar systems (to see the planet candidates), additionally we need to be able to see a map view of all solar systems.\n\nClicking on a target in the map should open a dialogue to create a mission to it, and also show any contractor missions that would be relevant. If the user hasn't unlocked free missions, then this should be locked.\n\nFinally, remove the 'navigate to continue your mission' dialogue and add more tags/labels to this ticket.\n\nThe main nav bar along the bottom should also show the option to construct new buildings — set up a starter dialogue that's functional, for now it only works for building new things on Earth.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "map",
+          "ux",
+          "missions",
+          "nav",
+          "build",
+          "space-map",
+          "earth"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Space map background is dark (space-like), not white"
+          },
+          {
+            "completed": true,
+            "text": "Asteroid targets are visible in solar view"
+          },
+          {
+            "completed": true,
+            "text": "Clicking a target opens an inline overlay dialogue — not a scene change"
+          },
+          {
+            "completed": true,
+            "text": "Dialogue shows target info, launch option, and any relevant active contractor missions"
+          },
+          {
+            "completed": true,
+            "text": "Launch option is disabled/locked for players below free-ops stage (mission stage < 4)"
+          },
+          {
+            "completed": true,
+            "text": "Navigate to continue your mission. fallback text is removed from TutorialCoachOverlay"
+          }
+        ],
+        "implementationNotes": "Fixed in one pass:\n- SpaceMap.gd: replaced DS/NebulaSciTheme gradient (light-mode palette) with BG_COLOR=dark constant\n- SpaceMap.gd: _open_target_preview now shows inline overlay (TargetDialogue on CanvasLayer) instead of scene change; includes target info, contractor roster, launch button (gated by is_free_operations_unlocked)\n- TutorialCoachOverlay.gd: _resume_hint_for_step() fallback returns \"\" (empty); message_label hidden when hint is empty"
+      }
+    }
+  ]
+}

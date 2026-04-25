@@ -1,6 +1,6 @@
 {
   "taskId": "phx001",
-  "currentVersion": 1,
+  "currentVersion": 4,
   "versions": [
     {
       "id": "v1",
@@ -53,6 +53,218 @@
           },
           {
             "completed": false,
+            "text": "Deferred room/art/construction work is clearly marked."
+          }
+        ],
+        "implementationPlan": "1. Confirm M1-M4 authored onboarding plus Free Operations is the only active MVP scope.\n2. Update the open-task handoff notes if they contradict this scope.",
+        "implementationNotes": "Created by project-management reset on 2026-04-20.\n\nRelated to @task-q8bgdg, @task-vcrxs5"
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "phx001",
+      "version": 2,
+      "timestamp": "2026-04-22T04:13:51.417Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        },
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "No authored Mission 5 work is active."
+            },
+            {
+              "completed": false,
+              "text": "MVP scope is visible from the repo docs and this command center."
+            },
+            {
+              "completed": false,
+              "text": "Deferred room/art/construction work is clearly marked."
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "No authored Mission 5 work is active."
+            },
+            {
+              "completed": false,
+              "text": "MVP scope is visible from the repo docs and this command center."
+            },
+            {
+              "completed": false,
+              "text": "Deferred room/art/construction work is clearly marked."
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Rebaseline Planet Hunters MVP scope to M1-M4 plus Free Ops",
+        "description": "This is part of the 2026-04-20 Star Sailors MVP/project-management reset. Project: Planet Hunters Experiment 1. Work must stay tied to MVP closure, distribution, testing, or agent handoff for this week.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "mvp",
+          "planning",
+          "scope-lock",
+          "rebaseline",
+          "mission-mapping"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "No authored Mission 5 work is active."
+          },
+          {
+            "completed": false,
+            "text": "MVP scope is visible from the repo docs and this command center."
+          },
+          {
+            "completed": false,
+            "text": "Deferred room/art/construction work is clearly marked."
+          }
+        ],
+        "implementationPlan": "1. Confirm M1-M4 authored onboarding plus Free Operations is the only active MVP scope.\n2. Update the open-task handoff notes if they contradict this scope.",
+        "implementationNotes": "Created by project-management reset on 2026-04-20.\n\nRelated to @task-q8bgdg, @task-vcrxs5"
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "phx001",
+      "version": 3,
+      "timestamp": "2026-04-22T04:13:51.868Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "No authored Mission 5 work is active."
+            },
+            {
+              "completed": false,
+              "text": "MVP scope is visible from the repo docs and this command center."
+            },
+            {
+              "completed": false,
+              "text": "Deferred room/art/construction work is clearly marked."
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "No authored Mission 5 work is active."
+            },
+            {
+              "completed": true,
+              "text": "MVP scope is visible from the repo docs and this command center."
+            },
+            {
+              "completed": false,
+              "text": "Deferred room/art/construction work is clearly marked."
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Rebaseline Planet Hunters MVP scope to M1-M4 plus Free Ops",
+        "description": "This is part of the 2026-04-20 Star Sailors MVP/project-management reset. Project: Planet Hunters Experiment 1. Work must stay tied to MVP closure, distribution, testing, or agent handoff for this week.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "mvp",
+          "planning",
+          "scope-lock",
+          "rebaseline",
+          "mission-mapping"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "No authored Mission 5 work is active."
+          },
+          {
+            "completed": true,
+            "text": "MVP scope is visible from the repo docs and this command center."
+          },
+          {
+            "completed": false,
+            "text": "Deferred room/art/construction work is clearly marked."
+          }
+        ],
+        "implementationPlan": "1. Confirm M1-M4 authored onboarding plus Free Operations is the only active MVP scope.\n2. Update the open-task handoff notes if they contradict this scope.",
+        "implementationNotes": "Created by project-management reset on 2026-04-20.\n\nRelated to @task-q8bgdg, @task-vcrxs5"
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "phx001",
+      "version": 4,
+      "timestamp": "2026-04-22T04:13:52.289Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "No authored Mission 5 work is active."
+            },
+            {
+              "completed": true,
+              "text": "MVP scope is visible from the repo docs and this command center."
+            },
+            {
+              "completed": false,
+              "text": "Deferred room/art/construction work is clearly marked."
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "No authored Mission 5 work is active."
+            },
+            {
+              "completed": true,
+              "text": "MVP scope is visible from the repo docs and this command center."
+            },
+            {
+              "completed": true,
+              "text": "Deferred room/art/construction work is clearly marked."
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Rebaseline Planet Hunters MVP scope to M1-M4 plus Free Ops",
+        "description": "This is part of the 2026-04-20 Star Sailors MVP/project-management reset. Project: Planet Hunters Experiment 1. Work must stay tied to MVP closure, distribution, testing, or agent handoff for this week.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "mvp",
+          "planning",
+          "scope-lock",
+          "rebaseline",
+          "mission-mapping"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "No authored Mission 5 work is active."
+          },
+          {
+            "completed": true,
+            "text": "MVP scope is visible from the repo docs and this command center."
+          },
+          {
+            "completed": true,
             "text": "Deferred room/art/construction work is clearly marked."
           }
         ],

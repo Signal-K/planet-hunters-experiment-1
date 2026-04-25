@@ -19,6 +19,25 @@ const GameMenuProgressCardScene = preload("res://Scenes/UI/Templates/GameMenuPro
 const ResourceValueRowScene = preload("res://Scenes/UI/Templates/ResourceValueRow.tscn")
 const MenuUnlockHeaderScene = preload("res://Scenes/UI/Templates/MenuUnlockHeader.tscn")
 const MenuUnlockItemScene = preload("res://Scenes/UI/Templates/MenuUnlockItem.tscn")
+const MenuLogbookCardScene = preload("res://Scenes/UI/Templates/MenuLogbookCard.tscn")
+const MenuLogbookKeyValueRowScene = preload("res://Scenes/UI/Templates/MenuLogbookKeyValueRow.tscn")
+const MenuLogbookEmptyScene = preload("res://Scenes/UI/Templates/MenuLogbookEmpty.tscn")
+const MenuDiscoveryRowScene = preload("res://Scenes/UI/Templates/MenuDiscoveryRow.tscn")
+const MenuEmptyStateLabelScene = preload("res://Scenes/UI/Templates/MenuEmptyStateLabel.tscn")
+const GameMenuConstructionProjectCardScene = preload("res://Scenes/UI/Templates/GameMenuConstructionProjectCard.tscn")
+const GameMenuConstructionRequirementRowScene = preload("res://Scenes/UI/Templates/GameMenuConstructionRequirementRow.tscn")
+const GameMenuContributeOverlayScene = preload("res://Scenes/UI/Templates/GameMenuContributeOverlay.tscn")
+const GameMenuContributeMineralRowScene = preload("res://Scenes/UI/Templates/GameMenuContributeMineralRow.tscn")
+const GameMenuContractorRowScene = preload("res://Scenes/UI/Templates/GameMenuContractorRow.tscn")
+const GameMenuMarketplaceRowScene = preload("res://Scenes/UI/Templates/GameMenuMarketplaceRow.tscn")
+const GameMenuRoomUpgradeRowScene = preload("res://Scenes/UI/Templates/GameMenuRoomUpgradeRow.tscn")
+const GameMenuResearchCardScene = preload("res://Scenes/UI/Templates/GameMenuResearchCard.tscn")
+const GameMenuContentCardScene = preload("res://Scenes/UI/Templates/GameMenuContentCard.tscn")
+const GameMenuStatColumnScene = preload("res://Scenes/UI/Templates/GameMenuStatColumn.tscn")
+const GameMenuDebugSectionScene = preload("res://Scenes/UI/Templates/GameMenuDebugSection.tscn")
+const GameMenuInfoCardScene = preload("res://Scenes/UI/Templates/GameMenuInfoCard.tscn")
+const GameMenuLegendLabelScene = preload("res://Scenes/UI/Templates/GameMenuLegendLabel.tscn")
+const GameMenuActionsSectionScene = preload("res://Scenes/UI/Templates/GameMenuActionsSection.tscn")
 
 const MENU_LAYER_NAME := "GameMenuLayer"
 const MENU_ROOT_NAME := "GameMenuRoot"
@@ -154,26 +173,44 @@ static func _build_menu_root(owner: Node) -> Control:
 	var sep: HSeparator = root.get_node("Center/%s/Scroll/Shell/Separator" % MENU_PANEL_NAME)
 	sep.add_theme_color_override("separator", Color(CYAN.r, CYAN.g, CYAN.b, 0.3))
 
+	var stats_host: VBoxContainer = root.get_node("Center/%s/Scroll/Shell/StatsHost" % MENU_PANEL_NAME)
+	var cargo_label: Label = root.get_node("Center/%s/Scroll/Shell/CargoSectionLabel" % MENU_PANEL_NAME)
+	var cargo_host: VBoxContainer = root.get_node("Center/%s/Scroll/Shell/CargoHost" % MENU_PANEL_NAME)
+	var mission_requirements_label: Label = root.get_node("Center/%s/Scroll/Shell/MissionRequirementsSectionLabel" % MENU_PANEL_NAME)
+	var mission_requirements_host: VBoxContainer = root.get_node("Center/%s/Scroll/Shell/MissionRequirementsHost" % MENU_PANEL_NAME)
+	var settings_label: Label = root.get_node("Center/%s/Scroll/Shell/SettingsSectionLabel" % MENU_PANEL_NAME)
+	var settings_host: VBoxContainer = root.get_node("Center/%s/Scroll/Shell/SettingsHost" % MENU_PANEL_NAME)
+	var debug_label: Label = root.get_node("Center/%s/Scroll/Shell/DebugSectionLabel" % MENU_PANEL_NAME)
+	var debug_host: VBoxContainer = root.get_node("Center/%s/Scroll/Shell/DebugHost" % MENU_PANEL_NAME)
+
+	for section_label in [cargo_label, mission_requirements_label, settings_label, debug_label]:
+		section_label.add_theme_font_size_override("font_size", 14)
+		section_label.add_theme_color_override("font_color", TEXT_MUTED)
+
+	for host in [stats_host, cargo_host, mission_requirements_host, settings_host, debug_host]:
+		host.add_theme_constant_override("separation", 10)
+
 	# Player stats
-	shell.add_child(_build_stats_card())
+	stats_host.add_child(_build_stats_card())
 
 	# Cargo — minerals currently in inventory
-	shell.add_child(_build_section_header("CARGO"))
-	shell.add_child(_build_inventory_card())
+	cargo_host.add_child(_build_inventory_card())
 
 	# Active mission requirements (only shown when a contractor order is active)
 	var req := _build_mission_requirements_card()
 	if req != null:
-		shell.add_child(_build_section_header("MISSION REQUIREMENTS"))
-		shell.add_child(req)
+		mission_requirements_label.visible = true
+		mission_requirements_host.visible = true
+		mission_requirements_host.add_child(req)
+	else:
+		mission_requirements_label.visible = false
+		mission_requirements_host.visible = false
 
 	# Settings / Actions
-	shell.add_child(_build_section_header("SETTINGS"))
-	shell.add_child(_build_actions_section(owner))
+	settings_host.add_child(_build_actions_section(owner))
 
 	# Debug
-	shell.add_child(_build_section_header("DEBUG"))
-	shell.add_child(_build_debug_section(owner))
+	debug_host.add_child(_build_debug_section(owner))
 
 	# Logbook overlay (hidden until logbook_btn pressed)
 	var logbook_overlay := _build_logbook_overlay(vp_w)
@@ -228,69 +265,14 @@ static func _build_stats_card() -> PanelContainer:
 		["FRANCS", francs_str, AMBER],
 		["MISSIONS", str(missions), TEXT_COLOR],
 	]:
-		var col := VBoxContainer.new()
-		col.add_theme_constant_override("separation", 3)
-		col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var col: VBoxContainer = GameMenuStatColumnScene.instantiate()
 		hbox.add_child(col)
-		var key_lbl := Label.new()
+		var key_lbl: Label = col.get_node("KeyLabel")
 		key_lbl.text = stat_pair[0]
-		key_lbl.add_theme_font_size_override("font_size", 10)
 		key_lbl.add_theme_color_override("font_color", TEXT_MUTED)
-		col.add_child(key_lbl)
-		var val_lbl := Label.new()
+		var val_lbl: Label = col.get_node("ValueLabel")
 		val_lbl.text = stat_pair[1]
-		val_lbl.add_theme_font_size_override("font_size", 20)
 		val_lbl.add_theme_color_override("font_color", stat_pair[2])
-		val_lbl.clip_text = true
-		col.add_child(val_lbl)
-
-	return card
-
-# ---------------------------------------------------------------------------
-# Progress card (XP bar + next-level info)
-# ---------------------------------------------------------------------------
-
-static func _build_progress_card() -> PanelContainer:
-	var card: PanelContainer = GameMenuProgressCardScene.instantiate()
-	card.add_theme_stylebox_override("panel", _card_style(0.45))
-
-	var app = AppControllerHelper.get_instance()
-	var level := 1
-	var xp := 0
-	var total_xp := 0
-	var next_req := 10
-	if app:
-		level = int(app.get_experience_level()) if app.has_method("get_experience_level") else 1
-		xp = int(app.get_experience_xp()) if app.has_method("get_experience_xp") else 0
-		total_xp = int(app.get_total_experience()) if app.has_method("get_total_experience") else xp
-		next_req = int(app.get_xp_required_for_next_level()) if app.has_method("get_xp_required_for_next_level") else max(10, xp + 1)
-
-	var level_lbl: Label = card.get_node("Body/LevelRow/LevelLabel")
-	level_lbl.text = "Level %d" % level
-	level_lbl.add_theme_font_size_override("font_size", 22)
-	level_lbl.add_theme_color_override("font_color", CYAN)
-
-	var xp_lbl: Label = card.get_node("Body/LevelRow/XPLabel")
-	xp_lbl.text = "Total XP: %d  •  Current: %d" % [total_xp, xp]
-	xp_lbl.add_theme_font_size_override("font_size", 16)
-	xp_lbl.add_theme_color_override("font_color", TEXT_MUTED)
-
-	var bar: ProgressBar = card.get_node("Body/ProgressBar")
-	bar.max_value = max(next_req, 1)
-	bar.value = clamp(xp, 0, bar.max_value)
-	var bar_fill := StyleBoxFlat.new()
-	bar_fill.bg_color = CYAN
-	bar_fill.set_corner_radius_all(4)
-	var bar_bg := StyleBoxFlat.new()
-	bar_bg.bg_color = Color(0.10, 0.13, 0.22, 1.0)
-	bar_bg.set_corner_radius_all(4)
-	bar.add_theme_stylebox_override("fill", bar_fill)
-	bar.add_theme_stylebox_override("background", bar_bg)
-
-	var next_lbl: Label = card.get_node("Body/NextLabel")
-	next_lbl.text = "%d XP to next level" % max(next_req - xp, 0)
-	next_lbl.add_theme_font_size_override("font_size", 15)
-	next_lbl.add_theme_color_override("font_color", TEXT_MUTED)
 
 	return card
 
@@ -299,36 +281,27 @@ static func _build_progress_card() -> PanelContainer:
 # ---------------------------------------------------------------------------
 
 static func _build_actions_section(owner: Node) -> VBoxContainer:
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 10)
+	var vbox: VBoxContainer = GameMenuActionsSectionScene.instantiate()
 
-	var practice_btn := _build_button("Practice Mining", true)
+	var practice_btn: Button = vbox.get_node("PracticeMiningButton")
+	_apply_button_style(practice_btn, true)
 	practice_btn.pressed.connect(func():
 		var opened := AppControllerHelper.open_mining_practice_panel("menu_panel")
 		if opened:
 			preload("res://Scripts/UI/GameNavigationMenu.gd").close(owner)
 	)
-	vbox.add_child(practice_btn)
 
-	var replay_mission_btn := _build_button("Replay This Mission Guide", false)
+	var replay_mission_btn: Button = vbox.get_node("ReplayMissionGuideButton")
+	_apply_button_style(replay_mission_btn, false)
 	replay_mission_btn.pressed.connect(func():
 		var app = AppControllerHelper.get_instance()
 		if app and app.has_method("replay_tutorial_for_current_mission"):
 			app.replay_tutorial_for_current_mission()
 		preload("res://Scripts/UI/GameNavigationMenu.gd").close(owner)
 	)
-	vbox.add_child(replay_mission_btn)
 
-	var replay_all_btn := _build_button("Replay Full Onboarding", false)
-	replay_all_btn.pressed.connect(func():
-		var app = AppControllerHelper.get_instance()
-		if app and app.has_method("replay_tutorial_from_mission1"):
-			app.replay_tutorial_from_mission1()
-		preload("res://Scripts/UI/GameNavigationMenu.gd").close(owner)
-	)
-	vbox.add_child(replay_all_btn)
-
-	var dialogue_btn := _build_button("", false)
+	var dialogue_btn: Button = vbox.get_node("CitizenScienceDialogueButton")
+	_apply_button_style(dialogue_btn, false)
 	_refresh_dialogue_button_text(dialogue_btn)
 	dialogue_btn.pressed.connect(func():
 		var app = AppControllerHelper.get_instance()
@@ -337,14 +310,13 @@ static func _build_actions_section(owner: Node) -> VBoxContainer:
 			app.set_citizen_science_dialogue_enabled(next_enabled)
 		_refresh_dialogue_button_text(dialogue_btn)
 	)
-	vbox.add_child(dialogue_btn)
 
-	var reset_btn := _build_button("Reset All Data", false)
+	var reset_btn: Button = vbox.get_node("ResetAllDataButton")
+	_apply_button_style(reset_btn, false)
 	reset_btn.pressed.connect(func():
 		_request_reset_all(owner)
 		preload("res://Scripts/UI/GameNavigationMenu.gd").close(owner)
 	)
-	vbox.add_child(reset_btn)
 
 	return vbox
 
@@ -368,115 +340,47 @@ static func _request_reset_all(owner: Node) -> void:
 			fallback._on_reset_all()
 
 # ---------------------------------------------------------------------------
-# Unlocks card
-# ---------------------------------------------------------------------------
-
-static func _build_unlocks_card() -> PanelContainer:
-	var card := PanelContainer.new()
-	card.add_theme_stylebox_override("panel", _card_style(0.45))
-
-	var app = AppControllerHelper.get_instance()
-	var current_level := 1
-	if app and app.has_method("get_experience_level"):
-		current_level = int(app.get_experience_level())
-
-	var list := VBoxContainer.new()
-	list.add_theme_constant_override("separation", 4)
-	card.add_child(list)
-
-	var unlocks_by_level := {}
-	const ROCKET_DISPLAY_NAMES := {
-		"starterrocket1": "Starter Rocket 1",
-		"starterrocket2": "Starter Rocket 2",
-		"starterrocket3": "Starter Rocket 3",
-	}
-	for rocket_id in RocketsManager.ROCKET_UNLOCK_LEVELS.keys():
-		var lvl := int(RocketsManager.ROCKET_UNLOCK_LEVELS.get(rocket_id, 1))
-		if not unlocks_by_level.has(lvl):
-			unlocks_by_level[lvl] = []
-		var display_name: String = str(ROCKET_DISPLAY_NAMES.get(str(rocket_id), str(rocket_id)))
-		unlocks_by_level[lvl].append("Ship: %s" % display_name)
-
-	for idx in range(SubcontractorManager.SUBCONTRACTORS.size()):
-		var c = SubcontractorManager.SUBCONTRACTORS[idx]
-		var lvl := int(SubcontractorManager.get_unlock_level_for_index(idx))
-		if not unlocks_by_level.has(lvl):
-			unlocks_by_level[lvl] = []
-		var cname = str(c.get("name", ""))
-		if c.get("hidden", false):
-			cname = "Classified Subcontractor"
-		unlocks_by_level[lvl].append("Partner: %s" % cname)
-
-	for m in MISSION_UNLOCKS:
-		var lvl := int(m.get("level", 1))
-		if not unlocks_by_level.has(lvl):
-			unlocks_by_level[lvl] = []
-		unlocks_by_level[lvl].append("Mission: %s" % str(m.get("name", "")))
-
-	var levels: Array = unlocks_by_level.keys()
-	levels.sort()
-	for lvl in levels:
-		var header_lbl: Label = MenuUnlockHeaderScene.instantiate()
-		header_lbl.text = "Level %d" % lvl
-		header_lbl.add_theme_font_size_override("font_size", 16)
-		header_lbl.add_theme_color_override("font_color", CYAN if lvl <= current_level else TEXT_MUTED)
-		list.add_child(header_lbl)
-
-		var items: Array = unlocks_by_level[lvl].duplicate()
-		items.sort()
-		for item in items:
-			var row: Label = MenuUnlockItemScene.instantiate()
-			row.text = "  • %s" % str(item)
-			row.add_theme_font_size_override("font_size", 15)
-			row.add_theme_color_override("font_color", TEXT_COLOR if lvl <= current_level else TEXT_MUTED)
-			list.add_child(row)
-
-	return card
-
-# ---------------------------------------------------------------------------
 # Debug section
 # ---------------------------------------------------------------------------
 
 static func _build_debug_section(owner: Node) -> VBoxContainer:
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 10)
-
-	var instant_btn := _build_button("DEBUG: Start Instant Mining", false)
+	var vbox: VBoxContainer = GameMenuDebugSectionScene.instantiate()
+	var instant_btn: Button = vbox.get_node("InstantMiningButton")
+	_apply_button_style(instant_btn, false)
 	instant_btn.pressed.connect(func():
 		var app = AppControllerHelper.get_instance()
 		if app and app.has_method("trigger_instant_mining"):
 			app.trigger_instant_mining()
 			preload("res://Scripts/UI/GameNavigationMenu.gd").close(owner)
 	)
-	vbox.add_child(instant_btn)
 
-	var money_btn := _build_button("DEBUG: Grant 10M Francs", false)
+	var money_btn: Button = vbox.get_node("MoneyButton")
+	_apply_button_style(money_btn, false)
 	money_btn.pressed.connect(func():
 		var app = AppControllerHelper.get_instance()
 		if app and app.has_method("set_franc_balance_from_react"):
 			app.set_franc_balance_from_react(10000000)
 	)
-	vbox.add_child(money_btn)
 
-	var mission_lbl := Label.new()
-	mission_lbl.text = "Jump to Mission:"
-	mission_lbl.add_theme_font_size_override("font_size", 16)
+	var mission_lbl: Label = vbox.get_node("MissionLabel")
 	mission_lbl.add_theme_color_override("font_color", TEXT_MUTED)
-	vbox.add_child(mission_lbl)
 
-	var mission_row := HBoxContainer.new()
-	mission_row.add_theme_constant_override("separation", 8)
-	for i in range(1, 6):
-		var mbtn := _build_button("M%d" % i, false)
-		mbtn.custom_minimum_size = Vector2(80, 50)
+	var mission_buttons: Array[Button] = [
+		vbox.get_node("MissionRow/Mission1Button"),
+		vbox.get_node("MissionRow/Mission2Button"),
+		vbox.get_node("MissionRow/Mission3Button"),
+		vbox.get_node("MissionRow/Mission4Button"),
+		vbox.get_node("MissionRow/Mission5Button")
+	]
+	for i in range(mission_buttons.size()):
+		var mbtn := mission_buttons[i]
+		_apply_button_style(mbtn, false)
 		mbtn.pressed.connect(func():
 			var app = AppControllerHelper.get_instance()
 			if app and app.has_method("debug_skip_to_mission"):
-				app.debug_skip_to_mission(i)
+				app.debug_skip_to_mission(i + 1)
 			preload("res://Scripts/UI/GameNavigationMenu.gd").close(owner)
 		)
-		mission_row.add_child(mbtn)
-	vbox.add_child(mission_row)
 
 	return vbox
 
@@ -544,7 +448,7 @@ static func _populate_logbook_entries(entries: VBoxContainer) -> void:
 	var rows: Array = log.get_missions() if log else []
 
 	if rows.is_empty():
-		var empty_lbl := Label.new()
+		var empty_lbl: Label = MenuLogbookEmptyScene.instantiate()
 		empty_lbl.text = "No mission records yet."
 		empty_lbl.add_theme_font_size_override("font_size", 16)
 		empty_lbl.add_theme_color_override("font_color", TEXT_MUTED)
@@ -556,13 +460,12 @@ static func _populate_logbook_entries(entries: VBoxContainer) -> void:
 		if typeof(entry) != TYPE_DICTIONARY:
 			continue
 
-		var card := PanelContainer.new()
+		var card: PanelContainer = MenuLogbookCardScene.instantiate()
 		card.add_theme_stylebox_override("panel", _card_style(0.45))
 		entries.add_child(card)
 
-		var body := VBoxContainer.new()
+		var body: VBoxContainer = card.get_node("Body")
 		body.add_theme_constant_override("separation", 4)
-		card.add_child(body)
 
 		var action := str(entry.get("action", "mission"))
 		var timestamp := str(entry.get("timestamp", ""))
@@ -570,28 +473,24 @@ static func _populate_logbook_entries(entries: VBoxContainer) -> void:
 		if timestamp != "":
 			header_text += "  •  %s" % timestamp
 
-		var header_lbl := Label.new()
+		var header_lbl: Label = card.get_node("Body/HeaderLabel")
 		header_lbl.text = header_text
 		header_lbl.add_theme_font_size_override("font_size", 17)
 		header_lbl.add_theme_color_override("font_color", CYAN)
-		body.add_child(header_lbl)
 
 		for key in ["target_id", "rocket_id", "subcontractor_name", "operation_mode", "payout", "order_completion_pct"]:
 			if not entry.has(key):
 				continue
-			var row := HBoxContainer.new()
+			var row: HBoxContainer = MenuLogbookKeyValueRowScene.instantiate()
 			body.add_child(row)
-			var key_lbl := Label.new()
+			var key_lbl: Label = row.get_node("KeyLabel")
 			key_lbl.text = "%s:" % _format_key(key)
-			key_lbl.custom_minimum_size = Vector2(160, 0)
 			key_lbl.add_theme_font_size_override("font_size", 14)
 			key_lbl.add_theme_color_override("font_color", TEXT_MUTED)
-			row.add_child(key_lbl)
-			var val_lbl := Label.new()
+			var val_lbl: Label = row.get_node("ValueLabel")
 			val_lbl.text = _format_value(key, entry.get(key))
 			val_lbl.add_theme_font_size_override("font_size", 14)
 			val_lbl.add_theme_color_override("font_color", TEXT_COLOR)
-			row.add_child(val_lbl)
 
 # ---------------------------------------------------------------------------
 # Discoveries overlay
@@ -645,11 +544,10 @@ static func _build_discoveries_overlay(vp_w: float = 1280.0) -> ColorRect:
 
 	var discoveries := _get_personal_discoveries()
 	if discoveries.is_empty():
-		var empty_lbl := Label.new()
+		var empty_lbl: Label = MenuEmptyStateLabelScene.instantiate()
 		empty_lbl.text = "No discoveries yet. Mine a target for the first time to claim it."
 		empty_lbl.add_theme_font_size_override("font_size", 16)
 		empty_lbl.add_theme_color_override("font_color", TEXT_MUTED)
-		empty_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		list.add_child(empty_lbl)
 	else:
 		for disc in discoveries:
@@ -685,37 +583,27 @@ static func _get_personal_discoveries() -> Array:
 	return result
 
 static func _build_discovery_row(disc: Dictionary) -> HBoxContainer:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 14)
-
-	var icon_lbl := Label.new()
+	var row: HBoxContainer = MenuDiscoveryRowScene.instantiate()
+	var icon_lbl: Label = row.get_node("IconLabel")
 	var ttype := str(disc.get("target_type", "asteroid"))
 	icon_lbl.text = "🪐" if ttype == "planet" else "☄"
 	icon_lbl.add_theme_font_size_override("font_size", 22)
-	row.add_child(icon_lbl)
 
-	var info := VBoxContainer.new()
-	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(info)
-
-	var name_lbl := Label.new()
+	var name_lbl: Label = row.get_node("Info/NameLabel")
 	name_lbl.text = str(disc.get("label", disc.get("target_id", "Unknown")))
 	name_lbl.add_theme_font_size_override("font_size", 18)
 	name_lbl.add_theme_color_override("font_color", AMBER)
-	info.add_child(name_lbl)
 
-	var ts_lbl := Label.new()
+	var ts_lbl: Label = row.get_node("Info/TimestampLabel")
 	var ts := str(disc.get("timestamp", ""))
 	ts_lbl.text = "Discovered: %s" % (ts.substr(0, 10) if ts.length() >= 10 else ts)
 	ts_lbl.add_theme_font_size_override("font_size", 14)
 	ts_lbl.add_theme_color_override("font_color", TEXT_MUTED)
-	info.add_child(ts_lbl)
 
-	var badge_lbl := Label.new()
+	var badge_lbl: Label = row.get_node("Info/BadgeLabel")
 	badge_lbl.text = "First discovery — your name is attached"
 	badge_lbl.add_theme_font_size_override("font_size", 13)
 	badge_lbl.add_theme_color_override("font_color", Color(0.3, 0.85, 0.55))
-	info.add_child(badge_lbl)
 
 	return row
 
@@ -736,24 +624,21 @@ static func _build_job_board_card() -> PanelContainer:
 	var market_pct := 80
 	var contractor_pct := 120
 
-	var card := PanelContainer.new()
-	var style := StyleBoxFlat.new()
+	var card: PanelContainer = GameMenuInfoCardScene.instantiate()
+	var style := _card_style(0.0)
 	style.bg_color = Color(0.06, 0.09, 0.15, 1.0)
-	style.set_corner_radius_all(6)
 	card.add_theme_stylebox_override("panel", style)
-
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 6)
-	card.add_child(vbox)
+	var vbox: VBoxContainer = card.get_node("Body")
+	var legend_row: HBoxContainer = card.get_node("Body/LegendRow")
+	var sep: HSeparator = card.get_node("Body/Separator")
+	var rows_box: VBoxContainer = card.get_node("Body/Rows")
+	var note_lbl: Label = card.get_node("Body/NoteLabel")
 
 	# Legend row
-	var legend_row := HBoxContainer.new()
-	legend_row.add_theme_constant_override("separation", 8)
-	vbox.add_child(legend_row)
+	legend_row.visible = true
 	for col_text in ["Contractor", "Buys", "Payout", "Status"]:
-		var lbl := Label.new()
+		var lbl: Label = GameMenuLegendLabelScene.instantiate()
 		lbl.text = col_text
-		lbl.add_theme_font_size_override("font_size", 13)
 		lbl.add_theme_color_override("font_color", TEXT_MUTED)
 		if col_text == "Contractor":
 			lbl.custom_minimum_size = Vector2(130, 0)
@@ -765,16 +650,14 @@ static func _build_job_board_card() -> PanelContainer:
 			lbl.custom_minimum_size = Vector2(90, 0)
 		legend_row.add_child(lbl)
 
-	var sep := HSeparator.new()
+	sep.visible = true
 	sep.add_theme_color_override("separator", Color(CYAN.r, CYAN.g, CYAN.b, 0.2))
-	vbox.add_child(sep)
 
 	if contractors.is_empty():
-		var empty := Label.new()
+		var empty: Label = MenuEmptyStateLabelScene.instantiate()
 		empty.text = "No contractors unlocked yet."
-		empty.add_theme_font_size_override("font_size", 15)
 		empty.add_theme_color_override("font_color", TEXT_MUTED)
-		vbox.add_child(empty)
+		rows_box.add_child(empty)
 	else:
 		for c in contractors:
 			var cid := str(c.get("id", ""))
@@ -783,34 +666,26 @@ static func _build_job_board_card() -> PanelContainer:
 			var bonus: Dictionary = c.get("bonus", {})
 			var mineral_str := ", ".join(bonus.keys()) if not bonus.is_empty() else "General cargo"
 
-			var row := HBoxContainer.new()
-			row.add_theme_constant_override("separation", 8)
-			vbox.add_child(row)
+			var row: HBoxContainer = GameMenuContractorRowScene.instantiate()
+			rows_box.add_child(row)
 
-			var name_lbl := Label.new()
+			var name_lbl: Label = row.get_node("NameLabel")
 			name_lbl.text = str(c.get("name", cid))
 			name_lbl.add_theme_font_size_override("font_size", 15)
 			var name_col = TEXT_MUTED if on_cooldown else TEXT_COLOR
 			name_lbl.add_theme_color_override("font_color", name_col)
-			name_lbl.custom_minimum_size = Vector2(130, 0)
-			row.add_child(name_lbl)
 
-			var mineral_lbl := Label.new()
+			var mineral_lbl: Label = row.get_node("MineralsLabel")
 			mineral_lbl.text = mineral_str
 			mineral_lbl.add_theme_font_size_override("font_size", 14)
 			mineral_lbl.add_theme_color_override("font_color", AMBER if not on_cooldown else TEXT_MUTED)
-			mineral_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			mineral_lbl.clip_text = true
-			row.add_child(mineral_lbl)
 
-			var payout_lbl := Label.new()
+			var payout_lbl: Label = row.get_node("PayoutLabel")
 			payout_lbl.text = "+%d%% (vs %d%%)" % [contractor_pct - market_pct, market_pct]
 			payout_lbl.add_theme_font_size_override("font_size", 14)
 			payout_lbl.add_theme_color_override("font_color", Color(0.3, 0.85, 0.55) if not on_cooldown else TEXT_MUTED)
-			payout_lbl.custom_minimum_size = Vector2(100, 0)
-			row.add_child(payout_lbl)
 
-			var status_lbl := Label.new()
+			var status_lbl: Label = row.get_node("StatusLabel")
 			if on_cooldown:
 				var remaining := int(sm.get_cooldown_remaining(cid))
 				var mins := int(ceil(float(remaining) / 60.0))
@@ -823,15 +698,10 @@ static func _build_job_board_card() -> PanelContainer:
 				status_lbl.text = "Ready"
 				status_lbl.add_theme_color_override("font_color", Color(0.3, 0.85, 0.55))
 			status_lbl.add_theme_font_size_override("font_size", 14)
-			status_lbl.custom_minimum_size = Vector2(90, 0)
-			row.add_child(status_lbl)
 
-	var note_lbl := Label.new()
+	note_lbl.visible = true
 	note_lbl.text = "Contract route pays %d%% vs open market %d%% — pick a contractor at the Launchpad." % [contractor_pct, market_pct]
-	note_lbl.add_theme_font_size_override("font_size", 13)
 	note_lbl.add_theme_color_override("font_color", TEXT_MUTED)
-	note_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	vbox.add_child(note_lbl)
 
 	return card
 
@@ -840,18 +710,15 @@ static func _build_job_board_card() -> PanelContainer:
 # ---------------------------------------------------------------------------
 
 static func _build_inventory_card() -> PanelContainer:
-	var card := PanelContainer.new()
+	var card: PanelContainer = GameMenuContentCardScene.instantiate()
 	card.add_theme_stylebox_override("panel", _card_style(0.45))
-
-	var vbox := VBoxContainer.new()
+	var vbox: VBoxContainer = card.get_node("Body")
 	vbox.add_theme_constant_override("separation", 6)
-	card.add_child(vbox)
 
 	var inv: Dictionary = RocketsManager.get_inventory()
 	if inv.is_empty():
-		var empty_lbl := Label.new()
+		var empty_lbl: Label = MenuEmptyStateLabelScene.instantiate()
 		empty_lbl.text = "No minerals in inventory. Complete a mining mission to collect resources."
-		empty_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		empty_lbl.add_theme_font_size_override("font_size", 16)
 		empty_lbl.add_theme_color_override("font_color", TEXT_MUTED)
 		vbox.add_child(empty_lbl)
@@ -886,12 +753,10 @@ static func _build_mission_requirements_card() -> PanelContainer:
 	if required.is_empty():
 		return null
 
-	var card := PanelContainer.new()
+	var card: PanelContainer = GameMenuContentCardScene.instantiate()
 	card.add_theme_stylebox_override("panel", _card_style(0.45))
-
-	var vbox := VBoxContainer.new()
+	var vbox: VBoxContainer = card.get_node("Body")
 	vbox.add_theme_constant_override("separation", 6)
-	card.add_child(vbox)
 
 	var inv := RocketsManager.get_inventory()
 	var keys: Array = required.keys()
@@ -922,12 +787,11 @@ static func _build_mission_requirements_card() -> PanelContainer:
 const MARKETPLACE_UNLOCK_LEVEL := 5
 
 static func _build_marketplace_card() -> PanelContainer:
-	var card := PanelContainer.new()
+	var card: PanelContainer = GameMenuInfoCardScene.instantiate()
 	card.add_theme_stylebox_override("panel", _card_style(0.45))
-
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 6)
-	card.add_child(vbox)
+	var vbox: VBoxContainer = card.get_node("Body")
+	var header_lbl: Label = card.get_node("Body/HeaderLabel")
+	var rows_box: VBoxContainer = card.get_node("Body/Rows")
 
 	# Check player level
 	var app = AppControllerHelper.get_instance()
@@ -936,21 +800,16 @@ static func _build_marketplace_card() -> PanelContainer:
 		player_level = max(int(app.get_experience_level()), 1)
 
 	if player_level < MARKETPLACE_UNLOCK_LEVEL:
-		var locked_lbl := Label.new()
+		var locked_lbl: Label = MenuEmptyStateLabelScene.instantiate()
 		locked_lbl.text = "Mineral market prices unlock at Level %d.\nSell timing and supply/demand become visible." % MARKETPLACE_UNLOCK_LEVEL
-		locked_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		locked_lbl.add_theme_font_size_override("font_size", 16)
 		locked_lbl.add_theme_color_override("font_color", TEXT_MUTED)
-		vbox.add_child(locked_lbl)
+		rows_box.add_child(locked_lbl)
 		return card
 
 	# Header
-	var header_lbl := Label.new()
+	header_lbl.visible = true
 	header_lbl.text = "Live mineral prices — selling depresses demand"
-	header_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	header_lbl.add_theme_font_size_override("font_size", 15)
 	header_lbl.add_theme_color_override("font_color", TEXT_MUTED)
-	vbox.add_child(header_lbl)
 
 	var minerals = MineralPricing.BASE_PRICES.keys()
 	minerals.sort()
@@ -968,30 +827,23 @@ static func _build_marketplace_card() -> PanelContainer:
 			change_str = "+%d%%" % pct_change
 			change_color = Color(0.3, 0.9, 0.5, 1.0)  # green for above base
 
-		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 8)
-		vbox.add_child(row)
+		var row: HBoxContainer = GameMenuMarketplaceRowScene.instantiate()
+		rows_box.add_child(row)
 
-		var name_lbl := Label.new()
+		var name_lbl: Label = row.get_node("NameLabel")
 		name_lbl.text = str(mineral)
-		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		name_lbl.add_theme_font_size_override("font_size", 17)
 		name_lbl.add_theme_color_override("font_color", TEXT_COLOR)
-		row.add_child(name_lbl)
 
-		var price_lbl := Label.new()
+		var price_lbl: Label = row.get_node("PriceLabel")
 		price_lbl.text = NumberFormat.compact(current_price) + " F/kg"
 		price_lbl.add_theme_font_size_override("font_size", 17)
 		price_lbl.add_theme_color_override("font_color", CYAN)
-		row.add_child(price_lbl)
 
-		var change_lbl := Label.new()
+		var change_lbl: Label = row.get_node("ChangeLabel")
 		change_lbl.text = change_str
-		change_lbl.custom_minimum_size = Vector2(52, 0)
-		change_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		change_lbl.add_theme_font_size_override("font_size", 15)
 		change_lbl.add_theme_color_override("font_color", change_color)
-		row.add_child(change_lbl)
 
 	return card
 
@@ -1002,12 +854,11 @@ static func _build_marketplace_card() -> PanelContainer:
 const ROOM_UPGRADE_UNLOCK_LEVEL := 5
 
 static func _build_room_upgrades_card(owner: Node) -> PanelContainer:
-	var card := PanelContainer.new()
+	var card: PanelContainer = GameMenuInfoCardScene.instantiate()
 	card.add_theme_stylebox_override("panel", _card_style(0.45))
-
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 8)
-	card.add_child(vbox)
+	var vbox: VBoxContainer = card.get_node("Body")
+	var header_lbl: Label = card.get_node("Body/HeaderLabel")
+	var rows_box: VBoxContainer = card.get_node("Body/Rows")
 
 	var app = AppControllerHelper.get_instance()
 	var player_level := 1
@@ -1015,12 +866,10 @@ static func _build_room_upgrades_card(owner: Node) -> PanelContainer:
 		player_level = max(int(app.get_experience_level()), 1)
 
 	if player_level < ROOM_UPGRADE_UNLOCK_LEVEL:
-		var locked_lbl := Label.new()
+		var locked_lbl: Label = MenuEmptyStateLabelScene.instantiate()
 		locked_lbl.text = "Room upgrades unlock at Level %d.\nUpgrade your rocket's modules to unlock better laser tiers, cargo capacity, and scanner range." % ROOM_UPGRADE_UNLOCK_LEVEL
-		locked_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		locked_lbl.add_theme_font_size_override("font_size", 16)
 		locked_lbl.add_theme_color_override("font_color", TEXT_MUTED)
-		vbox.add_child(locked_lbl)
+		rows_box.add_child(locked_lbl)
 		return card
 
 	# Determine the active rocket type
@@ -1038,11 +887,9 @@ static func _build_room_upgrades_card(owner: Node) -> PanelContainer:
 	var type_upgrades = RocketsManager.get_type_room_upgrades(rocket_type)
 	var upgradeable = RoomCatalog.get_upgradeable_rooms(rocket_type, type_upgrades)
 
-	var header_lbl := Label.new()
+	header_lbl.visible = true
 	header_lbl.text = RocketSpecs.get_display_name(rocket_type)
-	header_lbl.add_theme_font_size_override("font_size", 14)
 	header_lbl.add_theme_color_override("font_color", TEXT_MUTED)
-	vbox.add_child(header_lbl)
 
 	var franc_balance := 0
 	if app and app.has_method("get_franc_balance"):
@@ -1056,36 +903,29 @@ static func _build_room_upgrades_card(owner: Node) -> PanelContainer:
 		var cost = int(entry.get("upgrade_cost", 0))
 		var at_max = bool(entry.get("at_max", false))
 
-		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 8)
-		vbox.add_child(row)
+		var row: HBoxContainer = GameMenuRoomUpgradeRowScene.instantiate()
+		rows_box.add_child(row)
 
-		var name_col := VBoxContainer.new()
-		name_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		row.add_child(name_col)
-
-		var name_lbl := Label.new()
+		var name_lbl: Label = row.get_node("NameColumn/NameLabel")
 		name_lbl.text = display_name
 		name_lbl.add_theme_font_size_override("font_size", 17)
 		name_lbl.add_theme_color_override("font_color", TEXT_COLOR)
-		name_col.add_child(name_lbl)
 
-		var tier_lbl := Label.new()
+		var tier_lbl: Label = row.get_node("NameColumn/TierLabel")
 		tier_lbl.text = "Tier %d / %d" % [current_tier, max_tier]
 		tier_lbl.add_theme_font_size_override("font_size", 13)
 		tier_lbl.add_theme_color_override("font_color", TEXT_MUTED)
-		name_col.add_child(tier_lbl)
 
 		if at_max:
-			var maxed_lbl := Label.new()
+			var maxed_lbl: Label = row.get_node("StatusLabel")
 			maxed_lbl.text = "MAX"
 			maxed_lbl.add_theme_font_size_override("font_size", 15)
 			maxed_lbl.add_theme_color_override("font_color", Color(0.3, 0.9, 0.5, 1.0))
-			row.add_child(maxed_lbl)
+			maxed_lbl.visible = true
 		else:
-			var btn := Button.new()
+			var btn: Button = row.get_node("UpgradeButton")
 			btn.text = "Upgrade\n%s F" % NumberFormat.compact(cost)
-			btn.custom_minimum_size = Vector2(110, 0)
+			btn.visible = true
 			btn.add_theme_font_size_override("font_size", 13)
 			var can_afford = franc_balance >= cost
 			if not can_afford:
@@ -1099,15 +939,12 @@ static func _build_room_upgrades_card(owner: Node) -> PanelContainer:
 			btn.pressed.connect(func():
 				_do_room_upgrade(cap_owner, cap_type, cap_category, cap_tier + 1)
 			)
-			row.add_child(btn)
 
 	if upgradeable.is_empty():
-		var none_lbl := Label.new()
+		var none_lbl: Label = MenuEmptyStateLabelScene.instantiate()
 		none_lbl.text = "No upgradeable rooms available for this rocket type."
-		none_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		none_lbl.add_theme_font_size_override("font_size", 15)
 		none_lbl.add_theme_color_override("font_color", TEXT_MUTED)
-		vbox.add_child(none_lbl)
+		rows_box.add_child(none_lbl)
 
 	return card
 
@@ -1128,153 +965,18 @@ static func _do_room_upgrade(owner: Node, rocket_type: String, category: String,
 	preload("res://Scripts/UI/GameNavigationMenu.gd").close(owner)
 	preload("res://Scripts/UI/GameNavigationMenu.gd").open(owner)
 
-# ---------------------------------------------------------------------------
-# Construction card
-# ---------------------------------------------------------------------------
-
-static func _build_construction_card(root: Control) -> VBoxContainer:
-	var outer := VBoxContainer.new()
-	outer.add_theme_constant_override("separation", 10)
-
-	var projects: Array = ConstructionManager.get_available_projects()
-
-	for proj in projects:
-		var proj_id := str(proj.get("id", ""))
-		var proj_name := str(proj.get("name", proj_id))
-		var proj_desc := str(proj.get("description", ""))
-		var reqs: Dictionary = proj.get("requirements", {})
-		var is_done := bool(proj.get("completed", false))
-		var progress: Dictionary = proj.get("progress", {})
-
-		var card := PanelContainer.new()
-		var card_style := _card_style(0.3 if is_done else 0.45)
-		if is_done:
-			card_style.border_color = Color(0.28, 0.96, 0.60, 0.5)
-		card.add_theme_stylebox_override("panel", card_style)
-		outer.add_child(card)
-
-		var vbox := VBoxContainer.new()
-		vbox.add_theme_constant_override("separation", 6)
-		card.add_child(vbox)
-
-		# Title row
-		var title_row := HBoxContainer.new()
-		vbox.add_child(title_row)
-		var title_lbl := Label.new()
-		title_lbl.text = proj_name
-		title_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		title_lbl.add_theme_font_size_override("font_size", 19)
-		title_lbl.add_theme_color_override("font_color", Color(0.28, 0.96, 0.60, 1.0) if is_done else TITLE_COLOR)
-		title_row.add_child(title_lbl)
-		if is_done:
-			var done_badge := Label.new()
-			done_badge.text = "COMPLETE"
-			done_badge.add_theme_font_size_override("font_size", 14)
-			done_badge.add_theme_color_override("font_color", Color(0.28, 0.96, 0.60, 1.0))
-			title_row.add_child(done_badge)
-
-		# Description
-		var desc_lbl := Label.new()
-		desc_lbl.text = proj_desc
-		desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		desc_lbl.add_theme_font_size_override("font_size", 15)
-		desc_lbl.add_theme_color_override("font_color", TEXT_MUTED)
-		vbox.add_child(desc_lbl)
-
-		# Requirements with progress bars
-		var req_keys: Array = reqs.keys()
-		req_keys.sort()
-		for mineral in req_keys:
-			var required := int(reqs.get(mineral, 0))
-			var contributed := int(progress.get(mineral, 0))
-			var clamped: int = min(contributed, required)
-
-			var req_row := HBoxContainer.new()
-			req_row.add_theme_constant_override("separation", 8)
-			vbox.add_child(req_row)
-
-			var req_name := Label.new()
-			req_name.text = str(mineral)
-			req_name.custom_minimum_size = Vector2(110, 0)
-			req_name.add_theme_font_size_override("font_size", 15)
-			req_name.add_theme_color_override("font_color", TEXT_COLOR)
-			req_row.add_child(req_name)
-
-			var bar := ProgressBar.new()
-			bar.max_value = required
-			bar.value = clamped
-			bar.show_percentage = false
-			bar.custom_minimum_size = Vector2(0, 12)
-			bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			var fill := StyleBoxFlat.new()
-			fill.bg_color = Color(0.28, 0.96, 0.60, 1.0) if clamped >= required else CYAN
-			fill.set_corner_radius_all(3)
-			var bg := StyleBoxFlat.new()
-			bg.bg_color = Color(0.10, 0.13, 0.22, 1.0)
-			bg.set_corner_radius_all(3)
-			bar.add_theme_stylebox_override("fill", fill)
-			bar.add_theme_stylebox_override("background", bg)
-			req_row.add_child(bar)
-
-			var qty_lbl := Label.new()
-			qty_lbl.text = "%d / %d kg" % [clamped, required]
-			qty_lbl.custom_minimum_size = Vector2(120, 0)
-			qty_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-			qty_lbl.add_theme_font_size_override("font_size", 14)
-			qty_lbl.add_theme_color_override("font_color", Color(0.28, 0.96, 0.60, 1.0) if clamped >= required else TEXT_MUTED)
-			req_row.add_child(qty_lbl)
-
-		# Contribute button (disabled when complete)
-		if not is_done:
-			var inv: Dictionary = RocketsManager.get_inventory()
-			var can_contribute := false
-			for mineral in req_keys:
-				if int(inv.get(mineral, 0)) > 0:
-					can_contribute = true
-					break
-
-			var contrib_btn := _build_button("Contribute Minerals", false)
-			contrib_btn.disabled = not can_contribute
-			if not can_contribute:
-				contrib_btn.add_theme_color_override("font_color", TEXT_MUTED)
-			contrib_btn.pressed.connect(func():
-				_open_contribute_overlay(root, proj_id, proj_name, reqs, progress)
-			)
-			vbox.add_child(contrib_btn)
-
-	if projects.is_empty():
-		var empty_lbl := Label.new()
-		empty_lbl.text = "No construction projects available yet."
-		empty_lbl.add_theme_font_size_override("font_size", 16)
-		empty_lbl.add_theme_color_override("font_color", TEXT_MUTED)
-		outer.add_child(empty_lbl)
-
-	return outer
-
 static func _open_contribute_overlay(root: Control, proj_id: String, proj_name: String, reqs: Dictionary, current_progress: Dictionary) -> void:
 	# Remove any existing contribute overlay
 	var old = root.get_node_or_null("ContributeOverlay")
 	if old:
 		old.queue_free()
 
-	var overlay := ColorRect.new()
-	overlay.name = "ContributeOverlay"
-	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	overlay.color = Color(0.0, 0.0, 0.0, 0.65)
-	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	var overlay: ColorRect = GameMenuContributeOverlayScene.instantiate()
 	overlay.set_meta("tutorial_zone_exempt", true)
 	root.add_child(overlay)
-
-	var center := CenterContainer.new()
-	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	center.mouse_filter = Control.MOUSE_FILTER_STOP
-	overlay.add_child(center)
-
-	var panel := PanelContainer.new()
+	var panel: PanelContainer = overlay.get_node("Center/Panel")
 	var _cvp_w := root.get_viewport().get_visible_rect().size.x if root.get_viewport() else 1280.0
 	panel.custom_minimum_size = Vector2(clampf(_cvp_w - 48.0, 300.0, 560.0), 0.0)
-	panel.mouse_filter = Control.MOUSE_FILTER_STOP
-	center.add_child(panel)
 
 	var pstyle := StyleBoxFlat.new()
 	pstyle.bg_color = PANEL_BG
@@ -1287,29 +989,20 @@ static func _open_contribute_overlay(root: Control, proj_id: String, proj_name: 
 	pstyle.content_margin_bottom = 16
 	panel.add_theme_stylebox_override("panel", pstyle)
 
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 12)
-	panel.add_child(vbox)
-
-	# Title
-	var title_row := HBoxContainer.new()
-	vbox.add_child(title_row)
-	var title_lbl := Label.new()
+	var title_lbl: Label = overlay.get_node("Center/Panel/Content/Header/TitleLabel")
 	title_lbl.text = "Contribute to: %s" % proj_name
-	title_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title_lbl.add_theme_font_size_override("font_size", 22)
 	title_lbl.add_theme_color_override("font_color", TITLE_COLOR)
-	title_row.add_child(title_lbl)
-	var close_btn := _build_button("Cancel", false)
+	var close_btn: Button = overlay.get_node("Center/Panel/Content/Header/CloseButton")
+	close_btn.text = "Cancel"
+	_apply_button_style(close_btn, false)
 	close_btn.custom_minimum_size = Vector2(100, 44)
 	close_btn.pressed.connect(func(): overlay.queue_free())
-	title_row.add_child(close_btn)
-
-	var sep := HSeparator.new()
+	var sep: HSeparator = overlay.get_node("Center/Panel/Content/Separator")
 	sep.add_theme_color_override("separator", Color(CYAN.r, CYAN.g, CYAN.b, 0.3))
-	vbox.add_child(sep)
 
 	var inv: Dictionary = RocketsManager.get_inventory()
+	var rows: VBoxContainer = overlay.get_node("Center/Panel/Content/Rows")
 
 	# Per-mineral contribution rows
 	var req_keys: Array = reqs.keys()
@@ -1323,42 +1016,33 @@ static func _open_contribute_overlay(root: Control, proj_id: String, proj_name: 
 		var in_inv := int(inv.get(mineral, 0))
 		var max_contribute: int = min(remaining, in_inv)
 
-		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 10)
-		vbox.add_child(row)
-
-		var name_lbl := Label.new()
+		var row: HBoxContainer = GameMenuContributeMineralRowScene.instantiate()
+		rows.add_child(row)
+		var name_lbl: Label = row.get_node("NameLabel")
 		name_lbl.text = str(mineral)
-		name_lbl.custom_minimum_size = Vector2(110, 0)
 		name_lbl.add_theme_font_size_override("font_size", 16)
 		name_lbl.add_theme_color_override("font_color", TEXT_COLOR)
-		row.add_child(name_lbl)
 
-		var info_lbl := Label.new()
+		var info_lbl: Label = row.get_node("InfoLabel")
 		info_lbl.text = "Need %d kg  •  In inventory: %d kg" % [remaining, in_inv]
-		info_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		info_lbl.add_theme_font_size_override("font_size", 14)
 		info_lbl.add_theme_color_override("font_color", TEXT_MUTED)
-		row.add_child(info_lbl)
 
-		var spin := SpinBox.new()
+		var spin: SpinBox = row.get_node("AmountSpinBox")
 		spin.min_value = 0
 		spin.max_value = max_contribute
 		spin.step = 1
 		spin.value = max_contribute
-		spin.custom_minimum_size = Vector2(110, 44)
 		spin.suffix = "kg"
 		spin.editable = max_contribute > 0
 		spinboxes[mineral] = spin
-		row.add_child(spin)
 
-	var status_lbl := Label.new()
-	status_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var status_lbl: Label = overlay.get_node("Center/Panel/Content/StatusLabel")
 	status_lbl.add_theme_font_size_override("font_size", 15)
 	status_lbl.add_theme_color_override("font_color", TEXT_MUTED)
-	vbox.add_child(status_lbl)
 
-	var confirm_btn := _build_button("Contribute", true)
+	var confirm_btn: Button = overlay.get_node("Center/Panel/Content/ConfirmButton")
+	_apply_button_style(confirm_btn, true)
 	confirm_btn.pressed.connect(func():
 		var contribution := {}
 		for mineral in spinboxes.keys():
@@ -1377,7 +1061,6 @@ static func _open_contribute_overlay(root: Control, proj_id: String, proj_name: 
 			status_lbl.text = "Could not contribute — check your inventory."
 			status_lbl.add_theme_color_override("font_color", Color(1.0, 0.45, 0.35, 1.0))
 	)
-	vbox.add_child(confirm_btn)
 
 # ---------------------------------------------------------------------------
 # Rocket Research card (L5+)
@@ -1387,21 +1070,19 @@ static func _build_rocket_research_card(owner: Node) -> PanelContainer:
 	var tree := Engine.get_main_loop() as SceneTree
 	if tree:
 		FirstTimeMechanicTracker.maybe_show("reusable_research", tree)
-	var card := PanelContainer.new()
+	var card: PanelContainer = GameMenuResearchCardScene.instantiate()
 	card.add_theme_stylebox_override("panel", _card_style(0.4))
 	card.size_flags_horizontal = Control.SIZE_FILL
-	var vbox := VBoxContainer.new()
+	var vbox: VBoxContainer = card.get_node("Body")
 	vbox.add_theme_constant_override("separation", 8)
-	card.add_child(vbox)
 
-	var title := Label.new()
+	var title: Label = card.get_node("Body/TitleLabel")
 	title.text = "Reusable Rockets Research"
 	title.add_theme_font_size_override("font_size", 16)
 	title.add_theme_color_override("font_color", Color(0.92, 0.95, 1.0, 1.0))
-	vbox.add_child(title)
 
 	var current_tier := RocketsManager.get_reusable_research_tier()
-	var tier_lbl := Label.new()
+	var tier_lbl: Label = card.get_node("Body/TierLabel")
 	var discount_pct := int(round((1.0 - RocketsManager.get_reusable_research_cost_mult()) * 100))
 	if current_tier == 0:
 		tier_lbl.text = "Not researched — rocket costs are at full price."
@@ -1409,13 +1090,11 @@ static func _build_rocket_research_card(owner: Node) -> PanelContainer:
 		tier_lbl.text = "Tier %d researched — %d%% launch cost reduction." % [current_tier, discount_pct]
 	tier_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	PanelStyle.apply_body(tier_lbl)
-	vbox.add_child(tier_lbl)
 
-	var desc_lbl := Label.new()
+	var desc_lbl: Label = card.get_node("Body/DescriptionLabel")
 	desc_lbl.text = "Invest in rocket reusability research to permanently reduce the cost of each mission. Each tier makes your fleet more economical."
 	desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	PanelStyle.apply_muted(desc_lbl)
-	vbox.add_child(desc_lbl)
 
 	var next_tier := current_tier + 1
 	if next_tier <= 3:
@@ -1425,12 +1104,13 @@ static func _build_rocket_research_card(owner: Node) -> PanelContainer:
 		var can_afford := app != null and app.has_method("get_franc_balance") and \
 			int(app.get_franc_balance()) >= upgrade_cost
 
-		var upgrade_btn := Button.new()
+		var upgrade_btn: Button = card.get_node("Body/ActionButton")
 		upgrade_btn.text = "Research Tier %d — %s F (−%d%% cost)" % [
 			next_tier,
 			NumberFormat.compact(upgrade_cost),
 			int(new_discount)
 		]
+		upgrade_btn.visible = true
 		PanelStyle.apply_button(upgrade_btn, can_afford)
 		upgrade_btn.disabled = not can_afford
 		upgrade_btn.focus_mode = Control.FOCUS_NONE
@@ -1445,26 +1125,18 @@ static func _build_rocket_research_card(owner: Node) -> PanelContainer:
 			preload("res://Scripts/UI/GameNavigationMenu.gd").close(owner)
 			preload("res://Scripts/UI/GameNavigationMenu.gd").open(owner)
 		)
-		vbox.add_child(upgrade_btn)
 	else:
-		var maxed_lbl := Label.new()
+		var maxed_lbl: Label = card.get_node("Body/MaxedLabel")
 		maxed_lbl.text = "Maximum research tier achieved — 30% launch cost reduction active."
 		maxed_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		maxed_lbl.visible = true
 		PanelStyle.apply_muted(maxed_lbl)
-		vbox.add_child(maxed_lbl)
 
 	return card
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
-
-static func _build_section_header(text: String) -> Label:
-	var lbl := Label.new()
-	lbl.text = text
-	lbl.add_theme_font_size_override("font_size", 14)
-	lbl.add_theme_color_override("font_color", TEXT_MUTED)
-	return lbl
 
 static func _card_style(border_alpha: float) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
@@ -1477,12 +1149,6 @@ static func _card_style(border_alpha: float) -> StyleBoxFlat:
 	style.content_margin_top = 12
 	style.content_margin_bottom = 12
 	return style
-
-static func _build_button(text: String, primary: bool) -> Button:
-	var btn := Button.new()
-	btn.text = text
-	_apply_button_style(btn, primary)
-	return btn
 
 static func _apply_button_style(btn: Button, primary: bool) -> void:
 	if btn == null:

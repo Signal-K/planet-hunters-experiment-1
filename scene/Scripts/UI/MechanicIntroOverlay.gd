@@ -7,6 +7,7 @@ extends CanvasLayer
 ##                    targeting, efficiency, schematic_label, protocol, auth
 
 const DIALOG_LAYER := 128
+const StepRowScene = preload("res://Scenes/UI/Templates/MechanicIntroStepRow.tscn")
 
 @onready var protocol_label: Label   = $Center/Panel/OuterVBox/HeaderBar/HeaderRow/ProtocolLabel
 @onready var coord_label: Label      = $Center/Panel/OuterVBox/HeaderBar/HeaderRow/CoordLabel
@@ -55,21 +56,11 @@ func show_intro(content: Dictionary) -> void:
 		child.queue_free()
 	var steps: Array = content.get("steps", [])
 	for i in steps.size():
-		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 10)
-		var num := Label.new()
+		var row: HBoxContainer = StepRowScene.instantiate()
+		var num: Label = row.get_node("StepNumber")
+		var txt: Label = row.get_node("StepText")
 		num.text = "%02d" % (i + 1)
-		num.add_theme_color_override("font_color", Color(0.22, 0.60, 0.82, 1.0))
-		num.add_theme_font_size_override("font_size", 12)
-		num.custom_minimum_size = Vector2(28, 0)
-		row.add_child(num)
-		var txt := Label.new()
 		txt.text = str(steps[i])
-		txt.add_theme_color_override("font_color", Color(0.20, 0.30, 0.40, 1.0))
-		txt.add_theme_font_size_override("font_size", 13)
-		txt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		txt.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		row.add_child(txt)
 		steps_list.add_child(row)
 
 func _update_bar_label(bar: ProgressBar, val: float) -> void:

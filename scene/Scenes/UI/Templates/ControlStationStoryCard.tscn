@@ -28,6 +28,12 @@ theme_override_constants/margin_bottom = 18
 layout_mode = 2
 theme_override_constants/separation = 8
 
+[node name="CodeLabel" type="Label" parent="Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.28, 0.88, 0.96, 1)
+theme_override_font_sizes/font_size = 12
+text = "01 // MILESTONE"
+
 [node name="TitleLabel" type="Label" parent="Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.92, 0.95, 0.98, 1)

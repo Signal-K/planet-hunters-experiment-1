@@ -1,0 +1,34 @@
+[gd_scene format=3]
+
+[node name="GameMenuResearchCard" type="PanelContainer"]
+layout_mode = 2
+size_flags_horizontal = 1
+
+[node name="Body" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="TitleLabel" type="Label" parent="Body"]
+layout_mode = 2
+text = "Reusable Rockets Research"
+
+[node name="TierLabel" type="Label" parent="Body"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Tier"
+
+[node name="DescriptionLabel" type="Label" parent="Body"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Description"
+
+[node name="ActionButton" type="Button" parent="Body"]
+layout_mode = 2
+text = "Research"
+visible = false
+
+[node name="MaxedLabel" type="Label" parent="Body"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Maxed"
+visible = false

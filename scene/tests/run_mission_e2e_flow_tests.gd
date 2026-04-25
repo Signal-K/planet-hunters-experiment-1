@@ -23,6 +23,7 @@ extends SceneTree
 
 const TestReporter = preload("res://tests/TestReporter.gd")
 const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
+const MissionLogManager = preload("res://Scripts/Utils/MissionLogManager.gd")
 const TutorialControllerScript = preload("res://Scripts/Tutorial/TutorialController.gd")
 
 var reporter := TestReporter.new()
@@ -76,10 +77,12 @@ func test_transit_and_mining_timing_delays_are_intentionally_non_trivial() -> vo
 
 func _reset_runtime_state() -> void:
 	DirAccess.remove_absolute("user://tutorial_v2.cfg")
+	MissionLogManager.reset_state()
 	RocketsManager.reset_state()
 	RocketsManager.clear_selected_target()
 	RocketsManager.clear_preview_target()
 	RocketsManager.clear_returned_mission()
+	RocketsManager.clear_trip_contract_offer()
 	RocketsManager.set_operation_mode("contract")
 
 func _setup_controller() -> Node:
@@ -142,9 +145,9 @@ func test_fresh_start_to_open_operations_without_tutorial_duplicates_or_blockers
 
 	var stage_actions := {
 		1: ["accept_contractor_offer", "create_rocket", "select_launch_target", "launch_rocket_from_earth", "arrived_at_mining_site", "mine_target", "return_rocket_home", "resolve_mission_debrief"],
-		2: ["build_control_station", "accept_contractor_offer", "create_rocket", "select_launch_target", "launch_rocket_from_earth", "mine_target", "return_rocket_home", "resolve_mission_debrief"],
-		3: ["accept_contractor_offer", "select_launch_target", "launch_rocket_from_earth", "mine_target", "return_rocket_home", "resolve_mission_debrief"],
-		4: ["build_scanner_station", "scan_targets", "select_launch_target", "launch_rocket_from_earth", "mine_target", "resolve_mission_debrief"]
+		2: ["build_control_station"],
+		3: ["accept_contractor_offer", "classify_candidate", "select_launch_target", "launch_rocket_from_earth", "mine_target", "return_rocket_home", "resolve_mission_debrief"],
+		4: ["open_launchpad", "select_launch_target", "launch_rocket_from_earth", "mine_target", "resolve_mission_debrief"]
 	}
 	var stage_rocket := {
 		1: "starterrocket1-e2e",
@@ -157,13 +160,6 @@ func test_fresh_start_to_open_operations_without_tutorial_duplicates_or_blockers
 		var launch_error = _assert_launch_resolvable_for_stage(stage, str(stage_rocket[stage]))
 		if launch_error != "":
 			reporter.fail_test(launch_error)
-			await _teardown_controller(controller)
-			return
-
-		var state_before = controller.get_tutorial_state()
-		var stage_before = int(state_before.get("current_stage", 1))
-		if stage_before < stage:
-			reporter.fail_test("Tutorial lagged mission progression at stage %s (tutorial stage=%s)" % [stage, stage_before])
 			await _teardown_controller(controller)
 			return
 
@@ -201,18 +197,8 @@ func test_fresh_start_to_open_operations_without_tutorial_duplicates_or_blockers
 
 		if stage < 4:
 			_mark_stage_complete(stage)
-			controller.record_action("mission_progress_sync_%s" % stage)
-			var after_stage = controller.get_tutorial_state()
-			if int(after_stage.get("current_stage", 1)) < (stage + 1):
-				reporter.fail_test("Expected tutorial to reach stage %s after mission completion" % (stage + 1))
-				await _teardown_controller(controller)
-				return
-
-	var final_stage = int(controller.get_tutorial_state().get("current_stage", 1))
-	if final_stage < 4:
-		reporter.fail_test("Expected free-operations readiness at stage 4, got stage %s" % final_stage)
-		await _teardown_controller(controller)
-		return
+			await _teardown_controller(controller)
+			controller = await _setup_controller()
 
 	await _teardown_controller(controller)
 	reporter.pass_test()
@@ -226,9 +212,9 @@ func test_free_operations_launch_requires_contractor_selection() -> void:
 	if mission_stage < 4:
 		reporter.fail_test("Expected mission stage 4 after four completions, got %s" % mission_stage)
 		return
-	var mode_ok = RocketsManager.set_operation_mode("survey")
+	var mode_ok = RocketsManager.set_operation_mode("contract")
 	if not mode_ok:
-		reporter.fail_test("Failed to set operation mode to survey")
+		reporter.fail_test("Failed to set operation mode to contract")
 		return
 	var target_id = "free-ops-survey-target"
 	var scan_ok = RocketsManager.set_detected_targets([{

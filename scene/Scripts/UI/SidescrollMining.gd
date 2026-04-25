@@ -7,10 +7,13 @@ const VisualSync = preload("res://Scripts/UI/SidescrollMiningVisualSync.gd")
 const RoomCatalog = preload("res://Scripts/Utils/RoomCatalog.gd")
 const RoomSpriteAtlas = preload("res://Scripts/UI/RoomSpriteAtlas.gd")
 const MiningTargetTheme = preload("res://Scripts/UI/MiningTargetTheme.gd")
+const MiningRoomDebugMarkerScene = preload("res://Scenes/UI/Templates/MiningRoomDebugMarker.tscn")
 const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
 const SubcontractorManager = preload("res://Scripts/Utils/SubcontractorManager.gd")
 const UILayout = preload("res://Scripts/UI/UILayout.gd")
 const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd")
+const MiningRoomRowScene = preload("res://Scenes/UI/Templates/MiningRoomRow.tscn")
+const MiningContractOrderRowScene = preload("res://Scenes/UI/Templates/MiningContractOrderRow.tscn")
 
 signal mining_completed(minerals: Dictionary, score: int)
 
@@ -70,6 +73,7 @@ var _terrain_loop_container: Node2D = null
 @onready var terrain_container: Node2D = $TerrainContainer
 @onready var terrain_fill: Polygon2D = $TerrainContainer/TerrainFill
 @onready var terrain_line: Line2D = $TerrainContainer/TerrainLine
+@onready var _mars_background: TextureRect = $MarsPixelBackground
 @onready var rocket: Sprite2D = $Rocket
 @onready var laser: Line2D = $Laser
 @onready var ui_root: Control = $UI
@@ -138,12 +142,13 @@ var _science_xp_multiplier := 1.0
 var _room_panel: PanelContainer = null
 var _room_grid: GridContainer = null
 var _room_debug_overlay: Control = null
+var _room_debug_preview: TextureRect = null
+var _room_debug_markers: Control = null
 var _room_toggle_button: Button = null
 var _room_debug_visible := false
 var _compact_layout_active := false
 var _room_panel_visible := false
 var _beam_glow: Line2D = null
-var _mars_background: TextureRect = null
 var _mars_bg_size := Vector2i.ZERO
 var _tutorial_overlay_was_visible := false
 var _terrain_pixel_textures: Dictionary = {}
@@ -262,17 +267,9 @@ func _setup_beam_visuals() -> void:
 	move_child(_beam_glow, laser.get_index())
 
 func _setup_mars_background() -> void:
-	if _mars_background and is_instance_valid(_mars_background):
+	if _mars_background == null:
 		return
-	_mars_background = TextureRect.new()
-	_mars_background.name = "MarsPixelBackground"
-	_mars_background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_mars_background.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	_mars_background.stretch_mode = TextureRect.STRETCH_SCALE
-	_mars_background.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	_mars_background.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_mars_background)
-	move_child(_mars_background, 0)
+	move_child(_mars_background, 1)
 	_apply_base_bg_color()
 	_refresh_mars_background()
 
@@ -631,6 +628,8 @@ func _setup_room_panel() -> void:
 	_room_panel = get_node_or_null("UI/RoomPanel") as PanelContainer
 	_room_grid = get_node_or_null("UI/RoomPanel/RoomMargin/RoomVBox/RoomGrid") as GridContainer
 	_room_debug_overlay = get_node_or_null("UI/RoomDebugOverlay") as Control
+	_room_debug_preview = get_node_or_null("UI/RoomDebugOverlay/AtlasPreview") as TextureRect
+	_room_debug_markers = get_node_or_null("UI/RoomDebugOverlay/MarkersLayer") as Control
 	_room_toggle_button = get_node_or_null("UI/RoomPanelToggle") as Button
 	if _room_toggle_button:
 		_room_toggle_button.pressed.connect(_toggle_room_panel)
@@ -638,7 +637,7 @@ func _setup_room_panel() -> void:
 func _render_room_panel() -> void:
 	if _room_grid == null:
 		return
-	_room_grid.columns = 2
+	_room_grid.columns = 1
 	for child in _room_grid.get_children():
 		child.queue_free()
 	var rooms = RoomCatalog.get_installed_rooms(_rocket_room_layout)
@@ -647,21 +646,23 @@ func _render_room_panel() -> void:
 		var room_def = RoomCatalog.get_room(room_id)
 		if room_def.is_empty():
 			continue
-		var tile := TextureRect.new()
-		tile.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		tile.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		tile.custom_minimum_size = Vector2(56, 24)
-		tile.texture = RoomSpriteAtlas.texture_for_room(room_id)
-		if tile.texture == null:
-			tile.modulate = Color(0.16, 0.22, 0.34, 1.0)
-		_room_grid.add_child(tile)
-		var label := Label.new()
+		var row := MiningRoomRowScene.instantiate() as HBoxContainer
+		if row == null:
+			continue
+		_room_grid.add_child(row)
+		var tile := row.get_node_or_null("RoomIcon") as TextureRect
+		if tile:
+			tile.texture = RoomSpriteAtlas.texture_for_room(room_id)
+			if tile.texture == null:
+				tile.modulate = Color(0.16, 0.22, 0.34, 1.0)
+		var label := row.get_node_or_null("RoomLabel") as Label
+		if label == null:
+			continue
 		var room_name = _truncate_room_name(str(room_def.get("name", room_id)))
 		var tier = int(room_row.get("tier", 1))
 		label.text = "%s Tier %d" % [room_name, tier]
 		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		label.add_theme_font_size_override("font_size", 12 if _compact_layout_active else 14)
-		_room_grid.add_child(label)
 	_refresh_room_debug_overlay()
 
 func _truncate_room_name(name: String) -> String:
@@ -673,8 +674,9 @@ func _truncate_room_name(name: String) -> String:
 func _refresh_room_debug_overlay() -> void:
 	if _room_debug_overlay == null:
 		return
-	for child in _room_debug_overlay.get_children():
-		child.queue_free()
+	if _room_debug_markers:
+		for child in _room_debug_markers.get_children():
+			child.queue_free()
 	_room_debug_overlay.visible = _room_debug_visible
 	if not _room_debug_visible:
 		return
@@ -686,40 +688,26 @@ func _refresh_room_debug_overlay() -> void:
 	var sheet = load(RoomSpriteAtlas.SHEET_PATH)
 	if sheet == null or not (sheet is Texture2D):
 		return
-	var texture_rect := TextureRect.new()
-	texture_rect.texture = sheet
-	texture_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	texture_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	texture_rect.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	texture_rect.offset_left = -540
-	texture_rect.offset_top = 330
-	texture_rect.offset_right = -20
-	texture_rect.offset_bottom = 650
-	texture_rect.modulate = Color(1, 1, 1, 0.92)
-	_room_debug_overlay.add_child(texture_rect)
-	var target_rect := texture_rect.get_rect()
-	var sheet_size := Vector2(texture_rect.texture.get_width(), texture_rect.texture.get_height())
+	if _room_debug_preview == null:
+		return
+	_room_debug_preview.texture = sheet
+	var target_rect := _room_debug_preview.get_rect()
+	var sheet_size := Vector2(_room_debug_preview.texture.get_width(), _room_debug_preview.texture.get_height())
 	if sheet_size.x <= 0 or sheet_size.y <= 0:
 		return
 	var scale_x := target_rect.size.x / sheet_size.x
 	var scale_y := target_rect.size.y / sheet_size.y
 	for entry in debug_regions:
 		var r: Rect2 = entry.get("rect", Rect2())
-		var marker := ColorRect.new()
-		marker.color = Color(0.15, 0.95, 0.95, 0.18)
+		var marker := MiningRoomDebugMarkerScene.instantiate() as Control
+		if marker == null:
+			continue
 		marker.position = target_rect.position + Vector2(r.position.x * scale_x, r.position.y * scale_y)
 		marker.size = Vector2(r.size.x * scale_x, r.size.y * scale_y)
-		_room_debug_overlay.add_child(marker)
-		var outline := ColorRect.new()
-		outline.color = Color(0.15, 0.95, 0.95, 0.95)
-		outline.position = marker.position
-		outline.size = Vector2(marker.size.x, 1)
-		_room_debug_overlay.add_child(outline)
-		var index_label := Label.new()
-		index_label.text = "%d %s" % [int(entry.get("index", 0)) + 1, str(entry.get("room_id", ""))]
-		index_label.position = marker.position + Vector2(4, 2)
-		index_label.add_theme_font_size_override("font_size", 11)
-		_room_debug_overlay.add_child(index_label)
+		var index_label := marker.get_node_or_null("IndexLabel") as Label
+		if index_label:
+			index_label.text = "%d %s" % [int(entry.get("index", 0)) + 1, str(entry.get("room_id", ""))]
+		_room_debug_markers.add_child(marker)
 
 func _load_rocket_frames():
 	for i in range(1, 9):
@@ -1506,29 +1494,19 @@ func _refresh_contract_order_tracker() -> void:
 			var done := collected_amount >= required_amount
 			# Create row on first call.
 			if not _mineral_bar_rows.has(key):
-				var row := HBoxContainer.new()
-				row.add_theme_constant_override("separation", 6)
+				var row := MiningContractOrderRowScene.instantiate() as HBoxContainer
+				if row == null:
+					continue
 				contract_order_vbox.add_child(row)
-				var name_lbl := Label.new()
+				var name_lbl := row.get_node_or_null("NameLabel") as Label
+				var bar := row.get_node_or_null("ProgressBar") as ProgressBar
+				var qty_lbl := row.get_node_or_null("QuantityLabel") as Label
+				if name_lbl == null or bar == null or qty_lbl == null:
+					continue
 				var color_hint = _MINERAL_COLOR_HINTS.get(str(key).to_lower(), "")
 				name_lbl.text = "%s%s" % [str(key).capitalize(), " (%s)" % color_hint if color_hint else ""]
-				name_lbl.add_theme_color_override("font_color", Color(0.90, 0.90, 0.70))
-				name_lbl.add_theme_font_size_override("font_size", 13)
-				name_lbl.custom_minimum_size = Vector2(110, 0)
-				row.add_child(name_lbl)
-				var bar := ProgressBar.new()
 				bar.min_value = 0.0
 				bar.max_value = float(required_amount)
-				bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-				bar.custom_minimum_size = Vector2(0, 14)
-				bar.show_percentage = false
-				row.add_child(bar)
-				var qty_lbl := Label.new()
-				qty_lbl.add_theme_color_override("font_color", Color(1.0, 1.0, 0.85))
-				qty_lbl.add_theme_font_size_override("font_size", 13)
-				qty_lbl.custom_minimum_size = Vector2(72, 0)
-				qty_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-				row.add_child(qty_lbl)
 				_mineral_bar_rows[key] = row
 				_mineral_progress_bars[key] = bar
 				row.set_meta("qty_label", qty_lbl)

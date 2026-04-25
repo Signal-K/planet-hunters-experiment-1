@@ -29,6 +29,8 @@ static func navigation_hint_for_action(action_key: String) -> String:
 			return "→ Create a rocket in Launchpad"
 		"select_launch_target":
 			return "→ Select a mission target in Launchpad"
+		"classify_candidate":
+			return "→ Classify a candidate in Launchpad"
 		"launch_rocket_from_earth":
 			return "→ Press Launch in Launchpad"
 		"mine_target":
@@ -63,6 +65,8 @@ static func action_hint_for_step(action_key: String) -> String:
 			return "Create button in Rocket Selector"
 		"select_launch_target":
 			return "Select target button"
+		"classify_candidate":
+			return "Candidate classification button"
 		"launch_rocket_from_earth":
 			return "Launch button"
 		"mine_target":
@@ -125,6 +129,15 @@ static func _find_target_for_action(action_key: String, tree: SceneTree) -> Node
 					return false
 				var text = btn.text.to_lower()
 				return text.find("target") != -1
+			)
+		"classify_candidate":
+			if on_base:
+				return _find_new_mission_button(tree)
+			return _find_visible_button(tree, func(btn: Button) -> bool:
+				if btn.disabled:
+					return false
+				var text = btn.text.strip_edges().to_lower()
+				return text == "planet" or text == "not a planet" or text == "mark dip"
 			)
 		"launch_rocket_from_earth":
 			if on_base:

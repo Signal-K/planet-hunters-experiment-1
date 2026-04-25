@@ -42,9 +42,47 @@ static func load_json(file_path: String) -> Dictionary:
 	else:
 		# Unexpected parse return type
 		print("JSONFileManager: Unexpected JSON.parse_string() return type for file: ", file_path)
+		var backup_result = _load_backup_json(file_path)
+		if not backup_result.is_empty():
+			return backup_result
 		return result
 	
 	return result
+
+static func _load_backup_json(file_path: String) -> Dictionary:
+	var backup_path = _backup_path(file_path)
+	if not FileAccess.file_exists(backup_path):
+		return {}
+	print("JSONFileManager: Falling back to backup JSON file: ", backup_path)
+	var backup = load_json(backup_path)
+	if not backup.is_empty():
+		_write_text_file(file_path, _read_text_file(backup_path))
+	return backup
+
+static func _backup_path(file_path: String) -> String:
+	return "%s.bak" % file_path
+
+static func _temp_path(file_path: String) -> String:
+	return "%s.tmp" % file_path
+
+static func _write_text_file(file_path: String, contents: String) -> bool:
+	var file = FileAccess.open(file_path, FileAccess.WRITE)
+	if not file:
+		print("JSONFileManager: Failed to open file for writing: ", file_path)
+		return false
+	file.store_string(contents)
+	file.close()
+	return true
+
+static func _read_text_file(file_path: String) -> String:
+	if not FileAccess.file_exists(file_path):
+		return ""
+	var file = FileAccess.open(file_path, FileAccess.READ)
+	if not file:
+		return ""
+	var text = file.get_as_text()
+	file.close()
+	return text
 
 # Helper functions for pretty-printing JSON
 static func _escape_string(s: String) -> String:
@@ -94,13 +132,14 @@ static func _to_pretty(value, level: int = 0) -> String:
 static func save_json(file_path: String, data: Dictionary) -> bool:
 	# Pretty-print JSON with indentation and line breaks for readability
 	var json_string = _to_pretty(data, 0) + "\n"
-
-	var file = FileAccess.open(file_path, FileAccess.WRITE)
-	if not file:
-		print("JSONFileManager: Failed to open file for writing: ", file_path)
+	var backup_path = _backup_path(file_path)
+	var prior_contents = _read_text_file(file_path)
+	if prior_contents != "":
+		_write_text_file(backup_path, prior_contents)
+	if not _write_text_file(file_path, json_string):
+		if prior_contents != "":
+			_write_text_file(file_path, prior_contents)
+		print("JSONFileManager: Failed to save JSON file directly: ", file_path)
 		return false
-
-	file.store_string(json_string)
-	file.close()
 	print("JSONFileManager: Successfully saved data to: ", file_path)
 	return true

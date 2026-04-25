@@ -5,16 +5,16 @@ const ROCKETS_MANAGER = preload("res://Scripts/Utils/RocketsManager.gd")
 const UILayout = preload("res://Scripts/UI/UILayout.gd")
 const MISSION_OBJECTIVES := {
 	1: "Pick a contractor, launch the starter rocket, and deliver the first order.",
-	2: "Build the Control Station, then prep Starter Rocket 2 and complete the delivery loop.",
-	3: "Pick a contractor, fly to a NASA TESS planet candidate, and complete the run.",
-	4: "Build the Scanner Station, scan for targets, then mine with drone assistance."
+	2: "Build the Control Station, then use Mission 2 planning for Starter Rocket 2 and the structured contractor route.",
+	3: "Pick a contractor, classify a TESS lightcurve candidate, then fly to a confirmed target.",
+	4: "Use Mission 4 to leave the strict tutorial rail: choose a contractor run or set up your own survey route."
 }
 const COMPACT_SCENES := ["earth_base_1"]
 const MISSION_STEP_KEYS := {
 	1: ["accept_contractor_offer", "create_rocket", "select_launch_target", "launch_rocket_from_earth", "mine_target", "return_rocket_home", "resolve_mission_debrief"],
-	2: ["build_control_station", "accept_contractor_offer", "create_rocket", "select_launch_target", "launch_rocket_from_earth", "mine_target", "return_rocket_home", "resolve_mission_debrief"],
-	3: ["accept_contractor_offer", "select_launch_target", "launch_rocket_from_earth", "mine_target", "return_rocket_home", "resolve_mission_debrief"],
-	4: ["build_scanner_station", "scan_targets", "select_launch_target", "launch_rocket_from_earth", "mine_target", "return_rocket_home", "resolve_mission_debrief"]
+	2: ["build_control_station"],
+	3: ["accept_contractor_offer", "classify_candidate", "select_launch_target", "launch_rocket_from_earth", "mine_target", "return_rocket_home", "resolve_mission_debrief"],
+	4: ["open_launchpad", "select_launch_target", "launch_rocket_from_earth", "mine_target", "resolve_mission_debrief"]
 }
 
 @onready var panel: PanelContainer = $Panel
@@ -104,7 +104,7 @@ func _on_toggle_pressed() -> void:
 	_apply_layout()
 	_apply_visual_state()
 
-const HIDE_SCENES := ["rocket_ascent", "rocket_transit", "rocket_return", "asteroid_preview", "SidescrollMining", "earth_launchpad", "mission_debrief_v2"]
+const HIDE_SCENES := ["rocket_ascent", "rocket_transit", "rocket_return", "asteroid_preview", "SidescrollMining", "earth_base_1", "earth_launchpad", "mission_debrief_v2"]
 
 func _get_current_scene_basename() -> String:
 	var tree = get_tree()
@@ -215,10 +215,10 @@ func _label_for_action(action_key: String) -> String:
 			return "Return to Earth"
 		"resolve_mission_debrief":
 			return "Complete debrief"
-		"build_scanner_station":
-			return "Build scanner station"
-		"scan_targets":
-			return "Scan targets"
+		"open_launchpad":
+			return "Open launchpad"
+		"classify_candidate":
+			return "Classify candidate"
 		"select_launch_target":
 			return "Select launch target"
 	return action_key

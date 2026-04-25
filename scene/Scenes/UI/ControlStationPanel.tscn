@@ -271,6 +271,12 @@ layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 14
 
+[node name="StoryList" type="VBoxContainer" parent="RootHBox/MainArea/ContentMargin/ContentHBox/MissionsArea"]
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 12
+
 [node name="GlobePanel" type="PanelContainer" parent="RootHBox/MainArea/ContentMargin/ContentHBox"]
 custom_minimum_size = Vector2(220, 180)
 layout_mode = 2
@@ -319,3 +325,68 @@ theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 0.80)
 theme_override_font_sizes/font_size = 14
 text = "REPORT"
 flat = true
+
+[node name="RightRail" type="VBoxContainer" parent="RootHBox/MainArea/ContentMargin/ContentHBox"]
+custom_minimum_size = Vector2(320, 0)
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="QueueCard" type="PanelContainer" parent="RootHBox/MainArea/ContentMargin/ContentHBox/RightRail"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_mission_card")
+
+[node name="QueueVBox" type="VBoxContainer" parent="RootHBox/MainArea/ContentMargin/ContentHBox/RightRail/QueueCard"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="QueueTitle" type="Label" parent="RootHBox/MainArea/ContentMargin/ContentHBox/RightRail/QueueCard/QueueVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.141, 0.180, 0.200, 1.0)
+theme_override_font_sizes/font_size = 16
+text = "CONSTRUCTION QUEUE"
+
+[node name="QueueList" type="VBoxContainer" parent="RootHBox/MainArea/ContentMargin/ContentHBox/RightRail/QueueCard/QueueVBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="LogCard" type="PanelContainer" parent="RootHBox/MainArea/ContentMargin/ContentHBox/RightRail"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_mission_card")
+
+[node name="LogVBox" type="VBoxContainer" parent="RootHBox/MainArea/ContentMargin/ContentHBox/RightRail/LogCard"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="LogTitle" type="Label" parent="RootHBox/MainArea/ContentMargin/ContentHBox/RightRail/LogCard/LogVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.380, 0.440, 0.460, 1.0)
+theme_override_font_sizes/font_size = 14
+text = "SYSTEM LOG"
+
+[node name="LogList" type="VBoxContainer" parent="RootHBox/MainArea/ContentMargin/ContentHBox/RightRail/LogCard/LogVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 6
+
+[node name="FooterTabs" type="HBoxContainer" parent="RootHBox/MainArea/ContentMargin/ContentHBox/RightRail"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="FooterTabTelemetry" type="Button" parent="RootHBox/MainArea/ContentMargin/ContentHBox/RightRail/FooterTabs"]
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 58)
+text = "TELEMETRY"
+
+[node name="FooterTabDiagnostics" type="Button" parent="RootHBox/MainArea/ContentMargin/ContentHBox/RightRail/FooterTabs"]
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 58)
+text = "DIAGNOSTICS"
+
+[node name="FooterTabMissions" type="Button" parent="RootHBox/MainArea/ContentMargin/ContentHBox/RightRail/FooterTabs"]
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 58)
+text = "MISSIONS"

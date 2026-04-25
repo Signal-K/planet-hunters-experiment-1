@@ -10,11 +10,11 @@
  *   NP01  Mission 1 full completion → survey triggered after debrief
  *   NP02  Mission 1 → Mission 2 XP progression → level-up at each threshold
  *   NP03  Mission 1 → skip survey (already seen) → no duplicate overlay
- *   NP04  Mission 5 contractor path → complete_contractor_mission fires no errors
- *   NP05  Mission 5 survey path → mission_debrief_resolved fires no errors
+ *   NP04  Free Operations contractor path → complete_contractor_mission fires no errors
+ *   NP05  Free Operations survey path → mission_debrief_resolved fires no errors
  *   NP06  Multiple debrief action types (orbit_sale, earth_sale, keep, scrap)
  *   NP07  Feedback mid-session then continues normally
- *   NP08  XP progression through all 5 levels with correct banner text each time
+ *   NP08  XP progression through all levels with correct banner text each time
  *   NP09  Progress cookie updated at each mission checkpoint
  */
 import { expect, test } from "@playwright/test";
@@ -139,14 +139,14 @@ test.describe("Narrative paths", () => {
     expect(display).toBe("none");
   });
 
-  // NP04 — Mission 5 contractor path: complete_contractor_mission fires no errors
-  test("NP04: M5 contractor path — accept_contractor then complete fires no errors", async ({
+  // NP04 — Free Operations contractor path: complete_contractor_mission fires no errors
+  test("NP04: Free Operations contractor path — accept_contractor then complete fires no errors", async ({
     page,
   }) => {
     const errors: string[] = [];
     page.on("pageerror", (e) => errors.push(e.message));
     await dispatchGameEvent(page, "contractor_accepted", { contractor_id: "survey_corp" });
-    await saveProgress(page, "m5_launch_contractor");
+    await saveProgress(page, "free_ops_launch_contractor");
     await dispatchGameEvent(page, "mission_debrief_resolved", {
       mission_count: 5,
       action: "complete_contractor_mission",
@@ -155,10 +155,11 @@ test.describe("Narrative paths", () => {
     expect(errors).toHaveLength(0);
   });
 
-  // NP05 — Mission 5 survey route: no contractor, just debrief
-  test("NP05: M5 survey path — no contractor, mission_debrief_resolved fires survey", async ({
+  // NP05 — Free Operations survey route: no contractor, just debrief
+  test("NP05: Free Operations survey path — no contractor, mission_debrief_resolved fires survey", async ({
     page,
   }) => {
+
     await setXpLevel(page, 1, 0); // Ensure survey hasn't been shown
     await dispatchGameEvent(page, "mission_debrief_resolved", {
       mission_count: 5,
@@ -239,7 +240,7 @@ test.describe("Narrative paths", () => {
       "m2_launch",
       "m3_scan_complete",
       "m4_planet_launch",
-      "m5_contractor_launch",
+      "free_ops_contractor_launch",
     ];
     for (const marker of checkpoints) {
       await saveProgress(page, marker);

@@ -1,11 +1,68 @@
-[gd_scene load_steps=2 format=3 uid="uid://launch_wizard_scene"]
+[gd_scene load_steps=11 format=3 uid="uid://launch_wizard_scene"]
 
 [ext_resource type="Script" path="res://Scripts/UI/LaunchWizard.gd" id="1"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/Templates/LaunchWizardContractorCard.tscn" id="2"]
+[ext_resource type="Script" path="res://Scripts/UI/LaunchWizardMapStep.gd" id="3"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/Templates/LaunchWizardRocketTile.tscn" id="4"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/Templates/LaunchWizardConfirmRow.tscn" id="5"]
 
 ; Terminal Ethereal — mobile-first launch wizard.
-; Static scaffold defined here so designers can adjust layout in the Godot editor.
-; Dynamic card content (contractor / target / rocket cards) is built at runtime
-; in LaunchWizard.gd — only edit that file for data-driven content.
+; UI structure lives in scene files so designers can inspect and adjust it in the editor.
+; LaunchWizard.gd binds mission data into these scene-owned controls.
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_intro"]
+bg_color = Color(0.038, 0.058, 0.112, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.22, 0.54, 0.8, 0.2)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+content_margin_left = 18.0
+content_margin_top = 16.0
+content_margin_right = 18.0
+content_margin_bottom = 16.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_locked"]
+bg_color = Color(0.038, 0.058, 0.112, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.22, 0.54, 0.8, 0.18)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+content_margin_left = 18.0
+content_margin_top = 14.0
+content_margin_right = 18.0
+content_margin_bottom = 14.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_step_bg"]
+bg_color = Color(0.024, 0.038, 0.075, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+content_margin_left = 16.0
+content_margin_top = 16.0
+content_margin_right = 16.0
+content_margin_bottom = 16.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_badge"]
+bg_color = Color(0.22, 0.54, 0.8, 0.16)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+content_margin_left = 9.0
+content_margin_top = 5.0
+content_margin_right = 9.0
+content_margin_bottom = 5.0
 
 [node name="LaunchWizard" type="Control"]
 layout_mode = 3
@@ -64,7 +121,7 @@ theme_override_constants/separation = 8
 layout_mode = 2
 custom_minimum_size = Vector2(44, 44)
 flat = true
-text = "\u2039"
+text = "<"
 
 [node name="StepTitle" type="Label" parent="Scaffold/Header/HeaderRow"]
 layout_mode = 2
@@ -95,6 +152,336 @@ theme_override_constants/margin_bottom = 20
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 12
+
+[node name="ContractorStep" type="VBoxContainer" parent="Scaffold/Scroll/ScrollMargin/CardList"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 14
+
+[node name="IntroPanel" type="PanelContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/ContractorStep"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_intro")
+
+[node name="Margin" type="MarginContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/ContractorStep/IntroPanel"]
+layout_mode = 2
+
+[node name="VBox" type="VBoxContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/ContractorStep/IntroPanel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="TitleLabel" type="Label" parent="Scaffold/Scroll/ScrollMargin/CardList/ContractorStep/IntroPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.94, 0.98, 1)
+theme_override_font_sizes/font_size = 30
+text = "Mission 1 contract"
+
+[node name="SubtitleLabel" type="Label" parent="Scaffold/Scroll/ScrollMargin/CardList/ContractorStep/IntroPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.64, 0.73, 0.84, 1)
+theme_override_font_sizes/font_size = 16
+text = "Pick the buyer. Their order defines the haul."
+
+[node name="ContractorGrid" type="GridContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/ContractorStep"]
+layout_mode = 2
+size_flags_horizontal = 3
+columns = 3
+theme_override_constants/h_separation = 14
+theme_override_constants/v_separation = 14
+
+[node name="EditorPreviewContractorCard" parent="Scaffold/Scroll/ScrollMargin/CardList/ContractorStep/ContractorGrid" instance=ExtResource("2")]
+layout_mode = 2
+
+[node name="CustomMissionCard" type="PanelContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/ContractorStep"]
+layout_mode = 2
+size_flags_horizontal = 3
+modulate = Color(1, 1, 1, 0.46)
+theme_override_styles/panel = SubResource("StyleBoxFlat_locked")
+
+[node name="Margin" type="MarginContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/ContractorStep/CustomMissionCard"]
+layout_mode = 2
+
+[node name="HBox" type="HBoxContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/ContractorStep/CustomMissionCard/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="LockBadge" type="PanelContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/ContractorStep/CustomMissionCard/Margin/HBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_badge")
+
+[node name="Label" type="Label" parent="Scaffold/Scroll/ScrollMargin/CardList/ContractorStep/CustomMissionCard/Margin/HBox/LockBadge"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.64, 0.73, 0.84, 1)
+theme_override_font_sizes/font_size = 13
+text = "LOCKED"
+vertical_alignment = 1
+
+[node name="TextCol" type="VBoxContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/ContractorStep/CustomMissionCard/Margin/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 3
+
+[node name="Title" type="Label" parent="Scaffold/Scroll/ScrollMargin/CardList/ContractorStep/CustomMissionCard/Margin/HBox/TextCol"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.94, 0.98, 1)
+theme_override_font_sizes/font_size = 17
+text = "Custom Mission"
+
+[node name="Subtitle" type="Label" parent="Scaffold/Scroll/ScrollMargin/CardList/ContractorStep/CustomMissionCard/Margin/HBox/TextCol"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.64, 0.73, 0.84, 1)
+theme_override_font_sizes/font_size = 13
+text = "Unlocks after your first mission."
+
+[node name="TargetStep" type="VBoxContainer" parent="Scaffold/Scroll/ScrollMargin/CardList"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 14
+
+[node name="IntroPanel" type="PanelContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/TargetStep"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_intro")
+
+[node name="Margin" type="MarginContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/TargetStep/IntroPanel"]
+layout_mode = 2
+
+[node name="VBox" type="VBoxContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/TargetStep/IntroPanel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="TitleLabel" type="Label" parent="Scaffold/Scroll/ScrollMargin/CardList/TargetStep/IntroPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.94, 0.98, 1)
+theme_override_font_sizes/font_size = 30
+text = "Select destination"
+
+[node name="SubtitleLabel" type="Label" parent="Scaffold/Scroll/ScrollMargin/CardList/TargetStep/IntroPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.64, 0.73, 0.84, 1)
+theme_override_font_sizes/font_size = 16
+text = "Choose where the next rocket is headed."
+
+[node name="ClassificationCard" type="PanelContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/TargetStep"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_step_bg")
+
+[node name="Margin" type="MarginContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/TargetStep/ClassificationCard"]
+layout_mode = 2
+
+[node name="VBox" type="VBoxContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/TargetStep/ClassificationCard/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="SectionLabel" type="Label" parent="Scaffold/Scroll/ScrollMargin/CardList/TargetStep/ClassificationCard/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.94, 0.98, 1)
+theme_override_font_sizes/font_size = 18
+text = "Candidate review"
+
+[node name="CopyLabel" type="Label" parent="Scaffold/Scroll/ScrollMargin/CardList/TargetStep/ClassificationCard/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.64, 0.73, 0.84, 1)
+theme_override_font_sizes/font_size = 14
+text = "Cached TESS/TIC lightcurve review."
+autowrap_mode = 3
+
+[node name="FactsRow" type="HBoxContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/TargetStep/ClassificationCard/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="ButtonsRow" type="HBoxContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/TargetStep/ClassificationCard/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="PlanetButton" type="Button" parent="Scaffold/Scroll/ScrollMargin/CardList/TargetStep/ClassificationCard/Margin/VBox/ButtonsRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Planet"
+
+[node name="NotPlanetButton" type="Button" parent="Scaffold/Scroll/ScrollMargin/CardList/TargetStep/ClassificationCard/Margin/VBox/ButtonsRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Not a Planet"
+
+[node name="MarkDipButton" type="Button" parent="Scaffold/Scroll/ScrollMargin/CardList/TargetStep/ClassificationCard/Margin/VBox/ButtonsRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Mark Dip"
+
+[node name="MapPanel" type="PanelContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/TargetStep"]
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 420)
+theme_override_styles/panel = SubResource("StyleBoxFlat_step_bg")
+
+[node name="MapStep" type="Control" parent="Scaffold/Scroll/ScrollMargin/CardList/TargetStep/MapPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("3")
+
+[node name="LabelLayer" type="Control" parent="Scaffold/Scroll/ScrollMargin/CardList/TargetStep/MapPanel/MapStep"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="TargetDetailCard" type="PanelContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/TargetStep"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_step_bg")
+
+[node name="Margin" type="MarginContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/TargetStep/TargetDetailCard"]
+layout_mode = 2
+
+[node name="VBox" type="VBoxContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/TargetStep/TargetDetailCard/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="HintLabel" type="Label" parent="Scaffold/Scroll/ScrollMargin/CardList/TargetStep/TargetDetailCard/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.64, 0.73, 0.84, 1)
+theme_override_font_sizes/font_size = 14
+text = "< Tap a target on the map above"
+horizontal_alignment = 1
+
+[node name="RocketStep" type="HBoxContainer" parent="Scaffold/Scroll/ScrollMargin/CardList"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="RocketListColumn" type="VBoxContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.48
+theme_override_constants/separation = 8
+
+[node name="EditorPreviewRocketTile" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/RocketListColumn" instance=ExtResource("4")]
+layout_mode = 2
+
+[node name="AssemblyPanel" type="PanelContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.52
+custom_minimum_size = Vector2(0, 260)
+theme_override_styles/panel = SubResource("StyleBoxFlat_step_bg")
+
+[node name="Margin" type="MarginContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel"]
+layout_mode = 2
+
+[node name="VBox" type="VBoxContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="TitleLabel" type="Label" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.82, 0.92, 0.97, 0.5)
+theme_override_font_sizes/font_size = 13
+text = "ASSEMBLY PREVIEW"
+horizontal_alignment = 1
+
+[node name="HintLabel" type="Label" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.65, 0.78, 0.7)
+theme_override_font_sizes/font_size = 11
+text = "Select a rocket to see its parts"
+horizontal_alignment = 1
+
+[node name="PartsBox" type="VBoxContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+alignment = 1
+theme_override_constants/separation = 3
+
+[node name="StatusLabel" type="Label" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.22, 0.8, 0.45, 0)
+theme_override_font_sizes/font_size = 13
+text = "ASSEMBLED ✓  READY TO LAUNCH"
+horizontal_alignment = 1
+
+[node name="PadBar" type="ColorRect" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 5)
+color = Color(0.22, 0.54, 0.8, 0.45)
+
+[node name="ConfirmStep" type="VBoxContainer" parent="Scaffold/Scroll/ScrollMargin/CardList"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 14
+
+[node name="IntroPanel" type="PanelContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_intro")
+
+[node name="Margin" type="MarginContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep/IntroPanel"]
+layout_mode = 2
+
+[node name="VBox" type="VBoxContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep/IntroPanel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="TitleLabel" type="Label" parent="Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep/IntroPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.94, 0.98, 1)
+theme_override_font_sizes/font_size = 30
+text = "Ready to launch"
+
+[node name="SubtitleLabel" type="Label" parent="Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep/IntroPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.64, 0.73, 0.84, 1)
+theme_override_font_sizes/font_size = 16
+text = "Review your mission before the rocket departs."
+
+[node name="SummaryCard" type="PanelContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_step_bg")
+
+[node name="Margin" type="MarginContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep/SummaryCard"]
+layout_mode = 2
+
+[node name="VBox" type="VBoxContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep/SummaryCard/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="RowsBox" type="VBoxContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep/SummaryCard/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="EditorPreviewRow" parent="Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep/SummaryCard/Margin/VBox/RowsBox" instance=ExtResource("5")]
+layout_mode = 2
+
+[node name="Divider" type="ColorRect" parent="Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep/SummaryCard/Margin/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 1)
+color = Color(0.928, 0.94, 0.955, 1)
+
+[node name="TravelTimeLabel" type="Label" parent="Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep/SummaryCard/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.64, 0.73, 0.84, 1)
+theme_override_font_sizes/font_size = 13
+text = "Estimated travel time: ~0 min"
+
+[node name="NoteLabel" type="Label" parent="Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep/SummaryCard/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.16, 0.42, 0.65, 1)
+theme_override_font_sizes/font_size = 13
+text = "Once launched the rocket departs immediately."
+autowrap_mode = 3
 
 ; ── Footer (88 px tall, surface-low bar with Cancel + Next buttons) ──────────
 
@@ -133,4 +520,4 @@ text = "Cancel"
 layout_mode = 2
 size_flags_horizontal = 3
 custom_minimum_size = Vector2(0, 56)
-text = "Next \u2192"
+text = "Next >"

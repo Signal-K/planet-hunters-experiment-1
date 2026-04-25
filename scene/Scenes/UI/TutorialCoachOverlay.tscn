@@ -79,10 +79,6 @@ text = "Practice Mining"
 layout_mode = 2
 text = "Replay Mission"
 
-[node name="ReplayAllButton" type="Button" parent="Root/Panel/Margin/VBox/Buttons"]
-layout_mode = 2
-text = "Replay All"
-
 [node name="OpenLaunchpadButton" type="Button" parent="Root/Panel/Margin/VBox/Buttons"]
 layout_mode = 2
 visible = false

@@ -42,6 +42,7 @@ func _init():
 func run_all_tests() -> void:
 	await test_project_uses_linear_canvas_filter()
 	await test_franc_balance_button_has_readable_text_color()
+	await test_franc_balance_loan_label_is_scene_owned()
 	await test_ds_palette_has_sufficient_contrast()
 	await test_ds_primary_is_cyan_not_warm()
 	await test_weather_cycle_and_event_hooks()
@@ -73,6 +74,29 @@ func test_franc_balance_button_has_readable_text_color() -> void:
 	var luminance_bg = 0.2126 * bg_color.r + 0.7152 * bg_color.g + 0.0722 * bg_color.b
 	if abs(luminance_font - luminance_bg) < 0.35:
 		reporter.fail_test("BalanceButton contrast too low (font=%s bg=%s)" % [str(font_color), str(bg_color)])
+		node.queue_free()
+		return
+	node.queue_free()
+	reporter.pass_test()
+
+func test_franc_balance_loan_label_is_scene_owned() -> void:
+	reporter.start_test("Franc balance loan label exists in scene and toggles visible from state")
+	var node = FrancBalanceScene.instantiate()
+	get_root().add_child(node)
+	await create_timer(0.02).timeout
+	var loan_label = node.get_node_or_null("Container/LoanLabel") as Label
+	if loan_label == null:
+		reporter.fail_test("LoanLabel node not found in FrancBalance scene")
+		node.queue_free()
+		return
+	node.loan_balance = 250000000
+	node._update_loan_label()
+	if not loan_label.visible:
+		reporter.fail_test("Expected LoanLabel to become visible when loan balance is positive")
+		node.queue_free()
+		return
+	if loan_label.text.find("Loan:") == -1:
+		reporter.fail_test("Expected LoanLabel text to show loan copy")
 		node.queue_free()
 		return
 	node.queue_free()

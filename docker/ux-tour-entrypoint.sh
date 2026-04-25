@@ -35,8 +35,18 @@ echo "    Xvfb PID=$XVFB_PID"
 
 # ── 3. Run the UX tour scene ──────────────────────────────────────────────────────
 echo "==> Running UX tour (timeout 30 min)..."
-GALLIUM_DRIVER=softpipe GODOT_UX_TOUR=1 timeout 1800s "$GODOT" \
+# MESA_GL_VERSION_OVERRIDE/MESA_GLSL_VERSION_OVERRIDE: expose GL 3.3 to Godot so it
+# picks the Compatibility renderer without triggering Vulkan init (Xvfb has no Vulkan).
+# MESA_NO_ERROR: disable GL error checking for ~10% speed gain under softpipe.
+# GALLIUM_DRIVER=softpipe: explicit software rasteriser (Xvfb has no hw GL).
+GALLIUM_DRIVER=softpipe \
+MESA_GL_VERSION_OVERRIDE=3.3 \
+MESA_GLSL_VERSION_OVERRIDE=330 \
+MESA_NO_ERROR=1 \
+GODOT_UX_TOUR=1 \
+    timeout 1800s "$GODOT" \
     --audio-driver Dummy \
+    --rendering-driver opengl3 \
     --path "$SCENE_DIR" \
     res://tests/UXTour.tscn \
     "$@" \

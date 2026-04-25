@@ -1,6 +1,9 @@
-[gd_scene load_steps=3 format=3 uid="uid://mission_debrief_v2"]
+[gd_scene load_steps=6 format=3 uid="uid://mission_debrief_v2"]
 
 [ext_resource type="Script" path="res://Scripts/Earth/MissionDebriefV2.gd" id="1_debriefv2"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/Templates/MissionDebriefSectionCard.tscn" id="2_section"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/Templates/MissionDebriefPayoutCard.tscn" id="3_payout"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/Templates/MissionDebriefSummaryCard.tscn" id="4_summary"]
 
 [sub_resource type="StyleBoxFlat" id="1"]
 bg_color = Color(0.0588235, 0.101961, 0.14902, 0.96)
@@ -111,6 +114,122 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/separation = 12
+
+[node name="HeaderSection" type="VBoxContainer" parent="Center/Panel/Margin/ContentVBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="HeaderTopRow" type="HBoxContainer" parent="Center/Panel/Margin/ContentVBox/HeaderSection"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+
+[node name="TitleColumn" type="VBoxContainer" parent="Center/Panel/Margin/ContentVBox/HeaderSection/HeaderTopRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 2
+
+[node name="EyebrowLabel" type="Label" parent="Center/Panel/Margin/ContentVBox/HeaderSection/HeaderTopRow/TitleColumn"]
+layout_mode = 2
+text = "MISSION COMPLETE"
+
+[node name="TitleLabel" type="Label" parent="Center/Panel/Margin/ContentVBox/HeaderSection/HeaderTopRow/TitleColumn"]
+layout_mode = 2
+text = "◎ Debrief"
+
+[node name="HintLabel" type="Label" parent="Center/Panel/Margin/ContentVBox/HeaderSection/HeaderTopRow/TitleColumn"]
+visible = false
+layout_mode = 2
+text = ""
+autowrap_mode = 3
+
+[node name="HeaderControls" type="HBoxContainer" parent="Center/Panel/Margin/ContentVBox/HeaderSection/HeaderTopRow"]
+layout_mode = 2
+alignment = 2
+theme_override_constants/separation = 10
+
+[node name="PhaseChip" type="PanelContainer" parent="Center/Panel/Margin/ContentVBox/HeaderSection/HeaderTopRow/HeaderControls"]
+layout_mode = 2
+
+[node name="PhaseChipLabel" type="Label" parent="Center/Panel/Margin/ContentVBox/HeaderSection/HeaderTopRow/HeaderControls/PhaseChip"]
+layout_mode = 2
+text = "Mission Summary"
+
+[node name="GuideButton" type="Button" parent="Center/Panel/Margin/ContentVBox/HeaderSection/HeaderTopRow/HeaderControls"]
+layout_mode = 2
+custom_minimum_size = Vector2(112, 42)
+text = "Guide"
+
+[node name="HeaderSeparator" type="HSeparator" parent="Center/Panel/Margin/ContentVBox/HeaderSection"]
+layout_mode = 2
+
+[node name="GuideCard" parent="Center/Panel/Margin/ContentVBox" instance=ExtResource("2_section")]
+visible = false
+layout_mode = 2
+
+[node name="HeaderLabel" parent="Center/Panel/Margin/ContentVBox/GuideCard/Content" index="0"]
+text = "Debrief Controls"
+
+[node name="SummaryGrid" type="GridContainer" parent="Center/Panel/Margin/ContentVBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 12
+theme_override_constants/v_separation = 12
+
+[node name="TargetSummaryCard" parent="Center/Panel/Margin/ContentVBox/SummaryGrid" instance=ExtResource("4_summary")]
+layout_mode = 2
+
+[node name="RocketSummaryCard" parent="Center/Panel/Margin/ContentVBox/SummaryGrid" instance=ExtResource("4_summary")]
+layout_mode = 2
+
+[node name="ContractorSummaryCard" parent="Center/Panel/Margin/ContentVBox/SummaryGrid" instance=ExtResource("4_summary")]
+layout_mode = 2
+
+[node name="PayoutCard" parent="Center/Panel/Margin/ContentVBox" instance=ExtResource("3_payout")]
+visible = false
+layout_mode = 2
+
+[node name="CombinedCargoCard" parent="Center/Panel/Margin/ContentVBox" instance=ExtResource("2_section")]
+visible = false
+layout_mode = 2
+
+[node name="HeaderLabel" parent="Center/Panel/Margin/ContentVBox/CombinedCargoCard/Content" index="0"]
+text = "◌ Cargo"
+
+[node name="PhaseCard" parent="Center/Panel/Margin/ContentVBox" instance=ExtResource("2_section")]
+visible = false
+layout_mode = 2
+
+[node name="HeaderLabel" parent="Center/Panel/Margin/ContentVBox/PhaseCard/Content" index="0"]
+text = "NEXT MISSION"
+
+[node name="ActionsCard" parent="Center/Panel/Margin/ContentVBox" instance=ExtResource("2_section")]
+visible = false
+layout_mode = 2
+
+[node name="HeaderLabel" parent="Center/Panel/Margin/ContentVBox/ActionsCard/Content" index="0"]
+visible = false
+
+[node name="ActionsRow" type="HBoxContainer" parent="Center/Panel/Margin/ContentVBox/ActionsCard/Content/Rows"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="PrimaryActionButton" type="Button" parent="Center/Panel/Margin/ContentVBox/ActionsCard/Content/Rows/ActionsRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(220, 48)
+text = "Primary"
+
+[node name="SecondaryActionButton" type="Button" parent="Center/Panel/Margin/ContentVBox/ActionsCard/Content/Rows/ActionsRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(280, 48)
+text = "Secondary"
+
+[node name="TertiaryActionButton" type="Button" parent="Center/Panel/Margin/ContentVBox/ActionsCard/Content/Rows/ActionsRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(170, 48)
+text = "Return to Base"
 
 [node name="EmptyState" type="VBoxContainer" parent="Center"]
 visible = false

@@ -22,6 +22,7 @@ func _init() -> void:
 func run_all_tests() -> void:
 	await test_progression_advances_on_expected_actions()
 	await test_skip_and_replay_controls()
+	await test_current_mission_started_only_after_stage_progress()
 	await test_state_persists_across_controller_recreation()
 	await test_targeting_prefers_structure_nodes_for_world_actions()
 	await test_targeting_finds_launch_button_for_launch_action()
@@ -102,6 +103,43 @@ func test_skip_and_replay_controls() -> void:
 
 	reporter.pass_test()
 	await _teardown_controller(controller)
+
+func test_current_mission_started_only_after_stage_progress() -> void:
+	reporter.start_test("Tutorial marks current mission started only after current-stage progress")
+	_reset_tutorial_state()
+	var controller = await _setup_controller()
+	controller.replay_full()
+	await create_timer(0.02).timeout
+
+	var fresh = controller.get_tutorial_state()
+	if bool(fresh.get("current_mission_started", true)):
+		reporter.fail_test("Expected fresh tutorial mission to be unstarted")
+		await _teardown_controller(controller)
+		return
+
+	controller.record_action("accept_contractor_offer")
+	var started = controller.get_tutorial_state()
+	if not bool(started.get("current_mission_started", false)):
+		reporter.fail_test("Expected current mission to be started after first current-stage action")
+		await _teardown_controller(controller)
+		return
+
+	await _teardown_controller(controller)
+	_reset_tutorial_state()
+	RocketsManager.mark_mission_completed("tutorial-started-stage-1")
+	var next_controller = await _setup_controller()
+	var next_stage = next_controller.get_tutorial_state()
+	if int(next_stage.get("current_stage", 1)) < 2:
+		reporter.fail_test("Expected tutorial to advance to stage 2 after mission completion")
+		await _teardown_controller(next_controller)
+		return
+	if bool(next_stage.get("current_mission_started", true)):
+		reporter.fail_test("Expected newly advanced mission stage to be unstarted")
+		await _teardown_controller(next_controller)
+		return
+
+	reporter.pass_test()
+	await _teardown_controller(next_controller)
 
 func test_state_persists_across_controller_recreation() -> void:
 	reporter.start_test("Tutorial state persists across controller recreation")

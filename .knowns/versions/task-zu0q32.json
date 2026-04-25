@@ -1,0 +1,96 @@
+{
+  "taskId": "zu0q32",
+  "currentVersion": 2,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "zu0q32",
+      "version": 1,
+      "timestamp": "2026-04-24T06:51:53.184Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        },
+        {
+          "field": "implementationPlan",
+          "newValue": "1. Inspect MissionDebriefV2 scene and identify the highest-volume script-built sections.\n2. Move the primary debrief shell and persistent layout sections into mission_debrief_v2.tscn/templates.\n3. Update MissionDebriefV2.gd to bind data into scene-owned nodes instead of constructing those sections.\n4. Add or update debrief tests for the scene-owned layout path.\n5. Verify with focused debrief and structure suites."
+        }
+      ],
+      "snapshot": {
+        "title": "Convert MissionDebriefV2 to scene-owned UI",
+        "description": "Move MissionDebriefV2 layout out of GDScript-built controls and into .tscn scene/template files so the debrief surface is editable in Godot and follows the scene-owned UI rule.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "debrief",
+          "missions",
+          "scene-owned"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "MissionDebriefV2 primary layout sections live in .tscn scene/template files"
+          },
+          {
+            "completed": false,
+            "text": "MissionDebriefV2.gd binds data into scene-owned nodes instead of constructing those sections in code"
+          },
+          {
+            "completed": false,
+            "text": "Debrief tests cover the converted scene-owned layout path"
+          }
+        ],
+        "implementationPlan": "1. Inspect MissionDebriefV2 scene and identify the highest-volume script-built sections.\n2. Move the primary debrief shell and persistent layout sections into mission_debrief_v2.tscn/templates.\n3. Update MissionDebriefV2.gd to bind data into scene-owned nodes instead of constructing those sections.\n4. Add or update debrief tests for the scene-owned layout path.\n5. Verify with focused debrief and structure suites."
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "zu0q32",
+      "version": 2,
+      "timestamp": "2026-04-24T06:55:35.293Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Convert MissionDebriefV2 to scene-owned UI",
+        "description": "Move MissionDebriefV2 layout out of GDScript-built controls and into .tscn scene/template files so the debrief surface is editable in Godot and follows the scene-owned UI rule.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "debrief",
+          "missions",
+          "scene-owned"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "MissionDebriefV2 primary layout sections live in .tscn scene/template files"
+          },
+          {
+            "completed": false,
+            "text": "MissionDebriefV2.gd binds data into scene-owned nodes instead of constructing those sections in code"
+          },
+          {
+            "completed": false,
+            "text": "Debrief tests cover the converted scene-owned layout path"
+          }
+        ],
+        "implementationPlan": "1. Inspect MissionDebriefV2 scene and identify the highest-volume script-built sections.\n2. Move the primary debrief shell and persistent layout sections into mission_debrief_v2.tscn/templates.\n3. Update MissionDebriefV2.gd to bind data into scene-owned nodes instead of constructing those sections.\n4. Add or update debrief tests for the scene-owned layout path.\n5. Verify with focused debrief and structure suites."
+      }
+    }
+  ]
+}

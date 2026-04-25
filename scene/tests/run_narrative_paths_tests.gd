@@ -156,8 +156,7 @@ func test_p02_mission2_semi_open_completion() -> void:
 
 	if not _assert_stage(c, 2, "P02 start"): await _teardown(c); return
 
-	var m2_actions = ["build_control_station", "accept_contractor_offer", "create_rocket", "select_launch_target", "launch_rocket_from_earth",
-		"arrived_at_mining_site", "mine_target", "return_rocket_home", "resolve_mission_debrief"]
+	var m2_actions = ["build_control_station"]
 	for action in m2_actions:
 		var before = c.get_tutorial_state()
 		c.record_action(action)
@@ -178,7 +177,7 @@ func test_p03_mission3_scanner_no_mining() -> void:
 
 	if not _assert_stage(c, 3, "P03 start"): await _teardown(c); return
 
-	var m3_actions = ["select_launch_target", "launch_rocket_from_earth",
+	var m3_actions = ["accept_contractor_offer", "classify_candidate", "select_launch_target", "launch_rocket_from_earth",
 		"mine_target", "return_rocket_home", "resolve_mission_debrief"]
 	for action in m3_actions:
 		var before = c.get_tutorial_state()
@@ -190,7 +189,7 @@ func test_p03_mission3_scanner_no_mining() -> void:
 	await _teardown(c)
 
 func test_p04_mission4_planet_mode() -> void:
-	reporter.start_test("P04: Mission 4 scanner + annotator path")
+	reporter.start_test("P04: Mission 4 autonomy handoff path")
 	_reset()
 	for s in [1, 2, 3]:
 		_mark_stage_complete(s)
@@ -200,7 +199,7 @@ func test_p04_mission4_planet_mode() -> void:
 
 	if not _assert_stage(c, 4, "P04 start"): await _teardown(c); return
 
-	var m4_actions = ["build_scanner_station", "scan_targets", "select_launch_target",
+	var m4_actions = ["open_launchpad", "select_launch_target",
 		"launch_rocket_from_earth", "mine_target", "resolve_mission_debrief"]
 	for action in m4_actions:
 		var before = c.get_tutorial_state()

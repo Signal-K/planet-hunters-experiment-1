@@ -1,0 +1,36 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="PackedScene" path="res://Scenes/UI/Templates/LaunchWizardStatChip.tscn" id="1"]
+
+[node name="LaunchWizardTargetDetail" type="VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="HeaderRow" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="IconLabel" type="Label" parent="HeaderRow"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "☄"
+
+[node name="NameLabel" type="Label" parent="HeaderRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 20
+text = "Target"
+
+[node name="StatsRow" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 28
+
+[node name="EditorPreviewChip" parent="StatsRow" instance=ExtResource("1")]
+layout_mode = 2
+
+[node name="ScienceLabel" type="Label" parent="."]
+visible = false
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "Science metadata"
+autowrap_mode = 3

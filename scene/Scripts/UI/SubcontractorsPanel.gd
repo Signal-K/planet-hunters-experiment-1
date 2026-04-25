@@ -3,6 +3,7 @@ extends Control
 signal panel_closed
 
 const SubcontractorCardScene = preload("res://Scenes/UI/Templates/SubcontractorCard.tscn")
+const SubcontractorDetailLabelScene = preload("res://Scenes/UI/Templates/SubcontractorDetailLabel.tscn")
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
 
 @onready var close_btn: Button = $PanelContainer/Panel/VBox/Header/HeaderBar/HeaderContent/CloseButton
@@ -100,7 +101,7 @@ func _build_list() -> void:
 				if pct > 0:
 					wants_parts.append("%s +%d%%" % [mineral, pct])
 			if not wants_parts.is_empty():
-				var wants_lbl := Label.new()
+				var wants_lbl: Label = SubcontractorDetailLabelScene.instantiate()
 				wants_lbl.text = "Wants: %s" % ", ".join(wants_parts)
 				wants_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3, 1.0))
 				wants_lbl.add_theme_font_size_override("font_size", 14)
@@ -128,10 +129,9 @@ func _build_list() -> void:
 		if is_available and not is_hidden:
 			var rep_xp = int(sm.get_reputation(sub_id))
 			var rep_data = sm.get_level_data(rep_xp)
-			var rep_lbl := Label.new()
+			var rep_lbl: Label = SubcontractorDetailLabelScene.instantiate()
 			rep_lbl.text = "Reputation: %s (Level %d)" % [str(rep_data.get("title", "New Partner")), int(rep_data.get("level", 1))]
 			rep_lbl.add_theme_color_override("font_color", PanelStyle.ACCENT)
-			rep_lbl.add_theme_font_size_override("font_size", 13)
 			row.add_child(rep_lbl)
 
 		# Cooldown indicator
@@ -139,10 +139,9 @@ func _build_list() -> void:
 			var remaining = int(sm.get_cooldown_remaining(sub_id))
 			if remaining > 0:
 				var mins = int(ceil(float(remaining) / 60.0))
-				var cd_lbl := Label.new()
+				var cd_lbl: Label = SubcontractorDetailLabelScene.instantiate()
 				cd_lbl.text = "Not available — cooldown: %dm remaining" % mins
 				cd_lbl.add_theme_color_override("font_color", Color(1.0, 0.45, 0.35, 1.0))
-				cd_lbl.add_theme_font_size_override("font_size", 13)
 				row.add_child(cd_lbl)
 
 		list.add_child(card)

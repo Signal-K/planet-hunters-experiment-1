@@ -33,7 +33,7 @@ func on_interact():
 		return
 	_ensure_scanner_state_consistency(rm)
 	if not rm.is_scanner_station_built():
-		_prompt_build_scanner()
+		_prompt_scanner_build_flow()
 		return
 	super.on_interact()
 	print("Satellite Station clicked: " + structure_name)
@@ -96,12 +96,12 @@ func _maybe_show_unlock_dialog() -> void:
 	if not rm.is_scanner_unlock_dialog_seen():
 		if _info_dialog and is_instance_valid(_info_dialog):
 			var cost_text = _format_francs(rm.get_scanner_build_cost())
-			_info_dialog.dialog_text = "Mission 4 unlocked: Scanner Station. Build it for %s F to begin detecting targets across the stellar neighbourhood." % cost_text
+			_info_dialog.dialog_text = "Scanner Station available. Older saves may still think it needs to be built, but current progression keeps it online once Mission 3 data access is unlocked. Legacy build cost was %s F." % cost_text
 			_info_dialog.call_deferred("popup_centered")
 		rm.set_scanner_unlock_dialog_seen(true)
 	return
 
-func _prompt_build_scanner() -> void:
+func _prompt_scanner_build_flow() -> void:
 	var rm = RocketsManager
 	if not rm:
 		return
@@ -109,10 +109,11 @@ func _prompt_build_scanner() -> void:
 	if rm.is_scanner_station_built():
 		return
 	_ensure_dialogs()
-	if _build_dialog and is_instance_valid(_build_dialog):
-		var cost_text = _format_francs(rm.get_scanner_build_cost())
-		_build_dialog.dialog_text = "Build Scanner Station for %s F?" % cost_text
-		_build_dialog.call_deferred("popup_centered")
+	var current_scene = get_tree().current_scene
+	if current_scene and current_scene.has_method("_start_guided_build_flow"):
+		current_scene.call("_start_guided_build_flow", "scanner_station")
+		return
+	_show_info("The Scanner Station should already be available in current progression. If this save is out of date, reopen Earth Base to reconcile the legacy state.")
 
 func _ensure_scanner_state_consistency(rm = null) -> void:
 	var rockets_manager = rm
@@ -120,31 +121,12 @@ func _ensure_scanner_state_consistency(rm = null) -> void:
 		rockets_manager = RocketsManager
 	if not rockets_manager:
 		return
+	if rockets_manager.is_scanner_unlocked() and not rockets_manager.is_scanner_station_built():
+		rockets_manager.set_scanner_station_built(true)
+		rockets_manager.set_scanner_unlock_dialog_seen(true)
 
 func _on_confirm_build_scanner() -> void:
-	var rm = RocketsManager
-	if not rm:
-		return
-	var app = get_tree().root.find_child("AppController", true, false)
-	if app == null or not app.has_method("get_franc_balance") or not app.has_method("add_franc_balance"):
-		_show_info("Unable to access balance. Scanner build cancelled.")
-		return
-	var cost = rm.get_scanner_build_cost()
-	var balance = int(app.get_franc_balance())
-	if not rm.can_afford_scanner_build(balance):
-		_show_info("Insufficient funds. Scanner build requires %s F." % _format_francs(cost))
-		return
-	app.add_franc_balance(-cost, "build_scanner_station")
-	rm.set_scanner_station_built(true)
-	AppControllerHelper.record_tutorial_action("build_scanner_station")
-	_refresh_visibility()
-	var current_scene = get_tree().current_scene
-	if current_scene:
-		if current_scene.has_method("_apply_tutorial_button_state"):
-			current_scene.call_deferred("_apply_tutorial_button_state")
-		if current_scene.has_method("_build_progression_cards"):
-			current_scene.call_deferred("_build_progression_cards")
-	_show_info("Scanner Station constructed. Open it to start detecting asteroid and planet targets.")
+	_prompt_scanner_build_flow()
 
 func _show_info(message: String) -> void:
 	_ensure_dialogs()

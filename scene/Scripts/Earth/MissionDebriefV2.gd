@@ -20,6 +20,8 @@ const ResourceValueRowScene = preload("res://Scenes/UI/Templates/ResourceValueRo
 const SummaryCardScene      = preload("res://Scenes/UI/Templates/MissionDebriefSummaryCard.tscn")
 const SectionCardScene      = preload("res://Scenes/UI/Templates/MissionDebriefSectionCard.tscn")
 const PayoutCardScene       = preload("res://Scenes/UI/Templates/MissionDebriefPayoutCard.tscn")
+const MissionDebriefBulletRowScene = preload("res://Scenes/UI/Templates/MissionDebriefBulletRow.tscn")
+const MissionDebriefDetailRowScene = preload("res://Scenes/UI/Templates/MissionDebriefDetailRow.tscn")
 const PanelStyle           = preload("res://Scripts/UI/PanelStyle.gd")
 
 const EARTH_SCENE               := "res://Scenes/Earth/earth_base_1.tscn"
@@ -68,6 +70,29 @@ var _ui_helper := EarthSceneUIHelper.new()
 @onready var _empty_state: VBoxContainer = $Center/EmptyState
 @onready var _empty_label: Label = $Center/EmptyState/EmptyLabel
 @onready var _empty_button: Button = $Center/EmptyState/EmptyButton
+@onready var _header_section: VBoxContainer = $Center/Panel/Margin/ContentVBox/HeaderSection
+@onready var _header_eyebrow: Label = $Center/Panel/Margin/ContentVBox/HeaderSection/HeaderTopRow/TitleColumn/EyebrowLabel
+@onready var _header_title: Label = $Center/Panel/Margin/ContentVBox/HeaderSection/HeaderTopRow/TitleColumn/TitleLabel
+@onready var _header_hint: Label = $Center/Panel/Margin/ContentVBox/HeaderSection/HeaderTopRow/TitleColumn/HintLabel
+@onready var _phase_chip: PanelContainer = $Center/Panel/Margin/ContentVBox/HeaderSection/HeaderTopRow/HeaderControls/PhaseChip
+@onready var _phase_chip_label: Label = $Center/Panel/Margin/ContentVBox/HeaderSection/HeaderTopRow/HeaderControls/PhaseChip/PhaseChipLabel
+@onready var _guide_button: Button = $Center/Panel/Margin/ContentVBox/HeaderSection/HeaderTopRow/HeaderControls/GuideButton
+@onready var _header_separator: HSeparator = $Center/Panel/Margin/ContentVBox/HeaderSection/HeaderSeparator
+@onready var _guide_card: PanelContainer = $Center/Panel/Margin/ContentVBox/GuideCard
+@onready var _guide_rows: VBoxContainer = $Center/Panel/Margin/ContentVBox/GuideCard/Content/Rows
+@onready var _guide_footer: Label = $Center/Panel/Margin/ContentVBox/GuideCard/Content/FooterLabel
+@onready var _summary_grid: GridContainer = $Center/Panel/Margin/ContentVBox/SummaryGrid
+@onready var _target_summary_card: PanelContainer = $Center/Panel/Margin/ContentVBox/SummaryGrid/TargetSummaryCard
+@onready var _rocket_summary_card: PanelContainer = $Center/Panel/Margin/ContentVBox/SummaryGrid/RocketSummaryCard
+@onready var _contractor_summary_card: PanelContainer = $Center/Panel/Margin/ContentVBox/SummaryGrid/ContractorSummaryCard
+@onready var _payout_card: PanelContainer = $Center/Panel/Margin/ContentVBox/PayoutCard
+@onready var _combined_cargo_card: PanelContainer = $Center/Panel/Margin/ContentVBox/CombinedCargoCard
+@onready var _phase_card: PanelContainer = $Center/Panel/Margin/ContentVBox/PhaseCard
+@onready var _actions_card: PanelContainer = $Center/Panel/Margin/ContentVBox/ActionsCard
+@onready var _actions_row: HBoxContainer = $Center/Panel/Margin/ContentVBox/ActionsCard/Content/Rows/ActionsRow
+@onready var _primary_action_button: Button = $Center/Panel/Margin/ContentVBox/ActionsCard/Content/Rows/ActionsRow/PrimaryActionButton
+@onready var _secondary_action_button: Button = $Center/Panel/Margin/ContentVBox/ActionsCard/Content/Rows/ActionsRow/SecondaryActionButton
+@onready var _tertiary_action_button: Button = $Center/Panel/Margin/ContentVBox/ActionsCard/Content/Rows/ActionsRow/TertiaryActionButton
 
 
 func _ready() -> void:
@@ -83,6 +108,7 @@ func _ready() -> void:
 	call_deferred("_apply_nav_safe_area")
 	_apply_scene_nav_state()
 	_empty_button.pressed.connect(_return_to_base)
+	_guide_button.pressed.connect(_toggle_button_guide)
 	_returned = RocketsManager.get_returned_mission()
 	if _returned.is_empty():
 		_build_empty_ui()
@@ -213,9 +239,6 @@ func _calc_payout() -> int:
 # ---------------------------------------------------------------------------
 
 func _render_ui() -> void:
-	for child in _content_vbox.get_children():
-		_content_vbox.remove_child(child)
-		child.queue_free()
 	_panel.visible = false
 	_empty_state.visible = false
 	if _returned.is_empty():
@@ -236,18 +259,302 @@ func _build_ui() -> void:
 	var style := PanelStyle.create_glass_panel_style(Color(0.06, 0.10, 0.16, 0.96), 0.86, 18, 28, 24)
 	_panel.add_theme_stylebox_override("panel", style)
 	_content_vbox.add_theme_constant_override("separation", 10)
-
-	_add_header(_content_vbox)
-	if _guide_visible:
-		_add_button_guide(_content_vbox)
-	_add_summary(_content_vbox)
+	_bind_header()
+	_bind_button_guide()
+	_bind_summary()
 	if _phase == "reward":
-		_add_reward_snapshot(_content_vbox)
-		_add_reward_actions(_content_vbox)
+		_bind_reward_snapshot()
+		_bind_reward_actions()
 	else:
-		_add_reward_feedback(_content_vbox)
-		_add_next_mission_handoff(_content_vbox)
-		_add_handoff_actions(_content_vbox)
+		_bind_handoff_sections()
+		_bind_handoff_actions()
+
+func _clear_container(container: Node) -> void:
+	if container == null:
+		return
+	for child in container.get_children():
+		container.remove_child(child)
+		child.queue_free()
+
+func _reset_button(button: Button, text: String, primary: bool) -> void:
+	if button == null:
+		return
+	for connection in button.pressed.get_connections():
+		button.pressed.disconnect(connection.callable)
+	button.text = text
+	button.disabled = false
+	button.visible = true
+	button.custom_minimum_size.y = 48
+	if primary:
+		PanelStyle.apply_button(button, true)
+	else:
+		PanelStyle.apply_outline_button(button, CYAN, TEXT_COLOR)
+	button.add_theme_font_size_override("font_size", 16)
+
+func _bind_header() -> void:
+	_header_section.visible = true
+	_header_eyebrow.text = "MISSION COMPLETE"
+	_header_eyebrow.add_theme_font_size_override("font_size", 14)
+	_header_eyebrow.add_theme_color_override("font_color", CYAN)
+	_header_title.text = "◎ Debrief"
+	_header_title.add_theme_font_size_override("font_size", 30)
+	_header_title.add_theme_color_override("font_color", TITLE_COLOR)
+	var stage := int(RocketsManager.get_mission_stage())
+	var hint := _stage_hint(stage)
+	_header_hint.visible = hint != ""
+	_header_hint.text = hint
+	_header_hint.add_theme_font_size_override("font_size", 14)
+	_header_hint.add_theme_color_override("font_color", AMBER)
+	_header_separator.add_theme_color_override("separator", Color(CYAN.r, CYAN.g, CYAN.b, 0.28))
+	_phase_chip.add_theme_stylebox_override("panel", PanelStyle.create_glass_pill_style(Color(0.10, 0.15, 0.22, 0.96), 0.46, 9))
+	var phase_text := "Reward Pending" if _phase == "reward" and not _reward_resolved else ("Reward Cleared" if _phase == "handoff" else "Mission Summary")
+	var phase_color := AMBER if _phase == "reward" and not _reward_resolved else CYAN
+	_phase_chip_label.text = phase_text
+	_phase_chip_label.add_theme_font_size_override("font_size", 13)
+	_phase_chip_label.add_theme_color_override("font_color", phase_color)
+	PanelStyle.apply_outline_button(_guide_button, CYAN, TEXT_COLOR)
+	_guide_button.add_theme_font_size_override("font_size", 15)
+
+func _bind_button_guide() -> void:
+	_guide_card.visible = _guide_visible
+	_guide_card.add_theme_stylebox_override("panel", PanelStyle.create_glass_card_style(Color(0.08, 0.12, 0.19, 0.98), 0.56, 12, 18, 14))
+	var header: Label = _guide_card.get_node("Content/HeaderLabel")
+	header.text = "Debrief Controls"
+	header.add_theme_font_size_override("font_size", 14)
+	header.add_theme_color_override("font_color", CYAN)
+	_guide_footer.visible = false
+	_clear_container(_guide_rows)
+	if not _guide_visible:
+		return
+	for line in _build_button_guide_text().split("\n", false):
+		var item: Label = MissionDebriefBulletRowScene.instantiate()
+		item.text = "• %s" % line
+		item.add_theme_color_override("font_color", TEXT_COLOR)
+		item.add_theme_font_size_override("font_size", 14)
+		_guide_rows.add_child(item)
+
+func _bind_summary() -> void:
+	var vp_w := get_viewport().get_visible_rect().size.x if get_viewport() else 1280.0
+	_summary_grid.columns = 1 if vp_w < 900.0 else 3
+	_bind_summary_card(_target_summary_card, "◎", "Target", str(_returned.get("label", str(_returned.get("target_id", "Unknown")))))
+	var rocket_id := str(_returned.get("rocket_id", ""))
+	_bind_summary_card(_rocket_summary_card, "▲", "Rocket", RocketSpecs.get_display_name(rocket_id) if rocket_id != "" else "—")
+	_bind_summary_card(_contractor_summary_card, "◆", "Contractor", _contractor_name if _contractor_name != "" else "—")
+
+func _bind_summary_card(card: PanelContainer, icon_text: String, label_text: String, value_text: String) -> void:
+	card.visible = true
+	card.add_theme_stylebox_override("panel", _soft_card_style())
+	var icon: Label = card.get_node("Row/IconLabel")
+	icon.text = icon_text
+	icon.add_theme_font_size_override("font_size", 22)
+	icon.add_theme_color_override("font_color", CYAN)
+	var key: Label = card.get_node("Row/Content/KeyLabel")
+	key.text = label_text
+	key.add_theme_font_size_override("font_size", 13)
+	key.add_theme_color_override("font_color", TEXT_MUTED)
+	var value: Label = card.get_node("Row/Content/ValueLabel")
+	value.text = value_text
+	value.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	value.add_theme_font_size_override("font_size", 18)
+	value.add_theme_color_override("font_color", TEXT_COLOR)
+
+func _bind_reward_snapshot() -> void:
+	_payout_card.visible = true
+	_phase_card.visible = false
+	_actions_card.visible = true
+	_combined_cargo_card.visible = true
+	_payout_card.add_theme_stylebox_override("panel", _highlight_card_style())
+	var payout_label: Label = _payout_card.get_node("Content/Label")
+	payout_label.text = "₣ PAYOUT"
+	payout_label.add_theme_font_size_override("font_size", 12)
+	payout_label.add_theme_color_override("font_color", AMBER)
+	var payout_value: Label = _payout_card.get_node("Content/Value")
+	payout_value.text = "+%s F" % NumberFormat.commas(str(_payout))
+	payout_value.add_theme_font_size_override("font_size", 36)
+	payout_value.add_theme_color_override("font_color", GREEN)
+	_bind_combined_cargo_card()
+
+func _bind_combined_cargo_card() -> void:
+	_combined_cargo_card.add_theme_stylebox_override("panel", _soft_card_style())
+	var header: Label = _combined_cargo_card.get_node("Content/HeaderLabel")
+	var rows: VBoxContainer = _combined_cargo_card.get_node("Content/Rows")
+	var footer: Label = _combined_cargo_card.get_node("Content/FooterLabel")
+	rows.add_theme_constant_override("separation", 10)
+	_clear_container(rows)
+	footer.visible = false
+	if _cargo.is_empty():
+		header.text = "◌ Cargo"
+		header.add_theme_font_size_override("font_size", 17)
+		header.add_theme_color_override("font_color", CYAN)
+		var empty := Label.new()
+		empty.text = "No minerals collected."
+		empty.add_theme_font_size_override("font_size", 17)
+		empty.add_theme_color_override("font_color", TEXT_COLOR)
+		rows.add_child(empty)
+		return
+	if not _requested.is_empty():
+		header.text = "◎ Cargo & Order"
+		header.add_theme_font_size_override("font_size", 17)
+		header.add_theme_color_override("font_color", AMBER)
+		var all_met := true
+		var req_keys := _requested.keys()
+		req_keys.sort()
+		for mineral in req_keys:
+			var need := int(_requested.get(mineral, 0))
+			var have := int(_cargo.get(str(mineral), 0))
+			var done := have >= need
+			if not done:
+				all_met = false
+			var row: HBoxContainer = ResourceValueRowScene.instantiate()
+			rows.add_child(row)
+			var name_lbl: Label = row.get_node("NameLabel")
+			name_lbl.text = "%s  %s" % ["✓" if done else "—", str(mineral).capitalize()]
+			name_lbl.add_theme_font_size_override("font_size", 18)
+			name_lbl.add_theme_color_override("font_color", GREEN if done else TEXT_COLOR)
+			var qty_lbl: Label = row.get_node("ValueLabel")
+			qty_lbl.text = "%d / %d kg" % [have, need]
+			qty_lbl.add_theme_font_size_override("font_size", 18)
+			qty_lbl.add_theme_color_override("font_color", GREEN if done else RED)
+			qty_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		for mineral in _cargo.keys():
+			if _requested.has(mineral):
+				continue
+			var amt := int(_cargo.get(mineral, 0))
+			if amt <= 0:
+				continue
+			var row: HBoxContainer = ResourceValueRowScene.instantiate()
+			rows.add_child(row)
+			var name_lbl: Label = row.get_node("NameLabel")
+			name_lbl.text = str(mineral).capitalize()
+			name_lbl.add_theme_font_size_override("font_size", 18)
+			name_lbl.add_theme_color_override("font_color", TEXT_COLOR)
+			var qty_lbl: Label = row.get_node("ValueLabel")
+			qty_lbl.text = "%d kg" % amt
+			qty_lbl.add_theme_font_size_override("font_size", 18)
+			qty_lbl.add_theme_color_override("font_color", CYAN)
+			qty_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		footer.visible = true
+		footer.text = "Order filled — bonus applied." if all_met else "Partial order — standard payout."
+		footer.add_theme_font_size_override("font_size", 16)
+		footer.add_theme_color_override("font_color", GREEN if all_met else AMBER)
+	else:
+		header.text = "◌ Cargo"
+		header.add_theme_font_size_override("font_size", 17)
+		header.add_theme_color_override("font_color", CYAN)
+		var cargo_keys := _cargo.keys()
+		cargo_keys.sort_custom(func(a, b): return int(_cargo.get(a, 0)) > int(_cargo.get(b, 0)))
+		for mineral in cargo_keys:
+			var amt := int(_cargo.get(mineral, 0))
+			if amt <= 0:
+				continue
+			var row: HBoxContainer = ResourceValueRowScene.instantiate()
+			rows.add_child(row)
+			var name_lbl: Label = row.get_node("NameLabel")
+			name_lbl.text = str(mineral).capitalize()
+			name_lbl.add_theme_font_size_override("font_size", 18)
+			name_lbl.add_theme_color_override("font_color", TEXT_COLOR)
+			var qty_lbl: Label = row.get_node("ValueLabel")
+			qty_lbl.text = "%d kg" % amt
+			qty_lbl.add_theme_font_size_override("font_size", 18)
+			qty_lbl.add_theme_color_override("font_color", CYAN)
+			qty_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+
+func _bind_reward_actions() -> void:
+	_reset_button(_primary_action_button, "Next Mission →", false)
+	_primary_action_button.name = "CompleteButton"
+	_primary_action_button.custom_minimum_size.x = 220
+	_primary_action_button.disabled = not _reward_resolved
+	if not _primary_action_button.disabled:
+		_primary_action_button.pressed.connect(_on_complete_pressed)
+	else:
+		_primary_action_button.add_theme_color_override("font_disabled_color", TEXT_MUTED)
+	if not _cargo.is_empty():
+		var label := "₣ Sell Cargo to %s" % _contractor_name if _contractor_name != "" else "₣ Sell Cargo"
+		_reset_button(_secondary_action_button, label, true)
+		_secondary_action_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_secondary_action_button.pressed.connect(_on_sell_pressed.bind(_secondary_action_button))
+		_secondary_action_button.visible = true
+	else:
+		_secondary_action_button.visible = false
+	_reset_button(_tertiary_action_button, "Return to Base", false)
+	_tertiary_action_button.name = "OrbitButton"
+	_tertiary_action_button.custom_minimum_size.x = 170
+	_tertiary_action_button.pressed.connect(_return_to_base)
+	_tertiary_action_button.visible = true
+
+func _bind_handoff_sections() -> void:
+	_payout_card.visible = false
+	_combined_cargo_card.visible = false
+	_phase_card.visible = true
+	_phase_card.add_theme_stylebox_override("panel", _soft_card_style())
+	var header: Label = _phase_card.get_node("Content/HeaderLabel")
+	var rows: VBoxContainer = _phase_card.get_node("Content/Rows")
+	var footer: Label = _phase_card.get_node("Content/FooterLabel")
+	_clear_container(rows)
+	footer.visible = false
+	if _reward_resolved:
+		header.text = "NEXT MISSION"
+		header.add_theme_font_size_override("font_size", 12)
+		header.add_theme_color_override("font_color", CYAN)
+		var title := Label.new()
+		title.text = str(_next_mission_brief.get("title", "Your next mission is ready"))
+		title.add_theme_font_size_override("font_size", 22)
+		title.add_theme_color_override("font_color", TITLE_COLOR)
+		rows.add_child(title)
+		for pair in [
+			["Location", str(_next_mission_brief.get("location", "Earth Launchpad"))],
+			["Contractor", str(_next_mission_brief.get("contractor", "Mission Control"))],
+			["Mission", str(_next_mission_brief.get("objective", "Prepare the next launch."))]
+		]:
+			var row: HBoxContainer = MissionDebriefDetailRowScene.instantiate()
+			rows.add_child(row)
+			var key: Label = row.get_node("KeyLabel")
+			key.text = pair[0]
+			key.add_theme_font_size_override("font_size", 15)
+			key.add_theme_color_override("font_color", TEXT_MUTED)
+			var value: Label = row.get_node("ValueLabel")
+			value.text = pair[1]
+			value.add_theme_font_size_override("font_size", 15)
+			value.add_theme_color_override("font_color", TEXT_COLOR)
+		footer.visible = true
+		footer.text = str(_next_mission_brief.get("note", "Open the launchpad to continue the loop."))
+		footer.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		footer.add_theme_font_size_override("font_size", 14)
+		footer.add_theme_color_override("font_color", AMBER)
+	else:
+		header.text = "REWARD CONFIRMED"
+		header.add_theme_font_size_override("font_size", 12)
+		header.add_theme_color_override("font_color", AMBER)
+		var payout_lbl := Label.new()
+		payout_lbl.text = "Payout delivered: +%s F" % NumberFormat.commas(str(_payout))
+		payout_lbl.add_theme_font_size_override("font_size", 24)
+		payout_lbl.add_theme_color_override("font_color", GREEN)
+		rows.add_child(payout_lbl)
+		footer.visible = true
+		footer.text = "Mission closed. Choose the next destination before leaving debrief."
+		footer.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		footer.add_theme_font_size_override("font_size", 14)
+		footer.add_theme_color_override("font_color", TEXT_MUTED)
+
+func _bind_handoff_actions() -> void:
+	_actions_card.visible = true
+	_reset_button(_primary_action_button, _primary_handoff_action_label(), true)
+	_primary_action_button.name = "CompleteButton"
+	_primary_action_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_primary_action_button.pressed.connect(_on_primary_handoff_pressed)
+	_reset_button(_secondary_action_button, "Scrap / Salvage Ship  (+%s F)" % NumberFormat.commas(str(_salvage_refund)), false)
+	_secondary_action_button.custom_minimum_size.x = 280
+	_secondary_action_button.disabled = _salvage_applied or _salvage_refund <= 0
+	if not _secondary_action_button.disabled:
+		_secondary_action_button.pressed.connect(_on_salvage_pressed.bind(_secondary_action_button))
+	if _should_show_return_to_base_action():
+		_reset_button(_tertiary_action_button, "Return to Base", false)
+		_tertiary_action_button.name = "OrbitButton"
+		_tertiary_action_button.custom_minimum_size.x = 170
+		_tertiary_action_button.pressed.connect(_return_to_base)
+		_tertiary_action_button.visible = true
+	else:
+		_tertiary_action_button.visible = false
 
 
 func _build_empty_ui() -> void:
@@ -961,6 +1268,7 @@ func _on_complete_pressed() -> void:
 	if _done or not _reward_resolved:
 		return
 	_resolve_debrief_once()
+	_next_mission_brief = _build_next_mission_brief()
 	_phase = "handoff"
 	_render_ui()
 
@@ -1135,11 +1443,11 @@ func _build_next_mission_brief() -> Dictionary:
 func _next_mission_title(current_stage: int) -> String:
 	match current_stage:
 		1:
-			return "Build the Control Station to unlock Mission 2"
+			return "Mission 2 starts at the Control Station"
 		2:
 			return "Mission 3 is ready"
 		3:
-			return "Mission 4 starts at the Scanner Station"
+			return "Mission 4 opens into your first self-directed run"
 		_:
 			return "Your next mission is ready"
 
@@ -1151,7 +1459,7 @@ func _next_mission_objective(current_stage: int, target_label: String) -> String
 		2:
 			return "Prepare the first planet-target mission and route toward %s." % target_label
 		3:
-			return "Return to Earth base, build the Scanner Station, and run a scan before preparing the route to %s." % target_label
+			return "Return to Earth base, reopen the Launchpad, and choose how you want to approach %s." % target_label
 		_:
 			return "Open the launchpad, pick a contractor, and line up the next operation."
 
@@ -1159,11 +1467,11 @@ func _next_mission_objective(current_stage: int, target_label: String) -> String
 func _next_mission_note(current_stage: int) -> String:
 	match current_stage:
 		1:
-			return "Once the Control Station is online, reopen the Launchpad to build Starter Rocket 2."
+			return "Build the Control Station first; it unlocks mission planning for Starter Rocket 2."
 		2:
 			return "Contractor choice still happens first on every run. Target lock comes after the ship is ready."
 		3:
-			return "The scanner build costs 2.0B F. After it is online, scan once and reopen the Launchpad."
+			return "Mission 4 is the transition into autonomy: take a contract for structure or launch a survey run on your own."
 		_:
 			return "Free Operations is open; use the launchpad to continue the loop."
 
@@ -1201,8 +1509,6 @@ func _next_stage_base_setup_key(current_stage: int) -> String:
 	match current_stage:
 		1:
 			return "control_station" if not RocketsManager.is_control_station_built() else ""
-		3:
-			return "scanner_station" if not RocketsManager.is_scanner_station_built() else ""
 		_:
 			return ""
 

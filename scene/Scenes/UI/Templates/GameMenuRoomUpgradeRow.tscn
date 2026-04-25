@@ -1,0 +1,30 @@
+[gd_scene format=3]
+
+[node name="GameMenuRoomUpgradeRow" type="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="NameColumn" type="VBoxContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="NameLabel" type="Label" parent="NameColumn"]
+layout_mode = 2
+text = "Upgrade"
+
+[node name="TierLabel" type="Label" parent="NameColumn"]
+layout_mode = 2
+text = "Tier 1 / 3"
+
+[node name="StatusLabel" type="Label" parent="."]
+layout_mode = 2
+text = "MAX"
+visible = false
+
+[node name="UpgradeButton" type="Button" parent="."]
+custom_minimum_size = Vector2(110, 0)
+layout_mode = 2
+text = "Upgrade"
+visible = false

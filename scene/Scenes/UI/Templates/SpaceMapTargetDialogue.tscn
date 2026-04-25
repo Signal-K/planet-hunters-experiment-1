@@ -1,0 +1,78 @@
+[gd_scene format=3]
+
+[node name="TargetDialogue" type="ColorRect"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 1
+color = Color(0, 0, 0, 0.55)
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 1
+
+[node name="Panel" type="PanelContainer" parent="Center"]
+layout_mode = 2
+
+[node name="Scroll" type="ScrollContainer" parent="Center/Panel"]
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="Body" type="VBoxContainer" parent="Center/Panel/Scroll"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="HeaderRow" type="HBoxContainer" parent="Center/Panel/Scroll/Body"]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="Center/Panel/Scroll/Body/HeaderRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Target"
+
+[node name="CloseButton" type="Button" parent="Center/Panel/Scroll/Body/HeaderRow"]
+custom_minimum_size = Vector2(56, 50)
+layout_mode = 2
+text = "✕"
+
+[node name="PrimarySeparator" type="HSeparator" parent="Center/Panel/Scroll/Body"]
+layout_mode = 2
+
+[node name="TypeLabel" type="Label" parent="Center/Panel/Scroll/Body"]
+layout_mode = 2
+text = "Type"
+
+[node name="IdLabel" type="Label" parent="Center/Panel/Scroll/Body"]
+layout_mode = 2
+text = "ID"
+
+[node name="SecondarySeparator" type="HSeparator" parent="Center/Panel/Scroll/Body"]
+layout_mode = 2
+
+[node name="ContractorsHeader" type="Label" parent="Center/Panel/Scroll/Body"]
+visible = false
+layout_mode = 2
+text = "AVAILABLE CONTRACTORS"
+
+[node name="ContractorsList" type="VBoxContainer" parent="Center/Panel/Scroll/Body"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="TertiarySeparator" type="HSeparator" parent="Center/Panel/Scroll/Body"]
+visible = false
+layout_mode = 2
+
+[node name="LaunchButton" type="Button" parent="Center/Panel/Scroll/Body"]
+visible = false
+layout_mode = 2
+text = "Launch"
+
+[node name="LockedLabel" type="Label" parent="Center/Panel/Scroll/Body"]
+visible = false
+layout_mode = 2
+autowrap_mode = 3
+text = "Locked"

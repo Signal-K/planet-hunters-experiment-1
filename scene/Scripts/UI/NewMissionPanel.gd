@@ -4,7 +4,6 @@ signal panel_closed
 
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
 const SimpleDetailView = preload("res://Scenes/UI/SimpleDetail/simple_detail_view.tscn")
-const RocketSelectorOverlay = preload("res://Scenes/UI/RocketSelectorOverlay.tscn")
 const NewMissionAnnotations = preload("res://Scripts/UI/NewMissionAnnotations.gd")
 const NewMissionLaunchList = preload("res://Scripts/UI/NewMissionLaunchList.gd")
 const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
@@ -62,21 +61,6 @@ func _refresh():
 
 func _process(_delta: float) -> void:
 	_launch_list.update_progress()
-
-func _on_select_rocket_pressed() -> void:
-	if RocketSelectorOverlay == null:
-		push_error("NewMissionPanel: RocketSelectorOverlay scene not found")
-		return
-
-	var sel = RocketSelectorOverlay.instantiate()
-	# prefer adding to the current scene so it overlays the scene content
-	var root = get_tree().current_scene
-	if root:
-		root.add_child(sel)
-		# place on right side of screen relative to parent
-		sel.position = Vector2(1080, 120)
-	else:
-		get_tree().root.add_child(sel)
 
 
 func _display_launched_rockets() -> void:
