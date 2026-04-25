@@ -1,17 +1,15 @@
 ---
-title: 'spec,missions,game-design,reference'
+title: spec,missions,game-design,reference
+description: Complete specification for all 5 missions including objectives, mechanics, progression, rewards, and onboarding flow
 createdAt: '2026-02-25T08:19:42.936Z'
-updatedAt: '2026-03-10T07:09:38.078Z'
-description: >-
-  Complete specification for all 5 missions including objectives, mechanics,
-  progression, rewards, and onboarding flow
-spec: true
+updatedAt: '2026-04-25T02:23:34.988Z'
 tags:
   - missions
   - spec
   - design
   - game-design
 ---
+
 # Mission System Specification
 
 ## Overview
@@ -134,3 +132,18 @@ Each authored mission keeps the same core loop:
 - Contractor selection is required at mission start before target selection.
 - Discovery bonus (`10% + 1% per annotation level`) applies to net payout.
 - Mission 4 completion should explicitly communicate Free Operations unlock.
+
+---
+
+## ⚠️ 2026-04-25 Correction Notice
+
+This document is an older spec file that conflicts with the authoritative version at @doc/game-design/mission-system-specification.
+
+**Key corrections:**
+- Authored missions are **M1, M2, M3 only** — there is no authored M4.
+- "Mission 4: Planetary Expansion" described here is historical and not current design.
+- What was called M4 is now Free Operations. SR3 and planets are Free Ops features, not tutorial-mission features.
+- Post-M3 transition is a **single handoff dialogue**, not a tutorial rail.
+- M5 described here is fully archaic — no M5 exists in any form.
+
+For current source of truth: @doc/game-design/mission-system-specification

@@ -1,0 +1,36 @@
+{
+  "docPath": "specs/post-m4-free-ops-product-decisions-2026-03-10",
+  "currentVersion": 1,
+  "versions": [
+    {
+      "id": "v1",
+      "docPath": "specs/post-m4-free-ops-product-decisions-2026-03-10",
+      "version": 1,
+      "timestamp": "2026-04-25T02:22:07.881217982Z",
+      "changes": [
+        {
+          "field": "title",
+          "oldValue": "Post-M4 Free Ops Product Decisions (2026-03-10)",
+          "newValue": "Post-M3 Free Ops Product Decisions (2026-03-10)"
+        },
+        {
+          "field": "description",
+          "oldValue": "Locked gameplay/product decisions from live design review; supersedes legacy Mission 5 assumptions",
+          "newValue": "Locked gameplay/product decisions from live design review; supersedes legacy Mission 4/5 assumptions. Authored arc is M1-M3 only."
+        }
+      ],
+      "snapshot": {
+        "content": "# Post-M4 Free Ops Product Decisions (Locked 2026-03-10)\n\n## Scope Lock\n- Core authored progression is **Mission 1 through Mission 4 only**.\n- Everything after Mission 4 uses **Free Operations**.\n- Focus now is adding new missions/targets within Free Ops rather than introducing a fixed post-M4 authored chain.\n\n## Locked Gameplay Decisions\n1. **Readability and usability are always prioritized**.\n2. Scanner/candidate UX language should be **player-friendly**.\n3. Players pick a contractor at mission start for each trip.\n4. Contractor identity should apply **per mission and per rocket**.\n5. Players can choose known targets or unconfirmed candidates.\n6. Unconfirmed candidates must be confirmed before visit; failed confirmation still grants reward.\n7. Failed-confirmation reward should **vary by context**, not be globally flat.\n8. Discovery opportunity target cadence: **every run**.\n9. Post-M4 guidance is soft and should not occupy too much UI.\n10. Penalty mechanics for incorrect classifications remain deferred (future): `task-lkzqm0`.\n\n## Reward Lock\n- Discovery travel bonus remains **10% + 1% per annotation level**.\n- Keep progression understandable and low-friction in copy.\n\n## Art Direction Lock\n- Production quality target for prompt batches.\n- Contractor identity should be visibly themed in room art.\n- Wear progression is subtle.\n- Wear/progression memory should be **permanent per rocket**.\n\n## Mobile/PWA UX Lock\n- Support baseline: iPhone regular + Pro Max, Nothing Phone, Samsung Galaxy, Pixel.\n- Keep background full-screen.\n- Move actionable controls inward from cutouts/notches/dynamic island/gesture edges using safe-area insets.\n- Keep HUD compact to avoid obscuring gameplay.\n\n## References\n- @doc/game-design/mission-system-specification\n- @doc/specs/user-flow-and-citizen-science-specification\n- @doc/specs/pwa-standalone-game-shell-layout-behavior\n\n\n\n## 2026-03-10 Clarification Update (Latest)\n- Failed-confirmation reward is **flat XP** (not variable).\n- \"Discovery every run\" means every run should expose candidate opportunities; it does **not** guarantee a true transit/confirmation candidate.\n- Candidate terminology remains in scientific/backend models; use player-friendly wording in player-facing prompts only.\n\n\n\n## 2026-03-10 Decision Update (Hands-on Pass)\n- Keep only **two Free Ops routes** for now: `contract` and `survey`.\n- Contractor is selected when starting a run; target selection remains locked until contractor is selected.\n- Failed candidate path stays **manual** (no auto-target replacement).\n- Discovery bonus applies to **net payout**.\n- Free Operations unlock should be shown **explicitly** in UI messaging.\n- Scanner uses a **soft cooldown** (not hard lock).\n- Mobile readability rule: use larger text + shorter copy; no hidden controls; no overlap with cutouts/safe areas.\n- Narrative beats remain **single-line** now, expandable/modular later.\n- Future penalty system remains deferred; maintain player-friendly/no-punishment-first posture for novice users.",
+        "description": "Locked gameplay/product decisions from live design review; supersedes legacy Mission 4/5 assumptions. Authored arc is M1-M3 only.",
+        "tags": [
+          "spec",
+          "missions",
+          "free-ops",
+          "mobile",
+          "art-direction"
+        ],
+        "title": "Post-M3 Free Ops Product Decisions (2026-03-10)"
+      }
+    }
+  ]
+}

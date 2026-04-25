@@ -1,10 +1,8 @@
 ---
 title: Level Progression and Unlocks
+description: Complete reference for all mechanics, features, and content unlocked as players level up
 createdAt: '2026-02-25T00:28:33.561Z'
-updatedAt: '2026-03-17T06:46:17.164Z'
-description: >-
-  Complete reference for all mechanics, features, and content unlocked as
-  players level up
+updatedAt: '2026-04-25T02:28:06.108Z'
 tags:
   - progression
   - leveling
@@ -12,9 +10,10 @@ tags:
   - xp
   - experience
 ---
+
 # Level Progression and Unlocks
 
-Complete reference for all mechanics, features, and content unlocked as players level up. **Authoritative — last updated 2026-03-17.**
+Complete reference for all mechanics, features, and content unlocked as players level up. **Authoritative — last updated 2026-04-25.**
 
 ---
 
@@ -68,13 +67,14 @@ Complete reference for all mechanics, features, and content unlocked as players 
 ### Level 3
 **Rockets:** Starter Rocket 3 — Cost: 4.0B F — unibody
 
-**Targets:** All planet distance bands (120–340 AU) — requires Mission 3 completion
+**Targets:** All planet distance bands (120–340 AU) — available in Free Operations after M3 completion
 
 **Subcontractors:** 6 available
 
 **Features:**
 - Scanner Station purchasable (2.0B F) — requires Mission 3 completion
-- M4 progression (transition to Free Operations)
+- Free Operations access (after post-M3 handoff dialogue)
+- SR3 and planet targets are Free Ops features, not tutorial-mission features
 
 ---
 
@@ -91,9 +91,9 @@ Complete reference for all mechanics, features, and content unlocked as players 
 **Subcontractors:** 10 available (all)
 
 **Features:**
-- **Room upgrades** unlock (mining laser tier, cargo bay expansion — accessed via room management screen, not launchpad)
+- **Room upgrades** unlock (mining laser tier, cargo bay expansion)
 - **Marketplace** becomes visible (live market prices, timing sell windows)
-- **Build new structures** (first time player can place a new structure — Earth-based first)
+- **Build new structures** (Earth-based first)
 
 ---
 
@@ -138,7 +138,7 @@ Complete reference for all mechanics, features, and content unlocked as players 
 |-----------|-------------|
 | M1 complete | Star map accessible |
 | M3 complete | Scanner Station purchasable (2.0B F) |
-| M4 complete | Free Operations loop begins |
+| M3 complete + handoff dialogue dismissed | Free Operations loop begins |
 
 ---
 
@@ -152,7 +152,6 @@ All StarterRocket family rockets are prebuilt with a fixed internal layout — n
 ### Non-Starter Rockets (Slot-Based)
 From non-starter rocket classes, players choose their room loadout when purchasing:
 - Available room types depend on rocket class and player level
-- E.g. at certain class levels, a second mining laser slot becomes available
 - Long-term: Minecraft-level per-component granularity (deferred — see roadmap)
 
 ---
@@ -190,6 +189,8 @@ const ASTEROID_DISTANCE_BANDS_AU := [3.0, 24.0]
 const PLANET_DISTANCE_BANDS_AU := [120.0, 220.0, 340.0]
 ```
 
+Note: Code internals may use `completed_mission_count >= 4` as the Free Ops gate trigger. This is an implementation detail only — it does not mean M4 is an authored tutorial mission.
+
 ---
 
 ## Related Docs
@@ -207,21 +208,19 @@ const PLANET_DISTANCE_BANDS_AU := [120.0, 220.0, 340.0]
 - All rockets before L5 are StarterRocket unibody family.
 
 ### XP Curve (Q18)
-**Design target:** Tutorial arc (M1–M4) gets player to approximately Level 3.
+**Design target:** Tutorial arc (M1–M3) gets player to approximately Level 3.
 After L3: progressive slowdown.
-
-**Proposed curve (needs balance validation):**
 
 | Transition | XP Required | Sessions (approx) |
 |------------|-------------|-------------------|
 | L1 → L2 | 200 XP | Same session (M1+M2) |
-| L2 → L3 | 500 XP | Same/next session (M3+M4) |
+| L2 → L3 | 500 XP | Same/next session (M3 + handoff) |
 | L3 → L4 | 1,200 XP | ~4–6 sessions |
 | L4 → L5 | 3,000 XP | ~2 weeks casual |
 | L5 → L6 | 7,500 XP | — |
 | L6 → L7 | 18,000 XP | — |
 | L7 → L8 | 45,000 XP | — |
 
-**XP per mission (base):** Tutorial M1=80, M2=120, M3=160, M4=200. Free ops: 150–400 XP based on distance, minerals, discovery bonus.
+**XP per mission (base):** Tutorial M1=80, M2=120, M3=160. Free ops: 150–400 XP based on distance, minerals, discovery bonus.
 
 > Needs implementation and balance validation — see XP curve task.

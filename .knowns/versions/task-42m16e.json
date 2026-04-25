@@ -1,6 +1,6 @@
 {
   "taskId": "42m16e",
-  "currentVersion": 3,
+  "currentVersion": 9,
   "versions": [
     {
       "id": "v1",
@@ -15,54 +15,11 @@
         },
         {
           "field": "assignee",
+          "oldValue": null,
           "newValue": "@me"
         }
       ],
       "snapshot": {
-        "title": "Align M4 tutorial and Earth-base guidance with Free Ops flow",
-        "description": "Remove outdated Mission 4 scanner-station gating after the mission reorg, align M3/M4 citizen-science and Free Operations messaging, reduce redundant Earth-base guidance surfaces, and update authoritative docs.",
-        "status": "in-progress",
-        "priority": "medium",
-        "assignee": "@me",
-        "labels": [],
-        "acceptanceCriteria": [
-          {
-            "completed": false,
-            "text": "Mission 4 no longer tells players to build the Scanner Station when it is already built or when M3 already introduced scanner/citizen-science flow."
-          },
-          {
-            "completed": false,
-            "text": "Earth-base guidance surfaces do not stack into redundant tutorial dialogs for the same next action."
-          },
-          {
-            "completed": false,
-            "text": "Tutorial and debrief copy reflect that post-M4 the player enters Free Operations with soft guidance only."
-          },
-          {
-            "completed": false,
-            "text": "Authoritative docs are updated to match the current M3/M4 and post-M4 flow."
-          }
-        ]
-      }
-    },
-    {
-      "id": "v2",
-      "taskId": "42m16e",
-      "version": 2,
-      "timestamp": "2026-04-25T00:07:25.789Z",
-      "changes": [
-        {
-          "field": "implementationPlan",
-          "newValue": "1. Update authoritative mission/tutorial docs so M3 scanner+civilian-science intro, M4 autonomy transition, and post-M4 Free Operations are the source of truth.\n2. Refactor tutorial/debrief/Earth-base guidance to remove the stale M4 scanner-build gate and replace it with soft Free Ops/contracting guidance.\n3. Collapse redundant Earth-base guidance surfaces so only one primary tutorial/progression prompt shows for the same state, and increase compact tracker readability where it still appears.\n4. Update/add regression coverage for debrief handoff, Earth-base cards, and mission/tutorial text so the old scanner-station assumptions do not return."
-        }
-      ],
-      "snapshot": {
-        "title": "Align M4 tutorial and Earth-base guidance with Free Ops flow",
-        "description": "Remove outdated Mission 4 scanner-station gating after the mission reorg, align M3/M4 citizen-science and Free Operations messaging, reduce redundant Earth-base guidance surfaces, and update authoritative docs.",
-        "status": "in-progress",
-        "priority": "medium",
-        "assignee": "@me",
-        "labels": [],
         "acceptanceCriteria": [
           {
             "completed": false,
@@ -81,7 +38,52 @@
             "text": "Authoritative docs are updated to match the current M3/M4 and post-M4 flow."
           }
         ],
-        "implementationPlan": "1. Update authoritative mission/tutorial docs so M3 scanner+civilian-science intro, M4 autonomy transition, and post-M4 Free Operations are the source of truth.\n2. Refactor tutorial/debrief/Earth-base guidance to remove the stale M4 scanner-build gate and replace it with soft Free Ops/contracting guidance.\n3. Collapse redundant Earth-base guidance surfaces so only one primary tutorial/progression prompt shows for the same state, and increase compact tracker readability where it still appears.\n4. Update/add regression coverage for debrief handoff, Earth-base cards, and mission/tutorial text so the old scanner-station assumptions do not return."
+        "assignee": "@me",
+        "description": "Remove outdated Mission 4 scanner-station gating after the mission reorg, align M3/M4 citizen-science and Free Operations messaging, reduce redundant Earth-base guidance surfaces, and update authoritative docs.",
+        "labels": [],
+        "priority": "medium",
+        "status": "in-progress",
+        "title": "Align M4 tutorial and Earth-base guidance with Free Ops flow"
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "42m16e",
+      "version": 2,
+      "timestamp": "2026-04-25T00:07:25.789Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "oldValue": null,
+          "newValue": "1. Update authoritative mission/tutorial docs so M3 scanner+civilian-science intro, M4 autonomy transition, and post-M4 Free Operations are the source of truth.\n2. Refactor tutorial/debrief/Earth-base guidance to remove the stale M4 scanner-build gate and replace it with soft Free Ops/contracting guidance.\n3. Collapse redundant Earth-base guidance surfaces so only one primary tutorial/progression prompt shows for the same state, and increase compact tracker readability where it still appears.\n4. Update/add regression coverage for debrief handoff, Earth-base cards, and mission/tutorial text so the old scanner-station assumptions do not return."
+        }
+      ],
+      "snapshot": {
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Mission 4 no longer tells players to build the Scanner Station when it is already built or when M3 already introduced scanner/citizen-science flow."
+          },
+          {
+            "completed": false,
+            "text": "Earth-base guidance surfaces do not stack into redundant tutorial dialogs for the same next action."
+          },
+          {
+            "completed": false,
+            "text": "Tutorial and debrief copy reflect that post-M4 the player enters Free Operations with soft guidance only."
+          },
+          {
+            "completed": false,
+            "text": "Authoritative docs are updated to match the current M3/M4 and post-M4 flow."
+          }
+        ],
+        "assignee": "@me",
+        "description": "Remove outdated Mission 4 scanner-station gating after the mission reorg, align M3/M4 citizen-science and Free Operations messaging, reduce redundant Earth-base guidance surfaces, and update authoritative docs.",
+        "implementationPlan": "1. Update authoritative mission/tutorial docs so M3 scanner+civilian-science intro, M4 autonomy transition, and post-M4 Free Operations are the source of truth.\n2. Refactor tutorial/debrief/Earth-base guidance to remove the stale M4 scanner-build gate and replace it with soft Free Ops/contracting guidance.\n3. Collapse redundant Earth-base guidance surfaces so only one primary tutorial/progression prompt shows for the same state, and increase compact tracker readability where it still appears.\n4. Update/add regression coverage for debrief handoff, Earth-base cards, and mission/tutorial text so the old scanner-station assumptions do not return.",
+        "labels": [],
+        "priority": "medium",
+        "status": "in-progress",
+        "title": "Align M4 tutorial and Earth-base guidance with Free Ops flow"
       }
     },
     {
@@ -131,16 +133,11 @@
         },
         {
           "field": "implementationNotes",
+          "oldValue": null,
           "newValue": "Updated M4 from scanner-build gate to autonomy handoff. Removed redundant Earth-base guidance stacking by hiding the compact tracker on base and delaying Star Map card until Free Ops. Added legacy scanner-state reconciliation for older saves. Updated authoritative docs and refreshed regression suites for debrief, structure, later-mission, narrative, and E2E coverage."
         }
       ],
       "snapshot": {
-        "title": "Align M4 tutorial and Earth-base guidance with Free Ops flow",
-        "description": "Remove outdated Mission 4 scanner-station gating after the mission reorg, align M3/M4 citizen-science and Free Operations messaging, reduce redundant Earth-base guidance surfaces, and update authoritative docs.",
-        "status": "in-progress",
-        "priority": "medium",
-        "assignee": "@me",
-        "labels": [],
         "acceptanceCriteria": [
           {
             "completed": true,
@@ -159,8 +156,305 @@
             "text": "Authoritative docs are updated to match the current M3/M4 and post-M4 flow."
           }
         ],
+        "assignee": "@me",
+        "description": "Remove outdated Mission 4 scanner-station gating after the mission reorg, align M3/M4 citizen-science and Free Operations messaging, reduce redundant Earth-base guidance surfaces, and update authoritative docs.",
+        "implementationNotes": "Updated M4 from scanner-build gate to autonomy handoff. Removed redundant Earth-base guidance stacking by hiding the compact tracker on base and delaying Star Map card until Free Ops. Added legacy scanner-state reconciliation for older saves. Updated authoritative docs and refreshed regression suites for debrief, structure, later-mission, narrative, and E2E coverage.",
         "implementationPlan": "1. Update authoritative mission/tutorial docs so M3 scanner+civilian-science intro, M4 autonomy transition, and post-M4 Free Operations are the source of truth.\n2. Refactor tutorial/debrief/Earth-base guidance to remove the stale M4 scanner-build gate and replace it with soft Free Ops/contracting guidance.\n3. Collapse redundant Earth-base guidance surfaces so only one primary tutorial/progression prompt shows for the same state, and increase compact tracker readability where it still appears.\n4. Update/add regression coverage for debrief handoff, Earth-base cards, and mission/tutorial text so the old scanner-station assumptions do not return.",
-        "implementationNotes": "Updated M4 from scanner-build gate to autonomy handoff. Removed redundant Earth-base guidance stacking by hiding the compact tracker on base and delaying Star Map card until Free Ops. Added legacy scanner-state reconciliation for older saves. Updated authoritative docs and refreshed regression suites for debrief, structure, later-mission, narrative, and E2E coverage."
+        "labels": [],
+        "priority": "medium",
+        "status": "in-progress",
+        "title": "Align M4 tutorial and Earth-base guidance with Free Ops flow"
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "42m16e",
+      "version": 4,
+      "timestamp": "2026-04-25T02:19:58.762299326Z",
+      "changes": [
+        {
+          "field": "title",
+          "oldValue": "Align M4 tutorial and Earth-base guidance with Free Ops flow",
+          "newValue": "Post-M3 Free Ops handoff dialogue and Earth-base guidance"
+        },
+        {
+          "field": "description",
+          "oldValue": "Remove outdated Mission 4 scanner-station gating after the mission reorg, align M3/M4 citizen-science and Free Operations messaging, reduce redundant Earth-base guidance surfaces, and update authoritative docs.",
+          "newValue": "Authored missions are M1, M2, and M3 only. After M3 the player enters Free Operations — there is no M4 tutorial. The transition should be handled by a single handoff dialogue, not a tutorial rail. This task tracks: (1) ensuring all Earth-base guidance surfaces reflect this, (2) ensuring no tutorial copy refers to an 'M4' step or gate, and (3) keeping docs aligned to the 3-mission authored arc."
+        }
+      ],
+      "snapshot": {
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Mission 4 no longer tells players to build the Scanner Station when it is already built or when M3 already introduced scanner/citizen-science flow."
+          },
+          {
+            "completed": true,
+            "text": "Earth-base guidance surfaces do not stack into redundant tutorial dialogs for the same next action."
+          },
+          {
+            "completed": true,
+            "text": "Tutorial and debrief copy reflect that post-M4 the player enters Free Operations with soft guidance only."
+          },
+          {
+            "completed": true,
+            "text": "Authoritative docs are updated to match the current M3/M4 and post-M4 flow."
+          }
+        ],
+        "assignee": "@me",
+        "description": "Authored missions are M1, M2, and M3 only. After M3 the player enters Free Operations — there is no M4 tutorial. The transition should be handled by a single handoff dialogue, not a tutorial rail. This task tracks: (1) ensuring all Earth-base guidance surfaces reflect this, (2) ensuring no tutorial copy refers to an 'M4' step or gate, and (3) keeping docs aligned to the 3-mission authored arc.",
+        "implementationNotes": "Updated M4 from scanner-build gate to autonomy handoff. Removed redundant Earth-base guidance stacking by hiding the compact tracker on base and delaying Star Map card until Free Ops. Added legacy scanner-state reconciliation for older saves. Updated authoritative docs and refreshed regression suites for debrief, structure, later-mission, narrative, and E2E coverage.",
+        "implementationPlan": "1. Update authoritative mission/tutorial docs so M3 scanner+civilian-science intro, M4 autonomy transition, and post-M4 Free Operations are the source of truth.\n2. Refactor tutorial/debrief/Earth-base guidance to remove the stale M4 scanner-build gate and replace it with soft Free Ops/contracting guidance.\n3. Collapse redundant Earth-base guidance surfaces so only one primary tutorial/progression prompt shows for the same state, and increase compact tracker readability where it still appears.\n4. Update/add regression coverage for debrief handoff, Earth-base cards, and mission/tutorial text so the old scanner-station assumptions do not return.",
+        "priority": "medium",
+        "status": "in-progress",
+        "title": "Post-M3 Free Ops handoff dialogue and Earth-base guidance"
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "42m16e",
+      "version": 5,
+      "timestamp": "2026-04-25T02:20:11.913788562Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Mission 4 no longer tells players to build the Scanner Station when it is already built or when M3 already introduced scanner/citizen-science flow."
+            },
+            {
+              "completed": false,
+              "text": "Earth-base guidance surfaces do not stack into redundant tutorial dialogs for the same next action."
+            },
+            {
+              "completed": false,
+              "text": "Tutorial and debrief copy reflect that post-M4 the player enters Free Operations with soft guidance only."
+            },
+            {
+              "completed": false,
+              "text": "Authoritative docs are updated to match the current M3/M4 and post-M4 flow."
+            }
+          ],
+          "newValue": [
+            {
+              "completed": false,
+              "text": "Mission 4 no longer tells players to build the Scanner Station when it is already built or when M3 already introduced scanner/citizen-science flow."
+            },
+            {
+              "completed": false,
+              "text": "Earth-base guidance surfaces do not stack into redundant tutorial dialogs for the same next action."
+            },
+            {
+              "completed": false,
+              "text": "Tutorial and debrief copy reflect that post-M4 the player enters Free Operations with soft guidance only."
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Mission 4 no longer tells players to build the Scanner Station when it is already built or when M3 already introduced scanner/citizen-science flow."
+          },
+          {
+            "completed": false,
+            "text": "Earth-base guidance surfaces do not stack into redundant tutorial dialogs for the same next action."
+          },
+          {
+            "completed": false,
+            "text": "Tutorial and debrief copy reflect that post-M4 the player enters Free Operations with soft guidance only."
+          }
+        ],
+        "assignee": "@me",
+        "description": "Authored missions are M1, M2, and M3 only. After M3 the player enters Free Operations — there is no M4 tutorial. The transition should be handled by a single handoff dialogue, not a tutorial rail. This task tracks: (1) ensuring all Earth-base guidance surfaces reflect this, (2) ensuring no tutorial copy refers to an 'M4' step or gate, and (3) keeping docs aligned to the 3-mission authored arc.",
+        "implementationNotes": "Updated M4 from scanner-build gate to autonomy handoff. Removed redundant Earth-base guidance stacking by hiding the compact tracker on base and delaying Star Map card until Free Ops. Added legacy scanner-state reconciliation for older saves. Updated authoritative docs and refreshed regression suites for debrief, structure, later-mission, narrative, and E2E coverage.",
+        "implementationPlan": "1. Update authoritative mission/tutorial docs so M3 scanner+civilian-science intro, M4 autonomy transition, and post-M4 Free Operations are the source of truth.\n2. Refactor tutorial/debrief/Earth-base guidance to remove the stale M4 scanner-build gate and replace it with soft Free Ops/contracting guidance.\n3. Collapse redundant Earth-base guidance surfaces so only one primary tutorial/progression prompt shows for the same state, and increase compact tracker readability where it still appears.\n4. Update/add regression coverage for debrief handoff, Earth-base cards, and mission/tutorial text so the old scanner-station assumptions do not return.",
+        "priority": "medium",
+        "status": "in-progress",
+        "title": "Post-M3 Free Ops handoff dialogue and Earth-base guidance"
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "42m16e",
+      "version": 6,
+      "timestamp": "2026-04-25T02:20:14.028228796Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Mission 4 no longer tells players to build the Scanner Station when it is already built or when M3 already introduced scanner/citizen-science flow."
+            },
+            {
+              "completed": false,
+              "text": "Earth-base guidance surfaces do not stack into redundant tutorial dialogs for the same next action."
+            },
+            {
+              "completed": false,
+              "text": "Tutorial and debrief copy reflect that post-M4 the player enters Free Operations with soft guidance only."
+            }
+          ],
+          "newValue": [
+            {
+              "completed": false,
+              "text": "Mission 4 no longer tells players to build the Scanner Station when it is already built or when M3 already introduced scanner/citizen-science flow."
+            },
+            {
+              "completed": false,
+              "text": "Earth-base guidance surfaces do not stack into redundant tutorial dialogs for the same next action."
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Mission 4 no longer tells players to build the Scanner Station when it is already built or when M3 already introduced scanner/citizen-science flow."
+          },
+          {
+            "completed": false,
+            "text": "Earth-base guidance surfaces do not stack into redundant tutorial dialogs for the same next action."
+          }
+        ],
+        "assignee": "@me",
+        "description": "Authored missions are M1, M2, and M3 only. After M3 the player enters Free Operations — there is no M4 tutorial. The transition should be handled by a single handoff dialogue, not a tutorial rail. This task tracks: (1) ensuring all Earth-base guidance surfaces reflect this, (2) ensuring no tutorial copy refers to an 'M4' step or gate, and (3) keeping docs aligned to the 3-mission authored arc.",
+        "implementationNotes": "Updated M4 from scanner-build gate to autonomy handoff. Removed redundant Earth-base guidance stacking by hiding the compact tracker on base and delaying Star Map card until Free Ops. Added legacy scanner-state reconciliation for older saves. Updated authoritative docs and refreshed regression suites for debrief, structure, later-mission, narrative, and E2E coverage.",
+        "implementationPlan": "1. Update authoritative mission/tutorial docs so M3 scanner+civilian-science intro, M4 autonomy transition, and post-M4 Free Operations are the source of truth.\n2. Refactor tutorial/debrief/Earth-base guidance to remove the stale M4 scanner-build gate and replace it with soft Free Ops/contracting guidance.\n3. Collapse redundant Earth-base guidance surfaces so only one primary tutorial/progression prompt shows for the same state, and increase compact tracker readability where it still appears.\n4. Update/add regression coverage for debrief handoff, Earth-base cards, and mission/tutorial text so the old scanner-station assumptions do not return.",
+        "priority": "medium",
+        "status": "in-progress",
+        "title": "Post-M3 Free Ops handoff dialogue and Earth-base guidance"
+      }
+    },
+    {
+      "id": "v7",
+      "taskId": "42m16e",
+      "version": 7,
+      "timestamp": "2026-04-25T02:20:16.115036601Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Mission 4 no longer tells players to build the Scanner Station when it is already built or when M3 already introduced scanner/citizen-science flow."
+            },
+            {
+              "completed": false,
+              "text": "Earth-base guidance surfaces do not stack into redundant tutorial dialogs for the same next action."
+            }
+          ],
+          "newValue": [
+            {
+              "completed": false,
+              "text": "Mission 4 no longer tells players to build the Scanner Station when it is already built or when M3 already introduced scanner/citizen-science flow."
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Mission 4 no longer tells players to build the Scanner Station when it is already built or when M3 already introduced scanner/citizen-science flow."
+          }
+        ],
+        "assignee": "@me",
+        "description": "Authored missions are M1, M2, and M3 only. After M3 the player enters Free Operations — there is no M4 tutorial. The transition should be handled by a single handoff dialogue, not a tutorial rail. This task tracks: (1) ensuring all Earth-base guidance surfaces reflect this, (2) ensuring no tutorial copy refers to an 'M4' step or gate, and (3) keeping docs aligned to the 3-mission authored arc.",
+        "implementationNotes": "Updated M4 from scanner-build gate to autonomy handoff. Removed redundant Earth-base guidance stacking by hiding the compact tracker on base and delaying Star Map card until Free Ops. Added legacy scanner-state reconciliation for older saves. Updated authoritative docs and refreshed regression suites for debrief, structure, later-mission, narrative, and E2E coverage.",
+        "implementationPlan": "1. Update authoritative mission/tutorial docs so M3 scanner+civilian-science intro, M4 autonomy transition, and post-M4 Free Operations are the source of truth.\n2. Refactor tutorial/debrief/Earth-base guidance to remove the stale M4 scanner-build gate and replace it with soft Free Ops/contracting guidance.\n3. Collapse redundant Earth-base guidance surfaces so only one primary tutorial/progression prompt shows for the same state, and increase compact tracker readability where it still appears.\n4. Update/add regression coverage for debrief handoff, Earth-base cards, and mission/tutorial text so the old scanner-station assumptions do not return.",
+        "priority": "medium",
+        "status": "in-progress",
+        "title": "Post-M3 Free Ops handoff dialogue and Earth-base guidance"
+      }
+    },
+    {
+      "id": "v8",
+      "taskId": "42m16e",
+      "version": 8,
+      "timestamp": "2026-04-25T02:20:18.208568798Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Mission 4 no longer tells players to build the Scanner Station when it is already built or when M3 already introduced scanner/citizen-science flow."
+            }
+          ],
+          "newValue": null
+        }
+      ],
+      "snapshot": {
+        "assignee": "@me",
+        "description": "Authored missions are M1, M2, and M3 only. After M3 the player enters Free Operations — there is no M4 tutorial. The transition should be handled by a single handoff dialogue, not a tutorial rail. This task tracks: (1) ensuring all Earth-base guidance surfaces reflect this, (2) ensuring no tutorial copy refers to an 'M4' step or gate, and (3) keeping docs aligned to the 3-mission authored arc.",
+        "implementationNotes": "Updated M4 from scanner-build gate to autonomy handoff. Removed redundant Earth-base guidance stacking by hiding the compact tracker on base and delaying Star Map card until Free Ops. Added legacy scanner-state reconciliation for older saves. Updated authoritative docs and refreshed regression suites for debrief, structure, later-mission, narrative, and E2E coverage.",
+        "implementationPlan": "1. Update authoritative mission/tutorial docs so M3 scanner+civilian-science intro, M4 autonomy transition, and post-M4 Free Operations are the source of truth.\n2. Refactor tutorial/debrief/Earth-base guidance to remove the stale M4 scanner-build gate and replace it with soft Free Ops/contracting guidance.\n3. Collapse redundant Earth-base guidance surfaces so only one primary tutorial/progression prompt shows for the same state, and increase compact tracker readability where it still appears.\n4. Update/add regression coverage for debrief handoff, Earth-base cards, and mission/tutorial text so the old scanner-station assumptions do not return.",
+        "priority": "medium",
+        "status": "in-progress",
+        "title": "Post-M3 Free Ops handoff dialogue and Earth-base guidance"
+      }
+    },
+    {
+      "id": "v9",
+      "taskId": "42m16e",
+      "version": 9,
+      "timestamp": "2026-04-25T02:20:29.816920314Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": null,
+          "newValue": [
+            {
+              "text": "No in-game copy or UI surface refers to 'Mission 4' as a tutorial step or objective — the concept does not exist",
+              "completed": false
+            },
+            {
+              "text": "After M3 debrief, a single handoff dialogue informs the player they are now in Free Operations",
+              "completed": false
+            },
+            {
+              "text": "Earth-base shows at most one soft guidance surface post-M3 (no stacked tutorial prompts)",
+              "completed": false
+            },
+            {
+              "text": "All authoritative docs state the authored arc is M1–M3 only; post-M3 entry to Free Ops is dialogue-only",
+              "completed": false
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "acceptanceCriteria": [
+          {
+            "text": "No in-game copy or UI surface refers to 'Mission 4' as a tutorial step or objective — the concept does not exist",
+            "completed": false
+          },
+          {
+            "text": "After M3 debrief, a single handoff dialogue informs the player they are now in Free Operations",
+            "completed": false
+          },
+          {
+            "text": "Earth-base shows at most one soft guidance surface post-M3 (no stacked tutorial prompts)",
+            "completed": false
+          },
+          {
+            "text": "All authoritative docs state the authored arc is M1–M3 only; post-M3 entry to Free Ops is dialogue-only",
+            "completed": false
+          }
+        ],
+        "assignee": "@me",
+        "description": "Authored missions are M1, M2, and M3 only. After M3 the player enters Free Operations — there is no M4 tutorial. The transition should be handled by a single handoff dialogue, not a tutorial rail. This task tracks: (1) ensuring all Earth-base guidance surfaces reflect this, (2) ensuring no tutorial copy refers to an 'M4' step or gate, and (3) keeping docs aligned to the 3-mission authored arc.",
+        "implementationNotes": "Updated M4 from scanner-build gate to autonomy handoff. Removed redundant Earth-base guidance stacking by hiding the compact tracker on base and delaying Star Map card until Free Ops. Added legacy scanner-state reconciliation for older saves. Updated authoritative docs and refreshed regression suites for debrief, structure, later-mission, narrative, and E2E coverage.",
+        "implementationPlan": "1. Update authoritative mission/tutorial docs so M3 scanner+civilian-science intro, M4 autonomy transition, and post-M4 Free Operations are the source of truth.\n2. Refactor tutorial/debrief/Earth-base guidance to remove the stale M4 scanner-build gate and replace it with soft Free Ops/contracting guidance.\n3. Collapse redundant Earth-base guidance surfaces so only one primary tutorial/progression prompt shows for the same state, and increase compact tracker readability where it still appears.\n4. Update/add regression coverage for debrief handoff, Earth-base cards, and mission/tutorial text so the old scanner-station assumptions do not return.",
+        "priority": "medium",
+        "status": "in-progress",
+        "title": "Post-M3 Free Ops handoff dialogue and Earth-base guidance"
       }
     }
   ]

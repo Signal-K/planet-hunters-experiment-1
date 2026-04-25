@@ -1,10 +1,8 @@
 ---
-title: Post-M4 Free Ops Product Decisions (2026-03-10)
+title: Post-M3 Free Ops Product Decisions (2026-03-10)
+description: Locked gameplay/product decisions from live design review; supersedes legacy Mission 4/5 assumptions. Authored arc is M1-M3 only.
 createdAt: '2026-03-10T06:05:07.254Z'
-updatedAt: '2026-03-10T07:09:33.641Z'
-description: >-
-  Locked gameplay/product decisions from live design review; supersedes legacy
-  Mission 5 assumptions
+updatedAt: '2026-04-25T02:22:07.773Z'
 tags:
   - spec
   - missions
@@ -12,6 +10,7 @@ tags:
   - mobile
   - art-direction
 ---
+
 # Post-M4 Free Ops Product Decisions (Locked 2026-03-10)
 
 ## Scope Lock

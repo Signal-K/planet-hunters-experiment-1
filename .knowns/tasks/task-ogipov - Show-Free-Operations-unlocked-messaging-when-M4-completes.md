@@ -1,6 +1,6 @@
 ---
 id: ogipov
-title: 'Show ''Free Operations unlocked'' messaging when M4 completes'
+title: 'Show ''Free Operations unlocked'' messaging when M3 completes'
 status: done
 priority: medium
 labels:
@@ -8,16 +8,16 @@ labels:
   - ux
   - progression
 createdAt: '2026-03-16T17:52:06.585Z'
-updatedAt: '2026-04-11T03:59:56.395Z'
+updatedAt: '2026-04-25T02:24:12.841Z'
 timeSpent: 0
 assignee: '@me'
 ---
-# Show 'Free Operations unlocked' messaging when M4 completes
+# Show 'Free Operations unlocked' messaging when M3 completes
 
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-Post-M4 spec (2026-03-10) explicitly states: 'Free Operations unlock should be shown explicitly in UI messaging.' When mission stage crosses into Free Ops (post-M4), show clear messaging that free operations are now available with brief explanation of the two routes (contract, survey).
+After M3 debrief, show clear messaging that Free Operations are now available. The post-M3 spec states Free Operations unlock should be shown explicitly in UI messaging. When the player's mission stage crosses into Free Ops (post-M3 handoff dialogue), show a clear 'Free Operations unlocked' moment with brief explanation of the two routes (contract, survey). Note: code may use completed_mission_count >= 4 as the trigger — this is an implementation detail, not evidence of an M4 mission.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria

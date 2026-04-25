@@ -1,15 +1,15 @@
 ---
-title: 'spec,user-flow,citizen-science,gameplay,reference'
-createdAt: '2026-02-25T08:23:19.256Z'
-updatedAt: '2026-03-10T07:09:35.860Z'
+title: spec,user-flow,citizen-science,gameplay,reference
 description: Hybrid resource management game and citizen science platform integration
-spec: true
+createdAt: '2026-02-25T08:23:19.256Z'
+updatedAt: '2026-04-25T02:23:43.549Z'
 tags:
   - game-design
   - citizen-science
   - user-flow
   - gameplay
 ---
+
 # Planet Hunters: User Flow & Citizen Science Integration
 
 ## Product Intent
@@ -118,3 +118,14 @@ The post-tutorial shape is intentionally "sandbox-first":
 - Discovery bonus calculation is applied on net payout.
 - Scanner refresh now uses a soft cooldown to pace retries.
 - Messaging target: player-friendly and concise for users without exoplanet expertise.
+
+---
+
+## ⚠️ 2026-04-25 Correction Notice
+
+This is an older spec file. See @doc/game-design/user-flow-and-citizen-science for the current version.
+
+**Key corrections:**
+- "Mission 4: planetary expansion" described here is historical.
+- Authored missions are M1, M2, M3 only. Post-M3 is a handoff dialogue, then Free Operations.
+- "M5" does not exist in any form.
