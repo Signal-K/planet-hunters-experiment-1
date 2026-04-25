@@ -1,0 +1,63 @@
+name: Mission Sandbox
+
+on:
+  push:
+    branches:
+      - main
+      - "claude/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  sandbox:
+    name: M1→M3 Mission Flow Sandbox
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Build sandbox image
+        run: docker build -f Dockerfile.sandbox -t planet-hunters-sandbox:ci .
+
+      - name: Run sandbox
+        run: |
+          mkdir -p sandbox/output
+          docker run --rm \
+            --shm-size=256mb \
+            -e DISPLAY=:99 \
+            -e GODOT_DISABLE_ZIVA_AGENT=1 \
+            -e GALLIUM_DRIVER=softpipe \
+            -e MESA_GL_VERSION_OVERRIDE=3.3 \
+            -e MESA_GLSL_VERSION_OVERRIDE=330 \
+            -v "${{ github.workspace }}/scene:/app/scene:ro" \
+            -v "${{ github.workspace }}/sandbox/output:/output" \
+            planet-hunters-sandbox:ci
+
+      - name: Upload sandbox output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sandbox-output-${{ github.sha }}
+          path: sandbox/output/
+          retention-days: 14
+
+      - name: Fail on critical issues
+        if: always()
+        run: |
+          ISSUES_FILE="sandbox/output/sandbox_issues.json"
+          if [ -f "$ISSUES_FILE" ]; then
+            CRITICAL=$(grep -c '"severity":"CRITICAL"' "$ISSUES_FILE" || echo 0)
+            if [ "$CRITICAL" -gt 0 ]; then
+              echo "::error::Sandbox found $CRITICAL critical issue(s). See sandbox_issues.json artifact."
+              cat "$ISSUES_FILE"
+              exit 1
+            fi
+          fi
+          echo "No critical issues found."
