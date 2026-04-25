@@ -116,9 +116,9 @@ Rockets are the primary vehicle for all missions. Each rocket has rooms/bays tha
 ---
 
 ## Related Docs
-- @doc/game-design/level-progression-and-unlocks
-- @doc/game-design/economy-and-minerals
-- @doc/game-design/target-system
+- @doc/game-design/progression/level-progression-and-unlocks
+- @doc/game-design/economy/economy-and-minerals
+- @doc/game-design/mechanics/target-system
 - task-v7u2n9: Implement persistent mineral inventory and construction manager
 
 ## Design Review Round 2 — 2026-03-17

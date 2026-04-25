@@ -73,7 +73,7 @@ Contractors are NPCs who offer missions to the player. They are the primary sour
 
 - Contractors pay approximately **20% above base mineral market price** for minerals needed for their project.
 - This creates an incentive to work contractor orders vs. selling freely on the open market.
-- Base market price fluctuates (see @doc/game-design/economy-and-minerals).
+- Base market price fluctuates (see @doc/game-design/economy/economy-and-minerals).
 
 ---
 
@@ -113,9 +113,9 @@ Contractors are NPCs who offer missions to the player. They are the primary sour
 ---
 
 ## Related Docs
-- @doc/game-design/economy-and-minerals
-- @doc/specs/post-m4-free-ops-product-decisions-2026-03-10
-- @doc/game-design/mission-system-specification
+- @doc/game-design/economy/economy-and-minerals
+- @doc/specs/missions/post-m4-free-ops-product-decisions-2026-03-10
+- @doc/game-design/missions/mission-system-specification
 
 ## Related Tasks
 - task-m8v4pj: Implement contractor cooldowns and reputation levels
@@ -155,7 +155,7 @@ Contractors are NPCs who offer missions to the player. They are the primary sour
 ### Mission Generation (Q5)
 - Hybrid **procedural + AI** generation from reusable templates.
 - Location always a variable from live TESS/asteroid feed.
-- Full spec: @doc/game-design/contractor-mission-generation
+- Full spec: @doc/game-design/missions/contractor-mission-generation
 
 ### Job Board UI (Q15)
 - Contractor panel uses a **job board** layout: all available missions from all unlocked contractors visible simultaneously.

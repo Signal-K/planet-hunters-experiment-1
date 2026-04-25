@@ -75,5 +75,5 @@ Each mission is assembled from these components:
 ---
 
 ## Related Docs
-- @doc/game-design/contractor-system
-- @doc/game-design/economy-and-minerals
+- @doc/game-design/economy/contractor-system
+- @doc/game-design/economy/economy-and-minerals

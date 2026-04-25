@@ -51,4 +51,4 @@ Future iterations can add explicit fallback navigation target for environments t
 - Keep background full-screen/edge-to-edge.
 - Inset all fixed interactive controls from cutouts/notches/dynamic-island/gesture regions using top/right/bottom/left safe-area env vars.
 - Keep HUD compact and auto-hide to reduce gameplay obstruction.
-- Use matrix/checklist in @doc/specs/mobile-safe-area-compatibility-matrix-pwa-shell for regression coverage.
+- Use matrix/checklist in @doc/specs/ui/mobile-safe-area-compatibility-matrix-pwa-shell for regression coverage.

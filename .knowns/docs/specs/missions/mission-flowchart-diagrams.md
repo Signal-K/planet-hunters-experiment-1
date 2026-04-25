@@ -107,4 +107,4 @@ The M4 and M5 flowcharts in this document are historical.
 - **M5 flowchart** ("Contractor Choice and Effects") is fully archaic. M5 was removed when progression was simplified to M1–M3 + Free Operations.
 - M3 flowchart still shows "Build Scanner Station" as a gate — the current design frames M3 scanner usage without a hard construction gate (scanner purchase is possible from M3 onward but not required before launch in all flows).
 
-For current flow: @doc/game-design/mission-system-specification
+For current flow: @doc/game-design/missions/mission-system-specification

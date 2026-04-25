@@ -29,7 +29,7 @@ This document captures deferred and future features so they are not forgotten. E
 
 | Feature | Notes |
 |---------|-------|
-| Room builder UI layout | Grid-based vs. free-form decision needed. See @doc/game-design/rocket-and-room-system |
+| Room builder UI layout | Grid-based vs. free-form decision needed. See @doc/game-design/mechanics/rocket-and-room-system |
 | Construction placement (grid vs. Crashlands-style) | UX and implementation decision needed. See @doc/game-design/construction-and-settlements |
 | Relay station full mechanics | Full implementation spec needed beyond basic outline |
 
@@ -97,10 +97,10 @@ This document captures deferred and future features so they are not forgotten. E
 
 ## Related Docs
 - @doc/game-design/gameplay-vision-20-questions
-- @doc/game-design/contractor-system
+- @doc/game-design/economy/contractor-system
 - @doc/game-design/construction-and-settlements
 - @doc/game-design/characters-system-deferred
-- @doc/game-design/rocket-and-room-system
+- @doc/game-design/mechanics/rocket-and-room-system
 
 ## New Deferred Items — 2026-03-17
 

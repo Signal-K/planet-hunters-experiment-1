@@ -60,7 +60,7 @@ apply contractor theme through trims/decals/signage only; preserve all gameplay-
 ## References
 - @doc/game-design/room-component-prompt-system-for-rocket-interiors
 - @doc/game-design/room-prompt-production-runbook-trimmed-batches-by-level-ship
-- @doc/specs/post-m4-free-ops-product-decisions-2026-03-10
+- @doc/specs/missions/post-m4-free-ops-product-decisions-2026-03-10
 
 
 

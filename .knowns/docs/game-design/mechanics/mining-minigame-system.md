@@ -160,7 +160,7 @@ final_yield = base_yield * mining_multiplier * bonus_multiplier
 
 ### Session Duration
 - Laser charge and fuel limits bound how long mining can continue per visit.
-- Cargo Bay capacity limits total haul weight (see @doc/game-design/rocket-and-room-system).
+- Cargo Bay capacity limits total haul weight (see @doc/game-design/mechanics/rocket-and-room-system).
 
 ## Design Review Round 2 — 2026-03-17
 

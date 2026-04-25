@@ -57,7 +57,7 @@ Planet Hunters uses a single currency (Francs) with a mineral-based economy. Pla
 ### Sell to Contractor (Mission Fulfillment)
 - Contractors pay ~**20% above base market price** for minerals they need for their project.
 - This creates a meaningful incentive to work contractor orders vs. free-selling.
-- Affinity bonus adds additional percentage on top (see @doc/game-design/contractor-system).
+- Affinity bonus adds additional percentage on top (see @doc/game-design/economy/contractor-system).
 
 ### Construction Discount
 - If a player sells unsold, unrefined minerals toward building a structure:
@@ -118,9 +118,9 @@ Planet Hunters uses a single currency (Francs) with a mineral-based economy. Pla
 ---
 
 ## Related Docs
-- @doc/game-design/contractor-system
+- @doc/game-design/economy/contractor-system
 - @doc/game-design/construction-and-settlements
-- @doc/game-design/target-system
+- @doc/game-design/mechanics/target-system
 - task-v7u2n9: Implement persistent mineral inventory and construction manager
 
 ## Design Review Round 2 — 2026-03-17

@@ -119,7 +119,7 @@ Targets are the celestial objects players visit on missions: asteroids, planets,
 ---
 
 ## Related Docs
-- @doc/game-design/economy-and-minerals
+- @doc/game-design/economy/economy-and-minerals
 - @doc/game-design/construction-and-settlements
 - @doc/specs/target-procedural-generation-signature
-- @doc/game-design/user-flow-and-citizen-science
+- @doc/game-design/missions/user-flow-and-citizen-science
