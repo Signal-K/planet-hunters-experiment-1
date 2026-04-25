@@ -1,11 +1,11 @@
 ---
 title: Tutorial rail user flow contract
+description: Canonical onboarding user flow + dedicated tutorial lane rules for all UI panels
 createdAt: '2026-03-14T06:32:53.469Z'
-updatedAt: '2026-04-25T00:15:10.414Z'
-description: >-
-  Canonical onboarding user flow + dedicated tutorial lane rules for all UI
-  panels
+updatedAt: '2026-04-25T02:27:21.904Z'
+tags: []
 ---
+
 # Tutorial Rail User Flow Contract
 
 ## Canonical User Flow (Onboarding)
@@ -27,10 +27,12 @@ description: >-
 - Resolve debrief
 
 4. Progression
-- M1 -> M2 -> M3 -> M4
-- M3 is the first real citizen-science/data-classification mission
-- M4 is the autonomy handoff: reopen Launchpad, choose a contractor run or a self-directed survey route
-- After M4, Free Operations unlocks
+- M1 -> M2 -> M3 -> handoff dialogue -> Free Operations
+- M3 is the last authored tutorial mission; it introduces citizen-science/data-classification
+- After M3 debrief, a single handoff dialogue signals the player is now on their own
+- The handoff dialogue is NOT a tutorial — it is a brief transition moment
+- Free Operations begins immediately after the dialogue is dismissed
+- There is no "Mission 4" tutorial, authored objective chain, or M4 guidance rail
 
 ## Dedicated Tutorial Rail (Layout Contract)
 
@@ -43,6 +45,7 @@ Rules:
 - No tooltip, guide arrow, or highlight may occlude primary click targets.
 - If a screen cannot satisfy this, it must explicitly hide or suspend tutorial UI for that screen.
 - Earth Base should not stack multiple guidance surfaces for the same progression state. One primary authored/tutorial prompt is enough.
+- Post-M3 Earth Base shows soft guidance only (no tutorial rail, no stacked prompts).
 
 ## Required Integration Points
 

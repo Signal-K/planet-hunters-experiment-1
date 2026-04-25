@@ -1,14 +1,15 @@
 ---
-title: User Flow & Citizen Science Integration
-createdAt: '2026-02-25T08:23:19.256Z'
-updatedAt: '2026-04-25T00:15:10.413Z'
+title: 'User Flow & Citizen Science Integration'
 description: Hybrid resource management game and citizen science platform integration
+createdAt: '2026-02-25T08:23:19.256Z'
+updatedAt: '2026-04-25T02:27:01.527Z'
 tags:
   - game-design
   - citizen-science
   - user-flow
   - gameplay
 ---
+
 # User Flow & Citizen Science Integration
 
 ## Overview
@@ -17,24 +18,25 @@ Star Sailors: Experiment 1 is a hybrid resource management game and citizen scie
 
 ## Core User Flow & Citizen Science Touchpoints
 
-The primary gameplay cycle begins at **Earth Base**, the player's planetary headquarters featuring three key structures: the **Satellite Station** (scanner/telescope), **Control Station** (mission command), and **Launchpad** (launch facility).
+The primary gameplay cycle begins at **Earth Base**, featuring three key structures: the **Satellite Station** (scanner/telescope), **Control Station** (mission command), and **Launchpad** (launch facility).
 
-Mission structure now works like this:
+Mission structure:
 - **Mission 1:** baseline launch, mine, return, debrief.
 - **Mission 2:** build the Control Station and learn the more structured contractor flow.
-- **Mission 3:** first real citizen-science mission. The player works with live-style TESS candidate data, reviews lightcurves, classifies a candidate, and then routes to a confirmed target.
-- **Mission 4:** transition out of the strict tutorial rail. The player reopens the Launchpad and chooses whether to run a contractor-guided trip or a more self-directed survey run.
-- **After Mission 4:** Free Operations. Guidance becomes softer and the player is expected to operate with more independence.
+- **Mission 3:** first real citizen-science mission. The player works with live-style TESS candidate data, reviews lightcurves, classifies a candidate, and routes to a confirmed target.
+- **After Mission 3:** a single handoff dialogue informs the player that the tutorial is complete and they are now in Free Operations. This is not a tutorial — it is a brief transition moment. Free Operations begins immediately after.
 
-The **Satellite Station** is part of the Mission 3 and onward science workflow. It should not be framed as a separate Mission 4 construction gate in player-facing copy. When scanning, players see authentic lightcurve data, object identifiers (such as TIC IDs for TESS objects), and positional information, presented through an in-game interface that abstracts the complexity while preserving scientific authenticity.
+There is no Mission 4 in the authored sense. What was previously called "M4" is simply Free Operations. Features like SR3, planet targets, and multi-buyer debrief are Free Ops features unlocked by level/progression, not attached to a tutorial mission.
 
-Once scan results arrive, players can **view detailed information** about each celestial object, including distance, object type, and visual data representations. The **annotation and classification system** enables players to mark features on lightcurves or asteroid images, categorize anomalies, and flag objects for further review. These contributions mirror real citizen-science research workflows.
+The **Satellite Station** is part of the Mission 3 and onward science workflow. It should not be framed as a separate construction gate in player-facing copy. When scanning, players see authentic lightcurve data, object identifiers (such as TIC IDs for TESS objects), and positional information, presented through an in-game interface that abstracts the complexity while preserving scientific authenticity.
 
-After selecting a target, players transition to **Mission Planning** at the Launchpad, where they configure their rocket, review mission parameters, and purchase a rocket for that trip. Missions progress through **Transit**, **Mining/Scanning**, and **Return** phases. Upon return, the **End-of-Rocket Debrief** presents mining yields, XP gained, payout, and the next handoff into either authored progression or Free Operations.
+Once scan results arrive, players can **view detailed information** about each celestial object, including distance, object type, and visual data representations. The **annotation and classification system** enables players to mark features on lightcurves or asteroid images, categorize anomalies, and flag objects for further review.
+
+After selecting a target, players transition to **Mission Planning** at the Launchpad. Missions progress through **Transit**, **Mining/Scanning**, and **Return** phases. Upon return, the **End-of-Rocket Debrief** presents mining yields, XP gained, payout, and the next handoff into either authored progression or Free Operations.
 
 ## Citizen Science Mechanics
 
-The **Satellite Station** serves as the primary citizen-science hub. The game sources anomaly data from public astronomical databases via Supabase integration. The classification workflow allows players to mark features, submit classifications, and optionally provide observations. A toggleable science dialogue mode provides richer explanations for engaged players without interrupting those focused on economic optimization.
+The **Satellite Station** serves as the primary citizen-science hub. The game sources anomaly data from public astronomical databases via Supabase integration. The classification workflow allows players to mark features, submit classifications, and optionally provide observations.
 
 XP is awarded for both launching missions and completing scans, mechanically equalizing science and mining to encourage both. Annotated images and classifications are stored in `user://annotations/` with plans to sync to Supabase tables mirroring Zooniverse-like schemas.
 

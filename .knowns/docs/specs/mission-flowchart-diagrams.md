@@ -1,9 +1,11 @@
 ---
 title: Mission Flowchart Diagrams
-createdAt: '2026-02-25T09:57:01.332Z'
-updatedAt: '2026-02-25T09:57:21.839Z'
 description: Visual mission flowcharts for M1-M5 decision paths and outcomes
+createdAt: '2026-02-25T09:57:01.332Z'
+updatedAt: '2026-04-25T02:23:48.916Z'
+tags: []
 ---
+
 # Mission Flowchart Diagrams
 
 These flowcharts visualize the mission progression described in @doc/specs/mission-system-specification.
@@ -94,3 +96,15 @@ flowchart TD
 - M3 introduces first meaningful target-choice branch.
 - M4 introduces target-type toggle and hard range gating.
 - M5 introduces strategic contractor branching with capped outcomes.
+
+---
+
+## ⚠️ 2026-04-25 Correction Notice
+
+The M4 and M5 flowcharts in this document are historical.
+
+- **M4 flowchart** ("Planet Toggle and Long-Range Exploration") represents features that now belong to Free Operations, not an authored tutorial mission. There is no authored M4.
+- **M5 flowchart** ("Contractor Choice and Effects") is fully archaic. M5 was removed when progression was simplified to M1–M3 + Free Operations.
+- M3 flowchart still shows "Build Scanner Station" as a gate — the current design frames M3 scanner usage without a hard construction gate (scanner purchase is possible from M3 onward but not required before launch in all flows).
+
+For current flow: @doc/game-design/mission-system-specification
