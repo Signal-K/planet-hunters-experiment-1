@@ -58,7 +58,6 @@ var local_only: bool = false
 var use_archived_detail: bool = false
 var _player_level: int = 1
 var _unlock_overlay: ColorRect = null
-var _citizen_science_hint_label: Label = null
 var _data := SatelliteStationPanelData.new()
 var _list := SatelliteStationPanelList.new()
 var _detail := SatelliteStationPanelDetail.new()
@@ -95,6 +94,8 @@ func set_local_only(val: bool) -> void:
 @onready var sync_label: Label = $PanelContainer/Panel/Scroll/VBoxContainer/TelemetryStrip/SyncLabel
 @onready var content_container: VBoxContainer = $PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer
 @onready var toggle_switch: Button = $PanelContainer/Panel/Scroll/VBoxContainer/HeaderContainer/ToggleSwitch
+@onready var citizen_science_hint_label: Label = $PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/StatusContainer/ScanSummaryCard/SummaryMargin/SummaryVBox/CitizenScienceHintLabel
+@onready var early_scan_button: Button = $PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/RefreshContainer/EarlyScanButton
 
 func _ready():
 	# Apply consistent panel styling
@@ -206,6 +207,8 @@ func _apply_panel_style() -> void:
 	_apply_station_button(close_button, false)
 	_apply_station_button(toggle_switch, false)
 	_apply_station_button(refresh_button, true)
+	_apply_station_button(early_scan_button, false)
+	early_scan_button.add_theme_font_size_override("font_size", 14)
 	_apply_station_progress_bar(progress_bar)
 	warm_glow.color = Color(0.81, 0.93, 0.89, 0.40)
 	cool_glow.color = Color(0.88, 0.96, 0.95, 0.50)
@@ -379,23 +382,20 @@ func _on_citizen_science_dialogue_toggled(_enabled: bool) -> void:
 	_refresh_citizen_science_hint()
 
 func _ensure_citizen_science_hint() -> void:
-	if _citizen_science_hint_label and is_instance_valid(_citizen_science_hint_label):
+	if not citizen_science_hint_label:
 		return
-	_citizen_science_hint_label = Label.new()
-	_citizen_science_hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	_citizen_science_hint_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_citizen_science_hint_label.add_theme_color_override("font_color", STATION_MUTED)
-	_citizen_science_hint_label.add_theme_font_size_override("font_size", 13)
-	if summary_vbox:
-		summary_vbox.add_child(_citizen_science_hint_label)
+	citizen_science_hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	citizen_science_hint_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	citizen_science_hint_label.add_theme_color_override("font_color", STATION_MUTED)
+	citizen_science_hint_label.add_theme_font_size_override("font_size", 13)
 
 func _refresh_citizen_science_hint() -> void:
-	if not _citizen_science_hint_label:
+	if not citizen_science_hint_label:
 		return
 	var enabled = AppControllerHelper.is_citizen_science_dialogue_enabled(true)
-	_citizen_science_hint_label.visible = enabled
+	citizen_science_hint_label.visible = enabled
 	if enabled:
-		_citizen_science_hint_label.text = "These scans feed the real TESS candidate review loop. The annotation surface is part of the game’s live science promise."
+		citizen_science_hint_label.text = "These scans feed the real TESS candidate review loop. The annotation surface is part of the game’s live science promise."
 
 
 func _on_refresh_pressed():
@@ -674,10 +674,10 @@ func _refresh_scan_cooldown_ui() -> void:
 	var rm = RocketsManager
 	if refresh_button == null:
 		return
-	# Remove any previous early-scan button
-	var existing_early = refresh_button.get_parent().get_node_or_null("EarlyScanButton") if refresh_button.get_parent() else null
-	if existing_early:
-		existing_early.queue_free()
+	if early_scan_button:
+		early_scan_button.visible = false
+		if early_scan_button.pressed.is_connected(_on_early_scan_pressed):
+			early_scan_button.pressed.disconnect(_on_early_scan_pressed)
 	if rm == null:
 		refresh_button.disabled = false
 		refresh_button.text = REFRESH_BUTTON_BASE_TEXT
@@ -689,23 +689,17 @@ func _refresh_scan_cooldown_ui() -> void:
 		refresh_button.disabled = true
 		var btn_cd = "%d min" % int(ceil(float(remaining) / 60.0)) if remaining >= 60 else "%ds" % remaining
 		refresh_button.text = "Refresh (%s)" % btn_cd
-		# Soft cooldown: add an override button so player can scan early if they choose
-		var parent = refresh_button.get_parent()
-		if parent:
-			var early_btn := Button.new()
-			early_btn.name = "EarlyScanButton"
-			early_btn.text = "Scan early (cooldown active)"
-			early_btn.tooltip_text = "Scanner quality may be lower when used before cooldown completes."
-			parent.add_child(early_btn)
-			_apply_station_button(early_btn, false)
-			early_btn.add_theme_font_size_override("font_size", 14)
-			early_btn.pressed.connect(func():
-				RocketsManager.set_scanner_next_scan_at(0)
-				_try_start_scan_with_cooldown(REFRESH_LOAD_TIME)
-			)
+		if early_scan_button:
+			early_scan_button.visible = true
+			early_scan_button.tooltip_text = "Scanner quality may be lower when used before cooldown completes."
+			early_scan_button.pressed.connect(_on_early_scan_pressed, CONNECT_ONE_SHOT)
 		return
 	refresh_button.disabled = false
 	refresh_button.text = REFRESH_BUTTON_BASE_TEXT
+
+func _on_early_scan_pressed() -> void:
+	RocketsManager.set_scanner_next_scan_at(0)
+	_try_start_scan_with_cooldown(REFRESH_LOAD_TIME)
 
 func _connect_experience_updates() -> void:
 	var app = _get_app_controller()

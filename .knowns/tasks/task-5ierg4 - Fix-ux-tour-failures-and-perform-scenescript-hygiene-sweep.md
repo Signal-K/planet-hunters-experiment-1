@@ -1,7 +1,7 @@
 ---
 id: 5ierg4
 title: Fix ux-tour failures and perform scene/script hygiene sweep
-status: in-progress
+status: done
 priority: high
 labels:
   - godot
@@ -9,7 +9,7 @@ labels:
   - ux-tour
   - tech-debt
 createdAt: '2026-03-28T04:40:26.281Z'
-updatedAt: '2026-04-21T08:18:47.951Z'
+updatedAt: '2026-04-22T04:14:05.680Z'
 timeSpent: 2084080
 assignee: '@me'
 ---
@@ -23,7 +23,7 @@ Address all issues surfaced by make ux-tour, remove or disable broken UX-tour bl
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 make ux-tour completes without current blocking errors and key UX-tour issues are either fixed or explicitly downgraded to non-blocking warnings
+- [x] #1 make ux-tour completes without current blocking errors and key UX-tour issues are either fixed or explicitly downgraded to non-blocking warnings
 - [x] #2 High-confidence runtime-created UI/button nodes are moved to scene files or documented as intentionally dynamic
 - [x] #3 Oversized/duplicate/dead scene or script candidates are identified, with safe removals/refactors completed or follow-up recommendations documented
 <!-- AC:END -->

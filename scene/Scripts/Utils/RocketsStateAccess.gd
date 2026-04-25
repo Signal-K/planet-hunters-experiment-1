@@ -11,7 +11,11 @@ static func load_state(
     on_save_state: Callable
 ) -> Dictionary:
     if override_state.size() > 0:
-        return override_state.duplicate(true)
+        var override_copy = override_state.duplicate(true)
+        _apply_defaults(override_copy, scanner_unlock_completed_missions)
+        _sync_legacy_progression_state(override_copy)
+        _sync_legacy_scanner_station_state(override_copy)
+        return override_copy
     var data = {}
     var json = preload("res://Scripts/Utils/JSONFileManager.gd")
     if not FileAccess.file_exists(state_path):
@@ -27,6 +31,8 @@ static func load_state(
         data = {}
 
     _apply_defaults(data, scanner_unlock_completed_missions)
+    var progression_state_migrated = _sync_legacy_progression_state(data)
+    var scanner_state_migrated = _sync_legacy_scanner_station_state(data)
 
     var progress_migrated = false
     if on_progress_migrate.is_valid():
@@ -34,7 +40,7 @@ static func load_state(
     var badge_sanitized = false
     if on_badges_sanitize.is_valid():
         badge_sanitized = bool(on_badges_sanitize.call(data))
-    if (progress_migrated or badge_sanitized) and on_save_state.is_valid():
+    if (progress_migrated or badge_sanitized or progression_state_migrated or scanner_state_migrated) and on_save_state.is_valid():
         on_save_state.call(data)
 
     var migrations = preload("res://Scripts/Utils/RocketsStateStore.gd")
@@ -84,6 +90,7 @@ static func build_default_state(mission_progress_schema_version: int) -> Diction
     data["operation_mode"] = "contract"
     data["candidate_visit_blocks"] = {}
     data["target_annotation_levels"] = {}
+    data["tess_classifications"] = {}
     data["discovery_bonus_claimed"] = {}
     data["rocket_customizations"] = {}
     data["rocket_wear"] = {}
@@ -101,13 +108,8 @@ static func build_default_state(mission_progress_schema_version: int) -> Diction
     return data
 
 static func write_state_direct(data: Dictionary, state_path: String) -> bool:
-    var file = FileAccess.open(state_path, FileAccess.WRITE)
-    if not file:
-        return false
-    var json_string = JSON.stringify(data, "  ")
-    file.store_string(json_string + "\n")
-    file.close()
-    return true
+    var json = preload("res://Scripts/Utils/JSONFileManager.gd")
+    return json.save_json(state_path, data)
 
 static func _apply_defaults(data: Dictionary, scanner_unlock_completed_missions: int) -> void:
     if not data.has("unlocked"):
@@ -170,6 +172,8 @@ static func _apply_defaults(data: Dictionary, scanner_unlock_completed_missions:
         data["candidate_visit_blocks"] = {}
     if not data.has("target_annotation_levels"):
         data["target_annotation_levels"] = {}
+    if not data.has("tess_classifications"):
+        data["tess_classifications"] = {}
     if not data.has("discovery_bonus_claimed"):
         data["discovery_bonus_claimed"] = {}
     if not data.has("rocket_customizations"):
@@ -191,3 +195,28 @@ static func _apply_defaults(data: Dictionary, scanner_unlock_completed_missions:
         }
     if not data.has("mission_progress_schema_version"):
         data["mission_progress_schema_version"] = 0
+
+static func _sync_legacy_scanner_station_state(data: Dictionary) -> bool:
+    var scanner_unlocked := bool(data.get("scanner_unlocked", false))
+    var scanner_built := bool(data.get("scanner_station_built", false))
+    var mutated := false
+    if scanner_unlocked and not scanner_built:
+        data["scanner_station_built"] = true
+        mutated = true
+    if bool(data.get("scanner_station_built", false)) and not bool(data.get("scanner_unlock_dialog_seen", false)):
+        data["scanner_unlock_dialog_seen"] = true
+        mutated = true
+    return mutated
+
+static func _sync_legacy_progression_state(data: Dictionary) -> bool:
+    var completed := 0
+    var badges = data.get("completed_mission_badges", [])
+    if typeof(badges) == TYPE_ARRAY:
+        completed = badges.size()
+    else:
+        completed = max(int(data.get("mission_progress_completed", 0)), 0)
+    var mutated := false
+    if completed >= 2 and not bool(data.get("control_station_built", false)):
+        data["control_station_built"] = true
+        mutated = true
+    return mutated

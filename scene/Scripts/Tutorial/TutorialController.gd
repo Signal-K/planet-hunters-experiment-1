@@ -33,6 +33,7 @@ func get_tutorial_state() -> Dictionary:
 	snapshot["current_step"] = get_current_step()
 	snapshot["total_steps"] = _catalog.get_total_steps(int(snapshot.get("current_stage", 1)))
 	snapshot["progress_percent"] = _build_progress_percent()
+	snapshot["current_mission_started"] = _current_mission_started()
 	return snapshot
 
 func get_current_step() -> Dictionary:
@@ -201,6 +202,10 @@ func _try_advance_stage() -> bool:
 	var stage = int(_state.get("current_stage", 1))
 	if stage >= MAX_STAGE:
 		return false
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var stage_from_progress = clamp(int(rm.get_mission_stage()), 1, MAX_STAGE)
+	if stage + 1 > stage_from_progress:
+		return false
 	_state["current_stage"] = stage + 1
 	if int(_state.get("stage_lock", 0)) > 0:
 		_state["stage_lock"] = int(_state.get("current_stage", 1))
@@ -264,6 +269,18 @@ func _build_progress_percent() -> int:
 		return 100
 	var idx = int(_state.get("current_step_index", 0))
 	return int(round((float(idx) / float(total)) * 100.0))
+
+func _current_mission_started() -> bool:
+	var stage := int(_state.get("current_stage", 1))
+	if int(_state.get("current_step_index", 0)) > 0:
+		return true
+	var completed_steps: Dictionary = _state.get("completed_steps_by_stage", {})
+	var stage_steps = completed_steps.get(str(stage), [])
+	if typeof(stage_steps) == TYPE_ARRAY and not stage_steps.is_empty():
+		return true
+	var by_stage: Dictionary = _state.get("completed_actions_by_stage", {})
+	var stage_actions = by_stage.get(str(stage), {})
+	return typeof(stage_actions) == TYPE_DICTIONARY and not stage_actions.is_empty()
 
 func _persist_and_emit(action_key: String = "", advanced: bool = false) -> void:
 	_persistence.save_state(_state)

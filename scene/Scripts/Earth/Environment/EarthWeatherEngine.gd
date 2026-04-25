@@ -13,7 +13,8 @@ var _event_nodes: Array[Node] = []
 
 func _ready() -> void:
 	_elapsed = clamp(start_cycle_t, 0.0, 1.0) * max(cycle_duration_seconds, 0.001)
-	_running = auto_start
+	# Skip continuous day/night cycling in CI (softpipe/Xvfb) to reduce per-frame cost.
+	_running = auto_start and not OS.has_environment("GODOT_UX_TOUR")
 	_refresh_event_nodes()
 	_emit_cycle_update(0.0)
 

@@ -10,6 +10,7 @@ const HashUtils = preload("res://Scripts/Utils/HashUtils.gd")
 const RocketsStateAccess = preload("res://Scripts/Utils/RocketsStateAccess.gd")
 const RocketsMissionProgress = preload("res://Scripts/Utils/RocketsMissionProgress.gd")
 const RocketsTargeting = preload("res://Scripts/Utils/RocketsTargeting.gd")
+const MissionObjectiveResolver = preload("res://Scripts/Utils/MissionObjectiveResolver.gd")
 const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd")
 const SubcontractorManager = preload("res://Scripts/Utils/SubcontractorManager.gd")
 const KNOWN_ROCKET_TYPES := ["starterrocket1", "starterrocket2", "starterrocket3"]
@@ -75,7 +76,9 @@ const MISSION2_FALLBACK_TARGETS := [
 		"distance_au": 3.2,
 		"required_level": 2,
 		"science_source": "Active Asteroids Programme",
-		"science_blurb": "First known main-belt comet"
+		"science_blurb": "First known main-belt comet",
+		"anomalySet": "active-asteroids",
+		"classification_status": "candidate"
 	},
 	{
 		"id": "mission-2-active-asteroid-238p",
@@ -84,7 +87,9 @@ const MISSION2_FALLBACK_TARGETS := [
 		"distance_au": 8.4,
 		"required_level": 2,
 		"science_source": "Active Asteroids Programme",
-		"science_blurb": "Confirmed water-ice sublimation"
+		"science_blurb": "Confirmed water-ice sublimation",
+		"anomalySet": "active-asteroids",
+		"classification_status": "candidate"
 	},
 	{
 		"id": "mission-2-active-asteroid-259p",
@@ -93,7 +98,9 @@ const MISSION2_FALLBACK_TARGETS := [
 		"distance_au": 15.7,
 		"required_level": 2,
 		"science_source": "Active Asteroids Programme",
-		"science_blurb": "Main-belt comet with recurrent activity"
+		"science_blurb": "Main-belt comet with recurrent activity",
+		"anomalySet": "active-asteroids",
+		"classification_status": "candidate"
 	}
 ]
 const MISSION3_FALLBACK_TARGETS := [
@@ -101,26 +108,77 @@ const MISSION3_FALLBACK_TARGETS := [
 		"id": "mission-3-tess-candidate-alpha",
 		"label": "TOI-700 d",
 		"type": "planet",
-		"distance_au": 12.0,
+		"distance_au": 120.0,
 		"required_level": 2,
+		"reward_ratio": 1.25,
+		"anomalySet": "telescope-tess",
+		"tess_disposition": "PC",
+		"classification_status": "candidate",
+		"ticId": "TIC 150428135",
+		"period_days": 37.43,
+		"parent_star": "TOI-700",
+		"star_system_id": "toi-700",
+		"star_system_name": "TOI-700 System",
 		"science_source": "NASA TESS",
-		"science_blurb": "Confirmed exoplanet in habitable zone"
+		"science_blurb": "Lightcurve candidate near the habitable zone"
+	},
+	{
+		"id": "mission-3-active-asteroid-313p",
+		"label": "313P/Gibbs",
+		"type": "asteroid",
+		"distance_au": 4.5,
+		"required_level": 2,
+		"reward_ratio": 1.25,
+		"anomalySet": "active-asteroids",
+		"classification_status": "candidate",
+		"science_source": "Active Asteroids Programme",
+		"science_blurb": "Recurrent activity near perihelion"
 	},
 	{
 		"id": "mission-3-tess-candidate-beta",
 		"label": "TOI-1452 b",
 		"type": "planet",
-		"distance_au": 18.0,
+		"distance_au": 174.0,
 		"required_level": 2,
+		"reward_ratio": 1.28,
+		"anomalySet": "telescope-tess",
+		"tess_disposition": "PC",
+		"classification_status": "candidate",
+		"ticId": "TIC 420112587",
+		"period_days": 11.06,
+		"parent_star": "TOI-1452",
+		"star_system_id": "toi-1452",
+		"star_system_name": "TOI-1452 System",
 		"science_source": "NASA TESS",
-		"science_blurb": "Water world candidate"
+		"science_blurb": "Water-world style transit signal"
+	},
+	{
+		"id": "mission-3-active-asteroid-p2013-p5",
+		"label": "P/2013 P5 (PANSTARRS)",
+		"type": "asteroid",
+		"distance_au": 12.2,
+		"required_level": 2,
+		"reward_ratio": 1.30,
+		"anomalySet": "active-asteroids",
+		"classification_status": "candidate",
+		"science_source": "Active Asteroids Programme",
+		"science_blurb": "Six comet-like tails detected"
 	},
 	{
 		"id": "mission-3-tess-candidate-gamma",
 		"label": "TOI-561 b",
 		"type": "planet",
-		"distance_au": 24.0,
+		"distance_au": 224.0,
 		"required_level": 2,
+		"reward_ratio": 1.30,
+		"anomalySet": "telescope-tess",
+		"tess_disposition": "PC",
+		"classification_status": "candidate",
+		"ticId": "TIC 377064495",
+		"period_days": 0.45,
+		"parent_star": "TOI-561",
+		"star_system_id": "toi-561",
+		"star_system_name": "TOI-561 System",
 		"science_source": "NASA TESS",
 		"science_blurb": "Ultra-short period planet"
 	}
@@ -282,7 +340,13 @@ static func get_scanner_build_cost() -> int:
 
 static func is_scanner_unlocked() -> bool:
 	var s = load_state()
-	var progress_unlock = max(int(s.get("mission_progress_completed", 0)), 0) >= SCANNER_UNLOCK_COMPLETED_MISSIONS
+	# Use badges array (authoritative) first; fall back to legacy integer only when badges absent.
+	var badge_count := RocketsMissionProgress.completed_mission_count_from_state(s) if s.has("completed_mission_badges") else -1
+	var progress_unlock: bool
+	if badge_count >= 0:
+		progress_unlock = badge_count >= SCANNER_UNLOCK_COMPLETED_MISSIONS
+	else:
+		progress_unlock = max(int(s.get("mission_progress_completed", 0)), 0) >= SCANNER_UNLOCK_COMPLETED_MISSIONS
 	return bool(s.get("scanner_unlocked", false)) or progress_unlock
 
 static func is_control_station_built() -> bool:
@@ -383,6 +447,13 @@ static func get_target_reward_ratio(target_id: String) -> float:
 		if str(item.get("id", "")) != target_id:
 			continue
 		return max(float(item.get("reward_ratio", 0.0)), 0.0)
+	for list_any in [MISSION2_FALLBACK_TARGETS, MISSION3_FALLBACK_TARGETS]:
+		for item_any in list_any:
+			if typeof(item_any) != TYPE_DICTIONARY:
+				continue
+			var item: Dictionary = item_any
+			if str(item.get("id", "")) == target_id:
+				return max(float(item.get("reward_ratio", 1.2)), 0.0)
 	return 0.0
 
 static func get_targeted_target_ids() -> Dictionary:
@@ -402,16 +473,41 @@ static func get_targeted_target_ids() -> Dictionary:
 	return targeted
 
 static func get_mission3_targets(detected_targets: Array = []) -> Array:
-	var source = detected_targets
+	var source: Array = detected_targets.duplicate(true)
 	if source.is_empty():
 		source = get_detected_targets()
-	return RocketsTargeting.select_visible_targets(
-		source,
-		get_targeted_target_ids(),
-		"planet",
-		MISSION3_VISIBLE_TARGET_COUNT,
-		_primary_fallback_target_for_stage(3)
-	)
+	var ids := {}
+	for item_any in source:
+		if typeof(item_any) != TYPE_DICTIONARY:
+			continue
+		var item: Dictionary = item_any
+		var tid := str(item.get("id", ""))
+		if tid != "":
+			ids[tid] = true
+	for fallback_any in MISSION3_FALLBACK_TARGETS:
+		if typeof(fallback_any) != TYPE_DICTIONARY:
+			continue
+		var fallback: Dictionary = fallback_any
+		var fallback_id := str(fallback.get("id", ""))
+		if fallback_id == "" or ids.has(fallback_id):
+			continue
+		source.append(fallback.duplicate(true))
+		ids[fallback_id] = true
+	var targeted_ids := get_targeted_target_ids()
+	var out := []
+	for target_any in source:
+		if typeof(target_any) != TYPE_DICTIONARY:
+			continue
+		var target: Dictionary = target_any
+		var tid := str(target.get("id", ""))
+		if tid == "" or targeted_ids.has(tid):
+			continue
+		if is_candidate_visit_blocked(tid):
+			continue
+		out.append(target)
+		if out.size() >= MISSION3_VISIBLE_TARGET_COUNT:
+			break
+	return out
 
 static func get_mission2_targets(detected_targets: Array = []) -> Array:
 	var source = detected_targets
@@ -935,8 +1031,8 @@ static func build_target_profile(target_id: String, target_type: String = "aster
 			return {
 				"distance_au": dist_au,
 				"distance_km": dist_au * AU_IN_KM,
-				"required_level": 2,
-				"type": "planet"
+				"required_level": int(item.get("required_level", 2)),
+				"type": str(item.get("type", "planet"))
 			}
 	if get_mission_stage() == 4 and normalized_type == "planet":
 		var mission4_targets = get_mission4_targets()
@@ -1191,7 +1287,9 @@ static func ensure_selected_target_for_launch(rocket_id: String = "") -> Diction
 			"fallback_used": false,
 			"reason": "Resolved fallback target was invalid"
 		}
-	if not select_target(selected_id):
+	var persisted := load_state()
+	persisted["selected_target"] = selected_id
+	if not save_state(persisted):
 		return {
 			"ok": false,
 			"target_id": "",
@@ -1224,6 +1322,13 @@ static func get_target_details(target_id: String) -> Dictionary:
 		var item = PREDEFINED_MISSION_TARGETS[stage]
 		if str(item.get("id", "")) == target_id:
 			return item.duplicate(true)
+	for list_any in [MISSION2_FALLBACK_TARGETS, MISSION3_FALLBACK_TARGETS]:
+		for item_any in list_any:
+			if typeof(item_any) != TYPE_DICTIONARY:
+				continue
+			var item: Dictionary = item_any
+			if str(item.get("id", "")) == target_id:
+				return item.duplicate(true)
 	var detected = get_detected_targets()
 	for target in detected:
 		if str(target.get("id", "")) == target_id:
@@ -1256,14 +1361,19 @@ static func add_mission(rocket_id: String, target_id: String, launch_time_epoch:
 	if effective_travel_seconds <= 0:
 		effective_travel_seconds = get_mission_duration_seconds_for_rocket(rocket_id)
 	var arrival = launch_time_epoch + effective_travel_seconds
+	var target_details = get_target_details(target_id)
+	var target_label = str(target_details.get("label", target_details.get("name", target_id)))
+	var target_type = str(target_details.get("type", "asteroid"))
+	var operation_mode = get_operation_mode()
 	var record = {
 		"rocket_id": rocket_id,
 		"target": target_id,
 		"launch_time": launch_time_epoch,
 		"arrival_time": arrival,
-		"operation_mode": get_operation_mode(),
+		"operation_mode": operation_mode,
 		"goingTo": target_id,
-		"location": [target_id]
+		"location": [target_id],
+		"objective": _build_mission_objective(rocket_id, target_id, target_label, target_type, operation_mode)
 	}
 	missions.append(record)
 	s["missions"] = missions
@@ -1281,8 +1391,8 @@ static func add_mission(rocket_id: String, target_id: String, launch_time_epoch:
 		s["arrived"] = arrived
 	
 	# Proactively set preview target for better state persistence across refreshes
-	var target_label = ""
-	var target_type = "asteroid"
+	if target_label == "":
+		target_label = target_id
 	var targets = s.get("detected_targets", [])
 	for t in targets:
 		if str(t.get("id", "")) == target_id:
@@ -1302,6 +1412,35 @@ static func add_mission(rocket_id: String, target_id: String, launch_time_epoch:
 static func get_missions() -> Array:
 	var s = load_state()
 	return s.get("missions", [])
+
+static func debug_complete_active_mission_to_debrief() -> Dictionary:
+	var mission = _get_latest_active_mission()
+	if mission.is_empty():
+		return {"ok": false, "reason": "no_active_mission"}
+	var rocket_id = str(mission.get("rocket_id", ""))
+	var target_id = str(mission.get("target", mission.get("target_id", "")))
+	if rocket_id == "" or target_id == "":
+		return {"ok": false, "reason": "invalid_mission"}
+	var target_details = get_target_details(target_id)
+	var target_label = str(target_details.get("label", target_details.get("name", target_id)))
+	var target_type = str(target_details.get("type", "asteroid"))
+	var operation_mode = str(mission.get("operation_mode", "")).strip_edges().to_lower()
+	if not OPEN_OPERATION_MODES.has(operation_mode):
+		operation_mode = get_operation_mode_for_rocket(rocket_id)
+	var objective = mission.get("objective", {})
+	if typeof(objective) != TYPE_DICTIONARY or objective.is_empty():
+		objective = _build_mission_objective(rocket_id, target_id, target_label, target_type, operation_mode)
+	var extra = MissionObjectiveResolver.completion_payload(objective, true)
+	mark_arrived(rocket_id, target_id)
+	set_returned_mission(rocket_id, target_id, target_label, target_type, operation_mode, extra)
+	return_home(rocket_id)
+	clear_preview_target()
+	return {
+		"ok": true,
+		"rocket_id": rocket_id,
+		"target_id": target_id,
+		"objective": objective.duplicate(true)
+	}
 
 ## Update the current destination for an in-flight mission.
 static func update_mission_going_to(rocket_id: String, going_to: String) -> void:
@@ -1541,6 +1680,28 @@ static func is_candidate_visit_blocked(target_id: String) -> bool:
 	if typeof(blocks) != TYPE_DICTIONARY:
 		return false
 	return bool(blocks.get(target_id, false))
+
+static func classify_candidate_target(target_id: String, verdict: String, annotation_level: int = 1) -> Dictionary:
+	var normalized := verdict.strip_edges().to_lower()
+	if target_id == "" or not ["planet", "not_planet", "dip"].has(normalized):
+		return {"ok": false, "target_id": target_id, "verdict": normalized, "confirmed": false}
+	set_tess_classification(target_id, normalized)
+	set_target_annotation_level(target_id, max(annotation_level, 1))
+	var confirmed := normalized == "planet"
+	if confirmed:
+		clear_candidate_visit_block(target_id)
+	else:
+		mark_candidate_visit_blocked(target_id)
+		if get_selected_target() == target_id:
+			clear_selected_target()
+		set_launch_guidance_notice("Candidate %s needs more review. Reward granted; choose another confirmed target." % target_id)
+	return {
+		"ok": true,
+		"target_id": target_id,
+		"verdict": normalized,
+		"confirmed": confirmed,
+		"blocked": not confirmed
+	}
 
 static func has_discovery_bonus_claimed(target_id: String) -> bool:
 	if target_id == "":
@@ -2280,6 +2441,89 @@ static func _find_trip_contractor(contractor_id: String) -> Dictionary:
 static func _find_starter_contractor(contractor_id: String) -> Dictionary:
 	return RocketsMissionProgress.find_trip_contractor(contractor_id, STARTER_CONTRACTOR_OFFERS)
 
+static func _get_latest_active_mission() -> Dictionary:
+	var missions = get_missions()
+	if missions.is_empty():
+		return {}
+	var latest := {}
+	var latest_launch := -1.0
+	for item_any in missions:
+		if typeof(item_any) != TYPE_DICTIONARY:
+			continue
+		var item: Dictionary = item_any
+		var launch = float(item.get("launch_time", 0))
+		if launch >= latest_launch:
+			latest_launch = launch
+			latest = item
+	return latest.duplicate(true)
+
+static func _build_mission_objective(rocket_id: String, target_id: String, target_label: String, target_type: String, operation_mode: String) -> Dictionary:
+	var stage = _effective_stage_for_target_selection()
+	var contractor_context = _objective_contractor_context(stage, operation_mode)
+	return MissionObjectiveResolver.build_objective({
+		"stage": stage,
+		"target_id": target_id,
+		"target_label": target_label,
+		"target_type": target_type,
+		"operation_mode": operation_mode,
+		"contractor": contractor_context.get("contractor", {}),
+		"requested_minerals": contractor_context.get("requested_minerals", {}),
+		"source": "launch:%s" % rocket_id
+	})
+
+static func _objective_contractor_context(stage: int, operation_mode: String) -> Dictionary:
+	if operation_mode != "contract":
+		return {}
+	if stage <= 1:
+		var starter = get_starter_selected_contractor()
+		if starter.is_empty():
+			var starters = get_starter_contractors()
+			if not starters.is_empty() and typeof(starters[0]) == TYPE_DICTIONARY:
+				starter = starters[0]
+		if starter.is_empty():
+			return {}
+		return {
+			"contractor": {
+				"id": str(starter.get("id", "")),
+				"name": str(starter.get("name", "")),
+				"effect": str(starter.get("effect", "")),
+				"starter": true
+			},
+			"requested_minerals": get_starter_requested_minerals(str(starter.get("id", "")))
+		}
+	var trip = _get_selected_trip_contractor_from_offer()
+	if trip.is_empty():
+		trip = get_trip_selected_contractor()
+	if trip.is_empty():
+		return {}
+	return {
+		"contractor": {
+			"id": str(trip.get("id", "")),
+			"name": str(trip.get("name", "")),
+			"effect": str(trip.get("effect", "")),
+			"starter": false
+		},
+		"requested_minerals": trip.get("requested_minerals", {})
+	}
+
+static func _get_selected_trip_contractor_from_offer() -> Dictionary:
+	var offer = get_trip_contract_offer()
+	if offer.is_empty() or bool(offer.get("selection_required", true)):
+		return {}
+	var selected_id = str(offer.get("selected_contractor", ""))
+	if selected_id == "":
+		return {}
+	var contractors = offer.get("contractors", [])
+	if typeof(contractors) != TYPE_ARRAY:
+		return {}
+	for item_any in contractors:
+		if typeof(item_any) != TYPE_DICTIONARY:
+			continue
+		var item: Dictionary = item_any
+		if str(item.get("id", "")) == selected_id:
+			return item.duplicate(true)
+	return {}
+
 static func _build_starter_contract_offer() -> Dictionary:
 	return {
 		"contractors": get_starter_contractors(),
@@ -2377,16 +2621,39 @@ static func _ensure_stage_fallback_targets(stage: int) -> bool:
 		var tid = str(row.get("id", ""))
 		if tid == "" or ids.has(tid):
 			continue
-		merged.append({
-			"id": tid,
-			"label": str(row.get("label", tid)),
-			"type": _normalize_target_type(str(row.get("type", "asteroid")))
-		})
+		var merged_row := row.duplicate(true)
+		merged_row["id"] = tid
+		merged_row["label"] = str(row.get("label", tid))
+		merged_row["type"] = _normalize_target_type(str(row.get("type", "asteroid")))
+		merged.append(merged_row)
 		ids[tid] = true
 		changed = true
 	if not changed:
 		return false
 	return set_detected_targets(merged)
+
+static func get_unlocked_star_systems(stage: int = -1) -> Array:
+	var mission_stage := stage if stage > 0 else get_mission_stage()
+	var source := get_selectable_targets_for_stage(mission_stage)
+	var seen := {}
+	var out := []
+	for target_any in source:
+		if typeof(target_any) != TYPE_DICTIONARY:
+			continue
+		var target: Dictionary = target_any
+		var system_id := str(target.get("star_system_id", target.get("parent_star", ""))).strip_edges()
+		if system_id == "":
+			continue
+		if seen.has(system_id):
+			continue
+		seen[system_id] = true
+		out.append({
+			"id": system_id,
+			"name": str(target.get("star_system_name", target.get("parent_star", system_id))),
+			"parent_star": str(target.get("parent_star", "")),
+			"target_count": 1
+		})
+	return out
 
 static func _primary_fallback_target_for_stage(stage: int) -> Dictionary:
 	if stage == 3:

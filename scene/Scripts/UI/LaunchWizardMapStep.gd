@@ -5,6 +5,8 @@ class_name LaunchWizardMapStep
 
 signal target_selected(target: Dictionary)
 
+const TargetLabelScene = preload("res://Scenes/UI/Templates/LaunchWizardMapTargetLabel.tscn")
+
 const _COL_BG    := Color(0.028, 0.047, 0.118, 1.0)
 const _COL_ORBIT := Color(0.275, 0.420, 0.651, 0.35)
 const _COL_SUN   := Color(1.000, 0.918, 0.580, 1.0)
@@ -15,6 +17,8 @@ const _COL_SEL   := Color(0.320, 0.860, 0.740, 1.0)
 var _targets:     Array  = []
 var _selected_id: String = ""
 var _labels:      Array  = []
+
+@onready var _label_layer: Control = $LabelLayer
 
 func setup(targets: Array, selected_id: String = "") -> void:
 	_targets     = targets
@@ -51,6 +55,8 @@ func _draw() -> void:
 			Vector2(rng.randf_range(4, size.x - 4), rng.randf_range(4, size.y - 4)),
 			rng.randf_range(0.5, 1.8),
 			Color(1, 1, 1, rng.randf_range(0.15, 0.60)))
+
+	_draw_star_system_markers()
 
 	# Orbit rings (one per distinct radius band)
 	var seen: Array[float] = []
@@ -95,7 +101,7 @@ func _gui_input(event: InputEvent) -> void:
 			target_selected.emit(t)
 			return
 
-# ── helpers ───────────────────────────────────────────────────────────────────
+# Helpers
 
 func _center() -> Vector2:
 	return Vector2(size.x * 0.5, size.y * 0.56)
@@ -114,25 +120,53 @@ func _pos(t: Dictionary, ctr: Vector2) -> Vector2:
 	var ang := float(h % 1000) / 1000.0 * TAU
 	return ctr + Vector2(cos(ang) * r, sin(ang) * r * 0.52)  # slightly elliptical
 
+func _draw_star_system_markers() -> void:
+	var systems := _star_systems()
+	if systems.size() <= 1:
+		return
+	var start_x := 28.0
+	var y := 30.0
+	for i in range(systems.size()):
+		var x := start_x + float(i) * 46.0
+		var pos := Vector2(x, y)
+		draw_circle(pos, 12.0, Color(1.0, 0.92, 0.58, 0.12))
+		draw_circle(pos, 5.0, _COL_SUN)
+		draw_circle(pos + Vector2(8.0, 2.0), 2.2, Color(0.78, 0.88, 1.0, 0.85))
+
+func _star_systems() -> Array:
+	var seen := {}
+	var out := []
+	for target_any in _targets:
+		if typeof(target_any) != TYPE_DICTIONARY:
+			continue
+		var target: Dictionary = target_any
+		var system_id := str(target.get("star_system_id", target.get("parent_star", ""))).strip_edges()
+		if system_id == "" or seen.has(system_id):
+			continue
+		seen[system_id] = true
+		out.append(system_id)
+	return out
+
 func _sync_labels() -> void:
 	for n in _labels:
 		if is_instance_valid(n):
 			n.queue_free()
 	_labels.clear()
-	if size.x < 10:
-		return
-	var ctr := _center()
+	var draw_size := size
+	if draw_size.x < 10.0 or draw_size.y < 10.0:
+		draw_size = Vector2(maxf(draw_size.x, 96.0), maxf(draw_size.y, 96.0))
+	var ctr := Vector2(draw_size.x * 0.5, draw_size.y * 0.56)
 	for t in _targets:
 		var pos := _pos(t, ctr)
 		var sel := _selected_id == str(t.get("id", ""))
-		var lbl := Label.new()
+		var lbl: Label = TargetLabelScene.instantiate()
+		lbl.set_meta("ui_template", "LaunchWizardMapTargetLabel")
 		lbl.text = str(t.get("label", t.get("name", "?")))
-		lbl.add_theme_font_size_override("font_size", 10)
 		lbl.add_theme_color_override("font_color",
 				Color(1.0, 1.0, 1.0, 1.0) if sel else Color(0.9, 0.95, 1.0, 0.70))
 		lbl.position = pos + Vector2(-32.0, -26.0)
-		lbl.custom_minimum_size = Vector2(64, 0)
-		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		lbl.mouse_filter = MOUSE_FILTER_IGNORE
-		add_child(lbl)
+		if _label_layer:
+			_label_layer.add_child(lbl)
+		else:
+			add_child(lbl)
 		_labels.append(lbl)

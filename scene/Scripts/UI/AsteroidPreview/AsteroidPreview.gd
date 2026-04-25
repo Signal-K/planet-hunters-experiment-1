@@ -8,6 +8,7 @@ const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
 const ResourceYield = preload("res://Scripts/Utils/ResourceYield.gd")
 const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd")
 const MiningInventory = preload("res://Scripts/Utils/MiningInventory.gd")
+const MissionObjectiveResolver = preload("res://Scripts/Utils/MissionObjectiveResolver.gd")
 
 const RETRY_PENALTY_FRANCS := 50000000  # 50M franc penalty for retry after fuel depletion
 
@@ -257,7 +258,21 @@ func _on_return_pressed():
 	var operation_mode = rm.get_operation_mode_for_rocket(_current_rocket_id)
 	var trip_contractor = rm.get_trip_selected_contractor()
 	var trip_offer = rm.get_trip_contract_offer()
+	var mission = rm.get_mission_for_rocket(_current_rocket_id)
+	var objective = mission.get("objective", {})
+	if typeof(objective) != TYPE_DICTIONARY:
+		objective = {}
+	var objective_complete = MissionObjectiveResolver.is_complete(objective, {
+		"complete": true,
+		"mining_run_collected": _last_mining_collected
+	}) if not objective.is_empty() else _starter_requirements_met(_last_mining_collected)
 	rm.set_returned_mission(_current_rocket_id, _current_target_id, target_label, _current_target_type, operation_mode, {
+		"mission_objective": objective.duplicate(true),
+		"objective_result": {
+			"type": str(objective.get("type", "")),
+			"complete": objective_complete,
+			"minerals": _last_mining_collected.duplicate(true)
+		},
 		"mining_run_collected": _last_mining_collected.duplicate(true),
 		"mining_report": _last_mining_report.duplicate(true),
 		"starter_contract_context": _starter_contract_context.duplicate(true),

@@ -1,0 +1,15 @@
+[gd_scene format=3]
+
+[node name="LaunchWizardStatChip" type="VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="KeyLabel" type="Label" parent="."]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "Type"
+
+[node name="ValueLabel" type="Label" parent="."]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Asteroid"

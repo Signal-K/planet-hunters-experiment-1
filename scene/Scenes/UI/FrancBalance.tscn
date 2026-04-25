@@ -75,6 +75,14 @@ theme_override_styles/pressed = SubResource("3")
 theme_override_styles/focus = SubResource("2")
 text = "10B F"
 
+[node name="LoanLabel" type="Label" parent="Container"]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.35, 0.35, 1)
+theme_override_font_sizes/font_size = 16
+text = "Loan: 0 F owed"
+vertical_alignment = 1
+
 [node name="DebugPopup" type="AcceptDialog" parent="."]
 title = "Adjust Balance"
 initial_position = 2

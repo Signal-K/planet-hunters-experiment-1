@@ -2,11 +2,11 @@ extends Control
 
 @onready var balance_button: Button = $Container/BalanceButton
 @onready var debug_popup: AcceptDialog = $DebugPopup
+@onready var loan_label: Label = $Container/LoanLabel
 
 var balance: int = 10000000000  # Default 10B
 var loan_balance: int = 0
 var app_controller: Node = null
-var _loan_label: Label = null
 
 func _ready() -> void:
 	print("FrancBalance: _ready called")
@@ -81,16 +81,13 @@ func _update_display() -> void:
 
 func _update_loan_label() -> void:
 	if loan_balance <= 0:
-		if _loan_label:
-			_loan_label.visible = false
+		if loan_label:
+			loan_label.visible = false
 		return
-	if _loan_label == null:
-		_loan_label = Label.new()
-		_loan_label.add_theme_color_override("font_color", Color(0.94, 0.35, 0.35))
-		_loan_label.add_theme_font_size_override("font_size", 16)
-		$Container.add_child(_loan_label)
-	_loan_label.text = "Loan: %s F owed" % _format_balance(loan_balance)
-	_loan_label.visible = true
+	if loan_label == null:
+		return
+	loan_label.text = "Loan: %s F owed" % _format_balance(loan_balance)
+	loan_label.visible = true
 
 func _format_balance(value: int) -> String:
 	"""Format balance with K/M/B/T suffixes"""

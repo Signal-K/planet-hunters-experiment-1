@@ -1,6 +1,6 @@
 {
   "taskId": "phx003",
-  "currentVersion": 1,
+  "currentVersion": 4,
   "versions": [
     {
       "id": "v1",
@@ -53,6 +53,218 @@
           },
           {
             "completed": false,
+            "text": "Two different target IDs produce meaningfully different terrain/mineral results."
+          }
+        ],
+        "implementationPlan": "1. Verify mining scene direct entry, portrait/mobile layout, and target-seeded terrain/mineral uniqueness.",
+        "implementationNotes": "Created by project-management reset on 2026-04-20.\n\nRelated to @task-w51551, @task-0ddcsh"
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "phx003",
+      "version": 2,
+      "timestamp": "2026-04-22T04:13:58.282Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        },
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Mining scene opens directly for testing."
+            },
+            {
+              "completed": false,
+              "text": "Critical HUD controls are visible in portrait mobile."
+            },
+            {
+              "completed": false,
+              "text": "Two different target IDs produce meaningfully different terrain/mineral results."
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Mining scene opens directly for testing."
+            },
+            {
+              "completed": false,
+              "text": "Critical HUD controls are visible in portrait mobile."
+            },
+            {
+              "completed": false,
+              "text": "Two different target IDs produce meaningfully different terrain/mineral results."
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Validate mining mobile layout and target-specific generation",
+        "description": "This is part of the 2026-04-20 Star Sailors MVP/project-management reset. Project: Planet Hunters Experiment 1. Work must stay tied to MVP closure, distribution, testing, or agent handoff for this week.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "mining",
+          "mobile",
+          "testing",
+          "terrain-gen",
+          "hud-visibility"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Mining scene opens directly for testing."
+          },
+          {
+            "completed": false,
+            "text": "Critical HUD controls are visible in portrait mobile."
+          },
+          {
+            "completed": false,
+            "text": "Two different target IDs produce meaningfully different terrain/mineral results."
+          }
+        ],
+        "implementationPlan": "1. Verify mining scene direct entry, portrait/mobile layout, and target-seeded terrain/mineral uniqueness.",
+        "implementationNotes": "Created by project-management reset on 2026-04-20.\n\nRelated to @task-w51551, @task-0ddcsh"
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "phx003",
+      "version": 3,
+      "timestamp": "2026-04-22T04:13:58.677Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Mining scene opens directly for testing."
+            },
+            {
+              "completed": false,
+              "text": "Critical HUD controls are visible in portrait mobile."
+            },
+            {
+              "completed": false,
+              "text": "Two different target IDs produce meaningfully different terrain/mineral results."
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Mining scene opens directly for testing."
+            },
+            {
+              "completed": true,
+              "text": "Critical HUD controls are visible in portrait mobile."
+            },
+            {
+              "completed": false,
+              "text": "Two different target IDs produce meaningfully different terrain/mineral results."
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Validate mining mobile layout and target-specific generation",
+        "description": "This is part of the 2026-04-20 Star Sailors MVP/project-management reset. Project: Planet Hunters Experiment 1. Work must stay tied to MVP closure, distribution, testing, or agent handoff for this week.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "mining",
+          "mobile",
+          "testing",
+          "terrain-gen",
+          "hud-visibility"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Mining scene opens directly for testing."
+          },
+          {
+            "completed": true,
+            "text": "Critical HUD controls are visible in portrait mobile."
+          },
+          {
+            "completed": false,
+            "text": "Two different target IDs produce meaningfully different terrain/mineral results."
+          }
+        ],
+        "implementationPlan": "1. Verify mining scene direct entry, portrait/mobile layout, and target-seeded terrain/mineral uniqueness.",
+        "implementationNotes": "Created by project-management reset on 2026-04-20.\n\nRelated to @task-w51551, @task-0ddcsh"
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "phx003",
+      "version": 4,
+      "timestamp": "2026-04-22T04:13:59.061Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": true,
+              "text": "Mining scene opens directly for testing."
+            },
+            {
+              "completed": true,
+              "text": "Critical HUD controls are visible in portrait mobile."
+            },
+            {
+              "completed": false,
+              "text": "Two different target IDs produce meaningfully different terrain/mineral results."
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Mining scene opens directly for testing."
+            },
+            {
+              "completed": true,
+              "text": "Critical HUD controls are visible in portrait mobile."
+            },
+            {
+              "completed": true,
+              "text": "Two different target IDs produce meaningfully different terrain/mineral results."
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Validate mining mobile layout and target-specific generation",
+        "description": "This is part of the 2026-04-20 Star Sailors MVP/project-management reset. Project: Planet Hunters Experiment 1. Work must stay tied to MVP closure, distribution, testing, or agent handoff for this week.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "mining",
+          "mobile",
+          "testing",
+          "terrain-gen",
+          "hud-visibility"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Mining scene opens directly for testing."
+          },
+          {
+            "completed": true,
+            "text": "Critical HUD controls are visible in portrait mobile."
+          },
+          {
+            "completed": true,
             "text": "Two different target IDs produce meaningfully different terrain/mineral results."
           }
         ],

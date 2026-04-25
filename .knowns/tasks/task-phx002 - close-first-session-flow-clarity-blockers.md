@@ -1,7 +1,7 @@
 ---
 id: phx002
 title: Close first-session flow clarity blockers
-status: todo
+status: done
 priority: high
 labels:
   - mvp
@@ -11,7 +11,7 @@ labels:
   - ux-clarity
   - tester-ready
 createdAt: '2026-04-19T14:00:00.000Z'
-updatedAt: '2026-04-21T08:17:15.285Z'
+updatedAt: '2026-04-22T04:13:53.928Z'
 timeSpent: 0
 assignee: '@me'
 ---
@@ -25,9 +25,9 @@ This is part of the 2026-04-20 Star Sailors MVP/project-management reset. Projec
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Tester can complete first mission and know what to do next.
-- [ ] #2 First mission payout does not create a dead-end.
-- [ ] #3 Visible buttons have plain-language help.
+- [x] #1 Tester can complete first mission and know what to do next.
+- [x] #2 First mission payout does not create a dead-end.
+- [x] #3 Visible buttons have plain-language help.
 <!-- AC:END -->
 
 ## Implementation Plan

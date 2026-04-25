@@ -231,12 +231,6 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 20
 text = "Replay This Mission Guide"
 
-[node name="ReplayAllTutorialButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/TabContainer/Settings/Content"]
-custom_minimum_size = Vector2(160, 50)
-layout_mode = 2
-theme_override_font_sizes/font_size = 20
-text = "Replay Full Onboarding"
-
 [node name="InfoLabel" type="Label" parent="PanelContainer/Panel/VBoxContainer/TabContainer/Settings/Content"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
@@ -301,6 +295,56 @@ custom_minimum_size = Vector2(160, 50)
 layout_mode = 2
 theme_override_font_sizes/font_size = 20
 text = "Reset All Data"
+
+[node name="DebugMiningButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content"]
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+text = "DEBUG: START INSTANT MINING"
+
+[node name="MissionJumpLabel" type="Label" parent="PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "JUMP TO MISSION:"
+
+[node name="MissionJumpRow" type="HBoxContainer" parent="PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="Mission1Button" type="Button" parent="PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/MissionJumpRow"]
+custom_minimum_size = Vector2(60, 40)
+layout_mode = 2
+text = "M1"
+
+[node name="Mission2Button" type="Button" parent="PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/MissionJumpRow"]
+custom_minimum_size = Vector2(60, 40)
+layout_mode = 2
+text = "M2"
+
+[node name="Mission3Button" type="Button" parent="PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/MissionJumpRow"]
+custom_minimum_size = Vector2(60, 40)
+layout_mode = 2
+text = "M3"
+
+[node name="Mission4Button" type="Button" parent="PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/MissionJumpRow"]
+custom_minimum_size = Vector2(60, 40)
+layout_mode = 2
+text = "M4"
+
+[node name="Mission5Button" type="Button" parent="PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/MissionJumpRow"]
+custom_minimum_size = Vector2(60, 40)
+layout_mode = 2
+text = "M5"
+
+[node name="DebugMoneyButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content"]
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+text = "DEBUG: GRANT 10M FRANCS"
 
 [node name="LogbookOverlay" type="ColorRect" parent="."]
 visible = false

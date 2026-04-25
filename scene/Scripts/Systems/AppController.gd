@@ -35,6 +35,7 @@ var is_ux_tour_running: bool = false
 const AppControllerPersistence = preload("res://Scripts/Systems/AppControllerPersistence.gd")
 const WebEventBridge = preload("res://Scripts/Systems/WebEventBridge.gd")
 const AppLogger = preload("res://Scripts/Utils/Logger.gd")
+const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
 const MissionLogManager = preload("res://Scripts/Utils/MissionLogManager.gd")
 const SubcontractorManager = preload("res://Scripts/Utils/SubcontractorManager.gd")
 const FirstTimeMechanicTracker = preload("res://Scripts/Utils/FirstTimeMechanicTracker.gd")
@@ -214,6 +215,53 @@ func check_auto_start_mining() -> bool:
 	_auto_start_mining = false
 	return val
 
+func _unhandled_input(event: InputEvent) -> void:
+	if not _is_debug_debrief_shortcut(event):
+		return
+	if debug_skip_active_mission_to_debrief():
+		get_viewport().set_input_as_handled()
+
+func debug_skip_active_mission_to_debrief() -> bool:
+	if not _debug_mission_skip_allowed():
+		return false
+	var result = RocketsManager.debug_complete_active_mission_to_debrief()
+	if not bool(result.get("ok", false)):
+		return false
+	var rocket_id = str(result.get("rocket_id", ""))
+	var target_id = str(result.get("target_id", ""))
+	record_tutorial_action("mine_target", {
+		"rocket_id": rocket_id,
+		"target_id": target_id,
+		"debug_completed": true
+	})
+	record_tutorial_action("return_rocket_home", {
+		"rocket_id": rocket_id,
+		"target_id": target_id,
+		"debug_completed": true
+	})
+	set_game_paused(false)
+	hide_menu_panel()
+	if get_tree():
+		get_tree().change_scene_to_file("res://Scenes/Earth/mission_debrief_v2.tscn")
+	return true
+
+func _is_debug_debrief_shortcut(event: InputEvent) -> bool:
+	if event == null or not (event is InputEventKey):
+		return false
+	var key_event := event as InputEventKey
+	if not key_event.pressed or key_event.echo:
+		return false
+	if key_event.keycode != KEY_E and key_event.physical_keycode != KEY_E:
+		return false
+	return key_event.meta_pressed
+
+func _debug_mission_skip_allowed() -> bool:
+	if OS.has_feature("web") or OS.has_feature("mobile"):
+		return false
+	if OS.has_feature("editor"):
+		return true
+	return OS.get_name() in ["macOS", "Windows", "Linux", "FreeBSD", "NetBSD", "OpenBSD"]
+
 func debug_skip_to_mission(stage: int) -> void:
 	AppLogger.d("AppController Debug: Jumping to Mission %d" % stage)
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
@@ -238,15 +286,15 @@ func debug_skip_to_mission(stage: int) -> void:
 	
 	# 3. Force Level and Francs for that stage
 	# M1 (Start): 0
-	# M2 (Upgrade): ~120k
-	# M3 (Scanner): 250k (Matches React handleSkipToLevel3)
-	# M4 (Planetary): 500k
-	# M5 (Free Ops): 1.0M
+	# M2 (Upgrade): 500M
+	# M3 (Scanner): 1B
+	# M4 (Planetary): 3B
+	# M5 (Free Ops): 5B
 	var balances = {
-		2: 120000,
-		3: 250000,
-		4: 500000,
-		5: 1000000
+		2: 500000000,
+		3: 1000000000,
+		4: 3000000000,
+		5: 5000000000
 	}
 	var target_francs = balances.get(stage, 1000000)
 
@@ -618,10 +666,6 @@ func skip_tutorial() -> void:
 func replay_tutorial_for_current_mission() -> void:
 	if _tutorial_controller and _tutorial_controller.has_method("replay_current_mission"):
 		_tutorial_controller.replay_current_mission()
-
-func replay_tutorial_from_mission1() -> void:
-	if _tutorial_controller and _tutorial_controller.has_method("replay_full"):
-		_tutorial_controller.replay_full()
 
 func _on_tutorial_state_updated(state: Dictionary) -> void:
 	tutorial_state_updated.emit(state)

@@ -25,29 +25,22 @@ const STEPS_BY_MISSION := {
 		{"id": "m1_debrief", "action_key": "resolve_mission_debrief", "title": "Debrief", "message": "Sell your cargo and complete the debrief. Mission 2 unlocks when you're done.", "mechanic": "debrief", "valid_scenes": DEBRIEF_SCENES}
 	],
 	2: [
-		{"id": "m2_build_control_station", "action_key": "build_control_station", "title": "Build Control Station", "message": "Build the Control Station on your base before starting Mission 2. It becomes your fleet and route hub from here on.", "mechanic": "progression", "valid_scenes": BASE_ONLY_SCENES},
-		{"id": "m2_pick_contractor", "action_key": "accept_contractor_offer", "title": "Pick Contractor", "message": "Pick a contractor — their delivery order gives you a bonus payout on top of the standard haul price.", "mechanic": "contractor", "valid_scenes": LAUNCHPAD_SCENES},
-		{"id": "m2_create_rocket", "action_key": "create_rocket", "title": "Build Rocket 2", "message": "Starter Rocket 2 has better range and cargo capacity. Build it in the Launchpad.", "mechanic": "progression", "valid_scenes": LAUNCHPAD_SCENES},
-		{"id": "m2_select_target", "action_key": "select_launch_target", "title": "Target", "message": "Choose your mission target from the list.", "mechanic": "targeting", "valid_scenes": LAUNCHPAD_SCENES},
-		{"id": "m2_launch", "action_key": "launch_rocket_from_earth", "title": "Launch", "message": "Press Launch when ready.", "mechanic": "launch", "valid_scenes": LAUNCHPAD_SCENES},
-		{"id": "m2_mine", "action_key": "mine_target", "title": "Mine", "message": "Fill the contractor's order for the bonus payout. The delivery panel shows what you still need.", "mechanic": "mining", "valid_scenes": MINING_SCENES},
-		{"id": "m2_return", "action_key": "return_rocket_home", "title": "Return", "message": "Good haul. Press Return to head home.", "mechanic": "return", "valid_scenes": MINING_SCENES},
-		{"id": "m2_debrief", "action_key": "resolve_mission_debrief", "title": "Debrief", "message": "Sell your cargo and complete the debrief to unlock Mission 3.", "mechanic": "debrief", "valid_scenes": DEBRIEF_SCENES}
+		{"id": "m2_build_control_station", "action_key": "build_control_station", "title": "Control Station", "message": "Build the Control Station before starting Mission 2. This unlocks the fleet hub, Starter Rocket 2 planning, and a structured contractor route.", "mechanic": "progression", "valid_scenes": BASE_ONLY_SCENES}
 	],
 	3: [
 		{"id": "m3_pick_contractor", "action_key": "accept_contractor_offer", "title": "Pick Contractor", "message": "Choose a contractor for a delivery bonus on your haul.", "mechanic": "contractor", "valid_scenes": LAUNCHPAD_SCENES},
-		{"id": "m3_select", "action_key": "select_launch_target", "title": "Target", "message": "Pick a TESS planet candidate as your target. These are real exoplanet candidates from NASA data.", "mechanic": "targeting", "valid_scenes": LAUNCHPAD_SCENES},
+		{"id": "m3_classify", "action_key": "classify_candidate", "title": "Classify Candidate", "message": "Review the TESS lightcurve before choosing a target. Confirmed planet candidates can be routed; false positives still grant the classification reward.", "mechanic": "classification", "valid_scenes": LAUNCHPAD_SCENES},
+		{"id": "m3_select", "action_key": "select_launch_target", "title": "Target", "message": "Pick a confirmed TESS planet candidate as your target. The map now shows candidate systems beyond Earth.", "mechanic": "targeting", "valid_scenes": LAUNCHPAD_SCENES},
 		{"id": "m3_launch", "action_key": "launch_rocket_from_earth", "title": "Launch", "message": "Heading out to a real world. Press Launch.", "mechanic": "launch", "valid_scenes": LAUNCHPAD_SCENES},
 		{"id": "m3_mine", "action_key": "mine_target", "title": "Mine", "message": "Mine what you can from the planet's surface.", "mechanic": "mining", "valid_scenes": MINING_SCENES},
 		{"id": "m3_return", "action_key": "return_rocket_home", "title": "Return", "message": "Cargo secured. Return to Earth.", "mechanic": "return", "valid_scenes": MINING_SCENES},
 		{"id": "m3_debrief", "action_key": "resolve_mission_debrief", "title": "Debrief", "message": "Deliver and debrief. You're building operational range.", "mechanic": "debrief", "valid_scenes": DEBRIEF_SCENES}
 	],
 	4: [
-		{"id": "m4_build_scanner", "action_key": "build_scanner_station", "title": "Scanner", "message": "Build the Scanner Station at your base — it will reveal new targets across your operational zone.", "mechanic": "scanner", "valid_scenes": BASE_ONLY_SCENES},
-		{"id": "m4_scan", "action_key": "scan_targets", "title": "Scan", "message": "Activate the scanner. It will map asteroid fields and flag high-value planet candidates.", "mechanic": "scanner", "valid_scenes": BASE_ONLY_SCENES},
-		{"id": "m4_select", "action_key": "select_launch_target", "title": "Target", "message": "Select a scanned target from the Launchpad list.", "mechanic": "targeting", "valid_scenes": LAUNCHPAD_SCENES},
-		{"id": "m4_launch", "action_key": "launch_rocket_from_earth", "title": "Launch", "message": "Press Launch to begin the mission.", "mechanic": "launch", "valid_scenes": LAUNCHPAD_SCENES},
-		{"id": "m4_mine", "action_key": "mine_target", "title": "Mine + Drones", "message": "Drones are unlocked. Press DRONE (or D) to target dark subsurface deposits for bonus yield on top of your surface haul.", "mechanic": "mining", "valid_scenes": MINING_SCENES},
+		{"id": "m4_open_launchpad", "action_key": "open_launchpad", "title": "Mission 4", "message": "Mission 4 is the handoff out of the strict tutorial rail. Open the Launchpad and decide how you want to run the next trip.", "mechanic": "free-ops", "valid_scenes": BASE_ONLY_SCENES},
+		{"id": "m4_select", "action_key": "select_launch_target", "title": "Choose Route", "message": "You can take a contractor order for a payout bonus or line up your own survey run. Pick any reachable target from the Launchpad.", "mechanic": "targeting", "valid_scenes": LAUNCHPAD_SCENES},
+		{"id": "m4_launch", "action_key": "launch_rocket_from_earth", "title": "Launch", "message": "Press Launch when the run looks right. From here the game starts giving you room to operate on your own terms.", "mechanic": "launch", "valid_scenes": LAUNCHPAD_SCENES},
+		{"id": "m4_mine", "action_key": "mine_target", "title": "Run the Mission", "message": "Fly the mission the way you want. Contractor work pays cleanly; survey runs are there for your own goals and discoveries.", "mechanic": "mining", "valid_scenes": MINING_SCENES},
 		{"id": "m4_debrief", "action_key": "resolve_mission_debrief", "title": "Debrief", "message": "Complete Mission 4 to unlock Free Operations — run missions on your own terms.", "mechanic": "debrief", "valid_scenes": DEBRIEF_SCENES}
 	]
 }

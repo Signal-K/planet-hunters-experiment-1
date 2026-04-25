@@ -1,0 +1,21 @@
+[gd_scene format=3]
+
+[node name="GameMenuMarketplaceRow" type="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="NameLabel" type="Label" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Iron"
+
+[node name="PriceLabel" type="Label" parent="."]
+layout_mode = 2
+text = "0 F/kg"
+
+[node name="ChangeLabel" type="Label" parent="."]
+custom_minimum_size = Vector2(52, 0)
+layout_mode = 2
+horizontal_alignment = 2
+text = "0%"

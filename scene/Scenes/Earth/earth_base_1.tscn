@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3 uid="uid://bl5h6pq4ns86t"]
+[gd_scene load_steps=16 format=3 uid="uid://bl5h6pq4ns86t"]
 
 [ext_resource type="Texture2D" uid="uid://bni1814mlo7mv" path="res://assets/Backdrops/Earth1.png" id="0"]
 [ext_resource type="Script" uid="uid://eoqjev5txcu5" path="res://Scenes/Earth/earth_base_1.gd" id="1"]
@@ -11,6 +11,8 @@
 [ext_resource type="Script" uid="uid://wbb4npqwk838" path="res://Scripts/Earth/Environment/EarthStarFieldEvent.gd" id="10"]
 [ext_resource type="Script" uid="uid://bebqtkwv7bhxn" path="res://Scripts/Earth/Environment/EarthCloudDriftEvent.gd" id="11"]
 [ext_resource type="Script" uid="uid://b6grrjbuo2flq" path="res://Scripts/Earth/Environment/EarthSkyMapEvent.gd" id="12"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/Templates/EarthBaseActionCard.tscn" id="13"]
+[ext_resource type="Script" path="res://Scripts/UI/EarthBaseProgressionCards.gd" id="14"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_satellite"]
 size = Vector2(300, 220)
@@ -137,6 +139,13 @@ size_flags_horizontal = 3
 size_flags_vertical = 4
 text = "Map"
 
+[node name="BuildButton" type="Button" parent="UILayer/ButtonContainer"]
+custom_minimum_size = Vector2(220, 120)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+text = "Build"
+
 [node name="NewMissionButton" type="Button" parent="UILayer/ButtonContainer"]
 custom_minimum_size = Vector2(280, 120)
 layout_mode = 2
@@ -162,6 +171,86 @@ offset_right = -24.0
 offset_bottom = 620.0
 clip_contents = true
 theme_override_constants/separation = 10
+script = ExtResource("14")
+
+[node name="ActiveMissionCard" parent="UILayer/ProgressionCards" instance=ExtResource("13")]
+visible = false
+layout_mode = 2
+card_title = "Mission In Progress"
+card_subtitle = "Resume the active mission from here."
+card_hint = "Resume the active mission flow instead of opening a new setup loop."
+card_cta = "Resume Mission"
+
+[node name="Title" parent="UILayer/ProgressionCards/ActiveMissionCard/Body" index="0"]
+text = "Mission In Progress"
+
+[node name="Subtitle" parent="UILayer/ProgressionCards/ActiveMissionCard/Body" index="1"]
+text = "Resume the active mission from here."
+
+[node name="Hint" parent="UILayer/ProgressionCards/ActiveMissionCard/Body" index="2"]
+visible = true
+text = "Resume the active mission flow instead of opening a new setup loop."
+
+[node name="CTAButton" parent="UILayer/ProgressionCards/ActiveMissionCard/Body" index="4"]
+text = "Resume Mission"
+
+[node name="ControlStationCard" parent="UILayer/ProgressionCards" instance=ExtResource("13")]
+visible = false
+layout_mode = 2
+card_title = "Build Control Station"
+card_subtitle = "Mission 2 starts here. Construct the Control Station first so your base has a fleet and route hub."
+card_hint = "One-time construction. Your Launchpad reopens for new missions once it's in place."
+card_cta = "Build Control Station"
+
+[node name="Title" parent="UILayer/ProgressionCards/ControlStationCard/Body" index="0"]
+text = "Build Control Station"
+
+[node name="Subtitle" parent="UILayer/ProgressionCards/ControlStationCard/Body" index="1"]
+text = "Construct the Control Station to unlock Mission 2 planning."
+
+[node name="Hint" parent="UILayer/ProgressionCards/ControlStationCard/Body" index="2"]
+visible = true
+text = "Place it through the Build flow on Earth Base."
+
+[node name="CTAButton" parent="UILayer/ProgressionCards/ControlStationCard/Body" index="4"]
+text = "Build Control Station"
+
+[node name="ScannerStationCard" parent="UILayer/ProgressionCards" instance=ExtResource("13")]
+visible = false
+layout_mode = 2
+card_title = "Scanner Station"
+card_subtitle = "The scanner is now part of the Mission 3 real-data workflow and remains available once unlocked."
+card_hint = "If this card appears on an older save, reopening the base should reconcile the legacy state automatically."
+card_cta = "Open Scanner Station"
+
+[node name="Title" parent="UILayer/ProgressionCards/ScannerStationCard/Body" index="0"]
+text = "Build Scanner Station"
+
+[node name="Subtitle" parent="UILayer/ProgressionCards/ScannerStationCard/Body" index="1"]
+text = "Place the Scanner Station on Earth Base to begin Mission 4."
+
+[node name="Hint" parent="UILayer/ProgressionCards/ScannerStationCard/Body" index="2"]
+visible = true
+text = "Build flow: Earth Base, then Scanner Station."
+
+[node name="CTAButton" parent="UILayer/ProgressionCards/ScannerStationCard/Body" index="4"]
+text = "Build Scanner Station"
+
+[node name="NextMissionCard" parent="UILayer/ProgressionCards" instance=ExtResource("13")]
+visible = false
+layout_mode = 2
+card_title = "Next Mission Available"
+card_subtitle = "Open Launchpad to plan the next mission."
+card_cta = "Open Launchpad"
+
+[node name="Title" parent="UILayer/ProgressionCards/NextMissionCard/Body" index="0"]
+text = "Next Mission Available"
+
+[node name="Subtitle" parent="UILayer/ProgressionCards/NextMissionCard/Body" index="1"]
+text = "Open Launchpad to plan the next mission."
+
+[node name="CTAButton" parent="UILayer/ProgressionCards/NextMissionCard/Body" index="4"]
+text = "Open Launchpad"
 
 [node name="AmbientStarLayer" type="CanvasLayer" parent="."]
 layer = -1

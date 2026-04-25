@@ -7,6 +7,15 @@ extends Control
 const RocketSpecs    = preload("res://Scripts/Utils/RocketSpecs.gd")
 const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
 const MapStepScript  = preload("res://Scripts/UI/LaunchWizardMapStep.gd")
+const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd")
+const ContractorCardScene = preload("res://Scenes/UI/Templates/LaunchWizardContractorCard.tscn")
+const MineralChipScene = preload("res://Scenes/UI/Templates/LaunchWizardMineralChip.tscn")
+const RocketTileScene = preload("res://Scenes/UI/Templates/LaunchWizardRocketTile.tscn")
+const RocketPartScene = preload("res://Scenes/UI/Templates/LaunchWizardRocketPart.tscn")
+const ConfirmRowScene = preload("res://Scenes/UI/Templates/LaunchWizardConfirmRow.tscn")
+const StatChipScene = preload("res://Scenes/UI/Templates/LaunchWizardStatChip.tscn")
+const TargetDetailScene = preload("res://Scenes/UI/Templates/LaunchWizardTargetDetail.tscn")
+const EmptyStateLabelScene = preload("res://Scenes/UI/Templates/LaunchWizardEmptyStateLabel.tscn")
 
 enum Step { CONTRACTOR = 0, TARGET = 1, ROCKET = 2, CONFIRM = 3 }
 
@@ -19,8 +28,12 @@ const C_ICE_TINT_BG := Color(0.820, 0.918, 0.960, 0.35)
 const C_PAGE_BG     := Color(0.940, 0.950, 0.965, 1.0)
 const C_SURF_LOW    := Color(0.928, 0.940, 0.955, 1.0)
 const C_SURF_LOWEST := Color(1.000, 1.000, 1.000, 1.0)
+const C_CONTRACT_BG := Color(0.038, 0.058, 0.112, 1.0)
+const C_CONTRACT_BG_2 := Color(0.055, 0.082, 0.150, 1.0)
 const C_ON_SURF     := Color(0.106, 0.137, 0.196, 1.0)
 const C_ON_SURF_VAR := Color(0.330, 0.380, 0.450, 1.0)
+const C_ON_DARK     := Color(0.900, 0.940, 0.980, 1.0)
+const C_ON_DARK_VAR := Color(0.640, 0.730, 0.840, 1.0)
 const C_SHADOW      := Color(0.055, 0.086, 0.165, 0.10)
 const C_WHITE       := Color(1.000, 1.000, 1.000, 1.0)
 const C_OK          := Color(0.129, 0.588, 0.486, 1.0)
@@ -84,6 +97,34 @@ signal launched(rocket_id: String, target_id: String)
 @onready var _back_btn:     Button          = $Scaffold/Header/HeaderRow/BackBtn
 @onready var _scroll:       ScrollContainer = $Scaffold/Scroll
 @onready var _card_list:    VBoxContainer   = $Scaffold/Scroll/ScrollMargin/CardList
+@onready var _contractor_step: VBoxContainer = $Scaffold/Scroll/ScrollMargin/CardList/ContractorStep
+@onready var _contractor_title: Label = $Scaffold/Scroll/ScrollMargin/CardList/ContractorStep/IntroPanel/Margin/VBox/TitleLabel
+@onready var _contractor_subtitle: Label = $Scaffold/Scroll/ScrollMargin/CardList/ContractorStep/IntroPanel/Margin/VBox/SubtitleLabel
+@onready var _contractor_grid: GridContainer = $Scaffold/Scroll/ScrollMargin/CardList/ContractorStep/ContractorGrid
+@onready var _custom_mission_card: PanelContainer = $Scaffold/Scroll/ScrollMargin/CardList/ContractorStep/CustomMissionCard
+@onready var _target_step: VBoxContainer = $Scaffold/Scroll/ScrollMargin/CardList/TargetStep
+@onready var _target_title: Label = $Scaffold/Scroll/ScrollMargin/CardList/TargetStep/IntroPanel/Margin/VBox/TitleLabel
+@onready var _target_subtitle: Label = $Scaffold/Scroll/ScrollMargin/CardList/TargetStep/IntroPanel/Margin/VBox/SubtitleLabel
+@onready var _classification_card: PanelContainer = $Scaffold/Scroll/ScrollMargin/CardList/TargetStep/ClassificationCard
+@onready var _classification_copy: Label = $Scaffold/Scroll/ScrollMargin/CardList/TargetStep/ClassificationCard/Margin/VBox/CopyLabel
+@onready var _classification_facts: HBoxContainer = $Scaffold/Scroll/ScrollMargin/CardList/TargetStep/ClassificationCard/Margin/VBox/FactsRow
+@onready var _classify_planet_btn: Button = $Scaffold/Scroll/ScrollMargin/CardList/TargetStep/ClassificationCard/Margin/VBox/ButtonsRow/PlanetButton
+@onready var _classify_not_planet_btn: Button = $Scaffold/Scroll/ScrollMargin/CardList/TargetStep/ClassificationCard/Margin/VBox/ButtonsRow/NotPlanetButton
+@onready var _classify_mark_dip_btn: Button = $Scaffold/Scroll/ScrollMargin/CardList/TargetStep/ClassificationCard/Margin/VBox/ButtonsRow/MarkDipButton
+@onready var _map_panel: PanelContainer = $Scaffold/Scroll/ScrollMargin/CardList/TargetStep/MapPanel
+@onready var _map_step_node: MapStepScript = $Scaffold/Scroll/ScrollMargin/CardList/TargetStep/MapPanel/MapStep
+@onready var _target_detail_card: PanelContainer = $Scaffold/Scroll/ScrollMargin/CardList/TargetStep/TargetDetailCard
+@onready var _target_detail_box: VBoxContainer = $Scaffold/Scroll/ScrollMargin/CardList/TargetStep/TargetDetailCard/Margin/VBox
+@onready var _target_hint_label: Label = $Scaffold/Scroll/ScrollMargin/CardList/TargetStep/TargetDetailCard/Margin/VBox/HintLabel
+@onready var _rocket_step: HBoxContainer = $Scaffold/Scroll/ScrollMargin/CardList/RocketStep
+@onready var _rocket_list_column: VBoxContainer = $Scaffold/Scroll/ScrollMargin/CardList/RocketStep/RocketListColumn
+@onready var _assembly_hint_label: Label = $Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/HintLabel
+@onready var _confirm_step: VBoxContainer = $Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep
+@onready var _confirm_rows_box: VBoxContainer = $Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep/SummaryCard/Margin/VBox/RowsBox
+@onready var _confirm_travel_time_label: Label = $Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep/SummaryCard/Margin/VBox/TravelTimeLabel
+@onready var _confirm_note_label: Label = $Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep/SummaryCard/Margin/VBox/NoteLabel
+@onready var _assembly_vbox_scene: VBoxContainer = $Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/PartsBox
+@onready var _asm_status_label_scene: Label = $Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/StatusLabel
 @onready var _footer_bg:    ColorRect       = $Scaffold/Footer/FooterBg
 @onready var _cancel_btn:   Button          = $Scaffold/Footer/FooterRow/CancelBtn
 @onready var _next_btn:     Button          = $Scaffold/Footer/FooterRow/NextBtn
@@ -96,6 +137,8 @@ func _ready() -> void:
 	_apply_styles()
 	_create_dots()
 	_wire_buttons()
+	_assembly_vbox = _assembly_vbox_scene
+	_asm_status_label = _asm_status_label_scene
 	_card_list.add_theme_constant_override("separation", 16)
 	_show_step(Step.CONTRACTOR)
 
@@ -138,6 +181,26 @@ func _wire_buttons() -> void:
 	_back_btn.pressed.connect(_on_back)
 	_cancel_btn.pressed.connect(_on_cancel)
 	_next_btn.pressed.connect(_on_next)
+	if _map_step_node and not _map_step_node.target_selected.is_connected(_on_map_target_selected):
+		_map_step_node.target_selected.connect(_on_map_target_selected)
+	_style_action_button(_classify_planet_btn, false)
+	_style_action_button(_classify_not_planet_btn, false)
+	_style_action_button(_classify_mark_dip_btn, false)
+	_classify_planet_btn.pressed.connect(func() -> void:
+		var target_id := str(_classification_card.get_meta("target_id", ""))
+		if target_id != "":
+			_on_m3_classification_pressed(target_id, "planet")
+	)
+	_classify_not_planet_btn.pressed.connect(func() -> void:
+		var target_id := str(_classification_card.get_meta("target_id", ""))
+		if target_id != "":
+			_on_m3_classification_pressed(target_id, "not_planet")
+	)
+	_classify_mark_dip_btn.pressed.connect(func() -> void:
+		var target_id := str(_classification_card.get_meta("target_id", ""))
+		if target_id != "":
+			_on_m3_classification_pressed(target_id, "dip")
+	)
 
 # ── Step management ───────────────────────────────────────────────────────────
 
@@ -147,10 +210,10 @@ func _show_step(s: Step) -> void:
 			t.kill()
 	_asm_tweens.clear()
 	_step              = s
-	_map_step          = null
+	_map_step          = _map_step_node
 	_target_detail     = null
-	_assembly_vbox     = null
-	_asm_status_label  = null
+	_assembly_vbox     = _assembly_vbox_scene
+	_asm_status_label  = _asm_status_label_scene
 	_update_header()
 	_update_dots()
 	_update_footer()
@@ -210,13 +273,45 @@ func _on_next() -> void:
 # ── Card rebuild ──────────────────────────────────────────────────────────────
 
 func _rebuild_cards() -> void:
-	for child in _card_list.get_children():
-		child.queue_free()
+	_clear_step_content()
 	match _step:
 		Step.CONTRACTOR: _build_contractor_step()
 		Step.TARGET:     _build_target_step()
 		Step.ROCKET:     _build_rocket_step()
 		Step.CONFIRM:    _build_confirm_step()
+
+func _clear_step_content() -> void:
+	for child in _card_list.get_children():
+		if child == _contractor_step or child == _target_step or child == _rocket_step or child == _confirm_step:
+			child.visible = false
+			continue
+		child.queue_free()
+	if _contractor_grid:
+		_clear_container_children(_contractor_grid)
+	if _classification_facts:
+		_clear_container_children(_classification_facts)
+	if _target_detail_box:
+		_clear_container_children_except(_target_detail_box, [_target_hint_label])
+		if _target_hint_label.get_parent() != _target_detail_box:
+			_target_hint_label.reparent(_target_detail_box)
+		_target_hint_label.visible = true
+		_target_hint_label.text = "< Tap a target on the map above"
+	if _rocket_list_column:
+		_clear_container_children(_rocket_list_column)
+	if _assembly_vbox:
+		_clear_container_children(_assembly_vbox)
+	if _confirm_rows_box:
+		_clear_container_children(_confirm_rows_box)
+
+func _clear_container_children(container: Node) -> void:
+	for child in container.get_children():
+		child.queue_free()
+
+func _clear_container_children_except(container: Node, keep: Array) -> void:
+	for child in container.get_children():
+		if child in keep:
+			continue
+		child.queue_free()
 
 # ── Step: Contractor ──────────────────────────────────────────────────────────
 
@@ -224,10 +319,10 @@ func _build_contractor_step() -> void:
 	_is_free_ops = RocketsManager.is_free_operations_unlocked()
 	var stage    := RocketsManager.get_mission_stage()
 
-	_add_section_label(
-		"Mission %d" % stage,
-		"Choose who you're mining for — they define the minerals you need to extract and your payout."
-	)
+	_contractor_step.visible = true
+	_contractor_title.text = "Mission %d contract" % stage
+	_contractor_subtitle.text = "Pick the buyer. Their order defines the haul."
+	_contractor_grid.columns = _contractor_grid_columns()
 
 	if _is_free_ops:
 		RocketsManager.ensure_trip_contract_offer()
@@ -242,7 +337,7 @@ func _build_contractor_step() -> void:
 		for c in _contractors:
 			_add_contractor_card(c)
 
-	_add_custom_mission_locked()
+	_custom_mission_card.visible = true
 
 func _add_contractor_card(c: Dictionary) -> void:
 	var c_id      := str(c.get("id", ""))
@@ -252,76 +347,37 @@ func _add_contractor_card(c: Dictionary) -> void:
 	var selected  := c_id == str(_selected_contractor.get("id", ""))
 	var icon      := _contractor_icon(c_focus)
 
-	# ── Outer card shell (white / selected-tinted, rounded, shadow) ──
-	var card      := _make_card(selected, false)
-	card.clip_contents = true
-	_card_list.add_child(card)
+	var card := ContractorCardScene.instantiate() as PanelContainer
+	if card == null:
+		return
+	card.custom_minimum_size = _contractor_tile_min_size()
+	_contractor_grid.add_child(card)
+	card.add_theme_stylebox_override("panel", _contract_card_box(selected))
 
-	var outer := VBoxContainer.new()
-	outer.add_theme_constant_override("separation", 0)
-	card.add_child(outer)
+	_set_label_text(card, "Margin/VBox/TopRow/IconPanel/IconLabel", icon)
+	_set_label_text(card, "Margin/VBox/TopRow/TitleColumn/NameLabel", c_name)
+	_set_label_text(card, "Margin/VBox/TopRow/TitleColumn/BriefLabel", _contractor_brief(c_focus))
+	_set_label_text(card, "Margin/VBox/TopRow/StatusLabel", "SELECTED" if selected else "")
+	_set_label_text(card, "Margin/VBox/OrderColumn/HeaderRow/TagLabel", _contractor_contract_tag(c))
 
-	# ── Coloured header band ──
-	var band    := PanelContainer.new()
-	var band_s  := StyleBoxFlat.new()
-	band_s.bg_color                  = C_HEADER_BG if selected else C_ACCENT
-	band_s.corner_radius_top_left    = 12
-	band_s.corner_radius_top_right   = 12
-	band_s.content_margin_left       = 14
-	band_s.content_margin_right      = 14
-	band_s.content_margin_top        = 12
-	band_s.content_margin_bottom     = 12
-	band.add_theme_stylebox_override("panel", band_s)
-	outer.add_child(band)
-
-	var band_row := HBoxContainer.new()
-	band_row.add_theme_constant_override("separation", 10)
-	band.add_child(band_row)
-
-	var icon_lbl := _label(icon, C_WHITE, 26)
-	icon_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	band_row.add_child(icon_lbl)
-
-	var name_col := VBoxContainer.new()
-	name_col.add_theme_constant_override("separation", 3)
-	name_col.size_flags_horizontal = SIZE_EXPAND_FILL
-	band_row.add_child(name_col)
-	name_col.add_child(_label(c_name, C_WHITE, 21))
-	if c_focus:
-		var fl := _label(c_focus, Color(0.82, 0.92, 0.97, 0.88), 12)
-		fl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		name_col.add_child(fl)
-
-	if selected:
-		var chk := _label("✓", C_WHITE, 22)
-		chk.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		band_row.add_child(chk)
-
-	# ── Body (minerals + button) ──
-	var body := MarginContainer.new()
-	body.add_theme_constant_override("margin_left",   14)
-	body.add_theme_constant_override("margin_right",  14)
-	body.add_theme_constant_override("margin_top",    12)
-	body.add_theme_constant_override("margin_bottom", 12)
-	outer.add_child(body)
-
-	var body_col := VBoxContainer.new()
-	body_col.add_theme_constant_override("separation", 10)
-	body.add_child(body_col)
+	var chips := card.get_node_or_null("Margin/VBox/OrderColumn/MineralGrid") as GridContainer
+	if chips:
+		for child in chips.get_children():
+			child.queue_free()
 
 	if not minerals.is_empty():
-		body_col.add_child(_label("Order requirements:", C_ON_SURF_VAR, 12))
-		var chips := HBoxContainer.new()
-		chips.add_theme_constant_override("separation", 6)
-		body_col.add_child(chips)
-		for mname: String in minerals:
-			chips.add_child(_mineral_chip(mname, minerals[mname]))
+		for mname in minerals.keys():
+			if chips:
+				chips.add_child(_mineral_chip(str(mname), minerals[mname], true))
+	else:
+		if chips:
+			chips.add_child(_mineral_chip("Open route", 0, true))
 
-	var btn_row := HBoxContainer.new()
-	btn_row.alignment = BoxContainer.ALIGNMENT_END
-	body_col.add_child(btn_row)
-
-	var btn := _action_btn("Selected ✓" if selected else "Select", selected)
+	var btn := card.get_node_or_null("Margin/VBox/SelectButton") as Button
+	if btn == null:
+		return
+	btn.text = "Selected" if selected else "Select contract"
+	_style_action_button(btn, selected)
 	btn.pressed.connect(func():
 		_selected_contractor = c
 		if _is_free_ops:
@@ -331,30 +387,67 @@ func _add_contractor_card(c: Dictionary) -> void:
 		_rebuild_cards()
 		_update_footer()
 	)
-	btn_row.add_child(btn)
 
-func _add_custom_mission_locked() -> void:
-	var card := _make_card(false, true)
-	card.modulate = Color(1, 1, 1, 0.52)
-	_card_list.add_child(card)
+func _contractor_grid_columns() -> int:
+	var width := get_viewport_rect().size.x
+	if width >= 1180.0:
+		return 3
+	if width >= 760.0:
+		return 2
+	return 1
 
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 14)
-	card.add_child(row)
+func _contractor_tile_min_size() -> Vector2:
+	var columns := _contractor_grid_columns()
+	var height := 250.0 if columns >= 3 else 230.0
+	return Vector2(320, height)
 
-	var lock := _label("🔒", C_LOCK, 28)
-	lock.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	row.add_child(lock)
+func _contractor_brief(focus: String) -> String:
+	var f := focus.strip_edges()
+	if f == "":
+		return "Standard delivery contract"
+	if f.find("—") != -1:
+		return f.split("—")[0].strip_edges()
+	if f.find("-") != -1:
+		return f.split("-")[0].strip_edges()
+	if f.length() > 42:
+		return f.substr(0, 39).strip_edges() + "..."
+	return f
 
-	var txt := VBoxContainer.new()
-	txt.add_theme_constant_override("separation", 4)
-	txt.size_flags_horizontal = SIZE_EXPAND_FILL
-	row.add_child(txt)
+func _contractor_contract_tag(c: Dictionary) -> String:
+	var effect := str(c.get("effect", "")).strip_edges()
+	match effect:
+		"build_discount":
+			return "BUILD DISCOUNT"
+		"payout_bonus":
+			return "PAYOUT BONUS"
+		_:
+			return "ORDER"
 
-	txt.add_child(_label("Custom Mission", C_ON_SURF, 18))
-	var sub := _label("Design your own objective — unlocks after completing your first mission.", C_ON_SURF_VAR, 13)
-	sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	txt.add_child(sub)
+func _set_label_text(root: Node, path: NodePath, value: String) -> void:
+	var label := root.get_node_or_null(path) as Label
+	if label:
+		label.text = value
+
+func _contract_card_box(selected: bool) -> StyleBoxFlat:
+	var s := StyleBoxFlat.new()
+	s.bg_color = C_CONTRACT_BG_2 if selected else C_CONTRACT_BG
+	s.corner_radius_top_left = 8
+	s.corner_radius_top_right = 8
+	s.corner_radius_bottom_left = 8
+	s.corner_radius_bottom_right = 8
+	s.shadow_color = Color(0, 0, 0, 0.18)
+	s.shadow_size = 8
+	s.shadow_offset = Vector2(0, 3)
+	s.content_margin_left = 0
+	s.content_margin_right = 0
+	s.content_margin_top = 0
+	s.content_margin_bottom = 0
+	s.border_width_left = 3 if selected else 1
+	s.border_width_right = 3 if selected else 1
+	s.border_width_top = 3 if selected else 1
+	s.border_width_bottom = 3 if selected else 1
+	s.border_color = C_ACCENT if selected else Color(C_ACCENT, 0.20)
+	return s
 
 func _contractor_icon(focus: String) -> String:
 	var f := focus.to_lower()
@@ -370,16 +463,27 @@ func _contractor_icon(focus: String) -> String:
 # ── Step: Target ──────────────────────────────────────────────────────────────
 
 func _build_target_step() -> void:
+	_target_step.visible = true
 	var stage := RocketsManager.get_mission_stage()
 	_targets = RocketsManager.get_selectable_targets_for_stage(stage)
 	if _targets.is_empty():
 		_targets = RocketsManager.get_selectable_targets_for_stage()
-
-	_add_section_label("Select destination", "Tap a target on the map to choose where your rocket is headed.")
+	_target_title.text = "Select destination"
+	_target_subtitle.text = "Tap a target on the map to choose where your rocket is headed."
 
 	if _targets.is_empty():
-		_add_empty_msg("No targets available. Complete a scan mission first.")
+		_classification_card.visible = false
+		_map_panel.visible = false
+		_target_detail_card.visible = true
+		_target_hint_label.text = "No targets available. Complete a scan mission first."
 		return
+	_map_panel.visible = true
+	_target_detail_card.visible = true
+
+	if stage == 3:
+		_add_m3_classification_card()
+	else:
+		_classification_card.visible = false
 
 	# Auto-select first target if none chosen yet
 	if _selected_target.is_empty() and not _targets.is_empty():
@@ -387,36 +491,15 @@ func _build_target_step() -> void:
 		RocketsManager.select_target(str(_selected_target.get("id", "")))
 		_update_footer()
 
-	# ── Orbital map ──
-	var map_wrap := PanelContainer.new()
-	map_wrap.size_flags_horizontal = SIZE_EXPAND_FILL
 	var _vp_h := get_viewport_rect().size.y
-	map_wrap.custom_minimum_size   = Vector2(0, max(420.0, _vp_h * 0.62))
-	var mws := StyleBoxFlat.new()
-	mws.bg_color                  = Color(0.028, 0.047, 0.118, 1.0)
-	mws.corner_radius_top_left    = 12
-	mws.corner_radius_top_right   = 12
-	mws.corner_radius_bottom_left = 12
-	mws.corner_radius_bottom_right= 12
-	map_wrap.add_theme_stylebox_override("panel", mws)
-	_card_list.add_child(map_wrap)
-
-	var map := MapStepScript.new()
-	map.size_flags_horizontal = SIZE_EXPAND_FILL
-	map.size_flags_vertical   = SIZE_EXPAND_FILL
-	map_wrap.add_child(map)
-	_map_step = map
-	map.setup(_targets, str(_selected_target.get("id", "")))
-	map.target_selected.connect(_on_map_target_selected)
-
-	# ── Detail panel (populated on selection) ──
-	_target_detail = _make_card(false, true)
-	_card_list.add_child(_target_detail)
+	_map_panel.custom_minimum_size = Vector2(0, max(420.0, _vp_h * 0.62))
+	_map_step = _map_step_node
+	_map_step.setup(_targets, str(_selected_target.get("id", "")))
+	_target_detail = _target_detail_card
 
 	if _selected_target.is_empty():
-		var hint := _label("< Tap a target on the map above", C_ON_SURF_VAR, 14)
-		hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		_target_detail.add_child(hint)
+		_target_hint_label.visible = true
+		_target_hint_label.text = "< Tap a target on the map above"
 	else:
 		_refresh_target_detail(_selected_target)
 
@@ -429,156 +512,160 @@ func _on_map_target_selected(t: Dictionary) -> void:
 func _refresh_target_detail(t: Dictionary) -> void:
 	if not _target_detail or not is_instance_valid(_target_detail):
 		return
-	for c in _target_detail.get_children():
-		c.queue_free()
-
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 10)
-	_target_detail.add_child(vbox)
+	_clear_container_children_except(_target_detail_box, [_target_hint_label])
+	var detail := TargetDetailScene.instantiate() as VBoxContainer
+	if detail == null:
+		return
+	_target_detail_box.add_child(detail)
+	_target_hint_label.visible = false
 
 	var t_label  := str(t.get("label", t.get("name", "Unknown")))
 	var t_type   := str(t.get("type", "asteroid"))
 	var t_dist   := float(t.get("distance_au", 0.0))
 	var t_reward := RocketsManager.get_target_reward_ratio(str(t.get("id", "")))
 
-	var row1 := HBoxContainer.new()
-	row1.add_theme_constant_override("separation", 10)
-	vbox.add_child(row1)
-	row1.add_child(_label("🪐" if t_type == "planet" else "☄", C_ACCENT, 26))
-	var nlbl := _label(t_label, C_ON_SURF, 20)
-	nlbl.size_flags_horizontal = SIZE_EXPAND_FILL
-	row1.add_child(nlbl)
-
-	var stats := HBoxContainer.new()
-	stats.add_theme_constant_override("separation", 28)
-	vbox.add_child(stats)
+	var icon_label := detail.get_node_or_null("HeaderRow/IconLabel") as Label
+	var name_label := detail.get_node_or_null("HeaderRow/NameLabel") as Label
+	var stats := detail.get_node_or_null("StatsRow") as HBoxContainer
+	var science := detail.get_node_or_null("ScienceLabel") as Label
+	if icon_label:
+		icon_label.text = "🪐" if t_type == "planet" else "☄"
+		icon_label.add_theme_color_override("font_color", C_ACCENT)
+	if name_label:
+		name_label.text = t_label
+		name_label.add_theme_color_override("font_color", C_ON_SURF)
+	if stats:
+		_clear_container_children(stats)
 	for pair: Array in [
 		["Type",     t_type.capitalize()],
 		["Distance", "%.1f AU" % t_dist],
 		["Yield",    "%d%%" % int(t_reward * 100)],
 	]:
-		stats.add_child(_stat_chip(str(pair[0]), str(pair[1])))
+		if stats:
+			stats.add_child(_stat_chip(str(pair[0]), str(pair[1])))
+
+	var source := str(t.get("science_source", "")).strip_edges()
+	var system := str(t.get("star_system_name", t.get("parent_star", ""))).strip_edges()
+	var period := float(t.get("period_days", 0.0))
+	if source != "" or system != "" or period > 0.0:
+		var science_line := []
+		if source != "":
+			science_line.append(source)
+		if system != "":
+			science_line.append(system)
+		if period > 0.0:
+			science_line.append("%.2f day period" % period)
+		if science:
+			science.visible = true
+			science.text = " · ".join(science_line)
+			science.add_theme_color_override("font_color", C_ON_SURF_VAR)
+	elif science:
+		science.visible = false
+
+func _add_m3_classification_card() -> void:
+	var target := _first_unclassified_m3_target()
+	if target.is_empty():
+		var systems := RocketsManager.get_unlocked_star_systems(3)
+		_classification_card.visible = true
+		_classification_copy.text = "Candidate review complete. %d star system(s) are now available in the target map." % systems.size()
+		_classification_copy.add_theme_color_override("font_color", C_OK)
+		_clear_container_children(_classification_facts)
+		_classify_planet_btn.visible = false
+		_classify_not_planet_btn.visible = false
+		_classify_mark_dip_btn.visible = false
+		_classification_card.set_meta("target_id", "")
+		return
+
+	var label := str(target.get("label", target.get("id", "TESS candidate")))
+	_classification_card.visible = true
+	_classification_copy.text = "%s is a cached TESS/TIC lightcurve. Decide whether the dip looks like a planet before you route a rocket." % label
+	_classification_copy.add_theme_color_override("font_color", C_ON_DARK_VAR)
+	_clear_container_children(_classification_facts)
+	_classification_facts.add_child(_stat_chip("TIC", str(target.get("ticId", "cached")), true))
+	_classification_facts.add_child(_stat_chip("Period", "%.2f d" % float(target.get("period_days", 0.0)), true))
+	_classification_facts.add_child(_stat_chip("Star", str(target.get("parent_star", "TESS")), true))
+	_classify_planet_btn.visible = true
+	_classify_not_planet_btn.visible = true
+	_classify_mark_dip_btn.visible = true
+	_classification_card.set_meta("target_id", str(target.get("id", "")))
+
+func _first_unclassified_m3_target() -> Dictionary:
+	for target_any in _targets:
+		if typeof(target_any) != TYPE_DICTIONARY:
+			continue
+		var target: Dictionary = target_any
+		var target_id := str(target.get("id", ""))
+		if target_id == "":
+			continue
+		if str(target.get("anomalySet", "")) != "telescope-tess":
+			continue
+		if RocketsManager.get_tess_classification(target_id) == "":
+			return target
+	return {}
+
+func _on_m3_classification_pressed(target_id: String, verdict: String) -> void:
+	var result := RocketsManager.classify_candidate_target(target_id, verdict, 1)
+	AppControllerHelper.record_tutorial_action("classify_candidate", {
+		"target_id": target_id,
+		"verdict": verdict,
+		"confirmed": bool(result.get("confirmed", false))
+	})
+	if bool(result.get("confirmed", false)):
+		var details := RocketsManager.get_target_details(target_id)
+		if not details.is_empty():
+			_selected_target = details
+			RocketsManager.select_target(target_id)
+	else:
+		if str(_selected_target.get("id", "")) == target_id:
+			_selected_target = {}
+		_targets = RocketsManager.get_selectable_targets_for_stage(3)
+	_show_step(Step.TARGET)
 
 # ── Step: Rocket ──────────────────────────────────────────────────────────────
 
 func _build_rocket_step() -> void:
 	_rockets = RocketsManager.get_unlocked()
-	_add_section_label("Build your rocket", "Select a vehicle — see how its components stack up before launch.")
+	_rocket_step.visible = true
 
 	if _rockets.is_empty():
-		_add_empty_msg("No rockets unlocked yet.")
+		_assembly_hint_label.text = "No rockets unlocked yet."
 		return
 
-	# ── 2-column layout ──
-	var builder := HBoxContainer.new()
-	builder.size_flags_horizontal = SIZE_EXPAND_FILL
-	builder.add_theme_constant_override("separation", 10)
-	_card_list.add_child(builder)
-
-	# Left: rocket selection tiles
-	var list_col := VBoxContainer.new()
-	list_col.add_theme_constant_override("separation", 8)
-	list_col.size_flags_horizontal    = SIZE_EXPAND_FILL
-	list_col.size_flags_stretch_ratio = 0.48
-	builder.add_child(list_col)
-
 	for r in _rockets:
-		_add_rocket_tile(r, list_col)
-
-	# Right: assembly preview panel
-	var asm_panel := PanelContainer.new()
-	asm_panel.size_flags_horizontal    = SIZE_EXPAND_FILL
-	asm_panel.size_flags_stretch_ratio = 0.52
-	asm_panel.custom_minimum_size      = Vector2(0, 260)
-	var aps := StyleBoxFlat.new()
-	aps.bg_color                   = Color(0.040, 0.062, 0.118, 1.0)
-	aps.corner_radius_top_left     = 12
-	aps.corner_radius_top_right    = 12
-	aps.corner_radius_bottom_left  = 12
-	aps.corner_radius_bottom_right = 12
-	asm_panel.add_theme_stylebox_override("panel", aps)
-	builder.add_child(asm_panel)
-
-	var asm_margin := MarginContainer.new()
-	asm_margin.add_theme_constant_override("margin_left",   10)
-	asm_margin.add_theme_constant_override("margin_right",  10)
-	asm_margin.add_theme_constant_override("margin_top",    12)
-	asm_margin.add_theme_constant_override("margin_bottom", 12)
-	asm_panel.add_child(asm_margin)
-
-	var asm_outer := VBoxContainer.new()
-	asm_outer.add_theme_constant_override("separation", 6)
-	asm_margin.add_child(asm_outer)
-
-	var asm_title := _label("ASSEMBLY PREVIEW", Color(0.82, 0.92, 0.97, 0.50), 13)
-	asm_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	asm_outer.add_child(asm_title)
-
-	var asm_hint := _label("Select a rocket to see its parts", Color(0.55, 0.65, 0.78, 0.70), 11)
-	asm_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	asm_outer.add_child(asm_hint)
-
-	_assembly_vbox = VBoxContainer.new()
-	_assembly_vbox.add_theme_constant_override("separation", 3)
-	_assembly_vbox.size_flags_vertical = SIZE_EXPAND_FILL
-	_assembly_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	asm_outer.add_child(_assembly_vbox)
-
-	_asm_status_label = Label.new()
-	_asm_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_asm_status_label.add_theme_font_size_override("font_size", 13)
-	_asm_status_label.add_theme_color_override("font_color", Color(0.22, 0.80, 0.45, 0.0))
-	_asm_status_label.text = "ASSEMBLED ✓  READY TO LAUNCH"
-	asm_outer.add_child(_asm_status_label)
-
-	# Launchpad bar at the bottom
-	var pad := ColorRect.new()
-	pad.custom_minimum_size = Vector2(0, 5)
-	pad.color = Color(C_ACCENT, 0.45)
-	asm_outer.add_child(pad)
+		_add_rocket_tile(r, _rocket_list_column)
 
 	if _selected_rocket:
 		_refresh_assembly(_selected_rocket)
 	else:
-		var hint := _label("Select\na rocket", Color(0.82, 0.92, 0.97, 0.30), 13)
-		hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		_assembly_vbox.add_child(hint)
+		_assembly_hint_label.text = "Select\na rocket"
+		_assembly_hint_label.visible = true
 
 func _add_rocket_tile(rtype: String, parent: VBoxContainer) -> void:
 	var selected := rtype == _selected_rocket
-	var card     := _make_card(selected, true)
+	var card := RocketTileScene.instantiate() as PanelContainer
+	if card == null:
+		return
 	parent.add_child(card)
-
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 6)
-	card.add_child(vbox)
-
-	var row1 := HBoxContainer.new()
-	row1.add_theme_constant_override("separation", 8)
-	vbox.add_child(row1)
-	row1.add_child(_label("🚀", C_ACCENT, 24))
-	var nlbl := _label(RocketSpecs.get_display_name(rtype), C_ON_SURF, 19)
-	nlbl.size_flags_horizontal = SIZE_EXPAND_FILL
-	row1.add_child(nlbl)
-	if selected:
-		row1.add_child(_label("✓", C_ACCENT, 20))
-
-	var stats_row := HBoxContainer.new()
-	stats_row.add_theme_constant_override("separation", 12)
-	vbox.add_child(stats_row)
+	card.add_theme_stylebox_override("panel", _make_card_style(selected, true))
+	_set_label_text(card, "Margin/VBox/TopRow/IconLabel", "🚀")
+	_set_label_text(card, "Margin/VBox/TopRow/NameLabel", RocketSpecs.get_display_name(rtype))
+	_set_label_text(card, "Margin/VBox/TopRow/SelectedLabel", "✓" if selected else "")
+	var stats_row := card.get_node_or_null("Margin/VBox/StatsRow") as HBoxContainer
+	if stats_row:
+		_clear_container_children(stats_row)
 	var cost_b := RocketSpecs.get_cost(rtype) / 1_000_000_000
 	for pair: Array in [
 		["Speed",  "%.1fx" % RocketSpecs.get_speed_multiplier(rtype)],
 		["Cargo",  "%.1fx" % RocketSpecs.get_cargo_multiplier(rtype)],
 		["Cost",   "%dB F" % cost_b],
 	]:
-		stats_row.add_child(_stat_chip(str(pair[0]), str(pair[1])))
-
-	var btn_row := HBoxContainer.new()
-	btn_row.alignment = BoxContainer.ALIGNMENT_END
-	vbox.add_child(btn_row)
-	var btn := _action_btn("Selected ✓" if selected else "Select", selected)
+		if stats_row:
+			stats_row.add_child(_stat_chip(str(pair[0]), str(pair[1])))
+	var btn := card.get_node_or_null("Margin/VBox/ButtonRow/SelectButton") as Button
+	if btn == null:
+		return
+	btn.text = "Selected ✓" if selected else "Select"
+	_style_action_button(btn, selected)
 	btn.pressed.connect(func():
 		if _selected_rocket != rtype:
 			_selected_rocket = rtype
@@ -587,11 +674,9 @@ func _add_rocket_tile(rtype: String, parent: VBoxContainer) -> void:
 			# Rebuild tile styles without full step fade
 			_rebuild_rocket_tiles(parent)
 	)
-	btn_row.add_child(btn)
 
 func _rebuild_rocket_tiles(parent: VBoxContainer) -> void:
-	for c in parent.get_children():
-		c.queue_free()
+	_clear_container_children(parent)
 	for r in _rockets:
 		_add_rocket_tile(r, parent)
 
@@ -606,6 +691,7 @@ func _refresh_assembly(rtype: String) -> void:
 		c.queue_free()
 	if _asm_status_label and is_instance_valid(_asm_status_label):
 		_asm_status_label.add_theme_color_override("font_color", Color(0.22, 0.80, 0.45, 0.0))
+	_assembly_hint_label.visible = false
 
 	var parts: Array = ROCKET_PARTS.get(rtype, [
 		{"name": "CMD POD", "color": Color(0.66, 0.76, 0.88), "h": 40},
@@ -615,7 +701,9 @@ func _refresh_assembly(rtype: String) -> void:
 
 	var delay := 0.0
 	for part: Dictionary in parts:
-		var pbox := PanelContainer.new()
+		var pbox := RocketPartScene.instantiate() as PanelContainer
+		if pbox == null:
+			continue
 		pbox.size_flags_horizontal = SIZE_EXPAND_FILL
 		pbox.custom_minimum_size   = Vector2(0, int(part.get("h", 40)))
 		pbox.mouse_filter          = Control.MOUSE_FILTER_IGNORE
@@ -639,11 +727,9 @@ func _refresh_assembly(rtype: String) -> void:
 
 		var icon := _part_icon(str(part.get("name", "")))
 		var part_text := "%s  %s" % [icon, str(part.get("name", ""))] if icon != "" else str(part.get("name", ""))
-		var plbl := _label(part_text, Color(1, 1, 1, 0.88), 13)
-		plbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		plbl.vertical_alignment   = VERTICAL_ALIGNMENT_CENTER
-		plbl.mouse_filter         = Control.MOUSE_FILTER_IGNORE
-		pbox.add_child(plbl)
+		var plbl := pbox.get_node_or_null("PartLabel") as Label
+		if plbl:
+			plbl.text = part_text
 		_assembly_vbox.add_child(pbox)
 
 		# Snap-in animation: fade in sequentially
@@ -666,14 +752,7 @@ func _refresh_assembly(rtype: String) -> void:
 # ── Step: Confirm ─────────────────────────────────────────────────────────────
 
 func _build_confirm_step() -> void:
-	_add_section_label("Ready to launch", "Review your mission before the rocket departs.")
-
-	var card := _make_card(false, true)
-	_card_list.add_child(card)
-
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 14)
-	card.add_child(vbox)
+	_confirm_step.visible = true
 
 	var c_name   := str(_selected_contractor.get("name", "—"))
 	var t_label  := str(_selected_target.get("label", _selected_target.get("name", "—")))
@@ -686,29 +765,31 @@ func _build_confirm_step() -> void:
 		["🚀", "Rocket",     r_name],
 		["💰", "Cost",       cost_str],
 	]:
-		var hbox := HBoxContainer.new()
-		hbox.add_theme_constant_override("separation", 10)
-		vbox.add_child(hbox)
-		hbox.add_child(_label(str(row[0]), C_ACCENT, 18))
-		var kl := _label(str(row[1]), C_ON_SURF_VAR, 14)
-		kl.custom_minimum_size = Vector2(100, 0)
-		hbox.add_child(kl)
-		var vl := _label(str(row[2]), C_ON_SURF, 16)
-		vl.size_flags_horizontal = SIZE_EXPAND_FILL
-		hbox.add_child(vl)
-
-	var div := ColorRect.new()
-	div.custom_minimum_size = Vector2(0, 1)
-	div.color = C_SURF_LOW
-	vbox.add_child(div)
+		var summary_row := ConfirmRowScene.instantiate() as HBoxContainer
+		if summary_row == null:
+			continue
+		_set_label_text(summary_row, "IconLabel", str(row[0]))
+		_set_label_text(summary_row, "KeyLabel", str(row[1]))
+		_set_label_text(summary_row, "ValueLabel", str(row[2]))
+		var icon_label := summary_row.get_node_or_null("IconLabel") as Label
+		var key_label := summary_row.get_node_or_null("KeyLabel") as Label
+		var value_label := summary_row.get_node_or_null("ValueLabel") as Label
+		if icon_label:
+			icon_label.add_theme_color_override("font_color", C_ACCENT)
+		if key_label:
+			key_label.add_theme_color_override("font_color", C_ON_SURF_VAR)
+		if value_label:
+			value_label.add_theme_color_override("font_color", C_ON_SURF)
+		_confirm_rows_box.add_child(summary_row)
 
 	if _selected_rocket:
 		var dur_sec := RocketSpecs.get_mission_seconds(_selected_rocket)
-		vbox.add_child(_label("Estimated travel time: ~%d min" % (dur_sec / 60), C_ON_SURF_VAR, 13))
+		_confirm_travel_time_label.text = "Estimated travel time: ~%d min" % (dur_sec / 60)
+		_confirm_travel_time_label.visible = true
+	else:
+		_confirm_travel_time_label.visible = false
 
-	var note := _label("Once launched the rocket departs immediately.", C_ACCENT_DIM, 13)
-	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	vbox.add_child(note)
+	_confirm_note_label.text = "Once launched the rocket departs immediately."
 
 # ── Launch execution ──────────────────────────────────────────────────────────
 
@@ -730,11 +811,7 @@ func _execute_launch() -> void:
 	RocketsManager.set_preview_target(target_id, target_label, target_type, rocket_id)
 	launched.emit(rocket_id, target_id)
 
-# ── Widget helpers ────────────────────────────────────────────────────────────
-
-func _make_card(selected: bool, padded: bool) -> PanelContainer:
-	var p := PanelContainer.new()
-	p.size_flags_horizontal = SIZE_EXPAND_FILL
+func _make_card_style(selected: bool, padded: bool) -> StyleBoxFlat:
 	var s := StyleBoxFlat.new()
 	s.bg_color                   = C_ICE_TINT_BG if selected else C_SURF_LOWEST
 	s.corner_radius_top_left     = 12
@@ -755,8 +832,7 @@ func _make_card(selected: bool, padded: bool) -> PanelContainer:
 		s.border_width_top    = 2
 		s.border_width_bottom = 2
 		s.border_color        = C_ACCENT
-	p.add_theme_stylebox_override("panel", s)
-	return p
+	return s
 
 func _box(color: Color, radius: int) -> StyleBoxFlat:
 	var s := StyleBoxFlat.new()
@@ -786,10 +862,7 @@ func _part_icon(part_name: String) -> String:
 	if "ion" in n: return "⚡"
 	return "▪"
 
-func _action_btn(text: String, is_selected: bool) -> Button:
-	var btn := Button.new()
-	btn.text = text
-	btn.custom_minimum_size = Vector2(120, 40)
+func _style_action_button(btn: Button, is_selected: bool) -> void:
 	var bg  := C_ICE_TINT if is_selected else C_ACCENT
 	var fg  := C_ACCENT   if is_selected else C_WHITE
 	btn.add_theme_color_override("font_color", fg)
@@ -798,50 +871,59 @@ func _action_btn(text: String, is_selected: bool) -> Button:
 	btn.add_theme_stylebox_override("hover",   _box(C_ACCENT_DIM, 8))
 	btn.add_theme_stylebox_override("pressed", _box(C_ACCENT_DIM, 8))
 	btn.add_theme_stylebox_override("focus",   _box(bg, 8))
-	return btn
 
-func _stat_chip(key: String, val: String) -> VBoxContainer:
-	var v := VBoxContainer.new()
-	v.add_theme_constant_override("separation", 2)
-	v.add_child(_label(key, C_ON_SURF_VAR, 13))
-	v.add_child(_label(val, C_ON_SURF,     18))
+func _stat_chip(key: String, val: String, dark: bool = false) -> VBoxContainer:
+	var v := StatChipScene.instantiate() as VBoxContainer
+	if v == null:
+		v = VBoxContainer.new()
+	var key_label := v.get_node_or_null("KeyLabel") as Label
+	var value_label := v.get_node_or_null("ValueLabel") as Label
+	if key_label:
+		key_label.text = key
+		key_label.add_theme_color_override("font_color", C_ON_DARK_VAR if dark else C_ON_SURF_VAR)
+	if value_label:
+		value_label.text = val
+		value_label.add_theme_color_override("font_color", C_ON_DARK if dark else C_ON_SURF)
 	return v
 
-func _mineral_chip(mineral: String, qty: Variant) -> PanelContainer:
+func _mineral_chip(mineral: String, qty: Variant, dark: bool = false) -> PanelContainer:
 	var col: Color = MINERAL_TINTS.get(mineral, C_ACCENT)
-	var p := PanelContainer.new()
+	var p := MineralChipScene.instantiate() as PanelContainer
+	if p == null:
+		p = PanelContainer.new()
+	p.size_flags_horizontal = SIZE_EXPAND_FILL
 	var s := StyleBoxFlat.new()
-	s.bg_color                   = Color(col.r, col.g, col.b, 0.18)
+	s.bg_color                   = Color(col.r, col.g, col.b, 0.24 if dark else 0.18)
 	s.border_width_left          = 1
 	s.border_width_right         = 1
 	s.border_width_top           = 1
 	s.border_width_bottom        = 1
-	s.border_color               = Color(col.r, col.g, col.b, 0.65)
+	s.border_color               = Color(col.r, col.g, col.b, 0.72 if dark else 0.65)
 	s.corner_radius_top_left     = 6
 	s.corner_radius_top_right    = 6
 	s.corner_radius_bottom_left  = 6
 	s.corner_radius_bottom_right = 6
-	s.content_margin_left        = 8
-	s.content_margin_right       = 8
-	s.content_margin_top         = 3
-	s.content_margin_bottom      = 3
+	s.content_margin_left        = 10 if dark else 8
+	s.content_margin_right       = 10 if dark else 8
+	s.content_margin_top         = 7 if dark else 3
+	s.content_margin_bottom      = 7 if dark else 3
 	p.add_theme_stylebox_override("panel", s)
 	var qty_int := int(float(str(qty)))
-	var fg      := Color(col.r * 0.55, col.g * 0.55, col.b * 0.55, 1.0)
-	p.add_child(_label("%s  %d" % [mineral, qty_int], fg, 12))
+	var fg := C_ON_DARK if dark else Color(col.r * 0.55, col.g * 0.55, col.b * 0.55, 1.0)
+	var lbl := p.get_node_or_null("Label") as Label
+	if lbl == null:
+		lbl = _label("", fg, 15 if dark else 12)
+		p.add_child(lbl)
+	lbl.text = mineral if qty_int <= 0 else "%s  %d" % [mineral, qty_int]
+	lbl.add_theme_color_override("font_color", fg)
+	lbl.add_theme_font_size_override("font_size", 15 if dark else 12)
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER if dark else HORIZONTAL_ALIGNMENT_LEFT
 	return p
 
-func _add_section_label(title: String, subtitle: String) -> void:
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 6)
-	vbox.add_child(_label(title,    C_ON_SURF,     28))
-	var sub := _label(subtitle, C_ON_SURF_VAR, 15)
-	sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	vbox.add_child(sub)
-	_card_list.add_child(vbox)
-
 func _add_empty_msg(text: String) -> void:
-	var lbl := _label(text, C_ON_SURF_VAR, 16)
-	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var lbl := EmptyStateLabelScene.instantiate() as Label
+	if lbl == null:
+		return
+	lbl.text = text
+	lbl.add_theme_color_override("font_color", C_ON_SURF_VAR)
 	_card_list.add_child(lbl)

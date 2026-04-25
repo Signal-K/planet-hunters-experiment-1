@@ -1,0 +1,36 @@
+[gd_scene format=3]
+
+[node name="GameMenuConstructionProjectCard" type="PanelContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Body" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="TitleRow" type="HBoxContainer" parent="Body"]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="Body/TitleRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Project"
+
+[node name="StatusLabel" type="Label" parent="Body/TitleRow"]
+layout_mode = 2
+text = "COMPLETE"
+visible = false
+
+[node name="DescriptionLabel" type="Label" parent="Body"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Description"
+
+[node name="RequirementsList" type="VBoxContainer" parent="Body"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="ContributeButton" type="Button" parent="Body"]
+layout_mode = 2
+text = "Contribute Minerals"
+visible = false

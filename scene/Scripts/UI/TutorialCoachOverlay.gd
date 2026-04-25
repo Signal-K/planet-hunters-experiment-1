@@ -25,7 +25,6 @@ const POINTER_MIN_LENGTH := 84.0
 @onready var skip_button: Button = $Root/Panel/Margin/VBox/Buttons/SkipButton
 @onready var practice_mining_button: Button = $Root/Panel/Margin/VBox/Buttons/PracticeMiningButton
 @onready var replay_mission_button: Button = $Root/Panel/Margin/VBox/Buttons/ReplayMissionButton
-@onready var replay_all_button: Button = $Root/Panel/Margin/VBox/Buttons/ReplayAllButton
 @onready var open_launchpad_button: Button = $Root/Panel/Margin/VBox/Buttons/OpenLaunchpadButton
 @onready var go_to_debrief_button: Button = $Root/Panel/Margin/VBox/Buttons/GoToDebriefButton
 @onready var resume_mission_button: Button = $Root/Panel/Margin/VBox/Buttons/ResumeMissionButton
@@ -60,7 +59,6 @@ func _ready() -> void:
 	skip_button.hide()
 	practice_mining_button.pressed.connect(_on_practice_mining_pressed)
 	replay_mission_button.pressed.connect(_on_replay_mission_pressed)
-	replay_all_button.pressed.connect(_on_replay_all_pressed)
 	set_process(true)
 	_refresh()
 
@@ -96,7 +94,7 @@ func _configure_mouse_passthrough() -> void:
 	var buttons_row = $Root/Panel/Margin/VBox/Buttons
 	if buttons_row:
 		buttons_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	for btn in [collapse_button, skip_button, practice_mining_button, replay_mission_button, replay_all_button, open_launchpad_button, go_to_debrief_button, resume_mission_button]:
+	for btn in [collapse_button, skip_button, practice_mining_button, replay_mission_button, open_launchpad_button, go_to_debrief_button, resume_mission_button]:
 		if btn:
 			btn.mouse_filter = Control.MOUSE_FILTER_STOP
 
@@ -170,7 +168,6 @@ func _apply_off_course_display() -> void:
 		message_label.visible = true
 		skip_button.visible = false
 		replay_mission_button.visible = false
-		replay_all_button.visible = false
 		practice_mining_button.visible = false
 		if resume_mission_button:
 			resume_mission_button.visible = false
@@ -179,11 +176,11 @@ func _apply_off_course_display() -> void:
 	stage_label.visible = false
 	progress_label.visible = false
 	action_label.visible = false
-	message_label.text = _resume_hint_for_step(_current_step)
-	message_label.visible = true
+	var _hint := _resume_hint_for_step(_current_step)
+	message_label.text = _hint
+	message_label.visible = _hint != ""
 	skip_button.visible = false
 	replay_mission_button.visible = false
-	replay_all_button.visible = false
 	practice_mining_button.visible = false
 	var valid_scenes: Array = _current_step.get("valid_scenes", [])
 	var is_inflight_step = "SidescrollMining" in valid_scenes
@@ -199,7 +196,7 @@ func _resume_hint_for_step(step: Dictionary) -> String:
 		return "Your mission is in flight."
 	if "mission_debrief_v2" in valid_scenes:
 		return "Return to base to complete your debrief."
-	return "Navigate to continue your mission."
+	return ""
 
 func _is_transit_scene() -> bool:
 	var tree = get_tree()
@@ -234,7 +231,7 @@ func _apply_style() -> void:
 	PanelStyle.apply_muted_on_dark(progress_label)
 	progress_label.add_theme_font_size_override("font_size", 18)
 
-	for btn in [replay_mission_button, replay_all_button]:
+	for btn in [replay_mission_button]:
 		_apply_pill_button(btn, false)
 	_apply_pill_button(practice_mining_button, true)
 	_apply_pill_button(collapse_button, false)
@@ -303,7 +300,7 @@ func _on_tutorial_state_updated(state: Dictionary) -> void:
 	stage_label.text = "Mission %d" % stage
 	message_label.text = str(step.get("message", ""))
 	action_label.text = _action_copy_for_step(step)
-	progress_label.text = "Step %d/%d" % [min(current_idx + 1, max(total, 1)), max(total, 1)]
+	progress_label.text = _progress_copy_for_state(stage, current_idx, total, step)
 	practice_mining_button.visible = _step_supports_practice(step)
 	_update_context_action_button()
 	call_deferred("_reposition_panel")
@@ -461,6 +458,12 @@ func _intersect_line_with_rect(origin: Vector2, direction: Vector2, rect: Rect2)
 			best_point = point
 	return best_point
 
+func _progress_copy_for_state(stage: int, current_idx: int, total: int, step: Dictionary) -> String:
+	var action_key := str(step.get("action_key", ""))
+	if stage == 2 and action_key == "build_control_station":
+		return "Mission 2 gate"
+	return "Step %d/%d" % [min(current_idx + 1, max(total, 1)), max(total, 1)]
+
 func _action_copy_for_step(step: Dictionary) -> String:
 	var key = str(step.get("action_key", ""))
 	var stage = int(_current_state.get("current_stage", 1))
@@ -486,7 +489,13 @@ func _action_copy_for_step(step: Dictionary) -> String:
 		"select_launch_target":
 			if on_base:
 				return "Press New Mission to open Launchpad, then select a target."
-			return "Select the highlighted Mission 1 target."
+			if stage == 3:
+				return "Classify a TESS candidate, then select a confirmed target on the map."
+			return "Select the highlighted Mission target."
+		"classify_candidate":
+			if on_base:
+				return "Press New Mission to open Launchpad, then classify a TESS lightcurve candidate."
+			return "Use the candidate review card before selecting your route."
 		"launch_rocket_from_earth":
 			if on_base:
 				return "Press New Mission to open Launchpad, then launch."
@@ -544,10 +553,6 @@ func _on_replay_mission_pressed() -> void:
 	if _app_controller and _app_controller.has_method("replay_tutorial_for_current_mission"):
 		_app_controller.replay_tutorial_for_current_mission()
 
-func _on_replay_all_pressed() -> void:
-	if _app_controller and _app_controller.has_method("replay_tutorial_from_mission1"):
-		_app_controller.replay_tutorial_from_mission1()
-
 func _on_practice_mining_pressed() -> void:
 	preload("res://Scripts/Utils/AppControllerHelper.gd").open_mining_practice_panel("tutorial_overlay")
 
@@ -560,6 +565,8 @@ func _update_context_action_button() -> void:
 	if open_launchpad_button == null:
 		return
 	open_launchpad_button.text = "Open Launchpad"
+	var show_build_control_station := _needs_control_station_cta()
+	var show_build_scanner_station := _needs_scanner_station_cta()
 	if go_to_debrief_button:
 		go_to_debrief_button.text = "Open Debrief"
 	if resume_mission_button:
@@ -579,20 +586,45 @@ func _update_context_action_button() -> void:
 			if mode == "resume":
 				resume_mission_button.text = str(mission_ctx.get("cta", "Resume Mission"))
 		replay_mission_button.visible = false
-		replay_all_button.visible = false
 		return
 	var show_launchpad := _needs_launchpad_cta()
 	var show_debrief   := _needs_debrief_cta()
-	var show_any_cta   := show_launchpad or show_debrief
-	open_launchpad_button.visible = show_launchpad
+	var show_any_cta   := show_build_control_station or show_build_scanner_station or show_launchpad or show_debrief
+	open_launchpad_button.visible = show_build_control_station or show_build_scanner_station or show_launchpad
+	if show_build_control_station:
+		open_launchpad_button.text = "Build Control Station"
+	elif show_build_scanner_station:
+		open_launchpad_button.text = "Build Scanner Station"
 	if go_to_debrief_button:
 		go_to_debrief_button.visible = show_debrief
 	# Avoid right-edge overflow: when a CTA is shown, hide replay buttons.
 	if not _off_course:
-		replay_mission_button.visible = not show_any_cta
-		replay_all_button.visible = not show_any_cta
+		replay_mission_button.visible = not show_any_cta and _current_mission_started()
 		if resume_mission_button:
 			resume_mission_button.visible = false
+
+func _needs_control_station_cta() -> bool:
+	if _current_step.is_empty():
+		return false
+	if str(_current_step.get("action_key", "")) != "build_control_station":
+		return false
+	var tree := get_tree()
+	if tree == null or tree.current_scene == null:
+		return false
+	return tree.current_scene.scene_file_path.get_file().get_basename() == "earth_base_1"
+
+func _needs_scanner_station_cta() -> bool:
+	if _current_step.is_empty():
+		return false
+	if str(_current_step.get("action_key", "")) != "build_scanner_station":
+		return false
+	var tree := get_tree()
+	if tree == null or tree.current_scene == null:
+		return false
+	return tree.current_scene.scene_file_path.get_file().get_basename() == "earth_base_1"
+
+func _current_mission_started() -> bool:
+	return bool(_current_state.get("current_mission_started", false))
 
 func _get_earth_base_mission_context() -> Dictionary:
 	var tree := get_tree()
@@ -652,6 +684,12 @@ func _on_go_to_debrief_pressed() -> void:
 		tree.change_scene_to_file("res://Scenes/Earth/mission_debrief_v2.tscn")
 
 func _on_open_launchpad_pressed() -> void:
+	if _needs_control_station_cta():
+		_build_control_station_from_current_scene()
+		return
+	if _needs_scanner_station_cta():
+		_build_scanner_station_from_current_scene()
+		return
 	var tree = get_tree()
 	if tree == null:
 		return
@@ -661,6 +699,28 @@ func _on_open_launchpad_pressed() -> void:
 		scene_manager.change_to_scene("res://Scenes/Earth/earth_launchpad.tscn")
 		return
 	tree.change_scene_to_file("res://Scenes/Earth/earth_launchpad.tscn")
+
+func _build_control_station_from_current_scene() -> void:
+	var tree := get_tree()
+	if tree == null or tree.current_scene == null:
+		return
+	var scene := tree.current_scene
+	if scene.has_method("_start_guided_build_flow"):
+		scene.call("_start_guided_build_flow", "control_station")
+		return
+	if scene.has_method("_on_build_control_station_pressed"):
+		scene.call("_on_build_control_station_pressed")
+
+func _build_scanner_station_from_current_scene() -> void:
+	var tree := get_tree()
+	if tree == null or tree.current_scene == null:
+		return
+	var scene := tree.current_scene
+	if scene.has_method("_start_guided_build_flow"):
+		scene.call("_start_guided_build_flow", "scanner_station")
+		return
+	if scene.has_method("_on_build_scanner_station_pressed"):
+		scene.call("_on_build_scanner_station_pressed")
 
 func _on_resume_mission_pressed() -> void:
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")

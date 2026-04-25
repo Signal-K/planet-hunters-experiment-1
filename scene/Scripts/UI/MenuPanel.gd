@@ -8,7 +8,6 @@ signal counter_changed(new_value: int)
 signal reset_all
 signal skip_tutorial_requested
 signal replay_mission_tutorial_requested
-signal replay_all_tutorial_requested
 
 const UnlockHeaderScene = preload("res://Scenes/UI/Templates/MenuUnlockHeader.tscn")
 const UnlockItemScene = preload("res://Scenes/UI/Templates/MenuUnlockItem.tscn")
@@ -31,15 +30,14 @@ const NumberFormat = preload("res://Scripts/Utils/NumberFormat.gd")
 @onready var close_btn: Button = $PanelContainer/Panel/VBoxContainer/HeaderContainer/HeaderBackground/HeaderContent/HeaderButtons/CloseButton
 @onready var logbook_btn: Button = $PanelContainer/Panel/VBoxContainer/HeaderContainer/HeaderBackground/HeaderContent/HeaderButtons/LogbookButton
 @onready var reset_btn: Button = $PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/ResetButton
-var debug_mining_btn: Button
-var debug_money_btn: Button
-var mission_jump_label: Label
-var mission_jump_row: HBoxContainer
+@onready var debug_mining_btn: Button = $PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/DebugMiningButton
+@onready var debug_money_btn: Button = $PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/DebugMoneyButton
+@onready var mission_jump_label: Label = $PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/MissionJumpLabel
+@onready var mission_jump_row: HBoxContainer = $PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/MissionJumpRow
 
 @onready var practice_mining_btn: Button = $PanelContainer/Panel/VBoxContainer/TabContainer/Settings/Content/PracticeMiningButton
 @onready var skip_tutorial_btn: Button = $PanelContainer/Panel/VBoxContainer/TabContainer/Settings/Content/SkipTutorialButton
 @onready var replay_mission_tutorial_btn: Button = $PanelContainer/Panel/VBoxContainer/TabContainer/Settings/Content/ReplayMissionTutorialButton
-@onready var replay_all_tutorial_btn: Button = $PanelContainer/Panel/VBoxContainer/TabContainer/Settings/Content/ReplayAllTutorialButton
 @onready var level_label: Label = $PanelContainer/Panel/VBoxContainer/TabContainer/Progress/Content/ProgressCard/ProgressContainer/LevelRow/LevelLabel
 @onready var xp_label: Label = $PanelContainer/Panel/VBoxContainer/TabContainer/Progress/Content/ProgressCard/ProgressContainer/LevelRow/XpLabel
 @onready var progress_bar: ProgressBar = $PanelContainer/Panel/VBoxContainer/TabContainer/Progress/Content/ProgressCard/ProgressContainer/ProgressBar
@@ -78,7 +76,6 @@ func _ready() -> void:
 	practice_mining_btn.pressed.connect(_on_practice_mining_pressed)
 	skip_tutorial_btn.pressed.connect(_on_skip_tutorial_pressed)
 	replay_mission_tutorial_btn.pressed.connect(_on_replay_mission_tutorial_pressed)
-	replay_all_tutorial_btn.pressed.connect(_on_replay_all_tutorial_pressed)
 	citizen_science_dialogue_btn.pressed.connect(_on_citizen_science_dialogue_pressed)
 	
 	# Update display
@@ -138,7 +135,6 @@ func _apply_style() -> void:
 	PanelStyle.apply_button(practice_mining_btn, true)
 	PanelStyle.apply_outline_button(skip_tutorial_btn)
 	PanelStyle.apply_outline_button(replay_mission_tutorial_btn)
-	PanelStyle.apply_outline_button(replay_all_tutorial_btn)
 	$LogbookOverlay.color = Color(0.03, 0.06, 0.10, 0.84)
 	$LogbookOverlay/LogbookPanelContainer/LogbookPanel.add_theme_stylebox_override(
 		"panel",
@@ -289,40 +285,22 @@ func _on_reset_button_pressed() -> void:
 	reset_all.emit()
 
 func _setup_debug_buttons() -> void:
-	var container = $PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content
-	
-	debug_mining_btn = Button.new()
-	debug_mining_btn.text = "🚀 DEBUG: START INSTANT MINING"
-	container.add_child(debug_mining_btn)
-	container.move_child(debug_mining_btn, 0)
 	debug_mining_btn.pressed.connect(_on_debug_mining_pressed)
-	
-	mission_jump_label = Label.new()
-	mission_jump_label.text = "JUMP TO MISSION:"
 	PanelStyle.apply_muted_on_dark(mission_jump_label)
 	mission_jump_label.add_theme_font_size_override("font_size", 14)
-	container.add_child(mission_jump_label)
-	container.move_child(mission_jump_label, 1)
-	
-	mission_jump_row = HBoxContainer.new()
-	mission_jump_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	mission_jump_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	mission_jump_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	container.add_child(mission_jump_row)
-	container.move_child(mission_jump_row, 2)
-	
-	for i in range(1, 6):
-		var btn = Button.new()
-		btn.text = "M%d" % i
-		btn.custom_minimum_size = Vector2(60, 40)
-		btn.pressed.connect(func(): _on_jump_to_mission(i))
-		mission_jump_row.add_child(btn)
+	var mission_buttons: Array[Button] = [
+		$PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/MissionJumpRow/Mission1Button,
+		$PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/MissionJumpRow/Mission2Button,
+		$PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/MissionJumpRow/Mission3Button,
+		$PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/MissionJumpRow/Mission4Button,
+		$PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/MissionJumpRow/Mission5Button
+	]
+	for i in range(mission_buttons.size()):
+		var btn := mission_buttons[i]
+		btn.pressed.connect(func(): _on_jump_to_mission(i + 1))
 		PanelStyle.apply_button(btn, false)
-	
-	debug_money_btn = Button.new()
-	debug_money_btn.text = "💰 DEBUG: GRANT 10M FRANCS"
-	container.add_child(debug_money_btn)
-	container.move_child(debug_money_btn, 3)
 	debug_money_btn.pressed.connect(_on_debug_money_pressed)
 
 func _on_debug_mining_pressed() -> void:
@@ -363,9 +341,6 @@ func _on_skip_tutorial_pressed() -> void:
 
 func _on_replay_mission_tutorial_pressed() -> void:
 	replay_mission_tutorial_requested.emit()
-
-func _on_replay_all_tutorial_pressed() -> void:
-	replay_all_tutorial_requested.emit()
 
 func _on_citizen_science_dialogue_pressed() -> void:
 	var app = _get_app_controller()

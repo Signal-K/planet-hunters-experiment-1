@@ -1,0 +1,20 @@
+[gd_scene format=3]
+
+[node name="GameMenuContributeMineralRow" type="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="NameLabel" type="Label" parent="."]
+custom_minimum_size = Vector2(110, 0)
+layout_mode = 2
+text = "Iron"
+
+[node name="InfoLabel" type="Label" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Need 0 kg"
+
+[node name="AmountSpinBox" type="SpinBox" parent="."]
+custom_minimum_size = Vector2(110, 44)
+layout_mode = 2

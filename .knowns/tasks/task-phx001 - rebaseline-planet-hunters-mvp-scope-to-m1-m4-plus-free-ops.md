@@ -1,7 +1,7 @@
 ---
 id: phx001
 title: Rebaseline Planet Hunters MVP scope to M1-M4 plus Free Ops
-status: todo
+status: done
 priority: high
 labels:
   - mvp
@@ -10,7 +10,7 @@ labels:
   - rebaseline
   - mission-mapping
 createdAt: '2026-04-19T14:00:00.000Z'
-updatedAt: '2026-04-21T08:17:14.288Z'
+updatedAt: '2026-04-22T04:13:52.289Z'
 timeSpent: 0
 assignee: '@me'
 ---
@@ -24,9 +24,9 @@ This is part of the 2026-04-20 Star Sailors MVP/project-management reset. Projec
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 No authored Mission 5 work is active.
-- [ ] #2 MVP scope is visible from the repo docs and this command center.
-- [ ] #3 Deferred room/art/construction work is clearly marked.
+- [x] #1 No authored Mission 5 work is active.
+- [x] #2 MVP scope is visible from the repo docs and this command center.
+- [x] #3 Deferred room/art/construction work is clearly marked.
 <!-- AC:END -->
 
 ## Implementation Plan

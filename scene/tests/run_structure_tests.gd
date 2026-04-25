@@ -9,10 +9,15 @@ const RocketsMissionProgress = preload("res://Scripts/Utils/RocketsMissionProgre
 const RocketsTargeting = preload("res://Scripts/Utils/RocketsTargeting.gd")
 const CurrencyManager = preload("res://Scripts/Utils/CurrencyManager.gd")
 const LaunchWizard = preload("res://Scripts/UI/LaunchWizard.gd")
+const GameNavigationMenu = preload("res://Scripts/UI/GameNavigationMenu.gd")
+const GameMenuMarketplaceRowScene = preload("res://Scenes/UI/Templates/GameMenuMarketplaceRow.tscn")
+const GameMenuRoomUpgradeRowScene = preload("res://Scenes/UI/Templates/GameMenuRoomUpgradeRow.tscn")
+const EmergencyLoanOfferDialogScene = preload("res://Scenes/UI/EmergencyLoanOfferDialog.tscn")
 const EarthBaseScene = preload("res://Scenes/Earth/earth_base_1.tscn")
 const EarthLaunchpadScene = preload("res://Scenes/Earth/earth_launchpad.tscn")
 const MissionDebriefScene = preload("res://Scenes/Earth/mission_debrief_v2.tscn")
 const SpaceMapScene = preload("res://Scenes/UI/SpaceMap/space_map.tscn")
+const ControlStationScene = preload("res://Scenes/UI/ControlStationPanel.tscn")
 const SidescrollMiningScene = preload("res://Scenes/UI/SidescrollMining.tscn")
 const MiningPracticeScene = preload("res://Scenes/UI/MiningPracticePanel.tscn")
 const SatelliteStationScene = preload("res://Scenes/UI/SatelliteStationPanel.tscn")
@@ -20,6 +25,15 @@ const RocketAscentScene = preload("res://Scenes/Transitions/rocket_ascent.tscn")
 const OutboundPreviewScene = preload("res://Scenes/Transitions/rocket_transit.tscn")
 
 var reporter := TestReporter.new()
+
+class FakeTutorialAppController:
+	extends Node
+	signal tutorial_state_updated(state: Dictionary)
+
+	var state: Dictionary = {}
+
+	func get_tutorial_state() -> Dictionary:
+		return state.duplicate(true)
 
 func _init():
 	reporter.start_suite("Structure & Interaction Tests", {
@@ -52,12 +66,36 @@ func run_all_tests() -> void:
 	await test_open_operation_mode_persists_and_applies_to_missions()
 	await test_mission_exposure_reward_progression()
 	await test_mission_briefing_seen_persistence()
-	await test_scanner_station_requires_explicit_build_step()
-	await test_earth_base_disables_new_mission_until_scanner_station_is_built()
+	await test_scanner_station_legacy_state_reconciles_after_m3()
+	await test_control_station_legacy_state_reconciles_after_m2()
+	await test_earth_base_hides_progression_cards_during_active_tutorial_step()
+	await test_earth_base_allows_new_mission_for_m4_without_scanner_gate()
+	await test_earth_base_ignores_historical_mission_log_when_no_live_mission_exists()
+	await test_earth_base_hides_star_map_progression_card()
+	await test_game_navigation_menu_root_has_scene_owned_sections()
+	await test_game_navigation_menu_stats_and_debug_use_templates()
+	await test_game_navigation_menu_actions_use_scene_owned_controls()
+	await test_game_navigation_menu_uses_template_backed_overlay_rows()
+	await test_game_navigation_menu_construction_uses_templates()
+	await test_game_navigation_menu_live_cards_use_templates()
+	await test_control_station_panel_has_scene_owned_primary_sections()
+	await test_control_station_panel_uses_template_backed_rows()
+	await test_satellite_station_panel_has_scene_owned_hint_and_early_scan_controls()
+	await test_space_map_target_dialogue_uses_scene_templates()
+	await test_emergency_loan_dialog_has_scene_owned_layout()
+	await test_asteroid_detail_view_uses_scene_owned_summary_and_classification()
+	await test_mission_debrief_uses_template_backed_guide_and_detail_rows()
+	await test_menu_panel_advanced_debug_controls_are_scene_owned()
+	await test_mechanic_intro_overlay_uses_template_backed_step_rows()
+	await test_subcontractors_panel_uses_template_backed_detail_labels()
 	await test_launch_wizard_has_required_signals()
 	await test_space_map_scene_has_shared_bottom_nav()
 	await test_mission_debrief_scene_has_shared_bottom_nav()
 	await test_sidescroll_mining_drone_pool_reuse()
+	await test_sidescroll_mining_has_scene_owned_mars_background()
+	await test_sidescroll_mining_contract_rows_use_template()
+	await test_sidescroll_mining_room_rows_use_template()
+	await test_sidescroll_mining_room_debug_overlay_uses_scene_owned_preview_and_marker_template()
 	await test_sidescroll_mining_button_handbook_copy_is_plain_language()
 	await test_mining_practice_panel_stays_on_screen_after_run_complete()
 	await test_satellite_station_panel_stays_on_screen()
@@ -383,8 +421,446 @@ func test_launch_wizard_has_required_signals() -> void:
 	wiz.free()
 	reporter.pass_test()
 
-func test_scanner_station_requires_explicit_build_step() -> void:
-	reporter.start_test("[UX] Scanner station stays unbuilt after Mission 3 until the player builds it")
+func test_game_navigation_menu_root_has_scene_owned_sections() -> void:
+	reporter.start_test("[UX] GameNavigationMenu root includes scene-owned section hosts")
+	var owner := Control.new()
+	get_root().add_child(owner)
+	GameNavigationMenu.open(owner)
+	await create_timer(0.05).timeout
+	var layer := get_root().get_node_or_null("GameMenuLayer")
+	if layer == null:
+		reporter.fail_test("Expected GameMenuLayer after opening menu")
+		owner.queue_free()
+		return
+	var expected_paths = [
+		"GameMenuRoot/Center/GameMenuPanel/Scroll/Shell/StatsHost",
+		"GameMenuRoot/Center/GameMenuPanel/Scroll/Shell/CargoHost",
+		"GameMenuRoot/Center/GameMenuPanel/Scroll/Shell/MissionRequirementsHost",
+		"GameMenuRoot/Center/GameMenuPanel/Scroll/Shell/SettingsHost",
+		"GameMenuRoot/Center/GameMenuPanel/Scroll/Shell/DebugHost"
+	]
+	for path in expected_paths:
+		if layer.get_node_or_null(path) == null:
+			reporter.fail_test("Expected scene-owned menu section at %s" % path)
+			GameNavigationMenu.close(owner)
+			owner.queue_free()
+			return
+	GameNavigationMenu.close(owner)
+	owner.queue_free()
+	reporter.pass_test()
+
+func test_game_navigation_menu_stats_and_debug_use_templates() -> void:
+	reporter.start_test("[UX] GameNavigationMenu stats and debug sections use template-backed content")
+	var owner := Control.new()
+	get_root().add_child(owner)
+	var existing_layer := get_root().get_node_or_null("GameMenuLayer")
+	if existing_layer != null:
+		existing_layer.queue_free()
+		await create_timer(0.02).timeout
+	GameNavigationMenu.open(owner)
+	await create_timer(0.05).timeout
+	var layer := get_root().get_node_or_null("GameMenuLayer")
+	if layer == null:
+		reporter.fail_test("Expected GameMenuLayer after opening menu")
+		owner.queue_free()
+		return
+	var stats_host := layer.get_node_or_null("GameMenuRoot/Center/GameMenuPanel/Scroll/Shell/StatsHost") as VBoxContainer
+	var debug_host := layer.get_node_or_null("GameMenuRoot/Center/GameMenuPanel/Scroll/Shell/DebugHost") as VBoxContainer
+	if stats_host == null or debug_host == null:
+		reporter.fail_test("Expected stats/debug hosts in GameNavigationMenu")
+		GameNavigationMenu.close(owner)
+		owner.queue_free()
+		return
+	var stats_card := stats_host.get_child(0) if stats_host.get_child_count() > 0 else null
+	if stats_card == null or stats_card.find_child("GameMenuStatColumn", true, false) == null:
+		reporter.fail_test("Expected template-backed GameMenuStatColumn inside stats card")
+		GameNavigationMenu.close(owner)
+		owner.queue_free()
+		return
+	var debug_section := debug_host.get_child(0) if debug_host.get_child_count() > 0 else null
+	if debug_section == null or debug_section.name != "GameMenuDebugSection":
+		reporter.fail_test("Expected GameMenuDebugSection template in debug host")
+		GameNavigationMenu.close(owner)
+		owner.queue_free()
+		return
+	var debug_paths = [
+		"InstantMiningButton",
+		"MoneyButton",
+		"MissionLabel",
+		"MissionRow/Mission1Button",
+		"MissionRow/Mission5Button"
+	]
+	for path in debug_paths:
+		if debug_section.get_node_or_null(path) == null:
+			reporter.fail_test("Expected debug template node at %s" % path)
+			GameNavigationMenu.close(owner)
+			owner.queue_free()
+			return
+	GameNavigationMenu.close(owner)
+	owner.queue_free()
+	reporter.pass_test()
+
+func test_control_station_panel_has_scene_owned_primary_sections() -> void:
+	reporter.start_test("[UX] ControlStationPanel includes scene-owned primary sections")
+	var scene = ControlStationScene.instantiate()
+	get_root().add_child(scene)
+	await create_timer(0.05).timeout
+	var expected_paths = [
+		"RootHBox/Sidebar",
+		"RootHBox/MainArea/Header",
+		"RootHBox/MainArea/ContentMargin/ContentHBox/MissionsArea/MissionsList",
+		"RootHBox/MainArea/ContentMargin/ContentHBox/MissionsArea/StoryList",
+		"RootHBox/MainArea/ContentMargin/ContentHBox/RightRail/QueueCard/QueueVBox/QueueList",
+		"RootHBox/MainArea/ContentMargin/ContentHBox/RightRail/LogCard/LogVBox/LogList",
+		"RootHBox/MainArea/ContentMargin/ContentHBox/RightRail/FooterTabs"
+	]
+	for path in expected_paths:
+		if scene.get_node_or_null(path) == null:
+			reporter.fail_test("Expected scene-owned control station section at %s" % path)
+			scene.queue_free()
+			return
+	scene.queue_free()
+	reporter.pass_test()
+
+func test_game_navigation_menu_actions_use_scene_owned_controls() -> void:
+	reporter.start_test("[UX] GameNavigationMenu actions section uses scene-owned controls")
+	var section = preload("res://Scenes/UI/Templates/GameMenuActionsSection.tscn").instantiate()
+	get_root().add_child(section)
+	await create_timer(0.01).timeout
+	for node_name in [
+		"PracticeMiningButton",
+		"ReplayMissionGuideButton",
+		"CitizenScienceDialogueButton",
+		"ResetAllDataButton"
+	]:
+		if section.get_node_or_null(node_name) == null:
+			reporter.fail_test("Expected GameMenuActionsSection node %s" % node_name)
+			section.queue_free()
+			return
+	section.queue_free()
+	reporter.pass_test()
+
+func test_game_navigation_menu_uses_template_backed_overlay_rows() -> void:
+	reporter.start_test("[UX] GameNavigationMenu overlay rows use reusable scene templates")
+	var logbook_entries := VBoxContainer.new()
+	GameNavigationMenu._populate_logbook_entries(logbook_entries)
+	if logbook_entries.get_child_count() == 0:
+		reporter.fail_test("Expected logbook population to add at least one child")
+		return
+	var first_logbook_child := logbook_entries.get_child(0)
+	if first_logbook_child.name != "EmptyLabel" and first_logbook_child.name != "LogbookCard":
+		reporter.fail_test("Expected template-backed logbook child, got %s" % first_logbook_child.name)
+		return
+	var discovery_row := GameNavigationMenu._build_discovery_row({
+		"label": "Training Asteroid A",
+		"target_id": "mission-1-training-target",
+		"timestamp": "2026-04-24 10:00:00",
+		"target_type": "asteroid"
+	})
+	if discovery_row.name != "MenuDiscoveryRow":
+		reporter.fail_test("Expected MenuDiscoveryRow template, got %s" % discovery_row.name)
+		return
+	reporter.pass_test()
+
+func test_control_station_panel_uses_template_backed_rows() -> void:
+	reporter.start_test("[UX] ControlStationPanel uses template-backed empty and log rows")
+	var scene = ControlStationScene.instantiate()
+	get_root().add_child(scene)
+	await create_timer(0.05).timeout
+	var empty_state = scene._create_empty_state_card()
+	if empty_state.name != "ControlStationEmptyStateCard":
+		reporter.fail_test("Expected ControlStationEmptyStateCard template, got %s" % empty_state.name)
+		scene.queue_free()
+		return
+	var log_list = scene.get_node_or_null("RootHBox/MainArea/ContentMargin/ContentHBox/RightRail/LogCard/LogVBox/LogList") as VBoxContainer
+	if log_list == null or log_list.get_child_count() == 0:
+		reporter.fail_test("Expected populated control station log list")
+		scene.queue_free()
+		return
+	if log_list.get_child(0).name != "ControlStationLogLine":
+		reporter.fail_test("Expected ControlStationLogLine template, got %s" % log_list.get_child(0).name)
+		scene.queue_free()
+		return
+	var mineral_row := HBoxContainer.new()
+	scene._populate_mineral_chips(mineral_row, {}, false)
+	if mineral_row.get_child_count() != 1 or mineral_row.get_child(0).name != "ControlStationMineralEmptyLabel":
+		reporter.fail_test("Expected ControlStationMineralEmptyLabel template for empty mineral row")
+		scene.queue_free()
+		return
+	var overflow_row := HBoxContainer.new()
+	scene._populate_mineral_chips(overflow_row, {"Iron": 1, "Nickel": 1, "Gold": 1, "Cobalt": 1}, false)
+	if overflow_row.get_child_count() < 4 or overflow_row.get_child(overflow_row.get_child_count() - 1).name != "ControlStationMineralOverflowLabel":
+		reporter.fail_test("Expected ControlStationMineralOverflowLabel template for overflow mineral row")
+		scene.queue_free()
+		return
+	scene.queue_free()
+	reporter.pass_test()
+
+func test_satellite_station_panel_has_scene_owned_hint_and_early_scan_controls() -> void:
+	reporter.start_test("[UX] SatelliteStationPanel includes scene-owned citizen-science and early-scan controls")
+	var scene = SatelliteStationScene.instantiate()
+	get_root().add_child(scene)
+	await create_timer(0.05).timeout
+	var expected_paths = [
+		"PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/StatusContainer/ScanSummaryCard/SummaryMargin/SummaryVBox/CitizenScienceHintLabel",
+		"PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/RefreshContainer/EarlyScanButton"
+	]
+	for path in expected_paths:
+		if scene.get_node_or_null(path) == null:
+			reporter.fail_test("Expected scene-owned satellite station control at %s" % path)
+			scene.queue_free()
+			return
+	scene.queue_free()
+	reporter.pass_test()
+
+func test_space_map_target_dialogue_uses_scene_templates() -> void:
+	reporter.start_test("[UX] SpaceMap target dialogue uses scene-owned overlay and contractor row templates")
+	var scene = SpaceMapScene.instantiate()
+	get_root().add_child(scene)
+	await create_timer(0.05).timeout
+	scene._open_target_preview("test-target", {"label": "Test Target", "type": "asteroid"})
+	await create_timer(0.02).timeout
+	var dialogue := scene.get_node_or_null("CanvasLayer/TargetDialogue")
+	if dialogue == null:
+		reporter.fail_test("Expected SpaceMap target dialogue under CanvasLayer")
+		scene.queue_free()
+		return
+	var expected_paths = [
+		"Center/Panel/Scroll/Body/HeaderRow/TitleLabel",
+		"Center/Panel/Scroll/Body/ContractorsList",
+		"Center/Panel/Scroll/Body/LaunchButton",
+		"Center/Panel/Scroll/Body/LockedLabel"
+	]
+	for path in expected_paths:
+		if dialogue.get_node_or_null(path) == null:
+			reporter.fail_test("Expected scene-owned space map dialogue node at %s" % path)
+			scene.queue_free()
+			return
+	scene.queue_free()
+	reporter.pass_test()
+
+func test_emergency_loan_dialog_has_scene_owned_layout() -> void:
+	reporter.start_test("[UX] Emergency loan dialog uses scene-owned layout and controls")
+	var scene = EmergencyLoanOfferDialogScene.instantiate()
+	get_root().add_child(scene)
+	await create_timer(0.05).timeout
+	var expected_paths = [
+		"Center/Panel/HBox/Sidebar/SidebarVBox/IconCircle/IconLabel",
+		"Center/Panel/HBox/RightMargin/RightContent/CreditCard/CreditCardBody/AmountRow/AmountLabel",
+		"Center/Panel/HBox/RightMargin/RightContent/WarningCard/WarningHBox/WarnLabel",
+		"Center/Panel/HBox/RightMargin/RightContent/ButtonRow/AcceptButton",
+		"Center/Panel/HBox/RightMargin/RightContent/ButtonRow/DeclineButton"
+	]
+	for path in expected_paths:
+		if scene.get_node_or_null(path) == null:
+			reporter.fail_test("Expected scene-owned loan dialog node at %s" % path)
+			scene.queue_free()
+			return
+	scene.queue_free()
+	reporter.pass_test()
+
+func test_asteroid_detail_view_uses_scene_owned_summary_and_classification() -> void:
+	reporter.start_test("[UX] Asteroid detail view uses scene-owned science summary and classification row")
+	var scene = preload("res://Scenes/UI/AsteroidDetail/asteroid_detail_view.tscn").instantiate()
+	get_root().add_child(scene)
+	await create_timer(0.05).timeout
+	var summary_paths = [
+		"BodyScroll/ContentContainer/ImageContainer/ImageShell",
+		"BodyScroll/ContentContainer/ScienceSummaryCard/Body/EyebrowLabel",
+		"BodyScroll/ContentContainer/ScienceSummaryCard/Body/SummaryBodyLabel",
+		"BodyScroll/ContentContainer/ScienceSummaryCard/Body/SummaryMetaLabel"
+	]
+	for path in summary_paths:
+		if scene.get_node_or_null(path) == null:
+			reporter.fail_test("Expected scene-owned asteroid detail summary node at %s" % path)
+			scene.queue_free()
+			return
+	scene.initialize({
+		"anomalySet": "telescope-tess",
+		"anomalytype": "telescope_tess",
+		"ticId": "12345",
+		"tess_disposition": "PC",
+		"classification_status": "candidate"
+	}, true)
+	await create_timer(0.02).timeout
+	var classification_paths = [
+		"BodyScroll/ContentContainer/AsteroidClassificationRow/PromptLabel",
+		"BodyScroll/ContentContainer/AsteroidClassificationRow/ClassificationButtons/BtnPlanet",
+		"BodyScroll/ContentContainer/AsteroidClassificationRow/ClassificationButtons/BtnNotPlanet",
+		"BodyScroll/ContentContainer/AsteroidClassificationRow/ClassificationButtons/BtnMarkDip"
+	]
+	for path in classification_paths:
+		if scene.get_node_or_null(path) == null:
+			reporter.fail_test("Expected scene-owned asteroid classification node at %s" % path)
+			scene.queue_free()
+			return
+	scene.queue_free()
+	reporter.pass_test()
+
+func test_mission_debrief_uses_template_backed_guide_and_detail_rows() -> void:
+	reporter.start_test("[UX] Mission debrief guide bullets and handoff detail rows use templates")
+	var bullet_scene = preload("res://Scenes/UI/Templates/MissionDebriefBulletRow.tscn").instantiate()
+	if bullet_scene.name != "MissionDebriefBulletRow":
+		reporter.fail_test("Expected MissionDebriefBulletRow template, got %s" % bullet_scene.name)
+		return
+	var detail_scene = preload("res://Scenes/UI/Templates/MissionDebriefDetailRow.tscn").instantiate()
+	if detail_scene.name != "MissionDebriefDetailRow":
+		reporter.fail_test("Expected MissionDebriefDetailRow template, got %s" % detail_scene.name)
+		return
+	reporter.pass_test()
+
+func test_menu_panel_advanced_debug_controls_are_scene_owned() -> void:
+	reporter.start_test("[UX] MenuPanel advanced debug controls are scene-owned")
+	var panel := preload("res://Scenes/UI/MenuPanel.tscn").instantiate()
+	get_root().add_child(panel)
+	await create_timer(0.05).timeout
+	var required_paths = [
+		"PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/DebugMiningButton",
+		"PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/MissionJumpLabel",
+		"PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/MissionJumpRow",
+		"PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/MissionJumpRow/Mission1Button",
+		"PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/MissionJumpRow/Mission2Button",
+		"PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/MissionJumpRow/Mission3Button",
+		"PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/MissionJumpRow/Mission4Button",
+		"PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/MissionJumpRow/Mission5Button",
+		"PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/DebugMoneyButton"
+	]
+	for path in required_paths:
+		if panel.get_node_or_null(path) == null:
+			reporter.fail_test("Expected scene-owned MenuPanel debug node at %s" % path)
+			panel.queue_free()
+			return
+	panel.queue_free()
+	reporter.pass_test()
+
+func test_mechanic_intro_overlay_uses_template_backed_step_rows() -> void:
+	reporter.start_test("[UX] MechanicIntroOverlay uses template-backed step rows")
+	var overlay := preload("res://Scenes/UI/MechanicIntroOverlay.tscn").instantiate()
+	get_root().add_child(overlay)
+	overlay.show_intro({
+		"title": "MECHANIC UNLOCKED:",
+		"mechanic_name": "TEST SYSTEM",
+		"steps": ["Alpha", "Beta", "Gamma"]
+	})
+	await create_timer(0.05).timeout
+	var steps_list := overlay.get_node_or_null("Center/Panel/OuterVBox/Content/ContentVBox/MainHBox/LeftCol/StepsList") as VBoxContainer
+	if steps_list == null:
+		reporter.fail_test("Expected MechanicIntroOverlay StepsList")
+		overlay.queue_free()
+		return
+	if steps_list.get_child_count() != 3:
+		reporter.fail_test("Expected 3 template-backed step rows, got %s" % steps_list.get_child_count())
+		overlay.queue_free()
+		return
+	if steps_list.get_child(0).name != "MechanicIntroStepRow":
+		reporter.fail_test("Expected MechanicIntroStepRow template, got %s" % steps_list.get_child(0).name)
+		overlay.queue_free()
+		return
+	overlay.queue_free()
+	reporter.pass_test()
+
+func test_subcontractors_panel_uses_template_backed_detail_labels() -> void:
+	reporter.start_test("[UX] SubcontractorsPanel uses template-backed detail labels")
+	var panel := preload("res://Scenes/UI/SubcontractorsPanel.tscn").instantiate()
+	get_root().add_child(panel)
+	await create_timer(0.05).timeout
+	var list := panel.get_node_or_null("PanelContainer/Panel/VBox/Scroll/List") as VBoxContainer
+	if list == null or list.get_child_count() == 0:
+		reporter.fail_test("Expected populated subcontractors list")
+		panel.queue_free()
+		return
+	var found_detail_label := false
+	for card in list.get_children():
+		if card.find_child("SubcontractorDetailLabel", true, false) != null:
+			found_detail_label = true
+			break
+	if not found_detail_label:
+		reporter.fail_test("Expected at least one template-backed subcontractor detail label")
+		panel.queue_free()
+		return
+	panel.queue_free()
+	reporter.pass_test()
+
+func test_game_navigation_menu_construction_uses_templates() -> void:
+	reporter.start_test("[UX] GameNavigationMenu construction overlay uses template-backed scenes")
+	var owner := Control.new()
+	get_root().add_child(owner)
+	GameNavigationMenu._open_contribute_overlay(owner, "test-project", "Test Project", {"Iron": 4, "Nickel": 2}, {"Iron": 1})
+	await create_timer(0.02).timeout
+	var overlay := owner.get_node_or_null("ContributeOverlay")
+	if overlay == null:
+		reporter.fail_test("Expected ContributeOverlay under owner")
+		owner.queue_free()
+		return
+	var expected_paths = [
+		"Center/Panel/Content/Rows",
+		"Center/Panel/Content/StatusLabel",
+		"Center/Panel/Content/ConfirmButton"
+	]
+	for path in expected_paths:
+		if overlay.get_node_or_null(path) == null:
+			reporter.fail_test("Expected contribute overlay scene node at %s" % path)
+			owner.queue_free()
+			return
+	var rows := overlay.get_node("Center/Panel/Content/Rows") as VBoxContainer
+	if rows.get_child_count() == 0:
+		reporter.fail_test("Expected template-backed mineral rows in contribute overlay")
+		owner.queue_free()
+		return
+	if rows.get_child(0).name != "GameMenuContributeMineralRow":
+		reporter.fail_test("Expected GameMenuContributeMineralRow template, got %s" % rows.get_child(0).name)
+		owner.queue_free()
+		return
+	owner.queue_free()
+	reporter.pass_test()
+
+func test_game_navigation_menu_live_cards_use_templates() -> void:
+	reporter.start_test("[UX] GameNavigationMenu live contractor, market, upgrade, and research cards use templates")
+	var job_card = GameNavigationMenu._build_job_board_card()
+	var job_body := job_card.get_node_or_null("Body") as VBoxContainer
+	if job_body == null:
+		reporter.fail_test("Expected job board to use scene-backed info card shell")
+		return
+	var job_rows := job_card.get_node_or_null("Body/Rows") as VBoxContainer
+	if job_card.get_node_or_null("Body/LegendRow") == null or job_rows == null:
+		reporter.fail_test("Expected job board card scene-owned legend and rows hosts")
+		return
+	for child in job_rows.get_children():
+		if child.name == "GameMenuContractorRow":
+			break
+		if child == job_rows.get_child(job_rows.get_child_count() - 1):
+			reporter.fail_test("Expected at least one GameMenuContractorRow in job board card")
+			return
+
+	var market_card = GameNavigationMenu._build_marketplace_card()
+	if market_card.get_node_or_null("Body/Rows") == null:
+		reporter.fail_test("Expected marketplace card to use scene-backed info card shell")
+		return
+	if GameMenuMarketplaceRowScene.instantiate().name != "GameMenuMarketplaceRow":
+		reporter.fail_test("Expected GameMenuMarketplaceRow template to instantiate cleanly")
+		return
+
+	var owner := Control.new()
+	get_root().add_child(owner)
+	var upgrades_card = GameNavigationMenu._build_room_upgrades_card(owner)
+	if upgrades_card.get_node_or_null("Body/Rows") == null:
+		reporter.fail_test("Expected room upgrades card to use scene-backed info card shell")
+		owner.queue_free()
+		return
+	if GameMenuRoomUpgradeRowScene.instantiate().name != "GameMenuRoomUpgradeRow":
+		reporter.fail_test("Expected GameMenuRoomUpgradeRow template to instantiate cleanly")
+		owner.queue_free()
+		return
+	var research_card = GameNavigationMenu._build_rocket_research_card(owner)
+	if research_card.name != "GameMenuResearchCard":
+		reporter.fail_test("Expected GameMenuResearchCard template, got %s" % research_card.name)
+		owner.queue_free()
+		return
+	owner.queue_free()
+	reporter.pass_test()
+
+func test_scanner_station_legacy_state_reconciles_after_m3() -> void:
+	reporter.start_test("[UX] Scanner station legacy build state reconciles automatically after Mission 3")
 	var state = RocketsStateAccess.build_default_state(2)
 	state["mission_progress_completed"] = 3
 	state["completed_mission_badges"] = ["mission-1", "mission-2", "mission-3"]
@@ -402,7 +878,27 @@ func test_scanner_station_requires_explicit_build_step() -> void:
 		RocketsManager.clear_override_state()
 		return
 	if RocketsManager.is_scanner_station_built():
-		reporter.fail_test("Scanner station should remain unbuilt until the player confirms construction")
+		base.queue_free()
+		RocketsManager.clear_override_state()
+		reporter.pass_test()
+		return
+	reporter.fail_test("Expected legacy scanner state to reconcile to built once Mission 3 is complete")
+	base.queue_free()
+	RocketsManager.clear_override_state()
+	return
+
+func test_control_station_legacy_state_reconciles_after_m2() -> void:
+	reporter.start_test("[UX] Control Station legacy build state reconciles automatically after Mission 2")
+	var state = RocketsStateAccess.build_default_state(2)
+	state["mission_progress_completed"] = 2
+	state["completed_mission_badges"] = ["mission-1", "mission-2"]
+	state["control_station_built"] = false
+	RocketsManager.set_override_state(state)
+	var base = EarthBaseScene.instantiate()
+	get_root().add_child(base)
+	await create_timer(0.08).timeout
+	if not RocketsManager.is_control_station_built():
+		reporter.fail_test("Expected legacy control-station state to reconcile to built once Mission 2 is complete")
 		base.queue_free()
 		RocketsManager.clear_override_state()
 		return
@@ -410,18 +906,24 @@ func test_scanner_station_requires_explicit_build_step() -> void:
 	RocketsManager.clear_override_state()
 	reporter.pass_test()
 
-func test_earth_base_disables_new_mission_until_scanner_station_is_built() -> void:
-	reporter.start_test("[UX] Earth base blocks New Mission until Scanner Station is built for Mission 4")
+func test_earth_base_allows_new_mission_for_m4_without_scanner_gate() -> void:
+	reporter.start_test("[UX] Earth base keeps New Mission available for Mission 4 autonomy handoff")
 	var state = RocketsStateAccess.build_default_state(2)
 	state["mission_progress_completed"] = 3
 	state["completed_mission_badges"] = ["mission-1", "mission-2", "mission-3"]
 	state["control_station_built"] = true
 	state["scanner_unlocked"] = true
 	state["scanner_station_built"] = false
+	# Pre-include all rockets so unlock_for_level() (called on AppController level load)
+	# finds them already present, skips save_state(), and preserves the override.
+	state["unlocked"] = ["starterrocket1", "starterrocket2", "starterrocket3"]
 	RocketsManager.set_override_state(state)
 	var base = EarthBaseScene.instantiate()
 	get_root().add_child(base)
 	await create_timer(0.08).timeout
+	var app = get_root().find_child("AppController", true, false)
+	if app and app.has_method("skip_tutorial"):
+		app.skip_tutorial()
 	base._apply_tutorial_button_state()
 	base._build_progression_cards()
 	await create_timer(0.02).timeout
@@ -432,16 +934,138 @@ func test_earth_base_disables_new_mission_until_scanner_station_is_built() -> vo
 		RocketsManager.clear_override_state()
 		return
 	if not new_mission_btn.disabled:
-		reporter.fail_test("Expected New Mission to stay disabled while scanner build is still pending")
+		var control_card := base.get_node_or_null("UILayer/ProgressionCards/ControlStationCard") as Control
+		var scanner_card := base.get_node_or_null("UILayer/ProgressionCards/ScannerStationCard") as Control
+		if control_card != null and control_card.visible:
+			reporter.fail_test("Expected Mission 4 handoff to hide the old Control Station gate")
+			base.queue_free()
+			RocketsManager.clear_override_state()
+			return
+		if scanner_card != null and scanner_card.visible:
+			reporter.fail_test("Expected Mission 4 handoff to hide the old Scanner Station gate")
+			base.queue_free()
+			RocketsManager.clear_override_state()
+			return
+		var handoff_copy = _find_label_in_subtree(base.get_node_or_null("UILayer/ProgressionCards"), "choose a contract or run your own survey mission")
+		if handoff_copy == null:
+			var active_context: Dictionary = base.get_active_mission_context()
+			if active_context.is_empty():
+				base.queue_free()
+				RocketsManager.clear_override_state()
+				reporter.pass_test()
+				return
+			reporter.fail_test("Expected Mission 4 handoff to avoid surfacing a stale active mission card")
+			base.queue_free()
+			RocketsManager.clear_override_state()
+			return
 		base.queue_free()
 		RocketsManager.clear_override_state()
+		reporter.pass_test()
 		return
-	if _find_label_in_subtree(base.get_node_or_null("UILayer/ProgressionCards"), "Build Scanner Station") == null:
-		reporter.fail_test("Expected scanner build progression card while Mission 4 setup is pending")
+	reporter.fail_test("Expected New Mission to remain enabled once the old scanner gate is removed")
+	base.queue_free()
+	RocketsManager.clear_override_state()
+	return
+
+func test_earth_base_ignores_historical_mission_log_when_no_live_mission_exists() -> void:
+	reporter.start_test("[UX] Earth base ignores historical mission rows when no live mission is active")
+	var state = RocketsStateAccess.build_default_state(2)
+	state["mission_progress_completed"] = 3
+	state["completed_mission_badges"] = ["mission-1", "mission-2", "mission-3"]
+	state["control_station_built"] = true
+	state["scanner_unlocked"] = true
+	state["scanner_station_built"] = true
+	state["missions"] = [{
+		"rocket_id": "starterrocket1",
+		"target": "mission-3-tess-candidate-alpha",
+		"launch_time": 123.0
+	}]
+	state["unlocked"] = ["starterrocket1", "starterrocket2", "starterrocket3"]
+	RocketsManager.set_override_state(state)
+	var base = EarthBaseScene.instantiate()
+	get_root().add_child(base)
+	await create_timer(0.08).timeout
+	var context: Dictionary = base.get_active_mission_context()
+	if not context.is_empty():
+		reporter.fail_test("Expected no active mission context when there is no placed rocket to resume")
 		base.queue_free()
 		RocketsManager.clear_override_state()
 		return
 	base.queue_free()
+	RocketsManager.clear_override_state()
+	reporter.pass_test()
+
+func test_earth_base_hides_star_map_progression_card() -> void:
+	reporter.start_test("[UX] Earth base main screen does not show the Star Map progression card")
+	var state = RocketsStateAccess.build_default_state(2)
+	state["mission_progress_completed"] = 4
+	state["completed_mission_badges"] = ["mission-1", "mission-2", "mission-3", "mission-4"]
+	state["control_station_built"] = true
+	state["scanner_unlocked"] = true
+	state["scanner_station_built"] = true
+	state["unlocked"] = ["starterrocket1", "starterrocket2", "starterrocket3"]
+	RocketsManager.set_override_state(state)
+	var base = EarthBaseScene.instantiate()
+	get_root().add_child(base)
+	await create_timer(0.08).timeout
+	base._build_progression_cards()
+	await create_timer(0.02).timeout
+	if _find_label_in_subtree(base.get_node_or_null("UILayer/ProgressionCards"), "Star Map") != null:
+		reporter.fail_test("Expected Star Map card to stay off the Earth base main screen")
+		base.queue_free()
+		RocketsManager.clear_override_state()
+		return
+	base.queue_free()
+	RocketsManager.clear_override_state()
+	reporter.pass_test()
+
+func test_earth_base_hides_progression_cards_during_active_tutorial_step() -> void:
+	reporter.start_test("[UX] Earth base hides progression cards while tutorial coach is active")
+	var state = RocketsStateAccess.build_default_state(2)
+	state["mission_progress_completed"] = 3
+	state["completed_mission_badges"] = ["mission-1", "mission-2", "mission-3"]
+	state["control_station_built"] = true
+	state["scanner_unlocked"] = true
+	state["scanner_station_built"] = false
+	state["unlocked"] = ["starterrocket1", "starterrocket2", "starterrocket3"]
+	RocketsManager.set_override_state(state)
+	var fake_app := FakeTutorialAppController.new()
+	fake_app.name = "AppController"
+	fake_app.state = {
+		"skipped": false,
+		"current_stage": 4,
+		"current_step_index": 0,
+		"current_step": {
+			"action_key": "open_launchpad",
+			"title": "Mission 4",
+			"message": "Mission 4 is the handoff out of the strict tutorial rail.",
+			"valid_scenes": ["earth_base_1"]
+		}
+	}
+	get_root().add_child(fake_app)
+	var base = EarthBaseScene.instantiate()
+	get_root().add_child(base)
+	await create_timer(0.08).timeout
+	base._build_progression_cards()
+	await create_timer(0.02).timeout
+	var cards_root := base.get_node_or_null("UILayer/ProgressionCards") as VBoxContainer
+	if cards_root == null:
+		reporter.fail_test("Earth base missing ProgressionCards")
+		base.queue_free()
+		get_root().remove_child(fake_app)
+		fake_app.queue_free()
+		RocketsManager.clear_override_state()
+		return
+	if cards_root.visible:
+		reporter.fail_test("Expected progression cards hidden while active tutorial coach step is visible")
+		base.queue_free()
+		get_root().remove_child(fake_app)
+		fake_app.queue_free()
+		RocketsManager.clear_override_state()
+		return
+	base.queue_free()
+	get_root().remove_child(fake_app)
+	fake_app.queue_free()
 	RocketsManager.clear_override_state()
 	reporter.pass_test()
 
@@ -523,6 +1147,94 @@ func test_sidescroll_mining_drone_pool_reuse() -> void:
 		reporter.fail_test("Expected drone pool size to remain constant (scene-managed reuse)")
 		mining.queue_free()
 		return
+	mining.queue_free()
+	reporter.pass_test()
+
+func test_sidescroll_mining_has_scene_owned_mars_background() -> void:
+	reporter.start_test("[UX] Sidescroll mining uses scene-owned Mars background host")
+	var mining = SidescrollMiningScene.instantiate()
+	get_root().add_child(mining)
+	await create_timer(0.05).timeout
+	var background = mining.get_node_or_null("MarsPixelBackground") as TextureRect
+	if background == null:
+		reporter.fail_test("Expected scene-owned MarsPixelBackground node")
+		mining.queue_free()
+		return
+	if background.mouse_filter != Control.MOUSE_FILTER_IGNORE:
+		reporter.fail_test("Expected MarsPixelBackground to ignore mouse input")
+		mining.queue_free()
+		return
+	mining.queue_free()
+	reporter.pass_test()
+
+func test_sidescroll_mining_contract_rows_use_template() -> void:
+	reporter.start_test("[UX] Sidescroll mining contract tracker uses template-backed rows")
+	var mining = SidescrollMiningScene.instantiate()
+	get_root().add_child(mining)
+	await create_timer(0.05).timeout
+	mining._starter_contract_active = true
+	mining._starter_contractor_name = "Aegis"
+	mining._starter_order_targets = {"Iron": 6, "Nickel": 4}
+	mining._collected_minerals = {"Iron": 2}
+	mining._refresh_contract_order_tracker()
+	await create_timer(0.05).timeout
+	if mining.contract_order_vbox.get_child_count() < 3:
+		reporter.fail_test("Expected contract tracker to contain title/progress plus template-backed mineral rows")
+		mining.queue_free()
+		return
+	var found_template_row := false
+	for child in mining.contract_order_vbox.get_children():
+		if child.get_node_or_null("NameLabel") != null and child.get_node_or_null("ProgressBar") != null and child.get_node_or_null("QuantityLabel") != null:
+			found_template_row = true
+			break
+	if not found_template_row:
+		reporter.fail_test("Expected MiningContractOrderRow template instance under contract order tracker")
+		mining.queue_free()
+		return
+	mining.queue_free()
+	reporter.pass_test()
+
+func test_sidescroll_mining_room_rows_use_template() -> void:
+	reporter.start_test("[UX] Sidescroll mining room panel uses template-backed room rows")
+	var mining = SidescrollMiningScene.instantiate()
+	get_root().add_child(mining)
+	await create_timer(0.05).timeout
+	mining._setup_room_panel()
+	mining._configure_rocket_rooms(2)
+	mining._render_room_panel()
+	await create_timer(0.05).timeout
+	if mining._room_grid == null or mining._room_grid.get_child_count() < 1:
+		reporter.fail_test("Expected room grid to populate installed rooms")
+		mining.queue_free()
+		return
+	var room_row: Node = mining._room_grid.get_child(0)
+	if room_row.get_node_or_null("RoomIcon") == null or room_row.get_node_or_null("RoomLabel") == null:
+		reporter.fail_test("Expected MiningRoomRow template instance in room grid")
+		mining.queue_free()
+		return
+	mining.queue_free()
+	reporter.pass_test()
+
+func test_sidescroll_mining_room_debug_overlay_uses_scene_owned_preview_and_marker_template() -> void:
+	reporter.start_test("[UX] Sidescroll mining room debug overlay uses scene-owned preview and marker template")
+	var mining = SidescrollMiningScene.instantiate()
+	get_root().add_child(mining)
+	await create_timer(0.05).timeout
+	mining._setup_room_panel()
+	if mining.get_node_or_null("UI/RoomDebugOverlay/AtlasPreview") == null:
+		reporter.fail_test("Expected scene-owned AtlasPreview under RoomDebugOverlay")
+		mining.queue_free()
+		return
+	if mining.get_node_or_null("UI/RoomDebugOverlay/MarkersLayer") == null:
+		reporter.fail_test("Expected scene-owned MarkersLayer under RoomDebugOverlay")
+		mining.queue_free()
+		return
+	var marker = preload("res://Scenes/UI/Templates/MiningRoomDebugMarker.tscn").instantiate()
+	if marker.name != "MiningRoomDebugMarker" or marker.get_node_or_null("Fill") == null or marker.get_node_or_null("TopOutline") == null or marker.get_node_or_null("IndexLabel") == null:
+		reporter.fail_test("Expected MiningRoomDebugMarker template nodes")
+		mining.queue_free()
+		return
+	marker.queue_free()
 	mining.queue_free()
 	reporter.pass_test()
 
@@ -615,10 +1327,8 @@ func test_outbound_preview_panels_stay_on_screen() -> void:
 	outbound._apply_responsive_layout()
 	await create_timer(0.05).timeout
 	var viewport = outbound.get_viewport().get_visible_rect().size
-	for node_name in ["ControlPanel", "InventoryPanel", "TravelPanel", "TravelCaption"]:
+	for node_name in ["ControlPanel", "InventoryPanel", "TravelPanel"]:
 		var node = outbound.get_node_or_null("CanvasLayer/UI/%s" % node_name) as Control
-		if node == null and node_name == "TravelCaption":
-			node = outbound.get_node_or_null("CanvasLayer/TravelCaption") as Control
 		if node == null:
 			reporter.fail_test("Outbound preview node missing: %s" % node_name)
 			outbound.queue_free()

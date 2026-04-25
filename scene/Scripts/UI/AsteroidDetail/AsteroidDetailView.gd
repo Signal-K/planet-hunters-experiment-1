@@ -11,6 +11,7 @@ const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
 const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd")
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
 const UILayout = preload("res://Scripts/UI/UILayout.gd")
+const AsteroidClassificationRowScene = preload("res://Scenes/UI/Templates/AsteroidClassificationRow.tscn")
 
 var anomaly_id: String = ""
 var anomaly_data: Dictionary = {}
@@ -18,15 +19,13 @@ var _annotations := AsteroidAnnotationHelper.new()
 var _image_helper := AsteroidImageHelper.new()
 var _model := AsteroidDetailModel.new()
 var _classification_row: Control
-var _science_summary_card: PanelContainer
-var _science_summary_body: Label
-var _science_summary_meta: Label
 
 @onready var header_container: VBoxContainer = $HeaderContainer
 @onready var tools_row: HFlowContainer = $HeaderContainer/ToolsRow
 @onready var body_scroll: ScrollContainer = $BodyScroll
 @onready var content_container: VBoxContainer = $BodyScroll/ContentContainer
 @onready var image_container: CenterContainer = $BodyScroll/ContentContainer/ImageContainer
+@onready var image_shell: PanelContainer = $BodyScroll/ContentContainer/ImageContainer/ImageShell
 @onready var asteroid_image: TextureRect = $BodyScroll/ContentContainer/ImageContainer/AsteroidImage
 @onready var drawing_canvas: Control = $BodyScroll/ContentContainer/ImageContainer/DrawingCanvas
 @onready var loading_label: Label = $BodyScroll/ContentContainer/LoadingLabel
@@ -42,6 +41,9 @@ var _science_summary_meta: Label
 @onready var pen_circle_button: Button = $HeaderContainer/ToolsRow/PenCircleButton
 @onready var color_picker: ColorPickerButton = $HeaderContainer/ToolsRow/ColorPickerButton
 @onready var annotation_count_label: Label = $HeaderContainer/TopRow/AnnotationCount
+@onready var _science_summary_card: PanelContainer = $BodyScroll/ContentContainer/ScienceSummaryCard
+@onready var _science_summary_body: Label = $BodyScroll/ContentContainer/ScienceSummaryCard/Body/SummaryBodyLabel
+@onready var _science_summary_meta: Label = $BodyScroll/ContentContainer/ScienceSummaryCard/Body/SummaryMetaLabel
 
 func _ready():
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -65,7 +67,6 @@ func _ready():
 	asteroid_image.scale = Vector2.ZERO
 	asteroid_image.pivot_offset = BASE_IMAGE_SIZE / 2
 
-	_build_science_summary()
 	_apply_visual_style()
 	_update_pen_button()
 	color_picker.color = Color(0, 1, 0)
@@ -128,45 +129,6 @@ func initialize(anomaly: Dictionary, force_controls_visible := false):
 
 	call_deferred("_apply_layout")
 
-func _build_science_summary() -> void:
-	_science_summary_card = PanelContainer.new()
-	_science_summary_card.name = "ScienceSummaryCard"
-	content_container.add_child(_science_summary_card)
-	content_container.move_child(_science_summary_card, 0)
-
-	var card_style := StyleBoxFlat.new()
-	card_style.bg_color = Color(0.96, 0.98, 0.98, 1.0)
-	card_style.border_color = Color(0.79, 0.88, 0.89, 1.0)
-	card_style.set_border_width_all(1)
-	card_style.set_corner_radius_all(20)
-	card_style.content_margin_left = 18
-	card_style.content_margin_top = 18
-	card_style.content_margin_right = 18
-	card_style.content_margin_bottom = 18
-	_science_summary_card.add_theme_stylebox_override("panel", card_style)
-
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 8)
-	_science_summary_card.add_child(vbox)
-
-	var eyebrow := Label.new()
-	eyebrow.text = "SCIENCE REVIEW"
-	eyebrow.add_theme_color_override("font_color", Color(0.05, 0.49, 0.45, 1.0))
-	eyebrow.add_theme_font_size_override("font_size", 12)
-	vbox.add_child(eyebrow)
-
-	_science_summary_body = Label.new()
-	_science_summary_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_science_summary_body.add_theme_color_override("font_color", Color(0.18, 0.22, 0.24, 1.0))
-	_science_summary_body.add_theme_font_size_override("font_size", 15)
-	vbox.add_child(_science_summary_body)
-
-	_science_summary_meta = Label.new()
-	_science_summary_meta.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_science_summary_meta.add_theme_color_override("font_color", Color(0.40, 0.46, 0.49, 1.0))
-	_science_summary_meta.add_theme_font_size_override("font_size", 13)
-	vbox.add_child(_science_summary_meta)
-
 func _apply_visual_style() -> void:
 	add_theme_constant_override("separation", 14)
 	header_container.add_theme_constant_override("separation", 12)
@@ -195,18 +157,29 @@ func _apply_visual_style() -> void:
 	color_style.set_corner_radius_all(12)
 	color_picker.add_theme_stylebox_override("normal", color_style)
 	color_picker.add_theme_stylebox_override("hover", color_style)
-	if image_container.get_node_or_null("ImageShell") == null:
-		var shell := PanelContainer.new()
-		shell.name = "ImageShell"
-		shell.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		var shell_style := StyleBoxFlat.new()
-		shell_style.bg_color = Color(0.93, 0.96, 0.97, 1.0)
-		shell_style.border_color = Color(0.78, 0.86, 0.88, 1.0)
-		shell_style.set_border_width_all(1)
-		shell_style.set_corner_radius_all(26)
-		shell.add_theme_stylebox_override("panel", shell_style)
-		image_container.add_child(shell)
-		image_container.move_child(shell, 0)
+	var shell_style := StyleBoxFlat.new()
+	shell_style.bg_color = Color(0.93, 0.96, 0.97, 1.0)
+	shell_style.border_color = Color(0.78, 0.86, 0.88, 1.0)
+	shell_style.set_border_width_all(1)
+	shell_style.set_corner_radius_all(26)
+	image_shell.add_theme_stylebox_override("panel", shell_style)
+	var summary_style := StyleBoxFlat.new()
+	summary_style.bg_color = Color(0.96, 0.98, 0.98, 1.0)
+	summary_style.border_color = Color(0.79, 0.88, 0.89, 1.0)
+	summary_style.set_border_width_all(1)
+	summary_style.set_corner_radius_all(20)
+	summary_style.content_margin_left = 18
+	summary_style.content_margin_top = 18
+	summary_style.content_margin_right = 18
+	summary_style.content_margin_bottom = 18
+	_science_summary_card.add_theme_stylebox_override("panel", summary_style)
+	var summary_eyebrow: Label = _science_summary_card.get_node("Body/EyebrowLabel")
+	summary_eyebrow.add_theme_color_override("font_color", Color(0.05, 0.49, 0.45, 1.0))
+	summary_eyebrow.add_theme_font_size_override("font_size", 12)
+	_science_summary_body.add_theme_color_override("font_color", Color(0.18, 0.22, 0.24, 1.0))
+	_science_summary_body.add_theme_font_size_override("font_size", 15)
+	_science_summary_meta.add_theme_color_override("font_color", Color(0.40, 0.46, 0.49, 1.0))
+	_science_summary_meta.add_theme_font_size_override("font_size", 13)
 
 func _style_button(button: Button, primary: bool) -> void:
 	var normal := StyleBoxFlat.new()
@@ -353,53 +326,37 @@ func _build_classification_row() -> void:
 		return
 	var existing_verdict = RocketsManager.get_tess_classification(anomaly_id)
 
-	var row = VBoxContainer.new()
-	row.name = "ClassificationRow"
-	row.add_theme_constant_override("separation", 8)
+	var row = AsteroidClassificationRowScene.instantiate()
 	_classification_row = row
 	content_container.add_child(row)
 
-	var prompt = Label.new()
-	prompt.text = "Classify this target:"
+	var prompt: Label = row.get_node("PromptLabel")
 	PanelStyle.apply_muted(prompt)
-	row.add_child(prompt)
 
-	var note = Label.new()
+	var note: Label = row.get_node("NoteLabel")
 	note.text = "A confirmed verdict unlocks safer routing. A rejection blocks travel until the signal is revisited."
-	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	note.add_theme_color_override("font_color", Color(0.36, 0.42, 0.45, 1.0))
 	note.add_theme_font_size_override("font_size", 13)
-	row.add_child(note)
 
-	var button_row = HFlowContainer.new()
-	button_row.name = "ClassificationButtons"
-	button_row.add_theme_constant_override("h_separation", 8)
-	button_row.add_theme_constant_override("v_separation", 8)
-	row.add_child(button_row)
+	var button_row: HFlowContainer = row.get_node("ClassificationButtons")
 
-	var btn_planet = Button.new()
-	btn_planet.name = "BtnPlanet"
+	var btn_planet: Button = row.get_node("ClassificationButtons/BtnPlanet")
 	btn_planet.text = "Planet" if existing_verdict != "planet" else "✓ Planet"
 	btn_planet.disabled = existing_verdict != ""
 	PanelStyle.apply_button(btn_planet, existing_verdict == "planet")
 	btn_planet.pressed.connect(_on_classify.bind("planet", row))
-	button_row.add_child(btn_planet)
 
-	var btn_not = Button.new()
-	btn_not.name = "BtnNotPlanet"
+	var btn_not: Button = row.get_node("ClassificationButtons/BtnNotPlanet")
 	btn_not.text = "Not a Planet" if existing_verdict != "not_planet" else "✓ Not a Planet"
 	btn_not.disabled = existing_verdict != ""
 	PanelStyle.apply_button(btn_not, existing_verdict == "not_planet")
 	btn_not.pressed.connect(_on_classify.bind("not_planet", row))
-	button_row.add_child(btn_not)
 
-	var btn_mark_dip = Button.new()
-	btn_mark_dip.name = "BtnMarkDip"
+	var btn_mark_dip: Button = row.get_node("ClassificationButtons/BtnMarkDip")
 	btn_mark_dip.text = "Mark Dip"
 	btn_mark_dip.disabled = existing_verdict != ""
 	PanelStyle.apply_button(btn_mark_dip, false)
 	btn_mark_dip.pressed.connect(Callable(self, "_on_mark_dip_pressed"))
-	button_row.add_child(btn_mark_dip)
 
 func _on_mark_dip_pressed() -> void:
 	drawing_canvas.set_mode(3)
@@ -412,14 +369,11 @@ func _on_classify(verdict: String, row: VBoxContainer) -> void:
 	var annotation_count = drawing_canvas.get_annotation_count() if drawing_canvas.has_method("get_annotation_count") else 0
 	var target_type = "planet" if _model.is_planet(anomaly_data) else "asteroid"
 	_annotations.save_annotations(anomaly_id, target_type, title_label.text if title_label else "")
-	RocketsManager.set_target_annotation_level(anomaly_id, annotation_count)
-	RocketsManager.set_tess_classification(anomaly_id, verdict)
-	if verdict == "planet":
-		RocketsManager.clear_candidate_visit_block(anomaly_id)
-	else:
-		RocketsManager.mark_candidate_visit_blocked(anomaly_id)
-		RocketsManager.clear_selected_target()
-		RocketsManager.set_launch_guidance_notice("This target is not confirmed yet. Pick another target for launch, then scan this one again later.")
+	RocketsManager.classify_candidate_target(anomaly_id, verdict, annotation_count)
+	AppControllerHelper.record_tutorial_action("classify_candidate", {
+		"target_id": anomaly_id,
+		"verdict": verdict
+	})
 
 	var button_row = row.get_node_or_null("ClassificationButtons")
 	if button_row:

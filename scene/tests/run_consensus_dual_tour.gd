@@ -166,7 +166,7 @@ func _screenshot(label: String) -> void:
 	RenderingServer.force_draw(false)
 	var texture := get_viewport().get_texture()
 	if texture == null:
-		return null
+		return
 	var image := texture.get_image()
 	var attempts := 0
 	while (image == null or image.get_width() <= 0 or image.get_height() <= 0) and attempts < 6:
@@ -175,7 +175,7 @@ func _screenshot(label: String) -> void:
 		RenderingServer.force_draw(false)
 		texture = get_viewport().get_texture()
 		if texture == null:
-			return null
+			return
 		image = texture.get_image()
 		attempts += 1
 	if not image:

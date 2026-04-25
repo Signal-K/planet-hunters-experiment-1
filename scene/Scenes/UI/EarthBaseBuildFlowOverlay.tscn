@@ -1,0 +1,95 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/EarthBaseBuildFlowOverlay.gd" id="1"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/Templates/EarthBaseBuildFlowOptionCard.tscn" id="2"]
+
+[node name="EarthBaseBuildFlowOverlay" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.7)
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="PanelContainer" parent="Center"]
+layout_mode = 2
+custom_minimum_size = Vector2(840, 0)
+size_flags_horizontal = 4
+
+[node name="Margin" type="MarginContainer" parent="Center/Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 22
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 22
+
+[node name="VBox" type="VBoxContainer" parent="Center/Panel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="StepLabel" type="Label" parent="Center/Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.28, 0.88, 0.96, 1)
+theme_override_font_sizes/font_size = 14
+text = "BUILD FLOW"
+
+[node name="TitleLabel" type="Label" parent="Center/Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.93, 0.9, 1)
+theme_override_font_sizes/font_size = 30
+text = "Select build location"
+
+[node name="SubtitleLabel" type="Label" parent="Center/Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.84, 0.92, 1)
+theme_override_font_sizes/font_size = 16
+text = "Choose where to place the next structure."
+autowrap_mode = 3
+
+[node name="OptionsList" type="VBoxContainer" parent="Center/Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="EditorPreviewCard" parent="Center/Panel/Margin/VBox/OptionsList" instance=ExtResource("2")]
+layout_mode = 2
+
+[node name="MessageLabel" type="Label" parent="Center/Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.58, 0.7, 0.82, 1)
+theme_override_font_sizes/font_size = 14
+text = ""
+autowrap_mode = 3
+
+[node name="FooterRow" type="HBoxContainer" parent="Center/Panel/Margin/VBox"]
+layout_mode = 2
+alignment = 2
+theme_override_constants/separation = 12
+
+[node name="CancelButton" type="Button" parent="Center/Panel/Margin/VBox/FooterRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(120, 50)
+text = "Close"
+
+[node name="BackButton" type="Button" parent="Center/Panel/Margin/VBox/FooterRow"]
+visible = false
+layout_mode = 2
+custom_minimum_size = Vector2(120, 50)
+text = "Back"

@@ -1,24 +1,39 @@
 {
   "missions": [
     {
-      "timestamp": "2026-04-21T22:05:44",
-      "rocket_id": "starterrocket1-2235453858",
+      "timestamp": "2026-04-25T10:32:42",
+      "rocket_id": "starterrocket1-1672623696",
       "target_id": "mission-1-training-target",
       "label": "433 Eros",
       "target_type": "asteroid",
       "operation_mode": "contract",
-      "subcontractor_id": "aegis_defense",
-      "subcontractor_name": "Aegis Defense Systems",
-      "payout": 1200000000,
+      "subcontractor_id": "lumen_consumer",
+      "subcontractor_name": "Lumen Consumer Labs",
+      "payout": 1200000000.0,
       "cargo": {
-        "Iron": 7,
-        "Nickel": 5,
-        "Cobalt": 2,
-        "Platinum": 1
+        "Iron": 5.0,
+        "Nickel": 5.0
       },
       "requested_minerals": {
-        "Iron": 6,
-        "Nickel": 4
+        "Iron": 5.0,
+        "Nickel": 5.0
+      },
+      "order_completion_pct": 100.0,
+      "affinity_before": 0.0
+    },
+    {
+      "timestamp": "2026-04-25T10:33:15",
+      "rocket_id": "starterrocket1-3373424876",
+      "target_id": "mission-2-active-asteroid-259p",
+      "label": "259P/Garradd",
+      "target_type": "asteroid",
+      "operation_mode": "contract",
+      "subcontractor_id": "",
+      "subcontractor_name": "",
+      "payout": 420000000,
+      "cargo": {
+      },
+      "requested_minerals": {
       },
       "order_completion_pct": 100,
       "affinity_before": 0

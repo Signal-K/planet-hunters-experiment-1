@@ -1,0 +1,320 @@
+{
+  "taskId": "fzoyb8",
+  "currentVersion": 4,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "fzoyb8",
+      "version": 1,
+      "timestamp": "2026-04-22T04:46:46.860Z",
+      "changes": [
+        {
+          "field": "priority",
+          "oldValue": "medium",
+          "newValue": "high"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        },
+        {
+          "field": "labels",
+          "oldValue": [],
+          "newValue": [
+            "mvp",
+            "onboarding",
+            "mission-flow",
+            "tutorial",
+            "m3",
+            "classification",
+            "scanner",
+            "map",
+            "pwa-ready"
+          ]
+        },
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [],
+          "newValue": [
+            {
+              "text": "Mission 3 introduces classification through a short authored tutorial flow before target selection.",
+              "completed": false
+            },
+            {
+              "text": "Mission 3 uses cached/offline anomaly or lightcurve candidate data suitable for PWA play.",
+              "completed": false
+            },
+            {
+              "text": "Candidate classification affects target reveal/access without blocking mission reward progress.",
+              "completed": false
+            },
+            {
+              "text": "Map/scanner UI can represent unlocked planet/candidate context, including multi-star system context where available.",
+              "completed": false
+            },
+            {
+              "text": "Sandboxed tests cover M2 to M3 transition, M3 classification tutorial flow, and map/scanner candidate reveal state.",
+              "completed": false
+            }
+          ]
+        },
+        {
+          "field": "implementationPlan",
+          "newValue": "1. Inspect current M3 launch/target/scanner/map/classification code paths and existing tests.\n2. Define the M3 authored flow around candidate classification: intro copy, anomaly/lightcurve prompt, result handling, and map reveal.\n3. Implement the smallest vertical slice that connects tutorial guidance, candidate data, target reveal/access, and mission progression without introducing open-ops/free-mode language.\n4. Add sandboxed Godot tests for M2 -> M3, M3 tutorial/classification, candidate reveal/block/reward behavior, and map/scanner state.\n5. Run focused mission/tutorial/map tests and record completion notes."
+        }
+      ],
+      "snapshot": {
+        "title": "Set up tutorial & flow for m3",
+        "description": "So, the annotation mechanic should follow:\n1. We introduce the user to what lightcurves & active asteroids (zooniverse.org/projects/orionnau/active-asteroids/classify) are\n2. We have a set of anomalies that are downloaded & cached/offline on PWA\n3. Mission 3 involves users being given asteroid candidates or lightcurves (from TESS/TIC) to classify\n4. Planets will give users new minerals, depending on the period the user provides (as this determines relative distance to parent star). Asteroids will give users water\n5. Tutorial involves annotations and then showing the candidate (if the user idnetified it was real) in the map\n6. The map needs to be updated to show multiple stars once planets are unlocked",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "mvp",
+          "onboarding",
+          "mission-flow",
+          "tutorial",
+          "m3",
+          "classification",
+          "scanner",
+          "map",
+          "pwa-ready"
+        ],
+        "acceptanceCriteria": [
+          {
+            "text": "Mission 3 introduces classification through a short authored tutorial flow before target selection.",
+            "completed": false
+          },
+          {
+            "text": "Mission 3 uses cached/offline anomaly or lightcurve candidate data suitable for PWA play.",
+            "completed": false
+          },
+          {
+            "text": "Candidate classification affects target reveal/access without blocking mission reward progress.",
+            "completed": false
+          },
+          {
+            "text": "Map/scanner UI can represent unlocked planet/candidate context, including multi-star system context where available.",
+            "completed": false
+          },
+          {
+            "text": "Sandboxed tests cover M2 to M3 transition, M3 classification tutorial flow, and map/scanner candidate reveal state.",
+            "completed": false
+          }
+        ],
+        "implementationPlan": "1. Inspect current M3 launch/target/scanner/map/classification code paths and existing tests.\n2. Define the M3 authored flow around candidate classification: intro copy, anomaly/lightcurve prompt, result handling, and map reveal.\n3. Implement the smallest vertical slice that connects tutorial guidance, candidate data, target reveal/access, and mission progression without introducing open-ops/free-mode language.\n4. Add sandboxed Godot tests for M2 -> M3, M3 tutorial/classification, candidate reveal/block/reward behavior, and map/scanner state.\n5. Run focused mission/tutorial/map tests and record completion notes."
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "fzoyb8",
+      "version": 2,
+      "timestamp": "2026-04-22T07:34:01.672Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "Relations: builds on @task-55nk4i. Relevant completed work: @task-9zc5kc, @task-btkvyl, @task-8unidd, @task-12x898. Related blocked/planned work: @task-lkzqm0, @task-srnf59."
+        }
+      ],
+      "snapshot": {
+        "title": "Set up tutorial & flow for m3",
+        "description": "So, the annotation mechanic should follow:\n1. We introduce the user to what lightcurves & active asteroids (zooniverse.org/projects/orionnau/active-asteroids/classify) are\n2. We have a set of anomalies that are downloaded & cached/offline on PWA\n3. Mission 3 involves users being given asteroid candidates or lightcurves (from TESS/TIC) to classify\n4. Planets will give users new minerals, depending on the period the user provides (as this determines relative distance to parent star). Asteroids will give users water\n5. Tutorial involves annotations and then showing the candidate (if the user idnetified it was real) in the map\n6. The map needs to be updated to show multiple stars once planets are unlocked",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "mvp",
+          "onboarding",
+          "mission-flow",
+          "tutorial",
+          "m3",
+          "classification",
+          "scanner",
+          "map",
+          "pwa-ready"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Mission 3 introduces classification through a short authored tutorial flow before target selection."
+          },
+          {
+            "completed": false,
+            "text": "Mission 3 uses cached/offline anomaly or lightcurve candidate data suitable for PWA play."
+          },
+          {
+            "completed": false,
+            "text": "Candidate classification affects target reveal/access without blocking mission reward progress."
+          },
+          {
+            "completed": false,
+            "text": "Map/scanner UI can represent unlocked planet/candidate context, including multi-star system context where available."
+          },
+          {
+            "completed": false,
+            "text": "Sandboxed tests cover M2 to M3 transition, M3 classification tutorial flow, and map/scanner candidate reveal state."
+          }
+        ],
+        "implementationPlan": "1. Inspect current M3 launch/target/scanner/map/classification code paths and existing tests.\n2. Define the M3 authored flow around candidate classification: intro copy, anomaly/lightcurve prompt, result handling, and map reveal.\n3. Implement the smallest vertical slice that connects tutorial guidance, candidate data, target reveal/access, and mission progression without introducing open-ops/free-mode language.\n4. Add sandboxed Godot tests for M2 -> M3, M3 tutorial/classification, candidate reveal/block/reward behavior, and map/scanner state.\n5. Run focused mission/tutorial/map tests and record completion notes.",
+        "implementationNotes": "Relations: builds on @task-55nk4i. Relevant completed work: @task-9zc5kc, @task-btkvyl, @task-8unidd, @task-12x898. Related blocked/planned work: @task-lkzqm0, @task-srnf59."
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "fzoyb8",
+      "version": 3,
+      "timestamp": "2026-04-22T08:00:18.235Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Mission 3 introduces classification through a short authored tutorial flow before target selection."
+            },
+            {
+              "completed": false,
+              "text": "Mission 3 uses cached/offline anomaly or lightcurve candidate data suitable for PWA play."
+            },
+            {
+              "completed": false,
+              "text": "Candidate classification affects target reveal/access without blocking mission reward progress."
+            },
+            {
+              "completed": false,
+              "text": "Map/scanner UI can represent unlocked planet/candidate context, including multi-star system context where available."
+            },
+            {
+              "completed": false,
+              "text": "Sandboxed tests cover M2 to M3 transition, M3 classification tutorial flow, and map/scanner candidate reveal state."
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Mission 3 introduces classification through a short authored tutorial flow before target selection."
+            },
+            {
+              "completed": true,
+              "text": "Mission 3 uses cached/offline anomaly or lightcurve candidate data suitable for PWA play."
+            },
+            {
+              "completed": true,
+              "text": "Candidate classification affects target reveal/access without blocking mission reward progress."
+            },
+            {
+              "completed": true,
+              "text": "Map/scanner UI can represent unlocked planet/candidate context, including multi-star system context where available."
+            },
+            {
+              "completed": true,
+              "text": "Sandboxed tests cover M2 to M3 transition, M3 classification tutorial flow, and map/scanner candidate reveal state."
+            }
+          ]
+        },
+        {
+          "field": "implementationNotes",
+          "oldValue": "Relations: builds on @task-55nk4i. Relevant completed work: @task-9zc5kc, @task-btkvyl, @task-8unidd, @task-12x898. Related blocked/planned work: @task-lkzqm0, @task-srnf59.",
+          "newValue": "Relations: builds on @task-55nk4i. Relevant completed work: @task-9zc5kc, @task-btkvyl, @task-8unidd, @task-12x898. Related blocked/planned work: @task-lkzqm0, @task-srnf59.\n\n✓ Implemented M3 TESS/TIC candidate flow: cached offline targets, classification tutorial step, LaunchWizard classification card, candidate reveal/block semantics, map star-system context.\n✓ Fixed base prerequisite card priority so M4 Scanner Station build remains actionable before New Mission.\n✓ Tests: later_missions 17/17, mission_e2e 3/3, tutorial 8/8, narrative 13/13, structure 27/27."
+        }
+      ],
+      "snapshot": {
+        "title": "Set up tutorial & flow for m3",
+        "description": "So, the annotation mechanic should follow:\n1. We introduce the user to what lightcurves & active asteroids (zooniverse.org/projects/orionnau/active-asteroids/classify) are\n2. We have a set of anomalies that are downloaded & cached/offline on PWA\n3. Mission 3 involves users being given asteroid candidates or lightcurves (from TESS/TIC) to classify\n4. Planets will give users new minerals, depending on the period the user provides (as this determines relative distance to parent star). Asteroids will give users water\n5. Tutorial involves annotations and then showing the candidate (if the user idnetified it was real) in the map\n6. The map needs to be updated to show multiple stars once planets are unlocked",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "mvp",
+          "onboarding",
+          "mission-flow",
+          "tutorial",
+          "m3",
+          "classification",
+          "scanner",
+          "map",
+          "pwa-ready"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Mission 3 introduces classification through a short authored tutorial flow before target selection."
+          },
+          {
+            "completed": true,
+            "text": "Mission 3 uses cached/offline anomaly or lightcurve candidate data suitable for PWA play."
+          },
+          {
+            "completed": true,
+            "text": "Candidate classification affects target reveal/access without blocking mission reward progress."
+          },
+          {
+            "completed": true,
+            "text": "Map/scanner UI can represent unlocked planet/candidate context, including multi-star system context where available."
+          },
+          {
+            "completed": true,
+            "text": "Sandboxed tests cover M2 to M3 transition, M3 classification tutorial flow, and map/scanner candidate reveal state."
+          }
+        ],
+        "implementationPlan": "1. Inspect current M3 launch/target/scanner/map/classification code paths and existing tests.\n2. Define the M3 authored flow around candidate classification: intro copy, anomaly/lightcurve prompt, result handling, and map reveal.\n3. Implement the smallest vertical slice that connects tutorial guidance, candidate data, target reveal/access, and mission progression without introducing open-ops/free-mode language.\n4. Add sandboxed Godot tests for M2 -> M3, M3 tutorial/classification, candidate reveal/block/reward behavior, and map/scanner state.\n5. Run focused mission/tutorial/map tests and record completion notes.",
+        "implementationNotes": "Relations: builds on @task-55nk4i. Relevant completed work: @task-9zc5kc, @task-btkvyl, @task-8unidd, @task-12x898. Related blocked/planned work: @task-lkzqm0, @task-srnf59.\n\n✓ Implemented M3 TESS/TIC candidate flow: cached offline targets, classification tutorial step, LaunchWizard classification card, candidate reveal/block semantics, map star-system context.\n✓ Fixed base prerequisite card priority so M4 Scanner Station build remains actionable before New Mission.\n✓ Tests: later_missions 17/17, mission_e2e 3/3, tutorial 8/8, narrative 13/13, structure 27/27."
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "fzoyb8",
+      "version": 4,
+      "timestamp": "2026-04-22T08:00:28.451Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Set up tutorial & flow for m3",
+        "description": "So, the annotation mechanic should follow:\n1. We introduce the user to what lightcurves & active asteroids (zooniverse.org/projects/orionnau/active-asteroids/classify) are\n2. We have a set of anomalies that are downloaded & cached/offline on PWA\n3. Mission 3 involves users being given asteroid candidates or lightcurves (from TESS/TIC) to classify\n4. Planets will give users new minerals, depending on the period the user provides (as this determines relative distance to parent star). Asteroids will give users water\n5. Tutorial involves annotations and then showing the candidate (if the user idnetified it was real) in the map\n6. The map needs to be updated to show multiple stars once planets are unlocked",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "mvp",
+          "onboarding",
+          "mission-flow",
+          "tutorial",
+          "m3",
+          "classification",
+          "scanner",
+          "map",
+          "pwa-ready"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Mission 3 introduces classification through a short authored tutorial flow before target selection."
+          },
+          {
+            "completed": true,
+            "text": "Mission 3 uses cached/offline anomaly or lightcurve candidate data suitable for PWA play."
+          },
+          {
+            "completed": true,
+            "text": "Candidate classification affects target reveal/access without blocking mission reward progress."
+          },
+          {
+            "completed": true,
+            "text": "Map/scanner UI can represent unlocked planet/candidate context, including multi-star system context where available."
+          },
+          {
+            "completed": true,
+            "text": "Sandboxed tests cover M2 to M3 transition, M3 classification tutorial flow, and map/scanner candidate reveal state."
+          }
+        ],
+        "implementationPlan": "1. Inspect current M3 launch/target/scanner/map/classification code paths and existing tests.\n2. Define the M3 authored flow around candidate classification: intro copy, anomaly/lightcurve prompt, result handling, and map reveal.\n3. Implement the smallest vertical slice that connects tutorial guidance, candidate data, target reveal/access, and mission progression without introducing open-ops/free-mode language.\n4. Add sandboxed Godot tests for M2 -> M3, M3 tutorial/classification, candidate reveal/block/reward behavior, and map/scanner state.\n5. Run focused mission/tutorial/map tests and record completion notes.",
+        "implementationNotes": "Relations: builds on @task-55nk4i. Relevant completed work: @task-9zc5kc, @task-btkvyl, @task-8unidd, @task-12x898. Related blocked/planned work: @task-lkzqm0, @task-srnf59.\n\n✓ Implemented M3 TESS/TIC candidate flow: cached offline targets, classification tutorial step, LaunchWizard classification card, candidate reveal/block semantics, map star-system context.\n✓ Fixed base prerequisite card priority so M4 Scanner Station build remains actionable before New Mission.\n✓ Tests: later_missions 17/17, mission_e2e 3/3, tutorial 8/8, narrative 13/13, structure 27/27."
+      }
+    }
+  ]
+}
