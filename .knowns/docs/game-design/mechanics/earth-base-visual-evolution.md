@@ -62,4 +62,4 @@ Feel: functional but sparse. "Starter" aesthetic.
 
 ## Related Docs
 - @doc/game-design/construction-and-settlements
-- @doc/game-design/level-progression-and-unlocks
+- @doc/game-design/progression/level-progression-and-unlocks

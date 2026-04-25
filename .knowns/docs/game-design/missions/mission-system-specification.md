@@ -21,7 +21,7 @@ Star Sailors: Experiment 1 uses an authored onboarding arc for **Mission 1 to Mi
 - Legacy M4/M5 authored-mission references and scanner-build gates are archive-only and non-authoritative
 
 Primary reference:
-- @doc/specs/post-m4-free-ops-product-decisions-2026-03-10
+- @doc/specs/missions/post-m4-free-ops-product-decisions-2026-03-10
 
 ## Product Principles
 - Readability and usability are prioritized over visual complexity.

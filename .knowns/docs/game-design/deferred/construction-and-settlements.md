@@ -53,9 +53,9 @@ Players can build static structures on Earth and on discovered anomalies (astero
 - Future: player outposts may become Neutral Trade Hubs accessible to any player.
 
 ## Related Docs
-- @doc/game-design/economy-and-minerals
+- @doc/game-design/economy/economy-and-minerals
 - @doc/game-design/long-term-features-roadmap
-- @doc/game-design/rocket-and-room-system
+- @doc/game-design/mechanics/rocket-and-room-system
 
 ## Design Round 3 — 2026-03-17
 

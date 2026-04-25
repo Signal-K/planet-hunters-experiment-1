@@ -195,9 +195,9 @@ Note: Code internals may use `completed_mission_count >= 4` as the Free Ops gate
 
 ## Related Docs
 - @doc/game-design/gameplay-vision-20-questions
-- @doc/game-design/rocket-and-room-system
-- @doc/game-design/contractor-system
-- @doc/game-design/economy-and-minerals
+- @doc/game-design/mechanics/rocket-and-room-system
+- @doc/game-design/economy/contractor-system
+- @doc/game-design/economy/economy-and-minerals
 - @doc/game-design/construction-and-settlements
 - @doc/game-design/long-term-features-roadmap
 

@@ -47,7 +47,7 @@ tags:
 - Keep HUD compact to avoid obscuring gameplay.
 
 ## References
-- @doc/game-design/mission-system-specification
+- @doc/game-design/missions/mission-system-specification
 - @doc/specs/user-flow-and-citizen-science-specification
 - @doc/specs/pwa-standalone-game-shell-layout-behavior
 

@@ -105,5 +105,5 @@ Colour coding: grey (T1) → green (T2) → blue (T3) → purple (T4)
 
 ## Related
 - `MineralCatalog.gd` — authoritative code implementation
-- @doc/game-design/economy-and-minerals
-- @doc/game-design/contractor-system
+- @doc/game-design/economy/economy-and-minerals
+- @doc/game-design/economy/contractor-system

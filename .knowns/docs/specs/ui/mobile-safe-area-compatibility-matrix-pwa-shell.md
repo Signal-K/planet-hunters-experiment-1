@@ -68,4 +68,4 @@ Ensure actionable controls never overlap cutouts/notches/dynamic-island/gesture 
 ## Implementation Anchors
 - Shell layout and fixed controls: `react-shell.js`
 - PWA behavior spec: @doc/specs/pwa-standalone-game-shell-layout-behavior
-- Decision lock: @doc/specs/post-m4-free-ops-product-decisions-2026-03-10
+- Decision lock: @doc/specs/missions/post-m4-free-ops-product-decisions-2026-03-10

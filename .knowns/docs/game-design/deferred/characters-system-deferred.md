@@ -42,5 +42,5 @@ Characters (crew) can be recruited using Francs or found during exploration. The
 
 ## Integration
 - Characters are part of the Star Sailors ecosystem (same account, same character pool).
-- See @doc/game-design/rocket-and-room-system for room slot decisions.
+- See @doc/game-design/mechanics/rocket-and-room-system for room slot decisions.
 - See @doc/game-design/long-term-features-roadmap for revisit date.

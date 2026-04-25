@@ -28,7 +28,7 @@ This supersedes fragmented prompt/runbook docs for active production.
 
 References:
 - @doc/specs/mission-system-specification
-- @doc/specs/post-m4-free-ops-product-decisions-2026-03-10
+- @doc/specs/missions/post-m4-free-ops-product-decisions-2026-03-10
 - @doc/specs/contractor-visual-theming-rules-for-room-prompt-production
 
 ## Output Contract (Per Asset)

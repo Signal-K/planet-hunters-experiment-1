@@ -68,6 +68,6 @@ The star map is the player's spatial view of the game world. Visible after Missi
 ---
 
 ## Related Docs
-- @doc/game-design/target-system
-- @doc/game-design/user-flow-and-citizen-science
-- @doc/game-design/level-progression-and-unlocks
+- @doc/game-design/mechanics/target-system
+- @doc/game-design/missions/user-flow-and-citizen-science
+- @doc/game-design/progression/level-progression-and-unlocks
