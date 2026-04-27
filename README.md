@@ -6,7 +6,7 @@ A hybrid resource management game and citizen science platform where players exp
 
 ## 🎮 Game Overview
 
-Planet Hunters combines economic progression with authentic data from space telescopes. Players scan the cosmos using real TESS telescope data and asteroid databases, select targets for resource extraction missions, and analyze celestial objects—activities that mirror real astronomical research workflows.
+Planet Hunters combines economic progression with authentic data from space telescopes. In the current release path, players scan the cosmos using real TESS-style planet-candidate data, select targets for resource extraction missions, and analyze celestial objects in a planet-hunting loop that mirrors real astronomical research workflows.
 
 ## 📋 Spec-Driven Development
 

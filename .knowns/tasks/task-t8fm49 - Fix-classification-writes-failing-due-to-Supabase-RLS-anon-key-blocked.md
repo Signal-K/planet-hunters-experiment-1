@@ -6,7 +6,7 @@ priority: high
 labels:
   - 'supabase,rls,citizen-science,bug'
 createdAt: '2026-04-11T04:07:40.472Z'
-updatedAt: '2026-04-13T03:08:39.323Z'
+updatedAt: '2026-04-30T01:07:13.407Z'
 timeSpent: 0
 assignee: '@Liam'
 parent: q1jyo4
@@ -74,5 +74,7 @@ Recommended: Option C — use supabase.auth.signInAnonymously() to get a real au
 ✓ Added anonymous Supabase auth session flow + real author IDs for classification POST/read paths
 
 ⚠ Production still rejects authenticated anonymous inserts with 42501. Root cause confirmed: repo migrations only grant classifications INSERT to anon, while Supabase anonymous auth yields authenticated role. Added corrective migration supabase/migrations/20260413_classifications_authenticated_guest_policy.sql and normalized anomaly-id parsing in game/test write paths.
+
+2026-04-30 scope update: this production classification fix now applies only to planet-candidate / TESS lightcurve submissions for the next release. Asteroid review is out of scope.
 <!-- SECTION:NOTES:END -->
 
