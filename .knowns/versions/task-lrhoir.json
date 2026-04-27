@@ -1,0 +1,346 @@
+{
+  "taskId": "lrhoir",
+  "currentVersion": 6,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "lrhoir",
+      "version": 1,
+      "timestamp": "2026-04-30T01:03:00.621Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        },
+        {
+          "field": "assignee",
+          "newValue": "@me"
+        }
+      ],
+      "snapshot": {
+        "title": "Retire asteroid classification flow for next release",
+        "description": "Align current release scope with planet-hunting-only gameplay after the tutorial and through Mission 3. Update sprint/docs/tickets and remove asteroid candidate classification/integration paths that conflict with the current planet candidate flow.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "release-scope",
+          "planet-hunters",
+          "citizen-science"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Sprint and active planning docs state that Mission 3 and post-tutorial gameplay are planet-hunting only for the upcoming release"
+          },
+          {
+            "completed": false,
+            "text": "Knowns tasks reflect removal of asteroid classification work from the immediate sprint and capture any follow-up work needed"
+          },
+          {
+            "completed": false,
+            "text": "Codebase no longer exposes or relies on asteroid candidate classification/integration paths for Mission 3 or Free Operations"
+          },
+          {
+            "completed": false,
+            "text": "Tests and copy are updated to match the planet-only release scope"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "lrhoir",
+      "version": 2,
+      "timestamp": "2026-04-30T01:05:19.562Z",
+      "changes": [
+        {
+          "field": "implementationPlan",
+          "newValue": "1. Update sprint and mission/citizen-science docs to make the upcoming release planet-hunting only after the tutorial and through Mission 3/Free Ops.\n2. Update current sprint tickets and create any follow-up tasks needed for future planet-only integration or deferred asteroid reintroduction.\n3. Remove asteroid candidate-classification and scanner/integration paths that conflict with the active planet-candidate flow.\n4. Update tests and player-facing copy to match the planet-only release scope.\n5. Run relevant tests, then check AC, add notes, stop time, and mark the task done."
+        }
+      ],
+      "snapshot": {
+        "title": "Retire asteroid classification flow for next release",
+        "description": "Align current release scope with planet-hunting-only gameplay after the tutorial and through Mission 3. Update sprint/docs/tickets and remove asteroid candidate classification/integration paths that conflict with the current planet candidate flow.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "release-scope",
+          "planet-hunters",
+          "citizen-science"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Sprint and active planning docs state that Mission 3 and post-tutorial gameplay are planet-hunting only for the upcoming release"
+          },
+          {
+            "completed": false,
+            "text": "Knowns tasks reflect removal of asteroid classification work from the immediate sprint and capture any follow-up work needed"
+          },
+          {
+            "completed": false,
+            "text": "Codebase no longer exposes or relies on asteroid candidate classification/integration paths for Mission 3 or Free Operations"
+          },
+          {
+            "completed": false,
+            "text": "Tests and copy are updated to match the planet-only release scope"
+          }
+        ],
+        "implementationPlan": "1. Update sprint and mission/citizen-science docs to make the upcoming release planet-hunting only after the tutorial and through Mission 3/Free Ops.\n2. Update current sprint tickets and create any follow-up tasks needed for future planet-only integration or deferred asteroid reintroduction.\n3. Remove asteroid candidate-classification and scanner/integration paths that conflict with the active planet-candidate flow.\n4. Update tests and player-facing copy to match the planet-only release scope.\n5. Run relevant tests, then check AC, add notes, stop time, and mark the task done."
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "lrhoir",
+      "version": 3,
+      "timestamp": "2026-04-30T01:18:25.337Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "title": "Retire asteroid classification flow for next release",
+        "description": "Align current release scope with planet-hunting-only gameplay after the tutorial and through Mission 3. Update sprint/docs/tickets and remove asteroid candidate classification/integration paths that conflict with the current planet candidate flow.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "release-scope",
+          "planet-hunters",
+          "citizen-science"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Sprint and active planning docs state that Mission 3 and post-tutorial gameplay are planet-hunting only for the upcoming release"
+          },
+          {
+            "completed": false,
+            "text": "Knowns tasks reflect removal of asteroid classification work from the immediate sprint and capture any follow-up work needed"
+          },
+          {
+            "completed": false,
+            "text": "Codebase no longer exposes or relies on asteroid candidate classification/integration paths for Mission 3 or Free Operations"
+          },
+          {
+            "completed": false,
+            "text": "Tests and copy are updated to match the planet-only release scope"
+          }
+        ],
+        "implementationPlan": "1. Update sprint and mission/citizen-science docs to make the upcoming release planet-hunting only after the tutorial and through Mission 3/Free Ops.\n2. Update current sprint tickets and create any follow-up tasks needed for future planet-only integration or deferred asteroid reintroduction.\n3. Remove asteroid candidate-classification and scanner/integration paths that conflict with the active planet-candidate flow.\n4. Update tests and player-facing copy to match the planet-only release scope.\n5. Run relevant tests, then check AC, add notes, stop time, and mark the task done."
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "lrhoir",
+      "version": 4,
+      "timestamp": "2026-04-30T01:18:25.344Z",
+      "changes": [
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Sprint and active planning docs state that Mission 3 and post-tutorial gameplay are planet-hunting only for the upcoming release"
+            },
+            {
+              "completed": false,
+              "text": "Knowns tasks reflect removal of asteroid classification work from the immediate sprint and capture any follow-up work needed"
+            },
+            {
+              "completed": false,
+              "text": "Codebase no longer exposes or relies on asteroid candidate classification/integration paths for Mission 3 or Free Operations"
+            },
+            {
+              "completed": false,
+              "text": "Tests and copy are updated to match the planet-only release scope"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Sprint and active planning docs state that Mission 3 and post-tutorial gameplay are planet-hunting only for the upcoming release"
+            },
+            {
+              "completed": true,
+              "text": "Knowns tasks reflect removal of asteroid classification work from the immediate sprint and capture any follow-up work needed"
+            },
+            {
+              "completed": true,
+              "text": "Codebase no longer exposes or relies on asteroid candidate classification/integration paths for Mission 3 or Free Operations"
+            },
+            {
+              "completed": true,
+              "text": "Tests and copy are updated to match the planet-only release scope"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Retire asteroid classification flow for next release",
+        "description": "Align current release scope with planet-hunting-only gameplay after the tutorial and through Mission 3. Update sprint/docs/tickets and remove asteroid candidate classification/integration paths that conflict with the current planet candidate flow.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "release-scope",
+          "planet-hunters",
+          "citizen-science"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Sprint and active planning docs state that Mission 3 and post-tutorial gameplay are planet-hunting only for the upcoming release"
+          },
+          {
+            "completed": true,
+            "text": "Knowns tasks reflect removal of asteroid classification work from the immediate sprint and capture any follow-up work needed"
+          },
+          {
+            "completed": true,
+            "text": "Codebase no longer exposes or relies on asteroid candidate classification/integration paths for Mission 3 or Free Operations"
+          },
+          {
+            "completed": true,
+            "text": "Tests and copy are updated to match the planet-only release scope"
+          }
+        ],
+        "implementationPlan": "1. Update sprint and mission/citizen-science docs to make the upcoming release planet-hunting only after the tutorial and through Mission 3/Free Ops.\n2. Update current sprint tickets and create any follow-up tasks needed for future planet-only integration or deferred asteroid reintroduction.\n3. Remove asteroid candidate-classification and scanner/integration paths that conflict with the active planet-candidate flow.\n4. Update tests and player-facing copy to match the planet-only release scope.\n5. Run relevant tests, then check AC, add notes, stop time, and mark the task done."
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "lrhoir",
+      "version": 5,
+      "timestamp": "2026-04-30T01:18:25.347Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "newValue": "Updated sprint and authoritative mission/citizen-science docs to lock the upcoming release to planet hunting only from Mission 3 onward.\n\nAdjusted current tickets for the new scope and created deferred follow-up task xgcipb for any future asteroid-review redesign.\n\nRemoved asteroid candidate review from active Mission 3 and Free Ops selection/classification paths by trimming M3 fallback targets to TESS-only, forcing the scanner panel onto the planet-only path, and restricting candidate classification exposure to TESS targets.\n\nUpdated copy and targeted tests to match the new contract.\n\nVerification:\n- HOME=/tmp/godot45-user /Applications/Godot4.5.app/Contents/MacOS/Godot --headless --path ./scene --script res://tests/run_annotation_model_tests.gd\n- HOME=/tmp/godot45-user /Applications/Godot4.5.app/Contents/MacOS/Godot --headless --path ./scene --script res://tests/run_later_missions_tests.gd\n- HOME=/tmp/godot45-user /Applications/Godot4.5.app/Contents/MacOS/Godot --headless --path ./scene --script res://tests/run_mission_e2e_flow_tests.gd"
+        }
+      ],
+      "snapshot": {
+        "title": "Retire asteroid classification flow for next release",
+        "description": "Align current release scope with planet-hunting-only gameplay after the tutorial and through Mission 3. Update sprint/docs/tickets and remove asteroid candidate classification/integration paths that conflict with the current planet candidate flow.",
+        "status": "in-progress",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "release-scope",
+          "planet-hunters",
+          "citizen-science"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "Sprint and active planning docs state that Mission 3 and post-tutorial gameplay are planet-hunting only for the upcoming release"
+          },
+          {
+            "completed": false,
+            "text": "Knowns tasks reflect removal of asteroid classification work from the immediate sprint and capture any follow-up work needed"
+          },
+          {
+            "completed": false,
+            "text": "Codebase no longer exposes or relies on asteroid candidate classification/integration paths for Mission 3 or Free Operations"
+          },
+          {
+            "completed": false,
+            "text": "Tests and copy are updated to match the planet-only release scope"
+          }
+        ],
+        "implementationPlan": "1. Update sprint and mission/citizen-science docs to make the upcoming release planet-hunting only after the tutorial and through Mission 3/Free Ops.\n2. Update current sprint tickets and create any follow-up tasks needed for future planet-only integration or deferred asteroid reintroduction.\n3. Remove asteroid candidate-classification and scanner/integration paths that conflict with the active planet-candidate flow.\n4. Update tests and player-facing copy to match the planet-only release scope.\n5. Run relevant tests, then check AC, add notes, stop time, and mark the task done.",
+        "implementationNotes": "Updated sprint and authoritative mission/citizen-science docs to lock the upcoming release to planet hunting only from Mission 3 onward.\n\nAdjusted current tickets for the new scope and created deferred follow-up task xgcipb for any future asteroid-review redesign.\n\nRemoved asteroid candidate review from active Mission 3 and Free Ops selection/classification paths by trimming M3 fallback targets to TESS-only, forcing the scanner panel onto the planet-only path, and restricting candidate classification exposure to TESS targets.\n\nUpdated copy and targeted tests to match the new contract.\n\nVerification:\n- HOME=/tmp/godot45-user /Applications/Godot4.5.app/Contents/MacOS/Godot --headless --path ./scene --script res://tests/run_annotation_model_tests.gd\n- HOME=/tmp/godot45-user /Applications/Godot4.5.app/Contents/MacOS/Godot --headless --path ./scene --script res://tests/run_later_missions_tests.gd\n- HOME=/tmp/godot45-user /Applications/Godot4.5.app/Contents/MacOS/Godot --headless --path ./scene --script res://tests/run_mission_e2e_flow_tests.gd"
+      }
+    },
+    {
+      "id": "v6",
+      "taskId": "lrhoir",
+      "version": 6,
+      "timestamp": "2026-04-30T01:18:51.596Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        },
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Sprint and active planning docs state that Mission 3 and post-tutorial gameplay are planet-hunting only for the upcoming release"
+            },
+            {
+              "completed": false,
+              "text": "Knowns tasks reflect removal of asteroid classification work from the immediate sprint and capture any follow-up work needed"
+            },
+            {
+              "completed": false,
+              "text": "Codebase no longer exposes or relies on asteroid candidate classification/integration paths for Mission 3 or Free Operations"
+            },
+            {
+              "completed": false,
+              "text": "Tests and copy are updated to match the planet-only release scope"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Sprint and active planning docs state that Mission 3 and post-tutorial gameplay are planet-hunting only for the upcoming release"
+            },
+            {
+              "completed": true,
+              "text": "Knowns tasks reflect removal of asteroid classification work from the immediate sprint and capture any follow-up work needed"
+            },
+            {
+              "completed": true,
+              "text": "Codebase no longer exposes or relies on asteroid candidate classification/integration paths for Mission 3 or Free Operations"
+            },
+            {
+              "completed": true,
+              "text": "Tests and copy are updated to match the planet-only release scope"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "title": "Retire asteroid classification flow for next release",
+        "description": "Align current release scope with planet-hunting-only gameplay after the tutorial and through Mission 3. Update sprint/docs/tickets and remove asteroid candidate classification/integration paths that conflict with the current planet candidate flow.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "release-scope",
+          "planet-hunters",
+          "citizen-science"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Sprint and active planning docs state that Mission 3 and post-tutorial gameplay are planet-hunting only for the upcoming release"
+          },
+          {
+            "completed": true,
+            "text": "Knowns tasks reflect removal of asteroid classification work from the immediate sprint and capture any follow-up work needed"
+          },
+          {
+            "completed": true,
+            "text": "Codebase no longer exposes or relies on asteroid candidate classification/integration paths for Mission 3 or Free Operations"
+          },
+          {
+            "completed": true,
+            "text": "Tests and copy are updated to match the planet-only release scope"
+          }
+        ],
+        "implementationPlan": "1. Update sprint and mission/citizen-science docs to make the upcoming release planet-hunting only after the tutorial and through Mission 3/Free Ops.\n2. Update current sprint tickets and create any follow-up tasks needed for future planet-only integration or deferred asteroid reintroduction.\n3. Remove asteroid candidate-classification and scanner/integration paths that conflict with the active planet-candidate flow.\n4. Update tests and player-facing copy to match the planet-only release scope.\n5. Run relevant tests, then check AC, add notes, stop time, and mark the task done.",
+        "implementationNotes": "Updated sprint and authoritative mission/citizen-science docs to lock the upcoming release to planet hunting only from Mission 3 onward.\n\nAdjusted current tickets for the new scope and created deferred follow-up task xgcipb for any future asteroid-review redesign.\n\nRemoved asteroid candidate review from active Mission 3 and Free Ops selection/classification paths by trimming M3 fallback targets to TESS-only, forcing the scanner panel onto the planet-only path, and restricting candidate classification exposure to TESS targets.\n\nUpdated copy and targeted tests to match the new contract.\n\nVerification:\n- HOME=/tmp/godot45-user /Applications/Godot4.5.app/Contents/MacOS/Godot --headless --path ./scene --script res://tests/run_annotation_model_tests.gd\n- HOME=/tmp/godot45-user /Applications/Godot4.5.app/Contents/MacOS/Godot --headless --path ./scene --script res://tests/run_later_missions_tests.gd\n- HOME=/tmp/godot45-user /Applications/Godot4.5.app/Contents/MacOS/Godot --headless --path ./scene --script res://tests/run_mission_e2e_flow_tests.gd"
+      }
+    }
+  ]
+}
