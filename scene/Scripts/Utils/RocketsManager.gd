@@ -25,7 +25,7 @@ const ASTEROID_REQUIRED_LEVEL_BY_BAND := [1, 2]
 const PLANET_DISTANCE_BANDS_AU := [120.0, 220.0, 340.0]
 const PLANET_REQUIRED_LEVEL_BY_BAND := [3, 3, 3]
 const MISSION_PROGRESS_SCHEMA_VERSION := 2
-const SCANNER_UNLOCK_COMPLETED_MISSIONS := 3  # Scanner introduced in M4, which starts after 3 completed missions
+const SCANNER_UNLOCK_COMPLETED_MISSIONS := 3  # Scanner loop becomes active after the 3-mission onboarding arc
 
 ## Mission System Constants
 ## See: @doc/specs/mission-system-specification for complete mission design
@@ -36,8 +36,7 @@ const SCANNER_BUILD_COST := 2000000000
 const SCANNER_SOFT_COOLDOWN_SECONDS := 120
 
 # Predefined authored mission targets with reward ratios.
-# Current onboarding target: M1/M2 aim for a single successful run at ~1.2x,
-# while M4 keeps the higher-risk planetary upside.
+# Current onboarding target: M1/M2 aim for a single successful run at ~1.2x.
 const PREDEFINED_MISSION_TARGETS := {
 	1: {
 		"id": "mission-1-training-target",
@@ -54,14 +53,6 @@ const PREDEFINED_MISSION_TARGETS := {
 		"distance_au": 12.0,
 		"required_level": 2,
 		"reward_ratio": 1.2  # Early-game remains single-run and forgiving
-	},
-	4: {
-		"id": "mission-4-exoplanet-target",
-		"label": "Exoplanet Kepler-442b Proxy",
-		"type": "planet",
-		"distance_au": 120.0,
-		"required_level": 3,
-		"reward_ratio": 1.4  # Spec: M4 reward planetary exploration
 	}
 }
 
@@ -123,18 +114,6 @@ const MISSION3_FALLBACK_TARGETS := [
 		"science_blurb": "Lightcurve candidate near the habitable zone"
 	},
 	{
-		"id": "mission-3-active-asteroid-313p",
-		"label": "313P/Gibbs",
-		"type": "asteroid",
-		"distance_au": 4.5,
-		"required_level": 2,
-		"reward_ratio": 1.25,
-		"anomalySet": "active-asteroids",
-		"classification_status": "candidate",
-		"science_source": "Active Asteroids Programme",
-		"science_blurb": "Recurrent activity near perihelion"
-	},
-	{
 		"id": "mission-3-tess-candidate-beta",
 		"label": "TOI-1452 b",
 		"type": "planet",
@@ -151,18 +130,6 @@ const MISSION3_FALLBACK_TARGETS := [
 		"star_system_name": "TOI-1452 System",
 		"science_source": "NASA TESS",
 		"science_blurb": "Water-world style transit signal"
-	},
-	{
-		"id": "mission-3-active-asteroid-p2013-p5",
-		"label": "P/2013 P5 (PANSTARRS)",
-		"type": "asteroid",
-		"distance_au": 12.2,
-		"required_level": 2,
-		"reward_ratio": 1.30,
-		"anomalySet": "active-asteroids",
-		"classification_status": "candidate",
-		"science_source": "Active Asteroids Programme",
-		"science_blurb": "Six comet-like tails detected"
 	},
 	{
 		"id": "mission-3-tess-candidate-gamma",
@@ -184,12 +151,10 @@ const MISSION3_FALLBACK_TARGETS := [
 	}
 ]
 
-# Mission 4: Planetary exploration
-# Spec: Shows 5 untargeted planets, requires SR3
+# Mission 4 / Free Ops fallback still uses planet targets.
 const MISSION4_VISIBLE_TARGET_COUNT := 5
 
-# Free Ops: contractor-driven trips after Mission 4.
-# Spec: Show asteroid candidates that can be filtered by route + contractor selection.
+# Free Ops: contractor-driven trips after Mission 3.
 const FREE_OPS_VISIBLE_TARGET_COUNT := 5
 const OPEN_OPERATION_MODES := ["contract", "survey"]
 const ROCKET_FLAG_OPTIONS := ["Earth Union", "Signal-K", "Open Science", "Frontier Guild"]
@@ -501,6 +466,8 @@ static func get_mission3_targets(detected_targets: Array = []) -> Array:
 		var target: Dictionary = target_any
 		var tid := str(target.get("id", ""))
 		if tid == "" or targeted_ids.has(tid):
+			continue
+		if _normalize_target_type(str(target.get("type", ""))) != "planet":
 			continue
 		if is_candidate_visit_blocked(tid):
 			continue
@@ -1021,7 +988,7 @@ static func build_target_profile(target_id: String, target_type: String = "aster
 				"required_level": int(variant.get("required_level", 2)),
 				"type": "asteroid"
 			}
-	if get_mission_stage() == 3 and (normalized_type == "planet" or normalized_type == "asteroid"):
+	if get_mission_stage() == 3 and normalized_type == "planet":
 		var mission3_targets = get_mission3_targets()
 		for i in range(mission3_targets.size()):
 			var item = mission3_targets[i]
@@ -1035,22 +1002,18 @@ static func build_target_profile(target_id: String, target_type: String = "aster
 				"type": str(item.get("type", "planet"))
 			}
 	if get_mission_stage() == 4 and normalized_type == "planet":
-		var mission4_targets = get_mission4_targets()
-		for i in range(mission4_targets.size()):
-			var item = mission4_targets[i]
+		var mission4_targets = get_mission3_targets()
+		for item_any in mission4_targets:
+			if typeof(item_any) != TYPE_DICTIONARY:
+				continue
+			var item: Dictionary = item_any
 			if str(item.get("id", "")) != target_id:
 				continue
-			if i == 0:
-				return {
-					"distance_au": 120.0,
-					"distance_km": 120.0 * AU_IN_KM,
-					"required_level": 3,
-					"type": "planet"
-				}
+			var distance_au_stage4 = float(item.get("distance_au", 120.0))
 			return {
-				"distance_au": 220.0,
-				"distance_km": 220.0 * AU_IN_KM,
-				"required_level": 3,
+				"distance_au": distance_au_stage4,
+				"distance_km": distance_au_stage4 * AU_IN_KM,
+				"required_level": int(item.get("required_level", 3)),
 				"type": "planet"
 			}
 	if target_id == "":
@@ -1201,6 +1164,41 @@ static func get_selected_target() -> String:
 	var s = load_state()
 	return str(s.get("selected_target", ""))
 
+static func get_planning_rocket_type() -> String:
+	var s = load_state()
+	return str(s.get("planning_rocket_type", ""))
+
+static func set_planning_rocket_type(rtype: String) -> bool:
+	var s = load_state()
+	s["planning_rocket_type"] = rtype
+	return save_state(s)
+
+static func get_planning_step() -> int:
+	var s = load_state()
+	return int(s.get("planning_step", 0))
+
+static func set_planning_step(step: int) -> bool:
+	var s = load_state()
+	s["planning_step"] = step
+	return save_state(s)
+
+static func clear_planning_state() -> bool:
+	var s = load_state()
+	s.erase("planning_rocket_type")
+	s.erase("planning_step")
+	s.erase("selected_target")
+	# We also need to clear selected contractor from the offer
+	var offer = s.get("trip_contract_offer", {})
+	if typeof(offer) == TYPE_DICTIONARY:
+		offer.erase("selected_contractor")
+		offer["selection_required"] = true
+		s["trip_contract_offer"] = offer
+	var starter = s.get("starter_contract_offer", {})
+	if typeof(starter) == TYPE_DICTIONARY:
+		starter.erase("selected_contractor")
+		s["starter_contract_offer"] = starter
+	return save_state(s)
+
 static func is_target_selectable_for_current_stage(target_id: String) -> bool:
 	if target_id == "":
 		return false
@@ -1225,8 +1223,16 @@ static func get_selectable_targets_for_stage(stage: int = -1) -> Array:
 		return get_mission3_targets()
 	if mission_stage == 4:
 		if is_free_operations_unlocked():
-			return get_detected_targets()
-		return get_mission4_targets()
+			var free_ops_targets := []
+			for target_any in get_detected_targets():
+				if typeof(target_any) != TYPE_DICTIONARY:
+					continue
+				var target: Dictionary = target_any
+				if _normalize_target_type(str(target.get("type", ""))) != "planet":
+					continue
+				free_ops_targets.append(target)
+			return free_ops_targets
+		return get_mission3_targets()
 	return get_detected_targets()
 
 static func ensure_selected_target_for_launch(rocket_id: String = "") -> Dictionary:
