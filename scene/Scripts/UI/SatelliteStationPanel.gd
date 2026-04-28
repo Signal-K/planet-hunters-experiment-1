@@ -53,7 +53,7 @@ const STATION_BUTTON_HOVER := Color(0.96, 0.98, 0.98, 1.0)
 const STATION_BUTTON_PRESSED := Color(0.93, 0.95, 0.95, 1.0)
 
 var pending_anomalies := []
-var current_mode: String = "asteroids"  # Default mode
+var current_mode: String = "planets"
 var local_only: bool = false
 var use_archived_detail: bool = false
 var _player_level: int = 1
@@ -408,63 +408,29 @@ func _on_refresh_pressed():
 	_fetch_anomalies()
 
 func _on_toggle_switch_pressed():
-	"""Handle toggle switch between asteroids and planets"""
 	if _player_level < PLANET_UNLOCK_LEVEL:
 		status_label.text = "Planet targets unlock at Level %d." % PLANET_UNLOCK_LEVEL
 		return
-	if current_mode == "asteroids":
-		current_mode = "planets"
-		GameplayAnalytics.emit_event("scanner_mode_toggled", {
-			"scanner_mode": "planets"
-		})
-		AppControllerHelper.record_tutorial_action("toggle_planet_scanner")
-		toggle_switch.text = "Switch to Asteroids"
-		_refresh_scan_summary()
-		if local_only:
-			if not _try_start_scan_with_cooldown(REFRESH_LOAD_TIME):
-				return
-			_apply_local_anomalies()
-			return
-		# Fetch and display planets
-		if not _try_start_scan_with_cooldown(REFRESH_LOAD_TIME):
-			return
-		_fetch_anomalies()
-	else:
-		current_mode = "asteroids"
-		GameplayAnalytics.emit_event("scanner_mode_toggled", {
-			"scanner_mode": "asteroids"
-		})
-		toggle_switch.text = "Switch to Planets"
-		_refresh_scan_summary()
-		if local_only:
-			if not _try_start_scan_with_cooldown(REFRESH_LOAD_TIME):
-				return
-			_apply_local_anomalies()
-			return
-		# Fetch and display asteroids
-		if not _try_start_scan_with_cooldown(REFRESH_LOAD_TIME):
-			return
-		_fetch_anomalies()
+	current_mode = "planets"
+	status_label.text = "Planet hunter sweep locked for this release."
+	_refresh_scan_summary()
 
 func _get_current_mode() -> String:
 	return current_mode
 
 func _apply_local_anomalies() -> void:
 	pending_anomalies = _build_local_anomalies()
-	var target_type = "planets" if current_mode == "planets" else "asteroids"
 	var local_range_note = " • Range: %s" % get_scanner_range_label() if _player_level >= PLANET_UNLOCK_LEVEL else ""
-	status_label.text = "%d local %s contacts loaded%s" % [pending_anomalies.size(), target_type, local_range_note]
+	status_label.text = "%d local planet contacts loaded%s" % [pending_anomalies.size(), local_range_note]
 	_refresh_scan_summary(pending_anomalies)
 	_loading.mark_anomalies_ready()
 
 func _refresh_scan_summary(anomalies: Array = []) -> void:
 	if not is_instance_valid(mode_badge):
 		return
-	var is_planet_mode := current_mode == "planets"
-	var target_label := "planet" if is_planet_mode else "asteroid"
 	var count := anomalies.size()
-	mode_badge.text = "PLANET SWEEP" if is_planet_mode else "ASTEROID SWEEP"
-	count_label.text = "%d %s%s" % [count, target_label, "" if count == 1 else "s"]
+	mode_badge.text = "PLANET SWEEP"
+	count_label.text = "%d planet%s" % [count, "" if count == 1 else "s"]
 	if _player_level >= PLANET_UNLOCK_LEVEL:
 		range_label.text = get_scanner_range_label()
 	else:
@@ -473,10 +439,8 @@ func _refresh_scan_summary(anomalies: Array = []) -> void:
 		guidance_label.text = "Route a contact to the Launchpad, or inspect it first to confirm mission fit and science value."
 	elif _loading.is_loading():
 		guidance_label.text = "Sweep in progress. Fresh contacts will populate here once telemetry resolves."
-	elif is_planet_mode:
-		guidance_label.text = "No planetary contacts on this pass. Refresh for another sweep or pivot back to asteroids."
 	else:
-		guidance_label.text = "No asteroid contacts on this pass. Refresh for another sweep or inspect prior detections."
+		guidance_label.text = "No planetary contacts on this pass. Refresh for another sweep."
 
 func _apply_station_panel(panel: Control, bg_color: Color, border_color: Color, border_width: int = 1, corner_radius: int = 10, shadow_size: int = 12) -> void:
 	if panel == null:
@@ -529,7 +493,6 @@ func _persist_detected_targets_and_record_scan(anomalies: Array) -> void:
 	if not rm:
 		return
 	var targets := []
-	var target_kind = "planet" if current_mode == "planets" else "asteroid"
 	for i in range(anomalies.size()):
 		var a = anomalies[i]
 		var id = _data.normalize_anomaly_id(a, i + 1)
@@ -537,7 +500,7 @@ func _persist_detected_targets_and_record_scan(anomalies: Array) -> void:
 		targets.append({
 			"id": id,
 			"label": label,
-			"type": target_kind,
+			"type": "planet",
 			"anomalySet": str(a.get("anomalySet", "")),
 			"classification_status": str(a.get("classification_status", "")),
 			"tess_disposition": str(a.get("tess_disposition", ""))
@@ -591,22 +554,16 @@ func _ensure_free_ops_candidate_option(targets: Array, rm) -> Array:
 	return enriched
 
 func _build_local_anomalies() -> Array:
-	if current_mode == "planets":
-		return [
-			{
-				"id": 9101,
-				"ticId": "9101",
-				"content": "9101",
-				"anomalytype": "telescope_tess",
-				"temperature": 290
-			}
-		]
 	return [
 		{
-			"id": 4201,
-			"content": "4201",
-			"anomalytype": "active-asteroids",
-			"classification_status": "confirmed"
+			"id": 9101,
+			"ticId": "9101",
+			"content": "9101",
+			"anomalySet": PLANET_SET,
+			"anomalytype": "telescope_tess",
+			"classification_status": "candidate",
+			"tess_disposition": "PC",
+			"temperature": 290
 		}
 	]
 
@@ -616,10 +573,6 @@ func _filter_mission3_untargeted_anomalies(anomalies: Array) -> Array:
 		return anomalies
 	var mission_stage = int(rm.get_mission_stage())
 	if rm.is_free_operations_unlocked():
-		return anomalies
-	if mission_stage == 3 and current_mode != "asteroids":
-		return anomalies
-	if mission_stage == 4 and current_mode != "planets":
 		return anomalies
 	if mission_stage != 3 and mission_stage != 4:
 		return anomalies
@@ -722,18 +675,16 @@ func _refresh_player_level() -> void:
 func _refresh_planet_unlock_ui(show_overlay_if_needed: bool) -> void:
 	var planets_unlocked = _player_level >= PLANET_UNLOCK_LEVEL
 	if not planets_unlocked:
-		current_mode = "asteroids"
+		current_mode = "planets"
 		toggle_switch.disabled = true
 		toggle_switch.text = "Planets unlock at Level %d" % PLANET_UNLOCK_LEVEL
 		if not _loading.is_loading():
 			status_label.text = "Reach Level %d to unlock planet targets" % PLANET_UNLOCK_LEVEL
 		return
 
+	current_mode = "planets"
 	toggle_switch.disabled = false
-	if current_mode == "planets":
-		toggle_switch.text = "Switch to Asteroids"
-	else:
-		toggle_switch.text = "Switch to Planets"
+	toggle_switch.text = "Planet Hunters Active"
 
 	var has_seen_overlay = _has_seen_level2_unlock_overlay()
 	if show_overlay_if_needed or not has_seen_overlay:
@@ -796,7 +747,7 @@ func _on_level2_overlay_confirmed() -> void:
 
 func _focus_planets_after_unlock() -> void:
 	current_mode = "planets"
-	toggle_switch.text = "Switch to Asteroids"
+	toggle_switch.text = "Planet Hunters Active"
 	var t = create_tween()
 	t.tween_property(toggle_switch, "scale", Vector2(1.09, 1.09), 0.12)
 	t.tween_property(toggle_switch, "scale", Vector2.ONE, 0.18)

@@ -2,11 +2,14 @@ extends Node2D
 
 const SpaceMapTargetDialogueScene = preload("res://Scenes/UI/Templates/SpaceMapTargetDialogue.tscn")
 const SpaceMapContractorRowScene = preload("res://Scenes/UI/Templates/SpaceMapContractorRow.tscn")
+const AsteroidDetailViewScene = preload("res://Scenes/UI/AsteroidDetail/asteroid_detail_view.tscn")
 
 const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
 const SectorRevealManager = preload("res://Scripts/Utils/SectorRevealManager.gd")
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
 const EarthSceneUIHelper = preload("res://Scripts/Earth/EarthSceneUIHelper.gd")
+const SceneManager = preload("res://Scripts/Earth/SceneManager.gd")
+const UIManager = preload("res://Scripts/Earth/UIManager.gd")
 
 const ORBIT_COUNT := 6
 const STAR_COUNT := 220
@@ -19,8 +22,11 @@ const DISCOVERY_COLOR := Color(1.0, 0.85, 0.25, 1)      # Gold for personal disc
 const FOG_COLOR := Color(0.05, 0.08, 0.14, 0.82)
 const ORBIT_COLOR := Color(0.6, 0.65, 0.75, 0.35)
 const STAR_COLOR := Color(0.9, 0.9, 0.9, 0.8)
+const CANDIDATE_RING_COLOR := Color(0.3, 0.9, 1.0, 0.9)   # Cyan ring for unclassified planet candidates
+const CANDIDATE_PULSE_COLOR := Color(0.3, 0.9, 1.0, 0.35)
 
-var _view_mode: String = "solar"  # "solar" or "stars"
+var _view_mode: String = "stars"  # "solar" or "stars" — galaxy view is default
+var _tess_classifications: Dictionary = {}  # target_id → verdict
 var scene_manager: SceneManager
 var ui_manager: UIManager
 var _ui_helper := EarthSceneUIHelper.new()
@@ -57,7 +63,7 @@ func _ready() -> void:
 	if back_button:
 		back_button.pressed.connect(_on_back_pressed)
 		PanelStyle.apply_button(back_button, false)
-		back_button.visible = false
+		back_button.visible = true
 	if solar_btn:
 		solar_btn.pressed.connect(func(): _set_view_mode("solar"))
 	if stars_btn:
@@ -124,6 +130,7 @@ func _refresh_targets() -> void:
 		_targets = []
 	_revealed_sectors = SectorRevealManager.get_revealed_sectors()
 	_personal_discoveries = _load_personal_discoveries()
+	_tess_classifications = RocketsManager.get_all_tess_classifications()
 
 func _load_personal_discoveries() -> Array:
 	var result: Array = []
@@ -214,14 +221,19 @@ func _build_target_positions() -> void:
 				center_y + rng.randf_range(-sector_h * 0.30, sector_h * 0.30)
 			)
 			var draw_radius = _last_sun_radius * 0.28
+			var is_planet_type := target_type.to_lower() == "planet"
+			var already_classified := _tess_classifications.has(target_id)
+			var awaiting_review := is_planet_type and not already_classified
 			_target_positions[target_id] = {
 				"pos": pos,  # absolute, not relative to center
 				"type": target_type,
 				"label": str(t.get("label", target_id)),
 				"radius": draw_radius,
-				"revealed": revealed,
+				"revealed": revealed or awaiting_review,  # always show candidates needing review
 				"sector": sector,
 				"is_discovery": target_id in _personal_discoveries,
+				"awaiting_review": awaiting_review,
+				"target_data": t,
 			}
 
 func _simple_hash(s: String) -> int:
@@ -321,24 +333,39 @@ func _draw_star_systems(size: Vector2, _NebulaTheme) -> void:
 			continue
 		var pos: Vector2 = entry["pos"]  # absolute position
 		var is_discovery: bool = bool(entry.get("is_discovery", false))
+		var awaiting_review: bool = bool(entry.get("awaiting_review", false))
 		var draw_radius = float(entry.get("radius", _last_sun_radius * 0.28))
 
 		# Star icon: colored circle with a subtle glow
 		var h = _simple_hash(target_id)
 		var star_color := _star_color_for_hash(h)
 
-		if is_discovery:
+		if awaiting_review:
+			# Cyan pulsing ring for unclassified planet candidates
+			draw_circle(pos, draw_radius + 8.0, CANDIDATE_PULSE_COLOR)
+			draw_arc(pos, draw_radius + 5.0, 0.0, TAU, 48, CANDIDATE_RING_COLOR, 2.0, true)
+		elif is_discovery:
 			draw_circle(pos, draw_radius + 4.0, Color(DISCOVERY_COLOR.r, DISCOVERY_COLOR.g, DISCOVERY_COLOR.b, 0.35))
 		draw_circle(pos, draw_radius * 1.5, Color(star_color.r, star_color.g, star_color.b, 0.25))
 		draw_circle(pos, draw_radius, star_color)
 
-		if is_discovery and _label_font:
+		if awaiting_review and _label_font:
+			draw_string(_label_font, pos + Vector2(draw_radius + 4, -2), "?", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, CANDIDATE_RING_COLOR)
+		elif is_discovery and _label_font:
 			draw_string(_label_font, pos + Vector2(draw_radius + 4, -2), "★", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, DISCOVERY_COLOR)
 
 		if _label_font:
 			var label = str(entry.get("label", target_id))
-			var label_color = Color(1.0, 0.95, 0.7, 1.0) if is_discovery else Color(0.85, 0.90, 0.98, 0.9)
+			var label_color: Color
+			if awaiting_review:
+				label_color = CANDIDATE_RING_COLOR
+			elif is_discovery:
+				label_color = Color(1.0, 0.95, 0.7, 1.0)
+			else:
+				label_color = Color(0.85, 0.90, 0.98, 0.9)
 			draw_string(_label_font, pos + Vector2(draw_radius + 2, 14), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, label_color)
+			if awaiting_review:
+				draw_string(_label_font, pos + Vector2(draw_radius + 2, 28), "Awaiting Review", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(CANDIDATE_RING_COLOR.r, CANDIDATE_RING_COLOR.g, CANDIDATE_RING_COLOR.b, 0.8))
 
 	_draw_legend_stars(size)
 
@@ -376,6 +403,9 @@ func _draw_legend_stars(size: Vector2) -> void:
 	draw_circle(Vector2(x + 6, y), 6, DISCOVERY_COLOR)
 	draw_string(_label_font, Vector2(x + 15, y + 5), "Your discovery", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color(0.8, 0.8, 0.85))
 	x += 130
+	draw_arc(Vector2(x + 6, y), 8, 0.0, TAU, 24, CANDIDATE_RING_COLOR, 2.0, true)
+	draw_string(_label_font, Vector2(x + 18, y + 5), "Planet candidate (tap to classify)", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, CANDIDATE_RING_COLOR)
+	x += 230
 	draw_rect(Rect2(x, y - 6, 12, 12), FOG_COLOR, true)
 	draw_rect(Rect2(x, y - 6, 12, 12), Color(0.3, 0.4, 0.6, 0.5), false, 1.0)
 	draw_string(_label_font, Vector2(x + 16, y + 5), "Unexplored sector", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color(0.8, 0.8, 0.85))
@@ -412,6 +442,11 @@ func _handle_click(pos: Vector2) -> void:
 				return
 
 func _open_target_preview(target_id: String, entry: Dictionary) -> void:
+	# Planet candidates awaiting review → open annotation/classification screen
+	if bool(entry.get("awaiting_review", false)):
+		_open_annotation_screen(target_id, entry)
+		return
+
 	# Close any existing target dialogue first
 	var existing := get_node_or_null("CanvasLayer/TargetDialogue")
 	if existing:
@@ -556,6 +591,43 @@ func _open_target_preview(target_id: String, entry: Dictionary) -> void:
 			if not panel.get_global_rect().has_point(event.global_position):
 				backdrop.queue_free()
 	)
+
+func _open_annotation_screen(target_id: String, entry: Dictionary) -> void:
+	# Close any existing overlay first
+	var existing := get_node_or_null("CanvasLayer/AnnotationOverlay")
+	if existing:
+		existing.queue_free()
+		return
+
+	var canvas: CanvasLayer = $CanvasLayer
+
+	# Full-screen backdrop
+	var overlay := ColorRect.new()
+	overlay.name = "AnnotationOverlay"
+	overlay.color = Color(0.02, 0.03, 0.08, 0.98)
+	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	canvas.add_child(overlay)
+
+	# Detail view container
+	var detail_view = AsteroidDetailViewScene.instantiate()
+	overlay.add_child(detail_view)
+	detail_view.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+
+	var target_data: Dictionary = entry.get("target_data", {})
+	if target_data.is_empty():
+		target_data = {
+			"id": target_id,
+			"label": str(entry.get("label", target_id)),
+			"type": str(entry.get("type", "planet")),
+		}
+	detail_view.initialize(target_data, true)
+
+	if detail_view.has_signal("back_pressed"):
+		detail_view.back_pressed.connect(func():
+			overlay.queue_free()
+			_refresh_targets()
+			_rebuild_layout()
+		)
 
 func _style_dialogue_button(btn: Button, col: Color, primary: bool) -> void:
 	if btn == null:
