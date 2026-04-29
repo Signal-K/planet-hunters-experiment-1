@@ -31,11 +31,11 @@ const RUNTIME_CONFIG_PATH: String = "res://supabase.runtime.json"
 # This can be useful for testing mobile builds against local development
 const FORCE_LOCAL_MODE: bool = false
 
-static var _instance: SupabaseClient
+static var _instance  # SupabaseClient singleton
 
-static func get_instance() -> SupabaseClient:
+static func get_instance():
 	if _instance == null:
-		_instance = SupabaseClient.new()
+		_instance = (load("res://Scripts/Systems/SupabaseClient.gd") as GDScript).new()
 
 		# Check for environment variables first (CI/GitHub Actions)
 		var env_url = OS.get_environment("SUPABASE_URL").strip_edges()
@@ -67,7 +67,7 @@ static func get_instance() -> SupabaseClient:
 		print("SupabaseClient: resolved SUPABASE_URL=", _instance.SUPABASE_URL, " key_present=", _instance.SUPABASE_KEY != "")
 	return _instance
 
-static func _apply_credentials(instance: SupabaseClient, url: String, key: String, source: String) -> void:
+static func _apply_credentials(instance: Node, url: String, key: String, source: String) -> void:
 	instance.SUPABASE_URL = url
 	instance.SUPABASE_KEY = key
 	AppLogger.d("SupabaseClient: credentials_source=%s url=%s" % [source, instance.SUPABASE_URL])

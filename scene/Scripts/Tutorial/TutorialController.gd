@@ -128,10 +128,12 @@ func force_advance_current_step() -> bool:
 func _advance_if_match(action_key: String, _metadata: Dictionary) -> bool:
 	if bool(_state.get("skipped", false)):
 		return false
-	# If the reconciler already fast-forwarded us to the end of a stage (empty
-	# step), don't treat this call as a trigger to chain into the next stage.
 	if get_current_step().is_empty():
-		return false
+		var stage_advanced := _try_advance_stage()
+		if stage_advanced:
+			_reconcile_step_index()
+			_emit_step_changed()
+		return stage_advanced
 	var advanced := false
 	var guard = 0
 	while guard < 12:

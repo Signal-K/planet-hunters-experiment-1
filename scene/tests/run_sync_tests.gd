@@ -102,9 +102,9 @@ func test_set_value_updates_state() -> void:
 
 func test_set_value_updates_app_controller() -> void:
 	reporter.start_test("set_value updates AppController")
-	var ctx = await _setup()
-	var app = ctx["app"]
-	var sync = ctx["sync"]
+	var ctx: Dictionary = await _setup()
+	var app: Node = ctx["app"]
+	var sync: Node = ctx["sync"]
 
 	sync.set_value("counter", 99)
 	if app.get_counter() != 99:

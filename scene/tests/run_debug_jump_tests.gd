@@ -44,6 +44,7 @@ func _teardown_app(app: Node) -> void:
 func _reset_state() -> void:
 	RocketsManager.clear_override_state()
 	RocketsManager.reset_state()
+	RocketsManager.clear_trip_contract_offer()
 	var s = RocketsManager.load_state()
 	s["mission_progress_completed"] = 0
 	s["completed_mission_badges"] = []
@@ -59,7 +60,7 @@ func _reset_state() -> void:
 	RocketsManager.save_state(s)
 	RocketsManager.clear_returned_mission()
 	MissionLogManager.reset_state()
-	DirAccess.remove_absolute("user://tutorial_v2.cfg")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path("user://tutorial_v2.cfg"))
 	DirAccess.remove_absolute("user://franc_balance.cfg")
 	DirAccess.remove_absolute("user://experience.cfg")
 

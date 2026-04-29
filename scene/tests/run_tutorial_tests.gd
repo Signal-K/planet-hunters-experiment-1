@@ -32,7 +32,7 @@ func run_all_tests() -> void:
 
 func _setup_controller() -> Node:
 	var controller = TutorialControllerScript.new()
-	controller.name = "TutorialController"
+	controller.name = "TutorialControllerTest"
 	get_root().add_child(controller)
 	await create_timer(0.05).timeout
 	return controller
@@ -43,8 +43,9 @@ func _teardown_controller(controller: Node) -> void:
 	await create_timer(0.05).timeout
 
 func _reset_tutorial_state() -> void:
-	DirAccess.remove_absolute("user://tutorial_v2.cfg")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path("user://tutorial_v2.cfg"))
 	RocketsManager.reset_state()
+	RocketsManager.clear_trip_contract_offer()
 	RocketsManager.clear_selected_target()
 	RocketsManager.clear_preview_target()
 	RocketsManager.clear_returned_mission()

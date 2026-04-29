@@ -2,13 +2,16 @@ extends Node2D
 
 @export var show_ground_guide: bool = false
 
-var camera_controller: Node
-var scene_manager: SceneManager
-var ui_manager: UIManager
+const SceneManager = preload("res://Scripts/Earth/SceneManager.gd")
+const UIManager = preload("res://Scripts/Earth/UIManager.gd")
 const PREVIEW_SCENE_PATH := "res://Scenes/UI/AsteroidPreview/asteroid_preview.tscn"
 const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
 const UILayout = preload("res://Scripts/UI/UILayout.gd")
+
+var camera_controller: Node
+var scene_manager: SceneManager
+var ui_manager: UIManager
 const ClassificationConsensus = preload("res://Scripts/Utils/ClassificationConsensus.gd")
 const EarthBaseActionCard = preload("res://Scripts/UI/EarthBaseActionCard.gd")
 const EarthBaseProgressionCards = preload("res://Scripts/UI/EarthBaseProgressionCards.gd")
@@ -19,7 +22,7 @@ const EarthBaseBuildFlowOverlayScene = preload("res://Scenes/UI/EarthBaseBuildFl
 const EmergencyLoanOfferDialogScene = preload("res://Scenes/UI/EmergencyLoanOfferDialog.tscn")
 const ClassificationConsensusNotificationScene = preload("res://Scenes/UI/ClassificationConsensusNotification.tscn")
 const ControlStationScript = preload("res://Scripts/Earth/ControlStation.gd")
-const ControlStationTexture = preload("res://assets/Structures/ControlStation.png")
+const CONTROL_STATION_TEXTURE_PATH := "res://assets/Structures/ControlStation.png"
 const PreviewRouting = preload("res://Scripts/UI/NewMissionPreviewRouting.gd")
 const SR2_UNLOCK_POPUP_PATH := "user://rocket_unlock_popups.cfg"
 const SR2_UNLOCK_SECTION := "popups"
@@ -96,17 +99,17 @@ func _connect_app_runtime_signals() -> void:
 		app.rockets_reset.connect(_on_rockets_reset)
 
 func _setup_buttons() -> void:
-	var back_btn        := $UILayer/ButtonContainer/BackButton       as Button
-	var forward_btn     := $UILayer/ButtonContainer/ForwardButton    as Button
-	var menu_btn        := $UILayer/ButtonContainer/MenuButton       as Button
-	var market_btn      := $UILayer/ButtonContainer/MarketButton     as Button
-	var space_map_btn   := $UILayer/ButtonContainer/SpaceMapButton   as Button
-	var build_btn       := $UILayer/ButtonContainer/BuildButton      as Button
-	var new_mission_btn := $UILayer/ButtonContainer/NewMissionButton as Button
-	var container       := $UILayer/ButtonContainer                  as HBoxContainer
+	var back_btn: Button        = $UILayer/ButtonContainer/BackButton
+	var forward_btn: Button     = $UILayer/ButtonContainer/ForwardButton
+	var menu_btn: Button        = $UILayer/ButtonContainer/MenuButton
+	var market_btn: Button      = $UILayer/ButtonContainer/MarketButton
+	var space_map_btn: Button   = $UILayer/ButtonContainer/SpaceMapButton
+	var build_btn: Button       = $UILayer/ButtonContainer/BuildButton
+	var new_mission_btn: Button = $UILayer/ButtonContainer/NewMissionButton
+	var container: HBoxContainer = $UILayer/ButtonContainer
 
 	# ── Unified pill background behind all buttons ───────────────────────────
-	var bg := $UILayer/ButtonContainer/NavBackground as Panel
+	var bg: Panel = $UILayer/ButtonContainer/NavBackground
 	var bg_style := StyleBoxFlat.new()
 	bg_style.bg_color     = Color(0.03, 0.03, 0.04, 0.94)
 	bg_style.border_color = Color(0.28, 0.88, 0.96, 0.35)   # cyan, low-opacity border
@@ -1210,7 +1213,7 @@ func _ensure_control_station_visible() -> void:
 	sprite.name = "Sprite2D"
 	sprite.position = Vector2(-29.00003, 5.9999847)
 	sprite.scale = Vector2(0.5, 0.5)
-	sprite.texture = ControlStationTexture
+	sprite.texture = load(CONTROL_STATION_TEXTURE_PATH)
 	structure.add_child(sprite)
 
 	var area := Area2D.new()

@@ -66,11 +66,11 @@ func _reset() -> void:
 	RocketsManager.clear_returned_mission()
 	RocketsManager.clear_preview_target()
 	RocketsManager.clear_trip_contract_offer()
-	DirAccess.remove_absolute("user://tutorial_v2.cfg")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path("user://tutorial_v2.cfg"))
 
 func _setup_controller() -> Node:
 	var c = TutorialControllerScript.new()
-	c.name = "TutorialController"
+	c.name = "TutorialControllerNewUserTest"
 	get_root().add_child(c)
 	await create_timer(0.05).timeout
 	return c

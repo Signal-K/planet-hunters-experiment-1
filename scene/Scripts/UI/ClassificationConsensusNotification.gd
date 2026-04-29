@@ -5,6 +5,7 @@ extends "res://Scripts/UI/BaseDialogLayer.gd"
 ## Call show_results(entries, exp_gained, rank) after instantiating.
 ## entries: Array of ClassificationConsensus dicts (anomaly_id, consensus_verdict, …)
 
+const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
 const TargetCardScene = preload("res://Scenes/UI/Templates/TargetClassificationCard.tscn")
 
 @onready var sync_label: Label          = $Center/Panel/VBox/StatusBar/Row/SyncLabel
