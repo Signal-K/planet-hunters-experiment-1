@@ -103,7 +103,7 @@ static func get_items_by_class(item_class: int) -> Array:
 	for id in ITEMS:
 		var entry: Dictionary = ITEMS[id]
 		if int(entry.get("class", -1)) == item_class:
-			var copy = entry.duplicate()
+			var copy: Dictionary = entry.duplicate()
 			copy["id"] = id
 			result.append(copy)
 	return result

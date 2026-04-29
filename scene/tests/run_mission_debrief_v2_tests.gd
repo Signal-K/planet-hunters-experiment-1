@@ -108,7 +108,7 @@ func _setup_scene(completed_missions: int = 0, returned_override: Dictionary = {
 		"trip_contractor_name": "Rocketlab",
 		"trip_requested_minerals": {"Iron": 10},
 		"mining_run_collected": {"Iron": 10}
-	}
+	} as Dictionary
 	for key in returned_override.keys():
 		if ["rocket_id", "target_id", "target_label", "target_type", "operation_mode"].has(str(key)):
 			continue

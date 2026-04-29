@@ -102,8 +102,8 @@ func _apply_to_app_controller(key: String, value: Variant) -> void:
 				app.set_franc_balance_from_react(int(value))
 		"experienceXp", "experienceLevel":
 			if app.has_method("set_experience_from_react"):
-				var xp = int(_state.get("experienceXp", 0))
-				var level = int(_state.get("experienceLevel", 1))
+				var xp: int = int(_state.get("experienceXp", 0))
+				var level: int = int(_state.get("experienceLevel", 1))
 				app.set_experience_from_react(xp, level)
 
 func _on_counter_updated(value: int) -> void:

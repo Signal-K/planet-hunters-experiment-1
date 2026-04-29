@@ -1,6 +1,7 @@
 extends RefCounted
 class_name GameNavigationMenu
 
+const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
 const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd")
 const AppLogger = preload("res://Scripts/Utils/Logger.gd")
 const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
