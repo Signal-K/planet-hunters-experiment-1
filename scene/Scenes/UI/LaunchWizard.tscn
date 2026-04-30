@@ -1,10 +1,13 @@
-[gd_scene load_steps=11 format=3 uid="uid://launch_wizard_scene"]
+[gd_scene load_steps=19 format=3 uid="uid://launch_wizard_scene"]
 
 [ext_resource type="Script" path="res://Scripts/UI/LaunchWizard.gd" id="1"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/Templates/LaunchWizardContractorCard.tscn" id="2"]
 [ext_resource type="Script" path="res://Scripts/UI/LaunchWizardMapStep.gd" id="3"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/Templates/LaunchWizardRocketTile.tscn" id="4"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/Templates/LaunchWizardConfirmRow.tscn" id="5"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/Templates/LaunchWizardAssemblyMetricCard.tscn" id="6"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/Templates/LaunchWizardConfirmManifestCard.tscn" id="7"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/Templates/LaunchWizardConfirmFactCard.tscn" id="8"]
 
 ; Terminal Ethereal — mobile-first launch wizard.
 ; UI structure lives in scene files so designers can inspect and adjust it in the editor.
@@ -64,6 +67,66 @@ content_margin_top = 5.0
 content_margin_right = 9.0
 content_margin_bottom = 5.0
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_footer_secondary"]
+bg_color = Color(0.055, 0.082, 0.15, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+content_margin_left = 16.0
+content_margin_top = 8.0
+content_margin_right = 16.0
+content_margin_bottom = 8.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_footer_secondary_hover"]
+bg_color = Color(0.16, 0.42, 0.65, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+content_margin_left = 16.0
+content_margin_top = 8.0
+content_margin_right = 16.0
+content_margin_bottom = 8.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_footer_primary"]
+bg_color = Color(0.22, 0.54, 0.8, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+content_margin_left = 16.0
+content_margin_top = 8.0
+content_margin_right = 16.0
+content_margin_bottom = 8.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_footer_primary_disabled"]
+bg_color = Color(0.6, 0.6, 0.6, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+content_margin_left = 16.0
+content_margin_top = 8.0
+content_margin_right = 16.0
+content_margin_bottom = 8.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ready_badge"]
+bg_color = Color(0.129, 0.588, 0.486, 0.12)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.129, 0.588, 0.486, 0.42)
+corner_radius_top_left = 999
+corner_radius_top_right = 999
+corner_radius_bottom_right = 999
+corner_radius_bottom_left = 999
+content_margin_left = 16.0
+content_margin_top = 10.0
+content_margin_right = 16.0
+content_margin_bottom = 10.0
+
 [node name="LaunchWizard" type="Control"]
 layout_mode = 3
 anchors_preset = 15
@@ -80,6 +143,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+color = Color(0.038, 0.058, 0.112, 1)
 
 [node name="Scaffold" type="VBoxContainer" parent="."]
 layout_mode = 1
@@ -104,6 +168,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+color = Color(0.055, 0.086, 0.165, 1)
 
 [node name="HeaderRow" type="HBoxContainer" parent="Scaffold/Header"]
 layout_mode = 1
@@ -120,18 +185,42 @@ theme_override_constants/separation = 8
 [node name="BackBtn" type="Button" parent="Scaffold/Header/HeaderRow"]
 layout_mode = 2
 custom_minimum_size = Vector2(44, 44)
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 32
 flat = true
 text = "<"
 
 [node name="StepTitle" type="Label" parent="Scaffold/Header/HeaderRow"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 22
 vertical_alignment = 1
 
 [node name="DotBox" type="HBoxContainer" parent="Scaffold/Header/HeaderRow"]
 layout_mode = 2
 alignment = 1
 theme_override_constants/separation = 7
+
+[node name="Dot1" type="ColorRect" parent="Scaffold/Header/HeaderRow/DotBox"]
+custom_minimum_size = Vector2(8, 8)
+layout_mode = 2
+color = Color(1, 1, 1, 1)
+
+[node name="Dot2" type="ColorRect" parent="Scaffold/Header/HeaderRow/DotBox"]
+custom_minimum_size = Vector2(8, 8)
+layout_mode = 2
+color = Color(1, 1, 1, 0.3)
+
+[node name="Dot3" type="ColorRect" parent="Scaffold/Header/HeaderRow/DotBox"]
+custom_minimum_size = Vector2(8, 8)
+layout_mode = 2
+color = Color(1, 1, 1, 0.3)
+
+[node name="Dot4" type="ColorRect" parent="Scaffold/Header/HeaderRow/DotBox"]
+custom_minimum_size = Vector2(8, 8)
+layout_mode = 2
+color = Color(1, 1, 1, 0.3)
 
 ; ── Scroll area (fills remaining space) ──────────────────────────────────────
 
@@ -151,7 +240,7 @@ theme_override_constants/margin_bottom = 20
 [node name="CardList" type="VBoxContainer" parent="Scaffold/Scroll/ScrollMargin"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 12
+theme_override_constants/separation = 16
 
 [node name="ContractorStep" type="VBoxContainer" parent="Scaffold/Scroll/ScrollMargin/CardList"]
 layout_mode = 2
@@ -179,7 +268,7 @@ text = "Mission 1 contract"
 [node name="SubtitleLabel" type="Label" parent="Scaffold/Scroll/ScrollMargin/CardList/ContractorStep/IntroPanel/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.64, 0.73, 0.84, 1)
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 18
 text = "Pick the buyer. Their order defines the haul."
 
 [node name="ContractorGrid" type="GridContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/ContractorStep"]
@@ -212,7 +301,7 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_badge")
 [node name="Label" type="Label" parent="Scaffold/Scroll/ScrollMargin/CardList/ContractorStep/CustomMissionCard/Margin/HBox/LockBadge"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.64, 0.73, 0.84, 1)
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 15
 text = "LOCKED"
 vertical_alignment = 1
 
@@ -224,13 +313,13 @@ theme_override_constants/separation = 3
 [node name="Title" type="Label" parent="Scaffold/Scroll/ScrollMargin/CardList/ContractorStep/CustomMissionCard/Margin/HBox/TextCol"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.94, 0.98, 1)
-theme_override_font_sizes/font_size = 17
+theme_override_font_sizes/font_size = 20
 text = "Custom Mission"
 
 [node name="Subtitle" type="Label" parent="Scaffold/Scroll/ScrollMargin/CardList/ContractorStep/CustomMissionCard/Margin/HBox/TextCol"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.64, 0.73, 0.84, 1)
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 16
 text = "Unlocks after your first mission."
 
 [node name="TargetStep" type="VBoxContainer" parent="Scaffold/Scroll/ScrollMargin/CardList"]
@@ -260,7 +349,7 @@ text = "Select destination"
 [node name="SubtitleLabel" type="Label" parent="Scaffold/Scroll/ScrollMargin/CardList/TargetStep/IntroPanel/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.64, 0.73, 0.84, 1)
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 18
 text = "Choose where the next rocket is headed."
 
 [node name="ClassificationCard" type="PanelContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/TargetStep"]
@@ -300,16 +389,34 @@ theme_override_constants/separation = 10
 [node name="PlanetButton" type="Button" parent="Scaffold/Scroll/ScrollMargin/CardList/TargetStep/ClassificationCard/Margin/VBox/ButtonsRow"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 15
+theme_override_styles/normal = SubResource("StyleBoxFlat_footer_primary")
+theme_override_styles/hover = SubResource("StyleBoxFlat_footer_secondary_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_footer_secondary_hover")
+theme_override_styles/focus = SubResource("StyleBoxFlat_footer_primary")
 text = "Planet"
 
 [node name="NotPlanetButton" type="Button" parent="Scaffold/Scroll/ScrollMargin/CardList/TargetStep/ClassificationCard/Margin/VBox/ButtonsRow"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 15
+theme_override_styles/normal = SubResource("StyleBoxFlat_footer_primary")
+theme_override_styles/hover = SubResource("StyleBoxFlat_footer_secondary_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_footer_secondary_hover")
+theme_override_styles/focus = SubResource("StyleBoxFlat_footer_primary")
 text = "Not a Planet"
 
 [node name="MarkDipButton" type="Button" parent="Scaffold/Scroll/ScrollMargin/CardList/TargetStep/ClassificationCard/Margin/VBox/ButtonsRow"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 15
+theme_override_styles/normal = SubResource("StyleBoxFlat_footer_primary")
+theme_override_styles/hover = SubResource("StyleBoxFlat_footer_secondary_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_footer_secondary_hover")
+theme_override_styles/focus = SubResource("StyleBoxFlat_footer_primary")
 text = "Mark Dip"
 
 [node name="MapPanel" type="PanelContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/TargetStep"]
@@ -355,17 +462,17 @@ theme_override_font_sizes/font_size = 14
 text = "< Tap a target on the map above"
 horizontal_alignment = 1
 
-[node name="RocketStep" type="HBoxContainer" parent="Scaffold/Scroll/ScrollMargin/CardList"]
+[node name="RocketStep" type="VBoxContainer" parent="Scaffold/Scroll/ScrollMargin/CardList"]
 visible = false
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 10
+theme_override_constants/separation = 14
 
-[node name="RocketListColumn" type="VBoxContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep"]
+[node name="RocketListColumn" type="HFlowContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep"]
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_stretch_ratio = 0.48
-theme_override_constants/separation = 8
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 10
 
 [node name="EditorPreviewRocketTile" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/RocketListColumn" instance=ExtResource("4")]
 layout_mode = 2
@@ -373,8 +480,7 @@ layout_mode = 2
 [node name="AssemblyPanel" type="PanelContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep"]
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_stretch_ratio = 0.52
-custom_minimum_size = Vector2(0, 260)
+custom_minimum_size = Vector2(0, 420)
 theme_override_styles/panel = SubResource("StyleBoxFlat_step_bg")
 
 [node name="Margin" type="MarginContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel"]
@@ -382,39 +488,93 @@ layout_mode = 2
 
 [node name="VBox" type="VBoxContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin"]
 layout_mode = 2
-theme_override_constants/separation = 6
+theme_override_constants/separation = 10
 
 [node name="TitleLabel" type="Label" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.82, 0.92, 0.97, 0.5)
+theme_override_font_sizes/font_size = 15
+text = "LAUNCHPAD"
+horizontal_alignment = 1
+
+[node name="TelemetryBox" type="HFlowContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 10
+
+[node name="SpeedCard" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/TelemetryBox" instance=ExtResource("6")]
+layout_mode = 2
+
+[node name="KeyLabel" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/TelemetryBox/SpeedCard/Margin/VBox"]
+text = "SPEED"
+
+[node name="ValueLabel" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/TelemetryBox/SpeedCard/Margin/VBox"]
+text = "—"
+
+[node name="CargoCard" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/TelemetryBox" instance=ExtResource("6")]
+layout_mode = 2
+
+[node name="KeyLabel" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/TelemetryBox/CargoCard/Margin/VBox"]
+theme_override_colors/font_color = Color(0.129, 0.588, 0.486, 0.82)
+text = "CARGO"
+
+[node name="ValueLabel" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/TelemetryBox/CargoCard/Margin/VBox"]
+text = "—"
+
+[node name="RangeCard" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/TelemetryBox" instance=ExtResource("6")]
+layout_mode = 2
+
+[node name="KeyLabel" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/TelemetryBox/RangeCard/Margin/VBox"]
+theme_override_colors/font_color = Color(0.851, 0.467, 0.024, 0.82)
+text = "RANGE"
+
+[node name="ValueLabel" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/TelemetryBox/RangeCard/Margin/VBox"]
+text = "—"
+
+[node name="CostCard" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/TelemetryBox" instance=ExtResource("6")]
+layout_mode = 2
+
+[node name="KeyLabel" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/TelemetryBox/CostCard/Margin/VBox"]
+theme_override_colors/font_color = Color(0.506, 0.392, 0.906, 0.82)
+text = "COST"
+
+[node name="ValueLabel" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/TelemetryBox/CostCard/Margin/VBox"]
+text = "—"
+
+[node name="StatusLabel" type="Label" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 13
-text = "ASSEMBLY PREVIEW"
+text = "FLIGHT READY"
 horizontal_alignment = 1
 
 [node name="HintLabel" type="Label" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.55, 0.65, 0.78, 0.7)
-theme_override_font_sizes/font_size = 11
-text = "Select a rocket to see its parts"
+theme_override_font_sizes/font_size = 14
+text = "Select a rocket to populate the launchpad"
 horizontal_alignment = 1
+autowrap_mode = 3
 
 [node name="PartsBox" type="VBoxContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox"]
 layout_mode = 2
 size_flags_vertical = 3
+custom_minimum_size = Vector2(0, 260)
 alignment = 1
-theme_override_constants/separation = 3
-
-[node name="StatusLabel" type="Label" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.22, 0.8, 0.45, 0)
-theme_override_font_sizes/font_size = 13
-text = "ASSEMBLED ✓  READY TO LAUNCH"
-horizontal_alignment = 1
+theme_override_constants/separation = 6
 
 [node name="PadBar" type="ColorRect" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox"]
 layout_mode = 2
-custom_minimum_size = Vector2(0, 5)
-color = Color(0.22, 0.54, 0.8, 0.45)
+custom_minimum_size = Vector2(0, 12)
+color = Color(0.22, 0.54, 0.8, 0.6)
+
+[node name="PadLabel" type="Label" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.64, 0.73, 0.84, 0.75)
+theme_override_font_sizes/font_size = 12
+text = "Launchpad awaiting configuration"
+horizontal_alignment = 1
 
 [node name="ConfirmStep" type="VBoxContainer" parent="Scaffold/Scroll/ScrollMargin/CardList"]
 visible = false
@@ -443,8 +603,54 @@ text = "Ready to launch"
 [node name="SubtitleLabel" type="Label" parent="Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep/IntroPanel/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.64, 0.73, 0.84, 1)
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 18
 text = "Review your mission before the rocket departs."
+
+[node name="ReadinessBadge" type="PanelContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_styles/panel = SubResource("StyleBoxFlat_ready_badge")
+
+[node name="ReadinessLabel" type="Label" parent="Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep/ReadinessBadge"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.129, 0.588, 0.486, 1)
+theme_override_font_sizes/font_size = 13
+text = "SYSTEMS NOMINAL // FLIGHT READY"
+horizontal_alignment = 1
+
+[node name="ManifestGrid" type="GridContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep"]
+layout_mode = 2
+size_flags_horizontal = 3
+columns = 3
+theme_override_constants/h_separation = 14
+theme_override_constants/v_separation = 14
+
+[node name="ContractorManifestCard" parent="Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep/ManifestGrid" instance=ExtResource("7")]
+layout_mode = 2
+
+[node name="KickerLabel" parent="Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep/ManifestGrid/ContractorManifestCard/VBox"]
+text = "CONTRACTOR"
+
+[node name="IconLabel" parent="Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep/ManifestGrid/ContractorManifestCard/VBox/ContentRow/IconPanel"]
+text = "CTR"
+
+[node name="TargetManifestCard" parent="Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep/ManifestGrid" instance=ExtResource("7")]
+layout_mode = 2
+
+[node name="KickerLabel" parent="Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep/ManifestGrid/TargetManifestCard/VBox"]
+text = "TARGET"
+
+[node name="IconLabel" parent="Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep/ManifestGrid/TargetManifestCard/VBox/ContentRow/IconPanel"]
+text = "TGT"
+
+[node name="RocketManifestCard" parent="Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep/ManifestGrid" instance=ExtResource("7")]
+layout_mode = 2
+
+[node name="KickerLabel" parent="Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep/ManifestGrid/RocketManifestCard/VBox"]
+text = "VESSEL"
+
+[node name="IconLabel" parent="Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep/ManifestGrid/RocketManifestCard/VBox/ContentRow/IconPanel"]
+text = "RKT"
 
 [node name="SummaryCard" type="PanelContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep"]
 layout_mode = 2
@@ -458,28 +664,63 @@ layout_mode = 2
 layout_mode = 2
 theme_override_constants/separation = 14
 
+[node name="SectionLabel" type="Label" parent="Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep/SummaryCard/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.82, 0.92, 0.97, 0.52)
+theme_override_font_sizes/font_size = 13
+text = "MISSION CHECKLIST"
+horizontal_alignment = 1
+
 [node name="RowsBox" type="VBoxContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep/SummaryCard/Margin/VBox"]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="EditorPreviewRow" parent="Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep/SummaryCard/Margin/VBox/RowsBox" instance=ExtResource("5")]
+[node name="ContractorRow" parent="Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep/SummaryCard/Margin/VBox/RowsBox" instance=ExtResource("5")]
+layout_mode = 2
+
+[node name="TargetRow" parent="Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep/SummaryCard/Margin/VBox/RowsBox" instance=ExtResource("5")]
+layout_mode = 2
+
+[node name="RocketRow" parent="Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep/SummaryCard/Margin/VBox/RowsBox" instance=ExtResource("5")]
+layout_mode = 2
+
+[node name="CostRow" parent="Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep/SummaryCard/Margin/VBox/RowsBox" instance=ExtResource("5")]
 layout_mode = 2
 
 [node name="Divider" type="ColorRect" parent="Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep/SummaryCard/Margin/VBox"]
 layout_mode = 2
 custom_minimum_size = Vector2(0, 1)
-color = Color(0.928, 0.94, 0.955, 1)
+color = Color(0.22, 0.54, 0.8, 0.22)
 
-[node name="TravelTimeLabel" type="Label" parent="Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep/SummaryCard/Margin/VBox"]
+[node name="FactsRow" type="GridContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep/SummaryCard/Margin/VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.64, 0.73, 0.84, 1)
-theme_override_font_sizes/font_size = 13
-text = "Estimated travel time: ~0 min"
+size_flags_horizontal = 3
+columns = 3
+theme_override_constants/h_separation = 12
+theme_override_constants/v_separation = 12
+
+[node name="TravelFactCard" parent="Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep/SummaryCard/Margin/VBox/FactsRow" instance=ExtResource("8")]
+layout_mode = 2
+
+[node name="LabelLabel" parent="Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep/SummaryCard/Margin/VBox/FactsRow/TravelFactCard/VBox"]
+text = "EST. TRAVEL TIME"
+
+[node name="CostFactCard" parent="Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep/SummaryCard/Margin/VBox/FactsRow" instance=ExtResource("8")]
+layout_mode = 2
+
+[node name="LabelLabel" parent="Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep/SummaryCard/Margin/VBox/FactsRow/CostFactCard/VBox"]
+text = "LAUNCH COST"
+
+[node name="YieldFactCard" parent="Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep/SummaryCard/Margin/VBox/FactsRow" instance=ExtResource("8")]
+layout_mode = 2
+
+[node name="LabelLabel" parent="Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep/SummaryCard/Margin/VBox/FactsRow/YieldFactCard/VBox"]
+text = "EXPECTED YIELD"
 
 [node name="NoteLabel" type="Label" parent="Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep/SummaryCard/Margin/VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.16, 0.42, 0.65, 1)
-theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.55, 0.75, 0.96, 1)
+theme_override_font_sizes/font_size = 16
 text = "Once launched the rocket departs immediately."
 autowrap_mode = 3
 
@@ -497,6 +738,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+color = Color(0.055, 0.086, 0.165, 1)
 
 [node name="FooterRow" type="HBoxContainer" parent="Scaffold/Footer"]
 layout_mode = 1
@@ -514,10 +756,23 @@ theme_override_constants/separation = 12
 [node name="CancelBtn" type="Button" parent="Scaffold/Footer/FooterRow"]
 layout_mode = 2
 custom_minimum_size = Vector2(110, 56)
+theme_override_colors/font_color = Color(0.64, 0.73, 0.84, 1)
+theme_override_font_sizes/font_size = 17
+theme_override_styles/normal = SubResource("StyleBoxFlat_footer_secondary")
+theme_override_styles/hover = SubResource("StyleBoxFlat_footer_secondary_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_footer_secondary_hover")
+theme_override_styles/focus = SubResource("StyleBoxFlat_footer_secondary")
 text = "Cancel"
 
 [node name="NextBtn" type="Button" parent="Scaffold/Footer/FooterRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 custom_minimum_size = Vector2(0, 56)
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 19
+theme_override_styles/normal = SubResource("StyleBoxFlat_footer_primary")
+theme_override_styles/hover = SubResource("StyleBoxFlat_footer_secondary_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_footer_secondary_hover")
+theme_override_styles/focus = SubResource("StyleBoxFlat_footer_primary")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_footer_primary_disabled")
 text = "Next >"
