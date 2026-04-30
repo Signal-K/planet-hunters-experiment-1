@@ -5,38 +5,42 @@ class_name LaunchWizardMapStep
 
 signal target_selected(target: Dictionary)
 
+const MapTargetLabelScene = preload("res://Scenes/UI/Templates/LaunchWizardMapTargetLabel.tscn")
+const MapTargetLabelSelectedScene = preload("res://Scenes/UI/Templates/LaunchWizardMapTargetLabelSelected.tscn")
 const STAR_COUNT := 180
 const _COL_BG := Color(0.028, 0.040, 0.090, 1.0)
 const _COL_STAR_FG := Color(0.88, 0.90, 0.96, 0.75)
 const _COL_SEL_RIM := Color(0.32, 0.86, 0.74, 1.0)
-const _COL_LABEL := Color(0.88, 0.92, 1.00, 0.90)
-const _COL_LABEL_S := Color(1.00, 1.00, 1.00, 1.00)
+const _COL_GRID := Color(0.22, 0.54, 0.80, 0.08)
 
 var _targets: Array = []
 var _selected_id: String = ""
 var _bg_stars: Array[Dictionary] = []
 var _last_size: Vector2 = Vector2.ZERO
-var _font: Font = null
+@onready var _label_layer: Control = $LabelLayer
 
 func setup(targets: Array, selected_id: String = "") -> void:
 	_targets = targets
 	_selected_id = selected_id
 	_rebuild_stars()
+	_sync_labels()
 	queue_redraw()
 
 func set_selected(target_id: String) -> void:
 	_selected_id = target_id
+	_sync_labels()
 	queue_redraw()
 
 func _ready() -> void:
 	mouse_filter = MOUSE_FILTER_STOP
 	clip_contents = true
-	_font = ThemeDB.fallback_font
 	_rebuild_stars()
+	_sync_labels()
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED:
 		_rebuild_stars()
+		_sync_labels()
 		queue_redraw()
 
 func _rebuild_stars() -> void:
@@ -59,6 +63,7 @@ func _draw() -> void:
 		return
 
 	draw_rect(Rect2(Vector2.ZERO, size), _COL_BG)
+	_draw_grid()
 
 	for star: Dictionary in _bg_stars:
 		var star_pos: Vector2 = star.get("pos", Vector2.ZERO)
@@ -83,11 +88,6 @@ func _draw() -> void:
 
 		draw_circle(pos, rad, col)
 
-		if _font != null:
-			var lbl: String = str(target.get("label", target.get("name", "?")))
-			var label_color: Color = _COL_LABEL_S if sel else _COL_LABEL
-			draw_string(_font, pos + Vector2(rad + 5.0, 5.0), lbl, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 12, label_color)
-
 func _gui_input(event: InputEvent) -> void:
 	if not (event is InputEventMouseButton \
 			and (event as InputEventMouseButton).pressed \
@@ -103,6 +103,38 @@ func _gui_input(event: InputEvent) -> void:
 			queue_redraw()
 			target_selected.emit(target)
 			return
+
+func _draw_grid() -> void:
+	var step := 48.0
+	var x := step
+	while x < size.x:
+		draw_line(Vector2(x, 0.0), Vector2(x, size.y), _COL_GRID, 1.0)
+		x += step
+	var y := step
+	while y < size.y:
+		draw_line(Vector2(0.0, y), Vector2(size.x, y), _COL_GRID, 1.0)
+		y += step
+
+func _sync_labels() -> void:
+	if _label_layer == null:
+		return
+	for child in _label_layer.get_children():
+		child.queue_free()
+	for target_any: Variant in _targets:
+		if typeof(target_any) != TYPE_DICTIONARY:
+			continue
+		var target: Dictionary = target_any
+		var sel := _selected_id == str(target.get("id", ""))
+		var label_scene := MapTargetLabelSelectedScene if sel else MapTargetLabelScene
+		var label := label_scene.instantiate() as Label
+		if label == null:
+			continue
+		label.set_meta("ui_template", "LaunchWizardMapTargetLabel")
+		label.text = str(target.get("label", target.get("name", "?"))).to_upper()
+		label.modulate = Color(1, 1, 1, 1.0 if sel else 0.82)
+		var pos := _pos_for(target)
+		label.position = Vector2(pos.x - 48.0, pos.y + 10.0)
+		_label_layer.add_child(label)
 
 func _pos_for(t: Dictionary) -> Vector2:
 	var h: int = abs(str(t.get("id", t.get("label", "x"))).hash())

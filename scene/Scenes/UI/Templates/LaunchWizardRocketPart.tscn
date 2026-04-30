@@ -16,13 +16,17 @@ content_margin_top = 4.0
 content_margin_right = 6.0
 content_margin_bottom = 4.0
 
-[node name="LaunchWizardRocketPart" type="PanelContainer"]
+[node name="LaunchWizardRocketPart" type="CenterContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="PartBox" type="PanelContainer" parent="."]
+layout_mode = 2
 custom_minimum_size = Vector2(0, 40)
 theme_override_styles/panel = SubResource("StyleBoxFlat_part")
 
-[node name="PartLabel" type="Label" parent="."]
+[node name="PartLabel" type="Label" parent="PartBox"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
