@@ -30,7 +30,7 @@ const STEPS_BY_MISSION := {
 	3: [
 		{"id": "m3_pick_contractor", "action_key": "accept_contractor_offer", "title": "Pick Contractor", "message": "Choose a contractor for a delivery bonus on your haul.", "mechanic": "contractor", "valid_scenes": LAUNCHPAD_SCENES},
 		{"id": "m3_classify", "action_key": "classify_candidate", "title": "Classify Candidate", "message": "Review the TESS lightcurve before choosing a target. Confirmed planet candidates can be routed; false positives still grant the classification reward.", "mechanic": "classification", "valid_scenes": LAUNCHPAD_SCENES},
-		{"id": "m3_select", "action_key": "select_launch_target", "title": "Target", "message": "Pick a confirmed TESS planet candidate as your target. The map now shows candidate systems beyond Earth.", "mechanic": "targeting", "valid_scenes": LAUNCHPAD_SCENES},
+		{"id": "m3_select", "action_key": "select_launch_target", "title": "Target Routed", "message": "Once a TESS candidate is confirmed, mission control routes it directly into launch setup so you can finish planning the rocket.", "mechanic": "targeting", "valid_scenes": LAUNCHPAD_SCENES},
 		{"id": "m3_launch", "action_key": "launch_rocket_from_earth", "title": "Launch", "message": "Heading out to a real world. Press Launch.", "mechanic": "launch", "valid_scenes": LAUNCHPAD_SCENES},
 		{"id": "m3_mine", "action_key": "mine_target", "title": "Mine", "message": "Mine what you can from the planet's surface.", "mechanic": "mining", "valid_scenes": MINING_SCENES},
 		{"id": "m3_return", "action_key": "return_rocket_home", "title": "Return", "message": "Cargo secured. Return to Earth.", "mechanic": "return", "valid_scenes": MINING_SCENES},

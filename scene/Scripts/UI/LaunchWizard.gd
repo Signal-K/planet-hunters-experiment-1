@@ -8,6 +8,7 @@ const RocketSpecs    = preload("res://Scripts/Utils/RocketSpecs.gd")
 const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
 const MapStepScript  = preload("res://Scripts/UI/LaunchWizardMapStep.gd")
 const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd")
+const AsteroidDetailViewScene = preload("res://Scenes/UI/AsteroidDetail/asteroid_detail_view.tscn")
 const ContractorCardScene = preload("res://Scenes/UI/Templates/LaunchWizardContractorCard.tscn")
 const MineralChipScene = preload("res://Scenes/UI/Templates/LaunchWizardMineralChip.tscn")
 const RocketTileScene = preload("res://Scenes/UI/Templates/LaunchWizardRocketTile.tscn")
@@ -78,6 +79,7 @@ var _is_free_ops:         bool       = false
 var _contractors:         Array      = []
 var _targets:             Array      = []
 var _rockets:             Array      = []
+var _m3_review_auto_target_id: String = ""
 
 # Live-update widget refs
 var _map_step:          MapStepScript  = null
@@ -140,7 +142,32 @@ func _ready() -> void:
 	_assembly_vbox = _assembly_vbox_scene
 	_asm_status_label = _asm_status_label_scene
 	_card_list.add_theme_constant_override("separation", 16)
-	_show_step(Step.CONTRACTOR)
+	
+	_load_planning_state()
+	_show_step(_step)
+
+func _load_planning_state() -> void:
+	_is_free_ops = RocketsManager.is_free_operations_unlocked()
+	
+	# 1. Load Step
+	var saved_step = RocketsManager.get_planning_step()
+	_step = clamp(saved_step, 0, 3) as Step
+	
+	# 2. Load Contractor
+	if _is_free_ops:
+		_selected_contractor = RocketsManager.get_trip_selected_contractor()
+	else:
+		_selected_contractor = RocketsManager.get_starter_selected_contractor()
+		
+	# 3. Load Target
+	var tid = RocketsManager.get_selected_target()
+	if tid != "":
+		_selected_target = RocketsManager.get_target_details(tid)
+		if RocketsManager.get_mission_stage() == 3 and RocketsManager.get_tess_classification(tid) == "planet" and int(_step) <= int(Step.TARGET):
+			_step = Step.ROCKET
+		
+	# 4. Load Rocket
+	_selected_rocket = RocketsManager.get_planning_rocket_type()
 
 func _apply_styles() -> void:
 	_background.color = C_PAGE_BG
@@ -186,21 +213,9 @@ func _wire_buttons() -> void:
 	_style_action_button(_classify_planet_btn, false)
 	_style_action_button(_classify_not_planet_btn, false)
 	_style_action_button(_classify_mark_dip_btn, false)
-	_classify_planet_btn.pressed.connect(func() -> void:
-		var target_id := str(_classification_card.get_meta("target_id", ""))
-		if target_id != "":
-			_on_m3_classification_pressed(target_id, "planet")
-	)
-	_classify_not_planet_btn.pressed.connect(func() -> void:
-		var target_id := str(_classification_card.get_meta("target_id", ""))
-		if target_id != "":
-			_on_m3_classification_pressed(target_id, "not_planet")
-	)
-	_classify_mark_dip_btn.pressed.connect(func() -> void:
-		var target_id := str(_classification_card.get_meta("target_id", ""))
-		if target_id != "":
-			_on_m3_classification_pressed(target_id, "dip")
-	)
+	_classify_planet_btn.pressed.connect(_on_primary_classification_button_pressed)
+	_classify_not_planet_btn.pressed.connect(_on_not_planet_button_pressed)
+	_classify_mark_dip_btn.pressed.connect(_on_mark_dip_button_pressed)
 
 # ── Step management ───────────────────────────────────────────────────────────
 
@@ -210,6 +225,7 @@ func _show_step(s: Step) -> void:
 			t.kill()
 	_asm_tweens.clear()
 	_step              = s
+	RocketsManager.set_planning_step(int(s))
 	_map_step          = _map_step_node
 	_target_detail     = null
 	_assembly_vbox     = _assembly_vbox_scene
@@ -477,13 +493,31 @@ func _build_target_step() -> void:
 		_target_detail_card.visible = true
 		_target_hint_label.text = "No targets available. Complete a scan mission first."
 		return
-	_map_panel.visible = true
-	_target_detail_card.visible = true
 
 	if stage == 3:
-		_add_m3_classification_card()
+		var review_target: Dictionary = _first_unclassified_m3_target()
+		if not review_target.is_empty():
+			_build_m3_review_gate(review_target)
+			return
+		if _selected_target.is_empty():
+			var confirmed_target: Dictionary = _first_confirmed_m3_target()
+			if not confirmed_target.is_empty():
+				_selected_target = confirmed_target
+				RocketsManager.select_target(str(confirmed_target.get("id", "")))
+				AppControllerHelper.record_tutorial_action("select_launch_target", {
+					"target_id": str(confirmed_target.get("id", "")),
+					"auto_selected": true,
+					"source": "mission3_review_gate"
+				})
+				_update_footer()
+				call_deferred("_show_step", Step.ROCKET)
+				return
+		_classification_card.visible = false
 	else:
 		_classification_card.visible = false
+
+	_map_panel.visible = true
+	_target_detail_card.visible = true
 
 	# Auto-select first target if none chosen yet
 	if _selected_target.is_empty() and not _targets.is_empty():
@@ -503,9 +537,40 @@ func _build_target_step() -> void:
 	else:
 		_refresh_target_detail(_selected_target)
 
+func _build_m3_review_gate(target: Dictionary) -> void:
+	_target_title.text = "Review candidate"
+	_target_subtitle.text = "Mission 3 routes a confirmed TESS candidate directly into launch setup."
+	_map_panel.visible = false
+	_target_detail_card.visible = false
+	_classification_card.visible = true
+	_classification_card.set_meta("target_id", str(target.get("id", "")))
+	_classification_card.set_meta("review_screen_only", true)
+	_classification_copy.text = "Open the full review screen for %s, classify the lightcurve, and mission control will route the result automatically." % str(target.get("label", target.get("id", "TESS candidate")))
+	_classification_copy.add_theme_color_override("font_color", C_ON_DARK_VAR)
+	_clear_container_children(_classification_facts)
+	_classification_facts.add_child(_stat_chip("TIC", str(target.get("ticId", "cached")), true))
+	_classification_facts.add_child(_stat_chip("Period", "%.2f d" % float(target.get("period_days", 0.0)), true))
+	_classification_facts.add_child(_stat_chip("Star", str(target.get("parent_star", "TESS")), true))
+	_classify_planet_btn.visible = true
+	_classify_planet_btn.text = "Open Review"
+	_style_action_button(_classify_planet_btn, true)
+	_classify_not_planet_btn.visible = false
+	_classify_mark_dip_btn.visible = false
+	_selected_target = {}
+	RocketsManager.clear_selected_target()
+	_update_footer()
+	var review_target_id: String = str(target.get("id", ""))
+	if review_target_id != "" and review_target_id != _m3_review_auto_target_id:
+		_m3_review_auto_target_id = review_target_id
+		call_deferred("_open_m3_review_for_target_id", review_target_id)
+
 func _on_map_target_selected(t: Dictionary) -> void:
 	_selected_target = t
 	RocketsManager.select_target(str(t.get("id", "")))
+	AppControllerHelper.record_tutorial_action("select_launch_target", {
+		"target_id": str(t.get("id", "")),
+		"source": "launch_wizard_map"
+	})
 	_update_footer()
 	_refresh_target_detail(t)
 
@@ -603,6 +668,91 @@ func _first_unclassified_m3_target() -> Dictionary:
 			return target
 	return {}
 
+func _first_confirmed_m3_target() -> Dictionary:
+	for target_any in _targets:
+		if typeof(target_any) != TYPE_DICTIONARY:
+			continue
+		var target: Dictionary = target_any
+		var target_id := str(target.get("id", ""))
+		if target_id == "":
+			continue
+		if RocketsManager.get_tess_classification(target_id) == "planet":
+			return target
+	return {}
+
+func _on_primary_classification_button_pressed() -> void:
+	var target_id := str(_classification_card.get_meta("target_id", ""))
+	if target_id == "":
+		return
+	if bool(_classification_card.get_meta("review_screen_only", false)):
+		_open_m3_review_for_target_id(target_id)
+		return
+	_on_m3_classification_pressed(target_id, "planet")
+
+func _on_not_planet_button_pressed() -> void:
+	var target_id := str(_classification_card.get_meta("target_id", ""))
+	if target_id == "" or bool(_classification_card.get_meta("review_screen_only", false)):
+		return
+	_on_m3_classification_pressed(target_id, "not_planet")
+
+func _on_mark_dip_button_pressed() -> void:
+	var target_id := str(_classification_card.get_meta("target_id", ""))
+	if target_id == "" or bool(_classification_card.get_meta("review_screen_only", false)):
+		return
+	_on_m3_classification_pressed(target_id, "dip")
+
+func _open_m3_review_for_target_id(target_id: String) -> void:
+	if target_id == "" or get_node_or_null("M3ReviewOverlay") != null:
+		return
+	var target_data: Dictionary = RocketsManager.get_target_details(target_id)
+	if target_data.is_empty():
+		return
+	var overlay := ColorRect.new()
+	overlay.name = "M3ReviewOverlay"
+	overlay.color = Color(0.02, 0.03, 0.08, 0.98)
+	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(overlay)
+
+	var detail_view = AsteroidDetailViewScene.instantiate()
+	if detail_view == null:
+		overlay.queue_free()
+		return
+	overlay.add_child(detail_view)
+	detail_view.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	detail_view.initialize(target_data, true)
+	if detail_view.has_signal("classification_submitted"):
+		detail_view.classification_submitted.connect(func(result: Dictionary) -> void:
+			overlay.queue_free()
+			_on_m3_review_submitted(result)
+		)
+	if detail_view.has_signal("back_pressed"):
+		detail_view.back_pressed.connect(func() -> void:
+			if is_instance_valid(overlay):
+				overlay.queue_free()
+		)
+
+func _on_m3_review_submitted(result: Dictionary) -> void:
+	var target_id := str(result.get("target_id", ""))
+	var confirmed := bool(result.get("confirmed", false))
+	if confirmed and target_id != "":
+		var details := RocketsManager.get_target_details(target_id)
+		if not details.is_empty():
+			_selected_target = details
+			RocketsManager.select_target(target_id)
+			AppControllerHelper.record_tutorial_action("select_launch_target", {
+				"target_id": target_id,
+				"auto_selected": true,
+				"source": "mission3_review"
+			})
+		_update_footer()
+		_show_step(Step.ROCKET)
+		return
+	if target_id != "" and str(_selected_target.get("id", "")) == target_id:
+		_selected_target = {}
+	RocketsManager.clear_selected_target()
+	_targets = RocketsManager.get_selectable_targets_for_stage(3)
+	_show_step(Step.TARGET)
+
 func _on_m3_classification_pressed(target_id: String, verdict: String) -> void:
 	var result := RocketsManager.classify_candidate_target(target_id, verdict, 1)
 	AppControllerHelper.record_tutorial_action("classify_candidate", {
@@ -615,6 +765,11 @@ func _on_m3_classification_pressed(target_id: String, verdict: String) -> void:
 		if not details.is_empty():
 			_selected_target = details
 			RocketsManager.select_target(target_id)
+			AppControllerHelper.record_tutorial_action("select_launch_target", {
+				"target_id": target_id,
+				"auto_selected": true,
+				"source": "launch_wizard_inline"
+			})
 	else:
 		if str(_selected_target.get("id", "")) == target_id:
 			_selected_target = {}
@@ -669,6 +824,7 @@ func _add_rocket_tile(rtype: String, parent: VBoxContainer) -> void:
 	btn.pressed.connect(func():
 		if _selected_rocket != rtype:
 			_selected_rocket = rtype
+			RocketsManager.set_planning_rocket_type(rtype)
 			_update_footer()
 			_refresh_assembly(rtype)
 			# Rebuild tile styles without full step fade
@@ -809,6 +965,7 @@ func _execute_launch() -> void:
 	var target_label := _selected_target.get("label", target_id) as String
 	var target_type  := _selected_target.get("type",  "asteroid") as String
 	RocketsManager.set_preview_target(target_id, target_label, target_type, rocket_id)
+	RocketsManager.clear_planning_state()
 	launched.emit(rocket_id, target_id)
 
 func _make_card_style(selected: bool, padded: bool) -> StyleBoxFlat:

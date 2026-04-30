@@ -1,6 +1,8 @@
 extends CanvasLayer
 
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
+const UILayout = preload("res://Scripts/UI/UILayout.gd")
+const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
 const TutorialLayoutZone = preload("res://Scripts/UI/TutorialLayoutZone.gd")
 const TutorialCoachTargeting = preload("res://Scripts/UI/TutorialCoachTargeting.gd")
 
@@ -490,12 +492,12 @@ func _action_copy_for_step(step: Dictionary) -> String:
 			if on_base:
 				return "Press New Mission to open Launchpad, then select a target."
 			if stage == 3:
-				return "Classify a TESS candidate, then select a confirmed target on the map."
+				return "Classify the TESS candidate in the review screen. Mission control will route a confirmed result into launch setup automatically."
 			return "Select the highlighted Mission target."
 		"classify_candidate":
 			if on_base:
 				return "Press New Mission to open Launchpad, then classify a TESS lightcurve candidate."
-			return "Use the candidate review card before selecting your route."
+			return "Use the full review screen to classify the TESS candidate before launch setup."
 		"launch_rocket_from_earth":
 			if on_base:
 				return "Press New Mission to open Launchpad, then launch."
@@ -723,8 +725,7 @@ func _build_scanner_station_from_current_scene() -> void:
 		scene.call("_on_build_scanner_station_pressed")
 
 func _on_resume_mission_pressed() -> void:
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
-	var missions: Array = rm.get_missions()
+	var missions: Array = RocketsManager.get_missions()
 	if missions.is_empty():
 		return
 	var m: Dictionary = missions[0]
@@ -733,10 +734,10 @@ func _on_resume_mission_pressed() -> void:
 	var target_type := str(m.get("target_type", "asteroid"))
 	if rocket_id == "" or target_id == "":
 		return
-	rm.set_preview_target(target_id, target_id, target_type, rocket_id)
-	rm.mark_returned_if_due(rocket_id)
-	var status := rm.get_rocket_status(rocket_id)
-	var arrived := rm.has_arrived(rocket_id, target_id)
+	RocketsManager.set_preview_target(target_id, target_id, target_type, rocket_id)
+	RocketsManager.mark_returned_if_due(rocket_id)
+	var status: String = RocketsManager.get_rocket_status(rocket_id)
+	var arrived: bool = RocketsManager.has_arrived(rocket_id, target_id)
 	var scene_path := PreviewRouting.resolve_scene_path(status, arrived)
 	var tree = get_tree()
 	if tree == null:

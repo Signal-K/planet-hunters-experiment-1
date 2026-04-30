@@ -195,7 +195,7 @@ func _has_seen_guide_action_for_stage(action_key: String, stage: int) -> bool:
 			return bool(app.has_seen_guide_action(action_key))
 	return false
 
-func _label_for_action(action_key: String) -> String:
+func _label_for_action(action_key: String, stage: int = 0) -> String:
 	match action_key:
 		"build_control_station":
 			return "Build control station"
@@ -220,6 +220,8 @@ func _label_for_action(action_key: String) -> String:
 		"classify_candidate":
 			return "Classify candidate"
 		"select_launch_target":
+			if stage == 3:
+				return "Target routed"
 			return "Select launch target"
 	return action_key
 
@@ -227,7 +229,7 @@ func _next_pending_label(keys: Array, stage: int) -> String:
 	for key_any in keys:
 		var key := str(key_any)
 		if not _has_seen_guide_action_for_stage(key, stage):
-			return _label_for_action(key)
+			return _label_for_action(key, stage)
 	return "Mission complete"
 
 func _apply_visual_state() -> void:
