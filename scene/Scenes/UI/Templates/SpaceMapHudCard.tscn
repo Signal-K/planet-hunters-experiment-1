@@ -1,0 +1,101 @@
+[gd_scene load_steps=4 format=3]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card"]
+bg_color = Color(0.0588235, 0.0862745, 0.133333, 0.88)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.278431, 0.878431, 0.960784, 0.24)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+shadow_color = Color(0, 0, 0, 0.3)
+shadow_size = 14
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_meter_bg"]
+bg_color = Color(1, 1, 1, 0.06)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_meter_fill"]
+bg_color = Color(0.278431, 0.878431, 0.960784, 0.95)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[node name="SpaceMapHudCard" type="PanelContainer"]
+custom_minimum_size = Vector2(260, 0)
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 16
+
+[node name="Content" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="HeaderRow" type="HBoxContainer" parent="Margin/Content"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="StatusDot" type="ColorRect" parent="Margin/Content/HeaderRow"]
+custom_minimum_size = Vector2(8, 8)
+layout_mode = 2
+color = Color(0.278431, 0.878431, 0.960784, 1)
+
+[node name="EyebrowLabel" type="Label" parent="Margin/Content/HeaderRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.698039, 0.768627, 0.85098, 0.68)
+theme_override_font_sizes/font_size = 10
+text = "GALAXY SURVEY"
+
+[node name="TitleLabel" type="Label" parent="Margin/Content"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.921569, 0.94902, 0.980392, 1)
+theme_override_font_sizes/font_size = 24
+text = "Sector 1"
+
+[node name="DetailLabel" type="Label" parent="Margin/Content"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.760784, 0.8, 0.862745, 0.78)
+theme_override_font_sizes/font_size = 12
+text = "Detail"
+autowrap_mode = 3
+
+[node name="FooterRow" type="HBoxContainer" parent="Margin/Content"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="FooterLabel" type="Label" parent="Margin/Content/FooterRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.698039, 0.768627, 0.85098, 0.56)
+theme_override_font_sizes/font_size = 10
+text = "STATUS"
+
+[node name="ValueLabel" type="Label" parent="Margin/Content/FooterRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.278431, 0.878431, 0.960784, 0.95)
+theme_override_font_sizes/font_size = 12
+text = "ONLINE"
+
+[node name="MeterBackground" type="PanelContainer" parent="Margin/Content"]
+custom_minimum_size = Vector2(0, 6)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_meter_bg")
+
+[node name="MeterFill" type="PanelContainer" parent="Margin/Content/MeterBackground"]
+custom_minimum_size = Vector2(120, 6)
+layout_mode = 1
+offset_right = 120.0
+offset_bottom = 6.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_meter_fill")

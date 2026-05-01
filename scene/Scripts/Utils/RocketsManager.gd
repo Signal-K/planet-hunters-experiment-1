@@ -30,6 +30,9 @@ const SCANNER_UNLOCK_COMPLETED_MISSIONS := 3  # Scanner loop becomes active afte
 ## Mission System Constants
 ## See: @doc/specs/mission-system-specification for complete mission design
 
+# Control Station build cost (Mission 2 gate)
+const CONTROL_STATION_BUILD_COST := 500000000
+
 # Scanner Station build cost (Mission 3 unlock)
 # Spec: M3 requires 2B F scanner construction before first scan
 const SCANNER_BUILD_COST := 2000000000
@@ -299,6 +302,12 @@ static func get_mission_stage() -> int:
 
 static func is_free_operations_unlocked() -> bool:
 	return get_completed_mission_count() >= 4
+
+static func get_control_station_build_cost() -> int:
+	return CONTROL_STATION_BUILD_COST
+
+static func can_afford_control_station_build(balance: int) -> bool:
+	return balance >= CONTROL_STATION_BUILD_COST
 
 static func get_scanner_build_cost() -> int:
 	return SCANNER_BUILD_COST
