@@ -142,8 +142,8 @@ func _draw_signal(image: Image, rect: Rect2i, anomaly_id: String, anomaly_data: 
 	_draw_vertical_line(image, dip_end, rect.position.y, rect.position.y + rect.size.y, Color(0.52, 0.96, 0.86, 0.35), 2)
 
 func _fill_rect(image: Image, rect: Rect2i, color: Color) -> void:
-	var x_end := min(rect.position.x + rect.size.x, image.get_width())
-	var y_end := min(rect.position.y + rect.size.y, image.get_height())
+	var x_end: int = min(rect.position.x + rect.size.x, image.get_width())
+	var y_end: int = min(rect.position.y + rect.size.y, image.get_height())
 	for y in range(max(rect.position.y, 0), y_end):
 		for x in range(max(rect.position.x, 0), x_end):
 			image.set_pixel(x, y, color)
@@ -165,9 +165,9 @@ func _draw_vertical_line(image: Image, x: int, y0: int, y1: int, color: Color, t
 			image.set_pixel(xx, y, color)
 
 func _draw_line(image: Image, start: Vector2i, finish: Vector2i, color: Color, thickness: int) -> void:
-	var dx := abs(finish.x - start.x)
-	var dy := abs(finish.y - start.y)
-	var steps := max(dx, dy)
+	var dx: int = abs(finish.x - start.x)
+	var dy: int = abs(finish.y - start.y)
+	var steps: int = max(dx, dy)
 	if steps <= 0:
 		_draw_brush(image, start.x, start.y, thickness, color)
 		return
@@ -178,7 +178,7 @@ func _draw_line(image: Image, start: Vector2i, finish: Vector2i, color: Color, t
 		_draw_brush(image, x, y, thickness, color)
 
 func _draw_brush(image: Image, center_x: int, center_y: int, thickness: int, color: Color) -> void:
-	var radius := max(1, thickness / 2)
+	var radius: int = max(1, thickness / 2)
 	for y in range(center_y - radius, center_y + radius + 1):
 		if y < 0 or y >= image.get_height():
 			continue
