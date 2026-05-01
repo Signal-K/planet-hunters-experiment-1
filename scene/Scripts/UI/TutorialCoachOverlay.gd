@@ -101,7 +101,7 @@ func _configure_mouse_passthrough() -> void:
 			btn.mouse_filter = Control.MOUSE_FILTER_STOP
 
 func _process(delta: float) -> void:
-	if _is_launchpad_scene_with_embedded_guidance():
+	if _has_scene_owned_guidance_overlay():
 		if visible:
 			visible = false
 			_hide_target_pointer()
@@ -278,7 +278,7 @@ func _on_tutorial_state_updated(state: Dictionary) -> void:
 	if state.is_empty():
 		visible = false
 		return
-	if _is_launchpad_scene_with_embedded_guidance():
+	if _has_scene_owned_guidance_overlay():
 		visible = false
 		_hide_target_pointer()
 		return
@@ -313,6 +313,23 @@ func _is_launchpad_scene_with_embedded_guidance() -> bool:
 	if tree == null or tree.current_scene == null:
 		return false
 	return tree.current_scene.scene_file_path.get_file().get_basename() == "earth_launchpad"
+
+func _has_scene_owned_guidance_overlay() -> bool:
+	if _is_launchpad_scene_with_embedded_guidance():
+		return true
+	var tree := get_tree()
+	if tree == null or tree.root == null:
+		return false
+	for overlay_name in ["AnnotationOverlay", "M3ReviewOverlay"]:
+		var overlay := tree.root.find_child(overlay_name, true, false)
+		if overlay == null:
+			continue
+		if overlay is CanvasItem:
+			if (overlay as CanvasItem).visible:
+				return true
+		else:
+			return true
+	return false
 
 func _setup_pointer_indicator() -> void:
 	if _pointer_line and _pointer_head and _target_highlight:
@@ -630,16 +647,31 @@ func _current_mission_started() -> bool:
 
 func _get_earth_base_mission_context() -> Dictionary:
 	var tree := get_tree()
-	if tree == null or tree.current_scene == null:
+	if tree == null:
 		return {}
-	var scene := tree.current_scene
-	if scene.scene_file_path.get_file().get_basename() != "earth_base_1":
+	var scene: Node = tree.current_scene
+	if scene == null or scene.scene_file_path.get_file().get_basename() != "earth_base_1":
+		scene = _find_scene_by_basename("earth_base_1")
+	if scene == null:
 		return {}
 	if scene.has_method("get_active_mission_context"):
 		var context = scene.call("get_active_mission_context")
 		if typeof(context) == TYPE_DICTIONARY:
 			return context
 	return {}
+
+func _find_scene_by_basename(scene_basename: String) -> Node:
+	var tree := get_tree()
+	if tree == null or tree.root == null:
+		return null
+	var stack: Array[Node] = [tree.root]
+	while not stack.is_empty():
+		var node: Node = stack.pop_back()
+		if node.scene_file_path.get_file().get_basename() == scene_basename:
+			return node
+		for child in node.get_children():
+			stack.append(child)
+	return null
 
 func _needs_launchpad_cta() -> bool:
 	if _current_step.is_empty():

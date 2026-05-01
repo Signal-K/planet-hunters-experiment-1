@@ -78,10 +78,12 @@ func test_remaining_steps_use_scene_owned_nodes() -> void:
 	var target_detail = wizard.get_node_or_null("Scaffold/Scroll/ScrollMargin/CardList/TargetStep/TargetDetailCard")
 	var rocket_step = wizard.get_node_or_null("Scaffold/Scroll/ScrollMargin/CardList/RocketStep")
 	var rocket_list = wizard.get_node_or_null("Scaffold/Scroll/ScrollMargin/CardList/RocketStep/RocketListColumn")
+	var telemetry_box = wizard.get_node_or_null("Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/TelemetryBox")
 	var assembly_box = wizard.get_node_or_null("Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/PartsBox")
+	var pad_label = wizard.get_node_or_null("Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/PadLabel")
 	var confirm_step = wizard.get_node_or_null("Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep")
 	var rows_box = wizard.get_node_or_null("Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep/SummaryCard/Margin/VBox/RowsBox")
-	if target_step == null or map_step == null or target_detail == null or rocket_step == null or rocket_list == null or assembly_box == null or confirm_step == null or rows_box == null:
+	if target_step == null or map_step == null or target_detail == null or rocket_step == null or rocket_list == null or telemetry_box == null or assembly_box == null or pad_label == null or confirm_step == null or rows_box == null:
 		reporter.fail_test("Expected target, rocket, and confirm step layout nodes to exist in LaunchWizard.tscn")
 		wizard.queue_free()
 		return
@@ -106,6 +108,14 @@ func test_remaining_steps_use_scene_owned_nodes() -> void:
 	var rocket_tile = rocket_list.get_child(0)
 	if rocket_tile.get_node_or_null("Margin/VBox/ButtonRow/SelectButton") == null:
 		reporter.fail_test("Expected rocket tiles to be instances of the scene tile template")
+		wizard.queue_free()
+		return
+	if telemetry_box.get_child_count() < 4:
+		reporter.fail_test("Expected launchpad telemetry row to populate real rocket metrics")
+		wizard.queue_free()
+		return
+	if str(pad_label.text).strip_edges() == "":
+		reporter.fail_test("Expected launchpad scene node to expose a pad status label")
 		wizard.queue_free()
 		return
 

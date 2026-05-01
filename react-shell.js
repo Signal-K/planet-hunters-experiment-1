@@ -1061,8 +1061,244 @@ function AuthModal({ isOpen, onClose, onAuthSuccess }) {
   );
 }
 
+// ── Landing page ──────────────────────────────────────────────────────────────
+function LandingPage({ onPlay }) {
+  const canvasRef = useRef(null);
+  const [fadeIn, setFadeIn] = useState(false);
+
+  // Kick fade-in on mount
+  useEffect(() => {
+    const t = setTimeout(() => setFadeIn(true), 40);
+    return () => clearTimeout(t);
+  }, []);
+
+  // Procedural starfield
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    let raf;
+    const stars = [];
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+
+    function seed() {
+      stars.length = 0;
+      const count = Math.floor((canvas.width * canvas.height) / 3000);
+      for (let i = 0; i < count; i++) {
+        stars.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          r: Math.random() * 1.4 + 0.2,
+          a: Math.random(),
+          speed: Math.random() * 0.004 + 0.001,
+          phase: Math.random() * Math.PI * 2,
+        });
+      }
+    }
+
+    function draw(t) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (const s of stars) {
+        const alpha = s.a * (0.5 + 0.5 * Math.sin(t * s.speed + s.phase));
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(180,210,255,${alpha})`;
+        ctx.fill();
+      }
+      raf = requestAnimationFrame(draw);
+    }
+
+    resize();
+    seed();
+    raf = requestAnimationFrame(draw);
+    window.addEventListener("resize", () => { resize(); seed(); });
+    return () => {
+      cancelAnimationFrame(raf);
+    };
+  }, []);
+
+  const isMob = typeof window !== "undefined" && window.innerWidth < 640;
+
+  return React.createElement(
+    "div",
+    {
+      style: {
+        position: "fixed",
+        inset: 0,
+        background: "radial-gradient(ellipse at 30% 10%, #111c38 0%, #05080f 55%, #020407 100%)",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        overflow: "hidden",
+        opacity: fadeIn ? 1 : 0,
+        transition: "opacity 0.6s ease",
+      },
+    },
+    // Starfield canvas
+    React.createElement("canvas", {
+      ref: canvasRef,
+      style: { position: "absolute", inset: 0, pointerEvents: "none" },
+    }),
+    // Subtle planet glow
+    React.createElement("div", {
+      style: {
+        position: "absolute",
+        bottom: "-18%",
+        right: "-8%",
+        width: "clamp(320px, 55vw, 680px)",
+        height: "clamp(320px, 55vw, 680px)",
+        borderRadius: "50%",
+        background: "radial-gradient(circle, rgba(28,78,130,0.28) 0%, rgba(10,30,70,0.12) 55%, transparent 75%)",
+        pointerEvents: "none",
+      },
+    }),
+    // Content card
+    React.createElement(
+      "div",
+      {
+        style: {
+          position: "relative",
+          zIndex: 2,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          textAlign: "center",
+          padding: isMob ? "32px 24px" : "52px 48px",
+          maxWidth: "680px",
+          width: "100%",
+        },
+      },
+      // Eyebrow
+      React.createElement(
+        "p",
+        {
+          style: {
+            margin: "0 0 16px",
+            fontSize: "11px",
+            letterSpacing: "0.18em",
+            textTransform: "uppercase",
+            color: "#4ad0ff",
+            fontWeight: 600,
+            opacity: 0.85,
+          },
+        },
+        "Star Sailors · Experiment 1"
+      ),
+      // Title
+      React.createElement(
+        "h1",
+        {
+          style: {
+            margin: "0 0 18px",
+            fontSize: isMob ? "42px" : "clamp(52px, 7vw, 80px)",
+            fontWeight: 900,
+            lineHeight: 1.0,
+            letterSpacing: "-0.02em",
+            color: "#e7edf9",
+            textShadow: "0 0 60px rgba(74,208,255,0.18)",
+          },
+        },
+        "Planet Hunters"
+      ),
+      // Tagline
+      React.createElement(
+        "p",
+        {
+          style: {
+            margin: "0 0 36px",
+            fontSize: isMob ? "15px" : "18px",
+            color: "#a9b4cc",
+            lineHeight: 1.6,
+            maxWidth: "480px",
+          },
+        },
+        "Mine asteroids. Discover real planet candidates. Contribute to NASA citizen science — one mission at a time."
+      ),
+      // Feature pills
+      React.createElement(
+        "div",
+        {
+          style: {
+            display: "flex",
+            flexWrap: "wrap",
+            gap: "10px",
+            justifyContent: "center",
+            marginBottom: "44px",
+          },
+        },
+        ...["🚀  Launch & mine", "🪐  Real TESS data", "📡  Contractor missions", "🏗️  Build your base"].map((label) =>
+          React.createElement(
+            "span",
+            {
+              key: label,
+              style: {
+                padding: "6px 14px",
+                borderRadius: "999px",
+                border: "1px solid rgba(74,208,255,0.22)",
+                background: "rgba(74,208,255,0.06)",
+                fontSize: "13px",
+                color: "#c8d8f0",
+                letterSpacing: "0.02em",
+              },
+            },
+            label
+          )
+        )
+      ),
+      // CTA
+      React.createElement(
+        "button",
+        {
+          onClick: onPlay,
+          style: {
+            padding: isMob ? "16px 48px" : "18px 64px",
+            fontSize: isMob ? "17px" : "19px",
+            fontWeight: 700,
+            letterSpacing: "0.03em",
+            color: "#05080f",
+            background: "linear-gradient(135deg, #4ad0ff 0%, #2ab8f0 100%)",
+            border: "none",
+            borderRadius: "12px",
+            cursor: "pointer",
+            boxShadow: "0 0 32px rgba(74,208,255,0.35), 0 4px 16px rgba(0,0,0,0.4)",
+            transition: "transform 0.12s ease, box-shadow 0.12s ease",
+          },
+          onMouseEnter: (e) => {
+            e.currentTarget.style.transform = "scale(1.04)";
+            e.currentTarget.style.boxShadow = "0 0 48px rgba(74,208,255,0.5), 0 4px 20px rgba(0,0,0,0.5)";
+          },
+          onMouseLeave: (e) => {
+            e.currentTarget.style.transform = "scale(1)";
+            e.currentTarget.style.boxShadow = "0 0 32px rgba(74,208,255,0.35), 0 4px 16px rgba(0,0,0,0.4)";
+          },
+        },
+        "Play Now"
+      ),
+      // Fine print
+      React.createElement(
+        "p",
+        {
+          style: {
+            marginTop: "20px",
+            fontSize: "12px",
+            color: "rgba(169,180,204,0.5)",
+          },
+        },
+        "Free to play · No account required · Progress saved locally"
+      )
+    )
+  );
+}
+
 function App() {
   const [progress, setProgress] = useState(() => parseProgress(readCookie(COOKIE_NAME)));
+  // If the player has a saved progress cookie they've played before — skip the landing page.
+  const [playing, setPlaying] = useState(() => parseProgress(readCookie(COOKIE_NAME)) !== null);
   const [xpState, setXpState] = useState(() => readXpState() || { experience_level: 1, experience_xp: 0, franc_balance: 0 });
   const [user, setUser] = useState(null);
   const [showAuth, setShowAuth] = useState(false);
@@ -1497,6 +1733,11 @@ function App() {
           )
         )
       : null;
+
+  // Landing page — shown to first-time visitors (no progress cookie). Returning players bypass it.
+  if (!playing) {
+    return React.createElement(LandingPage, { onPlay: () => setPlaying(true) });
+  }
 
   // Full-screen mode: PWA installed or mobile browser — game fills entire screen, no chrome
   if (isPwa || isMobile) {

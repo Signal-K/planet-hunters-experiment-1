@@ -1,39 +1,24 @@
 {
   "missions": [
     {
-      "timestamp": "2026-04-30T14:01:49",
-      "rocket_id": "starterrocket1-3828043580",
+      "timestamp": "2026-05-02T22:37:20",
+      "rocket_id": "starterrocket1-950328804",
       "target_id": "mission-1-training-target",
       "label": "433 Eros",
       "target_type": "asteroid",
       "operation_mode": "contract",
       "subcontractor_id": "aegis_defense",
       "subcontractor_name": "Aegis Defense Systems",
-      "payout": 1200000000.0,
+      "payout": 1200000000,
       "cargo": {
-        "Iron": 6.0,
-        "Nickel": 4.0
+        "Iron": 7.0,
+        "Nickel": 5.0,
+        "Cobalt": 2.0,
+        "Platinum": 1.0
       },
       "requested_minerals": {
         "Iron": 6.0,
         "Nickel": 4.0
-      },
-      "order_completion_pct": 100.0,
-      "affinity_before": 0.0
-    },
-    {
-      "timestamp": "2026-04-30T14:02:05",
-      "rocket_id": "starterrocket1-1439817058",
-      "target_id": "mission-2-active-asteroid-133p",
-      "label": "133P/Elst-Pizarro",
-      "target_type": "asteroid",
-      "operation_mode": "contract",
-      "subcontractor_id": "",
-      "subcontractor_name": "",
-      "payout": 420000000,
-      "cargo": {
-      },
-      "requested_minerals": {
       },
       "order_completion_pct": 100,
       "affinity_before": 0

@@ -1,14 +1,12 @@
 {
   "affinity": {
-    "aegis_defense": 2
+    "aegis_defense": 1
   },
   "reputation": {
-    "aegis_defense": 100.0
   },
   "cooldowns": {
   },
   "consecutive_use": {
-    "aegis_defense": 1.0
   },
-  "last_mission_sub": "aegis_defense"
+  "last_mission_sub": ""
 }

@@ -5,6 +5,7 @@ extends SceneTree
 
 const TestReporter = preload("res://tests/TestReporter.gd")
 const SpaceMapScene = preload("res://Scenes/UI/SpaceMap/space_map.tscn")
+const TutorialCoachOverlayScene = preload("res://Scenes/UI/TutorialCoachOverlay.tscn")
 const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
 
 var reporter := TestReporter.new()
@@ -31,6 +32,7 @@ func run_all_tests() -> void:
 	await test_click_routes_candidate_to_annotation()
 	await test_click_routes_non_candidate_to_standard_preview()
 	await test_annotation_overlay_created_on_candidate_click()
+	await test_tutorial_overlay_hides_during_annotation_review()
 	await test_script_load_tutorial_coach_overlay()
 	await test_script_load_classification_consensus_notification()
 	await test_script_load_game_navigation_menu()
@@ -348,6 +350,60 @@ func test_annotation_overlay_created_on_candidate_click() -> void:
 		return
 
 	reporter.pass_test()
+	await _teardown(sm)
+
+func test_tutorial_overlay_hides_during_annotation_review() -> void:
+	reporter.start_test("Tutorial overlay hides when scene-owned annotation review overlay is active")
+	_reset()
+	_seed_planet_targets([_make_planet("tic-guide", "Guide Test Planet")])
+
+	var sm := await _instantiate_spacemap()
+	var overlay := TutorialCoachOverlayScene.instantiate()
+	get_root().add_child(overlay)
+	await create_timer(0.05).timeout
+
+	var state := {
+		"skipped": false,
+		"current_stage": 3,
+		"current_step_index": 0,
+		"total_steps": 1,
+		"current_step": {
+			"title": "Candidate Review",
+			"message": "Classify the candidate.",
+			"action_key": "classify_candidate",
+			"valid_scenes": ["space_map"]
+		}
+	}
+	overlay.call("_on_tutorial_state_updated", state)
+	await create_timer(0.05).timeout
+	if not overlay.visible:
+		reporter.fail_test("Tutorial overlay should be visible before opening annotation review")
+		await _teardown(overlay)
+		await _teardown(sm)
+		return
+
+	var entry := {
+		"pos": Vector2(200, 200),
+		"type": "planet",
+		"label": "Guide Test Planet",
+		"radius": 10.0,
+		"revealed": true,
+		"awaiting_review": true,
+		"target_data": _make_planet("tic-guide", "Guide Test Planet"),
+	}
+	sm.call("_open_annotation_screen", "tic-guide", entry)
+	await create_timer(0.1).timeout
+	overlay.call("_on_tutorial_state_updated", state)
+	await create_timer(0.05).timeout
+
+	if overlay.visible:
+		reporter.fail_test("Tutorial overlay should hide while AnnotationOverlay is active")
+		await _teardown(overlay)
+		await _teardown(sm)
+		return
+
+	reporter.pass_test()
+	await _teardown(overlay)
 	await _teardown(sm)
 
 ## ── Script-load tests (parse error fixes) ────────────────────────────────────
