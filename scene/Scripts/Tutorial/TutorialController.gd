@@ -225,6 +225,21 @@ func _refresh_stage_from_progress() -> void:
 	if stage_from_progress > current_stage:
 		_state["current_stage"] = stage_from_progress
 		_state["current_step_index"] = 0
+	elif current_stage > stage_from_progress:
+		# Corrupted save: tutorial stage exceeds what missions unlock. Cap it down
+		# so the player gets the correct guidance (e.g. M2 build-control-station)
+		# instead of jumping ahead to M3/M4 guidance.
+		# Also clear per-stage action/step records for the stages being rolled back
+		# so the reconciler doesn't immediately fast-forward past them again.
+		var by_stage: Dictionary = _state.get("completed_actions_by_stage", {})
+		var done_steps: Dictionary = _state.get("completed_steps_by_stage", {})
+		for s in range(stage_from_progress, current_stage + 1):
+			by_stage.erase(str(s))
+			done_steps.erase(str(s))
+		_state["completed_actions_by_stage"] = by_stage
+		_state["completed_steps_by_stage"] = done_steps
+		_state["current_stage"] = stage_from_progress
+		_state["current_step_index"] = 0
 
 func _reconcile_step_index() -> void:
 	var stage = int(_state.get("current_stage", 1))

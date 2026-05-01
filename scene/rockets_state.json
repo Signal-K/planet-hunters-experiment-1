@@ -6,14 +6,7 @@
   "placed": [
     {
       "type": "starterrocket1",
-      "id": "starterrocket1-3828043580",
-      "x": 0.0,
-      "y": 0.0,
-      "status": "returned"
-    },
-    {
-      "type": "starterrocket1",
-      "id": "starterrocket1-1439817058",
+      "id": "starterrocket1-950328804",
       "x": 0.0,
       "y": 0.0,
       "status": "returned"
@@ -36,23 +29,16 @@
   "scan_counts": {
   },
   "status_changed_at": {
-    "starterrocket1-3828043580": {
-      "awaitingLaunch": 1777521705.0,
-      "launched": 1777521705.0,
-      "returningHome": 1777521706.0,
-      "returned": 1777521709.0
-    },
-    "starterrocket1-1439817058": {
-      "awaitingLaunch": 1777521723.0,
-      "launched": 1777521723.0,
-      "returningHome": 1777521723.0,
-      "returned": 1777521725.0
+    "starterrocket1-950328804": {
+      "awaitingLaunch": 1777640035.0,
+      "launched": 1777640035.0,
+      "returningHome": 1777640070.0,
+      "returned": 1777725440.0
     }
   },
-  "mission_progress_completed": 2,
+  "mission_progress_completed": 1,
   "completed_mission_badges": [
-    "mission-mission-1-training-target-1777521709",
-    "mission-mission-2-active-asteroid-133p-1777521725"
+    "mission-mission-1-training-target-1777725440"
   ],
   "control_station_built": true,
   "scanner_station_built": false,
@@ -60,7 +46,6 @@
   "scanner_unlock_dialog_seen": false,
   "scanner_next_scan_at": 0.0,
   "trip_contract_offer": {
-    "selection_required": true
   },
   "operation_mode": "contract",
   "candidate_visit_blocks": {
@@ -73,20 +58,14 @@
     "mission-1-training-target": true
   },
   "rocket_customizations": {
-    "starterrocket1-3828043580": {
-      "flag": "Earth Union",
-      "logo": "Star",
-      "rocket_type": "starterrocket1"
-    },
-    "starterrocket1-1439817058": {
+    "starterrocket1-950328804": {
       "flag": "Earth Union",
       "logo": "Star",
       "rocket_type": "starterrocket1"
     }
   },
   "rocket_wear": {
-    "starterrocket1-3828043580": 1.0,
-    "starterrocket1-1439817058": 1.0
+    "starterrocket1-950328804": 1.0
   },
   "archived_rocket_wear": {
   },
@@ -140,15 +119,11 @@
       }
     ]
   },
+  "selected_target": "",
   "revealed_sectors": [
     0.0,
     7.0,
     3.0,
-    6.0,
-    7.0,
-    3.0,
     6.0
-  ],
-  "selected_target": "",
-  "planning_step": 1.0
+  ]
 }
