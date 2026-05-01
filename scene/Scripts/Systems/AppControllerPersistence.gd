@@ -2,6 +2,7 @@ extends RefCounted
 class_name AppControllerPersistence
 
 const FRANC_BALANCE_CONFIG_PATH := "user://franc_balance.cfg"
+const LEGACY_FRANC_BALANCE_JSON_PATH := "user://franc_balance.json"
 const EXPERIENCE_CONFIG_PATH := "user://experience.cfg"
 const FRANC_BALANCE_SECTION := "currency"
 const FRANC_BALANCE_KEY := "balance"
@@ -11,6 +12,7 @@ const EXPERIENCE_XP_KEY := "xp"
 const EXPERIENCE_LEVEL_KEY := "level"
 const PREFERENCES_SECTION := "preferences"
 const CITIZEN_SCIENCE_DIALOGUE_KEY := "citizen_science_dialogue_enabled"
+const JSONFileManager = preload("res://Scripts/Utils/JSONFileManager.gd")
 
 func save_franc_balance(value: int, loan: int = -1) -> void:
 	var cfg = ConfigFile.new()
@@ -23,6 +25,7 @@ func save_franc_balance(value: int, loan: int = -1) -> void:
 		print("[AppController] Failed to save franc balance: ", err)
 	else:
 		print("[AppController] Franc balance saved: ", value)
+	JSONFileManager.save_json(LEGACY_FRANC_BALANCE_JSON_PATH, {FRANC_BALANCE_KEY: value})
 
 func load_franc_balance(default_value: int) -> Dictionary:
 	var cfg = ConfigFile.new()
@@ -32,11 +35,19 @@ func load_franc_balance(default_value: int) -> Dictionary:
 			var value = int(cfg.get_value(FRANC_BALANCE_SECTION, FRANC_BALANCE_KEY))
 			var loan = int(cfg.get_value(FRANC_BALANCE_SECTION, LOAN_KEY, 0))
 			print("[AppController] Loaded franc balance from disk: ", value)
-			return {"loaded": true, "value": value, "loan": loan}
+			return {"loaded": true, "value": value, "loan": loan, "source": "cfg"}
 		print("[AppController] No franc balance key in config; using default: ", default_value)
-		return {"loaded": false, "value": default_value, "loan": 0}
+		var migrated = _load_legacy_franc_balance(default_value)
+		if migrated.get("loaded", false):
+			save_franc_balance(int(migrated.get("value", default_value)), 0)
+			return migrated
+		return {"loaded": false, "value": default_value, "loan": 0, "source": "default"}
 	print("[AppController] No saved franc balance config (or failed to load): ", err)
-	return {"loaded": false, "value": default_value, "loan": 0}
+	var legacy = _load_legacy_franc_balance(default_value)
+	if legacy.get("loaded", false):
+		save_franc_balance(int(legacy.get("value", default_value)), 0)
+		return legacy
+	return {"loaded": false, "value": default_value, "loan": 0, "source": "default"}
 
 func save_experience(xp: int, level: int) -> void:
 	var cfg = ConfigFile.new()
@@ -56,11 +67,11 @@ func load_experience(default_xp: int, default_level: int) -> Dictionary:
 			var xp = int(cfg.get_value(EXPERIENCE_SECTION, EXPERIENCE_XP_KEY))
 			var level = int(cfg.get_value(EXPERIENCE_SECTION, EXPERIENCE_LEVEL_KEY))
 			print("[AppController] Loaded experience from disk: xp=", xp, " level=", level)
-			return {"loaded": true, "xp": xp, "level": level}
+			return {"loaded": true, "xp": xp, "level": level, "source": "cfg"}
 		print("[AppController] No experience keys in config; using defaults")
-		return {"loaded": false, "xp": default_xp, "level": default_level}
+		return {"loaded": false, "xp": default_xp, "level": default_level, "source": "default"}
 	print("[AppController] No saved experience config (or failed to load): ", err)
-	return {"loaded": false, "xp": default_xp, "level": default_level}
+	return {"loaded": false, "xp": default_xp, "level": default_level, "source": "default"}
 
 func save_citizen_science_dialogue_enabled(enabled: bool) -> void:
 	var cfg = ConfigFile.new()
@@ -86,4 +97,14 @@ func load_citizen_science_dialogue_enabled(default_value: bool = true) -> bool:
 
 func reset_all() -> void:
 	DirAccess.remove_absolute(FRANC_BALANCE_CONFIG_PATH)
+	DirAccess.remove_absolute(LEGACY_FRANC_BALANCE_JSON_PATH)
+	DirAccess.remove_absolute("%s.bak" % LEGACY_FRANC_BALANCE_JSON_PATH)
 	DirAccess.remove_absolute(EXPERIENCE_CONFIG_PATH)
+
+func _load_legacy_franc_balance(default_value: int) -> Dictionary:
+	var data = JSONFileManager.load_json(LEGACY_FRANC_BALANCE_JSON_PATH)
+	if data.has(FRANC_BALANCE_KEY):
+		var value = int(data.get(FRANC_BALANCE_KEY, default_value))
+		print("[AppController] Loaded franc balance from legacy JSON: ", value)
+		return {"loaded": true, "value": value, "loan": 0, "source": "json"}
+	return {"loaded": false, "value": default_value, "loan": 0, "source": "default"}

@@ -1,19 +1,18 @@
 <!-- KNOWNS GUIDELINES START -->
 # Core Rules
 
-You MUST follow these rules. If you cannot follow any rule, stop and ask for guidance before proceeding.
+> These rules are NON-NEGOTIABLE. Violating them leads to data corruption and lost work.
 
 ---
 
-## 🎯 The Golden Rule
+## The Golden Rule
 
-**If you want to change ANYTHING in a task or doc, use CLI commands or MCP tools. NEVER edit .md files directly.**
+**If you want to change ANYTHING in a task or doc, use CLI commands. NEVER edit .md files directly.**
 
-Why? Direct file editing breaks metadata synchronization, Git tracking, and relationships.
 
 ---
 
-## ⚠️ CRITICAL: The -a Flag Confusion
+## CRITICAL: The -a Flag Confusion
 
 The `-a` flag means DIFFERENT things in different commands:
 
@@ -26,27 +25,26 @@ The `-a` flag means DIFFERENT things in different commands:
 ### Acceptance Criteria: Use --ac
 
 ```bash
-# ❌ WRONG: -a is assignee, NOT acceptance criteria!
+# WRONG: -a is assignee, NOT acceptance criteria!
 knowns task edit 35 -a "- [ ] Criterion"    # Sets assignee to garbage!
-knowns task create "Title" -a "Criterion"   # Sets assignee to garbage!
 
-# ✅ CORRECT: Use --ac for acceptance criteria
+# CORRECT: Use --ac for acceptance criteria
 knowns task edit 35 --ac "Criterion one"
-knowns task edit 35 --ac "Criterion two"
 knowns task create "Title" --ac "Criterion one" --ac "Criterion two"
 ```
 
 ---
 
-## Core Principles
+## Quick Reference
 
 | Rule | Description |
 |------|-------------|
-| **CLI/MCP Only** | Use commands for ALL operations. NEVER edit .md files directly |
+| **CLI Only** | Use commands for ALL operations. NEVER edit .md files directly |
 | **Docs First** | Read project docs BEFORE planning or coding |
-| **Time Tracking** | Always start timer when taking task, stop when done |
+| **Time Tracking** | Start timer when taking task, stop when done |
 | **Plan Approval** | Share plan with user, WAIT for approval before coding |
-| **Check AC After Work** | Only mark acceptance criteria done AFTER completing the work |
+| **Check AC After** | Only mark criteria done AFTER completing work |
+| **Validate** | Run validate before completing task |
 
 ---
 
@@ -55,67 +53,48 @@ knowns task create "Title" --ac "Criterion one" --ac "Criterion two"
 **ONLY for view/list/search commands (NOT create/edit):**
 
 ```bash
-# ✅ CORRECT
+# CORRECT
 knowns task <id> --plain
 knowns task list --plain
 knowns doc "path" --plain
-knowns doc list --plain
 knowns search "query" --plain
 
-# ❌ WRONG (create/edit don't support --plain)
+# WRONG (create/edit don't support --plain)
 knowns task create "Title" --plain       # ERROR!
 knowns task edit <id> -s done --plain    # ERROR!
-knowns doc create "Title" --plain        # ERROR!
-knowns doc edit "name" -c "..." --plain  # ERROR!
 ```
 
 ---
 
 ## Reference System
 
-| Context | Task Format | Doc Format |
-|---------|-------------|------------|
-| **Writing** (input) | `@task-<id>` | `@doc/<path>` |
-| **Reading** (output) | `@.knowns/tasks/task-<id>` | `@.knowns/docs/<path>.md` |
+Tasks, docs, and templates can reference each other:
 
-Follow refs recursively until complete context gathered.
+| Type | Writing (Input) | Reading (Output) |
+|------|-----------------|------------------|
+| Task | `@task-<id>` | `@.knowns/tasks/task-<id>` |
+| Doc | `@doc/<path>` | `@.knowns/docs/<path>.md` |
+| Template | `@template/<name>` | `@.knowns/templates/<name>` |
+
+**Always follow refs recursively** to gather complete context before planning.
 
 ---
 
-## Task IDs
+## Subtasks
 
-| Format | Example | Notes |
-|--------|---------|-------|
-| Sequential | `48`, `49` | Legacy numeric |
-| Hierarchical | `48.1`, `48.2` | Legacy subtasks |
-| Random | `qkh5ne` | Current (6-char) |
+### CLI
+```bash
+knowns task create "Subtask title" --parent 48
+```
 
 **CRITICAL:** Use raw ID for `--parent`:
 ```bash
-# ✅ CORRECT
+# CORRECT
 knowns task create "Title" --parent 48
 
-# ❌ WRONG
+# WRONG
 knowns task create "Title" --parent task-48
 ```
-
----
-
-## Status & Priority
-
-| Status | When |
-|--------|------|
-| `todo` | Not started (default) |
-| `in-progress` | Currently working |
-| `in-review` | PR submitted |
-| `blocked` | Waiting on dependency |
-| `done` | All criteria met |
-
-| Priority | Level |
-|----------|-------|
-| `low` | Nice-to-have |
-| `medium` | Normal (default) |
-| `high` | Urgent |
 
 ---
 
@@ -128,10 +107,10 @@ Optimize your context usage to work more efficiently within token limits.
 ## Output Format
 
 ```bash
-# ❌ Verbose output
+# Verbose output
 knowns task 42 --json
 
-# ✅ Compact output (always use --plain)
+# Compact output (always use --plain)
 knowns task 42 --plain
 ```
 
@@ -139,39 +118,52 @@ knowns task 42 --plain
 
 ## Search Before Read
 
+### CLI
 ```bash
-# ❌ Reading all docs to find info
+# DON'T: Read all docs hoping to find info
 knowns doc "doc1" --plain
 knowns doc "doc2" --plain
-knowns doc "doc3" --plain
 
-# ✅ Search first, then read only relevant docs
+# DO: Search first, then read only relevant docs
 knowns search "authentication" --type doc --plain
-knowns doc "security-patterns" --plain  # Only the relevant one
+knowns doc "security-patterns" --plain
 ```
 
 ---
 
-## Selective File Reading
+
+## Reading Documents
+
+### CLI
+**ALWAYS use `--smart`** - auto-handles both small and large docs:
 
 ```bash
-# ❌ Reading entire large file
-Read file (2000+ lines)
+# DON'T: Read without --smart
+knowns doc readme --plain
 
-# ✅ Read specific sections
-Read file with offset=100 limit=50
+# DO: Always use --smart
+knowns doc readme --plain --smart
+# Small doc → full content
+# Large doc → stats + TOC
+
+# If large, read specific section:
+knowns doc readme --plain --section 3
 ```
+
+**Behavior:**
+- **≤2000 tokens**: Returns full content automatically
+- **>2000 tokens**: Returns stats + TOC, then use section parameter
 
 ---
 
 ## Compact Notes
 
 ```bash
-# ❌ Verbose notes
-knowns task edit 42 --append-notes "I have successfully completed the implementation of the authentication middleware which validates JWT tokens and handles refresh logic..."
+# DON'T: Verbose notes
+knowns task edit 42 --append-notes "I have successfully completed the implementation..."
 
-# ✅ Compact notes
-knowns task edit 42 --append-notes "✓ Auth middleware + JWT validation done"
+# DO: Compact notes
+knowns task edit 42 --append-notes "Done: Auth middleware + JWT validation"
 ```
 
 ---
@@ -183,7 +175,6 @@ knowns task edit 42 --append-notes "✓ Auth middleware + JWT validation done"
 | Re-read files already in context | Reference from memory |
 | List tasks/docs multiple times | List once, remember results |
 | Quote entire file contents | Summarize key points |
-| Repeat full error messages | Reference error briefly |
 
 ---
 
@@ -201,16 +192,16 @@ knowns task edit 42 --append-notes "✓ Auth middleware + JWT validation done"
 
 ## Quick Rules
 
-1. **Always `--plain`** - Never use `--json` unless specifically needed
-2. **Search first** - Don't read all docs hoping to find info
-3. **Read selectively** - Use offset/limit for large files
-4. **Write concise** - Compact notes, not essays
-5. **Don't repeat** - Reference context already loaded
-6. **Summarize** - Key points, not full quotes
+1. **Always `--plain`** - Never use `--json` unless needed
+2. **Always `--smart`** - Auto-handles doc size
+3. **Search first** - Don't read all docs hoping to find info
+4. **Read selectively** - Only fetch what you need
+5. **Write concise** - Compact notes, not essays
+6. **Don't repeat** - Reference context already loaded
 
 ---
 
-# Commands Reference
+# CLI Commands Reference
 
 ## task create
 
@@ -223,12 +214,11 @@ knowns task create <title> [options]
 | `--description` | `-d` | Task description |
 | `--ac` | | Acceptance criterion (repeatable) |
 | `--labels` | `-l` | Comma-separated labels |
-| `--assignee` | `-a` | Assign to user ⚠️ |
+| `--assignee` | `-a` | Assign to user |
 | `--priority` | | low/medium/high |
-| `--status` | `-s` | Initial status |
 | `--parent` | | Parent task ID (raw ID only!) |
 
-**⚠️ `-a` = assignee, NOT acceptance criteria! Use `--ac` for AC.**
+**`-a` = assignee, NOT acceptance criteria! Use `--ac` for AC.**
 
 ---
 
@@ -240,33 +230,24 @@ knowns task edit <id> [options]
 
 | Flag | Short | Purpose |
 |------|-------|---------|
-| `--title` | `-t` | Change title |
-| `--description` | `-d` | Change description |
 | `--status` | `-s` | Change status |
-| `--priority` | | Change priority |
-| `--labels` | `-l` | Set labels |
-| `--assignee` | `-a` | Assign user ⚠️ |
-| `--parent` | | Move to parent |
+| `--assignee` | `-a` | Assign user |
 | `--ac` | | Add acceptance criterion |
 | `--check-ac` | | Mark AC done (1-indexed) |
-| `--uncheck-ac` | | Unmark AC (1-indexed) |
-| `--remove-ac` | | Delete AC (1-indexed) |
+| `--uncheck-ac` | | Unmark AC |
 | `--plan` | | Set implementation plan |
 | `--notes` | | Replace notes |
 | `--append-notes` | | Add to notes |
-
-**⚠️ `-a` = assignee, NOT acceptance criteria! Use `--ac` for AC.**
 
 ---
 
 ## task view/list
 
 ```bash
-knowns task <id> --plain              # View single task
-knowns task list --plain              # List all
+knowns task <id> --plain
+knowns task list --plain
 knowns task list --status in-progress --plain
-knowns task list --assignee @me --plain
-knowns task list --tree --plain       # Tree hierarchy
+knowns task list --tree --plain
 ```
 
 ---
@@ -293,24 +274,30 @@ knowns doc edit <name> [options]
 
 | Flag | Short | Purpose |
 |------|-------|---------|
-| `--title` | `-t` | Change title |
-| `--description` | `-d` | Change description |
-| `--tags` | | Set tags |
 | `--content` | `-c` | Replace content |
-| `--append` | `-a` | Append content ⚠️ |
-| `--content-file` | | Content from file |
-| `--append-file` | | Append from file |
+| `--append` | `-a` | Append content |
+| `--section` | | Target section (use with -c) |
 
-**⚠️ In doc edit, `-a` = append content, NOT assignee!**
+**In doc edit, `-a` = append content, NOT assignee!**
 
 ---
 
 ## doc view/list
 
+**ALWAYS use `--smart`** - auto-handles small/large docs:
+
 ```bash
-knowns doc <path> --plain             # View single doc
-knowns doc list --plain               # List all
-knowns doc list --tag api --plain     # Filter by tag
+knowns doc <path> --plain --smart
+```
+
+If large, returns TOC. Then read section:
+```bash
+knowns doc <path> --plain --section 3
+```
+
+```bash
+knowns doc list --plain
+knowns doc list --tag api --plain
 ```
 
 ---
@@ -320,10 +307,8 @@ knowns doc list --tag api --plain     # Filter by tag
 ```bash
 knowns time start <id>    # REQUIRED when taking task
 knowns time stop          # REQUIRED when completing
-knowns time pause
-knowns time resume
 knowns time status
-knowns time add <id> <duration> -n "Note" -d "2025-01-01"
+knowns time add <id> <duration> -n "Note"
 ```
 
 ---
@@ -334,12 +319,22 @@ knowns time add <id> <duration> -n "Note" -d "2025-01-01"
 knowns search "query" --plain
 knowns search "auth" --type task --plain
 knowns search "api" --type doc --plain
-knowns search "bug" --type task --status in-progress --priority high --plain
 ```
 
 ---
 
-## Multi-line Input (Bash/Zsh)
+## template
+
+```bash
+knowns template list
+knowns template info <name>
+knowns template run <name> --name "X" --dry-run
+knowns template create <name>
+```
+
+---
+
+## Multi-line Input
 
 ```bash
 knowns task edit <id> --plan $'1. Step\n2. Step\n3. Step'
@@ -351,6 +346,7 @@ knowns task edit <id> --plan $'1. Step\n2. Step\n3. Step'
 
 ## Before Creating
 
+### CLI
 ```bash
 # Search for existing tasks first
 knowns search "keyword" --type task --plain
@@ -360,6 +356,7 @@ knowns search "keyword" --type task --plain
 
 ## Create Task
 
+### CLI
 ```bash
 knowns task create "Clear title (WHAT)" \
   -d "Description (WHY)" \
@@ -374,8 +371,8 @@ knowns task create "Clear title (WHAT)" \
 ## Quality Guidelines
 
 ### Title
-| ❌ Bad | ✅ Good |
-|--------|---------|
+| Bad | Good |
+|-----|------|
 | Do auth stuff | Add JWT authentication |
 | Fix bug | Fix login timeout |
 
@@ -385,8 +382,8 @@ Explain WHY. Include doc refs: `@doc/security-patterns`
 ### Acceptance Criteria
 **Outcome-focused, NOT implementation steps:**
 
-| ❌ Bad | ✅ Good |
-|--------|---------|
+| Bad | Good |
+|-----|------|
 | Add handleLogin() function | User can login |
 | Use bcrypt | Passwords are hashed |
 | Add try-catch | Errors return proper HTTP codes |
@@ -395,6 +392,7 @@ Explain WHY. Include doc refs: `@doc/security-patterns`
 
 ## Subtasks
 
+### CLI
 ```bash
 knowns task create "Parent task"
 knowns task create "Subtask" --parent 48  # Raw ID only!
@@ -404,9 +402,9 @@ knowns task create "Subtask" --parent 48  # Raw ID only!
 
 ## Anti-Patterns
 
-- ❌ Too many AC in one task → Split into multiple tasks
-- ❌ Implementation steps as AC → Write outcomes instead
-- ❌ Skip search → Always check existing tasks first
+- Too many AC in one task -> Split into multiple tasks
+- Implementation steps as AC -> Write outcomes instead
+- Skip search -> Always check existing tasks first
 
 ---
 
@@ -414,6 +412,7 @@ knowns task create "Subtask" --parent 48  # Raw ID only!
 
 ## Step 1: Take Task
 
+### CLI
 ```bash
 knowns task edit <id> -s in-progress -a @me
 knowns time start <id>    # REQUIRED!
@@ -423,11 +422,12 @@ knowns time start <id>    # REQUIRED!
 
 ## Step 2: Research
 
+### CLI
 ```bash
 # Read task and follow ALL refs
 knowns task <id> --plain
-# @.knowns/docs/xxx.md → knowns doc "xxx" --plain
-# @.knowns/tasks/task-YY → knowns task YY --plain
+# @doc/xxx → knowns doc "xxx" --plain
+# @task-YY → knowns task YY --plain
 
 # Search related docs
 knowns search "keyword" --type doc --plain
@@ -440,6 +440,7 @@ knowns search "keyword" --type task --status done --plain
 
 ## Step 3: Plan (BEFORE coding!)
 
+### CLI
 ```bash
 knowns task edit <id> --plan $'1. Research (see @doc/xxx)
 2. Implement
@@ -447,16 +448,17 @@ knowns task edit <id> --plan $'1. Research (see @doc/xxx)
 4. Document'
 ```
 
-**⚠️ Share plan with user. WAIT for approval before coding.**
+**Share plan with user. WAIT for approval before coding.**
 
 ---
 
 ## Step 4: Implement
 
+### CLI
 ```bash
 # Check AC only AFTER work is done
 knowns task edit <id> --check-ac 1
-knowns task edit <id> --append-notes "✓ Done: feature X"
+knowns task edit <id> --append-notes "Done: feature X"
 ```
 
 ---
@@ -465,16 +467,17 @@ knowns task edit <id> --append-notes "✓ Done: feature X"
 
 If new requirements emerge during work:
 
+### CLI
 ```bash
 # Small: Add to current task
 knowns task edit <id> --ac "New requirement"
-knowns task edit <id> --append-notes "⚠️ Scope updated: reason"
+knowns task edit <id> --append-notes "Scope updated: reason"
 
 # Large: Ask user first, then create follow-up
 knowns task create "Follow-up: feature" -d "From task <id>"
 ```
 
-**⚠️ Don't silently expand scope. Ask user first.**
+**Don't silently expand scope. Ask user first.**
 
 ---
 
@@ -493,10 +496,12 @@ knowns task create "Follow-up: feature" -d "From task <id>"
 
 A task is **Done** when ALL of these are complete:
 
+### CLI
 | Requirement | Command |
 |-------------|---------|
 | All AC checked | `knowns task edit <id> --check-ac N` |
 | Notes added | `knowns task edit <id> --notes "Summary"` |
+| Refs validated | `knowns validate` |
 | Timer stopped | `knowns time stop` |
 | Status = done | `knowns task edit <id> -s done` |
 | Tests pass | Run test suite |
@@ -505,6 +510,7 @@ A task is **Done** when ALL of these are complete:
 
 ## Completion Steps
 
+### CLI
 ```bash
 # 1. Verify all AC are checked
 knowns task <id> --plain
@@ -513,10 +519,13 @@ knowns task <id> --plain
 knowns task edit <id> --notes $'## Summary
 What was done and key decisions.'
 
-# 3. Stop timer (REQUIRED!)
+# 3. Validate refs (catch broken @doc/ @task- refs)
+knowns validate
+
+# 4. Stop timer (REQUIRED!)
 knowns time stop
 
-# 4. Mark done
+# 5. Mark done
 knowns task edit <id> -s done
 ```
 
@@ -526,20 +535,24 @@ knowns task edit <id> -s done
 
 If user requests changes after task is done:
 
+### CLI
 ```bash
 knowns task edit <id> -s in-progress    # Reopen
 knowns time start <id>                   # Restart timer
 knowns task edit <id> --ac "Fix: description"
-knowns task edit <id> --append-notes "🔄 Reopened: reason"
-# Complete work, then follow completion steps again
+knowns task edit <id> --append-notes "Reopened: reason"
 ```
+
+Then follow completion steps again.
 
 ---
 
 ## Checklist
 
+### CLI
 - [ ] All AC checked (`--check-ac`)
 - [ ] Notes added (`--notes`)
+- [ ] Refs validated (`knowns validate`)
 - [ ] Timer stopped (`time stop`)
 - [ ] Tests pass
 - [ ] Status = done (`-s done`)
@@ -548,7 +561,7 @@ knowns task edit <id> --append-notes "🔄 Reopened: reason"
 
 # Common Mistakes
 
-## ⚠️ CRITICAL: The -a Flag
+## CRITICAL: The -a Flag
 
 | Command | `-a` Means | NOT This! |
 |---------|------------|-----------|
@@ -556,28 +569,73 @@ knowns task edit <id> --append-notes "🔄 Reopened: reason"
 | `doc edit` | `--append` | ~~assignee~~ |
 
 ```bash
-# ❌ WRONG (sets assignee to garbage!)
+# WRONG (sets assignee to garbage!)
 knowns task edit 35 -a "Criterion text"
 
-# ✅ CORRECT (use --ac)
+# CORRECT (use --ac)
 knowns task edit 35 --ac "Criterion text"
 ```
 
 ---
 
+## CRITICAL: Notes vs Append Notes
+
+**NEVER use `notes`/`--notes` for progress updates - it REPLACES all existing notes!**
+
+```bash
+# ❌ WRONG - Destroys audit trail!
+knowns task edit <id> --notes "Done: feature X"
+
+# ✅ CORRECT - Preserves history
+knowns task edit <id> --append-notes "Done: feature X"
+```
+
+| Field | Behavior |
+|-------|----------|
+| `--notes` | **REPLACES** all notes (use only for initial setup) |
+| `--append-notes` | **APPENDS** to existing notes (use for progress) |
+
+---
+
 ## Quick Reference
 
-| ❌ DON'T | ✅ DO |
-|----------|-------|
+| DON'T | DO |
+|-------|-----|
 | Edit .md files directly | Use CLI commands |
 | `-a "criterion"` | `--ac "criterion"` |
 | `--parent task-48` | `--parent 48` (raw ID) |
 | `--plain` with create/edit | `--plain` only for view/list |
+| `--notes` for progress | `--append-notes` for progress |
 | Check AC before work done | Check AC AFTER work done |
 | Code before plan approval | Wait for user approval |
 | Code before reading docs | Read docs FIRST |
-| Skip time tracking | Always `time start`/`stop` |
-| Ignore task refs | Follow ALL `@.knowns/...` refs |
+| Skip time tracking | Always start/stop timer |
+| Skip validation | Run validate before completing |
+| Ignore refs | Follow ALL `@task-xxx`, `@doc/xxx`, `@template/xxx` refs |
+
+
+---
+
+## Template Syntax Pitfalls
+
+When writing `.hbs` templates, **NEVER** create `$` followed by triple-brace - Handlebars interprets triple-brace as unescaped output:
+
+```
+// ❌ WRONG - Parse error!
+this.logger.log(`Created: $` + `{` + `{` + `{camelCase entity}.id}`);
+
+// ✅ CORRECT - Add space between ${ and double-brace, use ~ to trim whitespace
+this.logger.log(`Created: ${ {{~camelCase entity~}}.id}`);
+```
+
+| DON'T | DO |
+|-------|-----|
+| `$` + triple-brace | `${ {{~helper~}}}` (space + escaped) |
+
+**Rules:**
+- Add space between `${` and double-brace
+- Use `~` (tilde) to trim whitespace in output
+- Escape literal braces with backslash
 
 ---
 
@@ -589,4 +647,6 @@ knowns task edit 35 --ac "Criterion text"
 | Forgot to stop timer | `knowns time add <id> <duration>` |
 | Checked AC too early | `knowns task edit <id> --uncheck-ac N` |
 | Task not found | `knowns task list --plain` |
+| Replaced notes by mistake | Cannot recover - notes are lost. Use `--append-notes` next time |
+| Broken refs in task/doc | Run `knowns validate`, fix refs, validate again |
 <!-- KNOWNS GUIDELINES END -->

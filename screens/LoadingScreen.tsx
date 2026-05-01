@@ -113,7 +113,7 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ navigation }) => {
     <SafeAreaView style={commonStyles.loadingContainer}>
       <ScrollView contentContainerStyle={commonStyles.scrollContent} bounces={false}>
         <View style={commonStyles.loadingContent}>
-          <Text style={commonStyles.appTitle}>Planet Hunters</Text>
+          <Text style={commonStyles.appTitle}>Distant Signals</Text>
           <Text style={commonStyles.appSubtitle}>Godot + React Native</Text>
 
           <View style={commonStyles.progressContainer}>

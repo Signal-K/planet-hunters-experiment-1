@@ -23,6 +23,7 @@ const ResourceYield = preload("res://Scripts/Utils/ResourceYield.gd")
 const ProceduralBodyBuilder = preload("res://Scripts/Utils/ProceduralBodyBuilder.gd")
 const RocketSpriteHelper = preload("res://Scripts/Utils/RocketSpriteHelper.gd")
 const RoomCatalog = preload("res://Scripts/Utils/RoomCatalog.gd")
+const UILayout = preload("res://Scripts/UI/UILayout.gd")
 
 
 @onready var asteroid_pivot: Node3D = $AsteroidPivot
@@ -480,7 +481,7 @@ func _apply_responsive_layout() -> void:
 	var right_panel_width = clamp(viewport.x * (0.30 if compact else 0.26), 420.0, 520.0)
 	# Safe area: compensate for Dynamic Island / notch (landscape iPhone aspect > 1.85)
 	var safe_top = 90.0 if viewport.x / max(viewport.y, 1.0) > 1.85 else 0.0
-	var safe_bottom = 90.0 if viewport.x / max(viewport.y, 1.0) > 1.85 else 0.0
+	var safe_bottom = UILayout.bottom_clearance(viewport)
 	if _ui_margin:
 		_ui_margin.offset_top = 24.0 + safe_top
 	if travel_panel:
@@ -495,6 +496,12 @@ func _apply_responsive_layout() -> void:
 		travel_panel.custom_minimum_size.x = panel_width
 	if control_panel:
 		control_panel.custom_minimum_size.x = right_panel_width
+		var control_height := maxf(control_panel.size.y, absf(control_panel.offset_bottom - control_panel.offset_top))
+		control_height = maxf(control_height, 92.0)
+		control_panel.anchor_top = 1.0
+		control_panel.anchor_bottom = 1.0
+		control_panel.offset_top = -(control_height + safe_bottom)
+		control_panel.offset_bottom = -safe_bottom
 		control_panel.offset_left = -edge_margin - right_panel_width
 		control_panel.offset_right = -edge_margin
 	if inventory_panel:

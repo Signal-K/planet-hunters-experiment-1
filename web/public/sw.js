@@ -1,4 +1,4 @@
-/* Planet Hunters — Service Worker */
+/* Distant Signals — Service Worker */
 /* Handles push notifications and basic offline caching */
 
 self.addEventListener("push", (event) => {
@@ -6,10 +6,10 @@ self.addEventListener("push", (event) => {
   try {
     data = event.data ? event.data.json() : {};
   } catch (_) {
-    data = { title: "Planet Hunters", body: event.data ? event.data.text() : "" };
+    data = { title: "Distant Signals", body: event.data ? event.data.text() : "" };
   }
 
-  const title = data.title || "Planet Hunters";
+  const title = data.title || "Distant Signals";
   const options = {
     body: data.body || "",
     icon: "/favicon.svg",

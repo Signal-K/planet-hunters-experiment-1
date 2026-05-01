@@ -18,13 +18,15 @@ Keep rocket, structures, and backdrop visuals in the same pixel-art language by 
 
 ## Rules
 - Backdrop sprites that receive night tint shader must use nearest filtering.
-- Rocket animated sprites in orbit/ascent transitions must use nearest filtering.
-- Launch sequence uses dedicated launch sprite-sheet frames for Starter Rocket 1.
+- Rocket animated sprites in active orbit/transport transitions must use nearest filtering.
 
 ## Implementation Points
 - `EarthSkyNightFilterEvent.gd`: set `texture_filter = NEAREST` on resolved backdrops.
-- `RocketSpriteHelper.gd`: set nearest filtering when applying orbit/launch sprite frames.
-- `RocketAscent.gd`: use `AnimatedSprite2D` launch sprite path + nearest-filtered Earth backdrop sprite.
+- `RocketSpriteHelper.gd`: set nearest filtering when applying orbit sprites in the retained transport scenes.
+
+## Historical Note
+- Until 2026-05-04, launches routed through `rocket_ascent.tscn` / `RocketAscent.gd`, which played a dedicated lift-off scene where the rocket climbed away from Earth and the Earth backdrop faded out before handing off to `rocket_transit.tscn`.
+- That ascent/fade sequence has now been removed from the live mission flow. `LaunchpadScene.gd` routes directly to `rocket_transit.tscn`, and the obsolete ascent scene/script were deleted to keep the transport stack limited to the scenes still used at runtime.
 
 ## Future Work
 - Add optional per-target post-process grain/dither pass while preserving nearest sampling.

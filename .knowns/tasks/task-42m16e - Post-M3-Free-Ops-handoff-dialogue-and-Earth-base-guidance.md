@@ -1,11 +1,11 @@
 ---
 id: 42m16e
 title: Post-M3 Free Ops handoff dialogue and Earth-base guidance
-status: in-progress
+status: done
 priority: medium
 labels: []
 createdAt: '2026-04-25T00:07:08.212Z'
-updatedAt: '2026-04-30T01:07:13.405Z'
+updatedAt: '2026-05-08T10:30:54.841Z'
 timeSpent: 808
 assignee: '@me'
 ---
@@ -19,10 +19,10 @@ Authored missions are M1, M2, and M3 only. After M3 the player enters Free Opera
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 No in-game copy or UI surface refers to 'Mission 4' as a tutorial step or objective — the concept does not exist
-- [ ] #2 After M3 debrief, a single handoff dialogue informs the player they are now in Free Operations
-- [ ] #3 Earth-base shows at most one soft guidance surface post-M3 (no stacked tutorial prompts)
-- [ ] #4 All authoritative docs state the authored arc is M1–M3 only; post-M3 entry to Free Ops is dialogue-only
+- [x] #1 No in-game copy or UI surface refers to 'Mission 4' as a tutorial step or objective — the concept does not exist
+- [x] #2 After M3 debrief, a single handoff dialogue informs the player they are now in Free Operations
+- [x] #3 Earth-base shows at most one soft guidance surface post-M3 (no stacked tutorial prompts)
+- [x] #4 All authoritative docs state the authored arc is M1–M3 only; post-M3 entry to Free Ops is dialogue-only
 <!-- AC:END -->
 
 ## Implementation Plan
@@ -40,5 +40,7 @@ Authored missions are M1, M2, and M3 only. After M3 the player enters Free Opera
 Updated M4 from scanner-build gate to autonomy handoff. Removed redundant Earth-base guidance stacking by hiding the compact tracker on base and delaying Star Map card until Free Ops. Added legacy scanner-state reconciliation for older saves. Updated authoritative docs and refreshed regression suites for debrief, structure, later-mission, narrative, and E2E coverage.
 
 2026-04-30 scope lock: next release is planet-hunting only after the tutorial and through M3/Free Ops; asteroid candidate review must not be reintroduced in handoff/guidance copy.
+
+✓ All ACs verified complete. M4/Free-Ops handoff implemented; no M4 tutorial copy; docs updated.
 <!-- SECTION:NOTES:END -->
 

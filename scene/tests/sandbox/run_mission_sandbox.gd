@@ -25,7 +25,6 @@ const EARTH_SCENE     := "res://Scenes/Earth/earth_base_1.tscn"
 const LAUNCHPAD_SCENE := "res://Scenes/Earth/earth_launchpad.tscn"
 const DEBRIEF_SCENE   := "res://Scenes/Earth/mission_debrief_v2.tscn"
 const TRANSIT_SCENE   := "res://Scenes/Transitions/rocket_transit.tscn"
-const ASCENT_SCENE    := "res://Scenes/Transitions/rocket_ascent.tscn"
 const RETURN_SCENE    := "res://Scenes/Transitions/rocket_return.tscn"
 const MINING_SCENE    := "res://Scenes/UI/SidescrollMining.tscn"
 const WIZARD_SCENE    := "res://Scenes/UI/LaunchWizard.tscn"
@@ -193,9 +192,7 @@ func _phase_launchpad(mission: int, tag: String) -> void:
 
 func _phase_transit(tag: String) -> void:
 	_begin_step("transit")
-	var scene := await _load_scene(ASCENT_SCENE)
-	if not scene:
-		scene = await _load_scene(TRANSIT_SCENE)
+	var scene := await _load_scene(TRANSIT_SCENE)
 	if not scene:
 		return
 	await _wait(SETTLE_ANIM * 2.0)

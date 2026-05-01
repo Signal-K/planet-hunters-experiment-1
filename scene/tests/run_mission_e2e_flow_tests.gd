@@ -51,7 +51,7 @@ func test_transit_and_mining_timing_delays_are_intentionally_non_trivial() -> vo
 	# make the rocket launch feel like a real journey (not a teleport) and give
 	# mining sessions a sense of weight and commitment.
 	# If someone accidentally zeros these out, this test will catch it.
-	const TransitScript = preload("res://Scripts/Transitions/RocketTransit.gd")
+	const TransitScript = preload("res://Scripts/Transitions/OutboundPreviewTransition.gd")
 	const MiningScript = preload("res://Scripts/UI/SidescrollMining.gd")
 
 	if TransitScript.EARTH_ORBIT_TIME < 1.0:

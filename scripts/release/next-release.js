@@ -44,7 +44,7 @@ function formatReleaseTag(versionNumber) {
 }
 
 function formatReleaseName(versionNumber) {
-  return `Planet Hunters Release ${versionNumber}`;
+  return `Distant Signals Release ${versionNumber}`;
 }
 
 function main() {

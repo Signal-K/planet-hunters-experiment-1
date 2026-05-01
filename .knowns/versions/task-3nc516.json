@@ -1,0 +1,138 @@
+{
+  "taskId": "3nc516",
+  "currentVersion": 2,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "3nc516",
+      "version": 1,
+      "timestamp": "2026-05-03T11:41:09.492Z",
+      "author": "@Liam",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": null,
+          "newValue": "todo"
+        },
+        {
+          "field": "priority",
+          "oldValue": null,
+          "newValue": "high"
+        }
+      ],
+      "snapshot": {
+        "acceptanceCriteria": [
+          {
+            "text": "Landing page shows 'Distant Signals' as the game title",
+            "completed": false
+          },
+          {
+            "text": "Tagline: 'Mine asteroids. Build settlements. Discover real planets.'",
+            "completed": false
+          },
+          {
+            "text": "All React Native screens updated",
+            "completed": false
+          },
+          {
+            "text": "Storage key names unchanged to preserve existing sessions",
+            "completed": false
+          }
+        ],
+        "assignee": "@Liam",
+        "description": "The first experiment was called 'Planet Hunters' which is too literal and similar to real NASA programme names. Renamed to 'Distant Signals' — evocative of the TESS light-curve signals from far stars and the asteroid mining comms theme. Name inspired by the Gizmonauts soundtrack style (2-word poetic space phrases). Changes applied: react-shell.js (landing page title, tagline, login text, desktop subtitle), screens/LoadingScreen.tsx, screens/LoginScreen.tsx, screens/MenuScreen.tsx, App.tsx comment. Storage cookie/localStorage keys left as planet_hunters_* to avoid invalidating existing sessions. Tagline updated from NASA citizen science framing to 'Mine asteroids. Build settlements. Discover real planets.'",
+        "labels": [
+          "branding,rename,landing-page"
+        ],
+        "priority": "high",
+        "status": "todo",
+        "title": "Rename Experiment 1 from 'Planet Hunters' to 'Distant Signals'"
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "3nc516",
+      "version": 2,
+      "timestamp": "2026-05-06T02:16:26.824Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        },
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Landing page shows 'Distant Signals' as the game title"
+            },
+            {
+              "completed": false,
+              "text": "Tagline: 'Mine asteroids. Build settlements. Discover real planets.'"
+            },
+            {
+              "completed": false,
+              "text": "All React Native screens updated"
+            },
+            {
+              "completed": false,
+              "text": "Storage key names unchanged to preserve existing sessions"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Landing page shows 'Distant Signals' as the game title"
+            },
+            {
+              "completed": true,
+              "text": "Tagline: 'Mine asteroids. Build settlements. Discover real planets.'"
+            },
+            {
+              "completed": true,
+              "text": "All React Native screens updated"
+            },
+            {
+              "completed": true,
+              "text": "Storage key names unchanged to preserve existing sessions"
+            }
+          ]
+        },
+        {
+          "field": "implementationNotes",
+          "newValue": "Verified the primary React Native screens already used Distant Signals, then cleaned up remaining visible rename leftovers on 2026-05-06 in the web service worker notification title, scanner-station toggle copy, and release/playthrough labels."
+        }
+      ],
+      "snapshot": {
+        "title": "Rename Experiment 1 from 'Planet Hunters' to 'Distant Signals'",
+        "description": "The first experiment was called 'Planet Hunters' which is too literal and similar to real NASA programme names. Renamed to 'Distant Signals' — evocative of the TESS light-curve signals from far stars and the asteroid mining comms theme. Name inspired by the Gizmonauts soundtrack style (2-word poetic space phrases). Changes applied: react-shell.js (landing page title, tagline, login text, desktop subtitle), screens/LoadingScreen.tsx, screens/LoginScreen.tsx, screens/MenuScreen.tsx, App.tsx comment. Storage cookie/localStorage keys left as planet_hunters_* to avoid invalidating existing sessions. Tagline updated from NASA citizen science framing to 'Mine asteroids. Build settlements. Discover real planets.'",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@Liam",
+        "labels": [
+          "branding,rename,landing-page"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Landing page shows 'Distant Signals' as the game title"
+          },
+          {
+            "completed": true,
+            "text": "Tagline: 'Mine asteroids. Build settlements. Discover real planets.'"
+          },
+          {
+            "completed": true,
+            "text": "All React Native screens updated"
+          },
+          {
+            "completed": true,
+            "text": "Storage key names unchanged to preserve existing sessions"
+          }
+        ],
+        "implementationNotes": "Verified the primary React Native screens already used Distant Signals, then cleaned up remaining visible rename leftovers on 2026-05-06 in the web service worker notification title, scanner-station toggle copy, and release/playthrough labels."
+      }
+    }
+  ]
+}

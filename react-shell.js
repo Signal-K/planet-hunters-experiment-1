@@ -118,7 +118,7 @@ async function initPushNotifications() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            title: (payload && payload.title) || "Planet Hunters",
+            title: (payload && payload.title) || "Distant Signals",
             message: (payload && payload.body) || "",
             tag: event || "planet-hunters",
             url: (payload && payload.url) || "/",
@@ -756,13 +756,16 @@ async function showInlineSurvey(params, surveyIdOverride) {
 // ── Micro-survey helpers ──────────────────────────────────────────────────────
 
 async function maybeTriggerMicroSurvey(storageKey, surveyId, context, eventPayload) {
-  // Never overlap with exit survey or another micro-survey already open.
-  if (_surveyShownInThisBoot) return;
+  // Don't stack with another open overlay.
   if (document.getElementById(SURVEY_OVERLAY_ID)) return;
+  // Each micro-survey has its own localStorage gate — don't show it twice.
   if (localStorage.getItem(storageKey)) return;
   // Skip if no survey ID configured yet.
   if (!surveyId) return;
   try {
+    const runtimeConfig = await getRuntimeConfig();
+    // Only show PostHog iframe surveys when PostHog is actually configured.
+    if (!runtimeConfig.posthog.projectToken) return;
     const distinctId = await resolveSurveyDistinctId();
     const params = {
       distinct_id: distinctId,
@@ -771,8 +774,6 @@ async function maybeTriggerMicroSurvey(storageKey, surveyId, context, eventPaylo
       mission_stage: String((eventPayload && eventPayload.mission_stage) || ""),
     };
     await showInlineSurvey(params, surveyId);
-    // Block any further surveys this session — one survey per boot is enough.
-    _surveyShownInThisBoot = true;
     localStorage.setItem(storageKey, new Date().toISOString());
   } catch (err) {
     console.error("Micro-survey trigger failed:", storageKey, err);
@@ -901,6 +902,10 @@ async function maybeTriggerFirstMissionSurvey(eventPayload) {
   if (localStorage.getItem(SURVEY_SHOWN_KEY)) return;
 
   try {
+    const runtimeConfig = await getRuntimeConfig();
+    // Only show PostHog iframe survey when PostHog is configured; blank iframes
+    // would consume the one-per-boot slot and block all subsequent micro-surveys.
+    if (!runtimeConfig.posthog.projectToken) return;
     const distinctId = await resolveSurveyDistinctId();
     const missionCount = Number((eventPayload && eventPayload.mission_count) || 0);
     const progressJson = buildProgressJson(eventPayload);
@@ -1005,7 +1010,7 @@ function AuthModal({ isOpen, onClose, onAuthSuccess }) {
       React.createElement(
         "p",
         { style: { margin: "0 0 24px", fontSize: "14px", color: "#a9b4cc", lineHeight: 1.5 } },
-        "Save your progress and access points across all games in the Star Sailors ecosystem (Planet Hunters, Star Sailors, and more!)."
+        "Save your progress and access points across all games in the Star Sailors ecosystem (Distant Signals, Star Sailors, and more!)."
       ),
       error && React.createElement(
         "div",
@@ -1203,7 +1208,7 @@ function LandingPage({ onPlay }) {
             textShadow: "0 0 60px rgba(74,208,255,0.18)",
           },
         },
-        "Planet Hunters"
+        "Distant Signals"
       ),
       // Tagline
       React.createElement(
@@ -1217,7 +1222,7 @@ function LandingPage({ onPlay }) {
             maxWidth: "480px",
           },
         },
-        "Mine asteroids. Discover real planet candidates. Contribute to NASA citizen science — one mission at a time."
+        "Mine asteroids. Build settlements. Discover real planets."
       ),
       // Feature pills
       React.createElement(
@@ -1306,7 +1311,7 @@ function App() {
   const [storageStatus, setStorageStatus] = useState("Cookie storage active");
   // In PWA mode skip cache-busting so the service worker can cache the game
   const [gameSrc] = useState(() => isPwaMode() ? "/game/index.html" : "/game/index.html?v=" + Date.now());
-  const [isMobile, setIsMobile] = useState(() => typeof window !== "undefined" && Math.min(window.innerWidth, window.innerHeight) < 768);
+  const [isMobile, setIsMobile] = useState(() => typeof window !== "undefined" && Math.min(window.innerWidth, window.innerHeight) < 900);
   const [isPwa] = useState(() => isPwaMode());
   const [isIos] = useState(() => isIosDevice());
   const [installPrompt, setInstallPrompt] = useState(null);
@@ -1337,7 +1342,7 @@ function App() {
 
   useEffect(() => {
     function onResize() {
-      setIsMobile(Math.min(window.innerWidth, window.innerHeight) < 768);
+      setIsMobile(Math.min(window.innerWidth, window.innerHeight) < 900);
       setViewportWidth(window.innerWidth);
     }
     window.addEventListener("resize", onResize, { passive: true });
@@ -1642,7 +1647,7 @@ function App() {
 
   const frameStyle = {
     width: "100%",
-    height: "min(75vh, 860px)",
+    height: "min(85vh, 1000px)",
     border: "0",
     display: "block",
     background: "#000",
@@ -1688,9 +1693,9 @@ function App() {
       )
     : null;
 
-  // Portrait overlay — covers the game when a mobile/PWA device is held portrait
+  // Portrait overlay — covers the game when any handheld/tablet device is held portrait
   const rotatePrompt =
-    (isMobile || isPwa) && isPortrait
+    isPortrait && viewportWidth < 1200
       ? React.createElement(
           "div",
           {
@@ -1750,6 +1755,7 @@ function App() {
           background: "#000",
           display: "flex",
           flexDirection: "column",
+          paddingBottom: "env(safe-area-inset-bottom)",
         },
       },
       React.createElement("iframe", {
@@ -1764,7 +1770,6 @@ function App() {
           display: "block",
           background: "#000",
           width: "100%",
-          height: "100dvh",
         },
         onError: () => setStorageStatus("Game load error"),
         onLoad: () => {
@@ -1778,15 +1783,15 @@ function App() {
           onClick: revealPwaHud,
           style: {
             position: "fixed",
-            top: "max(0px, env(safe-area-inset-top))",
+            bottom: "env(safe-area-inset-bottom)",
             left: "50%",
             transform: "translateX(-50%)",
             width: "min(52vw, calc(100vw - env(safe-area-inset-left) - env(safe-area-inset-right) - 16px))",
             maxWidth: "240px",
             height: "22px",
             border: "none",
-            borderBottomLeftRadius: "12px",
-            borderBottomRightRadius: "12px",
+            borderTopLeftRadius: "12px",
+            borderTopRightRadius: "12px",
             background: "rgba(10, 18, 40, 0.55)",
             color: "rgba(200,215,255,0.7)",
             fontSize: "10px",
@@ -1804,7 +1809,7 @@ function App() {
             {
               style: {
                 position: "fixed",
-                top: "max(8px, env(safe-area-inset-top))",
+                bottom: "calc(env(safe-area-inset-bottom) + 24px)",
                 left: "50%",
                 transform: "translateX(-50%)",
                 display: "flex",
@@ -1812,7 +1817,7 @@ function App() {
                 justifyContent: "center",
                 gap: "8px",
                 zIndex: 10002,
-                background: "rgba(5, 8, 15, 0.82)",
+                background: "rgba(5, 8, 15, 0.92)",
                 border: "1px solid #2a3560",
                 borderRadius: "12px",
                 padding: "8px",
@@ -2279,7 +2284,7 @@ function App() {
               lineHeight: 1.5,
             },
           },
-          "Mine asteroids \u00b7 Discover planets \u00b7 Contribute to real citizen science"
+          "Mine asteroids \u00b7 Build settlements \u00b7 Discover real planets"
         )
       ),
       React.createElement(
