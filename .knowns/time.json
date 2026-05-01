@@ -1,11 +1,3 @@
 {
-  "active": [
-    {
-      "taskId": "zoftvm",
-      "taskTitle": "Convert GameNavigationMenu and ControlStationPanel to scene-owned UI",
-      "startedAt": "2026-04-24T06:57:13.653Z",
-      "pausedAt": null,
-      "totalPausedMs": 0
-    }
-  ]
+  "active": []
 }

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Planet Hunters — playthrough. Run: bash explore-game.sh
+# Distant Signals — playthrough. Run: bash explore-game.sh
 # Requires: brew install cliclick
 
 PROJ="/Users/scroobz/Navigation/Native/planet-hunters-experiment-1"
@@ -72,7 +72,7 @@ click_pct() {
 }
 
 # ── 0. Setup ──────────────────────────────────────────────────────────────────
-log "# Planet Hunters — New User Playthrough"
+log "# Distant Signals — New User Playthrough"
 log "$(date -u)"
 pkill -x Godot 2>/dev/null || true; p 2
 [ -d "$USERDATA" ] && { rm -f "$USERDATA"/*.cfg "$USERDATA"/*.json 2>/dev/null; log "Saves cleared"; }

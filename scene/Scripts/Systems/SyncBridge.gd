@@ -7,14 +7,45 @@ const STATE_KEYS := [
 	"counter",
 	"francBalance",
 	"experienceXp",
-	"experienceLevel"
+	"experienceLevel",
+	"playerStateVersion",
+	"missionStage",
+	"completedMissions",
+	"controlStationBuilt",
+	"scannerStationBuilt",
+	"scannerUnlocked",
+	"operationMode",
+	"freeOperationsUnlocked",
+	"activeMissionsCount",
+	"hasReturnedMission",
+	"pendingMissionGuidanceId",
+	"unlockedRockets"
 ]
+
+const MUTABLE_STATE_KEYS := {
+	"counter": true,
+	"francBalance": true,
+	"experienceXp": true,
+	"experienceLevel": true
+}
 
 var _state := {
 	"counter": 0,
-	"francBalance": 10000000000,
+	"francBalance": 0,
 	"experienceXp": 0,
-	"experienceLevel": 1
+	"experienceLevel": 1,
+	"playerStateVersion": 0,
+	"missionStage": 1,
+	"completedMissions": 0,
+	"controlStationBuilt": false,
+	"scannerStationBuilt": false,
+	"scannerUnlocked": false,
+	"operationMode": "contract",
+	"freeOperationsUnlocked": false,
+	"activeMissionsCount": 0,
+	"hasReturnedMission": false,
+	"pendingMissionGuidanceId": 0,
+	"unlockedRockets": []
 }
 
 var _applying_from_react := false
@@ -45,9 +76,11 @@ func _connect_to_app_controller() -> void:
 			return
 
 	_state["counter"] = app.get_counter() if app.has_method("get_counter") else 0
-	_state["francBalance"] = app.get_franc_balance() if app.has_method("get_franc_balance") else 10000000000
+	_state["francBalance"] = app.get_franc_balance() if app.has_method("get_franc_balance") else 0
 	_state["experienceXp"] = app.get_experience_xp() if app.has_method("get_experience_xp") else 0
 	_state["experienceLevel"] = app.get_experience_level() if app.has_method("get_experience_level") else 1
+	if app.has_method("get_player_state_snapshot"):
+		_apply_snapshot(app.get_player_state_snapshot("sync_bridge_connect"), "")
 
 	if app.has_signal("counter_updated"):
 		app.counter_updated.connect(_on_counter_updated)
@@ -55,6 +88,8 @@ func _connect_to_app_controller() -> void:
 		app.franc_balance_updated.connect(_on_balance_updated)
 	if app.has_signal("experience_updated"):
 		app.experience_updated.connect(_on_experience_updated)
+	if app.has_signal("player_state_snapshot_updated"):
+		app.player_state_snapshot_updated.connect(_on_player_state_snapshot_updated)
 
 	print("[SyncBridge] Connected to AppController")
 
@@ -68,6 +103,9 @@ func set_value(key: String, value: Variant) -> void:
 	if not _state.has(key):
 		print("[SyncBridge] Unknown key: ", key)
 		return
+	if not MUTABLE_STATE_KEYS.has(key):
+		print("[SyncBridge] Ignoring write to read-only key: ", key)
+		return
 
 	_applying_from_react = true
 	_state[key] = value
@@ -79,7 +117,7 @@ func set_value(key: String, value: Variant) -> void:
 func set_values(updates: Dictionary) -> void:
 	_applying_from_react = true
 	for key in updates.keys():
-		if _state.has(key):
+		if _state.has(key) and MUTABLE_STATE_KEYS.has(key):
 			_state[key] = updates[key]
 			_apply_to_app_controller(key, updates[key])
 	_applying_from_react = false
@@ -125,3 +163,40 @@ func _on_experience_updated(xp: int, level: int) -> void:
 	_state["experienceLevel"] = level
 	state_changed.emit("experienceXp", xp, "godot")
 	state_changed.emit("experienceLevel", level, "godot")
+
+func _on_player_state_snapshot_updated(snapshot: Dictionary) -> void:
+	if _applying_from_react:
+		return
+	_apply_snapshot(snapshot, "godot")
+
+func _apply_snapshot(snapshot: Dictionary, source: String) -> void:
+	if typeof(snapshot) != TYPE_DICTIONARY:
+		return
+	var mappings := {
+		"schema_version": "playerStateVersion",
+		"counter": "counter",
+		"franc_balance": "francBalance",
+		"experience_xp": "experienceXp",
+		"experience_level": "experienceLevel",
+		"mission_stage": "missionStage",
+		"completed_missions": "completedMissions",
+		"control_station_built": "controlStationBuilt",
+		"scanner_station_built": "scannerStationBuilt",
+		"scanner_unlocked": "scannerUnlocked",
+		"operation_mode": "operationMode",
+		"free_operations_unlocked": "freeOperationsUnlocked",
+		"active_missions_count": "activeMissionsCount",
+		"has_returned_mission": "hasReturnedMission",
+		"pending_mission_guidance_id": "pendingMissionGuidanceId",
+		"unlocked_rockets": "unlockedRockets"
+	}
+	for snapshot_key in mappings.keys():
+		if not snapshot.has(snapshot_key):
+			continue
+		var state_key = str(mappings[snapshot_key])
+		var next_value = snapshot.get(snapshot_key)
+		if _state.get(state_key) == next_value:
+			continue
+		_state[state_key] = next_value
+		if source != "":
+			state_changed.emit(state_key, next_value, source)

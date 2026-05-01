@@ -21,7 +21,7 @@ const CYAN        := PanelStyle.ACCENT
 const CYAN_FAINT  := Color(CYAN.r, CYAN.g, CYAN.b, 0.34)
 const NAV_BG      := Color(0.04, 0.07, 0.11, 0.90)
 const NAV_TEXT    := PanelStyle.TEXT_ON_DARK
-const NAV_BOTTOM_MARGIN := 12.0
+const NAV_BOTTOM_MARGIN := 0.0
 const NAV_SIDE_MARGIN := 12.0
 const ULTRAWIDE_LIFT := 74.0
 
@@ -92,7 +92,9 @@ func apply_nav_layout() -> void:
 	for child in container.get_children():
 		if child is Button:
 			bar_height = maxf(bar_height, (child as Button).custom_minimum_size.y)
-	var bottom_margin := NAV_BOTTOM_MARGIN + (ULTRAWIDE_LIFT if vp_size.x / maxf(vp_size.y, 1.0) > 1.85 else 0.0)
+	var bottom_margin := maxf(NAV_BOTTOM_MARGIN, UILayout.bottom_clearance(vp_size))
+	if vp_size.x / maxf(vp_size.y, 1.0) > 1.85:
+		bottom_margin = maxf(bottom_margin, ULTRAWIDE_LIFT)
 	var rect := Rect2(
 		safe.position.x + NAV_SIDE_MARGIN,
 		safe.end.y - bar_height - bottom_margin,

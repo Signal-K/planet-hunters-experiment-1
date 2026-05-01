@@ -1,6 +1,6 @@
 {
   "taskId": "mjad1m",
-  "currentVersion": 3,
+  "currentVersion": 4,
   "versions": [
     {
       "id": "v1",
@@ -122,6 +122,91 @@
         ],
         "implementationPlan": "1. Reconcile legacy base-state flags with authored mission progress so a save cannot be Mission 4 / Free Ops while still advertising Control Station gating.\n2. Remove or suppress the Earth-base Star Map card from the main screen when it only adds redundant or misleading discovery-count messaging.\n3. Tighten Earth-base card visibility so only one progression card family can appear at a time, even on contradictory legacy saves.\n4. Update copy/tests so mission stage is clearly progression-based, while planet charting remains a separate discovery counter.",
         "implementationNotes": "✓ Reconciled legacy control/scanner progression state and removed Earth Base Star Map card. ✓ Added EarthBaseActionCard scene script so progression copy/CTA defaults live in tscn-backed cards instead of earth_base_1.gd. ✓ Earth Base now ignores historical mission log rows when no live placed rocket exists. ✓ JSON save path now uses direct writes with .bak recovery for corrupted user:// state. ✓ Stabilized later-missions suite around AppController/tutorial runtime interference."
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "mjad1m",
+      "version": 4,
+      "timestamp": "2026-05-08T10:30:55.141Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        },
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "Earth Base no longer shows contradictory progression states such as Mission 4 alongside Control Station build gating for the same save."
+            },
+            {
+              "completed": false,
+              "text": "Player-facing progression copy makes it clear that mission stage and discovered planets are different things."
+            },
+            {
+              "completed": false,
+              "text": "Main-screen progression cards do not overlap or stack redundant guidance surfaces."
+            },
+            {
+              "completed": false,
+              "text": "Regression coverage exists for legacy save reconciliation and Earth Base card visibility rules."
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "Earth Base no longer shows contradictory progression states such as Mission 4 alongside Control Station build gating for the same save."
+            },
+            {
+              "completed": true,
+              "text": "Player-facing progression copy makes it clear that mission stage and discovered planets are different things."
+            },
+            {
+              "completed": true,
+              "text": "Main-screen progression cards do not overlap or stack redundant guidance surfaces."
+            },
+            {
+              "completed": true,
+              "text": "Regression coverage exists for legacy save reconciliation and Earth Base card visibility rules."
+            }
+          ]
+        },
+        {
+          "field": "implementationNotes",
+          "oldValue": "✓ Reconciled legacy control/scanner progression state and removed Earth Base Star Map card. ✓ Added EarthBaseActionCard scene script so progression copy/CTA defaults live in tscn-backed cards instead of earth_base_1.gd. ✓ Earth Base now ignores historical mission log rows when no live placed rocket exists. ✓ JSON save path now uses direct writes with .bak recovery for corrupted user:// state. ✓ Stabilized later-missions suite around AppController/tutorial runtime interference.",
+          "newValue": "✓ Reconciled legacy control/scanner progression state and removed Earth Base Star Map card. ✓ Added EarthBaseActionCard scene script so progression copy/CTA defaults live in tscn-backed cards instead of earth_base_1.gd. ✓ Earth Base now ignores historical mission log rows when no live placed rocket exists. ✓ JSON save path now uses direct writes with .bak recovery for corrupted user:// state. ✓ Stabilized later-missions suite around AppController/tutorial runtime interference.\n\n✓ All ACs verified complete. Legacy state reconciliation + card overlap removal in place."
+        }
+      ],
+      "snapshot": {
+        "title": "Fix Earth Base progression state mismatch and overlapping guidance cards",
+        "description": "Reconcile contradictory mission/base progression state on older saves, clarify mission-stage vs discovery counts, and remove overlapping Earth Base guidance cards that make Mission 4 / Control Station / Star Map appear together.",
+        "status": "done",
+        "priority": "medium",
+        "assignee": "@me",
+        "labels": [],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "Earth Base no longer shows contradictory progression states such as Mission 4 alongside Control Station build gating for the same save."
+          },
+          {
+            "completed": true,
+            "text": "Player-facing progression copy makes it clear that mission stage and discovered planets are different things."
+          },
+          {
+            "completed": true,
+            "text": "Main-screen progression cards do not overlap or stack redundant guidance surfaces."
+          },
+          {
+            "completed": true,
+            "text": "Regression coverage exists for legacy save reconciliation and Earth Base card visibility rules."
+          }
+        ],
+        "implementationPlan": "1. Reconcile legacy base-state flags with authored mission progress so a save cannot be Mission 4 / Free Ops while still advertising Control Station gating.\n2. Remove or suppress the Earth-base Star Map card from the main screen when it only adds redundant or misleading discovery-count messaging.\n3. Tighten Earth-base card visibility so only one progression card family can appear at a time, even on contradictory legacy saves.\n4. Update copy/tests so mission stage is clearly progression-based, while planet charting remains a separate discovery counter.",
+        "implementationNotes": "✓ Reconciled legacy control/scanner progression state and removed Earth Base Star Map card. ✓ Added EarthBaseActionCard scene script so progression copy/CTA defaults live in tscn-backed cards instead of earth_base_1.gd. ✓ Earth Base now ignores historical mission log rows when no live placed rocket exists. ✓ JSON save path now uses direct writes with .bak recovery for corrupted user:// state. ✓ Stabilized later-missions suite around AppController/tutorial runtime interference.\n\n✓ All ACs verified complete. Legacy state reconciliation + card overlap removal in place."
       }
     }
   ]

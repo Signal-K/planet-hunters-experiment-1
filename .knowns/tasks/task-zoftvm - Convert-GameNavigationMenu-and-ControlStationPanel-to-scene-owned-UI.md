@@ -1,7 +1,7 @@
 ---
 id: zoftvm
 title: Convert GameNavigationMenu and ControlStationPanel to scene-owned UI
-status: in-progress
+status: done
 priority: high
 labels:
   - ui
@@ -9,8 +9,8 @@ labels:
   - control-station
   - scene-owned
 createdAt: '2026-04-24T06:57:02.352Z'
-updatedAt: '2026-04-24T15:16:51.496Z'
-timeSpent: 0
+updatedAt: '2026-05-08T10:30:54.540Z'
+timeSpent: 1222412
 assignee: '@me'
 ---
 # Convert GameNavigationMenu and ControlStationPanel to scene-owned UI
@@ -23,10 +23,10 @@ Move the persistent GameNavigationMenu and ControlStationPanel layouts out of GD
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 GameNavigationMenu primary layout sections live in .tscn scene/template files
-- [ ] #2 ControlStationPanel primary layout sections live in .tscn scene/template files
-- [ ] #3 Scripts bind data into scene-owned nodes instead of constructing the primary layouts in code
-- [ ] #4 Panel tests cover the converted scene-owned layout paths
+- [x] #1 GameNavigationMenu primary layout sections live in .tscn scene/template files
+- [x] #2 ControlStationPanel primary layout sections live in .tscn scene/template files
+- [x] #3 Scripts bind data into scene-owned nodes instead of constructing the primary layouts in code
+- [x] #4 Panel tests cover the converted scene-owned layout paths
 <!-- AC:END -->
 
 ## Implementation Plan
@@ -87,5 +87,7 @@ Move the persistent GameNavigationMenu and ControlStationPanel layouts out of GD
 ✓ SidescrollMining MarsPixelBackground moved into SidescrollMining.tscn; ✓ run_structure_tests 48/48
 
 ✓ Removed dead GameNavigationMenu _build_button runtime helper after scene-backed actions migration; ✓ run_structure_tests 48/48
+
+✓ All ACs verified complete. Structure suite 58/58 passes. GameNavigationMenu + ControlStationPanel fully template-backed.
 <!-- SECTION:NOTES:END -->
 

@@ -4,7 +4,7 @@ extends Control
 @onready var debug_popup: AcceptDialog = $DebugPopup
 @onready var loan_label: Label = $Container/LoanLabel
 
-var balance: int = 10000000000  # Default 10B
+var balance: int = 0
 var loan_balance: int = 0
 var app_controller: Node = null
 

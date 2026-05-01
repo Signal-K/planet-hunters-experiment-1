@@ -6,7 +6,7 @@ const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
 const TutorialLayoutZone = preload("res://Scripts/UI/TutorialLayoutZone.gd")
 const TutorialCoachTargeting = preload("res://Scripts/UI/TutorialCoachTargeting.gd")
 
-const TRANSIT_SCENE_BASENAMES := ["rocket_ascent", "rocket_transit", "rocket_return"]
+const TRANSIT_SCENE_BASENAMES := ["rocket_transit", "rocket_return"]
 const DEBRIEF_SCENE_BASENAMES := ["mission_debrief_v2"]
 const PreviewRouting = preload("res://Scripts/UI/NewMissionPreviewRouting.gd")
 const LAYOUT_REFRESH_INTERVAL := 0.15

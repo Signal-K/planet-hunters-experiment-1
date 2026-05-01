@@ -4,7 +4,7 @@ signal window_status_update(message: String)
 signal franc_balance_updated(new_value: int)
 
 var counter: int = 0
-var franc_balance: int = 10000000000
+var franc_balance: int = 0
 var _game_paused: bool = false
 var _menu_request_version: int = 0
 var _menu_request_action: String = ""

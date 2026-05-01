@@ -54,10 +54,19 @@ function resolveSafePath(rootDir, requestPath) {
   return absolutePath;
 }
 
-function sendFile(filePath, response) {
+function buildStaticHeaders(filePath) {
   const extension = path.extname(filePath).toLowerCase();
   const contentType = MIME_TYPES[extension] || "application/octet-stream";
-  response.writeHead(200, { "Content-Type": contentType });
+  return {
+    "Content-Type": contentType,
+    "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+    Pragma: "no-cache",
+    Expires: "0",
+  };
+}
+
+function sendFile(filePath, response) {
+  response.writeHead(200, buildStaticHeaders(filePath));
   fs.createReadStream(filePath).pipe(response);
 }
 
@@ -380,7 +389,7 @@ function createRequestHandler() {
     }
 
     if (method === "HEAD") {
-      response.writeHead(200);
+      response.writeHead(200, buildStaticHeaders(filePath));
       response.end();
       return;
     }

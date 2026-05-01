@@ -9,6 +9,7 @@ const MissionLogManager = preload("res://Scripts/Utils/MissionLogManager.gd")
 const SubcontractorManager = preload("res://Scripts/Utils/SubcontractorManager.gd")
 const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
 const FirstTimeMechanicTracker = preload("res://Scripts/Utils/FirstTimeMechanicTracker.gd")
+const JSONFileManager = preload("res://Scripts/Utils/JSONFileManager.gd")
 
 var reporter := TestReporter.new()
 
@@ -34,6 +35,10 @@ func run_all_tests() -> void:
 	await test_app_controller_changes_update_sync_bridge()
 	await test_init_from_react_sets_all_values()
 	await test_no_feedback_loop()
+	await test_legacy_json_balance_fallback_migrates_into_app_controller()
+	await test_app_controller_reconciles_level_from_progression_state()
+	await test_app_controller_clamps_onboarding_level_to_mission_stage()
+	await test_sync_bridge_exposes_canonical_player_snapshot()
 	await test_reset_all_restores_fresh_player_defaults()
 
 func _clear_persisted_state() -> void:
@@ -46,8 +51,9 @@ func _clear_persisted_state() -> void:
 	DirAccess.remove_absolute("user://rocket_unlock_popups.cfg")
 	DirAccess.remove_absolute("user://planet_hunters_intro_v1.cfg")
 
-func _setup() -> Dictionary:
-	_clear_persisted_state()
+func _setup(clear_state: bool = true) -> Dictionary:
+	if clear_state:
+		_clear_persisted_state()
 	var app = AppControllerScript.new()
 	app.name = "AppController"
 	get_root().add_child(app)
@@ -73,7 +79,13 @@ func test_get_state_returns_all_keys() -> void:
 	var sync = ctx["sync"]
 
 	var state = sync.get_state()
-	var expected_keys = ["counter", "francBalance", "experienceXp", "experienceLevel"]
+	var expected_keys = [
+		"counter", "francBalance", "experienceXp", "experienceLevel",
+		"playerStateVersion", "missionStage", "completedMissions",
+		"controlStationBuilt", "scannerStationBuilt", "scannerUnlocked",
+		"operationMode", "freeOperationsUnlocked", "activeMissionsCount",
+		"hasReturnedMission", "pendingMissionGuidanceId", "unlockedRockets"
+	]
 
 	for key in expected_keys:
 		if not state.has(key):
@@ -194,6 +206,127 @@ func test_no_feedback_loop() -> void:
 		await _teardown(app, sync)
 		return
 
+	reporter.pass_test()
+	await _teardown(app, sync)
+
+func test_legacy_json_balance_fallback_migrates_into_app_controller() -> void:
+	reporter.start_test("AppController loads legacy franc_balance.json when cfg is missing")
+	_clear_persisted_state()
+	JSONFileManager.save_json("user://franc_balance.json", {"balance": 321})
+	var ctx = await _setup(false)
+	var app = ctx["app"]
+	var sync = ctx["sync"]
+	if app.get_franc_balance() != 321:
+		reporter.fail_test("Expected legacy JSON balance 321, got %s" % app.get_franc_balance())
+		await _teardown(app, sync)
+		return
+	if not FileAccess.file_exists("user://franc_balance.cfg"):
+		reporter.fail_test("Expected franc_balance.cfg migration file to be created")
+		await _teardown(app, sync)
+		return
+	var state = sync.get_state()
+	if state.get("francBalance") != 321:
+		reporter.fail_test("SyncBridge should reflect migrated JSON balance, got %s" % str(state.get("francBalance")))
+		await _teardown(app, sync)
+		return
+	reporter.pass_test()
+	await _teardown(app, sync)
+
+func test_app_controller_reconciles_level_from_progression_state() -> void:
+	reporter.start_test("AppController raises level floor to match reconciled mission progression")
+	_clear_persisted_state()
+	var state = RocketsManager.load_state()
+	state["mission_progress_completed"] = 0
+	state["completed_mission_badges"] = []
+	state["control_station_built"] = true
+	state["scanner_station_built"] = true
+	state["scanner_unlocked"] = false
+	RocketsManager.save_state(state)
+	var ctx = await _setup(false)
+	var app = ctx["app"]
+	var sync = ctx["sync"]
+	if RocketsManager.get_mission_stage() < 3:
+		reporter.fail_test("Expected reconciled mission stage >= 3, got %s" % RocketsManager.get_mission_stage())
+		await _teardown(app, sync)
+		return
+	if app.get_experience_level() < 3:
+		reporter.fail_test("Expected AppController level floor >= 3 after reconciliation, got %s" % app.get_experience_level())
+		await _teardown(app, sync)
+		return
+	var bridge_state = sync.get_state()
+	if bridge_state.get("experienceLevel") < 3:
+		reporter.fail_test("Expected SyncBridge level floor >= 3 after reconciliation, got %s" % str(bridge_state.get("experienceLevel")))
+		await _teardown(app, sync)
+		return
+	reporter.pass_test()
+	await _teardown(app, sync)
+
+func test_app_controller_clamps_onboarding_level_to_mission_stage() -> void:
+	reporter.start_test("AppController clamps stale onboarding levels back to mission-stage bounds")
+	_clear_persisted_state()
+	var state = RocketsManager.load_state()
+	state["mission_progress_completed"] = 1
+	state["completed_mission_badges"] = ["mission-1"]
+	RocketsManager.save_state(state)
+	var persistence = AppControllerPersistenceScript.new()
+	persistence.save_experience(999, 9)
+	var ctx = await _setup(false)
+	var app = ctx["app"]
+	var sync = ctx["sync"]
+	var mission_stage = RocketsManager.get_mission_stage()
+	if mission_stage < 2 or mission_stage > 3:
+		reporter.fail_test("Expected onboarding mission stage to stay within authored early-game bounds, got %s" % mission_stage)
+		await _teardown(app, sync)
+		return
+	if app.get_experience_level() != mission_stage:
+		reporter.fail_test("Expected onboarding level clamp to current mission stage %s, got %s" % [mission_stage, app.get_experience_level()])
+		await _teardown(app, sync)
+		return
+	if sync.get_state().get("experienceLevel") != mission_stage:
+		reporter.fail_test("Expected SyncBridge onboarding level clamp to %s, got %s" % [mission_stage, str(sync.get_state().get("experienceLevel"))])
+		await _teardown(app, sync)
+		return
+	reporter.pass_test()
+	await _teardown(app, sync)
+
+func test_sync_bridge_exposes_canonical_player_snapshot() -> void:
+	reporter.start_test("SyncBridge mirrors canonical player snapshot fields from AppController")
+	_clear_persisted_state()
+	var state = RocketsManager.load_state()
+	state["mission_progress_completed"] = 3
+	state["completed_mission_badges"] = ["mission-1", "mission-2", "mission-3"]
+	state["control_station_built"] = true
+	state["scanner_station_built"] = true
+	state["scanner_unlocked"] = true
+	state["operation_mode"] = "survey"
+	state["missions"] = [{"rocket_id": "rocket-a", "target": "target-a", "operation_mode": "survey"}]
+	state["returned_mission"] = {"rocket_id": "rocket-b", "target_id": "target-b", "operation_mode": "contract"}
+	RocketsManager.save_state(state)
+	var ctx = await _setup(false)
+	var app = ctx["app"]
+	var sync = ctx["sync"]
+	var snapshot = app.get_player_state_snapshot("test")
+	var bridge_state = sync.get_state()
+	if int(bridge_state.get("playerStateVersion", 0)) != int(snapshot.get("schema_version", 0)):
+		reporter.fail_test("Expected snapshot schema version in SyncBridge, got %s vs %s" % [str(bridge_state.get("playerStateVersion")), str(snapshot.get("schema_version"))])
+		await _teardown(app, sync)
+		return
+	if int(bridge_state.get("missionStage", 0)) != int(snapshot.get("mission_stage", 0)):
+		reporter.fail_test("Expected missionStage from canonical snapshot, got %s vs %s" % [str(bridge_state.get("missionStage")), str(snapshot.get("mission_stage"))])
+		await _teardown(app, sync)
+		return
+	if bool(bridge_state.get("scannerUnlocked", false)) != bool(snapshot.get("scanner_unlocked", false)):
+		reporter.fail_test("Expected scannerUnlocked from canonical snapshot, got %s vs %s" % [str(bridge_state.get("scannerUnlocked")), str(snapshot.get("scanner_unlocked"))])
+		await _teardown(app, sync)
+		return
+	if str(bridge_state.get("operationMode", "")) != str(snapshot.get("operation_mode", "")):
+		reporter.fail_test("Expected operationMode from canonical snapshot, got %s vs %s" % [str(bridge_state.get("operationMode")), str(snapshot.get("operation_mode"))])
+		await _teardown(app, sync)
+		return
+	if int(bridge_state.get("activeMissionsCount", -1)) != 1 or not bool(bridge_state.get("hasReturnedMission", false)):
+		reporter.fail_test("Expected active/returned mission snapshot fields, got %s" % str(bridge_state))
+		await _teardown(app, sync)
+		return
 	reporter.pass_test()
 	await _teardown(app, sync)
 
