@@ -76,7 +76,7 @@ func _reset_to_stage(stage: int, extra: Dictionary = {}) -> void:
 	RocketsManager.clear_preview_target()
 	RocketsManager.clear_trip_contract_offer()
 	RocketsManager.set_pending_mission_guidance_id(0)
-	DirAccess.remove_absolute("user://tutorial_v2.cfg")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path("user://tutorial_v2.cfg"))
 
 func _remove_runtime_singletons() -> void:
 	for node_name in ["SyncBridge", "AppController"]:
@@ -87,7 +87,7 @@ func _remove_runtime_singletons() -> void:
 
 func _setup_controller() -> Node:
 	var c = TutorialControllerScript.new()
-	c.name = "TutorialController"
+	c.name = "TutorialControllerLaterTest"
 	get_root().add_child(c)
 	await create_timer(0.05).timeout
 	return c
@@ -274,8 +274,8 @@ func test_m3_02_m3_targets_available() -> void:
 	_reset_to_stage(3)
 	await create_timer(0.02).timeout
 	var targets: Array = RocketsManager.get_mission3_targets() as Array
-	if targets.size() < 5:
-		reporter.fail_test("Expected at least 5 cached M3 candidates, got %d" % targets.size())
+	if targets.size() < 3:
+		reporter.fail_test("Expected at least 3 cached M3 TESS candidates, got %d" % targets.size())
 		return
 	var first: Dictionary = targets[0] as Dictionary
 	if str(first.get("id", "")) == "":
@@ -296,44 +296,35 @@ func test_m3_02_m3_targets_available() -> void:
 # ─── M3 Test 3 ───────────────────────────────────────────────────────────────
 
 func test_m3_03_candidate_classification_controls_reveal_and_access() -> void:
-	reporter.start_test("M3-03: Candidate classification for TESS lightcurves and Active Asteroids")
+	reporter.start_test("M3-03: Candidate classification is planet-only in Mission 3")
 	_reset_to_stage(3)
 	await create_timer(0.02).timeout
 	var targets: Array = RocketsManager.get_mission3_targets() as Array
 	
-	# Find one TESS candidate and one Active Asteroid candidate
 	var tess_cand: Dictionary = {}
-	var asteroid_cand: Dictionary = {}
 	for t_any in targets:
 		var t: Dictionary = t_any as Dictionary
 		if str(t.get("anomalySet", "")) == "telescope-tess" and tess_cand.is_empty():
 			tess_cand = t
-		if str(t.get("anomalySet", "")) == "active-asteroids" and asteroid_cand.is_empty():
-			asteroid_cand = t
 	
 	if tess_cand.is_empty():
 		reporter.fail_test("No TESS candidate found in M3 targets")
 		return
-	if asteroid_cand.is_empty():
-		reporter.fail_test("No Active Asteroid candidate found in M3 targets")
-		return
 
-	# Test TESS classification
 	var tess_id := str(tess_cand.get("id", ""))
 	var tess_result := RocketsManager.classify_candidate_target(tess_id, "planet", 2)
 	if not bool(tess_result.get("confirmed", false)):
 		reporter.fail_test("TESS 'planet' classification should confirm the candidate")
 		return
 
-	# Test Active Asteroid classification
-	var asteroid_id := str(asteroid_cand.get("id", ""))
-	var ast_result := RocketsManager.classify_candidate_target(asteroid_id, "planet", 1)
-	if not bool(ast_result.get("confirmed", false)):
-		reporter.fail_test("Active Asteroid 'planet' classification should confirm the candidate")
-		return
-	
-	if RocketsManager.is_candidate_visit_blocked(tess_id) or RocketsManager.is_candidate_visit_blocked(asteroid_id):
-		reporter.fail_test("Confirmed candidates should not be visit-blocked")
+	for target_any in targets:
+		var target: Dictionary = target_any as Dictionary
+		if str(target.get("anomalySet", "")) != "telescope-tess":
+			reporter.fail_test("Mission 3 target list should not include non-TESS candidates")
+			return
+
+	if RocketsManager.is_candidate_visit_blocked(tess_id):
+		reporter.fail_test("Confirmed planet candidate should not be visit-blocked")
 		return
 		
 	reporter.pass_test()

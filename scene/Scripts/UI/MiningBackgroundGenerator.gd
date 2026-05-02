@@ -80,13 +80,13 @@ static func _draw_planet_disc(image: Image) -> void:
 					base = base.lightened(0.1)
 				if ((x * 2 + y) % 13) == 0:
 					base = base.darkened(0.14)
-				var src := image.get_pixel(x, y)
+				var src: Color = image.get_pixel(x, y)
 				image.set_pixel(x, y, src.lerp(base, 0.78))
 				if absf(dy + radius * 0.26) < 1.5 or absf(dy - radius * 0.02) < 1.5:
 					image.set_pixel(x, y, src.lerp(Color8(168, 132, 172, 200), 0.6))
 				elif dist <= 1.08:
 					var alpha: float = 1.0 - ((dist - 1.0) / 0.08)
-					var edge_src := image.get_pixel(x, y)
+					var edge_src: Color = image.get_pixel(x, y)
 					image.set_pixel(x, y, edge_src.lerp(Color8(169, 140, 182, int(alpha * 160.0)), alpha * 0.35))
 
 static func _draw_cloud_haze(image: Image) -> void:
@@ -103,7 +103,7 @@ static func _draw_cloud_haze(image: Image) -> void:
 		for ix in range(max(0, x_start), min(width, x_start + cloud_w)):
 			for iy in range(max(0, y - cloud_h), min(height, y + cloud_h)):
 				if absf(float(iy - y)) <= float(cloud_h) * (1.0 - absf(float(ix - x_start - cloud_w / 2)) / max(float(cloud_w) * 0.5, 1.0)):
-					var src := image.get_pixel(ix, iy)
+					var src := image.get_pixel(ix, iy) as Color
 					image.set_pixel(ix, iy, src.lerp(haze, 0.35))
 
 static func _draw_layered_ridges(image: Image) -> void:
@@ -172,7 +172,7 @@ static func _apply_theme_tint(image: Image, target_palette: Dictionary) -> void:
 	var height := image.get_height()
 	for y in range(height):
 		for x in range(width):
-			var src := image.get_pixel(x, y)
+			var src := image.get_pixel(x, y) as Color
 			image.set_pixel(x, y, src.lerp(tint, strength))
 
 static func _apply_pixel_texture(image: Image) -> void:
@@ -184,6 +184,8 @@ static func _apply_pixel_texture(image: Image) -> void:
 		for x in range(width):
 			var n := rng.randf()
 			if n < 0.065:
-				image.set_pixel(x, y, image.get_pixel(x, y).darkened(0.08))
+				var c := image.get_pixel(x, y) as Color
+				image.set_pixel(x, y, c.darkened(0.08))
 			elif n > 0.935:
-				image.set_pixel(x, y, image.get_pixel(x, y).lightened(0.07))
+				var c := image.get_pixel(x, y) as Color
+				image.set_pixel(x, y, c.lightened(0.07))

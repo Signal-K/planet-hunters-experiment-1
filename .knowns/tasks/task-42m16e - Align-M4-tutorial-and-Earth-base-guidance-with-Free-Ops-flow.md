@@ -1,28 +1,28 @@
 ---
 id: 42m16e
-title: Align M4 tutorial and Earth-base guidance with Free Ops flow
+title: Post-M3 Free Ops handoff dialogue and Earth-base guidance
 status: in-progress
 priority: medium
 labels: []
 createdAt: '2026-04-25T00:07:08.212Z'
-updatedAt: '2026-04-25T00:20:45.377Z'
+updatedAt: '2026-04-25T02:20:29.811Z'
 timeSpent: 808
 assignee: '@me'
 ---
-# Align M4 tutorial and Earth-base guidance with Free Ops flow
+# Post-M3 Free Ops handoff dialogue and Earth-base guidance
 
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-Remove outdated Mission 4 scanner-station gating after the mission reorg, align M3/M4 citizen-science and Free Operations messaging, reduce redundant Earth-base guidance surfaces, and update authoritative docs.
+Authored missions are M1, M2, and M3 only. After M3 the player enters Free Operations — there is no M4 tutorial. The transition should be handled by a single handoff dialogue, not a tutorial rail. This task tracks: (1) ensuring all Earth-base guidance surfaces reflect this, (2) ensuring no tutorial copy refers to an 'M4' step or gate, and (3) keeping docs aligned to the 3-mission authored arc.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [x] #1 Mission 4 no longer tells players to build the Scanner Station when it is already built or when M3 already introduced scanner/citizen-science flow.
-- [x] #2 Earth-base guidance surfaces do not stack into redundant tutorial dialogs for the same next action.
-- [x] #3 Tutorial and debrief copy reflect that post-M4 the player enters Free Operations with soft guidance only.
-- [x] #4 Authoritative docs are updated to match the current M3/M4 and post-M4 flow.
+- [ ] #1 No in-game copy or UI surface refers to 'Mission 4' as a tutorial step or objective — the concept does not exist
+- [ ] #2 After M3 debrief, a single handoff dialogue informs the player they are now in Free Operations
+- [ ] #3 Earth-base shows at most one soft guidance surface post-M3 (no stacked tutorial prompts)
+- [ ] #4 All authoritative docs state the authored arc is M1–M3 only; post-M3 entry to Free Ops is dialogue-only
 <!-- AC:END -->
 
 ## Implementation Plan

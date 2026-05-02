@@ -38,17 +38,15 @@ func is_planet(anomaly: Dictionary) -> bool:
 
 func is_candidate(anomaly: Dictionary) -> bool:
 	var anomaly_set = str(anomaly.get("anomalySet", "")).to_lower()
-	if anomaly_set == "active-asteroids":
-		return true
 	if is_planet(anomaly):
 		var disposition = str(anomaly.get("tess_disposition", ""))
 		return disposition == "" or disposition == "PC"
 	return false
 
 func build_title(anomaly: Dictionary, anomaly_id: String, is_planet: bool) -> String:
-	var tic_id = anomaly.get("ticId", "")
+	var tic_id = str(anomaly.get("ticId", "")).strip_edges()
 	if tic_id != "" and tic_id != null:
-		return "TIC %s" % tic_id
+		return tic_id if tic_id.begins_with("TIC ") else "TIC %s" % tic_id
 	if anomaly_id != "":
 		var item_type = "Planet" if is_planet else "Asteroid"
 		return "%s #%s" % [item_type, anomaly_id]

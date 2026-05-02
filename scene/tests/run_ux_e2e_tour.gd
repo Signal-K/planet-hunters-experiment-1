@@ -2176,12 +2176,12 @@ func _finish() -> void:
 	_report("")
 	_report("---")
 	_report("## Mission Simulation Report")
-	_report("This tour simulated a user progressing through the authoritative M1-M4 onboarding flow into Free Operations.")
+	_report("This tour simulated a user progressing through the authoritative M1-M3 onboarding flow into Free Operations.")
 	_report("")
 	_report("### Mission Summary")
 	var state := RocketsManager.load_state()
 	var completed := int(state.get("mission_progress_completed", 0))
-	_report("- Completed Onboarding Stages: %d / 4" % completed)
+	_report("- Completed Onboarding Stages: %d / 3+" % completed)
 	_report("- Free Operations Unlocked: %s" % ("Yes" if RocketsManager.is_free_operations_unlocked() else "No"))
 	
 	_report("")
@@ -2189,8 +2189,8 @@ func _finish() -> void:
 	if _user_actions.is_empty():
 		_report("- Initialized M1 Tutorial: Guided launch to 433 Eros")
 		_report("- Progressed to M2: Built Control Station, unlocked Contractor missions")
-		_report("- Progressed to M3: Classified TESS lightcurves and Active Asteroid candidates")
-		_report("- Progressed to M4: Built Scanner Station, performed remote planet scans")
+		_report("- Progressed to M3: Classified TESS lightcurves and unlocked the planet-hunting loop")
+		_report("- Entered post-tutorial play: Continued scanning and routing planet candidates")
 		_report("- Entered Free Operations: Managed multiple concurrent missions and explored the full target pool")
 	else:
 		for action in _user_actions:
@@ -2199,7 +2199,6 @@ func _finish() -> void:
 	_report("")
 	_report("### Citizen Science Integrations")
 	_report("- TESS Lightcurve Annotation: Verified in Phase 17 and Sandbox S8")
-	_report("- Active Asteroid Annotation: Verified in Phase 17 and Sandbox S4")
 	_report("- Consensus Verification: Logic exercised in M3 classification steps")
 
 	_report("")

@@ -1,5 +1,7 @@
-class_name SatelliteStation extends Structure
+extends "res://Scripts/Earth/Structure.gd"
+class_name SatelliteStation
 
+const UIManager = preload("res://Scripts/Earth/UIManager.gd")
 const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
 const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd")
 const NumberFormat = preload("res://Scripts/Utils/NumberFormat.gd")

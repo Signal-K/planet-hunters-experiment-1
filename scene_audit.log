@@ -1,0 +1,342 @@
+WorkerThreadPool: 14 threads, 10 max low-priority.
+Godot Engine v4.5.stable.official.876b29033 - https://godotengine.org
+TextServer: Added interface "Dummy"
+TextServer: Added interface "ICU / HarfBuzz / Graphite (Built-in)"
+Unrecognized output string "misc2" in mapping:
+030000007e0500006920000001010000,Nintendo Switch 2 Pro Controller,a:b0,b:b1,back:b14,dpdown:b8,dpleft:b10,dpright:b9,dpup:b11,guide:b16,leftshoulder:b12,leftstick:b15,lefttrigger:b13,leftx:a0,lefty:a1~,misc1:b17,misc2:b20,paddle1:b18,paddle2:b19,rightshoulder:b4,rightstick:b7,righttrigger:b5,rightx:a2,righty:a3~,start:b6,x:b2,y:b3,platform:Mac OS X,
+SDL: Init OK!
+Using "default" pen tablet driver...
+
+TextServer: Primary interface set to: "ICU / HarfBuzz / Graphite (Built-in)".
+CORE API HASH: 2213950498
+EDITOR API HASH: 3825216437
+SceneTreeFTI: traversal method DEFAULT
+Loading resource: /Users/scroobz/Library/Application Support/Godot/editor_settings-4.5.tres
+EditorSettings: Load OK!
+EditorTheme: Generating new theme for the config '3773473555'.
+EditorTheme: Generating new icons.
+EditorTheme: Generating new fonts.
+EditorTheme: Generating new styles.
+Loading resource: /Users/scroobz/Library/Caches/Godot/editor_doc_cache-4.5.res
+Loaded system CA certificates
+Failed to bind socket. Error: 3.
+Loading resource: res://addons/ziva_agent/audio/done-sound.wav
+Loading resource: res://.godot/imported/done-sound.wav-3eeaf711bda61d5af4827d5c3ffab946.sample
+[   0% ] [90m[1mfirst_scan_filesystem[22m | Started Project initialization (5 steps)[39m[0m
+[   0% ] [90m[1mfirst_scan_filesystem[22m | Scanning file structure...[39m[0m
+[  16% ] [90m[1mfirst_scan_filesystem[22m | Loading global class names...[39m[0m
+[  33% ] [90m[1mfirst_scan_filesystem[22m | Verifying GDExtensions...[39m[0m
+[  50% ] [90m[1mfirst_scan_filesystem[22m | Creating autoload scripts...[39m[0m
+Loading resource: res://Scripts/Systems/AppController.gd
+Loading resource: res://Scenes/UI/MissionProgressTracker.tscn
+Loading resource: res://Scripts/UI/MissionProgressTracker.gd
+Loading resource: res://Scenes/UI/MiningPracticePanel.tscn
+Loading resource: res://Scripts/UI/MiningPracticePanel.gd
+Loading resource: res://Scenes/UI/SidescrollMining.tscn
+Loading resource: res://Scripts/UI/SidescrollMining.gd
+Loading resource: res://Scenes/UI/Templates/MiningRoomDebugMarker.tscn
+Loading resource: res://Scenes/UI/Templates/MiningRoomRow.tscn
+Loading resource: res://Scenes/UI/Templates/MiningContractOrderRow.tscn
+Loading resource: res://Scenes/UI/MiningDrone.tscn
+Loading resource: res://Scripts/UI/MiningDrone.gd
+Loading resource: res://assets/Vehicles/StarterRocketStage2Frame1.png
+Loading resource: res://.godot/imported/StarterRocketStage2Frame1.png-3f5ddafc047d0dc39cd392204706ad81.ctex
+Loading resource: res://Scenes/UI/MechanicIntroOverlay.tscn
+Loading resource: res://Scripts/UI/MechanicIntroOverlay.gd
+Loading resource: res://Scenes/UI/Templates/MechanicIntroStepRow.tscn
+Loading resource: res://Scenes/UI/TutorialCoachOverlay.tscn
+Loading resource: res://Scripts/UI/TutorialCoachOverlay.gd
+Loading resource: res://Scenes/UI/FeedbackBeacon.tscn
+Loading resource: res://Scripts/UI/FeedbackBeacon.gd
+Loading resource: res://Scenes/UI/PlanetHuntersIntroSplash.tscn
+Loading resource: res://Scripts/UI/PlanetHuntersIntroSplash.gd
+Loading resource: res://Scenes/UI/LevelUpNotification.tscn
+Loading resource: res://Scripts/UI/LevelUpNotification.gd
+Loading resource: res://Scenes/UI/Templates/GameNavigationMenuRoot.tscn
+Loading resource: res://Scenes/UI/Templates/GameNavigationOverlay.tscn
+Loading resource: res://Scenes/UI/Templates/GameMenuStatsCard.tscn
+Loading resource: res://Scenes/UI/Templates/GameMenuProgressCard.tscn
+Loading resource: res://Scenes/UI/Templates/ResourceValueRow.tscn
+Loading resource: res://Scenes/UI/Templates/MenuUnlockHeader.tscn
+Loading resource: res://Scenes/UI/Templates/MenuUnlockItem.tscn
+Loading resource: res://Scenes/UI/Templates/MenuLogbookCard.tscn
+Loading resource: res://Scenes/UI/Templates/MenuLogbookKeyValueRow.tscn
+Loading resource: res://Scenes/UI/Templates/MenuLogbookEmpty.tscn
+Loading resource: res://Scenes/UI/Templates/MenuDiscoveryRow.tscn
+Loading resource: res://Scenes/UI/Templates/MenuEmptyStateLabel.tscn
+Loading resource: res://Scenes/UI/Templates/GameMenuConstructionProjectCard.tscn
+Loading resource: res://Scenes/UI/Templates/GameMenuConstructionRequirementRow.tscn
+Loading resource: res://Scenes/UI/Templates/GameMenuContributeOverlay.tscn
+Loading resource: res://Scenes/UI/Templates/GameMenuContributeMineralRow.tscn
+Loading resource: res://Scenes/UI/Templates/GameMenuContractorRow.tscn
+Loading resource: res://Scenes/UI/Templates/GameMenuMarketplaceRow.tscn
+Loading resource: res://Scenes/UI/Templates/GameMenuRoomUpgradeRow.tscn
+Loading resource: res://Scenes/UI/Templates/GameMenuResearchCard.tscn
+Loading resource: res://Scenes/UI/Templates/GameMenuContentCard.tscn
+Loading resource: res://Scenes/UI/Templates/GameMenuStatColumn.tscn
+Loading resource: res://Scenes/UI/Templates/GameMenuDebugSection.tscn
+Loading resource: res://Scenes/UI/Templates/GameMenuInfoCard.tscn
+Loading resource: res://Scenes/UI/Templates/GameMenuLegendLabel.tscn
+Loading resource: res://Scenes/UI/Templates/GameMenuActionsSection.tscn
+Loading resource: res://Scripts/Systems/SyncBridge.gd
+Loading resource: res://Scripts/UI/SafeAreaUI.gd
+[  66% ] [90m[1mfirst_scan_filesystem[22m | Initializing plugins...[39m[0m
+[  83% ] [90m[1mfirst_scan_filesystem[22m | Starting file scan...[39m[0m
+[92m[ DONE ][39m [1mfirst_scan_filesystem[22m
+[0m
+[   0% ] [90m[1mloading_editor_layout[22m | Started Loading editor (5 steps)[39m[0m
+[   0% ] [90m[1mloading_editor_layout[22m | Loading editor layout...[39m[0m
+[92m[ DONE ][39m [1mloading_editor_layout[22m
+[0m
+Loading resource: res://Scenes/Earth/earth_base_1.tscn
+Loading resource: res://assets/Backdrops/Earth1.png
+Loading resource: res://.godot/imported/Earth1.png-bfd4d5b11fc84cc9b314a88fd93351d9.ctex
+Loading resource: res://Scenes/Earth/earth_base_1.gd
+Loading resource: res://Scenes/UI/StarterRocket2UnlockOverlay.tscn
+Loading resource: res://Scenes/UI/FreeOpsUnlockOverlay.tscn
+Loading resource: res://Scripts/UI/FreeOpsUnlockOverlay.gd
+Loading resource: res://Scenes/UI/Templates/StarterRocket2HighlightChip.tscn
+Loading resource: res://Scenes/UI/EarthBaseBuildFlowOverlay.tscn
+Loading resource: res://Scripts/UI/EarthBaseBuildFlowOverlay.gd
+Loading resource: res://Scenes/UI/Templates/EarthBaseBuildFlowOptionCard.tscn
+Loading resource: res://Scenes/UI/EmergencyLoanOfferDialog.tscn
+Loading resource: res://Scripts/UI/EmergencyLoanOfferDialog.gd
+Loading resource: res://Scenes/UI/ClassificationConsensusNotification.tscn
+Loading resource: res://Scripts/UI/ClassificationConsensusNotification.gd
+Loading resource: res://Scenes/UI/Templates/TargetClassificationCard.tscn
+Loading resource: res://Scenes/UI/Templates/SceneFlashOverlay.tscn
+Loading resource: res://Scenes/UI/Templates/GenericStyledPanel.tscn
+Loading resource: res://assets/Structures/satellite_groundstation1.png
+Loading resource: res://.godot/imported/satellite_groundstation1.png-526c9b4ac882f9e67e98eed71fbefecf.ctex
+Loading resource: res://Scripts/Earth/SatelliteStation.gd
+Loading resource: res://Scripts/Earth/Launchpad.gd
+Loading resource: res://assets/Structures/launchpad.png
+Loading resource: res://.godot/imported/launchpad.png-fbe838c617fe190eba658482c6781cbf.ctex
+Loading resource: res://Scripts/Earth/Environment/EarthWeatherEngine.gd
+Loading resource: res://Scripts/Earth/Environment/EarthSkyNightFilterEvent.gd
+Loading resource: res://Shaders/Earth/earth_sky_night_filter.gdshader
+Loading resource: res://Scripts/Earth/Environment/EarthStarFieldEvent.gd
+Loading resource: res://Scripts/Earth/Environment/EarthCloudDriftEvent.gd
+Loading resource: res://Scripts/Earth/Environment/EarthSkyMapEvent.gd
+Loading resource: res://Scenes/UI/Templates/EarthBaseActionCard.tscn
+Failed to bind socket. Error: 3.
+Script docs haven't been properly loaded or regenerated, so don't save them to disk.
+EditorSettings: Save OK!
+XR: Clearing primary interface
+XR: Removed interface "Native mobile"
+XR: Removed interface "OpenXR"
+Orphan StringName: InputMap (static: 1, total: 3)
+Orphan StringName: PhysicsMaterial (static: 1, total: 3)
+Orphan StringName: Mesh (static: 1, total: 3)
+Orphan StringName: X509Certificate (static: 1, total: 3)
+Orphan StringName: Tween (static: 1, total: 3)
+Orphan StringName: HScrollBar (static: 1, total: 3)
+Orphan StringName: Shader (static: 1, total: 3)
+Orphan StringName: JSON (static: 1, total: 3)
+Orphan StringName: EditorDebuggerSession (static: 1, total: 3)
+Orphan StringName: Tree (static: 33, total: 35)
+Orphan StringName: ImageTexture (static: 4, total: 6)
+Orphan StringName: LineEdit (static: 7, total: 9)
+Orphan StringName: MainLoop (static: 1, total: 3)
+Orphan StringName: TileMapPattern (static: 1, total: 3)
+Orphan StringName: EditorDebuggerPlugin (static: 1, total: 3)
+Orphan StringName: AudioStreamPlayer (static: 2, total: 4)
+Orphan StringName: Camera2D (static: 2, total: 4)
+Orphan StringName: Camera3D (static: 2, total: 4)
+Orphan StringName: Label (static: 13, total: 15)
+Orphan StringName: TriangleMesh (static: 1, total: 3)
+Orphan StringName: CharFXTransform (static: 1, total: 3)
+Orphan StringName: TextureRect (static: 1, total: 3)
+Orphan StringName: TLSOptions (static: 1, total: 3)
+Orphan StringName: InputEvent (static: 1, total: 3)
+Orphan StringName: InputEventMouse (static: 1, total: 3)
+Orphan StringName: ClearOutputLogsToolZiva (static: 0, total: 3)
+Orphan StringName: GetInputMapToolZiva (static: 0, total: 3)
+Orphan StringName: EditorNode3DGizmoPlugin (static: 1, total: 3)
+Orphan StringName: NavigationPolygon (static: 1, total: 3)
+Orphan StringName: EditorExportPlugin (static: 1, total: 3)
+Orphan StringName: InputEventWithModifiers (static: 1, total: 3)
+Orphan StringName: Control (static: 4, total: 6)
+Orphan StringName: Shape2D (static: 1, total: 3)
+Orphan StringName: Shape3D (static: 1, total: 3)
+Orphan StringName: ConfigureSpriteFramesToolZiva (static: 0, total: 3)
+Orphan StringName: Input (static: 1, total: 3)
+Orphan StringName: EraseRectangleToolZiva (static: 0, total: 3)
+Orphan StringName: WebSocketServerZiva (static: 0, total: 3)
+Orphan StringName: ConfigFile (static: 1, total: 3)
+Orphan StringName: InputEventFromWindow (static: 1, total: 3)
+Orphan StringName: ResourceLoader (static: 1, total: 3)
+Orphan StringName: ScriptEditorBase (static: 1, total: 3)
+Orphan StringName: UndoRedo (static: 1, total: 3)
+Orphan StringName: Button (static: 3, total: 5)
+Orphan StringName: AddResourceToolZiva (static: 0, total: 3)
+Orphan StringName: CreateFileToolZiva (static: 0, total: 3)
+Orphan StringName: DockZiva (static: 0, total: 3)
+Orphan StringName: WebSocketPeer (static: 1, total: 3)
+Orphan StringName: SnapshotManagerZiva (static: 0, total: 3)
+Orphan StringName: UidToProjectPathToolZiva (static: 0, total: 3)
+Orphan StringName: SubViewport (static: 1, total: 3)
+Orphan StringName: ScriptLanguage (static: 1, total: 3)
+Orphan StringName: ValidatePhysicsSetupToolZiva (static: 0, total: 3)
+Orphan StringName: SavePixelArtToolZiva (static: 0, total: 3)
+Orphan StringName: StreamPeer (static: 1, total: 3)
+Orphan StringName: CenterContainer (static: 1, total: 3)
+Orphan StringName: EditorFileSystem (static: 1, total: 3)
+Orphan StringName: ResourceUID (static: 1, total: 3)
+Orphan StringName: StopRunningSceneToolZiva (static: 0, total: 3)
+Orphan StringName: Font (static: 1, total: 3)
+Orphan StringName: VBoxContainer (static: 1, total: 3)
+Orphan StringName: DrawVerticalLineToolZiva (static: 0, total: 3)
+Orphan StringName: TileSet (static: 4, total: 6)
+Orphan StringName: EditorExportPlatform (static: 1, total: 3)
+Orphan StringName: FillRectangleToolZiva (static: 0, total: 3)
+Orphan StringName: GetSceneTreeToolZiva (static: 0, total: 3)
+Orphan StringName: GrepToolZiva (static: 0, total: 3)
+Orphan StringName: GetTileMapStateToolZiva (static: 0, total: 3)
+Orphan StringName: ResourceFormatSaver (static: 1, total: 3)
+Orphan StringName: EditorPaths (static: 1, total: 3)
+Orphan StringName: MoveNodeToolZiva (static: 0, total: 3)
+Orphan StringName: Node3DGizmo (static: 1, total: 3)
+Orphan StringName: EditorFileDialog (static: 1, total: 3)
+Orphan StringName: EditorInspector (static: 2, total: 4)
+Orphan StringName: Image (static: 1, total: 3)
+Orphan StringName: Resource (static: 1, total: 3)
+Orphan StringName: CodeEdit (static: 1, total: 3)
+Orphan StringName: AudioStream (static: 1, total: 3)
+Orphan StringName: Popup (static: 2, total: 4)
+Orphan StringName: SplitContainer (static: 1, total: 3)
+Orphan StringName: EditorSyntaxHighlighter (static: 1, total: 3)
+Orphan StringName: OS (static: 1, total: 3)
+Orphan StringName: Viewport (static: 1, total: 3)
+Orphan StringName: ItemList (static: 2, total: 4)
+Orphan StringName: MultiplayerAPI (static: 1, total: 3)
+Orphan StringName: EditorInterface (static: 1, total: 3)
+Orphan StringName: Timer (static: 1, total: 3)
+Orphan StringName: DisplayServer (static: 1, total: 3)
+Orphan StringName: PacketPeer (static: 1, total: 3)
+Orphan StringName: Marshalls (static: 1, total: 3)
+Orphan StringName: FileAccess (static: 1, total: 3)
+Orphan StringName: EditorTranslationParserPlugin (static: 1, total: 3)
+Orphan StringName: ResourceImporter (static: 1, total: 3)
+Orphan StringName: OccluderPolygon2D (static: 1, total: 3)
+Orphan StringName: EditFileToolZiva (static: 0, total: 3)
+Orphan StringName: WebviewZiva (static: 0, total: 3)
+Orphan StringName: ButtonGroup (static: 1, total: 3)
+Orphan StringName: TabBar (static: 1, total: 3)
+Orphan StringName: TileSetSource (static: 1, total: 3)
+Orphan StringName: SearchGodotDocsToolZiva (static: 0, total: 3)
+Orphan StringName: ConcavePolygonShape3D (static: 1, total: 3)
+Orphan StringName: VSplitContainer (static: 2, total: 4)
+Orphan StringName: ZIPReader (static: 1, total: 3)
+Orphan StringName: EditorCommandPalette (static: 1, total: 3)
+Orphan StringName: RegExMatch (static: 1, total: 3)
+Orphan StringName: EditorNode3DGizmo (static: 1, total: 3)
+Orphan StringName: EditorResourceConversionPlugin (static: 1, total: 3)
+Orphan StringName: AudioStreamPlayback (static: 1, total: 3)
+Orphan StringName: CanvasItem (static: 1, total: 3)
+Orphan StringName: Node2D (static: 3, total: 5)
+Orphan StringName: TileSetAtlasSource (static: 1, total: 3)
+Orphan StringName: Node3D (static: 4, total: 6)
+Orphan StringName: ValidateTileMapStructureToolZiva (static: 0, total: 3)
+Orphan StringName: TempSingletonZiva (static: 0, total: 3)
+Orphan StringName: EditorFileSystemDirectory (static: 1, total: 3)
+Orphan StringName: GetNodePropertiesToolZiva (static: 0, total: 3)
+Orphan StringName: PanelContainer (static: 1, total: 3)
+Orphan StringName: GetTileSetInfoToolZiva (static: 0, total: 3)
+Orphan StringName: BoxContainer (static: 1, total: 3)
+Orphan StringName: BaseToolZiva (static: 0, total: 2)
+Orphan StringName: EditorSceneFormatImporter (static: 1, total: 3)
+Orphan StringName: SceneTree (static: 1, total: 3)
+Orphan StringName: ScrollContainer (static: 1, total: 3)
+Orphan StringName: EditorResourcePreview (static: 1, total: 3)
+Orphan StringName: GlobToolZiva (static: 0, total: 3)
+Orphan StringName: ReadToolZiva (static: 0, total: 3)
+Orphan StringName: CollisionShape2D (static: 1, total: 3)
+Orphan StringName: InputEventMouseMotion (static: 1, total: 3)
+Orphan StringName: InputEventMouseButton (static: 1, total: 3)
+Orphan StringName: ToolCallResultZiva (static: 0, total: 2)
+Orphan StringName: CryptoKey (static: 1, total: 3)
+Orphan StringName: Container (static: 1, total: 3)
+Orphan StringName: Texture (static: 1, total: 3)
+Orphan StringName: ResourceSaver (static: 1, total: 3)
+Orphan StringName: TCPServer (static: 1, total: 3)
+Orphan StringName: CanvasLayer (static: 1, total: 3)
+Orphan StringName: EditorScenePostImportPlugin (static: 1, total: 3)
+Orphan StringName: World2D (static: 1, total: 3)
+Orphan StringName: World3D (static: 1, total: 3)
+Orphan StringName: OpenSceneToolZiva (static: 0, total: 3)
+Orphan StringName: ContextGathererZiva (static: 0, total: 2)
+Orphan StringName: GetGodotErrorsToolZiva (static: 0, total: 3)
+Orphan StringName: Material (static: 1, total: 3)
+Orphan StringName: Node (static: 8, total: 11)
+Orphan StringName: SkinReference (static: 1, total: 3)
+Orphan StringName: ScriptCreateDialog (static: 1, total: 3)
+Orphan StringName: ProjectSettings (static: 1, total: 3)
+Orphan StringName: DirAccess (static: 1, total: 3)
+Orphan StringName: TextServer (static: 1, total: 3)
+Orphan StringName: RunTestsToolZiva (static: 0, total: 3)
+Orphan StringName: StyleBoxEmpty (static: 1, total: 3)
+Orphan StringName: RefCounted (static: 1, total: 3)
+Orphan StringName: DockWebviewZiva (static: 0, total: 3)
+Orphan StringName: RmToolZiva (static: 0, total: 3)
+Orphan StringName: TabContainer (static: 8, total: 10)
+Orphan StringName: Engine (static: 1, total: 3)
+Orphan StringName: StreamPeerTCP (static: 1, total: 3)
+Orphan StringName: EditorPlugin (static: 2, total: 4)
+Orphan StringName: Object (static: 5, total: 7)
+Orphan StringName: DrawHorizontalLineToolZiva (static: 0, total: 3)
+Orphan StringName: Theme (static: 1, total: 3)
+Orphan StringName: FileSystemDock (static: 1, total: 3)
+Orphan StringName: TextEdit (static: 3, total: 5)
+Orphan StringName: SyntaxHighlighter (static: 1, total: 3)
+Orphan StringName: LabelSettings (static: 1, total: 3)
+Orphan StringName: GetTilemapLayoutToolZiva (static: 0, total: 3)
+Orphan StringName: DrawStairsToolZiva (static: 0, total: 3)
+Orphan StringName: ProjectPathToUidToolZiva (static: 0, total: 3)
+Orphan StringName: SpriteFrames (static: 1, total: 3)
+Orphan StringName: TileData (static: 1, total: 3)
+Orphan StringName: AcceptDialog (static: 1, total: 3)
+Orphan StringName: RichTextLabel (static: 1, total: 3)
+Orphan StringName: Shortcut (static: 1, total: 3)
+Orphan StringName: HBoxContainer (static: 1, total: 3)
+Orphan StringName: UpdateProjectSettingToolZiva (static: 0, total: 3)
+Orphan StringName: EditorPluginZiva (static: 0, total: 3)
+Orphan StringName: GetProjectInfoToolZiva (static: 0, total: 3)
+Orphan StringName: ConvexPolygonShape3D (static: 1, total: 3)
+Orphan StringName: InputEventKey (static: 1, total: 3)
+Orphan StringName: EditorSettings (static: 1, total: 3)
+Orphan StringName: ScriptEditor (static: 2, total: 4)
+Orphan StringName: StandardMaterial3D (static: 1, total: 3)
+Orphan StringName: ResourceFormatLoader (static: 1, total: 3)
+Orphan StringName: MultiMesh (static: 1, total: 3)
+Orphan StringName: EditorImportPlugin (static: 1, total: 3)
+Orphan StringName: ScrollBar (static: 1, total: 3)
+Orphan StringName: EditorUndoRedoManager (static: 1, total: 3)
+Orphan StringName: HTTPClient (static: 1, total: 3)
+Orphan StringName: ConfigureTileSetAtlasToolZiva (static: 0, total: 3)
+Orphan StringName: EditorSelection (static: 1, total: 3)
+Orphan StringName: PackedScene (static: 1, total: 3)
+Orphan StringName: TreeItem (static: 1, total: 3)
+Orphan StringName: EditorInspectorPlugin (static: 1, total: 3)
+Orphan StringName: Texture2D (static: 1, total: 3)
+Orphan StringName: Window (static: 6, total: 8)
+Orphan StringName: StyleBox (static: 1, total: 3)
+Orphan StringName: Range (static: 1, total: 3)
+Orphan StringName: Time (static: 2, total: 4)
+Orphan StringName: AnimatedSprite2D (static: 1, total: 3)
+Orphan StringName: ViewportTexture (static: 1, total: 3)
+Orphan StringName: GetOpenScriptsToolZiva (static: 0, total: 3)
+Orphan StringName: BaseMaterial3D (static: 1, total: 3)
+Orphan StringName: ClassDB (static: 1, total: 3)
+Orphan StringName: DuplicateNodeToolZiva (static: 0, total: 3)
+Orphan StringName: VScrollBar (static: 1, total: 3)
+Orphan StringName: GetEditorScreenshotToolZiva (static: 0, total: 3)
+Orphan StringName: ConfirmationDialog (static: 1, total: 3)
+Orphan StringName: BaseButton (static: 1, total: 3)
+Orphan StringName: SceneState (static: 1, total: 3)
+Orphan StringName: RichTextEffect (static: 1, total: 3)
+Orphan StringName: ToolManagerZiva (static: 0, total: 3)
+Orphan StringName: RegEx (static: 1, total: 3)
+Orphan StringName: Script (static: 7, total: 9)
+Orphan StringName: PopupMenu (static: 2, total: 4)
+StringName: 214 unclaimed string names at exit.

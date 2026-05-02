@@ -1,5 +1,7 @@
-class_name ControlStation extends Structure
+extends "res://Scripts/Earth/Structure.gd"
+class_name ControlStation
 
+const UIManager = preload("res://Scripts/Earth/UIManager.gd")
 
 func _ready():
 	super._ready()

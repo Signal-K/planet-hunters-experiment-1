@@ -1,28 +1,28 @@
 extends Control
 class_name LaunchWizardMapStep
-## Orbital mini-map embedded in the LaunchWizard TARGET step.
-## Draws targets as interactive dots on concentric orbit rings.
+## Galaxy-map target picker embedded in the LaunchWizard TARGET step.
+## Renders targets as clickable star dots on a dark starfield.
 
 signal target_selected(target: Dictionary)
 
-const TargetLabelScene = preload("res://Scenes/UI/Templates/LaunchWizardMapTargetLabel.tscn")
+const MapTargetLabelScene = preload("res://Scenes/UI/Templates/LaunchWizardMapTargetLabel.tscn")
+const MapTargetLabelSelectedScene = preload("res://Scenes/UI/Templates/LaunchWizardMapTargetLabelSelected.tscn")
+const STAR_COUNT := 180
+const _COL_BG := Color(0.028, 0.040, 0.090, 1.0)
+const _COL_STAR_FG := Color(0.88, 0.90, 0.96, 0.75)
+const _COL_SEL_RIM := Color(0.32, 0.86, 0.74, 1.0)
+const _COL_GRID := Color(0.22, 0.54, 0.80, 0.08)
 
-const _COL_BG    := Color(0.028, 0.047, 0.118, 1.0)
-const _COL_ORBIT := Color(0.275, 0.420, 0.651, 0.35)
-const _COL_SUN   := Color(1.000, 0.918, 0.580, 1.0)
-const _COL_AST   := Color(0.780, 0.710, 0.570, 1.0)
-const _COL_PLN   := Color(0.380, 0.630, 0.870, 1.0)
-const _COL_SEL   := Color(0.320, 0.860, 0.740, 1.0)
-
-var _targets:     Array  = []
+var _targets: Array = []
 var _selected_id: String = ""
-var _labels:      Array  = []
-
+var _bg_stars: Array[Dictionary] = []
+var _last_size: Vector2 = Vector2.ZERO
 @onready var _label_layer: Control = $LabelLayer
 
 func setup(targets: Array, selected_id: String = "") -> void:
-	_targets     = targets
+	_targets = targets
 	_selected_id = selected_id
+	_rebuild_stars()
 	_sync_labels()
 	queue_redraw()
 
@@ -34,139 +34,134 @@ func set_selected(target_id: String) -> void:
 func _ready() -> void:
 	mouse_filter = MOUSE_FILTER_STOP
 	clip_contents = true
+	_rebuild_stars()
+	_sync_labels()
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED:
+		_rebuild_stars()
 		_sync_labels()
 		queue_redraw()
 
-func _draw() -> void:
-	if size.x < 10 or size.y < 10:
+func _rebuild_stars() -> void:
+	if size == _last_size:
 		return
-	var ctr := _center()
+	_last_size = size
+	_bg_stars.clear()
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 9173
+	for _i: int in range(STAR_COUNT):
+		var star: Dictionary = {
+			"pos": Vector2(rng.randf_range(0.0, size.x), rng.randf_range(0.0, size.y)),
+			"r": rng.randf_range(0.5, 1.6),
+			"a": rng.randf_range(0.15, 0.65),
+		}
+		_bg_stars.append(star)
+
+func _draw() -> void:
+	if size.x < 10.0 or size.y < 10.0:
+		return
 
 	draw_rect(Rect2(Vector2.ZERO, size), _COL_BG)
+	_draw_grid()
 
-	# Deterministic star field
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 7331
-	for i in 90:
-		draw_circle(
-			Vector2(rng.randf_range(4, size.x - 4), rng.randf_range(4, size.y - 4)),
-			rng.randf_range(0.5, 1.8),
-			Color(1, 1, 1, rng.randf_range(0.15, 0.60)))
+	for star: Dictionary in _bg_stars:
+		var star_pos: Vector2 = star.get("pos", Vector2.ZERO)
+		var star_radius: float = float(star.get("r", 1.0))
+		var star_alpha: float = float(star.get("a", 0.5))
+		draw_circle(star_pos, star_radius, Color(1.0, 1.0, 1.0, star_alpha))
 
-	_draw_star_system_markers()
-
-	# Orbit rings (one per distinct radius band)
-	var seen: Array[float] = []
-	for t in _targets:
-		var r := _orbit_r(t, ctr)
-		var dup := false
-		for s in seen:
-			if absf(s - r) < 6.0:
-				dup = true
-				break
-		if not dup:
-			seen.append(r)
-			draw_arc(ctr, r, 0.0, TAU, maxi(int(r * 1.4), 32), _COL_ORBIT, 1.2, true)
-
-	# Sun glow + core
-	draw_circle(ctr, 22, Color(1.0, 0.92, 0.58, 0.12))
-	draw_circle(ctr, 10, _COL_SUN)
-
-	# Target dots
-	for t in _targets:
-		var pos := _pos(t, ctr)
-		var col := _COL_PLN if t.get("type", "asteroid") == "planet" else _COL_AST
-		var sel := _selected_id == str(t.get("id", ""))
-		var rad := 9   if t.get("type", "asteroid") == "planet" else 6
-		if sel:
-			draw_circle(pos, rad + 10, Color(col.r, col.g, col.b, 0.18))
-			draw_arc(pos, rad + 8, 0.0, TAU, 32, _COL_SEL, 2.0, true)
-		draw_circle(pos, rad, col)
-
-func _gui_input(event: InputEvent) -> void:
-	if not (event is InputEventMouseButton
-			and (event as InputEventMouseButton).pressed
-			and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT):
-		return
-	var ctr  := _center()
-	var mpos := (event as InputEventMouseButton).position
-	for t in _targets:
-		if _pos(t, ctr).distance_to(mpos) <= 20.0:
-			_selected_id = str(t.get("id", ""))
-			_sync_labels()
-			queue_redraw()
-			target_selected.emit(t)
-			return
-
-# Helpers
-
-func _center() -> Vector2:
-	return Vector2(size.x * 0.5, size.y * 0.56)
-
-func _orbit_r(t: Dictionary, ctr: Vector2) -> float:
-	var dist  := float(t.get("distance_au", 12.0))
-	var max_r := minf(ctr.x * 0.86, ctr.y * 0.92)
-	var min_r := max_r * 0.16
-	if t.get("type", "asteroid") == "planet":
-		return lerpf(max_r * 0.62, max_r, clampf((dist - 90.0) / 260.0, 0.0, 1.0))
-	return lerpf(min_r, max_r * 0.50, clampf((dist - 2.0) / 22.0, 0.0, 1.0))
-
-func _pos(t: Dictionary, ctr: Vector2) -> Vector2:
-	var r   := _orbit_r(t, ctr)
-	var h: int = abs(str(t.get("id", t.get("label", "x"))).hash())
-	var ang := float(h % 1000) / 1000.0 * TAU
-	return ctr + Vector2(cos(ang) * r, sin(ang) * r * 0.52)  # slightly elliptical
-
-func _draw_star_system_markers() -> void:
-	var systems := _star_systems()
-	if systems.size() <= 1:
-		return
-	var start_x := 28.0
-	var y := 30.0
-	for i in range(systems.size()):
-		var x := start_x + float(i) * 46.0
-		var pos := Vector2(x, y)
-		draw_circle(pos, 12.0, Color(1.0, 0.92, 0.58, 0.12))
-		draw_circle(pos, 5.0, _COL_SUN)
-		draw_circle(pos + Vector2(8.0, 2.0), 2.2, Color(0.78, 0.88, 1.0, 0.85))
-
-func _star_systems() -> Array:
-	var seen := {}
-	var out := []
-	for target_any in _targets:
+	for target_any: Variant in _targets:
 		if typeof(target_any) != TYPE_DICTIONARY:
 			continue
 		var target: Dictionary = target_any
-		var system_id := str(target.get("star_system_id", target.get("parent_star", ""))).strip_edges()
-		if system_id == "" or seen.has(system_id):
+		var pos: Vector2 = _pos_for(target)
+		var sel: bool = _selected_id == str(target.get("id", ""))
+		var col: Color = _star_color(target)
+		var rad: float = 7.0 if str(target.get("type", "asteroid")) == "planet" else 5.0
+
+		draw_circle(pos, rad * 2.6, Color(col.r, col.g, col.b, 0.18))
+
+		if sel:
+			draw_arc(pos, rad + 8.0, 0.0, TAU, 40, _COL_SEL_RIM, 2.0, true)
+			draw_circle(pos, rad + 14.0, Color(_COL_SEL_RIM.r, _COL_SEL_RIM.g, _COL_SEL_RIM.b, 0.12))
+
+		draw_circle(pos, rad, col)
+
+func _gui_input(event: InputEvent) -> void:
+	if not (event is InputEventMouseButton \
+			and (event as InputEventMouseButton).pressed \
+			and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT):
+		return
+	var mpos: Vector2 = (event as InputEventMouseButton).position
+	for target_any: Variant in _targets:
+		if typeof(target_any) != TYPE_DICTIONARY:
 			continue
-		seen[system_id] = true
-		out.append(system_id)
-	return out
+		var target: Dictionary = target_any
+		if _pos_for(target).distance_to(mpos) <= 22.0:
+			_selected_id = str(target.get("id", ""))
+			queue_redraw()
+			target_selected.emit(target)
+			return
+
+func _draw_grid() -> void:
+	var step := 48.0
+	var x := step
+	while x < size.x:
+		draw_line(Vector2(x, 0.0), Vector2(x, size.y), _COL_GRID, 1.0)
+		x += step
+	var y := step
+	while y < size.y:
+		draw_line(Vector2(0.0, y), Vector2(size.x, y), _COL_GRID, 1.0)
+		y += step
 
 func _sync_labels() -> void:
-	for n in _labels:
-		if is_instance_valid(n):
-			n.queue_free()
-	_labels.clear()
-	var draw_size := size
-	if draw_size.x < 10.0 or draw_size.y < 10.0:
-		draw_size = Vector2(maxf(draw_size.x, 96.0), maxf(draw_size.y, 96.0))
-	var ctr := Vector2(draw_size.x * 0.5, draw_size.y * 0.56)
-	for t in _targets:
-		var pos := _pos(t, ctr)
-		var sel := _selected_id == str(t.get("id", ""))
-		var lbl: Label = TargetLabelScene.instantiate()
-		lbl.set_meta("ui_template", "LaunchWizardMapTargetLabel")
-		lbl.text = str(t.get("label", t.get("name", "?")))
-		lbl.add_theme_color_override("font_color",
-				Color(1.0, 1.0, 1.0, 1.0) if sel else Color(0.9, 0.95, 1.0, 0.70))
-		lbl.position = pos + Vector2(-32.0, -26.0)
-		if _label_layer:
-			_label_layer.add_child(lbl)
-		else:
-			add_child(lbl)
-		_labels.append(lbl)
+	if _label_layer == null:
+		return
+	for child in _label_layer.get_children():
+		child.queue_free()
+	for target_any: Variant in _targets:
+		if typeof(target_any) != TYPE_DICTIONARY:
+			continue
+		var target: Dictionary = target_any
+		var sel := _selected_id == str(target.get("id", ""))
+		var label_scene := MapTargetLabelSelectedScene if sel else MapTargetLabelScene
+		var label := label_scene.instantiate() as Label
+		if label == null:
+			continue
+		label.set_meta("ui_template", "LaunchWizardMapTargetLabel")
+		label.text = str(target.get("label", target.get("name", "?"))).to_upper()
+		label.modulate = Color(1, 1, 1, 1.0 if sel else 0.82)
+		var pos := _pos_for(target)
+		label.position = Vector2(pos.x - 48.0, pos.y + 10.0)
+		_label_layer.add_child(label)
+
+func _pos_for(t: Dictionary) -> Vector2:
+	var h: int = abs(str(t.get("id", t.get("label", "x"))).hash())
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = h
+	var margin: float = 48.0
+	var min_x: float = margin
+	var max_x: float = maxf(margin, size.x - margin)
+	var min_y: float = margin
+	var max_y: float = maxf(margin, size.y - margin)
+	return Vector2(
+		rng.randf_range(min_x, max_x),
+		rng.randf_range(min_y, max_y)
+	)
+
+func _star_color(t: Dictionary) -> Color:
+	var h: int = abs(str(t.get("id", "x")).hash())
+	match h % 6:
+		0:
+			return Color(0.98, 0.90, 0.60, 1.0)
+		1:
+			return Color(0.70, 0.85, 1.00, 1.0)
+		2:
+			return Color(1.00, 0.60, 0.35, 1.0)
+		3:
+			return Color(0.60, 0.80, 1.00, 1.0)
+		4:
+			return Color(0.95, 0.55, 0.35, 1.0)
+		_:
+			return Color(0.78, 0.90, 1.00, 1.0)

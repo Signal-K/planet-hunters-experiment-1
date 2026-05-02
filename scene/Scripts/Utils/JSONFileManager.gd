@@ -103,9 +103,9 @@ static func _to_pretty(value, level: int = 0) -> String:
 	var t = typeof(value)
 	if t == TYPE_DICTIONARY:
 		var s = "{\n"
-		var keys = value.keys()
+		var keys: Array = value.keys()
 		for k in keys:
-			var v = value.get(k)
+			var v: Variant = value.get(k)
 			s += _indent(level + 1) + '"' + str(k) + '": ' + _to_pretty(v, level + 1) + ",\n"
 		if s.ends_with(",\n"):
 			s = s.substr(0, s.length() - 2) + "\n"

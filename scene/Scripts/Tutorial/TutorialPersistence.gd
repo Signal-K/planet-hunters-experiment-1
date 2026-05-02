@@ -36,4 +36,6 @@ func load_state(default_state: Dictionary) -> Dictionary:
 	return out
 
 func reset() -> void:
-	DirAccess.remove_absolute(TUTORIAL_STATE_PATH)
+	var absolute_path := ProjectSettings.globalize_path(TUTORIAL_STATE_PATH)
+	if absolute_path != "":
+		DirAccess.remove_absolute(absolute_path)

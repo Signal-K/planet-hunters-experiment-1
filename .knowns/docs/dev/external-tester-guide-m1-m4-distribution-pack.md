@@ -1,10 +1,8 @@
 ---
-title: External Tester Guide — M1-M4 Distribution Pack
+title: External Tester Guide — M1-M3 Distribution Pack
+description: 'Step-by-step tester script for first external testers: launch, mine, debrief, next mission, PWA install. Authored arc is M1-M3 only. Includes feedback capture and rollback path.'
 createdAt: '2026-04-22T04:01:09.805Z'
-updatedAt: '2026-04-22T04:01:37.289Z'
-description: >-
-  Step-by-step tester script for first external testers: launch, mine, debrief,
-  next mission, PWA install. Includes feedback capture and rollback path.
+updatedAt: '2026-04-25T02:24:01.941Z'
 tags:
   - testing
   - distribution
@@ -12,6 +10,7 @@ tags:
   - pwa
   - mvp
 ---
+
 # Planet Hunters — External Tester Guide (MVP M1-M4)
 
 **Last updated:** 2026-04-22  
@@ -120,3 +119,9 @@ The previous production deployment URL is always visible in `vercel ls` output.
 A git revert + `npm run deploy` also restores a known-good state from any prior commit.
 
 **Current git SHA at time of writing:** See `git log --oneline -1` in the repo root.
+
+---
+
+## ⚠️ 2026-04-25 Note
+
+This guide was written as "M1-M4" but the authored arc is **M1-M3 only**. There is no M4 tutorial. After M3 the player receives a handoff dialogue and enters Free Operations. Parts 1-3 of this guide (M1-M2) remain valid. No M4 step-by-step guide is needed.

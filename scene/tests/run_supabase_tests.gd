@@ -18,7 +18,7 @@ func _init() -> void:
     run_tests()
 
 func run_tests() -> void:
-    reporter.start_test("Fetch anomalies (active-asteroids)")
+    reporter.start_test("Fetch anomalies (telescope-tess)")
     var SupabaseClientScript = load("res://Scripts/Systems/SupabaseClient.gd")
     if SupabaseClientScript == null:
         reporter.fail_test("Could not load SupabaseClient.gd")
@@ -29,9 +29,9 @@ func run_tests() -> void:
     get_root().add_child(_client)
     await create_timer(0.05).timeout
     print("Supabase tests: using SUPABASE_URL=", _client.SUPABASE_URL)
-    print("Supabase tests: issuing HTTP request for anomaly_set=active-asteroids, limit=1")
+    print("Supabase tests: issuing HTTP request for anomaly_set=telescope-tess, limit=1")
     # Call fetch_anomalies with a short timeout watcher
-    _client.fetch_anomalies("active-asteroids", 1, Callable(self, "_on_fetch"))
+    _client.fetch_anomalies("telescope-tess", 1, Callable(self, "_on_fetch"))
     # Timeout in 10 seconds
     var timer = create_timer(10.0)
     timer.timeout.connect(Callable(self, "_on_timeout"))

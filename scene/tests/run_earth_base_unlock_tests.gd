@@ -26,7 +26,8 @@ func run_all_tests() -> void:
 	await test_sr2_unlock_overlay_matches_layout_and_copy()
 	await test_free_ops_unlock_overlay_uses_scene_owned_dashboard_nodes()
 	await test_earth_base_active_mission_card_overrides_build_prompt()
-	await test_tutorial_overlay_uses_active_mission_context_on_earth_base()
+	await test_tutorial_overlay_suppresses_progression_cards_on_earth_base()
+	await test_tutorial_overlay_suppresses_progression_cards_when_it_appears_after_initial_build()
 	await test_build_flow_blocks_structures_before_mission_2()
 	await test_mission_2_build_flow_places_control_station_after_earth_base_selection()
 	await test_tutorial_control_station_cta_opens_guided_build_flow()
@@ -254,8 +255,19 @@ func test_earth_base_active_mission_card_overrides_build_prompt() -> void:
 	reporter.start_test("Earth base shows active mission card instead of build prompt when a mission is already armed")
 	_reset_rockets_state()
 	RocketsManager.reset_state()
+	var stale_overlay := get_root().get_node_or_null("TutorialCoachOverlay")
+	if stale_overlay:
+		stale_overlay.queue_free()
+		await create_timer(0.02).timeout
 	RocketsManager.mark_mission_completed("mission-1-active-card-test")
-	RocketsManager.add_placed("starterrocket1", Vector2(-110.0, -170.0))
+	var rocket_id := RocketsManager.add_placed("starterrocket1", Vector2(-110.0, -170.0))
+	var contractors := RocketsManager.get_trip_contractors()
+	if not contractors.is_empty():
+		var first_contractor: Dictionary = contractors[0]
+		var contractor_id := str(first_contractor.get("id", ""))
+		if contractor_id != "":
+			RocketsManager.select_trip_contractor(contractor_id)
+	RocketsManager.ensure_selected_target_for_launch(rocket_id)
 	var scene = EarthBaseScene.instantiate()
 	get_root().add_child(scene)
 	current_scene = scene
@@ -274,8 +286,9 @@ func test_earth_base_active_mission_card_overrides_build_prompt() -> void:
 		scene.queue_free()
 		RocketsManager.reset_state()
 		return
-	if _find_visible_label_containing(cards_root, "Launch Ready on Pad") == null:
-		reporter.fail_test("Expected active mission card to replace the build prompt")
+	var active_card := scene.get_node_or_null("UILayer/ProgressionCards/ActiveMissionCard") as Control
+	if active_card == null or not active_card.visible:
+		reporter.fail_test("Expected the scene-owned active mission card to replace the build prompt")
 		scene.queue_free()
 		RocketsManager.reset_state()
 		return
@@ -290,12 +303,23 @@ func test_earth_base_active_mission_card_overrides_build_prompt() -> void:
 	await create_timer(0.05).timeout
 	reporter.pass_test()
 
-func test_tutorial_overlay_uses_active_mission_context_on_earth_base() -> void:
-	reporter.start_test("Tutorial coach uses active mission context on Earth base instead of stale launchpad step copy")
+func test_tutorial_overlay_suppresses_progression_cards_on_earth_base() -> void:
+	reporter.start_test("Tutorial coach suppresses Earth base progression cards while it owns mission CTA guidance")
 	_reset_rockets_state()
 	RocketsManager.reset_state()
-	RocketsManager.mark_mission_completed("mission-1-overlay-context-test")
-	RocketsManager.add_placed("starterrocket1", Vector2(-110.0, -170.0))
+	RocketsManager.set_returned_mission(
+		"starterrocket1",
+		"mission-1-training-target",
+		"433 Eros",
+		"asteroid",
+		"contract",
+		{
+			"trip_contractor_id": "rocketlab",
+			"trip_contractor_name": "Rocketlab",
+			"trip_requested_minerals": {"Iron": 10},
+			"mining_run_collected": {"Iron": 10}
+		}
+	)
 	var scene = EarthBaseScene.instantiate()
 	get_root().add_child(scene)
 	current_scene = scene
@@ -311,36 +335,137 @@ func test_tutorial_overlay_uses_active_mission_context_on_earth_base() -> void:
 	overlay._off_course = true
 	overlay.visible = true
 	overlay._apply_off_course_display()
+	scene._build_progression_cards()
 	await create_timer(0.03).timeout
 
-	if overlay.title_label.text == "Pick Contractor":
-		reporter.fail_test("Expected overlay title to switch to the active mission context")
+	if not overlay.visible:
+		reporter.fail_test("Expected tutorial overlay to remain visible for the mission CTA guidance")
 		overlay.queue_free()
 		scene.queue_free()
 		current_scene = null
 		RocketsManager.reset_state()
 		return
-	if overlay.title_label.text.find("Launch Ready on Pad") == -1:
-		reporter.fail_test("Expected launch-ready title when a rocket is already armed on Earth base")
+	var cards_root := scene.get_node_or_null("UILayer/ProgressionCards") as Control
+	if cards_root == null:
+		reporter.fail_test("Expected Earth base progression cards root")
 		overlay.queue_free()
 		scene.queue_free()
 		current_scene = null
 		RocketsManager.reset_state()
 		return
-	if overlay.message_label.text.find("armed") == -1:
-		reporter.fail_test("Expected overlay message to describe the active mission state")
+	if cards_root.visible:
+		reporter.fail_test("Expected Earth base progression cards to hide while tutorial overlay is active")
 		overlay.queue_free()
 		scene.queue_free()
 		current_scene = null
 		RocketsManager.reset_state()
 		return
-	if overlay.open_launchpad_button == null or not overlay.open_launchpad_button.visible:
-		reporter.fail_test("Expected overlay CTA to keep the player in the correct launchpad resume flow")
+	if overlay.title_label.text.find("Mission Debrief Ready") == -1:
+		reporter.fail_test("Expected tutorial overlay to show the debrief-ready title")
 		overlay.queue_free()
 		scene.queue_free()
 		current_scene = null
 		RocketsManager.reset_state()
 		return
+	if overlay.message_label.text.find("Resolve the debrief") == -1:
+		reporter.fail_test("Expected tutorial overlay to describe the debrief requirement")
+		overlay.queue_free()
+		scene.queue_free()
+		current_scene = null
+		RocketsManager.reset_state()
+		return
+	if _find_button_by_text(overlay, "Open Debrief") == null:
+		reporter.fail_test("Expected tutorial overlay to own the Open Debrief CTA")
+		overlay.queue_free()
+		scene.queue_free()
+		current_scene = null
+		RocketsManager.reset_state()
+		return
+	if overlay.go_to_debrief_button == null or not overlay.go_to_debrief_button.visible:
+		reporter.fail_test("Expected tutorial overlay to surface the debrief CTA button")
+		overlay.queue_free()
+		scene.queue_free()
+		current_scene = null
+		RocketsManager.reset_state()
+		return
+	overlay.queue_free()
+	scene.queue_free()
+	current_scene = null
+	RocketsManager.reset_state()
+	await create_timer(0.05).timeout
+	reporter.pass_test()
+
+func test_tutorial_overlay_suppresses_progression_cards_when_it_appears_after_initial_build() -> void:
+	reporter.start_test("Earth base rebuilds CTA ownership when tutorial overlay appears after initial build")
+	_reset_rockets_state()
+	RocketsManager.reset_state()
+	RocketsManager.set_returned_mission(
+		"starterrocket1",
+		"mission-1-training-target",
+		"433 Eros",
+		"asteroid",
+		"contract",
+		{
+			"trip_contractor_id": "rocketlab",
+			"trip_contractor_name": "Rocketlab",
+			"trip_requested_minerals": {"Iron": 10},
+			"mining_run_collected": {"Iron": 10}
+		}
+	)
+	var scene = EarthBaseScene.instantiate()
+	get_root().add_child(scene)
+	current_scene = scene
+	await create_timer(0.10).timeout
+	var existing_overlay := get_root().find_child("TutorialCoachOverlay", true, false)
+	if existing_overlay:
+		existing_overlay.queue_free()
+		await create_timer(0.05).timeout
+		existing_overlay = null
+	scene._build_progression_cards()
+	await create_timer(0.03).timeout
+
+	var cards_root := scene.get_node_or_null("UILayer/ProgressionCards") as Control
+	if cards_root == null:
+		reporter.fail_test("Expected Earth base progression cards root")
+		scene.queue_free()
+		current_scene = null
+		RocketsManager.reset_state()
+		return
+	cards_root.visible = true
+
+	var overlay := existing_overlay
+	if overlay == null:
+		overlay = TutorialOverlayScene.instantiate()
+		get_root().add_child(overlay)
+		await create_timer(0.05).timeout
+	var state := {
+		"skipped": false,
+		"current_stage": 1,
+		"current_step_index": 0,
+		"total_steps": 1,
+		"current_step": {
+			"title": "Mission Debrief Ready",
+			"message": "Resolve the debrief before continuing.",
+			"action_key": "resolve_mission_debrief",
+			"valid_scenes": ["mission_debrief_v2"]
+		}
+	}
+	scene._on_tutorial_state_updated(state)
+	overlay._current_step = state["current_step"]
+	overlay._off_course = true
+	overlay.visible = true
+	overlay._apply_off_course_display()
+	scene._on_tutorial_overlay_visibility_changed()
+	await create_timer(0.08).timeout
+
+	if cards_root.visible:
+		reporter.fail_test("Expected progression cards to hide after tutorial overlay appears")
+		overlay.queue_free()
+		scene.queue_free()
+		current_scene = null
+		RocketsManager.reset_state()
+		return
+
 	overlay.queue_free()
 	scene.queue_free()
 	current_scene = null

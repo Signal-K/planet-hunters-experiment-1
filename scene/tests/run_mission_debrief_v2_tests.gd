@@ -61,10 +61,13 @@ func test_debrief_primary_sections_are_scene_owned() -> void:
 	var expected_paths = [
 		"Center/Panel/Margin/ContentVBox/HeaderSection",
 		"Center/Panel/Margin/ContentVBox/GuideCard",
-		"Center/Panel/Margin/ContentVBox/SummaryGrid",
-		"Center/Panel/Margin/ContentVBox/PayoutCard",
-		"Center/Panel/Margin/ContentVBox/CombinedCargoCard",
-		"Center/Panel/Margin/ContentVBox/PhaseCard",
+		"Center/Panel/Margin/ContentVBox/MainRow/LeftColumn/SuccessBanner",
+		"Center/Panel/Margin/ContentVBox/MainRow/LeftColumn/SummaryGrid/ManifestCard",
+		"Center/Panel/Margin/ContentVBox/MainRow/BodyGrid",
+		"Center/Panel/Margin/ContentVBox/MainRow/BodyGrid/RecoveryColumn/PayoutCard",
+		"Center/Panel/Margin/ContentVBox/MainRow/BodyGrid/RecoveryColumn/CombinedCargoCard",
+		"Center/Panel/Margin/ContentVBox/MainRow/BodyGrid/ProgressColumn/FindingsCard",
+		"Center/Panel/Margin/ContentVBox/MainRow/BodyGrid/ProgressColumn/PhaseCard",
 		"Center/Panel/Margin/ContentVBox/ActionsCard"
 	]
 	for path in expected_paths:
@@ -108,7 +111,7 @@ func _setup_scene(completed_missions: int = 0, returned_override: Dictionary = {
 		"trip_contractor_name": "Rocketlab",
 		"trip_requested_minerals": {"Iron": 10},
 		"mining_run_collected": {"Iron": 10}
-	}
+	} as Dictionary
 	for key in returned_override.keys():
 		if ["rocket_id", "target_id", "target_label", "target_type", "operation_mode"].has(str(key)):
 			continue

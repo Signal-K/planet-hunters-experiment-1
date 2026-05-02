@@ -23,8 +23,10 @@ func _init():
 
 func run_all_tests() -> void:
 	await test_planet_uses_tic_id_for_annotation_key()
-	await test_asteroid_uses_numeric_database_id()
+	await test_numeric_database_id_normalization_stays_stable()
 	await test_planet_detection_aliases()
+	await test_only_planet_candidates_expose_classification()
+	await test_title_builder_avoids_duplicate_tic_prefix()
 
 func test_planet_uses_tic_id_for_annotation_key() -> void:
 	reporter.start_test("Planet normalization prefers ticId over row id")
@@ -40,8 +42,8 @@ func test_planet_uses_tic_id_for_annotation_key() -> void:
 		return
 	reporter.pass_test()
 
-func test_asteroid_uses_numeric_database_id() -> void:
-	reporter.start_test("Asteroid normalization keeps numeric DB id stable")
+func test_numeric_database_id_normalization_stays_stable() -> void:
+	reporter.start_test("Numeric database id normalization stays stable")
 	var anomaly = {
 		"id": 63769326.0,
 		"content": "TIC 63769326",
@@ -63,5 +65,26 @@ func test_planet_detection_aliases() -> void:
 		return
 	if model.is_planet({"anomalySet": "active-asteroids"}):
 		reporter.fail_test("Did not expect asteroid set to be treated as planet")
+		return
+	reporter.pass_test()
+
+func test_only_planet_candidates_expose_classification() -> void:
+	reporter.start_test("Only TESS planet candidates expose classification controls")
+	if not model.is_candidate({"anomalySet": "telescope-tess", "tess_disposition": "PC"}):
+		reporter.fail_test("Expected unconfirmed TESS candidate to be classifiable")
+		return
+	if model.is_candidate({"anomalySet": "active-asteroids", "classification_status": "candidate"}):
+		reporter.fail_test("Did not expect active-asteroids candidate to remain classifiable in the current release")
+		return
+	reporter.pass_test()
+
+func test_title_builder_avoids_duplicate_tic_prefix() -> void:
+	reporter.start_test("Planet title builder keeps a single TIC prefix")
+	var title = model.build_title({
+		"ticId": "TIC 150428135",
+		"anomalySet": "telescope-tess"
+	}, "150428135", true)
+	if title != "TIC 150428135":
+		reporter.fail_test("Expected a single TIC prefix, got %s" % title)
 		return
 	reporter.pass_test()

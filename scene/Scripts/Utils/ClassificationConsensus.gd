@@ -61,7 +61,7 @@ static func check_for_updates(tree: SceneTree, callback: Callable = Callable()) 
 			callback.call([])
 		return
 
-	var supabase := SupabaseClient.get_instance()
+	var supabase: Node = SupabaseClient.get_instance()
 	if supabase == null:
 		if callback.is_valid():
 			callback.call([])

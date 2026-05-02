@@ -102,9 +102,9 @@ func _create_anomaly_item(anomaly: Dictionary, index: int) -> Control:
 	var scan_pass_text = "%d scan%s" % [max(scan_count, 1), "" if max(scan_count, 1) == 1 else "s"]
 
 	var badge_text := ""
-	var tess_disposition = _clean_text(anomaly.get("tess_disposition", ""))
-	var classification = _clean_text(anomaly.get("classification_status", ""))
-	var anomaly_type = _clean_text(anomaly.get("anomalytype", ""))
+	var tess_disposition: String = _clean_text(anomaly.get("tess_disposition", ""))
+	var classification: String = _clean_text(anomaly.get("classification_status", ""))
+	var anomaly_type: String = _clean_text(anomaly.get("anomalytype", ""))
 	if tess_disposition != "":
 		badge_text = tess_disposition
 	elif classification != "":

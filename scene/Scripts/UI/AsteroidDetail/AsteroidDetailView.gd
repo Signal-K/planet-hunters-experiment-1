@@ -1,6 +1,7 @@
 extends VBoxContainer
 
 signal back_pressed
+signal classification_submitted(result: Dictionary)
 
 const ANIMATION_DURATION := 0.6
 const BASE_IMAGE_SIZE := Vector2(768, 768)
@@ -23,14 +24,15 @@ var _classification_row: Control
 @onready var header_container: VBoxContainer = $HeaderContainer
 @onready var tools_row: HFlowContainer = $HeaderContainer/ToolsRow
 @onready var body_scroll: ScrollContainer = $BodyScroll
-@onready var content_container: VBoxContainer = $BodyScroll/ContentContainer
-@onready var image_container: CenterContainer = $BodyScroll/ContentContainer/ImageContainer
-@onready var image_shell: PanelContainer = $BodyScroll/ContentContainer/ImageContainer/ImageShell
-@onready var asteroid_image: TextureRect = $BodyScroll/ContentContainer/ImageContainer/AsteroidImage
-@onready var drawing_canvas: Control = $BodyScroll/ContentContainer/ImageContainer/DrawingCanvas
-@onready var loading_label: Label = $BodyScroll/ContentContainer/LoadingLabel
-@onready var error_label: Label = $BodyScroll/ContentContainer/ErrorLabel
-@onready var info_label: Label = $BodyScroll/ContentContainer/InfoLabel
+@onready var body_margin: MarginContainer = $BodyScroll/ContentMargin
+@onready var content_container: VBoxContainer = $BodyScroll/ContentMargin/ContentContainer
+@onready var image_container: CenterContainer = $BodyScroll/ContentMargin/ContentContainer/ImageContainer
+@onready var image_shell: PanelContainer = $BodyScroll/ContentMargin/ContentContainer/ImageContainer/ImageShell
+@onready var asteroid_image: TextureRect = $BodyScroll/ContentMargin/ContentContainer/ImageContainer/AsteroidImage
+@onready var drawing_canvas: Control = $BodyScroll/ContentMargin/ContentContainer/ImageContainer/DrawingCanvas
+@onready var loading_label: Label = $BodyScroll/ContentMargin/ContentContainer/LoadingLabel
+@onready var error_label: Label = $BodyScroll/ContentMargin/ContentContainer/ErrorLabel
+@onready var info_label: Label = $BodyScroll/ContentMargin/ContentContainer/InfoLabel
 @onready var back_button: Button = $HeaderContainer/TopRow/BackButton
 @onready var title_label: Label = $HeaderContainer/TopRow/Title
 @onready var pen_button: Button = $HeaderContainer/ToolsRow/PenButton
@@ -133,16 +135,27 @@ func _apply_visual_style() -> void:
 	add_theme_constant_override("separation", 14)
 	header_container.add_theme_constant_override("separation", 12)
 	content_container.add_theme_constant_override("separation", 18)
-	title_label.add_theme_color_override("font_color", Color(0.16, 0.20, 0.22, 1.0))
-	back_button.add_theme_font_size_override("font_size", 14)
-	annotation_count_label.add_theme_color_override("font_color", Color(0.05, 0.49, 0.45, 1.0))
-	annotation_count_label.add_theme_font_size_override("font_size", 14)
+	var header_style := StyleBoxFlat.new()
+	header_style.bg_color = Color(0.03, 0.05, 0.10, 0.96)
+	header_style.border_color = Color(0.16, 0.27, 0.34, 0.90)
+	header_style.set_border_width_all(1)
+	header_style.set_corner_radius_all(22)
+	header_style.content_margin_left = 18
+	header_style.content_margin_top = 16
+	header_style.content_margin_right = 18
+	header_style.content_margin_bottom = 16
+	header_container.add_theme_stylebox_override("panel", header_style)
+	title_label.add_theme_color_override("font_color", Color(0.94, 0.97, 1.0, 1.0))
+	back_button.add_theme_font_size_override("font_size", 16)
+	annotation_count_label.add_theme_color_override("font_color", Color(0.55, 0.96, 0.89, 1.0))
+	annotation_count_label.add_theme_font_size_override("font_size", 16)
 	loading_label.text = "Loading science frame..."
-	loading_label.add_theme_color_override("font_color", Color(0.33, 0.41, 0.46, 1.0))
-	loading_label.add_theme_font_size_override("font_size", 16)
-	error_label.add_theme_font_size_override("font_size", 15)
-	info_label.add_theme_color_override("font_color", Color(0.32, 0.38, 0.42, 1.0))
-	info_label.add_theme_font_size_override("font_size", 14)
+	loading_label.add_theme_color_override("font_color", Color(0.74, 0.92, 1.0, 1.0))
+	loading_label.add_theme_font_size_override("font_size", 18)
+	error_label.add_theme_color_override("font_color", Color(1.0, 0.47, 0.43, 1.0))
+	error_label.add_theme_font_size_override("font_size", 17)
+	info_label.add_theme_color_override("font_color", Color(0.82, 0.89, 0.95, 1.0))
+	info_label.add_theme_font_size_override("font_size", 16)
 	_style_button(back_button, false)
 	_style_button(pen_button, true)
 	_style_button(clear_button, false)
@@ -151,21 +164,21 @@ func _apply_visual_style() -> void:
 	_style_button(pen_rect_button, false)
 	_style_button(pen_circle_button, false)
 	var color_style := StyleBoxFlat.new()
-	color_style.bg_color = Color(0.97, 0.985, 0.985, 1.0)
-	color_style.border_color = Color(0.77, 0.86, 0.87, 1.0)
+	color_style.bg_color = Color(0.11, 0.15, 0.19, 1.0)
+	color_style.border_color = Color(0.28, 0.40, 0.47, 1.0)
 	color_style.set_border_width_all(1)
 	color_style.set_corner_radius_all(12)
 	color_picker.add_theme_stylebox_override("normal", color_style)
 	color_picker.add_theme_stylebox_override("hover", color_style)
 	var shell_style := StyleBoxFlat.new()
-	shell_style.bg_color = Color(0.93, 0.96, 0.97, 1.0)
-	shell_style.border_color = Color(0.78, 0.86, 0.88, 1.0)
+	shell_style.bg_color = Color(0.04, 0.07, 0.11, 1.0)
+	shell_style.border_color = Color(0.19, 0.30, 0.36, 1.0)
 	shell_style.set_border_width_all(1)
 	shell_style.set_corner_radius_all(26)
 	image_shell.add_theme_stylebox_override("panel", shell_style)
 	var summary_style := StyleBoxFlat.new()
-	summary_style.bg_color = Color(0.96, 0.98, 0.98, 1.0)
-	summary_style.border_color = Color(0.79, 0.88, 0.89, 1.0)
+	summary_style.bg_color = Color(0.96, 0.98, 1.0, 0.98)
+	summary_style.border_color = Color(0.78, 0.88, 0.93, 0.90)
 	summary_style.set_border_width_all(1)
 	summary_style.set_corner_radius_all(20)
 	summary_style.content_margin_left = 18
@@ -175,22 +188,22 @@ func _apply_visual_style() -> void:
 	_science_summary_card.add_theme_stylebox_override("panel", summary_style)
 	var summary_eyebrow: Label = _science_summary_card.get_node("Body/EyebrowLabel")
 	summary_eyebrow.add_theme_color_override("font_color", Color(0.05, 0.49, 0.45, 1.0))
-	summary_eyebrow.add_theme_font_size_override("font_size", 12)
-	_science_summary_body.add_theme_color_override("font_color", Color(0.18, 0.22, 0.24, 1.0))
-	_science_summary_body.add_theme_font_size_override("font_size", 15)
-	_science_summary_meta.add_theme_color_override("font_color", Color(0.40, 0.46, 0.49, 1.0))
-	_science_summary_meta.add_theme_font_size_override("font_size", 13)
+	summary_eyebrow.add_theme_font_size_override("font_size", 14)
+	_science_summary_body.add_theme_color_override("font_color", Color(0.11, 0.15, 0.18, 1.0))
+	_science_summary_body.add_theme_font_size_override("font_size", 18)
+	_science_summary_meta.add_theme_color_override("font_color", Color(0.28, 0.34, 0.39, 1.0))
+	_science_summary_meta.add_theme_font_size_override("font_size", 15)
 
 func _style_button(button: Button, primary: bool) -> void:
 	var normal := StyleBoxFlat.new()
-	normal.bg_color = Color(0.06, 0.54, 0.49, 1.0) if primary else Color(0.98, 0.99, 0.99, 1.0)
-	normal.border_color = Color(0.79, 0.87, 0.88, 1.0) if not primary else Color(0.30, 0.89, 0.82, 0.55)
+	normal.bg_color = Color(0.07, 0.58, 0.53, 1.0) if primary else Color(0.10, 0.14, 0.18, 0.96)
+	normal.border_color = Color(0.27, 0.40, 0.46, 1.0) if not primary else Color(0.41, 0.97, 0.88, 0.70)
 	normal.set_border_width_all(1)
 	normal.set_corner_radius_all(14)
-	normal.content_margin_left = 16
-	normal.content_margin_top = 12
-	normal.content_margin_right = 16
-	normal.content_margin_bottom = 12
+	normal.content_margin_left = 18
+	normal.content_margin_top = 13
+	normal.content_margin_right = 18
+	normal.content_margin_bottom = 13
 	var hover := normal.duplicate()
 	hover.bg_color = normal.bg_color.lightened(0.06)
 	var pressed := normal.duplicate()
@@ -199,10 +212,10 @@ func _style_button(button: Button, primary: bool) -> void:
 	button.add_theme_stylebox_override("hover", hover)
 	button.add_theme_stylebox_override("pressed", pressed)
 	button.add_theme_stylebox_override("focus", hover)
-	button.add_theme_color_override("font_color", Color(0.97, 0.99, 0.99, 1.0) if primary else Color(0.28, 0.34, 0.37, 1.0))
-	button.add_theme_color_override("font_hover_color", Color(0.97, 0.99, 0.99, 1.0) if primary else Color(0.28, 0.34, 0.37, 1.0))
-	button.add_theme_color_override("font_pressed_color", Color(0.97, 0.99, 0.99, 1.0) if primary else Color(0.28, 0.34, 0.37, 1.0))
-	button.add_theme_font_size_override("font_size", 13)
+	button.add_theme_color_override("font_color", Color(0.97, 0.99, 0.99, 1.0) if primary else Color(0.92, 0.96, 1.0, 1.0))
+	button.add_theme_color_override("font_hover_color", Color(0.97, 0.99, 0.99, 1.0) if primary else Color(0.92, 0.96, 1.0, 1.0))
+	button.add_theme_color_override("font_pressed_color", Color(0.97, 0.99, 0.99, 1.0) if primary else Color(0.92, 0.96, 1.0, 1.0))
+	button.add_theme_font_size_override("font_size", 15)
 
 func _refresh_science_summary() -> void:
 	if _science_summary_body == null:
@@ -227,7 +240,7 @@ func _load_saved_annotations():
 	_annotations.load_saved_annotations(anomaly_id)
 
 func _load_anomaly_image(is_planet: bool = false):
-	_image_helper.load_anomaly_image(anomaly_id, is_planet)
+	_image_helper.load_anomaly_image(anomaly_id, anomaly_data, is_planet)
 
 func _on_pen_pressed():
 	drawing_canvas.toggle_pen()
@@ -281,15 +294,21 @@ func _apply_layout() -> void:
 	var safe := UILayout.safe_rect(viewport)
 	var is_mobile := viewport.x < 900.0
 	var is_narrow := viewport.x < 1280.0
-	var image_side := clampf(minf(safe.size.x - (48.0 if is_mobile else 96.0), safe.size.y * (0.50 if is_mobile else 0.62)), 260.0, BASE_IMAGE_SIZE.x)
-	var button_h := 44.0 if is_mobile else 50.0
-	var tool_h := 40.0 if is_mobile else 44.0
+	var image_side := clampf(minf(safe.size.x - (40.0 if is_mobile else 120.0), safe.size.y * (0.48 if is_mobile else 0.62)), 280.0, BASE_IMAGE_SIZE.x)
+	var button_h := 52.0 if is_mobile else 54.0
+	var tool_h := 48.0 if is_mobile else 46.0
+	var margin_h := 14 if is_mobile else (28 if is_narrow else 42)
+	var margin_v := 14 if is_mobile else 22
 
 	add_theme_constant_override("separation", 12 if is_mobile else 16)
 	header_container.add_theme_constant_override("separation", 10 if is_mobile else 12)
 	tools_row.add_theme_constant_override("h_separation", 8 if is_mobile else 10)
 	tools_row.add_theme_constant_override("v_separation", 8 if is_mobile else 10)
 	content_container.add_theme_constant_override("separation", 16 if is_mobile else 20)
+	body_margin.add_theme_constant_override("margin_left", margin_h)
+	body_margin.add_theme_constant_override("margin_right", margin_h)
+	body_margin.add_theme_constant_override("margin_top", margin_v)
+	body_margin.add_theme_constant_override("margin_bottom", margin_v + 8)
 	var header_height := maxf(
 		header_container.get_combined_minimum_size().y,
 		158.0 if is_mobile else 176.0
@@ -300,21 +319,35 @@ func _apply_layout() -> void:
 	image_container.custom_minimum_size = Vector2(image_side, image_side)
 	asteroid_image.custom_minimum_size = Vector2(image_side, image_side)
 	drawing_canvas.custom_minimum_size = Vector2(image_side, image_side)
-	title_label.add_theme_font_size_override("font_size", 24 if is_mobile else (28 if is_narrow else 32))
+	title_label.add_theme_font_size_override("font_size", 28 if is_mobile else (32 if is_narrow else 36))
 	title_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	info_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT if is_mobile else HORIZONTAL_ALIGNMENT_CENTER
+	info_label.add_theme_font_size_override("font_size", 15 if is_mobile else 16)
+	loading_label.add_theme_font_size_override("font_size", 18 if is_mobile else 20)
+	error_label.add_theme_font_size_override("font_size", 16 if is_mobile else 18)
 	annotation_count_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT if not is_mobile else HORIZONTAL_ALIGNMENT_LEFT
-	annotation_count_label.add_theme_font_size_override("font_size", 14 if is_mobile else 16)
+	annotation_count_label.add_theme_font_size_override("font_size", 15 if is_mobile else 16)
 
 	back_button.custom_minimum_size = Vector2(92.0 if is_mobile else 108.0, button_h)
-	pen_button.custom_minimum_size = Vector2(116.0 if is_mobile else 136.0, button_h)
-	clear_button.custom_minimum_size = Vector2(90.0 if is_mobile else 104.0, button_h)
-	save_button.custom_minimum_size = Vector2(90.0 if is_mobile else 104.0, button_h)
-	pen_free_button.custom_minimum_size = Vector2(76.0 if is_mobile else 90.0, tool_h)
-	pen_rect_button.custom_minimum_size = Vector2(76.0 if is_mobile else 90.0, tool_h)
-	pen_circle_button.custom_minimum_size = Vector2(76.0 if is_mobile else 90.0, tool_h)
+	pen_button.custom_minimum_size = Vector2(134.0 if is_mobile else 156.0, button_h)
+	clear_button.custom_minimum_size = Vector2(94.0 if is_mobile else 112.0, button_h)
+	save_button.custom_minimum_size = Vector2(94.0 if is_mobile else 112.0, button_h)
+	pen_free_button.custom_minimum_size = Vector2(84.0 if is_mobile else 96.0, tool_h)
+	pen_rect_button.custom_minimum_size = Vector2(84.0 if is_mobile else 96.0, tool_h)
+	pen_circle_button.custom_minimum_size = Vector2(84.0 if is_mobile else 96.0, tool_h)
 	color_picker.custom_minimum_size = Vector2(56.0 if is_mobile else 64.0, tool_h)
 	_science_summary_card.custom_minimum_size = Vector2(0.0, 0.0 if is_mobile else 110.0)
+	if is_instance_valid(_classification_row):
+		var prompt: Label = _classification_row.get_node("PromptLabel")
+		var note: Label = _classification_row.get_node("NoteLabel")
+		var btn_planet: Button = _classification_row.get_node("ClassificationButtons/BtnPlanet")
+		var btn_not: Button = _classification_row.get_node("ClassificationButtons/BtnNotPlanet")
+		var btn_mark_dip: Button = _classification_row.get_node("ClassificationButtons/BtnMarkDip")
+		prompt.add_theme_font_size_override("font_size", 18 if is_mobile else 20)
+		note.add_theme_font_size_override("font_size", 14 if is_mobile else 15)
+		for button in [btn_planet, btn_not, btn_mark_dip]:
+			button.custom_minimum_size = Vector2(164.0 if is_mobile else 196.0, button_h)
+			button.add_theme_font_size_override("font_size", 16 if is_mobile else 17)
 
 func _show_error(message: String) -> void:
 	loading_label.visible = false
@@ -331,14 +364,17 @@ func _build_classification_row() -> void:
 	content_container.add_child(row)
 
 	var prompt: Label = row.get_node("PromptLabel")
-	PanelStyle.apply_muted(prompt)
+	prompt.add_theme_color_override("font_color", Color(0.95, 0.98, 1.0, 1.0))
+	prompt.add_theme_font_size_override("font_size", 20)
 
 	var note: Label = row.get_node("NoteLabel")
 	note.text = "A confirmed verdict unlocks safer routing. A rejection blocks travel until the signal is revisited."
-	note.add_theme_color_override("font_color", Color(0.36, 0.42, 0.45, 1.0))
-	note.add_theme_font_size_override("font_size", 13)
+	note.add_theme_color_override("font_color", Color(0.74, 0.82, 0.88, 1.0))
+	note.add_theme_font_size_override("font_size", 15)
 
 	var button_row: HFlowContainer = row.get_node("ClassificationButtons")
+	button_row.add_theme_constant_override("h_separation", 10)
+	button_row.add_theme_constant_override("v_separation", 10)
 
 	var btn_planet: Button = row.get_node("ClassificationButtons/BtnPlanet")
 	btn_planet.text = "Planet" if existing_verdict != "planet" else "✓ Planet"
@@ -369,10 +405,11 @@ func _on_classify(verdict: String, row: VBoxContainer) -> void:
 	var annotation_count = drawing_canvas.get_annotation_count() if drawing_canvas.has_method("get_annotation_count") else 0
 	var target_type = "planet" if _model.is_planet(anomaly_data) else "asteroid"
 	_annotations.save_annotations(anomaly_id, target_type, title_label.text if title_label else "")
-	RocketsManager.classify_candidate_target(anomaly_id, verdict, annotation_count)
+	var result: Dictionary = RocketsManager.classify_candidate_target(anomaly_id, verdict, annotation_count)
 	AppControllerHelper.record_tutorial_action("classify_candidate", {
 		"target_id": anomaly_id,
-		"verdict": verdict
+		"verdict": verdict,
+		"confirmed": bool(result.get("confirmed", false))
 	})
 
 	var button_row = row.get_node_or_null("ClassificationButtons")
@@ -397,6 +434,8 @@ func _on_classify(verdict: String, row: VBoxContainer) -> void:
 	var app = AppControllerHelper.get_instance()
 	if app and app.has_method("add_experience"):
 		app.add_experience(1, "tess_classification")
+
+	classification_submitted.emit(result.duplicate(true))
 
 	var supabase = preload("res://Scripts/Systems/SupabaseClient.gd").get_instance()
 	if supabase:
