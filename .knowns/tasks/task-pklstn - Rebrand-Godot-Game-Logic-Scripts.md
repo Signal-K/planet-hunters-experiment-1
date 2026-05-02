@@ -1,11 +1,11 @@
 ---
 id: pklstn
 title: 'Rebrand: Godot Game Logic & Scripts'
-status: todo
+status: done
 priority: high
 labels: []
 createdAt: '2026-05-11T03:02:07.555Z'
-updatedAt: '2026-05-11T03:02:07.555Z'
+updatedAt: '2026-05-11T03:11:05.712Z'
 timeSpent: 0
 assignee: '@Liam'
 ---
@@ -23,4 +23,10 @@ Update internal GDScript references and mission logs for Landnám.
 - [ ] #2 Project settings updated
 - [ ] #3 JSON data files updated
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Completed rebranding for Godot scripts and internal logic.
+<!-- SECTION:NOTES:END -->
 

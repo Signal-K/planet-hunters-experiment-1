@@ -1,6 +1,6 @@
 {
   "taskId": "m1zpy5",
-  "currentVersion": 1,
+  "currentVersion": 2,
   "versions": [
     {
       "id": "v1",
@@ -23,6 +23,45 @@
       "snapshot": {
         "acceptanceCriteria": [
           {
+            "completed": false,
+            "text": "app.json updated"
+          },
+          {
+            "completed": false,
+            "text": "android strings and settings updated"
+          },
+          {
+            "completed": false,
+            "text": "PWA manifest updated"
+          }
+        ],
+        "assignee": "@Liam",
+        "description": "Update app.json and android native settings for Landnám.",
+        "priority": "high",
+        "status": "todo",
+        "title": "Rebrand: Application Config \u0026 Mobile Shell"
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "m1zpy5",
+      "version": 2,
+      "timestamp": "2026-05-11T03:11:00.610167Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        },
+        {
+          "field": "implementationNotes",
+          "oldValue": null,
+          "newValue": "Completed rebranding for app configuration and mobile shell."
+        }
+      ],
+      "snapshot": {
+        "acceptanceCriteria": [
+          {
             "text": "app.json updated",
             "completed": false
           },
@@ -37,8 +76,9 @@
         ],
         "assignee": "@Liam",
         "description": "Update app.json and android native settings for Landnám.",
+        "implementationNotes": "Completed rebranding for app configuration and mobile shell.",
         "priority": "high",
-        "status": "todo",
+        "status": "done",
         "title": "Rebrand: Application Config \u0026 Mobile Shell"
       }
     }

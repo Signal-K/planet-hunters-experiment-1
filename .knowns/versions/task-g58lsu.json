@@ -1,6 +1,6 @@
 {
   "taskId": "g58lsu",
-  "currentVersion": 1,
+  "currentVersion": 2,
   "versions": [
     {
       "id": "v1",
@@ -23,6 +23,45 @@
       "snapshot": {
         "acceptanceCriteria": [
           {
+            "completed": false,
+            "text": "README.md updated"
+          },
+          {
+            "completed": false,
+            "text": "GEMINI.md updated"
+          },
+          {
+            "completed": false,
+            "text": "Supabase migrations updated"
+          }
+        ],
+        "assignee": "@Liam",
+        "description": "Rename project to Landnám across README, GEMINI, and Supabase migrations.",
+        "priority": "high",
+        "status": "todo",
+        "title": "Rebrand: Core Identity \u0026 Documentation"
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "g58lsu",
+      "version": 2,
+      "timestamp": "2026-05-11T03:10:55.515031Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        },
+        {
+          "field": "implementationNotes",
+          "oldValue": null,
+          "newValue": "Completed core rebranding for documentation and migrations."
+        }
+      ],
+      "snapshot": {
+        "acceptanceCriteria": [
+          {
             "text": "README.md updated",
             "completed": false
           },
@@ -37,8 +76,9 @@
         ],
         "assignee": "@Liam",
         "description": "Rename project to Landnám across README, GEMINI, and Supabase migrations.",
+        "implementationNotes": "Completed core rebranding for documentation and migrations.",
         "priority": "high",
-        "status": "todo",
+        "status": "done",
         "title": "Rebrand: Core Identity \u0026 Documentation"
       }
     }
