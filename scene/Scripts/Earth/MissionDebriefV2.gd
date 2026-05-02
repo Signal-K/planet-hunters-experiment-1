@@ -64,7 +64,7 @@ var scene_manager: SceneManager
 var ui_manager: UIManager
 var _ui_helper := EarthSceneUIHelper.new()
 @onready var _background: ColorRect = $Background
-@onready var _center: CenterContainer = $Center
+@onready var _center: MarginContainer = $Center
 @onready var _panel: PanelContainer = $Center/Panel
 @onready var _content_vbox: VBoxContainer = $Center/Panel/Margin/ContentVBox
 @onready var _empty_state: VBoxContainer = $Center/EmptyState
@@ -77,22 +77,32 @@ var _ui_helper := EarthSceneUIHelper.new()
 @onready var _phase_chip: PanelContainer = $Center/Panel/Margin/ContentVBox/HeaderSection/HeaderTopRow/HeaderControls/PhaseChip
 @onready var _phase_chip_label: Label = $Center/Panel/Margin/ContentVBox/HeaderSection/HeaderTopRow/HeaderControls/PhaseChip/PhaseChipLabel
 @onready var _guide_button: Button = $Center/Panel/Margin/ContentVBox/HeaderSection/HeaderTopRow/HeaderControls/GuideButton
-@onready var _header_separator: HSeparator = $Center/Panel/Margin/ContentVBox/HeaderSection/HeaderSeparator
+@onready var _header_separator: HBoxContainer = $Center/Panel/Margin/ContentVBox/HeaderSection/HeaderSeparator
 @onready var _guide_card: PanelContainer = $Center/Panel/Margin/ContentVBox/GuideCard
 @onready var _guide_rows: VBoxContainer = $Center/Panel/Margin/ContentVBox/GuideCard/Content/Rows
 @onready var _guide_footer: Label = $Center/Panel/Margin/ContentVBox/GuideCard/Content/FooterLabel
-@onready var _summary_grid: GridContainer = $Center/Panel/Margin/ContentVBox/SummaryGrid
-@onready var _target_summary_card: PanelContainer = $Center/Panel/Margin/ContentVBox/SummaryGrid/TargetSummaryCard
-@onready var _rocket_summary_card: PanelContainer = $Center/Panel/Margin/ContentVBox/SummaryGrid/RocketSummaryCard
-@onready var _contractor_summary_card: PanelContainer = $Center/Panel/Margin/ContentVBox/SummaryGrid/ContractorSummaryCard
-@onready var _payout_card: PanelContainer = $Center/Panel/Margin/ContentVBox/PayoutCard
-@onready var _combined_cargo_card: PanelContainer = $Center/Panel/Margin/ContentVBox/CombinedCargoCard
-@onready var _phase_card: PanelContainer = $Center/Panel/Margin/ContentVBox/PhaseCard
+@onready var _success_banner: PanelContainer = $Center/Panel/Margin/ContentVBox/MainRow/LeftColumn/SuccessBanner
+@onready var _success_icon: Label = $Center/Panel/Margin/ContentVBox/MainRow/LeftColumn/SuccessBanner/Margin/Row/StatusIcon
+@onready var _success_title: Label = $Center/Panel/Margin/ContentVBox/MainRow/LeftColumn/SuccessBanner/Margin/Row/TextColumn/StatusLabel
+@onready var _success_detail: Label = $Center/Panel/Margin/ContentVBox/MainRow/LeftColumn/SuccessBanner/Margin/Row/TextColumn/StatusDetailLabel
+@onready var _summary_grid: VBoxContainer = $Center/Panel/Margin/ContentVBox/MainRow/LeftColumn/SummaryGrid
+@onready var _body_grid: VBoxContainer = $Center/Panel/Margin/ContentVBox/MainRow/BodyGrid
+@onready var _manifest_card: PanelContainer = $Center/Panel/Margin/ContentVBox/MainRow/LeftColumn/SummaryGrid/ManifestCard
+@onready var _manifest_target_value: Label = $Center/Panel/Margin/ContentVBox/MainRow/LeftColumn/SummaryGrid/ManifestCard/Margin/Content/Rows/TargetRow/TargetValue
+@onready var _manifest_contractor_value: Label = $Center/Panel/Margin/ContentVBox/MainRow/LeftColumn/SummaryGrid/ManifestCard/Margin/Content/Rows/ContractorRow/ContractorValue
+@onready var _manifest_vessel_value: Label = $Center/Panel/Margin/ContentVBox/MainRow/LeftColumn/SummaryGrid/ManifestCard/Margin/Content/Rows/VesselRow/VesselValue
+@onready var _manifest_duration_value: Label = $Center/Panel/Margin/ContentVBox/MainRow/LeftColumn/SummaryGrid/ManifestCard/Margin/Content/Rows/DurationRow/DurationValue
+@onready var _payout_card: PanelContainer = $Center/Panel/Margin/ContentVBox/MainRow/BodyGrid/RecoveryColumn/PayoutCard
+@onready var _combined_cargo_card: PanelContainer = $Center/Panel/Margin/ContentVBox/MainRow/BodyGrid/RecoveryColumn/CombinedCargoCard
+@onready var _recovery_primary_chip: PanelContainer = $Center/Panel/Margin/ContentVBox/MainRow/BodyGrid/RecoveryColumn/CombinedCargoCard/Margin/Content/ChipsRow/PrimaryChip
+@onready var _recovery_secondary_chip: PanelContainer = $Center/Panel/Margin/ContentVBox/MainRow/BodyGrid/RecoveryColumn/CombinedCargoCard/Margin/Content/ChipsRow/SecondaryChip
+@onready var _findings_card: PanelContainer = $Center/Panel/Margin/ContentVBox/MainRow/BodyGrid/ProgressColumn/FindingsCard
+@onready var _phase_card: PanelContainer = $Center/Panel/Margin/ContentVBox/MainRow/BodyGrid/ProgressColumn/PhaseCard
 @onready var _actions_card: PanelContainer = $Center/Panel/Margin/ContentVBox/ActionsCard
-@onready var _actions_row: HBoxContainer = $Center/Panel/Margin/ContentVBox/ActionsCard/Content/Rows/ActionsRow
-@onready var _primary_action_button: Button = $Center/Panel/Margin/ContentVBox/ActionsCard/Content/Rows/ActionsRow/PrimaryActionButton
-@onready var _secondary_action_button: Button = $Center/Panel/Margin/ContentVBox/ActionsCard/Content/Rows/ActionsRow/SecondaryActionButton
-@onready var _tertiary_action_button: Button = $Center/Panel/Margin/ContentVBox/ActionsCard/Content/Rows/ActionsRow/TertiaryActionButton
+@onready var _actions_row: HBoxContainer = $Center/Panel/Margin/ContentVBox/ActionsCard/Margin/Content/Rows/ActionsRow
+@onready var _primary_action_button: Button = $Center/Panel/Margin/ContentVBox/ActionsCard/Margin/Content/Rows/ActionsRow/PrimaryActionButton
+@onready var _secondary_action_button: Button = $Center/Panel/Margin/ContentVBox/ActionsCard/Margin/Content/Rows/ActionsRow/SecondaryActionButton
+@onready var _tertiary_action_button: Button = $Center/Panel/Margin/ContentVBox/ActionsCard/Margin/Content/Rows/ActionsRow/TertiaryActionButton
 
 
 func _ready() -> void:
@@ -233,6 +243,15 @@ func _calc_payout() -> int:
 	gross = min(gross, RocketsManager.get_free_ops_payout_cap())
 	return RocketsManager.calibrate_onboarding_payout(gross, str(_returned.get("rocket_id", "")))
 
+func _format_manifest_duration(rocket_id: String) -> String:
+	if rocket_id == "":
+		return "Recovered"
+	var total_seconds := RocketsManager.get_mission_duration_seconds_for_rocket(rocket_id) + RocketsManager.get_return_duration_seconds_for_rocket(rocket_id)
+	var hours := int(total_seconds / 3600)
+	var minutes := int((total_seconds % 3600) / 60)
+	var seconds := int(total_seconds % 60)
+	return "%02d:%02d:%02d UTC" % [hours, minutes, seconds]
+
 
 # ---------------------------------------------------------------------------
 # UI construction
@@ -255,11 +274,10 @@ func _build_ui() -> void:
 	_background.color = PANEL_BG
 	_panel.visible = true
 	_empty_state.visible = false
-	_panel.custom_minimum_size = Vector2(clampf(vp_w - 140.0, 700.0, 1180.0), clampf(vp_h - 260.0, 480.0, 760.0))
-	var style := PanelStyle.create_glass_panel_style(Color(0.06, 0.10, 0.16, 0.96), 0.86, 18, 28, 24)
-	_panel.add_theme_stylebox_override("panel", style)
-	_content_vbox.add_theme_constant_override("separation", 10)
+	_panel.custom_minimum_size = Vector2(clampf(vp_w - 220.0, 980.0, 1420.0), clampf(vp_h - 220.0, 620.0, 860.0))
+	_content_vbox.add_theme_constant_override("separation", 28)
 	_bind_header()
+	_bind_success_banner()
 	_bind_button_guide()
 	_bind_summary()
 	if _phase == "reward":
@@ -293,27 +311,41 @@ func _reset_button(button: Button, text: String, primary: bool) -> void:
 
 func _bind_header() -> void:
 	_header_section.visible = true
-	_header_eyebrow.text = "MISSION COMPLETE"
-	_header_eyebrow.add_theme_font_size_override("font_size", 14)
-	_header_eyebrow.add_theme_color_override("font_color", CYAN)
-	_header_title.text = "◎ Debrief"
-	_header_title.add_theme_font_size_override("font_size", 30)
+	_header_eyebrow.text = "#DEBRIEF_07X"
+	_header_eyebrow.add_theme_font_size_override("font_size", 10)
+	_header_eyebrow.add_theme_color_override("font_color", Color(0.42, 0.46, 0.63, 0.72))
+	_header_title.text = "MISSION DEBRIEF"
+	_header_title.add_theme_font_size_override("font_size", 34)
 	_header_title.add_theme_color_override("font_color", TITLE_COLOR)
 	var stage := int(RocketsManager.get_mission_stage())
-	var hint := _stage_hint(stage)
+	var hint := "MISSION PARAMETERS FULFILLED. DATA AND RESOURCE RECOVERY COMPLETE."
+	var unlock_hint := _stage_hint(stage)
+	if unlock_hint != "":
+		hint += "  " + unlock_hint.to_upper()
 	_header_hint.visible = hint != ""
 	_header_hint.text = hint
-	_header_hint.add_theme_font_size_override("font_size", 14)
-	_header_hint.add_theme_color_override("font_color", AMBER)
-	_header_separator.add_theme_color_override("separator", Color(CYAN.r, CYAN.g, CYAN.b, 0.28))
-	_phase_chip.add_theme_stylebox_override("panel", PanelStyle.create_glass_pill_style(Color(0.10, 0.15, 0.22, 0.96), 0.46, 9))
+	_header_hint.add_theme_font_size_override("font_size", 12)
+	_header_hint.add_theme_color_override("font_color", TEXT_MUTED)
+	_phase_chip.visible = false
 	var phase_text := "Reward Pending" if _phase == "reward" and not _reward_resolved else ("Reward Cleared" if _phase == "handoff" else "Mission Summary")
 	var phase_color := AMBER if _phase == "reward" and not _reward_resolved else CYAN
 	_phase_chip_label.text = phase_text
 	_phase_chip_label.add_theme_font_size_override("font_size", 13)
 	_phase_chip_label.add_theme_color_override("font_color", phase_color)
-	PanelStyle.apply_outline_button(_guide_button, CYAN, TEXT_COLOR)
-	_guide_button.add_theme_font_size_override("font_size", 15)
+	_guide_button.add_theme_font_size_override("font_size", 12)
+
+func _bind_success_banner() -> void:
+	_success_banner.visible = true
+	_success_banner.add_theme_stylebox_override("panel", _success_banner_style())
+	_success_icon.text = "✓"
+	_success_icon.add_theme_font_size_override("font_size", 54)
+	_success_icon.add_theme_color_override("font_color", Color(0.88, 0.91, 0.98, 1.0))
+	_success_title.text = "MISSION\nCOMPLETE"
+	_success_title.add_theme_font_size_override("font_size", 28)
+	_success_title.add_theme_color_override("font_color", TITLE_COLOR)
+	_success_detail.text = "Return trajectory complete. Cargo and findings are ready for review."
+	_success_detail.add_theme_font_size_override("font_size", 13)
+	_success_detail.add_theme_color_override("font_color", TEXT_MUTED)
 
 func _bind_button_guide() -> void:
 	_guide_card.visible = _guide_visible
@@ -334,56 +366,90 @@ func _bind_button_guide() -> void:
 		_guide_rows.add_child(item)
 
 func _bind_summary() -> void:
-	var vp_w := get_viewport().get_visible_rect().size.x if get_viewport() else 1280.0
-	_summary_grid.columns = 1 if vp_w < 900.0 else 3
-	_bind_summary_card(_target_summary_card, "◎", "Target", str(_returned.get("label", str(_returned.get("target_id", "Unknown")))))
+	_manifest_card.visible = true
+	_manifest_card.add_theme_stylebox_override("panel", _soft_card_style())
+	var header: Label = _manifest_card.get_node("Margin/Content/HeaderLabel")
+	header.add_theme_font_size_override("font_size", 16)
+	header.add_theme_color_override("font_color", Color(0.72, 0.76, 0.88, 0.96))
+	var separator: HSeparator = _manifest_card.get_node("Margin/Content/Separator")
+	separator.add_theme_color_override("separator", Color(0.52, 0.56, 0.68, 0.30))
+	for path in [
+		"Margin/Content/Rows/TargetRow/TargetKey",
+		"Margin/Content/Rows/ContractorRow/ContractorKey",
+		"Margin/Content/Rows/VesselRow/VesselKey",
+		"Margin/Content/Rows/DurationRow/DurationKey"
+	]:
+		var key_label := _manifest_card.get_node(path) as Label
+		key_label.add_theme_font_size_override("font_size", 14)
+		key_label.add_theme_color_override("font_color", TEXT_MUTED)
+	for value_label in [_manifest_target_value, _manifest_contractor_value, _manifest_vessel_value, _manifest_duration_value]:
+		value_label.add_theme_font_size_override("font_size", 15)
+		value_label.add_theme_color_override("font_color", TEXT_COLOR)
+		value_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_manifest_target_value.text = str(_returned.get("label", str(_returned.get("target_id", "Unknown"))))
+	_manifest_contractor_value.text = _contractor_name if _contractor_name != "" else "Mission Control"
 	var rocket_id := str(_returned.get("rocket_id", ""))
-	_bind_summary_card(_rocket_summary_card, "▲", "Rocket", RocketSpecs.get_display_name(rocket_id) if rocket_id != "" else "—")
-	_bind_summary_card(_contractor_summary_card, "◆", "Contractor", _contractor_name if _contractor_name != "" else "—")
-
-func _bind_summary_card(card: PanelContainer, icon_text: String, label_text: String, value_text: String) -> void:
-	card.visible = true
-	card.add_theme_stylebox_override("panel", _soft_card_style())
-	var icon: Label = card.get_node("Row/IconLabel")
-	icon.text = icon_text
-	icon.add_theme_font_size_override("font_size", 22)
-	icon.add_theme_color_override("font_color", CYAN)
-	var key: Label = card.get_node("Row/Content/KeyLabel")
-	key.text = label_text
-	key.add_theme_font_size_override("font_size", 13)
-	key.add_theme_color_override("font_color", TEXT_MUTED)
-	var value: Label = card.get_node("Row/Content/ValueLabel")
-	value.text = value_text
-	value.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	value.add_theme_font_size_override("font_size", 18)
-	value.add_theme_color_override("font_color", TEXT_COLOR)
+	_manifest_vessel_value.text = RocketSpecs.get_display_name(rocket_id) if rocket_id != "" else "—"
+	_manifest_duration_value.text = _format_manifest_duration(rocket_id)
 
 func _bind_reward_snapshot() -> void:
 	_payout_card.visible = true
 	_phase_card.visible = false
 	_actions_card.visible = true
 	_combined_cargo_card.visible = true
+	_findings_card.visible = true
 	_payout_card.add_theme_stylebox_override("panel", _highlight_card_style())
 	var payout_label: Label = _payout_card.get_node("Content/Label")
-	payout_label.text = "₣ PAYOUT"
-	payout_label.add_theme_font_size_override("font_size", 12)
-	payout_label.add_theme_color_override("font_color", AMBER)
+	payout_label.text = "NET PAYOUT"
+	payout_label.add_theme_font_size_override("font_size", 14)
+	payout_label.add_theme_color_override("font_color", TEXT_COLOR)
 	var payout_value: Label = _payout_card.get_node("Content/Value")
-	payout_value.text = "+%s F" % NumberFormat.commas(str(_payout))
-	payout_value.add_theme_font_size_override("font_size", 36)
-	payout_value.add_theme_color_override("font_color", GREEN)
+	payout_value.text = "[ %s F ]" % NumberFormat.commas(str(_payout))
+	payout_value.add_theme_font_size_override("font_size", 28)
+	payout_value.add_theme_color_override("font_color", TITLE_COLOR)
+	_bind_findings_card()
+	_bind_recovery_chips()
 	_bind_combined_cargo_card()
+
+func _bind_recovery_chips() -> void:
+	var chip_labels: Array[Label] = [
+		_recovery_primary_chip.get_node("Label") as Label,
+		_recovery_secondary_chip.get_node("Label") as Label
+	]
+	var chips: Array[PanelContainer] = [_recovery_primary_chip, _recovery_secondary_chip]
+	for chip in chips:
+		chip.visible = false
+	var chip_entries: Array = []
+	if not _requested.is_empty():
+		var req_keys := _requested.keys()
+		req_keys.sort_custom(func(a, b): return int(_requested.get(a, 0)) > int(_requested.get(b, 0)))
+		for mineral in req_keys:
+			var need := int(_requested.get(mineral, 0))
+			if need > 0:
+				chip_entries.append("%s: %dT" % [str(mineral).to_upper(), need])
+	else:
+		var cargo_keys := _cargo.keys()
+		cargo_keys.sort_custom(func(a, b): return int(_cargo.get(a, 0)) > int(_cargo.get(b, 0)))
+		for mineral in cargo_keys:
+			var amount := int(_cargo.get(mineral, 0))
+			if amount > 0:
+				chip_entries.append("%s: %dT" % [str(mineral).to_upper(), amount])
+	for idx in range(min(chip_entries.size(), chips.size())):
+		chips[idx].visible = true
+		chip_labels[idx].text = str(chip_entries[idx])
+		chip_labels[idx].add_theme_font_size_override("font_size", 12)
+		chip_labels[idx].add_theme_color_override("font_color", TEXT_COLOR)
 
 func _bind_combined_cargo_card() -> void:
 	_combined_cargo_card.add_theme_stylebox_override("panel", _soft_card_style())
-	var header: Label = _combined_cargo_card.get_node("Content/HeaderLabel")
-	var rows: VBoxContainer = _combined_cargo_card.get_node("Content/Rows")
-	var footer: Label = _combined_cargo_card.get_node("Content/FooterLabel")
+	var header: Label = _combined_cargo_card.get_node("Margin/Content/HeaderLabel")
+	var rows: VBoxContainer = _combined_cargo_card.get_node("Margin/Content/Rows")
+	var footer: Label = _combined_cargo_card.get_node("Margin/Content/FooterLabel")
 	rows.add_theme_constant_override("separation", 10)
 	_clear_container(rows)
 	footer.visible = false
 	if _cargo.is_empty():
-		header.text = "◌ Cargo"
+		header.text = "RECOVERY REPORT"
 		header.add_theme_font_size_override("font_size", 17)
 		header.add_theme_color_override("font_color", CYAN)
 		var empty := Label.new()
@@ -393,7 +459,7 @@ func _bind_combined_cargo_card() -> void:
 		rows.add_child(empty)
 		return
 	if not _requested.is_empty():
-		header.text = "◎ Cargo & Order"
+		header.text = "RECOVERY REPORT"
 		header.add_theme_font_size_override("font_size", 17)
 		header.add_theme_color_override("font_color", AMBER)
 		var all_met := true
@@ -438,7 +504,7 @@ func _bind_combined_cargo_card() -> void:
 		footer.add_theme_font_size_override("font_size", 16)
 		footer.add_theme_color_override("font_color", GREEN if all_met else AMBER)
 	else:
-		header.text = "◌ Cargo"
+		header.text = "RECOVERY REPORT"
 		header.add_theme_font_size_override("font_size", 17)
 		header.add_theme_color_override("font_color", CYAN)
 		var cargo_keys := _cargo.keys()
@@ -458,6 +524,46 @@ func _bind_combined_cargo_card() -> void:
 			qty_lbl.add_theme_font_size_override("font_size", 18)
 			qty_lbl.add_theme_color_override("font_color", CYAN)
 			qty_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+
+func _bind_findings_card() -> void:
+	_findings_card.visible = true
+	_findings_card.add_theme_stylebox_override("panel", _soft_card_style())
+	var header: Label = _findings_card.get_node("Margin/Content/HeaderLabel")
+	var rows: VBoxContainer = _findings_card.get_node("Margin/Content/Rows")
+	var footer: Label = _findings_card.get_node("Margin/Content/FooterLabel")
+	header.text = "FINDINGS & PROGRESSION"
+	header.text = "SCAN INTEGRITY: 100%"
+	header.add_theme_font_size_override("font_size", 16)
+	header.add_theme_color_override("font_color", TITLE_COLOR)
+	_clear_container(rows)
+	footer.visible = true
+	footer.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	footer.add_theme_font_size_override("font_size", 13)
+	footer.add_theme_color_override("font_color", TEXT_MUTED)
+
+	var order_row: HBoxContainer = MissionDebriefDetailRowScene.instantiate()
+	rows.add_child(order_row)
+	(order_row.get_node("KeyLabel") as Label).text = "Rank achieved"
+	(order_row.get_node("ValueLabel") as Label).text = "%d%%" % int(round(_order_ratio * 100.0))
+
+	var payout_row: HBoxContainer = MissionDebriefDetailRowScene.instantiate()
+	rows.add_child(payout_row)
+	(payout_row.get_node("KeyLabel") as Label).text = "Reward status"
+	(payout_row.get_node("ValueLabel") as Label).text = "Pending cargo resolution" if not _reward_resolved else "Payout delivered"
+
+	var unlock_row: HBoxContainer = MissionDebriefDetailRowScene.instantiate()
+	rows.add_child(unlock_row)
+	(unlock_row.get_node("KeyLabel") as Label).text = "Next unlock"
+	(unlock_row.get_node("ValueLabel") as Label).text = str(_next_mission_brief.get("title", "Next mission ready"))
+
+	for row in [order_row, payout_row, unlock_row]:
+		var key := row.get_node("KeyLabel") as Label
+		var value := row.get_node("ValueLabel") as Label
+		key.add_theme_font_size_override("font_size", 15)
+		key.add_theme_color_override("font_color", TEXT_MUTED)
+		value.add_theme_font_size_override("font_size", 15)
+		value.add_theme_color_override("font_color", TEXT_COLOR)
+	footer.text = str(_next_mission_brief.get("note", _stage_hint(int(RocketsManager.get_mission_stage()))))
 
 func _bind_reward_actions() -> void:
 	_reset_button(_primary_action_button, "Next Mission →", false)
@@ -486,10 +592,12 @@ func _bind_handoff_sections() -> void:
 	_payout_card.visible = false
 	_combined_cargo_card.visible = false
 	_phase_card.visible = true
+	_findings_card.visible = true
+	_bind_findings_card()
 	_phase_card.add_theme_stylebox_override("panel", _soft_card_style())
-	var header: Label = _phase_card.get_node("Content/HeaderLabel")
-	var rows: VBoxContainer = _phase_card.get_node("Content/Rows")
-	var footer: Label = _phase_card.get_node("Content/FooterLabel")
+	var header: Label = _phase_card.get_node("Margin/Content/HeaderLabel")
+	var rows: VBoxContainer = _phase_card.get_node("Margin/Content/Rows")
+	var footer: Label = _phase_card.get_node("Margin/Content/FooterLabel")
 	_clear_container(rows)
 	footer.visible = false
 	if _reward_resolved:
@@ -1149,6 +1257,20 @@ func _make_button(text: String, primary: bool) -> Button:
 func _soft_card_style() -> StyleBoxFlat:
 	# Distinctly lighter than panel background so cards are visible
 	return PanelStyle.create_glass_card_style(Color(0.14, 0.20, 0.30, 1.0), 0.72, 12, 18, 14)
+
+func _success_banner_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.08, 0.12, 0.19, 0.96)
+	style.border_color = Color(CYAN.r, CYAN.g, CYAN.b, 0.52)
+	style.border_width_left = 1
+	style.border_width_top = 1
+	style.border_width_right = 1
+	style.border_width_bottom = 1
+	style.set_corner_radius_all(14)
+	style.shadow_color = Color(CYAN.r, CYAN.g, CYAN.b, 0.16)
+	style.shadow_size = 14
+	style.shadow_offset = Vector2(0, 3)
+	return style
 
 func _highlight_card_style() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()

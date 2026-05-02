@@ -1,0 +1,170 @@
+[gd_scene load_steps=6 format=3]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card"]
+bg_color = Color(0.055, 0.082, 0.15, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.22, 0.54, 0.8, 0.95)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(0.22, 0.54, 0.8, 0.16)
+shadow_size = 12
+shadow_offset = Vector2(0, 4)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_icon"]
+bg_color = Color(0.22, 0.54, 0.8, 0.16)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+content_margin_left = 10.0
+content_margin_top = 8.0
+content_margin_right = 10.0
+content_margin_bottom = 8.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button"]
+bg_color = Color(0.82, 0.918, 0.96, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+content_margin_left = 16.0
+content_margin_top = 8.0
+content_margin_right = 16.0
+content_margin_bottom = 8.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button_hover"]
+bg_color = Color(0.16, 0.42, 0.65, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+content_margin_left = 16.0
+content_margin_top = 8.0
+content_margin_right = 16.0
+content_margin_bottom = 8.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button_focus"]
+bg_color = Color(0.82, 0.918, 0.96, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.22, 0.54, 0.8, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+content_margin_left = 16.0
+content_margin_top = 8.0
+content_margin_right = 16.0
+content_margin_bottom = 8.0
+
+[node name="LaunchWizardContractorCardSelected" type="PanelContainer"]
+custom_minimum_size = Vector2(320, 330)
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="VBox" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="TopRow" type="HBoxContainer" parent="Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="IconPanel" type="PanelContainer" parent="Margin/VBox/TopRow"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_icon")
+
+[node name="IconLabel" type="Label" parent="Margin/VBox/TopRow/IconPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.94, 0.98, 1)
+theme_override_font_sizes/font_size = 24
+text = "CON"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="TitleColumn" type="VBoxContainer" parent="Margin/VBox/TopRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="NameLabel" type="Label" parent="Margin/VBox/TopRow/TitleColumn"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.94, 0.98, 1)
+theme_override_font_sizes/font_size = 20
+text = "Contractor"
+autowrap_mode = 3
+
+[node name="BriefLabel" type="Label" parent="Margin/VBox/TopRow/TitleColumn"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.64, 0.73, 0.84, 1)
+theme_override_font_sizes/font_size = 13
+text = "Delivery contract"
+autowrap_mode = 3
+
+[node name="StatusLabel" type="Label" parent="Margin/VBox/TopRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.22, 0.54, 0.8, 1)
+theme_override_font_sizes/font_size = 11
+text = "LOCKED IN"
+vertical_alignment = 1
+
+[node name="Divider" type="ColorRect" parent="Margin/VBox"]
+custom_minimum_size = Vector2(0, 1)
+layout_mode = 2
+color = Color(0.22, 0.54, 0.8, 0.18)
+
+[node name="OrderColumn" type="VBoxContainer" parent="Margin/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 14
+
+[node name="HeaderRow" type="HBoxContainer" parent="Margin/VBox/OrderColumn"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="NeedsLabel" type="Label" parent="Margin/VBox/OrderColumn/HeaderRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.94, 0.98, 1)
+theme_override_font_sizes/font_size = 14
+text = "NEEDS"
+
+[node name="TagLabel" type="Label" parent="Margin/VBox/OrderColumn/HeaderRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.22, 0.54, 0.8, 1)
+theme_override_font_sizes/font_size = 12
+text = "ORDER"
+horizontal_alignment = 2
+
+[node name="MineralGrid" type="GridContainer" parent="Margin/VBox/OrderColumn"]
+layout_mode = 2
+size_flags_horizontal = 3
+columns = 2
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 10
+
+[node name="SelectButton" type="Button" parent="Margin/VBox"]
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.22, 0.54, 0.8, 1)
+theme_override_font_sizes/font_size = 15
+theme_override_styles/normal = SubResource("StyleBoxFlat_button")
+theme_override_styles/hover = SubResource("StyleBoxFlat_button_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_button_hover")
+theme_override_styles/focus = SubResource("StyleBoxFlat_button_focus")
+text = "Selected"

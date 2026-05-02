@@ -2,13 +2,16 @@ extends Node2D
 
 @export var show_ground_guide: bool = false
 
-var camera_controller: Node
-var scene_manager: SceneManager
-var ui_manager: UIManager
+const SceneManager = preload("res://Scripts/Earth/SceneManager.gd")
+const UIManager = preload("res://Scripts/Earth/UIManager.gd")
 const PREVIEW_SCENE_PATH := "res://Scenes/UI/AsteroidPreview/asteroid_preview.tscn"
 const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
 const UILayout = preload("res://Scripts/UI/UILayout.gd")
+
+var camera_controller: Node
+var scene_manager: SceneManager
+var ui_manager: UIManager
 const ClassificationConsensus = preload("res://Scripts/Utils/ClassificationConsensus.gd")
 const EarthBaseActionCard = preload("res://Scripts/UI/EarthBaseActionCard.gd")
 const EarthBaseProgressionCards = preload("res://Scripts/UI/EarthBaseProgressionCards.gd")
@@ -19,7 +22,7 @@ const EarthBaseBuildFlowOverlayScene = preload("res://Scenes/UI/EarthBaseBuildFl
 const EmergencyLoanOfferDialogScene = preload("res://Scenes/UI/EmergencyLoanOfferDialog.tscn")
 const ClassificationConsensusNotificationScene = preload("res://Scenes/UI/ClassificationConsensusNotification.tscn")
 const ControlStationScript = preload("res://Scripts/Earth/ControlStation.gd")
-const ControlStationTexture = preload("res://assets/Structures/ControlStation.png")
+const CONTROL_STATION_TEXTURE_PATH := "res://assets/Structures/ControlStation.png"
 const PreviewRouting = preload("res://Scripts/UI/NewMissionPreviewRouting.gd")
 const SR2_UNLOCK_POPUP_PATH := "user://rocket_unlock_popups.cfg"
 const SR2_UNLOCK_SECTION := "popups"
@@ -82,6 +85,7 @@ func _ready() -> void:
 	call_deferred("_apply_nav_safe_area")
 	call_deferred("_apply_structure_visual_evolution")
 	_build_earth_base_identity()
+	call_deferred("_refresh_tutorial_owned_ui")
 
 func _ensure_tutorial_runtime() -> void:
 	var app = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
@@ -91,22 +95,51 @@ func _ensure_tutorial_runtime() -> void:
 func _connect_app_runtime_signals() -> void:
 	var app = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
 	if app == null:
+		_connect_tutorial_overlay_signals()
 		return
 	if app.has_signal("rockets_reset") and not app.rockets_reset.is_connected(_on_rockets_reset):
 		app.rockets_reset.connect(_on_rockets_reset)
+	if app.has_signal("tutorial_state_updated") and not app.tutorial_state_updated.is_connected(_on_tutorial_state_updated):
+		app.tutorial_state_updated.connect(_on_tutorial_state_updated)
+	_connect_tutorial_overlay_signals()
+
+func _connect_tutorial_overlay_signals() -> void:
+	var tree := get_tree()
+	if tree == null or tree.root == null:
+		return
+	if not tree.root.child_entered_tree.is_connected(_on_root_child_entered_tree):
+		tree.root.child_entered_tree.connect(_on_root_child_entered_tree)
+	var overlay := tree.root.find_child("TutorialCoachOverlay", true, false)
+	if overlay != null:
+		_bind_tutorial_overlay_signals(overlay)
+
+func _on_root_child_entered_tree(node: Node) -> void:
+	if node != null and str(node.name) == "TutorialCoachOverlay":
+		_bind_tutorial_overlay_signals(node)
+		call_deferred("_refresh_tutorial_owned_ui")
+
+func _bind_tutorial_overlay_signals(node: Node) -> void:
+	if not (node is CanvasItem):
+		return
+	var canvas_item := node as CanvasItem
+	if not canvas_item.visibility_changed.is_connected(_on_tutorial_overlay_visibility_changed):
+		canvas_item.visibility_changed.connect(_on_tutorial_overlay_visibility_changed)
+
+func _on_tutorial_overlay_visibility_changed() -> void:
+	call_deferred("_refresh_tutorial_owned_ui")
 
 func _setup_buttons() -> void:
-	var back_btn        := $UILayer/ButtonContainer/BackButton       as Button
-	var forward_btn     := $UILayer/ButtonContainer/ForwardButton    as Button
-	var menu_btn        := $UILayer/ButtonContainer/MenuButton       as Button
-	var market_btn      := $UILayer/ButtonContainer/MarketButton     as Button
-	var space_map_btn   := $UILayer/ButtonContainer/SpaceMapButton   as Button
-	var build_btn       := $UILayer/ButtonContainer/BuildButton      as Button
-	var new_mission_btn := $UILayer/ButtonContainer/NewMissionButton as Button
-	var container       := $UILayer/ButtonContainer                  as HBoxContainer
+	var back_btn: Button        = $UILayer/ButtonContainer/BackButton
+	var forward_btn: Button     = $UILayer/ButtonContainer/ForwardButton
+	var menu_btn: Button        = $UILayer/ButtonContainer/MenuButton
+	var market_btn: Button      = $UILayer/ButtonContainer/MarketButton
+	var space_map_btn: Button   = $UILayer/ButtonContainer/SpaceMapButton
+	var build_btn: Button       = $UILayer/ButtonContainer/BuildButton
+	var new_mission_btn: Button = $UILayer/ButtonContainer/NewMissionButton
+	var container: HBoxContainer = $UILayer/ButtonContainer
 
 	# ── Unified pill background behind all buttons ───────────────────────────
-	var bg := $UILayer/ButtonContainer/NavBackground as Panel
+	var bg: Panel = $UILayer/ButtonContainer/NavBackground
 	var bg_style := StyleBoxFlat.new()
 	bg_style.bg_color     = Color(0.03, 0.03, 0.04, 0.94)
 	bg_style.border_color = Color(0.28, 0.88, 0.96, 0.35)   # cyan, low-opacity border
@@ -346,11 +379,16 @@ func _show_build_structure_step(overlay: Control) -> void:
 func _available_build_structures() -> Array:
 	var options := []
 	if _control_station_build_required():
+		var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+		var cost_str := "500M F"
+		if rm:
+			var cost := rm.get_control_station_build_cost()
+			cost_str = preload("res://Scripts/Utils/CurrencyFormatter.gd").format_with_symbol(cost)
 		options.append({
 			"id": "control_station",
 			"title": "Control Station",
 			"subtitle": "Mission 2 fleet hub. Unlocks structured route planning and Starter Rocket 2 prep.",
-			"meta": "MISSION 2 GATE"
+			"meta": "COST: " + cost_str
 		})
 	if _scanner_station_build_required():
 		options.append({
@@ -377,13 +415,130 @@ func _complete_control_station_build() -> bool:
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	if not rm or rm.is_control_station_built() or not _control_station_build_required():
 		return false
+	var app = get_tree().root.find_child("AppController", true, false)
+	if app == null or not app.has_method("get_franc_balance") or not app.has_method("add_franc_balance"):
+		return false
+	var cost := rm.get_control_station_build_cost()
+	if not rm.can_afford_control_station_build(int(app.get_franc_balance())):
+		return false
+	app.add_franc_balance(-cost, "build_control_station")
 	rm.set_control_station_built(true)
 	preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("build_control_station")
 	_sync_control_station_presence()
 	_apply_control_station_visual_tier()
 	_apply_tutorial_button_state()
 	_build_progression_cards()
+	call_deferred("_show_control_station_built_dialogue")
 	return true
+
+func _show_control_station_built_dialogue() -> void:
+	var viewport_size := get_viewport().get_visible_rect().size
+	var compact := viewport_size.x < 1200.0
+
+	# Full-screen dimmed backdrop
+	var backdrop := ColorRect.new()
+	backdrop.name = "ControlStationBuiltDialogue"
+	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	backdrop.color = Color(0.0, 0.0, 0.0, 0.72)
+	$UILayer.add_child(backdrop)
+
+	# Centered layout
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	backdrop.add_child(center)
+
+	var card := PanelContainer.new()
+	card.custom_minimum_size = Vector2(clampf(viewport_size.x - 48.0, 320.0, 660.0), 0.0)
+	_apply_glass_callout_panel(card, Color(0.06, 0.10, 0.16, 0.98), 0.65, 20, 28, 26)
+	center.add_child(card)
+
+	var margin := MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 0)
+	margin.add_theme_constant_override("margin_right", 0)
+	margin.add_theme_constant_override("margin_top", 0)
+	margin.add_theme_constant_override("margin_bottom", 0)
+	card.add_child(margin)
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 18)
+	margin.add_child(vbox)
+
+	# Eyebrow
+	var eyebrow := Label.new()
+	eyebrow.text = "MISSION 2  •  FLEET HUB ONLINE"
+	eyebrow.add_theme_color_override("font_color", Color(0.28, 0.88, 0.96, 1.0))
+	eyebrow.add_theme_font_size_override("font_size", 14)
+	vbox.add_child(eyebrow)
+
+	# Title
+	var title := Label.new()
+	title.text = "Control Station Built"
+	title.add_theme_color_override("font_color", Color(0.95, 0.93, 0.90, 1.0))
+	title.add_theme_font_size_override("font_size", 34 if compact else 40)
+	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	vbox.add_child(title)
+
+	# Body
+	var body := Label.new()
+	body.text = "The Control Station is your base of operations for Mission 2 fleet planning. You can now build Starter Rocket 2, take on contractor delivery orders for payout bonuses, and push further into the belt."
+	body.add_theme_color_override("font_color", Color(0.78, 0.84, 0.92, 1.0))
+	body.add_theme_font_size_override("font_size", 20 if compact else 24)
+	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	vbox.add_child(body)
+
+	# Highlight chips
+	var chips_box := VBoxContainer.new()
+	chips_box.add_theme_constant_override("separation", 10)
+	vbox.add_child(chips_box)
+	for chip_text in [
+		"STARTER ROCKET 2  •  Now buildable — faster, longer range, bigger haul.",
+		"CONTRACTORS  •  Accept a delivery order before launch for a payout bonus.",
+		"BELT ACCESS  •  SR2 reaches targets beyond SR1's operating radius."
+	]:
+		var chip := PanelContainer.new()
+		_apply_glass_callout_panel(chip, GLASS_CARD_SUBTLE_BG, 0.42, 12, 18, 14)
+		var chip_label := Label.new()
+		chip_label.text = chip_text
+		chip_label.add_theme_color_override("font_color", Color(0.78, 0.84, 0.92, 1.0))
+		chip_label.add_theme_font_size_override("font_size", 18 if compact else 20)
+		chip_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		chip.add_child(chip_label)
+		chips_box.add_child(chip)
+
+	# Spacer
+	var spacer := Control.new()
+	spacer.custom_minimum_size = Vector2(0, 4)
+	vbox.add_child(spacer)
+
+	# CTA
+	var cta := Button.new()
+	cta.text = "Open Launchpad"
+	cta.custom_minimum_size = Vector2(0, 52)
+	var cta_style := StyleBoxFlat.new()
+	cta_style.bg_color = Color(0.10, 0.54, 0.46, 1.0)
+	cta_style.set_corner_radius_all(10)
+	cta_style.content_margin_left = 24
+	cta_style.content_margin_right = 24
+	cta_style.content_margin_top = 12
+	cta_style.content_margin_bottom = 12
+	var cta_hover := cta_style.duplicate() as StyleBoxFlat
+	cta_hover.bg_color = Color(0.13, 0.65, 0.55, 1.0)
+	cta.add_theme_stylebox_override("normal", cta_style)
+	cta.add_theme_stylebox_override("hover", cta_hover)
+	cta.add_theme_stylebox_override("pressed", cta_style)
+	cta.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0, 1.0))
+	cta.add_theme_font_size_override("font_size", 20)
+	cta.pressed.connect(func() -> void:
+		if is_instance_valid(backdrop):
+			backdrop.queue_free()
+		_on_new_mission_button_pressed()
+	)
+	vbox.add_child(cta)
+
+	# Fade in
+	backdrop.modulate.a = 0.0
+	var tw := create_tween()
+	tw.tween_property(backdrop, "modulate:a", 1.0, 0.2)
 
 func _complete_scanner_station_build() -> bool:
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
@@ -672,6 +827,13 @@ func _build_earth_base_identity() -> void:
 	_build_ambient_stars()
 	_build_progression_cards()
 
+func _on_tutorial_state_updated(_state: Dictionary) -> void:
+	call_deferred("_refresh_tutorial_owned_ui")
+
+func _refresh_tutorial_owned_ui() -> void:
+	_apply_tutorial_button_state()
+	_build_progression_cards()
+
 func _build_wordmark() -> void:
 	var ui_layer = get_node_or_null("UILayer")
 	if ui_layer == null:
@@ -736,22 +898,12 @@ func _build_progression_cards() -> void:
 	var active_context := get_active_mission_context()
 	var control_station_required := _control_station_build_required()
 	var scanner_station_required := _scanner_station_build_required()
-	var state := _get_tutorial_state()
-	if not state.is_empty():
-		var skipped = bool(state.get("skipped", false))
-		var step: Dictionary = state.get("current_step", {})
-		var valid_scenes: Variant = step.get("valid_scenes", [])
-		var is_earth_base_step := false
-		if typeof(valid_scenes) == TYPE_ARRAY:
-			for scene_name_any in valid_scenes:
-				if str(scene_name_any) == "earth_base_1":
-					is_earth_base_step = true
-					break
-		# Keep the tutorial lane clean: the coach overlay is the single active
-		# tutorial surface, including build-gate CTAs.
-		if active_context.is_empty() and not skipped and not step.is_empty() and is_earth_base_step:
-			cards_root.visible = false
-			return
+	# The tutorial coach owns the CTA lane whenever it is visible on Earth base.
+	# Do not try to infer intent from tutorial state here; duplicate cards are worse
+	# than hiding the scene-owned progression lane while guidance is active.
+	if _has_visible_tutorial_overlay():
+		cards_root.visible = false
+		return
 	cards_root.hide_all()
 	cards_root.visible = true
 
@@ -770,6 +922,17 @@ func _build_progression_cards() -> void:
 		cards_root.show_scanner_station(_on_build_scanner_station_pressed)
 	elif completed_count >= 1:
 		cards_root.show_next_mission(int(rm.get_mission_stage()), _on_new_mission_button_pressed)
+
+func _has_visible_tutorial_overlay() -> bool:
+	var tree := get_tree()
+	if tree == null or tree.root == null:
+		return false
+	var overlay := tree.root.find_child("TutorialCoachOverlay", true, false)
+	if overlay == null:
+		return false
+	if overlay is CanvasItem:
+		return (overlay as CanvasItem).visible
+	return true
 
 func _get_tutorial_state() -> Dictionary:
 	var tree := get_tree()
@@ -1210,7 +1373,7 @@ func _ensure_control_station_visible() -> void:
 	sprite.name = "Sprite2D"
 	sprite.position = Vector2(-29.00003, 5.9999847)
 	sprite.scale = Vector2(0.5, 0.5)
-	sprite.texture = ControlStationTexture
+	sprite.texture = load(CONTROL_STATION_TEXTURE_PATH)
 	structure.add_child(sprite)
 
 	var area := Area2D.new()

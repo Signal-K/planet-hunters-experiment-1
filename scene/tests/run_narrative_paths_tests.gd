@@ -54,8 +54,9 @@ func run_all_tests() -> void:
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 
 func _reset() -> void:
-	DirAccess.remove_absolute("user://tutorial_v2.cfg")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path("user://tutorial_v2.cfg"))
 	RocketsManager.reset_state()
+	RocketsManager.clear_trip_contract_offer()
 	RocketsManager.clear_selected_target()
 	RocketsManager.clear_preview_target()
 	RocketsManager.clear_returned_mission()
@@ -103,7 +104,7 @@ func _assert_no_regression(state_before: Dictionary, state_after: Dictionary, ac
 func _assert_no_duplicate_steps(state: Dictionary, label: String) -> bool:
 	var completed = state.get("completed_steps_by_stage", {})
 	for stage_key in completed.keys():
-		var steps = completed.get(stage_key, [])
+		var steps: Array = completed.get(stage_key, [])
 		if typeof(steps) != TYPE_ARRAY:
 			continue
 		var seen := {}
@@ -239,7 +240,10 @@ func test_p06_free_operations_survey_path() -> void:
 	RocketsManager.set_detected_targets([{
 		"id": "p06-free-ops-target",
 		"label": "P06 Free Ops Target",
-		"type": "asteroid"
+		"type": "planet",
+		"anomalySet": "telescope-tess",
+		"classification_status": "confirmed",
+		"tess_disposition": "CP"
 	}])
 	var selectable = RocketsManager.get_selectable_targets_for_stage(4)
 	if selectable.is_empty():

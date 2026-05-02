@@ -13,6 +13,7 @@ var _menu_request_version: int = 0
 var _menu_request_action: String = ""
 var _last_mining_result: Dictionary = {}
 var _last_mining_result_synced: bool = true
+var _auto_start_mining: bool = false
 
 const BASE_XP_TO_LEVEL := 10
 const XP_AWARD_LAUNCH := 5

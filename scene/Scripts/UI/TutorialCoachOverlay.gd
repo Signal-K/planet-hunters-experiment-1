@@ -1,6 +1,8 @@
 extends CanvasLayer
 
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
+const UILayout = preload("res://Scripts/UI/UILayout.gd")
+const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
 const TutorialLayoutZone = preload("res://Scripts/UI/TutorialLayoutZone.gd")
 const TutorialCoachTargeting = preload("res://Scripts/UI/TutorialCoachTargeting.gd")
 
@@ -99,7 +101,7 @@ func _configure_mouse_passthrough() -> void:
 			btn.mouse_filter = Control.MOUSE_FILTER_STOP
 
 func _process(delta: float) -> void:
-	if _is_launchpad_scene_with_embedded_guidance():
+	if _has_scene_owned_guidance_overlay():
 		if visible:
 			visible = false
 			_hide_target_pointer()
@@ -276,7 +278,7 @@ func _on_tutorial_state_updated(state: Dictionary) -> void:
 	if state.is_empty():
 		visible = false
 		return
-	if _is_launchpad_scene_with_embedded_guidance():
+	if _has_scene_owned_guidance_overlay():
 		visible = false
 		_hide_target_pointer()
 		return
@@ -311,6 +313,23 @@ func _is_launchpad_scene_with_embedded_guidance() -> bool:
 	if tree == null or tree.current_scene == null:
 		return false
 	return tree.current_scene.scene_file_path.get_file().get_basename() == "earth_launchpad"
+
+func _has_scene_owned_guidance_overlay() -> bool:
+	if _is_launchpad_scene_with_embedded_guidance():
+		return true
+	var tree := get_tree()
+	if tree == null or tree.root == null:
+		return false
+	for overlay_name in ["AnnotationOverlay", "M3ReviewOverlay"]:
+		var overlay := tree.root.find_child(overlay_name, true, false)
+		if overlay == null:
+			continue
+		if overlay is CanvasItem:
+			if (overlay as CanvasItem).visible:
+				return true
+		else:
+			return true
+	return false
 
 func _setup_pointer_indicator() -> void:
 	if _pointer_line and _pointer_head and _target_highlight:
@@ -490,12 +509,12 @@ func _action_copy_for_step(step: Dictionary) -> String:
 			if on_base:
 				return "Press New Mission to open Launchpad, then select a target."
 			if stage == 3:
-				return "Classify a TESS candidate, then select a confirmed target on the map."
+				return "Classify the TESS candidate in the review screen. Mission control will route a confirmed result into launch setup automatically."
 			return "Select the highlighted Mission target."
 		"classify_candidate":
 			if on_base:
 				return "Press New Mission to open Launchpad, then classify a TESS lightcurve candidate."
-			return "Use the candidate review card before selecting your route."
+			return "Use the full review screen to classify the TESS candidate before launch setup."
 		"launch_rocket_from_earth":
 			if on_base:
 				return "Press New Mission to open Launchpad, then launch."
@@ -628,16 +647,31 @@ func _current_mission_started() -> bool:
 
 func _get_earth_base_mission_context() -> Dictionary:
 	var tree := get_tree()
-	if tree == null or tree.current_scene == null:
+	if tree == null:
 		return {}
-	var scene := tree.current_scene
-	if scene.scene_file_path.get_file().get_basename() != "earth_base_1":
+	var scene: Node = tree.current_scene
+	if scene == null or scene.scene_file_path.get_file().get_basename() != "earth_base_1":
+		scene = _find_scene_by_basename("earth_base_1")
+	if scene == null:
 		return {}
 	if scene.has_method("get_active_mission_context"):
 		var context = scene.call("get_active_mission_context")
 		if typeof(context) == TYPE_DICTIONARY:
 			return context
 	return {}
+
+func _find_scene_by_basename(scene_basename: String) -> Node:
+	var tree := get_tree()
+	if tree == null or tree.root == null:
+		return null
+	var stack: Array[Node] = [tree.root]
+	while not stack.is_empty():
+		var node: Node = stack.pop_back()
+		if node.scene_file_path.get_file().get_basename() == scene_basename:
+			return node
+		for child in node.get_children():
+			stack.append(child)
+	return null
 
 func _needs_launchpad_cta() -> bool:
 	if _current_step.is_empty():
@@ -723,8 +757,7 @@ func _build_scanner_station_from_current_scene() -> void:
 		scene.call("_on_build_scanner_station_pressed")
 
 func _on_resume_mission_pressed() -> void:
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
-	var missions: Array = rm.get_missions()
+	var missions: Array = RocketsManager.get_missions()
 	if missions.is_empty():
 		return
 	var m: Dictionary = missions[0]
@@ -733,10 +766,10 @@ func _on_resume_mission_pressed() -> void:
 	var target_type := str(m.get("target_type", "asteroid"))
 	if rocket_id == "" or target_id == "":
 		return
-	rm.set_preview_target(target_id, target_id, target_type, rocket_id)
-	rm.mark_returned_if_due(rocket_id)
-	var status := rm.get_rocket_status(rocket_id)
-	var arrived := rm.has_arrived(rocket_id, target_id)
+	RocketsManager.set_preview_target(target_id, target_id, target_type, rocket_id)
+	RocketsManager.mark_returned_if_due(rocket_id)
+	var status: String = RocketsManager.get_rocket_status(rocket_id)
+	var arrived: bool = RocketsManager.has_arrived(rocket_id, target_id)
 	var scene_path := PreviewRouting.resolve_scene_path(status, arrived)
 	var tree = get_tree()
 	if tree == null:

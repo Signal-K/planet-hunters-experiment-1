@@ -1,23 +1,15 @@
 {
   "unlocked": [
     "starterrocket1",
-    "starterrocket2",
-    "starterrocket3"
+    "starterrocket2"
   ],
   "placed": [
     {
       "type": "starterrocket1",
-      "id": "starterrocket1-2992794632",
-      "x": -110.0,
-      "y": -170.0,
-      "status": "awaitingLaunch"
-    },
-    {
-      "type": "starterrocket1",
-      "id": "starterrocket1-1559265029",
-      "x": -110.0,
-      "y": -170.0,
-      "status": "awaitingLaunch"
+      "id": "starterrocket1-950328804",
+      "x": 0.0,
+      "y": 0.0,
+      "status": "returned"
     }
   ],
   "launched": [
@@ -26,90 +18,9 @@
   ],
   "missions": [
   ],
-  "selected_target": "",
   "preview_target": {
   },
   "detected_targets": [
-    {
-      "id": "init-planet-0",
-      "label": "TOI-700 d",
-      "type": "planet",
-      "distance_au": 120.0,
-      "required_level": 2.0,
-      "reward_ratio": 1.25,
-      "anomalySet": "telescope-tess",
-      "tess_disposition": "PC",
-      "classification_status": "candidate",
-      "ticId": "TIC 150428135",
-      "period_days": 37.43,
-      "parent_star": "TOI-700",
-      "star_system_id": "toi-700",
-      "star_system_name": "TOI-700 System",
-      "science_source": "NASA TESS",
-      "science_blurb": "Lightcurve candidate near the habitable zone"
-    },
-    {
-      "id": "init-planet-1",
-      "label": "313P/Gibbs",
-      "type": "asteroid",
-      "distance_au": 4.5,
-      "required_level": 2.0,
-      "reward_ratio": 1.25,
-      "anomalySet": "telescope-tess",
-      "classification_status": "candidate",
-      "science_source": "Active Asteroids Programme",
-      "science_blurb": "Recurrent activity near perihelion",
-      "tess_disposition": "PC"
-    },
-    {
-      "id": "init-planet-2",
-      "label": "TOI-1452 b",
-      "type": "planet",
-      "distance_au": 174.0,
-      "required_level": 2.0,
-      "reward_ratio": 1.28,
-      "anomalySet": "telescope-tess",
-      "tess_disposition": "PC",
-      "classification_status": "candidate",
-      "ticId": "TIC 420112587",
-      "period_days": 11.06,
-      "parent_star": "TOI-1452",
-      "star_system_id": "toi-1452",
-      "star_system_name": "TOI-1452 System",
-      "science_source": "NASA TESS",
-      "science_blurb": "Water-world style transit signal"
-    },
-    {
-      "id": "init-planet-3",
-      "label": "P/2013 P5 (PANSTARRS)",
-      "type": "asteroid",
-      "distance_au": 12.2,
-      "required_level": 2.0,
-      "reward_ratio": 1.3,
-      "anomalySet": "telescope-tess",
-      "classification_status": "candidate",
-      "science_source": "Active Asteroids Programme",
-      "science_blurb": "Six comet-like tails detected",
-      "tess_disposition": "PC"
-    },
-    {
-      "id": "init-planet-4",
-      "label": "TOI-561 b",
-      "type": "planet",
-      "distance_au": 224.0,
-      "required_level": 2.0,
-      "reward_ratio": 1.3,
-      "anomalySet": "telescope-tess",
-      "tess_disposition": "PC",
-      "classification_status": "candidate",
-      "ticId": "TIC 377064495",
-      "period_days": 0.45,
-      "parent_star": "TOI-561",
-      "star_system_id": "toi-561",
-      "star_system_name": "TOI-561 System",
-      "science_source": "NASA TESS",
-      "science_blurb": "Ultra-short period planet"
-    }
   ],
   "seen_asteroids": [
   ],
@@ -118,23 +29,21 @@
   "scan_counts": {
   },
   "status_changed_at": {
-    "starterrocket1-2992794632": {
-      "awaitingLaunch": 1777078175.0
-    },
-    "starterrocket1-1559265029": {
-      "awaitingLaunch": 1777078175
+    "starterrocket1-950328804": {
+      "awaitingLaunch": 1777640035.0,
+      "launched": 1777640035.0,
+      "returningHome": 1777640070.0,
+      "returned": 1777725440.0
     }
   },
-  "mission_progress_completed": 3,
+  "mission_progress_completed": 1,
   "completed_mission_badges": [
-    "mission-1",
-    "mission-2",
-    "mission-3"
+    "mission-mission-1-training-target-1777725440"
   ],
-  "control_station_built": true,
-  "scanner_station_built": true,
-  "scanner_unlocked": true,
-  "scanner_unlock_dialog_seen": true,
+  "control_station_built": false,
+  "scanner_station_built": false,
+  "scanner_unlocked": false,
+  "scanner_unlock_dialog_seen": false,
   "scanner_next_scan_at": 0.0,
   "trip_contract_offer": {
   },
@@ -146,20 +55,17 @@
   "tess_classifications": {
   },
   "discovery_bonus_claimed": {
+    "mission-1-training-target": true
   },
   "rocket_customizations": {
-    "starterrocket1-2992794632": {
-      "flag": "Earth Union",
-      "logo": "Star",
-      "rocket_type": "starterrocket1"
-    },
-    "starterrocket1-1559265029": {
+    "starterrocket1-950328804": {
       "flag": "Earth Union",
       "logo": "Star",
       "rocket_type": "starterrocket1"
     }
   },
   "rocket_wear": {
+    "starterrocket1-950328804": 1.0
   },
   "archived_rocket_wear": {
   },
@@ -181,5 +87,43 @@
   "returned_mission": {
   },
   "returning_started": {
-  }
+  },
+  "starter_contract_offer": {
+    "contractors": [
+      {
+        "id": "aegis_defense",
+        "name": "Aegis Defense Systems",
+        "focus": "Defense-grade avionics and hardened military systems",
+        "requested_minerals": {
+          "Iron": 6.0,
+          "Nickel": 4.0
+        }
+      },
+      {
+        "id": "lumen_consumer",
+        "name": "Lumen Consumer Labs",
+        "focus": "High-volume consumer electronics and smart devices",
+        "requested_minerals": {
+          "Iron": 5.0,
+          "Nickel": 5.0
+        }
+      },
+      {
+        "id": "helion_orbital",
+        "name": "Helion Orbital Works",
+        "focus": "Next-gen propulsion and frontier space innovation",
+        "requested_minerals": {
+          "Iron": 4.0,
+          "Nickel": 6.0
+        }
+      }
+    ]
+  },
+  "selected_target": "",
+  "revealed_sectors": [
+    0.0,
+    7.0,
+    3.0,
+    6.0
+  ]
 }

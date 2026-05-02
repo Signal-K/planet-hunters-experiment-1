@@ -1,7 +1,7 @@
-[gd_scene format=3]
+[gd_scene load_steps=5 format=3]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card"]
-bg_color = Color(1, 1, 1, 1)
+bg_color = Color(0.038, 0.058, 0.112, 1)
 corner_radius_top_left = 12
 corner_radius_top_right = 12
 corner_radius_bottom_right = 12
@@ -14,9 +14,48 @@ content_margin_top = 14.0
 content_margin_right = 16.0
 content_margin_bottom = 14.0
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button"]
+bg_color = Color(0.22, 0.54, 0.8, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+content_margin_left = 16.0
+content_margin_top = 8.0
+content_margin_right = 16.0
+content_margin_bottom = 8.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button_hover"]
+bg_color = Color(0.16, 0.42, 0.65, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+content_margin_left = 16.0
+content_margin_top = 8.0
+content_margin_right = 16.0
+content_margin_bottom = 8.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button_focus"]
+bg_color = Color(0.22, 0.54, 0.8, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.82, 0.918, 0.96, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+content_margin_left = 16.0
+content_margin_top = 8.0
+content_margin_right = 16.0
+content_margin_bottom = 8.0
+
 [node name="LaunchWizardRocketTile" type="PanelContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
+custom_minimum_size = Vector2(212, 118)
 theme_override_styles/panel = SubResource("StyleBoxFlat_card")
 
 [node name="Margin" type="MarginContainer" parent="."]
@@ -24,7 +63,7 @@ layout_mode = 2
 
 [node name="VBox" type="VBoxContainer" parent="Margin"]
 layout_mode = 2
-theme_override_constants/separation = 6
+theme_override_constants/separation = 8
 
 [node name="TopRow" type="HBoxContainer" parent="Margin/VBox"]
 layout_mode = 2
@@ -32,23 +71,26 @@ theme_override_constants/separation = 8
 
 [node name="IconLabel" type="Label" parent="Margin/VBox/TopRow"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
-text = "🚀"
+theme_override_colors/font_color = Color(0.22, 0.54, 0.8, 1)
+theme_override_font_sizes/font_size = 12
+text = "SR-1"
 
 [node name="NameLabel" type="Label" parent="Margin/VBox/TopRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 19
-text = "Starter Rocket"
+theme_override_colors/font_color = Color(0.9, 0.94, 0.98, 1)
+theme_override_font_sizes/font_size = 17
+text = "Starter Rocket 1"
 
 [node name="SelectedLabel" type="Label" parent="Margin/VBox/TopRow"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(1, 1, 1, 0)
+theme_override_font_sizes/font_size = 16
 text = ""
 
 [node name="StatsRow" type="HBoxContainer" parent="Margin/VBox"]
 layout_mode = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 10
 
 [node name="ButtonRow" type="HBoxContainer" parent="Margin/VBox"]
 layout_mode = 2
@@ -56,5 +98,11 @@ alignment = 2
 
 [node name="SelectButton" type="Button" parent="Margin/VBox/ButtonRow"]
 layout_mode = 2
-custom_minimum_size = Vector2(120, 40)
+custom_minimum_size = Vector2(120, 42)
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 15
+theme_override_styles/normal = SubResource("StyleBoxFlat_button")
+theme_override_styles/hover = SubResource("StyleBoxFlat_button_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_button_hover")
+theme_override_styles/focus = SubResource("StyleBoxFlat_button_focus")
 text = "Select"

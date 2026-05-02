@@ -1,6 +1,7 @@
 class_name UIManager
 extends CanvasLayer
 const AppLogger = preload("res://Scripts/Utils/Logger.gd")
+const PanelManager = preload("res://Scripts/Utils/PanelManager.gd")
 
 enum PanelType {
 	MENU,

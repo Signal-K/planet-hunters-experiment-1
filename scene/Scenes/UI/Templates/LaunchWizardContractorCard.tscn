@@ -65,16 +65,16 @@ content_margin_right = 16.0
 content_margin_bottom = 8.0
 
 [node name="LaunchWizardContractorCard" type="PanelContainer"]
-custom_minimum_size = Vector2(320, 250)
+custom_minimum_size = Vector2(320, 330)
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_card")
 
 [node name="Margin" type="MarginContainer" parent="."]
 layout_mode = 2
-theme_override_constants/margin_left = 18
-theme_override_constants/margin_top = 18
-theme_override_constants/margin_right = 18
-theme_override_constants/margin_bottom = 18
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
 
 [node name="VBox" type="VBoxContainer" parent="Margin"]
 layout_mode = 2
@@ -104,21 +104,21 @@ theme_override_constants/separation = 4
 [node name="NameLabel" type="Label" parent="Margin/VBox/TopRow/TitleColumn"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.94, 0.98, 1)
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 20
 text = "Contractor"
 autowrap_mode = 3
 
 [node name="BriefLabel" type="Label" parent="Margin/VBox/TopRow/TitleColumn"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.64, 0.73, 0.84, 1)
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 13
 text = "Delivery contract"
 autowrap_mode = 3
 
 [node name="StatusLabel" type="Label" parent="Margin/VBox/TopRow"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.22, 0.54, 0.8, 1)
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 11
 vertical_alignment = 1
 
 [node name="Divider" type="ColorRect" parent="Margin/VBox"]
@@ -129,7 +129,7 @@ color = Color(0.22, 0.54, 0.8, 0.18)
 [node name="OrderColumn" type="VBoxContainer" parent="Margin/VBox"]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_constants/separation = 10
+theme_override_constants/separation = 14
 
 [node name="HeaderRow" type="HBoxContainer" parent="Margin/VBox/OrderColumn"]
 layout_mode = 2
@@ -137,8 +137,8 @@ theme_override_constants/separation = 8
 
 [node name="NeedsLabel" type="Label" parent="Margin/VBox/OrderColumn/HeaderRow"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.64, 0.73, 0.84, 1)
-theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.9, 0.94, 0.98, 1)
+theme_override_font_sizes/font_size = 14
 text = "NEEDS"
 
 [node name="TagLabel" type="Label" parent="Margin/VBox/OrderColumn/HeaderRow"]
@@ -153,11 +153,11 @@ horizontal_alignment = 2
 layout_mode = 2
 size_flags_horizontal = 3
 columns = 2
-theme_override_constants/h_separation = 8
-theme_override_constants/v_separation = 8
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 10
 
 [node name="SelectButton" type="Button" parent="Margin/VBox"]
-custom_minimum_size = Vector2(0, 40)
+custom_minimum_size = Vector2(0, 52)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(1, 1, 1, 1)

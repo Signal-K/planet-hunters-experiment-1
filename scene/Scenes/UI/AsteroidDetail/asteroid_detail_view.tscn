@@ -80,22 +80,29 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="ContentContainer" type="VBoxContainer" parent="BodyScroll"]
+[node name="ContentMargin" type="MarginContainer" parent="BodyScroll"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 24
+
+[node name="ContentContainer" type="VBoxContainer" parent="BodyScroll/ContentMargin"]
 custom_minimum_size = Vector2(0, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 20
 
-[node name="ScienceSummaryCard" parent="BodyScroll/ContentContainer" instance=ExtResource("3_summary_card")]
+[node name="ScienceSummaryCard" parent="BodyScroll/ContentMargin/ContentContainer" instance=ExtResource("3_summary_card")]
 layout_mode = 2
 
-[node name="LoadingLabel" type="Label" parent="BodyScroll/ContentContainer"]
+[node name="LoadingLabel" type="Label" parent="BodyScroll/ContentMargin/ContentContainer"]
 layout_mode = 2
 text = "Loading..."
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="ErrorLabel" type="Label" parent="BodyScroll/ContentContainer"]
+[node name="ErrorLabel" type="Label" parent="BodyScroll/ContentMargin/ContentContainer"]
 visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 0.2, 0.2, 1)
@@ -103,12 +110,12 @@ text = "Error loading image"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="ImageContainer" type="CenterContainer" parent="BodyScroll/ContentContainer"]
+[node name="ImageContainer" type="CenterContainer" parent="BodyScroll/ContentMargin/ContentContainer"]
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 3
 
-[node name="ImageShell" type="PanelContainer" parent="BodyScroll/ContentContainer/ImageContainer"]
+[node name="ImageShell" type="PanelContainer" parent="BodyScroll/ContentMargin/ContentContainer/ImageContainer"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -116,18 +123,18 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="AsteroidImage" type="TextureRect" parent="BodyScroll/ContentContainer/ImageContainer"]
+[node name="AsteroidImage" type="TextureRect" parent="BodyScroll/ContentMargin/ContentContainer/ImageContainer"]
 custom_minimum_size = Vector2(768, 768)
 layout_mode = 2
 expand_mode = 1
 stretch_mode = 5
 
-[node name="DrawingCanvas" type="Control" parent="BodyScroll/ContentContainer/ImageContainer"]
+[node name="DrawingCanvas" type="Control" parent="BodyScroll/ContentMargin/ContentContainer/ImageContainer"]
 custom_minimum_size = Vector2(768, 768)
 layout_mode = 2
 script = ExtResource("2_drawing_canvas")
 
-[node name="InfoLabel" type="Label" parent="BodyScroll/ContentContainer"]
+[node name="InfoLabel" type="Label" parent="BodyScroll/ContentMargin/ContentContainer"]
 visible = false
 layout_mode = 2
 text = "Additional information will appear here"

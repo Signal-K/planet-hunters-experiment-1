@@ -12,12 +12,14 @@ theme_override_constants/separation = 10
 
 [node name="IconLabel" type="Label" parent="HeaderRow"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.22, 0.54, 0.8, 1)
 theme_override_font_sizes/font_size = 26
 text = "☄"
 
 [node name="NameLabel" type="Label" parent="HeaderRow"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.106, 0.137, 0.196, 1)
 theme_override_font_sizes/font_size = 20
 text = "Target"
 
@@ -31,6 +33,7 @@ layout_mode = 2
 [node name="ScienceLabel" type="Label" parent="."]
 visible = false
 layout_mode = 2
+theme_override_colors/font_color = Color(0.33, 0.38, 0.45, 1)
 theme_override_font_sizes/font_size = 13
 text = "Science metadata"
 autowrap_mode = 3

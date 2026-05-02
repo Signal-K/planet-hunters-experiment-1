@@ -128,10 +128,12 @@ func force_advance_current_step() -> bool:
 func _advance_if_match(action_key: String, _metadata: Dictionary) -> bool:
 	if bool(_state.get("skipped", false)):
 		return false
-	# If the reconciler already fast-forwarded us to the end of a stage (empty
-	# step), don't treat this call as a trigger to chain into the next stage.
 	if get_current_step().is_empty():
-		return false
+		var stage_advanced := _try_advance_stage()
+		if stage_advanced:
+			_reconcile_step_index()
+			_emit_step_changed()
+		return stage_advanced
 	var advanced := false
 	var guard = 0
 	while guard < 12:
@@ -221,6 +223,21 @@ func _refresh_stage_from_progress() -> void:
 	var stage_from_progress = clamp(int(rm.get_mission_stage()), 1, MAX_STAGE)
 	var current_stage = int(_state.get("current_stage", 1))
 	if stage_from_progress > current_stage:
+		_state["current_stage"] = stage_from_progress
+		_state["current_step_index"] = 0
+	elif current_stage > stage_from_progress:
+		# Corrupted save: tutorial stage exceeds what missions unlock. Cap it down
+		# so the player gets the correct guidance (e.g. M2 build-control-station)
+		# instead of jumping ahead to M3/M4 guidance.
+		# Also clear per-stage action/step records for the stages being rolled back
+		# so the reconciler doesn't immediately fast-forward past them again.
+		var by_stage: Dictionary = _state.get("completed_actions_by_stage", {})
+		var done_steps: Dictionary = _state.get("completed_steps_by_stage", {})
+		for s in range(stage_from_progress, current_stage + 1):
+			by_stage.erase(str(s))
+			done_steps.erase(str(s))
+		_state["completed_actions_by_stage"] = by_stage
+		_state["completed_steps_by_stage"] = done_steps
 		_state["current_stage"] = stage_from_progress
 		_state["current_step_index"] = 0
 

@@ -159,7 +159,7 @@ func _extract_distance_km(label_text: String, prefix: String) -> int:
 func _defined_flows() -> Dictionary:
 	return {
 		"mission order": ["mission stage progression"],
-		"supabase fetch": ["run_supabase_tests.gd::Fetch anomalies (active-asteroids)"],
+		"supabase fetch": ["run_supabase_tests.gd::Fetch anomalies (telescope-tess)"],
 		"supabase interact": ["target filters and contract selection"],
 		"scene transitions": ["outbound/return distance and debrief auto-advance"],
 		"unlock progression": ["scanner unlock gate", "rocket unlocks"],

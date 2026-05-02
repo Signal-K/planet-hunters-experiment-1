@@ -57,7 +57,7 @@ func _run_test() -> void:
 
     # ── Step 2: fetch a real TESS anomaly ─────────────────────────────────────
     _report("\n## Step 2 — Fetch Live TESS Anomaly")
-    var anomaly_sets_to_try := ["tess-candidates", "tess", "active-asteroids"]
+    var anomaly_sets_to_try := ["tess-candidates", "tess", "telescope-tess"]
     var fetch_done := false
 
     for set_name in anomaly_sets_to_try:

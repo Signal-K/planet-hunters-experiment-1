@@ -2,11 +2,14 @@ extends Node2D
 
 const SpaceMapTargetDialogueScene = preload("res://Scenes/UI/Templates/SpaceMapTargetDialogue.tscn")
 const SpaceMapContractorRowScene = preload("res://Scenes/UI/Templates/SpaceMapContractorRow.tscn")
+const AsteroidDetailViewScene = preload("res://Scenes/UI/AsteroidDetail/asteroid_detail_view.tscn")
 
 const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
 const SectorRevealManager = preload("res://Scripts/Utils/SectorRevealManager.gd")
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
 const EarthSceneUIHelper = preload("res://Scripts/Earth/EarthSceneUIHelper.gd")
+const SceneManager = preload("res://Scripts/Earth/SceneManager.gd")
+const UIManager = preload("res://Scripts/Earth/UIManager.gd")
 
 const ORBIT_COUNT := 6
 const STAR_COUNT := 220
@@ -19,13 +22,28 @@ const DISCOVERY_COLOR := Color(1.0, 0.85, 0.25, 1)      # Gold for personal disc
 const FOG_COLOR := Color(0.05, 0.08, 0.14, 0.82)
 const ORBIT_COLOR := Color(0.6, 0.65, 0.75, 0.35)
 const STAR_COLOR := Color(0.9, 0.9, 0.9, 0.8)
+const CANDIDATE_RING_COLOR := Color(0.3, 0.9, 1.0, 0.9)   # Cyan ring for unclassified planet candidates
+const CANDIDATE_PULSE_COLOR := Color(0.3, 0.9, 1.0, 0.35)
+const GRID_COLOR := Color(0.28, 0.88, 0.96, 0.08)
+const RING_COLOR := Color(0.28, 0.88, 0.96, 0.16)
+const SWEEP_COLOR := Color(0.28, 0.88, 0.96, 0.32)
+const FIELD_COLORS := [
+	Color(0.40, 0.92, 0.98, 0.85),
+	Color(0.58, 0.95, 0.33, 0.82),
+	Color(0.99, 0.64, 0.28, 0.82),
+	Color(0.86, 0.42, 0.98, 0.82),
+	Color(0.98, 0.36, 0.46, 0.82),
+	Color(0.44, 0.68, 1.00, 0.82),
+]
 
-var _view_mode: String = "solar"  # "solar" or "stars"
+var _view_mode: String = "stars"  # "solar" or "stars" — galaxy view is default
+var _tess_classifications: Dictionary = {}  # target_id → verdict
 var scene_manager: SceneManager
 var ui_manager: UIManager
 var _ui_helper := EarthSceneUIHelper.new()
 var _orbit_radii: Array = []
 var _stars: Array = []
+var _constellations: Array = []
 var _targets: Array = []
 var _target_positions: Dictionary = {}
 var _earth_pos := Vector2.ZERO
@@ -36,13 +54,18 @@ var _ignore_click_until := 0
 var _earth_radius := 0.0
 var _personal_discoveries: Array = []  # Array of target_ids player personally discovered
 var _revealed_sectors: Array = []
+var _scan_revision := 0
 
 const EARTH_CLICK_RADIUS := 26.0
 const TARGET_CLICK_RADIUS := 22.0
 
-@onready var back_button: Button = $CanvasLayer/UI/BackButton
-@onready var solar_btn: Button = $CanvasLayer/UI/ModeToggle/SolarBtn
-@onready var stars_btn: Button = $CanvasLayer/UI/ModeToggle/StarsBtn
+@onready var back_button: Button = get_node_or_null("CanvasLayer/UI/BackButton") as Button
+@onready var solar_btn: Button = get_node_or_null("CanvasLayer/UI/Header/HeaderRow/ModeToggle/SolarBtn") as Button
+@onready var stars_btn: Button = get_node_or_null("CanvasLayer/UI/Header/HeaderRow/ModeToggle/StarsBtn") as Button
+@onready var deep_scan_button: Button = get_node_or_null("CanvasLayer/UI/DeepScanButton") as Button
+@onready var sector_card: PanelContainer = get_node_or_null("CanvasLayer/UI/HudCards/SectorCard") as PanelContainer
+@onready var primary_target_card: PanelContainer = get_node_or_null("CanvasLayer/UI/HudCards/PrimaryTargetCard") as PanelContainer
+@onready var secondary_target_card: PanelContainer = get_node_or_null("CanvasLayer/UI/HudCards/SecondaryTargetCard") as PanelContainer
 
 func _ready() -> void:
 	scene_manager = SceneManager.new()
@@ -57,11 +80,13 @@ func _ready() -> void:
 	if back_button:
 		back_button.pressed.connect(_on_back_pressed)
 		PanelStyle.apply_button(back_button, false)
-		back_button.visible = false
+		back_button.visible = true
 	if solar_btn:
 		solar_btn.pressed.connect(func(): _set_view_mode("solar"))
 	if stars_btn:
 		stars_btn.pressed.connect(func(): _set_view_mode("stars"))
+	if deep_scan_button:
+		deep_scan_button.pressed.connect(_on_deep_scan_pressed)
 	_apply_view_toggle_style()
 	set_process_unhandled_input(true)
 	set_process_input(true)
@@ -108,14 +133,15 @@ func _set_view_mode(mode: String) -> void:
 
 func _apply_view_toggle_style() -> void:
 	if solar_btn:
-		PanelStyle.apply_button(solar_btn, _view_mode == "solar")
+		solar_btn.add_theme_color_override("font_color", Color(0.28, 0.88, 0.96, 1.0) if _view_mode == "solar" else Color(0.58, 0.65, 0.74, 0.9))
 	if stars_btn:
-		PanelStyle.apply_button(stars_btn, _view_mode == "stars")
+		stars_btn.add_theme_color_override("font_color", Color(0.28, 0.88, 0.96, 1.0) if _view_mode == "stars" else Color(0.58, 0.65, 0.74, 0.9))
 
 func _process(_delta: float) -> void:
 	var size = get_viewport_rect().size
 	if size != _last_size:
 		_rebuild_layout()
+	queue_redraw()
 
 func _refresh_targets() -> void:
 	if RocketsManager:
@@ -124,6 +150,7 @@ func _refresh_targets() -> void:
 		_targets = []
 	_revealed_sectors = SectorRevealManager.get_revealed_sectors()
 	_personal_discoveries = _load_personal_discoveries()
+	_tess_classifications = RocketsManager.get_all_tess_classifications()
 
 func _load_personal_discoveries() -> Array:
 	var result: Array = []
@@ -142,6 +169,7 @@ func _rebuild_layout() -> void:
 	_build_orbits()
 	_build_stars()
 	_build_target_positions()
+	_refresh_hud_cards()
 	queue_redraw()
 
 func _build_orbits() -> void:
@@ -154,12 +182,46 @@ func _build_orbits() -> void:
 
 func _build_stars() -> void:
 	_stars.clear()
+	_constellations.clear()
 	var rng = RandomNumberGenerator.new()
-	rng.seed = 1337
+	rng.seed = 1337 + (_scan_revision * 17)
 	for _i in range(STAR_COUNT):
 		var p = Vector2(rng.randf_range(0, _last_size.x), rng.randf_range(0, _last_size.y))
 		var r = rng.randf_range(0.6, 1.6)
-		_stars.append({"pos": p, "r": r})
+		var alpha = rng.randf_range(0.18, 0.72)
+		_stars.append({"pos": p, "r": r, "alpha": alpha})
+
+	var cluster_count := 26
+	for idx in range(cluster_count):
+		var center = Vector2(
+			rng.randf_range(_last_size.x * 0.08, _last_size.x * 0.92),
+			rng.randf_range(_last_size.y * 0.12, _last_size.y * 0.90)
+		)
+		var node_count = rng.randi_range(4, 8)
+		var nodes: Array = []
+		var links: Array = []
+		var angle = rng.randf_range(0.0, TAU)
+		for node_idx in range(node_count):
+			angle += rng.randf_range(0.4, 1.2)
+			var radial = rng.randf_range(24.0, 120.0)
+			var wobble = Vector2(rng.randf_range(-18.0, 18.0), rng.randf_range(-18.0, 18.0))
+			var pos = center + Vector2(cos(angle), sin(angle)) * radial + wobble
+			pos.x = clampf(pos.x, 28.0, _last_size.x - 28.0)
+			pos.y = clampf(pos.y, 76.0, _last_size.y - 28.0)
+			nodes.append({
+				"pos": pos,
+				"r": rng.randf_range(1.5, 4.0),
+				"highlight": node_idx == 0 or rng.randf() < 0.18,
+			})
+			if node_idx > 0:
+				links.append([node_idx - 1, node_idx])
+			if node_idx > 2 and rng.randf() < 0.35:
+				links.append([rng.randi_range(0, node_idx - 2), node_idx])
+		_constellations.append({
+			"nodes": nodes,
+			"links": links,
+			"color": FIELD_COLORS[idx % FIELD_COLORS.size()],
+		})
 
 func _build_target_positions() -> void:
 	_target_positions.clear()
@@ -214,15 +276,192 @@ func _build_target_positions() -> void:
 				center_y + rng.randf_range(-sector_h * 0.30, sector_h * 0.30)
 			)
 			var draw_radius = _last_sun_radius * 0.28
+			var is_planet_type := target_type.to_lower() == "planet"
+			var already_classified := _tess_classifications.has(target_id)
+			var awaiting_review := is_planet_type and not already_classified
 			_target_positions[target_id] = {
 				"pos": pos,  # absolute, not relative to center
 				"type": target_type,
 				"label": str(t.get("label", target_id)),
 				"radius": draw_radius,
-				"revealed": revealed,
+				"revealed": revealed or awaiting_review,  # always show candidates needing review
 				"sector": sector,
 				"is_discovery": target_id in _personal_discoveries,
+				"awaiting_review": awaiting_review,
+				"target_data": t,
 			}
+
+func _refresh_hud_cards() -> void:
+	if _view_mode == "solar":
+		_bind_hud_card(
+			sector_card,
+			"ORBITAL GRID",
+			"Earth Launch Lanes",
+			"Review orbital routes, nearby asteroids, and launch-ready traffic before returning to mission setup.",
+			"TRACKED",
+			"%d TARGETS" % _target_positions.size(),
+			Color(0.28, 0.88, 0.96, 1.0),
+			0.72,
+			true
+		)
+		var solar_entries := _sorted_visible_entries()
+		_bind_target_cards(solar_entries)
+		return
+
+	var revealed_count := _revealed_sectors.size()
+	var sector_target_counts := {}
+	for entry_any in _target_positions.values():
+		if typeof(entry_any) != TYPE_DICTIONARY:
+			continue
+		var entry: Dictionary = entry_any
+		if not bool(entry.get("revealed", false)):
+			continue
+		var sector_id := int(entry.get("sector", -1))
+		sector_target_counts[sector_id] = int(sector_target_counts.get(sector_id, 0)) + 1
+
+	var primary_sector := -1
+	var highest_count := -1
+	for sector_key in sector_target_counts.keys():
+		var count := int(sector_target_counts.get(sector_key, 0))
+		if count > highest_count:
+			highest_count = count
+			primary_sector = int(sector_key)
+	if primary_sector == -1 and not _revealed_sectors.is_empty():
+		primary_sector = int(_revealed_sectors[0])
+
+	var sector_name := "Deep Field"
+	if primary_sector != -1:
+		sector_name = str(SectorRevealManager.SECTOR_NAMES.get(primary_sector, "Sector %d" % primary_sector))
+	var sector_ratio := float(revealed_count) / float(max(SectorRevealManager.SECTOR_COUNT, 1))
+	_bind_hud_card(
+		sector_card,
+		"GALAXY SURVEY",
+		sector_name,
+		"%d sectors revealed. %d targets are currently plotted in the tactical field." % [revealed_count, _sorted_visible_entries().size()],
+		"FIELD STATUS",
+		"REVEALED",
+		Color(0.28, 0.88, 0.96, 1.0),
+		sector_ratio,
+		true
+	)
+
+	_bind_target_cards(_sorted_visible_entries())
+
+func _on_deep_scan_pressed() -> void:
+	_scan_revision += 1
+	_refresh_targets()
+	_rebuild_layout()
+
+func _bind_target_cards(entries: Array) -> void:
+	var first_entry: Dictionary = entries[0] if not entries.is_empty() else {}
+	var second_entry: Dictionary = entries[1] if entries.size() > 1 else {}
+	_bind_target_card(primary_target_card, first_entry)
+	_bind_target_card(secondary_target_card, second_entry)
+
+func _bind_target_card(card: PanelContainer, entry: Dictionary) -> void:
+	if card == null:
+		return
+	if entry.is_empty():
+		card.visible = false
+		return
+	var target_type := str(entry.get("type", "asteroid")).to_lower()
+	var awaiting_review := bool(entry.get("awaiting_review", false))
+	var is_discovery := bool(entry.get("is_discovery", false))
+	var eyebrow := "ASTEROID TARGET"
+	var detail := "Tap to inspect the plotted route and available mission details."
+	var footer := "TARGET TYPE"
+	var value := target_type.capitalize()
+	var dot := ASTEROID_COLOR
+	var meter := 0.64
+	if awaiting_review:
+		eyebrow = "PLANET CANDIDATE"
+		detail = "Classification required. Open the review screen to inspect the lightcurve and mark a verdict."
+		footer = "REVIEW"
+		value = "REQUIRED"
+		dot = CANDIDATE_RING_COLOR
+		meter = 0.28
+	elif is_discovery:
+		eyebrow = "DISCOVERY TARGET"
+		detail = "Personally discovered and logged. Review the target again or route a future mission back through this sector."
+		footer = "STATUS"
+		value = "LOGGED"
+		dot = DISCOVERY_COLOR
+		meter = 0.92
+	elif target_type == "planet":
+		eyebrow = "PLANET TARGET"
+		detail = "Confirmed survey target. Tap to inspect this system and review the current classification state."
+		footer = "STATUS"
+		value = "CONFIRMED"
+		dot = PLANET_COLOR
+		meter = 0.78
+	_bind_hud_card(
+		card,
+		eyebrow,
+		str(entry.get("label", "Target")),
+		detail,
+		footer,
+		value,
+		dot,
+		meter,
+		true
+	)
+
+func _bind_hud_card(card: PanelContainer, eyebrow: String, title: String, detail: String, footer: String, value: String, dot_color: Color, meter_ratio: float, shown: bool) -> void:
+	if card == null:
+		return
+	card.visible = shown
+	if not shown:
+		return
+	var eyebrow_label := card.get_node_or_null("Margin/Content/HeaderRow/EyebrowLabel") as Label
+	var title_label := card.get_node_or_null("Margin/Content/TitleLabel") as Label
+	var detail_label := card.get_node_or_null("Margin/Content/DetailLabel") as Label
+	var footer_label := card.get_node_or_null("Margin/Content/FooterRow/FooterLabel") as Label
+	var value_label := card.get_node_or_null("Margin/Content/FooterRow/ValueLabel") as Label
+	var status_dot := card.get_node_or_null("Margin/Content/HeaderRow/StatusDot") as ColorRect
+	var meter_fill := card.get_node_or_null("Margin/Content/MeterBackground/MeterFill") as PanelContainer
+	if eyebrow_label:
+		eyebrow_label.text = eyebrow
+		eyebrow_label.add_theme_color_override("font_color", Color(dot_color.r, dot_color.g, dot_color.b, 0.78))
+	if title_label:
+		title_label.text = title
+	if detail_label:
+		detail_label.text = detail
+	if footer_label:
+		footer_label.text = footer
+	if value_label:
+		value_label.text = value
+		value_label.add_theme_color_override("font_color", dot_color)
+	if status_dot:
+		status_dot.color = dot_color
+	if meter_fill:
+		meter_fill.size_flags_horizontal = 0
+		meter_fill.custom_minimum_size.x = clampf(224.0 * meter_ratio, 36.0, 224.0)
+
+func _sorted_visible_entries() -> Array:
+	var entries: Array = []
+	for target_id_any in _target_positions.keys():
+		var target_id := str(target_id_any)
+		var entry: Dictionary = _target_positions[target_id]
+		if _view_mode == "stars" and not bool(entry.get("revealed", false)):
+			continue
+		entry = entry.duplicate(true)
+		entry["target_id"] = target_id
+		entries.append(entry)
+	entries.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		var a_score := _entry_priority(a)
+		var b_score := _entry_priority(b)
+		if a_score == b_score:
+			return str(a.get("label", "")).nocasecmp_to(str(b.get("label", ""))) < 0
+		return a_score > b_score
+	)
+	return entries
+
+func _entry_priority(entry: Dictionary) -> int:
+	if bool(entry.get("awaiting_review", false)):
+		return 30
+	if bool(entry.get("is_discovery", false)):
+		return 20
+	return 10
 
 func _simple_hash(s: String) -> int:
 	var h := 0
@@ -242,23 +481,63 @@ func _draw() -> void:
 	if size == Vector2.ZERO:
 		return
 
-	var NebulaTheme = preload("res://Resources/NebulaSciTheme.gd")
-
 	draw_rect(get_viewport_rect(), BG_COLOR, true)
-
-	for s in _stars:
-		draw_circle(s["pos"], s["r"], STAR_COLOR)
+	_draw_nebula_haze(size)
+	_draw_tactical_grid(size)
 
 	if _view_mode == "solar":
-		_draw_solar_system(size, NebulaTheme)
+		_draw_solar_system(size)
 	else:
-		_draw_star_systems(size, NebulaTheme)
+		_draw_galaxy_tactical(size)
 
-func _draw_solar_system(size: Vector2, NebulaTheme) -> void:
+func _draw_nebula_haze(size: Vector2) -> void:
+	var haze_centers := [
+		{"pos": Vector2(size.x * 0.22, size.y * 0.18), "radius": min(size.x, size.y) * 0.22, "color": Color(0.22, 0.28, 0.52, 0.14)},
+		{"pos": Vector2(size.x * 0.76, size.y * 0.26), "radius": min(size.x, size.y) * 0.28, "color": Color(0.36, 0.20, 0.54, 0.12)},
+		{"pos": Vector2(size.x * 0.58, size.y * 0.68), "radius": min(size.x, size.y) * 0.24, "color": Color(0.16, 0.36, 0.48, 0.10)},
+	]
+	for haze_any in haze_centers:
+		var haze: Dictionary = haze_any
+		draw_circle(haze["pos"], haze["radius"], haze["color"])
+	for s_any in _stars:
+		var s: Dictionary = s_any
+		draw_circle(s["pos"], s["r"], Color(STAR_COLOR.r, STAR_COLOR.g, STAR_COLOR.b, float(s["alpha"])))
+
+func _draw_tactical_grid(size: Vector2) -> void:
+	var minor_step: float = 92.0
+	var major_step: float = minor_step * 4.0
+	var x: float = 0.0
+	while x <= size.x:
+		var is_major := fmod(x, major_step) < 0.5
+		draw_line(Vector2(x, 0), Vector2(x, size.y), Color(GRID_COLOR.r, GRID_COLOR.g, GRID_COLOR.b, 0.18 if is_major else 0.08), 1.4 if is_major else 1.0)
+		x += minor_step
+	var y: float = 0.0
+	while y <= size.y:
+		var is_major_y := fmod(y, major_step) < 0.5
+		draw_line(Vector2(0, y), Vector2(size.x, y), Color(GRID_COLOR.r, GRID_COLOR.g, GRID_COLOR.b, 0.18 if is_major_y else 0.08), 1.4 if is_major_y else 1.0)
+		y += minor_step
+
+	var center := size * 0.5
+	var radar_radius: float = min(size.x, size.y) * 0.43
+	for ratio in [0.42, 0.67, 0.94]:
+		draw_arc(center, radar_radius * ratio, 0.0, TAU, 192, RING_COLOR, 1.2, true)
+	draw_arc(center, radar_radius * 1.12, PI * 0.12, PI * 1.86, 192, Color(RING_COLOR.r, RING_COLOR.g, RING_COLOR.b, 0.08), 1.0, true)
+	_draw_scan_sweep(center, radar_radius)
+
+func _draw_scan_sweep(center: Vector2, radius: float) -> void:
+	var sweep_angle := fmod((Time.get_ticks_msec() / 1000.0) * 0.28 + float(_scan_revision) * 0.75, TAU)
+	for trail_idx in range(5):
+		var fade := 1.0 - (float(trail_idx) / 5.0)
+		var angle := sweep_angle - trail_idx * 0.08
+		var end := center + Vector2(cos(angle), sin(angle)) * radius
+		draw_line(center, end, Color(SWEEP_COLOR.r, SWEEP_COLOR.g, SWEEP_COLOR.b, 0.12 + 0.20 * fade), 2.4 - trail_idx * 0.28)
+	draw_circle(center, 4.0, Color(0.40, 0.92, 0.98, 0.72))
+
+func _draw_solar_system(size: Vector2) -> void:
 	var center = size * 0.5
 
 	for r in _orbit_radii:
-		draw_arc(center, r, 0.0, TAU, 160, Color(NebulaTheme.PANEL_OUTLINE.r, NebulaTheme.PANEL_OUTLINE.g, NebulaTheme.PANEL_OUTLINE.b, 0.3), 1.5, true)
+		draw_arc(center, r, 0.0, TAU, 160, Color(RING_COLOR.r, RING_COLOR.g, RING_COLOR.b, 0.22), 1.3, true)
 
 	var sun_r = _last_sun_radius
 	draw_circle(center, sun_r * 1.4, Color(1, 0.9, 0.5, 0.25))
@@ -284,11 +563,12 @@ func _draw_solar_system(size: Vector2, NebulaTheme) -> void:
 			var label_color = Color(1.0, 0.95, 0.7, 1.0) if is_discovery else Color(0.85, 0.85, 0.9, 0.85)
 			draw_string(_label_font, pos + Vector2(8, -8), str(entry.get("label", target_id)), HORIZONTAL_ALIGNMENT_LEFT, -1, 13, label_color)
 
-	# Legend
-	_draw_legend_solar(size)
+func _draw_galaxy_tactical(size: Vector2) -> void:
+	_draw_sector_overlays(size)
+	_draw_constellation_field()
+	_draw_tactical_targets()
 
-func _draw_star_systems(size: Vector2, _NebulaTheme) -> void:
-	# Draw sector grid and labels
+func _draw_sector_overlays(size: Vector2) -> void:
 	var sector_w = size.x / 4.0
 	var sector_h = size.y / 2.0
 	for sector_id in range(SectorRevealManager.SECTOR_COUNT):
@@ -297,50 +577,75 @@ func _draw_star_systems(size: Vector2, _NebulaTheme) -> void:
 		var cy = frac.y * size.y
 		var is_revealed = sector_id in _revealed_sectors
 		var sector_rect = Rect2(cx - sector_w * 0.5, cy - sector_h * 0.5, sector_w, sector_h)
-
-		# Sector outline
-		var outline_color = Color(0.35, 0.45, 0.65, 0.35) if is_revealed else Color(0.1, 0.12, 0.2, 0.6)
-		draw_rect(sector_rect, outline_color, false, 1.0)
-
+		var border_alpha := 0.10 if is_revealed else 0.05
+		draw_rect(sector_rect, Color(RING_COLOR.r, RING_COLOR.g, RING_COLOR.b, border_alpha), false, 1.0)
 		if not is_revealed:
-			# Fog of war
-			draw_rect(sector_rect, FOG_COLOR, true)
-			if _label_font:
-				draw_string(_label_font, Vector2(cx - 30, cy), "Unexplored", HORIZONTAL_ALIGNMENT_CENTER, -1, 12, Color(0.4, 0.45, 0.6, 0.7))
-		else:
-			# Sector name
-			var sector_name = SectorRevealManager.SECTOR_NAMES.get(sector_id, "Sector %d" % sector_id)
-			if _label_font:
-				draw_string(_label_font, Vector2(cx - 50, cy - sector_h * 0.4), sector_name, HORIZONTAL_ALIGNMENT_CENTER, -1, 12, Color(0.55, 0.65, 0.85, 0.7))
+			draw_rect(sector_rect, Color(FOG_COLOR.r, FOG_COLOR.g, FOG_COLOR.b, 0.18), true)
 
-	# Draw targets
+func _draw_constellation_field() -> void:
+	for cluster_any in _constellations:
+		var cluster: Dictionary = cluster_any
+		var color: Color = cluster.get("color", FIELD_COLORS[0])
+		var nodes: Array = cluster.get("nodes", [])
+		var links: Array = cluster.get("links", [])
+		for link_any in links:
+			var link: Array = link_any
+			if link.size() < 2:
+				continue
+			var start_idx := int(link[0])
+			var end_idx := int(link[1])
+			if start_idx >= nodes.size() or end_idx >= nodes.size():
+				continue
+			var start_node: Dictionary = nodes[start_idx]
+			var end_node: Dictionary = nodes[end_idx]
+			draw_line(start_node["pos"], end_node["pos"], Color(color.r, color.g, color.b, 0.52), 1.4)
+		for node_any in nodes:
+			var node: Dictionary = node_any
+			var pos: Vector2 = node["pos"]
+			var radius := float(node.get("r", 2.0))
+			var highlight := bool(node.get("highlight", false))
+			draw_circle(pos, radius + 2.0, Color(color.r, color.g, color.b, 0.12 if highlight else 0.06))
+			draw_circle(pos, radius, Color(color.r, color.g, color.b, 0.94 if highlight else 0.80))
+
+func _draw_tactical_targets() -> void:
 	for target_id in _target_positions.keys():
-		var entry = _target_positions[target_id]
+		var entry: Dictionary = _target_positions[target_id]
 		var revealed: bool = bool(entry.get("revealed", false))
 		if not revealed:
 			continue
-		var pos: Vector2 = entry["pos"]  # absolute position
+		var pos: Vector2 = entry["pos"]
 		var is_discovery: bool = bool(entry.get("is_discovery", false))
+		var awaiting_review: bool = bool(entry.get("awaiting_review", false))
 		var draw_radius = float(entry.get("radius", _last_sun_radius * 0.28))
+		var star_color := _star_color_for_hash(_simple_hash(target_id))
 
-		# Star icon: colored circle with a subtle glow
-		var h = _simple_hash(target_id)
-		var star_color := _star_color_for_hash(h)
-
-		if is_discovery:
+		if awaiting_review:
+			draw_circle(pos, draw_radius + 10.0, CANDIDATE_PULSE_COLOR)
+			draw_arc(pos, draw_radius + 6.0, 0.0, TAU, 56, CANDIDATE_RING_COLOR, 2.0, true)
+		elif is_discovery:
 			draw_circle(pos, draw_radius + 4.0, Color(DISCOVERY_COLOR.r, DISCOVERY_COLOR.g, DISCOVERY_COLOR.b, 0.35))
 		draw_circle(pos, draw_radius * 1.5, Color(star_color.r, star_color.g, star_color.b, 0.25))
 		draw_circle(pos, draw_radius, star_color)
+		draw_line(pos + Vector2(draw_radius + 4.0, 0.0), pos + Vector2(draw_radius + 22.0, 0.0), Color(0.80, 0.90, 0.98, 0.38), 1.0)
+		draw_line(pos + Vector2(draw_radius + 22.0, 0.0), pos + Vector2(draw_radius + 22.0, 14.0), Color(0.80, 0.90, 0.98, 0.24), 1.0)
 
-		if is_discovery and _label_font:
+		if awaiting_review and _label_font:
+			draw_string(_label_font, pos + Vector2(draw_radius + 4, -2), "?", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, CANDIDATE_RING_COLOR)
+		elif is_discovery and _label_font:
 			draw_string(_label_font, pos + Vector2(draw_radius + 4, -2), "★", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, DISCOVERY_COLOR)
 
 		if _label_font:
 			var label = str(entry.get("label", target_id))
-			var label_color = Color(1.0, 0.95, 0.7, 1.0) if is_discovery else Color(0.85, 0.90, 0.98, 0.9)
+			var label_color: Color
+			if awaiting_review:
+				label_color = CANDIDATE_RING_COLOR
+			elif is_discovery:
+				label_color = Color(1.0, 0.95, 0.7, 1.0)
+			else:
+				label_color = Color(0.85, 0.90, 0.98, 0.9)
 			draw_string(_label_font, pos + Vector2(draw_radius + 2, 14), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, label_color)
-
-	_draw_legend_stars(size)
+			if awaiting_review:
+				draw_string(_label_font, pos + Vector2(draw_radius + 2, 28), "Awaiting Review", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(CANDIDATE_RING_COLOR.r, CANDIDATE_RING_COLOR.g, CANDIDATE_RING_COLOR.b, 0.8))
 
 func _star_color_for_hash(h: int) -> Color:
 	# Map hash to a stellar spectral class colour (simplified)
@@ -352,33 +657,6 @@ func _star_color_for_hash(h: int) -> Color:
 		4: return Color(0.95, 0.55, 0.35, 1)  # M-type (red-orange)
 		_: return Color(0.78, 0.90, 1.00, 1)  # B-type (blue)
 	return Color(1, 1, 1, 1)
-
-func _draw_legend_solar(size: Vector2) -> void:
-	if _label_font == null:
-		return
-	var y = size.y - 20.0
-	var x = 16.0
-	draw_circle(Vector2(x + 6, y), 5, ASTEROID_COLOR)
-	draw_string(_label_font, Vector2(x + 15, y + 5), "Asteroid target", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color(0.8, 0.8, 0.85))
-	x += 130
-	draw_circle(Vector2(x + 6, y), 6, DISCOVERY_COLOR)
-	draw_string(_label_font, Vector2(x + 15, y + 5), "Your discovery", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color(0.8, 0.8, 0.85))
-	draw_circle(Vector2(x + 4, y), 10, Color(DISCOVERY_COLOR.r, DISCOVERY_COLOR.g, DISCOVERY_COLOR.b, 0.3))
-
-func _draw_legend_stars(size: Vector2) -> void:
-	if _label_font == null:
-		return
-	var y = size.y - 20.0
-	var x = 16.0
-	draw_circle(Vector2(x + 6, y), 6, Color(0.7, 0.85, 1, 1))
-	draw_string(_label_font, Vector2(x + 15, y + 5), "Star system", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color(0.8, 0.8, 0.85))
-	x += 120
-	draw_circle(Vector2(x + 6, y), 6, DISCOVERY_COLOR)
-	draw_string(_label_font, Vector2(x + 15, y + 5), "Your discovery", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color(0.8, 0.8, 0.85))
-	x += 130
-	draw_rect(Rect2(x, y - 6, 12, 12), FOG_COLOR, true)
-	draw_rect(Rect2(x, y - 6, 12, 12), Color(0.3, 0.4, 0.6, 0.5), false, 1.0)
-	draw_string(_label_font, Vector2(x + 16, y + 5), "Unexplored sector", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color(0.8, 0.8, 0.85))
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
@@ -412,6 +690,11 @@ func _handle_click(pos: Vector2) -> void:
 				return
 
 func _open_target_preview(target_id: String, entry: Dictionary) -> void:
+	# Planet candidates awaiting review → open annotation/classification screen
+	if bool(entry.get("awaiting_review", false)):
+		_open_annotation_screen(target_id, entry)
+		return
+
 	# Close any existing target dialogue first
 	var existing := get_node_or_null("CanvasLayer/TargetDialogue")
 	if existing:
@@ -556,6 +839,43 @@ func _open_target_preview(target_id: String, entry: Dictionary) -> void:
 			if not panel.get_global_rect().has_point(event.global_position):
 				backdrop.queue_free()
 	)
+
+func _open_annotation_screen(target_id: String, entry: Dictionary) -> void:
+	# Close any existing overlay first
+	var existing := get_node_or_null("CanvasLayer/AnnotationOverlay")
+	if existing:
+		existing.queue_free()
+		return
+
+	var canvas: CanvasLayer = $CanvasLayer
+
+	# Full-screen backdrop
+	var overlay := ColorRect.new()
+	overlay.name = "AnnotationOverlay"
+	overlay.color = Color(0.02, 0.03, 0.08, 0.98)
+	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	canvas.add_child(overlay)
+
+	# Detail view container
+	var detail_view = AsteroidDetailViewScene.instantiate()
+	overlay.add_child(detail_view)
+	detail_view.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+
+	var target_data: Dictionary = entry.get("target_data", {})
+	if target_data.is_empty():
+		target_data = {
+			"id": target_id,
+			"label": str(entry.get("label", target_id)),
+			"type": str(entry.get("type", "planet")),
+		}
+	detail_view.initialize(target_data, true)
+
+	if detail_view.has_signal("back_pressed"):
+		detail_view.back_pressed.connect(func():
+			overlay.queue_free()
+			_refresh_targets()
+			_rebuild_layout()
+		)
 
 func _style_dialogue_button(btn: Button, col: Color, primary: bool) -> void:
 	if btn == null:

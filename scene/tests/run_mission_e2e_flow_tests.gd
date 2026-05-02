@@ -76,7 +76,7 @@ func test_transit_and_mining_timing_delays_are_intentionally_non_trivial() -> vo
 	reporter.pass_test()
 
 func _reset_runtime_state() -> void:
-	DirAccess.remove_absolute("user://tutorial_v2.cfg")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path("user://tutorial_v2.cfg"))
 	MissionLogManager.reset_state()
 	RocketsManager.reset_state()
 	RocketsManager.clear_selected_target()
@@ -220,7 +220,10 @@ func test_free_operations_launch_requires_contractor_selection() -> void:
 	var scan_ok = RocketsManager.set_detected_targets([{
 		"id": target_id,
 		"label": "Free Ops Survey Target",
-		"type": "asteroid"
+		"type": "planet",
+		"anomalySet": "telescope-tess",
+		"classification_status": "confirmed",
+		"tess_disposition": "CP"
 	}])
 	if not scan_ok:
 		reporter.fail_test("Failed to seed free-operations detected target")
