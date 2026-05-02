@@ -1,6 +1,6 @@
 {
   "taskId": "35tm2a",
-  "currentVersion": 1,
+  "currentVersion": 2,
   "versions": [
     {
       "id": "v1",
@@ -23,6 +23,45 @@
       "snapshot": {
         "acceptanceCriteria": [
           {
+            "completed": false,
+            "text": "web/public scripts updated"
+          },
+          {
+            "completed": false,
+            "text": "PostHog surveys updated"
+          },
+          {
+            "completed": false,
+            "text": "Web server updated"
+          }
+        ],
+        "assignee": "@Liam",
+        "description": "Rename web shell and PostHog surveys to Landnám.",
+        "priority": "high",
+        "status": "todo",
+        "title": "Rebrand: Web Platform \u0026 Survey Integration"
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "35tm2a",
+      "version": 2,
+      "timestamp": "2026-05-11T03:11:10.824776Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        },
+        {
+          "field": "implementationNotes",
+          "oldValue": null,
+          "newValue": "Completed rebranding for web platform and surveys."
+        }
+      ],
+      "snapshot": {
+        "acceptanceCriteria": [
+          {
             "text": "web/public scripts updated",
             "completed": false
           },
@@ -37,8 +76,9 @@
         ],
         "assignee": "@Liam",
         "description": "Rename web shell and PostHog surveys to Landnám.",
+        "implementationNotes": "Completed rebranding for web platform and surveys.",
         "priority": "high",
-        "status": "todo",
+        "status": "done",
         "title": "Rebrand: Web Platform \u0026 Survey Integration"
       }
     }
