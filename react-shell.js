@@ -756,13 +756,16 @@ async function showInlineSurvey(params, surveyIdOverride) {
 // ── Micro-survey helpers ──────────────────────────────────────────────────────
 
 async function maybeTriggerMicroSurvey(storageKey, surveyId, context, eventPayload) {
-  // Never overlap with exit survey or another micro-survey already open.
-  if (_surveyShownInThisBoot) return;
+  // Don't stack with another open overlay.
   if (document.getElementById(SURVEY_OVERLAY_ID)) return;
+  // Each micro-survey has its own localStorage gate — don't show it twice.
   if (localStorage.getItem(storageKey)) return;
   // Skip if no survey ID configured yet.
   if (!surveyId) return;
   try {
+    const runtimeConfig = await getRuntimeConfig();
+    // Only show PostHog iframe surveys when PostHog is actually configured.
+    if (!runtimeConfig.posthog.projectToken) return;
     const distinctId = await resolveSurveyDistinctId();
     const params = {
       distinct_id: distinctId,
@@ -771,8 +774,6 @@ async function maybeTriggerMicroSurvey(storageKey, surveyId, context, eventPaylo
       mission_stage: String((eventPayload && eventPayload.mission_stage) || ""),
     };
     await showInlineSurvey(params, surveyId);
-    // Block any further surveys this session — one survey per boot is enough.
-    _surveyShownInThisBoot = true;
     localStorage.setItem(storageKey, new Date().toISOString());
   } catch (err) {
     console.error("Micro-survey trigger failed:", storageKey, err);
@@ -901,6 +902,10 @@ async function maybeTriggerFirstMissionSurvey(eventPayload) {
   if (localStorage.getItem(SURVEY_SHOWN_KEY)) return;
 
   try {
+    const runtimeConfig = await getRuntimeConfig();
+    // Only show PostHog iframe survey when PostHog is configured; blank iframes
+    // would consume the one-per-boot slot and block all subsequent micro-surveys.
+    if (!runtimeConfig.posthog.projectToken) return;
     const distinctId = await resolveSurveyDistinctId();
     const missionCount = Number((eventPayload && eventPayload.mission_count) || 0);
     const progressJson = buildProgressJson(eventPayload);
@@ -1778,15 +1783,15 @@ function App() {
           onClick: revealPwaHud,
           style: {
             position: "fixed",
-            top: "max(0px, env(safe-area-inset-top))",
+            bottom: "env(safe-area-inset-bottom)",
             left: "50%",
             transform: "translateX(-50%)",
             width: "min(52vw, calc(100vw - env(safe-area-inset-left) - env(safe-area-inset-right) - 16px))",
             maxWidth: "240px",
             height: "22px",
             border: "none",
-            borderBottomLeftRadius: "12px",
-            borderBottomRightRadius: "12px",
+            borderTopLeftRadius: "12px",
+            borderTopRightRadius: "12px",
             background: "rgba(10, 18, 40, 0.55)",
             color: "rgba(200,215,255,0.7)",
             fontSize: "10px",
@@ -1804,7 +1809,7 @@ function App() {
             {
               style: {
                 position: "fixed",
-                top: "max(8px, env(safe-area-inset-top))",
+                bottom: "calc(env(safe-area-inset-bottom) + 24px)",
                 left: "50%",
                 transform: "translateX(-50%)",
                 display: "flex",
@@ -1812,7 +1817,7 @@ function App() {
                 justifyContent: "center",
                 gap: "8px",
                 zIndex: 10002,
-                background: "rgba(5, 8, 15, 0.82)",
+                background: "rgba(5, 8, 15, 0.92)",
                 border: "1px solid #2a3560",
                 borderRadius: "12px",
                 padding: "8px",
