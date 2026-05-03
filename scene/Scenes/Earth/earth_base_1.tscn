@@ -92,6 +92,7 @@ shape = SubResource("RectangleShape2D_launchpad")
 
 [node name="UILayer" type="CanvasLayer" parent="."]
 layer = 2
+follow_viewport_enabled = true
 
 [node name="ButtonContainer" type="HBoxContainer" parent="UILayer"]
 custom_minimum_size = Vector2(0, 120)

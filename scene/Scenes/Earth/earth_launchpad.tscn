@@ -23,6 +23,7 @@ texture = ExtResource("2")
 
 [node name="UILayer" type="CanvasLayer" parent="."]
 layer = 10
+follow_viewport_enabled = true
 
 [node name="LaunchWizard" parent="UILayer" instance=ExtResource("3")]
 layout_mode = 3

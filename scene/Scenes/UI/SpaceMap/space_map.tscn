@@ -43,6 +43,7 @@ layer = 2
 
 [node name="UILayer" type="CanvasLayer" parent="."]
 layer = 3
+follow_viewport_enabled = true
 
 [node name="ButtonContainer" type="HBoxContainer" parent="UILayer"]
 custom_minimum_size = Vector2(0, 80)
