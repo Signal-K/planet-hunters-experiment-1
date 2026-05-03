@@ -1,0 +1,241 @@
+[gd_scene load_steps=8 format=3 uid="uid://galaxy_map_scene"]
+
+[ext_resource type="Script" path="res://Scripts/UI/SpaceMap/GalaxyMap.gd"        id="1_galaxymap"]
+[ext_resource type="Script" path="res://Scripts/UI/SpaceMap/StarField.gd"         id="2_stars"]
+[ext_resource type="Script" path="res://Scripts/UI/SpaceMap/GalaxyBackground.gd"  id="3_galaxybg"]
+[ext_resource type="Script" path="res://Scripts/UI/SpaceMap/GalaxyMapNode.gd"     id="4_galaxynode"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bg"]
+bg_color = Color(0.047, 0.047, 0.055, 1.0)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_telemetry"]
+bg_color = Color(0.075, 0.078, 0.094, 0.88)
+border_color = Color(0.745, 0.776, 0.882, 0.30)
+border_width_top = 1
+content_margin_left = 24.0
+content_margin_right = 24.0
+content_margin_top = 10.0
+content_margin_bottom = 10.0
+
+[node name="GalaxyMap" type="Node2D"]
+script = ExtResource("1_galaxymap")
+
+[node name="BGLayer" type="CanvasLayer" parent="."]
+layer = -2
+
+[node name="BGRect" type="Panel" parent="BGLayer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_bg")
+
+[node name="StarsLayer" type="CanvasLayer" parent="."]
+layer = -1
+
+[node name="StarField" type="Node2D" parent="StarsLayer"]
+script = ExtResource("2_stars")
+star_count = 200
+rng_seed = 7331
+star_color = Color(0.9, 0.9, 0.9, 0.7)
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+layer = 2
+
+[node name="GalaxySystem" type="Node2D" parent="."]
+position = Vector2(960, 540)
+
+[node name="Background" type="Node2D" parent="GalaxySystem"]
+script = ExtResource("3_galaxybg")
+
+[node name="Stars" type="Node2D" parent="GalaxySystem"]
+
+[node name="Sol" type="Node2D" parent="GalaxySystem/Stars"]
+script = ExtResource("4_galaxynode")
+star_name = "Sol"
+distance_label = "0.00 ly"
+star_color = Color(0.886, 0.757, 0.612, 1.0)
+star_radius = 9.0
+is_selected = true
+is_sol = true
+
+[node name="AlphaCentauri" type="Node2D" parent="GalaxySystem/Stars"]
+position = Vector2(160, 45)
+script = ExtResource("4_galaxynode")
+star_name = "Alpha Centauri"
+distance_label = "4.37 ly"
+star_color = Color(1.0, 0.867, 0.718, 1.0)
+star_radius = 7.0
+
+[node name="Sirius" type="Node2D" parent="GalaxySystem/Stars"]
+position = Vector2(280, -175)
+script = ExtResource("4_galaxynode")
+star_name = "Sirius"
+distance_label = "8.60 ly"
+star_color = Color(0.729, 0.773, 0.929, 1.0)
+star_radius = 8.0
+
+[node name="BarnardsStar" type="Node2D" parent="GalaxySystem/Stars"]
+position = Vector2(-130, 120)
+script = ExtResource("4_galaxynode")
+star_name = "Barnard's Star"
+distance_label = "5.96 ly"
+star_color = Color(1.0, 0.706, 0.671, 0.85)
+star_radius = 5.0
+
+[node name="Procyon" type="Node2D" parent="GalaxySystem/Stars"]
+position = Vector2(-230, -105)
+script = ExtResource("4_galaxynode")
+star_name = "Procyon"
+distance_label = "11.46 ly"
+star_color = Color(0.894, 0.886, 0.894, 0.9)
+star_radius = 6.0
+
+[node name="Vega" type="Node2D" parent="GalaxySystem/Stars"]
+position = Vector2(110, -330)
+script = ExtResource("4_galaxynode")
+star_name = "Vega"
+distance_label = "25.1 ly"
+star_color = Color(0.729, 0.773, 0.929, 1.0)
+star_radius = 8.0
+
+[node name="Altair" type="Node2D" parent="GalaxySystem/Stars"]
+position = Vector2(400, 175)
+script = ExtResource("4_galaxynode")
+star_name = "Altair"
+distance_label = "16.7 ly"
+star_color = Color(0.894, 0.886, 0.894, 0.85)
+star_radius = 6.0
+
+[node name="Fomalhaut" type="Node2D" parent="GalaxySystem/Stars"]
+position = Vector2(-300, 280)
+script = ExtResource("4_galaxynode")
+star_name = "Fomalhaut"
+distance_label = "25.1 ly"
+star_color = Color(0.894, 0.886, 0.894, 0.8)
+star_radius = 6.0
+
+[node name="GameTargets" type="Node2D" parent="GalaxySystem"]
+
+[node name="UILayer" type="CanvasLayer" parent="."]
+layer = 3
+follow_viewport_enabled = true
+
+[node name="TelemetryPanel" type="PanelContainer" parent="UILayer"]
+offset_left = 0.0
+offset_top = 904.0
+offset_right = 1920.0
+offset_bottom = 1000.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_telemetry")
+
+[node name="Row" type="HBoxContainer" parent="UILayer/TelemetryPanel"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 0
+
+[node name="NameBlock" type="VBoxContainer" parent="UILayer/TelemetryPanel/Row"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 3
+
+[node name="EyebrowLabel" type="Label" parent="UILayer/TelemetryPanel/Row/NameBlock"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.565, 0.565, 0.592, 1)
+theme_override_font_sizes/font_size = 9
+text = "SELECTED TARGET"
+
+[node name="NameLabel" type="Label" parent="UILayer/TelemetryPanel/Row/NameBlock"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.886, 0.757, 0.612, 1)
+theme_override_font_sizes/font_size = 18
+text = "SOL"
+
+[node name="SubLabel" type="Label" parent="UILayer/TelemetryPanel/Row/NameBlock"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.886, 0.757, 0.612, 0.65)
+theme_override_font_sizes/font_size = 11
+text = "Current Location"
+
+[node name="TelDiv1" type="VSeparator" parent="UILayer/TelemetryPanel/Row"]
+layout_mode = 2
+theme_override_colors/separator_color = Color(0.745, 0.776, 0.882, 0.20)
+custom_minimum_size = Vector2(1, 0)
+
+[node name="StatsBlock" type="HBoxContainer" parent="UILayer/TelemetryPanel/Row"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 24
+
+[node name="TypeCol" type="VBoxContainer" parent="UILayer/TelemetryPanel/Row/StatsBlock"]
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="TypeKey" type="Label" parent="UILayer/TelemetryPanel/Row/StatsBlock/TypeCol"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.565, 0.565, 0.592, 1)
+theme_override_font_sizes/font_size = 9
+text = "TYPE"
+
+[node name="TypeVal" type="Label" parent="UILayer/TelemetryPanel/Row/StatsBlock/TypeCol"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.894, 0.886, 0.894, 1)
+theme_override_font_sizes/font_size = 12
+text = "Yellow Dwarf / G2V"
+
+[node name="DistCol" type="VBoxContainer" parent="UILayer/TelemetryPanel/Row/StatsBlock"]
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="DistKey" type="Label" parent="UILayer/TelemetryPanel/Row/StatsBlock/DistCol"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.565, 0.565, 0.592, 1)
+theme_override_font_sizes/font_size = 9
+text = "DISTANCE"
+
+[node name="DistVal" type="Label" parent="UILayer/TelemetryPanel/Row/StatsBlock/DistCol"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.894, 0.886, 0.894, 1)
+theme_override_font_sizes/font_size = 12
+text = "0.00 LY"
+
+[node name="PlanetsCol" type="VBoxContainer" parent="UILayer/TelemetryPanel/Row/StatsBlock"]
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="PlanetsKey" type="Label" parent="UILayer/TelemetryPanel/Row/StatsBlock/PlanetsCol"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.565, 0.565, 0.592, 1)
+theme_override_font_sizes/font_size = 9
+text = "PLANETS"
+
+[node name="PlanetsVal" type="Label" parent="UILayer/TelemetryPanel/Row/StatsBlock/PlanetsCol"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.894, 0.886, 0.894, 1)
+theme_override_font_sizes/font_size = 12
+text = "8"
+
+[node name="TelSpacer" type="Control" parent="UILayer/TelemetryPanel/Row"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ActionBtn" type="Button" parent="UILayer/TelemetryPanel/Row"]
+custom_minimum_size = Vector2(220, 0)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_colors/font_color = Color(0.745, 0.776, 0.882, 1)
+theme_override_font_sizes/font_size = 13
+text = "◉  SOLAR SYSTEM"
+
+[node name="TelHomeDivider" type="VSeparator" parent="UILayer/TelemetryPanel/Row"]
+layout_mode = 2
+theme_override_colors/separator_color = Color(0.28, 0.88, 0.96, 0.18)
+custom_minimum_size = Vector2(1, 0)
+
+[node name="HomeBtn" type="Button" parent="UILayer/TelemetryPanel/Row"]
+custom_minimum_size = Vector2(140, 0)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_colors/font_color = Color(0.28, 0.88, 0.96, 1)
+theme_override_font_sizes/font_size = 13
+text = "← HOME"

@@ -17,14 +17,21 @@ const EarthBaseScene = preload("res://Scenes/Earth/earth_base_1.tscn")
 const EarthLaunchpadScene = preload("res://Scenes/Earth/earth_launchpad.tscn")
 const MissionDebriefScene = preload("res://Scenes/Earth/mission_debrief_v2.tscn")
 const SpaceMapScene = preload("res://Scenes/UI/SpaceMap/space_map.tscn")
+const GalaxyMapScene = preload("res://Scenes/UI/SpaceMap/galaxy_map.tscn")
 const ControlStationScene = preload("res://Scenes/UI/ControlStationPanel.tscn")
 const SidescrollMiningScene = preload("res://Scenes/UI/SidescrollMining.tscn")
 const MiningPracticeScene = preload("res://Scenes/UI/MiningPracticePanel.tscn")
 const SatelliteStationScene = preload("res://Scenes/UI/SatelliteStationPanel.tscn")
-const RocketAscentScene = preload("res://Scenes/Transitions/rocket_ascent.tscn")
 const OutboundPreviewScene = preload("res://Scenes/Transitions/rocket_transit.tscn")
 
 var reporter := TestReporter.new()
+
+class FakeSceneManager:
+	extends Node
+	var last_scene_path := ""
+
+	func change_to_scene(scene_path: String) -> void:
+		last_scene_path = scene_path
 
 class FakeTutorialAppController:
 	extends Node
@@ -68,12 +75,19 @@ func run_all_tests() -> void:
 	await test_mission_briefing_seen_persistence()
 	await test_scanner_station_legacy_state_reconciles_after_m3()
 	await test_control_station_legacy_state_reconciles_after_m2()
+	await test_structure_flags_backfill_minimum_progression_stage()
+	await test_state_reconcile_repairs_unlock_chain_and_planning_state()
+	await test_state_reconcile_clears_invalid_contractor_selection()
+	await test_state_reconcile_normalizes_inventory_and_target_arrays()
+	await test_state_reconcile_normalizes_live_mission_payloads()
+	await test_state_reconcile_prunes_orphaned_transit_maps()
 	await test_earth_base_hides_progression_cards_during_active_tutorial_step()
 	await test_earth_base_allows_new_mission_for_m4_without_scanner_gate()
 	await test_earth_base_ignores_historical_mission_log_when_no_live_mission_exists()
 	await test_earth_base_hides_star_map_progression_card()
 	await test_game_navigation_menu_root_has_scene_owned_sections()
 	await test_game_navigation_menu_stats_and_debug_use_templates()
+	await test_game_navigation_menu_uses_trip_order_requirements()
 	await test_game_navigation_menu_actions_use_scene_owned_controls()
 	await test_game_navigation_menu_uses_template_backed_overlay_rows()
 	await test_game_navigation_menu_construction_uses_templates()
@@ -90,6 +104,7 @@ func run_all_tests() -> void:
 	await test_subcontractors_panel_uses_template_backed_detail_labels()
 	await test_launch_wizard_has_required_signals()
 	await test_space_map_scene_has_shared_bottom_nav()
+	await test_galaxy_map_scene_has_nav_buttons()
 	await test_mission_debrief_scene_has_shared_bottom_nav()
 	await test_sidescroll_mining_drone_pool_reuse()
 	await test_sidescroll_mining_has_scene_owned_mars_background()
@@ -99,7 +114,7 @@ func run_all_tests() -> void:
 	await test_sidescroll_mining_button_handbook_copy_is_plain_language()
 	await test_mining_practice_panel_stays_on_screen_after_run_complete()
 	await test_satellite_station_panel_stays_on_screen()
-	await test_rocket_ascent_skip_button_stays_on_screen()
+	await test_launchpad_launch_routes_directly_to_outbound_preview()
 	await test_outbound_preview_panels_stay_on_screen()
 
 func test_currency_manager_balance_operations() -> void:
@@ -500,6 +515,54 @@ func test_game_navigation_menu_stats_and_debug_use_templates() -> void:
 	owner.queue_free()
 	reporter.pass_test()
 
+func test_game_navigation_menu_uses_trip_order_requirements() -> void:
+	reporter.start_test("[UX] GameNavigationMenu mission requirements show selected trip order progress")
+	var state = RocketsStateAccess.build_default_state(2)
+	state["mission_progress_completed"] = 1
+	state["inventory"] = {"Iron": 2, "Nickel": 1}
+	state["trip_contract_offer"] = {
+		"contractors": [
+			{
+				"id": "rocketlab",
+				"name": "Rocketlab",
+				"requested_minerals": {"Iron": 4, "Nickel": 3}
+			}
+		],
+		"selected_contractor": "rocketlab",
+		"selection_required": false
+	}
+	RocketsManager.set_override_state(state)
+	var selected := RocketsManager.get_trip_selected_contractor()
+	if int(selected.get("requested_minerals", {}).get("Iron", 0)) != 4:
+		reporter.fail_test("Selected trip contractor did not preserve generated requested_minerals")
+		RocketsManager.clear_override_state()
+		return
+	var card := GameNavigationMenu._build_mission_requirements_card()
+	if card == null:
+		reporter.fail_test("Expected mission requirements card for selected trip contractor")
+		RocketsManager.clear_override_state()
+		return
+	var body := card.get_node_or_null("Body") as VBoxContainer
+	if body == null or body.get_child_count() < 2:
+		reporter.fail_test("Expected mineral progress rows in mission requirements card")
+		RocketsManager.clear_override_state()
+		return
+	var first_row := body.get_child(0) as HBoxContainer
+	var second_row := body.get_child(1) as HBoxContainer
+	var first_qty := first_row.get_node_or_null("ValueLabel") as Label if first_row else null
+	var second_qty := second_row.get_node_or_null("ValueLabel") as Label if second_row else null
+	if first_qty == null or second_qty == null:
+		reporter.fail_test("Expected quantity labels in mission requirements card rows")
+		RocketsManager.clear_override_state()
+		return
+	var qty_texts := [first_qty.text, second_qty.text]
+	if not qty_texts.has("2 / 4 kg") or not qty_texts.has("1 / 3 kg"):
+		reporter.fail_test("Expected trip order progress text, got %s" % str(qty_texts))
+		RocketsManager.clear_override_state()
+		return
+	RocketsManager.clear_override_state()
+	reporter.pass_test()
+
 func test_control_station_panel_has_scene_owned_primary_sections() -> void:
 	reporter.start_test("[UX] ControlStationPanel includes scene-owned primary sections")
 	var scene = ControlStationScene.instantiate()
@@ -523,21 +586,31 @@ func test_control_station_panel_has_scene_owned_primary_sections() -> void:
 	reporter.pass_test()
 
 func test_game_navigation_menu_actions_use_scene_owned_controls() -> void:
-	reporter.start_test("[UX] GameNavigationMenu actions section uses scene-owned controls")
-	var section = preload("res://Scenes/UI/Templates/GameMenuActionsSection.tscn").instantiate()
-	get_root().add_child(section)
+	reporter.start_test("[UX] GameNavigationMenu settings entry and landscape panel use scene-owned controls")
+	var entry = preload("res://Scenes/UI/Templates/GameMenuSettingsEntryCard.tscn").instantiate()
+	get_root().add_child(entry)
 	await create_timer(0.01).timeout
-	for node_name in [
-		"PracticeMiningButton",
-		"ReplayMissionGuideButton",
-		"CitizenScienceDialogueButton",
-		"ResetAllDataButton"
+	for path in [
+		"Body/TopRow/TextColumn/EyebrowLabel",
+		"Body/TopRow/TextColumn/TitleLabel",
+		"Body/TopRow/TextColumn/SummaryLabel",
+		"Body/TopRow/OpenButton"
 	]:
-		if section.get_node_or_null(node_name) == null:
-			reporter.fail_test("Expected GameMenuActionsSection node %s" % node_name)
-			section.queue_free()
+		if entry.get_node_or_null(path) == null:
+			reporter.fail_test("Expected GameMenuSettingsEntryCard node at %s" % path)
+			entry.queue_free()
 			return
-	section.queue_free()
+	entry.queue_free()
+	# GameSettingsPanel is now fully code-built — verify it instantiates and
+	# constructs at least one child (backdrop + center container with card).
+	var panel = preload("res://Scenes/UI/GameSettingsPanel.tscn").instantiate()
+	get_root().add_child(panel)
+	await create_timer(0.02).timeout
+	if panel.get_child_count() < 1:
+		reporter.fail_test("Expected GameSettingsPanel to have code-built children after _ready")
+		panel.queue_free()
+		return
+	panel.queue_free()
 	reporter.pass_test()
 
 func test_game_navigation_menu_uses_template_backed_overlay_rows() -> void:
@@ -665,10 +738,10 @@ func test_asteroid_detail_view_uses_scene_owned_summary_and_classification() -> 
 	get_root().add_child(scene)
 	await create_timer(0.05).timeout
 	var summary_paths = [
-		"BodyScroll/ContentContainer/ImageContainer/ImageShell",
-		"BodyScroll/ContentContainer/ScienceSummaryCard/Body/EyebrowLabel",
-		"BodyScroll/ContentContainer/ScienceSummaryCard/Body/SummaryBodyLabel",
-		"BodyScroll/ContentContainer/ScienceSummaryCard/Body/SummaryMetaLabel"
+		"BodyScroll/ContentMargin/ContentContainer/ImageContainer/ImageShell",
+		"BodyScroll/ContentMargin/ContentContainer/ScienceSummaryCard/Body/EyebrowLabel",
+		"BodyScroll/ContentMargin/ContentContainer/ScienceSummaryCard/Body/SummaryBodyLabel",
+		"BodyScroll/ContentMargin/ContentContainer/ScienceSummaryCard/Body/SummaryMetaLabel"
 	]
 	for path in summary_paths:
 		if scene.get_node_or_null(path) == null:
@@ -684,10 +757,10 @@ func test_asteroid_detail_view_uses_scene_owned_summary_and_classification() -> 
 	}, true)
 	await create_timer(0.02).timeout
 	var classification_paths = [
-		"BodyScroll/ContentContainer/AsteroidClassificationRow/PromptLabel",
-		"BodyScroll/ContentContainer/AsteroidClassificationRow/ClassificationButtons/BtnPlanet",
-		"BodyScroll/ContentContainer/AsteroidClassificationRow/ClassificationButtons/BtnNotPlanet",
-		"BodyScroll/ContentContainer/AsteroidClassificationRow/ClassificationButtons/BtnMarkDip"
+		"BodyScroll/ContentMargin/ContentContainer/AsteroidClassificationRow/PromptLabel",
+		"BodyScroll/ContentMargin/ContentContainer/AsteroidClassificationRow/ClassificationButtons/BtnPlanet",
+		"BodyScroll/ContentMargin/ContentContainer/AsteroidClassificationRow/ClassificationButtons/BtnNotPlanet",
+		"BodyScroll/ContentMargin/ContentContainer/AsteroidClassificationRow/ClassificationButtons/BtnMarkDip"
 	]
 	for path in classification_paths:
 		if scene.get_node_or_null(path) == null:
@@ -906,6 +979,255 @@ func test_control_station_legacy_state_reconciles_after_m2() -> void:
 	RocketsManager.clear_override_state()
 	reporter.pass_test()
 
+func test_structure_flags_backfill_minimum_progression_stage() -> void:
+	reporter.start_test("[UX] Contradictory structure flags backfill minimum mission progression")
+	var state = RocketsStateAccess.build_default_state(2)
+	state["mission_progress_completed"] = 0
+	state["completed_mission_badges"] = []
+	state["control_station_built"] = true
+	state["scanner_station_built"] = true
+	state["scanner_unlocked"] = false
+	RocketsManager.set_override_state(state)
+	var loaded := RocketsManager.load_state()
+	var badges = loaded.get("completed_mission_badges", [])
+	var completed := int(loaded.get("mission_progress_completed", -1))
+	var stage := RocketsManager.get_mission_stage()
+	if typeof(badges) != TYPE_ARRAY or badges.size() < 2:
+		reporter.fail_test("Expected at least two mission badges to be synthesized from built structure flags")
+		RocketsManager.clear_override_state()
+		return
+	if completed < 2:
+		reporter.fail_test("Expected mission_progress_completed >= 2 after reconciliation, got %d" % completed)
+		RocketsManager.clear_override_state()
+		return
+	if stage != 3:
+		reporter.fail_test("Expected reconciled mission stage 3 for scanner-built contradictory state, got %d" % stage)
+		RocketsManager.clear_override_state()
+		return
+	if not bool(loaded.get("scanner_unlocked", false)):
+		reporter.fail_test("Expected scanner_unlocked true once scanner station is already built")
+		RocketsManager.clear_override_state()
+		return
+	RocketsManager.clear_override_state()
+	reporter.pass_test()
+
+func test_state_reconcile_repairs_unlock_chain_and_planning_state() -> void:
+	reporter.start_test("[ARCH] State reconcile repairs unlock chain, planning state, and pre-free-ops survey mode")
+	var state = RocketsStateAccess.build_default_state(2)
+	state["mission_progress_completed"] = 1
+	state["completed_mission_badges"] = ["mission-1"]
+	state["unlocked"] = ["starterrocket3", "starterrocket1", "starterrocket3"]
+	state["operation_mode"] = "survey"
+	state["planning_rocket_type"] = "starterrocket9"
+	state["planning_step"] = 99
+	RocketsManager.set_override_state(state)
+	var loaded := RocketsManager.load_state()
+	var unlocked: Array = loaded.get("unlocked", [])
+	if not unlocked.has("starterrocket1") or not unlocked.has("starterrocket2") or not unlocked.has("starterrocket3"):
+		reporter.fail_test("Expected unlock chain to contain starterrocket1/2/3 after reconciliation, got %s" % str(unlocked))
+		RocketsManager.clear_override_state()
+		return
+	if str(loaded.get("operation_mode", "")) != "contract":
+		reporter.fail_test("Expected pre-free-ops operation_mode to be forced back to contract, got %s" % str(loaded.get("operation_mode", "")))
+		RocketsManager.clear_override_state()
+		return
+	if loaded.has("planning_rocket_type"):
+		reporter.fail_test("Expected invalid planning_rocket_type to be cleared")
+		RocketsManager.clear_override_state()
+		return
+	if int(loaded.get("planning_step", -1)) != 3:
+		reporter.fail_test("Expected planning_step to clamp to 3, got %s" % str(loaded.get("planning_step", "")))
+		RocketsManager.clear_override_state()
+		return
+	RocketsManager.clear_override_state()
+	reporter.pass_test()
+
+func test_state_reconcile_clears_invalid_contractor_selection() -> void:
+	reporter.start_test("[ARCH] State reconcile clears stale contractor selections when offers change")
+	var state = RocketsStateAccess.build_default_state(2)
+	state["starter_contract_offer"] = {
+		"selected_contractor": "bogus_starter"
+	}
+	state["trip_contract_offer"] = {
+		"selected_contractor": "bogus_trip",
+		"selection_required": false,
+		"contractors": [
+			{"id": "rocketlab", "name": "Rocketlab"},
+			{"id": "astroforge", "name": "Astroforge"}
+		]
+	}
+	RocketsManager.set_override_state(state)
+	var loaded := RocketsManager.load_state()
+	var starter: Dictionary = loaded.get("starter_contract_offer", {})
+	var trip: Dictionary = loaded.get("trip_contract_offer", {})
+	if str(starter.get("selected_contractor", "")) != "":
+		reporter.fail_test("Expected invalid starter contractor selection to be cleared, got %s" % str(starter.get("selected_contractor", "")))
+		RocketsManager.clear_override_state()
+		return
+	if str(trip.get("selected_contractor", "")) != "":
+		reporter.fail_test("Expected invalid trip contractor selection to be cleared, got %s" % str(trip.get("selected_contractor", "")))
+		RocketsManager.clear_override_state()
+		return
+	if not bool(trip.get("selection_required", false)):
+		reporter.fail_test("Expected trip offer selection_required to be restored when no valid contractor is selected")
+		RocketsManager.clear_override_state()
+		return
+	RocketsManager.clear_override_state()
+	reporter.pass_test()
+
+func test_state_reconcile_normalizes_inventory_and_target_arrays() -> void:
+	reporter.start_test("[ARCH] State reconcile normalizes inventory, detected targets, seen arrays, and preview selection")
+	var state = RocketsStateAccess.build_default_state(2)
+	state["inventory"] = {"Iron": -5, "Nickel": 4, "Silicates": -2, "Gold": 7}
+	state["detected_targets"] = [
+		{"id": "alpha", "type": "PLANET", "label": "Alpha"},
+		{"id": "alpha", "type": "planet", "label": "Duplicate"},
+		{"id": "", "type": "asteroid"},
+		"bad-row",
+		{"id": "beta", "label": "Beta"}
+	]
+	state["seen_asteroids"] = ["a1", "", "a1", "a2"]
+	state["seen_planets"] = ["p1", "p1", ""]
+	state["candidate_visit_blocks"] = {"": 10, "alpha": 20}
+	state["selected_target"] = "  beta  "
+	state["preview_target"] = {"id": " "}
+	RocketsManager.set_override_state(state)
+	var loaded := RocketsManager.load_state()
+	var inventory: Dictionary = loaded.get("inventory", {})
+	var targets: Array = loaded.get("detected_targets", [])
+	if int(inventory.get("Iron", -1)) != 0 or int(inventory.get("Silicates", -1)) != 0 or int(inventory.get("Gold", -1)) != 7:
+		reporter.fail_test("Expected inventory negatives to clamp to zero while preserving valid extras, got %s" % str(inventory))
+		RocketsManager.clear_override_state()
+		return
+	if targets.size() != 2:
+		reporter.fail_test("Expected detected_targets to drop malformed/duplicate rows, got %s" % str(targets))
+		RocketsManager.clear_override_state()
+		return
+	if str(targets[0].get("type", "")) != "planet" or str(targets[1].get("type", "")) != "asteroid":
+		reporter.fail_test("Expected detected target types to normalize to planet/asteroid, got %s" % str(targets))
+		RocketsManager.clear_override_state()
+		return
+	if loaded.get("seen_asteroids", []) != ["a1", "a2"] or loaded.get("seen_planets", []) != ["p1"]:
+		reporter.fail_test("Expected seen arrays to dedupe and strip blanks, got asteroids=%s planets=%s" % [str(loaded.get("seen_asteroids", [])), str(loaded.get("seen_planets", []))])
+		RocketsManager.clear_override_state()
+		return
+	if loaded.get("candidate_visit_blocks", {}).has(""):
+		reporter.fail_test("Expected blank candidate_visit_blocks key to be removed")
+		RocketsManager.clear_override_state()
+		return
+	if str(loaded.get("selected_target", "")) != "beta":
+		reporter.fail_test("Expected selected_target to be trimmed to beta, got %s" % str(loaded.get("selected_target", "")))
+		RocketsManager.clear_override_state()
+		return
+	if not Dictionary(loaded.get("preview_target", {})).is_empty():
+		reporter.fail_test("Expected blank preview_target to be cleared, got %s" % str(loaded.get("preview_target", {})))
+		RocketsManager.clear_override_state()
+		return
+	RocketsManager.clear_override_state()
+	reporter.pass_test()
+
+func test_state_reconcile_normalizes_live_mission_payloads() -> void:
+	reporter.start_test("[ARCH] State reconcile normalizes live mission and returned-mission payloads")
+	var state = RocketsStateAccess.build_default_state(2)
+	state["mission_progress_completed"] = 1
+	state["completed_mission_badges"] = ["mission-1"]
+	state["missions"] = [
+		{
+			"rocket_id": "rocket-a",
+			"target_id": "target-alpha",
+			"operation_mode": "survey",
+			"location": "",
+			"objective": {
+				"requirements": {"minerals": {"Iron": -3}},
+				"target_id": "wrong-target"
+			}
+		},
+		{
+			"rocket_id": "rocket-a",
+			"target": "target-beta",
+			"launch_time": 10,
+			"operation_mode": "contract"
+		},
+		{
+			"rocket_id": "",
+			"target": "bad-row"
+		}
+	]
+	state["returned_mission"] = {
+		"rocket_id": "rocket-b",
+		"target": "target-returned",
+		"operation_mode": "survey",
+		"mission_objective": {
+			"requirements": {"minerals": {"Nickel": -4}}
+		}
+	}
+	RocketsManager.set_override_state(state)
+	var loaded := RocketsManager.load_state()
+	var missions: Array = loaded.get("missions", [])
+	var returned: Dictionary = loaded.get("returned_mission", {})
+	if missions.size() != 1:
+		reporter.fail_test("Expected duplicate/invalid live missions to collapse to one valid record, got %s" % str(missions))
+		RocketsManager.clear_override_state()
+		return
+	var mission: Dictionary = missions[0]
+	if str(mission.get("target", "")) != "target-beta" or str(mission.get("operation_mode", "")) != "contract":
+		reporter.fail_test("Expected live mission to keep latest valid target and contract mode, got %s" % str(mission))
+		RocketsManager.clear_override_state()
+		return
+	if mission.get("location", []) != ["target-beta"]:
+		reporter.fail_test("Expected live mission location to normalize to the active target, got %s" % str(mission.get("location", [])))
+		RocketsManager.clear_override_state()
+		return
+	var objective: Dictionary = mission.get("objective", {})
+	if str(objective.get("target_id", "")) != "target-beta":
+		reporter.fail_test("Expected mission objective target_id to normalize with live mission target, got %s" % str(objective))
+		RocketsManager.clear_override_state()
+		return
+	if str(returned.get("target_id", "")) != "target-returned" or str(returned.get("operation_mode", "")) != "contract":
+		reporter.fail_test("Expected returned mission to normalize target_id and onboarding-safe mode, got %s" % str(returned))
+		RocketsManager.clear_override_state()
+		return
+	if not Dictionary(returned.get("mission_objective", {}).get("requirements", {}).get("minerals", {})).is_empty():
+		reporter.fail_test("Expected returned mission objective minerals to normalize to an empty requirements map, got %s" % str(returned.get("mission_objective", {})))
+		RocketsManager.clear_override_state()
+		return
+	RocketsManager.clear_override_state()
+	reporter.pass_test()
+
+func test_state_reconcile_prunes_orphaned_transit_maps() -> void:
+	reporter.start_test("[ARCH] State reconcile prunes orphaned transit and status maps")
+	var state = RocketsStateAccess.build_default_state(2)
+	state["placed"] = [
+		{"id": "rocket-a", "type": "starterrocket1", "status": "awaitingLaunch"}
+	]
+	state["missions"] = [
+		{"rocket_id": "rocket-b", "rocket_type": "starterrocket2", "status": "launched"}
+	]
+	state["returning"] = [
+		{"rocket_id": "rocket-a"},
+		{"rocket_id": "orphan"}
+	]
+	state["arrived"] = {"rocket-a": {"target_id": "x"}, "orphan": {"target_id": "y"}}
+	state["returning_started"] = {"rocket-a": 1, "orphan": 2}
+	state["status_changed_at"] = {
+		"rocket-a": {"awaitingLaunch": 1},
+		"rocket-b": {"launched": 2},
+		"orphan": {"returned": 3}
+	}
+	RocketsManager.set_override_state(state)
+	var loaded := RocketsManager.load_state()
+	var returning: Array = loaded.get("returning", [])
+	if returning.size() != 1 or str(returning[0].get("rocket_id", "")) != "rocket-a":
+		reporter.fail_test("Expected returning list to prune orphaned rockets, got %s" % str(returning))
+		RocketsManager.clear_override_state()
+		return
+	if loaded.get("arrived", {}).has("orphan") or loaded.get("returning_started", {}).has("orphan") or loaded.get("status_changed_at", {}).has("orphan"):
+		reporter.fail_test("Expected orphaned transit/status maps to be pruned, got arrived=%s returning_started=%s status=%s" % [str(loaded.get("arrived", {})), str(loaded.get("returning_started", {})), str(loaded.get("status_changed_at", {}))])
+		RocketsManager.clear_override_state()
+		return
+	RocketsManager.clear_override_state()
+	reporter.pass_test()
+
 func test_earth_base_allows_new_mission_for_m4_without_scanner_gate() -> void:
 	reporter.start_test("[UX] Earth base keeps New Mission available for Mission 4 autonomy handoff")
 	var state = RocketsStateAccess.build_default_state(2)
@@ -1082,8 +1404,42 @@ func _find_label_in_subtree(root: Node, snippet: String) -> Label:
 	return null
 
 func test_space_map_scene_has_shared_bottom_nav() -> void:
-	reporter.start_test("[UX] Space map scene includes the shared bottom navigation shell")
-	await _assert_scene_has_bottom_nav(SpaceMapScene.instantiate(), "SpaceMap")
+	reporter.start_test("[UX] Space map scene includes HomeBtn and GalaxyBtn in footer")
+	var scene = SpaceMapScene.instantiate()
+	if scene == null:
+		reporter.fail_test("SpaceMap scene failed to instantiate")
+		return
+	get_root().add_child(scene)
+	await create_timer(0.05).timeout
+	if scene.get_node_or_null("UILayer/InfoBar/Sections/HomeBtn") == null:
+		reporter.fail_test("SpaceMap scene missing HomeBtn in InfoBar footer")
+		scene.queue_free()
+		return
+	if scene.get_node_or_null("UILayer/InfoBar/Sections/GalaxyBtn") == null:
+		reporter.fail_test("SpaceMap scene missing GalaxyBtn in InfoBar footer")
+		scene.queue_free()
+		return
+	scene.queue_free()
+	reporter.pass_test()
+
+func test_galaxy_map_scene_has_nav_buttons() -> void:
+	reporter.start_test("[UX] Galaxy map scene includes TelemetryPanel with HomeBtn")
+	var scene = GalaxyMapScene.instantiate()
+	if scene == null:
+		reporter.fail_test("GalaxyMap scene failed to instantiate")
+		return
+	get_root().add_child(scene)
+	await create_timer(0.05).timeout
+	if scene.get_node_or_null("UILayer/TelemetryPanel") == null:
+		reporter.fail_test("GalaxyMap scene missing UILayer/TelemetryPanel")
+		scene.queue_free()
+		return
+	if scene.get_node_or_null("UILayer/TelemetryPanel/Row/HomeBtn") == null:
+		reporter.fail_test("GalaxyMap scene missing HomeBtn in TelemetryPanel")
+		scene.queue_free()
+		return
+	scene.queue_free()
+	reporter.pass_test()
 
 func test_mission_debrief_scene_has_shared_bottom_nav() -> void:
 	reporter.start_test("[UX] Mission debrief scene includes the shared bottom navigation shell")
@@ -1299,23 +1655,23 @@ func test_satellite_station_panel_stays_on_screen() -> void:
 	satellite.queue_free()
 	reporter.pass_test()
 
-func test_rocket_ascent_skip_button_stays_on_screen() -> void:
-	reporter.start_test("[UX] Rocket ascent skip button stays inside the viewport")
-	var ascent = RocketAscentScene.instantiate()
-	get_root().add_child(ascent)
+func test_launchpad_launch_routes_directly_to_outbound_preview() -> void:
+	reporter.start_test("[UX] Launchpad skips ascent and routes directly to outbound preview")
+	var fake_scene_manager := FakeSceneManager.new()
+	fake_scene_manager.name = "FakeSceneManager"
+	fake_scene_manager.add_to_group("scene_manager")
+	get_root().add_child(fake_scene_manager)
+	var launchpad = EarthLaunchpadScene.instantiate()
+	get_root().add_child(launchpad)
 	await create_timer(0.05).timeout
-	var viewport = ascent.get_viewport().get_visible_rect().size
-	var button = ascent._skip_button as Button
-	if button == null:
-		reporter.fail_test("Rocket ascent skip button not found")
-		ascent.queue_free()
+	launchpad._on_launched("starterrocket1", "target-1")
+	if fake_scene_manager.last_scene_path != "res://Scenes/Transitions/rocket_transit.tscn":
+		reporter.fail_test("Expected direct outbound preview route, got %s" % fake_scene_manager.last_scene_path)
+		launchpad.queue_free()
+		fake_scene_manager.queue_free()
 		return
-	var rect = button.get_global_rect()
-	if rect.position.x < 0.0 or rect.position.y < 0.0 or rect.end.x > viewport.x or rect.end.y > viewport.y:
-		reporter.fail_test("Rocket ascent skip button extends outside viewport: %s vs %s" % [rect, viewport])
-		ascent.queue_free()
-		return
-	ascent.queue_free()
+	launchpad.queue_free()
+	fake_scene_manager.queue_free()
 	reporter.pass_test()
 
 func test_outbound_preview_panels_stay_on_screen() -> void:
