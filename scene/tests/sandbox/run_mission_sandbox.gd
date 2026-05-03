@@ -27,7 +27,7 @@ const DEBRIEF_SCENE   := "res://Scenes/Earth/mission_debrief_v2.tscn"
 const TRANSIT_SCENE   := "res://Scenes/Transitions/rocket_transit.tscn"
 const ASCENT_SCENE    := "res://Scenes/Transitions/rocket_ascent.tscn"
 const RETURN_SCENE    := "res://Scenes/Transitions/rocket_return.tscn"
-const MINING_SCENE    := "res://Scenes/SidescrollMining/sidescroll_mining.tscn"
+const MINING_SCENE    := "res://Scenes/UI/SidescrollMining.tscn"
 const WIZARD_SCENE    := "res://Scenes/UI/LaunchWizard.tscn"
 const SATELLITE_SCENE := "res://Scenes/UI/SatelliteStationPanel.tscn"
 const ASTEROID_DETAIL := "res://Scenes/UI/AsteroidDetail/asteroid_detail_view.tscn"
@@ -711,7 +711,8 @@ func _finalize() -> void:
 		_screenshot_index, _issues.size(), critical_count
 	])
 	if critical_count > 0:
-		OS.exit_code = 1
+		get_tree().quit(1)
+		return
 
 
 # ---------------------------------------------------------------------------
