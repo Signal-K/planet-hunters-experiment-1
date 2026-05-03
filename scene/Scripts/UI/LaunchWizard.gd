@@ -79,6 +79,7 @@ var _selected_contractor: Dictionary = {}
 var _selected_target:     Dictionary = {}
 var _selected_rocket:     String     = ""
 var _is_free_ops:         bool       = false
+var _use_trip_contract:   bool       = false
 var _contractors:         Array      = []
 var _targets:             Array      = []
 var _rockets:             Array      = []
@@ -158,13 +159,14 @@ func _ready() -> void:
 
 func _load_planning_state() -> void:
 	_is_free_ops = RocketsManager.is_free_operations_unlocked()
-	
+	_use_trip_contract = _is_free_ops or RocketsManager.get_mission_stage() >= 2
+
 	# 1. Load Step
 	var saved_step = RocketsManager.get_planning_step()
 	_step = clamp(saved_step, 0, 3) as Step
-	
+
 	# 2. Load Contractor
-	if _is_free_ops:
+	if _use_trip_contract:
 		_selected_contractor = RocketsManager.get_trip_selected_contractor()
 	else:
 		_selected_contractor = RocketsManager.get_starter_selected_contractor()
@@ -310,13 +312,14 @@ func _clear_container_children_except(container: Node, keep: Array) -> void:
 func _build_contractor_step() -> void:
 	_is_free_ops = RocketsManager.is_free_operations_unlocked()
 	var stage    := RocketsManager.get_mission_stage()
+	_use_trip_contract = _is_free_ops or stage >= 2
 
 	_contractor_step.visible = true
 	_contractor_title.text = "Mission %d contractor" % stage
 	_contractor_subtitle.text = "Choose the buyer. Their order defines the mission haul."
 	_contractor_grid.columns = _contractor_grid_columns()
 
-	if _is_free_ops:
+	if _use_trip_contract:
 		RocketsManager.ensure_trip_contract_offer()
 		_contractors = RocketsManager.get_trip_contractors()
 	else:
@@ -370,7 +373,7 @@ func _add_contractor_card(c: Dictionary) -> void:
 	btn.text = "Selected" if selected else "Select contract"
 	btn.pressed.connect(func():
 		_selected_contractor = c
-		if _is_free_ops:
+		if _use_trip_contract:
 			RocketsManager.select_trip_contractor(c_id)
 		else:
 			RocketsManager.select_starter_contractor(c_id)

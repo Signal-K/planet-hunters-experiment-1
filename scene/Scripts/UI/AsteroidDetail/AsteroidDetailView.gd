@@ -43,9 +43,9 @@ var _classification_row: Control
 @onready var pen_circle_button: Button = $HeaderContainer/ToolsRow/PenCircleButton
 @onready var color_picker: ColorPickerButton = $HeaderContainer/ToolsRow/ColorPickerButton
 @onready var annotation_count_label: Label = $HeaderContainer/TopRow/AnnotationCount
-@onready var _science_summary_card: PanelContainer = $BodyScroll/ContentContainer/ScienceSummaryCard
-@onready var _science_summary_body: Label = $BodyScroll/ContentContainer/ScienceSummaryCard/Body/SummaryBodyLabel
-@onready var _science_summary_meta: Label = $BodyScroll/ContentContainer/ScienceSummaryCard/Body/SummaryMetaLabel
+@onready var _science_summary_card: PanelContainer = $BodyScroll/ContentMargin/ContentContainer/ScienceSummaryCard
+@onready var _science_summary_body: Label = $BodyScroll/ContentMargin/ContentContainer/ScienceSummaryCard/Body/SummaryBodyLabel
+@onready var _science_summary_meta: Label = $BodyScroll/ContentMargin/ContentContainer/ScienceSummaryCard/Body/SummaryMetaLabel
 
 func _ready():
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)

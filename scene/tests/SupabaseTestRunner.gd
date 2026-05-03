@@ -248,7 +248,7 @@ func test_asteroid_selection():
 	await create_timer(4.0).timeout
 	
 	# Get the anomaly list
-	var anomaly_list = panel.get_node_or_null("PanelContainer/Panel/VBoxContainer/ContentContainer/AnomalyList")
+	var anomaly_list = panel.get_node_or_null("PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/AnomalyScroll/AnomalyList")
 	if anomaly_list == null:
 		fail(test_name, "Could not find AnomalyList in panel")
 		panel.queue_free()
@@ -265,18 +265,24 @@ func test_asteroid_selection():
 	
 	# Find clickable buttons inside the rendered anomaly item.
 	# Item layout can be nested, so search recursively.
+	# Accepts: "Route to Launchpad" (SelectButton), "Inspect" (DetailButton),
+	# or any legacy "select"/"view" wording.
 	var first_asteroid_data = null
 	var select_button: Button = null
 	var view_button: Button = null
 	for item in asteroid_items:
 		if select_button == null:
-			select_button = _find_button_recursive(item, "select")
+			select_button = _find_button_recursive(item, "route")
+			if select_button == null:
+				select_button = _find_button_recursive(item, "select")
 		if view_button == null:
-			view_button = _find_button_recursive(item, "view")
+			view_button = _find_button_recursive(item, "inspect")
+			if view_button == null:
+				view_button = _find_button_recursive(item, "view")
 		if select_button or view_button:
 			break
-	
-	var click_button: Button = view_button if view_button != null else select_button
+
+	var click_button: Button = select_button if select_button != null else view_button
 	if click_button == null:
 		fail(test_name, "Could not find clickable button in asteroid items")
 		panel.queue_free()
@@ -305,8 +311,8 @@ func test_asteroid_selection():
 	
 	# Current panel behavior routes to launchpad after selection.
 	var status_text := ""
-	if panel.has_node("PanelContainer/Panel/VBoxContainer/ContentContainer/StatusContainer/StatusLabel"):
-		status_text = str(panel.get_node("PanelContainer/Panel/VBoxContainer/ContentContainer/StatusContainer/StatusLabel").text)
+	if panel.has_node("PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/StatusContainer/StatusLabel"):
+		status_text = str(panel.get_node("PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/StatusContainer/StatusLabel").text)
 	var selected_target := ""
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	if rm:
@@ -314,7 +320,7 @@ func test_asteroid_selection():
 	var routed_to_launchpad := status_text.begins_with("Target selected:") or selected_target != ""
 
 	# Backward-compatible path: older UI opened asteroid detail in-place.
-	var content_container = panel.get_node_or_null("PanelContainer/Panel/VBoxContainer/ContentContainer")
+	var content_container = panel.get_node_or_null("PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer")
 	if not content_container:
 		fail(test_name, "ContentContainer not found in panel")
 		panel.queue_free()
