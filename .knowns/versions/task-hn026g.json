@@ -1,0 +1,49 @@
+{
+  "taskId": "hn026g",
+  "currentVersion": 1,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "hn026g",
+      "version": 1,
+      "timestamp": "2026-05-03T11:40:58.94495705Z",
+      "author": "@Liam",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": null,
+          "newValue": "todo"
+        },
+        {
+          "field": "priority",
+          "oldValue": null,
+          "newValue": "medium"
+        }
+      ],
+      "snapshot": {
+        "acceptanceCriteria": [
+          {
+            "text": "Portrait rotate prompt shows on tablets (not just phones/PWA)",
+            "completed": false
+          },
+          {
+            "text": "Prompt fires when viewportWidth \u003c 1200 and orientation is portrait",
+            "completed": false
+          },
+          {
+            "text": "Consider a portrait-native informational layout (future task)",
+            "completed": false
+          }
+        ],
+        "assignee": "@Liam",
+        "description": "In landscape mode on a browser (non-PWA), users see the browser tab bar eating into the game viewport. Portrait mode shows only a rotate-device prompt. The rotate prompt was previously restricted to isMobile/isPwa only; tablets in portrait (browser mode) got no prompt. Fix applied: portrait rotate prompt now triggers for any device with viewportWidth \u003c 1200 in portrait orientation (covers phones and tablets). Long-term: consider a lightweight portrait layout that shows HUD summary / mission status without requiring Godot.",
+        "labels": [
+          "mobile,portrait,ux,layout"
+        ],
+        "priority": "medium",
+        "status": "todo",
+        "title": "Portrait mode support — game requires landscape but browser users don't always rotate"
+      }
+    }
+  ]
+}

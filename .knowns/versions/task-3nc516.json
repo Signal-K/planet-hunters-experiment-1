@@ -1,0 +1,53 @@
+{
+  "taskId": "3nc516",
+  "currentVersion": 1,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "3nc516",
+      "version": 1,
+      "timestamp": "2026-05-03T11:41:09.492501946Z",
+      "author": "@Liam",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": null,
+          "newValue": "todo"
+        },
+        {
+          "field": "priority",
+          "oldValue": null,
+          "newValue": "high"
+        }
+      ],
+      "snapshot": {
+        "acceptanceCriteria": [
+          {
+            "text": "Landing page shows 'Distant Signals' as the game title",
+            "completed": false
+          },
+          {
+            "text": "Tagline: 'Mine asteroids. Build settlements. Discover real planets.'",
+            "completed": false
+          },
+          {
+            "text": "All React Native screens updated",
+            "completed": false
+          },
+          {
+            "text": "Storage key names unchanged to preserve existing sessions",
+            "completed": false
+          }
+        ],
+        "assignee": "@Liam",
+        "description": "The first experiment was called 'Planet Hunters' which is too literal and similar to real NASA programme names. Renamed to 'Distant Signals' — evocative of the TESS light-curve signals from far stars and the asteroid mining comms theme. Name inspired by the Gizmonauts soundtrack style (2-word poetic space phrases). Changes applied: react-shell.js (landing page title, tagline, login text, desktop subtitle), screens/LoadingScreen.tsx, screens/LoginScreen.tsx, screens/MenuScreen.tsx, App.tsx comment. Storage cookie/localStorage keys left as planet_hunters_* to avoid invalidating existing sessions. Tagline updated from NASA citizen science framing to 'Mine asteroids. Build settlements. Discover real planets.'",
+        "labels": [
+          "branding,rename,landing-page"
+        ],
+        "priority": "high",
+        "status": "todo",
+        "title": "Rename Experiment 1 from 'Planet Hunters' to 'Distant Signals'"
+      }
+    }
+  ]
+}

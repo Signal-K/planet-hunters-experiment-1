@@ -1,5 +1,5 @@
 /**
- * Planet Hunters - React Native + Godot
+ * Distant Signals - React Native + Godot
  */
 
 import React, { useEffect, useRef, useState } from "react";
