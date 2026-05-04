@@ -38,7 +38,8 @@ const GameMenuStatColumnScene = preload("res://Scenes/UI/Templates/GameMenuStatC
 const GameMenuDebugSectionScene = preload("res://Scenes/UI/Templates/GameMenuDebugSection.tscn")
 const GameMenuInfoCardScene = preload("res://Scenes/UI/Templates/GameMenuInfoCard.tscn")
 const GameMenuLegendLabelScene = preload("res://Scenes/UI/Templates/GameMenuLegendLabel.tscn")
-const GameMenuActionsSectionScene = preload("res://Scenes/UI/Templates/GameMenuActionsSection.tscn")
+const GameMenuSettingsEntryCardScene = preload("res://Scenes/UI/Templates/GameMenuSettingsEntryCard.tscn")
+const GameSettingsPanelScript = preload("res://Scripts/UI/GameSettingsPanel.gd")
 
 const MENU_LAYER_NAME := "GameMenuLayer"
 const MENU_ROOT_NAME := "GameMenuRoot"
@@ -79,6 +80,7 @@ static func open(owner: Node) -> void:
 	var layer := CanvasLayer.new()
 	layer.name = MENU_LAYER_NAME
 	layer.layer = MENU_LAYER_Z
+	layer.follow_viewport_enabled = true
 	layer.set_meta("tutorial_zone_exempt", true)
 	layer.process_mode = Node.PROCESS_MODE_ALWAYS
 
@@ -168,7 +170,7 @@ static func _build_menu_root(owner: Node) -> Control:
 	_apply_button_style(close_btn, false)
 	close_btn.custom_minimum_size = Vector2(110, 50)
 	close_btn.pressed.connect(func():
-		preload("res://Scripts/UI/GameNavigationMenu.gd").close(owner)
+		GameNavigationMenu.close(root)
 	)
 
 	var sep: HSeparator = root.get_node("Center/%s/Scroll/Shell/Separator" % MENU_PANEL_NAME)
@@ -207,8 +209,8 @@ static func _build_menu_root(owner: Node) -> Control:
 		mission_requirements_label.visible = false
 		mission_requirements_host.visible = false
 
-	# Settings / Actions
-	settings_host.add_child(_build_actions_section(owner))
+	# Settings
+	settings_host.add_child(_build_settings_entry_card(owner))
 
 	# Debug
 	debug_host.add_child(_build_debug_section(owner))
@@ -281,64 +283,24 @@ static func _build_stats_card() -> PanelContainer:
 # Settings / actions section
 # ---------------------------------------------------------------------------
 
-static func _build_actions_section(owner: Node) -> VBoxContainer:
-	var vbox: VBoxContainer = GameMenuActionsSectionScene.instantiate()
-
-	var practice_btn: Button = vbox.get_node("PracticeMiningButton")
-	_apply_button_style(practice_btn, true)
-	practice_btn.pressed.connect(func():
-		var opened := AppControllerHelper.open_mining_practice_panel("menu_panel")
-		if opened:
-			preload("res://Scripts/UI/GameNavigationMenu.gd").close(owner)
+static func _build_settings_entry_card(owner: Node) -> PanelContainer:
+	var card: PanelContainer = GameMenuSettingsEntryCardScene.instantiate()
+	card.add_theme_stylebox_override("panel", _card_style(0.45))
+	var eyebrow: Label = card.get_node("Body/TopRow/TextColumn/EyebrowLabel")
+	var title: Label = card.get_node("Body/TopRow/TextColumn/TitleLabel")
+	var summary: Label = card.get_node("Body/TopRow/TextColumn/SummaryLabel")
+	eyebrow.add_theme_color_override("font_color", CYAN)
+	eyebrow.add_theme_font_size_override("font_size", 11)
+	title.add_theme_color_override("font_color", TITLE_COLOR)
+	title.add_theme_font_size_override("font_size", 24)
+	summary.add_theme_color_override("font_color", TEXT_MUTED)
+	summary.add_theme_font_size_override("font_size", 15)
+	var open_btn: Button = card.get_node("Body/TopRow/OpenButton")
+	_apply_button_style(open_btn, true)
+	open_btn.pressed.connect(func():
+		GameSettingsPanelScript.open(owner)
 	)
-
-	var replay_mission_btn: Button = vbox.get_node("ReplayMissionGuideButton")
-	_apply_button_style(replay_mission_btn, false)
-	replay_mission_btn.pressed.connect(func():
-		var app = AppControllerHelper.get_instance()
-		if app and app.has_method("replay_tutorial_for_current_mission"):
-			app.replay_tutorial_for_current_mission()
-		preload("res://Scripts/UI/GameNavigationMenu.gd").close(owner)
-	)
-
-	var dialogue_btn: Button = vbox.get_node("CitizenScienceDialogueButton")
-	_apply_button_style(dialogue_btn, false)
-	_refresh_dialogue_button_text(dialogue_btn)
-	dialogue_btn.pressed.connect(func():
-		var app = AppControllerHelper.get_instance()
-		if app and app.has_method("is_citizen_science_dialogue_enabled") and app.has_method("set_citizen_science_dialogue_enabled"):
-			var next_enabled := not bool(app.is_citizen_science_dialogue_enabled())
-			app.set_citizen_science_dialogue_enabled(next_enabled)
-		_refresh_dialogue_button_text(dialogue_btn)
-	)
-
-	var reset_btn: Button = vbox.get_node("ResetAllDataButton")
-	_apply_button_style(reset_btn, false)
-	reset_btn.pressed.connect(func():
-		_request_reset_all(owner)
-		preload("res://Scripts/UI/GameNavigationMenu.gd").close(owner)
-	)
-
-	return vbox
-
-static func _request_reset_all(owner: Node) -> void:
-	var app = AppControllerHelper.get_instance()
-	if app and app.has_method("_on_reset_all"):
-		app._on_reset_all()
-		return
-	if owner != null:
-		var ui_manager = owner.get_node_or_null("UIManager")
-		if ui_manager and ui_manager.has_method("_on_reset_all"):
-			ui_manager._on_reset_all()
-			return
-		if owner.has_method("_on_reset_all"):
-			owner._on_reset_all()
-			return
-	var tree := Engine.get_main_loop() as SceneTree
-	if tree and tree.root:
-		var fallback = tree.root.find_child("AppController", true, false)
-		if fallback and fallback.has_method("_on_reset_all"):
-			fallback._on_reset_all()
+	return card
 
 # ---------------------------------------------------------------------------
 # Debug section
@@ -352,7 +314,7 @@ static func _build_debug_section(owner: Node) -> VBoxContainer:
 		var app = AppControllerHelper.get_instance()
 		if app and app.has_method("trigger_instant_mining"):
 			app.trigger_instant_mining()
-			preload("res://Scripts/UI/GameNavigationMenu.gd").close(owner)
+			GameNavigationMenu.close(owner)
 	)
 
 	var money_btn: Button = vbox.get_node("MoneyButton")
@@ -380,7 +342,7 @@ static func _build_debug_section(owner: Node) -> VBoxContainer:
 			var app = AppControllerHelper.get_instance()
 			if app and app.has_method("debug_skip_to_mission"):
 				app.debug_skip_to_mission(i + 1)
-			preload("res://Scripts/UI/GameNavigationMenu.gd").close(owner)
+			GameNavigationMenu.close(owner)
 		)
 
 	return vbox
@@ -450,7 +412,7 @@ static func _populate_logbook_entries(entries: VBoxContainer) -> void:
 
 	if rows.is_empty():
 		var empty_lbl: Label = MenuLogbookEmptyScene.instantiate()
-		empty_lbl.text = "No mission records yet."
+		empty_lbl.text = "No missions completed yet."
 		empty_lbl.add_theme_font_size_override("font_size", 16)
 		empty_lbl.add_theme_color_override("font_color", TEXT_MUTED)
 		entries.add_child(empty_lbl)
@@ -468,19 +430,25 @@ static func _populate_logbook_entries(entries: VBoxContainer) -> void:
 		var body: VBoxContainer = card.get_node("Body")
 		body.add_theme_constant_override("separation", 4)
 
-		var action := str(entry.get("action", "mission"))
-		var timestamp := str(entry.get("timestamp", ""))
-		var header_text := "Mission #%d  •  %s" % [idx + 1, action]
-		if timestamp != "":
-			header_text += "  •  %s" % timestamp
+		# Header: target name (label) + date
+		var target_name := str(entry.get("label", entry.get("target_id", "Unknown Target")))
+		var date_str := _format_date(str(entry.get("last_timestamp", entry.get("timestamp", ""))))
+		var header_text := target_name
+		if date_str != "":
+			header_text += "  ·  %s" % date_str
 
 		var header_lbl: Label = card.get_node("Body/HeaderLabel")
 		header_lbl.text = header_text
 		header_lbl.add_theme_font_size_override("font_size", 17)
 		header_lbl.add_theme_color_override("font_color", CYAN)
 
-		for key in ["target_id", "rocket_id", "subcontractor_name", "operation_mode", "payout", "order_completion_pct"]:
+		# Show: payout, contractor (if present)
+		var display_keys: Array = ["payout", "subcontractor_name"]
+		for key in display_keys:
 			if not entry.has(key):
+				continue
+			var val = entry.get(key)
+			if val == null or str(val) == "" or str(val) == "0":
 				continue
 			var row: HBoxContainer = MenuLogbookKeyValueRowScene.instantiate()
 			body.add_child(row)
@@ -489,7 +457,7 @@ static func _populate_logbook_entries(entries: VBoxContainer) -> void:
 			key_lbl.add_theme_font_size_override("font_size", 14)
 			key_lbl.add_theme_color_override("font_color", TEXT_MUTED)
 			var val_lbl: Label = row.get_node("ValueLabel")
-			val_lbl.text = _format_value(key, entry.get(key))
+			val_lbl.text = _format_value(key, val)
 			val_lbl.add_theme_font_size_override("font_size", 14)
 			val_lbl.add_theme_color_override("font_color", TEXT_COLOR)
 
@@ -750,7 +718,7 @@ static func _build_inventory_card() -> PanelContainer:
 # ---------------------------------------------------------------------------
 
 static func _build_mission_requirements_card() -> PanelContainer:
-	var required := RocketsManager.get_starter_requested_minerals()
+	var required := RocketsManager.get_current_requested_minerals()
 	if required.is_empty():
 		return null
 
@@ -963,8 +931,8 @@ static func _do_room_upgrade(owner: Node, rocket_type: String, category: String,
 	if tree:
 		FirstTimeMechanicTracker.maybe_show("room_upgrades", tree)
 	# Close and reopen to rebuild with updated state
-	preload("res://Scripts/UI/GameNavigationMenu.gd").close(owner)
-	preload("res://Scripts/UI/GameNavigationMenu.gd").open(owner)
+	GameNavigationMenu.close(owner)
+	GameNavigationMenu.open(owner)
 
 static func _open_contribute_overlay(root: Control, proj_id: String, proj_name: String, reqs: Dictionary, current_progress: Dictionary) -> void:
 	# Remove any existing contribute overlay
@@ -1123,8 +1091,8 @@ static func _build_rocket_research_card(owner: Node) -> PanelContainer:
 				return
 			a.add_franc_balance(-upgrade_cost, "reusable_research_tier%d" % next_tier)
 			RocketsManager.set_reusable_research_tier(next_tier)
-			preload("res://Scripts/UI/GameNavigationMenu.gd").close(owner)
-			preload("res://Scripts/UI/GameNavigationMenu.gd").open(owner)
+			GameNavigationMenu.close(owner)
+			GameNavigationMenu.open(owner)
 		)
 	else:
 		var maxed_lbl: Label = card.get_node("Body/MaxedLabel")
@@ -1194,11 +1162,23 @@ static func _set_tutorial_overlay_visible(tree: SceneTree, visible: bool) -> voi
 	if visible and overlay.has_method("_refresh"):
 		overlay.call_deferred("_refresh")
 
+static func _format_date(ts: String) -> String:
+	if ts == "":
+		return ""
+	# Accept ISO-8601 prefix "YYYY-MM-DD" or "YYYY-MM-DDTHH:MM"
+	var parts := ts.split("T")
+	var date_part := parts[0] if parts.size() > 0 else ts
+	# If it looks like a Unix timestamp (all digits), skip
+	if date_part.is_valid_int():
+		return ""
+	return date_part
+
 static func _format_key(key: String) -> String:
 	const KEY_LABELS := {
+		"label": "Target",
 		"target_id": "Target",
 		"rocket_id": "Ship",
-		"payout": "Earnings",
+		"payout": "Earned",
 		"xp_awarded": "XP earned",
 		"action": "Outcome",
 		"subcontractor_name": "Contractor",
