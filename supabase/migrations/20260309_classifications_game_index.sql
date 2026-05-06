@@ -1,5 +1,5 @@
 -- Migration: Indexes and RLS for game-driven TESS classifications
--- Purpose: The Star Sailors game inserts TESS lightcurve classifications
+-- Purpose: The Landnám game inserts TESS lightcurve classifications
 --   using the anon key. This migration ensures efficient querying and
 --   documents the expected data shape.
 --
@@ -9,7 +9,7 @@
 --     "verdict": "planet" | "not_planet",
 --     "annotation_count": <int>,
 --     "annotations": [...stroke data...],
---     "source": "star-sailors-game",
+--     "source": "landnam-game",
 --     "game_session": "<uuid>"
 --   }
 --
@@ -48,4 +48,4 @@ BEGIN
 END $$;
 
 COMMENT ON INDEX idx_classifications_tess_lightcurve IS
-  'Supports Star Sailors game queries for TESS citizen science classification counts per anomaly';
+  'Supports Landnám game queries for TESS citizen science classification counts per anomaly';

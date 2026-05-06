@@ -1,4 +1,4 @@
--- Star Sailors: Consolidated Game Schema (Fixed Quoting & Names)
+-- Landnám: Consolidated Game Schema (Fixed Quoting & Names)
 -- Covers: Citizen Science (TESS), Economy, Fleet, Mining, and Customization.
 
 -- 1. BASE TABLES

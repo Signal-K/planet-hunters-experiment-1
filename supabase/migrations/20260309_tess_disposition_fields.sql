@@ -1,5 +1,5 @@
 -- Migration: TESS disposition and lightcurve metadata fields on anomalies
--- Purpose: Support citizen science classification loop in Star Sailors game.
+-- Purpose: Support citizen science classification loop in Landnám game.
 --   Players view TESS planet candidates, annotate lightcurves, and submit
 --   classifications. tess_disposition distinguishes candidates (PC) from
 --   confirmed planets (KP/CP) and false positives (FP/EB/etc).

@@ -8,7 +8,7 @@
 - **Persistence:** When deferring a new idea or mechanic, I MUST create a corresponding spec sheet in `.knowns/tasks/` or `.knowns/prompts/` with a clear "Status: Deferred" header and "Revisit" criteria.
 
 ## Engineering Standards
-- Adhere to the Star Sailors ecosystem architecture: shared Supabase instance, unified player profiles, and cross-game XP.
+- Adhere to the Landnám ecosystem architecture: shared Supabase instance, unified player profiles, and cross-game XP.
 - Prioritize Godot-React Native bridge stability and efficient state synchronization.
 
 <!-- KNOWNS GUIDELINES START -->
