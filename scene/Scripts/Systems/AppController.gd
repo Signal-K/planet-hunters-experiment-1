@@ -11,14 +11,12 @@ signal rockets_reset()
 signal tutorial_state_updated(state: Dictionary)
 signal citizen_science_dialogue_toggled(enabled: bool)
 signal leveled_up(new_level: int)
-signal player_state_snapshot_updated(state: Dictionary)
 
 const DEFAULT_FRANC_BALANCE := 10000000000
 const DEFAULT_EXPERIENCE_XP := 0
 const DEFAULT_EXPERIENCE_LEVEL := 1
 const DEFAULT_CITIZEN_SCIENCE_DIALOGUE_ENABLED := true
 const MAIN_SCENE_PATH := "res://Scenes/Earth/earth_base_1.tscn"
-const PLAYER_STATE_SCHEMA_VERSION := 1
 
 var counter: int = 0
 var franc_balance: int = DEFAULT_FRANC_BALANCE
@@ -68,18 +66,16 @@ func _ready() -> void:
 	load_experience()
 	_sync_experience_from_web_storage()
 	load_preferences()
-	_reconcile_cross_system_state()
 	_ensure_mission_progress_tracker()
 	_ensure_tutorial_controller()
 	_ensure_feedback_beacon()
-	_show_intro_splash_if_needed()
+	_set_tutorial_overlay_suspended(false)
 	WebEventBridge.emit("app_ready", {
 		"experience_level": experience_level,
 		"experience_xp": experience_xp,
 		"franc_balance": franc_balance,
 		"citizen_science_dialogue_enabled": citizen_science_dialogue_enabled
 	})
-	_emit_player_state_updated("app_ready")
 
 func _ensure_tutorial_runtime() -> void:
 	_ensure_tutorial_controller()
@@ -365,6 +361,53 @@ func _mark_tutorial_zone_exempt_recursive(node: Node) -> void:
 	for child in node.get_children():
 		_mark_tutorial_zone_exempt_recursive(child)
 
+func full_factory_reset() -> void:
+	AppLogger.d("[AppController] CRITICAL: Performing full factory reset.")
+	
+	# 1. Reset core managers (they manage their own files)
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if rm:
+		rm.reset_state()
+	
+	if _tutorial_controller and _tutorial_controller.has_method("reset_all"):
+		_tutorial_controller.reset_all()
+	
+	# 2. Reset persistence (Experience, Francs, Preferences)
+	_persistence.reset_all()
+	
+	# 3. Clear mission logs and subcontractors
+	var json = preload("res://Scripts/Utils/JSONFileManager.gd")
+	json.save_json("user://mission_logs.json", MissionLogManager.build_default_state())
+	json.save_json("user://subcontractors.json", SubcontractorManager.build_default_state())
+	if OS.has_feature("editor"):
+		json.save_json("res://mission_logs.json", MissionLogManager.build_default_state())
+		json.save_json("res://subcontractors.json", SubcontractorManager.build_default_state())
+	
+	# 4. Clear other state files
+	DirAccess.remove_absolute("user://rocket_unlock_popups.cfg")
+	DirAccess.remove_absolute(INTRO_SPLASH_FLAG_PATH)
+	DirAccess.remove_absolute("user://construction_state.json")
+	DirAccess.remove_absolute("user://first_time_mechanics.json")
+	
+	# 5. Reset local variables
+	counter = 0
+	franc_balance = DEFAULT_FRANC_BALANCE
+	loan_balance = 0
+	experience_xp = DEFAULT_EXPERIENCE_XP
+	experience_level = DEFAULT_EXPERIENCE_LEVEL
+	
+	# 6. Reset singleton trackers
+	FirstTimeMechanicTracker.reset_all()
+	MissionNarrativeAPI.reset_session_state()
+	
+	# 7. Clear web storage
+	_clear_web_experience_storage()
+	
+	AppLogger.d("[AppController] Factory reset complete. Reloading main scene.")
+	
+	# 8. Reload
+	_return_to_fresh_player_scene()
+
 func _on_reset_all() -> void:
 	"""Handle reset all action from menu panel"""
 	AppLogger.d("Reset all requested from Godot UI")
@@ -397,7 +440,6 @@ func _on_reset_all() -> void:
 	if _tutorial_controller and _tutorial_controller.has_method("reset_all"):
 		_tutorial_controller.reset_all()
 	rockets_reset.emit()
-	_emit_player_state_updated("reset_all")
 	_return_to_fresh_player_scene()
 	AppLogger.d("All state reset in Godot. Signals emitted to notify React Native.")
 
@@ -405,6 +447,9 @@ func _clear_runtime_progression_state() -> void:
 	var json = preload("res://Scripts/Utils/JSONFileManager.gd")
 	json.save_json("user://mission_logs.json", MissionLogManager.build_default_state())
 	json.save_json("user://subcontractors.json", SubcontractorManager.build_default_state())
+	if OS.has_feature("editor"):
+		json.save_json("res://mission_logs.json", MissionLogManager.build_default_state())
+		json.save_json("res://subcontractors.json", SubcontractorManager.build_default_state())
 	FirstTimeMechanicTracker.reset_all()
 	MissionNarrativeAPI.reset_session_state()
 	_clear_web_experience_storage()
@@ -430,7 +475,6 @@ func set_franc_balance_from_react(value: int) -> void:
 	franc_balance_updated.emit(franc_balance)
 	AppLogger.d("[AppController] Franc balance set from React Native: %s" % franc_balance)
 	save_franc_balance()
-	_emit_player_state_updated("franc_balance_set")
 
 func add_franc_balance(amount: int, source: String = "") -> void:
 	if amount == 0:
@@ -438,7 +482,6 @@ func add_franc_balance(amount: int, source: String = "") -> void:
 	franc_balance += amount
 	franc_balance_updated.emit(franc_balance)
 	save_franc_balance()
-	_emit_player_state_updated(source if source != "" else "franc_balance_delta")
 	if source != "":
 		AppLogger.d("[AppController] Franc balance change from %s: %s (balance=%s)" % [source, amount, franc_balance])
 
@@ -520,11 +563,9 @@ func award_scan_experience() -> void:
 func set_experience_from_react(xp: int, level: int) -> void:
 	experience_xp = max(xp, 0)
 	experience_level = max(level, 1)
-	_reconcile_cross_system_state()
 	_unlock_rockets_for_level(experience_level)
 	_emit_experience_updated()
 	save_experience()
-	_emit_player_state_updated("experience_set")
 
 func get_experience_xp() -> int:
 	return experience_xp
@@ -568,72 +609,8 @@ func _emit_experience_updated() -> void:
 	_sync_experience_to_web_storage()
 	WebEventBridge.emit("experience_state_updated", {
 		"experience_xp": experience_xp,
-		"experience_level": experience_level,
-		"franc_balance": franc_balance
+		"experience_level": experience_level
 	})
-
-func _reconcile_cross_system_state() -> void:
-	var rm = RocketsManager
-	if rm == null:
-		return
-	var completed_missions := int(rm.get_completed_mission_count())
-	var mission_stage := int(rm.get_mission_stage())
-	var minimum_level := _minimum_level_for_mission_stage(mission_stage)
-	var mutated := false
-	if experience_level < minimum_level:
-		experience_level = minimum_level
-		mutated = true
-	var maximum_level := _maximum_level_for_mission_state(mission_stage, completed_missions)
-	if maximum_level > 0 and experience_level > maximum_level:
-		experience_level = maximum_level
-		experience_xp = min(experience_xp, _xp_required_for_level(experience_level) - 1)
-		mutated = true
-	if mutated:
-		_unlock_rockets_for_level(experience_level)
-		save_experience()
-		_emit_experience_updated()
-
-func _minimum_level_for_mission_stage(stage: int) -> int:
-	return maxi(stage, 1)
-
-func _maximum_level_for_mission_state(stage: int, completed_missions: int) -> int:
-	if completed_missions < 3:
-		return maxi(stage, 1)
-	return -1
-
-func get_player_state_snapshot(reason: String = "") -> Dictionary:
-	var mission_stage := RocketsManager.get_mission_stage()
-	var completed_missions := RocketsManager.get_completed_mission_count()
-	var unlocked := RocketsManager.get_unlocked()
-	var operation_mode := RocketsManager.get_operation_mode()
-	var active_missions := RocketsManager.get_missions()
-	var returned_mission := RocketsManager.get_returned_mission()
-	return {
-		"schema_version": PLAYER_STATE_SCHEMA_VERSION,
-		"reason": reason,
-		"counter": counter,
-		"franc_balance": franc_balance,
-		"experience_xp": experience_xp,
-		"experience_level": experience_level,
-		"total_experience": get_total_experience(),
-		"mission_stage": mission_stage,
-		"completed_missions": completed_missions,
-		"control_station_built": RocketsManager.is_control_station_built(),
-		"scanner_station_built": RocketsManager.is_scanner_station_built(),
-		"scanner_unlocked": RocketsManager.is_scanner_unlocked(),
-		"operation_mode": operation_mode,
-		"free_operations_unlocked": RocketsManager.is_free_operations_unlocked(),
-		"unlocked_rockets": unlocked.duplicate(true),
-		"active_missions_count": active_missions.size(),
-		"has_returned_mission": not returned_mission.is_empty(),
-		"pending_mission_guidance_id": RocketsManager.get_pending_mission_guidance_id(),
-		"updated_at_unix": Time.get_unix_time_from_system()
-	}
-
-func _emit_player_state_updated(reason: String = "") -> void:
-	var snapshot = get_player_state_snapshot(reason)
-	player_state_snapshot_updated.emit(snapshot.duplicate(true))
-	WebEventBridge.emit("player_state_updated", snapshot)
 
 func set_citizen_science_dialogue_enabled(enabled: bool) -> void:
 	var next_enabled = bool(enabled)

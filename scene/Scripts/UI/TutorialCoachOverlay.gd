@@ -6,7 +6,7 @@ const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
 const TutorialLayoutZone = preload("res://Scripts/UI/TutorialLayoutZone.gd")
 const TutorialCoachTargeting = preload("res://Scripts/UI/TutorialCoachTargeting.gd")
 
-const TRANSIT_SCENE_BASENAMES := ["rocket_transit", "rocket_return"]
+const TRANSIT_SCENE_BASENAMES := ["rocket_ascent", "rocket_transit", "rocket_return"]
 const DEBRIEF_SCENE_BASENAMES := ["mission_debrief_v2"]
 const PreviewRouting = preload("res://Scripts/UI/NewMissionPreviewRouting.gd")
 const LAYOUT_REFRESH_INTERVAL := 0.15
@@ -271,6 +271,12 @@ func _refresh() -> void:
 		visible = false
 		return
 	_on_tutorial_state_updated(_app_controller.get_tutorial_state())
+
+func reposition_for_map() -> void:
+	visible = true
+	var vp_sz := get_viewport().get_visible_rect().size if get_viewport() else Vector2(1280, 720)
+	# Move to bottom-right or top-right, away from the central solar system
+	_refresh()
 
 func _on_tutorial_state_updated(state: Dictionary) -> void:
 	_off_course = false

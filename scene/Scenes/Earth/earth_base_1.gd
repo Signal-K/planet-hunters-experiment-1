@@ -86,18 +86,11 @@ func _ready() -> void:
 	call_deferred("_apply_structure_visual_evolution")
 	_build_earth_base_identity()
 	call_deferred("_refresh_tutorial_owned_ui")
-	call_deferred("_stabilize_earth_base_layout")
 
 func _ensure_tutorial_runtime() -> void:
 	var app = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
 	if app != null and app.has_method("_ensure_tutorial_runtime"):
 		app._ensure_tutorial_runtime()
-	# Restore tutorial overlay visibility if it was hidden by map selection mode
-	var overlay := get_tree().root.get_node_or_null("TutorialCoachOverlay")
-	if overlay is CanvasItem and not (overlay as CanvasItem).visible:
-		(overlay as CanvasItem).visible = true
-		if overlay.has_method("_refresh"):
-			overlay.call_deferred("_refresh")
 
 func _connect_app_runtime_signals() -> void:
 	var app = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
@@ -568,9 +561,9 @@ func _complete_scanner_station_build() -> bool:
 func _on_space_map_button_pressed() -> void:
 	print("Space Map button pressed - opening space map scene")
 	if scene_manager:
-		scene_manager.change_to_scene("res://Scenes/UI/SpaceMap/galaxy_map.tscn")
+		scene_manager.change_to_scene("res://Scenes/UI/SpaceMap/space_map.tscn")
 	else:
-		get_tree().change_scene_to_file("res://Scenes/UI/SpaceMap/galaxy_map.tscn")
+		get_tree().change_scene_to_file("res://Scenes/UI/SpaceMap/space_map.tscn")
 
 func _on_new_mission_button_pressed() -> void:
 	if _control_station_build_required():
@@ -851,21 +844,6 @@ func _build_wordmark() -> void:
 	_apply_wordmark_layout(wordmark)
 	if not get_viewport().size_changed.is_connected(_on_earth_base_viewport_resized):
 		get_viewport().size_changed.connect(_on_earth_base_viewport_resized)
-	_on_earth_base_viewport_resized()
-
-func _stabilize_earth_base_layout() -> void:
-	# Web startup can settle the canvas size a frame or two after _ready(),
-	# leaving the scene-authored nav offsets in place on the first paint.
-	_on_earth_base_viewport_resized()
-	if not OS.has_feature("web"):
-		return
-	var tree := get_tree()
-	if tree == null:
-		return
-	await tree.process_frame
-	_on_earth_base_viewport_resized()
-	await tree.process_frame
-	_on_earth_base_viewport_resized()
 
 func _on_earth_base_viewport_resized() -> void:
 	var ui_layer = get_node_or_null("UILayer")
@@ -946,10 +924,8 @@ func _build_progression_cards() -> void:
 		cards_root.show_next_mission(int(rm.get_mission_stage()), _on_new_mission_button_pressed)
 
 func _has_visible_tutorial_overlay() -> bool:
-	if not is_inside_tree():
-		return false
 	var tree := get_tree()
-	if tree == null or tree.root == null or not is_instance_valid(tree.root):
+	if tree == null or tree.root == null:
 		return false
 	var overlay := tree.root.find_child("TutorialCoachOverlay", true, false)
 	if overlay == null:
@@ -1216,9 +1192,11 @@ func _apply_nav_safe_area() -> void:
 		return
 
 	var vp_w := vp_rect.size.x
+	var vp_h := vp_rect.size.y
 	var margin_h := 24.0
 	var bar_h := 120.0
-	var bottom_margin := UILayout.bottom_clearance(vp_rect.size)
+	# On ultra-wide landscape (phone home indicator), leave a small bottom margin.
+	var bottom_margin := 34.0 if vp_w / vp_h > 1.85 else 0.0
 
 	# Anchor to bottom-full-width so the bar tracks the actual viewport height.
 	container.anchor_left   = 0.0
@@ -1230,11 +1208,17 @@ func _apply_nav_safe_area() -> void:
 	container.offset_right  = -margin_h
 	container.offset_bottom = -bottom_margin
 
-	# Keep the scene camera neutral; global project stretch controls the framing.
+	# Zoom the camera so the designed 1920-unit world fills the full width on
+	# wide-aspect (mobile landscape) viewports instead of leaving empty edges.
 	var camera := get_node_or_null("Camera2D") as Camera2D
 	if camera != null:
-		camera.zoom = Vector2.ONE
-		camera.position = Vector2(960.0, 480.0)
+		var design_aspect := 1920.0 / 1080.0
+		var actual_aspect := vp_w / vp_h
+		if actual_aspect > design_aspect:
+			var z := actual_aspect / design_aspect
+			camera.zoom = Vector2(z, z)
+		else:
+			camera.zoom = Vector2(1.0, 1.0)
 
 func _check_classification_consensus() -> void:
 	ClassificationConsensus.check_for_updates(get_tree(), func(updates: Array) -> void:
