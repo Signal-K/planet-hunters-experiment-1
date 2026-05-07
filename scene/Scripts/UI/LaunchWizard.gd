@@ -6,6 +6,8 @@ extends Control
 
 const RocketSpecs    = preload("res://Scripts/Utils/RocketSpecs.gd")
 const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
+const RoomCatalog = preload("res://Scripts/Utils/RoomCatalog.gd")
+const RoomSpriteAtlas = preload("res://Scripts/UI/RoomSpriteAtlas.gd")
 const MapStepScript  = preload("res://Scripts/UI/LaunchWizardMapStep.gd")
 const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd")
 const AsteroidDetailViewScene = preload("res://Scenes/UI/AsteroidDetail/asteroid_detail_view.tscn")
@@ -14,7 +16,6 @@ const ContractorCardSelectedScene = preload("res://Scenes/UI/Templates/LaunchWiz
 const MineralChipScene = preload("res://Scenes/UI/Templates/LaunchWizardMineralChip.tscn")
 const RocketTileScene = preload("res://Scenes/UI/Templates/LaunchWizardRocketTile.tscn")
 const RocketTileSelectedScene = preload("res://Scenes/UI/Templates/LaunchWizardRocketTileSelected.tscn")
-const RocketPartScene = preload("res://Scenes/UI/Templates/LaunchWizardRocketPart.tscn")
 const StatChipScene = preload("res://Scenes/UI/Templates/LaunchWizardStatChip.tscn")
 const StatChipDarkScene = preload("res://Scenes/UI/Templates/LaunchWizardStatChipDark.tscn")
 const TargetDetailScene = preload("res://Scenes/UI/Templates/LaunchWizardTargetDetail.tscn")
@@ -54,23 +55,11 @@ const MINERAL_TINTS: Dictionary = {
 	"Gold":      Color(0.92, 0.78, 0.16),
 }
 
-# Visual rocket component specs (cosmetic only — launch uses rocket type)
-const ROCKET_PARTS: Dictionary = {
-	"starterrocket1": [
-		{"name": "CMD ALPHA",  "color": Color(0.66, 0.76, 0.88), "h": 66,  "w": 116},
-		{"name": "T-100 TANK", "color": Color(0.48, 0.60, 0.78), "h": 124, "w": 154},
-		{"name": "E-CORE",     "color": Color(0.34, 0.48, 0.72), "h": 74,  "w": 196},
-	],
-	"starterrocket2": [
-		{"name": "CMD BETA",   "color": Color(0.66, 0.76, 0.88), "h": 72,  "w": 124},
-		{"name": "T-200 TANK", "color": Color(0.48, 0.60, 0.78), "h": 148, "w": 168},
-		{"name": "ION DRIVE",  "color": Color(0.26, 0.42, 0.68), "h": 86,  "w": 208},
-	],
-	"starterrocket3": [
-		{"name": "CMD BETA",     "color": Color(0.66, 0.76, 0.88), "h": 72,  "w": 124},
-		{"name": "T-200 × 2",    "color": Color(0.48, 0.60, 0.78), "h": 172, "w": 176},
-		{"name": "ION DRV × 3",  "color": Color(0.22, 0.38, 0.65), "h": 98,  "w": 220},
-	],
+const BAY_DISPLAY_NAMES := {
+	"core_engine": "ENGINE RAIL",
+	"core_mid": "MID BAY",
+	"core_aft": "AFT BAY",
+	"expansion_t2": "EXPANSION BAY"
 }
 
 # ── State ─────────────────────────────────────────────────────────────────────
@@ -91,6 +80,7 @@ var _target_detail:     PanelContainer = null
 var _assembly_vbox:     VBoxContainer  = null
 var _asm_status_label:  Label          = null
 var _asm_tweens:        Array          = []
+var _selected_assembly_room_id: String = ""
 
 signal back_pressed
 signal launched(rocket_id: String, target_id: String)
@@ -102,6 +92,7 @@ signal launched(rocket_id: String, target_id: String)
 @onready var _dot_box:      HBoxContainer   = $Scaffold/Header/HeaderRow/DotBox
 @onready var _back_btn:     Button          = $Scaffold/Header/HeaderRow/BackBtn
 @onready var _scroll:       ScrollContainer = $Scaffold/Scroll
+@onready var _scroll_margin: MarginContainer = $Scaffold/Scroll/ScrollMargin
 @onready var _card_list:    VBoxContainer   = $Scaffold/Scroll/ScrollMargin/CardList
 @onready var _contractor_step: VBoxContainer = $Scaffold/Scroll/ScrollMargin/CardList/ContractorStep
 @onready var _contractor_title: Label = $Scaffold/Scroll/ScrollMargin/CardList/ContractorStep/IntroPanel/Margin/VBox/TitleLabel
@@ -125,8 +116,17 @@ signal launched(rocket_id: String, target_id: String)
 @onready var _rocket_step: VBoxContainer = $Scaffold/Scroll/ScrollMargin/CardList/RocketStep
 @onready var _rocket_list_column: Container = $Scaffold/Scroll/ScrollMargin/CardList/RocketStep/RocketListColumn
 @onready var _assembly_title_label: Label = $Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/TitleLabel
-@onready var _assembly_telemetry_box: FlowContainer = $Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/TelemetryBox
-@onready var _assembly_hint_label: Label = $Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/HintLabel
+@onready var _assembly_header_copy: Label = $Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/HeaderCopy
+@onready var _assembly_header_hint: Label = $Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/HeaderHint
+@onready var _assembly_telemetry_box: FlowContainer = $Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/BodyRow/InspectorColumn/InspectorPanel/Margin/VBox/TelemetryBox
+@onready var _assembly_hint_label: Label = $Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/BodyRow/InspectorColumn/InspectorPanel/Margin/VBox/HintLabel
+@onready var _assembly_inspector_title: Label = $Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/BodyRow/InspectorColumn/InspectorPanel/Margin/VBox/InspectorTitle
+@onready var _assembly_module_sprite: TextureRect = $Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/BodyRow/InspectorColumn/InspectorPanel/Margin/VBox/PreviewRow/SpriteShell/ModuleSprite
+@onready var _assembly_category_label: Label = $Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/BodyRow/InspectorColumn/InspectorPanel/Margin/VBox/PreviewRow/MetaColumn/CategoryLabel
+@onready var _assembly_bay_label: Label = $Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/BodyRow/InspectorColumn/InspectorPanel/Margin/VBox/PreviewRow/MetaColumn/BayLabel
+@onready var _assembly_tier_label: Label = $Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/BodyRow/InspectorColumn/InspectorPanel/Margin/VBox/PreviewRow/MetaColumn/TierLabel
+@onready var _assembly_footprint_label: Label = $Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/BodyRow/InspectorColumn/InspectorPanel/Margin/VBox/PreviewRow/MetaColumn/FootprintLabel
+@onready var _assembly_action_button: Button = $Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/BodyRow/InspectorColumn/InspectorPanel/Margin/VBox/ActionButton
 @onready var _confirm_step: VBoxContainer = $Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep
 @onready var _confirm_readiness_label: Label = $Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep/ReadinessBadge/ReadinessLabel
 @onready var _confirm_contractor_manifest: PanelContainer = $Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep/ManifestGrid/ContractorManifestCard
@@ -137,11 +137,13 @@ signal launched(rocket_id: String, target_id: String)
 @onready var _confirm_cost_fact: PanelContainer = $Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep/SummaryCard/Margin/VBox/FactsRow/CostFactCard
 @onready var _confirm_yield_fact: PanelContainer = $Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep/SummaryCard/Margin/VBox/FactsRow/YieldFactCard
 @onready var _confirm_note_label: Label = $Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep/SummaryCard/Margin/VBox/NoteLabel
-@onready var _assembly_vbox_scene: VBoxContainer = $Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/PartsBox
-@onready var _asm_status_label_scene: Label = $Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/StatusLabel
-@onready var _assembly_pad_label: Label = $Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/PadLabel
+@onready var _assembly_vbox_scene: VBoxContainer = $Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/BodyRow/ModuleColumn/PartsBox
+@onready var _asm_status_label_scene: Label = $Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/BodyRow/InspectorColumn/InspectorPanel/Margin/VBox/StatusLabel
+@onready var _assembly_pad_label: Label = $Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/BodyRow/InspectorColumn/InspectorPanel/Margin/VBox/PadLabel
+@onready var _assembly_readiness_stats: FlowContainer = $Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/BodyRow/ModuleColumn/ReadinessPanel/Margin/VBox/StatsRow
 @onready var _footer_bg:    ColorRect       = $Scaffold/Footer/FooterBg
 @onready var _cancel_btn:   Button          = $Scaffold/Footer/FooterRow/CancelBtn
+@onready var _footer_status_label: Label    = $Scaffold/Footer/FooterRow/StatusLabel
 @onready var _next_btn:     Button          = $Scaffold/Footer/FooterRow/NextBtn
 
 var _step_dots: Array = []
@@ -149,6 +151,9 @@ var _step_dots: Array = []
 # ── Lifecycle ─────────────────────────────────────────────────────────────────
 
 func _ready() -> void:
+	var viewport := get_viewport()
+	if viewport and not viewport.size_changed.is_connected(_on_viewport_size_changed):
+		viewport.size_changed.connect(_on_viewport_size_changed)
 	_wire_buttons()
 	_step_dots = _dot_box.get_children()
 	_assembly_vbox = _assembly_vbox_scene
@@ -156,6 +161,69 @@ func _ready() -> void:
 	
 	_load_planning_state()
 	_show_step(_step)
+	call_deferred("refresh_layout_for_viewport")
+	call_deferred("_stabilize_layout_after_startup")
+
+func _on_viewport_size_changed() -> void:
+	refresh_layout_for_viewport()
+
+func _stabilize_layout_after_startup() -> void:
+	var tree := get_tree()
+	if tree == null:
+		return
+	await tree.process_frame
+	refresh_layout_for_viewport()
+	await tree.process_frame
+	refresh_layout_for_viewport()
+
+func refresh_layout_for_viewport() -> void:
+	var viewport := get_viewport_rect().size
+	if viewport == Vector2.ZERO:
+		return
+
+	size = viewport
+	custom_minimum_size = viewport
+	position = Vector2.ZERO
+
+	var compact := viewport.x < 900.0
+	var narrow := viewport.x < 1280.0
+	var side_margin := 14 if compact else (20 if narrow else 28)
+	var vertical_margin := 14 if compact else 20
+	var header_height := 64 if compact else 72
+	var footer_height := 84 if compact else 88
+
+	_background.custom_minimum_size = viewport
+	_scroll_margin.add_theme_constant_override("margin_left", side_margin)
+	_scroll_margin.add_theme_constant_override("margin_right", side_margin)
+	_scroll_margin.add_theme_constant_override("margin_top", vertical_margin)
+	_scroll_margin.add_theme_constant_override("margin_bottom", vertical_margin)
+
+	var header := _header_bg.get_parent() as Control
+	if header:
+		header.custom_minimum_size.y = header_height
+	var footer := _footer_bg.get_parent() as Control
+	if footer:
+		footer.custom_minimum_size.y = footer_height
+
+	_back_btn.custom_minimum_size = Vector2(44, 44 if compact else 48)
+	_cancel_btn.custom_minimum_size.y = 52 if compact else 56
+	_next_btn.custom_minimum_size.y = 52 if compact else 56
+	if _footer_status_label:
+		_footer_status_label.visible = not compact
+
+	if _contractor_grid:
+		_contractor_grid.columns = _contractor_grid_columns()
+		for child in _contractor_grid.get_children():
+			if child is Control:
+				(child as Control).custom_minimum_size = _contractor_tile_min_size()
+
+	if _step == Step.TARGET and _map_panel.visible:
+		call_deferred("_fit_map_to_scroll")
+
+	if _card_list:
+		_card_list.queue_sort()
+	if _contractor_grid:
+		_contractor_grid.queue_sort()
 
 func _load_planning_state() -> void:
 	_is_free_ops = RocketsManager.is_free_operations_unlocked()
@@ -232,21 +300,29 @@ func _update_dots() -> void:
 func _update_footer() -> void:
 	match _step:
 		Step.CONTRACTOR:
-			_cancel_btn.text   = "Cancel"
-			_next_btn.text     = "Next >"
+			_cancel_btn.text   = "BACK"
+			_next_btn.text     = "PROCEED"
 			_next_btn.disabled = _selected_contractor.is_empty()
+			if _footer_status_label:
+				_footer_status_label.text = "SYSTEM STATUS: OPTIMAL  •  CONTRACT BOARD ONLINE"
 		Step.TARGET:
-			_cancel_btn.text   = "< Back"
-			_next_btn.text     = "Next >"
+			_cancel_btn.text   = "BACK"
+			_next_btn.text     = "PROCEED"
 			_next_btn.disabled = _selected_target.is_empty()
+			if _footer_status_label:
+				_footer_status_label.text = "TARGET MAP LINKED  •  ROUTE SELECTION ACTIVE"
 		Step.ROCKET:
-			_cancel_btn.text   = "< Back"
-			_next_btn.text     = "Next >"
+			_cancel_btn.text   = "BACK"
+			_next_btn.text     = "PROCEED"
 			_next_btn.disabled = _selected_rocket.is_empty()
+			if _footer_status_label:
+				_footer_status_label.text = "FABRICATION RAIL SYNCED  •  LOADOUT REVIEW IN PROGRESS"
 		Step.CONFIRM:
-			_cancel_btn.text   = "< Back"
-			_next_btn.text     = "Launch Mission"
+			_cancel_btn.text   = "BACK"
+			_next_btn.text     = "LAUNCH MISSION"
 			_next_btn.disabled = false
+			if _footer_status_label:
+				_footer_status_label.text = "SYSTEMS NOMINAL  •  MISSION LOG READY FOR DISPATCH"
 
 func _on_back() -> void:
 	if _step == Step.CONTRACTOR:
@@ -315,13 +391,14 @@ func _build_contractor_step() -> void:
 	_use_trip_contract = _is_free_ops or stage >= 2
 
 	_contractor_step.visible = true
-	_contractor_title.text = "Mission %d contractor" % stage
-	_contractor_subtitle.text = "Choose the buyer. Their order defines the mission haul."
+	_contractor_title.text = "MISSION %d // PICK A BUYER" % stage
+	_contractor_subtitle.text = "Companies pay you to mine specific minerals. Pick one — they tell you exactly what to collect, and you earn a bonus on top of the standard market price when you deliver it."
 	_contractor_grid.columns = _contractor_grid_columns()
 
 	if _use_trip_contract:
-		RocketsManager.ensure_trip_contract_offer()
-		_contractors = RocketsManager.get_trip_contractors()
+		var offer := RocketsManager.ensure_trip_contract_offer()
+		var offer_contractors = offer.get("contractors", [])
+		_contractors = offer_contractors if typeof(offer_contractors) == TYPE_ARRAY else []
 	else:
 		RocketsManager.ensure_starter_contract_offer()
 		_contractors = RocketsManager.get_starter_contractors()
@@ -329,12 +406,15 @@ func _build_contractor_step() -> void:
 	if _contractors.is_empty():
 		_add_empty_msg("No contractors available right now.")
 	else:
-		for c in _contractors:
-			_add_contractor_card(c)
+		for idx in range(_contractors.size()):
+			var c_any = _contractors[idx]
+			if typeof(c_any) != TYPE_DICTIONARY:
+				continue
+			_add_contractor_card(c_any as Dictionary, idx)
 
 	_custom_mission_card.visible = true
 
-func _add_contractor_card(c: Dictionary) -> void:
+func _add_contractor_card(c: Dictionary, idx: int = 0) -> void:
 	var c_id      := str(c.get("id", ""))
 	var c_name    := str(c.get("name", "Unknown"))
 	var c_focus   := str(c.get("focus", c.get("role", "")))
@@ -349,12 +429,13 @@ func _add_contractor_card(c: Dictionary) -> void:
 	_contractor_grid.add_child(card)
 
 	_set_label_text(card, "Margin/VBox/TopRow/IconPanel/IconLabel", _contractor_code(c_name, c_focus))
+	_set_label_text(card, "Margin/VBox/TopRow/TitleColumn/MetaLabel", "[ CON_%02d ]" % (idx + 1))
 	_set_label_text(card, "Margin/VBox/TopRow/TitleColumn/NameLabel", c_name)
-	_set_label_text(card, "Margin/VBox/TopRow/TitleColumn/BriefLabel", _contractor_brief(c_focus))
-	_set_label_text(card, "Margin/VBox/TopRow/StatusLabel", "LOCKED IN" if selected else "")
+	_set_label_text(card, "Margin/VBox/TopRow/TitleColumn/BriefLabel", _contractor_brief(c_focus).to_upper())
+	_set_label_text(card, "Margin/VBox/TopRow/StatusLabel", "ONLINE" if selected else "STANDBY")
 	_set_label_text(card, "Margin/VBox/OrderColumn/HeaderRow/TagLabel", _contractor_contract_tag(c))
 
-	var chips := card.get_node_or_null("Margin/VBox/OrderColumn/MineralGrid") as GridContainer
+	var chips := card.get_node_or_null("Margin/VBox/OrderColumn/OrderPanel/MineralGrid") as GridContainer
 	if chips:
 		for child in chips.get_children():
 			child.queue_free()
@@ -365,12 +446,12 @@ func _add_contractor_card(c: Dictionary) -> void:
 				chips.add_child(_mineral_chip(str(mname), minerals[mname], true))
 	else:
 		if chips:
-			chips.add_child(_mineral_chip("Open route", 0, true))
+			chips.add_child(_mineral_chip("Collect anything", 0, true))
 
 	var btn := card.get_node_or_null("Margin/VBox/SelectButton") as Button
 	if btn == null:
 		return
-	btn.text = "Selected" if selected else "Select contract"
+	btn.text = "CONTRACT SECURED" if selected else "LOCK CONTRACT"
 	btn.pressed.connect(func():
 		_selected_contractor = c
 		if _use_trip_contract:
@@ -383,16 +464,17 @@ func _add_contractor_card(c: Dictionary) -> void:
 
 func _contractor_grid_columns() -> int:
 	var width := get_viewport_rect().size.x
-	if width >= 1180.0:
+	if width >= 1320.0:
 		return 3
-	if width >= 760.0:
+	if width >= 880.0:
 		return 2
 	return 1
 
 func _contractor_tile_min_size() -> Vector2:
 	var columns := _contractor_grid_columns()
-	var height := 330.0 if columns >= 3 else 316.0
-	return Vector2(320, height)
+	var width := 420.0 if columns >= 3 else (380.0 if columns == 2 else 0.0)
+	var height := 360.0 if columns >= 3 else 332.0
+	return Vector2(width, height)
 
 func _contractor_brief(focus: String) -> String:
 	var f := focus.strip_edges()
@@ -410,11 +492,11 @@ func _contractor_contract_tag(c: Dictionary) -> String:
 	var effect := str(c.get("effect", "")).strip_edges()
 	match effect:
 		"build_discount":
-			return "BUILD DISCOUNT"
+			return "ROCKET BUILD DISCOUNT"
 		"payout_bonus":
-			return "PAYOUT BONUS"
+			return "DELIVERY BONUS"
 		_:
-			return "ORDER"
+			return "BONUS ON DELIVERY"
 
 func _set_label_text(root: Node, path: NodePath, value: String) -> void:
 	var label := root.get_node_or_null(path) as Label
@@ -470,18 +552,12 @@ func _build_target_step() -> void:
 	else:
 		_classification_card.visible = false
 
-	_target_detail = _target_detail_card
-	_map_panel.visible = true
-	_target_detail_card.visible = true
-
-	_map_step = _map_step_node
-	_map_step.setup(_targets, str(_selected_target.get("id", "")))
-	if _selected_target.is_empty():
-		_target_hint_label.visible = true
-		_target_hint_label.text = "< Tap a target on the map above"
-	else:
-		_refresh_target_detail(_selected_target)
-	call_deferred("_fit_map_to_scroll")
+	# Open the new space/galaxy map for target selection.
+	# RocketsManager restores full LaunchWizard state on return.
+	RocketsManager.set_map_return_mode(true)
+	var map_scene := "res://Scenes/UI/SpaceMap/galaxy_map.tscn" \
+		if stage >= 3 else "res://Scenes/UI/SpaceMap/space_map.tscn"
+	get_tree().change_scene_to_file(map_scene)
 
 func _fit_map_to_scroll() -> void:
 	var h := _scroll.size.y
@@ -728,7 +804,9 @@ func _on_m3_classification_pressed(target_id: String, verdict: String) -> void:
 func _build_rocket_step() -> void:
 	_rockets = RocketsManager.get_unlocked()
 	_rocket_step.visible = true
-	_assembly_title_label.text = "LAUNCHPAD"
+	_assembly_title_label.text = "FABRICATION BAY"
+	_assembly_header_copy.text = "Assemble your mining stack"
+	_assembly_header_hint.text = "Fabrication rail showing real modules from the selected rocket loadout."
 
 	if _rockets.is_empty():
 		_show_empty_assembly()
@@ -797,88 +875,75 @@ func _refresh_assembly(rtype: String) -> void:
 		_show_empty_assembly()
 		return
 
-	_assembly_title_label.text = "LAUNCHPAD ASSEMBLY"
-	_assembly_pad_label.text = "%s on pad" % RocketSpecs.get_display_name(rtype)
+	_assembly_title_label.text = "FABRICATION BAY"
+	_assembly_pad_label.text = "%s // DOCKING BAY" % RocketSpecs.get_display_name(rtype).to_upper()
 	_populate_assembly_telemetry(rtype)
-	_assembly_hint_label.visible = true
-	_assembly_hint_label.text = "Installing flight modules onto the launchpad."
 
-	if _asm_status_label and is_instance_valid(_asm_status_label):
-		_asm_status_label.text = "ASSEMBLY IN PROGRESS"
-		_asm_status_label.modulate = Color(C_ACCENT.r, C_ACCENT.g, C_ACCENT.b, 0.0)
+	var layout := RoomCatalog.create_layout_for_rocket_type(rtype)
+	var installed := _sorted_installed_rooms(layout)
+	if installed.is_empty():
+		_show_empty_assembly()
+		return
 
-	var parts: Array = ROCKET_PARTS.get(rtype, [
-		{"name": "CMD POD", "color": Color(0.66, 0.76, 0.88), "h": 66, "w": 116},
-		{"name": "TANK",    "color": Color(0.48, 0.60, 0.78), "h": 124, "w": 154},
-		{"name": "ENGINE",  "color": Color(0.34, 0.48, 0.72), "h": 74, "w": 196},
-	])
+	if not _room_id_in_list(_selected_assembly_room_id, installed):
+		_selected_assembly_room_id = str(installed[0].get("room_id", ""))
 
 	var delay := 0.0
-	for i in parts.size():
-		var part_any = parts[i]
-		if typeof(part_any) != TYPE_DICTIONARY:
+	for room_inst_any in installed:
+		if typeof(room_inst_any) != TYPE_DICTIONARY:
 			continue
-		var part: Dictionary = part_any
-		var wrapper := _build_launchpad_part(part, false)
-		_assembly_vbox.add_child(wrapper)
-
-		wrapper.modulate.a = 0.0
+		var room_inst: Dictionary = room_inst_any
+		var room_id := str(room_inst.get("room_id", ""))
+		var room_def := RoomCatalog.get_room(room_id)
+		if room_def.is_empty():
+			continue
+		var card := _build_fabrication_module_card(room_inst, room_def, room_id == _selected_assembly_room_id)
+		_assembly_vbox.add_child(card)
+		card.modulate.a = 0.0
 		var tw := create_tween()
 		_asm_tweens.append(tw)
 		tw.tween_interval(delay)
-		tw.tween_property(wrapper, "modulate:a", 1.0, 0.22).set_ease(Tween.EASE_OUT)
-		delay += 0.12
+		tw.tween_property(card, "modulate:a", 1.0, 0.18).set_ease(Tween.EASE_OUT)
+		delay += 0.06
 
-	if _asm_status_label and is_instance_valid(_asm_status_label):
-		var progress_tween := create_tween()
-		_asm_tweens.append(progress_tween)
-		progress_tween.tween_interval(0.04)
-		progress_tween.tween_property(
-			_asm_status_label,
-			"modulate",
-			Color(C_ACCENT.r, C_ACCENT.g, C_ACCENT.b, 1.0),
-			0.18
-		).set_ease(Tween.EASE_OUT)
-
-		var status_tween := create_tween()
-		_asm_tweens.append(status_tween)
-		status_tween.tween_interval(delay + 0.08)
-		status_tween.tween_callback(func() -> void:
-			if _asm_status_label and is_instance_valid(_asm_status_label):
-				_asm_status_label.text = "FLIGHT READY"
-			if _assembly_hint_label and is_instance_valid(_assembly_hint_label):
-				_assembly_hint_label.text = "All modules seated. Ready for launch confirmation."
-		)
-		status_tween.tween_property(
-			_asm_status_label,
-			"modulate",
-			Color(C_OK.r, C_OK.g, C_OK.b, 1.0),
-			0.30
-		).set_ease(Tween.EASE_OUT)
+	_populate_readiness_stats(layout)
+	_refresh_assembly_inspector(layout, rtype)
 
 func _show_empty_assembly() -> void:
 	if _assembly_title_label:
-		_assembly_title_label.text = "EMPTY LAUNCHPAD"
+		_assembly_title_label.text = "FABRICATION BAY"
+	if _assembly_header_copy:
+		_assembly_header_copy.text = "Awaiting rocket selection"
+	if _assembly_header_hint:
+		_assembly_header_hint.text = "Choose a rocket to load real modules into the fabrication rail."
 	if _assembly_pad_label:
-		_assembly_pad_label.text = "Launchpad awaiting configuration"
+		_assembly_pad_label.text = "DOCKING BAY // IDLE"
 	if _assembly_hint_label:
 		_assembly_hint_label.visible = true
-		_assembly_hint_label.text = "Select a rocket to populate the launchpad."
+		_assembly_hint_label.text = "Select a rocket to inspect its installed fabrication modules."
 	if _asm_status_label and is_instance_valid(_asm_status_label):
-		_asm_status_label.text = ""
-		_asm_status_label.modulate = Color(C_OK.r, C_OK.g, C_OK.b, 0.0)
+		_asm_status_label.text = "INSPECTOR IDLE"
+		_asm_status_label.modulate = C_ACCENT
+	if _assembly_inspector_title:
+		_assembly_inspector_title.text = "SELECT A MODULE"
+	if _assembly_module_sprite:
+		_assembly_module_sprite.texture = null
+	if _assembly_category_label:
+		_assembly_category_label.text = "Category · —"
+	if _assembly_bay_label:
+		_assembly_bay_label.text = "Bay · —"
+	if _assembly_tier_label:
+		_assembly_tier_label.text = "Tier · —"
+	if _assembly_footprint_label:
+		_assembly_footprint_label.text = "Footprint · —"
+	if _assembly_action_button:
+		_assembly_action_button.text = "SELECT ROCKET"
+		_assembly_action_button.disabled = true
 	_populate_assembly_telemetry("")
-	var placeholders: Array = [
-		{"name": "COMMAND MODULE", "color": Color(0.66, 0.76, 0.88), "h": 58, "w": 112},
-		{"name": "FUEL TANK",      "color": Color(0.48, 0.60, 0.78), "h": 112, "w": 150},
-		{"name": "ENGINE SECTION", "color": Color(0.34, 0.48, 0.72), "h": 70, "w": 188},
-	]
-	for i in placeholders.size():
-		var placeholder_any = placeholders[i]
-		if typeof(placeholder_any) != TYPE_DICTIONARY:
-			continue
-		var placeholder: Dictionary = placeholder_any
-		_assembly_vbox.add_child(_build_launchpad_part(placeholder, true))
+	_populate_readiness_stats({})
+	_selected_assembly_room_id = ""
+	for slot_name in ["DOCKING FRAME", "HULL SLOT", "ENGINE SLOT"]:
+		_assembly_vbox.add_child(_build_empty_fabrication_card(slot_name))
 
 func _populate_assembly_telemetry(rtype: String) -> void:
 	if not _assembly_telemetry_box or not is_instance_valid(_assembly_telemetry_box):
@@ -905,22 +970,254 @@ func _populate_assembly_telemetry(rtype: String) -> void:
 		_set_label_text(card, "Margin/VBox/KeyLabel", str(metric[0]))
 		_set_label_text(card, "Margin/VBox/ValueLabel", str(metric[1]))
 
-func _build_launchpad_part(part: Dictionary, ghost: bool) -> Control:
-	var root := RocketPartScene.instantiate() as Control
-	if root == null:
-		return Control.new()
-	var width := int(part.get("w", 148))
-	var height := int(part.get("h", 72))
-	var part_box := root.get_node_or_null("PartBox") as PanelContainer
-	if part_box:
-		part_box.custom_minimum_size = Vector2(width, height)
-		var fill: Color = part.get("color", C_ACCENT)
-		part_box.modulate = Color(fill.r, fill.g, fill.b, 0.26) if ghost else fill
-	var part_label := root.get_node_or_null("PartBox/PartLabel") as Label
-	if part_label:
-		part_label.text = str(part.get("name", "MODULE"))
-		part_label.modulate = Color(1, 1, 1, 0.44) if ghost else C_WHITE
-	return root
+func _sorted_installed_rooms(layout: Dictionary) -> Array:
+	var bays: Dictionary = layout.get("bays", {})
+	var rows: Array = []
+	for bay_id in ["core_engine", "core_mid", "core_aft", "expansion_t2"]:
+		if not bays.has(bay_id):
+			continue
+		for room_inst_any in bays[bay_id].get("rooms", []):
+			if typeof(room_inst_any) != TYPE_DICTIONARY:
+				continue
+			var room_inst: Dictionary = room_inst_any
+			rows.append({
+				"bay_id": bay_id,
+				"room_id": room_inst.get("room_id", ""),
+				"tier": room_inst.get("tier", 1),
+				"offline": bool(room_inst.get("offline", false))
+			})
+	return rows
+
+func _room_id_in_list(room_id: String, rooms: Array) -> bool:
+	for room_any in rooms:
+		if typeof(room_any) != TYPE_DICTIONARY:
+			continue
+		if str((room_any as Dictionary).get("room_id", "")) == room_id:
+			return true
+	return false
+
+func _build_fabrication_module_card(room_inst: Dictionary, room_def: Dictionary, selected: bool) -> Button:
+	var btn := Button.new()
+	btn.flat = true
+	btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	btn.custom_minimum_size = Vector2(0, 112)
+	btn.size_flags_horizontal = SIZE_EXPAND_FILL
+	btn.text = ""
+
+	var normal := StyleBoxFlat.new()
+	normal.bg_color = Color(0.17, 0.20, 0.28, 0.98)
+	normal.border_color = Color(0.28, 0.34, 0.44, 1.0)
+	normal.border_width_left = 2
+	normal.border_width_top = 2
+	normal.border_width_right = 2
+	normal.border_width_bottom = 2
+	normal.corner_radius_top_left = 8
+	normal.corner_radius_top_right = 8
+	normal.corner_radius_bottom_right = 8
+	normal.corner_radius_bottom_left = 8
+
+	var hover := normal.duplicate() as StyleBoxFlat
+	hover.border_color = C_ACCENT
+
+	var pressed := normal.duplicate() as StyleBoxFlat
+	pressed.border_color = Color(0.99, 0.70, 0.05, 1.0)
+	pressed.border_width_left = 3
+	pressed.border_width_top = 3
+	pressed.border_width_right = 3
+	pressed.border_width_bottom = 3
+	pressed.bg_color = Color(0.19, 0.21, 0.29, 1.0)
+
+	btn.add_theme_stylebox_override("normal", pressed if selected else normal)
+	btn.add_theme_stylebox_override("hover", hover)
+	btn.add_theme_stylebox_override("pressed", pressed)
+	btn.add_theme_stylebox_override("focus", pressed)
+
+	var row := HBoxContainer.new()
+	row.set_anchors_preset(Control.PRESET_FULL_RECT)
+	row.offset_left = 0
+	row.offset_top = 0
+	row.offset_right = 0
+	row.offset_bottom = 0
+	row.add_theme_constant_override("separation", 0)
+	btn.add_child(row)
+
+	var rail := PanelContainer.new()
+	rail.custom_minimum_size = Vector2(54, 0)
+	var rail_style := StyleBoxFlat.new()
+	rail_style.bg_color = Color(0.14, 0.17, 0.23, 1.0)
+	rail_style.border_color = Color(0.30, 0.35, 0.44, 1.0)
+	rail_style.border_width_right = 2
+	rail.add_theme_stylebox_override("panel", rail_style)
+	row.add_child(rail)
+
+	var rail_label := Label.new()
+	rail_label.text = _compact_room_code(str(room_def.get("name", "MODULE")))
+	rail_label.rotation_degrees = -90.0
+	rail_label.position = Vector2(17, 88)
+	rail_label.theme_override_colors.font_color = Color(0.68, 0.75, 0.86, 0.88)
+	rail_label.theme_override_font_sizes.font_size = 13
+	rail.add_child(rail_label)
+
+	var visual := VBoxContainer.new()
+	visual.custom_minimum_size = Vector2(110, 0)
+	visual.alignment = BoxContainer.ALIGNMENT_CENTER
+	visual.add_theme_constant_override("separation", 6)
+	row.add_child(visual)
+
+	var icon := TextureRect.new()
+	icon.custom_minimum_size = Vector2(96, 72)
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.texture = _texture_for_room(str(room_inst.get("room_id", "")))
+	visual.add_child(icon)
+
+	var body := VBoxContainer.new()
+	body.size_flags_horizontal = SIZE_EXPAND_FILL
+	body.alignment = BoxContainer.ALIGNMENT_CENTER
+	body.add_theme_constant_override("separation", 6)
+	row.add_child(body)
+
+	var title := Label.new()
+	title.text = str(room_def.get("name", "MODULE")).to_upper()
+	title.theme_override_colors.font_color = Color(0.92, 0.95, 0.99, 1.0)
+	title.theme_override_font_sizes.font_size = 19
+	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	body.add_child(title)
+
+	var meta := Label.new()
+	meta.text = "%s  //  T%d" % [_assembly_bay_display_name(str(room_inst.get("bay_id", ""))), int(room_inst.get("tier", 1))]
+	meta.theme_override_colors.font_color = Color(0.63, 0.72, 0.83, 0.84)
+	meta.theme_override_font_sizes.font_size = 13
+	meta.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	body.add_child(meta)
+
+	var state := Label.new()
+	state.text = "INSTALLED" if not bool(room_inst.get("offline", false)) else "UPGRADE OFFLINE"
+	state.theme_override_colors.font_color = Color(0.99, 0.70, 0.05, 1.0) if selected else C_OK
+	state.theme_override_font_sizes.font_size = 14
+	body.add_child(state)
+
+	btn.pressed.connect(func() -> void:
+		_selected_assembly_room_id = str(room_inst.get("room_id", ""))
+		_refresh_assembly(_selected_rocket)
+	)
+	return btn
+
+func _build_empty_fabrication_card(slot_name: String) -> PanelContainer:
+	var shell := PanelContainer.new()
+	shell.custom_minimum_size = Vector2(0, 112)
+	shell.size_flags_horizontal = SIZE_EXPAND_FILL
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.07, 0.10, 0.16, 0.70)
+	style.border_color = Color(0.34, 0.39, 0.47, 0.9)
+	style.border_width_left = 2
+	style.border_width_top = 2
+	style.border_width_right = 2
+	style.border_width_bottom = 2
+	style.corner_radius_top_left = 8
+	style.corner_radius_top_right = 8
+	style.corner_radius_bottom_right = 8
+	style.corner_radius_bottom_left = 8
+	shell.add_theme_stylebox_override("panel", style)
+
+	var label := Label.new()
+	label.text = slot_name
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.theme_override_colors.font_color = Color(0.64, 0.69, 0.76, 0.82)
+	label.theme_override_font_sizes.font_size = 18
+	label.set_anchors_preset(Control.PRESET_FULL_RECT)
+	shell.add_child(label)
+	return shell
+
+func _refresh_assembly_inspector(layout: Dictionary, rtype: String) -> void:
+	var installed := _sorted_installed_rooms(layout)
+	var selected_room: Dictionary = {}
+	for room_any in installed:
+		if typeof(room_any) != TYPE_DICTIONARY:
+			continue
+		var room_inst: Dictionary = room_any
+		if str(room_inst.get("room_id", "")) == _selected_assembly_room_id:
+			selected_room = room_inst
+			break
+	if selected_room.is_empty() and not installed.is_empty():
+		selected_room = installed[0]
+		_selected_assembly_room_id = str(selected_room.get("room_id", ""))
+	if selected_room.is_empty():
+		_show_empty_assembly()
+		return
+
+	var room_id := str(selected_room.get("room_id", ""))
+	var room_def := RoomCatalog.get_room(room_id)
+	if room_def.is_empty():
+		return
+
+	_assembly_pad_label.text = "%s // %s" % [RocketSpecs.get_display_name(rtype).to_upper(), _assembly_bay_display_name(str(selected_room.get("bay_id", "")))]
+	_assembly_inspector_title.text = str(room_def.get("name", "MODULE")).to_upper()
+	_asm_status_label.text = "MODULE INSTALLED"
+	_asm_status_label.modulate = C_ACCENT
+	_assembly_category_label.text = "Category · %s" % _pretty_category(str(room_def.get("category", "")))
+	_assembly_bay_label.text = "Bay · %s" % _assembly_bay_display_name(str(selected_room.get("bay_id", "")))
+	_assembly_tier_label.text = "Tier · T%d" % int(room_def.get("tier", 1))
+	_assembly_footprint_label.text = "Footprint · %d slot%s" % [int(room_def.get("footprint", 1)), "" if int(room_def.get("footprint", 1)) == 1 else "s"]
+	_assembly_hint_label.text = "%s mounted and flight checked. This module contributes to the current mission profile." % str(room_def.get("name", "Module"))
+	_assembly_action_button.text = "MODULE INSTALLED"
+	_assembly_action_button.disabled = true
+	if _assembly_module_sprite:
+		_assembly_module_sprite.texture = _texture_for_room(room_id)
+
+func _populate_readiness_stats(layout: Dictionary) -> void:
+	if _assembly_readiness_stats == null:
+		return
+	var installed := _sorted_installed_rooms(layout)
+	var room_count := installed.size()
+	var level := RoomCatalog.derive_rocket_level(layout) if not layout.is_empty() else 1
+	var science := RoomCatalog.science_multipliers(layout) if not layout.is_empty() else {"payout_multiplier": 1.0}
+	var mining_count := 0
+	var power_count := 0
+	for room_any in installed:
+		if typeof(room_any) != TYPE_DICTIONARY:
+			continue
+		var room_def := RoomCatalog.get_room(str((room_any as Dictionary).get("room_id", "")))
+		var category := str(room_def.get("category", ""))
+		if category == "mining":
+			mining_count += 1
+		if category == "power":
+			power_count += 1
+	var mass_tons := 72 + (room_count * 9) + (level * 12)
+	var power_draw := 2.5 + float(power_count) * 1.4 + float(level) * 0.8
+	var output_bonus := int(round(((float(science.get("payout_multiplier", 1.0)) - 1.0) * 100.0) + float(mining_count * 10)))
+	var metrics := [
+		["MASS", "%d T" % mass_tons],
+		["POWER", "%.1f MW" % power_draw],
+		["OUTPUT", "%+d%%" % output_bonus],
+	]
+	for i in min(metrics.size(), _assembly_readiness_stats.get_child_count()):
+		var metric: Array = metrics[i]
+		var card := _assembly_readiness_stats.get_child(i)
+		_set_label_text(card, "Margin/VBox/KeyLabel", str(metric[0]))
+		_set_label_text(card, "Margin/VBox/ValueLabel", str(metric[1]))
+
+func _texture_for_room(room_id: String) -> Texture2D:
+	var generated_path := "res://assets/Rooms/generated_parts_512/%s.png" % room_id
+	if ResourceLoader.exists(generated_path):
+		return load(generated_path) as Texture2D
+	return RoomSpriteAtlas.texture_for_room(room_id)
+
+func _assembly_bay_display_name(bay_id: String) -> String:
+	return str(BAY_DISPLAY_NAMES.get(bay_id, bay_id.replace("_", " ").to_upper()))
+
+func _pretty_category(category: String) -> String:
+	var words := category.replace("_", " ").split(" ")
+	for i in range(words.size()):
+		words[i] = str(words[i]).capitalize()
+	return " ".join(words)
+
+func _compact_room_code(room_name: String) -> String:
+	var compact := room_name.to_upper().replace(" ", "-")
+	if compact.length() <= 10:
+		return compact
+	return compact.substr(0, 10)
 
 # ── Step: Confirm ─────────────────────────────────────────────────────────────
 
@@ -979,7 +1276,7 @@ func _set_fact_card(card: PanelContainer, label_text: String, value_text: String
 func _confirm_haul_summary() -> String:
 	var minerals := _selected_contractor.get("requested_minerals", {}) as Dictionary
 	if minerals.is_empty():
-		return "Open route"
+		return "Collect any minerals"
 	var parts: Array[String] = []
 	for mineral_any in minerals.keys():
 		var mineral := str(mineral_any)
@@ -1044,12 +1341,29 @@ func _mineral_chip(mineral: String, qty: Variant, _dark: bool = false) -> PanelC
 	var name_lbl := p.get_node_or_null("VBox/NameLabel") as Label
 	var qty_lbl  := p.get_node_or_null("VBox/QtyLabel")  as Label
 	if name_lbl:
-		name_lbl.text = mineral.to_upper()
+		name_lbl.text = _mineral_short_code(mineral)
 		name_lbl.visible = true
 	if qty_lbl:
 		qty_lbl.text    = str(qty_int) if qty_int > 0 else "—"
 		qty_lbl.visible = true
 	return p
+
+func _mineral_short_code(mineral: String) -> String:
+	match mineral.to_lower():
+		"iron":
+			return "FE (IRON)"
+		"nickel":
+			return "NI (NICKEL)"
+		"cobalt":
+			return "CO (COBALT)"
+		"silicates":
+			return "SI (SILICATES)"
+		"platinum":
+			return "PT (PLATINUM)"
+		"gold":
+			return "AU (GOLD)"
+		_:
+			return mineral.to_upper()
 
 func _add_empty_msg(text: String) -> void:
 	var lbl := EmptyStateLabelScene.instantiate() as Label
