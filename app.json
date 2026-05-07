@@ -1,9 +1,9 @@
 {
-  "name": "GodotTest",
-  "displayName": "GodotTest",
+  "name": "landnam",
+  "displayName": "Landnám",
   "expo": {
-    "name": "GodotTest",
-    "slug": "godot-test",
+    "name": "landnam",
+    "slug": "landnam",
     "entryPoint": "./index.js",
     "version": "1.0.0",
     "orientation": "landscape",
