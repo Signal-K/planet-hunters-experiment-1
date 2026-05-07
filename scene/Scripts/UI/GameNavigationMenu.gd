@@ -39,7 +39,6 @@ const GameMenuDebugSectionScene = preload("res://Scenes/UI/Templates/GameMenuDeb
 const GameMenuInfoCardScene = preload("res://Scenes/UI/Templates/GameMenuInfoCard.tscn")
 const GameMenuLegendLabelScene = preload("res://Scenes/UI/Templates/GameMenuLegendLabel.tscn")
 const GameMenuSettingsEntryCardScene = preload("res://Scenes/UI/Templates/GameMenuSettingsEntryCard.tscn")
-const GameSettingsPanelScript = preload("res://Scripts/UI/GameSettingsPanel.gd")
 
 const MENU_LAYER_NAME := "GameMenuLayer"
 const MENU_ROOT_NAME := "GameMenuRoot"
@@ -211,6 +210,7 @@ static func _build_menu_root(owner: Node) -> Control:
 
 	# Settings
 	settings_host.add_child(_build_settings_entry_card(owner))
+	settings_host.add_child(_build_reset_progress_button(owner))
 
 	# Debug
 	debug_host.add_child(_build_debug_section(owner))
@@ -283,28 +283,85 @@ static func _build_stats_card() -> PanelContainer:
 # Settings / actions section
 # ---------------------------------------------------------------------------
 
-static func _build_settings_entry_card(owner: Node) -> PanelContainer:
-	var card: PanelContainer = GameMenuSettingsEntryCardScene.instantiate()
-	card.add_theme_stylebox_override("panel", _card_style(0.45))
-	var eyebrow: Label = card.get_node("Body/TopRow/TextColumn/EyebrowLabel")
-	var title: Label = card.get_node("Body/TopRow/TextColumn/TitleLabel")
-	var summary: Label = card.get_node("Body/TopRow/TextColumn/SummaryLabel")
-	eyebrow.add_theme_color_override("font_color", CYAN)
-	eyebrow.add_theme_font_size_override("font_size", 11)
-	title.add_theme_color_override("font_color", TITLE_COLOR)
-	title.add_theme_font_size_override("font_size", 24)
-	summary.add_theme_color_override("font_color", TEXT_MUTED)
-	summary.add_theme_font_size_override("font_size", 15)
-	var open_btn: Button = card.get_node("Body/TopRow/OpenButton")
-	_apply_button_style(open_btn, true)
-	open_btn.pressed.connect(func():
-		GameSettingsPanelScript.open(owner)
-	)
-	return card
+static func _build_settings_entry_card(owner: Node) -> VBoxContainer:
+	var host := VBoxContainer.new()
+	host.add_theme_constant_override("separation", 10)
 
-# ---------------------------------------------------------------------------
-# Debug section
-# ---------------------------------------------------------------------------
+	# 1. Practice Mining
+	var practice_btn := _build_action_button("Practice Mining", AMBER, true)
+	practice_btn.pressed.connect(func():
+		AppControllerHelper.open_mining_practice_panel("navigation_menu")
+		GameNavigationMenu.close(owner)
+	)
+	host.add_child(practice_btn)
+
+	# 2. Replay Tutorial
+	var replay_btn := _build_action_button("Replay Mission Guide", TITLE_COLOR, false)
+	replay_btn.pressed.connect(func():
+		var app := AppControllerHelper.get_instance()
+		if app and app.has_method("replay_tutorial_for_current_mission"):
+			app.replay_tutorial_for_current_mission()
+		GameNavigationMenu.close(owner)
+	)
+	host.add_child(replay_btn)
+
+	# 3. Skip Tutorial (Conditional)
+	var app_check := AppControllerHelper.get_instance()
+	if app_check != null and app_check.has_method("skip_tutorial"):
+		var skip_btn := _build_action_button("Skip Tutorial", TITLE_COLOR, false)
+		skip_btn.pressed.connect(func():
+			var app2 := AppControllerHelper.get_instance()
+			if app2 and app2.has_method("skip_tutorial"):
+				app2.skip_tutorial()
+			GameNavigationMenu.close(owner)
+		)
+		host.add_child(skip_btn)
+
+	# 4. Dialogue Toggle
+	var dlg_enabled := AppControllerHelper.is_citizen_science_dialogue_enabled(true)
+	var dlg_btn := _build_action_button("Dialogue: %s" % ("On" if dlg_enabled else "Off"), TITLE_COLOR, false)
+	dlg_btn.pressed.connect(func():
+		var app3 := AppControllerHelper.get_instance()
+		if app3 and app3.has_method("is_citizen_science_dialogue_enabled") \
+				and app3.has_method("set_citizen_science_dialogue_enabled"):
+			var next := not bool(app3.is_citizen_science_dialogue_enabled())
+			app3.set_citizen_science_dialogue_enabled(next)
+			dlg_btn.text = "Dialogue: %s" % ("On" if next else "Off")
+	)
+	host.add_child(dlg_btn)
+
+	return host
+
+static func _build_action_button(label: String, color: Color, primary: bool) -> Button:
+	var btn := Button.new()
+	btn.text = label
+	_apply_button_style(btn, primary)
+	# Override color if provided
+	btn.add_theme_color_override("font_color", color)
+	btn.add_theme_color_override("font_hover_color", color)
+	btn.add_theme_color_override("font_pressed_color", color)
+	return btn
+
+static func _build_reset_progress_button(owner: Node) -> Button:
+	var btn := Button.new()
+	btn.text = "Reset All Progress"
+	_apply_button_style(btn, false)
+	# Override with warm warning color
+	btn.add_theme_color_override("font_color", AMBER)
+	btn.add_theme_color_override("font_hover_color", AMBER)
+	btn.add_theme_color_override("font_pressed_color", AMBER)
+	var style = btn.get_theme_stylebox("normal").duplicate()
+	style.border_color = Color(AMBER.r, AMBER.g, AMBER.b, 0.5)
+	btn.add_theme_stylebox_override("normal", style)
+	
+	btn.pressed.connect(func():
+		var app = AppControllerHelper.get_instance()
+		if app and app.has_method("full_factory_reset"):
+			app.full_factory_reset()
+		elif app and app.has_method("_on_reset_all"):
+			app._on_reset_all()
+	)
+	return btn
 
 static func _build_debug_section(owner: Node) -> VBoxContainer:
 	var vbox: VBoxContainer = GameMenuDebugSectionScene.instantiate()
