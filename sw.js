@@ -1,7 +1,7 @@
-/* Star Sailors: Experiment 1 — Service Worker */
+/* Landnám — Service Worker */
 const SW_VERSION = "v4";
-const SHELL_CACHE = `star-sailors-shell-${SW_VERSION}`;
-const GAME_CACHE = `star-sailors-game-${SW_VERSION}`;
+const SHELL_CACHE = `landnam-shell-${SW_VERSION}`;
+const GAME_CACHE = `landnam-game-${SW_VERSION}`;
 
 // Pre-cache shell files so installed PWA loads instantly
 const SHELL_FILES = ["/", "/react-shell.js", "/manifest.json", "/game/index.html"];
