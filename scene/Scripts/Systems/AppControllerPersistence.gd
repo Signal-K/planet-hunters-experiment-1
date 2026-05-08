@@ -87,3 +87,8 @@ func load_citizen_science_dialogue_enabled(default_value: bool = true) -> bool:
 func reset_all() -> void:
 	DirAccess.remove_absolute(FRANC_BALANCE_CONFIG_PATH)
 	DirAccess.remove_absolute(EXPERIENCE_CONFIG_PATH)
+	DirAccess.remove_absolute("user://construction_state.json")
+	DirAccess.remove_absolute("user://first_time_mechanics.json")
+	DirAccess.remove_absolute("user://rockets_state.json")
+	DirAccess.remove_absolute("user://mission_logs.json")
+	DirAccess.remove_absolute("user://subcontractors.json")
