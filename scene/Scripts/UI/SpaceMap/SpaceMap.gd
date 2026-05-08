@@ -13,8 +13,6 @@ const GalaxyMapNodeScript         = preload("res://Scripts/UI/SpaceMap/GalaxyMap
 
 const RocketsManager      = preload("res://Scripts/Utils/RocketsManager.gd")
 const SectorRevealManager = preload("res://Scripts/Utils/SectorRevealManager.gd")
-const PanelStyle          = preload("res://Scripts/UI/PanelStyle.gd")
-const EarthSceneUIHelper  = preload("res://Scripts/Earth/EarthSceneUIHelper.gd")
 const SceneManager        = preload("res://Scripts/Earth/SceneManager.gd")
 const UIManager           = preload("res://Scripts/Earth/UIManager.gd")
 
@@ -43,7 +41,6 @@ const BG_STAR_DATA := {
 # ── State ─────────────────────────────────────────────────────────────────────
 var scene_manager: SceneManager
 var ui_manager: UIManager
-var _ui_helper := EarthSceneUIHelper.new()
 
 var _targets: Array = []
 var _planet_targets: Array = []        # type=planet from RocketsManager
@@ -74,6 +71,8 @@ var _selected_is_game_target := false
 @onready var telem_dist:      Label          = $UILayer/TelemetryPanel/Row/StatsBlock/DistCol/DistVal
 @onready var telem_planets:   Label          = $UILayer/TelemetryPanel/Row/StatsBlock/PlanetsCol/PlanetsVal
 @onready var telem_btn:       Button         = $UILayer/TelemetryPanel/Row/ActionBtn
+@onready var home_btn:        Button         = $UILayer/InfoBar/Sections/HomeBtn
+@onready var home_btn_galaxy: Button         = $UILayer/TelemetryPanel/Row/HomeBtnGalaxy
 
 func _ready() -> void:
 	scene_manager = SceneManager.new()
@@ -82,8 +81,6 @@ func _ready() -> void:
 	ui_manager = UIManager.new()
 	add_child(ui_manager)
 	ui_manager.add_to_group("ui_manager")
-	_ui_helper.setup(self)
-	_ui_helper.setup_buttons()
 	call_deferred("_fit_to_viewport")
 	set_process_input(true)
 	_refresh_targets()
@@ -92,6 +89,7 @@ func _ready() -> void:
 	_update_info_bar()
 	_setup_mode_toggle()
 	_setup_telemetry_panel()
+	_setup_home_buttons()
 	_select_galaxy_star("Sol", false, {})
 
 func _process(_delta: float) -> void:
@@ -112,7 +110,6 @@ func _fit_to_viewport() -> void:
 	var center := sz * 0.5
 	solar_system.scale  = Vector2(sf, sf); solar_system.position  = center
 	galaxy_layer.scale  = Vector2(sf, sf); galaxy_layer.position  = center
-	_ui_helper.apply_nav_layout()
 	_reposition_bottom_bars()
 	_reposition_mode_toggle(sz)
 
@@ -120,12 +117,14 @@ func _reposition_bottom_bars() -> void:
 	var sz := get_viewport().get_visible_rect().size
 	if sz.x <= 0.0:
 		return
-	var nav_h := 120.0; var bar_h := 96.0
-	var top := sz.y - nav_h - bar_h
+	var bar_h := 96.0
+	var bottom := sz.y
 	for bar in [info_bar, telemetry_panel]:
 		if bar:
-			bar.offset_left = 0.0; bar.offset_top   = top
-			bar.offset_right = sz.x; bar.offset_bottom = sz.y - nav_h
+			bar.offset_left   = 0.0
+			bar.offset_top    = bottom - bar_h
+			bar.offset_right  = sz.x
+			bar.offset_bottom = bottom
 
 func _reposition_mode_toggle(sz: Vector2) -> void:
 	if mode_toggle == null:
@@ -401,25 +400,40 @@ func _update_info_bar() -> void:
 				unexplored += 1
 		count_label.text = str(unexplored)
 
-# ── Navigation callbacks (wired by EarthSceneUIHelper) ────────────────────────
+# ── Home buttons ─────────────────────────────────────────────────────────────
 
-func _on_back_button_pressed() -> void:
+func _setup_home_buttons() -> void:
+	_style_home_button(home_btn)
+	_style_home_button(home_btn_galaxy)
+	if home_btn:
+		home_btn.pressed.connect(_on_home_pressed)
+	if home_btn_galaxy:
+		home_btn_galaxy.pressed.connect(_on_home_pressed)
+
+func _style_home_button(btn: Button) -> void:
+	if btn == null:
+		return
+	const C_CYAN := Color(0.28, 0.88, 0.96, 1.0)
+	var sn := StyleBoxFlat.new()
+	sn.bg_color = Color(0, 0, 0, 0)
+	sn.border_color = Color(C_CYAN.r, C_CYAN.g, C_CYAN.b, 0.35)
+	sn.set_border_width_all(1)
+	sn.content_margin_left = 14; sn.content_margin_right = 14
+	sn.content_margin_top = 6;  sn.content_margin_bottom = 6
+	var sh := sn.duplicate() as StyleBoxFlat
+	sh.bg_color = Color(C_CYAN.r, C_CYAN.g, C_CYAN.b, 0.10)
+	sh.border_color = C_CYAN
+	btn.add_theme_stylebox_override("normal",  sn)
+	btn.add_theme_stylebox_override("hover",   sh)
+	btn.add_theme_stylebox_override("pressed", sh)
+	btn.add_theme_color_override("font_color",       C_CYAN)
+	btn.add_theme_color_override("font_hover_color", C_CYAN)
+
+func _on_home_pressed() -> void:
 	if _galaxy_mode:
 		_set_galaxy_mode(false)
 	else:
 		_change_scene_to_base()
-
-func _on_forward_button_pressed() -> void: pass
-func _on_menu_button_pressed() -> void:
-	preload("res://Scripts/UI/GameNavigationMenu.gd").toggle(self)
-func _on_market_button_pressed() -> void:
-	if ui_manager: ui_manager.show_panel(UIManager.PanelType.MARKET)
-func _on_space_map_button_pressed() -> void: pass
-func _on_new_mission_button_pressed() -> void:
-	if scene_manager:
-		scene_manager.change_to_scene("res://Scenes/Earth/earth_launchpad.tscn")
-	else:
-		get_tree().change_scene_to_file("res://Scenes/Earth/earth_launchpad.tscn")
 
 # ── Input ─────────────────────────────────────────────────────────────────────
 
@@ -630,7 +644,3 @@ func _simple_hash(s: String) -> int:
 		h = (h * 31 + int(c)) & 0x7FFFFFFF
 	return h
 
-# ── Viewport scale helper (used by UILayer repositioning) ─────────────────────
-
-func _reposition_info_bar() -> void:
-	_reposition_bottom_bars()

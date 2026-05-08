@@ -1409,7 +1409,23 @@ func _find_label_in_subtree(root: Node, snippet: String) -> Label:
 
 func test_space_map_scene_has_shared_bottom_nav() -> void:
 	reporter.start_test("[UX] Space map scene includes the shared bottom navigation shell")
-	await _assert_scene_has_bottom_nav(SpaceMapScene.instantiate(), "SpaceMap")
+	var scene = SpaceMapScene.instantiate()
+	if scene == null:
+		reporter.fail_test("SpaceMap scene failed to instantiate")
+		return
+	get_root().add_child(scene)
+	await create_timer(0.05).timeout
+	# SpaceMap uses a HomeBtn in the footer instead of the full nav bar
+	if scene.get_node_or_null("UILayer/InfoBar/Sections/HomeBtn") == null:
+		reporter.fail_test("SpaceMap scene missing HomeBtn in InfoBar footer")
+		scene.queue_free()
+		return
+	if scene.get_node_or_null("UILayer/TelemetryPanel/Row/HomeBtnGalaxy") == null:
+		reporter.fail_test("SpaceMap scene missing HomeBtnGalaxy in TelemetryPanel")
+		scene.queue_free()
+		return
+	scene.queue_free()
+	reporter.pass_test()
 
 func test_mission_debrief_scene_has_shared_bottom_nav() -> void:
 	reporter.start_test("[UX] Mission debrief scene includes the shared bottom navigation shell")
