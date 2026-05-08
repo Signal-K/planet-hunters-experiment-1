@@ -159,55 +159,10 @@ func _on_citizen_science_dialogue_pressed() -> void:
 	_refresh_dialogue_button_text()
 
 func _on_reset_all_pressed() -> void:
-	_show_reset_confirm()
-
-func _show_reset_confirm() -> void:
-	var existing := get_node_or_null("ResetConfirmOverlay")
-	if existing != null:
-		return
-	var overlay := ColorRect.new()
-	overlay.name = "ResetConfirmOverlay"
-	overlay.color = Color(0.0, 0.0, 0.0, 0.72)
-	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
-	add_child(overlay)
-
-	var box := VBoxContainer.new()
-	box.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-	box.add_theme_constant_override("separation", 16)
-	overlay.add_child(box)
-
-	var msg := Label.new()
-	msg.text = "Reset all progress?\nThis cannot be undone."
-	msg.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	msg.add_theme_color_override("font_color", Color(0.92, 0.93, 0.96, 1.0))
-	msg.add_theme_font_size_override("font_size", 18)
-	box.add_child(msg)
-
-	var row := HBoxContainer.new()
-	row.alignment = BoxContainer.ALIGNMENT_CENTER
-	row.add_theme_constant_override("separation", 12)
-	box.add_child(row)
-
-	var cancel := Button.new()
-	cancel.text = "Cancel"
-	cancel.custom_minimum_size = Vector2(130, 56)
-	PanelStyle.apply_outline_button(cancel)
-	cancel.pressed.connect(func(): overlay.queue_free())
-	row.add_child(cancel)
-
-	var confirm := Button.new()
-	confirm.text = "Reset"
-	confirm.custom_minimum_size = Vector2(130, 56)
-	PanelStyle.apply_outline_button(confirm, Color(PanelStyle.ACCENT_WARM.r, PanelStyle.ACCENT_WARM.g, PanelStyle.ACCENT_WARM.b, 0.82))
-	confirm.pressed.connect(func():
-		overlay.queue_free()
-		var app = AppControllerHelper.get_instance()
-		if app and app.has_method("_on_reset_all"):
-			app._on_reset_all()
-		_request_close()
-	)
-	row.add_child(confirm)
+	var app = AppControllerHelper.get_instance()
+	if app and app.has_method("_on_reset_all"):
+		app._on_reset_all()
+	_request_close()
 
 func _request_close() -> void:
 	close_requested.emit()
