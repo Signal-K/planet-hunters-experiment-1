@@ -4,9 +4,9 @@ title: PostHog surveys not popping up — blank iframe poisons session survey ga
 status: done
 priority: high
 labels:
-  - posthog,surveys,bug,analytics
+  - 'posthog,surveys,bug,analytics'
 createdAt: '2026-05-03T11:50:56.065Z'
-updatedAt: '2026-05-03T11:50:56.065Z'
+updatedAt: '2026-05-06T02:16:26.692Z'
 timeSpent: 0
 assignee: '@Liam'
 ---
@@ -30,3 +30,4 @@ Root cause: when POSTHOG_PROJECT_TOKEN is not set in Vercel env vars, showInline
 <!-- SECTION:NOTES:BEGIN -->
 Verified in react-shell.js on 2026-05-06 that maybeTriggerMicroSurvey and the first-mission survey path both gate on runtimeConfig.posthog.projectToken before opening an iframe, and micro-surveys no longer consume the boot-level survey gate. Enabling live surveys still requires Vercel env configuration.
 <!-- SECTION:NOTES:END -->
+

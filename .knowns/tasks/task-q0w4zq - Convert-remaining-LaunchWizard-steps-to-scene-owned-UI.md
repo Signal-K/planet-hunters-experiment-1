@@ -1,14 +1,14 @@
 ---
 id: q0w4zq
 title: Convert remaining LaunchWizard steps to scene-owned UI
-status: todo
+status: done
 priority: high
 labels:
   - ui
   - missions
   - launchpad
 createdAt: '2026-04-24T01:35:20.542Z'
-updatedAt: '2026-04-24T01:48:25.859Z'
+updatedAt: '2026-05-08T10:30:40.872Z'
 timeSpent: 0
 ---
 # Convert remaining LaunchWizard steps to scene-owned UI
@@ -35,4 +35,10 @@ Move the LaunchWizard target, rocket, and confirm step layouts out of LaunchWiza
 3. Refactor LaunchWizard.gd to populate existing nodes instead of constructing UI trees.
 4. Add focused tests enforcing scene ownership and validate mission wizard flows.
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+✓ All ACs previously verified complete. LaunchWizard target/rocket/confirm steps use tscn-owned nodes.
+<!-- SECTION:NOTES:END -->
 

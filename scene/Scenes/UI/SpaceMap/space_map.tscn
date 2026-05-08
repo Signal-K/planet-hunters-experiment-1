@@ -1,59 +1,487 @@
-[gd_scene load_steps=7 format=3 uid="uid://space_map_scene"]
+[gd_scene load_steps=13 format=3 uid="uid://space_map_scene"]
 
-[ext_resource type="Script" path="res://Scripts/UI/SpaceMap/SpaceMap.gd" id="1"]
-[ext_resource type="PackedScene" path="res://Scenes/UI/Templates/SpaceMapHudCard.tscn" id="2"]
+[ext_resource type="Script" path="res://Scripts/UI/SpaceMap/SpaceMap.gd"          id="1_spacemap"]
+[ext_resource type="Script" path="res://Scripts/UI/SpaceMap/OrbitLine.gd"         id="2_orbit"]
+[ext_resource type="Script" path="res://Scripts/UI/SpaceMap/PlanetIcon.gd"        id="3_planet"]
+[ext_resource type="Script" path="res://Scripts/UI/SpaceMap/MoonOrbit.gd"         id="4_moon"]
+[ext_resource type="Script" path="res://Scripts/UI/SpaceMap/StarField.gd"         id="5_stars"]
+[ext_resource type="Script" path="res://Scripts/UI/SpaceMap/CometOrbit.gd"        id="6_comet"]
+[ext_resource type="Script" path="res://Scripts/UI/SpaceMap/GalaxyBackground.gd"  id="7_galaxybg"]
+[ext_resource type="Script" path="res://Scripts/UI/SpaceMap/GalaxyMapNode.gd"     id="8_galaxynode"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tab_active"]
-bg_color = Color(0, 0, 0, 0)
-border_width_bottom = 2
-border_color = Color(0.278431, 0.878431, 0.960784, 1)
-content_margin_bottom = 6.0
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_info_bar"]
+bg_color = Color(0.106, 0.106, 0.114, 0.88)
+border_color = Color(0.28, 0.88, 0.96, 0.25)
+border_width_top = 1
+content_margin_left = 24.0
+content_margin_right = 24.0
+content_margin_top = 10.0
+content_margin_bottom = 10.0
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tab_idle"]
-bg_color = Color(0, 0, 0, 0)
-content_margin_bottom = 6.0
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bg"]
+bg_color = Color(0.047, 0.047, 0.055, 1.0)
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_scan_button"]
-bg_color = Color(0.278431, 0.878431, 0.960784, 0.9)
-corner_radius_top_left = 14
-corner_radius_top_right = 14
-corner_radius_bottom_right = 14
-corner_radius_bottom_left = 14
-content_margin_left = 28.0
-content_margin_top = 16.0
-content_margin_right = 28.0
-content_margin_bottom = 16.0
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_nebula"]
+bg_color = Color(0.0, 0.0, 0.0, 0.0)
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_scan_button_hover"]
-bg_color = Color(0.388235, 0.92549, 0.980392, 1)
-corner_radius_top_left = 14
-corner_radius_top_right = 14
-corner_radius_bottom_right = 14
-corner_radius_bottom_left = 14
-content_margin_left = 28.0
-content_margin_top = 16.0
-content_margin_right = 28.0
-content_margin_bottom = 16.0
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_telemetry"]
+bg_color = Color(0.075, 0.078, 0.094, 0.88)
+border_color = Color(0.745, 0.776, 0.882, 0.30)
+border_width_top = 1
+content_margin_left = 24.0
+content_margin_right = 24.0
+content_margin_top = 10.0
+content_margin_bottom = 10.0
 
 [node name="SpaceMap" type="Node2D"]
-script = ExtResource("1")
+script = ExtResource("1_spacemap")
+
+[node name="BGLayer" type="CanvasLayer" parent="."]
+layer = -2
+
+[node name="BGRect" type="Panel" parent="BGLayer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_bg")
+
+[node name="StarsLayer" type="CanvasLayer" parent="."]
+layer = -1
+
+[node name="StarField" type="Node2D" parent="StarsLayer"]
+script = ExtResource("5_stars")
+star_count = 200
+rng_seed = 7331
+star_color = Color(0.9, 0.9, 0.9, 0.7)
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 layer = 2
+
+[node name="SolarSystem" type="Node2D" parent="."]
+position = Vector2(960, 540)
+
+[node name="Orbits" type="Node2D" parent="SolarSystem"]
+
+[node name="MercuryOrbit" type="Node2D" parent="SolarSystem/Orbits"]
+script = ExtResource("2_orbit")
+radius_x = 75.0
+radius_y = 57.0
+line_color = Color(0.55, 0.58, 0.62, 0.15)
+line_width = 1.0
+
+[node name="VenusOrbit" type="Node2D" parent="SolarSystem/Orbits"]
+script = ExtResource("2_orbit")
+radius_x = 124.0
+radius_y = 95.0
+line_color = Color(0.98, 0.64, 0.28, 0.22)
+line_width = 1.0
+
+[node name="EarthOrbit" type="Node2D" parent="SolarSystem/Orbits"]
+script = ExtResource("2_orbit")
+radius_x = 174.0
+radius_y = 133.0
+line_color = Color(0.28, 0.88, 0.96, 0.40)
+line_width = 1.2
+
+[node name="MarsOrbit" type="Node2D" parent="SolarSystem/Orbits"]
+script = ExtResource("2_orbit")
+radius_x = 224.0
+radius_y = 171.0
+line_color = Color(0.98, 0.36, 0.36, 0.18)
+line_width = 1.0
+
+[node name="BeltInner" type="Node2D" parent="SolarSystem/Orbits"]
+script = ExtResource("2_orbit")
+radius_x = 267.0
+radius_y = 204.0
+line_color = Color(0.55, 0.58, 0.62, 0.18)
+line_width = 1.0
+is_dotted = true
+segments = 80
+
+[node name="BeltOuter" type="Node2D" parent="SolarSystem/Orbits"]
+script = ExtResource("2_orbit")
+radius_x = 305.0
+radius_y = 233.0
+line_color = Color(0.55, 0.58, 0.62, 0.14)
+line_width = 1.0
+is_dotted = true
+segments = 80
+
+[node name="JupiterOrbit" type="Node2D" parent="SolarSystem/Orbits"]
+script = ExtResource("2_orbit")
+radius_x = 342.0
+radius_y = 262.0
+line_color = Color(0.98, 0.64, 0.28, 0.18)
+line_width = 1.0
+
+[node name="SaturnOrbit" type="Node2D" parent="SolarSystem/Orbits"]
+script = ExtResource("2_orbit")
+radius_x = 392.0
+radius_y = 300.0
+line_color = Color(0.98, 0.92, 0.55, 0.18)
+line_width = 1.0
+
+[node name="UranusOrbit" type="Node2D" parent="SolarSystem/Orbits"]
+script = ExtResource("2_orbit")
+radius_x = 448.0
+radius_y = 342.0
+line_color = Color(0.26, 0.85, 0.72, 0.18)
+line_width = 1.0
+
+[node name="NeptuneOrbit" type="Node2D" parent="SolarSystem/Orbits"]
+script = ExtResource("2_orbit")
+radius_x = 504.0
+radius_y = 385.0
+line_color = Color(0.40, 0.60, 0.98, 0.18)
+line_width = 1.0
+
+[node name="PlutoOrbit" type="Node2D" parent="SolarSystem/Orbits"]
+script = ExtResource("2_orbit")
+radius_x = 541.0
+radius_y = 414.0
+line_color = Color(0.70, 0.40, 0.98, 0.14)
+line_width = 0.8
+
+[node name="KuiperInner" type="Node2D" parent="SolarSystem/Orbits"]
+script = ExtResource("2_orbit")
+radius_x = 566.0
+radius_y = 432.0
+line_color = Color(0.40, 0.55, 0.80, 0.12)
+line_width = 0.8
+is_dotted = true
+segments = 80
+
+[node name="KuiperOuter" type="Node2D" parent="SolarSystem/Orbits"]
+script = ExtResource("2_orbit")
+radius_x = 590.0
+radius_y = 451.0
+line_color = Color(0.40, 0.55, 0.80, 0.10)
+line_width = 0.8
+is_dotted = true
+segments = 80
+
+[node name="OortCloud" type="Node2D" parent="SolarSystem/Orbits"]
+script = ExtResource("2_orbit")
+radius_x = 652.0
+radius_y = 499.0
+line_color = Color(0.30, 0.40, 0.65, 0.07)
+line_width = 0.7
+is_dotted = true
+segments = 80
+
+[node name="Bodies" type="Node2D" parent="SolarSystem"]
+
+[node name="Sol" type="Node2D" parent="SolarSystem/Bodies"]
+script = ExtResource("3_planet")
+label_text = "Sol"
+icon_color = Color(0.98, 0.92, 0.65, 1.0)
+icon_radius = 14.0
+symbol = ""
+is_star = true
+label_size = 12
+
+[node name="Mercury" type="Node2D" parent="SolarSystem/Bodies"]
+position = Vector2(-44, -51)
+script = ExtResource("3_planet")
+label_text = "Mercury"
+icon_color = Color(0.55, 0.58, 0.62, 1.0)
+icon_radius = 5.0
+symbol = "☿"
+label_size = 11
+
+[node name="Venus" type="Node2D" parent="SolarSystem/Bodies"]
+position = Vector2(-102, 57)
+script = ExtResource("3_planet")
+label_text = "Venus"
+icon_color = Color(0.98, 0.64, 0.28, 1.0)
+icon_radius = 7.5
+symbol = "♀"
+label_size = 11
+
+[node name="Earth" type="Node2D" parent="SolarSystem/Bodies"]
+position = Vector2(109, -109)
+script = ExtResource("3_planet")
+label_text = "Earth"
+icon_color = Color(0.28, 0.88, 0.96, 1.0)
+icon_radius = 9.0
+symbol = "⊕"
+is_home = true
+label_size = 13
+
+[node name="EarthMoons" type="Node2D" parent="SolarSystem/Bodies/Earth"]
+
+[node name="Moon" type="Node2D" parent="SolarSystem/Bodies/Earth/EarthMoons"]
+script = ExtResource("4_moon")
+orbit_radius = 16.0
+moon_radius = 3.0
+moon_angle = 0.5
+moon_label = "Moon"
+moon_color = Color(0.50, 0.52, 0.56, 0.85)
+
+[node name="Mars" type="Node2D" parent="SolarSystem/Bodies"]
+position = Vector2(80, -157)
+script = ExtResource("3_planet")
+label_text = "Mars"
+icon_color = Color(0.98, 0.36, 0.36, 1.0)
+icon_radius = 7.0
+symbol = "♂"
+label_size = 11
+
+[node name="MarsMoons" type="Node2D" parent="SolarSystem/Bodies/Mars"]
+
+[node name="Phobos" type="Node2D" parent="SolarSystem/Bodies/Mars/MarsMoons"]
+script = ExtResource("4_moon")
+orbit_radius = 14.0
+moon_radius = 2.0
+moon_angle = 1.0
+moon_label = "Phobos"
+moon_color = Color(0.50, 0.52, 0.56, 0.75)
+
+[node name="Deimos" type="Node2D" parent="SolarSystem/Bodies/Mars/MarsMoons"]
+script = ExtResource("4_moon")
+orbit_radius = 20.0
+moon_radius = 1.8
+moon_angle = 2.8
+moon_label = "Deimos"
+moon_color = Color(0.50, 0.52, 0.56, 0.70)
+
+[node name="Jupiter" type="Node2D" parent="SolarSystem/Bodies"]
+position = Vector2(-341, 9)
+script = ExtResource("3_planet")
+label_text = "Jupiter"
+icon_color = Color(0.98, 0.64, 0.28, 1.0)
+icon_radius = 14.0
+symbol = "♃"
+label_size = 12
+
+[node name="JupiterMoons" type="Node2D" parent="SolarSystem/Bodies/Jupiter"]
+
+[node name="Io" type="Node2D" parent="SolarSystem/Bodies/Jupiter/JupiterMoons"]
+script = ExtResource("4_moon")
+orbit_radius = 20.0
+moon_radius = 2.5
+moon_angle = 0.5
+moon_label = "Io"
+moon_color = Color(0.50, 0.52, 0.56, 0.75)
+
+[node name="Europa" type="Node2D" parent="SolarSystem/Bodies/Jupiter/JupiterMoons"]
+script = ExtResource("4_moon")
+orbit_radius = 26.0
+moon_radius = 2.5
+moon_angle = 1.8
+moon_label = "Europa"
+moon_color = Color(0.50, 0.52, 0.56, 0.70)
+
+[node name="Ganymede" type="Node2D" parent="SolarSystem/Bodies/Jupiter/JupiterMoons"]
+script = ExtResource("4_moon")
+orbit_radius = 33.0
+moon_radius = 3.0
+moon_angle = 3.2
+moon_label = "Ganymede"
+moon_color = Color(0.50, 0.52, 0.56, 0.65)
+
+[node name="Callisto" type="Node2D" parent="SolarSystem/Bodies/Jupiter/JupiterMoons"]
+script = ExtResource("4_moon")
+orbit_radius = 40.0
+moon_radius = 3.0
+moon_angle = 4.5
+moon_label = "Callisto"
+moon_color = Color(0.50, 0.52, 0.56, 0.60)
+
+[node name="Saturn" type="Node2D" parent="SolarSystem/Bodies"]
+position = Vector2(369, -89)
+script = ExtResource("3_planet")
+label_text = "Saturn"
+icon_color = Color(0.98, 0.92, 0.55, 1.0)
+icon_radius = 12.0
+symbol = "♄"
+has_ring = true
+label_size = 12
+
+[node name="SaturnMoons" type="Node2D" parent="SolarSystem/Bodies/Saturn"]
+
+[node name="Titan" type="Node2D" parent="SolarSystem/Bodies/Saturn/SaturnMoons"]
+script = ExtResource("4_moon")
+orbit_radius = 24.0
+moon_radius = 3.0
+moon_angle = 1.2
+moon_label = "Titan"
+moon_color = Color(0.50, 0.52, 0.56, 0.75)
+
+[node name="Rhea" type="Node2D" parent="SolarSystem/Bodies/Saturn/SaturnMoons"]
+script = ExtResource("4_moon")
+orbit_radius = 16.0
+moon_radius = 2.0
+moon_angle = 3.8
+moon_label = "Rhea"
+moon_color = Color(0.50, 0.52, 0.56, 0.65)
+
+[node name="Iapetus" type="Node2D" parent="SolarSystem/Bodies/Saturn/SaturnMoons"]
+script = ExtResource("4_moon")
+orbit_radius = 32.0
+moon_radius = 2.0
+moon_angle = 2.5
+moon_label = "Iapetus"
+moon_color = Color(0.50, 0.52, 0.56, 0.60)
+
+[node name="Dione" type="Node2D" parent="SolarSystem/Bodies/Saturn/SaturnMoons"]
+script = ExtResource("4_moon")
+orbit_radius = 10.0
+moon_radius = 2.0
+moon_angle = 0.3
+moon_label = "Dione"
+moon_color = Color(0.50, 0.52, 0.56, 0.65)
+
+[node name="Uranus" type="Node2D" parent="SolarSystem/Bodies"]
+position = Vector2(-114, 313)
+script = ExtResource("3_planet")
+label_text = "Uranus"
+icon_color = Color(0.26, 0.85, 0.72, 1.0)
+icon_radius = 10.0
+symbol = "♅"
+label_size = 11
+
+[node name="UranusMoons" type="Node2D" parent="SolarSystem/Bodies/Uranus"]
+
+[node name="Miranda" type="Node2D" parent="SolarSystem/Bodies/Uranus/UranusMoons"]
+script = ExtResource("4_moon")
+orbit_radius = 14.0
+moon_radius = 2.0
+moon_angle = 1.5
+moon_label = "Miranda"
+moon_color = Color(0.50, 0.52, 0.56, 0.70)
+
+[node name="Ariel" type="Node2D" parent="SolarSystem/Bodies/Uranus/UranusMoons"]
+script = ExtResource("4_moon")
+orbit_radius = 18.0
+moon_radius = 2.0
+moon_angle = 3.0
+moon_label = "Ariel"
+moon_color = Color(0.50, 0.52, 0.56, 0.65)
+
+[node name="Titania" type="Node2D" parent="SolarSystem/Bodies/Uranus/UranusMoons"]
+script = ExtResource("4_moon")
+orbit_radius = 24.0
+moon_radius = 2.5
+moon_angle = 4.8
+moon_label = "Titania"
+moon_color = Color(0.50, 0.52, 0.56, 0.60)
+
+[node name="Oberon" type="Node2D" parent="SolarSystem/Bodies/Uranus/UranusMoons"]
+script = ExtResource("4_moon")
+orbit_radius = 30.0
+moon_radius = 2.5
+moon_angle = 0.8
+moon_label = "Oberon"
+moon_color = Color(0.50, 0.52, 0.56, 0.55)
+
+[node name="Neptune" type="Node2D" parent="SolarSystem/Bodies"]
+position = Vector2(315, 300)
+script = ExtResource("3_planet")
+label_text = "Neptune"
+icon_color = Color(0.40, 0.60, 0.98, 1.0)
+icon_radius = 10.0
+symbol = "♆"
+label_size = 11
+
+[node name="NeptuneMoons" type="Node2D" parent="SolarSystem/Bodies/Neptune"]
+
+[node name="Triton" type="Node2D" parent="SolarSystem/Bodies/Neptune/NeptuneMoons"]
+script = ExtResource("4_moon")
+orbit_radius = 18.0
+moon_radius = 2.5
+moon_angle = 2.3
+moon_label = "Triton"
+moon_color = Color(0.50, 0.52, 0.56, 0.72)
+
+[node name="Pluto" type="Node2D" parent="SolarSystem/Bodies"]
+position = Vector2(475, -199)
+script = ExtResource("3_planet")
+label_text = "Pluto"
+icon_color = Color(0.70, 0.40, 0.98, 1.0)
+icon_radius = 5.0
+symbol = "♇"
+label_size = 10
+
+[node name="PlutoMoons" type="Node2D" parent="SolarSystem/Bodies/Pluto"]
+
+[node name="Charon" type="Node2D" parent="SolarSystem/Bodies/Pluto/PlutoMoons"]
+script = ExtResource("4_moon")
+orbit_radius = 11.0
+moon_radius = 2.5
+moon_angle = 1.8
+moon_label = "Charon"
+moon_color = Color(0.50, 0.52, 0.56, 0.70)
+
+[node name="Belt" type="Node2D" parent="SolarSystem"]
+
+[node name="Ceres" type="Node2D" parent="SolarSystem/Belt"]
+position = Vector2(41, -213)
+script = ExtResource("3_planet")
+label_text = "Ceres"
+icon_color = Color(0.55, 0.58, 0.62, 1.0)
+icon_radius = 4.0
+symbol = "⬡"
+label_size = 10
+
+[node name="Vesta" type="Node2D" parent="SolarSystem/Belt"]
+position = Vector2(200, 158)
+script = ExtResource("3_planet")
+label_text = "Vesta"
+icon_color = Color(0.55, 0.58, 0.62, 1.0)
+icon_radius = 3.5
+symbol = "⬡"
+label_size = 10
+
+[node name="Hygiea" type="Node2D" parent="SolarSystem/Belt"]
+position = Vector2(-142, 181)
+script = ExtResource("3_planet")
+label_text = "Hygiea"
+icon_color = Color(0.55, 0.58, 0.62, 1.0)
+icon_radius = 3.0
+symbol = "⬡"
+label_size = 10
+
+[node name="GameTargets" type="Node2D" parent="SolarSystem/Belt"]
+
+[node name="OuterRegions" type="Node2D" parent="SolarSystem"]
+
+[node name="Eris" type="Node2D" parent="SolarSystem/OuterRegions"]
+position = Vector2(153, 433)
+script = ExtResource("3_planet")
+label_text = "Eris"
+icon_color = Color(0.65, 0.35, 0.95, 1.0)
+icon_radius = 4.5
+symbol = "♇"
+label_size = 10
+
+[node name="HaleBopp" type="Node2D" parent="SolarSystem/OuterRegions"]
+script = ExtResource("6_comet")
+semi_latus_rectum = 170.0
+eccentricity = 0.992
+perihelion_angle = -2.0
+y_flatten = 0.82
+arc_half_angle = 2.1
+line_color = Color(0.80, 0.90, 1.00, 0.22)
+tail_color = Color(0.80, 0.90, 1.00, 0.60)
+max_reach = 680.0
+comet_label = "Hale-Bopp"
 
 [node name="UILayer" type="CanvasLayer" parent="."]
 layer = 3
 follow_viewport_enabled = true
 
 [node name="ButtonContainer" type="HBoxContainer" parent="UILayer"]
-custom_minimum_size = Vector2(0, 80)
-offset_left = 24.0
-offset_top = 976.0
-offset_right = 1896.0
-offset_bottom = 1056.0
+custom_minimum_size = Vector2(0, 120)
+offset_left = 12.0
+offset_top = 960.0
+offset_right = 1908.0
+offset_bottom = 1080.0
 
 [node name="BackButton" type="Button" parent="UILayer/ButtonContainer"]
-custom_minimum_size = Vector2(160, 80)
+custom_minimum_size = Vector2(160, 120)
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
@@ -61,7 +489,7 @@ theme_override_font_sizes/font_size = 24
 text = "<<"
 
 [node name="ForwardButton" type="Button" parent="UILayer/ButtonContainer"]
-custom_minimum_size = Vector2(160, 80)
+custom_minimum_size = Vector2(160, 120)
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
@@ -69,7 +497,7 @@ theme_override_font_sizes/font_size = 24
 text = ">>"
 
 [node name="MenuButton" type="Button" parent="UILayer/ButtonContainer"]
-custom_minimum_size = Vector2(220, 80)
+custom_minimum_size = Vector2(220, 120)
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
@@ -77,7 +505,7 @@ theme_override_font_sizes/font_size = 20
 text = "Menu"
 
 [node name="MarketButton" type="Button" parent="UILayer/ButtonContainer"]
-custom_minimum_size = Vector2(220, 80)
+custom_minimum_size = Vector2(220, 120)
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
@@ -85,7 +513,7 @@ theme_override_font_sizes/font_size = 20
 text = "Market"
 
 [node name="SpaceMapButton" type="Button" parent="UILayer/ButtonContainer"]
-custom_minimum_size = Vector2(260, 80)
+custom_minimum_size = Vector2(260, 120)
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
@@ -93,117 +521,319 @@ theme_override_font_sizes/font_size = 20
 text = "Space Map"
 
 [node name="NewMissionButton" type="Button" parent="UILayer/ButtonContainer"]
-custom_minimum_size = Vector2(300, 80)
+custom_minimum_size = Vector2(300, 120)
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_colors/font_color = Color(0.847, 0.871, 0.914, 1)
 theme_override_font_sizes/font_size = 20
 text = "New Mission"
 
-[node name="UI" type="Control" parent="CanvasLayer"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
+[node name="InfoBar" type="PanelContainer" parent="UILayer"]
+offset_left = 0.0
+offset_top = 864.0
+offset_right = 1920.0
+offset_bottom = 960.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_info_bar")
 
-[node name="Header" type="MarginContainer" parent="CanvasLayer/UI"]
-layout_mode = 1
-anchors_preset = 10
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -2200.0
-offset_top = 32.0
-offset_right = -220.0
-offset_bottom = 108.0
-grow_horizontal = 0
-theme_override_constants/margin_left = 0
-theme_override_constants/margin_top = 0
-theme_override_constants/margin_right = 0
-theme_override_constants/margin_bottom = 0
-
-[node name="HeaderRow" type="HBoxContainer" parent="CanvasLayer/UI/Header"]
+[node name="Sections" type="HBoxContainer" parent="UILayer/InfoBar"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 30
+size_flags_vertical = 3
+theme_override_constants/separation = 0
 
-[node name="TitleColumn" type="VBoxContainer" parent="CanvasLayer/UI/Header/HeaderRow"]
+[node name="CurrentLocation" type="VBoxContainer" parent="UILayer/InfoBar/Sections"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="EyebrowLabel" type="Label" parent="UILayer/InfoBar/Sections/CurrentLocation"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.565, 0.565, 0.592, 1)
+theme_override_font_sizes/font_size = 10
+text = "CURRENT LOCATION"
+
+[node name="BodyRow" type="HBoxContainer" parent="UILayer/InfoBar/Sections/CurrentLocation"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Icon" type="Label" parent="UILayer/InfoBar/Sections/CurrentLocation/BodyRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.28, 0.88, 0.96, 1)
+theme_override_font_sizes/font_size = 26
+text = "⊕"
+
+[node name="NameCol" type="VBoxContainer" parent="UILayer/InfoBar/Sections/CurrentLocation/BodyRow"]
+layout_mode = 2
 theme_override_constants/separation = 2
 
-[node name="EyebrowLabel" type="Label" parent="CanvasLayer/UI/Header/HeaderRow/TitleColumn"]
+[node name="NameLabel" type="Label" parent="UILayer/InfoBar/Sections/CurrentLocation/BodyRow/NameCol"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.278431, 0.878431, 0.960784, 0.82)
-theme_override_font_sizes/font_size = 11
-text = "TACTICAL HUD"
+theme_override_colors/font_color = Color(0.28, 0.88, 0.96, 1)
+theme_override_font_sizes/font_size = 16
+text = "Earth"
 
-[node name="TitleLabel" type="Label" parent="CanvasLayer/UI/Header/HeaderRow/TitleColumn"]
+[node name="SubLabel" type="Label" parent="UILayer/InfoBar/Sections/CurrentLocation/BodyRow/NameCol"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.921569, 0.94902, 0.980392, 1)
-theme_override_font_sizes/font_size = 26
-text = "Space Map"
+theme_override_colors/font_color = Color(0.28, 0.88, 0.96, 0.6)
+theme_override_font_sizes/font_size = 12
+text = "Sol III"
 
-[node name="ModeToggle" type="HBoxContainer" parent="CanvasLayer/UI/Header/HeaderRow"]
+[node name="Divider1" type="VSeparator" parent="UILayer/InfoBar/Sections"]
 layout_mode = 2
-theme_override_constants/separation = 18
+theme_override_colors/separator_color = Color(0.28, 0.88, 0.96, 0.18)
+custom_minimum_size = Vector2(1, 0)
 
-[node name="SolarBtn" type="Button" parent="CanvasLayer/UI/Header/HeaderRow/ModeToggle"]
+[node name="ExploredObjects" type="VBoxContainer" parent="UILayer/InfoBar/Sections"]
 layout_mode = 2
-theme_override_styles/focus = SubResource("StyleBoxFlat_tab_active")
-theme_override_styles/hover = SubResource("StyleBoxFlat_tab_idle")
-theme_override_styles/normal = SubResource("StyleBoxFlat_tab_idle")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_tab_active")
-theme_override_colors/font_color = Color(0.580392, 0.654902, 0.741176, 0.9)
-theme_override_font_sizes/font_size = 13
-text = "SOLAR SYSTEM"
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
 
-[node name="StarsBtn" type="Button" parent="CanvasLayer/UI/Header/HeaderRow/ModeToggle"]
+[node name="EyebrowLabel" type="Label" parent="UILayer/InfoBar/Sections/ExploredObjects"]
 layout_mode = 2
-theme_override_styles/focus = SubResource("StyleBoxFlat_tab_active")
-theme_override_styles/hover = SubResource("StyleBoxFlat_tab_idle")
-theme_override_styles/normal = SubResource("StyleBoxFlat_tab_idle")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_tab_active")
-theme_override_colors/font_color = Color(0.278431, 0.878431, 0.960784, 1)
-theme_override_font_sizes/font_size = 13
-text = "GALAXY"
+theme_override_colors/font_color = Color(0.565, 0.565, 0.592, 1)
+theme_override_font_sizes/font_size = 10
+text = "EXPLORED OBJECTS"
 
-[node name="HudCards" type="Control" parent="CanvasLayer/UI"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="ExploredLabel" type="Label" parent="UILayer/InfoBar/Sections/ExploredObjects"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.855, 0.886, 0.996, 1)
+theme_override_font_sizes/font_size = 16
+text = "Earth"
 
-[node name="SectorCard" parent="CanvasLayer/UI/HudCards" instance=ExtResource("2")]
-offset_left = 200.0
-offset_top = 190.0
-offset_right = 480.0
-offset_bottom = 366.0
+[node name="Divider2" type="VSeparator" parent="UILayer/InfoBar/Sections"]
+layout_mode = 2
+theme_override_colors/separator_color = Color(0.28, 0.88, 0.96, 0.18)
+custom_minimum_size = Vector2(1, 0)
 
-[node name="PrimaryTargetCard" parent="CanvasLayer/UI/HudCards" instance=ExtResource("2")]
-offset_left = 1310.0
-offset_top = 210.0
-offset_right = 1590.0
-offset_bottom = 386.0
+[node name="UnexploredObjects" type="VBoxContainer" parent="UILayer/InfoBar/Sections"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
 
-[node name="SecondaryTargetCard" parent="CanvasLayer/UI/HudCards" instance=ExtResource("2")]
-offset_left = 1310.0
-offset_top = 444.0
-offset_right = 1590.0
-offset_bottom = 620.0
+[node name="EyebrowLabel" type="Label" parent="UILayer/InfoBar/Sections/UnexploredObjects"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.565, 0.565, 0.592, 1)
+theme_override_font_sizes/font_size = 10
+text = "UNEXPLORED OBJECTS"
 
-[node name="DeepScanButton" type="Button" parent="CanvasLayer/UI"]
-offset_left = 1260.0
-offset_top = 840.0
-offset_right = 1500.0
-offset_bottom = 906.0
-theme_override_styles/hover = SubResource("StyleBoxFlat_scan_button_hover")
-theme_override_styles/normal = SubResource("StyleBoxFlat_scan_button")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_scan_button_hover")
-theme_override_colors/font_color = Color(0.0470588, 0.0862745, 0.137255, 1)
+[node name="CountRow" type="HBoxContainer" parent="UILayer/InfoBar/Sections/UnexploredObjects"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="CountIcon" type="Label" parent="UILayer/InfoBar/Sections/UnexploredObjects/CountRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.565, 0.565, 0.592, 1)
+theme_override_font_sizes/font_size = 22
+text = "?"
+
+[node name="CountLabel" type="Label" parent="UILayer/InfoBar/Sections/UnexploredObjects/CountRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.565, 0.565, 0.592, 1)
 theme_override_font_sizes/font_size = 18
-text = "DEEP SCAN"
+text = "0"
+
+[node name="ModeToggle" type="HBoxContainer" parent="UILayer"]
+offset_left = 760.0
+offset_top = 8.0
+offset_right = 1160.0
+offset_bottom = 52.0
+theme_override_constants/separation = 0
+
+[node name="SolarBtn" type="Button" parent="UILayer/ModeToggle"]
+custom_minimum_size = Vector2(200, 44)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.28, 0.88, 0.96, 1)
+theme_override_font_sizes/font_size = 13
+text = "◉  SOLAR SYSTEM"
+
+[node name="GalaxyBtn" type="Button" parent="UILayer/ModeToggle"]
+custom_minimum_size = Vector2(200, 44)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.565, 0.565, 0.592, 1)
+theme_override_font_sizes/font_size = 13
+text = "✦  GALAXY"
+
+[node name="TelemetryPanel" type="PanelContainer" parent="UILayer"]
+visible = false
+offset_left = 0.0
+offset_top = 864.0
+offset_right = 1920.0
+offset_bottom = 960.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_telemetry")
+
+[node name="Row" type="HBoxContainer" parent="UILayer/TelemetryPanel"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 0
+
+[node name="NameBlock" type="VBoxContainer" parent="UILayer/TelemetryPanel/Row"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 3
+
+[node name="EyebrowLabel" type="Label" parent="UILayer/TelemetryPanel/Row/NameBlock"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.565, 0.565, 0.592, 1)
+theme_override_font_sizes/font_size = 9
+text = "SELECTED TARGET"
+
+[node name="NameLabel" type="Label" parent="UILayer/TelemetryPanel/Row/NameBlock"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.886, 0.757, 0.612, 1)
+theme_override_font_sizes/font_size = 18
+text = "SOL"
+
+[node name="SubLabel" type="Label" parent="UILayer/TelemetryPanel/Row/NameBlock"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.886, 0.757, 0.612, 0.65)
+theme_override_font_sizes/font_size = 11
+text = "Current Location"
+
+[node name="TelDiv1" type="VSeparator" parent="UILayer/TelemetryPanel/Row"]
+layout_mode = 2
+theme_override_colors/separator_color = Color(0.745, 0.776, 0.882, 0.20)
+custom_minimum_size = Vector2(1, 0)
+
+[node name="StatsBlock" type="HBoxContainer" parent="UILayer/TelemetryPanel/Row"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 24
+
+[node name="TypeCol" type="VBoxContainer" parent="UILayer/TelemetryPanel/Row/StatsBlock"]
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="TypeKey" type="Label" parent="UILayer/TelemetryPanel/Row/StatsBlock/TypeCol"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.565, 0.565, 0.592, 1)
+theme_override_font_sizes/font_size = 9
+text = "TYPE"
+
+[node name="TypeVal" type="Label" parent="UILayer/TelemetryPanel/Row/StatsBlock/TypeCol"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.894, 0.886, 0.894, 1)
+theme_override_font_sizes/font_size = 12
+text = "Yellow Dwarf / G2V"
+
+[node name="DistCol" type="VBoxContainer" parent="UILayer/TelemetryPanel/Row/StatsBlock"]
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="DistKey" type="Label" parent="UILayer/TelemetryPanel/Row/StatsBlock/DistCol"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.565, 0.565, 0.592, 1)
+theme_override_font_sizes/font_size = 9
+text = "DISTANCE"
+
+[node name="DistVal" type="Label" parent="UILayer/TelemetryPanel/Row/StatsBlock/DistCol"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.894, 0.886, 0.894, 1)
+theme_override_font_sizes/font_size = 12
+text = "0.00 LY"
+
+[node name="PlanetsCol" type="VBoxContainer" parent="UILayer/TelemetryPanel/Row/StatsBlock"]
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="PlanetsKey" type="Label" parent="UILayer/TelemetryPanel/Row/StatsBlock/PlanetsCol"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.565, 0.565, 0.592, 1)
+theme_override_font_sizes/font_size = 9
+text = "PLANETS"
+
+[node name="PlanetsVal" type="Label" parent="UILayer/TelemetryPanel/Row/StatsBlock/PlanetsCol"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.894, 0.886, 0.894, 1)
+theme_override_font_sizes/font_size = 12
+text = "8"
+
+[node name="TelSpacer" type="Control" parent="UILayer/TelemetryPanel/Row"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ActionBtn" type="Button" parent="UILayer/TelemetryPanel/Row"]
+custom_minimum_size = Vector2(220, 0)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_colors/font_color = Color(0.745, 0.776, 0.882, 1)
+theme_override_font_sizes/font_size = 13
+text = "◉  SOLAR SYSTEM VIEW"
+
+[node name="GalaxyLayer" type="Node2D" parent="."]
+position = Vector2(960, 540)
+visible = false
+
+[node name="Background" type="Node2D" parent="GalaxyLayer"]
+script = ExtResource("7_galaxybg")
+
+[node name="Stars" type="Node2D" parent="GalaxyLayer"]
+
+[node name="Sol" type="Node2D" parent="GalaxyLayer/Stars"]
+script = ExtResource("8_galaxynode")
+star_name = "Sol"
+distance_label = "0.00 ly"
+star_color = Color(0.886, 0.757, 0.612, 1.0)
+star_radius = 9.0
+is_selected = true
+is_sol = true
+
+[node name="AlphaCentauri" type="Node2D" parent="GalaxyLayer/Stars"]
+position = Vector2(160, 45)
+script = ExtResource("8_galaxynode")
+star_name = "Alpha Centauri"
+distance_label = "4.37 ly"
+star_color = Color(1.0, 0.867, 0.718, 1.0)
+star_radius = 7.0
+
+[node name="Sirius" type="Node2D" parent="GalaxyLayer/Stars"]
+position = Vector2(280, -175)
+script = ExtResource("8_galaxynode")
+star_name = "Sirius"
+distance_label = "8.60 ly"
+star_color = Color(0.729, 0.773, 0.929, 1.0)
+star_radius = 8.0
+
+[node name="BarnardsStar" type="Node2D" parent="GalaxyLayer/Stars"]
+position = Vector2(-130, 120)
+script = ExtResource("8_galaxynode")
+star_name = "Barnard's Star"
+distance_label = "5.96 ly"
+star_color = Color(1.0, 0.706, 0.671, 0.85)
+star_radius = 5.0
+
+[node name="Procyon" type="Node2D" parent="GalaxyLayer/Stars"]
+position = Vector2(-230, -105)
+script = ExtResource("8_galaxynode")
+star_name = "Procyon"
+distance_label = "11.46 ly"
+star_color = Color(0.894, 0.886, 0.894, 0.9)
+star_radius = 6.0
+
+[node name="Vega" type="Node2D" parent="GalaxyLayer/Stars"]
+position = Vector2(110, -330)
+script = ExtResource("8_galaxynode")
+star_name = "Vega"
+distance_label = "25.1 ly"
+star_color = Color(0.729, 0.773, 0.929, 1.0)
+star_radius = 8.0
+
+[node name="Altair" type="Node2D" parent="GalaxyLayer/Stars"]
+position = Vector2(400, 175)
+script = ExtResource("8_galaxynode")
+star_name = "Altair"
+distance_label = "16.7 ly"
+star_color = Color(0.894, 0.886, 0.894, 0.85)
+star_radius = 6.0
+
+[node name="Fomalhaut" type="Node2D" parent="GalaxyLayer/Stars"]
+position = Vector2(-300, 280)
+script = ExtResource("8_galaxynode")
+star_name = "Fomalhaut"
+distance_label = "25.1 ly"
+star_color = Color(0.894, 0.886, 0.894, 0.8)
+star_radius = 6.0
+
+[node name="GameTargets" type="Node2D" parent="GalaxyLayer"]

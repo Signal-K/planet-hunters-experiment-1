@@ -56,6 +56,21 @@ const PREDEFINED_MISSION_TARGETS := {
 		"distance_au": 12.0,
 		"required_level": 2,
 		"reward_ratio": 1.2  # Early-game remains single-run and forgiving
+	},
+	4: {
+		"id": "mission-4-autonomy-target",
+		"label": "TOI-700 d",
+		"type": "planet",
+		"distance_au": 120.0,
+		"required_level": 2,
+		"reward_ratio": 1.4,  # Spec: autonomy handoff, higher payout ceiling
+		"anomalySet": "telescope-tess",
+		"tess_disposition": "PC",
+		"classification_status": "candidate",
+		"ticId": "TIC 150428135",
+		"parent_star": "TOI-700",
+		"star_system_id": "toi-700",
+		"science_blurb": "Habitable zone candidate — first Free Operations target"
 	}
 }
 
@@ -754,15 +769,34 @@ static func select_trip_contractor(contractor_id: String) -> bool:
 	return save_state(s)
 
 static func get_trip_selected_contractor() -> Dictionary:
+	var selected_from_offer := _get_selected_trip_contractor_from_offer()
+	if not selected_from_offer.is_empty():
+		return selected_from_offer.duplicate(true)
 	var offer = get_trip_contract_offer()
-	if offer.is_empty():
-		return {}
-	if bool(offer.get("selection_required", true)):
+	if offer.is_empty() or bool(offer.get("selection_required", true)):
 		return {}
 	var selected = str(offer.get("selected_contractor", ""))
 	if selected == "":
 		return {}
 	return _find_trip_contractor(selected).duplicate(true)
+
+static func get_current_requested_minerals() -> Dictionary:
+	var mission := _get_latest_active_mission()
+	if not mission.is_empty():
+		var objective_any = mission.get("objective", {})
+		if typeof(objective_any) == TYPE_DICTIONARY:
+			var objective: Dictionary = objective_any
+			var requirements_any = objective.get("requirements", {})
+			if typeof(requirements_any) == TYPE_DICTIONARY:
+				var requested_any = requirements_any.get("minerals", {})
+				if typeof(requested_any) == TYPE_DICTIONARY and not requested_any.is_empty():
+					return (requested_any as Dictionary).duplicate(true)
+	var trip_selected := get_trip_selected_contractor()
+	if not trip_selected.is_empty():
+		var trip_requested_any = trip_selected.get("requested_minerals", {})
+		if typeof(trip_requested_any) == TYPE_DICTIONARY and not trip_requested_any.is_empty():
+			return (trip_requested_any as Dictionary).duplicate(true)
+	return get_starter_requested_minerals()
 
 ## Reusable Rockets Research tier (0 = none, 1–3 = progressively cheaper launches).
 static func get_reusable_research_tier() -> int:

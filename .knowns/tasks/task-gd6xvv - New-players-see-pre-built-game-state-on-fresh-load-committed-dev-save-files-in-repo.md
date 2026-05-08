@@ -1,12 +1,14 @@
 ---
 id: gd6xvv
-title: New players see pre-built game state on fresh load — committed dev save files in repo
+title: >-
+  New players see pre-built game state on fresh load — committed dev save files
+  in repo
 status: done
 priority: high
 labels:
-  - critical,bug,save-state,godot,vercel
+  - 'critical,bug,save-state,godot,vercel'
 createdAt: '2026-05-03T11:40:49.782Z'
-updatedAt: '2026-05-03T11:40:49.782Z'
+updatedAt: '2026-05-06T02:16:26.691Z'
 timeSpent: 0
 assignee: '@Liam'
 ---
@@ -34,3 +36,4 @@ CRITICAL BUG: When a brand-new user visits the live URL, they see the game with 
 <!-- SECTION:NOTES:BEGIN -->
 Verified locally on 2026-05-06 that the committed seed files are reset to fresh defaults: scene/rockets_state.json, scene/franc_balance.json, scene/mission_logs.json, scene/subcontractors.json, and root franc_balance.json. Remaining live validation is a deployment concern rather than missing repo code.
 <!-- SECTION:NOTES:END -->
+

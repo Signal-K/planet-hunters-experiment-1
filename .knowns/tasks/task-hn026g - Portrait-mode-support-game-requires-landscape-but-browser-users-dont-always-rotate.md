@@ -1,12 +1,14 @@
 ---
 id: hn026g
-title: 'Portrait mode support — game requires landscape but browser users don''t always rotate'
+title: >-
+  Portrait mode support — game requires landscape but browser users don't always
+  rotate
 status: done
 priority: medium
 labels:
-  - mobile,portrait,ux,layout
+  - 'mobile,portrait,ux,layout'
 createdAt: '2026-05-03T11:40:58.944Z'
-updatedAt: '2026-05-03T11:40:58.944Z'
+updatedAt: '2026-05-06T02:16:26.691Z'
 timeSpent: 0
 assignee: '@Liam'
 ---
@@ -30,3 +32,4 @@ In landscape mode on a browser (non-PWA), users see the browser tab bar eating i
 <!-- SECTION:NOTES:BEGIN -->
 Verified in react-shell.js on 2026-05-06 that the rotate prompt now shows whenever the viewport is portrait and width is below 1200px, which covers tablets in browser mode as described by the ticket.
 <!-- SECTION:NOTES:END -->
+

@@ -1,6 +1,6 @@
 {
   "taskId": "zoftvm",
-  "currentVersion": 24,
+  "currentVersion": 25,
   "versions": [
     {
       "id": "v1",
@@ -1110,6 +1110,96 @@
         ],
         "implementationPlan": "1. Inspect existing GameNavigationMenu and ControlStationPanel scene roots/templates and identify the primary script-built layout blocks.\n2. Move the persistent GameNavigationMenu layout sections into scene/template files and update GameNavigationMenu.gd to bind scene-owned nodes.\n3. Move the persistent ControlStationPanel layout sections into scene-owned nodes and update ControlStationPanel.gd to bind them.\n4. Add or update panel tests for the scene-owned layout paths.\n5. Verify with focused panel and structure suites.",
         "implementationNotes": "✓ Template-backed menu logbook/discovery rows; ✓ ControlStation empty/log rows; ✓ structure suite 32/32\n\n✓ Construction project cards + contribute overlay now template-backed scenes; ✓ structure suite 33/33\n\n✓ Job board, marketplace, room upgrades, and research cards now template-backed; ✓ structure suite 34/34\n\n✓ Removed dead ControlStationPanel legacy builder paths; ✓ inventory + mission requirement cards now use reusable content-card scene; ✓ structure suite 34/34\n\n✓ SatelliteStationPanel citizen-science hint + early-scan controls moved into scene; ✓ structure suite 35/35\n\n✓ SpaceMap target dialogue converted to scene-owned overlay + contractor row templates; ✓ structure suite 36/36\n\n✓ EmergencyLoanOfferDialog now binds scene-owned layout instead of rebuilding dialog tree; ✓ structure suite 37/37\n\n✓ AsteroidDetailView science summary + classification row now use scene-owned templates; ✓ structure suite 38/38\n\n✓ MissionDebriefV2 guide bullets + handoff detail rows now template-backed; ✓ structure suite 39/39\n\n✓ MenuPanel Advanced debug controls moved into MenuPanel.tscn; ✓ structure suite 40/40\n\n✓ MechanicIntroOverlay steps now use MechanicIntroStepRow.tscn; ✓ structure suite 41/41\n\n✓ LaunchWizard target detail now uses LaunchWizardTargetDetail.tscn; ✓ removed dead LaunchWizard layout helper builders\n\n✓ GameNavigationMenu stats/debug sections now use GameMenuStatColumn.tscn and GameMenuDebugSection.tscn\n\n✓ Removed dead GameNavigationMenu layout builders for progress/unlocks/construction shell/section header after scene-template migration\n\n✓ FrancBalance loan badge moved into FrancBalance.tscn with scene-backed LoanLabel\n\n✓ LaunchWizardMapStep target labels now use LaunchWizardMapTargetLabel.tscn\n\n✓ LaunchWizardMapStep labels now render into scene-owned LabelLayer using LaunchWizardMapTargetLabel metadata; ✓ run_launch_wizard_scene_tests 4/4\n\n✓ SidescrollMining contract tracker rows now use MiningContractOrderRow.tscn; ✓ room panel rows now use MiningRoomRow.tscn; ✓ run_structure_tests 45/45\n\n✓ GameNavigationMenu actions/settings stack now uses GameMenuActionsSection.tscn; ✓ run_structure_tests 46/46\n\n✓ ControlStationPanel mineral empty/overflow labels now use scene templates; ✓ run_structure_tests 46/46\n\n✓ SidescrollMining room debug overlay now uses scene-owned AtlasPreview + MarkersLayer and MiningRoomDebugMarker.tscn; ✓ run_structure_tests 47/47\n\n✓ SidescrollMining MarsPixelBackground moved into SidescrollMining.tscn; ✓ run_structure_tests 48/48\n\n✓ Removed dead GameNavigationMenu _build_button runtime helper after scene-backed actions migration; ✓ run_structure_tests 48/48"
+      }
+    },
+    {
+      "id": "v25",
+      "taskId": "zoftvm",
+      "version": 25,
+      "timestamp": "2026-05-08T10:30:54.542Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "done"
+        },
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "GameNavigationMenu primary layout sections live in .tscn scene/template files"
+            },
+            {
+              "completed": false,
+              "text": "ControlStationPanel primary layout sections live in .tscn scene/template files"
+            },
+            {
+              "completed": false,
+              "text": "Scripts bind data into scene-owned nodes instead of constructing the primary layouts in code"
+            },
+            {
+              "completed": false,
+              "text": "Panel tests cover the converted scene-owned layout paths"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "GameNavigationMenu primary layout sections live in .tscn scene/template files"
+            },
+            {
+              "completed": true,
+              "text": "ControlStationPanel primary layout sections live in .tscn scene/template files"
+            },
+            {
+              "completed": true,
+              "text": "Scripts bind data into scene-owned nodes instead of constructing the primary layouts in code"
+            },
+            {
+              "completed": true,
+              "text": "Panel tests cover the converted scene-owned layout paths"
+            }
+          ]
+        },
+        {
+          "field": "implementationNotes",
+          "oldValue": "✓ Template-backed menu logbook/discovery rows; ✓ ControlStation empty/log rows; ✓ structure suite 32/32\n\n✓ Construction project cards + contribute overlay now template-backed scenes; ✓ structure suite 33/33\n\n✓ Job board, marketplace, room upgrades, and research cards now template-backed; ✓ structure suite 34/34\n\n✓ Removed dead ControlStationPanel legacy builder paths; ✓ inventory + mission requirement cards now use reusable content-card scene; ✓ structure suite 34/34\n\n✓ SatelliteStationPanel citizen-science hint + early-scan controls moved into scene; ✓ structure suite 35/35\n\n✓ SpaceMap target dialogue converted to scene-owned overlay + contractor row templates; ✓ structure suite 36/36\n\n✓ EmergencyLoanOfferDialog now binds scene-owned layout instead of rebuilding dialog tree; ✓ structure suite 37/37\n\n✓ AsteroidDetailView science summary + classification row now use scene-owned templates; ✓ structure suite 38/38\n\n✓ MissionDebriefV2 guide bullets + handoff detail rows now template-backed; ✓ structure suite 39/39\n\n✓ MenuPanel Advanced debug controls moved into MenuPanel.tscn; ✓ structure suite 40/40\n\n✓ MechanicIntroOverlay steps now use MechanicIntroStepRow.tscn; ✓ structure suite 41/41\n\n✓ LaunchWizard target detail now uses LaunchWizardTargetDetail.tscn; ✓ removed dead LaunchWizard layout helper builders\n\n✓ GameNavigationMenu stats/debug sections now use GameMenuStatColumn.tscn and GameMenuDebugSection.tscn\n\n✓ Removed dead GameNavigationMenu layout builders for progress/unlocks/construction shell/section header after scene-template migration\n\n✓ FrancBalance loan badge moved into FrancBalance.tscn with scene-backed LoanLabel\n\n✓ LaunchWizardMapStep target labels now use LaunchWizardMapTargetLabel.tscn\n\n✓ LaunchWizardMapStep labels now render into scene-owned LabelLayer using LaunchWizardMapTargetLabel metadata; ✓ run_launch_wizard_scene_tests 4/4\n\n✓ SidescrollMining contract tracker rows now use MiningContractOrderRow.tscn; ✓ room panel rows now use MiningRoomRow.tscn; ✓ run_structure_tests 45/45\n\n✓ GameNavigationMenu actions/settings stack now uses GameMenuActionsSection.tscn; ✓ run_structure_tests 46/46\n\n✓ ControlStationPanel mineral empty/overflow labels now use scene templates; ✓ run_structure_tests 46/46\n\n✓ SidescrollMining room debug overlay now uses scene-owned AtlasPreview + MarkersLayer and MiningRoomDebugMarker.tscn; ✓ run_structure_tests 47/47\n\n✓ SidescrollMining MarsPixelBackground moved into SidescrollMining.tscn; ✓ run_structure_tests 48/48\n\n✓ Removed dead GameNavigationMenu _build_button runtime helper after scene-backed actions migration; ✓ run_structure_tests 48/48",
+          "newValue": "✓ Template-backed menu logbook/discovery rows; ✓ ControlStation empty/log rows; ✓ structure suite 32/32\n\n✓ Construction project cards + contribute overlay now template-backed scenes; ✓ structure suite 33/33\n\n✓ Job board, marketplace, room upgrades, and research cards now template-backed; ✓ structure suite 34/34\n\n✓ Removed dead ControlStationPanel legacy builder paths; ✓ inventory + mission requirement cards now use reusable content-card scene; ✓ structure suite 34/34\n\n✓ SatelliteStationPanel citizen-science hint + early-scan controls moved into scene; ✓ structure suite 35/35\n\n✓ SpaceMap target dialogue converted to scene-owned overlay + contractor row templates; ✓ structure suite 36/36\n\n✓ EmergencyLoanOfferDialog now binds scene-owned layout instead of rebuilding dialog tree; ✓ structure suite 37/37\n\n✓ AsteroidDetailView science summary + classification row now use scene-owned templates; ✓ structure suite 38/38\n\n✓ MissionDebriefV2 guide bullets + handoff detail rows now template-backed; ✓ structure suite 39/39\n\n✓ MenuPanel Advanced debug controls moved into MenuPanel.tscn; ✓ structure suite 40/40\n\n✓ MechanicIntroOverlay steps now use MechanicIntroStepRow.tscn; ✓ structure suite 41/41\n\n✓ LaunchWizard target detail now uses LaunchWizardTargetDetail.tscn; ✓ removed dead LaunchWizard layout helper builders\n\n✓ GameNavigationMenu stats/debug sections now use GameMenuStatColumn.tscn and GameMenuDebugSection.tscn\n\n✓ Removed dead GameNavigationMenu layout builders for progress/unlocks/construction shell/section header after scene-template migration\n\n✓ FrancBalance loan badge moved into FrancBalance.tscn with scene-backed LoanLabel\n\n✓ LaunchWizardMapStep target labels now use LaunchWizardMapTargetLabel.tscn\n\n✓ LaunchWizardMapStep labels now render into scene-owned LabelLayer using LaunchWizardMapTargetLabel metadata; ✓ run_launch_wizard_scene_tests 4/4\n\n✓ SidescrollMining contract tracker rows now use MiningContractOrderRow.tscn; ✓ room panel rows now use MiningRoomRow.tscn; ✓ run_structure_tests 45/45\n\n✓ GameNavigationMenu actions/settings stack now uses GameMenuActionsSection.tscn; ✓ run_structure_tests 46/46\n\n✓ ControlStationPanel mineral empty/overflow labels now use scene templates; ✓ run_structure_tests 46/46\n\n✓ SidescrollMining room debug overlay now uses scene-owned AtlasPreview + MarkersLayer and MiningRoomDebugMarker.tscn; ✓ run_structure_tests 47/47\n\n✓ SidescrollMining MarsPixelBackground moved into SidescrollMining.tscn; ✓ run_structure_tests 48/48\n\n✓ Removed dead GameNavigationMenu _build_button runtime helper after scene-backed actions migration; ✓ run_structure_tests 48/48\n\n✓ All ACs verified complete. Structure suite 58/58 passes. GameNavigationMenu + ControlStationPanel fully template-backed."
+        }
+      ],
+      "snapshot": {
+        "title": "Convert GameNavigationMenu and ControlStationPanel to scene-owned UI",
+        "description": "Move the persistent GameNavigationMenu and ControlStationPanel layouts out of GDScript-built controls and into .tscn scene/template files so both panels are editable in Godot and follow the scene-owned UI rule.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@me",
+        "labels": [
+          "ui",
+          "menu",
+          "control-station",
+          "scene-owned"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "GameNavigationMenu primary layout sections live in .tscn scene/template files"
+          },
+          {
+            "completed": true,
+            "text": "ControlStationPanel primary layout sections live in .tscn scene/template files"
+          },
+          {
+            "completed": true,
+            "text": "Scripts bind data into scene-owned nodes instead of constructing the primary layouts in code"
+          },
+          {
+            "completed": true,
+            "text": "Panel tests cover the converted scene-owned layout paths"
+          }
+        ],
+        "implementationPlan": "1. Inspect existing GameNavigationMenu and ControlStationPanel scene roots/templates and identify the primary script-built layout blocks.\n2. Move the persistent GameNavigationMenu layout sections into scene/template files and update GameNavigationMenu.gd to bind scene-owned nodes.\n3. Move the persistent ControlStationPanel layout sections into scene-owned nodes and update ControlStationPanel.gd to bind them.\n4. Add or update panel tests for the scene-owned layout paths.\n5. Verify with focused panel and structure suites.",
+        "implementationNotes": "✓ Template-backed menu logbook/discovery rows; ✓ ControlStation empty/log rows; ✓ structure suite 32/32\n\n✓ Construction project cards + contribute overlay now template-backed scenes; ✓ structure suite 33/33\n\n✓ Job board, marketplace, room upgrades, and research cards now template-backed; ✓ structure suite 34/34\n\n✓ Removed dead ControlStationPanel legacy builder paths; ✓ inventory + mission requirement cards now use reusable content-card scene; ✓ structure suite 34/34\n\n✓ SatelliteStationPanel citizen-science hint + early-scan controls moved into scene; ✓ structure suite 35/35\n\n✓ SpaceMap target dialogue converted to scene-owned overlay + contractor row templates; ✓ structure suite 36/36\n\n✓ EmergencyLoanOfferDialog now binds scene-owned layout instead of rebuilding dialog tree; ✓ structure suite 37/37\n\n✓ AsteroidDetailView science summary + classification row now use scene-owned templates; ✓ structure suite 38/38\n\n✓ MissionDebriefV2 guide bullets + handoff detail rows now template-backed; ✓ structure suite 39/39\n\n✓ MenuPanel Advanced debug controls moved into MenuPanel.tscn; ✓ structure suite 40/40\n\n✓ MechanicIntroOverlay steps now use MechanicIntroStepRow.tscn; ✓ structure suite 41/41\n\n✓ LaunchWizard target detail now uses LaunchWizardTargetDetail.tscn; ✓ removed dead LaunchWizard layout helper builders\n\n✓ GameNavigationMenu stats/debug sections now use GameMenuStatColumn.tscn and GameMenuDebugSection.tscn\n\n✓ Removed dead GameNavigationMenu layout builders for progress/unlocks/construction shell/section header after scene-template migration\n\n✓ FrancBalance loan badge moved into FrancBalance.tscn with scene-backed LoanLabel\n\n✓ LaunchWizardMapStep target labels now use LaunchWizardMapTargetLabel.tscn\n\n✓ LaunchWizardMapStep labels now render into scene-owned LabelLayer using LaunchWizardMapTargetLabel metadata; ✓ run_launch_wizard_scene_tests 4/4\n\n✓ SidescrollMining contract tracker rows now use MiningContractOrderRow.tscn; ✓ room panel rows now use MiningRoomRow.tscn; ✓ run_structure_tests 45/45\n\n✓ GameNavigationMenu actions/settings stack now uses GameMenuActionsSection.tscn; ✓ run_structure_tests 46/46\n\n✓ ControlStationPanel mineral empty/overflow labels now use scene templates; ✓ run_structure_tests 46/46\n\n✓ SidescrollMining room debug overlay now uses scene-owned AtlasPreview + MarkersLayer and MiningRoomDebugMarker.tscn; ✓ run_structure_tests 47/47\n\n✓ SidescrollMining MarsPixelBackground moved into SidescrollMining.tscn; ✓ run_structure_tests 48/48\n\n✓ Removed dead GameNavigationMenu _build_button runtime helper after scene-backed actions migration; ✓ run_structure_tests 48/48\n\n✓ All ACs verified complete. Structure suite 58/58 passes. GameNavigationMenu + ControlStationPanel fully template-backed."
       }
     }
   ]

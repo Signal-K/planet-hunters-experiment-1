@@ -1,12 +1,12 @@
 ---
 id: 3nc516
-title: 'Rename Experiment 1 from ''Planet Hunters'' to ''Distant Signals'''
+title: Rename Experiment 1 from 'Planet Hunters' to 'Distant Signals'
 status: done
 priority: high
 labels:
-  - branding,rename,landing-page
+  - 'branding,rename,landing-page'
 createdAt: '2026-05-03T11:41:09.491Z'
-updatedAt: '2026-05-03T11:41:09.491Z'
+updatedAt: '2026-05-06T02:16:26.823Z'
 timeSpent: 0
 assignee: '@Liam'
 ---
@@ -31,3 +31,4 @@ The first experiment was called 'Planet Hunters' which is too literal and simila
 <!-- SECTION:NOTES:BEGIN -->
 Verified the primary React Native screens already used Distant Signals, then cleaned up remaining visible rename leftovers on 2026-05-06 in the web service worker notification title, scanner-station toggle copy, and release/playthrough labels.
 <!-- SECTION:NOTES:END -->
+
