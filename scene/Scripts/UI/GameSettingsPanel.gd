@@ -211,3 +211,4 @@ func _show_reset_confirm() -> void:
 
 func _request_close() -> void:
 	close_requested.emit()
+	queue_free()

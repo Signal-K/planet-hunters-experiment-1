@@ -312,11 +312,6 @@ static func _open_settings_panel(owner: Node, menu_root: Control) -> void:
 	var panel: Control = GameSettingsPanelScene.instantiate()
 	panel.name = "GameSettingsPanel"
 	panel.set_meta("tutorial_zone_exempt", true)
-	if panel.has_signal("close_requested"):
-		panel.close_requested.connect(func():
-			if is_instance_valid(panel):
-				panel.queue_free()
-		)
 	menu_root.add_child(panel)
 
 static func _request_reset_all(owner: Node) -> void:
