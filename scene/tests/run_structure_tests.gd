@@ -17,6 +17,7 @@ const EarthBaseScene = preload("res://Scenes/Earth/earth_base_1.tscn")
 const EarthLaunchpadScene = preload("res://Scenes/Earth/earth_launchpad.tscn")
 const MissionDebriefScene = preload("res://Scenes/Earth/mission_debrief_v2.tscn")
 const SpaceMapScene = preload("res://Scenes/UI/SpaceMap/space_map.tscn")
+const GalaxyMapScene = preload("res://Scenes/UI/SpaceMap/galaxy_map.tscn")
 const ControlStationScene = preload("res://Scenes/UI/ControlStationPanel.tscn")
 const SidescrollMiningScene = preload("res://Scenes/UI/SidescrollMining.tscn")
 const MiningPracticeScene = preload("res://Scenes/UI/MiningPracticePanel.tscn")
@@ -103,6 +104,7 @@ func run_all_tests() -> void:
 	await test_subcontractors_panel_uses_template_backed_detail_labels()
 	await test_launch_wizard_has_required_signals()
 	await test_space_map_scene_has_shared_bottom_nav()
+	await test_galaxy_map_scene_has_nav_buttons()
 	await test_mission_debrief_scene_has_shared_bottom_nav()
 	await test_sidescroll_mining_drone_pool_reuse()
 	await test_sidescroll_mining_has_scene_owned_mars_background()
@@ -1408,20 +1410,38 @@ func _find_label_in_subtree(root: Node, snippet: String) -> Label:
 	return null
 
 func test_space_map_scene_has_shared_bottom_nav() -> void:
-	reporter.start_test("[UX] Space map scene includes the shared bottom navigation shell")
+	reporter.start_test("[UX] Space map scene includes HomeBtn and GalaxyBtn in footer")
 	var scene = SpaceMapScene.instantiate()
 	if scene == null:
 		reporter.fail_test("SpaceMap scene failed to instantiate")
 		return
 	get_root().add_child(scene)
 	await create_timer(0.05).timeout
-	# SpaceMap uses a HomeBtn in the footer instead of the full nav bar
 	if scene.get_node_or_null("UILayer/InfoBar/Sections/HomeBtn") == null:
 		reporter.fail_test("SpaceMap scene missing HomeBtn in InfoBar footer")
 		scene.queue_free()
 		return
-	if scene.get_node_or_null("UILayer/TelemetryPanel/Row/HomeBtnGalaxy") == null:
-		reporter.fail_test("SpaceMap scene missing HomeBtnGalaxy in TelemetryPanel")
+	if scene.get_node_or_null("UILayer/InfoBar/Sections/GalaxyBtn") == null:
+		reporter.fail_test("SpaceMap scene missing GalaxyBtn in InfoBar footer")
+		scene.queue_free()
+		return
+	scene.queue_free()
+	reporter.pass_test()
+
+func test_galaxy_map_scene_has_nav_buttons() -> void:
+	reporter.start_test("[UX] Galaxy map scene includes TelemetryPanel with HomeBtn")
+	var scene = GalaxyMapScene.instantiate()
+	if scene == null:
+		reporter.fail_test("GalaxyMap scene failed to instantiate")
+		return
+	get_root().add_child(scene)
+	await create_timer(0.05).timeout
+	if scene.get_node_or_null("UILayer/TelemetryPanel") == null:
+		reporter.fail_test("GalaxyMap scene missing UILayer/TelemetryPanel")
+		scene.queue_free()
+		return
+	if scene.get_node_or_null("UILayer/TelemetryPanel/Row/HomeBtn") == null:
+		reporter.fail_test("GalaxyMap scene missing HomeBtn in TelemetryPanel")
 		scene.queue_free()
 		return
 	scene.queue_free()
