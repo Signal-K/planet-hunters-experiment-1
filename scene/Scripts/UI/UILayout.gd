@@ -1,6 +1,6 @@
 ## UILayout.gd
 ## ════════════════════════════════════════════════════════════════════════════
-## Central UI zone registry for Planet Hunters.
+## Central UI zone registry for Landnám.
 ##
 ## RULES — every UI author must follow these:
 ##

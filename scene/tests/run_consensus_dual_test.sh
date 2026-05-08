@@ -5,7 +5,7 @@
 # simulate two players (PILOT_ALPHA and PILOT_BETA) each receiving the
 # ClassificationConsensusNotification for planet candidate TIC-4501.
 #
-# Screenshots + reports land in user:// = ~/.local/share/PlanetHuntersExperiment1/
+# Screenshots + reports land in user:// = ~/.local/share/Landnám/
 # Each player gets a sub-directory so they don't collide.
 #
 # Requirements: /tmp/godot (or GODOT_BIN env var), Xvfb
@@ -22,13 +22,13 @@ SCENE_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 TSCN="res://tests/ConsensusDualTour.tscn"
 
 # Godot 4 user:// path for this project
-USER_DIR="$HOME/.local/share/PlanetHuntersExperiment1"
+USER_DIR="$HOME/.local/share/Landnám"
 
 DISPLAY_ALPHA=":95"
 DISPLAY_BETA=":100"
 
 echo "═══════════════════════════════════════════════════════"
-echo " Planet Hunters — Consensus Dual-Instance Test"
+echo " Landnám — Consensus Dual-Instance Test"
 echo " Anomaly: TIC-4501  |  Both players voted: planet"
 echo "═══════════════════════════════════════════════════════"
 echo ""
