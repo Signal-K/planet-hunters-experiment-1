@@ -19,6 +19,7 @@
     "web:verify": "bash ./scripts/verify_game_export.sh",
     "deploy": "npm run web:build && vercel --prod",
     "download-prebuilt": "download-prebuilt",
+    "build": "yarn web:sync-game",
     "godot:export:desktop": "bash ./scripts/export_godot_desktop.sh",
     "electron:dev": "npm run godot:export:desktop && electron electron/main.js",
     "electron:pack": "npm run godot:export:desktop && electron-builder --dir",
