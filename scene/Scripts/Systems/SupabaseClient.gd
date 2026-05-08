@@ -221,7 +221,7 @@ func _sign_up_anonymously_native() -> void:
 	]
 	var body := JSON.stringify({
 		"data": {
-			"source": "planet-hunters-game",
+			"source": "landnam-game",
 			"client": "godot",
 		}
 	})
@@ -278,7 +278,7 @@ func _sign_up_anonymously_web() -> void:
 	var js = "(async function(){try{const r=await fetch(%s,{method:'POST',headers:{'apikey':%s,'Content-Type':'application/json'},body:%s});const t=await r.text();if(!r.ok){window[%s]('__ERR__auth request failed: code='+r.status+' body='+t.slice(0,260));return;}window[%s](t);}catch(e){window[%s]('__ERR__'+(e&&e.message?e.message:String(e)));}})();" % [
 		JSON.stringify("%s/auth/v1/signup" % _resolve_api_base_url()),
 		JSON.stringify(SUPABASE_KEY),
-		JSON.stringify(JSON.stringify({"data": {"source": "planet-hunters-game", "client": "godot"}})),
+		JSON.stringify(JSON.stringify({"data": {"source": "landnam-game", "client": "godot"}})),
 		JSON.stringify(callback_id),
 		JSON.stringify(callback_id),
 		JSON.stringify(callback_id),

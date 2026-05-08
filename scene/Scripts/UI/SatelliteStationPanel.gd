@@ -684,7 +684,7 @@ func _refresh_planet_unlock_ui(show_overlay_if_needed: bool) -> void:
 
 	current_mode = "planets"
 	toggle_switch.disabled = false
-	toggle_switch.text = "Distant Signals Active"
+	toggle_switch.text = "Landnám Active"
 
 	var has_seen_overlay = _has_seen_level2_unlock_overlay()
 	if show_overlay_if_needed or not has_seen_overlay:
@@ -747,7 +747,7 @@ func _on_level2_overlay_confirmed() -> void:
 
 func _focus_planets_after_unlock() -> void:
 	current_mode = "planets"
-	toggle_switch.text = "Distant Signals Active"
+	toggle_switch.text = "Landnám Active"
 	var t = create_tween()
 	t.tween_property(toggle_switch, "scale", Vector2(1.09, 1.09), 0.12)
 	t.tween_property(toggle_switch, "scale", Vector2.ONE, 0.18)

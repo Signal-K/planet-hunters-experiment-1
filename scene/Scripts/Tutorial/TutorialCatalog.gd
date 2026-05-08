@@ -39,7 +39,7 @@ const STEPS_BY_MISSION := {
 	4: [
 		{"id": "m4_open_launchpad", "action_key": "open_launchpad", "title": "Full Autonomy", "message": "Mission 4 marks your transition to full autonomy. Open the Launchpad to decide the future direction of your mining company.", "mechanic": "free-ops", "valid_scenes": BASE_ONLY_SCENES},
 		{"id": "m4_select", "action_key": "select_launch_target", "title": "Select Route & Target", "message": "You can now choose between contractor-driven profit missions or independent scientific survey runs. Any reachable target is valid.", "mechanic": "targeting", "valid_scenes": LAUNCHPAD_SCENES},
-		{"id": "m4_launch", "action_key": "launch_rocket_from_earth", "title": "Independent Launch", "message": "Initiate launch on your own terms. Your decisions now shape the growth of the Planet Hunters fleet.", "mechanic": "launch", "valid_scenes": LAUNCHPAD_SCENES},
+		{"id": "m4_launch", "action_key": "launch_rocket_from_earth", "title": "Independent Launch", "message": "Initiate launch on your own terms. Your decisions now shape the growth of the Landnám fleet.", "mechanic": "launch", "valid_scenes": LAUNCHPAD_SCENES},
 		{"id": "m4_mine", "action_key": "mine_target", "title": "Autonomous Operations", "message": "Execute your mission plan. Contractor work provides steady growth, while survey runs prioritize scientific discovery.", "mechanic": "mining", "valid_scenes": MINING_SCENES},
 		{"id": "m4_debrief", "action_key": "resolve_mission_debrief", "title": "Expansion Complete", "message": "Finalize Mission 4 to fully unlock Free Operations, giving you total control over all future mission parameters.", "mechanic": "debrief", "valid_scenes": DEBRIEF_SCENES}
 	]
