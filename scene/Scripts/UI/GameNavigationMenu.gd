@@ -80,6 +80,7 @@ static func open(owner: Node) -> void:
 	var layer := CanvasLayer.new()
 	layer.name = MENU_LAYER_NAME
 	layer.layer = MENU_LAYER_Z
+	layer.follow_viewport_enabled = true
 	layer.set_meta("tutorial_zone_exempt", true)
 	layer.process_mode = Node.PROCESS_MODE_ALWAYS
 
