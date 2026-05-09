@@ -15,6 +15,7 @@ const DEBRIEF_SCENES := ["earth_base_1", "mission_debrief_v2"]
 
 const STEPS_BY_MISSION := {
 	1: [
+		{"id": "m1_open_launchpad", "action_key": "open_launchpad", "title": "Start Mission 1", "message": "Welcome to Distant Signals. Tap New Mission to open the Launchpad and begin your first asteroid mining run.", "mechanic": "start", "valid_scenes": BASE_ONLY_SCENES},
 		{"id": "m1_pick_contractor", "action_key": "accept_contractor_offer", "title": "Pick Contractor", "message": "Contractors pay a bonus when you deliver their requested minerals. Pick one before building your rocket.", "mechanic": "contractor", "valid_scenes": LAUNCHPAD_SCENES},
 		{"id": "m1_create_rocket", "action_key": "create_rocket", "title": "Build Rocket", "message": "Build your first rocket here in the Launchpad. Starter Rocket 1 is ready to kit out.", "mechanic": "economy", "valid_scenes": LAUNCHPAD_SCENES},
 		{"id": "m1_select_target", "action_key": "select_launch_target", "title": "Select Target", "message": "Select the Mission 1 asteroid as your destination.", "mechanic": "targeting", "valid_scenes": LAUNCHPAD_SCENES},

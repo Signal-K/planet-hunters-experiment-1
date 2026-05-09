@@ -72,7 +72,7 @@ func _ready() -> void:
 	_ensure_mission_progress_tracker()
 	_ensure_tutorial_controller()
 	_ensure_feedback_beacon()
-	_set_tutorial_overlay_suspended(false)
+	_show_intro_splash_if_needed()
 	WebEventBridge.emit("app_ready", {
 		"experience_level": experience_level,
 		"experience_xp": experience_xp,
@@ -355,7 +355,19 @@ func _set_tutorial_overlay_suspended(suspended: bool) -> void:
 		overlay.call_deferred("_refresh")
 
 func _show_intro_splash_if_needed() -> void:
-	_set_tutorial_overlay_suspended(false)
+	if PlanetHuntersIntroSplash.has_been_shown():
+		_set_tutorial_overlay_suspended(false)
+		return
+	if get_tree() == null or get_tree().root == null:
+		_set_tutorial_overlay_suspended(false)
+		return
+	var splash = INTRO_SPLASH_SCENE.instantiate()
+	splash.name = "PlanetHuntersIntroSplash"
+	splash.splash_dismissed.connect(func():
+		_set_tutorial_overlay_suspended(false)
+	)
+	_set_tutorial_overlay_suspended(true)
+	get_tree().root.call_deferred("add_child", splash)
 
 func _mark_tutorial_zone_exempt_recursive(node: Node) -> void:
 	if node == null:
