@@ -37,12 +37,12 @@ static func create_panel_style() -> StyleBoxFlat:
 	s.bg_color     = DS.CARD_BG
 	s.border_color = DS.BORDER
 	s.set_border_width_all(1)
-	s.set_corner_radius_all(12)
-	s.shadow_color  = Color(DS.TEXT.r, DS.TEXT.g, DS.TEXT.b, 0.06)
-	s.shadow_size   = 8
-	s.shadow_offset = Vector2(0, 2)
-	s.content_margin_left   = 20
-	s.content_margin_right  = 20
+	s.set_corner_radius_all(DS.R_CARD)
+	s.shadow_color  = Color(0.0, 0.0, 0.0, 0.45)
+	s.shadow_size   = 24
+	s.shadow_offset = Vector2(0, 8)
+	s.content_margin_left   = 24
+	s.content_margin_right  = 24
 	s.content_margin_top    = 16
 	s.content_margin_bottom = 16
 	return s
@@ -52,12 +52,12 @@ static func create_button_style(state: String = "normal") -> StyleBoxFlat:
 	match state:
 		"hover":   s.bg_color = DS.BUTTON_HOVER
 		"pressed": s.bg_color = DS.BUTTON_PRESSED
-		_:         s.bg_color = DS.CARD_BG
+		_:         s.bg_color = DS.SURFACE_LOW
 	s.border_color = DS.BORDER_STRONG
 	s.set_border_width_all(1)
-	s.set_corner_radius_all(8)
-	s.content_margin_left   = 20
-	s.content_margin_right  = 20
+	s.set_corner_radius_all(DS.R_BTN)
+	s.content_margin_left   = 22
+	s.content_margin_right  = 22
 	s.content_margin_top    = 12
 	s.content_margin_bottom = 12
 	return s
@@ -68,7 +68,7 @@ static func create_segmented_bar(container: HBoxContainer, segments: int, filled
 	for i in segments:
 		var seg := ColorRect.new()
 		seg.custom_minimum_size = Vector2(10, 18)
-		seg.color = color if i < filled else Color(DS.BORDER.r, DS.BORDER.g, DS.BORDER.b, 0.8)
+		seg.color = color if i < filled else DS.BORDER
 		container.add_child(seg)
 		if i < segments - 1:
 			var spacer := Control.new()
@@ -77,7 +77,7 @@ static func create_segmented_bar(container: HBoxContainer, segments: int, filled
 
 static func create_nebula_gradient() -> Gradient:
 	var g := Gradient.new()
-	g.set_color(0, DS.PAGE_BG)
-	g.add_point(0.5, DS.CARD_ALT)
-	g.add_point(1.0, DS.CARD_BG)
+	g.set_color(0, DS.SURFACE_BRIGHT)
+	g.add_point(0.5, DS.SURFACE_LOW)
+	g.add_point(1.0, DS.SURFACE_LOWEST)
 	return g
