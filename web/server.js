@@ -11,7 +11,7 @@ const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || "";
 if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
   try {
     _webPush = require("web-push");
-    _webPush.setVapidDetails("mailto:noreply@planet-hunters.app", VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
+    _webPush.setVapidDetails("mailto:noreply@landnam.app", VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
   } catch (e) {
     console.warn("[push] web-push unavailable:", e.message);
     _webPush = null;
@@ -186,7 +186,7 @@ async function handleGenerateMission(request, response) {
       : "";
 
   const prompt =
-    `You are writing mission content for a sci-fi space mining mobile game called Planet Hunters.\n` +
+    `You are writing mission content for a sci-fi space mining mobile game called Landnám.\n` +
     `Contractor: ${contractor_name} (${contractor_role})\n` +
     `Partnership phase: ${phase}\n` +
     `Mission type: ${mission_type}\n` +
@@ -231,7 +231,7 @@ async function handleGenerateMission(request, response) {
 
 async function sendPushToAll(title, body, tag, url) {
   if (!_webPush) return;
-  const payload = JSON.stringify({ title, body, tag: tag || "planet-hunters", url: url || "/" });
+  const payload = JSON.stringify({ title, body, tag: tag || "landnam", url: url || "/" });
   const dead = [];
   for (const [endpoint, subscription] of _pushSubscriptions) {
     try {
@@ -273,7 +273,7 @@ async function handlePushNotify(request, response) {
     sendJson(response, 400, { error: "Invalid JSON" });
     return;
   }
-  const { title = "Planet Hunters", message = "", tag = "planet-hunters", url = "/", schedule_after_secs = 0 } = body || {};
+  const { title = "Landnám", message = "", tag = "landnam", url = "/", schedule_after_secs = 0 } = body || {};
   const delayMs = Math.max(0, Number(schedule_after_secs || 0)) * 1000;
 
   if (delayMs > 0) {
@@ -405,7 +405,7 @@ function createServer() {
 if (require.main === module) {
   const server = createServer();
   server.listen(DEFAULT_PORT, "127.0.0.1", () => {
-    console.log(`Star Sailors: Experiment 1 running at http://127.0.0.1:${DEFAULT_PORT}`);
+    console.log(`Landnám running at http://127.0.0.1:${DEFAULT_PORT}`);
     console.log(`Serving shell from: ${PUBLIC_DIR}`);
     console.log(`Serving Godot build from: ${GODOT_WEB_DIR}`);
   });
