@@ -54,7 +54,10 @@ func _ready() -> void:
 	_apply_exploration_visibility()
 	_update_info_bar()
 	_setup_home_button()
-	_setup_galaxy_button()
+	if RocketsManager.is_map_return_mode():
+		_setup_selection_mode_ui()
+	else:
+		_setup_galaxy_button()
 
 func _process(_delta: float) -> void:
 	if get_viewport_rect().size != _last_vp_size:
@@ -87,7 +90,16 @@ func _reposition_info_bar(sz: Vector2) -> void:
 # ── Data refresh ──────────────────────────────────────────────────────────────
 
 func _refresh_targets() -> void:
-	_targets = RocketsManager.get_detected_targets() if RocketsManager else []
+	if RocketsManager == null:
+		return
+	# In launchpad selection mode show only the targets valid for this mission stage.
+	if RocketsManager.is_map_return_mode():
+		var stage := RocketsManager.get_mission_stage()
+		_targets = RocketsManager.get_selectable_targets_for_stage(stage)
+		if _targets.is_empty():
+			_targets = RocketsManager.get_selectable_targets_for_stage()
+	else:
+		_targets = RocketsManager.get_detected_targets()
 	_personal_discoveries = _load_personal_discoveries()
 	_tess_classifications = RocketsManager.get_all_tess_classifications()
 
@@ -176,6 +188,21 @@ func _setup_galaxy_button() -> void:
 	_style_nav_button(galaxy_btn, Color(0.941, 0.690, 0.188, 1.0))
 	if galaxy_btn:
 		galaxy_btn.pressed.connect(_change_to_galaxy_map)
+
+func _setup_selection_mode_ui() -> void:
+	# Replace footer buttons with a "tap a target" hint + cancel back to launchpad
+	if galaxy_btn:
+		galaxy_btn.text = "← CANCEL"
+		_style_nav_button(galaxy_btn, Color(0.565, 0.565, 0.592, 1.0))
+		galaxy_btn.pressed.connect(func():
+			RocketsManager.set_map_return_mode(false)
+			get_tree().change_scene_to_file("res://Scenes/Earth/earth_launchpad.tscn")
+		)
+	if explored_label:
+		explored_label.text = "Tap a target to select it for this mission"
+		explored_label.add_theme_color_override("font_color", Color(0.941, 0.690, 0.188, 1.0))
+	if count_label:
+		count_label.text = ""
 
 func _style_nav_button(btn: Button, col: Color) -> void:
 	if btn == null:
