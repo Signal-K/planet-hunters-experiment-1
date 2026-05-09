@@ -30,7 +30,6 @@ const EARTH_MAIN_SCENE        := "res://Scenes/Earth/earth_base_1.tscn"
 const DEBRIEF_SCENE           := "res://Scenes/Earth/mission_debrief_v2.tscn"
 const LAUNCHPAD_SCENE         := "res://Scenes/Earth/earth_launchpad.tscn"
 const TRANSIT_SCENE           := "res://Scenes/Transitions/rocket_transit.tscn"
-const ASCENT_SCENE            := "res://Scenes/Transitions/rocket_ascent.tscn"
 const RETURN_SCENE            := "res://Scenes/Transitions/rocket_return.tscn"
 const NEW_MISSION_PANEL_SCENE := "res://Scenes/UI/NewMissionPanel.tscn"
 const SUBCONTRACTORS_SCENE    := "res://Scenes/UI/SubcontractorsPanel.tscn"
@@ -43,6 +42,7 @@ const MINING_MINIGAME_SCENE   := "res://Scenes/UI/MiningMinigame.tscn"
 const MINING_PRACTICE_SCENE   := "res://Scenes/UI/MiningPracticePanel.tscn"
 const ASTEROID_DETAIL_SCENE   := "res://Scenes/UI/AsteroidDetail/asteroid_detail_view.tscn"
 const SPACE_MAP_SCENE         := "res://Scenes/UI/SpaceMap/space_map.tscn"
+const GALAXY_MAP_SCENE        := "res://Scenes/UI/SpaceMap/galaxy_map.tscn"
 
 const DEFAULT_MINING_RUN_SECONDS := 12.0
 const DEFAULT_SCENE_SETTLE  := 2.5
@@ -1474,36 +1474,19 @@ func _run_tour() -> void:
 		_report("  - RocketSelectorOverlay.tscn not loadable (skip).")
 
 	# ==================================================================
-	# Phase 11 — Rocket Ascent
+	# Phase 11 — Rocket Transit
 	# ==================================================================
-	_report("## Phase 11 — Rocket Ascent")
-	var ascent := await _load_scene(ASCENT_SCENE)
-	if ascent:
-		await _wait(_panel_settle)
-		_meta("Phase 11 - Rocket Ascent", -1,
-			"The rocket ascent animation — plays when a rocket launches from Earth.",
-			["Is the ascent animation visually clear?",
-			 "Is any status text readable?",
-			 "Are any UI elements in unexpected positions?"])
-		await _screenshot("14_rocket_ascent")
-		_check_visible_labels(ascent, "Rocket Ascent", 0)
-		_check_offscreen_elements(ascent, "Rocket Ascent")
-		_check_for_placeholder_text(ascent, "Rocket Ascent")
-
-	# ==================================================================
-	# Phase 12 — Rocket Transit
-	# ==================================================================
-	_report("## Phase 12 — Rocket Transit")
+	_report("## Phase 11 — Rocket Transit")
 	var transit := await _load_scene(TRANSIT_SCENE)
 	if transit:
 		await _wait(_scene_settle)
-		_meta("Phase 12 - Rocket Transit (initial)", -1,
+		_meta("Phase 11 - Rocket Transit (initial)", -1,
 			"Rocket transit animation at the start of flight — the 'in-flight waiting' state users see between Earth and their target.",
 			["Is there a target/status label showing where the rocket is going?",
 			 "Is there a travel progress bar?",
 			 "Is there a back/skip button so users aren't stuck watching the full animation?",
 			 "Is the flight status readable?"])
-		await _screenshot("15_rocket_transit_initial")
+		await _screenshot("14_rocket_transit_initial")
 		var status_lbl := _find_node_by_name(transit, "TargetLabel")
 		if not status_lbl:
 			status_lbl = _find_node_by_name(transit, "StatusLabel")
@@ -1517,12 +1500,12 @@ func _run_tour() -> void:
 			_issue("Rocket Transit missing TravelBar — users can't see travel progress.")
 
 		await _wait(_scene_settle)
-		_meta("Phase 12 - Rocket Transit (mid-flight)", -1,
+		_meta("Phase 11 - Rocket Transit (mid-flight)", -1,
 			"Rocket transit animation a few seconds into the journey.",
 			["Has the animation progressed? Is the rocket visibly moving?",
 			 "Is the travel progress bar updating?",
 			 "Is the back/skip button still visible and accessible?"])
-		await _screenshot("16_rocket_transit_midway")
+		await _screenshot("15_rocket_transit_midway")
 		_check_offscreen_elements(transit, "Rocket Transit")
 
 		var back_btn := _find_button_with_text(transit, "Back")
