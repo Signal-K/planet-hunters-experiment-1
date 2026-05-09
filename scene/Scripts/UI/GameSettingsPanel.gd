@@ -166,4 +166,18 @@ func _on_reset_all_pressed() -> void:
 
 func _request_close() -> void:
 	close_requested.emit()
-	queue_free()
+	_close_nav_layer()
+
+func _close_nav_layer() -> void:
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree == null or tree.root == null:
+		queue_free()
+		return
+	var layer := tree.root.get_node_or_null("GameMenuLayer")
+	if is_instance_valid(layer):
+		var tutorial := tree.root.find_child("TutorialOverlay", true, false)
+		if tutorial != null:
+			tutorial.visible = true
+		layer.queue_free()
+	else:
+		queue_free()
