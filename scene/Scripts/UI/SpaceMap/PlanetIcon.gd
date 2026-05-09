@@ -12,6 +12,8 @@ extends Node2D
 	set(v): symbol = v; queue_redraw()
 @export var is_home: bool = false:
 	set(v): is_home = v; queue_redraw()
+@export var is_selected: bool = false:
+	set(v): is_selected = v; queue_redraw()
 @export var is_star: bool = false:
 	set(v): is_star = v; queue_redraw()
 @export var has_ring: bool = false:
@@ -40,18 +42,11 @@ func _draw() -> void:
 			HORIZONTAL_ALIGNMENT_LEFT, -1, label_size, Color(col.r, col.g, col.b, 0.85))
 		return
 
+	# Selection brackets (REMOVED - now handled by GalaxyMapNodeScript for targets)
+	
 	if is_home:
-		# Earth: selection glow + bracket marks
-		draw_circle(Vector2.ZERO, r * 2.4, Color(col.r, col.g, col.b, 0.10))
+		# Earth: subtle home glow
 		draw_circle(Vector2.ZERO, r * 1.6, Color(col.r, col.g, col.b, 0.14))
-		var box := r + 8.0
-		var bl  := box * 0.50
-		for sx in [-1.0, 1.0]:
-			for sy in [-1.0, 1.0]:
-				var cx: float = float(sx) * box
-				var cy: float = float(sy) * box
-				draw_line(Vector2(cx, cy), Vector2(cx - float(sx) * bl, cy), col, 2.0)
-				draw_line(Vector2(cx, cy), Vector2(cx, cy - float(sy) * bl), col, 2.0)
 	else:
 		draw_circle(Vector2.ZERO, r * 1.5, Color(col.r, col.g, col.b, 0.08))
 
