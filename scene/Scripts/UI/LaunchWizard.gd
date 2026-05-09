@@ -435,7 +435,7 @@ func _add_contractor_card(c: Dictionary, idx: int = 0) -> void:
 	_set_label_text(card, "Margin/VBox/TopRow/StatusLabel", "ONLINE" if selected else "STANDBY")
 	_set_label_text(card, "Margin/VBox/OrderColumn/HeaderRow/TagLabel", _contractor_contract_tag(c))
 
-	var chips := card.get_node_or_null("Margin/VBox/OrderColumn/MineralGrid") as GridContainer
+	var chips := card.get_node_or_null("Margin/VBox/OrderColumn/OrderPanel/MineralGrid") as GridContainer
 	if chips:
 		for child in chips.get_children():
 			child.queue_free()
