@@ -170,7 +170,7 @@ static func _build_menu_root(owner: Node) -> Control:
 	_apply_button_style(close_btn, false)
 	close_btn.custom_minimum_size = Vector2(110, 50)
 	close_btn.pressed.connect(func():
-		preload("res://Scripts/UI/GameNavigationMenu.gd").close(owner)
+		GameNavigationMenu.close(root)
 	)
 
 	var sep: HSeparator = root.get_node("Center/%s/Scroll/Shell/Separator" % MENU_PANEL_NAME)
@@ -314,7 +314,7 @@ static func _build_debug_section(owner: Node) -> VBoxContainer:
 		var app = AppControllerHelper.get_instance()
 		if app and app.has_method("trigger_instant_mining"):
 			app.trigger_instant_mining()
-			preload("res://Scripts/UI/GameNavigationMenu.gd").close(owner)
+			GameNavigationMenu.close(owner)
 	)
 
 	var money_btn: Button = vbox.get_node("MoneyButton")
@@ -342,7 +342,7 @@ static func _build_debug_section(owner: Node) -> VBoxContainer:
 			var app = AppControllerHelper.get_instance()
 			if app and app.has_method("debug_skip_to_mission"):
 				app.debug_skip_to_mission(i + 1)
-			preload("res://Scripts/UI/GameNavigationMenu.gd").close(owner)
+			GameNavigationMenu.close(owner)
 		)
 
 	return vbox
@@ -931,8 +931,8 @@ static func _do_room_upgrade(owner: Node, rocket_type: String, category: String,
 	if tree:
 		FirstTimeMechanicTracker.maybe_show("room_upgrades", tree)
 	# Close and reopen to rebuild with updated state
-	preload("res://Scripts/UI/GameNavigationMenu.gd").close(owner)
-	preload("res://Scripts/UI/GameNavigationMenu.gd").open(owner)
+	GameNavigationMenu.close(owner)
+	GameNavigationMenu.open(owner)
 
 static func _open_contribute_overlay(root: Control, proj_id: String, proj_name: String, reqs: Dictionary, current_progress: Dictionary) -> void:
 	# Remove any existing contribute overlay
@@ -1091,8 +1091,8 @@ static func _build_rocket_research_card(owner: Node) -> PanelContainer:
 				return
 			a.add_franc_balance(-upgrade_cost, "reusable_research_tier%d" % next_tier)
 			RocketsManager.set_reusable_research_tier(next_tier)
-			preload("res://Scripts/UI/GameNavigationMenu.gd").close(owner)
-			preload("res://Scripts/UI/GameNavigationMenu.gd").open(owner)
+			GameNavigationMenu.close(owner)
+			GameNavigationMenu.open(owner)
 		)
 	else:
 		var maxed_lbl: Label = card.get_node("Body/MaxedLabel")
