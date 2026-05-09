@@ -1,4 +1,4 @@
-/* Distant Signals — Service Worker */
+/* Landnám — Service Worker */
 /* Handles push notifications and basic offline caching */
 
 self.addEventListener("push", (event) => {
@@ -6,15 +6,15 @@ self.addEventListener("push", (event) => {
   try {
     data = event.data ? event.data.json() : {};
   } catch (_) {
-    data = { title: "Distant Signals", body: event.data ? event.data.text() : "" };
+    data = { title: "Landnám", body: event.data ? event.data.text() : "" };
   }
 
-  const title = data.title || "Distant Signals";
+  const title = data.title || "Landnám";
   const options = {
     body: data.body || "",
     icon: "/favicon.svg",
     badge: "/favicon.svg",
-    tag: data.tag || "planet-hunters-default",
+    tag: data.tag || "landnam-default",
     data: { url: data.url || "/" },
     requireInteraction: false,
   };

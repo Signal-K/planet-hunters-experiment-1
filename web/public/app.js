@@ -5,9 +5,9 @@
   var SAVE_MARKER_KEY = "planet_hunters_web_shell_bootstrap_v1";
   var ACTION_LOG_KEY = "planet_hunters_action_log_v1";
   var SURVEY_SHOWN_KEY = "planet_hunters_exit_survey_first_mission_v1";
-  var SURVEY_OVERLAY_ID = "planet-hunters-survey-overlay";
-  var SURVEY_IFRAME_ID = "planet-hunters-survey-iframe";
-  var FEEDBACK_OVERLAY_ID = "planet-hunters-feedback-overlay";
+  var SURVEY_OVERLAY_ID = "landnam-survey-overlay";
+  var SURVEY_IFRAME_ID = "landnam-survey-iframe";
+  var FEEDBACK_OVERLAY_ID = "landnam-feedback-overlay";
   var SUPABASE_SESSION_STORAGE_KEY = "planet_hunters_supabase_guest";
   var XP_STATE_KEY = "planet_hunters_xp_state_v1";
   var DEFAULT_RUNTIME_CONFIG = {
@@ -611,7 +611,7 @@
     var iframe = document.createElement("iframe");
     iframe.id = SURVEY_IFRAME_ID;
     iframe.src = surveyUrl + "?" + new URLSearchParams(params).toString();
-    iframe.title = "Experiment 1 Exit Survey";
+    iframe.title = "Landnám Exit Survey";
     iframe.style.width = "100%";
     iframe.style.height = "100%";
     iframe.style.border = "0";
@@ -674,7 +674,7 @@
       return;
     }
     var data = event.data;
-    if (!data || typeof data !== "object" || data.source !== "planet-hunters") {
+    if (!data || typeof data !== "object" || data.source !== "landnam") {
       return;
     }
     var eventName = String(data.event || "");
