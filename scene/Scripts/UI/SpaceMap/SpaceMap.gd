@@ -44,9 +44,7 @@ func _ready() -> void:
 	scene_manager = SceneManager.new()
 	add_child(scene_manager)
 	scene_manager.add_to_group("scene_manager")
-	ui_manager = UIManager.new()
-	add_child(ui_manager)
-	ui_manager.add_to_group("ui_manager")
+	# UIManager adds FrancBalance HUD — not needed on the map scene
 	call_deferred("_fit_to_viewport")
 	set_process_input(true)
 	_refresh_targets()
@@ -153,16 +151,25 @@ func _rebuild_solar_targets() -> void:
 
 func _apply_exploration_visibility() -> void:
 	var has_belt := not _targets.is_empty()
+	var selection_mode := RocketsManager.is_map_return_mode()
 	var bodies := get_node_or_null("SolarSystem/Bodies") as Node2D
 	if bodies:
 		for child in bodies.get_children():
 			match child.name:
-				"Sol", "Earth": child.modulate = Color(1, 1, 1, 1.0)
-				"Mars":         child.modulate = Color(1, 1, 1, 1.0 if has_belt else 0.55)
-				_:              child.modulate = Color(1, 1, 1, 0.50)
+				"Sol", "Earth":
+					child.modulate = Color(1, 1, 1, 1.0)
+				"Mars":
+					# Hide in selection mode — not a valid M1/M2 target
+					child.modulate = Color(1, 1, 1, 0.0 if selection_mode else (1.0 if has_belt else 0.55))
+				_:
+					child.modulate = Color(1, 1, 1, 0.0 if selection_mode else 0.50)
 	for nm in ["Ceres", "Vesta", "Hygiea"]:
 		var n := get_node_or_null("SolarSystem/Belt/" + nm)
 		if n: n.modulate = Color(1, 1, 1, 1.0 if has_belt else 0.45)
+	# Hide outer regions (comets, Eris, Oort, Kuiper) in selection mode
+	if selection_mode:
+		var outer := get_node_or_null("SolarSystem/OuterRegions") as Node2D
+		if outer: outer.modulate = Color(1, 1, 1, 0.0)
 
 # ── Info bar footer ───────────────────────────────────────────────────────────
 
@@ -190,6 +197,11 @@ func _setup_galaxy_button() -> void:
 		galaxy_btn.pressed.connect(_change_to_galaxy_map)
 
 func _setup_selection_mode_ui() -> void:
+	# Hide persistent root-level HUD nodes that don't belong on the map
+	for hud_name in ["MissionProgressTracker", "TutorialCoachOverlay"]:
+		var hud := get_tree().root.get_node_or_null(hud_name)
+		if hud is CanvasItem:
+			(hud as CanvasItem).visible = false
 	# Replace footer buttons with a "tap a target" hint + cancel back to launchpad
 	if galaxy_btn:
 		galaxy_btn.text = "← CANCEL"

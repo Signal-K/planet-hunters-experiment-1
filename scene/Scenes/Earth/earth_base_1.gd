@@ -92,6 +92,12 @@ func _ensure_tutorial_runtime() -> void:
 	var app = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
 	if app != null and app.has_method("_ensure_tutorial_runtime"):
 		app._ensure_tutorial_runtime()
+	# Restore tutorial overlay visibility if it was hidden by map selection mode
+	var overlay := get_tree().root.get_node_or_null("TutorialCoachOverlay")
+	if overlay is CanvasItem and not (overlay as CanvasItem).visible:
+		(overlay as CanvasItem).visible = true
+		if overlay.has_method("_refresh"):
+			overlay.call_deferred("_refresh")
 
 func _connect_app_runtime_signals() -> void:
 	var app = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
