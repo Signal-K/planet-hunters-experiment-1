@@ -1,183 +1,206 @@
 extends Control
+class_name GameSettingsPanel
 
-const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
-const UILayout = preload("res://Scripts/UI/UILayout.gd")
+## Settings panel — self-managed CanvasLayer at tree.root layer 200.
+## Call GameSettingsPanel.open(any_node_in_tree) to show.
+
 const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd")
 
 signal close_requested
 
-@onready var panel: PanelContainer = $PanelMargin/Panel
-@onready var back_button: Button = $PanelMargin/Panel/Shell/Header/BackButton
-@onready var close_button: Button = $PanelMargin/Panel/Shell/Header/CloseButton
-@onready var bottom_close_button: Button = $PanelMargin/Panel/Shell/BottomBar/BottomCloseButton
-@onready var footer_reset_button: Button = $PanelMargin/Panel/Shell/BottomBar/FooterResetButton
-@onready var citizen_science_dialogue_button: Button = $PanelMargin/Panel/Shell/ContentScroll/Content/CardsGrid/GuidanceCard/Body/GuidanceRow/CitizenScienceDialogueButton
-@onready var practice_mining_button: Button = $PanelMargin/Panel/Shell/ContentScroll/Content/CardsGrid/MissionToolsCard/Body/ButtonsRow/PracticeMiningButton
-@onready var replay_mission_guide_button: Button = $PanelMargin/Panel/Shell/ContentScroll/Content/CardsGrid/MissionToolsCard/Body/ButtonsRow/ReplayMissionGuideButton
-@onready var skip_tutorial_button: Button = $PanelMargin/Panel/Shell/ContentScroll/Content/CardsGrid/MissionToolsCard/Body/ButtonsRow/SkipTutorialButton
-@onready var reset_all_button: Button = $PanelMargin/Panel/Shell/ContentScroll/Content/CardsGrid/ProgressCard/Body/ResetAllDataButton
-@onready var section_cards: Array[Control] = [
-	$PanelMargin/Panel/Shell/ContentScroll/Content/CardsGrid/MissionToolsCard,
-	$PanelMargin/Panel/Shell/ContentScroll/Content/CardsGrid/GuidanceCard,
-	$PanelMargin/Panel/Shell/ContentScroll/Content/CardsGrid/ProgressCard
-]
-@onready var content_scroll: ScrollContainer = $PanelMargin/Panel/Shell/ContentScroll
-@onready var cards_grid: GridContainer = $PanelMargin/Panel/Shell/ContentScroll/Content/CardsGrid
+const _LAYER_NAME := "GameSettingsPanelLayer"
+const _LAYER_Z    := 200
+
+const _C_BG     := Color(0.04, 0.05, 0.09, 0.92)
+const _C_CARD   := Color(0.07, 0.09, 0.13, 0.97)
+const _C_BORDER := Color(0.11, 0.30, 0.50, 0.80)
+const _C_TEXT   := Color(0.79, 0.85, 0.93, 1.0)
+const _C_MUTED  := Color(0.50, 0.58, 0.68, 1.0)
+const _C_ACCENT := Color(0.29, 0.82, 1.00, 1.0)
+const _C_WARN   := Color(0.91, 0.70, 0.19, 1.0)
+
+var _closing := false
+
+# ── Public API ────────────────────────────────────────────────────────────────
+
+static func open(owner: Node) -> void:
+	var tree := owner.get_tree() if owner else null
+	if tree == null or tree.root == null:
+		return
+	if tree.root.get_node_or_null(_LAYER_NAME) != null:
+		return
+	var layer := CanvasLayer.new()
+	layer.name = _LAYER_NAME
+	layer.layer = _LAYER_Z
+	layer.follow_viewport_enabled = true
+	tree.root.add_child(layer)
+	var script := load("res://Scripts/UI/GameSettingsPanel.gd") as GDScript
+	var panel := script.new() as Control
+	layer.add_child(panel)
+
+# ── Lifecycle ─────────────────────────────────────────────────────────────────
 
 func _ready() -> void:
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
-	_apply_style()
-	_apply_layout()
-	if get_viewport() != null:
-		get_viewport().size_changed.connect(_apply_layout)
-	back_button.pressed.connect(_request_close)
-	close_button.pressed.connect(_request_close)
-	bottom_close_button.pressed.connect(_request_close)
-	footer_reset_button.pressed.connect(_on_reset_all_pressed)
-	practice_mining_button.pressed.connect(_on_practice_mining_pressed)
-	replay_mission_guide_button.pressed.connect(_on_replay_mission_guide_pressed)
-	skip_tutorial_button.pressed.connect(_on_skip_tutorial_pressed)
-	citizen_science_dialogue_button.pressed.connect(_on_citizen_science_dialogue_pressed)
-	reset_all_button.pressed.connect(_on_reset_all_pressed)
-	$Backdrop.gui_input.connect(func(ev: InputEvent):
+	_build_ui()
+
+# ── UI construction ───────────────────────────────────────────────────────────
+
+func _build_ui() -> void:
+	var vp_w := get_viewport().get_visible_rect().size.x if get_viewport() else 480.0
+	var card_w := clampf(vp_w - 48.0, 300.0, 480.0)
+
+	# Backdrop — blocks all clicks, tap outside card to close
+	var backdrop := ColorRect.new()
+	backdrop.color = _C_BG
+	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	backdrop.mouse_filter = Control.MOUSE_FILTER_STOP
+	backdrop.gui_input.connect(func(ev: InputEvent):
 		if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
 			_request_close()
 	)
-	_refresh_dynamic_state()
+	add_child(backdrop)
 
-func _apply_style() -> void:
-	$Backdrop.color = Color(0.05, 0.07, 0.12, 0.90)
-	panel.add_theme_stylebox_override("panel", PanelStyle.create_glass_panel_style(Color(0.05, 0.08, 0.14, 0.96), 0.72, 18, 22, 18))
-	var section_style = PanelStyle.create_glass_card_style(Color(0.09, 0.12, 0.20, 0.88), 0.45, 14, 16, 14)
-	for card in section_cards:
-		(card as PanelContainer).add_theme_stylebox_override("panel", section_style)
+	# CenterContainer fills the panel and centers the card
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	center.mouse_filter = Control.MOUSE_FILTER_PASS
+	add_child(center)
 
-	PanelStyle.apply_outline_button(back_button)
-	PanelStyle.apply_outline_button(close_button)
-	PanelStyle.apply_outline_button(bottom_close_button)
-	PanelStyle.apply_outline_button(footer_reset_button)
-	PanelStyle.apply_button(practice_mining_button, true)
-	PanelStyle.apply_outline_button(replay_mission_guide_button)
-	PanelStyle.apply_outline_button(skip_tutorial_button)
-	PanelStyle.apply_outline_button(citizen_science_dialogue_button)
-	PanelStyle.apply_outline_button(reset_all_button, Color(PanelStyle.ACCENT_WARM.r, PanelStyle.ACCENT_WARM.g, PanelStyle.ACCENT_WARM.b, 0.82))
+	# Card
+	var card := PanelContainer.new()
+	card.custom_minimum_size = Vector2(card_w, 0)
+	var cs := StyleBoxFlat.new()
+	cs.bg_color = _C_CARD
+	cs.border_color = _C_BORDER
+	cs.set_border_width_all(1)
+	cs.set_corner_radius_all(12)
+	cs.content_margin_left = 24; cs.content_margin_right = 24
+	cs.content_margin_top = 20; cs.content_margin_bottom = 20
+	card.add_theme_stylebox_override("panel", cs)
+	center.add_child(card)
 
-	var header_title: Label = $PanelMargin/Panel/Shell/Header/TitleLabel
-	var header_status: Label = $PanelMargin/Panel/Shell/Header/HeaderStatusLabel
-	PanelStyle.apply_title_on_dark(header_title)
-	header_title.add_theme_font_size_override("font_size", 18)
-	header_title.add_theme_color_override("font_color", PanelStyle.ACCENT)
-	header_title.add_theme_constant_override("outline_size", 0)
-	PanelStyle.apply_muted_on_dark(header_status)
-	header_status.add_theme_font_size_override("font_size", 12)
-	header_status.add_theme_color_override("font_color", PanelStyle.ACCENT)
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 10)
+	card.add_child(vbox)
 
-	var section_title: Label = $PanelMargin/Panel/Shell/ContentScroll/Content/SectionTitle
-	var section_hint: Label = $PanelMargin/Panel/Shell/ContentScroll/Content/SectionHint
-	PanelStyle.apply_title_on_dark(section_title)
-	section_title.add_theme_font_size_override("font_size", 22)
-	PanelStyle.apply_muted_on_dark(section_hint)
+	# ── Header ──
+	var header := HBoxContainer.new()
+	vbox.add_child(header)
 
-	for label_path in [
-		"PanelMargin/Panel/Shell/ContentScroll/Content/CardsGrid/MissionToolsCard/Body/SectionLabel",
-		"PanelMargin/Panel/Shell/ContentScroll/Content/CardsGrid/GuidanceCard/Body/SectionLabel",
-		"PanelMargin/Panel/Shell/ContentScroll/Content/CardsGrid/ProgressCard/Body/SectionLabel"
-	]:
-		var section_label: Label = get_node(label_path)
-		PanelStyle.apply_muted_on_dark(section_label)
-		section_label.add_theme_color_override("font_color", PanelStyle.ACCENT)
-		section_label.add_theme_font_size_override("font_size", 11)
+	var title := Label.new()
+	title.text = "SETTINGS"
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title.add_theme_color_override("font_color", _C_ACCENT)
+	title.add_theme_font_size_override("font_size", 18)
+	header.add_child(title)
 
-	for label_path in [
-		"PanelMargin/Panel/Shell/ContentScroll/Content/CardsGrid/MissionToolsCard/Body/MissionToolsHint",
-		"PanelMargin/Panel/Shell/ContentScroll/Content/CardsGrid/GuidanceCard/Body/GuidanceRow/GuidanceCopy/CitizenScienceHintLabel",
-		"PanelMargin/Panel/Shell/ContentScroll/Content/CardsGrid/ProgressCard/Body/ProgressHintLabel",
-		"PanelMargin/Panel/Shell/BottomBar/BottomStatusLabel"
-	]:
-		var body_label: Label = get_node(label_path)
-		PanelStyle.apply_muted_on_dark(body_label)
+	var x_btn := _make_btn("✕", _C_MUTED, false)
+	x_btn.custom_minimum_size = Vector2(44, 44)
+	x_btn.pressed.connect(_request_close)
+	header.add_child(x_btn)
 
-	for label_path in [
-		"PanelMargin/Panel/Shell/ContentScroll/Content/CardsGrid/MissionToolsCard/Body/SectionTitle",
-		"PanelMargin/Panel/Shell/ContentScroll/Content/CardsGrid/GuidanceCard/Body/SectionTitle",
-		"PanelMargin/Panel/Shell/ContentScroll/Content/CardsGrid/GuidanceCard/Body/GuidanceRow/GuidanceCopy/CitizenScienceStatusLabel",
-		"PanelMargin/Panel/Shell/ContentScroll/Content/CardsGrid/ProgressCard/Body/SectionTitle"
-	]:
-		var heading: Label = get_node(label_path)
-		PanelStyle.apply_body_on_dark(heading)
-		heading.add_theme_font_size_override("font_size", 19)
+	vbox.add_child(_sep())
 
-	PanelStyle.apply_separator($PanelMargin/Panel/Shell/Divider)
-
-func _apply_layout() -> void:
-	var viewport := get_viewport().get_visible_rect().size
-	var safe := UILayout.safe_rect(viewport)
-	var margin := $PanelMargin as MarginContainer
-	margin.add_theme_constant_override("margin_left", int(safe.position.x + maxf(12.0, safe.size.x * 0.02)))
-	margin.add_theme_constant_override("margin_top", int(safe.position.y + maxf(10.0, safe.size.y * 0.02)))
-	margin.add_theme_constant_override("margin_right", int(viewport.x - safe.end.x + maxf(12.0, safe.size.x * 0.02)))
-	margin.add_theme_constant_override("margin_bottom", int(viewport.y - safe.end.y + maxf(10.0, safe.size.y * 0.02)))
-
-	var compact := viewport.x < 980.0
-	cards_grid.columns = 1 if compact else 2
-	var button_height := 62 if compact else 74
-	for button in [practice_mining_button, replay_mission_guide_button, skip_tutorial_button, citizen_science_dialogue_button, reset_all_button]:
-		button.custom_minimum_size.y = button_height
-
-func _refresh_dynamic_state() -> void:
-	var app = AppControllerHelper.get_instance()
-	var can_skip = app != null and app.has_method("skip_tutorial")
-	skip_tutorial_button.visible = can_skip
-	_refresh_dialogue_button_text()
-
-func _refresh_dialogue_button_text() -> void:
-	var enabled := AppControllerHelper.is_citizen_science_dialogue_enabled(true)
-	citizen_science_dialogue_button.text = "Dialogue: %s" % ("On" if enabled else "Off")
-
-func _on_practice_mining_pressed() -> void:
-	var opened := AppControllerHelper.open_mining_practice_panel("settings_panel")
-	if opened:
+	# ── Action buttons ──
+	var practice_btn := _make_btn("Practice Mining", _C_ACCENT, true)
+	practice_btn.pressed.connect(func():
+		AppControllerHelper.open_mining_practice_panel("settings_panel")
 		_request_close()
+	)
+	vbox.add_child(practice_btn)
 
-func _on_replay_mission_guide_pressed() -> void:
-	var app = AppControllerHelper.get_instance()
-	if app and app.has_method("replay_tutorial_for_current_mission"):
-		app.replay_tutorial_for_current_mission()
-	_request_close()
+	var replay_btn := _make_btn("Replay Mission Guide", _C_TEXT, false)
+	replay_btn.pressed.connect(func():
+		var app := AppControllerHelper.get_instance()
+		if app and app.has_method("replay_tutorial_for_current_mission"):
+			app.replay_tutorial_for_current_mission()
+		_request_close()
+	)
+	vbox.add_child(replay_btn)
 
-func _on_skip_tutorial_pressed() -> void:
-	var app = AppControllerHelper.get_instance()
-	if app and app.has_method("skip_tutorial"):
-		app.skip_tutorial()
-	_request_close()
+	var app_check := AppControllerHelper.get_instance()
+	if app_check != null and app_check.has_method("skip_tutorial"):
+		var skip_btn := _make_btn("Skip Tutorial", _C_TEXT, false)
+		skip_btn.pressed.connect(func():
+			var app2 := AppControllerHelper.get_instance()
+			if app2 and app2.has_method("skip_tutorial"):
+				app2.skip_tutorial()
+			_request_close()
+		)
+		vbox.add_child(skip_btn)
 
-func _on_citizen_science_dialogue_pressed() -> void:
-	var app = AppControllerHelper.get_instance()
-	if app and app.has_method("is_citizen_science_dialogue_enabled") and app.has_method("set_citizen_science_dialogue_enabled"):
-		var next_enabled := not bool(app.is_citizen_science_dialogue_enabled())
-		app.set_citizen_science_dialogue_enabled(next_enabled)
-	_refresh_dialogue_button_text()
+	var dlg_enabled := AppControllerHelper.is_citizen_science_dialogue_enabled(true)
+	var dlg_btn := _make_btn("Dialogue: %s" % ("On" if dlg_enabled else "Off"), _C_TEXT, false)
+	dlg_btn.pressed.connect(func():
+		var app3 := AppControllerHelper.get_instance()
+		if app3 and app3.has_method("is_citizen_science_dialogue_enabled") \
+				and app3.has_method("set_citizen_science_dialogue_enabled"):
+			var next := not bool(app3.is_citizen_science_dialogue_enabled())
+			app3.set_citizen_science_dialogue_enabled(next)
+			dlg_btn.text = "Dialogue: %s" % ("On" if next else "Off")
+	)
+	vbox.add_child(dlg_btn)
 
-func _on_reset_all_pressed() -> void:
-	var app = AppControllerHelper.get_instance()
-	if app and app.has_method("_on_reset_all"):
-		app._on_reset_all()
-	_request_close()
+	vbox.add_child(_sep())
+
+	var reset_btn := _make_btn("Reset All Progress", _C_WARN, false)
+	reset_btn.pressed.connect(func():
+		var app4 := AppControllerHelper.get_instance()
+		if app4 and app4.has_method("_on_reset_all"):
+			app4._on_reset_all()
+		_request_close()
+	)
+	vbox.add_child(reset_btn)
+
+	vbox.add_child(_sep())
+
+	var close_btn := _make_btn("Close", _C_ACCENT, false)
+	close_btn.pressed.connect(_request_close)
+	vbox.add_child(close_btn)
+
+# ── Close ─────────────────────────────────────────────────────────────────────
 
 func _request_close() -> void:
-	close_requested.emit()
-	_close_nav_layer()
-
-func _close_nav_layer() -> void:
-	var tree := Engine.get_main_loop() as SceneTree
-	if tree == null or tree.root == null:
-		queue_free()
+	if _closing:
 		return
-	var layer := tree.root.get_node_or_null("GameMenuLayer")
+	_closing = true
+	close_requested.emit()
+	var layer := get_parent()
 	if is_instance_valid(layer):
-		var tutorial := tree.root.find_child("TutorialOverlay", true, false)
-		if tutorial != null:
-			tutorial.visible = true
 		layer.queue_free()
 	else:
 		queue_free()
+
+# ── Helpers ───────────────────────────────────────────────────────────────────
+
+func _sep() -> HSeparator:
+	var s := HSeparator.new()
+	s.add_theme_color_override("separator", Color(_C_BORDER.r, _C_BORDER.g, _C_BORDER.b, 0.45))
+	return s
+
+func _make_btn(label: String, col: Color, is_primary: bool) -> Button:
+	var btn := Button.new()
+	btn.text = label
+	btn.custom_minimum_size = Vector2(0, 54)
+	btn.focus_mode = Control.FOCUS_NONE
+	var sn := StyleBoxFlat.new()
+	sn.bg_color = Color(col.r, col.g, col.b, 0.14) if is_primary else Color(0, 0, 0, 0)
+	sn.border_color = Color(col.r, col.g, col.b, 0.50)
+	sn.set_border_width_all(1)
+	sn.set_corner_radius_all(8)
+	sn.content_margin_left = 16; sn.content_margin_right = 16
+	sn.content_margin_top = 10; sn.content_margin_bottom = 10
+	var sh := sn.duplicate() as StyleBoxFlat
+	sh.bg_color = Color(col.r, col.g, col.b, 0.26)
+	sh.border_color = col
+	var sp := sh.duplicate() as StyleBoxFlat
+	sp.bg_color = Color(col.r, col.g, col.b, 0.38)
+	btn.add_theme_stylebox_override("normal", sn)
+	btn.add_theme_stylebox_override("hover",  sh)
+	btn.add_theme_stylebox_override("pressed", sp)
+	btn.add_theme_color_override("font_color",       col)
+	btn.add_theme_color_override("font_hover_color", col)
+	btn.add_theme_font_size_override("font_size", 16)
+	return btn

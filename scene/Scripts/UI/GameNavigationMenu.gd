@@ -39,7 +39,7 @@ const GameMenuDebugSectionScene = preload("res://Scenes/UI/Templates/GameMenuDeb
 const GameMenuInfoCardScene = preload("res://Scenes/UI/Templates/GameMenuInfoCard.tscn")
 const GameMenuLegendLabelScene = preload("res://Scenes/UI/Templates/GameMenuLegendLabel.tscn")
 const GameMenuSettingsEntryCardScene = preload("res://Scenes/UI/Templates/GameMenuSettingsEntryCard.tscn")
-const GameSettingsPanelScene = preload("res://Scenes/UI/GameSettingsPanel.tscn")
+const GameSettingsPanelScript = preload("res://Scripts/UI/GameSettingsPanel.gd")
 
 const MENU_LAYER_NAME := "GameMenuLayer"
 const MENU_ROOT_NAME := "GameMenuRoot"
@@ -210,7 +210,7 @@ static func _build_menu_root(owner: Node) -> Control:
 		mission_requirements_host.visible = false
 
 	# Settings
-	settings_host.add_child(_build_settings_entry_card(owner, root))
+	settings_host.add_child(_build_settings_entry_card(owner))
 
 	# Debug
 	debug_host.add_child(_build_debug_section(owner))
@@ -283,7 +283,7 @@ static func _build_stats_card() -> PanelContainer:
 # Settings / actions section
 # ---------------------------------------------------------------------------
 
-static func _build_settings_entry_card(owner: Node, menu_root: Control) -> PanelContainer:
+static func _build_settings_entry_card(owner: Node) -> PanelContainer:
 	var card: PanelContainer = GameMenuSettingsEntryCardScene.instantiate()
 	card.add_theme_stylebox_override("panel", _card_style(0.45))
 	var eyebrow: Label = card.get_node("Body/TopRow/TextColumn/EyebrowLabel")
@@ -298,40 +298,9 @@ static func _build_settings_entry_card(owner: Node, menu_root: Control) -> Panel
 	var open_btn: Button = card.get_node("Body/TopRow/OpenButton")
 	_apply_button_style(open_btn, true)
 	open_btn.pressed.connect(func():
-		_open_settings_panel(owner, menu_root)
+		GameSettingsPanelScript.open(owner)
 	)
 	return card
-
-static func _open_settings_panel(owner: Node, menu_root: Control) -> void:
-	if menu_root == null:
-		return
-	var existing := menu_root.get_node_or_null("GameSettingsPanel") as Control
-	if existing != null:
-		existing.visible = true
-		return
-	var panel: Control = GameSettingsPanelScene.instantiate()
-	panel.name = "GameSettingsPanel"
-	panel.set_meta("tutorial_zone_exempt", true)
-	menu_root.add_child(panel)
-
-static func _request_reset_all(owner: Node) -> void:
-	var app = AppControllerHelper.get_instance()
-	if app and app.has_method("_on_reset_all"):
-		app._on_reset_all()
-		return
-	if owner != null:
-		var ui_manager = owner.get_node_or_null("UIManager")
-		if ui_manager and ui_manager.has_method("_on_reset_all"):
-			ui_manager._on_reset_all()
-			return
-		if owner.has_method("_on_reset_all"):
-			owner._on_reset_all()
-			return
-	var tree := Engine.get_main_loop() as SceneTree
-	if tree and tree.root:
-		var fallback = tree.root.find_child("AppController", true, false)
-		if fallback and fallback.has_method("_on_reset_all"):
-			fallback._on_reset_all()
 
 # ---------------------------------------------------------------------------
 # Debug section
