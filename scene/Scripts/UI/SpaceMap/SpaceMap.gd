@@ -141,9 +141,19 @@ func _rebuild_solar_targets() -> void:
 		node.set_meta("target_id", tid); node.set_meta("is_discovery", is_disc)
 		var icon := GalaxyMapNodeScript.new()
 		icon.set("label_text",  str(t.get("label", tid)))
-		icon.set("icon_radius", 5.0)
-		icon.set("icon_color",  Color(1.0, 0.85, 0.25, 1.0) if is_disc \
-			else Color(0.55, 0.58, 0.62, 0.85))
+		
+		var base_color := Color(1.0, 0.85, 0.25, 1.0) if is_disc else Color(0.55, 0.58, 0.62, 0.85)
+		var radius := 5.0
+		
+		if RocketsManager.is_map_return_mode():
+			# Highlight available mission targets
+			base_color = Color(0.28, 0.88, 0.96, 1.0) # MISSION CYAN
+			radius = 8.0
+			# Add a subtle pulse or ring via the icon script if supported, 
+			# or just make it bigger and brighter.
+			
+		icon.set("icon_radius", radius)
+		icon.set("icon_color", base_color)
 		node.add_child(icon)
 		game_nd.add_child(node)
 
@@ -197,11 +207,18 @@ func _setup_galaxy_button() -> void:
 		galaxy_btn.pressed.connect(_change_to_galaxy_map)
 
 func _setup_selection_mode_ui() -> void:
-	# Hide persistent root-level HUD nodes that don't belong on the map
-	for hud_name in ["MissionProgressTracker", "TutorialCoachOverlay"]:
-		var hud := get_tree().root.get_node_or_null(hud_name)
-		if hud is CanvasItem:
-			(hud as CanvasItem).visible = false
+	# Hide persistent root-level HUD nodes that don't belong on the map,
+	# or move them so they don't block target clicks.
+	var overlay = get_tree().root.get_node_or_null("TutorialCoachOverlay")
+	if overlay and overlay.has_method("set_deferred"):
+		# Instead of just hiding, we can move it to a non-blocking corner
+		# or tell it to refresh its zone. For now, let's keep it visible
+		# but ensure it's not on top of the belt.
+		overlay.call_deferred("reposition_for_map")
+	
+	var progress = get_tree().root.get_node_or_null("MissionProgressTracker")
+	if progress is CanvasItem:
+		progress.visible = false
 	# Replace footer buttons with a "tap a target" hint + cancel back to launchpad
 	if galaxy_btn:
 		galaxy_btn.text = "← CANCEL"
@@ -256,10 +273,6 @@ func _handle_click(screen_pos: Vector2) -> void:
 	for tid in _target_positions.keys():
 		var entry: Dictionary = _target_positions[tid]
 		if local.distance_to(entry["pos"] as Vector2) <= TARGET_HIT_R:
-			if RocketsManager.consume_map_return_mode():
-				RocketsManager.select_target(tid)
-				get_tree().change_scene_to_file("res://Scenes/Earth/earth_launchpad.tscn")
-				return
 			_open_target_preview(tid, entry)
 			return
 
@@ -275,22 +288,25 @@ func _open_target_preview(target_id: String, entry: Dictionary) -> void:
 	var canvas: CanvasLayer = $CanvasLayer
 	var target_label := str(entry.get("label", target_id))
 	var target_type  := str(entry.get("type", "asteroid"))
+	var is_selection_mode := RocketsManager.is_map_return_mode()
 	var is_free_ops  := RocketsManager.is_free_operations_unlocked()
 
 	const C_BG   := Color(0.04, 0.06, 0.12, 0.97)
 	const C_CYAN := Color(0.28, 0.88, 0.96, 1.0)
 	const C_AMB  := Color(0.941, 0.690, 0.188, 1.0)
 	const C_TXT  := Color(0.90, 0.92, 0.95, 1.0)
+	const C_MUTED := Color(0.55, 0.62, 0.70, 1.0)
 
 	var backdrop: ColorRect = SpaceMapTargetDialogueScene.instantiate()
 	canvas.add_child(backdrop)
+	backdrop.name = "TargetDialogue"
 
 	var vp_sz := get_viewport().get_visible_rect().size if get_viewport() else Vector2(1280, 768)
 	var panel: PanelContainer = backdrop.get_node("Center/Panel")
 	panel.custom_minimum_size = Vector2(clampf(vp_sz.x - 48.0, 320.0, 720.0), 0.0)
 
 	var ps := StyleBoxFlat.new()
-	ps.bg_color = C_BG; ps.border_color = C_CYAN
+	ps.bg_color = C_BG; ps.border_color = C_AMB if is_selection_mode else C_CYAN
 	ps.set_border_width_all(2); ps.set_corner_radius_all(8)
 	ps.content_margin_left=24; ps.content_margin_right=24
 	ps.content_margin_top=20; ps.content_margin_bottom=20
@@ -314,6 +330,34 @@ func _open_target_preview(target_id: String, entry: Dictionary) -> void:
 
 	(backdrop.get_node("Center/Panel/Scroll/Body/PrimarySeparator") as HSeparator)\
 		.add_theme_color_override("separator", Color(C_CYAN.r, C_CYAN.g, C_CYAN.b, 0.3))
+	
+	# Show Mission Relevance
+	if is_selection_mode:
+		var reqs := RocketsManager.get_current_requested_minerals()
+		if not reqs.is_empty():
+			var rel_lbl := Label.new()
+			rel_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			rel_lbl.add_theme_font_size_override("font_size", 16)
+			
+			var matches := []
+			# Predefined M1 target is always relevant for M1
+			if target_id == "mission-1-training-target":
+				matches = reqs.keys()
+			else:
+				# Simple check: asteroids are assumed to have common minerals in early stages
+				for m in ["Iron", "Nickel", "Silicates"]:
+					if reqs.has(m): matches.append(m)
+			
+			if not matches.is_empty():
+				rel_lbl.text = "MISSION RELEVANT: Contains " + ", ".join(matches)
+				rel_lbl.add_theme_color_override("font_color", Color(0.3, 1.0, 0.45)) # Green
+			else:
+				rel_lbl.text = "NOT IDEAL: Does not match contractor requirements."
+				rel_lbl.add_theme_color_override("font_color", Color(1.0, 0.4, 0.3)) # Red
+				
+			backdrop.get_node("Center/Panel/Scroll/Body").add_child(rel_lbl)
+			backdrop.get_node("Center/Panel/Scroll/Body").move_child(rel_lbl, 2)
+
 	(backdrop.get_node("Center/Panel/Scroll/Body/TypeLabel") as Label).text = \
 		"Type: %s" % target_type.capitalize()
 	(backdrop.get_node("Center/Panel/Scroll/Body/IdLabel") as Label).text = "ID: %s" % target_id
@@ -345,20 +389,32 @@ func _open_target_preview(target_id: String, entry: Dictionary) -> void:
 			sl.add_theme_color_override("font_color", Color(0.9,0.45,0.2) if on_cd else Color(0.3,0.85,0.55))
 		(backdrop.get_node("Center/Panel/Scroll/Body/TertiarySeparator") as HSeparator).visible = true
 
-	if is_free_ops:
+	if is_selection_mode or is_free_ops:
 		var lb: Button = backdrop.get_node("Center/Panel/Scroll/Body/LaunchButton")
-		lb.text = "Launch Mission to %s" % target_label; lb.visible = true
+		lb.text = "Select as Mission Target" if is_selection_mode else ("Launch Mission to %s" % target_label)
+		lb.visible = true
 		_style_dlg_button(lb, C_AMB, true)
 		lb.pressed.connect(func():
 			backdrop.queue_free()
-			RocketsManager.set_preview_target(target_id, target_label, target_type, "")
-			var t := Engine.get_main_loop() as SceneTree
-			if t == null: return
-			var sm = t.current_scene.get_node_or_null("SceneManager") if t.current_scene else null
-			if sm and sm.has_method("change_to_scene"):
-				sm.change_to_scene("res://Scenes/Earth/earth_launchpad.tscn")
+			if is_selection_mode:
+				RocketsManager.consume_map_return_mode() # Clear the flag
+				RocketsManager.select_target(target_id)
+				
+				# Record tutorial progress
+				var app_inst = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
+				if app_inst and app_inst.has_method("record_tutorial_action"):
+					app_inst.record_tutorial_action("select_launch_target")
+				
+				get_tree().change_scene_to_file("res://Scenes/Earth/earth_launchpad.tscn")
 			else:
-				t.change_scene_to_file("res://Scenes/Earth/earth_launchpad.tscn"))
+				RocketsManager.set_preview_target(target_id, target_label, target_type, "")
+				var t := Engine.get_main_loop() as SceneTree
+				if t == null: return
+				var sm = t.current_scene.get_node_or_null("SceneManager") if t.current_scene else null
+				if sm and sm.has_method("change_to_scene"):
+					sm.change_to_scene("res://Scenes/Earth/earth_launchpad.tscn")
+				else:
+					t.change_scene_to_file("res://Scenes/Earth/earth_launchpad.tscn"))
 	else:
 		var ll: Label = backdrop.get_node("Center/Panel/Scroll/Body/LockedLabel")
 		ll.text = "Free Operations locked — complete Mission 4 to launch from the map."
