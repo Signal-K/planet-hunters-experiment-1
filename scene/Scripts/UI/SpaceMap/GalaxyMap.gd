@@ -249,6 +249,10 @@ func _handle_click(screen_pos: Vector2) -> void:
 		if local.distance_to((gt as Node2D).position) <= 28.0:
 			var tid  := str(gt.get_meta("target_id", ""))
 			var data := gt.get_meta("target_data", {}) as Dictionary
+			if RocketsManager.consume_map_return_mode():
+				RocketsManager.select_target(tid)
+				get_tree().change_scene_to_file("res://Scenes/Earth/earth_launchpad.tscn")
+				return
 			_select_star(tid, true, data)
 			return
 

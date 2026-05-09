@@ -242,6 +242,7 @@ const STARTER_CONTRACTOR_OFFERS := [
 
 static var _preview_target: Dictionary = {}
 static var _return_to_new_mission_panel: bool = false
+static var _map_return_mode: bool = false  # true = space map was opened from launchpad for target selection
 static var _preview_index: int = 0
 static var _override_state: Dictionary = {}
 static var _returned_mission: Dictionary = {}
@@ -2235,6 +2236,17 @@ static func consume_return_to_new_mission_panel() -> bool:
 	var flag = _return_to_new_mission_panel
 	_return_to_new_mission_panel = false
 	return flag
+
+static func set_map_return_mode(enabled: bool) -> void:
+	_map_return_mode = enabled
+
+static func consume_map_return_mode() -> bool:
+	var flag := _map_return_mode
+	_map_return_mode = false
+	return flag
+
+static func is_map_return_mode() -> bool:
+	return _map_return_mode
 
 static func set_pending_mission_guidance_id(mission_id: int) -> bool:
 	var safe_id = max(mission_id, 0)

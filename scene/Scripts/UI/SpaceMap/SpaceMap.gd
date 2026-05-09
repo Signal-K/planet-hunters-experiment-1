@@ -217,6 +217,10 @@ func _handle_click(screen_pos: Vector2) -> void:
 	for tid in _target_positions.keys():
 		var entry: Dictionary = _target_positions[tid]
 		if local.distance_to(entry["pos"] as Vector2) <= TARGET_HIT_R:
+			if RocketsManager.consume_map_return_mode():
+				RocketsManager.select_target(tid)
+				get_tree().change_scene_to_file("res://Scenes/Earth/earth_launchpad.tscn")
+				return
 			_open_target_preview(tid, entry)
 			return
 

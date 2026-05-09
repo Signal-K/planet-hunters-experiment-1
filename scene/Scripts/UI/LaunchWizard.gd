@@ -552,18 +552,12 @@ func _build_target_step() -> void:
 	else:
 		_classification_card.visible = false
 
-	_target_detail = _target_detail_card
-	_map_panel.visible = true
-	_target_detail_card.visible = true
-
-	_map_step = _map_step_node
-	_map_step.setup(_targets, str(_selected_target.get("id", "")))
-	if _selected_target.is_empty():
-		_target_hint_label.visible = true
-		_target_hint_label.text = "< Tap a target on the map above"
-	else:
-		_refresh_target_detail(_selected_target)
-	call_deferred("_fit_map_to_scroll")
+	# Open the new space/galaxy map for target selection.
+	# RocketsManager restores full LaunchWizard state on return.
+	RocketsManager.set_map_return_mode(true)
+	var map_scene := "res://Scenes/UI/SpaceMap/galaxy_map.tscn" \
+		if stage >= 3 else "res://Scenes/UI/SpaceMap/space_map.tscn"
+	get_tree().change_scene_to_file(map_scene)
 
 func _fit_map_to_scroll() -> void:
 	var h := _scroll.size.y
