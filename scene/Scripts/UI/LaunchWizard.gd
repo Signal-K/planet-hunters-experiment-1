@@ -340,6 +340,16 @@ func _on_next() -> void:
 	if _step == Step.CONFIRM:
 		_execute_launch()
 	else:
+		# Record tutorial progress
+		var app = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
+		if app and app.has_method("record_tutorial_action"):
+			if _step == Step.CONTRACTOR:
+				app.record_tutorial_action("accept_contractor_offer")
+			elif _step == Step.TARGET:
+				app.record_tutorial_action("select_launch_target")
+			elif _step == Step.ROCKET:
+				app.record_tutorial_action("create_rocket")
+		
 		_show_step((int(_step) + 1) as Step)
 
 # ── Card rebuild ──────────────────────────────────────────────────────────────
