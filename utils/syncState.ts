@@ -224,7 +224,10 @@ async function migrateLegacyState(): Promise<SyncState> {
 export async function resetState(): Promise<void> {
   _state = { ...DEFAULT_STATE };
   await saveState();
-  notify({ key: "counter", value: 0, source: "react", timestamp: Date.now() });
+  const timestamp = Date.now();
+  for (const key of Object.keys(DEFAULT_STATE) as SyncStateKey[]) {
+    notify({ key, value: DEFAULT_STATE[key], source: "react", timestamp });
+  }
 }
 
 // ============================================================================

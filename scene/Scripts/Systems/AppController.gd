@@ -11,6 +11,7 @@ signal rockets_reset()
 signal tutorial_state_updated(state: Dictionary)
 signal citizen_science_dialogue_toggled(enabled: bool)
 signal leveled_up(new_level: int)
+signal player_state_snapshot_updated(snapshot: Dictionary)
 
 const DEFAULT_FRANC_BALANCE := 10000000000
 const DEFAULT_EXPERIENCE_XP := 0
@@ -64,6 +65,7 @@ func _ready() -> void:
 	load_franc_balance()
 	# Load persisted experience from disk (if present)
 	load_experience()
+	_reconcile_experience_level_with_mission_stage()
 	_sync_experience_from_web_storage()
 	load_preferences()
 	_ensure_mission_progress_tracker()
@@ -76,6 +78,7 @@ func _ready() -> void:
 		"franc_balance": franc_balance,
 		"citizen_science_dialogue_enabled": citizen_science_dialogue_enabled
 	})
+	_emit_player_state_snapshot("ready")
 
 func _ensure_tutorial_runtime() -> void:
 	_ensure_tutorial_controller()
@@ -219,7 +222,9 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not _is_debug_debrief_shortcut(event):
 		return
 	if debug_skip_active_mission_to_debrief():
-		get_viewport().set_input_as_handled()
+		var viewport := get_viewport()
+		if viewport != null:
+			viewport.set_input_as_handled()
 
 func debug_skip_active_mission_to_debrief() -> bool:
 	if not _debug_mission_skip_allowed():
@@ -379,9 +384,6 @@ func full_factory_reset() -> void:
 	var json = preload("res://Scripts/Utils/JSONFileManager.gd")
 	json.save_json("user://mission_logs.json", MissionLogManager.build_default_state())
 	json.save_json("user://subcontractors.json", SubcontractorManager.build_default_state())
-	if OS.has_feature("editor"):
-		json.save_json("res://mission_logs.json", MissionLogManager.build_default_state())
-		json.save_json("res://subcontractors.json", SubcontractorManager.build_default_state())
 	
 	# 4. Clear other state files
 	DirAccess.remove_absolute("user://rocket_unlock_popups.cfg")
@@ -395,6 +397,12 @@ func full_factory_reset() -> void:
 	loan_balance = 0
 	experience_xp = DEFAULT_EXPERIENCE_XP
 	experience_level = DEFAULT_EXPERIENCE_LEVEL
+	citizen_science_dialogue_enabled = DEFAULT_CITIZEN_SCIENCE_DIALOGUE_ENABLED
+	_menu_request_version = 0
+	_menu_request_action = ""
+	_last_mining_result = {}
+	_last_mining_result_synced = true
+	_auto_start_mining = false
 	
 	# 6. Reset singleton trackers
 	FirstTimeMechanicTracker.reset_all()
@@ -402,6 +410,13 @@ func full_factory_reset() -> void:
 	
 	# 7. Clear web storage
 	_clear_web_experience_storage()
+	counter_updated.emit(counter)
+	franc_balance_updated.emit(franc_balance)
+	loan_updated.emit(loan_balance)
+	citizen_science_dialogue_toggled.emit(citizen_science_dialogue_enabled)
+	_emit_experience_updated()
+	rockets_reset.emit()
+	_emit_player_state_snapshot("factory_reset")
 	
 	AppLogger.d("[AppController] Factory reset complete. Reloading main scene.")
 	
@@ -440,6 +455,7 @@ func _on_reset_all() -> void:
 	if _tutorial_controller and _tutorial_controller.has_method("reset_all"):
 		_tutorial_controller.reset_all()
 	rockets_reset.emit()
+	_emit_player_state_snapshot("reset_all")
 	_return_to_fresh_player_scene()
 	AppLogger.d("All state reset in Godot. Signals emitted to notify React Native.")
 
@@ -447,9 +463,6 @@ func _clear_runtime_progression_state() -> void:
 	var json = preload("res://Scripts/Utils/JSONFileManager.gd")
 	json.save_json("user://mission_logs.json", MissionLogManager.build_default_state())
 	json.save_json("user://subcontractors.json", SubcontractorManager.build_default_state())
-	if OS.has_feature("editor"):
-		json.save_json("res://mission_logs.json", MissionLogManager.build_default_state())
-		json.save_json("res://subcontractors.json", SubcontractorManager.build_default_state())
 	FirstTimeMechanicTracker.reset_all()
 	MissionNarrativeAPI.reset_session_state()
 	_clear_web_experience_storage()
@@ -475,6 +488,7 @@ func set_franc_balance_from_react(value: int) -> void:
 	franc_balance_updated.emit(franc_balance)
 	AppLogger.d("[AppController] Franc balance set from React Native: %s" % franc_balance)
 	save_franc_balance()
+	_emit_player_state_snapshot("franc_balance")
 
 func add_franc_balance(amount: int, source: String = "") -> void:
 	if amount == 0:
@@ -482,6 +496,7 @@ func add_franc_balance(amount: int, source: String = "") -> void:
 	franc_balance += amount
 	franc_balance_updated.emit(franc_balance)
 	save_franc_balance()
+	_emit_player_state_snapshot("franc_balance")
 	if source != "":
 		AppLogger.d("[AppController] Franc balance change from %s: %s (balance=%s)" % [source, amount, franc_balance])
 
@@ -511,6 +526,8 @@ func has_outstanding_loan() -> bool:
 	return loan_balance > 0
 
 func can_take_loan() -> bool:
+	if RocketsManager.get_completed_mission_count() <= 0:
+		return false
 	var cheapest = preload("res://Scripts/Utils/RocketSpecs.gd").get_cost("starterrocket1")
 	return franc_balance < cheapest and not has_outstanding_loan()
 
@@ -566,6 +583,7 @@ func set_experience_from_react(xp: int, level: int) -> void:
 	_unlock_rockets_for_level(experience_level)
 	_emit_experience_updated()
 	save_experience()
+	_emit_player_state_snapshot("experience")
 
 func get_experience_xp() -> int:
 	return experience_xp
@@ -594,8 +612,16 @@ func load_experience() -> void:
 	if result.get("loaded", false):
 		experience_xp = result.get("xp", experience_xp)
 		experience_level = result.get("level", experience_level)
+	_reconcile_experience_level_with_mission_stage()
 	_unlock_rockets_for_level(experience_level)
 	_emit_experience_updated()
+
+func _reconcile_experience_level_with_mission_stage() -> void:
+	var stage: int = int(clamp(RocketsManager.get_mission_stage(), 1, 4))
+	if stage <= 1:
+		experience_level = 1
+		return
+	experience_level = stage
 
 func save_preferences() -> void:
 	_persistence.save_citizen_science_dialogue_enabled(citizen_science_dialogue_enabled)
@@ -611,6 +637,33 @@ func _emit_experience_updated() -> void:
 		"experience_xp": experience_xp,
 		"experience_level": experience_level
 	})
+
+func get_player_state_snapshot(source: String = "") -> Dictionary:
+	var missions := RocketsManager.get_missions()
+	var returned := RocketsManager.get_returned_mission()
+	return {
+		"schema_version": 1,
+		"source": source,
+		"counter": counter,
+		"franc_balance": franc_balance,
+		"loan_balance": loan_balance,
+		"experience_xp": experience_xp,
+		"experience_level": experience_level,
+		"mission_stage": RocketsManager.get_mission_stage(),
+		"completed_missions": RocketsManager.get_completed_mission_count(),
+		"control_station_built": RocketsManager.is_control_station_built(),
+		"scanner_station_built": RocketsManager.is_scanner_station_built(),
+		"scanner_unlocked": RocketsManager.is_scanner_unlocked(),
+		"operation_mode": RocketsManager.get_operation_mode(),
+		"free_operations_unlocked": RocketsManager.is_free_operations_unlocked(),
+		"active_missions_count": missions.size(),
+		"has_returned_mission": not returned.is_empty(),
+		"pending_mission_guidance_id": RocketsManager.get_pending_mission_guidance_id(),
+		"unlocked_rockets": RocketsManager.get_unlocked()
+	}
+
+func _emit_player_state_snapshot(source: String = "") -> void:
+	player_state_snapshot_updated.emit(get_player_state_snapshot(source))
 
 func set_citizen_science_dialogue_enabled(enabled: bool) -> void:
 	var next_enabled = bool(enabled)
