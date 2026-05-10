@@ -65,10 +65,10 @@ export const LoginScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
     >
       <View style={styles.card}>
         <Text style={styles.title}>
-          {isSignup ? 'Create Account' : 'Distant Signals'}
+          {isSignup ? 'Create Account' : 'Landnám'}
         </Text>
         <Text style={styles.subtitle}>
-          Save your progress and access points across all games in the Star Sailors ecosystem (Distant Signals, Star Sailors, and more!).
+          Save your progress and access points across all games in the Landnám ecosystem (Landnám, Landnám, and more!).
         </Text>
         <Text style={styles.subtitle}>
           {isSignup ? 'Sign up to play' : 'Log in to play'}

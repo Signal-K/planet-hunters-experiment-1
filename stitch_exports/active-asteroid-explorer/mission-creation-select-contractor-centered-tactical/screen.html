@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, orientation=landscape" name="viewport"/>
+<title>ASTEROID EXPLORER - Select Contractor</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-bright": "#32394a",
+                    "error": "#ffb4ab",
+                    "on-primary-fixed": "#001d34",
+                    "on-tertiary-fixed-variant": "#3f465d",
+                    "on-background": "#dce2f8",
+                    "on-error": "#690005",
+                    "on-tertiary": "#283045",
+                    "secondary-fixed": "#ffdeac",
+                    "on-error-container": "#ffdad6",
+                    "inverse-surface": "#dce2f8",
+                    "surface-container-high": "#232a3a",
+                    "inverse-on-surface": "#2a3041",
+                    "surface-container": "#191f2f",
+                    "outline": "#89919d",
+                    "surface-container-lowest": "#070e1d",
+                    "surface-tint": "#99cbff",
+                    "error-container": "#93000a",
+                    "background": "#0c1322",
+                    "surface-variant": "#2e3445",
+                    "on-primary": "#003355",
+                    "inverse-primary": "#00629e",
+                    "on-tertiary-container": "#2b3348",
+                    "on-primary-fixed-variant": "#004a78",
+                    "primary": "#99cbff",
+                    "tertiary": "#bec6e1",
+                    "on-tertiary-fixed": "#131b2f",
+                    "surface-container-low": "#151b2b",
+                    "on-secondary-fixed-variant": "#604100",
+                    "surface": "#0c1322",
+                    "secondary-fixed-dim": "#ffba38",
+                    "secondary-container": "#feb300",
+                    "secondary": "#ffd799",
+                    "on-secondary": "#432c00",
+                    "primary-container": "#38a1f3",
+                    "outline-variant": "#3f4751",
+                    "on-primary-container": "#003559",
+                    "surface-container-highest": "#2e3445",
+                    "primary-fixed": "#cfe5ff",
+                    "on-surface": "#dce2f8",
+                    "tertiary-container": "#939bb5",
+                    "on-surface-variant": "#bfc7d3",
+                    "on-secondary-container": "#6a4800",
+                    "surface-dim": "#0c1322",
+                    "on-secondary-fixed": "#281900",
+                    "tertiary-fixed": "#dae2fe",
+                    "tertiary-fixed-dim": "#bec6e1",
+                    "primary-fixed-dim": "#99cbff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "unit": "4px",
+                    "md": "16px",
+                    "gutter": "20px",
+                    "panel-padding": "24px",
+                    "lg": "24px",
+                    "sm": "8px",
+                    "xs": "4px",
+                    "xl": "48px"
+            },
+            "fontFamily": {
+                    "h3": [
+                            "Space Grotesk"
+                    ],
+                    "h2": [
+                            "Space Grotesk"
+                    ],
+                    "body-md": [
+                            "Space Grotesk"
+                    ],
+                    "body-lg": [
+                            "Space Grotesk"
+                    ],
+                    "h1": [
+                            "Space Grotesk"
+                    ],
+                    "mono-data": [
+                            "Space Grotesk"
+                    ],
+                    "label-caps": [
+                            "Space Grotesk"
+                    ]
+            },
+            "fontSize": {
+                    "h3": [
+                            "24px",
+                            {
+                                    "lineHeight": "1.2",
+                                    "letterSpacing": "0em",
+                                    "fontWeight": "500"
+                            }
+                    ],
+                    "h2": [
+                            "32px",
+                            {
+                                    "lineHeight": "1.2",
+                                    "letterSpacing": "-0.01em",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "body-md": [
+                            "16px",
+                            {
+                                    "lineHeight": "1.6",
+                                    "letterSpacing": "0.01em",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "body-lg": [
+                            "18px",
+                            {
+                                    "lineHeight": "1.6",
+                                    "letterSpacing": "0.01em",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "h1": [
+                            "48px",
+                            {
+                                    "lineHeight": "1.1",
+                                    "letterSpacing": "-0.02em",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "mono-data": [
+                            "14px",
+                            {
+                                    "lineHeight": "1.0",
+                                    "letterSpacing": "0.05em",
+                                    "fontWeight": "500"
+                            }
+                    ],
+                    "label-caps": [
+                            "12px",
+                            {
+                                    "lineHeight": "1.0",
+                                    "letterSpacing": "0.2em",
+                                    "fontWeight": "700"
+                            }
+                    ]
+            }
+    },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #050B1A;
+            margin: 0;
+            overflow: hidden; /* Landscape full-bleed */
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* Greeblies - Crosshairs */
+        .greeblie-crosshair {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            pointer-events: none;
+            z-index: 10;
+        }
+        .greeblie-crosshair::before, .greeblie-crosshair::after {
+            content: '';
+            position: absolute;
+            background-color: rgba(153, 203, 255, 0.4); /* surface-tint */
+        }
+        .greeblie-crosshair::before { width: 100%; height: 1px; top: 50%; left: 0; }
+        .greeblie-crosshair::after { width: 1px; height: 100%; top: 0; left: 50%; }
+
+        .tl-crosshair { top: 16px; left: 16px; }
+        .tr-crosshair { top: 16px; right: 16px; }
+        .bl-crosshair { bottom: 16px; left: 16px; }
+        .br-crosshair { bottom: 16px; right: 16px; }
+
+        /* Cinematic Background */
+        .bg-cinematic {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at 50% 120%, #0D1529 0%, #050B1A 80%);
+            z-index: -2;
+        }
+        .bg-grid {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: 
+                linear-gradient(rgba(153, 203, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(153, 203, 255, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            z-index: -1;
+            perspective: 1000px;
+            transform: rotateX(60deg) translateY(-100px) scale(2);
+            transform-origin: top center;
+        }
+        .scanlines {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.1));
+            background-size: 100% 4px;
+            z-index: 50;
+            pointer-events: none;
+            opacity: 0.3;
+        }
+
+        /* Glass Panel Styling */
+        .glass-panel {
+            background: rgba(13, 21, 41, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(153, 203, 255, 0.15);
+            position: relative;
+        }
+        
+        .glass-panel-active {
+            border-color: rgba(56, 161, 243, 0.8);
+            box-shadow: 0 0 20px rgba(56, 161, 243, 0.2) inset, 0 0 15px rgba(56, 161, 243, 0.4);
+        }
+
+        /* Active Card Bracket Accents */
+        .bracket-accent {
+            position: absolute;
+            width: 24px; height: 24px;
+            border: 2px solid #38a1f3;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .glass-panel-active .bracket-accent { opacity: 1; }
+        .bracket-tl { top: -2px; left: -2px; border-right: none; border-bottom: none; }
+        .bracket-tr { top: -2px; right: -2px; border-left: none; border-bottom: none; }
+        .bracket-bl { bottom: -2px; left: -2px; border-right: none; border-top: none; }
+        .bracket-br { bottom: -2px; right: -2px; border-left: none; border-top: none; }
+
+        /* Hide scrollbar for carousel */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        /* Chamfered Button */
+        .btn-chamfer {
+            clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+        }
+    </style>
+</head>
+<body class="text-on-background font-body-md h-screen w-screen flex flex-col justify-between">
+<!-- Environmental Backgrounds -->
+<div class="bg-cinematic"></div>
+<div class="bg-grid"></div>
+<div class="scanlines"></div>
+<!-- Technical Greeblies Viewport Corners -->
+<div class="greeblie-crosshair tl-crosshair"></div>
+<div class="greeblie-crosshair tr-crosshair"></div>
+<div class="greeblie-crosshair bl-crosshair"></div>
+<div class="greeblie-crosshair br-crosshair"></div>
+<!-- Center: Contractor Carousel -->
+<main class="flex-1 overflow-x-auto no-scrollbar flex items-center justify-center px-8 z-20 snap-x snap-mandatory pb-[100px]">
+<div class="flex gap-8 w-max mx-auto items-center">
+<!-- Card 1: ROCKETLAB (Selected) -->
+<div class="glass-panel glass-panel-active snap-center flex flex-col p-6 cursor-pointer relative shrink-0 w-[480px] h-[320px]">
+<div class="absolute -top-8 -left-4 font-mono-data text-[10px] text-primary-container/80 flex flex-col uppercase">
+<span>AUTH_TOKEN: 0x882A...F3</span>
+<span>STATUS: DEPLOYMENT_READY</span>
+</div>
+<div class="absolute -bottom-8 -right-4 font-mono-data text-[10px] text-primary-container/80 text-right uppercase">
+<span>LATENCY: 12ms</span>
+<span>ENCRYPTION: AES-256-GCM</span>
+</div>
+<!-- Additional Dense Greeblies around main card -->
+<div class="absolute top-1/2 -left-12 -translate-y-1/2 flex flex-col gap-1 font-mono-data text-[8px] text-outline/50">
+<span>[SN-01]</span>
+<span>[SN-02]</span>
+<span>[SN-03]</span>
+</div>
+<div class="absolute top-1/2 -right-12 -translate-y-1/2 flex flex-col gap-1 font-mono-data text-[8px] text-outline/50 text-right">
+<span>FREQ: 144.2</span>
+<span>BND: WIDE</span>
+<span>MOD: QAM</span>
+</div>
+<!-- Bracket Accents -->
+<div class="bracket-accent bracket-tl"></div>
+<div class="bracket-accent bracket-tr"></div>
+<div class="bracket-accent bracket-bl"></div>
+<div class="bracket-accent bracket-br"></div>
+<!-- Card Header -->
+<div class="flex justify-between items-start mb-6">
+<span class="font-mono-data text-[12px] text-surface-tint opacity-70">[ CON_01 ]</span>
+<span class="font-mono-data text-[12px] text-primary-container font-bold tracking-widest animate-pulse">
+<span class="inline-block w-2 h-2 bg-primary-container rounded-sm mr-1"></span> ONLINE
+                    </span>
+</div>
+<!-- Company Info -->
+<div class="mb-auto">
+<h2 class="font-h1 text-h1 text-on-background uppercase leading-none mb-2">ROCKETLAB</h2>
+<p class="font-mono-data text-mono-data text-outline text-[14px] uppercase tracking-widest">HIGH-VELOCITY INTERCEPT</p>
+</div>
+<!-- Mineral Order Readout -->
+<div class="bg-surface-container-low border border-outline-variant/30 p-4 flex gap-6 mt-6 relative overflow-hidden"><!-- Subtle background image hinting at resources -->
+<div class="absolute inset-0 opacity-10 bg-cover bg-center" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCeKU0vRKuCtd0EhiwdnkA9jT0x1cxpsgE5mG04vlBfK036OyF2sFMN7Pa5ZODCrEeUGOEjXfDmy9SYKUgEytar8U9sMh7g0t05gfOHKKaq2KoYOu7Bp2tIKXXMeQy_OrvrRS74hiFAaKgglL-pkhcXnnvKVO06YBoqgYXoTYiFgpQ8__pmw99wNb471rkCN5h8Q6AZhtVMvsRDWXz-_08TJzD7t0RAFjrEt5EhMUOQh8dALiHuUSqts8YR4MWscdpwUgtmUqEsI0c');"></div>
+<div class="flex flex-col items-center relative z-10 flex-1">
+<span class="material-symbols-outlined text-primary-fixed text-4xl mb-1">architecture</span>
+<span class="font-h2 text-4xl text-primary-fixed mt-1">4.2K</span>
+<span class="font-mono-data text-[12px] text-outline tracking-tighter mt-1">PT (PLATINUM)</span>
+</div>
+<div class="w-px bg-outline-variant/50 self-stretch"></div>
+<div class="flex flex-col items-center relative z-10 flex-1">
+<span class="material-symbols-outlined text-primary-fixed text-4xl mb-1">water_drop</span>
+<span class="font-h2 text-4xl text-primary-fixed mt-1">850</span>
+<span class="font-mono-data text-[12px] text-outline tracking-tighter mt-1">H2O (ICE)</span>
+</div></div>
+<!-- Secured Badge -->
+<div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[110%] text-center pointer-events-none -rotate-12 mix-blend-screen opacity-90 z-20"><span class="font-label-caps text-lg text-primary-container border-y-2 border-primary-container py-3 px-12 tracking-[0.5em] bg-surface-container-lowest/95 backdrop-blur-md shadow-[0_0_30px_rgba(56,161,243,0.8)]">CONTRACT SECURED</span></div>
+</div>
+<!-- Card 2: ASTROFORGE (Inactive) -->
+<div class="glass-panel snap-center flex flex-col p-6 cursor-pointer relative shrink-0 opacity-50 hover:opacity-100 transition-opacity w-[480px] h-[320px]">
+<div class="flex justify-between items-start mb-6">
+<span class="font-mono-data text-[12px] text-outline">[ CON_02 ]</span>
+<span class="font-mono-data text-[12px] text-secondary-fixed opacity-70 tracking-widest">
+                        STANDBY
+                    </span>
+</div>
+<div class="mb-auto">
+<h2 class="font-h1 text-h1 text-outline uppercase leading-none mb-2">ASTROFORGE</h2>
+<p class="font-mono-data text-mono-data text-outline/60 text-[14px] uppercase tracking-widest">DEEP CORE EXTRACTION</p>
+</div>
+<div class="bg-surface-container-low border border-outline-variant/20 p-4 flex gap-6 mt-6 relative overflow-hidden grayscale">
+<div class="absolute inset-0 opacity-5 bg-cover bg-center" data-alt="A dense, rocky asteroid surface rich in iron and nickel. Harsh, directional lighting casts long shadows across craters and metallic veins. The overall tone is gritty and industrial, set against the infinite dark of deep space, fitting for a heavy-duty mining operation." style="background-image: url('https://lh3.googleusercontent.com/aida/ADBb0ujb_ePD1k83_Pv-0vL2uZJ3dEsj65-ZGqBRmopZoUytxVev6DEQJ9H9YzsLstL0ss3dJo8Q3yPKBuYWjrwyfoUmYs1L2ssCwqP2aI_upGtCVJApeNgGcX4p4Jtn0LBM8DYbxqIttzBDomzLmtTW8BLZTzpWHJe1yU1yFwwWimc4j0pbvWmNU4eXh8apRndTxqhQYg-Kh_mgQwISS_OrvvNCzn8rksQtKizAiz-_JOEhZqsfjHBHmVJ0Bgpyy79Qhen_b5H4kx1VnA');"></div>
+<div class="flex flex-col items-center relative z-10 flex-1">
+<span class="material-symbols-outlined text-outline text-4xl mb-1">diamond</span>
+<span class="font-h2 text-4xl text-outline mt-1">1.8K</span>
+<span class="font-mono-data text-[12px] text-outline/50 mt-1">FE (IRON)</span>
+</div>
+<div class="w-px bg-outline-variant/30 self-stretch"></div>
+<div class="flex flex-col items-center relative z-10 flex-1">
+<span class="material-symbols-outlined text-outline text-4xl mb-1">blur_on</span>
+<span class="font-h2 text-4xl text-outline mt-1">400</span>
+<span class="font-mono-data text-[12px] text-outline/50 mt-1">NI (NICKEL)</span>
+</div>
+</div>
+</div>
+<!-- Card 3: SPACEX (Inactive) -->
+<div class="glass-panel snap-center flex flex-col p-6 cursor-pointer relative shrink-0 opacity-50 hover:opacity-100 transition-opacity w-[480px] h-[320px]">
+<div class="flex justify-between items-start mb-6">
+<span class="font-mono-data text-[12px] text-outline">[ CON_03 ]</span>
+<span class="font-mono-data text-[12px] text-secondary-fixed opacity-70 tracking-widest">
+                        STANDBY
+                    </span>
+</div>
+<div class="mb-auto">
+<h2 class="font-h1 text-h1 text-outline uppercase leading-none mb-2">SPACEX</h2>
+<p class="font-mono-data text-mono-data text-outline/60 text-[14px] uppercase tracking-widest">HEAVY HAUL LOGISTICS</p>
+</div>
+<div class="bg-surface-container-low border border-outline-variant/20 p-4 flex gap-6 mt-6 relative overflow-hidden grayscale">
+<div class="absolute inset-0 opacity-5 bg-cover bg-center" data-alt="A massive industrial spacecraft cargo hold filled with refined regolith containers. Dim, utilitarian lighting highlights the structural ribs of the ship. The atmosphere is functional and vast, emphasizing large-scale off-world transport and logistics." style="background-image: url('https://lh3.googleusercontent.com/aida/ADBb0uhVqBEXsjYCv2tCartxY2Z3E2RfZuDJ39cRJto97ILtcSCwkOxZdmuo_GtW04LHNALbIj8I2pTCV0mo2hohdtLGnBw0V36iwcVz20BnsE0kYVpzQq9B6Bqm1wE1bA4ps-Xthv2HilaChhRwiJaEbCWE9sqL8ti2TLQgrRfi-e0PJEdnuCDpx4ITGb_NKPoqmh_EeOger_IE6ygtIurGRCbYXqx6XqBQQvxcdxCoOJlsl_VHcFx1uK6IjzCeXS1lJ3K821-JNq6O');"></div>
+<div class="flex flex-col items-center relative z-10 flex-1">
+<span class="material-symbols-outlined text-outline text-4xl mb-1">layers</span>
+<span class="font-h2 text-4xl text-outline mt-1">9.5K</span>
+<span class="font-mono-data text-[12px] text-outline/50 mt-1">REG (REGOLITH)</span>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom: Tactical Action Bar (Shared Component Output Mapping: Footer) -->
+<!-- Applying Shared Component Footer JSON content and relevant styles translated to UI context -->
+<footer class="bg-[#0D1529]/95 fixed bottom-0 left-0 w-full z-50 flex justify-between items-center px-16 py-8 border-t border-cyan-900/50 shadow-none transition-all duration-200 ease-in-out shrink-0">
+<!-- Left: Cancel / Back action -->
+<button class="text-slate-500 border border-slate-800 px-10 py-4 font-mono uppercase tracking-widest text-[12px] hover:border-cyan-300 hover:text-cyan-200 hover:shadow-[0_0_15px_rgba(34,211,238,0.4)] flex items-center gap-3 btn-chamfer scale-110">
+<span class="material-symbols-outlined text-xl">close</span>
+            BACK
+        </button>
+<!-- Center: Status text from Shared JSON -->
+<div class="font-mono uppercase tracking-widest text-[12px] text-cyan-400 opacity-60 hidden md:flex gap-8 items-center">
+<span>SYSTEM STATUS: OPTIMAL</span>
+<span class="w-1 h-1 bg-cyan-400 rounded-full"></span>
+<span>MISSION LOG 2.4.9</span>
+<span class="w-1 h-1 bg-cyan-400 rounded-full"></span>
+<span>COORD: 45.992.11 - 88.A</span>
+</div>
+<!-- Right: Proceed action (Active state style applied) -->
+<button class="bg-cyan-500/20 text-cyan-400 border border-cyan-400 px-10 py-4 rounded-none font-bold font-mono uppercase tracking-widest text-[12px] hover:border-cyan-300 hover:text-cyan-200 hover:shadow-[0_0_15px_rgba(34,211,238,0.4)] flex items-center gap-3 btn-chamfer scale-110">
+            PROCEED
+            <span class="material-symbols-outlined text-xl">arrow_forward</span>
+</button>
+</footer>
+<div class="fixed inset-0 pointer-events-none z-10 opacity-30">
+<!-- Additional Dashboard Lines and Markers -->
+<div class="absolute top-10 left-10 w-24 h-24 border-l border-t border-primary-fixed/40"></div>
+<div class="absolute top-10 right-10 w-24 h-24 border-r border-t border-primary-fixed/40"></div>
+<div class="absolute bottom-32 left-10 w-24 h-24 border-l border-b border-primary-fixed/40"></div>
+<div class="absolute bottom-32 right-10 w-24 h-24 border-r border-b border-primary-fixed/40"></div>
+<div class="absolute top-1/2 left-8 -translate-y-1/2 rotate-90 font-mono-data text-[12px] text-primary-fixed/50 tracking-[0.3em]">NAV_GRID_REF: ALPHA-9</div>
+<div class="absolute top-1/2 right-8 -translate-y-1/2 -rotate-90 font-mono-data text-[12px] text-primary-fixed/50 tracking-[0.3em]">ORBITAL_PLANE: ZENITH</div>
+</div></body></html>

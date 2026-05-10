@@ -1,6 +1,6 @@
 # kanban-go
 
-Star Sailors sprint board — Go backend + vanilla JS PWA.
+Landnám sprint board — Go backend + vanilla JS PWA.
 
 ## Running locally
 

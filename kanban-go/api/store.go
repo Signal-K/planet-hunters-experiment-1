@@ -56,7 +56,7 @@ type Store interface {
 
 var defaultProjects = []KanbanProject{
 	{Slug: "saily", Name: "Daily Game"},
-	{Slug: "planet-hunters-experiment-1", Name: "Experiment 1"},
+	{Slug: "planet-hunters-experiment-1", Name: "Landnám"},
 	{Slug: "client", Name: "Web"},
 	{Slug: "coral", Name: "Coral"},
 }

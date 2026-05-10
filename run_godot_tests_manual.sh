@@ -37,7 +37,7 @@ TEST_FILES=(
 )
 
 echo "=========================================="
-echo "Star Sailors Godot Test Runner"
+echo "Landnám Godot Test Runner"
 echo "=========================================="
 echo "Godot: $GODOT_BIN"
 echo "Path:  $SCENE_DIR"

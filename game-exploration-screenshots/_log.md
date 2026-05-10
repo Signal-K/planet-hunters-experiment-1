@@ -1,4 +1,4 @@
-# Planet Hunters — New User Playthrough
+# Landnám — New User Playthrough
 Fri Mar  6 00:14:18 UTC 2026
 Saves cleared
 ## 1. Launch (fresh save)

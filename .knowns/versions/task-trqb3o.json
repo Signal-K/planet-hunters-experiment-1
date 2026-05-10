@@ -1,0 +1,46 @@
+{
+  "taskId": "trqb3o",
+  "currentVersion": 1,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "trqb3o",
+      "version": 1,
+      "timestamp": "2026-05-11T03:02:17.735406Z",
+      "author": "@Liam",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": null,
+          "newValue": "todo"
+        },
+        {
+          "field": "priority",
+          "oldValue": null,
+          "newValue": "high"
+        }
+      ],
+      "snapshot": {
+        "acceptanceCriteria": [
+          {
+            "text": "React Native screens updated",
+            "completed": false
+          },
+          {
+            "text": "Makefile and Dockerfiles updated",
+            "completed": false
+          },
+          {
+            "text": "Test suites updated",
+            "completed": false
+          }
+        ],
+        "assignee": "@Liam",
+        "description": "Update React Native screens and CI/CD scripts for Landnám.",
+        "priority": "high",
+        "status": "todo",
+        "title": "Rebrand: React Native UI \u0026 DevOps Polish"
+      }
+    }
+  ]
+}

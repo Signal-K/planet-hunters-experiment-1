@@ -3,7 +3,7 @@
     {
       "id": "275r0m",
       "project": "planet-hunters-experiment-1",
-      "projectName": "Experiment 1",
+      "projectName": "Landnám",
       "title": "Sketch the Starter Rocket 2 unlock screen layout",
       "status": "done",
       "priority": "high",
@@ -263,7 +263,7 @@
     {
       "id": "84qdog",
       "project": "planet-hunters-experiment-1",
-      "projectName": "Experiment 1",
+      "projectName": "Landnám",
       "title": "Sketch a 'next mission' CTA for post-debrief screen",
       "status": "done",
       "priority": "medium",
@@ -503,7 +503,7 @@
     {
       "id": "rlxdxi",
       "project": "planet-hunters-experiment-1",
-      "projectName": "Experiment 1",
+      "projectName": "Landnám",
       "title": "Sketch star map UI for target selection",
       "status": "done",
       "priority": "medium",
@@ -561,7 +561,7 @@
     {
       "id": "3t29bl",
       "project": "planet-hunters-experiment-1",
-      "projectName": "Experiment 1",
+      "projectName": "Landnám",
       "title": "Write button guide copy for mining and debrief screens",
       "status": "done",
       "priority": "medium",
@@ -583,7 +583,7 @@
     {
       "id": "fi4geq",
       "project": "planet-hunters-experiment-1",
-      "projectName": "Experiment 1",
+      "projectName": "Landnám",
       "title": "Write copy and flow for the Starter Rocket 2 unlock screen",
       "status": "done",
       "priority": "medium",
@@ -605,7 +605,7 @@
     {
       "id": "kraozi",
       "project": "planet-hunters-experiment-1",
-      "projectName": "Experiment 1",
+      "projectName": "Landnám",
       "title": "Design Launchpad mission-setup screen for populated DB-backed targets",
       "status": "in-review",
       "priority": "medium",
@@ -632,7 +632,7 @@
     {
       "id": "ex77py",
       "project": "planet-hunters-experiment-1",
-      "projectName": "Experiment 1",
+      "projectName": "Landnám",
       "title": "Design Satellite Station populated anomaly list for DB-backed scan results",
       "status": "in-review",
       "priority": "high",
@@ -702,7 +702,7 @@
     {
       "id": "w8f4l5",
       "project": "planet-hunters-experiment-1",
-      "projectName": "Experiment 1",
+      "projectName": "Landnám",
       "title": "Write in-universe project briefs for the 6 named contractors",
       "status": "todo",
       "priority": "medium",
@@ -725,7 +725,7 @@
     {
       "id": "zpo0t2",
       "project": "planet-hunters-experiment-1",
-      "projectName": "Experiment 1",
+      "projectName": "Landnám",
       "title": "Design the Control Station active mission card",
       "status": "in-progress",
       "priority": "high",
@@ -748,7 +748,7 @@
     {
       "id": "01905l",
       "project": "planet-hunters-experiment-1",
-      "projectName": "Experiment 1",
+      "projectName": "Landnám",
       "title": "Design the debrief payout breakdown panel",
       "status": "todo",
       "priority": "medium",
@@ -925,7 +925,7 @@
         "liam-sprint"
       ],
       "assignee": "Liam",
-      "description": "Document Bumble current product identity in one concise brief: target player is casual gamers, canonical title is Bumble / Star Sailors: Bumble, planets stay hidden in current UX, NPCs are light-flavour order names, and copy should stay practical rather than lore-heavy. Include explicit do and do-not rules for future writing and design work.",
+      "description": "Document Bumble current product identity in one concise brief: target player is casual gamers, canonical title is Bumble / Landnám: Bumble, planets stay hidden in current UX, NPCs are light-flavour order names, and copy should stay practical rather than lore-heavy. Include explicit do and do-not rules for future writing and design work.",
       "notes": "",
       "plan": "",
       "ac": [],
@@ -1013,7 +1013,7 @@
     },
     {
       "slug": "planet-hunters-experiment-1",
-      "name": "Experiment 1"
+      "name": "Landnám"
     },
     {
       "slug": "client",

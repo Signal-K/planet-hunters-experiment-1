@@ -12,7 +12,7 @@ TEMP_GODOT_USER_DIR=""
 if [ -n "${GODOT_USER_DIR:-}" ]; then
   GODOT_USER_DIR="$GODOT_USER_DIR"
 else
-  TEMP_GODOT_USER_DIR="$(mktemp -d "${TMPDIR:-/tmp}/planet-hunters-godot-export.XXXXXX")"
+  TEMP_GODOT_USER_DIR="$(mktemp -d "${TMPDIR:-/tmp}/landnam-godot-export.XXXXXX")"
   GODOT_USER_DIR="$TEMP_GODOT_USER_DIR"
 fi
 

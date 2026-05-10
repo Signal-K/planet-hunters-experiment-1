@@ -1,5 +1,5 @@
 /**
- * Distant Signals - React Native + Godot
+ * Landnám - React Native + Godot
  */
 
 import React, { useEffect, useRef, useState } from "react";
@@ -27,7 +27,7 @@ interface GodotHostProps {
 
 const GodotHost = ({ interactive }: GodotHostProps) => {
   useEffect(() => {
-    initGodot("GodotTest");
+    initGodot("Landnam");
     const stopSync = startSyncLoop(700);
     const { MissionService } = require("./utils/missionService");
     MissionService.startListening();

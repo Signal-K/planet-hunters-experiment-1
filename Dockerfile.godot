@@ -58,5 +58,5 @@ WORKDIR /app/project
 
 # Default command - interactive godot shell
 # To export a PCK file:
-# docker-compose run --rm godot-cli godot --path . --export-pack "iOS" ../ios/GodotTest.pck
+# docker-compose run --rm godot-cli godot --path . --export-pack "iOS" ../ios/Landnam.pck
 CMD ["godot", "--help"]

@@ -1,7 +1,7 @@
 {
-  "name": "planet-hunters-kanban",
+  "name": "landnam-kanban",
   "version": "1.0.0",
-  "description": "Kanban board for Planet Hunters / Star Sailors project tasks",
+  "description": "Kanban board for Landnám / Landnám project tasks",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

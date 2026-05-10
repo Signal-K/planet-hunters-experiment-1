@@ -1,0 +1,46 @@
+{
+  "taskId": "g58lsu",
+  "currentVersion": 1,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "g58lsu",
+      "version": 1,
+      "timestamp": "2026-05-11T03:01:57.038419Z",
+      "author": "@Liam",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": null,
+          "newValue": "todo"
+        },
+        {
+          "field": "priority",
+          "oldValue": null,
+          "newValue": "high"
+        }
+      ],
+      "snapshot": {
+        "acceptanceCriteria": [
+          {
+            "text": "README.md updated",
+            "completed": false
+          },
+          {
+            "text": "GEMINI.md updated",
+            "completed": false
+          },
+          {
+            "text": "Supabase migrations updated",
+            "completed": false
+          }
+        ],
+        "assignee": "@Liam",
+        "description": "Rename project to Landnám across README, GEMINI, and Supabase migrations.",
+        "priority": "high",
+        "status": "todo",
+        "title": "Rebrand: Core Identity \u0026 Documentation"
+      }
+    }
+  ]
+}

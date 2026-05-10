@@ -456,7 +456,7 @@ func _on_classify(verdict: String, row: VBoxContainer) -> void:
 					"verdict": verdict,
 					"annotation_count": annotation_count,
 					"transit_dips": drawing_canvas.get_transit_dips() if drawing_canvas.has_method("get_transit_dips") else [],
-					"source": "star-sailors-game"
+					"source": "landnam-game"
 				}
 			}
 			supabase.post_json("classifications", row_data)

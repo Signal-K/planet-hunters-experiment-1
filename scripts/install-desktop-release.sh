@@ -59,7 +59,7 @@ elif [ "$os" = "Linux" ]; then
   fi
 
   install_dir="${HOME}/.local/bin"
-  install_path="${install_dir}/planet-hunters-desktop"
+  install_path="${install_dir}/landnam-desktop"
 
   mkdir -p "$install_dir"
   echo "Downloading $asset_name"

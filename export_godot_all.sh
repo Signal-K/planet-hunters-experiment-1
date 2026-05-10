@@ -193,7 +193,7 @@ export_ios() {
     
     TARGET_DIR="$OUTPUT_BASE_DIR/ios"
     PRESET="iOS"
-    NAME="GodotTest"
+    NAME="Landnam"
 
     if ! preset_exists "$PRESET"; then
         echo -e "${RED}✗ Export preset \"$PRESET\" not found in $EXPORT_PRESETS_FILE${NC}"

@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Stellar OS - Tactical Star Map</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700;900&amp;family=Inter:wght@400;500;700&amp;family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-error-container": "#ffdad6",
+                      "surface-container-highest": "#353436",
+                      "on-tertiary-fixed": "#291802",
+                      "primary-fixed-dim": "#bec6e1",
+                      "tertiary-fixed-dim": "#e2c19c",
+                      "tertiary": "#e2c19c",
+                      "tertiary-fixed": "#ffddb7",
+                      "surface-container-high": "#2a2a2b",
+                      "on-tertiary-container": "#967b5a",
+                      "on-surface-variant": "#c6c6cd",
+                      "surface-container-low": "#1b1b1d",
+                      "on-primary-fixed-variant": "#3f465d",
+                      "on-secondary": "#232f4f",
+                      "secondary-fixed": "#dae2ff",
+                      "outline": "#909097",
+                      "surface-container-lowest": "#0e0e10",
+                      "inverse-surface": "#e4e2e4",
+                      "surface-tint": "#bec6e1",
+                      "surface-variant": "#353436",
+                      "primary-fixed": "#dae2fe",
+                      "on-background": "#e4e2e4",
+                      "inverse-on-surface": "#303032",
+                      "on-secondary-fixed-variant": "#3a4667",
+                      "tertiary-container": "#221200",
+                      "background": "#131315",
+                      "surface-dim": "#131315",
+                      "on-error": "#690005",
+                      "surface": "#131315",
+                      "outline-variant": "#45464d",
+                      "on-tertiary": "#402d12",
+                      "surface-bright": "#39393b",
+                      "on-primary-fixed": "#131b2f",
+                      "on-primary": "#283045",
+                      "surface-container": "#1f1f21",
+                      "secondary": "#bac5ed",
+                      "inverse-primary": "#565e75",
+                      "on-secondary-container": "#abb7df",
+                      "on-secondary-fixed": "#0d1a39",
+                      "on-tertiary-fixed-variant": "#594326",
+                      "on-primary-container": "#777f98",
+                      "secondary-fixed-dim": "#bac5ed",
+                      "error-container": "#93000a",
+                      "primary": "#bec6e1",
+                      "on-surface": "#e4e2e4",
+                      "error": "#ffb4ab",
+                      "primary-container": "#0d1529",
+                      "secondary-container": "#3c486a"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "module-gap": "16px",
+                      "inner-padding": "12px",
+                      "container-padding": "24px",
+                      "unit": "4px"
+              },
+              "fontFamily": {
+                      "ui-header": ["Space Grotesk", "sans-serif"],
+                      "display-data": ["Space Mono", "monospace"],
+                      "body-standard": ["Inter", "sans-serif"],
+                      "data-mono": ["Space Mono", "monospace"],
+                      "label-bold": ["Space Grotesk", "sans-serif"]
+              },
+              "fontSize": {
+                      "ui-header": ["18px", { "lineHeight": "1.2", "letterSpacing": "0.01em", "fontWeight": "700" }],
+                      "display-data": ["40px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                      "body-standard": ["14px", { "lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400" }],
+                      "data-mono": ["12px", { "lineHeight": "1.5", "letterSpacing": "0.02em", "fontWeight": "400" }],
+                      "label-bold": ["14px", { "lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "700" }]
+              }
+            }
+          }
+        }
+    </script>
+<style type="text/tailwindcss">
+        @layer utilities {
+            .bg-grid-pattern {
+                background-image: 
+                    linear-gradient(to right, rgba(144, 144, 151, 0.1) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(144, 144, 151, 0.1) 1px, transparent 1px);
+                background-size: 40px 40px;
+            }
+            .glow-border {
+                box-shadow: 0 0 8px rgba(190, 198, 225, 0.3);
+            }
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface h-screen w-screen overflow-hidden relative font-body-standard text-body-standard selection:bg-primary-container selection:text-primary">
+<!-- Background Layer: Nebula Haze & Grid -->
+<div class="absolute inset-0 z-0 pointer-events-none">
+<div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-surface-container-high/40 via-background to-background"></div>
+<div class="absolute inset-0 bg-grid-pattern"></div>
+<!-- Concentric Range Rings -->
+<svg class="absolute inset-0 w-full h-full opacity-20" xmlns="http://www.w3.org/2000/svg">
+<circle class="text-outline" cx="50%" cy="50%" fill="none" r="20%" stroke="currentColor" stroke-dasharray="4 4" stroke-width="1"></circle>
+<circle class="text-outline" cx="50%" cy="50%" fill="none" r="35%" stroke="currentColor" stroke-width="1"></circle>
+<circle class="text-outline" cx="50%" cy="50%" fill="none" r="50%" stroke="currentColor" stroke-dasharray="2 8" stroke-width="1"></circle>
+<circle class="text-outline" cx="50%" cy="50%" fill="none" r="65%" stroke="currentColor" stroke-width="0.5"></circle>
+<!-- Radar Sweep -->
+<path class="text-primary opacity-50" d="M 50% 50% L 50% 15%" stroke="currentColor" stroke-width="2"></path>
+</svg>
+<!-- Constellation Lines & Star Clusters (SVG Canvas) -->
+<svg class="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
+<!-- Constellation 1 (Primary/Cyan equivalent) -->
+<polyline class="text-primary opacity-60" fill="none" points="20%,30% 25%,45% 35%,40% 40%,25%" stroke="currentColor" stroke-width="1"></polyline>
+<circle class="text-primary" cx="20%" cy="30%" fill="currentColor" r="3"></circle>
+<circle class="text-primary" cx="25%" cy="45%" fill="currentColor" r="4"></circle>
+<circle class="text-primary" cx="35%" cy="40%" fill="currentColor" r="2"></circle>
+<circle class="text-primary" cx="40%" cy="25%" fill="currentColor" r="5"></circle>
+<circle class="text-primary opacity-40" cx="40%" cy="25%" fill="none" r="12" stroke="currentColor" stroke-width="1"></circle>
+<!-- Constellation 2 (Tertiary/Orange equivalent) -->
+<polyline class="text-tertiary opacity-60" fill="none" points="70%,20% 75%,35% 85%,30%" stroke="currentColor" stroke-width="1"></polyline>
+<circle class="text-tertiary" cx="70%" cy="20%" fill="currentColor" r="4"></circle>
+<circle class="text-tertiary" cx="75%" cy="35%" fill="currentColor" r="6"></circle>
+<circle class="text-tertiary" cx="85%" cy="30%" fill="currentColor" r="3"></circle>
+<circle class="text-tertiary opacity-40" cx="75%" cy="35%" fill="none" r="15" stroke="currentColor" stroke-dasharray="2 2" stroke-width="1"></circle>
+<!-- Constellation 3 (Error/Red equivalent) -->
+<polyline class="text-error opacity-60" fill="none" points="60%,70% 55%,85% 70%,80%" stroke="currentColor" stroke-width="1"></polyline>
+<circle class="text-error" cx="60%" cy="70%" fill="currentColor" r="3"></circle>
+<circle class="text-error" cx="55%" cy="85%" fill="currentColor" r="5"></circle>
+<circle class="text-error" cx="70%" cy="80%" fill="currentColor" r="4"></circle>
+<!-- Constellation 4 (Secondary) -->
+<polyline class="text-secondary opacity-60" fill="none" points="30%,70% 20%,80% 35%,85%" stroke="currentColor" stroke-width="1"></polyline>
+<circle class="text-secondary" cx="30%" cy="70%" fill="currentColor" r="4"></circle>
+<circle class="text-secondary" cx="20%" cy="80%" fill="currentColor" r="3"></circle>
+<circle class="text-secondary" cx="35%" cy="85%" fill="currentColor" r="5"></circle>
+</svg>
+</div>
+<!-- TopAppBar (Shared Component) -->
+<nav class="flex justify-between items-center w-full px-8 py-4 h-16 docked full-width top-0 border-b border-cyan-500/20 bg-slate-950/40 backdrop-blur-xl shadow-[0_0_15px_rgba(0,242,255,0.1)] absolute z-50">
+<div class="flex items-center space-x-container-padding">
+<span class="text-xl font-black text-cyan-400 tracking-tighter">STELLAR_OS</span>
+<div class="flex space-x-module-gap ml-8">
+<a class="font-space-grotesk tracking-widest uppercase text-xs font-bold text-slate-500 hover:text-cyan-200 transition-colors" href="#">SOLAR SYSTEM</a>
+<a class="font-space-grotesk tracking-widest uppercase text-xs font-bold text-cyan-400 border-b-2 border-cyan-400 pb-2 transition-all Active: scale-95 transition-transform" href="#">GALAXY</a>
+</div>
+</div>
+<div class="flex items-center space-x-module-gap">
+<button aria-label="settings" class="text-slate-500 hover:bg-cyan-400/10 hover:text-cyan-300 p-2 rounded transition-colors">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<button aria-label="notifications" class="text-slate-500 hover:bg-cyan-400/10 hover:text-cyan-300 p-2 rounded transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<div class="w-8 h-8 bg-surface-container rounded-full border border-cyan-500/30 overflow-hidden ml-4">
+<img alt="Pilot profile" class="w-full h-full object-cover" data-alt="A close up portrait of a futuristic starship pilot wearing a high-tech sleek helmet and dark visor. The lighting is cinematic, casting dramatic shadows and cool blue rim light across the visor. The setting implies a dark, advanced cockpit environment. The overall aesthetic is gritty, realistic sci-fi with a moody, high-contrast atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC7i1CKxiojW1vd4IX9laTlXUFG2m3WjP7gq8uvjHu02_d5MoJK8BNMyzGy4YPertSt_kv8yiRkUz-syNKevJ1gcXsiiNdc1tT51UD73gTsaVkoayB57-cqkfHT9Np-QlKZDluM3gKfYghB8W6zcTiYag7Jyj42s4I1AMQhb8ijIFuk7q8MG0bmrBBzO9HWQ8iRGDxOvUVnKzRb3fZE8eDumxX9Xx5AKi2JvXXt0fiRL98vFBJjBE-WFwo1lHFrAaq0oBwHLxOnqdg"/>
+</div>
+</div>
+</nav>
+<!-- SideNavBar (Shared Component) - Hidden on Mobile -->
+<aside class="fixed left-0 top-0 h-full w-20 border-r border-cyan-500/10 bg-slate-950/60 backdrop-blur-2xl shadow-2xl flex flex-col items-center py-20 space-y-8 z-40 hidden md:flex">
+<div class="flex flex-col items-center mb-8">
+<div class="w-10 h-10 bg-surface-container-high border border-cyan-500/30 mb-2 flex items-center justify-center">
+<span class="material-symbols-outlined text-cyan-400 text-sm">rocket</span>
+</div>
+</div>
+<div class="flex flex-col space-y-6 w-full">
+<a class="flex flex-col items-center justify-center w-full py-3 font-space-grotesk text-[10px] tracking-tight text-slate-600 opacity-60 hover:bg-slate-800/50 hover:text-cyan-100 transition-colors group relative" href="#" title="TELEMETRY">
+<span class="material-symbols-outlined mb-1 group-hover:scale-110 transition-transform">query_stats</span>
+<span class="sr-only">TELEMETRY</span>
+</a>
+<a class="flex flex-col items-center justify-center w-full py-3 font-space-grotesk text-[10px] tracking-tight bg-cyan-500/10 text-cyan-400 border-l-2 border-cyan-400 shadow-[inset_10px_0_15px_-10px_rgba(0,242,255,0.3)] Active: brightness-125 relative" href="#" title="COORDINATES">
+<span class="material-symbols-outlined mb-1">explore</span>
+<span class="sr-only">COORDINATES</span>
+</a>
+<a class="flex flex-col items-center justify-center w-full py-3 font-space-grotesk text-[10px] tracking-tight text-slate-600 opacity-60 hover:bg-slate-800/50 hover:text-cyan-100 transition-colors group relative" href="#" title="LIFESUPPORT">
+<span class="material-symbols-outlined mb-1 group-hover:scale-110 transition-transform">vital_signs</span>
+<span class="sr-only">LIFESUPPORT</span>
+</a>
+<a class="flex flex-col items-center justify-center w-full py-3 font-space-grotesk text-[10px] tracking-tight text-slate-600 opacity-60 hover:bg-slate-800/50 hover:text-cyan-100 transition-colors group relative" href="#" title="COMMS">
+<span class="material-symbols-outlined mb-1 group-hover:scale-110 transition-transform">terminal</span>
+<span class="sr-only">COMMS</span>
+</a>
+</div>
+<div class="mt-auto flex flex-col items-center pb-8">
+<span class="text-lg font-bold text-cyan-400 writing-vertical-rl transform rotate-180 mb-4">APOLLO_HUD</span>
+<span class="font-data-mono text-[8px] text-slate-500 writing-vertical-rl transform rotate-180">SECTOR_7G</span>
+</div>
+</aside>
+<!-- Main Canvas Area (Tactical Data) -->
+<main class="absolute inset-0 z-10 pt-16 pl-20 pointer-events-none">
+<!-- Data Card: SECTOR REFERENCE -->
+<div class="absolute top-[25%] left-[15%] w-64 bg-surface-container-low/80 backdrop-blur-sm border border-outline/30 p-inner-padding pointer-events-auto group">
+<div class="absolute -top-1 -left-1 w-2 h-2 border-t-2 border-l-2 border-primary"></div>
+<div class="absolute -top-1 -right-1 w-2 h-2 border-t-2 border-r-2 border-primary"></div>
+<div class="absolute -bottom-1 -left-1 w-2 h-2 border-b-2 border-l-2 border-primary"></div>
+<div class="absolute -bottom-1 -right-1 w-2 h-2 border-b-2 border-r-2 border-primary"></div>
+<div class="flex items-center space-x-2 mb-2 border-b border-outline/20 pb-1">
+<span class="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
+<h3 class="font-label-bold text-label-bold text-primary uppercase">SECTOR REFERENCE</h3>
+</div>
+<div class="space-y-1">
+<div class="flex justify-between">
+<span class="font-data-mono text-data-mono text-on-surface-variant">COORD_X:</span>
+<span class="font-data-mono text-data-mono text-primary">78.492.1</span>
+</div>
+<div class="flex justify-between">
+<span class="font-data-mono text-data-mono text-on-surface-variant">COORD_Y:</span>
+<span class="font-data-mono text-data-mono text-primary">12.004.8</span>
+</div>
+<div class="flex justify-between">
+<span class="font-data-mono text-data-mono text-on-surface-variant">DENSITY:</span>
+<span class="font-data-mono text-data-mono text-primary">0.04 AU</span>
+</div>
+</div>
+<!-- Connector Line SVG -->
+<svg class="absolute top-1/2 left-full w-32 h-1 overflow-visible" xmlns="http://www.w3.org/2000/svg">
+<line class="text-primary opacity-40" stroke="currentColor" stroke-dasharray="2 4" stroke-width="1" x1="0" x2="100%" y1="0" y2="0"></line>
+<circle class="text-primary" cx="100%" cy="0" fill="currentColor" r="2"></circle>
+</svg>
+</div>
+<!-- Data Card: ACTIVE ANOMALY -->
+<div class="absolute bottom-[25%] right-[20%] w-72 bg-surface-container-low/90 backdrop-blur-md border border-error/50 p-inner-padding pointer-events-auto shadow-[0_0_15px_rgba(255,180,171,0.1)]">
+<!-- Diagonal hazard stripe background pseudo-element representation -->
+<div class="absolute inset-0 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(255,180,171,0.05)_10px,rgba(255,180,171,0.05)_20px)] opacity-50 pointer-events-none"></div>
+<div class="relative z-10 flex items-center justify-between mb-3 border-b border-error/30 pb-2">
+<div class="flex items-center space-x-2">
+<span class="material-symbols-outlined text-error text-sm" style="font-variation-settings: 'FILL' 1;">warning</span>
+<h3 class="font-label-bold text-label-bold text-error uppercase tracking-widest">ACTIVE ANOMALY</h3>
+</div>
+<span class="font-data-mono text-[10px] text-error bg-error/10 px-1 py-0.5">CLASS_IV</span>
+</div>
+<div class="relative z-10 space-y-2">
+<div class="flex justify-between items-center bg-surface-container p-1 border border-outline/20">
+<span class="font-data-mono text-data-mono text-on-surface-variant">SIG_STRENGTH:</span>
+<div class="flex space-x-1">
+<div class="w-1 h-3 bg-error"></div>
+<div class="w-1 h-3 bg-error"></div>
+<div class="w-1 h-3 bg-error"></div>
+<div class="w-1 h-3 bg-error/30"></div>
+<div class="w-1 h-3 bg-error/30"></div>
+</div>
+</div>
+<p class="font-data-mono text-[10px] text-on-surface-variant leading-tight">GRAVITATIONAL FLUCTUATIONS DETECTED. IMMEDIATE SCAN RECOMMENDED.</p>
+</div>
+<!-- Connector Line SVG -->
+<svg class="absolute top-1/4 right-full w-24 h-1 overflow-visible" xmlns="http://www.w3.org/2000/svg">
+<line class="text-error opacity-60" stroke="currentColor" stroke-width="1" x1="0" x2="100%" y1="0" y2="0"></line>
+<circle class="text-error" cx="0" cy="0" fill="none" r="3" stroke="currentColor" stroke-width="1"></circle>
+</svg>
+</div>
+<!-- Data Card: UNIDENTIFIED SIGNAL -->
+<div class="absolute top-[20%] right-[30%] w-56 bg-surface-container-low/80 backdrop-blur-sm border-l-2 border-tertiary p-inner-padding pointer-events-auto">
+<div class="flex items-center space-x-2 mb-2">
+<span class="material-symbols-outlined text-tertiary text-sm">radar</span>
+<h3 class="font-label-bold text-label-bold text-tertiary uppercase">UNIDENTIFIED SIGNAL</h3>
+</div>
+<div class="bg-surface-container/50 h-8 w-full border border-outline/20 flex items-center justify-center mb-2 overflow-hidden relative">
+<!-- Fake waveform -->
+<svg class="w-full h-full text-tertiary opacity-70" preserveaspectratio="none" viewbox="0 0 100 20">
+<polyline fill="none" points="0,10 10,10 15,2 20,18 25,10 40,10 45,5 50,15 55,10 80,10 85,8 90,12 100,10" stroke="currentColor" stroke-width="0.5"></polyline>
+</svg>
+<div class="absolute inset-0 bg-gradient-to-r from-transparent via-tertiary/20 to-transparent w-1/2 animate-[spin_3s_linear_infinite] origin-left"></div>
+</div>
+<div class="flex justify-between">
+<span class="font-data-mono text-data-mono text-on-surface-variant">FREQ:</span>
+<span class="font-data-mono text-data-mono text-tertiary">14.2 GHz</span>
+</div>
+</div>
+</main>
+<!-- FAB: DEEP SCAN -->
+<button class="fixed bottom-container-padding right-container-padding z-50 bg-primary-container text-on-primary-container border border-primary px-6 py-3 font-label-bold text-label-bold uppercase tracking-widest flex items-center space-x-2 hover:bg-primary/20 hover:text-primary transition-all glow-border group">
+<span class="material-symbols-outlined text-primary group-hover:rotate-180 transition-transform duration-500">settings_input_antenna</span>
+<span>DEEP SCAN</span>
+<div class="absolute inset-0 border border-primary opacity-0 group-hover:animate-ping pointer-events-none"></div>
+</button>
+</body></html>
