@@ -6,6 +6,7 @@ const EXPERIENCE_CONFIG_PATH := "user://experience.cfg"
 const FRANC_BALANCE_SECTION := "currency"
 const FRANC_BALANCE_KEY := "balance"
 const LOAN_KEY := "loan_balance"
+const LEGACY_FRANC_BALANCE_JSON_PATH := "user://franc_balance.json"
 const EXPERIENCE_SECTION := "experience"
 const EXPERIENCE_XP_KEY := "xp"
 const EXPERIENCE_LEVEL_KEY := "level"
@@ -35,8 +36,27 @@ func load_franc_balance(default_value: int) -> Dictionary:
 			return {"loaded": true, "value": value, "loan": loan}
 		print("[AppController] No franc balance key in config; using default: ", default_value)
 		return {"loaded": false, "value": default_value, "loan": 0}
+	var legacy = _load_legacy_franc_balance_json()
+	if bool(legacy.get("loaded", false)):
+		save_franc_balance(int(legacy.get("value", default_value)), int(legacy.get("loan", 0)))
+		return legacy
 	print("[AppController] No saved franc balance config (or failed to load): ", err)
 	return {"loaded": false, "value": default_value, "loan": 0}
+
+func _load_legacy_franc_balance_json() -> Dictionary:
+	if not FileAccess.file_exists(LEGACY_FRANC_BALANCE_JSON_PATH):
+		return {"loaded": false}
+	var file := FileAccess.open(LEGACY_FRANC_BALANCE_JSON_PATH, FileAccess.READ)
+	if file == null:
+		return {"loaded": false}
+	var parsed = JSON.parse_string(file.get_as_text())
+	file.close()
+	if typeof(parsed) != TYPE_DICTIONARY or not parsed.has(FRANC_BALANCE_KEY):
+		return {"loaded": false}
+	var value := int(parsed.get(FRANC_BALANCE_KEY, 0))
+	var loan := int(parsed.get(LOAN_KEY, 0))
+	print("[AppController] Loaded legacy franc balance JSON: ", value)
+	return {"loaded": true, "value": value, "loan": loan}
 
 func save_experience(xp: int, level: int) -> void:
 	var cfg = ConfigFile.new()
@@ -86,6 +106,7 @@ func load_citizen_science_dialogue_enabled(default_value: bool = true) -> bool:
 
 func reset_all() -> void:
 	DirAccess.remove_absolute(FRANC_BALANCE_CONFIG_PATH)
+	DirAccess.remove_absolute(LEGACY_FRANC_BALANCE_JSON_PATH)
 	DirAccess.remove_absolute(EXPERIENCE_CONFIG_PATH)
 	DirAccess.remove_absolute("user://construction_state.json")
 	DirAccess.remove_absolute("user://first_time_mechanics.json")
