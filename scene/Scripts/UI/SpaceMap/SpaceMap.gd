@@ -22,7 +22,7 @@ const BELT_RX := 286.0
 const BELT_RY := 219.0
 
 const EARTH_HIT_R  := 30.0
-const TARGET_HIT_R := 22.0
+const TARGET_HIT_R := 32.0
 
 var scene_manager: SceneManager
 var ui_manager: UIManager
@@ -140,7 +140,7 @@ func _rebuild_solar_targets() -> void:
 		node.name = "T_" + tid; node.position = lpos
 		node.set_meta("target_id", tid); node.set_meta("is_discovery", is_disc)
 		var icon := GalaxyMapNodeScript.new()
-		icon.set("label_text",  str(t.get("label", tid)))
+		icon.set("star_name", str(t.get("label", tid)))
 		
 		var base_color := Color(1.0, 0.85, 0.25, 1.0) if is_disc else Color(0.55, 0.58, 0.62, 0.85)
 		var radius := 5.0
@@ -149,11 +149,10 @@ func _rebuild_solar_targets() -> void:
 			# Highlight available mission targets
 			base_color = Color(0.28, 0.88, 0.96, 1.0) # MISSION CYAN
 			radius = 8.0
-			# Add a subtle pulse or ring via the icon script if supported, 
-			# or just make it bigger and brighter.
+			icon.set("is_selected", true) # Use the selection bracket for extra focus
 			
-		icon.set("icon_radius", radius)
-		icon.set("icon_color", base_color)
+		icon.set("star_radius", radius)
+		icon.set("star_color", base_color)
 		node.add_child(icon)
 		game_nd.add_child(node)
 
@@ -176,6 +175,12 @@ func _apply_exploration_visibility() -> void:
 	for nm in ["Ceres", "Vesta", "Hygiea"]:
 		var n := get_node_or_null("SolarSystem/Belt/" + nm)
 		if n: n.modulate = Color(1, 1, 1, 1.0 if has_belt else 0.45)
+	
+	var game_targets := get_node_or_null("SolarSystem/Belt/GameTargets") as Node2D
+	if game_targets:
+		game_targets.modulate = Color(1, 1, 1, 1.0)
+		game_targets.visible = true
+
 	# Hide outer regions (comets, Eris, Oort, Kuiper) in selection mode
 	if selection_mode:
 		var outer := get_node_or_null("SolarSystem/OuterRegions") as Node2D
