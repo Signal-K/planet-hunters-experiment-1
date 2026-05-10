@@ -149,7 +149,9 @@ func _rebuild_solar_targets() -> void:
 			# Highlight available mission targets
 			base_color = Color(0.28, 0.88, 0.96, 1.0) # MISSION CYAN
 			radius = 8.0
-			icon.set("is_selected", true) # Use the selection bracket for extra focus
+			icon.set("is_selected", true) # Brackets
+			icon.set("is_candidate", true) # Extra pulse ring
+			icon.set("awaiting_review", true) # Cyan arc
 			
 		icon.set("star_radius", radius)
 		icon.set("star_color", base_color)
@@ -268,18 +270,26 @@ func _input(event: InputEvent) -> void:
 func _handle_click(screen_pos: Vector2) -> void:
 	if solar_system == null:
 		return
-	var local := solar_system.to_local(screen_pos)
-
+	
+	# Earth check (always available)
 	var earth := get_node_or_null("SolarSystem/Bodies/Earth") as Node2D
-	if earth and local.distance_to(earth.position) <= EARTH_HIT_R:
-		_change_scene_to_base()
-		return
+	if earth:
+		var earth_global_pos = earth.global_position
+		if screen_pos.distance_to(earth_global_pos) <= EARTH_HIT_R * solar_system.scale.x:
+			_change_scene_to_base()
+			return
 
+	# Target check
 	for tid in _target_positions.keys():
 		var entry: Dictionary = _target_positions[tid]
-		if local.distance_to(entry["pos"] as Vector2) <= TARGET_HIT_R:
-			_open_target_preview(tid, entry)
-			return
+		var target_node = get_node_or_null("SolarSystem/Belt/GameTargets/T_" + tid)
+		if target_node:
+			var target_global_pos = target_node.global_position
+			# Scale the hit radius by the solar system's current view scale
+			var effective_radius = TARGET_HIT_R * solar_system.scale.x
+			if screen_pos.distance_to(target_global_pos) <= effective_radius:
+				_open_target_preview(tid, entry)
+				return
 
 # ── Target popup ──────────────────────────────────────────────────────────────
 
