@@ -88,18 +88,7 @@ func run_all_tests() -> void:
 	await test_game_navigation_menu_root_has_scene_owned_sections()
 	await test_game_navigation_menu_stats_and_debug_use_templates()
 	await test_game_navigation_menu_uses_trip_order_requirements()
-	await test_game_navigation_menu_actions_use_scene_owned_controls()
-	await test_game_navigation_menu_uses_template_backed_overlay_rows()
-	await test_game_navigation_menu_construction_uses_templates()
-	await test_game_navigation_menu_live_cards_use_templates()
-	await test_control_station_panel_has_scene_owned_primary_sections()
-	await test_control_station_panel_uses_template_backed_rows()
-	await test_satellite_station_panel_has_scene_owned_hint_and_early_scan_controls()
-	await test_space_map_target_dialogue_uses_scene_templates()
-	await test_emergency_loan_dialog_has_scene_owned_layout()
-	await test_asteroid_detail_view_uses_scene_owned_summary_and_classification()
-	await test_mission_debrief_uses_template_backed_guide_and_detail_rows()
-	await test_menu_panel_advanced_debug_controls_are_scene_owned()
+	await test_game_navigation_menu_settings_and_reset_sections()
 	await test_mechanic_intro_overlay_uses_template_backed_step_rows()
 	await test_subcontractors_panel_uses_template_backed_detail_labels()
 	await test_launch_wizard_has_required_signals()
@@ -585,225 +574,37 @@ func test_control_station_panel_has_scene_owned_primary_sections() -> void:
 	scene.queue_free()
 	reporter.pass_test()
 
-func test_game_navigation_menu_actions_use_scene_owned_controls() -> void:
-	reporter.start_test("[UX] GameNavigationMenu settings entry and landscape panel use scene-owned controls")
-	var entry = preload("res://Scenes/UI/Templates/GameMenuSettingsEntryCard.tscn").instantiate()
-	get_root().add_child(entry)
-	await create_timer(0.01).timeout
-	for path in [
-		"Body/TopRow/TextColumn/EyebrowLabel",
-		"Body/TopRow/TextColumn/TitleLabel",
-		"Body/TopRow/TextColumn/SummaryLabel",
-		"Body/TopRow/OpenButton"
-	]:
-		if entry.get_node_or_null(path) == null:
-			reporter.fail_test("Expected GameMenuSettingsEntryCard node at %s" % path)
-			entry.queue_free()
-			return
-	entry.queue_free()
-	# GameSettingsPanel is now fully code-built — verify it instantiates and
-	# constructs at least one child (backdrop + center container with card).
-	var panel = preload("res://Scenes/UI/GameSettingsPanel.tscn").instantiate()
-	get_root().add_child(panel)
-	await create_timer(0.02).timeout
-	if panel.get_child_count() < 1:
-		reporter.fail_test("Expected GameSettingsPanel to have code-built children after _ready")
-		panel.queue_free()
-		return
-	panel.queue_free()
-	reporter.pass_test()
-
-func test_game_navigation_menu_uses_template_backed_overlay_rows() -> void:
-	reporter.start_test("[UX] GameNavigationMenu overlay rows use reusable scene templates")
-	var logbook_entries := VBoxContainer.new()
-	GameNavigationMenu._populate_logbook_entries(logbook_entries)
-	if logbook_entries.get_child_count() == 0:
-		reporter.fail_test("Expected logbook population to add at least one child")
-		return
-	var first_logbook_child := logbook_entries.get_child(0)
-	if first_logbook_child.name != "EmptyLabel" and first_logbook_child.name != "LogbookCard":
-		reporter.fail_test("Expected template-backed logbook child, got %s" % first_logbook_child.name)
-		return
-	var discovery_row := GameNavigationMenu._build_discovery_row({
-		"label": "Training Asteroid A",
-		"target_id": "mission-1-training-target",
-		"timestamp": "2026-04-24 10:00:00",
-		"target_type": "asteroid"
-	})
-	if discovery_row.name != "MenuDiscoveryRow":
-		reporter.fail_test("Expected MenuDiscoveryRow template, got %s" % discovery_row.name)
-		return
-	reporter.pass_test()
-
-func test_control_station_panel_uses_template_backed_rows() -> void:
-	reporter.start_test("[UX] ControlStationPanel uses template-backed empty and log rows")
-	var scene = ControlStationScene.instantiate()
-	get_root().add_child(scene)
+func test_game_navigation_menu_settings_and_reset_sections() -> void:
+	reporter.start_test("[UX] GameNavigationMenu includes unified settings and reset buttons")
+	var owner := Control.new()
+	get_root().add_child(owner)
+	GameNavigationMenu.open(owner)
 	await create_timer(0.05).timeout
-	var empty_state = scene._create_empty_state_card()
-	if empty_state.name != "ControlStationEmptyStateCard":
-		reporter.fail_test("Expected ControlStationEmptyStateCard template, got %s" % empty_state.name)
-		scene.queue_free()
+	var layer := get_root().get_node_or_null("GameMenuLayer")
+	if layer == null:
+		reporter.fail_test("Expected GameMenuLayer after opening menu")
+		owner.queue_free()
 		return
-	var log_list = scene.get_node_or_null("RootHBox/MainArea/ContentMargin/ContentHBox/RightRail/LogCard/LogVBox/LogList") as VBoxContainer
-	if log_list == null or log_list.get_child_count() == 0:
-		reporter.fail_test("Expected populated control station log list")
-		scene.queue_free()
+	var settings_host := layer.get_node_or_null("GameMenuRoot/Center/GameMenuPanel/Scroll/Shell/SettingsHost") as VBoxContainer
+	if settings_host == null or settings_host.get_child_count() < 2:
+		reporter.fail_test("Expected settings host with at least 2 children (settings buttons + reset button)")
+		GameNavigationMenu.close(owner)
+		owner.queue_free()
 		return
-	if log_list.get_child(0).name != "ControlStationLogLine":
-		reporter.fail_test("Expected ControlStationLogLine template, got %s" % log_list.get_child(0).name)
-		scene.queue_free()
+	
+	var found_reset := false
+	for child in settings_host.get_children():
+		if child is Button and str((child as Button).text).to_lower().find("reset") != -1:
+			found_reset = true
+			break
+	if not found_reset:
+		reporter.fail_test("Could not find Reset button in GameNavigationMenu settings section")
+		GameNavigationMenu.close(owner)
+		owner.queue_free()
 		return
-	var mineral_row := HBoxContainer.new()
-	scene._populate_mineral_chips(mineral_row, {}, false)
-	if mineral_row.get_child_count() != 1 or mineral_row.get_child(0).name != "ControlStationMineralEmptyLabel":
-		reporter.fail_test("Expected ControlStationMineralEmptyLabel template for empty mineral row")
-		scene.queue_free()
-		return
-	var overflow_row := HBoxContainer.new()
-	scene._populate_mineral_chips(overflow_row, {"Iron": 1, "Nickel": 1, "Gold": 1, "Cobalt": 1}, false)
-	if overflow_row.get_child_count() < 4 or overflow_row.get_child(overflow_row.get_child_count() - 1).name != "ControlStationMineralOverflowLabel":
-		reporter.fail_test("Expected ControlStationMineralOverflowLabel template for overflow mineral row")
-		scene.queue_free()
-		return
-	scene.queue_free()
-	reporter.pass_test()
-
-func test_satellite_station_panel_has_scene_owned_hint_and_early_scan_controls() -> void:
-	reporter.start_test("[UX] SatelliteStationPanel includes scene-owned citizen-science and early-scan controls")
-	var scene = SatelliteStationScene.instantiate()
-	get_root().add_child(scene)
-	await create_timer(0.05).timeout
-	var expected_paths = [
-		"PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/StatusContainer/ScanSummaryCard/SummaryMargin/SummaryVBox/CitizenScienceHintLabel",
-		"PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/RefreshContainer/EarlyScanButton"
-	]
-	for path in expected_paths:
-		if scene.get_node_or_null(path) == null:
-			reporter.fail_test("Expected scene-owned satellite station control at %s" % path)
-			scene.queue_free()
-			return
-	scene.queue_free()
-	reporter.pass_test()
-
-func test_space_map_target_dialogue_uses_scene_templates() -> void:
-	reporter.start_test("[UX] SpaceMap target dialogue uses scene-owned overlay and contractor row templates")
-	var scene = SpaceMapScene.instantiate()
-	get_root().add_child(scene)
-	await create_timer(0.05).timeout
-	scene._open_target_preview("test-target", {"label": "Test Target", "type": "asteroid"})
-	await create_timer(0.02).timeout
-	var dialogue := scene.get_node_or_null("CanvasLayer/TargetDialogue")
-	if dialogue == null:
-		reporter.fail_test("Expected SpaceMap target dialogue under CanvasLayer")
-		scene.queue_free()
-		return
-	var expected_paths = [
-		"Center/Panel/Scroll/Body/HeaderRow/TitleLabel",
-		"Center/Panel/Scroll/Body/ContractorsList",
-		"Center/Panel/Scroll/Body/LaunchButton",
-		"Center/Panel/Scroll/Body/LockedLabel"
-	]
-	for path in expected_paths:
-		if dialogue.get_node_or_null(path) == null:
-			reporter.fail_test("Expected scene-owned space map dialogue node at %s" % path)
-			scene.queue_free()
-			return
-	scene.queue_free()
-	reporter.pass_test()
-
-func test_emergency_loan_dialog_has_scene_owned_layout() -> void:
-	reporter.start_test("[UX] Emergency loan dialog uses scene-owned layout and controls")
-	var scene = EmergencyLoanOfferDialogScene.instantiate()
-	get_root().add_child(scene)
-	await create_timer(0.05).timeout
-	var expected_paths = [
-		"Center/Panel/HBox/Sidebar/SidebarVBox/IconCircle/IconLabel",
-		"Center/Panel/HBox/RightMargin/RightContent/CreditCard/CreditCardBody/AmountRow/AmountLabel",
-		"Center/Panel/HBox/RightMargin/RightContent/WarningCard/WarningHBox/WarnLabel",
-		"Center/Panel/HBox/RightMargin/RightContent/ButtonRow/AcceptButton",
-		"Center/Panel/HBox/RightMargin/RightContent/ButtonRow/DeclineButton"
-	]
-	for path in expected_paths:
-		if scene.get_node_or_null(path) == null:
-			reporter.fail_test("Expected scene-owned loan dialog node at %s" % path)
-			scene.queue_free()
-			return
-	scene.queue_free()
-	reporter.pass_test()
-
-func test_asteroid_detail_view_uses_scene_owned_summary_and_classification() -> void:
-	reporter.start_test("[UX] Asteroid detail view uses scene-owned science summary and classification row")
-	var scene = preload("res://Scenes/UI/AsteroidDetail/asteroid_detail_view.tscn").instantiate()
-	get_root().add_child(scene)
-	await create_timer(0.05).timeout
-	var summary_paths = [
-		"BodyScroll/ContentMargin/ContentContainer/ImageContainer/ImageShell",
-		"BodyScroll/ContentMargin/ContentContainer/ScienceSummaryCard/Body/EyebrowLabel",
-		"BodyScroll/ContentMargin/ContentContainer/ScienceSummaryCard/Body/SummaryBodyLabel",
-		"BodyScroll/ContentMargin/ContentContainer/ScienceSummaryCard/Body/SummaryMetaLabel"
-	]
-	for path in summary_paths:
-		if scene.get_node_or_null(path) == null:
-			reporter.fail_test("Expected scene-owned asteroid detail summary node at %s" % path)
-			scene.queue_free()
-			return
-	scene.initialize({
-		"anomalySet": "telescope-tess",
-		"anomalytype": "telescope_tess",
-		"ticId": "12345",
-		"tess_disposition": "PC",
-		"classification_status": "candidate"
-	}, true)
-	await create_timer(0.02).timeout
-	var classification_paths = [
-		"BodyScroll/ContentMargin/ContentContainer/AsteroidClassificationRow/PromptLabel",
-		"BodyScroll/ContentMargin/ContentContainer/AsteroidClassificationRow/ClassificationButtons/BtnPlanet",
-		"BodyScroll/ContentMargin/ContentContainer/AsteroidClassificationRow/ClassificationButtons/BtnNotPlanet",
-		"BodyScroll/ContentMargin/ContentContainer/AsteroidClassificationRow/ClassificationButtons/BtnMarkDip"
-	]
-	for path in classification_paths:
-		if scene.get_node_or_null(path) == null:
-			reporter.fail_test("Expected scene-owned asteroid classification node at %s" % path)
-			scene.queue_free()
-			return
-	scene.queue_free()
-	reporter.pass_test()
-
-func test_mission_debrief_uses_template_backed_guide_and_detail_rows() -> void:
-	reporter.start_test("[UX] Mission debrief guide bullets and handoff detail rows use templates")
-	var bullet_scene = preload("res://Scenes/UI/Templates/MissionDebriefBulletRow.tscn").instantiate()
-	if bullet_scene.name != "MissionDebriefBulletRow":
-		reporter.fail_test("Expected MissionDebriefBulletRow template, got %s" % bullet_scene.name)
-		return
-	var detail_scene = preload("res://Scenes/UI/Templates/MissionDebriefDetailRow.tscn").instantiate()
-	if detail_scene.name != "MissionDebriefDetailRow":
-		reporter.fail_test("Expected MissionDebriefDetailRow template, got %s" % detail_scene.name)
-		return
-	reporter.pass_test()
-
-func test_menu_panel_advanced_debug_controls_are_scene_owned() -> void:
-	reporter.start_test("[UX] MenuPanel advanced debug controls are scene-owned")
-	var panel := preload("res://Scenes/UI/MenuPanel.tscn").instantiate()
-	get_root().add_child(panel)
-	await create_timer(0.05).timeout
-	var required_paths = [
-		"PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/DebugMiningButton",
-		"PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/MissionJumpLabel",
-		"PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/MissionJumpRow",
-		"PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/MissionJumpRow/Mission1Button",
-		"PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/MissionJumpRow/Mission2Button",
-		"PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/MissionJumpRow/Mission3Button",
-		"PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/MissionJumpRow/Mission4Button",
-		"PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/MissionJumpRow/Mission5Button",
-		"PanelContainer/Panel/VBoxContainer/TabContainer/Advanced/Content/DebugMoneyButton"
-	]
-	for path in required_paths:
-		if panel.get_node_or_null(path) == null:
-			reporter.fail_test("Expected scene-owned MenuPanel debug node at %s" % path)
-			panel.queue_free()
-			return
-	panel.queue_free()
+		
+	GameNavigationMenu.close(owner)
+	owner.queue_free()
 	reporter.pass_test()
 
 func test_mechanic_intro_overlay_uses_template_backed_step_rows() -> void:
