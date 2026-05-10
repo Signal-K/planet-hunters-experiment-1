@@ -38,9 +38,9 @@ const MICRO_SURVEY_IDS = {
   planet_found: "", // "How exciting was it to find your first planet?" — fires after planet candidate found
   difficulty:   "", // "What part of the mission was most difficult?" — fires after failed/stuck run
 };
-const SURVEY_OVERLAY_ID = "planet-hunters-survey-overlay";
-const SURVEY_IFRAME_ID = "planet-hunters-survey-iframe";
-const FEEDBACK_OVERLAY_ID = "planet-hunters-feedback-overlay";
+const SURVEY_OVERLAY_ID = "landnam-survey-overlay";
+const SURVEY_IFRAME_ID = "landnam-survey-iframe";
+const FEEDBACK_OVERLAY_ID = "landnam-feedback-overlay";
 const SUPABASE_SESSION_STORAGE_KEY = "planet_hunters_supabase_guest";
 const XP_STATE_KEY = "planet_hunters_xp_state_v1";
 const DEFAULT_RUNTIME_CONFIG = {
@@ -118,9 +118,9 @@ async function initPushNotifications() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            title: (payload && payload.title) || "Distant Signals",
+            title: (payload && payload.title) || "Landnám",
             message: (payload && payload.body) || "",
-            tag: event || "planet-hunters",
+            tag: event || "landnam",
             url: (payload && payload.url) || "/",
             schedule_after_secs: Math.round((delayMs || 0) / 1000),
           }),
@@ -730,7 +730,7 @@ async function showInlineSurvey(params, surveyIdOverride) {
   const iframe = document.createElement("iframe");
   iframe.id = SURVEY_IFRAME_ID;
   iframe.src = `${surveyUrl}?${new URLSearchParams(params).toString()}`;
-  iframe.title = params.survey_context ? "Star Sailors Survey" : "Experiment 1 Exit Survey";
+  iframe.title = params.survey_context ? "Landnám Survey" : "Landnám Exit Survey";
   iframe.style.width = "100%";
   iframe.style.flex = "1";
   iframe.style.border = "0";
@@ -1010,7 +1010,7 @@ function AuthModal({ isOpen, onClose, onAuthSuccess }) {
       React.createElement(
         "p",
         { style: { margin: "0 0 24px", fontSize: "14px", color: "#a9b4cc", lineHeight: 1.5 } },
-        "Save your progress and access points across all games in the Star Sailors ecosystem (Distant Signals, Star Sailors, and more!)."
+        "Save your progress and access points across all games in the Landnám ecosystem (Landnám, Landnám, and more!)."
       ),
       error && React.createElement(
         "div",
@@ -1192,7 +1192,7 @@ function LandingPage({ onPlay }) {
             opacity: 0.85,
           },
         },
-        "Star Sailors · Experiment 1"
+        "Landnám"
       ),
       // Title
       React.createElement(
@@ -1208,7 +1208,7 @@ function LandingPage({ onPlay }) {
             textShadow: "0 0 60px rgba(74,208,255,0.18)",
           },
         },
-        "Distant Signals"
+        "Landnám"
       ),
       // Tagline
       React.createElement(
@@ -1417,7 +1417,7 @@ function App() {
       if (event.origin !== window.location.origin && event.origin !== "") {
         return;
       }
-      if (data.source !== "planet-hunters") {
+      if (data.source !== "landnam") {
         return;
       }
       const eventName = String(data.event || "");
@@ -1473,7 +1473,7 @@ function App() {
       }
       if (eventName === "schedule_push" && typeof window.__schedulePush === "function") {
         window.__schedulePush(
-          payload.tag || "planet-hunters",
+          payload.tag || "landnam",
           Number(payload.delay_ms || 0),
           { title: payload.title, body: payload.body, url: payload.url }
         );
@@ -1761,7 +1761,7 @@ function App() {
       React.createElement("iframe", {
         id: "game-frame",
         src: gameSrc,
-        title: "Star Sailors: Experiment 1",
+        title: "Landnám",
         allow: "fullscreen",
         style: {
           flex: 1,
@@ -2258,7 +2258,7 @@ function App() {
               fontWeight: 600,
             },
           },
-          "Star Sailors \u00b7 Experiment 1"
+          "Landnám"
         ),
         React.createElement(
           "h1",
@@ -2272,7 +2272,7 @@ function App() {
               color: "var(--ink)",
             },
           },
-          "Star Sailors"
+          "Landnám"
         ),
         React.createElement(
           "p",
@@ -2430,7 +2430,7 @@ function App() {
       React.createElement("iframe", {
         id: "game-frame",
         src: gameSrc,
-        title: "Star Sailors: Experiment 1",
+        title: "Landnám",
         allow: "fullscreen",
         style: frameStyle,
         onError: () => {

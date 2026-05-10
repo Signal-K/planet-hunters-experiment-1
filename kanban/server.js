@@ -1,5 +1,5 @@
 /**
- * Planet Hunters Kanban Server
+ * Landnám Kanban Server
  *
  * Reads and writes tasks from the .knowns/tasks/ directory.
  * Each task is a markdown file with YAML frontmatter.

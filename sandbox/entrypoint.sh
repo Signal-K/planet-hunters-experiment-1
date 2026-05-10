@@ -54,7 +54,7 @@ SANDBOX_OUTPUT_DIR="$OUTPUT_DIR" \
 EXIT_CODE=${PIPESTATUS[0]}
 
 # ── Copy user:// output to /output ────────────────────────────────────────────
-USER_DATA_DIR="${HOME}/.local/share/godot/app_userdata/Star Sailors"
+USER_DATA_DIR="${HOME}/.local/share/godot/app_userdata/Landnám"
 if [ -d "$USER_DATA_DIR/sandbox_screenshots" ]; then
   cp -r "$USER_DATA_DIR/sandbox_screenshots/." "$OUTPUT_DIR/screenshots/" 2>/dev/null || true
 fi

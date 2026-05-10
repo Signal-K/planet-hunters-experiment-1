@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:stitch.googlelabs.com)",
+      "WebFetch(domain:stitch.googleapis.com)"
+    ]
+  }
+}

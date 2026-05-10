@@ -1,5 +1,5 @@
 {
-  "name": "GodotTest",
+  "name": "landnam",
   "version": "0.0.1",
   "private": true,
   "main": "index.js",
@@ -77,8 +77,8 @@
     "extraMetadata": {
       "main": "electron/main.js"
     },
-    "appId": "com.fromscroobles.planethunters.desktop",
-    "productName": "PlanetHuntersDesktop",
+    "appId": "com.fromscroobles.landnam.desktop",
+    "productName": "LandnamDesktop",
     "files": [
       "electron/**/*",
       "package.json"

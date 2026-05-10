@@ -29,4 +29,4 @@ if [ "$platform" = "android" ] && ! grep -q "name=\"$preset\"" "$EXPORT_PRESETS_
     exit 2
 fi
 
-$BASE_DIR/export_godot.sh --target $BASE_DIR --name GodotTest --preset "$preset" --project $BASE_DIR/scene --platform $platform
+$BASE_DIR/export_godot.sh --target $BASE_DIR --name Landnam --preset "$preset" --project $BASE_DIR/scene --platform $platform

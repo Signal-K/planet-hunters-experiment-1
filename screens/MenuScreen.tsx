@@ -82,7 +82,7 @@ export const MenuScreen: React.FC<MenuScreenProps> = ({ navigation }) => {
         bounces={false}
       >
         <View style={commonStyles.menuHeader}>
-          <Text style={commonStyles.appTitle}>Distant Signals</Text>
+          <Text style={commonStyles.appTitle}>Landnám</Text>
           <Text style={commonStyles.appSubtitle}>Mission Control</Text>
         </View>
 

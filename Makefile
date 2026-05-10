@@ -7,7 +7,7 @@
 
 GODOT_BIN  := /Applications/Godot4.5.app/Contents/MacOS/Godot
 GODOT_PROJ := scene
-SAVE_DIR   := $(HOME)/Library/Application Support/Godot/app_userdata/2d Tiny Garden Game
+SAVE_DIR   := $(HOME)/Library/Application Support/Godot/app_userdata/Landnám
 SAVE_BAK   := /tmp/planet-hunters-save-bak
 
 SAVE_FILES := franc_balance.cfg experience.cfg rockets_state.json \
@@ -84,7 +84,7 @@ buildit:
 	npm run web:start
 
 # CI targets (mimics GitHub Actions)
-IMAGE_NAME=planet-hunters-ci
+IMAGE_NAME=landnam-ci
 
 # Build the CI docker image
 ci-build:
@@ -110,7 +110,7 @@ ci-godot: ci-build
 # Run Playwright e2e tests in Docker using Firefox (avoids Chrome QEMU crash on Apple Silicon).
 # Builds from the cached linux/amd64 node layer — no Docker Hub pull needed.
 # GitHub Actions uses ci-all (Dockerfile.ci, native x86_64, all browsers) instead.
-PLAYWRIGHT_IMAGE_NAME=planet-hunters-playwright
+PLAYWRIGHT_IMAGE_NAME=landnam-playwright
 
 ci-playwright:
 	@echo "Building Playwright Docker image..."
@@ -163,7 +163,7 @@ ghactions:
 #   make ux-tour-mining   — run mining-only sandbox tour
 #   make ux-tour-build    — (re)build the image only, e.g. after a Godot upgrade
 #
-UX_TOUR_IMAGE=planet-hunters-ux-tour
+UX_TOUR_IMAGE=landnam-ux-tour
 UX_TOUR_OUT=$(PWD)/ux-screenshots
 
 GHCR_UX_TOUR_IMAGE=ghcr.io/signal-k/planet-hunters-experiment-1/ux-tour:latest
