@@ -58,17 +58,18 @@ func test_progression_advances_on_expected_actions() -> void:
 	controller.replay_full()
 	await create_timer(0.02).timeout
 	var before = controller.get_tutorial_state()
-	if str(before.get("current_step", {}).get("action_key", "")) != "accept_contractor_offer":
-		reporter.fail_test("Expected first action accept_contractor_offer")
+	if str(before.get("current_step", {}).get("action_key", "")) != "open_launchpad":
+		reporter.fail_test("Expected first action open_launchpad")
 		await _teardown_controller(controller)
 		return
 
+	controller.record_action("open_launchpad")
 	controller.record_action("accept_contractor_offer")
-	controller.record_action("create_rocket")
 	controller.record_action("select_launch_target")
+	controller.record_action("create_rocket")
 	var after = controller.get_tutorial_state()
-	if int(after.get("current_step_index", 0)) < 3:
-		reporter.fail_test("Expected current_step_index >= 3 after first actions")
+	if int(after.get("current_step_index", 0)) < 4:
+		reporter.fail_test("Expected current_step_index >= 4 after first actions")
 		await _teardown_controller(controller)
 		return
 
@@ -118,7 +119,7 @@ func test_current_mission_started_only_after_stage_progress() -> void:
 		await _teardown_controller(controller)
 		return
 
-	controller.record_action("accept_contractor_offer")
+	controller.record_action("open_launchpad")
 	var started = controller.get_tutorial_state()
 	if not bool(started.get("current_mission_started", false)):
 		reporter.fail_test("Expected current mission to be started after first current-stage action")
@@ -147,6 +148,7 @@ func test_state_persists_across_controller_recreation() -> void:
 	_reset_tutorial_state()
 	var controller = await _setup_controller()
 	controller.replay_full()
+	controller.record_action("open_launchpad")
 	controller.record_action("accept_contractor_offer")
 	controller.record_action("create_rocket")
 	await create_timer(0.02).timeout
@@ -274,7 +276,8 @@ func test_advance_if_match_skips_past_out_of_order_completed_actions() -> void:
 	controller.replay_full()
 	await create_timer(0.02).timeout
 
-	# Advance normally through the first two steps to reach select_launch_target:
+	# Advance normally through the setup steps to reach select_launch_target:
+	controller.record_action("open_launchpad")
 	controller.record_action("accept_contractor_offer")
 	controller.record_action("create_rocket")
 	var pre_state = controller.get_tutorial_state()
@@ -305,7 +308,8 @@ func test_reconcile_step_index_fast_forwards_past_completed_actions() -> void:
 	controller.replay_full()
 	await create_timer(0.02).timeout
 
-	# Complete the first two steps then capture the index:
+	# Complete the first setup steps then capture the index:
+	controller.record_action("open_launchpad")
 	controller.record_action("accept_contractor_offer")
 	controller.record_action("create_rocket")
 	var mid_state = controller.get_tutorial_state()

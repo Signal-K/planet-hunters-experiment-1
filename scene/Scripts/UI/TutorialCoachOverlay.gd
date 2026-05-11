@@ -192,8 +192,12 @@ func _apply_off_course_display() -> void:
 
 func _resume_hint_for_step(step: Dictionary) -> String:
 	var valid_scenes: Array = step.get("valid_scenes", [])
+	var step_id: String = str(step.get("id", ""))
+	
 	if "earth_launchpad" in valid_scenes:
-		return "Open the Launchpad to continue."
+		if step_id == "m1_welcome":
+			return "Start at the Launchpad: accept a contractor job, then build toward your first launch."
+		return "Return to the Launchpad to continue mission setup."
 	if "SidescrollMining" in valid_scenes:
 		return "Your mission is in flight."
 	if "mission_debrief_v2" in valid_scenes:
@@ -497,6 +501,10 @@ func _action_copy_for_step(step: Dictionary) -> String:
 		scene_name = get_tree().current_scene.scene_file_path.get_file().get_basename()
 	var on_base := scene_name == "earth_base_1"
 	match key:
+		"open_launchpad":
+			if stage <= 1:
+				return "Open the Launchpad to start your first contract route."
+			return "Open the Launchpad to choose the next mission route."
 		"build_control_station":
 			return "Build the Control Station from the base card before starting Mission 2."
 		"accept_contractor_offer", "accept_starter_contractor":
@@ -624,9 +632,16 @@ func _update_context_action_button() -> void:
 		go_to_debrief_button.visible = show_debrief
 	# Avoid right-edge overflow: when a CTA is shown, hide replay buttons.
 	if not _off_course:
-		replay_mission_button.visible = not show_any_cta and _current_mission_started()
+		replay_mission_button.visible = not show_any_cta and not _is_map_scene() and _current_mission_started()
 		if resume_mission_button:
 			resume_mission_button.visible = false
+
+func _is_map_scene() -> bool:
+	var tree := get_tree()
+	if tree == null or tree.current_scene == null:
+		return false
+	var basename := tree.current_scene.scene_file_path.get_file().get_basename()
+	return basename in ["space_map", "galaxy_map"]
 
 func _needs_control_station_cta() -> bool:
 	if _current_step.is_empty():
