@@ -15,7 +15,8 @@ const DEBRIEF_SCENES := ["earth_base_1", "mission_debrief_v2"]
 
 const STEPS_BY_MISSION := {
 	1: [
-		{"id": "m1_pick_contractor", "action_key": "accept_contractor_offer", "title": "Contractor Selection", "message": "Contractors pay a significant bonus when you deliver their requested minerals. Open the contractor list and accept your first job.", "mechanic": "contractor", "valid_scenes": LAUNCHPAD_SCENES},
+		{"id": "m1_welcome", "action_key": "open_launchpad", "title": "First Mining Contract", "message": "Start by taking a contractor job, choosing the matching asteroid, launching a rocket, then returning the cargo for payout. Open the Launchpad to begin.", "mechanic": "intro", "valid_scenes": BASE_SCENES},
+		{"id": "m1_pick_contractor", "action_key": "accept_contractor_offer", "title": "Contractor Selection", "message": "Contractors turn raw mining into funded missions. Accept the starter job so mission control knows which minerals and target to prioritize.", "mechanic": "contractor", "valid_scenes": LAUNCHPAD_SCENES},
 		{"id": "m1_select_target", "action_key": "select_launch_target", "title": "Navigation: Select Target", "message": "Open the Space Map and select the highlighted Mission 1 asteroid. It contains the exact Iron and Nickel requested by your contractor.", "mechanic": "targeting", "valid_scenes": LAUNCHPAD_SCENES},
 		{"id": "m1_create_rocket", "action_key": "create_rocket", "title": "Rocket Assembly", "message": "assemble your first vessel. Starter Rocket 1 is a reliable workhorse for inner belt missions.", "mechanic": "economy", "valid_scenes": LAUNCHPAD_SCENES},
 		{"id": "m1_launch", "action_key": "launch_rocket_from_earth", "title": "Launch Sequence", "message": "Flight systems are green. Press Launch to leave Earth orbit and begin your transit to the asteroid belt.", "mechanic": "launch", "valid_scenes": LAUNCHPAD_SCENES},
