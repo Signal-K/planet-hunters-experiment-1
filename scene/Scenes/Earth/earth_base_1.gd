@@ -258,7 +258,9 @@ func _unhandled_input(event: InputEvent) -> void:
 	if mouse_event.button_index != MOUSE_BUTTON_LEFT or not mouse_event.pressed:
 		return
 	if _try_launchpad_click_fallback(mouse_event.position):
-		get_viewport().set_input_as_handled()
+		var viewport := get_viewport()
+		if viewport != null:
+			viewport.set_input_as_handled()
 
 func _try_launchpad_click_fallback(screen_position: Vector2) -> bool:
 	var launchpad = get_node_or_null("StructuresLayer/Launchpad")
