@@ -1,9 +1,28 @@
 import { StyleSheet } from "react-native";
 
+// Landnam Deep Command palette — mirrors colors_and_type.css tokens
+const C = {
+  bg:          '#0a121d',
+  bgVoid:      '#06090f',
+  surface:     '#122236',
+  surface2:    '#18304b',
+  surface3:    '#1f3d5e',
+  cyan:        '#3fa9ff',
+  cyanBorder:  'rgba(63,169,255,0.45)',
+  hairline:    'rgba(63,169,255,0.18)',
+  amber:       '#f5a623',
+  ok:          '#39d36a',
+  warn:        '#ffb347',
+  crit:        '#ff5a6a',
+  text:        '#e6efff',
+  textDim:     '#a9b8ce',
+  textMuted:   '#5d7390',
+} as const;
+
 export const commonStyles = StyleSheet.create({
   loadingContainer: {
     flex: 1,
-    backgroundColor: "#1C1C1E",
+    backgroundColor: C.bg,
     flexDirection: "column",
   },
   scrollContent: {
@@ -22,15 +41,18 @@ export const commonStyles = StyleSheet.create({
   appTitle: {
     fontSize: 28,
     fontWeight: "bold",
-    color: "#FFFFFF",
+    color: C.text,
     marginBottom: 4,
     textAlign: "center",
+    letterSpacing: 0.5,
   },
   appSubtitle: {
     fontSize: 14,
-    color: "#8E8E93",
+    color: C.textMuted,
     marginBottom: 30,
     textAlign: "center",
+    letterSpacing: 1.8,
+    textTransform: "uppercase",
   },
   progressContainer: {
     alignItems: "center",
@@ -40,24 +62,26 @@ export const commonStyles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    borderWidth: 6,
-    borderColor: "#E5E5EA",
-    borderTopColor: "#007AFF",
+    borderWidth: 3,
+    borderColor: C.hairline,
+    borderTopColor: C.cyan,
     justifyContent: "center",
     alignItems: "center",
   },
   progressText: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#FFFFFF",
+    color: C.cyan,
+    letterSpacing: 0.5,
   },
   loadingText: {
     fontSize: 16,
-    color: "#FFFFFF",
+    color: C.text,
     marginBottom: 20,
     textAlign: "center",
     fontWeight: "500",
     minHeight: 20,
+    letterSpacing: 0.3,
   },
   progressBarContainer: {
     width: "100%",
@@ -67,21 +91,23 @@ export const commonStyles = StyleSheet.create({
   },
   progressBarBackground: {
     width: "100%",
-    height: 4,
-    backgroundColor: "#E5E5EA",
-    borderRadius: 2,
+    height: 2,
+    backgroundColor: C.hairline,
+    borderRadius: 1,
     overflow: "hidden",
   },
   progressBarFill: {
     height: "100%",
-    backgroundColor: "#007AFF",
-    borderRadius: 2,
+    backgroundColor: C.cyan,
+    borderRadius: 1,
   },
   stepText: {
     fontSize: 12,
-    color: "#8E8E93",
+    color: C.textMuted,
     textAlign: "center",
     marginBottom: 30,
+    letterSpacing: 1.4,
+    textTransform: "uppercase",
   },
   counterSection: {
     width: "100%",
@@ -91,17 +117,20 @@ export const commonStyles = StyleSheet.create({
   counterContainer: {
     alignItems: 'center',
     gap: 12,
-    backgroundColor: '#2C2C2E',
+    backgroundColor: C.surface,
     paddingVertical: 16,
     paddingHorizontal: 24,
-    borderRadius: 10,
+    borderRadius: 8,
     width: "80%",
+    borderWidth: 1,
+    borderColor: C.hairline,
   },
   counterLabel: {
     fontSize: 12,
-    color: '#8E8E93',
+    color: C.textMuted,
     fontWeight: '600',
-    letterSpacing: 0.3,
+    letterSpacing: 1.4,
+    textTransform: 'uppercase',
   },
   counterControls: {
     flexDirection: 'row',
@@ -112,7 +141,7 @@ export const commonStyles = StyleSheet.create({
   counterValue: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: C.text,
     minWidth: 50,
     textAlign: "center",
   },
@@ -121,12 +150,12 @@ export const commonStyles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: "#1C1C1E",
+    backgroundColor: C.bgVoid,
     paddingHorizontal: 40,
     paddingVertical: 12,
     gap: 10,
     borderTopWidth: 1,
-    borderTopColor: "#3C3C3E",
+    borderTopColor: C.hairline,
   },
   gameButton: {
     minHeight: 44,
@@ -135,7 +164,7 @@ export const commonStyles = StyleSheet.create({
   gameButtonDisabled: {
     minHeight: 44,
     justifyContent: "center",
-    opacity: 0.5,
+    opacity: 0.4,
   },
   logoutButton: {
     minHeight: 44,
@@ -150,7 +179,7 @@ export const commonStyles = StyleSheet.create({
   },
   appRoot: {
     flex: 1,
-    backgroundColor: "black",
+    backgroundColor: C.bgVoid,
   },
   navigationLayer: {
     ...StyleSheet.absoluteFillObject,
@@ -165,7 +194,7 @@ export const commonStyles = StyleSheet.create({
   },
   menuContainer: {
     flex: 1,
-    backgroundColor: "rgba(11, 11, 15, 0.88)",
+    backgroundColor: "rgba(6,9,15,0.92)",
   },
   menuContent: {
     flexGrow: 1,
@@ -181,37 +210,43 @@ export const commonStyles = StyleSheet.create({
   },
   menuCard: {
     width: "100%",
-    backgroundColor: "#171821",
-    borderRadius: 16,
+    backgroundColor: C.surface,
+    borderRadius: 8,
     paddingVertical: 24,
     paddingHorizontal: 20,
     borderWidth: 1,
-    borderColor: "#232638",
+    borderColor: C.hairline,
     gap: 8,
   },
   menuCardTitle: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#FFFFFF",
+    color: C.text,
+    letterSpacing: 0.3,
   },
   menuCardText: {
     fontSize: 14,
-    color: "#A7A8B5",
+    color: C.textDim,
   },
   menuStatRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     paddingVertical: 6,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(169,184,206,0.12)',
   },
   menuStatLabel: {
     fontSize: 13,
-    color: "#A7A8B5",
+    color: C.textMuted,
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    fontWeight: '500',
   },
   menuStatValue: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#FFFFFF",
+    color: C.text,
   },
   menuButtonContainer: {
     position: "absolute",
@@ -220,9 +255,9 @@ export const commonStyles = StyleSheet.create({
     right: 0,
     paddingHorizontal: 32,
     paddingVertical: 16,
-    backgroundColor: "#0B0B0F",
+    backgroundColor: C.bgVoid,
     borderTopWidth: 1,
-    borderTopColor: "#232638",
+    borderTopColor: C.hairline,
   },
   menuPrimaryButton: {
     minHeight: 44,
@@ -243,15 +278,16 @@ export const commonStyles = StyleSheet.create({
   menuExitButton: {
     paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: 18,
-    backgroundColor: "rgba(0,0,0,0.55)",
+    borderRadius: 6,
+    backgroundColor: C.surface,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.12)",
+    borderColor: C.hairline,
   },
   menuExitButtonText: {
-    color: "#FFFFFF",
+    color: C.text,
     fontSize: 13,
     fontWeight: "600",
-    letterSpacing: 0.2,
+    letterSpacing: 1.4,
+    textTransform: 'uppercase',
   },
 });

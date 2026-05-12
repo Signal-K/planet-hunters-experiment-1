@@ -138,9 +138,9 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ navigation }) => {
             <View style={commonStyles.counterContainer}>
               <Text style={commonStyles.counterLabel}>Game Counter</Text>
               <View style={commonStyles.counterControls}>
-                <Button title="-" onPress={decrementCounter} color="#FF3B30" />
+                <Button title="-" onPress={decrementCounter} color="#ff5a6a" />
                 <Text style={commonStyles.counterValue}>{syncState.counter}</Text>
-                <Button title="+" onPress={incrementCounter} color="#34C759" />
+                <Button title="+" onPress={incrementCounter} color="#39d36a" />
               </View>
             </View>
             <View style={{ marginTop: 12, alignItems: 'center' }}>
@@ -157,21 +157,21 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ navigation }) => {
             title={isGameReady && syncLoaded ? "Start Game" : "Please Wait..."}
             onPress={handleOpenGame}
             disabled={!isGameReady || !syncLoaded}
-            color={isGameReady && syncLoaded ? "#34C759" : "#8E8E93"}
+            color={isGameReady && syncLoaded ? "#3fa9ff" : "#5d7390"}
           />
         </View>
         <View style={commonStyles.logoutButton}>
           <Button
             title="Log Out"
             onPress={handleLogout}
-            color="#FF3B30"
+            color="#ff5a6a"
           />
         </View>
         <View style={[commonStyles.logoutButton, { marginTop: 8 }]}>
           <Button
             title="Clear All State"
             onPress={clearAllState}
-            color="#FF9500"
+            color="#ffb347"
           />
         </View>
       </View>
