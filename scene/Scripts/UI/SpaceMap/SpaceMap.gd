@@ -32,6 +32,7 @@ var _target_positions: Dictionary = {}
 var _personal_discoveries: Array = []
 var _tess_classifications: Dictionary = {}
 var _last_vp_size := Vector2.ZERO
+var _selection_in_progress := false
 
 @onready var solar_system:   Node2D         = $SolarSystem
 @onready var info_bar:       PanelContainer = $UILayer/InfoBar
@@ -54,6 +55,19 @@ func _ready() -> void:
 	_setup_home_button()
 	if RocketsManager.is_map_return_mode():
 		_setup_selection_mode_ui()
+		# AUTO-FIX: If we are on the map in selection mode but tutorial is stuck on 
+		# contractor selection, force-record the contractor action so the coach
+		# updates to "Select Target".
+		var app = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
+		if app and app.has_method("get_tutorial_state"):
+			var state: Dictionary = app.get_tutorial_state()
+			var step: Dictionary = state.get("current_step", {})
+			var stage = int(state.get("current_stage", 1))
+			if stage == 1 and str(step.get("action_key", "")) == "accept_contractor_offer":
+				# Double check if we actually have an active mission target selected or if we are just in the right scene
+				# If we are in selection mode, it means we have passed the contractor step.
+				print("[SpaceMap] Tutorial stuck on M1 contractor selection - auto-advancing to Target Selection")
+				app.record_tutorial_action("accept_contractor_offer")
 	else:
 		_setup_galaxy_button()
 
@@ -150,8 +164,16 @@ func _rebuild_solar_targets() -> void:
 			base_color = Color(0.28, 0.88, 0.96, 1.0) # MISSION CYAN
 			radius = 8.0
 			icon.set("is_selected", true) # Brackets
-			icon.set("is_candidate", true) # Extra pulse ring
-			icon.set("awaiting_review", true) # Cyan arc
+			
+			# Only show as candidate/awaiting review if it's a TESS candidate or similar
+			# For asteroids, they are just targets to be selected.
+			var is_candidate = t.get("classification_status", "") == "candidate"
+			icon.set("is_candidate", is_candidate)
+			if is_candidate:
+				var tid_classified = _tess_classifications.has(tid)
+				icon.set("awaiting_review", not tid_classified)
+			else:
+				icon.set("awaiting_review", false)
 			
 		icon.set("star_radius", radius)
 		icon.set("star_color", base_color)
@@ -261,6 +283,11 @@ func _style_nav_button(btn: Button, col: Color) -> void:
 # ── Input ─────────────────────────────────────────────────────────────────────
 
 func _input(event: InputEvent) -> void:
+	if _selection_in_progress:
+		var viewport := get_viewport()
+		if viewport != null:
+			viewport.set_input_as_handled()
+		return
 	if not (event is InputEventMouseButton
 			and event.pressed
 			and event.button_index == MOUSE_BUTTON_LEFT):
@@ -270,27 +297,52 @@ func _input(event: InputEvent) -> void:
 func _handle_click(screen_pos: Vector2) -> void:
 	if solar_system == null:
 		return
-	
-	# Earth check (always available)
-	var earth := get_node_or_null("SolarSystem/Bodies/Earth") as Node2D
-	if earth:
-		var earth_global_pos = earth.global_position
-		if screen_pos.distance_to(earth_global_pos) <= EARTH_HIT_R * solar_system.scale.x:
-			_change_scene_to_base()
-			return
 
-	# Target check
-	for tid in _target_positions.keys():
-		var entry: Dictionary = _target_positions[tid]
-		var target_node = get_node_or_null("SolarSystem/Belt/GameTargets/T_" + tid)
-		if target_node:
+	var is_selection_mode := RocketsManager.is_map_return_mode()
+
+	# 1. Prioritize Target check (especially in selection mode)
+	var belt_targets_node = get_node_or_null("SolarSystem/Belt/GameTargets") as Node2D
+	if belt_targets_node:
+		for target_node in belt_targets_node.get_children():
+			if not (target_node is Node2D):
+				continue
+			
 			var target_global_pos = target_node.global_position
+			var dist = screen_pos.distance_to(target_global_pos)
 			# Scale the hit radius by the solar system's current view scale
-			var effective_radius = TARGET_HIT_R * solar_system.scale.x
-			if screen_pos.distance_to(target_global_pos) <= effective_radius:
-				_open_target_preview(tid, entry)
-				return
+			var effective_radius = (TARGET_HIT_R + 8.0) * solar_system.scale.x
+			
+			if dist <= effective_radius:
+				var tid = str(target_node.get_meta("target_id", ""))
+				if tid == "" and target_node.name.begins_with("T_"):
+					tid = target_node.name.substr(2)
+				
+				if tid != "" and _target_positions.has(tid):
+					print("[SpaceMap] Target clicked: ", tid)
+					if is_selection_mode:
+						_select_mission_target(tid)
+						return
+					_open_target_preview(tid, _target_positions[tid])
+					return
 
+	# 2. Earth check (Go Home) - Disabled in selection mode to prevent accidents
+	if not is_selection_mode:
+		var earth := get_node_or_null("SolarSystem/Bodies/Earth") as Node2D
+		if earth:
+			var earth_global_pos = earth.global_position
+			var dist = screen_pos.distance_to(earth_global_pos)
+			var threshold = EARTH_HIT_R * solar_system.scale.x
+			if dist <= threshold:
+				_change_scene_to_base()
+				return
+	else:
+		# In selection mode, clicking Earth does nothing or shows a "Current Location" hint
+		var earth := get_node_or_null("SolarSystem/Bodies/Earth") as Node2D
+		if earth:
+			var dist = screen_pos.distance_to(earth.global_position)
+			if dist <= EARTH_HIT_R * solar_system.scale.x:
+				print("[SpaceMap] Earth clicked in selection mode - ignoring")
+				return
 # ── Target popup ──────────────────────────────────────────────────────────────
 
 func _open_target_preview(target_id: String, entry: Dictionary) -> void:
@@ -439,6 +491,37 @@ func _open_target_preview(target_id: String, entry: Dictionary) -> void:
 		if ev is InputEventMouseButton and ev.pressed:
 			if not panel.get_global_rect().has_point(ev.global_position):
 				backdrop.queue_free())
+
+func _select_mission_target(target_id: String) -> void:
+	if target_id == "":
+		return
+	if _selection_in_progress:
+		return
+	_selection_in_progress = true
+	if not RocketsManager.select_target(target_id):
+		_selection_in_progress = false
+		print("[SpaceMap] Target selection rejected: ", target_id)
+		return
+	RocketsManager.consume_map_return_mode()
+	var viewport := get_viewport()
+	if viewport != null:
+		viewport.set_input_as_handled()
+	var app_inst = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
+	if app_inst and app_inst.has_method("record_tutorial_action"):
+		app_inst.record_tutorial_action("select_launch_target", {"target_id": target_id})
+	call_deferred("_return_to_launchpad_after_target_selection", target_id)
+
+func _return_to_launchpad_after_target_selection(target_id: String) -> void:
+	print("[SpaceMap] Target selected, returning to launchpad: ", target_id)
+	var tree := get_tree()
+	if tree == null:
+		_selection_in_progress = false
+		return
+	var err := tree.change_scene_to_file("res://Scenes/Earth/earth_launchpad.tscn")
+	if err != OK:
+		_selection_in_progress = false
+		RocketsManager.set_map_return_mode(true)
+		print("[SpaceMap] Failed to return to launchpad after target selection: ", err)
 
 func _open_annotation_screen(target_id: String, entry: Dictionary) -> void:
 	var existing := get_node_or_null("CanvasLayer/AnnotationOverlay")
