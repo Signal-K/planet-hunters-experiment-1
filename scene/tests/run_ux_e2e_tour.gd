@@ -225,9 +225,8 @@ func _inject_progress_state(stage: int, with_launchpad_targeting: bool = false) 
 		state["scanner_station_built"] = true
 		state["control_station_built"] = true
 		state["unlocked"] = ["starterrocket1", "starterrocket2", "starterrocket3"]
-		# Add a billion francs for sandbox testing
-		if app_node and app_node.has_method("add_franc_balance"):
-			app_node.add_franc_balance(1000000000, "sandbox_tour")
+		if app_node and app_node.has_method("set_franc_balance_from_react"):
+			app_node.set_franc_balance_from_react(1000000000)
 		state["detected_targets"] = _stage_targets(5)
 	else:
 		var completed: int = maxi(stage - 1, 0)
@@ -246,14 +245,13 @@ func _inject_progress_state(stage: int, with_launchpad_targeting: bool = false) 
 			state["unlocked"].append("starterrocket3")
 		state["detected_targets"] = _stage_targets(stage)
 		
-		# Give reasonable starting balance for 'sandbox play' of this stage
-		if app_node and app_node.has_method("add_franc_balance"):
+		if app_node and app_node.has_method("set_franc_balance_from_react"):
 			var balance := 1000
 			match stage:
 				2: balance = 500000000 # 500M
 				3: balance = 1000000000 # 1B
 				4: balance = 3000000000 # 3B
-			app_node.add_franc_balance(balance, "sandbox_tour")
+			app_node.set_franc_balance_from_react(balance)
 
 	state["operation_mode"] = "contract"
 	state["selected_target"] = ""
@@ -887,7 +885,7 @@ func _run_sandbox_tour() -> void:
 	# Phase S11 — Menu Panel
 	# ==================================================================
 	_report("[SANDBOX] ## Phase S11 — Menu Panel")
-	var menu := await _load_scene(MENU_PANEL_SCENE)
+	var menu := await _load_scene(MENU_ROOT_SCENE)
 	if menu:
 		await _wait(_panel_settle)
 		_report("[SANDBOX]   Menu Panel loaded.")
@@ -1079,7 +1077,7 @@ func _run_tour() -> void:
 	# Phase 3 — Menu Panel
 	# ==================================================================
 	_report("## Phase 3 — Menu Panel")
-	var menu := await _load_scene(MENU_PANEL_SCENE)
+	var menu := await _load_scene(MENU_ROOT_SCENE)
 	if menu:
 		await _wait(_panel_settle)
 		_meta("Phase 3 - Menu Panel", -1,

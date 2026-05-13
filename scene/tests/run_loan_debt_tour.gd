@@ -192,7 +192,7 @@ func _setup_broke_state() -> void:
 	RocketsManager.clear_returned_mission()
 	RocketsManager.clear_preview_target()
 	var state := RocketsManager.load_state()
-	state["completed_mission_badges"] = ["mission_1", "mission_2"]
+	state["completed_mission_badges"] = ["mission-1", "mission-2"]
 	state["mission_progress_completed"] = 2
 	state["scanner_unlocked"] = false
 	state["scanner_station_built"] = false
