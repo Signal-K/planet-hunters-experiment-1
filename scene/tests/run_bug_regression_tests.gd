@@ -14,6 +14,8 @@ const TestReporter = preload("res://tests/TestReporter.gd")
 const SidescrollMining = preload("res://Scripts/UI/SidescrollMining.gd")
 const AsteroidPreview = preload("res://Scripts/UI/AsteroidPreview/AsteroidPreview.gd")
 const SubcontractorManager = preload("res://Scripts/Utils/SubcontractorManager.gd")
+const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
+const AppControllerScript = preload("res://Scripts/Systems/AppController.gd")
 
 var reporter := TestReporter.new()
 
@@ -46,6 +48,8 @@ func run_all_tests() -> void:
 	await test_mfix11_record_mission_completion_awards_rep_xp()
 	await test_mfix12_cooldown_triggered_after_two_consecutive()
 	await test_mfix13_get_cooldown_remaining_zero_when_not_on_cooldown()
+	await test_mfix14_fresh_restart_does_not_offer_loan()
+	await test_mfix15_map_return_preserves_selected_target()
 
 # MFIX01 — Scroll speed
 func test_mfix01_scroll_speed_is_75() -> void:
@@ -236,5 +240,35 @@ func test_mfix13_get_cooldown_remaining_zero_when_not_on_cooldown() -> void:
 	var remaining = SubcontractorManager.get_cooldown_remaining("no_such_contractor_xyz")
 	if remaining != 0:
 		reporter.fail_test("Expected 0, got %d" % remaining)
+		return
+	reporter.pass_test()
+
+# MFIX14 — fresh restart has no progress, so it must not trigger emergency credit
+func test_mfix14_fresh_restart_does_not_offer_loan() -> void:
+	reporter.start_test("MFIX14: fresh restart does not offer emergency loan")
+	RocketsManager.reset_state()
+	var app = AppControllerScript.new()
+	app.franc_balance = 0
+	app.loan_balance = 0
+	var eligible = app.can_take_loan()
+	app.free()
+	if eligible:
+		reporter.fail_test("Expected can_take_loan=false when no missions have been completed")
+		return
+	reporter.pass_test()
+
+# MFIX15 — map selection must survive returning to the Launchpad
+func test_mfix15_map_return_preserves_selected_target() -> void:
+	reporter.start_test("MFIX15: map return preserves selected M1 target")
+	RocketsManager.reset_state()
+	var target_id := "mission-1-training-target"
+	RocketsManager.set_map_return_mode(true)
+	if not RocketsManager.select_target(target_id):
+		reporter.fail_test("Expected M1 training target to be selectable")
+		return
+	RocketsManager.consume_map_return_mode()
+	var selected := RocketsManager.get_selected_target()
+	if selected != target_id:
+		reporter.fail_test("Expected selected_target='%s' after map return, got '%s'" % [target_id, selected])
 		return
 	reporter.pass_test()
