@@ -67,7 +67,7 @@ func test_contractor_step_uses_scene_owned_nodes() -> void:
 	reporter.pass_test()
 
 func test_remaining_steps_use_scene_owned_nodes() -> void:
-	reporter.start_test("Target, rocket, and confirm steps use scene-owned controls")
+	reporter.start_test("Target, rocket, and confirm steps expose current flow controls")
 	_reset_state()
 	var wizard = LaunchWizardScene.instantiate()
 	get_root().add_child(wizard)
@@ -77,14 +77,10 @@ func test_remaining_steps_use_scene_owned_nodes() -> void:
 	var map_step = wizard.get_node_or_null("Scaffold/Scroll/ScrollMargin/CardList/TargetStep/MapPanel/MapStep")
 	var target_detail = wizard.get_node_or_null("Scaffold/Scroll/ScrollMargin/CardList/TargetStep/TargetDetailCard")
 	var rocket_step = wizard.get_node_or_null("Scaffold/Scroll/ScrollMargin/CardList/RocketStep")
-	var rocket_list = wizard.get_node_or_null("Scaffold/Scroll/ScrollMargin/CardList/RocketStep/RocketListColumn")
-	var telemetry_box = wizard.get_node_or_null("Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/TelemetryBox")
-	var assembly_box = wizard.get_node_or_null("Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/PartsBox")
-	var pad_label = wizard.get_node_or_null("Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/PadLabel")
 	var confirm_step = wizard.get_node_or_null("Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep")
 	var rows_box = wizard.get_node_or_null("Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep/SummaryCard/Margin/VBox/RowsBox")
-	if target_step == null or map_step == null or target_detail == null or rocket_step == null or rocket_list == null or telemetry_box == null or assembly_box == null or pad_label == null or confirm_step == null or rows_box == null:
-		reporter.fail_test("Expected target, rocket, and confirm step layout nodes to exist in LaunchWizard.tscn")
+	if target_step == null or map_step == null or target_detail == null or rocket_step == null or confirm_step == null or rows_box == null:
+		reporter.fail_test("Expected target, rocket, and confirm step layout nodes to exist")
 		wizard.queue_free()
 		return
 
@@ -101,21 +97,26 @@ func test_remaining_steps_use_scene_owned_nodes() -> void:
 		reporter.fail_test("Expected RocketStep scene node to be visible on rocket step")
 		wizard.queue_free()
 		return
-	if rocket_list.get_child_count() < 1:
-		reporter.fail_test("Expected rocket list column to populate scene-owned rocket tile instances")
+	var fabrication_bay = rocket_step.get_node_or_null("FabricationBayUnified")
+	if fabrication_bay == null:
+		reporter.fail_test("Expected rebuilt FabricationBayUnified node on rocket step")
 		wizard.queue_free()
 		return
-	var rocket_tile = rocket_list.get_child(0)
-	if rocket_tile.get_node_or_null("Margin/VBox/ButtonRow/SelectButton") == null:
-		reporter.fail_test("Expected rocket tiles to be instances of the scene tile template")
+	var chooser: OptionButton = null
+	for child in fabrication_bay.find_children("*", "OptionButton", true, false):
+		chooser = child as OptionButton
+		break
+	if chooser == null or chooser.item_count < 2:
+		reporter.fail_test("Expected rebuilt Fabrication Bay to expose a rocket selector")
 		wizard.queue_free()
 		return
-	if telemetry_box.get_child_count() < 4:
-		reporter.fail_test("Expected launchpad telemetry row to populate real rocket metrics")
-		wizard.queue_free()
-		return
-	if str(pad_label.text).strip_edges() == "":
-		reporter.fail_test("Expected launchpad scene node to expose a pad status label")
+	var found_slot_or_module := false
+	for child in fabrication_bay.find_children("*", "Control", true, false):
+		if str(child.name).begins_with("FabricationModule_") or (child is PanelContainer and (child as Control).custom_minimum_size == Vector2(256, 320)):
+			found_slot_or_module = true
+			break
+	if not found_slot_or_module:
+		reporter.fail_test("Expected rebuilt Fabrication Bay to render module tiles or empty slots")
 		wizard.queue_free()
 		return
 
