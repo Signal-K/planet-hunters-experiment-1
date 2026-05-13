@@ -48,8 +48,8 @@ const MENU_LAYER_Z := 150
 const TITLE_COLOR := Color(0.95, 0.93, 0.90, 1.0)
 const TEXT_COLOR := Color(0.82, 0.84, 0.88, 1.0)
 const TEXT_MUTED := Color(0.55, 0.60, 0.68, 1.0)
-const CYAN := Color(0.28, 0.88, 0.96, 1.0)
-const AMBER := Color(0.941, 0.690, 0.188, 1.0)
+const CYAN := Color(0.247, 0.663, 1.000, 1.0)
+const AMBER := Color(0.961, 0.651, 0.137, 1.0)
 const PANEL_BG := Color(0.04, 0.06, 0.12, 0.96)
 const CARD_BG := Color(0.08, 0.11, 0.20, 0.88)
 
@@ -1159,7 +1159,7 @@ static func _apply_button_style(btn: Button, primary: bool) -> void:
 	normal.bg_color = Color(0, 0, 0, 0)
 	normal.border_color = color
 	normal.set_border_width_all(1)
-	normal.set_corner_radius_all(28)
+	normal.set_corner_radius_all(6)
 	normal.content_margin_left = 18
 	normal.content_margin_right = 18
 	normal.content_margin_top = 10
