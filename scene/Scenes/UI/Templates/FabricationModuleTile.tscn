@@ -1,0 +1,130 @@
+[gd_scene load_steps=6 format=3]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_normal"]
+bg_color = Color(0.071, 0.133, 0.212, 0.96)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.247, 0.663, 1.0, 0.18)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hover"]
+bg_color = Color(0.094, 0.188, 0.294, 0.98)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.247, 0.663, 1.0, 1.0)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_art"]
+bg_color = Color(0.094, 0.188, 0.294, 1.0)
+corner_radius_top_left = 0
+corner_radius_top_right = 0
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_code"]
+bg_color = Color(0.02, 0.03, 0.06, 0.80)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.247, 0.663, 1.0, 0.45)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+content_margin_left = 10.0
+content_margin_top = 4.0
+content_margin_right = 10.0
+content_margin_bottom = 4.0
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_focus"]
+
+[node name="FabricationModuleTile" type="Button"]
+custom_minimum_size = Vector2(256, 320)
+size_flags_horizontal = 0
+flat = true
+text = ""
+theme_override_styles/normal = SubResource("StyleBoxFlat_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_hover")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_focus")
+
+[node name="Stack" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/separation = 0
+
+[node name="HeaderMargin" type="MarginContainer" parent="Stack"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 44)
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_top = 0
+theme_override_constants/margin_bottom = 0
+
+[node name="HeaderRow" type="HBoxContainer" parent="Stack/HeaderMargin"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 8
+
+[node name="CategoryLabel" type="Label" parent="Stack/HeaderMargin/HeaderRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
+theme_override_colors/font_color = Color(0.247, 0.663, 1.0, 1.0)
+vertical_alignment = 1
+text = "CHASSIS"
+
+[node name="StatusDot" type="ColorRect" parent="Stack/HeaderMargin/HeaderRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(8, 8)
+size_flags_vertical = 4
+color = Color(0.224, 0.827, 0.416, 1.0)
+
+[node name="HeaderDivider" type="ColorRect" parent="Stack"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 1)
+color = Color(0.247, 0.663, 1.0, 0.18)
+
+[node name="ArtPanel" type="PanelContainer" parent="Stack"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_art")
+
+[node name="ArtStack" type="VBoxContainer" parent="Stack/ArtPanel"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="ArtIcon" type="TextureRect" parent="Stack/ArtPanel/ArtStack"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+expand_mode = 1
+stretch_mode = 5
+
+[node name="CodeBadgeMargin" type="MarginContainer" parent="Stack/ArtPanel/ArtStack"]
+layout_mode = 2
+theme_override_constants/margin_bottom = 10
+
+[node name="CodeCenter" type="CenterContainer" parent="Stack/ArtPanel/ArtStack/CodeBadgeMargin"]
+layout_mode = 2
+
+[node name="CodeLabel" type="Label" parent="Stack/ArtPanel/ArtStack/CodeBadgeMargin/CodeCenter"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.902, 0.937, 1.0, 1.0)
+theme_override_styles/normal = SubResource("StyleBoxFlat_code")
+horizontal_alignment = 1
+text = "HULL-MK2"
