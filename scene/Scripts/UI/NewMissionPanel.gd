@@ -52,7 +52,7 @@ func _ready():
 
 	# Show launched rockets for self-destruct management
 	_annotations.setup(self, anomaly_list, SimpleDetailView)
-	_launch_list.setup(launched_list_container, Callable(self, "_add_refund"))
+	_launch_list.setup(launched_list_container, _add_refund)
 	_display_launched_rockets()
 	set_process(true)
 
@@ -73,7 +73,7 @@ func _add_refund(rocket_id: String) -> void:
 		var refund = RocketSpecs.get_cost(rocket_id)
 		app_controller.set_franc_balance_from_react(balance + refund)
 	else:
-		print("NewMissionPanel: AppController not available for refund")
+		push_error("NewMissionPanel: AppController not available for refund")
 
 func _apply_panel_style() -> void:
 	var panel = $PanelContainer/Panel

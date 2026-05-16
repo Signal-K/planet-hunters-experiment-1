@@ -1,5 +1,7 @@
 extends CanvasLayer
 
+const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
+
 const GameplayAnalytics = preload("res://Scripts/Systems/GameplayAnalytics.gd")
 
 @onready var feedback_button: Button = $Anchor/Panel/VBox/FeedbackButton
@@ -12,7 +14,7 @@ func _ready() -> void:
 	visible = OS.has_feature("web")
 	if not visible:
 		return
-	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
+	var panel_style = PanelStyle
 	panel_style.apply_button(feedback_button, true)
 	panel_style.apply_muted_on_dark(hint_label)
 	feedback_button.pressed.connect(_on_feedback_pressed)

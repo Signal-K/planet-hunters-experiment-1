@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO="Signal-K/planet-hunters-experiment-1"
+REPO="Signal-K/landnam"
 API_URL="https://api.github.com/repos/${REPO}/releases/latest"
 
 require_cmd() {

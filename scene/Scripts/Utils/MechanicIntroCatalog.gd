@@ -6,15 +6,6 @@ extends RefCounted
 ## Each entry is shown exactly once per player via FirstTimeMechanicTracker.
 
 const ENTRIES: Dictionary = {
-	## ── Room Upgrades ────────────────────────────────────────────────────────
-	"room_upgrades": {
-		"title": "Room Upgrades",
-		"icon": "🔧",
-		"what": "Your rocket's rooms (Mining Laser, Cargo Bay, Scanner) can be upgraded through multiple tiers. Each tier improves that room's capabilities.",
-		"how": "Tap the Upgrade button next to any room in the Room Upgrades panel. Upgrades cost Francs and take effect immediately.",
-		"expect": "Higher laser tiers extract more from each target and unlock rarer minerals. Higher cargo tiers let you accept bigger orders. Higher scanner tiers reveal targets at greater distances.",
-	},
-
 	## ── Construction ─────────────────────────────────────────────────────────
 	"construction": {
 		"title": "Structure Construction",
@@ -58,15 +49,6 @@ const ENTRIES: Dictionary = {
 		"what": "The Scanner Station reveals new asteroid and planet targets within a certain range. It's your primary tool for finding new mining opportunities.",
 		"how": "Open the Scanner from the Earth base. Each scan costs a small Franc fee and covers the current scanner range. Upgrade your scanner room to extend the range and reveal rarer targets.",
 		"expect": "Newly revealed targets appear in the Launchpad. Planet targets take longer to reach but yield much higher quantities. Some targets may have already been partially mined by your previous missions.",
-	},
-
-	## ── Marketplace ──────────────────────────────────────────────────────────
-	"marketplace": {
-		"title": "Marketplace",
-		"icon": "📈",
-		"what": "The Marketplace shows live mineral prices and how they move with your sales. Use it to time your selling strategy.",
-		"how": "Open the Marketplace from the Earth base (unlocks at Level 5). Prices update after each sale. Sell less of a mineral for a period to let the price recover.",
-		"expect": "If you flood the market with one mineral, prices dip to 70% of base and stay there until demand recovers. Diversify your cargo for more stable income.",
 	},
 
 	## ── Reusable Rockets Research ─────────────────────────────────────────────

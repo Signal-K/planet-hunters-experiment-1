@@ -1,0 +1,46 @@
+{
+  "taskId": "kknluz",
+  "currentVersion": 1,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "kknluz",
+      "version": 1,
+      "timestamp": "2026-05-13T12:02:59.980391Z",
+      "author": "@Liam",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": null,
+          "newValue": "todo"
+        },
+        {
+          "field": "priority",
+          "oldValue": null,
+          "newValue": "high"
+        }
+      ],
+      "snapshot": {
+        "acceptanceCriteria": [
+          {
+            "text": "EventBus singleton implemented",
+            "completed": false
+          },
+          {
+            "text": "PlayerProfile and ProgressionState resources defined",
+            "completed": false
+          },
+          {
+            "text": "PlayerManager autoload created to manage resource lifecycle",
+            "completed": false
+          }
+        ],
+        "assignee": "@Liam",
+        "description": "Implement the global EventBus and basic PlayerProfile resources to replace manual variable tracking in AppController.",
+        "priority": "high",
+        "status": "todo",
+        "title": "Foundation: EventBus \u0026 Resource-Based State"
+      }
+    }
+  ]
+}

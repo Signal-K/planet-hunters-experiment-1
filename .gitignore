@@ -71,3 +71,4 @@ node_modules/
 # UX tour outputs (generated, not source)
 ux-screenshots/
 test-results/
+*.bak

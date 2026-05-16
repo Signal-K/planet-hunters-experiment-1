@@ -1,6 +1,8 @@
 extends RefCounted
 class_name MineralPricing
 
+const JSONFileManager = preload("res://Scripts/Utils/JSONFileManager.gd")
+
 const MineralCatalog = preload("res://Scripts/Utils/MineralCatalog.gd")
 
 ## Base prices are authoritative in MineralCatalog.
@@ -55,7 +57,7 @@ static func record_player_sale(mineral: String) -> void:
 	_save_market_state(data)
 
 static func _load_market_state() -> Dictionary:
-	var json = preload("res://Scripts/Utils/JSONFileManager.gd")
+	var json = JSONFileManager
 	var data = json.load_json(_MARKET_STATE_PATH)
 	if typeof(data) != TYPE_DICTIONARY:
 		data = {}
@@ -64,7 +66,7 @@ static func _load_market_state() -> Dictionary:
 	return data
 
 static func _save_market_state(data: Dictionary) -> void:
-	var json = preload("res://Scripts/Utils/JSONFileManager.gd")
+	var json = JSONFileManager
 	json.save_json(_MARKET_STATE_PATH, data)
 
 ## Returns the buy price per kg (always ≥ BUY_MARKUP × current sell price).
@@ -83,7 +85,7 @@ static func recover_prices_on_session_start() -> void:
 	var mults: Dictionary = data.get("multipliers", {}).duplicate(true)
 	var changed := false
 	for mineral in mults.keys():
-		var current := clamp(float(mults[mineral]), MIN_PRICE_MULT, MAX_PRICE_MULT)
+		var current: float = clamp(float(mults[mineral]), MIN_PRICE_MULT, MAX_PRICE_MULT)
 		if current < MAX_PRICE_MULT:
 			mults[mineral] = minf(current + PRICE_RECOVERY_PER_SESSION, MAX_PRICE_MULT)
 			changed = true

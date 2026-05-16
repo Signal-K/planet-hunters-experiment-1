@@ -1,6 +1,10 @@
 extends RefCounted
 class_name RocketsStateAccess
 
+const JSONFileManager = preload("res://Scripts/Utils/JSONFileManager.gd")
+const RocketsStateStore = preload("res://Scripts/Utils/RocketsStateStore.gd")
+const MissionObjectiveResolver = preload("res://Scripts/Utils/MissionObjectiveResolver.gd")
+
 const KNOWN_ROCKET_TYPES := ["starterrocket1", "starterrocket2", "starterrocket3"]
 const VALID_OPERATION_MODES := ["contract", "survey"]
 const MAX_PLANNING_STEP := 3
@@ -30,7 +34,7 @@ static func load_state(
         _reconcile_state_invariants(override_copy, scanner_unlock_completed_missions)
         return override_copy
     var data = {}
-    var json = preload("res://Scripts/Utils/JSONFileManager.gd")
+    var json = JSONFileManager
     if not FileAccess.file_exists(state_path):
         # Seed user:// state from bundled res:// file if present
         data = json.load_json(default_state_path)
@@ -58,7 +62,7 @@ static func load_state(
     if (progress_migrated or badge_sanitized or progression_state_migrated or scanner_state_migrated or progression_floor_reconciled or invariant_reconciled) and on_save_state.is_valid():
         on_save_state.call(data)
 
-    var migrations = preload("res://Scripts/Utils/RocketsStateStore.gd")
+    var migrations = RocketsStateStore
     if migrations:
         migrations.apply_migrations(data, on_save_state)
     return data
@@ -71,7 +75,7 @@ static func save_state(
 ) -> bool:
     if not data.has("mission_progress_schema_version"):
         data["mission_progress_schema_version"] = mission_progress_schema_version
-    var json = preload("res://Scripts/Utils/JSONFileManager.gd")
+    var json = JSONFileManager
     return json.save_json(state_path, data)
 
 static func build_default_state(mission_progress_schema_version: int) -> Dictionary:
@@ -118,7 +122,7 @@ static func build_default_state(mission_progress_schema_version: int) -> Diction
     return data
 
 static func write_state_direct(data: Dictionary, state_path: String) -> bool:
-    var json = preload("res://Scripts/Utils/JSONFileManager.gd")
+    var json = JSONFileManager
     return json.save_json(state_path, data)
 
 static func _apply_defaults(data: Dictionary, scanner_unlock_completed_missions: int) -> void:
@@ -587,7 +591,7 @@ static func _normalize_returned_mission_record(returned_any: Variant, completed:
     return returned
 
 static func _normalize_mission_objective(objective_any: Variant, target_id: String, target_type: String, operation_mode: String, completed: int, source: String, target_label: String) -> Dictionary:
-    var MissionObjectiveResolver = preload("res://Scripts/Utils/MissionObjectiveResolver.gd")
+    var MissionObjectiveResolver = MissionObjectiveResolver
     if typeof(objective_any) != TYPE_DICTIONARY:
         return MissionObjectiveResolver.build_objective({
             "stage": _mission_stage_from_completed(completed),

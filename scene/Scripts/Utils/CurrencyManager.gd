@@ -43,4 +43,4 @@ func set_balance(new_balance: int) -> void:
 
 ## Get formatted balance string
 func get_formatted_balance() -> String:
-	return CurrencyFormatter.format_with_symbol(balance, "F")
+	return NumberFormat.with_symbol(balance, "F")

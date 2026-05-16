@@ -1,6 +1,8 @@
 extends RefCounted
 class_name ResearchManager
 
+const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd")
+
 const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
 
 const RESEARCH_NODES := {
@@ -65,7 +67,7 @@ static func purchase_research(node_id: String) -> bool:
 		return false
 		
 	# Check costs (Science XP is just a check for now, Francs are consumed)
-	var app = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
+	var app = AppControllerHelper.get_instance()
 	if app == null:
 		return false
 		

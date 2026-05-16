@@ -1,4 +1,5 @@
 extends VBoxContainer
+const AppLogger = preload("res://Scripts/Utils/Logger.gd")
 
 signal back_pressed
 
@@ -10,7 +11,7 @@ var anomaly_id: String = ""
 var is_planet: bool = false
 
 func _ready():
-	back_button.pressed.connect(Callable(self, "_on_back_pressed"))
+	back_button.pressed.connect(_on_back_pressed)
 	anomaly_image.visible = false
 
 func initialize(anomaly: Dictionary):
@@ -49,10 +50,10 @@ func _load_anomaly_image():
 
 	loading_label.text = "Loading image..."
 	# Console-log the exact image URL requested (per user request)
-	print("SimpleDetailView: requesting image URL -> ", image_url)
+	AppLogger.d("SimpleDetailView: requesting image URL -> " + str(image_url))
 	var http = HTTPRequest.new()
 	add_child(http)
-	http.request_completed.connect(Callable(self, "_on_image_loaded"))
+	http.request_completed.connect(_on_image_loaded)
 	var err = http.request(image_url)
 	if err != OK:
 		preload("res://Scripts/Utils/Logger.gd").d("SimpleDetailView: Failed to start HTTP request: %d" % [err])
@@ -67,7 +68,7 @@ func _on_image_loaded(result:int, response_code:int, headers:PackedStringArray, 
 	var err = img.load_png_from_buffer(body)
 	if err != OK:
 		# Do NOT attempt fallbacks. Log PNG decode failure and stop.
-		print("SimpleDetailView: PNG decode failed for requested URL")
+		push_error("SimpleDetailView: PNG decode failed for requested URL")
 		loading_label.text = "Failed to decode image"
 		return
 	var tex = ImageTexture.create_from_image(img)

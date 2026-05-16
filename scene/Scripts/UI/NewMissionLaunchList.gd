@@ -1,5 +1,6 @@
 extends RefCounted
 class_name NewMissionLaunchList
+const AppLogger = preload("res://Scripts/Utils/Logger.gd")
 
 var _launch_list_container: Node
 var _on_refund: Callable
@@ -89,12 +90,12 @@ func display_launched_rockets() -> void:
 			preview_btn.disabled = true
 		else:
 			var target_type = _get_target_type(target_map, target_id)
-			preview_btn.pressed.connect(Callable(self, "_on_preview_pressed").bind(target_id, target_label, target_type, id))
+			preview_btn.pressed.connect(_on_preview_pressed.bind(target_id, target_label, target_type, id))
 		panel_style.apply_outline_button(preview_btn)
 
 		var btn: Button = row.get_node("Margin/HBox/ActionButton")
 		btn.text = "Self-Destruct"
-		btn.pressed.connect(Callable(self, "_on_self_destruct_pressed").bind(id))
+		btn.pressed.connect(_on_self_destruct_pressed.bind(id))
 		panel_style.apply_button(btn, true)
 
 		_launch_list_container.add_child(row)
@@ -136,7 +137,7 @@ func display_launched_rockets() -> void:
 		if target_id == "":
 			preview_btn.disabled = true
 		else:
-			preview_btn.pressed.connect(Callable(self, "_on_preview_pressed").bind(target_id, target_label, target_type, rocket_id))
+			preview_btn.pressed.connect(_on_preview_pressed.bind(target_id, target_label, target_type, rocket_id))
 		panel_style.apply_outline_button(preview_btn)
 
 		_launch_list_container.add_child(row)
@@ -144,20 +145,20 @@ func display_launched_rockets() -> void:
 	update_progress()
 
 func _on_self_destruct_pressed(rocket_id: String) -> void:
-	print("NewMissionPanel: self-destruct requested for", rocket_id)
+	AppLogger.d("NewMissionPanel: self-destruct requested for" + str(rocket_id))
 	var rm = RocketsManager
 	if rm:
 		var ok = rm.set_destroyed(rocket_id)
 		if ok:
-			print("NewMissionPanel: rocket", rocket_id, "marked Destroyed")
+			AppLogger.d("NewMissionPanel: rocket" + str(rocket_id, "marked Destroyed"))
 			if _on_refund.is_valid():
 				_on_refund.call(rocket_id)
 			# Refresh the launched list UI
 			display_launched_rockets()
 		else:
-			print("NewMissionPanel: failed to mark rocket destroyed:", rocket_id)
+			AppLogger.d("NewMissionPanel: failed to mark rocket destroyed:" + str(rocket_id))
 	else:
-		print("NewMissionPanel: RocketsManager not available")
+		AppLogger.d("NewMissionPanel: RocketsManager not available")
 
 func _on_preview_pressed(target_id: String, target_label: String, target_type: String, rocket_id: String) -> void:
 	var rm = RocketsManager

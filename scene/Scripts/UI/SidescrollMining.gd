@@ -1,5 +1,7 @@
 extends Control
 
+const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
+
 const NavigationMixin = preload("res://Scripts/Utils/NavigationMixin.gd")
 const GameplayAnalytics = preload("res://Scripts/Systems/GameplayAnalytics.gd")
 const RegionMath = preload("res://Scripts/UI/SidescrollMiningRegionMath.gd")
@@ -14,6 +16,15 @@ const UILayout = preload("res://Scripts/UI/UILayout.gd")
 const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd")
 const MiningRoomRowScene = preload("res://Scenes/UI/Templates/MiningRoomRow.tscn")
 const MiningContractOrderRowScene = preload("res://Scenes/UI/Templates/MiningContractOrderRow.tscn")
+
+const _ROCKET_FRAME_1 = preload("res://assets/Vehicles/StarterRocketStage2Frame1.png")
+const _ROCKET_FRAME_2 = preload("res://assets/Vehicles/StarterRocketStage2Frame2.png")
+const _ROCKET_FRAME_3 = preload("res://assets/Vehicles/StarterRocketStage2Frame3.png")
+const _ROCKET_FRAME_4 = preload("res://assets/Vehicles/StarterRocketStage2Frame4.png")
+const _ROCKET_FRAME_5 = preload("res://assets/Vehicles/StarterRocketStage2Frame5.png")
+const _ROCKET_FRAME_6 = preload("res://assets/Vehicles/StarterRocketStage2Frame6.png")
+const _ROCKET_FRAME_7 = preload("res://assets/Vehicles/StarterRocketStage2Frame7.png")
+const _ROCKET_FRAME_8 = preload("res://assets/Vehicles/StarterRocketStage2Frame8.png")
 
 signal mining_completed(minerals: Dictionary, score: int)
 
@@ -209,7 +220,8 @@ func _build_button_handbook_text() -> String:
 		entries.append("Drone: Send a drone after deeper deposits the mining beam cannot reach.")
 	entries.append("Inventory: Check what you have collected and how much the load is worth.")
 	entries.append("Return to Base: End the run and move into mission debrief.")
-	return "\n".join(entries)
+	return "
+".join(entries)
 
 func _toggle_button_handbook() -> void:
 	if handbook_panel == null:
@@ -580,7 +592,6 @@ func start_mining(is_planet: bool = false, difficulty: int = 1, target_id: Strin
 	if _order_total > 0:
 		_max_beam_charges = max(_max_beam_charges, ceil(_order_total * 1.4))
 	_beam_charges = _max_beam_charges
-	_update_mineral_header_label()
 	return_button.text = "RETURN"
 	return_button.modulate = Color(1, 1, 1, 1)
 	var analytics_payload := _with_session_context({
@@ -710,9 +721,10 @@ func _refresh_room_debug_overlay() -> void:
 		_room_debug_markers.add_child(marker)
 
 func _load_rocket_frames():
-	for i in range(1, 9):
-		var frame = load("res://assets/Vehicles/StarterRocketStage2Frame%d.png" % i)
-		_rocket_frames.append(frame)
+	_rocket_frames = [
+		_ROCKET_FRAME_1, _ROCKET_FRAME_2, _ROCKET_FRAME_3, _ROCKET_FRAME_4,
+		_ROCKET_FRAME_5, _ROCKET_FRAME_6, _ROCKET_FRAME_7, _ROCKET_FRAME_8,
+	]
 
 func _setup_rocket():
 	rocket.texture = _rocket_frames[0]
@@ -776,13 +788,18 @@ func _rebuild_loop_container() -> void:
 func _process(delta):
 	_enforce_tutorial_overlay_hidden()
 	_elapsed_time += delta
-	
-	# Animate particles from pool
-	_animate_particles(delta)
-	
+	_update_terrain_scroll(delta)
+	_update_rocket_animation(delta)
+	_update_resources(delta)
+	if _elapsed_time >= _target_duration:
+		_completion_reason = "duration_elapsed"
+		_complete_mining()
+		return
+	_just_looped = false
+	_maybe_emit_stuck_signals()
+
+func _update_terrain_scroll(delta: float) -> void:
 	_scroll_offset += SCROLL_SPEED * delta
-	
-	# Loop terrain seamlessly
 	if _scroll_offset >= _terrain_width:
 		_scroll_offset = fmod(_scroll_offset, _terrain_width)
 		_loop_count += 1
@@ -793,23 +810,18 @@ func _process(delta):
 		})
 		_reset_minerals()
 		_just_looped = true
-
-	# Position both terrain instances for seamless loop
 	terrain_container.position.x = -_scroll_offset
 	if _terrain_loop_container and is_instance_valid(_terrain_loop_container):
 		_terrain_loop_container.position.x = -_scroll_offset + _terrain_width
-	
-	# Check if we need to show the loop (when near end)
-	if _scroll_offset > _terrain_width * 0.5:
-		# We're in second half, prepare for loop by resetting visuals
-		pass
-	
+
+func _update_rocket_animation(delta: float) -> void:
 	_frame_timer += delta
 	if _frame_timer >= 0.1:
 		_frame_timer = 0.0
 		_frame_index = (_frame_index + 1) % _rocket_frames.size()
 		rocket.texture = _rocket_frames[_frame_index]
-	
+
+func _update_resources(delta: float) -> void:
 	if _signpost_timer > 0.0:
 		_signpost_timer -= delta
 		if _signpost_timer <= 0.0:
@@ -818,12 +830,11 @@ func _process(delta):
 	else:
 		_fuel -= FUEL_DRAIN_RATE * delta
 	fuel_bar.value = _fuel
-	
+
 	beam_bar.value = (_beam_charges / _max_beam_charges) * 100.0
 	if beam_label:
 		beam_label.text = "BEAM: %d" % int(_beam_charges)
-	
-	# Check for fuel depletion
+
 	if _fuel <= 0:
 		_fuel = 0
 		fuel_bar.value = 0
@@ -835,15 +846,15 @@ func _process(delta):
 	elif _beam_charges <= 0:
 		return_button.text = "BEAM DEPLETED - RETURN"
 		return_button.modulate = Color(1, 0.7, 0.3, 1)
-	
+
 	if _drone_cooldown_timer > 0:
 		_drone_cooldown_timer -= delta
 		if _drone_cooldown_timer <= 0:
 			_update_drone_display()
-	
+
 	if _guide_active:
 		_update_guide(delta)
-	
+
 	if _is_mining and _beam_charges > 0 and not _just_looped:
 		_heat = min(100, _heat + HEAT_GAIN_RATE * delta)
 		_fire_laser()
@@ -854,8 +865,6 @@ func _process(delta):
 			_beam_glow.visible = false
 		if _heat == 0 and _combo > 0:
 			_combo = 0
-			_update_mineral_header_label()
-	
 	heat_bar.value = _heat
 
 	if not _heat_warned and _heat >= 50.0:
@@ -863,30 +872,20 @@ func _process(delta):
 		instructions.text = "Heat rising — release FIRE to cool"
 		instructions.modulate.a = 1.0
 
-	# Allow inventory check anytime
 	if Input.is_key_pressed(KEY_E):
 		if not inventory_panel.visible:
 			inventory_panel.visible = true
 			_update_inventory_display()
 	else:
 		inventory_panel.visible = false
-	
+
 	if not _guide_active:
 		if Input.is_action_pressed("ui_accept") and not _uses_touch_controls:
 			_is_mining = true
 		elif Input.is_action_just_released("ui_accept"):
 			_is_mining = false
-
 		if _drones_enabled and Input.is_key_pressed(KEY_D) and _drones_available > 0 and _drone_cooldown_timer <= 0:
 			_deploy_drone()
-	
-	if _elapsed_time >= _target_duration:
-		_completion_reason = "duration_elapsed"
-		_complete_mining()
-		return
-
-	_just_looped = false
-	_maybe_emit_stuck_signals()
 
 func _fire_laser():
 	laser.visible = true
@@ -963,12 +962,6 @@ func _check_mineral_hit():
 
 var _particle_pool_index = 0
 
-func _animate_particles(delta: float):
-	"""Animate particles in the pool (currently using tweens, so this is a placeholder)"""
-	# Particles are animated via tweens in _spawn_particles
-	# This function exists to prevent parse errors
-	pass
-
 func _spawn_particles(region):
 	# Use pre-created particle pool from scene instead of runtime creation
 	var particle_pool = particles_container.get_node_or_null("ParticlePool")
@@ -1033,7 +1026,6 @@ func _record_region_collection(region: Dictionary, source: String) -> void:
 	if not _collected_minerals.has(mineral_name):
 		_collected_minerals[mineral_name] = 0
 	_collected_minerals[mineral_name] += 1
-	_update_mineral_header_label()
 	if _collected_deposit_count == 1:
 		GameplayAnalytics.emit_event("mining_first_collection", _with_session_context({
 			"collection_source": source,
@@ -1086,18 +1078,28 @@ func _toggle_inventory():
 		_update_inventory_display()
 
 func _update_inventory_display():
-	var text = "STORAGE\n"
-	text += "─────────────────\n"
-	text += "Fuel:  %d%%\n" % int(round(_fuel))
-	text += "Heat:  %d%%\n" % int(round(_heat))
-	text += "Beam:  %d%%\n" % int(round(_beam_charges / max(_max_beam_charges, 1.0) * 100.0))
-	text += "\nMINERALS COLLECTED\n"
+	var text = "STORAGE
+"
+	text += "─────────────────
+"
+	text += "Fuel:  %d%%
+" % int(round(_fuel))
+	text += "Heat:  %d%%
+" % int(round(_heat))
+	text += "Beam:  %d%%
+" % int(round(_beam_charges / max(_max_beam_charges, 1.0) * 100.0))
+	text += "
+MINERALS COLLECTED
+"
 	if _collected_minerals.is_empty():
-		text += "Nothing yet...\n"
+		text += "Nothing yet...
+"
 	else:
 		for mineral_name in _collected_minerals:
-			text += "%s: %d\n" % [mineral_name, _collected_minerals[mineral_name]]
-	text += "\nScore: %d" % _score
+			text += "%s: %d
+" % [mineral_name, _collected_minerals[mineral_name]]
+	text += "
+Score: %d" % _score
 	inventory_label.text = text
 
 func _complete_mining():
@@ -1173,7 +1175,7 @@ func _complete_mining():
 		RocketsManager.add_to_inventory(_collected_minerals)
 		
 	# Pass to AppController for React Native bridge sync
-	var app = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
+	var app = AppControllerHelper.get_instance()
 	if app and app.has_method("set_last_mining_result"):
 		app.set_last_mining_result({
 			"minerals": _collected_minerals.duplicate(true),
@@ -1276,7 +1278,7 @@ func _deploy_drone():
 	_active_drones.append(drone)
 
 	drone.deploy(rocket.position)
-	var exploded_cb = Callable(self, "_on_drone_exploded")
+	var exploded_cb = _on_drone_exploded
 	if not drone.exploded.is_connected(exploded_cb):
 		drone.exploded.connect(exploded_cb)
 	
@@ -1317,7 +1319,6 @@ func _on_drone_exploded(_pos: Vector2, region: Dictionary = {}):
 		if _guide_active and _guide_step == GuideStep.DEPLOY_DRONE:
 			_advance_guide_step(GuideStep.COMPLETE)
 	_score += 50
-	_update_mineral_header_label()
 
 
 func _update_drone_display():
@@ -1330,9 +1331,11 @@ func _update_drone_display():
 	if _compact_layout_active:
 		drone_label.text = "DRONES: %d/%d%s" % [_drones_available, MAX_DRONES, cooldown_text]
 	elif _uses_touch_controls:
-		drone_label.text = "DRONES: %d/%d%s\n[TAP DRONE]" % [_drones_available, MAX_DRONES, cooldown_text]
+		drone_label.text = "DRONES: %d/%d%s
+[TAP DRONE]" % [_drones_available, MAX_DRONES, cooldown_text]
 	else:
-		drone_label.text = "DRONES: %d/%d%s\n[D] deploy" % [_drones_available, MAX_DRONES, cooldown_text]
+		drone_label.text = "DRONES: %d/%d%s
+[D] deploy" % [_drones_available, MAX_DRONES, cooldown_text]
 
 func _suspend_tutorial_overlay() -> void:
 	var root = get_tree().root if get_tree() else null
@@ -1468,9 +1471,6 @@ func _setup_contract_panel_style() -> void:
 			row.queue_free()
 	_mineral_progress_bars.clear()
 	_mineral_bar_rows.clear()
-
-func _update_mineral_header_label() -> void:
-	pass  # OrderPanel removed; mineral totals shown via ContractOrderPanel progress bars.
 
 func _refresh_contract_order_tracker() -> void:
 	if contract_order_panel == null or contract_order_title == null or contract_order_progress == null:

@@ -1,4 +1,5 @@
 extends Node
+const AppLogger = preload("res://Scripts/Utils/Logger.gd")
 ## Unified Sync Bridge — Web/PWA edition.
 ## Observes EventBus, pushes state changes to the Next.js PWA via JavaScriptBridge (postMessage).
 ## Receives inbound Supabase-reconciled snapshots from the PWA and applies them to AppController.
@@ -13,7 +14,7 @@ func _ready() -> void:
 	_connect_event_bus()
 	if OS.has_feature("web"):
 		_register_pwa_listener()
-	print("[SyncBridge] Ready")
+	AppLogger.d("[SyncBridge] Ready")
 
 func _connect_event_bus() -> void:
 	EventBus.player_state_changed.connect(_on_player_state_changed)

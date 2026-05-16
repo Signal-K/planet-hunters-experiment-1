@@ -11,6 +11,7 @@ const MineralHoldings       = preload("res://Scripts/Utils/MineralHoldings.gd")
 const SectorRevealManager   = preload("res://Scripts/Utils/SectorRevealManager.gd")
 const SubcontractorManager  = preload("res://Scripts/Utils/SubcontractorManager.gd")
 const AppControllerHelper   = preload("res://Scripts/Utils/AppControllerHelper.gd")
+const GameplayAnalytics     = preload("res://Scripts/Systems/GameplayAnalytics.gd")
 const MissionLogManager     = preload("res://Scripts/Utils/MissionLogManager.gd")
 const NumberFormat          = preload("res://Scripts/Utils/NumberFormat.gd")
 const NavigationMixin       = preload("res://Scripts/Utils/NavigationMixin.gd")
@@ -850,6 +851,20 @@ func _resolve_debrief_once() -> void:
 	var now_ts := int(Time.get_unix_time_from_system())
 	var mission_badge := "mission-%s-%d" % [tid if tid != "" else "unknown", now_ts]
 	RocketsManager.mark_mission_completed(mission_badge)
+	GameplayAnalytics.emit_event("mission_debrief_resolved", {
+		"action": "resolve_mission_debrief",
+		"badge": mission_badge,
+		"mission_count": RocketsManager.get_completed_mission_count(),
+		"target_id": tid,
+		"target_type": str(_returned.get("type", "asteroid")),
+		"label": str(_returned.get("label", "")),
+		"operation_mode": _operation_mode,
+		"contractor_id": _contractor_id,
+		"contractor_name": _contractor_name,
+		"payout": _payout,
+		"cargo_units": _cargo.size(),
+		"order_completion_pct": int(round(_order_ratio * 100.0))
+	})
 	AppControllerHelper.record_tutorial_action("resolve_mission_debrief")
 	RocketsManager.finalize_return(rid)
 	RocketsManager.clear_returned_mission()

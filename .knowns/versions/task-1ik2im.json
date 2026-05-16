@@ -1,0 +1,49 @@
+{
+  "taskId": "1ik2im",
+  "currentVersion": 1,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "1ik2im",
+      "version": 1,
+      "timestamp": "2026-05-13T12:02:48.53259Z",
+      "author": "@Liam",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": null,
+          "newValue": "todo"
+        },
+        {
+          "field": "priority",
+          "oldValue": null,
+          "newValue": "high"
+        }
+      ],
+      "snapshot": {
+        "acceptanceCriteria": [
+          {
+            "text": "State management migrated to Resource-based architecture",
+            "completed": false
+          },
+          {
+            "text": "Monolithic managers (RocketsManager, AppController) decoupled into domain-specific services",
+            "completed": false
+          },
+          {
+            "text": "Global EventBus implemented for decoupled signaling",
+            "completed": false
+          }
+        ],
+        "assignee": "@Liam",
+        "description": "Implement a series of architectural improvements to the Godot codebase to improve maintainability, scalability, and state management.",
+        "labels": [
+          "godot,architecture,refactor"
+        ],
+        "priority": "high",
+        "status": "todo",
+        "title": "Godot Architectural Overhaul"
+      }
+    }
+  ]
+}

@@ -1,10 +1,12 @@
 extends ColorRect
 class_name NebulaBackground
 
+const NebulaTheme = preload("res://Resources/NebulaSciTheme.gd")
+
 @onready var _gradient_texture := GradientTexture2D.new()
 
 func _ready() -> void:
-	var NebulaTheme = preload("res://Resources/NebulaSciTheme.gd")
+	var NebulaTheme = NebulaTheme
 	
 	# Create gradient
 	var gradient = NebulaTheme.create_nebula_gradient()

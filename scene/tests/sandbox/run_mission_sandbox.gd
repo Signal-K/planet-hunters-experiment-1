@@ -536,6 +536,11 @@ func _check_overlaps(root: Node, label: String) -> void:
 
 	for i in range(rects.size()):
 		for j in range(i + 1, rects.size()):
+			# Skip parent-child pairs — they always overlap by definition
+			var pi := names[i]
+			var pj := names[j]
+			if pj.begins_with(pi + "/") or pi.begins_with(pj + "/"):
+				continue
 			var intersection := rects[i].intersection(rects[j])
 			if intersection.size.x > 6 and intersection.size.y > 6:
 				var area := intersection.size.x * intersection.size.y

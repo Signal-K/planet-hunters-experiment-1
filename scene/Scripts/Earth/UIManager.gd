@@ -2,6 +2,11 @@ class_name UIManager
 extends CanvasLayer
 const AppLogger = preload("res://Scripts/Utils/Logger.gd")
 const PanelManager = preload("res://Scripts/Utils/PanelManager.gd")
+const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd")
+
+const FrancBalanceScene = preload("res://Scenes/UI/FrancBalance.tscn")
+const NewMissionPanelScene = preload("res://Scenes/UI/NewMissionPanel.tscn")
+const SubcontractorsPanelScene = preload("res://Scenes/UI/SubcontractorsPanel.tscn")
 
 enum PanelType {
 	MENU,
@@ -30,9 +35,8 @@ func _setup_ui_components() -> void:
 
 func _add_franc_balance_ui() -> void:
 	"""Add the franc balance UI component"""
-	var franc_scene = load("res://Scenes/UI/FrancBalance.tscn")
-	if franc_scene:
-		var franc_instance = franc_scene.instantiate()
+	if FrancBalanceScene:
+		var franc_instance = FrancBalanceScene.instantiate()
 		add_child(franc_instance)
 		# Shift right of the 420 px left selector panel (420 + 12 px gap = 432)
 		franc_instance.offset_left = 432.0
@@ -61,9 +65,8 @@ func _show_menu_panel() -> void:
 
 func _show_new_mission_panel() -> void:
 	"""Show the New Mission panel (SatelliteStationPanel)"""
-	var panel_scene = load("res://Scenes/UI/NewMissionPanel.tscn")
-	if panel_scene:
-		var panel_instance = panel_scene.instantiate()
+	if NewMissionPanelScene:
+		var panel_instance = NewMissionPanelScene.instantiate()
 		add_child(panel_instance)
 		if panel_instance.has_signal("panel_closed"):
 			panel_instance.panel_closed.connect(_on_panel_closed)
@@ -110,8 +113,7 @@ func _show_market_locked_message() -> void:
 	AppLogger.d("Market locked message shown")
 
 func _get_app_controller() -> Node:
-	"""Get reference to the AppController"""
-	return preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
+	return AppControllerHelper.get_instance()
 
 func _on_reset_all() -> void:
 	"""Handle reset all from menu panel - relay to AppController"""

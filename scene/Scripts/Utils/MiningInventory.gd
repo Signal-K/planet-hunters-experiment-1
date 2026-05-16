@@ -1,5 +1,8 @@
 extends RefCounted
 class_name MiningInventory
+const AppLogger = preload("res://Scripts/Utils/Logger.gd")
+
+const JSONFileManager = preload("res://Scripts/Utils/JSONFileManager.gd")
 
 const STATE_PATH := "user://mining_inventory.json"
 
@@ -23,13 +26,14 @@ static func _direct_save_state(data: Dictionary) -> bool:
 	if not file:
 		return false
 	var json_string = JSON.stringify(data, "  ")
-	file.store_string(json_string + "\n")
+	file.store_string(json_string + "
+")
 	file.close()
-	print("MiningInventory: direct state write succeeded: ", STATE_PATH)
+	AppLogger.d("MiningInventory: direct state write succeeded: " + str(STATE_PATH))
 	return true
 
 static func load_state() -> Dictionary:
-	var json = preload("res://Scripts/Utils/JSONFileManager.gd")
+	var json = JSONFileManager
 	var data = json.load_json(STATE_PATH)
 	if data.is_empty() and FileAccess.file_exists(STATE_PATH):
 		data = _direct_load_state()
@@ -40,7 +44,7 @@ static func load_state() -> Dictionary:
 	return data
 
 static func save_state(data: Dictionary) -> bool:
-	var json = preload("res://Scripts/Utils/JSONFileManager.gd")
+	var json = JSONFileManager
 	var ok = json.save_json(STATE_PATH, data)
 	if ok:
 		return true

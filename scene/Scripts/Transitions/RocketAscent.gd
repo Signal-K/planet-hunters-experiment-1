@@ -1,5 +1,8 @@
 extends Node2D
 
+const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
+const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
+
 const ASCENT_DURATION := 4.0
 const NEXT_SCENE := "res://Scenes/Transitions/rocket_transit.tscn"
 const SKY_GROUND := Color(0.53, 0.81, 0.98)
@@ -82,7 +85,7 @@ func _build_stars(vp: Vector2) -> void:
 
 func _build_rocket(vp: Vector2) -> void:
 	_rocket_sprite = AnimatedSprite2D.new()
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var rm = RocketsManager
 	var rocket_id := ""
 	if rm:
 		var preview = rm.get_preview_target()
@@ -101,7 +104,7 @@ func _build_ui() -> void:
 	_skip_button = Button.new()
 	_skip_button.text = "Skip"
 	_skip_button.custom_minimum_size = Vector2(80, 36)
-	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
+	var panel_style = PanelStyle
 	panel_style.apply_button(_skip_button, false)
 	_skip_button.pressed.connect(_on_skip_pressed)
 	ui_layer.add_child(_skip_button)

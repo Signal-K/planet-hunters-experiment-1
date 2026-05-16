@@ -125,7 +125,7 @@ func _connect_nav_layout_updates() -> void:
 	var vp := _owner.get_viewport()
 	if vp == null:
 		return
-	var cb := Callable(self, "_on_viewport_size_changed")
+	var cb := _on_viewport_size_changed
 	if not vp.size_changed.is_connected(cb):
 		vp.size_changed.connect(cb)
 	_nav_layout_connected = true

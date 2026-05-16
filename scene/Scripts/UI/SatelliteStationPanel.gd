@@ -58,7 +58,7 @@ var local_only: bool = false
 var use_archived_detail: bool = false
 var _player_level: int = 1
 var _unlock_overlay: ColorRect = null
-var _data := SatelliteStationPanelData.new()
+var _data: SatelliteStationPanelData = SatelliteStationPanelData.new()
 var _list := SatelliteStationPanelList.new()
 var _detail := SatelliteStationPanelDetail.new()
 var _loading := SatelliteStationPanelLoading.new()
@@ -119,10 +119,10 @@ func _ready():
 
 	_list.setup(
 		anomaly_list,
-		Callable(self, "_get_current_mode"),
-		Callable(_data, "normalize_anomaly_id"),
-		Callable(self, "_on_select_target_pressed"),
-		Callable(self, "_on_view_pressed")
+		_get_current_mode,
+		_data.normalize_anomaly_id,
+		_on_select_target_pressed,
+		_on_view_pressed
 	)
 
 	_loading.setup(
@@ -131,7 +131,7 @@ func _ready():
 		progress_bar,
 		status_label,
 		refresh_button,
-		Callable(self, "_on_loading_finished"),
+		_on_loading_finished,
 		MIN_DISPLAY_TIME
 	)
 	

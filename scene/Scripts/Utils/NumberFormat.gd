@@ -21,3 +21,7 @@ static func compact(value: int) -> String:
 	if value >= 1000:
 		return "%.1fK" % (float(value) / 1000.0)
 	return str(value)
+
+## Compact with a currency symbol suffix (e.g. "1.2K F").
+static func with_symbol(value: int, symbol: String = "F") -> String:
+	return compact(value) + " " + symbol

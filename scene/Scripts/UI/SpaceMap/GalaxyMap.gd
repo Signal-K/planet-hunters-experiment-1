@@ -1,4 +1,5 @@
 extends Node2D
+const AppLogger = preload("res://Scripts/Utils/Logger.gd")
 ## Galaxy map — standalone scene.
 ## Visual structure is editor-visible via @tool nodes (GalaxyBackground, GalaxyMapNode).
 ## Clicking Sol opens space_map.tscn (Sol's solar system).
@@ -159,21 +160,25 @@ func _setup_telemetry_panel() -> void:
 
 func _setup_home_button() -> void:
 	if home_btn == null: return
-	const C := Color(0.28, 0.88, 0.96, 1.0)
+	_style_nav_button(home_btn, Color(0.28, 0.88, 0.96, 1.0))
+	home_btn.pressed.connect(_change_to_base)
+
+func _style_nav_button(btn: Button, col: Color) -> void:
+	if btn == null: return
 	var sn := StyleBoxFlat.new()
 	sn.bg_color = Color(0, 0, 0, 0)
-	sn.border_color = Color(C.r, C.g, C.b, 0.35)
+	sn.border_color = Color(col.r, col.g, col.b, 0.35)
 	sn.set_border_width_all(1)
-	sn.content_margin_left=14; sn.content_margin_right=14
-	sn.content_margin_top=6;   sn.content_margin_bottom=6
+	sn.content_margin_left = 14; sn.content_margin_right = 14
+	sn.content_margin_top  = 6;  sn.content_margin_bottom = 6
 	var sh := sn.duplicate() as StyleBoxFlat
-	sh.bg_color    = Color(C.r, C.g, C.b, 0.10)
-	sh.border_color = C
-	home_btn.add_theme_stylebox_override("normal",  sn)
-	home_btn.add_theme_stylebox_override("hover",   sh)
-	home_btn.add_theme_stylebox_override("pressed", sh)
-	home_btn.add_theme_color_override("font_color", C)
-	home_btn.pressed.connect(_change_to_base)
+	sh.bg_color     = Color(col.r, col.g, col.b, 0.10)
+	sh.border_color = col
+	btn.add_theme_stylebox_override("normal",  sn)
+	btn.add_theme_stylebox_override("hover",   sh)
+	btn.add_theme_stylebox_override("pressed", sh)
+	btn.add_theme_color_override("font_color",       col)
+	btn.add_theme_color_override("font_hover_color", col)
 
 func _update_telemetry(node_name: String, is_game_target: bool, data: Dictionary) -> void:
 	if telem_name == null: return
@@ -208,6 +213,7 @@ func _update_telemetry(node_name: String, is_game_target: bool, data: Dictionary
 			action_btn.text = "✦  LAUNCH MISSION"
 			action_btn.add_theme_color_override("font_color", Color(0.941, 0.690, 0.188, 1.0))
 			action_btn.pressed.connect(func():
+				RocketsManager.select_target(tid)
 				RocketsManager.set_preview_target(tid, label, "planet", "")
 				get_tree().change_scene_to_file("res://Scenes/Earth/earth_launchpad.tscn"))
 		else:
@@ -262,7 +268,7 @@ func _handle_click(screen_pos: Vector2) -> void:
 					_select_star(tid, true, data)
 					if telem_name:
 						telem_name.add_theme_color_override("font_color", Color(1.0, 0.353, 0.416, 1.0))
-					print("[GalaxyMap] Target selection rejected for: ", tid)
+					AppLogger.d("[GalaxyMap] Target selection rejected for: " + str(tid))
 				return
 			_select_star(tid, true, data)
 			return

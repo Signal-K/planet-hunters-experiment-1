@@ -1,4 +1,5 @@
 extends Node
+const AppLogger = preload("res://Scripts/Utils/Logger.gd")
 ## Autoload. Owns the canonical PlayerProfile resource.
 ## During Phase 1 migration, mirrors AppController state and re-emits via EventBus.
 ## Future phases will make AppController read from this instead.
@@ -8,7 +9,7 @@ var profile := PlayerProfile.new()
 func _ready() -> void:
 	_mirror_from_app_controller()
 	_connect_app_controller_signals()
-	print("[PlayerManager] Ready")
+	AppLogger.d("[PlayerManager] Ready")
 
 func _get_app_controller() -> Node:
 	return get_node_or_null("/root/AppController")

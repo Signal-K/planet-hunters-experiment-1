@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "WebFetch(domain:stitch.googlelabs.com)",
-      "WebFetch(domain:stitch.googleapis.com)"
+      "WebFetch(domain:stitch.googleapis.com)",
+      "Skill(kn-init)",
+      "mcp__knowns__memory"
     ]
   }
 }

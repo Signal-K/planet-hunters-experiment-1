@@ -2,17 +2,19 @@
 class_name JSONFileManager
 extends RefCounted
 
+const AppLogger = preload("res://Scripts/Utils/Logger.gd")
+
 ## Load data from a JSON file
 static func load_json(file_path: String) -> Dictionary:
 	var result = {}
 
 	if not FileAccess.file_exists(file_path):
-		print("JSONFileManager: File does not exist: ", file_path)
+		AppLogger.d("JSONFileManager: File does not exist: " + str(file_path))
 		return result
 	
 	var file = FileAccess.open(file_path, FileAccess.READ)
 	if not file:
-		print("JSONFileManager: Failed to open file: ", file_path)
+		push_error("JSONFileManager: Failed to open file: ", file_path)
 		return result
 	
 	var contents = file.get_as_text()
@@ -20,7 +22,7 @@ static func load_json(file_path: String) -> Dictionary:
 
 	if typeof(contents) != TYPE_STRING or contents.strip_edges() == "":
 		# Empty file — treat as empty state rather than failing JSON parse
-		print("JSONFileManager: Empty JSON file, returning empty object: ", file_path)
+		AppLogger.d("JSONFileManager: Empty JSON file, returning empty object: " + str(file_path))
 		return result
 	
 	var parsed = JSON.parse_string(contents)
@@ -31,7 +33,7 @@ static func load_json(file_path: String) -> Dictionary:
 		if err != 0:
 			var err_line = parsed.get("error_line", 0)
 			var err_str = parsed.get("error_string", "Unknown parse error")
-			print("JSONFileManager: Parse JSON failed for %s. Error at line %d: %s" % [file_path, err_line, err_str])
+			push_error("JSONFileManager: Parse JSON failed for %s. Error at line %d: %s" % [file_path, err_line, err_str])
 			return result
 		# Prefer the 'result' field when present (newer API)
 		if parsed.has("result"):
@@ -41,7 +43,7 @@ static func load_json(file_path: String) -> Dictionary:
 			result = parsed
 	else:
 		# Unexpected parse return type
-		print("JSONFileManager: Unexpected JSON.parse_string() return type for file: ", file_path)
+		push_error("JSONFileManager: Unexpected JSON.parse_string() return type for file: ", file_path)
 		var backup_result = _load_backup_json(file_path)
 		if not backup_result.is_empty():
 			return backup_result
@@ -53,7 +55,7 @@ static func _load_backup_json(file_path: String) -> Dictionary:
 	var backup_path = _backup_path(file_path)
 	if not FileAccess.file_exists(backup_path):
 		return {}
-	print("JSONFileManager: Falling back to backup JSON file: ", backup_path)
+	AppLogger.d("JSONFileManager: Falling back to backup JSON file: " + str(backup_path))
 	var backup = load_json(backup_path)
 	if not backup.is_empty():
 		_write_text_file(file_path, _read_text_file(backup_path))
@@ -68,7 +70,7 @@ static func _temp_path(file_path: String) -> String:
 static func _write_text_file(file_path: String, contents: String) -> bool:
 	var file = FileAccess.open(file_path, FileAccess.WRITE)
 	if not file:
-		print("JSONFileManager: Failed to open file for writing: ", file_path)
+		push_error("JSONFileManager: Failed to open file for writing: ", file_path)
 		return false
 	file.store_string(contents)
 	file.close()
@@ -139,7 +141,7 @@ static func save_json(file_path: String, data: Dictionary) -> bool:
 	if not _write_text_file(file_path, json_string):
 		if prior_contents != "":
 			_write_text_file(file_path, prior_contents)
-		print("JSONFileManager: Failed to save JSON file directly: ", file_path)
+		push_error("JSONFileManager: Failed to save JSON file directly: ", file_path)
 		return false
-	print("JSONFileManager: Successfully saved data to: ", file_path)
+	AppLogger.d("JSONFileManager: Successfully saved data to: " + str(file_path))
 	return true

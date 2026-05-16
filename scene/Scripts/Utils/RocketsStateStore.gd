@@ -1,6 +1,8 @@
 extends RefCounted
 class_name RocketsStateStore
 
+const TimeHelper = preload("res://Scripts/Earth/TimeHelper.gd")
+
 static func apply_migrations(data: Dictionary, save_fn: Callable) -> void:
 	_migrate_placed_entries(data, save_fn)
 	_migrate_mission_times(data, save_fn)
@@ -55,7 +57,7 @@ static func _migrate_mission_times(data: Dictionary, save_fn: Callable) -> void:
 	var missions = data.get("missions", [])
 	if missions.is_empty():
 		return
-	var time_helper = preload("res://Scripts/Earth/TimeHelper.gd")
+	var time_helper = TimeHelper
 	var now = int(time_helper.get_unix_epoch_seconds())
 	var changed = false
 	for i in range(missions.size()):

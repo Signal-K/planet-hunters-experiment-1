@@ -53,10 +53,10 @@ func run_all_tests() -> void:
 
 # MFIX01 — Scroll speed
 func test_mfix01_scroll_speed_is_75() -> void:
-	reporter.start_test("MFIX01: Mining scroll speed is 75.0 (was 120)")
+	reporter.start_test("MFIX01: Mining scroll speed is 105.0 (raised from 75 for faster pace)")
 	var speed = SidescrollMining.SCROLL_SPEED
-	if abs(float(speed) - 75.0) > 0.001:
-		reporter.fail_test("Expected SCROLL_SPEED=75.0, got %s" % str(speed))
+	if abs(float(speed) - 105.0) > 0.001:
+		reporter.fail_test("Expected SCROLL_SPEED=105.0, got %s" % str(speed))
 		return
 	reporter.pass_test()
 

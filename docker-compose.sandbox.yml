@@ -5,7 +5,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.sandbox
-    image: planet-hunters-sandbox:local
+    image: landnam-sandbox:local
     environment:
       DISPLAY: ":99"
       VNC_PORT: "5900"

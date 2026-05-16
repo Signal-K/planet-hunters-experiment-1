@@ -1,6 +1,8 @@
 extends RefCounted
 class_name ResourceYield
 
+const HashUtils = preload("res://Scripts/Utils/HashUtils.gd")
+
 const PLANET_CAPACITY := 10000
 const ASTEROID_RATIO := 0.2
 const MINERALS := ["Iron", "Nickel", "Cobalt", "Platinum", "Silicates"]
@@ -27,7 +29,7 @@ static func get_yield_for_target(target_id: String, target_type: String, level: 
 	var base_capacity = PLANET_CAPACITY if normalized_type == "planet" else int(round(PLANET_CAPACITY * ASTEROID_RATIO))
 	var effective_cargo_multiplier = max(cargo_multiplier, 0.1)
 	var target_multiplier = _target_capacity_multiplier(target_id)
-	var hash_util = preload("res://Scripts/Utils/HashUtils.gd")
+	var hash_util = HashUtils
 	var seed = hash_util.simple_hash("%s:%s" % [target_id, normalized_type])
 	var rng = RandomNumberGenerator.new()
 	rng.seed = seed

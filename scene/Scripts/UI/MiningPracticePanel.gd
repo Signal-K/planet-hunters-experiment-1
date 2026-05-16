@@ -1,4 +1,5 @@
 extends Control
+const AppLogger = preload("res://Scripts/Utils/Logger.gd")
 
 const GameplayAnalytics = preload("res://Scripts/Systems/GameplayAnalytics.gd")
 const MiningScene = preload("res://Scenes/UI/SidescrollMining.tscn")
@@ -237,7 +238,7 @@ func _maybe_auto_start_when_no_rocket_in_play() -> void:
 	if not has_active_rocket:
 		# Smart skip-ahead: if player has no rocket staged, jump directly into
 		# a forgiving drill so test/sandbox flow is immediately usable.
-		print("MiningPracticePanel: no rocket in play, auto-starting warm-up drill")
+		AppLogger.d("MiningPracticePanel: no rocket in play, auto-starting warm-up drill")
 		_start_preset("warmup_asteroid")
 
 func _suspend_tutorial_overlay() -> void:

@@ -153,9 +153,9 @@ size_flags_horizontal = 3
 size_flags_vertical = 4
 text = "New Mission"
 
-[node name="PlanetHuntersWordmark" type="Label" parent="UILayer"]
+[node name="LandnamWordmark" type="Label" parent="UILayer"]
 mouse_filter = 2
-text = "PLANET HUNTERS"
+text = "LANDNAM"
 modulate = Color(0.9, 0.87, 0.82, 0.45)
 horizontal_alignment = 1
 

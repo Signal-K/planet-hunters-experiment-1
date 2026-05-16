@@ -23,7 +23,7 @@ func run_all_tests() -> void:
 	await test_xp_accumulates()
 	await test_level_up_threshold()
 	await test_multi_level_up()
-	await test_scanner_unlock_gating_by_progress()
+	await test_scanner_v1_stays_deferred()
 	await test_scanner_build_cost_enforced()
 	await test_scanner_stage_requires_scanned_target_selection()
 	await test_outbound_transit_distance_label_decreases()
@@ -88,8 +88,8 @@ func test_multi_level_up() -> void:
 		return
 	reporter.pass_test()
 
-func test_scanner_unlock_gating_by_progress() -> void:
-	reporter.start_test("Scanner unlock gated by mission progress")
+func test_scanner_v1_stays_deferred() -> void:
+	reporter.start_test("Scanner v1 stays deferred")
 	var state = RocketsManager.load_state()
 	state["mission_progress_completed"] = 2
 	state["completed_mission_badges"] = ["mission-1", "mission-2"]
@@ -98,15 +98,15 @@ func test_scanner_unlock_gating_by_progress() -> void:
 	var locked = RocketsManager.is_scanner_unlocked()
 	state["mission_progress_completed"] = 3
 	state["completed_mission_badges"] = ["mission-1", "mission-2", "mission-3"]
-	state["scanner_unlocked"] = false
+	state["scanner_unlocked"] = true
 	RocketsManager.set_override_state(state)
 	var unlocked = RocketsManager.is_scanner_unlocked()
 	RocketsManager.clear_override_state()
 	if locked:
-		reporter.fail_test("Scanner should be locked before mission stage 3")
+		reporter.fail_test("Scanner should be locked before the deferred scanner loop returns")
 		return
-	if not unlocked:
-		reporter.fail_test("Scanner should unlock at mission stage 3")
+	if unlocked:
+		reporter.fail_test("Scanner should remain locked while scanner v1 is deferred")
 		return
 	reporter.pass_test()
 
@@ -162,7 +162,7 @@ func _defined_flows() -> Dictionary:
 		"supabase fetch": ["run_supabase_tests.gd::Fetch anomalies (telescope-tess)"],
 		"supabase interact": ["target filters and contract selection"],
 		"scene transitions": ["outbound/return distance and debrief auto-advance"],
-		"unlock progression": ["scanner unlock gate", "rocket unlocks"],
+		"unlock progression": ["scanner v1 deferred gate", "rocket unlocks"],
 		"xp progression": ["xp accumulate", "level thresholds", "multi level-up"],
 		"editor persistence": ["mission progress persistence"],
 		"bundle smoke": ["__tests__/bundle_flows.test.js"]

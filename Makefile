@@ -1,18 +1,69 @@
-# Local development targets
-.PHONY: up down kanban supabase-check godot godot-dev godot-env buildit ci-build ci-test ci-godot ci-playwright ci-export ci-all ci-clean ci-full-run sync-lock ghactions ux-tour ux-tour-build test test-structure test-all-godot
+.PHONY: help \
+        godot godot-dev buildit \
+        test test-all \
+        sandbox sandbox-build sandbox-vnc \
+        ux-tour ux-tour-build ux-tour-m1 ux-tour-m2 ux-tour-m3 ux-tour-m4 ux-tour-sandbox ux-tour-mining \
+        ci-build ci-test ci-godot ci-playwright ci-export ci-all ci-clean \
+        up down \
+        sync-lock ghactions
 
-## ── Local Godot tests (save-safe) ────────────────────────────────────────────
-# Backs up all user save files before running, restores them after.
-# This prevents test runs from wiping your in-progress game state.
+# ── Config ────────────────────────────────────────────────────────────────────
 
-GODOT_BIN  := /Applications/Godot4.5.app/Contents/MacOS/Godot
+GODOT_BIN  := /Applications/Dev/Godot4.5.app/Contents/MacOS/Godot
 GODOT_PROJ := scene
 SAVE_DIR   := $(HOME)/Library/Application Support/Godot/app_userdata/Landnám
-SAVE_BAK   := /tmp/planet-hunters-save-bak
-
+SAVE_BAK   := /tmp/landnam-save-bak
 SAVE_FILES := franc_balance.cfg experience.cfg rockets_state.json \
               mission_logs.json subcontractors.json satellite_station.cfg \
               tutorial.cfg mining_inventory.json
+
+CI_IMAGE        := landnam-ci
+PLAYWRIGHT_IMAGE := landnam-playwright
+SANDBOX_IMAGE   := landnam-sandbox
+UX_TOUR_IMAGE   := landnam-ux-tour
+UX_TOUR_OUT     := $(PWD)/ux-screenshots
+GHCR_UX_IMAGE   := ghcr.io/signal-k/landnam/ux-tour:latest
+UX_TOUR_PLATFORM := $(shell \
+	if [ -x .godot-bin/Godot_v4.5-stable_linux.arm64 ]; then echo linux/arm64; \
+	elif [ -x .godot-bin/Godot_v4.5-stable_linux.x86_64 ]; then echo linux/amd64; fi)
+
+help:
+	@echo "Landnam — available targets"
+	@echo ""
+	@echo "  Dev"
+	@echo "    godot          Open Godot (with Supabase check)"
+	@echo "    buildit        Export web build + serve locally"
+	@echo "    up / down      Kanban board on :4444"
+	@echo ""
+	@echo "  Tests (local, save-safe)"
+	@echo "    test           Run structure tests"
+	@echo "    test-all       Run all Godot test scripts"
+	@echo ""
+	@echo "  Sandbox (VNC browser at http://localhost:6080/vnc.html)"
+	@echo "    sandbox-build  Build the sandbox Docker image"
+	@echo "    sandbox        Build + run sandbox (docker-compose)"
+	@echo "    sandbox-vnc    Run sandbox, open vnc.html when ready"
+	@echo ""
+	@echo "  UX Tour (headless screenshot run)"
+	@echo "    ux-tour        Run full tour (all missions)"
+	@echo "    ux-tour-m1/m2/m3/m4  Run specific mission"
+	@echo "    ux-tour-sandbox / ux-tour-mining"
+	@echo "    ux-tour-build  Rebuild tour image"
+	@echo ""
+	@echo "  CI (Docker, linux/amd64)"
+	@echo "    ci-build       Build CI image"
+	@echo "    ci-test        Unit tests"
+	@echo "    ci-godot       All Godot tests"
+	@echo "    ci-playwright  E2E tests (Firefox)"
+	@echo "    ci-export      Export Godot web assets"
+	@echo "    ci-all         All of the above"
+	@echo "    ci-clean       Remove CI image"
+	@echo ""
+	@echo "  Misc"
+	@echo "    sync-lock      Regenerate package-lock.json"
+	@echo "    ghactions      Run GitHub Actions locally (requires act)"
+
+# ── Helpers ───────────────────────────────────────────────────────────────────
 
 _save-backup:
 	@mkdir -p "$(SAVE_BAK)"
@@ -24,13 +75,36 @@ _save-restore:
 	@for f in $(SAVE_FILES); do \
 		[ -f "$(SAVE_BAK)/$$f" ] && cp -f "$(SAVE_BAK)/$$f" "$(SAVE_DIR)/$$f" 2>/dev/null || true; \
 	done
-	@echo "Save files restored."
 
-test-structure: _save-backup
+_supabase-check:
+	@if ! curl -sf -m 5 http://127.0.0.1:54323/project/default > /dev/null; then \
+		echo "Starting Supabase..."; \
+		cd /Users/scroobz/Navigation/client && supabase start; \
+	fi
+
+# ── Dev ───────────────────────────────────────────────────────────────────────
+
+godot: _supabase-check
+	open -a Godot --args --path ./scene
+
+buildit:
+	npm run web:build
+	npm run web:start
+
+up:
+	@lsof -ti :4444 | xargs kill -9 2>/dev/null || true
+	@cd kanban-go && KNOWNS_DIR=$(CURDIR)/.knowns PORT=4444 go run .
+
+down:
+	@lsof -ti :4444 | xargs kill -9 2>/dev/null && echo "Stopped :4444" || echo "Nothing on :4444"
+
+# ── Tests (local, save-safe) ──────────────────────────────────────────────────
+
+test: _save-backup
 	@"$(GODOT_BIN)" --headless --path "$(GODOT_PROJ)" --script tests/run_structure_tests.gd; STATUS=$$?; \
 	$(MAKE) -s _save-restore; exit $$STATUS
 
-test-all-godot: _save-backup
+test-all: _save-backup
 	@"$(GODOT_BIN)" --headless --path "$(GODOT_PROJ)" --script tests/run_structure_tests.gd && \
 	"$(GODOT_BIN)" --headless --path "$(GODOT_PROJ)" --script tests/run_tutorial_tests.gd && \
 	"$(GODOT_BIN)" --headless --path "$(GODOT_PROJ)" --script tests/run_narrative_paths_tests.gd && \
@@ -39,67 +113,57 @@ test-all-godot: _save-backup
 	"$(GODOT_BIN)" --headless --path "$(GODOT_PROJ)" --script tests/run_mission_e2e_flow_tests.gd; STATUS=$$?; \
 	$(MAKE) -s _save-restore; exit $$STATUS
 
-test: test-structure
+# ── Sandbox (VNC) ─────────────────────────────────────────────────────────────
 
-## ── Kanban board (Go) ────────────────────────────────────────────────────────
-up:
-	@lsof -ti :4444 | xargs kill -9 2>/dev/null || true
-	@echo "⭐  Kanban board → http://localhost:4444"
-	@cd kanban-go && KNOWNS_DIR=$(CURDIR)/.knowns PORT=4444 go run .
+sandbox-build:
+	docker build -f Dockerfile.sandbox -t $(SANDBOX_IMAGE):local .
 
-down:
-	@lsof -ti :4444 | xargs kill -9 2>/dev/null && echo "Stopped kanban on :4444" || echo "Nothing running on :4444"
+sandbox:
+	docker compose -f docker-compose.sandbox.yml up --build
 
-kanban:
-	@echo "Starting knowns browser without opening a browser tab..."
-	@BROWSER=echo knowns browser
+sandbox-vnc: sandbox-build
+	docker compose -f docker-compose.sandbox.yml up -d
+	@echo "Waiting for noVNC..."
+	@until curl -sf http://localhost:6080/vnc.html > /dev/null; do sleep 1; done
+	open http://localhost:6080/vnc.html
 
-# Check if Supabase is running, start if not
-supabase-check:
-	@echo "Checking if Supabase is running..."
-	@if ! curl -s -f -m 5 http://127.0.0.1:54323/project/default > /dev/null 2>&1; then \
-		echo "Supabase is not running. Starting Supabase..."; \
-		cd /Users/scroobz/Navigation/client && supabase start; \
+# ── UX Tour ───────────────────────────────────────────────────────────────────
+
+ux-tour-build:
+	@if [ -n "$(UX_TOUR_PLATFORM)" ]; then \
+		docker build --platform $(UX_TOUR_PLATFORM) -t $(UX_TOUR_IMAGE) -f Dockerfile.ux-tour .; \
 	else \
-		echo "Supabase is already running."; \
+		docker build -t $(UX_TOUR_IMAGE) -f Dockerfile.ux-tour .; \
 	fi
 
-# Open Godot project
-godot:
-	@echo "Opening Godot project..."
-	open -a Godot --args --path ./project
+ux-tour: ## Run full UX screenshot tour (pulls image or builds locally)
+	@if ! docker pull $(GHCR_UX_IMAGE) 2>/dev/null; then $(MAKE) ux-tour-build; \
+	else docker tag $(GHCR_UX_IMAGE) $(UX_TOUR_IMAGE); fi
+	@mkdir -p $(UX_TOUR_OUT)
+	docker run --rm \
+		-v "$(PWD)/scene:/app/scene" \
+		-v "$(UX_TOUR_OUT):/output" \
+		$(UX_TOUR_IMAGE) $(ARGS)
+	@docker container prune -f 2>/dev/null; docker image rm -f $(UX_TOUR_IMAGE) 2>/dev/null; \
+	docker volume prune -f 2>/dev/null; docker builder prune -f 2>/dev/null; true
 
-# Main target: ensure Supabase is running, then open Godot
-godot-dev: supabase-check godot
-	@echo "Godot development environment ready!"
+ux-tour-m1:    ; $(MAKE) ux-tour ARGS="--mission=M1"
+ux-tour-m2:    ; $(MAKE) ux-tour ARGS="--mission=M2"
+ux-tour-m3:    ; $(MAKE) ux-tour ARGS="--mission=M3"
+ux-tour-m4:    ; $(MAKE) ux-tour ARGS="--mission=M4"
+ux-tour-sandbox: ; $(MAKE) ux-tour ARGS="--sandbox"
+ux-tour-mining:  ; $(MAKE) ux-tour ARGS="--mining-only"
 
-# Alias for godot-dev
-godot-env: godot-dev
+# ── CI ────────────────────────────────────────────────────────────────────────
 
-# Export the Godot web build and start the local web frontend.
-buildit:
-	@echo "Exporting Godot web build..."
-	npm run web:build
-	@echo "Starting local web frontend at http://127.0.0.1:4173"
-	npm run web:start
-
-# CI targets (mimics GitHub Actions)
-IMAGE_NAME=landnam-ci
-
-# Build the CI docker image
 ci-build:
-	@echo "Building CI docker image..."
-	docker build --platform linux/amd64 -t $(IMAGE_NAME) -f Dockerfile.ci .
+	docker build --platform linux/amd64 -t $(CI_IMAGE) -f Dockerfile.ci .
 
-# Run basic tests (unit tests)
 ci-test: ci-build
-	@echo "Running basic tests in Docker..."
-	docker run --rm $(IMAGE_NAME) npm run test:unit
+	docker run --rm $(CI_IMAGE) npm run test:unit
 
-# Run Godot tests (all Godot test scripts)
 ci-godot: ci-build
-	@echo "Running all Godot tests in Docker..."
-	docker run --rm $(IMAGE_NAME) bash -c "cd scene && \
+	docker run --rm $(CI_IMAGE) bash -c "cd scene && \
 		/opt/godot/godot --headless --path . --script res://tests/run_sync_tests.gd && \
 		/opt/godot/godot --headless --path . --script res://tests/run_mission_log_tests.gd && \
 		/opt/godot/godot --headless --path . --script res://tests/run_tutorial_tests.gd && \
@@ -107,130 +171,26 @@ ci-godot: ci-build
 		/opt/godot/godot --headless --path . --script res://tests/run_bug_regression_tests.gd && \
 		/opt/godot/godot --headless --path . --script res://tests/SupabaseTestRunner.gd"
 
-# Run Playwright e2e tests in Docker using Firefox (avoids Chrome QEMU crash on Apple Silicon).
-# Builds from the cached linux/amd64 node layer — no Docker Hub pull needed.
-# GitHub Actions uses ci-all (Dockerfile.ci, native x86_64, all browsers) instead.
-PLAYWRIGHT_IMAGE_NAME=landnam-playwright
-
 ci-playwright:
-	@echo "Building Playwright Docker image..."
-	docker build --platform linux/amd64 -t $(PLAYWRIGHT_IMAGE_NAME) -f Dockerfile.playwright .
-	@echo "Running Playwright e2e tests in Docker (Firefox)..."
-	docker run --rm $(PLAYWRIGHT_IMAGE_NAME)
+	docker build --platform linux/amd64 -t $(PLAYWRIGHT_IMAGE) -f Dockerfile.playwright .
+	docker run --rm $(PLAYWRIGHT_IMAGE)
 
-# Run Godot export
 ci-export: ci-build
-	@echo "Exporting Godot web assets in Docker..."
-	docker run --rm -v $(PWD)/electron-dist:/app/electron-dist $(IMAGE_NAME) npm run godot:export:desktop
+	docker run --rm -v $(PWD)/electron-dist:/app/electron-dist $(CI_IMAGE) npm run godot:export:desktop
 
-# Run all CI tests (unit + godot + e2e)
 ci-all: ci-build
-	@echo "Running all tests in Docker (Unit, Godot, E2E)..."
-	docker run --rm $(IMAGE_NAME) npm run test:all
+	docker run --rm $(CI_IMAGE) npm run test:all
 
-# Run full CI cycle (build, test, clean)
-ci-full-run: ci-build ci-all ci-clean
-	@echo "Full CI cycle completed and cleaned up."
-
-# Cleanup Docker image and intermediate build artifacts
 ci-clean:
-	@echo "Cleaning up CI Docker image..."
-	docker rmi $(IMAGE_NAME) || true
-	@echo "Done."
+	docker rmi $(CI_IMAGE) || true
 
-# Run GitHub Actions pipeline locally via act (simulates GitHub Actions in Docker)
-# Requires: brew install act
-# Optional: pass ACT_FLAGS="--job basic-tests" to run a specific job
-# Optional: pass SECRETS_FILE=".secrets" to provide secrets (e.g. VERCEL_TOKEN=xxx)
+# ── Misc ──────────────────────────────────────────────────────────────────────
+
+sync-lock:
+	npm install --package-lock-only --legacy-peer-deps
+
 ghactions:
-	@echo "Running GitHub Actions pipeline locally via act..."
-	@command -v act >/dev/null 2>&1 || { echo "Error: 'act' is not installed. Install with: brew install act"; exit 1; }
-	act push \
-		-W .github/workflows/electron_release.yml \
+	@command -v act >/dev/null || { echo "Install: brew install act"; exit 1; }
+	act push -W .github/workflows/electron_release.yml \
 		$(if $(SECRETS_FILE),--secret-file $(SECRETS_FILE),) \
 		$(ACT_FLAGS)
-
-# ── Godot UX E2E screenshot tour (local Docker) ───────────────────────────────
-# Runs the full UX tour scene in a headless Docker container with Xvfb and
-# dumps screenshots + a report into ./ux-screenshots/ on your host.
-#
-#   make ux-tour          — build image (if needed) then run the full tour
-#   make ux-tour-m1       — run tour for Mission 1 only
-#   make ux-tour-m2       — run tour for Mission 2 only
-#   make ux-tour-m3       — run tour for Mission 3 only
-#   make ux-tour-m4       — run tour for Mission 4 only
-#   make ux-tour-sandbox  — run tour in free-ops sandbox mode
-#   make ux-tour-mining   — run mining-only sandbox tour
-#   make ux-tour-build    — (re)build the image only, e.g. after a Godot upgrade
-#
-UX_TOUR_IMAGE=landnam-ux-tour
-UX_TOUR_OUT=$(PWD)/ux-screenshots
-
-GHCR_UX_TOUR_IMAGE=ghcr.io/signal-k/planet-hunters-experiment-1/ux-tour:latest
-UX_TOUR_PLATFORM:=$(shell \
-	if [ -x .godot-bin/Godot_v4.5-stable_linux.arm64 ]; then \
-		echo linux/arm64; \
-	elif [ -x .godot-bin/Godot_v4.5-stable_linux.x86_64 ]; then \
-		echo linux/amd64; \
-	fi)
-
-ux-tour-build:
-	@echo "Building UX tour Docker image..."
-	@if [ -n "$(UX_TOUR_PLATFORM)" ]; then \
-		echo "Using cached Godot binary for $(UX_TOUR_PLATFORM)"; \
-		docker build --platform $(UX_TOUR_PLATFORM) -t $(UX_TOUR_IMAGE) -f Dockerfile.ux-tour .; \
-	else \
-		docker build -t $(UX_TOUR_IMAGE) -f Dockerfile.ux-tour .; \
-	fi
-
-# Pull pre-built image from ghcr.io, fall back to local build
-ux-tour-pull:
-	@echo "Pulling pre-built UX tour image from ghcr.io..."
-	@if docker pull $(GHCR_UX_TOUR_IMAGE) 2>/dev/null; then \
-		docker tag $(GHCR_UX_TOUR_IMAGE) $(UX_TOUR_IMAGE); \
-		echo "✓ Using pre-built image (no rebuild needed)"; \
-	else \
-		echo "⚠️  Pre-built image unavailable — building locally..."; \
-		$(MAKE) ux-tour-build; \
-	fi
-
-ux-tour: ux-tour-pull
-	@mkdir -p $(UX_TOUR_OUT)
-	@echo "Running Godot UX E2E tour in Docker..."
-	@echo "Screenshots will appear in ./ux-screenshots/ when the tour finishes."
-	docker run --rm \
-		-v "$(PWD)/scene:/app/scene" \
-		-v "$(UX_TOUR_OUT):/output" \
-		$(UX_TOUR_IMAGE) $(ARGS)
-	@echo ""
-	@echo "Tour complete. Open ./ux-screenshots/ to view screenshots and ux_report.md."
-	@echo "Cleaning up Docker resources..."
-	@docker container prune -f 2>/dev/null || true
-	@docker image rm -f $(UX_TOUR_IMAGE) 2>/dev/null || true
-	@docker volume prune -f 2>/dev/null || true
-	@docker builder prune -f 2>/dev/null || true
-	@echo "Docker cleanup done."
-
-ux-tour-m1:
-	$(MAKE) ux-tour ARGS="--mission=M1"
-
-ux-tour-m2:
-	$(MAKE) ux-tour ARGS="--mission=M2"
-
-ux-tour-m3:
-	$(MAKE) ux-tour ARGS="--mission=M3"
-
-ux-tour-m4:
-	$(MAKE) ux-tour ARGS="--mission=M4"
-
-ux-tour-sandbox:
-	$(MAKE) ux-tour ARGS="--sandbox"
-
-ux-tour-mining:
-	$(MAKE) ux-tour ARGS="--mining-only"
-
-# Sync package-lock.json (to fix npm ci issues)
-sync-lock:
-	@echo "Syncing package-lock.json..."
-	npm install --package-lock-only --legacy-peer-deps
-	@echo "package-lock.json updated."

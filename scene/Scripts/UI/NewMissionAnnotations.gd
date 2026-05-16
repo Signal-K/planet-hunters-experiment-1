@@ -1,6 +1,8 @@
 extends RefCounted
 class_name NewMissionAnnotations
 
+const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
+
 const AnnotationItemScene = preload("res://Scenes/UI/Templates/NewMissionAnnotationItem.tscn")
 const EmptyLabelScene = preload("res://Scenes/UI/Templates/MenuLogbookEmpty.tscn")
 const AppLogger = preload("res://Scripts/Utils/Logger.gd")
@@ -87,7 +89,7 @@ func _display_items(items: Array) -> void:
 		_anomaly_list.add_child(item)
 
 func _create_item(data: Dictionary, idx: int) -> Control:
-	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
+	var panel_style = PanelStyle
 	var pc: PanelContainer = AnnotationItemScene.instantiate()
 	
 	var style = panel_style.create_list_item_style()
@@ -144,7 +146,7 @@ func _create_item(data: Dictionary, idx: int) -> Control:
 	var btn: Button = pc.get_node("OverlayButton")
 	btn.focus_mode = Control.FOCUS_NONE
 	btn.mouse_filter = Control.MOUSE_FILTER_STOP
-	btn.pressed.connect(Callable(self, "_on_item_pressed").bind(data))
+	btn.pressed.connect(_on_item_pressed.bind(data))
 
 	# Hover effect
 	pc.mouse_entered.connect(func():

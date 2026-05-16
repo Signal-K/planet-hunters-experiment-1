@@ -1,6 +1,8 @@
 extends RefCounted
 class_name AsteroidImageHelper
 
+const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
+
 const AppLogger = preload("res://Scripts/Utils/Logger.gd")
 
 var _owner: Node
@@ -48,7 +50,7 @@ func load_anomaly_image(anomaly_id: String, anomaly_data: Dictionary = {}, is_pl
 	# Create HTTP request
 	var http_request = HTTPRequest.new()
 	_owner.add_child(http_request)
-	http_request.request_completed.connect(Callable(self, "_on_image_loaded"))
+	http_request.request_completed.connect(_on_image_loaded)
 
 	var error = http_request.request(image_url)
 	if error != OK:
@@ -263,7 +265,7 @@ func _get_dominant_color(image: Image) -> Color:
 
 func _apply_background_color(color: Color) -> void:
 	"""Tint panel background toward image dominant color while preserving UI contrast."""
-	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
+	var panel_style = PanelStyle
 	var background_color = Color(
 		lerp(panel_style.PANEL_BG.r, color.r, 0.22),
 		lerp(panel_style.PANEL_BG.g, color.g, 0.22),

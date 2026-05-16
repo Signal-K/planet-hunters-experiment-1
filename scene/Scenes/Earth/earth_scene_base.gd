@@ -18,17 +18,22 @@ const SKY_LEVEL: float = 400.0
 const UI_LEVEL: float = 1000.0
 
 const AppLogger = preload("res://Scripts/Utils/Logger.gd")
+const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd")
+const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
+const CameraController = preload("res://Scripts/Earth/CameraController.gd")
+const DebugVisualizer = preload("res://Scripts/Earth/DebugVisualizer.gd")
+const GameNavigationMenu = preload("res://Scripts/UI/GameNavigationMenu.gd")
+const EarthSceneUIHelper = preload("res://Scripts/Earth/EarthSceneUIHelper.gd")
 
 @export var show_ground_guide: bool = false
 
 var camera_controller: Node
 var scene_manager: SceneManager
 var ui_manager: UIManager
-var _ui_helper := preload("res://Scripts/Earth/EarthSceneUIHelper.gd").new()
+var _ui_helper := EarthSceneUIHelper.new()
 
 func _ready() -> void:
 	# Initialize camera controller
-	var CameraController = preload("res://Scripts/Earth/CameraController.gd")
 	camera_controller = CameraController.new()
 	add_child(camera_controller)
 	camera_controller.initialize($Camera2D)
@@ -53,7 +58,6 @@ func _ready() -> void:
 
 	# Create ground guide lines if enabled
 	if show_ground_guide:
-		var DebugVisualizer = preload("res://Scripts/Earth/DebugVisualizer.gd")
 		DebugVisualizer.create_ground_guides(self)
 
 	# Call custom initialization for derived scenes
@@ -64,27 +68,42 @@ func _custom_ready() -> void:
 	pass
 
 func _ensure_tutorial_runtime() -> void:
-	var app = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
+	var app = AppControllerHelper.get_instance()
 	if app != null and app.has_method("_ensure_tutorial_runtime"):
 		app._ensure_tutorial_runtime()
 
 func _apply_tutorial_button_state() -> void:
-	var app = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
-	var tutorial_active := false
+	var app = AppControllerHelper.get_instance()
+	var tutorial_active := not RocketsManager.is_free_operations_unlocked()
 	if app != null and app.has_method("get_tutorial_state"):
 		var state: Dictionary = app.get_tutorial_state()
-		tutorial_active = not state.is_empty() and not bool(state.get("skipped", false))
+		if not state.is_empty():
+			var current_step: Dictionary = state.get("current_step", {}) as Dictionary
+			tutorial_active = not bool(state.get("skipped", false)) and not current_step.is_empty()
 	# During the tutorial disable off-mission nav buttons (SpaceMap, Market, Forward).
 	# Back and Menu stay enabled so the player can navigate back or access skip/replay.
 	# New Mission stays enabled in template scenes where it triggers the launchpad flow.
 	for btn_path in [
 		"UILayer/ButtonContainer/ForwardButton",
-		"UILayer/ButtonContainer/MarketButton",
 		"UILayer/ButtonContainer/SpaceMapButton",
 	]:
 		var btn := get_node_or_null(btn_path) as Button
 		if btn:
 			btn.disabled = tutorial_active
+	_apply_market_button_state(tutorial_active)
+
+func _apply_market_button_state(_tutorial_active: bool) -> void:
+	var market_btn := get_node_or_null("UILayer/ButtonContainer/MarketButton") as Button
+	if market_btn == null:
+		return
+	var market_unlocked := RocketsManager.is_free_operations_unlocked()
+	market_btn.disabled = not market_unlocked
+	if not market_unlocked:
+		market_btn.tooltip_text = "Market unlocks after completing the starter mission series."
+		market_btn.modulate = Color(1, 1, 1, 0.38)
+	else:
+		market_btn.tooltip_text = ""
+		market_btn.modulate = Color(1, 1, 1, 1)
 
 # ============================================================================
 # Ground and Soil Helper Functions
@@ -123,38 +142,34 @@ func is_in_soil_layer(y_position: float) -> bool:
 # ============================================================================
 
 func _on_back_button_pressed() -> void:
-	print("Back button pressed - navigating backward")
 	scene_manager.navigate_backward()
 
 func _on_forward_button_pressed() -> void:
-	print("Forward button pressed - navigating forward")
 	scene_manager.navigate_forward()
 
 func _on_menu_button_pressed() -> void:
-	print("Menu button pressed - showing menu panel")
-	preload("res://Scripts/UI/GameNavigationMenu.gd").toggle(self)
+	GameNavigationMenu.toggle(self)
 
 func _on_market_button_pressed() -> void:
-	var app = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
+	if not RocketsManager.is_free_operations_unlocked():
+		return
+	var app = AppControllerHelper.get_instance()
 	if app and app.has_method("get_experience_level"):
 		var level = int(app.get_experience_level())
 		if level < 5:
 			AppLogger.w("Market unlocks at Level 5 (Current: %d)" % level)
 			return
 	
-	print("Market button pressed - showing market panel")
 	ui_manager.show_panel(UIManager.PanelType.MARKET)
 
 func _on_space_map_button_pressed() -> void:
-	print("Space Map button pressed - opening space map scene")
 	if scene_manager:
 		scene_manager.change_to_scene("res://Scenes/UI/SpaceMap/galaxy_map.tscn")
 	else:
 		get_tree().change_scene_to_file("res://Scenes/UI/SpaceMap/galaxy_map.tscn")
 
 func _on_new_mission_button_pressed() -> void:
-	print("New Mission button pressed - opening launchpad scene")
-	preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("open_launchpad")
+	AppControllerHelper.record_tutorial_action("open_launchpad")
 	if scene_manager:
 		scene_manager.change_to_scene("res://Scenes/Earth/earth_launchpad.tscn")
 	else:

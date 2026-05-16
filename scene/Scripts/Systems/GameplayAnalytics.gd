@@ -2,6 +2,7 @@ extends RefCounted
 class_name GameplayAnalytics
 
 const WebEventBridge = preload("res://Scripts/Systems/WebEventBridge.gd")
+const PostHogNativeSurveyBridge = preload("res://Scripts/Systems/PostHogNativeSurveyBridge.gd")
 const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd")
 const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
 
@@ -14,6 +15,7 @@ static func emit_event(event_name: String, payload: Dictionary = {}) -> void:
 	var enriched := payload.duplicate(true)
 	_apply_common_context(enriched)
 	WebEventBridge.emit(event_name, enriched)
+	PostHogNativeSurveyBridge.handle_event(event_name, enriched)
 
 static func emit_feedback_requested(source: String, payload: Dictionary = {}) -> void:
 	var enriched := payload.duplicate(true)

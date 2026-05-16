@@ -1,4 +1,5 @@
 extends Node2D
+const AppLogger = preload("res://Scripts/Utils/Logger.gd")
 ## Solar system strategic map — standalone scene.
 ## Visual structure lives in space_map.tscn via @tool nodes (OrbitLine, PlanetIcon,
 ## MoonOrbit, StarField, CometOrbit) — editor-visible.
@@ -10,10 +11,12 @@ const SpaceMapContractorRowScene  = preload("res://Scenes/UI/Templates/SpaceMapC
 const AsteroidDetailViewScene     = preload("res://Scenes/UI/AsteroidDetail/asteroid_detail_view.tscn")
 const GalaxyMapNodeScript         = preload("res://Scripts/UI/SpaceMap/GalaxyMapNode.gd")
 
-const RocketsManager      = preload("res://Scripts/Utils/RocketsManager.gd")
-const SectorRevealManager = preload("res://Scripts/Utils/SectorRevealManager.gd")
-const SceneManager        = preload("res://Scripts/Earth/SceneManager.gd")
-const UIManager           = preload("res://Scripts/Earth/UIManager.gd")
+const RocketsManager         = preload("res://Scripts/Utils/RocketsManager.gd")
+const AppControllerHelper    = preload("res://Scripts/Utils/AppControllerHelper.gd")
+const SubcontractorManager   = preload("res://Scripts/Utils/SubcontractorManager.gd")
+const SectorRevealManager    = preload("res://Scripts/Utils/SectorRevealManager.gd")
+const SceneManager           = preload("res://Scripts/Earth/SceneManager.gd")
+const UIManager              = preload("res://Scripts/Earth/UIManager.gd")
 
 const BASE_W := 1920.0
 const BASE_H := 1080.0
@@ -58,7 +61,7 @@ func _ready() -> void:
 		# AUTO-FIX: If we are on the map in selection mode but tutorial is stuck on 
 		# contractor selection, force-record the contractor action so the coach
 		# updates to "Select Target".
-		var app = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
+		var app = AppControllerHelper.get_instance()
 		if app and app.has_method("get_tutorial_state"):
 			var state: Dictionary = app.get_tutorial_state()
 			var step: Dictionary = state.get("current_step", {})
@@ -66,7 +69,7 @@ func _ready() -> void:
 			if stage == 1 and str(step.get("action_key", "")) == "accept_contractor_offer":
 				# Double check if we actually have an active mission target selected or if we are just in the right scene
 				# If we are in selection mode, it means we have passed the contractor step.
-				print("[SpaceMap] Tutorial stuck on M1 contractor selection - auto-advancing to Target Selection")
+				AppLogger.d("[SpaceMap] Tutorial stuck on M1 contractor selection - auto-advancing to Target Selection")
 				app.record_tutorial_action("accept_contractor_offer")
 	else:
 		_setup_galaxy_button()
@@ -272,7 +275,7 @@ func _setup_selection_mode_ui() -> void:
 			confirm_btn.pressed.connect(func():
 				_select_mission_target(preselected_id)
 			)
-			sections.add_child(confirm_btn)
+			sections.call_deferred("add_child", confirm_btn)
 
 func _style_nav_button(btn: Button, col: Color) -> void:
 	if btn == null:
@@ -330,7 +333,7 @@ func _handle_click(screen_pos: Vector2) -> void:
 					tid = target_node.name.substr(2)
 				
 				if tid != "" and _target_positions.has(tid):
-					print("[SpaceMap] Target clicked: ", tid)
+					AppLogger.d("[SpaceMap] Target clicked: " + str(tid))
 					if is_selection_mode:
 						_select_mission_target(tid)
 						return
@@ -353,7 +356,7 @@ func _handle_click(screen_pos: Vector2) -> void:
 		if earth:
 			var dist = screen_pos.distance_to(earth.global_position)
 			if dist <= EARTH_HIT_R * solar_system.scale.x:
-				print("[SpaceMap] Earth clicked in selection mode - ignoring")
+				AppLogger.d("[SpaceMap] Earth clicked in selection mode - ignoring")
 				return
 # ── Target popup ──────────────────────────────────────────────────────────────
 
@@ -443,8 +446,8 @@ func _open_target_preview(target_id: String, entry: Dictionary) -> void:
 	(backdrop.get_node("Center/Panel/Scroll/Body/SecondarySeparator") as HSeparator)\
 		.add_theme_color_override("separator", Color(C_CYAN.r, C_CYAN.g, C_CYAN.b, 0.2))
 
-	var SubCM = preload("res://Scripts/Utils/SubcontractorManager.gd")
-	var RocketsMgr = preload("res://Scripts/Utils/RocketsManager.gd")
+	var SubCM = SubcontractorManager
+	var RocketsMgr = RocketsManager
 	var relevant: Array = []
 	for c in SubCM.get_roster(int(RocketsMgr.get_mission_stage())):
 		if (c as Dictionary).get("bonus", {}).is_empty() or target_type == "asteroid":
@@ -476,20 +479,17 @@ func _open_target_preview(target_id: String, entry: Dictionary) -> void:
 				RocketsManager.select_target(target_id)
 				
 				# Record tutorial progress
-				var app_inst = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
+				var app_inst = AppControllerHelper.get_instance()
 				if app_inst and app_inst.has_method("record_tutorial_action"):
 					app_inst.record_tutorial_action("select_launch_target")
 				
 				get_tree().change_scene_to_file("res://Scenes/Earth/earth_launchpad.tscn")
 			else:
+				RocketsManager.select_target(target_id)
 				RocketsManager.set_preview_target(target_id, target_label, target_type, "")
 				var t := Engine.get_main_loop() as SceneTree
 				if t == null: return
-				var sm = t.current_scene.get_node_or_null("SceneManager") if t.current_scene else null
-				if sm and sm.has_method("change_to_scene"):
-					sm.change_to_scene("res://Scenes/Earth/earth_launchpad.tscn")
-				else:
-					t.change_scene_to_file("res://Scenes/Earth/earth_launchpad.tscn"))
+				t.change_scene_to_file("res://Scenes/Earth/earth_launchpad.tscn"))
 	else:
 		var ll: Label = backdrop.get_node("Center/Panel/Scroll/Body/LockedLabel")
 		ll.text = "Free Operations locked — complete Mission 4 to launch from the map."
@@ -508,19 +508,19 @@ func _select_mission_target(target_id: String) -> void:
 	_selection_in_progress = true
 	if not RocketsManager.select_target(target_id):
 		_selection_in_progress = false
-		print("[SpaceMap] Target selection rejected: ", target_id)
+		AppLogger.d("[SpaceMap] Target selection rejected: " + str(target_id))
 		return
 	RocketsManager.consume_map_return_mode()
 	var viewport := get_viewport()
 	if viewport != null:
 		viewport.set_input_as_handled()
-	var app_inst = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
+	var app_inst = AppControllerHelper.get_instance()
 	if app_inst and app_inst.has_method("record_tutorial_action"):
 		app_inst.record_tutorial_action("select_launch_target", {"target_id": target_id})
 	call_deferred("_return_to_launchpad_after_target_selection", target_id)
 
 func _return_to_launchpad_after_target_selection(target_id: String) -> void:
-	print("[SpaceMap] Target selected, returning to launchpad: ", target_id)
+	AppLogger.d("[SpaceMap] Target selected, returning to launchpad: " + str(target_id))
 	var tree := get_tree()
 	if tree == null:
 		_selection_in_progress = false
@@ -529,7 +529,7 @@ func _return_to_launchpad_after_target_selection(target_id: String) -> void:
 	if err != OK:
 		_selection_in_progress = false
 		RocketsManager.set_map_return_mode(true)
-		print("[SpaceMap] Failed to return to launchpad after target selection: ", err)
+		AppLogger.d("[SpaceMap] Failed to return to launchpad after target selection: " + str(err))
 
 func _open_annotation_screen(target_id: String, entry: Dictionary) -> void:
 	var existing := get_node_or_null("CanvasLayer/AnnotationOverlay")

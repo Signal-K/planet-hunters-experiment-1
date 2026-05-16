@@ -128,7 +128,7 @@ func test_01_fresh_start_state() -> void:
 # ─── Test 2 ───────────────────────────────────────────────────────────────────
 
 func test_02_tutorial_first_step_is_pick_contractor() -> void:
-	reporter.start_test("Tutorial M1 first step has action_key 'accept_contractor_offer'")
+	reporter.start_test("Tutorial M1 first step has action_key 'open_launchpad'")
 	_reset()
 	var tc = await _setup_controller()
 	var state: Dictionary = tc.get_tutorial_state() as Dictionary
@@ -138,8 +138,8 @@ func test_02_tutorial_first_step_is_pick_contractor() -> void:
 		await _teardown(tc)
 		return
 	var action_key := str(step.get("action_key", ""))
-	if action_key != "accept_contractor_offer":
-		reporter.fail_test("Expected 'accept_contractor_offer', got '%s'" % action_key)
+	if action_key != "open_launchpad":
+		reporter.fail_test("Expected 'open_launchpad', got '%s'" % action_key)
 		await _teardown(tc)
 		return
 	await _teardown(tc)
@@ -343,9 +343,10 @@ func test_11_mining_tutorial_step_fires_on_arrival() -> void:
 	reporter.start_test("Tutorial advances from 'm1_mine_intro' → 'mine_target' on arrived_at_mining_site")
 	_reset()
 	var tc = await _setup_controller()
+	tc.record_action("open_launchpad")
 	tc.record_action("accept_contractor_offer")
-	tc.record_action("create_rocket")
 	tc.record_action("select_launch_target")
+	tc.record_action("create_rocket")
 	tc.record_action("launch_rocket_from_earth")
 	await create_timer(0.04).timeout
 
@@ -441,13 +442,13 @@ func test_14_mission_2_unlocks_sr2_and_targets() -> void:
 # ─── Test 15 ──────────────────────────────────────────────────────────────────
 
 func test_15_all_m1_tutorial_steps_advance_in_sequence() -> void:
-	reporter.start_test("All 8 Mission 1 tutorial steps advance in correct order")
+	reporter.start_test("All 9 Mission 1 tutorial steps advance in correct order")
 	_reset()
 	var tc = await _setup_controller()
 	var catalog := TutorialCatalog.new()
 	var m1_steps: Array = catalog.get_mission_steps(1) as Array
-	if m1_steps.size() != 8:
-		reporter.fail_test("Expected 8 M1 steps, got %d" % m1_steps.size())
+	if m1_steps.size() != 9:
+		reporter.fail_test("Expected 9 M1 steps, got %d" % m1_steps.size())
 		await _teardown(tc)
 		return
 	for i in range(m1_steps.size()):
@@ -462,9 +463,11 @@ func test_15_all_m1_tutorial_steps_advance_in_sequence() -> void:
 		tc.record_action(expected_key)
 		await create_timer(0.02).timeout
 	var final_state: Dictionary = tc.get_tutorial_state() as Dictionary
-	var final_stage := int(final_state.get("current_stage", 1))
-	if final_stage < 2:
-		reporter.fail_test("After all M1 steps, stage should be >= 2, got %d" % final_stage)
+	var final_step: Dictionary = final_state.get("current_step", {}) as Dictionary
+	# Stage advances only when RocketsManager reports a completed mission — not testable
+	# in isolation here. Instead verify all M1 steps were consumed (current_step is empty).
+	if not final_step.is_empty():
+		reporter.fail_test("After all M1 steps, current_step should be empty, got '%s'" % str(final_step.get("action_key", "?")))
 		await _teardown(tc)
 		return
 	await _teardown(tc)
