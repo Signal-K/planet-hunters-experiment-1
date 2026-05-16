@@ -7,7 +7,7 @@ if [ "$(uname -s)" != "Darwin" ]; then
 fi
 
 REPO_OWNER="${REPO_OWNER:-Signal-K}"
-REPO_NAME="${REPO_NAME:-planet-hunters-experiment-1}"
+REPO_NAME="${REPO_NAME:-landnam}"
 REPO_BRANCH="${REPO_BRANCH:-main}"
 REPO_URL="${REPO_URL:-https://github.com/${REPO_OWNER}/${REPO_NAME}.git}"
 REPO_ARCHIVE_URL="${REPO_ARCHIVE_URL:-https://github.com/${REPO_OWNER}/${REPO_NAME}/archive/refs/heads/${REPO_BRANCH}.zip}"
@@ -16,7 +16,7 @@ TARGET_DIR="${TARGET_DIR:-$HOME/${REPO_NAME}}"
 GODOT_VERSION="${GODOT_VERSION:-4.5-stable}"
 GODOT_APP_ZIP_URL="${GODOT_APP_ZIP_URL:-https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/Godot_v4.5-stable_macos.universal.zip}"
 GODOT_TEMPLATES_URL="${GODOT_TEMPLATES_URL:-https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/Godot_v4.5-stable_export_templates.tpz}"
-GODOT_INSTALL_ROOT="${GODOT_INSTALL_ROOT:-$HOME/.planet-hunters-tools}"
+GODOT_INSTALL_ROOT="${GODOT_INSTALL_ROOT:-$HOME/.landnam-tools}"
 
 log() {
   printf '[bootstrap] %s\n' "$*"

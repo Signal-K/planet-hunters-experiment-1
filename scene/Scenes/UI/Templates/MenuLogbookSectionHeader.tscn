@@ -1,4 +1,0 @@
-[gd_scene format=3]
-
-[node name="SectionHeader" type="Label"]
-layout_mode = 2

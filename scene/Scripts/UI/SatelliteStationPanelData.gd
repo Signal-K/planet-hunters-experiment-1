@@ -1,5 +1,6 @@
 extends RefCounted
 class_name SatelliteStationPanelData
+const AppLogger = preload("res://Scripts/Utils/Logger.gd")
 
 ## Helpers for normalizing anomaly IDs and migrating old annotation files
 func normalize_anomaly_id(anomaly: Dictionary, fallback_index: int) -> String:
@@ -64,15 +65,15 @@ func migrate_annotations_on_disk() -> void:
 		var new_path = "%s/%s" % ["user://annotations", new_name]
 		# Avoid overwriting existing normalized files
 		if FileAccess.file_exists(new_path):
-			print("migrate_annotations_on_disk: target exists, skipping:", new_path)
+			AppLogger.d("migrate_annotations_on_disk: target exists, skipping: " + str(new_path))
 			continue
 
-		print("migrate_annotations_on_disk: renaming", old_path, "->", new_path)
+		AppLogger.d("migrate_annotations_on_disk: renaming " + str(old_path) + " -> " + str(new_path))
 		var d = DirAccess.open("user://annotations")
 		if d != null:
 			var rename_err = d.rename(f, new_name)
 			if rename_err != OK:
-				print("migrate_annotations_on_disk: rename failed for", f, "err=", rename_err)
+				push_error("migrate_annotations_on_disk: rename failed for " + str(f) + " err=" + str(rename_err))
 
 func load_local_annotations() -> Array:
 	"""Scan user://annotations for saved annotated PNGs and return array of anomaly-like dictionaries."""

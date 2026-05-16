@@ -279,7 +279,7 @@ theme_override_constants/separation = 16
 [node name="ContractorStep" type="VBoxContainer" parent="Scaffold/Scroll/ScrollMargin/CardList"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 24
+theme_override_constants/separation = 12
 
 [node name="IntroPanel" type="PanelContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/ContractorStep"]
 layout_mode = 2
@@ -291,26 +291,27 @@ layout_mode = 2
 
 [node name="VBox" type="VBoxContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/ContractorStep/IntroPanel/Margin"]
 layout_mode = 2
-theme_override_constants/separation = 6
+theme_override_constants/separation = 8
 
 [node name="TitleLabel" type="Label" parent="Scaffold/Scroll/ScrollMargin/CardList/ContractorStep/IntroPanel/Margin/VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.9, 0.94, 0.98, 1)
+theme_override_colors/font_color = Color(0.729, 0.902, 1, 1)
 theme_override_font_sizes/font_size = 26
-text = "Mission 1 contract"
+text = "CONTRACT BOARD"
 
 [node name="SubtitleLabel" type="Label" parent="Scaffold/Scroll/ScrollMargin/CardList/ContractorStep/IntroPanel/Margin/VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.64, 0.73, 0.84, 0.86)
+theme_override_colors/font_color = Color(0.745, 0.776, 0.882, 0.92)
 theme_override_font_sizes/font_size = 15
-text = "Pick the buyer. Their order defines the haul."
+text = "Compare live purchase orders. The chosen buyer locks your delivery manifest and payout route."
+autowrap_mode = 3
 
 [node name="ContractorGrid" type="GridContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/ContractorStep"]
 layout_mode = 2
 size_flags_horizontal = 3
-columns = 3
-theme_override_constants/h_separation = 24
-theme_override_constants/v_separation = 24
+columns = 1
+theme_override_constants/h_separation = 0
+theme_override_constants/v_separation = 10
 
 [node name="EditorPreviewContractorCard" parent="Scaffold/Scroll/ScrollMargin/CardList/ContractorStep/ContractorGrid" instance=ExtResource("2")]
 layout_mode = 2
@@ -318,7 +319,8 @@ layout_mode = 2
 [node name="CustomMissionCard" type="PanelContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/ContractorStep"]
 layout_mode = 2
 size_flags_horizontal = 3
-modulate = Color(1, 1, 1, 0.56)
+custom_minimum_size = Vector2(0, 70)
+modulate = Color(1, 1, 1, 0.70)
 theme_override_styles/panel = SubResource("StyleBoxFlat_locked")
 
 [node name="Margin" type="MarginContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/ContractorStep/CustomMissionCard"]
@@ -336,7 +338,8 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_badge")
 layout_mode = 2
 theme_override_colors/font_color = Color(0.64, 0.73, 0.84, 1)
 theme_override_font_sizes/font_size = 15
-text = "LOCKED"
+text = "LOCK"
+horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="TextCol" type="VBoxContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/ContractorStep/CustomMissionCard/Margin/HBox"]
@@ -347,14 +350,14 @@ theme_override_constants/separation = 3
 [node name="Title" type="Label" parent="Scaffold/Scroll/ScrollMargin/CardList/ContractorStep/CustomMissionCard/Margin/HBox/TextCol"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.94, 0.98, 1)
-theme_override_font_sizes/font_size = 20
-text = "Custom Mission"
+theme_override_font_sizes/font_size = 17
+text = "CUSTOM MISSION"
 
 [node name="Subtitle" type="Label" parent="Scaffold/Scroll/ScrollMargin/CardList/ContractorStep/CustomMissionCard/Margin/HBox/TextCol"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.64, 0.73, 0.84, 1)
-theme_override_font_sizes/font_size = 16
-text = "Unlocks after your first mission."
+theme_override_colors/font_color = Color(1, 0.706, 0.671, 1)
+theme_override_font_sizes/font_size = 12
+text = "RANK 10 REQUIRED"
 
 [node name="TargetStep" type="VBoxContainer" parent="Scaffold/Scroll/ScrollMargin/CardList"]
 visible = false

@@ -64,14 +64,14 @@ static func get_instance():
 		_instance._load_auth_session()
 
 		# Always print resolved URL for easier debugging
-		print("SupabaseClient: resolved SUPABASE_URL=", _instance.SUPABASE_URL, " key_present=", _instance.SUPABASE_KEY != "")
+		AppLogger.d("SupabaseClient: resolved SUPABASE_URL=" + str(_instance.SUPABASE_URL) + " key_present=" + str(_instance.SUPABASE_KEY != ""))
 	return _instance
 
 static func _apply_credentials(instance: Node, url: String, key: String, source: String) -> void:
 	instance.SUPABASE_URL = url
 	instance.SUPABASE_KEY = key
 	AppLogger.d("SupabaseClient: credentials_source=%s url=%s" % [source, instance.SUPABASE_URL])
-	print("SupabaseClient: credentials_source=", source, " url=", instance.SUPABASE_URL)
+	AppLogger.d("SupabaseClient: credentials_source=" + str(source) + " url=" + str(instance.SUPABASE_URL))
 
 static func _load_runtime_credentials() -> Dictionary:
 	if not FileAccess.file_exists(RUNTIME_CONFIG_PATH):
@@ -411,7 +411,7 @@ func _fetch_anomalies_web(anomaly_set: String, limit: int, callback: Callable) -
 
 	var callback_id = "__ph_supabase_cb_%d" % Time.get_ticks_usec()
 	_web_pending_callbacks[callback_id] = callback
-	var bridge_callback = JavaScriptBridge.create_callback(Callable(self, "_on_web_fetch_completed").bind(callback_id))
+	var bridge_callback = JavaScriptBridge.create_callback(_on_web_fetch_completed.bind(callback_id))
 	window.set(callback_id, bridge_callback)
 
 	var url_js = JSON.stringify(url)

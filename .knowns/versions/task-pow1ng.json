@@ -1,0 +1,46 @@
+{
+  "taskId": "pow1ng",
+  "currentVersion": 1,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "pow1ng",
+      "version": 1,
+      "timestamp": "2026-05-13T12:03:05.078978Z",
+      "author": "@Liam",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": null,
+          "newValue": "todo"
+        },
+        {
+          "field": "priority",
+          "oldValue": null,
+          "newValue": "medium"
+        }
+      ],
+      "snapshot": {
+        "acceptanceCriteria": [
+          {
+            "text": "EconomyManager handles currency/loans",
+            "completed": false
+          },
+          {
+            "text": "ExperienceManager handles XP/leveling",
+            "completed": false
+          },
+          {
+            "text": "TutorialManager handles onboarding logic",
+            "completed": false
+          }
+        ],
+        "assignee": "@Liam",
+        "description": "Break down AppController.gd by moving logic into specialized managers.",
+        "priority": "medium",
+        "status": "todo",
+        "title": "Decouple AppController into Domain Managers"
+      }
+    }
+  ]
+}

@@ -1,5 +1,8 @@
 extends Control
 
+const SubcontractorManager = preload("res://Scripts/Utils/SubcontractorManager.gd")
+const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
+
 signal panel_closed
 
 const SubcontractorCardScene = preload("res://Scenes/UI/Templates/SubcontractorCard.tscn")
@@ -44,11 +47,11 @@ func _apply_style() -> void:
 func _build_list() -> void:
 	for child in list.get_children():
 		child.queue_free()
-	var sm = preload("res://Scripts/Utils/SubcontractorManager.gd")
+	var sm = SubcontractorManager
 	if not sm:
 		return
-	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
-	var RocketsMgr = preload("res://Scripts/Utils/RocketsManager.gd")
+	var panel_style = PanelStyle
+	var RocketsMgr = RocketsManager
 	var roster = sm.get_roster(int(RocketsMgr.get_mission_stage()))
 	for entry in roster:
 		var is_hidden = bool(entry.get("hidden", false))

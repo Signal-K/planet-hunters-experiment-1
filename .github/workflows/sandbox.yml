@@ -24,7 +24,7 @@ jobs:
           lfs: true
 
       - name: Build sandbox image
-        run: docker build -f Dockerfile.sandbox -t planet-hunters-sandbox:ci .
+        run: docker build -f Dockerfile.sandbox -t landnam-sandbox:ci .
 
       - name: Run sandbox
         run: |
@@ -38,7 +38,7 @@ jobs:
             -e MESA_GLSL_VERSION_OVERRIDE=330 \
             -v "${{ github.workspace }}/scene:/app/scene:ro" \
             -v "${{ github.workspace }}/sandbox/output:/output" \
-            planet-hunters-sandbox:ci
+            landnam-sandbox:ci
 
       - name: Upload sandbox output
         if: always()

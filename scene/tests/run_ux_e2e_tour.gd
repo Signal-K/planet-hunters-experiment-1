@@ -486,7 +486,7 @@ func _wipe_state() -> void:
 		"user://earth_inventory.json",
 		"user://satellite_station.cfg",
 		"user://mechanic_intros_seen.json",
-		"user://planet_hunters_intro_v1.cfg",
+		"user://landnam_intro_v1.cfg",
 		"user://rocket_unlock_popups.cfg",
 	]
 	var wiped := 0
@@ -954,7 +954,7 @@ func _run_tour() -> void:
 	_record_user_action("Started first-time user flow")
 
 	_report("  - Searching for IntroSplash...")
-	var splash := _find_node_by_class(get_tree().root, "PlanetHuntersIntroSplash")
+	var splash := _find_node_by_class(get_tree().root, "LandnamIntroSplash")
 	if splash:
 		_report("  - Intro splash found. ✓")
 		if _find_button_with_text(splash, "Begin Mission"):

@@ -1,5 +1,6 @@
 extends RefCounted
 class_name AsteroidAnnotationHelper
+const AppLogger = preload("res://Scripts/Utils/Logger.gd")
 
 const AnnotationRenderViewportScene = preload("res://Scenes/UI/Templates/AnnotationRenderViewport.tscn")
 
@@ -27,13 +28,13 @@ func setup(
 
 func save_annotations(anomaly_id: String, target_type: String = "asteroid", title: String = "") -> void:
 	"""Save current annotations for this asteroid to user://annotations/<id>.json"""
-	print("save_annotations called for anomaly_id:", anomaly_id)
+	AppLogger.d("save_annotations called for anomaly_id:" + str(anomaly_id))
 	if anomaly_id == "":
 		_show_error("No asteroid ID to save annotations for")
 		return
 
 	var strokes = _drawing_canvas.get_drawing_data()
-	print("Found strokes count:", strokes.size())
+	AppLogger.d("Found strokes count:" + str(strokes.size()))
 	var serializable := []
 	for s in strokes:
 		var item := {}
@@ -81,7 +82,7 @@ func save_annotations(anomaly_id: String, target_type: String = "asteroid", titl
 	}
 	var write_err = file.store_string(JSON.stringify(payload))
 	file.close()
-	print("Saved annotations (variant) to:", file_path, " result=", write_err)
+	AppLogger.d("Saved annotations (variant) to:" + str(file_path) + " result=" + str(write_err))
 
 	_render_annotated_image(anomaly_id)
 	update_annotation_count()
@@ -97,7 +98,7 @@ func load_saved_annotations(anomaly_id: String) -> void:
 
 	var file = FileAccess.open(annotations_path, FileAccess.READ)
 	if file == null:
-		print("Failed to open annotations file: %s" % annotations_path)
+		push_error("Failed to open annotations file: %s" % annotations_path)
 		return
 
 	var content = file.get_as_text()
@@ -115,14 +116,14 @@ func load_saved_annotations(anomaly_id: String) -> void:
 		# Fallback: maybe the file was written with store_var(), attempt to read variant
 		var file2 = FileAccess.open(annotations_path, FileAccess.READ)
 		if file2 == null:
-			print("Failed to reopen annotations file for variant read: %s" % annotations_path)
+			push_error("Failed to reopen annotations file for variant read: %s" % annotations_path)
 			return
 		var var_data = file2.get_var()
 		file2.close()
 		if typeof(var_data) == TYPE_ARRAY:
 			parsed = var_data
 		else:
-			print("Annotations file parse/read returned unexpected type: %s" % typeof(var_data))
+			AppLogger.d("Annotations file parse/read returned unexpected type: %s" % typeof(var_data))
 			return
 
 	var strokes := []
@@ -192,11 +193,11 @@ func _render_annotated_image(anomaly_id: String) -> void:
 		var img = vp.get_texture().get_image()
 		var combined_path = "user://annotations/%s-annotated.png" % anomaly_id
 		var save_err = img.save_png(combined_path)
-		print("Saved combined annotated image:", combined_path, " result=", save_err)
+		AppLogger.d("Saved combined annotated image:" + str(combined_path) + " result=" + str(save_err))
 		vp.queue_free()
 
 func _show_error(message: String) -> void:
 	if _on_error.is_valid():
 		_on_error.call(message)
 	else:
-		print("AsteroidDetailView error: ", message)
+		push_error("AsteroidDetailView error: " + str(message))

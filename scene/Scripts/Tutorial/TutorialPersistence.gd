@@ -15,7 +15,7 @@ func save_state(state: Dictionary) -> void:
 	cfg.set_value(STATE_SECTION, "completed_steps_by_stage", state.get("completed_steps_by_stage", {}).duplicate(true))
 	var err = cfg.save(TUTORIAL_STATE_PATH)
 	if err != OK:
-		print("[TutorialPersistence] Failed to save tutorial state: ", err)
+		push_error("[TutorialPersistence] Failed to save tutorial state: " + str(err))
 
 func load_state(default_state: Dictionary) -> Dictionary:
 	var out = default_state.duplicate(true)

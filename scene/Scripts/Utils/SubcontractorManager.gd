@@ -1,6 +1,8 @@
 extends RefCounted
 class_name SubcontractorManager
 
+const JSONFileManager = preload("res://Scripts/Utils/JSONFileManager.gd")
+
 const MineralCatalog = preload("res://Scripts/Utils/MineralCatalog.gd")
 const PushNotificationHelper = preload("res://Scripts/Utils/PushNotificationHelper.gd")
 
@@ -106,7 +108,7 @@ static func build_default_state() -> Dictionary:
 	}
 
 static func load_state() -> Dictionary:
-	var json = preload("res://Scripts/Utils/JSONFileManager.gd")
+	var json = JSONFileManager
 	var data = {}
 	if not FileAccess.file_exists(STATE_PATH):
 		data = build_default_state()
@@ -129,7 +131,7 @@ static func load_state() -> Dictionary:
 	return data
 
 static func save_state(data: Dictionary) -> bool:
-	var json = preload("res://Scripts/Utils/JSONFileManager.gd")
+	var json = JSONFileManager
 	return json.save_json(STATE_PATH, data)
 
 static func reset_state() -> bool:

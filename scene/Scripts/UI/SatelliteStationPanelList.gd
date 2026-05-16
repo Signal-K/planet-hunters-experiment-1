@@ -6,6 +6,8 @@ const EmptyLabelScene = preload("res://Scenes/UI/Templates/MenuLogbookEmpty.tscn
 const ClassificationConsensus = preload("res://Scripts/Utils/ClassificationConsensus.gd")
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
 
+const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
+
 const STATION_CARD_BG := Color(0.99, 0.995, 0.995, 1.0)
 const STATION_CARD_BORDER := Color(0.82, 0.89, 0.90, 1.0)
 const STATION_CARD_HOVER := Color(0.95, 0.98, 0.98, 1.0)
@@ -94,11 +96,10 @@ func _create_anomaly_item(anomaly: Dictionary, index: int) -> Control:
 
 	var normalized = _normalize_cb.call(anomaly, index)
 	var target_type = "planet" if _get_mode.call() == "planets" else "asteroid"
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
-	var profile = rm.build_target_profile(normalized, target_type) if rm else {}
+	var profile = RocketsManager.build_target_profile(normalized, target_type)
 	var distance_au = float(profile.get("distance_au", 0.0))
 	var required_level = int(profile.get("required_level", 1))
-	var scan_count = int(rm.get_target_scan_count(normalized, target_type)) if rm else 0
+	var scan_count = int(RocketsManager.get_target_scan_count(normalized, target_type))
 	var scan_pass_text = "%d scan%s" % [max(scan_count, 1), "" if max(scan_count, 1) == 1 else "s"]
 
 	var badge_text := ""
@@ -169,9 +170,7 @@ func _create_anomaly_item(anomaly: Dictionary, index: int) -> Control:
 	_apply_station_button(detail_btn, false)
 
 	# Display selected marker if this matches currently selected target
-	var current_target = ""
-	if rm:
-		current_target = rm.get_selected_target()
+	var current_target = RocketsManager.get_selected_target()
 	if current_target == normalized:
 		select_btn.text = "Target Selected"
 		select_btn.disabled = true

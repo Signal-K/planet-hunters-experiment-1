@@ -2,6 +2,8 @@
 class_name PanelManager
 extends RefCounted
 
+const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
+
 const GenericStyledPanelScene = preload("res://Scenes/UI/Templates/GenericStyledPanel.tscn")
 
 ## Create a styled panel with consistent styling
@@ -25,7 +27,7 @@ static func create_styled_panel(title: String, tree: SceneTree) -> Control:
 	var close_button: Button = wrapper.get_node("PanelContainer/Content/Margin/Body/CloseButton")
 	title_label.text = title
 
-	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
+	var panel_style = PanelStyle
 	panel_style.apply_panel(panel)
 	panel_style.apply_title(title_label)
 	panel_style.apply_button(close_button, true)

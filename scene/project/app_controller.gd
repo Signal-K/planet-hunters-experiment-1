@@ -14,14 +14,12 @@ func _ready() -> void:
 
 func set_counter_from_react(value: int) -> void:
 	counter = value
-	print("AppController: Counter set from React Native to: ", counter)
 
 func get_counter() -> int:
 	return counter
 
 func set_franc_balance_from_react(value: int) -> void:
 	franc_balance = value
-	print("AppController: Franc balance set from React Native to: ", franc_balance)
 	franc_balance_updated.emit(franc_balance)
 
 func get_franc_balance() -> int:
@@ -67,7 +65,6 @@ func close_window(window_name: String) -> bool:
 func set_game_paused(paused: bool) -> void:
 	_game_paused = paused
 	get_tree().paused = paused
-	print("[AppController] Game paused set to: ", paused)
 
 func get_game_paused() -> bool:
 	return _game_paused

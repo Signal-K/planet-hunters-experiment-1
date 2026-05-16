@@ -2519,4 +2519,3 @@ static func get_unlocked_star_systems(stage: int = -1) -> Array:
 			"target_count": 1
 		})
 	return out
-

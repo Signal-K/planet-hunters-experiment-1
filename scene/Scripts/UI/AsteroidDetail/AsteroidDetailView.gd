@@ -1,5 +1,7 @@
 extends VBoxContainer
 
+const SupabaseClient = preload("res://Scripts/Systems/SupabaseClient.gd")
+
 signal back_pressed
 signal classification_submitted(result: Dictionary)
 
@@ -50,15 +52,15 @@ var _classification_row: Control
 func _ready():
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	custom_minimum_size = Vector2.ZERO
-	back_button.pressed.connect(Callable(self, "_on_back_pressed"))
-	pen_button.pressed.connect(Callable(self, "_on_pen_pressed"))
-	clear_button.pressed.connect(Callable(self, "_on_clear_pressed"))
-	save_button.pressed.connect(Callable(self, "_on_save_pressed"))
-	pen_free_button.pressed.connect(Callable(self, "_on_mode_free"))
-	pen_rect_button.pressed.connect(Callable(self, "_on_mode_rect"))
-	pen_circle_button.pressed.connect(Callable(self, "_on_mode_circle"))
-	color_picker.color_changed.connect(Callable(self, "_on_color_changed"))
-	drawing_canvas.drawing_changed.connect(Callable(self, "_on_drawing_changed"))
+	back_button.pressed.connect(_on_back_pressed)
+	pen_button.pressed.connect(_on_pen_pressed)
+	clear_button.pressed.connect(_on_clear_pressed)
+	save_button.pressed.connect(_on_save_pressed)
+	pen_free_button.pressed.connect(_on_mode_free)
+	pen_rect_button.pressed.connect(_on_mode_rect)
+	pen_circle_button.pressed.connect(_on_mode_circle)
+	color_picker.color_changed.connect(_on_color_changed)
+	drawing_canvas.drawing_changed.connect(_on_drawing_changed)
 
 	asteroid_image.visible = false
 	error_label.visible = false
@@ -80,7 +82,7 @@ func _ready():
 		annotation_count_label,
 		asteroid_image,
 		BASE_IMAGE_SIZE,
-		Callable(self, "_show_error")
+		_show_error
 	)
 	_image_helper.setup(
 		self,
@@ -89,7 +91,7 @@ func _ready():
 		info_label,
 		content_container,
 		ANIMATION_DURATION,
-		Callable(self, "_show_error")
+		_show_error
 	)
 	_update_annotation_count()
 
@@ -396,7 +398,7 @@ func _build_classification_row() -> void:
 	btn_mark_dip.text = "Mark Dip"
 	btn_mark_dip.disabled = existing_verdict != ""
 	PanelStyle.apply_button(btn_mark_dip, false)
-	btn_mark_dip.pressed.connect(Callable(self, "_on_mark_dip_pressed"))
+	btn_mark_dip.pressed.connect(_on_mark_dip_pressed)
 
 func _on_mark_dip_pressed() -> void:
 	drawing_canvas.set_mode(3)
@@ -441,7 +443,7 @@ func _on_classify(verdict: String, row: VBoxContainer) -> void:
 
 	classification_submitted.emit(result.duplicate(true))
 
-	var supabase = preload("res://Scripts/Systems/SupabaseClient.gd").get_instance()
+	var supabase = SupabaseClient.get_instance()
 	if supabase:
 		supabase.ensure_authenticated(func(ok: bool, _err: String) -> void:
 			if not ok:

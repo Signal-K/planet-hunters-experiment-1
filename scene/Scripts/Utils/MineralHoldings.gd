@@ -39,9 +39,9 @@ static func sell(mineral: String, kg: int) -> int:
 	var held := int(data.get(mineral, 0))
 	if held <= 0 or kg <= 0:
 		return 0
-	var sell_kg := min(kg, held)
-	var price_per_kg := MineralPricing.get_current_price(mineral)
-	var francs := price_per_kg * sell_kg
+	var sell_kg: int = mini(kg, held)
+	var price_per_kg: int = MineralPricing.get_current_price(mineral)
+	var francs: int = price_per_kg * sell_kg
 	MineralPricing.record_player_sale(mineral)
 	data[mineral] = held - sell_kg
 	if int(data[mineral]) <= 0:

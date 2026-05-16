@@ -1,6 +1,8 @@
 extends RefCounted
 class_name MissionLogManager
 
+const JSONFileManager = preload("res://Scripts/Utils/JSONFileManager.gd")
+
 const STATE_PATH := "user://mission_logs.json"
 const DEFAULT_STATE_PATH := "res://mission_logs.json"
 static var _state_path_override := ""
@@ -25,7 +27,7 @@ static func _get_default_state_path() -> String:
 	return DEFAULT_STATE_PATH
 
 static func load_state() -> Dictionary:
-	var json = preload("res://Scripts/Utils/JSONFileManager.gd")
+	var json = JSONFileManager
 	var data = json.load_json(_get_state_path())
 	if typeof(data) != TYPE_DICTIONARY:
 		data = {}
@@ -43,7 +45,7 @@ static func build_default_state() -> Dictionary:
 	return {"missions": []}
 
 static func save_state(data: Dictionary) -> bool:
-	var json = preload("res://Scripts/Utils/JSONFileManager.gd")
+	var json = JSONFileManager
 	var state_path = _get_state_path()
 	var primary_ok = json.save_json(state_path, data)
 	return primary_ok

@@ -2,11 +2,13 @@ extends Node3D
 
 const PREVIEW_SCENE_PATH := "res://Scenes/UI/AsteroidPreview/asteroid_preview.tscn"
 const MINING_SCENE_PATH := "res://Scenes/UI/SidescrollMining.tscn"
+const MiningScene = preload("res://Scenes/UI/SidescrollMining.tscn")
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
 const GameplayAnalytics = preload("res://Scripts/Systems/GameplayAnalytics.gd")
 const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
 const ResourceYield = preload("res://Scripts/Utils/ResourceYield.gd")
 const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd")
+const AppLogger = preload("res://Scripts/Utils/Logger.gd")
 const MiningInventory = preload("res://Scripts/Utils/MiningInventory.gd")
 const MissionObjectiveResolver = preload("res://Scripts/Utils/MissionObjectiveResolver.gd")
 
@@ -33,7 +35,7 @@ var _last_mining_collected := {}
 var _last_mining_report := {}
 
 func _ready():
-	print("[Preview] _ready called")
+	AppLogger.d("[Preview] _ready called")
 	
 	# Apply shared panel/button/text styling for preview controls.
 	PanelStyle.apply_button(mine_btn, true)
@@ -48,19 +50,19 @@ func _ready():
 	var preview = rm.get_preview_target()
 	_starter_contract_context = _build_starter_contract_context(rm)
 	
-	print("[Preview] Preview data: ", preview)
+	AppLogger.d("[Preview] Preview data: " + str(preview))
 	
 	_current_target_id = str(preview.get("id", ""))
 	_current_target_type = str(preview.get("type", "asteroid"))
 	_current_rocket_id = str(preview.get("rocket_id", ""))
 	
-	print("[Preview] Parsed: target_id=%s, type=%s, rocket=%s" % [_current_target_id, _current_target_type, _current_rocket_id])
+	AppLogger.d("[Preview] Parsed: target_id=%s, type=%s, rocket=%s" % [_current_target_id, _current_target_type, _current_rocket_id])
 	
 	if _current_target_id == "":
 		target_label.text = "No target"
 		mine_btn.disabled = true
 		return_btn.disabled = true
-		print("[Preview] ERROR: No target ID!")
+		push_error("[Preview] No target ID!")
 		return
 	
 	# Get yield data
@@ -94,16 +96,16 @@ func _ready():
 		"mineable_pct": float(_current_yield.get("mineable_pct", 0.0))
 	})
 	
-	print("[Preview] Ready - target=%s, rocket=%s, yield=%s" % [_current_target_id, _current_rocket_id, str(_current_yield)])
+	AppLogger.d("[Preview] Ready - target=%s, rocket=%s, yield=%s" % [_current_target_id, _current_rocket_id, str(_current_yield)])
 	# Auto-start mining to skip the blank preview screen entirely.
 	call_deferred("_on_mine_pressed")
 
 func _on_mine_pressed():
-	print("[Preview] Mine button pressed")
-	print("[Preview] _current_yield = ", _current_yield)
+	AppLogger.d("[Preview] Mine button pressed")
+	AppLogger.d("[Preview] _current_yield = " + str(_current_yield))
 	
 	if _current_yield.is_empty():
-		print("[Preview] ERROR: No yield data")
+		push_error("[Preview] No yield data")
 		return
 	GameplayAnalytics.emit_event("mining_entry_requested", {
 		"target_id": _current_target_id,
@@ -114,18 +116,17 @@ func _on_mine_pressed():
 		"target_id": _current_target_id
 	})
 	
-	print("[Preview] Hiding UI...")
+	AppLogger.d("[Preview] Hiding UI...")
 	mine_btn.disabled = true
 	return_btn.disabled = false
 	ui_container.visible = false
 	
-	print("[Preview] Loading mining scene...")
-	var MiningScene = load(MINING_SCENE_PATH)
+	AppLogger.d("[Preview] Loading mining scene...")
 	_minigame_instance = MiningScene.instantiate()
-	print("[Preview] Adding to container...")
+	AppLogger.d("[Preview] Adding to container...")
 	minigame_container.add_child(_minigame_instance)
 	
-	print("[Preview] Connecting signal...")
+	AppLogger.d("[Preview] Connecting signal...")
 	_minigame_instance.mining_completed.connect(_on_mining_completed)
 	
 	var is_planet = _current_target_type == "planet"
@@ -147,12 +148,12 @@ func _on_mine_pressed():
 	else:
 		session_context["mission_mode"] = "free"
 	
-	print("[Preview] Starting mining: level=%d, minerals=%s, mineable=%f" % [level, str(minerals), mineable_pct])
+	AppLogger.d("[Preview] Starting mining: level=%d, minerals=%s, mineable=%f" % [level, str(minerals), mineable_pct])
 	_minigame_instance.start_mining(is_planet, level, _current_target_id, minerals, mineable_pct, session_context)
-	print("[Preview] Mining started!")
+	AppLogger.d("[Preview] Mining started!")
 
 func _on_mining_completed(minerals_collected: Dictionary, score: int):
-	print("[Preview] Mining completed: score=%d" % score)
+	AppLogger.d("[Preview] Mining completed: score=%d" % score)
 	_last_mining_collected = minerals_collected.duplicate(true)
 	_last_mining_report = {}
 	if _minigame_instance and _minigame_instance.has_method("get_completion_report"):
@@ -240,7 +241,7 @@ func _style_salvage_dialog() -> void:
 	PanelStyle.apply_outline_button(retry_button, Color(PanelStyle.ACCENT_WARM.r, PanelStyle.ACCENT_WARM.g, PanelStyle.ACCENT_WARM.b, 0.82))
 
 func _on_return_pressed():
-	print("[Preview] Return home pressed")
+	AppLogger.d("[Preview] Return home pressed")
 	GameplayAnalytics.emit_event("mission_return_requested", {
 		"rocket_id": _current_rocket_id,
 		"target_id": _current_target_id,

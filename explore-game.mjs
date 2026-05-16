@@ -14,11 +14,11 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SHOTS_DIR = path.join(__dirname, "game-exploration-screenshots");
 const LOG_FILE = path.join(SHOTS_DIR, "_playthrough_log.md");
 const SCENE_PATH = path.join(__dirname, "scene");
-const GODOT = "/Applications/Godot4.5.app/Contents/MacOS/Godot";
+const GODOT = "/Applications/Dev/Godot4.5.app/Contents/MacOS/Godot";
 // User data lives here (Godot user:// on macOS)
 const USER_DATA = path.join(
   process.env.HOME,
-  "Library/Application Support/Godot/app_userdata/Landnám"
+  "Library/Application Support/Godot/app_userdata/scene"
 );
 
 // ── helpers ─────────────────────────────────────────────────────────────────

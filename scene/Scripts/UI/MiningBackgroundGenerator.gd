@@ -1,11 +1,12 @@
 extends Node
 ## Static utility for generating mining backgrounds
 
+const MiningTargetTheme = preload("res://Scripts/UI/MiningTargetTheme.gd")
+
 const PIXEL_BG_MIN_WIDTH = 160
 const PIXEL_BG_MIN_HEIGHT = 90
 
 static func generate_background(viewport_size: Vector2, target_theme: String, current_target_id: String, session_context: Dictionary) -> Texture2D:
-	var MiningTargetTheme = load("res://Scripts/UI/MiningTargetTheme.gd")
 	var target_palette = MiningTargetTheme.build_palette(target_theme, current_target_id, session_context)
 	
 	var pixel_w: int = max(PIXEL_BG_MIN_WIDTH, int(round(viewport_size.x / 8.0)))

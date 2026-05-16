@@ -1,10 +1,12 @@
 extends RefCounted
 class_name EarthInventory
 
+const JSONFileManager = preload("res://Scripts/Utils/JSONFileManager.gd")
+
 const STATE_PATH := "user://earth_inventory.json"
 
 static func load_state() -> Dictionary:
-	var json = preload("res://Scripts/Utils/JSONFileManager.gd")
+	var json = JSONFileManager
 	var data = json.load_json(STATE_PATH)
 	if typeof(data) != TYPE_DICTIONARY:
 		data = {}
@@ -13,7 +15,7 @@ static func load_state() -> Dictionary:
 	return data
 
 static func save_state(data: Dictionary) -> bool:
-	var json = preload("res://Scripts/Utils/JSONFileManager.gd")
+	var json = JSONFileManager
 	return json.save_json(STATE_PATH, data)
 
 static func add_materials(materials: Dictionary) -> bool:

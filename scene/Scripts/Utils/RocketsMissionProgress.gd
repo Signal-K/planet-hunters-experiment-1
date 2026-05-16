@@ -1,6 +1,8 @@
 extends RefCounted
 class_name RocketsMissionProgress
 
+const HashUtils = preload("res://Scripts/Utils/HashUtils.gd")
+
 static func completed_mission_count_from_state(state: Dictionary) -> int:
     var badges = state.get("completed_mission_badges", [])
     if typeof(badges) == TYPE_ARRAY:
@@ -88,7 +90,7 @@ static func build_trip_contract_offer(
         recommended_target = candidate_targets[0]
     var recommended_target_id = str(recommended_target.get("id", ""))
     var recommended_target_label = str(recommended_target.get("label", recommended_target_id))
-    var hash_utils = preload("res://Scripts/Utils/HashUtils.gd")
+    var hash_utils = HashUtils
     var hash_seed = hash_utils.simple_hash("%s:%d" % [recommended_target_id, int(Time.get_unix_time_from_system())])
     var rng = RandomNumberGenerator.new()
     rng.seed = hash_seed

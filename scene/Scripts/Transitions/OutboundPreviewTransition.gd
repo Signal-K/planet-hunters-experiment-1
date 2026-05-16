@@ -191,13 +191,11 @@ func _setup_orbit_visual() -> void:
 		return
 	orbit_root.visible = true
 	_orbit_angle = 0.0
-	var orbit_utils = OrbitVisuals
-	orbit_utils.build_orbit_circle(orbit_circle, ORBIT_RADIUS_PX, ORBIT_SEGMENTS)
+	OrbitVisuals.build_orbit_circle(orbit_circle, ORBIT_RADIUS_PX, ORBIT_SEGMENTS)
 	orbit_rocket.position = Vector2(ORBIT_RADIUS_PX, 0)
 	orbit_rocket.scale = Vector2(0.2, 0.2)
 	_set_orbit_rocket_visual(_current_rocket_id)
-	var orbit_utils2 = OrbitVisuals
-	orbit_utils2.update_heading_line(orbit_heading, orbit_rocket)
+	OrbitVisuals.update_heading_line(orbit_heading, orbit_rocket)
 
 func _start_earth_orbit() -> void:
 	_phase = Phase.EARTH_ORBIT
@@ -317,8 +315,7 @@ func _update_orbit(delta: float) -> void:
 			orbit_root.position = camera_3d.unproject_position(_earth_pivot.global_position)
 		else:
 			orbit_root.position = camera_3d.unproject_position(asteroid_pivot.global_position)
-	var orbit_utils3 = OrbitVisuals
-	orbit_utils3.update_heading_line(orbit_heading, orbit_rocket)
+	OrbitVisuals.update_heading_line(orbit_heading, orbit_rocket)
 
 func _build_minerals_list() -> void:
 	if minerals_list == null:

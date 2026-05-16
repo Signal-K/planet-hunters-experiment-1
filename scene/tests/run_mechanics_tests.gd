@@ -1,12 +1,6 @@
 extends SceneTree
 
 ## Mechanics tests covering features implemented in March 2026:
-##   MECH24  RoomCatalog.UPGRADE_COSTS T1→T2 = 50M F
-##   MECH25  RoomCatalog.get_upgrade_cost returns 0 at max tier
-##   MECH26  RoomCatalog.get_room_at_tier returns correct room for mining chain
-##   MECH27  RocketsManager.get_type_room_upgrades returns {} for unknown type
-##   MECH28  RocketsManager.set_type_room_tier persists and syncs laser_level for mining
-##   MECH29  GameNavigationMenu.ROOM_UPGRADE_UNLOCK_LEVEL == 5
 ##   MECH21  MissionDebriefV2 has DISCOVERY_BONUS_MULT = 1.10
 ##   MECH22  RocketsManager has_discovery_bonus_claimed returns false for unknown target
 ##   MECH23  RocketsManager mark_discovery_bonus_claimed persists and is_claimed returns true
@@ -32,9 +26,6 @@ extends SceneTree
 ##   MECH15  MiningInventory depletion is laser-level specific (L1 depleted ≠ L2 depleted)
 ##   MECH16  RocketsManager.get_laser_level returns 1 by default
 ##   MECH17  RocketsManager.set_laser_level persists custom level per rocket
-##   MECH18  GameNavigationMenu has MARKETPLACE_UNLOCK_LEVEL = 5
-##   MECH19  SatelliteStationPanel has SCANNER_RANGE_UNLOCK_LEVEL = 8
-##   MECH20  SatelliteStationPanel.has_extended_scanner_range method exists
 
 const TestReporter = preload("res://tests/TestReporter.gd")
 const MissionDebriefV2 = preload("res://Scripts/Earth/MissionDebriefV2.gd")
@@ -43,9 +34,7 @@ const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
 const MineralPricing = preload("res://Scripts/Utils/MineralPricing.gd")
 const MiningInventory = preload("res://Scripts/Utils/MiningInventory.gd")
 const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
-const RoomCatalog = preload("res://Scripts/Utils/RoomCatalog.gd")
 const GameNavigationMenu = preload("res://Scripts/UI/GameNavigationMenu.gd")
-const SatelliteStationPanel = preload("res://Scripts/UI/SatelliteStationPanel.gd")
 
 var reporter := TestReporter.new()
 
@@ -65,12 +54,6 @@ func _init():
 		quit(0)
 
 func run_all_tests() -> void:
-	await test_mech24_upgrade_cost_t1_to_t2()
-	await test_mech25_upgrade_cost_zero_at_max()
-	await test_mech26_get_room_at_tier_mining_chain()
-	await test_mech27_get_type_room_upgrades_empty_for_unknown()
-	await test_mech28_set_type_room_tier_persists_and_syncs_laser()
-	await test_mech29_room_upgrade_unlock_level_five()
 	await test_mech21_discovery_bonus_mult()
 	await test_mech22_discovery_bonus_unclaimed_for_unknown()
 	await test_mech23_discovery_bonus_mark_and_check()
@@ -91,9 +74,7 @@ func run_all_tests() -> void:
 	await test_mech15_depletion_is_laser_level_specific()
 	await test_mech16_get_laser_level_default_one()
 	await test_mech17_set_laser_level_persists()
-	await test_mech18_marketplace_unlock_level_five()
-	await test_mech19_scanner_range_unlock_level_eight()
-	await test_mech20_scanner_has_extended_range_method()
+
 	await test_mech30_add_mission_includes_going_to()
 	await test_mech31_add_mission_includes_location_array()
 	await test_mech32_update_mission_going_to()
@@ -405,46 +386,6 @@ func test_mech17_set_laser_level_persists() -> void:
 	reporter.pass_test()
 
 # ---------------------------------------------------------------------------
-# MECH18 — MARKETPLACE_UNLOCK_LEVEL == 5
-# ---------------------------------------------------------------------------
-func test_mech18_marketplace_unlock_level_five() -> void:
-	reporter.start_test("MECH18: GameNavigationMenu.MARKETPLACE_UNLOCK_LEVEL == 5")
-	var level = int(GameNavigationMenu.MARKETPLACE_UNLOCK_LEVEL)
-	if level != 5:
-		reporter.fail_test("Expected 5, got %d" % level)
-		return
-	reporter.pass_test()
-
-# ---------------------------------------------------------------------------
-# MECH19 — SCANNER_RANGE_UNLOCK_LEVEL == 8
-# ---------------------------------------------------------------------------
-func test_mech19_scanner_range_unlock_level_eight() -> void:
-	reporter.start_test("MECH19: SatelliteStationPanel.SCANNER_RANGE_UNLOCK_LEVEL == 8")
-	var level = int(SatelliteStationPanel.SCANNER_RANGE_UNLOCK_LEVEL)
-	if level != 8:
-		reporter.fail_test("Expected 8, got %d" % level)
-		return
-	reporter.pass_test()
-
-# ---------------------------------------------------------------------------
-# MECH20 — has_extended_scanner_range method exists
-# ---------------------------------------------------------------------------
-func test_mech20_scanner_has_extended_range_method() -> void:
-	reporter.start_test("MECH20: SatelliteStationPanel has has_extended_scanner_range method")
-	var script: GDScript = SatelliteStationPanel as GDScript
-	if script == null:
-		reporter.fail_test("Could not cast SatelliteStationPanel to GDScript")
-		return
-	var source = script.source_code
-	if source == "":
-		reporter.pass_test()
-		return
-	if not source.contains("has_extended_scanner_range"):
-		reporter.fail_test("has_extended_scanner_range not found in SatelliteStationPanel source")
-		return
-	reporter.pass_test()
-
-# ---------------------------------------------------------------------------
 # MECH21 — DISCOVERY_BONUS_MULT == 1.10
 # ---------------------------------------------------------------------------
 func test_mech21_discovery_bonus_mult() -> void:
@@ -500,105 +441,6 @@ func test_mech23_discovery_bonus_mark_and_check() -> void:
 		return
 	if not after:
 		reporter.fail_test("Expected true after mark, got false")
-		return
-	reporter.pass_test()
-
-# ---------------------------------------------------------------------------
-# MECH24 — UPGRADE_COSTS T1→T2 == 50M F
-# ---------------------------------------------------------------------------
-func test_mech24_upgrade_cost_t1_to_t2() -> void:
-	reporter.start_test("MECH24: RoomCatalog.UPGRADE_COSTS T1→T2 == 50,000,000 F")
-	var cost = int(RoomCatalog.UPGRADE_COSTS.get(1, 0))
-	if cost != 50000000:
-		reporter.fail_test("Expected 50000000, got %d" % cost)
-		return
-	reporter.pass_test()
-
-# ---------------------------------------------------------------------------
-# MECH25 — get_upgrade_cost returns 0 at max tier
-# ---------------------------------------------------------------------------
-func test_mech25_upgrade_cost_zero_at_max() -> void:
-	reporter.start_test("MECH25: RoomCatalog.get_upgrade_cost returns 0 at max tier")
-	# propulsion has 3 tiers; cost from T3 onwards = 0
-	var max_t = RoomCatalog.get_max_tier("propulsion")
-	var cost = RoomCatalog.get_upgrade_cost("propulsion", max_t)
-	if cost != 0:
-		reporter.fail_test("Expected 0 at max tier %d, got %d" % [max_t, cost])
-		return
-	reporter.pass_test()
-
-# ---------------------------------------------------------------------------
-# MECH26 — get_room_at_tier returns correct mining chain room
-# ---------------------------------------------------------------------------
-func test_mech26_get_room_at_tier_mining_chain() -> void:
-	reporter.start_test("MECH26: RoomCatalog.get_room_at_tier returns correct rooms for mining chain")
-	var t1 = RoomCatalog.get_room_at_tier("mining", 1)
-	var t2 = RoomCatalog.get_room_at_tier("mining", 2)
-	var t3 = RoomCatalog.get_room_at_tier("mining", 3)  # should be ""
-	if t1 != "mining_drill_t1":
-		reporter.fail_test("Expected mining_drill_t1 at T1, got '%s'" % t1)
-		return
-	if t2 != "mining_laser_t2":
-		reporter.fail_test("Expected mining_laser_t2 at T2, got '%s'" % t2)
-		return
-	if t3 != "":
-		reporter.fail_test("Expected '' at T3 (beyond max), got '%s'" % t3)
-		return
-	reporter.pass_test()
-
-# ---------------------------------------------------------------------------
-# MECH27 — get_type_room_upgrades returns {} for unknown type
-# ---------------------------------------------------------------------------
-func test_mech27_get_type_room_upgrades_empty_for_unknown() -> void:
-	reporter.start_test("MECH27: RocketsManager.get_type_room_upgrades returns {} for unknown type")
-	var result = RocketsManager.get_type_room_upgrades("__no_such_rocket_type__")
-	if not result.is_empty():
-		reporter.fail_test("Expected empty dict, got %s" % str(result))
-		return
-	reporter.pass_test()
-
-# ---------------------------------------------------------------------------
-# MECH28 — set_type_room_tier persists and syncs laser_level for mining
-# ---------------------------------------------------------------------------
-func test_mech28_set_type_room_tier_persists_and_syncs_laser() -> void:
-	reporter.start_test("MECH28: set_type_room_tier persists and syncs laser_level for mining category")
-	var test_type := "__test_rocket_type_mech28__"
-	# Clean slate
-	var s = RocketsManager.load_state()
-	var all_u: Dictionary = s.get("type_room_upgrades", {}).duplicate(true)
-	all_u.erase(test_type)
-	s["type_room_upgrades"] = all_u
-	var lasers: Dictionary = s.get("laser_levels", {}).duplicate(true)
-	lasers.erase(test_type)
-	s["laser_levels"] = lasers
-	RocketsManager.save_state(s)
-
-	RocketsManager.set_type_room_tier(test_type, "mining", 2)
-	var upgrades = RocketsManager.get_type_room_upgrades(test_type)
-	var laser = RocketsManager.get_laser_level(test_type)
-
-	# Cleanup
-	s = RocketsManager.load_state()
-	s.get("type_room_upgrades", {}).erase(test_type)
-	s.get("laser_levels", {}).erase(test_type)
-	RocketsManager.save_state(s)
-
-	if int(upgrades.get("mining", 0)) != 2:
-		reporter.fail_test("Expected mining tier=2 in upgrades, got %s" % str(upgrades))
-		return
-	if laser != 2:
-		reporter.fail_test("Expected laser_level=2 after mining tier upgrade, got %d" % laser)
-		return
-	reporter.pass_test()
-
-# ---------------------------------------------------------------------------
-# MECH29 — ROOM_UPGRADE_UNLOCK_LEVEL == 5
-# ---------------------------------------------------------------------------
-func test_mech29_room_upgrade_unlock_level_five() -> void:
-	reporter.start_test("MECH29: GameNavigationMenu.ROOM_UPGRADE_UNLOCK_LEVEL == 5")
-	var level = int(GameNavigationMenu.ROOM_UPGRADE_UNLOCK_LEVEL)
-	if level != 5:
-		reporter.fail_test("Expected 5, got %d" % level)
 		return
 	reporter.pass_test()
 

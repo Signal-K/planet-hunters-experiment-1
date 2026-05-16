@@ -8,6 +8,8 @@ class_name SectorRevealManager
 ## TESS/planet targets are assigned to sectors by hash of their target_id.
 ## Visiting a target reveals its sector + adjacent sectors.
 
+const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
+
 const SECTOR_COUNT := 8
 
 ## Adjacency map: sector_id → adjacent sector ids
@@ -55,10 +57,7 @@ static func get_sector_for_target(target_id: String) -> int:
 
 ## Load revealed sectors from rockets_state.
 static func get_revealed_sectors() -> Array:
-	var rm = load("res://Scripts/Utils/RocketsManager.gd")
-	if rm == null:
-		return [0]
-	var s = rm.load_state()
+	var s = RocketsManager.load_state()
 	var sectors = s.get("revealed_sectors", [0])
 	if typeof(sectors) != TYPE_ARRAY:
 		return [0]
@@ -66,24 +65,19 @@ static func get_revealed_sectors() -> Array:
 
 ## Persist revealed sectors.
 static func save_revealed_sectors(sectors: Array) -> void:
-	var rm = load("res://Scripts/Utils/RocketsManager.gd")
-	if rm == null:
-		return
-	var s = rm.load_state()
+	var s = RocketsManager.load_state()
 	s["revealed_sectors"] = sectors
-	rm.save_state(s)
+	RocketsManager.save_state(s)
 
 ## Reveal the sector containing target_id, plus its neighbours.
 ## Returns true if state changed.
 static func reveal_for_target(target_id: String) -> bool:
 	var type_lower = ""
 	# If we can determine it's an asteroid, no sector tracking needed
-	var rm = load("res://Scripts/Utils/RocketsManager.gd")
-	if rm:
-		for t in rm.get_detected_targets():
-			if str(t.get("id", "")) == target_id:
-				type_lower = str(t.get("type", "")).to_lower()
-				break
+	for t in RocketsManager.get_detected_targets():
+		if str(t.get("id", "")) == target_id:
+			type_lower = str(t.get("type", "")).to_lower()
+			break
 	if type_lower == "asteroid":
 		return false  # Asteroids don't have sectors
 

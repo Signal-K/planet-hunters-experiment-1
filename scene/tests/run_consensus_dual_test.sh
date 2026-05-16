@@ -11,7 +11,7 @@
 # Requirements: /tmp/godot (or GODOT_BIN env var), Xvfb
 #
 # Usage:
-#   cd /path/to/planet-hunters-experiment-1
+#   cd /path/to/landnam
 #   bash scene/tests/run_consensus_dual_test.sh
 # ──────────────────────────────────────────────────────────────────────────────
 

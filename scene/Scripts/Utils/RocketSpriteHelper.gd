@@ -1,6 +1,8 @@
 extends RefCounted
 class_name RocketSpriteHelper
 
+const _LAUNCH_SHEET = preload("res://assets/Vehicles/StarterRocket1LaunchSpritesheet.png")
+
 static var _stage2_frames: SpriteFrames = null
 static var _launch_frames: SpriteFrames = null
 
@@ -67,11 +69,7 @@ static func _get_launch_sprite_frames() -> SpriteFrames:
 		frames.add_animation("default")
 	frames.set_animation_speed("default", 20.0)
 	frames.set_animation_loop("default", true)
-	var sheet: Texture2D = load("res://assets/Vehicles/StarterRocket1LaunchSpritesheet.png")
-	if sheet == null:
-		# Fallback to orbit stage frames when launch sheet is unavailable.
-		_launch_frames = _get_stage2_sprite_frames()
-		return _launch_frames
+	var sheet: Texture2D = _LAUNCH_SHEET
 	var frame_size := Vector2i(170, 256)
 	var columns := int(sheet.get_width() / frame_size.x)
 	var rows := int(sheet.get_height() / frame_size.y)

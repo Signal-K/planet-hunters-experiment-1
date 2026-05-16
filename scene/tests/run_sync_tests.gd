@@ -49,7 +49,7 @@ func _clear_persisted_state() -> void:
 	RocketsManager.reset_state()
 	FirstTimeMechanicTracker.reset_all()
 	DirAccess.remove_absolute("user://rocket_unlock_popups.cfg")
-	DirAccess.remove_absolute("user://planet_hunters_intro_v1.cfg")
+	DirAccess.remove_absolute("user://landnam_intro_v1.cfg")
 
 func _setup(clear_state: bool = true) -> Dictionary:
 	if clear_state:

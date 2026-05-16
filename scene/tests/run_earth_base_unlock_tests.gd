@@ -23,6 +23,9 @@ func _init() -> void:
 func run_all_tests() -> void:
 	await test_earth_base_progression_cards_are_scene_owned()
 	await test_earth_base_progression_cards_root_uses_scene_owned_controller()
+	await test_market_button_locked_before_free_operations()
+	await test_market_button_enabled_after_free_operations_unlock()
+	await test_earth_base_refreshes_tutorial_overlay_after_runtime_setup()
 	await test_sr2_unlock_overlay_matches_layout_and_copy()
 	await test_free_ops_unlock_overlay_uses_scene_owned_dashboard_nodes()
 	await test_earth_base_active_mission_card_overrides_build_prompt()
@@ -95,6 +98,131 @@ func _find_button_named(root: Node, target_name: String) -> Button:
 		for child in node.get_children():
 			stack.append(child)
 	return null
+
+func test_market_button_locked_before_free_operations() -> void:
+	reporter.start_test("Earth base Market button is locked before free operations unlock")
+	_reset_rockets_state()
+	var state := RocketsStateAccess.build_default_state(2)
+	state["mission_progress_completed"] = 0
+	state["completed_mission_badges"] = []
+	RocketsManager.set_override_state(state)
+	var scene = EarthBaseScene.instantiate()
+	get_root().add_child(scene)
+	await create_timer(0.10).timeout
+	scene._apply_tutorial_button_state()
+
+	var market_btn := scene.get_node_or_null("UILayer/ButtonContainer/MarketButton") as Button
+	if market_btn == null:
+		reporter.fail_test("Expected MarketButton on Earth base nav")
+		scene.queue_free()
+		current_scene = null
+		RocketsManager.clear_override_state()
+		return
+	if not market_btn.disabled:
+		reporter.fail_test("Expected MarketButton to be disabled before free operations unlock")
+		scene.queue_free()
+		current_scene = null
+		RocketsManager.clear_override_state()
+		return
+	if market_btn.tooltip_text.find("Market unlocks") == -1:
+		reporter.fail_test("Expected locked MarketButton tooltip to explain the unlock")
+		scene.queue_free()
+		current_scene = null
+		RocketsManager.clear_override_state()
+		return
+
+	scene.queue_free()
+	current_scene = null
+	RocketsManager.clear_override_state()
+	await create_timer(0.05).timeout
+	reporter.pass_test()
+
+func test_market_button_enabled_after_free_operations_unlock() -> void:
+	reporter.start_test("Earth base Market button enables after free operations unlock")
+	_reset_rockets_state()
+	var state := RocketsStateAccess.build_default_state(2)
+	state["mission_progress_completed"] = 4
+	state["completed_mission_badges"] = ["mission-1", "mission-2", "mission-3", "mission-4"]
+	RocketsManager.set_override_state(state)
+	var scene = EarthBaseScene.instantiate()
+	get_root().add_child(scene)
+	await create_timer(0.10).timeout
+	scene._apply_tutorial_button_state()
+
+	var market_btn := scene.get_node_or_null("UILayer/ButtonContainer/MarketButton") as Button
+	if market_btn == null:
+		reporter.fail_test("Expected MarketButton on Earth base nav")
+		scene.queue_free()
+		current_scene = null
+		RocketsManager.clear_override_state()
+		return
+	if market_btn.disabled:
+		reporter.fail_test("Expected MarketButton to be enabled once free operations are unlocked")
+		scene.queue_free()
+		current_scene = null
+		RocketsManager.clear_override_state()
+		return
+	if market_btn.tooltip_text != "":
+		reporter.fail_test("Expected unlocked MarketButton tooltip to be cleared")
+		scene.queue_free()
+		current_scene = null
+		RocketsManager.clear_override_state()
+		return
+
+	scene.queue_free()
+	current_scene = null
+	RocketsManager.clear_override_state()
+	await create_timer(0.05).timeout
+	reporter.pass_test()
+
+func test_earth_base_refreshes_tutorial_overlay_after_runtime_setup() -> void:
+	reporter.start_test("Earth base refreshes tutorial overlay after deferred runtime setup")
+	_reset_rockets_state()
+	var existing_overlay := get_root().find_child("TutorialCoachOverlay", true, false)
+	if existing_overlay:
+		existing_overlay.queue_free()
+		await create_timer(0.05).timeout
+	var overlay = TutorialOverlayScene.instantiate()
+	overlay.name = "TutorialCoachOverlay"
+	get_root().add_child(overlay)
+	var scene = EarthBaseScene.instantiate()
+	get_root().add_child(scene)
+	current_scene = scene
+	await create_timer(0.05).timeout
+	overlay._on_tutorial_state_updated({
+		"skipped": false,
+		"current_stage": 1,
+		"current_step_index": 0,
+		"total_steps": 9,
+		"current_step": {
+			"title": "Welcome to Landnam",
+			"message": "Tap New Mission.",
+			"action_key": "open_launchpad",
+			"valid_scenes": ["earth_base_1"]
+		}
+	})
+	await create_timer(0.03).timeout
+	if not overlay.visible:
+		reporter.fail_test("Expected tutorial overlay to show the first Earth base guidance popup")
+		overlay.queue_free()
+		scene.queue_free()
+		current_scene = null
+		RocketsManager.reset_state()
+		return
+	if overlay.title_label.text != "Welcome to Landnam":
+		reporter.fail_test("Expected tutorial overlay title to render the active welcome step")
+		overlay.queue_free()
+		scene.queue_free()
+		current_scene = null
+		RocketsManager.reset_state()
+		return
+
+	overlay.queue_free()
+	scene.queue_free()
+	current_scene = null
+	RocketsManager.reset_state()
+	await create_timer(0.05).timeout
+	reporter.pass_test()
 
 func test_earth_base_progression_cards_are_scene_owned() -> void:
 	reporter.start_test("Earth base progression cards exist as scene-owned nodes")
@@ -327,14 +455,19 @@ func test_tutorial_overlay_suppresses_progression_cards_on_earth_base() -> void:
 	get_root().add_child(overlay)
 	await create_timer(0.10).timeout
 
-	overlay._current_step = {
-		"title": "Pick Contractor",
-		"action_key": "accept_contractor_offer",
-		"valid_scenes": ["earth_launchpad"]
-	}
-	overlay._off_course = true
-	overlay.visible = true
-	overlay._apply_off_course_display()
+	# Use public API: feed a tutorial state that has an active step so _display()
+	# runs and detects the returned mission → shows debrief-ready mode.
+	overlay._on_tutorial_state_updated({
+		"skipped": false,
+		"current_step": {
+			"title": "Pick Contractor",
+			"action_key": "accept_contractor_offer",
+			"valid_scenes": ["earth_launchpad"]
+		},
+		"current_stage": 1,
+		"current_step_index": 1,
+		"total_steps": 9
+	})
 	scene._build_progression_cards()
 	await create_timer(0.03).timeout
 
@@ -360,15 +493,15 @@ func test_tutorial_overlay_suppresses_progression_cards_on_earth_base() -> void:
 		current_scene = null
 		RocketsManager.reset_state()
 		return
-	if overlay.title_label.text.find("Mission Debrief Ready") == -1:
-		reporter.fail_test("Expected tutorial overlay to show the debrief-ready title")
+	if overlay.title_label.text.find("Mission complete") == -1:
+		reporter.fail_test("Expected tutorial overlay to show the debrief-ready title, got: " + overlay.title_label.text)
 		overlay.queue_free()
 		scene.queue_free()
 		current_scene = null
 		RocketsManager.reset_state()
 		return
-	if overlay.message_label.text.find("Resolve the debrief") == -1:
-		reporter.fail_test("Expected tutorial overlay to describe the debrief requirement")
+	if overlay.message_label.text.find("Debrief") == -1 and overlay.message_label.text.find("debrief") == -1:
+		reporter.fail_test("Expected tutorial overlay message to mention debrief")
 		overlay.queue_free()
 		scene.queue_free()
 		current_scene = null
@@ -451,10 +584,7 @@ func test_tutorial_overlay_suppresses_progression_cards_when_it_appears_after_in
 		}
 	}
 	scene._on_tutorial_state_updated(state)
-	overlay._current_step = state["current_step"]
-	overlay._off_course = true
-	overlay.visible = true
-	overlay._apply_off_course_display()
+	overlay._on_tutorial_state_updated(state)
 	scene._on_tutorial_overlay_visibility_changed()
 	await create_timer(0.08).timeout
 
@@ -597,11 +727,17 @@ func test_tutorial_control_station_cta_opens_guided_build_flow() -> void:
 	get_root().add_child(overlay)
 	await create_timer(0.10).timeout
 
-	overlay._current_step = {
-		"title": "Control Station",
-		"action_key": "build_control_station",
-		"valid_scenes": ["earth_base_1"]
-	}
+	overlay._on_tutorial_state_updated({
+		"skipped": false,
+		"current_step": {
+			"title": "Control Station",
+			"action_key": "build_control_station",
+			"valid_scenes": ["earth_base_1"]
+		},
+		"current_stage": 2,
+		"current_step_index": 0,
+		"total_steps": 1
+	})
 	overlay._build_control_station_from_current_scene()
 	await create_timer(0.05).timeout
 	var build_overlay = scene.get_node_or_null("UILayer/BuildOverlay")

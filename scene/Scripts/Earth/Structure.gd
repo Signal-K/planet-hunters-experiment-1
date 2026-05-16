@@ -2,6 +2,7 @@
 # Base class for all interactive structures on Earth
 class_name Structure
 extends Node2D
+const AppLogger = preload("res://Scripts/Utils/Logger.gd")
 
 @export var structure_name: String = "Structure"
 @export var interactive: bool = true
@@ -32,24 +33,24 @@ func _setup_interaction() -> void:
 
 func on_interact() -> void:
 	"""Called when this structure is clicked/interacted with"""
-	print("Interacting with: ", structure_name)
+	AppLogger.d("Interacting with: " + str(structure_name))
 
 func on_hover_enter() -> void:
 	"""Called when mouse enters structure"""
 	is_hovered = true
-	print("Hovering over: ", structure_name)
+	AppLogger.d("Hovering over: " + str(structure_name))
 
 func on_hover_exit() -> void:
 	"""Called when mouse leaves structure"""
 	is_hovered = false
-	print("Left: ", structure_name)
+	AppLogger.d("Left: " + str(structure_name))
 
 func _on_input_event(viewport: Node, event: InputEvent, shape_idx: int) -> void:
 	"""Handle mouse input events"""
 	if preload("res://Scripts/Utils/AppControllerHelper.gd").is_menu_open():
 		return
-	print("Structure._on_input_event called for: ", structure_name, " event: ", event)
+	AppLogger.d("Structure._on_input_event called for: " + str(structure_name, " event: ", event))
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-			print("Mouse clicked on: ", structure_name)
+			AppLogger.d("Mouse clicked on: " + str(structure_name))
 			on_interact()
