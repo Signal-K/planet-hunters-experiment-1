@@ -212,8 +212,12 @@ static func _build_menu_root(owner: Node) -> Control:
 	settings_host.add_child(_build_settings_entry_card(owner))
 	settings_host.add_child(_build_reset_progress_button(owner))
 
-	# Debug
-	debug_host.add_child(_build_debug_section(owner))
+	# Debug — editor only; never shown in exported builds
+	if OS.has_feature("editor"):
+		debug_host.add_child(_build_debug_section(owner))
+	else:
+		debug_label.visible = false
+		debug_host.visible = false
 
 	# Logbook overlay (hidden until logbook_btn pressed)
 	var logbook_overlay := _build_logbook_overlay(vp_w)
@@ -243,28 +247,16 @@ static func _build_stats_card() -> PanelContainer:
 	var app = AppControllerHelper.get_instance()
 	var francs := 0
 	var francs_str := "?"
-	var level := 1
-	var level_str := "?"
-	var xp := 0
-	var xp_str := "?"
 	var missions := 0
 	if app:
 		if app.has_method("get_franc_balance"):
 			francs = int(app.get_franc_balance())
 			francs_str = NumberFormat.commas(str(francs)) + " F"
-		if app.has_method("get_experience_level"):
-			level = int(app.get_experience_level())
-			level_str = str(level)
-		if app.has_method("get_experience_xp"):
-			xp = int(app.get_experience_xp())
-			xp_str = str(xp)
 	missions = int(RocketsManager.get_completed_mission_count())
 
 	var hbox: HBoxContainer = card.get_node("StatsRow")
 
 	for stat_pair in [
-		["LEVEL", level_str, CYAN],
-		["XP", xp_str, TEXT_COLOR],
 		["FRANCS", francs_str, AMBER],
 		["MISSIONS", str(missions), TEXT_COLOR],
 	]:
@@ -639,14 +631,8 @@ static func _build_discovery_row(disc: Dictionary) -> HBoxContainer:
 
 static func _build_job_board_card() -> PanelContainer:
 	var sm = preload("res://Scripts/Utils/SubcontractorManager.gd")
-	var app = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
-	var level := 1
-	if app and app.has_method("get_experience_level_value"):
-		level = int(app.get_experience_level_value())
-	elif app and app.get("experience_level") != null:
-		level = int(app.experience_level)
-
-	var contractors: Array = sm.get_roster(level)
+	var mission_stage := int(RocketsManager.get_mission_stage())
+	var contractors: Array = sm.get_roster(mission_stage)
 	var market_pct := 80
 	var contractor_pct := 120
 
@@ -819,18 +805,11 @@ static func _build_marketplace_card() -> PanelContainer:
 	var header_lbl: Label = card.get_node("Body/HeaderLabel")
 	var rows_box: VBoxContainer = card.get_node("Body/Rows")
 
-	# Check player level
-	var app = AppControllerHelper.get_instance()
-	var player_level := 1
-	if app and app.has_method("get_experience_level"):
-		player_level = max(int(app.get_experience_level()), 1)
-
-	if player_level < MARKETPLACE_UNLOCK_LEVEL:
-		var locked_lbl: Label = MenuEmptyStateLabelScene.instantiate()
-		locked_lbl.text = "Mineral market prices unlock at Level %d.\nSell timing and supply/demand become visible." % MARKETPLACE_UNLOCK_LEVEL
-		locked_lbl.add_theme_color_override("font_color", TEXT_MUTED)
-		rows_box.add_child(locked_lbl)
-		return card
+	var locked_lbl: Label = MenuEmptyStateLabelScene.instantiate()
+	locked_lbl.text = "Mineral market prices are not available in this version."
+	locked_lbl.add_theme_color_override("font_color", TEXT_MUTED)
+	rows_box.add_child(locked_lbl)
+	return card
 
 	# Header
 	header_lbl.visible = true
@@ -886,17 +865,11 @@ static func _build_room_upgrades_card(owner: Node) -> PanelContainer:
 	var header_lbl: Label = card.get_node("Body/HeaderLabel")
 	var rows_box: VBoxContainer = card.get_node("Body/Rows")
 
-	var app = AppControllerHelper.get_instance()
-	var player_level := 1
-	if app and app.has_method("get_experience_level"):
-		player_level = max(int(app.get_experience_level()), 1)
-
-	if player_level < ROOM_UPGRADE_UNLOCK_LEVEL:
-		var locked_lbl: Label = MenuEmptyStateLabelScene.instantiate()
-		locked_lbl.text = "Room upgrades unlock at Level %d.\nUpgrade your rocket's modules to unlock better laser tiers, cargo capacity, and scanner range." % ROOM_UPGRADE_UNLOCK_LEVEL
-		locked_lbl.add_theme_color_override("font_color", TEXT_MUTED)
-		rows_box.add_child(locked_lbl)
-		return card
+	var locked_lbl: Label = MenuEmptyStateLabelScene.instantiate()
+	locked_lbl.text = "Room upgrades are not available in this version."
+	locked_lbl.add_theme_color_override("font_color", TEXT_MUTED)
+	rows_box.add_child(locked_lbl)
+	return card
 
 	# Determine the active rocket type
 	var awaiting_id = RocketsManager.get_primary_awaiting_rocket_id()
@@ -918,6 +891,7 @@ static func _build_room_upgrades_card(owner: Node) -> PanelContainer:
 	header_lbl.add_theme_color_override("font_color", TEXT_MUTED)
 
 	var franc_balance := 0
+	var app = AppControllerHelper.get_instance()
 	if app and app.has_method("get_franc_balance"):
 		franc_balance = int(app.get_franc_balance())
 

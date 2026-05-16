@@ -47,12 +47,9 @@ func _build_list() -> void:
 	var sm = preload("res://Scripts/Utils/SubcontractorManager.gd")
 	if not sm:
 		return
-	var app = get_node_or_null("/root/AppController")
-	var level = 1
 	var panel_style = preload("res://Scripts/UI/PanelStyle.gd")
-	if app and app.has_method("get_experience_level"):
-		level = int(app.get_experience_level())
-	var roster = sm.get_roster(level)
+	var RocketsMgr = preload("res://Scripts/Utils/RocketsManager.gd")
+	var roster = sm.get_roster(int(RocketsMgr.get_mission_stage()))
 	for entry in roster:
 		var is_hidden = bool(entry.get("hidden", false))
 		var is_available = bool(entry.get("available", false))

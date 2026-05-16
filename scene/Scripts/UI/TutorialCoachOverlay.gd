@@ -308,6 +308,7 @@ func _on_tutorial_state_updated(state: Dictionary) -> void:
 	var stage = int(state.get("current_stage", 1))
 	var current_idx = int(state.get("current_step_index", 0))
 	var total = int(state.get("total_steps", 0))
+
 	title_label.text = str(step.get("title", "Mission Guidance"))
 	stage_label.text = "Mission %d" % stage
 	message_label.text = str(step.get("message", ""))
@@ -495,52 +496,45 @@ func _progress_copy_for_state(stage: int, current_idx: int, total: int, step: Di
 
 func _action_copy_for_step(step: Dictionary) -> String:
 	var key = str(step.get("action_key", ""))
-	var stage = int(_current_state.get("current_stage", 1))
 	var scene_name := ""
 	if get_tree() and get_tree().current_scene:
 		scene_name = get_tree().current_scene.scene_file_path.get_file().get_basename()
 	var on_base := scene_name == "earth_base_1"
 	match key:
 		"open_launchpad":
-			if stage <= 1:
-				return "Open the Launchpad to start your first contract route."
-			return "Open the Launchpad to choose the next mission route."
+			return "→ Tap the Launchpad"
 		"build_control_station":
-			return "Build the Control Station from the base card before starting Mission 2."
+			return "→ Tap the Control Station pad on the base"
 		"accept_contractor_offer", "accept_starter_contractor":
 			if on_base:
-				return "Press New Mission to open Launchpad, then select a contractor."
-			return "Tap a contractor card and press Select. They give you a target order — delivering it earns a payout bonus on top of the base price."
+				return "→ Press New Mission"
+			return "→ Tap a contractor and press Select"
 		"create_rocket":
 			if on_base:
-				return "Press New Mission to open Launchpad, then build the required rocket."
-			if stage <= 1:
-				return "Create Starter Rocket 1."
-			if stage == 2:
-				return "Create Starter Rocket 2."
-			return "Build a rocket that matches this mission."
+				return "→ Press New Mission"
+			return "→ Press Create"
 		"select_launch_target":
 			if on_base:
-				return "Press New Mission to open Launchpad, then select a target."
-			if stage == 3:
-				return "Classify the TESS candidate in the review screen. Mission control will route a confirmed result into launch setup automatically."
-			return "Select the highlighted Mission target."
+				return "→ Press New Mission"
+			return "→ Tap a target on the map"
 		"classify_candidate":
 			if on_base:
-				return "Press New Mission to open Launchpad, then classify a TESS lightcurve candidate."
-			return "Use the full review screen to classify the TESS candidate before launch setup."
+				return "→ Press New Mission"
+			return "→ Tap Planet or Not a Planet"
 		"launch_rocket_from_earth":
 			if on_base:
-				return "Press New Mission to open Launchpad, then launch."
-			return "Press Launch when contractor, rocket, and target are ready."
+				return "→ Press New Mission"
+			return "→ Press Launch"
+		"arrived_at_mining_site":
+			return "→ Launch a mission"
 		"mine_target":
-			return "Mine required cargo at the target."
+			return "→ Hold FIRE"
 		"return_rocket_home":
-			return "Return to Earth with cargo."
+			return "→ Press Return Home"
 		"resolve_mission_debrief":
-			return "Complete the debrief to advance."
+			return "→ Sell cargo, then press Complete"
 		_:
-			return "Complete the current objective."
+			return ""
 
 func _reposition_panel() -> void:
 	if not visible:

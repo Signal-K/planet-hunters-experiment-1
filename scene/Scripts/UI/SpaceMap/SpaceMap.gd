@@ -238,12 +238,6 @@ func _setup_galaxy_button() -> void:
 func _setup_selection_mode_ui() -> void:
 	# Hide persistent root-level HUD nodes that don't belong on the map,
 	# or move them so they don't block target clicks.
-	var overlay = get_tree().root.get_node_or_null("TutorialCoachOverlay")
-	if overlay and overlay.has_method("set_deferred"):
-		# Instead of just hiding, we can move it to a non-blocking corner
-		# or tell it to refresh its zone. For now, let's keep it visible
-		# but ensure it's not on top of the belt.
-		overlay.call_deferred("reposition_for_map")
 	
 	var progress = get_tree().root.get_node_or_null("MissionProgressTracker")
 	if progress is CanvasItem:
@@ -256,11 +250,29 @@ func _setup_selection_mode_ui() -> void:
 			RocketsManager.set_map_return_mode(false)
 			get_tree().change_scene_to_file("res://Scenes/Earth/earth_launchpad.tscn")
 		)
+	var preselected_id := RocketsManager.get_selected_target()
 	if explored_label:
-		explored_label.text = "Tap a target to select it for this mission"
+		if preselected_id != "":
+			var details := RocketsManager.get_target_details(preselected_id)
+			var label := str(details.get("label", details.get("name", preselected_id)))
+			explored_label.text = "%s selected — tap another to change" % label
+		else:
+			explored_label.text = "Tap a target to select it for this mission"
 		explored_label.add_theme_color_override("font_color", Color(0.941, 0.690, 0.188, 1.0))
 	if count_label:
 		count_label.text = ""
+	# Add a Confirm button when a target is already selected
+	if preselected_id != "":
+		var sections: HBoxContainer = get_node_or_null("UILayer/InfoBar/Sections")
+		if sections:
+			var confirm_btn := Button.new()
+			confirm_btn.name = "ConfirmTargetBtn"
+			confirm_btn.text = "✓ CONFIRM"
+			_style_nav_button(confirm_btn, Color(0.28, 0.88, 0.96, 1.0))
+			confirm_btn.pressed.connect(func():
+				_select_mission_target(preselected_id)
+			)
+			sections.add_child(confirm_btn)
 
 func _style_nav_button(btn: Button, col: Color) -> void:
 	if btn == null:
@@ -431,14 +443,10 @@ func _open_target_preview(target_id: String, entry: Dictionary) -> void:
 	(backdrop.get_node("Center/Panel/Scroll/Body/SecondarySeparator") as HSeparator)\
 		.add_theme_color_override("separator", Color(C_CYAN.r, C_CYAN.g, C_CYAN.b, 0.2))
 
-	var AppCH = preload("res://Scripts/Utils/AppControllerHelper.gd")
-	var app := AppCH.get_instance()
-	var level := 1
-	if app and app.has_method("get_experience_level"):
-		level = int(app.get_experience_level())
 	var SubCM = preload("res://Scripts/Utils/SubcontractorManager.gd")
+	var RocketsMgr = preload("res://Scripts/Utils/RocketsManager.gd")
 	var relevant: Array = []
-	for c in SubCM.get_roster(level):
+	for c in SubCM.get_roster(int(RocketsMgr.get_mission_stage())):
 		if (c as Dictionary).get("bonus", {}).is_empty() or target_type == "asteroid":
 			relevant.append(c)
 
