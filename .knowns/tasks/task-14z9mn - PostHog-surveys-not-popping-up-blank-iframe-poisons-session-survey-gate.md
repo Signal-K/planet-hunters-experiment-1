@@ -1,15 +1,23 @@
 ---
+project: Experiment 1/Landnam
 id: 14z9mn
 title: PostHog surveys not popping up — blank iframe poisons session survey gate
 status: done
 priority: high
 labels:
-  - 'posthog,surveys,bug,analytics'
+  - project-landnam
+  - posthog
+  - surveys
+  - bug
+  - analytics
 createdAt: '2026-05-03T11:50:56.065Z'
 updatedAt: '2026-05-06T02:16:26.692Z'
 timeSpent: 0
 assignee: '@Liam'
 ---
+
+[← Back to Index](../INDEX.md)
+
 # PostHog surveys not popping up — blank iframe poisons session survey gate
 
 ## Description

@@ -1,9 +1,11 @@
 ---
+project: Experiment 1/Landnam
 id: zoftvm
 title: Convert GameNavigationMenu and ControlStationPanel to scene-owned UI
 status: done
 priority: high
 labels:
+  - project-landnam
   - ui
   - menu
   - control-station
@@ -13,6 +15,9 @@ updatedAt: '2026-05-08T10:30:54.540Z'
 timeSpent: 1222412
 assignee: '@me'
 ---
+
+[← Back to Index](../INDEX.md)
+
 # Convert GameNavigationMenu and ControlStationPanel to scene-owned UI
 
 ## Description

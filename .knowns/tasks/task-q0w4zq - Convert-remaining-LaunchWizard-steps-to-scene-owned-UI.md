@@ -1,9 +1,11 @@
 ---
+project: Experiment 1/Landnam
 id: q0w4zq
 title: Convert remaining LaunchWizard steps to scene-owned UI
 status: done
 priority: high
 labels:
+  - project-landnam
   - ui
   - missions
   - launchpad
@@ -11,6 +13,9 @@ createdAt: '2026-04-24T01:35:20.542Z'
 updatedAt: '2026-05-08T10:30:40.872Z'
 timeSpent: 0
 ---
+
+[← Back to Index](../INDEX.md)
+
 # Convert remaining LaunchWizard steps to scene-owned UI
 
 ## Description

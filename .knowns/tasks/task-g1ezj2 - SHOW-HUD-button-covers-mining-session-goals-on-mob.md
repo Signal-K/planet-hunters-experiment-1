@@ -1,15 +1,23 @@
 ---
+project: Experiment 1/Landnam
 id: g1ezj2
 title: SHOW HUD button covers mining session goals on mobile
 status: done
 priority: high
 labels:
-  - mobile,ux,hud,mining
+  - project-landnam
+  - mobile
+  - ux
+  - hud
+  - mining
 createdAt: '2026-05-03T11:50:55.246Z'
 updatedAt: '2026-05-04T16:40:00.000Z'
 timeSpent: 0
 assignee: '@Liam'
 ---
+
+[← Back to Index](../INDEX.md)
+
 # SHOW HUD button covers mining session goals on mobile
 
 ## Description

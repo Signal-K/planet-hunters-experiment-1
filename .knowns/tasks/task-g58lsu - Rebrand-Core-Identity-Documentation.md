@@ -1,14 +1,20 @@
 ---
+project: Experiment 1/Landnam
 id: g58lsu
 title: 'Rebrand: Core Identity & Documentation'
 status: done
 priority: high
+labels:
+  - project-landnam
 labels: []
 createdAt: '2026-05-11T03:01:56.932Z'
 updatedAt: '2026-05-11T03:10:55.410Z'
 timeSpent: 0
 assignee: '@Liam'
 ---
+
+[← Back to Index](../INDEX.md)
+
 # Rebrand: Core Identity & Documentation
 
 ## Description

@@ -1,4 +1,5 @@
 ---
+project: Experiment 1/Landnam
 id: hn026g
 title: >-
   Portrait mode support — game requires landscape but browser users don't always
@@ -6,12 +7,19 @@ title: >-
 status: done
 priority: medium
 labels:
-  - 'mobile,portrait,ux,layout'
+  - project-landnam
+  - mobile
+  - portrait
+  - ux
+  - layout
 createdAt: '2026-05-03T11:40:58.944Z'
 updatedAt: '2026-05-06T02:16:26.691Z'
 timeSpent: 0
 assignee: '@Liam'
 ---
+
+[← Back to Index](../INDEX.md)
+
 # Portrait mode support — game requires landscape but browser users don't always rotate
 
 ## Description

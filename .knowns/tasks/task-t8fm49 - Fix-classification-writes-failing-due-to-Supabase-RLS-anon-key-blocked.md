@@ -1,15 +1,19 @@
 ---
 id: t8fm49
 title: Fix classification writes failing due to Supabase RLS (anon key blocked)
-status: blocked
-priority: high
+status: todo
+priority: low
 labels:
-  - 'supabase,rls,citizen-science,bug'
+  - project-landnam
+  - supabase
+  - rls
+  - citizen-science
+  - bug
 createdAt: '2026-04-11T04:07:40.472Z'
-updatedAt: '2026-04-30T01:07:13.407Z'
+updatedAt: '2026-05-14T00:00:00.000Z'
 timeSpent: 0
 assignee: '@Liam'
-parent: q1jyo4
+order: 8
 ---
 # Fix classification writes failing due to Supabase RLS (anon key blocked)
 
@@ -25,6 +29,7 @@ All player classifications (planet/not_planet verdicts + annotations) silently f
 - [ ] #2 ClassificationConsensus.check_for_updates() returns real rows from live data after a classification is submitted
 - [ ] #3 At least one classification visible in Supabase after a full game run
 - [ ] #4 author field populated with real user ID (or guest ID) rather than all-zeros UUID
+- [ ] #5 Capture an identifier (device ID or IP) to track classification source, potentially linked with Posthog identifiers
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -69,12 +74,19 @@ B. Create a Supabase Edge Function that accepts unauthenticated classification s
 C. Implement guest auth (anonymous Supabase auth) to generate a real auth.uid() per session
 D. Pass a verified game session token in the request headers and add matching RLS policy
 
-Recommended: Option C — use supabase.auth.signInAnonymously() to get a real auth UID per session, then set author to auth.uid(). This also enables real consensus tracking per player.
+Recommended: Option B (Updated 2026-05-14) — Preference shifted to an Edge Function to allow capturing identifiers (IP/Device ID) while keeping the game simple for guest users.
 
 ✓ Added anonymous Supabase auth session flow + real author IDs for classification POST/read paths
 
 ⚠ Production still rejects authenticated anonymous inserts with 42501. Root cause confirmed: repo migrations only grant classifications INSERT to anon, while Supabase anonymous auth yields authenticated role. Added corrective migration supabase/migrations/20260413_classifications_authenticated_guest_policy.sql and normalized anomaly-id parsing in game/test write paths.
 
 2026-04-30 scope update: this production classification fix now applies only to planet-candidate / TESS lightcurve submissions for the next release. Asteroid review is out of scope.
+Backlog cleanup 2026-05-13: moved from blocked to todo. Next action is a concrete production Supabase RLS/auth verification/fix pass rather than leaving this in blocked status.
+
+Update 2026-05-14:
+- Priority reduced to Low.
+- Classifications are deferred; the initial release will feature starter missions only.
+- Implementation goal: Use an edge function to handle submissions.
+- Identifier tracking: Capture device ID or IP address to track classification source, ideally linking with Posthog's browser-side identifiers.
 <!-- SECTION:NOTES:END -->
 

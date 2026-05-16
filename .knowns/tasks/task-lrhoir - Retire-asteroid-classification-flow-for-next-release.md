@@ -1,9 +1,11 @@
 ---
+project: Experiment 1/Landnam
 id: lrhoir
 title: Retire asteroid classification flow for next release
 status: done
 priority: high
 labels:
+  - project-landnam
   - release-scope
   - planet-hunters
   - citizen-science
@@ -12,6 +14,9 @@ updatedAt: '2026-04-30T01:18:51.595Z'
 timeSpent: 936
 assignee: '@me'
 ---
+
+[← Back to Index](../INDEX.md)
+
 # Retire asteroid classification flow for next release
 
 ## Description

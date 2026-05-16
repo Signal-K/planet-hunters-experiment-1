@@ -1,9 +1,11 @@
 ---
+project: Experiment 1/Landnam
 id: 68u1ef
 title: Full-screen galaxy map with planet candidates on mission setup
 status: done
 priority: high
 labels:
+  - project-landnam
   - spacemap
   - galaxy
   - annotation
@@ -13,6 +15,9 @@ updatedAt: '2026-05-08T10:30:41.419Z'
 timeSpent: 165285
 assignee: '@me'
 ---
+
+[← Back to Index](../INDEX.md)
+
 # Full-screen galaxy map with planet candidates on mission setup
 
 ## Description

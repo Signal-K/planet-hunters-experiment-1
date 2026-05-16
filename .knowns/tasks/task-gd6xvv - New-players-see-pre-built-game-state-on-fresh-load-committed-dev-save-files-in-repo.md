@@ -1,4 +1,5 @@
 ---
+project: Experiment 1/Landnam
 id: gd6xvv
 title: >-
   New players see pre-built game state on fresh load — committed dev save files
@@ -6,12 +7,20 @@ title: >-
 status: done
 priority: high
 labels:
-  - 'critical,bug,save-state,godot,vercel'
+  - project-landnam
+  - critical
+  - bug
+  - save-state
+  - godot
+  - vercel
 createdAt: '2026-05-03T11:40:49.782Z'
 updatedAt: '2026-05-06T02:16:26.691Z'
 timeSpent: 0
 assignee: '@Liam'
 ---
+
+[← Back to Index](../INDEX.md)
+
 # New players see pre-built game state on fresh load — committed dev save files in repo
 
 ## Description
