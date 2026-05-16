@@ -9,40 +9,43 @@ const MAX_MISSION_STAGE := 4
 # "off-course" nudge instead of the normal step instructions.
 const BASE_ONLY_SCENES := ["earth_base_1"]
 const BASE_SCENES   := ["earth_base_1", "earth_launchpad"]
-const LAUNCHPAD_SCENES := ["earth_launchpad", "space_map"]
+# Steps that are valid anywhere in the LaunchWizard flow (launchpad + map for target selection)
+const LAUNCHPAD_SCENES := ["earth_launchpad", "space_map", "galaxy_map"]
+# Steps that only make sense on the launchpad itself — map is off-course for these
+const LAUNCHPAD_ONLY_SCENES := ["earth_launchpad"]
 const MINING_SCENES := ["SidescrollMining"]
 const DEBRIEF_SCENES := ["earth_base_1", "mission_debrief_v2"]
 
 const STEPS_BY_MISSION := {
 	1: [
-		{"id": "m1_welcome", "action_key": "open_launchpad", "title": "First Mining Contract", "message": "Start by taking a contractor job, choosing the matching asteroid, launching a rocket, then returning the cargo for payout. Open the Launchpad to begin.", "mechanic": "intro", "valid_scenes": BASE_SCENES},
-		{"id": "m1_pick_contractor", "action_key": "accept_contractor_offer", "title": "Contractor Selection", "message": "Contractors turn raw mining into funded missions. Accept the starter job so mission control knows which minerals and target to prioritize.", "mechanic": "contractor", "valid_scenes": LAUNCHPAD_SCENES},
-		{"id": "m1_select_target", "action_key": "select_launch_target", "title": "Navigation: Select Target", "message": "Open the Space Map and select the highlighted Mission 1 asteroid. It contains the exact Iron and Nickel requested by your contractor.", "mechanic": "targeting", "valid_scenes": LAUNCHPAD_SCENES},
-		{"id": "m1_create_rocket", "action_key": "create_rocket", "title": "Rocket Assembly", "message": "assemble your first vessel. Starter Rocket 1 is a reliable workhorse for inner belt missions.", "mechanic": "economy", "valid_scenes": LAUNCHPAD_SCENES},
-		{"id": "m1_launch", "action_key": "launch_rocket_from_earth", "title": "Launch Sequence", "message": "Flight systems are green. Press Launch to leave Earth orbit and begin your transit to the asteroid belt.", "mechanic": "launch", "valid_scenes": LAUNCHPAD_SCENES},
-		{"id": "m1_mine_intro", "action_key": "arrived_at_mining_site", "title": "Arrival: Orbital Insertion", "message": "You've reached the target. Hold the FIRE button to deploy your mining laser and begin cutting into the surface.", "mechanic": "mining-intro", "valid_scenes": MINING_SCENES},
-		{"id": "m1_mine", "action_key": "mine_target", "title": "Active Mining Operations", "message": "Collect the Iron and Nickel required by your contract. Track your progress in the delivery panel on the right side of the screen.", "mechanic": "mining", "valid_scenes": MINING_SCENES},
-		{"id": "m1_return", "action_key": "return_rocket_home", "title": "Payload Secured: Return", "message": "The cargo hold is full of high-grade minerals. Initiate the return sequence to head back to Earth base.", "mechanic": "return", "valid_scenes": MINING_SCENES},
-		{"id": "m1_debrief", "action_key": "resolve_mission_debrief", "title": "Mission Debrief", "message": "Finalize your mission logs, sell your cargo, and collect your payout. Completing this debrief will unlock the next phase of operations.", "mechanic": "debrief", "valid_scenes": DEBRIEF_SCENES}
+		{"id": "m1_welcome", "action_key": "open_launchpad", "title": "Start here", "message": "Open the Launchpad to take your first contract.", "mechanic": "intro", "valid_scenes": BASE_SCENES},
+		{"id": "m1_pick_contractor", "action_key": "accept_contractor_offer", "title": "Pick a contractor", "message": "They'll tell you what minerals to bring back.", "mechanic": "contractor", "valid_scenes": LAUNCHPAD_SCENES},
+		{"id": "m1_select_target", "action_key": "select_launch_target", "title": "Set your destination", "message": "Tap an asteroid to confirm your target.", "mechanic": "targeting", "valid_scenes": LAUNCHPAD_SCENES},
+		{"id": "m1_create_rocket", "action_key": "create_rocket", "title": "Build your rocket", "message": "Build Starter Rocket 1.", "mechanic": "economy", "valid_scenes": LAUNCHPAD_ONLY_SCENES},
+		{"id": "m1_launch", "action_key": "launch_rocket_from_earth", "title": "Launch", "message": "Hit Launch when you're ready.", "mechanic": "launch", "valid_scenes": LAUNCHPAD_ONLY_SCENES},
+		{"id": "m1_mine_intro", "action_key": "arrived_at_mining_site", "title": "Start mining", "message": "Hold FIRE to deploy your laser.", "mechanic": "mining-intro", "valid_scenes": MINING_SCENES},
+		{"id": "m1_mine", "action_key": "mine_target", "title": "Collect the order", "message": "Mine the minerals shown in your order panel.", "mechanic": "mining", "valid_scenes": MINING_SCENES},
+		{"id": "m1_return", "action_key": "return_rocket_home", "title": "Head home", "message": "Cargo secured. Press Return Home.", "mechanic": "return", "valid_scenes": MINING_SCENES},
+		{"id": "m1_debrief", "action_key": "resolve_mission_debrief", "title": "Collect payout", "message": "Sell your cargo and complete the debrief.", "mechanic": "debrief", "valid_scenes": DEBRIEF_SCENES}
 	],
 	2: [
-		{"id": "m2_build_control_station", "action_key": "build_control_station", "title": "Command Infrastructure", "message": "Construct the Control Station at Earth Base. This specialized facility allows you to manage multiple ships and coordinate more complex contractor routes.", "mechanic": "progression", "valid_scenes": BASE_ONLY_SCENES}
+		{"id": "m2_build_control_station", "action_key": "build_control_station", "title": "Build Control Station", "message": "Construct the Control Station to manage your fleet.", "mechanic": "progression", "valid_scenes": BASE_ONLY_SCENES}
 	],
 	3: [
-		{"id": "m3_pick_contractor", "action_key": "accept_contractor_offer", "title": "Advanced Contracts", "message": "Select a new contractor. Higher levels unlock more specialized jobs with greater payout potential.", "mechanic": "contractor", "valid_scenes": LAUNCHPAD_SCENES},
-		{"id": "m3_classify", "action_key": "classify_candidate", "title": "Scientific Analysis", "message": "Before targeting a TESS candidate, review its lightcurve. Distinguishing real planets from false positives is key to scientific progress.", "mechanic": "classification", "valid_scenes": LAUNCHPAD_SCENES},
-		{"id": "m3_select", "action_key": "select_launch_target", "title": "Course Plotting", "message": "Confirmed scientific candidates are automatically entered into the navigation computer. Select your destination from the map to proceed.", "mechanic": "targeting", "valid_scenes": LAUNCHPAD_SCENES},
-		{"id": "m3_launch", "action_key": "launch_rocket_from_earth", "title": "Deep Space Launch", "message": "Course confirmed. Initiate the launch sequence for your deep space mission.", "mechanic": "launch", "valid_scenes": LAUNCHPAD_SCENES},
-		{"id": "m3_mine", "action_key": "mine_target", "title": "Resource Extraction", "message": "Extract valuable resources from the candidate world. Every gram contributes to our scientific understanding of the system.", "mechanic": "mining", "valid_scenes": MINING_SCENES},
-		{"id": "m3_return", "action_key": "return_rocket_home", "title": "Return to Base", "message": "All samples secured. Return to Earth base for full analysis and processing.", "mechanic": "return", "valid_scenes": MINING_SCENES},
-		{"id": "m3_debrief", "action_key": "resolve_mission_debrief", "title": "Operations Summary", "message": "Complete the debrief to formalize your findings. You are expanding the reach of human exploration.", "mechanic": "debrief", "valid_scenes": DEBRIEF_SCENES}
+		{"id": "m3_pick_contractor", "action_key": "accept_contractor_offer", "title": "New contract", "message": "Choose a contractor for your next mission.", "mechanic": "contractor", "valid_scenes": LAUNCHPAD_SCENES},
+		{"id": "m3_classify", "action_key": "classify_candidate", "title": "Review the candidate", "message": "Classify the TESS lightcurve before launch.", "mechanic": "classification", "valid_scenes": LAUNCHPAD_SCENES},
+		{"id": "m3_select", "action_key": "select_launch_target", "title": "Set destination", "message": "Confirm your destination on the map.", "mechanic": "targeting", "valid_scenes": LAUNCHPAD_SCENES},
+		{"id": "m3_launch", "action_key": "launch_rocket_from_earth", "title": "Launch", "message": "Course confirmed. Hit Launch.", "mechanic": "launch", "valid_scenes": LAUNCHPAD_ONLY_SCENES},
+		{"id": "m3_mine", "action_key": "mine_target", "title": "Extract samples", "message": "Extract resources from the candidate world.", "mechanic": "mining", "valid_scenes": MINING_SCENES},
+		{"id": "m3_return", "action_key": "return_rocket_home", "title": "Return home", "message": "Samples secured. Return to Earth base.", "mechanic": "return", "valid_scenes": MINING_SCENES},
+		{"id": "m3_debrief", "action_key": "resolve_mission_debrief", "title": "Debrief", "message": "Review your mission and collect payment.", "mechanic": "debrief", "valid_scenes": DEBRIEF_SCENES}
 	],
 	4: [
-		{"id": "m4_open_launchpad", "action_key": "open_launchpad", "title": "Full Autonomy", "message": "Mission 4 marks your transition to full autonomy. Open the Launchpad to decide the future direction of your mining company.", "mechanic": "free-ops", "valid_scenes": BASE_ONLY_SCENES},
-		{"id": "m4_select", "action_key": "select_launch_target", "title": "Select Route & Target", "message": "You can now choose between contractor-driven profit missions or independent scientific survey runs. Any reachable target is valid.", "mechanic": "targeting", "valid_scenes": LAUNCHPAD_SCENES},
-		{"id": "m4_launch", "action_key": "launch_rocket_from_earth", "title": "Independent Launch", "message": "Initiate launch on your own terms. Your decisions now shape the growth of the Landnám fleet.", "mechanic": "launch", "valid_scenes": LAUNCHPAD_SCENES},
-		{"id": "m4_mine", "action_key": "mine_target", "title": "Autonomous Operations", "message": "Execute your mission plan. Contractor work provides steady growth, while survey runs prioritize scientific discovery.", "mechanic": "mining", "valid_scenes": MINING_SCENES},
-		{"id": "m4_debrief", "action_key": "resolve_mission_debrief", "title": "Expansion Complete", "message": "Finalize Mission 4 to fully unlock Free Operations, giving you total control over all future mission parameters.", "mechanic": "debrief", "valid_scenes": DEBRIEF_SCENES}
+		{"id": "m4_open_launchpad", "action_key": "open_launchpad", "title": "Free operations", "message": "You're in command. Open the Launchpad to plan your next run.", "mechanic": "free-ops", "valid_scenes": BASE_ONLY_SCENES},
+		{"id": "m4_select", "action_key": "select_launch_target", "title": "Pick your target", "message": "Any reachable destination is valid.", "mechanic": "targeting", "valid_scenes": LAUNCHPAD_SCENES},
+		{"id": "m4_launch", "action_key": "launch_rocket_from_earth", "title": "Launch", "message": "Your call. Hit Launch.", "mechanic": "launch", "valid_scenes": LAUNCHPAD_ONLY_SCENES},
+		{"id": "m4_mine", "action_key": "mine_target", "title": "Mine", "message": "Execute your mission plan.", "mechanic": "mining", "valid_scenes": MINING_SCENES},
+		{"id": "m4_debrief", "action_key": "resolve_mission_debrief", "title": "Debrief", "message": "Complete the debrief to finish.", "mechanic": "debrief", "valid_scenes": DEBRIEF_SCENES}
 	]
 }
 

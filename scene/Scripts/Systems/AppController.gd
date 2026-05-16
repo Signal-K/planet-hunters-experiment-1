@@ -6,24 +6,18 @@ signal window_status_update(message: String)
 signal counter_updated(new_value: int)
 signal franc_balance_updated(new_value: int)
 signal loan_updated(loan_balance: int)
-signal experience_updated(xp: int, level: int)
 signal rockets_reset()
 signal tutorial_state_updated(state: Dictionary)
 signal citizen_science_dialogue_toggled(enabled: bool)
-signal leveled_up(new_level: int)
 signal player_state_snapshot_updated(snapshot: Dictionary)
 
 const DEFAULT_FRANC_BALANCE := 10000000000
-const DEFAULT_EXPERIENCE_XP := 0
-const DEFAULT_EXPERIENCE_LEVEL := 1
 const DEFAULT_CITIZEN_SCIENCE_DIALOGUE_ENABLED := true
 const MAIN_SCENE_PATH := "res://Scenes/Earth/earth_base_1.tscn"
 
 var counter: int = 0
 var franc_balance: int = DEFAULT_FRANC_BALANCE
 var loan_balance: int = 0
-var experience_xp: int = DEFAULT_EXPERIENCE_XP
-var experience_level: int = DEFAULT_EXPERIENCE_LEVEL
 var citizen_science_dialogue_enabled: bool = DEFAULT_CITIZEN_SCIENCE_DIALOGUE_ENABLED
 var _game_paused: bool = false
 var _menu_request_version: int = 0
@@ -42,16 +36,12 @@ const SubcontractorManager = preload("res://Scripts/Utils/SubcontractorManager.g
 const FirstTimeMechanicTracker = preload("res://Scripts/Utils/FirstTimeMechanicTracker.gd")
 const MissionNarrativeAPI = preload("res://Scripts/Utils/MissionNarrativeAPI.gd")
 var _persistence := AppControllerPersistence.new()
-const XP_AWARD_LAUNCH := 5
-const XP_AWARD_SCAN := 2
 const MISSION_PROGRESS_TRACKER_SCENE := preload("res://Scenes/UI/MissionProgressTracker.tscn")
 const TUTORIAL_CONTROLLER_SCENE := preload("res://Scripts/Tutorial/TutorialController.gd")
 const TUTORIAL_OVERLAY_SCENE := preload("res://Scenes/UI/TutorialCoachOverlay.tscn")
 const FEEDBACK_BEACON_SCENE := preload("res://Scenes/UI/FeedbackBeacon.tscn")
 const INTRO_SPLASH_SCENE := preload("res://Scenes/UI/PlanetHuntersIntroSplash.tscn")
 const INTRO_SPLASH_FLAG_PATH := "user://planet_hunters_intro_v1.cfg"
-const LEVEL_UP_NOTIFICATION_SCENE := preload("res://Scenes/UI/LevelUpNotification.tscn")
-const WEB_XP_STATE_KEY := "planet_hunters_xp_state_v1"
 var _tutorial_controller: Node = null
 # Actions recorded before the TutorialController's _ready() has run are queued
 # here and replayed in order once the controller is fully initialised.
@@ -61,20 +51,14 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	is_ux_tour_running = OS.has_environment("GODOT_UX_TOUR")
 	AppLogger.d("AppController ready, counter initialized to: %s, is_ux_tour_running: %s" % [counter, is_ux_tour_running])
-	# Load persisted franc balance from disk (if present)
 	load_franc_balance()
-	# Load persisted experience from disk (if present)
-	load_experience()
-	_reconcile_experience_level_with_mission_stage()
-	_sync_experience_from_web_storage()
+	_unlock_rockets_for_mission_stage(RocketsManager.get_completed_mission_count())
 	load_preferences()
 	_ensure_mission_progress_tracker()
 	_ensure_tutorial_controller()
 	_ensure_feedback_beacon()
 	_set_tutorial_overlay_suspended(false)
 	WebEventBridge.emit("app_ready", {
-		"experience_level": experience_level,
-		"experience_xp": experience_xp,
 		"franc_balance": franc_balance,
 		"citizen_science_dialogue_enabled": citizen_science_dialogue_enabled
 	})
@@ -304,7 +288,6 @@ func debug_skip_to_mission(stage: int) -> void:
 	var target_francs = balances.get(stage, 1000000)
 
 	set_franc_balance_from_react(target_francs)
-	set_experience_from_react(0, stage)
 
 	# 4. Special unlocks for later stages
 	if stage >= 2:
@@ -395,26 +378,21 @@ func full_factory_reset() -> void:
 	counter = 0
 	franc_balance = DEFAULT_FRANC_BALANCE
 	loan_balance = 0
-	experience_xp = DEFAULT_EXPERIENCE_XP
-	experience_level = DEFAULT_EXPERIENCE_LEVEL
 	citizen_science_dialogue_enabled = DEFAULT_CITIZEN_SCIENCE_DIALOGUE_ENABLED
 	_menu_request_version = 0
 	_menu_request_action = ""
 	_last_mining_result = {}
 	_last_mining_result_synced = true
 	_auto_start_mining = false
-	
+
 	# 6. Reset singleton trackers
 	FirstTimeMechanicTracker.reset_all()
 	MissionNarrativeAPI.reset_session_state()
-	
-	# 7. Clear web storage
-	_clear_web_experience_storage()
+
 	counter_updated.emit(counter)
 	franc_balance_updated.emit(franc_balance)
 	loan_updated.emit(loan_balance)
 	citizen_science_dialogue_toggled.emit(citizen_science_dialogue_enabled)
-	_emit_experience_updated()
 	rockets_reset.emit()
 	_emit_player_state_snapshot("factory_reset")
 	
@@ -430,8 +408,6 @@ func _on_reset_all() -> void:
 	counter = 0
 	franc_balance = DEFAULT_FRANC_BALANCE
 	loan_balance = 0
-	experience_xp = DEFAULT_EXPERIENCE_XP
-	experience_level = DEFAULT_EXPERIENCE_LEVEL
 	citizen_science_dialogue_enabled = DEFAULT_CITIZEN_SCIENCE_DIALOGUE_ENABLED
 	_menu_request_version = 0
 	_menu_request_action = ""
@@ -440,14 +416,13 @@ func _on_reset_all() -> void:
 	_auto_start_mining = false
 	counter_updated.emit(counter)
 	save_franc_balance()
-	save_experience()
 	save_preferences()
 	loan_updated.emit(loan_balance)
+	_unlock_rockets_for_mission_stage(RocketsManager.get_completed_mission_count())
 	_clear_runtime_progression_state()
 	DirAccess.remove_absolute("user://rocket_unlock_popups.cfg")
 	DirAccess.remove_absolute(INTRO_SPLASH_FLAG_PATH)
 	franc_balance_updated.emit(franc_balance)
-	_emit_experience_updated()
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	if rm:
 		rm.reset_state()
@@ -465,12 +440,8 @@ func _clear_runtime_progression_state() -> void:
 	json.save_json("user://subcontractors.json", SubcontractorManager.build_default_state())
 	FirstTimeMechanicTracker.reset_all()
 	MissionNarrativeAPI.reset_session_state()
-	_clear_web_experience_storage()
-
-func _clear_web_experience_storage() -> void:
-	if not OS.has_feature("web"):
-		return
-	JavaScriptBridge.eval("(function(){try{window.localStorage.removeItem('%s');}catch(_e){}})();" % WEB_XP_STATE_KEY, true)
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval("(function(){try{window.localStorage.removeItem('planet_hunters_xp_state_v1');}catch(_e){}})();", true)
 
 func _return_to_fresh_player_scene() -> void:
 	set_game_paused(false)
@@ -553,75 +524,6 @@ func repay_loan_from_payout(payout: int) -> int:
 	AppLogger.d("[AppController] Loan repaid: %s F, remaining loan: %s F" % [repay, loan_balance])
 	return remainder
 
-func add_experience(amount: int, source: String = "") -> void:
-	if amount <= 0:
-		return
-	experience_xp += amount
-	var leveled_up = false
-	while experience_xp >= _xp_required_for_level(experience_level):
-		experience_xp -= _xp_required_for_level(experience_level)
-		experience_level += 1
-		leveled_up = leveled_up or true
-	if leveled_up:
-		_unlock_rockets_for_level(experience_level)
-		self.leveled_up.emit(experience_level)
-		_show_level_up_notification(experience_level)
-	_emit_experience_updated()
-	save_experience()
-	if source != "":
-		AppLogger.d("[AppController] Experience gained from %s: +%s (xp=%s level=%s)" % [source, amount, experience_xp, experience_level])
-
-func award_launch_experience() -> void:
-	add_experience(XP_AWARD_LAUNCH, "launch")
-
-func award_scan_experience() -> void:
-	add_experience(XP_AWARD_SCAN, "scan")
-
-func set_experience_from_react(xp: int, level: int) -> void:
-	experience_xp = max(xp, 0)
-	experience_level = max(level, 1)
-	_unlock_rockets_for_level(experience_level)
-	_emit_experience_updated()
-	save_experience()
-	_emit_player_state_snapshot("experience")
-
-func get_experience_xp() -> int:
-	return experience_xp
-
-func get_experience_level() -> int:
-	return experience_level
-
-func get_xp_required_for_level(level: int) -> int:
-	return _xp_required_for_level(level)
-
-func get_xp_required_for_next_level() -> int:
-	return _xp_required_for_level(experience_level)
-
-func get_total_experience() -> int:
-	var total = 0
-	for lvl in range(1, max(experience_level, 1)):
-		total += _xp_required_for_level(lvl)
-	total += experience_xp
-	return total
-
-func save_experience() -> void:
-	_persistence.save_experience(experience_xp, experience_level)
-
-func load_experience() -> void:
-	var result = _persistence.load_experience(experience_xp, experience_level)
-	if result.get("loaded", false):
-		experience_xp = result.get("xp", experience_xp)
-		experience_level = result.get("level", experience_level)
-	_reconcile_experience_level_with_mission_stage()
-	_unlock_rockets_for_level(experience_level)
-	_emit_experience_updated()
-
-func _reconcile_experience_level_with_mission_stage() -> void:
-	var stage: int = int(clamp(RocketsManager.get_mission_stage(), 1, 4))
-	if stage <= 1:
-		experience_level = 1
-		return
-	experience_level = stage
 
 func save_preferences() -> void:
 	_persistence.save_citizen_science_dialogue_enabled(citizen_science_dialogue_enabled)
@@ -629,14 +531,6 @@ func save_preferences() -> void:
 func load_preferences() -> void:
 	citizen_science_dialogue_enabled = _persistence.load_citizen_science_dialogue_enabled(true)
 	citizen_science_dialogue_toggled.emit(citizen_science_dialogue_enabled)
-
-func _emit_experience_updated() -> void:
-	experience_updated.emit(experience_xp, experience_level)
-	_sync_experience_to_web_storage()
-	WebEventBridge.emit("experience_state_updated", {
-		"experience_xp": experience_xp,
-		"experience_level": experience_level
-	})
 
 func get_player_state_snapshot(source: String = "") -> Dictionary:
 	var missions := RocketsManager.get_missions()
@@ -647,8 +541,6 @@ func get_player_state_snapshot(source: String = "") -> Dictionary:
 		"counter": counter,
 		"franc_balance": franc_balance,
 		"loan_balance": loan_balance,
-		"experience_xp": experience_xp,
-		"experience_level": experience_level,
 		"mission_stage": RocketsManager.get_mission_stage(),
 		"completed_missions": RocketsManager.get_completed_mission_count(),
 		"control_station_built": RocketsManager.is_control_station_built(),
@@ -676,54 +568,10 @@ func set_citizen_science_dialogue_enabled(enabled: bool) -> void:
 func is_citizen_science_dialogue_enabled() -> bool:
 	return citizen_science_dialogue_enabled
 
-func _sync_experience_from_web_storage() -> void:
-	if not OS.has_feature("web"):
-		return
-	var payload = JavaScriptBridge.eval("(function(){try{return window.localStorage.getItem('%s') || '';}catch(_e){return '';}})();" % WEB_XP_STATE_KEY, true)
-	if payload == null:
-		return
-	var raw = str(payload)
-	if raw == "":
-		return
-	var parsed = JSON.parse_string(raw)
-	if typeof(parsed) != TYPE_DICTIONARY:
-		return
-	var web_xp = int(parsed.get("experience_xp", 0))
-	var web_level = int(parsed.get("experience_level", 1))
-	var local_total = get_total_experience()
-	var web_total = _total_experience_for(web_xp, web_level)
-	if web_total > local_total:
-		set_experience_from_react(web_xp, web_level)
-
-func _sync_experience_to_web_storage() -> void:
-	if not OS.has_feature("web"):
-		return
-	var payload = {
-		"experience_xp": experience_xp,
-		"experience_level": experience_level,
-		"franc_balance": franc_balance,
-		"updated_at_unix": Time.get_unix_time_from_system()
-	}
-	var json_payload = JSON.stringify(payload)
-	# Wrap in a try-catch to avoid breaking if localStorage is blocked
-	JavaScriptBridge.eval("(function(){try{window.localStorage.setItem('%s', '%s');}catch(_e){}})();" % [WEB_XP_STATE_KEY, json_payload.replace("'", "\\'")], true)
-
-func _total_experience_for(xp: int, level: int) -> int:
-	var total = 0
-	for lvl in range(1, max(level, 1)):
-		total += _xp_required_for_level(lvl)
-	total += max(xp, 0)
-	return total
-
-func _xp_required_for_level(level: int) -> int:
-	# Exponential curve: L1→L2=100, L2→L3=150, L3→L4=225, L4→L5=337, …
-	# Tutorial arc (M1–M4, ~580 XP) puts player solidly at L3.
-	return int(floor(100.0 * pow(1.5, max(level, 1) - 1)))
-
-func _unlock_rockets_for_level(level: int) -> void:
+func _unlock_rockets_for_mission_stage(completed_missions: int) -> void:
 	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 	if rm:
-		rm.unlock_for_level(level)
+		rm.unlock_for_mission_stage(completed_missions)
 
 func record_tutorial_action(action_key: String, metadata: Dictionary = {}) -> bool:
 	# Guard against the deferred add_child window: _tutorial_controller exists as
@@ -770,16 +618,3 @@ func replay_tutorial_for_current_mission() -> void:
 func _on_tutorial_state_updated(state: Dictionary) -> void:
 	tutorial_state_updated.emit(state)
 
-func _show_level_up_notification(level: int) -> void:
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
-	var unlocks = []
-	if rm:
-		var rocket_specs = preload("res://Scripts/Utils/RocketSpecs.gd")
-		for rocket_id in rm.ROCKET_UNLOCK_LEVELS.keys():
-			if int(rm.ROCKET_UNLOCK_LEVELS[rocket_id]) == level:
-				unlocks.append("Rocket: %s" % rocket_specs.get_display_name(str(rocket_id)))
-
-	var notification = LEVEL_UP_NOTIFICATION_SCENE.instantiate()
-	if notification:
-		add_child(notification)
-		notification.show_level(level, unlocks)

@@ -229,9 +229,9 @@ func _load_planning_state() -> void:
 	if _selected_contractor.is_empty():
 		_step = Step.CONTRACTOR
 	elif _selected_target.is_empty():
-		_step = min(_step, Step.TARGET) as Step
+		_step = Step.TARGET
 	elif _selected_rocket.is_empty():
-		_step = min(_step, Step.ROCKET) as Step
+		_step = Step.ROCKET
 
 func _wire_buttons() -> void:
 	_back_btn.pressed.connect(_on_back)
@@ -533,8 +533,13 @@ func _build_target_step() -> void:
 	else:
 		_classification_card.visible = false
 
-	# Open the new space/galaxy map for target selection.
-	# RocketsManager restores full LaunchWizard state on return.
+	# Auto-select the best available target before opening the map,
+	# so the map opens with something already selected.
+	if _selected_target.is_empty():
+		var auto := RocketsManager.ensure_selected_target_for_launch()
+		if auto.get("ok", false):
+			RocketsManager.select_target(str(auto.get("target_id", "")))
+
 	RocketsManager.set_map_return_mode(true)
 	var map_scene := "res://Scenes/UI/SpaceMap/galaxy_map.tscn" \
 		if stage >= 3 else "res://Scenes/UI/SpaceMap/space_map.tscn"
@@ -786,6 +791,13 @@ func _build_rocket_step() -> void:
 	_rockets = RocketsManager.get_unlocked()
 	_rocket_step.visible = true
 
+	# Auto-select the only available rocket, or restore a previously chosen one
+	if _selected_rocket == "" and not _rockets.is_empty():
+		_selected_rocket = str(_rockets[0])
+		RocketsManager.set_planning_rocket_type(_selected_rocket)
+		var rooms := _installed_rooms_for_rocket(_selected_rocket)
+		_selected_assembly_room_id = str(rooms[0].get("room_id", "")) if not rooms.is_empty() else ""
+
 	_fabrication_bay_root = _build_fabrication_bay_screen()
 	_rocket_step.add_child(_fabrication_bay_root)
 
@@ -836,6 +848,7 @@ func _build_fabrication_module_tile(room_inst: Dictionary, room_def: Dictionary)
 	var selected := room_id == _selected_assembly_room_id
 	var is_propulsion := str(room_def.get("category", "")) == "power" or room_id.find("thruster") != -1 or room_id.find("engine") != -1
 	var accent := C_FAB_AMBER if is_propulsion else C_FAB_BLUE
+	var role_label := _module_role_label(room_def, room_inst)
 
 	var tile := Button.new()
 	tile.name = "FabricationModule_%s" % room_id
@@ -843,52 +856,82 @@ func _build_fabrication_module_tile(room_inst: Dictionary, room_def: Dictionary)
 	tile.text = ""
 	tile.custom_minimum_size = Vector2(256, 320)
 	tile.size_flags_horizontal = 0
-	tile.add_theme_stylebox_override("normal", _fabrication_style(C_FAB_PANEL, accent if selected else C_FAB_LINE, 2 if selected else 1, 4, 16))
-	tile.add_theme_stylebox_override("hover", _fabrication_style(C_FAB_PANEL_H, accent, 2, 4, 16))
-	tile.add_theme_stylebox_override("pressed", _fabrication_style(C_FAB_PANEL_H, accent, 2, 4, 16))
-	tile.add_theme_stylebox_override("focus", _fabrication_style(C_FAB_PANEL_H, accent, 2, 4, 16))
+	# No content margin — header/art flush to card edges like the Stitch design
+	tile.add_theme_stylebox_override("normal", _fabrication_style(C_FAB_PANEL, accent if selected else C_FAB_LINE, 2 if selected else 1, 4, 0))
+	tile.add_theme_stylebox_override("hover", _fabrication_style(C_FAB_PANEL_H, accent, 2, 4, 0))
+	tile.add_theme_stylebox_override("pressed", _fabrication_style(C_FAB_PANEL_H, accent, 2, 4, 0))
+	tile.add_theme_stylebox_override("focus", _fabrication_style(C_FAB_PANEL_H, accent, 2, 4, 0))
 
 	var stack := VBoxContainer.new()
 	stack.set_anchors_preset(Control.PRESET_FULL_RECT)
 	stack.add_theme_constant_override("separation", 0)
 	tile.add_child(stack)
 
-	var header := HBoxContainer.new()
-	header.custom_minimum_size = Vector2(0, 58)
-	header.add_theme_constant_override("separation", 8)
-	stack.add_child(header)
+	# Header: padded row with category label + status dot
+	var header_margin := MarginContainer.new()
+	header_margin.custom_minimum_size = Vector2(0, 44)
+	header_margin.add_theme_constant_override("margin_left", 14)
+	header_margin.add_theme_constant_override("margin_right", 14)
+	header_margin.add_theme_constant_override("margin_top", 0)
+	header_margin.add_theme_constant_override("margin_bottom", 0)
+	stack.add_child(header_margin)
 
-	var label := _fabrication_label(_module_role_label(room_def, room_inst), 13, accent)
-	label.size_flags_horizontal = SIZE_EXPAND_FILL
-	label.add_theme_constant_override("line_spacing", 0)
-	header.add_child(label)
+	var header := HBoxContainer.new()
+	header.alignment = BoxContainer.ALIGNMENT_CENTER
+	header.add_theme_constant_override("separation", 8)
+	header_margin.add_child(header)
+
+	var cat_label := _fabrication_label(role_label, 11, accent)
+	cat_label.size_flags_horizontal = SIZE_EXPAND_FILL
+	cat_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	header.add_child(cat_label)
 
 	var status := ColorRect.new()
 	status.color = C_FAB_GREEN
 	status.custom_minimum_size = Vector2(8, 8)
+	status.size_flags_vertical = SIZE_SHRINK_CENTER
 	header.add_child(status)
 
+	# Divider between header and art area (border-b equivalent)
+	var header_divider := ColorRect.new()
+	header_divider.color = accent if selected else C_FAB_LINE
+	header_divider.custom_minimum_size = Vector2(0, 1)
+	stack.add_child(header_divider)
+
+	# Art area: module image fills space, code badge at bottom
 	var art_panel := PanelContainer.new()
 	art_panel.size_flags_vertical = SIZE_EXPAND_FILL
-	art_panel.add_theme_stylebox_override("panel", _fabrication_style(C_FAB_SLOT, Color(0, 0, 0, 0), 0, 0, 16))
+	art_panel.add_theme_stylebox_override("panel", _fabrication_style(C_FAB_SLOT, Color(0, 0, 0, 0), 0, 0, 0))
 	stack.add_child(art_panel)
 
 	var art_stack := VBoxContainer.new()
-	art_stack.alignment = BoxContainer.ALIGNMENT_CENTER
-	art_stack.add_theme_constant_override("separation", 14)
+	art_stack.alignment = BoxContainer.ALIGNMENT_BEGIN
+	art_stack.add_theme_constant_override("separation", 0)
 	art_panel.add_child(art_stack)
 
 	var icon := TextureRect.new()
-	icon.custom_minimum_size = Vector2(196, 168)
+	icon.size_flags_vertical = SIZE_EXPAND_FILL
+	icon.size_flags_horizontal = SIZE_EXPAND_FILL
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon.texture = _texture_for_room(room_id)
 	art_stack.add_child(icon)
 
+	# Code badge pinned to the bottom of the art area
+	var code_margin := MarginContainer.new()
+	code_margin.add_theme_constant_override("margin_left", 0)
+	code_margin.add_theme_constant_override("margin_right", 0)
+	code_margin.add_theme_constant_override("margin_top", 0)
+	code_margin.add_theme_constant_override("margin_bottom", 10)
+	art_stack.add_child(code_margin)
+
+	var code_center := CenterContainer.new()
+	code_margin.add_child(code_center)
+
 	var code := _fabrication_label(_module_code(room_def), 12, C_ON_DARK)
 	code.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	code.add_theme_stylebox_override("normal", _fabrication_style(Color(0.02, 0.03, 0.06, 0.78), accent, 1, 4, 10))
-	art_stack.add_child(code)
+	code.add_theme_stylebox_override("normal", _fabrication_style(Color(0.02, 0.03, 0.06, 0.80), accent, 1, 4, 10))
+	code_center.add_child(code)
 
 	tile.pressed.connect(func() -> void:
 		_selected_assembly_room_id = room_id
@@ -902,26 +945,60 @@ func _build_fabrication_module_tile(room_inst: Dictionary, room_def: Dictionary)
 func _build_fabrication_empty_slot(slot_name: String) -> PanelContainer:
 	var slot := PanelContainer.new()
 	slot.custom_minimum_size = Vector2(256, 320)
-	slot.add_theme_stylebox_override("panel", _fabrication_style(Color(0.027, 0.055, 0.114, 0.55), C_FAB_LINE, 2, 4, 16, true))
+	# Dashed border style (border_blend approximates dashed appearance)
+	slot.add_theme_stylebox_override("panel", _fabrication_style(Color(0.027, 0.055, 0.114, 0.55), C_FAB_LINE, 2, 4, 0, true))
+
 	var stack := VBoxContainer.new()
-	stack.alignment = BoxContainer.ALIGNMENT_CENTER
-	stack.add_theme_constant_override("separation", 14)
+	stack.add_theme_constant_override("separation", 0)
 	slot.add_child(stack)
-	var title := _fabrication_label(slot_name, 13, C_ON_DARK_VAR)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	stack.add_child(title)
-	var plus := _fabrication_label("+", 48, C_ON_DARK_VAR)
+
+	# Header row matching filled tile layout
+	var header_margin := MarginContainer.new()
+	header_margin.custom_minimum_size = Vector2(0, 44)
+	header_margin.add_theme_constant_override("margin_left", 14)
+	header_margin.add_theme_constant_override("margin_right", 14)
+	header_margin.add_theme_constant_override("margin_top", 0)
+	header_margin.add_theme_constant_override("margin_bottom", 0)
+	stack.add_child(header_margin)
+
+	var header := HBoxContainer.new()
+	header.alignment = BoxContainer.ALIGNMENT_CENTER
+	header_margin.add_child(header)
+
+	var title := _fabrication_label(slot_name, 11, C_ON_DARK_VAR)
+	title.size_flags_horizontal = SIZE_EXPAND_FILL
+	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	header.add_child(title)
+
+	# Header divider
+	var divider := ColorRect.new()
+	divider.color = C_FAB_LINE
+	divider.custom_minimum_size = Vector2(0, 1)
+	stack.add_child(divider)
+
+	# Body: centered install prompt
+	var body := VBoxContainer.new()
+	body.size_flags_vertical = SIZE_EXPAND_FILL
+	body.alignment = BoxContainer.ALIGNMENT_CENTER
+	body.add_theme_constant_override("separation", 14)
+	stack.add_child(body)
+
+	var plus_color := Color(C_ON_DARK_VAR.r, C_ON_DARK_VAR.g, C_ON_DARK_VAR.b, 0.55)
+	var plus := _fabrication_label("+", 48, plus_color)
 	plus.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	stack.add_child(plus)
-	var hint := _fabrication_label("SELECT VESSEL", 12, C_ON_DARK_VAR)
+	body.add_child(plus)
+
+	var hint := _fabrication_label("INSTALL MODULE", 11, C_ON_DARK_VAR)
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	stack.add_child(hint)
+	body.add_child(hint)
+
 	return slot
 
 func _build_fabrication_footer(installed: Array) -> PanelContainer:
 	var footer := PanelContainer.new()
-	footer.custom_minimum_size = Vector2(0, 112)
-	footer.add_theme_stylebox_override("panel", _fabrication_style(Color(0.180, 0.204, 0.270, 0.96), C_FAB_BLUE, 1, 0, 22))
+	footer.custom_minimum_size = Vector2(0, 96)
+	# surface-container-highest/95 with primary-container top border — matches Stitch footer
+	footer.add_theme_stylebox_override("panel", _fabrication_style(Color(0.110, 0.130, 0.200, 0.96), C_FAB_BLUE, 1, 0, 28))
 
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 20)
@@ -930,14 +1007,18 @@ func _build_fabrication_footer(installed: Array) -> PanelContainer:
 	var progress := HBoxContainer.new()
 	progress.size_flags_horizontal = SIZE_EXPAND_FILL
 	progress.alignment = BoxContainer.ALIGNMENT_CENTER
-	progress.add_theme_constant_override("separation", 10)
+	progress.add_theme_constant_override("separation", 6)
 	row.add_child(progress)
-	for step_label in ["LOCATION SET", "MISSION SET"]:
-		progress.add_child(_fabrication_progress_label(step_label, true))
-		progress.add_child(_fabrication_rule())
-	progress.add_child(_fabrication_progress_label("ASSEMBLY %s" % ("COMPLETE" if _selected_rocket != "" else "PENDING"), _selected_rocket != ""))
-	progress.add_child(_fabrication_rule())
-	progress.add_child(_fabrication_progress_label("LAUNCH READY", false))
+	var assembly_done := _selected_rocket != ""
+	for pair in [
+		["LOCATION SET", true],
+		["MISSION SET", true],
+		["ASSEMBLY %s" % ("COMPLETE" if assembly_done else "PENDING"), assembly_done],
+		["LAUNCH READY", false],
+	]:
+		if progress.get_child_count() > 0:
+			progress.add_child(_fabrication_rule())
+		progress.add_child(_fabrication_progress_label(str(pair[0]), bool(pair[1])))
 
 	var chooser_box := VBoxContainer.new()
 	chooser_box.custom_minimum_size = Vector2(330, 0)
@@ -979,13 +1060,37 @@ func _build_fabrication_footer(installed: Array) -> PanelContainer:
 		)
 	chooser_box.add_child(chooser)
 
-	var launch_box := VBoxContainer.new()
-	launch_box.custom_minimum_size = Vector2(220, 0)
-	launch_box.add_theme_constant_override("separation", 7)
-	row.add_child(launch_box)
-	var ready_text := "FLIGHT SYSTEMS NOMINAL" if _selected_rocket != "" else "AWAITING ASSEMBLY"
-	launch_box.add_child(_fabrication_label(ready_text, 13, C_FAB_AMBER if _selected_rocket == "" else C_FAB_GREEN))
-	launch_box.add_child(_fabrication_label(_fabrication_metric_summary(installed), 12, C_ON_DARK_VAR))
+	# Stats section (right side) — mirrors Stitch design's TOTAL MASS / FORCE columns
+	var stats_box := HBoxContainer.new()
+	stats_box.add_theme_constant_override("separation", 20)
+	stats_box.alignment = BoxContainer.ALIGNMENT_END
+	row.add_child(stats_box)
+
+	var divider_v := ColorRect.new()
+	divider_v.color = Color(C_FAB_LINE.r, C_FAB_LINE.g, C_FAB_LINE.b, 0.5)
+	divider_v.custom_minimum_size = Vector2(1, 0)
+	divider_v.size_flags_vertical = SIZE_EXPAND_FILL
+	stats_box.add_child(divider_v)
+
+	var modules_col := VBoxContainer.new()
+	modules_col.alignment = BoxContainer.ALIGNMENT_CENTER
+	modules_col.add_theme_constant_override("separation", 4)
+	stats_box.add_child(modules_col)
+	modules_col.add_child(_fabrication_label("MODULES", 9, C_ON_DARK_VAR))
+	var mod_count := "%d / %d" % [installed.size(), max(installed.size(), 3)]
+	var mod_color := C_FAB_GREEN if installed.size() >= 2 else C_FAB_AMBER
+	var mod_val := _fabrication_label(mod_count, 15, mod_color)
+	mod_val.add_theme_font_size_override("font_size", 15)
+	modules_col.add_child(mod_val)
+
+	var range_col := VBoxContainer.new()
+	range_col.alignment = BoxContainer.ALIGNMENT_CENTER
+	range_col.add_theme_constant_override("separation", 4)
+	stats_box.add_child(range_col)
+	range_col.add_child(_fabrication_label("RANGE", 9, C_ON_DARK_VAR))
+	var range_str := "%.1f AU" % RocketSpecs.get_max_range_au(_selected_rocket) if _selected_rocket != "" else "— AU"
+	range_col.add_child(_fabrication_label(range_str, 15, C_FAB_BLUE))
+
 	return footer
 
 func _installed_rooms_for_rocket(rtype: String) -> Array:
@@ -1027,14 +1132,20 @@ func _fabrication_metric_summary(installed: Array) -> String:
 	return "%d modules  //  %.1f AU  //  %+d%% output" % [installed.size(), RocketSpecs.get_max_range_au(_selected_rocket), output_bonus]
 
 func _fabrication_progress_label(text_value: String, complete: bool) -> Label:
-	var label := _fabrication_label(("[OK] " if complete else "[ ] ") + text_value, 11, C_FAB_BLUE if complete else C_ON_DARK_VAR)
+	var prefix := "✓  " if complete else "○  "
+	var label := _fabrication_label(prefix + text_value, 11, C_FAB_BLUE if complete else C_ON_DARK_VAR)
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	label.clip_text = false
+	label.size_flags_horizontal = SIZE_SHRINK_CENTER
 	return label
 
 func _fabrication_rule() -> ColorRect:
 	var rule := ColorRect.new()
 	rule.color = C_FAB_LINE
-	rule.custom_minimum_size = Vector2(28, 1)
+	rule.custom_minimum_size = Vector2(32, 2)
+	rule.size_flags_vertical = SIZE_SHRINK_CENTER
+	rule.size_flags_horizontal = SIZE_EXPAND_FILL
 	return rule
 
 func _fabrication_label(text_value: String, font_size: int, color: Color) -> Label:
@@ -1042,7 +1153,7 @@ func _fabrication_label(text_value: String, font_size: int, color: Color) -> Lab
 	label.text = text_value
 	label.add_theme_color_override("font_color", color)
 	label.add_theme_font_size_override("font_size", font_size)
-	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	return label
 
 func _fabrication_style(bg: Color, border: Color, border_width: int = 1, radius: int = 4, margin: int = 0, dashed: bool = false) -> StyleBoxFlat:
