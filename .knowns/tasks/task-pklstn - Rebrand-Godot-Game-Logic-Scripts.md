@@ -1,14 +1,20 @@
 ---
+project: Experiment 1/Landnam
 id: pklstn
 title: 'Rebrand: Godot Game Logic & Scripts'
 status: done
 priority: high
+labels:
+  - project-landnam
 labels: []
 createdAt: '2026-05-11T03:02:07.555Z'
 updatedAt: '2026-05-11T03:11:05.712Z'
 timeSpent: 0
 assignee: '@Liam'
 ---
+
+[← Back to Index](../INDEX.md)
+
 # Rebrand: Godot Game Logic & Scripts
 
 ## Description

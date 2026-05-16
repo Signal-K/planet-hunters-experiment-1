@@ -1,13 +1,19 @@
 ---
+project: Experiment 1/Landnam
 id: 1cg8vq
 title: Mission 2 - mission info not showing specific minerals to be mined
 status: done
 priority: high
+labels:
+  - project-landnam
 labels: []
 createdAt: '2026-05-03T04:17:58.600Z'
 updatedAt: '2026-05-05T09:28:00.000Z'
 timeSpent: 0
 ---
+
+[← Back to Index](../INDEX.md)
+
 # Mission 2 - mission info not showing specific minerals to be mined
 
 ## Description

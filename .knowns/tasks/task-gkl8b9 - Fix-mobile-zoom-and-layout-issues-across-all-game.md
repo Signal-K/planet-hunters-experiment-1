@@ -1,15 +1,23 @@
 ---
+project: Experiment 1/Landnam
 id: gkl8b9
 title: Fix mobile zoom and layout issues across all game screens
 status: done
 priority: high
 labels:
-  - mobile,ui,zoom,layout
+  - project-landnam
+  - mobile
+  - ui
+  - zoom
+  - layout
 createdAt: '2026-05-03T11:40:28.587Z'
 updatedAt: '2026-05-04T16:40:00.000Z'
 timeSpent: 0
 assignee: '@Liam'
 ---
+
+[← Back to Index](../INDEX.md)
+
 # Fix mobile zoom and layout issues across all game screens
 
 ## Description

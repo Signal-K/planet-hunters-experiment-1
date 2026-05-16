@@ -1,9 +1,11 @@
 ---
+project: Experiment 1/Landnam
 id: lkzqm0
 title: 'Future: penalties for incorrect unconfirmed-target classifications'
 status: blocked
 priority: low
 labels:
+  - project-landnam
   - citizen-science
   - future
   - balancing
@@ -11,6 +13,9 @@ createdAt: '2026-03-10T01:48:51.864Z'
 updatedAt: '2026-04-22T04:14:06.079Z'
 timeSpent: 0
 ---
+
+[← Back to Index](../INDEX.md)
+
 # Future: penalties for incorrect unconfirmed-target classifications
 
 ## Description

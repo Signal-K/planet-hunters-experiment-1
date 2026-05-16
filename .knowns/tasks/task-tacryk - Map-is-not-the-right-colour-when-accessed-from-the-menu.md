@@ -1,9 +1,11 @@
 ---
+project: Experiment 1/Landnam
 id: tacryk
 title: Map is not the right colour when accessed from the menu
 status: done
 priority: high
 labels:
+  - project-landnam
   - map
   - galaxy
   - ui
@@ -12,6 +14,9 @@ createdAt: '2026-05-05T07:50:25.396Z'
 updatedAt: '2026-05-08T10:30:45.746Z'
 timeSpent: 6
 ---
+
+[← Back to Index](../INDEX.md)
+
 # Map is not the right colour when accessed from the menu
 
 ## Description

@@ -1,15 +1,22 @@
 ---
+project: Experiment 1/Landnam
 id: 3nc516
 title: Rename Experiment 1 from 'Planet Hunters' to 'Distant Signals'
 status: done
 priority: high
 labels:
-  - 'branding,rename,landing-page'
+  - project-landnam
+  - branding
+  - rename
+  - landing-page
 createdAt: '2026-05-03T11:41:09.491Z'
 updatedAt: '2026-05-06T02:16:26.823Z'
 timeSpent: 0
 assignee: '@Liam'
 ---
+
+[← Back to Index](../INDEX.md)
+
 # Rename Experiment 1 from 'Planet Hunters' to 'Distant Signals'
 
 ## Description

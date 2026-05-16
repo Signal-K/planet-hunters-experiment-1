@@ -1,9 +1,11 @@
 ---
+project: Experiment 1/Landnam
 id: uuzqs2
 title: Convert Earth base progression cards to scene-owned UI
 status: done
 priority: high
 labels:
+  - project-landnam
   - ui
   - earth-base
   - missions
@@ -12,6 +14,9 @@ updatedAt: '2026-05-08T10:30:54.238Z'
 timeSpent: 0
 assignee: '@me'
 ---
+
+[← Back to Index](../INDEX.md)
+
 # Convert Earth base progression cards to scene-owned UI
 
 ## Description

@@ -1,14 +1,20 @@
 ---
+project: Experiment 1/Landnam
 id: m1zpy5
 title: 'Rebrand: Application Config & Mobile Shell'
 status: done
 priority: high
+labels:
+  - project-landnam
 labels: []
 createdAt: '2026-05-11T03:02:02.465Z'
 updatedAt: '2026-05-11T03:11:00.607Z'
 timeSpent: 0
 assignee: '@Liam'
 ---
+
+[← Back to Index](../INDEX.md)
+
 # Rebrand: Application Config & Mobile Shell
 
 ## Description

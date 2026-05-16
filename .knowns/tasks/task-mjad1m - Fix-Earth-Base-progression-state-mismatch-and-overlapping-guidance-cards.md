@@ -1,14 +1,20 @@
 ---
+project: Experiment 1/Landnam
 id: mjad1m
 title: Fix Earth Base progression state mismatch and overlapping guidance cards
 status: done
 priority: medium
+labels:
+  - project-landnam
 labels: []
 createdAt: '2026-04-25T00:27:30.973Z'
 updatedAt: '2026-05-08T10:30:55.140Z'
 timeSpent: 0
 assignee: '@me'
 ---
+
+[← Back to Index](../INDEX.md)
+
 # Fix Earth Base progression state mismatch and overlapping guidance cards
 
 ## Description

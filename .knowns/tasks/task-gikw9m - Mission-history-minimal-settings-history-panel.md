@@ -1,9 +1,11 @@
 ---
+project: Experiment 1/Landnam
 id: gikw9m
 title: 'Mission history: minimal settings / history panel'
 status: done
 priority: medium
 labels:
+  - project-landnam
   - ui
   - history
   - settings
@@ -11,6 +13,9 @@ createdAt: '2026-05-02T12:55:22.411Z'
 updatedAt: '2026-05-08T10:31:01.233Z'
 timeSpent: 0
 ---
+
+[← Back to Index](../INDEX.md)
+
 # Mission history: minimal settings / history panel
 
 ## Description

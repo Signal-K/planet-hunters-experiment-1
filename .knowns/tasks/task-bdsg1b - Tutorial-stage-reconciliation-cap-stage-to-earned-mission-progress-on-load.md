@@ -1,9 +1,11 @@
 ---
+project: Experiment 1/Landnam
 id: bdsg1b
 title: 'Tutorial stage reconciliation: cap stage to earned mission progress on load'
 status: done
 priority: high
 labels:
+  - project-landnam
   - tutorial
   - bug
   - progression
@@ -11,6 +13,9 @@ createdAt: '2026-05-02T12:55:19.251Z'
 updatedAt: '2026-05-02T12:57:27.413Z'
 timeSpent: 0
 ---
+
+[← Back to Index](../INDEX.md)
+
 # Tutorial stage reconciliation: cap stage to earned mission progress on load
 
 ## Description

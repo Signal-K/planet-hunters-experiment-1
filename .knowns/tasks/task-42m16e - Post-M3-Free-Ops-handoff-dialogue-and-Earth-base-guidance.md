@@ -1,14 +1,20 @@
 ---
+project: Experiment 1/Landnam
 id: 42m16e
 title: Post-M3 Free Ops handoff dialogue and Earth-base guidance
 status: done
 priority: medium
+labels:
+  - project-landnam
 labels: []
 createdAt: '2026-04-25T00:07:08.212Z'
 updatedAt: '2026-05-08T10:30:54.841Z'
 timeSpent: 808
 assignee: '@me'
 ---
+
+[← Back to Index](../INDEX.md)
+
 # Post-M3 Free Ops handoff dialogue and Earth-base guidance
 
 ## Description

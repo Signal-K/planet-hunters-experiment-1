@@ -1,15 +1,23 @@
 ---
+project: Experiment 1/Landnam
 id: 7rek9m
 title: 'iOS safe-area: bottom navigation pill overlaps game buttons'
 status: done
 priority: high
 labels:
-  - mobile,ios,safe-area,layout
+  - project-landnam
+  - mobile
+  - ios
+  - safe-area
+  - layout
 createdAt: '2026-05-03T11:40:36.464Z'
 updatedAt: '2026-05-04T16:40:00.000Z'
 timeSpent: 0
 assignee: '@Liam'
 ---
+
+[← Back to Index](../INDEX.md)
+
 # iOS safe-area: bottom navigation pill overlaps game buttons
 
 ## Description
