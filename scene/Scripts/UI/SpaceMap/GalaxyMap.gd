@@ -94,9 +94,13 @@ func _load_personal_discoveries() -> Array:
 func _rebuild_galaxy_targets() -> void:
 	for c in galaxy_targets.get_children():
 		c.queue_free()
+	var selection_mode := RocketsManager.is_map_return_mode()
 	for t in _planet_targets:
 		var tid   := str(t.get("id", ""))
 		if tid == "": continue
+		# In selection mode, hide targets that can't actually be selected
+		if selection_mode and not RocketsManager.is_target_selectable_for_current_stage(tid):
+			continue
 		var label := str(t.get("label", tid))
 		var classified := _tess_classifications.has(tid)
 
@@ -249,9 +253,16 @@ func _handle_click(screen_pos: Vector2) -> void:
 		if local.distance_to((gt as Node2D).position) <= 28.0:
 			var tid  := str(gt.get_meta("target_id", ""))
 			var data := gt.get_meta("target_data", {}) as Dictionary
-			if RocketsManager.consume_map_return_mode():
-				RocketsManager.select_target(tid)
-				get_tree().change_scene_to_file("res://Scenes/Earth/earth_launchpad.tscn")
+			if RocketsManager.is_map_return_mode():
+				if RocketsManager.select_target(tid):
+					RocketsManager.consume_map_return_mode()
+					get_tree().change_scene_to_file("res://Scenes/Earth/earth_launchpad.tscn")
+				else:
+					# Target rejected (blocked/wrong stage) — stay on map, update UI to hint
+					_select_star(tid, true, data)
+					if telem_name:
+						telem_name.add_theme_color_override("font_color", Color(1.0, 0.353, 0.416, 1.0))
+					print("[GalaxyMap] Target selection rejected for: ", tid)
 				return
 			_select_star(tid, true, data)
 			return
