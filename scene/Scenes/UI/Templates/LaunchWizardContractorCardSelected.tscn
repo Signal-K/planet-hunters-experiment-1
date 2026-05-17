@@ -1,84 +1,117 @@
 [gd_scene load_steps=6 format=3]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card"]
-bg_color = Color(0.055, 0.082, 0.15, 0.96)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.22, 0.54, 0.8, 0.95)
-corner_radius_top_left = 12
-corner_radius_top_right = 12
-corner_radius_bottom_right = 12
-corner_radius_bottom_left = 12
-shadow_color = Color(0.22, 0.54, 0.8, 0.16)
-shadow_size = 12
-shadow_offset = Vector2(0, 4)
+bg_color = Color(0.06, 0.10, 0.18, 0.92)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.22, 0.62, 0.95, 0.88)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+shadow_color = Color(0.12, 0.46, 0.86, 0.28)
+shadow_size = 18
+shadow_offset = Vector2(0, 6)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_icon"]
-bg_color = Color(0.22, 0.54, 0.8, 0.16)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
+bg_color = Color(0.10, 0.17, 0.28, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.35, 0.74, 1, 0.42)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
 content_margin_left = 10.0
 content_margin_top = 8.0
 content_margin_right = 10.0
 content_margin_bottom = 8.0
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_order"]
+bg_color = Color(0.08, 0.11, 0.18, 0.96)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.22, 0.62, 0.95, 0.16)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+content_margin_left = 14.0
+content_margin_top = 14.0
+content_margin_right = 14.0
+content_margin_bottom = 14.0
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button"]
-bg_color = Color(0.82, 0.918, 0.96, 1)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
+bg_color = Color(0.10, 0.28, 0.42, 0.88)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.35, 0.74, 1, 0.92)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
 content_margin_left = 16.0
 content_margin_top = 8.0
 content_margin_right = 16.0
 content_margin_bottom = 8.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button_hover"]
-bg_color = Color(0.16, 0.42, 0.65, 1)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
-content_margin_left = 16.0
-content_margin_top = 8.0
-content_margin_right = 16.0
-content_margin_bottom = 8.0
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button_focus"]
-bg_color = Color(0.82, 0.918, 0.96, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.22, 0.54, 0.8, 1)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
+bg_color = Color(0.14, 0.36, 0.52, 0.95)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.58, 0.86, 1, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
 content_margin_left = 16.0
 content_margin_top = 8.0
 content_margin_right = 16.0
 content_margin_bottom = 8.0
 
 [node name="LaunchWizardContractorCardSelected" type="PanelContainer"]
-custom_minimum_size = Vector2(320, 330)
+custom_minimum_size = Vector2(420, 360)
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_card")
 
+[node name="OverlayLabel" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -188.0
+offset_top = -22.0
+offset_right = 188.0
+offset_bottom = 22.0
+rotation = -0.15
+theme_override_colors/font_color = Color(0.48, 0.78, 1, 0.90)
+theme_override_font_sizes/font_size = 18
+text = "CONTRACT SECURED"
+horizontal_alignment = 1
+vertical_alignment = 1
+
 [node name="Margin" type="MarginContainer" parent="."]
 layout_mode = 2
-theme_override_constants/margin_left = 20
-theme_override_constants/margin_top = 20
-theme_override_constants/margin_right = 20
-theme_override_constants/margin_bottom = 20
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 18
 
 [node name="VBox" type="VBoxContainer" parent="Margin"]
 layout_mode = 2
-theme_override_constants/separation = 16
+theme_override_constants/separation = 14
 
 [node name="TopRow" type="HBoxContainer" parent="Margin/VBox"]
 layout_mode = 2
@@ -90,47 +123,53 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_icon")
 
 [node name="IconLabel" type="Label" parent="Margin/VBox/TopRow/IconPanel"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.9, 0.94, 0.98, 1)
-theme_override_font_sizes/font_size = 24
-text = "CON"
+theme_override_colors/font_color = Color(0.70, 0.90, 1, 0.95)
+theme_override_font_sizes/font_size = 14
+text = "ROC"
 horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="TitleColumn" type="VBoxContainer" parent="Margin/VBox/TopRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 4
+theme_override_constants/separation = 6
+
+[node name="MetaLabel" type="Label" parent="Margin/VBox/TopRow/TitleColumn"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.70, 0.90, 1, 0.78)
+theme_override_font_sizes/font_size = 12
+text = "[ CON_01 ]"
 
 [node name="NameLabel" type="Label" parent="Margin/VBox/TopRow/TitleColumn"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.9, 0.94, 0.98, 1)
-theme_override_font_sizes/font_size = 20
-text = "Contractor"
+theme_override_colors/font_color = Color(0.96, 0.98, 1, 1)
+theme_override_font_sizes/font_size = 32
+text = "Rocketlab"
 autowrap_mode = 3
 
 [node name="BriefLabel" type="Label" parent="Margin/VBox/TopRow/TitleColumn"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.64, 0.73, 0.84, 1)
-theme_override_font_sizes/font_size = 13
-text = "Delivery contract"
+theme_override_colors/font_color = Color(0.72, 0.82, 0.92, 0.88)
+theme_override_font_sizes/font_size = 14
+text = "HIGH-VELOCITY INTERCEPT"
 autowrap_mode = 3
 
 [node name="StatusLabel" type="Label" parent="Margin/VBox/TopRow"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.22, 0.54, 0.8, 1)
-theme_override_font_sizes/font_size = 11
-text = "LOCKED IN"
+theme_override_colors/font_color = Color(0.46, 0.92, 1, 0.92)
+theme_override_font_sizes/font_size = 12
+text = "ONLINE"
 vertical_alignment = 1
 
 [node name="Divider" type="ColorRect" parent="Margin/VBox"]
 custom_minimum_size = Vector2(0, 1)
 layout_mode = 2
-color = Color(0.22, 0.54, 0.8, 0.18)
+color = Color(0.58, 0.80, 1, 0.12)
 
 [node name="OrderColumn" type="VBoxContainer" parent="Margin/VBox"]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_constants/separation = 14
+theme_override_constants/separation = 12
 
 [node name="HeaderRow" type="HBoxContainer" parent="Margin/VBox/OrderColumn"]
 layout_mode = 2
@@ -138,33 +177,37 @@ theme_override_constants/separation = 8
 
 [node name="NeedsLabel" type="Label" parent="Margin/VBox/OrderColumn/HeaderRow"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.9, 0.94, 0.98, 1)
-theme_override_font_sizes/font_size = 14
-text = "NEEDS"
+theme_override_colors/font_color = Color(0.96, 0.98, 1, 0.80)
+theme_override_font_sizes/font_size = 13
+text = "ORDER MANIFEST"
 
 [node name="TagLabel" type="Label" parent="Margin/VBox/OrderColumn/HeaderRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.22, 0.54, 0.8, 1)
+theme_override_colors/font_color = Color(0.70, 0.90, 1, 0.82)
 theme_override_font_sizes/font_size = 12
-text = "ORDER"
+text = "PAYLOAD ORDER"
 horizontal_alignment = 2
 
-[node name="MineralGrid" type="GridContainer" parent="Margin/VBox/OrderColumn"]
+[node name="OrderPanel" type="PanelContainer" parent="Margin/VBox/OrderColumn"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_order")
+
+[node name="MineralGrid" type="GridContainer" parent="Margin/VBox/OrderColumn/OrderPanel"]
 layout_mode = 2
 size_flags_horizontal = 3
 columns = 2
-theme_override_constants/h_separation = 10
-theme_override_constants/v_separation = 10
+theme_override_constants/h_separation = 12
+theme_override_constants/v_separation = 12
 
 [node name="SelectButton" type="Button" parent="Margin/VBox"]
-custom_minimum_size = Vector2(0, 52)
+custom_minimum_size = Vector2(0, 54)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.22, 0.54, 0.8, 1)
-theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(0.86, 0.97, 1, 1)
+theme_override_font_sizes/font_size = 14
 theme_override_styles/normal = SubResource("StyleBoxFlat_button")
 theme_override_styles/hover = SubResource("StyleBoxFlat_button_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_button_hover")
-theme_override_styles/focus = SubResource("StyleBoxFlat_button_focus")
-text = "Selected"
+theme_override_styles/focus = SubResource("StyleBoxFlat_button_hover")
+text = "CONTRACT SECURED"

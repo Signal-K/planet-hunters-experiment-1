@@ -39,7 +39,7 @@ Adds the missing `authenticated` RLS policies for the game's anonymous-auth gues
     "verdict": "planet",
     "annotation_count": 2,
     "annotations": [],
-    "source": "star-sailors-game",
+    "source": "landnam-game",
     "game_session": "<uuid>"
   }
 }

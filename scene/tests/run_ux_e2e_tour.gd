@@ -30,12 +30,12 @@ const EARTH_MAIN_SCENE        := "res://Scenes/Earth/earth_base_1.tscn"
 const DEBRIEF_SCENE           := "res://Scenes/Earth/mission_debrief_v2.tscn"
 const LAUNCHPAD_SCENE         := "res://Scenes/Earth/earth_launchpad.tscn"
 const TRANSIT_SCENE           := "res://Scenes/Transitions/rocket_transit.tscn"
-const ASCENT_SCENE            := "res://Scenes/Transitions/rocket_ascent.tscn"
 const RETURN_SCENE            := "res://Scenes/Transitions/rocket_return.tscn"
 const NEW_MISSION_PANEL_SCENE := "res://Scenes/UI/NewMissionPanel.tscn"
 const SUBCONTRACTORS_SCENE    := "res://Scenes/UI/SubcontractorsPanel.tscn"
 const ROCKET_SELECTOR_SCENE   := "res://Scenes/UI/LaunchWizard.tscn"
-const MENU_PANEL_SCENE        := "res://Scenes/UI/MenuPanel.tscn"
+const MENU_ROOT_SCENE       := "res://Scenes/UI/Templates/GameNavigationMenuRoot.tscn"
+const MENU_NAV_SCRIPT       := "res://Scripts/UI/GameNavigationMenu.gd"
 const TUTORIAL_OVERLAY_SCENE  := "res://Scenes/UI/TutorialCoachOverlay.tscn"
 const CONTROL_STATION_SCENE   := "res://Scenes/UI/ControlStationPanel.tscn"
 const SATELLITE_STATION_SCENE := "res://Scenes/UI/SatelliteStationPanel.tscn"
@@ -43,6 +43,7 @@ const MINING_MINIGAME_SCENE   := "res://Scenes/UI/MiningMinigame.tscn"
 const MINING_PRACTICE_SCENE   := "res://Scenes/UI/MiningPracticePanel.tscn"
 const ASTEROID_DETAIL_SCENE   := "res://Scenes/UI/AsteroidDetail/asteroid_detail_view.tscn"
 const SPACE_MAP_SCENE         := "res://Scenes/UI/SpaceMap/space_map.tscn"
+const GALAXY_MAP_SCENE        := "res://Scenes/UI/SpaceMap/galaxy_map.tscn"
 
 const DEFAULT_MINING_RUN_SECONDS := 12.0
 const DEFAULT_SCENE_SETTLE  := 2.5
@@ -224,9 +225,8 @@ func _inject_progress_state(stage: int, with_launchpad_targeting: bool = false) 
 		state["scanner_station_built"] = true
 		state["control_station_built"] = true
 		state["unlocked"] = ["starterrocket1", "starterrocket2", "starterrocket3"]
-		# Add a billion francs for sandbox testing
-		if app_node and app_node.has_method("add_franc_balance"):
-			app_node.add_franc_balance(1000000000, "sandbox_tour")
+		if app_node and app_node.has_method("set_franc_balance_from_react"):
+			app_node.set_franc_balance_from_react(1000000000)
 		state["detected_targets"] = _stage_targets(5)
 	else:
 		var completed: int = maxi(stage - 1, 0)
@@ -245,14 +245,13 @@ func _inject_progress_state(stage: int, with_launchpad_targeting: bool = false) 
 			state["unlocked"].append("starterrocket3")
 		state["detected_targets"] = _stage_targets(stage)
 		
-		# Give reasonable starting balance for 'sandbox play' of this stage
-		if app_node and app_node.has_method("add_franc_balance"):
+		if app_node and app_node.has_method("set_franc_balance_from_react"):
 			var balance := 1000
 			match stage:
 				2: balance = 500000000 # 500M
 				3: balance = 1000000000 # 1B
 				4: balance = 3000000000 # 3B
-			app_node.add_franc_balance(balance, "sandbox_tour")
+			app_node.set_franc_balance_from_react(balance)
 
 	state["operation_mode"] = "contract"
 	state["selected_target"] = ""
@@ -886,7 +885,7 @@ func _run_sandbox_tour() -> void:
 	# Phase S11 — Menu Panel
 	# ==================================================================
 	_report("[SANDBOX] ## Phase S11 — Menu Panel")
-	var menu := await _load_scene(MENU_PANEL_SCENE)
+	var menu := await _load_scene(MENU_ROOT_SCENE)
 	if menu:
 		await _wait(_panel_settle)
 		_report("[SANDBOX]   Menu Panel loaded.")
@@ -1078,7 +1077,7 @@ func _run_tour() -> void:
 	# Phase 3 — Menu Panel
 	# ==================================================================
 	_report("## Phase 3 — Menu Panel")
-	var menu := await _load_scene(MENU_PANEL_SCENE)
+	var menu := await _load_scene(MENU_ROOT_SCENE)
 	if menu:
 		await _wait(_panel_settle)
 		_meta("Phase 3 - Menu Panel", -1,
@@ -1474,36 +1473,19 @@ func _run_tour() -> void:
 		_report("  - RocketSelectorOverlay.tscn not loadable (skip).")
 
 	# ==================================================================
-	# Phase 11 — Rocket Ascent
+	# Phase 11 — Rocket Transit
 	# ==================================================================
-	_report("## Phase 11 — Rocket Ascent")
-	var ascent := await _load_scene(ASCENT_SCENE)
-	if ascent:
-		await _wait(_panel_settle)
-		_meta("Phase 11 - Rocket Ascent", -1,
-			"The rocket ascent animation — plays when a rocket launches from Earth.",
-			["Is the ascent animation visually clear?",
-			 "Is any status text readable?",
-			 "Are any UI elements in unexpected positions?"])
-		await _screenshot("14_rocket_ascent")
-		_check_visible_labels(ascent, "Rocket Ascent", 0)
-		_check_offscreen_elements(ascent, "Rocket Ascent")
-		_check_for_placeholder_text(ascent, "Rocket Ascent")
-
-	# ==================================================================
-	# Phase 12 — Rocket Transit
-	# ==================================================================
-	_report("## Phase 12 — Rocket Transit")
+	_report("## Phase 11 — Rocket Transit")
 	var transit := await _load_scene(TRANSIT_SCENE)
 	if transit:
 		await _wait(_scene_settle)
-		_meta("Phase 12 - Rocket Transit (initial)", -1,
+		_meta("Phase 11 - Rocket Transit (initial)", -1,
 			"Rocket transit animation at the start of flight — the 'in-flight waiting' state users see between Earth and their target.",
 			["Is there a target/status label showing where the rocket is going?",
 			 "Is there a travel progress bar?",
 			 "Is there a back/skip button so users aren't stuck watching the full animation?",
 			 "Is the flight status readable?"])
-		await _screenshot("15_rocket_transit_initial")
+		await _screenshot("14_rocket_transit_initial")
 		var status_lbl := _find_node_by_name(transit, "TargetLabel")
 		if not status_lbl:
 			status_lbl = _find_node_by_name(transit, "StatusLabel")
@@ -1517,12 +1499,12 @@ func _run_tour() -> void:
 			_issue("Rocket Transit missing TravelBar — users can't see travel progress.")
 
 		await _wait(_scene_settle)
-		_meta("Phase 12 - Rocket Transit (mid-flight)", -1,
+		_meta("Phase 11 - Rocket Transit (mid-flight)", -1,
 			"Rocket transit animation a few seconds into the journey.",
 			["Has the animation progressed? Is the rocket visibly moving?",
 			 "Is the travel progress bar updating?",
 			 "Is the back/skip button still visible and accessible?"])
-		await _screenshot("16_rocket_transit_midway")
+		await _screenshot("15_rocket_transit_midway")
 		_check_offscreen_elements(transit, "Rocket Transit")
 
 		var back_btn := _find_button_with_text(transit, "Back")
@@ -2157,7 +2139,7 @@ func _screenshot(label: String) -> void:
 # ---------------------------------------------------------------------------
 func _log_header() -> void:
 	_report("# UX End-to-End Tour Report")
-	_report("Generated by `run_ux_e2e_tour.gd` — Planet Hunters Experiment 1")
+	_report("Generated by `run_ux_e2e_tour.gd` — Landnám")
 	_report("")
 
 
@@ -2273,11 +2255,11 @@ func _write_manifest() -> void:
 # ---------------------------------------------------------------------------
 func _write_ai_context() -> void:
 	var lines: Array[String] = [
-		"# Planet Hunters Experiment 1 — UX Tour AI Review Context",
+		"# Landnám — UX Tour AI Review Context",
 		"",
 		"## What is this game?",
 		"",
-		"Planet Hunters Experiment 1 is a citizen science mobile game where players:",
+		"Landnám is a citizen science mobile game where players:",
 		"- Build and launch rockets to mine asteroids and visit exoplanet candidates",
 		"- Complete a 4-mission tutorial that teaches all core mechanics",
 		"- Annotate real TESS space telescope data (drawing on planet candidate images)",

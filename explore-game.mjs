@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Planet Hunters — Full user playthrough script
+ * Landnám — Full user playthrough script
  * Launches Godot natively, screenshots + clicks through the game as a new user.
  * Run: node explore-game.mjs
  */
@@ -18,7 +18,7 @@ const GODOT = "/Applications/Godot4.5.app/Contents/MacOS/Godot";
 // User data lives here (Godot user:// on macOS)
 const USER_DATA = path.join(
   process.env.HOME,
-  "Library/Application Support/Godot/app_userdata/Star Sailors Experiment 1"
+  "Library/Application Support/Godot/app_userdata/Landnám"
 );
 
 // ── helpers ─────────────────────────────────────────────────────────────────
@@ -105,7 +105,7 @@ for (const f of fs.readdirSync(SHOTS_DIR)) {
   fs.unlinkSync(path.join(SHOTS_DIR, f));
 }
 
-note("# Planet Hunters — New User Playthrough\n");
+note("# Landnám — New User Playthrough\n");
 note(`Date: ${new Date().toISOString()}`);
 note(`Scene: ${SCENE_PATH}\n`);
 

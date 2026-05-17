@@ -6,52 +6,22 @@
       "id": "v1",
       "taskId": "q0w4zq",
       "version": 1,
-      "timestamp": "2026-04-24T01:48:25.859Z",
+      "timestamp": "2026-05-08T10:30:40.872Z",
       "changes": [
         {
-          "field": "acceptanceCriteria",
-          "oldValue": [
-            {
-              "completed": false,
-              "text": "Target step layout and reusable cards live in .tscn scene files"
-            },
-            {
-              "completed": false,
-              "text": "Rocket selection and assembly layout live in .tscn scene files"
-            },
-            {
-              "completed": false,
-              "text": "Confirm step summary layout lives in .tscn scene files"
-            },
-            {
-              "completed": false,
-              "text": "LaunchWizard.gd binds data into scene-owned nodes instead of constructing those step trees in code"
-            }
-          ],
-          "newValue": [
-            {
-              "completed": true,
-              "text": "Target step layout and reusable cards live in .tscn scene files"
-            },
-            {
-              "completed": true,
-              "text": "Rocket selection and assembly layout live in .tscn scene files"
-            },
-            {
-              "completed": true,
-              "text": "Confirm step summary layout lives in .tscn scene files"
-            },
-            {
-              "completed": true,
-              "text": "LaunchWizard.gd binds data into scene-owned nodes instead of constructing those step trees in code"
-            }
-          ]
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        },
+        {
+          "field": "implementationNotes",
+          "newValue": "✓ All ACs previously verified complete. LaunchWizard target/rocket/confirm steps use tscn-owned nodes."
         }
       ],
       "snapshot": {
         "title": "Convert remaining LaunchWizard steps to scene-owned UI",
         "description": "Move the LaunchWizard target, rocket, and confirm step layouts out of LaunchWizard.gd and into .tscn scene files so the UI is editable in Godot and consistent with the scene-owned contractor step.",
-        "status": "todo",
+        "status": "done",
         "priority": "high",
         "labels": [
           "ui",
@@ -76,11 +46,8 @@
             "text": "LaunchWizard.gd binds data into scene-owned nodes instead of constructing those step trees in code"
           }
         ],
-        "implementationPlan": "1. Inspect LaunchWizard target, rocket, and confirm builders plus current .tscn structure.\n2. Add scene-owned containers/templates for those steps in LaunchWizard.tscn and reusable template scenes where needed.\n3. Refactor LaunchWizard.gd to populate existing nodes instead of constructing UI trees.\n4. Add focused tests enforcing scene ownership and validate mission wizard flows."
-      }
-    }
-  ]
-}o LaunchWizard.tscn so those flows are visible in the Godot editor.\n- Added scene templates for rocket tiles, rocket parts, confirm rows, and stat chips.\n- Refactored LaunchWizard.gd so the remaining steps bind data into scene-owned nodes instead of constructing those step trees in code.\n- Added focused scene tests that assert the target, rocket, and confirm steps exist as scene-owned UI and populate template-backed content.\n\n## Verification\n- PASS: /Applications/Godot4.5.app/Contents/MacOS/Godot --headless --path scene -s tests/run_launch_wizard_scene_tests.gd\n- PARTIAL: /Applications/Godot4.5.app/Contents/MacOS/Godot --headless --path scene -s tests/run_structure_tests.gd (27/28; existing Earth-base tutorial coach visibility failure remains unrelated)\n\n## Files\n- scene/Scenes/UI/LaunchWizard.tscn\n- scene/Scenes/UI/Templates/LaunchWizardRocketTile.tscn\n- scene/Scenes/UI/Templates/LaunchWizardRocketPart.tscn\n- scene/Scenes/UI/Templates/LaunchWizardConfirmRow.tscn\n- scene/Scenes/UI/Templates/LaunchWizardStatChip.tscn\n- scene/Scripts/UI/LaunchWizard.gd\n- scene/tests/run_launch_wizard_scene_tests.gd"
+        "implementationPlan": "1. Inspect LaunchWizard target, rocket, and confirm builders plus current .tscn structure.\n2. Add scene-owned containers/templates for those steps in LaunchWizard.tscn and reusable template scenes where needed.\n3. Refactor LaunchWizard.gd to populate existing nodes instead of constructing UI trees.\n4. Add focused tests enforcing scene ownership and validate mission wizard flows.",
+        "implementationNotes": "✓ All ACs previously verified complete. LaunchWizard target/rocket/confirm steps use tscn-owned nodes."
       }
     }
   ]

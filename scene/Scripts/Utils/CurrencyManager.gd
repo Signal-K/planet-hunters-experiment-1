@@ -2,7 +2,8 @@
 class_name CurrencyManager
 extends RefCounted
 
-const CURRENCY_FILE_PATH = "res://franc_balance.json"
+const CURRENCY_FILE_PATH = "user://franc_balance.json"
+const DEFAULT_CURRENCY_FILE_PATH = "res://franc_balance.json"
 const CURRENCY_KEY = "balance"
 
 var balance: int = 0
@@ -14,10 +15,12 @@ func _init():
 ## Load balance from JSON file
 func load_balance() -> void:
 	var data = JSONFileManager.load_json(CURRENCY_FILE_PATH)
+	if data.is_empty():
+		data = JSONFileManager.load_json(DEFAULT_CURRENCY_FILE_PATH)
 	if data.has(CURRENCY_KEY):
 		balance = int(data[CURRENCY_KEY])
 	else:
-		balance = 10000000000  # Default 10B if no data found
+		balance = 0
 
 ## Save current balance to JSON file
 func save_balance() -> bool:

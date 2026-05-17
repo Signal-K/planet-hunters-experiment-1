@@ -151,6 +151,11 @@ func _apply_off_course_check() -> void:
 		return
 	var basename: String = tree.current_scene.scene_file_path.get_file().get_basename()
 	var in_valid_scene: bool = basename in valid_scenes
+
+	# On the map during a launchpad step — skip off-course; transitioning back to launchpad.
+	if "earth_launchpad" in valid_scenes and basename in ["space_map", "galaxy_map"]:
+		return
+
 	if not in_valid_scene and not _off_course:
 		_off_course = true
 		_apply_off_course_display()
@@ -192,8 +197,12 @@ func _apply_off_course_display() -> void:
 
 func _resume_hint_for_step(step: Dictionary) -> String:
 	var valid_scenes: Array = step.get("valid_scenes", [])
+	var step_id: String = str(step.get("id", ""))
+	
 	if "earth_launchpad" in valid_scenes:
-		return "Open the Launchpad to continue."
+		if step_id == "m1_welcome":
+			return "Start at the Launchpad: accept a contractor job, then build toward your first launch."
+		return "Open the Launchpad to continue mission setup."
 	if "SidescrollMining" in valid_scenes:
 		return "Your mission is in flight."
 	if "mission_debrief_v2" in valid_scenes:
@@ -272,6 +281,12 @@ func _refresh() -> void:
 		return
 	_on_tutorial_state_updated(_app_controller.get_tutorial_state())
 
+func reposition_for_map() -> void:
+	visible = true
+	var vp_sz := get_viewport().get_visible_rect().size if get_viewport() else Vector2(1280, 720)
+	# Move to bottom-right or top-right, away from the central solar system
+	_refresh()
+
 func _on_tutorial_state_updated(state: Dictionary) -> void:
 	_off_course = false
 	_current_state = state.duplicate(true)
@@ -298,6 +313,7 @@ func _on_tutorial_state_updated(state: Dictionary) -> void:
 	var stage = int(state.get("current_stage", 1))
 	var current_idx = int(state.get("current_step_index", 0))
 	var total = int(state.get("total_steps", 0))
+
 	title_label.text = str(step.get("title", "Mission Guidance"))
 	stage_label.text = "Mission %d" % stage
 	message_label.text = str(step.get("message", ""))
@@ -485,48 +501,45 @@ func _progress_copy_for_state(stage: int, current_idx: int, total: int, step: Di
 
 func _action_copy_for_step(step: Dictionary) -> String:
 	var key = str(step.get("action_key", ""))
-	var stage = int(_current_state.get("current_stage", 1))
 	var scene_name := ""
 	if get_tree() and get_tree().current_scene:
 		scene_name = get_tree().current_scene.scene_file_path.get_file().get_basename()
 	var on_base := scene_name == "earth_base_1"
 	match key:
+		"open_launchpad":
+			return "→ Tap the Launchpad"
 		"build_control_station":
-			return "Build the Control Station from the base card before starting Mission 2."
+			return "→ Tap the Control Station pad on the base"
 		"accept_contractor_offer", "accept_starter_contractor":
 			if on_base:
-				return "Press New Mission to open Launchpad, then select a contractor."
-			return "Tap a contractor card and press Select. They give you a target order — delivering it earns a payout bonus on top of the base price."
+				return "→ Press New Mission"
+			return "→ Tap a contractor and press Select"
 		"create_rocket":
 			if on_base:
-				return "Press New Mission to open Launchpad, then build the required rocket."
-			if stage <= 1:
-				return "Create Starter Rocket 1."
-			if stage == 2:
-				return "Create Starter Rocket 2."
-			return "Build a rocket that matches this mission."
+				return "→ Press New Mission"
+			return "→ Press Create"
 		"select_launch_target":
 			if on_base:
-				return "Press New Mission to open Launchpad, then select a target."
-			if stage == 3:
-				return "Classify the TESS candidate in the review screen. Mission control will route a confirmed result into launch setup automatically."
-			return "Select the highlighted Mission target."
+				return "→ Press New Mission"
+			return "→ Tap a target on the map"
 		"classify_candidate":
 			if on_base:
-				return "Press New Mission to open Launchpad, then classify a TESS lightcurve candidate."
-			return "Use the full review screen to classify the TESS candidate before launch setup."
+				return "→ Press New Mission"
+			return "→ Tap Planet or Not a Planet"
 		"launch_rocket_from_earth":
 			if on_base:
-				return "Press New Mission to open Launchpad, then launch."
-			return "Press Launch when contractor, rocket, and target are ready."
+				return "→ Press New Mission"
+			return "→ Press Launch"
+		"arrived_at_mining_site":
+			return "→ Launch a mission"
 		"mine_target":
-			return "Mine required cargo at the target."
+			return "→ Hold FIRE"
 		"return_rocket_home":
-			return "Return to Earth with cargo."
+			return "→ Press Return Home"
 		"resolve_mission_debrief":
-			return "Complete the debrief to advance."
+			return "→ Sell cargo, then press Complete"
 		_:
-			return "Complete the current objective."
+			return ""
 
 func _reposition_panel() -> void:
 	if not visible:
@@ -618,9 +631,16 @@ func _update_context_action_button() -> void:
 		go_to_debrief_button.visible = show_debrief
 	# Avoid right-edge overflow: when a CTA is shown, hide replay buttons.
 	if not _off_course:
-		replay_mission_button.visible = not show_any_cta and _current_mission_started()
+		replay_mission_button.visible = not show_any_cta and not _is_map_scene() and _current_mission_started()
 		if resume_mission_button:
 			resume_mission_button.visible = false
+
+func _is_map_scene() -> bool:
+	var tree := get_tree()
+	if tree == null or tree.current_scene == null:
+		return false
+	var basename := tree.current_scene.scene_file_path.get_file().get_basename()
+	return basename in ["space_map", "galaxy_map"]
 
 func _needs_control_station_cta() -> bool:
 	if _current_step.is_empty():

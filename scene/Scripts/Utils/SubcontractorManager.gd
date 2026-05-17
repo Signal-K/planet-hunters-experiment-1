@@ -130,10 +130,7 @@ static func load_state() -> Dictionary:
 
 static func save_state(data: Dictionary) -> bool:
 	var json = preload("res://Scripts/Utils/JSONFileManager.gd")
-	var ok = json.save_json(STATE_PATH, data)
-	if OS.has_feature("editor"):
-		json.save_json(DEFAULT_STATE_PATH, data)
-	return ok
+	return json.save_json(STATE_PATH, data)
 
 static func reset_state() -> bool:
 	return save_state(build_default_state())

@@ -277,6 +277,13 @@ func _step_satisfied_from_game_state(step: Dictionary) -> bool:
 			return rm.is_control_station_built()
 		"build_scanner_station":
 			return rm.is_scanner_station_built()
+		"select_launch_target":
+			# Only consider satisfied if a mission is already in flight or returned —
+			# a recorded action alone means the player picked a target but may not
+			# have launched yet, so keep showing this step until launch confirms it.
+			return rm.get_missions().size() > 0
+		"launch_rocket_from_earth":
+			return rm.get_missions().size() > 0
 	return false
 
 func _build_progress_percent() -> int:

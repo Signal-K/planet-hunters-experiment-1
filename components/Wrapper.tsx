@@ -96,7 +96,7 @@ export const Wrapper: React.FC<IProps> = ({
   }));
 
   return (
-    <Box style={{flex: 1, backgroundColor: "#101010"}} flex={1}>
+    <Box style={{flex: 1, backgroundColor: "#0a121d"}} flex={1}>
       <Box style={StyleSheet.absoluteFill}>
         <Animated.View
           style={[

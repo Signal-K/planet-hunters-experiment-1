@@ -10,16 +10,18 @@ config_version=5
 
 [application]
 
-config/name="2d Tiny Garden Game"
+config/name="Landnám"
 run/main_scene="res://Scenes/Earth/earth_base_1.tscn"
 config/use_custom_user_dir=true
-config/custom_user_dir_name="PlanetHuntersExperiment1"
+config/custom_user_dir_name="Landnám"
 config/features=PackedStringArray("4.5", "GL Compatibility")
 config/icon="res://icon.svg"
 
 [autoload]
 
+EventBus="*res://Scripts/Systems/EventBus.gd"
 AppController="*res://Scripts/Systems/AppController.gd"
+PlayerManager="*res://Scripts/Systems/PlayerManager.gd"
 SyncBridge="*res://Scripts/Systems/SyncBridge.gd"
 SafeAreaUI="*res://Scripts/UI/SafeAreaUI.gd"
 
@@ -30,7 +32,7 @@ window/size/viewport_height=1080
 window/size/window_width_override=1920
 window/size/window_height_override=1080
 window/stretch/mode="canvas_items"
-window/stretch/aspect="expand"
+window/stretch/aspect="keep_height"
 window/handheld/orientation=1
 
 [input]

@@ -9,39 +9,43 @@ const MAX_MISSION_STAGE := 4
 # "off-course" nudge instead of the normal step instructions.
 const BASE_ONLY_SCENES := ["earth_base_1"]
 const BASE_SCENES   := ["earth_base_1", "earth_launchpad"]
-const LAUNCHPAD_SCENES := ["earth_launchpad"]
+# Steps that are valid anywhere in the LaunchWizard flow (launchpad + map for target selection)
+const LAUNCHPAD_SCENES := ["earth_launchpad", "space_map", "galaxy_map"]
+# Steps that only make sense on the launchpad itself — map is off-course for these
+const LAUNCHPAD_ONLY_SCENES := ["earth_launchpad"]
 const MINING_SCENES := ["SidescrollMining"]
 const DEBRIEF_SCENES := ["earth_base_1", "mission_debrief_v2"]
 
 const STEPS_BY_MISSION := {
 	1: [
-		{"id": "m1_pick_contractor", "action_key": "accept_contractor_offer", "title": "Pick Contractor", "message": "Contractors pay a bonus when you deliver their requested minerals. Pick one before building your rocket.", "mechanic": "contractor", "valid_scenes": LAUNCHPAD_SCENES},
-		{"id": "m1_create_rocket", "action_key": "create_rocket", "title": "Build Rocket", "message": "Build your first rocket here in the Launchpad. Starter Rocket 1 is ready to kit out.", "mechanic": "economy", "valid_scenes": LAUNCHPAD_SCENES},
-		{"id": "m1_select_target", "action_key": "select_launch_target", "title": "Select Target", "message": "Select the Mission 1 asteroid as your destination.", "mechanic": "targeting", "valid_scenes": LAUNCHPAD_SCENES},
-		{"id": "m1_launch", "action_key": "launch_rocket_from_earth", "title": "Launch", "message": "Everything's ready. Press Launch to leave Earth orbit.", "mechanic": "launch", "valid_scenes": LAUNCHPAD_SCENES},
-		{"id": "m1_mine_intro", "action_key": "arrived_at_mining_site", "title": "Arrived", "message": "You're at the asteroid. Hold FIRE to activate your mining laser.", "mechanic": "mining-intro", "valid_scenes": MINING_SCENES},
-		{"id": "m1_mine", "action_key": "mine_target", "title": "Mine", "message": "Mine the minerals your contractor ordered. Check the delivery panel on screen to track your progress.", "mechanic": "mining", "valid_scenes": MINING_SCENES},
-		{"id": "m1_return", "action_key": "return_rocket_home", "title": "Return", "message": "Cargo hold loaded. Press Return to head back to Earth with your haul.", "mechanic": "return", "valid_scenes": MINING_SCENES},
-		{"id": "m1_debrief", "action_key": "resolve_mission_debrief", "title": "Debrief", "message": "Sell your cargo and complete the debrief. Mission 2 unlocks when you're done.", "mechanic": "debrief", "valid_scenes": DEBRIEF_SCENES}
+		{"id": "m1_welcome", "action_key": "open_launchpad", "title": "Mission 1 — First launch", "message": "Open the Launchpad to pick up your first contract and build your rocket.", "mechanic": "intro", "valid_scenes": BASE_SCENES},
+		{"id": "m1_pick_contractor", "action_key": "accept_contractor_offer", "title": "Accept a contract", "message": "Pick a contractor — they set the minerals you need to mine and pay a bonus on delivery.", "mechanic": "contractor", "valid_scenes": LAUNCHPAD_SCENES},
+		{"id": "m1_select_target", "action_key": "select_launch_target", "title": "Set your destination", "message": "Tap an asteroid on the map to set your target, then tap CONFIRM.", "mechanic": "targeting", "valid_scenes": LAUNCHPAD_SCENES},
+		{"id": "m1_create_rocket", "action_key": "create_rocket", "title": "Assemble your rocket", "message": "In the Fabrication Bay, select your rocket and confirm the build. Then hit Launch.", "mechanic": "economy", "valid_scenes": LAUNCHPAD_ONLY_SCENES},
+		{"id": "m1_launch", "action_key": "launch_rocket_from_earth", "title": "Launch", "message": "Rocket assembled and target locked. Hit Launch to depart.", "mechanic": "launch", "valid_scenes": LAUNCHPAD_ONLY_SCENES},
+		{"id": "m1_mine_intro", "action_key": "arrived_at_mining_site", "title": "Start mining", "message": "You've arrived. Hold FIRE to deploy your mining laser.", "mechanic": "mining-intro", "valid_scenes": MINING_SCENES},
+		{"id": "m1_mine", "action_key": "mine_target", "title": "Fill the order", "message": "Mine the minerals listed in your order panel. Hit the required quantities to complete delivery.", "mechanic": "mining", "valid_scenes": MINING_SCENES},
+		{"id": "m1_return", "action_key": "return_rocket_home", "title": "Return to base", "message": "Order filled. Press Return Home to head back to Earth.", "mechanic": "return", "valid_scenes": MINING_SCENES},
+		{"id": "m1_debrief", "action_key": "resolve_mission_debrief", "title": "Collect your payout", "message": "Sell your cargo and resolve the debrief to close out Mission 1.", "mechanic": "debrief", "valid_scenes": DEBRIEF_SCENES}
 	],
 	2: [
-		{"id": "m2_build_control_station", "action_key": "build_control_station", "title": "Control Station", "message": "Build the Control Station before starting Mission 2. This unlocks the fleet hub, Starter Rocket 2 planning, and a structured contractor route.", "mechanic": "progression", "valid_scenes": BASE_ONLY_SCENES}
+		{"id": "m2_build_control_station", "action_key": "build_control_station", "title": "Build Control Station", "message": "Construct the Control Station to manage your fleet.", "mechanic": "progression", "valid_scenes": BASE_ONLY_SCENES}
 	],
 	3: [
-		{"id": "m3_pick_contractor", "action_key": "accept_contractor_offer", "title": "Pick Contractor", "message": "Choose a contractor for a delivery bonus on your haul.", "mechanic": "contractor", "valid_scenes": LAUNCHPAD_SCENES},
-		{"id": "m3_classify", "action_key": "classify_candidate", "title": "Classify Candidate", "message": "Review the TESS lightcurve before choosing a target. Confirmed planet candidates can be routed; false positives still grant the classification reward.", "mechanic": "classification", "valid_scenes": LAUNCHPAD_SCENES},
-		{"id": "m3_select", "action_key": "select_launch_target", "title": "Target Routed", "message": "Once a TESS candidate is confirmed, mission control routes it directly into launch setup so you can finish planning the rocket.", "mechanic": "targeting", "valid_scenes": LAUNCHPAD_SCENES},
-		{"id": "m3_launch", "action_key": "launch_rocket_from_earth", "title": "Launch", "message": "Heading out to a real world. Press Launch.", "mechanic": "launch", "valid_scenes": LAUNCHPAD_SCENES},
-		{"id": "m3_mine", "action_key": "mine_target", "title": "Mine", "message": "Mine what you can from the planet's surface.", "mechanic": "mining", "valid_scenes": MINING_SCENES},
-		{"id": "m3_return", "action_key": "return_rocket_home", "title": "Return", "message": "Cargo secured. Return to Earth.", "mechanic": "return", "valid_scenes": MINING_SCENES},
-		{"id": "m3_debrief", "action_key": "resolve_mission_debrief", "title": "Debrief", "message": "Deliver and debrief. You're building operational range.", "mechanic": "debrief", "valid_scenes": DEBRIEF_SCENES}
+		{"id": "m3_pick_contractor", "action_key": "accept_contractor_offer", "title": "New contract", "message": "Choose a contractor for your next mission.", "mechanic": "contractor", "valid_scenes": LAUNCHPAD_SCENES},
+		{"id": "m3_classify", "action_key": "classify_candidate", "title": "Review the candidate", "message": "Classify the TESS lightcurve before launch.", "mechanic": "classification", "valid_scenes": LAUNCHPAD_SCENES},
+		{"id": "m3_select", "action_key": "select_launch_target", "title": "Set destination", "message": "Confirm your destination on the map.", "mechanic": "targeting", "valid_scenes": LAUNCHPAD_SCENES},
+		{"id": "m3_launch", "action_key": "launch_rocket_from_earth", "title": "Launch", "message": "Course confirmed. Hit Launch.", "mechanic": "launch", "valid_scenes": LAUNCHPAD_ONLY_SCENES},
+		{"id": "m3_mine", "action_key": "mine_target", "title": "Extract samples", "message": "Extract resources from the candidate world.", "mechanic": "mining", "valid_scenes": MINING_SCENES},
+		{"id": "m3_return", "action_key": "return_rocket_home", "title": "Return home", "message": "Samples secured. Return to Earth base.", "mechanic": "return", "valid_scenes": MINING_SCENES},
+		{"id": "m3_debrief", "action_key": "resolve_mission_debrief", "title": "Debrief", "message": "Review your mission and collect payment.", "mechanic": "debrief", "valid_scenes": DEBRIEF_SCENES}
 	],
 	4: [
-		{"id": "m4_open_launchpad", "action_key": "open_launchpad", "title": "Mission 4", "message": "Mission 4 is the handoff out of the strict tutorial rail. Open the Launchpad and decide how you want to run the next trip.", "mechanic": "free-ops", "valid_scenes": BASE_ONLY_SCENES},
-		{"id": "m4_select", "action_key": "select_launch_target", "title": "Choose Route", "message": "You can take a contractor order for a payout bonus or line up your own survey run. Pick any reachable target from the Launchpad.", "mechanic": "targeting", "valid_scenes": LAUNCHPAD_SCENES},
-		{"id": "m4_launch", "action_key": "launch_rocket_from_earth", "title": "Launch", "message": "Press Launch when the run looks right. From here the game starts giving you room to operate on your own terms.", "mechanic": "launch", "valid_scenes": LAUNCHPAD_SCENES},
-		{"id": "m4_mine", "action_key": "mine_target", "title": "Run the Mission", "message": "Fly the mission the way you want. Contractor work pays cleanly; survey runs are there for your own goals and discoveries.", "mechanic": "mining", "valid_scenes": MINING_SCENES},
-		{"id": "m4_debrief", "action_key": "resolve_mission_debrief", "title": "Debrief", "message": "Complete Mission 4 to unlock Free Operations — run missions on your own terms.", "mechanic": "debrief", "valid_scenes": DEBRIEF_SCENES}
+		{"id": "m4_open_launchpad", "action_key": "open_launchpad", "title": "Free operations", "message": "You're in command. Open the Launchpad to plan your next run.", "mechanic": "free-ops", "valid_scenes": BASE_ONLY_SCENES},
+		{"id": "m4_select", "action_key": "select_launch_target", "title": "Pick your target", "message": "Any reachable destination is valid.", "mechanic": "targeting", "valid_scenes": LAUNCHPAD_SCENES},
+		{"id": "m4_launch", "action_key": "launch_rocket_from_earth", "title": "Launch", "message": "Your call. Hit Launch.", "mechanic": "launch", "valid_scenes": LAUNCHPAD_ONLY_SCENES},
+		{"id": "m4_mine", "action_key": "mine_target", "title": "Mine", "message": "Fill your order — mine the minerals listed in the order panel.", "mechanic": "mining", "valid_scenes": MINING_SCENES},
+		{"id": "m4_debrief", "action_key": "resolve_mission_debrief", "title": "Debrief", "message": "Review your haul and collect payment.", "mechanic": "debrief", "valid_scenes": DEBRIEF_SCENES}
 	]
 }
 

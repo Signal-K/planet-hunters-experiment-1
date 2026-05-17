@@ -1,6 +1,6 @@
 ## UILayout.gd
 ## ════════════════════════════════════════════════════════════════════════════
-## Central UI zone registry for Planet Hunters.
+## Central UI zone registry for Landnám.
 ##
 ## RULES — every UI author must follow these:
 ##
@@ -96,6 +96,20 @@ static func clamp_to_viewport(r: Rect2, vp: Vector2) -> Rect2:
 static func safe_rect(vp: Vector2) -> Rect2:
 	return Rect2(EDGE, EDGE, vp.x - EDGE * 2, vp.y - EDGE * 2)
 
+## Shared bottom clearance for controls that should never sit flush with the
+## viewport edge. Mobile gets a larger lift to stay clear of browser chrome and
+## the iOS home indicator; desktop still keeps a small visual gap.
+static func bottom_clearance(vp: Vector2) -> float:
+	if vp == Vector2.ZERO:
+		return EDGE
+	var short_side := minf(vp.x, vp.y)
+	var aspect := vp.x / maxf(vp.y, 1.0)
+	if aspect > 1.85:
+		return 96.0
+	if short_side <= 900.0:
+		return 52.0
+	return 28.0
+
 ## ─── Mining minigame zones ────────────────────────────────────────────────────
 
 static func _mining_hud(vp: Vector2) -> Rect2:
@@ -130,7 +144,8 @@ static func _mining_handbook(vp: Vector2) -> Rect2:
 
 static func _mining_bottom(vp: Vector2) -> Rect2:
 	var h := 60.0
-	return Rect2(EDGE, vp.y - h - EDGE, vp.x - EDGE * 2, h)
+	var bottom_gap := bottom_clearance(vp)
+	return Rect2(EDGE, vp.y - h - bottom_gap, vp.x - EDGE * 2, h)
 
 ## ─── Global / multi-scene zones ──────────────────────────────────────────────
 

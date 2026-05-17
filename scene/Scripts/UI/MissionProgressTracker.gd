@@ -104,7 +104,7 @@ func _on_toggle_pressed() -> void:
 	_apply_layout()
 	_apply_visual_state()
 
-const HIDE_SCENES := ["rocket_ascent", "rocket_transit", "rocket_return", "asteroid_preview", "SidescrollMining", "earth_base_1", "earth_launchpad", "mission_debrief_v2"]
+const HIDE_SCENES := ["rocket_transit", "rocket_return", "asteroid_preview", "SidescrollMining", "earth_base_1", "earth_launchpad", "mission_debrief_v2"]
 
 func _get_current_scene_basename() -> String:
 	var tree = get_tree()

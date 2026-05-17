@@ -1,7 +1,7 @@
 const fs = require("fs");
 
-const TAG_PATTERN = /planet-hunters-v(\d+)/i;
-const NAME_PATTERN = /planet\s+hunters\s+release\s+(\d+)/i;
+const TAG_PATTERN = /landnam-v(\d+)/i;
+const NAME_PATTERN = /landnám\s+release\s+(\d+)/i;
 
 function extractReleaseNumber(value) {
   if (typeof value !== "string") {
@@ -40,11 +40,11 @@ function computeNextReleaseNumber(releases) {
 }
 
 function formatReleaseTag(versionNumber) {
-  return `planet-hunters-v${versionNumber}`;
+  return `landnam-v${versionNumber}`;
 }
 
 function formatReleaseName(versionNumber) {
-  return `Planet Hunters Release ${versionNumber}`;
+  return `Landnám Release ${versionNumber}`;
 }
 
 function main() {

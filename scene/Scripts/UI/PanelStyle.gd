@@ -1,12 +1,7 @@
 extends RefCounted
 class_name PanelStyle
 
-## PanelStyle — thin compatibility shim over DS.
-## All colour constants now read from DS (light mode palette).
-## The apply_* methods are no-ops: Themes/Light.tres and component scenes
-## (Scenes/UI/Components/) are the single source of styling truth.
-## Existing callers will compile and run without error; they just stop
-## fighting the theme instead of overriding it.
+## PanelStyle — applies Deep Command design tokens to runtime-built nodes.
 
 const DS = preload("res://Scripts/UI/DS.gd")
 
@@ -28,59 +23,143 @@ const FONT_BODY   := DS.F_BODY
 const FONT_MUTED  := DS.F_CAPTION
 const FONT_BUTTON := DS.F_BUTTON
 
-# ── apply_* are intentional no-ops ────────────────────────────────────────
-# The project default theme (Themes/Light.tres) handles all base styles.
-# For variant buttons (primary/danger) use the component scenes in
-# Scenes/UI/Components/ instead of calling these functions.
+static func apply_panel(panel: Control, bg_color: Color = DS.CARD_BG) -> void:
+	if panel == null:
+		return
+	var s := StyleBoxFlat.new()
+	s.bg_color = bg_color
+	s.border_color = DS.BORDER
+	s.set_border_width_all(1)
+	s.set_corner_radius_all(DS.R_CARD)
+	s.shadow_color  = Color(0, 0, 0, 0.45)
+	s.shadow_size   = 24
+	s.shadow_offset = Vector2(0, 8)
+	s.content_margin_left   = 24
+	s.content_margin_right  = 24
+	s.content_margin_top    = 16
+	s.content_margin_bottom = 16
+	panel.add_theme_stylebox_override("panel", s)
 
-static func apply_panel(_panel: Control, _bg_color: Color = DS.CARD_BG) -> void:
-	pass
+static func apply_title(label: Label) -> void:
+	if label == null: return
+	label.add_theme_color_override("font_color", DS.TEXT)
+	label.add_theme_font_size_override("font_size", DS.F_HEADLINE)
 
-static func apply_title(_label: Label) -> void:
-	pass
+static func apply_title_on_dark(label: Label) -> void:
+	if label == null: return
+	label.add_theme_color_override("font_color", DS.TEXT)
+	label.add_theme_font_size_override("font_size", DS.F_HEADLINE)
 
-static func apply_title_on_dark(_label: Label) -> void:
-	pass
+static func apply_body(label: Label) -> void:
+	if label == null: return
+	label.add_theme_color_override("font_color", DS.TEXT_MUTED)
+	label.add_theme_font_size_override("font_size", DS.F_BODY)
 
-static func apply_body(_label: Label) -> void:
-	pass
+static func apply_body_on_dark(label: Label) -> void:
+	if label == null: return
+	label.add_theme_color_override("font_color", DS.TEXT_MUTED)
+	label.add_theme_font_size_override("font_size", DS.F_BODY)
 
-static func apply_body_on_dark(_label: Label) -> void:
-	pass
+static func apply_richtext(label: RichTextLabel) -> void:
+	if label == null: return
+	label.add_theme_color_override("default_color", DS.TEXT_MUTED)
+	label.add_theme_font_size_override("normal_font_size", DS.F_BODY)
 
-static func apply_richtext(_label: RichTextLabel) -> void:
-	pass
+static func apply_muted(label: Label) -> void:
+	if label == null: return
+	label.add_theme_color_override("font_color", DS.TEXT_MUTED)
+	label.add_theme_font_size_override("font_size", DS.F_CAPTION)
 
-static func apply_muted(_label: Label) -> void:
-	pass
+static func apply_muted_on_dark(label: Label) -> void:
+	if label == null: return
+	label.add_theme_color_override("font_color", DS.TEXT_MUTED)
+	label.add_theme_font_size_override("font_size", DS.F_CAPTION)
 
-static func apply_muted_on_dark(_label: Label) -> void:
-	pass
+static func apply_button(button: Button, is_primary: bool = false) -> void:
+	if button == null: return
+	var c := DS.PRIMARY if is_primary else DS.PRIMARY
+	var n := StyleBoxFlat.new()
+	n.bg_color = Color(c.r, c.g, c.b, 0.16) if is_primary else Color(0, 0, 0, 0)
+	n.border_color = c
+	n.set_border_width_all(1)
+	n.set_corner_radius_all(DS.R_BTN)
+	n.content_margin_left = 20; n.content_margin_right = 20
+	n.content_margin_top = 10; n.content_margin_bottom = 10
+	var h := n.duplicate() as StyleBoxFlat
+	h.bg_color = Color(c.r, c.g, c.b, 0.24)
+	h.border_color = DS.PRIMARY_HOVER
+	var p := n.duplicate() as StyleBoxFlat
+	p.bg_color = Color(c.r, c.g, c.b, 0.32)
+	button.add_theme_stylebox_override("normal", n)
+	button.add_theme_stylebox_override("hover", h)
+	button.add_theme_stylebox_override("pressed", p)
+	button.add_theme_stylebox_override("focus", h)
+	button.add_theme_color_override("font_color", c)
+	button.add_theme_color_override("font_hover_color", DS.PRIMARY_HOVER)
+	button.add_theme_font_size_override("font_size", DS.F_BUTTON)
 
-static func apply_button(_button: Button, _is_primary: bool = false) -> void:
-	pass
+static func apply_separator(separator: HSeparator) -> void:
+	if separator == null: return
+	separator.add_theme_color_override("separation_color", DS.BORDER)
 
-static func apply_separator(_separator: HSeparator) -> void:
-	pass
-
-static func apply_progress_bar(_bar: ProgressBar) -> void:
-	pass
+static func apply_progress_bar(bar: ProgressBar) -> void:
+	if bar == null: return
+	var bg := StyleBoxFlat.new()
+	bg.bg_color = DS.SURFACE_LOW
+	bg.set_corner_radius_all(DS.R_CHIP)
+	var fill := StyleBoxFlat.new()
+	fill.bg_color = DS.PRIMARY
+	fill.set_corner_radius_all(DS.R_CHIP)
+	bar.add_theme_stylebox_override("background", bg)
+	bar.add_theme_stylebox_override("fill", fill)
 
 static func apply_outline_button(
-	_button: Button,
-	_border_color: Color = DS.PRIMARY,
-	_text_color: Color = DS.TEXT
+	button: Button,
+	border_color: Color = DS.PRIMARY,
+	text_color: Color = DS.TEXT
 ) -> void:
-	pass
+	if button == null: return
+	var n := StyleBoxFlat.new()
+	n.bg_color = Color(0, 0, 0, 0)
+	n.border_color = border_color
+	n.set_border_width_all(1)
+	n.set_corner_radius_all(DS.R_BTN)
+	n.content_margin_left = 18; n.content_margin_right = 18
+	n.content_margin_top = 10; n.content_margin_bottom = 10
+	var h := n.duplicate() as StyleBoxFlat
+	h.bg_color = Color(border_color.r, border_color.g, border_color.b, 0.12)
+	button.add_theme_stylebox_override("normal", n)
+	button.add_theme_stylebox_override("hover", h)
+	button.add_theme_stylebox_override("pressed", h)
+	button.add_theme_stylebox_override("focus", h)
+	button.add_theme_color_override("font_color", text_color)
+	button.add_theme_color_override("font_hover_color", text_color)
+	button.add_theme_font_size_override("font_size", DS.F_BUTTON)
 
 static func apply_nav_slot_button(
-	_button: Button,
-	_divider_color: Color = DS.PRIMARY,
-	_text_color: Color = DS.TEXT,
-	_is_primary: bool = false,
-	_no_right_divider: bool = false
+	button: Button,
+	divider_color: Color = DS.PRIMARY,
+	text_color: Color = DS.TEXT,
+	is_primary: bool = false,
+	no_right_divider: bool = false
 ) -> void:
-	pass
+	if button == null: return
+	var n := StyleBoxFlat.new()
+	n.bg_color = Color(0, 0, 0, 0)
+	n.border_color = Color(divider_color.r, divider_color.g, divider_color.b, 0.30)
+	if not no_right_divider:
+		n.border_width_right = 1
+	var h := n.duplicate() as StyleBoxFlat
+	h.bg_color = Color(divider_color.r, divider_color.g, divider_color.b, 0.10)
+	h.border_color = divider_color
+	button.add_theme_stylebox_override("normal", n)
+	button.add_theme_stylebox_override("hover", h)
+	button.add_theme_stylebox_override("pressed", h)
+	button.add_theme_stylebox_override("focus", h)
+	button.add_theme_color_override("font_color", text_color)
+	button.add_theme_color_override("font_hover_color", text_color)
+	if is_primary:
+		button.add_theme_color_override("font_color", DS.SECONDARY)
 
 # ── Style factories (still return usable StyleBoxFlat for callers that
 #    genuinely need a dynamic style, but now use light colours) ─────────────
@@ -110,12 +189,12 @@ static func create_card_style() -> StyleBoxFlat:
 	s.bg_color     = DS.CARD_BG
 	s.border_color = DS.BORDER
 	s.set_border_width_all(1)
-	s.set_corner_radius_all(12)
-	s.shadow_color  = Color(DS.TEXT.r, DS.TEXT.g, DS.TEXT.b, 0.06)
-	s.shadow_size   = 8
-	s.shadow_offset = Vector2(0, 2)
-	s.content_margin_left   = 20
-	s.content_margin_right  = 20
+	s.set_corner_radius_all(DS.R_CARD)
+	s.shadow_color  = Color(0, 0, 0, 0.45)
+	s.shadow_size   = 24
+	s.shadow_offset = Vector2(0, 8)
+	s.content_margin_left   = 24
+	s.content_margin_right  = 24
 	s.content_margin_top    = 16
 	s.content_margin_bottom = 16
 	return s

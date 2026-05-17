@@ -1,14 +1,20 @@
 ---
+project: Experiment 1/Landnam
 id: fwf2jt
 title: Verify live consensus and rewards after production classification fix
 status: blocked
 priority: high
+labels:
+  - project-landnam
 labels: []
 createdAt: '2026-04-12T10:00:25.866Z'
 updatedAt: '2026-04-30T01:07:13.407Z'
 timeSpent: 0
 parent: q1jyo4
 ---
+
+[← Back to Index](../INDEX.md)
+
 # Verify live consensus and rewards after production classification fix
 
 ## Description

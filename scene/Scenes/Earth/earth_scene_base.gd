@@ -148,9 +148,9 @@ func _on_market_button_pressed() -> void:
 func _on_space_map_button_pressed() -> void:
 	print("Space Map button pressed - opening space map scene")
 	if scene_manager:
-		scene_manager.change_to_scene("res://Scenes/UI/SpaceMap/space_map.tscn")
+		scene_manager.change_to_scene("res://Scenes/UI/SpaceMap/galaxy_map.tscn")
 	else:
-		get_tree().change_scene_to_file("res://Scenes/UI/SpaceMap/space_map.tscn")
+		get_tree().change_scene_to_file("res://Scenes/UI/SpaceMap/galaxy_map.tscn")
 
 func _on_new_mission_button_pressed() -> void:
 	print("New Mission button pressed - opening launchpad scene")

@@ -45,12 +45,8 @@ static func build_default_state() -> Dictionary:
 static func save_state(data: Dictionary) -> bool:
 	var json = preload("res://Scripts/Utils/JSONFileManager.gd")
 	var state_path = _get_state_path()
-	var default_path = _get_default_state_path()
 	var primary_ok = json.save_json(state_path, data)
-	var default_ok = true
-	if OS.has_feature("editor") and default_path != "":
-		default_ok = json.save_json(default_path, data)
-	return primary_ok or default_ok
+	return primary_ok
 
 static func reset_state() -> bool:
 	return save_state(build_default_state())

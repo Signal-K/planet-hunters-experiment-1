@@ -14,10 +14,11 @@ const MissionObjectiveResolver = preload("res://Scripts/Utils/MissionObjectiveRe
 const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd")
 const SubcontractorManager = preload("res://Scripts/Utils/SubcontractorManager.gd")
 const KNOWN_ROCKET_TYPES := ["starterrocket1", "starterrocket2", "starterrocket3"]
-const ROCKET_UNLOCK_LEVELS := {
-	"starterrocket1": 1,
-	"starterrocket2": 2,
-	"starterrocket3": 3
+## Missions completed required to unlock each rocket (0 = always available)
+const ROCKET_UNLOCK_MISSIONS := {
+	"starterrocket1": 0,
+	"starterrocket2": 1,
+	"starterrocket3": 2
 }
 const AU_IN_KM := 149597870.7
 const ASTEROID_DISTANCE_BANDS_AU := [3.0, 24.0]
@@ -56,6 +57,21 @@ const PREDEFINED_MISSION_TARGETS := {
 		"distance_au": 12.0,
 		"required_level": 2,
 		"reward_ratio": 1.2  # Early-game remains single-run and forgiving
+	},
+	4: {
+		"id": "mission-4-autonomy-target",
+		"label": "TOI-700 d",
+		"type": "planet",
+		"distance_au": 120.0,
+		"required_level": 2,
+		"reward_ratio": 1.4,  # Spec: autonomy handoff, higher payout ceiling
+		"anomalySet": "telescope-tess",
+		"tess_disposition": "PC",
+		"classification_status": "candidate",
+		"ticId": "TIC 150428135",
+		"parent_star": "TOI-700",
+		"star_system_id": "toi-700",
+		"science_blurb": "Habitable zone candidate — first Free Operations target"
 	}
 }
 
@@ -227,6 +243,7 @@ const STARTER_CONTRACTOR_OFFERS := [
 
 static var _preview_target: Dictionary = {}
 static var _return_to_new_mission_panel: bool = false
+static var _map_return_mode: bool = false  # true = space map was opened from launchpad for target selection
 static var _preview_index: int = 0
 static var _override_state: Dictionary = {}
 static var _returned_mission: Dictionary = {}
@@ -754,15 +771,34 @@ static func select_trip_contractor(contractor_id: String) -> bool:
 	return save_state(s)
 
 static func get_trip_selected_contractor() -> Dictionary:
+	var selected_from_offer := _get_selected_trip_contractor_from_offer()
+	if not selected_from_offer.is_empty():
+		return selected_from_offer.duplicate(true)
 	var offer = get_trip_contract_offer()
-	if offer.is_empty():
-		return {}
-	if bool(offer.get("selection_required", true)):
+	if offer.is_empty() or bool(offer.get("selection_required", true)):
 		return {}
 	var selected = str(offer.get("selected_contractor", ""))
 	if selected == "":
 		return {}
 	return _find_trip_contractor(selected).duplicate(true)
+
+static func get_current_requested_minerals() -> Dictionary:
+	var mission := _get_latest_active_mission()
+	if not mission.is_empty():
+		var objective_any = mission.get("objective", {})
+		if typeof(objective_any) == TYPE_DICTIONARY:
+			var objective: Dictionary = objective_any
+			var requirements_any = objective.get("requirements", {})
+			if typeof(requirements_any) == TYPE_DICTIONARY:
+				var requested_any = requirements_any.get("minerals", {})
+				if typeof(requested_any) == TYPE_DICTIONARY and not requested_any.is_empty():
+					return (requested_any as Dictionary).duplicate(true)
+	var trip_selected := get_trip_selected_contractor()
+	if not trip_selected.is_empty():
+		var trip_requested_any = trip_selected.get("requested_minerals", {})
+		if typeof(trip_requested_any) == TYPE_DICTIONARY and not trip_requested_any.is_empty():
+			return (trip_requested_any as Dictionary).duplicate(true)
+	return get_starter_requested_minerals()
 
 ## Reusable Rockets Research tier (0 = none, 1–3 = progressively cheaper launches).
 static func get_reusable_research_tier() -> int:
@@ -904,20 +940,21 @@ static func mark_mission_completed(badge: String = "") -> bool:
 				fallback.append(target)
 			s["detected_targets"] = fallback
 
-	if int(s.get("mission_progress_completed", 0)) >= 1:
+	var completed = int(s.get("mission_progress_completed", 0))
+	if completed >= 1:
 		var unlocked = s.get("unlocked", [])
 		if typeof(unlocked) != TYPE_ARRAY:
 			unlocked = []
 		if not unlocked.has("starterrocket2"):
 			unlocked.append("starterrocket2")
-		if int(s.get("mission_progress_completed", 0)) >= 3 and not unlocked.has("starterrocket3"):
+		if completed >= 2 and not unlocked.has("starterrocket3"):
 			unlocked.append("starterrocket3")
 		s["unlocked"] = unlocked
 	return save_state(s)
 
-static func get_rocket_level(rocket_id_or_type: String) -> int:
+static func get_rocket_unlock_missions(rocket_id_or_type: String) -> int:
 	var rocket_type = RocketSpecs.rocket_type_from_id(rocket_id_or_type)
-	return int(ROCKET_UNLOCK_LEVELS.get(rocket_type, 1))
+	return int(ROCKET_UNLOCK_MISSIONS.get(rocket_type, 0))
 
 ## Returns the mining laser level for a rocket.
 ## Currently always 1 until room-upgrade system is implemented (L5+).
@@ -1052,13 +1089,11 @@ static func build_target_profile(target_id: String, target_type: String = "aster
 		"type": normalized_type
 	}
 
-static func unlock_for_level(level: int) -> Array:
+static func unlock_for_mission_stage(completed_missions: int) -> Array:
 	var newly_unlocked := []
-	if level < 1:
-		return newly_unlocked
-	for rocket_id in ROCKET_UNLOCK_LEVELS.keys():
-		var required_level = int(ROCKET_UNLOCK_LEVELS[rocket_id])
-		if level >= required_level:
+	for rocket_id in ROCKET_UNLOCK_MISSIONS.keys():
+		var required = int(ROCKET_UNLOCK_MISSIONS[rocket_id])
+		if completed_missions >= required:
 			if unlock(rocket_id):
 				newly_unlocked.append(rocket_id)
 	return newly_unlocked
@@ -1269,7 +1304,6 @@ static func ensure_selected_target_for_launch(rocket_id: String = "") -> Diction
 		_ensure_stage_fallback_targets(mission_stage)
 		selectable = get_selectable_targets_for_stage(mission_stage)
 
-	var rocket_level = get_rocket_level(rocket_id) if rocket_id != "" else 99
 	var selected_row := {}
 	for item_any in selectable:
 		if typeof(item_any) != TYPE_DICTIONARY:
@@ -1281,7 +1315,7 @@ static func ensure_selected_target_for_launch(rocket_id: String = "") -> Diction
 		if is_candidate_visit_blocked(tid):
 			continue
 		var profile = build_target_profile(tid, str(item.get("type", "asteroid")))
-		if int(profile.get("required_level", 1)) <= rocket_level:
+		if int(profile.get("required_level", 1)) <= mission_stage:
 			selected_row = item
 			break
 	if selected_row.is_empty() and not selectable.is_empty():
@@ -2201,6 +2235,17 @@ static func consume_return_to_new_mission_panel() -> bool:
 	var flag = _return_to_new_mission_panel
 	_return_to_new_mission_panel = false
 	return flag
+
+static func set_map_return_mode(enabled: bool) -> void:
+	_map_return_mode = enabled
+
+static func consume_map_return_mode() -> bool:
+	var flag := _map_return_mode
+	_map_return_mode = false
+	return flag
+
+static func is_map_return_mode() -> bool:
+	return _map_return_mode
 
 static func set_pending_mission_guidance_id(mission_id: int) -> bool:
 	var safe_id = max(mission_id, 0)

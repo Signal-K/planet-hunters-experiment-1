@@ -1,129 +1,48 @@
 {
   "unlocked": [
-    "starterrocket1",
-    "starterrocket2"
+    "starterrocket1"
   ],
-  "placed": [
-    {
-      "type": "starterrocket1",
-      "id": "starterrocket1-950328804",
-      "x": 0.0,
-      "y": 0.0,
-      "status": "returned"
-    }
-  ],
-  "launched": [
-  ],
-  "destroyed": [
-  ],
-  "missions": [
-  ],
-  "preview_target": {
-  },
-  "detected_targets": [
-  ],
-  "seen_asteroids": [
-  ],
-  "seen_planets": [
-  ],
-  "scan_counts": {
-  },
-  "status_changed_at": {
-    "starterrocket1-950328804": {
-      "awaitingLaunch": 1777640035.0,
-      "launched": 1777640035.0,
-      "returningHome": 1777640070.0,
-      "returned": 1777725440.0
-    }
-  },
-  "mission_progress_completed": 1,
-  "completed_mission_badges": [
-    "mission-mission-1-training-target-1777725440"
-  ],
-  "control_station_built": true,
+  "placed": [],
+  "launched": [],
+  "destroyed": [],
+  "missions": [],
+  "selected_target": "",
+  "preview_target": {},
+  "detected_targets": [],
+  "seen_asteroids": [],
+  "seen_planets": [],
+  "scan_counts": {},
+  "status_changed_at": {},
+  "mission_progress_completed": 0,
+  "completed_mission_badges": [],
+  "control_station_built": false,
   "scanner_station_built": false,
   "scanner_unlocked": false,
   "scanner_unlock_dialog_seen": false,
-  "scanner_next_scan_at": 0.0,
-  "trip_contract_offer": {
-  },
+  "scanner_next_scan_at": 0,
+  "trip_contract_offer": {},
   "operation_mode": "contract",
-  "candidate_visit_blocks": {
-  },
-  "target_annotation_levels": {
-  },
-  "tess_classifications": {
-  },
-  "discovery_bonus_claimed": {
-    "mission-1-training-target": true
-  },
-  "rocket_customizations": {
-    "starterrocket1-950328804": {
-      "flag": "Earth Union",
-      "logo": "Star",
-      "rocket_type": "starterrocket1"
-    }
-  },
-  "rocket_wear": {
-    "starterrocket1-950328804": 1.0
-  },
-  "archived_rocket_wear": {
-  },
-  "mission_briefings_seen": {
-  },
-  "mission_progress_schema_version": 2.0,
-  "pending_mission_guidance_id": 0.0,
+  "candidate_visit_blocks": {},
+  "target_annotation_levels": {},
+  "tess_classifications": {},
+  "discovery_bonus_claimed": {},
+  "rocket_customizations": {},
+  "rocket_wear": {},
+  "archived_rocket_wear": {},
+  "mission_briefings_seen": {},
+  "mission_progress_schema_version": 2,
+  "pending_mission_guidance_id": 0,
   "launch_fallback_notice": "",
   "inventory": {
-    "Iron": 0.0,
-    "Nickel": 0.0,
-    "Cobalt": 0.0,
-    "Platinum": 0.0
+    "Iron": 0,
+    "Nickel": 0,
+    "Cobalt": 0,
+    "Platinum": 0
   },
-  "returning": [
-  ],
-  "arrived": {
-  },
-  "returned_mission": {
-  },
-  "returning_started": {
-  },
-  "starter_contract_offer": {
-    "contractors": [
-      {
-        "id": "aegis_defense",
-        "name": "Aegis Defense Systems",
-        "focus": "Defense-grade avionics and hardened military systems",
-        "requested_minerals": {
-          "Iron": 6.0,
-          "Nickel": 4.0
-        }
-      },
-      {
-        "id": "lumen_consumer",
-        "name": "Lumen Consumer Labs",
-        "focus": "High-volume consumer electronics and smart devices",
-        "requested_minerals": {
-          "Iron": 5.0,
-          "Nickel": 5.0
-        }
-      },
-      {
-        "id": "helion_orbital",
-        "name": "Helion Orbital Works",
-        "focus": "Next-gen propulsion and frontier space innovation",
-        "requested_minerals": {
-          "Iron": 4.0,
-          "Nickel": 6.0
-        }
-      }
-    ]
-  },
-  "selected_target": "",
-  "revealed_sectors": [
-    0.0,
-    7.0,
-    3.0,
-    6.0
-  ]
+  "returning": [],
+  "arrived": {},
+  "returned_mission": {},
+  "returning_started": {},
+  "starter_contract_offer": {},
+  "revealed_sectors": []
 }

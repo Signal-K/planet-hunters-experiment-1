@@ -1,0 +1,86 @@
+{
+  "taskId": "pklstn",
+  "currentVersion": 2,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "pklstn",
+      "version": 1,
+      "timestamp": "2026-05-11T03:02:07.557172Z",
+      "author": "@Liam",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": null,
+          "newValue": "todo"
+        },
+        {
+          "field": "priority",
+          "oldValue": null,
+          "newValue": "high"
+        }
+      ],
+      "snapshot": {
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "GDScripts updated"
+          },
+          {
+            "completed": false,
+            "text": "Project settings updated"
+          },
+          {
+            "completed": false,
+            "text": "JSON data files updated"
+          }
+        ],
+        "assignee": "@Liam",
+        "description": "Update internal GDScript references and mission logs for Landnám.",
+        "priority": "high",
+        "status": "todo",
+        "title": "Rebrand: Godot Game Logic \u0026 Scripts"
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "pklstn",
+      "version": 2,
+      "timestamp": "2026-05-11T03:11:05.71699Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        },
+        {
+          "field": "implementationNotes",
+          "oldValue": null,
+          "newValue": "Completed rebranding for Godot scripts and internal logic."
+        }
+      ],
+      "snapshot": {
+        "acceptanceCriteria": [
+          {
+            "text": "GDScripts updated",
+            "completed": false
+          },
+          {
+            "text": "Project settings updated",
+            "completed": false
+          },
+          {
+            "text": "JSON data files updated",
+            "completed": false
+          }
+        ],
+        "assignee": "@Liam",
+        "description": "Update internal GDScript references and mission logs for Landnám.",
+        "implementationNotes": "Completed rebranding for Godot scripts and internal logic.",
+        "priority": "high",
+        "status": "done",
+        "title": "Rebrand: Godot Game Logic \u0026 Scripts"
+      }
+    }
+  ]
+}
