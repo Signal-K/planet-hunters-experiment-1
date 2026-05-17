@@ -8,7 +8,7 @@ SCENE_SRC="/app/scene"
 SCENE_DIR="/tmp/scene"
 OUT="/output"
 GODOT="/opt/godot/godot"
-GODOT_USER_DIR="$HOME/.local/share/PlanetHuntersExperiment1"
+GODOT_USER_DIR="$HOME/.local/share/Landnám"
 
 rm -rf "$SCENE_DIR"
 cp -a "$SCENE_SRC" "$SCENE_DIR"

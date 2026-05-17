@@ -1,0 +1,38 @@
+---
+project: Experiment 1/Landnam
+id: m1zpy5
+title: 'Rebrand: Application Config & Mobile Shell'
+status: done
+priority: high
+labels:
+  - project-landnam
+labels: []
+createdAt: '2026-05-11T03:02:02.465Z'
+updatedAt: '2026-05-11T03:11:00.607Z'
+timeSpent: 0
+assignee: '@Liam'
+---
+
+[← Back to Index](../INDEX.md)
+
+# Rebrand: Application Config & Mobile Shell
+
+## Description
+
+<!-- SECTION:DESCRIPTION:BEGIN -->
+Update app.json and android native settings for Landnám.
+<!-- SECTION:DESCRIPTION:END -->
+
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 app.json updated
+- [ ] #2 android strings and settings updated
+- [ ] #3 PWA manifest updated
+<!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Completed rebranding for app configuration and mobile shell.
+<!-- SECTION:NOTES:END -->
+

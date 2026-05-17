@@ -124,7 +124,7 @@ text = "✕"
 [node name="ToggleSwitch" type="Button" parent="PanelContainer/Panel/Scroll/VBoxContainer/HeaderContainer"]
 custom_minimum_size = Vector2(190, 50)
 layout_mode = 2
-text = "Planet Hunters Active"
+text = "Landnám Active"
 
 [node name="TelemetryStrip" type="HBoxContainer" parent="PanelContainer/Panel/Scroll/VBoxContainer"]
 layout_mode = 2

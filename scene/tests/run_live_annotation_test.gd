@@ -153,7 +153,7 @@ func _run_test() -> void:
             "verdict"          : verdict,
             "annotation_count" : annotation_count,
             "transit_dips"     : transit_dips,
-            "source"           : "star-sailors-game-live-test",
+            "source"           : "landnam-game-live-test",
         }
     }
 

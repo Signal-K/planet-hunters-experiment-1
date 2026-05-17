@@ -1,12 +1,12 @@
 {
-  "name": "Star Sailors: Planet Hunters (Experiment 1) Exit Survey",
+  "name": "Landnám Exit Survey",
   "type": "external_survey",
   "schedule": "always",
   "enable_partial_responses": true,
   "appearance": {
     "displayThankYouMessage": true,
-    "thankYouMessageHeader": "Thanks for testing Star Sailors: Planet Hunters",
-    "thankYouMessageDescription": "Your feedback helps shape this Planet Hunters experiment and its connection to the wider Star Sailors web game."
+    "thankYouMessageHeader": "Thanks for testing Landnám: Landnám",
+    "thankYouMessageDescription": "Your feedback helps shape this Landnám experiment and its connection to the wider Landnám web game."
   },
   "questions": [
     {
@@ -80,7 +80,7 @@
     },
     {
       "type": "multiple_choice",
-      "question": "If progress carries between Experiment 1 and the Star Sailors web game, what should carry over?",
+      "question": "If progress carries between Landnám and the wider web game, what should carry over?",
       "choices": [
         "XP and level",
         "Mission logbook",
@@ -95,7 +95,7 @@
       "question": "After completing a mission, what should happen next?",
       "choices": [
         "Suggested next mission",
-        "Return to Star Sailors hub",
+        "Return to Landnám hub",
         "Compare results with other players",
         "See science impact summary",
         "End session quickly"
@@ -104,7 +104,7 @@
     },
     {
       "type": "open",
-      "question": "What is one change that would make this prototype feel clearly connected to the wider Star Sailors world?",
+      "question": "What is one change that would make this prototype feel clearly connected to the wider Landnám world?",
       "descriptionContentType": "text"
     }
   ]

@@ -34,7 +34,7 @@ static func emit_launch_started(rocket_id: String, target_id: String, target_typ
 	enriched["rocket_id"] = rocket_id
 	enriched["target_id"] = target_id
 	enriched["target_type"] = _normalize_target_type(target_type)
-	enriched["rocket_level"] = int(RocketsManager.get_rocket_level(rocket_id))
+	enriched["rocket_unlock_missions"] = int(RocketsManager.get_rocket_unlock_missions(rocket_id))
 	enriched["mission_duration_seconds"] = int(RocketsManager.get_mission_duration_seconds_for_rocket(rocket_id))
 	emit_event("mission_launch_started", enriched)
 
@@ -92,10 +92,6 @@ static func _apply_common_context(payload: Dictionary) -> void:
 
 	var app = AppControllerHelper.get_instance()
 	if app:
-		if app.has_method("get_experience_level"):
-			payload["experience_level"] = int(app.get_experience_level())
-		if app.has_method("get_total_experience"):
-			payload["experience_total"] = int(app.get_total_experience())
 		if app.has_method("get_franc_balance"):
 			payload["franc_balance"] = int(app.get_franc_balance())
 

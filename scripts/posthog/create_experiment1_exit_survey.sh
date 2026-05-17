@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Create the Experiment 1 external survey in PostHog.
+# Create the Landnám external survey in PostHog.
 # Required (Vercel names supported first):
 #   Posthog_Personal_Token=phx_...
 #   Posthog_Project_ID=<numeric id>

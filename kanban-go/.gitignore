@@ -1,6 +1,0 @@
-kanban-data/attachments/
-kanban
-*.db
-.env
-.env.local
-.vercel

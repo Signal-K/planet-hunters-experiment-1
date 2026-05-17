@@ -43,9 +43,9 @@ var _classification_row: Control
 @onready var pen_circle_button: Button = $HeaderContainer/ToolsRow/PenCircleButton
 @onready var color_picker: ColorPickerButton = $HeaderContainer/ToolsRow/ColorPickerButton
 @onready var annotation_count_label: Label = $HeaderContainer/TopRow/AnnotationCount
-@onready var _science_summary_card: PanelContainer = $BodyScroll/ContentMargin/ContentContainer/ScienceSummaryCard
-@onready var _science_summary_body: Label = $BodyScroll/ContentMargin/ContentContainer/ScienceSummaryCard/Body/SummaryBodyLabel
-@onready var _science_summary_meta: Label = $BodyScroll/ContentMargin/ContentContainer/ScienceSummaryCard/Body/SummaryMetaLabel
+@onready var _science_summary_card: PanelContainer = get_node_or_null("BodyScroll/ContentMargin/ContentContainer/ScienceSummaryCard") as PanelContainer
+@onready var _science_summary_body: Label = get_node_or_null("BodyScroll/ContentMargin/ContentContainer/ScienceSummaryCard/Body/SummaryBodyLabel") as Label
+@onready var _science_summary_meta: Label = get_node_or_null("BodyScroll/ContentMargin/ContentContainer/ScienceSummaryCard/Body/SummaryMetaLabel") as Label
 
 func _ready():
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -185,14 +185,18 @@ func _apply_visual_style() -> void:
 	summary_style.content_margin_top = 18
 	summary_style.content_margin_right = 18
 	summary_style.content_margin_bottom = 18
-	_science_summary_card.add_theme_stylebox_override("panel", summary_style)
-	var summary_eyebrow: Label = _science_summary_card.get_node("Body/EyebrowLabel")
-	summary_eyebrow.add_theme_color_override("font_color", Color(0.05, 0.49, 0.45, 1.0))
-	summary_eyebrow.add_theme_font_size_override("font_size", 14)
-	_science_summary_body.add_theme_color_override("font_color", Color(0.11, 0.15, 0.18, 1.0))
-	_science_summary_body.add_theme_font_size_override("font_size", 18)
-	_science_summary_meta.add_theme_color_override("font_color", Color(0.28, 0.34, 0.39, 1.0))
-	_science_summary_meta.add_theme_font_size_override("font_size", 15)
+	if _science_summary_card:
+		_science_summary_card.add_theme_stylebox_override("panel", summary_style)
+		var summary_eyebrow := _science_summary_card.get_node_or_null("Body/EyebrowLabel") as Label
+		if summary_eyebrow:
+			summary_eyebrow.add_theme_color_override("font_color", Color(0.05, 0.49, 0.45, 1.0))
+			summary_eyebrow.add_theme_font_size_override("font_size", 14)
+	if _science_summary_body:
+		_science_summary_body.add_theme_color_override("font_color", Color(0.11, 0.15, 0.18, 1.0))
+		_science_summary_body.add_theme_font_size_override("font_size", 18)
+	if _science_summary_meta:
+		_science_summary_meta.add_theme_color_override("font_color", Color(0.28, 0.34, 0.39, 1.0))
+		_science_summary_meta.add_theme_font_size_override("font_size", 15)
 
 func _style_button(button: Button, primary: bool) -> void:
 	var normal := StyleBoxFlat.new()
@@ -452,7 +456,7 @@ func _on_classify(verdict: String, row: VBoxContainer) -> void:
 					"verdict": verdict,
 					"annotation_count": annotation_count,
 					"transit_dips": drawing_canvas.get_transit_dips() if drawing_canvas.has_method("get_transit_dips") else [],
-					"source": "star-sailors-game"
+					"source": "landnam-game"
 				}
 			}
 			supabase.post_json("classifications", row_data)

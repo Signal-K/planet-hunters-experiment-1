@@ -1,12 +1,12 @@
 {
-  "name": "Planet Hunters: Real Science Awareness",
+  "name": "Landnám: Real Science Awareness",
   "type": "external_survey",
   "schedule": "always",
   "enable_partial_responses": true,
   "appearance": {
     "displayThankYouMessage": true,
     "thankYouMessageHeader": "Thanks!",
-    "thankYouMessageDescription": "Real astronomical data is at the core of Planet Hunters."
+    "thankYouMessageDescription": "Real astronomical data is at the core of Landnám."
   },
   "questions": [
     {

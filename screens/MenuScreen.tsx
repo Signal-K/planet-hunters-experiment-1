@@ -82,7 +82,7 @@ export const MenuScreen: React.FC<MenuScreenProps> = ({ navigation }) => {
         bounces={false}
       >
         <View style={commonStyles.menuHeader}>
-          <Text style={commonStyles.appTitle}>Planet Hunters</Text>
+          <Text style={commonStyles.appTitle}>Landnám</Text>
           <Text style={commonStyles.appSubtitle}>Mission Control</Text>
         </View>
 
@@ -113,11 +113,11 @@ export const MenuScreen: React.FC<MenuScreenProps> = ({ navigation }) => {
           </View>
         </View>
 
-        <TouchableOpacity 
-          style={{ paddingVertical: 15, alignItems: 'center' }} 
+        <TouchableOpacity
+          style={{ paddingVertical: 15, alignItems: 'center' }}
           onPress={() => setShowAdvanced(!showAdvanced)}
         >
-          <Text style={{ color: '#0A84FF', fontSize: 13, textDecorationLine: 'underline' }}>
+          <Text style={{ color: '#3fa9ff', fontSize: 13, letterSpacing: 1.2, textTransform: 'uppercase' }}>
             {showAdvanced ? 'Hide Advanced Settings' : 'Show Advanced Settings'}
           </Text>
         </TouchableOpacity>
@@ -174,7 +174,7 @@ export const MenuScreen: React.FC<MenuScreenProps> = ({ navigation }) => {
           <Button
             title="Resume Game"
             onPress={() => navigation.navigate('Game')}
-            color="#34C759"
+            color="#3fa9ff"
           />
         </View>
         <View style={commonStyles.menuSecondaryButton}>
@@ -182,7 +182,7 @@ export const MenuScreen: React.FC<MenuScreenProps> = ({ navigation }) => {
             title={isRefreshing ? "Refreshing..." : "Refresh Data"}
             onPress={handleRefresh}
             disabled={isRefreshing}
-            color="#0A84FF"
+            color="#3fa9ff"
           />
         </View>
       </View>

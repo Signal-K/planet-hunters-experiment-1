@@ -3,7 +3,7 @@ import { RTNGodot, runOnGodotThread } from "@borndotcom/react-native-godot";
 import type { AppController } from "../types/navigation";
 
 // Compute pack path at module initialization (not in worklet)
-const PACK_PATH = (FileSystem.bundleDirectory || "") + "GodotTest.pck";
+const PACK_PATH = (FileSystem.bundleDirectory || "") + "Landnam.pck";
 
 export function initGodot(_name: string) {
   if (RTNGodot.getInstance() != null) {

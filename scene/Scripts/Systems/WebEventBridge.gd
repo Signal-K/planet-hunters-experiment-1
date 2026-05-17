@@ -15,7 +15,7 @@ static func emit(event_name: String, payload: Dictionary = {}) -> void:
 		return
 
 	var body := {
-		"source": "planet-hunters",
+		"source": "landnam",
 		"event": event_name,
 		"timestamp": Time.get_unix_time_from_system(),
 		"payload": payload

@@ -1,5 +1,45 @@
 # Local development targets
-.PHONY: up down kanban supabase-check godot godot-dev godot-env ci-build ci-test ci-godot ci-playwright ci-export ci-all ci-clean ci-full-run sync-lock ghactions ux-tour ux-tour-build
+.PHONY: up down kanban supabase-check godot godot-dev godot-env buildit ci-build ci-test ci-godot ci-playwright ci-export ci-all ci-clean ci-full-run sync-lock ghactions ux-tour ux-tour-build test test-structure test-all-godot
+
+## ── Local Godot tests (save-safe) ────────────────────────────────────────────
+# Backs up all user save files before running, restores them after.
+# This prevents test runs from wiping your in-progress game state.
+
+GODOT_BIN  := /Applications/Godot4.5.app/Contents/MacOS/Godot
+GODOT_PROJ := scene
+SAVE_DIR   := $(HOME)/Library/Application Support/Godot/app_userdata/Landnám
+SAVE_BAK   := /tmp/planet-hunters-save-bak
+
+SAVE_FILES := franc_balance.cfg experience.cfg rockets_state.json \
+              mission_logs.json subcontractors.json satellite_station.cfg \
+              tutorial.cfg mining_inventory.json
+
+_save-backup:
+	@mkdir -p "$(SAVE_BAK)"
+	@for f in $(SAVE_FILES); do \
+		cp -f "$(SAVE_DIR)/$$f" "$(SAVE_BAK)/$$f" 2>/dev/null || true; \
+	done
+
+_save-restore:
+	@for f in $(SAVE_FILES); do \
+		[ -f "$(SAVE_BAK)/$$f" ] && cp -f "$(SAVE_BAK)/$$f" "$(SAVE_DIR)/$$f" 2>/dev/null || true; \
+	done
+	@echo "Save files restored."
+
+test-structure: _save-backup
+	@"$(GODOT_BIN)" --headless --path "$(GODOT_PROJ)" --script tests/run_structure_tests.gd; STATUS=$$?; \
+	$(MAKE) -s _save-restore; exit $$STATUS
+
+test-all-godot: _save-backup
+	@"$(GODOT_BIN)" --headless --path "$(GODOT_PROJ)" --script tests/run_structure_tests.gd && \
+	"$(GODOT_BIN)" --headless --path "$(GODOT_PROJ)" --script tests/run_tutorial_tests.gd && \
+	"$(GODOT_BIN)" --headless --path "$(GODOT_PROJ)" --script tests/run_narrative_paths_tests.gd && \
+	"$(GODOT_BIN)" --headless --path "$(GODOT_PROJ)" --script tests/run_new_user_flow_tests.gd && \
+	"$(GODOT_BIN)" --headless --path "$(GODOT_PROJ)" --script tests/run_later_missions_tests.gd && \
+	"$(GODOT_BIN)" --headless --path "$(GODOT_PROJ)" --script tests/run_mission_e2e_flow_tests.gd; STATUS=$$?; \
+	$(MAKE) -s _save-restore; exit $$STATUS
+
+test: test-structure
 
 ## ── Kanban board (Go) ────────────────────────────────────────────────────────
 up:
@@ -36,8 +76,15 @@ godot-dev: supabase-check godot
 # Alias for godot-dev
 godot-env: godot-dev
 
+# Export the Godot web build and start the local web frontend.
+buildit:
+	@echo "Exporting Godot web build..."
+	npm run web:build
+	@echo "Starting local web frontend at http://127.0.0.1:4173"
+	npm run web:start
+
 # CI targets (mimics GitHub Actions)
-IMAGE_NAME=planet-hunters-ci
+IMAGE_NAME=landnam-ci
 
 # Build the CI docker image
 ci-build:
@@ -63,7 +110,7 @@ ci-godot: ci-build
 # Run Playwright e2e tests in Docker using Firefox (avoids Chrome QEMU crash on Apple Silicon).
 # Builds from the cached linux/amd64 node layer — no Docker Hub pull needed.
 # GitHub Actions uses ci-all (Dockerfile.ci, native x86_64, all browsers) instead.
-PLAYWRIGHT_IMAGE_NAME=planet-hunters-playwright
+PLAYWRIGHT_IMAGE_NAME=landnam-playwright
 
 ci-playwright:
 	@echo "Building Playwright Docker image..."
@@ -116,7 +163,7 @@ ghactions:
 #   make ux-tour-mining   — run mining-only sandbox tour
 #   make ux-tour-build    — (re)build the image only, e.g. after a Godot upgrade
 #
-UX_TOUR_IMAGE=planet-hunters-ux-tour
+UX_TOUR_IMAGE=landnam-ux-tour
 UX_TOUR_OUT=$(PWD)/ux-screenshots
 
 GHCR_UX_TOUR_IMAGE=ghcr.io/signal-k/planet-hunters-experiment-1/ux-tour:latest

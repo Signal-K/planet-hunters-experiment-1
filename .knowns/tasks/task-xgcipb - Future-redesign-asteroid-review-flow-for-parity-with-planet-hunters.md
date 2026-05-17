@@ -1,9 +1,11 @@
 ---
+project: Experiment 1/Landnam
 id: xgcipb
 title: 'Future: redesign asteroid review flow for parity with planet hunters'
 status: todo
 priority: low
 labels:
+  - project-landnam
   - deferred
   - asteroids
   - design
@@ -12,6 +14,9 @@ createdAt: '2026-04-30T01:07:13.404Z'
 updatedAt: '2026-04-30T01:07:13.404Z'
 timeSpent: 0
 ---
+
+[← Back to Index](../INDEX.md)
+
 # Future: redesign asteroid review flow for parity with planet hunters
 
 ## Description

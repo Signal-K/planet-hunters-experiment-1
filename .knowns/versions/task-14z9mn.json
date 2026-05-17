@@ -1,0 +1,122 @@
+{
+  "taskId": "14z9mn",
+  "currentVersion": 2,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "14z9mn",
+      "version": 1,
+      "timestamp": "2026-05-03T11:50:56.066Z",
+      "author": "@Liam",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": null,
+          "newValue": "todo"
+        },
+        {
+          "field": "priority",
+          "oldValue": null,
+          "newValue": "high"
+        }
+      ],
+      "snapshot": {
+        "acceptanceCriteria": [
+          {
+            "text": "No blank survey overlay appears when PostHog is not configured",
+            "completed": false
+          },
+          {
+            "text": "Micro-surveys are not blocked by the boot-level flag",
+            "completed": false
+          },
+          {
+            "text": "POSTHOG_PROJECT_TOKEN is set in Vercel env and surveys display correctly",
+            "completed": false
+          }
+        ],
+        "assignee": "@Liam",
+        "description": "Root cause: when POSTHOG_PROJECT_TOKEN is not set in Vercel env vars, showInlineSurvey renders a blank PostHog iframe. This blank overlay still consumed the _surveyShownInThisBoot boot-level flag, blocking ALL subsequent micro-surveys for the entire session. Fix: maybeTriggerFirstMissionSurvey and maybeTriggerMicroSurvey now check for a valid PostHog project token before showing any iframe survey — if no token, they return early without poisoning the boot flag. Micro-surveys also no longer set _surveyShownInThisBoot (each has its own localStorage gate already). To enable surveys: set POSTHOG_PROJECT_TOKEN in Vercel environment variables.",
+        "labels": [
+          "posthog,surveys,bug,analytics"
+        ],
+        "priority": "high",
+        "status": "todo",
+        "title": "PostHog surveys not popping up — blank iframe poisons session survey gate"
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "14z9mn",
+      "version": 2,
+      "timestamp": "2026-05-06T02:16:26.692Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        },
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": [
+            {
+              "completed": false,
+              "text": "No blank survey overlay appears when PostHog is not configured"
+            },
+            {
+              "completed": false,
+              "text": "Micro-surveys are not blocked by the boot-level flag"
+            },
+            {
+              "completed": false,
+              "text": "POSTHOG_PROJECT_TOKEN is set in Vercel env and surveys display correctly"
+            }
+          ],
+          "newValue": [
+            {
+              "completed": true,
+              "text": "No blank survey overlay appears when PostHog is not configured"
+            },
+            {
+              "completed": true,
+              "text": "Micro-surveys are not blocked by the boot-level flag"
+            },
+            {
+              "completed": false,
+              "text": "POSTHOG_PROJECT_TOKEN is set in Vercel env and surveys display correctly"
+            }
+          ]
+        },
+        {
+          "field": "implementationNotes",
+          "newValue": "Verified in react-shell.js on 2026-05-06 that maybeTriggerMicroSurvey and the first-mission survey path both gate on runtimeConfig.posthog.projectToken before opening an iframe, and micro-surveys no longer consume the boot-level survey gate. Enabling live surveys still requires Vercel env configuration."
+        }
+      ],
+      "snapshot": {
+        "title": "PostHog surveys not popping up — blank iframe poisons session survey gate",
+        "description": "Root cause: when POSTHOG_PROJECT_TOKEN is not set in Vercel env vars, showInlineSurvey renders a blank PostHog iframe. This blank overlay still consumed the _surveyShownInThisBoot boot-level flag, blocking ALL subsequent micro-surveys for the entire session. Fix: maybeTriggerFirstMissionSurvey and maybeTriggerMicroSurvey now check for a valid PostHog project token before showing any iframe survey — if no token, they return early without poisoning the boot flag. Micro-surveys also no longer set _surveyShownInThisBoot (each has its own localStorage gate already). To enable surveys: set POSTHOG_PROJECT_TOKEN in Vercel environment variables.",
+        "status": "done",
+        "priority": "high",
+        "assignee": "@Liam",
+        "labels": [
+          "posthog,surveys,bug,analytics"
+        ],
+        "acceptanceCriteria": [
+          {
+            "completed": true,
+            "text": "No blank survey overlay appears when PostHog is not configured"
+          },
+          {
+            "completed": true,
+            "text": "Micro-surveys are not blocked by the boot-level flag"
+          },
+          {
+            "completed": false,
+            "text": "POSTHOG_PROJECT_TOKEN is set in Vercel env and surveys display correctly"
+          }
+        ],
+        "implementationNotes": "Verified in react-shell.js on 2026-05-06 that maybeTriggerMicroSurvey and the first-mission survey path both gate on runtimeConfig.posthog.projectToken before opening an iframe, and micro-surveys no longer consume the boot-level survey gate. Enabling live surveys still requires Vercel env configuration."
+      }
+    }
+  ]
+}

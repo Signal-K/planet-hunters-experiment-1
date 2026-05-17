@@ -38,7 +38,7 @@ const GameMenuStatColumnScene = preload("res://Scenes/UI/Templates/GameMenuStatC
 const GameMenuDebugSectionScene = preload("res://Scenes/UI/Templates/GameMenuDebugSection.tscn")
 const GameMenuInfoCardScene = preload("res://Scenes/UI/Templates/GameMenuInfoCard.tscn")
 const GameMenuLegendLabelScene = preload("res://Scenes/UI/Templates/GameMenuLegendLabel.tscn")
-const GameMenuActionsSectionScene = preload("res://Scenes/UI/Templates/GameMenuActionsSection.tscn")
+const GameMenuSettingsEntryCardScene = preload("res://Scenes/UI/Templates/GameMenuSettingsEntryCard.tscn")
 
 const MENU_LAYER_NAME := "GameMenuLayer"
 const MENU_ROOT_NAME := "GameMenuRoot"
@@ -48,8 +48,8 @@ const MENU_LAYER_Z := 150
 const TITLE_COLOR := Color(0.95, 0.93, 0.90, 1.0)
 const TEXT_COLOR := Color(0.82, 0.84, 0.88, 1.0)
 const TEXT_MUTED := Color(0.55, 0.60, 0.68, 1.0)
-const CYAN := Color(0.28, 0.88, 0.96, 1.0)
-const AMBER := Color(0.941, 0.690, 0.188, 1.0)
+const CYAN := Color(0.247, 0.663, 1.000, 1.0)
+const AMBER := Color(0.961, 0.651, 0.137, 1.0)
 const PANEL_BG := Color(0.04, 0.06, 0.12, 0.96)
 const CARD_BG := Color(0.08, 0.11, 0.20, 0.88)
 
@@ -79,6 +79,7 @@ static func open(owner: Node) -> void:
 	var layer := CanvasLayer.new()
 	layer.name = MENU_LAYER_NAME
 	layer.layer = MENU_LAYER_Z
+	layer.follow_viewport_enabled = true
 	layer.set_meta("tutorial_zone_exempt", true)
 	layer.process_mode = Node.PROCESS_MODE_ALWAYS
 
@@ -168,7 +169,7 @@ static func _build_menu_root(owner: Node) -> Control:
 	_apply_button_style(close_btn, false)
 	close_btn.custom_minimum_size = Vector2(110, 50)
 	close_btn.pressed.connect(func():
-		preload("res://Scripts/UI/GameNavigationMenu.gd").close(owner)
+		GameNavigationMenu.close(root)
 	)
 
 	var sep: HSeparator = root.get_node("Center/%s/Scroll/Shell/Separator" % MENU_PANEL_NAME)
@@ -207,11 +208,16 @@ static func _build_menu_root(owner: Node) -> Control:
 		mission_requirements_label.visible = false
 		mission_requirements_host.visible = false
 
-	# Settings / Actions
-	settings_host.add_child(_build_actions_section(owner))
+	# Settings
+	settings_host.add_child(_build_settings_entry_card(owner))
+	settings_host.add_child(_build_reset_progress_button(owner))
 
-	# Debug
-	debug_host.add_child(_build_debug_section(owner))
+	# Debug — editor only; never shown in exported builds
+	if OS.has_feature("editor"):
+		debug_host.add_child(_build_debug_section(owner))
+	else:
+		debug_label.visible = false
+		debug_host.visible = false
 
 	# Logbook overlay (hidden until logbook_btn pressed)
 	var logbook_overlay := _build_logbook_overlay(vp_w)
@@ -241,28 +247,16 @@ static func _build_stats_card() -> PanelContainer:
 	var app = AppControllerHelper.get_instance()
 	var francs := 0
 	var francs_str := "?"
-	var level := 1
-	var level_str := "?"
-	var xp := 0
-	var xp_str := "?"
 	var missions := 0
 	if app:
 		if app.has_method("get_franc_balance"):
 			francs = int(app.get_franc_balance())
 			francs_str = NumberFormat.commas(str(francs)) + " F"
-		if app.has_method("get_experience_level"):
-			level = int(app.get_experience_level())
-			level_str = str(level)
-		if app.has_method("get_experience_xp"):
-			xp = int(app.get_experience_xp())
-			xp_str = str(xp)
 	missions = int(RocketsManager.get_completed_mission_count())
 
 	var hbox: HBoxContainer = card.get_node("StatsRow")
 
 	for stat_pair in [
-		["LEVEL", level_str, CYAN],
-		["XP", xp_str, TEXT_COLOR],
 		["FRANCS", francs_str, AMBER],
 		["MISSIONS", str(missions), TEXT_COLOR],
 	]:
@@ -281,68 +275,85 @@ static func _build_stats_card() -> PanelContainer:
 # Settings / actions section
 # ---------------------------------------------------------------------------
 
-static func _build_actions_section(owner: Node) -> VBoxContainer:
-	var vbox: VBoxContainer = GameMenuActionsSectionScene.instantiate()
+static func _build_settings_entry_card(owner: Node) -> VBoxContainer:
+	var host := VBoxContainer.new()
+	host.add_theme_constant_override("separation", 10)
 
-	var practice_btn: Button = vbox.get_node("PracticeMiningButton")
-	_apply_button_style(practice_btn, true)
+	# 1. Practice Mining
+	var practice_btn := _build_action_button("Practice Mining", AMBER, true)
 	practice_btn.pressed.connect(func():
-		var opened := AppControllerHelper.open_mining_practice_panel("menu_panel")
-		if opened:
-			preload("res://Scripts/UI/GameNavigationMenu.gd").close(owner)
+		AppControllerHelper.open_mining_practice_panel("navigation_menu")
+		GameNavigationMenu.close(owner)
 	)
+	host.add_child(practice_btn)
 
-	var replay_mission_btn: Button = vbox.get_node("ReplayMissionGuideButton")
-	_apply_button_style(replay_mission_btn, false)
-	replay_mission_btn.pressed.connect(func():
-		var app = AppControllerHelper.get_instance()
+	# 2. Replay Tutorial
+	var replay_btn := _build_action_button("Replay Mission Guide", TITLE_COLOR, false)
+	replay_btn.pressed.connect(func():
+		var app := AppControllerHelper.get_instance()
 		if app and app.has_method("replay_tutorial_for_current_mission"):
 			app.replay_tutorial_for_current_mission()
-		preload("res://Scripts/UI/GameNavigationMenu.gd").close(owner)
+		GameNavigationMenu.close(owner)
 	)
+	host.add_child(replay_btn)
 
-	var dialogue_btn: Button = vbox.get_node("CitizenScienceDialogueButton")
-	_apply_button_style(dialogue_btn, false)
-	_refresh_dialogue_button_text(dialogue_btn)
-	dialogue_btn.pressed.connect(func():
+	# 3. Skip Tutorial (Conditional)
+	var app_check := AppControllerHelper.get_instance()
+	if app_check != null and app_check.has_method("skip_tutorial"):
+		var skip_btn := _build_action_button("Skip Tutorial", TITLE_COLOR, false)
+		skip_btn.pressed.connect(func():
+			var app2 := AppControllerHelper.get_instance()
+			if app2 and app2.has_method("skip_tutorial"):
+				app2.skip_tutorial()
+			GameNavigationMenu.close(owner)
+		)
+		host.add_child(skip_btn)
+
+	# 4. Dialogue Toggle
+	var dlg_enabled := AppControllerHelper.is_citizen_science_dialogue_enabled(true)
+	var dlg_btn := _build_action_button("Dialogue: %s" % ("On" if dlg_enabled else "Off"), TITLE_COLOR, false)
+	dlg_btn.pressed.connect(func():
+		var app3 := AppControllerHelper.get_instance()
+		if app3 and app3.has_method("is_citizen_science_dialogue_enabled") \
+				and app3.has_method("set_citizen_science_dialogue_enabled"):
+			var next := not bool(app3.is_citizen_science_dialogue_enabled())
+			app3.set_citizen_science_dialogue_enabled(next)
+			dlg_btn.text = "Dialogue: %s" % ("On" if next else "Off")
+	)
+	host.add_child(dlg_btn)
+
+	return host
+
+static func _build_action_button(label: String, color: Color, primary: bool) -> Button:
+	var btn := Button.new()
+	btn.text = label
+	_apply_button_style(btn, primary)
+	# Override color if provided
+	btn.add_theme_color_override("font_color", color)
+	btn.add_theme_color_override("font_hover_color", color)
+	btn.add_theme_color_override("font_pressed_color", color)
+	return btn
+
+static func _build_reset_progress_button(owner: Node) -> Button:
+	var btn := Button.new()
+	btn.text = "Reset All Progress"
+	_apply_button_style(btn, false)
+	# Override with warm warning color
+	btn.add_theme_color_override("font_color", AMBER)
+	btn.add_theme_color_override("font_hover_color", AMBER)
+	btn.add_theme_color_override("font_pressed_color", AMBER)
+	var style = btn.get_theme_stylebox("normal").duplicate()
+	style.border_color = Color(AMBER.r, AMBER.g, AMBER.b, 0.5)
+	btn.add_theme_stylebox_override("normal", style)
+	
+	btn.pressed.connect(func():
 		var app = AppControllerHelper.get_instance()
-		if app and app.has_method("is_citizen_science_dialogue_enabled") and app.has_method("set_citizen_science_dialogue_enabled"):
-			var next_enabled := not bool(app.is_citizen_science_dialogue_enabled())
-			app.set_citizen_science_dialogue_enabled(next_enabled)
-		_refresh_dialogue_button_text(dialogue_btn)
+		if app and app.has_method("full_factory_reset"):
+			app.full_factory_reset()
+		elif app and app.has_method("_on_reset_all"):
+			app._on_reset_all()
 	)
-
-	var reset_btn: Button = vbox.get_node("ResetAllDataButton")
-	_apply_button_style(reset_btn, false)
-	reset_btn.pressed.connect(func():
-		_request_reset_all(owner)
-		preload("res://Scripts/UI/GameNavigationMenu.gd").close(owner)
-	)
-
-	return vbox
-
-static func _request_reset_all(owner: Node) -> void:
-	var app = AppControllerHelper.get_instance()
-	if app and app.has_method("_on_reset_all"):
-		app._on_reset_all()
-		return
-	if owner != null:
-		var ui_manager = owner.get_node_or_null("UIManager")
-		if ui_manager and ui_manager.has_method("_on_reset_all"):
-			ui_manager._on_reset_all()
-			return
-		if owner.has_method("_on_reset_all"):
-			owner._on_reset_all()
-			return
-	var tree := Engine.get_main_loop() as SceneTree
-	if tree and tree.root:
-		var fallback = tree.root.find_child("AppController", true, false)
-		if fallback and fallback.has_method("_on_reset_all"):
-			fallback._on_reset_all()
-
-# ---------------------------------------------------------------------------
-# Debug section
-# ---------------------------------------------------------------------------
+	return btn
 
 static func _build_debug_section(owner: Node) -> VBoxContainer:
 	var vbox: VBoxContainer = GameMenuDebugSectionScene.instantiate()
@@ -352,7 +363,7 @@ static func _build_debug_section(owner: Node) -> VBoxContainer:
 		var app = AppControllerHelper.get_instance()
 		if app and app.has_method("trigger_instant_mining"):
 			app.trigger_instant_mining()
-			preload("res://Scripts/UI/GameNavigationMenu.gd").close(owner)
+			GameNavigationMenu.close(owner)
 	)
 
 	var money_btn: Button = vbox.get_node("MoneyButton")
@@ -380,7 +391,7 @@ static func _build_debug_section(owner: Node) -> VBoxContainer:
 			var app = AppControllerHelper.get_instance()
 			if app and app.has_method("debug_skip_to_mission"):
 				app.debug_skip_to_mission(i + 1)
-			preload("res://Scripts/UI/GameNavigationMenu.gd").close(owner)
+			GameNavigationMenu.close(owner)
 		)
 
 	return vbox
@@ -450,7 +461,7 @@ static func _populate_logbook_entries(entries: VBoxContainer) -> void:
 
 	if rows.is_empty():
 		var empty_lbl: Label = MenuLogbookEmptyScene.instantiate()
-		empty_lbl.text = "No mission records yet."
+		empty_lbl.text = "No missions completed yet."
 		empty_lbl.add_theme_font_size_override("font_size", 16)
 		empty_lbl.add_theme_color_override("font_color", TEXT_MUTED)
 		entries.add_child(empty_lbl)
@@ -468,19 +479,25 @@ static func _populate_logbook_entries(entries: VBoxContainer) -> void:
 		var body: VBoxContainer = card.get_node("Body")
 		body.add_theme_constant_override("separation", 4)
 
-		var action := str(entry.get("action", "mission"))
-		var timestamp := str(entry.get("timestamp", ""))
-		var header_text := "Mission #%d  •  %s" % [idx + 1, action]
-		if timestamp != "":
-			header_text += "  •  %s" % timestamp
+		# Header: target name (label) + date
+		var target_name := str(entry.get("label", entry.get("target_id", "Unknown Target")))
+		var date_str := _format_date(str(entry.get("last_timestamp", entry.get("timestamp", ""))))
+		var header_text := target_name
+		if date_str != "":
+			header_text += "  ·  %s" % date_str
 
 		var header_lbl: Label = card.get_node("Body/HeaderLabel")
 		header_lbl.text = header_text
 		header_lbl.add_theme_font_size_override("font_size", 17)
 		header_lbl.add_theme_color_override("font_color", CYAN)
 
-		for key in ["target_id", "rocket_id", "subcontractor_name", "operation_mode", "payout", "order_completion_pct"]:
+		# Show: payout, contractor (if present)
+		var display_keys: Array = ["payout", "subcontractor_name"]
+		for key in display_keys:
 			if not entry.has(key):
+				continue
+			var val = entry.get(key)
+			if val == null or str(val) == "" or str(val) == "0":
 				continue
 			var row: HBoxContainer = MenuLogbookKeyValueRowScene.instantiate()
 			body.add_child(row)
@@ -489,7 +506,7 @@ static func _populate_logbook_entries(entries: VBoxContainer) -> void:
 			key_lbl.add_theme_font_size_override("font_size", 14)
 			key_lbl.add_theme_color_override("font_color", TEXT_MUTED)
 			var val_lbl: Label = row.get_node("ValueLabel")
-			val_lbl.text = _format_value(key, entry.get(key))
+			val_lbl.text = _format_value(key, val)
 			val_lbl.add_theme_font_size_override("font_size", 14)
 			val_lbl.add_theme_color_override("font_color", TEXT_COLOR)
 
@@ -614,14 +631,8 @@ static func _build_discovery_row(disc: Dictionary) -> HBoxContainer:
 
 static func _build_job_board_card() -> PanelContainer:
 	var sm = preload("res://Scripts/Utils/SubcontractorManager.gd")
-	var app = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
-	var level := 1
-	if app and app.has_method("get_experience_level_value"):
-		level = int(app.get_experience_level_value())
-	elif app and app.get("experience_level") != null:
-		level = int(app.experience_level)
-
-	var contractors: Array = sm.get_roster(level)
+	var mission_stage := int(RocketsManager.get_mission_stage())
+	var contractors: Array = sm.get_roster(mission_stage)
 	var market_pct := 80
 	var contractor_pct := 120
 
@@ -750,7 +761,7 @@ static func _build_inventory_card() -> PanelContainer:
 # ---------------------------------------------------------------------------
 
 static func _build_mission_requirements_card() -> PanelContainer:
-	var required := RocketsManager.get_starter_requested_minerals()
+	var required := RocketsManager.get_current_requested_minerals()
 	if required.is_empty():
 		return null
 
@@ -794,18 +805,11 @@ static func _build_marketplace_card() -> PanelContainer:
 	var header_lbl: Label = card.get_node("Body/HeaderLabel")
 	var rows_box: VBoxContainer = card.get_node("Body/Rows")
 
-	# Check player level
-	var app = AppControllerHelper.get_instance()
-	var player_level := 1
-	if app and app.has_method("get_experience_level"):
-		player_level = max(int(app.get_experience_level()), 1)
-
-	if player_level < MARKETPLACE_UNLOCK_LEVEL:
-		var locked_lbl: Label = MenuEmptyStateLabelScene.instantiate()
-		locked_lbl.text = "Mineral market prices unlock at Level %d.\nSell timing and supply/demand become visible." % MARKETPLACE_UNLOCK_LEVEL
-		locked_lbl.add_theme_color_override("font_color", TEXT_MUTED)
-		rows_box.add_child(locked_lbl)
-		return card
+	var locked_lbl: Label = MenuEmptyStateLabelScene.instantiate()
+	locked_lbl.text = "Mineral market prices are not available in this version."
+	locked_lbl.add_theme_color_override("font_color", TEXT_MUTED)
+	rows_box.add_child(locked_lbl)
+	return card
 
 	# Header
 	header_lbl.visible = true
@@ -861,17 +865,11 @@ static func _build_room_upgrades_card(owner: Node) -> PanelContainer:
 	var header_lbl: Label = card.get_node("Body/HeaderLabel")
 	var rows_box: VBoxContainer = card.get_node("Body/Rows")
 
-	var app = AppControllerHelper.get_instance()
-	var player_level := 1
-	if app and app.has_method("get_experience_level"):
-		player_level = max(int(app.get_experience_level()), 1)
-
-	if player_level < ROOM_UPGRADE_UNLOCK_LEVEL:
-		var locked_lbl: Label = MenuEmptyStateLabelScene.instantiate()
-		locked_lbl.text = "Room upgrades unlock at Level %d.\nUpgrade your rocket's modules to unlock better laser tiers, cargo capacity, and scanner range." % ROOM_UPGRADE_UNLOCK_LEVEL
-		locked_lbl.add_theme_color_override("font_color", TEXT_MUTED)
-		rows_box.add_child(locked_lbl)
-		return card
+	var locked_lbl: Label = MenuEmptyStateLabelScene.instantiate()
+	locked_lbl.text = "Room upgrades are not available in this version."
+	locked_lbl.add_theme_color_override("font_color", TEXT_MUTED)
+	rows_box.add_child(locked_lbl)
+	return card
 
 	# Determine the active rocket type
 	var awaiting_id = RocketsManager.get_primary_awaiting_rocket_id()
@@ -893,6 +891,7 @@ static func _build_room_upgrades_card(owner: Node) -> PanelContainer:
 	header_lbl.add_theme_color_override("font_color", TEXT_MUTED)
 
 	var franc_balance := 0
+	var app = AppControllerHelper.get_instance()
 	if app and app.has_method("get_franc_balance"):
 		franc_balance = int(app.get_franc_balance())
 
@@ -963,8 +962,8 @@ static func _do_room_upgrade(owner: Node, rocket_type: String, category: String,
 	if tree:
 		FirstTimeMechanicTracker.maybe_show("room_upgrades", tree)
 	# Close and reopen to rebuild with updated state
-	preload("res://Scripts/UI/GameNavigationMenu.gd").close(owner)
-	preload("res://Scripts/UI/GameNavigationMenu.gd").open(owner)
+	GameNavigationMenu.close(owner)
+	GameNavigationMenu.open(owner)
 
 static func _open_contribute_overlay(root: Control, proj_id: String, proj_name: String, reqs: Dictionary, current_progress: Dictionary) -> void:
 	# Remove any existing contribute overlay
@@ -1123,8 +1122,8 @@ static func _build_rocket_research_card(owner: Node) -> PanelContainer:
 				return
 			a.add_franc_balance(-upgrade_cost, "reusable_research_tier%d" % next_tier)
 			RocketsManager.set_reusable_research_tier(next_tier)
-			preload("res://Scripts/UI/GameNavigationMenu.gd").close(owner)
-			preload("res://Scripts/UI/GameNavigationMenu.gd").open(owner)
+			GameNavigationMenu.close(owner)
+			GameNavigationMenu.open(owner)
 		)
 	else:
 		var maxed_lbl: Label = card.get_node("Body/MaxedLabel")
@@ -1160,7 +1159,7 @@ static func _apply_button_style(btn: Button, primary: bool) -> void:
 	normal.bg_color = Color(0, 0, 0, 0)
 	normal.border_color = color
 	normal.set_border_width_all(1)
-	normal.set_corner_radius_all(28)
+	normal.set_corner_radius_all(6)
 	normal.content_margin_left = 18
 	normal.content_margin_right = 18
 	normal.content_margin_top = 10
@@ -1194,11 +1193,23 @@ static func _set_tutorial_overlay_visible(tree: SceneTree, visible: bool) -> voi
 	if visible and overlay.has_method("_refresh"):
 		overlay.call_deferred("_refresh")
 
+static func _format_date(ts: String) -> String:
+	if ts == "":
+		return ""
+	# Accept ISO-8601 prefix "YYYY-MM-DD" or "YYYY-MM-DDTHH:MM"
+	var parts := ts.split("T")
+	var date_part := parts[0] if parts.size() > 0 else ts
+	# If it looks like a Unix timestamp (all digits), skip
+	if date_part.is_valid_int():
+		return ""
+	return date_part
+
 static func _format_key(key: String) -> String:
 	const KEY_LABELS := {
+		"label": "Target",
 		"target_id": "Target",
 		"rocket_id": "Ship",
-		"payout": "Earnings",
+		"payout": "Earned",
 		"xp_awarded": "XP earned",
 		"action": "Outcome",
 		"subcontractor_name": "Contractor",

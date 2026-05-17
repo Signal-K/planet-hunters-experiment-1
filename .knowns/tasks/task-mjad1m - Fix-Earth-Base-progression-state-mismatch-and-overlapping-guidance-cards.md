@@ -1,14 +1,20 @@
 ---
+project: Experiment 1/Landnam
 id: mjad1m
 title: Fix Earth Base progression state mismatch and overlapping guidance cards
-status: in-progress
+status: done
 priority: medium
+labels:
+  - project-landnam
 labels: []
 createdAt: '2026-04-25T00:27:30.973Z'
-updatedAt: '2026-04-25T00:46:20.664Z'
+updatedAt: '2026-05-08T10:30:55.140Z'
 timeSpent: 0
 assignee: '@me'
 ---
+
+[← Back to Index](../INDEX.md)
+
 # Fix Earth Base progression state mismatch and overlapping guidance cards
 
 ## Description
@@ -19,10 +25,10 @@ Reconcile contradictory mission/base progression state on older saves, clarify m
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Earth Base no longer shows contradictory progression states such as Mission 4 alongside Control Station build gating for the same save.
-- [ ] #2 Player-facing progression copy makes it clear that mission stage and discovered planets are different things.
-- [ ] #3 Main-screen progression cards do not overlap or stack redundant guidance surfaces.
-- [ ] #4 Regression coverage exists for legacy save reconciliation and Earth Base card visibility rules.
+- [x] #1 Earth Base no longer shows contradictory progression states such as Mission 4 alongside Control Station build gating for the same save.
+- [x] #2 Player-facing progression copy makes it clear that mission stage and discovered planets are different things.
+- [x] #3 Main-screen progression cards do not overlap or stack redundant guidance surfaces.
+- [x] #4 Regression coverage exists for legacy save reconciliation and Earth Base card visibility rules.
 <!-- AC:END -->
 
 ## Implementation Plan
@@ -38,5 +44,7 @@ Reconcile contradictory mission/base progression state on older saves, clarify m
 
 <!-- SECTION:NOTES:BEGIN -->
 ✓ Reconciled legacy control/scanner progression state and removed Earth Base Star Map card. ✓ Added EarthBaseActionCard scene script so progression copy/CTA defaults live in tscn-backed cards instead of earth_base_1.gd. ✓ Earth Base now ignores historical mission log rows when no live placed rocket exists. ✓ JSON save path now uses direct writes with .bak recovery for corrupted user:// state. ✓ Stabilized later-missions suite around AppController/tutorial runtime interference.
+
+✓ All ACs verified complete. Legacy state reconciliation + card overlap removal in place.
 <!-- SECTION:NOTES:END -->
 

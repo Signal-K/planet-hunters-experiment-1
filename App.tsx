@@ -1,10 +1,11 @@
 /**
- * Planet Hunters - React Native + Godot
+ * Landnám - React Native + Godot
  */
 
 import React, { useEffect, useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { LogBox } from "react-native";
+import { useFonts } from "expo-font";
 import {
   NavigationContainer,
   type NavigationContainerRef,
@@ -27,7 +28,7 @@ interface GodotHostProps {
 
 const GodotHost = ({ interactive }: GodotHostProps) => {
   useEffect(() => {
-    initGodot("GodotTest");
+    initGodot("Landnam");
     const stopSync = startSyncLoop(700);
     const { MissionService } = require("./utils/missionService");
     MissionService.startListening();
@@ -126,6 +127,19 @@ const AppContent = () => {
 };
 
 const App = () => {
+  useFonts({
+    "Oxanium-Regular":    require("./assets/fonts/Oxanium-Regular.ttf"),
+    "Oxanium-Medium":     require("./assets/fonts/Oxanium-Medium.ttf"),
+    "Oxanium-SemiBold":   require("./assets/fonts/Oxanium-SemiBold.ttf"),
+    "Oxanium-Bold":       require("./assets/fonts/Oxanium-Bold.ttf"),
+    "Oxanium-ExtraBold":  require("./assets/fonts/Oxanium-ExtraBold.ttf"),
+    "Oxanium-Light":      require("./assets/fonts/Oxanium-Light.ttf"),
+    "Oxanium-ExtraLight": require("./assets/fonts/Oxanium-ExtraLight.ttf"),
+    "TurretRoad-Regular": require("./assets/fonts/TurretRoad-Regular.ttf"),
+    "TurretRoad-Bold":    require("./assets/fonts/TurretRoad-Bold.ttf"),
+    "TurretRoad-Medium":  require("./assets/fonts/TurretRoad-Medium.ttf"),
+  });
+
   return (
     <AuthProvider>
       <AppContent />

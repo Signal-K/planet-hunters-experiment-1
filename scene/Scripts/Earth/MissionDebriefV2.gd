@@ -31,8 +31,6 @@ const AFFINITY_BONUS_PER_POINT  := 0.005
 const AFFINITY_BONUS_CAP        := 0.25
 const ORDER_BONUS_CAP           := 0.15
 const DISCOVERY_BONUS_MULT      := 1.10
-const XP_BY_MISSION_STAGE       := {1: 80, 2: 120, 3: 160, 4: 200}
-const XP_FREE_OPS               := 100
 
 const PANEL_BG    := Color(0.03, 0.05, 0.09, 0.98)
 const CYAN        := PanelStyle.ACCENT
@@ -150,19 +148,14 @@ func _on_menu_button_pressed() -> void:
 	preload("res://Scripts/UI/GameNavigationMenu.gd").toggle(self)
 
 func _on_market_button_pressed() -> void:
-	var app = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
-	if app and app.has_method("get_experience_level"):
-		if int(app.get_experience_level()) < 5:
-			AppLogger.w("Market unlocks at Level 5")
-			return
-	if ui_manager:
-		ui_manager.show_panel(UIManager.PanelType.MARKET)
+	AppLogger.w("Market not available in this version")
+	return
 
 func _on_space_map_button_pressed() -> void:
 	if scene_manager:
-		scene_manager.change_to_scene("res://Scenes/UI/SpaceMap/space_map.tscn")
+		scene_manager.change_to_scene("res://Scenes/UI/SpaceMap/galaxy_map.tscn")
 	else:
-		get_tree().change_scene_to_file("res://Scenes/UI/SpaceMap/space_map.tscn")
+		get_tree().change_scene_to_file("res://Scenes/UI/SpaceMap/galaxy_map.tscn")
 
 func _on_new_mission_button_pressed() -> void:
 	if scene_manager:
@@ -1378,7 +1371,6 @@ func _on_sell_pressed(btn: Button) -> void:
 	if _contractor_id != "" and app:
 		SubcontractorManager.add_affinity(_contractor_id, 1)
 		SubcontractorManager.record_mission_completion(_contractor_id)
-		app.add_experience(1, "affinity")
 
 	RocketsManager.clear_trip_contract_offer()
 	_clear_cargo(tid)
@@ -1403,11 +1395,8 @@ func _resolve_debrief_once() -> void:
 	var app    = AppControllerHelper.get_instance()
 	var rid    := str(_returned.get("rocket_id", ""))
 	var tid    := str(_returned.get("target_id", ""))
-	var stage  := int(RocketsManager.get_mission_stage())
-	var xp_amt: int = XP_BY_MISSION_STAGE.get(stage, XP_FREE_OPS)
-
 	if app:
-		app.add_experience(xp_amt, "mission_completion")
+		_unlock_rockets_on_mission_complete()
 
 	MissionLogManager.add_mission({
 		"timestamp":           Time.get_datetime_string_from_system(),
@@ -1506,6 +1495,11 @@ func _calc_salvage_refund() -> int:
 		salvage_pct = RocketSpecs.get_salvage_refund_pct(rocket_id)
 	return int(round(float(base_cost) * salvage_pct))
 
+
+func _unlock_rockets_on_mission_complete() -> void:
+	var app = AppControllerHelper.get_instance()
+	if app and app.has_method("_unlock_rockets_for_mission_stage"):
+		app._unlock_rockets_for_mission_stage(RocketsManager.get_completed_mission_count())
 
 func _build_next_mission_brief() -> Dictionary:
 	var current_stage = _infer_returned_mission_stage()

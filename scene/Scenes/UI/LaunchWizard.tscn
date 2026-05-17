@@ -1,11 +1,9 @@
-[gd_scene load_steps=19 format=3 uid="uid://launch_wizard_scene"]
+[gd_scene load_steps=17 format=3 uid="uid://launch_wizard_scene"]
 
 [ext_resource type="Script" path="res://Scripts/UI/LaunchWizard.gd" id="1"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/Templates/LaunchWizardContractorCard.tscn" id="2"]
 [ext_resource type="Script" path="res://Scripts/UI/LaunchWizardMapStep.gd" id="3"]
-[ext_resource type="PackedScene" path="res://Scenes/UI/Templates/LaunchWizardRocketTile.tscn" id="4"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/Templates/LaunchWizardConfirmRow.tscn" id="5"]
-[ext_resource type="PackedScene" path="res://Scenes/UI/Templates/LaunchWizardAssemblyMetricCard.tscn" id="6"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/Templates/LaunchWizardConfirmManifestCard.tscn" id="7"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/Templates/LaunchWizardConfirmFactCard.tscn" id="8"]
 
@@ -14,35 +12,35 @@
 ; LaunchWizard.gd binds mission data into these scene-owned controls.
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_intro"]
-bg_color = Color(0.038, 0.058, 0.112, 1)
+bg_color = Color(0.045, 0.070, 0.135, 0.82)
 border_width_left = 1
 border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
-border_color = Color(0.22, 0.54, 0.8, 0.2)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
-content_margin_left = 18.0
-content_margin_top = 16.0
-content_margin_right = 18.0
-content_margin_bottom = 16.0
+border_color = Color(0.247, 0.663, 1.0, 0.14)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+content_margin_left = 24.0
+content_margin_top = 22.0
+content_margin_right = 24.0
+content_margin_bottom = 22.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_locked"]
-bg_color = Color(0.038, 0.058, 0.112, 1)
+bg_color = Color(0.04, 0.06, 0.11, 0.74)
 border_width_left = 1
 border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
-border_color = Color(0.22, 0.54, 0.8, 0.18)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
-content_margin_left = 18.0
+border_color = Color(0.247, 0.663, 1.0, 0.10)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+content_margin_left = 20.0
 content_margin_top = 14.0
-content_margin_right = 18.0
+content_margin_right = 20.0
 content_margin_bottom = 14.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_step_bg"]
@@ -56,8 +54,24 @@ content_margin_top = 16.0
 content_margin_right = 16.0
 content_margin_bottom = 16.0
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_target_card"]
+bg_color = Color(0.055, 0.082, 0.150, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.220, 0.540, 0.800, 0.18)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+content_margin_left = 16.0
+content_margin_top = 16.0
+content_margin_right = 16.0
+content_margin_bottom = 16.0
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_badge"]
-bg_color = Color(0.22, 0.54, 0.8, 0.16)
+bg_color = Color(0.247, 0.663, 1.0, 0.16)
 corner_radius_top_left = 6
 corner_radius_top_right = 6
 corner_radius_bottom_right = 6
@@ -68,44 +82,64 @@ content_margin_right = 9.0
 content_margin_bottom = 5.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_footer_secondary"]
-bg_color = Color(0.055, 0.082, 0.15, 1)
-corner_radius_top_left = 12
-corner_radius_top_right = 12
-corner_radius_bottom_right = 12
-corner_radius_bottom_left = 12
+bg_color = Color(0.05, 0.09, 0.16, 0.88)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.247, 0.663, 1.0, 0.24)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
 content_margin_left = 16.0
 content_margin_top = 8.0
 content_margin_right = 16.0
 content_margin_bottom = 8.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_footer_secondary_hover"]
-bg_color = Color(0.16, 0.42, 0.65, 1)
-corner_radius_top_left = 12
-corner_radius_top_right = 12
-corner_radius_bottom_right = 12
-corner_radius_bottom_left = 12
+bg_color = Color(0.09, 0.17, 0.30, 0.96)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.247, 0.663, 1.0, 0.84)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
 content_margin_left = 16.0
 content_margin_top = 8.0
 content_margin_right = 16.0
 content_margin_bottom = 8.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_footer_primary"]
-bg_color = Color(0.22, 0.54, 0.8, 1)
-corner_radius_top_left = 12
-corner_radius_top_right = 12
-corner_radius_bottom_right = 12
-corner_radius_bottom_left = 12
+bg_color = Color(0.10, 0.28, 0.42, 0.90)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.247, 0.663, 1.0, 0.94)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
 content_margin_left = 16.0
 content_margin_top = 8.0
 content_margin_right = 16.0
 content_margin_bottom = 8.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_footer_primary_disabled"]
-bg_color = Color(0.6, 0.6, 0.6, 1)
-corner_radius_top_left = 12
-corner_radius_top_right = 12
-corner_radius_bottom_right = 12
-corner_radius_bottom_left = 12
+bg_color = Color(0.18, 0.22, 0.30, 0.88)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.38, 0.44, 0.55, 0.36)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
 content_margin_left = 16.0
 content_margin_top = 8.0
 content_margin_right = 16.0
@@ -143,7 +177,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.038, 0.058, 0.112, 1)
+color = Color(0.02, 0.04, 0.10, 1)
 
 [node name="Scaffold" type="VBoxContainer" parent="."]
 layout_mode = 1
@@ -168,15 +202,15 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.055, 0.086, 0.165, 1)
+color = Color(0.03, 0.06, 0.13, 0.94)
 
 [node name="HeaderRow" type="HBoxContainer" parent="Scaffold/Header"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 16.0
-offset_right = -16.0
+offset_left = 20.0
+offset_right = -20.0
 grow_horizontal = 2
 grow_vertical = 2
 alignment = 0
@@ -194,7 +228,7 @@ text = "<"
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 20
 vertical_alignment = 1
 
 [node name="DotBox" type="HBoxContainer" parent="Scaffold/Header/HeaderRow"]
@@ -232,10 +266,10 @@ horizontal_scroll_mode = 2
 [node name="ScrollMargin" type="MarginContainer" parent="Scaffold/Scroll"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/margin_left = 20
-theme_override_constants/margin_right = 20
-theme_override_constants/margin_top = 20
-theme_override_constants/margin_bottom = 20
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_right = 28
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_bottom = 24
 
 [node name="CardList" type="VBoxContainer" parent="Scaffold/Scroll/ScrollMargin"]
 layout_mode = 2
@@ -245,7 +279,7 @@ theme_override_constants/separation = 16
 [node name="ContractorStep" type="VBoxContainer" parent="Scaffold/Scroll/ScrollMargin/CardList"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 14
+theme_override_constants/separation = 24
 
 [node name="IntroPanel" type="PanelContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/ContractorStep"]
 layout_mode = 2
@@ -262,21 +296,21 @@ theme_override_constants/separation = 6
 [node name="TitleLabel" type="Label" parent="Scaffold/Scroll/ScrollMargin/CardList/ContractorStep/IntroPanel/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.94, 0.98, 1)
-theme_override_font_sizes/font_size = 30
+theme_override_font_sizes/font_size = 26
 text = "Mission 1 contract"
 
 [node name="SubtitleLabel" type="Label" parent="Scaffold/Scroll/ScrollMargin/CardList/ContractorStep/IntroPanel/Margin/VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.64, 0.73, 0.84, 1)
-theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.64, 0.73, 0.84, 0.86)
+theme_override_font_sizes/font_size = 15
 text = "Pick the buyer. Their order defines the haul."
 
 [node name="ContractorGrid" type="GridContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/ContractorStep"]
 layout_mode = 2
 size_flags_horizontal = 3
 columns = 3
-theme_override_constants/h_separation = 14
-theme_override_constants/v_separation = 14
+theme_override_constants/h_separation = 24
+theme_override_constants/v_separation = 24
 
 [node name="EditorPreviewContractorCard" parent="Scaffold/Scroll/ScrollMargin/CardList/ContractorStep/ContractorGrid" instance=ExtResource("2")]
 layout_mode = 2
@@ -284,7 +318,7 @@ layout_mode = 2
 [node name="CustomMissionCard" type="PanelContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/ContractorStep"]
 layout_mode = 2
 size_flags_horizontal = 3
-modulate = Color(1, 1, 1, 0.46)
+modulate = Color(1, 1, 1, 0.56)
 theme_override_styles/panel = SubResource("StyleBoxFlat_locked")
 
 [node name="Margin" type="MarginContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/ContractorStep/CustomMissionCard"]
@@ -468,114 +502,6 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 14
 
-[node name="RocketListColumn" type="HFlowContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/h_separation = 10
-theme_override_constants/v_separation = 10
-
-[node name="EditorPreviewRocketTile" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/RocketListColumn" instance=ExtResource("4")]
-layout_mode = 2
-
-[node name="AssemblyPanel" type="PanelContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep"]
-layout_mode = 2
-size_flags_horizontal = 3
-custom_minimum_size = Vector2(0, 420)
-theme_override_styles/panel = SubResource("StyleBoxFlat_step_bg")
-
-[node name="Margin" type="MarginContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel"]
-layout_mode = 2
-
-[node name="VBox" type="VBoxContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin"]
-layout_mode = 2
-theme_override_constants/separation = 10
-
-[node name="TitleLabel" type="Label" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.82, 0.92, 0.97, 0.5)
-theme_override_font_sizes/font_size = 15
-text = "LAUNCHPAD"
-horizontal_alignment = 1
-
-[node name="TelemetryBox" type="HFlowContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/h_separation = 10
-theme_override_constants/v_separation = 10
-
-[node name="SpeedCard" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/TelemetryBox" instance=ExtResource("6")]
-layout_mode = 2
-
-[node name="KeyLabel" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/TelemetryBox/SpeedCard/Margin/VBox"]
-text = "SPEED"
-
-[node name="ValueLabel" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/TelemetryBox/SpeedCard/Margin/VBox"]
-text = "—"
-
-[node name="CargoCard" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/TelemetryBox" instance=ExtResource("6")]
-layout_mode = 2
-
-[node name="KeyLabel" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/TelemetryBox/CargoCard/Margin/VBox"]
-theme_override_colors/font_color = Color(0.129, 0.588, 0.486, 0.82)
-text = "CARGO"
-
-[node name="ValueLabel" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/TelemetryBox/CargoCard/Margin/VBox"]
-text = "—"
-
-[node name="RangeCard" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/TelemetryBox" instance=ExtResource("6")]
-layout_mode = 2
-
-[node name="KeyLabel" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/TelemetryBox/RangeCard/Margin/VBox"]
-theme_override_colors/font_color = Color(0.851, 0.467, 0.024, 0.82)
-text = "RANGE"
-
-[node name="ValueLabel" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/TelemetryBox/RangeCard/Margin/VBox"]
-text = "—"
-
-[node name="CostCard" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/TelemetryBox" instance=ExtResource("6")]
-layout_mode = 2
-
-[node name="KeyLabel" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/TelemetryBox/CostCard/Margin/VBox"]
-theme_override_colors/font_color = Color(0.506, 0.392, 0.906, 0.82)
-text = "COST"
-
-[node name="ValueLabel" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox/TelemetryBox/CostCard/Margin/VBox"]
-text = "—"
-
-[node name="StatusLabel" type="Label" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 13
-text = "FLIGHT READY"
-horizontal_alignment = 1
-
-[node name="HintLabel" type="Label" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.55, 0.65, 0.78, 0.7)
-theme_override_font_sizes/font_size = 14
-text = "Select a rocket to populate the launchpad"
-horizontal_alignment = 1
-autowrap_mode = 3
-
-[node name="PartsBox" type="VBoxContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox"]
-layout_mode = 2
-size_flags_vertical = 3
-custom_minimum_size = Vector2(0, 260)
-alignment = 1
-theme_override_constants/separation = 6
-
-[node name="PadBar" type="ColorRect" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox"]
-layout_mode = 2
-custom_minimum_size = Vector2(0, 12)
-color = Color(0.22, 0.54, 0.8, 0.6)
-
-[node name="PadLabel" type="Label" parent="Scaffold/Scroll/ScrollMargin/CardList/RocketStep/AssemblyPanel/Margin/VBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.64, 0.73, 0.84, 0.75)
-theme_override_font_sizes/font_size = 12
-text = "Launchpad awaiting configuration"
-horizontal_alignment = 1
-
 [node name="ConfirmStep" type="VBoxContainer" parent="Scaffold/Scroll/ScrollMargin/CardList"]
 visible = false
 layout_mode = 2
@@ -690,7 +616,7 @@ layout_mode = 2
 [node name="Divider" type="ColorRect" parent="Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep/SummaryCard/Margin/VBox"]
 layout_mode = 2
 custom_minimum_size = Vector2(0, 1)
-color = Color(0.22, 0.54, 0.8, 0.22)
+color = Color(0.247, 0.663, 1.0, 0.22)
 
 [node name="FactsRow" type="GridContainer" parent="Scaffold/Scroll/ScrollMargin/CardList/ConfirmStep/SummaryCard/Margin/VBox"]
 layout_mode = 2
@@ -738,41 +664,50 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.055, 0.086, 0.165, 1)
+color = Color(0.03, 0.06, 0.13, 0.96)
 
 [node name="FooterRow" type="HBoxContainer" parent="Scaffold/Footer"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 20.0
-offset_right = -20.0
-offset_top = 16.0
-offset_bottom = -16.0
+offset_left = 28.0
+offset_right = -28.0
+offset_top = 14.0
+offset_bottom = -14.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 12
+alignment = 1
+theme_override_constants/separation = 18
 
 [node name="CancelBtn" type="Button" parent="Scaffold/Footer/FooterRow"]
 layout_mode = 2
-custom_minimum_size = Vector2(110, 56)
+custom_minimum_size = Vector2(170, 56)
 theme_override_colors/font_color = Color(0.64, 0.73, 0.84, 1)
-theme_override_font_sizes/font_size = 17
+theme_override_font_sizes/font_size = 14
 theme_override_styles/normal = SubResource("StyleBoxFlat_footer_secondary")
 theme_override_styles/hover = SubResource("StyleBoxFlat_footer_secondary_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_footer_secondary_hover")
 theme_override_styles/focus = SubResource("StyleBoxFlat_footer_secondary")
-text = "Cancel"
+text = "BACK"
+
+[node name="StatusLabel" type="Label" parent="Scaffold/Footer/FooterRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.278431, 0.878431, 0.960784, 0.62)
+theme_override_font_sizes/font_size = 12
+text = "SYSTEM STATUS: OPTIMAL  •  CONTRACT BOARD ONLINE"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="NextBtn" type="Button" parent="Scaffold/Footer/FooterRow"]
 layout_mode = 2
-size_flags_horizontal = 3
-custom_minimum_size = Vector2(0, 56)
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 19
+custom_minimum_size = Vector2(220, 56)
+theme_override_colors/font_color = Color(0.86, 0.97, 1, 1)
+theme_override_font_sizes/font_size = 14
 theme_override_styles/normal = SubResource("StyleBoxFlat_footer_primary")
 theme_override_styles/hover = SubResource("StyleBoxFlat_footer_secondary_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_footer_secondary_hover")
 theme_override_styles/focus = SubResource("StyleBoxFlat_footer_primary")
 theme_override_styles/disabled = SubResource("StyleBoxFlat_footer_primary_disabled")
-text = "Next >"
+text = "PROCEED"

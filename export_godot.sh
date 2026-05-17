@@ -2,7 +2,7 @@
 
 # Godot Export Script for React Native Godot
 # Supports both iOS (PCK format) and Android (folder format)
-# Usage: ./export_godot.sh --target ./ios --project ./project --name GodotTest --preset iOS --platform ios
+# Usage: ./export_godot.sh --target ./ios --project ./project --name Landnam --preset iOS --platform ios
 
 set -eu
 
@@ -55,7 +55,7 @@ function usage() {
     echo ""
     echo "Examples:"
     echo "  # Export iOS as PCK file:"
-    echo "  $0 --target ./ios --project ./project --name GodotTest --preset iOS --platform ios"
+    echo "  $0 --target ./ios --project ./project --name Landnam --preset iOS --platform ios"
     echo ""
     echo "  # Export Android as folder:"
     echo "  $0 --target ./android/app/src/main/assets --project ./project --name main --preset Android --platform android"

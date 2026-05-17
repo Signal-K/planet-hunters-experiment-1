@@ -20,7 +20,7 @@ static func _post_schedule(tag: String, delay_secs: float, title: String, body: 
 		"url": "/",
 	}
 	JavaScriptBridge.eval(
-		"window.parent && window.parent.postMessage({source:'planet-hunters',event:'schedule_push',payload:%s}, '*')" \
+		"window.parent && window.parent.postMessage({source:'landnam',event:'schedule_push',payload:%s}, '*')" \
 		% JSON.stringify(payload)
 	)
 
