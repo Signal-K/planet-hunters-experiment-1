@@ -151,6 +151,11 @@ func _apply_off_course_check() -> void:
 		return
 	var basename: String = tree.current_scene.scene_file_path.get_file().get_basename()
 	var in_valid_scene: bool = basename in valid_scenes
+
+	# On the map during a launchpad step — skip off-course; transitioning back to launchpad.
+	if "earth_launchpad" in valid_scenes and basename in ["space_map", "galaxy_map"]:
+		return
+
 	if not in_valid_scene and not _off_course:
 		_off_course = true
 		_apply_off_course_display()
@@ -197,7 +202,7 @@ func _resume_hint_for_step(step: Dictionary) -> String:
 	if "earth_launchpad" in valid_scenes:
 		if step_id == "m1_welcome":
 			return "Start at the Launchpad: accept a contractor job, then build toward your first launch."
-		return "Return to the Launchpad to continue mission setup."
+		return "Open the Launchpad to continue mission setup."
 	if "SidescrollMining" in valid_scenes:
 		return "Your mission is in flight."
 	if "mission_debrief_v2" in valid_scenes:
