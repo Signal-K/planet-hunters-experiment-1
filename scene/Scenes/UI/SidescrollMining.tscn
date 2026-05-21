@@ -780,7 +780,7 @@ theme_override_constants/separation = 8
 [node name="MineButton" type="Button" parent="UI/BottomBar"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "MINE"
+text = "FIRE"
 
 [node name="DroneButton" type="Button" parent="UI/BottomBar"]
 layout_mode = 2

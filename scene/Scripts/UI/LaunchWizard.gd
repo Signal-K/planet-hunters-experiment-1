@@ -6,14 +6,10 @@ extends Control
 
 const RocketSpecs    = preload("res://Scripts/Utils/RocketSpecs.gd")
 const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
-const RoomCatalog = preload("res://Scripts/Utils/RoomCatalog.gd")
-const RoomSpriteAtlas = preload("res://Scripts/UI/RoomSpriteAtlas.gd")
 const MapStepScript  = preload("res://Scripts/UI/LaunchWizardMapStep.gd")
+const RocketCardScene = preload("res://Scenes/UI/Templates/LaunchWizardRocketCard.tscn")
 const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd")
 const AsteroidDetailViewScene = preload("res://Scenes/UI/AsteroidDetail/asteroid_detail_view.tscn")
-const FabricationBayScene       = preload("res://Scenes/UI/FabricationBay.tscn")
-const FabricationModuleTileScene = preload("res://Scenes/UI/Templates/FabricationModuleTile.tscn")
-const FabricationEmptySlotScene  = preload("res://Scenes/UI/Templates/FabricationEmptySlot.tscn")
 const ContractorCardScene = preload("res://Scenes/UI/Templates/LaunchWizardContractorCard.tscn")
 const ContractorCardSelectedScene = preload("res://Scenes/UI/Templates/LaunchWizardContractorCardSelected.tscn")
 const MineralChipScene = preload("res://Scenes/UI/Templates/LaunchWizardMineralChip.tscn")
@@ -79,8 +75,6 @@ var _m3_review_auto_target_id: String = ""
 # Live-update widget refs
 var _map_step:          MapStepScript  = null
 var _target_detail:     PanelContainer = null
-var _selected_assembly_room_id: String = ""
-var _fabrication_bay_root: Control = null
 
 signal back_pressed
 signal launched(rocket_id: String, target_id: String)
@@ -323,7 +317,7 @@ func _on_next() -> void:
 		_execute_launch()
 	else:
 		# Record tutorial progress
-		var app = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
+		var app = AppControllerHelper.get_instance()
 		if app and app.has_method("record_tutorial_action"):
 			if _step == Step.CONTRACTOR:
 				app.record_tutorial_action("accept_contractor_offer")
@@ -360,9 +354,11 @@ func _clear_step_content() -> void:
 			_target_hint_label.reparent(_target_detail_box)
 		_target_hint_label.visible = true
 		_target_hint_label.text = "< Tap a target on the map above"
-	if _fabrication_bay_root and is_instance_valid(_fabrication_bay_root):
-		_fabrication_bay_root.queue_free()
-	_fabrication_bay_root = null
+	# Remove any dynamically added rocket cards
+	if _rocket_step:
+		for child in _rocket_step.get_children():
+			if child.get_meta("rocket_card", false):
+				child.queue_free()
 
 func _clear_container_children(container: Node) -> void:
 	for child in container.get_children():
@@ -599,7 +595,7 @@ func _on_map_target_selected(t: Dictionary) -> void:
 	_refresh_target_detail(t)
 
 func _refresh_target_detail(t: Dictionary) -> void:
-	if not _target_detail or not is_instance_valid(_target_detail):
+	if not _target_detail_card or not is_instance_valid(_target_detail_card):
 		return
 	_clear_container_children_except(_target_detail_box, [_target_hint_label])
 	var detail := TargetDetailScene.instantiate() as VBoxContainer
@@ -648,30 +644,6 @@ func _refresh_target_detail(t: Dictionary) -> void:
 	elif science:
 		science.visible = false
 
-func _add_m3_classification_card() -> void:
-	var target := _first_unclassified_m3_target()
-	if target.is_empty():
-		var systems := RocketsManager.get_unlocked_star_systems(3)
-		_classification_card.visible = true
-		_classification_copy.text = "Candidate review complete. %d star system(s) are now available in the target map." % systems.size()
-		_clear_container_children(_classification_facts)
-		_classify_planet_btn.visible = false
-		_classify_not_planet_btn.visible = false
-		_classify_mark_dip_btn.visible = false
-		_classification_card.set_meta("target_id", "")
-		return
-
-	var label := str(target.get("label", target.get("id", "TESS candidate")))
-	_classification_card.visible = true
-	_classification_copy.text = "%s is a cached TESS/TIC lightcurve. Decide whether the dip looks like a planet before you route a rocket." % label
-	_clear_container_children(_classification_facts)
-	_classification_facts.add_child(_stat_chip("TIC", str(target.get("ticId", "cached")), true))
-	_classification_facts.add_child(_stat_chip("Period", "%.2f d" % float(target.get("period_days", 0.0)), true))
-	_classification_facts.add_child(_stat_chip("Star", str(target.get("parent_star", "TESS")), true))
-	_classify_planet_btn.visible = true
-	_classify_not_planet_btn.visible = true
-	_classify_mark_dip_btn.visible = true
-	_classification_card.set_meta("target_id", str(target.get("id", "")))
 
 func _first_unclassified_m3_target() -> Dictionary:
 	for target_any in _targets:
@@ -804,172 +776,81 @@ func _build_rocket_step() -> void:
 	if _selected_rocket == "" and not _rockets.is_empty():
 		_selected_rocket = str(_rockets[0])
 		RocketsManager.set_planning_rocket_type(_selected_rocket)
-		var rooms := _installed_rooms_for_rocket(_selected_rocket)
-		_selected_assembly_room_id = str(rooms[0].get("room_id", "")) if not rooms.is_empty() else ""
 
-	_fabrication_bay_root = FabricationBayScene.instantiate() as FabricationBay
-	_rocket_step.add_child(_fabrication_bay_root)
-	_populate_fabrication_bay()
-
-func _populate_fabrication_bay() -> void:
-	var fab := _fabrication_bay_root as FabricationBay
-	if fab == null or not is_instance_valid(fab):
-		return
-
-	fab.clear_modules()
-
-	var installed := _installed_rooms_for_rocket(_selected_rocket)
-	if installed.is_empty():
-		for slot_name in ["CHASSIS", "PROPULSION", "MINING DRILL"]:
-			var slot := FabricationEmptySlotScene.instantiate()
-			(slot.get_node("Stack/HeaderMargin/HeaderRow/SlotNameLabel") as Label).text = slot_name
-			fab.module_rail.add_child(slot)
-	else:
-		for room_any in installed:
-			if typeof(room_any) != TYPE_DICTIONARY:
-				continue
-			var room_inst: Dictionary = room_any
-			var room_def := RoomCatalog.get_room(str(room_inst.get("room_id", "")))
-			if room_def.is_empty():
-				continue
-			var room_id := str(room_inst.get("room_id", ""))
-			var selected := room_id == _selected_assembly_room_id
-			var is_propulsion := str(room_def.get("category", "")) == "power" \
-				or room_id.find("thruster") != -1 or room_id.find("engine") != -1
-			var accent := C_FAB_AMBER if is_propulsion else C_FAB_BLUE
-
-			var tile: Button = FabricationModuleTileScene.instantiate()
-			var cat_lbl := tile.get_node("Stack/HeaderMargin/HeaderRow/CategoryLabel") as Label
-			cat_lbl.text = _module_role_label(room_def, room_inst)
-			cat_lbl.add_theme_color_override("font_color", accent)
-
-			(tile.get_node("Stack/HeaderDivider") as ColorRect).color = \
-				accent if selected else C_FAB_LINE
-
-			(tile.get_node("Stack/ArtPanel/ArtStack/ArtIcon") as TextureRect).texture = \
-				_texture_for_room(room_id)
-
-			(tile.get_node("Stack/ArtPanel/ArtStack/CodeBadgeMargin/CodeCenter/CodeLabel") as Label).text = \
-				_module_code(room_def)
-
-			if selected:
-				var sel_style := StyleBoxFlat.new()
-				sel_style.bg_color = C_FAB_PANEL
-				sel_style.border_color = accent
-				sel_style.set_border_width_all(2)
-				sel_style.set_corner_radius_all(4)
-				tile.add_theme_stylebox_override("normal", sel_style)
-
-			tile.pressed.connect(func() -> void:
-				_selected_assembly_room_id = room_id
-				if _fabrication_bay_root and is_instance_valid(_fabrication_bay_root):
-					_fabrication_bay_root.queue_free()
-				_fabrication_bay_root = FabricationBayScene.instantiate() as FabricationBay
-				_rocket_step.add_child(_fabrication_bay_root)
-				_populate_fabrication_bay()
-			)
-			fab.module_rail.add_child(tile)
-
-	# Populate rocket chooser
-	var chooser := fab.rocket_chooser
-	chooser.clear()
-	if _rockets.is_empty():
-		chooser.add_item("NO ROCKETS UNLOCKED")
-		chooser.disabled = true
-	else:
-		chooser.add_item("SELECT VESSEL")
-		chooser.set_item_disabled(0, true)
-		chooser.select(0)
-		for idx in range(_rockets.size()):
-			var rtype := str(_rockets[idx])
-			chooser.add_item("%s  —  %s" % [_rocket_short_code(rtype), RocketSpecs.get_display_name(rtype)])
-			if rtype == _selected_rocket:
-				chooser.select(idx + 1)
-		if not chooser.item_selected.is_connected(_on_fab_rocket_selected):
-			chooser.item_selected.connect(_on_fab_rocket_selected)
-
-	# Stats and assembly state
-	fab.set_assembly_state(_selected_rocket != "")
-	var range_str := "%.1f AU" % RocketSpecs.get_max_range_au(_selected_rocket) \
-		if _selected_rocket != "" else "— AU"
-	fab.set_stats(installed.size(), 3, range_str)
-
-func _on_fab_rocket_selected(index: int) -> void:
-	var rocket_index := index - 1
-	if rocket_index < 0 or rocket_index >= _rockets.size():
-		return
-	_selected_rocket = str(_rockets[rocket_index])
-	RocketsManager.set_planning_rocket_type(_selected_rocket)
-	var rooms := _installed_rooms_for_rocket(_selected_rocket)
-	_selected_assembly_room_id = str(rooms[0].get("room_id", "")) if not rooms.is_empty() else ""
+	_build_rocket_cards()
 	_update_footer()
-	if _fabrication_bay_root and is_instance_valid(_fabrication_bay_root):
-		_fabrication_bay_root.queue_free()
-	_fabrication_bay_root = FabricationBayScene.instantiate() as FabricationBay
-	_rocket_step.add_child(_fabrication_bay_root)
-	_populate_fabrication_bay()
 
-func _installed_rooms_for_rocket(rtype: String) -> Array:
-	if rtype == "":
-		return []
-	var layout := RoomCatalog.create_layout_for_rocket_type(rtype)
-	var installed := _sorted_installed_rooms(layout)
-	if not installed.is_empty() and not _room_id_in_list(_selected_assembly_room_id, installed):
-		_selected_assembly_room_id = str(installed[0].get("room_id", ""))
-	return installed
+func _build_rocket_cards() -> void:
+	if _rockets.is_empty():
+		var lbl := EmptyStateLabelScene.instantiate() as Label
+		if lbl:
+			lbl.text = "No rockets unlocked yet."
+			lbl.set_meta("rocket_card", true)
+			_rocket_step.add_child(lbl)
+		return
+	for rtype_any in _rockets:
+		_add_rocket_card(str(rtype_any))
 
-func _module_role_label(room_def: Dictionary, room_inst: Dictionary) -> String:
-	var category := str(room_def.get("category", "")).to_upper()
-	if category == "POWER":
-		return "PROPULSION"
-	if category == "MINING":
-		return "MINING DRILL"
-	if str(room_inst.get("bay_id", "")) == "core_mid":
-		return "CHASSIS"
-	return category if category != "" else "MODULE"
+func _add_rocket_card(rtype: String) -> void:
+	var selected := rtype == _selected_rocket
+	var card := RocketCardScene.instantiate() as PanelContainer
+	card.set_meta("rocket_card", true)
 
-func _module_code(room_def: Dictionary) -> String:
-	var words := str(room_def.get("name", "MODULE")).to_upper().split(" ")
-	var parts: Array[String] = []
-	for word in words:
-		if str(word).is_empty():
-			continue
-		parts.append(str(word).substr(0, min(4, str(word).length())))
-		if parts.size() >= 2:
-			break
-	return "-".join(parts)
+	var bg := C_FAB_PANEL_H if selected else C_FAB_PANEL
+	var border := C_FAB_BLUE if selected else C_FAB_LINE
+	var border_w := 2 if selected else 1
+	var style := StyleBoxFlat.new()
+	style.bg_color = bg
+	style.border_color = border
+	style.set_border_width_all(border_w)
+	style.set_corner_radius_all(8)
+	style.content_margin_left   = 20
+	style.content_margin_right  = 20
+	style.content_margin_top    = 16
+	style.content_margin_bottom = 16
+	card.add_theme_stylebox_override("panel", style)
 
-func _sorted_installed_rooms(layout: Dictionary) -> Array:
-	var bays: Dictionary = layout.get("bays", {})
-	var rows: Array = []
-	for bay_id in ["core_engine", "core_mid", "core_aft", "expansion_t2"]:
-		if not bays.has(bay_id):
-			continue
-		for room_inst_any in bays[bay_id].get("rooms", []):
-			if typeof(room_inst_any) != TYPE_DICTIONARY:
-				continue
-			var room_inst: Dictionary = room_inst_any
-			rows.append({
-				"bay_id": bay_id,
-				"room_id": room_inst.get("room_id", ""),
-				"tier": room_inst.get("tier", 1),
-				"offline": bool(room_inst.get("offline", false))
-			})
-	return rows
+	var cost_f  := float(RocketSpecs.get_cost(rtype)) / 1_000_000_000.0
+	var dur_sec := RocketSpecs.get_mission_seconds(rtype)
+	var dur_str := "%d min" % (dur_sec / 60) if dur_sec >= 60 else "%ds" % dur_sec
 
-func _room_id_in_list(room_id: String, rooms: Array) -> bool:
-	for room_any in rooms:
-		if typeof(room_any) != TYPE_DICTIONARY:
-			continue
-		if str((room_any as Dictionary).get("room_id", "")) == room_id:
-			return true
-	return false
+	_set_label_text(card, "Margin/VBox/HeaderRow/NameLabel", RocketSpecs.get_display_name(rtype))
+	_set_label_text(card, "Margin/VBox/HeaderRow/StatusLabel", "SELECTED" if selected else "AVAILABLE")
+	_set_label_text(card, "Margin/VBox/StatsRow/RangeChip/ValueLabel",    "%.0f AU" % RocketSpecs.get_max_range_au(rtype))
+	_set_label_text(card, "Margin/VBox/StatsRow/CostChip/ValueLabel",     "%.1fB F" % cost_f)
+	_set_label_text(card, "Margin/VBox/StatsRow/DurationChip/ValueLabel", dur_str)
 
-func _texture_for_room(room_id: String) -> Texture2D:
-	var generated_path := "res://assets/Rooms/generated_parts_512/%s.png" % room_id
-	if ResourceLoader.exists(generated_path):
-		return load(generated_path) as Texture2D
-	return RoomSpriteAtlas.texture_for_room(room_id)
+	var name_lbl := card.get_node_or_null("Margin/VBox/HeaderRow/NameLabel") as Label
+	if name_lbl:
+		name_lbl.add_theme_color_override("font_color", C_FAB_BLUE if selected else C_ON_SURF)
+
+	var status_lbl := card.get_node_or_null("Margin/VBox/HeaderRow/StatusLabel") as Label
+	if status_lbl:
+		status_lbl.add_theme_color_override("font_color", C_FAB_BLUE if selected else C_ON_SURF_VAR)
+
+	for chip_path in ["Margin/VBox/StatsRow/RangeChip", "Margin/VBox/StatsRow/CostChip", "Margin/VBox/StatsRow/DurationChip"]:
+		var key_lbl := card.get_node_or_null(chip_path + "/KeyLabel") as Label
+		if key_lbl:
+			key_lbl.add_theme_color_override("font_color", C_ON_SURF_VAR)
+		var val_lbl := card.get_node_or_null(chip_path + "/ValueLabel") as Label
+		if val_lbl:
+			val_lbl.add_theme_color_override("font_color", C_ON_SURF)
+
+	var select_btn := card.get_node_or_null("Margin/VBox/SelectButton") as Button
+	if select_btn:
+		select_btn.visible = not selected
+		select_btn.text = "Select"
+		select_btn.pressed.connect(func() -> void:
+			_selected_rocket = rtype
+			RocketsManager.set_planning_rocket_type(rtype)
+			_update_footer()
+			for child in _rocket_step.get_children():
+				if child.get_meta("rocket_card", false):
+					child.queue_free()
+			_build_rocket_cards()
+		)
+
+	_rocket_step.add_child(card)
 
 # ── Step: Confirm ─────────────────────────────────────────────────────────────
 

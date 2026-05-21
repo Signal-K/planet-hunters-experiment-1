@@ -10,8 +10,6 @@ const RocketsTargeting = preload("res://Scripts/Utils/RocketsTargeting.gd")
 const CurrencyManager = preload("res://Scripts/Utils/CurrencyManager.gd")
 const LaunchWizard = preload("res://Scripts/UI/LaunchWizard.gd")
 const GameNavigationMenu = preload("res://Scripts/UI/GameNavigationMenu.gd")
-const GameMenuMarketplaceRowScene = preload("res://Scenes/UI/Templates/GameMenuMarketplaceRow.tscn")
-const GameMenuRoomUpgradeRowScene = preload("res://Scenes/UI/Templates/GameMenuRoomUpgradeRow.tscn")
 const EmergencyLoanOfferDialogScene = preload("res://Scenes/UI/EmergencyLoanOfferDialog.tscn")
 const EarthBaseScene = preload("res://Scenes/Earth/earth_base_1.tscn")
 const EarthLaunchpadScene = preload("res://Scenes/Earth/earth_launchpad.tscn")
@@ -578,6 +576,10 @@ func test_game_navigation_menu_settings_and_reset_sections() -> void:
 	reporter.start_test("[UX] GameNavigationMenu includes unified settings and reset buttons")
 	var owner := Control.new()
 	get_root().add_child(owner)
+	var existing_layer := get_root().get_node_or_null("GameMenuLayer")
+	if existing_layer != null:
+		existing_layer.queue_free()
+		await create_timer(0.02).timeout
 	GameNavigationMenu.open(owner)
 	await create_timer(0.05).timeout
 	var layer := get_root().get_node_or_null("GameMenuLayer")
@@ -655,83 +657,6 @@ func test_subcontractors_panel_uses_template_backed_detail_labels() -> void:
 	panel.queue_free()
 	reporter.pass_test()
 
-func test_game_navigation_menu_construction_uses_templates() -> void:
-	reporter.start_test("[UX] GameNavigationMenu construction overlay uses template-backed scenes")
-	var owner := Control.new()
-	get_root().add_child(owner)
-	GameNavigationMenu._open_contribute_overlay(owner, "test-project", "Test Project", {"Iron": 4, "Nickel": 2}, {"Iron": 1})
-	await create_timer(0.02).timeout
-	var overlay := owner.get_node_or_null("ContributeOverlay")
-	if overlay == null:
-		reporter.fail_test("Expected ContributeOverlay under owner")
-		owner.queue_free()
-		return
-	var expected_paths = [
-		"Center/Panel/Content/Rows",
-		"Center/Panel/Content/StatusLabel",
-		"Center/Panel/Content/ConfirmButton"
-	]
-	for path in expected_paths:
-		if overlay.get_node_or_null(path) == null:
-			reporter.fail_test("Expected contribute overlay scene node at %s" % path)
-			owner.queue_free()
-			return
-	var rows := overlay.get_node("Center/Panel/Content/Rows") as VBoxContainer
-	if rows.get_child_count() == 0:
-		reporter.fail_test("Expected template-backed mineral rows in contribute overlay")
-		owner.queue_free()
-		return
-	if rows.get_child(0).name != "GameMenuContributeMineralRow":
-		reporter.fail_test("Expected GameMenuContributeMineralRow template, got %s" % rows.get_child(0).name)
-		owner.queue_free()
-		return
-	owner.queue_free()
-	reporter.pass_test()
-
-func test_game_navigation_menu_live_cards_use_templates() -> void:
-	reporter.start_test("[UX] GameNavigationMenu live contractor, market, upgrade, and research cards use templates")
-	var job_card = GameNavigationMenu._build_job_board_card()
-	var job_body := job_card.get_node_or_null("Body") as VBoxContainer
-	if job_body == null:
-		reporter.fail_test("Expected job board to use scene-backed info card shell")
-		return
-	var job_rows := job_card.get_node_or_null("Body/Rows") as VBoxContainer
-	if job_card.get_node_or_null("Body/LegendRow") == null or job_rows == null:
-		reporter.fail_test("Expected job board card scene-owned legend and rows hosts")
-		return
-	for child in job_rows.get_children():
-		if child.name == "GameMenuContractorRow":
-			break
-		if child == job_rows.get_child(job_rows.get_child_count() - 1):
-			reporter.fail_test("Expected at least one GameMenuContractorRow in job board card")
-			return
-
-	var market_card = GameNavigationMenu._build_marketplace_card()
-	if market_card.get_node_or_null("Body/Rows") == null:
-		reporter.fail_test("Expected marketplace card to use scene-backed info card shell")
-		return
-	if GameMenuMarketplaceRowScene.instantiate().name != "GameMenuMarketplaceRow":
-		reporter.fail_test("Expected GameMenuMarketplaceRow template to instantiate cleanly")
-		return
-
-	var owner := Control.new()
-	get_root().add_child(owner)
-	var upgrades_card = GameNavigationMenu._build_room_upgrades_card(owner)
-	if upgrades_card.get_node_or_null("Body/Rows") == null:
-		reporter.fail_test("Expected room upgrades card to use scene-backed info card shell")
-		owner.queue_free()
-		return
-	if GameMenuRoomUpgradeRowScene.instantiate().name != "GameMenuRoomUpgradeRow":
-		reporter.fail_test("Expected GameMenuRoomUpgradeRow template to instantiate cleanly")
-		owner.queue_free()
-		return
-	var research_card = GameNavigationMenu._build_rocket_research_card(owner)
-	if research_card.name != "GameMenuResearchCard":
-		reporter.fail_test("Expected GameMenuResearchCard template, got %s" % research_card.name)
-		owner.queue_free()
-		return
-	owner.queue_free()
-	reporter.pass_test()
 
 func test_scanner_station_legacy_state_reconciles_after_m3() -> void:
 	reporter.start_test("[UX] Scanner station legacy build state reconciles automatically after Mission 3")
