@@ -857,34 +857,6 @@ func _has_visible_tutorial_overlay() -> bool:
 		return (overlay as CanvasItem).visible
 	return true
 
-func _get_tutorial_state() -> Dictionary:
-	var tree := get_tree()
-	if tree == null or tree.root == null:
-		return {}
-	var root := tree.root
-	var fallback_state := {}
-	var stack: Array[Node] = [root]
-	while not stack.is_empty():
-		var node: Node = stack.pop_back()
-		if node.has_method("get_tutorial_state"):
-			var state: Dictionary = node.get_tutorial_state()
-			var step: Dictionary = state.get("current_step", {})
-			if not step.is_empty():
-				return state
-			if fallback_state.is_empty():
-				fallback_state = state
-		for child in node.get_children():
-			stack.append(child)
-	var app = AppControllerHelper.get_instance()
-	if app != null and app.has_method("get_tutorial_state"):
-		var state: Dictionary = app.get_tutorial_state()
-		var step: Dictionary = state.get("current_step", {})
-		if not step.is_empty():
-			return state
-		if fallback_state.is_empty():
-			fallback_state = state
-	return fallback_state
-
 func get_active_mission_context() -> Dictionary:
 
 	var returned: Dictionary = RocketsManager.get_returned_mission()

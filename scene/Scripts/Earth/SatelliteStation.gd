@@ -12,7 +12,6 @@ const NumberFormat = preload("res://Scripts/Utils/NumberFormat.gd")
 func _ready():
 	super._ready()
 	structure_name = "Scanner Station"
-	print("Satellite Station initialized: " + structure_name)
 	if _build_dialog and not _build_dialog.confirmed.is_connected(_on_confirm_build_scanner):
 		_build_dialog.confirmed.connect(_on_confirm_build_scanner)
 	if _info_dialog and not _info_dialog.confirmed.is_connected(_on_unlock_info_confirmed):
@@ -38,26 +37,11 @@ func on_interact():
 		_prompt_scanner_build_flow()
 		return
 	super.on_interact()
-	print("Satellite Station clicked: " + structure_name)
-	
-	# Get the UIManager from the scene tree
 	var ui_manager = get_tree().get_first_node_in_group("ui_manager")
-	print("Found UIManager in group: ", ui_manager != null)
-	
 	if not ui_manager:
-		# Try to get from main scene
-		var main_scene = get_tree().current_scene
-		for child in main_scene.get_children():
-			if child is UIManager:
-				ui_manager = child
-				break
-		print("Found UIManager as child: ", ui_manager != null)
-	
-	if ui_manager:
-		print("Calling show_structure_panel...")
-		ui_manager.show_structure_panel("res://Scenes/UI/SatelliteStationPanel.tscn")
-	else:
-		print("ERROR: UIManager not found for Satellite Station")
+		push_error("SatelliteStation: UIManager not in 'ui_manager' group")
+		return
+	ui_manager.show_structure_panel("res://Scenes/UI/SatelliteStationPanel.tscn")
 
 
 func _on_rockets_reset() -> void:
