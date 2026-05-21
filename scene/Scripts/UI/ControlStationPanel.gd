@@ -286,7 +286,7 @@ func _create_mission_card(
 	var is_returning := rocket_status == "returning"
 	var card: PanelContainer = ControlStationActiveMissionCardScene.instantiate()
 	var rocket_label: Label = card.get_node("Margin/VBox/HeaderRow/RocketLabel")
-	rocket_label.text = "%s // %s" % [RocketSpecs.get_display_name(rocket_id), "Agile Scout" if rocket_id.contains("2") else "Heavy Freighter"]
+	rocket_label.text = RocketSpecs.get_display_name(rocket_id)
 	rocket_label.add_theme_color_override("font_color", Color(0.14, 0.18, 0.20, 1.0))
 	rocket_label.add_theme_font_size_override("font_size", 24)
 
@@ -302,7 +302,8 @@ func _create_mission_card(
 	subtitle.add_theme_font_size_override("font_size", 14)
 
 	var target_row: Label = card.get_node("Margin/VBox/TargetLabel")
-	target_row.text = "%s  %s" % ["COORDINATE LINK" if not is_returning else "ENTRY VECTOR", "41.40338, 2.17403" if not is_returning else "02.14921, 5.11022"]
+	var target_display := target_label if target_label != "" else target_id
+	target_row.text = "%s  %s" % ["TARGET" if not is_returning else "RETURNING FROM", target_display]
 
 	var action_button: Button = card.get_node("Margin/VBox/ActionButton")
 	action_button.text = "RESUME →" if not is_returning else "INBOUND %s" % _format_eta(eta_seconds)

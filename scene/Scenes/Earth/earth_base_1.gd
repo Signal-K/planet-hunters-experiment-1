@@ -4,6 +4,10 @@ extends Node2D
 
 const SceneManager = preload("res://Scripts/Earth/SceneManager.gd")
 const UIManager = preload("res://Scripts/Earth/UIManager.gd")
+const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
+const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd")
+const CameraController = preload("res://Scripts/Earth/CameraController.gd")
+const DebugVisualizer = preload("res://Scripts/Earth/DebugVisualizer.gd")
 const PREVIEW_SCENE_PATH := "res://Scenes/UI/AsteroidPreview/asteroid_preview.tscn"
 const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
@@ -20,8 +24,11 @@ const FreeOpsUnlockOverlayScene = preload("res://Scenes/UI/FreeOpsUnlockOverlay.
 const StarterRocket2HighlightChipScene = preload("res://Scenes/UI/Templates/StarterRocket2HighlightChip.tscn")
 const EarthBaseBuildFlowOverlayScene = preload("res://Scenes/UI/EarthBaseBuildFlowOverlay.tscn")
 const EmergencyLoanOfferDialogScene = preload("res://Scenes/UI/EmergencyLoanOfferDialog.tscn")
+const ControlStationBuiltDialogueScene = preload("res://Scenes/UI/ControlStationBuiltDialogue.tscn")
+const ControlStationLabelScene = preload("res://Scenes/UI/ControlStationLabel.tscn")
 const ClassificationConsensusNotificationScene = preload("res://Scenes/UI/ClassificationConsensusNotification.tscn")
 const ControlStationScript = preload("res://Scripts/Earth/ControlStation.gd")
+const LaunchpadTexture = preload("res://assets/Structures/launchpad.png")
 const CONTROL_STATION_TEXTURE_PATH := "res://assets/Structures/ControlStation.png"
 const PreviewRouting = preload("res://Scripts/UI/NewMissionPreviewRouting.gd")
 const SR2_UNLOCK_POPUP_PATH := "user://rocket_unlock_popups.cfg"
@@ -34,6 +41,7 @@ const CONTROL_STATION_LABEL_POSITION := Vector2(1600, 620)
 const CONTROL_STATION_COLLISION_SIZE := Vector2(200, 200)
 const GLASS_CARD_BG := Color(0.06, 0.10, 0.16, 0.95)
 const GLASS_CARD_SUBTLE_BG := Color(0.08, 0.12, 0.20, 0.93)
+const COMPACT_LAYOUT_BREAKPOINT := 1200.0
 
 var _build_flow_requested_structure: String = ""
 var _build_flow_location_id: String = ""
@@ -43,7 +51,6 @@ var _build_flow_location_id: String = ""
 func _ready() -> void:
 	_ensure_tutorial_runtime()
 	# Initialize camera controller
-	var CameraController = preload("res://Scripts/Earth/CameraController.gd")
 	camera_controller = CameraController.new()
 	add_child(camera_controller)
 	camera_controller.initialize($Camera2D)
@@ -58,8 +65,7 @@ func _ready() -> void:
 	ui_manager.add_to_group("ui_manager")  # Add to group for easy access
 
 	# Reopen New Mission panel if requested by previous scene
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
-	if rm and rm.consume_return_to_new_mission_panel():
+	if RocketsManager.consume_return_to_new_mission_panel():
 		ui_manager.show_panel(UIManager.PanelType.NEW_MISSION)
 	
 	# Connect button signals
@@ -69,10 +75,9 @@ func _ready() -> void:
 	
 	# Create ground guide lines if enabled
 	if show_ground_guide:
-		var DebugVisualizer = preload("res://Scripts/Earth/DebugVisualizer.gd")
 		DebugVisualizer.create_ground_guides(self)
 
-	var app_ctrl = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
+	var app_ctrl = AppControllerHelper.get_instance()
 	var ux_tour_running = app_ctrl != null and app_ctrl.get("is_ux_tour_running") == true
 
 	if not ux_tour_running:
@@ -88,12 +93,12 @@ func _ready() -> void:
 	call_deferred("_refresh_tutorial_owned_ui")
 
 func _ensure_tutorial_runtime() -> void:
-	var app = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
+	var app = AppControllerHelper.get_instance()
 	if app != null and app.has_method("_ensure_tutorial_runtime"):
 		app._ensure_tutorial_runtime()
 
 func _connect_app_runtime_signals() -> void:
-	var app = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
+	var app = AppControllerHelper.get_instance()
 	if app == null:
 		_connect_tutorial_overlay_signals()
 		return
@@ -287,29 +292,22 @@ func _sprite_contains_point(sprite: Sprite2D, screen_position: Vector2) -> bool:
 
 # Button handlers
 func _on_back_button_pressed() -> void:
-	print("Back button pressed - navigating backward")
 	if _open_preview_delta(-1):
 		return
 	scene_manager.navigate_backward()
 
 func _on_forward_button_pressed() -> void:
-	print("Forward button pressed - navigating forward")
 	if _open_preview_delta(1):
 		return
 	scene_manager.navigate_forward()
 
 func _on_menu_button_pressed() -> void:
-	print("Menu button pressed - showing menu panel")
 	preload("res://Scripts/UI/GameNavigationMenu.gd").toggle(self)
 
 func _on_market_button_pressed() -> void:
-	print("Market button pressed - showing market panel")
 	ui_manager.show_panel(UIManager.PanelType.MARKET)
 
 func _on_build_button_pressed() -> void:
-	_start_guided_build_flow("")
-
-func _show_build_overlay() -> void:
 	_start_guided_build_flow("")
 
 func _start_guided_build_flow(requested_structure: String = "") -> void:
@@ -381,11 +379,9 @@ func _show_build_structure_step(overlay: Control) -> void:
 func _available_build_structures() -> Array:
 	var options := []
 	if _control_station_build_required():
-		var rm = preload("res://Scripts/Utils/RocketsManager.gd")
 		var cost_str := "500M F"
-		if rm:
-			var cost := rm.get_control_station_build_cost()
-			cost_str = preload("res://Scripts/Utils/CurrencyFormatter.gd").format_with_symbol(cost)
+		var cost := RocketsManager.get_control_station_build_cost()
+		cost_str = NumberFormat.with_symbol(cost)
 		options.append({
 			"id": "control_station",
 			"title": "Control Station",
@@ -414,17 +410,16 @@ func _complete_guided_structure_build(structure_id: String, overlay: Control) ->
 	_build_flow_location_id = ""
 
 func _complete_control_station_build() -> bool:
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
-	if not rm or rm.is_control_station_built() or not _control_station_build_required():
+	if RocketsManager.is_control_station_built() or not _control_station_build_required():
 		return false
 	var app = get_tree().root.find_child("AppController", true, false)
 	if app == null or not app.has_method("get_franc_balance") or not app.has_method("add_franc_balance"):
 		return false
-	var cost := rm.get_control_station_build_cost()
-	if not rm.can_afford_control_station_build(int(app.get_franc_balance())):
+	var cost := RocketsManager.get_control_station_build_cost()
+	if not RocketsManager.can_afford_control_station_build(int(app.get_franc_balance())):
 		return false
 	app.add_franc_balance(-cost, "build_control_station")
-	rm.set_control_station_built(true)
+	RocketsManager.set_control_station_built(true)
 	preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("build_control_station")
 	_sync_control_station_presence()
 	_apply_control_station_visual_tier()
@@ -434,68 +429,34 @@ func _complete_control_station_build() -> bool:
 	return true
 
 func _show_control_station_built_dialogue() -> void:
-	var viewport_size := get_viewport().get_visible_rect().size
-	var compact := viewport_size.x < 1200.0
+	var vp_w := get_viewport().get_visible_rect().size.x
+	var compact := vp_w < COMPACT_LAYOUT_BREAKPOINT
 
-	# Full-screen dimmed backdrop
-	var backdrop := ColorRect.new()
-	backdrop.name = "ControlStationBuiltDialogue"
-	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	backdrop.color = Color(0.0, 0.0, 0.0, 0.72)
+	var backdrop: ColorRect = ControlStationBuiltDialogueScene.instantiate()
 	$UILayer.add_child(backdrop)
 
-	# Centered layout
-	var center := CenterContainer.new()
-	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	backdrop.add_child(center)
-
-	var card := PanelContainer.new()
-	card.custom_minimum_size = Vector2(clampf(viewport_size.x - 48.0, 320.0, 660.0), 0.0)
+	var card: PanelContainer = backdrop.get_node("Center/Card")
+	card.custom_minimum_size = Vector2(clampf(vp_w - 48.0, 320.0, 660.0), 0.0)
 	_apply_glass_callout_panel(card, Color(0.06, 0.10, 0.16, 0.98), 0.65, 20, 28, 26)
-	center.add_child(card)
 
-	var margin := MarginContainer.new()
-	margin.add_theme_constant_override("margin_left", 0)
-	margin.add_theme_constant_override("margin_right", 0)
-	margin.add_theme_constant_override("margin_top", 0)
-	margin.add_theme_constant_override("margin_bottom", 0)
-	card.add_child(margin)
-
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 18)
-	margin.add_child(vbox)
-
-	# Eyebrow
-	var eyebrow := Label.new()
-	eyebrow.text = "MISSION 2  •  FLEET HUB ONLINE"
+	var vbox: VBoxContainer = card.get_node("VBox")
+	var eyebrow: Label = vbox.get_node("Eyebrow")
 	eyebrow.add_theme_color_override("font_color", Color(0.28, 0.88, 0.96, 1.0))
 	eyebrow.add_theme_font_size_override("font_size", 14)
-	vbox.add_child(eyebrow)
 
-	# Title
-	var title := Label.new()
-	title.text = "Control Station Built"
+	var title: Label = vbox.get_node("Title")
 	title.add_theme_color_override("font_color", Color(0.95, 0.93, 0.90, 1.0))
 	title.add_theme_font_size_override("font_size", 34 if compact else 40)
-	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	vbox.add_child(title)
 
-	# Body
-	var body := Label.new()
-	body.text = "The Control Station is your base of operations for Mission 2 fleet planning. You can now build Starter Rocket 2, take on contractor delivery orders for payout bonuses, and push further into the belt."
+	var body: Label = vbox.get_node("Body")
 	body.add_theme_color_override("font_color", Color(0.78, 0.84, 0.92, 1.0))
 	body.add_theme_font_size_override("font_size", 20 if compact else 24)
-	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	vbox.add_child(body)
 
-	# Highlight chips
-	var chips_box := VBoxContainer.new()
-	chips_box.add_theme_constant_override("separation", 10)
-	vbox.add_child(chips_box)
-	for chip_text in [
+	var chips_box: VBoxContainer = vbox.get_node("ChipsBox")
+	for chip_text: String in [
 		"STARTER ROCKET 2  •  Now buildable — faster, longer range, bigger haul.",
 		"CONTRACTORS  •  Accept a delivery order before launch for a payout bonus.",
-		"BELT ACCESS  •  SR2 reaches targets beyond SR1's operating radius."
+		"BELT ACCESS  •  SR2 reaches targets beyond SR1's operating radius.",
 	]:
 		var chip := PanelContainer.new()
 		_apply_glass_callout_panel(chip, GLASS_CARD_SUBTLE_BG, 0.42, 12, 18, 14)
@@ -507,61 +468,36 @@ func _show_control_station_built_dialogue() -> void:
 		chip.add_child(chip_label)
 		chips_box.add_child(chip)
 
-	# Spacer
-	var spacer := Control.new()
-	spacer.custom_minimum_size = Vector2(0, 4)
-	vbox.add_child(spacer)
-
-	# CTA
-	var cta := Button.new()
-	cta.text = "Open Launchpad"
-	cta.custom_minimum_size = Vector2(0, 52)
-	var cta_style := StyleBoxFlat.new()
-	cta_style.bg_color = Color(0.10, 0.54, 0.46, 1.0)
-	cta_style.set_corner_radius_all(10)
-	cta_style.content_margin_left = 24
-	cta_style.content_margin_right = 24
-	cta_style.content_margin_top = 12
-	cta_style.content_margin_bottom = 12
-	var cta_hover := cta_style.duplicate() as StyleBoxFlat
-	cta_hover.bg_color = Color(0.13, 0.65, 0.55, 1.0)
-	cta.add_theme_stylebox_override("normal", cta_style)
-	cta.add_theme_stylebox_override("hover", cta_hover)
-	cta.add_theme_stylebox_override("pressed", cta_style)
-	cta.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0, 1.0))
+	var cta: Button = vbox.get_node("CTA")
+	PanelStyle.apply_button(cta, true)
 	cta.add_theme_font_size_override("font_size", 20)
 	cta.pressed.connect(func() -> void:
 		if is_instance_valid(backdrop):
 			backdrop.queue_free()
 		_on_new_mission_button_pressed()
 	)
-	vbox.add_child(cta)
 
-	# Fade in
 	backdrop.modulate.a = 0.0
-	var tw := create_tween()
-	tw.tween_property(backdrop, "modulate:a", 1.0, 0.2)
+	create_tween().tween_property(backdrop, "modulate:a", 1.0, 0.2)
 
 func _complete_scanner_station_build() -> bool:
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
-	if not rm or rm.is_scanner_station_built() or not _scanner_station_build_required():
+	if RocketsManager.is_scanner_station_built() or not _scanner_station_build_required():
 		return false
 	var app = get_tree().root.find_child("AppController", true, false)
 	if app == null or not app.has_method("get_franc_balance") or not app.has_method("add_franc_balance"):
 		return false
-	var cost = rm.get_scanner_build_cost()
+	var cost = RocketsManager.get_scanner_build_cost()
 	var balance = int(app.get_franc_balance())
-	if not rm.can_afford_scanner_build(balance):
+	if not RocketsManager.can_afford_scanner_build(balance):
 		return false
 	app.add_franc_balance(-cost, "build_scanner_station")
-	rm.set_scanner_station_built(true)
+	RocketsManager.set_scanner_station_built(true)
 	preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("build_scanner_station")
 	_apply_tutorial_button_state()
 	_build_progression_cards()
 	return true
 
 func _on_space_map_button_pressed() -> void:
-	print("Space Map button pressed - opening space map scene")
 	if scene_manager:
 		scene_manager.change_to_scene("res://Scenes/UI/SpaceMap/space_map.tscn")
 	else:
@@ -571,7 +507,6 @@ func _on_new_mission_button_pressed() -> void:
 	if _control_station_build_required():
 		_build_progression_cards()
 		return
-	print("New Mission button pressed - opening launchpad scene")
 	preload("res://Scripts/Utils/AppControllerHelper.gd").record_tutorial_action("open_launchpad")
 	if scene_manager:
 		scene_manager.change_to_scene("res://Scenes/Earth/earth_launchpad.tscn")
@@ -579,19 +514,16 @@ func _on_new_mission_button_pressed() -> void:
 		get_tree().change_scene_to_file("res://Scenes/Earth/earth_launchpad.tscn")
 
 func _open_preview_delta(delta: int) -> bool:
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
-	if not rm:
-		return false
-	var candidates = rm.get_preview_candidates()
+	var candidates = RocketsManager.get_preview_candidates()
 	if candidates.is_empty():
 		return false
-	var idx = rm.get_preview_index()
+	var idx = RocketsManager.get_preview_index()
 	idx = (idx + delta) % candidates.size()
 	if idx < 0:
 		idx = candidates.size() - 1
-	rm.set_preview_index(idx)
+	RocketsManager.set_preview_index(idx)
 	var target = candidates[idx]
-	rm.set_preview_target(
+	RocketsManager.set_preview_target(
 		str(target.get("target_id", "")),
 		str(target.get("label", "")),
 		str(target.get("type", "asteroid")),
@@ -606,10 +538,9 @@ func _open_preview_delta(delta: int) -> bool:
 func _maybe_show_starterrocket2_unlock_popup() -> void:
 	if _has_seen_starterrocket2_unlock_popup():
 		return
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
-	if not rm or not rm.is_unlocked("starterrocket2"):
+	if not RocketsManager.is_unlocked("starterrocket2"):
 		return
-	var completed_count = int(rm.get_completed_mission_count())
+	var completed_count = int(RocketsManager.get_completed_mission_count())
 	if completed_count < 1:
 		return
 	_mark_starterrocket2_unlock_popup_seen()
@@ -625,11 +556,11 @@ func _show_starterrocket2_unlock_popup() -> void:
 	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	intro.modulate = Color(1, 1, 1, 0.0)
 	PanelStyle.apply_title_on_dark(intro)
-	intro.add_theme_font_size_override("font_size", 36 if get_viewport().get_visible_rect().size.x < 1200.0 else 42)
+	intro.add_theme_font_size_override("font_size", 36 if get_viewport().get_visible_rect().size.x < COMPACT_LAYOUT_BREAKPOINT else 42)
 
 	var viewport := get_viewport().get_visible_rect().size
 	var vp_w := viewport.x
-	var compact := viewport.x < 1200.0
+	var compact := viewport.x < COMPACT_LAYOUT_BREAKPOINT
 	var panel: PanelContainer = overlay.get_node("Center/Stack/Card")
 	panel.custom_minimum_size = Vector2(clampf(vp_w - 48.0, 300.0, 700.0), 0)
 	_apply_glass_callout_panel(panel)
@@ -727,11 +658,8 @@ func _show_starterrocket2_unlock_popup() -> void:
 func _maybe_show_free_ops_unlock() -> void:
 	if _has_seen_free_ops_unlock():
 		return
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
-	if not rm:
-		return
 	# Free ops unlocks after completing all 4 authored missions
-	if int(rm.get_completed_mission_count()) < 4:
+	if int(RocketsManager.get_completed_mission_count()) < 4:
 		return
 	_mark_free_ops_unlock_seen()
 	_show_free_ops_unlock_overlay()
@@ -755,7 +683,7 @@ func _show_free_ops_unlock_overlay() -> void:
 		start_btn.text = "Open Launchpad"
 
 	if overlay.has_signal("cta_pressed"):
-		overlay.connect("cta_pressed", Callable(self, "_on_new_mission_button_pressed"))
+		overlay.cta_pressed.connect(_on_new_mission_button_pressed)
 
 	overlay.modulate.a = 0.0
 	var intro = create_tween()
@@ -775,7 +703,7 @@ func _mark_free_ops_unlock_seen() -> void:
 	cfg.save(SR2_UNLOCK_POPUP_PATH)
 
 func _maybe_offer_loan() -> void:
-	var app = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
+	var app = AppControllerHelper.get_instance()
 	if app == null or not app.has_method("can_take_loan"):
 		return
 	if not app.can_take_loan():
@@ -788,16 +716,13 @@ func _show_loan_offer_dialog(_app: Node) -> void:
 	add_child(ui_layer)
 
 func _control_station_build_required() -> bool:
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
-	if not rm:
-		return false
-	return int(rm.get_completed_mission_count()) == 1 and not rm.is_control_station_built()
+	return int(RocketsManager.get_completed_mission_count()) == 1 and not RocketsManager.is_control_station_built()
 
 func _scanner_station_build_required() -> bool:
 	return false
 
 func _apply_tutorial_button_state() -> void:
-	var app = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
+	var app = AppControllerHelper.get_instance()
 	var tutorial_active := false
 	if app != null and app.has_method("get_tutorial_state"):
 		var state: Dictionary = app.get_tutorial_state()
@@ -840,7 +765,7 @@ func _build_wordmark() -> void:
 	var ui_layer = get_node_or_null("UILayer")
 	if ui_layer == null:
 		return
-	var wordmark := ui_layer.get_node_or_null("PlanetHuntersWordmark") as Label
+	var wordmark := ui_layer.get_node_or_null("LandnamWordmark") as Label
 	if wordmark == null:
 		return
 	_apply_wordmark_layout(wordmark)
@@ -851,7 +776,7 @@ func _on_earth_base_viewport_resized() -> void:
 	var ui_layer = get_node_or_null("UILayer")
 	if ui_layer == null:
 		return
-	var wordmark := ui_layer.get_node_or_null("PlanetHuntersWordmark") as Label
+	var wordmark := ui_layer.get_node_or_null("LandnamWordmark") as Label
 	if wordmark:
 		_apply_wordmark_layout(wordmark)
 	_apply_nav_safe_area()
@@ -861,8 +786,8 @@ func _apply_wordmark_layout(wordmark: Label) -> void:
 	var widget_rect := UILayout.zone(UILayout.Zone.EARTH_WIDGET, viewport)
 	wordmark.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	wordmark.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	wordmark.add_theme_font_size_override("font_size", 10 if viewport.x < 1200.0 else 12)
-	if viewport.x < 1200.0:
+	wordmark.add_theme_font_size_override("font_size", 10 if viewport.x < COMPACT_LAYOUT_BREAKPOINT else 12)
+	if viewport.x < COMPACT_LAYOUT_BREAKPOINT:
 		wordmark.offset_left = widget_rect.position.x + 6.0
 		wordmark.offset_top = widget_rect.end.y + 10.0
 	else:
@@ -909,12 +834,8 @@ func _build_progression_cards() -> void:
 	cards_root.hide_all()
 	cards_root.visible = true
 
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
-	if not rm:
-		cards_root.visible = false
-		return
 
-	var completed_count = int(rm.get_completed_mission_count())
+	var completed_count = int(RocketsManager.get_completed_mission_count())
 	if not active_context.is_empty():
 		cards_root.show_active_mission(active_context, _on_active_mission_cta_pressed)
 		return
@@ -923,7 +844,7 @@ func _build_progression_cards() -> void:
 	elif scanner_station_required:
 		cards_root.show_scanner_station(_on_build_scanner_station_pressed)
 	elif completed_count >= 1:
-		cards_root.show_next_mission(int(rm.get_mission_stage()), _on_new_mission_button_pressed)
+		cards_root.show_next_mission(int(RocketsManager.get_mission_stage()), _on_new_mission_button_pressed)
 
 func _has_visible_tutorial_overlay() -> bool:
 	var tree := get_tree()
@@ -954,7 +875,7 @@ func _get_tutorial_state() -> Dictionary:
 				fallback_state = state
 		for child in node.get_children():
 			stack.append(child)
-	var app = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
+	var app = AppControllerHelper.get_instance()
 	if app != null and app.has_method("get_tutorial_state"):
 		var state: Dictionary = app.get_tutorial_state()
 		var step: Dictionary = state.get("current_step", {})
@@ -965,17 +886,14 @@ func _get_tutorial_state() -> Dictionary:
 	return fallback_state
 
 func get_active_mission_context() -> Dictionary:
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
-	if not rm:
-		return {}
 
-	var returned: Dictionary = rm.get_returned_mission()
+	var returned: Dictionary = RocketsManager.get_returned_mission()
 	if not returned.is_empty():
 		return _build_returned_mission_context(returned)
 
-	var awaiting_rocket_id := str(rm.get_primary_awaiting_rocket_id())
+	var awaiting_rocket_id := str(RocketsManager.get_primary_awaiting_rocket_id())
 	if awaiting_rocket_id == "":
-		for placed_any in rm.get_placed():
+		for placed_any in RocketsManager.get_placed():
 			if typeof(placed_any) != TYPE_DICTIONARY:
 				continue
 			var placed: Dictionary = placed_any
@@ -984,10 +902,10 @@ func get_active_mission_context() -> Dictionary:
 				if awaiting_rocket_id != "":
 					break
 	if awaiting_rocket_id != "":
-		return _build_awaiting_mission_context(rm, awaiting_rocket_id)
+		return _build_awaiting_mission_context(awaiting_rocket_id)
 
 	var placed_by_id := {}
-	for placed_any in rm.get_placed():
+	for placed_any in RocketsManager.get_placed():
 		if typeof(placed_any) != TYPE_DICTIONARY:
 			continue
 		var placed: Dictionary = placed_any
@@ -996,7 +914,7 @@ func get_active_mission_context() -> Dictionary:
 			continue
 		placed_by_id[placed_id] = placed
 
-	var missions: Array = rm.get_missions()
+	var missions: Array = RocketsManager.get_missions()
 	if missions.is_empty() or placed_by_id.is_empty():
 		return {}
 	var latest_mission: Dictionary = {}
@@ -1016,17 +934,17 @@ func get_active_mission_context() -> Dictionary:
 		return {}
 
 	var rocket_id := str(latest_mission.get("rocket_id", ""))
-	rm.mark_returned_if_due(rocket_id)
-	returned = rm.get_returned_mission()
+	RocketsManager.mark_returned_if_due(rocket_id)
+	returned = RocketsManager.get_returned_mission()
 	if not returned.is_empty() and str(returned.get("rocket_id", "")) == rocket_id:
 		return _build_returned_mission_context(returned)
 
 	var target_id := str(latest_mission.get("target", ""))
-	var target_details: Dictionary = rm.get_target_details(target_id)
+	var target_details: Dictionary = RocketsManager.get_target_details(target_id)
 	var target_label := str(target_details.get("label", target_id if target_id != "" else "mission target"))
 	var target_type := str(target_details.get("type", "asteroid"))
-	var status := str(rm.get_rocket_status(rocket_id))
-	var arrived := rm.has_arrived(rocket_id, target_id)
+	var status := str(RocketsManager.get_rocket_status(rocket_id))
+	var arrived := RocketsManager.has_arrived(rocket_id, target_id)
 	var rocket_name := RocketSpecs.get_display_name(rocket_id)
 
 	if status == "returningHome":
@@ -1080,13 +998,13 @@ func _build_returned_mission_context(returned: Dictionary) -> Dictionary:
 		"target_type": str(returned.get("type", "asteroid")),
 	}
 
-func _build_awaiting_mission_context(rm, rocket_id: String) -> Dictionary:
+func _build_awaiting_mission_context(rocket_id: String) -> Dictionary:
 	var rocket_name := RocketSpecs.get_display_name(rocket_id)
-	var target_id := str(rm.get_selected_target())
-	var target_details: Dictionary = rm.get_target_details(target_id) if target_id != "" else {}
+	var target_id := str(RocketsManager.get_selected_target())
+	var target_details: Dictionary = RocketsManager.get_target_details(target_id) if target_id != "" else {}
 	var target_label := str(target_details.get("label", target_id if target_id != "" else "route selection"))
 	var target_type := str(target_details.get("type", "asteroid"))
-	var contractor: Dictionary = rm.get_trip_selected_contractor()
+	var contractor: Dictionary = RocketsManager.get_trip_selected_contractor()
 	var contractor_name := str(contractor.get("name", ""))
 	var subtitle := "%s is armed on the pad. Return to the Launchpad to finish setup and launch." % rocket_name
 	if contractor_name != "" and target_id != "":
@@ -1124,19 +1042,16 @@ func _on_active_mission_cta_pressed() -> void:
 		else:
 			get_tree().change_scene_to_file("res://Scenes/Earth/mission_debrief_v2.tscn")
 		return
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
-	if not rm:
-		return
 	var rocket_id := str(context.get("rocket_id", ""))
 	var target_id := str(context.get("target_id", ""))
 	var target_label := str(context.get("target_label", target_id))
 	var target_type := str(context.get("target_type", "asteroid"))
 	if rocket_id == "" or target_id == "":
 		return
-	rm.set_preview_target(target_id, target_label, target_type, rocket_id)
-	rm.mark_returned_if_due(rocket_id)
-	var status := rm.get_rocket_status(rocket_id)
-	var arrived := rm.has_arrived(rocket_id, target_id)
+	RocketsManager.set_preview_target(target_id, target_label, target_type, rocket_id)
+	RocketsManager.mark_returned_if_due(rocket_id)
+	var status := RocketsManager.get_rocket_status(rocket_id)
+	var arrived := RocketsManager.has_arrived(rocket_id, target_id)
 	var scene_path := PreviewRouting.resolve_scene_path(status, arrived)
 	if scene_manager:
 		scene_manager.change_to_scene(scene_path)
@@ -1235,7 +1150,7 @@ func _show_consensus_notifications(updates: Array) -> void:
 	# Use the redesigned ClassificationConsensusNotification via its show_results() API.
 	var layer = ClassificationConsensusNotificationScene.instantiate()
 	add_child(layer)
-	var app = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
+	var app = AppControllerHelper.get_instance()
 	var exp_gained := int(app.get_experience()) if app and app.has_method("get_experience") else 0
 	var rank := str(app.get_player_rank_label()) if app and app.has_method("get_player_rank_label") else ""
 	if layer.has_method("show_results"):
@@ -1254,10 +1169,7 @@ const _CONSTRUCTION_STRUCTURE_POSITIONS := {
 const _STRUCTURE_SEEN_CFG := "user://structure_intro_seen.cfg"
 
 func _apply_structure_visual_evolution() -> void:
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
-	if rm == null:
-		return
-	var app = preload("res://Scripts/Utils/AppControllerHelper.gd").get_instance()
+	var app = AppControllerHelper.get_instance()
 	var player_level := 1
 	if app and app.has_method("get_experience_level"):
 		player_level = int(app.get_experience_level())
@@ -1265,13 +1177,13 @@ func _apply_structure_visual_evolution() -> void:
 	# Scale the three starter structures based on their room upgrade tiers.
 	# "starterrocket1" is the primary type for tier tracking at L1-L4.
 	var primary_type := "starterrocket1"
-	var upgrades: Dictionary = rm.get_type_room_upgrades(primary_type)
+	var upgrades: Dictionary = RocketsManager.get_type_room_upgrades(primary_type)
 	var mining_tier := int(upgrades.get("mining", 1))
 	var cargo_tier  := int(upgrades.get("cargo", 1))
 
 	# Satellite Station → scales with scanner (track via mission count as proxy)
-	var mission_count := int(rm.get_completed_mission_count())
-	var scanner_tier: int = clamp(1 + int(rm.is_scanner_station_built()), 1, 2)
+	var mission_count := int(RocketsManager.get_completed_mission_count())
+	var scanner_tier: int = clamp(1 + int(RocketsManager.is_scanner_station_built()), 1, 2)
 	_scale_structure("SatelliteStation", scanner_tier)
 	_scale_structure("Launchpad", mining_tier)
 	_apply_control_station_visual_tier(cargo_tier)
@@ -1295,10 +1207,7 @@ func _scale_structure(node_name: String, tier: int) -> void:
 func _apply_control_station_visual_tier(tier: int = -1) -> void:
 	var cargo_tier := tier
 	if cargo_tier < 0:
-		var rm = preload("res://Scripts/Utils/RocketsManager.gd")
-		if rm == null:
-			return
-		var upgrades: Dictionary = rm.get_type_room_upgrades("starterrocket1")
+		var upgrades: Dictionary = RocketsManager.get_type_room_upgrades("starterrocket1")
 		cargo_tier = int(upgrades.get("cargo", 1))
 	var layers := get_node_or_null("StructuresLayer")
 	if layers == null:
@@ -1325,9 +1234,7 @@ func _ensure_construction_structure_visible(proj_id: String) -> void:
 	sprite.name = node_name
 	sprite.position = _CONSTRUCTION_STRUCTURE_POSITIONS.get(proj_id, Vector2(0, 0))
 	# Use launchpad sprite as placeholder (art asset for each project TBD)
-	var tex = load("res://assets/Structures/launchpad.png") as Texture2D
-	if tex:
-		sprite.texture = tex
+	sprite.texture = LaunchpadTexture
 	sprite.scale = Vector2(0.35, 0.35)
 	# Tint to distinguish from base structures
 	sprite.modulate = Color(0.7, 0.9, 1.0, 1.0)
@@ -1350,10 +1257,7 @@ func _on_rockets_reset() -> void:
 	_build_progression_cards()
 
 func _sync_control_station_presence() -> void:
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
-	if rm == null:
-		return
-	if rm.is_control_station_built():
+	if RocketsManager.is_control_station_built():
 		_ensure_control_station_visible()
 	else:
 		_remove_control_station()
@@ -1394,32 +1298,9 @@ func _ensure_control_station_visible() -> void:
 		layers.add_child(_build_control_station_label())
 
 func _build_control_station_label() -> Node2D:
-	var label_root := Node2D.new()
-	label_root.name = "ControlStationLabel"
-	label_root.position = CONTROL_STATION_LABEL_POSITION
-
-	var label := Label.new()
-	label.name = "Label"
-	label.offset_left = -120.0
-	label.offset_top = -20.0
-	label.offset_right = 120.0
-	label.offset_bottom = 20.0
-	label.add_theme_color_override("font_color", Color(1, 1, 1, 1))
-	label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.7))
-	label.add_theme_constant_override("outline_size", 4)
-	label.add_theme_font_size_override("font_size", 26)
-	label.text = "Control Station"
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label_root.add_child(label)
-
-	var pointer := Line2D.new()
-	pointer.name = "Pointer"
-	pointer.points = PackedVector2Array([Vector2(0, 30), Vector2(0, 170)])
-	pointer.width = 4.0
-	pointer.default_color = Color(1, 1, 1, 0.9)
-	pointer.antialiased = true
-	label_root.add_child(pointer)
-	return label_root
+	var node: Node2D = ControlStationLabelScene.instantiate()
+	node.position = CONTROL_STATION_LABEL_POSITION
+	return node
 
 func _remove_control_station() -> void:
 	var layers := get_node_or_null("StructuresLayer")

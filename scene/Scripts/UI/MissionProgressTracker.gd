@@ -178,12 +178,6 @@ func _on_tutorial_state_updated(state: Dictionary) -> void:
 	visible = not _tutorial_active and (_tutorial_skipped or ROCKETS_MANAGER.is_free_operations_unlocked())
 	_apply_visual_state()
 
-func _has_seen_guide_action(action_key: String) -> bool:
-	var app = get_node_or_null("/root/AppController")
-	if app and app.has_method("has_seen_guide_action"):
-		return bool(app.has_seen_guide_action(action_key))
-	return false
-
 func _has_seen_guide_action_for_stage(action_key: String, stage: int) -> bool:
 	var app = get_node_or_null("/root/AppController")
 	if app and app.has_method("has_seen_guide_action_for_stage"):
@@ -201,9 +195,7 @@ func _label_for_action(action_key: String, stage: int = 0) -> String:
 			return "Build control station"
 		"open_launchpad":
 			return "Open launchpad"
-		"accept_starter_contractor":
-			return "Pick a contractor"
-		"accept_contractor_offer":
+		"accept_starter_contractor", "accept_contractor_offer":
 			return "Pick a contractor"
 		"create_rocket":
 			return "Build rocket"
@@ -215,8 +207,6 @@ func _label_for_action(action_key: String, stage: int = 0) -> String:
 			return "Return to Earth"
 		"resolve_mission_debrief":
 			return "Complete debrief"
-		"open_launchpad":
-			return "Open launchpad"
 		"classify_candidate":
 			return "Classify candidate"
 		"select_launch_target":
