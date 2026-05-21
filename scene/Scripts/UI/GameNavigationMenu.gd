@@ -332,6 +332,7 @@ static func _build_reset_progress_button(owner: Node) -> Button:
 	btn.add_theme_stylebox_override("normal", style)
 	
 	btn.pressed.connect(func():
+		GameNavigationMenu.close(owner)
 		var app = AppControllerHelper.get_instance()
 		if app and app.has_method("full_factory_reset"):
 			app.full_factory_reset()

@@ -32,6 +32,9 @@ const WebEventBridge = preload("res://Scripts/Systems/WebEventBridge.gd")
 const AppLogger = preload("res://Scripts/Utils/Logger.gd")
 const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
 const MissionLogManager = preload("res://Scripts/Utils/MissionLogManager.gd")
+const JSONFileManager = preload("res://Scripts/Utils/JSONFileManager.gd")
+const GameNavigationMenu = preload("res://Scripts/UI/GameNavigationMenu.gd")
+const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
 const SubcontractorManager = preload("res://Scripts/Utils/SubcontractorManager.gd")
 const FirstTimeMechanicTracker = preload("res://Scripts/Utils/FirstTimeMechanicTracker.gd")
 const MissionNarrativeAPI = preload("res://Scripts/Utils/MissionNarrativeAPI.gd")
@@ -40,8 +43,7 @@ const MISSION_PROGRESS_TRACKER_SCENE := preload("res://Scenes/UI/MissionProgress
 const TUTORIAL_CONTROLLER_SCENE := preload("res://Scripts/Tutorial/TutorialController.gd")
 const TUTORIAL_OVERLAY_SCENE := preload("res://Scenes/UI/TutorialCoachOverlay.tscn")
 const FEEDBACK_BEACON_SCENE := preload("res://Scenes/UI/FeedbackBeacon.tscn")
-const INTRO_SPLASH_SCENE := preload("res://Scenes/UI/PlanetHuntersIntroSplash.tscn")
-const INTRO_SPLASH_FLAG_PATH := "user://planet_hunters_intro_v1.cfg"
+const INTRO_SPLASH_FLAG_PATH := "user://landnam_intro_v1.cfg"
 var _tutorial_controller: Node = null
 # Actions recorded before the TutorialController's _ready() has run are queued
 # here and replayed in order once the controller is fully initialised.
@@ -253,7 +255,7 @@ func _debug_mission_skip_allowed() -> bool:
 
 func debug_skip_to_mission(stage: int) -> void:
 	AppLogger.d("AppController Debug: Jumping to Mission %d" % stage)
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var rm = RocketsManager
 	if not rm: return
 	
 	# 1. Reset state if jumping back to M1
@@ -311,20 +313,20 @@ func show_menu_panel() -> void:
 	"""Show the runtime menu via the single menu service."""
 	if get_tree() == null or get_tree().root == null:
 		return
-	var service = preload("res://Scripts/UI/GameNavigationMenu.gd")
+	var service = GameNavigationMenu
 	service.open(self)
 
 func hide_menu_panel() -> void:
 	"""Hide the runtime menu via the single menu service."""
 	if get_tree() == null or get_tree().root == null:
 		return
-	var service = preload("res://Scripts/UI/GameNavigationMenu.gd")
+	var service = GameNavigationMenu
 	service.close(self)
 
 func is_menu_open() -> bool:
 	if get_tree() == null:
 		return false
-	var service = preload("res://Scripts/UI/GameNavigationMenu.gd")
+	var service = GameNavigationMenu
 	return service.is_open(get_tree())
 
 func _set_tutorial_overlay_suspended(suspended: bool) -> void:
@@ -353,7 +355,7 @@ func full_factory_reset() -> void:
 	AppLogger.d("[AppController] CRITICAL: Performing full factory reset.")
 	
 	# 1. Reset core managers (they manage their own files)
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var rm = RocketsManager
 	if rm:
 		rm.reset_state()
 	
@@ -364,7 +366,7 @@ func full_factory_reset() -> void:
 	_persistence.reset_all()
 	
 	# 3. Clear mission logs and subcontractors
-	var json = preload("res://Scripts/Utils/JSONFileManager.gd")
+	var json = JSONFileManager
 	json.save_json("user://mission_logs.json", MissionLogManager.build_default_state())
 	json.save_json("user://subcontractors.json", SubcontractorManager.build_default_state())
 	
@@ -384,6 +386,7 @@ func full_factory_reset() -> void:
 	_last_mining_result = {}
 	_last_mining_result_synced = true
 	_auto_start_mining = false
+	_pending_tutorial_actions.clear()
 
 	# 6. Reset singleton trackers
 	FirstTimeMechanicTracker.reset_all()
@@ -397,7 +400,8 @@ func full_factory_reset() -> void:
 	_emit_player_state_snapshot("factory_reset")
 	
 	AppLogger.d("[AppController] Factory reset complete. Reloading main scene.")
-	
+	_set_tutorial_overlay_suspended(false)
+
 	# 8. Reload
 	_return_to_fresh_player_scene()
 
@@ -414,6 +418,7 @@ func _on_reset_all() -> void:
 	_last_mining_result = {}
 	_last_mining_result_synced = true
 	_auto_start_mining = false
+	_pending_tutorial_actions.clear()
 	counter_updated.emit(counter)
 	save_franc_balance()
 	save_preferences()
@@ -423,7 +428,7 @@ func _on_reset_all() -> void:
 	DirAccess.remove_absolute("user://rocket_unlock_popups.cfg")
 	DirAccess.remove_absolute(INTRO_SPLASH_FLAG_PATH)
 	franc_balance_updated.emit(franc_balance)
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var rm = RocketsManager
 	if rm:
 		rm.reset_state()
 		AppLogger.d("RocketsManager: persisted rockets state reset")
@@ -431,17 +436,18 @@ func _on_reset_all() -> void:
 		_tutorial_controller.reset_all()
 	rockets_reset.emit()
 	_emit_player_state_snapshot("reset_all")
+	_set_tutorial_overlay_suspended(false)
 	_return_to_fresh_player_scene()
 	AppLogger.d("All state reset in Godot. Signals emitted to notify React Native.")
 
 func _clear_runtime_progression_state() -> void:
-	var json = preload("res://Scripts/Utils/JSONFileManager.gd")
+	var json = JSONFileManager
 	json.save_json("user://mission_logs.json", MissionLogManager.build_default_state())
 	json.save_json("user://subcontractors.json", SubcontractorManager.build_default_state())
 	FirstTimeMechanicTracker.reset_all()
 	MissionNarrativeAPI.reset_session_state()
 	if OS.has_feature("web"):
-		JavaScriptBridge.eval("(function(){try{window.localStorage.removeItem('planet_hunters_xp_state_v1');}catch(_e){}})();", true)
+		JavaScriptBridge.eval("(function(){try{window.localStorage.removeItem('landnam_xp_state_v1');}catch(_e){}})();", true)
 
 func _return_to_fresh_player_scene() -> void:
 	set_game_paused(false)
@@ -499,7 +505,7 @@ func has_outstanding_loan() -> bool:
 func can_take_loan() -> bool:
 	if RocketsManager.get_completed_mission_count() <= 0:
 		return false
-	var cheapest = preload("res://Scripts/Utils/RocketSpecs.gd").get_cost("starterrocket1")
+	var cheapest = RocketSpecs.get_cost("starterrocket1")
 	return franc_balance < cheapest and not has_outstanding_loan()
 
 func take_loan() -> bool:
@@ -533,8 +539,8 @@ func load_preferences() -> void:
 	citizen_science_dialogue_toggled.emit(citizen_science_dialogue_enabled)
 
 func get_player_state_snapshot(source: String = "") -> Dictionary:
-	var missions := RocketsManager.get_missions()
-	var returned := RocketsManager.get_returned_mission()
+	var missions: Array = RocketsManager.get_missions()
+	var returned: Dictionary = RocketsManager.get_returned_mission()
 	return {
 		"schema_version": 1,
 		"source": source,
@@ -569,7 +575,7 @@ func is_citizen_science_dialogue_enabled() -> bool:
 	return citizen_science_dialogue_enabled
 
 func _unlock_rockets_for_mission_stage(completed_missions: int) -> void:
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var rm = RocketsManager
 	if rm:
 		rm.unlock_for_mission_stage(completed_missions)
 
