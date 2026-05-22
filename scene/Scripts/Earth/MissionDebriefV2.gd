@@ -7,6 +7,7 @@ const RocketSpecs           = preload("res://Scripts/Utils/RocketSpecs.gd")
 const RocketsManager        = preload("res://Scripts/Utils/RocketsManager.gd")
 const MineralPricing        = preload("res://Scripts/Utils/MineralPricing.gd")
 const MiningInventory       = preload("res://Scripts/Utils/MiningInventory.gd")
+const MineralHoldings       = preload("res://Scripts/Utils/MineralHoldings.gd")
 const SectorRevealManager   = preload("res://Scripts/Utils/SectorRevealManager.gd")
 const SubcontractorManager  = preload("res://Scripts/Utils/SubcontractorManager.gd")
 const AppControllerHelper   = preload("res://Scripts/Utils/AppControllerHelper.gd")
@@ -568,18 +569,37 @@ func _bind_reward_actions() -> void:
 	else:
 		_primary_action_button.add_theme_color_override("font_disabled_color", TEXT_MUTED)
 	if not _cargo.is_empty():
-		var label := "₣ Sell Cargo to %s" % _contractor_name if _contractor_name != "" else "₣ Sell Cargo"
-		_reset_button(_secondary_action_button, label, true)
-		_secondary_action_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		_secondary_action_button.pressed.connect(_on_sell_pressed.bind(_secondary_action_button))
-		_secondary_action_button.visible = true
+		var is_free_ops := _operation_mode == "free_ops" or RocketsManager.is_free_operations_unlocked()
+		if is_free_ops:
+			# Free ops: offer both Sell Now and Hold for Market
+			var sell_label := "₣ Sell Now"
+			_reset_button(_secondary_action_button, sell_label, true)
+			_secondary_action_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			_secondary_action_button.pressed.connect(_on_sell_pressed.bind(_secondary_action_button))
+			_secondary_action_button.visible = true
+			_reset_button(_tertiary_action_button, "Hold for Market →", false)
+			_tertiary_action_button.name = "HoldButton"
+			_tertiary_action_button.custom_minimum_size.x = 170
+			_tertiary_action_button.pressed.connect(_on_hold_pressed.bind(_tertiary_action_button))
+			_tertiary_action_button.visible = true
+		else:
+			var label := "₣ Sell Cargo to %s" % _contractor_name if _contractor_name != "" else "₣ Sell Cargo"
+			_reset_button(_secondary_action_button, label, true)
+			_secondary_action_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			_secondary_action_button.pressed.connect(_on_sell_pressed.bind(_secondary_action_button))
+			_secondary_action_button.visible = true
+			_reset_button(_tertiary_action_button, "Return to Base", false)
+			_tertiary_action_button.name = "OrbitButton"
+			_tertiary_action_button.custom_minimum_size.x = 170
+			_tertiary_action_button.pressed.connect(_return_to_base)
+			_tertiary_action_button.visible = true
 	else:
 		_secondary_action_button.visible = false
-	_reset_button(_tertiary_action_button, "Return to Base", false)
-	_tertiary_action_button.name = "OrbitButton"
-	_tertiary_action_button.custom_minimum_size.x = 170
-	_tertiary_action_button.pressed.connect(_return_to_base)
-	_tertiary_action_button.visible = true
+		_reset_button(_tertiary_action_button, "Return to Base", false)
+		_tertiary_action_button.name = "OrbitButton"
+		_tertiary_action_button.custom_minimum_size.x = 170
+		_tertiary_action_button.pressed.connect(_return_to_base)
+		_tertiary_action_button.visible = true
 
 func _bind_handoff_sections() -> void:
 	_payout_card.visible = false
@@ -1369,6 +1389,31 @@ func _on_sell_pressed(btn: Button) -> void:
 		app.add_franc_balance(net, "mission_sale")
 
 	if _contractor_id != "" and app:
+		SubcontractorManager.add_affinity(_contractor_id, 1)
+		SubcontractorManager.record_mission_completion(_contractor_id)
+
+	RocketsManager.clear_trip_contract_offer()
+	_clear_cargo(tid)
+	_reward_resolved = true
+	_render_ui()
+
+
+func _on_hold_pressed(btn: Button) -> void:
+	if _done:
+		return
+	btn.disabled = true
+	btn.text = "Held ✓"
+
+	var tid := str(_returned.get("target_id", ""))
+	MineralHoldings.add(_cargo)
+	RocketsManager.consume_from_inventory(_cargo)
+
+	if tid != "" and not RocketsManager.has_discovery_bonus_claimed(tid):
+		RocketsManager.mark_discovery_bonus_claimed(tid)
+	if tid != "":
+		SectorRevealManager.reveal_for_target(tid)
+
+	if _contractor_id != "":
 		SubcontractorManager.add_affinity(_contractor_id, 1)
 		SubcontractorManager.record_mission_completion(_contractor_id)
 
