@@ -42,6 +42,22 @@ http
     }
 
     const { pathname } = new URL(req.url || "/", "http://localhost");
+
+    // Serve local runtime config — points all Supabase calls at the local dev instance.
+    if (pathname === "/api/runtime-config") {
+      const payload = {
+        posthog: { projectToken: "", apiHost: "", uiHost: "", surveyId: "" },
+        supabase: {
+          url: process.env.SUPABASE_URL || "http://127.0.0.1:54321",
+          anonKey: process.env.SUPABASE_ANON || "sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH",
+        },
+        push: { vapidPublicKey: "" },
+      };
+      res.writeHead(200, { "Content-Type": "application/json", "Cache-Control": "no-store" });
+      res.end(JSON.stringify(payload));
+      return;
+    }
+
     let fp = safeResolve(pathname);
 
     if (!fp) {

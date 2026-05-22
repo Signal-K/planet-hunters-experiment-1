@@ -27,6 +27,10 @@ const PRICE_DIP_PER_SALE := 0.02
 const MIN_PRICE_MULT := 0.70
 ## Ceiling: price recovers toward 1.0 but never exceeds it.
 const MAX_PRICE_MULT := 1.0
+## How much price recovers toward 1.0 per session start (called once on app ready).
+const PRICE_RECOVERY_PER_SESSION := 0.05
+## Buy price markup over current sell price (minimum 1.25×).
+const BUY_MARKUP := 1.25
 
 const _MARKET_STATE_PATH := "user://mineral_market.json"
 
@@ -62,6 +66,30 @@ static func _load_market_state() -> Dictionary:
 static func _save_market_state(data: Dictionary) -> void:
 	var json = preload("res://Scripts/Utils/JSONFileManager.gd")
 	json.save_json(_MARKET_STATE_PATH, data)
+
+## Returns the buy price per kg (always ≥ BUY_MARKUP × current sell price).
+static func get_buy_price(mineral: String) -> int:
+	return int(ceil(float(get_current_price(mineral)) * BUY_MARKUP))
+
+## Returns the percentage delta from base price (negative = depressed, 0 = at base).
+## e.g. multiplier 0.82 → -18%
+static func get_price_delta_pct(mineral: String) -> int:
+	var mult := get_price_multiplier(mineral)
+	return int(round((mult - 1.0) * 100.0))
+
+## Called once per session start: nudges all depressed prices toward 1.0 by PRICE_RECOVERY_PER_SESSION.
+static func recover_prices_on_session_start() -> void:
+	var data := _load_market_state()
+	var mults: Dictionary = data.get("multipliers", {}).duplicate(true)
+	var changed := false
+	for mineral in mults.keys():
+		var current := clamp(float(mults[mineral]), MIN_PRICE_MULT, MAX_PRICE_MULT)
+		if current < MAX_PRICE_MULT:
+			mults[mineral] = minf(current + PRICE_RECOVERY_PER_SESSION, MAX_PRICE_MULT)
+			changed = true
+	if changed:
+		data["multipliers"] = mults
+		_save_market_state(data)
 
 static func price_for(name: String, amount: int) -> int:
 	var unit = int(BASE_PRICES.get(name, 5))

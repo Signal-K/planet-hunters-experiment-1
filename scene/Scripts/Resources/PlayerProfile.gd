@@ -10,8 +10,6 @@ class_name PlayerProfile
 @export var mission_stage: int = 1
 @export var completed_missions: int = 0
 @export var control_station_built: bool = false
-@export var scanner_station_built: bool = false
-@export var scanner_unlocked: bool = false
 @export var operation_mode: String = "contract"
 @export var free_operations_unlocked: bool = false
 @export var active_missions_count: int = 0
@@ -28,8 +26,6 @@ func to_snapshot() -> Dictionary:
 		"mission_stage": mission_stage,
 		"completed_missions": completed_missions,
 		"control_station_built": control_station_built,
-		"scanner_station_built": scanner_station_built,
-		"scanner_unlocked": scanner_unlocked,
 		"operation_mode": operation_mode,
 		"free_operations_unlocked": free_operations_unlocked,
 		"active_missions_count": active_missions_count,
@@ -45,8 +41,6 @@ func apply_snapshot(snapshot: Dictionary) -> void:
 	if snapshot.has("mission_stage"): mission_stage = int(snapshot["mission_stage"])
 	if snapshot.has("completed_missions"): completed_missions = int(snapshot["completed_missions"])
 	if snapshot.has("control_station_built"): control_station_built = bool(snapshot["control_station_built"])
-	if snapshot.has("scanner_station_built"): scanner_station_built = bool(snapshot["scanner_station_built"])
-	if snapshot.has("scanner_unlocked"): scanner_unlocked = bool(snapshot["scanner_unlocked"])
 	if snapshot.has("operation_mode"): operation_mode = str(snapshot["operation_mode"])
 	if snapshot.has("free_operations_unlocked"): free_operations_unlocked = bool(snapshot["free_operations_unlocked"])
 	if snapshot.has("active_missions_count"): active_missions_count = int(snapshot["active_missions_count"])
