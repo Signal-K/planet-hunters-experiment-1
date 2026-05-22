@@ -27,9 +27,9 @@ var _auth_request_in_flight: bool = false
 var _auth_pending_callbacks: Array = []
 
 const RUNTIME_CONFIG_PATH: String = "res://supabase.runtime.json"
-# Force local mode - set this to true if you want to always use local development server
-# This can be useful for testing mobile builds against local development
-const FORCE_LOCAL_MODE: bool = false
+# Force local mode — enabled while running against the local test Supabase instance.
+# Set to false before deploying to production.
+const FORCE_LOCAL_MODE: bool = true
 
 static var _instance  # SupabaseClient singleton
 

@@ -147,15 +147,7 @@ static func get_scanner_build_cost() -> int:
 	return SCANNER_BUILD_COST
 
 static func is_scanner_unlocked() -> bool:
-	var s = load_state()
-	# Use badges array (authoritative) first; fall back to legacy integer only when badges absent.
-	var badge_count := RocketsMissionProgress.completed_mission_count_from_state(s) if s.has("completed_mission_badges") else -1
-	var progress_unlock: bool
-	if badge_count >= 0:
-		progress_unlock = badge_count >= SCANNER_UNLOCK_COMPLETED_MISSIONS
-	else:
-		progress_unlock = max(int(s.get("mission_progress_completed", 0)), 0) >= SCANNER_UNLOCK_COMPLETED_MISSIONS
-	return bool(s.get("scanner_unlocked", false)) or progress_unlock
+	return false  # Scanner deferred from v1 — always locked
 
 static func is_control_station_built() -> bool:
 	var s = load_state()
@@ -167,8 +159,7 @@ static func set_control_station_built(built: bool) -> bool:
 	return save_state(s)
 
 static func is_scanner_station_built() -> bool:
-	var s = load_state()
-	return bool(s.get("scanner_station_built", false))
+	return false  # Scanner deferred from v1 — always returns false
 
 static func set_scanner_station_built(built: bool) -> bool:
 	var s = load_state()
