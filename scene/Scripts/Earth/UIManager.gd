@@ -75,18 +75,39 @@ func _show_new_mission_panel() -> void:
 func _show_generic_panel(panel_type: PanelType) -> void:
 	"""Show a generic styled panel"""
 	if panel_type == PanelType.MARKET:
-		var market_scene = load("res://Scenes/UI/SubcontractorsPanel.tscn")
-		if market_scene:
-			var market_instance = market_scene.instantiate()
-			add_child(market_instance)
-			if market_instance.has_signal("panel_closed"):
-				market_instance.panel_closed.connect(_on_panel_closed)
-			AppLogger.d("Market panel opened: Subcontractors")
-			return
-		AppLogger.w("Failed to load SubcontractorsPanel scene for Market")
+		_show_market_panel()
+		return
 	var panel = PanelManager.create_styled_panel(panel_titles[panel_type], get_tree())
 	add_child(panel)
 	AppLogger.d("Panel opened: %s" % panel_titles[panel_type])
+
+func _show_market_panel() -> void:
+	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	if rm == null or not rm.is_free_operations_unlocked():
+		_show_market_locked_message()
+		return
+	var market_scene = load("res://Scenes/UI/MarketPanel.tscn")
+	if market_scene:
+		var market_instance = market_scene.instantiate()
+		add_child(market_instance)
+		if market_instance.has_signal("panel_closed"):
+			market_instance.panel_closed.connect(_on_panel_closed)
+		AppLogger.d("Market panel opened")
+	else:
+		AppLogger.w("Failed to load MarketPanel scene")
+
+func _show_market_locked_message() -> void:
+	var panel = PanelManager.create_styled_panel("Market", get_tree())
+	var label := Label.new()
+	label.text = "The mineral market opens after completing the three starter missions.\n\nComplete M1 → M2 → M3 to unlock Free Operations and market access."
+	label.add_theme_font_size_override("font_size", 14)
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	if panel.get_child_count() > 0:
+		panel.get_child(0).add_child(label)
+	else:
+		panel.add_child(label)
+	add_child(panel)
+	AppLogger.d("Market locked message shown")
 
 func _get_app_controller() -> Node:
 	"""Get reference to the AppController"""

@@ -31,6 +31,7 @@ const AppControllerPersistence = preload("res://Scripts/Systems/AppControllerPer
 const WebEventBridge = preload("res://Scripts/Systems/WebEventBridge.gd")
 const AppLogger = preload("res://Scripts/Utils/Logger.gd")
 const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
+const MineralPricing = preload("res://Scripts/Utils/MineralPricing.gd")
 const MissionLogManager = preload("res://Scripts/Utils/MissionLogManager.gd")
 const SubcontractorManager = preload("res://Scripts/Utils/SubcontractorManager.gd")
 const FirstTimeMechanicTracker = preload("res://Scripts/Utils/FirstTimeMechanicTracker.gd")
@@ -54,6 +55,7 @@ func _ready() -> void:
 	load_franc_balance()
 	_unlock_rockets_for_mission_stage(RocketsManager.get_completed_mission_count())
 	load_preferences()
+	MineralPricing.recover_prices_on_session_start()
 	_ensure_mission_progress_tracker()
 	_ensure_tutorial_controller()
 	_ensure_feedback_beacon()
@@ -433,6 +435,7 @@ func _clear_runtime_progression_state() -> void:
 	json.save_json("user://subcontractors.json", SubcontractorManager.build_default_state())
 	FirstTimeMechanicTracker.reset_all()
 	MissionNarrativeAPI.reset_session_state()
+	preload("res://Scripts/Utils/MineralHoldings.gd").reset()
 	if OS.has_feature("web"):
 		JavaScriptBridge.eval("(function(){try{window.localStorage.removeItem('planet_hunters_xp_state_v1');}catch(_e){}})();", true)
 
