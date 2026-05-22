@@ -75,8 +75,6 @@ func get_value(key: String) -> Variant:
 		"missionStage": "mission_stage",
 		"completedMissions": "completed_missions",
 		"controlStationBuilt": "control_station_built",
-		"scannerStationBuilt": "scanner_station_built",
-		"scannerUnlocked": "scanner_unlocked",
 		"operationMode": "operation_mode",
 		"freeOperationsUnlocked": "free_operations_unlocked",
 		"activeMissionsCount": "active_missions_count",

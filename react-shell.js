@@ -206,7 +206,6 @@ function readXpState() {
 
 function writeXpState(snapshot) {
   if (!snapshot || typeof snapshot !== "object") return;
-  console.log("[XP_DEBUG] writeXpState level=" + snapshot.experience_level + " xp=" + snapshot.experience_xp + " stack=" + new Error().stack.split("\n")[1]);
   localStorage.setItem(XP_STATE_KEY, JSON.stringify(snapshot));
 }
 
@@ -306,6 +305,7 @@ async function loadPostHogClient() {
         capture_pageleave: true,
         persistence: "localStorage+cookie",
         autocapture: true,
+        disable_surveys: true,
         session_recording: {
           maskAllInputs: false,
           recordCrossOriginIframes: true,
@@ -2171,7 +2171,7 @@ function App() {
             {
               style: {
                 position: "fixed",
-                bottom: "max(16px, env(safe-area-inset-bottom))",
+                top: "max(16px, env(safe-area-inset-top))",
                 left: "50%",
                 transform: "translateX(-50%)",
                 background: "rgba(5, 8, 15, 0.92)",

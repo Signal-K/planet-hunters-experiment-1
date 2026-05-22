@@ -191,12 +191,6 @@ func mark_mining_result_synced() -> void:
 	_last_mining_result_synced = true
 	AppLogger.d("AppController: Mining result marked as synced")
 
-func trigger_instant_mining() -> void:
-	AppLogger.d("AppController: Triggering instant mining...")
-	_auto_start_mining = true
-	set_game_paused(false)
-	get_tree().change_scene_to_file("res://test_mining.tscn")
-
 func check_auto_start_mining() -> bool:
 	var val = _auto_start_mining
 	_auto_start_mining = false
@@ -296,7 +290,6 @@ func debug_skip_to_mission(stage: int) -> void:
 		rm.unlock("starterrocket2")
 	if stage >= 4:
 		rm.unlock("starterrocket3")
-		rm.set_scanner_station_built(true)
 
 	# 5. Refresh tutorial state
 	if _tutorial_controller and _tutorial_controller.has_method("replay_current_mission"):
@@ -544,8 +537,6 @@ func get_player_state_snapshot(source: String = "") -> Dictionary:
 		"mission_stage": RocketsManager.get_mission_stage(),
 		"completed_missions": RocketsManager.get_completed_mission_count(),
 		"control_station_built": RocketsManager.is_control_station_built(),
-		"scanner_station_built": RocketsManager.is_scanner_station_built(),
-		"scanner_unlocked": RocketsManager.is_scanner_unlocked(),
 		"operation_mode": RocketsManager.get_operation_mode(),
 		"free_operations_unlocked": RocketsManager.is_free_operations_unlocked(),
 		"active_missions_count": missions.size(),
