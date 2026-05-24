@@ -1,0 +1,28 @@
+{
+  "name": "Landnám: Mission Difficulty Friction",
+  "type": "external_survey",
+  "schedule": "always",
+  "enable_partial_responses": true,
+  "appearance": {
+    "displayThankYouMessage": true,
+    "thankYouMessageHeader": "Thanks!",
+    "thankYouMessageDescription": "Your feedback helps us balance the mission difficulty."
+  },
+  "questions": [
+    {
+      "type": "multiple_choice",
+      "question": "What part of the mission was most difficult?",
+      "choices": ["Knowing where to go next", "Mining — too hard or too slow", "Managing my budget", "Understanding the scanner", "The contractor system", "Nothing was too hard"],
+      "descriptionContentType": "text"
+    },
+    {
+      "type": "rating",
+      "scale": 5,
+      "display": "number",
+      "question": "How frustrated did you feel?",
+      "lowerBoundLabel": "Not at all",
+      "upperBoundLabel": "Ready to quit",
+      "descriptionContentType": "text"
+    }
+  ]
+}

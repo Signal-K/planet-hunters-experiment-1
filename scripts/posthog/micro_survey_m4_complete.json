@@ -1,0 +1,33 @@
+{
+  "name": "Landnám: End of Content (M4)",
+  "type": "external_survey",
+  "schedule": "always",
+  "enable_partial_responses": true,
+  "appearance": {
+    "displayThankYouMessage": true,
+    "thankYouMessageHeader": "Thank you for playing!",
+    "thankYouMessageDescription": "You have reached the end of our current content. Your feedback shapes what comes next."
+  },
+  "questions": [
+    {
+      "type": "rating",
+      "scale": 5,
+      "display": "emoji",
+      "question": "Overall, how would you rate your Landnám experience?",
+      "lowerBoundLabel": "Disappointing",
+      "upperBoundLabel": "Amazing",
+      "descriptionContentType": "text"
+    },
+    {
+      "type": "multiple_choice",
+      "question": "What would keep you playing if there was more content?",
+      "choices": ["More missions and story", "New mechanics or ships", "Competitive or co-op play", "Deeper planet science", "Better rewards and progression", "Nothing — I am done for now"],
+      "descriptionContentType": "text"
+    },
+    {
+      "type": "open",
+      "question": "Anything else you want us to know?",
+      "descriptionContentType": "text"
+    }
+  ]
+}

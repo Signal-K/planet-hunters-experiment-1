@@ -27,14 +27,13 @@ const MICRO_SURVEY_IDS = {
   mining:      "019ccaf8-c4d8-0000-901b-aa850dfd43c5",
   science:     "019ccaf9-0259-0000-d411-e11fdc643d97",
   progression: "019ccaf9-3453-0000-b6b9-0e41fcae8f1c",
-  // New surveys — create in PostHog and paste IDs here:
-  launch:      "",  // "How did your first launch feel?" — fires after rocket_launched (M1)
-  pwa_install: "",  // "Why did you install the app?" — fires after PWA install prompt accepted
-  m4_complete: "",  // "You've reached the end — what would keep you playing?" — fires at M4 debrief
-  return_visit: "", // "What brought you back?" — fires on 2nd+ session start
-  level_up:     "", // "How does the progression speed feel?" — fires after level up
-  planet_found: "", // "How exciting was it to find your first planet?" — fires after planet candidate found
-  difficulty:   "", // "What part of the mission was most difficult?" — fires after failed/stuck run
+  launch:      "019e5a4e-46ab-0000-df9e-81f0e919a252",
+  pwa_install: "019e5a4e-4c83-0000-1c17-7bd8754ad640",
+  m4_complete: "019e5a4e-532f-0000-da2b-18527d4e3299",
+  return_visit: "019e5a4e-5958-0000-e011-fc51b26ca89d",
+  level_up:     "019e5a4e-5f74-0000-2470-c06526c3e36d",
+  planet_found: "019e5a4e-6528-0000-b69d-e5745079ffd5",
+  difficulty:   "019e5a4e-6b23-0000-dbb1-0bed0fad9910",
 };
 const SURVEY_OVERLAY_ID = "landnam-survey-overlay";
 const SURVEY_IFRAME_ID = "landnam-survey-iframe";

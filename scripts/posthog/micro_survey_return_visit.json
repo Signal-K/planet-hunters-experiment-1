@@ -1,0 +1,28 @@
+{
+  "name": "Landnám: Return Visit Motivation",
+  "type": "external_survey",
+  "schedule": "always",
+  "enable_partial_responses": true,
+  "appearance": {
+    "displayThankYouMessage": true,
+    "thankYouMessageHeader": "Welcome back!",
+    "thankYouMessageDescription": "Your answer helps us understand what brings players back."
+  },
+  "questions": [
+    {
+      "type": "multiple_choice",
+      "question": "What brought you back to Landnám today?",
+      "choices": ["Wanted to finish a mission", "Curious about new content", "Habit — I just keep playing", "Someone mentioned it", "Boredom", "Not sure"],
+      "descriptionContentType": "text"
+    },
+    {
+      "type": "rating",
+      "scale": 5,
+      "display": "number",
+      "question": "How strong is your urge to keep playing right now?",
+      "lowerBoundLabel": "Just browsing",
+      "upperBoundLabel": "Cannot stop",
+      "descriptionContentType": "text"
+    }
+  ]
+}
