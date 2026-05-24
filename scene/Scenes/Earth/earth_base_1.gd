@@ -89,6 +89,7 @@ func _ready() -> void:
 	call_deferred("_apply_tutorial_button_state")
 	call_deferred("_apply_nav_safe_area")
 	call_deferred("_apply_structure_visual_evolution")
+	call_deferred("_refresh_tutorial_overlay_when_ready")
 	_build_earth_base_identity()
 	call_deferred("_refresh_tutorial_owned_ui")
 
@@ -121,6 +122,7 @@ func _connect_tutorial_overlay_signals() -> void:
 func _on_root_child_entered_tree(node: Node) -> void:
 	if node != null and str(node.name) == "TutorialCoachOverlay":
 		_bind_tutorial_overlay_signals(node)
+		call_deferred("_refresh_tutorial_overlay_when_ready")
 		call_deferred("_refresh_tutorial_owned_ui")
 
 func _bind_tutorial_overlay_signals(node: Node) -> void:
@@ -193,6 +195,7 @@ func _setup_buttons() -> void:
 	# Prevent spacebar/enter from accidentally activating nav buttons via Godot's ui_accept
 	for btn in [back_btn, forward_btn, menu_btn, market_btn, space_map_btn, build_btn, new_mission_btn]:
 		btn.focus_mode = Control.FOCUS_NONE
+	_apply_market_button_state(false)
 
 
 const _AMBER        := Color(0.941, 0.690, 0.188, 1.0)
@@ -305,6 +308,8 @@ func _on_menu_button_pressed() -> void:
 	preload("res://Scripts/UI/GameNavigationMenu.gd").toggle(self)
 
 func _on_market_button_pressed() -> void:
+	if not RocketsManager.is_free_operations_unlocked():
+		return
 	ui_manager.show_panel(UIManager.PanelType.MARKET)
 
 func _on_build_button_pressed() -> void:
@@ -723,20 +728,22 @@ func _scanner_station_build_required() -> bool:
 
 func _apply_tutorial_button_state() -> void:
 	var app = AppControllerHelper.get_instance()
-	var tutorial_active := false
+	var tutorial_active := not RocketsManager.is_free_operations_unlocked()
 	if app != null and app.has_method("get_tutorial_state"):
 		var state: Dictionary = app.get_tutorial_state()
-		tutorial_active = not state.is_empty() and not bool(state.get("skipped", false))
+		if not state.is_empty():
+			var current_step: Dictionary = state.get("current_step", {}) as Dictionary
+			tutorial_active = not bool(state.get("skipped", false)) and not current_step.is_empty()
 	# During the tutorial keep only Menu + New Mission active.
 	# SpaceMap, Market, and Forward lead nowhere useful and confuse new players.
 	for btn_path in [
 		"UILayer/ButtonContainer/ForwardButton",
-		"UILayer/ButtonContainer/MarketButton",
 		"UILayer/ButtonContainer/SpaceMapButton",
 	]:
 		var btn := get_node_or_null(btn_path) as Button
 		if btn:
 			btn.disabled = tutorial_active
+	_apply_market_button_state(tutorial_active)
 	var new_mission_btn := get_node_or_null("UILayer/ButtonContainer/NewMissionButton") as Button
 	if new_mission_btn:
 		var control_station_required := _control_station_build_required()
@@ -748,6 +755,49 @@ func _apply_tutorial_button_state() -> void:
 			new_mission_btn.tooltip_text = "Build the Scanner Station first."
 		else:
 			new_mission_btn.tooltip_text = ""
+
+func _apply_market_button_state(_tutorial_active: bool) -> void:
+	var market_btn := get_node_or_null("UILayer/ButtonContainer/MarketButton") as Button
+	if market_btn == null:
+		return
+	var market_unlocked := RocketsManager.is_free_operations_unlocked()
+	market_btn.disabled = not market_unlocked
+	if not market_unlocked:
+		market_btn.tooltip_text = "Market unlocks after completing the starter mission series."
+		market_btn.modulate = Color(1, 1, 1, 0.38)
+	else:
+		market_btn.tooltip_text = ""
+		market_btn.modulate = Color(1, 1, 1, 1)
+
+func _refresh_tutorial_overlay_when_ready() -> void:
+	var tree := get_tree()
+	if tree == null:
+		return
+	await tree.process_frame
+	await tree.process_frame
+	if not is_inside_tree():
+		return
+	if tree.root == null:
+		return
+	var overlay := tree.root.find_child("TutorialCoachOverlay", true, false)
+	if overlay == null:
+		return
+	if overlay.has_method("_try_connect_app_controller"):
+		overlay.call("_try_connect_app_controller")
+	if overlay.has_method("_pull_state_from_controller"):
+		overlay.call("_pull_state_from_controller")
+	var app = AppControllerHelper.get_instance()
+	if app == null or not app.has_method("get_tutorial_state"):
+		return
+	var state: Dictionary = app.get_tutorial_state()
+	if state.is_empty() or bool(state.get("skipped", false)):
+		return
+	var current_step: Dictionary = state.get("current_step", {}) as Dictionary
+	if current_step.is_empty():
+		return
+	if overlay.has_method("_on_tutorial_state_updated"):
+		overlay.call("_on_tutorial_state_updated", state)
+	_refresh_tutorial_owned_ui()
 
 func _build_earth_base_identity() -> void:
 	_build_wordmark()
@@ -847,6 +897,8 @@ func _build_progression_cards() -> void:
 		cards_root.show_next_mission(int(RocketsManager.get_mission_stage()), _on_new_mission_button_pressed)
 
 func _has_visible_tutorial_overlay() -> bool:
+	if not is_inside_tree():
+		return false
 	var tree := get_tree()
 	if tree == null or tree.root == null:
 		return false
