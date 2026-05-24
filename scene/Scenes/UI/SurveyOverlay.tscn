@@ -1,0 +1,190 @@
+[gd_scene load_steps=9 format=3]
+
+; In-game PostHog survey overlay — shown when a survey event fires in native (editor/desktop) mode.
+; Static shell: backdrop, panel, header, scroll container, footer.
+; Questions are populated dynamically in SurveyOverlay.gd because the count and types are runtime data.
+
+[ext_resource type="Script" path="res://Scripts/UI/SurveyOverlay.gd" id="1"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.047, 0.071, 0.125, 1.0)
+border_color = Color(0.137, 0.204, 0.333, 1.0)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+shadow_color = Color(0.0, 0.0, 0.0, 0.5)
+shadow_size = 32
+shadow_offset = Vector2(0, 12)
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_submit_normal"]
+bg_color = Color(0.290, 0.816, 1.0, 1.0)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+content_margin_left = 24.0
+content_margin_top = 12.0
+content_margin_right = 24.0
+content_margin_bottom = 12.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_submit_hover"]
+bg_color = Color(0.200, 0.690, 0.900, 1.0)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+content_margin_left = 24.0
+content_margin_top = 12.0
+content_margin_right = 24.0
+content_margin_bottom = 12.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_submit_disabled"]
+bg_color = Color(0.290, 0.816, 1.0, 0.35)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+content_margin_left = 24.0
+content_margin_top = 12.0
+content_margin_right = 24.0
+content_margin_bottom = 12.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_skip"]
+bg_color = Color(0.0, 0.0, 0.0, 0.0)
+border_color = Color(0.137, 0.204, 0.333, 1.0)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+content_margin_left = 20.0
+content_margin_top = 12.0
+content_margin_right = 20.0
+content_margin_bottom = 12.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_inner"]
+bg_color = Color(0.031, 0.047, 0.086, 1.0)
+corner_radius_top_left = 0
+corner_radius_top_right = 0
+corner_radius_bottom_right = 0
+corner_radius_bottom_left = 0
+content_margin_left = 28.0
+content_margin_top = 24.0
+content_margin_right = 28.0
+content_margin_bottom = 0.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_footer"]
+bg_color = Color(0.031, 0.047, 0.086, 1.0)
+border_color = Color(0.137, 0.204, 0.333, 0.6)
+border_width_top = 1
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+content_margin_left = 28.0
+content_margin_top = 16.0
+content_margin_right = 28.0
+content_margin_bottom = 20.0
+
+[node name="SurveyOverlay" type="CanvasLayer"]
+layer = 90
+script = ExtResource("1")
+
+[node name="Backdrop" type="ColorRect" parent="."]
+color = Color(0.008, 0.024, 0.059, 0.85)
+anchors_preset = 15
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+
+[node name="Center" type="CenterContainer" parent="."]
+anchors_preset = 15
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="PanelContainer" parent="Center"]
+custom_minimum_size = Vector2(600, 0)
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="OuterVBox" type="VBoxContainer" parent="Center/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="HeaderMargin" type="MarginContainer" parent="Center/Panel/OuterVBox"]
+layout_mode = 2
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_top = 22
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 16
+
+[node name="Header" type="HBoxContainer" parent="Center/Panel/OuterVBox/HeaderMargin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="TitleLabel" type="Label" parent="Center/Panel/OuterVBox/HeaderMargin/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Survey"
+theme_override_colors/font_color = Color(0.906, 0.929, 0.976, 1.0)
+theme_override_font_sizes/font_size = 22
+
+[node name="CloseBtn" type="Button" parent="Center/Panel/OuterVBox/HeaderMargin/Header"]
+layout_mode = 2
+custom_minimum_size = Vector2(36, 36)
+text = "×"
+theme_override_colors/font_color = Color(0.663, 0.706, 0.800, 1.0)
+theme_override_font_sizes/font_size = 22
+
+[node name="ScrollArea" type="ScrollContainer" parent="Center/Panel/OuterVBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 180)
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_inner")
+
+[node name="QuestionsVBox" type="VBoxContainer" parent="Center/Panel/OuterVBox/ScrollArea"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 28
+
+[node name="Footer" type="PanelContainer" parent="Center/Panel/OuterVBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_footer")
+
+[node name="FooterRow" type="HBoxContainer" parent="Center/Panel/OuterVBox/Footer"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="SkipBtn" type="Button" parent="Center/Panel/OuterVBox/Footer/FooterRow"]
+layout_mode = 2
+text = "Skip"
+theme_override_styles/normal = SubResource("StyleBoxFlat_skip")
+theme_override_styles/hover = SubResource("StyleBoxFlat_skip")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_skip")
+theme_override_colors/font_color = Color(0.663, 0.706, 0.800, 1.0)
+theme_override_font_sizes/font_size = 18
+
+[node name="FooterSpacer" type="Control" parent="Center/Panel/OuterVBox/Footer/FooterRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="SubmitBtn" type="Button" parent="Center/Panel/OuterVBox/Footer/FooterRow"]
+layout_mode = 2
+disabled = true
+text = "Submit answers"
+theme_override_styles/normal = SubResource("StyleBoxFlat_submit_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_submit_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_submit_hover")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_submit_disabled")
+theme_override_colors/font_color = Color(0.039, 0.063, 0.102, 1.0)
+theme_override_colors/font_disabled_color = Color(0.039, 0.063, 0.102, 0.45)
+theme_override_font_sizes/font_size = 18
