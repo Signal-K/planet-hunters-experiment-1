@@ -2,27 +2,26 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "https://esm.sh/react@19";
 import { createRoot } from "https://esm.sh/react-dom@19/client";
 
-const COOKIE_NAME = "planet_hunters_progress_v1";
+const COOKIE_NAME = "landnam_progress_v1";
 const COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365;
-const ACTION_LOG_KEY = "planet_hunters_action_log_v1";
-const SURVEY_SHOWN_KEY = "planet_hunters_exit_survey_first_mission_v1";
+const ACTION_LOG_KEY = "landnam_action_log_v1";
+const SURVEY_SHOWN_KEY = "landnam_exit_survey_first_mission_v1";
 const MICRO_SURVEY_KEYS = {
-  contractor:   "planet_hunters_micro_survey_contractor_v1",
-  mining:       "planet_hunters_micro_survey_mining_v1",
-  science:      "planet_hunters_micro_survey_science_v1",
-  progression2: "planet_hunters_micro_survey_progression_stage2_v1",
-  progression3: "planet_hunters_micro_survey_progression_stage3_v1",
-  progression4: "planet_hunters_micro_survey_progression_stage4_v1",
-  launch:       "planet_hunters_micro_survey_first_launch_v1",
-  pwa_install:  "planet_hunters_micro_survey_pwa_install_v1",
-  m4_complete:  "planet_hunters_micro_survey_m4_complete_v1",
-  return_visit: "planet_hunters_micro_survey_return_visit_v1",
-  level_up:     "planet_hunters_micro_survey_level_up_v1",
-  upgrade:      "planet_hunters_micro_survey_upgrade_v1",
-  planet_found: "planet_hunters_micro_survey_planet_found_v1",
-  difficulty:   "planet_hunters_micro_survey_difficulty_v1",
+  contractor:   "landnam_micro_survey_contractor_v1",
+  mining:       "landnam_micro_survey_mining_v1",
+  science:      "landnam_micro_survey_science_v1",
+  progression2: "landnam_micro_survey_progression_stage2_v1",
+  progression3: "landnam_micro_survey_progression_stage3_v1",
+  progression4: "landnam_micro_survey_progression_stage4_v1",
+  launch:       "landnam_micro_survey_first_launch_v1",
+  pwa_install:  "landnam_micro_survey_pwa_install_v1",
+  m4_complete:  "landnam_micro_survey_m4_complete_v1",
+  return_visit: "landnam_micro_survey_return_visit_v1",
+  level_up:     "landnam_micro_survey_level_up_v1",
+  planet_found: "landnam_micro_survey_planet_found_v1",
+  difficulty:   "landnam_micro_survey_difficulty_v1",
 };
-const SESSION_COUNT_KEY = "planet_hunters_session_count_v1";
+const SESSION_COUNT_KEY = "landnam_session_count_v1";
 const MICRO_SURVEY_IDS = {
   contractor:  "019ccaf8-4299-0000-b3ad-92a57ab75b95",
   mining:      "019ccaf8-c4d8-0000-901b-aa850dfd43c5",
@@ -34,15 +33,14 @@ const MICRO_SURVEY_IDS = {
   m4_complete: "",  // "You've reached the end — what would keep you playing?" — fires at M4 debrief
   return_visit: "", // "What brought you back?" — fires on 2nd+ session start
   level_up:     "", // "How does the progression speed feel?" — fires after level up
-  upgrade:      "", // "Was this upgrade worth the price?" — fires after room upgrade
   planet_found: "", // "How exciting was it to find your first planet?" — fires after planet candidate found
   difficulty:   "", // "What part of the mission was most difficult?" — fires after failed/stuck run
 };
 const SURVEY_OVERLAY_ID = "landnam-survey-overlay";
 const SURVEY_IFRAME_ID = "landnam-survey-iframe";
 const FEEDBACK_OVERLAY_ID = "landnam-feedback-overlay";
-const SUPABASE_SESSION_STORAGE_KEY = "planet_hunters_supabase_guest";
-const XP_STATE_KEY = "planet_hunters_xp_state_v1";
+const SUPABASE_SESSION_STORAGE_KEY = "landnam_supabase_guest";
+const XP_STATE_KEY = "landnam_xp_state_v1";
 const DEFAULT_RUNTIME_CONFIG = {
   posthog: {
     projectToken: "",
@@ -284,6 +282,38 @@ function pushAction(eventName, payload) {
   saveActionLog();
 }
 
+// Stub out every native PostHog survey API so no popover can auto-render.
+// disable_surveys: true in init() is the primary guard; this is the secondary
+// belt in case a posthog-js build loads the survey plugin before the flag is
+// evaluated, or in case the config is ignored during a hot-reload.
+function disableNativePostHogSurveys(client) {
+  if (!client) return;
+  const noop = () => {};
+  const noopAsync = () => Promise.resolve([]);
+  try {
+    if (client.surveys && typeof client.surveys === "object") {
+      client.surveys.loadIfEnabled = noop;
+      client.surveys.afterDecideResponse = noop;
+      client.surveys.getSurveys = noopAsync;
+      client.surveys.getActiveMatchingSurveys = noopAsync;
+    }
+    if (typeof client.getActiveMatchingSurveys === "function") {
+      client.getActiveMatchingSurveys = noopAsync;
+    }
+    if (typeof client.getSurveys === "function") {
+      client.getSurveys = noopAsync;
+    }
+    if (typeof client.renderSurvey === "function") {
+      client.renderSurvey = noop;
+    }
+    if (typeof client.canRenderSurvey === "function") {
+      client.canRenderSurvey = () => false;
+    }
+  } catch (e) {
+    console.warn("[posthog] disableNativePostHogSurveys failed:", e);
+  }
+}
+
 async function loadPostHogClient() {
   if (_posthogPromise) {
     return _posthogPromise;
@@ -311,12 +341,14 @@ async function loadPostHogClient() {
           recordCrossOriginIframes: true,
         },
         loaded(ph) {
+          disableNativePostHogSurveys(ph);
           ph.register({
-            app: "planet_hunters_experiment1_web",
+            app: "landnam_experiment1_web",
             runtime: "godot_web_shell",
           });
         },
       });
+      disableNativePostHogSurveys(client);
       return client;
     })
     .catch((error) => {
@@ -360,7 +392,7 @@ async function syncAnalyticsIdentity(distinctId) {
   try {
     const client = await loadPostHogClient();
     client.identify(distinctId, {
-      source: "planet_hunters_experiment1_web",
+      source: "landnam_experiment1_web",
     });
   } catch (error) {
     console.warn("PostHog identify failed:", error);
@@ -399,7 +431,7 @@ async function ensureGuestUser() {
   const created = await client.auth.signInAnonymously({
     options: {
       data: {
-        source: "planet_hunters_experiment1_web",
+        source: "landnam_experiment1_web",
         created_by: "react_shell_survey_trigger",
       },
     },
@@ -857,14 +889,6 @@ function maybeShowLevelUpSurvey(payload) {
   );
 }
 
-function maybeShowUpgradeSurvey(payload) {
-  maybeTriggerMicroSurvey(
-    MICRO_SURVEY_KEYS.upgrade,
-    MICRO_SURVEY_IDS.upgrade,
-    "micro_room_upgrade_value",
-    payload
-  );
-}
 
 function maybeShowPlanetFoundSurvey(payload) {
   maybeTriggerMicroSurvey(
@@ -1456,9 +1480,6 @@ function App() {
       if (eventName === "player_stuck_detected") {
         maybeShowDifficultySurvey(payload);
       }
-      if (eventName === "franc_balance_updated" && String(payload.source || "").startsWith("room_upgrade")) {
-        maybeShowUpgradeSurvey(payload);
-      }
       if (eventName === "scanner_scan_completed") {
         maybeShowScienceSurvey(payload);
         if (payload.detected_count > 0 && payload.scanner_mode === "planets") {
@@ -1487,14 +1508,11 @@ function App() {
       if (eventName === "mining_run_completed") {
         maybeShowMiningSurvey(payload);
       }
-      if (eventName === "scanner_scan_completed") {
-        maybeShowScienceSurvey(payload);
-      }
       if (eventName === "mission_debrief_resolved") {
         maybeShowProgressionSurvey(payload);
         maybeShowM4CompleteSurvey(payload);
       }
-      if (eventName === "rocket_launched") {
+      if (eventName === "rocket_launched" || eventName === "mission_launch_started") {
         maybeShowLaunchSurvey(payload);
       }
       // Return-visit survey: fires the first time the player completes a meaningful
@@ -1544,7 +1562,7 @@ function App() {
   // Auto-show install banner on mobile non-PWA after 2s (dismissible, suppressed after dismiss)
   useEffect(() => {
     if (!isMobile || isPwa) return;
-    if (localStorage.getItem("planet_hunters_install_banner_dismissed_v1")) return;
+    if (localStorage.getItem("landnam_install_banner_dismissed_v1")) return;
     const timer = setTimeout(() => setShowInstallHint(true), 2000);
     return () => clearTimeout(timer);
   }, [isMobile, isPwa]);
@@ -2207,7 +2225,7 @@ function App() {
               {
                 onClick: () => {
                   setShowInstallHint(false);
-                  localStorage.setItem("planet_hunters_install_banner_dismissed_v1", "1");
+                  localStorage.setItem("landnam_install_banner_dismissed_v1", "1");
                 },
                 style: {
                   border: "none",
