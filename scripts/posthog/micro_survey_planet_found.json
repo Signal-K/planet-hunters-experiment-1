@@ -1,0 +1,28 @@
+{
+  "name": "Landnám: Planet Discovery Excitement",
+  "type": "external_survey",
+  "schedule": "always",
+  "enable_partial_responses": true,
+  "appearance": {
+    "displayThankYouMessage": true,
+    "thankYouMessageHeader": "Thanks!",
+    "thankYouMessageDescription": "You just found a real planet candidate — your reaction matters to us."
+  },
+  "questions": [
+    {
+      "type": "rating",
+      "scale": 5,
+      "display": "emoji",
+      "question": "How exciting was it to find your first planet candidate?",
+      "lowerBoundLabel": "Not at all exciting",
+      "upperBoundLabel": "Mind-blowing",
+      "descriptionContentType": "text"
+    },
+    {
+      "type": "multiple_choice",
+      "question": "Did you know this is a real unconfirmed exoplanet candidate from TESS data?",
+      "choices": ["Yes — that is why I use the scanner", "Yes, I had read about it", "No — I had no idea!", "I suspected but was not sure"],
+      "descriptionContentType": "text"
+    }
+  ]
+}

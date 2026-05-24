@@ -1,0 +1,28 @@
+{
+  "name": "Landnám: Progression Speed Feel",
+  "type": "external_survey",
+  "schedule": "always",
+  "enable_partial_responses": true,
+  "appearance": {
+    "displayThankYouMessage": true,
+    "thankYouMessageHeader": "Thanks!",
+    "thankYouMessageDescription": "Your answer helps us tune the progression curve."
+  },
+  "questions": [
+    {
+      "type": "multiple_choice",
+      "question": "How does the speed of levelling up feel?",
+      "choices": ["Too slow — it feels like a grind", "A bit slow", "About right", "A bit fast", "Too fast — levels feel cheap"],
+      "descriptionContentType": "text"
+    },
+    {
+      "type": "rating",
+      "scale": 5,
+      "display": "emoji",
+      "question": "How satisfying was reaching this level?",
+      "lowerBoundLabel": "Not at all",
+      "upperBoundLabel": "Very satisfying",
+      "descriptionContentType": "text"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "name": "Landnám: First Launch Feel",
+  "type": "external_survey",
+  "schedule": "always",
+  "enable_partial_responses": true,
+  "appearance": {
+    "displayThankYouMessage": true,
+    "thankYouMessageHeader": "Thanks!",
+    "thankYouMessageDescription": "Your feedback helps us make the launch feel better."
+  },
+  "questions": [
+    {
+      "type": "rating",
+      "scale": 5,
+      "display": "emoji",
+      "question": "How did your first launch feel?",
+      "lowerBoundLabel": "Anticlimactic",
+      "upperBoundLabel": "Thrilling",
+      "descriptionContentType": "text"
+    },
+    {
+      "type": "multiple_choice",
+      "question": "What would have made the launch more exciting?",
+      "choices": ["Better visual effects", "More build-up beforehand", "Sound or music", "It was already great", "Not sure"],
+      "descriptionContentType": "text"
+    }
+  ]
+}
