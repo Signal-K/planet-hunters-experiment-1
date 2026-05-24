@@ -1,0 +1,35 @@
+{
+  "taskId": "3k3ktl",
+  "currentVersion": 1,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "3k3ktl",
+      "version": 1,
+      "timestamp": "2026-05-24T15:18:53.234554Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": null,
+          "newValue": "done"
+        },
+        {
+          "field": "priority",
+          "oldValue": null,
+          "newValue": "high"
+        }
+      ],
+      "snapshot": {
+        "description": "Tutorial panel was overflowing the right edge of the game viewport in production because the title label's natural text width forced PanelContainer wider than the UILayout zone (320px). Zone was also too short (240px) to fit all content. Arrow for the open_launchpad step pointed at the physical Launchpad building instead of the New Mission nav button.",
+        "labels": [
+          "bug",
+          "tutorial",
+          "ui"
+        ],
+        "priority": "high",
+        "status": "done",
+        "title": "Fix tutorial coach panel cut-off and wrong arrow target in prod"
+      }
+    }
+  ]
+}
