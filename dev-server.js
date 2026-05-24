@@ -45,8 +45,17 @@ http
 
     // Serve local runtime config — points all Supabase calls at the local dev instance.
     if (pathname === "/api/runtime-config") {
+      const regionRaw = String(process.env.Posthog_Region || process.env.POSTHOG_REGION || "US Cloud").toLowerCase();
+      const isEu = regionRaw.includes("eu");
       const payload = {
-        posthog: { projectToken: "", apiHost: "", uiHost: "", surveyId: "" },
+        posthog: {
+          projectToken: process.env.Posthog_Project_Token || process.env.POSTHOG_PROJECT_TOKEN || "",
+          projectId: process.env.Posthog_Project_ID || process.env.POSTHOG_PROJECT_ID || "",
+          region: process.env.Posthog_Region || process.env.POSTHOG_REGION || "",
+          apiHost: process.env.Posthog_API_Host || process.env.POSTHOG_API_HOST || (isEu ? "https://eu.i.posthog.com" : "https://us.i.posthog.com"),
+          uiHost: process.env.Posthog_UI_Host || process.env.POSTHOG_UI_HOST || (isEu ? "https://eu.posthog.com" : "https://us.posthog.com"),
+          surveyId: process.env.Posthog_Survey_ID || process.env.POSTHOG_SURVEY_ID || "019c9df8-db7f-0000-072f-73b3347a4d6c",
+        },
         supabase: {
           url: process.env.SUPABASE_URL || "http://127.0.0.1:54321",
           anonKey: process.env.SUPABASE_ANON || "sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH",
@@ -91,7 +100,8 @@ http
     if (req.method === "HEAD") { res.end(); return; }
     fs.createReadStream(fp).pipe(res);
   })
-  .listen(PORT, "127.0.0.1", () => {
-    console.log(`Dev server: http://127.0.0.1:${PORT}`);
+  .listen(PORT, process.env.HOST || "127.0.0.1", () => {
+    const host = process.env.HOST || "127.0.0.1";
+    console.log(`Dev server: http://${host}:${PORT}`);
     console.log(`Serving root: ${ROOT}`);
   });
