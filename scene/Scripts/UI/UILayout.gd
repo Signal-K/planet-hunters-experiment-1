@@ -175,27 +175,16 @@ static func _app_body(vp: Vector2) -> Rect2:
 	return Rect2(0.0, header.end.y, vp.x, maxf(0.0, footer.position.y - header.end.y))
 
 static func _app_header_with_coach(vp: Vector2) -> Rect2:
-	var header := _app_header(vp)
-	var coach := _tutorial_coach(vp)
-	if _can_reserve_tutorial_sidecar(vp):
-		header.size.x = maxf(320.0, coach.position.x - EDGE)
-	return header
+	return _app_header(vp)
 
 static func _app_body_with_coach(vp: Vector2) -> Rect2:
-	var body := _app_body(vp)
-	var coach := _tutorial_coach(vp)
-	if _can_reserve_tutorial_sidecar(vp):
-		body.size.x = maxf(320.0, coach.position.x - EDGE)
-	return body
-
-static func _can_reserve_tutorial_sidecar(vp: Vector2) -> bool:
-	return vp.x >= 1180.0
+	return _app_body(vp)
 
 static func _tutorial_coach(vp: Vector2) -> Rect2:
-	# Mirrors TutorialLayoutZone.reserved_rect — keep in sync.
-	const MARGIN := 24.0
-	var w := minf(460.0, maxf(220.0, vp.x * 0.32))
-	var h := minf(280.0, maxf(180.0, vp.y * 0.38))
+	# Small corner widget — top-right only. Floats over content; never squeezes.
+	const MARGIN := 16.0
+	var w := minf(280.0, maxf(200.0, vp.x * 0.18))
+	var h := minf(220.0, maxf(160.0, vp.y * 0.26))
 	return Rect2(vp.x - w - MARGIN, MARGIN, w, h)
 
 static func _earth_widget(vp: Vector2) -> Rect2:
