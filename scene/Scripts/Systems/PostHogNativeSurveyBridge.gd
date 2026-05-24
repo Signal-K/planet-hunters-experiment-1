@@ -19,6 +19,7 @@ const SURVEY_IDS := {
 	"level_up":      "019e5a4e-5f74-0000-2470-c06526c3e36d",
 	"planet_found":  "019e5a4e-6528-0000-b69d-e5745079ffd5",
 	"difficulty":    "019e5a4e-6b23-0000-dbb1-0bed0fad9910",
+	"nav_test":      "019e5a8a-840d-0000-7d68-d43089c0fd61",
 }
 
 # Embedded question data for all surveys — mirrors the PostHog JSON definitions.
@@ -94,11 +95,34 @@ const SURVEY_QUESTIONS := {
 			{"type": "rating", "text": "How frustrated did you feel?", "low": "Not at all", "high": "Ready to quit"},
 		]
 	},
+	"nav_test": {
+		"name": "Landnam Nav Test Survey",
+		"questions": [
+			{"type": "rating", "text": "How easy was it to find your way around?", "low": "Very hard", "high": "Very easy"},
+			{"type": "open", "text": "Anything confusing about the navigation?"},
+		]
+	},
 }
 
 static var opened_urls: Array[String] = []
 static var _config := ConfigFile.new()
 static var _config_loaded := false
+
+## Count a repeatable action and fire a survey once the threshold is reached.
+## Unlike handle_event, this works on web too (no OS.has_feature guard), so it
+## can be used to test the native survey overlay in the production web build.
+static func count_and_fire(counter_key: String, threshold: int, gate_key: String,
+		survey_id: String, survey_key: String, payload: Dictionary) -> void:
+	var config := _load_config()
+	if config.has_section_key(GATE_SECTION, gate_key):
+		return
+	const COUNT_SECTION := "counts"
+	var count := int(config.get_value(COUNT_SECTION, counter_key, 0)) + 1
+	config.set_value(COUNT_SECTION, counter_key, count)
+	config.save(STORE_PATH)
+	if count < threshold:
+		return
+	_open_once(gate_key, survey_id, survey_key, survey_key, payload)
 
 static func handle_event(event_name: String, payload: Dictionary) -> void:
 	if OS.has_feature("web"):
@@ -212,3 +236,11 @@ static func reset_for_tests() -> void:
 	opened_urls.clear()
 	_config = ConfigFile.new()
 	_config_loaded = false
+
+## Clear just the nav_test cycle counter (keeps all other survey gates intact).
+## Useful in development to re-test the survey trigger without a full reset.
+static func reset_nav_test_counter() -> void:
+	var config := _load_config()
+	config.erase_section_key("counts", "launchpad_back_cycles")
+	config.erase_section_key(GATE_SECTION, "nav_test")
+	config.save(STORE_PATH)

@@ -2,6 +2,7 @@ extends Node2D
 
 const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
 const PreviewRouting = preload("res://Scripts/UI/NewMissionPreviewRouting.gd")
+const PostHogNativeSurveyBridge = preload("res://Scripts/Systems/PostHogNativeSurveyBridge.gd")
 
 func _ready() -> void:
 	# Redirect guards — evaluated before wizard setup
@@ -45,6 +46,10 @@ func _redirect_to_base() -> void:
 
 func _go_back() -> void:
 	RocketsManager.remove_awaiting_rocket()
+	PostHogNativeSurveyBridge.count_and_fire(
+		"launchpad_back_cycles", 3, "nav_test",
+		PostHogNativeSurveyBridge.SURVEY_IDS.nav_test, "nav_test", {}
+	)
 	var sm := get_tree().get_first_node_in_group("scene_manager")
 	if sm:
 		sm.navigate_backward()
