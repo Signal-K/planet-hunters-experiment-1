@@ -5,6 +5,7 @@ signal tutorial_state_updated(state: Dictionary)
 signal tutorial_step_changed(step: Dictionary, state: Dictionary)
 signal tutorial_action_recorded(action_key: String, advanced: bool)
 
+const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
 const TutorialCatalogScript = preload("res://Scripts/Tutorial/TutorialCatalog.gd")
 const TutorialPersistenceScript = preload("res://Scripts/Tutorial/TutorialPersistence.gd")
 const MAX_STAGE := 5
@@ -58,17 +59,20 @@ func record_action(action_key: String, metadata: Dictionary = {}) -> bool:
 	var completed_actions: Dictionary = _state.get("completed_actions", {})
 	completed_actions[action_key] = true
 	_state["completed_actions"] = completed_actions
-	# Snapshot the stage BEFORE advancing so we can record in the right bucket.
-	# We only write to completed_actions_by_stage when the action actually
-	# advances a step — this prevents duplicate calls (fired after a stage
-	# transition) from contaminating the new stage's action dict.
+	# Record in the stage that was current when the action matched a step.
+	# If _advance_if_match triggers a stage transition (empty step → stage
+	# advances), use the NEW stage so reconciliation finds the action in the
+	# correct per-stage bucket. Duplicate calls still return false and are not
+	# written, preventing cross-stage contamination.
 	var stage_before := int(_state.get("current_stage", 1))
 	var advanced = _advance_if_match(action_key, metadata)
 	if advanced:
+		var stage_after := int(_state.get("current_stage", 1))
+		var record_stage := stage_after if stage_after != stage_before else stage_before
 		var by_stage: Dictionary = _state.get("completed_actions_by_stage", {})
-		var stage_actions: Dictionary = by_stage.get(str(stage_before), {})
+		var stage_actions: Dictionary = by_stage.get(str(record_stage), {})
 		stage_actions[action_key] = true
-		by_stage[str(stage_before)] = stage_actions
+		by_stage[str(record_stage)] = stage_actions
 		_state["completed_actions_by_stage"] = by_stage
 	_persist_and_emit(action_key, advanced)
 	return advanced
@@ -128,12 +132,10 @@ func force_advance_current_step() -> bool:
 func _advance_if_match(action_key: String, _metadata: Dictionary) -> bool:
 	if bool(_state.get("skipped", false)):
 		return false
-	if get_current_step().is_empty():
-		var stage_advanced := _try_advance_stage()
-		if stage_advanced:
-			_reconcile_step_index()
-			_emit_step_changed()
-		return stage_advanced
+	# Fall through to the guard loop even when the current step is empty so
+	# that a stage transition also tries to match the action against the new
+	# stage's first step in the same call. This prevents the next (duplicate)
+	# call from finding an unmatched step 0 and incorrectly advancing it.
 	var advanced := false
 	var guard = 0
 	while guard < 12:
@@ -183,11 +185,7 @@ func _advance_if_match(action_key: String, _metadata: Dictionary) -> bool:
 # specific sub-dict simply means no actions have been recorded in that stage yet.
 func _stage_action_completed(stage: int, action_key: String) -> bool:
 	var by_stage: Dictionary = _state.get("completed_actions_by_stage", {})
-	if not by_stage.is_empty():
-		# Per-stage tracking is active — use only this stage's actions.
-		return bool(by_stage.get(str(stage), {}).get(action_key, false))
-	# Fallback: old save that pre-dates per-stage tracking.
-	return bool(_state.get("completed_actions", {}).get(action_key, false))
+	return bool(by_stage.get(str(stage), {}).get(action_key, false))
 
 func _mark_step_complete(stage: int, step_index: int) -> void:
 	var completed_steps: Dictionary = _state.get("completed_steps_by_stage", {})
@@ -204,7 +202,7 @@ func _try_advance_stage() -> bool:
 	var stage = int(_state.get("current_stage", 1))
 	if stage >= MAX_STAGE:
 		return false
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var rm = RocketsManager
 	var stage_from_progress = clamp(int(rm.get_mission_stage()), 1, MAX_STAGE)
 	if stage + 1 > stage_from_progress:
 		return false
@@ -217,7 +215,7 @@ func _try_advance_stage() -> bool:
 func _refresh_stage_from_progress() -> void:
 	if int(_state.get("stage_lock", 0)) > 0:
 		return
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var rm = RocketsManager
 	if not rm:
 		return
 	var stage_from_progress = clamp(int(rm.get_mission_stage()), 1, MAX_STAGE)
@@ -269,7 +267,7 @@ func _step_satisfied_from_game_state(step: Dictionary) -> bool:
 	var action_key := str(step.get("action_key", ""))
 	if action_key == "":
 		return true
-	var rm = preload("res://Scripts/Utils/RocketsManager.gd")
+	var rm = RocketsManager
 	if not rm:
 		return false
 	match action_key:

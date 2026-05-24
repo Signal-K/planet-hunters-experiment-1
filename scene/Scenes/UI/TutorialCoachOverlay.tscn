@@ -46,6 +46,11 @@ text = "Mission Guidance"
 layout_mode = 2
 text = "Mission 1"
 
+[node name="RestartBtn" type="Button" parent="Root/Panel/Margin/VBox/Header"]
+layout_mode = 2
+text = "↺"
+tooltip_text = "Restart tutorial from step 1"
+
 [node name="CollapseButton" type="Button" parent="Root/Panel/Margin/VBox/Header"]
 layout_mode = 2
 text = "−"
@@ -95,3 +100,34 @@ text = "Go to Debrief"
 layout_mode = 2
 visible = false
 text = "Resume Mission"
+
+[node name="TargetPointerLine" type="Line2D" parent="Root"]
+z_index = 240
+visible = false
+width = 7.0
+default_color = Color(0.28, 0.88, 0.96, 1.0)
+begin_cap_mode = 1
+end_cap_mode = 1
+
+[node name="TargetPointerHead" type="Polygon2D" parent="Root"]
+z_index = 241
+visible = false
+color = Color(0.28, 0.88, 0.96, 1.0)
+
+[node name="TargetPointerHead2" type="Polygon2D" parent="Root"]
+z_index = 241
+visible = false
+color = Color(0.28, 0.88, 0.96, 0.65)
+
+[node name="TargetPointerHead3" type="Polygon2D" parent="Root"]
+z_index = 241
+visible = false
+color = Color(0.28, 0.88, 0.96, 0.35)
+
+[node name="TargetHighlight" type="ReferenceRect" parent="Root"]
+z_index = 239
+visible = false
+mouse_filter = 2
+editor_only = false
+border_color = Color(0.28, 0.88, 0.96, 0.95)
+border_width = 4.0
