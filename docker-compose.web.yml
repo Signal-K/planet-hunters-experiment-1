@@ -1,0 +1,54 @@
+# Local web-shell environment — mirrors the CI / Vercel-production setup.
+#
+# Profiles:
+#   test   — run Jest (same as CI yarn test step)
+#   serve  — serve the shell on http://localhost:3333
+#
+# Usage:
+#   docker compose -f docker-compose.web.yml --profile test  up --build --abort-on-container-exit
+#   docker compose -f docker-compose.web.yml --profile serve up --build
+#   docker compose -f docker-compose.web.yml --profile test --profile serve up --build
+#
+# Env vars (PostHog token, Supabase, etc.) are read from .env in the repo root.
+# The file is listed in .dockerignore so it is NOT baked into the image —
+# it is only injected at container runtime via env_file below.
+
+services:
+
+  # ── Jest test runner ────────────────────────────────────────────────────────
+  # Mirrors the CI step: yarn install (done in image) → npx jest --no-coverage
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    command: ["npx", "jest", "--no-coverage", "--forceExit", "--runInBand"]
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      NODE_ENV: test
+    profiles: ["test"]
+
+  # ── Web shell server ────────────────────────────────────────────────────────
+  # Serves index.html + react-shell.js + /game/* from the project root.
+  # Open http://localhost:3333 in a browser to manually verify no survey pops.
+  shell:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    ports:
+      - "3333:3333"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      HOST: "0.0.0.0"
+      PORT: "3333"
+      NODE_ENV: development
+    profiles: ["serve"]
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3333/', r => { if (r.statusCode !== 200) throw r.statusCode }).on('error', e => { throw e })"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
