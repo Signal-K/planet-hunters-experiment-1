@@ -1,9 +1,11 @@
 extends RefCounted
 class_name AppControllerPersistence
 
+const AppLogger = preload("res://Scripts/Utils/Logger.gd")
 const FRANC_BALANCE_CONFIG_PATH := "user://franc_balance.cfg"
 const PREFERENCES_CONFIG_PATH := "user://preferences.cfg"
 const LEGACY_EXPERIENCE_CONFIG_PATH := "user://experience.cfg"
+const TUTORIAL_STATE_CONFIG_PATH := "user://tutorial_v2.cfg"
 const FRANC_BALANCE_SECTION := "currency"
 const FRANC_BALANCE_KEY := "balance"
 const LOAN_KEY := "loan_balance"
@@ -19,9 +21,9 @@ func save_franc_balance(value: int, loan: int = -1) -> void:
 		cfg.set_value(FRANC_BALANCE_SECTION, LOAN_KEY, loan)
 	var err = cfg.save(FRANC_BALANCE_CONFIG_PATH)
 	if err != OK:
-		print("[AppController] Failed to save franc balance: ", err)
+		push_error("[AppController] Failed to save franc balance: ", err)
 	else:
-		print("[AppController] Franc balance saved: ", value)
+		AppLogger.d("[AppController] Franc balance saved: " + str(value))
 
 func load_franc_balance(default_value: int) -> Dictionary:
 	var cfg = ConfigFile.new()
@@ -30,15 +32,15 @@ func load_franc_balance(default_value: int) -> Dictionary:
 		if cfg.has_section_key(FRANC_BALANCE_SECTION, FRANC_BALANCE_KEY):
 			var value = int(cfg.get_value(FRANC_BALANCE_SECTION, FRANC_BALANCE_KEY))
 			var loan = int(cfg.get_value(FRANC_BALANCE_SECTION, LOAN_KEY, 0))
-			print("[AppController] Loaded franc balance from disk: ", value)
+			AppLogger.d("[AppController] Loaded franc balance from disk: " + str(value))
 			return {"loaded": true, "value": value, "loan": loan}
-		print("[AppController] No franc balance key in config; using default: ", default_value)
+		AppLogger.d("[AppController] No franc balance key in config; using default: " + str(default_value))
 		return {"loaded": false, "value": default_value, "loan": 0}
 	var legacy = _load_legacy_franc_balance_json()
 	if bool(legacy.get("loaded", false)):
 		save_franc_balance(int(legacy.get("value", default_value)), int(legacy.get("loan", 0)))
 		return legacy
-	print("[AppController] No saved franc balance config (or failed to load): ", err)
+	AppLogger.d("[AppController] No saved franc balance config (or failed to load): " + str(err))
 	return {"loaded": false, "value": default_value, "loan": 0}
 
 func _load_legacy_franc_balance_json() -> Dictionary:
@@ -53,7 +55,7 @@ func _load_legacy_franc_balance_json() -> Dictionary:
 		return {"loaded": false}
 	var value := int(parsed.get(FRANC_BALANCE_KEY, 0))
 	var loan := int(parsed.get(LOAN_KEY, 0))
-	print("[AppController] Loaded legacy franc balance JSON: ", value)
+	AppLogger.d("[AppController] Loaded legacy franc balance JSON: " + str(value))
 	return {"loaded": true, "value": value, "loan": loan}
 
 func save_citizen_science_dialogue_enabled(enabled: bool) -> void:
@@ -62,7 +64,7 @@ func save_citizen_science_dialogue_enabled(enabled: bool) -> void:
 	cfg.set_value(PREFERENCES_SECTION, CITIZEN_SCIENCE_DIALOGUE_KEY, enabled)
 	var err = cfg.save(PREFERENCES_CONFIG_PATH)
 	if err != OK:
-		print("[AppController] Failed to save preferences: ", err)
+		push_error("[AppController] Failed to save preferences: ", err)
 
 func load_citizen_science_dialogue_enabled(default_value: bool = true) -> bool:
 	var cfg = ConfigFile.new()
@@ -80,6 +82,7 @@ func reset_all() -> void:
 	DirAccess.remove_absolute(LEGACY_FRANC_BALANCE_JSON_PATH)
 	DirAccess.remove_absolute(PREFERENCES_CONFIG_PATH)
 	DirAccess.remove_absolute(LEGACY_EXPERIENCE_CONFIG_PATH)
+	DirAccess.remove_absolute(TUTORIAL_STATE_CONFIG_PATH)
 	DirAccess.remove_absolute("user://construction_state.json")
 	DirAccess.remove_absolute("user://first_time_mechanics.json")
 	DirAccess.remove_absolute("user://rockets_state.json")

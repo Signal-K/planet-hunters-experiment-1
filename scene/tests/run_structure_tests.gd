@@ -21,6 +21,7 @@ const SidescrollMiningScene = preload("res://Scenes/UI/SidescrollMining.tscn")
 const MiningPracticeScene = preload("res://Scenes/UI/MiningPracticePanel.tscn")
 const SatelliteStationScene = preload("res://Scenes/UI/SatelliteStationPanel.tscn")
 const OutboundPreviewScene = preload("res://Scenes/Transitions/rocket_transit.tscn")
+const MarketPanelScene = preload("res://Scenes/UI/MarketPanel.tscn")
 
 var reporter := TestReporter.new()
 
@@ -71,7 +72,7 @@ func run_all_tests() -> void:
 	await test_open_operation_mode_persists_and_applies_to_missions()
 	await test_mission_exposure_reward_progression()
 	await test_mission_briefing_seen_persistence()
-	await test_scanner_station_legacy_state_reconciles_after_m3()
+	await test_scanner_station_legacy_state_stays_deferred_after_m3()
 	await test_control_station_legacy_state_reconciles_after_m2()
 	await test_structure_flags_backfill_minimum_progression_stage()
 	await test_state_reconcile_repairs_unlock_chain_and_planning_state()
@@ -87,6 +88,7 @@ func run_all_tests() -> void:
 	await test_game_navigation_menu_stats_and_debug_use_templates()
 	await test_game_navigation_menu_uses_trip_order_requirements()
 	await test_game_navigation_menu_settings_and_reset_sections()
+	await test_market_panel_is_scene_owned()
 	await test_mechanic_intro_overlay_uses_template_backed_step_rows()
 	await test_subcontractors_panel_uses_template_backed_detail_labels()
 	await test_launch_wizard_has_required_signals()
@@ -609,6 +611,46 @@ func test_game_navigation_menu_settings_and_reset_sections() -> void:
 	owner.queue_free()
 	reporter.pass_test()
 
+func test_market_panel_is_scene_owned() -> void:
+	reporter.start_test("[UX] MarketPanel layout is scene-owned")
+	var market = MarketPanelScene.instantiate()
+	get_root().add_child(market)
+	await create_timer(0.05).timeout
+	for path in [
+		"Backdrop",
+		"OuterMargin/PanelVBox/HeaderRow/TitleLabel",
+		"OuterMargin/PanelVBox/HeaderRow/CloseButton",
+		"OuterMargin/PanelVBox/Scroll/Content/HoldingsList",
+		"OuterMargin/PanelVBox/Scroll/Content/PricesList",
+		"OuterMargin/PanelVBox/SellAllButton",
+	]:
+		if market.get_node_or_null(path) == null:
+			reporter.fail_test("Expected scene-owned MarketPanel node at %s" % path)
+			market.queue_free()
+			return
+	var source_file := FileAccess.open("res://Scripts/UI/MarketPanel.gd", FileAccess.READ)
+	if source_file == null:
+		reporter.fail_test("Could not read MarketPanel.gd")
+		market.queue_free()
+		return
+	var source := source_file.get_as_text()
+	for forbidden in [
+		"ColorRect.new(",
+		"Label.new(",
+		"Button.new(",
+		"VBoxContainer.new(",
+		"HBoxContainer.new(",
+		"PanelContainer.new(",
+		"ScrollContainer.new(",
+		"MarginContainer.new(",
+	]:
+		if source.find(forbidden) != -1:
+			reporter.fail_test("MarketPanel.gd still constructs static UI with %s" % forbidden)
+			market.queue_free()
+			return
+	market.queue_free()
+	reporter.pass_test()
+
 func test_mechanic_intro_overlay_uses_template_backed_step_rows() -> void:
 	reporter.start_test("[UX] MechanicIntroOverlay uses template-backed step rows")
 	var overlay := preload("res://Scenes/UI/MechanicIntroOverlay.tscn").instantiate()
@@ -658,8 +700,8 @@ func test_subcontractors_panel_uses_template_backed_detail_labels() -> void:
 	reporter.pass_test()
 
 
-func test_scanner_station_legacy_state_reconciles_after_m3() -> void:
-	reporter.start_test("[UX] Scanner station legacy build state reconciles automatically after Mission 3")
+func test_scanner_station_legacy_state_stays_deferred_after_m3() -> void:
+	reporter.start_test("[UX] Scanner station legacy build state stays deferred after Mission 3")
 	var state = RocketsStateAccess.build_default_state(2)
 	state["mission_progress_completed"] = 3
 	state["completed_mission_badges"] = ["mission-1", "mission-2", "mission-3"]
@@ -677,14 +719,13 @@ func test_scanner_station_legacy_state_reconciles_after_m3() -> void:
 		RocketsManager.clear_override_state()
 		return
 	if RocketsManager.is_scanner_station_built():
+		reporter.fail_test("Scanner station should remain unbuilt while scanner v1 is deferred")
 		base.queue_free()
 		RocketsManager.clear_override_state()
-		reporter.pass_test()
 		return
-	reporter.fail_test("Expected legacy scanner state to reconcile to built once Mission 3 is complete")
 	base.queue_free()
 	RocketsManager.clear_override_state()
-	return
+	reporter.pass_test()
 
 func test_control_station_legacy_state_reconciles_after_m2() -> void:
 	reporter.start_test("[UX] Control Station legacy build state reconciles automatically after Mission 2")
