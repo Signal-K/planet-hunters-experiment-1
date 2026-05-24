@@ -4,6 +4,7 @@ const TestReporter = preload("res://tests/TestReporter.gd")
 const TutorialControllerScript = preload("res://Scripts/Tutorial/TutorialController.gd")
 const TutorialTargeting = preload("res://Scripts/UI/TutorialCoachTargeting.gd")
 const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
+const AppControllerPersistenceScript = preload("res://Scripts/Systems/AppControllerPersistence.gd")
 
 var reporter := TestReporter.new()
 
@@ -23,6 +24,7 @@ func run_all_tests() -> void:
 	await test_progression_advances_on_expected_actions()
 	await test_skip_and_replay_controls()
 	await test_current_mission_started_only_after_stage_progress()
+	await test_app_reset_clears_persisted_tutorial_state()
 	await test_state_persists_across_controller_recreation()
 	await test_targeting_prefers_structure_nodes_for_world_actions()
 	await test_targeting_finds_launch_button_for_launch_action()
@@ -142,6 +144,36 @@ func test_current_mission_started_only_after_stage_progress() -> void:
 
 	reporter.pass_test()
 	await _teardown_controller(next_controller)
+
+func test_app_reset_clears_persisted_tutorial_state() -> void:
+	reporter.start_test("App reset clears persisted tutorial skip/completion state")
+	_reset_tutorial_state()
+	var cfg := ConfigFile.new()
+	cfg.set_value("state", "current_stage", 4)
+	cfg.set_value("state", "current_step_index", 2)
+	cfg.set_value("state", "skipped", true)
+	cfg.save("user://tutorial_v2.cfg")
+
+	var persistence = AppControllerPersistenceScript.new()
+	persistence.reset_all()
+	if FileAccess.file_exists("user://tutorial_v2.cfg"):
+		reporter.fail_test("Expected tutorial_v2.cfg to be removed by AppControllerPersistence.reset_all")
+		return
+
+	var controller = await _setup_controller()
+	var state: Dictionary = controller.get_tutorial_state()
+	if bool(state.get("skipped", true)):
+		reporter.fail_test("Expected reset tutorial state to be unskipped")
+		await _teardown_controller(controller)
+		return
+	var current_step: Dictionary = state.get("current_step", {}) as Dictionary
+	if str(current_step.get("action_key", "")) != "open_launchpad":
+		reporter.fail_test("Expected fresh tutorial to restart at open_launchpad, got %s" % str(current_step))
+		await _teardown_controller(controller)
+		return
+
+	reporter.pass_test()
+	await _teardown_controller(controller)
 
 func test_state_persists_across_controller_recreation() -> void:
 	reporter.start_test("Tutorial state persists across controller recreation")

@@ -8,3 +8,115 @@ anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 script = ExtResource("1")
+
+[node name="Backdrop" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.03, 0.05, 0.09, 0.98)
+
+[node name="OuterMargin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="PanelVBox" type="VBoxContainer" parent="OuterMargin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="HeaderRow" type="HBoxContainer" parent="OuterMargin/PanelVBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="TitleLabel" type="Label" parent="OuterMargin/PanelVBox/HeaderRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.247, 0.663, 1, 1)
+theme_override_font_sizes/font_size = 20
+text = "MINERAL MARKET"
+
+[node name="CloseButton" type="Button" parent="OuterMargin/PanelVBox/HeaderRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.62, 0.68, 0.78, 1)
+text = "Close"
+
+[node name="SubtitleLabel" type="Label" parent="OuterMargin/PanelVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.62, 0.68, 0.78, 1)
+theme_override_font_sizes/font_size = 12
+text = "Prices fluctuate with every sale. Hold minerals to sell when prices recover."
+autowrap_mode = 3
+
+[node name="Scroll" type="ScrollContainer" parent="OuterMargin/PanelVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Content" type="VBoxContainer" parent="OuterMargin/PanelVBox/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="HoldingsSectionLabel" type="Label" parent="OuterMargin/PanelVBox/Scroll/Content"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.247, 0.663, 1, 1)
+theme_override_font_sizes/font_size = 11
+text = "YOUR HOLDINGS"
+
+[node name="HoldingsList" type="VBoxContainer" parent="OuterMargin/PanelVBox/Scroll/Content"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="EmptyHoldingsLabel" type="Label" parent="OuterMargin/PanelVBox/Scroll/Content/HoldingsList"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.62, 0.68, 0.78, 1)
+theme_override_font_sizes/font_size = 13
+text = "No minerals held. Complete Free Operations missions and choose 'Hold for Market' at debrief."
+autowrap_mode = 3
+
+[node name="PortfolioValueRow" type="HBoxContainer" parent="OuterMargin/PanelVBox/Scroll/Content"]
+visible = false
+layout_mode = 2
+
+[node name="PortfolioLabel" type="Label" parent="OuterMargin/PanelVBox/Scroll/Content/PortfolioValueRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.62, 0.68, 0.78, 1)
+theme_override_font_sizes/font_size = 13
+text = "Portfolio value"
+
+[node name="PortfolioValueLabel" type="Label" parent="OuterMargin/PanelVBox/Scroll/Content/PortfolioValueRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 1, 0.45, 1)
+theme_override_font_sizes/font_size = 13
+text = "F 0"
+
+[node name="SectionSeparator" type="HSeparator" parent="OuterMargin/PanelVBox/Scroll/Content"]
+layout_mode = 2
+
+[node name="PricesSectionLabel" type="Label" parent="OuterMargin/PanelVBox/Scroll/Content"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.247, 0.663, 1, 1)
+theme_override_font_sizes/font_size = 11
+text = "CURRENT MARKET PRICES"
+
+[node name="PricesList" type="VBoxContainer" parent="OuterMargin/PanelVBox/Scroll/Content"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="BuyNoteLabel" type="Label" parent="OuterMargin/PanelVBox/Scroll/Content"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.62, 0.68, 0.78, 1)
+theme_override_font_sizes/font_size = 11
+text = "Buy orders: coming soon - minimum 1.25x current sell price"
+autowrap_mode = 3
+
+[node name="SellAllButton" type="Button" parent="OuterMargin/PanelVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.961, 0.651, 0.137, 1)
+text = "Sell All Holdings"

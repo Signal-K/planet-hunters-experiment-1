@@ -48,6 +48,13 @@ enum Zone {
 	                    ## When open it covers everything; no other zone active.
 
 	# ── Earth scene / global ──────────────────────────────────────────────────
+	APP_HEADER,         ## Full-screen flow header lane.
+	                    ## Can be narrowed by APP_HEADER_WITH_COACH when the
+	                    ## tutorial coach is visible in the top-right sidecar.
+	APP_HEADER_WITH_COACH, ## Header lane excluding TUTORIAL_COACH sidecar.
+	APP_BODY,           ## Main scroll/content lane between header and footer.
+	APP_BODY_WITH_COACH, ## Main content lane excluding TUTORIAL_COACH sidecar.
+	APP_FOOTER,         ## Bottom action bar lane for full-screen flows.
 	TUTORIAL_COACH,     ## Tutorial overlay panel: TOP-RIGHT corner.
 	                    ## Owned exclusively by TutorialCoachOverlay.
 	                    ## No other persistent element may occupy this zone.
@@ -68,6 +75,11 @@ static func zone(z: Zone, vp: Vector2) -> Rect2:
 		Zone.MINING_HANDBOOK:    return _mining_handbook(vp)
 		Zone.MINING_BOTTOM:      return _mining_bottom(vp)
 		Zone.MINING_MODAL:       return Rect2(Vector2.ZERO, vp)
+		Zone.APP_HEADER:         return _app_header(vp)
+		Zone.APP_HEADER_WITH_COACH: return _app_header_with_coach(vp)
+		Zone.APP_BODY:           return _app_body(vp)
+		Zone.APP_BODY_WITH_COACH: return _app_body_with_coach(vp)
+		Zone.APP_FOOTER:         return _app_footer(vp)
 		Zone.TUTORIAL_COACH:     return _tutorial_coach(vp)
 		Zone.EARTH_WIDGET:       return _earth_widget(vp)
 		_:
@@ -148,6 +160,36 @@ static func _mining_bottom(vp: Vector2) -> Rect2:
 	return Rect2(EDGE, vp.y - h - bottom_gap, vp.x - EDGE * 2, h)
 
 ## ─── Global / multi-scene zones ──────────────────────────────────────────────
+
+static func _app_header(vp: Vector2) -> Rect2:
+	var h := 64.0 if vp.x < 900.0 else 72.0
+	return Rect2(0.0, 0.0, vp.x, h)
+
+static func _app_footer(vp: Vector2) -> Rect2:
+	var h := 84.0 if vp.x < 900.0 else 88.0
+	return Rect2(0.0, maxf(0.0, vp.y - h), vp.x, h)
+
+static func _app_body(vp: Vector2) -> Rect2:
+	var header := _app_header(vp)
+	var footer := _app_footer(vp)
+	return Rect2(0.0, header.end.y, vp.x, maxf(0.0, footer.position.y - header.end.y))
+
+static func _app_header_with_coach(vp: Vector2) -> Rect2:
+	var header := _app_header(vp)
+	var coach := _tutorial_coach(vp)
+	if _can_reserve_tutorial_sidecar(vp):
+		header.size.x = maxf(320.0, coach.position.x - EDGE)
+	return header
+
+static func _app_body_with_coach(vp: Vector2) -> Rect2:
+	var body := _app_body(vp)
+	var coach := _tutorial_coach(vp)
+	if _can_reserve_tutorial_sidecar(vp):
+		body.size.x = maxf(320.0, coach.position.x - EDGE)
+	return body
+
+static func _can_reserve_tutorial_sidecar(vp: Vector2) -> bool:
+	return vp.x >= 1180.0
 
 static func _tutorial_coach(vp: Vector2) -> Rect2:
 	# Mirrors TutorialLayoutZone.reserved_rect — keep in sync.
