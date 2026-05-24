@@ -577,7 +577,9 @@ func _apply_style() -> void:
 	s.content_margin_bottom = 16
 	panel.add_theme_stylebox_override("panel", s)
 
-	# Header
+	# Header — title must shrink freely so it never forces the panel wider than the zone.
+	title_label.custom_minimum_size = Vector2.ZERO
+	title_label.clip_text = true
 	title_label.add_theme_color_override("font_color", Color(0.902, 0.937, 1.0))
 	title_label.add_theme_font_size_override("font_size", 22)
 	stage_label.add_theme_color_override("font_color", CYAN)

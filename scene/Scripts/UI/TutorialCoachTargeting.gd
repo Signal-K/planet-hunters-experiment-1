@@ -100,6 +100,10 @@ static func _find_target_for_action(action_key: String, tree: SceneTree) -> Node
 				return text == "build control station"
 			)
 		"open_launchpad":
+			# On the base scene the action is done via the "New Mission" nav button,
+			# so the arrow should point there rather than at the physical structure.
+			if on_base:
+				return _find_new_mission_button(tree)
 			return _find_node_path_any(tree, [
 				"StructuresLayer/Launchpad",
 				"StructuresLayer/Launchpad/InteractionArea"

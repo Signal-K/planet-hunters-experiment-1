@@ -181,11 +181,12 @@ static func _app_body_with_coach(vp: Vector2) -> Rect2:
 	return _app_body(vp)
 
 static func _tutorial_coach(vp: Vector2) -> Rect2:
-	# Small corner widget — top-right only. Floats over content; never squeezes.
-	# Min 300px wide so the buttons row (Skip + CTA) fits without overflow.
+	# Top-right corner widget. Width must accommodate the header row:
+	# title label + "Mission N" + restart + collapse buttons (~400 px at 22 px font).
+	# Height must fit wrapped message + action hint + progress + CTA row.
 	const MARGIN := 24.0
-	var w := minf(320.0, maxf(300.0, vp.x * 0.20))
-	var h := minf(240.0, maxf(180.0, vp.y * 0.28))
+	var w := minf(440.0, maxf(400.0, vp.x * 0.23))
+	var h := minf(360.0, maxf(300.0, vp.y * 0.34))
 	return Rect2(vp.x - w - MARGIN, MARGIN, w, h)
 
 static func _earth_widget(vp: Vector2) -> Rect2:
