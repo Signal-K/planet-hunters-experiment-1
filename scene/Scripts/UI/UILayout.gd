@@ -182,9 +182,10 @@ static func _app_body_with_coach(vp: Vector2) -> Rect2:
 
 static func _tutorial_coach(vp: Vector2) -> Rect2:
 	# Small corner widget — top-right only. Floats over content; never squeezes.
-	const MARGIN := 16.0
-	var w := minf(280.0, maxf(200.0, vp.x * 0.18))
-	var h := minf(220.0, maxf(160.0, vp.y * 0.26))
+	# Min 300px wide so the buttons row (Skip + CTA) fits without overflow.
+	const MARGIN := 24.0
+	var w := minf(320.0, maxf(300.0, vp.x * 0.20))
+	var h := minf(240.0, maxf(180.0, vp.y * 0.28))
 	return Rect2(vp.x - w - MARGIN, MARGIN, w, h)
 
 static func _earth_widget(vp: Vector2) -> Rect2:

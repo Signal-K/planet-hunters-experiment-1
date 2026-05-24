@@ -42,8 +42,11 @@ const POINTER_MIN_LENGTH    := 84.0
 @onready var open_launchpad_button:  Button  = $Root/Panel/Margin/VBox/Buttons/OpenLaunchpadButton
 @onready var go_to_debrief_button:   Button  = $Root/Panel/Margin/VBox/Buttons/GoToDebriefButton
 @onready var resume_mission_button:  Button  = $Root/Panel/Margin/VBox/Buttons/ResumeMissionButton
+@onready var _restart_btn:    Button         = $Root/Panel/Margin/VBox/Header/RestartBtn
 @onready var _pointer_line:   Line2D         = $Root/TargetPointerLine
 @onready var _pointer_head:   Polygon2D      = $Root/TargetPointerHead
+@onready var _pointer_head2:  Polygon2D      = $Root/TargetPointerHead2
+@onready var _pointer_head3:  Polygon2D      = $Root/TargetPointerHead3
 @onready var _target_highlight: ReferenceRect = $Root/TargetHighlight
 
 var _collapsed:      bool       = false
@@ -315,6 +318,9 @@ func _action_hint(step: Dictionary) -> String:
 # ── Button wiring ─────────────────────────────────────────────────────────────
 
 func _wire_buttons() -> void:
+	if _restart_btn:
+		_restart_btn.pressed.connect(_on_restart_pressed)
+		_apply_pill_button(_restart_btn, false)
 	if collapse_button:
 		collapse_button.pressed.connect(_on_collapse_pressed)
 	if skip_button:
@@ -345,6 +351,10 @@ func _on_collapse_pressed() -> void:
 	action_label.visible   = not _collapsed and action_label.text != ""
 	progress_label.visible = not _collapsed
 	$Root/Panel/Margin/VBox/Buttons.visible = not _collapsed
+
+func _on_restart_pressed() -> void:
+	if _app_controller and _app_controller.has_method("replay_tutorial_for_current_mission"):
+		_app_controller.replay_tutorial_for_current_mission()
 
 func _on_replay_mission_pressed() -> void:
 	if _app_controller and _app_controller.has_method("replay_tutorial_for_current_mission"):
@@ -494,24 +504,31 @@ func _start_highlight_pulse() -> void:
 	).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 func _update_pointer_head(tip: Vector2, direction: Vector2) -> void:
-	if _pointer_head == null:
-		return
-	var dir   := direction.normalized()
+	var dir := direction.normalized()
 	if dir == Vector2.ZERO:
 		dir = Vector2.RIGHT
-	var side  := dir.orthogonal()
-	var base  := tip - (dir * POINTER_ARROW_SIZE)
-	_pointer_head.polygon = PackedVector2Array([
-		tip,
-		base + (side * (POINTER_ARROW_SIZE * 0.5)),
-		base - (side * (POINTER_ARROW_SIZE * 0.5))
-	])
-	_pointer_head.visible = true
+	var side := dir.orthogonal()
+	var step := POINTER_ARROW_SIZE * 2.2
+	for i in range(3):
+		var head: Polygon2D = [_pointer_head, _pointer_head2, _pointer_head3][i]
+		if head == null:
+			continue
+		var t := tip - dir * (step * i)
+		var base := t - dir * POINTER_ARROW_SIZE
+		head.polygon = PackedVector2Array([
+			t,
+			base + side * (POINTER_ARROW_SIZE * 0.5),
+			base - side * (POINTER_ARROW_SIZE * 0.5),
+		])
+		head.visible = true
 
 func _hide_pointers() -> void:
 	if _pointer_line:
 		_pointer_line.visible = false
 		_pointer_line.clear_points()
+	for head in [_pointer_head2, _pointer_head3]:
+		if head:
+			head.visible = false
 	if _pointer_head:
 		_pointer_head.visible = false
 	if _target_highlight:
@@ -622,8 +639,8 @@ func _configure_mouse_passthrough() -> void:
 	var btns_row := $Root/Panel/Margin/VBox/Buttons
 	if btns_row:
 		(btns_row as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
-	for btn in [collapse_button, skip_button, practice_mining_button, replay_mission_button,
-			open_launchpad_button, go_to_debrief_button, resume_mission_button]:
+	for btn in [_restart_btn, collapse_button, skip_button, practice_mining_button,
+			replay_mission_button, open_launchpad_button, go_to_debrief_button, resume_mission_button]:
 		if btn:
 			(btn as Button).mouse_filter = Control.MOUSE_FILTER_STOP
 
