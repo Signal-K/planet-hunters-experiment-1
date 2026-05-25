@@ -1,0 +1,34 @@
+{
+  "taskId": "816t53",
+  "currentVersion": 1,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "816t53",
+      "version": 1,
+      "timestamp": "2026-05-25T09:24:58.874688Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": null,
+          "newValue": "todo"
+        },
+        {
+          "field": "priority",
+          "oldValue": null,
+          "newValue": "high"
+        }
+      ],
+      "snapshot": {
+        "description": "This week's release slice of the portrait mode epic (@task-fmq4vk). Goal: land the orientation unlock and visual test harness so subsequent scene redesign work can be done with visual feedback.\n\nIn scope this sprint:\n- @task-yaajdi — P1: unlock orientation in app.json + project.godot + index.html\n- @task-5divuc — P2: UILayout.gd portrait zones + design token palette  \n- @task-bwuozl — P6: Docker + Playwright visual harness\n\nOut of scope (next sprint): actual scene redesigns (P3–P5).\n\nDone = game loads in portrait on mobile without rotation, zones defined, visual tests capturing screenshots.",
+        "labels": [
+          "sprint-active",
+          "portrait-mode"
+        ],
+        "priority": "high",
+        "status": "todo",
+        "title": "Sprint: Portrait Mode Foundation (week of 2026-05-25)"
+      }
+    }
+  ]
+}

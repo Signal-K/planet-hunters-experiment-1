@@ -1,0 +1,75 @@
+{
+  "taskId": "bwuozl",
+  "currentVersion": 2,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "bwuozl",
+      "version": 1,
+      "timestamp": "2026-05-25T09:17:34.983156Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": null,
+          "newValue": "todo"
+        },
+        {
+          "field": "priority",
+          "oldValue": null,
+          "newValue": "high"
+        }
+      ],
+      "snapshot": {
+        "description": "Set up a visual test environment that actually interacts with a rendered UI, replacing the current headless Godot approach that can't verify layout.\n\ndocker-compose.visual.yml:\n- Service 1: portrait-web — node dev-server.js serving the portrait/ design reference at port 3333\n- Service 2: playwright — mcr.microsoft.com/playwright image running tests/visual/*.spec.ts\n\nTests navigate the React prototype (portrait/index.html) through every screen in the game loop, take screenshots, and diff against baselines. This validates the design spec is correct before/during the Godot scene work.\n\nLonger term: once Godot web export is served, replace the portrait HTML target with the real Godot game at /game.\n\nNew Makefile target: make test:visual",
+        "labels": [
+          "portrait-mode",
+          "testing",
+          "docker",
+          "playwright",
+          "visual"
+        ],
+        "priority": "high",
+        "status": "todo",
+        "title": "P6: Docker + Playwright visual screenshot harness"
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "bwuozl",
+      "version": 2,
+      "timestamp": "2026-05-25T09:25:04.469556Z",
+      "changes": [
+        {
+          "field": "labels",
+          "oldValue": [
+            "portrait-mode",
+            "testing",
+            "docker",
+            "playwright",
+            "visual"
+          ],
+          "newValue": [
+            "portrait-mode",
+            "testing",
+            "docker",
+            "playwright",
+            "sprint-active"
+          ]
+        }
+      ],
+      "snapshot": {
+        "description": "Set up a visual test environment that actually interacts with a rendered UI, replacing the current headless Godot approach that can't verify layout.\n\ndocker-compose.visual.yml:\n- Service 1: portrait-web — node dev-server.js serving the portrait/ design reference at port 3333\n- Service 2: playwright — mcr.microsoft.com/playwright image running tests/visual/*.spec.ts\n\nTests navigate the React prototype (portrait/index.html) through every screen in the game loop, take screenshots, and diff against baselines. This validates the design spec is correct before/during the Godot scene work.\n\nLonger term: once Godot web export is served, replace the portrait HTML target with the real Godot game at /game.\n\nNew Makefile target: make test:visual",
+        "labels": [
+          "portrait-mode",
+          "testing",
+          "docker",
+          "playwright",
+          "sprint-active"
+        ],
+        "priority": "high",
+        "status": "todo",
+        "title": "P6: Docker + Playwright visual screenshot harness"
+      }
+    }
+  ]
+}

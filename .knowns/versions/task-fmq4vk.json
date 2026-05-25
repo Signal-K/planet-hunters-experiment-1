@@ -1,0 +1,68 @@
+{
+  "taskId": "fmq4vk",
+  "currentVersion": 2,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "fmq4vk",
+      "version": 1,
+      "timestamp": "2026-05-25T09:10:18.712045Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": null,
+          "newValue": "todo"
+        },
+        {
+          "field": "priority",
+          "oldValue": null,
+          "newValue": "high"
+        }
+      ],
+      "snapshot": {
+        "description": "Replace the landscape Godot-embedded game with a mobile-first portrait-mode React web app. Same narrative (M1–M4 tutorial, free ops, mission loop, mining minigame), same data layer (Supabase), same analytics (PostHog), but entirely new UI built from the Landnam portrait design system (Oxanium/Turret Road fonts, deep-command cyan/amber palette, blueprint-grid aesthetics). The design prototype lives in the design system archive at ui_kits/landnam-portrait/.\n\nFlow: Hub → Control Station → Mission Board → Target Picker (Sol system map) → Rocket Fab (3-slot assembly w/ constraint validation) → Transit (sky→space tween) → Mining (tap-to-mine sidescroller) → Debrief → Hub.\n\nDesign reference: /tmp/landnam-design/landnam-design-system/project/ui_kits/landnam-portrait/",
+        "labels": [
+          "portrait-mode",
+          "epic",
+          "mobile",
+          "react",
+          "design"
+        ],
+        "priority": "high",
+        "status": "todo",
+        "title": "Epic: Portrait Mode — Mobile-First Game Redesign"
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "fmq4vk",
+      "version": 2,
+      "timestamp": "2026-05-25T09:16:30.937479Z",
+      "changes": [
+        {
+          "field": "title",
+          "oldValue": "Epic: Portrait Mode — Mobile-First Game Redesign",
+          "newValue": "Epic: Portrait Mode — Godot scene redesign for mobile"
+        },
+        {
+          "field": "description",
+          "oldValue": "Replace the landscape Godot-embedded game with a mobile-first portrait-mode React web app. Same narrative (M1–M4 tutorial, free ops, mission loop, mining minigame), same data layer (Supabase), same analytics (PostHog), but entirely new UI built from the Landnam portrait design system (Oxanium/Turret Road fonts, deep-command cyan/amber palette, blueprint-grid aesthetics). The design prototype lives in the design system archive at ui_kits/landnam-portrait/.\n\nFlow: Hub → Control Station → Mission Board → Target Picker (Sol system map) → Rocket Fab (3-slot assembly w/ constraint validation) → Transit (sky→space tween) → Mining (tap-to-mine sidescroller) → Debrief → Hub.\n\nDesign reference: /tmp/landnam-design/landnam-design-system/project/ui_kits/landnam-portrait/",
+          "newValue": "Redesign the existing Godot scenes to work in portrait orientation on mobile. No device rotation required. Same game, same flow (M1–M4 tutorial, mission loop, mining minigame), same Supabase/PostHog backend. The visual target is the Landnam portrait design system — dark navy command deck, Oxanium/Turret Road type, cyan/amber palette. Design reference (React prototype for visual spec): portrait/ directory in the repo.\n\nKey changes:\n1. Remove landscape-only orientation lock from the app wrapper\n2. Redesign UILayout.gd zones for portrait (top HUD, scrollable center, bottom nav)\n3. Adapt each major scene's node tree for portrait layout\n4. Apply the design token palette (DS.gd / NebulaSciTheme.gd)\n5. Docker + Playwright visual harness for regression testing\n\nScenes in scope: earth_base_1, ControlStationPanel, LaunchWizard, LaunchWizardMapStep, SidescrollMining, TutorialCoachOverlay."
+        }
+      ],
+      "snapshot": {
+        "description": "Redesign the existing Godot scenes to work in portrait orientation on mobile. No device rotation required. Same game, same flow (M1–M4 tutorial, mission loop, mining minigame), same Supabase/PostHog backend. The visual target is the Landnam portrait design system — dark navy command deck, Oxanium/Turret Road type, cyan/amber palette. Design reference (React prototype for visual spec): portrait/ directory in the repo.\n\nKey changes:\n1. Remove landscape-only orientation lock from the app wrapper\n2. Redesign UILayout.gd zones for portrait (top HUD, scrollable center, bottom nav)\n3. Adapt each major scene's node tree for portrait layout\n4. Apply the design token palette (DS.gd / NebulaSciTheme.gd)\n5. Docker + Playwright visual harness for regression testing\n\nScenes in scope: earth_base_1, ControlStationPanel, LaunchWizard, LaunchWizardMapStep, SidescrollMining, TutorialCoachOverlay.",
+        "labels": [
+          "portrait-mode",
+          "epic",
+          "mobile",
+          "react",
+          "design"
+        ],
+        "priority": "high",
+        "status": "todo",
+        "title": "Epic: Portrait Mode — Godot scene redesign for mobile"
+      }
+    }
+  ]
+}

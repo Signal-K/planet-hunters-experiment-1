@@ -173,7 +173,8 @@ func _build_starfield() -> void:
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	canvas.add_child(bg)
 	canvas.move_child(bg, 0)
-	var vp_size := Vector2(1920, 1080)
+	var _vp2 := get_viewport()
+	var vp_size := _vp2.get_visible_rect().size if _vp2 else Vector2(1080, 1920)
 	var img := Image.create(int(vp_size.x), int(vp_size.y), false, Image.FORMAT_RGBA8)
 	img.fill(Color(0, 0, 0, 0))
 	var rng := RandomNumberGenerator.new()

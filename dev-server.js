@@ -14,14 +14,18 @@ const ROOT = path.resolve(__dirname);
 const PORT = Number(process.env.PORT || 3333);
 
 const MIME = {
-  ".css": "text/css; charset=utf-8",
+  ".css":  "text/css; charset=utf-8",
   ".html": "text/html; charset=utf-8",
-  ".ico": "image/x-icon",
-  ".js": "application/javascript; charset=utf-8",
+  ".ico":  "image/x-icon",
+  ".js":   "application/javascript; charset=utf-8",
+  ".jsx":  "application/javascript; charset=utf-8",
   ".json": "application/json; charset=utf-8",
-  ".pck": "application/octet-stream",
-  ".png": "image/png",
-  ".svg": "image/svg+xml",
+  ".pck":  "application/octet-stream",
+  ".png":  "image/png",
+  ".jpg":  "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".svg":  "image/svg+xml",
+  ".ttf":  "font/truetype",
   ".wasm": "application/wasm",
 };
 

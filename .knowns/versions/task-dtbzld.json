@@ -1,0 +1,64 @@
+{
+  "taskId": "dtbzld",
+  "currentVersion": 2,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "dtbzld",
+      "version": 1,
+      "timestamp": "2026-05-25T09:10:43.075157Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": null,
+          "newValue": "todo"
+        },
+        {
+          "field": "priority",
+          "oldValue": null,
+          "newValue": "medium"
+        }
+      ],
+      "snapshot": {
+        "description": "Instrument the portrait app with PostHog events. Key events: screen_view (per screen), mission_started, target_selected, build_confirmed, launch_started, mining_complete, debrief_completed. Mirror existing Godot PostHog event taxonomy where it exists.",
+        "labels": [
+          "portrait-mode",
+          "posthog",
+          "analytics"
+        ],
+        "priority": "medium",
+        "status": "todo",
+        "title": "P3: PostHog event wiring for portrait mode"
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "dtbzld",
+      "version": 2,
+      "timestamp": "2026-05-25T09:17:14.787174Z",
+      "changes": [
+        {
+          "field": "title",
+          "oldValue": "P3: PostHog event wiring for portrait mode",
+          "newValue": "P3: Redesign Hub + ControlStation scenes for portrait"
+        },
+        {
+          "field": "description",
+          "oldValue": "Instrument the portrait app with PostHog events. Key events: screen_view (per screen), mission_started, target_selected, build_confirmed, launch_started, mining_complete, debrief_completed. Mirror existing Godot PostHog event taxonomy where it exists.",
+          "newValue": "Rework earth_base_1.tscn and ControlStationPanel.tscn for portrait layout. Hub: full-width scene background, buildings stacked in their designated zones (no overlap), soil cross-section band at bottom, game HUD chips in top status zone. Control Station / Mission Board: full-width card list using APP_BODY scroll lane. Reference the portrait JSX (portrait/screens-pre.jsx HubScreen + MissionBoardScreen) for layout intent. Preserve all existing GDScript signal handlers."
+        }
+      ],
+      "snapshot": {
+        "description": "Rework earth_base_1.tscn and ControlStationPanel.tscn for portrait layout. Hub: full-width scene background, buildings stacked in their designated zones (no overlap), soil cross-section band at bottom, game HUD chips in top status zone. Control Station / Mission Board: full-width card list using APP_BODY scroll lane. Reference the portrait JSX (portrait/screens-pre.jsx HubScreen + MissionBoardScreen) for layout intent. Preserve all existing GDScript signal handlers.",
+        "labels": [
+          "portrait-mode",
+          "posthog",
+          "analytics"
+        ],
+        "priority": "medium",
+        "status": "todo",
+        "title": "P3: Redesign Hub + ControlStation scenes for portrait"
+      }
+    }
+  ]
+}

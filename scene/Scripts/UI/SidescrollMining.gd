@@ -349,8 +349,8 @@ func _resolve_target_theme() -> String:
 
 func _apply_responsive_layout() -> void:
 	var viewport := get_viewport_rect().size
-	var is_mobile := viewport.x < 900.0
-	var is_portrait_mobile := is_mobile and viewport.y > viewport.x
+	var is_portrait_mobile := viewport.y > viewport.x
+	var is_mobile := viewport.x < 900.0 or is_portrait_mobile
 	_compact_layout_active = _is_compact_layout(viewport)
 	_set_hud_typography(is_mobile, is_portrait_mobile)
 	_ensure_right_stats_parent(ui_root if is_portrait_mobile else top_bar)

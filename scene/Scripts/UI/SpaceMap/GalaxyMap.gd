@@ -9,8 +9,8 @@ const AsteroidDetailViewScene = preload("res://Scenes/UI/AsteroidDetail/asteroid
 const GalaxyMapNodeScript     = preload("res://Scripts/UI/SpaceMap/GalaxyMapNode.gd")
 const RocketsManager          = preload("res://Scripts/Utils/RocketsManager.gd")
 
-const BASE_W := 1920.0
-const BASE_H := 1080.0
+const BASE_W := 1080.0
+const BASE_H := 1920.0
 
 const BG_STAR_DATA := {
 	"Sol":           {"type": "Yellow Dwarf / G2V", "dist": "0.00 LY", "planets": "8"},

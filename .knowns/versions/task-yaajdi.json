@@ -1,0 +1,181 @@
+{
+  "taskId": "yaajdi",
+  "currentVersion": 4,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "yaajdi",
+      "version": 1,
+      "timestamp": "2026-05-25T09:10:30.775331Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": null,
+          "newValue": "todo"
+        },
+        {
+          "field": "priority",
+          "oldValue": null,
+          "newValue": "high"
+        }
+      ],
+      "snapshot": {
+        "description": "Copy the portrait UI kit (JSX files, CSS tokens, fonts, scene/part/icon assets) from the design system archive into portrait/ in the Landnam repo. Adjust font/image paths. Serve via the existing dev-server.js at /portrait/. Verify the full game loop renders in Chrome mobile emulation (390×844). Design source: /tmp/landnam-design/landnam-design-system/project/ui_kits/landnam-portrait/",
+        "labels": [
+          "portrait-mode",
+          "design",
+          "setup"
+        ],
+        "priority": "high",
+        "status": "todo",
+        "title": "P1: Portrait shell — copy design system \u0026 wire up index.html"
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "yaajdi",
+      "version": 2,
+      "timestamp": "2026-05-25T09:10:59.665571Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "in-progress"
+        }
+      ],
+      "snapshot": {
+        "description": "Copy the portrait UI kit (JSX files, CSS tokens, fonts, scene/part/icon assets) from the design system archive into portrait/ in the Landnam repo. Adjust font/image paths. Serve via the existing dev-server.js at /portrait/. Verify the full game loop renders in Chrome mobile emulation (390×844). Design source: /tmp/landnam-design/landnam-design-system/project/ui_kits/landnam-portrait/",
+        "labels": [
+          "portrait-mode",
+          "design",
+          "setup"
+        ],
+        "priority": "high",
+        "status": "in-progress",
+        "title": "P1: Portrait shell — copy design system \u0026 wire up index.html"
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "yaajdi",
+      "version": 3,
+      "timestamp": "2026-05-25T09:17:05.417185Z",
+      "changes": [
+        {
+          "field": "title",
+          "oldValue": "P1: Portrait shell — copy design system \u0026 wire up index.html",
+          "newValue": "P1: Unlock orientation — app.json + Godot viewport → portrait"
+        },
+        {
+          "field": "status",
+          "oldValue": "in-progress",
+          "newValue": "todo"
+        },
+        {
+          "field": "description",
+          "oldValue": "Copy the portrait UI kit (JSX files, CSS tokens, fonts, scene/part/icon assets) from the design system archive into portrait/ in the Landnam repo. Adjust font/image paths. Serve via the existing dev-server.js at /portrait/. Verify the full game loop renders in Chrome mobile emulation (390×844). Design source: /tmp/landnam-design/landnam-design-system/project/ui_kits/landnam-portrait/",
+          "newValue": "Remove the landscape lock. Two changes:\n1. app.json: \"orientation\": \"landscape\" → \"portrait\" (React Native wrapper)\n2. scene/project.godot: viewport_width/height swapped to portrait resolution (1080×1920), stretch mode set to \"expand\", handheld orientation already correct (1=portrait)\n3. index.html: remove the landscape media query hack that forces game content sideways\n\nThis is the prerequisite for all other portrait scene work."
+        },
+        {
+          "field": "acceptanceCriteria",
+          "oldValue": null,
+          "newValue": [
+            {
+              "completed": false,
+              "text": "app.json orientation is portrait"
+            },
+            {
+              "completed": false,
+              "text": "Godot project.godot viewport is portrait (1080×1920 or equivalent)"
+            },
+            {
+              "completed": false,
+              "text": "index.html no longer forces landscape rotation on mobile"
+            },
+            {
+              "completed": false,
+              "text": "Existing Godot tests still pass (make test)"
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "acceptanceCriteria": [
+          {
+            "completed": false,
+            "text": "app.json orientation is portrait"
+          },
+          {
+            "completed": false,
+            "text": "Godot project.godot viewport is portrait (1080×1920 or equivalent)"
+          },
+          {
+            "completed": false,
+            "text": "index.html no longer forces landscape rotation on mobile"
+          },
+          {
+            "completed": false,
+            "text": "Existing Godot tests still pass (make test)"
+          }
+        ],
+        "description": "Remove the landscape lock. Two changes:\n1. app.json: \"orientation\": \"landscape\" → \"portrait\" (React Native wrapper)\n2. scene/project.godot: viewport_width/height swapped to portrait resolution (1080×1920), stretch mode set to \"expand\", handheld orientation already correct (1=portrait)\n3. index.html: remove the landscape media query hack that forces game content sideways\n\nThis is the prerequisite for all other portrait scene work.",
+        "labels": [
+          "portrait-mode",
+          "design",
+          "setup"
+        ],
+        "priority": "high",
+        "status": "todo",
+        "title": "P1: Unlock orientation — app.json + Godot viewport → portrait"
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "yaajdi",
+      "version": 4,
+      "timestamp": "2026-05-25T09:25:03.411977Z",
+      "changes": [
+        {
+          "field": "labels",
+          "oldValue": [
+            "portrait-mode",
+            "design",
+            "setup"
+          ],
+          "newValue": [
+            "portrait-mode",
+            "sprint-active"
+          ]
+        }
+      ],
+      "snapshot": {
+        "acceptanceCriteria": [
+          {
+            "text": "app.json orientation is portrait",
+            "completed": false
+          },
+          {
+            "text": "Godot project.godot viewport is portrait (1080×1920 or equivalent)",
+            "completed": false
+          },
+          {
+            "text": "index.html no longer forces landscape rotation on mobile",
+            "completed": false
+          },
+          {
+            "text": "Existing Godot tests still pass (make test)",
+            "completed": false
+          }
+        ],
+        "description": "Remove the landscape lock. Two changes:\n1. app.json: \"orientation\": \"landscape\" → \"portrait\" (React Native wrapper)\n2. scene/project.godot: viewport_width/height swapped to portrait resolution (1080×1920), stretch mode set to \"expand\", handheld orientation already correct (1=portrait)\n3. index.html: remove the landscape media query hack that forces game content sideways\n\nThis is the prerequisite for all other portrait scene work.",
+        "labels": [
+          "portrait-mode",
+          "sprint-active"
+        ],
+        "priority": "high",
+        "status": "todo",
+        "title": "P1: Unlock orientation — app.json + Godot viewport → portrait"
+      }
+    }
+  ]
+}

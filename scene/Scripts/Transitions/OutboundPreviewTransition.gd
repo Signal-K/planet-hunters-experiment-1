@@ -439,7 +439,8 @@ func _build_starfield() -> void:
 		canvas.move_child(bg, 0)
 
 	# Generate a static star texture and display it as a full-screen TextureRect.
-	var vp_size := Vector2(1920, 1080)  # generated at fixed res; stretched to screen
+	var _vp := get_viewport()
+	var vp_size := _vp.get_visible_rect().size if _vp else Vector2(1080, 1920)
 	var img := Image.create(int(vp_size.x), int(vp_size.y), false, Image.FORMAT_RGBA8)
 	img.fill(Color(0, 0, 0, 0))
 	var rng := RandomNumberGenerator.new()

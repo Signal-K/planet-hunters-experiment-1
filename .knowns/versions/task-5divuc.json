@@ -1,0 +1,94 @@
+{
+  "taskId": "5divuc",
+  "currentVersion": 3,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "5divuc",
+      "version": 1,
+      "timestamp": "2026-05-25T09:10:39.597052Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": null,
+          "newValue": "todo"
+        },
+        {
+          "field": "priority",
+          "oldValue": null,
+          "newValue": "medium"
+        }
+      ],
+      "snapshot": {
+        "description": "Wire the portrait app's player state (francs, level, XP, active mission) to Supabase. Replace mock MISSIONS/TARGETS data with real-time queries. Implement auth flow (sign in → session → player profile). Use existing supabase/ client setup.",
+        "labels": [
+          "portrait-mode",
+          "supabase",
+          "auth"
+        ],
+        "priority": "medium",
+        "status": "todo",
+        "title": "P2: Supabase auth + real mission/player data binding"
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "5divuc",
+      "version": 2,
+      "timestamp": "2026-05-25T09:17:10.551353Z",
+      "changes": [
+        {
+          "field": "title",
+          "oldValue": "P2: Supabase auth + real mission/player data binding",
+          "newValue": "P2: UILayout.gd portrait zones + design token palette"
+        },
+        {
+          "field": "description",
+          "oldValue": "Wire the portrait app's player state (francs, level, XP, active mission) to Supabase. Replace mock MISSIONS/TARGETS data with real-time queries. Implement auth flow (sign in → session → player profile). Use existing supabase/ client setup.",
+          "newValue": "Redefine UILayout zone rects for portrait canvas (1080×1920). Portrait zones: TOP_STATUS (notch+HUD, ~0–80px), APP_HEADER (~80–180px), APP_BODY (scrollable, ~180 to viewport_height-120), BOTTOM_NAV (~last 120px). Also apply the portrait design system colour tokens in DS.gd — deep navy bg (#0a121d), cyan primary (#3fa9ff), amber accent (#f5a623). Reference: portrait/colors_and_type.css for the full token set.\n\nDepends on P1."
+        }
+      ],
+      "snapshot": {
+        "description": "Redefine UILayout zone rects for portrait canvas (1080×1920). Portrait zones: TOP_STATUS (notch+HUD, ~0–80px), APP_HEADER (~80–180px), APP_BODY (scrollable, ~180 to viewport_height-120), BOTTOM_NAV (~last 120px). Also apply the portrait design system colour tokens in DS.gd — deep navy bg (#0a121d), cyan primary (#3fa9ff), amber accent (#f5a623). Reference: portrait/colors_and_type.css for the full token set.\n\nDepends on P1.",
+        "labels": [
+          "portrait-mode",
+          "supabase",
+          "auth"
+        ],
+        "priority": "medium",
+        "status": "todo",
+        "title": "P2: UILayout.gd portrait zones + design token palette"
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "5divuc",
+      "version": 3,
+      "timestamp": "2026-05-25T09:25:03.946307Z",
+      "changes": [
+        {
+          "field": "labels",
+          "oldValue": [
+            "portrait-mode",
+            "supabase",
+            "auth"
+          ],
+          "newValue": [
+            "portrait-mode",
+            "sprint-active"
+          ]
+        }
+      ],
+      "snapshot": {
+        "description": "Redefine UILayout zone rects for portrait canvas (1080×1920). Portrait zones: TOP_STATUS (notch+HUD, ~0–80px), APP_HEADER (~80–180px), APP_BODY (scrollable, ~180 to viewport_height-120), BOTTOM_NAV (~last 120px). Also apply the portrait design system colour tokens in DS.gd — deep navy bg (#0a121d), cyan primary (#3fa9ff), amber accent (#f5a623). Reference: portrait/colors_and_type.css for the full token set.\n\nDepends on P1.",
+        "labels": [
+          "portrait-mode",
+          "sprint-active"
+        ],
+        "priority": "medium",
+        "status": "todo",
+        "title": "P2: UILayout.gd portrait zones + design token palette"
+      }
+    }
+  ]
+}

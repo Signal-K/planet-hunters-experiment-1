@@ -24,19 +24,19 @@ size = Vector2(300, 200)
 script = ExtResource("1")
 
 [node name="Camera2D" type="Camera2D" parent="."]
-position = Vector2(960, 480)
+position = Vector2(540, 960)
 
 [node name="BackgroundLayer" type="CanvasLayer" parent="."]
 layer = 0
 
 [node name="BackgroundSprite" type="Sprite2D" parent="BackgroundLayer"]
-position = Vector2(960, 440)
-scale = Vector2(1.9, 1.9)
+position = Vector2(540, 960)
+scale = Vector2(2.0, 3.6)
 texture = ExtResource("0")
 
 [node name="BackgroundSprite2" type="Sprite2D" parent="BackgroundLayer"]
-position = Vector2(2880, 440)
-scale = Vector2(1.9010351, 1.9)
+position = Vector2(1620, 960)
+scale = Vector2(2.0, 3.6)
 texture = ExtResource("0")
 
 [node name="SkyNightFilterEvent" type="Node" parent="BackgroundLayer"]
@@ -55,7 +55,7 @@ script = ExtResource("11")
 [node name="StructuresLayer" type="CanvasLayer" parent="."]
 
 [node name="SatelliteStation" type="Node2D" parent="StructuresLayer"]
-position = Vector2(600, 800)
+position = Vector2(250, 1450)
 script = ExtResource("3")
 
 [node name="Sprite2D" type="Sprite2D" parent="StructuresLayer/SatelliteStation"]
@@ -76,7 +76,7 @@ title = "Build Scanner Station"
 title = "Scanner Station"
 
 [node name="Launchpad" type="Node2D" parent="StructuresLayer"]
-position = Vector2(1100, 800)
+position = Vector2(750, 1450)
 script = ExtResource("4")
 
 [node name="Sprite2D" type="Sprite2D" parent="StructuresLayer/Launchpad"]
@@ -94,11 +94,15 @@ shape = SubResource("RectangleShape2D_launchpad")
 layer = 2
 
 [node name="ButtonContainer" type="HBoxContainer" parent="UILayer"]
-custom_minimum_size = Vector2(0, 120)
-offset_left = 24.0
-offset_top = 944.0
-offset_right = 1896.0
-offset_bottom = 1072.0
+custom_minimum_size = Vector2(0, 88)
+anchor_left = 0.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = -88.0
+offset_right = 0.0
+offset_bottom = 0.0
 
 [node name="NavBackground" type="Panel" parent="UILayer/ButtonContainer"]
 layout_mode = 2
@@ -161,14 +165,14 @@ horizontal_alignment = 1
 
 [node name="ProgressionCards" type="VBoxContainer" parent="UILayer"]
 visible = false
-anchor_left = 1.0
+anchor_left = 0.0
 anchor_top = 0.0
 anchor_right = 1.0
 anchor_bottom = 0.0
-offset_left = -484.0
-offset_top = 316.0
+offset_left = 24.0
+offset_top = 80.0
 offset_right = -24.0
-offset_bottom = 620.0
+offset_bottom = 480.0
 clip_contents = true
 theme_override_constants/separation = 10
 script = ExtResource("14")

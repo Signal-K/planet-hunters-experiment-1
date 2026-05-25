@@ -1,11 +1,11 @@
 extends Node
 class_name EarthBaseGround
 
-const GROUND_LEVEL: float = 800.0
-const SOIL_TOP: float = 750.0
-const SOIL_BOTTOM: float = 950.0
-const SKY_LEVEL: float = 400.0
-const UI_LEVEL: float = 1000.0
+const GROUND_LEVEL: float = 1450.0
+const SOIL_TOP: float = 1400.0
+const SOIL_BOTTOM: float = 1600.0
+const SKY_LEVEL: float = 700.0
+const UI_LEVEL: float = 1700.0
 
 func snap_to_ground(object: Node2D, offset_y: float = 0.0) -> void:
 	object.position.y = GROUND_LEVEL + offset_y
@@ -33,7 +33,7 @@ func create_ground_guides(parent_node: Node) -> void:
 
 	var ground_line = Line2D.new()
 	ground_line.add_point(Vector2(0, GROUND_LEVEL))
-	ground_line.add_point(Vector2(1920, GROUND_LEVEL))
+	ground_line.add_point(Vector2(2160, GROUND_LEVEL))
 	ground_line.default_color = line_color
 	ground_line.width = line_width
 	ground_line.z_index = 100
@@ -41,7 +41,7 @@ func create_ground_guides(parent_node: Node) -> void:
 
 	var soil_top_line = Line2D.new()
 	soil_top_line.add_point(Vector2(0, SOIL_TOP))
-	soil_top_line.add_point(Vector2(1920, SOIL_TOP))
+	soil_top_line.add_point(Vector2(2160, SOIL_TOP))
 	soil_top_line.default_color = Color.GREEN
 	soil_top_line.width = line_width
 	soil_top_line.z_index = 100
@@ -49,7 +49,7 @@ func create_ground_guides(parent_node: Node) -> void:
 
 	var soil_bottom_line = Line2D.new()
 	soil_bottom_line.add_point(Vector2(0, SOIL_BOTTOM))
-	soil_bottom_line.add_point(Vector2(1920, SOIL_BOTTOM))
+	soil_bottom_line.add_point(Vector2(2160, SOIL_BOTTOM))
 	soil_bottom_line.default_color = Color.BLUE
 	soil_bottom_line.width = line_width
 	soil_bottom_line.z_index = 100

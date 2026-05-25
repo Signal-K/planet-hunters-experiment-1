@@ -28,6 +28,10 @@ extends RefCounted
 ## Minimum safe distance from any physical screen edge.
 const EDGE := 12.0
 
+## True when the viewport is taller than it is wide (portrait orientation).
+static func is_portrait(vp: Vector2) -> bool:
+	return vp.y > vp.x
+
 ## ─── Zone identifiers ────────────────────────────────────────────────────────
 enum Zone {
 	# ── Mining minigame ───────────────────────────────────────────────────────
@@ -60,6 +64,8 @@ enum Zone {
 	                    ## No other persistent element may occupy this zone.
 	EARTH_WIDGET,       ## Small persistent widget for Earth scenes: TOP-LEFT.
 	                    ## Used by FrancBalance. Must not overlap TUTORIAL_COACH.
+	BOTTOM_NAV,         ## Full-width persistent bottom navigation bar.
+	                    ## Portrait-primary zone — sits above the home indicator.
 }
 
 ## ─── Public API ──────────────────────────────────────────────────────────────
@@ -82,6 +88,7 @@ static func zone(z: Zone, vp: Vector2) -> Rect2:
 		Zone.APP_FOOTER:         return _app_footer(vp)
 		Zone.TUTORIAL_COACH:     return _tutorial_coach(vp)
 		Zone.EARTH_WIDGET:       return _earth_widget(vp)
+		Zone.BOTTOM_NAV:         return _bottom_nav(vp)
 		_:
 			push_warning("UILayout: unknown zone %d" % z)
 			return safe_rect(vp)
@@ -125,8 +132,9 @@ static func bottom_clearance(vp: Vector2) -> float:
 ## ─── Mining minigame zones ────────────────────────────────────────────────────
 
 static func _mining_hud(vp: Vector2) -> Rect2:
-	# Taller on desktop to give gauges room; shorter on mobile.
-	var h := 72.0 if vp.x < 900 else 88.0
+	# Taller on landscape desktop; compact in portrait or narrow viewports.
+	var compact := is_portrait(vp) or vp.x < 900
+	var h := 72.0 if compact else 88.0
 	return Rect2(EDGE, EDGE, vp.x - EDGE * 2, h)
 
 static func _mining_instruction(vp: Vector2) -> Rect2:
@@ -162,11 +170,13 @@ static func _mining_bottom(vp: Vector2) -> Rect2:
 ## ─── Global / multi-scene zones ──────────────────────────────────────────────
 
 static func _app_header(vp: Vector2) -> Rect2:
-	var h := 64.0 if vp.x < 900.0 else 72.0
+	var compact := is_portrait(vp) or vp.x < 900.0
+	var h := 64.0 if compact else 72.0
 	return Rect2(0.0, 0.0, vp.x, h)
 
 static func _app_footer(vp: Vector2) -> Rect2:
-	var h := 84.0 if vp.x < 900.0 else 88.0
+	var compact := is_portrait(vp) or vp.x < 900.0
+	var h := 84.0 if compact else 88.0
 	return Rect2(0.0, maxf(0.0, vp.y - h), vp.x, h)
 
 static func _app_body(vp: Vector2) -> Rect2:
@@ -181,10 +191,14 @@ static func _app_body_with_coach(vp: Vector2) -> Rect2:
 	return _app_body(vp)
 
 static func _tutorial_coach(vp: Vector2) -> Rect2:
-	# Top-right corner widget. Width must accommodate the header row:
-	# title label + "Mission N" + restart + collapse buttons (~400 px at 22 px font).
-	# Height must fit wrapped message + action hint + progress + CTA row.
 	const MARGIN := 24.0
+	if is_portrait(vp):
+		# Portrait: bottom-center overlay to avoid covering content.
+		var w := minf(vp.x - MARGIN * 2, 520.0)
+		var h := minf(340.0, maxf(280.0, vp.y * 0.22))
+		var bottom_gap := bottom_clearance(vp) + 16.0
+		return Rect2((vp.x - w) * 0.5, vp.y - h - bottom_gap, w, h)
+	# Landscape: top-right corner. Width accommodates the full header row.
 	var w := minf(440.0, maxf(400.0, vp.x * 0.23))
 	var h := minf(360.0, maxf(300.0, vp.y * 0.34))
 	return Rect2(vp.x - w - MARGIN, MARGIN, w, h)
@@ -192,3 +206,8 @@ static func _tutorial_coach(vp: Vector2) -> Rect2:
 static func _earth_widget(vp: Vector2) -> Rect2:
 	# TOP-LEFT small widget.  Kept away from TUTORIAL_COACH (top-right).
 	return Rect2(EDGE, EDGE, 200.0, 50.0)
+
+static func _bottom_nav(vp: Vector2) -> Rect2:
+	var h := 72.0
+	var bottom_gap := bottom_clearance(vp)
+	return Rect2(0.0, vp.y - h - bottom_gap, vp.x, h)

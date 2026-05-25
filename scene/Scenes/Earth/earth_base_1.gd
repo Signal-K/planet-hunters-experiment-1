@@ -36,12 +36,12 @@ const SR2_UNLOCK_SECTION := "popups"
 const SR2_UNLOCK_KEY := "starterrocket2_seen"
 const FREE_OPS_UNLOCK_KEY := "free_ops_unlock_seen"
 const SR2_UNLOCK_INTRO_SECONDS := 0.9
-const CONTROL_STATION_POSITION := Vector2(1600, 800)
-const CONTROL_STATION_LABEL_POSITION := Vector2(1600, 620)
+const CONTROL_STATION_POSITION := Vector2(900, 1450)
+const CONTROL_STATION_LABEL_POSITION := Vector2(900, 1270)
 const CONTROL_STATION_COLLISION_SIZE := Vector2(200, 200)
 const GLASS_CARD_BG := Color(0.06, 0.10, 0.16, 0.95)
 const GLASS_CARD_SUBTLE_BG := Color(0.08, 0.12, 0.20, 0.93)
-const COMPACT_LAYOUT_BREAKPOINT := 1200.0
+const COMPACT_LAYOUT_BREAKPOINT := 900.0
 
 var _build_flow_requested_structure: String = ""
 var _build_flow_location_id: String = ""
@@ -1149,11 +1149,12 @@ func _apply_nav_safe_area() -> void:
 	container.offset_right  = -margin_h
 	container.offset_bottom = -bottom_margin
 
-	# Zoom the camera so the designed 1920-unit world fills the full width on
-	# wide-aspect (mobile landscape) viewports instead of leaving empty edges.
+	# Zoom the camera so the designed 1080-unit world fills the full width in
+	# portrait. No zoom needed for portrait (1080×1920); landscape builds that
+	# are wider than the design aspect zoom in to avoid empty side margins.
 	var camera := get_node_or_null("Camera2D") as Camera2D
 	if camera != null:
-		var design_aspect := 1920.0 / 1080.0
+		var design_aspect := 1080.0 / 1920.0
 		var actual_aspect := vp_w / vp_h
 		if actual_aspect > design_aspect:
 			var z := actual_aspect / design_aspect

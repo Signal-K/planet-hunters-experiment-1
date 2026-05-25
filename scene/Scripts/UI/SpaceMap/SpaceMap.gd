@@ -18,8 +18,8 @@ const SectorRevealManager    = preload("res://Scripts/Utils/SectorRevealManager.
 const SceneManager           = preload("res://Scripts/Earth/SceneManager.gd")
 const UIManager              = preload("res://Scripts/Earth/UIManager.gd")
 
-const BASE_W := 1920.0
-const BASE_H := 1080.0
+const BASE_W := 1080.0
+const BASE_H := 1920.0
 
 const BELT_RX := 286.0
 const BELT_RY := 219.0

@@ -3,6 +3,7 @@ extends CanvasLayer
 const AppLogger = preload("res://Scripts/Utils/Logger.gd")
 const PanelManager = preload("res://Scripts/Utils/PanelManager.gd")
 const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd")
+const UILayout = preload("res://Scripts/UI/UILayout.gd")
 
 const FrancBalanceScene = preload("res://Scenes/UI/FrancBalance.tscn")
 const NewMissionPanelScene = preload("res://Scenes/UI/NewMissionPanel.tscn")
@@ -38,9 +39,11 @@ func _add_franc_balance_ui() -> void:
 	if FrancBalanceScene:
 		var franc_instance = FrancBalanceScene.instantiate()
 		add_child(franc_instance)
-		# Shift right of the 420 px left selector panel (420 + 12 px gap = 432)
-		franc_instance.offset_left = 432.0
-		franc_instance.offset_right = 632.0
+		# Portrait: place top-right; EARTH_WIDGET zone handles exact position via UILayout.
+		var vp := get_viewport().get_visible_rect().size if get_viewport() else Vector2(1080, 1920)
+		var r := UILayout.zone(UILayout.Zone.EARTH_WIDGET, vp)
+		franc_instance.offset_left = r.position.x
+		franc_instance.offset_right = r.end.x
 		AppLogger.d("UIManager: FrancBalance added")
 	else:
 		AppLogger.w("UIManager: failed to load FrancBalance scene")

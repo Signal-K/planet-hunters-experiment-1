@@ -1,0 +1,68 @@
+{
+  "taskId": "xpgzs4",
+  "currentVersion": 2,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "xpgzs4",
+      "version": 1,
+      "timestamp": "2026-05-25T09:10:49.955158Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": null,
+          "newValue": "todo"
+        },
+        {
+          "field": "priority",
+          "oldValue": null,
+          "newValue": "high"
+        }
+      ],
+      "snapshot": {
+        "description": "Set up a Docker Compose stack that launches the portrait web app and runs Playwright screenshot tests against it. Tests should cover each screen in the game loop, verify no element overflow, and compare against baseline screenshots. Replaces the current headless Godot test approach for UI regression testing. This gives the visual interface that current Docker tests lack.\n\nApproach: docker-compose.visual.yml with two services: (1) portrait-web — node dev-server serving portrait/, (2) playwright — mcr.microsoft.com/playwright image running tests/visual/ scripts that navigate the game loop and take screenshots.",
+        "labels": [
+          "portrait-mode",
+          "testing",
+          "docker",
+          "playwright",
+          "visual"
+        ],
+        "priority": "high",
+        "status": "todo",
+        "title": "P4: Visual test environment — Docker + Playwright screenshot harness"
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "xpgzs4",
+      "version": 2,
+      "timestamp": "2026-05-25T09:17:18.132127Z",
+      "changes": [
+        {
+          "field": "title",
+          "oldValue": "P4: Visual test environment — Docker + Playwright screenshot harness",
+          "newValue": "P4: Redesign LaunchWizard (Fab) + Map scenes for portrait"
+        },
+        {
+          "field": "description",
+          "oldValue": "Set up a Docker Compose stack that launches the portrait web app and runs Playwright screenshot tests against it. Tests should cover each screen in the game loop, verify no element overflow, and compare against baseline screenshots. Replaces the current headless Godot test approach for UI regression testing. This gives the visual interface that current Docker tests lack.\n\nApproach: docker-compose.visual.yml with two services: (1) portrait-web — node dev-server serving portrait/, (2) playwright — mcr.microsoft.com/playwright image running tests/visual/ scripts that navigate the game loop and take screenshots.",
+          "newValue": "Rework LaunchWizard.tscn and LaunchWizardMapStep.tscn for portrait. Fab: 3 slots stacked vertically (chassis → propulsion → drill) with horizontally-scrolling part chip selectors beneath each, sticky bottom CTA bar. Map/Target picker: sol system orbital rings sized to portrait canvas. Reference: portrait/screens-pre.jsx FabScreen + TargetPickerScreen + GalaxyScreen."
+        }
+      ],
+      "snapshot": {
+        "description": "Rework LaunchWizard.tscn and LaunchWizardMapStep.tscn for portrait. Fab: 3 slots stacked vertically (chassis → propulsion → drill) with horizontally-scrolling part chip selectors beneath each, sticky bottom CTA bar. Map/Target picker: sol system orbital rings sized to portrait canvas. Reference: portrait/screens-pre.jsx FabScreen + TargetPickerScreen + GalaxyScreen.",
+        "labels": [
+          "portrait-mode",
+          "testing",
+          "docker",
+          "playwright",
+          "visual"
+        ],
+        "priority": "high",
+        "status": "todo",
+        "title": "P4: Redesign LaunchWizard (Fab) + Map scenes for portrait"
+      }
+    }
+  ]
+}

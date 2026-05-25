@@ -34,9 +34,9 @@ func _draw() -> void:
 
 func _vp_size() -> Vector2:
 	if Engine.is_editor_hint():
-		return Vector2(1920, 1080)
+		return Vector2(1080, 1920)
 	var vp := get_viewport()
-	return vp.get_visible_rect().size if vp else Vector2(1920, 1080)
+	return vp.get_visible_rect().size if vp else Vector2(1080, 1920)
 
 func _draw_nebula(sz: Vector2) -> void:
 	draw_circle(Vector2(-sz.x * 0.20, -sz.y * 0.10), sz.x * 0.38, nebula_col1)

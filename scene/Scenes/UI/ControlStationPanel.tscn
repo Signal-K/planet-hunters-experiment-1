@@ -124,7 +124,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 color = Color(0.973, 0.980, 0.976, 1.0)
 
-[node name="RootHBox" type="HBoxContainer" parent="."]
+[node name="RootHBox" type="VBoxContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -132,16 +132,19 @@ anchor_bottom = 1.0
 theme_override_constants/separation = 0
 
 [node name="Sidebar" type="PanelContainer" parent="RootHBox"]
-custom_minimum_size = Vector2(56, 0)
+custom_minimum_size = Vector2(0, 72)
 layout_mode = 2
+size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_sidebar")
 
-[node name="SidebarVBox" type="VBoxContainer" parent="RootHBox/Sidebar"]
+[node name="SidebarVBox" type="HBoxContainer" parent="RootHBox/Sidebar"]
 layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/separation = 0
 
 [node name="NavBtn0" type="Button" parent="RootHBox/Sidebar/SidebarVBox"]
 layout_mode = 2
+size_flags_horizontal = 3
 theme_override_styles/normal = SubResource("StyleBoxFlat_sidebar_btn")
 theme_override_styles/hover = SubResource("StyleBoxFlat_sidebar_active")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_sidebar_active")
@@ -152,6 +155,7 @@ flat = true
 
 [node name="NavBtn1" type="Button" parent="RootHBox/Sidebar/SidebarVBox"]
 layout_mode = 2
+size_flags_horizontal = 3
 theme_override_styles/normal = SubResource("StyleBoxFlat_sidebar_active")
 theme_override_styles/hover = SubResource("StyleBoxFlat_sidebar_active")
 theme_override_colors/font_color = Color(0.0, 0.424, 0.361, 1.0)
@@ -161,6 +165,7 @@ flat = true
 
 [node name="NavBtn2" type="Button" parent="RootHBox/Sidebar/SidebarVBox"]
 layout_mode = 2
+size_flags_horizontal = 3
 theme_override_styles/normal = SubResource("StyleBoxFlat_sidebar_btn")
 theme_override_styles/hover = SubResource("StyleBoxFlat_sidebar_active")
 theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 0.80)
@@ -170,6 +175,7 @@ flat = true
 
 [node name="NavBtn3" type="Button" parent="RootHBox/Sidebar/SidebarVBox"]
 layout_mode = 2
+size_flags_horizontal = 3
 theme_override_styles/normal = SubResource("StyleBoxFlat_sidebar_btn")
 theme_override_styles/hover = SubResource("StyleBoxFlat_sidebar_active")
 theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 0.80)
@@ -179,6 +185,7 @@ flat = true
 
 [node name="NavBtn4" type="Button" parent="RootHBox/Sidebar/SidebarVBox"]
 layout_mode = 2
+size_flags_horizontal = 3
 theme_override_styles/normal = SubResource("StyleBoxFlat_sidebar_btn")
 theme_override_styles/hover = SubResource("StyleBoxFlat_sidebar_active")
 theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 0.80)
@@ -189,6 +196,7 @@ flat = true
 [node name="MainArea" type="VBoxContainer" parent="RootHBox"]
 layout_mode = 2
 size_flags_horizontal = 3
+size_flags_vertical = 3
 theme_override_constants/separation = 0
 
 [node name="Header" type="PanelContainer" parent="RootHBox/MainArea"]
@@ -245,7 +253,7 @@ theme_override_constants/margin_top = 18
 theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 10
 
-[node name="ContentHBox" type="HBoxContainer" parent="RootHBox/MainArea/ContentMargin"]
+[node name="ContentHBox" type="VBoxContainer" parent="RootHBox/MainArea/ContentMargin"]
 layout_mode = 2
 theme_override_constants/separation = 16
 
@@ -327,7 +335,7 @@ text = "REPORT"
 flat = true
 
 [node name="RightRail" type="VBoxContainer" parent="RootHBox/MainArea/ContentMargin/ContentHBox"]
-custom_minimum_size = Vector2(320, 0)
+custom_minimum_size = Vector2(0, 0)
 layout_mode = 2
 theme_override_constants/separation = 14
 

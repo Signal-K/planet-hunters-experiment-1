@@ -1,0 +1,64 @@
+{
+  "taskId": "ucrkjx",
+  "currentVersion": 2,
+  "versions": [
+    {
+      "id": "v1",
+      "taskId": "ucrkjx",
+      "version": 1,
+      "timestamp": "2026-05-25T09:10:54.255223Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": null,
+          "newValue": "todo"
+        },
+        {
+          "field": "priority",
+          "oldValue": null,
+          "newValue": "medium"
+        }
+      ],
+      "snapshot": {
+        "description": "Update dev-server.js and vercel.json so that mobile UA requests to the game URL are served the portrait app instead of the Godot landscape embed. Add a /portrait route for direct access. Desktop UAs continue to see the Godot game. Add a toggle link on both versions to switch.",
+        "labels": [
+          "portrait-mode",
+          "routing",
+          "web"
+        ],
+        "priority": "medium",
+        "status": "todo",
+        "title": "P5: Production routing — serve portrait for mobile user agents"
+      }
+    },
+    {
+      "id": "v2",
+      "taskId": "ucrkjx",
+      "version": 2,
+      "timestamp": "2026-05-25T09:17:21.449544Z",
+      "changes": [
+        {
+          "field": "title",
+          "oldValue": "P5: Production routing — serve portrait for mobile user agents",
+          "newValue": "P5: Redesign SidescrollMining for portrait + bottom nav"
+        },
+        {
+          "field": "description",
+          "oldValue": "Update dev-server.js and vercel.json so that mobile UA requests to the game URL are served the portrait app instead of the Godot landscape embed. Add a /portrait route for direct access. Desktop UAs continue to see the Godot game. Add a toggle link on both versions to switch.",
+          "newValue": "Adapt SidescrollMining.tscn to portrait canvas. The sidescroller can keep its horizontal scroll but the HUD, cargo bar, and Return CTA need to fit the portrait zone layout. Add a persistent bottom nav (Base / Atlas / Missions / Build) that replaces the current landscape sidebar nav. Reference: portrait/screens-loop.jsx MiningScreen + chrome.jsx BottomNav."
+        }
+      ],
+      "snapshot": {
+        "description": "Adapt SidescrollMining.tscn to portrait canvas. The sidescroller can keep its horizontal scroll but the HUD, cargo bar, and Return CTA need to fit the portrait zone layout. Add a persistent bottom nav (Base / Atlas / Missions / Build) that replaces the current landscape sidebar nav. Reference: portrait/screens-loop.jsx MiningScreen + chrome.jsx BottomNav.",
+        "labels": [
+          "portrait-mode",
+          "routing",
+          "web"
+        ],
+        "priority": "medium",
+        "status": "todo",
+        "title": "P5: Redesign SidescrollMining for portrait + bottom nav"
+      }
+    }
+  ]
+}
