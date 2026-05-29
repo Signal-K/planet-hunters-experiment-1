@@ -1,6 +1,7 @@
 extends CanvasLayer
 
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
+const PostHogNativeSurveyBridge = preload("res://Scripts/Systems/PostHogNativeSurveyBridge.gd")
 
 const GameplayAnalytics = preload("res://Scripts/Systems/GameplayAnalytics.gd")
 
@@ -23,12 +24,14 @@ func _on_feedback_pressed() -> void:
 	_request_count += 1
 	var scene = get_tree().current_scene
 	hint_label.text = "Opening feedback..."
-	GameplayAnalytics.emit_feedback_requested("feedback_beacon", {
+	var analytics_payload := {
 		"request_index": _request_count,
 		"current_scene": str(scene.name if scene else ""),
 		"context": "manual_help_request"
-	})
+	}
+	GameplayAnalytics.emit_feedback_requested("feedback_beacon", analytics_payload)
+	PostHogNativeSurveyBridge.fire_feedback_survey(analytics_payload)
 	var tween = create_tween()
 	tween.tween_property(hint_label, "modulate:a", 0.6, 0.15)
 	tween.tween_property(hint_label, "modulate:a", 1.0, 0.15)
-	hint_label.text = "Tell us where you got stuck."
+	hint_label.text = "Feedback form opened."
