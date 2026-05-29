@@ -7,6 +7,7 @@ const DISTINCT_SECTION := "identity"
 const GATE_SECTION := "shown"
 
 const SURVEY_IDS := {
+	"feedback":      "019e7269-3773-0000-a6d1-d944a8724a09",
 	"first_mission": "019c9df8-db7f-0000-072f-73b3347a4d6c",
 	"contractor":    "019ccaf8-4299-0000-b3ad-92a57ab75b95",
 	"mining":        "019ccaf8-c4d8-0000-901b-aa850dfd43c5",
@@ -27,6 +28,13 @@ const SURVEY_IDS := {
 # For rating: low_label, high_label
 # For multiple_choice: choices Array[String]
 const SURVEY_QUESTIONS := {
+	"feedback": {
+		"name": "Landnám: Feedback",
+		"questions": [
+			{"type": "multiple_choice", "text": "What do you need help with?", "choices": ["I am stuck on a mission", "Something is not working", "I want to report a bug", "I have a suggestion", "Just exploring"]},
+			{"type": "open", "text": "Tell us more — what happened and what were you trying to do?"},
+		]
+	},
 	"first_mission": {
 		"name": "Landnám: Mission Complete",
 		"questions": [
@@ -123,6 +131,15 @@ static func count_and_fire(counter_key: String, threshold: int, gate_key: String
 	if count < threshold:
 		return
 	_open_once(gate_key, survey_id, survey_key, survey_key, payload)
+
+## Fire the feedback survey directly — no gate, always shows, web-safe.
+## Call this from any UI that needs a "send feedback" action.
+static func fire_feedback_survey(payload: Dictionary = {}) -> void:
+	var config := _load_config()
+	var distinct_id := _get_distinct_id(config)
+	config.save(STORE_PATH)
+	var survey_data: Dictionary = SURVEY_QUESTIONS.get("feedback", {})
+	_show_overlay("feedback", SURVEY_IDS.get("feedback", ""), survey_data, distinct_id, payload)
 
 static func handle_event(event_name: String, payload: Dictionary) -> void:
 	if OS.has_feature("web"):

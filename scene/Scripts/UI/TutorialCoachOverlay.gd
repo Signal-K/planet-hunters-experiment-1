@@ -438,6 +438,11 @@ func _reposition_panel() -> void:
 		return
 	var vp_size := vp.get_visible_rect().size
 	var zone := UILayout.zone(UILayout.Zone.TUTORIAL_COACH, vp_size)
+	var step_id := str(_current_step.get("id", ""))
+	if step_id == "accept_contractor_offer":
+		# Contractor cards have their SELECT button on the right side; place panel
+		# on the left so it does not visually cover the button.
+		zone = Rect2(24.0, zone.position.y, zone.size.x, zone.size.y)
 	panel.position = zone.position
 	panel.size     = zone.size
 

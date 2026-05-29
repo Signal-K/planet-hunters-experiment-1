@@ -39,9 +39,9 @@ const CYAN        := PanelStyle.ACCENT
 const AMBER       := PanelStyle.ACCENT_WARM
 const GREEN       := Color(0.30, 1.0, 0.45, 1.0)
 const RED         := Color(1.0, 0.35, 0.35, 1.0)
-const TEXT_COLOR  := PanelStyle.TEXT_ON_DARK
+const TEXT_COLOR  := PanelStyle.TEXT_PRIMARY
 const TEXT_MUTED  := PanelStyle.MUTED_ON_DARK
-const TITLE_COLOR := PanelStyle.TEXT_ON_DARK
+const TITLE_COLOR := PanelStyle.TEXT_PRIMARY
 
 var _returned: Dictionary       = {}
 var _cargo: Dictionary          = {}
