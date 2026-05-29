@@ -195,7 +195,7 @@ func test_earth_base_refreshes_tutorial_overlay_after_runtime_setup() -> void:
 		"current_step_index": 0,
 		"total_steps": 9,
 		"current_step": {
-			"title": "Welcome to Landnam",
+			"title": "Get started",
 			"message": "Tap New Mission.",
 			"action_key": "open_launchpad",
 			"valid_scenes": ["earth_base_1"]
@@ -209,7 +209,7 @@ func test_earth_base_refreshes_tutorial_overlay_after_runtime_setup() -> void:
 		current_scene = null
 		RocketsManager.reset_state()
 		return
-	if overlay.title_label.text != "Welcome to Landnam":
+	if overlay.title_label.text != "Get started":
 		reporter.fail_test("Expected tutorial overlay title to render the active welcome step")
 		overlay.queue_free()
 		scene.queue_free()

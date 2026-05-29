@@ -63,17 +63,9 @@ func _build_ui() -> void:
 	vbox.add_theme_constant_override("separation", 24)
 	card.add_child(vbox)
 
-	# Eyebrow
-	var eyebrow := Label.new()
-	eyebrow.text = "LANDNÁM"
-	eyebrow.add_theme_color_override("font_color", DS.PRIMARY)
-	eyebrow.add_theme_font_size_override("font_size", 13)
-	eyebrow.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vbox.add_child(eyebrow)
-
 	# Title
 	var title := Label.new()
-	title.text = "Welcome, Commander."
+	title.text = "Landnám"
 	title.add_theme_color_override("font_color", DS.TEXT)
 	title.add_theme_font_size_override("font_size", 36)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -87,7 +79,7 @@ func _build_ui() -> void:
 
 	# Body
 	var body := Label.new()
-	body.text = "You are in command of a deep-space mining operation.\n\nSign contractors, build rockets, and launch missions to real asteroid and planet candidates — contributing to actual ongoing science.\n\nYour first mission briefing is waiting."
+	body.text = "Mine asteroids, fill contractor orders, and scan space objects that are still unconfirmed — the data goes to real ongoing science programs.\n\nThe launchpad is where missions start."
 	body.add_theme_color_override("font_color", DS.TEXT_MUTED)
 	body.add_theme_font_size_override("font_size", 19)
 	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -101,7 +93,7 @@ func _build_ui() -> void:
 
 	# CTA button
 	var btn := Button.new()
-	btn.text = "Start Exploring  →"
+	btn.text = "Get started  →"
 	btn.custom_minimum_size = Vector2(0, 52)
 	btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	PanelStyle.apply_button(btn, true)
