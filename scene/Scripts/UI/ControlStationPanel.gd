@@ -2,6 +2,7 @@ extends Control
 
 signal panel_closed
 
+const DS = preload("res://Scripts/UI/DS.gd")
 const PREVIEW_SCENE := "res://Scenes/UI/AsteroidPreview/asteroid_preview.tscn"
 const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
 const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
@@ -75,11 +76,35 @@ func _ready() -> void:
 	if legacy_root:
 		legacy_root.visible = true
 		legacy_root.mouse_filter = Control.MOUSE_FILTER_PASS
+	_stamp_panel_fonts(self)
 	_bind_scene_ui()
 	_apply_layout()
 	if get_viewport() and not get_viewport().size_changed.is_connected(_apply_layout):
 		get_viewport().size_changed.connect(_apply_layout)
 	_populate_view()
+
+func _stamp_panel_fonts(node: Node) -> void:
+	var disp := DS.font_display()
+	var mono := DS.font_mono()
+	if disp == null:
+		return
+	var vp_w := get_viewport_rect().size.x
+	var scale := clampf(vp_w / 480.0, 1.0, 2.5)
+	for child in node.get_children():
+		if child is Label:
+			var lbl := child as Label
+			lbl.add_theme_font_override("font", disp)
+			var sz: int = lbl.theme_override_font_sizes.get("font_size", 0)
+			if sz > 0 and sz < 20:
+				lbl.add_theme_font_size_override("font_size", int(sz * scale))
+		elif child is Button:
+			var btn := child as Button
+			btn.add_theme_font_override("font", disp)
+			var sz: int = btn.theme_override_font_sizes.get("font_size", 0)
+			if sz > 0 and sz < 20:
+				btn.add_theme_font_size_override("font_size", int(sz * scale))
+		if child.get_child_count() > 0:
+			_stamp_panel_fonts(child)
 
 func _bind_scene_ui() -> void:
 	_subtitle_label = _subtitle_label_scene
@@ -110,7 +135,8 @@ func apply_footer_button(button: Button, active: bool) -> void:
 		_apply_primary_button(button)
 	else:
 		_apply_secondary_button(button)
-	button.add_theme_font_size_override("font_size", 13)
+	button.add_theme_font_override("font", DS.font_display())
+	button.add_theme_font_size_override("font_size", DS.F_BUTTON)
 
 func _apply_layout() -> void:
 	if legacy_root == null:
@@ -224,21 +250,24 @@ func _populate_sidebar_cards() -> void:
 	]:
 		var label: Label = ControlStationLogLineScene.instantiate()
 		label.text = line
-		label.add_theme_color_override("font_color", Color(0.48, 0.52, 0.54, 1.0))
-		label.add_theme_font_size_override("font_size", 13)
+		label.add_theme_color_override("font_color", DS.TEXT_MUTED)
+		label.add_theme_font_override("font", DS.font_mono())
+		label.add_theme_font_size_override("font_size", DS.F_CAPTION)
 		_log_list.add_child(label)
 
 func _create_queue_row(item: Dictionary) -> Control:
 	var row: VBoxContainer = ControlStationQueueRowScene.instantiate()
 	var title: Label = row.get_node("TopRow/TitleLabel")
 	title.text = str(item.get("title", ""))
-	title.add_theme_color_override("font_color", Color(0.22, 0.24, 0.26, 1.0))
-	title.add_theme_font_size_override("font_size", 13)
+	title.add_theme_color_override("font_color", DS.TEXT_MUTED)
+	title.add_theme_font_override("font", DS.font_display())
+	title.add_theme_font_size_override("font_size", DS.F_CAPTION)
 
 	var value: Label = row.get_node("TopRow/ValueLabel")
 	value.text = str(item.get("value", ""))
-	value.add_theme_color_override("font_color", Color(0.08, 0.52, 0.47, 1.0))
-	value.add_theme_font_size_override("font_size", 13)
+	value.add_theme_color_override("font_color", DS.PRIMARY)
+	value.add_theme_font_override("font", DS.font_mono())
+	value.add_theme_font_size_override("font_size", DS.F_CAPTION)
 
 	var fill: ColorRect = row.get_node("ProgressBarShell/ProgressFill")
 	fill.anchor_right = 0.74 if str(item.get("value", "")).contains("%") else 0.38
@@ -248,18 +277,21 @@ func _create_story_card(step: Dictionary) -> Control:
 	var card: PanelContainer = ControlStationStoryCardScene.instantiate()
 	var code: Label = card.get_node("Margin/VBox/CodeLabel")
 	code.text = "%s // MILESTONE" % str(step.get("code", ""))
-	code.add_theme_color_override("font_color", Color(0.08, 0.52, 0.47, 1.0))
-	code.add_theme_font_size_override("font_size", 12)
+	code.add_theme_color_override("font_color", DS.PRIMARY)
+	code.add_theme_font_override("font", DS.font_mono())
+	code.add_theme_font_size_override("font_size", DS.F_CAPTION)
 
 	var title: Label = card.get_node("Margin/VBox/TitleLabel")
 	title.text = str(step.get("title", ""))
-	title.add_theme_color_override("font_color", Color(0.13, 0.18, 0.20, 1.0))
-	title.add_theme_font_size_override("font_size", 20)
+	title.add_theme_color_override("font_color", DS.TEXT)
+	title.add_theme_font_override("font", DS.font_display())
+	title.add_theme_font_size_override("font_size", DS.F_BODY)
 
 	var body: Label = card.get_node("Margin/VBox/DescriptionLabel")
 	body.text = str(step.get("description", ""))
-	body.add_theme_color_override("font_color", Color(0.40, 0.45, 0.47, 1.0))
-	body.add_theme_font_size_override("font_size", 14)
+	body.add_theme_color_override("font_color", DS.TEXT_MUTED)
+	body.add_theme_font_override("font", DS.font_display())
+	body.add_theme_font_size_override("font_size", DS.F_CAPTION)
 	return card
 
 func _create_empty_state_card() -> Control:

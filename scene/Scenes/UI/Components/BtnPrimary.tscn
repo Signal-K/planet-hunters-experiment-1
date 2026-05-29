@@ -1,12 +1,10 @@
 [gd_scene load_steps=5 format=3]
 
-; Primary command trigger — teal-green fill, white text.
-; Design: solid PRIMARY (#006c5c); gradient PRIMARY→PRIMARY_CONTAINER at 135°
-; is the design intent but requires a shader; solid is the Godot-native equivalent.
+; Primary command trigger — DS Command Cyan fill, white text.
 ; Set .text and connect .pressed in the parent scene.
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_normal"]
-bg_color = Color(0.0, 0.424, 0.361, 1.0)
+bg_color = Color(0.247, 0.663, 1.0, 1.0)
 corner_radius_top_left = 12
 corner_radius_top_right = 12
 corner_radius_bottom_right = 12
@@ -17,7 +15,7 @@ content_margin_right = 24.0
 content_margin_bottom = 14.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hover"]
-bg_color = Color(0.0, 0.353, 0.298, 1.0)
+bg_color = Color(0.192, 0.537, 0.835, 1.0)
 corner_radius_top_left = 12
 corner_radius_top_right = 12
 corner_radius_bottom_right = 12
@@ -28,7 +26,7 @@ content_margin_right = 24.0
 content_margin_bottom = 14.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pressed"]
-bg_color = Color(0.0, 0.282, 0.235, 1.0)
+bg_color = Color(0.145, 0.416, 0.659, 1.0)
 corner_radius_top_left = 12
 corner_radius_top_right = 12
 corner_radius_bottom_right = 12
@@ -39,7 +37,7 @@ content_margin_right = 24.0
 content_margin_bottom = 14.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_disabled"]
-bg_color = Color(0.0, 0.424, 0.361, 0.35)
+bg_color = Color(0.247, 0.663, 1.0, 0.35)
 corner_radius_top_left = 12
 corner_radius_top_right = 12
 corner_radius_bottom_right = 12

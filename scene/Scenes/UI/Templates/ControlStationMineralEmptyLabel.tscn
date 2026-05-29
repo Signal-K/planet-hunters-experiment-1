@@ -3,5 +3,5 @@
 [node name="ControlStationMineralEmptyLabel" type="Label"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.4, 0.52, 0.62, 0.7)
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 22
 text = "open market"

@@ -1,5 +1,7 @@
 extends CanvasLayer
 
+const DS = preload("res://Scripts/UI/DS.gd")
+
 # PostHog project capture key — public, safe to embed (same as react-shell.js).
 const POSTHOG_API_KEY := "phc_65umDftbbTkrm1V6azue6OeU4u5c8iJcaHm4JtJ95di"
 const POSTHOG_CAPTURE_URL := "https://us.i.posthog.com/capture/"
@@ -26,6 +28,10 @@ func _ready() -> void:
 	_answers.resize(_questions.size())
 	_answers.fill(null)
 
+	var disp := DS.font_display()
+	if disp != null:
+		_stamp_font(self, disp)
+
 	for i in range(_questions.size()):
 		_build_question_widget(i, _questions[i])
 
@@ -37,6 +43,15 @@ func _ready() -> void:
 	_skip_btn.pressed.connect(queue_free)
 	_close_btn.pressed.connect(queue_free)
 	_update_submit_state()
+
+func _stamp_font(node: Node, font: Font) -> void:
+	for child in node.get_children():
+		if child is Label:
+			(child as Label).add_theme_font_override("font", font)
+		elif child is Button:
+			(child as Button).add_theme_font_override("font", font)
+		if child.get_child_count() > 0:
+			_stamp_font(child, font)
 
 func _build_question_widget(index: int, question: Dictionary) -> void:
 	var q_type: String = question.get("type", "open")

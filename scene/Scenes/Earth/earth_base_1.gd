@@ -36,9 +36,9 @@ const SR2_UNLOCK_SECTION := "popups"
 const SR2_UNLOCK_KEY := "starterrocket2_seen"
 const FREE_OPS_UNLOCK_KEY := "free_ops_unlock_seen"
 const SR2_UNLOCK_INTRO_SECONDS := 0.9
-const CONTROL_STATION_POSITION := Vector2(900, 1450)
-const CONTROL_STATION_LABEL_POSITION := Vector2(900, 1270)
-const CONTROL_STATION_COLLISION_SIZE := Vector2(200, 200)
+const CONTROL_STATION_POSITION := Vector2(914, 1169)
+const CONTROL_STATION_LABEL_POSITION := Vector2(914, 960)
+const CONTROL_STATION_COLLISION_SIZE := Vector2(220, 180)
 const GLASS_CARD_BG := Color(0.06, 0.10, 0.16, 0.95)
 const GLASS_CARD_SUBTLE_BG := Color(0.08, 0.12, 0.20, 0.93)
 const COMPACT_LAYOUT_BREAKPOINT := 900.0
@@ -47,6 +47,9 @@ var _build_flow_requested_structure: String = ""
 var _build_flow_location_id: String = ""
 
 @onready var _progression_cards_root: EarthBaseProgressionCards = $UILayer/ProgressionCards
+@onready var _satellite_chip_status: Label = $UILayer/SatelliteChip/VBox/StatusLabel
+@onready var _launchpad_chip_status: Label = $UILayer/LaunchpadChip/VBox/StatusLabel
+@onready var _jobs_label: Label = $UILayer/JobsChip/JobsLabel
 
 func _ready() -> void:
 	_ensure_tutorial_runtime()
@@ -145,43 +148,37 @@ func _setup_buttons() -> void:
 	var new_mission_btn: Button = $UILayer/ButtonContainer/NewMissionButton
 	var container: HBoxContainer = $UILayer/ButtonContainer
 
-	# ── Unified pill background behind all buttons ───────────────────────────
+	# Portrait nav: 4 visible tabs (Base/Atlas/Build/Missions); Back/Forward/Market hidden
+	back_btn.visible    = false
+	forward_btn.visible = false
+	market_btn.visible  = false
+
+	# ── Nav background — dark gradient matching portrait prototype ───────────
 	var bg: Panel = $UILayer/ButtonContainer/NavBackground
 	var bg_style := StyleBoxFlat.new()
-	bg_style.bg_color     = Color(0.03, 0.03, 0.04, 0.94)
-	bg_style.border_color = Color(0.28, 0.88, 0.96, 0.35)   # cyan, low-opacity border
-	bg_style.set_border_width_all(1)
-	bg_style.set_corner_radius_all(12)
+	bg_style.bg_color     = Color(0.024, 0.035, 0.059, 0.92)
+	bg_style.border_color = Color(0.247, 0.663, 1.0, 0.22)
+	bg_style.border_width_top = 1
+	bg_style.set_corner_radius_all(0)
 	bg.add_theme_stylebox_override("panel", bg_style)
 	container.add_theme_constant_override("separation", 0)
 
-	# ── Style buttons as transparent slots with divider on the right ─────────
-	_style_nav_slot(back_btn,        false)
-	_style_nav_slot(forward_btn,     false)
-	_style_nav_slot(menu_btn,        false)
-	_style_nav_slot(market_btn,      false)
-	_style_nav_slot(space_map_btn,   false)
-	_style_nav_slot(build_btn,       false)
-	_style_nav_slot(new_mission_btn, true)   # amber, no right divider
+	# ── Style 4 portrait tabs ────────────────────────────────────────────────
+	_style_portrait_tab(menu_btn,        false)   # Base
+	_style_portrait_tab(space_map_btn,   false)   # Atlas
+	_style_portrait_tab(build_btn,       false)   # Build
+	_style_portrait_tab(new_mission_btn, true)    # Missions (amber accent)
 
-	# ── Labels and icons ─────────────────────────────────────────────────────
-	back_btn.text        = "Back"
-	forward_btn.text     = "Next"
-	menu_btn.text        = "Menu"
-	market_btn.text      = "Market"
-	space_map_btn.text   = "Map"
+	# ── Labels: concise single words ─────────────────────────────────────────
+	menu_btn.text        = "Base"
+	space_map_btn.text   = "Atlas"
 	build_btn.text       = "Build"
-	new_mission_btn.text = "New Mission"
+	new_mission_btn.text = "Missions"
 
-	_load_icon(back_btn,        "res://Resources/Icons/nav_back.svg",    false)
-	_load_icon(forward_btn,     "res://Resources/Icons/nav_forward.svg", false)
+	# ── Icons ────────────────────────────────────────────────────────────────
 	_load_icon(menu_btn,        "res://Resources/Icons/nav_menu.svg",    false)
-	_load_icon(market_btn,      "res://Resources/Icons/nav_market.svg",  false)
 	_load_icon(space_map_btn,   "res://Resources/Icons/nav_map.svg",     false)
 	_load_icon(new_mission_btn, "res://Resources/Icons/nav_mission.svg", true)
-	for btn in [back_btn, forward_btn, menu_btn, market_btn, space_map_btn, build_btn]:
-		_set_nav_min(btn, 152, 108)
-	_set_nav_min(new_mission_btn, 210, 108)
 
 	# ── Connect signals ───────────────────────────────────────────────────────
 	back_btn.pressed.connect(_on_back_button_pressed)
@@ -198,47 +195,50 @@ func _setup_buttons() -> void:
 	_apply_market_button_state(false)
 
 
-const _AMBER        := Color(0.941, 0.690, 0.188, 1.0)
-const _CYAN_FAINT   := Color(0.28, 0.88, 0.96, 0.35)   # cyan divider
-const _FONT_WHITE   := Color(0.95, 0.93, 0.90, 1.0)
+const _AMBER        := Color(0.961, 0.651, 0.137, 1.0)   # DS Vulcan Amber
+const _CYAN         := Color(0.247, 0.663, 1.0,   1.0)   # DS Command Cyan
+const _TEXT_MUTED   := Color(0.663, 0.722, 0.808, 1.0)   # DS TEXT_MUTED
 
-func _style_nav_slot(btn: Button, is_amber: bool) -> void:
-	var col: Color = _AMBER if is_amber else _FONT_WHITE
-	var div: Color = Color(_AMBER.r, _AMBER.g, _AMBER.b, 0.60) if is_amber else _CYAN_FAINT
+# Portrait bottom-nav tab styling: icon above label, 4 equal columns.
+func _style_portrait_tab(btn: Button, is_amber: bool) -> void:
+	var col: Color    = _AMBER if is_amber else _TEXT_MUTED
+	var col_act: Color = _AMBER if is_amber else _CYAN
 
 	var normal := StyleBoxFlat.new()
 	normal.bg_color = Color(0, 0, 0, 0)
-	normal.border_width_right = 0 if is_amber else 1
-	normal.border_color = div
-	normal.set_corner_radius_all(0)
-	normal.content_margin_left   = 12
-	normal.content_margin_right  = 12
-	normal.content_margin_top    = 8
-	normal.content_margin_bottom = 8
+	normal.set_corner_radius_all(10)
+	normal.content_margin_left   = 8
+	normal.content_margin_right  = 8
+	normal.content_margin_top    = 10
+	normal.content_margin_bottom = 10
 
-	var hover := StyleBoxFlat.new()
-	hover.bg_color = Color(_AMBER.r, _AMBER.g, _AMBER.b, 0.12) if is_amber else Color(1, 1, 1, 0.06)
-	hover.border_width_right = normal.border_width_right
-	hover.border_color = div
-	hover.set_corner_radius_all(0)
-	hover.content_margin_left   = 12
-	hover.content_margin_right  = 12
-	hover.content_margin_top    = 8
-	hover.content_margin_bottom = 8
+	var hover := normal.duplicate() as StyleBoxFlat
+	hover.bg_color = Color(col_act.r, col_act.g, col_act.b, 0.14)
 
-	var pressed := hover.duplicate()
-	pressed.bg_color = Color(_AMBER.r, _AMBER.g, _AMBER.b, 0.22) if is_amber else Color(1, 1, 1, 0.12)
+	var pressed := normal.duplicate() as StyleBoxFlat
+	pressed.bg_color = Color(col_act.r, col_act.g, col_act.b, 0.22)
 
 	btn.add_theme_stylebox_override("normal",  normal)
 	btn.add_theme_stylebox_override("hover",   hover)
 	btn.add_theme_stylebox_override("pressed", pressed)
 	btn.add_theme_stylebox_override("focus",   hover)
 	btn.add_theme_color_override("font_color",         col)
-	btn.add_theme_color_override("font_hover_color",   col)
-	btn.add_theme_color_override("font_pressed_color", col)
-	btn.add_theme_font_size_override("font_size", 28)
+	btn.add_theme_color_override("font_hover_color",   col_act)
+	btn.add_theme_color_override("font_pressed_color", col_act)
+	var nav_font := load("res://Resources/Fonts/Oxanium-Bold.ttf") as Font
+	if nav_font:
+		btn.add_theme_font_override("font", nav_font)
+	# Label at 18px, icon above via button's built-in vertical layout
+	btn.add_theme_font_size_override("font_size", 18)
+	btn.icon_alignment     = HORIZONTAL_ALIGNMENT_CENTER
+	btn.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
+	btn.expand_icon        = false
 	# Lock so UIConsistencyEnforcer does not override our custom nav styling
 	btn.set_meta("ui_style_locked", true)
+
+# Legacy stub — kept so any remaining callers compile; use _style_portrait_tab instead.
+func _style_nav_slot(btn: Button, is_amber: bool) -> void:
+	_style_portrait_tab(btn, is_amber)
 
 
 func _load_icon(btn: Button, path: String, is_amber: bool) -> void:
@@ -248,7 +248,7 @@ func _load_icon(btn: Button, path: String, is_amber: bool) -> void:
 	if tex == null:
 		return
 	btn.icon = tex
-	var col: Color = _AMBER if is_amber else _FONT_WHITE
+	var col: Color = _AMBER if is_amber else _TEXT_MUTED
 	btn.add_theme_color_override("icon_normal_color",  col)
 	btn.add_theme_color_override("icon_hover_color",   col)
 	btn.add_theme_color_override("icon_pressed_color", col)
@@ -734,11 +734,9 @@ func _apply_tutorial_button_state() -> void:
 		if not state.is_empty():
 			var current_step: Dictionary = state.get("current_step", {}) as Dictionary
 			tutorial_active = not bool(state.get("skipped", false)) and not current_step.is_empty()
-	# During the tutorial keep only Menu + New Mission active.
-	# SpaceMap, Market, and Forward lead nowhere useful and confuse new players.
+	# During the tutorial: Atlas tab is available but hidden buttons stay off.
 	for btn_path in [
 		"UILayer/ButtonContainer/ForwardButton",
-		"UILayer/ButtonContainer/SpaceMapButton",
 	]:
 		var btn := get_node_or_null(btn_path) as Button
 		if btn:
@@ -803,6 +801,45 @@ func _build_earth_base_identity() -> void:
 	_build_wordmark()
 	_build_ambient_stars()
 	_build_progression_cards()
+	_build_hud_strip()
+
+func _build_hud_strip() -> void:
+	var level_label := get_node_or_null("UILayer/HUDStrip/LevelChip/LevelLabel") as Label
+	var francs_label := get_node_or_null("UILayer/HUDStrip/FrancsChip/FrancsLabel") as Label
+	if level_label == null and francs_label == null:
+		return
+	var app = AppControllerHelper.get_instance()
+	if app == null:
+		return
+	var lv := 1
+	if app.has_method("get_experience_level"):
+		lv = int(app.get_experience_level())
+	if level_label != null:
+		level_label.text = "LV %d" % lv
+	if francs_label != null and app.has_method("get_franc_balance"):
+		var bal := int(app.get_franc_balance())
+		francs_label.text = NumberFormat.with_symbol(bal)
+	# Update Jobs pill: count active missions (placed + launched)
+	if is_instance_valid(_jobs_label):
+		var jobs_count := RocketsManager.get_placed().size() + RocketsManager.get_launched().size()
+		_jobs_label.text = "%d JOBS" % jobs_count if jobs_count != 1 else "1 JOB"
+	# Update eyebrow with level
+	var eyebrow := get_node_or_null("UILayer/TitleBlock/LandnamWordmark") as Label
+	if eyebrow != null:
+		eyebrow.text = "EARTH BASE · LV %d" % lv
+	# Refresh whenever balance changes
+	if app.has_signal("franc_balance_updated") and not app.franc_balance_updated.is_connected(_on_franc_balance_updated):
+		app.franc_balance_updated.connect(_on_franc_balance_updated)
+
+func _on_franc_balance_updated(_new_balance: int) -> void:
+	var francs_label := get_node_or_null("UILayer/HUDStrip/FrancsChip/FrancsLabel") as Label
+	if francs_label == null:
+		return
+	var app = AppControllerHelper.get_instance()
+	if app == null or not app.has_method("get_franc_balance"):
+		return
+	var bal := int(app.get_franc_balance())
+	francs_label.text = NumberFormat.with_symbol(bal)
 
 func _on_tutorial_state_updated(_state: Dictionary) -> void:
 	call_deferred("_refresh_tutorial_owned_ui")
@@ -815,10 +852,12 @@ func _build_wordmark() -> void:
 	var ui_layer = get_node_or_null("UILayer")
 	if ui_layer == null:
 		return
+	# Support both old (LandnamWordmark Label) and new (TitleBlock VBoxContainer) layouts.
+	var block := ui_layer.get_node_or_null("TitleBlock") as Control
 	var wordmark := ui_layer.get_node_or_null("LandnamWordmark") as Label
-	if wordmark == null:
+	if block == null and wordmark == null:
 		return
-	_apply_wordmark_layout(wordmark)
+	_apply_wordmark_layout(block if block != null else wordmark)
 	if not get_viewport().size_changed.is_connected(_on_earth_base_viewport_resized):
 		get_viewport().size_changed.connect(_on_earth_base_viewport_resized)
 
@@ -826,25 +865,22 @@ func _on_earth_base_viewport_resized() -> void:
 	var ui_layer = get_node_or_null("UILayer")
 	if ui_layer == null:
 		return
+	var block := ui_layer.get_node_or_null("TitleBlock") as Control
 	var wordmark := ui_layer.get_node_or_null("LandnamWordmark") as Label
-	if wordmark:
+	if block != null:
+		_apply_wordmark_layout(block)
+	elif wordmark != null:
 		_apply_wordmark_layout(wordmark)
 	_apply_nav_safe_area()
 
-func _apply_wordmark_layout(wordmark: Label) -> void:
+func _apply_wordmark_layout(node: Control) -> void:
 	var viewport := get_viewport_rect().size
-	var widget_rect := UILayout.zone(UILayout.Zone.EARTH_WIDGET, viewport)
-	wordmark.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	wordmark.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	wordmark.add_theme_font_size_override("font_size", 10 if viewport.x < COMPACT_LAYOUT_BREAKPOINT else 12)
-	if viewport.x < COMPACT_LAYOUT_BREAKPOINT:
-		wordmark.offset_left = widget_rect.position.x + 6.0
-		wordmark.offset_top = widget_rect.end.y + 10.0
-	else:
-		wordmark.offset_left = widget_rect.end.x + 28.0
-		wordmark.offset_top = widget_rect.position.y + 10.0
-	wordmark.offset_right = wordmark.offset_left + 150.0
-	wordmark.offset_bottom = wordmark.offset_top + 24.0
+	# Portrait: anchor title block top-left below the safe area notch
+	node.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	node.offset_left   = 16.0
+	node.offset_top    = 52.0
+	node.offset_right  = 340.0
+	node.offset_bottom = 120.0
 
 func _build_ambient_stars() -> void:
 	var star_root = get_node_or_null("AmbientStarLayer/StarRoot")
@@ -1134,10 +1170,12 @@ func _apply_nav_safe_area() -> void:
 
 	var vp_w := vp_rect.size.x
 	var vp_h := vp_rect.size.y
-	var margin_h := 24.0
-	var bar_h := 120.0
-	# On ultra-wide landscape (phone home indicator), leave a small bottom margin.
-	var bottom_margin := 34.0 if vp_w / vp_h > 1.85 else 0.0
+	var is_portrait_layout := vp_h > vp_w
+	# Portrait: full-width bar, no side margins; safe area bottom for home indicator.
+	var margin_h := 0.0 if is_portrait_layout else 24.0
+	var bar_h := 96.0
+	# Ultra-wide landscape → home indicator gap; portrait → iOS home indicator in bottom safe area.
+	var bottom_margin := 34.0 if (vp_w / vp_h > 1.85 or is_portrait_layout) else 0.0
 
 	# Anchor to bottom-full-width so the bar tracks the actual viewport height.
 	container.anchor_left   = 0.0
@@ -1188,8 +1226,8 @@ func _show_consensus_notifications(updates: Array) -> void:
 
 const _STRUCTURE_SCALE_PER_TIER := {1: 1.0, 2: 1.15, 3: 1.30, 4: 1.45}
 const _CONSTRUCTION_STRUCTURE_POSITIONS := {
-	"relay_1":    Vector2(2100, 800),
-	"refinery_1": Vector2(400, 800),
+	"relay_1":    Vector2(800, 1450),
+	"refinery_1": Vector2(150, 1450),
 }
 const _STRUCTURE_SEEN_CFG := "user://structure_intro_seen.cfg"
 
@@ -1212,12 +1250,25 @@ func _apply_structure_visual_evolution() -> void:
 	_scale_structure("SatelliteStation", scanner_tier)
 	_scale_structure("Launchpad", mining_tier)
 	_apply_control_station_visual_tier(cargo_tier)
+	_update_building_chip_status()
 
 	# Show construction-project structures when completed
 	if player_level >= 5:
 		for proj_id in _CONSTRUCTION_STRUCTURE_POSITIONS.keys():
 			if preload("res://Scripts/Utils/ConstructionManager.gd").is_project_completed(proj_id):
 				_ensure_construction_structure_visible(proj_id)
+
+func _update_building_chip_status() -> void:
+	if is_instance_valid(_satellite_chip_status):
+		var built := RocketsManager.is_scanner_station_built()
+		_satellite_chip_status.text = "SCANNING" if built else "OFFLINE"
+		_satellite_chip_status.add_theme_color_override("font_color",
+			Color(0.22, 0.851, 0.416) if built else Color(0.478, 0.510, 0.565))
+	if is_instance_valid(_launchpad_chip_status):
+		var in_flight := RocketsManager.get_launched().size() > 0
+		_launchpad_chip_status.text = "IN FLIGHT" if in_flight else "READY"
+		_launchpad_chip_status.add_theme_color_override("font_color",
+			Color(1.0, 0.702, 0.282) if in_flight else Color(0.22, 0.851, 0.416))
 
 func _scale_structure(node_name: String, tier: int) -> void:
 	var layers := get_node_or_null("StructuresLayer")
@@ -1302,8 +1353,7 @@ func _ensure_control_station_visible() -> void:
 
 	var sprite := Sprite2D.new()
 	sprite.name = "Sprite2D"
-	sprite.position = Vector2(-29.00003, 5.9999847)
-	sprite.scale = Vector2(0.5, 0.5)
+	sprite.scale = Vector2(0.17, 0.17)
 	sprite.texture = load(CONTROL_STATION_TEXTURE_PATH)
 	structure.add_child(sprite)
 

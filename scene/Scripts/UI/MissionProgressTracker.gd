@@ -1,6 +1,7 @@
 extends CanvasLayer
 
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
+const DS = preload("res://Scripts/UI/DS.gd")
 const ROCKETS_MANAGER = preload("res://Scripts/Utils/RocketsManager.gd")
 const UILayout = preload("res://Scripts/UI/UILayout.gd")
 const MISSION_OBJECTIVES := {
@@ -59,24 +60,33 @@ func _ready() -> void:
 			"panel",
 			PanelStyle.create_glass_panel_style(Color(0.05, 0.09, 0.14, 0.94), 0.64, 14, 16, 12)
 		)
+	var vp_w := get_viewport().get_visible_rect().size.x
+	var _scale := clampf(vp_w / 480.0, 1.0, 3.0)
+	var disp := DS.font_display()
 	if title_label:
 		PanelStyle.apply_body_on_dark(title_label)
-		title_label.add_theme_font_size_override("font_size", 13)
+		title_label.add_theme_font_size_override("font_size", int(13 * _scale))
+		if disp: title_label.add_theme_font_override("font", disp)
 	if objective_label:
 		PanelStyle.apply_muted_on_dark(objective_label)
-		objective_label.add_theme_font_size_override("font_size", 12)
+		objective_label.add_theme_font_size_override("font_size", int(12 * _scale))
+		if disp: objective_label.add_theme_font_override("font", disp)
 	if progress_label:
 		PanelStyle.apply_muted_on_dark(progress_label)
-		progress_label.add_theme_font_size_override("font_size", 12)
+		progress_label.add_theme_font_size_override("font_size", int(12 * _scale))
+		if disp: progress_label.add_theme_font_override("font", disp)
 	if percent_badge:
 		PanelStyle.apply_body_on_dark(percent_badge)
-		percent_badge.add_theme_font_size_override("font_size", 13)
+		percent_badge.add_theme_font_size_override("font_size", int(13 * _scale))
+		if disp: percent_badge.add_theme_font_override("font", disp)
 	if next_step_label:
 		PanelStyle.apply_body_on_dark(next_step_label)
-		next_step_label.add_theme_font_size_override("font_size", 12)
+		next_step_label.add_theme_font_size_override("font_size", int(12 * _scale))
+		if disp: next_step_label.add_theme_font_override("font", disp)
 	if checklist_label:
 		PanelStyle.apply_muted_on_dark(checklist_label)
-		checklist_label.add_theme_font_size_override("font_size", 12)
+		checklist_label.add_theme_font_size_override("font_size", int(12 * _scale))
+		if disp: checklist_label.add_theme_font_override("font", disp)
 	if toggle_button:
 		PanelStyle.apply_outline_button(toggle_button)
 		toggle_button.text = "Hide"
@@ -241,7 +251,9 @@ func _apply_visual_state() -> void:
 	if toggle_button:
 		toggle_button.text = "Show" if _collapsed else "Hide"
 		toggle_button.custom_minimum_size = Vector2(56, 28) if _compact_mode else Vector2(92, 38)
-		toggle_button.add_theme_font_size_override("font_size", 11 if _compact_mode else 13)
+		var _vw := get_viewport().get_visible_rect().size.x
+		var _sc := clampf(_vw / 480.0, 1.0, 3.0)
+		toggle_button.add_theme_font_size_override("font_size", int((11 if _compact_mode else 13) * _sc))
 	if panel:
 		panel.add_theme_stylebox_override(
 			"panel",

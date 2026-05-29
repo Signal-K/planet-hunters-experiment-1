@@ -86,7 +86,7 @@ layout_mode = 2
 [node name="HeaderBar" type="Panel" parent="PanelContainer/Panel/VBox/Header"]
 layout_mode = 2
 size_flags_horizontal = 3
-custom_minimum_size = Vector2(0, 54)
+custom_minimum_size = Vector2(0, 80)
 theme_override_styles/panel = SubResource("2")
 
 [node name="HeaderContent" type="HBoxContainer" parent="PanelContainer/Panel/VBox/Header/HeaderBar"]
@@ -106,13 +106,14 @@ theme_override_font_sizes/font_size = 28
 text = "Subcontractors"
 
 [node name="CloseButton" type="Button" parent="PanelContainer/Panel/VBox/Header/HeaderBar/HeaderContent"]
-custom_minimum_size = Vector2(100, 46)
+custom_minimum_size = Vector2(120, 72)
 layout_mode = 2
+theme_override_font_sizes/font_size = 26
 text = "Close"
 
 [node name="Subtitle" type="Label" parent="PanelContainer/Panel/VBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 26
 text = "Unlock partners as your level grows. Affinity increases with interactions."
 
 [node name="Scroll" type="ScrollContainer" parent="PanelContainer/Panel/VBox"]
@@ -133,5 +134,5 @@ layout_mode = 2
 [node name="Hint" type="Label" parent="PanelContainer/Panel/VBox/Footer"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 24
 text = "Orbit sales are 20% lower than Earth sales. Purchases cost +15%."

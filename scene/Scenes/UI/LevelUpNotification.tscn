@@ -31,7 +31,7 @@ grow_vertical = 2
 mouse_filter = 2
 
 [node name="Panel" type="PanelContainer" parent="Center"]
-custom_minimum_size = Vector2(400, 0)
+custom_minimum_size = Vector2(700, 0)
 layout_mode = 2
 theme_override_styles/panel = SubResource("1")
 
@@ -48,7 +48,7 @@ horizontal_alignment = 1
 
 [node name="LevelLabel" type="Label" parent="Center/Panel/VBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 32
 text = "You reached Level 2"
 horizontal_alignment = 1
 
@@ -56,6 +56,6 @@ horizontal_alignment = 1
 visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(0.4, 1, 0.5, 1)
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 26
 autowrap_mode = 3
 

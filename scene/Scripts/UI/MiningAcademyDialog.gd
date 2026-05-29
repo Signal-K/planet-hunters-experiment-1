@@ -1,4 +1,5 @@
 extends CanvasLayer
+const DS = preload("res://Scripts/UI/DS.gd")
 ## MiningAcademyDialog.gd
 ## Post-mission academy debrief dialog (light-themed two-column panel).
 ##
@@ -22,6 +23,25 @@ const DIALOG_LAYER := 85
 func _ready() -> void:
 	layer = DIALOG_LAYER
 	back_button.pressed.connect(close)
+	_stamp_fonts(self)
+
+func _stamp_fonts(node: Node) -> void:
+	var disp := DS.font_display()
+	if disp == null:
+		return
+	var vp_w := get_viewport().get_visible_rect().size.x
+	var scale := clampf(vp_w / 480.0, 1.0, 2.5)
+	for child in node.get_children():
+		if child is Label:
+			var lbl := child as Label
+			lbl.add_theme_font_override("font", disp)
+			var sz: int = lbl.theme_override_font_sizes.get("font_size", 0)
+			if sz > 0 and sz < 20:
+				lbl.add_theme_font_size_override("font_size", int(sz * scale))
+		elif child is Button:
+			(child as Button).add_theme_font_override("font", disp)
+		if child.get_child_count() > 0:
+			_stamp_fonts(child)
 
 func show_results(data: Dictionary) -> void:
 	var accuracy := float(data.get("accuracy", 94.2))

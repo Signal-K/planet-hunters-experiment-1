@@ -1,6 +1,20 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://Scripts/UI/MiningPracticePanel.gd" id="1_script"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.071, 0.133, 0.212, 1.0)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+shadow_color = Color(0.0, 0.0, 0.0, 0.55)
+shadow_size = 24
+shadow_offset = Vector2(0, 8)
+content_margin_left = 24.0
+content_margin_top = 20.0
+content_margin_right = 24.0
+content_margin_bottom = 20.0
 
 [node name="MiningPracticePanel" type="Control"]
 layout_mode = 3
@@ -41,10 +55,11 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Panel" type="PanelContainer" parent="Dock"]
-custom_minimum_size = Vector2(480, 0)
+custom_minimum_size = Vector2(880, 0)
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
 [node name="Scroll" type="ScrollContainer" parent="Dock/Panel"]
 layout_mode = 2
@@ -58,10 +73,12 @@ theme_override_constants/separation = 10
 
 [node name="TitleLabel" type="Label" parent="Dock/Panel/Scroll/VBox"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 32
 text = "Mining Academy"
 
 [node name="SubtitleLabel" type="Label" parent="Dock/Panel/Scroll/VBox"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 24
 autowrap_mode = 3
 text = "Subtitle"
 
@@ -71,18 +88,25 @@ theme_override_constants/separation = 8
 
 [node name="WarmupButton" type="Button" parent="Dock/Panel/Scroll/VBox/PresetButtons"]
 layout_mode = 2
+custom_minimum_size = Vector2(0, 72)
+theme_override_font_sizes/font_size = 26
 text = "Warm-Up"
 
 [node name="DrillButton" type="Button" parent="Dock/Panel/Scroll/VBox/PresetButtons"]
 layout_mode = 2
+custom_minimum_size = Vector2(0, 72)
+theme_override_font_sizes/font_size = 26
 text = "Prospector"
 
 [node name="EnduranceButton" type="Button" parent="Dock/Panel/Scroll/VBox/PresetButtons"]
 layout_mode = 2
+custom_minimum_size = Vector2(0, 72)
+theme_override_font_sizes/font_size = 26
 text = "Endurance"
 
 [node name="StatusLabel" type="Label" parent="Dock/Panel/Scroll/VBox"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 24
 autowrap_mode = 3
 text = "Status"
 
@@ -100,4 +124,6 @@ alignment = 2
 
 [node name="CloseButton" type="Button" parent="Dock/Panel/Scroll/VBox/FooterButtons"]
 layout_mode = 2
+custom_minimum_size = Vector2(0, 72)
+theme_override_font_sizes/font_size = 26
 text = "Back To Game"

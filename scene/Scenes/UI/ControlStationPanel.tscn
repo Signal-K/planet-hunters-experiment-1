@@ -7,26 +7,28 @@
 ; Globe panel: SURFACE_LOW tonal card. Header/status: SURFACE_LOWEST.
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_root"]
-bg_color = Color(0.973, 0.980, 0.976, 1.0)
+bg_color = Color(0.039, 0.071, 0.114, 1.0)
 content_margin_left = 0
 content_margin_top = 0
 content_margin_right = 0
 content_margin_bottom = 0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sidebar"]
-bg_color = Color(0.941, 0.957, 0.953, 1.0)
+bg_color = Color(0.055, 0.094, 0.157, 1.0)
+border_color = Color(0.247, 0.663, 1.0, 0.18)
+border_width_bottom = 1
 content_margin_left = 0
 content_margin_top = 0
 content_margin_right = 0
 content_margin_bottom = 0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sidebar_active"]
-bg_color = Color(0.310, 0.800, 0.710, 0.18)
-border_color = Color(0.0, 0.424, 0.361, 1.0)
-border_width_left = 3
+bg_color = Color(0.247, 0.663, 1.0, 0.16)
+border_color = Color(0.247, 0.663, 1.0, 1.0)
+border_width_left = 0
 border_width_top = 0
 border_width_right = 0
-border_width_bottom = 0
+border_width_bottom = 2
 content_margin_left = 11.0
 content_margin_top = 14.0
 content_margin_right = 14.0
@@ -40,36 +42,50 @@ content_margin_right = 14.0
 content_margin_bottom = 14.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_header"]
-bg_color = Color(1.0, 1.0, 1.0, 1.0)
+bg_color = Color(0.071, 0.133, 0.212, 1.0)
+border_color = Color(0.247, 0.663, 1.0, 0.18)
+border_width_bottom = 1
 content_margin_left = 20.0
 content_margin_top = 14.0
 content_margin_right = 20.0
 content_margin_bottom = 14.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_globe"]
-bg_color = Color(0.941, 0.957, 0.953, 1.0)
-corner_radius_top_left = 16
-corner_radius_top_right = 16
-corner_radius_bottom_right = 16
-corner_radius_bottom_left = 16
-shadow_color = Color(0.0, 0.424, 0.361, 0.06)
+bg_color = Color(0.055, 0.094, 0.157, 1.0)
+border_color = Color(0.247, 0.663, 1.0, 0.18)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+shadow_color = Color(0.0, 0.0, 0.0, 0.45)
 shadow_size = 12
 shadow_offset = Vector2(0, 4)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_status_bar"]
-bg_color = Color(0.941, 0.957, 0.953, 1.0)
+bg_color = Color(0.055, 0.094, 0.157, 1.0)
+border_color = Color(0.247, 0.663, 1.0, 0.18)
+border_width_top = 1
 content_margin_left = 20.0
 content_margin_top = 10.0
 content_margin_right = 20.0
 content_margin_bottom = 10.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mission_card"]
-bg_color = Color(1.0, 1.0, 1.0, 1.0)
-corner_radius_top_left = 16
-corner_radius_top_right = 16
-corner_radius_bottom_right = 16
-corner_radius_bottom_left = 16
-shadow_color = Color(0.0, 0.424, 0.361, 0.06)
+bg_color = Color(0.071, 0.133, 0.212, 1.0)
+border_color = Color(0.247, 0.663, 1.0, 0.18)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+shadow_color = Color(0.0, 0.0, 0.0, 0.45)
 shadow_size = 10
 shadow_offset = Vector2(0, 3)
 content_margin_left = 18.0
@@ -78,7 +94,12 @@ content_margin_right = 18.0
 content_margin_bottom = 14.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_inorbit_badge"]
-bg_color = Color(0.310, 0.800, 0.710, 0.18)
+bg_color = Color(0.247, 0.663, 1.0, 0.16)
+border_color = Color(0.247, 0.663, 1.0, 0.45)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
 corner_radius_top_left = 6
 corner_radius_top_right = 6
 corner_radius_bottom_right = 6
@@ -89,7 +110,12 @@ content_margin_right = 8.0
 content_margin_bottom = 3.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_returning_badge"]
-bg_color = Color(0.776, 0.933, 0.667, 1.0)
+bg_color = Color(0.224, 0.827, 0.416, 0.18)
+border_color = Color(0.224, 0.827, 0.416, 0.45)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
 corner_radius_top_left = 6
 corner_radius_top_right = 6
 corner_radius_bottom_right = 6
@@ -100,7 +126,12 @@ content_margin_right = 8.0
 content_margin_bottom = 3.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mineral_chip"]
-bg_color = Color(0.310, 0.800, 0.710, 0.14)
+bg_color = Color(0.247, 0.663, 1.0, 0.14)
+border_color = Color(0.247, 0.663, 1.0, 0.35)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
 corner_radius_top_left = 6
 corner_radius_top_right = 6
 corner_radius_bottom_right = 6
@@ -122,7 +153,7 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-color = Color(0.973, 0.980, 0.976, 1.0)
+color = Color(0.039, 0.071, 0.114, 1.0)
 
 [node name="RootHBox" type="VBoxContainer" parent="."]
 layout_mode = 1
@@ -132,7 +163,7 @@ anchor_bottom = 1.0
 theme_override_constants/separation = 0
 
 [node name="Sidebar" type="PanelContainer" parent="RootHBox"]
-custom_minimum_size = Vector2(0, 72)
+custom_minimum_size = Vector2(0, 116)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_sidebar")
@@ -148,8 +179,8 @@ size_flags_horizontal = 3
 theme_override_styles/normal = SubResource("StyleBoxFlat_sidebar_btn")
 theme_override_styles/hover = SubResource("StyleBoxFlat_sidebar_active")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_sidebar_active")
-theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 0.80)
-theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 0.80)
+theme_override_font_sizes/font_size = 30
 text = "🚀"
 flat = true
 
@@ -158,8 +189,8 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/normal = SubResource("StyleBoxFlat_sidebar_active")
 theme_override_styles/hover = SubResource("StyleBoxFlat_sidebar_active")
-theme_override_colors/font_color = Color(0.0, 0.424, 0.361, 1.0)
-theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.247, 0.663, 1.0, 1.0)
+theme_override_font_sizes/font_size = 30
 text = "⌨"
 flat = true
 
@@ -168,8 +199,8 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/normal = SubResource("StyleBoxFlat_sidebar_btn")
 theme_override_styles/hover = SubResource("StyleBoxFlat_sidebar_active")
-theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 0.80)
-theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 0.80)
+theme_override_font_sizes/font_size = 30
 text = "⛏"
 flat = true
 
@@ -178,8 +209,8 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/normal = SubResource("StyleBoxFlat_sidebar_btn")
 theme_override_styles/hover = SubResource("StyleBoxFlat_sidebar_active")
-theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 0.80)
-theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 0.80)
+theme_override_font_sizes/font_size = 30
 text = "📡"
 flat = true
 
@@ -188,8 +219,8 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/normal = SubResource("StyleBoxFlat_sidebar_btn")
 theme_override_styles/hover = SubResource("StyleBoxFlat_sidebar_active")
-theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 0.80)
-theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 0.80)
+theme_override_font_sizes/font_size = 30
 text = "🗄"
 flat = true
 
@@ -209,49 +240,50 @@ theme_override_constants/separation = 6
 
 [node name="BreadcrumbLabel" type="Label" parent="RootHBox/MainArea/Header/HeaderRow"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 0.80)
-theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 0.80)
+theme_override_font_sizes/font_size = 24
 text = "MOD-04"
 
 [node name="BreadSep" type="Label" parent="RootHBox/MainArea/Header/HeaderRow"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 0.60)
-theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 0.60)
+theme_override_font_sizes/font_size = 24
 text = "/"
 
 [node name="Title" type="Label" parent="RootHBox/MainArea/Header/HeaderRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.176, 0.204, 0.200, 1.0)
-theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.902, 0.937, 1.0, 1.0)
+theme_override_font_sizes/font_size = 30
 text = "CONTROL PANEL"
 
 [node name="TempLabel" type="Label" parent="RootHBox/MainArea/Header/HeaderRow"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 0.80)
-theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 0.80)
+theme_override_font_sizes/font_size = 24
 text = "TEMP  294.1 K"
 
 [node name="UptimeLabel" type="Label" parent="RootHBox/MainArea/Header/HeaderRow"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 0.80)
-theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 0.80)
+theme_override_font_sizes/font_size = 24
 text = "UPTIME  99.9%"
 
 [node name="CloseButton" parent="RootHBox/MainArea/Header/HeaderRow" type="Button"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 0.80)
-theme_override_font_sizes/font_size = 18
+custom_minimum_size = Vector2(64, 64)
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 0.80)
+theme_override_font_sizes/font_size = 30
 text = "×"
 flat = true
 
 [node name="ContentMargin" type="MarginContainer" parent="RootHBox/MainArea"]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_constants/margin_left = 20
-theme_override_constants/margin_top = 18
-theme_override_constants/margin_right = 16
-theme_override_constants/margin_bottom = 10
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 16
 
 [node name="ContentHBox" type="VBoxContainer" parent="RootHBox/MainArea/ContentMargin"]
 layout_mode = 2
@@ -264,14 +296,14 @@ theme_override_constants/separation = 14
 
 [node name="MissionsSectionLabel" type="Label" parent="RootHBox/MainArea/ContentMargin/ContentHBox/MissionsArea"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 0.80)
-theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 0.80)
+theme_override_font_sizes/font_size = 26
 text = "ACTIVE MISSIONS"
 
 [node name="Subtitle" type="Label" parent="RootHBox/MainArea/ContentMargin/ContentHBox/MissionsArea"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 0.70)
-theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 0.60)
+theme_override_font_sizes/font_size = 24
 text = "Track active routes and mission milestones."
 
 [node name="MissionsList" type="HBoxContainer" parent="RootHBox/MainArea/ContentMargin/ContentHBox/MissionsArea"]
@@ -286,7 +318,7 @@ size_flags_vertical = 3
 theme_override_constants/separation = 12
 
 [node name="GlobePanel" type="PanelContainer" parent="RootHBox/MainArea/ContentMargin/ContentHBox"]
-custom_minimum_size = Vector2(220, 180)
+custom_minimum_size = Vector2(320, 280)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_globe")
 
@@ -299,8 +331,8 @@ anchor_right = 0.5
 anchor_bottom = 0.5
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_colors/font_color = Color(0.0, 0.424, 0.361, 0.40)
-theme_override_font_sizes/font_size = 40
+theme_override_colors/font_color = Color(0.247, 0.663, 1.0, 0.40)
+theme_override_font_sizes/font_size = 64
 text = "🌍"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -316,21 +348,23 @@ theme_override_constants/separation = 20
 [node name="FleetLabel" type="Label" parent="RootHBox/MainArea/StatusBar/StatusRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.086, 0.639, 0.290, 1.0)
-theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.224, 0.827, 0.416, 1.0)
+theme_override_font_sizes/font_size = 26
 text = "● FLEET OPERATIONAL"
 
 [node name="DiagnosticsBtn" type="Button" parent="RootHBox/MainArea/StatusBar/StatusRow"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 0.80)
-theme_override_font_sizes/font_size = 14
+custom_minimum_size = Vector2(0, 72)
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 0.80)
+theme_override_font_sizes/font_size = 24
 text = "DIAGNOSTICS"
 flat = true
 
 [node name="ReportBtn" type="Button" parent="RootHBox/MainArea/StatusBar/StatusRow"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 0.80)
-theme_override_font_sizes/font_size = 14
+custom_minimum_size = Vector2(0, 72)
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 0.80)
+theme_override_font_sizes/font_size = 24
 text = "REPORT"
 flat = true
 
@@ -349,8 +383,8 @@ theme_override_constants/separation = 12
 
 [node name="QueueTitle" type="Label" parent="RootHBox/MainArea/ContentMargin/ContentHBox/RightRail/QueueCard/QueueVBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.141, 0.180, 0.200, 1.0)
-theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.902, 0.937, 1.0, 1.0)
+theme_override_font_sizes/font_size = 28
 text = "CONSTRUCTION QUEUE"
 
 [node name="QueueList" type="VBoxContainer" parent="RootHBox/MainArea/ContentMargin/ContentHBox/RightRail/QueueCard/QueueVBox"]
@@ -368,8 +402,8 @@ theme_override_constants/separation = 10
 
 [node name="LogTitle" type="Label" parent="RootHBox/MainArea/ContentMargin/ContentHBox/RightRail/LogCard/LogVBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.380, 0.440, 0.460, 1.0)
-theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 1.0)
+theme_override_font_sizes/font_size = 26
 text = "SYSTEM LOG"
 
 [node name="LogList" type="VBoxContainer" parent="RootHBox/MainArea/ContentMargin/ContentHBox/RightRail/LogCard/LogVBox"]
@@ -384,17 +418,17 @@ theme_override_constants/separation = 12
 [node name="FooterTabTelemetry" type="Button" parent="RootHBox/MainArea/ContentMargin/ContentHBox/RightRail/FooterTabs"]
 layout_mode = 2
 size_flags_horizontal = 3
-custom_minimum_size = Vector2(0, 58)
+custom_minimum_size = Vector2(0, 88)
 text = "TELEMETRY"
 
 [node name="FooterTabDiagnostics" type="Button" parent="RootHBox/MainArea/ContentMargin/ContentHBox/RightRail/FooterTabs"]
 layout_mode = 2
 size_flags_horizontal = 3
-custom_minimum_size = Vector2(0, 58)
+custom_minimum_size = Vector2(0, 88)
 text = "DIAGNOSTICS"
 
 [node name="FooterTabMissions" type="Button" parent="RootHBox/MainArea/ContentMargin/ContentHBox/RightRail/FooterTabs"]
 layout_mode = 2
 size_flags_horizontal = 3
-custom_minimum_size = Vector2(0, 58)
+custom_minimum_size = Vector2(0, 88)
 text = "MISSIONS"

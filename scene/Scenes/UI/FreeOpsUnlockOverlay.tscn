@@ -5,26 +5,26 @@
 ; Terminal Ethereal — PAGE_BG root, SURFACE_LOW tonal bands, PRIMARY teal actions.
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_top_bar"]
-bg_color = Color(0.941, 0.957, 0.953, 1.0)
+bg_color = Color(0.055, 0.094, 0.157, 1.0)
 content_margin_left = 20.0
 content_margin_top = 8.0
 content_margin_right = 20.0
 content_margin_bottom = 8.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
-bg_color = Color(0.973, 0.980, 0.976, 1.0)
+bg_color = Color(0.039, 0.071, 0.114, 1.0)
 content_margin_left = 0
 content_margin_top = 0
 content_margin_right = 0
 content_margin_bottom = 0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card"]
-bg_color = Color(1.0, 1.0, 1.0, 1.0)
+bg_color = Color(0.071, 0.133, 0.212, 1.0)
 corner_radius_top_left = 16
 corner_radius_top_right = 16
 corner_radius_bottom_right = 16
 corner_radius_bottom_left = 16
-shadow_color = Color(0.0, 0.424, 0.361, 0.06)
+shadow_color = Color(0.0, 0.0, 0.0, 0.35)
 shadow_size = 12
 shadow_offset = Vector2(0, 4)
 content_margin_left = 16.0
@@ -34,7 +34,7 @@ content_margin_bottom = 14.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sector_selected"]
 bg_color = Color(0.310, 0.800, 0.710, 0.14)
-border_color = Color(0.0, 0.424, 0.361, 1.0)
+border_color = Color(0.247, 0.663, 1.0, 1.0)
 border_width_left = 2
 border_width_top = 0
 border_width_right = 0
@@ -45,12 +45,12 @@ content_margin_right = 10.0
 content_margin_bottom = 6.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_gauge_bg"]
-bg_color = Color(0.941, 0.957, 0.953, 1.0)
+bg_color = Color(0.055, 0.094, 0.157, 1.0)
 corner_radius_top_left = 16
 corner_radius_top_right = 16
 corner_radius_bottom_right = 16
 corner_radius_bottom_left = 16
-shadow_color = Color(0.0, 0.424, 0.361, 0.06)
+shadow_color = Color(0.0, 0.0, 0.0, 0.30)
 shadow_size = 12
 shadow_offset = Vector2(0, 4)
 content_margin_left = 16.0
@@ -59,21 +59,21 @@ content_margin_right = 16.0
 content_margin_bottom = 16.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_progress_bg"]
-bg_color = Color(0.878, 0.906, 0.898, 1.0)
+bg_color = Color(0.039, 0.071, 0.114, 1.0)
 corner_radius_top_left = 4
 corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_progress_fill"]
-bg_color = Color(0.0, 0.424, 0.361, 1.0)
+bg_color = Color(0.247, 0.663, 1.0, 1.0)
 corner_radius_top_left = 4
 corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_start_btn"]
-bg_color = Color(0.0, 0.424, 0.361, 1.0)
+bg_color = Color(0.247, 0.663, 1.0, 1.0)
 corner_radius_top_left = 12
 corner_radius_top_right = 12
 corner_radius_bottom_right = 12
@@ -84,7 +84,7 @@ content_margin_right = 24.0
 content_margin_bottom = 14.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_logs_btn"]
-bg_color = Color(0.878, 0.906, 0.898, 1.0)
+bg_color = Color(0.055, 0.094, 0.157, 1.0)
 corner_radius_top_left = 12
 corner_radius_top_right = 12
 corner_radius_bottom_right = 12
@@ -95,7 +95,7 @@ content_margin_right = 20.0
 content_margin_bottom = 14.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bottom_bar"]
-bg_color = Color(0.941, 0.957, 0.953, 1.0)
+bg_color = Color(0.055, 0.094, 0.157, 1.0)
 content_margin_left = 20.0
 content_margin_top = 12.0
 content_margin_right = 20.0
@@ -116,7 +116,7 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-color = Color(0.973, 0.980, 0.976, 1.0)
+color = Color(0.039, 0.071, 0.114, 1.0)
 
 [node name="RootVBox" type="VBoxContainer" parent="."]
 layout_mode = 1
@@ -135,20 +135,20 @@ theme_override_constants/separation = 16
 
 [node name="CoreTempLabel" type="Label" parent="RootVBox/TopBar/TopBarRow"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 1.0)
-theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 1.0)
+theme_override_font_sizes/font_size = 24
 text = "CORE_TEMP: 32.4°C"
 
 [node name="SyncDot" type="Label" parent="RootVBox/TopBar/TopBarRow"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.086, 0.639, 0.290, 1.0)
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 24
 text = "●"
 
 [node name="SyncFreqLabel" type="Label" parent="RootVBox/TopBar/TopBarRow"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 1.0)
-theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 1.0)
+theme_override_font_sizes/font_size = 24
 text = "SYNC_FREQ: 142.2 MHz"
 
 [node name="TopBarSpacer" type="Control" parent="RootVBox/TopBar/TopBarRow"]
@@ -157,14 +157,14 @@ size_flags_horizontal = 3
 
 [node name="UplinkLabel" type="Label" parent="RootVBox/TopBar/TopBarRow"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 1.0)
-theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 1.0)
+theme_override_font_sizes/font_size = 24
 text = "UPLINK: ACTIVE"
 
 [node name="LatencyLabel" type="Label" parent="RootVBox/TopBar/TopBarRow"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 0.80)
-theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 0.80)
+theme_override_font_sizes/font_size = 24
 text = "LATENCY: 0.04ms"
 
 [node name="ContentMargin" type="MarginContainer" parent="RootVBox"]
@@ -181,8 +181,8 @@ theme_override_constants/separation = 16
 
 [node name="SystemStateLabel" type="Label" parent="RootVBox/ContentMargin/ContentVBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.0, 0.424, 0.361, 1.0)
-theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.247, 0.663, 1.0, 1.0)
+theme_override_font_sizes/font_size = 24
 text = "SYSTEM STATE: UNRESTRICTED_ACCESS"
 
 [node name="TitleSep" type="HSeparator" parent="RootVBox/ContentMargin/ContentVBox"]
@@ -196,7 +196,7 @@ theme_override_constants/separation = 16
 [node name="TitleLabel" type="Label" parent="RootVBox/ContentMargin/ContentVBox/TitleRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.176, 0.204, 0.200, 1.0)
+theme_override_colors/font_color = Color(0.902, 0.937, 1.0, 1.0)
 theme_override_font_sizes/font_size = 52
 
 [node name="TitleDesc" type="Label" parent="RootVBox/ContentMargin/ContentVBox/TitleRow"]
@@ -204,8 +204,8 @@ custom_minimum_size = Vector2(300, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
-theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 0.80)
-theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 0.80)
+theme_override_font_sizes/font_size = 28
 text = "Tutorial complete. Pick any target, any contractor, and forge your own path across the horizon."
 autowrap_mode = 3
 
@@ -226,8 +226,8 @@ theme_override_constants/separation = 8
 
 [node name="SectorsMuted" type="Label" parent="RootVBox/ContentMargin/ContentVBox/GridRow1/SectorsCard/SectorsVBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 0.80)
-theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 0.80)
+theme_override_font_sizes/font_size = 24
 text = "LOCAL_SECTORS"
 
 [node name="SectorsList" type="VBoxContainer" parent="RootVBox/ContentMargin/ContentVBox/GridRow1/SectorsCard/SectorsVBox"]
@@ -244,14 +244,14 @@ layout_mode = 2
 [node name="Sector0Name" type="Label" parent="RootVBox/ContentMargin/ContentVBox/GridRow1/SectorsCard/SectorsVBox/SectorsList/Sector0/Sector0Row"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.176, 0.204, 0.200, 1.0)
-theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.902, 0.937, 1.0, 1.0)
+theme_override_font_sizes/font_size = 28
 text = "CENTAURI_A"
 
 [node name="Sector0Status" type="Label" parent="RootVBox/ContentMargin/ContentVBox/GridRow1/SectorsCard/SectorsVBox/SectorsList/Sector0/Sector0Row"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.0, 0.424, 0.361, 1.0)
-theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.247, 0.663, 1.0, 1.0)
+theme_override_font_sizes/font_size = 24
 text = "STABLE"
 
 [node name="Sector1Row" type="HBoxContainer" parent="RootVBox/ContentMargin/ContentVBox/GridRow1/SectorsCard/SectorsVBox/SectorsList"]
@@ -260,14 +260,14 @@ layout_mode = 2
 [node name="Sector1Name" type="Label" parent="RootVBox/ContentMargin/ContentVBox/GridRow1/SectorsCard/SectorsVBox/SectorsList/Sector1Row"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.176, 0.204, 0.200, 0.80)
-theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.902, 0.937, 1.0, 0.80)
+theme_override_font_sizes/font_size = 28
 text = "HELIOS_SYSTEM"
 
 [node name="Sector1Status" type="Label" parent="RootVBox/ContentMargin/ContentVBox/GridRow1/SectorsCard/SectorsVBox/SectorsList/Sector1Row"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.086, 0.639, 0.290, 1.0)
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 24
 text = "RICH"
 
 [node name="Sector2Row" type="HBoxContainer" parent="RootVBox/ContentMargin/ContentVBox/GridRow1/SectorsCard/SectorsVBox/SectorsList"]
@@ -276,14 +276,14 @@ layout_mode = 2
 [node name="Sector2Name" type="Label" parent="RootVBox/ContentMargin/ContentVBox/GridRow1/SectorsCard/SectorsVBox/SectorsList/Sector2Row"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.176, 0.204, 0.200, 0.80)
-theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.902, 0.937, 1.0, 0.80)
+theme_override_font_sizes/font_size = 28
 text = "ORION_FRONTIER"
 
 [node name="Sector2Status" type="Label" parent="RootVBox/ContentMargin/ContentVBox/GridRow1/SectorsCard/SectorsVBox/SectorsList/Sector2Row"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.851, 0.467, 0.024, 1.0)
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 24
 text = "ACTIVE"
 
 [node name="QueuesCard" type="PanelContainer" parent="RootVBox/ContentMargin/ContentVBox/GridRow1"]
@@ -298,8 +298,8 @@ theme_override_constants/separation = 8
 
 [node name="QueuesMuted" type="Label" parent="RootVBox/ContentMargin/ContentVBox/GridRow1/QueuesCard/QueuesVBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 0.80)
-theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 0.80)
+theme_override_font_sizes/font_size = 24
 text = "CONSTRUCTION_QUEUES"
 
 [node name="Queue0Row" type="HBoxContainer" parent="RootVBox/ContentMargin/ContentVBox/GridRow1/QueuesCard/QueuesVBox"]
@@ -307,21 +307,21 @@ layout_mode = 2
 
 [node name="Queue0Icon" type="Label" parent="RootVBox/ContentMargin/ContentVBox/GridRow1/QueuesCard/QueuesVBox/Queue0Row"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 0.70)
-theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 0.70)
+theme_override_font_sizes/font_size = 24
 text = "⬡"
 
 [node name="Queue0Name" type="Label" parent="RootVBox/ContentMargin/ContentVBox/GridRow1/QueuesCard/QueuesVBox/Queue0Row"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.176, 0.204, 0.200, 1.0)
-theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.902, 0.937, 1.0, 1.0)
+theme_override_font_sizes/font_size = 28
 text = "LUNAR HABITATION UNIT"
 
 [node name="Queue0Avail" type="Label" parent="RootVBox/ContentMargin/ContentVBox/GridRow1/QueuesCard/QueuesVBox/Queue0Row"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.086, 0.639, 0.290, 1.0)
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 24
 text = "AVAIL"
 
 [node name="Queue1Row" type="HBoxContainer" parent="RootVBox/ContentMargin/ContentVBox/GridRow1/QueuesCard/QueuesVBox"]
@@ -329,21 +329,21 @@ layout_mode = 2
 
 [node name="Queue1Icon" type="Label" parent="RootVBox/ContentMargin/ContentVBox/GridRow1/QueuesCard/QueuesVBox/Queue1Row"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 0.70)
-theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 0.70)
+theme_override_font_sizes/font_size = 24
 text = "📡"
 
 [node name="Queue1Name" type="Label" parent="RootVBox/ContentMargin/ContentVBox/GridRow1/QueuesCard/QueuesVBox/Queue1Row"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.176, 0.204, 0.200, 1.0)
-theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.902, 0.937, 1.0, 1.0)
+theme_override_font_sizes/font_size = 28
 text = "DEEP SPACE RELAY"
 
 [node name="Queue1Avail" type="Label" parent="RootVBox/ContentMargin/ContentVBox/GridRow1/QueuesCard/QueuesVBox/Queue1Row"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.086, 0.639, 0.290, 1.0)
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 24
 text = "AVAIL"
 
 [node name="AssetCard" type="PanelContainer" parent="RootVBox/ContentMargin/ContentVBox/GridRow1"]
@@ -358,8 +358,8 @@ theme_override_constants/separation = 6
 
 [node name="AssetMuted" type="Label" parent="RootVBox/ContentMargin/ContentVBox/GridRow1/AssetCard/AssetVBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 0.80)
-theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 0.80)
+theme_override_font_sizes/font_size = 24
 text = "SELECTED_ASSET"
 
 [node name="AssetRow" type="HBoxContainer" parent="RootVBox/ContentMargin/ContentVBox/GridRow1/AssetCard/AssetVBox"]
@@ -368,7 +368,7 @@ theme_override_constants/separation = 10
 
 [node name="AssetIcon" type="Label" parent="RootVBox/ContentMargin/ContentVBox/GridRow1/AssetCard/AssetVBox/AssetRow"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 0.70)
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 0.70)
 theme_override_font_sizes/font_size = 22
 text = "🚀"
 
@@ -379,14 +379,14 @@ theme_override_constants/separation = 2
 
 [node name="AssetName" type="Label" parent="RootVBox/ContentMargin/ContentVBox/GridRow1/AssetCard/AssetVBox/AssetRow/AssetInfoVBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.176, 0.204, 0.200, 1.0)
+theme_override_colors/font_color = Color(0.902, 0.937, 1.0, 1.0)
 theme_override_font_sizes/font_size = 22
 text = "X-97 CERES"
 
 [node name="AssetStats" type="Label" parent="RootVBox/ContentMargin/ContentVBox/GridRow1/AssetCard/AssetVBox/AssetRow/AssetInfoVBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 0.80)
-theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 0.80)
+theme_override_font_sizes/font_size = 24
 text = "THRUST: 100%  VEL: MACH 9\nFUEL: MAX  BIO: CLEAN"
 
 [node name="GridRow2" type="HBoxContainer" parent="RootVBox/ContentMargin/ContentVBox"]
@@ -405,22 +405,22 @@ theme_override_constants/separation = 4
 
 [node name="GaugeIcon" type="Label" parent="RootVBox/ContentMargin/ContentVBox/GridRow2/GaugeCard/GaugeVBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.0, 0.424, 0.361, 0.90)
+theme_override_colors/font_color = Color(0.247, 0.663, 1.0, 0.90)
 theme_override_font_sizes/font_size = 22
 text = "◉  ◉"
 horizontal_alignment = 1
 
 [node name="GaugePctLabel" type="Label" parent="RootVBox/ContentMargin/ContentVBox/GridRow2/GaugeCard/GaugeVBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.176, 0.204, 0.200, 1.0)
+theme_override_colors/font_color = Color(0.902, 0.937, 1.0, 1.0)
 theme_override_font_sizes/font_size = 28
 text = "99.8%"
 horizontal_alignment = 1
 
 [node name="GaugeSubLabel" type="Label" parent="RootVBox/ContentMargin/ContentVBox/GridRow2/GaugeCard/GaugeVBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 1.0)
-theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 1.0)
+theme_override_font_sizes/font_size = 24
 text = "INTEGRITY"
 horizontal_alignment = 1
 
@@ -431,16 +431,16 @@ theme_override_constants/separation = 12
 [node name="BufferLabel" type="Label" parent="RootVBox/ContentMargin/ContentVBox/GridRow2/GaugeCard/GaugeVBox/GaugeRow2"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 0.80)
-theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 0.80)
+theme_override_font_sizes/font_size = 22
 text = "BUFFER"
 horizontal_alignment = 1
 
 [node name="SyncLabel2" type="Label" parent="RootVBox/ContentMargin/ContentVBox/GridRow2/GaugeCard/GaugeVBox/GaugeRow2"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 0.80)
-theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 0.80)
+theme_override_font_sizes/font_size = 22
 text = "SYNC"
 horizontal_alignment = 1
 
@@ -456,8 +456,8 @@ theme_override_constants/separation = 8
 
 [node name="PartnersMuted" type="Label" parent="RootVBox/ContentMargin/ContentVBox/GridRow2/PartnersCard/PartnersVBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 0.80)
-theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 0.80)
+theme_override_font_sizes/font_size = 24
 text = "CORPORATE_PARTNERS"
 
 [node name="PartnersRow" type="HBoxContainer" parent="RootVBox/ContentMargin/ContentVBox/GridRow2/PartnersCard/PartnersVBox"]
@@ -470,22 +470,22 @@ theme_override_constants/separation = 3
 
 [node name="Partner0Icon" type="Label" parent="RootVBox/ContentMargin/ContentVBox/GridRow2/PartnersCard/PartnersVBox/PartnersRow/Partner0VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 0.70)
-theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 0.70)
+theme_override_font_sizes/font_size = 28
 text = "◈"
 horizontal_alignment = 1
 
 [node name="Partner0Name" type="Label" parent="RootVBox/ContentMargin/ContentVBox/GridRow2/PartnersCard/PartnersVBox/PartnersRow/Partner0VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.176, 0.204, 0.200, 1.0)
-theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.902, 0.937, 1.0, 1.0)
+theme_override_font_sizes/font_size = 28
 text = "AETHERIS"
 horizontal_alignment = 1
 
 [node name="Partner0Status" type="Label" parent="RootVBox/ContentMargin/ContentVBox/GridRow2/PartnersCard/PartnersVBox/PartnersRow/Partner0VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.086, 0.639, 0.290, 1.0)
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 24
 text = "ONLINE"
 horizontal_alignment = 1
 
@@ -495,22 +495,22 @@ theme_override_constants/separation = 3
 
 [node name="Partner1Icon" type="Label" parent="RootVBox/ContentMargin/ContentVBox/GridRow2/PartnersCard/PartnersVBox/PartnersRow/Partner1VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 0.70)
-theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 0.70)
+theme_override_font_sizes/font_size = 28
 text = "⬡"
 horizontal_alignment = 1
 
 [node name="Partner1Name" type="Label" parent="RootVBox/ContentMargin/ContentVBox/GridRow2/PartnersCard/PartnersVBox/PartnersRow/Partner1VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.176, 0.204, 0.200, 1.0)
-theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.902, 0.937, 1.0, 1.0)
+theme_override_font_sizes/font_size = 28
 text = "NEXUS GRP"
 horizontal_alignment = 1
 
 [node name="Partner1Status" type="Label" parent="RootVBox/ContentMargin/ContentVBox/GridRow2/PartnersCard/PartnersVBox/PartnersRow/Partner1VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.086, 0.639, 0.290, 1.0)
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 24
 text = "ONLINE"
 horizontal_alignment = 1
 
@@ -520,22 +520,22 @@ theme_override_constants/separation = 3
 
 [node name="Partner2Icon" type="Label" parent="RootVBox/ContentMargin/ContentVBox/GridRow2/PartnersCard/PartnersVBox/PartnersRow/Partner2VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 0.70)
-theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 0.70)
+theme_override_font_sizes/font_size = 28
 text = "◉"
 horizontal_alignment = 1
 
 [node name="Partner2Name" type="Label" parent="RootVBox/ContentMargin/ContentVBox/GridRow2/PartnersCard/PartnersVBox/PartnersRow/Partner2VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.176, 0.204, 0.200, 1.0)
-theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.902, 0.937, 1.0, 1.0)
+theme_override_font_sizes/font_size = 28
 text = "IRONBOUND"
 horizontal_alignment = 1
 
 [node name="Partner2Status" type="Label" parent="RootVBox/ContentMargin/ContentVBox/GridRow2/PartnersCard/PartnersVBox/PartnersRow/Partner2VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.851, 0.467, 0.024, 1.0)
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 24
 text = "BUSY"
 horizontal_alignment = 1
 
@@ -551,8 +551,8 @@ theme_override_constants/separation = 8
 
 [node name="TelemetryMuted" type="Label" parent="RootVBox/ContentMargin/ContentVBox/GridRow2/TelemetryCard/TelemetryVBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 0.80)
-theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 0.80)
+theme_override_font_sizes/font_size = 24
 text = "FLEET_TELEMETRY"
 
 [node name="Miner0Row" type="HBoxContainer" parent="RootVBox/ContentMargin/ContentVBox/GridRow2/TelemetryCard/TelemetryVBox"]
@@ -561,21 +561,21 @@ theme_override_constants/separation = 8
 
 [node name="Miner0Icon" type="Label" parent="RootVBox/ContentMargin/ContentVBox/GridRow2/TelemetryCard/TelemetryVBox/Miner0Row"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.0, 0.424, 0.361, 0.80)
-theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.247, 0.663, 1.0, 0.80)
+theme_override_font_sizes/font_size = 24
 text = "↑"
 
 [node name="Miner0Name" type="Label" parent="RootVBox/ContentMargin/ContentVBox/GridRow2/TelemetryCard/TelemetryVBox/Miner0Row"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.176, 0.204, 0.200, 1.0)
-theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.902, 0.937, 1.0, 1.0)
+theme_override_font_sizes/font_size = 28
 text = "MINER_01 [ALPHA]"
 
 [node name="Miner0Status" type="Label" parent="RootVBox/ContentMargin/ContentVBox/GridRow2/TelemetryCard/TelemetryVBox/Miner0Row"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.0, 0.424, 0.361, 1.0)
-theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.247, 0.663, 1.0, 1.0)
+theme_override_font_sizes/font_size = 24
 text = "IN-ORBIT"
 
 [node name="Miner0Bar" type="ProgressBar" parent="RootVBox/ContentMargin/ContentVBox/GridRow2/TelemetryCard/TelemetryVBox"]
@@ -593,20 +593,20 @@ theme_override_constants/separation = 8
 [node name="Miner1Icon" type="Label" parent="RootVBox/ContentMargin/ContentVBox/GridRow2/TelemetryCard/TelemetryVBox/Miner1Row"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.086, 0.639, 0.290, 0.80)
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 24
 text = "↓"
 
 [node name="Miner1Name" type="Label" parent="RootVBox/ContentMargin/ContentVBox/GridRow2/TelemetryCard/TelemetryVBox/Miner1Row"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.176, 0.204, 0.200, 1.0)
-theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.902, 0.937, 1.0, 1.0)
+theme_override_font_sizes/font_size = 28
 text = "MINER_04 [GAMMA]"
 
 [node name="Miner1Status" type="Label" parent="RootVBox/ContentMargin/ContentVBox/GridRow2/TelemetryCard/TelemetryVBox/Miner1Row"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.086, 0.639, 0.290, 1.0)
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 24
 text = "RETURNING"
 
 [node name="Miner1Bar" type="ProgressBar" parent="RootVBox/ContentMargin/ContentVBox/GridRow2/TelemetryCard/TelemetryVBox"]
@@ -629,14 +629,14 @@ theme_override_constants/separation = 12
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.086, 0.639, 0.290, 1.0)
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 24
 text = "● OPTIMAL FLIGHT PATH: CALCULATED_AND_VERIFIED"
 
 [node name="LogsButton" type="Button" parent="RootVBox/BottomBar/BottomRow"]
 layout_mode = 2
 theme_override_styles/normal = SubResource("StyleBoxFlat_logs_btn")
-theme_override_colors/font_color = Color(0.176, 0.204, 0.200, 0.80)
-theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.902, 0.937, 1.0, 0.80)
+theme_override_font_sizes/font_size = 28
 text = "⊙  LOGS"
 
 [node name="StartRunButton" type="Button" parent="RootVBox/BottomBar/BottomRow"]

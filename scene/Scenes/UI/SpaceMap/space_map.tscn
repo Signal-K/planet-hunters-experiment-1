@@ -13,8 +13,8 @@ border_color = Color(0.28, 0.88, 0.96, 0.25)
 border_width_top = 1
 content_margin_left = 24.0
 content_margin_right = 24.0
-content_margin_top = 10.0
-content_margin_bottom = 10.0
+content_margin_top = 18.0
+content_margin_bottom = 18.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bg"]
 bg_color = Color(0.047, 0.047, 0.055, 1.0)
@@ -46,7 +46,7 @@ star_color = Color(0.9, 0.9, 0.9, 0.7)
 layer = 2
 
 [node name="SolarSystem" type="Node2D" parent="."]
-position = Vector2(960, 540)
+position = Vector2(540, 900)
 
 [node name="Orbits" type="Node2D" parent="SolarSystem"]
 
@@ -462,9 +462,9 @@ follow_viewport_enabled = true
 
 [node name="InfoBar" type="PanelContainer" parent="UILayer"]
 offset_left = 0.0
-offset_top = 864.0
-offset_right = 1920.0
-offset_bottom = 960.0
+offset_top = 1780.0
+offset_right = 1080.0
+offset_bottom = 1920.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_info_bar")
 
 [node name="Sections" type="HBoxContainer" parent="UILayer/InfoBar"]
@@ -481,7 +481,7 @@ theme_override_constants/separation = 4
 [node name="EyebrowLabel" type="Label" parent="UILayer/InfoBar/Sections/CurrentLocation"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.565, 0.565, 0.592, 1)
-theme_override_font_sizes/font_size = 10
+theme_override_font_sizes/font_size = 20
 text = "CURRENT LOCATION"
 
 [node name="BodyRow" type="HBoxContainer" parent="UILayer/InfoBar/Sections/CurrentLocation"]
@@ -501,13 +501,13 @@ theme_override_constants/separation = 2
 [node name="NameLabel" type="Label" parent="UILayer/InfoBar/Sections/CurrentLocation/BodyRow/NameCol"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.28, 0.88, 0.96, 1)
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 28
 text = "Earth"
 
 [node name="SubLabel" type="Label" parent="UILayer/InfoBar/Sections/CurrentLocation/BodyRow/NameCol"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.28, 0.88, 0.96, 0.6)
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 22
 text = "Sol III"
 
 [node name="Divider1" type="VSeparator" parent="UILayer/InfoBar/Sections"]
@@ -523,13 +523,13 @@ theme_override_constants/separation = 4
 [node name="EyebrowLabel" type="Label" parent="UILayer/InfoBar/Sections/ExploredObjects"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.565, 0.565, 0.592, 1)
-theme_override_font_sizes/font_size = 10
+theme_override_font_sizes/font_size = 20
 text = "EXPLORED OBJECTS"
 
 [node name="ExploredLabel" type="Label" parent="UILayer/InfoBar/Sections/ExploredObjects"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.855, 0.886, 0.996, 1)
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 28
 text = "Earth"
 
 [node name="Divider2" type="VSeparator" parent="UILayer/InfoBar/Sections"]
@@ -545,7 +545,7 @@ theme_override_constants/separation = 4
 [node name="EyebrowLabel" type="Label" parent="UILayer/InfoBar/Sections/UnexploredObjects"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.565, 0.565, 0.592, 1)
-theme_override_font_sizes/font_size = 10
+theme_override_font_sizes/font_size = 20
 text = "UNEXPLORED OBJECTS"
 
 [node name="CountRow" type="HBoxContainer" parent="UILayer/InfoBar/Sections/UnexploredObjects"]
@@ -561,7 +561,7 @@ text = "?"
 [node name="CountLabel" type="Label" parent="UILayer/InfoBar/Sections/UnexploredObjects/CountRow"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.565, 0.565, 0.592, 1)
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 28
 text = "0"
 
 [node name="GalaxyDivider" type="VSeparator" parent="UILayer/InfoBar/Sections"]
@@ -570,11 +570,11 @@ theme_override_colors/separator_color = Color(0.941, 0.690, 0.188, 0.25)
 custom_minimum_size = Vector2(1, 0)
 
 [node name="GalaxyBtn" type="Button" parent="UILayer/InfoBar/Sections"]
-custom_minimum_size = Vector2(160, 0)
+custom_minimum_size = Vector2(200, 80)
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_colors/font_color = Color(0.941, 0.690, 0.188, 1)
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 24
 text = "✦  GALAXY MAP"
 
 [node name="HomeDivider" type="VSeparator" parent="UILayer/InfoBar/Sections"]
@@ -583,9 +583,9 @@ theme_override_colors/separator_color = Color(0.28, 0.88, 0.96, 0.18)
 custom_minimum_size = Vector2(1, 0)
 
 [node name="HomeBtn" type="Button" parent="UILayer/InfoBar/Sections"]
-custom_minimum_size = Vector2(160, 0)
+custom_minimum_size = Vector2(200, 80)
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_colors/font_color = Color(0.28, 0.88, 0.96, 1)
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 24
 text = "← HOME"

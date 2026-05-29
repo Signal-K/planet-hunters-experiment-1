@@ -29,6 +29,6 @@ offset_left = 4.0
 offset_top = 2.0
 offset_right = 72.0
 offset_bottom = 16.0
-theme_override_font_sizes/font_size = 11
+theme_override_font_sizes/font_size = 22
 mouse_filter = 2
 text = "1 core"

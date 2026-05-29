@@ -93,3 +93,15 @@ const FONT_TITLE     := F_TITLE
 const FONT_BODY      := F_BODY
 const FONT_MUTED     := F_CAPTION
 const FONT_BUTTON    := F_BUTTON
+
+# ── Typefaces ─────────────────────────────────────────────────────────────
+## Oxanium-Bold: display, UI labels, buttons, chips, headings
+const FONT_DISPLAY_FACE  := "res://Resources/Fonts/Oxanium-Bold.ttf"
+## TurretRoad-Bold: monospace instrument readouts, coordinates, data values
+const FONT_MONO_FACE     := "res://Resources/Fonts/TurretRoad-Bold.ttf"
+
+static func font_display() -> Font:
+	return load(FONT_DISPLAY_FACE) as Font
+
+static func font_mono() -> Font:
+	return load(FONT_MONO_FACE) as Font

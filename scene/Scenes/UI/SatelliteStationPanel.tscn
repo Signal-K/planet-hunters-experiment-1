@@ -28,7 +28,7 @@ offset_right = -80.0
 offset_bottom = -80.0
 
 [node name="Panel" type="Panel" parent="PanelContainer"]
-custom_minimum_size = Vector2(780, 0)
+custom_minimum_size = Vector2(880, 0)
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
@@ -82,7 +82,7 @@ anchors_preset = 10
 anchor_right = 1.0
 offset_bottom = 176.0
 grow_horizontal = 2
-color = Color(0.988235, 0.941176, 0.901961, 0.56)
+color = Color(0.039, 0.071, 0.114, 0.30)
 
 [node name="Scroll" type="ScrollContainer" parent="PanelContainer/Panel"]
 layout_mode = 1
@@ -116,14 +116,15 @@ text = "Scanner Station"
 autowrap_mode = 3
 
 [node name="CloseButton" type="Button" parent="PanelContainer/Panel/Scroll/VBoxContainer/HeaderContainer"]
-custom_minimum_size = Vector2(60, 40)
+custom_minimum_size = Vector2(80, 72)
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 30
 text = "✕"
 
 [node name="ToggleSwitch" type="Button" parent="PanelContainer/Panel/Scroll/VBoxContainer/HeaderContainer"]
-custom_minimum_size = Vector2(190, 50)
+custom_minimum_size = Vector2(260, 72)
 layout_mode = 2
+theme_override_font_sizes/font_size = 26
 text = "Landnám Active"
 
 [node name="TelemetryStrip" type="HBoxContainer" parent="PanelContainer/Panel/Scroll/VBoxContainer"]
@@ -162,7 +163,7 @@ theme_override_constants/separation = 12
 [node name="StatusLabel" type="Label" parent="PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/StatusContainer"]
 layout_mode = 2
 size_flags_horizontal = 1
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 26
 text = "Status: Initializing..."
 
 [node name="ScanSummaryCard" type="PanelContainer" parent="PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/StatusContainer"]
@@ -222,7 +223,7 @@ horizontal_alignment = 1
 text = "Scanning for asteroids..."
 
 [node name="ProgressBar" type="ProgressBar" parent="PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/LoadingContainer"]
-custom_minimum_size = Vector2(400, 24)
+custom_minimum_size = Vector2(600, 32)
 layout_mode = 2
 size_flags_horizontal = 4
 max_value = 100.0
@@ -231,7 +232,7 @@ show_percentage = false
 
 [node name="ScanningHint" type="Label" parent="PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/LoadingContainer"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 26
 horizontal_alignment = 1
 text = "Deep space scan in progress..."
 
@@ -253,13 +254,14 @@ layout_mode = 2
 alignment = 1
 
 [node name="RefreshButton" type="Button" parent="PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/RefreshContainer"]
-custom_minimum_size = Vector2(200, 50)
+custom_minimum_size = Vector2(280, 80)
 layout_mode = 2
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 28
 text = "🔄 Refresh Scan"
 
 [node name="EarlyScanButton" type="Button" parent="PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/RefreshContainer"]
 visible = false
-custom_minimum_size = Vector2(220, 44)
+custom_minimum_size = Vector2(280, 72)
 layout_mode = 2
+theme_override_font_sizes/font_size = 26
 text = "Scan early (cooldown active)"

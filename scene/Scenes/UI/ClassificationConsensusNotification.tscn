@@ -4,12 +4,12 @@
 
 ; Terminal Ethereal — SURFACE_LOWEST panel, xl radius, Cyan-Mist shadow, no border.
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
-bg_color = Color(1.0, 1.0, 1.0, 1.0)
+bg_color = Color(0.039, 0.071, 0.114, 1.0)
 corner_radius_top_left = 24
 corner_radius_top_right = 24
 corner_radius_bottom_right = 24
 corner_radius_bottom_left = 24
-shadow_color = Color(0.0, 0.424, 0.361, 0.10)
+shadow_color = Color(0.0, 0.0, 0.0, 0.55)
 shadow_size = 32
 shadow_offset = Vector2(0, 12)
 content_margin_left = 0
@@ -19,7 +19,7 @@ content_margin_bottom = 0
 
 ; Tonal status bar — SURFACE_LOW, no border
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_statusbar"]
-bg_color = Color(0.941, 0.957, 0.953, 1.0)
+bg_color = Color(0.055, 0.094, 0.157, 1.0)
 corner_radius_top_left = 24
 corner_radius_top_right = 24
 corner_radius_bottom_right = 0
@@ -35,7 +35,7 @@ bg_color = Color(0.675, 0.702, 0.698, 0.18)
 
 ; Close button — SURFACE_HIGH, no border
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_close"]
-bg_color = Color(0.878, 0.906, 0.898, 1.0)
+bg_color = Color(0.071, 0.133, 0.212, 1.0)
 corner_radius_top_left = 8
 corner_radius_top_right = 8
 corner_radius_bottom_right = 8
@@ -47,7 +47,7 @@ content_margin_bottom = 4.0
 
 ; Acknowledge button — PRIMARY teal, no border
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ack"]
-bg_color = Color(0.0, 0.424, 0.361, 1.0)
+bg_color = Color(0.247, 0.663, 1.0, 1.0)
 corner_radius_top_left = 12
 corner_radius_top_right = 12
 corner_radius_bottom_right = 12
@@ -59,7 +59,7 @@ content_margin_bottom = 14.0
 
 ; EXP card — SURFACE_LOW tonal, no border
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_exp"]
-bg_color = Color(0.941, 0.957, 0.953, 1.0)
+bg_color = Color(0.055, 0.094, 0.157, 1.0)
 corner_radius_top_left = 12
 corner_radius_top_right = 12
 corner_radius_bottom_right = 12
@@ -80,7 +80,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 1
-color = Color(0.988, 0.996, 0.992, 0.82)
+color = Color(0.02, 0.035, 0.059, 0.85)
 
 [node name="Center" type="CenterContainer" parent="."]
 anchors_preset = 15
@@ -91,7 +91,7 @@ grow_vertical = 2
 mouse_filter = 2
 
 [node name="Panel" type="PanelContainer" parent="Center"]
-custom_minimum_size = Vector2(880, 0)
+custom_minimum_size = Vector2(640, 0)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
@@ -109,27 +109,27 @@ theme_override_constants/separation = 10
 
 [node name="BufferLabel" type="Label" parent="Center/Panel/VBox/StatusBar/Row"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 1.0)
-theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 1.0)
+theme_override_font_sizes/font_size = 24
 text = "BUFFER_STATE"
 
 [node name="SyncLabel" type="Label" parent="Center/Panel/VBox/StatusBar/Row"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.0, 0.424, 0.361, 1.0)
-theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.247, 0.663, 1.0, 1.0)
+theme_override_font_sizes/font_size = 24
 text = "● SYNCHRONIZING..."
 
 [node name="ProtocolLabel" type="Label" parent="Center/Panel/VBox/StatusBar/Row"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 1.0)
-theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 1.0)
+theme_override_font_sizes/font_size = 24
 text = "PROTOCOL_V_9.2"
 
 [node name="GreenDot" type="Label" parent="Center/Panel/VBox/StatusBar/Row"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.086, 0.639, 0.290, 1.0)
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 24
 text = "●"
 
 [node name="Content" type="MarginContainer" parent="Center/Panel/VBox"]
@@ -149,21 +149,21 @@ layout_mode = 2
 [node name="TitleLabel" type="Label" parent="Center/Panel/VBox/Content/VBox/TitleRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.176, 0.204, 0.200, 1.0)
+theme_override_colors/font_color = Color(0.902, 0.937, 1.0, 1.0)
 theme_override_font_sizes/font_size = 36
 
 [node name="CloseButton" type="Button" parent="Center/Panel/VBox/Content/VBox/TitleRow"]
 layout_mode = 2
 size_flags_horizontal = 8
 theme_override_styles/normal = SubResource("StyleBoxFlat_close")
-theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 1.0)
-theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 1.0)
+theme_override_font_sizes/font_size = 26
 text = "×"
 
 [node name="BatchLabel" type="Label" parent="Center/Panel/VBox/Content/VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 1.0)
-theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 1.0)
+theme_override_font_sizes/font_size = 26
 text = "— BATCH UPDATE: 0 TARGETS PROCESSED"
 
 [node name="Sep1" type="HSeparator" parent="Center/Panel/VBox/Content/VBox"]
@@ -196,14 +196,14 @@ theme_override_constants/separation = 8
 
 [node name="ExpMuted" type="Label" parent="Center/Panel/VBox/Content/VBox/BottomRow/ExpCol/ExpVBox/ExpRow"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 1.0)
-theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 1.0)
+theme_override_font_sizes/font_size = 24
 text = "EXP_GAINED"
 
 [node name="RankMuted" type="Label" parent="Center/Panel/VBox/Content/VBox/BottomRow/ExpCol/ExpVBox/ExpRow"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.349, 0.376, 0.376, 1.0)
-theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 1.0)
+theme_override_font_sizes/font_size = 24
 text = "RANK_STATUS"
 
 [node name="ValueRow" type="HBoxContainer" parent="Center/Panel/VBox/Content/VBox/BottomRow/ExpCol/ExpVBox"]
@@ -212,12 +212,12 @@ theme_override_constants/separation = 12
 
 [node name="ExpLabel" type="Label" parent="Center/Panel/VBox/Content/VBox/BottomRow/ExpCol/ExpVBox/ValueRow"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.0, 0.424, 0.361, 1.0)
+theme_override_colors/font_color = Color(0.247, 0.663, 1.0, 1.0)
 theme_override_font_sizes/font_size = 28
 
 [node name="RankLabel" type="Label" parent="Center/Panel/VBox/Content/VBox/BottomRow/ExpCol/ExpVBox/ValueRow"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.176, 0.204, 0.200, 1.0)
+theme_override_colors/font_color = Color(0.902, 0.937, 1.0, 1.0)
 theme_override_font_sizes/font_size = 28
 
 [node name="BottomSpacer" type="Control" parent="Center/Panel/VBox/Content/VBox/BottomRow"]

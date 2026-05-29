@@ -32,7 +32,8 @@ func _ready() -> void:
 
 func _setup_ui_components() -> void:
 	"""Initialize all UI components that should be visible on Earth scenes"""
-	_add_franc_balance_ui()
+	# FrancBalance is now handled by the HUDStrip in earth_base_1.tscn — skip adding it here.
+	pass
 
 func _add_franc_balance_ui() -> void:
 	"""Add the franc balance UI component"""

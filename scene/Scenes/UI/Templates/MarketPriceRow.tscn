@@ -1,26 +1,27 @@
 [gd_scene format=3 uid="uid://market_price_row"]
 
 [node name="MarketPriceRow" type="HBoxContainer"]
-theme_override_constants/separation = 8
+custom_minimum_size = Vector2(0, 56)
+theme_override_constants/separation = 10
 
 [node name="NameLabel" type="Label" parent="."]
 layout_mode = 2
-custom_minimum_size = Vector2(100, 0)
+custom_minimum_size = Vector2(160, 0)
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 24
 text = "Iron"
 
 [node name="PriceLabel" type="Label" parent="."]
 layout_mode = 2
-custom_minimum_size = Vector2(100, 0)
+custom_minimum_size = Vector2(130, 0)
 theme_override_colors/font_color = Color(0.9, 0.92, 0.95, 1)
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 24
 text = "F 0/kg"
 
 [node name="DeltaLabel" type="Label" parent="."]
 layout_mode = 2
-custom_minimum_size = Vector2(48, 0)
+custom_minimum_size = Vector2(60, 0)
 theme_override_colors/font_color = Color(0.62, 0.68, 0.78, 1)
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 22
 text = "-"

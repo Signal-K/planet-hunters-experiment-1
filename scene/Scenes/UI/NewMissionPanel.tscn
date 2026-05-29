@@ -1,6 +1,13 @@
-[gd_scene load_steps=2 format=3 uid="uid://new_mission_panel"]
+[gd_scene load_steps=3 format=3 uid="uid://new_mission_panel"]
 
 [ext_resource type="Script" path="res://Scripts/UI/NewMissionPanel.gd" id="1"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.071, 0.133, 0.212, 1.0)
+content_margin_left = 0
+content_margin_top = 0
+content_margin_right = 0
+content_margin_bottom = 0
 
 [node name="NewMissionPanel" type="Control"]
 layout_mode = 3
@@ -24,6 +31,7 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/Panel"]
 layout_mode = 1
@@ -41,16 +49,19 @@ layout_mode = 2
 [node name="Title" type="Label" parent="PanelContainer/Panel/VBoxContainer/HeaderContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 32
 text = "New Mission"
 
 [node name="CloseButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/HeaderContainer"]
-custom_minimum_size = Vector2(80, 40)
+custom_minimum_size = Vector2(120, 72)
 layout_mode = 2
+theme_override_font_sizes/font_size = 26
 text = "Close"
 
 [node name="SelectRocketButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/HeaderContainer"]
-custom_minimum_size = Vector2(160, 40)
+custom_minimum_size = Vector2(240, 72)
 layout_mode = 2
+theme_override_font_sizes/font_size = 26
 text = "Select Rocket"
 
 [node name="HSeparator" type="HSeparator" parent="PanelContainer/Panel/VBoxContainer"]
@@ -75,6 +86,7 @@ layout_mode = 2
 alignment = 1
 
 [node name="RefreshButton" type="Button" parent="PanelContainer/Panel/VBoxContainer/ContentContainer/RefreshContainer"]
-custom_minimum_size = Vector2(200, 50)
+custom_minimum_size = Vector2(280, 80)
 layout_mode = 2
+theme_override_font_sizes/font_size = 26
 text = "Refresh"

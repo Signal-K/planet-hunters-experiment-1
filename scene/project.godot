@@ -29,8 +29,8 @@ SafeAreaUI="*res://Scripts/UI/SafeAreaUI.gd"
 
 window/size/viewport_width=1080
 window/size/viewport_height=1920
-window/size/window_width_override=1080
-window/size/window_height_override=1920
+window/size/window_width_override=540
+window/size/window_height_override=960
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 window/handheld/orientation=1

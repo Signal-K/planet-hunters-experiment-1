@@ -1,4 +1,18 @@
-[gd_scene format=3]
+[gd_scene load_steps=2 format=3]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.071, 0.133, 0.212, 1.0)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+shadow_color = Color(0.0, 0.0, 0.0, 0.55)
+shadow_size = 32
+shadow_offset = Vector2(0, 12)
+content_margin_left = 24.0
+content_margin_top = 20.0
+content_margin_right = 24.0
+content_margin_bottom = 20.0
 
 [node name="GameMenuRoot" type="Control"]
 layout_mode = 3
@@ -24,6 +38,8 @@ mouse_filter = 1
 
 [node name="GameMenuPanel" type="PanelContainer" parent="Center"]
 layout_mode = 2
+custom_minimum_size = Vector2(900, 0)
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
 [node name="Scroll" type="ScrollContainer" parent="Center/GameMenuPanel"]
 layout_mode = 2
@@ -45,22 +61,30 @@ theme_override_constants/separation = 2
 
 [node name="Eyebrow" type="Label" parent="Center/GameMenuPanel/Scroll/Shell/Header/TitleColumn"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 24
 text = "PLANET HUNTERS"
 
 [node name="Title" type="Label" parent="Center/GameMenuPanel/Scroll/Shell/Header/TitleColumn"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 36
 text = "Base of Operations"
 
 [node name="LogbookButton" type="Button" parent="Center/GameMenuPanel/Scroll/Shell/Header"]
 layout_mode = 2
+custom_minimum_size = Vector2(0, 72)
+theme_override_font_sizes/font_size = 26
 text = "Logbook"
 
 [node name="DiscoveriesButton" type="Button" parent="Center/GameMenuPanel/Scroll/Shell/Header"]
 layout_mode = 2
+custom_minimum_size = Vector2(0, 72)
+theme_override_font_sizes/font_size = 26
 text = "Discoveries"
 
 [node name="CloseButton" type="Button" parent="Center/GameMenuPanel/Scroll/Shell/Header"]
 layout_mode = 2
+custom_minimum_size = Vector2(100, 72)
+theme_override_font_sizes/font_size = 26
 text = "Close"
 
 [node name="Separator" type="HSeparator" parent="Center/GameMenuPanel/Scroll/Shell"]
@@ -71,6 +95,7 @@ layout_mode = 2
 
 [node name="CargoSectionLabel" type="Label" parent="Center/GameMenuPanel/Scroll/Shell"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 24
 text = "CARGO"
 
 [node name="CargoHost" type="VBoxContainer" parent="Center/GameMenuPanel/Scroll/Shell"]
@@ -79,6 +104,7 @@ layout_mode = 2
 [node name="MissionRequirementsSectionLabel" type="Label" parent="Center/GameMenuPanel/Scroll/Shell"]
 visible = false
 layout_mode = 2
+theme_override_font_sizes/font_size = 24
 text = "MISSION REQUIREMENTS"
 
 [node name="MissionRequirementsHost" type="VBoxContainer" parent="Center/GameMenuPanel/Scroll/Shell"]
@@ -87,6 +113,7 @@ layout_mode = 2
 
 [node name="SettingsSectionLabel" type="Label" parent="Center/GameMenuPanel/Scroll/Shell"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 24
 text = "SETTINGS"
 
 [node name="SettingsHost" type="VBoxContainer" parent="Center/GameMenuPanel/Scroll/Shell"]
@@ -94,6 +121,7 @@ layout_mode = 2
 
 [node name="DebugSectionLabel" type="Label" parent="Center/GameMenuPanel/Scroll/Shell"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 24
 text = "DEBUG"
 
 [node name="DebugHost" type="VBoxContainer" parent="Center/GameMenuPanel/Scroll/Shell"]

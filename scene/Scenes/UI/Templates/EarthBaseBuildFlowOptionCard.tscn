@@ -37,17 +37,18 @@ text = "Earth Base"
 [node name="SubtitleLabel" type="Label" parent="Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.78, 0.84, 0.92, 1)
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 26
 text = "Primary surface hub"
 autowrap_mode = 3
 
 [node name="MetaLabel" type="Label" parent="Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.58, 0.7, 0.82, 1)
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 24
 text = "MISSION 2 BUILD FLOW"
 
 [node name="ActionButton" type="Button" parent="Margin/VBox"]
 layout_mode = 2
-custom_minimum_size = Vector2(0, 48)
+custom_minimum_size = Vector2(0, 80)
+theme_override_font_sizes/font_size = 28
 text = "Select"

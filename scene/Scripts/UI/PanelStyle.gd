@@ -43,36 +43,43 @@ static func apply_panel(panel: Control, bg_color: Color = DS.CARD_BG) -> void:
 static func apply_title(label: Label) -> void:
 	if label == null: return
 	label.add_theme_color_override("font_color", DS.TEXT)
+	label.add_theme_font_override("font", DS.font_display())
 	label.add_theme_font_size_override("font_size", DS.F_HEADLINE)
 
 static func apply_title_on_dark(label: Label) -> void:
 	if label == null: return
 	label.add_theme_color_override("font_color", DS.TEXT)
+	label.add_theme_font_override("font", DS.font_display())
 	label.add_theme_font_size_override("font_size", DS.F_HEADLINE)
 
 static func apply_body(label: Label) -> void:
 	if label == null: return
 	label.add_theme_color_override("font_color", DS.TEXT_MUTED)
+	label.add_theme_font_override("font", DS.font_display())
 	label.add_theme_font_size_override("font_size", DS.F_BODY)
 
 static func apply_body_on_dark(label: Label) -> void:
 	if label == null: return
 	label.add_theme_color_override("font_color", DS.TEXT_MUTED)
+	label.add_theme_font_override("font", DS.font_display())
 	label.add_theme_font_size_override("font_size", DS.F_BODY)
 
 static func apply_richtext(label: RichTextLabel) -> void:
 	if label == null: return
 	label.add_theme_color_override("default_color", DS.TEXT_MUTED)
+	label.add_theme_font_override("normal_font", DS.font_display())
 	label.add_theme_font_size_override("normal_font_size", DS.F_BODY)
 
 static func apply_muted(label: Label) -> void:
 	if label == null: return
 	label.add_theme_color_override("font_color", DS.TEXT_MUTED)
+	label.add_theme_font_override("font", DS.font_display())
 	label.add_theme_font_size_override("font_size", DS.F_CAPTION)
 
 static func apply_muted_on_dark(label: Label) -> void:
 	if label == null: return
 	label.add_theme_color_override("font_color", DS.TEXT_MUTED)
+	label.add_theme_font_override("font", DS.font_display())
 	label.add_theme_font_size_override("font_size", DS.F_CAPTION)
 
 static func apply_button(button: Button, is_primary: bool = false) -> void:
@@ -96,6 +103,7 @@ static func apply_button(button: Button, is_primary: bool = false) -> void:
 	button.add_theme_stylebox_override("focus", h)
 	button.add_theme_color_override("font_color", c)
 	button.add_theme_color_override("font_hover_color", DS.PRIMARY_HOVER)
+	button.add_theme_font_override("font", DS.font_display())
 	button.add_theme_font_size_override("font_size", DS.F_BUTTON)
 
 static func apply_separator(separator: HSeparator) -> void:

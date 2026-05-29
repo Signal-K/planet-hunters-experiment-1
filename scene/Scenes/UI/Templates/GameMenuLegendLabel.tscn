@@ -2,5 +2,5 @@
 
 [node name="GameMenuLegendLabel" type="Label"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 24
 text = "Legend"

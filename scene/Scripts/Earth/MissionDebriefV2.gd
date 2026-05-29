@@ -65,7 +65,7 @@ var ui_manager: UIManager
 var _ui_helper := EarthSceneUIHelper.new()
 @onready var _background: ColorRect = $Background
 @onready var _center: MarginContainer = $Center
-@onready var _panel: PanelContainer = $Center/Panel
+@onready var _panel: Control = $Center/Panel
 @onready var _content_vbox: VBoxContainer = $Center/Panel/Margin/ContentVBox
 @onready var _empty_state: VBoxContainer = $Center/EmptyState
 @onready var _empty_label: Label = $Center/EmptyState/EmptyLabel
@@ -269,7 +269,7 @@ func _build_ui() -> void:
 	_background.color = PANEL_BG
 	_panel.visible = true
 	_empty_state.visible = false
-	_panel.custom_minimum_size = Vector2(clampf(vp_w - 220.0, 980.0, 1420.0), clampf(vp_h - 220.0, 620.0, 860.0))
+	# Portrait: panel is a ScrollContainer — let it size itself
 	_content_vbox.add_theme_constant_override("separation", 28)
 	_bind_header()
 	_bind_success_banner()

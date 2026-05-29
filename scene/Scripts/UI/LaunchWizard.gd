@@ -18,6 +18,7 @@ const StatChipDarkScene = preload("res://Scenes/UI/Templates/LaunchWizardStatChi
 const TargetDetailScene = preload("res://Scenes/UI/Templates/LaunchWizardTargetDetail.tscn")
 const EmptyStateLabelScene = preload("res://Scenes/UI/Templates/LaunchWizardEmptyStateLabel.tscn")
 const UILayout = preload("res://Scripts/UI/UILayout.gd")
+const DS       = preload("res://Scripts/UI/DS.gd")
 
 enum Step { CONTRACTOR = 0, TARGET = 1, ROCKET = 2, CONFIRM = 3 }
 
@@ -136,12 +137,39 @@ func _ready() -> void:
 		viewport.size_changed.connect(_on_viewport_size_changed)
 	_wire_buttons()
 	_step_dots = _dot_box.get_children()
-	
+	_apply_display_fonts(self)
 	_load_planning_state()
 	_show_step(_step)
 	call_deferred("_bind_tutorial_overlay_for_layout")
 	call_deferred("refresh_layout_for_viewport")
 	call_deferred("_stabilize_layout_after_startup")
+
+func _apply_display_fonts(root: Node) -> void:
+	var font := DS.font_display()
+	if font == null:
+		return
+	var vp_w := get_viewport_rect().size.x
+	var scale := clampf(vp_w / 480.0, 1.0, 2.5)
+	_stamp_display_fonts_r(root, font, scale)
+
+func _stamp_display_fonts_r(root: Node, font: Font, scale: float) -> void:
+	for child in root.get_children():
+		if child is Label:
+			var lbl := child as Label
+			lbl.add_theme_font_override("font", font)
+			var sz: int = lbl.theme_override_font_sizes.get("font_size", 0)
+			if sz > 0 and sz < 20:
+				lbl.add_theme_font_size_override("font_size", int(sz * scale))
+		elif child is Button:
+			var btn := child as Button
+			btn.add_theme_font_override("font", font)
+			var sz: int = btn.theme_override_font_sizes.get("font_size", 0)
+			if sz > 0 and sz < 20:
+				btn.add_theme_font_size_override("font_size", int(sz * scale))
+		elif child is RichTextLabel:
+			(child as RichTextLabel).add_theme_font_override("normal_font", font)
+		if child.get_child_count() > 0:
+			_stamp_display_fonts_r(child, font, scale)
 
 func _on_viewport_size_changed() -> void:
 	refresh_layout_for_viewport()

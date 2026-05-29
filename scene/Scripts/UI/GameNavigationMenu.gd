@@ -2,6 +2,7 @@ extends RefCounted
 class_name GameNavigationMenu
 
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
+const DS = preload("res://Scripts/UI/DS.gd")
 const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd")
 const AppLogger = preload("res://Scripts/Utils/Logger.gd")
 const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
@@ -137,13 +138,21 @@ static func _build_menu_root(owner: Node) -> Control:
 
 	var shell: VBoxContainer = root.get_node("Center/%s/Scroll/Shell" % MENU_PANEL_NAME)
 	shell.set_meta("tutorial_zone_exempt", true)
+	var _vp_w := 480.0
+	if owner != null and owner.get_viewport() != null:
+		_vp_w = owner.get_viewport().get_visible_rect().size.x
+	var _fs_scale := clampf(_vp_w / 480.0, 1.0, 3.0)
+	var _disp := DS.font_display()
+
 	var eyebrow: Label = root.get_node("Center/%s/Scroll/Shell/Header/TitleColumn/Eyebrow" % MENU_PANEL_NAME)
-	eyebrow.add_theme_font_size_override("font_size", 11)
+	eyebrow.add_theme_font_size_override("font_size", int(11 * _fs_scale))
 	eyebrow.add_theme_color_override("font_color", CYAN)
+	if _disp: eyebrow.add_theme_font_override("font", _disp)
 
 	var title: Label = root.get_node("Center/%s/Scroll/Shell/Header/TitleColumn/Title" % MENU_PANEL_NAME)
-	title.add_theme_font_size_override("font_size", 28)
+	title.add_theme_font_size_override("font_size", int(28 * _fs_scale))
 	title.add_theme_color_override("font_color", TITLE_COLOR)
+	if _disp: title.add_theme_font_override("font", _disp)
 	var logbook_btn: Button = root.get_node("Center/%s/Scroll/Shell/Header/LogbookButton" % MENU_PANEL_NAME)
 	_apply_button_style(logbook_btn, false)
 	logbook_btn.custom_minimum_size = Vector2(110, 50)
@@ -173,8 +182,9 @@ static func _build_menu_root(owner: Node) -> Control:
 	var debug_host: VBoxContainer = root.get_node("Center/%s/Scroll/Shell/DebugHost" % MENU_PANEL_NAME)
 
 	for section_label in [cargo_label, mission_requirements_label, settings_label, debug_label]:
-		section_label.add_theme_font_size_override("font_size", 14)
+		section_label.add_theme_font_size_override("font_size", int(14 * _fs_scale))
 		section_label.add_theme_color_override("font_color", TEXT_MUTED)
+		if _disp: (section_label as Label).add_theme_font_override("font", _disp)
 
 	for host in [stats_host, cargo_host, mission_requirements_host, settings_host, debug_host]:
 		host.add_theme_constant_override("separation", 10)

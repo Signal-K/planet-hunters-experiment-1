@@ -40,7 +40,7 @@ grow_vertical = 2
 mouse_filter = 2
 
 [node name="Panel" type="PanelContainer" parent="Overlay/Center"]
-custom_minimum_size = Vector2(480, 0)
+custom_minimum_size = Vector2(880, 0)
 layout_mode = 2
 theme_override_styles/panel = SubResource("1")
 
@@ -51,14 +51,14 @@ theme_override_constants/separation = 20
 [node name="Eyebrow" type="Label" parent="Overlay/Center/Panel/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.45, 0.65, 1, 1)
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 24
 text = "STAR SAILORS: EXPERIMENT 1"
 horizontal_alignment = 1
 
 [node name="Title" type="Label" parent="Overlay/Center/Panel/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.92, 0.95, 1, 1)
-theme_override_font_sizes/font_size = 38
+theme_override_font_sizes/font_size = 64
 text = "LANDNAM"
 horizontal_alignment = 1
 
@@ -68,25 +68,26 @@ layout_mode = 2
 [node name="Body" type="Label" parent="Overlay/Center/Panel/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.78, 0.83, 0.95, 1)
-theme_override_font_sizes/font_size = 15
+theme_override_font_sizes/font_size = 26
 text = "Fly missions. Mine asteroids. Build your fleet.\n\nLandnám — your feedback shapes what's next."
 horizontal_alignment = 1
 autowrap_mode = 3
 
 [node name="Spacer" type="Control" parent="Overlay/Center/Panel/VBox"]
-custom_minimum_size = Vector2(0, 8)
+custom_minimum_size = Vector2(0, 16)
 layout_mode = 2
 
 [node name="BeginButton" type="Button" parent="Overlay/Center/Panel/VBox"]
-custom_minimum_size = Vector2(240, 52)
+custom_minimum_size = Vector2(380, 88)
 layout_mode = 2
 size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 30
 text = "Begin Mission"
 
 [node name="FinePrint" type="Label" parent="Overlay/Center/Panel/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.45, 0.5, 0.65, 1)
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 22
 text = "Part of the Landnám universe • landnam.app"
 horizontal_alignment = 1
 

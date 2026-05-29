@@ -1,6 +1,7 @@
 extends Control
 
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
+const DS = preload("res://Scripts/UI/DS.gd")
 
 const NavigationMixin = preload("res://Scripts/Utils/NavigationMixin.gd")
 const GameplayAnalytics = preload("res://Scripts/Systems/GameplayAnalytics.gd")
@@ -384,10 +385,15 @@ func _is_compact_layout(viewport: Vector2) -> bool:
 	return viewport.y > viewport.x or viewport.x < 1600.0 or viewport.y < 900.0
 
 func _set_hud_typography(is_mobile: bool, is_portrait_mobile: bool) -> void:
-	var gauge_font_size = 12 if is_portrait_mobile else (14 if is_mobile else (15 if _compact_layout_active else 18))
-	var instructions_font_size = 13 if is_portrait_mobile else (16 if is_mobile else (17 if _compact_layout_active else 22))
-	var contract_title_font_size = 13 if is_portrait_mobile else (15 if is_mobile else 17)
-	var contract_progress_font_size = 12 if is_portrait_mobile else (14 if is_mobile else 15)
+	# Scale font sizes with viewport width so 1080-wide portrait gets readable text.
+	var vp_w := get_viewport_rect().size.x
+	var scale := clampf(vp_w / 480.0, 1.0, 3.0)
+	var gauge_font_size = int(12 * scale) if is_portrait_mobile else (14 if is_mobile else (15 if _compact_layout_active else 18))
+	var instructions_font_size = int(13 * scale) if is_portrait_mobile else (16 if is_mobile else (17 if _compact_layout_active else 22))
+	var contract_title_font_size = int(13 * scale) if is_portrait_mobile else (15 if is_mobile else 17)
+	var contract_progress_font_size = int(12 * scale) if is_portrait_mobile else (14 if is_mobile else 15)
+	var disp := DS.font_display()
+	var mono := DS.font_mono()
 	fuel_label.add_theme_font_size_override("font_size", gauge_font_size)
 	heat_label.add_theme_font_size_override("font_size", gauge_font_size)
 	beam_label.add_theme_font_size_override("font_size", gauge_font_size)
@@ -395,6 +401,15 @@ func _set_hud_typography(is_mobile: bool, is_portrait_mobile: bool) -> void:
 	instructions.add_theme_font_size_override("font_size", instructions_font_size)
 	contract_order_title.add_theme_font_size_override("font_size", contract_title_font_size)
 	contract_order_progress.add_theme_font_size_override("font_size", contract_progress_font_size)
+	if disp != null:
+		fuel_label.add_theme_font_override("font", disp)
+		heat_label.add_theme_font_override("font", disp)
+		beam_label.add_theme_font_override("font", disp)
+		drone_label.add_theme_font_override("font", disp)
+		contract_order_title.add_theme_font_override("font", disp)
+		instructions.add_theme_font_override("font", disp)
+	if mono != null:
+		contract_order_progress.add_theme_font_override("font", mono)
 
 func _ensure_right_stats_parent(parent_node: Node) -> void:
 	if parent_node == null:

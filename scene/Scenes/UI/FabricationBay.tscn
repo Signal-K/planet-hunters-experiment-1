@@ -1,6 +1,7 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=13 format=3]
 
 [ext_resource type="Script" path="res://Scripts/UI/FabricationBay.gd" id="1"]
+[ext_resource type="FontFile" uid="uid://bl1ej0ena8t42" path="res://Resources/Fonts/Oxanium-Bold.ttf" id="oxanium_bold"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_shell"]
 bg_color = Color(0.039, 0.071, 0.114, 1.0)
@@ -63,7 +64,7 @@ bg_color = Color(0.365, 0.451, 0.565, 0.0)
 [node name="FabricationBay" type="PanelContainer"]
 size_flags_horizontal = 3
 size_flags_vertical = 3
-custom_minimum_size = Vector2(0, 640)
+custom_minimum_size = Vector2(0, 900)
 script = ExtResource("1")
 theme_override_styles/panel = SubResource("StyleBoxFlat_shell")
 
@@ -74,7 +75,7 @@ theme_override_constants/separation = 0
 [node name="ModuleCanvas" type="ScrollContainer" parent="VBox"]
 layout_mode = 2
 size_flags_vertical = 3
-custom_minimum_size = Vector2(0, 456)
+custom_minimum_size = Vector2(0, 700)
 horizontal_scroll_mode = 1
 vertical_scroll_mode = 0
 
@@ -86,7 +87,7 @@ theme_override_constants/separation = 24
 
 [node name="Footer" type="PanelContainer" parent="VBox"]
 layout_mode = 2
-custom_minimum_size = Vector2(0, 96)
+custom_minimum_size = Vector2(0, 140)
 theme_override_styles/panel = SubResource("StyleBoxFlat_footer")
 
 [node name="FooterMargin" type="MarginContainer" parent="VBox/Footer"]
@@ -113,13 +114,13 @@ theme_override_constants/separation = 6
 
 [node name="Step1Check" type="Label" parent="VBox/Footer/FooterMargin/Row/ProgressFlow/Step1"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 22
 theme_override_colors/font_color = Color(0.247, 0.663, 1.0, 0.80)
 text = "✓"
 
 [node name="Step1Label" type="Label" parent="VBox/Footer/FooterMargin/Row/ProgressFlow/Step1"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 11
+theme_override_font_sizes/font_size = 28
 theme_override_colors/font_color = Color(0.247, 0.663, 1.0, 0.80)
 text = "LOCATION SET"
 
@@ -135,13 +136,13 @@ theme_override_constants/separation = 6
 
 [node name="Step2Check" type="Label" parent="VBox/Footer/FooterMargin/Row/ProgressFlow/Step2"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 22
 theme_override_colors/font_color = Color(0.247, 0.663, 1.0, 0.80)
 text = "✓"
 
 [node name="Step2Label" type="Label" parent="VBox/Footer/FooterMargin/Row/ProgressFlow/Step2"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 11
+theme_override_font_sizes/font_size = 28
 theme_override_colors/font_color = Color(0.247, 0.663, 1.0, 0.80)
 text = "MISSION SET"
 
@@ -157,14 +158,14 @@ theme_override_constants/separation = 4
 
 [node name="AssemblyStateLabel" type="Label" parent="VBox/Footer/FooterMargin/Row/ProgressFlow/AssemblyStep"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 11
+theme_override_font_sizes/font_size = 28
 theme_override_colors/font_color = Color(0.961, 0.651, 0.137, 1.0)
 text = "ASSEMBLY PENDING"
 
 [node name="RocketChooser" type="OptionButton" parent="VBox/Footer/FooterMargin/Row/ProgressFlow/AssemblyStep"]
 layout_mode = 2
-custom_minimum_size = Vector2(280, 42)
-theme_override_font_sizes/font_size = 13
+custom_minimum_size = Vector2(380, 72)
+theme_override_font_sizes/font_size = 28
 theme_override_colors/font_color = Color(0.902, 0.937, 1.0, 1.0)
 theme_override_styles/normal = SubResource("StyleBoxFlat_chooser_normal")
 theme_override_styles/hover = SubResource("StyleBoxFlat_chooser_hover")
@@ -183,13 +184,13 @@ theme_override_constants/separation = 6
 
 [node name="Step4Check" type="Label" parent="VBox/Footer/FooterMargin/Row/ProgressFlow/Step4"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 22
 theme_override_colors/font_color = Color(0.365, 0.451, 0.565, 1.0)
 text = "○"
 
 [node name="Step4Label" type="Label" parent="VBox/Footer/FooterMargin/Row/ProgressFlow/Step4"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 11
+theme_override_font_sizes/font_size = 28
 theme_override_colors/font_color = Color(0.365, 0.451, 0.565, 1.0)
 text = "READY FOR LAUNCH"
 
@@ -214,13 +215,13 @@ theme_override_constants/separation = 4
 
 [node name="ModulesEyebrow" type="Label" parent="VBox/Footer/FooterMargin/Row/RightGroup/StatsBox/ModulesCol"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 10
+theme_override_font_sizes/font_size = 20
 theme_override_colors/font_color = Color(0.365, 0.451, 0.565, 1.0)
 text = "MODULES"
 
 [node name="ModulesValue" type="Label" parent="VBox/Footer/FooterMargin/Row/RightGroup/StatsBox/ModulesCol"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 22
 theme_override_colors/font_color = Color(0.961, 0.651, 0.137, 1.0)
 text = "0 / 3"
 
@@ -231,12 +232,12 @@ theme_override_constants/separation = 4
 
 [node name="RangeEyebrow" type="Label" parent="VBox/Footer/FooterMargin/Row/RightGroup/StatsBox/RangeCol"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 10
+theme_override_font_sizes/font_size = 20
 theme_override_colors/font_color = Color(0.365, 0.451, 0.565, 1.0)
 text = "RANGE"
 
 [node name="RangeValue" type="Label" parent="VBox/Footer/FooterMargin/Row/RightGroup/StatsBox/RangeCol"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 22
 theme_override_colors/font_color = Color(0.247, 0.663, 1.0, 1.0)
 text = "— AU"

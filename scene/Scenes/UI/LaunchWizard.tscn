@@ -1,6 +1,7 @@
-[gd_scene load_steps=17 format=3 uid="uid://launch_wizard_scene"]
+[gd_scene load_steps=18 format=3 uid="uid://launch_wizard_scene"]
 
 [ext_resource type="Script" path="res://Scripts/UI/LaunchWizard.gd" id="1"]
+[ext_resource type="FontFile" uid="uid://bl1ej0ena8t42" path="res://Resources/Fonts/Oxanium-Bold.ttf" id="oxanium_bold"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/Templates/LaunchWizardContractorCard.tscn" id="2"]
 [ext_resource type="Script" path="res://Scripts/UI/LaunchWizardMapStep.gd" id="3"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/Templates/LaunchWizardConfirmRow.tscn" id="5"]
@@ -227,8 +228,9 @@ text = "<"
 [node name="StepTitle" type="Label" parent="Scaffold/Header/HeaderRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(0.902, 0.937, 1.0, 1.0)
+theme_override_fonts/font = ExtResource("oxanium_bold")
+theme_override_font_sizes/font_size = 28
 vertical_alignment = 1
 
 [node name="DotBox" type="HBoxContainer" parent="Scaffold/Header/HeaderRow"]
@@ -295,14 +297,16 @@ theme_override_constants/separation = 8
 
 [node name="TitleLabel" type="Label" parent="Scaffold/Scroll/ScrollMargin/CardList/ContractorStep/IntroPanel/Margin/VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.729, 0.902, 1, 1)
-theme_override_font_sizes/font_size = 26
+theme_override_colors/font_color = Color(0.247, 0.663, 1.0, 1.0)
+theme_override_fonts/font = ExtResource("oxanium_bold")
+theme_override_font_sizes/font_size = 32
 text = "CONTRACT BOARD"
 
 [node name="SubtitleLabel" type="Label" parent="Scaffold/Scroll/ScrollMargin/CardList/ContractorStep/IntroPanel/Margin/VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.745, 0.776, 0.882, 0.92)
-theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 0.92)
+theme_override_fonts/font = ExtResource("oxanium_bold")
+theme_override_font_sizes/font_size = 20
 text = "Compare live purchase orders. The chosen buyer locks your delivery manifest and payout route."
 autowrap_mode = 3
 

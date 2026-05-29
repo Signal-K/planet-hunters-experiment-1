@@ -18,21 +18,21 @@ mouse_filter = 2
 layout_mode = 1
 anchors_preset = 0
 offset_left = 24.0
-offset_top = 24.0
-offset_right = 700.0
-offset_bottom = 340.0
+offset_top = 200.0
+offset_right = 1056.0
+offset_bottom = 580.0
 mouse_filter = 1
 
 [node name="Margin" type="MarginContainer" parent="Root/Panel"]
 layout_mode = 2
-theme_override_constants/margin_left = 14
-theme_override_constants/margin_top = 12
-theme_override_constants/margin_right = 14
-theme_override_constants/margin_bottom = 12
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 20
 
 [node name="VBox" type="VBoxContainer" parent="Root/Panel/Margin"]
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 12
 
 [node name="Header" type="HBoxContainer" parent="Root/Panel/Margin/VBox"]
 layout_mode = 2
@@ -40,33 +40,42 @@ layout_mode = 2
 [node name="TitleLabel" type="Label" parent="Root/Panel/Margin/VBox/Header"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 28
 text = "Mission Guidance"
 
 [node name="StageLabel" type="Label" parent="Root/Panel/Margin/VBox/Header"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 26
 text = "Mission 1"
 
 [node name="RestartBtn" type="Button" parent="Root/Panel/Margin/VBox/Header"]
 layout_mode = 2
+custom_minimum_size = Vector2(56, 56)
+theme_override_font_sizes/font_size = 28
 text = "↺"
 tooltip_text = "Restart tutorial from step 1"
 
 [node name="CollapseButton" type="Button" parent="Root/Panel/Margin/VBox/Header"]
 layout_mode = 2
+custom_minimum_size = Vector2(56, 56)
+theme_override_font_sizes/font_size = 28
 text = "−"
 
 [node name="MessageLabel" type="Label" parent="Root/Panel/Margin/VBox"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 26
 text = "Tutorial step message"
 autowrap_mode = 3
 
 [node name="ActionLabel" type="Label" parent="Root/Panel/Margin/VBox"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 26
 text = "Required action: ..."
 autowrap_mode = 3
 
 [node name="ProgressLabel" type="Label" parent="Root/Panel/Margin/VBox"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 24
 text = "Step 1/7"
 
 [node name="Buttons" type="HBoxContainer" parent="Root/Panel/Margin/VBox"]
@@ -75,30 +84,42 @@ theme_override_constants/separation = 8
 
 [node name="SkipButton" type="Button" parent="Root/Panel/Margin/VBox/Buttons"]
 layout_mode = 2
+custom_minimum_size = Vector2(120, 64)
+theme_override_font_sizes/font_size = 24
 text = "Skip"
 
 [node name="PracticeMiningButton" type="Button" parent="Root/Panel/Margin/VBox/Buttons"]
 layout_mode = 2
 visible = false
+custom_minimum_size = Vector2(0, 64)
+theme_override_font_sizes/font_size = 24
 text = "Practice Mining"
 
 [node name="ReplayMissionButton" type="Button" parent="Root/Panel/Margin/VBox/Buttons"]
 layout_mode = 2
+custom_minimum_size = Vector2(0, 64)
+theme_override_font_sizes/font_size = 24
 text = "Replay Mission"
 
 [node name="OpenLaunchpadButton" type="Button" parent="Root/Panel/Margin/VBox/Buttons"]
 layout_mode = 2
 visible = false
+custom_minimum_size = Vector2(0, 64)
+theme_override_font_sizes/font_size = 24
 text = "Open Launchpad"
 
 [node name="GoToDebriefButton" type="Button" parent="Root/Panel/Margin/VBox/Buttons"]
 layout_mode = 2
 visible = false
+custom_minimum_size = Vector2(0, 64)
+theme_override_font_sizes/font_size = 24
 text = "Go to Debrief"
 
 [node name="ResumeMissionButton" type="Button" parent="Root/Panel/Margin/VBox/Buttons"]
 layout_mode = 2
 visible = false
+custom_minimum_size = Vector2(0, 64)
+theme_override_font_sizes/font_size = 24
 text = "Resume Mission"
 
 [node name="TargetPointerLine" type="Line2D" parent="Root"]

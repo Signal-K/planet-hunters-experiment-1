@@ -1,5 +1,6 @@
-[gd_scene load_steps=16 format=3 uid="uid://bl5h6pq4ns86t"]
+[gd_scene load_steps=23 format=3 uid="uid://bl5h6pq4ns86t"]
 
+; ── External resources ────────────────────────────────────────────────────────
 [ext_resource type="Texture2D" uid="uid://bni1814mlo7mv" path="res://assets/Backdrops/Earth1.png" id="0"]
 [ext_resource type="Script" uid="uid://eoqjev5txcu5" path="res://Scenes/Earth/earth_base_1.gd" id="1"]
 [ext_resource type="Texture2D" uid="uid://ccpehdcgu0qb5" path="res://assets/Structures/satellite_groundstation1.png" id="2"]
@@ -13,30 +14,139 @@
 [ext_resource type="Script" uid="uid://b6grrjbuo2flq" path="res://Scripts/Earth/Environment/EarthSkyMapEvent.gd" id="12"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/Templates/EarthBaseActionCard.tscn" id="13"]
 [ext_resource type="Script" path="res://Scripts/UI/EarthBaseProgressionCards.gd" id="14"]
+[ext_resource type="FontFile" uid="uid://bl1ej0ena8t42" path="res://Resources/Fonts/Oxanium-Bold.ttf" id="15"]
+[ext_resource type="FontFile" uid="uid://c134itcdnq6j6" path="res://Resources/Fonts/TurretRoad-Bold.ttf" id="16"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_satellite"]
-size = Vector2(300, 220)
+; ── Sub-resources (styles) ────────────────────────────────────────────────────
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_launchpad"]
-size = Vector2(300, 200)
+; Amber pill — Jobs count (left HUD)
+[sub_resource type="StyleBoxFlat" id="Style_jobs_pill"]
+bg_color = Color(1.0, 0.702, 0.282, 0.16)
+border_color = Color(1.0, 0.702, 0.282, 0.45)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+corner_radius_top_left = 999
+corner_radius_top_right = 999
+corner_radius_bottom_left = 999
+corner_radius_bottom_right = 999
+content_margin_left = 16.0
+content_margin_right = 16.0
+content_margin_top = 8.0
+content_margin_bottom = 8.0
 
+; Gold pill — Francs (right HUD)
+[sub_resource type="StyleBoxFlat" id="Style_francs_pill"]
+bg_color = Color(0.961, 0.651, 0.137, 0.16)
+border_color = Color(0.961, 0.651, 0.137, 0.55)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+corner_radius_top_left = 999
+corner_radius_top_right = 999
+corner_radius_bottom_left = 999
+corner_radius_bottom_right = 999
+content_margin_left = 16.0
+content_margin_right = 16.0
+content_margin_top = 8.0
+content_margin_bottom = 8.0
+
+; Cyan pill — Level (right HUD)
+[sub_resource type="StyleBoxFlat" id="Style_level_pill"]
+bg_color = Color(0.529, 0.812, 0.980, 0.14)
+border_color = Color(0.529, 0.812, 0.980, 0.45)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+corner_radius_top_left = 999
+corner_radius_top_right = 999
+corner_radius_bottom_left = 999
+corner_radius_bottom_right = 999
+content_margin_left = 16.0
+content_margin_right = 16.0
+content_margin_top = 8.0
+content_margin_bottom = 8.0
+
+; Building identity chip — navy card with cyan border
+[sub_resource type="StyleBoxFlat" id="Style_building_chip"]
+bg_color = Color(0.031, 0.047, 0.086, 0.88)
+border_color = Color(0.247, 0.663, 1.0, 0.45)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_left = 8
+corner_radius_bottom_right = 8
+content_margin_left = 14.0
+content_margin_right = 14.0
+content_margin_top = 6.0
+content_margin_bottom = 6.0
+
+; Soil section background
+[sub_resource type="StyleBoxFlat" id="Style_soil_bg"]
+bg_color = Color(0.18, 0.118, 0.067, 0.95)
+corner_radius_top_left = 0
+corner_radius_top_right = 0
+corner_radius_bottom_left = 0
+corner_radius_bottom_right = 0
+
+; Subsurface label pill
+[sub_resource type="StyleBoxFlat" id="Style_subsurface_pill"]
+bg_color = Color(0.031, 0.047, 0.086, 0.70)
+border_color = Color(0.478, 0.549, 0.392, 0.55)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+corner_radius_top_left = 999
+corner_radius_top_right = 999
+corner_radius_bottom_left = 999
+corner_radius_bottom_right = 999
+content_margin_left = 16.0
+content_margin_right = 16.0
+content_margin_top = 6.0
+content_margin_bottom = 6.0
+
+; Collision shapes
+[sub_resource type="RectangleShape2D" id="RectShape_satellite"]
+size = Vector2(220, 180)
+
+[sub_resource type="RectangleShape2D" id="RectShape_launchpad"]
+size = Vector2(320, 220)
+
+; ── Root ──────────────────────────────────────────────────────────────────────
 [node name="EarthBase1" type="Node2D"]
 script = ExtResource("1")
 
+; ── Camera (centered on 1080×1920 canvas) ─────────────────────────────────────
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(540, 960)
 
+; ── Stars — CanvasLayer −1 (behind sky) ──────────────────────────────────────
+[node name="AmbientStarLayer" type="CanvasLayer" parent="."]
+layer = -1
+
+[node name="StarRoot" type="Node2D" parent="AmbientStarLayer"]
+
+; ── Background — sky photo + environment events (layer 0) ─────────────────────
 [node name="BackgroundLayer" type="CanvasLayer" parent="."]
 layer = 0
 
+; Earth1.png at 1536×1024, scaled 1.875 → fills 2880×1920 (portrait height)
+; Centred on canvas at (540,960). A second tile sits off-screen right for drift.
 [node name="BackgroundSprite" type="Sprite2D" parent="BackgroundLayer"]
 position = Vector2(540, 960)
-scale = Vector2(2.0, 3.6)
+scale = Vector2(1.875, 1.875)
 texture = ExtResource("0")
 
 [node name="BackgroundSprite2" type="Sprite2D" parent="BackgroundLayer"]
-position = Vector2(1620, 960)
-scale = Vector2(2.0, 3.6)
+position = Vector2(3420, 960)
+scale = Vector2(1.875, 1.875)
 texture = ExtResource("0")
 
 [node name="SkyNightFilterEvent" type="Node" parent="BackgroundLayer"]
@@ -52,22 +162,30 @@ script = ExtResource("12")
 [node name="CloudDriftEvent" type="Node2D" parent="BackgroundLayer"]
 script = ExtResource("11")
 
+; ── Structures — buildings on the surface (layer 1) ──────────────────────────
+; Design: 402×874 device frame.
+; Width scale  1080/402 = 2.687
+; Height scale 1920/874 = 2.197
+;
+; Satellite  — design left:12 w:88 top:488 → center (56, 532) → canvas (150, 1169) scale 0.39
+; Launchpad  — design left:50% w:140 top:442 → center (201,512) → canvas (540, 1125) scale 0.245
+; ControlStation — dynamically managed by earth_base_1.gd (see constants therein)
 [node name="StructuresLayer" type="CanvasLayer" parent="."]
+layer = 1
 
+; Satellite Station — left, at forest/soil edge
 [node name="SatelliteStation" type="Node2D" parent="StructuresLayer"]
-position = Vector2(250, 1450)
+position = Vector2(150, 1169)
 script = ExtResource("3")
 
 [node name="Sprite2D" type="Sprite2D" parent="StructuresLayer/SatelliteStation"]
-position = Vector2(-321.00003, 23.999979)
-scale = Vector2(0.90555567, 0.9602942)
+scale = Vector2(0.39, 0.39)
 texture = ExtResource("2")
 
 [node name="InteractionArea" type="Area2D" parent="StructuresLayer/SatelliteStation"]
-position = Vector2(-321.00003, 23.999979)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="StructuresLayer/SatelliteStation/InteractionArea"]
-shape = SubResource("RectangleShape2D_satellite")
+shape = SubResource("RectShape_satellite")
 
 [node name="BuildDialog" type="ConfirmationDialog" parent="StructuresLayer/SatelliteStation"]
 title = "Build Scanner Station"
@@ -75,106 +193,149 @@ title = "Build Scanner Station"
 [node name="InfoDialog" type="AcceptDialog" parent="StructuresLayer/SatelliteStation"]
 title = "Scanner Station"
 
+; Launchpad — centre, dominant building
 [node name="Launchpad" type="Node2D" parent="StructuresLayer"]
-position = Vector2(750, 1450)
+position = Vector2(540, 1125)
 script = ExtResource("4")
 
 [node name="Sprite2D" type="Sprite2D" parent="StructuresLayer/Launchpad"]
-position = Vector2(-303.00003, -12.000015)
-scale = Vector2(0.37747392, 0.40156248)
+scale = Vector2(0.245, 0.245)
 texture = ExtResource("5")
 
 [node name="InteractionArea" type="Area2D" parent="StructuresLayer/Launchpad"]
-position = Vector2(-303.00003, -12.000015)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="StructuresLayer/Launchpad/InteractionArea"]
-shape = SubResource("RectangleShape2D_launchpad")
+shape = SubResource("RectShape_launchpad")
 
+; ControlStation is added/removed dynamically by _sync_control_station_presence() in earth_base_1.gd.
+
+; ── UI Layer — all HUD, chips, soil, nav (layer 2) ───────────────────────────
 [node name="UILayer" type="CanvasLayer" parent="."]
 layer = 2
 
-[node name="ButtonContainer" type="HBoxContainer" parent="UILayer"]
-custom_minimum_size = Vector2(0, 88)
+; ── Sky vignette — subtle dark gradient at top to anchor HUD ─────────────────
+[node name="SkyVignetteTop" type="ColorRect" parent="UILayer"]
+layout_mode = 1
 anchor_left = 0.0
-anchor_top = 1.0
+anchor_top = 0.0
 anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 0.0
-offset_top = -88.0
-offset_right = 0.0
-offset_bottom = 0.0
-
-[node name="NavBackground" type="Panel" parent="UILayer/ButtonContainer"]
-layout_mode = 2
-mouse_filter = 1
-
-[node name="BackButton" type="Button" parent="UILayer/ButtonContainer"]
-custom_minimum_size = Vector2(160, 120)
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 4
-text = "Back"
-
-[node name="ForwardButton" type="Button" parent="UILayer/ButtonContainer"]
-custom_minimum_size = Vector2(160, 120)
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 4
-text = "Next"
-
-[node name="MenuButton" type="Button" parent="UILayer/ButtonContainer"]
-custom_minimum_size = Vector2(220, 120)
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 4
-text = "Menu"
-
-[node name="MarketButton" type="Button" parent="UILayer/ButtonContainer"]
-custom_minimum_size = Vector2(220, 120)
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 4
-text = "Market"
-
-[node name="SpaceMapButton" type="Button" parent="UILayer/ButtonContainer"]
-custom_minimum_size = Vector2(220, 120)
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 4
-text = "Map"
-
-[node name="BuildButton" type="Button" parent="UILayer/ButtonContainer"]
-custom_minimum_size = Vector2(220, 120)
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 4
-text = "Build"
-
-[node name="NewMissionButton" type="Button" parent="UILayer/ButtonContainer"]
-custom_minimum_size = Vector2(280, 120)
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 4
-text = "New Mission"
-
-[node name="LandnamWordmark" type="Label" parent="UILayer"]
+anchor_bottom = 0.0
+offset_bottom = 200.0
+color = Color(0.024, 0.035, 0.059, 0.30)
 mouse_filter = 2
-text = "LANDNAM"
-modulate = Color(0.9, 0.87, 0.82, 0.45)
-horizontal_alignment = 1
 
+; ── Title block — eyebrow + "Earth Base" headline ────────────────────────────
+; Positioned at top-left below the HUD strip (design: top 56px → y=123)
+[node name="TitleBlock" type="VBoxContainer" parent="UILayer"]
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = 28.0
+offset_top = 130.0
+offset_right = 580.0
+offset_bottom = 250.0
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="LandnamWordmark" type="Label" parent="UILayer/TitleBlock"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(1.0, 1.0, 1.0, 0.60)
+theme_override_fonts/font = ExtResource("16")
+theme_override_font_sizes/font_size = 24
+text = "EARTH BASE · LV 1"
+
+[node name="HubTitle" type="Label" parent="UILayer/TitleBlock"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(1.0, 1.0, 1.0, 1.0)
+theme_override_fonts/font = ExtResource("15")
+theme_override_font_sizes/font_size = 64
+text = "Earth Base"
+
+; ── HUD Strip: left Jobs pill + right Francs/Level pills ─────────────────────
+; Left side: Jobs count (amber)
+; Design: left:78 top:14 on 402px → x=210 on 1080px, top=30px
+[node name="JobsChip" type="PanelContainer" parent="UILayer"]
+layout_mode = 1
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = 28.0
+offset_top = 28.0
+offset_right = 240.0
+offset_bottom = 88.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("Style_jobs_pill")
+
+[node name="JobsLabel" type="Label" parent="UILayer/JobsChip"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(1.0, 0.702, 0.282, 1.0)
+theme_override_fonts/font = ExtResource("15")
+theme_override_font_sizes/font_size = 26
+text = "0 Jobs"
+vertical_alignment = 1
+
+; Right side: Francs + Level (design right:88 top:14 → x=843 from left)
+[node name="HUDStrip" type="HBoxContainer" parent="UILayer"]
+layout_mode = 1
+anchor_left = 1.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 0.0
+offset_left = -400.0
+offset_top = 28.0
+offset_right = -28.0
+offset_bottom = 88.0
+grow_horizontal = 0
+alignment = 2
+theme_override_constants/separation = 10
+mouse_filter = 2
+
+[node name="FrancsChip" type="PanelContainer" parent="UILayer/HUDStrip"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("Style_francs_pill")
+
+[node name="FrancsLabel" type="Label" parent="UILayer/HUDStrip/FrancsChip"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.961, 0.651, 0.137, 1.0)
+theme_override_fonts/font = ExtResource("15")
+theme_override_font_sizes/font_size = 26
+text = "▲ 10B"
+vertical_alignment = 1
+
+[node name="LevelChip" type="PanelContainer" parent="UILayer/HUDStrip"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("Style_level_pill")
+
+[node name="LevelLabel" type="Label" parent="UILayer/HUDStrip/LevelChip"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.529, 0.812, 0.980, 1.0)
+theme_override_fonts/font = ExtResource("15")
+theme_override_font_sizes/font_size = 26
+text = "LV 1"
+vertical_alignment = 1
+
+; ── Progression cards — tutorial / action cards below title ──────────────────
 [node name="ProgressionCards" type="VBoxContainer" parent="UILayer"]
 visible = false
 anchor_left = 0.0
 anchor_top = 0.0
 anchor_right = 1.0
 anchor_bottom = 0.0
-offset_left = 24.0
-offset_top = 80.0
-offset_right = -24.0
-offset_bottom = 480.0
+offset_left = 28.0
+offset_top = 260.0
+offset_right = -28.0
+offset_bottom = 800.0
 clip_contents = true
-theme_override_constants/separation = 10
+theme_override_constants/separation = 16
 script = ExtResource("14")
 
 [node name="ActiveMissionCard" parent="UILayer/ProgressionCards" instance=ExtResource("13")]
@@ -202,7 +363,7 @@ text = "Resume Mission"
 visible = false
 layout_mode = 2
 card_title = "Build Control Station"
-card_subtitle = "Mission 2 starts here. Construct the Control Station first so your base has a fleet and route hub."
+card_subtitle = "Mission 2 starts here. Construct the Control Station first."
 card_hint = "One-time construction. Your Launchpad reopens for new missions once it's in place."
 card_cta = "Build Control Station"
 
@@ -223,8 +384,8 @@ text = "Build Control Station"
 visible = false
 layout_mode = 2
 card_title = "Scanner Station"
-card_subtitle = "The scanner is now part of the Mission 3 real-data workflow and remains available once unlocked."
-card_hint = "If this card appears on an older save, reopening the base should reconcile the legacy state automatically."
+card_subtitle = "The scanner is now part of the Mission 3 real-data workflow."
+card_hint = "If this card appears on an older save, reopening the base will reconcile legacy state."
 card_cta = "Open Scanner Station"
 
 [node name="Title" parent="UILayer/ProgressionCards/ScannerStationCard/Body" index="0"]
@@ -256,10 +417,357 @@ text = "Open Launchpad to plan the next mission."
 [node name="CTAButton" parent="UILayer/ProgressionCards/NextMissionCard/Body" index="4"]
 text = "Open Launchpad"
 
-[node name="AmbientStarLayer" type="CanvasLayer" parent="."]
-layer = -1
+; ── Building identity chips — below each structure ────────────────────────────
+; Satellite chip (center x=150): icon bottom ≈ 1169+97=1266, chip y=1274
+[node name="SatelliteChip" type="PanelContainer" parent="UILayer"]
+layout_mode = 1
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = 74.0
+offset_top = 1274.0
+offset_right = 228.0
+offset_bottom = 1336.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("Style_building_chip")
 
-[node name="StarRoot" type="Node2D" parent="AmbientStarLayer"]
+[node name="VBox" type="VBoxContainer" parent="UILayer/SatelliteChip"]
+layout_mode = 2
+add_theme_constant_override("separation", 4)
+alignment = 1
 
+[node name="NameLabel" type="Label" parent="UILayer/SatelliteChip/VBox"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.804, 0.894, 1.0, 1.0)
+theme_override_fonts/font = ExtResource("15")
+theme_override_font_sizes/font_size = 22
+text = "SATELLITE"
+horizontal_alignment = 1
+
+[node name="StatusLabel" type="Label" parent="UILayer/SatelliteChip/VBox"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.478, 0.510, 0.565, 1.0)
+theme_override_fonts/font = ExtResource("16")
+theme_override_font_sizes/font_size = 24
+text = "OFFLINE"
+horizontal_alignment = 1
+
+; Launchpad chip (center x=540): icon bottom ≈ 1125+154=1279, chip y=1287
+[node name="LaunchpadChip" type="PanelContainer" parent="UILayer"]
+layout_mode = 1
+anchor_left = 0.5
+anchor_top = 0.0
+anchor_right = 0.5
+anchor_bottom = 0.0
+offset_left = -90.0
+offset_top = 1287.0
+offset_right = 90.0
+offset_bottom = 1349.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("Style_building_chip")
+
+[node name="VBox" type="VBoxContainer" parent="UILayer/LaunchpadChip"]
+layout_mode = 2
+add_theme_constant_override("separation", 4)
+alignment = 1
+
+[node name="NameLabel" type="Label" parent="UILayer/LaunchpadChip/VBox"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.804, 0.894, 1.0, 1.0)
+theme_override_fonts/font = ExtResource("15")
+theme_override_font_sizes/font_size = 22
+text = "LAUNCHPAD"
+horizontal_alignment = 1
+
+[node name="StatusLabel" type="Label" parent="UILayer/LaunchpadChip/VBox"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.22, 0.851, 0.416, 1.0)
+theme_override_fonts/font = ExtResource("16")
+theme_override_font_sizes/font_size = 24
+text = "READY"
+horizontal_alignment = 1
+
+; ── "Tap a building" hint pill ────────────────────────────────────────────────
+; Design: bottom:110 on 874 → 87.4% from top → y=1678 on 1920. Height 52px.
+[node name="TapHintPanel" type="PanelContainer" parent="UILayer"]
+layout_mode = 1
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -160.0
+offset_top = -274.0
+offset_right = 160.0
+offset_bottom = -222.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("Style_level_pill")
+
+[node name="TapHintLabel" type="Label" parent="UILayer/TapHintPanel"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.620, 0.863, 1.0, 1.0)
+theme_override_fonts/font = ExtResource("16")
+theme_override_font_sizes/font_size = 24
+text = "TAP A BUILDING"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+; ── Soil cross-section — underground band (bottom 22% of canvas) ──────────────
+; Design: bottom:90 height:180 on 874px → top y=1327, height=395 on 1920px canvas.
+; Nav bar is at bottom 198px (offset_top=-198), so soil ends at y=1722.
+; This Control clips its children.
+[node name="SoilSection" type="Control" parent="UILayer"]
+layout_mode = 1
+anchor_left = 0.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -593.0
+offset_bottom = -198.0
+mouse_filter = 2
+clip_contents = true
+
+; Soil base — rich earth-brown gradient background
+[node name="SoilBase" type="ColorRect" parent="UILayer/SoilSection"]
+layout_mode = 1
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.176, 0.110, 0.059, 1.0)
+mouse_filter = 2
+
+; Soil top-edge gradient — dark surface line
+[node name="SoilTopEdge" type="ColorRect" parent="UILayer/SoilSection"]
+layout_mode = 1
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 0.0
+offset_bottom = 6.0
+color = Color(0.314, 0.216, 0.110, 0.85)
+mouse_filter = 2
+
+; Strata line 1 — shallow rock
+[node name="Strata1" type="ColorRect" parent="UILayer/SoilSection"]
+layout_mode = 1
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 0.0
+offset_top = 88.0
+offset_bottom = 90.0
+color = Color(0.314, 0.216, 0.110, 0.50)
+mouse_filter = 2
+
+; Strata line 2 — mid sediment
+[node name="Strata2" type="ColorRect" parent="UILayer/SoilSection"]
+layout_mode = 1
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 0.0
+offset_top = 195.0
+offset_bottom = 197.0
+color = Color(0.196, 0.141, 0.094, 0.55)
+mouse_filter = 2
+
+; Strata line 3 — deep rock
+[node name="Strata3" type="ColorRect" parent="UILayer/SoilSection"]
+layout_mode = 1
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 0.0
+offset_top = 310.0
+offset_bottom = 312.0
+color = Color(0.118, 0.094, 0.063, 0.50)
+mouse_filter = 2
+
+; Foundation pile — Satellite (x=150 on canvas = 150/1080=13.9% from left)
+[node name="Pile_Satellite" type="ColorRect" parent="UILayer/SoilSection"]
+layout_mode = 0
+offset_left = 136.0
+offset_top = 0.0
+offset_right = 162.0
+offset_bottom = 220.0
+color = Color(0.235, 0.176, 0.118, 0.85)
+mouse_filter = 2
+
+; Foundation pile — Launchpad (x=540 center)
+[node name="Pile_Launchpad" type="ColorRect" parent="UILayer/SoilSection"]
+layout_mode = 0
+offset_left = 524.0
+offset_top = 0.0
+offset_right = 558.0
+offset_bottom = 310.0
+color = Color(0.255, 0.196, 0.137, 0.90)
+mouse_filter = 2
+
+; Foundation pile — Control Station (x=914 on canvas)
+[node name="Pile_ControlStation" type="ColorRect" parent="UILayer/SoilSection"]
+layout_mode = 0
+offset_left = 900.0
+offset_top = 0.0
+offset_right = 926.0
+offset_bottom = 200.0
+color = Color(0.235, 0.176, 0.118, 0.85)
+mouse_filter = 2
+
+; Ore vein A — amber mineral (iron/silicate) left-centre
+[node name="OreA1" type="ColorRect" parent="UILayer/SoilSection"]
+layout_mode = 0
+offset_left = 234.0
+offset_top = 150.0
+offset_right = 244.0
+offset_bottom = 162.0
+color = Color(0.851, 0.447, 0.314, 0.85)
+mouse_filter = 2
+
+[node name="OreA2" type="ColorRect" parent="UILayer/SoilSection"]
+layout_mode = 0
+offset_left = 248.0
+offset_top = 162.0
+offset_right = 256.0
+offset_bottom = 172.0
+color = Color(0.851, 0.447, 0.314, 0.65)
+mouse_filter = 2
+
+[node name="OreA3" type="ColorRect" parent="UILayer/SoilSection"]
+layout_mode = 0
+offset_left = 226.0
+offset_top = 158.0
+offset_right = 234.0
+offset_bottom = 168.0
+color = Color(0.851, 0.447, 0.314, 0.75)
+mouse_filter = 2
+
+; Ore vein B — blue mineral (ice/crystal) right-centre
+[node name="OreB1" type="ColorRect" parent="UILayer/SoilSection"]
+layout_mode = 0
+offset_left = 730.0
+offset_top = 190.0
+offset_right = 740.0
+offset_bottom = 202.0
+color = Color(0.725, 0.847, 1.0, 0.85)
+mouse_filter = 2
+
+[node name="OreB2" type="ColorRect" parent="UILayer/SoilSection"]
+layout_mode = 0
+offset_left = 744.0
+offset_top = 200.0
+offset_right = 752.0
+offset_bottom = 210.0
+color = Color(0.725, 0.847, 1.0, 0.65)
+mouse_filter = 2
+
+; Buried Marketplace room — interactive, lower-left of soil section
+[node name="MarketRoom" type="ColorRect" parent="UILayer/SoilSection"]
+layout_mode = 0
+offset_left = 34.0
+offset_top = 220.0
+offset_right = 200.0
+offset_bottom = 340.0
+color = Color(0.098, 0.063, 0.039, 0.95)
+mouse_filter = 2
+
+[node name="MarketDoorFrame" type="ColorRect" parent="UILayer/SoilSection"]
+layout_mode = 0
+offset_left = 34.0
+offset_top = 220.0
+offset_right = 200.0
+offset_bottom = 226.0
+color = Color(0.478, 0.314, 0.157, 0.85)
+mouse_filter = 2
+
+; Subsurface pill label — top-right of soil section
+[node name="SubsurfacePill" type="PanelContainer" parent="UILayer/SoilSection"]
+layout_mode = 1
+anchor_left = 1.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 0.0
+offset_left = -210.0
+offset_top = 14.0
+offset_right = -14.0
+offset_bottom = 56.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("Style_subsurface_pill")
+
+[node name="SubsurfaceLabel" type="Label" parent="UILayer/SoilSection/SubsurfacePill"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.612, 0.553, 0.439, 1.0)
+theme_override_fonts/font = ExtResource("16")
+theme_override_font_sizes/font_size = 24
+text = "·  SUBSURFACE  ·"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+; ── Navigation bar — bottom (design: bottom 90px on 874 → 198px on 1920) ──────
+; Buttons are styled/populated by _apply_nav_safe_area() in earth_base_1.gd.
+[node name="ButtonContainer" type="HBoxContainer" parent="UILayer"]
+anchor_left = 0.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -198.0
+offset_bottom = 0.0
+custom_minimum_size = Vector2(0, 140)
+
+[node name="NavBackground" type="Panel" parent="UILayer/ButtonContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 1
+
+[node name="BackButton" type="Button" parent="UILayer/ButtonContainer"]
+visible = false
+layout_mode = 2
+focus_mode = 0
+text = "Back"
+
+[node name="ForwardButton" type="Button" parent="UILayer/ButtonContainer"]
+visible = false
+layout_mode = 2
+focus_mode = 0
+text = "Next"
+
+[node name="MenuButton" type="Button" parent="UILayer/ButtonContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+text = "Base"
+
+[node name="MarketButton" type="Button" parent="UILayer/ButtonContainer"]
+visible = false
+layout_mode = 2
+focus_mode = 0
+text = "Market"
+
+[node name="SpaceMapButton" type="Button" parent="UILayer/ButtonContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+text = "Atlas"
+
+[node name="BuildButton" type="Button" parent="UILayer/ButtonContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+text = "Build"
+
+[node name="NewMissionButton" type="Button" parent="UILayer/ButtonContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+text = "Missions"
+
+; ── Environment engine ────────────────────────────────────────────────────────
 [node name="EnvironmentEngine" type="Node" parent="."]
 script = ExtResource("8")

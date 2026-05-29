@@ -1,6 +1,8 @@
 class_name FabricationBay
 extends PanelContainer
 
+const DS = preload("res://Scripts/UI/DS.gd")
+
 @onready var module_rail: HBoxContainer       = $VBox/ModuleCanvas/ModuleRail
 @onready var assembly_state_label: Label      = $VBox/Footer/FooterMargin/Row/ProgressFlow/AssemblyStep/AssemblyStateLabel
 @onready var rocket_chooser: OptionButton     = $VBox/Footer/FooterMargin/Row/ProgressFlow/AssemblyStep/RocketChooser
@@ -10,6 +12,21 @@ extends PanelContainer
 const C_CYAN  := Color(0.247, 0.663, 1.000, 1.0)
 const C_AMBER := Color(0.961, 0.651, 0.137, 1.0)
 const C_GREEN := Color(0.224, 0.827, 0.416, 1.0)
+
+func _ready() -> void:
+	_stamp_font(self)
+
+func _stamp_font(node: Node) -> void:
+	var font := DS.font_display()
+	if font == null:
+		return
+	for child in node.get_children():
+		if child is Label:
+			(child as Label).add_theme_font_override("font", font)
+		elif child is Button or child is OptionButton:
+			(child as Control).add_theme_font_override("font", font)
+		if child.get_child_count() > 0:
+			_stamp_font(child)
 
 func clear_modules() -> void:
 	for c in module_rail.get_children():

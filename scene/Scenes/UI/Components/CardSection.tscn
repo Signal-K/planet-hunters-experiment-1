@@ -6,12 +6,12 @@
 ; Set SectionIndex.text ("01."), SectionTitle.text, add children to Content.
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_outer"]
-bg_color = Color(1.0, 1.0, 1.0, 1.0)
+bg_color = Color(0.071, 0.133, 0.212, 1.0)
 corner_radius_top_left = 24
 corner_radius_top_right = 24
 corner_radius_bottom_right = 24
 corner_radius_bottom_left = 24
-shadow_color = Color(0.0, 0.424, 0.361, 0.08)
+shadow_color = Color(0.0, 0.0, 0.0, 0.35)
 shadow_size = 24
 shadow_offset = Vector2(0, 10)
 content_margin_left = 0.0
@@ -20,7 +20,7 @@ content_margin_right = 0.0
 content_margin_bottom = 0.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_header"]
-bg_color = Color(0.941, 0.957, 0.953, 1.0)
+bg_color = Color(0.055, 0.094, 0.157, 1.0)
 corner_radius_top_left = 0
 corner_radius_top_right = 0
 corner_radius_bottom_right = 0
@@ -53,14 +53,14 @@ theme_override_constants/separation = 6
 [node name="SectionIndex" type="Label" parent="OuterVBox/Header/SectionRow"]
 layout_mode = 2
 text = "01."
-theme_override_colors/font_color = Color(0.0, 0.424, 0.361, 1.0)
+theme_override_colors/font_color = Color(0.247, 0.663, 1.0, 1.0)
 theme_override_font_sizes/font_size = 22
 
 [node name="SectionTitle" type="Label" parent="OuterVBox/Header/SectionRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "SECTION"
-theme_override_colors/font_color = Color(0.176, 0.204, 0.200, 1.0)
+theme_override_colors/font_color = Color(0.902, 0.937, 1.0, 1.0)
 theme_override_font_sizes/font_size = 22
 
 [node name="ContentMargin" type="MarginContainer" parent="OuterVBox"]

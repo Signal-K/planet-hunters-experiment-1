@@ -43,7 +43,7 @@ star_color = Color(0.9, 0.9, 0.9, 0.7)
 layer = 2
 
 [node name="GalaxySystem" type="Node2D" parent="."]
-position = Vector2(960, 540)
+position = Vector2(540, 900)
 
 [node name="Background" type="Node2D" parent="GalaxySystem"]
 script = ExtResource("3_galaxybg")
@@ -123,9 +123,9 @@ follow_viewport_enabled = true
 
 [node name="TelemetryPanel" type="PanelContainer" parent="UILayer"]
 offset_left = 0.0
-offset_top = 904.0
-offset_right = 1920.0
-offset_bottom = 1000.0
+offset_top = 1780.0
+offset_right = 1080.0
+offset_bottom = 1920.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_telemetry")
 
 [node name="Row" type="HBoxContainer" parent="UILayer/TelemetryPanel"]
@@ -142,19 +142,19 @@ theme_override_constants/separation = 3
 [node name="EyebrowLabel" type="Label" parent="UILayer/TelemetryPanel/Row/NameBlock"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.565, 0.565, 0.592, 1)
-theme_override_font_sizes/font_size = 9
+theme_override_font_sizes/font_size = 20
 text = "SELECTED TARGET"
 
 [node name="NameLabel" type="Label" parent="UILayer/TelemetryPanel/Row/NameBlock"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.886, 0.757, 0.612, 1)
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 28
 text = "SOL"
 
 [node name="SubLabel" type="Label" parent="UILayer/TelemetryPanel/Row/NameBlock"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.886, 0.757, 0.612, 0.65)
-theme_override_font_sizes/font_size = 11
+theme_override_font_sizes/font_size = 22
 text = "Current Location"
 
 [node name="TelDiv1" type="VSeparator" parent="UILayer/TelemetryPanel/Row"]
@@ -174,13 +174,13 @@ theme_override_constants/separation = 3
 [node name="TypeKey" type="Label" parent="UILayer/TelemetryPanel/Row/StatsBlock/TypeCol"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.565, 0.565, 0.592, 1)
-theme_override_font_sizes/font_size = 9
+theme_override_font_sizes/font_size = 20
 text = "TYPE"
 
 [node name="TypeVal" type="Label" parent="UILayer/TelemetryPanel/Row/StatsBlock/TypeCol"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.894, 0.886, 0.894, 1)
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 24
 text = "Yellow Dwarf / G2V"
 
 [node name="DistCol" type="VBoxContainer" parent="UILayer/TelemetryPanel/Row/StatsBlock"]
@@ -190,13 +190,13 @@ theme_override_constants/separation = 3
 [node name="DistKey" type="Label" parent="UILayer/TelemetryPanel/Row/StatsBlock/DistCol"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.565, 0.565, 0.592, 1)
-theme_override_font_sizes/font_size = 9
+theme_override_font_sizes/font_size = 20
 text = "DISTANCE"
 
 [node name="DistVal" type="Label" parent="UILayer/TelemetryPanel/Row/StatsBlock/DistCol"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.894, 0.886, 0.894, 1)
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 24
 text = "0.00 LY"
 
 [node name="PlanetsCol" type="VBoxContainer" parent="UILayer/TelemetryPanel/Row/StatsBlock"]
@@ -206,13 +206,13 @@ theme_override_constants/separation = 3
 [node name="PlanetsKey" type="Label" parent="UILayer/TelemetryPanel/Row/StatsBlock/PlanetsCol"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.565, 0.565, 0.592, 1)
-theme_override_font_sizes/font_size = 9
+theme_override_font_sizes/font_size = 20
 text = "PLANETS"
 
 [node name="PlanetsVal" type="Label" parent="UILayer/TelemetryPanel/Row/StatsBlock/PlanetsCol"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.894, 0.886, 0.894, 1)
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 24
 text = "8"
 
 [node name="TelSpacer" type="Control" parent="UILayer/TelemetryPanel/Row"]
@@ -220,11 +220,11 @@ layout_mode = 2
 size_flags_horizontal = 3
 
 [node name="ActionBtn" type="Button" parent="UILayer/TelemetryPanel/Row"]
-custom_minimum_size = Vector2(220, 0)
+custom_minimum_size = Vector2(280, 80)
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_colors/font_color = Color(0.745, 0.776, 0.882, 1)
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 24
 text = "◉  SOLAR SYSTEM"
 
 [node name="TelHomeDivider" type="VSeparator" parent="UILayer/TelemetryPanel/Row"]
@@ -233,9 +233,9 @@ theme_override_colors/separator_color = Color(0.28, 0.88, 0.96, 0.18)
 custom_minimum_size = Vector2(1, 0)
 
 [node name="HomeBtn" type="Button" parent="UILayer/TelemetryPanel/Row"]
-custom_minimum_size = Vector2(140, 0)
+custom_minimum_size = Vector2(200, 80)
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_colors/font_color = Color(0.28, 0.88, 0.96, 1)
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 24
 text = "← HOME"

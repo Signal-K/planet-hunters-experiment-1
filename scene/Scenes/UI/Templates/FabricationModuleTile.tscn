@@ -50,7 +50,7 @@ content_margin_bottom = 4.0
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_focus"]
 
 [node name="FabricationModuleTile" type="Button"]
-custom_minimum_size = Vector2(256, 320)
+custom_minimum_size = Vector2(320, 420)
 size_flags_horizontal = 0
 flat = true
 text = ""
@@ -68,7 +68,7 @@ theme_override_constants/separation = 0
 
 [node name="HeaderMargin" type="MarginContainer" parent="Stack"]
 layout_mode = 2
-custom_minimum_size = Vector2(0, 44)
+custom_minimum_size = Vector2(0, 60)
 theme_override_constants/margin_left = 14
 theme_override_constants/margin_right = 14
 theme_override_constants/margin_top = 0
@@ -82,7 +82,7 @@ theme_override_constants/separation = 8
 [node name="CategoryLabel" type="Label" parent="Stack/HeaderMargin/HeaderRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 11
+theme_override_font_sizes/font_size = 22
 theme_override_colors/font_color = Color(0.247, 0.663, 1.0, 1.0)
 vertical_alignment = 1
 text = "CHASSIS"
@@ -123,7 +123,7 @@ layout_mode = 2
 
 [node name="CodeLabel" type="Label" parent="Stack/ArtPanel/ArtStack/CodeBadgeMargin/CodeCenter"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 22
 theme_override_colors/font_color = Color(0.902, 0.937, 1.0, 1.0)
 theme_override_styles/normal = SubResource("StyleBoxFlat_code")
 horizontal_alignment = 1

@@ -113,7 +113,7 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Panel" type="PanelContainer" parent="Center"]
-custom_minimum_size = Vector2(600, 0)
+custom_minimum_size = Vector2(880, 0)
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
 [node name="OuterVBox" type="VBoxContainer" parent="Center/Panel"]
@@ -140,14 +140,14 @@ theme_override_font_sizes/font_size = 22
 
 [node name="CloseBtn" type="Button" parent="Center/Panel/OuterVBox/HeaderMargin/Header"]
 layout_mode = 2
-custom_minimum_size = Vector2(36, 36)
+custom_minimum_size = Vector2(64, 64)
 text = "×"
 theme_override_colors/font_color = Color(0.663, 0.706, 0.800, 1.0)
 theme_override_font_sizes/font_size = 22
 
 [node name="ScrollArea" type="ScrollContainer" parent="Center/Panel/OuterVBox"]
 layout_mode = 2
-custom_minimum_size = Vector2(0, 180)
+custom_minimum_size = Vector2(0, 300)
 size_flags_vertical = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_inner")
 
@@ -171,7 +171,7 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_skip")
 theme_override_styles/hover = SubResource("StyleBoxFlat_skip")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_skip")
 theme_override_colors/font_color = Color(0.663, 0.706, 0.800, 1.0)
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 28
 
 [node name="FooterSpacer" type="Control" parent="Center/Panel/OuterVBox/Footer/FooterRow"]
 layout_mode = 2
@@ -187,4 +187,4 @@ theme_override_styles/pressed = SubResource("StyleBoxFlat_submit_hover")
 theme_override_styles/disabled = SubResource("StyleBoxFlat_submit_disabled")
 theme_override_colors/font_color = Color(0.039, 0.063, 0.102, 1.0)
 theme_override_colors/font_disabled_color = Color(0.039, 0.063, 0.102, 0.45)
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 28

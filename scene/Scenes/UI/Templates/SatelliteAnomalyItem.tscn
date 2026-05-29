@@ -13,7 +13,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-color = Color(0.972549, 0.94902, 0.92549, 0.96)
+color = Color(0.071, 0.133, 0.212, 0.96)
 
 [node name="HBox" type="HBoxContainer" parent="."]
 layout_mode = 2

@@ -3,8 +3,10 @@
   "id": "planet-hunters-experiment-1",
   "createdAt": "2026-01-15T05:32:14.124Z",
   "settings": {
+    "defaultAssignee": "@Liam",
     "defaultPriority": "medium",
-    "defaultLabels": [],
+    "timeFormat": "24h",
+    "gitTrackingMode": "git-tracked",
     "statuses": [
       "todo",
       "in-progress",
@@ -14,6 +16,15 @@
       "on-hold",
       "urgent"
     ],
+    "statusColors": {
+      "blocked": "red",
+      "done": "green",
+      "in-progress": "blue",
+      "in-review": "purple",
+      "on-hold": "yellow",
+      "todo": "gray",
+      "urgent": "orange"
+    },
     "visibleColumns": [
       "todo",
       "in-progress",
@@ -23,20 +34,13 @@
       "on-hold",
       "urgent"
     ],
-    "statusColors": {
-      "todo": "gray",
-      "in-progress": "blue",
-      "in-review": "purple",
-      "done": "green",
-      "blocked": "red",
-      "on-hold": "yellow",
-      "urgent": "orange"
+    "semanticSearch": {
+      "enabled": true,
+      "model": "multilingual-e5-small",
+      "huggingFaceId": "Xenova/multilingual-e5-small",
+      "dimensions": 384,
+      "maxTokens": 512
     },
-    "id": "planet-hunters-experiment-1",
-    "createdAt": "2026-01-15T05:32:14.124Z",
-    "timeFormat": "24h",
-    "gitTrackingMode": "git-tracked",
-    "serverPort": 6420,
-    "defaultAssignee": "@Liam"
+    "serverPort": 6420
   }
 }
