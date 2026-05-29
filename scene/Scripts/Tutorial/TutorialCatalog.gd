@@ -18,7 +18,7 @@ const STEPS_BY_MISSION := {
 		{
 			"id": "m1_welcome",
 			"action_key": "open_launchpad",
-			"title": "Welcome to Landnam",
+			"title": "Get started",
 			"message": "You run a space mining operation. Tap New Mission — pick a buyer, choose an asteroid, and launch your first rocket.",
 			"mechanic": "intro",
 			"valid_scenes": BASE_SCENES
