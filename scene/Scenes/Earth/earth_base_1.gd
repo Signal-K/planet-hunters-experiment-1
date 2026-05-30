@@ -875,12 +875,13 @@ func _on_earth_base_viewport_resized() -> void:
 
 func _apply_wordmark_layout(node: Control) -> void:
 	var viewport := get_viewport_rect().size
-	# Portrait: anchor title block top-left below the safe area notch
+	# Portrait: anchor title block top-left below the TOP_STATUS (notch) zone.
+	var top_y := UILayout.zone(UILayout.Zone.TOP_STATUS, viewport).end.y
 	node.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	node.offset_left   = 16.0
-	node.offset_top    = 52.0
+	node.offset_top    = top_y
 	node.offset_right  = 340.0
-	node.offset_bottom = 120.0
+	node.offset_bottom = top_y + 68.0
 
 func _build_ambient_stars() -> void:
 	var star_root = get_node_or_null("AmbientStarLayer/StarRoot")

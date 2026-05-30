@@ -66,6 +66,10 @@ enum Zone {
 	                    ## Used by FrancBalance. Must not overlap TUTORIAL_COACH.
 	BOTTOM_NAV,         ## Full-width persistent bottom navigation bar.
 	                    ## Portrait-primary zone — sits above the home indicator.
+	TOP_STATUS,         ## Portrait-only: system status strip at the very top.
+	                    ## Covers the notch / dynamic-island area (~52 px tall).
+	                    ## Content must never be placed inside this zone.
+	                    ## Returns Rect2.ZERO in landscape — callers must guard.
 }
 
 ## ─── Public API ──────────────────────────────────────────────────────────────
@@ -89,6 +93,7 @@ static func zone(z: Zone, vp: Vector2) -> Rect2:
 		Zone.TUTORIAL_COACH:     return _tutorial_coach(vp)
 		Zone.EARTH_WIDGET:       return _earth_widget(vp)
 		Zone.BOTTOM_NAV:         return _bottom_nav(vp)
+		Zone.TOP_STATUS:         return _top_status(vp)
 		_:
 			push_warning("UILayout: unknown zone %d" % z)
 			return safe_rect(vp)
@@ -169,10 +174,19 @@ static func _mining_bottom(vp: Vector2) -> Rect2:
 
 ## ─── Global / multi-scene zones ──────────────────────────────────────────────
 
+static func _top_status(vp: Vector2) -> Rect2:
+	# Portrait-only: the notch / status-bar safe strip at the very top of the screen.
+	# In landscape this zone is empty — no notch clearance needed at the sides.
+	if not is_portrait(vp):
+		return Rect2(0.0, 0.0, vp.x, 0.0)
+	# Height matches the hardcoded notch offset already used in earth_base_1 (52 px).
+	return Rect2(0.0, 0.0, vp.x, 52.0)
+
 static func _app_header(vp: Vector2) -> Rect2:
 	var compact := is_portrait(vp) or vp.x < 900.0
-	var h := 64.0 if compact else 72.0
-	return Rect2(0.0, 0.0, vp.x, h)
+	var h := 100.0 if is_portrait(vp) else (64.0 if compact else 72.0)
+	var y := _top_status(vp).end.y  # start below the notch strip in portrait
+	return Rect2(0.0, y, vp.x, h)
 
 static func _app_footer(vp: Vector2) -> Rect2:
 	var compact := is_portrait(vp) or vp.x < 900.0
@@ -208,6 +222,8 @@ static func _earth_widget(vp: Vector2) -> Rect2:
 	return Rect2(EDGE, EDGE, 200.0, 50.0)
 
 static func _bottom_nav(vp: Vector2) -> Rect2:
-	var h := 72.0
+	# Portrait: taller bar (120 px) gives the 4 nav tabs comfortable tap targets.
+	# Landscape/desktop: keep the existing compact 72 px.
+	var h := 120.0 if is_portrait(vp) else 72.0
 	var bottom_gap := bottom_clearance(vp)
 	return Rect2(0.0, vp.y - h - bottom_gap, vp.x, h)

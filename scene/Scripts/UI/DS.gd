@@ -44,10 +44,27 @@ const BORDER_STRONG   := Color(0.247, 0.663, 1.000, 0.45)  # 45% ghost
 const DANGER       := Color(1.000, 0.353, 0.416, 1.0)  # #ff5a6a
 const DANGER_HOVER := Color(0.839, 0.271, 0.329, 1.0)  # darker crit
 
+# ── Text dim (between TEXT and TEXT_MUTED) ───────────────────────────────
+const TEXT_DIM := Color(0.663, 0.722, 0.808, 1.0)   # #a9b8ce  secondary body text
+
 # ── Status ────────────────────────────────────────────────────────────────
 const STATUS_OK   := Color(0.224, 0.827, 0.416, 1.0)  # #39d36a  ready / online
 const STATUS_WARN := Color(1.000, 0.702, 0.278, 1.0)  # #ffb347  low power / pending
 const STATUS_CRIT := Color(1.000, 0.353, 0.416, 1.0)  # #ff5a6a  abort / overload
+
+# ── Status soft backgrounds (18% alpha fill) ─────────────────────────────
+const STATUS_OK_SOFT   := Color(0.224, 0.827, 0.416, 0.18)  # ok tint
+const STATUS_WARN_SOFT := Color(1.000, 0.702, 0.278, 0.18)  # warn tint
+const STATUS_CRIT_SOFT := Color(1.000, 0.353, 0.416, 0.18)  # crit tint
+
+# ── Mineral palette ───────────────────────────────────────────────────────
+# Matches --ln-mineral-* CSS tokens in portrait/colors_and_type.css
+const MINERAL_SILICON := Color(0.725, 0.847, 1.000, 1.0)  # #b9d8ff
+const MINERAL_IRON    := Color(0.851, 0.443, 0.314, 1.0)  # #d97150
+const MINERAL_ICE     := Color(0.608, 0.925, 1.000, 1.0)  # #9becff
+const MINERAL_CARBON  := Color(0.416, 0.447, 0.502, 1.0)  # #6a7280
+const MINERAL_GOLD    := Color(1.000, 0.820, 0.400, 1.0)  # #ffd166
+const MINERAL_RARE    := Color(0.753, 0.518, 1.000, 1.0)  # #c084ff
 
 # ── Secondary button interaction states ───────────────────────────────────
 const BUTTON_HOVER    := SURFACE_HIGH
