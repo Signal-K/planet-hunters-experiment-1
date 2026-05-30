@@ -63,6 +63,7 @@ let _xpSyncInFlight = false;
 let _pendingXpSnapshot = null;
 // Set to true when this is the 2nd session; cleared once the survey fires
 let _pendingReturnVisitSurvey = false;
+let _cachedSurveyDefs = null;
 
 const LEVEL_UNLOCK_HINTS = {
   2: "Longer range unlocked",
@@ -703,17 +704,169 @@ function showFeedbackDialog(context = {}) {
   captureAnalyticsEvent("feedback_dialog_opened", context);
 }
 
+// ── Native survey overlay — no iframe, no dependency on us.posthog.com ───────
+// Fetches survey definitions from the PostHog capture API (us.i.posthog.com),
+// renders questions inline, and submits answers directly via the capture API.
+// Ad blockers that block us.posthog.com leave this unaffected.
+
+async function _fetchSurveyDefs(projectToken, apiHost) {
+  if (_cachedSurveyDefs) return _cachedSurveyDefs;
+  try {
+    const url = `${apiHost}/api/surveys/?token=${encodeURIComponent(projectToken)}`;
+    const resp = await fetch(url, { cache: "default" });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+    _cachedSurveyDefs = {};
+    for (const survey of (data.surveys || [])) {
+      _cachedSurveyDefs[survey.id] = survey;
+    }
+    return _cachedSurveyDefs;
+  } catch (e) {
+    console.warn("[survey] Could not fetch survey definitions:", e.message);
+    return {};
+  }
+}
+
+function _styleNativeChoiceBtn(btn, selected) {
+  btn.style.display = "block";
+  btn.style.width = "100%";
+  btn.style.padding = "10px 16px";
+  btn.style.border = selected ? "2px solid #4ab4ff" : "1px solid #233455";
+  btn.style.borderRadius = "8px";
+  btn.style.background = selected ? "rgba(74,180,255,0.15)" : "#0e1a2e";
+  btn.style.color = selected ? "#4ab4ff" : "#e6efff";
+  btn.style.fontSize = "16px";
+  btn.style.textAlign = "left";
+  btn.style.cursor = "pointer";
+  btn.style.transition = "background 0.1s, border-color 0.1s";
+}
+
+function _buildSurveyQuestions(container, questions, answers) {
+  questions.forEach((q, idx) => {
+    const block = document.createElement("div");
+    block.style.display = "flex";
+    block.style.flexDirection = "column";
+    block.style.gap = "10px";
+
+    const label = document.createElement("p");
+    label.textContent = q.question || "";
+    label.style.margin = "0";
+    label.style.color = "#e6efff";
+    label.style.fontSize = "17px";
+    label.style.fontWeight = "600";
+    label.style.lineHeight = "1.4";
+    block.appendChild(label);
+
+    if (q.type === "rating") {
+      const scaleN = q.scale || 5;
+      const lowLabel = q.low_label || q.lowerBoundLabel || "";
+      const highLabel = q.high_label || q.upperBoundLabel || "";
+      const row = document.createElement("div");
+      row.style.display = "flex";
+      row.style.alignItems = "center";
+      row.style.gap = "8px";
+      row.style.flexWrap = "wrap";
+      if (lowLabel) {
+        const lo = document.createElement("span");
+        lo.textContent = lowLabel;
+        lo.style.color = "#7a9abf";
+        lo.style.fontSize = "13px";
+        row.appendChild(lo);
+      }
+      for (let n = 1; n <= scaleN; n++) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.textContent = String(n);
+        btn.style.width = "48px";
+        btn.style.height = "48px";
+        btn.style.border = "1px solid #233455";
+        btn.style.borderRadius = "8px";
+        btn.style.background = "#0e1a2e";
+        btn.style.color = "#e6efff";
+        btn.style.fontSize = "18px";
+        btn.style.fontWeight = "600";
+        btn.style.cursor = "pointer";
+        btn.style.flexShrink = "0";
+        const captured = n;
+        btn.addEventListener("click", () => {
+          answers[idx] = String(captured);
+          for (const sibling of row.querySelectorAll("button")) {
+            const isSelected = sibling.textContent === String(captured);
+            sibling.style.border = isSelected ? "2px solid #4ab4ff" : "1px solid #233455";
+            sibling.style.background = isSelected ? "rgba(74,180,255,0.15)" : "#0e1a2e";
+            sibling.style.color = isSelected ? "#4ab4ff" : "#e6efff";
+          }
+        });
+        row.appendChild(btn);
+      }
+      if (highLabel) {
+        const hi = document.createElement("span");
+        hi.textContent = highLabel;
+        hi.style.color = "#7a9abf";
+        hi.style.fontSize = "13px";
+        row.appendChild(hi);
+      }
+      block.appendChild(row);
+    } else if (q.type === "multiple_choice") {
+      const col = document.createElement("div");
+      col.style.display = "flex";
+      col.style.flexDirection = "column";
+      col.style.gap = "8px";
+      for (const choice of (q.choices || [])) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.textContent = String(choice);
+        _styleNativeChoiceBtn(btn, false);
+        btn.addEventListener("click", () => {
+          answers[idx] = String(choice);
+          for (const sibling of col.querySelectorAll("button")) {
+            _styleNativeChoiceBtn(sibling, sibling.textContent === String(choice));
+          }
+        });
+        col.appendChild(btn);
+      }
+      block.appendChild(col);
+    } else {
+      // open text
+      const ta = document.createElement("textarea");
+      ta.placeholder = "Type your answer here\u2026";
+      ta.rows = 4;
+      ta.style.width = "100%";
+      ta.style.background = "#060d1a";
+      ta.style.border = "1px solid #233455";
+      ta.style.borderRadius = "8px";
+      ta.style.color = "#e6efff";
+      ta.style.fontSize = "16px";
+      ta.style.padding = "10px 14px";
+      ta.style.resize = "vertical";
+      ta.style.boxSizing = "border-box";
+      ta.addEventListener("input", () => { answers[idx] = ta.value.trim(); });
+      block.appendChild(ta);
+    }
+
+    container.appendChild(block);
+  });
+}
+
 async function showInlineSurvey(params, surveyIdOverride) {
   const runtimeConfig = await getRuntimeConfig();
   const surveyId = surveyIdOverride || runtimeConfig.posthog.surveyId;
-  const surveyUrl = `${runtimeConfig.posthog.uiHost}/external_surveys/${surveyId}`;
+  if (!surveyId) return;
+
+  const defs = await _fetchSurveyDefs(runtimeConfig.posthog.projectToken, runtimeConfig.posthog.apiHost);
+  const surveyDef = defs[surveyId] || null;
+  const surveyName = surveyDef ? surveyDef.name : "Share your feedback";
+  const questions = surveyDef ? (surveyDef.questions || []) : [];
+  const distinctId = params.distinct_id || "";
+
   removeSurveyOverlay();
 
+  // Backdrop
   const overlay = document.createElement("div");
   overlay.id = SURVEY_OVERLAY_ID;
   overlay.style.position = "fixed";
   overlay.style.inset = "0";
-  overlay.style.background = "rgba(2, 6, 15, 0.85)";
+  overlay.style.background = "rgba(2, 6, 15, 0.88)";
   overlay.style.zIndex = "2147482646";
   overlay.style.display = "flex";
   overlay.style.alignItems = "center";
@@ -721,25 +874,34 @@ async function showInlineSurvey(params, surveyIdOverride) {
   overlay.style.padding = "min(20px, 4vw)";
   overlay.style.boxSizing = "border-box";
 
+  // Card
   const card = document.createElement("div");
-  card.style.width = "min(860px, 100%)";
-  card.style.height = "min(calc(100svh - 32px), 900px)";
-  card.style.background = "#0c1220";
-  card.style.border = "1px solid #233455";
+  card.style.width = "min(560px, 100%)";
+  card.style.maxHeight = "min(calc(100svh - 32px), 860px)";
+  card.style.background = "#080f1c";
+  card.style.border = "1px solid #1e3050";
   card.style.borderRadius = "14px";
-  card.style.overflow = "hidden";
-  card.style.boxShadow = "0 24px 60px rgba(0, 0, 0, 0.6)";
-  card.style.position = "relative";
+  card.style.boxShadow = "0 24px 60px rgba(0,0,0,0.65)";
   card.style.display = "flex";
   card.style.flexDirection = "column";
   card.style.boxSizing = "border-box";
+  card.style.overflow = "hidden";
 
+  // Header
   const header = document.createElement("div");
-  header.style.padding = "8px 12px";
+  header.style.padding = "16px 20px 14px";
   header.style.display = "flex";
-  header.style.justifyContent = "flex-end";
-  header.style.background = "#0a101a";
+  header.style.alignItems = "center";
+  header.style.justifyContent = "space-between";
   header.style.borderBottom = "1px solid #1a2a44";
+  header.style.flexShrink = "0";
+
+  const titleEl = document.createElement("span");
+  titleEl.textContent = surveyName;
+  titleEl.style.color = "#e6efff";
+  titleEl.style.fontSize = "16px";
+  titleEl.style.fontWeight = "700";
+  header.appendChild(titleEl);
 
   const closeBtn = document.createElement("button");
   closeBtn.type = "button";
@@ -747,29 +909,115 @@ async function showInlineSurvey(params, surveyIdOverride) {
   closeBtn.style.border = "1px solid #30496f";
   closeBtn.style.background = "#12213a";
   closeBtn.style.color = "#dce7fb";
-  closeBtn.style.padding = "6px 16px";
+  closeBtn.style.padding = "5px 14px";
   closeBtn.style.borderRadius = "999px";
   closeBtn.style.cursor = "pointer";
   closeBtn.style.fontSize = "13px";
   closeBtn.style.fontWeight = "600";
-  closeBtn.onclick = function closeSurvey() {
+  closeBtn.onclick = () => {
     removeSurveyOverlay();
-    pushAction("survey_closed", {});
+    captureAnalyticsEvent("survey_closed", { survey_id: surveyId });
+  };
+  header.appendChild(closeBtn);
+  card.appendChild(header);
+
+  // Scrollable questions body
+  const body = document.createElement("div");
+  body.style.padding = "24px 24px 16px";
+  body.style.overflowY = "auto";
+  body.style.flex = "1";
+  body.style.display = "flex";
+  body.style.flexDirection = "column";
+  body.style.gap = "24px";
+  body.style.boxSizing = "border-box";
+
+  const answers = new Array(questions.length).fill(null);
+  _buildSurveyQuestions(body, questions, answers);
+  card.appendChild(body);
+
+  // Footer
+  const footer = document.createElement("div");
+  footer.style.padding = "14px 24px 20px";
+  footer.style.display = "flex";
+  footer.style.gap = "12px";
+  footer.style.justifyContent = "flex-end";
+  footer.style.borderTop = "1px solid #1a2a44";
+  footer.style.flexShrink = "0";
+
+  const skipBtn = document.createElement("button");
+  skipBtn.type = "button";
+  skipBtn.textContent = "Skip";
+  skipBtn.style.padding = "10px 22px";
+  skipBtn.style.border = "1px solid #233455";
+  skipBtn.style.borderRadius = "8px";
+  skipBtn.style.background = "transparent";
+  skipBtn.style.color = "#7a9abf";
+  skipBtn.style.fontSize = "15px";
+  skipBtn.style.cursor = "pointer";
+  skipBtn.onclick = () => {
+    removeSurveyOverlay();
     captureAnalyticsEvent("survey_closed", { survey_id: surveyId });
   };
 
-  const iframe = document.createElement("iframe");
-  iframe.id = SURVEY_IFRAME_ID;
-  iframe.src = `${surveyUrl}?${new URLSearchParams(params).toString()}`;
-  iframe.title = params.survey_context ? "Landnám Survey" : "Landnám Exit Survey";
-  iframe.style.width = "100%";
-  iframe.style.flex = "1";
-  iframe.style.border = "0";
-  iframe.allow = "fullscreen";
+  const submitBtn = document.createElement("button");
+  submitBtn.type = "button";
+  submitBtn.textContent = "Submit";
+  submitBtn.style.padding = "10px 28px";
+  submitBtn.style.border = "1px solid #4ab4ff";
+  submitBtn.style.borderRadius = "8px";
+  submitBtn.style.background = "rgba(74,180,255,0.14)";
+  submitBtn.style.color = "#4ab4ff";
+  submitBtn.style.fontSize = "15px";
+  submitBtn.style.fontWeight = "700";
+  submitBtn.style.cursor = "pointer";
 
-  header.appendChild(closeBtn);
-  card.appendChild(header);
-  card.appendChild(iframe);
+  submitBtn.onclick = async () => {
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Sending\u2026";
+    skipBtn.disabled = true;
+
+    const properties = { "$survey_id": surveyId, "$survey_name": surveyName };
+    answers.forEach((a, i) => {
+      if (a == null) return;
+      const key = i === 0 ? "$survey_response" : `$survey_response_${i}`;
+      properties[key] = String(a);
+    });
+    for (const k of ["survey_context", "mission_count", "mission_stage"]) {
+      if (params[k]) properties[`survey_ctx_${k}`] = params[k];
+    }
+
+    try {
+      await fetch(`${runtimeConfig.posthog.apiHost}/capture/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          api_key: runtimeConfig.posthog.projectToken,
+          distinct_id: distinctId,
+          event: "survey sent",
+          properties,
+        }),
+      });
+    } catch (e) {
+      console.warn("[survey] Capture failed:", e.message);
+    }
+
+    // Thank-you state
+    for (const child of [...body.children]) child.remove();
+    const ty = document.createElement("p");
+    ty.textContent = "Thanks \u2014 your answer has been recorded.";
+    ty.style.color = "#4ab4ff";
+    ty.style.fontSize = "18px";
+    ty.style.textAlign = "center";
+    ty.style.margin = "auto";
+    body.appendChild(ty);
+    footer.style.display = "none";
+    setTimeout(() => removeSurveyOverlay(), 2500);
+  };
+
+  footer.appendChild(skipBtn);
+  footer.appendChild(submitBtn);
+  card.appendChild(footer);
+
   overlay.appendChild(card);
   document.body.appendChild(overlay);
 
