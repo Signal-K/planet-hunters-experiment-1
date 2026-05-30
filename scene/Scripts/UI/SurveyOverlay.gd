@@ -22,6 +22,9 @@ var _http: HTTPRequest
 @onready var _close_btn: Button = $Center/Panel/OuterVBox/HeaderMargin/Header/CloseBtn
 
 func _ready() -> void:
+	if _survey_name == "" or _questions.is_empty():
+		queue_free()
+		return
 	_title_label.text = _survey_name
 	_answers.resize(_questions.size())
 	_answers.fill(null)

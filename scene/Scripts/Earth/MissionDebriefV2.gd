@@ -39,9 +39,9 @@ const CYAN        := PanelStyle.ACCENT
 const AMBER       := PanelStyle.ACCENT_WARM
 const GREEN       := Color(0.30, 1.0, 0.45, 1.0)
 const RED         := Color(1.0, 0.35, 0.35, 1.0)
-const TEXT_COLOR  := PanelStyle.TEXT_ON_DARK
+const TEXT_COLOR  := PanelStyle.TEXT_PRIMARY
 const TEXT_MUTED  := PanelStyle.MUTED_ON_DARK
-const TITLE_COLOR := PanelStyle.TEXT_ON_DARK
+const TITLE_COLOR := PanelStyle.TEXT_PRIMARY
 
 var _returned: Dictionary       = {}
 var _cargo: Dictionary          = {}
@@ -306,14 +306,13 @@ func _reset_button(button: Button, text: String, primary: bool) -> void:
 
 func _bind_header() -> void:
 	_header_section.visible = true
-	_header_eyebrow.text = "#DEBRIEF_07X"
-	_header_eyebrow.add_theme_font_size_override("font_size", 10)
-	_header_eyebrow.add_theme_color_override("font_color", Color(0.42, 0.46, 0.63, 0.72))
-	_header_title.text = "MISSION DEBRIEF"
+	_header_eyebrow.text = ""
+	_header_eyebrow.visible = false
+	_header_title.text = "Mission debrief"
 	_header_title.add_theme_font_size_override("font_size", 34)
 	_header_title.add_theme_color_override("font_color", TITLE_COLOR)
 	var stage := int(RocketsManager.get_mission_stage())
-	var hint := "MISSION PARAMETERS FULFILLED. DATA AND RESOURCE RECOVERY COMPLETE."
+	var hint := "Run complete."
 	var unlock_hint := _stage_hint(stage)
 	if unlock_hint != "":
 		hint += "  " + unlock_hint.to_upper()
@@ -338,7 +337,7 @@ func _bind_success_banner() -> void:
 	_success_title.text = "MISSION\nCOMPLETE"
 	_success_title.add_theme_font_size_override("font_size", 28)
 	_success_title.add_theme_color_override("font_color", TITLE_COLOR)
-	_success_detail.text = "Return trajectory complete. Cargo and findings are ready for review."
+	_success_detail.text = "Back from the run. Check your haul and collect your payout."
 	_success_detail.add_theme_font_size_override("font_size", 13)
 	_success_detail.add_theme_color_override("font_color", TEXT_MUTED)
 

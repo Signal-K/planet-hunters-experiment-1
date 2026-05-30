@@ -195,7 +195,8 @@ func _setup_orbit_visual() -> void:
 	orbit_rocket.position = Vector2(ORBIT_RADIUS_PX, 0)
 	orbit_rocket.scale = Vector2(0.2, 0.2)
 	_set_orbit_rocket_visual(_current_rocket_id)
-	OrbitVisuals.update_heading_line(orbit_heading, orbit_rocket)
+	if orbit_heading:
+		orbit_heading.visible = false
 
 func _start_earth_orbit() -> void:
 	_phase = Phase.EARTH_ORBIT
@@ -287,7 +288,7 @@ func _start_target_orbit() -> void:
 	if orbit_circle:
 		orbit_circle.visible = true
 	if orbit_heading:
-		orbit_heading.visible = true
+		orbit_heading.visible = false
 	var t = get_tree().create_tween()
 	t.tween_property(minerals_panel, "modulate:a", 1.0, 0.6)
 	t.parallel().tween_property(inventory_panel, "modulate:a", 1.0, 0.6)
@@ -309,13 +310,12 @@ func _update_orbit(delta: float) -> void:
 	else:
 		var offset = Vector2(cos(_orbit_angle), sin(_orbit_angle)) * ORBIT_RADIUS_PX
 		orbit_rocket.position = offset
-		orbit_rocket.rotation = _orbit_angle + PI
+		orbit_rocket.rotation = _orbit_angle
 	if camera_3d and asteroid_pivot:
 		if _phase in [Phase.EARTH_ORBIT, Phase.TRAVEL]:
 			orbit_root.position = camera_3d.unproject_position(_earth_pivot.global_position)
 		else:
 			orbit_root.position = camera_3d.unproject_position(asteroid_pivot.global_position)
-	OrbitVisuals.update_heading_line(orbit_heading, orbit_rocket)
 
 func _build_minerals_list() -> void:
 	if minerals_list == null:

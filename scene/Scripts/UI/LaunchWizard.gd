@@ -685,23 +685,23 @@ func _style_contractor_card(card: PanelContainer, c: Dictionary, idx: int, selec
 	var btn := _contractor_select_button(card)
 	if btn:
 		var btn_style := StyleBoxFlat.new()
-		btn_style.bg_color = Color(warm.r, warm.g, warm.b, 0.92 if selected else 0.18)
+		btn_style.bg_color = Color(warm.r, warm.g, warm.b, 0.92 if selected else 0.58)
 		btn_style.border_color = Color(warm.r, warm.g, warm.b, 1.0)
-		btn_style.set_border_width_all(1)
+		btn_style.set_border_width_all(2)
 		btn_style.set_corner_radius_all(6)
 		btn_style.content_margin_left = 18.0
 		btn_style.content_margin_right = 18.0
 		btn_style.content_margin_top = 10.0
 		btn_style.content_margin_bottom = 10.0
 		var hover := btn_style.duplicate()
-		hover.bg_color = Color(warm.r, warm.g, warm.b, 1.0 if selected else 0.32)
+		hover.bg_color = Color(warm.r, warm.g, warm.b, 1.0)
 		btn.add_theme_stylebox_override("normal", btn_style)
 		btn.add_theme_stylebox_override("hover", hover)
 		btn.add_theme_stylebox_override("pressed", hover)
 		btn.add_theme_stylebox_override("focus", hover)
-		btn.add_theme_color_override("font_color", Color(0.04, 0.045, 0.055, 1.0) if selected else Color(warm.r, warm.g, warm.b, 1.0))
-		btn.add_theme_color_override("font_hover_color", Color(0.04, 0.045, 0.055, 1.0) if selected else Color(1, 0.96, 0.80, 1))
-		btn.add_theme_font_size_override("font_size", 15)
+		btn.add_theme_color_override("font_color", Color(0.04, 0.045, 0.055, 1.0))
+		btn.add_theme_color_override("font_hover_color", Color(0.04, 0.045, 0.055, 1.0))
+		btn.add_theme_font_size_override("font_size", 16)
 	for path in [
 		"Margin/VBox/HeaderRow/CodePanel/CodeLabel",
 		"Margin/VBox/HeaderRow/IdentityCol/NameLabel",

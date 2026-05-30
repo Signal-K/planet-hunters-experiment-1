@@ -18,6 +18,7 @@ var scene_manager: SceneManager
 var ui_manager: UIManager
 const ClassificationConsensus = preload("res://Scripts/Utils/ClassificationConsensus.gd")
 const EarthBaseActionCard = preload("res://Scripts/UI/EarthBaseActionCard.gd")
+const WelcomeOverlay = preload("res://Scripts/UI/WelcomeOverlay.gd")
 const EarthBaseProgressionCards = preload("res://Scripts/UI/EarthBaseProgressionCards.gd")
 const StarterRocket2UnlockOverlayScene = preload("res://Scenes/UI/StarterRocket2UnlockOverlay.tscn")
 const FreeOpsUnlockOverlayScene = preload("res://Scenes/UI/FreeOpsUnlockOverlay.tscn")
@@ -90,8 +91,12 @@ func _ready() -> void:
 	call_deferred("_apply_nav_safe_area")
 	call_deferred("_apply_structure_visual_evolution")
 	call_deferred("_refresh_tutorial_overlay_when_ready")
+	call_deferred("_maybe_show_welcome")
 	_build_earth_base_identity()
 	call_deferred("_refresh_tutorial_owned_ui")
+
+func _maybe_show_welcome() -> void:
+	WelcomeOverlay.maybe_show(self)
 
 func _ensure_tutorial_runtime() -> void:
 	var app = AppControllerHelper.get_instance()
