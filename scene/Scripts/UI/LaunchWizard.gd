@@ -190,10 +190,12 @@ func refresh_layout_for_viewport() -> void:
 
 	custom_minimum_size = viewport
 
-	var compact := viewport.x < 900.0
+	var portrait := UILayout.is_portrait(viewport)
+	var compact := portrait or viewport.x < 900.0
 	var narrow := viewport.x < 1280.0
-	var side_margin := 14 if compact else (20 if narrow else 28)
-	var vertical_margin := 14 if compact else 20
+	# Portrait uses tighter side margins to maximise usable card width.
+	var side_margin := 12 if portrait else (14 if compact else (20 if narrow else 28))
+	var vertical_margin := 10 if portrait else (14 if compact else 20)
 	var header_zone := UILayout.zone(UILayout.Zone.APP_HEADER, viewport)
 	var body_zone := UILayout.zone(UILayout.Zone.APP_BODY, viewport)
 	var footer_zone := UILayout.zone(UILayout.Zone.APP_FOOTER, viewport)
@@ -897,6 +899,17 @@ func _build_target_step() -> void:
 		var auto := RocketsManager.ensure_selected_target_for_launch()
 		if auto.get("ok", false):
 			RocketsManager.select_target(str(auto.get("target_id", "")))
+			# Reload _selected_target from the manager so detail panel can show it.
+			var auto_tid := str(auto.get("target_id", ""))
+			if auto_tid != "":
+				_selected_target = RocketsManager.get_target_details(auto_tid)
+
+	# In portrait, show the inline map panel instead of navigating to the map
+	# scene — the LaunchWizardMapStep embedded in the scene handles tap-to-pick.
+	var vp := get_viewport_rect().size
+	if UILayout.is_portrait(vp):
+		_show_inline_map()
+		return
 
 	RocketsManager.set_map_return_mode(true)
 	var map_scene := "res://Scenes/UI/SpaceMap/galaxy_map.tscn" \
@@ -904,12 +917,48 @@ func _build_target_step() -> void:
 	get_tree().change_scene_to_file(map_scene)
 
 func _fit_map_to_scroll() -> void:
+	var vp := get_viewport_rect().size
+	var portrait := UILayout.is_portrait(vp)
 	var h := _scroll.size.y
 	if h < 200.0:
-		h = get_viewport_rect().size.y - 120.0
-	_map_panel.custom_minimum_size = Vector2(0, maxf(h * 0.66, 420.0))
+		h = vp.y - 120.0
+	# In portrait, the map occupies ~52% of the scroll area (min 320 px) so
+	# the target detail panel is still visible below it without needing to scroll.
+	var map_h: float = maxf(h * 0.52, 320.0) if portrait else maxf(h * 0.66, 420.0)
+	_map_panel.custom_minimum_size = Vector2(0, map_h)
 	if _map_step and is_instance_valid(_map_step):
 		_map_step.queue_redraw()
+
+## Show the inline orbital-ring map embedded in the LaunchWizard scaffold.
+## Used only in portrait mode — landscape navigates to space_map.tscn instead.
+func _show_inline_map() -> void:
+	# Enrich _targets with distance_au so LaunchWizardMapStep can draw rings.
+	var enriched: Array = []
+	for t_any in _targets:
+		if typeof(t_any) != TYPE_DICTIONARY:
+			continue
+		var t: Dictionary = t_any.duplicate()
+		if not t.has("distance_au") or float(t.get("distance_au", 0.0)) <= 0.0:
+			var profile := RocketsManager.build_target_profile(
+				str(t.get("id", "")), str(t.get("type", "asteroid"))
+			)
+			t["distance_au"] = float(profile.get("distance_au", 0.0))
+		enriched.append(t)
+	_targets = enriched
+
+	var sel_id := str(_selected_target.get("id", ""))
+	_map_panel.visible = true
+	_target_detail_card.visible = true
+	if _map_step_node and is_instance_valid(_map_step_node):
+		_map_step_node.setup(_targets, sel_id)
+
+	if not _selected_target.is_empty():
+		_refresh_target_detail(_selected_target)
+	else:
+		_target_hint_label.text = "Tap a target on the map to select your destination."
+		_target_hint_label.visible = true
+
+	call_deferred("_fit_map_to_scroll")
 
 func _build_m3_review_gate(target: Dictionary) -> void:
 	_target_title.text = "Review candidate"
@@ -945,6 +994,9 @@ func _on_map_target_selected(t: Dictionary) -> void:
 	})
 	_update_footer()
 	_refresh_target_detail(t)
+	# In portrait inline-map mode, keep the MapStep selection ring in sync.
+	if _map_step_node and is_instance_valid(_map_step_node):
+		_map_step_node.set_selected(str(t.get("id", "")))
 
 func _refresh_target_detail(t: Dictionary) -> void:
 	if not _target_detail_card or not is_instance_valid(_target_detail_card):
@@ -1129,7 +1181,11 @@ func _build_rocket_step() -> void:
 		_selected_rocket = str(_rockets[0])
 		RocketsManager.set_planning_rocket_type(_selected_rocket)
 
-	_build_rocket_cards()
+	var vp := get_viewport_rect().size
+	if UILayout.is_portrait(vp):
+		_build_rocket_step_portrait()
+	else:
+		_build_rocket_cards()
 	_update_footer()
 
 func _build_rocket_cards() -> void:
@@ -1203,6 +1259,177 @@ func _add_rocket_card(rtype: String) -> void:
 		)
 
 	_rocket_step.add_child(card)
+
+# ── Portrait rocket step (Fab layout) ─────────────────────────────────────────
+
+## Portrait-specific Fab assembly screen. Shows the selected rocket as a large
+## highlighted panel (image + key stats), with a horizontally-scrolling chip
+## strip below so the player can switch between available rocket types.
+func _build_rocket_step_portrait() -> void:
+	if _rockets.is_empty():
+		var lbl := EmptyStateLabelScene.instantiate() as Label
+		if lbl:
+			lbl.text = "No rockets unlocked yet."
+			lbl.set_meta("rocket_card", true)
+			_rocket_step.add_child(lbl)
+		return
+
+	var selected := _selected_rocket
+	var dur_sec  := RocketSpecs.get_mission_seconds(selected)
+	var dur_str  := "%d min" % (dur_sec / 60) if dur_sec >= 60 else "%ds" % dur_sec
+	var cost_f   := float(RocketSpecs.get_cost(selected)) / 1_000_000_000.0
+	var range_au := RocketSpecs.get_max_range_au(selected)
+
+	# ── Selected-vessel panel ───────────────────────────────────────────────
+	var panel := PanelContainer.new()
+	panel.set_meta("rocket_card", true)
+	var ps := StyleBoxFlat.new()
+	ps.bg_color = C_FAB_PANEL_H
+	ps.border_color = C_FAB_BLUE
+	ps.set_border_width_all(2)
+	ps.set_corner_radius_all(DS.R_CARD)
+	ps.content_margin_left  = 16; ps.content_margin_right  = 16
+	ps.content_margin_top   = 16; ps.content_margin_bottom = 16
+	panel.add_theme_stylebox_override("panel", ps)
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 14)
+
+	# Header row: icon backplate + name/ID column
+	var header_row := HBoxContainer.new()
+	header_row.add_theme_constant_override("separation", 14)
+
+	var icon_plate := PanelContainer.new()
+	var ips := StyleBoxFlat.new()
+	ips.bg_color    = Color(C_FAB_BLUE.r, C_FAB_BLUE.g, C_FAB_BLUE.b, 0.14)
+	ips.border_color = Color(C_FAB_BLUE.r, C_FAB_BLUE.g, C_FAB_BLUE.b, 0.35)
+	ips.set_border_width_all(1)
+	ips.set_corner_radius_all(6)
+	ips.content_margin_left = 10; ips.content_margin_right = 10
+	ips.content_margin_top  = 10; ips.content_margin_bottom = 10
+	icon_plate.add_theme_stylebox_override("panel", ips)
+	icon_plate.custom_minimum_size = Vector2(72, 60)
+	var icon_lbl := Label.new()
+	icon_lbl.text = "🚀"
+	icon_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	icon_lbl.vertical_alignment   = VERTICAL_ALIGNMENT_CENTER
+	icon_lbl.add_theme_font_size_override("font_size", 28)
+	icon_plate.add_child(icon_lbl)
+	header_row.add_child(icon_plate)
+
+	var name_col := VBoxContainer.new()
+	name_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	name_col.add_theme_constant_override("separation", 4)
+	var name_lbl := Label.new()
+	name_lbl.text = RocketSpecs.get_display_name(selected)
+	name_lbl.add_theme_color_override("font_color", C_FAB_BLUE)
+	name_lbl.add_theme_font_size_override("font_size", DS.F_BODY)
+	name_lbl.add_theme_font_override("font", DS.font_display())
+	var id_lbl := Label.new()
+	id_lbl.text = selected.to_upper()
+	id_lbl.add_theme_color_override("font_color", C_ON_SURF_VAR)
+	id_lbl.add_theme_font_size_override("font_size", DS.F_CAPTION)
+	var sel_badge := Label.new()
+	sel_badge.text = "■  SELECTED"
+	sel_badge.add_theme_color_override("font_color", C_FAB_BLUE)
+	sel_badge.add_theme_font_size_override("font_size", DS.F_CAPTION)
+	name_col.add_child(name_lbl)
+	name_col.add_child(id_lbl)
+	name_col.add_child(sel_badge)
+	header_row.add_child(name_col)
+	vbox.add_child(header_row)
+
+	# Stats row: RANGE / COST / TIME chips
+	var stats_row := HBoxContainer.new()
+	stats_row.add_theme_constant_override("separation", 8)
+	for pair: Array in [
+		["RANGE", "%.0f AU" % range_au],
+		["COST",  "%.1fB F" % cost_f],
+		["TIME",  dur_str],
+	]:
+		var chip := PanelContainer.new()
+		var cs := StyleBoxFlat.new()
+		cs.bg_color = C_FAB_SLOT
+		cs.set_corner_radius_all(4)
+		cs.content_margin_left = 10; cs.content_margin_right = 10
+		cs.content_margin_top  = 6;  cs.content_margin_bottom = 6
+		chip.add_theme_stylebox_override("panel", cs)
+		chip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var cv := VBoxContainer.new()
+		cv.add_theme_constant_override("separation", 2)
+		var k := Label.new()
+		k.text = str(pair[0])
+		k.add_theme_color_override("font_color", C_ON_SURF_VAR)
+		k.add_theme_font_size_override("font_size", DS.F_CAPTION)
+		var v := Label.new()
+		v.text = str(pair[1])
+		v.add_theme_color_override("font_color", C_ON_SURF)
+		v.add_theme_font_size_override("font_size", DS.F_BODY)
+		cv.add_child(k)
+		cv.add_child(v)
+		chip.add_child(cv)
+		stats_row.add_child(chip)
+	vbox.add_child(stats_row)
+
+	panel.add_child(vbox)
+	_rocket_step.add_child(panel)
+
+	# ── Vessel-switch chip strip ────────────────────────────────────────────
+	if _rockets.size() > 1:
+		var strip_label := Label.new()
+		strip_label.text = "AVAILABLE VESSELS"
+		strip_label.add_theme_color_override("font_color", C_ON_SURF_VAR)
+		strip_label.add_theme_font_size_override("font_size", DS.F_CAPTION)
+		strip_label.set_meta("rocket_card", true)
+		_rocket_step.add_child(strip_label)
+
+		var scroll := ScrollContainer.new()
+		scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_ALWAYS
+		scroll.vertical_scroll_mode   = ScrollContainer.SCROLL_MODE_DISABLED
+		scroll.custom_minimum_size    = Vector2(0, 56)
+		scroll.set_meta("rocket_card", true)
+
+		var chip_row := HBoxContainer.new()
+		chip_row.add_theme_constant_override("separation", 8)
+		chip_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+		for rtype_any in _rockets:
+			var rtype := str(rtype_any)
+			var is_sel := rtype == _selected_rocket
+			var chip_btn := Button.new()
+			chip_btn.text = RocketSpecs.get_display_name(rtype)
+			_style_chip_btn(chip_btn, is_sel, C_FAB_BLUE)
+			chip_btn.pressed.connect(func() -> void:
+				_selected_rocket = rtype
+				RocketsManager.set_planning_rocket_type(rtype)
+				_update_footer()
+				for child in _rocket_step.get_children():
+					if child.get_meta("rocket_card", false):
+						child.queue_free()
+				_build_rocket_step_portrait()
+			)
+			chip_row.add_child(chip_btn)
+
+		scroll.add_child(chip_row)
+		_rocket_step.add_child(scroll)
+
+## Apply styled normal/hover/focus style boxes and font colour to a chip button.
+## `accent` is the border/text tint colour; `selected` highlights with filled bg.
+func _style_chip_btn(btn: Button, selected: bool, accent: Color) -> void:
+	var norm := StyleBoxFlat.new()
+	norm.bg_color     = Color(accent.r, accent.g, accent.b, 0.22 if selected else 0.07)
+	norm.border_color = Color(accent.r, accent.g, accent.b, 0.75 if selected else 0.28)
+	norm.set_border_width_all(1 if selected else 1)
+	norm.set_corner_radius_all(DS.R_BTN)
+	norm.content_margin_left  = 16; norm.content_margin_right  = 16
+	norm.content_margin_top   = 9;  norm.content_margin_bottom = 9
+	btn.add_theme_stylebox_override("normal", norm)
+	var hover := norm.duplicate() as StyleBoxFlat
+	hover.bg_color = Color(accent.r, accent.g, accent.b, 0.32)
+	btn.add_theme_stylebox_override("hover", hover)
+	btn.add_theme_stylebox_override("focus", norm)
+	btn.add_theme_color_override("font_color", accent if selected else Color(0.78, 0.88, 1.0, 1.0))
+	btn.add_theme_font_size_override("font_size", DS.F_CAPTION)
 
 # ── Step: Confirm ─────────────────────────────────────────────────────────────
 
