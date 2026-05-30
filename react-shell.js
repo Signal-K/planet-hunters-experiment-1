@@ -1903,6 +1903,30 @@ function App() {
     setShowAdvanced(false);
   }, []);
 
+  const handleResetAll = useCallback(async () => {
+    if (!window.confirm("Reset all game data? This clears your save, progress, and all local storage. Cannot be undone.")) return;
+    try {
+      // 1. Clear the progress cookie
+      document.cookie = `${COOKIE_NAME}=; Max-Age=0; Path=/; SameSite=Lax`;
+      // 2. Clear all localStorage (surveys, XP, session count, action log, etc.)
+      localStorage.clear();
+      // 3. Clear Godot's user:// filesystem stored in IndexedDB
+      if (typeof indexedDB !== "undefined" && typeof indexedDB.databases === "function") {
+        const dbs = await indexedDB.databases();
+        await Promise.all(dbs.map((db) => new Promise((resolve) => {
+          const req = indexedDB.deleteDatabase(db.name);
+          req.onsuccess = resolve;
+          req.onerror = resolve;
+          req.onblocked = resolve;
+        })));
+      }
+      captureAnalyticsEvent("full_reset_triggered", {});
+    } catch (e) {
+      console.warn("[reset] Error during reset:", e);
+    }
+    window.location.reload();
+  }, []);
+
   const markerText = useMemo(() => {
     if (!progress) {
       return "pending";
@@ -2265,6 +2289,22 @@ function App() {
                               },
                             },
                             "📈 Skip to Level 3 (Unlock Missions)"
+                          ),
+                          React.createElement(
+                            "button",
+                            {
+                              onClick: handleResetAll,
+                              style: {
+                                border: "1px solid #ff453a",
+                                borderRadius: "8px",
+                                padding: "8px 10px",
+                                color: "#fff",
+                                background: "#3a0f0d",
+                                fontSize: "11px",
+                                marginTop: "4px",
+                              },
+                            },
+                            "🗑 Reset All Game Data"
                           )
                         )
                       )
@@ -2422,6 +2462,22 @@ function App() {
                           },
                         },
                         "📈 Skip to Level 3 (Unlock Missions)"
+                      ),
+                      React.createElement(
+                        "button",
+                        {
+                          onClick: handleResetAll,
+                          style: {
+                            border: "1px solid #ff453a",
+                            borderRadius: "8px",
+                            padding: "8px 10px",
+                            color: "#fff",
+                            background: "#3a0f0d",
+                            fontSize: "11px",
+                            marginTop: "4px",
+                          },
+                        },
+                        "🗑 Reset All Game Data"
                       )
                     )
                   )
