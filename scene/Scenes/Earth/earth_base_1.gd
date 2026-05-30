@@ -1201,6 +1201,22 @@ func _apply_nav_safe_area() -> void:
 		else:
 			camera.zoom = Vector2(1.0, 1.0)
 
+	# Position the HUD chip strip inside the TOP_STATUS zone so it never
+	# overlaps APP_HEADER content (wordmark, eyebrow).
+	var hud_strip := get_node_or_null("UILayer/HUDStrip") as HBoxContainer
+	if hud_strip != null:
+		var status_zone := UILayout.zone(UILayout.Zone.TOP_STATUS, vp_rect.size)
+		var strip_h := 44.0
+		var top_pad := maxf(4.0, (status_zone.size.y - strip_h) * 0.5)
+		hud_strip.anchor_left   = 1.0
+		hud_strip.anchor_top    = 0.0
+		hud_strip.anchor_right  = 1.0
+		hud_strip.anchor_bottom = 0.0
+		hud_strip.offset_left   = -400.0
+		hud_strip.offset_top    = top_pad
+		hud_strip.offset_right  = -16.0
+		hud_strip.offset_bottom = top_pad + strip_h
+
 func _check_classification_consensus() -> void:
 	ClassificationConsensus.check_for_updates(get_tree(), func(updates: Array) -> void:
 		if updates.is_empty():

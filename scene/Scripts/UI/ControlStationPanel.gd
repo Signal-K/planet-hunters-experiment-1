@@ -3,6 +3,7 @@ extends Control
 signal panel_closed
 
 const DS = preload("res://Scripts/UI/DS.gd")
+const UILayout = preload("res://Scripts/UI/UILayout.gd")
 const PREVIEW_SCENE := "res://Scenes/UI/AsteroidPreview/asteroid_preview.tscn"
 const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
 const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
@@ -142,21 +143,37 @@ func _apply_layout() -> void:
 	if legacy_root == null:
 		return
 	var vp := get_viewport_rect().size
-	var compact := vp.x < 1380.0
+	var portrait := UILayout.is_portrait(vp)
+	var compact := portrait or vp.x < 1380.0
 
-	if compact:
-		var right_rail := legacy_root.get_node_or_null("MainArea/ContentMargin/ContentHBox/RightRail") as VBoxContainer
-		var globe_panel := legacy_root.get_node_or_null("MainArea/ContentMargin/ContentHBox/GlobePanel") as Control
+	var right_rail := legacy_root.get_node_or_null("MainArea/ContentMargin/ContentHBox/RightRail") as VBoxContainer
+	var globe_panel := legacy_root.get_node_or_null("MainArea/ContentMargin/ContentHBox/GlobePanel") as Control
+	var missions_area := legacy_root.get_node_or_null("MainArea/ContentMargin/ContentHBox/MissionsArea") as Control
+	var content_hbox := legacy_root.get_node_or_null("MainArea/ContentMargin/ContentHBox") as HBoxContainer
+
+	if portrait:
+		# Portrait: hide side panels so MissionsArea fills the full APP_BODY lane.
 		if right_rail:
+			right_rail.visible = false
+		if globe_panel:
+			globe_panel.visible = false
+		if missions_area:
+			missions_area.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		if content_hbox:
+			content_hbox.add_theme_constant_override("separation", 0)
+	elif compact:
+		if right_rail:
+			right_rail.visible = true
 			right_rail.custom_minimum_size = Vector2(280, 0)
 		if globe_panel:
+			globe_panel.visible = true
 			globe_panel.custom_minimum_size = Vector2(220, 180)
 	else:
-		var right_rail := legacy_root.get_node_or_null("MainArea/ContentMargin/ContentHBox/RightRail") as VBoxContainer
-		var globe_panel := legacy_root.get_node_or_null("MainArea/ContentMargin/ContentHBox/GlobePanel") as Control
 		if right_rail:
+			right_rail.visible = true
 			right_rail.custom_minimum_size = Vector2(320, 0)
 		if globe_panel:
+			globe_panel.visible = true
 			globe_panel.custom_minimum_size = Vector2(260, 180)
 
 func _set_view_mode(mode: String) -> void:
