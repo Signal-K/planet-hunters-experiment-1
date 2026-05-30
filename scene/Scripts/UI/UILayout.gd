@@ -140,7 +140,10 @@ static func _mining_hud(vp: Vector2) -> Rect2:
 	# Taller on landscape desktop; compact in portrait or narrow viewports.
 	var compact := is_portrait(vp) or vp.x < 900
 	var h := 72.0 if compact else 88.0
-	return Rect2(EDGE, EDGE, vp.x - EDGE * 2, h)
+	# In portrait, start below the TOP_STATUS notch strip so the HUD never
+	# overlaps the system status bar / dynamic island area.
+	var top := _top_status(vp).end.y + EDGE
+	return Rect2(EDGE, top, vp.x - EDGE * 2, h)
 
 static func _mining_instruction(vp: Vector2) -> Rect2:
 	var hud := _mining_hud(vp)
@@ -168,7 +171,8 @@ static func _mining_handbook(vp: Vector2) -> Rect2:
 	return Rect2(vp.x - EDGE - w, hud.end.y + 80.0, w, 240.0)
 
 static func _mining_bottom(vp: Vector2) -> Rect2:
-	var h := 60.0
+	# Portrait gets a taller bar (72 px) for thumb-friendly Return / Fire buttons.
+	var h := 72.0 if is_portrait(vp) else 60.0
 	var bottom_gap := bottom_clearance(vp)
 	return Rect2(EDGE, vp.y - h - bottom_gap, vp.x - EDGE * 2, h)
 

@@ -452,6 +452,44 @@ func _apply_portrait_layout(viewport: Vector2) -> void:
 		_layout_room_panel(viewport)
 	if _room_toggle_button and is_instance_valid(_room_toggle_button):
 		_layout_room_toggle_button(viewport)
+	# Portrait bottom bar: style Return as a full-width amber CTA; Mine as
+	# a compact cyan button so the player's thumb can easily reach both.
+	_apply_portrait_bottom_bar()
+
+func _apply_portrait_bottom_bar() -> void:
+	if return_button == null:
+		return
+	# Return button: full-height amber CTA filling available right side of bar.
+	var ret_style := StyleBoxFlat.new()
+	ret_style.bg_color     = Color(0.961, 0.651, 0.137, 1.0)   # DS.SECONDARY (Vulcan Amber)
+	ret_style.border_color = Color(0.961, 0.651, 0.137, 0.60)
+	ret_style.set_border_width_all(0)
+	ret_style.set_corner_radius_all(DS.R_BTN)
+	ret_style.content_margin_left  = 20; ret_style.content_margin_right  = 20
+	ret_style.content_margin_top   = 12; ret_style.content_margin_bottom = 12
+	return_button.add_theme_stylebox_override("normal",  ret_style)
+	var ret_hover := ret_style.duplicate() as StyleBoxFlat
+	ret_hover.bg_color = Color(0.800, 0.510, 0.090, 1.0)
+	return_button.add_theme_stylebox_override("hover",   ret_hover)
+	return_button.add_theme_stylebox_override("pressed", ret_hover)
+	return_button.add_theme_color_override("font_color", Color(0.024, 0.071, 0.149, 1.0))  # DS.ON_PRIMARY
+	return_button.add_theme_font_size_override("font_size", DS.F_BUTTON)
+	return_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	# Mine button: cyan ghost style — smaller, left-anchored.
+	if mine_button != null:
+		var mine_style := StyleBoxFlat.new()
+		mine_style.bg_color     = Color(0.247, 0.663, 1.000, 0.18)
+		mine_style.border_color = Color(0.247, 0.663, 1.000, 0.60)
+		mine_style.set_border_width_all(1)
+		mine_style.set_corner_radius_all(DS.R_BTN)
+		mine_style.content_margin_left  = 16; mine_style.content_margin_right  = 16
+		mine_style.content_margin_top   = 12; mine_style.content_margin_bottom = 12
+		mine_button.add_theme_stylebox_override("normal",  mine_style)
+		var mine_press := mine_style.duplicate() as StyleBoxFlat
+		mine_press.bg_color = Color(0.247, 0.663, 1.000, 0.32)
+		mine_button.add_theme_stylebox_override("pressed", mine_press)
+		mine_button.add_theme_color_override("font_color", Color(0.247, 0.663, 1.000, 1.0))
+		mine_button.add_theme_font_size_override("font_size", DS.F_BUTTON)
 
 func _apply_landscape_layout(is_mobile: bool) -> void:
 	var viewport := get_viewport_rect().size
