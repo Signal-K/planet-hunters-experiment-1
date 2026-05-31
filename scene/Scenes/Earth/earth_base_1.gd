@@ -209,8 +209,8 @@ func _style_portrait_tab(btn: Button, is_amber: bool) -> void:
 	normal.set_corner_radius_all(14)
 	normal.content_margin_left   = 12
 	normal.content_margin_right  = 12
-	normal.content_margin_top    = 20
-	normal.content_margin_bottom = 20
+	normal.content_margin_top    = 14
+	normal.content_margin_bottom = 14
 
 	var hover := normal.duplicate() as StyleBoxFlat
 	hover.bg_color = Color(col_act.r, col_act.g, col_act.b, 0.14)
@@ -228,9 +228,9 @@ func _style_portrait_tab(btn: Button, is_amber: bool) -> void:
 	var nav_font := load("res://Resources/Fonts/Oxanium-Bold.ttf") as Font
 	if nav_font:
 		btn.add_theme_font_override("font", nav_font)
-	# Label at 18px, icon above via button's built-in vertical layout
-	# 36 design-units ≈ 13px on phone after 0.36× scale — standard mobile nav label.
-	btn.add_theme_font_size_override("font_size", 36)
+	# Label at 10px effective, icon above via button's built-in vertical layout
+	# 26 design-units ≈ 9px on phone after 0.36× scale — compact mobile nav label.
+	btn.add_theme_font_size_override("font_size", 26)
 	btn.icon_alignment     = HORIZONTAL_ALIGNMENT_CENTER
 	btn.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
 	btn.expand_icon        = false
@@ -880,9 +880,9 @@ func _apply_wordmark_layout(node: Control) -> void:
 	var top_y := UILayout.zone(UILayout.Zone.TOP_STATUS, viewport).end.y
 	node.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	node.offset_left   = 20.0
-	node.offset_top    = top_y + 130.0  # below HUD strip (which sits at 32-112px)
-	node.offset_right  = 680.0          # wide enough for 100-pt title font
-	node.offset_bottom = top_y + 340.0  # eyebrow(48) + gap(8) + title(128) + breathing room
+	node.offset_top    = top_y + 110.0  # below HUD strip (which sits at 32-96px)
+	node.offset_right  = 680.0          # wide enough for 80-pt title font
+	node.offset_bottom = top_y + 300.0  # eyebrow(36) + gap(8) + title(102) + breathing room
 
 func _build_ambient_stars() -> void:
 	var star_root = get_node_or_null("AmbientStarLayer/StarRoot")
@@ -1210,7 +1210,7 @@ func _apply_nav_safe_area() -> void:
 	var hud_strip := get_node_or_null("UILayer/HUDStrip") as HBoxContainer
 	if hud_strip != null:
 		var status_zone := UILayout.zone(UILayout.Zone.TOP_STATUS, vp_rect.size)
-		var strip_h := 80.0   # accommodates font_size 44 chips (32px cap + 24px padding)
+		var strip_h := 64.0   # accommodates font_size 30 chips (24px cap + 16px padding)
 		var top_pad := maxf(32.0, status_zone.end.y + 32.0)
 		hud_strip.anchor_left   = 1.0
 		hud_strip.anchor_top    = 0.0
