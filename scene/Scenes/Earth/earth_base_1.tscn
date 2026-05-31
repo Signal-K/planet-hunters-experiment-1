@@ -809,6 +809,117 @@ size_flags_horizontal = 3
 focus_mode = 0
 text = "Missions"
 
+; ── Radial Navigation ─────────────────────────────────────────────────────────
+; Hub button (172×172) at bottom-center + 4 satellite buttons on 258-unit orbit.
+; Design: 64px hub, 54px satellites, 96px orbit radius (all in 402px frame →×2.687).
+; Hidden in landscape (tab bar used); shown in portrait by _setup_radial_nav() in gd.
+; Styled/wired by _setup_radial_nav(); satellite buttons toggled by _toggle_radial_menu().
+[node name="RadialNav" type="Control" parent="UILayer"]
+layout_mode = 1
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+visible = false
+
+; Dim overlay — covers screen when menu is open; tap to close
+[node name="RadialOverlay" type="ColorRect" parent="UILayer/RadialNav"]
+layout_mode = 1
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.024, 0.035, 0.059, 0.55)
+visible = false
+mouse_filter = 0
+
+; Glow ring — translucent cyan halo behind the hub button
+[node name="HubGlow" type="Panel" parent="UILayer/RadialNav"]
+layout_mode = 1
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -110.0
+offset_top = -222.0
+offset_right = 110.0
+offset_bottom = -2.0
+mouse_filter = 2
+
+; Hub button — 172×172 filled cyan circle, always visible in portrait
+[node name="HubButton" type="Button" parent="UILayer/RadialNav"]
+layout_mode = 1
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -86.0
+offset_top = -194.0
+offset_right = 86.0
+offset_bottom = -22.0
+focus_mode = 0
+
+; Satellite: Base — 165° (upper-left)
+[node name="SatBase" type="Button" parent="UILayer/RadialNav"]
+layout_mode = 1
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -322.0
+offset_top = -248.0
+offset_right = -177.0
+offset_bottom = -103.0
+visible = false
+focus_mode = 0
+text = "Base"
+
+; Satellite: Atlas — 115° (upper centre-left)
+[node name="SatAtlas" type="Button" parent="UILayer/RadialNav"]
+layout_mode = 1
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -182.0
+offset_top = -415.0
+offset_right = -37.0
+offset_bottom = -270.0
+visible = false
+focus_mode = 0
+text = "Atlas"
+
+; Satellite: Build — 65° (upper centre-right)
+[node name="SatBuild" type="Button" parent="UILayer/RadialNav"]
+layout_mode = 1
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = 37.0
+offset_top = -415.0
+offset_right = 182.0
+offset_bottom = -270.0
+visible = false
+focus_mode = 0
+text = "Build"
+
+; Satellite: Missions — 15° (upper-right)
+[node name="SatMissions" type="Button" parent="UILayer/RadialNav"]
+layout_mode = 1
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = 177.0
+offset_top = -248.0
+offset_right = 322.0
+offset_bottom = -103.0
+visible = false
+focus_mode = 0
+text = "Missions"
+
 ; ── Environment engine ────────────────────────────────────────────────────────
 [node name="EnvironmentEngine" type="Node" parent="."]
 script = ExtResource("8")

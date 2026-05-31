@@ -51,6 +51,14 @@ var _build_flow_location_id: String = ""
 @onready var _control_chip: PanelContainer = $UILayer/ControlChip
 @onready var _control_chip_status: Label = $UILayer/ControlChip/VBox/StatusLabel
 @onready var _jobs_label: Label = $UILayer/JobsChip/JobsLabel
+@onready var _radial_nav: Control = $UILayer/RadialNav
+@onready var _radial_overlay: ColorRect = $UILayer/RadialNav/RadialOverlay
+@onready var _hub_button: Button = $UILayer/RadialNav/HubButton
+@onready var _hub_glow: Panel = $UILayer/RadialNav/HubGlow
+@onready var _sat_base: Button = $UILayer/RadialNav/SatBase
+@onready var _sat_atlas: Button = $UILayer/RadialNav/SatAtlas
+@onready var _sat_build: Button = $UILayer/RadialNav/SatBuild
+@onready var _sat_missions: Button = $UILayer/RadialNav/SatMissions
 
 func _ready() -> void:
 	_ensure_tutorial_runtime()
@@ -260,6 +268,129 @@ func _set_nav_min(btn: Button, min_w: float, min_h: float) -> void:
 		return
 	var current := btn.custom_minimum_size
 	btn.custom_minimum_size = Vector2(max(current.x, min_w), max(current.y, min_h))
+
+# ── Radial Navigation ─────────────────────────────────────────────────────────
+
+func _setup_radial_nav() -> void:
+	# Style hub glow (translucent cyan halo behind the hub button)
+	var glow_style := StyleBoxFlat.new()
+	glow_style.bg_color = Color(_CYAN.r, _CYAN.g, _CYAN.b, 0.18)
+	glow_style.set_corner_radius_all(110)
+	_hub_glow.add_theme_stylebox_override("panel", glow_style)
+
+	# Style hub button (solid cyan circle with subtle ring)
+	var hub_normal := StyleBoxFlat.new()
+	hub_normal.bg_color = _CYAN
+	hub_normal.set_corner_radius_all(86)
+	hub_normal.border_width_top    = 3
+	hub_normal.border_width_bottom = 3
+	hub_normal.border_width_left   = 3
+	hub_normal.border_width_right  = 3
+	hub_normal.border_color = Color(1.0, 1.0, 1.0, 0.35)
+	var hub_pressed := hub_normal.duplicate() as StyleBoxFlat
+	hub_pressed.bg_color = Color(_CYAN.r * 0.75, _CYAN.g * 0.75, _CYAN.b * 0.75, 1.0)
+	_hub_button.add_theme_stylebox_override("normal",  hub_normal)
+	_hub_button.add_theme_stylebox_override("hover",   hub_normal)
+	_hub_button.add_theme_stylebox_override("pressed", hub_pressed)
+	_hub_button.add_theme_stylebox_override("focus",   hub_normal)
+	var hub_icon := load("res://Resources/Icons/nav_menu.svg") as Texture2D
+	if hub_icon:
+		_hub_button.icon = hub_icon
+		_hub_button.add_theme_color_override("icon_normal_color",  Color(0.06, 0.09, 0.14, 1.0))
+		_hub_button.add_theme_color_override("icon_hover_color",   Color(0.06, 0.09, 0.14, 1.0))
+		_hub_button.add_theme_color_override("icon_pressed_color", Color(0.06, 0.09, 0.14, 1.0))
+	_hub_button.add_theme_constant_override("icon_max_width", 64)
+	_hub_button.text = ""
+	_hub_button.focus_mode = Control.FOCUS_NONE
+
+	# Style satellite buttons (dark glass circles with label)
+	var sat_data := [
+		[_sat_base,     "Base",     "res://Resources/Icons/nav_menu.svg",    false],
+		[_sat_atlas,    "Atlas",    "res://Resources/Icons/nav_map.svg",     false],
+		[_sat_build,    "Build",    "",                                       false],
+		[_sat_missions, "Missions", "res://Resources/Icons/nav_mission.svg", true],
+	]
+	var nav_font := load("res://Resources/Fonts/Oxanium-Bold.ttf") as Font
+	for entry in sat_data:
+		var btn := entry[0] as Button
+		var label_text := entry[1] as String
+		var icon_path := entry[2] as String
+		var is_amber := entry[3] as bool
+		var col: Color = _AMBER if is_amber else _CYAN
+
+		var sat_n := StyleBoxFlat.new()
+		sat_n.bg_color = Color(0.039, 0.071, 0.114, 0.95)
+		sat_n.set_corner_radius_all(73)
+		sat_n.border_width_top    = 2
+		sat_n.border_width_bottom = 2
+		sat_n.border_width_left   = 2
+		sat_n.border_width_right  = 2
+		sat_n.border_color = Color(col.r, col.g, col.b, 0.55)
+		var sat_h := sat_n.duplicate() as StyleBoxFlat
+		sat_h.border_color = Color(col.r, col.g, col.b, 0.9)
+		sat_h.bg_color = Color(col.r, col.g, col.b, 0.18)
+		btn.add_theme_stylebox_override("normal",  sat_n)
+		btn.add_theme_stylebox_override("hover",   sat_h)
+		btn.add_theme_stylebox_override("pressed", sat_h)
+		btn.add_theme_stylebox_override("focus",   sat_n)
+		btn.add_theme_color_override("font_color",         col)
+		btn.add_theme_color_override("font_hover_color",   col)
+		btn.add_theme_color_override("font_pressed_color", col)
+		if nav_font:
+			btn.add_theme_font_override("font", nav_font)
+		btn.add_theme_font_size_override("font_size", 22)
+		if icon_path != "" and ResourceLoader.exists(icon_path):
+			var tex := load(icon_path) as Texture2D
+			if tex:
+				btn.icon = tex
+				btn.add_theme_color_override("icon_normal_color",  col)
+				btn.add_theme_color_override("icon_hover_color",   col)
+				btn.add_theme_color_override("icon_pressed_color", col)
+				btn.add_theme_constant_override("icon_max_width", 42)
+		btn.text = label_text
+		btn.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		btn.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
+		btn.focus_mode = Control.FOCUS_NONE
+		btn.set_meta("ui_style_locked", true)
+
+	# Wire signals once (guard against double-connect on resize)
+	if not _hub_button.pressed.is_connected(_toggle_radial_menu):
+		_hub_button.pressed.connect(_toggle_radial_menu)
+	if not _radial_overlay.gui_input.is_connected(_on_radial_overlay_input):
+		_radial_overlay.gui_input.connect(_on_radial_overlay_input)
+	if not _sat_base.pressed.is_connected(_on_menu_button_pressed):
+		_sat_base.pressed.connect(_on_menu_button_pressed)
+		_sat_base.pressed.connect(_close_radial_menu)
+	if not _sat_atlas.pressed.is_connected(_on_space_map_button_pressed):
+		_sat_atlas.pressed.connect(_on_space_map_button_pressed)
+		_sat_atlas.pressed.connect(_close_radial_menu)
+	if not _sat_build.pressed.is_connected(_on_build_button_pressed):
+		_sat_build.pressed.connect(_on_build_button_pressed)
+		_sat_build.pressed.connect(_close_radial_menu)
+	if not _sat_missions.pressed.is_connected(_on_new_mission_button_pressed):
+		_sat_missions.pressed.connect(_on_new_mission_button_pressed)
+		_sat_missions.pressed.connect(_close_radial_menu)
+
+var _radial_open: bool = false
+
+func _toggle_radial_menu() -> void:
+	_radial_open = not _radial_open
+	_radial_overlay.visible = _radial_open
+	_sat_base.visible     = _radial_open
+	_sat_atlas.visible    = _radial_open
+	_sat_build.visible    = _radial_open
+	_sat_missions.visible = _radial_open
+	# Switch overlay mouse filter: block taps when open, ignore when closed
+	_radial_nav.mouse_filter = Control.MOUSE_FILTER_STOP if _radial_open else Control.MOUSE_FILTER_IGNORE
+	_hub_button.mouse_filter = Control.MOUSE_FILTER_STOP  # hub always tappable
+
+func _close_radial_menu() -> void:
+	if _radial_open:
+		_toggle_radial_menu()
+
+func _on_radial_overlay_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and (event as InputEventMouseButton).pressed:
+		_close_radial_menu()
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not (event is InputEventMouseButton):
@@ -755,6 +886,11 @@ func _apply_tutorial_button_state() -> void:
 			new_mission_btn.tooltip_text = "Build the Scanner Station first."
 		else:
 			new_mission_btn.tooltip_text = ""
+	# Mirror disabled state onto radial satellite button
+	if is_instance_valid(_sat_missions):
+		var cs_req := _control_station_build_required()
+		var ss_req := _scanner_station_build_required()
+		_sat_missions.disabled = cs_req or ss_req
 
 func _apply_market_button_state(_tutorial_active: bool) -> void:
 	var market_btn := get_node_or_null("UILayer/ButtonContainer/MarketButton") as Button
@@ -1174,24 +1310,29 @@ func _apply_nav_safe_area() -> void:
 	var vp_w := vp_rect.size.x
 	var vp_h := vp_rect.size.y
 	var is_portrait_layout := vp_h > vp_w
-	# Portrait: full-width bar, no side margins; safe area bottom for home indicator.
-	var margin_h := 0.0 if is_portrait_layout else 24.0
-	# Scale bar height to the design viewport — the game renders at 1080×1920 and
-	# is scaled to the phone. 10% of vp_h gives ~192px at 1920 design height which
-	# appears as ~70px on a typical phone: large enough for comfortable thumb taps.
-	var bar_h := clampf(vp_h * 0.10, 150.0, 240.0)
-	# Ultra-wide landscape → home indicator gap; portrait → iOS home indicator in bottom safe area.
-	var bottom_margin := 34.0 if (vp_w / vp_h > 1.85 or is_portrait_layout) else 0.0
 
-	# Anchor to bottom-full-width so the bar tracks the actual viewport height.
-	container.anchor_left   = 0.0
-	container.anchor_top    = 1.0
-	container.anchor_right  = 1.0
-	container.anchor_bottom = 1.0
-	container.offset_left   = margin_h
-	container.offset_top    = -(bar_h + bottom_margin)
-	container.offset_right  = -margin_h
-	container.offset_bottom = -bottom_margin
+	# Portrait: swap to radial nav; landscape: keep legacy tab bar.
+	if is_portrait_layout:
+		container.visible = false
+		if is_instance_valid(_radial_nav):
+			_radial_nav.visible = true
+			_setup_radial_nav()
+	else:
+		container.visible = true
+		if is_instance_valid(_radial_nav):
+			_radial_nav.visible = false
+		# Portrait: full-width bar, no side margins; safe area bottom for home indicator.
+		var margin_h := 24.0
+		var bar_h := clampf(vp_h * 0.10, 150.0, 240.0)
+		var bottom_margin := 0.0
+		container.anchor_left   = 0.0
+		container.anchor_top    = 1.0
+		container.anchor_right  = 1.0
+		container.anchor_bottom = 1.0
+		container.offset_left   = margin_h
+		container.offset_top    = -(bar_h + bottom_margin)
+		container.offset_right  = -margin_h
+		container.offset_bottom = -bottom_margin
 
 	# Zoom the camera so the designed 1080-unit world fills the full width in
 	# portrait. No zoom needed for portrait (1080×1920); landscape builds that
