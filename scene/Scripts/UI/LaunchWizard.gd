@@ -175,10 +175,23 @@ func refresh_layout_for_viewport() -> void:
 	var header_height := int(header_zone.size.y)
 	var footer_height := int(footer_zone.size.y)
 
+	# On the contractor step with the tutorial coach visible in landscape, shrink
+	# the scroll content's right margin so cards don't extend under the coach panel.
+	# The coach is anchored top-right; pulling the right edge left ensures every
+	# contractor row — including the first — is fully clear of the panel.
+	# In portrait the coach sits at the bottom, so no adjustment is needed there.
+	var right_margin := side_margin
+	if _step == Step.CONTRACTOR and _has_visible_tutorial_overlay() \
+			and not UILayout.is_portrait(viewport):
+		var coach_zone := UILayout.zone(UILayout.Zone.TUTORIAL_COACH, viewport)
+		# right_margin = distance from viewport right to the coach panel's left edge + gap
+		var coach_clearance := int(viewport.x - coach_zone.position.x) + 8
+		right_margin = maxi(right_margin, coach_clearance)
+
 	_background.custom_minimum_size = viewport
 	_place_scaffold_in_zones(header_zone, body_zone, footer_zone)
 	_scroll_margin.add_theme_constant_override("margin_left", side_margin)
-	_scroll_margin.add_theme_constant_override("margin_right", side_margin)
+	_scroll_margin.add_theme_constant_override("margin_right", right_margin)
 	_scroll_margin.add_theme_constant_override("margin_top", vertical_margin)
 	_scroll_margin.add_theme_constant_override("margin_bottom", vertical_margin)
 
