@@ -206,11 +206,11 @@ func _style_portrait_tab(btn: Button, is_amber: bool) -> void:
 
 	var normal := StyleBoxFlat.new()
 	normal.bg_color = Color(0, 0, 0, 0)
-	normal.set_corner_radius_all(10)
-	normal.content_margin_left   = 8
-	normal.content_margin_right  = 8
-	normal.content_margin_top    = 10
-	normal.content_margin_bottom = 10
+	normal.set_corner_radius_all(14)
+	normal.content_margin_left   = 12
+	normal.content_margin_right  = 12
+	normal.content_margin_top    = 20
+	normal.content_margin_bottom = 20
 
 	var hover := normal.duplicate() as StyleBoxFlat
 	hover.bg_color = Color(col_act.r, col_act.g, col_act.b, 0.14)
@@ -229,7 +229,8 @@ func _style_portrait_tab(btn: Button, is_amber: bool) -> void:
 	if nav_font:
 		btn.add_theme_font_override("font", nav_font)
 	# Label at 18px, icon above via button's built-in vertical layout
-	btn.add_theme_font_size_override("font_size", 18)
+	# 36 design-units ≈ 13px on phone after 0.36× scale — standard mobile nav label.
+	btn.add_theme_font_size_override("font_size", 36)
 	btn.icon_alignment     = HORIZONTAL_ALIGNMENT_CENTER
 	btn.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
 	btn.expand_icon        = false
@@ -878,10 +879,10 @@ func _apply_wordmark_layout(node: Control) -> void:
 	# Portrait: anchor title block top-left below the TOP_STATUS (notch) zone.
 	var top_y := UILayout.zone(UILayout.Zone.TOP_STATUS, viewport).end.y
 	node.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	node.offset_left   = 16.0
-	node.offset_top    = top_y
-	node.offset_right  = 340.0
-	node.offset_bottom = top_y + 68.0
+	node.offset_left   = 20.0
+	node.offset_top    = top_y + 130.0  # below HUD strip (which sits at 32-112px)
+	node.offset_right  = 680.0          # wide enough for 100-pt title font
+	node.offset_bottom = top_y + 340.0  # eyebrow(48) + gap(8) + title(128) + breathing room
 
 func _build_ambient_stars() -> void:
 	var star_root = get_node_or_null("AmbientStarLayer/StarRoot")
@@ -1174,7 +1175,10 @@ func _apply_nav_safe_area() -> void:
 	var is_portrait_layout := vp_h > vp_w
 	# Portrait: full-width bar, no side margins; safe area bottom for home indicator.
 	var margin_h := 0.0 if is_portrait_layout else 24.0
-	var bar_h := 96.0
+	# Scale bar height to the design viewport — the game renders at 1080×1920 and
+	# is scaled to the phone. 10% of vp_h gives ~192px at 1920 design height which
+	# appears as ~70px on a typical phone: large enough for comfortable thumb taps.
+	var bar_h := clampf(vp_h * 0.10, 150.0, 240.0)
 	# Ultra-wide landscape → home indicator gap; portrait → iOS home indicator in bottom safe area.
 	var bottom_margin := 34.0 if (vp_w / vp_h > 1.85 or is_portrait_layout) else 0.0
 
@@ -1201,20 +1205,20 @@ func _apply_nav_safe_area() -> void:
 		else:
 			camera.zoom = Vector2(1.0, 1.0)
 
-	# Position the HUD chip strip inside the TOP_STATUS zone so it never
-	# overlaps APP_HEADER content (wordmark, eyebrow).
+	# Position the HUD chip strip at top-right, clear of the notch zone.
+	# strip_h is proportional so chips match the larger font sizes in design space.
 	var hud_strip := get_node_or_null("UILayer/HUDStrip") as HBoxContainer
 	if hud_strip != null:
 		var status_zone := UILayout.zone(UILayout.Zone.TOP_STATUS, vp_rect.size)
-		var strip_h := 44.0
-		var top_pad := maxf(4.0, (status_zone.size.y - strip_h) * 0.5)
+		var strip_h := 80.0   # accommodates font_size 44 chips (32px cap + 24px padding)
+		var top_pad := maxf(32.0, status_zone.end.y + 32.0)
 		hud_strip.anchor_left   = 1.0
 		hud_strip.anchor_top    = 0.0
 		hud_strip.anchor_right  = 1.0
 		hud_strip.anchor_bottom = 0.0
 		hud_strip.offset_left   = -400.0
 		hud_strip.offset_top    = top_pad
-		hud_strip.offset_right  = -16.0
+		hud_strip.offset_right  = -24.0
 		hud_strip.offset_bottom = top_pad + strip_h
 
 func _check_classification_consensus() -> void:

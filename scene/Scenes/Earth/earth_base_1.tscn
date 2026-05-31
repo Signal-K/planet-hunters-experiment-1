@@ -179,7 +179,7 @@ position = Vector2(150, 1169)
 script = ExtResource("3")
 
 [node name="Sprite2D" type="Sprite2D" parent="StructuresLayer/SatelliteStation"]
-scale = Vector2(0.39, 0.39)
+scale = Vector2(0.58, 0.58)
 texture = ExtResource("2")
 
 [node name="InteractionArea" type="Area2D" parent="StructuresLayer/SatelliteStation"]
@@ -199,7 +199,7 @@ position = Vector2(540, 1125)
 script = ExtResource("4")
 
 [node name="Sprite2D" type="Sprite2D" parent="StructuresLayer/Launchpad"]
-scale = Vector2(0.245, 0.245)
+scale = Vector2(0.40, 0.40)
 texture = ExtResource("5")
 
 [node name="InteractionArea" type="Area2D" parent="StructuresLayer/Launchpad"]
@@ -243,7 +243,7 @@ layout_mode = 2
 mouse_filter = 2
 theme_override_colors/font_color = Color(1.0, 1.0, 1.0, 0.60)
 theme_override_fonts/font = ExtResource("16")
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 40
 text = "EARTH BASE · LV 1"
 
 [node name="HubTitle" type="Label" parent="UILayer/TitleBlock"]
@@ -251,7 +251,7 @@ layout_mode = 2
 mouse_filter = 2
 theme_override_colors/font_color = Color(1.0, 1.0, 1.0, 1.0)
 theme_override_fonts/font = ExtResource("15")
-theme_override_font_sizes/font_size = 64
+theme_override_font_sizes/font_size = 100
 text = "Earth Base"
 
 ; ── HUD Strip: left Jobs pill + right Francs/Level pills ─────────────────────
@@ -264,9 +264,9 @@ anchor_top = 0.0
 anchor_right = 0.0
 anchor_bottom = 0.0
 offset_left = 28.0
-offset_top = 28.0
-offset_right = 240.0
-offset_bottom = 88.0
+offset_top = 32.0
+offset_right = 280.0
+offset_bottom = 112.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("Style_jobs_pill")
 
@@ -275,7 +275,7 @@ layout_mode = 2
 mouse_filter = 2
 theme_override_colors/font_color = Color(1.0, 0.702, 0.282, 1.0)
 theme_override_fonts/font = ExtResource("15")
-theme_override_font_sizes/font_size = 26
+theme_override_font_sizes/font_size = 44
 text = "0 Jobs"
 vertical_alignment = 1
 
@@ -287,9 +287,9 @@ anchor_top = 0.0
 anchor_right = 1.0
 anchor_bottom = 0.0
 offset_left = -400.0
-offset_top = 28.0
+offset_top = 32.0
 offset_right = -28.0
-offset_bottom = 88.0
+offset_bottom = 112.0
 grow_horizontal = 0
 alignment = 2
 theme_override_constants/separation = 10
@@ -305,7 +305,7 @@ layout_mode = 2
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.961, 0.651, 0.137, 1.0)
 theme_override_fonts/font = ExtResource("15")
-theme_override_font_sizes/font_size = 26
+theme_override_font_sizes/font_size = 44
 text = "▲ 10B"
 vertical_alignment = 1
 
@@ -319,7 +319,7 @@ layout_mode = 2
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.529, 0.812, 0.980, 1.0)
 theme_override_fonts/font = ExtResource("15")
-theme_override_font_sizes/font_size = 26
+theme_override_font_sizes/font_size = 44
 text = "LV 1"
 vertical_alignment = 1
 
@@ -425,10 +425,10 @@ anchor_left = 0.0
 anchor_top = 0.0
 anchor_right = 0.0
 anchor_bottom = 0.0
-offset_left = 74.0
-offset_top = 1274.0
-offset_right = 228.0
-offset_bottom = 1336.0
+offset_left = 14.0
+offset_top = 1300.0
+offset_right = 286.0
+offset_bottom = 1416.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("Style_building_chip")
 
@@ -442,7 +442,7 @@ layout_mode = 2
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.804, 0.894, 1.0, 1.0)
 theme_override_fonts/font = ExtResource("15")
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 42
 text = "SATELLITE"
 horizontal_alignment = 1
 
@@ -451,7 +451,7 @@ layout_mode = 2
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.478, 0.510, 0.565, 1.0)
 theme_override_fonts/font = ExtResource("16")
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 40
 text = "OFFLINE"
 horizontal_alignment = 1
 
@@ -462,10 +462,10 @@ anchor_left = 0.5
 anchor_top = 0.0
 anchor_right = 0.5
 anchor_bottom = 0.0
-offset_left = -90.0
-offset_top = 1287.0
-offset_right = 90.0
-offset_bottom = 1349.0
+offset_left = -150.0
+offset_top = 1345.0
+offset_right = 150.0
+offset_bottom = 1445.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("Style_building_chip")
 
@@ -479,7 +479,7 @@ layout_mode = 2
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.804, 0.894, 1.0, 1.0)
 theme_override_fonts/font = ExtResource("15")
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 42
 text = "LAUNCHPAD"
 horizontal_alignment = 1
 
@@ -488,7 +488,7 @@ layout_mode = 2
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.22, 0.851, 0.416, 1.0)
 theme_override_fonts/font = ExtResource("16")
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 40
 text = "READY"
 horizontal_alignment = 1
 
@@ -693,9 +693,9 @@ anchor_top = 0.0
 anchor_right = 1.0
 anchor_bottom = 0.0
 offset_left = -210.0
-offset_top = 14.0
+offset_top = 10.0
 offset_right = -14.0
-offset_bottom = 56.0
+offset_bottom = 74.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("Style_subsurface_pill")
 
@@ -704,7 +704,7 @@ layout_mode = 2
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.612, 0.553, 0.439, 1.0)
 theme_override_fonts/font = ExtResource("16")
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 42
 text = "·  SUBSURFACE  ·"
 horizontal_alignment = 1
 vertical_alignment = 1
