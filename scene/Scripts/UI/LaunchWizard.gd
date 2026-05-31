@@ -1384,7 +1384,7 @@ func _build_rocket_step_portrait() -> void:
 		_rocket_step.add_child(strip_label)
 
 		var scroll := ScrollContainer.new()
-		scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_ALWAYS
+		scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_ALWAYS
 		scroll.vertical_scroll_mode   = ScrollContainer.SCROLL_MODE_DISABLED
 		scroll.custom_minimum_size    = Vector2(0, 56)
 		scroll.set_meta("rocket_card", true)
