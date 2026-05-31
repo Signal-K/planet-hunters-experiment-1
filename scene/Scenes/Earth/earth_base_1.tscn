@@ -492,6 +492,47 @@ theme_override_font_sizes/font_size = 22
 text = "READY"
 horizontal_alignment = 1
 
+; Control station chip (right): matches Satellite/Launchpad chip style.
+; Design: right:16 top:506 w:84 on 402px frame → right-anchored in 1080 space.
+; Width 240, right margin 30, same top/bottom as SatelliteChip.
+; Hidden by default; shown by gd when ControlStation is built.
+[node name="ControlChip" type="PanelContainer" parent="UILayer"]
+layout_mode = 1
+anchor_left = 1.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 0.0
+offset_left = -270.0
+offset_top = 1300.0
+offset_right = -30.0
+offset_bottom = 1388.0
+mouse_filter = 2
+visible = false
+theme_override_styles/panel = SubResource("Style_building_chip")
+
+[node name="VBox" type="VBoxContainer" parent="UILayer/ControlChip"]
+layout_mode = 2
+add_theme_constant_override("separation", 4)
+alignment = 1
+
+[node name="NameLabel" type="Label" parent="UILayer/ControlChip/VBox"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.804, 0.894, 1.0, 1.0)
+theme_override_fonts/font = ExtResource("15")
+theme_override_font_sizes/font_size = 26
+text = "CONTROL"
+horizontal_alignment = 1
+
+[node name="StatusLabel" type="Label" parent="UILayer/ControlChip/VBox"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.478, 0.510, 0.565, 1.0)
+theme_override_fonts/font = ExtResource("16")
+theme_override_font_sizes/font_size = 22
+text = "0 JOBS"
+horizontal_alignment = 1
+
 ; ── "Tap a building" hint pill ────────────────────────────────────────────────
 ; Design: bottom:110 on 874 → 87.4% from top → y=1678 on 1920. Height 52px.
 [node name="TapHintPanel" type="PanelContainer" parent="UILayer"]

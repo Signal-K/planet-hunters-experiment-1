@@ -25,7 +25,6 @@ const StarterRocket2HighlightChipScene = preload("res://Scenes/UI/Templates/Star
 const EarthBaseBuildFlowOverlayScene = preload("res://Scenes/UI/EarthBaseBuildFlowOverlay.tscn")
 const EmergencyLoanOfferDialogScene = preload("res://Scenes/UI/EmergencyLoanOfferDialog.tscn")
 const ControlStationBuiltDialogueScene = preload("res://Scenes/UI/ControlStationBuiltDialogue.tscn")
-const ControlStationLabelScene = preload("res://Scenes/UI/ControlStationLabel.tscn")
 const ClassificationConsensusNotificationScene = preload("res://Scenes/UI/ClassificationConsensusNotification.tscn")
 const ControlStationScript = preload("res://Scripts/Earth/ControlStation.gd")
 const LaunchpadTexture = preload("res://assets/Structures/launchpad.png")
@@ -49,6 +48,8 @@ var _build_flow_location_id: String = ""
 @onready var _progression_cards_root: EarthBaseProgressionCards = $UILayer/ProgressionCards
 @onready var _satellite_chip_status: Label = $UILayer/SatelliteChip/VBox/StatusLabel
 @onready var _launchpad_chip_status: Label = $UILayer/LaunchpadChip/VBox/StatusLabel
+@onready var _control_chip: PanelContainer = $UILayer/ControlChip
+@onready var _control_chip_status: Label = $UILayer/ControlChip/VBox/StatusLabel
 @onready var _jobs_label: Label = $UILayer/JobsChip/JobsLabel
 
 func _ready() -> void:
@@ -1290,6 +1291,11 @@ func _update_building_chip_status() -> void:
 		_launchpad_chip_status.text = "IN FLIGHT" if in_flight else "READY"
 		_launchpad_chip_status.add_theme_color_override("font_color",
 			Color(1.0, 0.702, 0.282) if in_flight else Color(0.22, 0.851, 0.416))
+	if is_instance_valid(_control_chip_status):
+		var jobs_count := RocketsManager.get_placed().size() + RocketsManager.get_launched().size()
+		_control_chip_status.text = "%d JOBS" % jobs_count if jobs_count != 1 else "1 JOB"
+		_control_chip_status.add_theme_color_override("font_color",
+			Color(0.22, 0.851, 0.416) if jobs_count > 0 else Color(0.478, 0.510, 0.565))
 
 func _scale_structure(node_name: String, tier: int) -> void:
 	var layers := get_node_or_null("StructuresLayer")
@@ -1363,9 +1369,10 @@ func _ensure_control_station_visible() -> void:
 	var layers := get_node_or_null("StructuresLayer")
 	if layers == null:
 		return
+	# Show the UILayer chip (replaces the old floating world-space label).
+	if is_instance_valid(_control_chip):
+		_control_chip.visible = true
 	if layers.get_node_or_null("ControlStation") != null:
-		if layers.get_node_or_null("ControlStationLabel") == null:
-			layers.add_child(_build_control_station_label())
 		return
 	var structure := Node2D.new()
 	structure.name = "ControlStation"
@@ -1390,13 +1397,6 @@ func _ensure_control_station_visible() -> void:
 	structure.add_child(area)
 
 	layers.add_child(structure)
-	if layers.get_node_or_null("ControlStationLabel") == null:
-		layers.add_child(_build_control_station_label())
-
-func _build_control_station_label() -> Node2D:
-	var node: Node2D = ControlStationLabelScene.instantiate()
-	node.position = CONTROL_STATION_LABEL_POSITION
-	return node
 
 func _remove_control_station() -> void:
 	var layers := get_node_or_null("StructuresLayer")
@@ -1405,6 +1405,6 @@ func _remove_control_station() -> void:
 	var structure := layers.get_node_or_null("ControlStation")
 	if structure != null:
 		structure.queue_free()
-	var label := layers.get_node_or_null("ControlStationLabel")
-	if label != null:
-		label.queue_free()
+	# Hide the UILayer chip (no world-space label to free).
+	if is_instance_valid(_control_chip):
+		_control_chip.visible = false
