@@ -1381,7 +1381,7 @@ func _ensure_control_station_visible() -> void:
 
 	var sprite := Sprite2D.new()
 	sprite.name = "Sprite2D"
-	sprite.scale = Vector2(0.17, 0.17)
+	sprite.scale = Vector2(0.15, 0.15)
 	sprite.texture = load(CONTROL_STATION_TEXTURE_PATH)
 	structure.add_child(sprite)
 

@@ -179,7 +179,7 @@ position = Vector2(150, 1169)
 script = ExtResource("3")
 
 [node name="Sprite2D" type="Sprite2D" parent="StructuresLayer/SatelliteStation"]
-scale = Vector2(0.58, 0.58)
+scale = Vector2(0.39, 0.39)
 texture = ExtResource("2")
 
 [node name="InteractionArea" type="Area2D" parent="StructuresLayer/SatelliteStation"]
@@ -199,7 +199,7 @@ position = Vector2(540, 1125)
 script = ExtResource("4")
 
 [node name="Sprite2D" type="Sprite2D" parent="StructuresLayer/Launchpad"]
-scale = Vector2(0.40, 0.40)
+scale = Vector2(0.245, 0.245)
 texture = ExtResource("5")
 
 [node name="InteractionArea" type="Area2D" parent="StructuresLayer/Launchpad"]
@@ -426,9 +426,9 @@ anchor_top = 0.0
 anchor_right = 0.0
 anchor_bottom = 0.0
 offset_left = 14.0
-offset_top = 1300.0
+offset_top = 1260.0
 offset_right = 286.0
-offset_bottom = 1388.0
+offset_bottom = 1348.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("Style_building_chip")
 
@@ -455,7 +455,7 @@ theme_override_font_sizes/font_size = 22
 text = "OFFLINE"
 horizontal_alignment = 1
 
-; Launchpad chip (center x=540): icon bottom ≈ 1125+154=1279, chip y=1287
+; Launchpad chip (center x=540): at design ground line, same y as satellite/control chips
 [node name="LaunchpadChip" type="PanelContainer" parent="UILayer"]
 layout_mode = 1
 anchor_left = 0.5
@@ -463,9 +463,9 @@ anchor_top = 0.0
 anchor_right = 0.5
 anchor_bottom = 0.0
 offset_left = -150.0
-offset_top = 1345.0
+offset_top = 1260.0
 offset_right = 150.0
-offset_bottom = 1418.0
+offset_bottom = 1348.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("Style_building_chip")
 
@@ -503,9 +503,9 @@ anchor_top = 0.0
 anchor_right = 1.0
 anchor_bottom = 0.0
 offset_left = -270.0
-offset_top = 1300.0
+offset_top = 1260.0
 offset_right = -30.0
-offset_bottom = 1388.0
+offset_bottom = 1348.0
 mouse_filter = 2
 visible = false
 theme_override_styles/panel = SubResource("Style_building_chip")
