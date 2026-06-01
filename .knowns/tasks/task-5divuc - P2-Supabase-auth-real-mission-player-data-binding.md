@@ -1,13 +1,13 @@
 ---
 id: 5divuc
 title: 'P2: UILayout.gd portrait zones + design token palette'
-status: todo
+status: done
 priority: medium
 labels:
   - portrait-mode
   - sprint-active
 createdAt: '2026-05-25T09:10:39.596Z'
-updatedAt: '2026-05-25T09:25:03.945Z'
+updatedAt: '2026-05-30T02:34:25.656Z'
 timeSpent: 0
 parent: fmq4vk
 ---

@@ -1,6 +1,6 @@
 {
   "taskId": "xpgzs4",
-  "currentVersion": 2,
+  "currentVersion": 3,
   "versions": [
     {
       "id": "v1",
@@ -52,6 +52,33 @@
       ],
       "snapshot": {
         "description": "Rework LaunchWizard.tscn and LaunchWizardMapStep.tscn for portrait. Fab: 3 slots stacked vertically (chassis → propulsion → drill) with horizontally-scrolling part chip selectors beneath each, sticky bottom CTA bar. Map/Target picker: sol system orbital rings sized to portrait canvas. Reference: portrait/screens-pre.jsx FabScreen + TargetPickerScreen + GalaxyScreen.",
+        "labels": [
+          "portrait-mode",
+          "testing",
+          "docker",
+          "playwright",
+          "visual"
+        ],
+        "priority": "high",
+        "status": "todo",
+        "title": "P4: Redesign LaunchWizard (Fab) + Map scenes for portrait"
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "xpgzs4",
+      "version": 3,
+      "timestamp": "2026-05-30T07:02:54.028593Z",
+      "changes": [
+        {
+          "field": "implementationNotes",
+          "oldValue": null,
+          "newValue": "Portrait TARGET step: enriches targets with distance_au, shows inline orbital-ring map. Portrait ROCKET step: vessel panel + chip strip. LaunchWizardMapStep rewritten with orbital rings. Commit bc483f51 on feat/portrait-mode-foundation."
+        }
+      ],
+      "snapshot": {
+        "description": "Rework LaunchWizard.tscn and LaunchWizardMapStep.tscn for portrait. Fab: 3 slots stacked vertically (chassis → propulsion → drill) with horizontally-scrolling part chip selectors beneath each, sticky bottom CTA bar. Map/Target picker: sol system orbital rings sized to portrait canvas. Reference: portrait/screens-pre.jsx FabScreen + TargetPickerScreen + GalaxyScreen.",
+        "implementationNotes": "Portrait TARGET step: enriches targets with distance_au, shows inline orbital-ring map. Portrait ROCKET step: vessel panel + chip strip. LaunchWizardMapStep rewritten with orbital rings. Commit bc483f51 on feat/portrait-mode-foundation.",
         "labels": [
           "portrait-mode",
           "testing",

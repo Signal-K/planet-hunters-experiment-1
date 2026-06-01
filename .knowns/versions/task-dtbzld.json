@@ -1,6 +1,6 @@
 {
   "taskId": "dtbzld",
-  "currentVersion": 2,
+  "currentVersion": 3,
   "versions": [
     {
       "id": "v1",
@@ -57,6 +57,30 @@
         ],
         "priority": "medium",
         "status": "todo",
+        "title": "P3: Redesign Hub + ControlStation scenes for portrait"
+      }
+    },
+    {
+      "id": "v3",
+      "taskId": "dtbzld",
+      "version": 3,
+      "timestamp": "2026-05-30T02:38:52.365167Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "description": "Rework earth_base_1.tscn and ControlStationPanel.tscn for portrait layout. Hub: full-width scene background, buildings stacked in their designated zones (no overlap), soil cross-section band at bottom, game HUD chips in top status zone. Control Station / Mission Board: full-width card list using APP_BODY scroll lane. Reference the portrait JSX (portrait/screens-pre.jsx HubScreen + MissionBoardScreen) for layout intent. Preserve all existing GDScript signal handlers.",
+        "labels": [
+          "portrait-mode",
+          "posthog",
+          "analytics"
+        ],
+        "priority": "medium",
+        "status": "done",
         "title": "P3: Redesign Hub + ControlStation scenes for portrait"
       }
     }

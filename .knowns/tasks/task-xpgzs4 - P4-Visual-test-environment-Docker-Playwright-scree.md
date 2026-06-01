@@ -10,7 +10,7 @@ labels:
   - playwright
   - visual
 createdAt: '2026-05-25T09:10:49.954Z'
-updatedAt: '2026-05-25T09:17:18.131Z'
+updatedAt: '2026-05-30T07:02:54.025Z'
 timeSpent: 0
 parent: fmq4vk
 ---
@@ -25,4 +25,10 @@ Rework LaunchWizard.tscn and LaunchWizardMapStep.tscn for portrait. Fab: 3 slots
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Portrait TARGET step: enriches targets with distance_au, shows inline orbital-ring map. Portrait ROCKET step: vessel panel + chip strip. LaunchWizardMapStep rewritten with orbital rings. Commit bc483f51 on feat/portrait-mode-foundation.
+<!-- SECTION:NOTES:END -->
 

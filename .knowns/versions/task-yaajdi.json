@@ -1,6 +1,6 @@
 {
   "taskId": "yaajdi",
-  "currentVersion": 4,
+  "currentVersion": 5,
   "versions": [
     {
       "id": "v1",
@@ -151,6 +151,47 @@
       "snapshot": {
         "acceptanceCriteria": [
           {
+            "completed": false,
+            "text": "app.json orientation is portrait"
+          },
+          {
+            "completed": false,
+            "text": "Godot project.godot viewport is portrait (1080×1920 or equivalent)"
+          },
+          {
+            "completed": false,
+            "text": "index.html no longer forces landscape rotation on mobile"
+          },
+          {
+            "completed": false,
+            "text": "Existing Godot tests still pass (make test)"
+          }
+        ],
+        "description": "Remove the landscape lock. Two changes:\n1. app.json: \"orientation\": \"landscape\" → \"portrait\" (React Native wrapper)\n2. scene/project.godot: viewport_width/height swapped to portrait resolution (1080×1920), stretch mode set to \"expand\", handheld orientation already correct (1=portrait)\n3. index.html: remove the landscape media query hack that forces game content sideways\n\nThis is the prerequisite for all other portrait scene work.",
+        "labels": [
+          "portrait-mode",
+          "sprint-active"
+        ],
+        "priority": "high",
+        "status": "todo",
+        "title": "P1: Unlock orientation — app.json + Godot viewport → portrait"
+      }
+    },
+    {
+      "id": "v5",
+      "taskId": "yaajdi",
+      "version": 5,
+      "timestamp": "2026-05-30T02:35:12.431173Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "acceptanceCriteria": [
+          {
             "text": "app.json orientation is portrait",
             "completed": false
           },
@@ -173,7 +214,7 @@
           "sprint-active"
         ],
         "priority": "high",
-        "status": "todo",
+        "status": "done",
         "title": "P1: Unlock orientation — app.json + Godot viewport → portrait"
       }
     }

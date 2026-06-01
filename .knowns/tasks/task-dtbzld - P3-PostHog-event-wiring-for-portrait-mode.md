@@ -1,14 +1,14 @@
 ---
 id: dtbzld
 title: 'P3: Redesign Hub + ControlStation scenes for portrait'
-status: todo
+status: done
 priority: medium
 labels:
   - portrait-mode
   - posthog
   - analytics
 createdAt: '2026-05-25T09:10:43.074Z'
-updatedAt: '2026-05-25T09:17:14.786Z'
+updatedAt: '2026-05-30T02:38:52.361Z'
 timeSpent: 0
 parent: fmq4vk
 ---

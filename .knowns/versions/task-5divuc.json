@@ -1,6 +1,6 @@
 {
   "taskId": "5divuc",
-  "currentVersion": 3,
+  "currentVersion": 4,
   "versions": [
     {
       "id": "v1",
@@ -87,6 +87,29 @@
         ],
         "priority": "medium",
         "status": "todo",
+        "title": "P2: UILayout.gd portrait zones + design token palette"
+      }
+    },
+    {
+      "id": "v4",
+      "taskId": "5divuc",
+      "version": 4,
+      "timestamp": "2026-05-30T02:34:25.661599Z",
+      "changes": [
+        {
+          "field": "status",
+          "oldValue": "todo",
+          "newValue": "done"
+        }
+      ],
+      "snapshot": {
+        "description": "Redefine UILayout zone rects for portrait canvas (1080×1920). Portrait zones: TOP_STATUS (notch+HUD, ~0–80px), APP_HEADER (~80–180px), APP_BODY (scrollable, ~180 to viewport_height-120), BOTTOM_NAV (~last 120px). Also apply the portrait design system colour tokens in DS.gd — deep navy bg (#0a121d), cyan primary (#3fa9ff), amber accent (#f5a623). Reference: portrait/colors_and_type.css for the full token set.\n\nDepends on P1.",
+        "labels": [
+          "portrait-mode",
+          "sprint-active"
+        ],
+        "priority": "medium",
+        "status": "done",
         "title": "P2: UILayout.gd portrait zones + design token palette"
       }
     }

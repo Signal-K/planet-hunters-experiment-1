@@ -224,6 +224,13 @@ func refresh_layout_for_viewport() -> void:
 	_next_btn.custom_minimum_size.y = 52 if compact else 56
 	if _footer_status_label:
 		_footer_status_label.visible = not compact
+	if _contractor_step:
+		_contractor_step.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN if not portrait else Control.SIZE_EXPAND_FILL
+		if not portrait:
+			_contractor_step.custom_minimum_size.x = 820.0
+		else:
+			_contractor_step.custom_minimum_size.x = 0.0
+
 	if _contractor_grid:
 		_contractor_grid.columns = 1
 

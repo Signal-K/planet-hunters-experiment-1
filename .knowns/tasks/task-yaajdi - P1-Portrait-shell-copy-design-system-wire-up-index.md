@@ -1,13 +1,13 @@
 ---
 id: yaajdi
 title: 'P1: Unlock orientation — app.json + Godot viewport → portrait'
-status: todo
+status: done
 priority: high
 labels:
   - portrait-mode
   - sprint-active
 createdAt: '2026-05-25T09:10:30.774Z'
-updatedAt: '2026-05-25T09:25:03.411Z'
+updatedAt: '2026-05-30T02:35:12.426Z'
 timeSpent: 0
 parent: fmq4vk
 ---

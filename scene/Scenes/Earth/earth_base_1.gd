@@ -35,8 +35,8 @@ const SR2_UNLOCK_SECTION := "popups"
 const SR2_UNLOCK_KEY := "starterrocket2_seen"
 const FREE_OPS_UNLOCK_KEY := "free_ops_unlock_seen"
 const SR2_UNLOCK_INTRO_SECONDS := 0.9
-const CONTROL_STATION_POSITION := Vector2(914, 1169)
-const CONTROL_STATION_LABEL_POSITION := Vector2(914, 960)
+const CONTROL_STATION_POSITION := Vector2(914, 1310)
+const CONTROL_STATION_LABEL_POSITION := Vector2(914, 1110)
 const CONTROL_STATION_COLLISION_SIZE := Vector2(220, 180)
 const GLASS_CARD_BG := Color(0.06, 0.10, 0.16, 0.95)
 const GLASS_CARD_SUBTLE_BG := Color(0.08, 0.12, 0.20, 0.93)
@@ -46,11 +46,11 @@ var _build_flow_requested_structure: String = ""
 var _build_flow_location_id: String = ""
 
 @onready var _progression_cards_root: EarthBaseProgressionCards = $UILayer/ProgressionCards
-@onready var _satellite_chip_status: Label = $UILayer/SatelliteChip/VBox/StatusLabel
-@onready var _launchpad_chip_status: Label = $UILayer/LaunchpadChip/VBox/StatusLabel
+@onready var _satellite_chip_status: Label = $UILayer/SatelliteChip/HBox/StatusLabel
+@onready var _launchpad_chip_status: Label = $UILayer/LaunchpadChip/HBox/StatusLabel
 @onready var _control_chip: PanelContainer = $UILayer/ControlChip
-@onready var _control_chip_status: Label = $UILayer/ControlChip/VBox/StatusLabel
-@onready var _jobs_label: Label = $UILayer/JobsChip/JobsLabel
+@onready var _control_chip_status: Label = $UILayer/ControlChip/HBox/StatusLabel
+@onready var _jobs_label: Label = $UILayer/HUDStrip/JobsChip/HBox/JobsLabel
 @onready var _radial_nav: Control = $UILayer/RadialNav
 @onready var _radial_overlay: ColorRect = $UILayer/RadialNav/RadialOverlay
 @onready var _hub_button: Button = $UILayer/RadialNav/HubButton
@@ -60,32 +60,31 @@ var _build_flow_location_id: String = ""
 @onready var _sat_build: Button = $UILayer/RadialNav/SatBuild
 @onready var _sat_missions: Button = $UILayer/RadialNav/SatMissions
 
+var _radial_open: bool = false
+var _sat_anim_tweens: Array = []
+var _sat_cached_offsets: Dictionary = {}
+var _bobs_started: bool = false
+
 func _ready() -> void:
 	_ensure_tutorial_runtime()
-	# Initialize camera controller
 	camera_controller = CameraController.new()
 	add_child(camera_controller)
 	camera_controller.initialize($Camera2D)
-	
-	# Initialize scene manager
+
 	scene_manager = SceneManager.new()
 	add_child(scene_manager)
-	
-	# Initialize UI manager
+
 	ui_manager = UIManager.new()
 	add_child(ui_manager)
-	ui_manager.add_to_group("ui_manager")  # Add to group for easy access
+	ui_manager.add_to_group("ui_manager")
 
-	# Reopen New Mission panel if requested by previous scene
 	if RocketsManager.consume_return_to_new_mission_panel():
 		ui_manager.show_panel(UIManager.PanelType.NEW_MISSION)
-	
-	# Connect button signals
+
 	_setup_buttons()
 	_sync_control_station_presence()
 	_connect_app_runtime_signals()
-	
-	# Create ground guide lines if enabled
+
 	if show_ground_guide:
 		DebugVisualizer.create_ground_guides(self)
 
@@ -104,6 +103,8 @@ func _ready() -> void:
 	call_deferred("_refresh_tutorial_overlay_when_ready")
 	_build_earth_base_identity()
 	call_deferred("_refresh_tutorial_owned_ui")
+	call_deferred("_start_tap_hint_pulse")
+	call_deferred("_apply_ore_vein_glow")
 
 func _ensure_tutorial_runtime() -> void:
 	var app = AppControllerHelper.get_instance()
@@ -157,12 +158,10 @@ func _setup_buttons() -> void:
 	var new_mission_btn: Button = $UILayer/ButtonContainer/NewMissionButton
 	var container: HBoxContainer = $UILayer/ButtonContainer
 
-	# Portrait nav: 4 visible tabs (Base/Atlas/Build/Missions); Back/Forward/Market hidden
 	back_btn.visible    = false
 	forward_btn.visible = false
 	market_btn.visible  = false
 
-	# ── Nav background — dark gradient matching portrait prototype ───────────
 	var bg: Panel = $UILayer/ButtonContainer/NavBackground
 	var bg_style := StyleBoxFlat.new()
 	bg_style.bg_color     = Color(0.024, 0.035, 0.059, 0.92)
@@ -172,24 +171,20 @@ func _setup_buttons() -> void:
 	bg.add_theme_stylebox_override("panel", bg_style)
 	container.add_theme_constant_override("separation", 0)
 
-	# ── Style 4 portrait tabs ────────────────────────────────────────────────
-	_style_portrait_tab(menu_btn,        false)   # Base
-	_style_portrait_tab(space_map_btn,   false)   # Atlas
-	_style_portrait_tab(build_btn,       false)   # Build
-	_style_portrait_tab(new_mission_btn, true)    # Missions (amber accent)
+	_style_portrait_tab(menu_btn,        false)
+	_style_portrait_tab(space_map_btn,   false)
+	_style_portrait_tab(build_btn,       false)
+	_style_portrait_tab(new_mission_btn, true)
 
-	# ── Labels: concise single words ─────────────────────────────────────────
 	menu_btn.text        = "Base"
 	space_map_btn.text   = "Atlas"
 	build_btn.text       = "Build"
 	new_mission_btn.text = "Missions"
 
-	# ── Icons ────────────────────────────────────────────────────────────────
 	_load_icon(menu_btn,        "res://Resources/Icons/nav_menu.svg",    false)
 	_load_icon(space_map_btn,   "res://Resources/Icons/nav_map.svg",     false)
 	_load_icon(new_mission_btn, "res://Resources/Icons/nav_mission.svg", true)
 
-	# ── Connect signals ───────────────────────────────────────────────────────
 	back_btn.pressed.connect(_on_back_button_pressed)
 	forward_btn.pressed.connect(_on_forward_button_pressed)
 	menu_btn.pressed.connect(_on_menu_button_pressed)
@@ -198,19 +193,17 @@ func _setup_buttons() -> void:
 	build_btn.pressed.connect(_on_build_button_pressed)
 	new_mission_btn.pressed.connect(_on_new_mission_button_pressed)
 
-	# Prevent spacebar/enter from accidentally activating nav buttons via Godot's ui_accept
 	for btn in [back_btn, forward_btn, menu_btn, market_btn, space_map_btn, build_btn, new_mission_btn]:
 		btn.focus_mode = Control.FOCUS_NONE
 	_apply_market_button_state(false)
 
 
-const _AMBER        := Color(0.961, 0.651, 0.137, 1.0)   # DS Vulcan Amber
-const _CYAN         := Color(0.247, 0.663, 1.0,   1.0)   # DS Command Cyan
-const _TEXT_MUTED   := Color(0.663, 0.722, 0.808, 1.0)   # DS TEXT_MUTED
+const _AMBER      := Color(0.961, 0.651, 0.137, 1.0)
+const _CYAN       := Color(0.247, 0.663, 1.0,   1.0)
+const _TEXT_MUTED := Color(0.663, 0.722, 0.808, 1.0)
 
-# Portrait bottom-nav tab styling: icon above label, 4 equal columns.
 func _style_portrait_tab(btn: Button, is_amber: bool) -> void:
-	var col: Color    = _AMBER if is_amber else _TEXT_MUTED
+	var col: Color     = _AMBER if is_amber else _TEXT_MUTED
 	var col_act: Color = _AMBER if is_amber else _CYAN
 
 	var normal := StyleBoxFlat.new()
@@ -237,19 +230,14 @@ func _style_portrait_tab(btn: Button, is_amber: bool) -> void:
 	var nav_font := load("res://Resources/Fonts/Oxanium-Bold.ttf") as Font
 	if nav_font:
 		btn.add_theme_font_override("font", nav_font)
-	# Label at 10px effective, icon above via button's built-in vertical layout
-	# 26 design-units ≈ 9px on phone after 0.36× scale — compact mobile nav label.
 	btn.add_theme_font_size_override("font_size", 26)
-	btn.icon_alignment     = HORIZONTAL_ALIGNMENT_CENTER
-	btn.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
-	btn.expand_icon        = false
-	# Lock so UIConsistencyEnforcer does not override our custom nav styling
+	btn.icon_alignment              = HORIZONTAL_ALIGNMENT_CENTER
+	btn.vertical_icon_alignment     = VERTICAL_ALIGNMENT_TOP
+	btn.expand_icon                 = false
 	btn.set_meta("ui_style_locked", true)
 
-# Legacy stub — kept so any remaining callers compile; use _style_portrait_tab instead.
 func _style_nav_slot(btn: Button, is_amber: bool) -> void:
 	_style_portrait_tab(btn, is_amber)
-
 
 func _load_icon(btn: Button, path: String, is_amber: bool) -> void:
 	if not ResourceLoader.exists(path):
@@ -272,23 +260,22 @@ func _set_nav_min(btn: Button, min_w: float, min_h: float) -> void:
 # ── Radial Navigation ─────────────────────────────────────────────────────────
 
 func _setup_radial_nav() -> void:
-	# Style hub glow (translucent cyan halo behind the hub button)
+	# Hub glow — translucent cyan halo
 	var glow_style := StyleBoxFlat.new()
-	glow_style.bg_color = Color(_CYAN.r, _CYAN.g, _CYAN.b, 0.18)
+	glow_style.bg_color = Color(_CYAN.r, _CYAN.g, _CYAN.b, 0.12)
 	glow_style.set_corner_radius_all(110)
+	glow_style.set_border_width_all(1)
+	glow_style.border_color = Color(_CYAN.r, _CYAN.g, _CYAN.b, 0.22)
 	_hub_glow.add_theme_stylebox_override("panel", glow_style)
 
-	# Style hub button (solid cyan circle with subtle ring)
+	# Hub button — solid navy circle with glass border
 	var hub_normal := StyleBoxFlat.new()
-	hub_normal.bg_color = _CYAN
+	hub_normal.bg_color = Color(0.18, 0.45, 0.82, 0.95)
 	hub_normal.set_corner_radius_all(86)
-	hub_normal.border_width_top    = 3
-	hub_normal.border_width_bottom = 3
-	hub_normal.border_width_left   = 3
-	hub_normal.border_width_right  = 3
+	hub_normal.set_border_width_all(1)
 	hub_normal.border_color = Color(1.0, 1.0, 1.0, 0.35)
 	var hub_pressed := hub_normal.duplicate() as StyleBoxFlat
-	hub_pressed.bg_color = Color(_CYAN.r * 0.75, _CYAN.g * 0.75, _CYAN.b * 0.75, 1.0)
+	hub_pressed.bg_color = Color(0.18, 0.45, 0.82, 1.0)
 	_hub_button.add_theme_stylebox_override("normal",  hub_normal)
 	_hub_button.add_theme_stylebox_override("hover",   hub_normal)
 	_hub_button.add_theme_stylebox_override("pressed", hub_pressed)
@@ -303,7 +290,7 @@ func _setup_radial_nav() -> void:
 	_hub_button.text = ""
 	_hub_button.focus_mode = Control.FOCUS_NONE
 
-	# Style satellite buttons (dark glass circles with label)
+	# Satellite buttons — dark glass circles
 	var sat_data := [
 		[_sat_base,     "Base",     "res://Resources/Icons/nav_menu.svg",    false],
 		[_sat_atlas,    "Atlas",    "res://Resources/Icons/nav_map.svg",     false],
@@ -321,10 +308,7 @@ func _setup_radial_nav() -> void:
 		var sat_n := StyleBoxFlat.new()
 		sat_n.bg_color = Color(0.039, 0.071, 0.114, 0.95)
 		sat_n.set_corner_radius_all(73)
-		sat_n.border_width_top    = 2
-		sat_n.border_width_bottom = 2
-		sat_n.border_width_left   = 2
-		sat_n.border_width_right  = 2
+		sat_n.set_border_width_all(2)
 		sat_n.border_color = Color(col.r, col.g, col.b, 0.55)
 		var sat_h := sat_n.duplicate() as StyleBoxFlat
 		sat_h.border_color = Color(col.r, col.g, col.b, 0.9)
@@ -348,12 +332,12 @@ func _setup_radial_nav() -> void:
 				btn.add_theme_color_override("icon_pressed_color", col)
 				btn.add_theme_constant_override("icon_max_width", 42)
 		btn.text = label_text
-		btn.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		btn.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
-		btn.focus_mode = Control.FOCUS_NONE
+		btn.icon_alignment              = HORIZONTAL_ALIGNMENT_CENTER
+		btn.vertical_icon_alignment     = VERTICAL_ALIGNMENT_TOP
+		btn.focus_mode                  = Control.FOCUS_NONE
 		btn.set_meta("ui_style_locked", true)
 
-	# Wire signals once (guard against double-connect on resize)
+	# Wire signals once
 	if not _hub_button.pressed.is_connected(_toggle_radial_menu):
 		_hub_button.pressed.connect(_toggle_radial_menu)
 	if not _radial_overlay.gui_input.is_connected(_on_radial_overlay_input):
@@ -371,18 +355,94 @@ func _setup_radial_nav() -> void:
 		_sat_missions.pressed.connect(_on_new_mission_button_pressed)
 		_sat_missions.pressed.connect(_close_radial_menu)
 
-var _radial_open: bool = false
+	# Cache final offset positions for fan animation (needs one frame for layout)
+	await get_tree().process_frame
+	_cache_radial_sat_offsets()
+
+func _cache_radial_sat_offsets() -> void:
+	for btn in [_sat_base, _sat_atlas, _sat_build, _sat_missions]:
+		if is_instance_valid(btn):
+			_sat_cached_offsets[btn] = {
+				"left":   btn.offset_left,
+				"top":    btn.offset_top,
+				"right":  btn.offset_right,
+				"bottom": btn.offset_bottom,
+			}
 
 func _toggle_radial_menu() -> void:
 	_radial_open = not _radial_open
 	_radial_overlay.visible = _radial_open
-	_sat_base.visible     = _radial_open
-	_sat_atlas.visible    = _radial_open
-	_sat_build.visible    = _radial_open
-	_sat_missions.visible = _radial_open
-	# Switch overlay mouse filter: block taps when open, ignore when closed
 	_radial_nav.mouse_filter = Control.MOUSE_FILTER_STOP if _radial_open else Control.MOUSE_FILTER_IGNORE
-	_hub_button.mouse_filter = Control.MOUSE_FILTER_STOP  # hub always tappable
+	_hub_button.mouse_filter = Control.MOUSE_FILTER_STOP
+
+	for tw in _sat_anim_tweens:
+		if tw is Tween:
+			(tw as Tween).kill()
+	_sat_anim_tweens.clear()
+
+	var btns := [_sat_base, _sat_atlas, _sat_build, _sat_missions]
+	const STAGGER := 0.045
+	const HUB_LEFT := -86.0
+	const HUB_TOP  := -198.0
+	const HUB_RIGHT := 86.0
+	const HUB_BOTTOM := -26.0
+
+	if _radial_open:
+		# Hub icon rotates to an X
+		var hub_tw := create_tween()
+		hub_tw.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+		hub_tw.tween_property(_hub_button, "rotation_degrees", 45.0, 0.22)
+		_sat_anim_tweens.append(hub_tw)
+
+		for i in range(btns.size()):
+			var btn := btns[i] as Button
+			if not is_instance_valid(btn):
+				continue
+			var cached: Dictionary = _sat_cached_offsets.get(btn, {})
+			if cached.is_empty():
+				btn.visible = true
+				continue
+			# Start from hub centre, scale from zero, fade in
+			btn.offset_left   = HUB_LEFT
+			btn.offset_top    = HUB_TOP
+			btn.offset_right  = HUB_RIGHT
+			btn.offset_bottom = HUB_BOTTOM
+			btn.scale         = Vector2(0.1, 0.1)
+			btn.pivot_offset  = (btn.size * 0.5) if btn.size.length() > 0 else Vector2(72, 72)
+			btn.modulate.a    = 0.0
+			btn.visible       = true
+
+			var tw := create_tween()
+			tw.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+			tw.tween_interval(i * STAGGER)
+			tw.tween_property(btn, "offset_left",   cached["left"],   0.30).set_trans(Tween.TRANS_BACK)
+			tw.parallel().tween_property(btn, "offset_top",    cached["top"],    0.30)
+			tw.parallel().tween_property(btn, "offset_right",  cached["right"],  0.30)
+			tw.parallel().tween_property(btn, "offset_bottom", cached["bottom"], 0.30)
+			tw.parallel().tween_property(btn, "scale",         Vector2.ONE,      0.28)
+			tw.parallel().tween_property(btn, "modulate:a",    1.0,              0.22)
+			_sat_anim_tweens.append(tw)
+	else:
+		# Hub icon rotates back to hamburger/grid glyph
+		var hub_tw := create_tween()
+		hub_tw.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+		hub_tw.tween_property(_hub_button, "rotation_degrees", 0.0, 0.18)
+		_sat_anim_tweens.append(hub_tw)
+
+		for i in range(btns.size()):
+			var btn := btns[i] as Button
+			if not is_instance_valid(btn):
+				continue
+			var tw := create_tween()
+			tw.set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
+			tw.tween_property(btn, "scale",      Vector2(0.1, 0.1), 0.18)
+			tw.parallel().tween_property(btn, "modulate:a", 0.0,  0.16)
+			tw.tween_callback(func() -> void:
+				if is_instance_valid(btn):
+					btn.visible = false
+					btn.scale   = Vector2.ONE
+			)
+			_sat_anim_tweens.append(tw)
 
 func _close_radial_menu() -> void:
 	if _radial_open:
@@ -796,7 +856,6 @@ func _show_starterrocket2_unlock_popup() -> void:
 func _maybe_show_free_ops_unlock() -> void:
 	if _has_seen_free_ops_unlock():
 		return
-	# Free ops unlocks after completing all 4 authored missions
 	if int(RocketsManager.get_completed_mission_count()) < 4:
 		return
 	_mark_free_ops_unlock_seen()
@@ -849,7 +908,6 @@ func _maybe_offer_loan() -> void:
 	_show_loan_offer_dialog(app)
 
 func _show_loan_offer_dialog(_app: Node) -> void:
-	# EmergencyLoanOfferDialog.gd extends BaseDialogLayer and self-styles on _ready().
 	var ui_layer: CanvasLayer = EmergencyLoanOfferDialogScene.instantiate()
 	add_child(ui_layer)
 
@@ -867,7 +925,6 @@ func _apply_tutorial_button_state() -> void:
 		if not state.is_empty():
 			var current_step: Dictionary = state.get("current_step", {}) as Dictionary
 			tutorial_active = not bool(state.get("skipped", false)) and not current_step.is_empty()
-	# During the tutorial: Atlas tab is available but hidden buttons stay off.
 	for btn_path in [
 		"UILayer/ButtonContainer/ForwardButton",
 	]:
@@ -886,7 +943,6 @@ func _apply_tutorial_button_state() -> void:
 			new_mission_btn.tooltip_text = "Build the Scanner Station first."
 		else:
 			new_mission_btn.tooltip_text = ""
-	# Mirror disabled state onto radial satellite button
 	if is_instance_valid(_sat_missions):
 		var cs_req := _control_station_build_required()
 		var ss_req := _scanner_station_build_required()
@@ -942,9 +998,8 @@ func _build_earth_base_identity() -> void:
 	_build_hud_strip()
 
 func _build_hud_strip() -> void:
-	var level_label := get_node_or_null("UILayer/HUDStrip/LevelChip/LevelLabel") as Label
-	var francs_label := get_node_or_null("UILayer/HUDStrip/FrancsChip/FrancsLabel") as Label
-	if level_label == null and francs_label == null:
+	var francs_label := get_node_or_null("UILayer/HUDStrip/FrancsChip/HBox/FrancsLabel") as Label
+	if francs_label == null:
 		return
 	var app = AppControllerHelper.get_instance()
 	if app == null:
@@ -952,25 +1007,20 @@ func _build_hud_strip() -> void:
 	var lv := 1
 	if app.has_method("get_experience_level"):
 		lv = int(app.get_experience_level())
-	if level_label != null:
-		level_label.text = "LV %d" % lv
 	if francs_label != null and app.has_method("get_franc_balance"):
 		var bal := int(app.get_franc_balance())
 		francs_label.text = NumberFormat.with_symbol(bal)
-	# Update Jobs pill: count active missions (placed + launched)
 	if is_instance_valid(_jobs_label):
 		var jobs_count := RocketsManager.get_placed().size() + RocketsManager.get_launched().size()
 		_jobs_label.text = "%d JOBS" % jobs_count if jobs_count != 1 else "1 JOB"
-	# Update eyebrow with level
 	var eyebrow := get_node_or_null("UILayer/TitleBlock/LandnamWordmark") as Label
 	if eyebrow != null:
 		eyebrow.text = "EARTH BASE · LV %d" % lv
-	# Refresh whenever balance changes
 	if app.has_signal("franc_balance_updated") and not app.franc_balance_updated.is_connected(_on_franc_balance_updated):
 		app.franc_balance_updated.connect(_on_franc_balance_updated)
 
 func _on_franc_balance_updated(_new_balance: int) -> void:
-	var francs_label := get_node_or_null("UILayer/HUDStrip/FrancsChip/FrancsLabel") as Label
+	var francs_label := get_node_or_null("UILayer/HUDStrip/FrancsChip/HBox/FrancsLabel") as Label
 	if francs_label == null:
 		return
 	var app = AppControllerHelper.get_instance()
@@ -990,7 +1040,6 @@ func _build_wordmark() -> void:
 	var ui_layer = get_node_or_null("UILayer")
 	if ui_layer == null:
 		return
-	# Support both old (LandnamWordmark Label) and new (TitleBlock VBoxContainer) layouts.
 	var block := ui_layer.get_node_or_null("TitleBlock") as Control
 	var wordmark := ui_layer.get_node_or_null("LandnamWordmark") as Label
 	if block == null and wordmark == null:
@@ -1013,13 +1062,14 @@ func _on_earth_base_viewport_resized() -> void:
 
 func _apply_wordmark_layout(node: Control) -> void:
 	var viewport := get_viewport_rect().size
-	# Portrait: anchor title block top-left below the TOP_STATUS (notch) zone.
 	var top_y := UILayout.zone(UILayout.Zone.TOP_STATUS, viewport).end.y
 	node.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	node.offset_left   = 20.0
-	node.offset_top    = top_y + 110.0  # below HUD strip (which sits at 32-96px)
-	node.offset_right  = 680.0          # wide enough for 80-pt title font
-	node.offset_bottom = top_y + 300.0  # eyebrow(36) + gap(8) + title(102) + breathing room
+	node.offset_left   = 28.0
+	node.offset_top    = top_y + 32.0
+	node.offset_right  = 640.0
+	node.offset_bottom = top_y + 240.0
+
+# ── Ambient star field with twinkle ──────────────────────────────────────────
 
 func _build_ambient_stars() -> void:
 	var star_root = get_node_or_null("AmbientStarLayer/StarRoot")
@@ -1033,12 +1083,74 @@ func _build_ambient_stars() -> void:
 	rng.seed = 0xC3B9A1
 	for _i in range(55):
 		var dot = ColorRect.new()
-		var sz = rng.randf_range(1.0, 2.4)
+		var sz = rng.randf_range(1.2, 2.4)
 		dot.size = Vector2(sz, sz)
-		dot.color = Color(0.88, 0.94, 1.0, rng.randf_range(0.10, 0.32))
+		var base_alpha := rng.randf_range(0.28, 0.72)
+		dot.color = Color(0.88, 0.94, 1.0, base_alpha)
 		dot.position = Vector2(rng.randf_range(0.0, vp.x), rng.randf_range(0.0, sky_h))
 		dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		star_root.add_child(dot)
+		_start_twinkle(dot, base_alpha, rng.randf_range(1.6, 4.4))
+
+func _start_twinkle(dot: ColorRect, base_alpha: float, period: float) -> void:
+	var low := maxf(0.06, base_alpha * 0.30)
+	var high := minf(0.95, base_alpha * 1.15)
+	var tw := create_tween()
+	tw.set_loops()
+	tw.tween_property(dot, "color:a", low,  period * 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_property(dot, "color:a", high, period * 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+# ── Tap hint pulse ────────────────────────────────────────────────────────────
+
+func _start_tap_hint_pulse() -> void:
+	var hint := get_node_or_null("UILayer/TapHintPanel") as Control
+	if hint == null or not hint.visible:
+		return
+	var tw := create_tween()
+	tw.set_loops()
+	tw.tween_property(hint, "modulate:a", 0.40, 0.85).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_property(hint, "modulate:a", 1.00, 0.85).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+func hide_tap_hint() -> void:
+	var hint := get_node_or_null("UILayer/TapHintPanel") as Control
+	if hint:
+		hint.visible = false
+
+# ── Ore vein glow animations ─────────────────────────────────────────────────
+
+func _apply_ore_vein_glow() -> void:
+	var soil := get_node_or_null("UILayer/SoilSection") as Control
+	if soil == null:
+		return
+	for vein_name in ["OreVeinIron", "OreVeinSilicon", "OreVeinGold"]:
+		var vein := soil.get_node_or_null(vein_name) as ColorRect
+		if vein == null:
+			continue
+		var base_alpha := vein.color.a
+		var tw := create_tween()
+		tw.set_loops()
+		tw.tween_property(vein, "color:a", base_alpha * 0.45, 2.8).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		tw.tween_property(vein, "color:a", base_alpha * 1.60, 2.8).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+# ── Structure bob animations ──────────────────────────────────────────────────
+
+func _apply_structure_bobs() -> void:
+	if _bobs_started:
+		return
+	_bobs_started = true
+	var base_periods := {"SatelliteStation": 5.2, "Launchpad": 4.8, "ControlStation": 5.6}
+	for node_name in base_periods.keys():
+		var node := get_node_or_null("StructuresLayer/" + node_name) as Node2D
+		if node == null:
+			continue
+		var base_y := node.position.y
+		var period := float(base_periods[node_name])
+		var tw := create_tween()
+		tw.set_loops()
+		tw.tween_property(node, "position:y", base_y - 2.0, period * 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		tw.tween_property(node, "position:y", base_y + 2.0, period * 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+# ── Progression cards ────────────────────────────────────────────────────────
 
 func _build_progression_cards() -> void:
 	var ui_layer = get_node_or_null("UILayer")
@@ -1050,15 +1162,11 @@ func _build_progression_cards() -> void:
 	var active_context := get_active_mission_context()
 	var control_station_required := _control_station_build_required()
 	var scanner_station_required := _scanner_station_build_required()
-	# The tutorial coach owns the CTA lane whenever it is visible on Earth base.
-	# Do not try to infer intent from tutorial state here; duplicate cards are worse
-	# than hiding the scene-owned progression lane while guidance is active.
 	if _has_visible_tutorial_overlay():
 		cards_root.visible = false
 		return
 	cards_root.hide_all()
 	cards_root.visible = true
-
 
 	var completed_count = int(RocketsManager.get_completed_mission_count())
 	if not active_context.is_empty():
@@ -1085,7 +1193,6 @@ func _has_visible_tutorial_overlay() -> bool:
 	return true
 
 func get_active_mission_context() -> Dictionary:
-
 	var returned: Dictionary = RocketsManager.get_returned_mission()
 	if not returned.is_empty():
 		return _build_returned_mission_context(returned)
@@ -1279,7 +1386,6 @@ func _apply_glass_callout_panel(
 		PanelStyle.create_glass_panel_style(bg_color, border_alpha, corner_radius, padding_x, padding_y)
 	)
 
-
 func _has_seen_starterrocket2_unlock_popup() -> bool:
 	var cfg = ConfigFile.new()
 	var err = cfg.load(SR2_UNLOCK_POPUP_PATH)
@@ -1294,9 +1400,6 @@ func _mark_starterrocket2_unlock_popup_seen() -> void:
 	cfg.save(SR2_UNLOCK_POPUP_PATH)
 
 func _apply_nav_safe_area() -> void:
-	# Reposition the navigation ButtonContainer so it is always anchored to the
-	# bottom of the viewport and spans its full width.  This replaces the old
-	# single-case patch (aspect > 1.85) with a fully responsive layout.
 	var container := get_node_or_null("UILayer/ButtonContainer") as HBoxContainer
 	if container == null:
 		return
@@ -1311,7 +1414,6 @@ func _apply_nav_safe_area() -> void:
 	var vp_h := vp_rect.size.y
 	var is_portrait_layout := vp_h > vp_w
 
-	# Portrait: swap to radial nav; landscape: keep legacy tab bar.
 	if is_portrait_layout:
 		container.visible = false
 		if is_instance_valid(_radial_nav):
@@ -1321,7 +1423,6 @@ func _apply_nav_safe_area() -> void:
 		container.visible = true
 		if is_instance_valid(_radial_nav):
 			_radial_nav.visible = false
-		# Portrait: full-width bar, no side margins; safe area bottom for home indicator.
 		var margin_h := 24.0
 		var bar_h := clampf(vp_h * 0.10, 150.0, 240.0)
 		var bottom_margin := 0.0
@@ -1334,9 +1435,6 @@ func _apply_nav_safe_area() -> void:
 		container.offset_right  = -margin_h
 		container.offset_bottom = -bottom_margin
 
-	# Zoom the camera so the designed 1080-unit world fills the full width in
-	# portrait. No zoom needed for portrait (1080×1920); landscape builds that
-	# are wider than the design aspect zoom in to avoid empty side margins.
 	var camera := get_node_or_null("Camera2D") as Camera2D
 	if camera != null:
 		var design_aspect := 1080.0 / 1920.0
@@ -1347,21 +1445,18 @@ func _apply_nav_safe_area() -> void:
 		else:
 			camera.zoom = Vector2(1.0, 1.0)
 
-	# Position the HUD chip strip at top-right, clear of the notch zone.
-	# strip_h is proportional so chips match the larger font sizes in design space.
-	var hud_strip := get_node_or_null("UILayer/HUDStrip") as HBoxContainer
+	var hud_strip := get_node_or_null("UILayer/HUDStrip") as VBoxContainer
 	if hud_strip != null:
 		var status_zone := UILayout.zone(UILayout.Zone.TOP_STATUS, vp_rect.size)
-		var strip_h := 64.0   # accommodates font_size 30 chips (24px cap + 16px padding)
-		var top_pad := maxf(32.0, status_zone.end.y + 32.0)
+		var top_pad := maxf(38.0, status_zone.end.y + 38.0)
 		hud_strip.anchor_left   = 1.0
 		hud_strip.anchor_top    = 0.0
 		hud_strip.anchor_right  = 1.0
 		hud_strip.anchor_bottom = 0.0
-		hud_strip.offset_left   = -400.0
+		hud_strip.offset_left   = -320.0
 		hud_strip.offset_top    = top_pad
 		hud_strip.offset_right  = -24.0
-		hud_strip.offset_bottom = top_pad + strip_h
+		hud_strip.offset_bottom = top_pad + 190.0
 
 func _check_classification_consensus() -> void:
 	ClassificationConsensus.check_for_updates(get_tree(), func(updates: Array) -> void:
@@ -1373,7 +1468,6 @@ func _check_classification_consensus() -> void:
 func _show_consensus_notifications(updates: Array) -> void:
 	if updates.is_empty():
 		return
-	# Use the redesigned ClassificationConsensusNotification via its show_results() API.
 	var layer = ClassificationConsensusNotificationScene.instantiate()
 	add_child(layer)
 	var app = AppControllerHelper.get_instance()
@@ -1383,9 +1477,6 @@ func _show_consensus_notifications(updates: Array) -> void:
 		layer.show_results(updates, exp_gained, rank)
 
 # ── Earth base visual evolution ───────────────────────────────────────────────
-## Structure visual evolution: scales existing sprites to reflect upgrade tiers,
-## and shows construction-project structures with a placement animation.
-## Art assets (tier-specific sprites) are TODO — scale is used as placeholder.
 
 const _STRUCTURE_SCALE_PER_TIER := {1: 1.0, 2: 1.15, 3: 1.30, 4: 1.45}
 const _CONSTRUCTION_STRUCTURE_POSITIONS := {
@@ -1400,43 +1491,51 @@ func _apply_structure_visual_evolution() -> void:
 	if app and app.has_method("get_experience_level"):
 		player_level = int(app.get_experience_level())
 
-	# Scale the three starter structures based on their room upgrade tiers.
-	# "starterrocket1" is the primary type for tier tracking at L1-L4.
 	var primary_type := "starterrocket1"
 	var upgrades: Dictionary = RocketsManager.get_type_room_upgrades(primary_type)
 	var mining_tier := int(upgrades.get("mining", 1))
 	var cargo_tier  := int(upgrades.get("cargo", 1))
 
-	# Satellite Station → scales with scanner (track via mission count as proxy)
-	var mission_count := int(RocketsManager.get_completed_mission_count())
 	var scanner_tier: int = clamp(1 + int(RocketsManager.is_scanner_station_built()), 1, 2)
 	_scale_structure("SatelliteStation", scanner_tier)
 	_scale_structure("Launchpad", mining_tier)
 	_apply_control_station_visual_tier(cargo_tier)
 	_update_building_chip_status()
 
-	# Show construction-project structures when completed
 	if player_level >= 5:
 		for proj_id in _CONSTRUCTION_STRUCTURE_POSITIONS.keys():
 			if preload("res://Scripts/Utils/ConstructionManager.gd").is_project_completed(proj_id):
 				_ensure_construction_structure_visible(proj_id)
 
+	# Start bob animations after all scales are applied
+	call_deferred("_apply_structure_bobs")
+
 func _update_building_chip_status() -> void:
 	if is_instance_valid(_satellite_chip_status):
 		var built := RocketsManager.is_scanner_station_built()
 		_satellite_chip_status.text = "SCANNING" if built else "OFFLINE"
-		_satellite_chip_status.add_theme_color_override("font_color",
-			Color(0.22, 0.851, 0.416) if built else Color(0.478, 0.510, 0.565))
+		var col := Color(0.22, 0.851, 0.416) if built else Color(0.478, 0.510, 0.565)
+		_satellite_chip_status.add_theme_color_override("font_color", col)
+		var dot := _satellite_chip_status.get_parent().get_node_or_null("Dot") as Label
+		if dot == null:
+			dot = _satellite_chip_status.get_parent().get_node_or_null("Dot/StatusDot") as Label
+		if dot: dot.add_theme_color_override("font_color", col)
+
 	if is_instance_valid(_launchpad_chip_status):
 		var in_flight := RocketsManager.get_launched().size() > 0
 		_launchpad_chip_status.text = "IN FLIGHT" if in_flight else "READY"
-		_launchpad_chip_status.add_theme_color_override("font_color",
-			Color(1.0, 0.702, 0.282) if in_flight else Color(0.22, 0.851, 0.416))
+		var col := Color(1.0, 0.702, 0.282) if in_flight else Color(0.22, 0.851, 0.416)
+		_launchpad_chip_status.add_theme_color_override("font_color", col)
+		var dot := _launchpad_chip_status.get_parent().get_node_or_null("Dot") as Label
+		if dot: dot.add_theme_color_override("font_color", col)
+
 	if is_instance_valid(_control_chip_status):
 		var jobs_count := RocketsManager.get_placed().size() + RocketsManager.get_launched().size()
 		_control_chip_status.text = "%d JOBS" % jobs_count if jobs_count != 1 else "1 JOB"
-		_control_chip_status.add_theme_color_override("font_color",
-			Color(0.22, 0.851, 0.416) if jobs_count > 0 else Color(0.478, 0.510, 0.565))
+		var col := Color(0.22, 0.851, 0.416) if jobs_count > 0 else Color(0.478, 0.510, 0.565)
+		_control_chip_status.add_theme_color_override("font_color", col)
+		var dot := _control_chip_status.get_parent().get_node_or_null("Dot") as Label
+		if dot: dot.add_theme_color_override("font_color", col)
 
 func _scale_structure(node_name: String, tier: int) -> void:
 	var layers := get_node_or_null("StructuresLayer")
@@ -1468,7 +1567,7 @@ func _ensure_construction_structure_visible(proj_id: String) -> void:
 		return
 	var node_name := "ConstructionStructure_%s" % proj_id
 	if layers.get_node_or_null(node_name) != null:
-		return  # Already added
+		return
 
 	var cfg := ConfigFile.new()
 	var is_new := cfg.load(_STRUCTURE_SEEN_CFG) != OK or \
@@ -1477,15 +1576,12 @@ func _ensure_construction_structure_visible(proj_id: String) -> void:
 	var sprite := Sprite2D.new()
 	sprite.name = node_name
 	sprite.position = _CONSTRUCTION_STRUCTURE_POSITIONS.get(proj_id, Vector2(0, 0))
-	# Use launchpad sprite as placeholder (art asset for each project TBD)
 	sprite.texture = LaunchpadTexture
 	sprite.scale = Vector2(0.35, 0.35)
-	# Tint to distinguish from base structures
 	sprite.modulate = Color(0.7, 0.9, 1.0, 1.0)
 	layers.add_child(sprite)
 
 	if is_new:
-		# Placement animation: scale from 0 → full
 		var target_scale := sprite.scale
 		sprite.scale = Vector2.ZERO
 		var tween := create_tween()
@@ -1510,7 +1606,6 @@ func _ensure_control_station_visible() -> void:
 	var layers := get_node_or_null("StructuresLayer")
 	if layers == null:
 		return
-	# Show the UILayer chip (replaces the old floating world-space label).
 	if is_instance_valid(_control_chip):
 		_control_chip.visible = true
 	if layers.get_node_or_null("ControlStation") != null:
@@ -1539,6 +1634,14 @@ func _ensure_control_station_visible() -> void:
 
 	layers.add_child(structure)
 
+	# Start bob for the newly placed control station
+	if _bobs_started:
+		var base_y := structure.position.y
+		var tw := create_tween()
+		tw.set_loops()
+		tw.tween_property(structure, "position:y", base_y - 2.0, 2.8).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		tw.tween_property(structure, "position:y", base_y + 2.0, 2.8).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
 func _remove_control_station() -> void:
 	var layers := get_node_or_null("StructuresLayer")
 	if layers == null:
@@ -1546,6 +1649,5 @@ func _remove_control_station() -> void:
 	var structure := layers.get_node_or_null("ControlStation")
 	if structure != null:
 		structure.queue_free()
-	# Hide the UILayer chip (no world-space label to free).
 	if is_instance_valid(_control_chip):
 		_control_chip.visible = false

@@ -4,7 +4,25 @@
       "WebFetch(domain:stitch.googlelabs.com)",
       "WebFetch(domain:stitch.googleapis.com)",
       "Skill(kn-init)",
-      "mcp__knowns__memory"
+      "mcp__knowns__memory",
+      "mcp__knowns__tasks",
+      "WebFetch(domain:api.anthropic.com)",
+      "mcp__knowns__project",
+      "mcp__vellem__list_folders",
+      "Bash(mkdir -p /tmp/landnam-design)",
+      "Bash(cp /Users/scroobz/.claude/projects/-Users-scroobz-Navigation-Landnam/1eb5a813-62ca-4ca5-b842-b578b334108b/tool-results/webfetch-1779699895642-hnrp92.bin /tmp/landnam-design/archive.gz)",
+      "Bash(gunzip -c /tmp/landnam-design/archive.gz)",
+      "Bash(true)",
+      "Bash(file __TRACKED_VAR__/extracted)",
+      "mcp__Claude_Preview__preview_start",
+      "mcp__vellem__add_note",
+      "Skill(schedule)",
+      "Skill(schedule:*)",
+      "mcp__vellem__get_note",
+      "mcp__vellem__update_note",
+      "Bash(cp \"/Users/scroobz/.claude/projects/-Users-scroobz-Navigation-Landnam/1eb5a813-62ca-4ca5-b842-b578b334108b/tool-results/webfetch-1779783605750-9w37r1.bin\" /tmp/landnam-design.gz)",
+      "Bash(gunzip -c /tmp/landnam-design.gz)",
+      "Read(//tmp/**)"
     ]
   }
 }

@@ -23,8 +23,8 @@ func on_day_night_tick(_cycle_t: float, night_factor: float, _delta: float) -> v
 
 func _apply_materials() -> void:
 	_materials.clear()
-	for sprite in _resolve_backdrops():
-		sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	for item in _resolve_backdrops():
+		item.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		var material := ShaderMaterial.new()
 		material.shader = SKY_SHADER
 		material.set_shader_parameter("night_factor", 0.0)
@@ -33,22 +33,22 @@ func _apply_materials() -> void:
 		material.set_shader_parameter("sky_softness", sky_softness)
 		material.set_shader_parameter("sky_vertical_end", sky_vertical_end)
 		material.set_shader_parameter("sky_vertical_feather", sky_vertical_feather)
-		sprite.material = material
+		item.material = material
 		_materials.append(material)
 
-func _resolve_backdrops() -> Array[Sprite2D]:
-	var out: Array[Sprite2D] = []
+func _resolve_backdrops() -> Array[CanvasItem]:
+	var out: Array[CanvasItem] = []
 	for path in backdrop_paths:
 		var node = get_node_or_null(path)
-		if node is Sprite2D:
-			out.append(node)
+		if node is CanvasItem:
+			out.append(node as CanvasItem)
 	if not out.is_empty():
 		return out
 
-	# Fallback for scenes that use common Earth backdrop node names.
-	var fallback_names = ["BackgroundSprite", "BackgroundSprite2", "EarthBackdrop"]
-	for name in fallback_names:
-		var node = get_tree().current_scene.find_child(name, true, false)
-		if node is Sprite2D and not out.has(node):
-			out.append(node)
+	# Fallback — accept Sprite2D or TextureRect backdrop nodes by common names.
+	var fallback_names = ["BackdropRect", "BackgroundSprite", "BackgroundSprite2", "EarthBackdrop"]
+	for fname in fallback_names:
+		var node = get_tree().current_scene.find_child(fname, true, false)
+		if node is CanvasItem and not out.has(node):
+			out.append(node as CanvasItem)
 	return out
