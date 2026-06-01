@@ -1,0 +1,112 @@
+[gd_scene load_steps=2 format=3 uid="uid://btutcoachoverlay1"]
+
+[ext_resource type="Script" path="res://Scripts/UI/TutorialCoachOverlay.gd" id="1_tutcoach"]
+
+[node name="TutorialCoachOverlay" type="CanvasLayer"]
+layer = 10
+script = ExtResource("1_tutcoach")
+
+[node name="Dimmer" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.011765, 0.023529, 0.047059, 0.78)
+mouse_filter = 2
+
+[node name="SpotlightMask" type="ColorRect" parent="."]
+position = Vector2(0, 0)
+size = Vector2(64, 64)
+color = Color(0, 0, 0, 0)
+mouse_filter = 2
+
+[node name="SpotlightBorder" type="ColorRect" parent="."]
+position = Vector2(-2, -2)
+size = Vector2(68, 68)
+color = Color(0.961, 0.651, 0.137, 0.55)
+mouse_filter = 2
+
+[node name="CoachCard" type="PanelContainer" parent="."]
+anchors_preset = 0
+anchor_left = 0.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 14.0
+offset_top = -380.0
+offset_right = -14.0
+offset_bottom = -60.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="VBox" type="VBoxContainer" parent="CoachCard"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="HeaderRow" type="HBoxContainer" parent="CoachCard/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="CoachAvatar" type="ColorRect" parent="CoachCard/VBox/HeaderRow"]
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+color = Color(0.247, 0.663, 1.0, 0.35)
+
+[node name="HeaderInfo" type="VBoxContainer" parent="CoachCard/VBox/HeaderRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="CoachLabel" type="Label" parent="CoachCard/VBox/HeaderRow/HeaderInfo"]
+layout_mode = 2
+text = "MISSION COACH"
+theme_override_font_sizes/font_size = 13
+
+[node name="StepCounter" type="Label" parent="CoachCard/VBox/HeaderRow/HeaderInfo"]
+layout_mode = 2
+text = "1 / 9"
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 1)
+
+[node name="TitleLabel" type="Label" parent="CoachCard/VBox"]
+layout_mode = 2
+text = "Welcome, Commander"
+theme_override_font_sizes/font_size = 28
+theme_override_colors/font_color = Color(0.902, 0.937, 1.0, 1)
+
+[node name="BodyLabel" type="Label" parent="CoachCard/VBox"]
+layout_mode = 2
+text = "Your first contract is waiting. Open the radial menu and tap NEW MISSION to begin."
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 1)
+autowrap_mode = 3
+
+[node name="DotsRow" type="HBoxContainer" parent="CoachCard/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="ActionsRow" type="HBoxContainer" parent="CoachCard/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="SkipButton" type="Button" parent="CoachCard/VBox/ActionsRow"]
+layout_mode = 2
+size_flags_horizontal = 0
+text = "SKIP"
+theme_override_font_sizes/font_size = 16
+
+[node name="CTAButton" type="Button" parent="CoachCard/VBox/ActionsRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "New Mission"
+theme_override_font_sizes/font_size = 20
+
+[node name="PointerTriangle" type="ColorRect" parent="."]
+position = Vector2(180, 0)
+size = Vector2(16, 12)
+color = Color(0.071, 0.133, 0.212, 1)
+mouse_filter = 2

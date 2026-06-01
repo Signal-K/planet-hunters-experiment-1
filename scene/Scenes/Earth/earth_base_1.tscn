@@ -1,0 +1,332 @@
+[gd_scene load_steps=3 format=3 uid="uid://bearthbase001"]
+
+[ext_resource type="Script" path="res://Scenes/Earth/earth_base_1.gd" id="1_earthbase"]
+[ext_resource type="Texture2D" path="res://assets/Backdrops/Earth1.png" id="2_earth1"]
+
+[node name="Home" type="CanvasLayer"]
+layer = 0
+script = ExtResource("1_earthbase")
+
+[node name="Root" type="Control" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Backdrop" type="TextureRect" parent="Root"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_earth1")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="SkyFX" type="Node2D" parent="Root"]
+
+[node name="TopScrim" type="ColorRect" parent="Root"]
+anchors_preset = 0
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 0.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 120.0
+grow_horizontal = 2
+grow_vertical = 1
+color = Color(0.039, 0.071, 0.114, 0.85)
+mouse_filter = 2
+
+[node name="TitleBlock" type="Control" parent="Root"]
+anchors_preset = 0
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = 28.0
+offset_top = 40.0
+offset_right = 300.0
+offset_bottom = 120.0
+grow_horizontal = 1
+grow_vertical = 1
+
+[node name="Eyebrow" type="Label" parent="Root/TitleBlock"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 270.0
+offset_bottom = 24.0
+text = "EARTH BASE · LV 1"
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 1)
+
+[node name="Title" type="Label" parent="Root/TitleBlock"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 28.0
+offset_right = 270.0
+offset_bottom = 76.0
+text = "Earth Base"
+theme_override_font_sizes/font_size = 36
+theme_override_colors/font_color = Color(0.902, 0.937, 1.0, 1)
+
+[node name="HUD" type="Control" parent="Root"]
+anchors_preset = 0
+anchor_left = 1.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 0.0
+offset_left = -220.0
+offset_top = 40.0
+offset_right = -28.0
+offset_bottom = 120.0
+grow_horizontal = 0
+grow_vertical = 1
+
+[node name="FrancsChip" type="PanelContainer" parent="Root/HUD"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 192.0
+offset_bottom = 36.0
+
+[node name="FrancsLabel" type="Label" parent="Root/HUD/FrancsChip"]
+layout_mode = 2
+text = "▲ 10,000,000,000"
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.961, 0.651, 0.137, 1)
+
+[node name="JobsChip" type="PanelContainer" parent="Root/HUD"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 44.0
+offset_right = 192.0
+offset_bottom = 76.0
+
+[node name="HBox" type="HBoxContainer" parent="Root/HUD/JobsChip"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="StatusDot" type="ColorRect" parent="Root/HUD/JobsChip/HBox"]
+custom_minimum_size = Vector2(8, 8)
+layout_mode = 2
+color = Color(0.365, 0.451, 0.565, 1)
+
+[node name="JobsLabel" type="Label" parent="Root/HUD/JobsChip/HBox"]
+layout_mode = 2
+text = "0 JOBS"
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 1)
+
+[node name="ProgressionCard" type="PanelContainer" parent="Root"]
+anchors_preset = 0
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 0.0
+offset_left = 14.0
+offset_top = 140.0
+offset_right = -14.0
+offset_bottom = 204.0
+grow_horizontal = 2
+grow_vertical = 1
+
+[node name="HBox" type="HBoxContainer" parent="Root/ProgressionCard"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="AccentBar" type="ColorRect" parent="Root/ProgressionCard/HBox"]
+custom_minimum_size = Vector2(4, 0)
+layout_mode = 2
+size_flags_vertical = 3
+color = Color(0.247, 0.663, 1.0, 1)
+
+[node name="Info" type="VBoxContainer" parent="Root/ProgressionCard/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="CardEyebrow" type="Label" parent="Root/ProgressionCard/HBox/Info"]
+layout_mode = 2
+text = "NEXT STEP"
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 1)
+
+[node name="CardTitle" type="Label" parent="Root/ProgressionCard/HBox/Info"]
+layout_mode = 2
+text = "Start your first mission"
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(0.902, 0.937, 1.0, 1)
+
+[node name="CardCTA" type="PanelContainer" parent="Root/ProgressionCard/HBox"]
+layout_mode = 2
+size_flags_horizontal = 0
+
+[node name="CTALabel" type="Label" parent="Root/ProgressionCard/HBox/CardCTA"]
+layout_mode = 2
+text = "Go →"
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(0.247, 0.663, 1.0, 1)
+
+[node name="Structures" type="Node2D" parent="Root"]
+
+[node name="SatelliteStation" type="Button" parent="Root/Structures"]
+anchors_preset = 0
+offset_left = 14.0
+offset_top = 380.0
+offset_right = 140.0
+offset_bottom = 520.0
+text = "Satellite\nStation"
+theme_override_font_sizes/font_size = 16
+
+[node name="Launchpad" type="Button" parent="Root/Structures"]
+anchors_preset = 0
+offset_left = 155.0
+offset_top = 350.0
+offset_right = 390.0
+offset_bottom = 580.0
+text = "Launchpad"
+theme_override_font_sizes/font_size = 20
+
+[node name="ControlStation" type="Button" parent="Root/Structures"]
+anchors_preset = 0
+offset_left = 256.0
+offset_top = 380.0
+offset_right = 390.0
+offset_bottom = 520.0
+text = "Control\nStation"
+theme_override_font_sizes/font_size = 16
+
+[node name="SoilSection" type="Control" parent="Root"]
+anchors_preset = 0
+anchor_left = 0.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = -200.0
+offset_right = 0.0
+offset_bottom = 0.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="SoilBand" type="ColorRect" parent="Root/SoilSection"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.039, 0.071, 0.114, 0.92)
+mouse_filter = 2
+
+[node name="SubsurfaceLabel" type="Label" parent="Root/SoilSection"]
+layout_mode = 0
+offset_left = 28.0
+offset_top = 12.0
+offset_right = 300.0
+offset_bottom = 36.0
+text = "SUBSURFACE MARKET"
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 1)
+
+[node name="MarketButton" type="Button" parent="Root/SoilSection"]
+layout_mode = 0
+offset_left = 14.0
+offset_top = 44.0
+offset_right = 390.0
+offset_bottom = 108.0
+text = "Open Market"
+theme_override_font_sizes/font_size = 20
+
+[node name="TapHint" type="Label" parent="Root"]
+anchors_preset = 0
+anchor_left = 0.5
+anchor_top = 0.0
+anchor_right = 0.5
+anchor_bottom = 0.0
+offset_left = -120.0
+offset_top = 600.0
+offset_right = 120.0
+offset_bottom = 630.0
+grow_horizontal = 2
+text = "TAP A BUILDING"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 1)
+
+[node name="RadialNav" type="Control" parent="Root"]
+anchors_preset = 0
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -48.0
+offset_top = -116.0
+offset_right = 48.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="HubButton" type="Button" parent="Root/RadialNav"]
+layout_mode = 0
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 80.0
+offset_bottom = 80.0
+text = "⊕"
+theme_override_font_sizes/font_size = 28
+
+[node name="BaseBtn" type="Button" parent="Root/RadialNav"]
+layout_mode = 0
+offset_left = -80.0
+offset_top = -64.0
+offset_right = -4.0
+offset_bottom = 12.0
+visible = false
+text = "Base"
+theme_override_font_sizes/font_size = 14
+
+[node name="AtlasBtn" type="Button" parent="Root/RadialNav"]
+layout_mode = 0
+offset_left = -80.0
+offset_top = 16.0
+offset_right = -4.0
+offset_bottom = 92.0
+visible = false
+text = "Atlas"
+theme_override_font_sizes/font_size = 14
+
+[node name="BuildBtn" type="Button" parent="Root/RadialNav"]
+layout_mode = 0
+offset_left = 100.0
+offset_top = -64.0
+offset_right = 176.0
+offset_bottom = 12.0
+visible = false
+text = "Build"
+theme_override_font_sizes/font_size = 14
+
+[node name="MissionsBtn" type="Button" parent="Root/RadialNav"]
+layout_mode = 0
+offset_left = 100.0
+offset_top = 16.0
+offset_right = 176.0
+offset_bottom = 92.0
+visible = false
+text = "Missions"
+theme_override_font_sizes/font_size = 14

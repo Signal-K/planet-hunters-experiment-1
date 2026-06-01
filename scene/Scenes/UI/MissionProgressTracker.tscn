@@ -1,0 +1,3 @@
+[gd_scene format=3 uid="uid://bmissionprogress01"]
+
+[node name="MissionProgressTracker" type="Node"]

@@ -1,0 +1,95 @@
+/* Landnam UI Kit — page chrome */
+@import url("../../colors_and_type.css");
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #03060c;
+  color: var(--ln-text);
+  font-family: var(--ln-font-body);
+  overflow: hidden;
+  height: 100%;
+  width: 100%;
+}
+
+#root {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* the design canvas itself */
+.canvas {
+  width: 1920px;
+  height: 1080px;
+  background: var(--ln-bg);
+  background-image: var(--ln-bg-blueprint);
+  position: relative;
+  overflow: hidden;
+  flex: 0 0 auto;
+  transform-origin: center center;
+}
+
+.canvas.atlas {
+  background: #050608;
+  background-image:
+    radial-gradient(1px 1px at 8% 12%, rgba(239,231,211,0.55), transparent 60%),
+    radial-gradient(1.2px 1.2px at 22% 36%, rgba(239,231,211,0.45), transparent 60%),
+    radial-gradient(1px 1px at 38% 70%, rgba(239,231,211,0.5), transparent 60%),
+    radial-gradient(1.4px 1.4px at 58% 22%, rgba(239,231,211,0.45), transparent 60%),
+    radial-gradient(1px 1px at 76% 54%, rgba(239,231,211,0.4), transparent 60%),
+    radial-gradient(1.1px 1.1px at 88% 78%, rgba(239,231,211,0.4), transparent 60%),
+    radial-gradient(1px 1px at 14% 86%, rgba(239,231,211,0.3), transparent 60%),
+    radial-gradient(1px 1px at 92% 10%, rgba(239,231,211,0.5), transparent 60%);
+  color: #efe7d3;
+}
+
+.canvas.galaxy {
+  background: #03060c;
+  background-image:
+    radial-gradient(1px 1px at 5% 8%, rgba(208,224,255,0.55), transparent 60%),
+    radial-gradient(1px 1px at 18% 22%, rgba(208,224,255,0.4), transparent 60%),
+    radial-gradient(1.2px 1.2px at 28% 50%, rgba(208,224,255,0.45), transparent 60%),
+    radial-gradient(1px 1px at 42% 70%, rgba(208,224,255,0.45), transparent 60%),
+    radial-gradient(1.6px 1.6px at 58% 22%, rgba(208,224,255,0.55), transparent 60%),
+    radial-gradient(1px 1px at 78% 54%, rgba(208,224,255,0.4), transparent 60%),
+    radial-gradient(1.4px 1.4px at 88% 78%, rgba(208,224,255,0.5), transparent 60%),
+    radial-gradient(1px 1px at 14% 86%, rgba(208,224,255,0.4), transparent 60%),
+    radial-gradient(1px 1px at 70% 32%, rgba(208,224,255,0.5), transparent 60%),
+    repeating-linear-gradient(0deg, transparent 0 119px, rgba(63,169,255,0.04) 119px 120px),
+    repeating-linear-gradient(90deg, transparent 0 119px, rgba(63,169,255,0.04) 119px 120px);
+  color: #d8e2f5;
+}
+
+/* ── Top tab nav for picking which mock to view ──────────────── */
+.kit-tabs {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 100;
+  display: flex;
+  gap: 4px;
+  padding: 6px;
+  background: rgba(6, 9, 15, 0.85);
+  border: 1px solid var(--ln-hairline);
+  border-radius: 10px;
+  font-family: var(--ln-font-display);
+  backdrop-filter: blur(6px);
+}
+.kit-tab {
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ln-text-muted);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 120ms var(--ln-ease-snap);
+  border: none;
+  background: transparent;
+}
+.kit-tab:hover { color: var(--ln-text-dim); }
+.kit-tab.on { background: rgba(63,169,255,0.14); color: var(--ln-cyan); }

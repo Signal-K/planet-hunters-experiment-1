@@ -1,0 +1,92 @@
+[gd_scene load_steps=2 format=3 uid="uid://bearthbuild001"]
+
+[ext_resource type="Script" path="res://Scripts/UI/EarthBaseBuildFlowOverlay.gd" id="1_earthbuild"]
+
+[node name="EarthBaseBuildFlowOverlay" type="CanvasLayer"]
+layer = 20
+script = ExtResource("1_earthbuild")
+
+[node name="Root" type="Control" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Scrim" type="ColorRect" parent="Root"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.011765, 0.023529, 0.047059, 0.7)
+mouse_filter = 2
+
+[node name="Sheet" type="PanelContainer" parent="Root"]
+anchors_preset = 0
+anchor_left = 0.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = -420.0
+offset_right = 0.0
+offset_bottom = 0.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="VBox" type="VBoxContainer" parent="Root/Sheet"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Grabber" type="ColorRect" parent="Root/Sheet/VBox"]
+custom_minimum_size = Vector2(0, 4)
+layout_mode = 2
+color = Color(0.365, 0.451, 0.565, 1)
+
+[node name="Eyebrow" type="Label" parent="Root/Sheet/VBox"]
+layout_mode = 2
+text = "BUILD REQUIRED"
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.961, 0.651, 0.137, 1)
+horizontal_alignment = 1
+
+[node name="TitleLabel" type="Label" parent="Root/Sheet/VBox"]
+layout_mode = 2
+text = "Control Station"
+theme_override_font_sizes/font_size = 28
+theme_override_colors/font_color = Color(0.902, 0.937, 1.0, 1)
+horizontal_alignment = 1
+
+[node name="BodyText" type="Label" parent="Root/Sheet/VBox"]
+layout_mode = 2
+text = "Unlocks the contractor job board."
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 1)
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="CostRow" type="Label" parent="Root/Sheet/VBox"]
+layout_mode = 2
+text = "▲ 500,000,000"
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(0.961, 0.651, 0.137, 1)
+horizontal_alignment = 1
+
+[node name="BuildButton" type="Button" parent="Root/Sheet/VBox"]
+layout_mode = 2
+text = "Build · Place on Earth Base"
+theme_override_font_sizes/font_size = 20
+
+[node name="DismissButton" type="Button" parent="Root/Sheet/VBox"]
+layout_mode = 2
+text = "Not now"
+theme_override_font_sizes/font_size = 16

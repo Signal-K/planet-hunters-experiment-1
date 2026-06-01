@@ -1,0 +1,112 @@
+[gd_scene load_steps=2 format=3 uid="uid://bfreeopsunlock1"]
+
+[ext_resource type="Script" path="res://Scripts/UI/FreeOpsUnlockOverlay.gd" id="1_freeops"]
+
+[node name="FreeOpsUnlockOverlay" type="CanvasLayer"]
+layer = 20
+script = ExtResource("1_freeops")
+
+[node name="Root" type="Control" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Scrim" type="ColorRect" parent="Root"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.011765, 0.023529, 0.047059, 0.8)
+mouse_filter = 2
+
+[node name="Popup" type="PanelContainer" parent="Root"]
+anchors_preset = 0
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -160.0
+offset_top = -240.0
+offset_right = 160.0
+offset_bottom = 240.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="Root/Popup"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Eyebrow" type="Label" parent="Root/Popup/VBox"]
+layout_mode = 2
+text = "MILESTONE REACHED"
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.961, 0.651, 0.137, 1)
+horizontal_alignment = 1
+
+[node name="ArtArea" type="ColorRect" parent="Root/Popup/VBox"]
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+color = Color(0.071, 0.133, 0.212, 1)
+
+[node name="TitleLabel" type="Label" parent="Root/Popup/VBox"]
+layout_mode = 2
+text = "FREE OPERATIONS"
+theme_override_font_sizes/font_size = 28
+theme_override_colors/font_color = Color(0.902, 0.937, 1.0, 1)
+horizontal_alignment = 1
+
+[node name="BodyText" type="Label" parent="Root/Popup/VBox"]
+layout_mode = 2
+text = "All authored missions complete."
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 1)
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="StatsRow" type="HBoxContainer" parent="Root/Popup/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="StatMarket" type="PanelContainer" parent="Root/Popup/VBox/StatsRow"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Root/Popup/VBox/StatsRow/StatMarket"]
+layout_mode = 2
+text = "MARKET OPEN"
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.224, 0.827, 0.416, 1)
+
+[node name="StatMissions" type="PanelContainer" parent="Root/Popup/VBox/StatsRow"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Root/Popup/VBox/StatsRow/StatMissions"]
+layout_mode = 2
+text = "MISSIONS ∞"
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.224, 0.827, 0.416, 1)
+
+[node name="StatCoach" type="PanelContainer" parent="Root/Popup/VBox/StatsRow"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Root/Popup/VBox/StatsRow/StatCoach"]
+layout_mode = 2
+text = "COACH OFF"
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 1)
+
+[node name="CTAButton" type="Button" parent="Root/Popup/VBox"]
+layout_mode = 2
+text = "Take Command"
+theme_override_font_sizes/font_size = 20

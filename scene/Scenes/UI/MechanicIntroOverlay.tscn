@@ -1,0 +1,75 @@
+[gd_scene load_steps=2 format=3 uid="uid://bmechintro001"]
+
+[ext_resource type="Script" path="res://Scripts/UI/MechanicIntroOverlay.gd" id="1_mechintro"]
+
+[node name="MechanicIntroOverlay" type="CanvasLayer"]
+layer = 20
+script = ExtResource("1_mechintro")
+
+[node name="Root" type="Control" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Scrim" type="ColorRect" parent="Root"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.011765, 0.023529, 0.047059, 0.78)
+mouse_filter = 2
+
+[node name="Card" type="PanelContainer" parent="Root"]
+anchors_preset = 0
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -170.0
+offset_top = -200.0
+offset_right = 170.0
+offset_bottom = 200.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="Root/Card"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Eyebrow" type="Label" parent="Root/Card/VBox"]
+layout_mode = 2
+text = "NEW MECHANIC"
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.247, 0.663, 1.0, 1)
+horizontal_alignment = 1
+
+[node name="TitleLabel" type="Label" parent="Root/Card/VBox"]
+layout_mode = 2
+text = "Mechanic Title"
+theme_override_font_sizes/font_size = 28
+theme_override_colors/font_color = Color(0.902, 0.937, 1.0, 1)
+horizontal_alignment = 1
+
+[node name="BodyLabel" type="Label" parent="Root/Card/VBox"]
+layout_mode = 2
+text = "Explanation of how this mechanic works."
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 1)
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="CloseButton" type="Button" parent="Root/Card/VBox"]
+layout_mode = 2
+text = "Got it"
+theme_override_font_sizes/font_size = 20
