@@ -305,6 +305,14 @@ func _setup_radial_nav() -> void:
 	_hub_button.text = ""
 	_hub_button.focus_mode = Control.FOCUS_NONE
 
+	# Idle pulse — hub glow alpha breathes, 2.2s loop (design spec radial-pulse)
+	var pulse := create_tween()
+	pulse.set_loops()
+	pulse.tween_property(_hub_glow, "modulate:a", 0.15, 1.10) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	pulse.tween_property(_hub_glow, "modulate:a", 1.0, 1.10) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+
 	# Style satellite buttons (dark glass circles with label)
 	var sat_data := [
 		[_sat_base,     "Base",     "res://Resources/Icons/nav_menu.svg",    false],
@@ -374,17 +382,48 @@ func _setup_radial_nav() -> void:
 		_sat_missions.pressed.connect(_close_radial_menu)
 
 var _radial_open: bool = false
+var _radial_tweens: Array = []
 
 func _toggle_radial_menu() -> void:
 	_radial_open = not _radial_open
 	_radial_overlay.visible = _radial_open
-	_sat_base.visible     = _radial_open
-	_sat_atlas.visible    = _radial_open
-	_sat_build.visible    = _radial_open
-	_sat_missions.visible = _radial_open
-	# Switch overlay mouse filter: block taps when open, ignore when closed
 	_radial_nav.mouse_filter = Control.MOUSE_FILTER_STOP if _radial_open else Control.MOUSE_FILTER_IGNORE
-	_hub_button.mouse_filter = Control.MOUSE_FILTER_STOP  # hub always tappable
+	_hub_button.mouse_filter = Control.MOUSE_FILTER_STOP
+
+	# Cancel any in-flight tweens
+	for t in _radial_tweens:
+		if t is Tween:
+			t.kill()
+	_radial_tweens.clear()
+
+	var sats := [_sat_base, _sat_atlas, _sat_build, _sat_missions]
+
+	if _radial_open:
+		# Spring-in with 45 ms stagger per satellite (matches design spec)
+		for i in range(sats.size()):
+			var btn := sats[i] as Button
+			btn.visible = true
+			btn.pivot_offset = btn.size * 0.5
+			btn.scale = Vector2(0.2, 0.2)
+			btn.modulate.a = 0.0
+			var delay := 0.045 * i
+			var tw := create_tween()
+			tw.tween_interval(delay)
+			tw.tween_property(btn, "scale", Vector2.ONE, 0.36) \
+				.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+			_radial_tweens.append(tw)
+			var tw2 := create_tween()
+			tw2.tween_interval(delay)
+			tw2.tween_property(btn, "modulate:a", 1.0, 0.24)
+			_radial_tweens.append(tw2)
+	else:
+		# Quick fade-out, no stagger
+		for btn in sats:
+			var tw := create_tween()
+			tw.tween_property(btn as Button, "modulate:a", 0.0, 0.12)
+			tw.tween_callback(func(): (btn as Button).visible = false)
+			tw.tween_callback(func(): (btn as Button).modulate.a = 1.0)
+			_radial_tweens.append(tw)
 
 func _close_radial_menu() -> void:
 	if _radial_open:
