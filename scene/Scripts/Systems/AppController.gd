@@ -8,17 +8,14 @@ signal franc_balance_updated(new_value: int)
 signal loan_updated(loan_balance: int)
 signal rockets_reset()
 signal tutorial_state_updated(state: Dictionary)
-signal citizen_science_dialogue_toggled(enabled: bool)
 signal player_state_snapshot_updated(snapshot: Dictionary)
 
 const DEFAULT_FRANC_BALANCE := 10000000000
-const DEFAULT_CITIZEN_SCIENCE_DIALOGUE_ENABLED := true
 const MAIN_SCENE_PATH := "res://Scenes/Earth/earth_base_1.tscn"
 
 var counter: int = 0
 var franc_balance: int = DEFAULT_FRANC_BALANCE
 var loan_balance: int = 0
-var citizen_science_dialogue_enabled: bool = DEFAULT_CITIZEN_SCIENCE_DIALOGUE_ENABLED
 var _game_paused: bool = false
 var _menu_request_version: int = 0
 var _menu_request_action: String = ""
@@ -63,8 +60,7 @@ func _ready() -> void:
 	_ensure_feedback_beacon()
 	_set_tutorial_overlay_suspended(false)
 	WebEventBridge.emit("app_ready", {
-		"franc_balance": franc_balance,
-		"citizen_science_dialogue_enabled": citizen_science_dialogue_enabled
+		"franc_balance": franc_balance
 	})
 	_emit_player_state_snapshot("ready")
 
@@ -375,7 +371,6 @@ func full_factory_reset() -> void:
 	counter = 0
 	franc_balance = DEFAULT_FRANC_BALANCE
 	loan_balance = 0
-	citizen_science_dialogue_enabled = DEFAULT_CITIZEN_SCIENCE_DIALOGUE_ENABLED
 	_menu_request_version = 0
 	_menu_request_action = ""
 	_last_mining_result = {}
@@ -390,7 +385,6 @@ func full_factory_reset() -> void:
 	counter_updated.emit(counter)
 	franc_balance_updated.emit(franc_balance)
 	loan_updated.emit(loan_balance)
-	citizen_science_dialogue_toggled.emit(citizen_science_dialogue_enabled)
 	rockets_reset.emit()
 	_emit_player_state_snapshot("factory_reset")
 	
@@ -407,7 +401,6 @@ func _on_reset_all() -> void:
 	counter = 0
 	franc_balance = DEFAULT_FRANC_BALANCE
 	loan_balance = 0
-	citizen_science_dialogue_enabled = DEFAULT_CITIZEN_SCIENCE_DIALOGUE_ENABLED
 	_menu_request_version = 0
 	_menu_request_action = ""
 	_last_mining_result = {}
@@ -528,11 +521,10 @@ func repay_loan_from_payout(payout: int) -> int:
 
 
 func save_preferences() -> void:
-	_persistence.save_citizen_science_dialogue_enabled(citizen_science_dialogue_enabled)
+	pass
 
 func load_preferences() -> void:
-	citizen_science_dialogue_enabled = _persistence.load_citizen_science_dialogue_enabled(true)
-	citizen_science_dialogue_toggled.emit(citizen_science_dialogue_enabled)
+	pass
 
 func get_player_state_snapshot(source: String = "") -> Dictionary:
 	var missions: Array = RocketsManager.get_missions()
@@ -556,17 +548,6 @@ func get_player_state_snapshot(source: String = "") -> Dictionary:
 
 func _emit_player_state_snapshot(source: String = "") -> void:
 	player_state_snapshot_updated.emit(get_player_state_snapshot(source))
-
-func set_citizen_science_dialogue_enabled(enabled: bool) -> void:
-	var next_enabled = bool(enabled)
-	if citizen_science_dialogue_enabled == next_enabled:
-		return
-	citizen_science_dialogue_enabled = next_enabled
-	save_preferences()
-	citizen_science_dialogue_toggled.emit(citizen_science_dialogue_enabled)
-
-func is_citizen_science_dialogue_enabled() -> bool:
-	return citizen_science_dialogue_enabled
 
 func _unlock_rockets_for_mission_stage(completed_missions: int) -> void:
 	var rm = RocketsManager

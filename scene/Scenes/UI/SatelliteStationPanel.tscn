@@ -204,12 +204,6 @@ layout_mode = 2
 autowrap_mode = 3
 text = "Select a contact to route it to the Launchpad, or inspect it for citizen-science detail."
 
-[node name="CitizenScienceHintLabel" type="Label" parent="PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/StatusContainer/ScanSummaryCard/SummaryMargin/SummaryVBox"]
-visible = false
-layout_mode = 2
-autowrap_mode = 3
-text = "Citizen science hint"
-
 [node name="LoadingContainer" type="VBoxContainer" parent="PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer"]
 layout_mode = 2
 theme_override_constants/separation = 24

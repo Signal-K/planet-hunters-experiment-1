@@ -16,6 +16,3 @@ text = "Replay Mission Guide"
 layout_mode = 2
 text = "Skip Tutorial"
 
-[node name="DialogueToggleButton" type="Button" parent="."]
-layout_mode = 2
-text = "Dialogue: On"

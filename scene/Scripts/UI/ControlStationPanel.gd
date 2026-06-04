@@ -31,7 +31,7 @@ const MINERAL_ABBREV := {
 const STORY_STEPS := [
 	{"code": "01", "title": "First Contact", "description": "Run the first guided mining loop and learn the return and debrief cadence."},
 	{"code": "02", "title": "Contract Upgrade", "description": "Add the fleet hub, route the second rocket, and start managing contractor-backed missions."},
-	{"code": "03", "title": "Candidate Review", "description": "Bring TESS candidates into the pipeline and use annotation to unlock trustworthy travel."},
+	{"code": "03", "title": "Advanced Mining", "description": "Expand fleet operations, route advanced contracts, and optimise mineral extraction across multiple asteroids."},
 	{"code": "04", "title": "Free Operations", "description": "Operate in generated jobs, handle cooldowns, and keep missions cycling after authored beats end."},
 ]
 
@@ -116,18 +116,27 @@ func _apply_layout() -> void:
 	if legacy_root == null:
 		return
 	var vp := get_viewport_rect().size
-	var compact := vp.x < 1380.0
+	var portrait := vp.y > vp.x
+	var right_rail := legacy_root.get_node_or_null("MainArea/ContentMargin/ContentHBox/RightRail") as VBoxContainer
+	var globe_panel := legacy_root.get_node_or_null("MainArea/ContentMargin/ContentHBox/GlobePanel") as Control
 
+	# Portrait: single-column layout — sidebar and secondary panels hidden
+	_sidebar.visible = not portrait
+	if globe_panel:
+		globe_panel.visible = not portrait
+	if right_rail:
+		right_rail.visible = not portrait
+
+	if portrait:
+		return
+
+	var compact := vp.x < 1380.0
 	if compact:
-		var right_rail := legacy_root.get_node_or_null("MainArea/ContentMargin/ContentHBox/RightRail") as VBoxContainer
-		var globe_panel := legacy_root.get_node_or_null("MainArea/ContentMargin/ContentHBox/GlobePanel") as Control
 		if right_rail:
 			right_rail.custom_minimum_size = Vector2(280, 0)
 		if globe_panel:
 			globe_panel.custom_minimum_size = Vector2(220, 180)
 	else:
-		var right_rail := legacy_root.get_node_or_null("MainArea/ContentMargin/ContentHBox/RightRail") as VBoxContainer
-		var globe_panel := legacy_root.get_node_or_null("MainArea/ContentMargin/ContentHBox/GlobePanel") as Control
 		if right_rail:
 			right_rail.custom_minimum_size = Vector2(320, 0)
 		if globe_panel:

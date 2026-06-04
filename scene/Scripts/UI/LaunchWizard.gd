@@ -72,8 +72,6 @@ var _use_trip_contract:   bool       = false
 var _contractors:         Array      = []
 var _targets:             Array      = []
 var _rockets:             Array      = []
-var _m3_review_auto_target_id: String = ""
-
 # Live-update widget refs
 var _map_step:          MapStepScript  = null
 var _target_detail:     PanelContainer = null
@@ -144,13 +142,8 @@ func _ready() -> void:
 	call_deferred("refresh_layout_for_viewport")
 	call_deferred("_stabilize_layout_after_startup")
 
-func _apply_display_fonts(root: Node) -> void:
-	var font := DS.font_display()
-	if font == null:
-		return
-	var vp_w := get_viewport_rect().size.x
-	var scale := clampf(vp_w / 480.0, 1.0, 2.5)
-	_stamp_display_fonts_r(root, font, scale)
+func _apply_display_fonts(_root: Node) -> void:
+	pass
 
 func _stamp_display_fonts_r(root: Node, font: Font, scale: float) -> void:
 	for child in root.get_children():
@@ -891,27 +884,7 @@ func _build_target_step() -> void:
 		_target_hint_label.text = "No targets available. Complete a scan mission first."
 		return
 
-	if stage == 3:
-		var review_target: Dictionary = _first_unclassified_m3_target()
-		if not review_target.is_empty():
-			_build_m3_review_gate(review_target)
-			return
-		if _selected_target.is_empty():
-			var confirmed_target: Dictionary = _first_confirmed_m3_target()
-			if not confirmed_target.is_empty():
-				_selected_target = confirmed_target
-				RocketsManager.select_target(str(confirmed_target.get("id", "")))
-				AppControllerHelper.record_tutorial_action("select_launch_target", {
-					"target_id": str(confirmed_target.get("id", "")),
-					"auto_selected": true,
-					"source": "mission3_review_gate"
-				})
-				_update_footer()
-				call_deferred("_show_step", Step.ROCKET)
-				return
-		_classification_card.visible = false
-	else:
-		_classification_card.visible = false
+	_classification_card.visible = false
 
 	# Auto-select the best available target before opening the map,
 	# so the map opens with something already selected.
@@ -980,31 +953,6 @@ func _show_inline_map() -> void:
 
 	call_deferred("_fit_map_to_scroll")
 
-func _build_m3_review_gate(target: Dictionary) -> void:
-	_target_title.text = "Review candidate"
-	_target_subtitle.text = "Mission 3 routes a confirmed TESS candidate directly into launch setup."
-	_map_panel.visible = false
-	_target_detail_card.visible = false
-	_classification_card.visible = true
-	_classification_card.set_meta("target_id", str(target.get("id", "")))
-	_classification_card.set_meta("review_screen_only", true)
-	_classification_copy.text = "Open the full review screen for %s, classify the lightcurve, and mission control will route the result automatically." % str(target.get("label", target.get("id", "TESS candidate")))
-	_clear_container_children(_classification_facts)
-	_classification_facts.add_child(_stat_chip("TIC", str(target.get("ticId", "cached")), true))
-	_classification_facts.add_child(_stat_chip("Period", "%.2f d" % float(target.get("period_days", 0.0)), true))
-	_classification_facts.add_child(_stat_chip("Star", str(target.get("parent_star", "TESS")), true))
-	_classify_planet_btn.visible = true
-	_classify_planet_btn.text = "Open Review"
-	_classify_not_planet_btn.visible = false
-	_classify_mark_dip_btn.visible = false
-	_selected_target = {}
-	RocketsManager.clear_selected_target()
-	_update_footer()
-	var review_target_id: String = str(target.get("id", ""))
-	if review_target_id != "" and review_target_id != _m3_review_auto_target_id:
-		_m3_review_auto_target_id = review_target_id
-		call_deferred("_open_m3_review_for_target_id", review_target_id)
-
 func _on_map_target_selected(t: Dictionary) -> void:
 	_selected_target = t
 	RocketsManager.select_target(str(t.get("id", "")))
@@ -1069,127 +1017,14 @@ func _refresh_target_detail(t: Dictionary) -> void:
 		science.visible = false
 
 
-func _first_unclassified_m3_target() -> Dictionary:
-	for target_any in _targets:
-		if typeof(target_any) != TYPE_DICTIONARY:
-			continue
-		var target: Dictionary = target_any
-		var target_id := str(target.get("id", ""))
-		if target_id == "":
-			continue
-		if str(target.get("anomalySet", "")) != "telescope-tess":
-			continue
-		if RocketsManager.get_tess_classification(target_id) == "":
-			return target
-	return {}
-
-func _first_confirmed_m3_target() -> Dictionary:
-	for target_any in _targets:
-		if typeof(target_any) != TYPE_DICTIONARY:
-			continue
-		var target: Dictionary = target_any
-		var target_id := str(target.get("id", ""))
-		if target_id == "":
-			continue
-		if RocketsManager.get_tess_classification(target_id) == "planet":
-			return target
-	return {}
-
 func _on_primary_classification_button_pressed() -> void:
-	var target_id := str(_classification_card.get_meta("target_id", ""))
-	if target_id == "":
-		return
-	if bool(_classification_card.get_meta("review_screen_only", false)):
-		_open_m3_review_for_target_id(target_id)
-		return
-	_on_m3_classification_pressed(target_id, "planet")
+	pass
 
 func _on_not_planet_button_pressed() -> void:
-	var target_id := str(_classification_card.get_meta("target_id", ""))
-	if target_id == "" or bool(_classification_card.get_meta("review_screen_only", false)):
-		return
-	_on_m3_classification_pressed(target_id, "not_planet")
+	pass
 
 func _on_mark_dip_button_pressed() -> void:
-	var target_id := str(_classification_card.get_meta("target_id", ""))
-	if target_id == "" or bool(_classification_card.get_meta("review_screen_only", false)):
-		return
-	_on_m3_classification_pressed(target_id, "dip")
-
-func _open_m3_review_for_target_id(target_id: String) -> void:
-	if target_id == "" or get_node_or_null("M3ReviewOverlay") != null:
-		return
-	var target_data: Dictionary = RocketsManager.get_target_details(target_id)
-	if target_data.is_empty():
-		return
-	var overlay := ColorRect.new()
-	overlay.name = "M3ReviewOverlay"
-	overlay.color = Color(0.02, 0.03, 0.08, 0.98)
-	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	add_child(overlay)
-
-	var detail_view = AsteroidDetailViewScene.instantiate()
-	if detail_view == null:
-		overlay.queue_free()
-		return
-	overlay.add_child(detail_view)
-	detail_view.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	detail_view.initialize(target_data, true)
-	if detail_view.has_signal("classification_submitted"):
-		detail_view.classification_submitted.connect(func(result: Dictionary) -> void:
-			overlay.queue_free()
-			_on_m3_review_submitted(result)
-		)
-	if detail_view.has_signal("back_pressed"):
-		detail_view.back_pressed.connect(func() -> void:
-			if is_instance_valid(overlay):
-				overlay.queue_free()
-		)
-
-func _on_m3_review_submitted(result: Dictionary) -> void:
-	var target_id := str(result.get("target_id", ""))
-	var confirmed := bool(result.get("confirmed", false))
-	if confirmed and target_id != "":
-		var details := RocketsManager.get_target_details(target_id)
-		if not details.is_empty():
-			_selected_target = details
-			RocketsManager.select_target(target_id)
-			AppControllerHelper.record_tutorial_action("select_launch_target", {
-				"target_id": target_id,
-				"auto_selected": true,
-				"source": "mission3_review"
-			})
-		_update_footer()
-		_show_step(Step.ROCKET)
-		return
-	if target_id != "" and str(_selected_target.get("id", "")) == target_id:
-		_selected_target = {}
-	RocketsManager.clear_selected_target()
-	_targets = RocketsManager.get_selectable_targets_for_stage(3)
-	_show_step(Step.TARGET)
-
-func _on_m3_classification_pressed(target_id: String, verdict: String) -> void:
-	var result := RocketsManager.classify_candidate_target(target_id, verdict, 1)
-	AppControllerHelper.record_tutorial_action("classify_candidate", {
-		"target_id": target_id,
-		"verdict": verdict,
-		"confirmed": bool(result.get("confirmed", false))
-	})
-	if bool(result.get("confirmed", false)):
-		var details := RocketsManager.get_target_details(target_id)
-		if not details.is_empty():
-			_selected_target = details
-			RocketsManager.select_target(target_id)
-			AppControllerHelper.record_tutorial_action("select_launch_target", {
-				"target_id": target_id,
-				"auto_selected": true,
-				"source": "launch_wizard_inline"
-			})
-	else:
-		if str(_selected_target.get("id", "")) == target_id:
-			_selected_target = {}
-		_targets = RocketsManager.get_selectable_targets_for_stage(3)
-	_show_step(Step.TARGET)
+	pass
 
 # ── Step: Rocket ──────────────────────────────────────────────────────────────
 
@@ -1344,7 +1179,7 @@ func _build_rocket_step_portrait() -> void:
 	name_lbl.text = RocketSpecs.get_display_name(selected)
 	name_lbl.add_theme_color_override("font_color", C_FAB_BLUE)
 	name_lbl.add_theme_font_size_override("font_size", DS.F_BODY)
-	name_lbl.add_theme_font_override("font", DS.font_display())
+	name_lbl.add_theme_font_size_override("font_size", DS.F_TITLE)
 	var id_lbl := Label.new()
 	id_lbl.text = selected.to_upper()
 	id_lbl.add_theme_color_override("font_color", C_ON_SURF_VAR)

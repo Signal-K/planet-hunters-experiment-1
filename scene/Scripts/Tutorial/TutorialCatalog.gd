@@ -102,24 +102,16 @@ const STEPS_BY_MISSION := {
 		{
 			"id": "m3_pick_contractor",
 			"action_key": "accept_contractor_offer",
-			"title": "New contract",
-			"message": "Lock a contract for Mission 3.",
+			"title": "Lock a contract",
+			"message": "Pick a buyer and lock in a contract before you launch.",
 			"mechanic": "contractor",
-			"valid_scenes": LAUNCHPAD_SCENES
-		},
-		{
-			"id": "m3_classify",
-			"action_key": "classify_candidate",
-			"title": "Review the TESS candidate",
-			"message": "Look at the lightcurve dip. If it looks like a planet transit, tap Planet — your classification goes into the science database.",
-			"mechanic": "classification",
 			"valid_scenes": LAUNCHPAD_SCENES
 		},
 		{
 			"id": "m3_select",
 			"action_key": "select_launch_target",
-			"title": "Confirm destination",
-			"message": "Your confirmed candidate is ready to visit. Tap Proceed.",
+			"title": "Choose a destination",
+			"message": "Tap an asteroid on the map and confirm the route.",
 			"mechanic": "targeting",
 			"valid_scenes": LAUNCHPAD_SCENES
 		},
@@ -127,7 +119,7 @@ const STEPS_BY_MISSION := {
 			"id": "m3_launch",
 			"action_key": "launch_rocket_from_earth",
 			"title": "Launch",
-			"message": "Course plotted and confirmed. Tap Launch Mission.",
+			"message": "All systems ready. Tap Launch Mission.",
 			"mechanic": "launch",
 			"valid_scenes": LAUNCHPAD_ONLY
 		},
@@ -135,7 +127,7 @@ const STEPS_BY_MISSION := {
 			"id": "m3_mine",
 			"action_key": "mine_target",
 			"title": "Extract samples",
-			"message": "Collect resources from the candidate world.",
+			"message": "Collect the minerals listed in your contract order.",
 			"mechanic": "mining",
 			"valid_scenes": MINING_SCENES
 		},
@@ -143,7 +135,7 @@ const STEPS_BY_MISSION := {
 			"id": "m3_return",
 			"action_key": "return_rocket_home",
 			"title": "Return home",
-			"message": "Samples secured. Tap Return Home.",
+			"message": "Cargo secured. Tap Return Home.",
 			"mechanic": "return",
 			"valid_scenes": MINING_SCENES
 		},

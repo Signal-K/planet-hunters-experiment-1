@@ -578,34 +578,27 @@ func _apply_style() -> void:
 	s.content_margin_bottom = 16
 	panel.add_theme_stylebox_override("panel", s)
 
-	var _disp := DS.font_display()
-
 	# Header — title must shrink freely so it never forces the panel wider than the zone.
 	title_label.custom_minimum_size = Vector2.ZERO
 	title_label.clip_text = true
 	title_label.add_theme_color_override("font_color", Color(0.902, 0.937, 1.0))
 	title_label.add_theme_font_size_override("font_size", 22)
-	if _disp: title_label.add_theme_font_override("font", _disp)
 	stage_label.add_theme_color_override("font_color", CYAN)
 	stage_label.add_theme_font_size_override("font_size", 16)
-	if _disp: stage_label.add_theme_font_override("font", _disp)
 
 	# Body
 	message_label.add_theme_color_override("font_color", Color(0.84, 0.88, 0.96))
 	message_label.add_theme_font_size_override("font_size", 21)
 	message_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	if _disp: message_label.add_theme_font_override("font", _disp)
 
 	# Action hint
 	action_label.add_theme_color_override("font_color", AMBER)
 	action_label.add_theme_font_size_override("font_size", 19)
 	action_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	if _disp: action_label.add_theme_font_override("font", _disp)
 
 	# Progress
 	progress_label.add_theme_color_override("font_color", Color(0.50, 0.58, 0.72))
 	progress_label.add_theme_font_size_override("font_size", 16)
-	if _disp: progress_label.add_theme_font_override("font", _disp)
 
 	_apply_pill_button(collapse_button, false)
 	collapse_button.custom_minimum_size = Vector2(48, 34)
@@ -636,8 +629,6 @@ func _apply_pill_button(btn: Button, primary: bool) -> void:
 	btn.add_theme_color_override("font_hover_color",   col)
 	btn.add_theme_color_override("font_pressed_color", col)
 	btn.add_theme_font_size_override("font_size", 19)
-	var _d := DS.font_display()
-	if _d: btn.add_theme_font_override("font", _d)
 
 func _configure_mouse_passthrough() -> void:
 	for node_path in ["$Root/Panel/Margin", "$Root/Panel/Margin/VBox",
