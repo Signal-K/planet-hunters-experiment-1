@@ -505,21 +505,24 @@ func _start_coach_bob() -> void:
 		if t != null:
 			t.kill()
 	_bob_tweens.clear()
-	for avatar in [_pb_avatar, _cc_avatar]:
-		if avatar == null:
-			continue
-		var base_y := avatar.position.y
-		var tw := create_tween()
-		tw.set_loops()
-		tw.tween_method(
-			func(y: float) -> void: avatar.position.y = y,
-			base_y, base_y - 2.0, 0.6
-		).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-		tw.tween_method(
-			func(y: float) -> void: avatar.position.y = y,
-			base_y - 2.0, base_y, 0.6
-		).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-		_bob_tweens.append(tw)
+	if _pb_avatar != null:
+		_bob_tweens.append(_make_bob_tween(_pb_avatar))
+	if _cc_avatar != null:
+		_bob_tweens.append(_make_bob_tween(_cc_avatar))
+
+func _make_bob_tween(av: Control) -> Tween:
+	var base_y: float = av.position.y
+	var tw := create_tween()
+	tw.set_loops()
+	tw.tween_method(
+		func(y: float) -> void: av.position.y = y,
+		base_y, base_y - 2.0, 0.6
+	).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_method(
+		func(y: float) -> void: av.position.y = y,
+		base_y - 2.0, base_y, 0.6
+	).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	return tw
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
