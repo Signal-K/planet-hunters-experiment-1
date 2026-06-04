@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # integrate_and_run_godot_tests.sh
-# Run GDScript-based tests for Supabase integration.
+# Run GDScript-based sync integration tests.
 # Usage:
 #   ./scripts/integrate_and_run_godot_tests.sh [/path/to/godot/binary]
 # or set GODOT_BIN env var before running.
@@ -33,18 +33,18 @@ fi
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 SCENE_DIR="$PROJECT_ROOT/scene"
-TEST_RUNNER="res://tests/SupabaseTestRunner.gd"
+TEST_RUNNER="res://tests/run_sync_tests.gd"
 GODOT_USER_DIR="${GODOT_USER_DIR:-/tmp/godot-test-user-$$}"
 
 mkdir -p "$GODOT_USER_DIR/logs"
 
-if [ ! -f "$SCENE_DIR/tests/SupabaseTestRunner.gd" ]; then
-  echo "Error: SupabaseTestRunner.gd not found in $SCENE_DIR/tests/" >&2
+if [ ! -f "$SCENE_DIR/tests/run_sync_tests.gd" ]; then
+  echo "Error: run_sync_tests.gd not found in $SCENE_DIR/tests/" >&2
   exit 3
 fi
 
 echo "=========================================="
-echo "Supabase Integration Tests"
+echo "Sync Integration Tests"
 echo "=========================================="
 echo "Godot binary: $GODOT_BIN"
 echo "Project path: $SCENE_DIR"

@@ -206,29 +206,14 @@ static func _apply_defaults(data: Dictionary, scanner_unlock_completed_missions:
         data["mission_progress_schema_version"] = 0
 
 static func _sync_legacy_scanner_station_state(data: Dictionary) -> bool:
-    var scanner_unlocked := bool(data.get("scanner_unlocked", false))
-    var scanner_built := bool(data.get("scanner_station_built", false))
-    var mutated := false
-    if scanner_unlocked and not scanner_built:
-        data["scanner_station_built"] = true
-        mutated = true
-    if bool(data.get("scanner_station_built", false)) and not bool(data.get("scanner_unlock_dialog_seen", false)):
-        data["scanner_unlock_dialog_seen"] = true
-        mutated = true
-    return mutated
+    # Legacy migration only — structures are now placed explicitly via StructureManager.
+    # We no longer auto-build based on scanner_unlocked flag.
+    return false
 
 static func _sync_legacy_progression_state(data: Dictionary) -> bool:
-    var completed := 0
-    var badges = data.get("completed_mission_badges", [])
-    if typeof(badges) == TYPE_ARRAY:
-        completed = badges.size()
-    else:
-        completed = max(int(data.get("mission_progress_completed", 0)), 0)
-    var mutated := false
-    if completed >= 2 and not bool(data.get("control_station_built", false)):
-        data["control_station_built"] = true
-        mutated = true
-    return mutated
+    # Legacy migration only — control_station is no longer auto-granted based on missions.
+    # Structures must be explicitly placed by the player in Build Mode.
+    return false
 
 static func _reconcile_progression_floor(data: Dictionary, scanner_unlock_completed_missions: int) -> bool:
     var mutated := false

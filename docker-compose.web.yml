@@ -2,14 +2,16 @@
 #
 # Profiles:
 #   test   — run Jest (same as CI yarn test step)
+#   visual — run Playwright frontend visual smoke tests
 #   serve  — serve the shell on http://localhost:3333
 #
 # Usage:
 #   docker compose -f docker-compose.web.yml --profile test  up --build --abort-on-container-exit
+#   docker compose -f docker-compose.web.yml --profile visual up --build --abort-on-container-exit
 #   docker compose -f docker-compose.web.yml --profile serve up --build
 #   docker compose -f docker-compose.web.yml --profile test --profile serve up --build
 #
-# Env vars (PostHog token, Supabase, etc.) are read from .env in the repo root.
+# Env vars (PostHog token, PocketBase URLs, etc.) are read from .env in the repo root.
 # The file is listed in .dockerignore so it is NOT baked into the image —
 # it is only injected at container runtime via env_file below.
 
@@ -28,6 +30,24 @@ services:
     environment:
       NODE_ENV: test
     profiles: ["test"]
+
+  # ── Playwright visual/frontend smoke runner ────────────────────────────────
+  # Uses the official Playwright image so browser dependencies are deterministic.
+  visual:
+    build:
+      context: .
+      dockerfile: Dockerfile.visual
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      NODE_ENV: test
+      CI: "1"
+      PORT: "3333"
+    volumes:
+      - ./test-results:/app/test-results
+      - ./playwright-report:/app/playwright-report
+    profiles: ["visual"]
 
   # ── Web shell server ────────────────────────────────────────────────────────
   # Serves index.html + react-shell.js + /game/* from the project root.

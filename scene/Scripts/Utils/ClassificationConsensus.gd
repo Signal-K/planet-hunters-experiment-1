@@ -1,7 +1,7 @@
 extends RefCounted
 ## ClassificationConsensus.gd
 ## Checks classification consensus for targets the player has classified,
-## by querying the Supabase classifications table.
+## when the classification pipeline is enabled.
 ##
 ## Usage:
 ##   ClassificationConsensus.check_for_updates(get_tree(), callback)
@@ -11,7 +11,6 @@ extends RefCounted
 const STATE_PATH := "user://classification_consensus.json"
 
 const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
-const SupabaseClient = preload("res://Scripts/Systems/SupabaseClient.gd")
 
 ## Minimum votes from other users before consensus is considered formed.
 const MIN_VOTES_FOR_CONSENSUS := 2
@@ -51,31 +50,15 @@ static func mark_notified(anomaly_id: String) -> void:
 		all[anomaly_id]["notified"] = true
 		_save(all)
 
-## Fetch consensus from Supabase for all targets the player has classified.
+## Classification network sync is intentionally disabled while Landnam only
+## migrates auth and game state to PocketBase.
 ## Calls back with Array of updated entries (empty if none or error).
 static func check_for_updates(tree: SceneTree, callback: Callable = Callable()) -> void:
-	# Collect all anomaly IDs the player has voted on
-	var classifications: Dictionary = RocketsManager.get_all_tess_classifications()
-	if classifications.is_empty():
-		if callback.is_valid():
-			callback.call([])
-		return
-
-	var supabase: Node = SupabaseClient.get_instance()
-	if supabase == null:
-		if callback.is_valid():
-			callback.call([])
-		return
-
-	# Fetch one anomaly at a time (PostgREST doesn't easily support IN queries
-	# without server-side RPC; keep it simple with sequential requests)
-	var pending: Array = classifications.keys()
-	var all_stored := _load()
-	var updated: Array = []
-	_process_next_consensus_fetch(supabase, pending, classifications, all_stored, updated, callback)
+	if callback.is_valid():
+		callback.call([])
 
 static func _process_next_consensus_fetch(
-	supabase,
+	client,
 	pending: Array,
 	classifications: Dictionary,
 	all_stored: Dictionary,
@@ -93,10 +76,10 @@ static func _process_next_consensus_fetch(
 	var player_verdict := str(classifications.get(anomaly_id, ""))
 	var query := "anomaly=eq.%s&limit=50" % anomaly_id
 
-	supabase.fetch_table("classifications", query, func(rows: Array, error: String) -> void:
+	client.fetch_table("classifications", query, func(rows: Array, error: String) -> void:
 		if error == "" and not rows.is_empty():
 			_apply_consensus_rows(anomaly_id, player_verdict, rows, all_stored, updated)
-		_process_next_consensus_fetch(supabase, pending, classifications, all_stored, updated, callback)
+		_process_next_consensus_fetch(client, pending, classifications, all_stored, updated, callback)
 	)
 
 static func _apply_consensus_rows(

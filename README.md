@@ -25,7 +25,7 @@ See [Specifications Index](/.knowns/docs/specs/specifications-index.md) for comp
 
 - Godot 4.5+
 - Node.js 18+
-- Supabase (local or remote)
+- Star Sailors PocketBase backends from `~/Navigation`
 
 ### Setup
 
@@ -33,8 +33,8 @@ See [Specifications Index](/.knowns/docs/specs/specifications-index.md) for comp
 # Install dependencies
 npm install
 
-# Start Supabase (local)
-supabase start
+# Start shared + Landnam PocketBase backends from ~/Navigation
+cd .. && make up
 
 # Export Godot project
 ./export_godot.sh --target ./build --project ./scene --name game --preset Web --platform web

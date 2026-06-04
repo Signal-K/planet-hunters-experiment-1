@@ -47,7 +47,16 @@ http
 
     const { pathname } = new URL(req.url || "/", "http://localhost");
 
-    // Serve local runtime config — points all Supabase calls at the local dev instance.
+    if (pathname === "/_vercel/insights/script.js") {
+      res.writeHead(200, {
+        "Content-Type": "application/javascript; charset=utf-8",
+        "Cache-Control": "no-store",
+      });
+      res.end("");
+      return;
+    }
+
+    // Serve local runtime config for PostHog and PocketBase.
     if (pathname === "/api/runtime-config") {
       const regionRaw = String(process.env.Posthog_Region || process.env.POSTHOG_REGION || "US Cloud").toLowerCase();
       const isEu = regionRaw.includes("eu");
@@ -60,9 +69,9 @@ http
           uiHost: process.env.Posthog_UI_Host || process.env.POSTHOG_UI_HOST || (isEu ? "https://eu.posthog.com" : "https://us.posthog.com"),
           surveyId: process.env.Posthog_Survey_ID || process.env.POSTHOG_SURVEY_ID || "019c9df8-db7f-0000-072f-73b3347a4d6c",
         },
-        supabase: {
-          url: process.env.SUPABASE_URL || "http://127.0.0.1:54321",
-          anonKey: process.env.SUPABASE_ANON || "sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH",
+        pocketbase: {
+          sharedUrl: process.env.SHARED_PB_URL || "http://127.0.0.1:8090",
+          landnamUrl: process.env.LANDNAM_PB_URL || "http://127.0.0.1:8091",
         },
         push: { vapidPublicKey: "" },
       };

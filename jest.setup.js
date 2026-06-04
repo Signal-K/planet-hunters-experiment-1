@@ -7,24 +7,19 @@ jest.mock('react-native', () => ({
   useWindowDimensions: () => ({ width: 300, height: 600 }),
 }), { virtual: true });
 
-// Mock Supabase to prevent initialization errors due to missing env variables
-jest.mock('./utils/supabase', () => ({
-  supabase: {
+// Mock PocketBase to prevent network calls in tests
+jest.mock('./utils/pocketbase', () => ({
+  pocketbase: {
     auth: {
       getSession: jest.fn(() => Promise.resolve({ data: { session: null }, error: null })),
       getUser: jest.fn(() => Promise.resolve({ data: { user: null }, error: null })),
       signInWithPassword: jest.fn(),
+      signInAnonymously: jest.fn(),
       signUp: jest.fn(),
       signOut: jest.fn(),
     },
-    from: jest.fn(() => ({
-      select: jest.fn().mockReturnThis(),
-      insert: jest.fn().mockReturnThis(),
-      update: jest.fn().mockReturnThis(),
-      delete: jest.fn().mockReturnThis(),
-      upsert: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockReturnThis(),
-      single: jest.fn().mockImplementation(() => Promise.resolve({ data: null, error: null })),
-    })),
   },
+  loadLandnamState: jest.fn(() => Promise.resolve(null)),
+  saveLandnamState: jest.fn(() => Promise.resolve()),
+  createMissionLog: jest.fn(() => Promise.resolve()),
 }));

@@ -1,0 +1,474 @@
+[gd_scene load_steps=17 format=3 uid="uid://be1tgubfs4e1u"]
+
+[ext_resource type="Script" path="res://Scripts/Earth/MissionDebriefV2.gd" id="1_script"]
+[ext_resource type="FontFile" path="res://Resources/Fonts/Oxanium-Bold.ttf" id="2_bold"]
+[ext_resource type="FontFile" path="res://Resources/Fonts/Oxanium-SemiBold.ttf" id="3_semi"]
+[ext_resource type="FontFile" path="res://Resources/Fonts/TurretRoad-Regular.ttf" id="4_mono"]
+
+; ── Green hero circle glow (radial gradient shader) ──────────────────────
+[sub_resource type="Shader" id="Sh_hero"]
+code = "shader_type canvas_item;
+void fragment() {
+	vec2 uv = UV * 2.0 - 1.0;
+	float d = length(uv);
+	float circle = smoothstep(0.86, 0.78, d);
+	float glow = max(0.0, 0.85 - d * 1.1) * 0.45;
+	COLOR = vec4(0.224, 0.827, 0.416, circle * 0.95 + glow * 0.55);
+}"
+[sub_resource type="ShaderMaterial" id="Mat_hero"]
+shader = SubResource("Sh_hero")
+
+; ── Checkmark circle bg (inner green circle) ─────────────────────────────
+[sub_resource type="StyleBoxFlat" id="SB_circle"]
+bg_color = Color(0.067, 0.647, 0.290, 1.0)
+border_width_left = 0
+border_width_top = 0
+border_width_right = 0
+border_width_bottom = 0
+corner_radius_top_left = 999
+corner_radius_top_right = 999
+corner_radius_bottom_right = 999
+corner_radius_bottom_left = 999
+content_margin_left = 0
+content_margin_top = 0
+content_margin_right = 0
+content_margin_bottom = 0
+
+; ── Reward card — amber accent ────────────────────────────────────────────
+[sub_resource type="StyleBoxFlat" id="SB_reward"]
+bg_color = Color(0.047, 0.082, 0.125, 0.92)
+border_color = Color(0.961, 0.651, 0.137, 0.25)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+content_margin_left = 38
+content_margin_top = 32
+content_margin_right = 38
+content_margin_bottom = 32
+
+; ── Coin circle (amber) ───────────────────────────────────────────────────
+[sub_resource type="StyleBoxFlat" id="SB_coin"]
+bg_color = Color(0.839, 0.541, 0.051, 1.0)
+border_width_left = 0
+border_width_top = 0
+border_width_right = 0
+border_width_bottom = 0
+corner_radius_top_left = 999
+corner_radius_top_right = 999
+corner_radius_bottom_right = 999
+corner_radius_bottom_left = 999
+content_margin_left = 0
+content_margin_top = 0
+content_margin_right = 0
+content_margin_bottom = 0
+
+; ── Contract card — cyan accent ───────────────────────────────────────────
+[sub_resource type="StyleBoxFlat" id="SB_contract"]
+bg_color = Color(0.047, 0.082, 0.125, 0.92)
+border_color = Color(0.247, 0.663, 1.0, 0.25)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+content_margin_left = 38
+content_margin_top = 32
+content_margin_right = 38
+content_margin_bottom = 32
+
+; ── Divider (dashed cyan, 1px) ────────────────────────────────────────────
+[sub_resource type="StyleBoxFlat" id="SB_divider"]
+bg_color = Color(0.247, 0.663, 1.0, 0.18)
+border_width_left = 0
+border_width_top = 0
+border_width_right = 0
+border_width_bottom = 0
+
+; ── CTA amber normal ─────────────────────────────────────────────────────
+[sub_resource type="StyleBoxFlat" id="SB_cta"]
+bg_color = Color(0.961, 0.651, 0.137, 1.0)
+border_width_left = 0
+border_width_top = 0
+border_width_right = 0
+border_width_bottom = 0
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+; ── CTA amber hover ──────────────────────────────────────────────────────
+[sub_resource type="StyleBoxFlat" id="SB_cta_h"]
+bg_color = Color(1.0, 0.761, 0.361, 1.0)
+border_width_left = 0
+border_width_top = 0
+border_width_right = 0
+border_width_bottom = 0
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+; ── Top scrim ────────────────────────────────────────────────────────────
+[sub_resource type="Shader" id="Sh_top"]
+code = "shader_type canvas_item;
+void fragment() {
+	float a = max(0.0, 1.0 - UV.y * 3.5) * 0.88;
+	COLOR = vec4(0.024, 0.035, 0.059, a);
+}"
+[sub_resource type="ShaderMaterial" id="Mat_top"]
+shader = SubResource("Sh_top")
+
+; ── Bottom scrim ─────────────────────────────────────────────────────────
+[sub_resource type="Shader" id="Sh_bot"]
+code = "shader_type canvas_item;
+void fragment() {
+	float a = max(0.0, UV.y * 3.5 - 2.5) * 0.95;
+	COLOR = vec4(0.024, 0.035, 0.059, a);
+}"
+[sub_resource type="ShaderMaterial" id="Mat_bot"]
+shader = SubResource("Sh_bot")
+
+; ═══════════════════════════════════════════════════════════════════════════
+
+[node name="MissionDebrief" type="CanvasLayer"]
+layer = 0
+script = ExtResource("1_script")
+
+[node name="Root" type="Control" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+; Dark background — #06090f
+[node name="BG" type="ColorRect" parent="Root"]
+z_index = 0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.024, 0.035, 0.059, 1.0)
+mouse_filter = 2
+
+[node name="TopScrim" type="ColorRect" parent="Root"]
+z_index = 2
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(1, 1, 1, 1)
+mouse_filter = 2
+material = SubResource("Mat_top")
+
+; ── TopBar ──────────────────────────────────────────────────────────────
+[node name="TopBar" type="Control" parent="Root"]
+z_index = 20
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 0.0
+offset_bottom = 128.0
+grow_horizontal = 2
+
+[node name="EyebrowLabel" type="Label" parent="Root/TopBar"]
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 0.0
+offset_left = 28.0
+offset_top = 36.0
+offset_right = -28.0
+offset_bottom = 68.0
+grow_horizontal = 2
+text = "MISSION COMPLETE"
+theme_override_fonts/font = ExtResource("4_mono")
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(0.365, 0.451, 0.565, 1.0)
+
+[node name="TitleLabel" type="Label" parent="Root/TopBar"]
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 28.0
+offset_top = 66.0
+offset_right = -28.0
+offset_bottom = 0.0
+grow_horizontal = 2
+grow_vertical = 1
+text = "Debrief"
+theme_override_fonts/font = ExtResource("2_bold")
+theme_override_font_sizes/font_size = 52
+theme_override_colors/font_color = Color(0.902, 0.937, 1.0, 1.0)
+
+; ── Scrollable content ──────────────────────────────────────────────────
+[node name="ContentScroll" type="ScrollContainer" parent="Root"]
+z_index = 5
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 130.0
+offset_bottom = -140.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ContentVBox" type="VBoxContainer" parent="Root/ContentScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 26
+
+; ── Hero section ────────────────────────────────────────────────────────
+[node name="HeroSection" type="VBoxContainer" parent="Root/ContentScroll/ContentVBox"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 20
+
+; Glow circle + checkmark
+[node name="CircleRow" type="HBoxContainer" parent="Root/ContentScroll/ContentVBox/HeroSection"]
+layout_mode = 2
+alignment = 1
+
+[node name="GlowControl" type="Control" parent="Root/ContentScroll/ContentVBox/HeroSection/CircleRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(333.0, 333.0)
+
+; Full-size glow shader (creates the green radial glow + inner circle)
+[node name="GlowRect" type="ColorRect" parent="Root/ContentScroll/ContentVBox/HeroSection/CircleRow/GlowControl"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(1, 1, 1, 1)
+mouse_filter = 2
+material = SubResource("Mat_hero")
+
+; Centered checkmark label over the glow
+[node name="CheckCenter" type="CenterContainer" parent="Root/ContentScroll/ContentVBox/HeroSection/CircleRow/GlowControl"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="CheckLabel" type="Label" parent="Root/ContentScroll/ContentVBox/HeroSection/CircleRow/GlowControl/CheckCenter"]
+layout_mode = 2
+text = "✓"
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_fonts/font = ExtResource("2_bold")
+theme_override_font_sizes/font_size = 140
+theme_override_colors/font_color = Color(0.024, 0.094, 0.047, 1.0)
+
+; "RETURNED" title
+[node name="ReturnedLabel" type="Label" parent="Root/ContentScroll/ContentVBox/HeroSection"]
+layout_mode = 2
+text = "RETURNED"
+horizontal_alignment = 1
+theme_override_fonts/font = ExtResource("2_bold")
+theme_override_font_sizes/font_size = 75
+theme_override_colors/font_color = Color(0.902, 0.937, 1.0, 1.0)
+
+; Sub-caption (target name bound in script)
+[node name="SubCaption" type="Label" parent="Root/ContentScroll/ContentVBox/HeroSection"]
+layout_mode = 2
+text = "FROM — · SOL III ORBIT RE-ENTRY"
+horizontal_alignment = 1
+theme_override_fonts/font = ExtResource("4_mono")
+theme_override_font_sizes/font_size = 28
+theme_override_colors/font_color = Color(0.365, 0.451, 0.565, 1.0)
+
+; Star rating row
+[node name="StarRow" type="HBoxContainer" parent="Root/ContentScroll/ContentVBox/HeroSection"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 16
+
+[node name="Star1" type="Label" parent="Root/ContentScroll/ContentVBox/HeroSection/StarRow"]
+layout_mode = 2
+text = "★"
+theme_override_fonts/font = ExtResource("2_bold")
+theme_override_font_sizes/font_size = 75
+theme_override_colors/font_color = Color(0.961, 0.651, 0.137, 1.0)
+
+[node name="Star2" type="Label" parent="Root/ContentScroll/ContentVBox/HeroSection/StarRow"]
+layout_mode = 2
+text = "★"
+theme_override_fonts/font = ExtResource("2_bold")
+theme_override_font_sizes/font_size = 75
+theme_override_colors/font_color = Color(0.961, 0.651, 0.137, 1.0)
+
+[node name="Star3" type="Label" parent="Root/ContentScroll/ContentVBox/HeroSection/StarRow"]
+layout_mode = 2
+text = "★"
+theme_override_fonts/font = ExtResource("2_bold")
+theme_override_font_sizes/font_size = 75
+theme_override_colors/font_color = Color(0.122, 0.165, 0.227, 1.0)
+
+; ── Reward card ─────────────────────────────────────────────────────────
+[node name="RewardCard" type="PanelContainer" parent="Root/ContentScroll/ContentVBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("SB_reward")
+
+[node name="RewardHBox" type="HBoxContainer" parent="Root/ContentScroll/ContentVBox/RewardCard"]
+layout_mode = 2
+theme_override_constants/separation = 38
+
+; Amber coin circle — 150×150
+[node name="CoinCircle" type="PanelContainer" parent="Root/ContentScroll/ContentVBox/RewardCard/RewardHBox"]
+custom_minimum_size = Vector2(150.0, 150.0)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_styles/panel = SubResource("SB_coin")
+
+[node name="CoinCenter" type="CenterContainer" parent="Root/ContentScroll/ContentVBox/RewardCard/RewardHBox/CoinCircle"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="CoinLabel" type="Label" parent="Root/ContentScroll/ContentVBox/RewardCard/RewardHBox/CoinCircle/CoinCenter"]
+layout_mode = 2
+text = "▲"
+horizontal_alignment = 1
+theme_override_fonts/font = ExtResource("2_bold")
+theme_override_font_sizes/font_size = 70
+theme_override_colors/font_color = Color(0.102, 0.047, 0.0, 1.0)
+
+; Reward right column
+[node name="RewardRight" type="VBoxContainer" parent="Root/ContentScroll/ContentVBox/RewardCard/RewardHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 12
+
+[node name="RewardEyebrow" type="Label" parent="Root/ContentScroll/ContentVBox/RewardCard/RewardHBox/RewardRight"]
+layout_mode = 2
+text = "FRANCS EARNED"
+theme_override_fonts/font = ExtResource("4_mono")
+theme_override_font_sizes/font_size = 27
+theme_override_colors/font_color = Color(0.839, 0.541, 0.051, 1.0)
+
+[node name="RewardAmount" type="Label" parent="Root/ContentScroll/ContentVBox/RewardCard/RewardHBox/RewardRight"]
+layout_mode = 2
+text = "+—"
+theme_override_fonts/font = ExtResource("2_bold")
+theme_override_font_sizes/font_size = 86
+theme_override_colors/font_color = Color(0.961, 0.651, 0.137, 1.0)
+
+[node name="RewardXP" type="Label" parent="Root/ContentScroll/ContentVBox/RewardCard/RewardHBox/RewardRight"]
+layout_mode = 2
+text = "+0 XP"
+theme_override_fonts/font = ExtResource("3_semi")
+theme_override_font_sizes/font_size = 32
+theme_override_colors/font_color = Color(0.494, 0.784, 1.0, 1.0)
+
+; ── Contract status card ────────────────────────────────────────────────
+[node name="ContractCard" type="PanelContainer" parent="Root/ContentScroll/ContentVBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("SB_contract")
+
+[node name="ContractVBox" type="VBoxContainer" parent="Root/ContentScroll/ContentVBox/ContractCard"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="ContractHeader" type="HBoxContainer" parent="Root/ContentScroll/ContentVBox/ContractCard/ContractVBox"]
+layout_mode = 2
+
+[node name="ContractEyebrow" type="Label" parent="Root/ContentScroll/ContentVBox/ContractCard/ContractVBox/ContractHeader"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "CONTRACT"
+theme_override_fonts/font = ExtResource("4_mono")
+theme_override_font_sizes/font_size = 27
+theme_override_colors/font_color = Color(0.365, 0.451, 0.565, 1.0)
+
+[node name="ContractStatus" type="Label" parent="Root/ContentScroll/ContentVBox/ContractCard/ContractVBox/ContractHeader"]
+layout_mode = 2
+text = "DELIVERED"
+theme_override_fonts/font = ExtResource("3_semi")
+theme_override_font_sizes/font_size = 27
+theme_override_colors/font_color = Color(0.224, 0.827, 0.416, 1.0)
+
+[node name="MineralBreakdownList" type="VBoxContainer" parent="Root/ContentScroll/ContentVBox/ContractCard/ContractVBox"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+; ── Cargo breakdown card ────────────────────────────────────────────────
+[node name="CargoCard" type="PanelContainer" parent="Root/ContentScroll/ContentVBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("SB_contract")
+
+[node name="CargoVBox" type="VBoxContainer" parent="Root/ContentScroll/ContentVBox/CargoCard"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="CargoEyebrow" type="Label" parent="Root/ContentScroll/ContentVBox/CargoCard/CargoVBox"]
+layout_mode = 2
+text = "SOLD CARGO"
+theme_override_fonts/font = ExtResource("4_mono")
+theme_override_font_sizes/font_size = 27
+theme_override_colors/font_color = Color(0.365, 0.451, 0.565, 1.0)
+
+[node name="Divider" type="ColorRect" parent="Root/ContentScroll/ContentVBox/CargoCard/CargoVBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0.0, 2.0)
+color = Color(0.247, 0.663, 1.0, 0.18)
+mouse_filter = 2
+
+[node name="CargoBreakdownList" type="VBoxContainer" parent="Root/ContentScroll/ContentVBox/CargoCard/CargoVBox"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+; Bottom padding
+[node name="BottomPad" type="Control" parent="Root/ContentScroll/ContentVBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0.0, 20.0)
+
+; ── Bottom CTA bar ───────────────────────────────────────────────────────
+[node name="BottomBar" type="Control" parent="Root"]
+z_index = 20
+anchor_left = 0.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -140.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="BottomFade" type="ColorRect" parent="Root/BottomBar"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(1, 1, 1, 1)
+mouse_filter = 2
+material = SubResource("Mat_bot")
+
+[node name="CTAButton" type="Button" parent="Root/BottomBar"]
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 28.0
+offset_top = 20.0
+offset_right = -28.0
+offset_bottom = -28.0
+grow_horizontal = 2
+text = "RETURN TO EARTH BASE"
+theme_override_fonts/font = ExtResource("2_bold")
+theme_override_font_sizes/font_size = 32
+theme_override_colors/font_color = Color(0.047, 0.071, 0.118, 1.0)
+theme_override_styles/normal = SubResource("SB_cta")
+theme_override_styles/hover = SubResource("SB_cta_h")
+theme_override_styles/pressed = SubResource("SB_cta")

@@ -135,7 +135,8 @@ static func get_mission_stage() -> int:
 	return RocketsMissionProgress.mission_stage_from_completed(get_completed_mission_count())
 
 static func is_free_operations_unlocked() -> bool:
-	return get_completed_mission_count() >= 4
+	# Free Operations unlock after the 3-mission tutorial arc (M1, M2, M3).
+	return get_completed_mission_count() >= 3
 
 static func get_control_station_build_cost() -> int:
 	return CONTROL_STATION_BUILD_COST
@@ -1915,6 +1916,22 @@ static func reset_state() -> bool:
 	push_error("RocketsManager: reset_state failed to persist user state; using in-memory override")
 	_override_state = data.duplicate(true)
 	return true
+
+static func restore_cloud_state(data: Dictionary) -> bool:
+	if data.is_empty():
+		return false
+	_override_state = data.duplicate(true)
+	var normalized := load_state()
+	_preview_target = normalized.get("preview_target", {}).duplicate(true) if typeof(normalized.get("preview_target", {})) == TYPE_DICTIONARY else {}
+	_returned_mission = normalized.get("returned_mission", {}).duplicate(true) if typeof(normalized.get("returned_mission", {})) == TYPE_DICTIONARY else {}
+	_pending_mission_guidance_id = max(int(normalized.get("pending_mission_guidance_id", 0)), 0)
+	_return_to_new_mission_panel = false
+	_map_return_mode = false
+	_preview_index = 0
+	var ok := save_state(normalized)
+	if ok:
+		_override_state = {}
+	return ok
 
 static func _write_state_direct(data: Dictionary) -> bool:
 	var ok = RocketsStateAccess.write_state_direct(data, STATE_PATH)

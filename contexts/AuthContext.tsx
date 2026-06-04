@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { supabase } from '../utils/supabase';
+import { pocketbase } from '../utils/pocketbase';
 
 interface AuthUser {
   id: string;
@@ -26,13 +25,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = pocketbase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         setUser({
           id: session.user.id,
           email: session.user.email || '',
-          isAnonymous: session.user.is_anonymous || false,
+          isAnonymous: session.user.isAnonymous || false,
         });
       } else {
         setUser(null);
@@ -41,12 +39,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     });
 
     // Check current session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    pocketbase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         setUser({
           id: session.user.id,
           email: session.user.email || '',
-          isAnonymous: session.user.is_anonymous || false,
+          isAnonymous: session.user.isAnonymous || false,
         });
       }
       setIsLoading(false);
@@ -58,22 +56,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   const signUp = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({ email, password });
+    const { error } = await pocketbase.auth.signUp({ email, password });
     if (error) throw error;
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await pocketbase.auth.signInWithPassword({ email, password });
     if (error) throw error;
   };
 
   const signInAnonymously = async () => {
-    const { error } = await supabase.auth.signInAnonymously();
+    const { error } = await pocketbase.auth.signInAnonymously();
     if (error) throw error;
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
+    const { error } = await pocketbase.auth.signOut();
     if (error) throw error;
   };
 

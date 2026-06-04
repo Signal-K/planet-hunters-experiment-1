@@ -32,7 +32,6 @@ TEST_FILES=(
   "res://tests/run_mission_e2e_flow_tests.gd"
   "res://tests/run_narrative_paths_tests.gd"
   "res://tests/run_debug_jump_tests.gd"
-  "res://tests/run_supabase_tests.gd"
   "res://tests/run_sync_tests.gd"
 )
 

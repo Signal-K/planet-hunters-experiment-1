@@ -43,7 +43,7 @@ Any production export, deploy, release, or versioned build must be generated fro
 - **Persistence:** When deferring a new idea or mechanic, I MUST create a corresponding spec sheet in `.knowns/tasks/` or `.knowns/prompts/` with a clear "Status: Deferred" header and "Revisit" criteria.
 
 ## Engineering Standards
-- Adhere to the Landnám ecosystem architecture: shared Supabase instance, unified player profiles, and cross-game XP.
+- Adhere to the Landnám ecosystem architecture: shared PocketBase auth, Landnam PocketBase game data, and cross-game ecosystem profiles.
 - Prioritize Godot-React Native bridge stability and efficient state synchronization.
 
 <!-- KNOWNS GUIDELINES START -->

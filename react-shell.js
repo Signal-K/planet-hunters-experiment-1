@@ -38,7 +38,7 @@ const MICRO_SURVEY_IDS = {
 const SURVEY_OVERLAY_ID = "landnam-survey-overlay";
 const SURVEY_IFRAME_ID = "landnam-survey-iframe";
 const FEEDBACK_OVERLAY_ID = "landnam-feedback-overlay";
-const SUPABASE_SESSION_STORAGE_KEY = "landnam_supabase_guest";
+const POCKETBASE_SESSION_STORAGE_KEY = "landnam_pocketbase_session";
 const XP_STATE_KEY = "landnam_xp_state_v1";
 const DEFAULT_RUNTIME_CONFIG = {
   posthog: {
@@ -47,20 +47,22 @@ const DEFAULT_RUNTIME_CONFIG = {
     uiHost: "https://us.posthog.com",
     surveyId: "",
   },
-  supabase: {
-    url: "",
-    anonKey: "",
+  pocketbase: {
+    sharedUrl: "http://127.0.0.1:8090",
+    landnamUrl: "http://127.0.0.1:8091",
   },
 };
 
 let _actionLog = [];
-let _supabaseClientPromise = null;
+let _pocketbaseClientPromise = null;
 let _surveyShownInThisBoot = false;
 let _posthogPromise = null;
 let _runtimeConfig = null;
 let _runtimeConfigPromise = null;
 let _xpSyncInFlight = false;
 let _pendingXpSnapshot = null;
+let _gameStateSyncInFlight = false;
+let _pendingGameStateSnapshot = null;
 // Set to true when this is the 2nd session; cleared once the survey fires
 let _pendingReturnVisitSurvey = false;
 
@@ -81,6 +83,42 @@ function _urlBase64ToUint8Array(base64String) {
   const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
   const rawData = atob(base64);
   return Uint8Array.from([...rawData].map((c) => c.charCodeAt(0)));
+}
+
+function readPocketBaseSession() {
+  return safeJsonParse(localStorage.getItem(POCKETBASE_SESSION_STORAGE_KEY), null);
+}
+
+function buildPocketBaseAuthPayload() {
+  const session = readPocketBaseSession();
+  if (!session || !session.token || !session.user || !session.user.id) {
+    return null;
+  }
+  return {
+    token: session.token,
+    user_id: session.user.id,
+    email: session.user.email || "",
+  };
+}
+
+function postToGameFrame(payload) {
+  const frame = document.getElementById("game-frame");
+  if (!frame || !frame.contentWindow) return;
+  frame.contentWindow.postMessage({
+    source: "landnam-pwa",
+    payload,
+  }, window.location.origin);
+}
+
+function postPocketBaseAuthToGame() {
+  const auth = buildPocketBaseAuthPayload();
+  if (auth) {
+    postToGameFrame({ auth });
+  }
+}
+
+function clearPocketBaseAuthInGame() {
+  postToGameFrame({ auth_clear: true });
 }
 
 async function initPushNotifications() {
@@ -209,7 +247,7 @@ function writeXpState(snapshot) {
 function mergeRuntimeConfig(remoteConfig) {
   const fallback = DEFAULT_RUNTIME_CONFIG;
   const remotePosthog = (remoteConfig && remoteConfig.posthog) || {};
-  const remoteSupabase = (remoteConfig && remoteConfig.supabase) || {};
+  const remotePocketBase = (remoteConfig && remoteConfig.pocketbase) || {};
   return {
     posthog: {
       projectToken: remotePosthog.projectToken || fallback.posthog.projectToken,
@@ -219,9 +257,9 @@ function mergeRuntimeConfig(remoteConfig) {
       uiHost: remotePosthog.uiHost || fallback.posthog.uiHost,
       surveyId: remotePosthog.surveyId || fallback.posthog.surveyId,
     },
-    supabase: {
-      url: remoteSupabase.url || fallback.supabase.url,
-      anonKey: remoteSupabase.anonKey || fallback.supabase.anonKey,
+    pocketbase: {
+      sharedUrl: remotePocketBase.sharedUrl || fallback.pocketbase.sharedUrl,
+      landnamUrl: remotePocketBase.landnamUrl || fallback.pocketbase.landnamUrl,
     },
   };
 }
@@ -398,54 +436,119 @@ async function syncAnalyticsIdentity(distinctId) {
   }
 }
 
-async function loadSupabaseClient() {
-  if (_supabaseClientPromise) {
-    return _supabaseClientPromise;
+async function loadPocketBaseClient() {
+  if (_pocketbaseClientPromise) {
+    return _pocketbaseClientPromise;
   }
-  _supabaseClientPromise = Promise.all([getRuntimeConfig(), import("https://esm.sh/@supabase/supabase-js@2?bundle")]).then(
-    ([runtimeConfig, mod]) => {
-      const createClient = mod.createClient || (mod.default && mod.default.createClient);
-      if (!createClient) {
-        throw new Error("Supabase createClient not available");
+  _pocketbaseClientPromise = getRuntimeConfig().then((runtimeConfig) => {
+    const config = runtimeConfig.pocketbase || DEFAULT_RUNTIME_CONFIG.pocketbase;
+
+    const readSession = () => safeJsonParse(localStorage.getItem(POCKETBASE_SESSION_STORAGE_KEY), null);
+    const writeSession = (session) => {
+      if (session) {
+        localStorage.setItem(POCKETBASE_SESSION_STORAGE_KEY, JSON.stringify(session));
+      } else {
+        localStorage.removeItem(POCKETBASE_SESSION_STORAGE_KEY);
       }
-      const supabaseConfig = runtimeConfig.supabase || DEFAULT_RUNTIME_CONFIG.supabase;
-      return createClient(supabaseConfig.url, supabaseConfig.anonKey, {
-        auth: {
-          persistSession: true,
-          autoRefreshToken: true,
-          storageKey: SUPABASE_SESSION_STORAGE_KEY,
+    };
+    const mapAuthPayload = (payload) => {
+      const record = (payload && payload.record) || {};
+      return {
+        token: String((payload && payload.token) || ""),
+        user: {
+          id: String(record.id || ""),
+          email: String(record.email || ""),
+        },
+      };
+    };
+    const requestSharedAuth = async (path, body) => {
+      const response = await fetch(`${config.sharedUrl}${path}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: body ? JSON.stringify(body) : undefined,
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(payload.message || payload.error || "PocketBase auth request failed");
+      }
+      return payload;
+    };
+    const requestLandnam = async (path, init = {}) => {
+      const session = readSession();
+      if (!session || !session.token) {
+        throw new Error("Sign in required");
+      }
+      const response = await fetch(`${config.landnamUrl}${path}`, {
+        ...init,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.token}`,
+          ...(init.headers || {}),
         },
       });
-    }
-  );
-  return _supabaseClientPromise;
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(payload.message || payload.error || "Landnam PocketBase request failed");
+      }
+      return payload;
+    };
+
+    return {
+      auth: {
+        async getUser() {
+          const session = readSession();
+          return { data: { user: session ? session.user : null }, error: null };
+        },
+        async signInWithPassword({ email, password }) {
+          try {
+            const payload = await requestSharedAuth("/api/collections/users/auth-with-password", {
+              identity: email,
+              password,
+            });
+            const session = mapAuthPayload(payload);
+            writeSession(session);
+            return { data: { session, user: session.user }, error: null };
+          } catch (error) {
+            return { data: {}, error };
+          }
+        },
+        async signUp({ email, password }) {
+          try {
+            await requestSharedAuth("/api/collections/users/records", {
+              email,
+              password,
+              passwordConfirm: password,
+            });
+            return this.signInWithPassword({ email, password });
+          } catch (error) {
+            return { data: {}, error };
+          }
+        },
+        async signOut() {
+          writeSession(null);
+          return { error: null };
+        },
+      },
+      async saveState(snapshot) {
+        return requestLandnam("/api/landnam/state", {
+          method: "POST",
+          body: JSON.stringify({
+            save_version: 1,
+            game_state: snapshot,
+            client_updated_at: new Date().toISOString(),
+          }),
+        });
+      },
+    };
+  });
+  return _pocketbaseClientPromise;
 }
 
 async function ensureGuestUser() {
-  const client = await loadSupabaseClient();
-  const current = await client.auth.getUser();
-  if (current && current.data && current.data.user && current.data.user.id) {
-    return current.data.user.id;
-  }
-  const created = await client.auth.signInAnonymously({
-    options: {
-      data: {
-        source: "landnam_experiment1_web",
-        created_by: "react_shell_survey_trigger",
-      },
-    },
-  });
-  if (created && created.error) {
-    throw created.error;
-  }
-  const user = created && created.data && created.data.user;
-  if (!user || !user.id) {
-    throw new Error("Anonymous sign-in succeeded but no user id was returned");
-  }
-  return user.id;
+  return localDistinctId();
 }
 
-async function syncExperienceToSupabase(snapshot) {
+async function syncExperienceToPocketBase(snapshot) {
   if (!snapshot || typeof snapshot !== "object") return;
   _pendingXpSnapshot = snapshot;
   if (_xpSyncInFlight) return;
@@ -454,19 +557,41 @@ async function syncExperienceToSupabase(snapshot) {
     while (_pendingXpSnapshot) {
       const next = _pendingXpSnapshot;
       _pendingXpSnapshot = null;
-      const client = await loadSupabaseClient();
-      await client.auth.updateUser({
-        data: {
-          experience_level: Number(next.experience_level || 1),
-          experience_xp: Number(next.experience_xp || 0),
-          experience_updated_at: new Date().toISOString(),
-        },
+      const client = await loadPocketBaseClient();
+      await client.saveState({
+        experience_level: Number(next.experience_level || 1),
+        experience_xp: Number(next.experience_xp || 0),
+        franc_balance: Number(next.franc_balance || 0),
+        experience_updated_at: new Date().toISOString(),
       });
     }
   } catch (error) {
-    console.warn("Failed to sync experience to Supabase profile:", error);
+    console.warn("Failed to sync experience to PocketBase profile:", error);
   } finally {
     _xpSyncInFlight = false;
+  }
+}
+
+async function syncGameStateToPocketBase(snapshot) {
+  if (!snapshot || typeof snapshot !== "object") return;
+  _pendingGameStateSnapshot = snapshot;
+  if (_gameStateSyncInFlight) return;
+  _gameStateSyncInFlight = true;
+  try {
+    while (_pendingGameStateSnapshot) {
+      const next = _pendingGameStateSnapshot;
+      _pendingGameStateSnapshot = null;
+      const client = await loadPocketBaseClient();
+      await client.saveState({
+        ...next,
+        synced_from: "landnam-web-shell",
+        synced_at: new Date().toISOString(),
+      });
+    }
+  } catch (error) {
+    console.warn("Failed to sync game state to PocketBase:", error);
+  } finally {
+    _gameStateSyncInFlight = false;
   }
 }
 
@@ -479,7 +604,7 @@ function localDistinctId() {
 
 async function resolveSurveyDistinctId() {
   try {
-    const client = await loadSupabaseClient();
+    const client = await loadPocketBaseClient();
     const { data: { user: currentUser } } = await client.auth.getUser();
     
     if (currentUser && currentUser.id) {
@@ -776,7 +901,7 @@ async function showInlineSurvey(params, surveyIdOverride) {
   const openMeta = {
     survey_id: surveyId,
     survey_context: params.survey_context || "",
-    supabase_guest_id: params.supabase_guest_id || "",
+    pocketbase_user_id: params.pocketbase_user_id || "",
   };
   if (params.mission_count) openMeta.mission_count = params.mission_count;
   if (params.mission_stage) openMeta.mission_stage = params.mission_stage;
@@ -800,7 +925,7 @@ async function maybeTriggerMicroSurvey(storageKey, surveyId, context, eventPaylo
     const distinctId = await resolveSurveyDistinctId();
     const params = {
       distinct_id: distinctId,
-      supabase_guest_id: distinctId,
+      pocketbase_user_id: distinctId,
       survey_context: context,
       mission_stage: String((eventPayload && eventPayload.mission_stage) || ""),
     };
@@ -934,7 +1059,7 @@ async function maybeTriggerFirstMissionSurvey(eventPayload) {
     const progressJson = buildProgressJson(eventPayload);
     const params = {
       distinct_id: distinctId,
-      supabase_guest_id: distinctId,
+      pocketbase_user_id: distinctId,
       survey_context: "experiment1_first_mission",
       mission_count: String(missionCount || 1),
       mission_action: String((eventPayload && eventPayload.action) || ""),
@@ -966,7 +1091,7 @@ function AuthModal({ isOpen, onClose, onAuthSuccess }) {
     setLoading(true);
     setError(null);
     try {
-      const client = await loadSupabaseClient();
+      const client = await loadPocketBaseClient();
       let result;
       if (isLogin) {
         result = await client.auth.signInWithPassword({ email, password });
@@ -984,6 +1109,7 @@ function AuthModal({ isOpen, onClose, onAuthSuccess }) {
           user_id: user.id,
         });
         onAuthSuccess(user);
+        postPocketBaseAuthToGame();
         onClose();
       }
     } catch (err) {
@@ -1326,7 +1452,7 @@ function LandingPage({ onPlay }) {
 function App() {
   const [progress, setProgress] = useState(() => parseProgress(readCookie(COOKIE_NAME)));
   // If the player has a saved progress cookie they've played before — skip the landing page.
-  const [playing, setPlaying] = useState(() => parseProgress(readCookie(COOKIE_NAME)) !== null);
+  const [playing, setPlaying] = useState(true);
   const [xpState, setXpState] = useState(() => readXpState() || { experience_level: 1, experience_xp: 0, franc_balance: 0 });
   const [user, setUser] = useState(null);
   const [showAuth, setShowAuth] = useState(false);
@@ -1344,20 +1470,18 @@ function App() {
   const levelUpTimerRef = useRef(null);
   const [showPwaHud, setShowPwaHud] = useState(false);
   const pwaHudTimerRef = useRef(null);
-  const [isPortrait, setIsPortrait] = useState(
-    () => typeof window !== "undefined" && window.matchMedia("(orientation: portrait)").matches
-  );
   const [viewportWidth, setViewportWidth] = useState(
     () => (typeof window !== "undefined" ? window.innerWidth : 1280)
   );
   const [showPwaHudMenu, setShowPwaHudMenu] = useState(false);
 
   useEffect(() => {
-    loadSupabaseClient().then((client) => {
+    loadPocketBaseClient().then((client) => {
       client.auth.getUser().then(({ data: { user: currentUser } }) => {
         if (currentUser) {
           setUser(currentUser);
           syncAnalyticsIdentity(currentUser.id);
+          postPocketBaseAuthToGame();
         }
       });
     });
@@ -1371,23 +1495,6 @@ function App() {
     window.addEventListener("resize", onResize, { passive: true });
     return () => window.removeEventListener("resize", onResize);
   }, []);
-
-  useEffect(() => {
-    const mq = window.matchMedia("(orientation: portrait)");
-    function onChange(e) { setIsPortrait(e.matches); }
-    mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
-  }, []);
-
-  // Attempt to lock landscape orientation on PWA/mobile (no-ops silently where unsupported, e.g. iOS)
-  useEffect(() => {
-    if (!isPwa && !isMobile) return;
-    try {
-      if (screen.orientation && typeof screen.orientation.lock === "function") {
-        screen.orientation.lock("landscape").catch(() => {});
-      }
-    } catch (_) {}
-  }, [isPwa, isMobile]);
 
   useEffect(() => {
     loadActionLog();
@@ -1450,6 +1557,9 @@ function App() {
       }
       pushAction(eventName, payload);
       captureAnalyticsEvent(eventName, payload);
+      if (eventName === "player_state_changed") {
+        syncGameStateToPocketBase(payload);
+      }
       if (typeof payload.experience_level !== "undefined" || typeof payload.experience_xp !== "undefined" || typeof payload.franc_balance !== "undefined") {
         const current = readXpState() || {};
         const prevLevel = Number(current.experience_level || 1);
@@ -1463,7 +1573,7 @@ function App() {
         };
         writeXpState(snapshot);
         setXpState(snapshot);
-        syncExperienceToSupabase(snapshot);
+        syncExperienceToPocketBase(snapshot);
         if (snapshot.experience_level > prevLevel) {
           const hint = LEVEL_UNLOCK_HINTS[snapshot.experience_level] || null;
           setLevelUpBanner({ level: snapshot.experience_level, hint });
@@ -1558,14 +1668,6 @@ function App() {
     };
   }, []);
 
-  // Auto-show install banner on mobile non-PWA after 2s (dismissible, suppressed after dismiss)
-  useEffect(() => {
-    if (!isMobile || isPwa) return;
-    if (localStorage.getItem("landnam_install_banner_dismissed_v1")) return;
-    const timer = setTimeout(() => setShowInstallHint(true), 2000);
-    return () => clearTimeout(timer);
-  }, [isMobile, isPwa]);
-
   const handleOpenFullscreen = useCallback(() => {
     if (document.documentElement.requestFullscreen) {
       document.documentElement.requestFullscreen().catch(() => {});
@@ -1607,9 +1709,10 @@ function App() {
 
   const handleSignout = useCallback(async () => {
     try {
-      const client = await loadSupabaseClient();
+      const client = await loadPocketBaseClient();
       await client.auth.signOut();
       setUser(null);
+      clearPocketBaseAuthInGame();
       captureAnalyticsEvent("logout_success");
     } catch (err) {
       console.warn("Signout failed:", err);
@@ -1710,52 +1813,6 @@ function App() {
       )
     : null;
 
-  // Portrait overlay — covers the game when any handheld/tablet device is held portrait
-  const rotatePrompt =
-    isPortrait && viewportWidth < 1200
-      ? React.createElement(
-          "div",
-          {
-            style: {
-              position: "fixed",
-              inset: 0,
-              background: "#05080f",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "20px",
-              zIndex: 99999,
-            },
-          },
-          React.createElement(
-            "span",
-            {
-              style: {
-                fontSize: "64px",
-                display: "block",
-                transform: "rotate(-90deg)",
-                transition: "transform 0.4s",
-              },
-            },
-            "\uD83D\uDCF1"
-          ),
-          React.createElement(
-            "p",
-            {
-              style: {
-                color: "#8899cc",
-                fontSize: "17px",
-                textAlign: "center",
-                margin: "0 40px",
-                lineHeight: 1.5,
-              },
-            },
-            "Rotate your device to landscape for the best experience"
-          )
-        )
-      : null;
-
   // Landing page — shown to first-time visitors (no progress cookie). Returning players bypass it.
   if (!playing) {
     return React.createElement(LandingPage, { onPlay: () => setPlaying(true) });
@@ -1792,6 +1849,7 @@ function App() {
         onLoad: () => {
           saveProgress({ marker: "game-loaded", updatedAt: new Date().toISOString() }, setProgress);
           setStorageStatus("Cookie saved");
+          postPocketBaseAuthToGame();
         },
       }),
       React.createElement(
@@ -2180,7 +2238,6 @@ function App() {
                 )
           )
         : null,
-      rotatePrompt,
       levelUpOverlay,
       showInstallHint && !isPwa
         ? React.createElement(
@@ -2460,10 +2517,10 @@ function App() {
           };
           saveProgress(next, setProgress);
           setStorageStatus("Cookie saved");
+          postPocketBaseAuthToGame();
         },
       })
     ),
-    rotatePrompt,
     levelUpOverlay,
     React.createElement(AuthModal, {
       isOpen: showAuth,

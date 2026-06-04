@@ -1,0 +1,14 @@
+FROM mcr.microsoft.com/playwright:v1.60.0-noble
+
+WORKDIR /app
+
+COPY package.json package-lock.json borndotcom-react-native-godot-v1.0.1.tgz* ./
+RUN npm ci --legacy-peer-deps
+
+COPY . .
+
+ENV CI=1
+ENV NODE_ENV=test
+ENV PORT=3333
+
+CMD ["npm", "run", "test:visual"]

@@ -31,7 +31,7 @@ help:
 	@echo "Landnam — available targets"
 	@echo ""
 	@echo "  Dev"
-	@echo "    godot          Open Godot (with Supabase check)"
+	@echo "    godot          Open Godot"
 	@echo "    buildit        Export web build + serve locally"
 	@echo "    up / down      Kanban board on :4444"
 	@echo ""
@@ -76,15 +76,9 @@ _save-restore:
 		[ -f "$(SAVE_BAK)/$$f" ] && cp -f "$(SAVE_BAK)/$$f" "$(SAVE_DIR)/$$f" 2>/dev/null || true; \
 	done
 
-_supabase-check:
-	@if ! curl -sf -m 5 http://127.0.0.1:54323/project/default > /dev/null; then \
-		echo "Starting Supabase..."; \
-		cd /Users/scroobz/Navigation/client && supabase start; \
-	fi
-
 # ── Dev ───────────────────────────────────────────────────────────────────────
 
-godot: _supabase-check
+godot:
 	open -a Godot --args --path ./scene
 
 buildit:
@@ -168,8 +162,7 @@ ci-godot: ci-build
 		/opt/godot/godot --headless --path . --script res://tests/run_mission_log_tests.gd && \
 		/opt/godot/godot --headless --path . --script res://tests/run_tutorial_tests.gd && \
 		/opt/godot/godot --headless --path . --script res://tests/run_experience_tests.gd && \
-		/opt/godot/godot --headless --path . --script res://tests/run_bug_regression_tests.gd && \
-		/opt/godot/godot --headless --path . --script res://tests/SupabaseTestRunner.gd"
+		/opt/godot/godot --headless --path . --script res://tests/run_bug_regression_tests.gd"
 
 ci-playwright:
 	docker build --platform linux/amd64 -t $(PLAYWRIGHT_IMAGE) -f Dockerfile.playwright .

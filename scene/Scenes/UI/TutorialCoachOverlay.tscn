@@ -1,112 +1,247 @@
-[gd_scene load_steps=2 format=3 uid="uid://btutcoachoverlay1"]
+[gd_scene load_steps=10 format=3 uid="uid://btutcoachoverlay1"]
 
 [ext_resource type="Script" path="res://Scripts/UI/TutorialCoachOverlay.gd" id="1_tutcoach"]
+[ext_resource type="FontFile" path="res://Resources/Fonts/Oxanium-Bold.ttf" id="2_bold"]
+[ext_resource type="FontFile" path="res://Resources/Fonts/Oxanium-SemiBold.ttf" id="3_semi"]
+[ext_resource type="FontFile" path="res://Resources/Fonts/TurretRoad-Regular.ttf" id="4_mono"]
+
+; ── Coach card panel — dark navy, cyan border, r=43 ──────────────────────
+; Matches tutorial.jsx: linear-gradient(#0d1c30, #081120), border rgba(135,207,250,0.5)
+[sub_resource type="StyleBoxFlat" id="SB_card"]
+bg_color = Color(0.041, 0.089, 0.157, 1.0)
+border_color = Color(0.529, 0.812, 0.980, 0.5)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+corner_radius_top_left = 43
+corner_radius_top_right = 43
+corner_radius_bottom_right = 43
+corner_radius_bottom_left = 43
+content_margin_left = 38
+content_margin_top = 38
+content_margin_right = 38
+content_margin_bottom = 38
+
+; ── CTA button — blue gradient ────────────────────────────────────────────
+; Matches tutorial.jsx: linear-gradient(#6cc2ff, #2d8de0)
+[sub_resource type="StyleBoxFlat" id="SB_cta"]
+bg_color = Color(0.310, 0.690, 0.941, 1.0)
+border_width_left = 0
+border_width_top = 0
+border_width_right = 0
+border_width_bottom = 0
+corner_radius_top_left = 27
+corner_radius_top_right = 27
+corner_radius_bottom_right = 27
+corner_radius_bottom_left = 27
+content_margin_left = 43
+content_margin_top = 22
+content_margin_right = 43
+content_margin_bottom = 22
+
+[sub_resource type="StyleBoxFlat" id="SB_cta_h"]
+bg_color = Color(0.424, 0.761, 1.0, 1.0)
+border_width_left = 0
+border_width_top = 0
+border_width_right = 0
+border_width_bottom = 0
+corner_radius_top_left = 27
+corner_radius_top_right = 27
+corner_radius_bottom_right = 27
+corner_radius_bottom_left = 27
+content_margin_left = 43
+content_margin_top = 22
+content_margin_right = 43
+content_margin_bottom = 22
+
+[sub_resource type="StyleBoxFlat" id="SB_cta_p"]
+bg_color = Color(0.173, 0.533, 0.863, 1.0)
+border_width_left = 0
+border_width_top = 0
+border_width_right = 0
+border_width_bottom = 0
+corner_radius_top_left = 27
+corner_radius_top_right = 27
+corner_radius_bottom_right = 27
+corner_radius_bottom_left = 27
+content_margin_left = 43
+content_margin_top = 22
+content_margin_right = 43
+content_margin_bottom = 22
+
+; ── Skip button — transparent, muted ─────────────────────────────────────
+[sub_resource type="StyleBoxEmpty" id="SB_skip"]
+
+; ── Avatar circle — cyan radial ───────────────────────────────────────────
+[sub_resource type="StyleBoxFlat" id="SB_avatar"]
+bg_color = Color(0.247, 0.663, 1.0, 0.7)
+border_color = Color(0.667, 0.933, 1.0, 1.0)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+corner_radius_top_left = 999
+corner_radius_top_right = 999
+corner_radius_bottom_right = 999
+corner_radius_bottom_left = 999
+content_margin_left = 0
+content_margin_top = 0
+content_margin_right = 0
+content_margin_bottom = 0
+
+; ═══════════════════════════════════════════════════════════════════════════
 
 [node name="TutorialCoachOverlay" type="CanvasLayer"]
 layer = 10
 script = ExtResource("1_tutcoach")
 
+; Full-screen dimmer — rgba(3,6,12,0.78) from tutorial.jsx
 [node name="Dimmer" type="ColorRect" parent="."]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 0.0
-offset_top = 0.0
-offset_right = 0.0
-offset_bottom = 0.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0.011765, 0.023529, 0.047059, 0.78)
+color = Color(0.012, 0.024, 0.047, 0.78)
 mouse_filter = 2
 
+; Spotlight cutout mask (transparent hole — positioned by script)
 [node name="SpotlightMask" type="ColorRect" parent="."]
 position = Vector2(0, 0)
 size = Vector2(64, 64)
 color = Color(0, 0, 0, 0)
 mouse_filter = 2
 
+; Amber border around spotlight (positioned by script)
 [node name="SpotlightBorder" type="ColorRect" parent="."]
-position = Vector2(-2, -2)
-size = Vector2(68, 68)
-color = Color(0.961, 0.651, 0.137, 0.55)
+position = Vector2(-3, -3)
+size = Vector2(70, 70)
+color = Color(0.961, 0.651, 0.137, 0.7)
 mouse_filter = 2
 
+; ── Coach card ────────────────────────────────────────────────────────────
+; Positioned by script. Default: bottom-anchored.
 [node name="CoachCard" type="PanelContainer" parent="."]
-anchors_preset = 0
 anchor_left = 0.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 14.0
-offset_top = -380.0
-offset_right = -14.0
-offset_bottom = -60.0
+offset_left = 38.0
+offset_top = -480.0
+offset_right = -38.0
+offset_bottom = -70.0
 grow_horizontal = 2
 grow_vertical = 0
+theme_override_styles/panel = SubResource("SB_card")
 
 [node name="VBox" type="VBoxContainer" parent="CoachCard"]
 layout_mode = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 28
 
+; ── Header row: avatar + label + step counter ─────────────────────────────
 [node name="HeaderRow" type="HBoxContainer" parent="CoachCard/VBox"]
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 22
 
-[node name="CoachAvatar" type="ColorRect" parent="CoachCard/VBox/HeaderRow"]
-custom_minimum_size = Vector2(64, 64)
+; Avatar — 118×118 cyan circle (44px × 2.69)
+[node name="CoachAvatar" type="PanelContainer" parent="CoachCard/VBox/HeaderRow"]
+custom_minimum_size = Vector2(118.0, 118.0)
 layout_mode = 2
-color = Color(0.247, 0.663, 1.0, 0.35)
+size_flags_vertical = 4
+theme_override_styles/panel = SubResource("SB_avatar")
+
+[node name="AvatarCenter" type="CenterContainer" parent="CoachCard/VBox/HeaderRow/CoachAvatar"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="AvatarGlyph" type="Label" parent="CoachCard/VBox/HeaderRow/CoachAvatar/AvatarCenter"]
+layout_mode = 2
+text = "⊙"
+theme_override_fonts/font = ExtResource("2_bold")
+theme_override_font_sizes/font_size = 60
+theme_override_colors/font_color = Color(0.024, 0.071, 0.157, 1.0)
 
 [node name="HeaderInfo" type="VBoxContainer" parent="CoachCard/VBox/HeaderRow"]
 layout_mode = 2
 size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 8
 
+; "MISSION COACH" — 9px × 2.69 = 24px, cyan, tracked uppercase
 [node name="CoachLabel" type="Label" parent="CoachCard/VBox/HeaderRow/HeaderInfo"]
 layout_mode = 2
 text = "MISSION COACH"
-theme_override_font_sizes/font_size = 13
+theme_override_fonts/font = ExtResource("3_semi")
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(0.529, 0.812, 0.980, 1.0)
 
+; "1 / 11" — 10px × 2.69 = 27px, mono, muted
 [node name="StepCounter" type="Label" parent="CoachCard/VBox/HeaderRow/HeaderInfo"]
 layout_mode = 2
-text = "1 / 9"
-theme_override_font_sizes/font_size = 13
-theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 1)
+text = "1 / 11"
+theme_override_fonts/font = ExtResource("4_mono")
+theme_override_font_sizes/font_size = 27
+theme_override_colors/font_color = Color(0.478, 0.510, 0.576, 1.0)
 
+; ── Title — 16px × 2.69 = 43px, bold, white ──────────────────────────────
 [node name="TitleLabel" type="Label" parent="CoachCard/VBox"]
 layout_mode = 2
-text = "Welcome, Commander"
-theme_override_font_sizes/font_size = 28
-theme_override_colors/font_color = Color(0.902, 0.937, 1.0, 1)
+text = "BUILD MODE"
+theme_override_fonts/font = ExtResource("2_bold")
+theme_override_font_sizes/font_size = 43
+theme_override_colors/font_color = Color(0.902, 0.937, 1.0, 1.0)
 
+; ── Body — 13px × 2.69 = 35px, dim ───────────────────────────────────────
 [node name="BodyLabel" type="Label" parent="CoachCard/VBox"]
 layout_mode = 2
-text = "Your first contract is waiting. Open the radial menu and tap NEW MISSION to begin."
-theme_override_font_sizes/font_size = 22
-theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 1)
+text = "Open the radial nav and tap BUILD to set up the base."
+theme_override_fonts/font = ExtResource("3_semi")
+theme_override_font_sizes/font_size = 35
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 1.0)
 autowrap_mode = 3
 
+; ── Progress dots (dynamic — cleared and rebuilt by script) ───────────────
 [node name="DotsRow" type="HBoxContainer" parent="CoachCard/VBox"]
 layout_mode = 2
-theme_override_constants/separation = 6
+theme_override_constants/separation = 8
 
+; ── Actions row: Skip (left) + CTA (right/expand) ─────────────────────────
 [node name="ActionsRow" type="HBoxContainer" parent="CoachCard/VBox"]
 layout_mode = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 20
 
+; SKIP — transparent, muted, 10px × 2.69 = 27px
 [node name="SkipButton" type="Button" parent="CoachCard/VBox/ActionsRow"]
 layout_mode = 2
 size_flags_horizontal = 0
 text = "SKIP"
-theme_override_font_sizes/font_size = 16
+theme_override_fonts/font = ExtResource("3_semi")
+theme_override_font_sizes/font_size = 27
+theme_override_colors/font_color = Color(0.365, 0.451, 0.565, 1.0)
+theme_override_styles/normal = SubResource("SB_skip")
+theme_override_styles/hover = SubResource("SB_skip")
+theme_override_styles/pressed = SubResource("SB_skip")
+theme_override_styles/focus = SubResource("SB_skip")
 
+; CTA — blue gradient, 12px × 2.69 = 32px, dark text
 [node name="CTAButton" type="Button" parent="CoachCard/VBox/ActionsRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "New Mission"
-theme_override_font_sizes/font_size = 20
+text = "BUILD  ›"
+theme_override_fonts/font = ExtResource("2_bold")
+theme_override_font_sizes/font_size = 32
+theme_override_colors/font_color = Color(0.024, 0.071, 0.122, 1.0)
+theme_override_styles/normal = SubResource("SB_cta")
+theme_override_styles/hover = SubResource("SB_cta_h")
+theme_override_styles/pressed = SubResource("SB_cta_p")
+theme_override_styles/focus = SubResource("SB_cta")
 
+; Pointer triangle (positioned by script for bottom-anchored steps)
 [node name="PointerTriangle" type="ColorRect" parent="."]
 position = Vector2(180, 0)
-size = Vector2(16, 12)
-color = Color(0.071, 0.133, 0.212, 1)
+size = Vector2(22, 14)
+color = Color(0.041, 0.089, 0.157, 1.0)
 mouse_filter = 2

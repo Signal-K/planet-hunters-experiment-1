@@ -1,0 +1,48 @@
+[gd_scene format=3 uid="uid://genericstyledpanel01"]
+
+[node name="GenericStyledPanel" type="Control"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PanelContainer" type="Control" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="Panel" parent="PanelContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Content" type="VBoxContainer" parent="PanelContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Margin" type="MarginContainer" parent="PanelContainer/Content"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="Body" type="VBoxContainer" parent="PanelContainer/Content/Margin"]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="PanelContainer/Content/Margin/Body"]
+layout_mode = 2
+text = "Panel Title"
+theme_override_font_sizes/font_size = 22
+
+[node name="CloseButton" type="Button" parent="PanelContainer/Content/Margin/Body"]
+layout_mode = 2
+text = "Close"

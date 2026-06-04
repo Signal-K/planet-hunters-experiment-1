@@ -12,7 +12,7 @@
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState, useCallback } from "react";
-import { supabase } from "./supabase";
+import { loadLandnamState, pocketbase, saveLandnamState } from "./pocketbase";
 
 // ============================================================================
 // Types
@@ -105,7 +105,7 @@ function notify(event?: SyncEvent): void {
 // ============================================================================
 
 /**
- * Load state from AsyncStorage and Supabase
+ * Load state from AsyncStorage and the Landnam PocketBase backend
  */
 export async function loadState(): Promise<SyncState> {
   if (_loaded) {
@@ -122,19 +122,11 @@ export async function loadState(): Promise<SyncState> {
       _state = await migrateLegacyState();
     }
 
-    // 2. Try to sync with Supabase cloud if logged in
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user) {
-      const { data: cloudProfile, error } = await supabase
-        .from('player_profiles')
-        .select('franc_balance, xp, level')
-        .eq('id', session.user.id)
-        .single();
-
-      if (!error && cloudProfile) {
-        _state.francBalance = cloudProfile.franc_balance;
-        _state.experienceXp = cloudProfile.xp;
-        _state.experienceLevel = cloudProfile.level;
+    const { data: { session } } = await pocketbase.auth.getSession();
+    if (session?.token) {
+      const cloudState = await loadLandnamState();
+      if (cloudState) {
+        _state = { ..._state, ...cloudState };
         await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(_state));
       }
     }
@@ -149,22 +141,15 @@ export async function loadState(): Promise<SyncState> {
 }
 
 /**
- * Save state to AsyncStorage and Supabase
+ * Save state to AsyncStorage and the Landnam PocketBase backend
  */
 async function saveState(): Promise<void> {
   try {
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(_state));
 
-    // Push to Supabase if authenticated
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user) {
-      await supabase.from('player_profiles').upsert({
-        id: session.user.id,
-        franc_balance: _state.francBalance,
-        xp: _state.experienceXp,
-        level: _state.experienceLevel,
-        updated_at: new Date().toISOString()
-      });
+    const { data: { session } } = await pocketbase.auth.getSession();
+    if (session?.token) {
+      await saveLandnamState(_state);
     }
   } catch (e) {
     console.error("[SyncState] Save error:", e);

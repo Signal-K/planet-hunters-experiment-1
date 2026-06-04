@@ -2,13 +2,15 @@ extends Node
 const AppLogger = preload("res://Scripts/Utils/Logger.gd")
 ## Unified Sync Bridge — Web/PWA edition.
 ## Observes EventBus, pushes state changes to the Next.js PWA via JavaScriptBridge (postMessage).
-## Receives inbound Supabase-reconciled snapshots from the PWA and applies them to AppController.
+## Receives inbound PocketBase-reconciled snapshots from the PWA and applies them to AppController.
 
 signal state_changed(key: String, value: Variant, source: String)
 
 const WebEventBridge = preload("res://Scripts/Systems/WebEventBridge.gd")
+const PocketBaseClient = preload("res://Scripts/Systems/PocketBaseClient.gd")
 
 var _js_message_callback: JavaScriptObject = null
+var _remote_restore_in_flight: bool = false
 
 func _ready() -> void:
 	_connect_event_bus()
@@ -46,6 +48,7 @@ func _handle_pwa_message(args: Array) -> void:
 func _on_player_state_changed(snapshot: Dictionary) -> void:
 	WebEventBridge.emit("player_state_changed", snapshot)
 	state_changed.emit("playerSnapshot", snapshot, "godot")
+	_save_snapshot_to_pocketbase(snapshot)
 
 func _on_franc_balance_changed(new_balance: int) -> void:
 	WebEventBridge.emit("franc_balance_changed", {"francBalance": new_balance})
@@ -56,6 +59,7 @@ func _on_counter_changed(new_value: int) -> void:
 	state_changed.emit("counter", new_value, "godot")
 
 func _on_pwa_state_received(payload: Dictionary) -> void:
+	_apply_auth_payload(payload)
 	var app: Node = get_node_or_null("/root/AppController")
 	if not app:
 		return
@@ -63,6 +67,54 @@ func _on_pwa_state_received(payload: Dictionary) -> void:
 		app.set_franc_balance_from_react(int(payload["franc_balance"]))
 	if payload.has("counter") and app.has_method("set_counter_from_react"):
 		app.set_counter_from_react(int(payload["counter"]))
+
+func _apply_auth_payload(payload: Dictionary) -> void:
+	if bool(payload.get("auth_clear", false)):
+		PocketBaseClient.get_instance().clear_auth_session()
+		AppLogger.d("[SyncBridge] PocketBase auth session cleared")
+		return
+	var auth = payload.get("auth", {})
+	if typeof(auth) != TYPE_DICTIONARY:
+		return
+	var auth_payload: Dictionary = auth
+	var token := str(auth_payload.get("token", "")).strip_edges()
+	var user_id := str(auth_payload.get("user_id", auth_payload.get("userId", ""))).strip_edges()
+	var email := str(auth_payload.get("email", "")).strip_edges()
+	if token == "" or user_id == "":
+		return
+	var client := PocketBaseClient.get_instance()
+	client.set_auth_session(token, user_id, email)
+	AppLogger.d("[SyncBridge] PocketBase auth session received for user=%s" % user_id)
+	_restore_snapshot_from_pocketbase()
+
+func _restore_snapshot_from_pocketbase() -> void:
+	if _remote_restore_in_flight:
+		return
+	var client := PocketBaseClient.get_instance()
+	if not client.has_authenticated_session():
+		return
+	_remote_restore_in_flight = true
+	client.load_game_state(func(snapshot: Dictionary, error: String) -> void:
+		_remote_restore_in_flight = false
+		if error != "":
+			AppLogger.w("[SyncBridge] PocketBase restore failed: %s" % error)
+			return
+		if snapshot.is_empty():
+			_save_snapshot_to_pocketbase(PlayerManager.get_snapshot())
+			return
+		var app: Node = get_node_or_null("/root/AppController")
+		if app and app.has_method("apply_remote_game_state"):
+			app.apply_remote_game_state(snapshot)
+	)
+
+func _save_snapshot_to_pocketbase(snapshot: Dictionary) -> void:
+	var client := PocketBaseClient.get_instance()
+	if not client.has_authenticated_session():
+		return
+	client.save_game_state(snapshot, func(ok: bool, error: String, _payload: Variant = null) -> void:
+		if not ok:
+			AppLogger.w("[SyncBridge] PocketBase save failed: %s" % error)
+	)
 
 # Public read API — reads from PlayerManager, no shadow state.
 func get_state() -> Dictionary:

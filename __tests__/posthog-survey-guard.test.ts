@@ -9,6 +9,7 @@
 
 import fs from "fs";
 import path from "path";
+import { describe, expect, test } from "@jest/globals";
 
 const shellSrc = fs.readFileSync(
   path.resolve(__dirname, "../react-shell.js"),

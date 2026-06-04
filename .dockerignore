@@ -8,6 +8,10 @@ yarn-error.log*
 # Build artifacts
 build/
 dist/
+electron-dist/
+test-results/
+playwright-report/
+sandbox/output/
 *.o
 *.a
 *.so
@@ -45,9 +49,16 @@ android/build/
 
 # Godot specific
 .godot/
+**/.godot/
+.godot-bin/
 godot_modules/
 .import/
+**/.import/
 export_presets.cfg.user
+
+# Local project state and documentation stores not needed in Docker builds
+.knowns/
+backend/pb_data/
 
 # Environment
 .env
@@ -73,3 +84,18 @@ README.md
 LICENSE
 .github/
 .gitpod.yml
+
+# Visual/frontend Docker tests need these even when broad ignores above change.
+!dev-server.js
+!index.html
+!manifest.json
+!react-shell.js
+!sw.js
+!package.json
+!package-lock.json
+!playwright.config.cjs
+!tests/
+!tests/visual/
+!tests/visual/**
+!game/
+!game/**

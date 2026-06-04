@@ -274,9 +274,9 @@ func debug_skip_to_mission(stage: int) -> void:
 	# 3. Force Level and Francs for that stage
 	# M1 (Start): 0
 	# M2 (Upgrade): 500M
-	# M3 (Scanner): 1B
-	# M4 (Planetary): 3B
-	# M5 (Free Ops): 5B
+	# M3 (Extended Range): 1B
+	# Free Ops entry: 3B
+	# Free Ops (advanced): 5B
 	var balances = {
 		2: 500000000,
 		3: 1000000000,
@@ -287,9 +287,11 @@ func debug_skip_to_mission(stage: int) -> void:
 
 	set_franc_balance_from_react(target_francs)
 
-	# 4. Special unlocks for later stages
+	# 4. Special unlocks for later stages (structures are now placed explicitly)
 	if stage >= 2:
-		rm.set_control_station_built(true)
+		var StructureManager = preload("res://Scripts/Utils/StructureManager.gd")
+		StructureManager.build("launchpad")
+		StructureManager.build("control_station")
 	if stage >= 3:
 		rm.unlock("starterrocket2")
 	if stage >= 4:
@@ -463,6 +465,34 @@ func set_franc_balance_from_react(value: int) -> void:
 	save_franc_balance()
 	_emit_player_state_snapshot("franc_balance")
 
+func apply_remote_game_state(snapshot: Dictionary) -> void:
+	"""Apply the compact cloud snapshot restored from Landnam PocketBase."""
+	if snapshot.is_empty():
+		return
+	var changed := false
+	if snapshot.has("counter"):
+		counter = int(snapshot["counter"])
+		counter_updated.emit(counter)
+		changed = true
+	if snapshot.has("franc_balance"):
+		franc_balance = int(snapshot["franc_balance"])
+		changed = true
+	if snapshot.has("loan_balance"):
+		loan_balance = int(snapshot["loan_balance"])
+		changed = true
+	if snapshot.has("citizen_science_dialogue_enabled"):
+		citizen_science_dialogue_enabled = bool(snapshot["citizen_science_dialogue_enabled"])
+		citizen_science_dialogue_toggled.emit(citizen_science_dialogue_enabled)
+		changed = true
+	_restore_remote_progression(snapshot)
+	_persistence.save_franc_balance(franc_balance, loan_balance)
+	save_preferences()
+	franc_balance_updated.emit(franc_balance)
+	loan_updated.emit(loan_balance)
+	if changed:
+		AppLogger.d("[AppController] Applied remote PocketBase game state")
+	_emit_player_state_snapshot("remote_restore")
+
 func add_franc_balance(amount: int, source: String = "") -> void:
 	if amount == 0:
 		return
@@ -543,6 +573,7 @@ func get_player_state_snapshot(source: String = "") -> Dictionary:
 		"counter": counter,
 		"franc_balance": franc_balance,
 		"loan_balance": loan_balance,
+		"citizen_science_dialogue_enabled": citizen_science_dialogue_enabled,
 		"mission_stage": RocketsManager.get_mission_stage(),
 		"completed_missions": RocketsManager.get_completed_mission_count(),
 		"control_station_built": RocketsManager.is_control_station_built(),
@@ -551,8 +582,47 @@ func get_player_state_snapshot(source: String = "") -> Dictionary:
 		"active_missions_count": missions.size(),
 		"has_returned_mission": not returned.is_empty(),
 		"pending_mission_guidance_id": RocketsManager.get_pending_mission_guidance_id(),
-		"unlocked_rockets": RocketsManager.get_unlocked()
+		"unlocked_rockets": RocketsManager.get_unlocked(),
+		"rockets_state": RocketsManager.load_state().duplicate(true)
 	}
+
+func _restore_remote_progression(snapshot: Dictionary) -> void:
+	if snapshot.has("rockets_state") and typeof(snapshot["rockets_state"]) == TYPE_DICTIONARY:
+		var remote_rockets_state: Dictionary = snapshot["rockets_state"]
+		RocketsManager.restore_cloud_state(remote_rockets_state.duplicate(true))
+		return
+	var has_progression := snapshot.has("completed_missions") or snapshot.has("unlocked_rockets") or snapshot.has("operation_mode") or snapshot.has("free_operations_unlocked")
+	if not has_progression:
+		return
+	var state := RocketsManager.load_state()
+	if snapshot.has("completed_missions"):
+		var target_completed: int = maxi(0, int(snapshot["completed_missions"]))
+		var badges = state.get("completed_mission_badges", [])
+		if typeof(badges) != TYPE_ARRAY:
+			badges = []
+		while badges.size() < target_completed:
+			badges.append("remote-restore-%d" % (badges.size() + 1))
+		if badges.size() > target_completed:
+			badges = badges.slice(0, target_completed)
+		state["completed_mission_badges"] = badges
+		state["mission_progress_completed"] = target_completed
+		state["scanner_unlocked"] = target_completed >= 3
+	if snapshot.has("unlocked_rockets"):
+		var unlocked_any = snapshot["unlocked_rockets"]
+		if typeof(unlocked_any) == TYPE_ARRAY:
+			var unlocked: Array = []
+			for rocket_id in unlocked_any:
+				var normalized := str(rocket_id).strip_edges()
+				if normalized != "" and not unlocked.has(normalized):
+					unlocked.append(normalized)
+			if not unlocked.has("starterrocket1"):
+				unlocked.append("starterrocket1")
+			state["unlocked"] = unlocked
+	if snapshot.has("operation_mode"):
+		state["operation_mode"] = str(snapshot["operation_mode"])
+	if snapshot.has("free_operations_unlocked") and bool(snapshot["free_operations_unlocked"]):
+		state["operation_mode"] = "free"
+	RocketsManager.save_state(state)
 
 func _emit_player_state_snapshot(source: String = "") -> void:
 	player_state_snapshot_updated.emit(get_player_state_snapshot(source))
@@ -617,4 +687,3 @@ func replay_tutorial_for_current_mission() -> void:
 
 func _on_tutorial_state_updated(state: Dictionary) -> void:
 	tutorial_state_updated.emit(state)
-

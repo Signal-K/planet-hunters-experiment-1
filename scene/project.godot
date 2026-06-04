@@ -35,6 +35,10 @@ window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 window/handheld/orientation=1
 
+[debug]
+
+file_logging/enable_file_logging=false
+
 [input]
 
 forward={

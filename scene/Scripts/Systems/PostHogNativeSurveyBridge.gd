@@ -203,7 +203,7 @@ static func _show_overlay(survey_key: String, survey_id: String, survey_data: Di
 static func _build_url(survey_id: String, distinct_id: String, context: String, payload: Dictionary) -> String:
 	var params := {
 		"distinct_id": distinct_id,
-		"supabase_guest_id": distinct_id,
+		"pocketbase_user_id": distinct_id,
 		"survey_context": context,
 		"mission_stage": str(payload.get("mission_stage", "")),
 		"mission_count": str(payload.get("mission_count", payload.get("completed_mission_count", ""))),

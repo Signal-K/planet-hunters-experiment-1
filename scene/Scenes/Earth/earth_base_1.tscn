@@ -1,7 +1,306 @@
-[gd_scene load_steps=3 format=3 uid="uid://bearthbase001"]
+[gd_scene load_steps=26 format=3 uid="uid://bearthbase001"]
 
 [ext_resource type="Script" path="res://Scenes/Earth/earth_base_1.gd" id="1_earthbase"]
 [ext_resource type="Texture2D" path="res://assets/Backdrops/Earth1.png" id="2_earth1"]
+[ext_resource type="FontFile" path="res://Resources/Fonts/Oxanium-Bold.ttf" id="3_bold"]
+[ext_resource type="FontFile" path="res://Resources/Fonts/Oxanium-SemiBold.ttf" id="4_semi"]
+[ext_resource type="FontFile" path="res://Resources/Fonts/TurretRoad-Regular.ttf" id="5_mono"]
+[ext_resource type="Texture2D" path="res://assets/Vehicles/StarterRocket1.png" id="6_rocket"]
+
+; ── Gradient overlay shader (top fade: dark → transparent) ──────────────
+[sub_resource type="Shader" id="Sh_top"]
+code = "shader_type canvas_item;
+void fragment() {
+	float a = max(0.0, 1.0 - UV.y * 4.0) * 0.9;
+	COLOR = vec4(0.024, 0.035, 0.059, a);
+}"
+
+[sub_resource type="ShaderMaterial" id="Mat_top"]
+shader = SubResource("Sh_top")
+
+; ── Gradient overlay shader (bottom fade: transparent → dark) ───────────
+[sub_resource type="Shader" id="Sh_bot"]
+code = "shader_type canvas_item;
+void fragment() {
+	float a = max(0.0, UV.y * 4.0 - 3.0) * 0.55;
+	COLOR = vec4(0.024, 0.035, 0.059, a);
+}"
+
+[sub_resource type="ShaderMaterial" id="Mat_bot"]
+shader = SubResource("Sh_bot")
+
+; ── Amber pill — FrancsChip ──────────────────────────────────────────────
+[sub_resource type="StyleBoxFlat" id="SB_francs"]
+bg_color = Color(0.071, 0.047, 0.012, 0.82)
+border_color = Color(0.961, 0.651, 0.137, 0.55)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+corner_radius_top_left = 999
+corner_radius_top_right = 999
+corner_radius_bottom_right = 999
+corner_radius_bottom_left = 999
+content_margin_left = 22
+content_margin_top = 10
+content_margin_right = 22
+content_margin_bottom = 10
+
+; ── Jobs pill ────────────────────────────────────────────────────────────
+[sub_resource type="StyleBoxFlat" id="SB_jobs"]
+bg_color = Color(0.039, 0.071, 0.114, 0.82)
+border_color = Color(1.0, 0.702, 0.278, 0.4)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+corner_radius_top_left = 999
+corner_radius_top_right = 999
+corner_radius_bottom_right = 999
+corner_radius_bottom_left = 999
+content_margin_left = 16
+content_margin_top = 8
+content_margin_right = 16
+content_margin_bottom = 8
+
+; ── Progression card ─────────────────────────────────────────────────────
+[sub_resource type="StyleBoxFlat" id="SB_card"]
+bg_color = Color(0.039, 0.071, 0.114, 0.92)
+border_color = Color(0.961, 0.651, 0.137, 0.4)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+content_margin_left = 20
+content_margin_top = 18
+content_margin_right = 20
+content_margin_bottom = 18
+
+; ── CTA pill in progression card ─────────────────────────────────────────
+[sub_resource type="StyleBoxFlat" id="SB_cta"]
+bg_color = Color(0.961, 0.651, 0.137, 0.18)
+border_color = Color(0.961, 0.651, 0.137, 0.55)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+content_margin_left = 20
+content_margin_top = 10
+content_margin_right = 20
+content_margin_bottom = 10
+
+; ── Building chip — green (ok) ───────────────────────────────────────────
+[sub_resource type="StyleBoxFlat" id="SB_chip_ok"]
+bg_color = Color(0.016, 0.024, 0.039, 0.92)
+border_color = Color(0.224, 0.827, 0.416, 0.5)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+corner_radius_top_left = 999
+corner_radius_top_right = 999
+corner_radius_bottom_right = 999
+corner_radius_bottom_left = 999
+content_margin_left = 16
+content_margin_top = 8
+content_margin_right = 16
+content_margin_bottom = 8
+
+; ── Building chip — warn (amber) ─────────────────────────────────────────
+[sub_resource type="StyleBoxFlat" id="SB_chip_warn"]
+bg_color = Color(0.016, 0.024, 0.039, 0.92)
+border_color = Color(1.0, 0.702, 0.278, 0.5)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+corner_radius_top_left = 999
+corner_radius_top_right = 999
+corner_radius_bottom_right = 999
+corner_radius_bottom_left = 999
+content_margin_left = 16
+content_margin_top = 8
+content_margin_right = 16
+content_margin_bottom = 8
+
+; ── Building chip — cyan (launchpad) ─────────────────────────────────────
+[sub_resource type="StyleBoxFlat" id="SB_chip_cyan"]
+bg_color = Color(0.016, 0.024, 0.039, 0.92)
+border_color = Color(0.247, 0.663, 1.0, 0.5)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+corner_radius_top_left = 999
+corner_radius_top_right = 999
+corner_radius_bottom_right = 999
+corner_radius_bottom_left = 999
+content_margin_left = 16
+content_margin_top = 8
+content_margin_right = 16
+content_margin_bottom = 8
+
+; ── TAP A BUILDING pill ──────────────────────────────────────────────────
+[sub_resource type="StyleBoxFlat" id="SB_hint"]
+bg_color = Color(0.031, 0.063, 0.11, 0.85)
+border_color = Color(0.247, 0.663, 1.0, 0.4)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+corner_radius_top_left = 999
+corner_radius_top_right = 999
+corner_radius_bottom_right = 999
+corner_radius_bottom_left = 999
+content_margin_left = 28
+content_margin_top = 12
+content_margin_right = 28
+content_margin_bottom = 12
+
+; ── Radial hub normal ────────────────────────────────────────────────────
+[sub_resource type="StyleBoxFlat" id="SB_hub_n"]
+bg_color = Color(0.110, 0.400, 0.710, 0.25)
+border_color = Color(1.0, 1.0, 1.0, 0.85)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+corner_radius_top_left = 999
+corner_radius_top_right = 999
+corner_radius_bottom_right = 999
+corner_radius_bottom_left = 999
+content_margin_left = 0
+content_margin_top = 0
+content_margin_right = 0
+content_margin_bottom = 0
+
+; ── Radial hub pressed ───────────────────────────────────────────────────
+[sub_resource type="StyleBoxFlat" id="SB_hub_p"]
+bg_color = Color(0.247, 0.663, 1.0, 0.45)
+border_color = Color(1.0, 1.0, 1.0, 0.6)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+corner_radius_top_left = 999
+corner_radius_top_right = 999
+corner_radius_bottom_right = 999
+corner_radius_bottom_left = 999
+
+; ── Satellite nav button ─────────────────────────────────────────────────
+[sub_resource type="StyleBoxFlat" id="SB_sat"]
+bg_color = Color(0.039, 0.071, 0.114, 0.92)
+border_color = Color(0.247, 0.663, 1.0, 0.5)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+corner_radius_top_left = 999
+corner_radius_top_right = 999
+corner_radius_bottom_right = 999
+corner_radius_bottom_left = 999
+content_margin_left = 22
+content_margin_top = 16
+content_margin_right = 22
+content_margin_bottom = 16
+
+; ── Market chip ──────────────────────────────────────────────────────────
+[sub_resource type="StyleBoxFlat" id="SB_market"]
+bg_color = Color(0.059, 0.027, 0.012, 0.88)
+border_color = Color(0.478, 0.314, 0.157, 0.55)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+content_margin_left = 18
+content_margin_top = 12
+content_margin_right = 18
+content_margin_bottom = 12
+
+; ── Ghost slot (build mode outline) ─────────────────────────────────────
+[sub_resource type="StyleBoxFlat" id="SB_ghost"]
+bg_color = Color(0.024, 0.035, 0.059, 0.35)
+border_color = Color(0.247, 0.663, 1.0, 0.7)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+content_margin_left = 20
+content_margin_top = 16
+content_margin_right = 20
+content_margin_bottom = 16
+
+; ── Build tray panel (bottom sheet) ─────────────────────────────────────
+[sub_resource type="StyleBoxFlat" id="SB_tray"]
+bg_color = Color(0.031, 0.055, 0.090, 0.97)
+border_color = Color(0.247, 0.663, 1.0, 0.35)
+border_width_left = 0
+border_width_top = 2
+border_width_right = 0
+border_width_bottom = 0
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 0
+corner_radius_bottom_left = 0
+content_margin_left = 28
+content_margin_top = 24
+content_margin_right = 28
+content_margin_bottom = 28
+
+; ── Structure card (in build tray) ───────────────────────────────────────
+[sub_resource type="StyleBoxFlat" id="SB_struct_card"]
+bg_color = Color(0.024, 0.043, 0.071, 0.9)
+border_color = Color(0.247, 0.663, 1.0, 0.22)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+content_margin_left = 22
+content_margin_top = 20
+content_margin_right = 22
+content_margin_bottom = 20
+
+; ── Done button (green) ──────────────────────────────────────────────────
+[sub_resource type="StyleBoxFlat" id="SB_done"]
+bg_color = Color(0.224, 0.827, 0.416, 1.0)
+border_width_left = 0
+border_width_top = 0
+border_width_right = 0
+border_width_bottom = 0
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+content_margin_left = 24
+content_margin_top = 14
+content_margin_right = 24
+content_margin_bottom = 14
+
+; ═══════════════════════════════════════════════════════════════════════════
+; SCENE TREE — 1080 × 1920 design canvas, window 540 × 960
+; Font sizes and positions scaled from the 402px-wide portrait prototype.
+; Scale factor: 1080 / 402 ≈ 2.69 ×
+; ═══════════════════════════════════════════════════════════════════════════
 
 [node name="Home" type="CanvasLayer"]
 layer = 0
@@ -11,322 +310,901 @@ script = ExtResource("1_earthbase")
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 0.0
-offset_top = 0.0
-offset_right = 0.0
-offset_bottom = 0.0
 grow_horizontal = 2
 grow_vertical = 2
 
+; ── Full-screen Earth backdrop ──────────────────────────────────────────
 [node name="Backdrop" type="TextureRect" parent="Root"]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 0.0
-offset_top = 0.0
-offset_right = 0.0
-offset_bottom = 0.0
 grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("2_earth1")
 expand_mode = 1
 stretch_mode = 6
-
-[node name="SkyFX" type="Node2D" parent="Root"]
-
-[node name="TopScrim" type="ColorRect" parent="Root"]
-anchors_preset = 0
-anchor_left = 0.0
-anchor_top = 0.0
-anchor_right = 1.0
-anchor_bottom = 0.0
-offset_left = 0.0
-offset_top = 0.0
-offset_right = 0.0
-offset_bottom = 120.0
-grow_horizontal = 2
-grow_vertical = 1
-color = Color(0.039, 0.071, 0.114, 0.85)
 mouse_filter = 2
 
-[node name="TitleBlock" type="Control" parent="Root"]
-anchors_preset = 0
+; ── SkyFX — cloud drift + ambient stars (driven by GDScript _draw / tweens)
+[node name="SkyFX" type="Node2D" parent="Root"]
+z_index = 1
+
+; ── Top scrim — gradient dark → transparent over upper ~22% of screen ──
+[node name="TopScrim" type="ColorRect" parent="Root"]
+z_index = 2
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(1.0, 1.0, 1.0, 1.0)
+mouse_filter = 2
+material = SubResource("Mat_top")
+
+; ── Bottom scrim — transparent → dark over lower ~26% of screen ────────
+[node name="BottomScrim" type="ColorRect" parent="Root"]
+z_index = 2
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(1.0, 1.0, 1.0, 1.0)
+mouse_filter = 2
+material = SubResource("Mat_bot")
+
+; ── Title block — top left ──────────────────────────────────────────────
+[node name="TitleBlock" type="VBoxContainer" parent="Root"]
+z_index = 10
 anchor_left = 0.0
 anchor_top = 0.0
 anchor_right = 0.0
 anchor_bottom = 0.0
 offset_left = 28.0
-offset_top = 40.0
-offset_right = 300.0
-offset_bottom = 120.0
-grow_horizontal = 1
+offset_top = 48.0
+offset_right = 540.0
+offset_bottom = 200.0
 grow_vertical = 1
+theme_override_constants/separation = 4
 
 [node name="Eyebrow" type="Label" parent="Root/TitleBlock"]
-layout_mode = 0
-offset_left = 0.0
-offset_top = 0.0
-offset_right = 270.0
-offset_bottom = 24.0
+layout_mode = 2
 text = "EARTH BASE · LV 1"
-theme_override_font_sizes/font_size = 13
-theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 1)
+theme_override_fonts/font = ExtResource("4_semi")
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(0.902, 0.937, 1.0, 0.6)
 
 [node name="Title" type="Label" parent="Root/TitleBlock"]
-layout_mode = 0
-offset_left = 0.0
-offset_top = 28.0
-offset_right = 270.0
-offset_bottom = 76.0
+layout_mode = 2
 text = "Earth Base"
-theme_override_font_sizes/font_size = 36
-theme_override_colors/font_color = Color(0.902, 0.937, 1.0, 1)
+theme_override_fonts/font = ExtResource("3_bold")
+theme_override_font_sizes/font_size = 64
+theme_override_colors/font_color = Color(1.0, 1.0, 1.0, 1.0)
 
-[node name="HUD" type="Control" parent="Root"]
-anchors_preset = 0
+; ── HUD — top right ─────────────────────────────────────────────────────
+[node name="HUD" type="VBoxContainer" parent="Root"]
+z_index = 10
 anchor_left = 1.0
 anchor_top = 0.0
 anchor_right = 1.0
 anchor_bottom = 0.0
-offset_left = -220.0
-offset_top = 40.0
+offset_left = -310.0
+offset_top = 48.0
 offset_right = -28.0
-offset_bottom = 120.0
+offset_bottom = 220.0
 grow_horizontal = 0
-grow_vertical = 1
+theme_override_constants/separation = 12
 
 [node name="FrancsChip" type="PanelContainer" parent="Root/HUD"]
-layout_mode = 0
-offset_left = 0.0
-offset_top = 0.0
-offset_right = 192.0
-offset_bottom = 36.0
+layout_mode = 2
+size_flags_horizontal = 0
+alignment = 2
+theme_override_styles/panel = SubResource("SB_francs")
 
 [node name="FrancsLabel" type="Label" parent="Root/HUD/FrancsChip"]
 layout_mode = 2
-text = "▲ 10,000,000,000"
-theme_override_font_sizes/font_size = 16
-theme_override_colors/font_color = Color(0.961, 0.651, 0.137, 1)
+text = "▲ 10.0B"
+theme_override_fonts/font = ExtResource("3_bold")
+theme_override_font_sizes/font_size = 32
+theme_override_colors/font_color = Color(0.961, 0.651, 0.137, 1.0)
 
 [node name="JobsChip" type="PanelContainer" parent="Root/HUD"]
-layout_mode = 0
-offset_left = 0.0
-offset_top = 44.0
-offset_right = 192.0
-offset_bottom = 76.0
-
-[node name="HBox" type="HBoxContainer" parent="Root/HUD/JobsChip"]
 layout_mode = 2
-theme_override_constants/separation = 6
+size_flags_horizontal = 0
+alignment = 2
+theme_override_styles/panel = SubResource("SB_jobs")
 
-[node name="StatusDot" type="ColorRect" parent="Root/HUD/JobsChip/HBox"]
-custom_minimum_size = Vector2(8, 8)
+[node name="JobsHBox" type="HBoxContainer" parent="Root/HUD/JobsChip"]
 layout_mode = 2
-color = Color(0.365, 0.451, 0.565, 1)
+theme_override_constants/separation = 10
 
-[node name="JobsLabel" type="Label" parent="Root/HUD/JobsChip/HBox"]
+[node name="StatusDot" type="ColorRect" parent="Root/HUD/JobsChip/JobsHBox"]
+custom_minimum_size = Vector2(12.0, 12.0)
+layout_mode = 2
+size_flags_vertical = 4
+color = Color(0.365, 0.451, 0.565, 1.0)
+
+[node name="JobsLabel" type="Label" parent="Root/HUD/JobsChip/JobsHBox"]
 layout_mode = 2
 text = "0 JOBS"
-theme_override_font_sizes/font_size = 16
-theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 1)
+theme_override_fonts/font = ExtResource("4_semi")
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(1.0, 0.702, 0.278, 1.0)
 
+; ── Progression card ─────────────────────────────────────────────────────
 [node name="ProgressionCard" type="PanelContainer" parent="Root"]
-anchors_preset = 0
+z_index = 10
 anchor_left = 0.0
 anchor_top = 0.0
 anchor_right = 1.0
 anchor_bottom = 0.0
 offset_left = 14.0
-offset_top = 140.0
+offset_top = 200.0
 offset_right = -14.0
-offset_bottom = 204.0
+offset_bottom = 318.0
 grow_horizontal = 2
 grow_vertical = 1
+theme_override_styles/panel = SubResource("SB_card")
 
-[node name="HBox" type="HBoxContainer" parent="Root/ProgressionCard"]
+[node name="CardHBox" type="HBoxContainer" parent="Root/ProgressionCard"]
 layout_mode = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 18
+alignment = 1
 
-[node name="AccentBar" type="ColorRect" parent="Root/ProgressionCard/HBox"]
-custom_minimum_size = Vector2(4, 0)
+[node name="AccentBar" type="ColorRect" parent="Root/ProgressionCard/CardHBox"]
+custom_minimum_size = Vector2(6.0, 50.0)
 layout_mode = 2
-size_flags_vertical = 3
-color = Color(0.247, 0.663, 1.0, 1)
+size_flags_vertical = 4
+color = Color(0.961, 0.651, 0.137, 1.0)
+mouse_filter = 2
 
-[node name="Info" type="VBoxContainer" parent="Root/ProgressionCard/HBox"]
+[node name="CardInfo" type="VBoxContainer" parent="Root/ProgressionCard/CardHBox"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_constants/separation = 4
 
-[node name="CardEyebrow" type="Label" parent="Root/ProgressionCard/HBox/Info"]
+[node name="CardEyebrow" type="Label" parent="Root/ProgressionCard/CardHBox/CardInfo"]
 layout_mode = 2
-text = "NEXT STEP"
-theme_override_font_sizes/font_size = 13
-theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 1)
-
-[node name="CardTitle" type="Label" parent="Root/ProgressionCard/HBox/Info"]
-layout_mode = 2
-text = "Start your first mission"
+text = "NEXT MISSION AVAILABLE"
+theme_override_fonts/font = ExtResource("4_semi")
 theme_override_font_sizes/font_size = 22
-theme_override_colors/font_color = Color(0.902, 0.937, 1.0, 1)
+theme_override_colors/font_color = Color(0.961, 0.651, 0.137, 1.0)
 
-[node name="CardCTA" type="PanelContainer" parent="Root/ProgressionCard/HBox"]
+[node name="CardTitle" type="Label" parent="Root/ProgressionCard/CardHBox/CardInfo"]
+layout_mode = 2
+text = "5 contracts on the board"
+theme_override_fonts/font = ExtResource("3_bold")
+theme_override_font_sizes/font_size = 32
+theme_override_colors/font_color = Color(0.902, 0.937, 1.0, 1.0)
+clip_text = true
+
+[node name="CardCTA" type="PanelContainer" parent="Root/ProgressionCard/CardHBox"]
 layout_mode = 2
 size_flags_horizontal = 0
+size_flags_vertical = 4
+mouse_filter = 2
+theme_override_styles/panel = SubResource("SB_cta")
 
-[node name="CTALabel" type="Label" parent="Root/ProgressionCard/HBox/CardCTA"]
+[node name="CTALabel" type="Label" parent="Root/ProgressionCard/CardHBox/CardCTA"]
 layout_mode = 2
-text = "Go →"
-theme_override_font_sizes/font_size = 20
-theme_override_colors/font_color = Color(0.247, 0.663, 1.0, 1)
+text = "OPEN LAUNCHPAD ›"
+theme_override_fonts/font = ExtResource("4_semi")
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(0.961, 0.651, 0.137, 1.0)
 
-[node name="Structures" type="Node2D" parent="Root"]
-
-[node name="SatelliteStation" type="Button" parent="Root/Structures"]
-anchors_preset = 0
-offset_left = 14.0
-offset_top = 380.0
-offset_right = 140.0
-offset_bottom = 520.0
-text = "Satellite\nStation"
-theme_override_font_sizes/font_size = 16
-
-[node name="Launchpad" type="Button" parent="Root/Structures"]
-anchors_preset = 0
-offset_left = 155.0
-offset_top = 350.0
-offset_right = 390.0
-offset_bottom = 580.0
-text = "Launchpad"
-theme_override_font_sizes/font_size = 20
-
-[node name="ControlStation" type="Button" parent="Root/Structures"]
-anchors_preset = 0
-offset_left = 256.0
-offset_top = 380.0
-offset_right = 390.0
-offset_bottom = 520.0
-text = "Control\nStation"
-theme_override_font_sizes/font_size = 16
-
-[node name="SoilSection" type="Control" parent="Root"]
-anchors_preset = 0
-anchor_left = 0.0
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 0.0
-offset_top = -200.0
-offset_right = 0.0
-offset_bottom = 0.0
-grow_horizontal = 2
-grow_vertical = 0
-
-[node name="SoilBand" type="ColorRect" parent="Root/SoilSection"]
+; ── Structures — buildings hidden until placed in Build Mode ────────────
+[node name="Structures" type="Control" parent="Root"]
+z_index = 5
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 0.0
-offset_top = 0.0
-offset_right = 0.0
-offset_bottom = 0.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.039, 0.071, 0.114, 0.92)
 mouse_filter = 2
 
-[node name="SubsurfaceLabel" type="Label" parent="Root/SoilSection"]
-layout_mode = 0
-offset_left = 28.0
-offset_top = 12.0
-offset_right = 300.0
-offset_bottom = 36.0
-text = "SUBSURFACE MARKET"
-theme_override_font_sizes/font_size = 13
-theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 1)
+; ─ Ghost slots — visible ONLY during Build Mode ──────────────────────────
 
-[node name="MarketButton" type="Button" parent="Root/SoilSection"]
-layout_mode = 0
+[node name="SatGhost" type="Button" parent="Root/Structures"]
+anchor_left = 0.0
+anchor_top = 0.57
+anchor_right = 0.0
+anchor_bottom = 0.57
 offset_left = 14.0
-offset_top = 44.0
-offset_right = 390.0
-offset_bottom = 108.0
-text = "Open Market"
-theme_override_font_sizes/font_size = 20
+offset_top = 0.0
+offset_right = 250.0
+offset_bottom = 230.0
+visible = false
+theme_override_styles/normal = SubResource("SB_ghost")
+theme_override_styles/hover = SubResource("SB_ghost")
+theme_override_styles/pressed = SubResource("SB_ghost")
 
-[node name="TapHint" type="Label" parent="Root"]
-anchors_preset = 0
-anchor_left = 0.5
-anchor_top = 0.0
-anchor_right = 0.5
-anchor_bottom = 0.0
-offset_left = -120.0
-offset_top = 600.0
-offset_right = 120.0
-offset_bottom = 630.0
+[node name="SatGhostVBox" type="VBoxContainer" parent="Root/Structures/SatGhost"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
 grow_horizontal = 2
-text = "TAP A BUILDING"
-horizontal_alignment = 1
-theme_override_font_sizes/font_size = 16
-theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 1)
+grow_vertical = 2
+alignment = 1
+theme_override_constants/separation = 10
+mouse_filter = 2
 
-[node name="RadialNav" type="Control" parent="Root"]
-anchors_preset = 0
+[node name="SatGhostName" type="Label" parent="Root/Structures/SatGhost/SatGhostVBox"]
+layout_mode = 2
+text = "SCANNING\nSTATION"
+horizontal_alignment = 1
+theme_override_fonts/font = ExtResource("4_semi")
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(0.620, 0.863, 1.0, 0.9)
+
+[node name="SatGhostCost" type="Label" parent="Root/Structures/SatGhost/SatGhostVBox"]
+layout_mode = 2
+text = "▲ 2.0B"
+horizontal_alignment = 1
+theme_override_fonts/font = ExtResource("5_mono")
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(0.961, 0.651, 0.137, 0.8)
+
+[node name="CenterGhost" type="Button" parent="Root/Structures"]
+anchor_left = 0.5
+anchor_top = 0.53
+anchor_right = 0.5
+anchor_bottom = 0.53
+offset_left = -155.0
+offset_top = 0.0
+offset_right = 155.0
+offset_bottom = 290.0
+visible = false
+theme_override_styles/normal = SubResource("SB_ghost")
+theme_override_styles/hover = SubResource("SB_ghost")
+theme_override_styles/pressed = SubResource("SB_ghost")
+
+[node name="CenterGhostVBox" type="VBoxContainer" parent="Root/Structures/CenterGhost"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+theme_override_constants/separation = 10
+mouse_filter = 2
+
+[node name="CenterGhostName" type="Label" parent="Root/Structures/CenterGhost/CenterGhostVBox"]
+layout_mode = 2
+text = "LAUNCHPAD"
+horizontal_alignment = 1
+theme_override_fonts/font = ExtResource("4_semi")
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(0.620, 0.863, 1.0, 0.9)
+
+[node name="CenterGhostCost" type="Label" parent="Root/Structures/CenterGhost/CenterGhostVBox"]
+layout_mode = 2
+text = "FREE"
+horizontal_alignment = 1
+theme_override_fonts/font = ExtResource("5_mono")
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(0.224, 0.827, 0.416, 0.9)
+
+[node name="CtrlGhost" type="Button" parent="Root/Structures"]
+anchor_left = 1.0
+anchor_top = 0.57
+anchor_right = 1.0
+anchor_bottom = 0.57
+offset_left = -264.0
+offset_top = 0.0
+offset_right = -14.0
+offset_bottom = 230.0
+visible = false
+theme_override_styles/normal = SubResource("SB_ghost")
+theme_override_styles/hover = SubResource("SB_ghost")
+theme_override_styles/pressed = SubResource("SB_ghost")
+
+[node name="CtrlGhostVBox" type="VBoxContainer" parent="Root/Structures/CtrlGhost"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+theme_override_constants/separation = 10
+mouse_filter = 2
+
+[node name="CtrlGhostName" type="Label" parent="Root/Structures/CtrlGhost/CtrlGhostVBox"]
+layout_mode = 2
+text = "CONTROL\nSTATION"
+horizontal_alignment = 1
+theme_override_fonts/font = ExtResource("4_semi")
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(0.620, 0.863, 1.0, 0.9)
+
+[node name="CtrlGhostCost" type="Label" parent="Root/Structures/CtrlGhost/CtrlGhostVBox"]
+layout_mode = 2
+text = "▲ 500M"
+horizontal_alignment = 1
+theme_override_fonts/font = ExtResource("5_mono")
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(0.961, 0.651, 0.137, 0.8)
+
+; ─ Satellite Station — left (hidden until built) ──────────────────────────
+[node name="SatelliteStation" type="Button" parent="Root/Structures"]
+anchor_left = 0.0
+anchor_top = 0.57
+anchor_right = 0.0
+anchor_bottom = 0.57
+offset_left = 14.0
+offset_top = 0.0
+offset_right = 250.0
+offset_bottom = 230.0
+visible = false
+focus_mode = 0
+text = ""
+flat = true
+
+[node name="SatChip" type="PanelContainer" parent="Root/Structures/SatelliteStation"]
+anchor_left = 0.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 10.0
+offset_bottom = 80.0
+grow_horizontal = 2
+grow_vertical = 1
+theme_override_styles/panel = SubResource("SB_chip_ok")
+
+[node name="SatRow" type="HBoxContainer" parent="Root/Structures/SatelliteStation/SatChip"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="SatDot" type="ColorRect" parent="Root/Structures/SatelliteStation/SatChip/SatRow"]
+custom_minimum_size = Vector2(12.0, 12.0)
+layout_mode = 2
+size_flags_vertical = 4
+color = Color(0.224, 0.827, 0.416, 1.0)
+
+[node name="SatName" type="Label" parent="Root/Structures/SatelliteStation/SatChip/SatRow"]
+layout_mode = 2
+text = "SATELLITE"
+theme_override_fonts/font = ExtResource("4_semi")
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(0.902, 0.937, 1.0, 1.0)
+
+[node name="SatSub" type="Label" parent="Root/Structures/SatelliteStation/SatChip/SatRow"]
+layout_mode = 2
+text = "SCANNING"
+theme_override_fonts/font = ExtResource("5_mono")
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(0.224, 0.827, 0.416, 1.0)
+
+; ─ Launchpad — center (hidden until built) ────────────────────────────────
+[node name="Launchpad" type="Button" parent="Root/Structures"]
+anchor_left = 0.5
+anchor_top = 0.53
+anchor_right = 0.5
+anchor_bottom = 0.53
+offset_left = -155.0
+offset_top = 0.0
+offset_right = 155.0
+offset_bottom = 290.0
+grow_horizontal = 2
+visible = false
+focus_mode = 0
+text = ""
+flat = true
+
+; Rocket only shown when a rocket is awaiting launch
+[node name="RocketArt" type="TextureRect" parent="Root/Structures/Launchpad"]
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 0.88
+grow_horizontal = 2
+grow_vertical = 2
+visible = false
+texture = ExtResource("6_rocket")
+expand_mode = 3
+stretch_mode = 5
+
+[node name="LaunchChip" type="PanelContainer" parent="Root/Structures/Launchpad"]
+anchor_left = 0.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 10.0
+offset_bottom = 80.0
+grow_horizontal = 2
+grow_vertical = 1
+theme_override_styles/panel = SubResource("SB_chip_cyan")
+
+[node name="LaunchRow" type="HBoxContainer" parent="Root/Structures/Launchpad/LaunchChip"]
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="LaunchDot" type="ColorRect" parent="Root/Structures/Launchpad/LaunchChip/LaunchRow"]
+custom_minimum_size = Vector2(12.0, 12.0)
+layout_mode = 2
+size_flags_vertical = 4
+color = Color(0.224, 0.827, 0.416, 1.0)
+
+[node name="LaunchName" type="Label" parent="Root/Structures/Launchpad/LaunchChip/LaunchRow"]
+layout_mode = 2
+text = "LAUNCHPAD"
+theme_override_fonts/font = ExtResource("4_semi")
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(0.902, 0.937, 1.0, 1.0)
+
+[node name="LaunchSub" type="Label" parent="Root/Structures/Launchpad/LaunchChip/LaunchRow"]
+layout_mode = 2
+text = "READY"
+theme_override_fonts/font = ExtResource("5_mono")
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(0.224, 0.827, 0.416, 1.0)
+
+; ─ Control Station — right (hidden until built) ───────────────────────────
+[node name="ControlStation" type="Button" parent="Root/Structures"]
+anchor_left = 1.0
+anchor_top = 0.57
+anchor_right = 1.0
+anchor_bottom = 0.57
+offset_left = -264.0
+offset_top = 0.0
+offset_right = -14.0
+offset_bottom = 230.0
+grow_horizontal = 0
+visible = false
+focus_mode = 0
+text = ""
+flat = true
+
+[node name="CtrlChip" type="PanelContainer" parent="Root/Structures/ControlStation"]
+anchor_left = 0.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 10.0
+offset_bottom = 80.0
+grow_horizontal = 2
+grow_vertical = 1
+theme_override_styles/panel = SubResource("SB_chip_warn")
+
+[node name="CtrlRow" type="HBoxContainer" parent="Root/Structures/ControlStation/CtrlChip"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="CtrlDot" type="ColorRect" parent="Root/Structures/ControlStation/CtrlChip/CtrlRow"]
+custom_minimum_size = Vector2(12.0, 12.0)
+layout_mode = 2
+size_flags_vertical = 4
+color = Color(1.0, 0.702, 0.278, 1.0)
+
+[node name="CtrlName" type="Label" parent="Root/Structures/ControlStation/CtrlChip/CtrlRow"]
+layout_mode = 2
+text = "CONTROL"
+theme_override_fonts/font = ExtResource("4_semi")
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(0.902, 0.937, 1.0, 1.0)
+
+[node name="CtrlSub" type="Label" parent="Root/Structures/ControlStation/CtrlChip/CtrlRow"]
+layout_mode = 2
+text = "0 JOBS"
+theme_override_fonts/font = ExtResource("5_mono")
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(1.0, 0.702, 0.278, 1.0)
+
+; ── Soil cross-section overlay — bottom area ────────────────────────────
+; This is NOT a solid panel — it's a transparent overlay on the painted soil
+; The background image shows through; this just adds the divider + labels.
+[node name="SoilSection" type="Control" parent="Root"]
+z_index = 6
+anchor_left = 0.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -452.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+
+; Dashed-style amber divider line at top of soil section
+[node name="SoilDivider" type="ColorRect" parent="Root/SoilSection"]
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 0.0
+offset_bottom = 3.0
+grow_horizontal = 2
+grow_vertical = 1
+color = Color(1.0, 0.882, 0.627, 0.5)
+mouse_filter = 2
+
+; Locked market chip — bottom left
+[node name="MarketButton" type="Button" parent="Root/SoilSection"]
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = 14.0
+offset_top = 20.0
+offset_right = 240.0
+offset_bottom = 160.0
+focus_mode = 0
+text = ""
+flat = true
+theme_override_styles/normal = SubResource("SB_market")
+
+[node name="MarketLabel" type="Label" parent="Root/SoilSection/MarketButton"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "MARKET · L5"
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_fonts/font = ExtResource("4_semi")
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(0.608, 0.549, 0.439, 0.8)
+mouse_filter = 2
+
+; Subsurface label — right
+[node name="SubsurfaceLabel" type="Label" parent="Root/SoilSection"]
+anchor_left = 1.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 0.0
+offset_left = -320.0
+offset_top = 20.0
+offset_right = -14.0
+offset_bottom = 60.0
+grow_horizontal = 0
+text = "·  SUBSURFACE  ·"
+horizontal_alignment = 2
+theme_override_fonts/font = ExtResource("5_mono")
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(0.608, 0.549, 0.439, 0.7)
+mouse_filter = 2
+
+; ── TAP A BUILDING hint ─────────────────────────────────────────────────
+[node name="TapHint" type="PanelContainer" parent="Root"]
+z_index = 7
 anchor_left = 0.5
 anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
-offset_left = -48.0
-offset_top = -116.0
-offset_right = 48.0
-offset_bottom = -20.0
+offset_left = -180.0
+offset_top = -530.0
+offset_right = 180.0
+offset_bottom = -470.0
 grow_horizontal = 2
 grow_vertical = 0
+theme_override_styles/panel = SubResource("SB_hint")
 
-[node name="HubButton" type="Button" parent="Root/RadialNav"]
-layout_mode = 0
-offset_left = 16.0
-offset_top = 16.0
-offset_right = 80.0
-offset_bottom = 80.0
-text = "⊕"
+[node name="TapHintLabel" type="Label" parent="Root/TapHint"]
+layout_mode = 2
+text = "TAP A BUILDING"
+horizontal_alignment = 1
+theme_override_fonts/font = ExtResource("4_semi")
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(0.620, 0.863, 1.0, 1.0)
+
+; ── Build Mode Overlay — z=40, hidden by default ────────────────────────
+[node name="BuildModePanel" type="Control" parent="Root"]
+z_index = 40
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+; Dim scrim behind the tray
+[node name="BuildDim" type="ColorRect" parent="Root/BuildModePanel"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.012, 0.024, 0.047, 0.65)
+mouse_filter = 0
+
+; Structure tray — bottom sheet
+[node name="BuildTray" type="PanelContainer" parent="Root/BuildModePanel"]
+anchor_left = 0.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -580.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_styles/panel = SubResource("SB_tray")
+
+[node name="TrayVBox" type="VBoxContainer" parent="Root/BuildModePanel/BuildTray"]
+layout_mode = 2
+theme_override_constants/separation = 24
+
+; Tray header row: title + done button
+[node name="TrayHeader" type="HBoxContainer" parent="Root/BuildModePanel/BuildTray/TrayVBox"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="TrayTitle" type="Label" parent="Root/BuildModePanel/BuildTray/TrayVBox/TrayHeader"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "BUILD MODE"
+theme_override_fonts/font = ExtResource("4_semi")
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(0.620, 0.863, 1.0, 1.0)
+
+[node name="TrayDoneBtn" type="Button" parent="Root/BuildModePanel/BuildTray/TrayVBox/TrayHeader"]
+layout_mode = 2
+text = "DONE ✓"
+theme_override_fonts/font = ExtResource("4_semi")
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(0.024, 0.094, 0.047, 1.0)
+theme_override_styles/normal = SubResource("SB_done")
+theme_override_styles/hover = SubResource("SB_done")
+theme_override_styles/pressed = SubResource("SB_done")
+
+; Structure cards row
+[node name="TrayCards" type="HBoxContainer" parent="Root/BuildModePanel/BuildTray/TrayVBox"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+; ── Launchpad card ────────────────────────────────────────────────────────
+[node name="LPCard" type="PanelContainer" parent="Root/BuildModePanel/BuildTray/TrayVBox/TrayCards"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("SB_struct_card")
+
+[node name="LPCardVBox" type="VBoxContainer" parent="Root/BuildModePanel/BuildTray/TrayVBox/TrayCards/LPCard"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="LPCardName" type="Label" parent="Root/BuildModePanel/BuildTray/TrayVBox/TrayCards/LPCard/LPCardVBox"]
+layout_mode = 2
+text = "LAUNCHPAD"
+theme_override_fonts/font = ExtResource("4_semi")
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(0.902, 0.937, 1.0, 1.0)
+
+[node name="LPCardDesc" type="Label" parent="Root/BuildModePanel/BuildTray/TrayVBox/TrayCards/LPCard/LPCardVBox"]
+layout_mode = 2
+text = "Launch missions."
+autowrap_mode = 1
+theme_override_fonts/font = ExtResource("5_mono")
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.365, 0.451, 0.565, 1.0)
+
+[node name="LPCardCost" type="Label" parent="Root/BuildModePanel/BuildTray/TrayVBox/TrayCards/LPCard/LPCardVBox"]
+layout_mode = 2
+text = "FREE"
+theme_override_fonts/font = ExtResource("3_bold")
 theme_override_font_sizes/font_size = 28
+theme_override_colors/font_color = Color(0.224, 0.827, 0.416, 1.0)
 
+[node name="LPCardStatus" type="Label" parent="Root/BuildModePanel/BuildTray/TrayVBox/TrayCards/LPCard/LPCardVBox"]
+layout_mode = 2
+text = "TAP TO PLACE →"
+theme_override_fonts/font = ExtResource("4_semi")
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.620, 0.863, 1.0, 0.8)
+
+; ── Control Station card ──────────────────────────────────────────────────
+[node name="CSCard" type="PanelContainer" parent="Root/BuildModePanel/BuildTray/TrayVBox/TrayCards"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("SB_struct_card")
+
+[node name="CSCardVBox" type="VBoxContainer" parent="Root/BuildModePanel/BuildTray/TrayVBox/TrayCards/CSCard"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="CSCardName" type="Label" parent="Root/BuildModePanel/BuildTray/TrayVBox/TrayCards/CSCard/CSCardVBox"]
+layout_mode = 2
+text = "CONTROL\nSTATION"
+theme_override_fonts/font = ExtResource("4_semi")
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(0.902, 0.937, 1.0, 1.0)
+
+[node name="CSCardDesc" type="Label" parent="Root/BuildModePanel/BuildTray/TrayVBox/TrayCards/CSCard/CSCardVBox"]
+layout_mode = 2
+text = "Contractor job board."
+autowrap_mode = 1
+theme_override_fonts/font = ExtResource("5_mono")
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.365, 0.451, 0.565, 1.0)
+
+[node name="CSCardCost" type="Label" parent="Root/BuildModePanel/BuildTray/TrayVBox/TrayCards/CSCard/CSCardVBox"]
+layout_mode = 2
+text = "▲ 500M"
+theme_override_fonts/font = ExtResource("3_bold")
+theme_override_font_sizes/font_size = 28
+theme_override_colors/font_color = Color(0.961, 0.651, 0.137, 1.0)
+
+[node name="CSCardStatus" type="Label" parent="Root/BuildModePanel/BuildTray/TrayVBox/TrayCards/CSCard/CSCardVBox"]
+layout_mode = 2
+text = "TAP TO PLACE →"
+theme_override_fonts/font = ExtResource("4_semi")
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.620, 0.863, 1.0, 0.8)
+
+; ── Scanning Station card ─────────────────────────────────────────────────
+[node name="SCCard" type="PanelContainer" parent="Root/BuildModePanel/BuildTray/TrayVBox/TrayCards"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("SB_struct_card")
+
+[node name="SCCardVBox" type="VBoxContainer" parent="Root/BuildModePanel/BuildTray/TrayVBox/TrayCards/SCCard"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="SCCardName" type="Label" parent="Root/BuildModePanel/BuildTray/TrayVBox/TrayCards/SCCard/SCCardVBox"]
+layout_mode = 2
+text = "SCANNING\nSTATION"
+theme_override_fonts/font = ExtResource("4_semi")
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(0.902, 0.937, 1.0, 1.0)
+
+[node name="SCCardDesc" type="Label" parent="Root/BuildModePanel/BuildTray/TrayVBox/TrayCards/SCCard/SCCardVBox"]
+layout_mode = 2
+text = "Scan operations."
+autowrap_mode = 1
+theme_override_fonts/font = ExtResource("5_mono")
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.365, 0.451, 0.565, 1.0)
+
+[node name="SCCardCost" type="Label" parent="Root/BuildModePanel/BuildTray/TrayVBox/TrayCards/SCCard/SCCardVBox"]
+layout_mode = 2
+text = "▲ 2.0B"
+theme_override_fonts/font = ExtResource("3_bold")
+theme_override_font_sizes/font_size = 28
+theme_override_colors/font_color = Color(0.961, 0.651, 0.137, 1.0)
+
+[node name="SCCardStatus" type="Label" parent="Root/BuildModePanel/BuildTray/TrayVBox/TrayCards/SCCard/SCCardVBox"]
+layout_mode = 2
+text = "FREE OPS ·  L3"
+theme_override_fonts/font = ExtResource("4_semi")
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.365, 0.451, 0.565, 0.8)
+
+; ── Radial navigation — bottom center ───────────────────────────────────
+; COORDINATE SYSTEM (all anchored to screen bottom-center):
+;   anchor_left=0.5, anchor_top=1.0, anchor_right=0.5, anchor_bottom=1.0
+;   offset_top = -(center_from_bottom + half_height)    [negative = above bottom]
+;   offset_bottom = -(center_from_bottom - half_height)  [negative = above bottom]
+;   offset_left = center_dx - half_width   [negative = left of center]
+;   offset_right = center_dx + half_width
+;
+; Prototype (402px canvas): hub=64px, radius=96px, arc 150° centered at 90°
+; Scale to Godot (1080px): × (1080/402) = × 2.686
+;   hub size = 172px → rounded to 140px
+;   satellite size = 145px → using 140px
+;   radius = 258px, hub_center_from_bottom = 120px
+;
+; Arc angles (start=-165°, step=50°, N=4):
+;   i=0 BASE     angle=-165°  dx=cos(-165°)×258=-249  dy=sin(-165°)×258=-67
+;   i=1 MISSIONS angle=-115°  dx=cos(-115°)×258=-109  dy=sin(-115°)×258=-234
+;   i=2 ATLAS    angle=-65°   dx=cos(-65°)×258=+109   dy=sin(-65°)×258=-234
+;   i=3 BUILD    angle=-15°   dx=cos(-15°)×258=+249   dy=sin(-15°)×258=-67
+; (dy negative = upward in screen space = MORE from bottom)
+; center_from_bottom = hub_center(120) + |dy|
+
+[node name="RadialNav" type="Control" parent="Root"]
+z_index = 30
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+; BASE: center_from_bottom=187, center_x=-249, btn 140×140 (half=70)
 [node name="BaseBtn" type="Button" parent="Root/RadialNav"]
-layout_mode = 0
-offset_left = -80.0
-offset_top = -64.0
-offset_right = -4.0
-offset_bottom = 12.0
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -319.0
+offset_top = -257.0
+offset_right = -179.0
+offset_bottom = -117.0
+grow_horizontal = 2
+grow_vertical = 0
 visible = false
-text = "Base"
-theme_override_font_sizes/font_size = 14
+custom_minimum_size = Vector2(140.0, 140.0)
+text = "BASE"
+theme_override_fonts/font = ExtResource("4_semi")
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(0.224, 0.827, 0.416, 1.0)
+theme_override_styles/normal = SubResource("SB_sat")
 
-[node name="AtlasBtn" type="Button" parent="Root/RadialNav"]
-layout_mode = 0
-offset_left = -80.0
-offset_top = 16.0
-offset_right = -4.0
-offset_bottom = 92.0
-visible = false
-text = "Atlas"
-theme_override_font_sizes/font_size = 14
-
-[node name="BuildBtn" type="Button" parent="Root/RadialNav"]
-layout_mode = 0
-offset_left = 100.0
-offset_top = -64.0
-offset_right = 176.0
-offset_bottom = 12.0
-visible = false
-text = "Build"
-theme_override_font_sizes/font_size = 14
-
+; MISSIONS: center_from_bottom=354, center_x=-109, btn 140×140
 [node name="MissionsBtn" type="Button" parent="Root/RadialNav"]
-layout_mode = 0
-offset_left = 100.0
-offset_top = 16.0
-offset_right = 176.0
-offset_bottom = 92.0
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -179.0
+offset_top = -424.0
+offset_right = -39.0
+offset_bottom = -284.0
+grow_horizontal = 2
+grow_vertical = 0
 visible = false
-text = "Missions"
-theme_override_font_sizes/font_size = 14
+custom_minimum_size = Vector2(140.0, 140.0)
+text = "MISSIONS"
+theme_override_fonts/font = ExtResource("4_semi")
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(0.961, 0.651, 0.137, 1.0)
+theme_override_styles/normal = SubResource("SB_sat")
+
+; ATLAS: center_from_bottom=354, center_x=+109, btn 140×140
+[node name="AtlasBtn" type="Button" parent="Root/RadialNav"]
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = 39.0
+offset_top = -424.0
+offset_right = 179.0
+offset_bottom = -284.0
+grow_horizontal = 2
+grow_vertical = 0
+visible = false
+custom_minimum_size = Vector2(140.0, 140.0)
+text = "ATLAS"
+theme_override_fonts/font = ExtResource("4_semi")
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(0.494, 0.784, 1.0, 1.0)
+theme_override_styles/normal = SubResource("SB_sat")
+
+; BUILD: center_from_bottom=187, center_x=+249, btn 140×140
+[node name="BuildBtn" type="Button" parent="Root/RadialNav"]
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = 179.0
+offset_top = -257.0
+offset_right = 319.0
+offset_bottom = -117.0
+grow_horizontal = 2
+grow_vertical = 0
+visible = false
+custom_minimum_size = Vector2(140.0, 140.0)
+text = "BUILD"
+theme_override_fonts/font = ExtResource("4_semi")
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(0.753, 0.518, 1.0, 1.0)
+theme_override_styles/normal = SubResource("SB_sat")
+
+; Hub button — 140 × 140 px, center 120px from bottom
+; center_from_bottom=120, half=70 → offset_top=-(120+70)=-190, offset_bottom=-(120-70)=-50
+[node name="HubButton" type="Button" parent="Root/RadialNav"]
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -70.0
+offset_top = -190.0
+offset_right = 70.0
+offset_bottom = -50.0
+grow_horizontal = 2
+grow_vertical = 0
+custom_minimum_size = Vector2(140.0, 140.0)
+text = ""
+flat = false
+theme_override_styles/normal = SubResource("SB_hub_n")
+theme_override_styles/hover = SubResource("SB_hub_n")
+theme_override_styles/pressed = SubResource("SB_hub_p")
+
+[node name="HubGlyph" type="Label" parent="Root/RadialNav/HubButton"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "⊕"
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_fonts/font = ExtResource("3_bold")
+theme_override_font_sizes/font_size = 70
+theme_override_colors/font_color = Color(0.047, 0.071, 0.118, 1.0)
+mouse_filter = 2

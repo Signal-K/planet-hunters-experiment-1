@@ -1,0 +1,533 @@
+[gd_scene load_steps=15 format=3 uid="uid://dthruias2ddam"]
+
+[ext_resource type="Script" path="res://Scripts/UI/LaunchWizard.gd" id="1_lw"]
+[ext_resource type="Texture2D" path="res://assets/Backdrops/earth-dusk-sm.png" id="2_bg"]
+[ext_resource type="FontFile" path="res://Resources/Fonts/Oxanium-Bold.ttf" id="3_bold"]
+[ext_resource type="FontFile" path="res://Resources/Fonts/Oxanium-SemiBold.ttf" id="4_semi"]
+[ext_resource type="FontFile" path="res://Resources/Fonts/TurretRoad-Regular.ttf" id="5_mono"]
+
+; ── TopBar background ────────────────────────────────────────────────────
+[sub_resource type="Shader" id="Sh_top"]
+code = "shader_type canvas_item;
+void fragment() {
+	float a = max(0.0, 1.0 - UV.y * 3.5) * 0.92;
+	COLOR = vec4(0.024, 0.035, 0.059, a);
+}"
+[sub_resource type="ShaderMaterial" id="Mat_top"]
+shader = SubResource("Sh_top")
+
+; ── Card panel (cyan accent) ─────────────────────────────────────────────
+[sub_resource type="StyleBoxFlat" id="SB_card"]
+bg_color = Color(0.039, 0.071, 0.114, 0.92)
+border_color = Color(0.247, 0.663, 1.0, 0.3)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+content_margin_left = 16
+content_margin_top = 14
+content_margin_right = 16
+content_margin_bottom = 14
+
+; ── Selected card (amber accent) ─────────────────────────────────────────
+[sub_resource type="StyleBoxFlat" id="SB_selected"]
+bg_color = Color(0.039, 0.071, 0.114, 0.95)
+border_color = Color(0.961, 0.651, 0.137, 0.6)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+content_margin_left = 16
+content_margin_top = 14
+content_margin_right = 16
+content_margin_bottom = 14
+
+; ── Primary CTA button ───────────────────────────────────────────────────
+[sub_resource type="StyleBoxFlat" id="SB_cta"]
+bg_color = Color(0.247, 0.663, 1.0, 1.0)
+border_width_left = 0
+border_width_top = 0
+border_width_right = 0
+border_width_bottom = 0
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+content_margin_left = 0
+content_margin_top = 0
+content_margin_right = 0
+content_margin_bottom = 0
+
+; ── CTA hover ────────────────────────────────────────────────────────────
+[sub_resource type="StyleBoxFlat" id="SB_cta_h"]
+bg_color = Color(0.424, 0.761, 1.0, 1.0)
+border_width_left = 0
+border_width_top = 0
+border_width_right = 0
+border_width_bottom = 0
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+; ── CTA amber (launch confirm) ───────────────────────────────────────────
+[sub_resource type="StyleBoxFlat" id="SB_amber"]
+bg_color = Color(0.961, 0.651, 0.137, 1.0)
+border_width_left = 0
+border_width_top = 0
+border_width_right = 0
+border_width_bottom = 0
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+; ── Ghost/back button ────────────────────────────────────────────────────
+[sub_resource type="StyleBoxFlat" id="SB_ghost"]
+bg_color = Color(0.039, 0.071, 0.114, 0.7)
+border_color = Color(0.247, 0.663, 1.0, 0.3)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+content_margin_left = 16
+content_margin_top = 8
+content_margin_right = 16
+content_margin_bottom = 8
+
+; ── Bottom bar background ────────────────────────────────────────────────
+[sub_resource type="Shader" id="Sh_bot"]
+code = "shader_type canvas_item;
+void fragment() {
+	float a = max(0.0, UV.y * 3.5 - 2.5) * 0.95;
+	COLOR = vec4(0.024, 0.035, 0.059, a);
+}"
+[sub_resource type="ShaderMaterial" id="Mat_bot"]
+shader = SubResource("Sh_bot")
+
+; ═══════════════════════════════════════════════════════════════════════════
+
+[node name="LaunchWizard" type="CanvasLayer"]
+layer = 0
+script = ExtResource("1_lw")
+
+[node name="Root" type="Control" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+; ── Background ──────────────────────────────────────────────────────────
+[node name="Backdrop" type="TextureRect" parent="Root"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_bg")
+expand_mode = 1
+stretch_mode = 6
+mouse_filter = 2
+
+; ── Top scrim ───────────────────────────────────────────────────────────
+[node name="TopScrim" type="ColorRect" parent="Root"]
+z_index = 2
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(1, 1, 1, 1)
+mouse_filter = 2
+material = SubResource("Mat_top")
+
+; ── Bottom scrim ────────────────────────────────────────────────────────
+[node name="BottomScrim" type="ColorRect" parent="Root"]
+z_index = 2
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(1, 1, 1, 1)
+mouse_filter = 2
+material = SubResource("Mat_bot")
+
+; ── Top bar ─────────────────────────────────────────────────────────────
+[node name="TopBar" type="Control" parent="Root"]
+z_index = 20
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 0.0
+offset_bottom = 128.0
+grow_horizontal = 2
+
+[node name="BackButton" type="Button" parent="Root/TopBar"]
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = 20.0
+offset_top = 40.0
+offset_right = 120.0
+offset_bottom = 96.0
+text = "← BACK"
+theme_override_fonts/font = ExtResource("4_semi")
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(0.620, 0.863, 1.0, 1.0)
+theme_override_styles/normal = SubResource("SB_ghost")
+theme_override_styles/hover = SubResource("SB_ghost")
+theme_override_styles/pressed = SubResource("SB_ghost")
+
+[node name="TitleVBox" type="VBoxContainer" parent="Root/TopBar"]
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 150.0
+offset_right = -20.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 4
+
+[node name="EyebrowLabel" type="Label" parent="Root/TopBar/TitleVBox"]
+layout_mode = 2
+size_flags_vertical = 4
+text = "LAUNCHPAD"
+theme_override_fonts/font = ExtResource("5_mono")
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(0.365, 0.451, 0.565, 1.0)
+
+[node name="TitleLabel" type="Label" parent="Root/TopBar/TitleVBox"]
+layout_mode = 2
+text = "Mission Board"
+theme_override_fonts/font = ExtResource("3_bold")
+theme_override_font_sizes/font_size = 48
+theme_override_colors/font_color = Color(1.0, 1.0, 1.0, 1.0)
+
+; ── Step panels — shown one at a time by script ─────────────────────────
+
+; ── STEP 1: Contractor selection ─────────────────────────────────────────
+[node name="Step1Panel" type="Control" parent="Root"]
+z_index = 5
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 130.0
+offset_bottom = -128.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Step1Header" type="Label" parent="Root/Step1Panel"]
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 0.0
+offset_left = 28.0
+offset_top = 12.0
+offset_right = -28.0
+offset_bottom = 48.0
+grow_horizontal = 2
+text = "SELECT CONTRACTOR"
+theme_override_fonts/font = ExtResource("5_mono")
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(0.365, 0.451, 0.565, 1.0)
+
+[node name="ContractorScroll" type="ScrollContainer" parent="Root/Step1Panel"]
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = 56.0
+offset_right = 0.0
+offset_bottom = 0.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ContractorList" type="VBoxContainer" parent="Root/Step1Panel/ContractorScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 16
+
+; ── STEP 2: Target ────────────────────────────────────────────────────────
+[node name="Step2Panel" type="Control" parent="Root"]
+z_index = 5
+visible = false
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 130.0
+offset_bottom = -128.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Step2Header" type="Label" parent="Root/Step2Panel"]
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 0.0
+offset_left = 28.0
+offset_top = 12.0
+offset_right = -28.0
+offset_bottom = 48.0
+grow_horizontal = 2
+text = "MISSION TARGET"
+theme_override_fonts/font = ExtResource("5_mono")
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(0.365, 0.451, 0.565, 1.0)
+
+[node name="TargetCard" type="PanelContainer" parent="Root/Step2Panel"]
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 0.0
+offset_left = 28.0
+offset_top = 60.0
+offset_right = -28.0
+offset_bottom = 280.0
+grow_horizontal = 2
+theme_override_styles/panel = SubResource("SB_card")
+
+[node name="TargetVBox" type="VBoxContainer" parent="Root/Step2Panel/TargetCard"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="TargetEyebrow" type="Label" parent="Root/Step2Panel/TargetCard/TargetVBox"]
+layout_mode = 2
+text = "ASSIGNED TARGET"
+theme_override_fonts/font = ExtResource("5_mono")
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(0.961, 0.651, 0.137, 1.0)
+
+[node name="TargetName" type="Label" parent="Root/Step2Panel/TargetCard/TargetVBox"]
+layout_mode = 2
+text = "433 Eros"
+theme_override_fonts/font = ExtResource("3_bold")
+theme_override_font_sizes/font_size = 48
+theme_override_colors/font_color = Color(0.902, 0.937, 1.0, 1.0)
+
+[node name="TargetTypeLabel" type="Label" parent="Root/Step2Panel/TargetCard/TargetVBox"]
+layout_mode = 2
+text = "TYPE · ASTEROID"
+theme_override_fonts/font = ExtResource("5_mono")
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(0.365, 0.451, 0.565, 1.0)
+
+[node name="TargetDistLabel" type="Label" parent="Root/Step2Panel/TargetCard/TargetVBox"]
+layout_mode = 2
+text = "DISTANCE · 3.0 AU"
+theme_override_fonts/font = ExtResource("5_mono")
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(0.365, 0.451, 0.565, 1.0)
+
+; ── STEP 3: Rocket ────────────────────────────────────────────────────────
+[node name="Step3Panel" type="Control" parent="Root"]
+z_index = 5
+visible = false
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 130.0
+offset_bottom = -128.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Step3Header" type="Label" parent="Root/Step3Panel"]
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 0.0
+offset_left = 28.0
+offset_top = 12.0
+offset_right = -28.0
+offset_bottom = 48.0
+grow_horizontal = 2
+text = "SELECT ROCKET"
+theme_override_fonts/font = ExtResource("5_mono")
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(0.365, 0.451, 0.565, 1.0)
+
+[node name="RocketScroll" type="ScrollContainer" parent="Root/Step3Panel"]
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = 56.0
+offset_right = 0.0
+offset_bottom = 0.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="RocketList" type="VBoxContainer" parent="Root/Step3Panel/RocketScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 16
+
+; ── STEP 4: Launch confirm ────────────────────────────────────────────────
+[node name="Step4Panel" type="Control" parent="Root"]
+z_index = 5
+visible = false
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 130.0
+offset_bottom = -128.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Step4Header" type="Label" parent="Root/Step4Panel"]
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 0.0
+offset_left = 28.0
+offset_top = 12.0
+offset_right = -28.0
+offset_bottom = 48.0
+grow_horizontal = 2
+text = "CONFIRM LAUNCH"
+theme_override_fonts/font = ExtResource("5_mono")
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(0.365, 0.451, 0.565, 1.0)
+
+[node name="SummaryScroll" type="ScrollContainer" parent="Root/Step4Panel"]
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = 56.0
+offset_right = 0.0
+offset_bottom = 0.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="SummaryVBox" type="VBoxContainer" parent="Root/Step4Panel/SummaryScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 20
+
+[node name="SummaryCard" type="PanelContainer" parent="Root/Step4Panel/SummaryScroll/SummaryVBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("SB_selected")
+
+[node name="SummaryContent" type="VBoxContainer" parent="Root/Step4Panel/SummaryScroll/SummaryVBox/SummaryCard"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="SummaryContractorLabel" type="Label" parent="Root/Step4Panel/SummaryScroll/SummaryVBox/SummaryCard/SummaryContent"]
+layout_mode = 2
+text = "CONTRACTOR"
+theme_override_fonts/font = ExtResource("5_mono")
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.365, 0.451, 0.565, 1.0)
+
+[node name="SummaryContractorName" type="Label" parent="Root/Step4Panel/SummaryScroll/SummaryVBox/SummaryCard/SummaryContent"]
+layout_mode = 2
+text = "—"
+theme_override_fonts/font = ExtResource("3_bold")
+theme_override_font_sizes/font_size = 36
+theme_override_colors/font_color = Color(0.902, 0.937, 1.0, 1.0)
+
+[node name="SummaryTargetLabel" type="Label" parent="Root/Step4Panel/SummaryScroll/SummaryVBox/SummaryCard/SummaryContent"]
+layout_mode = 2
+text = "TARGET"
+theme_override_fonts/font = ExtResource("5_mono")
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.365, 0.451, 0.565, 1.0)
+
+[node name="SummaryTargetName" type="Label" parent="Root/Step4Panel/SummaryScroll/SummaryVBox/SummaryCard/SummaryContent"]
+layout_mode = 2
+text = "—"
+theme_override_fonts/font = ExtResource("3_bold")
+theme_override_font_sizes/font_size = 36
+theme_override_colors/font_color = Color(0.961, 0.651, 0.137, 1.0)
+
+[node name="SummaryRocketLabel" type="Label" parent="Root/Step4Panel/SummaryScroll/SummaryVBox/SummaryCard/SummaryContent"]
+layout_mode = 2
+text = "VESSEL"
+theme_override_fonts/font = ExtResource("5_mono")
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.365, 0.451, 0.565, 1.0)
+
+[node name="SummaryRocketName" type="Label" parent="Root/Step4Panel/SummaryScroll/SummaryVBox/SummaryCard/SummaryContent"]
+layout_mode = 2
+text = "—"
+theme_override_fonts/font = ExtResource("3_bold")
+theme_override_font_sizes/font_size = 36
+theme_override_colors/font_color = Color(0.620, 0.863, 1.0, 1.0)
+
+[node name="SummaryCostCard" type="PanelContainer" parent="Root/Step4Panel/SummaryScroll/SummaryVBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("SB_card")
+
+[node name="CostHBox" type="HBoxContainer" parent="Root/Step4Panel/SummaryScroll/SummaryVBox/SummaryCostCard"]
+layout_mode = 2
+
+[node name="CostKeyLabel" type="Label" parent="Root/Step4Panel/SummaryScroll/SummaryVBox/SummaryCostCard/CostHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "LAUNCH COST"
+theme_override_fonts/font = ExtResource("5_mono")
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(0.365, 0.451, 0.565, 1.0)
+
+[node name="CostValueLabel" type="Label" parent="Root/Step4Panel/SummaryScroll/SummaryVBox/SummaryCostCard/CostHBox"]
+layout_mode = 2
+text = "▲ —"
+theme_override_fonts/font = ExtResource("3_bold")
+theme_override_font_sizes/font_size = 28
+theme_override_colors/font_color = Color(0.961, 0.651, 0.137, 1.0)
+
+; ── Bottom CTA bar ───────────────────────────────────────────────────────
+[node name="BottomBar" type="Control" parent="Root"]
+z_index = 20
+anchor_left = 0.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -128.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="BottomFade" type="ColorRect" parent="Root/BottomBar"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(1, 1, 1, 1)
+mouse_filter = 2
+material = SubResource("Mat_bot")
+
+[node name="CTAButton" type="Button" parent="Root/BottomBar"]
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 28.0
+offset_top = 20.0
+offset_right = -28.0
+offset_bottom = -28.0
+grow_horizontal = 2
+text = "NEXT →"
+theme_override_fonts/font = ExtResource("3_bold")
+theme_override_font_sizes/font_size = 28
+theme_override_colors/font_color = Color(0.047, 0.071, 0.118, 1.0)
+theme_override_styles/normal = SubResource("SB_cta")
+theme_override_styles/hover = SubResource("SB_cta_h")
+theme_override_styles/pressed = SubResource("SB_cta")

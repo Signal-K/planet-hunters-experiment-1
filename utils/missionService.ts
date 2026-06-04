@@ -1,4 +1,4 @@
-import { supabase } from "./supabase";
+import { createMissionLog, pocketbase } from "./pocketbase";
 import { getState, updateManyFromReact } from "./syncState";
 import { runOnGodotThread, appController } from "./godot";
 
@@ -9,8 +9,8 @@ export interface MiningResult {
 }
 
 /**
- * MissionService handles the lifecycle of mining missions and 
- * their persistence to the Supabase cloud.
+ * MissionService handles the lifecycle of mining missions and
+ * their persistence to the Landnam PocketBase backend.
  */
 export class MissionService {
   private static isListening = false;
@@ -52,7 +52,7 @@ export class MissionService {
 
   private static async processMiningResult(result: MiningResult) {
     const state = getState();
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { session } } = await pocketbase.auth.getSession();
 
     // 1. Calculate payout (Simplified for Release Today)
     const payout = result.score * 1000;
@@ -65,14 +65,12 @@ export class MissionService {
       experienceXp: newXp
     });
 
-    // 3. Record the mission log in Supabase
-    if (session?.user) {
-      await supabase.from('mission_logs').insert({
-        player_id: session.user.id,
+    if (session?.token) {
+      await createMissionLog({
         action: 'mining_complete',
         payout_francs: payout,
-        cargo_secured_json: result.minerals,
-        timestamp: new Date().toISOString()
+        cargo_secured: result.minerals,
+        target_id: result.target_id,
       });
     }
 
