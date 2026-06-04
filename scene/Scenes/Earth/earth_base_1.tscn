@@ -342,19 +342,6 @@ card_subtitle = "Resume the active mission from here."
 card_hint = "Resume the active mission flow instead of opening a new setup loop."
 card_cta = "Resume Mission"
 
-[node name="Title" parent="UILayer/ProgressionCards/ActiveMissionCard/Body" index="0"]
-text = "Mission In Progress"
-
-[node name="Subtitle" parent="UILayer/ProgressionCards/ActiveMissionCard/Body" index="1"]
-text = "Resume the active mission from here."
-
-[node name="Hint" parent="UILayer/ProgressionCards/ActiveMissionCard/Body" index="2"]
-visible = true
-text = "Resume the active mission flow instead of opening a new setup loop."
-
-[node name="CTAButton" parent="UILayer/ProgressionCards/ActiveMissionCard/Body" index="4"]
-text = "Resume Mission"
-
 [node name="ControlStationCard" parent="UILayer/ProgressionCards" instance=ExtResource("13")]
 visible = false
 layout_mode = 2
@@ -362,19 +349,6 @@ card_title = "Build Control Station"
 card_subtitle = "Mission 2 starts here. Construct the Control Station first."
 card_hint = "One-time construction. Your Launchpad reopens for new missions once it's in place."
 card_cta = "Build Control Station"
-
-[node name="Title" parent="UILayer/ProgressionCards/ControlStationCard/Body" index="0"]
-text = "Build Control Station"
-
-[node name="Subtitle" parent="UILayer/ProgressionCards/ControlStationCard/Body" index="1"]
-text = "Construct the Control Station to unlock Mission 2 planning."
-
-[node name="Hint" parent="UILayer/ProgressionCards/ControlStationCard/Body" index="2"]
-visible = true
-text = "Place it through the Build flow on Earth Base."
-
-[node name="CTAButton" parent="UILayer/ProgressionCards/ControlStationCard/Body" index="4"]
-text = "Build Control Station"
 
 [node name="ScannerStationCard" parent="UILayer/ProgressionCards" instance=ExtResource("13")]
 visible = false
@@ -384,34 +358,12 @@ card_subtitle = "The scanner is now part of the Mission 3 real-data workflow."
 card_hint = "If this card appears on an older save, reopening the base will reconcile legacy state."
 card_cta = "Open Scanner Station"
 
-[node name="Title" parent="UILayer/ProgressionCards/ScannerStationCard/Body" index="0"]
-text = "Build Scanner Station"
-
-[node name="Subtitle" parent="UILayer/ProgressionCards/ScannerStationCard/Body" index="1"]
-text = "Place the Scanner Station on Earth Base to begin Mission 4."
-
-[node name="Hint" parent="UILayer/ProgressionCards/ScannerStationCard/Body" index="2"]
-visible = true
-text = "Build flow: Earth Base, then Scanner Station."
-
-[node name="CTAButton" parent="UILayer/ProgressionCards/ScannerStationCard/Body" index="4"]
-text = "Build Scanner Station"
-
 [node name="NextMissionCard" parent="UILayer/ProgressionCards" instance=ExtResource("13")]
 visible = false
 layout_mode = 2
 card_title = "Next Mission Available"
 card_subtitle = "Open Launchpad to plan the next mission."
 card_cta = "Open Launchpad"
-
-[node name="Title" parent="UILayer/ProgressionCards/NextMissionCard/Body" index="0"]
-text = "Next Mission Available"
-
-[node name="Subtitle" parent="UILayer/ProgressionCards/NextMissionCard/Body" index="1"]
-text = "Open Launchpad to plan the next mission."
-
-[node name="CTAButton" parent="UILayer/ProgressionCards/NextMissionCard/Body" index="4"]
-text = "Open Launchpad"
 
 ; ── Building identity chips — below each structure ────────────────────────────
 [node name="SatelliteChip" type="PanelContainer" parent="UILayer"]
