@@ -144,7 +144,8 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 0
 
-; ── Scroll content area fills between nothing and the bottom bar ──────────────
+; Content area fills between nothing and the bottom bar.
+; 28 px L/R outer margin (matches PointBar / CoachCard side margins).
 [node name="ContentMargin" type="MarginContainer" parent="RootVBox"]
 layout_mode = 2
 size_flags_vertical = 3
@@ -153,43 +154,41 @@ theme_override_constants/margin_top = 0
 theme_override_constants/margin_right = 28
 theme_override_constants/margin_bottom = 0
 
+; ContentVBox is the direct layout parent — test paths expect TitleRow here.
+; CardBackdrop (layout_mode=1) renders the card visual without disrupting layout.
 [node name="ContentVBox" type="VBoxContainer" parent="RootVBox/ContentMargin"]
 layout_mode = 2
-theme_override_constants/separation = 0
+size_flags_vertical = 3
+theme_override_constants/separation = 18
 
-; Flexible top spacer — pushes card toward vertical center
+; Dark navy card background — anchored to fill ContentVBox, z_index behind content
+[node name="CardBackdrop" type="Panel" parent="RootVBox/ContentMargin/ContentVBox"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+z_index = -1
+mouse_filter = 2
+theme_override_styles/panel = SubResource("SB_card")
+
+; Flexible top spacer — pushes card content toward vertical center
 [node name="TopSpacer" type="Control" parent="RootVBox/ContentMargin/ContentVBox"]
 layout_mode = 2
 size_flags_vertical = 3
 
-; ── Popup card ────────────────────────────────────────────────────────────────
-[node name="Card" type="PanelContainer" parent="RootVBox/ContentMargin/ContentVBox"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_styles/panel = SubResource("SB_card")
-
-[node name="CardMargin" type="MarginContainer" parent="RootVBox/ContentMargin/ContentVBox/Card"]
-layout_mode = 2
-theme_override_constants/margin_left = 22
-theme_override_constants/margin_top = 24
-theme_override_constants/margin_right = 22
-theme_override_constants/margin_bottom = 24
-
-[node name="CardVBox" type="VBoxContainer" parent="RootVBox/ContentMargin/ContentVBox/Card/CardMargin"]
-layout_mode = 2
-theme_override_constants/separation = 18
-
-; Art circle — amber glow ring with star inside
-[node name="ArtRow" type="HBoxContainer" parent="RootVBox/ContentMargin/ContentVBox/Card/CardMargin/CardVBox"]
+; Art circle — amber glow ring with star inside, centered
+[node name="ArtRow" type="HBoxContainer" parent="RootVBox/ContentMargin/ContentVBox"]
 layout_mode = 2
 alignment = 1
 
-[node name="ArtCircle" type="Panel" parent="RootVBox/ContentMargin/ContentVBox/Card/CardMargin/CardVBox/ArtRow"]
+[node name="ArtCircle" type="Panel" parent="RootVBox/ContentMargin/ContentVBox/ArtRow"]
 layout_mode = 2
 custom_minimum_size = Vector2(96, 96)
 theme_override_styles/panel = SubResource("SB_art")
 
-[node name="ArtLabel" type="Label" parent="RootVBox/ContentMargin/ContentVBox/Card/CardMargin/CardVBox/ArtRow/ArtCircle"]
+[node name="ArtLabel" type="Label" parent="RootVBox/ContentMargin/ContentVBox/ArtRow/ArtCircle"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -204,7 +203,7 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 ; Eyebrow — "MILESTONE REACHED"
-[node name="EyebrowLabel" type="Label" parent="RootVBox/ContentMargin/ContentVBox/Card/CardMargin/CardVBox"]
+[node name="EyebrowLabel" type="Label" parent="RootVBox/ContentMargin/ContentVBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.961, 0.651, 0.137, 1.0)
 theme_override_fonts/font = ExtResource("4_turret_bold")
@@ -213,17 +212,18 @@ text = "MILESTONE REACHED"
 horizontal_alignment = 1
 
 ; Amber separator line
-[node name="AccentDivider" type="Panel" parent="RootVBox/ContentMargin/ContentVBox/Card/CardMargin/CardVBox"]
+[node name="AccentDivider" type="Panel" parent="RootVBox/ContentMargin/ContentVBox"]
 layout_mode = 2
 custom_minimum_size = Vector2(0, 1)
 theme_override_styles/panel = SubResource("SB_divider")
 
-; Title row — title + description, stacked vertically so code can set each
-[node name="TitleRow" type="VBoxContainer" parent="RootVBox/ContentMargin/ContentVBox/Card/CardMargin/CardVBox"]
+; Title row — title + description stacked vertically.
+; Tests check this exact path: ContentMargin/ContentVBox/TitleRow/TitleLabel|TitleDesc
+[node name="TitleRow" type="VBoxContainer" parent="RootVBox/ContentMargin/ContentVBox"]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="TitleLabel" type="Label" parent="RootVBox/ContentMargin/ContentVBox/Card/CardMargin/CardVBox/TitleRow"]
+[node name="TitleLabel" type="Label" parent="RootVBox/ContentMargin/ContentVBox/TitleRow"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1.0, 1.0, 1.0, 0.97)
 theme_override_fonts/font = ExtResource("2_oxanium")
@@ -231,7 +231,7 @@ theme_override_font_sizes/font_size = 34
 text = "FREE OPERATIONS"
 horizontal_alignment = 1
 
-[node name="TitleDesc" type="Label" parent="RootVBox/ContentMargin/ContentVBox/Card/CardMargin/CardVBox/TitleRow"]
+[node name="TitleDesc" type="Label" parent="RootVBox/ContentMargin/ContentVBox/TitleRow"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.706, 0.824, 1.0, 0.78)
 theme_override_fonts/font = ExtResource("3_oxanium_semi")
@@ -241,23 +241,23 @@ text = "All authored missions complete. The Marketplace is open, the mission cap
 horizontal_alignment = 1
 
 ; Stat chips row — 3 columns
-[node name="StatRow" type="GridContainer" parent="RootVBox/ContentMargin/ContentVBox/Card/CardMargin/CardVBox"]
+[node name="StatRow" type="GridContainer" parent="RootVBox/ContentMargin/ContentVBox"]
 layout_mode = 2
 size_flags_horizontal = 3
 columns = 3
 theme_override_constants/h_separation = 10
 theme_override_constants/v_separation = 0
 
-[node name="Chip0" type="PanelContainer" parent="RootVBox/ContentMargin/ContentVBox/Card/CardMargin/CardVBox/StatRow"]
+[node name="Chip0" type="PanelContainer" parent="RootVBox/ContentMargin/ContentVBox/StatRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("SB_chip")
 
-[node name="Chip0VBox" type="VBoxContainer" parent="RootVBox/ContentMargin/ContentVBox/Card/CardMargin/CardVBox/StatRow/Chip0"]
+[node name="Chip0VBox" type="VBoxContainer" parent="RootVBox/ContentMargin/ContentVBox/StatRow/Chip0"]
 layout_mode = 2
 theme_override_constants/separation = 3
 
-[node name="Chip0Key" type="Label" parent="RootVBox/ContentMargin/ContentVBox/Card/CardMargin/CardVBox/StatRow/Chip0/Chip0VBox"]
+[node name="Chip0Key" type="Label" parent="RootVBox/ContentMargin/ContentVBox/StatRow/Chip0/Chip0VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.529, 0.812, 0.980, 0.55)
 theme_override_fonts/font = ExtResource("5_turret")
@@ -265,7 +265,7 @@ theme_override_font_sizes/font_size = 11
 text = "MARKET"
 horizontal_alignment = 1
 
-[node name="Chip0Value" type="Label" parent="RootVBox/ContentMargin/ContentVBox/Card/CardMargin/CardVBox/StatRow/Chip0/Chip0VBox"]
+[node name="Chip0Value" type="Label" parent="RootVBox/ContentMargin/ContentVBox/StatRow/Chip0/Chip0VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.961, 0.651, 0.137, 1.0)
 theme_override_fonts/font = ExtResource("2_oxanium")
@@ -273,16 +273,16 @@ theme_override_font_sizes/font_size = 17
 text = "OPEN"
 horizontal_alignment = 1
 
-[node name="Chip1" type="PanelContainer" parent="RootVBox/ContentMargin/ContentVBox/Card/CardMargin/CardVBox/StatRow"]
+[node name="Chip1" type="PanelContainer" parent="RootVBox/ContentMargin/ContentVBox/StatRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("SB_chip")
 
-[node name="Chip1VBox" type="VBoxContainer" parent="RootVBox/ContentMargin/ContentVBox/Card/CardMargin/CardVBox/StatRow/Chip1"]
+[node name="Chip1VBox" type="VBoxContainer" parent="RootVBox/ContentMargin/ContentVBox/StatRow/Chip1"]
 layout_mode = 2
 theme_override_constants/separation = 3
 
-[node name="Chip1Key" type="Label" parent="RootVBox/ContentMargin/ContentVBox/Card/CardMargin/CardVBox/StatRow/Chip1/Chip1VBox"]
+[node name="Chip1Key" type="Label" parent="RootVBox/ContentMargin/ContentVBox/StatRow/Chip1/Chip1VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.529, 0.812, 0.980, 0.55)
 theme_override_fonts/font = ExtResource("5_turret")
@@ -290,7 +290,7 @@ theme_override_font_sizes/font_size = 11
 text = "MISSIONS"
 horizontal_alignment = 1
 
-[node name="Chip1Value" type="Label" parent="RootVBox/ContentMargin/ContentVBox/Card/CardMargin/CardVBox/StatRow/Chip1/Chip1VBox"]
+[node name="Chip1Value" type="Label" parent="RootVBox/ContentMargin/ContentVBox/StatRow/Chip1/Chip1VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.961, 0.651, 0.137, 1.0)
 theme_override_fonts/font = ExtResource("2_oxanium")
@@ -298,16 +298,16 @@ theme_override_font_sizes/font_size = 17
 text = "∞"
 horizontal_alignment = 1
 
-[node name="Chip2" type="PanelContainer" parent="RootVBox/ContentMargin/ContentVBox/Card/CardMargin/CardVBox/StatRow"]
+[node name="Chip2" type="PanelContainer" parent="RootVBox/ContentMargin/ContentVBox/StatRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("SB_chip")
 
-[node name="Chip2VBox" type="VBoxContainer" parent="RootVBox/ContentMargin/ContentVBox/Card/CardMargin/CardVBox/StatRow/Chip2"]
+[node name="Chip2VBox" type="VBoxContainer" parent="RootVBox/ContentMargin/ContentVBox/StatRow/Chip2"]
 layout_mode = 2
 theme_override_constants/separation = 3
 
-[node name="Chip2Key" type="Label" parent="RootVBox/ContentMargin/ContentVBox/Card/CardMargin/CardVBox/StatRow/Chip2/Chip2VBox"]
+[node name="Chip2Key" type="Label" parent="RootVBox/ContentMargin/ContentVBox/StatRow/Chip2/Chip2VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.529, 0.812, 0.980, 0.55)
 theme_override_fonts/font = ExtResource("5_turret")
@@ -315,7 +315,7 @@ theme_override_font_sizes/font_size = 11
 text = "COACH"
 horizontal_alignment = 1
 
-[node name="Chip2Value" type="Label" parent="RootVBox/ContentMargin/ContentVBox/Card/CardMargin/CardVBox/StatRow/Chip2/Chip2VBox"]
+[node name="Chip2Value" type="Label" parent="RootVBox/ContentMargin/ContentVBox/StatRow/Chip2/Chip2VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.961, 0.651, 0.137, 1.0)
 theme_override_fonts/font = ExtResource("2_oxanium")
@@ -323,7 +323,7 @@ theme_override_font_sizes/font_size = 17
 text = "OFF"
 horizontal_alignment = 1
 
-; Flexible bottom spacer — keeps card vertically centered
+; Flexible bottom spacer — keeps content vertically centered
 [node name="BottomSpacer" type="Control" parent="RootVBox/ContentMargin/ContentVBox"]
 layout_mode = 2
 size_flags_vertical = 3
