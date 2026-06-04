@@ -2327,7 +2327,197 @@
       "operation_mode": "contract",
       "subcontractor_id": "rocketlab",
       "subcontractor_name": "Rocketlab",
-      "payout": 605273760,
+      "payout": 605273760.0,
+      "cargo": {
+        "Iron": 10.0
+      },
+      "requested_minerals": {
+        "Iron": 10.0
+      },
+      "order_completion_pct": 100.0,
+      "affinity_before": 24.0
+    },
+    {
+      "timestamp": "2026-06-04T11:31:37",
+      "rocket_id": "starterrocket1-debrief-test",
+      "target_id": "mission-1-training-target",
+      "label": "433 Eros",
+      "target_type": "asteroid",
+      "operation_mode": "contract",
+      "subcontractor_id": "rocketlab",
+      "subcontractor_name": "Rocketlab",
+      "payout": 1200000000.0,
+      "cargo": {
+        "Iron": 10.0
+      },
+      "requested_minerals": {
+        "Iron": 10.0
+      },
+      "order_completion_pct": 100.0,
+      "affinity_before": 0.0
+    },
+    {
+      "timestamp": "2026-06-04T11:31:37",
+      "rocket_id": "starterrocket1-debrief-test",
+      "target_id": "mission-1-training-target",
+      "label": "433 Eros",
+      "target_type": "asteroid",
+      "operation_mode": "contract",
+      "subcontractor_id": "rocketlab",
+      "subcontractor_name": "Rocketlab",
+      "payout": 1200000000.0,
+      "cargo": {
+        "Iron": 10.0
+      },
+      "requested_minerals": {
+        "Iron": 10.0
+      },
+      "order_completion_pct": 100.0,
+      "affinity_before": 1.0
+    },
+    {
+      "timestamp": "2026-06-04T11:31:37",
+      "rocket_id": "starterrocket1-debrief-test",
+      "target_id": "mission-1-training-target",
+      "label": "433 Eros",
+      "target_type": "asteroid",
+      "operation_mode": "contract",
+      "subcontractor_id": "rocketlab",
+      "subcontractor_name": "Rocketlab",
+      "payout": 1200000000.0,
+      "cargo": {
+        "Iron": 10.0
+      },
+      "requested_minerals": {
+        "Iron": 10.0
+      },
+      "order_completion_pct": 100.0,
+      "affinity_before": 2.0
+    },
+    {
+      "timestamp": "2026-06-04T11:31:37",
+      "rocket_id": "starterrocket1-debrief-test",
+      "target_id": "mission-1-training-target",
+      "label": "433 Eros",
+      "target_type": "asteroid",
+      "operation_mode": "contract",
+      "subcontractor_id": "rocketlab",
+      "subcontractor_name": "Rocketlab",
+      "payout": 1200000000.0,
+      "cargo": {
+        "Iron": 10.0
+      },
+      "requested_minerals": {
+        "Iron": 10.0
+      },
+      "order_completion_pct": 100.0,
+      "affinity_before": 3.0
+    },
+    {
+      "timestamp": "2026-06-04T11:31:37",
+      "rocket_id": "starterrocket2-debrief-test",
+      "target_id": "mission-3-tess-candidate-alpha",
+      "label": "TOI-700 d",
+      "target_type": "planet",
+      "operation_mode": "contract",
+      "subcontractor_id": "rocketlab",
+      "subcontractor_name": "Rocketlab",
+      "payout": 605379606.0,
+      "cargo": {
+        "Iron": 10.0
+      },
+      "requested_minerals": {
+        "Iron": 10.0
+      },
+      "order_completion_pct": 100.0,
+      "affinity_before": 4.0
+    },
+    {
+      "timestamp": "2026-06-04T11:38:19",
+      "rocket_id": "starterrocket1-debrief-test",
+      "target_id": "mission-1-training-target",
+      "label": "433 Eros",
+      "target_type": "asteroid",
+      "operation_mode": "contract",
+      "subcontractor_id": "rocketlab",
+      "subcontractor_name": "Rocketlab",
+      "payout": 1200000000.0,
+      "cargo": {
+        "Iron": 10.0
+      },
+      "requested_minerals": {
+        "Iron": 10.0
+      },
+      "order_completion_pct": 100.0,
+      "affinity_before": 0.0
+    },
+    {
+      "timestamp": "2026-06-04T11:38:19",
+      "rocket_id": "starterrocket1-debrief-test",
+      "target_id": "mission-1-training-target",
+      "label": "433 Eros",
+      "target_type": "asteroid",
+      "operation_mode": "contract",
+      "subcontractor_id": "rocketlab",
+      "subcontractor_name": "Rocketlab",
+      "payout": 1200000000.0,
+      "cargo": {
+        "Iron": 10.0
+      },
+      "requested_minerals": {
+        "Iron": 10.0
+      },
+      "order_completion_pct": 100.0,
+      "affinity_before": 1.0
+    },
+    {
+      "timestamp": "2026-06-04T11:38:19",
+      "rocket_id": "starterrocket1-debrief-test",
+      "target_id": "mission-1-training-target",
+      "label": "433 Eros",
+      "target_type": "asteroid",
+      "operation_mode": "contract",
+      "subcontractor_id": "rocketlab",
+      "subcontractor_name": "Rocketlab",
+      "payout": 1200000000.0,
+      "cargo": {
+        "Iron": 10.0
+      },
+      "requested_minerals": {
+        "Iron": 10.0
+      },
+      "order_completion_pct": 100.0,
+      "affinity_before": 2.0
+    },
+    {
+      "timestamp": "2026-06-04T11:38:19",
+      "rocket_id": "starterrocket1-debrief-test",
+      "target_id": "mission-1-training-target",
+      "label": "433 Eros",
+      "target_type": "asteroid",
+      "operation_mode": "contract",
+      "subcontractor_id": "rocketlab",
+      "subcontractor_name": "Rocketlab",
+      "payout": 1200000000.0,
+      "cargo": {
+        "Iron": 10.0
+      },
+      "requested_minerals": {
+        "Iron": 10.0
+      },
+      "order_completion_pct": 100.0,
+      "affinity_before": 3.0
+    },
+    {
+      "timestamp": "2026-06-04T11:38:19",
+      "rocket_id": "starterrocket2-debrief-test",
+      "target_id": "mission-3-tess-candidate-alpha",
+      "label": "TOI-700 d",
+      "target_type": "planet",
+      "operation_mode": "contract",
+      "subcontractor_id": "rocketlab",
+      "subcontractor_name": "Rocketlab",
+      "payout": 605379606,
       "cargo": {
         "Iron": 10
       },
@@ -2335,7 +2525,7 @@
         "Iron": 10
       },
       "order_completion_pct": 100,
-      "affinity_before": 24
+      "affinity_before": 4
     }
   ]
 }
