@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3 uid="uid://mission_debrief_v2"]
+[gd_scene load_steps=14 format=3 uid="uid://mission_debrief_v2"]
 
 [ext_resource type="Script" path="res://Scripts/Earth/MissionDebriefV2.gd" id="1_debriefv2"]
 
@@ -11,11 +11,31 @@ border_width_left = 1
 border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
-border_color = Color(0.505882, 0.584314, 0.760784, 0.42)
+border_color = Color(0.224, 0.827, 0.416, 0.42)
+shadow_color = Color(0.224, 0.827, 0.416, 0.18)
+shadow_size = 16
 content_margin_left = 24.0
 content_margin_top = 24.0
 content_margin_right = 24.0
 content_margin_bottom = 24.0
+
+; ── Hero circle: green glow ring around the ✓ icon ─────────────────────────
+[sub_resource type="StyleBoxFlat" id="SB_hero_circle"]
+bg_color = Color(0.110, 0.278, 0.157, 0.30)
+corner_radius_top_left = 999
+corner_radius_top_right = 999
+corner_radius_bottom_right = 999
+corner_radius_bottom_left = 999
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.224, 0.827, 0.416, 0.75)
+shadow_color = Color(0.224, 0.827, 0.416, 0.38)
+shadow_size = 14
+
+; ── Dim star (unearned) ────────────────────────────────────────────────────
+[sub_resource type="StyleBoxEmpty" id="SB_empty"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card"]
 bg_color = Color(0.0627451, 0.0745098, 0.109804, 0.98)
@@ -397,11 +417,27 @@ layout_mode = 2
 layout_mode = 2
 theme_override_constants/separation = 20
 
-[node name="StatusIcon" type="Label" parent="Center/Panel/Margin/ContentVBox/MainRow/LeftColumn/SuccessBanner/Margin/Row"]
+; Hero circle wraps the ✓ icon — circular green glow, matches design hero orb
+[node name="HeroCirclePanel" type="Panel" parent="Center/Panel/Margin/ContentVBox/MainRow/LeftColumn/SuccessBanner/Margin/Row"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.882353, 0.905882, 0.976471, 1)
-theme_override_font_sizes/font_size = 54
+custom_minimum_size = Vector2(72, 72)
+size_flags_vertical = 4
+mouse_filter = 2
+theme_override_styles/panel = SubResource("SB_hero_circle")
+
+[node name="StatusIcon" type="Label" parent="Center/Panel/Margin/ContentVBox/MainRow/LeftColumn/SuccessBanner/Margin/Row/HeroCirclePanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.224, 0.827, 0.416, 1.0)
+theme_override_font_sizes/font_size = 40
 text = "✓"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="TextColumn" type="VBoxContainer" parent="Center/Panel/Margin/ContentVBox/MainRow/LeftColumn/SuccessBanner/Margin/Row"]
 layout_mode = 2
@@ -419,6 +455,32 @@ theme_override_colors/font_color = Color(0.537255, 0.572549, 0.678431, 0.9)
 theme_override_font_sizes/font_size = 13
 text = "Mission parameters fulfilled. Data and resource recovery complete."
 autowrap_mode = 3
+
+; Star rating row — 3 stars, amber when earned, dimmed when not
+[node name="StarRating" type="HBoxContainer" parent="Center/Panel/Margin/ContentVBox/MainRow/LeftColumn/SuccessBanner/Margin/Row/TextColumn"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Star1" type="Label" parent="Center/Panel/Margin/ContentVBox/MainRow/LeftColumn/SuccessBanner/Margin/Row/TextColumn/StarRating"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.961, 0.651, 0.137, 1.0)
+theme_override_font_sizes/font_size = 22
+text = "★"
+
+[node name="Star2" type="Label" parent="Center/Panel/Margin/ContentVBox/MainRow/LeftColumn/SuccessBanner/Margin/Row/TextColumn/StarRating"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.961, 0.651, 0.137, 0.28)
+theme_override_font_sizes/font_size = 22
+text = "★"
+
+[node name="Star3" type="Label" parent="Center/Panel/Margin/ContentVBox/MainRow/LeftColumn/SuccessBanner/Margin/Row/TextColumn/StarRating"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.961, 0.651, 0.137, 0.28)
+theme_override_font_sizes/font_size = 22
+text = "★"
 
 [node name="SummaryGrid" type="VBoxContainer" parent="Center/Panel/Margin/ContentVBox/MainRow/LeftColumn"]
 layout_mode = 2
