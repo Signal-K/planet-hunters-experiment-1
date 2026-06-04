@@ -1,16 +1,17 @@
 extends CanvasLayer
-## Tutorial coach overlay — event-driven, game-state-aware.
+## Tutorial coach overlay — Landnam portrait design.
+##
+## Two display modes, matching the tutorial.jsx prototype:
+##   POINT: bottom floating card (amber border) for steps with real UI actions.
+##   INFO:  top floating card  (cyan border)   for status messages and info steps.
 ##
 ## Visibility rules (in priority order):
-##   1. Transit scenes (ascent/transit/return) → always hidden; they're cinematic.
-##   2. Mining scene → hidden; the mining HUD coaches the player there.
+##   1. Transit scenes (ascent/transit/return) → always hidden.
+##   2. Mining scene → hidden (mining HUD coaches the player there).
 ##   3. Tutorial skipped or all steps done → hidden.
-##   4. Mission returned, debrief pending → "Mission complete — open Debrief."
-##   5. Mission in flight, player not in a step-relevant scene → "Rocket en route."
-##   6. Otherwise → show the current tutorial step.
-##
-## Startup timing: TutorialController is added via call_deferred so it may not be
-## in the tree when _ready() fires.  Two deferred refresh passes cover that window.
+##   4. Mission returned, debrief pending → INFO card "Mission complete / Open Debrief".
+##   5. Mission in flight, not in a step-relevant scene → INFO card "Rocket en route".
+##   6. Otherwise → POINT card for the current tutorial step.
 
 const PanelStyle     = preload("res://Scripts/UI/PanelStyle.gd")
 const DS             = preload("res://Scripts/UI/DS.gd")
@@ -30,49 +31,46 @@ const POINTER_TARGET_MARGIN := 12.0
 const POINTER_MAX_LENGTH    := 170.0
 const POINTER_MIN_LENGTH    := 84.0
 
-@onready var panel:           PanelContainer = $Root/Panel
-@onready var title_label:     Label          = $Root/Panel/Margin/VBox/Header/TitleLabel
-@onready var stage_label:     Label          = $Root/Panel/Margin/VBox/Header/StageLabel
-@onready var collapse_button: Button         = $Root/Panel/Margin/VBox/Header/CollapseButton
-@onready var message_label:   Label          = $Root/Panel/Margin/VBox/MessageLabel
-@onready var action_label:    Label          = $Root/Panel/Margin/VBox/ActionLabel
-@onready var progress_label:  Label          = $Root/Panel/Margin/VBox/ProgressLabel
-@onready var skip_button:     Button         = $Root/Panel/Margin/VBox/Buttons/SkipButton
-@onready var practice_mining_button: Button  = $Root/Panel/Margin/VBox/Buttons/PracticeMiningButton
-@onready var replay_mission_button:  Button  = $Root/Panel/Margin/VBox/Buttons/ReplayMissionButton
-@onready var open_launchpad_button:  Button  = $Root/Panel/Margin/VBox/Buttons/OpenLaunchpadButton
-@onready var go_to_debrief_button:   Button  = $Root/Panel/Margin/VBox/Buttons/GoToDebriefButton
-@onready var resume_mission_button:  Button  = $Root/Panel/Margin/VBox/Buttons/ResumeMissionButton
-@onready var _restart_btn:    Button         = $Root/Panel/Margin/VBox/Header/RestartBtn
-@onready var _pointer_line:   Line2D         = $Root/TargetPointerLine
-@onready var _pointer_head:   Polygon2D      = $Root/TargetPointerHead
-@onready var _pointer_head2:  Polygon2D      = $Root/TargetPointerHead2
-@onready var _pointer_head3:  Polygon2D      = $Root/TargetPointerHead3
+# ── PointBar (POINT mode) ─────────────────────────────────────────────────────
+@onready var _point_card:  PanelContainer = $Root/PointBar
+@onready var _pb_title:    Label          = $Root/PointBar/PBMargin/PBRow/PBText/PBTitle
+@onready var _pb_action:   Label          = $Root/PointBar/PBMargin/PBRow/PBText/PBAction
+@onready var _pb_dots:     HBoxContainer  = $Root/PointBar/PBMargin/PBRow/PBText/PBDots
+@onready var _pb_skip:     Button         = $Root/PointBar/PBMargin/PBRow/PBSkip
+
+# ── CoachCard (INFO mode) ─────────────────────────────────────────────────────
+@onready var _coach_card:      PanelContainer = $Root/CoachCard
+@onready var _cc_step_counter: Label          = $Root/CoachCard/CCMargin/CCVBox/CCHeader/CCHeaderText/CCStepCounter
+@onready var _cc_title:        Label          = $Root/CoachCard/CCMargin/CCVBox/CCTitle
+@onready var _cc_body:         Label          = $Root/CoachCard/CCMargin/CCVBox/CCBody
+@onready var _cc_dots:         HBoxContainer  = $Root/CoachCard/CCMargin/CCVBox/CCDots
+@onready var _cc_skip:         Button         = $Root/CoachCard/CCMargin/CCVBox/CCButtonRow/CCSkip
+@onready var _cc_cta:          Button         = $Root/CoachCard/CCMargin/CCVBox/CCButtonRow/CCCta
+@onready var _dimmer:          ColorRect      = $Root/Dimmer
+
+# ── Pointer / highlight ───────────────────────────────────────────────────────
+@onready var _pointer_line:     Line2D       = $Root/TargetPointerLine
+@onready var _pointer_head:     Polygon2D    = $Root/TargetPointerHead
+@onready var _pointer_head2:    Polygon2D    = $Root/TargetPointerHead2
+@onready var _pointer_head3:    Polygon2D    = $Root/TargetPointerHead3
 @onready var _target_highlight: ReferenceRect = $Root/TargetHighlight
 
-var _collapsed:      bool       = false
 var _app_controller: Node       = null
 var _current_state:  Dictionary = {}
 var _current_step:   Dictionary = {}
 var _layout_timer:   float      = 0.0
 var _highlight_tween: Tween     = null
+var _cta_action: String         = ""   # what CCCta does when pressed
 
 # ── Lifecycle ─────────────────────────────────────────────────────────────────
 
 func _ready() -> void:
 	layer = 70
-	visible = false  # stay hidden until _display() evaluates the tutorial state
+	visible = false
 	$Root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	$Root.set_meta("tutorial_zone_exempt", true)
-	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	panel.set_meta("tutorial_zone_exempt", true)
-	_apply_style()
-	_configure_mouse_passthrough()
 	_wire_buttons()
 	_try_connect_app_controller()
-	# Two deferred passes: first covers the common case where AppController is
-	# already in the tree; second covers the deferred-add_child window where
-	# TutorialController hasn't fired _ready() yet.
 	call_deferred("_deferred_refresh_pass1")
 
 func _try_connect_app_controller() -> void:
@@ -108,7 +106,6 @@ func _process(delta: float) -> void:
 		return
 	_layout_timer = 0.0
 	if visible:
-		_reposition_panel()
 		_refresh_target_pointer()
 
 # ── State update entry point ──────────────────────────────────────────────────
@@ -123,24 +120,20 @@ func _on_tutorial_state_updated(state: Dictionary) -> void:
 func _display() -> void:
 	var scene := _scene_basename()
 
-	# Rule 1+2: cinematic / mining scenes handle their own coaching
 	if scene in TRANSIT_SCENES or scene == MINING_SCENE:
 		_hide()
 		return
 
-	# Rule 3: tutorial skipped or complete
 	if bool(_current_state.get("skipped", false)) or _current_step.is_empty():
 		_hide()
 		return
 
-	# Rule 4: mission returned, debrief pending (highest-priority positive state)
 	if scene != DEBRIEF_SCENE:
 		var returned := RocketsManager.get_returned_mission()
 		if not returned.is_empty():
 			_show_debrief_ready()
 			return
 
-	# Rule 5: mission in flight but player is not in a step-relevant scene
 	var valid_scenes: Array = _current_step.get("valid_scenes", [])
 	var in_valid_scene: bool = valid_scenes.is_empty() or scene in valid_scenes
 	var is_inflight_step: bool = MINING_SCENE in valid_scenes
@@ -148,75 +141,68 @@ func _display() -> void:
 		_show_inflight()
 		return
 
-	# Rule 6: normal step
 	_show_step()
 
 func _hide() -> void:
 	visible = false
 	_hide_pointers()
+	_point_card.visible = false
+	_coach_card.visible = false
+	_dimmer.visible = false
 
 # ── Display modes ─────────────────────────────────────────────────────────────
 
 func _show_step() -> void:
 	visible = true
-	var stage := int(_current_state.get("current_stage", 1))
 	var idx   := int(_current_state.get("current_step_index", 0))
 	var total := int(_current_state.get("total_steps", 1))
 
-	title_label.text   = str(_current_step.get("title", "Mission Guidance"))
-	stage_label.text   = "Mission %d" % stage
-	stage_label.visible = true
+	var title := str(_current_step.get("title", "Mission Guidance"))
+	var hint  := _action_hint(_current_step)
 
-	var msg := str(_current_step.get("message", ""))
-	message_label.text    = msg
-	message_label.visible = msg != "" and not _collapsed
+	# Show POINT card at bottom
+	_point_card.visible  = true
+	_coach_card.visible  = false
+	_dimmer.visible      = false
 
-	var hint := _action_hint(_current_step)
-	action_label.text    = hint
-	action_label.visible = hint != "" and not _collapsed
+	_pb_title.text  = title
+	_pb_action.text = "→ " + hint if hint != "" else ""
+	_pb_action.visible = hint != ""
+	_update_dots(_pb_dots, idx, total)
 
-	progress_label.text    = "Step %d / %d" % [min(idx + 1, max(total, 1)), max(total, 1)]
-	progress_label.visible = not _collapsed
-
-	_update_buttons_for_step()
-	call_deferred("_reposition_panel")
 	call_deferred("_refresh_target_pointer")
 
 func _show_debrief_ready() -> void:
 	visible = true
-	title_label.text      = "Mission complete"
-	stage_label.text      = ""
-	stage_label.visible   = false
-	message_label.text    = "Your rocket is back. Open the Debrief to sell your cargo and collect payment."
-	message_label.visible = not _collapsed
-	action_label.text     = "→ Tap Debrief in the bottom bar"
-	action_label.visible  = not _collapsed
-	progress_label.visible = false
-	_hide_all_ctas()
-	if go_to_debrief_button:
-		go_to_debrief_button.text    = "Open Debrief"
-		go_to_debrief_button.visible = true
+	_point_card.visible = false
+	_coach_card.visible = true
+	_dimmer.visible     = true
+
+	_cc_step_counter.text = ""
+	_cc_title.text = "Mission complete"
+	_cc_body.text  = "Your rocket is back. Open the Debrief to sell cargo and collect payment."
+	_update_dots(_cc_dots, 0, 0)
+	_cc_skip.visible = false
+	_cc_cta.text     = "Open Debrief"
+	_cta_action      = "debrief"
 	_hide_pointers()
-	call_deferred("_reposition_panel")
 
 func _show_inflight() -> void:
 	visible = true
-	title_label.text      = "Mission in progress"
-	stage_label.text      = ""
-	stage_label.visible   = false
-	var missions: Array   = RocketsManager.get_missions()
-	var target_label      := _mission_target_label(missions[0] if not missions.is_empty() else {})
-	message_label.text    = "Your rocket is heading to %s. It will return automatically when done." % target_label
-	message_label.visible = not _collapsed
-	action_label.text     = ""
-	action_label.visible  = false
-	progress_label.visible = false
-	_hide_all_ctas()
-	if resume_mission_button:
-		resume_mission_button.text    = "Watch mission"
-		resume_mission_button.visible = true
+	_point_card.visible = false
+	_coach_card.visible = true
+	_dimmer.visible     = false
+
+	_cc_step_counter.text = ""
+	var missions: Array = RocketsManager.get_missions()
+	var target_label := _mission_target_label(missions[0] if not missions.is_empty() else {})
+	_cc_title.text = "Mission in Progress"
+	_cc_body.text  = "Your rocket is heading to %s. It will return when done." % target_label
+	_update_dots(_cc_dots, 0, 0)
+	_cc_skip.visible = false
+	_cc_cta.text     = "Watch Mission"
+	_cta_action      = "watch"
 	_hide_pointers()
-	call_deferred("_reposition_panel")
 
 func _mission_target_label(mission: Dictionary) -> String:
 	var label := str(mission.get("target_label", mission.get("target", ""))).strip_edges()
@@ -224,58 +210,32 @@ func _mission_target_label(mission: Dictionary) -> String:
 		return "the target"
 	return label
 
-# ── Button logic ──────────────────────────────────────────────────────────────
+# ── Progress dots ─────────────────────────────────────────────────────────────
 
-func _update_buttons_for_step() -> void:
-	_hide_all_ctas()
-	var key   := str(_current_step.get("action_key", ""))
-	var scene := _scene_basename()
-	var on_base := scene == "earth_base_1"
-	var started := bool(_current_state.get("current_mission_started", false))
-
-	# Launchpad / Build CTAs when on earth base
-	if on_base:
-		match key:
-			"open_launchpad", "accept_contractor_offer", "select_launch_target", \
-			"create_rocket", "launch_rocket_from_earth":
-				if RocketsManager.get_missions().is_empty() and open_launchpad_button:
-					open_launchpad_button.text    = "Open New Mission"
-					open_launchpad_button.visible = true
-			"build_control_station":
-				if open_launchpad_button:
-					open_launchpad_button.text    = "Build Control Station"
-					open_launchpad_button.visible = true
-			"build_scanner_station":
-				if open_launchpad_button:
-					open_launchpad_button.text    = "Build Scanner Station"
-					open_launchpad_button.visible = true
-
-	# Debrief CTA
-	if key == "resolve_mission_debrief" and not RocketsManager.get_returned_mission().is_empty():
-		if go_to_debrief_button:
-			go_to_debrief_button.text    = "Open Debrief"
-			go_to_debrief_button.visible = true
-
-	# Practice mining
-	if key == "mine_target" and practice_mining_button:
-		practice_mining_button.visible = true
-
-	# Replay — only if no other CTA is showing and mission has started
-	var any_cta := _any_cta_visible()
-	if not any_cta and started and replay_mission_button:
-		replay_mission_button.visible = true
-
-func _any_cta_visible() -> bool:
-	for btn: Button in [open_launchpad_button, go_to_debrief_button, resume_mission_button, practice_mining_button]:
-		if btn and btn.visible:
-			return true
-	return false
-
-func _hide_all_ctas() -> void:
-	for btn in [open_launchpad_button, go_to_debrief_button, resume_mission_button,
-			replay_mission_button, practice_mining_button]:
-		if btn:
-			(btn as Button).visible = false
+func _update_dots(container: HBoxContainer, current_idx: int, total: int) -> void:
+	for child in container.get_children():
+		child.queue_free()
+	if total <= 0:
+		return
+	for i in range(total):
+		var dot := Panel.new()
+		var s := StyleBoxFlat.new()
+		s.set_corner_radius_all(999)
+		if i < current_idx:
+			# completed — green
+			dot.custom_minimum_size = Vector2(6, 6)
+			s.bg_color = Color(0.224, 0.827, 0.416, 1.0)
+		elif i == current_idx:
+			# active — amber, wider pill
+			dot.custom_minimum_size = Vector2(16, 6)
+			s.bg_color = Color(0.961, 0.651, 0.137, 1.0)
+		else:
+			# future — ghost
+			dot.custom_minimum_size = Vector2(6, 6)
+			s.bg_color = Color(0.529, 0.812, 0.980, 0.25)
+		dot.add_theme_stylebox_override("panel", s)
+		dot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		container.add_child(dot)
 
 # ── Action hints ──────────────────────────────────────────────────────────────
 
@@ -285,84 +245,64 @@ func _action_hint(step: Dictionary) -> String:
 	var on_base := scene == "earth_base_1"
 	match key:
 		"open_launchpad":
-			return "→ Tap New Mission in the bottom bar"
+			return "Tap New Mission in the bottom bar"
 		"accept_contractor_offer":
-			if on_base: return "→ Tap New Mission in the bottom bar"
-			return "→ Pick a contractor and tap Lock Contract"
+			if on_base: return "Tap New Mission in the bottom bar"
+			return "Pick a contractor and tap Lock Contract"
 		"select_launch_target":
-			if on_base: return "→ Tap New Mission in the bottom bar"
-			return "→ Tap an asteroid on the map, then tap Proceed"
+			if on_base: return "Tap New Mission in the bottom bar"
+			return "Tap an asteroid on the map, then tap Proceed"
 		"create_rocket":
-			if on_base: return "→ Tap New Mission in the bottom bar"
-			return "→ Tap Proceed in the Fabrication Bay"
+			if on_base: return "Tap New Mission in the bottom bar"
+			return "Tap Proceed in the Fabrication Bay"
 		"launch_rocket_from_earth":
-			if on_base: return "→ Tap New Mission in the bottom bar"
-			return "→ Tap Launch Mission"
-		"arrived_at_mining_site":
-			return "→ Wait for your rocket to arrive"
+			if on_base: return "Tap New Mission in the bottom bar"
+			return "Tap Launch Mission"
 		"mine_target":
-			return "→ Hold FIRE to deploy the mining laser"
+			return "Mine the ore in the asteroid"
 		"return_rocket_home":
-			return "→ Tap Return Home when the order is filled"
+			return "Tap Return Home"
+		"arrived_at_mining_site":
+			return "Tap the ore deposits"
 		"resolve_mission_debrief":
-			return "→ Sell cargo then tap Complete Mission"
+			return "Open the Debrief and collect payment"
 		"build_control_station":
-			return "→ Tap the Control Station pad on the base"
+			return "Tap Build in the nav menu"
 		"build_scanner_station":
-			return "→ Tap the Scanner Station pad on the base"
-		"classify_candidate":
-			if on_base: return "→ Tap New Mission in the bottom bar"
-			return "→ Tap Planet or Not a Planet"
+			return "Tap Build in the nav menu"
 		_:
 			return ""
 
 # ── Button wiring ─────────────────────────────────────────────────────────────
 
 func _wire_buttons() -> void:
-	if _restart_btn:
-		_restart_btn.pressed.connect(_on_restart_pressed)
-		_apply_pill_button(_restart_btn, false)
-	if collapse_button:
-		collapse_button.pressed.connect(_on_collapse_pressed)
-	if skip_button:
-		skip_button.hide()
-	if practice_mining_button:
-		practice_mining_button.pressed.connect(_on_practice_mining_pressed)
-		_apply_pill_button(practice_mining_button, true)
-	if replay_mission_button:
-		replay_mission_button.pressed.connect(_on_replay_mission_pressed)
-		_apply_pill_button(replay_mission_button, false)
-	for btn in [open_launchpad_button, go_to_debrief_button, resume_mission_button]:
-		if btn == null:
-			continue
-		(btn as Button).visible = false
-		(btn as Button).mouse_filter = Control.MOUSE_FILTER_STOP
-		_apply_pill_button(btn as Button, true)
-	if open_launchpad_button:
-		open_launchpad_button.pressed.connect(_on_open_launchpad_pressed)
-	if go_to_debrief_button:
-		go_to_debrief_button.pressed.connect(_on_go_to_debrief_pressed)
-	if resume_mission_button:
-		resume_mission_button.pressed.connect(_on_resume_mission_pressed)
+	if _pb_skip:
+		_pb_skip.pressed.connect(_on_skip_pressed)
+	if _cc_skip:
+		_cc_skip.pressed.connect(_on_skip_pressed)
+	if _cc_cta:
+		_cc_cta.pressed.connect(_on_cta_pressed)
 
-func _on_collapse_pressed() -> void:
-	_collapsed = not _collapsed
-	collapse_button.text = "+" if _collapsed else "−"
-	message_label.visible  = not _collapsed
-	action_label.visible   = not _collapsed and action_label.text != ""
-	progress_label.visible = not _collapsed
-	$Root/Panel/Margin/VBox/Buttons.visible = not _collapsed
+func _on_skip_pressed() -> void:
+	if _app_controller and _app_controller.has_method("skip_tutorial"):
+		_app_controller.skip_tutorial()
+	else:
+		_hide()
 
-func _on_restart_pressed() -> void:
-	if _app_controller and _app_controller.has_method("replay_tutorial_for_current_mission"):
-		_app_controller.replay_tutorial_for_current_mission()
-
-func _on_replay_mission_pressed() -> void:
-	if _app_controller and _app_controller.has_method("replay_tutorial_for_current_mission"):
-		_app_controller.replay_tutorial_for_current_mission()
-
-func _on_practice_mining_pressed() -> void:
-	preload("res://Scripts/Utils/AppControllerHelper.gd").open_mining_practice_panel("tutorial_overlay")
+func _on_cta_pressed() -> void:
+	match _cta_action:
+		"debrief":
+			_on_go_to_debrief_pressed()
+		"watch":
+			_on_resume_mission_pressed()
+		"launchpad":
+			_on_open_launchpad_pressed()
+		"build_control_station":
+			_trigger_build_flow("control_station")
+		"build_scanner_station":
+			_trigger_build_flow("scanner_station")
+		"gotit":
+			_hide()
 
 func _on_open_launchpad_pressed() -> void:
 	var key := str(_current_step.get("action_key", ""))
@@ -429,25 +369,16 @@ func _on_resume_mission_pressed() -> void:
 	else:
 		tree.change_scene_to_file(scene_path)
 
-# ── Positioning ───────────────────────────────────────────────────────────────
-
-func _reposition_panel() -> void:
-	if not visible:
-		return
-	var vp := get_viewport()
-	if vp == null:
-		return
-	var vp_size := vp.get_visible_rect().size
-	var zone := UILayout.zone(UILayout.Zone.TUTORIAL_COACH, vp_size)
-	panel.position = zone.position
-	panel.size     = zone.size
-
 # ── Pointer / highlight ───────────────────────────────────────────────────────
 
 func _refresh_target_pointer() -> void:
 	if _pointer_line == null or _pointer_head == null:
 		return
-	if not visible or _collapsed or _current_step.is_empty():
+	if not visible or _current_step.is_empty():
+		_hide_pointers()
+		return
+	# Only show pointer in POINT mode
+	if not _point_card.visible:
 		_hide_pointers()
 		return
 	var tree := get_tree()
@@ -459,15 +390,15 @@ func _refresh_target_pointer() -> void:
 		_hide_pointers()
 		return
 	_update_target_highlight(target_rect)
-	var panel_rect := panel.get_global_rect()
-	var from := panel_rect.get_center()
+	var card_rect := _point_card.get_global_rect()
+	var from := card_rect.get_center()
 	var target_center := target_rect.get_center()
 	var direction := (target_center - from).normalized()
 	if direction == Vector2.ZERO:
 		direction = Vector2.RIGHT
-	var panel_exit := _intersect_line_with_rect(from, direction, panel_rect.grow(4.0))
-	if panel_exit != Vector2.INF:
-		from = panel_exit
+	var card_exit := _intersect_line_with_rect(from, direction, card_rect.grow(4.0))
+	if card_exit != Vector2.INF:
+		from = card_exit
 	var target_entry := _intersect_line_with_rect(target_center, -direction, target_rect.grow(POINTER_TARGET_MARGIN))
 	var to := target_entry if target_entry != Vector2.INF else target_center
 	var line_len := clampf(from.distance_to(to), POINTER_MIN_LENGTH, POINTER_MAX_LENGTH)
@@ -496,11 +427,11 @@ func _start_highlight_pulse() -> void:
 	_highlight_tween = create_tween()
 	_highlight_tween.set_loops()
 	_highlight_tween.tween_method(
-		func(a: float) -> void: _target_highlight.border_color = Color(CYAN.r, CYAN.g, CYAN.b, a),
+		func(a: float) -> void: _target_highlight.border_color = Color(AMBER.r, AMBER.g, AMBER.b, a),
 		0.42, 0.95, 0.75
 	).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	_highlight_tween.tween_method(
-		func(a: float) -> void: _target_highlight.border_color = Color(CYAN.r, CYAN.g, CYAN.b, a),
+		func(a: float) -> void: _target_highlight.border_color = Color(AMBER.r, AMBER.g, AMBER.b, a),
 		0.95, 0.42, 0.75
 	).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
@@ -527,11 +458,9 @@ func _hide_pointers() -> void:
 	if _pointer_line:
 		_pointer_line.visible = false
 		_pointer_line.clear_points()
-	for head in [_pointer_head2, _pointer_head3]:
+	for head in [_pointer_head, _pointer_head2, _pointer_head3]:
 		if head:
 			head.visible = false
-	if _pointer_head:
-		_pointer_head.visible = false
 	if _target_highlight:
 		_target_highlight.visible = false
 	if _highlight_tween != null:
@@ -547,105 +476,23 @@ func _intersect_line_with_rect(origin: Vector2, direction: Vector2, rect: Rect2)
 	var edges := [
 		[rect.position, rect.position + Vector2(rect.size.x, 0)],
 		[rect.position + Vector2(rect.size.x, 0), rect.end],
-		[rect.end, rect.position + Vector2(0, rect.size.y)],
-		[rect.position + Vector2(0, rect.size.y), rect.position]
+		[rect.end, rect.end - Vector2(rect.size.x, 0)],
+		[rect.end - Vector2(rect.size.x, 0), rect.position],
 	]
 	for edge in edges:
-		var a: Vector2 = edge[0]
-		var b: Vector2 = edge[1]
-		var hit = Geometry2D.segment_intersects_segment(origin, origin + (dir * 6000.0), a, b)
-		if hit == null:
+		var p1: Vector2 = edge[0]
+		var p2: Vector2 = edge[1]
+		var d2 := p2 - p1
+		var denom := dir.x * d2.y - dir.y * d2.x
+		if abs(denom) < 1e-6:
 			continue
-		var point := hit as Vector2
-		var t     := (point - origin).dot(dir)
-		if t > 0.0 and t < best_t:
+		var diff := p1 - origin
+		var t := (diff.x * d2.y - diff.y * d2.x) / denom
+		var s := (diff.x * dir.y - diff.y * dir.x) / denom
+		if t > 0.0 and t < best_t and s >= 0.0 and s <= 1.0:
 			best_t     = t
-			best_point = point
+			best_point = origin + dir * t
 	return best_point
-
-# ── Style ─────────────────────────────────────────────────────────────────────
-
-func _apply_style() -> void:
-	panel.set_meta("ui_style_locked", true)
-	var s := StyleBoxFlat.new()
-	s.bg_color          = Color(0.027, 0.047, 0.086, 0.94)
-	s.border_color      = CYAN
-	s.set_border_width_all(2)
-	s.set_corner_radius_all(10)
-	s.content_margin_left   = 20
-	s.content_margin_right  = 20
-	s.content_margin_top    = 16
-	s.content_margin_bottom = 16
-	panel.add_theme_stylebox_override("panel", s)
-
-	# Header — title must shrink freely so it never forces the panel wider than the zone.
-	title_label.custom_minimum_size = Vector2.ZERO
-	title_label.clip_text = true
-	title_label.add_theme_color_override("font_color", Color(0.902, 0.937, 1.0))
-	title_label.add_theme_font_size_override("font_size", 22)
-	stage_label.add_theme_color_override("font_color", CYAN)
-	stage_label.add_theme_font_size_override("font_size", 16)
-
-	# Body
-	message_label.add_theme_color_override("font_color", Color(0.84, 0.88, 0.96))
-	message_label.add_theme_font_size_override("font_size", 21)
-	message_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-
-	# Action hint
-	action_label.add_theme_color_override("font_color", AMBER)
-	action_label.add_theme_font_size_override("font_size", 19)
-	action_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-
-	# Progress
-	progress_label.add_theme_color_override("font_color", Color(0.50, 0.58, 0.72))
-	progress_label.add_theme_font_size_override("font_size", 16)
-
-	_apply_pill_button(collapse_button, false)
-	collapse_button.custom_minimum_size = Vector2(48, 34)
-
-func _apply_pill_button(btn: Button, primary: bool) -> void:
-	if btn == null:
-		return
-	btn.set_meta("ui_style_locked", true)
-	var col := AMBER if primary else CYAN
-	var normal := StyleBoxFlat.new()
-	normal.bg_color    = Color(0, 0, 0, 0)
-	normal.border_color = col
-	normal.set_border_width_all(1)
-	normal.set_corner_radius_all(28)
-	normal.content_margin_left   = 16
-	normal.content_margin_right  = 16
-	normal.content_margin_top    = 8
-	normal.content_margin_bottom = 8
-	var hover: StyleBoxFlat    = normal.duplicate()
-	hover.bg_color   = Color(col.r, col.g, col.b, 0.14)
-	var pressed: StyleBoxFlat  = normal.duplicate()
-	pressed.bg_color = Color(col.r, col.g, col.b, 0.24)
-	btn.add_theme_stylebox_override("normal",  normal)
-	btn.add_theme_stylebox_override("hover",   hover)
-	btn.add_theme_stylebox_override("pressed", pressed)
-	btn.add_theme_stylebox_override("focus",   hover)
-	btn.add_theme_color_override("font_color",         col)
-	btn.add_theme_color_override("font_hover_color",   col)
-	btn.add_theme_color_override("font_pressed_color", col)
-	btn.add_theme_font_size_override("font_size", 19)
-
-func _configure_mouse_passthrough() -> void:
-	for node_path in ["$Root/Panel/Margin", "$Root/Panel/Margin/VBox",
-			"$Root/Panel/Margin/VBox/Header"]:
-		var n: Node = get_node_or_null(node_path)
-		if n is Control:
-			(n as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
-	for lbl in [title_label, stage_label, message_label, action_label, progress_label]:
-		if lbl:
-			lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var btns_row := $Root/Panel/Margin/VBox/Buttons
-	if btns_row:
-		(btns_row as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
-	for btn in [_restart_btn, collapse_button, skip_button, practice_mining_button,
-			replay_mission_button, open_launchpad_button, go_to_debrief_button, resume_mission_button]:
-		if btn:
-			(btn as Button).mouse_filter = Control.MOUSE_FILTER_STOP
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -657,8 +504,4 @@ func _scene_basename() -> String:
 
 ## Called by SidescrollMining and MiningPracticePanel after they restore visibility.
 func _refresh() -> void:
-	_pull_state_from_controller()
-
-## Backward-compat alias used by tests and external callers.
-func _build_control_station_from_current_scene() -> void:
-	_trigger_build_flow("control_station")
+	_display()
