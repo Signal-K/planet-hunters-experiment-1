@@ -300,21 +300,6 @@ static func _build_settings_entry_card(owner: Node) -> VBoxContainer:
 	else:
 		skip_btn.visible = false
 
-	# 4. Dialogue Toggle
-	var dlg_enabled := AppControllerHelper.is_citizen_science_dialogue_enabled(true)
-	var dlg_btn: Button = host.get_node("DialogueToggleButton")
-	dlg_btn.text = "Dialogue: %s" % ("On" if dlg_enabled else "Off")
-	_apply_button_style(dlg_btn, false)
-	_apply_button_font_color(dlg_btn, TITLE_COLOR)
-	dlg_btn.pressed.connect(func():
-		var app3 := AppControllerHelper.get_instance()
-		if app3 and app3.has_method("is_citizen_science_dialogue_enabled") \
-				and app3.has_method("set_citizen_science_dialogue_enabled"):
-			var next := not bool(app3.is_citizen_science_dialogue_enabled())
-			app3.set_citizen_science_dialogue_enabled(next)
-			dlg_btn.text = "Dialogue: %s" % ("On" if next else "Off")
-	)
-
 	return host
 
 static func _build_reset_progress_button(owner: Node) -> Button:
@@ -725,12 +710,6 @@ static func _apply_button_style(btn: Button, primary: bool) -> void:
 	btn.add_theme_color_override("font_hover_color", color)
 	btn.add_theme_color_override("font_pressed_color", color)
 	btn.add_theme_font_size_override("font_size", 22)
-
-static func _refresh_dialogue_button_text(btn: Button) -> void:
-	if btn == null:
-		return
-	var enabled := AppControllerHelper.is_citizen_science_dialogue_enabled(true)
-	btn.text = "Citizen Science Dialogue: %s" % ("On" if enabled else "Off")
 
 static func _set_tutorial_overlay_visible(tree: SceneTree, visible: bool) -> void:
 	if tree == null or tree.root == null:

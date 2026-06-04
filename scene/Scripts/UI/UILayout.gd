@@ -47,6 +47,11 @@ enum Zone {
 	MINING_MODAL,       ## Full-screen exclusive modal (Inventory panel, etc.)
 	                    ## When open it covers everything; no other zone active.
 
+	# ── Portrait / notch safe area ───────────────────────────────────────────
+	TOP_STATUS,         ## Top notch/status-bar safe area for portrait screens.
+	                    ## Height is 0 on desktop / landscape; on phones this clears
+	                    ## the physical notch so UI never sits under it.
+
 	# ── Earth scene / global ──────────────────────────────────────────────────
 	APP_HEADER,         ## Full-screen flow header lane.
 	                    ## Can be narrowed by APP_HEADER_WITH_COACH when the
@@ -68,6 +73,7 @@ enum Zone {
 ## Always call this inside _apply_layout() / _on_viewport_size_changed().
 static func zone(z: Zone, vp: Vector2) -> Rect2:
 	match z:
+		Zone.TOP_STATUS:         return _top_status(vp)
 		Zone.MINING_HUD:         return _mining_hud(vp)
 		Zone.MINING_INSTRUCTION: return _mining_instruction(vp)
 		Zone.MINING_CONTRACT:    return _mining_contract(vp)
@@ -108,6 +114,10 @@ static func clamp_to_viewport(r: Rect2, vp: Vector2) -> Rect2:
 static func safe_rect(vp: Vector2) -> Rect2:
 	return Rect2(EDGE, EDGE, vp.x - EDGE * 2, vp.y - EDGE * 2)
 
+## True when the viewport is taller than it is wide (portrait orientation).
+static func is_portrait(vp: Vector2) -> bool:
+	return vp.y > vp.x
+
 ## Shared bottom clearance for controls that should never sit flush with the
 ## viewport edge. Mobile gets a larger lift to stay clear of browser chrome and
 ## the iOS home indicator; desktop still keeps a small visual gap.
@@ -121,6 +131,18 @@ static func bottom_clearance(vp: Vector2) -> float:
 	if short_side <= 900.0:
 		return 52.0
 	return 28.0
+
+## ─── Portrait notch safe area ────────────────────────────────────────────────
+
+static func _top_status(vp: Vector2) -> Rect2:
+	# On portrait-format viewports (height > width) reserve space for the
+	# phone's notch / dynamic island / status bar.  Desktop/landscape gets
+	# a zero-height rect so callers like `status_zone.end.y` return 0.
+	if vp.y <= vp.x:
+		return Rect2(0.0, 0.0, vp.x, 0.0)
+	# Typical iOS/Android notch heights in Godot canvas units.
+	# Using a fixed 44 px keeps it simple — SafeAreaUI handles real insets.
+	return Rect2(0.0, 0.0, vp.x, 44.0)
 
 ## ─── Mining minigame zones ────────────────────────────────────────────────────
 

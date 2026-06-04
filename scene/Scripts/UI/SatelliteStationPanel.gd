@@ -94,7 +94,6 @@ func set_local_only(val: bool) -> void:
 @onready var sync_label: Label = $PanelContainer/Panel/Scroll/VBoxContainer/TelemetryStrip/SyncLabel
 @onready var content_container: VBoxContainer = $PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer
 @onready var toggle_switch: Button = $PanelContainer/Panel/Scroll/VBoxContainer/HeaderContainer/ToggleSwitch
-@onready var citizen_science_hint_label: Label = $PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/StatusContainer/ScanSummaryCard/SummaryMargin/SummaryVBox/CitizenScienceHintLabel
 @onready var early_scan_button: Button = $PanelContainer/Panel/Scroll/VBoxContainer/ContentContainer/RefreshContainer/EarlyScanButton
 
 func _ready():
@@ -150,8 +149,6 @@ func _ready():
 	_connect_preference_updates()
 	_refresh_player_level()
 	_refresh_planet_unlock_ui(false)
-	_ensure_citizen_science_hint()
-	_refresh_citizen_science_hint()
 	_refresh_scan_cooldown_ui()
 	_refresh_scan_summary()
 
@@ -374,29 +371,7 @@ func _award_scan_experience() -> void:
 		app_controller.award_scan_experience()
 
 func _connect_preference_updates() -> void:
-	var app = AppControllerHelper.get_instance()
-	if app and app.has_signal("citizen_science_dialogue_toggled"):
-		app.citizen_science_dialogue_toggled.connect(_on_citizen_science_dialogue_toggled)
-
-func _on_citizen_science_dialogue_toggled(_enabled: bool) -> void:
-	_refresh_citizen_science_hint()
-
-func _ensure_citizen_science_hint() -> void:
-	if not citizen_science_hint_label:
-		return
-	citizen_science_hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	citizen_science_hint_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	citizen_science_hint_label.add_theme_color_override("font_color", STATION_MUTED)
-	citizen_science_hint_label.add_theme_font_size_override("font_size", 13)
-
-func _refresh_citizen_science_hint() -> void:
-	if not citizen_science_hint_label:
-		return
-	var enabled = AppControllerHelper.is_citizen_science_dialogue_enabled(true)
-	citizen_science_hint_label.visible = enabled
-	if enabled:
-		citizen_science_hint_label.text = "These scans feed the real TESS candidate review loop. The annotation surface is part of the game’s live science promise."
-
+	pass
 
 func _on_refresh_pressed():
 	if not _try_start_scan_with_cooldown(REFRESH_LOAD_TIME):

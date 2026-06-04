@@ -11,7 +11,6 @@ const FRANC_BALANCE_KEY := "balance"
 const LOAN_KEY := "loan_balance"
 const LEGACY_FRANC_BALANCE_JSON_PATH := "user://franc_balance.json"
 const PREFERENCES_SECTION := "preferences"
-const CITIZEN_SCIENCE_DIALOGUE_KEY := "citizen_science_dialogue_enabled"
 
 func save_franc_balance(value: int, loan: int = -1) -> void:
 	var cfg = ConfigFile.new()
@@ -57,25 +56,6 @@ func _load_legacy_franc_balance_json() -> Dictionary:
 	var loan := int(parsed.get(LOAN_KEY, 0))
 	AppLogger.d("[AppController] Loaded legacy franc balance JSON: " + str(value))
 	return {"loaded": true, "value": value, "loan": loan}
-
-func save_citizen_science_dialogue_enabled(enabled: bool) -> void:
-	var cfg = ConfigFile.new()
-	cfg.load(PREFERENCES_CONFIG_PATH)
-	cfg.set_value(PREFERENCES_SECTION, CITIZEN_SCIENCE_DIALOGUE_KEY, enabled)
-	var err = cfg.save(PREFERENCES_CONFIG_PATH)
-	if err != OK:
-		push_error("[AppController] Failed to save preferences: ", err)
-
-func load_citizen_science_dialogue_enabled(default_value: bool = true) -> bool:
-	var cfg = ConfigFile.new()
-	# Migrate from legacy experience.cfg if preferences.cfg doesn't exist yet
-	if not FileAccess.file_exists(PREFERENCES_CONFIG_PATH) and FileAccess.file_exists(LEGACY_EXPERIENCE_CONFIG_PATH):
-		cfg.load(LEGACY_EXPERIENCE_CONFIG_PATH)
-	else:
-		cfg.load(PREFERENCES_CONFIG_PATH)
-	if cfg.has_section_key(PREFERENCES_SECTION, CITIZEN_SCIENCE_DIALOGUE_KEY):
-		return bool(cfg.get_value(PREFERENCES_SECTION, CITIZEN_SCIENCE_DIALOGUE_KEY))
-	return default_value
 
 func reset_all() -> void:
 	DirAccess.remove_absolute(FRANC_BALANCE_CONFIG_PATH)

@@ -17,12 +17,6 @@ static func record_tutorial_action(action_key: String, metadata: Dictionary = {}
 	if app and app.has_method("record_tutorial_action"):
 		app.record_tutorial_action(action_key, metadata)
 
-static func is_citizen_science_dialogue_enabled(default_value: bool = true) -> bool:
-	var app = get_instance()
-	if app and app.has_method("is_citizen_science_dialogue_enabled"):
-		return bool(app.is_citizen_science_dialogue_enabled())
-	return default_value
-
 static func is_menu_open() -> bool:
 	var app = get_instance()
 	if app and app.has_method("is_menu_open"):

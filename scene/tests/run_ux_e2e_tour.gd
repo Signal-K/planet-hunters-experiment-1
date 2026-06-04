@@ -2179,11 +2179,6 @@ func _finish() -> void:
 			_report("- %s" % action)
 
 	_report("")
-	_report("### Citizen Science Integrations")
-	_report("- TESS Lightcurve Annotation: Verified in Phase 17 and Sandbox S8")
-	_report("- Consensus Verification: Logic exercised in M3 classification steps")
-
-	_report("")
 	_report("### UX Health")
 	_report("- Screenshots taken: %d" % _screenshot_index)
 	_report("- Total issues found: %d" % _issues.size())
@@ -2259,10 +2254,9 @@ func _write_ai_context() -> void:
 		"",
 		"## What is this game?",
 		"",
-		"Landnám is a citizen science mobile game where players:",
-		"- Build and launch rockets to mine asteroids and visit exoplanet candidates",
+		"Landnám is a space mining mobile game where players:",
+		"- Build and launch rockets to mine asteroids",
 		"- Complete a 4-mission tutorial that teaches all core mechanics",
-		"- Annotate real TESS space telescope data (drawing on planet candidate images)",
 		"- After the tutorial, enter Free Operations (sandbox) to run missions freely",
 		"",
 		"## Mission Flow — what 'going through all levels' means",
@@ -2271,16 +2265,9 @@ func _write_ai_context() -> void:
 		"|-------|------|--------------------------|",
 		"| M1    | First Mining Trip | Launchpad, basic mining, debrief |",
 		"| M2    | Contractor Missions | Contractor bonus system, better rockets |",
-		"| M3    | TESS Planet Candidates | Real exoplanet data as targets, annotation view |",
+		"| M3    | Advanced Mining | Contracts, multi-target routing |",
 		"| M4    | Scanner + Drones | Scanner Station build objective, drone mining mode |",
 		"| Sandbox | Free Operations | All mechanics unlocked, user-directed play |",
-		"",
-		"## What 'annotation' means",
-		"",
-		"In Missions 3+, users visit TESS planet candidates (real NASA/ESA exoplanet data).",
-		"The Candidate Detail View (asteroid_detail_view.tscn) lets users draw on these",
-		"images to mark transit dips or notable surface features. This is the citizen",
-		"science contribution — annotations feed into real research pipelines.",
 		"",
 		"## Screenshot groups and what to look for",
 		"",
