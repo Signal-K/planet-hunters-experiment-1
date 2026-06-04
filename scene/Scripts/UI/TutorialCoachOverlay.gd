@@ -37,6 +37,7 @@ const POINTER_MIN_LENGTH    := 84.0
 @onready var _pb_action:   Label          = $Root/PointBar/PBMargin/PBRow/PBText/PBAction
 @onready var _pb_dots:     HBoxContainer  = $Root/PointBar/PBMargin/PBRow/PBText/PBDots
 @onready var _pb_skip:     Button         = $Root/PointBar/PBMargin/PBRow/PBSkip
+@onready var _pb_avatar:   Panel          = $Root/PointBar/PBMargin/PBRow/PBAvatar
 
 # ── CoachCard (INFO mode) ─────────────────────────────────────────────────────
 @onready var _coach_card:      PanelContainer = $Root/CoachCard
@@ -46,6 +47,7 @@ const POINTER_MIN_LENGTH    := 84.0
 @onready var _cc_dots:         HBoxContainer  = $Root/CoachCard/CCMargin/CCVBox/CCDots
 @onready var _cc_skip:         Button         = $Root/CoachCard/CCMargin/CCVBox/CCButtonRow/CCSkip
 @onready var _cc_cta:          Button         = $Root/CoachCard/CCMargin/CCVBox/CCButtonRow/CCCta
+@onready var _cc_avatar:       Panel          = $Root/CoachCard/CCMargin/CCVBox/CCHeader/CCAvatar
 @onready var _dimmer:          ColorRect      = $Root/Dimmer
 
 # ── Pointer / highlight ───────────────────────────────────────────────────────
@@ -60,6 +62,7 @@ var _current_state:  Dictionary = {}
 var _current_step:   Dictionary = {}
 var _layout_timer:   float      = 0.0
 var _highlight_tween: Tween     = null
+var _bob_tweens:      Array     = []
 var _cta_action: String         = ""   # what CCCta does when pressed
 
 # ── Lifecycle ─────────────────────────────────────────────────────────────────
@@ -72,6 +75,7 @@ func _ready() -> void:
 	_wire_buttons()
 	_try_connect_app_controller()
 	call_deferred("_deferred_refresh_pass1")
+	call_deferred("_start_coach_bob")
 
 func _try_connect_app_controller() -> void:
 	var helper = preload("res://Scripts/Utils/AppControllerHelper.gd")
@@ -493,6 +497,29 @@ func _intersect_line_with_rect(origin: Vector2, direction: Vector2, rect: Rect2)
 			best_t     = t
 			best_point = origin + dir * t
 	return best_point
+
+# ── Coach bob animation (±2 px Y, 1.2 s loop, matches design spec) ───────────
+
+func _start_coach_bob() -> void:
+	for t in _bob_tweens:
+		if t != null:
+			t.kill()
+	_bob_tweens.clear()
+	for avatar in [_pb_avatar, _cc_avatar]:
+		if avatar == null:
+			continue
+		var base_y := avatar.position.y
+		var tw := create_tween()
+		tw.set_loops()
+		tw.tween_method(
+			func(y: float) -> void: avatar.position.y = y,
+			base_y, base_y - 2.0, 0.6
+		).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		tw.tween_method(
+			func(y: float) -> void: avatar.position.y = y,
+			base_y - 2.0, base_y, 0.6
+		).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		_bob_tweens.append(tw)
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
