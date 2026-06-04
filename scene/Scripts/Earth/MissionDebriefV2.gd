@@ -82,9 +82,12 @@ var _ui_helper := EarthSceneUIHelper.new()
 @onready var _guide_rows: VBoxContainer = $Center/Panel/Margin/ContentVBox/GuideCard/Content/Rows
 @onready var _guide_footer: Label = $Center/Panel/Margin/ContentVBox/GuideCard/Content/FooterLabel
 @onready var _success_banner: PanelContainer = $Center/Panel/Margin/ContentVBox/MainRow/LeftColumn/SuccessBanner
-@onready var _success_icon: Label = $Center/Panel/Margin/ContentVBox/MainRow/LeftColumn/SuccessBanner/Margin/Row/StatusIcon
+@onready var _success_icon: Label = $Center/Panel/Margin/ContentVBox/MainRow/LeftColumn/SuccessBanner/Margin/Row/HeroCirclePanel/StatusIcon
 @onready var _success_title: Label = $Center/Panel/Margin/ContentVBox/MainRow/LeftColumn/SuccessBanner/Margin/Row/TextColumn/StatusLabel
 @onready var _success_detail: Label = $Center/Panel/Margin/ContentVBox/MainRow/LeftColumn/SuccessBanner/Margin/Row/TextColumn/StatusDetailLabel
+@onready var _star1: Label = $Center/Panel/Margin/ContentVBox/MainRow/LeftColumn/SuccessBanner/Margin/Row/TextColumn/StarRating/Star1
+@onready var _star2: Label = $Center/Panel/Margin/ContentVBox/MainRow/LeftColumn/SuccessBanner/Margin/Row/TextColumn/StarRating/Star2
+@onready var _star3: Label = $Center/Panel/Margin/ContentVBox/MainRow/LeftColumn/SuccessBanner/Margin/Row/TextColumn/StarRating/Star3
 @onready var _summary_grid: VBoxContainer = $Center/Panel/Margin/ContentVBox/MainRow/LeftColumn/SummaryGrid
 @onready var _body_grid: VBoxContainer = $Center/Panel/Margin/ContentVBox/MainRow/BodyGrid
 @onready var _manifest_card: PanelContainer = $Center/Panel/Margin/ContentVBox/MainRow/LeftColumn/SummaryGrid/ManifestCard
@@ -332,14 +335,15 @@ func _bind_success_banner() -> void:
 	_success_banner.visible = true
 	_success_banner.add_theme_stylebox_override("panel", _success_banner_style())
 	_success_icon.text = "✓"
-	_success_icon.add_theme_font_size_override("font_size", 54)
-	_success_icon.add_theme_color_override("font_color", Color(0.88, 0.91, 0.98, 1.0))
+	_success_icon.add_theme_font_size_override("font_size", 40)
+	_success_icon.add_theme_color_override("font_color", Color(0.224, 0.827, 0.416, 1.0))
 	_success_title.text = "MISSION\nCOMPLETE"
 	_success_title.add_theme_font_size_override("font_size", 28)
 	_success_title.add_theme_color_override("font_color", TITLE_COLOR)
 	_success_detail.text = "Back from the run. Check your haul and collect your payout."
 	_success_detail.add_theme_font_size_override("font_size", 13)
 	_success_detail.add_theme_color_override("font_color", TEXT_MUTED)
+	_bind_star_rating()
 
 func _bind_button_guide() -> void:
 	_guide_card.visible = _guide_visible
@@ -693,17 +697,33 @@ func _soft_card_style() -> StyleBoxFlat:
 	# Distinctly lighter than panel background so cards are visible
 	return PanelStyle.create_glass_card_style(Color(0.14, 0.20, 0.30, 1.0), 0.72, 12, 18, 14)
 
+func _bind_star_rating() -> void:
+	if _star1 == null or _star2 == null or _star3 == null:
+		return
+	var amber_on  := Color(0.961, 0.651, 0.137, 1.0)
+	var amber_off := Color(0.961, 0.651, 0.137, 0.22)
+	var stars_earned := 0
+	if _order_ratio >= 0.333:
+		stars_earned = 1
+	if _order_ratio >= 0.666:
+		stars_earned = 2
+	if _order_ratio >= 1.0:
+		stars_earned = 3
+	_star1.add_theme_color_override("font_color", amber_on if stars_earned >= 1 else amber_off)
+	_star2.add_theme_color_override("font_color", amber_on if stars_earned >= 2 else amber_off)
+	_star3.add_theme_color_override("font_color", amber_on if stars_earned >= 3 else amber_off)
+
 func _success_banner_style() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.08, 0.12, 0.19, 0.96)
-	style.border_color = Color(CYAN.r, CYAN.g, CYAN.b, 0.52)
+	style.bg_color = Color(0.047, 0.059, 0.086, 0.98)
+	style.border_color = Color(0.224, 0.827, 0.416, 0.45)
 	style.border_width_left = 1
 	style.border_width_top = 1
 	style.border_width_right = 1
 	style.border_width_bottom = 1
 	style.set_corner_radius_all(14)
-	style.shadow_color = Color(CYAN.r, CYAN.g, CYAN.b, 0.16)
-	style.shadow_size = 14
+	style.shadow_color = Color(0.224, 0.827, 0.416, 0.18)
+	style.shadow_size = 16
 	style.shadow_offset = Vector2(0, 3)
 	return style
 
