@@ -28,6 +28,7 @@ func _save_data() -> void:
 			"launchpad_plot": launchpad_plot,
 			"franc_balance": franc_balance,
 		}))
+		f.close()
 
 func _load_data() -> void:
 	if not FileAccess.file_exists(SAVE_PATH):
