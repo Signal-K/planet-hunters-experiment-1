@@ -19,11 +19,8 @@ config/icon="res://icon.svg"
 
 [autoload]
 
-EventBus="*res://Scripts/Systems/EventBus.gd"
-AppController="*res://Scripts/Systems/AppController.gd"
-PlayerManager="*res://Scripts/Systems/PlayerManager.gd"
-SyncBridge="*res://Scripts/Systems/SyncBridge.gd"
 SafeAreaUI="*res://Scripts/UI/SafeAreaUI.gd"
+GameState="*res://Scripts/Systems/GameState.gd"
 
 [display]
 

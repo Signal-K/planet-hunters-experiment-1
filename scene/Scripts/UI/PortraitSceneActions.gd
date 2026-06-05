@@ -1,7 +1,5 @@
 extends Control
 
-const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
-
 @export var screen_type := ""
 
 const BASE_SCENE := "res://Scenes/Earth/earth_base_1.tscn"
@@ -43,23 +41,20 @@ func _ready() -> void:
 	_connect("SellCargoButton", func(): _go(BASE_SCENE))
 	if screen_type == "hub":
 		_connect("BuildLeftButton", func():
-			RocketsManager.set_launchpad_plot(0)
+			GameState.set_launchpad_plot(0)
 			_go(BASE_SCENE)
 		)
 		_connect("BuildRightButton", func():
-			RocketsManager.set_launchpad_plot(2)
+			GameState.set_launchpad_plot(2)
 			_go(BASE_SCENE)
 		)
 		_refresh_hub_layout()
 
 func _refresh_hub_layout() -> void:
-	var plot := RocketsManager.get_launchpad_plot()
+	var plot := GameState.launchpad_plot
 	_set_slot("LaunchpadArt", plot, true)
 	_set_slot("LaunchpadButton", plot, false)
-	# Hide build-slot nodes that overlap with the launchpad's chosen plot
-	_show_node("ControlStationArt", plot != 0)
 	_show_node("BuildLeftButton", plot != 0)
-	_show_node("SatelliteArt", plot != 2)
 	_show_node("BuildRightButton", plot != 2)
 
 func _set_slot(node_name: String, slot: int, is_art: bool) -> void:
