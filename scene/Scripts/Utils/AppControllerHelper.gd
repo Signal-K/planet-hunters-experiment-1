@@ -1,7 +1,6 @@
 extends RefCounted
 class_name AppControllerHelper
 
-const MINING_PRACTICE_PANEL_SCENE := preload("res://Scenes/UI/MiningPracticePanel.tscn")
 const FirstTimeMechanicTracker = preload("res://Scripts/Utils/FirstTimeMechanicTracker.gd")
 const MINING_PRACTICE_LAYER_NAME := "MiningPracticeOverlayLayer"
 const MINING_PRACTICE_LAYER_INDEX := 130
@@ -45,7 +44,10 @@ static func open_mining_practice_panel(entry_point: String = "menu_panel") -> bo
 	var existing = layer.get_node_or_null("MiningPracticePanel")
 	if existing != null:
 		return true
-	var panel = MINING_PRACTICE_PANEL_SCENE.instantiate()
+	var scene := load("res://Scenes/UI/MiningPracticePanel.tscn")
+	if scene == null:
+		return false
+	var panel = scene.instantiate()
 	if panel == null:
 		return false
 	panel.set_meta("entry_point", entry_point)

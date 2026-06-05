@@ -14,7 +14,7 @@ const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
 const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd")
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
 const UILayout = preload("res://Scripts/UI/UILayout.gd")
-const AsteroidClassificationRowScene = preload("res://Scenes/UI/Templates/AsteroidClassificationRow.tscn")
+static var AsteroidClassificationRowScene: PackedScene = load("res://Scenes/UI/Templates/AsteroidClassificationRow.tscn") if ResourceLoader.exists("res://Scenes/UI/Templates/AsteroidClassificationRow.tscn") else null
 
 var anomaly_id: String = ""
 var anomaly_data: Dictionary = {}

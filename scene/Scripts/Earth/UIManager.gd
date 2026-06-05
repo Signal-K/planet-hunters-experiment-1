@@ -4,9 +4,9 @@ const AppLogger = preload("res://Scripts/Utils/Logger.gd")
 const PanelManager = preload("res://Scripts/Utils/PanelManager.gd")
 const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd")
 
-const FrancBalanceScene = preload("res://Scenes/UI/FrancBalance.tscn")
-const NewMissionPanelScene = preload("res://Scenes/UI/NewMissionPanel.tscn")
-const SubcontractorsPanelScene = preload("res://Scenes/UI/SubcontractorsPanel.tscn")
+static var FrancBalanceScene: PackedScene = load("res://Scenes/UI/FrancBalance.tscn") if ResourceLoader.exists("res://Scenes/UI/FrancBalance.tscn") else null
+static var NewMissionPanelScene: PackedScene = load("res://Scenes/UI/NewMissionPanel.tscn") if ResourceLoader.exists("res://Scenes/UI/NewMissionPanel.tscn") else null
+static var SubcontractorsPanelScene: PackedScene = load("res://Scenes/UI/SubcontractorsPanel.tscn") if ResourceLoader.exists("res://Scenes/UI/SubcontractorsPanel.tscn") else null
 
 enum PanelType {
 	MENU,

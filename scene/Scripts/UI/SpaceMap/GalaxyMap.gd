@@ -5,7 +5,7 @@ const AppLogger = preload("res://Scripts/Utils/Logger.gd")
 ## Clicking Sol opens space_map.tscn (Sol's solar system).
 ## Clicking a TESS target opens the mission/review flow.
 
-const AsteroidDetailViewScene = preload("res://Scenes/UI/AsteroidDetail/asteroid_detail_view.tscn")
+static var AsteroidDetailViewScene: PackedScene = load("res://Scenes/UI/AsteroidDetail/asteroid_detail_view.tscn") if ResourceLoader.exists("res://Scenes/UI/AsteroidDetail/asteroid_detail_view.tscn") else null
 const GalaxyMapNodeScript     = preload("res://Scripts/UI/SpaceMap/GalaxyMapNode.gd")
 const RocketsManager          = preload("res://Scripts/Utils/RocketsManager.gd")
 

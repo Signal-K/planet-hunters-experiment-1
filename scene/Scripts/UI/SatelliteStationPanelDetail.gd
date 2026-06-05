@@ -1,7 +1,7 @@
 extends RefCounted
 class_name SatelliteStationPanelDetail
 
-const AsteroidDetailView = preload("res://Scenes/UI/AsteroidDetail/asteroid_detail_view.tscn")
+static var AsteroidDetailView: PackedScene = load("res://Scenes/UI/AsteroidDetail/asteroid_detail_view.tscn") if ResourceLoader.exists("res://Scenes/UI/AsteroidDetail/asteroid_detail_view.tscn") else null
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
 
 var _panel: Control

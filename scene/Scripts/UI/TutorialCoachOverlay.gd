@@ -73,9 +73,26 @@ func _ready() -> void:
 	$Root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	$Root.set_meta("tutorial_zone_exempt", true)
 	_wire_buttons()
+	var viewport := get_viewport()
+	if viewport and not viewport.size_changed.is_connected(_apply_layout):
+		viewport.size_changed.connect(_apply_layout)
 	_try_connect_app_controller()
+	call_deferred("_apply_layout")
 	call_deferred("_deferred_refresh_pass1")
 	call_deferred("_start_coach_bob")
+
+func _apply_layout() -> void:
+	var viewport_node := get_viewport()
+	var viewport := viewport_node.get_visible_rect().size if viewport_node else Vector2.ZERO
+	if viewport == Vector2.ZERO or _coach_card == null:
+		return
+	if UILayout.is_portrait(viewport):
+		_coach_card.set_anchor_and_offset(SIDE_LEFT, 0.0, 28.0)
+		_coach_card.set_anchor_and_offset(SIDE_TOP, 0.0, 80.0)
+		_coach_card.set_anchor_and_offset(SIDE_RIGHT, 1.0, -28.0)
+		_coach_card.set_anchor_and_offset(SIDE_BOTTOM, 0.0, 460.0)
+	else:
+		UILayout.place(_coach_card, UILayout.zone(UILayout.Zone.TUTORIAL_COACH, viewport))
 
 func _try_connect_app_controller() -> void:
 	var helper = preload("res://Scripts/Utils/AppControllerHelper.gd")

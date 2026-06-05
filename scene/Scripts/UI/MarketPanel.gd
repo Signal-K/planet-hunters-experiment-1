@@ -10,8 +10,8 @@ const MineralHoldings = preload("res://Scripts/Utils/MineralHoldings.gd")
 const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd")
 const NumberFormat = preload("res://Scripts/Utils/NumberFormat.gd")
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
-const MarketHoldingRowScene = preload("res://Scenes/UI/Templates/MarketHoldingRow.tscn")
-const MarketPriceRowScene = preload("res://Scenes/UI/Templates/MarketPriceRow.tscn")
+static var MarketHoldingRowScene: PackedScene = load("res://Scenes/UI/Templates/MarketHoldingRow.tscn") if ResourceLoader.exists("res://Scenes/UI/Templates/MarketHoldingRow.tscn") else null
+static var MarketPriceRowScene: PackedScene = load("res://Scenes/UI/Templates/MarketPriceRow.tscn") if ResourceLoader.exists("res://Scenes/UI/Templates/MarketPriceRow.tscn") else null
 
 const PANEL_BG    := Color(0.03, 0.05, 0.09, 0.98)
 const CYAN        := PanelStyle.ACCENT

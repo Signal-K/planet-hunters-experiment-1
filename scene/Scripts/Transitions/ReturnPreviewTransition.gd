@@ -18,8 +18,8 @@ const EARTH_VALUE_MULT     := 1.35
 
 const NumberFormat          = preload("res://Scripts/Utils/NumberFormat.gd")
 const RocketSpecs           = preload("res://Scripts/Utils/RocketSpecs.gd")
-const ResourceValueRowScene = preload("res://Scenes/UI/Templates/ResourceValueRow.tscn")
-const EmptyLabelScene       = preload("res://Scenes/UI/Templates/MenuLogbookEmpty.tscn")
+static var ResourceValueRowScene: PackedScene = load("res://Scenes/UI/Templates/ResourceValueRow.tscn") if ResourceLoader.exists("res://Scenes/UI/Templates/ResourceValueRow.tscn") else null
+static var EmptyLabelScene: PackedScene = load("res://Scenes/UI/Templates/MenuLogbookEmpty.tscn") if ResourceLoader.exists("res://Scenes/UI/Templates/MenuLogbookEmpty.tscn") else null
 const PanelStyle            = preload("res://Scripts/UI/PanelStyle.gd")
 const RocketsManager        = preload("res://Scripts/Utils/RocketsManager.gd")
 const OrbitVisuals          = preload("res://Scripts/Utils/OrbitVisuals.gd")

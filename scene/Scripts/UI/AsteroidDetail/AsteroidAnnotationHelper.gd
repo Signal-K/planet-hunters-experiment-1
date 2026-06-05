@@ -2,7 +2,7 @@ extends RefCounted
 class_name AsteroidAnnotationHelper
 const AppLogger = preload("res://Scripts/Utils/Logger.gd")
 
-const AnnotationRenderViewportScene = preload("res://Scenes/UI/Templates/AnnotationRenderViewport.tscn")
+static var AnnotationRenderViewportScene: PackedScene = load("res://Scenes/UI/Templates/AnnotationRenderViewport.tscn") if ResourceLoader.exists("res://Scenes/UI/Templates/AnnotationRenderViewport.tscn") else null
 
 var _owner: Node
 var _drawing_canvas: Control

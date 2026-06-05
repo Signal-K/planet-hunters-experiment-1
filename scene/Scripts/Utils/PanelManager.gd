@@ -4,7 +4,7 @@ extends RefCounted
 
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
 
-const GenericStyledPanelScene = preload("res://Scenes/UI/Templates/GenericStyledPanel.tscn")
+static var GenericStyledPanelScene: PackedScene = load("res://Scenes/UI/Templates/GenericStyledPanel.tscn") if ResourceLoader.exists("res://Scenes/UI/Templates/GenericStyledPanel.tscn") else null
 
 ## Create a styled panel with consistent styling
 static func create_styled_panel(title: String, tree: SceneTree) -> Control:

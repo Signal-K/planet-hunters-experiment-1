@@ -3,8 +3,8 @@ class_name NewMissionAnnotations
 
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
 
-const AnnotationItemScene = preload("res://Scenes/UI/Templates/NewMissionAnnotationItem.tscn")
-const EmptyLabelScene = preload("res://Scenes/UI/Templates/MenuLogbookEmpty.tscn")
+static var AnnotationItemScene: PackedScene = load("res://Scenes/UI/Templates/NewMissionAnnotationItem.tscn") if ResourceLoader.exists("res://Scenes/UI/Templates/NewMissionAnnotationItem.tscn") else null
+static var EmptyLabelScene: PackedScene = load("res://Scenes/UI/Templates/MenuLogbookEmpty.tscn") if ResourceLoader.exists("res://Scenes/UI/Templates/MenuLogbookEmpty.tscn") else null
 const AppLogger = preload("res://Scripts/Utils/Logger.gd")
 
 var _owner: Node

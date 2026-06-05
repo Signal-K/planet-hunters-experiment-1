@@ -197,10 +197,20 @@ static func _app_body(vp: Vector2) -> Rect2:
 	return Rect2(0.0, header.end.y, vp.x, maxf(0.0, footer.position.y - header.end.y))
 
 static func _app_header_with_coach(vp: Vector2) -> Rect2:
-	return _app_header(vp)
+	var base := _app_header(vp)
+	if is_portrait(vp):
+		return base
+	var coach := _tutorial_coach(vp)
+	var right := maxf(EDGE, coach.position.x - EDGE)
+	return Rect2(base.position.x, base.position.y, right - base.position.x, base.size.y)
 
 static func _app_body_with_coach(vp: Vector2) -> Rect2:
-	return _app_body(vp)
+	var base := _app_body(vp)
+	if is_portrait(vp):
+		return base
+	var coach := _tutorial_coach(vp)
+	var right := maxf(EDGE, coach.position.x - EDGE)
+	return Rect2(base.position.x, base.position.y, right - base.position.x, base.size.y)
 
 static func _tutorial_coach(vp: Vector2) -> Rect2:
 	# Top-right corner widget. Width must accommodate the header row:

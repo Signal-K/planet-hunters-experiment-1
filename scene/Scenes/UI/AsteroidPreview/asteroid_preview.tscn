@@ -1,108 +1,19 @@
-[gd_scene load_steps=3 format=3 uid="uid://rqlk5xixjqmi"]
+[gd_scene load_steps=2 format=3]
 
-[ext_resource type="Script" path="res://Scripts/UI/AsteroidPreview/AsteroidPreview.gd" id="1"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/SidescrollMining.tscn" id="1"]
 
-[sub_resource type="Environment" id="1"]
-background_mode = 1
-background_color = Color(0.08, 0.05, 0.15, 1)
-
-[node name="AsteroidPreview" type="Node3D"]
-script = ExtResource("1")
-
-[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
-environment = SubResource("1")
-
-[node name="Camera3D" type="Camera3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 5)
-
-[node name="CanvasLayer" type="CanvasLayer" parent="."]
-
-[node name="MinigameContainer" type="Control" parent="CanvasLayer"]
+[node name="LandnamMiningPreview" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-mouse_filter = 2
+grow_horizontal = 2
+grow_vertical = 2
 
-[node name="UI" type="Control" parent="CanvasLayer"]
-layout_mode = 3
+[node name="Mining" parent="." instance=ExtResource("1")]
+layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-
-[node name="SalvageDialog" type="PanelContainer" parent="CanvasLayer"]
-visible = false
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -260.0
-offset_top = -120.0
-offset_right = 260.0
-offset_bottom = 120.0
-
-[node name="DialogVBox" type="VBoxContainer" parent="CanvasLayer/SalvageDialog"]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="Title" type="Label" parent="CanvasLayer/SalvageDialog/DialogVBox"]
-layout_mode = 2
-text = "Fuel Depleted"
-
-[node name="Message" type="Label" parent="CanvasLayer/SalvageDialog/DialogVBox"]
-layout_mode = 2
-autowrap_mode = 3
-text = "You ran out of fuel."
-
-[node name="ButtonRow" type="HBoxContainer" parent="CanvasLayer/SalvageDialog/DialogVBox"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="SalvageButton" type="Button" parent="CanvasLayer/SalvageDialog/DialogVBox/ButtonRow"]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Keep Partial Haul"
-
-[node name="RetryButton" type="Button" parent="CanvasLayer/SalvageDialog/DialogVBox/ButtonRow"]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Retry"
-
-[node name="TargetLabel" type="Label" parent="CanvasLayer/UI"]
-layout_mode = 1
-anchors_preset = 10
-anchor_right = 1.0
-offset_bottom = 40.0
-theme_override_colors/font_color = Color(0.95, 0.95, 0.98, 1)
-theme_override_font_sizes/font_size = 24
-text = "Target"
-horizontal_alignment = 1
-
-[node name="MineButton" type="Button" parent="CanvasLayer/UI"]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -150.0
-offset_top = -30.0
-offset_right = 150.0
-offset_bottom = 30.0
-theme_override_font_sizes/font_size = 32
-text = "MINE"
-
-[node name="ReturnButton" type="Button" parent="CanvasLayer/UI"]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -150.0
-offset_top = 50.0
-offset_right = 150.0
-offset_bottom = 110.0
-theme_override_font_sizes/font_size = 24
-text = "RETURN HOME"
+grow_horizontal = 2
+grow_vertical = 2

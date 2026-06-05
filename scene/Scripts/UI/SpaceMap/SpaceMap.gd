@@ -6,9 +6,9 @@ const AppLogger = preload("res://Scripts/Utils/Logger.gd")
 ## This script handles: viewport scaling, game-state visibility,
 ## belt target placement, click detection, target popups, and footer updates.
 
-const SpaceMapTargetDialogueScene = preload("res://Scenes/UI/Templates/SpaceMapTargetDialogue.tscn")
-const SpaceMapContractorRowScene  = preload("res://Scenes/UI/Templates/SpaceMapContractorRow.tscn")
-const AsteroidDetailViewScene     = preload("res://Scenes/UI/AsteroidDetail/asteroid_detail_view.tscn")
+static var SpaceMapTargetDialogueScene: PackedScene = load("res://Scenes/UI/Templates/SpaceMapTargetDialogue.tscn") if ResourceLoader.exists("res://Scenes/UI/Templates/SpaceMapTargetDialogue.tscn") else null
+static var SpaceMapContractorRowScene: PackedScene = load("res://Scenes/UI/Templates/SpaceMapContractorRow.tscn") if ResourceLoader.exists("res://Scenes/UI/Templates/SpaceMapContractorRow.tscn") else null
+static var AsteroidDetailViewScene: PackedScene = load("res://Scenes/UI/AsteroidDetail/asteroid_detail_view.tscn") if ResourceLoader.exists("res://Scenes/UI/AsteroidDetail/asteroid_detail_view.tscn") else null
 const GalaxyMapNodeScript         = preload("res://Scripts/UI/SpaceMap/GalaxyMapNode.gd")
 
 const RocketsManager         = preload("res://Scripts/Utils/RocketsManager.gd")
