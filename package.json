@@ -11,6 +11,7 @@
     "test": "jest",
     "test:unit": "jest --runInBand --watchman=false",
     "test:sandbox": "docker compose -f docker-compose.sandbox.yml up --build --abort-on-container-exit",
+    "test:web:e2e": "bash ./scripts/e2e/run_godot_web_e2e.sh",
     "test:all": "npm run test:unit && npm run test:sandbox",
     "web:start": "node web/server.js",
     "web:dev": "node dev-server.js",
