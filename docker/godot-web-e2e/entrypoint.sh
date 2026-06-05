@@ -32,5 +32,15 @@ python3 -m http.server 8080 --directory "$WEB_BUILD_DIR" \
 SERVER_PID=$!
 trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
 
+# Wait for the HTTP server to be ready before launching Playwright
+echo "[web-e2e] Waiting for server to be ready…"
+for i in $(seq 1 20); do
+  if curl -sf http://127.0.0.1:8080/index.html > /dev/null 2>&1; then
+    echo "[web-e2e] Server ready"
+    break
+  fi
+  sleep 0.5
+done
+
 echo "[web-e2e] Running Playwright browser clickthrough"
 node /app/scripts/e2e/web_canvas_flow.mjs

@@ -32,7 +32,7 @@ window/size/viewport_height=1080
 window/size/window_width_override=1920
 window/size/window_height_override=1080
 window/stretch/mode="canvas_items"
-window/stretch/aspect="keep_height"
+window/stretch/aspect="expand"
 window/handheld/orientation=1
 
 [input]
