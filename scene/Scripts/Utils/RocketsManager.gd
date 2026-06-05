@@ -175,6 +175,15 @@ static func set_scanner_unlock_dialog_seen(seen: bool) -> bool:
 	s["scanner_unlock_dialog_seen"] = seen
 	return save_state(s)
 
+static func get_launchpad_plot() -> int:
+	var s = load_state()
+	return clampi(int(s.get("launchpad_plot", 1)), 0, 2)
+
+static func set_launchpad_plot(plot: int) -> void:
+	var s = load_state()
+	s["launchpad_plot"] = clampi(plot, 0, 2)
+	save_state(s)
+
 static func can_afford_scanner_build(balance: int) -> bool:
 	return balance >= SCANNER_BUILD_COST
 
