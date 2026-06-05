@@ -60,6 +60,9 @@ enum Zone {
 	                    ## No other persistent element may occupy this zone.
 	EARTH_WIDGET,       ## Small persistent widget for Earth scenes: TOP-LEFT.
 	                    ## Used by FrancBalance. Must not overlap TUTORIAL_COACH.
+	TOP_STATUS,         ## Top-of-screen safe area (phone notch / status bar).
+	                    ## Zero-height on web/desktop — callers use end.y as the
+	                    ## minimum top offset before placing any persistent UI.
 }
 
 ## ─── Public API ──────────────────────────────────────────────────────────────
@@ -82,6 +85,7 @@ static func zone(z: Zone, vp: Vector2) -> Rect2:
 		Zone.APP_FOOTER:         return _app_footer(vp)
 		Zone.TUTORIAL_COACH:     return _tutorial_coach(vp)
 		Zone.EARTH_WIDGET:       return _earth_widget(vp)
+		Zone.TOP_STATUS:         return _top_status(vp)
 		_:
 			push_warning("UILayout: unknown zone %d" % z)
 			return safe_rect(vp)
@@ -192,3 +196,8 @@ static func _tutorial_coach(vp: Vector2) -> Rect2:
 static func _earth_widget(vp: Vector2) -> Rect2:
 	# TOP-LEFT small widget.  Kept away from TUTORIAL_COACH (top-right).
 	return Rect2(EDGE, EDGE, 200.0, 50.0)
+
+static func _top_status(_vp: Vector2) -> Rect2:
+	# Phone notch / status-bar safe area. Zero height on web/desktop;
+	# callers use .end.y as the minimum top offset for persistent UI.
+	return Rect2(0.0, 0.0, _vp.x, 0.0)

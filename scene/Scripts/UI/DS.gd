@@ -93,3 +93,11 @@ const FONT_TITLE     := F_TITLE
 const FONT_BODY      := F_BODY
 const FONT_MUTED     := F_CAPTION
 const FONT_BUTTON    := F_BUTTON
+
+# ── Font resource helpers ─────────────────────────────────────────────────────
+
+## Load the display-weight font (Oxanium Bold) used for hero readouts,
+## Franc totals, and mission outcomes. Returns null if the asset is missing
+## so all callers can guard with  if font == null: return / if font: …
+static func font_display() -> Font:
+	return load("res://Resources/Fonts/Oxanium-Bold.ttf") as Font
