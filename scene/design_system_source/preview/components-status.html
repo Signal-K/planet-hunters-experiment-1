@@ -1,0 +1,26 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Components — Status Chips</title><link rel="stylesheet" href="preview.css">
+<style>
+  .chip-pill { display:inline-flex; align-items:center; gap:8px; padding:6px 12px; border-radius:999px; font-family:var(--ln-font-display); font-size:13px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; }
+  .dot { width:8px; height:8px; border-radius:999px; }
+  .check { width:16px; height:16px; border-radius:999px; display:inline-flex; align-items:center; justify-content:center; font-size:11px; }
+  .seg { display:flex; align-items:center; gap:10px; padding:8px 14px; }
+  .seg + .seg { border-left:1px solid var(--ln-hairline); }
+</style></head>
+<body>
+<div class="card" data-stamp="STATUS · CHIPS · STAGE BAR" style="height:230px">
+  <div class="eyebrow" style="margin-bottom:14px">Pills · stage segments · always one dot/icon + one tracked label</div>
+  <div class="row" style="gap:10px;flex-wrap:wrap;margin-bottom:18px">
+    <span class="chip-pill" style="background:rgba(57,211,106,0.18); color:#39d36a"><span class="dot" style="background:#39d36a"></span>READY</span>
+    <span class="chip-pill" style="background:rgba(63,169,255,0.16); color:#7ec8ff"><span class="dot" style="background:#7ec8ff"></span>IN TRANSIT</span>
+    <span class="chip-pill" style="background:rgba(255,179,71,0.18); color:#ffb347"><span class="dot" style="background:#ffb347"></span>LOW POWER</span>
+    <span class="chip-pill" style="background:rgba(255,90,106,0.18); color:#ff5a6a"><span class="dot" style="background:#ff5a6a"></span>OVERLOAD</span>
+    <span class="chip-pill" style="background:#0a121d; border:1px solid rgba(245,166,35,0.55); color:#f5a623">▲ 12.4K</span>
+    <span class="chip-pill" style="background:#0a121d; border:1px solid var(--ln-hairline); color:#e6efff">LV 04</span>
+  </div>
+  <div class="row" style="background:#0a121d; border:1px solid var(--ln-hairline); border-radius:8px; padding:6px;">
+    <div class="seg"><span class="check" style="background:rgba(63,169,255,0.16); color:#3fa9ff;border:1px solid #3fa9ff">✓</span><span class="chip-pill" style="padding:0;background:none;color:#3fa9ff">LOCATION SET</span></div>
+    <div class="seg"><span class="check" style="background:rgba(63,169,255,0.16); color:#3fa9ff;border:1px solid #3fa9ff">✓</span><span class="chip-pill" style="padding:0;background:none;color:#3fa9ff">MISSION SET</span></div>
+    <div class="seg"><span class="check" style="background:rgba(245,166,35,0.16); color:#f5a623;border:1px solid #f5a623">✓</span><span class="chip-pill" style="padding:0;background:none;color:#f5a623">ASSEMBLY COMPLETE</span></div>
+  </div>
+</div>
+</body></html>

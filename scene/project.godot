@@ -1,36 +1,24 @@
 ; Engine configuration file.
-; It's best edited using the editor UI and not directly,
-; since the parameters that go here are not all obvious.
-;
-; Format:
-;   [section] ; section goes between []
-;   param=value ; assign values to parameters
+; Fresh Landnam prototype generated from the supplied Claude design system.
 
 config_version=5
 
 [application]
 
-config/name="Landnám"
-run/main_scene="res://Scenes/Earth/earth_base_1.tscn"
+config/name="Landnam Design System Prototype"
+run/main_scene="res://Scenes/Main.tscn"
 config/features=PackedStringArray("4.5", "GL Compatibility")
-config/icon="res://Resources/Icons/godot-icon.svg"
-
-[autoload]
-
-GameState="*res://Scripts/Systems/GameState.gd"
+config/icon="res://design_system_source/assets/icons/godot-icon.svg"
 
 [display]
 
-window/size/viewport_width=1080
-window/size/viewport_height=1920
-window/size/window_width_override=1080
-window/size/window_height_override=1920
+window/size/viewport_width=402
+window/size/viewport_height=874
+window/size/mode=2
 window/stretch/mode="canvas_items"
-window/stretch/aspect="expand"
-window/handheld/orientation=1
+window/stretch/aspect="keep"
 
 [rendering]
 
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
-textures/vram_compression/import_etc2_astc=true

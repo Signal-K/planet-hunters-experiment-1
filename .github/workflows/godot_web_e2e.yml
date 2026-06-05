@@ -1,9 +1,15 @@
-name: Godot Web E2E
+name: Godot Web Placement + Atlas E2E
 
 on:
   push:
     branches:
       - "**"
+    paths:
+      - "scene/**"
+      - "scripts/e2e/**"
+      - "docker/godot-web-e2e/**"
+      - ".github/workflows/godot_web_e2e.yml"
+      - "package.json"
   workflow_dispatch:
 
 permissions:
@@ -16,7 +22,7 @@ concurrency:
 
 jobs:
   gate:
-    name: Limit Runs
+    name: Limit Action Runs
     runs-on: ubuntu-latest
     outputs:
       should_run: ${{ steps.limit.outputs.should_run }}
@@ -65,7 +71,7 @@ jobs:
             }
 
   web-e2e:
-    name: Export Web + Browser Clickthrough
+    name: Export Web + Placement/Atlas Browser Test
     needs: gate
     if: needs.gate.outputs.should_run == 'true'
     runs-on: ubuntu-latest
@@ -76,10 +82,10 @@ jobs:
         with:
           lfs: true
 
-      - name: Run Docker Web E2E
+      - name: Run Godot Web placement and atlas E2E
         run: npm run test:web:e2e
 
-      - name: Upload browser screenshots and logs
+      - name: Upload placement/atlas screenshots and logs
         if: always()
         uses: actions/upload-artifact@v4
         with:

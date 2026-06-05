@@ -1,0 +1,104 @@
+/* preview cards — shared chrome.
+   Each card lives in its own HTML file at preview/<name>.html.
+   We target ~700×<height>px; the asset name renders OUTSIDE the card
+   so the card body is just the content. */
+
+@import url("../colors_and_type.css");
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  font-family: var(--ln-font-body);
+  color: var(--ln-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+.card {
+  width: 700px;
+  box-sizing: border-box;
+  padding: 24px;
+  background: var(--ln-bg);
+  background-image: var(--ln-bg-blueprint);
+  background-attachment: fixed;
+  color: var(--ln-text);
+  position: relative;
+  overflow: hidden;
+}
+
+.card.atlas {
+  background: #050608;
+  background-image:
+    radial-gradient(1px 1px at 12% 28%, rgba(239,231,211,0.55), transparent 60%),
+    radial-gradient(1px 1px at 73% 18%, rgba(239,231,211,0.4),  transparent 60%),
+    radial-gradient(1.4px 1.4px at 38% 72%, rgba(239,231,211,0.5), transparent 60%),
+    radial-gradient(1px 1px at 88% 62%, rgba(239,231,211,0.35), transparent 60%),
+    radial-gradient(1px 1px at 50% 90%, rgba(239,231,211,0.3), transparent 60%);
+  color: #efe7d3;
+}
+
+.card.flat {
+  background: var(--ln-surface);
+  background-image: none;
+}
+
+/* tiny corner stamp */
+.card::before {
+  content: attr(data-stamp);
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  font-family: var(--ln-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ln-text-muted);
+}
+
+.row { display: flex; align-items: center; gap: 16px; }
+.col { display: flex; flex-direction: column; gap: 8px; }
+.grow { flex: 1; }
+
+.swatch {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.swatch .chip {
+  height: 56px;
+  border-radius: 6px;
+  border: 1px solid var(--ln-hairline);
+}
+.swatch .lbl {
+  font-family: var(--ln-font-display);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ln-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.swatch .hex {
+  font-family: var(--ln-font-mono);
+  font-size: 11px;
+  color: var(--ln-text-muted);
+  letter-spacing: 0.06em;
+}
+
+.eyebrow {
+  font-family: var(--ln-font-display);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ln-text-muted);
+}
+
+.divider-h {
+  height: 1px;
+  background: var(--ln-divider);
+  width: 100%;
+}

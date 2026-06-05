@@ -1,0 +1,63 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Components — Mineral Chips</title><link rel="stylesheet" href="preview.css">
+<style>
+  .grid { display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; }
+  .min {
+    background: linear-gradient(180deg, #15263c 0%, #0a121d 100%);
+    border:1px solid rgba(63,169,255,0.22);
+    border-radius:4px;
+    padding:10px 12px;
+    display:flex; align-items:center; gap:10px;
+    position:relative;
+    overflow:hidden;
+  }
+  .min::before { content:''; position:absolute; top:0; right:0; width:30px; height:30px; opacity:0.18; }
+  .min .glyph {
+    width:36px; height:36px; flex:0 0 auto;
+    border-radius:4px;
+    display:flex; align-items:center; justify-content:center;
+    position:relative;
+  }
+  .min .glyph svg { width:24px; height:24px; }
+  .min .meta { flex:1; min-width:0; }
+  .min .name { font-family:var(--ln-font-display); font-weight:700; font-size:14px; letter-spacing:0.14em; text-transform:uppercase; color:#e6efff; }
+  .min .sub { font-family:var(--ln-font-mono); font-size:10px; letter-spacing:0.12em; color:#5d7390; text-transform:uppercase; margin-top:2px; }
+  .min .qty { font-family:var(--ln-font-display); font-weight:700; font-size:20px; color:#e6efff; line-height:1; }
+  .min .qty .u { font-size:10px; color:#a9b8ce; margin-left:3px; letter-spacing:0.1em; }
+</style></head>
+<body>
+<div class="card" data-stamp="MINERAL TAGS · ICONOGRAPHY" style="height:230px">
+  <div class="eyebrow" style="margin-bottom:14px">Each resource its own SVG glyph + symbol code + scarcity stripe</div>
+  <div class="grid">
+    <div class="min" style="border-color:rgba(185,216,255,0.45)">
+      <div class="glyph" style="background:radial-gradient(circle at 30% 30%, #d8e8ff, #4778b0)"><svg viewBox="0 0 24 24" fill="none" stroke="#0a121d" stroke-width="1.6"><polygon points="12,3 21,8 21,16 12,21 3,16 3,8" fill="rgba(10,18,29,0.4)"/><polygon points="12,8 17,11 17,15 12,18 7,15 7,11"/></svg></div>
+      <div class="meta"><div class="name" style="color:#b9d8ff">Silicon</div><div class="sub">Si · 14</div></div>
+      <div class="qty" style="color:#b9d8ff">14<span class="u">u</span></div>
+    </div>
+    <div class="min" style="border-color:rgba(217,113,80,0.5)">
+      <div class="glyph" style="background:radial-gradient(circle at 30% 30%, #ffa080, #6a2810)"><svg viewBox="0 0 24 24" fill="none" stroke="#0a121d" stroke-width="1.6"><circle cx="12" cy="12" r="8" fill="rgba(10,18,29,0.4)"/><path d="M5 10 L10 10 L12 8 L14 10 L19 10 M5 14 L9 14 L12 16 L15 14 L19 14"/></svg></div>
+      <div class="meta"><div class="name" style="color:#ff9a78">Iron</div><div class="sub">Fe · 26</div></div>
+      <div class="qty" style="color:#ff9a78">8<span class="u">u</span></div>
+    </div>
+    <div class="min" style="border-color:rgba(155,236,255,0.5)">
+      <div class="glyph" style="background:radial-gradient(circle at 30% 30%, #d8f7ff, #2a8da5)"><svg viewBox="0 0 24 24" fill="none" stroke="#0a121d" stroke-width="1.6"><path d="M12 3 L18 14 L12 21 L6 14 Z" fill="rgba(10,18,29,0.35)"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="12" y1="9" x2="12" y2="17"/></svg></div>
+      <div class="meta"><div class="name" style="color:#9becff">Ice</div><div class="sub">H₂O · 22</div></div>
+      <div class="qty" style="color:#9becff">22<span class="u">u</span></div>
+    </div>
+    <div class="min" style="border-color:rgba(170,180,200,0.4)">
+      <div class="glyph" style="background:radial-gradient(circle at 30% 30%, #6e7990, #1c2230)"><svg viewBox="0 0 24 24" fill="none" stroke="#06090f" stroke-width="1.6"><polygon points="6,8 12,4 18,8 18,16 12,20 6,16" fill="rgba(6,9,15,0.4)"/><polygon points="9,11 12,9 15,11 15,14 12,16 9,14"/></svg></div>
+      <div class="meta"><div class="name" style="color:#a9b8ce">Carbon</div><div class="sub">C · 6</div></div>
+      <div class="qty" style="color:#a9b8ce">3<span class="u">u</span></div>
+    </div>
+    <div class="min" style="border-color:rgba(255,209,102,0.55)">
+      <div class="glyph" style="background:radial-gradient(circle at 30% 30%, #fff0b0, #8a5a00)"><svg viewBox="0 0 24 24" fill="none" stroke="#1a0c00" stroke-width="1.8"><path d="M5 17 L9 7 L12 13 L15 7 L19 17 Z" fill="rgba(26,12,0,0.3)"/></svg></div>
+      <div class="meta"><div class="name" style="color:#ffd166">Gold</div><div class="sub">Au · 79</div></div>
+      <div class="qty" style="color:#ffd166">1<span class="u">u</span></div>
+    </div>
+    <div class="min" style="border-color:rgba(192,132,255,0.55)">
+      <div class="glyph" style="background:radial-gradient(circle at 30% 30%, #e0c4ff, #5a2a90)"><svg viewBox="0 0 24 24" fill="none" stroke="#1a0c2a" stroke-width="1.6"><polygon points="12,3 16,8 21,9 17,13 18,19 12,16 6,19 7,13 3,9 8,8" fill="rgba(26,12,42,0.3)"/></svg></div>
+      <div class="meta"><div class="name" style="color:#c084ff">Rare</div><div class="sub">?? · UNK</div></div>
+      <div class="qty" style="color:#5d7390">—</div>
+    </div>
+  </div>
+</div>
+</body></html>

@@ -1,0 +1,68 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Components — Bottom Bar</title><link rel="stylesheet" href="preview.css">
+<style>
+  .bar {
+    display:flex; align-items:stretch; gap:8px;
+    padding:8px;
+    background: linear-gradient(180deg, #0a121d 0%, #04080f 100%);
+    border:1px solid rgba(63,169,255,0.35);
+    border-radius:12px;
+    box-shadow: 0 12px 24px rgba(0,0,0,0.5);
+  }
+  .step {
+    flex:1;
+    display:flex; align-items:center; gap:14px;
+    padding:14px 18px;
+    border-radius:8px;
+    position:relative;
+    border:1px solid currentColor;
+  }
+  .step .dot {
+    width:36px; height:36px; border-radius:999px;
+    background: currentColor;
+    display:inline-flex; align-items:center; justify-content:center;
+    font-size:18px; font-weight:800;
+    color:#06121f;
+    flex:0 0 auto;
+    box-shadow: 0 0 12px currentColor;
+  }
+  .step .lbl {
+    font-family:var(--ln-font-display); font-weight:700; font-size:20px;
+    letter-spacing:0.14em; text-transform:uppercase;
+    line-height:1;
+  }
+  .step .num {
+    margin-left:auto;
+    font-family:var(--ln-font-mono); font-size:11px; letter-spacing:0.2em;
+    color: rgba(255,255,255,0.55);
+    text-transform:uppercase;
+  }
+
+  /* per-step colour rails */
+  .step.s1 { color:#39d36a; background: rgba(57,211,106,0.10); }
+  .step.s2 { color:#7ec8ff; background: rgba(126,200,255,0.10); }
+  .step.s3 { color:#f5a623; background: rgba(245,166,35,0.14); border-color: rgba(245,166,35,0.55); }
+
+  /* primary CTA */
+  .cta {
+    display:inline-flex; align-items:center; gap:12px;
+    padding:18px 26px;
+    background: linear-gradient(180deg, #6cc2ff 0%, #2d8de0 100%);
+    color:#06121f;
+    font-family:var(--ln-font-display); font-weight:800; font-size:22px; letter-spacing:0.1em; text-transform:uppercase;
+    border-radius:10px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.4), 0 4px 0 rgba(0,0,0,0.25), 0 0 18px rgba(63,169,255,0.4);
+    line-height:1;
+  }
+  .cta .arr { font-size:26px; }
+</style></head>
+<body>
+<div class="card" data-stamp="BOTTOM BAR · OPS" style="height:160px">
+  <div class="eyebrow" style="margin-bottom:14px">Per-step colour · big dot icon · 20px label · always 3 steps + CTA</div>
+  <div class="bar">
+    <div class="step s1"><div class="dot">✓</div><div class="lbl">LOCATION</div><div class="num">01</div></div>
+    <div class="step s2"><div class="dot">✓</div><div class="lbl">MISSION</div><div class="num">02</div></div>
+    <div class="step s3"><div class="dot">✓</div><div class="lbl">ASSEMBLY</div><div class="num">03</div></div>
+    <div class="cta">LAUNCH <span class="arr">→</span></div>
+  </div>
+</div>
+</body></html>
