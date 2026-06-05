@@ -12,7 +12,7 @@ const MINING_SCENE := "res://Scenes/UI/SidescrollMining.tscn"
 const DEBRIEF_SCENE := "res://Scenes/Earth/mission_debrief_v2.tscn"
 
 # Hub layout: x ranges for each of the 3 surface plots [left, right]
-const _SLOT_X := [[40.0, 360.0], [380.0, 700.0], [720.0, 1040.0]]
+const _SLOT_X := [[12.0, 267.0], [279.0, 534.0], [546.0, 801.0], [813.0, 1068.0]]
 const _ART_Y := [980.0, 1340.0]   # top, bottom for structure art
 const _BTN_Y := [1345.0, 1415.0]  # top, bottom for label button
 
@@ -46,6 +46,16 @@ func _ready() -> void:
 		)
 		_connect("BuildRightButton", func():
 			GameState.set_launchpad_plot(2)
+			_go(BASE_SCENE)
+		)
+		_connect("SettingsButton", func():
+			_show_node("ResetOverlay", true)
+		)
+		_connect("CancelButton", func():
+			_show_node("ResetOverlay", false)
+		)
+		_connect("ConfirmResetButton", func():
+			GameState.full_reset()
 			_go(BASE_SCENE)
 		)
 		_refresh_hub_layout()
