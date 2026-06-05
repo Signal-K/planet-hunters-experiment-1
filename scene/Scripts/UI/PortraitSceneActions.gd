@@ -17,6 +17,7 @@ signal launched(rocket_id: String, target_id: String)
 func _ready() -> void:
 	_connect("BackButton", _go_back)
 	_connect("BaseButton", func(): _go(BASE_SCENE))
+	_connect("MenuButton", func(): _go(MISSIONS_SCENE))
 	_connect("LaunchpadButton", func(): _go(MISSIONS_SCENE))
 	_connect("MissionsButton", func(): _go(MISSIONS_SCENE))
 	_connect("GalaxyButton", func(): _go(GALAXY_SCENE))
