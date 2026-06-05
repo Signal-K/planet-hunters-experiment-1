@@ -3,7 +3,7 @@ extends Control
 signal panel_closed
 
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
-const SimpleDetailView = preload("res://Scenes/UI/SimpleDetail/simple_detail_view.tscn")
+static var SimpleDetailView: PackedScene = load("res://Scenes/UI/SimpleDetail/simple_detail_view.tscn") if ResourceLoader.exists("res://Scenes/UI/SimpleDetail/simple_detail_view.tscn") else null
 const NewMissionAnnotations = preload("res://Scripts/UI/NewMissionAnnotations.gd")
 const NewMissionLaunchList = preload("res://Scripts/UI/NewMissionLaunchList.gd")
 const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")

@@ -4,7 +4,7 @@ extends Node
 signal scene_changing
 signal scene_changed
 
-const SceneFlashOverlayScene = preload("res://Scenes/UI/Templates/SceneFlashOverlay.tscn")
+static var SceneFlashOverlayScene: PackedScene = load("res://Scenes/UI/Templates/SceneFlashOverlay.tscn") if ResourceLoader.exists("res://Scenes/UI/Templates/SceneFlashOverlay.tscn") else null
 
 var current_scene_index: int = 0
 var scene_list: Array[String] = [

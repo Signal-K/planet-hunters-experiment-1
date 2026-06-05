@@ -5,8 +5,8 @@ const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
 
 signal panel_closed
 
-const SubcontractorCardScene = preload("res://Scenes/UI/Templates/SubcontractorCard.tscn")
-const SubcontractorDetailLabelScene = preload("res://Scenes/UI/Templates/SubcontractorDetailLabel.tscn")
+static var SubcontractorCardScene: PackedScene = load("res://Scenes/UI/Templates/SubcontractorCard.tscn") if ResourceLoader.exists("res://Scenes/UI/Templates/SubcontractorCard.tscn") else null
+static var SubcontractorDetailLabelScene: PackedScene = load("res://Scenes/UI/Templates/SubcontractorDetailLabel.tscn") if ResourceLoader.exists("res://Scenes/UI/Templates/SubcontractorDetailLabel.tscn") else null
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
 
 @onready var close_btn: Button = $PanelContainer/Panel/VBox/Header/HeaderBar/HeaderContent/CloseButton

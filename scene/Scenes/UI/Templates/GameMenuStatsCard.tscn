@@ -1,8 +1,0 @@
-[gd_scene format=3]
-
-[node name="GameMenuStatsCard" type="PanelContainer"]
-layout_mode = 2
-
-[node name="StatsRow" type="HBoxContainer" parent="."]
-layout_mode = 2
-theme_override_constants/separation = 20

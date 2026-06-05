@@ -1,773 +1,342 @@
-[gd_scene load_steps=23 format=3 uid="uid://bl5h6pq4ns86t"]
+[gd_scene load_steps=12 format=3]
 
-; ── External resources ────────────────────────────────────────────────────────
-[ext_resource type="Texture2D" uid="uid://bni1814mlo7mv" path="res://assets/Backdrops/Earth1.png" id="0"]
-[ext_resource type="Script" uid="uid://eoqjev5txcu5" path="res://Scenes/Earth/earth_base_1.gd" id="1"]
-[ext_resource type="Texture2D" uid="uid://ccpehdcgu0qb5" path="res://assets/Structures/satellite_groundstation1.png" id="2"]
-[ext_resource type="Script" uid="uid://c5hj8es22yg8x" path="res://Scripts/Earth/SatelliteStation.gd" id="3"]
-[ext_resource type="Script" uid="uid://ce1a85vrjyh7x" path="res://Scripts/Earth/Launchpad.gd" id="4"]
-[ext_resource type="Texture2D" uid="uid://ctuf1c3mi4pat" path="res://assets/Structures/launchpad.png" id="5"]
-[ext_resource type="Script" uid="uid://b0lu716w5xsl4" path="res://Scripts/Earth/Environment/EarthWeatherEngine.gd" id="8"]
-[ext_resource type="Script" uid="uid://bsfnqfos70rv1" path="res://Scripts/Earth/Environment/EarthSkyNightFilterEvent.gd" id="9"]
-[ext_resource type="Script" uid="uid://wbb4npqwk838" path="res://Scripts/Earth/Environment/EarthStarFieldEvent.gd" id="10"]
-[ext_resource type="Script" uid="uid://bebqtkwv7bhxn" path="res://Scripts/Earth/Environment/EarthCloudDriftEvent.gd" id="11"]
-[ext_resource type="Script" uid="uid://b6grrjbuo2flq" path="res://Scripts/Earth/Environment/EarthSkyMapEvent.gd" id="12"]
-[ext_resource type="PackedScene" path="res://Scenes/UI/Templates/EarthBaseActionCard.tscn" id="13"]
-[ext_resource type="Script" path="res://Scripts/UI/EarthBaseProgressionCards.gd" id="14"]
-[ext_resource type="FontFile" uid="uid://bl1ej0ena8t42" path="res://Resources/Fonts/Oxanium-Bold.ttf" id="15"]
-[ext_resource type="FontFile" uid="uid://c134itcdnq6j6" path="res://Resources/Fonts/TurretRoad-Bold.ttf" id="16"]
+[ext_resource type="Script" path="res://Scripts/UI/PortraitSceneActions.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/Backdrops/Earth1.png" id="2"]
+[ext_resource type="Texture2D" path="res://assets/Structures/launchpad.png" id="3"]
+[ext_resource type="Texture2D" path="res://assets/Structures/ControlStation.png" id="4"]
+[ext_resource type="Texture2D" path="res://assets/Structures/satellite_groundstation1.png" id="5"]
+[ext_resource type="FontFile" path="res://Resources/Fonts/Oxanium-ExtraBold.ttf" id="6"]
+[ext_resource type="FontFile" path="res://Resources/Fonts/Oxanium-Regular.ttf" id="7"]
 
-; ── Sub-resources (styles) ────────────────────────────────────────────────────
-
-; Amber pill — Jobs count (left HUD)
-[sub_resource type="StyleBoxFlat" id="Style_jobs_pill"]
-bg_color = Color(1.0, 0.702, 0.282, 0.16)
-border_color = Color(1.0, 0.702, 0.282, 0.45)
+[sub_resource type="StyleBoxFlat" id="PanelDark"]
+bg_color = Color(0.071, 0.133, 0.212, 0.86)
 border_width_left = 1
 border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
-corner_radius_top_left = 999
-corner_radius_top_right = 999
-corner_radius_bottom_left = 999
-corner_radius_bottom_right = 999
-content_margin_left = 16.0
-content_margin_right = 16.0
-content_margin_top = 8.0
-content_margin_bottom = 8.0
+border_color = Color(0.961, 0.651, 0.137, 0.5)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
 
-; Gold pill — Francs (right HUD)
-[sub_resource type="StyleBoxFlat" id="Style_francs_pill"]
-bg_color = Color(0.961, 0.651, 0.137, 0.16)
-border_color = Color(0.961, 0.651, 0.137, 0.55)
+[sub_resource type="StyleBoxFlat" id="LabelPillGreen"]
+bg_color = Color(0.224, 0.827, 0.416, 0.18)
 border_width_left = 1
 border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
+border_color = Color(0.224, 0.827, 0.416, 0.7)
 corner_radius_top_left = 999
 corner_radius_top_right = 999
-corner_radius_bottom_left = 999
 corner_radius_bottom_right = 999
-content_margin_left = 16.0
-content_margin_right = 16.0
-content_margin_top = 8.0
-content_margin_bottom = 8.0
+corner_radius_bottom_left = 999
+content_margin_left = 18
+content_margin_top = 10
+content_margin_right = 18
+content_margin_bottom = 10
 
-; Cyan pill — Level (right HUD)
-[sub_resource type="StyleBoxFlat" id="Style_level_pill"]
-bg_color = Color(0.529, 0.812, 0.980, 0.14)
-border_color = Color(0.529, 0.812, 0.980, 0.45)
+[sub_resource type="StyleBoxFlat" id="LabelPillBlue"]
+bg_color = Color(0.247, 0.663, 1, 0.1)
 border_width_left = 1
 border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
+border_color = Color(0.247, 0.663, 1, 0.55)
 corner_radius_top_left = 999
 corner_radius_top_right = 999
-corner_radius_bottom_left = 999
 corner_radius_bottom_right = 999
-content_margin_left = 16.0
-content_margin_right = 16.0
-content_margin_top = 8.0
-content_margin_bottom = 8.0
+corner_radius_bottom_left = 999
+content_margin_left = 18
+content_margin_top = 10
+content_margin_right = 18
+content_margin_bottom = 10
 
-; Building identity chip — navy card with cyan border
-[sub_resource type="StyleBoxFlat" id="Style_building_chip"]
-bg_color = Color(0.031, 0.047, 0.086, 0.88)
-border_color = Color(0.247, 0.663, 1.0, 0.45)
+[sub_resource type="StyleBoxFlat" id="MenuBlue"]
+bg_color = Color(0.247, 0.663, 1, 0.95)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 1, 1, 0.85)
+corner_radius_top_left = 999
+corner_radius_top_right = 999
+corner_radius_bottom_right = 999
+corner_radius_bottom_left = 999
+
+[sub_resource type="StyleBoxFlat" id="SatelliteButton"]
+bg_color = Color(0.071, 0.133, 0.212, 0.92)
 border_width_left = 1
 border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
+border_color = Color(0.494, 0.784, 1, 0.75)
 corner_radius_top_left = 999
 corner_radius_top_right = 999
-corner_radius_bottom_left = 999
 corner_radius_bottom_right = 999
-content_margin_left = 22.0
-content_margin_right = 22.0
-content_margin_top = 6.0
-content_margin_bottom = 6.0
-
-; Soil section background
-[sub_resource type="StyleBoxFlat" id="Style_soil_bg"]
-bg_color = Color(0.18, 0.118, 0.067, 0.95)
-corner_radius_top_left = 0
-corner_radius_top_right = 0
-corner_radius_bottom_left = 0
-corner_radius_bottom_right = 0
-
-; Subsurface label pill
-[sub_resource type="StyleBoxFlat" id="Style_subsurface_pill"]
-bg_color = Color(0.031, 0.047, 0.086, 0.70)
-border_color = Color(0.478, 0.549, 0.392, 0.55)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-corner_radius_top_left = 999
-corner_radius_top_right = 999
 corner_radius_bottom_left = 999
-corner_radius_bottom_right = 999
-content_margin_left = 16.0
-content_margin_right = 16.0
-content_margin_top = 6.0
-content_margin_bottom = 6.0
 
-; Collision shapes
-[sub_resource type="RectangleShape2D" id="RectShape_satellite"]
-size = Vector2(220, 180)
-
-[sub_resource type="RectangleShape2D" id="RectShape_launchpad"]
-size = Vector2(320, 220)
-
-; ── Root ──────────────────────────────────────────────────────────────────────
-[node name="EarthBase1" type="Node2D"]
-script = ExtResource("1")
-
-; ── Camera (centered on 1080×1920 canvas) ─────────────────────────────────────
-[node name="Camera2D" type="Camera2D" parent="."]
-position = Vector2(540, 960)
-
-; ── Stars — CanvasLayer −1 (behind sky) ──────────────────────────────────────
-[node name="AmbientStarLayer" type="CanvasLayer" parent="."]
-layer = -1
-
-[node name="StarRoot" type="Node2D" parent="AmbientStarLayer"]
-
-; ── Background — sky photo + environment events (layer 0) ─────────────────────
-[node name="BackgroundLayer" type="CanvasLayer" parent="."]
-layer = 0
-
-; Earth1.png at 1536×1024, scaled 1.875 → fills 2880×1920 (portrait height)
-; Centred on canvas at (540,960). A second tile sits off-screen right for drift.
-[node name="BackgroundSprite" type="Sprite2D" parent="BackgroundLayer"]
-position = Vector2(540, 960)
-scale = Vector2(1.875, 1.875)
-texture = ExtResource("0")
-
-[node name="BackgroundSprite2" type="Sprite2D" parent="BackgroundLayer"]
-position = Vector2(3420, 960)
-scale = Vector2(1.875, 1.875)
-texture = ExtResource("0")
-
-[node name="SkyNightFilterEvent" type="Node" parent="BackgroundLayer"]
-script = ExtResource("9")
-backdrop_paths = Array[NodePath]([NodePath("../BackgroundSprite"), NodePath("../BackgroundSprite2")])
-
-[node name="StarFieldEvent" type="Node2D" parent="BackgroundLayer"]
-script = ExtResource("10")
-
-[node name="SkyMapEvent" type="Node2D" parent="BackgroundLayer"]
-script = ExtResource("12")
-
-[node name="CloudDriftEvent" type="Node2D" parent="BackgroundLayer"]
-script = ExtResource("11")
-
-; ── Structures — buildings on the surface (layer 1) ──────────────────────────
-; Design: 402×874 device frame.
-; Width scale  1080/402 = 2.687
-; Height scale 1920/874 = 2.197
-;
-; Satellite  — design left:12 w:88 top:488 → center (56, 532) → canvas (150, 1169) scale 0.39
-; Launchpad  — design left:50% w:140 top:442 → center (201,512) → canvas (540, 1125) scale 0.245
-; ControlStation — dynamically managed by earth_base_1.gd (see constants therein)
-[node name="StructuresLayer" type="CanvasLayer" parent="."]
-layer = 1
-
-; Satellite Station — left, at forest/soil edge
-[node name="SatelliteStation" type="Node2D" parent="StructuresLayer"]
-position = Vector2(150, 1169)
-script = ExtResource("3")
-
-[node name="Sprite2D" type="Sprite2D" parent="StructuresLayer/SatelliteStation"]
-scale = Vector2(0.39, 0.39)
-texture = ExtResource("2")
-
-[node name="InteractionArea" type="Area2D" parent="StructuresLayer/SatelliteStation"]
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="StructuresLayer/SatelliteStation/InteractionArea"]
-shape = SubResource("RectShape_satellite")
-
-[node name="BuildDialog" type="ConfirmationDialog" parent="StructuresLayer/SatelliteStation"]
-title = "Build Scanner Station"
-
-[node name="InfoDialog" type="AcceptDialog" parent="StructuresLayer/SatelliteStation"]
-title = "Scanner Station"
-
-; Launchpad — centre, dominant building
-[node name="Launchpad" type="Node2D" parent="StructuresLayer"]
-position = Vector2(540, 1125)
-script = ExtResource("4")
-
-[node name="Sprite2D" type="Sprite2D" parent="StructuresLayer/Launchpad"]
-scale = Vector2(0.245, 0.245)
-texture = ExtResource("5")
-
-[node name="InteractionArea" type="Area2D" parent="StructuresLayer/Launchpad"]
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="StructuresLayer/Launchpad/InteractionArea"]
-shape = SubResource("RectShape_launchpad")
-
-; ControlStation is added/removed dynamically by _sync_control_station_presence() in earth_base_1.gd.
-
-; ── UI Layer — all HUD, chips, soil, nav (layer 2) ───────────────────────────
-[node name="UILayer" type="CanvasLayer" parent="."]
-layer = 2
-
-; ── Sky vignette — subtle dark gradient at top to anchor HUD ─────────────────
-[node name="SkyVignetteTop" type="ColorRect" parent="UILayer"]
-layout_mode = 1
-anchor_left = 0.0
-anchor_top = 0.0
+[node name="LandnamPortraitFlow" type="Control"]
+layout_mode = 3
+anchors_preset = 15
 anchor_right = 1.0
-anchor_bottom = 0.0
-offset_bottom = 200.0
-color = Color(0.024, 0.035, 0.059, 0.30)
-mouse_filter = 2
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1")
+screen_type = "hub"
 
-; ── Title block — eyebrow + "Earth Base" headline ────────────────────────────
-; Positioned at top-left below the HUD strip (design: top 56px → y=123)
-[node name="TitleBlock" type="VBoxContainer" parent="UILayer"]
-anchor_left = 0.0
-anchor_top = 0.0
-anchor_right = 0.0
-anchor_bottom = 0.0
-offset_left = 28.0
-offset_top = 130.0
-offset_right = 580.0
-offset_bottom = 250.0
-mouse_filter = 2
-theme_override_constants/separation = 4
+[node name="HubScreen" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 
-[node name="LandnamWordmark" type="Label" parent="UILayer/TitleBlock"]
-layout_mode = 2
-mouse_filter = 2
-theme_override_colors/font_color = Color(1.0, 1.0, 1.0, 0.60)
-theme_override_fonts/font = ExtResource("16")
-theme_override_font_sizes/font_size = 28
-text = "EARTH BASE · LV 1"
+[node name="SceneBg" type="TextureRect" parent="HubScreen"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2")
+expand_mode = 1
+stretch_mode = 6
 
-[node name="HubTitle" type="Label" parent="UILayer/TitleBlock"]
-layout_mode = 2
-mouse_filter = 2
-theme_override_colors/font_color = Color(1.0, 1.0, 1.0, 1.0)
-theme_override_fonts/font = ExtResource("15")
-theme_override_font_sizes/font_size = 80
+[node name="TopBar" type="Control" parent="HubScreen"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 124.0
+grow_horizontal = 2
+
+[node name="TopWash" type="ColorRect" parent="HubScreen/TopBar"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.024, 0.035, 0.059, 0.52)
+
+[node name="Eyebrow" type="Label" parent="HubScreen/TopBar"]
+layout_mode = 1
+offset_left = 24.0
+offset_top = 24.0
+offset_right = 440.0
+offset_bottom = 48.0
+theme_override_colors/font_color = Color(0.72, 0.78, 0.86, 1)
+theme_override_fonts/font = ExtResource("6")
+theme_override_font_sizes/font_size = 25
+text = "EARTH BASE / LV 6"
+
+[node name="Title" type="Label" parent="HubScreen/TopBar"]
+layout_mode = 1
+offset_left = 24.0
+offset_top = 48.0
+offset_right = 540.0
+offset_bottom = 96.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("6")
+theme_override_font_sizes/font_size = 47
 text = "Earth Base"
 
-; ── HUD Strip: Francs + Level + Jobs ──────────────────────────────────────────
-; Stacked vertically at top-right
-[node name="HUDStrip" type="VBoxContainer" parent="UILayer"]
+[node name="FrancsChip" type="PanelContainer" parent="HubScreen/TopBar"]
 layout_mode = 1
-anchor_left = 1.0
-anchor_top = 0.0
-anchor_right = 1.0
-anchor_bottom = 0.0
-offset_left = -300.0
-offset_top = 32.0
-offset_right = -28.0
-offset_bottom = 200.0
-grow_horizontal = 0
-alignment = 0
-theme_override_constants/separation = 10
-mouse_filter = 2
+offset_left = 940.0
+offset_top = 24.0
+offset_right = 1045.0
+offset_bottom = 58.0
+theme_override_styles/panel = SubResource("LabelPillBlue")
 
-[node name="FrancsChip" type="PanelContainer" parent="UILayer/HUDStrip"]
+[node name="Label" type="Label" parent="HubScreen/TopBar/FrancsChip"]
 layout_mode = 2
-size_flags_horizontal = 8
-mouse_filter = 2
-theme_override_styles/panel = SubResource("Style_francs_pill")
-
-[node name="HBox" type="HBoxContainer" parent="UILayer/HUDStrip/FrancsChip"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="Icon" type="Label" parent="UILayer/HUDStrip/FrancsChip/HBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.961, 0.651, 0.137, 1.0)
-text = "▲"
-
-[node name="FrancsLabel" type="Label" parent="UILayer/HUDStrip/FrancsChip/HBox"]
-layout_mode = 2
-mouse_filter = 2
-theme_override_colors/font_color = Color(0.961, 0.651, 0.137, 1.0)
-theme_override_fonts/font = ExtResource("15")
-theme_override_font_sizes/font_size = 28
-text = "1,240"
+theme_override_colors/font_color = Color(0.961, 0.651, 0.137, 1)
+theme_override_fonts/font = ExtResource("6")
+theme_override_font_sizes/font_size = 21
+text = "▲ 1,240"
+horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="JobsChip" type="PanelContainer" parent="UILayer/HUDStrip"]
-layout_mode = 2
-size_flags_horizontal = 8
-mouse_filter = 2
-theme_override_styles/panel = SubResource("Style_jobs_pill")
+[node name="JobsChip" type="PanelContainer" parent="HubScreen/TopBar"]
+layout_mode = 1
+offset_left = 968.0
+offset_top = 68.0
+offset_right = 1062.0
+offset_bottom = 102.0
+theme_override_styles/panel = SubResource("LabelPillBlue")
 
-[node name="HBox" type="HBoxContainer" parent="UILayer/HUDStrip/JobsChip"]
+[node name="Label" type="Label" parent="HubScreen/TopBar/JobsChip"]
 layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="Dot" type="Label" parent="UILayer/HUDStrip/JobsChip/HBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1.0, 0.702, 0.282, 1.0)
-text = "•"
-
-[node name="JobsLabel" type="Label" parent="UILayer/HUDStrip/JobsChip/HBox"]
-layout_mode = 2
-mouse_filter = 2
-theme_override_colors/font_color = Color(1.0, 0.702, 0.282, 1.0)
-theme_override_fonts/font = ExtResource("15")
-theme_override_font_sizes/font_size = 24
-text = "5 JOBS"
+theme_override_colors/font_color = Color(0.961, 0.651, 0.137, 1)
+theme_override_fonts/font = ExtResource("6")
+theme_override_font_sizes/font_size = 19
+text = "4 JOBS"
+horizontal_alignment = 1
 vertical_alignment = 1
 
-; ── Progression cards — tutorial / action cards below title ──────────────────
-[node name="ProgressionCards" type="VBoxContainer" parent="UILayer"]
-visible = false
-anchor_left = 0.0
-anchor_top = 0.0
+[node name="SurfaceStructures" type="Control" parent="HubScreen"]
+layout_mode = 1
+anchors_preset = 15
 anchor_right = 1.0
-anchor_bottom = 0.0
-offset_left = 28.0
-offset_top = 260.0
-offset_right = -28.0
-offset_bottom = 800.0
-clip_contents = true
-theme_override_constants/separation = 16
-script = ExtResource("14")
-
-[node name="ActiveMissionCard" parent="UILayer/ProgressionCards" instance=ExtResource("13")]
-visible = false
-layout_mode = 2
-card_title = "Mission In Progress"
-card_subtitle = "Resume the active mission from here."
-card_hint = "Resume the active mission flow instead of opening a new setup loop."
-card_cta = "Resume Mission"
-
-[node name="ControlStationCard" parent="UILayer/ProgressionCards" instance=ExtResource("13")]
-visible = false
-layout_mode = 2
-card_title = "Build Control Station"
-card_subtitle = "Mission 2 starts here. Construct the Control Station first."
-card_hint = "One-time construction. Your Launchpad reopens for new missions once it's in place."
-card_cta = "Build Control Station"
-
-[node name="ScannerStationCard" parent="UILayer/ProgressionCards" instance=ExtResource("13")]
-visible = false
-layout_mode = 2
-card_title = "Scanner Station"
-card_subtitle = "The scanner is now part of the Mission 3 real-data workflow."
-card_hint = "If this card appears on an older save, reopening the base will reconcile legacy state."
-card_cta = "Open Scanner Station"
-
-[node name="NextMissionCard" parent="UILayer/ProgressionCards" instance=ExtResource("13")]
-visible = false
-layout_mode = 2
-card_title = "Next Mission Available"
-card_subtitle = "Open Launchpad to plan the next mission."
-card_cta = "Open Launchpad"
-
-; ── Building identity chips — below each structure ────────────────────────────
-[node name="SatelliteChip" type="PanelContainer" parent="UILayer"]
-layout_mode = 1
-anchor_left = 0.0
-anchor_top = 0.0
-anchor_right = 0.0
-anchor_bottom = 0.0
-offset_left = 60.0
-offset_top = 1140.0
-offset_right = 260.0
-offset_bottom = 1200.0
-mouse_filter = 2
-theme_override_styles/panel = SubResource("Style_building_chip")
-
-[node name="HBox" type="HBoxContainer" parent="UILayer/SatelliteChip"]
-layout_mode = 2
-theme_override_constants/separation = 8
-alignment = 1
-
-[node name="Dot" type="Label" parent="UILayer/SatelliteChip/HBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.478, 0.510, 0.565, 1.0)
-text = "•"
-
-[node name="NameLabel" type="Label" parent="UILayer/SatelliteChip/HBox"]
-layout_mode = 2
-mouse_filter = 2
-theme_override_colors/font_color = Color(0.804, 0.894, 1.0, 1.0)
-theme_override_fonts/font = ExtResource("15")
-theme_override_font_sizes/font_size = 22
-text = "SATELLITE"
-horizontal_alignment = 1
-
-[node name="StatusLabel" type="Label" parent="UILayer/SatelliteChip/HBox"]
-layout_mode = 2
-mouse_filter = 2
-theme_override_colors/font_color = Color(0.478, 0.510, 0.565, 1.0)
-theme_override_fonts/font = ExtResource("16")
-theme_override_font_sizes/font_size = 18
-text = "L5"
-horizontal_alignment = 1
-
-[node name="LaunchpadChip" type="PanelContainer" parent="UILayer"]
-layout_mode = 1
-anchor_left = 0.5
-anchor_top = 0.0
-anchor_right = 0.5
-anchor_bottom = 0.0
-offset_left = -120.0
-offset_top = 1180.0
-offset_right = 120.0
-offset_bottom = 1240.0
-mouse_filter = 2
-theme_override_styles/panel = SubResource("Style_building_chip")
-
-[node name="HBox" type="HBoxContainer" parent="UILayer/LaunchpadChip"]
-layout_mode = 2
-theme_override_constants/separation = 8
-alignment = 1
-
-[node name="Dot" type="Label" parent="UILayer/LaunchpadChip/HBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.22, 0.851, 0.416, 1.0)
-text = "•"
-
-[node name="NameLabel" type="Label" parent="UILayer/LaunchpadChip/HBox"]
-layout_mode = 2
-mouse_filter = 2
-theme_override_colors/font_color = Color(0.804, 0.894, 1.0, 1.0)
-theme_override_fonts/font = ExtResource("15")
-theme_override_font_sizes/font_size = 22
-text = "LAUNCHPAD"
-horizontal_alignment = 1
-
-[node name="StatusLabel" type="Label" parent="UILayer/LaunchpadChip/HBox"]
-layout_mode = 2
-mouse_filter = 2
-theme_override_colors/font_color = Color(0.22, 0.851, 0.416, 1.0)
-theme_override_fonts/font = ExtResource("16")
-theme_override_font_sizes/font_size = 18
-text = "READY"
-horizontal_alignment = 1
-
-[node name="ControlChip" type="PanelContainer" parent="UILayer"]
-layout_mode = 1
-anchor_left = 1.0
-anchor_top = 0.0
-anchor_right = 1.0
-anchor_bottom = 0.0
-offset_left = -260.0
-offset_top = 1140.0
-offset_right = -60.0
-offset_bottom = 1200.0
-mouse_filter = 2
-visible = false
-theme_override_styles/panel = SubResource("Style_building_chip")
-
-[node name="HBox" type="HBoxContainer" parent="UILayer/ControlChip"]
-layout_mode = 2
-theme_override_constants/separation = 8
-alignment = 1
-
-[node name="Dot" type="Label" parent="UILayer/ControlChip/HBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1.0, 0.702, 0.282, 1.0)
-text = "•"
-
-[node name="NameLabel" type="Label" parent="UILayer/ControlChip/HBox"]
-layout_mode = 2
-mouse_filter = 2
-theme_override_colors/font_color = Color(0.804, 0.894, 1.0, 1.0)
-theme_override_fonts/font = ExtResource("15")
-theme_override_font_sizes/font_size = 22
-text = "CONTROL"
-horizontal_alignment = 1
-
-[node name="StatusLabel" type="Label" parent="UILayer/ControlChip/HBox"]
-layout_mode = 2
-mouse_filter = 2
-theme_override_colors/font_color = Color(1.0, 0.702, 0.282, 1.0)
-theme_override_fonts/font = ExtResource("16")
-theme_override_font_sizes/font_size = 18
-text = "5 JOBS"
-horizontal_alignment = 1
-
-; ── "Tap a building" hint pill ────────────────────────────────────────────────
-[node name="TapHintPanel" type="PanelContainer" parent="UILayer"]
-layout_mode = 1
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
 anchor_bottom = 1.0
-offset_left = -140.0
-offset_top = -340.0
-offset_right = 140.0
-offset_bottom = -280.0
-mouse_filter = 2
-theme_override_styles/panel = SubResource("Style_building_chip")
+grow_horizontal = 2
+grow_vertical = 2
 
-[node name="TapHintLabel" type="Label" parent="UILayer/TapHintPanel"]
-layout_mode = 2
-mouse_filter = 2
-theme_override_colors/font_color = Color(0.620, 0.863, 1.0, 1.0)
-theme_override_fonts/font = ExtResource("16")
-theme_override_font_sizes/font_size = 20
-text = "TAP A BUILDING"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-; ── Soil section and buried components ────────────────────────────────────────
-[node name="SoilSection" type="Control" parent="UILayer"]
+[node name="BuildLeftButton" type="Button" parent="HubScreen/SurfaceStructures"]
 layout_mode = 1
-anchor_left = 0.0
+offset_left = 170.0
+offset_top = 1290.0
+offset_right = 305.0
+offset_bottom = 1338.0
+theme_override_colors/font_color = Color(0.494, 0.784, 1, 1)
+theme_override_fonts/font = ExtResource("6")
+theme_override_font_sizes/font_size = 21
+theme_override_styles/normal = SubResource("LabelPillBlue")
+theme_override_styles/hover = SubResource("LabelPillBlue")
+text = "+ BUILD"
+
+[node name="LaunchpadArt" type="TextureRect" parent="HubScreen/SurfaceStructures"]
+layout_mode = 1
+offset_left = 448.0
+offset_top = 1140.0
+offset_right = 632.0
+offset_bottom = 1304.0
+texture = ExtResource("3")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="LaunchpadButton" type="Button" parent="HubScreen/SurfaceStructures"]
+layout_mode = 1
+offset_left = 432.0
+offset_top = 1282.0
+offset_right = 648.0
+offset_bottom = 1338.0
+theme_override_colors/font_color = Color(0.224, 0.827, 0.416, 1)
+theme_override_fonts/font = ExtResource("6")
+theme_override_font_sizes/font_size = 21
+theme_override_styles/normal = SubResource("LabelPillGreen")
+theme_override_styles/hover = SubResource("LabelPillGreen")
+text = "LAUNCHPAD  READY"
+
+[node name="BuildRightButton" type="Button" parent="HubScreen/SurfaceStructures"]
+layout_mode = 1
+offset_left = 784.0
+offset_top = 1290.0
+offset_right = 920.0
+offset_bottom = 1338.0
+theme_override_colors/font_color = Color(0.494, 0.784, 1, 1)
+theme_override_fonts/font = ExtResource("6")
+theme_override_font_sizes/font_size = 21
+theme_override_styles/normal = SubResource("LabelPillBlue")
+theme_override_styles/hover = SubResource("LabelPillBlue")
+text = "+ BUILD"
+
+[node name="TutorialCard" type="PanelContainer" parent="HubScreen"]
+layout_mode = 1
+anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = -500.0
-offset_bottom = -200.0
-mouse_filter = 2
-clip_contents = true
-
-[node name="SoilBase" type="ColorRect" parent="UILayer/SoilSection"]
-layout_mode = 1
-anchor_left = 0.0
-anchor_top = 0.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-color = Color(0.13, 0.08, 0.05, 0.8)
-mouse_filter = 2
-
-[node name="MarketChip" type="PanelContainer" parent="UILayer/SoilSection"]
-layout_mode = 1
-anchor_left = 0.0
-anchor_top = 0.5
-anchor_right = 0.0
-anchor_bottom = 0.5
-offset_left = 40.0
-offset_top = 100.0
-offset_right = 220.0
-offset_bottom = 150.0
-theme_override_styles/panel = SubResource("Style_building_chip")
-
-[node name="HBox" type="HBoxContainer" parent="UILayer/SoilSection/MarketChip"]
-layout_mode = 2
-theme_override_constants/separation = 8
-alignment = 1
-
-[node name="Icon" type="Label" parent="UILayer/SoilSection/MarketChip/HBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.66, 0.72, 0.81, 1.0)
-text = "🔒"
-
-[node name="Name" type="Label" parent="UILayer/SoilSection/MarketChip/HBox"]
-layout_mode = 2
-theme_override_fonts/font = ExtResource("15")
-theme_override_font_sizes/font_size = 18
-theme_override_colors/font_color = Color(0.66, 0.72, 0.81, 1.0)
-text = "MARKET"
-
-[node name="Status" type="Label" parent="UILayer/SoilSection/MarketChip/HBox"]
-layout_mode = 2
-theme_override_fonts/font = ExtResource("16")
-theme_override_font_sizes/font_size = 16
-theme_override_colors/font_color = Color(0.66, 0.72, 0.81, 1.0)
-text = "L5"
-
-[node name="SubsurfacePill" type="PanelContainer" parent="UILayer/SoilSection"]
-layout_mode = 1
-anchor_left = 1.0
-anchor_top = 0.0
-anchor_right = 1.0
-anchor_bottom = 0.0
-offset_left = -240.0
-offset_top = 20.0
-offset_right = -40.0
-offset_bottom = 80.0
-theme_override_styles/panel = SubResource("Style_building_chip")
-
-[node name="Dot" type="Label" parent="UILayer/SoilSection/SubsurfacePill"]
-layout_mode = 2
 offset_left = 20.0
-text = "•"
-theme_override_colors/font_color = Color(0.48, 0.55, 0.39, 1.0)
+offset_top = -220.0
+offset_right = -20.0
+offset_bottom = -116.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_styles/panel = SubResource("PanelDark")
 
-[node name="Label" type="Label" parent="UILayer/SoilSection/SubsurfacePill"]
+[node name="VBox" type="VBoxContainer" parent="HubScreen/TutorialCard"]
 layout_mode = 2
-theme_override_fonts/font = ExtResource("15")
-theme_override_font_sizes/font_size = 20
-theme_override_colors/font_color = Color(0.48, 0.55, 0.39, 1.0)
-text = "SUBSURFACE"
-horizontal_alignment = 1
-vertical_alignment = 1
+theme_override_constants/separation = 8
 
-; ── Navigation bar — bottom (design: bottom 90px on 874 → 198px on 1920) ──────
-; Buttons are styled/populated by _apply_nav_safe_area() in earth_base_1.gd.
-[node name="ButtonContainer" type="HBoxContainer" parent="UILayer"]
-anchor_left = 0.0
+[node name="Title" type="Label" parent="HubScreen/TutorialCard/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.902, 0.937, 1, 1)
+theme_override_fonts/font = ExtResource("6")
+theme_override_font_sizes/font_size = 31
+text = "Free operations"
+
+[node name="Copy" type="Label" parent="HubScreen/TutorialCard/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 1)
+theme_override_fonts/font = ExtResource("7")
+theme_override_font_sizes/font_size = 25
+text = "Tap Launchpad to choose a mission."
+
+[node name="RadialMenu" type="Control" parent="HubScreen"]
+layout_mode = 1
+anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = -198.0
-offset_bottom = 0.0
-custom_minimum_size = Vector2(0, 140)
+offset_top = -150.0
+grow_horizontal = 2
+grow_vertical = 0
 
-[node name="NavBackground" type="Panel" parent="UILayer/ButtonContainer"]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-mouse_filter = 1
-
-[node name="BackButton" type="Button" parent="UILayer/ButtonContainer"]
-visible = false
-layout_mode = 2
-focus_mode = 0
-text = "Back"
-
-[node name="ForwardButton" type="Button" parent="UILayer/ButtonContainer"]
-visible = false
-layout_mode = 2
-focus_mode = 0
-text = "Next"
-
-[node name="MenuButton" type="Button" parent="UILayer/ButtonContainer"]
-layout_mode = 2
-size_flags_horizontal = 3
-focus_mode = 0
-text = "Base"
-
-[node name="MarketButton" type="Button" parent="UILayer/ButtonContainer"]
-visible = false
-layout_mode = 2
-focus_mode = 0
-text = "Market"
-
-[node name="SpaceMapButton" type="Button" parent="UILayer/ButtonContainer"]
-layout_mode = 2
-size_flags_horizontal = 3
-focus_mode = 0
-text = "Atlas"
-
-[node name="BuildButton" type="Button" parent="UILayer/ButtonContainer"]
-layout_mode = 2
-size_flags_horizontal = 3
-focus_mode = 0
-text = "Build"
-
-[node name="NewMissionButton" type="Button" parent="UILayer/ButtonContainer"]
-layout_mode = 2
-size_flags_horizontal = 3
-focus_mode = 0
-text = "Missions"
-
-; ── Radial Navigation ─────────────────────────────────────────────────────────
-; Hub button (172×172) at bottom-center + 4 satellite buttons on 258-unit orbit.
-; Design: 64px hub, 54px satellites, 96px orbit radius (all in 402px frame →×2.687).
-; Hidden in landscape (tab bar used); shown in portrait by _setup_radial_nav() in gd.
-; Styled/wired by _setup_radial_nav(); satellite buttons toggled by _toggle_radial_menu().
-[node name="RadialNav" type="Control" parent="UILayer"]
+[node name="BaseButton" type="Button" parent="HubScreen/RadialMenu"]
 layout_mode = 1
-anchor_left = 0.0
-anchor_top = 0.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-mouse_filter = 2
-visible = false
+offset_left = 246.0
+offset_top = 24.0
+offset_right = 310.0
+offset_bottom = 88.0
+theme_override_colors/font_color = Color(0.224, 0.827, 0.416, 1)
+theme_override_fonts/font = ExtResource("6")
+theme_override_font_sizes/font_size = 19
+theme_override_styles/normal = SubResource("SatelliteButton")
+theme_override_styles/hover = SubResource("SatelliteButton")
+text = "BASE"
 
-; Dim overlay — covers screen when menu is open; tap to close
-[node name="RadialOverlay" type="ColorRect" parent="UILayer/RadialNav"]
+[node name="MissionsButton" type="Button" parent="HubScreen/RadialMenu"]
 layout_mode = 1
-anchor_left = 0.0
-anchor_top = 0.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-color = Color(0.024, 0.035, 0.059, 0.55)
-visible = false
-mouse_filter = 0
+offset_left = 418.0
+offset_top = 0.0
+offset_right = 500.0
+offset_bottom = 82.0
+theme_override_colors/font_color = Color(0.961, 0.651, 0.137, 1)
+theme_override_fonts/font = ExtResource("6")
+theme_override_font_sizes/font_size = 19
+theme_override_styles/normal = SubResource("SatelliteButton")
+theme_override_styles/hover = SubResource("SatelliteButton")
+text = "MISSIONS"
 
-; Glow ring — translucent cyan halo behind the hub button
-[node name="HubGlow" type="Panel" parent="UILayer/RadialNav"]
+[node name="GalaxyButton" type="Button" parent="HubScreen/RadialMenu"]
 layout_mode = 1
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
-anchor_bottom = 1.0
-offset_left = -110.0
-offset_top = -222.0
-offset_right = 110.0
-offset_bottom = -2.0
-mouse_filter = 2
+offset_left = 580.0
+offset_top = 0.0
+offset_right = 662.0
+offset_bottom = 82.0
+theme_override_colors/font_color = Color(0.494, 0.784, 1, 1)
+theme_override_fonts/font = ExtResource("6")
+theme_override_font_sizes/font_size = 19
+theme_override_styles/normal = SubResource("SatelliteButton")
+theme_override_styles/hover = SubResource("SatelliteButton")
+text = "ATLAS"
 
-; Hub button — 172×172 filled cyan circle, always visible in portrait
-[node name="HubButton" type="Button" parent="UILayer/RadialNav"]
+[node name="FabButton" type="Button" parent="HubScreen/RadialMenu"]
 layout_mode = 1
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
-anchor_bottom = 1.0
-offset_left = -86.0
-offset_top = -194.0
-offset_right = 86.0
-offset_bottom = -22.0
-focus_mode = 0
+offset_left = 770.0
+offset_top = 24.0
+offset_right = 834.0
+offset_bottom = 88.0
+theme_override_colors/font_color = Color(0.753, 0.518, 1, 1)
+theme_override_fonts/font = ExtResource("6")
+theme_override_font_sizes/font_size = 19
+theme_override_styles/normal = SubResource("SatelliteButton")
+theme_override_styles/hover = SubResource("SatelliteButton")
+text = "BUILD"
 
-; Satellite: Base — 165° (upper-left)
-[node name="SatBase" type="Button" parent="UILayer/RadialNav"]
+[node name="MenuButton" type="Button" parent="HubScreen/RadialMenu"]
 layout_mode = 1
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
-anchor_bottom = 1.0
-offset_left = -322.0
-offset_top = -248.0
-offset_right = -177.0
-offset_bottom = -103.0
-visible = false
-focus_mode = 0
-text = "Base"
-
-; Satellite: Atlas — 115° (upper centre-left)
-[node name="SatAtlas" type="Button" parent="UILayer/RadialNav"]
-layout_mode = 1
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
-anchor_bottom = 1.0
-offset_left = -182.0
-offset_top = -415.0
-offset_right = -37.0
-offset_bottom = -270.0
-visible = false
-focus_mode = 0
-text = "Atlas"
-
-; Satellite: Build — 65° (upper centre-right)
-[node name="SatBuild" type="Button" parent="UILayer/RadialNav"]
-layout_mode = 1
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
-anchor_bottom = 1.0
-offset_left = 37.0
-offset_top = -415.0
-offset_right = 182.0
-offset_bottom = -270.0
-visible = false
-focus_mode = 0
-text = "Build"
-
-; Satellite: Missions — 15° (upper-right)
-[node name="SatMissions" type="Button" parent="UILayer/RadialNav"]
-layout_mode = 1
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
-anchor_bottom = 1.0
-offset_left = 177.0
-offset_top = -248.0
-offset_right = 322.0
-offset_bottom = -103.0
-visible = false
-focus_mode = 0
-text = "Missions"
-
-; ── Environment engine ────────────────────────────────────────────────────────
-[node name="EnvironmentEngine" type="Node" parent="."]
-script = ExtResource("8")
+offset_left = 500.0
+offset_top = 58.0
+offset_right = 580.0
+offset_bottom = 138.0
+theme_override_colors/font_color = Color(0.024, 0.035, 0.059, 1)
+theme_override_fonts/font = ExtResource("6")
+theme_override_font_sizes/font_size = 35
+theme_override_styles/normal = SubResource("MenuBlue")
+theme_override_styles/hover = SubResource("MenuBlue")
+text = "|||"

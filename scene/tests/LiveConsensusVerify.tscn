@@ -1,6 +1,0 @@
-[gd_scene load_steps=2 format=3 uid="uid://bpny5uiwt0knk"]
-
-[ext_resource type="Script" path="res://tests/run_live_consensus_verify.gd" id="1_consensus"]
-
-[node name="LiveConsensusVerify" type="Node"]
-script = ExtResource("1_consensus")

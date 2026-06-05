@@ -7,10 +7,10 @@ var _on_refund: Callable
 const MIN_DISTANCE_KM := 150000.0
 const MAX_DISTANCE_KM := 3000000.0
 const PreviewRouting = preload("res://Scripts/UI/NewMissionPreviewRouting.gd")
-const LaunchRowScene = preload("res://Scenes/UI/Templates/NewMissionLaunchRow.tscn")
-const ReturningRowScene = preload("res://Scenes/UI/Templates/NewMissionReturningRow.tscn")
-const HeaderLabelScene = preload("res://Scenes/UI/Templates/MenuUnlockHeader.tscn")
-const EmptyLabelScene = preload("res://Scenes/UI/Templates/MenuLogbookEmpty.tscn")
+static var LaunchRowScene: PackedScene = load("res://Scenes/UI/Templates/NewMissionLaunchRow.tscn") if ResourceLoader.exists("res://Scenes/UI/Templates/NewMissionLaunchRow.tscn") else null
+static var ReturningRowScene: PackedScene = load("res://Scenes/UI/Templates/NewMissionReturningRow.tscn") if ResourceLoader.exists("res://Scenes/UI/Templates/NewMissionReturningRow.tscn") else null
+static var HeaderLabelScene: PackedScene = load("res://Scenes/UI/Templates/MenuUnlockHeader.tscn") if ResourceLoader.exists("res://Scenes/UI/Templates/MenuUnlockHeader.tscn") else null
+static var EmptyLabelScene: PackedScene = load("res://Scenes/UI/Templates/MenuLogbookEmpty.tscn") if ResourceLoader.exists("res://Scenes/UI/Templates/MenuLogbookEmpty.tscn") else null
 var _mission_rows := {}
 const TimeHelper = preload("res://Scripts/Earth/TimeHelper.gd")
 const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")

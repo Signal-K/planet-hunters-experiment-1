@@ -1,7 +1,0 @@
-[gd_scene format=3]
-
-[node name="MissionDebriefBulletRow" type="Label"]
-layout_mode = 2
-size_flags_horizontal = 3
-autowrap_mode = 3
-text = "• Guide item"

@@ -9,13 +9,13 @@ const VisualSync = preload("res://Scripts/UI/SidescrollMiningVisualSync.gd")
 const RoomCatalog = preload("res://Scripts/Utils/RoomCatalog.gd")
 const RoomSpriteAtlas = preload("res://Scripts/UI/RoomSpriteAtlas.gd")
 const MiningTargetTheme = preload("res://Scripts/UI/MiningTargetTheme.gd")
-const MiningRoomDebugMarkerScene = preload("res://Scenes/UI/Templates/MiningRoomDebugMarker.tscn")
+static var MiningRoomDebugMarkerScene: PackedScene = load("res://Scenes/UI/Templates/MiningRoomDebugMarker.tscn") if ResourceLoader.exists("res://Scenes/UI/Templates/MiningRoomDebugMarker.tscn") else null
 const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
 const SubcontractorManager = preload("res://Scripts/Utils/SubcontractorManager.gd")
 const UILayout = preload("res://Scripts/UI/UILayout.gd")
 const AppControllerHelper = preload("res://Scripts/Utils/AppControllerHelper.gd")
-const MiningRoomRowScene = preload("res://Scenes/UI/Templates/MiningRoomRow.tscn")
-const MiningContractOrderRowScene = preload("res://Scenes/UI/Templates/MiningContractOrderRow.tscn")
+static var MiningRoomRowScene: PackedScene = load("res://Scenes/UI/Templates/MiningRoomRow.tscn") if ResourceLoader.exists("res://Scenes/UI/Templates/MiningRoomRow.tscn") else null
+static var MiningContractOrderRowScene: PackedScene = load("res://Scenes/UI/Templates/MiningContractOrderRow.tscn") if ResourceLoader.exists("res://Scenes/UI/Templates/MiningContractOrderRow.tscn") else null
 
 const _ROCKET_FRAME_1 = preload("res://assets/Vehicles/StarterRocketStage2Frame1.png")
 const _ROCKET_FRAME_2 = preload("res://assets/Vehicles/StarterRocketStage2Frame2.png")

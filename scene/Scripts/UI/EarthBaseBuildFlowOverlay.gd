@@ -1,7 +1,7 @@
 extends Control
 
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
-const OptionCardScene = preload("res://Scenes/UI/Templates/EarthBaseBuildFlowOptionCard.tscn")
+static var OptionCardScene: PackedScene = load("res://Scenes/UI/Templates/EarthBaseBuildFlowOptionCard.tscn") if ResourceLoader.exists("res://Scenes/UI/Templates/EarthBaseBuildFlowOptionCard.tscn") else null
 
 signal cancelled
 signal location_selected(location_id: String)

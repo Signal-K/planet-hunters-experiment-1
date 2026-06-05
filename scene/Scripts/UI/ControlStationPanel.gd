@@ -5,15 +5,15 @@ signal panel_closed
 const PREVIEW_SCENE := "res://Scenes/UI/AsteroidPreview/asteroid_preview.tscn"
 const RocketSpecs = preload("res://Scripts/Utils/RocketSpecs.gd")
 const RocketsManager = preload("res://Scripts/Utils/RocketsManager.gd")
-const ControlStationActiveMissionCardScene = preload("res://Scenes/UI/Templates/ControlStationActiveMissionCard.tscn")
-const ControlStationStoryCardScene = preload("res://Scenes/UI/Templates/ControlStationStoryCard.tscn")
-const ControlStationQueueRowScene = preload("res://Scenes/UI/Templates/ControlStationQueueRow.tscn")
-const ControlStationDataPillScene = preload("res://Scenes/UI/Templates/ControlStationDataPill.tscn")
-const ControlStationMineralChipScene = preload("res://Scenes/UI/Templates/ControlStationMineralChip.tscn")
-const ControlStationEmptyStateCardScene = preload("res://Scenes/UI/Templates/ControlStationEmptyStateCard.tscn")
-const ControlStationLogLineScene = preload("res://Scenes/UI/Templates/ControlStationLogLine.tscn")
-const ControlStationMineralEmptyLabelScene = preload("res://Scenes/UI/Templates/ControlStationMineralEmptyLabel.tscn")
-const ControlStationMineralOverflowLabelScene = preload("res://Scenes/UI/Templates/ControlStationMineralOverflowLabel.tscn")
+static var ControlStationActiveMissionCardScene: PackedScene = load("res://Scenes/UI/Templates/ControlStationActiveMissionCard.tscn") if ResourceLoader.exists("res://Scenes/UI/Templates/ControlStationActiveMissionCard.tscn") else null
+static var ControlStationStoryCardScene: PackedScene = load("res://Scenes/UI/Templates/ControlStationStoryCard.tscn") if ResourceLoader.exists("res://Scenes/UI/Templates/ControlStationStoryCard.tscn") else null
+static var ControlStationQueueRowScene: PackedScene = load("res://Scenes/UI/Templates/ControlStationQueueRow.tscn") if ResourceLoader.exists("res://Scenes/UI/Templates/ControlStationQueueRow.tscn") else null
+static var ControlStationDataPillScene: PackedScene = load("res://Scenes/UI/Templates/ControlStationDataPill.tscn") if ResourceLoader.exists("res://Scenes/UI/Templates/ControlStationDataPill.tscn") else null
+static var ControlStationMineralChipScene: PackedScene = load("res://Scenes/UI/Templates/ControlStationMineralChip.tscn") if ResourceLoader.exists("res://Scenes/UI/Templates/ControlStationMineralChip.tscn") else null
+static var ControlStationEmptyStateCardScene: PackedScene = load("res://Scenes/UI/Templates/ControlStationEmptyStateCard.tscn") if ResourceLoader.exists("res://Scenes/UI/Templates/ControlStationEmptyStateCard.tscn") else null
+static var ControlStationLogLineScene: PackedScene = load("res://Scenes/UI/Templates/ControlStationLogLine.tscn") if ResourceLoader.exists("res://Scenes/UI/Templates/ControlStationLogLine.tscn") else null
+static var ControlStationMineralEmptyLabelScene: PackedScene = load("res://Scenes/UI/Templates/ControlStationMineralEmptyLabel.tscn") if ResourceLoader.exists("res://Scenes/UI/Templates/ControlStationMineralEmptyLabel.tscn") else null
+static var ControlStationMineralOverflowLabelScene: PackedScene = load("res://Scenes/UI/Templates/ControlStationMineralOverflowLabel.tscn") if ResourceLoader.exists("res://Scenes/UI/Templates/ControlStationMineralOverflowLabel.tscn") else null
 
 const MINERAL_ABBREV := {
 	"Iron": "Fe",

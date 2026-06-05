@@ -5,8 +5,8 @@ class_name LaunchWizardMapStep
 
 signal target_selected(target: Dictionary)
 
-const MapTargetLabelScene = preload("res://Scenes/UI/Templates/LaunchWizardMapTargetLabel.tscn")
-const MapTargetLabelSelectedScene = preload("res://Scenes/UI/Templates/LaunchWizardMapTargetLabelSelected.tscn")
+static var MapTargetLabelScene: PackedScene = load("res://Scenes/UI/Templates/LaunchWizardMapTargetLabel.tscn") if ResourceLoader.exists("res://Scenes/UI/Templates/LaunchWizardMapTargetLabel.tscn") else null
+static var MapTargetLabelSelectedScene: PackedScene = load("res://Scenes/UI/Templates/LaunchWizardMapTargetLabelSelected.tscn") if ResourceLoader.exists("res://Scenes/UI/Templates/LaunchWizardMapTargetLabelSelected.tscn") else null
 const STAR_COUNT := 180
 const _COL_BG := Color(0.028, 0.040, 0.090, 1.0)
 const _COL_STAR_FG := Color(0.88, 0.90, 0.96, 0.75)

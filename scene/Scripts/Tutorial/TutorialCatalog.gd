@@ -93,7 +93,7 @@ const STEPS_BY_MISSION := {
 			"id": "m2_build_control_station",
 			"action_key": "build_control_station",
 			"title": "Build the Control Station",
-			"message": "Your operation is growing. Build the Control Station to manage multiple rockets and track active missions.",
+			"message": "Tap Build, select Earth Base, then place the Control Station to unlock mission planning.",
 			"mechanic": "progression",
 			"valid_scenes": BASE_ONLY_SCENES
 		}

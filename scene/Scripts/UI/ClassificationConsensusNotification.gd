@@ -8,7 +8,7 @@ extends "res://Scripts/UI/BaseDialogLayer.gd"
 const ClassificationConsensus = preload("res://Scripts/Utils/ClassificationConsensus.gd")
 
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
-const TargetCardScene = preload("res://Scenes/UI/Templates/TargetClassificationCard.tscn")
+static var TargetCardScene: PackedScene = load("res://Scenes/UI/Templates/TargetClassificationCard.tscn") if ResourceLoader.exists("res://Scenes/UI/Templates/TargetClassificationCard.tscn") else null
 
 @onready var sync_label: Label          = $Center/Panel/VBox/StatusBar/Row/SyncLabel
 @onready var batch_label: Label         = $Center/Panel/VBox/Content/VBox/BatchLabel

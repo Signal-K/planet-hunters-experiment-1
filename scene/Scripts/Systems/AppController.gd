@@ -51,6 +51,8 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	is_ux_tour_running = OS.has_environment("GODOT_UX_TOUR")
 	AppLogger.d("AppController ready, counter initialized to: %s, is_ux_tour_running: %s" % [counter, is_ux_tour_running])
+	if _should_reset_save_for_editor_play():
+		_reset_save_for_editor_play()
 	load_franc_balance()
 	_unlock_rockets_for_mission_stage(RocketsManager.get_completed_mission_count())
 	load_preferences()
@@ -63,6 +65,40 @@ func _ready() -> void:
 		"franc_balance": franc_balance
 	})
 	_emit_player_state_snapshot("ready")
+
+func _should_reset_save_for_editor_play() -> bool:
+	if OS.has_feature("web") or OS.has_feature("mobile"):
+		return false
+	if OS.has_environment("LANDNAM_KEEP_EDITOR_SAVE"):
+		return false
+	return OS.has_feature("editor")
+
+func _reset_save_for_editor_play() -> void:
+	AppLogger.d("[AppController] Editor play detected. Resetting persisted save state before startup.")
+	_persistence.reset_all()
+	var rm = RocketsManager
+	if rm:
+		rm.reset_state()
+	JSONFileManager.save_json("user://mission_logs.json", MissionLogManager.build_default_state())
+	JSONFileManager.save_json("user://subcontractors.json", SubcontractorManager.build_default_state())
+	DirAccess.remove_absolute("user://rocket_unlock_popups.cfg")
+	DirAccess.remove_absolute(INTRO_SPLASH_FLAG_PATH)
+	DirAccess.remove_absolute("user://construction_state.json")
+	DirAccess.remove_absolute("user://first_time_mechanics.json")
+	DirAccess.remove_absolute("user://posthog_native_survey_gates.cfg")
+	DirAccess.remove_absolute("user://scene_screenshots")
+	FirstTimeMechanicTracker.reset_all()
+	MissionNarrativeAPI.reset_session_state()
+	preload("res://Scripts/Utils/MineralHoldings.gd").reset()
+	counter = 0
+	franc_balance = DEFAULT_FRANC_BALANCE
+	loan_balance = 0
+	_menu_request_version = 0
+	_menu_request_action = ""
+	_last_mining_result = {}
+	_last_mining_result_synced = true
+	_auto_start_mining = false
+	_pending_tutorial_actions.clear()
 
 func _ensure_tutorial_runtime() -> void:
 	_ensure_tutorial_controller()
@@ -598,4 +634,3 @@ func replay_tutorial_for_current_mission() -> void:
 
 func _on_tutorial_state_updated(state: Dictionary) -> void:
 	tutorial_state_updated.emit(state)
-

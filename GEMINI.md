@@ -7,13 +7,15 @@
 
 GDScript files are for functionality. They must not be used as a substitute for authoring scenes.
 
+This is a hard project rule for every agent. If a UI element, screen, card, button, label, panel, structure marker, tutorial card, menu, or layout block is known at design time, it must exist as an editor-visible node in a `.tscn` file. Implementing a Claude/Stitch/design-template screen by generating its visible controls in GDScript is not acceptable.
+
 When creating or changing a Godot scene, put the scene structure in the `.tscn` file: nodes, containers, labels, buttons, text content, layout, anchors, exported resources, and editor-visible defaults belong in the scene so it can be viewed and edited in the Godot editor.
 
 Do not create an empty `.tscn` with a root node and then build the visible UI in `_ready()` or helper methods. That pattern is prohibited for static or known UI because it makes scenes unreadable, uneditable, and bug-prone.
 
-Use `.gd` scripts only for behavior: signal handlers, state changes, data loading, validation, navigation, animation triggers, and binding runtime data into existing scene nodes. Runtime node creation is acceptable only for genuinely dynamic repeated content, such as rendering an arbitrary number of rows from player data, and should use preauthored child scenes/resources when practical.
+Use `.gd` scripts only for behavior: signal handlers, state changes, data loading, validation, navigation, animation triggers, and binding runtime data into existing scene nodes. Runtime node creation is acceptable only for genuinely dynamic repeated content, such as rendering an arbitrary number of rows from player data, and must use preauthored child scenes/resources when practical.
 
-Before finishing any task that creates a scene, verify the `.tscn` contains the meaningful node tree and static UI/text, and that the attached script is not constructing that static UI in code.
+Before finishing any task that creates or changes a scene, verify the `.tscn` contains the meaningful node tree, static UI/text, layout, and asset references, and that the attached script is not constructing that static UI in code. If the scene editor would not show the relevant UI before the game is run, the task is not complete.
 
 ## UI Blocks Need Dedicated Layout Segments
 

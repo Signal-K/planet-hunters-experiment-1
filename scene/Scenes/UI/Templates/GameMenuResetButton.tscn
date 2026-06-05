@@ -1,5 +1,0 @@
-[gd_scene format=3 uid="uid://game_menu_reset_button"]
-
-[node name="GameMenuResetButton" type="Button"]
-layout_mode = 2
-text = "Reset All Progress"

@@ -1,8 +1,8 @@
 extends RefCounted
 class_name SatelliteStationPanelList
 
-const AnomalyItemScene = preload("res://Scenes/UI/Templates/SatelliteAnomalyItem.tscn")
-const EmptyLabelScene = preload("res://Scenes/UI/Templates/MenuLogbookEmpty.tscn")
+static var AnomalyItemScene: PackedScene = load("res://Scenes/UI/Templates/SatelliteAnomalyItem.tscn") if ResourceLoader.exists("res://Scenes/UI/Templates/SatelliteAnomalyItem.tscn") else null
+static var EmptyLabelScene: PackedScene = load("res://Scenes/UI/Templates/MenuLogbookEmpty.tscn") if ResourceLoader.exists("res://Scenes/UI/Templates/MenuLogbookEmpty.tscn") else null
 const ClassificationConsensus = preload("res://Scripts/Utils/ClassificationConsensus.gd")
 const PanelStyle = preload("res://Scripts/UI/PanelStyle.gd")
 

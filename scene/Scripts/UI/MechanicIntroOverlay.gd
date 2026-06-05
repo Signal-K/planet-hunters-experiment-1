@@ -7,7 +7,7 @@ extends CanvasLayer
 ##                    targeting, efficiency, schematic_label, protocol, auth
 
 const DIALOG_LAYER := 128
-const StepRowScene = preload("res://Scenes/UI/Templates/MechanicIntroStepRow.tscn")
+static var StepRowScene: PackedScene = load("res://Scenes/UI/Templates/MechanicIntroStepRow.tscn") if ResourceLoader.exists("res://Scenes/UI/Templates/MechanicIntroStepRow.tscn") else null
 
 @onready var protocol_label: Label   = $Center/Panel/OuterVBox/HeaderBar/HeaderRow/ProtocolLabel
 @onready var coord_label: Label      = $Center/Panel/OuterVBox/HeaderBar/HeaderRow/CoordLabel
