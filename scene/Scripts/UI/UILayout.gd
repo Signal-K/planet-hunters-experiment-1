@@ -112,6 +112,11 @@ static func clamp_to_viewport(r: Rect2, vp: Vector2) -> Rect2:
 static func safe_rect(vp: Vector2) -> Rect2:
 	return Rect2(EDGE, EDGE, vp.x - EDGE * 2, vp.y - EDGE * 2)
 
+## True when the viewport is taller than it is wide (phone portrait, etc.).
+## Use this to switch between single-column and side-by-side layouts.
+static func is_portrait(vp: Vector2) -> bool:
+	return vp.y >= vp.x
+
 ## Shared bottom clearance for controls that should never sit flush with the
 ## viewport edge. Mobile gets a larger lift to stay clear of browser chrome and
 ## the iOS home indicator; desktop still keeps a small visual gap.
