@@ -52,10 +52,26 @@ func _ready() -> void:
 			_go(BASE_SCENE)
 		)
 		_connect("SettingsButton", func():
+			_show_node("MainMenuOverlay", true)
+		)
+		_connect("CloseMenuButton", func():
+			_show_node("MainMenuOverlay", false)
+		)
+		_connect("MissionsMenuButton", func():
+			_show_node("MainMenuOverlay", false)
+			_go(MISSIONS_SCENE)
+		)
+		_connect("GalaxyMenuButton", func():
+			_show_node("MainMenuOverlay", false)
+			_go(GALAXY_SCENE)
+		)
+		_connect("OpenResetButton", func():
+			_show_node("MainMenuOverlay", false)
 			_show_node("ResetOverlay", true)
 		)
 		_connect("CancelButton", func():
 			_show_node("ResetOverlay", false)
+			_show_node("MainMenuOverlay", true)
 		)
 		_connect("ConfirmResetButton", func():
 			GameState.full_reset()

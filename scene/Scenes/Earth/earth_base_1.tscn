@@ -297,6 +297,94 @@ theme_override_styles/normal = SubResource("MenuBlue")
 theme_override_styles/hover = SubResource("MenuBlue")
 text = "|||"
 
+[node name="MainMenuOverlay" type="Control" parent="HubScreen"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+visible = false
+
+[node name="Dim" type="ColorRect" parent="HubScreen/MainMenuOverlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.72)
+
+[node name="Card" type="PanelContainer" parent="HubScreen/MainMenuOverlay"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -270.0
+offset_top = -280.0
+offset_right = 270.0
+offset_bottom = 280.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("PanelDark")
+
+[node name="VBox" type="VBoxContainer" parent="HubScreen/MainMenuOverlay/Card"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Title" type="Label" parent="HubScreen/MainMenuOverlay/Card/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.902, 0.937, 1, 1)
+theme_override_fonts/font = ExtResource("4")
+theme_override_font_sizes/font_size = 35
+text = "Menu"
+
+[node name="MissionsMenuButton" type="Button" parent="HubScreen/MainMenuOverlay/Card/VBox"]
+custom_minimum_size = Vector2(0, 72)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.494, 0.784, 1, 1)
+theme_override_fonts/font = ExtResource("4")
+theme_override_font_sizes/font_size = 26
+theme_override_styles/normal = SubResource("PillBlue")
+theme_override_styles/hover = SubResource("PillBlue")
+text = "MISSIONS →"
+
+[node name="GalaxyMenuButton" type="Button" parent="HubScreen/MainMenuOverlay/Card/VBox"]
+custom_minimum_size = Vector2(0, 72)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.494, 0.784, 1, 1)
+theme_override_fonts/font = ExtResource("4")
+theme_override_font_sizes/font_size = 26
+theme_override_styles/normal = SubResource("PillBlue")
+theme_override_styles/hover = SubResource("PillBlue")
+text = "GALAXY MAP →"
+
+[node name="OpenResetButton" type="Button" parent="HubScreen/MainMenuOverlay/Card/VBox"]
+custom_minimum_size = Vector2(0, 72)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.5, 0.5, 1)
+theme_override_fonts/font = ExtResource("4")
+theme_override_font_sizes/font_size = 26
+theme_override_styles/normal = SubResource("PillRed")
+theme_override_styles/hover = SubResource("PillRed")
+text = "RESET PROGRESS"
+
+[node name="Sep" type="Control" parent="HubScreen/MainMenuOverlay/Card/VBox"]
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+
+[node name="CloseMenuButton" type="Button" parent="HubScreen/MainMenuOverlay/Card/VBox"]
+custom_minimum_size = Vector2(0, 72)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 1)
+theme_override_fonts/font = ExtResource("4")
+theme_override_font_sizes/font_size = 26
+theme_override_styles/normal = SubResource("PillBlue")
+theme_override_styles/hover = SubResource("PillBlue")
+text = "CLOSE"
+
 [node name="ResetOverlay" type="Control" parent="HubScreen"]
 layout_mode = 1
 anchors_preset = 15
