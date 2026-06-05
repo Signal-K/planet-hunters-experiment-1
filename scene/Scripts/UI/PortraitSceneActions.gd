@@ -2,50 +2,53 @@ extends Control
 
 @export var screen_type := ""
 
-const BASE_SCENE := "res://Scenes/Earth/earth_base_1.tscn"
+const BASE_SCENE    := "res://Scenes/Earth/earth_base_1.tscn"
 const MISSIONS_SCENE := "res://Scenes/UI/LaunchWizard.tscn"
-const TARGETS_SCENE := "res://Scenes/UI/SpaceMap/space_map.tscn"
-const GALAXY_SCENE := "res://Scenes/UI/SpaceMap/galaxy_map.tscn"
-const FAB_SCENE := "res://Scenes/Transitions/rocket_ascent.tscn"
-const TRANSIT_SCENE := "res://Scenes/Transitions/rocket_transit.tscn"
-const MINING_SCENE := "res://Scenes/UI/SidescrollMining.tscn"
-const DEBRIEF_SCENE := "res://Scenes/Earth/mission_debrief_v2.tscn"
+const TARGETS_SCENE  := "res://Scenes/UI/SpaceMap/space_map.tscn"
+const GALAXY_SCENE   := "res://Scenes/UI/SpaceMap/galaxy_map.tscn"
+const FAB_SCENE      := "res://Scenes/Transitions/rocket_ascent.tscn"
+const TRANSIT_SCENE  := "res://Scenes/Transitions/rocket_transit.tscn"
+const MINING_SCENE   := "res://Scenes/UI/SidescrollMining.tscn"
+const DEBRIEF_SCENE  := "res://Scenes/Earth/mission_debrief_v2.tscn"
 
-# Hub layout: x ranges for each of the 3 surface plots [left, right]
+# Hub surface: x ranges for each of the 4 build slots [left, right]
 const _SLOT_X := [[12.0, 267.0], [279.0, 534.0], [546.0, 801.0], [813.0, 1068.0]]
-const _ART_Y := [980.0, 1340.0]   # top, bottom for structure art
-const _BTN_Y := [1345.0, 1415.0]  # top, bottom for label button
+const _ART_Y  := [980.0, 1340.0]   # top/bottom for structure art
+const _BTN_Y  := [1345.0, 1415.0]  # top/bottom for label button
 
 signal back_pressed
 signal launched(rocket_id: String, target_id: String)
 
 func _ready() -> void:
-	_connect("BackButton", _go_back)
-	_connect("BaseButton", func(): _go(BASE_SCENE))
-	_connect("MenuButton", func(): _go(MISSIONS_SCENE))
-	_connect("LaunchpadButton", func(): _go(MISSIONS_SCENE))
-	_connect("MissionsButton", func(): _go(MISSIONS_SCENE))
-	_connect("GalaxyButton", func(): _go(GALAXY_SCENE))
-	_connect("FabButton", func(): _go(MISSIONS_SCENE))
-	_connect("Contract1Button", func(): _go(TARGETS_SCENE))
-	_connect("Contract2Button", func(): _go(TARGETS_SCENE))
-	_connect("Contract3Button", func(): _go(TARGETS_SCENE))
-	_connect("TargetMarsButton", func(): _go(FAB_SCENE))
-	_connect("TargetBeltButton", func(): _go(FAB_SCENE))
+	_connect("BackButton",          _go_back)
+	_connect("LaunchpadButton",     func(): _go(MISSIONS_SCENE))
+	_connect("Contract1Button",     func(): _go(TARGETS_SCENE))
+	_connect("Contract2Button",     func(): _go(TARGETS_SCENE))
+	_connect("Contract3Button",     func(): _go(TARGETS_SCENE))
+	_connect("TargetMarsButton",    func(): _go(FAB_SCENE))
+	_connect("TargetBeltButton",    func(): _go(FAB_SCENE))
 	_connect("LaunchButton", func():
 		launched.emit("starter_rocket_1", "mars")
 		_go(TRANSIT_SCENE)
 	)
-	_connect("ArriveButton", func(): _go(MINING_SCENE))
-	_connect("CompleteMiningButton", func(): _go(DEBRIEF_SCENE))
-	_connect("SellCargoButton", func(): _go(BASE_SCENE))
+	_connect("ArriveButton",        func(): _go(MINING_SCENE))
+	_connect("CompleteMiningButton",func(): _go(DEBRIEF_SCENE))
+	_connect("SellCargoButton",     func(): _go(BASE_SCENE))
 	if screen_type == "hub":
-		_connect("BuildLeftButton", func():
+		_connect("BuildSlot0Button", func():
 			GameState.set_launchpad_plot(0)
 			_go(BASE_SCENE)
 		)
-		_connect("BuildRightButton", func():
+		_connect("BuildSlot1Button", func():
+			GameState.set_launchpad_plot(1)
+			_go(BASE_SCENE)
+		)
+		_connect("BuildSlot2Button", func():
 			GameState.set_launchpad_plot(2)
+			_go(BASE_SCENE)
+		)
+		_connect("BuildSlot3Button", func():
+			GameState.set_launchpad_plot(3)
 			_go(BASE_SCENE)
 		)
 		_connect("SettingsButton", func():
@@ -62,18 +65,20 @@ func _ready() -> void:
 
 func _refresh_hub_layout() -> void:
 	var plot := GameState.launchpad_plot
-	_set_slot("LaunchpadArt", plot, true)
+	_set_slot("LaunchpadArt",    plot, true)
 	_set_slot("LaunchpadButton", plot, false)
-	_show_node("BuildLeftButton", plot != 0)
-	_show_node("BuildRightButton", plot != 2)
+	_show_node("BuildSlot0Button", plot != 0)
+	_show_node("BuildSlot1Button", plot != 1)
+	_show_node("BuildSlot2Button", plot != 2)
+	_show_node("BuildSlot3Button", plot != 3)
 
 func _set_slot(node_name: String, slot: int, is_art: bool) -> void:
 	var node := find_child(node_name, true, false) as Control
 	if node == null:
 		return
-	node.offset_left = _SLOT_X[slot][0]
-	node.offset_right = _SLOT_X[slot][1]
-	node.offset_top = _ART_Y[0] if is_art else _BTN_Y[0]
+	node.offset_left   = _SLOT_X[slot][0]
+	node.offset_right  = _SLOT_X[slot][1]
+	node.offset_top    = _ART_Y[0] if is_art else _BTN_Y[0]
 	node.offset_bottom = _ART_Y[1] if is_art else _BTN_Y[1]
 
 func _show_node(node_name: String, shown: bool) -> void:

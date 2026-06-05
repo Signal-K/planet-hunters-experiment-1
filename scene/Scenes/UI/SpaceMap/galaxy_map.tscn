@@ -1,0 +1,125 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/PortraitSceneActions.gd" id="1"]
+[ext_resource type="FontFile" path="res://Resources/Fonts/Oxanium-ExtraBold.ttf" id="2"]
+[ext_resource type="FontFile" path="res://Resources/Fonts/Oxanium-Regular.ttf" id="3"]
+
+[sub_resource type="StyleBoxFlat" id="PanelDark"]
+bg_color = Color(0.071, 0.133, 0.212, 0.86)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.961, 0.651, 0.137, 0.5)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="PillBlue"]
+bg_color = Color(0.247, 0.663, 1, 0.1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.247, 0.663, 1, 0.55)
+corner_radius_top_left = 999
+corner_radius_top_right = 999
+corner_radius_bottom_right = 999
+corner_radius_bottom_left = 999
+content_margin_left = 18
+content_margin_top = 10
+content_margin_right = 18
+content_margin_bottom = 10
+
+[node name="LandnamPortraitFlow" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1")
+screen_type = "galaxy"
+
+[node name="GalaxyScreen" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="BgFill" type="ColorRect" parent="GalaxyScreen"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.006, 0.008, 0.02, 1)
+
+[node name="TopBar" type="Control" parent="GalaxyScreen"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 120.0
+grow_horizontal = 2
+
+[node name="TopWash" type="ColorRect" parent="GalaxyScreen/TopBar"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.024, 0.035, 0.059, 0.85)
+
+[node name="BackButton" type="Button" parent="GalaxyScreen/TopBar"]
+layout_mode = 1
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 180.0
+offset_bottom = 78.0
+theme_override_colors/font_color = Color(0.494, 0.784, 1, 1)
+theme_override_fonts/font = ExtResource("2")
+theme_override_font_sizes/font_size = 21
+theme_override_styles/normal = SubResource("PillBlue")
+theme_override_styles/hover = SubResource("PillBlue")
+text = "← BACK"
+
+[node name="Title" type="Label" parent="GalaxyScreen/TopBar"]
+layout_mode = 1
+offset_left = 200.0
+offset_top = 22.0
+offset_right = 900.0
+offset_bottom = 100.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("2")
+theme_override_font_sizes/font_size = 47
+text = "Atlas"
+
+[node name="PlaceholderCard" type="PanelContainer" parent="GalaxyScreen"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -100.0
+offset_right = 300.0
+offset_bottom = 100.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("PanelDark")
+
+[node name="Label" type="Label" parent="GalaxyScreen/PlaceholderCard"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.663, 0.722, 0.808, 1)
+theme_override_fonts/font = ExtResource("3")
+theme_override_font_sizes/font_size = 25
+text = "Galaxy map — coming soon."
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
