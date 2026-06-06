@@ -20,8 +20,10 @@ const MICRO_SURVEY_KEYS = {
   level_up:     "landnam_micro_survey_level_up_v1",
   planet_found: "landnam_micro_survey_planet_found_v1",
   difficulty:   "landnam_micro_survey_difficulty_v1",
+  nav_test:     "landnam_micro_survey_nav_test_v1",
 };
 const SESSION_COUNT_KEY = "landnam_session_count_v1";
+const LAUNCHPAD_BACK_COUNT_KEY = "landnam_launchpad_back_count_v1";
 const MICRO_SURVEY_IDS = {
   contractor:  "019ccaf8-4299-0000-b3ad-92a57ab75b95",
   mining:      "019ccaf8-c4d8-0000-901b-aa850dfd43c5",
@@ -34,6 +36,7 @@ const MICRO_SURVEY_IDS = {
   level_up:     "019e5a4e-5f74-0000-2470-c06526c3e36d",
   planet_found: "019e5a4e-6528-0000-b69d-e5745079ffd5",
   difficulty:   "019e5a4e-6b23-0000-dbb1-0bed0fad9910",
+  nav_test:     "019e5a8a-840d-0000-7d68-d43089c0fd61",
 };
 const SURVEY_OVERLAY_ID = "landnam-survey-overlay";
 const SURVEY_IFRAME_ID = "landnam-survey-iframe";
@@ -1155,6 +1158,20 @@ function maybeShowDifficultySurvey(payload) {
   );
 }
 
+function maybeShowNavTestSurvey() {
+  try {
+    const count = Number(localStorage.getItem(LAUNCHPAD_BACK_COUNT_KEY) || "0") + 1;
+    localStorage.setItem(LAUNCHPAD_BACK_COUNT_KEY, String(count));
+    if (count < 3) return;
+  } catch (_) { return; }
+  maybeTriggerMicroSurvey(
+    MICRO_SURVEY_KEYS.nav_test,
+    MICRO_SURVEY_IDS.nav_test,
+    "nav_test",
+    {}
+  );
+}
+
 function maybeShowReturnVisitSurvey() {
   // Increment session count and arm _pendingReturnVisitSurvey on the 2nd session.
   // The survey fires when the player completes a meaningful mechanic — see onGameMessage.
@@ -1726,6 +1743,9 @@ function App() {
       }
       if (eventName === "player_stuck_detected") {
         maybeShowDifficultySurvey(payload);
+      }
+      if (eventName === "launchpad_back_pressed") {
+        maybeShowNavTestSurvey();
       }
       if (eventName === "scanner_scan_completed") {
         maybeShowScienceSurvey(payload);
