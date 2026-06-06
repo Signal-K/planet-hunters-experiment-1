@@ -70,4 +70,21 @@ describe("PostHog native survey guard — react-shell.js", () => {
     expect(fnMatch).not.toBeNull();
     expect(fnMatch![0]).toMatch(/surveys\.getActiveMatchingSurveys\s*=\s*noopAsync/);
   });
+
+  test("manual feedback opens the production PostHog survey through the inline renderer", () => {
+    expect(shellSrc).toMatch(/const\s+FEEDBACK_SURVEY_ID\s*=\s*"019e7269-3773-0000-a6d1-d944a8724a09"/);
+    expect(shellSrc).toMatch(/eventName\s*===\s*"feedback_requested"[\s\S]*?showFeedbackSurvey\s*\(\s*payload\s*\)/);
+    expect(shellSrc).toMatch(/showInlineSurvey\([\s\S]*?FEEDBACK_SURVEY_ID,[\s\S]*?bypassCooldown:\s*true/);
+  });
+
+  test("inline surveys use an atomic opening lock and a session cooldown", () => {
+    expect(shellSrc).toMatch(/const\s+SURVEY_COOLDOWN_MS\s*=\s*60\s*\*\s*1000/);
+    expect(shellSrc).toMatch(/if\s*\(_surveyOpening\s*\|\|\s*document\.getElementById\(SURVEY_OVERLAY_ID\)\)\s*return false/);
+    expect(shellSrc).toMatch(/_surveyOpening\s*=\s*true/);
+    expect(shellSrc).toMatch(/Date\.now\(\)\s*-\s*_surveyLastClosedAt\s*<\s*SURVEY_COOLDOWN_MS/);
+  });
+
+  test("survey dedup is recorded only after the survey actually opens", () => {
+    expect(shellSrc).toMatch(/const opened = await showInlineSurvey\(params, surveyId\);\s*if \(opened\) localStorage\.setItem\(storageKey/);
+  });
 });

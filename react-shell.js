@@ -36,8 +36,8 @@ const MICRO_SURVEY_IDS = {
   difficulty:   "019e5a4e-6b23-0000-dbb1-0bed0fad9910",
 };
 const SURVEY_OVERLAY_ID = "landnam-survey-overlay";
-const SURVEY_IFRAME_ID = "landnam-survey-iframe";
-const FEEDBACK_OVERLAY_ID = "landnam-feedback-overlay";
+const FEEDBACK_SURVEY_ID = "019e7269-3773-0000-a6d1-d944a8724a09";
+const SURVEY_COOLDOWN_MS = 60 * 1000;
 const SUPABASE_SESSION_STORAGE_KEY = "landnam_supabase_guest";
 const XP_STATE_KEY = "landnam_xp_state_v1";
 const DEFAULT_RUNTIME_CONFIG = {
@@ -64,6 +64,8 @@ let _pendingXpSnapshot = null;
 // Set to true when this is the 2nd session; cleared once the survey fires
 let _pendingReturnVisitSurvey = false;
 let _cachedSurveyDefs = null;
+let _surveyOpening = false;
+let _surveyLastClosedAt = 0;
 
 const LEVEL_UNLOCK_HINTS = {
   2: "Longer range unlocked",
@@ -535,173 +537,13 @@ function removeSurveyOverlay() {
   }
 }
 
-function removeFeedbackOverlay() {
-  const existing = document.getElementById(FEEDBACK_OVERLAY_ID);
-  if (existing && existing.parentNode) {
-    existing.parentNode.removeChild(existing);
-  }
-}
-
-function showFeedbackDialog(context = {}) {
-  removeFeedbackOverlay();
-
-  const overlay = document.createElement("div");
-  overlay.id = FEEDBACK_OVERLAY_ID;
-  overlay.style.position = "fixed";
-  overlay.style.inset = "0";
-  overlay.style.background = "rgba(2, 6, 15, 0.85)";
-  overlay.style.zIndex = "2147482647";
-  overlay.style.display = "flex";
-  overlay.style.alignItems = "center";
-  overlay.style.justifyContent = "center";
-  overlay.style.padding = "16px";
-  overlay.style.boxSizing = "border-box";
-
-  const card = document.createElement("form");
-  card.style.width = "min(560px, 100%)";
-  card.style.maxHeight = "min(calc(100svh - 32px), 800px)";
-  card.style.background = "#08111d";
-  card.style.border = "1px solid #233455";
-  card.style.borderRadius = "18px";
-  card.style.boxShadow = "0 24px 60px rgba(0, 0, 0, 0.6)";
-  card.style.display = "flex";
-  card.style.flexDirection = "column";
-  card.style.overflow = "hidden";
-  card.style.boxSizing = "border-box";
-
-  const cardBody = document.createElement("div");
-  cardBody.style.padding = "24px 24px 12px";
-  cardBody.style.display = "grid";
-  cardBody.style.gap = "12px";
-  cardBody.style.overflowY = "auto";
-  cardBody.style.flex = "1";
-  cardBody.style.boxSizing = "border-box";
-  cardBody.style.webkitOverflowScrolling = "touch";
-
-  const title = document.createElement("h2");
-  title.textContent = "Where did you get stuck?";
-  title.style.margin = "0";
-  title.style.fontSize = "22px";
-  title.style.color = "#e7edf9";
-  title.style.fontWeight = "700";
-
-  const intro = document.createElement("p");
-  intro.textContent = "Send quick feedback with your current context. We will line it up with replay and gameplay events.";
-  intro.style.margin = "0";
-  intro.style.color = "#a9b4cc";
-  intro.style.lineHeight = "1.5";
-  intro.style.fontSize = "14px";
-
-  const blockerSelect = document.createElement("select");
-  blockerSelect.innerHTML = [
-    '<option value="navigation">I could not tell where to go</option>',
-    '<option value="mining">Mining felt too hard or unclear</option>',
-    '<option value="targeting">I did not understand target choice</option>',
-    '<option value="economy">Rewards or progression felt confusing</option>',
-    '<option value="bug">Something looked broken</option>',
-  ].join("");
-
-  const severitySelect = document.createElement("select");
-  severitySelect.innerHTML = [
-    '<option value="minor">Minor friction</option>',
-    '<option value="major">Major blocker</option>',
-    '<option value="quit_risk">I was close to quitting</option>',
-  ].join("");
-
-  const expectation = document.createElement("textarea");
-  expectation.rows = 3;
-  expectation.placeholder = "What were you trying to do, and what did you expect to happen?";
-  expectation.style.resize = "vertical";
-
-  const details = document.createElement("textarea");
-  details.rows = 2;
-  details.placeholder = "Anything else? Controls, tutorial, pacing, unclear text, bugs.";
-  details.style.resize = "vertical";
-
-  [blockerSelect, severitySelect, expectation, details].forEach((element) => {
-    element.style.width = "100%";
-    element.style.boxSizing = "border-box";
-    element.style.borderRadius = "12px";
-    element.style.border = "1px solid #30496f";
-    element.style.background = "#101c30";
-    element.style.color = "#e7edf9";
-    element.style.padding = "12px";
-    element.style.fontSize = "15px";
-    element.style.fontFamily = "inherit";
-  });
-
-  const footer = document.createElement("div");
-  footer.style.display = "flex";
-  footer.style.justifyContent = "space-between";
-  footer.style.gap = "12px";
-  footer.style.flexWrap = "wrap";
-  footer.style.padding = "16px 24px 20px";
-  footer.style.borderTop = "1px solid #1a2a44";
-  footer.style.background = "#0a1626";
-  footer.style.boxSizing = "border-box";
-
-  const closeBtn = document.createElement("button");
-  closeBtn.type = "button";
-  closeBtn.textContent = "Close";
-  closeBtn.style.border = "1px solid #30496f";
-  closeBtn.style.background = "#12213a";
-  closeBtn.style.color = "#dce7fb";
-  closeBtn.style.padding = "10px 20px";
-  closeBtn.style.borderRadius = "999px";
-  closeBtn.style.cursor = "pointer";
-  closeBtn.style.fontSize = "14px";
-  closeBtn.onclick = () => {
-    removeFeedbackOverlay();
-    pushAction("feedback_dialog_closed", context);
-    captureAnalyticsEvent("feedback_dialog_closed", context);
-  };
-
-  const submitBtn = document.createElement("button");
-  submitBtn.type = "submit";
-  submitBtn.textContent = "Send feedback";
-  submitBtn.style.border = "0";
-  submitBtn.style.background = "#4ad0ff";
-  submitBtn.style.color = "#04101a";
-  submitBtn.style.padding = "10px 24px";
-  submitBtn.style.borderRadius = "999px";
-  submitBtn.style.fontWeight = "700";
-  submitBtn.style.cursor = "pointer";
-  submitBtn.style.fontSize = "14px";
-
-  footer.appendChild(closeBtn);
-  footer.appendChild(submitBtn);
-
-  cardBody.appendChild(title);
-  cardBody.appendChild(intro);
-  cardBody.appendChild(blockerSelect);
-  cardBody.appendChild(severitySelect);
-  cardBody.appendChild(expectation);
-  cardBody.appendChild(details);
-  
-  card.appendChild(cardBody);
-  card.appendChild(footer);
-
-  card.onsubmit = async (event) => {
-    event.preventDefault();
-    const distinctId = await resolveSurveyDistinctId();
-    const payload = {
-      ...context,
-      distinct_id: distinctId,
-      blocker_type: blockerSelect.value,
-      blocker_severity: severitySelect.value,
-      expectation_text: expectation.value.trim(),
-      detail_text: details.value.trim(),
-      recent_actions_json: buildProgressJson({ feedback_context: context }),
-    };
-    pushAction("player_feedback_submitted", payload);
-    captureAnalyticsEvent("player_feedback_submitted", payload);
-    removeFeedbackOverlay();
-  };
-
-  overlay.appendChild(card);
-  document.body.appendChild(overlay);
-  pushAction("feedback_dialog_opened", context);
-  captureAnalyticsEvent("feedback_dialog_opened", context);
+function finishInlineSurvey(surveyId, reason) {
+  removeSurveyOverlay();
+  _surveyOpening = false;
+  _surveyLastClosedAt = Date.now();
+  const metadata = { survey_id: surveyId, close_reason: reason };
+  pushAction("survey_closed", metadata);
+  captureAnalyticsEvent("survey_closed", metadata);
 }
 
 // ── Native survey overlay — no iframe, no dependency on us.posthog.com ───────
@@ -848,15 +690,28 @@ function _buildSurveyQuestions(container, questions, answers) {
   });
 }
 
-async function showInlineSurvey(params, surveyIdOverride) {
+async function showInlineSurvey(params, surveyIdOverride, options = {}) {
+  const bypassCooldown = options.bypassCooldown === true;
+  if (_surveyOpening || document.getElementById(SURVEY_OVERLAY_ID)) return false;
+  if (!bypassCooldown && Date.now() - _surveyLastClosedAt < SURVEY_COOLDOWN_MS) return false;
+  _surveyOpening = true;
+
   const runtimeConfig = await getRuntimeConfig();
   const surveyId = surveyIdOverride || runtimeConfig.posthog.surveyId;
-  if (!surveyId) return;
+  if (!surveyId || !runtimeConfig.posthog.projectToken) {
+    _surveyOpening = false;
+    return false;
+  }
 
   const defs = await _fetchSurveyDefs(runtimeConfig.posthog.projectToken, runtimeConfig.posthog.apiHost);
   const surveyDef = defs[surveyId] || null;
-  const surveyName = surveyDef ? surveyDef.name : "Share your feedback";
-  const questions = surveyDef ? (surveyDef.questions || []) : [];
+  if (!surveyDef) {
+    _surveyOpening = false;
+    console.warn("[survey] Definition unavailable:", surveyId);
+    return false;
+  }
+  const surveyName = surveyDef.name || "Share your feedback";
+  const questions = surveyDef.questions || [];
   const distinctId = params.distinct_id || "";
 
   removeSurveyOverlay();
@@ -915,8 +770,7 @@ async function showInlineSurvey(params, surveyIdOverride) {
   closeBtn.style.fontSize = "13px";
   closeBtn.style.fontWeight = "600";
   closeBtn.onclick = () => {
-    removeSurveyOverlay();
-    captureAnalyticsEvent("survey_closed", { survey_id: surveyId });
+    finishInlineSurvey(surveyId, "close_button");
   };
   header.appendChild(closeBtn);
   card.appendChild(header);
@@ -955,8 +809,7 @@ async function showInlineSurvey(params, surveyIdOverride) {
   skipBtn.style.fontSize = "15px";
   skipBtn.style.cursor = "pointer";
   skipBtn.onclick = () => {
-    removeSurveyOverlay();
-    captureAnalyticsEvent("survey_closed", { survey_id: surveyId });
+    finishInlineSurvey(surveyId, "skip");
   };
 
   const submitBtn = document.createElement("button");
@@ -1011,7 +864,7 @@ async function showInlineSurvey(params, surveyIdOverride) {
     ty.style.margin = "auto";
     body.appendChild(ty);
     footer.style.display = "none";
-    setTimeout(() => removeSurveyOverlay(), 2500);
+    setTimeout(() => finishInlineSurvey(surveyId, "submitted"), 2500);
   };
 
   footer.appendChild(skipBtn);
@@ -1030,13 +883,12 @@ async function showInlineSurvey(params, surveyIdOverride) {
   if (params.mission_stage) openMeta.mission_stage = params.mission_stage;
   pushAction("survey_opened", openMeta);
   captureAnalyticsEvent("survey_opened", openMeta);
+  return true;
 }
 
 // ── Micro-survey helpers ──────────────────────────────────────────────────────
 
 async function maybeTriggerMicroSurvey(storageKey, surveyId, context, eventPayload) {
-  // Don't stack with another open overlay.
-  if (document.getElementById(SURVEY_OVERLAY_ID)) return;
   // Each micro-survey has its own localStorage gate — don't show it twice.
   if (localStorage.getItem(storageKey)) return;
   // Skip if no survey ID configured yet.
@@ -1052,10 +904,28 @@ async function maybeTriggerMicroSurvey(storageKey, surveyId, context, eventPaylo
       survey_context: context,
       mission_stage: String((eventPayload && eventPayload.mission_stage) || ""),
     };
-    await showInlineSurvey(params, surveyId);
-    localStorage.setItem(storageKey, new Date().toISOString());
+    const opened = await showInlineSurvey(params, surveyId);
+    if (opened) localStorage.setItem(storageKey, new Date().toISOString());
   } catch (err) {
+    _surveyOpening = false;
     console.error("Micro-survey trigger failed:", storageKey, err);
+  }
+}
+
+async function showFeedbackSurvey(context = {}) {
+  try {
+    const runtimeConfig = await getRuntimeConfig();
+    if (!runtimeConfig.posthog.projectToken) return;
+    const distinctId = await resolveSurveyDistinctId();
+    await showInlineSurvey({
+      distinct_id: distinctId,
+      supabase_guest_id: distinctId,
+      survey_context: "manual_feedback",
+      mission_stage: String(context.mission_stage || ""),
+    }, FEEDBACK_SURVEY_ID, { bypassCooldown: true });
+  } catch (error) {
+    _surveyOpening = false;
+    console.error("Feedback survey trigger failed:", error);
   }
 }
 
@@ -1189,10 +1059,13 @@ async function maybeTriggerFirstMissionSurvey(eventPayload) {
       mission_badge: String((eventPayload && eventPayload.badge) || ""),
       progress_json: progressJson,
     };
-    await showInlineSurvey(params);
-    _surveyShownInThisBoot = true;
-    localStorage.setItem(SURVEY_SHOWN_KEY, new Date().toISOString());
+    const opened = await showInlineSurvey(params);
+    if (opened) {
+      _surveyShownInThisBoot = true;
+      localStorage.setItem(SURVEY_SHOWN_KEY, new Date().toISOString());
+    }
   } catch (error) {
+    _surveyOpening = false;
     console.error("Failed to trigger first mission survey:", error);
     pushAction("survey_trigger_error", {
       message: String(error && error.message ? error.message : error),
@@ -1737,7 +1610,7 @@ function App() {
         vibrate([60, 40, 60]);
       }
       if (eventName === "feedback_requested") {
-        showFeedbackDialog(payload);
+        showFeedbackSurvey(payload);
       }
       if (eventName === "schedule_push" && typeof window.__schedulePush === "function") {
         window.__schedulePush(
