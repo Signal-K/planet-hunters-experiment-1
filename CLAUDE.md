@@ -1,6 +1,335 @@
 <!-- LANDNAM PROJECT REQUIREMENTS START -->
 # Landnam Project Requirements
 
+## Repo Location
+
+```
+~/Navigation/Landnam/          ← this repo (Landnam monorepo)
+~/Navigation/Landnam/scene/    ← Godot project (DO NOT TOUCH — ever)
+~/Navigation/Landnam/backend/  ← Landnam PocketBase, port 8091
+~/Navigation/Landnam/web/      ← Next.js frontend (create this)
+~/Navigation/backend/          ← shared PocketBase, port 8090
+```
+
+Working directory for all frontend work is `~/Navigation/Landnam/web/` — create this folder first.
+Do not touch anything in `~/Navigation/Landnam/scene/` or `~/Navigation/Landnam/backend/` unless explicitly told to.
+
+- All `npm` commands run from `~/Navigation/Landnam/web/`
+- All git commits are made from `~/Navigation/Landnam/` (the monorepo root, so Godot + backend + web are in one repo with a clean history).
+
+---
+
+# Landnam Frontend — Claude Code Working Document
+
+## What this project is
+
+Landnam is a citizen science mining game in the Star Sailors ecosystem.
+Players manage a space program: build rockets, accept contractor jobs,
+fly to asteroids, mine minerals, classify TESS lightcurve data, sell
+cargo, and reinvest. The UI is a space agency management interface —
+NASA mission control mixed with a tabletop wargame aesthetic.
+
+This repo is the React/Next.js frontend that replaces the Godot UI
+layer. The Godot project still exists for the mining minigame only
+(embedded as a WebGL canvas). Everything else is React.
+
+## Repo location
+
+```
+~/Navigation/Landnam-Web/     ← this repo
+~/Navigation/Landnam/scene/   ← Godot project (DO NOT TOUCH — ever)
+~/Navigation/backend/         ← shared PocketBase, port 8090
+~/Navigation/Landnam/backend/ ← Landnam PocketBase, port 8091
+```
+
+## Tech stack
+
+- Next.js 15 (App Router)
+- TypeScript (strict mode — no `any`, no suppressed errors)
+- Tailwind CSS v4
+- Framer Motion for animations
+- PocketBase JS SDK for API calls
+- Tauri v2 for native app wrapping (config exists, don't break it)
+
+## Design system
+
+The design system lives in the zip that was used to bootstrap this
+project. The canonical tokens are already in:
+```
+src/styles/tokens.css      ← mirrors colors_and_type.css exactly
+src/styles/globals.css     ← imports tokens, sets base styles
+```
+
+The two visual modes are:
+- `.theme-deep`  (default) — dark navy command deck
+- `.theme-atlas`            — black parchment atlas/map screens
+
+Fonts: Oxanium (display/body) + Turret Road (mono/atlas).
+Both are in `public/fonts/` and declared in `tokens.css`.
+
+Design rules (never violate these):
+- Always landscape canvas. No portrait layouts.
+- 8pt spacing rhythm: 4, 8, 12, 16, 24, 32, 48, 64px only.
+- No bounces/springs except mission debrief reward reveals.
+- No emoji anywhere. Status = shape + color + label.
+- UPPERCASE + letter-spacing for all instrument labels and CTAs.
+- Title Case for screen titles.
+- Sentence case for body/dialog.
+- Hairlines are ghosted cyan at 18% alpha (`--ln-hairline`), never solid neutral borders.
+- Bottom action bar is sacred and fixed on every operations screen.
+
+## Backend connections
+
+Shared backend (auth + citizen science):
+- `http://localhost:8090` (dev)
+- `NEXT_PUBLIC_SHARED_PB_URL` env var (prod)
+- Collections: users, celestial_bodies, classifications
+
+Landnam backend (game data):
+- `http://localhost:8091` (dev)
+- `NEXT_PUBLIC_LANDNAM_PB_URL` env var (prod)
+- Collections: contractors, locations, deposits, structures, rockets, missions, inventory, market_prices, research
+
+Auth: user signs in via shared backend, gets JWT, stored in
+`localStorage` as `'pb_auth_token'`. All Landnam backend requests
+include this token in the `Authorization` header.
+
+Cross-instance references: Landnam records reference shared backend
+records by plain string ID in fields named `shared_body_id`,
+`shared_classification_id` etc. Never try to join across backends.
+
+## Screen inventory
+
+Every screen the app needs — implement all of these:
+
+### Hub (Earth Base)
+Route: `/`
+Theme: `.theme-deep`
+Layout: full-bleed backdrop (`earth-day.png` or `earth-dusk.png` based
+on local time), three interactive structure buildings (Satellite
+Station, Launchpad, Control Station), bottom RadialNav, HUD chips
+top-left (`EARTH BASE · LV {level}`) and top-right (francs, jobs),
+ProgressionCard contextual below title.
+
+### Launch Wizard
+Route: `/launch`
+Theme: `.theme-deep`
+Layout: step-based flow. Steps: pick contractor → pick target
+(celestial body) → assemble rocket (three-slot card picker:
+chassis, propulsion, mining drill) → confirm launch. Bottom action
+bar with progress indicator and primary CTA. Back nav top-left.
+
+### Space Map / Atlas
+Route: `/atlas`
+Theme: `.theme-atlas`
+Layout: concentric orbit rings (SVG), planet glyph chips, bottom
+telemetry rail. Clickable bodies open a detail panel. Filter by
+`body_type` and `classification_status`.
+
+### Mission Active
+Route: `/mission/[id]`
+Theme: `.theme-deep`
+Layout: mission status card (target, contractor, rocket, ETA
+countdown), cargo manifest, abort button. When status = `'returning'`,
+show return ETA.
+
+### Mining (Godot embed)
+Route: `/mine/[missionId]`
+Theme: none (full canvas)
+Layout: full-bleed iframe/canvas containing the Godot WebGL export.
+Overlay: thin top HUD bar showing cargo remaining and a RETURN HOME
+button. The Godot game posts messages to the parent window via
+`postMessage` when cargo is filled or player requests return.
+
+### Classification
+Route: `/classify/[bodyId]`
+Theme: `.theme-deep`
+Layout: lightcurve plot (Line chart using Recharts or D3 — plot
+flux vs time data from `configuration.lightcurve_data` on the
+`celestial_body` record), classification buttons (PLANET /
+NOT PLANET / ECLIPSING BINARY / UNCERTAIN), confidence slider,
+submit button. On submit, POST to shared backend `classifications`
+collection. On success, show confirmation and navigate back.
+
+### Mission Debrief
+Route: `/debrief/[missionId]`
+Theme: `.theme-deep`
+Layout: mission outcome card, cargo sold breakdown per mineral
+(mineral color chips), francs earned (large amber display type,
+single overshoot animation on mount), contractor affinity change,
+next mission CTA.
+
+### Market
+Route: `/market`
+Theme: `.theme-deep`
+Layout: commodity price table (`market_prices` collection),
+sparkline trend per commodity (fake trend, random walk seeded
+from commodity name), buy/sell not yet implemented — show
+prices and a COMING SOON chip.
+
+### Contractors
+Route: `/contractors`
+Theme: `.theme-deep`
+Layout: card list of contractors, each showing name, wanted
+commodity (mineral chip), price per unit, contract terms.
+Tapping a card starts the launch wizard pre-filled with that
+contractor.
+
+### Research
+Route: `/research`
+Theme: `.theme-deep`
+Layout: tech tree grid. Three columns: rockets, equipment,
+infrastructure. Each node shows locked/unlocked state. Locked
+nodes show requirement (level or prerequisite tech). No unlock
+mechanic yet — display only.
+
+### Auth
+Route: `/auth`
+Theme: `.theme-deep`
+Layout: centered card. Email + password fields. Sign in / create
+account toggle. On success, store token and redirect to `/`.
+
+## Component library to build
+
+These components are used across multiple screens — build them
+first as they unblock everything else:
+
+### Primitives
+- `<Button variant="primary|secondary|ghost|danger" size="sm|md|lg">`
+- `<Chip variant="status|mineral|currency|label">`
+- `<HairlineCard>` — panel with ghosted cyan border + shadow
+- `<StatusDot color="ok|warn|crit|info">`
+- `<TelemetryRow label="..." value="..." unit="...">`
+- `<SectionEyebrow>` — uppercase tracked label
+- `<BottomBar>` — fixed bottom, left status segments + right CTA
+
+### Composite
+- `<MineralChip mineral="iron|silicon|gold|platinum|titanium|rare">`
+- `<RocketSlotCard slot="chassis|propulsion|drill" selected={bool}>`
+- `<CelestialBodyCard body={...}>` — used in atlas + launch wizard
+- `<MissionStatusCard mission={...}>`
+- `<ContractorCard contractor={...}>`
+- `<ProgressionCard>` — contextual next-action card on hub
+- `<RadialNav>` — hub bottom nav, fans 4 buttons on tap
+- `<LightcurvePlot data={...}>` — flux vs time chart
+
+### Hooks
+- `usePocketBase(collection, query)` — fetches from correct backend
+- `useAuth()` — current user, sign in, sign out
+- `useMissions()` — active missions with polling
+- `useMarketPrices()` — market_prices with 60s polling
+
+## File structure to produce
+
+```
+src/
+  app/
+    layout.tsx          ← root layout, font loading, theme class
+    page.tsx            ← Hub (Earth Base)
+    auth/page.tsx
+    launch/page.tsx
+    atlas/page.tsx
+    mission/[id]/page.tsx
+    mine/[missionId]/page.tsx
+    classify/[bodyId]/page.tsx
+    debrief/[missionId]/page.tsx
+    market/page.tsx
+    contractors/page.tsx
+    research/page.tsx
+  components/
+    primitives/         ← Button, Chip, HairlineCard, etc.
+    composite/          ← MineralChip, SlotCard, etc.
+    layout/             ← BottomBar, RadialNav, HUD chips
+  hooks/
+    usePocketBase.ts
+    useAuth.ts
+    useMissions.ts
+    useMarketPrices.ts
+  lib/
+    pb-shared.ts        ← PocketBase client for shared backend
+    pb-landnam.ts       ← PocketBase client for Landnam backend
+    types.ts            ← TypeScript types for all collections
+  styles/
+    tokens.css
+    globals.css
+```
+
+## Rules
+
+1. TypeScript strict mode. No `any`. No `@ts-ignore`.
+2. Every component gets a `.tsx` file. No logic in page files beyond data fetching and layout composition.
+3. All colors from CSS variables (`--ln-*`). No hardcoded hex values.
+4. All spacing from the 8pt rhythm. No arbitrary px values.
+5. Framer Motion for all transitions. Duration tokens from `tokens.css`: quick 120ms, base 220ms, slow 420ms.
+6. Mobile landscape minimum. Nothing below 768px wide.
+7. No `console.log` left in committed code.
+8. Run `npm run build` and `npm run typecheck` at the end. Both must pass with zero errors.
+9. Do not create or modify anything outside this repo directory.
+10. The Godot embed (`/mine/[missionId]`) is a placeholder iframe pointing at a local Godot export path. Don't try to build the Godot project.
+11. All `npm` commands run from `~/Navigation/Landnam/web/`. All git commits from `~/Navigation/Landnam/`.
+
+## Design system source files
+
+Read these before writing any UI code:
+```
+~/Navigation/Landnam_Design_System/colors_and_type.css              ← all CSS tokens
+~/Navigation/Landnam_Design_System/ui_kits/landnam-game/Chrome.jsx  ← BottomBar, TopBar, Button
+~/Navigation/Landnam_Design_System/ui_kits/landnam-portrait/screens-pre.jsx  ← Hub, Launch, Debrief
+~/Navigation/Landnam_Design_System/ui_kits/landnam-portrait/screens-loop.jsx ← Mining, Mission
+~/Navigation/Landnam_Design_System/ui_kits/landnam-portrait/chrome.jsx       ← RadialNav, HUD chips
+~/Navigation/Landnam_Design_System/ui_kits/landnam-portrait/tutorial.jsx     ← ProgressionCard, overlays
+```
+
+These JSX files are the visual source of truth. Translate them to TypeScript React components that match pixel-for-pixel.
+
+## Task order
+
+### Phase 1 — Project bootstrap
+- Init Next.js 15 with TypeScript strict, Tailwind v4, App Router
+- Install: pocketbase, framer-motion, recharts, lucide-react
+- Copy `tokens.css` from the design system, wire into `globals.css`
+- Copy fonts from design system to `public/fonts/`
+- Create `src/lib/pb-shared.ts` and `src/lib/pb-landnam.ts`
+- Create `src/lib/types.ts` with TypeScript types for all collections
+- Create `src/hooks/useAuth.ts`, `usePocketBase.ts`, `useMissions.ts`, `useMarketPrices.ts`
+
+### Phase 2 — Primitive components
+Build every component in `src/components/primitives/`.
+
+### Phase 3 — Composite components
+Build every component in `src/components/composite/` and `src/components/layout/`.
+
+### Phase 4 — Screens (in order)
+1. `/auth`
+2. `/` (Hub)
+3. `/atlas`
+4. `/contractors`
+5. `/launch`
+6. `/mission/[id]`
+7. `/classify/[bodyId]`
+8. `/debrief/[missionId]`
+9. `/market`
+10. `/research`
+11. `/mine/[missionId]`
+
+### Phase 5 — Polish and verify
+- Ensure all screens use BottomBar and correct theme class
+- Check all CSS variables are from `tokens.css`, no hardcoded hex
+- Add Framer Motion transitions (fade + 8px slide up, 220ms ease-out)
+- Run: `npm run typecheck` → `npm run build` → `npm run lint`
+- Fix all errors. Warnings are acceptable.
+
+## Definition of done
+
+- All routes render without runtime errors.
+- `npm run build` exits 0.
+- `npm run typecheck` exits 0.
+- `npm run lint` exits 0 or warnings only.
+- Auth flow works against local PocketBase (`localhost:8090`).
+- Hub screen renders with design system tokens visually correct.
+
+---
+
 ## Godot Scene Authoring Is Scene-First
 
 GDScript files are for functionality. They must not be used as a substitute for authoring scenes.

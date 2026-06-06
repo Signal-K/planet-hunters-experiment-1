@@ -1,0 +1,50 @@
+services:
+  pocketbase:
+    build:
+      context: ./pocketbase
+      args:
+        POCKETBASE_VERSION: "0.39.0"
+    ports:
+      - "8093:8090"
+    volumes:
+      - pocketbase-data:/pb/pb_data
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8090/api/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  web:
+    build:
+      context: ./web
+      args:
+        NEXT_PUBLIC_SHARED_PB_URL: http://localhost:8093
+    environment:
+      POCKETBASE_INTERNAL_URL: http://pocketbase:8090
+    ports:
+      - "3000:3000"
+    depends_on:
+      pocketbase:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/api/backend-health"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  cypress:
+    image: cypress/included:13.17.0
+    working_dir: /e2e
+    environment:
+      CYPRESS_baseUrl: http://web:3000
+      CYPRESS_POCKETBASE_URL: http://pocketbase:8090
+    volumes:
+      - ./cypress.docker.config.js:/e2e/cypress.config.js:ro
+      - ./cypress:/e2e/cypress:ro
+    depends_on:
+      web:
+        condition: service_healthy
+    profiles: ["e2e"]
+
+volumes:
+  pocketbase-data:

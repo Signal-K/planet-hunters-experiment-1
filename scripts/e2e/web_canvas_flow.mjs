@@ -1,10 +1,11 @@
+import path from "node:path";
 import { chromium } from "playwright";
 import fs from "node:fs/promises";
 import pngjs from "pngjs";
 
 const { PNG } = pngjs;
 
-const outputDir = process.env.E2E_OUTPUT_DIR || "/output";
+const outputDir = process.env.E2E_OUTPUT_DIR || path.resolve(process.cwd(), "test-results/godot-web-e2e");
 const url = process.env.WEB_E2E_URL || "http://127.0.0.1:8080/index.html";
 
 const screenshots = [];
@@ -65,7 +66,7 @@ async function waitForGodotCanvas(page) {
   await page.goto(url, { waitUntil: "domcontentloaded" });
   await page.locator("canvas").first().waitFor({ state: "visible", timeout: 30000 });
   await page.waitForTimeout(4500);
-  await writeScreenshot(page, "00-build-select-structure");
+  await writeScreenshot(page, "00-earth-base-first-run");
 }
 
 const browser = await chromium.launch({
@@ -97,24 +98,26 @@ let solarBrightness = null;
 let galaxyBrightness = null;
 
 try {
+  await fs.mkdir(outputDir, { recursive: true });
   await waitForGodotCanvas(page);
 
-  await clickCanvas(page, 0.50, 0.84, "01-placement-screen");
-  await clickCanvas(page, 0.50, 0.84, "02-earth-base-with-placed-launchpad");
+  await clickCanvas(page, 0.50, 0.96, "01-radial-menu");
+  await clickCanvas(page, 0.72, 0.91, "02-galaxy-map");
+  galaxyBrightness = await assertNotWhiteMap(`${outputDir}/02-galaxy-map.png`, "Galaxy map");
+  await clickCanvas(page, 0.06, 0.05, "03-earth-base-returned-from-atlas");
 
-  await clickCanvas(page, 0.38, 0.95, "03-mission-board");
-  await clickCanvas(page, 0.83, 0.25, "04-solar-target-map");
-  solarBrightness = await assertNotWhiteMap(`${outputDir}/04-solar-target-map.png`, "Solar system map");
+  await clickCanvas(page, 0.50, 0.96, "04-radial-menu-for-missions");
+  await clickCanvas(page, 0.50, 0.85, "05-mission-board");
+  await clickCanvas(page, 0.83, 0.25, "06-solar-target-map");
+  solarBrightness = await assertNotWhiteMap(`${outputDir}/06-solar-target-map.png`, "Solar system map");
 
-  await clickCanvas(page, 0.27, 0.47, "05-rocket-fabrication");
-  await clickCanvas(page, 0.50, 0.94, "06-transit");
-  await clickCanvas(page, 0.50, 0.62, "07-mining");
-  await clickCanvas(page, 0.22, 0.30, "08-mined-ore");
-  await clickCanvas(page, 0.50, 0.94, "09-debrief");
-  await clickCanvas(page, 0.50, 0.94, "10-returned-base");
-
-  await clickCanvas(page, 0.63, 0.95, "11-galaxy-map");
-  galaxyBrightness = await assertNotWhiteMap(`${outputDir}/11-galaxy-map.png`, "Galaxy map");
+  await clickCanvas(page, 0.27, 0.47, "07-rocket-fabrication");
+  await clickCanvas(page, 0.50, 0.94, "08-transit");
+  await clickCanvas(page, 0.50, 0.62, "09-mining");
+  await clickCanvas(page, 0.22, 0.30, "10-mined-ore");
+  await clickCanvas(page, 0.50, 0.94, "11-debrief");
+  await clickCanvas(page, 0.50, 0.94, "12-unlock-popup");
+  await clickCanvas(page, 0.50, 0.63, "13-post-m1-build-gate");
 
   const badConsole = badConsoleLines();
   await fs.writeFile(`${outputDir}/browser-console.log`, consoleMessages.join("\n"));

@@ -4,7 +4,12 @@
       "WebFetch(domain:stitch.googlelabs.com)",
       "WebFetch(domain:stitch.googleapis.com)",
       "Skill(kn-init)",
-      "mcp__knowns__memory"
+      "mcp__knowns__memory",
+      "WebFetch(domain:api.anthropic.com)"
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "stitch",
+    "knowns"
+  ]
 }

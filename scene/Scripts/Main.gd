@@ -1,5 +1,8 @@
 extends Control
 
+const UNLOCK_POPUP_SCENE := preload("res://Scenes/UI/UnlockPopup.tscn")
+const CLASSIFY_SCREEN_SCENE := preload("res://Scenes/UI/ClassifyLightcurveScreen.tscn")
+
 const BG := Color("#0a121d")
 const VOID := Color("#03060c")
 const SURFACE := Color("#122236")
@@ -15,9 +18,20 @@ const DIM := Color("#a9b8ce")
 const MUTED := Color("#5d7390")
 const PAPER := Color("#efe7d3")
 
-var screen := "build"
-var built := false
+const HUB_CHROME_SCENE := preload("res://Scenes/UI/HubChrome.tscn")
+const HUB_SCREEN_SCENE := preload("res://Scenes/UI/HubScreen.tscn")
+const RADIAL_MENU_SCENE := preload("res://Scenes/UI/RadialMenu.tscn")
+const TUTORIAL_COACH_SCENE := preload("res://Scenes/UI/TutorialCoach.tscn")
+const BUILD_GATE_SCENE := preload("res://Scenes/UI/BuildGatePrompt.tscn")
+const STRUCTURE_TILE_SCENE := preload("res://Scenes/UI/StructureTile.tscn")
+const MISSION_CARD_SCENE := preload("res://Scenes/UI/MissionCard.tscn")
+
+var tutorial: TutorialController
+
+var screen := "hub"
+var built := true
 var menu_open := false
+var radial_open := false
 var coach_on := true
 var popup := ""
 var build_gate := false
@@ -25,7 +39,7 @@ var pending_structure := ""
 var selected_mission := ""
 var selected_target := ""
 var selected_star := "SOL"
-var placed_structures := {}
+var placed_structures := {"launchpad": "center"}
 var rocket := {"chassis": "hull-mk1", "propulsion": "ion-a1", "drill": "hand-drill"}
 var cargo := {"iron": 0, "silicon": 0, "gold": 0, "ice": 0}
 var mining_total := 0
@@ -104,20 +118,20 @@ var parts := {
 }
 
 var m1_steps := {
-		"build": ["Build a Launchpad", "Tap SELECT A PLOT, then place the starter pad.", "1/8"],
-		"place": ["Place Structure", "Select any available plot on the Earth Base surface.", "1/8"],
-	"hub": ["Open a Mission", "Open the radial menu, then choose MISSIONS.", "2/8"],
-	"missions": ["Lock a Contract", "Pick a mining company and confirm the delivery order.", "3/8"],
-	"targets": ["Choose a Destination", "Tap a highlighted body on the map.", "4/8"],
-	"fab": ["Assemble the Rocket", "Starter parts are loaded. Confirm launch when checks pass.", "5/8"],
-	"transit": ["Transit", "Vessel is outbound. Hold telemetry until arrival.", "6/8"],
-	"mining": ["Mine the Asteroid", "Tap ore deposits to fill the order, then return.", "7/8"],
-	"debrief": ["Debrief", "Sell cargo and collect the contractor bonus.", "8/8"]
+	"hub": ["Open a Mission", "Open the radial menu, then choose MISSIONS.", "1/7"],
+	"missions": ["Lock a Contract", "Pick a mining company and confirm the delivery order.", "2/7"],
+	"targets": ["Choose a Destination", "Tap a highlighted body on the map.", "3/7"],
+	"fab": ["Assemble the Rocket", "Starter parts are loaded. Confirm launch when checks pass.", "4/7"],
+	"transit": ["Transit", "Vessel is outbound. Hold telemetry until arrival.", "5/7"],
+	"mining": ["Mine the Asteroid", "Tap ore deposits to fill the order, then return.", "6/7"],
+	"debrief": ["Debrief", "Sell cargo and collect the contractor bonus.", "7/7"]
 }
 
 func _ready() -> void:
 	custom_minimum_size = Vector2(402, 874)
 	rng.seed = 240604
+	tutorial = TutorialController.new()
+	coach_on = tutorial.tutorial_active
 	_load_assets()
 	_make_stars()
 	_rebuild()
@@ -171,10 +185,7 @@ func _draw_hub_background(size: Vector2) -> void:
 		draw_circle(p, 0.9, Color(1, 1, 1, 0.45))
 	draw_rect(Rect2(0, size.y - 258, size.x, 162), Color("#241b13") * Color(1, 1, 1, 0.82))
 	for y in range(int(size.y - 238), int(size.y - 112), 22):
-		draw_line(Vector2(0, y), Vector2(size.x, y + rng.randf_range(-2.0, 2.0)), Color(0.9, 0.55, 0.25, 0.18), 1)
-	for vein in [Vector2(58, size.y - 194), Vector2(210, size.y - 166), Vector2(330, size.y - 206)]:
-		draw_circle(vein, 10, Color(0.85, 0.45, 0.22, 0.18))
-		draw_circle(vein, 3, AMBER)
+		draw_line(Vector2(0, y), Vector2(size.x, y), Color(0.9, 0.55, 0.25, 0.08), 1)
 
 func _draw_mining_background(size: Vector2) -> void:
 	draw_rect(Rect2(Vector2.ZERO, size), Color("#120f14"))
@@ -200,8 +211,10 @@ func _rebuild() -> void:
 		"debrief": _screen_debrief()
 		"galaxy": _screen_galaxy()
 		"classify": _screen_classify()
-	if coach_on and m1_steps.has(screen):
-		_add_coach()
+	if coach_on and tutorial != null and tutorial.tutorial_active:
+		var step := tutorial.current_step(screen)
+		if not step.is_empty():
+			_add_coach()
 	if menu_open:
 		_add_game_menu()
 	if popup != "":
@@ -214,15 +227,16 @@ func _screen_build() -> void:
 	_label("AVAILABLE STRUCTURES", Vector2(14, 128), 10, MUTED, true)
 	var y := 150
 	_structure_card("Launchpad", "Assemble rockets and launch mining missions.", "FREE - STARTER", y, not placed_structures.has("launchpad"), Callable(self, "_choose_structure").bind("launchpad"))
-	_structure_card("Control Station", "Unlocks the contractor job board.", "M1 - 500 F", y + 96, placed_structures.has("launchpad") and not placed_structures.has("control"), Callable(self, "_choose_structure").bind("control"))
+	_structure_card("Control Station", "Unlocks the contractor job board.", "M1 - 500 F", y + 96, player.missions_done >= 1 and placed_structures.has("launchpad") and not placed_structures.has("control"), Callable(self, "_choose_structure").bind("control"))
 	_structure_card("Satellite Station", "Scan TESS data, classify planet candidates.", "L5 - SCIENCE", y + 192, placed_structures.has("control") and not placed_structures.has("satellite"), Callable(self, "_choose_structure").bind("satellite"))
 	_structure_card("Marketplace", "Sell cargo at fluctuating live prices.", "LOCKED - L5", y + 288, false, Callable())
-	_button("SELECT A PLOT >", Rect2(14, 708, 374, 50), Callable(self, "_choose_structure").bind("launchpad"), AMBER, Color("#081120"), 18)
+	_button("BACK TO BASE", Rect2(14, 708, 162, 50), Callable(self, "_go_screen").bind("hub"), Color("#081120"), CYAN, 13)
+	_button("PLACE CONTROL", Rect2(194, 708, 194, 50), Callable(self, "_choose_structure").bind("control"), AMBER if player.missions_done >= 1 and not placed_structures.has("control") else Color("#31445c"), Color("#081120"), 13)
 
 func _choose_structure(kind: String) -> void:
 	if kind == "launchpad" and placed_structures.has("launchpad"):
 		return
-	if kind == "control" and (not placed_structures.has("launchpad") or placed_structures.has("control")):
+	if kind == "control" and (player.missions_done < 1 or not placed_structures.has("launchpad") or placed_structures.has("control")):
 		return
 	if kind == "satellite" and (not placed_structures.has("control") or placed_structures.has("satellite")):
 		return
@@ -278,6 +292,8 @@ func _place_structure(plot_id: String) -> void:
 		player.control_built = true
 	placed_structures[pending_structure] = plot_id
 	built = placed_structures.has("launchpad")
+	if pending_structure == "launchpad":
+		tutorial.mark_complete(0)  # "Build a Launchpad" step
 	pending_structure = ""
 	screen = "hub"
 	_rebuild()
@@ -290,24 +306,33 @@ func _go_hub() -> void:
 	_rebuild()
 
 func _screen_hub() -> void:
-	_header("EARTH BASE - LV %d" % player.level, "Earth Base")
-	_chip("▲ %s" % str(player.francs), Vector2(314, 24), AMBER)
-	_progress_card()
-	if placed_structures.has("satellite"):
-		_building_button("Satellite", "SCANNING", _structure_rect("satellite"), Callable(self, "_go_classify"), true)
-	else:
-		_empty_plot_button("Satellite", _default_plot_rect("left"))
-	if placed_structures.has("launchpad"):
-		_building_button("Launchpad", "READY", _structure_rect("launchpad"), Callable(self, "_go_missions"), true)
-	else:
-		_empty_plot_button("Launchpad", _default_plot_rect("center"))
-	if placed_structures.has("control"):
-		_building_button("Control", "%d JOBS" % missions.size(), _structure_rect("control"), Callable(self, "_go_missions"), true)
-	else:
-		_empty_plot_button("Control", _default_plot_rect("right"))
-	_label("SUBSURFACE", Vector2(282, 662), 10, WARN, true)
-	_button("TAP A BUILDING", Rect2(122, 630, 158, 30), Callable(), Color(0.03, 0.07, 0.12, 0.86), CYAN, 10)
-	_radial_nav()
+	var hub := HUB_SCREEN_SCENE.instantiate()
+	add_child(hub)
+	hub.set_state({
+		"chrome": {
+			"visible": true,
+			"show_progress": false,
+			"eyebrow": "EARTH BASE - LV %d" % player.level,
+			"title": "Earth Base",
+			"francs": player.francs,
+			"jobs": player.missions_done,
+			"show_jobs": false,
+			"objective": "OBJECTIVE",
+			"step_title": m1_steps.get("hub", ["Open a Mission", "Open the radial menu, then choose MISSIONS.", "1/7"])[0],
+			"step_body": m1_steps.get("hub", ["Open a Mission", "Open the radial menu, then choose MISSIONS.", "1/7"])[1],
+			"step_count": m1_steps.get("hub", ["Open a Mission", "Open the radial menu, then choose MISSIONS.", "1/7"])[2],
+			"action_text": "BUILD CONTROL" if player.missions_done == 1 and not player.control_built else "OPEN MISSIONS",
+			"action_enabled": true,
+			"hint": ""
+		},
+		"radial_open": radial_open,
+		"allow_build": player.missions_done >= 1 and placed_structures.has("launchpad"),
+		"placed_structures": placed_structures,
+		"show_hint": true
+	})
+	hub.action_requested.connect(_handle_hub_action)
+	hub.menu_requested.connect(_open_menu)
+	hub.progress_requested.connect(_progress_action)
 
 func _progress_card() -> void:
 	var title := "Next Mission Available"
@@ -342,21 +367,33 @@ func _screen_missions() -> void:
 	_top_back("MISSION BOARD", "Contractors", Callable(self, "_go_screen").bind("hub"))
 	var y := 128
 	for mission in missions:
-		_mission_card(mission, y)
+		_add_mission_card(mission, y)
 		y += 134
-	_radial_nav()
+	_bottom_nav()
 
-func _mission_card(mission: Dictionary, y: int) -> void:
-	_panel(Rect2(14, y, 374, 118), SURFACE, CYAN_SOFT)
-	_label(mission.tag, Vector2(30, y + 14), 9, AMBER, true)
-	_label(mission.title, Vector2(30, y + 34), 17, TEXT, false, oxanium_bold)
-	_label(mission.contractor, Vector2(30, y + 58), 12, CYAN)
-	_label(mission.brief, Vector2(30, y + 78), 11, DIM)
-	_chip("%d F" % mission.payout, Vector2(296, y + 16), AMBER)
-	_button("LOCK", Rect2(296, y + 72, 72, 30), Callable(self, "_pick_mission").bind(mission.id), CYAN, Color("#06121f"), 10)
+func _add_mission_card(mission: Dictionary, y: int) -> void:
+	var card := MISSION_CARD_SCENE.instantiate()
+	card.position = Vector2(14, y)
+	card.size = Vector2(374, 118)
+	add_child(card)
+	card.set_state({
+		"id": mission.id,
+		"title": mission.title,
+		"company": mission.contractor,
+		"brief": mission.brief,
+		"tag": mission.tag,
+		"payout": mission.payout,
+		"xp": mission.xp,
+		"targets": 3 if mission.id == "m-iron-foundry" or mission.id == "m-silicon-mass" else 1 if mission.id == "m-belt-gold" else 2,
+		"icon": load("res://design_system_source/assets/icons/nav_mission.svg"),
+		"accent": AMBER if mission.tag in ["STARTER", "PROSPECT"] else CYAN,
+		"active": true
+	})
+	card.mission_selected.connect(_pick_mission)
 
 func _pick_mission(id: String) -> void:
 	selected_mission = id
+	tutorial.mark_complete(2)  # "Lock a Contract" step
 	screen = "targets"
 	_rebuild()
 
@@ -375,7 +412,7 @@ func _screen_targets() -> void:
 		var can_pick := _mission_allows(t)
 		_button(t.name.to_upper(), Rect2(pos.x - 42, pos.y - 18, 84, 36), Callable(self, "_pick_target").bind(t.id) if can_pick else Callable(), t.color if can_pick else Color(0.18, 0.20, 0.24), Color("#06121f"), 9)
 	_telemetry("CURRENT CONTRACT", _mission().title, "COMPATIBLE TARGETS", "3 DETECTED")
-	_radial_nav()
+	_bottom_nav()
 
 func _mission_allows(t: Dictionary) -> bool:
 	var m := _mission()
@@ -383,6 +420,7 @@ func _mission_allows(t: Dictionary) -> bool:
 
 func _pick_target(id: String) -> void:
 	selected_target = id
+	tutorial.mark_complete(3)  # "Choose a Destination" step
 	if selected_target == "belt":
 		rocket.propulsion = "hydra-v"
 	screen = "fab"
@@ -397,7 +435,7 @@ func _screen_fab() -> void:
 	_label("VESSEL-X12 (HEAVY) - COMPLETE", Vector2(20, 720), 17, TEXT, false, oxanium_bold)
 	_label("TOTAL MASS 140 T          POWER DRAW 12 MW", Vector2(20, 746), 11, DIM, true, turret_regular)
 	_button("CONFIRM LAUNCH", Rect2(14, 790, 374, 54), Callable(self, "_launch"), AMBER, Color("#081120"), 17)
-	_radial_nav()
+	_bottom_nav()
 
 func _slot_panel(slot: String, title: String, y: int) -> void:
 	_panel(Rect2(14, y, 374, 162), SURFACE, CYAN_SOFT)
@@ -419,6 +457,7 @@ func _select_part(slot: String, id: String) -> void:
 	_rebuild()
 
 func _launch() -> void:
+	tutorial.mark_complete(5)  # "Launch" step (step 4 info card dismissed via manual_next)
 	screen = "transit"
 	_rebuild()
 
@@ -459,6 +498,7 @@ func _mine(kind: String) -> void:
 	_rebuild()
 
 func _return_home() -> void:
+	tutorial.mark_complete(6)  # "Mine the Asteroid" step
 	screen = "debrief"
 	_rebuild()
 
@@ -480,9 +520,14 @@ func _collect(total: int) -> void:
 	player.francs += total
 	player.xp += int(_mission().xp)
 	player.missions_done += 1
+	tutorial.mark_complete(9)  # "Debrief" step
 	if player.missions_done == 1:
 		popup = "sr2"
 		build_gate = false
+	# Check free-ops unlock (after all 4 authored missions)
+	if player.missions_done >= 4 and not tutorial.free_ops_unlocked:
+		tutorial.free_ops_unlocked = true
+		popup = "freeops"
 	selected_mission = ""
 	selected_target = ""
 	screen = "hub"
@@ -507,26 +552,17 @@ func _screen_galaxy() -> void:
 	for s in star_data:
 		_button(s[0], Rect2(s[2].x - 46, s[2].y - 18, 92, 36), Callable(self, "_pick_star").bind(s[0]), s[3], Color("#05070b"), 8)
 	_telemetry("SYSTEM TELEMETRY", selected_star, "DIST", "0.00 LY")
-	_radial_nav()
+	_bottom_nav()
 
 func _pick_star(name: String) -> void:
 	selected_star = name
 	_rebuild()
 
 func _screen_classify() -> void:
-	_top_back("SATELLITE STATION", "Classify", Callable(self, "_go_screen").bind("hub"))
-	_panel(Rect2(20, 134, 362, 300), Color("#081120"), CYAN_SOFT)
-	_label("TESS LIGHTCURVE CANDIDATE", Vector2(40, 158), 10, CYAN, true)
-	var chart := GraphControl.new()
-	chart.position = Vector2(42, 206)
-	chart.size = Vector2(318, 174)
-	add_child(chart)
-	_label("DIP CONFIDENCE  82%", Vector2(40, 398), 11, AMBER, true, turret_regular)
-	_panel(Rect2(20, 466, 362, 136), SURFACE, CYAN_SOFT)
-	_label("M3 CITIZEN SCIENCE", Vector2(40, 490), 10, MUTED, true)
-	_label("Transit signature detected in Sector SOL-M3. Classify the candidate to authorize a science target.", Vector2(40, 516), 14, DIM)
-	_button("PLANET", Rect2(28, 650, 160, 54), Callable(self, "_classification_done"), OK, Color("#06121f"), 16)
-	_button("NOT PLANET", Rect2(214, 650, 160, 54), Callable(self, "_classification_done"), CRIT, Color("#06121f"), 16)
+	var cls := CLASSIFY_SCREEN_SCENE.instantiate()
+	add_child(cls)
+	cls.back_requested.connect(func(): _go_screen("hub"))
+	cls.classification_submitted.connect(func(_result: String): _classification_done())
 
 func _classification_done() -> void:
 	popup = "science"
@@ -534,23 +570,21 @@ func _classification_done() -> void:
 	_rebuild()
 
 func _add_coach() -> void:
-	var step: Array = m1_steps[screen]
-	_panel(Rect2(14, 62, 374, 56), Color("#0d1c30"), AMBER)
-	_label(step[0].to_upper(), Vector2(78, 76), 9, AMBER, true)
-	_label(step[1], Vector2(78, 93), 12, TEXT)
-	_label(step[2], Vector2(330, 78), 9, MUTED, true, turret_regular)
-	_button("SKIP", Rect2(340, 88, 42, 20), Callable(self, "_skip_coach"), Color(0, 0, 0, 0), MUTED, 9)
-	draw_avatar(Vector2(44, 90))
-
-func draw_avatar(pos: Vector2) -> void:
-	var avatar := ColorRect.new()
-	avatar.position = pos - Vector2(22, 22)
-	avatar.size = Vector2(44, 44)
-	avatar.color = CYAN
-	add_child(avatar)
-	avatar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var step := tutorial.current_step(screen)
+	if step.is_empty():
+		return
+	var coach := TUTORIAL_COACH_SCENE.instantiate()
+	add_child(coach)
+	var step_idx := tutorial.step_index_of(int(step.id))
+	coach.set_step(step, step_idx, tutorial.total_steps(), tutorial.M1_STEPS)
+	coach.skip_requested.connect(_skip_coach)
+	coach.manual_next_requested.connect(func():
+		tutorial.mark_complete(int(step.id))
+		_rebuild()
+	)
 
 func _skip_coach() -> void:
+	tutorial.skip_all()
 	coach_on = false
 	_rebuild()
 
@@ -571,57 +605,46 @@ func _close_menu() -> void:
 	_rebuild()
 
 func _add_unlock_popup() -> void:
-	var title := "STARTER ROCKET 2"
-	var eyebrow := "VEHICLE UNLOCKED"
-	var body := "Faster, longer range, and 1.5x cargo capacity."
-	var stats := "RANGE +60%   CARGO x1.5   SPEED +40%"
-	if popup == "science":
-		title = "CANDIDATE LOGGED"
-		eyebrow = "CLASSIFICATION CONSENSUS"
-		body = "The Satellite Station filed the classification and unlocked a science target."
-		stats = "CONFIDENCE 82%   TARGET OPEN   COACH ON"
-	_panel(Rect2(0, 0, 402, 874), Color(0.01, 0.015, 0.03, 0.78), Color(0, 0, 0, 0))
-	_panel(Rect2(28, 214, 346, 388), Color("#0d1c30"), AMBER)
-	_label(eyebrow, Vector2(60, 248), 10, AMBER, true)
-	_label(title, Vector2(60, 282), 30, TEXT, true, oxanium_bold)
-	_label(body, Vector2(60, 350), 15, DIM)
-	_label(stats, Vector2(60, 430), 11, CYAN, true, turret_regular)
-	_button("OUTSTANDING", Rect2(58, 520, 286, 48), Callable(self, "_close_popup"), AMBER, Color("#081120"), 14)
+	var up := UNLOCK_POPUP_SCENE.instantiate()
+	add_child(up)
+	up.setup(popup)
+	up.closed.connect(_close_popup)
 
 func _close_popup() -> void:
 	if popup == "sr2":
 		build_gate = true
+	elif popup == "freeops":
+		tutorial.skip_all()  # coaching ends after free-ops unlock
+		coach_on = false
 	popup = ""
 	_rebuild()
 
 func _add_build_gate() -> void:
-	_panel(Rect2(0, 0, 402, 874), Color(0.01, 0.015, 0.03, 0.62), Color(0, 0, 0, 0))
-	_panel(Rect2(18, 528, 366, 248), SURFACE, AMBER)
-	_label("BUILD REQUIRED", Vector2(42, 558), 10, AMBER, true)
-	_label("Control Station", Vector2(42, 586), 25, TEXT, false, oxanium_bold)
-	_label("Contractor access and M2 routing require an operations room.", Vector2(42, 624), 14, DIM)
-	_label("COST  500 F     BALANCE  %d F" % int(player.francs), Vector2(42, 672), 12, DIM, true, turret_regular)
-	_button("BUILD - PLACE ON EARTH BASE", Rect2(42, 710, 318, 42), Callable(self, "_build_control"), AMBER, Color("#081120"), 12)
+	var gate := BUILD_GATE_SCENE.instantiate()
+	add_child(gate)
+	gate.set_state({
+		"visible": true,
+		"francs": int(player.francs)
+	})
+	gate.build_requested.connect(_build_control)
+	gate.close_requested.connect(_close_build_gate)
 
 func _build_control() -> void:
 	build_gate = false
 	_choose_structure("control")
 
-func _structure_rect(kind: String) -> Rect2:
-	var plot_id := str(placed_structures.get(kind, "center"))
-	return _default_plot_rect(plot_id)
+func _close_build_gate() -> void:
+	build_gate = false
+	_rebuild()
 
 func _default_plot_rect(plot_id: String) -> Rect2:
 	match plot_id:
 		"left":
-			return Rect2(18, 486, 104, 104)
+			return Rect2(40, 540, 104, 92)
 		"right":
-			return Rect2(280, 486, 104, 104)
+			return Rect2(258, 540, 104, 92)
 		_:
-			return Rect2(135, 456, 132, 132)
-
-func _empty_plot_button(label: String, rect: Rect2) -> void:
-	_button("+\n%s" % label.to_upper(), rect, Callable(self, "_go_screen").bind("build"), Color(0.02, 0.04, 0.07, 0.58), MUTED, 10)
+			return Rect2(142, 510, 118, 92)
 
 func _structure_title(kind: String) -> String:
 	match kind:
@@ -634,11 +657,46 @@ func _structure_title(kind: String) -> String:
 		_:
 			return "Launchpad"
 
-func _radial_nav() -> void:
-	_button("BASE", Rect2(18, 808, 82, 42), Callable(self, "_open_menu"), Color("#081120"), CYAN, 10)
-	_button("MISSIONS", Rect2(110, 808, 92, 42), Callable(self, "_go_screen").bind("missions"), Color("#081120"), CYAN, 10)
-	_button("ATLAS", Rect2(212, 808, 82, 42), Callable(self, "_go_screen").bind("galaxy"), Color("#081120"), CYAN, 10)
-	_button("BUILD", Rect2(304, 808, 80, 42), Callable(self, "_go_screen").bind("fab"), Color("#081120"), CYAN, 10)
+func _bottom_nav() -> void:
+	var nav := RADIAL_MENU_SCENE.instantiate()
+	add_child(nav)
+	nav.set_state(radial_open, player.missions_done >= 1 and placed_structures.has("launchpad"))
+	nav.action_requested.connect(_handle_radial_action)
+
+func _handle_radial_action(action: String) -> void:
+	match action:
+		"toggle":
+			radial_open = not radial_open
+			if radial_open:
+				tutorial.mark_complete(1)  # "Open a Mission" step (player opened the menu)
+		"base", "missions", "atlas", "build":
+			radial_open = false
+			match action:
+				"base":
+					_go_screen("hub")
+				"missions":
+					_go_screen("missions")
+				"atlas":
+					_go_screen("galaxy")
+				"build":
+					_go_screen("build")
+		_:
+			pass
+	_rebuild()
+
+func _handle_hub_action(action: String) -> void:
+	match action:
+		"missions":
+			_go_missions()
+		"classify":
+			_go_classify()
+		"market":
+			pass
+		"toggle":
+			radial_open = not radial_open
+			_rebuild()
+		_:
+			_handle_radial_action(action)
 
 func _open_menu() -> void:
 	menu_open = true
@@ -648,6 +706,7 @@ func _go_screen(id: String) -> void:
 	if id == "fab" and (selected_mission == "" or selected_target == ""):
 		id = "missions"
 	screen = id
+	radial_open = false
 	_rebuild()
 
 func _top_back(eyebrow: String, title: String, cb: Callable, atlas := false) -> void:
@@ -670,18 +729,22 @@ func _structure_card(title: String, body: String, chip_text: String, y: int, act
 	if cb.is_valid():
 		_invisible_button(Rect2(14, y, 374, 80), cb)
 
-func _building_button(title: String, sub: String, rect: Rect2, cb: Callable, active: bool) -> void:
-	var glyph := StructureGlyph.new()
-	glyph.position = rect.position
-	glyph.size = rect.size
-	glyph.accent = AMBER if active else MUTED
-	glyph.active = active
-	add_child(glyph)
-	_panel(Rect2(rect.position.x + 8, rect.position.y + rect.size.y - 48, rect.size.x - 16, 42), Color(0.03, 0.07, 0.12, 0.74), AMBER if active else CYAN_SOFT)
-	_label(title.to_upper(), rect.position + Vector2(18, rect.size.y - 39), 9, AMBER if active else MUTED, true, oxanium_bold)
-	_label(sub.to_upper(), rect.position + Vector2(18, rect.size.y - 25), 9, OK if sub == "READY" or sub == "SCANNING" else WARN, true, oxanium_bold)
+func _add_structure_tile(title: String, sub: String, rect: Rect2, active: bool, accent: Color, texture: Texture2D, cb: Callable) -> void:
+	var tile := STRUCTURE_TILE_SCENE.instantiate()
+	tile.position = rect.position
+	tile.size = rect.size
+	add_child(tile)
+	tile.set_state({
+		"title": title,
+		"subtitle": sub,
+		"status": "READY" if active else "LOCKED",
+		"texture": texture,
+		"accent": accent,
+		"active": active,
+		"size": rect.size
+	})
 	if active and cb.is_valid():
-		_invisible_button(rect, cb)
+		tile.pressed.connect(cb)
 
 func _telemetry(a: String, b: String, c: String, d: String) -> void:
 	_panel(Rect2(14, 698, 374, 80), Color(0.03, 0.04, 0.06, 0.92), Color(0.94, 0.90, 0.80, 0.20))
@@ -867,26 +930,14 @@ class PlotMarker:
 		draw_arc(Vector2(cx, y), size.x * 0.34, PI, TAU, 48, Color(accent.r, accent.g, accent.b, 0.55), 1.5)
 		draw_line(Vector2(18, y), Vector2(size.x - 18, y), Color(accent.r, accent.g, accent.b, 0.55), 1.5)
 
-class StructureGlyph:
+class CoachAvatar:
 	extends Control
-	var accent := Color("#f5a623")
-	var active := true
-
-	func _ready() -> void:
-		mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	func _draw() -> void:
-		var alpha := 0.95 if active else 0.45
-		var base := Color(0.03, 0.07, 0.12, 0.72)
-		draw_circle(Vector2(size.x * 0.5, size.y * 0.77), size.x * 0.34, Color(0, 0, 0, 0.26))
-		draw_rect(Rect2(0, 0, size.x, size.y), base, true)
-		draw_rect(Rect2(0, 0, size.x, size.y), accent, false, 1.5)
-		var cx := size.x * 0.5
-		var ground := size.y * 0.56
-		draw_rect(Rect2(cx - 27, ground - 18, 54, 24), Color(0.48, 0.55, 0.60, alpha), true)
-		draw_rect(Rect2(cx - 21, ground - 12, 42, 13), Color(0.12, 0.18, 0.24, alpha), true)
-		draw_rect(Rect2(cx - 33, ground + 4, 66, 7), Color(0.18, 0.22, 0.27, alpha), true)
-		draw_line(Vector2(cx - 18, ground - 22), Vector2(cx - 18, ground - 48), Color(0.55, 0.62, 0.66, alpha), 2.0)
-		draw_line(Vector2(cx + 18, ground - 22), Vector2(cx + 18, ground - 46), Color(0.55, 0.62, 0.66, alpha), 2.0)
-		draw_circle(Vector2(cx + 18, ground - 48), 5.0, Color(accent.r, accent.g, accent.b, 0.95 if active else 0.35))
-		draw_line(Vector2(cx - 28, ground - 18), Vector2(cx + 28, ground - 18), Color(1, 1, 1, 0.18), 1.0)
+		draw_circle(size * 0.5, 21.0, Color(0.247, 0.663, 1.0, 0.18))
+		draw_circle(size * 0.5, 19.0, Color("#0d1c30"))
+		draw_arc(size * 0.5, 18.0, PI * 0.14, PI * 0.86, 36, Color("#3fa9ff"), 2.0)
+		draw_rect(Rect2(12, 18, 20, 12), Color("#d9e8f7"), true)
+		draw_rect(Rect2(15, 21, 14, 6), Color("#122236"), true)
+		draw_line(Vector2(22, 30), Vector2(22, 37), Color("#f5a623"), 2.0)
+		draw_circle(Vector2(22, 38), 3.0, Color("#f5a623"))

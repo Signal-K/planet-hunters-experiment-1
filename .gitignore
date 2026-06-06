@@ -51,6 +51,8 @@ GodotTest/
 
 # Node modules
 node_modules/
+web/.next/
+pocketbase/pb_data/
 
 # Large binaries
 *.so

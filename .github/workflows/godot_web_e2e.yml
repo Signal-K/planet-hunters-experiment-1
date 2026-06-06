@@ -71,7 +71,7 @@ jobs:
             }
 
   web-e2e:
-    name: Export Web + Placement/Atlas Browser Test
+    name: Export Web + First-Run/Atlas Browser Test
     needs: gate
     if: needs.gate.outputs.should_run == 'true'
     runs-on: ubuntu-latest
@@ -82,10 +82,10 @@ jobs:
         with:
           lfs: true
 
-      - name: Run Godot Web placement and atlas E2E
+      - name: Run Godot Web first-run and atlas E2E
         run: npm run test:web:e2e
 
-      - name: Upload placement/atlas screenshots and logs
+      - name: Upload first-run/atlas screenshots and logs
         if: always()
         uses: actions/upload-artifact@v4
         with:

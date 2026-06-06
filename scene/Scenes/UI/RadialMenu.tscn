@@ -1,0 +1,111 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/RadialMenu.gd" id="1"]
+[ext_resource type="Texture2D" path="res://design_system_source/assets/icons/nav_menu.svg" id="2"]
+[ext_resource type="Texture2D" path="res://design_system_source/assets/icons/nav_map.svg" id="3"]
+[ext_resource type="Texture2D" path="res://design_system_source/assets/icons/nav_mission.svg" id="4"]
+[ext_resource type="Texture2D" path="res://design_system_source/assets/icons/nav_forward.svg" id="5"]
+
+[node name="RadialMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1")
+
+[node name="FanPanel" type="Control" parent="."]
+layout_mode = 0
+offset_left = 58.0
+offset_top = 744.0
+offset_right = 344.0
+offset_bottom = 874.0
+mouse_filter = 2
+
+[node name="BaseButton" type="Button" parent="FanPanel"]
+layout_mode = 0
+offset_left = 16.0
+offset_top = 44.0
+offset_right = 76.0
+offset_bottom = 104.0
+text = ""
+icon = ExtResource("2")
+expand_icon = true
+
+[node name="BaseLabel" type="Label" parent="FanPanel"]
+layout_mode = 0
+offset_left = 4.0
+offset_top = 106.0
+offset_right = 88.0
+offset_bottom = 118.0
+horizontal_alignment = 1
+text = "BASE"
+
+[node name="MissionsButton" type="Button" parent="FanPanel"]
+layout_mode = 0
+offset_left = 110.0
+offset_top = 8.0
+offset_right = 170.0
+offset_bottom = 68.0
+text = ""
+icon = ExtResource("4")
+expand_icon = true
+
+[node name="MissionsLabel" type="Label" parent="FanPanel"]
+layout_mode = 0
+offset_left = 92.0
+offset_top = 70.0
+offset_right = 188.0
+offset_bottom = 82.0
+horizontal_alignment = 1
+text = "MISSIONS"
+
+[node name="AtlasButton" type="Button" parent="FanPanel"]
+layout_mode = 0
+offset_left = 194.0
+offset_top = 44.0
+offset_right = 254.0
+offset_bottom = 104.0
+text = ""
+icon = ExtResource("3")
+expand_icon = true
+
+[node name="AtlasLabel" type="Label" parent="FanPanel"]
+layout_mode = 0
+offset_left = 180.0
+offset_top = 106.0
+offset_right = 276.0
+offset_bottom = 118.0
+horizontal_alignment = 1
+text = "ATLAS"
+
+[node name="BuildButton" type="Button" parent="FanPanel"]
+layout_mode = 0
+offset_left = 110.0
+offset_top = 56.0
+offset_right = 170.0
+offset_bottom = 116.0
+text = ""
+icon = ExtResource("5")
+expand_icon = true
+
+[node name="BuildLabel" type="Label" parent="FanPanel"]
+layout_mode = 0
+offset_left = 92.0
+offset_top = 118.0
+offset_right = 188.0
+offset_bottom = 128.0
+horizontal_alignment = 1
+text = "BUILD"
+
+[node name="MenuButton" type="Button" parent="."]
+layout_mode = 0
+offset_left = 168.0
+offset_top = 804.0
+offset_right = 234.0
+offset_bottom = 870.0
+text = ""
+icon = ExtResource("2")
+expand_icon = true
