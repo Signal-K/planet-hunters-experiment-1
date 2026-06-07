@@ -1,18 +1,20 @@
 'use client'
 
-import type { Mission, Target } from '@/lib/data'
-import { MINERAL_META, sellCargo } from '@/lib/data'
+import type { Mission, Target, MineralMeta } from '@/lib/data'
+import { sellCargo } from '@/lib/data'
 import Panel from '@/components/ui/Panel'
 import TopBar from '@/components/ui/TopBar'
 import { PrimaryBtn } from '@/components/ui/Button'
 
-export default function DebriefScreen({ mission, target, cargo, onDone }: {
+export default function DebriefScreen({ mission, target, cargo, onDone, minerals }: {
   mission: Mission
   target: Target
   cargo: Record<string, number>
   onDone: (total: number, xp: number, affinity: number) => void
+  minerals: Record<string, MineralMeta>
 }) {
-  const subtotal = sellCargo(cargo)
+  const MINERAL_META = minerals
+  const subtotal = sellCargo(cargo, minerals)
   const delivered = Object.entries(mission.requires.minerals).every(([id, amount]) => (cargo[id] ?? 0) >= amount)
   const total = subtotal + (delivered ? mission.payout.francs : 0)
   const xp = delivered ? mission.payout.xp + Math.round(subtotal / 8) : Math.round(subtotal / 8)

@@ -1,17 +1,17 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import type { Mission, Target } from '@/lib/data'
-import { MINERAL_META } from '@/lib/data'
+import type { Mission, Target, MineralMeta } from '@/lib/data'
 import TopBar from '@/components/ui/TopBar'
 import Panel from '@/components/ui/Panel'
 import { PrimaryBtn } from '@/components/ui/Button'
 
-export default function MiningScreen({ mission, target, onComplete, onBack }: {
+export default function MiningScreen({ mission, target, onComplete, onBack, minerals }: {
   mission: Mission
   target: Target
   onComplete: (cargo: Record<string, number>) => void
   onBack: () => void
+  minerals: Record<string, MineralMeta>
 }) {
   const [cargo, setCargo] = useState<Record<string, number>>({})
   const ore = useMemo(() => Array.from({ length: 12 }, (_, index) => ({

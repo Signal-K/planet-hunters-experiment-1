@@ -71,9 +71,9 @@ export default function AssemblyScreen(props: AssemblyScreenProps) {
             <div><span className="ln-micro">Target</span><strong className="amber">{props.target.name}</strong></div>
           </div>
         </Panel>
-        <Slot label="01 · Chassis · Hull + Cargo" parts={PARTS.chassis} picked={check.chassis} accent="var(--ln-cyan)" onPick={id => props.onChange('chassis', id)} />
-        <Slot label="02 · Propulsion · Range" parts={PARTS.propulsion} picked={check.propulsion} accent="var(--ln-amber)" onPick={id => props.onChange('propulsion', id)} />
-        <Slot label="03 · Mining Drill · Yield" parts={PARTS.drill} picked={check.drill} accent="var(--ln-cyan)" onPick={id => props.onChange('drill', id)} />
+        <Slot label="01 · Chassis · Hull + Cargo" parts={props.parts.chassis} picked={check.chassis} accent="var(--ln-cyan)" onPick={id => props.onChange('chassis', id)} />
+        <Slot label="02 · Propulsion · Range" parts={props.parts.propulsion} picked={check.propulsion} accent="var(--ln-amber)" onPick={id => props.onChange('propulsion', id)} />
+        <Slot label="03 · Mining Drill · Yield" parts={props.parts.drill} picked={check.drill} accent="var(--ln-cyan)" onPick={id => props.onChange('drill', id)} />
         <div className={check.ok ? 'compatibility compatibility--ok' : 'compatibility compatibility--bad'}>
           <span />{check.ok ? 'Build compatible · Ready for launch' : check.problems.join(' · ')}
         </div>
