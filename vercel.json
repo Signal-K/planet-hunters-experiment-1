@@ -4,7 +4,6 @@
   "buildCommand": "rm -rf public && mkdir -p public && cp index.html react-shell.js manifest.json sw.js public/ && cp -R assets game public/",
   "cleanUrls": false,
   "trailingSlash": false,
-  "ignoreCommand": "exit 0",
   "headers": [
     {
       "source": "/(.*)\\.wasm",
