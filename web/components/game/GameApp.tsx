@@ -34,7 +34,8 @@ function GameCanvas() {
       return {
         ...s,
         action: 'Tap MISSIONS',
-        spot: { x: 122, y: 686, w: 64, h: 64 } // Approximate position of Missions button when open
+        anchor: 'bottom' as const,
+        spot: { x: 104, y: 704, w: 72, h: 72 },
       }
     }
     return s
@@ -57,6 +58,9 @@ function GameCanvas() {
       game.go(game.mission && game.target ? 'fab' : 'missions')
       return
     }
+    if (id === 'market') {
+      return
+    }
     game.go(id === 'galaxy' ? 'missions' : id as Screen)
   }
 
@@ -72,8 +76,13 @@ function GameCanvas() {
         {game.screen === 'build' && (
           <BuildPlaceScreen
             onBack={() => game.go('hub')}
-            onPlaced={kind => {
-              game.setPlayer(player => ({ ...player, placed: Array.from(new Set([...player.placed, kind])) }))
+            hasCoach={hasCoach}
+            onPlaced={(kind, plot) => {
+              game.setPlayer(player => ({
+                ...player,
+                placed: Array.from(new Set([...player.placed, kind])),
+                placementPlots: { ...player.placementPlots, [kind]: plot },
+              }))
               game.completeStep(0)
               game.go('hub')
             }}
@@ -82,6 +91,7 @@ function GameCanvas() {
         {game.screen === 'hub' && (
           <HubScreen
             player={game.player}
+            hasCoach={hasCoach}
             onNav={screen => goFromNav(screen)}
             onGoBuilding={building => {
               if (building === 'control' && !game.player.controlBuilt) return game.setBuildGate(true)
@@ -97,21 +107,23 @@ function GameCanvas() {
             controlBuilt={game.player.controlBuilt}
             freeOperations={game.player.freeOperations}
             hasCoach={hasCoach}
+            catalog={game.catalog}
           />
         )}
         {game.screen === 'classify' && game.mission && (
           <ClassifyLightcurveScreen onBack={() => game.go('missions')} onSubmit={game.classifyCandidate} hasCoach={hasCoach} />
         )}
         {game.screen === 'targets' && game.mission && (
-          <TargetPickerScreen mission={game.mission} onBack={() => game.go('missions')} onPick={game.onPickTarget} hasCoach={hasCoach} />
+          <TargetPickerScreen mission={game.mission} onBack={() => game.go('missions')} onPick={game.onPickTarget} hasCoach={hasCoach} catalog={game.catalog} />
         )}
         {game.screen === 'fab' && game.mission && game.target && (
           <AssemblyScreen
             mission={game.mission}
             target={game.target}
             rocket={game.rocket}
+            parts={game.catalog.parts}
             onChange={(slot, id) => game.setRocket(rocket => ({ ...rocket, [slot]: id }))}
-            onSuggest={() => game.setRocket(suggestBuild({ mission: game.mission, target: game.target, level: game.player.level }))}
+            onSuggest={() => game.setRocket(suggestBuild({ mission: game.mission, target: game.target, level: game.player.level, parts: game.catalog.parts }))}
             onExplained={() => game.completeStep(4)}
             onLaunch={game.onLaunch}
             onBack={() => game.go(game.mission?.requiresClassification ? 'classify' : 'targets')}
@@ -122,10 +134,10 @@ function GameCanvas() {
           <TransitScreen target={game.target} onBack={() => game.go('hub')} onArrive={() => game.go('mining')} />
         )}
         {game.screen === 'mining' && game.mission && game.target && (
-          <MiningScreen mission={game.mission} target={game.target} onBack={() => game.go('hub')} onComplete={game.onMiningDone} />
+          <MiningScreen mission={game.mission} target={game.target} onBack={() => game.go('hub')} onComplete={game.onMiningDone} minerals={game.catalog.minerals} />
         )}
         {game.screen === 'debrief' && game.mission && game.target && (
-          <DebriefScreen mission={game.mission} target={game.target} cargo={game.lastCargo ?? {}} onDone={game.onDebriefDone} />
+          <DebriefScreen mission={game.mission} target={game.target} cargo={game.lastCargo ?? {}} onDone={game.onDebriefDone} minerals={game.catalog.minerals} />
         )}
 
         {showNav && <RadialNav current={currentNav} onNav={goFromNav} />}

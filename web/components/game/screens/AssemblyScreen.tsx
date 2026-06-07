@@ -2,7 +2,8 @@
 
 import Image from 'next/image'
 import type { Mission, Part, RocketConfig, Target } from '@/lib/data'
-import { PARTS, validateBuild } from '@/lib/data'
+import { validateBuild } from '@/lib/data'
+import type { Catalog } from '@/lib/catalog'
 import Panel from '@/components/ui/Panel'
 import TopBar from '@/components/ui/TopBar'
 import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
@@ -11,6 +12,7 @@ interface AssemblyScreenProps {
   mission: Mission
   target: Target
   rocket: RocketConfig
+  parts: Catalog['parts']
   onChange: (slot: keyof RocketConfig, id: string) => void
   onSuggest: () => void
   onLaunch: () => void
@@ -57,7 +59,7 @@ function Slot({ label, parts, picked, accent, onPick }: {
 }
 
 export default function AssemblyScreen(props: AssemblyScreenProps) {
-  const check = validateBuild({ mission: props.mission, target: props.target, rocket: props.rocket })
+  const check = validateBuild({ mission: props.mission, target: props.target, rocket: props.rocket, parts: props.parts })
 
   return (
     <div className="game-screen blueprint-screen">

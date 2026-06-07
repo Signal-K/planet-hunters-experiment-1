@@ -19,6 +19,15 @@ This project follows spec-driven development practices. All features are documen
 
 See [Specifications Index](/.knowns/docs/specs/specifications-index.md) for complete documentation.
 
+## Backend Credentials
+
+### PocketBase Superuser (both instances)
+
+| Instance | URL | Email | Password |
+|----------|-----|-------|----------|
+| Shared backend (`~/Navigation/backend/`) | `http://localhost:8090/_/` | `liam@skinetics.tech` | `ThisIsATestPassword` |
+| Landnam backend (`~/Navigation/Landnam/pocketbase/`) | `http://localhost:8091/_/` | `liam@skinetics.tech` | `ThisIsATestPassword` |
+
 ## 🚀 Quick Start
 
 ### Prerequisites

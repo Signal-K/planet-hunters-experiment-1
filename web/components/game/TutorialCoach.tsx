@@ -18,6 +18,12 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
   if (!step) return null
   const spot = step.spot
   const manual = !!step.manual
+  const compactTop = step.screen === 'build'
+    ? 92
+    : spot
+      ? (spot.y + spot.h / 2 < 437 ? undefined : 84)
+      : (step.anchor === 'bottom' ? undefined : 84)
+  const compactBottom = compactTop == null ? 110 : undefined
 
   const dots = (
     <div style={{ display: 'flex', gap: 4 }}>
@@ -121,10 +127,10 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
         position: 'absolute',
         left: 12,
         right: 12,
-        top: step.anchor === 'bottom' ? 'auto' : 84,
-        bottom: step.anchor === 'bottom' ? 110 : 'auto',
+        top: compactTop,
+        bottom: compactBottom,
         zIndex: 82,
-        pointerEvents: 'auto'
+        pointerEvents: 'none'
       }}>
         <div style={{
           display: 'flex', alignItems: 'center', gap: 10,
@@ -133,7 +139,7 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
           padding: '7px 12px 7px 7px',
           boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
         }}>
-          <button onClick={() => setCollapsed(c => !c)} style={{ background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', flexShrink: 0 }}>
+          <button onClick={() => setCollapsed(c => !c)} style={{ background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', flexShrink: 0, pointerEvents: 'auto' }}>
             <CoachAvatar size={34} talking={!collapsed} />
           </button>
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -142,12 +148,12 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
               <span style={{ flex: 1 }} />
               <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 9, color: '#7a8294' }}>{stepIndex + 1}/{total}</span>
             </div>
-            <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#dfe9f7', lineHeight: 1.3, marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#dfe9f7', lineHeight: 1.25, marginTop: 1, whiteSpace: 'normal', overflow: 'visible' }}>
               <span aria-hidden="true" style={{ color: 'var(--ln-amber)', marginRight: 4 }}>›</span>
               {step.action ?? ('Tap ' + step.cta)}
             </div>
           </div>
-          <button onClick={onSkip} style={{ flexShrink: 0, background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#5d7390' }}>Skip</button>
+          <button onClick={onSkip} style={{ flexShrink: 0, background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#5d7390', pointerEvents: 'auto' }}>Skip</button>
         </div>
         <div style={{ marginTop: 6, display: 'flex', justifyContent: 'center' }}>{dots}</div>
       </div>

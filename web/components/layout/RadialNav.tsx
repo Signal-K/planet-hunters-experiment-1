@@ -9,6 +9,7 @@ interface NavItem {
   label: string
   color: string
   glyph: React.ReactNode
+  locked?: boolean
 }
 
 interface RadialNavProps {
@@ -55,11 +56,12 @@ function RocketGlyph() {
   )
 }
 
-function PlusIcon() {
+function MarketGlyph() {
   return (
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
-      <line x1="12" y1="5" x2="12" y2="19"/>
-      <line x1="5" y1="12" x2="19" y2="12"/>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 10h16l-2-6H6l-2 6z"/>
+      <path d="M5 10v10h14V10"/>
+      <path d="M9 20v-6h6v6"/>
     </svg>
   )
 }
@@ -69,6 +71,7 @@ const MENU: NavItem[] = [
   { id: 'missions', label: 'Missions', color: '#f5a623', glyph: <MissionsGlyph /> },
   { id: 'galaxy',   label: 'Atlas',    color: '#7ec8ff', glyph: <AtlasGlyph /> },
   { id: 'fab',      label: 'Build',    color: '#c084ff', glyph: <RocketGlyph /> },
+  { id: 'market',   label: 'Market',   color: '#ffb347', glyph: <MarketGlyph />, locked: true },
 ]
 
 export default function RadialNav({ current, onNav }: RadialNavProps) {
@@ -107,10 +110,13 @@ export default function RadialNav({ current, onNav }: RadialNavProps) {
         const dx = Math.cos(ang) * radius
         const dy = Math.sin(ang) * radius
         const active = current === m.id
+        const locked = m.locked && !game.player.freeOperations
+        const itemColor = locked ? '#5d7390' : m.color
         return (
           <button
             key={m.id}
-            onClick={() => { onNav(m.id); setOpen(false) }}
+            onClick={() => { if (!locked) onNav(m.id); setOpen(false) }}
+            aria-disabled={locked}
             style={{
               position: 'absolute',
               left: '50%',
@@ -126,7 +132,7 @@ export default function RadialNav({ current, onNav }: RadialNavProps) {
               borderRadius: 999,
               border: 'none',
               padding: 0,
-              cursor: 'pointer',
+              cursor: locked ? 'not-allowed' : 'pointer',
               background: 'transparent',
             }}
           >
@@ -141,11 +147,12 @@ export default function RadialNav({ current, onNav }: RadialNavProps) {
               background: active
                 ? `radial-gradient(circle at 32% 28%, ${m.color}, ${m.color}cc 70%, ${m.color}88)`
                 : 'rgba(10,18,29,0.92)',
-              border: `1.5px solid ${active ? '#fff' : m.color + '99'}`,
+              border: `1.5px solid ${active ? '#fff' : itemColor + '99'}`,
               boxShadow: active
                 ? `0 0 0 2px ${m.color}55, 0 0 18px ${m.color}aa, 0 6px 14px rgba(0,0,0,0.5)`
-                : `0 0 12px ${m.color}44, 0 6px 14px rgba(0,0,0,0.5)`,
-              color: active ? '#06121f' : m.color,
+                : `0 0 12px ${itemColor}44, 0 6px 14px rgba(0,0,0,0.5)`,
+              color: active ? '#06121f' : itemColor,
+              opacity: locked ? 0.68 : 1,
               backdropFilter: 'blur(6px)',
             }}>
               {m.glyph}
@@ -160,7 +167,7 @@ export default function RadialNav({ current, onNav }: RadialNavProps) {
               fontWeight: 800,
               letterSpacing: '0.16em',
               textTransform: 'uppercase',
-              color: active ? '#fff' : m.color,
+              color: active ? '#fff' : itemColor,
               whiteSpace: 'nowrap',
               textShadow: '0 1px 4px rgba(0,0,0,0.8)',
             }}>

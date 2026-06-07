@@ -5,16 +5,23 @@ import TopBar from '@/components/ui/TopBar'
 import Panel from '@/components/ui/Panel'
 import StatusPill from '@/components/ui/StatusPill'
 import { PrimaryBtn } from '@/components/ui/Button'
-import { TARGETS, MINERAL_META, compatibleTargetsFor, type Mission, type Target } from '@/lib/data'
+import { compatibleTargetsFor, type Mission, type Target } from '@/lib/data'
+import type { Catalog } from '@/lib/catalog'
 
 interface TargetPickerScreenProps {
   mission: Mission
   onBack: () => void
   onPick: (id: string) => void
   hasCoach?: boolean
+  catalog: Catalog
 }
 
-const ANGLES: Record<string, number> = { mercury: 200, venus: 320, earth: 70, mars: 140, belt: 250, jupiter: 30, saturn: 200, neptune: 320 }
+const ANGLES: Record<string, number> = {
+  mercury: 200, venus: 320, earth: 70, mars: 140,
+  eros: 45, bennu: 170, vesta: 310, psyche: 85,
+  belt: 250, ceres: 190,
+  jupiter: 30, saturn: 340, neptune: 120,
+}
 const RADII: Record<number, number> = { 1: 36, 2: 60, 3: 84, 4: 108, 5: 132, 6: 158, 7: 184, 8: 208 }
 
 function PlanetSVG({ id, size }: { id: string; size: number }) {
@@ -63,8 +70,9 @@ function Greebly({ pos }: { pos: 'tl' | 'tr' | 'bl' | 'br' }) {
   return <div style={sty} />
 }
 
-export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach }: TargetPickerScreenProps) {
-  const compat = compatibleTargetsFor(mission)
+export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, catalog }: TargetPickerScreenProps) {
+  const { targets: TARGETS, minerals: MINERAL_META } = catalog
+  const compat = compatibleTargetsFor(mission, TARGETS)
   const compatIds = new Set(compat.map(t => t.id))
   // Default pick first compatible, prioritizing recommended if they are actually in compat
   const [picked, setPicked] = useState<string>(

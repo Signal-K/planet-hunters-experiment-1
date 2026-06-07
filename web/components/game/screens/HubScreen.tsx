@@ -7,6 +7,7 @@ import ProgressionCard from '@/components/game/ProgressionCard'
 
 interface HubScreenProps {
   player: Player
+  hasCoach?: boolean
   onGoBuilding: (b: string) => void
   onNav: (s: Screen) => void
 }
@@ -45,7 +46,7 @@ function Cloud({ style, dur = '60s', delay = '0s' }: { style?: React.CSSProperti
   )
 }
 
-function SoilCrossSection({ onMarket }: { onMarket: () => void }) {
+function SoilCrossSection() {
   return (
     <div style={{ position: 'absolute', left: 0, right: 0, bottom: 96, height: 168, zIndex: 4, pointerEvents: 'none' }}>
       <div style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 0, borderTop: '1.5px dashed rgba(255,225,160,0.5)' }} />
@@ -77,22 +78,7 @@ function SoilCrossSection({ onMarket }: { onMarket: () => void }) {
           <path d="M360 0 q 8 20, -4 48"/>
         </g>
       </svg>
-      <button onClick={onMarket} style={{ position: 'absolute', left: 20, bottom: 8, width: 96, background: 'transparent', border: 'none', padding: 0, cursor: 'not-allowed', pointerEvents: 'auto', opacity: 0.7 }}>
-        <svg viewBox="0 0 120 90" width="100%" height="64">
-          <rect x="6" y="14" width="108" height="68" fill="#1a0f06" stroke="#7a5028" strokeWidth="1.4" opacity="0.92"/>
-          <line x1="6" y1="14" x2="14" y2="2" stroke="#7a5028" strokeWidth="2"/>
-          <line x1="114" y1="14" x2="106" y2="2" stroke="#7a5028" strokeWidth="2"/>
-          <line x1="6" y1="14" x2="114" y2="14" stroke="#3a2418" strokeWidth="2"/>
-          <rect x="16" y="40" width="20" height="32" fill="#3fa9ff" opacity="0.85" stroke="#1a2230" strokeWidth="0.6"/>
-          <rect x="44" y="40" width="20" height="32" fill="#39d36a" opacity="0.85" stroke="#1a2230" strokeWidth="0.6"/>
-          <rect x="72" y="40" width="20" height="32" fill="#ffb347" opacity="0.85" stroke="#1a2230" strokeWidth="0.6"/>
-          <line x1="6" y1="76" x2="114" y2="76" stroke="#3a2418" strokeWidth="2"/>
-        </svg>
-        <div style={{ marginTop: 3, padding: '2px 7px', background: 'rgba(8,12,22,0.85)', border: '1px solid rgba(122,80,40,0.6)', borderRadius: 4, fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 8, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#9c8d70', textAlign: 'center' }}>
-          Market · L5
-        </div>
-      </button>
-      <div style={{ position: 'absolute', right: 14, top: 10, padding: '3px 8px', background: 'rgba(8,12,22,0.7)', border: '1px solid rgba(122,80,40,0.55)', borderRadius: 999, fontFamily: 'var(--ln-font-mono)', fontSize: 9, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#9c8d70' }}>
+      <div style={{ position: 'absolute', right: 14, top: 58, padding: '3px 8px', background: 'rgba(8,12,22,0.7)', border: '1px solid rgba(122,80,40,0.55)', borderRadius: 999, fontFamily: 'var(--ln-font-mono)', fontSize: 9, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#9c8d70' }}>
         · Subsurface ·
       </div>
     </div>
@@ -176,25 +162,51 @@ function EmptyPlot({ w = 90, style, onClick }: { w?: number; style?: React.CSSPr
   )
 }
 
-export default function HubScreen({ player, onGoBuilding, onNav }: HubScreenProps) {
-  const placed = player.placed ?? ['launchpad']
-
-  const SLOTS = [
-    {
-      id: 'satellite', kind: 'satellite', label: 'Satellite', sub: 'SCANNING', status: 'ok' as const,
-      w: 78, style: { left: 16, top: 506 } as React.CSSProperties, onClick: () => onGoBuilding('satellite'),
-    },
-    {
-      id: 'launchpad', kind: 'launchpad', label: 'Launchpad',
-      sub: player.activeMission ? 'IN FLIGHT' : 'READY', status: (player.activeMission ? 'warn' : 'ok') as 'ok' | 'warn',
-      hot: !!player.pendingLaunch, w: 132, style: { left: '50%', top: 486, transform: 'translateX(-50%)' } as React.CSSProperties,
-      onClick: () => onGoBuilding('launchpad'),
-    },
-    {
-      id: 'control', kind: 'control', label: 'Control', sub: player.missionCount + ' JOBS', status: 'warn' as const,
-      w: 84, style: { right: 16, top: 506 } as React.CSSProperties, onClick: () => onGoBuilding('missions'),
-    },
+export default function HubScreen({ player, hasCoach, onGoBuilding, onNav }: HubScreenProps) {
+  const placed = player.placed ?? []
+  const placementPlots = player.placementPlots ?? {}
+  const legacyPlaced = (kind: string) => placed.includes(kind) && placementPlots[kind] == null
+  const effectivePlots: Record<string, number> = {
+    ...placementPlots,
+    ...(legacyPlaced('launchpad') ? { launchpad: 1 } : {}),
+    ...(legacyPlaced('control') ? { control: 2 } : {}),
+    ...(legacyPlaced('satellite') ? { satellite: 0 } : {}),
+  }
+  const plotStyles: React.CSSProperties[] = [
+    { left: 22, top: 570 },
+    { left: 112, top: 570 },
+    { left: 210, top: 570 },
+    { left: 300, top: 570 },
   ]
+  const structureForPlot = (plot: number) => Object.entries(effectivePlots).find(([, p]) => p === plot)?.[0] ?? null
+  const structureProps = (kind: string) => {
+    if (kind === 'launchpad') {
+      return {
+        kind, label: 'Launchpad',
+        sub: player.activeMission ? 'IN FLIGHT' : 'READY',
+        status: (player.activeMission ? 'warn' : 'ok') as 'ok' | 'warn',
+        hot: !!player.pendingLaunch,
+        w: 98,
+        onClick: () => onGoBuilding('launchpad'),
+      }
+    }
+    if (kind === 'control') {
+      return {
+        kind, label: 'Control',
+        sub: player.missionCount + ' JOBS',
+        status: 'warn' as const,
+        w: 84,
+        onClick: () => onGoBuilding('missions'),
+      }
+    }
+    return {
+      kind, label: 'Satellite',
+      sub: 'SCANNING',
+      status: 'ok' as const,
+      w: 78,
+      onClick: () => onGoBuilding('satellite'),
+    }
+  }
 
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
@@ -235,21 +247,24 @@ export default function HubScreen({ player, onGoBuilding, onNav }: HubScreenProp
       </div>
 
       {/* Progression card */}
-      <ProgressionCard player={player} onGoBuilding={onGoBuilding} onNav={onNav} />
+      {!hasCoach && <ProgressionCard player={player} onGoBuilding={onGoBuilding} onNav={onNav} />}
 
       {/* Surface buildings */}
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
         <div style={{ position: 'absolute', inset: 0, pointerEvents: 'auto' }}>
-          {SLOTS.map(s =>
-            placed.includes(s.id)
-              ? <Building key={s.id} kind={s.kind} label={s.label} sub={s.sub} status={s.status} hot={s.hot} onClick={s.onClick} w={s.w} style={s.style} />
-              : <EmptyPlot key={s.id} w={s.w} style={s.style} onClick={() => onGoBuilding('build')} />
-          )}
+          {plotStyles.map((style, plot) => {
+            const kind = structureForPlot(plot)
+            if (!kind) {
+              return <EmptyPlot key={plot} w={78} style={style} onClick={() => onGoBuilding('build')} />
+            }
+            const building = structureProps(kind)
+            return <Building key={kind} {...building} style={style} />
+          })}
         </div>
       </div>
 
       {/* Soil cross-section */}
-      <SoilCrossSection onMarket={() => {}} />
+      <SoilCrossSection />
 
       {/* Hint */}
       <div style={{ position: 'absolute', left: 0, right: 0, bottom: 110, zIndex: 5, display: 'flex', justifyContent: 'center', pointerEvents: 'none' }}>

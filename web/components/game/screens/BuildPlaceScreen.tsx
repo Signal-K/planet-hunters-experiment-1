@@ -8,15 +8,15 @@ import { PrimaryBtn } from '@/components/ui/Button'
 import StatusPill from '@/components/ui/StatusPill'
 
 interface BuildPlaceScreenProps {
-  onPlaced: (kind: string) => void
+  onPlaced: (kind: string, plot: number) => void
   onBack: () => void
+  hasCoach?: boolean
 }
 
 const CATALOG = [
   { id: 'launchpad', name: 'Launchpad', cost: 0, desc: 'Assemble rockets and launch mining missions.', avail: true },
   { id: 'control', name: 'Control Station', cost: 500, desc: 'Unlocks the contractor job board.', avail: false, req: 'M1' },
   { id: 'satellite', name: 'Satellite Station', cost: 1800, desc: 'Scan TESS data, classify planet candidates.', avail: false, req: 'L5' },
-  { id: 'market', name: 'Marketplace', cost: 2400, desc: 'Sell cargo at fluctuating live prices.', avail: false, req: 'L5' },
 ]
 
 function StructureIcon({ kind, size = 32 }: { kind: string; size?: number }) {
@@ -36,7 +36,7 @@ function LockIcon() {
   return <svg width="11" height="11" viewBox="0 0 12 12" fill="none" aria-hidden="true"><rect x="2" y="5" width="8" height="6" rx="1" stroke="currentColor"/><path d="M4 5V3a2 2 0 0 1 4 0v2" stroke="currentColor"/></svg>
 }
 
-export default function BuildPlaceScreen({ onPlaced, onBack }: BuildPlaceScreenProps) {
+export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach }: BuildPlaceScreenProps) {
   const [phase, setPhase] = useState<'pick' | 'place'>('pick')
   const [picked, setPicked] = useState('launchpad')
   const [cell, setCell] = useState<number | null>(null)
@@ -57,7 +57,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack }: BuildPlaceScreenP
       />
 
       {phase === 'pick' && (
-        <div style={{ position: 'absolute', inset: 0, paddingTop: 128, paddingBottom: 120, overflowY: 'auto' }}>
+        <div style={{ position: 'absolute', inset: 0, paddingTop: hasCoach ? 184 : 128, paddingBottom: 120, overflowY: 'auto' }}>
           <div style={{ padding: '0 14px 8px' }}>
             <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700, letterSpacing: '0.22em', color: 'var(--ln-text-muted)', textTransform: 'uppercase' }}>Available Structures</div>
           </div>
@@ -95,7 +95,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack }: BuildPlaceScreenP
 
       {phase === 'place' && (
         <>
-          <div style={{ position: 'absolute', left: 14, right: 14, top: 130, zIndex: 12 }}>
+          <div style={{ position: 'absolute', left: 14, right: 14, top: hasCoach ? 166 : 130, zIndex: 12 }}>
             <Panel accent="#f5a623" style={{ padding: 10 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <span style={{ color: 'var(--ln-amber)' }}><StructureIcon kind="launchpad" size={28} /></span>
@@ -126,7 +126,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack }: BuildPlaceScreenP
           </div>
 
           <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 30, padding: '10px 14px 24px', background: 'linear-gradient(180deg, transparent 0%, rgba(6,9,15,0.8) 30%, #06090f 100%)' }}>
-            <PrimaryBtn kind="amber" disabled={cell == null} onClick={() => onPlaced(picked)}>Confirm · Build Here →</PrimaryBtn>
+            <PrimaryBtn kind="amber" disabled={cell == null} onClick={() => cell != null && onPlaced(picked, cell)}>Confirm · Build Here →</PrimaryBtn>
           </div>
         </>
       )}

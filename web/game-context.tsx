@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
 import { type Mission, type Target, type RocketConfig, MISSIONS, TARGETS, PROGRESSION_STEPS, suggestBuild } from '@/lib/data'
 import { pbShared } from '@/lib/pb'
+import { type Catalog, STATIC_CATALOG, fetchCatalog } from '@/lib/catalog'
 
 export type Screen =
   | 'build'
@@ -24,6 +25,7 @@ export interface Player {
   missionCount: number
   pendingLaunch: boolean
   placed: string[]
+  placementPlots: Record<string, number>
   controlBuilt: boolean
   missionsDone: number
   freeOperations: boolean
@@ -47,6 +49,7 @@ export interface GameState {
 }
 
 interface GameActions {
+  catalog: Catalog
   go: (screen: Screen) => void
   setPlayer: React.Dispatch<React.SetStateAction<Player>>
   setMissionId: (id: string | null) => void
@@ -83,7 +86,8 @@ const DEFAULT_STATE: GameState = {
     activeMission: null,
     missionCount: 1,
     pendingLaunch: false,
-    placed: ['launchpad'],
+    placed: [],
+    placementPlots: {},
     controlBuilt: false,
     missionsDone: 0,
     freeOperations: false,
@@ -101,6 +105,11 @@ const DEFAULT_STATE: GameState = {
 }
 
 const STORAGE_KEY = 'landnam-game-state-v1'
+
+function firstOpenPlot(placementPlots: Record<string, number>, kinds: string[]) {
+  const occupied = new Set(kinds.map(kind => placementPlots[kind]).filter((plot): plot is number => typeof plot === 'number'))
+  return [0, 1, 2, 3].find(plot => !occupied.has(plot)) ?? 0
+}
 
 function loadState(): GameState {
   if (typeof window === 'undefined') return DEFAULT_STATE
@@ -121,6 +130,7 @@ function loadState(): GameState {
 export function GameProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<GameState>(DEFAULT_STATE)
   const [hydrated, setHydrated] = useState(false)
+  const [catalog, setCatalog] = useState<Catalog>(STATIC_CATALOG)
   const [authUserId, setAuthUserId] = useState<string | null>(pbShared.authStore.record?.id ?? null)
   const backendRecordId = useRef<string | null>(null)
   const backendLoadedFor = useRef<string | null>(null)
@@ -128,6 +138,10 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     setState(loadState())
     setHydrated(true)
+  }, [])
+
+  useEffect(() => {
+    fetchCatalog().then(setCatalog).catch(() => {})
   }, [])
 
   useEffect(() => pbShared.authStore.onChange((_token, record) => {
@@ -241,10 +255,10 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       missionId: id,
       targetId: null,
       classification: null,
-      screen: MISSIONS.find(m => m.id === id)?.requiresClassification ? 'classify' : 'targets',
+      screen: catalog.missions.find(m => m.id === id)?.requiresClassification ? 'classify' : 'targets',
       doneSteps: { ...s.doneSteps, 2: true },
     }))
-  }, [])
+  }, [catalog.missions])
 
   const classifyCandidate = useCallback((verdict: 'planet' | 'not_planet') => {
     setState(s => ({
@@ -252,9 +266,10 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       classification: { candidateId: 'tess-451b', verdict },
       targetId: 'tess-451b',
       rocket: suggestBuild({
-        mission: s.missionId ? MISSIONS.find(m => m.id === s.missionId) ?? null : null,
-        target: TARGETS.find(t => t.id === 'tess-451b') ?? null,
+        mission: s.missionId ? catalog.missions.find(m => m.id === s.missionId) ?? null : null,
+        target: catalog.targets.find(t => t.id === 'tess-451b') ?? null,
         level: s.player.level,
+        parts: catalog.parts,
       }),
       screen: 'fab',
       doneSteps: { ...s.doneSteps, 30: true, 3: true },
@@ -272,9 +287,9 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
   const onPickTarget = useCallback((id: string) => {
     setState(s => {
-      const mission = s.missionId ? MISSIONS.find(m => m.id === s.missionId) ?? null : null
-      const target = TARGETS.find(t => t.id === id) ?? null
-      const next = suggestBuild({ mission, target, level: s.player.level })
+      const mission = s.missionId ? catalog.missions.find(m => m.id === s.missionId) ?? null : null
+      const target = catalog.targets.find(t => t.id === id) ?? null
+      const next = suggestBuild({ mission, target, level: s.player.level, parts: catalog.parts })
       return {
         ...s,
         targetId: id,
@@ -380,17 +395,22 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
           controlBuilt: true,
           missionCount: 1,
           placed: Array.from(new Set([...s.player.placed, 'control'])),
+          placementPlots: {
+            ...s.player.placementPlots,
+            control: firstOpenPlot(s.player.placementPlots, ['launchpad', 'control', 'satellite']),
+          },
         },
       }
     })
   }, [])
 
-  const mission = state.missionId ? MISSIONS.find(m => m.id === state.missionId) ?? null : null
-  const target = state.targetId ? TARGETS.find(t => t.id === state.targetId) ?? null : null
+  const mission = state.missionId ? catalog.missions.find(m => m.id === state.missionId) ?? null : null
+  const target = state.targetId ? catalog.targets.find(t => t.id === state.targetId) ?? null : null
 
   return (
     <GameContext.Provider value={{
       ...state,
+      catalog,
       go,
       setPlayer,
       setMissionId,

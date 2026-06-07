@@ -147,6 +147,7 @@ export const MISSIONS: Mission[] = [
 ]
 
 export const TARGETS: Target[] = [
+  // ── Inner solar system planets ─────────────────────────────────────────────
   {
     id: 'mercury',
     name: 'Mercury',
@@ -166,6 +167,45 @@ export const TARGETS: Target[] = [
     minerals: ['iron', 'silicon'],
     recommended: true,
   },
+  // ── Near-Earth and inner belt asteroids (orbit 1–4) ────────────────────────
+  {
+    id: 'eros',
+    name: '433 Eros',
+    type: 'asteroid',
+    orbit: 2,
+    difficulty: 'L1',
+    brief: 'Elongated near-Earth rock with dense iron-nickel core. First commercial prospect on file.',
+    minerals: ['iron', 'silicon'],
+    recommended: true,
+  },
+  {
+    id: 'vesta',
+    name: '4 Vesta',
+    type: 'asteroid',
+    orbit: 3,
+    difficulty: 'L1',
+    brief: 'Differentiated protoplanet. Basaltic crust over a heavy iron mantle.',
+    minerals: ['iron', 'silicon'],
+  },
+  {
+    id: 'psyche',
+    name: '16 Psyche',
+    type: 'asteroid',
+    orbit: 4,
+    difficulty: 'L2',
+    brief: 'Exposed metallic core of an ancient body. Extremely high iron and nickel grades.',
+    minerals: ['iron', 'silicon', 'gold'],
+  },
+  {
+    id: 'bennu',
+    name: '101955 Bennu',
+    type: 'asteroid',
+    orbit: 2,
+    difficulty: 'L1',
+    brief: 'Carbon-rich near-Earth asteroid. Loose rubble pile, low gravity, easy approach.',
+    minerals: ['iron', 'carbon'],
+  },
+  // ── Main belt / outer (orbit 5+) ───────────────────────────────────────────
   {
     id: 'belt',
     name: 'Asteroid Belt',
@@ -177,6 +217,16 @@ export const TARGETS: Target[] = [
     recommended: true,
   },
   {
+    id: 'ceres',
+    name: '1 Ceres',
+    type: 'asteroid',
+    orbit: 5,
+    difficulty: 'L2',
+    brief: 'Dwarf planet at the belt\'s inner edge. Ice-rich mantle beneath a silicate crust.',
+    minerals: ['ice', 'silicon'],
+  },
+  // ── Outer planets ──────────────────────────────────────────────────────────
+  {
     id: 'jupiter',
     name: 'Jupiter',
     type: 'planet',
@@ -185,6 +235,7 @@ export const TARGETS: Target[] = [
     brief: 'Gas giant moons, ice and silicate rich, high gravity penalty.',
     minerals: ['ice', 'silicon'],
   },
+  // ── TESS candidate ─────────────────────────────────────────────────────────
   {
     id: 'tess-451b',
     name: 'TESS-451 b',
@@ -249,7 +300,7 @@ export const M1_STEPS: TutorialStep[] = [
   { id: 1, screen: 'hub',     title: 'Open a Mission',
     body: 'Open the radial menu, then choose MISSIONS to see the contract board.',
     action: 'Tap menu, then MISSIONS',
-    anchor: 'top', spot: { x: 302, y: 506, w: 84, h: 64 }, cta: 'the menu' },
+    anchor: 'bottom', spot: { x: 169, y: 786, w: 64, h: 64 }, cta: 'the menu' },
   { id: 2, screen: 'missions', title: 'Lock a Contract',
     body: 'Pick a mining company. They name the minerals they want and pay a bonus on delivery.',
     action: 'Tap a contract card',
@@ -297,42 +348,32 @@ export function suggestBuild(opts: {
   mission: Mission | null
   target: Target | null
   level: number
+  parts?: typeof PARTS
 }): RocketConfig {
-  const { mission, target } = opts
+  const { mission, target, parts = PARTS } = opts
   const orbit = target?.orbit ?? 4
   const drillTier = mission?.requires.drill_tier ?? 1
   const cargoMin = mission?.requires.cargo_min ?? 6
 
-  // pick propulsion that reaches the target
-  const prop = PARTS.propulsion.find(p => !p.locked && (p.max_orbit ?? 0) >= orbit)
-    ?? PARTS.propulsion[0]
-
-  // pick drill that meets tier
-  const drill = PARTS.drill.find(p => !p.locked && (p.tier ?? 0) >= drillTier)
-    ?? PARTS.drill[0]
-
-  // pick chassis with enough cargo
-  const chassis = PARTS.chassis.find(p => !p.locked && (p.cargo ?? 0) >= cargoMin)
-    ?? PARTS.chassis[0]
+  const prop = parts.propulsion.find(p => !p.locked && (p.max_orbit ?? 0) >= orbit)
+    ?? parts.propulsion[0]
+  const drill = parts.drill.find(p => !p.locked && (p.tier ?? 0) >= drillTier)
+    ?? parts.drill[0]
+  const chassis = parts.chassis.find(p => !p.locked && (p.cargo ?? 0) >= cargoMin)
+    ?? parts.chassis[0]
 
   return { chassis: chassis.id, propulsion: prop.id, drill: drill.id }
 }
 
-export function compatibleTargetsFor(mission: Mission): Target[] {
+export function compatibleTargetsFor(mission: Mission, targets: Target[] = TARGETS): Target[] {
   const required = Object.keys(mission.requires.minerals)
-  const isM1 = mission.id === 'm1-iron' || mission.sequence === 1;
-  
-  return TARGETS.filter(t => {
-    // Basic orbit and mineral compatibility
-    const basicCompat = t.orbit <= mission.requires.max_orbit && 
-                        required.every(mineral => t.minerals.includes(mineral));
-    
-    // M1 restriction: only asteroids
-    if (isM1) {
-      return basicCompat && t.type === 'asteroid';
-    }
-    
-    return basicCompat;
+  const isM1 = mission.id === 'm1-iron' || mission.sequence === 1
+
+  return targets.filter(t => {
+    const basicCompat = t.orbit <= mission.requires.max_orbit &&
+                        required.every(mineral => t.minerals.includes(mineral))
+    if (isM1) return basicCompat && t.type === 'asteroid'
+    return basicCompat
   })
 }
 
@@ -348,11 +389,12 @@ export function validateBuild(opts: {
   mission: Mission
   target: Target
   rocket: RocketConfig
+  parts?: typeof PARTS
 }): BuildCheck {
-  const { mission, target, rocket } = opts
-  const chassis = PARTS.chassis.find(p => p.id === rocket.chassis) ?? PARTS.chassis[0]
-  const propulsion = PARTS.propulsion.find(p => p.id === rocket.propulsion) ?? PARTS.propulsion[0]
-  const drill = PARTS.drill.find(p => p.id === rocket.drill) ?? PARTS.drill[0]
+  const { mission, target, rocket, parts = PARTS } = opts
+  const chassis = parts.chassis.find(p => p.id === rocket.chassis) ?? parts.chassis[0]
+  const propulsion = parts.propulsion.find(p => p.id === rocket.propulsion) ?? parts.propulsion[0]
+  const drill = parts.drill.find(p => p.id === rocket.drill) ?? parts.drill[0]
 
   const problems: string[] = []
   if ((propulsion.max_orbit ?? 0) < target.orbit) {
@@ -368,9 +410,9 @@ export function validateBuild(opts: {
   return { chassis, propulsion, drill, ok: problems.length === 0, problems }
 }
 
-export function sellCargo(cargo: Record<string, number>): number {
+export function sellCargo(cargo: Record<string, number>, minerals: Record<string, MineralMeta> = MINERAL_META): number {
   return Object.entries(cargo).reduce((sum, [k, v]) => {
-    const meta = MINERAL_META[k]
+    const meta = minerals[k]
     return sum + (meta ? meta.price * v : 0)
   }, 0)
 }

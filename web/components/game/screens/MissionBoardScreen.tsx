@@ -5,7 +5,8 @@ import Image from 'next/image'
 import TopBar from '@/components/ui/TopBar'
 import Panel from '@/components/ui/Panel'
 import StatusPill from '@/components/ui/StatusPill'
-import { MISSIONS, CONTRACTORS, MINERAL_META, compatibleTargetsFor } from '@/lib/data'
+import { compatibleTargetsFor } from '@/lib/data'
+import type { Catalog } from '@/lib/catalog'
 
 interface MissionBoardScreenProps {
   onBack: () => void
@@ -14,9 +15,11 @@ interface MissionBoardScreenProps {
   controlBuilt: boolean
   freeOperations: boolean
   hasCoach?: boolean
+  catalog: Catalog
 }
 
-export default function MissionBoardScreen({ onBack, onPick, missionsDone, controlBuilt, freeOperations, hasCoach }: MissionBoardScreenProps) {
+export default function MissionBoardScreen({ onBack, onPick, missionsDone, controlBuilt, freeOperations, hasCoach, catalog }: MissionBoardScreenProps) {
+  const { missions: MISSIONS, contractors: CONTRACTORS, minerals: MINERAL_META, targets } = catalog
   const available = MISSIONS.filter(m => freeOperations || (m.sequence === missionsDone + 1 && (m.sequence === 1 || controlBuilt)))
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative', background: '#06090f' }}>
@@ -38,7 +41,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, contr
           {MISSIONS.map(m => {
             const unlocked = freeOperations || available.some(item => item.id === m.id)
             const contractor = CONTRACTORS[m.contractor]
-            const targets = compatibleTargetsFor(m)
+            const mTargets = compatibleTargetsFor(m, targets)
             const accent = contractor.color
             return (
               <button key={m.id} data-mission-id={m.id} onClick={() => unlocked && onPick(m.id)} style={{ background: 'transparent', border: 'none', padding: 0, textAlign: 'left', cursor: unlocked ? 'pointer' : 'not-allowed', opacity: unlocked ? 1 : 0.5 }}>
@@ -78,7 +81,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, contr
                     {!unlocked
                       ? <StatusPill kind="mute">Locked · {m.sequence <= missionsDone ? 'Completed' : m.unlockAt}</StatusPill>
                       : <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 10px', borderRadius: 8, background: `${accent}20`, border: `1px solid ${accent}55`, color: accent, fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase' }}>
-                          {targets.length} target{targets.length !== 1 ? 's' : ''} ›
+                          {mTargets.length} target{mTargets.length !== 1 ? 's' : ''} ›
                         </span>}
                   </div>
                 </Panel>
