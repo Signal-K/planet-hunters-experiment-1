@@ -34,10 +34,11 @@ export default function MiningScreen({ mission, target, onComplete, onBack, mine
       <TopBar eyebrow={`${target.name.toUpperCase()} · SURFACE`} title="Mining Run" onBack={onBack} />
       <div className="asteroid-field">
         {ore.map(node => {
-          const meta = MINERAL_META[node.mineral]
+          const meta = minerals[node.mineral]
           return (
             <button
               key={node.id}
+              data-testid={`ore-node-${node.id}`}
               aria-label={`Mine ${meta.name}`}
               className="ore-node"
               disabled={mined[node.id]}
@@ -52,12 +53,12 @@ export default function MiningScreen({ mission, target, onComplete, onBack, mine
           <div className="order-heading"><span>Contract Order</span><strong>{orderFilled ? 'Filled' : 'Mining'}</strong></div>
           {Object.entries(mission.requires.minerals).map(([id, amount]) => (
             <div className="order-row" key={id}>
-              <span>{MINERAL_META[id].name}</span>
+              <span>{minerals[id].name}</span>
               <strong>{Math.min(cargo[id] ?? 0, amount)} / {amount}</strong>
             </div>
           ))}
         </Panel>
-        <PrimaryBtn kind="amber" disabled={!orderFilled} onClick={() => onComplete(cargo)}>Return Home</PrimaryBtn>
+        <PrimaryBtn kind="amber" disabled={!orderFilled} testId="return-home-btn" onClick={() => onComplete(cargo)}>Return Home</PrimaryBtn>
       </div>
     </div>
   )

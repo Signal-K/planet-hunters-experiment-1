@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "project": "Landnam",
+  "canonicalKnownsRoot": "../.knowns",
+  "canonicalKnownsRepo": "..",
+  "snapshot": "KNOWNS.snapshot.md",
+  "snapshotMode": "read-only",
+  "outbox": ".knowns-outbox",
+  "outboxMode": "write-proposals-only",
+  "collectCommand": "cd .. && make knowns-outbox-collect",
+  "refreshCommand": "cd .. && make knowns-sync"
+}

@@ -5,49 +5,9 @@ import TopBar from '@/components/ui/TopBar'
 import Panel from '@/components/ui/Panel'
 import StatusPill from '@/components/ui/StatusPill'
 import { PrimaryBtn } from '@/components/ui/Button'
+import LightcurvePlot from '../LightcurvePlot'
 
 type Verdict = 'planet' | 'not_planet'
-
-const POINTS = [
-  34, 33, 35, 32, 34, 33, 35, 34, 33, 32, 34, 35,
-  34, 35, 43, 61, 72, 64, 45, 35, 34, 33, 35, 34,
-  33, 35, 34, 32, 34, 35, 33, 34, 33, 35, 34, 32,
-]
-
-function Lightcurve() {
-  const width = 344
-  const height = 220
-  const path = POINTS.map((value, index) => {
-    const x = 10 + index * ((width - 20) / (POINTS.length - 1))
-    return `${index === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${value}`
-  }).join(' ')
-
-  return (
-    <div className="classification-plot" aria-label="TESS candidate lightcurve showing a repeating transit dip">
-      <svg viewBox={`0 0 ${width} ${height}`} role="img">
-        <defs>
-          <linearGradient id="dip-zone" x1="0" x2="1">
-            <stop offset="0" stopColor="#3fa9ff" stopOpacity="0" />
-            <stop offset="0.5" stopColor="#3fa9ff" stopOpacity="0.18" />
-            <stop offset="1" stopColor="#3fa9ff" stopOpacity="0" />
-          </linearGradient>
-        </defs>
-        {Array.from({ length: 6 }, (_, i) => <line key={`h${i}`} x1="10" x2="334" y1={22 + i * 32} y2={22 + i * 32} />)}
-        {Array.from({ length: 9 }, (_, i) => <line key={`v${i}`} y1="18" y2="188" x1={10 + i * 40.5} x2={10 + i * 40.5} />)}
-        <rect x="133" y="18" width="78" height="170" fill="url(#dip-zone)" />
-        <path className="lightcurve-line" d={path} />
-        {POINTS.map((value, index) => {
-          const x = 10 + index * ((width - 20) / (POINTS.length - 1))
-          return <circle key={index} cx={x} cy={value} r="2.2" />
-        })}
-        <path className="dip-marker" d="M 172 84 L 172 126 M 166 120 L 172 126 L 178 120" />
-        <text x="184" y="117">TRANSIT DIP · 2.7%</text>
-        <text x="10" y="210">TIME · 4.12 DAYS</text>
-        <text x="255" y="210">NORMALIZED FLUX</text>
-      </svg>
-    </div>
-  )
-}
 
 export default function ClassifyLightcurveScreen({ onBack, onSubmit, hasCoach }: {
   onBack: () => void
@@ -55,6 +15,16 @@ export default function ClassifyLightcurveScreen({ onBack, onSubmit, hasCoach }:
   hasCoach?: boolean
 }) {
   const [verdict, setVerdict] = useState<Verdict | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+
+  const handleHandleSubmit = async (v: Verdict) => {
+    setSubmitting(true)
+    try {
+      await onSubmit(v)
+    } finally {
+      setSubmitting(false)
+    }
+  }
 
   return (
     <div className="game-screen classification-screen">
@@ -69,8 +39,10 @@ export default function ClassifyLightcurveScreen({ onBack, onSubmit, hasCoach }:
         </div>
 
         <Panel accent="var(--ln-blue)">
-          <div className="order-heading"><span>Transit Photometry</span><strong>Folded</strong></div>
-          <Lightcurve />
+          <div className="order-heading"><span>Transit Photometry</span><strong>Dynamic Folded</strong></div>
+          <div className="my-4 bg-black/20 rounded-lg overflow-hidden border border-white/5 p-2">
+            <LightcurvePlot />
+          </div>
           <div className="classification-facts">
             <span><b>PERIOD</b> 4.12 d</span>
             <span><b>DEPTH</b> 2.7%</span>
@@ -84,12 +56,20 @@ export default function ClassifyLightcurveScreen({ onBack, onSubmit, hasCoach }:
         </div>
 
         <div className="verdict-grid">
-          <button className={verdict === 'planet' ? 'selected' : ''} onClick={() => setVerdict('planet')}>
+          <button 
+            className={verdict === 'planet' ? 'selected' : ''} 
+            onClick={() => setVerdict('planet')}
+            disabled={submitting}
+          >
             <span className="verdict-orbit"><i /></span>
             <strong>Planet</strong>
             <small>Consistent transit</small>
           </button>
-          <button className={verdict === 'not_planet' ? 'selected negative' : ''} onClick={() => setVerdict('not_planet')}>
+          <button 
+            className={verdict === 'not_planet' ? 'selected negative' : ''} 
+            onClick={() => setVerdict('not_planet')}
+            disabled={submitting}
+          >
             <span className="verdict-cross">×</span>
             <strong>Not Planet</strong>
             <small>Noise or binary</small>
@@ -106,7 +86,13 @@ export default function ClassifyLightcurveScreen({ onBack, onSubmit, hasCoach }:
         )}
       </div>
       <div className="sticky-actions">
-        <PrimaryBtn kind="amber" disabled={!verdict} onClick={() => verdict && onSubmit(verdict)}>Submit Classification</PrimaryBtn>
+        <PrimaryBtn 
+          kind="amber" 
+          disabled={!verdict || submitting} 
+          onClick={() => verdict && handleHandleSubmit(verdict)}
+        >
+          {submitting ? 'Transmitting...' : 'Submit Classification'}
+        </PrimaryBtn>
       </div>
     </div>
   )

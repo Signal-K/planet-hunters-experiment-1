@@ -7,9 +7,10 @@ interface ProgressionCardProps {
   player: Player
   onGoBuilding: (b: string) => void
   onNav: (s: Screen) => void
+  top?: number
 }
 
-export default function ProgressionCard({ player, onGoBuilding, onNav }: ProgressionCardProps) {
+export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132 }: ProgressionCardProps) {
   let card: {
     accent: string
     eyebrow: string
@@ -45,7 +46,7 @@ export default function ProgressionCard({ player, onGoBuilding, onNav }: Progres
   }
 
   return (
-    <div style={{ position: 'absolute', left: 14, right: 14, top: 132, zIndex: 8, maxWidth: 300, pointerEvents: 'auto' }}>
+    <div style={{ position: 'absolute', left: 14, right: 14, top, zIndex: 8, maxWidth: 300, pointerEvents: 'auto' }}>
       <button
         onClick={card.go}
         style={{

@@ -100,7 +100,7 @@ function Building({ kind, label, sub, status, hot, w, style, onClick }: Building
   const statusColors = { ok: '#39d36a', warn: '#ffb347', info: '#7ec8ff' }
   const color = statusColors[status]
   return (
-    <button onClick={onClick} style={{ position: 'absolute', background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, ...style }}>
+    <button data-testid={`building-${kind}`} onClick={onClick} style={{ position: 'absolute', background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, ...style }}>
       <div style={{ width: w, height: w * 0.6, position: 'relative', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
         {kind === 'launchpad' && (
           <svg width={w} height={w * 0.6} viewBox="0 0 132 80">
@@ -149,7 +149,7 @@ function Building({ kind, label, sub, status, hot, w, style, onClick }: Building
 
 function EmptyPlot({ w = 90, style, onClick }: { w?: number; style?: React.CSSProperties; onClick: () => void }) {
   return (
-    <button onClick={onClick} style={{ position: 'absolute', background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, ...style }}>
+    <button data-testid="build-plot" onClick={onClick} style={{ position: 'absolute', background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, ...style }}>
       <div style={{ width: w, height: w * 0.5, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ width: '88%', height: 26, borderRadius: '50% / 60%', background: 'radial-gradient(ellipse at 50% 35%, rgba(135,207,250,0.18), rgba(135,207,250,0.04) 70%)', border: '2px dashed rgba(135,207,250,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'pad-pulse 2s ease-in-out infinite' }}>
           <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 16, fontWeight: 800, color: 'rgba(135,207,250,0.8)', marginTop: -2 }}>+</span>
@@ -246,8 +246,8 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav }: Hub
         </div>
       </div>
 
-      {/* Progression card */}
-      {!hasCoach && <ProgressionCard player={player} onGoBuilding={onGoBuilding} onNav={onNav} />}
+      {/* Progression card — visible even during tutorial, shifted down when coach pill is present */}
+      <ProgressionCard player={player} onGoBuilding={onGoBuilding} onNav={onNav} top={hasCoach ? 152 : 132} />
 
       {/* Surface buildings */}
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>

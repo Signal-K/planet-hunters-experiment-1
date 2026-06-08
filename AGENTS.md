@@ -1,3 +1,14 @@
+<!-- KNOWNS BRIDGE START -->
+# Knowns Bridge
+
+Landnam uses the parent Navigation repo as the canonical Knowns/tickets source. If the parent filesystem is visible, use `.knowns-bridge.json` to locate `../.knowns` and operate on that canonical project. If this repo is sandboxed by itself, read `KNOWNS.snapshot.md` for read-only ticket context.
+
+Do not create or maintain a separate live `.knowns` project inside Landnam unless the user explicitly changes this architecture.
+
+If the parent Knowns project is not writable, write proposed task/doc/context updates into `.knowns-outbox/` as small Markdown or JSON files and mention them in your final response. Do not treat outbox files as accepted state; a parent-capable agent must collect them with `make knowns-outbox-collect` and apply accepted changes to canonical Knowns.
+
+<!-- KNOWNS BRIDGE END -->
+
 <!-- LANDNAM PROJECT REQUIREMENTS START -->
 # Landnam Project Requirements
 

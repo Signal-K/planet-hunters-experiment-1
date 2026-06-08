@@ -170,8 +170,27 @@ export default function RadialNav({ current, onNav }: RadialNavProps) {
               color: active ? '#fff' : itemColor,
               whiteSpace: 'nowrap',
               textShadow: '0 1px 4px rgba(0,0,0,0.8)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 3,
             }}>
               {m.label}
+              {locked && (
+                <span style={{
+                  fontSize: 7,
+                  fontWeight: 700,
+                  letterSpacing: '0.1em',
+                  color: '#5d7390',
+                  background: 'rgba(8,16,28,0.85)',
+                  border: '1px solid rgba(93,115,144,0.4)',
+                  borderRadius: 4,
+                  padding: '1px 5px',
+                  whiteSpace: 'nowrap',
+                }}>
+                  Coming soon
+                </span>
+              )}
             </span>
           </button>
         )

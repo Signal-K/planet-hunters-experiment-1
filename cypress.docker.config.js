@@ -4,6 +4,8 @@ module.exports = {
     specPattern: 'cypress/e2e/**/*.cy.js',
     supportFile: false,
     video: false,
+    videosFolder: '/tmp/cypress/videos',
+    screenshotsFolder: '/tmp/cypress/screenshots',
     screenshotOnRunFailure: true,
   },
 }

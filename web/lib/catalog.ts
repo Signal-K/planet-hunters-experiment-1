@@ -19,7 +19,7 @@ export const STATIC_CATALOG: Catalog = {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function toTarget(r: any): Target {
+export function toTarget(r: any): Target {
   return {
     id: r.slug,
     name: r.name,
@@ -33,7 +33,7 @@ function toTarget(r: any): Target {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function toMission(r: any): Mission {
+export function toMission(r: any): Mission {
   const minerals = typeof r.requires_minerals === 'object' && !Array.isArray(r.requires_minerals)
     ? r.requires_minerals
     : JSON.parse(r.requires_minerals || '{}')
@@ -63,7 +63,7 @@ function toMission(r: any): Mission {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function toPart(r: any): Part {
+export function toPart(r: any): Part {
   return {
     id: r.slug,
     name: r.name,

@@ -13,6 +13,7 @@ interface ButtonProps {
   kind?: ButtonKind
   size?: ButtonSize
   variant?: 'primary' | 'secondary' | 'danger'
+  testId?: string
 }
 
 const GRADS: Record<ButtonKind, [string, string, string, string]> = {
@@ -21,10 +22,11 @@ const GRADS: Record<ButtonKind, [string, string, string, string]> = {
   green: ['#6cf09a', '#1ea54a', '#02180c', 'rgba(57,211,106,0.4)'],
 }
 
-export function PrimaryBtn({ children, onClick, disabled, full = true, kind = 'cyan' }: ButtonProps) {
+export function PrimaryBtn({ children, onClick, disabled, full = true, kind = 'cyan', testId }: ButtonProps) {
   const [h1, h2, fg, glow] = GRADS[kind]
   return (
     <button
+      data-testid={testId}
       onClick={!disabled ? onClick : undefined}
       disabled={disabled}
       style={{

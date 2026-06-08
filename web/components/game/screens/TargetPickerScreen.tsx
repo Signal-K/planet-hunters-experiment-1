@@ -86,12 +86,28 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
   }
 
   const pickedTarget = TARGETS.find(x => x.id === picked)
+  const targetPickerScrollStyle: React.CSSProperties = {
+    position: 'absolute',
+    inset: 0,
+    paddingTop: hasCoach ? 146 : 72,
+    paddingBottom: hasCoach ? 154 : 96,
+    overflowY: 'auto',
+  }
+  const mapStyle: React.CSSProperties = {
+    margin: '6px 14px',
+    height: hasCoach ? 290 : 360,
+    borderRadius: 14,
+    background: 'radial-gradient(60% 60% at 50% 50%, #0a1422 0%, #03060a 90%)',
+    border: '1px solid #434C5E',
+    position: 'relative',
+    overflow: 'hidden',
+  }
 
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative', background: '#03060c' }}>
       <TopBar eyebrow={mission.title.toUpperCase()} title="Pick Target" onBack={onBack} />
 
-      <div style={{ position: 'absolute', inset: 0, paddingTop: hasCoach ? 146 : 72, paddingBottom: 96, overflowY: 'auto' }}>
+      <div style={targetPickerScrollStyle}>
         <div style={{ padding: '0 14px 6px 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700, letterSpacing: '0.22em', color: 'var(--ln-text-muted)', textTransform: 'uppercase' }}>Compatible · {compat.length}</span>
           <span style={{ flex: 1 }} />
@@ -99,7 +115,7 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
         </div>
 
         {/* System map */}
-        <div style={{ margin: '6px 14px', height: 360, borderRadius: 14, background: 'radial-gradient(60% 60% at 50% 50%, #0a1422 0%, #03060a 90%)', border: '1px solid #434C5E', position: 'relative', overflow: 'hidden' }}>
+        <div style={mapStyle}>
           {/* Stars */}
           <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(1px 1px at 8% 12%, #fff8, transparent 60%), radial-gradient(1px 1px at 44% 18%, #fff5, transparent 60%), radial-gradient(1.4px 1.4px at 58% 30%, #fff7, transparent 60%), radial-gradient(1px 1px at 84% 76%, #fff5, transparent 60%), radial-gradient(1.2px 1.2px at 26% 76%, #fff6, transparent 60%), radial-gradient(1px 1px at 80% 92%, #fff5, transparent 60%)' }} />
           {/* Grid */}
@@ -143,7 +159,7 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
 
         {/* Picked target detail */}
         {pickedTarget && (
-          <div style={{ padding: '14px 14px 0 14px' }}>
+          <div style={{ padding: '10px 14px 0 14px' }}>
             <Panel accent="#f5a623">
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <PlanetSVG id={pickedTarget.id} size={48} />
@@ -154,8 +170,10 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
                   <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, letterSpacing: '0.16em', color: '#7a8294', textTransform: 'uppercase' }}>Orbit {pickedTarget.orbit} · {pickedTarget.difficulty}</div>
                 </div>
               </div>
-              <div style={{ marginTop: 10, fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', lineHeight: 1.4 }}>{pickedTarget.brief}</div>
-              <div style={{ marginTop: 10, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {!hasCoach && (
+                <div style={{ marginTop: 10, fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', lineHeight: 1.4 }}>{pickedTarget.brief}</div>
+              )}
+              <div style={{ marginTop: hasCoach ? 6 : 10, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                 {pickedTarget.minerals.map(min => {
                   const meta = MINERAL_META[min]
                   const needed = mission.requires.minerals[min]

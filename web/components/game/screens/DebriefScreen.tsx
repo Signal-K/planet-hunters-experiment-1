@@ -13,7 +13,6 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   onDone: (total: number, xp: number, affinity: number) => void
   minerals: Record<string, MineralMeta>
 }) {
-  const MINERAL_META = minerals
   const subtotal = sellCargo(cargo, minerals)
   const delivered = Object.entries(mission.requires.minerals).every(([id, amount]) => (cargo[id] ?? 0) >= amount)
   const total = subtotal + (delivered ? mission.payout.francs : 0)
@@ -34,12 +33,12 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
         <Panel accent={delivered ? 'var(--ln-ok)' : 'var(--ln-crit)'}>
           <div className="order-heading"><span>{mission.title}</span><strong>{delivered ? 'Delivered' : 'Incomplete'}</strong></div>
           {Object.entries(cargo).map(([id, amount]) => (
-            <div className="order-row" key={id}><span>{MINERAL_META[id].name} ×{amount}</span><strong>▲ {(MINERAL_META[id].price * amount).toLocaleString()}</strong></div>
+            <div className="order-row" key={id}><span>{minerals[id].name} ×{amount}</span><strong>▲ {(minerals[id].price * amount).toLocaleString()}</strong></div>
           ))}
         </Panel>
       </div>
       <div className="sticky-actions">
-        <PrimaryBtn kind="amber" onClick={() => onDone(total, xp, delivered ? mission.payout.affinity : 0)}>Collect Reward</PrimaryBtn>
+        <PrimaryBtn kind="amber" testId="collect-reward-btn" onClick={() => onDone(total, xp, delivered ? mission.payout.affinity : 0)}>Collect Reward</PrimaryBtn>
       </div>
     </div>
   )

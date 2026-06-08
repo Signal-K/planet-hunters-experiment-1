@@ -67,7 +67,7 @@ function GameCanvas() {
   const currentNav = game.screen === 'missions' || game.screen === 'targets'
     ? 'missions'
     : game.screen === 'fab' ? 'fab' : 'hub'
-  const showNav = ['hub', 'missions', 'targets'].includes(game.screen)
+  const showNav = ['hub', 'missions', 'targets'].includes(game.screen) && !(game.screen === 'targets' && hasCoach)
 
   return (
     <main className="game-stage" aria-label="Landnam game">

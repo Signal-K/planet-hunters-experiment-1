@@ -261,8 +261,8 @@ export const PARTS: { chassis: Part[]; propulsion: Part[]; drill: Part[] } = {
   ],
   drill: [
     { id: 'hand-drill', name: 'Hand Drill', tier: 1, locked: false, img: '/parts/mining_drill_t1.png', rate: 1 },
-    { id: 'laser-t2', name: 'Laser T2', tier: 2, locked: false, img: '/parts/mining_drill_t1.png', rate: 2 },
-    { id: 'plasma-t3', name: 'Plasma T3', tier: 3, locked: true, img: '/parts/mining_drill_t1.png', rate: 4 },
+    { id: 'laser-t2', name: 'Laser T2', tier: 2, locked: false, img: '/parts/scanner_array_t2.png', rate: 2 },
+    { id: 'plasma-t3', name: 'Plasma T3', tier: 3, locked: true, img: '/parts/broadcast_array_t2.png', rate: 4 },
   ],
 }
 
@@ -308,7 +308,7 @@ export const M1_STEPS: TutorialStep[] = [
   { id: 3, screen: 'targets',  title: 'Choose a Destination',
     body: 'Tap a highlighted body on the map — only compatible targets are selectable.',
     action: 'Tap a target, then Continue',
-    anchor: 'bottom', spot: { x: 20, y: 80, w: 362, h: 360 }, cta: 'a target' },
+    anchor: 'bottom', spot: { x: 36, y: 204, w: 330, h: 482 }, cta: 'a target' },
   { id: 4, screen: 'fab',      title: 'Assemble the Rocket',
     body: 'Your Starter Rocket is pre-loaded with compatible parts. Swap any slot to experiment, or keep the suggested build.',
     manual: true,
@@ -318,7 +318,7 @@ export const M1_STEPS: TutorialStep[] = [
     action: 'Tap CONFIRM LAUNCH',
     anchor: 'top', spot: { x: 14, y: 786, w: 374, h: 64 }, cta: 'Confirm Launch' },
   { id: 6, screen: 'mining',   title: 'Mine the Asteroid',
-    body: 'Tap the glowing ore deposits to fire your laser. Fill your contract order, then tap RETURN when you\'re ready to fly home.',
+    body: 'Tap the glowing ore deposits to collect minerals. Fill your contract order, then tap RETURN when you\'re ready to fly home.',
     action: 'Tap ore to mine · then Return',
     anchor: 'center', spot: null, cta: 'mine' },
   { id: 9, screen: 'debrief',  title: 'Debrief',

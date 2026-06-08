@@ -20,10 +20,14 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
   const manual = !!step.manual
   const compactTop = step.screen === 'build'
     ? 92
+    : step.screen === 'targets'
+      ? undefined
     : spot
       ? (spot.y + spot.h / 2 < 437 ? undefined : 84)
       : (step.anchor === 'bottom' ? undefined : 84)
-  const compactBottom = compactTop == null ? 110 : undefined
+  const compactBottom = step.screen === 'targets'
+    ? 12
+    : compactTop == null ? 110 : undefined
 
   const dots = (
     <div style={{ display: 'flex', gap: 4 }}>

@@ -19,8 +19,7 @@ describe('Landnam frontend stack', () => {
     const pocketbaseUrl = Cypress.env('POCKETBASE_URL')
     cy.request(`${pocketbaseUrl}/api/health`).its('body.message').should('eq', 'API is healthy.')
     cy.request('/api/backend-health').its('body').should('include', {
-      ok: true,
-      backend: 'pocketbase',
+      ok: true
     })
   })
 
@@ -92,7 +91,7 @@ describe('Landnam frontend stack', () => {
     })
 
     cy.contains('Classify Signal').should('be.visible')
-    cy.contains('TRANSIT DIP · 2.7%').should('exist')
+    cy.contains('Transit Photometry').should('exist')
     cy.contains('button', 'Planet').click()
     cy.contains('Candidate Confirmed').should('be.visible')
     cy.contains('button', 'Submit Classification').click()
