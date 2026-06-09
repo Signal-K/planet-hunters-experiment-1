@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useMemo } from 'react'
+import React, { useMemo, useState } from 'react'
 import Image from 'next/image'
 import type { Player, Screen } from '@/game-context'
 import ProgressionCard from '@/components/game/ProgressionCard'
@@ -163,6 +163,7 @@ function EmptyPlot({ w = 90, style, onClick }: { w?: number; style?: React.CSSPr
 }
 
 export default function HubScreen({ player, hasCoach, onGoBuilding, onNav }: HubScreenProps) {
+  const [editMode, setEditMode] = useState(false)
   const placed = player.placed ?? []
   const placementPlots = player.placementPlots ?? {}
   const legacyPlaced = (kind: string) => placed.includes(kind) && placementPlots[kind] == null
@@ -255,6 +256,7 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav }: Hub
           {plotStyles.map((style, plot) => {
             const kind = structureForPlot(plot)
             if (!kind) {
+              if (!editMode) return null
               return <EmptyPlot key={plot} w={78} style={style} onClick={() => onGoBuilding('build')} />
             }
             const building = structureProps(kind)
@@ -266,11 +268,11 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav }: Hub
       {/* Soil cross-section */}
       <SoilCrossSection />
 
-      {/* Hint */}
-      <div style={{ position: 'absolute', left: 0, right: 0, bottom: 110, zIndex: 5, display: 'flex', justifyContent: 'center', pointerEvents: 'none' }}>
-        <div style={{ padding: '5px 12px', background: 'rgba(8,16,28,0.75)', backdropFilter: 'blur(6px)', border: '1px solid rgba(135,207,250,0.4)', borderRadius: 999, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.22em', color: '#9EDCFF', textTransform: 'uppercase' }}>
-          Tap a building
-        </div>
+      {/* Edit / Build mode toggle */}
+      <div style={{ position: 'absolute', left: 0, right: 0, bottom: 110, zIndex: 5, display: 'flex', justifyContent: 'center' }}>
+        <button onClick={() => setEditMode(v => !v)} style={{ padding: '5px 14px', background: editMode ? 'rgba(245,166,35,0.25)' : 'rgba(8,16,28,0.75)', backdropFilter: 'blur(6px)', border: editMode ? '1px solid rgba(245,166,35,0.6)' : '1px solid rgba(135,207,250,0.4)', borderRadius: 999, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.22em', color: editMode ? '#f5a623' : '#9EDCFF', textTransform: 'uppercase', cursor: 'pointer' }}>
+          {editMode ? 'Done · Exit Edit' : 'Edit · Build'}
+        </button>
       </div>
     </div>
   )
