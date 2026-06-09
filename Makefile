@@ -64,6 +64,13 @@ docker-prune:
 	docker volume prune -a -f
 	docker builder prune -a -f
 
+migrate:
+	$(FRONTEND_COMPOSE) up -d pocketbase
+	@echo "Waiting for PocketBase to apply migrations..."
+	@sleep 3
+	@echo "Migrations applied."
+	$(FRONTEND_COMPOSE) stop pocketbase
+
 kanban-up:
 	@lsof -ti :4444 | xargs kill -9 2>/dev/null || true
 	@cd kanban-go && KNOWNS_DIR=$(CURDIR)/.knowns PORT=4444 go run .
