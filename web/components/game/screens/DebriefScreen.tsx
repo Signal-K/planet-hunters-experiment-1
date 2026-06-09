@@ -7,17 +7,20 @@ import Panel from '@/components/ui/Panel'
 import TopBar from '@/components/ui/TopBar'
 import { PrimaryBtn } from '@/components/ui/Button'
 
-export default function DebriefScreen({ mission, target, cargo, onDone, minerals }: {
+export default function DebriefScreen({ mission, target, cargo, onDone, minerals, freeOperations, annotations }: {
   mission: Mission
   target: Target
   cargo: Record<string, number>
   onDone: (total: number, xp: number, affinity: number) => void
   minerals: Record<string, MineralMeta>
+  freeOperations?: boolean
+  annotations?: number
 }) {
   const [step, setStep] = useState(0)
   const subtotal = sellCargo(cargo, minerals)
   const delivered = Object.entries(mission.requires.minerals).every(([id, amount]) => (cargo[id] ?? 0) >= amount)
-  const total = subtotal + (delivered ? mission.payout.francs : 0)
+  const discoveryBonus = freeOperations ? Math.round(subtotal * (0.10 + 0.01 * (annotations ?? 0))) : 0
+  const total = subtotal + (delivered ? mission.payout.francs : 0) + discoveryBonus
   const xp = delivered ? mission.payout.xp + Math.round(subtotal / 8) : Math.round(subtotal / 8)
 
   return (
@@ -38,6 +41,11 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
         {step >= 1 && (
           <Panel accent="var(--ln-amber)" style={{ animation: 'unlock-in 0.4s ease-out' }}>
             <div className="reward-label">Francs Earned</div>
+            <div className="order-row"><span>Mineral Value</span><strong>▲ {subtotal.toLocaleString()}</strong></div>
+            {delivered && <div className="order-row"><span>Contract Payout</span><strong>▲ {mission.payout.francs.toLocaleString()}</strong></div>}
+            {discoveryBonus > 0 && (
+              <div className="order-row"><span>Discovery Bonus ({(10 + (annotations ?? 0))}%)</span><strong>▲ {discoveryBonus.toLocaleString()}</strong></div>
+            )}
             <div className="reward-total">▲ {total.toLocaleString()}</div>
             <div className="reward-xp">+{xp} XP</div>
           </Panel>

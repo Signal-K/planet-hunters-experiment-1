@@ -34,6 +34,7 @@ export interface Player {
   stash?: Record<string, number>
   contractorMissions: Record<string, number>
   contractorCooldowns: Record<string, number>
+  researchAnnotations: number
 }
 
 export interface GameState {
@@ -96,6 +97,7 @@ const DEFAULT_STATE: GameState = {
     freeOperations: false,
     contractorMissions: {},
     contractorCooldowns: {},
+    researchAnnotations: 0,
   },
   missionId: null,
   targetId: null,

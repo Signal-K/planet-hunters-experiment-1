@@ -143,7 +143,7 @@ function GameCanvas() {
           <MiningScreen mission={game.mission} target={game.target} onBack={() => game.go('hub')} onComplete={game.onMiningDone} minerals={game.catalog.minerals} />
         )}
         {game.screen === 'debrief' && game.mission && game.target && (
-          <DebriefScreen mission={game.mission} target={game.target} cargo={game.lastCargo ?? {}} onDone={game.onDebriefDone} minerals={game.catalog.minerals} />
+          <DebriefScreen mission={game.mission} target={game.target} cargo={game.lastCargo ?? {}} onDone={game.onDebriefDone} minerals={game.catalog.minerals} freeOperations={game.player.freeOperations} annotations={game.player.researchAnnotations} />
         )}
 
         {showNav && <RadialNav current={currentNav} onNav={goFromNav} />}
