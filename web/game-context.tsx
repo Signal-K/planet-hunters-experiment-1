@@ -32,6 +32,8 @@ export interface Player {
   freeOperations: boolean
   debriefPending?: boolean
   stash?: Record<string, number>
+  contractorMissions: Record<string, number>
+  contractorCooldowns: Record<string, number>
 }
 
 export interface GameState {
@@ -92,6 +94,8 @@ const DEFAULT_STATE: GameState = {
     controlBuilt: false,
     missionsDone: 0,
     freeOperations: false,
+    contractorMissions: {},
+    contractorCooldowns: {},
   },
   missionId: null,
   targetId: null,
@@ -346,6 +350,17 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     setState(s => {
       const missionsDone = s.player.missionsDone + 1
       const freeOperations = missionsDone >= 4
+      const mission = s.missionId ? MISSIONS.find(m => m.id === s.missionId) : null
+      const contractor = mission?.contractor
+      const contractorMissions = { ...s.player.contractorMissions }
+      const contractorCooldowns = { ...s.player.contractorCooldowns }
+      if (contractor) {
+        const count = (contractorMissions[contractor] ?? 0) + 1
+        contractorMissions[contractor] = count
+        if (count >= 2) {
+          contractorCooldowns[contractor] = Date.now() + 30 * 60 * 1000
+        }
+      }
       return {
         ...s,
         player: {
@@ -356,6 +371,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
           missionsDone,
           missionCount: freeOperations ? MISSIONS.length : Math.max(0, Math.min(1, MISSIONS.length - missionsDone)),
           freeOperations,
+          contractorMissions,
+          contractorCooldowns,
         },
         lastCargo: null,
         missionId: null,

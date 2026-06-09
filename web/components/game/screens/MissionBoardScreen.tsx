@@ -16,10 +16,23 @@ interface MissionBoardScreenProps {
   freeOperations: boolean
   hasCoach?: boolean
   catalog: Catalog
+  contractorCooldowns?: Record<string, number>
 }
 
-export default function MissionBoardScreen({ onBack, onPick, missionsDone, controlBuilt, freeOperations, hasCoach, catalog }: MissionBoardScreenProps) {
+function formatCooldown(remaining: number): string {
+  const mins = Math.ceil(remaining / 60000)
+  if (mins >= 60) return `${Math.floor(mins / 60)}h ${mins % 60}m`
+  return `${mins}m`
+}
+
+export default function MissionBoardScreen({ onBack, onPick, missionsDone, controlBuilt, freeOperations, hasCoach, catalog, contractorCooldowns }: MissionBoardScreenProps) {
   const { missions: MISSIONS, contractors: CONTRACTORS, minerals: MINERAL_META, targets } = catalog
+  const now = Date.now()
+  const isOnCooldown = (contractor: string) => {
+    if (!contractorCooldowns) return false
+    const expiry = contractorCooldowns[contractor]
+    return expiry && expiry > now
+  }
   const available = MISSIONS.filter(m => freeOperations || (m.sequence === missionsDone + 1 && (m.sequence === 1 || controlBuilt)))
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative', background: '#06090f' }}>
@@ -39,7 +52,8 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, contr
 
         <div style={{ padding: '0 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
           {MISSIONS.map(m => {
-            const unlocked = freeOperations || available.some(item => item.id === m.id)
+            const cooldown = isOnCooldown(m.contractor)
+            const unlocked = !cooldown && (freeOperations || available.some(item => item.id === m.id))
             const contractor = CONTRACTORS[m.contractor]
             const mTargets = compatibleTargetsFor(m, targets)
             const accent = contractor.color
@@ -78,11 +92,13 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, contr
                     <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 18, color: '#f5a623' }}>▲ {m.payout.francs.toLocaleString()}</div>
                     <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 11, letterSpacing: '0.16em', color: '#7ec8ff' }}>+{m.payout.xp} XP</span>
                     <span style={{ flex: 1 }} />
-                    {!unlocked
-                      ? <StatusPill kind="mute">Locked · {m.sequence <= missionsDone ? 'Completed' : m.unlockAt}</StatusPill>
-                      : <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 10px', borderRadius: 8, background: accent, color: '#06121f', fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase' }}>
-                          {mTargets.length} target{mTargets.length !== 1 ? 's' : ''} ›
-                        </span>}
+                    {cooldown
+                      ? <StatusPill kind="crit">Cooldown {formatCooldown(contractorCooldowns![m.contractor] - now)}</StatusPill>
+                      : !unlocked
+                        ? <StatusPill kind="mute">Locked · {m.sequence <= missionsDone ? 'Completed' : m.unlockAt}</StatusPill>
+                        : <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 10px', borderRadius: 8, background: accent, color: '#06121f', fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase' }}>
+                            {mTargets.length} target{mTargets.length !== 1 ? 's' : ''} ›
+                          </span>}
                   </div>
                 </Panel>
               </button>

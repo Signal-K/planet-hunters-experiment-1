@@ -112,6 +112,7 @@ function GameCanvas() {
             freeOperations={game.player.freeOperations}
             hasCoach={hasCoach}
             catalog={game.catalog}
+            contractorCooldowns={game.player.contractorCooldowns}
           />
         )}
         {game.screen === 'classify' && game.mission && (

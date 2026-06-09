@@ -17,6 +17,8 @@ function visitWithState(state: Partial<GameState>) {
       controlBuilt: false,
       missionsDone: 0,
       freeOperations: false,
+      contractorMissions: {},
+      contractorCooldowns: {},
     },
     missionId: null,
     targetId: null,
@@ -51,6 +53,8 @@ function fullState(overrides: Partial<GameState> = {}): GameState {
       controlBuilt: false,
       missionsDone: 0,
       freeOperations: false,
+      contractorMissions: {},
+      contractorCooldowns: {},
     },
     missionId: null,
     targetId: null,
@@ -154,6 +158,8 @@ describe('Full Game Loop — Landnam', () => {
           controlBuilt: false,
           missionsDone: 0,
           freeOperations: false,
+          contractorMissions: {},
+          contractorCooldowns: {},
         },
       }))
       cy.contains('Confirm Launch').should('be.visible')
@@ -179,6 +185,8 @@ describe('Full Game Loop — Landnam', () => {
           controlBuilt: false,
           missionsDone: 0,
           freeOperations: false,
+          contractorMissions: {},
+          contractorCooldowns: {},
         },
       }))
       cy.get('.trajectory').should('not.exist')
@@ -204,6 +212,8 @@ describe('Full Game Loop — Landnam', () => {
           controlBuilt: false,
           missionsDone: 0,
           freeOperations: false,
+          contractorMissions: {},
+          contractorCooldowns: {},
         },
       }))
       cy.get('[data-testid="mining-ship"]').should('be.visible')
@@ -234,6 +244,8 @@ describe('Full Game Loop — Landnam', () => {
           controlBuilt: false,
           missionsDone: 0,
           freeOperations: false,
+          contractorMissions: {},
+          contractorCooldowns: {},
         },
       }))
       cy.contains('MISSION COMPLETE').should('be.visible')
@@ -263,6 +275,8 @@ describe('Full Game Loop — Landnam', () => {
           controlBuilt: false,
           missionsDone: 0,
           freeOperations: false,
+          contractorMissions: {},
+          contractorCooldowns: {},
         },
         tutorial: false,
         popup: 'sr2',
@@ -287,6 +301,8 @@ describe('Full Game Loop — Landnam', () => {
           controlBuilt: false,
           missionsDone: 1,
           freeOperations: false,
+          contractorMissions: {},
+          contractorCooldowns: {},
         },
         tutorial: false,
       }))
@@ -315,6 +331,8 @@ describe('Full Game Loop — Landnam', () => {
           controlBuilt: false,
           missionsDone: 1,
           freeOperations: false,
+          contractorMissions: {},
+          contractorCooldowns: {},
         },
         tutorial: false,
       }))
@@ -339,6 +357,8 @@ describe('Full Game Loop — Landnam', () => {
           controlBuilt: true,
           missionsDone: 1,
           freeOperations: false,
+          contractorMissions: {},
+          contractorCooldowns: {},
         },
         tutorial: false,
       }))
@@ -363,6 +383,8 @@ describe('Full Game Loop — Landnam', () => {
           controlBuilt: true,
           missionsDone: 1,
           freeOperations: false,
+          contractorMissions: {},
+          contractorCooldowns: {},
         },
         tutorial: false,
       }))
