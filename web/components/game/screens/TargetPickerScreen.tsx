@@ -186,9 +186,6 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
                 })}
               </div>
             </Panel>
-            <div style={{ marginTop: 12 }}>
-              <PrimaryBtn onClick={() => onPick(pickedTarget.id)}>Continue · Build →</PrimaryBtn>
-            </div>
           </div>
         )}
 
@@ -201,6 +198,12 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
           </div>
         )}
       </div>
+
+      {pickedTarget && (
+        <div className="sticky-actions">
+          <PrimaryBtn onClick={() => onPick(pickedTarget.id)}>Continue · Build →</PrimaryBtn>
+        </div>
+      )}
     </div>
   )
 }

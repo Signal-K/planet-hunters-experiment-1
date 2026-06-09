@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import type { Target } from '@/lib/data'
 import TopBar from '@/components/ui/TopBar'
-import { GhostBtn } from '@/components/ui/Button'
+import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
 
 export default function TransitScreen({ target, onArrive, onBack }: { target: Target; onArrive: () => void; onBack: () => void }) {
   const [progress, setProgress] = useState(12)
@@ -38,7 +38,9 @@ export default function TransitScreen({ target, onArrive, onBack }: { target: Ta
       <div className="transit-readout">
         <div><span>Transit</span><strong>{progress}%</strong></div>
         <div className="progress-track"><span style={{ width: `${progress}%` }} /></div>
-        <GhostBtn onClick={onArrive}>Skip Transit</GhostBtn>
+      </div>
+      <div className="sticky-actions">
+        <PrimaryBtn onClick={onArrive} disabled={progress < 100}>Arrive{progress < 100 ? ` · ${progress}%` : ''}</PrimaryBtn>
       </div>
     </div>
   )
