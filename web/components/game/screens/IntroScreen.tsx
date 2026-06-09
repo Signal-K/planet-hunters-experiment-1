@@ -2,7 +2,12 @@
 
 import Image from 'next/image'
 
-export default function IntroScreen({ onBegin }: { onBegin: () => void }) {
+interface IntroScreenProps {
+  onBegin: () => void
+  returning?: boolean
+}
+
+export default function IntroScreen({ onBegin, returning = false }: IntroScreenProps) {
   return (
     <div className="game-screen intro-screen">
       <Image
@@ -17,12 +22,12 @@ export default function IntroScreen({ onBegin }: { onBegin: () => void }) {
       <div className="intro-content">
         <div className="intro-badge">SPACE MINING OPERATIONS</div>
         <h1 className="intro-title">LANDNAM</h1>
-        <p className="intro-welcome">Welcome, Commander.</p>
+        <p className="intro-welcome">{returning ? 'Welcome back, Commander.' : 'Welcome, Commander.'}</p>
         <p className="intro-subtitle">
           Build your base. Mine the asteroids. Fulfill the contract. The belt is waiting.
         </p>
         <button className="intro-begin-btn" onClick={onBegin} data-testid="intro-begin-btn">
-          BEGIN OPERATIONS
+          {returning ? 'RESUME OPERATIONS' : 'BEGIN OPERATIONS'}
         </button>
       </div>
     </div>
