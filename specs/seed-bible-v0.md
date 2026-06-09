@@ -47,3 +47,5 @@ Default build: Hull MK1 chassis + Ion Drive A1 propulsion + Hand Drill. Cargo ca
 | Per-instance structure placement | No — runtime state | Yes: already in game_states JSON |
 | Player progress / missions done | No — runtime state | Already in game_states JSON |
 | Economy pricing perturbations | Partial — base rate in config | Yes: market events table if dynamic pricing needed |
+| Contractor identity (name, color, initial) | Yes — static config | No — purely cosmetic, no schema needed |
+| Mission unlock conditions | Yes — static config | No — sequence numbers and unlockAt field suffice |
