@@ -25,8 +25,7 @@ export default function TransitScreen({ target, onArrive, onBack }: { target: Ta
       <TopBar eyebrow="MISSION TRANSIT" title={`Outbound · ${target.name}`} onBack={onBack} />
       <div className="transit-stage">
         <div className="target-orb"><span>{target.name}</span></div>
-        <div className="trajectory" />
-        <div className="rocket-mark" style={{ left: `${18 + progress * 0.62}%`, top: `${70 - progress * 0.42}%` }}>
+        <div className="rocket-mark" data-testid="transit-rocket" style={{ left: `${18 + progress * 0.62}%`, top: `${70 - progress * 0.42}%` }}>
           <svg width="54" height="76" viewBox="0 0 44 64" aria-hidden="true">
             <path d="M22 4 32 18v26H12V18Z" fill="var(--ln-text)" stroke="var(--ln-cyan)" />
             <path d="M22 4 32 18H12Z" fill="var(--ln-cyan)" />
@@ -35,6 +34,7 @@ export default function TransitScreen({ target, onArrive, onBack }: { target: Ta
           </svg>
         </div>
       </div>
+
       <div className="transit-readout">
         <div><span>Transit</span><strong>{progress}%</strong></div>
         <div className="progress-track"><span style={{ width: `${progress}%` }} /></div>
