@@ -74,7 +74,7 @@ interface GameActions {
   onPickTarget: (id: string) => void
   onLaunch: () => void
   onMiningDone: (cargo: Record<string, number>) => void
-  onDebriefDone: (total: number, xp: number, affinity: number) => void
+  onDebriefDone: (total: number, xp: number, affinity: number, consumed?: Record<string, number>) => void
   coachManualNext: () => void
   completeStep: (id: number) => void
   resetGame: () => void
@@ -396,15 +396,22 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const onMiningDone = useCallback((cargo: Record<string, number>) => {
-    setState(s => ({
-      ...s,
-      lastCargo: cargo,
-      screen: 'debrief',
-      doneSteps: { ...s.doneSteps, 6: true },
-    }))
+    setState(s => {
+      const stash = { ...(s.player.stash ?? {}) }
+      for (const [id, amount] of Object.entries(cargo)) {
+        stash[id] = (stash[id] ?? 0) + amount
+      }
+      return {
+        ...s,
+        lastCargo: cargo,
+        player: { ...s.player, stash },
+        screen: 'debrief',
+        doneSteps: { ...s.doneSteps, 6: true },
+      }
+    })
   }, [])
 
-  const onDebriefDone = useCallback((total: number, xp: number) => {
+  const onDebriefDone = useCallback((total: number, xp: number, _affinity: number = 0, consumed: Record<string, number> = {}) => {
     setState(s => {
       const missionsDone = s.player.missionsDone + 1
       const freeOperations = missionsDone >= 4
@@ -419,6 +426,10 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
           contractorCooldowns[contractor] = Date.now() + 30 * 60 * 1000
         }
       }
+      const stash = { ...(s.player.stash ?? {}) }
+      for (const [id, amount] of Object.entries(consumed)) {
+        stash[id] = Math.max(0, (stash[id] ?? 0) - amount)
+      }
       return {
         ...s,
         player: {
@@ -431,6 +442,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
           freeOperations,
           contractorMissions,
           contractorCooldowns,
+          stash,
         },
         lastCargo: null,
         missionId: null,

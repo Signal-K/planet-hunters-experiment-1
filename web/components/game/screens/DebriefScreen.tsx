@@ -11,7 +11,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   mission: Mission
   target: Target
   cargo: Record<string, number>
-  onDone: (total: number, xp: number, affinity: number) => void
+  onDone: (total: number, xp: number, affinity: number, consumed?: Record<string, number>) => void
   minerals: Record<string, MineralMeta>
   freeOperations?: boolean
   annotations?: number
@@ -55,7 +55,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
         {step === 0 ? (
           <PrimaryBtn kind="cyan" testId="resolve-cargo-btn" onClick={() => setStep(1)}>Resolve Cargo</PrimaryBtn>
         ) : (
-          <PrimaryBtn kind="amber" testId="collect-reward-btn" onClick={() => onDone(total, xp, delivered ? mission.payout.affinity : 0)}>Collect Reward</PrimaryBtn>
+          <PrimaryBtn kind="amber" testId="collect-reward-btn" onClick={() => onDone(total, xp, delivered ? mission.payout.affinity : 0, delivered ? mission.requires.minerals : {})}>Collect Reward</PrimaryBtn>
         )}
       </div>
     </div>
