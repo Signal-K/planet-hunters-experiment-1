@@ -236,17 +236,30 @@ button { cursor: pointer; }
 .progress-track { height: 12px; overflow: hidden; border: 1px solid var(--ln-cyan-border); border-radius: var(--ln-r-pill); background: var(--ln-void); }
 .progress-track span { display: block; height: 100%; background: linear-gradient(90deg, var(--ln-amber), var(--ln-cyan)); box-shadow: var(--ln-glow-cyan); transition: width 100ms linear; }
 
-.mining-screen { background: radial-gradient(circle at 50% 70%, #45301f, #17100d 58%, var(--ln-void)); }
-.asteroid-field { position: absolute; inset: 72px 0 260px; background: radial-gradient(ellipse at 50% 100%, rgba(217,113,80,.24), transparent 68%); }
-.ore-node { position: absolute; width: 46px; height: 46px; transform: translate(-50%, -50%); border-radius: 50%; border: 1px solid var(--ore); color: var(--ore); background: color-mix(in srgb, var(--ore) 18%, var(--ln-void)); box-shadow: 0 0 18px color-mix(in srgb, var(--ore) 55%, transparent); animation: orefloat 2s ease-in-out infinite; }
-.ore-node:disabled { opacity: .12; animation: none; }
-.ore-node span { font: 800 12px var(--ln-font-mono); }
-.mining-order { position: absolute; left: var(--ln-s-3); right: var(--ln-s-3); bottom: var(--ln-s-5); display: grid; gap: var(--ln-s-3); }
-.order-heading, .order-row { display: flex; align-items: center; justify-content: space-between; gap: var(--ln-s-2); }
-.order-heading { margin-bottom: var(--ln-s-2); color: var(--ln-text); font: 800 12px var(--ln-font-display); text-transform: uppercase; letter-spacing: var(--ln-tr-label); }
-.order-heading strong { color: var(--ln-amber); }
-.order-row { padding-top: var(--ln-s-2); border-top: 1px solid var(--ln-divider); color: var(--ln-text-dim); font: 600 12px var(--ln-font-body); }
-.order-row strong { color: var(--ln-text); font-family: var(--ln-font-mono); }
+.mining-screen { background: radial-gradient(circle at 50% 70%, #1a2a3f, #0a121d 58%, var(--ln-void)); display: flex; flex-direction: column; height: 100%; }
+.mining-viewport { position: relative; flex: 1; overflow: hidden; min-height: 0; }
+.mining-stars { position: absolute; inset: 0; background: radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,.3), transparent), radial-gradient(1px 1px at 40% 70%, rgba(255,255,255,.2), transparent), radial-gradient(1.5px 1.5px at 60% 20%, rgba(255,255,255,.25), transparent), radial-gradient(1px 1px at 80% 50%, rgba(255,255,255,.15), transparent), radial-gradient(1px 1px at 10% 80%, rgba(255,255,255,.2), transparent), radial-gradient(1.5px 1.5px at 90% 10%, rgba(255,255,255,.3), transparent); animation: star-drift 3s linear infinite; }
+@keyframes star-drift { from { transform: translateX(0); } to { transform: translateX(-40px); } }
+.mining-ship { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); z-index: 10; filter: drop-shadow(0 0 12px rgba(63,169,255,.6)); }
+.ore-deposit { position: absolute; width: 36px; height: 36px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 3px; z-index: 5; }
+.ore-icon { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%; border: 1.5px solid var(--ore); color: var(--ore); background: color-mix(in srgb, var(--ore) 14%, var(--ln-void)); font: 800 11px var(--ln-font-mono); box-shadow: 0 0 14px color-mix(in srgb, var(--ore) 40%, transparent); }
+.ore-hp-bar { width: 30px; height: 3px; overflow: hidden; border-radius: 2px; background: rgba(255,255,255,.1); }
+.ore-hp-fill { height: 100%; background: var(--ore); border-radius: 2px; transition: width 80ms linear; }
+.mining-laser { position: absolute; z-index: 8; transform: translateY(-50%); pointer-events: none; }
+.laser-beam { width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-bottom: 16px solid rgba(108,194,255,.5); position: absolute; top: -8px; left: -4px; filter: blur(1px); }
+.laser-core { position: absolute; width: 6px; height: 6px; top: -3px; left: -3px; border-radius: 50%; background: var(--ln-cyan-bright); box-shadow: 0 0 8px var(--ln-cyan), 0 0 20px rgba(63,169,255,.4); }
+.laser-flash { position: absolute; left: 50px; width: 20px; height: 30px; background: radial-gradient(ellipse, rgba(108,194,255,.6), transparent); pointer-events: none; animation: flash-fade .15s ease-out forwards; z-index: 9; }
+@keyframes flash-fade { from { opacity: 1; transform: scaleX(1); } to { opacity: 0; transform: scaleX(3); } }
+.mining-controls { flex-shrink: 0; padding: var(--ln-s-2) var(--ln-s-3) var(--ln-s-5); display: grid; gap: var(--ln-s-2); }
+.mining-stats-row { display: flex; gap: var(--ln-s-3); align-items: center; flex-wrap: wrap; }
+.mineral-stat { display: flex; align-items: center; gap: 4px; color: var(--ln-text-dim); font: 700 11px var(--ln-font-mono); }
+.mineral-stat-icon { font: 800 13px var(--ln-font-mono); }
+.mineral-stat-count { color: var(--ln-text); }
+.total-stat { margin-left: auto; gap: 6px; }
+.total-stat span:last-child { color: var(--ln-cyan-bright); }
+.mining-progress-track { height: 6px; margin-top: 6px; overflow: hidden; border-radius: 3px; background: rgba(255,255,255,.08); }
+.mining-progress-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--ln-amber), var(--ln-cyan)); transition: width 120ms linear; }
+.mining-actions { display: grid; gap: var(--ln-s-2); }
 
 .debrief-screen { background: var(--ln-bg-stars), var(--ln-void); }
 

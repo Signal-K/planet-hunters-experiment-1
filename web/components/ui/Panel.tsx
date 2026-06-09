@@ -26,16 +26,17 @@ interface PanelProps {
   children: React.ReactNode
   style?: React.CSSProperties
   accent?: string
+  variant?: 'default' | 'compact'
 }
 
-export default function Panel({ children, style, accent = '#3fa9ff' }: PanelProps) {
+export default function Panel({ children, style, accent = '#3fa9ff', variant = 'default' }: PanelProps) {
   return (
     <div style={{
       position: 'relative',
       background: 'linear-gradient(180deg, rgba(18,34,54,0.78) 0%, rgba(10,18,29,0.82) 100%)',
       border: `1px solid ${accent}40`,
       borderRadius: 12,
-      padding: 14,
+      padding: variant === 'compact' ? 10 : 14,
       backdropFilter: 'blur(8px)',
       ...style,
     }}>
