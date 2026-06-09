@@ -47,11 +47,14 @@ services:
     environment:
       CYPRESS_baseUrl: http://web:3000
       CYPRESS_POCKETBASE_URL: http://pocketbase:8090
+      CYPRESS_PROFILE: with-pb
       KNOWNS_CANONICAL_ROOT: /knowns
       KNOWNS_OUTBOX: /knowns-outbox
     volumes:
       - ./cypress.docker.config.js:/e2e/cypress.config.js:ro
-      - ./cypress:/e2e/cypress:ro
+      - ./web/cypress:/e2e/cypress:ro
+      - ./web/package.json:/e2e/package.json:ro
+      - ./web/node_modules:/e2e/node_modules:ro
       - ../.knowns:/knowns:ro
       - ./.knowns-outbox:/knowns-outbox
     depends_on:

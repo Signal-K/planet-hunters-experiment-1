@@ -10,7 +10,8 @@
     "test:unit": "vitest run",
     "cypress:open": "env -u ELECTRON_RUN_AS_NODE cypress open",
     "cypress:run": "env -u ELECTRON_RUN_AS_NODE cypress run",
-    "test:e2e": "start-server-and-test dev http://localhost:3000 cypress:run"
+    "test:e2e": "CYPRESS_PROFILE=offline start-server-and-test dev http://localhost:3000 cypress:run",
+    "test:e2e:pb": "CYPRESS_PROFILE=with-pb start-server-and-test dev http://localhost:3000 cypress:run"
   },
   "dependencies": {
     "framer-motion": "^12.40.0",

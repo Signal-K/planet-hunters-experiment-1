@@ -35,10 +35,13 @@ build:
 logs:
 	$(FRONTEND_COMPOSE) logs -f pocketbase web
 
+test-e2e:
+	CYPRESS_PROFILE=with-pb start-server-and-test 'npm run dev --prefix web' http://localhost:3000 'npm run cypress:run --prefix web'
+
 e2e:
 	@status=0; \
 	$(E2E_COMPOSE) down --remove-orphans; \
-	$(E2E_COMPOSE) up --build --remove-orphans --abort-on-container-exit --exit-code-from cypress pocketbase web cypress || status=$$?; \
+	CYPRESS_PROFILE=with-pb $(E2E_COMPOSE) up --build --remove-orphans --abort-on-container-exit --exit-code-from cypress pocketbase web cypress || status=$$?; \
 	$(E2E_COMPOSE) down --remove-orphans; \
 	exit $$status
 
