@@ -61,6 +61,17 @@ export default function MiningScreen({ mission, target, onComplete, onBack, mine
     if (orderFilled) setReturnText('RETURN HOME')
   }, [orderFilled])
 
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.code === 'Space' || e.code === 'KeyF') {
+        e.preventDefault()
+        fireLaser()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
   const collectMineral = useCallback((mineral: string) => {
     cargoRef.current = {
       ...cargoRef.current,
