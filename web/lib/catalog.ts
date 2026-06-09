@@ -68,7 +68,7 @@ export function toPart(r: any): Part {
     id: r.slug,
     name: r.name,
     tier: r.tier,
-    locked: r.locked ?? false,
+    locked: r.tier > 2 ? (r.locked ?? false) : false,
     img: r.img ?? '',
     mass: r.mass || undefined,
     cargo: r.cargo_capacity || undefined,

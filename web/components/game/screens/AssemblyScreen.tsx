@@ -73,7 +73,7 @@ export default function AssemblyScreen(props: AssemblyScreenProps) {
   return (
     <div className="game-screen blueprint-screen">
       <TopBar eyebrow="LAUNCHPAD · ASSEMBLY" title="Build Rocket" onBack={props.onBack} />
-      <div className={`screen-scroll assembly-scroll ${props.hasCoach ? 'screen-scroll--coach' : ''}`}>
+      <div className="screen-scroll assembly-scroll">
         <Panel accent="var(--ln-amber)" style={{ padding: 'var(--ln-s-3)' }}>
           <div className="context-row">
             <div><span className="ln-micro">Mission</span><strong>{props.mission.title}</strong></div>

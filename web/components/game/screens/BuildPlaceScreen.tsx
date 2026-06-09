@@ -57,7 +57,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach }: BuildPl
       />
 
       {phase === 'pick' && (
-        <div style={{ position: 'absolute', inset: 0, paddingTop: hasCoach ? 184 : 128, paddingBottom: 120, overflowY: 'auto' }}>
+        <div style={{ position: 'absolute', inset: 0, paddingTop: hasCoach ? 184 : 128, paddingBottom: 96, overflowY: 'auto' }}>
           <div style={{ padding: '0 14px 8px' }}>
             <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700, letterSpacing: '0.22em', color: 'var(--ln-text-muted)', textTransform: 'uppercase' }}>Available Structures</div>
           </div>
@@ -87,9 +87,12 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach }: BuildPl
               )
             })}
           </div>
-          <div style={{ padding: '14px' }}>
-            <PrimaryBtn kind="amber" onClick={() => setPhase('place')}>Select a Plot →</PrimaryBtn>
-          </div>
+        </div>
+      )}
+
+      {phase === 'pick' && (
+        <div className="sticky-actions">
+          <PrimaryBtn kind="amber" onClick={() => setPhase('place')}>Select a Plot →</PrimaryBtn>
         </div>
       )}
 
@@ -125,7 +128,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach }: BuildPl
             })}
           </div>
 
-          <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 30, padding: '10px 14px 24px', background: 'linear-gradient(180deg, transparent 0%, rgba(6,9,15,0.8) 30%, #06090f 100%)' }}>
+          <div className="sticky-actions">
             <PrimaryBtn kind="amber" disabled={cell == null} onClick={() => cell != null && onPlaced(picked, cell)}>Confirm · Build Here →</PrimaryBtn>
           </div>
         </>
