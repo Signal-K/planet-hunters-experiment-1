@@ -24,11 +24,11 @@ If the parent repo is not accessible, write proposed task/doc/context updates in
 - @task-638h3o Fix rocket orientation and remove direction pointer in transition scene [urgent priority=high labels=project-landnam,bug,godot,animation,transition,desktop,experiment1]
 - @task-0u1hg4 Fix tutorial popup covering contractor panel buttons + unreadable Choose button colour [urgent priority=high labels=project-landnam,bug,tutorial,ui,contractors,desktop,experiment1]
 - @task-illty2 Add welcoming intro message for first sign-in and progress reset [todo priority=medium labels=project-landnam,ux,tutorial,onboarding,desktop,experiment1]
-- @task-LANvzpwke Scrap and redesign tutorial system from scratch [todo priority=high labels=project-landnam,godot,tutorial,ux,architecture]
-- @task-LANaa6vht Remove M4 dead code and non-v1 mission references from codebase [todo priority=medium labels=project-landnam,godot,missions,cleanup,deferred]
-- @task-LANi7qewb Purge Scanner/Satellite Station from active codebase (deferred feature) [todo priority=medium labels=project-landnam,godot,cleanup,scanner,deferred]
-- @task-LANpcdjg5 Fix M3 review overlay — replace ColorRect.new() with ModalBase.tscn [todo priority=medium labels=project-landnam,godot,ui,cleanup]
-- @task-LANnledn7 Fix ControlStation.gd UIManager discovery — replace group-search with autoload ref [todo priority=medium labels=project-landnam,godot,architecture,cleanup]
+- @task-LANvzpwke Scrap and redesign tutorial system from scratch [archived priority=high labels=project-landnam,godot,tutorial,ux,architecture] — Obsoleted by web migration; Godot removed
+- @task-LANaa6vht Remove M4 dead code and non-v1 mission references from codebase [archived priority=medium labels=project-landnam,godot,missions,cleanup,deferred] — Obsoleted by web migration; Godot removed
+- @task-LANi7qewb Purge Scanner/Satellite Station from active codebase (deferred feature) [archived priority=medium labels=project-landnam,godot,cleanup,scanner,deferred] — Obsoleted by web migration; Godot removed
+- @task-LANpcdjg5 Fix M3 review overlay — replace ColorRect.new() with ModalBase.tscn [archived priority=medium labels=project-landnam,godot,ui,cleanup] — Obsoleted by web migration; Godot removed
+- @task-LANnledn7 Fix ControlStation.gd UIManager discovery — replace group-search with autoload ref [archived priority=medium labels=project-landnam,godot,architecture,cleanup] — Obsoleted by web migration; Godot removed
 - @task-LANnlucrn Landnam Health Audit - Review [in-progress priority=medium labels=project-landnam,documentation,quality]
 - @task-LANfwf2jt Verify live consensus and rewards after production classification fix [blocked priority=high]
 - @task-LANxgcipb Future: redesign asteroid review flow for parity with planet hunters [todo priority=low labels=project-landnam,deferred,asteroids,design,post-release]
@@ -42,11 +42,11 @@ If the parent repo is not accessible, write proposed task/doc/context updates in
 
 ## Recently Completed Tasks
 
-- @task-LANr2shk5 Landnam: Godot Architectural Overhaul [done priority=high labels=project-landnam,godot,architecture]
+- @task-LANr2shk5 Landnam: Godot Architectural Overhaul [archived priority=high labels=project-landnam,godot,architecture] — Obsoleted by web migration; Godot removed
 - @task-70e538 Connect "Need help / Send feedback" button to production PostHog survey [done priority=high labels=project-landnam,bug,posthog,feedback,desktop,experiment1]
 - @task-jogaqx Fix PostHog survey popup crash (blank grey screen on Chrome / slow connections) [done priority=high labels=project-landnam,bug,posthog,surveys,desktop,experiment1]
-- @task-LANzbphjc Modularize RocketsManager [done priority=medium labels=project-landnam,godot,architecture,rockets,missions]
-- @task-LANu5vh8s Convert rebuilt Fabrication Bay to reusable scene-owned UI [done priority=medium labels=project-landnam,ui,launchpad,launchwizard,technical-debt]
+- @task-LANzbphjc Modularize RocketsManager [archived priority=medium labels=project-landnam,godot,architecture,rockets,missions] — Obsoleted by web migration; Godot removed
+- @task-LANu5vh8s Convert rebuilt Fabrication Bay to reusable scene-owned UI [archived priority=medium labels=project-landnam,ui,launchpad,launchwizard,technical-debt] — Obsoleted by web migration; Godot removed
 - @task-4w8151 Remove requirement for user to press continue button to see payout options [done priority=high labels=project-landnam,styling,operations,mechanics,mining,payout,chapter,completion,scene,UI,tutorial]
 - @task-tbt6nb QA rebuilt Fabrication Bay against Stitch landscape screens [done priority=high labels=project-landnam,ui,launchpad,stitch]
 - @task-hn026g Portrait mode support — game requires landscape but browser users don''t always rotate [done priority=medium labels=project-landnam,mobile,portrait,ux,layout]
@@ -57,17 +57,17 @@ If the parent repo is not accessible, write proposed task/doc/context updates in
 - @task-fwzxys Fix survey triggers: gate surveys behind mechanic use [done priority=high labels=project-landnam,surveys,ux,mobile]
 - @task-xh84lt Design the Control Station active mission card [done priority=high labels=project-landnam]
 - @task-vvgprh Set up experience system [done priority=medium labels=project-landnam,Experience,Research,Launch,Data]
-- @task-gd6xvv New players see pre-built game state on fresh load — committed dev save files in repo [done priority=high labels=project-landnam,critical,bug,save-state,godot,vercel]
+- @task-gd6xvv New players see pre-built game state on fresh load — committed dev save files in repo [archived priority=high labels=project-landnam,critical,bug,save-state,godot,vercel] — Obsoleted by web migration; Godot removed
 - @task-oqovlg Write in-universe project briefs for the 6 named contractors [done priority=low labels=project-landnam]
-- @task-wcutme Portrait mode: design system font sweep + full UI scene reflow [done priority=high labels=project-landnam,godot,design-system,portrait,ui]
-- @task-LANh02n1m Remove XP/level system from codebase (deferred to v2) [done priority=high labels=project-landnam,godot,xp,levels,cleanup,deferred]
-- @task-LANbvf6kw Refactor SyncBridge for Web/PWA Sync [done priority=high labels=project-landnam,godot,web,pwa,sync]
+- @task-wcutme Portrait mode: design system font sweep + full UI scene reflow [archived priority=high labels=project-landnam,godot,design-system,portrait,ui] — Obsoleted by web migration; Godot removed
+- @task-LANh02n1m Remove XP/level system from codebase (deferred to v2) [archived priority=high labels=project-landnam,godot,xp,levels,cleanup,deferred] — Obsoleted by web migration; Godot removed
+- @task-LANbvf6kw Refactor SyncBridge for Web/PWA Sync [archived priority=high labels=project-landnam,godot,web,pwa,sync] — Obsoleted by web migration; Godot removed
 
 ## Project Docs
 
-- @doc/landnam/audit/godot-architecture-audit-refactoring-roadmap
-- @doc/landnam/audit/megadoc-2026-05-14
-- @doc/landnam/landnam-galaxymap-mining-scenes-deleted-reference
-- @doc/landnam/structures/mission-ideas-future-missions-deferred-spec
-- @doc/landnam/structures/scanner-station-deferred-feature-spec
-- @doc/landnam/structures/xp-level-system-deferred-feature-spec
+- @doc/landnam/audit/godot-architecture-audit-refactoring-roadmap [archived] — Obsoleted by web migration; Godot removed
+- @doc/landnam/audit/megadoc-2026-05-14 [archived] — Obsoleted by web migration; Godot removed
+- @doc/landnam/landnam-galaxymap-mining-scenes-deleted-reference [archived] — Obsoleted by web migration; Godot removed
+- @doc/landnam/structures/mission-ideas-future-missions-deferred-spec [archived] — Obsoleted by web migration; Godot removed
+- @doc/landnam/structures/scanner-station-deferred-feature-spec [archived] — Obsoleted by web migration; Godot removed
+- @doc/landnam/structures/xp-level-system-deferred-feature-spec [archived] — Obsoleted by web migration; Godot removed

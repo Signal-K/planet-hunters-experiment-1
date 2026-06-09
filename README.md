@@ -4,6 +4,8 @@
 
 A hybrid resource management game and citizen science platform where players explore the solar system, conduct mining missions to real astronomical targets, and contribute to actual scientific discovery.
 
+> **Migration complete:** Landnam is now 100% Next.js/React — no Godot dependencies. The legacy Godot project (`scene/`) is excluded from the repository and is not used in any build or development workflow.
+
 ## 🎮 Game Overview
 
 Landnám combines economic progression with authentic data from space telescopes. In the current release path, players scan the cosmos using real TESS-style planet-candidate data, select targets for resource extraction missions, and analyze celestial objects in a planet-hunting loop that mirrors real astronomical research workflows.
@@ -32,7 +34,6 @@ See [Specifications Index](/.knowns/docs/specs/specifications-index.md) for comp
 
 ### Prerequisites
 
-- Godot 4.5+
 - Node.js 18+
 - Supabase (local or remote)
 
@@ -44,9 +45,6 @@ npm install
 
 # Start Supabase (local)
 supabase start
-
-# Export Godot project
-./export_godot.sh --target ./build --project ./scene --name game --preset Web --platform web
 
 # Run development server
 npm run dev
@@ -61,11 +59,11 @@ npm run dev
 ## 🧪 Testing
 
 ```bash
-# Run Godot tests
-godot --headless --path ./scene --script scene/tests/run_experience_tests.gd
+# Run web tests
+npm test
 
-# Run mining tests
-godot --headless --path ./scene --script scene/tests/run_mining_tests.gd
+# Run Cypress e2e tests
+npx cypress run
 ```
 
 ## 🤝 Contributing
@@ -83,7 +81,6 @@ godot --headless --path ./scene --script scene/tests/run_mining_tests.gd
 
 ## 🔗 Links
 
-- [Godot Integration Guide](/.knowns/docs/dev/godot-integration-guide.md)
 - [Docker Setup](/.knowns/docs/dev/docker-setup-guide.md)
 - [Mission Improvement Plan](/.knowns/docs/game-design/mission-improvement-plan.md)
 

@@ -11,3 +11,5 @@ make knowns-outbox-collect
 ```
 
 After collection, accepted updates must still be applied to the canonical parent .knowns project using Knowns MCP tools or CLI commands.
+
+> **Note:** Landnam has fully migrated from Godot to Next.js/React. Godot-era tasks in `.knowns/tasks/` and Godot-era docs in `.knowns/docs/` should be archived. See `proposal-archive-godot-tasks.md` and `proposal-purge-godot-docs.md` in this directory.

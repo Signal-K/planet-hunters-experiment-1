@@ -12,37 +12,15 @@ If the parent Knowns project is not writable, write proposed task/doc/context up
 <!-- LANDNAM PROJECT REQUIREMENTS START -->
 # Landnam Project Requirements
 
-## Godot Scene Authoring Is Scene-First
+## Landnam Is 100% Web (Next.js / React) — No Godot
 
-GDScript files are for functionality. They must not be used as a substitute for authoring scenes.
+The Godot-to-Next.js migration is complete. The web frontend (`web/`) is the only active UI layer. No Godot files remain in the repository or build pipeline.
 
-This is a hard project rule for every agent. If a UI element, screen, card, button, label, panel, structure marker, tutorial card, menu, or layout block is known at design time, it must exist as an editor-visible node in a `.tscn` file. Implementing a Claude/Stitch/design-template screen by generating its visible controls in GDScript is not acceptable.
-
-When creating or changing a Godot scene, put the scene structure in the `.tscn` file: nodes, containers, labels, buttons, text content, layout, anchors, exported resources, and editor-visible defaults belong in the scene so it can be viewed and edited in the Godot editor.
-
-Do not create an empty `.tscn` with a root node and then build the visible UI in `_ready()` or helper methods. That pattern is prohibited for static or known UI because it makes scenes unreadable, uneditable, and bug-prone.
-
-Use `.gd` scripts only for behavior: signal handlers, state changes, data loading, validation, navigation, animation triggers, and binding runtime data into existing scene nodes. Runtime node creation is acceptable only for genuinely dynamic repeated content, such as rendering an arbitrary number of rows from player data, and must use preauthored child scenes/resources when practical.
-
-Before finishing any task that creates or changes a scene, verify the `.tscn` contains the meaningful node tree, static UI/text, layout, and asset references, and that the attached script is not constructing that static UI in code. If the scene editor would not show the relevant UI before the game is run, the task is not complete.
-
-## UI Blocks Need Dedicated Layout Segments
-
-Every persistent UI block/component type must have a defined layout segment before it is placed on screen. Use `UILayout.gd` zones or scene-owned container lanes for headers, content, footers, overlays, tutorial cards, modals, action bars, widgets, and repeated panels. Do not float cards, tutorial panels, debug widgets, or action controls over arbitrary content without reserving space for them.
-
-When adding a new overlay or persistent panel, define how it coexists with the rest of the screen at desktop, tablet, and mobile widths. If the tutorial coach or another overlay is visible, the underlying screen must either reserve a sidecar/body segment for it or explicitly suspend/hide the conflicting UI. Before finishing UI work, verify the relevant blocks do not overlap actionable content.
-
-## Testing Must Leave Fresh Player State
-
-When testing or playing the Godot game, use an isolated test profile whenever possible: the Docker sandbox, a temporary `GODOT_USER_DIR`, or Godot's `--user-data-dir` pointing at a disposable directory. Do not run test playthroughs against the user's normal playable save unless the user explicitly asks for that.
-
-After any test run, manual play session, scripted playthrough, or change that touches saved game behavior, leave the game in a fresh-start state for the user. Fresh means the next normal play session starts from the beginning with the default 10,000,000,000 franc balance, no completed/active/returned missions, default rocket state, default construction/tutorial/first-time mechanic state, and no stale `user://` progress files from the test.
-
-Prefer the existing reset paths when cleanup is needed: `AppController.full_factory_reset()` for in-game reset behavior and `AppControllerPersistence.reset_all()` or an isolated user-data directory for persisted files. Before finishing, verify the reset or state isolation when practical. If it cannot be verified, say that clearly.
-
-## Production Exports Must Be Fresh
-
-Any production export, deploy, release, or versioned build must be generated from the current `scene/` source. If Godot scene files, scripts, or exported assets changed, rebuild the web export before shipping by using the existing export pipeline, and run the export freshness verification when available. Do not publish stale `game/` or `electron-dist/godot-web` output after changing the Godot project.
+Key points:
+- All UI is built with React/Next.js components in `web/`
+- All task/feature references to Godot-specific patterns (`.gd`, `.tscn`, `ControlStation.gd`, `RocketsManager`, `UILayout.gd`, etc.) are obsolete and should be treated as archival only
+- The `scene/` directory (Godot project) is excluded from the repo and has no bearing on current development
+- Production builds are pure Next.js — no Godot WebGL export step required
 
 <!-- LANDNAM PROJECT REQUIREMENTS END -->
 
