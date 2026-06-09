@@ -43,16 +43,25 @@ function Slot({ label, parts, picked, accent, onPick }: {
         </div>
       </Panel>
       <div className="part-picker">
-        {parts.map(part => (
-          <button
-            key={part.id}
-            disabled={part.locked}
-            onClick={() => onPick(part.id)}
-            className={part.id === picked.id ? 'part-chip part-chip--active' : 'part-chip'}
-          >
-            {part.name} <span>T{part.tier}</span>
-          </button>
-        ))}
+        {parts.map(part => {
+          const isActive = part.id === picked.id
+          return (
+            <button
+              key={part.id}
+              disabled={part.locked}
+              onClick={() => onPick(part.id)}
+              className={
+                isActive ? 'part-chip part-chip--active' :
+                part.locked ? 'part-chip part-chip--locked' :
+                'part-chip'
+              }
+              title={part.locked ? `Locked — complete more missions to unlock T${part.tier} parts` : ''}
+            >
+              {part.name} <span>T{part.tier}</span>
+              {part.locked && <span className="lock-icon" aria-label="locked">LOCKED</span>}
+            </button>
+          )
+        })}
       </div>
     </section>
   )

@@ -196,7 +196,7 @@ button { cursor: pointer; }
 .backend-status--online { color: var(--ln-ok); }
 .backend-status--offline { color: var(--ln-crit); }
 .screen-scroll { position: absolute; inset: 0; overflow-y: auto; padding: 76px var(--ln-s-3) 118px; }
-.screen-scroll--coach { padding-top: 146px; }
+.screen-scroll--coach { padding-top: 90px; }
 .blueprint-screen {
   background:
     repeating-linear-gradient(0deg, transparent 0 19px, rgba(63,169,255,0.06) 19px 20px),
@@ -214,7 +214,9 @@ button { cursor: pointer; }
 .part-picker { display: flex; gap: var(--ln-s-2); overflow-x: auto; padding-top: var(--ln-s-2); }
 .part-chip { flex: none; padding: var(--ln-s-2) var(--ln-s-3); color: var(--ln-text-dim); background: rgba(8,16,28,.72); border: 1px solid var(--ln-hairline-strong); border-radius: var(--ln-r-lg); font: 700 11px var(--ln-font-display); letter-spacing: var(--ln-tr-label); text-transform: uppercase; }
 .part-chip--active { color: var(--ln-cyan-bright); border-color: var(--ln-cyan); background: var(--ln-cyan-soft); }
+.part-chip--locked { opacity: 0.45; cursor: not-allowed; border-color: var(--ln-hairline); }
 .part-chip span { color: var(--ln-text-muted); font-family: var(--ln-font-mono); }
+.lock-icon { margin-left: 4px; font: 700 7px var(--ln-font-mono); color: var(--ln-text-muted); letter-spacing: 0.08em; }
 .context-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--ln-s-3); }
 .context-row div { display: flex; flex-direction: column; gap: var(--ln-s-1); }
 .context-row strong { font: 800 13px var(--ln-font-display); color: var(--ln-text); }
