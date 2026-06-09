@@ -9,10 +9,11 @@ import LightcurvePlot from '../LightcurvePlot'
 
 type Verdict = 'planet' | 'not_planet'
 
-export default function ClassifyLightcurveScreen({ onBack, onSubmit, hasCoach }: {
+export default function ClassifyLightcurveScreen({ onBack, onSubmit, hasCoach, classificationError }: {
   onBack: () => void
   onSubmit: (verdict: Verdict) => void
   hasCoach?: boolean
+  classificationError?: string | null
 }) {
   const [verdict, setVerdict] = useState<Verdict | null>(null)
   const [submitting, setSubmitting] = useState(false)
@@ -85,6 +86,14 @@ export default function ClassifyLightcurveScreen({ onBack, onSubmit, hasCoach }:
           </Panel>
         )}
       </div>
+      {classificationError && (
+        <div style={{ padding: '10px 14px' }}>
+          <Panel accent="var(--ln-crit)" style={{ padding: 10 }}>
+            <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 12, color: '#ff5a6a' }}>Sync Error</div>
+            <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: '#ff8290', marginTop: 4 }}>{classificationError}</div>
+          </Panel>
+        </div>
+      )}
       <div className="sticky-actions">
         <PrimaryBtn 
           kind="amber" 

@@ -34,6 +34,7 @@ function visitWithState(state: Partial<GameState>) {
     buildGate: false,
     menuOpen: false,
     classification: null,
+    classificationError: null,
   }
   cy.visit('/game', {
     onBeforeLoad(win) {
@@ -74,6 +75,7 @@ function fullState(overrides: Partial<GameState> = {}): GameState {
     buildGate: false,
     menuOpen: false,
     classification: null,
+    classificationError: null,
     ...overrides,
   }
 }

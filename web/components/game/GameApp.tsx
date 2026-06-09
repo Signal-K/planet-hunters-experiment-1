@@ -119,7 +119,7 @@ function GameCanvas() {
           />
         )}
         {game.screen === 'classify' && game.mission && (
-          <ClassifyLightcurveScreen onBack={() => game.go('missions')} onSubmit={game.classifyCandidate} hasCoach={hasCoach} />
+          <ClassifyLightcurveScreen onBack={() => game.go('missions')} onSubmit={game.classifyCandidate} hasCoach={hasCoach} classificationError={game.classificationError} />
         )}
         {game.screen === 'targets' && game.mission && (
           <TargetPickerScreen mission={game.mission} onBack={() => game.go('missions')} onPick={game.onPickTarget} hasCoach={hasCoach} catalog={game.catalog} />

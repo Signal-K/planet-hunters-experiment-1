@@ -54,6 +54,7 @@ export interface GameState {
   buildGate: boolean
   menuOpen: boolean
   classification: { candidateId: string; verdict: 'planet' | 'not_planet' } | null
+  classificationError: string | null
 }
 
 interface GameActions {
@@ -118,6 +119,7 @@ const DEFAULT_STATE: GameState = {
   buildGate: false,
   menuOpen: false,
   classification: null,
+  classificationError: null,
 }
 
 const STORAGE_KEY = 'landnam-game-state-v1'
@@ -346,11 +348,16 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
     const userId = pbShared.authStore.record?.id
     if (userId) {
-      void pbShared.collection('classifications').create({
+      pbShared.collection('classifications').create({
         user: userId,
         candidate: 'tess-451b',
         verdict,
-      }).catch(() => undefined)
+      }).then(() => {
+        setState(s => ({ ...s, classificationError: null }))
+      }).catch((err) => {
+        const msg = err?.message ?? err?.status ?? 'Classification write failed'
+        setState(s => ({ ...s, classificationError: msg }))
+      })
     }
   }, [])
 
