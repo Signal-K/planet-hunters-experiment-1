@@ -85,7 +85,8 @@ describe('Full Game Loop — Landnam', () => {
     it('hub screen renders with launchpad building after placement', () => {
       visitWithState(fullState({ screen: 'hub' }))
       cy.get('[data-testid="building-launchpad"]').should('be.visible')
-      cy.contains('LAUNCHPAD').should('be.visible')
+      cy.contains('Launchpad').should('be.visible')
+      cy.contains('READY').should('be.visible')
     })
   })
 
@@ -342,7 +343,8 @@ describe('Full Game Loop — Landnam', () => {
         tutorial: false,
       }))
       cy.get('[data-testid="building-control"]').should('be.visible')
-      cy.contains('CONTROL').should('be.visible')
+      cy.contains('Control').should('be.visible')
+      cy.contains('JOBS').should('be.visible')
     })
 
     it('mission board shows M2 unlocked after M1 completion + Control Station', () => {

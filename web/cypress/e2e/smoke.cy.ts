@@ -23,7 +23,7 @@ describe('Smoke — Landnam', () => {
   })
 
   it('backend-health API route responds', () => {
-    cy.request({ url: '/api/auth/backend-health', failOnStatusCode: false })
+    cy.request({ url: '/api/backend-health', failOnStatusCode: false })
       .its('status')
       .should('be.oneOf', [200, 503])
   })
