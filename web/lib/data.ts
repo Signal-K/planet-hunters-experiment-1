@@ -122,6 +122,24 @@ export const CONTRACTOR_SLOTS: ContractorSlot[] = [
   { id: 'origin',    name: 'Origin Base',     color: '#39d36a', initial: 'OB', unlockTier: 1, projectType: 'Starter prospecting',    mineralPreferences: ['iron', 'silicon', 'carbon'], payoutNotes: 'Balanced starter contracts', affinityNotes: '+6 per delivery',     uiRole: 'starter' },
 ]
 
+export interface RefineryRecipe {
+  id: string
+  name: string
+  input: { mineral: string; amount: number }
+  output: { name: string; sym: string; color: string; price: number }
+  time: number
+  cost: number
+}
+
+export const REFINERY_RECIPES: RefineryRecipe[] = [
+  { id: 'refine-steel', name: 'Smelt Steel', input: { mineral: 'iron', amount: 4 }, output: { name: 'Steel Beam', sym: 'FeS', color: '#b0b8c4', price: 600 }, time: 30, cost: 50000 },
+  { id: 'refine-wafer', name: 'Fabricate Wafers', input: { mineral: 'silicon', amount: 3 }, output: { name: 'Silicon Wafer', sym: 'SiW', color: '#7ec8ff', price: 900 }, time: 45, cost: 75000 },
+  { id: 'refine-goldbar', name: 'Cast Gold Bars', input: { mineral: 'gold', amount: 3 }, output: { name: 'Gold Bar', sym: 'AuB', color: '#ffd166', price: 3200 }, time: 60, cost: 100000 },
+  { id: 'refine-xe', name: 'Compress Xenon', input: { mineral: 'rare', amount: 2 }, output: { name: 'Xenon Canister', sym: 'XeC', color: '#c084ff', price: 6000 }, time: 90, cost: 150000 },
+  { id: 'refine-nickel', name: 'Purify Nickel', input: { mineral: 'nickel', amount: 4 }, output: { name: 'Nickel Alloy', sym: 'NiA', color: '#b0b8c4', price: 500 }, time: 25, cost: 40000 },
+  { id: 'refine-cobalt', name: 'Refine Cobalt', input: { mineral: 'cobalt', amount: 3 }, output: { name: 'Cobalt Cathode', sym: 'CoC', color: '#4f9cf7', price: 1800 }, time: 50, cost: 80000 },
+]
+
 export const STRUCTURES: StructureBlueprint[] = [
   { id: 'launchpad', name: 'Launchpad',     kind: 'launchpad', cost: 0,          unlocksAt: 'always',      description: 'Rocket assembly and launch operations.' },
   { id: 'control',   name: 'Control Base',  kind: 'control',   cost: 500_000_000, unlocksAt: 'After M1',     description: 'Mission control center — unlocks contract board.' },

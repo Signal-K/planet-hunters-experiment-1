@@ -130,6 +130,16 @@ function Building({ kind, label, sub, status, hot, w, style, onClick }: Building
             <line x1="39" y1="10" x2="39" y2="16" stroke="#a9b8ce" strokeWidth="1.5"/>
           </svg>
         )}
+        {kind === 'refinery' && (
+          <svg width={w} height={w * 0.6} viewBox="0 0 84 60">
+            <rect x="6" y="20" width="72" height="30" rx="3" fill="#0e1c2e" stroke="#f5a623" strokeWidth="1.2"/>
+            <rect x="20" y="8" width="12" height="14" rx="2" fill="#1a3050" stroke="#f5a623" strokeWidth="0.8"/>
+            <rect x="52" y="8" width="12" height="14" rx="2" fill="#1a3050" stroke="#f5a623" strokeWidth="0.8"/>
+            <circle cx="26" cy="14" r="3" fill="#f5a623" opacity="0.6"/>
+            <circle cx="58" cy="14" r="3" fill="#f5a623" opacity="0.6"/>
+            <path d="M26 22 L42 20 L58 22" stroke="#f5a623" strokeWidth="1" fill="none" opacity="0.5"/>
+          </svg>
+        )}
       </div>
       <div style={{
         padding: '4px 10px', borderRadius: 999,
@@ -200,12 +210,30 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav }: Hub
         onClick: () => onGoBuilding('missions'),
       }
     }
+    if (kind === 'satellite') {
+      return {
+        kind, label: 'Satellite',
+        sub: 'SCANNING',
+        status: 'ok' as const,
+        w: 78,
+        onClick: () => onGoBuilding('satellite'),
+      }
+    }
+    if (kind === 'refinery') {
+      return {
+        kind, label: 'Refinery',
+        sub: 'ORE PROCESSING',
+        status: 'ok' as const,
+        w: 84,
+        onClick: () => onGoBuilding('refinery'),
+      }
+    }
     return {
-      kind, label: 'Satellite',
-      sub: 'SCANNING',
-      status: 'ok' as const,
+      kind, label: kind,
+      sub: 'BUILT',
+      status: 'info' as const,
       w: 78,
-      onClick: () => onGoBuilding('satellite'),
+      onClick: () => onGoBuilding(kind),
     }
   }
 

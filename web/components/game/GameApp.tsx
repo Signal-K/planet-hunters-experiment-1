@@ -13,6 +13,7 @@ import MissionBoardScreen from '@/components/game/screens/MissionBoardScreen'
 import TargetPickerScreen from '@/components/game/screens/TargetPickerScreen'
 import TransitScreen from '@/components/game/screens/TransitScreen'
 import ClassifyLightcurveScreen from '@/components/game/screens/ClassifyLightcurveScreen'
+import RefineryScreen from '@/components/game/screens/RefineryScreen'
 import TutorialCoach from '@/components/game/TutorialCoach'
 import BuildGatePrompt from '@/components/game/BuildGatePrompt'
 import UnlockPopup from '@/components/game/UnlockPopup'
@@ -81,6 +82,7 @@ function GameCanvas() {
           <BuildPlaceScreen
             onBack={() => game.go('hub')}
             hasCoach={hasCoach}
+            playerLevel={game.player.level}
             onPlaced={(kind, plot) => {
               game.setPlayer(player => ({
                 ...player,
@@ -99,6 +101,7 @@ function GameCanvas() {
             onNav={screen => goFromNav(screen)}
             onGoBuilding={building => {
               if (building === 'control' && !game.player.controlBuilt) return game.setBuildGate(true)
+              if (building === 'refinery') return game.go('refinery')
               if (building === 'launchpad' || building === 'missions') return goFromNav('missions')
             }}
           />
@@ -120,6 +123,19 @@ function GameCanvas() {
         )}
         {game.screen === 'targets' && game.mission && (
           <TargetPickerScreen mission={game.mission} onBack={() => game.go('missions')} onPick={game.onPickTarget} hasCoach={hasCoach} catalog={game.catalog} />
+        )}
+        {game.screen === 'refinery' && (
+          <RefineryScreen
+            player={{
+              francs: game.player.francs,
+              stash: game.player.stash,
+              refineryQueue: game.player.refineryQueue,
+              refinedGoods: game.player.refinedGoods,
+            }}
+            onBack={() => game.go('hub')}
+            onStartRefine={game.onStartRefine}
+            onCollect={game.onCollectRefined}
+          />
         )}
         {game.screen === 'fab' && game.mission && game.target && (
           <AssemblyScreen

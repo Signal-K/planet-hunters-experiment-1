@@ -20,6 +20,9 @@ function visitWithState(state: Partial<GameState>) {
       contractorMissions: {},
       contractorCooldowns: {},
       researchAnnotations: 0,
+      refineryBuilt: false,
+      refineryQueue: [],
+      refinedGoods: {},
     },
     missionId: null,
     targetId: null,
@@ -57,6 +60,9 @@ function fullState(overrides: Partial<GameState> = {}): GameState {
       contractorMissions: {},
       contractorCooldowns: {},
       researchAnnotations: 0,
+      refineryBuilt: false,
+      refineryQueue: [],
+      refinedGoods: {},
     },
     missionId: null,
     targetId: null,
@@ -163,6 +169,9 @@ describe('Full Game Loop — Landnam', () => {
           contractorMissions: {},
           contractorCooldowns: {},
           researchAnnotations: 0,
+          refineryBuilt: false,
+          refineryQueue: [],
+          refinedGoods: {},
         },
       }))
       cy.contains('Confirm Launch').should('be.visible')
@@ -191,6 +200,9 @@ describe('Full Game Loop — Landnam', () => {
           contractorMissions: {},
           contractorCooldowns: {},
           researchAnnotations: 0,
+          refineryBuilt: false,
+          refineryQueue: [],
+          refinedGoods: {},
         },
       }))
       cy.get('.trajectory').should('not.exist')
@@ -219,6 +231,9 @@ describe('Full Game Loop — Landnam', () => {
           contractorMissions: {},
           contractorCooldowns: {},
           researchAnnotations: 0,
+          refineryBuilt: false,
+          refineryQueue: [],
+          refinedGoods: {},
         },
       }))
       cy.get('[data-testid="mining-ship"]').should('be.visible')
@@ -252,6 +267,9 @@ describe('Full Game Loop — Landnam', () => {
           contractorMissions: {},
           contractorCooldowns: {},
           researchAnnotations: 0,
+          refineryBuilt: false,
+          refineryQueue: [],
+          refinedGoods: {},
         },
       }))
       cy.contains('MISSION COMPLETE').should('be.visible')
@@ -284,6 +302,9 @@ describe('Full Game Loop — Landnam', () => {
           contractorMissions: {},
           contractorCooldowns: {},
           researchAnnotations: 0,
+          refineryBuilt: false,
+          refineryQueue: [],
+          refinedGoods: {},
         },
         tutorial: false,
         popup: 'sr2',
@@ -311,6 +332,9 @@ describe('Full Game Loop — Landnam', () => {
           contractorMissions: {},
           contractorCooldowns: {},
           researchAnnotations: 0,
+          refineryBuilt: false,
+          refineryQueue: [],
+          refinedGoods: {},
         },
         tutorial: false,
       }))
@@ -342,6 +366,9 @@ describe('Full Game Loop — Landnam', () => {
           contractorMissions: {},
           contractorCooldowns: {},
           researchAnnotations: 0,
+          refineryBuilt: false,
+          refineryQueue: [],
+          refinedGoods: {},
         },
         tutorial: false,
       }))
@@ -369,6 +396,9 @@ describe('Full Game Loop — Landnam', () => {
           contractorMissions: {},
           contractorCooldowns: {},
           researchAnnotations: 0,
+          refineryBuilt: false,
+          refineryQueue: [],
+          refinedGoods: {},
         },
         tutorial: false,
       }))
@@ -396,6 +426,9 @@ describe('Full Game Loop — Landnam', () => {
           contractorMissions: {},
           contractorCooldowns: {},
           researchAnnotations: 0,
+          refineryBuilt: false,
+          refineryQueue: [],
+          refinedGoods: {},
         },
         tutorial: false,
       }))

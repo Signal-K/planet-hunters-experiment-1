@@ -1,7 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
-import { type Mission, type Target, type RocketConfig, MISSIONS, TARGETS, PROGRESSION_STEPS, suggestBuild } from '@/lib/data'
+import { type Mission, type Target, type RocketConfig, MISSIONS, TARGETS, PROGRESSION_STEPS, suggestBuild, REFINERY_RECIPES } from '@/lib/data'
 import { pbShared } from '@/lib/pb'
 import { type Catalog, STATIC_CATALOG, fetchCatalog } from '@/lib/catalog'
 
@@ -17,6 +17,7 @@ export type Screen =
   | 'mining'
   | 'debrief'
   | 'classify'
+  | 'refinery'
 
 export interface Player {
   francs: number
@@ -35,6 +36,9 @@ export interface Player {
   contractorMissions: Record<string, number>
   contractorCooldowns: Record<string, number>
   researchAnnotations: number
+  refineryBuilt: boolean
+  refineryQueue: { recipeId: string; startedAt: number }[]
+  refinedGoods: Record<string, number>
 }
 
 export interface GameState {
@@ -75,6 +79,8 @@ interface GameActions {
   resetGame: () => void
   buildControlStation: () => void
   classifyCandidate: (verdict: 'planet' | 'not_planet') => void
+  onStartRefine: (recipeId: string) => void
+  onCollectRefined: (recipeId: string) => void
   mission: Mission | null
   target: Target | null
 }
@@ -98,6 +104,9 @@ const DEFAULT_STATE: GameState = {
     contractorMissions: {},
     contractorCooldowns: {},
     researchAnnotations: 0,
+    refineryBuilt: false,
+    refineryQueue: [],
+    refinedGoods: {},
   },
   missionId: null,
   targetId: null,
@@ -266,6 +275,46 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       doneSteps: { ...s.doneSteps, 2: true },
     }))
   }, [catalog.missions])
+
+  const onStartRefine = useCallback((recipeId: string) => {
+    const recipe = REFINERY_RECIPES.find(r => r.id === recipeId)
+    if (!recipe) return
+    setState(s => {
+      const stash = { ...(s.player.stash ?? {}) }
+      const current = stash[recipe.input.mineral] ?? 0
+      if (current < recipe.input.amount || s.player.francs < recipe.cost) return s
+      stash[recipe.input.mineral] = current - recipe.input.amount
+      return {
+        ...s,
+        player: {
+          ...s.player,
+          francs: s.player.francs - recipe.cost,
+          stash,
+          refineryQueue: [...s.player.refineryQueue, { recipeId, startedAt: Date.now() }],
+        },
+      }
+    })
+  }, [])
+
+  const onCollectRefined = useCallback((recipeId: string) => {
+    setState(s => {
+      const queue = [...s.player.refineryQueue]
+      const idx = queue.findIndex(q => q.recipeId === recipeId)
+      if (idx < 0) return s
+      const started = queue[idx].startedAt
+      const recipe = REFINERY_RECIPES.find(r => r.id === recipeId)
+      if (!recipe || (Date.now() - started) / 1000 < recipe.time) return s
+      queue.splice(idx, 1)
+      return {
+        ...s,
+        player: {
+          ...s.player,
+          refineryQueue: queue,
+          refinedGoods: { ...s.player.refinedGoods, [recipeId]: (s.player.refinedGoods[recipeId] ?? 0) + 1 },
+        },
+      }
+    })
+  }, [])
 
   const classifyCandidate = useCallback((verdict: 'planet' | 'not_planet') => {
     const FLAT_XP = 20
@@ -465,6 +514,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       resetGame,
       buildControlStation,
       classifyCandidate,
+      onStartRefine,
+      onCollectRefined,
       mission,
       target,
     }}>
