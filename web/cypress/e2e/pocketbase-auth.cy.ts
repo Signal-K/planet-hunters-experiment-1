@@ -75,6 +75,7 @@ describe('PocketBase Guest Auth Pattern', () => {
         refineryQueue: [],
         refinedGoods: {},
         stash: {},
+        launchpadUpgraded: false,
       },
       missionId: null,
       targetId: null,

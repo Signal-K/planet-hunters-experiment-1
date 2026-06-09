@@ -10,6 +10,7 @@ interface HubScreenProps {
   hasCoach?: boolean
   onGoBuilding: (b: string) => void
   onNav: (s: Screen) => void
+  onUpgradeLaunchpad?: () => void
 }
 
 function AmbientStars() {
@@ -172,7 +173,7 @@ function EmptyPlot({ w = 90, style, onClick }: { w?: number; style?: React.CSSPr
   )
 }
 
-export default function HubScreen({ player, hasCoach, onGoBuilding, onNav }: HubScreenProps) {
+export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpgradeLaunchpad }: HubScreenProps) {
   const [editMode, setEditMode] = useState(false)
   const placed = player.placed ?? []
   const placementPlots = player.placementPlots ?? {}
@@ -300,9 +301,16 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav }: Hub
       {!hasCoach && (
         <div style={{ position: 'absolute', left: 0, right: 0, bottom: 110, zIndex: 5, display: 'flex', justifyContent: 'center', gap: 8 }}>
           {editMode && (
-            <button onClick={() => onGoBuilding('build')} style={{ padding: '5px 14px', background: 'rgba(57,211,106,0.15)', backdropFilter: 'blur(6px)', border: '1px solid rgba(57,211,106,0.5)', borderRadius: 999, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', color: '#39d36a', textTransform: 'uppercase', cursor: 'pointer' }}>
-              + New Structure
-            </button>
+            <>
+              <button onClick={() => onGoBuilding('build')} style={{ padding: '5px 14px', background: 'rgba(57,211,106,0.15)', backdropFilter: 'blur(6px)', border: '1px solid rgba(57,211,106,0.5)', borderRadius: 999, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', color: '#39d36a', textTransform: 'uppercase', cursor: 'pointer' }}>
+                + New Structure
+              </button>
+              {player.placed.includes('launchpad') && !player.launchpadUpgraded && onUpgradeLaunchpad && (
+                <button onClick={onUpgradeLaunchpad} style={{ padding: '5px 14px', background: 'rgba(245,166,35,0.15)', backdropFilter: 'blur(6px)', border: '1px solid rgba(245,166,35,0.5)', borderRadius: 999, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', color: '#f5a623', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  Upgrade Launchpad (₣1B)
+                </button>
+              )}
+            </>
           )}
           <button onClick={() => setEditMode(v => !v)} style={{ padding: '5px 14px', background: editMode ? 'rgba(245,166,35,0.25)' : 'rgba(8,16,28,0.75)', backdropFilter: 'blur(6px)', border: editMode ? '1px solid rgba(245,166,35,0.6)' : '1px solid rgba(135,207,250,0.4)', borderRadius: 999, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.22em', color: editMode ? '#f5a623' : '#9EDCFF', textTransform: 'uppercase', cursor: 'pointer' }}>
             {editMode ? 'Done' : 'Edit · Build'}

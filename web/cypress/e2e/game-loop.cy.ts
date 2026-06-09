@@ -23,6 +23,7 @@ function visitWithState(state: Partial<GameState>) {
       refineryBuilt: false,
       refineryQueue: [],
       refinedGoods: {},
+      launchpadUpgraded: false,
     },
     missionId: null,
     targetId: null,
@@ -64,6 +65,7 @@ function fullState(overrides: Partial<GameState> = {}): GameState {
       refineryBuilt: false,
       refineryQueue: [],
       refinedGoods: {},
+      launchpadUpgraded: false,
     },
     missionId: null,
     targetId: null,
@@ -174,6 +176,7 @@ describe('Full Game Loop — Landnam', () => {
           refineryBuilt: false,
           refineryQueue: [],
           refinedGoods: {},
+          launchpadUpgraded: false,
         },
       }))
       cy.contains('Confirm Launch').should('be.visible')
@@ -205,6 +208,7 @@ describe('Full Game Loop — Landnam', () => {
           refineryBuilt: false,
           refineryQueue: [],
           refinedGoods: {},
+          launchpadUpgraded: false,
         },
       }))
       cy.get('.trajectory').should('not.exist')
@@ -236,6 +240,7 @@ describe('Full Game Loop — Landnam', () => {
           refineryBuilt: false,
           refineryQueue: [],
           refinedGoods: {},
+          launchpadUpgraded: false,
         },
       }))
       cy.get('[data-testid="mining-ship"]').should('be.visible')
@@ -272,6 +277,7 @@ describe('Full Game Loop — Landnam', () => {
           refineryBuilt: false,
           refineryQueue: [],
           refinedGoods: {},
+          launchpadUpgraded: false,
         },
       }))
       cy.contains('MISSION COMPLETE').should('be.visible')
@@ -307,6 +313,7 @@ describe('Full Game Loop — Landnam', () => {
           refineryBuilt: false,
           refineryQueue: [],
           refinedGoods: {},
+          launchpadUpgraded: false,
         },
         tutorial: false,
         popup: 'sr2',
@@ -337,6 +344,7 @@ describe('Full Game Loop — Landnam', () => {
           refineryBuilt: false,
           refineryQueue: [],
           refinedGoods: {},
+          launchpadUpgraded: false,
         },
         tutorial: false,
       }))
@@ -371,6 +379,7 @@ describe('Full Game Loop — Landnam', () => {
           refineryBuilt: false,
           refineryQueue: [],
           refinedGoods: {},
+          launchpadUpgraded: false,
         },
         tutorial: false,
       }))
@@ -401,6 +410,7 @@ describe('Full Game Loop — Landnam', () => {
           refineryBuilt: false,
           refineryQueue: [],
           refinedGoods: {},
+          launchpadUpgraded: false,
         },
         tutorial: false,
       }))
@@ -431,6 +441,7 @@ describe('Full Game Loop — Landnam', () => {
           refineryBuilt: false,
           refineryQueue: [],
           refinedGoods: {},
+          launchpadUpgraded: false,
         },
         tutorial: false,
       }))

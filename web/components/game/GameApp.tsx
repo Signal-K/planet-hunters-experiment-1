@@ -14,6 +14,7 @@ import TargetPickerScreen from '@/components/game/screens/TargetPickerScreen'
 import TransitScreen from '@/components/game/screens/TransitScreen'
 import ClassifyLightcurveScreen from '@/components/game/screens/ClassifyLightcurveScreen'
 import RefineryScreen from '@/components/game/screens/RefineryScreen'
+import SatelliteScreen from '@/components/game/screens/SatelliteScreen'
 import TutorialCoach from '@/components/game/TutorialCoach'
 import BuildGatePrompt from '@/components/game/BuildGatePrompt'
 import UnlockPopup from '@/components/game/UnlockPopup'
@@ -102,8 +103,10 @@ function GameCanvas() {
             onGoBuilding={building => {
               if (building === 'control' && !game.player.controlBuilt) return game.setBuildGate(true)
               if (building === 'refinery') return game.go('refinery')
+              if (building === 'satellite') return game.go('satellite')
               if (building === 'launchpad' || building === 'missions') return goFromNav('missions')
             }}
+            onUpgradeLaunchpad={() => game.upgradeLaunchpad()}
           />
         )}
         {game.screen === 'missions' && (
@@ -123,6 +126,13 @@ function GameCanvas() {
         )}
         {game.screen === 'targets' && game.mission && (
           <TargetPickerScreen mission={game.mission} onBack={() => game.go('missions')} onPick={game.onPickTarget} hasCoach={hasCoach} catalog={game.catalog} />
+        )}
+        {game.screen === 'satellite' && (
+          <SatelliteScreen
+            annotations={game.player.researchAnnotations}
+            onClassify={game.onSatelliteClassify}
+            onBack={() => game.go('hub')}
+          />
         )}
         {game.screen === 'refinery' && (
           <RefineryScreen
@@ -145,7 +155,7 @@ function GameCanvas() {
             parts={game.catalog.parts}
             level={game.player.level}
             onChange={(slot, id) => game.setRocket(rocket => ({ ...rocket, [slot]: id }))}
-            onSuggest={() => game.setRocket(suggestBuild({ mission: game.mission, target: game.target, level: game.player.level, parts: game.catalog.parts }))}
+            onSuggest={() => game.setRocket(suggestBuild({ mission: game.mission, target: game.target, level: game.player.level, launchpadUpgraded: game.player.launchpadUpgraded, parts: game.catalog.parts }))}
             onExplained={() => game.completeStep(4)}
             onLaunch={game.onLaunch}
             onBack={() => game.go(game.mission?.requiresClassification ? 'classify' : 'targets')}

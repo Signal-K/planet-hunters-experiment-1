@@ -18,6 +18,7 @@ export type Screen =
   | 'debrief'
   | 'classify'
   | 'refinery'
+  | 'satellite'
 
 export interface Player {
   francs: number
@@ -39,6 +40,7 @@ export interface Player {
   refineryBuilt: boolean
   refineryQueue: { recipeId: string; startedAt: number }[]
   refinedGoods: Record<string, number>
+  launchpadUpgraded: boolean
 }
 
 export interface GameState {
@@ -80,6 +82,8 @@ interface GameActions {
   resetGame: () => void
   buildControlStation: () => void
   classifyCandidate: (verdict: 'planet' | 'not_planet') => void
+  onSatelliteClassify: (verdict: 'planet' | 'not_planet') => void
+  upgradeLaunchpad: () => void
   onStartRefine: (recipeId: string) => void
   onCollectRefined: (recipeId: string) => void
   mission: Mission | null
@@ -108,6 +112,7 @@ const DEFAULT_STATE: GameState = {
     refineryBuilt: false,
     refineryQueue: [],
     refinedGoods: {},
+    launchpadUpgraded: false,
   },
   missionId: null,
   targetId: null,
@@ -339,6 +344,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
           mission: s.missionId ? catalog.missions.find(m => m.id === s.missionId) ?? null : null,
           target: catalog.targets.find(t => t.id === 'tess-451b') ?? null,
           level: s.player.level,
+          launchpadUpgraded: s.player.launchpadUpgraded,
           parts: catalog.parts,
         }),
         screen: 'fab',
@@ -361,11 +367,36 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
+  const onSatelliteClassify = useCallback((verdict: 'planet' | 'not_planet') => {
+    setState(s => ({
+      ...s,
+      player: {
+        ...s.player,
+        xp: s.player.xp + (verdict === 'planet' ? 15 : 5),
+        researchAnnotations: s.player.researchAnnotations + (verdict === 'planet' ? 1 : 0),
+      },
+    }))
+  }, [])
+
+  const upgradeLaunchpad = useCallback(() => {
+    setState(s => {
+      if (s.player.launchpadUpgraded || s.player.francs < 1_000_000_000) return s
+      return {
+        ...s,
+        player: {
+          ...s.player,
+          francs: s.player.francs - 1_000_000_000,
+          launchpadUpgraded: true,
+        },
+      }
+    })
+  }, [])
+
   const onPickTarget = useCallback((id: string) => {
     setState(s => {
       const mission = s.missionId ? catalog.missions.find(m => m.id === s.missionId) ?? null : null
       const target = catalog.targets.find(t => t.id === id) ?? null
-      const next = suggestBuild({ mission, target, level: s.player.level, parts: catalog.parts })
+      const next = suggestBuild({ mission, target, level: s.player.level, launchpadUpgraded: s.player.launchpadUpgraded, parts: catalog.parts })
       return {
         ...s,
         targetId: id,
@@ -533,6 +564,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       resetGame,
       buildControlStation,
       classifyCandidate,
+      onSatelliteClassify,
+      upgradeLaunchpad,
       onStartRefine,
       onCollectRefined,
       mission,

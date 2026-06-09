@@ -456,16 +456,18 @@ export function suggestBuild(opts: {
   mission: Mission | null
   target: Target | null
   level: number
+  launchpadUpgraded?: boolean
   parts?: typeof PARTS
 }): RocketConfig {
   const { mission, target, parts = PARTS } = opts
   const orbit = target?.orbit ?? 4
   const drillTier = mission?.requires.drill_tier ?? 1
   const cargoMin = mission?.requires.cargo_min ?? 6
+  const effectiveLevel = opts.launchpadUpgraded ? Math.max(opts.level, 3) : opts.level
 
   const available = (p: Part) => {
     if (p.locked) return false
-    if (p.levelRequired && (opts.level ?? 0) < p.levelRequired) return false
+    if (p.levelRequired && effectiveLevel < p.levelRequired) return false
     return true
   }
   const prop = parts.propulsion.find(p => available(p) && (p.max_orbit ?? 0) >= orbit)
