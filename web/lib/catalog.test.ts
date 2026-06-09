@@ -46,4 +46,16 @@ describe('Landnam Catalog Mapping', () => {
     expect(part.id).toBe('drill-t1')
     expect(part.rate).toBe(1.5)
   })
+
+  it('unlocks tier-1 and tier-2 parts regardless of locked flag', () => {
+    const raw = { slug: 'hull-mk1', name: 'Hull MK1', tier: 1, locked: true }
+    const unlocked = toPart(raw)
+    expect(unlocked.locked).toBe(false)
+  })
+
+  it('respects locked flag for tier-3+ parts', () => {
+    const raw = { slug: 'hull-mk3', name: 'Hull MK3', tier: 4, locked: true }
+    const locked = toPart(raw)
+    expect(locked.locked).toBe(true)
+  })
 })
