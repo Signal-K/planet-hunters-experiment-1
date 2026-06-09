@@ -28,7 +28,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, contr
       </div>
       <TopBar eyebrow={freeOperations ? 'EARTH BASE · FREE OPS' : `EARTH BASE · M${Math.min(missionsDone + 1, 4)}`} title="Mission Board" onBack={onBack} />
 
-      <div style={{ position: 'absolute', inset: 0, paddingTop: hasCoach ? 146 : 72, paddingBottom: 96, overflowY: 'auto' }}>
+      <div style={{ position: 'absolute', inset: 0, paddingTop: hasCoach ? 146 : 72, paddingBottom: hasCoach ? 180 : 96, overflowY: 'auto' }}>
         <div style={{ padding: '0 14px 8px 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700, letterSpacing: '0.22em', color: 'var(--ln-text-muted)', textTransform: 'uppercase' }}>
             Active Contracts · {available.length}
@@ -80,12 +80,13 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, contr
                     <span style={{ flex: 1 }} />
                     {!unlocked
                       ? <StatusPill kind="mute">Locked · {m.sequence <= missionsDone ? 'Completed' : m.unlockAt}</StatusPill>
-                      : <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 10px', borderRadius: 8, background: `${accent}20`, border: `1px solid ${accent}55`, color: accent, fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase' }}>
+                      : <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 10px', borderRadius: 8, background: accent, color: '#06121f', fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase' }}>
                           {mTargets.length} target{mTargets.length !== 1 ? 's' : ''} ›
                         </span>}
                   </div>
                 </Panel>
               </button>
+
             )
           })}
         </div>
