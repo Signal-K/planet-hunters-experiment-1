@@ -96,7 +96,7 @@ export async function fetchCatalog(): Promise<Catalog> {
       drill:      parts.filter(p => p.part_type === 'drill').map(toPart),
     },
     minerals: Object.fromEntries(
-      minerals.map(r => [r.slug, { name: r.name, sym: r.sym, color: r.color, price: r.base_price }])
+      minerals.map(r => [r.slug, { name: r.name, sym: r.sym, color: r.color, price: r.base_price, rarity: r.rarity ?? 'common', constructionUse: r.construction_use ?? '', laserAccess: r.laser_access ?? 1 }])
     ),
     contractors: Object.fromEntries(
       contractors.map(r => [r.slug, { id: r.slug, name: r.name, color: r.color, initial: r.initial }])

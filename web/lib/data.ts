@@ -56,6 +56,9 @@ export interface MineralMeta {
   sym: string
   color: string
   price: number
+  rarity: 'common' | 'uncommon' | 'rare' | 'exotic'
+  constructionUse: string
+  laserAccess: number
 }
 
 export interface Contractor {
@@ -64,6 +67,81 @@ export interface Contractor {
   color: string
   initial: string
 }
+
+export interface ContractorSlot {
+  id: string
+  name: string
+  color: string
+  initial: string
+  unlockTier: number
+  projectType: string
+  mineralPreferences: string[]
+  payoutNotes: string
+  affinityNotes: string
+  uiRole: 'starter' | 'bulk' | 'prospect' | 'command' | 'science'
+}
+
+export interface StructureBlueprint {
+  id: string
+  name: string
+  kind: string
+  cost: number
+  unlocksAt: string
+  description: string
+}
+
+export interface MarketTemplate {
+  id: string
+  label: string
+  currency: string
+  baseRate: number
+  volatility: number
+}
+
+export interface MissionTemplate {
+  id: string
+  tag: string
+  difficulty: string
+  cargoRange: [number, number]
+  drillTierMin: number
+  orbitMax: number
+  payoutMultiplier: number
+}
+
+export const CONTRACTOR_SLOTS: ContractorSlot[] = [
+  { id: 'foundry3',  name: 'Foundry-3 Corp',  color: '#d97150', initial: 'F3', unlockTier: 1, projectType: 'Smelting throughput',   mineralPreferences: ['iron', 'silicon'], payoutNotes: 'Low rate, steady volume',       affinityNotes: '+10 per delivery',    uiRole: 'starter' },
+  { id: 'cryos',     name: 'Cryos Mining',    color: '#9becff', initial: 'CM', unlockTier: 1, projectType: 'Electronics-grade ore', mineralPreferences: ['silicon', 'iron'], payoutNotes: 'Medium pay, bulk orders',     affinityNotes: '+8 per delivery',     uiRole: 'bulk' },
+  { id: 'beltgold',  name: 'Belt Gold Ltd',   color: '#ffd166', initial: 'BG', unlockTier: 1, projectType: 'Precious metals',       mineralPreferences: ['gold', 'rare'], payoutNotes: 'High pay, low volume',         affinityNotes: '+15 per delivery',    uiRole: 'prospect' },
+  { id: 'lunarore',  name: 'Lunar ORE Inc',   color: '#a8d8ea', initial: 'LO', unlockTier: 2, projectType: 'Construction aggregates', mineralPreferences: ['iron', 'carbon'], payoutNotes: 'Very low rate, massive volume', affinityNotes: '+5 per delivery',     uiRole: 'bulk' },
+  { id: 'deepcore',  name: 'DeepCore Ltd',    color: '#70e070', initial: 'DC', unlockTier: 2, projectType: 'Deep-core sampling',    mineralPreferences: ['iron', 'silicon', 'gold'], payoutNotes: 'Mixed-bag premium',            affinityNotes: '+12 per delivery',    uiRole: 'prospect' },
+  { id: 'vestarock', name: 'VestaRock Co',    color: '#c084ff', initial: 'VR', unlockTier: 2, projectType: 'Rare-earth refining',     mineralPreferences: ['rare', 'gold'], payoutNotes: 'High tier, small batches',       affinityNotes: '+20 per delivery',    uiRole: 'command' },
+  { id: 'helio',     name: 'Helio Syndicate', color: '#ff8c42', initial: 'HS', unlockTier: 3, projectType: 'Solar-grade silicon',    mineralPreferences: ['silicon', 'ice'], payoutNotes: 'Premium purity contracts',     affinityNotes: '+10 per delivery',    uiRole: 'command' },
+  { id: 'triton',    name: 'Triton Collective', color: '#5fcde6', initial: 'TC', unlockTier: 3, projectType: 'Volatile harvesting',    mineralPreferences: ['ice', 'carbon'], payoutNotes: 'Medium rate, special cargo',    affinityNotes: '+8 per delivery',     uiRole: 'bulk' },
+  { id: 'axiom',     name: 'Axiom Resources', color: '#f5a623', initial: 'AR', unlockTier: 3, projectType: 'Strategic minerals',      mineralPreferences: ['gold', 'rare', 'silicon'], payoutNotes: 'High payout, rare minerals',  affinityNotes: '+25 per delivery',    uiRole: 'science' },
+  { id: 'origin',    name: 'Origin Base',     color: '#39d36a', initial: 'OB', unlockTier: 1, projectType: 'Starter prospecting',    mineralPreferences: ['iron', 'silicon', 'carbon'], payoutNotes: 'Balanced starter contracts', affinityNotes: '+6 per delivery',     uiRole: 'starter' },
+]
+
+export const STRUCTURES: StructureBlueprint[] = [
+  { id: 'launchpad', name: 'Launchpad',     kind: 'launchpad', cost: 0,          unlocksAt: 'always',      description: 'Rocket assembly and launch operations.' },
+  { id: 'control',   name: 'Control Base',  kind: 'control',   cost: 500_000_000, unlocksAt: 'After M1',     description: 'Mission control center — unlocks contract board.' },
+  { id: 'satellite', name: 'Satellite Uplink', kind: 'satellite', cost: 1_200_000_000, unlocksAt: 'Tier 2',   description: 'Orbital relay for deep-space comms.' },
+  { id: 'refinery',  name: 'Refinery',      kind: 'refinery',  cost: 800_000_000,  unlocksAt: 'Tier 2',     description: 'On-site ore processing increases sale price.' },
+  { id: 'garage',    name: 'Vehicle Garage', kind: 'garage',    cost: 600_000_000,  unlocksAt: 'Tier 2',     description: 'Surface rover maintenance and upgrades.' },
+]
+
+export const MARKET_TEMPLATES: MarketTemplate[] = [
+  { id: 'spot',     label: 'Spot Price',     currency: '₣', baseRate: 1.0, volatility: 0.05 },
+  { id: 'futures',  label: 'Futures Contract', currency: '₣', baseRate: 0.92, volatility: 0.02 },
+  { id: 'bulk',     label: 'Bulk Rate',       currency: '₣', baseRate: 0.85, volatility: 0.08 },
+]
+
+export const MISSION_TEMPLATES: MissionTemplate[] = [
+  { id: 'starter',    tag: 'STARTER',   difficulty: 'L1', cargoRange: [4, 8],    drillTierMin: 1, orbitMax: 4, payoutMultiplier: 1.0 },
+  { id: 'bulk',       tag: 'BULK',      difficulty: 'L2', cargoRange: [8, 14],   drillTierMin: 1, orbitMax: 5, payoutMultiplier: 1.5 },
+  { id: 'prospect',   tag: 'PROSPECT',  difficulty: 'L3', cargoRange: [3, 6],    drillTierMin: 2, orbitMax: 6, payoutMultiplier: 3.5 },
+  { id: 'command',    tag: 'COMMAND',   difficulty: 'L3', cargoRange: [4, 8],    drillTierMin: 2, orbitMax: 6, payoutMultiplier: 5.0 },
+  { id: 'science',    tag: 'SCIENCE',   difficulty: 'L2', cargoRange: [2, 5],    drillTierMin: 1, orbitMax: 7, payoutMultiplier: 2.5 },
+]
 
 export interface Star {
   id: string
@@ -90,6 +168,13 @@ export const CONTRACTORS: Record<string, Contractor> = {
   foundry3: { id: 'foundry3', name: 'Foundry-3 Corp', color: '#d97150', initial: 'F3' },
   cryos: { id: 'cryos', name: 'Cryos Mining', color: '#9becff', initial: 'CM' },
   beltgold: { id: 'beltgold', name: 'Belt Gold Ltd', color: '#ffd166', initial: 'BG' },
+  lunarore: { id: 'lunarore', name: 'Lunar ORE Inc', color: '#a8d8ea', initial: 'LO' },
+  deepcore: { id: 'deepcore', name: 'DeepCore Ltd', color: '#70e070', initial: 'DC' },
+  vestarock: { id: 'vestarock', name: 'VestaRock Co', color: '#c084ff', initial: 'VR' },
+  helio: { id: 'helio', name: 'Helio Syndicate', color: '#ff8c42', initial: 'HS' },
+  triton: { id: 'triton', name: 'Triton Collective', color: '#5fcde6', initial: 'TC' },
+  axiom: { id: 'axiom', name: 'Axiom Resources', color: '#f5a623', initial: 'AR' },
+  origin: { id: 'origin', name: 'Origin Base', color: '#39d36a', initial: 'OB' },
 }
 
 export const MISSIONS: Mission[] = [
@@ -267,12 +352,14 @@ export const PARTS: { chassis: Part[]; propulsion: Part[]; drill: Part[] } = {
 }
 
 export const MINERAL_META: Record<string, MineralMeta> = {
-  iron:    { name: 'Iron',    sym: 'Fe', color: '#d97150', price: 120 },
-  silicon: { name: 'Silicon', sym: 'Si', color: '#b9d8ff', price: 180 },
-  ice:     { name: 'Ice',     sym: 'H2O', color: '#9becff', price: 90 },
-  carbon:  { name: 'Carbon',  sym: 'C',  color: '#6a7280', price: 60 },
-  gold:    { name: 'Gold',    sym: 'Au', color: '#ffd166', price: 800 },
-  rare:    { name: 'Rare',    sym: 'Xe', color: '#c084ff', price: 2000 },
+  iron:    { name: 'Iron',    sym: 'Fe', color: '#d97150', price: 120,   rarity: 'common',   constructionUse: 'Structural frames, smelting feedstock', laserAccess: 1 },
+  silicon: { name: 'Silicon', sym: 'Si', color: '#b9d8ff', price: 180,   rarity: 'common',   constructionUse: 'Electronics, solar panels',                 laserAccess: 1 },
+  ice:     { name: 'Ice',     sym: 'H2O', color: '#9becff', price: 90,   rarity: 'uncommon', constructionUse: 'Propellant, life support',              laserAccess: 1 },
+  carbon:  { name: 'Carbon',  sym: 'C',  color: '#6a7280', price: 60,   rarity: 'common',   constructionUse: 'Composites, fuel',                       laserAccess: 1 },
+  gold:    { name: 'Gold',    sym: 'Au', color: '#ffd166', price: 800,   rarity: 'rare',     constructionUse: 'Circuitry, radiation shielding',            laserAccess: 2 },
+  rare:    { name: 'Rare',    sym: 'Xe', color: '#c084ff', price: 2000,  rarity: 'exotic',   constructionUse: 'Quantum sensors, ion propellant',           laserAccess: 3 },
+  nickel:  { name: 'Nickel',  sym: 'Ni', color: '#b0b8c4', price: 150,   rarity: 'uncommon', constructionUse: 'Alloys, battery production',              laserAccess: 1 },
+  cobalt:  { name: 'Cobalt',  sym: 'Co', color: '#4f9cf7', price: 450,   rarity: 'uncommon', constructionUse: 'Battery cathodes, superalloys',          laserAccess: 2 },
 }
 
 export const STARS: Star[] = [
@@ -437,4 +524,6 @@ export const MINERAL_COLORS: Record<string, string> = {
   carbon: '#6a7280',
   gold: '#ffd166',
   rare: '#c084ff',
+  nickel: '#b0b8c4',
+  cobalt: '#4f9cf7',
 }
