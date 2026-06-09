@@ -28,7 +28,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, contr
       </div>
       <TopBar eyebrow={freeOperations ? 'EARTH BASE · FREE OPS' : `EARTH BASE · M${Math.min(missionsDone + 1, 4)}`} title="Mission Board" onBack={onBack} />
 
-      <div style={{ position: 'absolute', inset: 0, paddingTop: hasCoach ? 146 : 72, paddingBottom: hasCoach ? 180 : 96, overflowY: 'auto' }}>
+      <div style={{ position: 'absolute', inset: 0, paddingTop: hasCoach ? 100 : 72, paddingBottom: hasCoach ? 180 : 96, overflowY: 'auto' }}>
         <div style={{ padding: '0 14px 8px 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700, letterSpacing: '0.22em', color: 'var(--ln-text-muted)', textTransform: 'uppercase' }}>
             Active Contracts · {available.length}
@@ -44,7 +44,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, contr
             const mTargets = compatibleTargetsFor(m, targets)
             const accent = contractor.color
             return (
-              <button key={m.id} data-mission-id={m.id} data-testid={`mission-card-${m.id}`} onClick={() => unlocked && onPick(m.id)} style={{ background: 'transparent', border: 'none', padding: 0, textAlign: 'left', cursor: unlocked ? 'pointer' : 'not-allowed', opacity: unlocked ? 1 : 0.5 }}>
+              <button key={m.id} data-mission-id={m.id} data-testid={`mission-card-${m.id}`} onClick={() => unlocked && onPick(m.id)} style={{ background: 'transparent', border: 'none', padding: 0, textAlign: 'left', cursor: unlocked ? 'pointer' : 'not-allowed', opacity: unlocked ? 1 : 0.5, outline: '2px solid transparent', outlineOffset: 2 }} className="mission-card-btn">
                 <Panel accent={accent} style={{ padding: 12 }}>
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                     <div style={{ width: 44, height: 44, flexShrink: 0, borderRadius: 999, background: `${accent}22`, border: `1.5px solid ${accent}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 13, color: accent }}>
@@ -55,8 +55,8 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, contr
                         <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', color: accent, textTransform: 'uppercase' }}>{contractor.name}</span>
                         <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 9, letterSpacing: '0.16em', color: '#5d7390', textTransform: 'uppercase', marginLeft: 'auto' }}>{m.tag}</span>
                       </div>
-                      <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 16, color: '#e6efff', marginTop: 4 }}>{m.title}</div>
-                      <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', marginTop: 4, lineHeight: 1.4 }}>{m.brief}</div>
+                      <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 16, color: '#e6efff', marginTop: 2 }}>{m.title}</div>
+                      <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', marginTop: 2, lineHeight: 1.4 }}>{m.brief}</div>
                     </div>
                   </div>
 

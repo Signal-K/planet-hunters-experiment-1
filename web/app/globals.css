@@ -275,6 +275,9 @@ button { cursor: pointer; }
 .intro-begin-btn { padding: 18px 40px; background: linear-gradient(180deg, var(--ln-cyan-bright) 0%, var(--ln-cyan-press) 100%); color: #06121f; font-family: var(--ln-font-display); font-weight: 800; font-size: 16px; letter-spacing: 0.14em; text-transform: uppercase; border: none; border-radius: 12px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.4), 0 4px 0 rgba(0,0,0,0.3), 0 0 22px rgba(63,169,255,0.4); cursor: pointer; transition: transform 100ms; }
 .intro-begin-btn:active { transform: translateY(2px); }
 
+.mission-card-btn:focus-visible { outline-color: var(--ln-cyan) !important; }
+.mission-card-btn:hover { outline-color: rgba(63,169,255,0.35) !important; }
+
 .classification-screen {
   background:
     radial-gradient(circle at 50% 22%, rgba(63,169,255,.12), transparent 32%),
