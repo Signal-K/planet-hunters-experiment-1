@@ -3,6 +3,7 @@
 
 FRONTEND_COMPOSE := docker compose -f docker-compose.frontend.yml
 E2E_COMPOSE      := $(FRONTEND_COMPOSE) --profile e2e
+E2E_FULL_COMPOSE := docker compose -f docker-compose.e2e.yml
 
 help:
 	@echo "Landnam — available targets"
@@ -12,7 +13,8 @@ help:
 	@echo "    down           Stop the stack"
 	@echo "    build          (Re)build images — run after package.json changes"
 	@echo "    logs           Follow stack logs"
-	@echo "    e2e            Run Cypress against the Docker stack"
+	@echo "    e2e            Run Cypress against the frontend Docker stack"
+	@echo "    test-e2e       Run Cypress against full E2E stack (shared-pb + landnam-pb + next-app)"
 	@echo "    e2e-open       Start stack + open Cypress UI"
 	@echo "    web-dev        Run Next.js dev server locally (no Docker)"
 	@echo "    web-build      Production build locally"
@@ -36,7 +38,11 @@ logs:
 	$(FRONTEND_COMPOSE) logs -f pocketbase web
 
 test-e2e:
-	CYPRESS_PROFILE=with-pb start-server-and-test 'npm run dev --prefix web' http://localhost:3000 'npm run cypress:run --prefix web'
+	@status=0; \
+	$(E2E_FULL_COMPOSE) down --remove-orphans; \
+	$(E2E_FULL_COMPOSE) up --build --remove-orphans --abort-on-container-exit --exit-code-from cypress shared-pb landnam-pb next-app cypress || status=$$?; \
+	$(E2E_FULL_COMPOSE) down --remove-orphans; \
+	exit $$status
 
 e2e:
 	@status=0; \
