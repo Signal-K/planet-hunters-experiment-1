@@ -127,6 +127,7 @@ function GameCanvas() {
             target={game.target}
             rocket={game.rocket}
             parts={game.catalog.parts}
+            level={game.player.level}
             onChange={(slot, id) => game.setRocket(rocket => ({ ...rocket, [slot]: id }))}
             onSuggest={() => game.setRocket(suggestBuild({ mission: game.mission, target: game.target, level: game.player.level, parts: game.catalog.parts }))}
             onExplained={() => game.completeStep(4)}

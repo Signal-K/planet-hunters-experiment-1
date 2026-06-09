@@ -75,6 +75,7 @@ export function toPart(r: any): Part {
     power: r.power || undefined,
     max_orbit: r.max_orbit || undefined,
     rate: r.drill_rate || undefined,
+    levelRequired: r.level_required || undefined,
   }
 }
 

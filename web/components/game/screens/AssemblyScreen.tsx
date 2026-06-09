@@ -13,6 +13,7 @@ interface AssemblyScreenProps {
   target: Target
   rocket: RocketConfig
   parts: Catalog['parts']
+  level: number
   onChange: (slot: keyof RocketConfig, id: string) => void
   onSuggest: () => void
   onLaunch: () => void
@@ -21,13 +22,19 @@ interface AssemblyScreenProps {
   hasCoach?: boolean
 }
 
-function Slot({ label, parts, picked, accent, onPick }: {
+function Slot({ label, parts, picked, accent, onPick, level }: {
   label: string
   parts: Part[]
   picked: Part
   accent: string
   onPick: (id: string) => void
+  level?: number
 }) {
+  const isUnlocked = (part: Part) => {
+    if (part.locked) return false
+    if (part.levelRequired && (level ?? 0) < part.levelRequired) return false
+    return true
+  }
   return (
     <section>
       <div className="ln-section-label">{label}</div>
@@ -44,21 +51,24 @@ function Slot({ label, parts, picked, accent, onPick }: {
       </Panel>
       <div className="part-picker">
         {parts.map(part => {
+          const unlocked = isUnlocked(part)
           const isActive = part.id === picked.id
+          const levelLocked = !!part.levelRequired && (level ?? 0) < part.levelRequired
           return (
             <button
               key={part.id}
-              disabled={part.locked}
-              onClick={() => onPick(part.id)}
+              disabled={!unlocked}
+              onClick={() => unlocked && onPick(part.id)}
               className={
                 isActive ? 'part-chip part-chip--active' :
-                part.locked ? 'part-chip part-chip--locked' :
+                !unlocked ? 'part-chip part-chip--locked' :
                 'part-chip'
               }
-              title={part.locked ? `Locked — complete more missions to unlock T${part.tier} parts` : ''}
+              title={levelLocked ? `Unlocks at L${part.levelRequired}` : part.locked ? 'Locked — complete more missions' : ''}
             >
               {part.name} <span>T{part.tier}</span>
-              {part.locked && <span className="lock-icon" aria-label="locked">LOCKED</span>}
+              {levelLocked && <span className="lock-icon" aria-label="level-locked">L{part.levelRequired}</span>}
+              {part.locked && !levelLocked && <span className="lock-icon" aria-label="locked">LOCKED</span>}
             </button>
           )
         })}
@@ -80,9 +90,9 @@ export default function AssemblyScreen(props: AssemblyScreenProps) {
             <div><span className="ln-micro">Target</span><strong className="amber">{props.target.name}</strong></div>
           </div>
         </Panel>
-        <Slot label="01 · Chassis · Hull + Cargo" parts={props.parts.chassis} picked={check.chassis} accent="var(--ln-cyan)" onPick={id => props.onChange('chassis', id)} />
-        <Slot label="02 · Propulsion · Range" parts={props.parts.propulsion} picked={check.propulsion} accent="var(--ln-amber)" onPick={id => props.onChange('propulsion', id)} />
-        <Slot label="03 · Mining Drill · Yield" parts={props.parts.drill} picked={check.drill} accent="var(--ln-cyan)" onPick={id => props.onChange('drill', id)} />
+        <Slot label="01 · Chassis · Hull + Cargo" parts={props.parts.chassis} picked={check.chassis} accent="var(--ln-cyan)" onPick={id => props.onChange('chassis', id)} level={props.level} />
+        <Slot label="02 · Propulsion · Range" parts={props.parts.propulsion} picked={check.propulsion} accent="var(--ln-amber)" onPick={id => props.onChange('propulsion', id)} level={props.level} />
+        <Slot label="03 · Mining Drill · Yield" parts={props.parts.drill} picked={check.drill} accent="var(--ln-cyan)" onPick={id => props.onChange('drill', id)} level={props.level} />
         <div className={check.ok ? 'compatibility compatibility--ok' : 'compatibility compatibility--bad'}>
           <span />{check.ok ? 'Build compatible · Ready for launch' : check.problems.join(' · ')}
         </div>
