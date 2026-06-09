@@ -263,6 +263,16 @@ button { cursor: pointer; }
 
 .debrief-screen { background: var(--ln-bg-stars), var(--ln-void); }
 
+.intro-screen { position: relative; width: 100%; height: 100%; overflow: hidden; }
+.intro-earth { position: absolute; inset: 0; }
+.intro-overlay { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(6,9,15,0.3) 0%, rgba(6,9,15,0.7) 50%, rgba(6,9,15,0.92) 100%); }
+.intro-content { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 32px; text-align: center; z-index: 1; }
+.intro-badge { color: var(--ln-cyan); font: 700 11px var(--ln-font-mono); letter-spacing: 0.22em; text-transform: uppercase; margin-bottom: 12px; }
+.intro-title { color: #fff; font: 800 52px var(--ln-font-display); letter-spacing: 0.08em; text-transform: uppercase; text-shadow: 0 0 40px rgba(63,169,255,0.3); margin: 0 0 10px; }
+.intro-subtitle { color: var(--ln-text-dim); font: 400 14px/1.5 var(--ln-font-body); max-width: 280px; margin: 0 0 36px; }
+.intro-begin-btn { padding: 18px 40px; background: linear-gradient(180deg, var(--ln-cyan-bright) 0%, var(--ln-cyan-press) 100%); color: #06121f; font-family: var(--ln-font-display); font-weight: 800; font-size: 16px; letter-spacing: 0.14em; text-transform: uppercase; border: none; border-radius: 12px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.4), 0 4px 0 rgba(0,0,0,0.3), 0 0 22px rgba(63,169,255,0.4); cursor: pointer; transition: transform 100ms; }
+.intro-begin-btn:active { transform: translateY(2px); }
+
 .classification-screen {
   background:
     radial-gradient(circle at 50% 22%, rgba(63,169,255,.12), transparent 32%),

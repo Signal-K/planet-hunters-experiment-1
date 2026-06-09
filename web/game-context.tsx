@@ -6,6 +6,7 @@ import { pbShared } from '@/lib/pb'
 import { type Catalog, STATIC_CATALOG, fetchCatalog } from '@/lib/catalog'
 
 export type Screen =
+  | 'intro'
   | 'build'
   | 'hub'
   | 'missions'
@@ -78,7 +79,7 @@ interface GameActions {
 const GameContext = createContext<(GameState & GameActions) | null>(null)
 
 const DEFAULT_STATE: GameState = {
-  screen: 'build',
+  screen: 'intro',
   player: {
     francs: 10_000_000_000,
     level: 1,

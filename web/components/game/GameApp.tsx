@@ -3,6 +3,7 @@
 import { useMemo } from 'react'
 import { GameProvider, type Screen, useGame } from '@/game-context'
 import { M1_STEPS, PROGRESSION_STEPS, suggestBuild } from '@/lib/data'
+import IntroScreen from '@/components/game/screens/IntroScreen'
 import AssemblyScreen from '@/components/game/screens/AssemblyScreen'
 import BuildPlaceScreen from '@/components/game/screens/BuildPlaceScreen'
 import DebriefScreen from '@/components/game/screens/DebriefScreen'
@@ -73,6 +74,9 @@ function GameCanvas() {
     <main className="game-stage" aria-label="Landnam game">
       <div className="portrait-canvas">
         <BackendStatus />
+        {game.screen === 'intro' && (
+          <IntroScreen onBegin={() => game.go('build')} />
+        )}
         {game.screen === 'build' && (
           <BuildPlaceScreen
             onBack={() => game.go('hub')}
