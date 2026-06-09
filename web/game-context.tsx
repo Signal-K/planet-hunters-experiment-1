@@ -262,19 +262,32 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   }, [catalog.missions])
 
   const classifyCandidate = useCallback((verdict: 'planet' | 'not_planet') => {
-    setState(s => ({
-      ...s,
-      classification: { candidateId: 'tess-451b', verdict },
-      targetId: 'tess-451b',
-      rocket: suggestBuild({
-        mission: s.missionId ? catalog.missions.find(m => m.id === s.missionId) ?? null : null,
-        target: catalog.targets.find(t => t.id === 'tess-451b') ?? null,
-        level: s.player.level,
-        parts: catalog.parts,
-      }),
-      screen: 'fab',
-      doneSteps: { ...s.doneSteps, 30: true, 3: true },
-    }))
+    const FLAT_XP = 20
+    setState(s => {
+      if (verdict === 'not_planet') {
+        return {
+          ...s,
+          classification: { candidateId: 'tess-451b', verdict },
+          targetId: null,
+          player: { ...s.player, xp: s.player.xp + FLAT_XP },
+          screen: 'targets',
+          doneSteps: { ...s.doneSteps, 30: true },
+        }
+      }
+      return {
+        ...s,
+        classification: { candidateId: 'tess-451b', verdict },
+        targetId: 'tess-451b',
+        rocket: suggestBuild({
+          mission: s.missionId ? catalog.missions.find(m => m.id === s.missionId) ?? null : null,
+          target: catalog.targets.find(t => t.id === 'tess-451b') ?? null,
+          level: s.player.level,
+          parts: catalog.parts,
+        }),
+        screen: 'fab',
+        doneSteps: { ...s.doneSteps, 30: true, 3: true },
+      }
+    })
 
     const userId = pbShared.authStore.record?.id
     if (userId) {
