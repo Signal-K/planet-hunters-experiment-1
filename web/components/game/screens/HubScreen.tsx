@@ -268,12 +268,14 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav }: Hub
       {/* Soil cross-section */}
       <SoilCrossSection />
 
-      {/* Edit / Build mode toggle */}
-      <div style={{ position: 'absolute', left: 0, right: 0, bottom: 110, zIndex: 5, display: 'flex', justifyContent: 'center' }}>
-        <button onClick={() => setEditMode(v => !v)} style={{ padding: '5px 14px', background: editMode ? 'rgba(245,166,35,0.25)' : 'rgba(8,16,28,0.75)', backdropFilter: 'blur(6px)', border: editMode ? '1px solid rgba(245,166,35,0.6)' : '1px solid rgba(135,207,250,0.4)', borderRadius: 999, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.22em', color: editMode ? '#f5a623' : '#9EDCFF', textTransform: 'uppercase', cursor: 'pointer' }}>
-          {editMode ? 'Done · Exit Edit' : 'Edit · Build'}
-        </button>
-      </div>
+      {/* Edit / Build mode toggle — hidden during tutorial to avoid conflicting overlays */}
+      {!hasCoach && (
+        <div style={{ position: 'absolute', left: 0, right: 0, bottom: 110, zIndex: 5, display: 'flex', justifyContent: 'center' }}>
+          <button onClick={() => setEditMode(v => !v)} style={{ padding: '5px 14px', background: editMode ? 'rgba(245,166,35,0.25)' : 'rgba(8,16,28,0.75)', backdropFilter: 'blur(6px)', border: editMode ? '1px solid rgba(245,166,35,0.6)' : '1px solid rgba(135,207,250,0.4)', borderRadius: 999, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.22em', color: editMode ? '#f5a623' : '#9EDCFF', textTransform: 'uppercase', cursor: 'pointer' }}>
+            {editMode ? 'Done · Exit Edit' : 'Edit · Build'}
+          </button>
+        </div>
+      )}
     </div>
   )
 }
