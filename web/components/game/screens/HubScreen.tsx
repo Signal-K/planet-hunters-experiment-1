@@ -268,11 +268,16 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav }: Hub
       {/* Soil cross-section */}
       <SoilCrossSection />
 
-      {/* Edit / Build mode toggle — hidden during tutorial to avoid conflicting overlays */}
+      {/* Edit / Build mode toggle — hidden during tutorial to avoid conflicting overlays. Acts as long-press analog (iOS home screen style). */}
       {!hasCoach && (
-        <div style={{ position: 'absolute', left: 0, right: 0, bottom: 110, zIndex: 5, display: 'flex', justifyContent: 'center' }}>
+        <div style={{ position: 'absolute', left: 0, right: 0, bottom: 110, zIndex: 5, display: 'flex', justifyContent: 'center', gap: 8 }}>
+          {editMode && (
+            <button onClick={() => onGoBuilding('build')} style={{ padding: '5px 14px', background: 'rgba(57,211,106,0.15)', backdropFilter: 'blur(6px)', border: '1px solid rgba(57,211,106,0.5)', borderRadius: 999, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', color: '#39d36a', textTransform: 'uppercase', cursor: 'pointer' }}>
+              + New Structure
+            </button>
+          )}
           <button onClick={() => setEditMode(v => !v)} style={{ padding: '5px 14px', background: editMode ? 'rgba(245,166,35,0.25)' : 'rgba(8,16,28,0.75)', backdropFilter: 'blur(6px)', border: editMode ? '1px solid rgba(245,166,35,0.6)' : '1px solid rgba(135,207,250,0.4)', borderRadius: 999, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.22em', color: editMode ? '#f5a623' : '#9EDCFF', textTransform: 'uppercase', cursor: 'pointer' }}>
-            {editMode ? 'Done · Exit Edit' : 'Edit · Build'}
+            {editMode ? 'Done' : 'Edit · Build'}
           </button>
         </div>
       )}
