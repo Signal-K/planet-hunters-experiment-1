@@ -103,7 +103,7 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
                   <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: '#7a8294', letterSpacing: '0.12em' }}>{stepIndex + 1} / {total}</span>
                 </div>
                 <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 15, fontWeight: 800, color: '#e6efff', marginTop: 4 }}>{step.title}</div>
-                <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: '#a9b8ce', marginTop: 4, lineHeight: 1.45 }}>{step.body}</div>
+                <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: '#a9b8ce', marginTop: 4, lineHeight: 1.45, wordBreak: 'break-word' }}>{step.body}</div>
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12 }}>
@@ -125,42 +125,44 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
   }
 
   return (
-    <div style={{ position: 'absolute', inset: 0, zIndex: 80, pointerEvents: 'none' }}>
-      {ring}
-      <div style={{
-        position: 'absolute',
-        left: 12,
-        right: 12,
-        top: compactTop,
-        bottom: compactBottom,
-        zIndex: 82,
-        pointerEvents: 'none'
-      }}>
+      <div style={{ position: 'absolute', inset: 0, zIndex: 80, pointerEvents: 'none' }}>
+        {ring}
         <div style={{
-          display: 'flex', alignItems: 'center', gap: 10,
-          background: 'linear-gradient(180deg, rgba(13,28,48,0.96), rgba(8,17,32,0.96))',
-          border: '1px solid rgba(245,166,35,0.5)', borderRadius: 999,
-          padding: '7px 12px 7px 7px',
-          boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+          position: 'absolute',
+          left: 12,
+          right: 12,
+          top: compactTop,
+          bottom: compactBottom,
+          zIndex: 82,
+          pointerEvents: 'none',
+          overflow: 'visible',
+          maxHeight: compactTop != null && compactBottom == null ? 'calc(100vh - 170px)' : undefined,
         }}>
-          <button onClick={() => setCollapsed(c => !c)} style={{ background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', flexShrink: 0, pointerEvents: 'auto' }}>
-            <CoachAvatar size={34} talking={!collapsed} />
-          </button>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 8, fontWeight: 800, letterSpacing: '0.2em', color: '#f5a623', textTransform: 'uppercase' }}>{step.title}</span>
-              <span style={{ flex: 1 }} />
-              <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 9, color: '#7a8294' }}>{stepIndex + 1}/{total}</span>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 10,
+            background: 'linear-gradient(180deg, rgba(13,28,48,0.96), rgba(8,17,32,0.96))',
+            border: '1px solid rgba(245,166,35,0.5)', borderRadius: 999,
+            padding: '7px 12px 7px 7px',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+          }}>
+            <button onClick={() => setCollapsed(c => !c)} style={{ background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', flexShrink: 0, pointerEvents: 'auto' }}>
+              <CoachAvatar size={34} talking={!collapsed} />
+            </button>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 8, fontWeight: 800, letterSpacing: '0.2em', color: '#f5a623', textTransform: 'uppercase' }}>{step.title}</span>
+                <span style={{ flex: 1 }} />
+                <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 9, color: '#7a8294' }}>{stepIndex + 1}/{total}</span>
+              </div>
+              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#dfe9f7', lineHeight: 1.25, marginTop: 1, whiteSpace: 'normal', overflow: 'visible', wordBreak: 'break-word' }}>
+                <span aria-hidden="true" style={{ color: 'var(--ln-amber)', marginRight: 4 }}>›</span>
+                {step.action ?? ('Tap ' + step.cta)}
+              </div>
             </div>
-            <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#dfe9f7', lineHeight: 1.25, marginTop: 1, whiteSpace: 'normal', overflow: 'visible' }}>
-              <span aria-hidden="true" style={{ color: 'var(--ln-amber)', marginRight: 4 }}>›</span>
-              {step.action ?? ('Tap ' + step.cta)}
-            </div>
+            <button onClick={onSkip} style={{ flexShrink: 0, background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#5d7390', pointerEvents: 'auto' }}>Skip</button>
           </div>
-          <button onClick={onSkip} style={{ flexShrink: 0, background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#5d7390', pointerEvents: 'auto' }}>Skip</button>
+          <div style={{ marginTop: 6, display: 'flex', justifyContent: 'center' }}>{dots}</div>
         </div>
-        <div style={{ marginTop: 6, display: 'flex', justifyContent: 'center' }}>{dots}</div>
       </div>
-    </div>
   )
 }
