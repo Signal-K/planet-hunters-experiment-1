@@ -89,6 +89,10 @@ export default function AssemblyScreen(props: AssemblyScreenProps) {
             <div><span className="ln-micro">Mission</span><strong>{props.mission.title}</strong></div>
             <div><span className="ln-micro">Target</span><strong className="amber">{props.target.name}</strong></div>
           </div>
+          <div style={{ marginTop: 6, display: 'flex', gap: 8, fontSize: 10, color: 'var(--ln-text-dim)', fontFamily: 'var(--ln-font-mono)' }}>
+            <span>Pilot Lv.{props.level}</span>
+            {props.level < 3 && <span style={{ color: 'var(--ln-amber)' }}>Launchpad upgrade: effective +3</span>}
+          </div>
         </Panel>
         <Slot label="01 · Chassis · Hull + Cargo" parts={props.parts.chassis} picked={check.chassis} accent="var(--ln-cyan)" onPick={id => props.onChange('chassis', id)} level={props.level} />
         <Slot label="02 · Propulsion · Range" parts={props.parts.propulsion} picked={check.propulsion} accent="var(--ln-amber)" onPick={id => props.onChange('propulsion', id)} level={props.level} />

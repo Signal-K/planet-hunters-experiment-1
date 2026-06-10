@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import Image from 'next/image'
 import TopBar from '@/components/ui/TopBar'
 import Panel from '@/components/ui/Panel'
@@ -20,14 +20,21 @@ interface MissionBoardScreenProps {
 }
 
 function formatCooldown(remaining: number): string {
+  if (remaining <= 0) return '0m'
   const mins = Math.ceil(remaining / 60000)
   if (mins >= 60) return `${Math.floor(mins / 60)}h ${mins % 60}m`
-  return `${mins}m`
+  const secs = Math.ceil((remaining % 60000) / 1000)
+  return `${mins}m ${secs}s`
 }
 
 export default function MissionBoardScreen({ onBack, onPick, missionsDone, controlBuilt, freeOperations, hasCoach, catalog, contractorCooldowns }: MissionBoardScreenProps) {
   const { missions: MISSIONS, contractors: CONTRACTORS, minerals: MINERAL_META, targets } = catalog
-  const now = Date.now()
+  const [tick, setTick] = useState(Date.now())
+  useEffect(() => {
+    const id = setInterval(() => setTick(Date.now()), 10000)
+    return () => clearInterval(id)
+  }, [])
+  const now = tick
   const isOnCooldown = (contractor: string) => {
     if (!contractorCooldowns) return false
     const expiry = contractorCooldowns[contractor]

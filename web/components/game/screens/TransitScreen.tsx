@@ -26,11 +26,14 @@ export default function TransitScreen({ target, onArrive, onBack }: { target: Ta
       <div className="transit-stage">
         <div className="target-orb"><span>{target.name}</span></div>
         <div className="rocket-mark" data-testid="transit-rocket" style={{ left: `${18 + progress * 0.62}%`, top: `${70 - progress * 0.42}%` }}>
-          <svg width="54" height="76" viewBox="0 0 44 64" aria-hidden="true">
+          <svg width="54" height="82" viewBox="0 0 44 70" aria-hidden="true">
             <path d="M22 4 32 18v26H12V18Z" fill="var(--ln-text)" stroke="var(--ln-cyan)" />
             <path d="M22 4 32 18H12Z" fill="var(--ln-cyan)" />
             <path d="m12 36-8 14 8-6m20-8 8 14-8-6" fill="var(--ln-cyan)" />
             <path d="m16 44 6 18 6-18Z" fill="var(--ln-amber)" />
+            <path d="M18 62 Q22 72 26 62" fill="none" stroke="var(--ln-amber)" strokeWidth="1.5" opacity="0.7">
+              <animate attributeName="d" values="M18 62 Q22 72 26 62;M18 64 Q22 76 26 64;M18 62 Q22 72 26 62" dur="0.3s" repeatCount="indefinite"/>
+            </path>
           </svg>
         </div>
       </div>

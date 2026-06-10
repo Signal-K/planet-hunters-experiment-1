@@ -17,6 +17,7 @@ interface MarketScreenProps {
 
 export default function MarketScreen({ stash, francs, onSell, onBack, contractorId }: MarketScreenProps) {
   const [confirming, setConfirming] = useState<string | null>(null)
+  const [sellAllConfirm, setSellAllConfirm] = useState(false)
 
   const entries = Object.entries(stash).filter(([, v]) => v > 0)
 
@@ -71,6 +72,24 @@ export default function MarketScreen({ stash, francs, onSell, onBack, contractor
         {entries.length === 0 && (
           <Panel>
             <p className="text-sm text-[#a9b8ce]">No minerals in stash. Complete mining missions to acquire ore.</p>
+          </Panel>
+        )}
+
+        {entries.length > 0 && !sellAllConfirm && (
+          <PrimaryBtn kind="amber" onClick={() => setSellAllConfirm(true)}>Sell All Minerals</PrimaryBtn>
+        )}
+        {sellAllConfirm && (
+          <Panel accent="var(--ln-amber)">
+            <div className="flex items-center justify-between">
+              <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 13, fontWeight: 800, color: '#f5a623' }}>Sell entire inventory for ₣{totalValue().toLocaleString()}?</span>
+              <div className="flex gap-2">
+                <PrimaryBtn kind="amber" onClick={() => {
+                  entries.forEach(([id]) => onSell(id, stash[id]))
+                  setSellAllConfirm(false)
+                }}>Confirm</PrimaryBtn>
+                <PrimaryBtn kind="amber" onClick={() => setSellAllConfirm(false)}>Cancel</PrimaryBtn>
+              </div>
+            </div>
           </Panel>
         )}
 

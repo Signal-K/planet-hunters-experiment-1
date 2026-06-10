@@ -328,24 +328,26 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
   const classifyCandidate = useCallback((verdict: 'planet' | 'not_planet') => {
     const FLAT_XP = 20
+    const CANDIDATE_ID = 'tess-451b'
     setState(s => {
       if (verdict === 'not_planet') {
         return {
           ...s,
-          classification: { candidateId: 'tess-451b', verdict },
+          classification: null,
           targetId: null,
           player: { ...s.player, xp: s.player.xp + FLAT_XP },
           screen: 'targets',
           doneSteps: { ...s.doneSteps, 30: true },
         }
       }
+      const target = catalog.targets.find(t => t.id === CANDIDATE_ID) ?? null
       return {
         ...s,
-        classification: { candidateId: 'tess-451b', verdict },
-        targetId: 'tess-451b',
+        classification: { candidateId: CANDIDATE_ID, verdict },
+        targetId: CANDIDATE_ID,
         rocket: suggestBuild({
           mission: s.missionId ? catalog.missions.find(m => m.id === s.missionId) ?? null : null,
-          target: catalog.targets.find(t => t.id === 'tess-451b') ?? null,
+          target,
           level: s.player.level,
           launchpadUpgraded: s.player.launchpadUpgraded,
           parts: catalog.parts,
@@ -359,7 +361,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     if (userId) {
       pbShared.collection('classifications').create({
         user: userId,
-        candidate: 'tess-451b',
+        candidate: CANDIDATE_ID,
         verdict,
       }).then(() => {
         setState(s => ({ ...s, classificationError: null }))
@@ -368,7 +370,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         setState(s => ({ ...s, classificationError: msg }))
       })
     }
-  }, [])
+  }, [catalog.missions, catalog.targets, catalog.parts])
 
   const onSatelliteClassify = useCallback((verdict: 'planet' | 'not_planet') => {
     setState(s => ({

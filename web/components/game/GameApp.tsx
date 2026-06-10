@@ -79,7 +79,7 @@ function GameCanvas() {
       <div className="portrait-canvas">
         <BackendStatus />
         {game.screen === 'intro' && (
-          <IntroScreen onBegin={() => game.go('build')} returning={game.player.missionsDone > 0 || game.player.placed.length > 0} />
+          <IntroScreen onBegin={() => game.go('build')} returning={game.player.missionsDone > 0 || game.player.placed.length > 0} missionsDone={game.player.missionsDone} totalEarned={game.player.francs} />
         )}
         {game.screen === 'build' && (
           <BuildPlaceScreen

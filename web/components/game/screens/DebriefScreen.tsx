@@ -44,7 +44,12 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
             <div className="order-row"><span>Mineral Value</span><strong>▲ {subtotal.toLocaleString()}</strong></div>
             {delivered && <div className="order-row"><span>Contract Payout</span><strong>▲ {mission.payout.francs.toLocaleString()}</strong></div>}
             {discoveryBonus > 0 && (
-              <div className="order-row"><span>Discovery Bonus ({(10 + (annotations ?? 0))}%)</span><strong>▲ {discoveryBonus.toLocaleString()}</strong></div>
+              <>
+                <div className="order-row"><span>Base Discovery (10%)</span><strong>▲ {Math.round(subtotal * 0.10).toLocaleString()}</strong></div>
+                {(annotations ?? 0) > 0 && (
+                  <div className="order-row"><span>Annotation Bonus ({annotations} × 1%)</span><strong>▲ {Math.round(subtotal * 0.01 * (annotations ?? 0)).toLocaleString()}</strong></div>
+                )}
+              </>
             )}
             <div className="reward-total">▲ {total.toLocaleString()}</div>
             <div className="reward-xp">+{xp} XP</div>

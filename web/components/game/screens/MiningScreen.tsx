@@ -68,8 +68,17 @@ export default function MiningScreen({ mission, target, onComplete, onBack, mine
         fireLaser()
       }
     }
+    function onTouch(e: TouchEvent) {
+      if (e.target && (e.target as HTMLElement).closest && !(e.target as HTMLElement).closest('button')) {
+        fireLaser()
+      }
+    }
     window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    window.addEventListener('touchstart', onTouch, { passive: true })
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      window.removeEventListener('touchstart', onTouch)
+    }
   }, [])
 
   const collectMineral = useCallback((mineral: string) => {

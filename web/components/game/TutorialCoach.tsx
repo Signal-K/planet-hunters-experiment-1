@@ -135,8 +135,9 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
           bottom: compactBottom,
           zIndex: 82,
           pointerEvents: 'none',
-          overflow: 'visible',
-          maxHeight: compactTop != null && compactBottom == null ? 'calc(100vh - 170px)' : undefined,
+          overflow: visible,
+          maxHeight: compactTop != null && compactBottom == null ? 'calc(100dvh - 170px)' : undefined,
+          overflowY: 'auto',
         }}>
           <div style={{
             display: 'flex', alignItems: 'center', gap: 10,
