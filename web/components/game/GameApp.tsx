@@ -15,6 +15,7 @@ import TransitScreen from '@/components/game/screens/TransitScreen'
 import ClassifyLightcurveScreen from '@/components/game/screens/ClassifyLightcurveScreen'
 import RefineryScreen from '@/components/game/screens/RefineryScreen'
 import SatelliteScreen from '@/components/game/screens/SatelliteScreen'
+import MarketScreen from '@/components/game/screens/MarketScreen'
 import TutorialCoach from '@/components/game/TutorialCoach'
 import BuildGatePrompt from '@/components/game/BuildGatePrompt'
 import UnlockPopup from '@/components/game/UnlockPopup'
@@ -62,6 +63,7 @@ function GameCanvas() {
       return
     }
     if (id === 'market') {
+      game.go('market')
       return
     }
     game.go(id === 'galaxy' ? 'missions' : id as Screen)
@@ -132,6 +134,15 @@ function GameCanvas() {
             annotations={game.player.researchAnnotations}
             onClassify={game.onSatelliteClassify}
             onBack={() => game.go('hub')}
+          />
+        )}
+        {game.screen === 'market' && (
+          <MarketScreen
+            stash={game.player.stash ?? {}}
+            francs={game.player.francs}
+            onSell={game.sellMinerals}
+            onBack={() => game.go('hub')}
+            contractorId={game.player.lastContractor}
           />
         )}
         {game.screen === 'refinery' && (

@@ -1,7 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
-import { type Mission, type Target, type RocketConfig, MISSIONS, TARGETS, PROGRESSION_STEPS, suggestBuild, REFINERY_RECIPES } from '@/lib/data'
+import { type Mission, type Target, type RocketConfig, MISSIONS, TARGETS, PROGRESSION_STEPS, suggestBuild, REFINERY_RECIPES, MINERAL_META } from '@/lib/data'
 import { pbShared } from '@/lib/pb'
 import { type Catalog, STATIC_CATALOG, fetchCatalog } from '@/lib/catalog'
 
@@ -19,6 +19,7 @@ export type Screen =
   | 'classify'
   | 'refinery'
   | 'satellite'
+  | 'market'
 
 export interface Player {
   francs: number
@@ -41,6 +42,7 @@ export interface Player {
   refineryQueue: { recipeId: string; startedAt: number }[]
   refinedGoods: Record<string, number>
   launchpadUpgraded: boolean
+  lastContractor?: string
 }
 
 export interface GameState {
@@ -84,6 +86,7 @@ interface GameActions {
   classifyCandidate: (verdict: 'planet' | 'not_planet') => void
   onSatelliteClassify: (verdict: 'planet' | 'not_planet') => void
   upgradeLaunchpad: () => void
+  sellMinerals: (mineralId: string, amount: number) => void
   onStartRefine: (recipeId: string) => void
   onCollectRefined: (recipeId: string) => void
   mission: Mission | null
@@ -392,6 +395,28 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     })
   }, [])
 
+  const sellMinerals = useCallback((mineralId: string, amount: number) => {
+    setState(s => {
+      const stash = { ...(s.player.stash ?? {}) }
+      const held = stash[mineralId] ?? 0
+      const sellAmount = Math.min(amount, held)
+      if (sellAmount <= 0) return s
+      const meta = MINERAL_META[mineralId]
+      if (!meta) return s
+      const revenue = meta.price * sellAmount
+      stash[mineralId] = held - sellAmount
+      if (stash[mineralId] <= 0) delete stash[mineralId]
+      return {
+        ...s,
+        player: {
+          ...s.player,
+          francs: s.player.francs + revenue,
+          stash,
+        },
+      }
+    })
+  }, [])
+
   const onPickTarget = useCallback((id: string) => {
     setState(s => {
       const mission = s.missionId ? catalog.missions.find(m => m.id === s.missionId) ?? null : null
@@ -447,7 +472,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       const missionsDone = s.player.missionsDone + 1
       const freeOperations = missionsDone >= 4
       const mission = s.missionId ? MISSIONS.find(m => m.id === s.missionId) : null
-      const contractor = mission?.contractor
+      const missionContractor = mission?.contractor
+      const contractor = missionContractor
       const contractorMissions = { ...s.player.contractorMissions }
       const contractorCooldowns = { ...s.player.contractorCooldowns }
       if (contractor) {
@@ -474,6 +500,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
           contractorMissions,
           contractorCooldowns,
           stash,
+          lastContractor: contractor,
         },
         lastCargo: null,
         missionId: null,
@@ -481,7 +508,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         tutorial: !freeOperations,
         popup: missionsDone === 1 ? 'sr2' : freeOperations ? 'freeops' : s.popup,
         doneSteps: { ...s.doneSteps, 9: true },
-        screen: missionsDone === 1 || freeOperations ? s.screen : 'hub',
+        screen: 'market',
       }
     })
   }, [])
@@ -566,6 +593,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       classifyCandidate,
       onSatelliteClassify,
       upgradeLaunchpad,
+      sellMinerals,
       onStartRefine,
       onCollectRefined,
       mission,
