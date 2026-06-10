@@ -9,7 +9,10 @@
       "mcp__knowns__initial",
       "mcp__knowns__search",
       "mcp__knowns__tasks",
-      "mcp__knowns__docs"
+      "mcp__knowns__docs",
+      "Edit",
+      "Write",
+      "Bash"
     ]
   },
   "enabledMcpjsonServers": [

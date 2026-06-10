@@ -472,7 +472,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const onDebriefDone = useCallback((total: number, xp: number, _affinity: number = 0, consumed: Record<string, number> = {}) => {
     setState(s => {
       const missionsDone = s.player.missionsDone + 1
-      const freeOperations = missionsDone >= 4
+      const freeOperations = missionsDone >= 3
       const mission = s.missionId ? MISSIONS.find(m => m.id === s.missionId) : null
       const missionContractor = mission?.contractor
       const contractor = missionContractor

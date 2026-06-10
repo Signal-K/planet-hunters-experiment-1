@@ -235,19 +235,6 @@ export const MISSIONS: Mission[] = [
     requires: { minerals: { gold: 4 }, cargo_min: 4, drill_tier: 2, max_orbit: 6 },
     payout: { francs: 4500000, xp: 450, affinity: 15 },
   },
-  {
-    id: 'm4-rare',
-    title: 'Signal in the Dark',
-    brief: 'A confirmed transit candidate needs a surface assay. Choose any reachable body and bring back rare material.',
-    contractor: 'cryos',
-    tag: 'COMMAND',
-    difficulty: 'L3',
-    locked: true,
-    sequence: 4,
-    unlockAt: 'Complete M3',
-    requires: { minerals: { rare: 4 }, cargo_min: 4, drill_tier: 2, max_orbit: 6 },
-    payout: { francs: 6200000, xp: 620, affinity: 20 },
-  },
 ]
 
 export const TARGETS: Target[] = [
@@ -441,9 +428,6 @@ export const PROGRESSION_STEPS: TutorialStep[] = [
     body: 'The repeating dip may be a planet crossing its star. Inspect the signal, then record PLANET or NOT PLANET for the science team.',
     action: 'Inspect the dip and submit a classification',
     anchor: 'bottom', spot: { x: 14, y: 190, w: 374, h: 300 }, cta: 'Classify' },
-  { id: 40, screen: 'missions', title: 'You\'re in Command Now',
-    body: 'The final authored contract is yours to run. Pick any reachable destination and bring the crew home.',
-    manual: true, anchor: 'top', spot: null, cta: 'Take Command' },
 ]
 
 export interface RocketConfig {

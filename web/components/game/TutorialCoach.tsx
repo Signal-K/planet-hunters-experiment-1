@@ -135,7 +135,7 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
           bottom: compactBottom,
           zIndex: 82,
           pointerEvents: 'none',
-          overflow: visible,
+          overflow: 'visible',
           maxHeight: compactTop != null && compactBottom == null ? 'calc(100dvh - 170px)' : undefined,
           overflowY: 'auto',
         }}>
