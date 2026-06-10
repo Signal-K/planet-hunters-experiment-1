@@ -447,6 +447,7 @@ describe('Full Game Loop — Landnam', () => {
       }))
       cy.get('[data-testid="mission-card-m2-silicon"]').should('be.visible')
       cy.get('[data-testid="mission-card-m2-silicon"]').should('have.attr', 'data-mission-id', 'm2-silicon')
+      cy.get('[data-testid="tutorial-coach-overlay"]').should('have.length.at.most', 1)
     })
   })
 })

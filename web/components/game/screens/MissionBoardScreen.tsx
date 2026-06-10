@@ -46,9 +46,9 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, contr
       <div style={{ position: 'absolute', inset: 0 }}>
         <Image src="/earth-day.jpg" alt="" fill style={{ objectFit: 'cover', filter: 'brightness(0.3)' }} />
       </div>
-      <TopBar eyebrow={freeOperations ? 'EARTH BASE · FREE OPS' : `EARTH BASE · M${Math.min(missionsDone + 1, 4)}`} title="Mission Board" onBack={onBack} />
+        <TopBar eyebrow={freeOperations ? 'EARTH BASE · FREE OPS' : `EARTH BASE · M${Math.min(missionsDone + 1, 4)}`} title="Mission Board" onBack={onBack} />
 
-      <div style={{ position: 'absolute', inset: 0, paddingTop: hasCoach ? 100 : 72, paddingBottom: hasCoach ? 180 : 96, overflowY: 'auto' }}>
+      <div style={{ position: 'absolute', inset: 0, paddingTop: hasCoach ? 110 : 72, paddingBottom: hasCoach ? 190 : 96, overflowY: 'auto' }}>
         <div style={{ padding: '0 14px 8px 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700, letterSpacing: '0.22em', color: 'var(--ln-text-muted)', textTransform: 'uppercase' }}>
             Active Contracts · {available.length}

@@ -21,7 +21,7 @@ If the parent repo is not accessible, write proposed task/doc/context updates in
 - @task-2h2azn Draft Landnam seed bible v0 [in-progress priority=high labels=project-landnam,seeds,contractors,economy]
 - @task-owxy6h Decision: choose Landnam contractor identity depth for v0 seed [todo priority=medium labels=project-landnam,seeds,contractors,decision-needed]
 - @task-u5b5cb Fix mission debrief: dark-on-dark text, unreadable buttons, broken click order [urgent priority=high labels=project-landnam,bug,ui,mission-debrief,ux,desktop,experiment1]
-- @task-638h3o Fix rocket orientation and remove direction pointer in transition scene [urgent priority=high labels=project-landnam,bug,godot,animation,transition,desktop,experiment1]
+- @task-638h3o Fix rocket orientation and remove direction pointer in transition scene [urgent priority=high labels=project-landnam,bug,animation,transition,desktop,experiment1] (Godot-era task — verified fixed in web)
 - @task-0u1hg4 Fix tutorial popup covering contractor panel buttons + unreadable Choose button colour [urgent priority=high labels=project-landnam,bug,tutorial,ui,contractors,desktop,experiment1]
 - @task-illty2 Add welcoming intro message for first sign-in and progress reset [todo priority=medium labels=project-landnam,ux,tutorial,onboarding,desktop,experiment1]
 - @task-LANvzpwke Scrap and redesign tutorial system from scratch [archived priority=high labels=project-landnam,godot,tutorial,ux,architecture] — Obsoleted by web migration; Godot removed

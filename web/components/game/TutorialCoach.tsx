@@ -84,7 +84,7 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
   if (manual) {
     const cardTop = step.anchor === 'top' ? 150 : step.anchor === 'center' ? 330 : 520
     return (
-      <div style={{ position: 'absolute', inset: 0, zIndex: 80, pointerEvents: 'none' }}>
+      <div style={{ position: 'absolute', inset: 0, zIndex: 80, pointerEvents: 'none' }} data-testid="tutorial-coach-overlay">
         {ring ?? <div style={{ position: 'absolute', inset: 0, background: 'rgba(3,6,12,0.45)' }} />}
         <div style={{ position: 'absolute', left: 14, right: 14, top: cardTop, zIndex: 82, pointerEvents: 'auto' }}>
           <div style={{
@@ -125,7 +125,7 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
   }
 
   return (
-      <div style={{ position: 'absolute', inset: 0, zIndex: 80, pointerEvents: 'none' }}>
+      <div style={{ position: 'absolute', inset: 0, zIndex: 80, pointerEvents: 'none' }} data-testid="tutorial-coach-overlay">
         {ring}
         <div style={{
           position: 'absolute',

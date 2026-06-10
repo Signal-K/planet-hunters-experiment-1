@@ -22,6 +22,7 @@ export default function RefineryScreen({ player, onBack, onStartRefine, onCollec
   const running = player.refineryQueue[0] ?? null
   const runningRecipe = running ? REFINERY_RECIPES.find(r => r.id === running.recipeId) : null
   const elapsed = running ? (now - running.startedAt) / 1000 : 0
+  const progressPct = runningRecipe ? Math.min(100, (elapsed / runningRecipe.time) * 100) : 0
   const done = runningRecipe ? elapsed >= runningRecipe.time : false
 
   return (
@@ -44,6 +45,11 @@ export default function RefineryScreen({ player, onBack, onStartRefine, onCollec
                 <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: '#7a8294' }}>
                   {done ? 'Complete — tap to collect' : `${Math.max(0, Math.ceil(runningRecipe.time - elapsed))}s remaining`}
                 </div>
+                {!done && (
+                  <div style={{ marginTop: 6, height: 6, borderRadius: 3, background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
+                    <div style={{ width: `${progressPct}%`, height: '100%', borderRadius: 3, background: 'linear-gradient(90deg, var(--ln-amber), var(--ln-cyan))', transition: 'width 1s linear' }} />
+                  </div>
+                )}
               </div>
               {done && (
                 <GhostBtn onClick={() => onCollect(running.recipeId)}>Collect</GhostBtn>

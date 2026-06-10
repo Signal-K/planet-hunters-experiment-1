@@ -1,4 +1,4 @@
-.PHONY: help up down build logs e2e e2e-open web-dev web-build web-check pb-reset docker-prune \
+.PHONY: help up down build logs e2e e2e-open web-dev web-build web-check pb-reset docker-prune migrate seed \
         kanban-up kanban-down
 
 FRONTEND_COMPOSE := docker compose -f docker-compose.frontend.yml
@@ -78,6 +78,13 @@ migrate:
 	@echo "Waiting for PocketBase to apply migrations..."
 	@sleep 3
 	@echo "Migrations applied."
+	$(FRONTEND_COMPOSE) stop pocketbase
+
+seed:
+	$(FRONTEND_COMPOSE) up -d pocketbase
+	@sleep 2
+	@echo "Running seed data insertion..."
+	@cd pocketbase && go run . seed 2>/dev/null || echo "Run pocketbase and visit /_/ to seed via UI or insert seed records manually."
 	$(FRONTEND_COMPOSE) stop pocketbase
 
 kanban-up:

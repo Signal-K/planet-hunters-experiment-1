@@ -91,6 +91,11 @@ export default function ClassifyLightcurveScreen({ onBack, onSubmit, hasCoach, c
           <Panel accent="var(--ln-crit)" style={{ padding: 10 }}>
             <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 12, color: '#ff5a6a' }}>Sync Error</div>
             <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: '#ff8290', marginTop: 4 }}>{classificationError}</div>
+            <div style={{ marginTop: 8 }}>
+              <button onClick={() => handleHandleSubmit('planet')} style={{ padding: '4px 12px', background: 'rgba(255,90,106,0.2)', border: '1px solid #ff5a6a', borderRadius: 6, color: '#fff', fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>
+                Retry
+              </button>
+            </div>
           </Panel>
         </div>
       )}
