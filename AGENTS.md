@@ -9,6 +9,16 @@ If the parent Knowns project is not writable, write proposed task/doc/context up
 
 <!-- KNOWNS BRIDGE END -->
 
+## Backend Architecture
+
+Landnam uses three PocketBase instances. If parent repo is accessible, read `@doc/backend-architecture` for full detail. If sandboxed:
+
+- **Shared backend** (port 8090) — auth + astronomy (celestial_bodies, classifications, ecosystem_profiles)
+- **Landnam backend** (port 8091 Docker / 8093 local) — game state (game_states, minerals, contractors, locations, rocket_parts, missions_catalog)
+- **Saily backend** (port 8092) — game state
+
+Auth is centralized: shared backend owns user accounts; game backends verify tokens via HTTP delegation to shared backend's `/api/collections/users/auth-refresh`.
+
 <!-- LANDNAM PROJECT REQUIREMENTS START -->
 # Landnam Project Requirements
 

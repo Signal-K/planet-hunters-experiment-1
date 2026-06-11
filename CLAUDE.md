@@ -50,13 +50,19 @@ Design rules (never violate):
 
 ## Backend connections
 
-Shared backend (auth + citizen science):
-- `http://localhost:8090` (dev) / `NEXT_PUBLIC_SHARED_PB_URL` (prod)
-- Collections: users, celestial_bodies, classifications
+This project uses a hub-and-spoke PocketBase topology with three backends. For full detail, read @doc/backend-architecture in the parent Navigation Knowns.
 
-Landnam backend (game data):
-- `http://localhost:8091` (dev) / `NEXT_PUBLIC_LANDNAM_PB_URL` (prod)
-- Collections: contractors, locations, deposits, structures, rockets, missions, inventory, market_prices, research
+**Shared backend** (auth + astronomy data — port 8090, `NEXT_PUBLIC_SHARED_PB_URL`):
+- `lib/pb.ts` → `pbShared` connects here
+- Collections: celestial_bodies, classifications, ecosystem_profiles, leaderboard_stats, internal_apps
+- Auth: users register here, tokens verified by game backends via HTTP delegation
+
+**Landnam backend** (game data — port 8091 Docker / 8093 dev, `NEXT_PUBLIC_LANDNAM_PB_URL`):
+- `lib/pb-landnam.ts` → `pbLandnam` connects here
+- Collections: game_states (user JSON), classifications, minerals, contractors, locations, rocket_parts, missions_catalog
+- Seed data is defined in `pocketbase/main.go` — `ensureCollections()` + `seedCatalog()`
+
+**Auth flow**: User gets JWT from shared backend → sends token to Landnam API → Landnam verifies via shared backend's `/api/collections/users/auth-refresh`.
 
 PocketBase superuser (both): `liam@skinetics.tech` / `ThisIsATestPassword`
 
