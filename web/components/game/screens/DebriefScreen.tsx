@@ -6,6 +6,7 @@ import { sellCargo } from '@/lib/data'
 import Panel from '@/components/ui/Panel'
 import TopBar from '@/components/ui/TopBar'
 import { PrimaryBtn } from '@/components/ui/Button'
+import { track } from '@/lib/analytics'
 
 export default function DebriefScreen({ mission, target, cargo, onDone, minerals }: {
   mission: Mission
@@ -45,7 +46,10 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
       </div>
       <div className="sticky-actions">
         {step === 0 ? (
-          <PrimaryBtn kind="cyan" testId="resolve-cargo-btn" onClick={() => setStep(1)}>Resolve Cargo</PrimaryBtn>
+          <PrimaryBtn kind="cyan" testId="resolve-cargo-btn" onClick={() => {
+            track('debrief_resolved', { mission_id: mission.id, target_id: target.id, delivered, francs_earned: total })
+            setStep(1)
+          }}>Resolve Cargo</PrimaryBtn>
         ) : (
           <PrimaryBtn kind="amber" testId="collect-reward-btn" onClick={() => onDone(total, xp, delivered ? mission.payout.affinity : 0)}>Collect Reward</PrimaryBtn>
         )}

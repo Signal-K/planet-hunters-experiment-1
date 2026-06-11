@@ -18,6 +18,7 @@ import UnlockPopup from '@/components/game/UnlockPopup'
 import RadialNav from '@/components/layout/RadialNav'
 import BackendStatus from '@/components/game/BackendStatus'
 import FeedbackButton from '@/components/game/FeedbackButton'
+import { track } from '@/lib/analytics'
 
 function GameCanvas() {
   const game = useGame()
@@ -85,6 +86,9 @@ function GameCanvas() {
                 placed: Array.from(new Set([...player.placed, kind])),
                 placementPlots: { ...player.placementPlots, [kind]: plot },
               }))
+              if (kind === 'launchpad') {
+                track('launchpad_built', { plot })
+              }
               game.completeStep(0)
               game.go('hub')
             }}
@@ -133,7 +137,11 @@ function GameCanvas() {
           />
         )}
         {game.screen === 'transit' && game.target && (
-          <TransitScreen target={game.target} onBack={() => game.go('hub')} onArrive={() => game.go('mining')} />
+          <TransitScreen target={game.target} onBack={() => game.go('hub')} onArrive={() => {
+            track('transit_arrived', { mission_id: game.missionId, target_id: game.targetId })
+            track('mining_started', { mission_id: game.missionId, target_id: game.targetId })
+            game.go('mining')
+          }} />
         )}
         {game.screen === 'mining' && game.mission && game.target && (
           <MiningScreen mission={game.mission} target={game.target} onBack={() => game.go('hub')} onComplete={game.onMiningDone} minerals={game.catalog.minerals} />

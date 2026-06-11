@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import { type Mission, type Target, type RocketConfig, MISSIONS, TARGETS, PROGRESSION_STEPS, suggestBuild } from '@/lib/data'
 import { pbShared } from '@/lib/pb'
 import { type Catalog, STATIC_CATALOG, fetchCatalog } from '@/lib/catalog'
+import { initAnalytics, track } from '@/lib/analytics'
 
 export type Screen =
   | 'build'
@@ -134,10 +135,17 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const [authUserId, setAuthUserId] = useState<string | null>(pbShared.authStore.record?.id ?? null)
   const backendRecordId = useRef<string | null>(null)
   const backendLoadedFor = useRef<string | null>(null)
+  const stateRef = useRef(state)
+  stateRef.current = state
 
   useEffect(() => {
-    setState(loadState())
+    const loaded = loadState()
+    setState(loaded)
     setHydrated(true)
+    initAnalytics()
+    if (loaded.player.missionsDone === 0 && loaded.tutorial) {
+      track('intro_begin_operations')
+    }
   }, [])
 
   useEffect(() => {
@@ -250,6 +258,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const onPickMission = useCallback((id: string) => {
+    track('mission_selected', { mission_id: id })
     setState(s => ({
       ...s,
       missionId: id,
@@ -286,6 +295,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const onPickTarget = useCallback((id: string) => {
+    track('target_selected', { target_id: id, mission_id: stateRef.current.missionId })
     setState(s => {
       const mission = s.missionId ? catalog.missions.find(m => m.id === s.missionId) ?? null : null
       const target = catalog.targets.find(t => t.id === id) ?? null
@@ -301,6 +311,10 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const onLaunch = useCallback(() => {
+    track('assembly_confirm_launch', {
+      mission_id: stateRef.current.missionId,
+      target_id: stateRef.current.targetId,
+    })
     setState(s => {
       const mission = s.missionId ? MISSIONS.find(m => m.id === s.missionId) : null
       const target = s.targetId ? TARGETS.find(t => t.id === s.targetId) : null
@@ -320,6 +334,12 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const onMiningDone = useCallback((cargo: Record<string, number>) => {
+    track('mining_order_completed', {
+      mission_id: stateRef.current.missionId,
+      target_id: stateRef.current.targetId,
+      cargo_item_count: Object.keys(cargo).length,
+      cargo_total: Object.values(cargo).reduce((sum, n) => sum + n, 0),
+    })
     setState(s => ({
       ...s,
       lastCargo: cargo,
@@ -329,6 +349,13 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const onDebriefDone = useCallback((total: number, xp: number) => {
+    track('reward_collected', {
+      mission_id: stateRef.current.missionId,
+      target_id: stateRef.current.targetId,
+      francs_earned: total,
+      xp_earned: xp,
+      missions_done: stateRef.current.player.missionsDone + 1,
+    })
     setState(s => {
       const missionsDone = s.player.missionsDone + 1
       const freeOperations = missionsDone >= 4
