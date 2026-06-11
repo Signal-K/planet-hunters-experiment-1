@@ -17,6 +17,7 @@ import BuildGatePrompt from '@/components/game/BuildGatePrompt'
 import UnlockPopup from '@/components/game/UnlockPopup'
 import RadialNav from '@/components/layout/RadialNav'
 import BackendStatus from '@/components/game/BackendStatus'
+import FeedbackButton from '@/components/game/FeedbackButton'
 
 function GameCanvas() {
   const game = useGame()
@@ -73,6 +74,7 @@ function GameCanvas() {
     <main className="game-stage" aria-label="Landnam game">
       <div className="portrait-canvas">
         <BackendStatus />
+        <FeedbackButton />
         {game.screen === 'build' && (
           <BuildPlaceScreen
             onBack={() => game.go('hub')}

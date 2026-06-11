@@ -240,6 +240,7 @@ button { cursor: pointer; }
 .asteroid-field { position: absolute; inset: 72px 0 260px; background: radial-gradient(ellipse at 50% 100%, rgba(217,113,80,.24), transparent 68%); }
 .ore-node { position: absolute; width: 46px; height: 46px; transform: translate(-50%, -50%); border-radius: 50%; border: 1px solid var(--ore); color: var(--ore); background: color-mix(in srgb, var(--ore) 18%, var(--ln-void)); box-shadow: 0 0 18px color-mix(in srgb, var(--ore) 55%, transparent); animation: orefloat 2s ease-in-out infinite; }
 .ore-node:disabled { opacity: .12; animation: none; }
+.ore-node--ordered { box-shadow: 0 0 0 3px color-mix(in srgb, var(--ore) 70%, transparent), 0 0 22px color-mix(in srgb, var(--ore) 70%, transparent); animation: orefloat 2s ease-in-out infinite, ore-ordered-pulse 1.4s ease-in-out infinite; }
 .ore-node span { font: 800 12px var(--ln-font-mono); }
 .mining-order { position: absolute; left: var(--ln-s-3); right: var(--ln-s-3); bottom: var(--ln-s-5); display: grid; gap: var(--ln-s-3); }
 .order-heading, .order-row { display: flex; align-items: center; justify-content: space-between; gap: var(--ln-s-2); }
@@ -312,6 +313,10 @@ button { cursor: pointer; }
 @keyframes orefloat {
   0%, 100% { transform: translate(-50%, -50%) translateY(0); }
   50%      { transform: translate(-50%, -50%) translateY(-6px); }
+}
+@keyframes ore-ordered-pulse {
+  0%, 100% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--ore) 70%, transparent), 0 0 22px color-mix(in srgb, var(--ore) 70%, transparent); }
+  50%      { box-shadow: 0 0 0 5px color-mix(in srgb, var(--ore) 90%, transparent), 0 0 30px color-mix(in srgb, var(--ore) 90%, transparent); }
 }
 @keyframes pop-float {
   0%   { opacity: 0; transform: translate(-50%, -100%) translateY(0); }

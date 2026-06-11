@@ -107,9 +107,9 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach }: BuildPl
             </Panel>
           </div>
 
-          <div style={{ position: 'absolute', left: 0, right: 0, top: 702, height: 3, zIndex: 6, background: 'linear-gradient(90deg, transparent, rgba(255,225,160,0.55) 20%, rgba(255,225,160,0.55) 80%, transparent)' }} />
+          <div style={{ position: 'absolute', left: 0, right: 0, bottom: 92, height: 3, zIndex: 6, background: 'linear-gradient(90deg, transparent, rgba(255,225,160,0.55) 20%, rgba(255,225,160,0.55) 80%, transparent)' }} />
 
-          <div style={{ position: 'absolute', left: 0, right: 0, top: 628, zIndex: 10, padding: '0 14px', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 10 }}>
+          <div style={{ position: 'absolute', left: 0, right: 0, bottom: 100, zIndex: 10, padding: '0 14px', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 10 }}>
             {[0, 1, 2, 3].map(id => {
               const on = cell === id
               return (

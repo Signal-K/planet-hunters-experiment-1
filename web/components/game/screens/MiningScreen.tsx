@@ -23,6 +23,11 @@ export default function MiningScreen({ mission, target, onComplete, onBack, mine
   const [mined, setMined] = useState<Record<number, boolean>>({})
   const orderFilled = Object.entries(mission.requires.minerals).every(([id, amount]) => (cargo[id] ?? 0) >= amount)
 
+  function isOrdered(mineral: string) {
+    const need = mission.requires.minerals[mineral]
+    return need != null && (cargo[mineral] ?? 0) < need
+  }
+
   function mine(id: number, mineral: string) {
     if (mined[id]) return
     setMined(value => ({ ...value, [id]: true }))
@@ -35,12 +40,13 @@ export default function MiningScreen({ mission, target, onComplete, onBack, mine
       <div className="asteroid-field">
         {ore.map(node => {
           const meta = minerals[node.mineral]
+          const ordered = isOrdered(node.mineral)
           return (
             <button
               key={node.id}
               data-testid={`ore-node-${node.id}`}
-              aria-label={`Mine ${meta.name}`}
-              className="ore-node"
+              aria-label={ordered ? `Mine ${meta.name} (ordered)` : `Mine ${meta.name}`}
+              className={ordered ? 'ore-node ore-node--ordered' : 'ore-node'}
               disabled={mined[node.id]}
               onClick={() => mine(node.id, node.mineral)}
               style={{ left: `${node.x}%`, top: `${node.y}%`, '--ore': meta.color } as React.CSSProperties}
@@ -51,12 +57,16 @@ export default function MiningScreen({ mission, target, onComplete, onBack, mine
       <div className="mining-order">
         <Panel accent={orderFilled ? 'var(--ln-ok)' : 'var(--ln-amber)'}>
           <div className="order-heading"><span>Contract Order</span><strong>{orderFilled ? 'Filled' : 'Mining'}</strong></div>
-          {Object.entries(mission.requires.minerals).map(([id, amount]) => (
-            <div className="order-row" key={id}>
-              <span>{minerals[id].name}</span>
-              <strong>{Math.min(cargo[id] ?? 0, amount)} / {amount}</strong>
-            </div>
-          ))}
+          {Object.entries(mission.requires.minerals).map(([id, amount]) => {
+            const have = cargo[id] ?? 0
+            const filled = have >= amount
+            return (
+              <div className="order-row" key={id}>
+                <span>{minerals[id].name}</span>
+                <strong>{filled ? '✓ ' : ''}{Math.min(have, amount)} / {amount}</strong>
+              </div>
+            )
+          })}
         </Panel>
         <PrimaryBtn kind="amber" disabled={!orderFilled} testId="return-home-btn" onClick={() => onComplete(cargo)}>Return Home</PrimaryBtn>
       </div>
