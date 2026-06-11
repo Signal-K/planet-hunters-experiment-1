@@ -19,7 +19,6 @@ export interface Mission {
   }
   payout: {
     francs: number
-    xp: number
     affinity: number
   }
 }
@@ -49,7 +48,7 @@ export interface Part {
   max_orbit?: number
   // drill
   rate?: number
-  levelRequired?: number
+  missionsRequired?: number
 }
 
 export interface MineralMeta {
@@ -207,7 +206,7 @@ export const MISSIONS: Mission[] = [
     locked: false,
     sequence: 1,
     requires: { minerals: { iron: 6 }, cargo_min: 6, drill_tier: 1, max_orbit: 4 },
-    payout: { francs: 1200000, xp: 120, affinity: 10 },
+    payout: { francs: 1200000, affinity: 10 },
   },
   {
     id: 'm2-silicon',
@@ -219,7 +218,7 @@ export const MISSIONS: Mission[] = [
     locked: false,
     sequence: 2,
     requires: { minerals: { silicon: 8 }, cargo_min: 8, drill_tier: 1, max_orbit: 5 },
-    payout: { francs: 1800000, xp: 180, affinity: 8 },
+    payout: { francs: 1800000, affinity: 8 },
   },
   {
     id: 'm3-gold',
@@ -233,7 +232,7 @@ export const MISSIONS: Mission[] = [
     requiresClassification: true,
     unlockAt: 'Complete M2',
     requires: { minerals: { gold: 4 }, cargo_min: 4, drill_tier: 2, max_orbit: 6 },
-    payout: { francs: 4500000, xp: 450, affinity: 15 },
+    payout: { francs: 4500000, affinity: 15 },
   },
 ]
 
@@ -342,20 +341,20 @@ export const TARGETS: Target[] = [
 export const PARTS: { chassis: Part[]; propulsion: Part[]; drill: Part[] } = {
   chassis: [
     { id: 'hull-mk1', name: 'Hull MK1', tier: 1, locked: false, img: '/parts/basic_hull_t1.png', mass: 2, cargo: 6 },
-    { id: 'hull-mk2', name: 'Hull MK2', tier: 2, locked: false, img: '/parts/reinforced_hull_t2.png', mass: 3, cargo: 10, levelRequired: 3 },
-    { id: 'hull-cargo', name: 'Cargo Bay T1', tier: 1, locked: false, img: '/parts/cargo_bay_t1.png', mass: 2, cargo: 14, levelRequired: 3 },
-    { id: 'hull-mk3', name: 'Hull MK3 – Heavy Frame', tier: 3, locked: true, img: '/parts/reinforced_hull_t2.png', mass: 4, cargo: 18, levelRequired: 5 },
-    { id: 'hull-hauler', name: 'Bulk Hauler Chassis', tier: 3, locked: true, img: '/parts/cargo_bay_t1.png', mass: 3, cargo: 24, levelRequired: 5 },
+    { id: 'hull-mk2', name: 'Hull MK2', tier: 2, locked: false, img: '/parts/reinforced_hull_t2.png', mass: 3, cargo: 10, missionsRequired: 1 },
+    { id: 'hull-cargo', name: 'Cargo Bay T1', tier: 1, locked: false, img: '/parts/cargo_bay_t1.png', mass: 2, cargo: 14, missionsRequired: 1 },
+    { id: 'hull-mk3', name: 'Hull MK3 – Heavy Frame', tier: 3, locked: true, img: '/parts/reinforced_hull_t2.png', mass: 4, cargo: 18, missionsRequired: 2 },
+    { id: 'hull-hauler', name: 'Bulk Hauler Chassis', tier: 3, locked: true, img: '/parts/cargo_bay_t1.png', mass: 3, cargo: 24, missionsRequired: 2 },
   ],
   propulsion: [
     { id: 'ion-a1', name: 'Ion Drive A1', tier: 1, locked: false, img: '/parts/basic_thruster_t1.png', power: 40, max_orbit: 5 },
-    { id: 'fusion-b2', name: 'Fusion Drive B2', tier: 2, locked: false, img: '/parts/fusion_drive_t2.png', power: 80, max_orbit: 7, levelRequired: 3 },
-    { id: 'ion-a3', name: 'Ion Drive A3', tier: 3, locked: true, img: '/parts/ion_drive_t3.png', power: 120, max_orbit: 9, levelRequired: 5 },
+    { id: 'fusion-b2', name: 'Fusion Drive B2', tier: 2, locked: false, img: '/parts/fusion_drive_t2.png', power: 80, max_orbit: 7, missionsRequired: 1 },
+    { id: 'ion-a3', name: 'Ion Drive A3', tier: 3, locked: true, img: '/parts/ion_drive_t3.png', power: 120, max_orbit: 9, missionsRequired: 2 },
   ],
   drill: [
     { id: 'hand-drill', name: 'Hand Drill', tier: 1, locked: false, img: '/parts/mining_drill_t1.png', rate: 1 },
-    { id: 'laser-t2', name: 'Laser T2', tier: 2, locked: false, img: '/parts/scanner_array_t2.png', rate: 2, levelRequired: 3 },
-    { id: 'plasma-t3', name: 'Plasma T3', tier: 3, locked: true, img: '/parts/broadcast_array_t2.png', rate: 4, levelRequired: 5 },
+    { id: 'laser-t2', name: 'Laser T2', tier: 2, locked: false, img: '/parts/laser_drill_t2.png', rate: 2, missionsRequired: 1 },
+    { id: 'plasma-t3', name: 'Plasma T3', tier: 3, locked: true, img: '/parts/broadcast_array_t2.png', rate: 4, missionsRequired: 2 },
   ],
 }
 
@@ -439,7 +438,7 @@ export interface RocketConfig {
 export function suggestBuild(opts: {
   mission: Mission | null
   target: Target | null
-  level: number
+  missionsDone: number
   launchpadUpgraded?: boolean
   parts?: typeof PARTS
 }): RocketConfig {
@@ -447,11 +446,11 @@ export function suggestBuild(opts: {
   const orbit = target?.orbit ?? 4
   const drillTier = mission?.requires.drill_tier ?? 1
   const cargoMin = mission?.requires.cargo_min ?? 6
-  const effectiveLevel = opts.launchpadUpgraded ? Math.max(opts.level, 3) : opts.level
+  const effectiveMissionsDone = opts.launchpadUpgraded ? Math.max(opts.missionsDone, 1) : opts.missionsDone
 
   const available = (p: Part) => {
     if (p.locked) return false
-    if (p.levelRequired && effectiveLevel < p.levelRequired) return false
+    if (p.missionsRequired && effectiveMissionsDone < p.missionsRequired) return false
     return true
   }
   const prop = parts.propulsion.find(p => available(p) && (p.max_orbit ?? 0) >= orbit)
