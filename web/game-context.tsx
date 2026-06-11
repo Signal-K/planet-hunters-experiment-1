@@ -1,6 +1,10 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
+import type { Toast } from '@/components/ui/ToastLayer'
+
+let toastSeq = 0
+function nextToastId() { return `t${++toastSeq}` }
 import { type Mission, type Target, type RocketConfig, MISSIONS, TARGETS, PROGRESSION_STEPS, suggestBuild, REFINERY_RECIPES, MINERAL_META } from '@/lib/data'
 import { pbShared } from '@/lib/pb'
 import { type Catalog, STATIC_CATALOG, fetchCatalog } from '@/lib/catalog'
@@ -41,6 +45,8 @@ export interface Player {
   refinedGoods: Record<string, number>
   launchpadUpgraded: boolean
   lastContractor?: string
+  loanDebt: number
+  loanOffered: boolean
 }
 
 export interface GameState {
@@ -87,6 +93,10 @@ interface GameActions {
   sellMinerals: (mineralId: string, amount: number) => void
   onStartRefine: (recipeId: string) => void
   onCollectRefined: (recipeId: string) => void
+  acceptLoan: () => void
+  abandonMission: () => void
+  toasts: Toast[]
+  dismissToast: (id: string) => void
   mission: Mission | null
   target: Target | null
 }
@@ -112,6 +122,8 @@ const DEFAULT_STATE: GameState = {
     refineryQueue: [],
     refinedGoods: {},
     launchpadUpgraded: false,
+    loanDebt: 0,
+    loanOffered: false,
   },
   missionId: null,
   targetId: null,
@@ -127,6 +139,9 @@ const DEFAULT_STATE: GameState = {
 }
 
 const STORAGE_KEY = 'landnam-game-state-v1'
+const LOAN_AMOUNT = 5_000_000_000
+const LOAN_REPAYMENT = Math.ceil(LOAN_AMOUNT * 1.08 / 2)
+const BANKRUPTCY_THRESHOLD = 500_000_000
 
 function firstOpenPlot(placementPlots: Record<string, number>, kinds: string[]) {
   const occupied = new Set(kinds.map(kind => placementPlots[kind]).filter((plot): plot is number => typeof plot === 'number'))
@@ -153,6 +168,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<GameState>(DEFAULT_STATE)
   const [hydrated, setHydrated] = useState(false)
   const [catalog, setCatalog] = useState<Catalog>(STATIC_CATALOG)
+  const [toasts, setToasts] = useState<Toast[]>([])
   const [authUserId, setAuthUserId] = useState<string | null>(pbShared.authStore.record?.id ?? null)
   const backendRecordId = useRef<string | null>(null)
   const backendLoadedFor = useRef<string | null>(null)
@@ -269,6 +285,14 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
   const setMenuOpen = useCallback((v: boolean) => {
     setState(s => ({ ...s, menuOpen: v }))
+  }, [])
+
+  const addToast = useCallback((message: string, kind: Toast['kind'] = 'info') => {
+    setToasts(ts => [...ts, { id: nextToastId(), message, kind }])
+  }, [])
+
+  const dismissToast = useCallback((id: string) => {
+    setToasts(ts => ts.filter(t => t.id !== id))
   }, [])
 
   const onPickMission = useCallback((id: string) => {
@@ -461,7 +485,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         doneSteps: { ...s.doneSteps, 6: true },
       }
     })
-  }, [])
+    addToast('Rocket has returned — cargo secured', 'ok')
+  }, [addToast])
 
   const onDebriefDone = useCallback((total: number, _affinity: number = 0, consumed: Record<string, number> = {}) => {
     setState(s => {
@@ -483,11 +508,20 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       for (const [id, amount] of Object.entries(consumed)) {
         stash[id] = Math.max(0, (stash[id] ?? 0) - amount)
       }
+      let loanDebt = s.player.loanDebt
+      let francs = s.player.francs + total
+      if (loanDebt > 0) {
+        const payment = Math.min(LOAN_REPAYMENT, loanDebt)
+        francs = Math.max(0, francs - payment)
+        loanDebt = Math.max(0, loanDebt - payment)
+      }
+      const loanOffered = s.player.loanOffered
+      const showLoanOffer = !loanOffered && francs < BANKRUPTCY_THRESHOLD && loanDebt === 0
       return {
         ...s,
         player: {
           ...s.player,
-          francs: s.player.francs + total,
+          francs,
           activeMission: null,
           missionsDone,
           missionCount: freeOperations ? MISSIONS.length : Math.max(0, Math.min(1, MISSIONS.length - missionsDone)),
@@ -496,17 +530,20 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
           contractorCooldowns,
           stash,
           lastContractor: contractor,
+          loanDebt,
+          loanOffered: loanOffered || showLoanOffer,
         },
         lastCargo: null,
         missionId: null,
         targetId: null,
         tutorial: !freeOperations,
-        popup: missionsDone === 1 ? 'sr2' : freeOperations ? 'freeops' : s.popup,
+        popup: missionsDone === 1 ? 'sr2' : freeOperations ? 'freeops' : showLoanOffer ? 'loan' : s.popup,
         doneSteps: { ...s.doneSteps, 9: true },
         screen: 'market',
       }
     })
-  }, [])
+    addToast(`Mission payout received: +${(total / 1_000_000).toFixed(0)}M F`, 'ok')
+  }, [addToast])
 
   const coachManualNext = useCallback(() => {
     setState(s => {
@@ -536,10 +573,43 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     }
   }, [authUserId])
 
+  const abandonMission = useCallback(() => {
+    if (!confirm('Abort this mission? You will lose 10% of the mission payout as a penalty.')) return
+    setState(s => {
+      const mission = s.missionId ? MISSIONS.find(m => m.id === s.missionId) : null
+      const penalty = mission ? Math.round(mission.payout.francs * 0.1) : 0
+      return {
+        ...s,
+        player: {
+          ...s.player,
+          francs: Math.max(0, s.player.francs - penalty),
+          activeMission: null,
+        },
+        missionId: null,
+        targetId: null,
+        screen: 'hub',
+      }
+    })
+  }, [])
+
+  const acceptLoan = useCallback(() => {
+    setState(s => ({
+      ...s,
+      popup: null,
+      player: {
+        ...s.player,
+        francs: s.player.francs + LOAN_AMOUNT,
+        loanDebt: s.player.loanDebt + LOAN_AMOUNT * 1.08,
+        loanOffered: true,
+      },
+    }))
+  }, [])
+
   const buildControlStation = useCallback(() => {
     const cost = 500_000_000
     setState(s => {
       if (s.player.francs < cost || s.player.controlBuilt) return s
+      addToast('Control Station construction complete', 'ok')
       return {
         ...s,
         buildGate: false,
@@ -556,7 +626,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         },
       }
     })
-  }, [])
+  }, [addToast])
 
   const mission = state.missionId ? catalog.missions.find(m => m.id === state.missionId) ?? null : null
   const target = state.targetId ? catalog.targets.find(t => t.id === state.targetId) ?? null : null
@@ -591,6 +661,10 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       sellMinerals,
       onStartRefine,
       onCollectRefined,
+      acceptLoan,
+      abandonMission,
+      toasts,
+      dismissToast,
       mission,
       target,
     }}>

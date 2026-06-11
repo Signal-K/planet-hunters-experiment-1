@@ -25,7 +25,7 @@ export default function SatelliteScreen({
   onBack: () => void
 }) {
   const [candidate, setCandidate] = useState<{ id: string; period: string; depth: string; likelyPlanet: boolean } | null>(null)
-  const [result, setResult] = useState<{ verdict: string; xp: number } | null>(null)
+  const [result, setResult] = useState<{ verdict: string; annotation: boolean } | null>(null)
 
   function scan() {
     setCandidate(randomCandidate())
@@ -36,7 +36,7 @@ export default function SatelliteScreen({
     onClassify(verdict)
     setResult({
       verdict: verdict === 'planet' ? 'PLANET CONFIRMED' : 'NO SIGNAL',
-      xp: verdict === 'planet' ? 15 : 5,
+      annotation: verdict === 'planet',
     })
     setCandidate(null)
   }
@@ -85,8 +85,7 @@ export default function SatelliteScreen({
           <Panel>
             <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 15, color: result.verdict === 'PLANET CONFIRMED' ? '#39d36a' : '#f5a623' }}>{result.verdict}</div>
             <p className="text-sm text-[#a9b8ce] mb-3">
-              +{result.xp} XP
-              {result.verdict === 'PLANET CONFIRMED' && ' · +1 Research Annotation'}
+              {result.annotation ? '+1 Research Annotation · Discovery bonus +1%' : 'No annotation recorded'}
             </p>
             <PrimaryBtn kind="cyan" onClick={scan}>Scan Another</PrimaryBtn>
           </Panel>

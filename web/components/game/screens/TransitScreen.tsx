@@ -5,7 +5,7 @@ import type { Target } from '@/lib/data'
 import TopBar from '@/components/ui/TopBar'
 import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
 
-export default function TransitScreen({ target, onArrive, onBack }: { target: Target; onArrive: () => void; onBack: () => void }) {
+export default function TransitScreen({ target, onArrive, onBack, onAbandon }: { target: Target; onArrive: () => void; onBack: () => void; onAbandon?: () => void }) {
   const [progress, setProgress] = useState(12)
 
   useEffect(() => {
@@ -44,6 +44,7 @@ export default function TransitScreen({ target, onArrive, onBack }: { target: Ta
       </div>
       <div className="sticky-actions">
         <PrimaryBtn onClick={onArrive} disabled={progress < 100}>Arrive{progress < 100 ? ` · ${progress}%` : ''}</PrimaryBtn>
+        {onAbandon && <GhostBtn onClick={onAbandon}>Abort Mission</GhostBtn>}
       </div>
     </div>
   )

@@ -38,18 +38,25 @@ describe('suggestBuild', () => {
     expect(build.drill).toBe('hand-drill')
   })
 
-  it('suggests tier-2 parts once missionsRequired is satisfied', () => {
+  it('suggests best available drill when mission requires locked tier', () => {
+    // M3 requires drill_tier: 3 but plasma-t3 is locked in static PARTS.
+    // suggestBuild should fall back to the best available drill (laser-t2 at missionsDone >= 1).
     const m3 = MISSIONS.find(m => m.id === 'm3-gold')!
-    const belt = TARGETS.find(t => t.id === 'belt')!
-    const build = suggestBuild({ mission: m3, target: belt, missionsDone: 1, parts: PARTS })
+    const belt = TARGETS.find(t => t.id === 'koi-7923-belt')!
+    const build = suggestBuild({ mission: m3, target: belt, missionsDone: 2, parts: PARTS })
     expect(build.drill).toBe('laser-t2')
   })
 
   it('treats launchpadUpgraded as having completed at least one mission', () => {
-    const m3 = MISSIONS.find(m => m.id === 'm3-gold')!
-    const belt = TARGETS.find(t => t.id === 'belt')!
-    const build = suggestBuild({ mission: m3, target: belt, missionsDone: 0, launchpadUpgraded: true, parts: PARTS })
-    expect(build.drill).toBe('laser-t2')
+    // laser-t2 has missionsRequired: 1 — unavailable at missionsDone: 0 without upgrade.
+    // A drill_tier: 2 requirement falls back to hand-drill without upgrade, but gets laser-t2 with it.
+    const m1 = MISSIONS.find(m => m.id === 'm1-iron')!
+    const target = TARGETS.find(t => t.id === 'mars')!
+    const missionWithDrill2 = { ...m1, requires: { ...m1.requires, drill_tier: 2 } }
+    const withoutUpgrade = suggestBuild({ mission: missionWithDrill2, target, missionsDone: 0, parts: PARTS })
+    expect(withoutUpgrade.drill).toBe('hand-drill')
+    const withUpgrade = suggestBuild({ mission: missionWithDrill2, target, missionsDone: 0, launchpadUpgraded: true, parts: PARTS })
+    expect(withUpgrade.drill).toBe('laser-t2')
   })
 })
 

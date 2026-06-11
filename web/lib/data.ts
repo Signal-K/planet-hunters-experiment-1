@@ -222,17 +222,16 @@ export const MISSIONS: Mission[] = [
   },
   {
     id: 'm3-gold',
-    title: 'Belt Gold Prospect',
-    brief: 'Belt Gold Ltd runs a premium grade — they want gold ore from the outer belt.',
+    title: 'KOI-7923 Deep Prospect',
+    brief: 'Belt Gold Ltd has eyes on the outer KOI corridor — confirmed exoplanet belt with dense gold and rare deposits. The SR3 drive tier is required for this depth.',
     contractor: 'beltgold',
     tag: 'PROSPECT',
     difficulty: 'L3',
     locked: true,
     sequence: 3,
-    requiresClassification: true,
     unlockAt: 'Complete M2',
-    requires: { minerals: { gold: 4 }, cargo_min: 4, drill_tier: 2, max_orbit: 6 },
-    payout: { francs: 4500000, affinity: 15 },
+    requires: { minerals: { gold: 4, rare: 2 }, cargo_min: 8, drill_tier: 3, max_orbit: 7 },
+    payout: { francs: 9000000, affinity: 20 },
   },
 ]
 
@@ -335,6 +334,16 @@ export const TARGETS: Target[] = [
     brief: 'Transit candidate selected by the science team. Spectral returns indicate gold and rare compounds.',
     minerals: ['gold', 'rare'],
     recommended: true,
+  },
+  // ── Confirmed exoplanet belt (M3 target) ────────────────────────────────────
+  {
+    id: 'koi-7923-belt',
+    name: 'KOI-7923 Belt',
+    type: 'asteroid',
+    orbit: 7,
+    difficulty: 'L3',
+    brief: 'Outer-system confirmed exoplanet corridor. Dense gold-rare concentrations along the debris plane — requires SR3-class propulsion.',
+    minerals: ['gold', 'rare'],
   },
 ]
 
@@ -453,12 +462,13 @@ export function suggestBuild(opts: {
     if (p.missionsRequired && effectiveMissionsDone < p.missionsRequired) return false
     return true
   }
+  const bestAvail = <T extends Part>(arr: T[]) => [...arr].reverse().find(p => available(p)) ?? arr[0]
   const prop = parts.propulsion.find(p => available(p) && (p.max_orbit ?? 0) >= orbit)
-    ?? parts.propulsion.find(p => available(p)) ?? parts.propulsion[0]
+    ?? bestAvail(parts.propulsion)
   const drill = parts.drill.find(p => available(p) && (p.tier ?? 0) >= drillTier)
-    ?? parts.drill.find(p => available(p)) ?? parts.drill[0]
+    ?? bestAvail(parts.drill)
   const chassis = parts.chassis.find(p => available(p) && (p.cargo ?? 0) >= cargoMin)
-    ?? parts.chassis.find(p => available(p)) ?? parts.chassis[0]
+    ?? bestAvail(parts.chassis)
 
   return { chassis: chassis.id, propulsion: prop.id, drill: drill.id }
 }

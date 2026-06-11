@@ -7,6 +7,7 @@ type UnlockKind = 'sr2' | 'freeops' | 'loan'
 interface UnlockPopupProps {
   kind: string
   onClose: () => void
+  onDismiss?: () => void
 }
 
 function darkenColor(hex: string, amount: number): string {
@@ -37,11 +38,11 @@ const UNLOCKS: Record<string, {
   },
   freeops: {
     accent: '#f5a623',
-    eyebrow: 'Milestone Reached',
+    eyebrow: 'M1–M3 Complete',
     title: 'FREE OPERATIONS',
-    body: 'All authored missions complete. The Marketplace is open, the mission cap is lifted — you\'re in command now.',
+    body: 'You\'re on your own now. The full mission board is open, the Satellite Uplink can classify TESS lightcurves, and every confirmed planet adds 1% to your discovery payouts.',
     art: 'star',
-    stats: [['MARKET', 'OPEN'], ['MISSIONS', '∞'], ['COACH', 'OFF']],
+    stats: [['MISSIONS', '∞'], ['CLASSIFY', 'ACTIVE'], ['DISCOVERY', '+10%']],
     cta: 'Take Command',
   },
   loan: {
@@ -91,7 +92,7 @@ function StarArt({ accent }: { accent: string }) {
   )
 }
 
-export default function UnlockPopup({ kind, onClose }: UnlockPopupProps) {
+export default function UnlockPopup({ kind, onClose, onDismiss }: UnlockPopupProps) {
   const u = UNLOCKS[kind] ?? UNLOCKS.sr2
 
   return (
@@ -143,6 +144,14 @@ export default function UnlockPopup({ kind, onClose }: UnlockPopupProps) {
             letterSpacing: '0.12em', textTransform: 'uppercase',
             boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.4), 0 4px 0 rgba(0,0,0,0.3)',
           }}>{u.cta}</button>
+          {onDismiss && (
+            <button onClick={onDismiss} style={{
+              width: '100%', marginTop: 8, padding: '10px', borderRadius: 10, cursor: 'pointer',
+              background: 'transparent', border: '1px solid rgba(169,184,206,0.2)',
+              color: 'rgba(169,184,206,0.5)', fontFamily: 'var(--ln-font-display)', fontSize: 11, fontWeight: 700,
+              letterSpacing: '0.12em', textTransform: 'uppercase',
+            }}>Decline</button>
+          )}
         </div>
       </div>
     </div>

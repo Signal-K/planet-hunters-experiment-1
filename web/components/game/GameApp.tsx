@@ -21,6 +21,11 @@ import BuildGatePrompt from '@/components/game/BuildGatePrompt'
 import UnlockPopup from '@/components/game/UnlockPopup'
 import RadialNav from '@/components/layout/RadialNav'
 import BackendStatus from '@/components/game/BackendStatus'
+import FeedbackButton from '@/components/ui/FeedbackButton'
+import ToastLayer from '@/components/ui/ToastLayer'
+import { initPostHog } from '@/lib/posthog'
+
+if (typeof window !== 'undefined') initPostHog()
 
 function GameCanvas() {
   const game = useGame()
@@ -174,7 +179,7 @@ function GameCanvas() {
           />
         )}
         {game.screen === 'transit' && game.target && (
-          <TransitScreen target={game.target} onBack={() => game.go('hub')} onArrive={() => game.go('mining')} />
+          <TransitScreen target={game.target} onBack={() => game.go('hub')} onArrive={() => game.go('mining')} onAbandon={game.abandonMission} />
         )}
         {game.screen === 'mining' && game.mission && game.target && (
           <MiningScreen mission={game.mission} target={game.target} onBack={() => game.go('hub')} onComplete={game.onMiningDone} minerals={game.catalog.minerals} />
@@ -183,6 +188,8 @@ function GameCanvas() {
           <DebriefScreen mission={game.mission} target={game.target} cargo={game.lastCargo ?? {}} onDone={game.onDebriefDone} minerals={game.catalog.minerals} freeOperations={game.player.freeOperations} annotations={game.player.researchAnnotations} />
         )}
 
+        <ToastLayer toasts={game.toasts} onDismiss={game.dismissToast} />
+        <FeedbackButton />
         {showNav && <RadialNav current={currentNav} onNav={goFromNav} />}
 
         {coach && (
@@ -204,6 +211,10 @@ function GameCanvas() {
             kind={game.popup}
             onClose={() => {
               const popup = game.popup
+              if (popup === 'loan') {
+                game.acceptLoan()
+                return
+              }
               game.setPopup(null)
               if (popup === 'sr2') {
                 game.go('hub')
@@ -212,6 +223,7 @@ function GameCanvas() {
                 game.go('hub')
               }
             }}
+            onDismiss={game.popup === 'loan' ? () => game.setPopup(null) : undefined}
           />
         )}
       </div>
