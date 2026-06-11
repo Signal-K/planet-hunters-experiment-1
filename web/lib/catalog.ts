@@ -56,7 +56,6 @@ export function toMission(r: any): Mission {
     },
     payout: {
       francs: r.payout_francs ?? 0,
-      xp: r.payout_xp ?? 0,
       affinity: r.payout_affinity ?? 0,
     },
   }
@@ -75,7 +74,7 @@ export function toPart(r: any): Part {
     power: r.power || undefined,
     max_orbit: r.max_orbit || undefined,
     rate: r.drill_rate || undefined,
-    levelRequired: r.level_required || undefined,
+    missionsRequired: r.missions_required || undefined,
   }
 }
 

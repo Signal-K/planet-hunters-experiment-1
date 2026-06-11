@@ -261,7 +261,7 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
         display: 'flex', alignItems: 'flex-start', gap: 10, pointerEvents: 'none',
       }}>
         <div style={{ pointerEvents: 'auto' }}>
-          <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.6)' }}>EARTH BASE · LV {player.level}</div>
+          <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.6)' }}>EARTH BASE · OPS {player.missionsDone}</div>
           <h1 style={{ margin: '2px 0 0', fontFamily: 'var(--ln-font-display)', fontSize: 24, fontWeight: 800, letterSpacing: '-0.01em', color: '#fff', lineHeight: 1, textShadow: '0 2px 10px rgba(0,0,0,0.7)' }}>Earth Base</h1>
         </div>
         <span style={{ flex: 1 }} />

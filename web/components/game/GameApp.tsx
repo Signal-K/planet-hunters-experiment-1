@@ -85,7 +85,7 @@ function GameCanvas() {
           <BuildPlaceScreen
             onBack={() => game.go('hub')}
             hasCoach={hasCoach}
-            playerLevel={game.player.level}
+            missionsDone={game.player.missionsDone}
             onPlaced={(kind, plot) => {
               game.setPlayer(player => ({
                 ...player,
@@ -164,9 +164,9 @@ function GameCanvas() {
             target={game.target}
             rocket={game.rocket}
             parts={game.catalog.parts}
-            level={game.player.level}
+            missionsDone={game.player.missionsDone}
             onChange={(slot, id) => game.setRocket(rocket => ({ ...rocket, [slot]: id }))}
-            onSuggest={() => game.setRocket(suggestBuild({ mission: game.mission, target: game.target, level: game.player.level, launchpadUpgraded: game.player.launchpadUpgraded, parts: game.catalog.parts }))}
+            onSuggest={() => game.setRocket(suggestBuild({ mission: game.mission, target: game.target, missionsDone: game.player.missionsDone, launchpadUpgraded: game.player.launchpadUpgraded, parts: game.catalog.parts }))}
             onExplained={() => game.completeStep(4)}
             onLaunch={game.onLaunch}
             onBack={() => game.go(game.mission?.requiresClassification ? 'classify' : 'targets')}

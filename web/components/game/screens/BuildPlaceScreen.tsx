@@ -11,14 +11,14 @@ interface BuildPlaceScreenProps {
   onPlaced: (kind: string, plot: number) => void
   onBack: () => void
   hasCoach?: boolean
-  playerLevel?: number
+  missionsDone?: number
 }
 
 const CATALOG = [
   { id: 'launchpad', name: 'Launchpad', cost: 0, desc: 'Assemble rockets and launch mining missions.', avail: true },
   { id: 'control', name: 'Control Station', cost: 500, desc: 'Unlocks the contractor job board.', avail: false, req: 'M1' },
-  { id: 'satellite', name: 'Satellite Station', cost: 1800, desc: 'Scan TESS data, classify planet candidates.', avail: false, req: 'L5' },
-  { id: 'refinery', name: 'Refinery', cost: 800, desc: 'On-site ore processing increases sale price.', avail: false, req: 'L6' },
+  { id: 'satellite', name: 'Satellite Station', cost: 1800, desc: 'Scan TESS data, classify planet candidates.', avail: false, req: 'M2' },
+  { id: 'refinery', name: 'Refinery', cost: 800, desc: 'On-site ore processing increases sale price.', avail: false, req: 'M2' },
 ]
 
 function StructureIcon({ kind, size = 32 }: { kind: string; size?: number }) {
@@ -38,7 +38,7 @@ function LockIcon() {
   return <svg width="11" height="11" viewBox="0 0 12 12" fill="none" aria-hidden="true"><rect x="2" y="5" width="8" height="6" rx="1" stroke="currentColor"/><path d="M4 5V3a2 2 0 0 1 4 0v2" stroke="currentColor"/></svg>
 }
 
-export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, playerLevel = 1 }: BuildPlaceScreenProps) {
+export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, missionsDone = 0 }: BuildPlaceScreenProps) {
   const [phase, setPhase] = useState<'pick' | 'place'>('pick')
   const [picked, setPicked] = useState('launchpad')
   const [cell, setCell] = useState<number | null>(null)
@@ -66,9 +66,9 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, playerLev
           <div style={{ padding: '0 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
             {CATALOG.map(c => {
               const on = c.id === picked
-              const reqIsLevel = c.req && c.req.startsWith('L')
-              const levelMet = reqIsLevel ? playerLevel >= parseInt(c.req.slice(1)) : c.avail
-              const unlocked = c.avail || levelMet
+              const reqIsMission = c.req && c.req.startsWith('M')
+              const missionMet = reqIsMission ? missionsDone >= parseInt(c.req.slice(1)) : c.avail
+              const unlocked = c.avail || missionMet
               return (
                 <button key={c.id} onClick={() => unlocked && setPicked(c.id)} style={{ background: 'transparent', border: 'none', padding: 0, textAlign: 'left', cursor: unlocked ? 'pointer' : 'not-allowed', opacity: unlocked ? 1 : 0.5 }}>
                   <Panel accent={on ? '#f5a623' : '#3fa9ff'} style={{ padding: 10 }}>

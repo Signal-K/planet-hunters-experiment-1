@@ -29,8 +29,8 @@ export default function HUDStrip({ player }: HUDStripProps) {
         fontSize: 11, fontWeight: 700, letterSpacing: '0.14em',
         color: '#cde4ff', textTransform: 'uppercase',
       }}>
-        <span style={{ color: '#7ec8ff' }}>LV</span>
-        <span style={{ fontWeight: 800, fontSize: 14 }}>{player.level}</span>
+        <span style={{ color: '#7ec8ff' }}>OPS</span>
+        <span style={{ fontWeight: 800, fontSize: 14 }}>{player.missionsDone}</span>
       </div>
       <div style={{
         display: 'inline-flex', alignItems: 'center', gap: 6,

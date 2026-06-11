@@ -23,8 +23,6 @@ export type Screen =
 
 export interface Player {
   francs: number
-  level: number
-  xp: number
   activeMission: { id: string; label: string } | null
   missionCount: number
   pendingLaunch: boolean
@@ -78,7 +76,7 @@ interface GameActions {
   onPickTarget: (id: string) => void
   onLaunch: () => void
   onMiningDone: (cargo: Record<string, number>) => void
-  onDebriefDone: (total: number, xp: number, affinity: number, consumed?: Record<string, number>) => void
+  onDebriefDone: (total: number, affinity: number, consumed?: Record<string, number>) => void
   coachManualNext: () => void
   completeStep: (id: number) => void
   resetGame: () => void
@@ -99,8 +97,6 @@ const DEFAULT_STATE: GameState = {
   screen: 'intro',
   player: {
     francs: 10_000_000_000,
-    level: 1,
-    xp: 0,
     activeMission: null,
     missionCount: 1,
     pendingLaunch: false,
@@ -327,7 +323,6 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const classifyCandidate = useCallback((verdict: 'planet' | 'not_planet') => {
-    const FLAT_XP = 20
     const CANDIDATE_ID = 'tess-451b'
     setState(s => {
       if (verdict === 'not_planet') {
@@ -335,7 +330,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
           ...s,
           classification: null,
           targetId: null,
-          player: { ...s.player, xp: s.player.xp + FLAT_XP },
+          player: { ...s.player },
           screen: 'targets',
           doneSteps: { ...s.doneSteps, 30: true },
         }
@@ -348,7 +343,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         rocket: suggestBuild({
           mission: s.missionId ? catalog.missions.find(m => m.id === s.missionId) ?? null : null,
           target,
-          level: s.player.level,
+          missionsDone: s.player.missionsDone,
           launchpadUpgraded: s.player.launchpadUpgraded,
           parts: catalog.parts,
         }),
@@ -377,7 +372,6 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       ...s,
       player: {
         ...s.player,
-        xp: s.player.xp + (verdict === 'planet' ? 15 : 5),
         researchAnnotations: s.player.researchAnnotations + (verdict === 'planet' ? 1 : 0),
       },
     }))
@@ -423,7 +417,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     setState(s => {
       const mission = s.missionId ? catalog.missions.find(m => m.id === s.missionId) ?? null : null
       const target = catalog.targets.find(t => t.id === id) ?? null
-      const next = suggestBuild({ mission, target, level: s.player.level, launchpadUpgraded: s.player.launchpadUpgraded, parts: catalog.parts })
+      const next = suggestBuild({ mission, target, missionsDone: s.player.missionsDone, launchpadUpgraded: s.player.launchpadUpgraded, parts: catalog.parts })
       return {
         ...s,
         targetId: id,
@@ -469,7 +463,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     })
   }, [])
 
-  const onDebriefDone = useCallback((total: number, xp: number, _affinity: number = 0, consumed: Record<string, number> = {}) => {
+  const onDebriefDone = useCallback((total: number, _affinity: number = 0, consumed: Record<string, number> = {}) => {
     setState(s => {
       const missionsDone = s.player.missionsDone + 1
       const freeOperations = missionsDone >= 3
@@ -494,7 +488,6 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         player: {
           ...s.player,
           francs: s.player.francs + total,
-          xp: s.player.xp + xp,
           activeMission: null,
           missionsDone,
           missionCount: freeOperations ? MISSIONS.length : Math.max(0, Math.min(1, MISSIONS.length - missionsDone)),

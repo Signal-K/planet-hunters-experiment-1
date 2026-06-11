@@ -11,7 +11,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   mission: Mission
   target: Target
   cargo: Record<string, number>
-  onDone: (total: number, xp: number, affinity: number, consumed?: Record<string, number>) => void
+  onDone: (total: number, affinity: number, consumed?: Record<string, number>) => void
   minerals: Record<string, MineralMeta>
   freeOperations?: boolean
   annotations?: number
@@ -21,7 +21,6 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   const delivered = Object.entries(mission.requires.minerals).every(([id, amount]) => (cargo[id] ?? 0) >= amount)
   const discoveryBonus = freeOperations ? Math.round(subtotal * (0.10 + 0.01 * (annotations ?? 0))) : 0
   const total = subtotal + (delivered ? mission.payout.francs : 0) + discoveryBonus
-  const xp = delivered ? mission.payout.xp + Math.round(subtotal / 8) : Math.round(subtotal / 8)
 
   return (
     <div className="game-screen debrief-screen">
@@ -52,7 +51,6 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
               </>
             )}
             <div className="reward-total">▲ {total.toLocaleString()}</div>
-            <div className="reward-xp">+{xp} XP</div>
           </Panel>
         )}
       </div>
@@ -60,7 +58,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
         {step === 0 ? (
           <PrimaryBtn kind="cyan" testId="resolve-cargo-btn" onClick={() => setStep(1)}>Resolve Cargo</PrimaryBtn>
         ) : (
-          <PrimaryBtn kind="amber" testId="collect-reward-btn" onClick={() => onDone(total, xp, delivered ? mission.payout.affinity : 0, delivered ? mission.requires.minerals : {})}>Collect Reward</PrimaryBtn>
+          <PrimaryBtn kind="amber" testId="collect-reward-btn" onClick={() => onDone(total, delivered ? mission.payout.affinity : 0, delivered ? mission.requires.minerals : {})}>Collect Reward</PrimaryBtn>
         )}
       </div>
     </div>

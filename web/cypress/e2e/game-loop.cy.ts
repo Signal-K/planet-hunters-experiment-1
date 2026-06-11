@@ -7,8 +7,6 @@ function visitWithState(state: Partial<GameState>) {
     screen: 'intro',
     player: {
       francs: 10_000_000_000,
-      level: 1,
-      xp: 0,
       activeMission: null,
       missionCount: 1,
       pendingLaunch: false,
@@ -49,8 +47,6 @@ function fullState(overrides: Partial<GameState> = {}): GameState {
     screen: 'hub',
     player: {
       francs: 9_500_000_000,
-      level: 1,
-      xp: 50,
       activeMission: null,
       missionCount: 1,
       pendingLaunch: false,
@@ -160,8 +156,6 @@ describe('Full Game Loop — Landnam', () => {
         doneSteps: { 1: true, 2: true, 3: true, 4: true, 5: false },
         player: {
           francs: 9_500_000_000,
-          level: 1,
-          xp: 50,
           activeMission: null,
           missionCount: 1,
           pendingLaunch: false,
@@ -192,8 +186,6 @@ describe('Full Game Loop — Landnam', () => {
         doneSteps: { 1: true, 2: true, 3: true, 5: true },
         player: {
           francs: 9_500_000_000,
-          level: 1,
-          xp: 50,
           activeMission: { id: 'm1-iron', label: 'Iron for Foundry-3 → Mars' },
           missionCount: 1,
           pendingLaunch: false,
@@ -224,8 +216,6 @@ describe('Full Game Loop — Landnam', () => {
         doneSteps: { 1: true, 2: true, 3: true, 5: true, 6: false },
         player: {
           francs: 9_500_000_000,
-          level: 1,
-          xp: 50,
           activeMission: { id: 'm1-iron', label: 'Iron for Foundry-3 → Mars' },
           missionCount: 1,
           pendingLaunch: false,
@@ -261,8 +251,6 @@ describe('Full Game Loop — Landnam', () => {
         doneSteps: { 1: true, 2: true, 3: true, 5: true, 6: true, 9: false },
         player: {
           francs: 9_500_000_000,
-          level: 1,
-          xp: 50,
           activeMission: { id: 'm1-iron', label: 'Iron for Foundry-3 → Mars' },
           missionCount: 1,
           pendingLaunch: false,
@@ -297,8 +285,6 @@ describe('Full Game Loop — Landnam', () => {
         doneSteps: { 1: true, 2: true, 3: true, 5: true, 6: true },
         player: {
           francs: 9_500_000_000,
-          level: 1,
-          xp: 50,
           activeMission: { id: 'm1-iron', label: 'Iron for Foundry-3 → Mars' },
           missionCount: 1,
           pendingLaunch: false,
@@ -328,8 +314,6 @@ describe('Full Game Loop — Landnam', () => {
         popup: 'sr2',
         player: {
           francs: 9_500_000_000,
-          level: 1,
-          xp: 170,
           activeMission: null,
           missionCount: 1,
           pendingLaunch: false,
@@ -363,8 +347,6 @@ describe('Full Game Loop — Landnam', () => {
         buildGate: false,
         player: {
           francs: 9_500_000_000,
-          level: 1,
-          xp: 170,
           activeMission: null,
           missionCount: 1,
           pendingLaunch: false,
@@ -394,8 +376,6 @@ describe('Full Game Loop — Landnam', () => {
         buildGate: false,
         player: {
           francs: 9_500_000_000,
-          level: 1,
-          xp: 170,
           activeMission: null,
           missionCount: 1,
           pendingLaunch: false,
@@ -425,8 +405,6 @@ describe('Full Game Loop — Landnam', () => {
         doneSteps: { 1: true },
         player: {
           francs: 9_000_000_000,
-          level: 1,
-          xp: 170,
           activeMission: null,
           missionCount: 1,
           pendingLaunch: false,
