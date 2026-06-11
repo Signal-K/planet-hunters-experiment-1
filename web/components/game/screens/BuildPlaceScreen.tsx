@@ -11,6 +11,7 @@ interface BuildPlaceScreenProps {
   onPlaced: (kind: string, plot: number) => void
   onBack: () => void
   hasCoach?: boolean
+  coachTarget?: string | null
 }
 
 const CATALOG = [
@@ -36,7 +37,7 @@ function LockIcon() {
   return <svg width="11" height="11" viewBox="0 0 12 12" fill="none" aria-hidden="true"><rect x="2" y="5" width="8" height="6" rx="1" stroke="currentColor"/><path d="M4 5V3a2 2 0 0 1 4 0v2" stroke="currentColor"/></svg>
 }
 
-export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach }: BuildPlaceScreenProps) {
+export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, coachTarget }: BuildPlaceScreenProps) {
   const [phase, setPhase] = useState<'pick' | 'place'>('pick')
   const [picked, setPicked] = useState('launchpad')
   const [cell, setCell] = useState<number | null>(null)
@@ -88,7 +89,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach }: BuildPl
             })}
           </div>
           <div style={{ padding: '14px' }}>
-            <PrimaryBtn kind="amber" onClick={() => setPhase('place')}>Select a Plot →</PrimaryBtn>
+            <PrimaryBtn kind="amber" onClick={() => setPhase('place')} highlight={coachTarget === 'build-select-plot'}>Select a Plot →</PrimaryBtn>
           </div>
         </div>
       )}

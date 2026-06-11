@@ -9,10 +9,11 @@ import LightcurvePlot from '../LightcurvePlot'
 
 type Verdict = 'planet' | 'not_planet'
 
-export default function ClassifyLightcurveScreen({ onBack, onSubmit, hasCoach }: {
+export default function ClassifyLightcurveScreen({ onBack, onSubmit, hasCoach, coachTarget }: {
   onBack: () => void
   onSubmit: (verdict: Verdict) => void
   hasCoach?: boolean
+  coachTarget?: string | null
 }) {
   const [verdict, setVerdict] = useState<Verdict | null>(null)
   const [submitting, setSubmitting] = useState(false)
@@ -86,10 +87,11 @@ export default function ClassifyLightcurveScreen({ onBack, onSubmit, hasCoach }:
         )}
       </div>
       <div className="sticky-actions">
-        <PrimaryBtn 
-          kind="amber" 
-          disabled={!verdict || submitting} 
+        <PrimaryBtn
+          kind="amber"
+          disabled={!verdict || submitting}
           onClick={() => verdict && handleHandleSubmit(verdict)}
+          highlight={coachTarget === 'submit-classification-btn' && !!verdict && !submitting}
         >
           {submitting ? 'Transmitting...' : 'Submit Classification'}
         </PrimaryBtn>

@@ -3,6 +3,7 @@
 import React from 'react'
 import type { Screen } from '@/game-context'
 import { useGame } from '@/game-context'
+import { coachHighlightStyle } from '@/lib/coachHighlight'
 
 interface NavItem {
   id: string
@@ -15,6 +16,7 @@ interface NavItem {
 interface RadialNavProps {
   current: string
   onNav: (id: string) => void
+  coachTarget?: string | null
 }
 
 function HubGlyph() {
@@ -74,7 +76,7 @@ const MENU: NavItem[] = [
   { id: 'market',   label: 'Market',   color: '#ffb347', glyph: <MarketGlyph />, locked: true },
 ]
 
-export default function RadialNav({ current, onNav }: RadialNavProps) {
+export default function RadialNav({ current, onNav, coachTarget }: RadialNavProps) {
   const game = useGame()
   const open = game.menuOpen
   const setOpen = game.setMenuOpen
@@ -154,6 +156,7 @@ export default function RadialNav({ current, onNav }: RadialNavProps) {
               color: active ? '#06121f' : itemColor,
               opacity: locked ? 0.68 : 1,
               backdropFilter: 'blur(6px)',
+              ...coachHighlightStyle(coachTarget === `nav-${m.id}-item`, 999),
             }}>
               {m.glyph}
             </span>
@@ -218,6 +221,7 @@ export default function RadialNav({ current, onNav }: RadialNavProps) {
           alignItems: 'center',
           justifyContent: 'center',
           transition: 'box-shadow 200ms',
+          ...coachHighlightStyle(coachTarget === 'nav-hub-button', 999),
         }}
       >
         <span style={{ position: 'absolute', inset: 6, borderRadius: 999, border: '1px solid rgba(255,255,255,0.4)' }} />

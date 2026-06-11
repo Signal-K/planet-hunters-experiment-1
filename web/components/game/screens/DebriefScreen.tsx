@@ -7,12 +7,13 @@ import Panel from '@/components/ui/Panel'
 import TopBar from '@/components/ui/TopBar'
 import { PrimaryBtn } from '@/components/ui/Button'
 
-export default function DebriefScreen({ mission, target, cargo, onDone, minerals }: {
+export default function DebriefScreen({ mission, target, cargo, onDone, minerals, coachTarget }: {
   mission: Mission
   target: Target
   cargo: Record<string, number>
   onDone: (total: number, xp: number, affinity: number) => void
   minerals: Record<string, MineralMeta>
+  coachTarget?: string | null
 }) {
   const [step, setStep] = useState(0)
   const subtotal = sellCargo(cargo, minerals)
@@ -45,9 +46,9 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
       </div>
       <div className="sticky-actions">
         {step === 0 ? (
-          <PrimaryBtn kind="cyan" testId="resolve-cargo-btn" onClick={() => setStep(1)}>Resolve Cargo</PrimaryBtn>
+          <PrimaryBtn kind="cyan" testId="resolve-cargo-btn" onClick={() => setStep(1)} highlight={coachTarget === 'debrief-cta'}>Resolve Cargo</PrimaryBtn>
         ) : (
-          <PrimaryBtn kind="amber" testId="collect-reward-btn" onClick={() => onDone(total, xp, delivered ? mission.payout.affinity : 0)}>Collect Reward</PrimaryBtn>
+          <PrimaryBtn kind="amber" testId="collect-reward-btn" onClick={() => onDone(total, xp, delivered ? mission.payout.affinity : 0)} highlight={coachTarget === 'debrief-cta'}>Collect Reward</PrimaryBtn>
         )}
       </div>
     </div>

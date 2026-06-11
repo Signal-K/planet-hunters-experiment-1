@@ -16,15 +16,12 @@ interface TutorialCoachProps {
 export default function TutorialCoach({ stepIndex, steps, step, total, onManualNext, onSkip }: TutorialCoachProps) {
   const [collapsed, setCollapsed] = useState(false)
   if (!step) return null
-  const spot = step.spot
   const manual = !!step.manual
   const compactTop = step.screen === 'build'
     ? 92
     : step.screen === 'targets'
       ? undefined
-    : spot
-      ? (spot.y + spot.h / 2 < 437 ? undefined : 84)
-      : (step.anchor === 'bottom' ? undefined : 84)
+      : (step.anchor === 'top' ? 84 : undefined)
   const compactBottom = step.screen === 'targets'
     ? 12
     : compactTop == null ? 110 : undefined
@@ -43,49 +40,11 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
     </div>
   )
 
-  const ring = spot && (
-    <>
-      <div style={{
-        position: 'absolute',
-        left: spot.x,
-        top: spot.y,
-        width: spot.w,
-        height: spot.h,
-        borderRadius: 14,
-        boxShadow: `0 0 0 9999px rgba(3,6,12,${manual ? '0.62' : '0.42'})`,
-        border: '2px solid #f5a623',
-        animation: 'coach-spot 1.4s ease-in-out infinite',
-        pointerEvents: 'none',
-      }} />
-      {!collapsed && (
-        <div style={{
-          position: 'absolute',
-          left: Math.min(Math.max(spot.x + spot.w / 2 - 13, 12), 364),
-          top: step.anchor === 'top' ? spot.y + spot.h + 4 : spot.y - 34,
-          animation: 'coach-point 1s ease-in-out infinite',
-          pointerEvents: 'none',
-        }}>
-          <svg
-            width="26"
-            height="30"
-            viewBox="0 0 26 30"
-            style={{
-              transform: step.anchor === 'top' ? 'rotate(180deg)' : 'none',
-              filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))',
-            }}
-          >
-            <path d="M13 2 L13 22 M13 22 L6 15 M13 22 L20 15" stroke="#f5a623" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-          </svg>
-        </div>
-      )}
-    </>
-  )
-
   if (manual) {
     const cardTop = step.anchor === 'top' ? 150 : step.anchor === 'center' ? 330 : 520
     return (
       <div style={{ position: 'absolute', inset: 0, zIndex: 80, pointerEvents: 'none' }}>
-        {ring ?? <div style={{ position: 'absolute', inset: 0, background: 'rgba(3,6,12,0.45)' }} />}
+        <div style={{ position: 'absolute', inset: 0, background: 'rgba(3,6,12,0.45)' }} />
         <div style={{ position: 'absolute', left: 14, right: 14, top: cardTop, zIndex: 82, pointerEvents: 'auto' }}>
           <div style={{
             background: 'linear-gradient(180deg, #0d1c30 0%, #081120 100%)',
@@ -126,7 +85,6 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
 
   return (
     <div style={{ position: 'absolute', inset: 0, zIndex: 80, pointerEvents: 'none' }}>
-      {ring}
       <div style={{
         position: 'absolute',
         left: 12,

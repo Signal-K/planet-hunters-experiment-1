@@ -34,8 +34,7 @@ function GameCanvas() {
       return {
         ...s,
         action: 'Tap MISSIONS',
-        anchor: 'bottom' as const,
-        spot: { x: 104, y: 704, w: 72, h: 72 },
+        target: 'nav-missions-item',
       }
     }
     return s
@@ -43,6 +42,7 @@ function GameCanvas() {
 
   const coachIndex = coach ? coachSteps.findIndex(step => step.id === coach.id) : -1
   const hasCoach = !!coach
+  const coachTarget = coach?.target ?? null
 
   function goFromNav(id: string) {
     if (id === 'missions') {
@@ -77,6 +77,7 @@ function GameCanvas() {
           <BuildPlaceScreen
             onBack={() => game.go('hub')}
             hasCoach={hasCoach}
+            coachTarget={coachTarget}
             onPlaced={(kind, plot) => {
               game.setPlayer(player => ({
                 ...player,
@@ -107,14 +108,15 @@ function GameCanvas() {
             controlBuilt={game.player.controlBuilt}
             freeOperations={game.player.freeOperations}
             hasCoach={hasCoach}
+            coachTarget={coachTarget}
             catalog={game.catalog}
           />
         )}
         {game.screen === 'classify' && game.mission && (
-          <ClassifyLightcurveScreen onBack={() => game.go('missions')} onSubmit={game.classifyCandidate} hasCoach={hasCoach} />
+          <ClassifyLightcurveScreen onBack={() => game.go('missions')} onSubmit={game.classifyCandidate} hasCoach={hasCoach} coachTarget={coachTarget} />
         )}
         {game.screen === 'targets' && game.mission && (
-          <TargetPickerScreen mission={game.mission} onBack={() => game.go('missions')} onPick={game.onPickTarget} hasCoach={hasCoach} catalog={game.catalog} />
+          <TargetPickerScreen mission={game.mission} onBack={() => game.go('missions')} onPick={game.onPickTarget} hasCoach={hasCoach} coachTarget={coachTarget} catalog={game.catalog} />
         )}
         {game.screen === 'fab' && game.mission && game.target && (
           <AssemblyScreen
@@ -128,6 +130,7 @@ function GameCanvas() {
             onLaunch={game.onLaunch}
             onBack={() => game.go(game.mission?.requiresClassification ? 'classify' : 'targets')}
             hasCoach={hasCoach}
+            coachTarget={coachTarget}
           />
         )}
         {game.screen === 'transit' && game.target && (
@@ -137,10 +140,10 @@ function GameCanvas() {
           <MiningScreen mission={game.mission} target={game.target} onBack={() => game.go('hub')} onComplete={game.onMiningDone} minerals={game.catalog.minerals} />
         )}
         {game.screen === 'debrief' && game.mission && game.target && (
-          <DebriefScreen mission={game.mission} target={game.target} cargo={game.lastCargo ?? {}} onDone={game.onDebriefDone} minerals={game.catalog.minerals} />
+          <DebriefScreen mission={game.mission} target={game.target} cargo={game.lastCargo ?? {}} onDone={game.onDebriefDone} minerals={game.catalog.minerals} coachTarget={coachTarget} />
         )}
 
-        {showNav && <RadialNav current={currentNav} onNav={goFromNav} />}
+        {showNav && <RadialNav current={currentNav} onNav={goFromNav} coachTarget={coachTarget} />}
 
         {coach && (
           <TutorialCoach

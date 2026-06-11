@@ -13,6 +13,7 @@ interface TargetPickerScreenProps {
   onBack: () => void
   onPick: (id: string) => void
   hasCoach?: boolean
+  coachTarget?: string | null
   catalog: Catalog
 }
 
@@ -70,7 +71,7 @@ function Greebly({ pos }: { pos: 'tl' | 'tr' | 'bl' | 'br' }) {
   return <div style={sty} />
 }
 
-export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, catalog }: TargetPickerScreenProps) {
+export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, coachTarget, catalog }: TargetPickerScreenProps) {
   const { targets: TARGETS, minerals: MINERAL_META } = catalog
   const compat = compatibleTargetsFor(mission, TARGETS)
   const compatIds = new Set(compat.map(t => t.id))
@@ -187,7 +188,7 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
               </div>
             </Panel>
             <div style={{ marginTop: 12 }}>
-              <PrimaryBtn onClick={() => onPick(pickedTarget.id)}>Continue · Build →</PrimaryBtn>
+              <PrimaryBtn onClick={() => onPick(pickedTarget.id)} highlight={coachTarget === 'target-continue-btn'}>Continue · Build →</PrimaryBtn>
             </div>
           </div>
         )}

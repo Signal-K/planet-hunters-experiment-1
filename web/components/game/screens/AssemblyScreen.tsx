@@ -19,6 +19,7 @@ interface AssemblyScreenProps {
   onBack: () => void
   onExplained: () => void
   hasCoach?: boolean
+  coachTarget?: string | null
 }
 
 function Slot({ label, parts, picked, accent, onPick }: {
@@ -82,7 +83,7 @@ export default function AssemblyScreen(props: AssemblyScreenProps) {
         <div style={{ display: 'flex', gap: 'var(--ln-s-2)', marginBottom: 'var(--ln-s-2)' }}>
           <GhostBtn full={false} onClick={() => { props.onSuggest(); props.onExplained() }}>Auto-Suggest</GhostBtn>
         </div>
-        <PrimaryBtn kind="amber" disabled={!check.ok} testId="launch-btn" onClick={props.onLaunch}>Confirm Launch</PrimaryBtn>
+        <PrimaryBtn kind="amber" disabled={!check.ok} testId="launch-btn" onClick={props.onLaunch} highlight={props.coachTarget === 'launch-btn'}>Confirm Launch</PrimaryBtn>
       </div>
     </div>
   )

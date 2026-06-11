@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { coachHighlightStyle } from '@/lib/coachHighlight'
 
 type ButtonKind = 'cyan' | 'amber' | 'green'
 type ButtonSize = 'sm' | 'md' | 'lg'
@@ -14,6 +15,8 @@ interface ButtonProps {
   size?: ButtonSize
   variant?: 'primary' | 'secondary' | 'danger'
   testId?: string
+  /** Draws the Mission Coach highlight ring around this button. */
+  highlight?: boolean
 }
 
 const GRADS: Record<ButtonKind, [string, string, string, string]> = {
@@ -22,7 +25,7 @@ const GRADS: Record<ButtonKind, [string, string, string, string]> = {
   green: ['#6cf09a', '#1ea54a', '#02180c', 'rgba(57,211,106,0.4)'],
 }
 
-export function PrimaryBtn({ children, onClick, disabled, full = true, kind = 'cyan', testId }: ButtonProps) {
+export function PrimaryBtn({ children, onClick, disabled, full = true, kind = 'cyan', testId, highlight }: ButtonProps) {
   const [h1, h2, fg, glow] = GRADS[kind]
   return (
     <button
@@ -49,6 +52,8 @@ export function PrimaryBtn({ children, onClick, disabled, full = true, kind = 'c
         gap: 10,
         opacity: disabled ? 0.4 : 1,
         filter: disabled ? 'saturate(0.5)' : 'none',
+        position: highlight ? 'relative' : undefined,
+        ...coachHighlightStyle(!!highlight, 12),
       }}
     >
       {children}

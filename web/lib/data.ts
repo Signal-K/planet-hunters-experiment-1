@@ -82,7 +82,8 @@ export interface TutorialStep {
   action?: string
   manual?: boolean
   anchor: 'top' | 'bottom' | 'center'
-  spot: { x: number; y: number; w: number; h: number } | null
+  /** Identifies which on-screen control should render its own coach highlight ring. */
+  target: string | null
   cta: string
 }
 
@@ -296,35 +297,35 @@ export const M1_STEPS: TutorialStep[] = [
   { id: 0, screen: 'build',   title: 'Build a Launchpad',
     body: 'Every base starts here. Select the Launchpad, then tap a plot to place it on your land.',
     action: 'Tap SELECT A PLOT, then a pad',
-    anchor: 'bottom', spot: null, cta: 'Build Launchpad' },
+    anchor: 'bottom', target: 'build-select-plot', cta: 'Build Launchpad' },
   { id: 1, screen: 'hub',     title: 'Open a Mission',
     body: 'Open the radial menu, then choose MISSIONS to see the contract board.',
     action: 'Tap menu, then MISSIONS',
-    anchor: 'bottom', spot: { x: 169, y: 786, w: 64, h: 64 }, cta: 'the menu' },
+    anchor: 'top', target: 'nav-hub-button', cta: 'the menu' },
   { id: 2, screen: 'missions', title: 'Lock a Contract',
     body: 'Pick a mining company. They name the minerals they want and pay a bonus on delivery.',
     action: 'Tap a contract card',
-    anchor: 'bottom', spot: { x: 14, y: 154, w: 374, h: 168 }, cta: 'a contract' },
+    anchor: 'bottom', target: 'mission-card-recommended', cta: 'a contract' },
   { id: 3, screen: 'targets',  title: 'Choose a Destination',
     body: 'Tap a highlighted body on the map — only compatible targets are selectable.',
     action: 'Tap a target, then Continue',
-    anchor: 'bottom', spot: { x: 36, y: 204, w: 330, h: 482 }, cta: 'a target' },
+    anchor: 'bottom', target: 'target-continue-btn', cta: 'a target' },
   { id: 4, screen: 'fab',      title: 'Assemble the Rocket',
     body: 'Your Starter Rocket is pre-loaded with compatible parts. Swap any slot to experiment, or keep the suggested build.',
     manual: true,
-    anchor: 'top', spot: { x: 14, y: 154, w: 374, h: 250 }, cta: 'Got it' },
+    anchor: 'top', target: null, cta: 'Got it' },
   { id: 5, screen: 'fab',      title: 'Launch',
     body: 'Everything checks out.',
     action: 'Tap CONFIRM LAUNCH',
-    anchor: 'top', spot: { x: 14, y: 786, w: 374, h: 64 }, cta: 'Confirm Launch' },
+    anchor: 'top', target: 'launch-btn', cta: 'Confirm Launch' },
   { id: 6, screen: 'mining',   title: 'Mine the Asteroid',
     body: 'Tap the glowing ore deposits to collect minerals. Fill your contract order, then tap RETURN when you\'re ready to fly home.',
     action: 'Tap ore to mine · then Return',
-    anchor: 'center', spot: null, cta: 'mine' },
+    anchor: 'top', target: null, cta: 'mine' },
   { id: 9, screen: 'debrief',  title: 'Debrief',
     body: 'Sell your cargo and collect the contractor bonus.',
     action: 'Tap to collect your reward',
-    anchor: 'top', spot: { x: 14, y: 786, w: 374, h: 64 }, cta: 'Collect' },
+    anchor: 'top', target: 'debrief-cta', cta: 'Collect' },
 ]
 
 export const PROGRESSION_STEPS: TutorialStep[] = [
@@ -332,10 +333,10 @@ export const PROGRESSION_STEPS: TutorialStep[] = [
   { id: 30, screen: 'classify', title: 'Classify a TESS Lightcurve',
     body: 'The repeating dip may be a planet crossing its star. Inspect the signal, then record PLANET or NOT PLANET for the science team.',
     action: 'Inspect the dip and submit a classification',
-    anchor: 'bottom', spot: { x: 14, y: 190, w: 374, h: 300 }, cta: 'Classify' },
+    anchor: 'bottom', target: 'submit-classification-btn', cta: 'Classify' },
   { id: 40, screen: 'missions', title: 'You\'re in Command Now',
     body: 'The final authored contract is yours to run. Pick any reachable destination and bring the crew home.',
-    manual: true, anchor: 'top', spot: null, cta: 'Take Command' },
+    manual: true, anchor: 'top', target: null, cta: 'Take Command' },
 ]
 
 export interface RocketConfig {
