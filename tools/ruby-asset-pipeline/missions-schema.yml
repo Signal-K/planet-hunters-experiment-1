@@ -1,0 +1,98 @@
+# Mission/event chain definition schema for Landnam (DSL decision: structured YAML, see task 018394).
+#
+# Each top-level entry under `missions:` corresponds to one entry in
+# web/lib/data.ts MISSIONS. A future loader can read this file and emit the
+# TypeScript Mission[] array (or a JSON catalog consumed at runtime).
+#
+# Schema:
+#
+# missions:
+#   - id: string                 # unique mission id, e.g. "m1-iron"
+#     title: string
+#     brief: string               # flavor text shown to the player
+#     contractor: string          # contractor id (see contractors catalog)
+#     tag: string                 # short badge, e.g. STARTER, BULK, PROSPECT
+#     difficulty: string          # L1, L2, L3 ...
+#     sequence: integer           # ordering within the mission chain
+#     locked: boolean             # initial lock state
+#     unlock:                     # optional unlock trigger (omit if unlocked from the start)
+#       requires_mission: string  # id of the mission that must be completed first
+#       label: string             # display text, e.g. "Complete M2"
+#     requires:                   # acceptance criteria for turning in the mission
+#       minerals:                 # map of mineral id -> quantity required
+#         <mineral_id>: integer
+#       cargo_min: integer        # minimum cargo capacity needed
+#       drill_tier: integer       # minimum drill tier needed
+#       max_orbit: integer        # maximum orbit distance reachable
+#     reward:                      # formula inputs for payout calculation
+#       francs: integer            # base currency reward
+#       affinity: integer          # contractor affinity gained
+
+missions:
+  - id: m1-iron
+    title: Iron for Foundry-3
+    brief: Foundry-3 needs a fresh iron shipment to keep their smelters running. Belt region preferred.
+    contractor: foundry3
+    tag: STARTER
+    difficulty: L1
+    sequence: 1
+    locked: false
+    requires:
+      minerals:
+        iron: 6
+      cargo_min: 6
+      drill_tier: 1
+      max_orbit: 4
+    reward:
+      francs: 1200000
+      affinity: 10
+
+  - id: m2-silicon
+    title: Silicon Mass Order
+    brief: Cryos needs raw silicon for their electronics division. Any asteroid source accepted.
+    contractor: cryos
+    tag: BULK
+    difficulty: L2
+    sequence: 2
+    locked: false
+    requires:
+      minerals:
+        silicon: 8
+      cargo_min: 8
+      drill_tier: 1
+      max_orbit: 5
+    reward:
+      francs: 1800000
+      affinity: 8
+
+  - id: m3-gold
+    title: KOI-7923 Deep Prospect
+    brief: Belt Gold Ltd has eyes on the outer KOI corridor — confirmed exoplanet belt with dense gold and rare deposits. The SR3 drive tier is required for this depth.
+    contractor: beltgold
+    tag: PROSPECT
+    difficulty: L3
+    sequence: 3
+    locked: true
+    unlock:
+      requires_mission: m2-silicon
+      label: Complete M2
+    requires:
+      minerals:
+        gold: 4
+        rare: 2
+      cargo_min: 8
+      drill_tier: 3
+      max_orbit: 7
+    reward:
+      francs: 9000000
+      affinity: 20
+
+# Edge cases / candidates for a future Ruby DSL parser (Treetop/Parslet) if YAML
+# proves insufficient:
+#   - Conditional rewards (e.g. bonus payout if mission completed within N turns)
+#     are not representable here; would need a small expression language.
+#   - Multi-step mission chains with branching outcomes (success/failure paths)
+#     are not modeled — `unlock.requires_mission` only supports a single linear
+#     prerequisite.
+#   - Dynamic reward formulas (e.g. payout scaling with player tier) would need
+#     a formula DSL rather than static integers.
