@@ -1,0 +1,446 @@
+openapi: 3.0.3
+info:
+  title: Landnam Geometry Service
+  description: >
+    Math co-processor for astronomy/orbital geometry operations. Tier 1-3
+    operations are computed in Elixir using Nx and called from PocketBase Go
+    hooks over HTTP/JSON. See @task-e2f4a1 for the Tier 1 spike and
+    @task-f9a2b5 for benchmark results against inline Go math.
+  version: 0.1.0
+servers:
+  - url: http://localhost:4002
+    description: Local / Docker Compose (port 4002)
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      operationId: health
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+
+  /metrics:
+    get:
+      summary: Prometheus metrics
+      operationId: metrics
+      responses:
+        '200':
+          description: Prometheus exposition format
+          content:
+            text/plain:
+              schema:
+                type: string
+
+  # ---- Tier 1 ----
+  /coordinate-conversion:
+    post:
+      summary: Convert equatorial (RA/Dec) to Cartesian coordinates
+      operationId: coordinateConversion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EquatorialCoordinates'
+      responses:
+        '200':
+          description: Unit Cartesian vector
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartesianVector'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /angular-distance:
+    post:
+      summary: Great-circle angular distance between two RA/Dec points
+      operationId: angularDistance
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [a, b]
+              properties:
+                a:
+                  $ref: '#/components/schemas/RaDecPair'
+                b:
+                  $ref: '#/components/schemas/RaDecPair'
+      responses:
+        '200':
+          description: Angular distance in degrees
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  distance_deg:
+                    type: number
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /sector-lookup:
+    post:
+      summary: Coarse sky-sector lookup for an RA/Dec point
+      operationId: sectorLookup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EquatorialCoordinates'
+      responses:
+        '200':
+          description: Sector index (0-31, 8x4 grid)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sector:
+                    type: integer
+                    minimum: 0
+                    maximum: 31
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  # ---- Tier 2 ----
+  /orbital-position:
+    post:
+      summary: Compute a body's position along its orbit at a given epoch
+      operationId: orbitalPosition
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [semi_major_axis_au, eccentricity, inclination_deg, epoch]
+              properties:
+                semi_major_axis_au:
+                  type: number
+                eccentricity:
+                  type: number
+                  minimum: 0
+                  maximum: 1
+                inclination_deg:
+                  type: number
+                argument_of_periapsis_deg:
+                  type: number
+                  default: 0
+                epoch:
+                  type: number
+                  description: Days since reference epoch (J2000)
+      responses:
+        '200':
+          description: Position in AU
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartesianVector'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /phase-angle:
+    post:
+      summary: Sun-target-observer phase angle
+      operationId: phaseAngle
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [observer, target, sun]
+              properties:
+                observer:
+                  $ref: '#/components/schemas/CartesianVector'
+                target:
+                  $ref: '#/components/schemas/CartesianVector'
+                sun:
+                  $ref: '#/components/schemas/CartesianVector'
+      responses:
+        '200':
+          description: Phase angle in degrees
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  phase_angle_deg:
+                    type: number
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /line-of-sight:
+    post:
+      summary: Check whether a line of sight between two points is occluded by a body
+      operationId: lineOfSight
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [from, to, occluder, occluder_radius_au]
+              properties:
+                from:
+                  $ref: '#/components/schemas/CartesianVector'
+                to:
+                  $ref: '#/components/schemas/CartesianVector'
+                occluder:
+                  $ref: '#/components/schemas/CartesianVector'
+                occluder_radius_au:
+                  type: number
+      responses:
+        '200':
+          description: Visibility result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  visible:
+                    type: boolean
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  # ---- Tier 3 ----
+  /procedural-body:
+    post:
+      summary: Generate a procedural celestial body from a seed
+      operationId: proceduralBody
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [seed, body_type]
+              properties:
+                seed:
+                  type: integer
+                body_type:
+                  type: string
+                  enum: [asteroid, planet, exoplanet]
+      responses:
+        '200':
+          description: Generated body parameters
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /spatial-range-query:
+    post:
+      summary: Find bodies within a radius of a point
+      operationId: spatialRangeQuery
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [center, radius_au, points]
+              properties:
+                center:
+                  $ref: '#/components/schemas/CartesianVector'
+                radius_au:
+                  type: number
+                points:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/CartesianVector'
+      responses:
+        '200':
+          description: Indices of points within range
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  indices:
+                    type: array
+                    items:
+                      type: integer
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /convex-hull:
+    post:
+      summary: Compute the 2D convex hull of a point set
+      operationId: convexHull
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [points]
+              properties:
+                points:
+                  type: array
+                  items:
+                    type: array
+                    items:
+                      type: number
+                    minItems: 2
+                    maxItems: 2
+      responses:
+        '200':
+          description: Hull vertices, in order
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  hull:
+                    type: array
+                    items:
+                      type: array
+                      items:
+                        type: number
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /trajectory-propagation:
+    post:
+      summary: Propagate a Keplerian trajectory forward by a time delta
+      operationId: trajectoryPropagation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [semi_major_axis_au, eccentricity, inclination_deg, epoch, delta_days]
+              properties:
+                semi_major_axis_au:
+                  type: number
+                eccentricity:
+                  type: number
+                inclination_deg:
+                  type: number
+                argument_of_periapsis_deg:
+                  type: number
+                  default: 0
+                epoch:
+                  type: number
+                delta_days:
+                  type: number
+      responses:
+        '200':
+          description: New position and velocity
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  position:
+                    $ref: '#/components/schemas/CartesianVector'
+                  velocity:
+                    $ref: '#/components/schemas/CartesianVector'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /noise-generation:
+    post:
+      summary: Sample procedural noise (e.g. for terrain/asteroid surface generation)
+      operationId: noiseGeneration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [seed, points]
+              properties:
+                seed:
+                  type: integer
+                octaves:
+                  type: integer
+                  default: 4
+                points:
+                  type: array
+                  items:
+                    type: array
+                    items:
+                      type: number
+                    minItems: 2
+                    maxItems: 3
+      responses:
+        '200':
+          description: Noise values, one per input point
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  values:
+                    type: array
+                    items:
+                      type: number
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+components:
+  schemas:
+    RaDecPair:
+      type: array
+      items:
+        type: number
+      minItems: 2
+      maxItems: 2
+      description: "[ra_deg, dec_deg]"
+    EquatorialCoordinates:
+      type: object
+      required: [ra_deg, dec_deg]
+      properties:
+        ra_deg:
+          type: number
+        dec_deg:
+          type: number
+    CartesianVector:
+      type: object
+      required: [x, y, z]
+      properties:
+        x:
+          type: number
+        y:
+          type: number
+        z:
+          type: number
+    Error:
+      type: object
+      required: [error, message]
+      properties:
+        error:
+          type: string
+          description: Machine-readable error code, e.g. validation_error, internal_error
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
+
+  responses:
+    ValidationError:
+      description: Request body failed validation
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
