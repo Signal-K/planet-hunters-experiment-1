@@ -18,6 +18,7 @@ import SatelliteScreen from '@/components/game/screens/SatelliteScreen'
 import MarketScreen from '@/components/game/screens/MarketScreen'
 import TutorialCoach from '@/components/game/TutorialCoach'
 import BuildGatePrompt from '@/components/game/BuildGatePrompt'
+import SaveProgressPrompt from '@/components/game/SaveProgressPrompt'
 import UnlockPopup from '@/components/game/UnlockPopup'
 import RadialNav from '@/components/layout/RadialNav'
 import BackendStatus from '@/components/game/BackendStatus'
@@ -200,7 +201,14 @@ function GameCanvas() {
             step={coach}
             total={coachSteps.length}
             onManualNext={game.coachManualNext}
-            onSkip={() => game.setTutorial(false)}
+            onSkip={() => {
+              game.setTutorial(false)
+              game.setDoneSteps(prev => {
+                const next = { ...prev }
+                for (const step of coachSteps) next[step.id] = true
+                return next
+              })
+            }}
           />
         )}
         {game.buildGate && (
@@ -225,6 +233,9 @@ function GameCanvas() {
             }}
             onDismiss={game.popup === 'loan' ? () => game.setPopup(null) : undefined}
           />
+        )}
+        {game.upgradePromptOpen && !game.popup && !game.buildGate && (
+          <SaveProgressPrompt onUpgrade={game.upgradeAccount} onDismiss={game.dismissUpgradePrompt} />
         )}
       </div>
     </main>
