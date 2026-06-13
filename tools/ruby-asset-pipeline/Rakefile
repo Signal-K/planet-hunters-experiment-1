@@ -13,6 +13,13 @@ namespace :sprites do
   end
 end
 
+namespace :mock do
+  desc 'Boot the Sinatra mock API stub server'
+  task :start do
+    sh 'cd mock && bundle exec rackup -p 4500'
+  end
+end
+
 namespace :seed do
   desc 'Import catalog data and write PocketBase-compatible seed JSON. Usage: rake seed:import[source,collection]'
   task :import, [:source, :collection] do |_t, args|
