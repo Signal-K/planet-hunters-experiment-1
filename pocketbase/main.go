@@ -19,8 +19,11 @@ func main() {
 	app.OnServe().BindFunc(func(se *core.ServeEvent) error {
 		ensureCollections(app)
 		seedCatalog(app)
+		registerGuestAccountCleanup(app)
 		return se.Next()
 	})
+
+	registerGuestSignupRateLimit(app)
 
 	if err := app.Start(); err != nil {
 		log.Fatal(err)
