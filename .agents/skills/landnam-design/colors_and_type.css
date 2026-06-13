@@ -1,0 +1,270 @@
+/* ============================================================
+   LANDNAM — Colors & Type
+   ------------------------------------------------------------
+   Mobile-first, landscape sci-fi mining game in the
+   Star Sailors ecosystem. Built in Godot. The tokens below
+   mirror the in-engine palette so HTML mocks and Godot UI
+   stay in lockstep.
+
+   Two surface modes ship together:
+     • .theme-deep   — deep-space command (default; rocket
+                       fab, mission HUD, system map)
+     • .theme-atlas  — black parchment atlas (galaxy/system
+                       atlas screens with cream-on-black mono)
+
+   Always mount the body in landscape; minimum readable
+   font-size on a 1920×1080 canvas is 18px.
+   ============================================================ */
+
+/* ─── Fonts ──────────────────────────────────────────────── */
+@font-face { font-family: "Oxanium"; src: url("fonts/Oxanium-ExtraLight.ttf") format("truetype"); font-weight: 200; font-style: normal; font-display: swap; }
+@font-face { font-family: "Oxanium"; src: url("fonts/Oxanium-Light.ttf")      format("truetype"); font-weight: 300; font-style: normal; font-display: swap; }
+@font-face { font-family: "Oxanium"; src: url("fonts/Oxanium-Regular.ttf")    format("truetype"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "Oxanium"; src: url("fonts/Oxanium-Medium.ttf")     format("truetype"); font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: "Oxanium"; src: url("fonts/Oxanium-SemiBold.ttf")   format("truetype"); font-weight: 600; font-style: normal; font-display: swap; }
+@font-face { font-family: "Oxanium"; src: url("fonts/Oxanium-Bold.ttf")       format("truetype"); font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: "Oxanium"; src: url("fonts/Oxanium-ExtraBold.ttf")  format("truetype"); font-weight: 800; font-style: normal; font-display: swap; }
+
+@font-face { font-family: "Turret Road"; src: url("fonts/TurretRoad-ExtraLight.ttf") format("truetype"); font-weight: 200; font-style: normal; font-display: swap; }
+@font-face { font-family: "Turret Road"; src: url("fonts/TurretRoad-Light.ttf")      format("truetype"); font-weight: 300; font-style: normal; font-display: swap; }
+@font-face { font-family: "Turret Road"; src: url("fonts/TurretRoad-Regular.ttf")    format("truetype"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "Turret Road"; src: url("fonts/TurretRoad-Medium.ttf")     format("truetype"); font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: "Turret Road"; src: url("fonts/TurretRoad-Bold.ttf")       format("truetype"); font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: "Turret Road"; src: url("fonts/TurretRoad-ExtraBold.ttf")  format("truetype"); font-weight: 800; font-style: normal; font-display: swap; }
+
+/* ─── Root tokens (deep-space default) ──────────────────── */
+:root, .theme-deep {
+  /* ── Surfaces — deep navy command ── */
+  --ln-void:        #06090f;  /* outermost backdrop, off-canvas */
+  --ln-bg:          #0a121d;  /* page / scene background */
+  --ln-bg-grid:     #0e1828;  /* grid + blueprint lines */
+  --ln-surface:     #122236;  /* primary cards, panels */
+  --ln-surface-2:   #18304b;  /* elevated cards, selected idle */
+  --ln-surface-3:   #1f3d5e;  /* hover */
+  --ln-overlay:     rgba(6, 9, 15, 0.72); /* modal scrim */
+
+  /* ── Primary — Command Cyan ── */
+  --ln-cyan:        #3fa9ff;  /* primary action, panel headers, links */
+  --ln-cyan-bright: #6cc2ff;  /* hover */
+  --ln-cyan-press:  #1c87dc;  /* pressed */
+  --ln-cyan-soft:   rgba(63, 169, 255, 0.16);
+  --ln-cyan-border: rgba(63, 169, 255, 0.35);
+
+  /* ── Highlight — Vulcan Amber (selection, propulsion, currency) ── */
+  --ln-amber:        #f5a623;
+  --ln-amber-bright: #ffc25c;
+  --ln-amber-press:  #d68a0d;
+  --ln-amber-soft:   rgba(245, 166, 35, 0.14);
+  --ln-amber-border: rgba(245, 166, 35, 0.55);
+
+  /* ── Status ── */
+  --ln-ok:        #39d36a;   /* ready / online / assembly complete */
+  --ln-ok-soft:   rgba(57, 211, 106, 0.18);
+  --ln-warn:      #ffb347;
+  --ln-warn-soft: rgba(255, 179, 71, 0.18);
+  --ln-crit:      #ff5a6a;   /* danger / abort / overload */
+  --ln-crit-soft: rgba(255, 90, 106, 0.18);
+  --ln-info:      #7ec8ff;
+
+  /* ── Mineral / resource accents (used as data hues) ── */
+  --ln-mineral-silicon: #b9d8ff;
+  --ln-mineral-iron:    #d97150;
+  --ln-mineral-ice:     #9becff;
+  --ln-mineral-carbon:  #6a7280;
+  --ln-mineral-gold:    #ffd166;
+  --ln-mineral-rare:    #c084ff;
+
+  /* ── Text ── */
+  --ln-text:       #e6efff;  /* primary readouts */
+  --ln-text-dim:   #a9b8ce;  /* secondary text, body */
+  --ln-text-muted: #5d7390;  /* tertiary, captions, axis labels */
+  --ln-text-ghost: rgba(230, 239, 255, 0.35);
+  --ln-text-on-cyan:  #061226;
+  --ln-text-on-amber: #1a1304;
+
+  /* ── Borders / hairlines ── */
+  --ln-hairline:        rgba(63, 169, 255, 0.18);  /* ghost panel edge */
+  --ln-hairline-strong: rgba(63, 169, 255, 0.45);  /* selected / focus */
+  --ln-divider:         rgba(169, 184, 206, 0.12); /* in-panel rule */
+
+  /* ── Elevation ── */
+  --ln-shadow-card:   0 2px 0 rgba(255,255,255,0.04) inset, 0 8px 24px rgba(0,0,0,0.45);
+  --ln-shadow-modal:  0 24px 64px rgba(0,0,0,0.7);
+  --ln-glow-cyan:     0 0 0 1px rgba(63,169,255,0.6), 0 0 18px rgba(63,169,255,0.35);
+  --ln-glow-amber:    0 0 0 1px rgba(245,166,35,0.7), 0 0 18px rgba(245,166,35,0.4);
+  --ln-glow-ok:       0 0 12px rgba(57,211,106,0.7);
+
+  /* ── Radii ── */
+  --ln-r-xs: 2px;   /* mineral chips, micro-tags */
+  --ln-r-sm: 4px;   /* inline labels */
+  --ln-r-md: 6px;   /* buttons, inputs */
+  --ln-r-lg: 8px;   /* panels, cards */
+  --ln-r-xl: 14px;  /* primary action button, big CTAs */
+  --ln-r-pill: 999px;
+
+  /* ── Spacing (8-pt rhythm) ── */
+  --ln-s-0: 0;
+  --ln-s-1: 4px;
+  --ln-s-2: 8px;
+  --ln-s-3: 12px;
+  --ln-s-4: 16px;
+  --ln-s-5: 24px;
+  --ln-s-6: 32px;
+  --ln-s-7: 48px;
+  --ln-s-8: 64px;
+
+  /* ── Type families ── */
+  --ln-font-display: "Oxanium", "Turret Road", system-ui, sans-serif;   /* HUD, titles, big readouts */
+  --ln-font-body:    "Oxanium", system-ui, sans-serif;                  /* body / UI text */
+  --ln-font-mono:    "Turret Road", ui-monospace, "Geist Mono", monospace; /* atlas coordinates, telemetry */
+
+  /* ── Type scale (px at 1920×1080) ── */
+  --ln-fs-display:  72px;  /* hero readouts, "FRANCS 1,240" */
+  --ln-fs-title:    48px;  /* screen titles */
+  --ln-fs-h1:       36px;  /* card headings */
+  --ln-fs-h2:       28px;  /* sub-headings */
+  --ln-fs-body:     22px;  /* body */
+  --ln-fs-button:   20px;  /* CTAs */
+  --ln-fs-label:    16px;  /* uppercase instrument labels */
+  --ln-fs-micro:    13px;  /* annotations, axis ticks */
+
+  /* ── Tracking ── */
+  --ln-tr-tight:   -0.01em;
+  --ln-tr-normal:   0em;
+  --ln-tr-label:    0.14em; /* uppercase instrument labels */
+  --ln-tr-loose:    0.22em; /* tiny eyebrow labels */
+
+  /* ── Motion ── */
+  --ln-ease-out:    cubic-bezier(0.16, 1, 0.3, 1);     /* HUD reveal */
+  --ln-ease-snap:   cubic-bezier(0.4, 0, 0, 1);        /* default UI */
+  --ln-ease-mech:   cubic-bezier(0.5, 0, 0.2, 1);      /* tabs, slot swap */
+  --ln-d-quick:     120ms;
+  --ln-d-base:      220ms;
+  --ln-d-slow:      420ms;
+
+  /* ── Backgrounds (composite) ── */
+  --ln-bg-blueprint:
+    linear-gradient(180deg, #0a121d 0%, #06090f 100%),
+    repeating-linear-gradient(0deg,  transparent 0 47px, rgba(63,169,255,0.06) 47px 48px),
+    repeating-linear-gradient(90deg, transparent 0 47px, rgba(63,169,255,0.06) 47px 48px);
+
+  --ln-bg-stars:
+    radial-gradient(1px 1px at 18% 22%, rgba(255,255,255,0.7), transparent 60%),
+    radial-gradient(1px 1px at 72% 14%, rgba(255,255,255,0.55), transparent 60%),
+    radial-gradient(1.2px 1.2px at 41% 78%, rgba(255,255,255,0.6), transparent 60%),
+    radial-gradient(1px 1px at 88% 56%, rgba(255,255,255,0.5), transparent 60%),
+    radial-gradient(1.5px 1.5px at 10% 64%, rgba(255,255,255,0.4), transparent 60%);
+}
+
+/* ─── Atlas variant — galaxy/system map screens ────────── */
+.theme-atlas {
+  --ln-bg:          #050608;
+  --ln-bg-grid:     #0a0c10;
+  --ln-surface:     #0c0e12;
+  --ln-surface-2:   #11141a;
+  --ln-surface-3:   #181c25;
+
+  --ln-text:        #efe7d3;  /* parchment cream */
+  --ln-text-dim:    #b5ad99;
+  --ln-text-muted:  #6b6552;
+  --ln-text-ghost:  rgba(239, 231, 211, 0.32);
+
+  --ln-cyan:        #efe7d3;  /* in atlas mode "primary" reads as cream */
+  --ln-amber:       #f5a623;
+  --ln-amber-bright:#ffc25c;
+
+  --ln-hairline:        rgba(239, 231, 211, 0.10);
+  --ln-hairline-strong: rgba(239, 231, 211, 0.32);
+  --ln-divider:         rgba(239, 231, 211, 0.10);
+
+  --ln-font-display: "Turret Road", "Oxanium", system-ui, sans-serif;
+}
+
+/* ============================================================
+   SEMANTIC TAGS — drop these on real elements
+   ============================================================ */
+
+body {
+  background: var(--ln-bg);
+  color: var(--ln-text);
+  font-family: var(--ln-font-body);
+  font-size: var(--ln-fs-body);
+  line-height: 1.35;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, .ln-h1 {
+  font-family: var(--ln-font-display);
+  font-size: var(--ln-fs-title);
+  font-weight: 700;
+  letter-spacing: var(--ln-tr-tight);
+  color: var(--ln-text);
+  margin: 0;
+}
+
+h2, .ln-h2 {
+  font-family: var(--ln-font-display);
+  font-size: var(--ln-fs-h1);
+  font-weight: 600;
+  letter-spacing: var(--ln-tr-normal);
+  color: var(--ln-text);
+  margin: 0;
+}
+
+h3, .ln-h3 {
+  font-family: var(--ln-font-display);
+  font-size: var(--ln-fs-h2);
+  font-weight: 600;
+  color: var(--ln-text);
+  margin: 0;
+}
+
+p, .ln-body {
+  font-family: var(--ln-font-body);
+  font-size: var(--ln-fs-body);
+  font-weight: 400;
+  color: var(--ln-text-dim);
+  margin: 0;
+}
+
+.ln-display {
+  font-family: var(--ln-font-display);
+  font-size: var(--ln-fs-display);
+  font-weight: 700;
+  letter-spacing: var(--ln-tr-tight);
+  color: var(--ln-text);
+}
+
+.ln-label {
+  font-family: var(--ln-font-display);
+  font-size: var(--ln-fs-label);
+  font-weight: 600;
+  letter-spacing: var(--ln-tr-label);
+  text-transform: uppercase;
+  color: var(--ln-cyan);
+}
+
+.ln-eyebrow {
+  font-family: var(--ln-font-display);
+  font-size: var(--ln-fs-micro);
+  font-weight: 500;
+  letter-spacing: var(--ln-tr-loose);
+  text-transform: uppercase;
+  color: var(--ln-text-muted);
+}
+
+.ln-mono {
+  font-family: var(--ln-font-mono);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+}
+
+.ln-caption {
+  font-family: var(--ln-font-body);
+  font-size: var(--ln-fs-micro);
+  color: var(--ln-text-muted);
+}
+
+a, .ln-link { color: var(--ln-cyan); text-decoration: none; }
+a:hover { color: var(--ln-cyan-bright); }

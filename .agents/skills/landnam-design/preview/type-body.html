@@ -1,0 +1,96 @@
+<!doctype html>
+<!-- @dsCard group="Type" name="Type · Body & Labels" subtitle="Body 22 · tracked label 16 · micro 13" viewport="700x240" --><html><head><meta charset="utf-8"><title>Type — Body & Labels</title><link rel="stylesheet" href="preview.css">
+<style>
+  .tile { background:#0a121d; border:1px solid rgba(63,169,255,0.18); border-radius:8px; padding:14px; position:relative; }
+  .tile .corner { position:absolute; width:10px; height:10px; border:1px solid #3fa9ff; }
+  .tile .corner.tl { top:-1px; left:-1px; border-right:none; border-bottom:none; }
+  .tile .corner.tr { top:-1px; right:-1px; border-left:none; border-bottom:none; }
+  .tile .corner.bl { bottom:-1px; left:-1px; border-right:none; border-top:none; }
+  .tile .corner.br { bottom:-1px; right:-1px; border-left:none; border-top:none; }
+  .tile.amber .corner { border-color:#f5a623; }
+  .tile.green .corner { border-color:#39d36a; }
+  .tile .stamp { position:absolute; top:6px; right:8px; font-family:var(--ln-font-mono); font-size:9px; letter-spacing:0.18em; color:#5d7390; text-transform:uppercase; }
+  .lbl { font-family:var(--ln-font-display); font-size:12px; font-weight:600; letter-spacing:0.2em; text-transform:uppercase; color:#3fa9ff; }
+  .val { font-family:var(--ln-font-display); font-weight:700; font-size:34px; color:#e6efff; letter-spacing:-0.02em; line-height:1; }
+  .val .u { font-size:13px; color:#a9b8ce; margin-left:5px; letter-spacing:0.1em; }
+  .bar { height:5px; background:#06090f; border-radius:1px; overflow:hidden; display:flex; gap:2px; padding:1px; }
+  .bar > div { background:#3fa9ff; flex:1; box-shadow:0 0 4px rgba(63,169,255,0.5); }
+  .bar > div.off { background:rgba(63,169,255,0.18); box-shadow:none; }
+  .bar.amber > div { background:#f5a623; box-shadow:0 0 4px rgba(245,166,35,0.5); }
+  .bar.amber > div.off { background:rgba(245,166,35,0.18); }
+  .dot { width:8px; height:8px; border-radius:999px; background:#39d36a; box-shadow:0 0 8px rgba(57,211,106,0.8); animation:pulse 1.2s infinite; }
+  @keyframes pulse { 0%,100% { opacity:1 } 50% { opacity:0.4 } }
+  .scan { position:absolute; left:0; right:0; height:1px; background:linear-gradient(90deg, transparent, rgba(63,169,255,0.7), transparent); animation:scan 2.4s linear infinite; }
+  @keyframes scan { 0% { top:8% } 100% { top:92% } }
+  .blueprint { position:relative; display:flex; align-items:center; justify-content:center; height:74px; overflow:hidden; }
+  .blueprint svg { width:100%; height:100%; }
+</style></head>
+<body>
+<div class="card" data-stamp="LABEL / VALUE · IN USE" style="height:260px">
+  <div class="row" style="gap:12px;align-items:stretch">
+    <!-- HUD TILE 1: VESSEL DIAGRAM -->
+    <div class="tile" style="flex:1.2">
+      <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+      <div class="stamp">VX12 · 04A</div>
+      <div class="lbl">VESSEL</div>
+      <div class="blueprint">
+        <div class="scan"></div>
+        <svg viewBox="0 0 200 80" fill="none" stroke="#3fa9ff" stroke-width="1.2">
+          <!-- rocket profile -->
+          <path d="M 20 40 L 140 40 L 170 30 L 180 40 L 170 50 L 140 40" fill="rgba(63,169,255,0.08)"/>
+          <path d="M 60 40 L 60 28 L 130 28 L 140 40" />
+          <path d="M 60 40 L 60 52 L 130 52 L 140 40" />
+          <circle cx="100" cy="40" r="6" fill="rgba(63,169,255,0.2)" />
+          <line x1="20" y1="40" x2="10" y2="34" />
+          <line x1="20" y1="40" x2="10" y2="46" />
+          <!-- crosshair -->
+          <line x1="100" y1="10" x2="100" y2="22" stroke-dasharray="2 2" opacity="0.5"/>
+          <line x1="100" y1="58" x2="100" y2="70" stroke-dasharray="2 2" opacity="0.5"/>
+          <!-- callout -->
+          <line x1="170" y1="20" x2="190" y2="8" stroke="#5d7390" stroke-width="0.6"/>
+          <text x="186" y="6" fill="#5d7390" font-family="monospace" font-size="6" letter-spacing="0.1">VLCN-IX</text>
+        </svg>
+      </div>
+      <div class="row" style="gap:8px;margin-top:6px;align-items:center"><div class="dot"></div><div class="val" style="font-size:22px">READY</div></div>
+    </div>
+
+    <!-- HUD TILE 2: POWER -->
+    <div class="tile" style="flex:1">
+      <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+      <div class="stamp">PWR · 02</div>
+      <div class="lbl">POWER</div>
+      <div class="val" style="margin-top:8px">12<span class="u">MW</span></div>
+      <div class="bar" style="margin-top:10px">
+        <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div class="off"></div><div class="off"></div><div class="off"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:4px;font-family:var(--ln-font-mono);font-size:10px;color:#5d7390;letter-spacing:0.06em">
+        <span>00.0</span><span>06.0</span><span>12.0</span><span>18.0</span>
+      </div>
+    </div>
+
+    <!-- HUD TILE 3: CARGO -->
+    <div class="tile amber" style="flex:1">
+      <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+      <div class="stamp" style="color:#d68a0d">CRG · 07</div>
+      <div class="lbl" style="color:#f5a623">CARGO</div>
+      <div class="val" style="margin-top:8px;color:#f5a623">85<span class="u" style="color:#ffc25c">/220</span></div>
+      <div class="bar amber" style="margin-top:10px">
+        <div></div><div></div><div></div><div></div><div class="off"></div><div class="off"></div><div class="off"></div><div class="off"></div><div class="off"></div><div class="off"></div><div class="off"></div><div class="off"></div>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:8px;align-items:center;font-family:var(--ln-font-mono);font-size:11px">
+        <span style="width:9px;height:9px;background:#b9d8ff;border-radius:1px"></span><span style="color:#a9b8ce">Si</span>
+        <span style="width:9px;height:9px;background:#d97150;border-radius:1px;margin-left:6px"></span><span style="color:#a9b8ce">Fe</span>
+        <span style="width:9px;height:9px;background:#9becff;border-radius:1px;margin-left:6px"></span><span style="color:#a9b8ce">H₂O</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:14px;display:flex;gap:18px;align-items:center;font-family:var(--ln-font-mono);font-size:10px;letter-spacing:0.18em;color:#5d7390;text-transform:uppercase">
+    <span>━━━</span>
+    <span>LABEL · 12 / 0.2em</span>
+    <span>VALUE · 34 / OXANIUM 700</span>
+    <span>UNIT · 13 DIM</span>
+    <span style="margin-left:auto">SECTOR-3.A · HUD-04</span>
+  </div>
+</div>
+</body></html>

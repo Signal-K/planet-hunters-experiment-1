@@ -1,0 +1,228 @@
+{
+  "plugins": [
+    "react",
+    "import"
+  ],
+  "rules": {
+    "react/forbid-elements": [
+      "warn",
+      {
+        "forbid": []
+      }
+    ],
+    "no-restricted-imports": [
+      "warn",
+      {
+        "patterns": [
+          {
+            "group": [
+              "ui_kits/landnam-game/**",
+              "ui_kits/landnam-portrait/**"
+            ],
+            "message": "Import design-system components from 'index.js', not component internals."
+          }
+        ]
+      }
+    ],
+    "no-restricted-syntax": [
+      "warn",
+      {
+        "selector": "Literal[value=/#[0-9a-fA-F]{3,8}\\b/]",
+        "message": "Raw hex color — use a design-system color token via var()."
+      },
+      {
+        "selector": "Literal[value=/\\b\\d+px\\b/]",
+        "message": "Raw px value — use a design-system spacing token via var()."
+      },
+      {
+        "selector": "Literal[value=/font-family\\s*:\\s*(?!['\\\"]?(?:Oxanium|Turret Road))/i]",
+        "message": "Font not provided by the design system. Available: Oxanium, Turret Road."
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": [
+        "**/index.js"
+      ],
+      "rules": {
+        "no-restricted-imports": "off"
+      }
+    }
+  ],
+  "x-omelette": {
+    "components": {},
+    "tokens": [
+      "--ln-amber",
+      "--ln-amber-border",
+      "--ln-amber-bright",
+      "--ln-amber-press",
+      "--ln-amber-soft",
+      "--ln-bg",
+      "--ln-bg-blueprint",
+      "--ln-bg-grid",
+      "--ln-bg-stars",
+      "--ln-crit",
+      "--ln-crit-soft",
+      "--ln-cyan",
+      "--ln-cyan-border",
+      "--ln-cyan-bright",
+      "--ln-cyan-press",
+      "--ln-cyan-soft",
+      "--ln-d-base",
+      "--ln-d-quick",
+      "--ln-d-slow",
+      "--ln-divider",
+      "--ln-ease-mech",
+      "--ln-ease-out",
+      "--ln-ease-snap",
+      "--ln-font-body",
+      "--ln-font-display",
+      "--ln-font-mono",
+      "--ln-fs-body",
+      "--ln-fs-button",
+      "--ln-fs-display",
+      "--ln-fs-h1",
+      "--ln-fs-h2",
+      "--ln-fs-label",
+      "--ln-fs-micro",
+      "--ln-fs-title",
+      "--ln-glow-amber",
+      "--ln-glow-cyan",
+      "--ln-glow-ok",
+      "--ln-hairline",
+      "--ln-hairline-strong",
+      "--ln-info",
+      "--ln-mineral-carbon",
+      "--ln-mineral-gold",
+      "--ln-mineral-ice",
+      "--ln-mineral-iron",
+      "--ln-mineral-rare",
+      "--ln-mineral-silicon",
+      "--ln-ok",
+      "--ln-ok-soft",
+      "--ln-overlay",
+      "--ln-r-lg",
+      "--ln-r-md",
+      "--ln-r-pill",
+      "--ln-r-sm",
+      "--ln-r-xl",
+      "--ln-r-xs",
+      "--ln-s-0",
+      "--ln-s-1",
+      "--ln-s-2",
+      "--ln-s-3",
+      "--ln-s-4",
+      "--ln-s-5",
+      "--ln-s-6",
+      "--ln-s-7",
+      "--ln-s-8",
+      "--ln-shadow-card",
+      "--ln-shadow-modal",
+      "--ln-surface",
+      "--ln-surface-2",
+      "--ln-surface-3",
+      "--ln-text",
+      "--ln-text-dim",
+      "--ln-text-ghost",
+      "--ln-text-muted",
+      "--ln-text-on-amber",
+      "--ln-text-on-cyan",
+      "--ln-tr-label",
+      "--ln-tr-loose",
+      "--ln-tr-normal",
+      "--ln-tr-tight",
+      "--ln-void",
+      "--ln-warn",
+      "--ln-warn-soft"
+    ],
+    "tokenKinds": {
+      "--ln-void": "color",
+      "--ln-bg": "color",
+      "--ln-bg-grid": "color",
+      "--ln-surface": "color",
+      "--ln-surface-2": "color",
+      "--ln-surface-3": "color",
+      "--ln-overlay": "color",
+      "--ln-cyan": "color",
+      "--ln-cyan-bright": "color",
+      "--ln-cyan-press": "color",
+      "--ln-cyan-soft": "color",
+      "--ln-cyan-border": "color",
+      "--ln-amber": "color",
+      "--ln-amber-bright": "color",
+      "--ln-amber-press": "color",
+      "--ln-amber-soft": "color",
+      "--ln-amber-border": "color",
+      "--ln-ok": "color",
+      "--ln-ok-soft": "color",
+      "--ln-warn": "color",
+      "--ln-warn-soft": "color",
+      "--ln-crit": "color",
+      "--ln-crit-soft": "color",
+      "--ln-info": "color",
+      "--ln-mineral-silicon": "color",
+      "--ln-mineral-iron": "color",
+      "--ln-mineral-ice": "color",
+      "--ln-mineral-carbon": "color",
+      "--ln-mineral-gold": "color",
+      "--ln-mineral-rare": "color",
+      "--ln-text": "font",
+      "--ln-text-dim": "font",
+      "--ln-text-muted": "font",
+      "--ln-text-ghost": "font",
+      "--ln-text-on-cyan": "font",
+      "--ln-text-on-amber": "font",
+      "--ln-hairline": "color",
+      "--ln-hairline-strong": "color",
+      "--ln-divider": "color",
+      "--ln-shadow-card": "shadow",
+      "--ln-shadow-modal": "shadow",
+      "--ln-glow-cyan": "shadow",
+      "--ln-glow-amber": "shadow",
+      "--ln-glow-ok": "shadow",
+      "--ln-r-xs": "spacing",
+      "--ln-r-sm": "spacing",
+      "--ln-r-md": "spacing",
+      "--ln-r-lg": "spacing",
+      "--ln-r-xl": "spacing",
+      "--ln-r-pill": "spacing",
+      "--ln-s-0": "other",
+      "--ln-s-1": "spacing",
+      "--ln-s-2": "spacing",
+      "--ln-s-3": "spacing",
+      "--ln-s-4": "spacing",
+      "--ln-s-5": "spacing",
+      "--ln-s-6": "spacing",
+      "--ln-s-7": "spacing",
+      "--ln-s-8": "spacing",
+      "--ln-font-display": "font",
+      "--ln-font-body": "font",
+      "--ln-font-mono": "font",
+      "--ln-fs-display": "spacing",
+      "--ln-fs-title": "spacing",
+      "--ln-fs-h1": "spacing",
+      "--ln-fs-h2": "spacing",
+      "--ln-fs-body": "spacing",
+      "--ln-fs-button": "spacing",
+      "--ln-fs-label": "spacing",
+      "--ln-fs-micro": "spacing",
+      "--ln-tr-tight": "spacing",
+      "--ln-tr-normal": "spacing",
+      "--ln-tr-label": "spacing",
+      "--ln-tr-loose": "spacing",
+      "--ln-ease-out": "other",
+      "--ln-ease-snap": "other",
+      "--ln-ease-mech": "other",
+      "--ln-d-quick": "other",
+      "--ln-d-base": "other",
+      "--ln-d-slow": "other",
+      "--ln-bg-blueprint": "color",
+      "--ln-bg-stars": "color"
+    },
+    "fontFamilies": [
+      "Oxanium",
+      "Turret Road"
+    ]
+  }
+}

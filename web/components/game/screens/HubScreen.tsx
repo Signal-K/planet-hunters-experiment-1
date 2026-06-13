@@ -1,9 +1,18 @@
 'use client'
 
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import Image from 'next/image'
 import type { Player, Screen } from '@/game-context'
 import ProgressionCard from '@/components/game/ProgressionCard'
+import { Scene } from '@/lib/engine/Scene'
+import type { EntityData } from '@/lib/engine/types'
+
+const DEFAULT_PLOTS: EntityData[] = [
+  { id: 'plot-0', name: 'Plot 0', transform: { position: { x: 22, y: 570 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'BuildPlot', index: 0 }] },
+  { id: 'plot-1', name: 'Plot 1', transform: { position: { x: 112, y: 570 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'BuildPlot', index: 1 }] },
+  { id: 'plot-2', name: 'Plot 2', transform: { position: { x: 210, y: 570 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'BuildPlot', index: 2 }] },
+  { id: 'plot-3', name: 'Plot 3', transform: { position: { x: 300, y: 570 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'BuildPlot', index: 3 }] },
+]
 
 interface HubScreenProps {
   player: Player
@@ -175,6 +184,7 @@ function EmptyPlot({ w = 90, style, onClick }: { w?: number; style?: React.CSSPr
 
 export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpgradeLaunchpad }: HubScreenProps) {
   const [editMode, setEditMode] = useState(false)
+  const [plotEntities, setPlotEntities] = useState<EntityData[]>(DEFAULT_PLOTS)
   const placed = player.placed ?? []
   const placementPlots = player.placementPlots ?? {}
   const legacyPlaced = (kind: string) => placed.includes(kind) && placementPlots[kind] == null
@@ -184,12 +194,21 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
     ...(legacyPlaced('control') ? { control: 2 } : {}),
     ...(legacyPlaced('satellite') ? { satellite: 0 } : {}),
   }
-  const plotStyles: React.CSSProperties[] = [
-    { left: 22, top: 570 },
-    { left: 112, top: 570 },
-    { left: 210, top: 570 },
-    { left: 300, top: 570 },
-  ]
+
+  useEffect(() => {
+    Scene.load('/game/scenes/hub.scene.json')
+      .then(data => { if (data.entities?.length) setPlotEntities(data.entities) })
+      .catch(() => {})
+  }, [])
+
+  const plotStyles: React.CSSProperties[] = plotEntities
+    .slice()
+    .sort((a, b) => {
+      const ai = (a.components.find(c => c.type === 'BuildPlot')?.index as number) ?? 0
+      const bi = (b.components.find(c => c.type === 'BuildPlot')?.index as number) ?? 0
+      return ai - bi
+    })
+    .map(e => ({ left: e.transform.position.x, top: e.transform.position.y }))
   const structureForPlot = (plot: number) => Object.entries(effectivePlots).find(([, p]) => p === plot)?.[0] ?? null
   const structureProps = (kind: string) => {
     if (kind === 'launchpad') {

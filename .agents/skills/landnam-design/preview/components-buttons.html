@@ -1,0 +1,71 @@
+<!doctype html>
+<!-- @dsCard group="Components" name="Components · Buttons" subtitle="Primary · secondary · amber · ghost · danger + states" viewport="700x200" --><html><head><meta charset="utf-8"><title>Components — Buttons</title><link rel="stylesheet" href="preview.css">
+<style>
+  /* Buttons match the in-game flat-rectangle pattern: clean radius, 1px hairline,
+     subtle top-highlight, NO chamfer, NO heavy bevel. */
+  .btn {
+    font-family:var(--ln-font-display); font-weight:600; letter-spacing:0.08em;
+    display:inline-flex; align-items:center; gap:10px; cursor:pointer; border:none; user-select:none;
+    border-radius:10px; padding:14px 22px; font-size:17px; line-height:1;
+    transition: filter 120ms var(--ln-ease-snap);
+  }
+  .btn .arr { font-size:18px; line-height:1; }
+
+  /* PRIMARY · matches NEXT STAGE in the screenshot */
+  .btn-primary { background:#3fa9ff; color:#06121f; box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 0 rgba(0,0,0,0.15); }
+  .btn-primary:hover { background:#6cc2ff; }
+
+  /* AMBER */
+  .btn-amber { background:#f5a623; color:#1d0c00; box-shadow: inset 0 1px 0 rgba(255,235,180,0.5), 0 2px 0 rgba(0,0,0,0.18); }
+
+  /* GREEN go */
+  .btn-go { background:#39d36a; color:#021a0a; box-shadow: inset 0 1px 0 rgba(220,255,235,0.45), 0 2px 0 rgba(0,0,0,0.18); }
+
+  /* DANGER */
+  .btn-danger { background:#ff5a6a; color:#fff; box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), 0 2px 0 rgba(0,0,0,0.18); }
+
+  /* SECONDARY · outlined, used for SYSTEM VIEW in galaxy footer */
+  .btn-secondary { background:transparent; color:#e6efff; box-shadow: inset 0 0 0 1px rgba(63,169,255,0.45); padding:13px 21px; }
+  .btn-secondary:hover { background: rgba(63,169,255,0.10); }
+
+  /* GHOST */
+  .btn-ghost { background:transparent; color:#a9b8ce; padding:11px 18px; font-size:15px; }
+  .btn-ghost:hover { color:#e6efff; background:rgba(255,255,255,0.03); }
+
+  /* ICON only — circular nav button from the galaxy screenshot (top-left ≡ / target) */
+  .btn-icon {
+    width:44px; height:44px; padding:0; border-radius:999px;
+    background: rgba(8,16,28,0.6);
+    box-shadow: inset 0 0 0 1px rgba(63,169,255,0.30);
+    color:#cde4ff;
+    display:inline-flex; align-items:center; justify-content:center;
+  }
+  .btn-icon:hover { background: rgba(63,169,255,0.10); box-shadow: inset 0 0 0 1px rgba(63,169,255,0.55); }
+
+  /* mini guidance */
+  .note { font-family:var(--ln-font-mono); font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:#5d7390; }
+</style></head>
+<body>
+<div class="card" data-stamp="BUTTONS · FLAT PANEL" style="height:230px">
+  <div class="eyebrow" style="margin-bottom:12px">10px radius · 1px top highlight · 2px drop · no chamfer, no bevel</div>
+
+  <div class="row" style="gap:12px;flex-wrap:wrap;align-items:center">
+    <button class="btn btn-primary">NEXT STAGE <span class="arr">→</span></button>
+    <button class="btn btn-amber">Confirm Launch</button>
+    <button class="btn btn-go">Engage</button>
+    <button class="btn btn-danger">Abort</button>
+    <button class="btn btn-secondary">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18"/></svg>
+      System View
+    </button>
+  </div>
+
+  <div class="row" style="gap:12px;margin-top:14px;align-items:center">
+    <button class="btn btn-ghost">← Back</button>
+    <button class="btn btn-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="7"  x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg></button>
+    <button class="btn btn-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="9"/><line x1="12" y1="1" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="1" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="23" y2="12"/></svg></button>
+    <button class="btn btn-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6"  x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="9" cy="6" r="2" fill="#06121f"/><circle cx="15" cy="12" r="2" fill="#06121f"/><circle cx="7" cy="18" r="2" fill="#06121f"/></svg></button>
+    <div style="margin-left:auto" class="note">— STATES · hover lift +6% · press dim 8% · disabled 40% opacity</div>
+  </div>
+</div>
+</body></html>

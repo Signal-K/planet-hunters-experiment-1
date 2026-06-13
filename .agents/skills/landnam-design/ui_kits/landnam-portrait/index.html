@@ -1,0 +1,97 @@
+<!doctype html>
+<!-- @dsCard group="UI Kit — Landnam Portrait" name="Landnam · Portrait Prototype" subtitle="Full flow ported to portrait: hub → atlas → fab → launch → mine → debrief" viewport="460x920" -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Landnam — Portrait Prototype</title>
+<link rel="stylesheet" href="../../colors_and_type.css">
+<style>
+  html, body {
+    margin:0; padding:0; height:100%;
+    background:#03060c; color:var(--ln-text);
+    font-family: var(--ln-font-body);
+    overflow:hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  body { display:flex; align-items:center; justify-content:center; }
+  #stage-host { transform-origin: center center; }
+
+  .canvas {
+    background: var(--ln-bg);
+    color: var(--ln-text);
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .scene { animation: scene-in 280ms var(--ln-ease-out); width:100%; height:100%; }
+  @keyframes scene-in {
+    from { opacity:0; transform: translateY(6px); }
+    to   { opacity:1; transform: translateY(0); }
+  }
+
+  /* hide scrollbars inside the phone */
+  .scene ::-webkit-scrollbar { display: none; }
+  .scene * { scrollbar-width: none; }
+</style>
+</head>
+<body>
+
+<div id="stage-host"><div id="phone"></div></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<!-- Load order: ios-frame → data → icons → chrome → screens → app -->
+<script type="text/babel" data-presets="env,react,typescript" src="ios-frame.tsx"></script>
+<script type="text/babel" data-presets="env,react,typescript" src="data.tsx"></script>
+<script type="text/babel" data-presets="env,react,typescript" src="icons.tsx"></script>
+<script type="text/babel" data-presets="env,react,typescript" src="chrome.tsx"></script>
+<script type="text/babel" data-presets="env,react,typescript" src="screens-pre.tsx"></script>
+<script type="text/babel" data-presets="env,react,typescript" src="screens-loop.tsx"></script>
+<script type="text/babel" data-presets="env,react,typescript" src="tutorial.tsx"></script>
+<script type="text/babel" data-presets="env,react,typescript" src="app.tsx"></script>
+
+<script type="text/babel" data-presets="env,react">
+  const PHONE_W = 402;
+  const PHONE_H = 874;
+
+  // Deep-link: read ?start=<base64 json> (set by the storyboard) into a global
+  // the app reads at mount, so each storyboard frame jumps to a specific state.
+  try {
+    const q = new URLSearchParams(location.search);
+    const s = q.get('start');
+    if (s) window.LANDNAM_START = JSON.parse(decodeURIComponent(escape(atob(s))));
+  } catch (e) { /* ignore */ }
+
+  function Mount() {
+    React.useLayoutEffect(() => {
+      function fit() {
+        const stage = document.getElementById('stage-host');
+        if (!stage) return;
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        const scale = Math.min(w / (PHONE_W + 40), h / (PHONE_H + 40), 1);
+        stage.style.transform = `scale(${scale})`;
+      }
+      fit();
+      window.addEventListener('resize', fit);
+      return () => window.removeEventListener('resize', fit);
+    }, []);
+    const { IOSDevice } = window;
+    const { LandnamApp } = window;
+    return (
+      <IOSDevice width={PHONE_W} height={PHONE_H} dark={true} hideStatusBar={true} hideIsland={true}>
+        <div className="canvas" style={{ width: PHONE_W, height: PHONE_H }}>
+          <LandnamApp />
+        </div>
+      </IOSDevice>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById('phone')).render(<Mount />);
+</script>
+
+</body>
+</html>

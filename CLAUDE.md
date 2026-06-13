@@ -97,7 +97,7 @@ npm run test:e2e           # start-server-and-test + cypress (offline profile)
 1. TypeScript strict — no `any`, no `@ts-ignore`
 2. All colors from CSS variables — no hardcoded hex
 3. All spacing from 8pt rhythm
-4. No Godot, no Electron, no scene files — this is a web game
+4. No Godot, no Electron. `.scene.json` files under `web/public/game/scenes/` ARE used — they describe entity layout/placement (shared `SceneData`/`EntityData` model in `web/lib/engine/types.ts`) for both PixiJS canvas screens and DOM screens, and are edited via Forge. See @doc/specs/landnam-screen-entityscene-dx-standard
 5. Read KNOWNS docs for game design decisions before changing game logic
 6. Use `appendNotes` in tasks (never `notes` for progress updates)
 

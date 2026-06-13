@@ -1,0 +1,61 @@
+<!doctype html>
+<!-- @dsCard group="Colors" name="Colors · Status" subtitle="OK · warn · crit · info dots" viewport="700x170" --><html><head><meta charset="utf-8"><title>Colors — Status</title><link rel="stylesheet" href="preview.css">
+<style>
+  .alert { position:relative; flex:1; padding:14px 16px; background:#0a121d; border:1px solid; border-radius:6px; display:flex; flex-direction:column; gap:8px; min-width:0; overflow:hidden; }
+  .alert .corner { position:absolute; width:8px; height:8px; }
+  .alert .corner.tl { top:-1px; left:-1px; border-top:1.5px solid; border-left:1.5px solid; }
+  .alert .corner.tr { top:-1px; right:-1px; border-top:1.5px solid; border-right:1.5px solid; }
+  .alert .corner.bl { bottom:-1px; left:-1px; border-bottom:1.5px solid; border-left:1.5px solid; }
+  .alert .corner.br { bottom:-1px; right:-1px; border-bottom:1.5px solid; border-right:1.5px solid; }
+  .alert .corner { border-color: inherit; }
+  .alert .stamp { font-family:var(--ln-font-mono); font-size:10px; letter-spacing:0.2em; text-transform:uppercase; opacity:0.7; }
+  .alert .head { display:flex; align-items:center; gap:10px; }
+  .alert .dot { width:10px; height:10px; border-radius:999px; }
+  .alert .label { font-family:var(--ln-font-display); font-weight:700; font-size:18px; letter-spacing:0.06em; }
+  .alert .hex { font-family:var(--ln-font-mono); font-size:11px; opacity:0.55; letter-spacing:0.06em; }
+  .alert .bar { height:3px; display:flex; gap:2px; }
+  .alert .bar > i { flex:1; background: currentColor; opacity:0.7; }
+  .alert .bar > i.off { opacity:0.2; }
+  .pulse { animation:pulse 1.2s infinite; }
+  @keyframes pulse { 0%,100% { opacity:1 } 50% { opacity:0.35 } }
+</style></head>
+<body>
+<div class="card" data-stamp="STATUS · 4 ALERT TILES" style="height:230px">
+  <div class="eyebrow" style="margin-bottom:14px">Always icon + tracked label + diagnostic stamp · never emoji</div>
+  <div class="row" style="gap:10px;align-items:stretch">
+
+    <div class="alert" style="color:#39d36a;border-color:rgba(57,211,106,0.45);background:linear-gradient(180deg, rgba(57,211,106,0.04), #0a121d 60%)">
+      <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+      <div style="display:flex;justify-content:space-between;align-items:center"><div class="stamp">OK · 1A</div><div class="stamp">PASS</div></div>
+      <div class="head"><div class="dot pulse" style="background:#39d36a;box-shadow:0 0 12px rgba(57,211,106,0.8)"></div><div class="label">READY</div></div>
+      <div class="bar"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="hex">#39D36A · STATUS_OK</div>
+    </div>
+
+    <div class="alert" style="color:#ffb347;border-color:rgba(255,179,71,0.45);background:linear-gradient(180deg, rgba(255,179,71,0.04), #0a121d 60%)">
+      <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+      <div style="display:flex;justify-content:space-between;align-items:center"><div class="stamp">WARN · 2B</div><div class="stamp">⚠ 03</div></div>
+      <div class="head"><div style="width:14px;height:14px;background:#ffb347;clip-path:polygon(50% 0,100% 100%,0 100%)"></div><div class="label">LOW PWR</div></div>
+      <div class="bar"><i></i><i></i><i></i><i></i><i></i><i class="off"></i><i class="off"></i><i class="off"></i></div>
+      <div class="hex">#FFB347 · STATUS_WARN</div>
+    </div>
+
+    <div class="alert" style="color:#ff5a6a;border-color:rgba(255,90,106,0.55);background:linear-gradient(180deg, rgba(255,90,106,0.06), #0a121d 60%)">
+      <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+      <div style="display:flex;justify-content:space-between;align-items:center"><div class="stamp pulse">CRIT · 3X</div><div class="stamp">▣ ABRT</div></div>
+      <div class="head"><div class="pulse" style="width:14px;height:14px;background:#ff5a6a;transform:rotate(45deg)"></div><div class="label">OVERLOAD</div></div>
+      <div class="bar"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="hex">#FF5A6A · STATUS_CRIT</div>
+    </div>
+
+    <div class="alert" style="color:#7ec8ff;border-color:rgba(126,200,255,0.45);background:linear-gradient(180deg, rgba(126,200,255,0.04), #0a121d 60%)">
+      <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+      <div style="display:flex;justify-content:space-between;align-items:center"><div class="stamp">INFO · 4C</div><div class="stamp">⟳ SYNC</div></div>
+      <div class="head"><div style="width:14px;height:14px;border:2px solid #7ec8ff;border-radius:50%;box-sizing:border-box"></div><div class="label">SCANNING</div></div>
+      <div class="bar"><i class="off"></i><i></i><i></i><i></i><i class="off"></i><i></i><i></i><i class="off"></i></div>
+      <div class="hex">#7EC8FF · STATUS_INFO</div>
+    </div>
+
+  </div>
+</div>
+</body></html>

@@ -1,0 +1,208 @@
+<!doctype html>
+<!-- @dsCard group="Brand" name="Brand · Blueprint Backdrop" subtitle="Reusable 4-layer recipe · swap CSS vars for any locale" viewport="700x560" --><html><head><meta charset="utf-8"><title>Brand — Blueprint Backdrop</title><link rel="stylesheet" href="preview.css">
+<style>
+  /* Reusable blueprint backdrop with the canonical 3-part rocket exploded view */
+  :root {
+    --bp-bg-1: #0a1726;
+    --bp-bg-2: #06101c;
+    --bp-grid-minor: rgba(63,169,255,0.08);
+    --bp-grid-major: rgba(63,169,255,0.20);
+    --bp-accent: #3fa9ff;
+    --bp-amber: #f5a623;
+    --bp-ink:    #cde4ff;
+    --bp-ink-2:  #5d7390;
+  }
+  .bp {
+    position:relative;
+    border-radius:8px;
+    overflow:hidden;
+    background: linear-gradient(180deg, var(--bp-bg-1) 0%, var(--bp-bg-2) 100%);
+  }
+  .bp::before {
+    content:''; position:absolute; inset:0; pointer-events:none;
+    background:
+      repeating-linear-gradient(0deg, transparent 0 19px, var(--bp-grid-minor) 19px 20px),
+      repeating-linear-gradient(90deg, transparent 0 19px, var(--bp-grid-minor) 19px 20px);
+  }
+  .bp::after {
+    content:''; position:absolute; inset:0; pointer-events:none;
+    background:
+      repeating-linear-gradient(0deg, transparent 0 99px, var(--bp-grid-major) 99px 100px),
+      repeating-linear-gradient(90deg, transparent 0 99px, var(--bp-grid-major) 99px 100px);
+  }
+  .vignette { position:absolute; inset:0; background: radial-gradient(120% 80% at 50% 50%, transparent 35%, rgba(0,0,0,0.55) 100%); pointer-events:none; }
+
+  .bp-frame { position:absolute; inset:8px; pointer-events:none; }
+  .bp-corner { position:absolute; width:18px; height:18px; }
+  .bp-corner.tl { top:0; left:0; border-top:1.5px solid var(--bp-accent); border-left:1.5px solid var(--bp-accent); }
+  .bp-corner.tr { top:0; right:0; border-top:1.5px solid var(--bp-accent); border-right:1.5px solid var(--bp-accent); }
+  .bp-corner.bl { bottom:0; left:0; border-bottom:1.5px solid var(--bp-accent); border-left:1.5px solid var(--bp-accent); }
+  .bp-corner.br { bottom:0; right:0; border-bottom:1.5px solid var(--bp-accent); border-right:1.5px solid var(--bp-accent); }
+  .bp-stamp { position:absolute; font-family:var(--ln-font-mono); font-size:10px; letter-spacing:0.22em; text-transform:uppercase; color:rgba(63,169,255,0.65); }
+  .bp-stamp.tl { top:14px; left:24px; }
+  .bp-stamp.tr { top:14px; right:24px; }
+  .bp-stamp.bl { bottom:14px; left:24px; }
+  .bp-stamp.br { bottom:14px; right:24px; }
+
+  .bp-title { position:absolute; left:50%; bottom:30px; transform:translateX(-50%); text-align:center; pointer-events:none; }
+  .bp-title .t { font-family:var(--ln-font-display); font-size:20px; font-weight:700; letter-spacing:0.18em; color:var(--bp-ink); text-transform:uppercase; }
+  .bp-title .s { font-family:var(--ln-font-mono); font-size:10px; letter-spacing:0.3em; color:var(--bp-accent); margin-top:2px; text-transform:uppercase; }
+
+  /* part legend tags running down the side */
+  .legend {
+    position:absolute; right:32px; top:50%; transform:translateY(-50%);
+    display:flex; flex-direction:column; gap:14px;
+    font-family:var(--ln-font-display);
+  }
+  .legend .leg {
+    display:flex; align-items:center; gap:10px;
+    padding:6px 10px;
+    background: rgba(8,18,29,0.7);
+    border:1px solid rgba(63,169,255,0.35);
+    border-radius:4px;
+    min-width:170px;
+  }
+  .legend .leg .pip { width:8px; height:8px; border-radius:999px; background: var(--bp-accent); box-shadow:0 0 6px currentColor; flex:0 0 auto; }
+  .legend .leg .meta { flex:1; min-width:0; }
+  .legend .leg .k { font-size:10px; font-weight:700; letter-spacing:0.2em; color:#5d7390; text-transform:uppercase; line-height:1; }
+  .legend .leg .v { font-size:13px; font-weight:700; letter-spacing:0.12em; color:#cde4ff; text-transform:uppercase; line-height:1.1; margin-top:4px; }
+  .legend .leg .id { font-family:var(--ln-font-mono); font-size:10px; letter-spacing:0.18em; color:#5d7390; text-transform:uppercase; }
+</style></head>
+<body>
+<div class="card" data-stamp="BLUEPRINT · 3-PART ASSEMBLY" style="height:560px;padding:24px">
+  <div class="eyebrow" style="margin-bottom:12px">Reusable backdrop · canonical exploded view shows the three rocket parts</div>
+
+  <div class="bp" style="height:480px">
+    <div class="vignette"></div>
+    <div class="bp-frame">
+      <div class="bp-corner tl"></div><div class="bp-corner tr"></div>
+      <div class="bp-corner bl"></div><div class="bp-corner br"></div>
+    </div>
+    <div class="bp-stamp tl">SHEET 04 / 12 · VESSEL-X12</div>
+    <div class="bp-stamp tr">SCALE 1:200 · M</div>
+    <div class="bp-stamp bl">REV. 02 · 14.05.41</div>
+    <div class="bp-stamp br">EARTH BASE · L04 · OPS</div>
+
+    <!-- Exploded vertical assembly: chassis / propulsion / drill -->
+    <svg style="position:absolute;left:60px;top:30px;height:calc(100% - 80px);width:auto;display:block" viewBox="0 0 220 420" fill="none">
+      <!-- centerline -->
+      <line x1="110" y1="0" x2="110" y2="420" stroke="#3fa9ff" stroke-opacity="0.4" stroke-width="0.8" stroke-dasharray="3 4"/>
+
+      <!-- ─── PART 01 · CHASSIS (top) ─── -->
+      <g stroke="#9ec9f5" stroke-width="1.3">
+        <path d="M110 14 L132 50 L132 110 L88 110 L88 50 Z" fill="rgba(63,169,255,0.18)"/>
+        <line x1="110" y1="14" x2="110" y2="110" stroke-dasharray="2 3" opacity="0.7"/>
+        <ellipse cx="110" cy="78" rx="8" ry="3" fill="rgba(63,169,255,0.4)"/>
+      </g>
+      <!-- callout 01 -->
+      <g stroke="#3fa9ff" stroke-width="1">
+        <line x1="138" y1="62" x2="172" y2="50"/>
+        <circle cx="138" cy="62" r="2" fill="#3fa9ff"/>
+      </g>
+      <text x="176" y="42" fill="#3fa9ff" font-family="monospace" font-size="8" letter-spacing="1.5">01 · CHASSIS</text>
+      <text x="176" y="54" fill="#cde4ff" font-family="monospace" font-size="9" font-weight="700" letter-spacing="1.5">HULL-MK2</text>
+
+      <!-- dimension line for chassis -->
+      <g stroke="#3fa9ff" stroke-width="0.7" opacity="0.7">
+        <line x1="62" y1="14" x2="62" y2="110"/>
+        <line x1="58" y1="14" x2="66" y2="14"/>
+        <line x1="58" y1="110" x2="66" y2="110"/>
+      </g>
+      <text x="38" y="66" fill="#cde4ff" font-family="monospace" font-size="8" letter-spacing="1">5.4M</text>
+
+      <!-- gap with arrow showing assembly direction -->
+      <g stroke="#f5a623" stroke-width="0.8" stroke-dasharray="2 3" opacity="0.7">
+        <line x1="110" y1="118" x2="110" y2="158"/>
+      </g>
+      <polygon points="106,150 110,158 114,150" fill="#f5a623" opacity="0.7"/>
+
+      <!-- ─── PART 02 · PROPULSION (middle) ─── -->
+      <g stroke="#ffd28a" stroke-width="1.3">
+        <circle cx="92" cy="180" r="14" fill="rgba(245,166,35,0.25)"/>
+        <circle cx="128" cy="180" r="14" fill="rgba(245,166,35,0.25)"/>
+        <circle cx="92" cy="180" r="7" fill="rgba(245,166,35,0.5)"/>
+        <circle cx="128" cy="180" r="7" fill="rgba(245,166,35,0.5)"/>
+        <rect x="80" y="198" width="60" height="18" fill="rgba(245,166,35,0.18)"/>
+        <circle cx="92" cy="222" r="6" fill="rgba(245,166,35,0.45)"/>
+        <circle cx="110" cy="224" r="5" fill="rgba(245,166,35,0.45)"/>
+        <circle cx="128" cy="222" r="6" fill="rgba(245,166,35,0.45)"/>
+      </g>
+      <!-- callout 02 -->
+      <g stroke="#f5a623" stroke-width="1">
+        <line x1="142" y1="206" x2="172" y2="218"/>
+        <circle cx="142" cy="206" r="2" fill="#f5a623"/>
+      </g>
+      <text x="176" y="210" fill="#f5a623" font-family="monospace" font-size="8" letter-spacing="1.5">02 · PROPULSION</text>
+      <text x="176" y="222" fill="#ffd28a" font-family="monospace" font-size="9" font-weight="700" letter-spacing="1.5">VULCAN-IX</text>
+      <text x="176" y="234" fill="#8a5300" font-family="monospace" font-size="7" letter-spacing="1.2">12 MW · T3</text>
+
+      <g stroke="#3fa9ff" stroke-width="0.7" opacity="0.7">
+        <line x1="62" y1="166" x2="62" y2="228"/>
+        <line x1="58" y1="166" x2="66" y2="166"/>
+        <line x1="58" y1="228" x2="66" y2="228"/>
+      </g>
+      <text x="38" y="202" fill="#cde4ff" font-family="monospace" font-size="8" letter-spacing="1">3.6M</text>
+
+      <!-- gap arrow -->
+      <g stroke="#f5a623" stroke-width="0.8" stroke-dasharray="2 3" opacity="0.7">
+        <line x1="110" y1="240" x2="110" y2="278"/>
+      </g>
+      <polygon points="106,270 110,278 114,270" fill="#f5a623" opacity="0.7"/>
+
+      <!-- ─── PART 03 · MINING DRILL (bottom) ─── -->
+      <g stroke="#9ec9f5" stroke-width="1.3">
+        <circle cx="110" cy="358" r="34" fill="rgba(63,169,255,0.14)"/>
+        <path d="M70 300 L88 290 L116 296 L132 280 L150 268 L168 296 L150 318 L140 326 L128 340 L100 340 L80 326 Z" fill="rgba(63,169,255,0.22)"/>
+        <circle cx="116" cy="318" r="6" fill="rgba(63,169,255,0.4)"/>
+        <circle cx="152" cy="290" r="4" fill="rgba(63,169,255,0.6)"/>
+        <line x1="80" y1="358" x2="140" y2="358" stroke-dasharray="2 2" opacity="0.5"/>
+      </g>
+      <!-- callout 03 -->
+      <g stroke="#3fa9ff" stroke-width="1">
+        <line x1="168" y1="310" x2="180" y2="296"/>
+        <circle cx="168" cy="310" r="2" fill="#3fa9ff"/>
+      </g>
+      <text x="176" y="290" fill="#3fa9ff" font-family="monospace" font-size="8" letter-spacing="1.5">03 · MINING DRILL</text>
+      <text x="176" y="302" fill="#cde4ff" font-family="monospace" font-size="9" font-weight="700" letter-spacing="1.5">PULSE-DRILL</text>
+
+      <g stroke="#3fa9ff" stroke-width="0.7" opacity="0.7">
+        <line x1="62" y1="280" x2="62" y2="392"/>
+        <line x1="58" y1="280" x2="66" y2="280"/>
+        <line x1="58" y1="392" x2="66" y2="392"/>
+      </g>
+      <text x="38" y="340" fill="#cde4ff" font-family="monospace" font-size="8" letter-spacing="1">5.4M</text>
+    </svg>
+
+    <!-- side legend tags -->
+    <div class="legend">
+      <div class="leg" style="border-color:rgba(63,169,255,0.45)">
+        <span class="pip" style="background:#3fa9ff;color:#3fa9ff"></span>
+        <div class="meta"><div class="k">01 · CHASSIS</div><div class="v">HULL-MK2</div></div>
+        <div class="id">T2</div>
+      </div>
+      <div class="leg" style="border-color:rgba(245,166,35,0.55);background:rgba(26,14,4,0.7)">
+        <span class="pip" style="background:#f5a623;color:#f5a623"></span>
+        <div class="meta"><div class="k" style="color:#d68a0d">02 · PROPULSION</div><div class="v" style="color:#ffd28a">VULCAN-IX</div></div>
+        <div class="id" style="color:#d68a0d">T3</div>
+      </div>
+      <div class="leg" style="border-color:rgba(63,169,255,0.45)">
+        <span class="pip" style="background:#3fa9ff;color:#3fa9ff"></span>
+        <div class="meta"><div class="k">03 · MINING DRILL</div><div class="v">PULSE-DRILL</div></div>
+        <div class="id">T2</div>
+      </div>
+    </div>
+
+    <div class="bp-title">
+      <div class="t">VESSEL-X12 · HEAVY</div>
+      <div class="s">DRAWING A-04 · ASSEMBLY ELEVATION · 3-PART</div>
+    </div>
+  </div>
+
+  <div style="margin-top:14px;display:flex;gap:18px;flex-wrap:wrap;font-family:var(--ln-font-mono);font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:#5d7390">
+    <div><span style="color:#3fa9ff">.bp</span> · reusable shell</div>
+    <div><span style="color:#3fa9ff">--bp-bg-1</span> · navy</div>
+    <div><span style="color:#3fa9ff">--bp-grid-major</span> · 100px</div>
+    <div><span style="color:#3fa9ff">.legend .leg</span> · swap for any part series</div>
+  </div>
+</div>
+</body></html>

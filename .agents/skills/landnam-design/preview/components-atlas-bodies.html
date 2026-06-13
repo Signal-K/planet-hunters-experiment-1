@@ -1,0 +1,29 @@
+<!doctype html>
+<!-- @dsCard group="Components" name="Components · Atlas Bodies" subtitle="Planet glyphs + selection reticle" viewport="700x240" --><html><head><meta charset="utf-8"><title>Components — Atlas Bodies</title><link rel="stylesheet" href="preview.css">
+<style>
+  .body { display:inline-flex; flex-direction:column; align-items:center; gap:4px; font-family:var(--ln-font-mono); }
+  .body .glyph { width:14px; height:14px; border:1px solid currentColor; border-radius:50%; position:relative; }
+  .body .glyph::before, .body .glyph::after { content:''; position:absolute; inset:0; border:1px solid currentColor; border-radius:50%; transform: scale(0.55); opacity:0.6; }
+  .body .name { font-size:12px; letter-spacing:0.06em; }
+  .body .dist { font-size:10px; opacity:0.6; }
+  .reticle { width:24px; height:24px; border:1px solid #efe7d3; box-sizing:border-box; position:relative; display:inline-block; }
+  .reticle .o { width:8px; height:8px; background:#f5a623; border-radius:50%; position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); }
+</style></head>
+<body>
+<div class="card atlas" data-stamp="ATLAS · BODIES · RETICLE" style="height:240px">
+  <div class="eyebrow" style="margin-bottom:14px;color:#6b6552">Planet glyph chip · star dot + label · selection reticle</div>
+  <div class="row" style="gap:30px;align-items:center;flex-wrap:wrap">
+    <div class="body" style="color:#b5ad99"><div class="glyph"></div><div class="name">Mars</div></div>
+    <div class="body" style="color:#d97150"><div class="glyph"></div><div class="name">Mercury</div></div>
+    <div class="body" style="color:#9becff"><div class="glyph"></div><div class="name">Neptune</div></div>
+    <div class="body" style="color:#ffd166"><div class="glyph"></div><div class="name">Saturn</div></div>
+    <div class="body" style="color:#efe7d3"><div class="reticle"><div class="o"></div></div><div class="name" style="font-weight:700">Earth</div><div class="dist">Sol III</div></div>
+  </div>
+  <div class="row" style="gap:24px;margin-top:24px;font-family:var(--ln-font-mono);color:#b5ad99">
+    <div><div style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#6b6552">CURRENT LOCATION</div><div style="font-size:16px;color:#efe7d3;margin-top:4px">Earth · Sol III</div></div>
+    <div><div style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#6b6552">EXPLORED</div><div style="font-size:16px;color:#efe7d3;margin-top:4px">1</div></div>
+    <div><div style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#6b6552">UNEXPLORED</div><div style="font-size:16px;color:#f5a623;margin-top:4px">24</div></div>
+    <div style="margin-left:auto;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#6b6552">SOLAR SYSTEM STRATEGIC ATLAS // VER 4.0.2</div>
+  </div>
+</div>
+</body></html>
