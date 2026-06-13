@@ -1,12 +1,33 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import TopBar from '@/components/ui/TopBar'
 import Panel from '@/components/ui/Panel'
 import StatusPill from '@/components/ui/StatusPill'
 import { PrimaryBtn } from '@/components/ui/Button'
 import { compatibleTargetsFor, type Mission, type Target } from '@/lib/data'
 import type { Catalog } from '@/lib/catalog'
+import { Scene } from '@/lib/engine/Scene'
+import type { EntityData } from '@/lib/engine/types'
+
+// Map center for target-picker.scene.json (viewport 374x360) — entity positions
+// are canvas-absolute so Forge can drag them; screen-space placement is relative
+// to this center.
+const MAP_CENTER = { x: 187, y: 180 }
+
+const DEFAULT_BODIES: EntityData[] = [
+  { id: 'mercury', name: 'Mercury', transform: { position: { x: 153.17, y: 167.69 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'CelestialBody', orbit: 1 }] },
+  { id: 'mars', name: 'Mars', transform: { position: { x: 104.23, y: 249.45 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'CelestialBody', orbit: 4 }] },
+  { id: 'eros', name: '433 Eros', transform: { position: { x: 229.43, y: 222.43 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'CelestialBody', orbit: 2 }] },
+  { id: 'vesta', name: '4 Vesta', transform: { position: { x: 240.99, y: 115.66 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'CelestialBody', orbit: 3 }] },
+  { id: 'psyche', name: '16 Psyche', transform: { position: { x: 196.42, y: 287.59 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'CelestialBody', orbit: 4 }] },
+  { id: 'bennu', name: '101955 Bennu', transform: { position: { x: 127.91, y: 190.42 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'CelestialBody', orbit: 2 }] },
+  { id: 'belt', name: 'Asteroid Belt', transform: { position: { x: 141.85, y: 55.95 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'CelestialBody', orbit: 5 }] },
+  { id: 'ceres', name: '1 Ceres', transform: { position: { x: 57.03, y: 157.08 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'CelestialBody', orbit: 5 }] },
+  { id: 'jupiter', name: 'Jupiter', transform: { position: { x: 323.83, y: 259 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'CelestialBody', orbit: 6 }] },
+  { id: 'tess-451b', name: 'TESS-451 b', transform: { position: { x: 319, y: 180 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'CelestialBody', orbit: 5 }] },
+  { id: 'koi-7923-belt', name: 'KOI-7923 Belt', transform: { position: { x: 371, y: 180 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'CelestialBody', orbit: 7 }] },
+]
 
 interface TargetPickerScreenProps {
   mission: Mission
@@ -78,8 +99,17 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
   const [picked, setPicked] = useState<string>(
     compat.find(t => t.recommended)?.id ?? compat[0]?.id ?? ''
   )
+  const [bodies, setBodies] = useState<EntityData[]>(DEFAULT_BODIES)
+
+  useEffect(() => {
+    Scene.load('/game/scenes/target-picker.scene.json')
+      .then(data => { if (data.entities?.length) setBodies(data.entities) })
+      .catch(() => {})
+  }, [])
 
   function place(t: Target) {
+    const body = bodies.find(b => b.id === t.id)
+    if (body) return { x: body.transform.position.x - MAP_CENTER.x, y: body.transform.position.y - MAP_CENTER.y }
     const a = ((ANGLES[t.id] ?? 0) * Math.PI) / 180
     const r = RADII[t.orbit] ?? 84
     return { x: Math.cos(a) * r, y: Math.sin(a) * r }
