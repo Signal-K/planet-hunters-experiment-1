@@ -302,6 +302,31 @@ button { cursor: pointer; }
 .classification-facts span { padding: 7px 4px; border-radius: 7px; background: rgba(63,169,255,.08); color: #cbd8e8; text-align: center; font: 700 10px var(--ln-font-mono); }
 .classification-facts b { display: block; margin-bottom: 2px; color: #66809f; font-size: 8px; letter-spacing: .14em; }
 .classification-copy { margin: 5px 0 0; color: var(--ln-text-muted); font: 400 13px/1.45 var(--ln-font-body); }
+.classification-hint { margin: 8px 0 0; color: var(--ln-text-dim); font: 700 10px var(--ln-font-mono); letter-spacing: var(--ln-tr-label); text-transform: uppercase; }
+.swipe-card { position: relative; touch-action: pan-y; cursor: grab; }
+.swipe-stamp {
+  position: absolute;
+  top: 16px;
+  z-index: 2;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font: 800 14px var(--ln-font-display);
+  letter-spacing: var(--ln-tr-label);
+  text-transform: uppercase;
+  pointer-events: none;
+}
+.swipe-stamp--planet {
+  right: 16px;
+  border: 2px solid var(--ln-ok);
+  color: var(--ln-ok);
+  transform: rotate(8deg);
+}
+.swipe-stamp--not-planet {
+  left: 16px;
+  border: 2px solid var(--ln-crit);
+  color: var(--ln-crit);
+  transform: rotate(-8deg);
+}
 .verdict-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .verdict-grid button { min-height: 104px; border: 1px solid rgba(57,211,106,.35); border-radius: 12px; background: linear-gradient(180deg, rgba(57,211,106,.10), rgba(5,14,20,.9)); color: #dce9f7; font-family: var(--ln-font-display); cursor: pointer; }
 .verdict-grid button:nth-child(2) { border-color: rgba(255,90,106,.35); background: linear-gradient(180deg, rgba(255,90,106,.10), rgba(18,7,12,.9)); }
