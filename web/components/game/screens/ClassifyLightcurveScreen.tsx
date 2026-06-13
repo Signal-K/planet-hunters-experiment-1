@@ -60,6 +60,7 @@ export default function ClassifyLightcurveScreen({ onBack, onSubmit, hasCoach, c
 
         <motion.div
           className="swipe-card"
+          data-testid="classify-swipe-card"
           style={{ x: dragX, rotate: cardRotate }}
           drag="x"
           dragElastic={0.6}
@@ -93,8 +94,9 @@ export default function ClassifyLightcurveScreen({ onBack, onSubmit, hasCoach, c
         </div>
 
         <div className="verdict-grid">
-          <button 
-            className={verdict === 'planet' ? 'selected' : ''} 
+          <button
+            data-testid="classify-verdict-planet"
+            className={verdict === 'planet' ? 'selected' : ''}
             onClick={() => setVerdict('planet')}
             disabled={submitting}
           >
@@ -102,8 +104,9 @@ export default function ClassifyLightcurveScreen({ onBack, onSubmit, hasCoach, c
             <strong>Planet</strong>
             <small>Consistent transit</small>
           </button>
-          <button 
-            className={verdict === 'not_planet' ? 'selected negative' : ''} 
+          <button
+            data-testid="classify-verdict-not-planet"
+            className={verdict === 'not_planet' ? 'selected negative' : ''}
             onClick={() => setVerdict('not_planet')}
             disabled={submitting}
           >
@@ -115,7 +118,7 @@ export default function ClassifyLightcurveScreen({ onBack, onSubmit, hasCoach, c
 
         {verdict && (
           <Panel accent={verdict === 'planet' ? 'var(--ln-ok)' : 'var(--ln-crit)'}>
-            <div className="classification-ready">
+            <div className="classification-ready" data-testid="classify-verdict-ready">
               <StatusPill kind={verdict === 'planet' ? 'ok' : 'crit'}>{verdict === 'planet' ? 'Candidate Confirmed' : 'False Positive Flagged'}</StatusPill>
               <span>Ready to transmit to the science database.</span>
             </div>
@@ -136,9 +139,10 @@ export default function ClassifyLightcurveScreen({ onBack, onSubmit, hasCoach, c
         </div>
       )}
       <div className="sticky-actions">
-        <PrimaryBtn 
-          kind="amber" 
-          disabled={!verdict || submitting} 
+        <PrimaryBtn
+          kind="amber"
+          testId="classify-submit-btn"
+          disabled={!verdict || submitting}
           onClick={() => verdict && handleHandleSubmit(verdict)}
         >
           {submitting ? 'Transmitting...' : 'Submit Classification'}

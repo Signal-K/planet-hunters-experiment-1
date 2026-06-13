@@ -42,8 +42,8 @@ export default function SatelliteScreen({
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#0a0f1a] text-white">
-      <TopBar title="Satellite Uplink" onBack={onBack} right={<StatusPill kind="info">{annotations} ANNOTATIONS</StatusPill>} />
+    <div className="flex flex-col min-h-screen bg-[#0a0f1a] text-white" data-testid="satellite-screen">
+      <TopBar title="Satellite Uplink" onBack={onBack} right={<span data-testid="satellite-annotations"><StatusPill kind="info">{annotations} ANNOTATIONS</StatusPill></span>} />
 
       <div className="flex-1 p-4 space-y-4 overflow-y-auto">
         <Panel>
@@ -55,12 +55,12 @@ export default function SatelliteScreen({
         </Panel>
 
         {!candidate && !result && (
-          <PrimaryBtn kind="cyan" onClick={scan}>Scan TESS Data</PrimaryBtn>
+          <PrimaryBtn kind="cyan" testId="satellite-scan-btn" onClick={scan}>Scan TESS Data</PrimaryBtn>
         )}
 
         {candidate && (
           <Panel>
-            <div className="space-y-2 text-sm">
+            <div className="space-y-2 text-sm" data-testid="satellite-candidate">
               <div className="flex justify-between">
                 <span className="text-[#a9b8ce]">Orbital Period</span>
                 <span>{candidate.period} days</span>
@@ -75,19 +75,19 @@ export default function SatelliteScreen({
               </div>
             </div>
             <div className="flex gap-2 mt-3">
-              <PrimaryBtn kind="amber" onClick={() => classify('planet')}>Confirm Planet</PrimaryBtn>
-              <PrimaryBtn kind="amber" onClick={() => classify('not_planet')}>False Positive</PrimaryBtn>
+              <PrimaryBtn kind="amber" testId="satellite-confirm-planet-btn" onClick={() => classify('planet')}>Confirm Planet</PrimaryBtn>
+              <PrimaryBtn kind="amber" testId="satellite-false-positive-btn" onClick={() => classify('not_planet')}>False Positive</PrimaryBtn>
             </div>
           </Panel>
         )}
 
         {result && (
           <Panel>
-            <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 15, color: result.verdict === 'PLANET CONFIRMED' ? '#39d36a' : '#f5a623' }}>{result.verdict}</div>
+            <div data-testid="satellite-result" style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 15, color: result.verdict === 'PLANET CONFIRMED' ? '#39d36a' : '#f5a623' }}>{result.verdict}</div>
             <p className="text-sm text-[#a9b8ce] mb-3">
               {result.annotation ? '+1 Research Annotation · Discovery bonus +1%' : 'No annotation recorded'}
             </p>
-            <PrimaryBtn kind="cyan" onClick={scan}>Scan Another</PrimaryBtn>
+            <PrimaryBtn kind="cyan" testId="satellite-scan-again-btn" onClick={scan}>Scan Another</PrimaryBtn>
           </Panel>
         )}
       </div>

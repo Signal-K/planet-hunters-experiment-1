@@ -5,7 +5,7 @@ const profile = process.env.CYPRESS_PROFILE || 'offline'
 const profiles: Record<string, Cypress.EndToEndConfigOptions> = {
   offline: {
     baseUrl: 'http://localhost:3000',
-    specPattern: ['cypress/e2e/smoke.cy.ts', 'cypress/e2e/game-loop.cy.ts'],
+    specPattern: ['cypress/e2e/smoke.cy.ts', 'cypress/e2e/game-loop.cy.ts', 'cypress/e2e/citizen-science.cy.ts'],
   },
   'with-pb': {
     baseUrl: process.env.CYPRESS_baseUrl || 'http://localhost:3000',
