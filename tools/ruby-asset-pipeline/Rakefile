@@ -1,0 +1,28 @@
+require 'rake'
+
+namespace :sprites do
+  desc 'Generate a procedural rocket part PNG sprite. Usage: rake sprites:generate[part_type,variant]'
+  task :generate, [:part_type, :variant] do |_t, args|
+    require_relative 'lib/sprite_generator'
+
+    part_type = args[:part_type] || 'hull'
+    variant = args[:variant] || 't1'
+
+    output_path = SpriteGenerator.generate(part_type: part_type, variant: variant)
+    puts "Generated sprite: #{output_path}"
+  end
+end
+
+namespace :seed do
+  desc 'Import catalog data and write PocketBase-compatible seed JSON. Usage: rake seed:import[source,collection]'
+  task :import, [:source, :collection] do |_t, args|
+    require_relative 'lib/seed_importer'
+
+    source = args[:source]
+    collection = args[:collection]
+    raise ArgumentError, 'usage: rake seed:import[source,collection]' unless source && collection
+
+    output_path = SeedImporter.import(source: source, collection: collection)
+    puts "Wrote seed data: #{output_path}"
+  end
+end
