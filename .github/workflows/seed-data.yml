@@ -1,0 +1,31 @@
+name: Seed Data Import
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tools/ruby-asset-pipeline/**'
+      - 'backend/migrations/**'
+  workflow_dispatch: {}
+
+jobs:
+  seed-import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+          working-directory: tools/ruby-asset-pipeline
+
+      - name: Import catalog seed data
+        working-directory: tools/ruby-asset-pipeline
+        run: bundle exec rake seed:import[catalog/astronomy.json,celestial_bodies]
+
+      - name: Upload seed JSON artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pocketbase-seed-data
+          path: backend/migrations/*.seed.json
