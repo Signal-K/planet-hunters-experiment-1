@@ -1,0 +1,31 @@
+{
+  "name": "build-place",
+  "width": 402,
+  "height": 874,
+  "entities": [
+    {
+      "id": "plot-0",
+      "name": "Plot 0",
+      "transform": { "position": { "x": 14, "y": 628 }, "rotation": 0, "scale": { "x": 1, "y": 1 } },
+      "components": [{ "type": "BuildPlot", "index": 0 }]
+    },
+    {
+      "id": "plot-1",
+      "name": "Plot 1",
+      "transform": { "position": { "x": 110, "y": 628 }, "rotation": 0, "scale": { "x": 1, "y": 1 } },
+      "components": [{ "type": "BuildPlot", "index": 1 }]
+    },
+    {
+      "id": "plot-2",
+      "name": "Plot 2",
+      "transform": { "position": { "x": 206, "y": 628 }, "rotation": 0, "scale": { "x": 1, "y": 1 } },
+      "components": [{ "type": "BuildPlot", "index": 2 }]
+    },
+    {
+      "id": "plot-3",
+      "name": "Plot 3",
+      "transform": { "position": { "x": 302, "y": 628 }, "rotation": 0, "scale": { "x": 1, "y": 1 } },
+      "components": [{ "type": "BuildPlot", "index": 3 }]
+    }
+  ]
+}

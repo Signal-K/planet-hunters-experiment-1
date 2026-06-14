@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import TopBar from '@/components/ui/TopBar'
 import Panel from '@/components/ui/Panel'
-import { PrimaryBtn } from '@/components/ui/Button'
+import { PrimaryBtn, GhostBtn } from '@/components/ui/Button'
 import StatusPill from '@/components/ui/StatusPill'
 
 function randomCandidate() {
@@ -21,22 +21,21 @@ export default function SatelliteScreen({
   onBack,
 }: {
   annotations: number
-  onClassify: (verdict: 'planet' | 'not_planet') => void
+  onClassify: (verdict: 'planet' | 'not_planet' | 'unsure') => void
   onBack: () => void
 }) {
   const [candidate, setCandidate] = useState<{ id: string; period: string; depth: string; likelyPlanet: boolean } | null>(null)
-  const [result, setResult] = useState<{ verdict: string; annotation: boolean } | null>(null)
+  const [result, setResult] = useState<{ verdict: string } | null>(null)
 
   function scan() {
     setCandidate(randomCandidate())
     setResult(null)
   }
 
-  function classify(verdict: 'planet' | 'not_planet') {
+  function classify(verdict: 'planet' | 'not_planet' | 'unsure') {
     onClassify(verdict)
     setResult({
-      verdict: verdict === 'planet' ? 'PLANET CONFIRMED' : 'NO SIGNAL',
-      annotation: verdict === 'planet',
+      verdict: verdict === 'planet' ? 'PLANET CONFIRMED' : verdict === 'not_planet' ? 'NO SIGNAL' : 'FLAGGED FOR REVIEW',
     })
     setCandidate(null)
   }
@@ -74,18 +73,19 @@ export default function SatelliteScreen({
                 <StatusPill kind={candidate.likelyPlanet ? 'ok' : 'warn'}>{candidate.likelyPlanet ? 'PROMISING' : 'UNCLEAR'}</StatusPill>
               </div>
             </div>
-            <div className="flex gap-2 mt-3">
+            <div className="flex gap-2 mt-3 flex-wrap">
               <PrimaryBtn kind="amber" onClick={() => classify('planet')}>Confirm Planet</PrimaryBtn>
               <PrimaryBtn kind="amber" onClick={() => classify('not_planet')}>False Positive</PrimaryBtn>
+              <GhostBtn onClick={() => classify('unsure')}>Not Sure</GhostBtn>
             </div>
           </Panel>
         )}
 
         {result && (
           <Panel>
-            <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 15, color: result.verdict === 'PLANET CONFIRMED' ? '#39d36a' : '#f5a623' }}>{result.verdict}</div>
+            <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 15, color: result.verdict === 'PLANET CONFIRMED' ? '#39d36a' : result.verdict === 'FLAGGED FOR REVIEW' ? '#7ec8ff' : '#f5a623' }}>{result.verdict}</div>
             <p className="text-sm text-[#a9b8ce] mb-3">
-              {result.annotation ? '+1 Research Annotation · Discovery bonus +1%' : 'No annotation recorded'}
+              +1 Research Annotation · Discovery bonus +1%
             </p>
             <PrimaryBtn kind="cyan" onClick={scan}>Scan Another</PrimaryBtn>
           </Panel>

@@ -16,6 +16,16 @@ Do not edit this snapshot to update tasks or docs. When the parent repo is acces
 
 If the parent repo is not accessible, write proposed task/doc/context updates into `.knowns-outbox/` and mention them in your final response. Parent-capable agents collect them with `make knowns-outbox-collect` and apply accepted updates to canonical Knowns.
 
+## Compass Worklog
+
+For Star Sailors project work, append a Compass worklog record before your final response. This applies from terminal agents, desktop agent apps, Scribe, and Compass.
+
+Write records to `../.knowns/attachments/<taskId>/records.json` when the parent repo is accessible. Use the raw task ID without the `task-` prefix. Preserve existing JSON and append one record per worked ticket.
+
+Each record must include `taskId`, `note`, `source`, `tickets`, `specs`, and `analysis`. `tickets` should contain Compass-deeplinkable ticket IDs/titles. `specs` should contain updated Scribe spec paths/titles such as `{ "path": "specs/example", "title": "Example spec" }`. `analysis` must state whether the task was done right, including tests, commits, gaps, and remaining risk.
+
+If the parent repo is not accessible, write the proposed worklog record into `.knowns-outbox/` and mention it in your final response so a parent-capable agent can collect it.
+
 ## Active Or Recent Tasks
 
 - @task-2h2azn Draft Landnam seed bible v0 [in-progress priority=high labels=project-landnam,seeds,contractors,economy]

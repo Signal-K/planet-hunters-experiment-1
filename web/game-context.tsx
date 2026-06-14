@@ -89,8 +89,8 @@ interface GameActions {
   completeStep: (id: number) => void
   resetGame: () => void
   buildControlStation: () => void
-  classifyCandidate: (verdict: 'planet' | 'not_planet') => void
-  onSatelliteClassify: (verdict: 'planet' | 'not_planet') => void
+  classifyCandidate: (verdict: 'planet' | 'not_planet' | 'unsure', subjectId: string, dipMarkers: number[]) => void
+  onSatelliteClassify: (verdict: 'planet' | 'not_planet' | 'unsure') => void
   upgradeLaunchpad: () => void
   sellMinerals: (mineralId: string, amount: number) => void
   onStartRefine: (recipeId: string) => void
@@ -417,8 +417,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     })
   }, [])
 
-  const classifyCandidate = useCallback((verdict: 'planet' | 'not_planet') => {
-    const CANDIDATE_ID = 'tess-451b'
+  const classifyCandidate = useCallback((verdict: 'planet' | 'not_planet' | 'unsure', subjectId: string, dipMarkers: number[]) => {
     setState(s => {
       if (verdict === 'not_planet') {
         return {
@@ -432,7 +431,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       }
       return {
         ...s,
-        classification: { candidateId: CANDIDATE_ID, verdict },
+        classification: verdict === 'planet' ? { candidateId: subjectId, verdict } : s.classification,
         targetId: null,
         screen: 'targets',
         doneSteps: { ...s.doneSteps, 30: true },
@@ -440,11 +439,13 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     })
 
     const userId = pbShared.authStore.record?.id
-    if (userId) {
-      pbShared.collection('classifications').create({
+    if (userId && subjectId) {
+      pbShared.collection('subject_classifications').create({
+        subject: subjectId,
         user: userId,
-        candidate: CANDIDATE_ID,
         verdict,
+        dip_markers: JSON.stringify(dipMarkers),
+        response_time_ms: 0,
       }).then(() => {
         setState(s => ({ ...s, classificationError: null }))
       }).catch((err) => {
@@ -454,12 +455,15 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  const onSatelliteClassify = useCallback((verdict: 'planet' | 'not_planet') => {
+  const onSatelliteClassify = useCallback((verdict: 'planet' | 'not_planet' | 'unsure') => {
+    // All verdicts (including unsure) count toward researchAnnotations —
+    // participation-based, not accuracy-based. Unsure subjects get routed
+    // to more users on the backend via unsure_count weighting.
     setState(s => ({
       ...s,
       player: {
         ...s.player,
-        researchAnnotations: s.player.researchAnnotations + (verdict === 'planet' ? 1 : 0),
+        researchAnnotations: s.player.researchAnnotations + 1,
       },
     }))
   }, [])

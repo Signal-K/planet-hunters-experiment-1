@@ -1,11 +1,20 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import Image from 'next/image'
 import TopBar from '@/components/ui/TopBar'
 import Panel from '@/components/ui/Panel'
 import { PrimaryBtn } from '@/components/ui/Button'
 import StatusPill from '@/components/ui/StatusPill'
+import { Scene } from '@/lib/engine/Scene'
+import type { EntityData } from '@/lib/engine/types'
+
+const DEFAULT_PLOTS: EntityData[] = [
+  { id: 'plot-0', name: 'Plot 0', transform: { position: { x: 14, y: 628 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'BuildPlot', index: 0 }] },
+  { id: 'plot-1', name: 'Plot 1', transform: { position: { x: 110, y: 628 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'BuildPlot', index: 1 }] },
+  { id: 'plot-2', name: 'Plot 2', transform: { position: { x: 206, y: 628 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'BuildPlot', index: 2 }] },
+  { id: 'plot-3', name: 'Plot 3', transform: { position: { x: 302, y: 628 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'BuildPlot', index: 3 }] },
+]
 
 interface BuildPlaceScreenProps {
   onPlaced: (kind: string, plot: number) => void
@@ -42,6 +51,13 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, missionsD
   const [phase, setPhase] = useState<'pick' | 'place'>('pick')
   const [picked, setPicked] = useState('launchpad')
   const [cell, setCell] = useState<number | null>(null)
+  const [plotEntities, setPlotEntities] = useState<EntityData[]>(DEFAULT_PLOTS)
+
+  useEffect(() => {
+    Scene.load('/game/scenes/build-place.scene.json')
+      .then(data => { if (data.entities?.length) setPlotEntities(data.entities) })
+      .catch(() => {})
+  }, [])
 
   const sel = CATALOG.find(c => c.id === picked) ?? CATALOG[0]
 
@@ -117,20 +133,28 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, missionsD
 
           <div style={{ position: 'absolute', left: 0, right: 0, top: 702, height: 3, zIndex: 6, background: 'linear-gradient(90deg, transparent, rgba(255,225,160,0.55) 20%, rgba(255,225,160,0.55) 80%, transparent)' }} />
 
-          <div style={{ position: 'absolute', left: 0, right: 0, top: 628, zIndex: 10, padding: '0 14px', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 10 }}>
-            {[0, 1, 2, 3].map(id => {
-              const on = cell === id
-              return (
-                <button key={id} data-testid={`build-plot-${id}`} onClick={() => setCell(id)} style={{ position: 'relative', flex: '1 1 0', maxWidth: 88, cursor: 'pointer', background: 'transparent', border: 'none', padding: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                  <div style={{ width: 64, height: 64, marginBottom: 2, opacity: on ? 1 : 0, transform: on ? 'translateY(0)' : 'translateY(6px)', transition: 'all 160ms', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32 }}>
-                    {on && <span style={{ color: 'var(--ln-amber)' }}><StructureIcon kind="launchpad" size={40} /></span>}
-                  </div>
-                  <div style={{ width: '100%', height: 30, borderRadius: '50% / 60%', background: on ? 'radial-gradient(ellipse at 50% 35%, rgba(245,166,35,0.5), rgba(245,166,35,0.12) 70%)' : 'radial-gradient(ellipse at 50% 35%, rgba(135,207,250,0.28), rgba(135,207,250,0.05) 70%)', border: `2px dashed ${on ? '#f5a623' : 'rgba(135,207,250,0.6)'}`, boxShadow: on ? '0 0 22px rgba(245,166,35,0.55)' : '0 2px 6px rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: on ? 'none' : 'pad-pulse 1.8s ease-in-out infinite', transition: 'all 160ms' }}>
-                    {!on && <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 20, fontWeight: 800, color: 'rgba(135,207,250,0.85)', marginTop: -2 }}>+</span>}
-                  </div>
-                </button>
-              )
-            })}
+          <div style={{ position: 'absolute', inset: 0, zIndex: 10, pointerEvents: 'none' }}>
+            {plotEntities
+              .slice()
+              .sort((a, b) => {
+                const ai = (a.components.find(c => c.type === 'BuildPlot')?.index as number) ?? 0
+                const bi = (b.components.find(c => c.type === 'BuildPlot')?.index as number) ?? 0
+                return ai - bi
+              })
+              .map(entity => {
+                const idx = (entity.components.find(c => c.type === 'BuildPlot')?.index as number) ?? 0
+                const on = cell === idx
+                return (
+                  <button key={idx} data-testid={`build-plot-${idx}`} onClick={() => setCell(idx)} style={{ position: 'absolute', left: entity.transform.position.x, top: entity.transform.position.y, width: 86, cursor: 'pointer', background: 'transparent', border: 'none', padding: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', pointerEvents: 'auto' }}>
+                    <div style={{ width: 64, height: 64, marginBottom: 2, opacity: on ? 1 : 0, transform: on ? 'translateY(0)' : 'translateY(6px)', transition: 'all 160ms', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32 }}>
+                      {on && <span style={{ color: 'var(--ln-amber)' }}><StructureIcon kind={picked} size={40} /></span>}
+                    </div>
+                    <div style={{ width: '100%', height: 30, borderRadius: '50% / 60%', background: on ? 'radial-gradient(ellipse at 50% 35%, rgba(245,166,35,0.5), rgba(245,166,35,0.12) 70%)' : 'radial-gradient(ellipse at 50% 35%, rgba(135,207,250,0.28), rgba(135,207,250,0.05) 70%)', border: `2px dashed ${on ? '#f5a623' : 'rgba(135,207,250,0.6)'}`, boxShadow: on ? '0 0 22px rgba(245,166,35,0.55)' : '0 2px 6px rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: on ? 'none' : 'pad-pulse 1.8s ease-in-out infinite', transition: 'all 160ms' }}>
+                      {!on && <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 20, fontWeight: 800, color: 'rgba(135,207,250,0.85)', marginTop: -2 }}>+</span>}
+                    </div>
+                  </button>
+                )
+              })}
           </div>
 
           <div className="sticky-actions">
