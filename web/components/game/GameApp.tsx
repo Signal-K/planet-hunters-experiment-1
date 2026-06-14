@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react'
 import { GameProvider, type Screen, useGame } from '@/game-context'
-import { M1_STEPS, PROGRESSION_STEPS, suggestBuild } from '@/lib/data'
+import { M1_STEPS, M2_STEPS, PROGRESSION_STEPS, suggestBuild } from '@/lib/data'
 import IntroScreen from '@/components/game/screens/IntroScreen'
 import AssemblyScreen from '@/components/game/screens/AssemblyScreen'
 import BuildPlaceScreen from '@/components/game/screens/BuildPlaceScreen'
@@ -33,8 +33,7 @@ function GameCanvas() {
   const coachSteps = useMemo(() => {
     if (!game.tutorial) return []
     if (game.player.missionsDone === 0) return M1_STEPS
-    if (game.player.missionsDone === 2) return PROGRESSION_STEPS.filter(step => step.id === 30)
-    if (game.player.missionsDone === 3) return PROGRESSION_STEPS.filter(step => step.id === 40)
+    if (game.player.missionsDone === 1) return M2_STEPS
     return []
   }, [game.player.missionsDone, game.tutorial])
 
@@ -56,10 +55,6 @@ function GameCanvas() {
 
   function goFromNav(id: string) {
     if (id === 'missions') {
-      if (game.player.missionsDone > 0 && !game.player.controlBuilt) {
-        game.setBuildGate(true)
-        return
-      }
       game.completeStep(1)
       game.go('missions')
       return
@@ -122,7 +117,6 @@ function GameCanvas() {
             onBack={() => game.go('hub')}
             onPick={game.onPickMission}
             missionsDone={game.player.missionsDone}
-            controlBuilt={game.player.controlBuilt}
             freeOperations={game.player.freeOperations}
             hasCoach={hasCoach}
             catalog={game.catalog}

@@ -31,10 +31,10 @@ const UNLOCKS: Record<string, {
     accent: '#3fa9ff',
     eyebrow: 'Vehicle Unlocked',
     title: 'STARTER ROCKET 2',
-    body: 'Faster, longer range, and 1.5× cargo capacity. Now available at the Launchpad.',
+    body: 'Mission 2 needs 8 silicon — more than SR1 can carry. Hull MK2 holds 10 units. Swap it in the Fabricator before you launch.',
     art: 'rocket',
-    stats: [['RANGE', '+60%'], ['CARGO', '×1.5'], ['SPEED', '+40%']],
-    cta: 'Outstanding',
+    stats: [['CARGO', 'MK2 ×1.5'], ['DRIVE', 'FUSION B2'], ['DRILL', 'LASER T2']],
+    cta: 'Got it',
   },
   freeops: {
     accent: '#f5a623',

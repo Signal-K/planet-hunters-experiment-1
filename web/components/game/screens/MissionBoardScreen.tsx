@@ -12,7 +12,6 @@ interface MissionBoardScreenProps {
   onBack: () => void
   onPick: (id: string) => void
   missionsDone: number
-  controlBuilt: boolean
   freeOperations: boolean
   hasCoach?: boolean
   catalog: Catalog
@@ -27,7 +26,7 @@ function formatCooldown(remaining: number): string {
   return `${mins}m ${secs}s`
 }
 
-export default function MissionBoardScreen({ onBack, onPick, missionsDone, controlBuilt, freeOperations, hasCoach, catalog, contractorCooldowns }: MissionBoardScreenProps) {
+export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeOperations, hasCoach, catalog, contractorCooldowns }: MissionBoardScreenProps) {
   const { missions: MISSIONS, contractors: CONTRACTORS, minerals: MINERAL_META, targets } = catalog
   const [tick, setTick] = useState(Date.now())
   useEffect(() => {
@@ -40,7 +39,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, contr
     const expiry = contractorCooldowns[contractor]
     return expiry && expiry > now
   }
-  const available = MISSIONS.filter(m => freeOperations || (m.sequence === missionsDone + 1 && (m.sequence === 1 || controlBuilt)))
+  const available = MISSIONS.filter(m => freeOperations || m.sequence === missionsDone + 1)
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative', background: '#06090f' }}>
       <div style={{ position: 'absolute', inset: 0 }}>

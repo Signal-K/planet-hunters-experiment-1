@@ -441,12 +441,20 @@ export const M1_STEPS: TutorialStep[] = [
     anchor: 'top', spot: { x: 14, y: 786, w: 374, h: 64 }, cta: 'Collect' },
 ]
 
+export const M2_STEPS: TutorialStep[] = [
+  { id: 20, screen: 'hub', title: 'Starter Rocket 2 Ready',
+    body: 'Mission 2 needs 8 silicon — more than your MK1 hull can carry. Hull MK2 is now unlocked in the Fabricator. Open Missions when ready.',
+    manual: true,
+    anchor: 'bottom', spot: null, cta: 'Got it' },
+  { id: 21, screen: 'fab', title: 'Upgrade Your Hull',
+    body: 'Swap your Chassis slot to Hull MK2. It holds 10 units — enough to fill the silicon order in one run.',
+    manual: true,
+    anchor: 'top', spot: { x: 14, y: 154, w: 374, h: 200 }, cta: 'Got it' },
+]
+
 export const PROGRESSION_STEPS: TutorialStep[] = [
   ...M1_STEPS,
-  { id: 30, screen: 'classify', title: 'Classify a TESS Lightcurve',
-    body: 'The repeating dip may be a planet crossing its star. Inspect the signal, then record PLANET or NOT PLANET for the science team.',
-    action: 'Inspect the dip and submit a classification',
-    anchor: 'bottom', spot: { x: 14, y: 190, w: 374, h: 300 }, cta: 'Classify' },
+  ...M2_STEPS,
 ]
 
 export interface RocketConfig {
