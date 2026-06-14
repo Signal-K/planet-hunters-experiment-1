@@ -65,12 +65,12 @@ describe('Landnam frontend stack', () => {
     })
   })
 
-  it('classifies the M3 TESS signal and continues to rocket assembly', () => {
+  it('classifies the lightcurve signal and returns to target picking', () => {
     cy.visit('/game', {
       onBeforeLoad(win) {
         win.localStorage.setItem('landnam-game-state-v1', JSON.stringify({
           screen: 'classify',
-          missionId: 'm3-gold',
+          missionId: 'm3-nickel-cobalt',
           targetId: null,
           tutorial: true,
           doneSteps: {},
@@ -95,7 +95,7 @@ describe('Landnam frontend stack', () => {
     cy.contains('button', 'Planet').click()
     cy.contains('Candidate Confirmed').should('be.visible')
     cy.contains('button', 'Submit Classification').click()
-    cy.contains('Build Rocket').should('be.visible')
-    cy.contains('TESS-451 b').should('be.visible')
+    cy.contains('Pick Target').should('be.visible')
+    cy.contains('Continue · Build').should('be.visible')
   })
 })

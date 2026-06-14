@@ -13,13 +13,13 @@ describe('PocketBase Guest Auth Pattern', () => {
     guestPassword = 'GuestPassword123!'
 
     cy.request('POST', `${pbUrl}/api/collections/users/records`, {
-      username: guestId,
+      email: `${guestId}@landnam.test`,
       password: guestPassword,
       passwordConfirm: guestPassword,
       displayName: 'Anonymous Explorer',
     }).then(({ body: userRecord }) => {
       cy.request('POST', `${pbUrl}/api/collections/users/auth-with-password`, {
-        identity: guestId,
+        identity: `${guestId}@landnam.test`,
         password: guestPassword,
       }).then(({ body: auth }) => {
         token = auth.token
@@ -58,8 +58,6 @@ describe('PocketBase Guest Auth Pattern', () => {
       screen,
       player: {
         francs: 9_500_000_000,
-        level: 1,
-        xp: 50,
         activeMission: null,
         missionCount: 1,
         pendingLaunch: false,
@@ -74,8 +72,9 @@ describe('PocketBase Guest Auth Pattern', () => {
         refineryBuilt: false,
         refineryQueue: [],
         refinedGoods: {},
-        stash: {},
         launchpadUpgraded: false,
+        loanDebt: 0,
+        loanOffered: false,
       },
       missionId: null,
       targetId: null,

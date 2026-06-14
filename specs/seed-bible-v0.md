@@ -8,7 +8,7 @@ This document defines the first authored seed set for Landnam: contractors, mine
 
 ### Contractors (10 slots)
 
-Unlock tiers, project types, mineral preferences, payout/affinity notes, and UI roles are defined in `CONTRACTOR_SLOTS` in `web/lib/data.ts`. The 3 active contractors (Foundry-3, Cryos, Belt Gold) are immediately available at tier 1. The remaining 7 are scaffolded and gated behind unlock tiers 2–3.
+Unlock tiers, project types, mineral preferences, payout/affinity notes, and UI roles are defined in `CONTRACTOR_SLOTS` in `web/lib/data.ts`. v0 uses mechanical placeholder identities first: 10 contractor slots at unlock tiers 3/4/6/8/10. Authored names, themes, portraits, and lore are deferred.
 
 ### Minerals (8 types)
 
@@ -28,7 +28,7 @@ Default build: Hull MK1 chassis + Ion Drive A1 propulsion + Hand Drill. Cargo ca
 
 ### Mission Templates
 
-5 templates mapping to mission tags: STARTER, BULK, PROSPECT, COMMAND, SCIENCE. Each defines cargo range, drill tier min, orbit max, and payout multiplier.
+4 resource-collection templates map to mission tags: STARTER, BULK, PROSPECT, COMMAND. Each defines eligible mineral keys, cargo range, drill tier min, orbit max, contractor role, payout multiplier, and payout formula. Target scouting and infrastructure templates are reserved for Free Ops/future work.
 
 ## Config JSON vs Schema Work
 
@@ -47,5 +47,5 @@ Default build: Hull MK1 chassis + Ion Drive A1 propulsion + Hand Drill. Cargo ca
 | Per-instance structure placement | No — runtime state | Yes: already in game_states JSON |
 | Player progress / missions done | No — runtime state | Already in game_states JSON |
 | Economy pricing perturbations | Partial — base rate in config | Yes: market events table if dynamic pricing needed |
-| Contractor identity (name, color, initial) | Yes — static config | No — purely cosmetic, no schema needed |
+| Contractor placeholder identity (slot name, color, initial) | Yes — static config | No — authored identity pass deferred |
 | Mission unlock conditions | Yes — static config | No — sequence numbers and unlockAt field suffice |

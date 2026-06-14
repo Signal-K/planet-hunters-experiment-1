@@ -1,6 +1,7 @@
 FROM node:20-alpine AS dev
 WORKDIR /app
 COPY package.json package-lock.json ./
+ENV CYPRESS_INSTALL_BINARY=0
 RUN npm ci
 ENV NEXT_TELEMETRY_DISABLED=1
 EXPOSE 3000
@@ -9,6 +10,7 @@ CMD ["npm", "run", "dev"]
 FROM node:20-alpine AS dependencies
 WORKDIR /app
 COPY package.json package-lock.json ./
+ENV CYPRESS_INSTALL_BINARY=0
 RUN npm ci
 
 FROM node:20-alpine AS builder

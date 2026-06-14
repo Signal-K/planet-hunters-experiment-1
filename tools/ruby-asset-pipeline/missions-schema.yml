@@ -1,76 +1,120 @@
-# Mission/event chain definition schema for Landnam (DSL decision: structured YAML, see task 018394).
+# Mission/template definition schema for Landnam resource-collection missions.
 #
-# Each top-level entry under `missions:` corresponds to one entry in
-# web/lib/data.ts MISSIONS. A future loader can read this file and emit the
-# TypeScript Mission[] array (or a JSON catalog consumed at runtime).
+# The v0 seed uses template-driven resource_collection missions only. Target
+# scouting and infrastructure mission types are intentionally reserved for
+# later Free Ops work.
 #
 # Schema:
 #
+# mission_templates:
+#   - id: string
+#     tag: string
+#     difficulty: string
+#     mineral_keys: string[]       # minerals this template can request
+#     cargo_range: [integer, integer]
+#     drill_tier_min: integer
+#     orbit_max: integer
+#     contractor_role: string
+#     payout_multiplier: number
+#     payout_formula: string       # human-readable formula, not executable Ruby
+#
 # missions:
-#   - id: string                 # unique mission id, e.g. "m1-iron"
+#   - id: string
+#     template: string             # mission_templates.id
 #     title: string
-#     brief: string               # flavor text shown to the player
-#     contractor: string          # contractor id (see contractors catalog)
-#     tag: string                 # short badge, e.g. STARTER, BULK, PROSPECT
-#     difficulty: string          # L1, L2, L3 ...
-#     sequence: integer           # ordering within the mission chain
-#     locked: boolean             # initial lock state
-#     unlock:                     # optional unlock trigger (omit if unlocked from the start)
-#       requires_mission: string  # id of the mission that must be completed first
-#       label: string             # display text, e.g. "Complete M2"
-#     requires:                   # acceptance criteria for turning in the mission
-#       minerals:                 # map of mineral id -> quantity required
+#     brief: string
+#     contractor: string           # contractor slot id
+#     sequence: integer
+#     locked: boolean
+#     unlock:                     # optional
+#       requires_mission: string
+#       label: string
+#     requires:
+#       minerals:
 #         <mineral_id>: integer
-#       cargo_min: integer        # minimum cargo capacity needed
-#       drill_tier: integer       # minimum drill tier needed
-#       max_orbit: integer        # maximum orbit distance reachable
-#     reward:                      # formula inputs for payout calculation
-#       francs: integer            # base currency reward
-#       affinity: integer          # contractor affinity gained
+#     reward:
+#       affinity: integer
+
+mission_templates:
+  - id: starter-bulk
+    tag: STARTER
+    difficulty: L1
+    mineral_keys: [iron, silicon, carbon]
+    cargo_range: [4, 8]
+    drill_tier_min: 1
+    orbit_max: 4
+    contractor_role: starter
+    payout_multiplier: 1.0
+    payout_formula: mineral price * amount * 1500 * multiplier
+
+  - id: volatile-bulk
+    tag: BULK
+    difficulty: L2
+    mineral_keys: [ice, carbon, silicon]
+    cargo_range: [8, 14]
+    drill_tier_min: 1
+    orbit_max: 5
+    contractor_role: bulk
+    payout_multiplier: 1.35
+    payout_formula: mineral price * amount * 1500 * multiplier
+
+  - id: metal-prospect
+    tag: PROSPECT
+    difficulty: L2
+    mineral_keys: [nickel, cobalt, gold]
+    cargo_range: [3, 8]
+    drill_tier_min: 2
+    orbit_max: 5
+    contractor_role: prospect
+    payout_multiplier: 2.25
+    payout_formula: mineral price * amount * 1500 * multiplier
+
+  - id: command-reserve
+    tag: COMMAND
+    difficulty: L3
+    mineral_keys: [gold, rare, cobalt]
+    cargo_range: [3, 6]
+    drill_tier_min: 2
+    orbit_max: 6
+    contractor_role: command
+    payout_multiplier: 3.5
+    payout_formula: mineral price * amount * 1500 * multiplier
 
 missions:
   - id: m1-iron
-    title: Iron for Foundry-3
-    brief: Foundry-3 needs a fresh iron shipment to keep their smelters running. Belt region preferred.
-    contractor: foundry3
-    tag: STARTER
-    difficulty: L1
+    template: starter-bulk
+    title: Iron Reserve Order
+    brief: Contractor Slot 03A needs a starter iron shipment from a reachable asteroid.
+    contractor: contractor-03a
     sequence: 1
     locked: false
     requires:
       minerals:
         iron: 6
-      cargo_min: 6
-      drill_tier: 1
-      max_orbit: 4
     reward:
-      francs: 1200000
       affinity: 10
 
   - id: m2-silicon
-    title: Silicon Mass Order
-    brief: Cryos needs raw silicon for their electronics division. Any asteroid source accepted.
-    contractor: cryos
-    tag: BULK
-    difficulty: L2
+    template: volatile-bulk
+    title: Silicon Bulk Order
+    brief: Contractor Slot 03B needs raw silicon for electronics-grade supply contracts.
+    contractor: contractor-03b
     sequence: 2
     locked: false
+    unlock:
+      requires_mission: m1-iron
+      label: Complete M1
     requires:
       minerals:
         silicon: 8
-      cargo_min: 8
-      drill_tier: 1
-      max_orbit: 5
     reward:
-      francs: 1800000
       affinity: 8
 
-  - id: m3-gold
-    title: KOI-7923 Deep Prospect
-    brief: Belt Gold Ltd has eyes on the outer KOI corridor — confirmed exoplanet belt with dense gold and rare deposits. The SR3 drive tier is required for this depth.
-    contractor: beltgold
-    tag: PROSPECT
-    difficulty: L3
+  - id: m3-nickel-cobalt
+    template: metal-prospect
+    title: Nickel-Cobalt Assay
+    brief: Contractor Slot 04A wants battery metals from confirmed belt targets only.
+    contractor: contractor-04a
     sequence: 3
     locked: true
     unlock:
@@ -78,21 +122,23 @@ missions:
       label: Complete M2
     requires:
       minerals:
-        gold: 4
-        rare: 2
-      cargo_min: 8
-      drill_tier: 3
-      max_orbit: 7
+        nickel: 4
+        cobalt: 2
     reward:
-      francs: 9000000
-      affinity: 20
+      affinity: 15
 
-# Edge cases / candidates for a future Ruby DSL parser (Treetop/Parslet) if YAML
-# proves insufficient:
-#   - Conditional rewards (e.g. bonus payout if mission completed within N turns)
-#     are not representable here; would need a small expression language.
-#   - Multi-step mission chains with branching outcomes (success/failure paths)
-#     are not modeled — `unlock.requires_mission` only supports a single linear
-#     prerequisite.
-#   - Dynamic reward formulas (e.g. payout scaling with player tier) would need
-#     a formula DSL rather than static integers.
+  - id: m4-gold-reserve
+    template: command-reserve
+    title: Gold Reserve Run
+    brief: Contractor Slot 04B has a premium gold order from the main belt.
+    contractor: contractor-04b
+    sequence: 4
+    locked: true
+    unlock:
+      requires_mission: m3-nickel-cobalt
+      label: Complete M3
+    requires:
+      minerals:
+        gold: 4
+    reward:
+      affinity: 20

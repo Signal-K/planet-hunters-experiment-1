@@ -57,6 +57,7 @@ function Slot({ label, parts, picked, accent, onPick, missionsDone }: {
           return (
             <button
               key={part.id}
+              data-testid={`part-${part.id}`}
               disabled={!unlocked}
               onClick={() => unlocked && onPick(part.id)}
               className={

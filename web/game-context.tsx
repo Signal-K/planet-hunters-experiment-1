@@ -7,6 +7,8 @@ let toastSeq = 0
 function nextToastId() { return `t${++toastSeq}` }
 import { type Mission, type Target, type RocketConfig, MISSIONS, TARGETS, PROGRESSION_STEPS, suggestBuild, REFINERY_RECIPES, MINERAL_META } from '@/lib/data'
 import { pbShared } from '@/lib/pb'
+import { ensureGuestAuth, isGuestAccount, upgradeGuestAccount } from '@/lib/guestAuth'
+import { pbLandnam } from '@/lib/pb-landnam'
 import { type Catalog, STATIC_CATALOG, fetchCatalog } from '@/lib/catalog'
 
 export type Screen =
@@ -99,6 +101,9 @@ interface GameActions {
   dismissToast: (id: string) => void
   mission: Mission | null
   target: Target | null
+  upgradePromptOpen: boolean
+  dismissUpgradePrompt: () => void
+  upgradeAccount: (email: string, password: string) => Promise<void>
 }
 
 const GameContext = createContext<(GameState & GameActions) | null>(null)
@@ -139,6 +144,8 @@ const DEFAULT_STATE: GameState = {
 }
 
 const STORAGE_KEY = 'landnam-game-state-v1'
+const UPGRADE_SNOOZE_KEY = 'landnam-upgrade-prompt-snooze-until'
+const UPGRADE_SNOOZE_MS = 24 * 60 * 60 * 1000
 const LOAN_AMOUNT = 5_000_000_000
 const LOAN_REPAYMENT = Math.ceil(LOAN_AMOUNT * 1.08 / 2)
 const BANKRUPTCY_THRESHOLD = 500_000_000
@@ -172,8 +179,25 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const [authUserId, setAuthUserId] = useState<string | null>(pbShared.authStore.record?.id ?? null)
   const backendRecordId = useRef<string | null>(null)
   const backendLoadedFor = useRef<string | null>(null)
+  const isPreview = useRef(false)
+  const [backendReady, setBackendReady] = useState(false)
+  const [upgradePromptOpen, setUpgradePromptOpen] = useState(false)
 
   useEffect(() => {
+    const previewScreen = new URLSearchParams(window.location.search).get('preview')
+    if (previewScreen) {
+      isPreview.current = true
+      setState({
+        ...DEFAULT_STATE,
+        screen: previewScreen as Screen,
+        tutorial: false,
+        missionId: MISSIONS[0]?.id ?? null,
+        targetId: TARGETS[0]?.id ?? null,
+        player: { ...DEFAULT_STATE.player, missionsDone: 1, controlBuilt: true, refineryBuilt: true, placed: ['control', 'launchpad', 'refinery', 'satellite'] },
+      })
+      setHydrated(true)
+      return
+    }
     setState(loadState())
     setHydrated(true)
   }, [])
@@ -185,13 +209,41 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => pbShared.authStore.onChange((_token, record) => {
     backendRecordId.current = null
     backendLoadedFor.current = null
+    setBackendReady(false)
     setAuthUserId(record?.id ?? null)
   }), [])
 
+  // Auto-create/restore a guest PocketBase session so progress syncs to the
+  // backend without forcing the player through /auth. Failure just leaves
+  // the game running in local-storage-only "offline" mode.
   useEffect(() => {
-    if (!hydrated || !authUserId || backendLoadedFor.current === authUserId) return
+    if (isPreview.current) return
+    if (pbShared.authStore.isValid) return
+    ensureGuestAuth().catch(() =>
+      // Transient network hiccups are common on first load — retry once
+      // before settling into offline mode.
+      new Promise(resolve => setTimeout(resolve, 3000)).then(() => ensureGuestAuth())
+    ).catch(() => {
+      addToast('Offline mode — progress saved on this device only', 'warn')
+    })
+  }, [])
+
+  // Periodically nudge guest players to save their progress to a full
+  // account. Re-checked whenever a mission completes (missionsDone changes)
+  // and respects a snooze window set when the player dismisses the prompt.
+  useEffect(() => {
+    if (!hydrated || isPreview.current) return
+    if (state.player.missionsDone < 1) return
+    if (!isGuestAccount()) return
+    const snoozeUntil = Number(localStorage.getItem(UPGRADE_SNOOZE_KEY) ?? 0)
+    if (Date.now() < snoozeUntil) return
+    setUpgradePromptOpen(true)
+  }, [hydrated, state.player.missionsDone, authUserId])
+
+  useEffect(() => {
+    if (!hydrated || isPreview.current || !authUserId || backendLoadedFor.current === authUserId) return
     let active = true
-    pbShared.collection('game_states')
+    pbLandnam.collection('game_states')
       .getFirstListItem(`user = "${authUserId}"`)
       .then(record => {
         if (!active) return
@@ -199,30 +251,32 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         backendLoadedFor.current = authUserId
         const remoteState = record.state as Partial<GameState>
         setState(current => ({ ...current, ...remoteState }))
+        setBackendReady(true)
       })
       .catch(error => {
         if (!active) return
         if (typeof error === 'object' && error && 'status' in error && error.status === 404) {
           backendLoadedFor.current = authUserId
+          setBackendReady(true)
         }
       })
     return () => { active = false }
   }, [authUserId, hydrated])
 
   useEffect(() => {
-    if (!hydrated) return
+    if (!hydrated || isPreview.current) return
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
   }, [state, hydrated])
 
   useEffect(() => {
-    if (!hydrated || !authUserId || backendLoadedFor.current !== authUserId) return
+    if (!hydrated || isPreview.current || !authUserId || !backendReady || backendLoadedFor.current !== authUserId) return
     const timer = window.setTimeout(async () => {
       const payload = { user: authUserId, state }
       try {
         if (backendRecordId.current) {
-          await pbShared.collection('game_states').update(backendRecordId.current, payload)
+          await pbLandnam.collection('game_states').update(backendRecordId.current, payload)
         } else {
-          const record = await pbShared.collection('game_states').create(payload)
+          const record = await pbLandnam.collection('game_states').create(payload)
           backendRecordId.current = record.id
         }
       } catch {
@@ -230,7 +284,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       }
     }, 400)
     return () => window.clearTimeout(timer)
-  }, [authUserId, hydrated, state])
+  }, [authUserId, hydrated, backendReady, state])
 
   const go = useCallback((screen: Screen) => {
     setState(s => ({ ...s, screen }))
@@ -294,6 +348,23 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const dismissToast = useCallback((id: string) => {
     setToasts(ts => ts.filter(t => t.id !== id))
   }, [])
+
+  const dismissUpgradePrompt = useCallback(() => {
+    localStorage.setItem(UPGRADE_SNOOZE_KEY, String(Date.now() + UPGRADE_SNOOZE_MS))
+    setUpgradePromptOpen(false)
+  }, [])
+
+  const upgradeAccount = useCallback(async (email: string, password: string) => {
+    const { emailChangeRequested } = await upgradeGuestAccount(email, password)
+    localStorage.removeItem(UPGRADE_SNOOZE_KEY)
+    setUpgradePromptOpen(false)
+    addToast(
+      emailChangeRequested
+        ? 'Account saved — check your email to confirm your new address'
+        : 'Account saved — your new password is active now',
+      'ok'
+    )
+  }, [addToast])
 
   const onPickMission = useCallback((id: string) => {
     setState(s => ({
@@ -359,20 +430,12 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
           doneSteps: { ...s.doneSteps, 30: true },
         }
       }
-      const target = catalog.targets.find(t => t.id === CANDIDATE_ID) ?? null
       return {
         ...s,
         classification: { candidateId: CANDIDATE_ID, verdict },
-        targetId: CANDIDATE_ID,
-        rocket: suggestBuild({
-          mission: s.missionId ? catalog.missions.find(m => m.id === s.missionId) ?? null : null,
-          target,
-          missionsDone: s.player.missionsDone,
-          launchpadUpgraded: s.player.launchpadUpgraded,
-          parts: catalog.parts,
-        }),
-        screen: 'fab',
-        doneSteps: { ...s.doneSteps, 30: true, 3: true },
+        targetId: null,
+        screen: 'targets',
+        doneSteps: { ...s.doneSteps, 30: true },
       }
     })
 
@@ -389,7 +452,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         setState(s => ({ ...s, classificationError: msg }))
       })
     }
-  }, [catalog.missions, catalog.targets, catalog.parts])
+  }, [])
 
   const onSatelliteClassify = useCallback((verdict: 'planet' | 'not_planet') => {
     setState(s => ({
@@ -567,7 +630,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     setState(DEFAULT_STATE)
     localStorage.removeItem(STORAGE_KEY)
     if (authUserId && backendRecordId.current) {
-      pbShared.collection('game_states').delete(backendRecordId.current)
+      pbLandnam.collection('game_states').delete(backendRecordId.current)
         .catch(() => {})
       backendRecordId.current = null
     }
@@ -667,6 +730,9 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       dismissToast,
       mission,
       target,
+      upgradePromptOpen,
+      dismissUpgradePrompt,
+      upgradeAccount,
     }}>
       {children}
     </GameContext.Provider>

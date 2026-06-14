@@ -1,0 +1,26 @@
+{
+  "background": "#0a0a12",
+  "entities": [
+    {
+      "components": [
+        {
+          "type": "MiningController"
+        }
+      ],
+      "id": "mining-controller",
+      "name": "Mining Controller",
+      "transform": {
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "rotation": 0,
+        "scale": {
+          "x": 1,
+          "y": 1
+        }
+      }
+    }
+  ],
+  "name": "mining"
+}

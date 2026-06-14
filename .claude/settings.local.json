@@ -12,7 +12,8 @@
       "mcp__knowns__docs",
       "Edit",
       "Write",
-      "Bash"
+      "Bash",
+      "mcp__knowns__project"
     ]
   },
   "enabledMcpjsonServers": [

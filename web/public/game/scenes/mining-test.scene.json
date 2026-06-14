@@ -1,0 +1,77 @@
+{
+  "background": "#0a0a12",
+  "entities": [
+    {
+      "components": [
+        {
+          "anchorX": 0.5,
+          "anchorY": 0.5,
+          "sprite": "ship",
+          "type": "SpriteRenderer"
+        }
+      ],
+      "id": "ship",
+      "name": "Player Ship",
+      "transform": {
+        "position": {
+          "x": 80,
+          "y": 225
+        },
+        "rotation": 0,
+        "scale": {
+          "x": 1.5,
+          "y": 1.5
+        }
+      }
+    },
+    {
+      "components": [
+        {
+          "anchorX": 0.5,
+          "anchorY": 0.5,
+          "sprite": "ore_iron",
+          "tint": 16737792,
+          "type": "SpriteRenderer"
+        }
+      ],
+      "id": "ore-0",
+      "name": "Iron Ore Node 0",
+      "transform": {
+        "position": {
+          "x": 300,
+          "y": 180
+        },
+        "rotation": 0,
+        "scale": {
+          "x": 1,
+          "y": 1
+        }
+      }
+    },
+    {
+      "components": [
+        {
+          "anchorX": 0.5,
+          "anchorY": 0.5,
+          "sprite": "ore_iron",
+          "tint": 11206570,
+          "type": "SpriteRenderer"
+        }
+      ],
+      "id": "ore-1",
+      "name": "Iron Ore Node 1",
+      "transform": {
+        "position": {
+          "x": 520,
+          "y": 260
+        },
+        "rotation": 0,
+        "scale": {
+          "x": 1,
+          "y": 1
+        }
+      }
+    }
+  ],
+  "name": "mining-test"
+}

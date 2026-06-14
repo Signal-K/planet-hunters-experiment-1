@@ -7,8 +7,10 @@ import {
   rateMission,
   MINERAL_META,
   MISSIONS,
+  MISSION_TEMPLATES,
   TARGETS,
   PARTS,
+  CONTRACTOR_SLOTS,
 } from './data'
 
 describe('sellCargo', () => {
@@ -39,10 +41,10 @@ describe('suggestBuild', () => {
   })
 
   it('suggests best available drill when mission requires locked tier', () => {
-    // M3 requires drill_tier: 3 but plasma-t3 is locked in static PARTS.
+    // M3 requires drill_tier: 2 but laser-t2 is unavailable until after M1.
     // suggestBuild should fall back to the best available drill (laser-t2 at missionsDone >= 1).
-    const m3 = MISSIONS.find(m => m.id === 'm3-gold')!
-    const belt = TARGETS.find(t => t.id === 'koi-7923-belt')!
+    const m3 = MISSIONS.find(m => m.id === 'm3-nickel-cobalt')!
+    const belt = TARGETS.find(t => t.id === 'belt')!
     const build = suggestBuild({ mission: m3, target: belt, missionsDone: 2, parts: PARTS })
     expect(build.drill).toBe('laser-t2')
   })
@@ -91,7 +93,7 @@ describe('validateBuild', () => {
   })
 
   it('flags propulsion that cannot reach the target orbit', () => {
-    const m3 = MISSIONS.find(m => m.id === 'm3-gold')!
+    const m3 = MISSIONS.find(m => m.id === 'm3-nickel-cobalt')!
     const farTarget = TARGETS.find(t => t.id === 'jupiter')!
     const result = validateBuild({
       mission: m3,
@@ -143,5 +145,24 @@ describe('rateMission', () => {
   it('returns 1 star for a slow delivery', () => {
     const m1 = MISSIONS.find(m => m.id === 'm1-iron')!
     expect(rateMission({ mission: m1, cargo: { iron: 6 }, elapsed: 90 })).toBe(1)
+  })
+})
+
+describe('seed bible v0 catalog', () => {
+  it('defines ten mechanical contractor slots at the spec unlock tiers', () => {
+    expect(CONTRACTOR_SLOTS).toHaveLength(10)
+    expect(CONTRACTOR_SLOTS.map(c => c.unlockTier)).toEqual([3, 3, 4, 4, 6, 6, 8, 8, 10, 10])
+    expect(CONTRACTOR_SLOTS.every(c => c.name.startsWith('Contractor Slot'))).toBe(true)
+  })
+
+  it('keeps Landnam targets to real solar-system bodies for the seed catalog', () => {
+    const blocked = ['tess-451b', 'koi-7923-belt']
+    expect(TARGETS.map(t => t.id)).not.toEqual(expect.arrayContaining(blocked))
+  })
+
+  it('builds resource-collection missions from mission templates', () => {
+    expect(MISSION_TEMPLATES.every(t => t.mineralKeys.length > 0)).toBe(true)
+    expect(MISSIONS.every(m => MISSION_TEMPLATES.some(t => t.tag === m.tag))).toBe(true)
+    expect(MISSIONS.every(m => !m.requiresClassification)).toBe(true)
   })
 })

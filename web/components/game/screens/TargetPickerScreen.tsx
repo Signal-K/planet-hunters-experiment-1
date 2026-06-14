@@ -22,11 +22,11 @@ const DEFAULT_BODIES: EntityData[] = [
   { id: 'vesta', name: '4 Vesta', transform: { position: { x: 240.99, y: 115.66 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'CelestialBody', orbit: 3 }] },
   { id: 'psyche', name: '16 Psyche', transform: { position: { x: 196.42, y: 287.59 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'CelestialBody', orbit: 4 }] },
   { id: 'bennu', name: '101955 Bennu', transform: { position: { x: 127.91, y: 190.42 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'CelestialBody', orbit: 2 }] },
+  { id: 'itokawa', name: '25143 Itokawa', transform: { position: { x: 263.0, y: 190.0 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'CelestialBody', orbit: 2 }] },
+  { id: 'ryugu', name: '162173 Ryugu', transform: { position: { x: 82.0, y: 112.0 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'CelestialBody', orbit: 3 }] },
   { id: 'belt', name: 'Asteroid Belt', transform: { position: { x: 141.85, y: 55.95 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'CelestialBody', orbit: 5 }] },
   { id: 'ceres', name: '1 Ceres', transform: { position: { x: 57.03, y: 157.08 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'CelestialBody', orbit: 5 }] },
   { id: 'jupiter', name: 'Jupiter', transform: { position: { x: 323.83, y: 259 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'CelestialBody', orbit: 6 }] },
-  { id: 'tess-451b', name: 'TESS-451 b', transform: { position: { x: 319, y: 180 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'CelestialBody', orbit: 5 }] },
-  { id: 'koi-7923-belt', name: 'KOI-7923 Belt', transform: { position: { x: 371, y: 180 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'CelestialBody', orbit: 7 }] },
 ]
 
 interface TargetPickerScreenProps {
@@ -39,7 +39,7 @@ interface TargetPickerScreenProps {
 
 const ANGLES: Record<string, number> = {
   mercury: 200, venus: 320, earth: 70, mars: 140,
-  eros: 45, bennu: 170, vesta: 310, psyche: 85,
+  eros: 45, bennu: 170, itokawa: 10, ryugu: 230, vesta: 310, psyche: 85,
   belt: 250, ceres: 190,
   jupiter: 30, saturn: 340, neptune: 120,
 }
@@ -175,7 +175,7 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
             const isCompat = compatIds.has(t.id)
             const isPicked = t.id === picked
             return (
-              <button key={t.id} onClick={() => isCompat && setPicked(t.id)} style={{ position: 'absolute', left: '50%', top: '50%', marginLeft: p.x, marginTop: p.y, transform: 'translate(-50%,-50%)', background: 'transparent', border: 'none', padding: 0, cursor: isCompat ? 'pointer' : 'not-allowed', opacity: isCompat ? 1 : 0.25, filter: isCompat ? 'none' : 'grayscale(1)' }}>
+              <button key={t.id} data-testid={`target-${t.id}`} onClick={() => isCompat && setPicked(t.id)} style={{ position: 'absolute', left: '50%', top: '50%', marginLeft: p.x, marginTop: p.y, transform: 'translate(-50%,-50%)', background: 'transparent', border: 'none', padding: 0, cursor: isCompat ? 'pointer' : 'not-allowed', opacity: isCompat ? 1 : 0.25, filter: isCompat ? 'none' : 'grayscale(1)' }}>
                 <div style={{ position: 'relative', borderRadius: 999, outline: isPicked ? '2px solid #f5a623' : 'none', outlineOffset: 4, boxShadow: isPicked ? '0 0 22px rgba(245,166,35,0.6)' : 'none' }}>
                   <PlanetSVG id={t.id} size={t.id === 'belt' ? 36 : 26} />
                 </div>

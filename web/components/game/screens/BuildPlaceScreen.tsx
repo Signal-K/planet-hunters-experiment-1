@@ -121,7 +121,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, missionsD
             {[0, 1, 2, 3].map(id => {
               const on = cell === id
               return (
-                <button key={id} onClick={() => setCell(id)} style={{ position: 'relative', flex: '1 1 0', maxWidth: 88, cursor: 'pointer', background: 'transparent', border: 'none', padding: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <button key={id} data-testid={`build-plot-${id}`} onClick={() => setCell(id)} style={{ position: 'relative', flex: '1 1 0', maxWidth: 88, cursor: 'pointer', background: 'transparent', border: 'none', padding: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                   <div style={{ width: 64, height: 64, marginBottom: 2, opacity: on ? 1 : 0, transform: on ? 'translateY(0)' : 'translateY(6px)', transition: 'all 160ms', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32 }}>
                     {on && <span style={{ color: 'var(--ln-amber)' }}><StructureIcon kind="launchpad" size={40} /></span>}
                   </div>

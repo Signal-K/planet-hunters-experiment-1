@@ -37,6 +37,10 @@ migrate((app) => {
         { type: 'text',   name: 'sym',        required: true, max: 10 },
         { type: 'text',   name: 'color',      required: true, max: 20 },
         { type: 'number', name: 'base_price', required: true },
+        { type: 'select', name: 'rarity',     maxSelect: 1, values: ['common', 'uncommon', 'rare', 'exotic'] },
+        { type: 'text',   name: 'demand_role', max: 120 },
+        { type: 'text',   name: 'construction_use', max: 200 },
+        { type: 'number', name: 'laser_access' },
       ],
       indexes: ['CREATE UNIQUE INDEX idx_minerals_slug ON minerals (slug)'],
     }))
@@ -57,6 +61,11 @@ migrate((app) => {
         { type: 'text',   name: 'color',       required: true, max: 20 },
         { type: 'text',   name: 'initial',     required: true, max: 5 },
         { type: 'number', name: 'unlock_tier' },
+        { type: 'text',   name: 'project_type', max: 160 },
+        { type: 'json',   name: 'mineral_preferences', maxSize: 1000 },
+        { type: 'text',   name: 'payout_notes', max: 200 },
+        { type: 'text',   name: 'affinity_notes', max: 200 },
+        { type: 'text',   name: 'ui_role', max: 40 },
       ],
       indexes: ['CREATE UNIQUE INDEX idx_contractors_slug ON contractors (slug)'],
     }))
@@ -119,8 +128,34 @@ migrate((app) => {
       indexes: ['CREATE UNIQUE INDEX idx_missions_catalog_slug ON missions_catalog (slug)'],
     }))
   }
+
+  // mission_templates
+  try {
+    app.findCollectionByNameOrId('mission_templates')
+  } catch {
+    app.save(new Collection({
+      type: 'base',
+      name: 'mission_templates',
+      listRule: '',
+      viewRule: '',
+      fields: [
+        { type: 'text',   name: 'slug',              required: true, max: 40 },
+        { type: 'text',   name: 'tag',               required: true, max: 40 },
+        { type: 'text',   name: 'difficulty',        required: true, max: 10 },
+        { type: 'json',   name: 'mineral_keys',      maxSize: 1000 },
+        { type: 'number', name: 'cargo_min' },
+        { type: 'number', name: 'cargo_max' },
+        { type: 'number', name: 'drill_tier_min' },
+        { type: 'number', name: 'orbit_max' },
+        { type: 'number', name: 'payout_multiplier' },
+        { type: 'text',   name: 'contractor_role',   max: 40 },
+        { type: 'text',   name: 'payout_formula',    max: 300 },
+      ],
+      indexes: ['CREATE UNIQUE INDEX idx_mission_templates_slug ON mission_templates (slug)'],
+    }))
+  }
 }, (app) => {
-  for (const name of ['missions_catalog', 'rocket_parts', 'contractors', 'minerals', 'locations']) {
+  for (const name of ['mission_templates', 'missions_catalog', 'rocket_parts', 'contractors', 'minerals', 'locations']) {
     try { app.delete(app.findCollectionByNameOrId(name)) } catch {}
   }
 })

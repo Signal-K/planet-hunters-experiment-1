@@ -50,11 +50,13 @@ services:
     working_dir: /e2e
     environment:
       CYPRESS_baseUrl: http://next-app:3000
+      CYPRESS_POCKETBASE_URL: http://landnam-pb:8090
       CYPRESS_PROFILE: with-pb
     volumes:
       - ./cypress.docker.config.js:/e2e/cypress.config.js:ro
       - ./web/cypress:/e2e/cypress:ro
       - ./web/package.json:/e2e/package.json:ro
+      - ./web/tsconfig.json:/e2e/tsconfig.json:ro
       - ./web/node_modules:/e2e/node_modules:ro
     depends_on:
       next-app:

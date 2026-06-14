@@ -167,9 +167,9 @@ function Building({ kind, label, sub, status, hot, w, style, onClick }: Building
   )
 }
 
-function EmptyPlot({ w = 90, style, onClick }: { w?: number; style?: React.CSSProperties; onClick: () => void }) {
+function EmptyPlot({ w = 90, style, onClick, plot }: { w?: number; style?: React.CSSProperties; onClick: () => void; plot?: number }) {
   return (
-    <button data-testid="build-plot" onClick={onClick} style={{ position: 'absolute', background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, ...style }}>
+    <button data-testid={plot != null ? `build-plot-${plot}` : 'build-plot'} onClick={onClick} style={{ position: 'absolute', background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, ...style }}>
       <div style={{ width: w, height: w * 0.5, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ width: '88%', height: 26, borderRadius: '50% / 60%', background: 'radial-gradient(ellipse at 50% 35%, rgba(135,207,250,0.18), rgba(135,207,250,0.04) 70%)', border: '2px dashed rgba(135,207,250,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'pad-pulse 2s ease-in-out infinite' }}>
           <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 16, fontWeight: 800, color: 'rgba(135,207,250,0.8)', marginTop: -2 }}>+</span>
@@ -310,7 +310,7 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
             const kind = structureForPlot(plot)
             if (!kind) {
               if (!editMode) return null
-              return <EmptyPlot key={plot} w={78} style={style} onClick={() => onGoBuilding('build')} />
+              return <EmptyPlot key={plot} plot={plot} w={78} style={style} onClick={() => onGoBuilding('build')} />
             }
             const building = structureProps(kind)
             return <Building key={kind} {...building} style={style} />

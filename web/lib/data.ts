@@ -102,23 +102,26 @@ export interface MissionTemplate {
   id: string
   tag: string
   difficulty: string
+  mineralKeys: string[]
   cargoRange: [number, number]
   drillTierMin: number
   orbitMax: number
   payoutMultiplier: number
+  contractorRole: ContractorSlot['uiRole']
+  payoutFormula: string
 }
 
 export const CONTRACTOR_SLOTS: ContractorSlot[] = [
-  { id: 'foundry3',  name: 'Foundry-3 Corp',  color: '#d97150', initial: 'F3', unlockTier: 1, projectType: 'Smelting throughput',   mineralPreferences: ['iron', 'silicon'], payoutNotes: 'Low rate, steady volume',       affinityNotes: '+10 per delivery',    uiRole: 'starter' },
-  { id: 'cryos',     name: 'Cryos Mining',    color: '#9becff', initial: 'CM', unlockTier: 1, projectType: 'Electronics-grade ore', mineralPreferences: ['silicon', 'iron'], payoutNotes: 'Medium pay, bulk orders',     affinityNotes: '+8 per delivery',     uiRole: 'bulk' },
-  { id: 'beltgold',  name: 'Belt Gold Ltd',   color: '#ffd166', initial: 'BG', unlockTier: 1, projectType: 'Precious metals',       mineralPreferences: ['gold', 'rare'], payoutNotes: 'High pay, low volume',         affinityNotes: '+15 per delivery',    uiRole: 'prospect' },
-  { id: 'lunarore',  name: 'Lunar ORE Inc',   color: '#a8d8ea', initial: 'LO', unlockTier: 2, projectType: 'Construction aggregates', mineralPreferences: ['iron', 'carbon'], payoutNotes: 'Very low rate, massive volume', affinityNotes: '+5 per delivery',     uiRole: 'bulk' },
-  { id: 'deepcore',  name: 'DeepCore Ltd',    color: '#70e070', initial: 'DC', unlockTier: 2, projectType: 'Deep-core sampling',    mineralPreferences: ['iron', 'silicon', 'gold'], payoutNotes: 'Mixed-bag premium',            affinityNotes: '+12 per delivery',    uiRole: 'prospect' },
-  { id: 'vestarock', name: 'VestaRock Co',    color: '#c084ff', initial: 'VR', unlockTier: 2, projectType: 'Rare-earth refining',     mineralPreferences: ['rare', 'gold'], payoutNotes: 'High tier, small batches',       affinityNotes: '+20 per delivery',    uiRole: 'command' },
-  { id: 'helio',     name: 'Helio Syndicate', color: '#ff8c42', initial: 'HS', unlockTier: 3, projectType: 'Solar-grade silicon',    mineralPreferences: ['silicon', 'ice'], payoutNotes: 'Premium purity contracts',     affinityNotes: '+10 per delivery',    uiRole: 'command' },
-  { id: 'triton',    name: 'Triton Collective', color: '#5fcde6', initial: 'TC', unlockTier: 3, projectType: 'Volatile harvesting',    mineralPreferences: ['ice', 'carbon'], payoutNotes: 'Medium rate, special cargo',    affinityNotes: '+8 per delivery',     uiRole: 'bulk' },
-  { id: 'axiom',     name: 'Axiom Resources', color: '#f5a623', initial: 'AR', unlockTier: 3, projectType: 'Strategic minerals',      mineralPreferences: ['gold', 'rare', 'silicon'], payoutNotes: 'High payout, rare minerals',  affinityNotes: '+25 per delivery',    uiRole: 'science' },
-  { id: 'origin',    name: 'Origin Base',     color: '#39d36a', initial: 'OB', unlockTier: 1, projectType: 'Starter prospecting',    mineralPreferences: ['iron', 'silicon', 'carbon'], payoutNotes: 'Balanced starter contracts', affinityNotes: '+6 per delivery',     uiRole: 'starter' },
+  { id: 'contractor-03a', name: 'Contractor Slot 03A', color: '#d97150', initial: '3A', unlockTier: 3, projectType: 'Starter smelting throughput', mineralPreferences: ['iron', 'silicon'], payoutNotes: 'Low rate, steady volume', affinityNotes: '+10 per delivery', uiRole: 'starter' },
+  { id: 'contractor-03b', name: 'Contractor Slot 03B', color: '#9becff', initial: '3B', unlockTier: 3, projectType: 'Volatile handling', mineralPreferences: ['ice', 'carbon'], payoutNotes: 'Medium pay, bulk orders', affinityNotes: '+8 per delivery', uiRole: 'bulk' },
+  { id: 'contractor-04a', name: 'Contractor Slot 04A', color: '#ffd166', initial: '4A', unlockTier: 4, projectType: 'Precious-metal assay', mineralPreferences: ['gold', 'nickel'], payoutNotes: 'High pay, low volume', affinityNotes: '+15 per delivery', uiRole: 'prospect' },
+  { id: 'contractor-04b', name: 'Contractor Slot 04B', color: '#a8d8ea', initial: '4B', unlockTier: 4, projectType: 'Construction aggregates', mineralPreferences: ['iron', 'carbon'], payoutNotes: 'Low rate, large orders', affinityNotes: '+6 per delivery', uiRole: 'bulk' },
+  { id: 'contractor-06a', name: 'Contractor Slot 06A', color: '#70e070', initial: '6A', unlockTier: 6, projectType: 'Deep-core sampling', mineralPreferences: ['nickel', 'cobalt'], payoutNotes: 'Mixed-bag premium', affinityNotes: '+12 per delivery', uiRole: 'prospect' },
+  { id: 'contractor-06b', name: 'Contractor Slot 06B', color: '#c084ff', initial: '6B', unlockTier: 6, projectType: 'Rare-gas refining', mineralPreferences: ['rare', 'gold'], payoutNotes: 'High tier, small batches', affinityNotes: '+20 per delivery', uiRole: 'command' },
+  { id: 'contractor-08a', name: 'Contractor Slot 08A', color: '#ff8c42', initial: '8A', unlockTier: 8, projectType: 'Solar-grade silicon', mineralPreferences: ['silicon', 'ice'], payoutNotes: 'Premium purity contracts', affinityNotes: '+10 per delivery', uiRole: 'command' },
+  { id: 'contractor-08b', name: 'Contractor Slot 08B', color: '#5fcde6', initial: '8B', unlockTier: 8, projectType: 'Outer-belt volatiles', mineralPreferences: ['ice', 'carbon'], payoutNotes: 'Medium rate, special cargo', affinityNotes: '+8 per delivery', uiRole: 'bulk' },
+  { id: 'contractor-10a', name: 'Contractor Slot 10A', color: '#f5a623', initial: '10A', unlockTier: 10, projectType: 'Strategic minerals', mineralPreferences: ['gold', 'rare', 'cobalt'], payoutNotes: 'High payout, rare minerals', affinityNotes: '+25 per delivery', uiRole: 'science' },
+  { id: 'contractor-10b', name: 'Contractor Slot 10B', color: '#39d36a', initial: '10B', unlockTier: 10, projectType: 'Base expansion reserves', mineralPreferences: ['iron', 'silicon', 'nickel'], payoutNotes: 'Balanced late-game contracts', affinityNotes: '+12 per delivery', uiRole: 'starter' },
 ]
 
 export interface RefineryRecipe {
@@ -154,12 +157,70 @@ export const MARKET_TEMPLATES: MarketTemplate[] = [
 ]
 
 export const MISSION_TEMPLATES: MissionTemplate[] = [
-  { id: 'starter',    tag: 'STARTER',   difficulty: 'L1', cargoRange: [4, 8],    drillTierMin: 1, orbitMax: 4, payoutMultiplier: 1.0 },
-  { id: 'bulk',       tag: 'BULK',      difficulty: 'L2', cargoRange: [8, 14],   drillTierMin: 1, orbitMax: 5, payoutMultiplier: 1.5 },
-  { id: 'prospect',   tag: 'PROSPECT',  difficulty: 'L3', cargoRange: [3, 6],    drillTierMin: 2, orbitMax: 6, payoutMultiplier: 3.5 },
-  { id: 'command',    tag: 'COMMAND',   difficulty: 'L3', cargoRange: [4, 8],    drillTierMin: 2, orbitMax: 6, payoutMultiplier: 5.0 },
-  { id: 'science',    tag: 'SCIENCE',   difficulty: 'L2', cargoRange: [2, 5],    drillTierMin: 1, orbitMax: 7, payoutMultiplier: 2.5 },
+  { id: 'starter-bulk', tag: 'STARTER', difficulty: 'L1', mineralKeys: ['iron', 'silicon', 'carbon'], cargoRange: [4, 8], drillTierMin: 1, orbitMax: 4, payoutMultiplier: 1.0, contractorRole: 'starter', payoutFormula: 'mineral price * amount * 1500 * multiplier' },
+  { id: 'volatile-bulk', tag: 'BULK', difficulty: 'L2', mineralKeys: ['ice', 'carbon', 'silicon'], cargoRange: [8, 14], drillTierMin: 1, orbitMax: 5, payoutMultiplier: 1.35, contractorRole: 'bulk', payoutFormula: 'mineral price * amount * 1500 * multiplier' },
+  { id: 'metal-prospect', tag: 'PROSPECT', difficulty: 'L2', mineralKeys: ['nickel', 'cobalt', 'gold'], cargoRange: [3, 8], drillTierMin: 2, orbitMax: 5, payoutMultiplier: 2.25, contractorRole: 'prospect', payoutFormula: 'mineral price * amount * 1500 * multiplier' },
+  { id: 'command-reserve', tag: 'COMMAND', difficulty: 'L3', mineralKeys: ['gold', 'rare', 'cobalt'], cargoRange: [3, 6], drillTierMin: 2, orbitMax: 6, payoutMultiplier: 3.5, contractorRole: 'command', payoutFormula: 'mineral price * amount * 1500 * multiplier' },
 ]
+
+const SEED_MINERAL_PRICES: Record<string, number> = {
+  iron: 120,
+  silicon: 180,
+  carbon: 60,
+  ice: 90,
+  nickel: 150,
+  cobalt: 450,
+  gold: 800,
+  rare: 2000,
+}
+
+interface ResourceMissionSeed {
+  id: string
+  title: string
+  brief: string
+  contractor: string
+  template: string
+  sequence: number
+  minerals: Record<string, number>
+  locked: boolean
+  unlockAt?: string
+  affinity: number
+}
+
+const RESOURCE_MISSION_SEEDS: ResourceMissionSeed[] = [
+  { id: 'm1-iron', title: 'Iron Reserve Order', brief: 'Contractor Slot 03A needs a starter iron shipment from a reachable asteroid.', contractor: 'contractor-03a', template: 'starter-bulk', sequence: 1, minerals: { iron: 6 }, locked: false, affinity: 10 },
+  { id: 'm2-silicon', title: 'Silicon Bulk Order', brief: 'Contractor Slot 03B needs raw silicon for electronics-grade supply contracts.', contractor: 'contractor-03b', template: 'volatile-bulk', sequence: 2, minerals: { silicon: 8 }, locked: false, unlockAt: 'Complete M1', affinity: 8 },
+  { id: 'm3-nickel-cobalt', title: 'Nickel-Cobalt Assay', brief: 'Contractor Slot 04A wants battery metals from confirmed belt targets only.', contractor: 'contractor-04a', template: 'metal-prospect', sequence: 3, minerals: { nickel: 4, cobalt: 2 }, locked: true, unlockAt: 'Complete M2', affinity: 15 },
+  { id: 'm4-gold-reserve', title: 'Gold Reserve Run', brief: 'Contractor Slot 04B has a premium gold order from the main belt.', contractor: 'contractor-04b', template: 'command-reserve', sequence: 4, minerals: { gold: 4 }, locked: true, unlockAt: 'Complete M3', affinity: 20 },
+]
+
+function buildResourceMission(seed: ResourceMissionSeed): Mission {
+  const template = MISSION_TEMPLATES.find(t => t.id === seed.template) ?? MISSION_TEMPLATES[0]
+  const cargoMin = Object.values(seed.minerals).reduce((sum, amount) => sum + amount, 0)
+  const francs = Object.entries(seed.minerals).reduce(
+    (sum, [mineral, amount]) => sum + (SEED_MINERAL_PRICES[mineral] ?? 0) * amount * 1500 * template.payoutMultiplier,
+    0
+  )
+
+  return {
+    id: seed.id,
+    title: seed.title,
+    brief: seed.brief,
+    contractor: seed.contractor,
+    tag: template.tag,
+    difficulty: template.difficulty,
+    locked: seed.locked,
+    sequence: seed.sequence,
+    unlockAt: seed.unlockAt,
+    requires: {
+      minerals: seed.minerals,
+      cargo_min: cargoMin,
+      drill_tier: template.drillTierMin,
+      max_orbit: template.orbitMax,
+    },
+    payout: { francs, affinity: seed.affinity },
+  }
+}
 
 export interface Star {
   id: string
@@ -182,58 +243,11 @@ export interface TutorialStep {
   cta: string
 }
 
-export const CONTRACTORS: Record<string, Contractor> = {
-  foundry3: { id: 'foundry3', name: 'Foundry-3 Corp', color: '#d97150', initial: 'F3' },
-  cryos: { id: 'cryos', name: 'Cryos Mining', color: '#9becff', initial: 'CM' },
-  beltgold: { id: 'beltgold', name: 'Belt Gold Ltd', color: '#ffd166', initial: 'BG' },
-  lunarore: { id: 'lunarore', name: 'Lunar ORE Inc', color: '#a8d8ea', initial: 'LO' },
-  deepcore: { id: 'deepcore', name: 'DeepCore Ltd', color: '#70e070', initial: 'DC' },
-  vestarock: { id: 'vestarock', name: 'VestaRock Co', color: '#c084ff', initial: 'VR' },
-  helio: { id: 'helio', name: 'Helio Syndicate', color: '#ff8c42', initial: 'HS' },
-  triton: { id: 'triton', name: 'Triton Collective', color: '#5fcde6', initial: 'TC' },
-  axiom: { id: 'axiom', name: 'Axiom Resources', color: '#f5a623', initial: 'AR' },
-  origin: { id: 'origin', name: 'Origin Base', color: '#39d36a', initial: 'OB' },
-}
+export const CONTRACTORS: Record<string, Contractor> = Object.fromEntries(
+  CONTRACTOR_SLOTS.map(c => [c.id, { id: c.id, name: c.name, color: c.color, initial: c.initial }])
+)
 
-export const MISSIONS: Mission[] = [
-  {
-    id: 'm1-iron',
-    title: 'Iron for Foundry-3',
-    brief: 'Foundry-3 needs a fresh iron shipment to keep their smelters running. Belt region preferred.',
-    contractor: 'foundry3',
-    tag: 'STARTER',
-    difficulty: 'L1',
-    locked: false,
-    sequence: 1,
-    requires: { minerals: { iron: 6 }, cargo_min: 6, drill_tier: 1, max_orbit: 4 },
-    payout: { francs: 1200000, affinity: 10 },
-  },
-  {
-    id: 'm2-silicon',
-    title: 'Silicon Mass Order',
-    brief: 'Cryos needs raw silicon for their electronics division. Any asteroid source accepted.',
-    contractor: 'cryos',
-    tag: 'BULK',
-    difficulty: 'L2',
-    locked: false,
-    sequence: 2,
-    requires: { minerals: { silicon: 8 }, cargo_min: 8, drill_tier: 1, max_orbit: 5 },
-    payout: { francs: 1800000, affinity: 8 },
-  },
-  {
-    id: 'm3-gold',
-    title: 'KOI-7923 Deep Prospect',
-    brief: 'Belt Gold Ltd has eyes on the outer KOI corridor — confirmed exoplanet belt with dense gold and rare deposits. The SR3 drive tier is required for this depth.',
-    contractor: 'beltgold',
-    tag: 'PROSPECT',
-    difficulty: 'L3',
-    locked: true,
-    sequence: 3,
-    unlockAt: 'Complete M2',
-    requires: { minerals: { gold: 4, rare: 2 }, cargo_min: 8, drill_tier: 3, max_orbit: 7 },
-    payout: { francs: 9000000, affinity: 20 },
-  },
-]
+export const MISSIONS: Mission[] = RESOURCE_MISSION_SEEDS.map(buildResourceMission)
 
 export const TARGETS: Target[] = [
   // ── Inner solar system planets ─────────────────────────────────────────────
@@ -277,13 +291,31 @@ export const TARGETS: Target[] = [
     minerals: ['iron', 'silicon'],
   },
   {
+    id: 'itokawa',
+    name: '25143 Itokawa',
+    type: 'asteroid',
+    orbit: 2,
+    difficulty: 'L1',
+    brief: 'Stony near-Earth rubble pile with accessible nickel-iron traces.',
+    minerals: ['iron', 'nickel'],
+  },
+  {
+    id: 'ryugu',
+    name: '162173 Ryugu',
+    type: 'asteroid',
+    orbit: 3,
+    difficulty: 'L1',
+    brief: 'Carbonaceous near-Earth asteroid with hydrated minerals and dark regolith.',
+    minerals: ['carbon', 'ice'],
+  },
+  {
     id: 'psyche',
     name: '16 Psyche',
     type: 'asteroid',
     orbit: 4,
     difficulty: 'L2',
     brief: 'Exposed metallic core of an ancient body. Extremely high iron and nickel grades.',
-    minerals: ['iron', 'silicon', 'gold'],
+    minerals: ['iron', 'nickel', 'gold'],
   },
   {
     id: 'bennu',
@@ -301,8 +333,8 @@ export const TARGETS: Target[] = [
     type: 'asteroid',
     orbit: 5,
     difficulty: 'L2',
-    brief: 'Varied deposits — iron, silicon, gold, rare. The prospector\'s playground.',
-    minerals: ['iron', 'silicon', 'gold', 'rare'],
+    brief: 'Varied deposits: iron, silicon, nickel, cobalt, gold, and xenon pockets. The prospector\'s playground.',
+    minerals: ['iron', 'silicon', 'nickel', 'cobalt', 'gold', 'rare'],
     recommended: true,
   },
   {
@@ -323,27 +355,6 @@ export const TARGETS: Target[] = [
     difficulty: 'L3',
     brief: 'Gas giant moons, ice and silicate rich, high gravity penalty.',
     minerals: ['ice', 'silicon'],
-  },
-  // ── TESS candidate ─────────────────────────────────────────────────────────
-  {
-    id: 'tess-451b',
-    name: 'TESS-451 b',
-    type: 'asteroid',
-    orbit: 5,
-    difficulty: 'L3',
-    brief: 'Transit candidate selected by the science team. Spectral returns indicate gold and rare compounds.',
-    minerals: ['gold', 'rare'],
-    recommended: true,
-  },
-  // ── Confirmed exoplanet belt (M3 target) ────────────────────────────────────
-  {
-    id: 'koi-7923-belt',
-    name: 'KOI-7923 Belt',
-    type: 'asteroid',
-    orbit: 7,
-    difficulty: 'L3',
-    brief: 'Outer-system confirmed exoplanet corridor. Dense gold-rare concentrations along the debris plane — requires SR3-class propulsion.',
-    minerals: ['gold', 'rare'],
   },
 ]
 
@@ -373,7 +384,7 @@ export const MINERAL_META: Record<string, MineralMeta> = {
   ice:     { name: 'Ice',     sym: 'H2O', color: '#9becff', price: 90,   rarity: 'uncommon', constructionUse: 'Propellant, life support',              laserAccess: 1 },
   carbon:  { name: 'Carbon',  sym: 'C',  color: '#6a7280', price: 60,   rarity: 'common',   constructionUse: 'Composites, fuel',                       laserAccess: 1 },
   gold:    { name: 'Gold',    sym: 'Au', color: '#ffd166', price: 800,   rarity: 'rare',     constructionUse: 'Circuitry, radiation shielding',            laserAccess: 2 },
-  rare:    { name: 'Rare',    sym: 'Xe', color: '#c084ff', price: 2000,  rarity: 'exotic',   constructionUse: 'Quantum sensors, ion propellant',           laserAccess: 3 },
+  rare:    { name: 'Xenon',   sym: 'Xe', color: '#c084ff', price: 2000,  rarity: 'exotic',   constructionUse: 'Quantum sensors, ion propellant',           laserAccess: 3 },
   nickel:  { name: 'Nickel',  sym: 'Ni', color: '#b0b8c4', price: 150,   rarity: 'uncommon', constructionUse: 'Alloys, battery production',              laserAccess: 1 },
   cobalt:  { name: 'Cobalt',  sym: 'Co', color: '#4f9cf7', price: 450,   rarity: 'uncommon', constructionUse: 'Battery cathodes, superalloys',          laserAccess: 2 },
 }

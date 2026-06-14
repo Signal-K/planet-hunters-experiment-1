@@ -241,6 +241,12 @@ button { cursor: pointer; }
 
 .mining-screen { background: radial-gradient(circle at 50% 70%, #1a2a3f, #0a121d 58%, var(--ln-void)); display: flex; flex-direction: column; height: 100%; }
 .mining-viewport { position: relative; flex: 1; overflow: hidden; min-height: 0; }
+.mining-canvas { position: absolute; inset: 0; z-index: 1; }
+.game-canvas-loading {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  font: 800 12px var(--ln-font-mono); letter-spacing: 0.1em; color: var(--ln-cyan);
+  background: var(--ln-void); z-index: 2;
+}
 .mining-stars { position: absolute; inset: 0; background: radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,.3), transparent), radial-gradient(1px 1px at 40% 70%, rgba(255,255,255,.2), transparent), radial-gradient(1.5px 1.5px at 60% 20%, rgba(255,255,255,.25), transparent), radial-gradient(1px 1px at 80% 50%, rgba(255,255,255,.15), transparent), radial-gradient(1px 1px at 10% 80%, rgba(255,255,255,.2), transparent), radial-gradient(1.5px 1.5px at 90% 10%, rgba(255,255,255,.3), transparent); animation: star-drift 3s linear infinite; }
 @keyframes star-drift { from { transform: translateX(0); } to { transform: translateX(-40px); } }
 .mining-ship { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); z-index: 10; filter: drop-shadow(0 0 12px rgba(63,169,255,.6)); }

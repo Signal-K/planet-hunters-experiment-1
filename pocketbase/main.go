@@ -99,6 +99,13 @@ func ensureCollections(app core.App) {
 		col.Fields.Add(&core.TextField{Name: "sym", Required: true, Max: 10})
 		col.Fields.Add(&core.TextField{Name: "color", Required: true, Max: 20})
 		col.Fields.Add(&core.NumberField{Name: "base_price", Required: true})
+		col.Fields.Add(&core.SelectField{
+			Name: "rarity", Required: true, MaxSelect: 1,
+			Values: []string{"common", "uncommon", "rare", "exotic"},
+		})
+		col.Fields.Add(&core.TextField{Name: "demand_role", Max: 120})
+		col.Fields.Add(&core.TextField{Name: "construction_use", Max: 200})
+		col.Fields.Add(&core.NumberField{Name: "laser_access"})
 		col.Indexes = []string{"CREATE UNIQUE INDEX idx_minerals_slug ON minerals (slug)"}
 		if err := app.Save(col); err != nil {
 			log.Printf("failed to save minerals: %v", err)
@@ -115,6 +122,11 @@ func ensureCollections(app core.App) {
 		col.Fields.Add(&core.TextField{Name: "color", Required: true, Max: 20})
 		col.Fields.Add(&core.TextField{Name: "initial", Required: true, Max: 5})
 		col.Fields.Add(&core.NumberField{Name: "unlock_tier"})
+		col.Fields.Add(&core.TextField{Name: "project_type", Max: 160})
+		col.Fields.Add(&core.JSONField{Name: "mineral_preferences", MaxSize: 1000})
+		col.Fields.Add(&core.TextField{Name: "payout_notes", Max: 200})
+		col.Fields.Add(&core.TextField{Name: "affinity_notes", Max: 200})
+		col.Fields.Add(&core.TextField{Name: "ui_role", Max: 40})
 		col.Indexes = []string{"CREATE UNIQUE INDEX idx_contractors_slug ON contractors (slug)"}
 		if err := app.Save(col); err != nil {
 			log.Printf("failed to save contractors: %v", err)
@@ -195,20 +207,92 @@ func ensureCollections(app core.App) {
 			log.Printf("failed to save missions_catalog: %v", err)
 		}
 	}
+
+	// mission_templates
+	if _, err := app.FindCollectionByNameOrId("mission_templates"); err != nil {
+		col := core.NewBaseCollection("mission_templates")
+		col.ListRule = emptyStr
+		col.ViewRule = emptyStr
+		col.Fields.Add(&core.TextField{Name: "slug", Required: true, Max: 40})
+		col.Fields.Add(&core.TextField{Name: "tag", Required: true, Max: 40})
+		col.Fields.Add(&core.TextField{Name: "difficulty", Required: true, Max: 10})
+		col.Fields.Add(&core.JSONField{Name: "mineral_keys", MaxSize: 1000})
+		col.Fields.Add(&core.NumberField{Name: "cargo_min"})
+		col.Fields.Add(&core.NumberField{Name: "cargo_max"})
+		col.Fields.Add(&core.NumberField{Name: "drill_tier_min"})
+		col.Fields.Add(&core.NumberField{Name: "orbit_max"})
+		col.Fields.Add(&core.NumberField{Name: "payout_multiplier"})
+		col.Fields.Add(&core.TextField{Name: "contractor_role", Max: 40})
+		col.Fields.Add(&core.TextField{Name: "payout_formula", Max: 300})
+		col.Indexes = []string{"CREATE UNIQUE INDEX idx_mission_templates_slug ON mission_templates (slug)"}
+		if err := app.Save(col); err != nil {
+			log.Printf("failed to save mission_templates: %v", err)
+		}
+	}
+
+	ensureCatalogFields(app)
+}
+
+func ensureCatalogFields(app core.App) {
+	minerals, err := app.FindCollectionByNameOrId("minerals")
+	if err == nil {
+		addSelectIfMissing(minerals, "rarity", []string{"common", "uncommon", "rare", "exotic"}, false)
+		addTextIfMissing(minerals, "demand_role", false)
+		addTextIfMissing(minerals, "construction_use", false)
+		addNumberIfMissing(minerals, "laser_access", false)
+		if err := app.Save(minerals); err != nil {
+			log.Printf("failed to update minerals schema: %v", err)
+		}
+	}
+
+	contractors, err := app.FindCollectionByNameOrId("contractors")
+	if err == nil {
+		addTextIfMissing(contractors, "project_type", false)
+		addJSONIfMissing(contractors, "mineral_preferences", false)
+		addTextIfMissing(contractors, "payout_notes", false)
+		addTextIfMissing(contractors, "affinity_notes", false)
+		addTextIfMissing(contractors, "ui_role", false)
+		if err := app.Save(contractors); err != nil {
+			log.Printf("failed to update contractors schema: %v", err)
+		}
+	}
+}
+
+func addTextIfMissing(collection *core.Collection, name string, required bool) {
+	if collection.Fields.GetByName(name) == nil {
+		collection.Fields.Add(&core.TextField{Name: name, Required: required})
+	}
+}
+
+func addNumberIfMissing(collection *core.Collection, name string, required bool) {
+	if collection.Fields.GetByName(name) == nil {
+		collection.Fields.Add(&core.NumberField{Name: name, Required: required})
+	}
+}
+
+func addJSONIfMissing(collection *core.Collection, name string, required bool) {
+	if collection.Fields.GetByName(name) == nil {
+		collection.Fields.Add(&core.JSONField{Name: name, Required: required})
+	}
+}
+
+func addSelectIfMissing(collection *core.Collection, name string, values []string, required bool) {
+	if collection.Fields.GetByName(name) == nil {
+		collection.Fields.Add(&core.SelectField{Name: name, Required: required, MaxSelect: 1, Values: values})
+	}
 }
 
 func seedRecord(app core.App, collection string, slug string, fields map[string]any) {
-	_, err := app.FindFirstRecordByData(collection, "slug", slug)
-	if err == nil {
-		return // already seeded
-	}
 	col, err := app.FindCollectionByNameOrId(collection)
 	if err != nil {
 		log.Printf("seedRecord: collection %q not found: %v", collection, err)
 		return
 	}
-	rec := core.NewRecord(col)
-	rec.Set("slug", slug)
+	rec, err := app.FindFirstRecordByData(collection, "slug", slug)
+	if err != nil {
+		rec = core.NewRecord(col)
+		rec.Set("slug", slug)
+	}
 	for k, v := range fields {
 		rec.Set(k, v)
 	}
@@ -219,37 +303,58 @@ func seedRecord(app core.App, collection string, slug string, fields map[string]
 
 func seedCatalog(app core.App) {
 	// Minerals
-	type mineral struct{ name, sym, color string; price float64 }
+	type mineral struct {
+		name, sym, color, rarity, demandRole, constructionUse string
+		price, laserAccess                                    float64
+	}
 	minerals := []struct {
 		slug string
 		mineral
 	}{
-		{"iron", mineral{"Iron", "Fe", "#d97150", 120}},
-		{"silicon", mineral{"Silicon", "Si", "#b9d8ff", 180}},
-		{"ice", mineral{"Ice", "H2O", "#9becff", 90}},
-		{"carbon", mineral{"Carbon", "C", "#6a7280", 60}},
-		{"gold", mineral{"Gold", "Au", "#ffd166", 800}},
-		{"rare", mineral{"Rare", "Xe", "#c084ff", 2000}},
+		{"iron", mineral{"Iron", "Fe", "#d97150", "common", "starter bulk", "Structural frames, smelting feedstock", 120, 1}},
+		{"silicon", mineral{"Silicon", "Si", "#b9d8ff", "common", "electronics bulk", "Electronics, solar panels", 180, 1}},
+		{"carbon", mineral{"Carbon", "C", "#6a7280", "common", "construction blend", "Composites, fuel", 60, 1}},
+		{"ice", mineral{"Ice", "H2O", "#9becff", "uncommon", "volatile supply", "Propellant, life support", 90, 1}},
+		{"nickel", mineral{"Nickel", "Ni", "#b0b8c4", "uncommon", "alloy demand", "Alloys, battery production", 150, 1}},
+		{"cobalt", mineral{"Cobalt", "Co", "#4f9cf7", "uncommon", "battery demand", "Battery cathodes, superalloys", 450, 2}},
+		{"gold", mineral{"Gold", "Au", "#ffd166", "rare", "premium assay", "Circuitry, radiation shielding", 800, 2}},
+		{"rare", mineral{"Xenon", "Xe", "#c084ff", "exotic", "advanced propellant", "Quantum sensors, ion propellant", 2000, 3}},
 	}
 	for _, m := range minerals {
 		seedRecord(app, "minerals", m.slug, map[string]any{
 			"name": m.name, "sym": m.sym, "color": m.color, "base_price": m.price,
+			"rarity": m.rarity, "demand_role": m.demandRole,
+			"construction_use": m.constructionUse, "laser_access": m.laserAccess,
 		})
 	}
 
 	// Contractors
-	type contractor struct{ name, color, initial string; tier float64 }
+	type contractor struct {
+		name, color, initial, projectType, payoutNotes, affinityNotes, uiRole string
+		tier                                                                  float64
+		preferences                                                           []string
+	}
 	contractors := []struct {
 		slug string
 		contractor
 	}{
-		{"foundry3", contractor{"Foundry-3 Corp", "#d97150", "F3", 1}},
-		{"cryos", contractor{"Cryos Mining", "#9becff", "CM", 1}},
-		{"beltgold", contractor{"Belt Gold Ltd", "#ffd166", "BG", 3}},
+		{"contractor-03a", contractor{"Contractor Slot 03A", "#d97150", "3A", "starter smelting throughput", "Low rate, steady volume", "+10 per delivery", "starter", 3, []string{"iron", "silicon"}}},
+		{"contractor-03b", contractor{"Contractor Slot 03B", "#9becff", "3B", "volatile handling", "Medium pay, bulk orders", "+8 per delivery", "bulk", 3, []string{"ice", "carbon"}}},
+		{"contractor-04a", contractor{"Contractor Slot 04A", "#ffd166", "4A", "precious-metal assay", "High pay, low volume", "+15 per delivery", "prospect", 4, []string{"gold", "nickel"}}},
+		{"contractor-04b", contractor{"Contractor Slot 04B", "#a8d8ea", "4B", "construction aggregates", "Low rate, large orders", "+6 per delivery", "bulk", 4, []string{"iron", "carbon"}}},
+		{"contractor-06a", contractor{"Contractor Slot 06A", "#70e070", "6A", "deep-core sampling", "Mixed-bag premium", "+12 per delivery", "prospect", 6, []string{"nickel", "cobalt"}}},
+		{"contractor-06b", contractor{"Contractor Slot 06B", "#c084ff", "6B", "rare-gas refining", "High tier, small batches", "+20 per delivery", "command", 6, []string{"rare", "gold"}}},
+		{"contractor-08a", contractor{"Contractor Slot 08A", "#ff8c42", "8A", "solar-grade silicon", "Premium purity contracts", "+10 per delivery", "command", 8, []string{"silicon", "ice"}}},
+		{"contractor-08b", contractor{"Contractor Slot 08B", "#5fcde6", "8B", "outer-belt volatiles", "Medium rate, special cargo", "+8 per delivery", "bulk", 8, []string{"ice", "carbon"}}},
+		{"contractor-10a", contractor{"Contractor Slot 10A", "#f5a623", "10A", "strategic minerals", "High payout, rare minerals", "+25 per delivery", "science", 10, []string{"gold", "rare", "cobalt"}}},
+		{"contractor-10b", contractor{"Contractor Slot 10B", "#39d36a", "10B", "base expansion reserves", "Balanced late-game contracts", "+12 per delivery", "starter", 10, []string{"iron", "silicon", "nickel"}}},
 	}
 	for _, c := range contractors {
 		seedRecord(app, "contractors", c.slug, map[string]any{
 			"name": c.name, "color": c.color, "initial": c.initial, "unlock_tier": c.tier,
+			"project_type": c.projectType, "mineral_preferences": c.preferences,
+			"payout_notes": c.payoutNotes, "affinity_notes": c.affinityNotes,
+			"ui_role": c.uiRole,
 		})
 	}
 
@@ -269,11 +374,12 @@ func seedCatalog(app core.App) {
 		{"jupiter", location{"Jupiter", "planet", "L3", "Gas giant moons, ice and silicate rich, high gravity penalty.", 6, []string{"ice", "silicon"}, false}},
 		{"eros", location{"433 Eros", "asteroid", "L1", "Elongated near-Earth rock with dense iron-nickel core. First commercial prospect on file.", 2, []string{"iron", "silicon"}, true}},
 		{"bennu", location{"101955 Bennu", "asteroid", "L1", "Carbon-rich near-Earth asteroid. Loose rubble pile, low gravity, easy approach.", 2, []string{"iron", "carbon"}, false}},
+		{"itokawa", location{"25143 Itokawa", "asteroid", "L1", "Stony near-Earth rubble pile with accessible nickel-iron traces.", 2, []string{"iron", "nickel"}, false}},
+		{"ryugu", location{"162173 Ryugu", "asteroid", "L1", "Carbonaceous near-Earth asteroid with hydrated minerals and dark regolith.", 3, []string{"carbon", "ice"}, false}},
 		{"vesta", location{"4 Vesta", "asteroid", "L1", "Differentiated protoplanet. Basaltic crust over a heavy iron mantle.", 3, []string{"iron", "silicon"}, false}},
-		{"psyche", location{"16 Psyche", "asteroid", "L2", "Exposed metallic core of an ancient body. Extremely high iron and nickel grades.", 4, []string{"iron", "silicon", "gold"}, false}},
-		{"belt", location{"Asteroid Belt", "asteroid", "L2", "Varied deposits — iron, silicon, gold, rare. The prospector's playground.", 5, []string{"iron", "silicon", "gold", "rare"}, true}},
+		{"psyche", location{"16 Psyche", "asteroid", "L2", "Exposed metallic core of an ancient body. Extremely high iron and nickel grades.", 4, []string{"iron", "nickel", "gold"}, false}},
+		{"belt", location{"Asteroid Belt", "asteroid", "L2", "Varied deposits: iron, silicon, nickel, cobalt, gold, and xenon pockets. The prospector's playground.", 5, []string{"iron", "silicon", "nickel", "cobalt", "gold", "rare"}, true}},
 		{"ceres", location{"1 Ceres", "asteroid", "L2", "Dwarf planet at the belt's inner edge. Ice-rich mantle beneath a silicate crust.", 5, []string{"ice", "silicon"}, false}},
-		{"tess-451b", location{"TESS-451 b", "asteroid", "L3", "Transit candidate selected by the science team. Spectral returns indicate gold and rare compounds.", 5, []string{"gold", "rare"}, true}},
 	}
 	for _, l := range locations {
 		seedRecord(app, "locations", l.slug, map[string]any{
@@ -285,9 +391,9 @@ func seedCatalog(app core.App) {
 
 	// Rocket parts
 	type part struct {
-		name, partType, img string
-		tier                float64
-		locked              bool
+		name, partType, img                     string
+		tier                                    float64
+		locked                                  bool
 		mass, cargo, power, maxOrbit, drillRate float64
 	}
 	parts := []struct {
@@ -309,71 +415,90 @@ func seedCatalog(app core.App) {
 			"name": p.name, "part_type": p.partType, "img": p.img,
 			"tier": p.tier, "locked": p.locked,
 		}
-		if p.mass > 0 { fields["mass"] = p.mass }
-		if p.cargo > 0 { fields["cargo_capacity"] = p.cargo }
-		if p.power > 0 { fields["power"] = p.power }
-		if p.maxOrbit > 0 { fields["max_orbit"] = p.maxOrbit }
-		if p.drillRate > 0 { fields["drill_rate"] = p.drillRate }
+		if p.mass > 0 {
+			fields["mass"] = p.mass
+		}
+		if p.cargo > 0 {
+			fields["cargo_capacity"] = p.cargo
+		}
+		if p.power > 0 {
+			fields["power"] = p.power
+		}
+		if p.maxOrbit > 0 {
+			fields["max_orbit"] = p.maxOrbit
+		}
+		if p.drillRate > 0 {
+			fields["drill_rate"] = p.drillRate
+		}
 		seedRecord(app, "rocket_parts", p.slug, fields)
 	}
 
-	// Missions catalog
-	type mission struct {
-		title, brief, contractorSlug, tag, difficulty, unlockAt string
-		sequence, cargoMin, drillTier, maxOrbit                 float64
-		locked, requiresClassification                           bool
-		minerals                                                 map[string]float64
-		payoutFrancs, payoutXP, payoutAffinity                  float64
+	// Mission templates
+	type missionTemplate struct {
+		tag, difficulty, contractorRole, payoutFormula string
+		mineralKeys                                    []string
+		cargoMin, cargoMax, drillTier, orbitMax        float64
+		payoutMultiplier                               float64
 	}
-	missions := []struct {
+	templates := []struct {
 		slug string
-		mission
+		missionTemplate
 	}{
-		{"m1-iron", mission{
-			"Iron for Foundry-3",
-			"Foundry-3 needs a fresh iron shipment to keep their smelters running. Belt region preferred.",
-			"foundry3", "STARTER", "L1", "",
-			1, 6, 1, 4, false, false,
-			map[string]float64{"iron": 6},
-			1200000, 120, 10,
-		}},
-		{"m2-silicon", mission{
-			"Silicon Mass Order",
-			"Cryos needs raw silicon for their electronics division. Any asteroid source accepted.",
-			"cryos", "BULK", "L2", "Complete M1",
-			2, 8, 1, 5, false, false,
-			map[string]float64{"silicon": 8},
-			1800000, 180, 8,
-		}},
-		{"m3-gold", mission{
-			"Belt Gold Prospect",
-			"Belt Gold Ltd runs a premium grade — they want gold ore from the outer belt.",
-			"beltgold", "PROSPECT", "L3", "Complete M2",
-			3, 4, 2, 6, true, true,
-			map[string]float64{"gold": 4},
-			4500000, 450, 15,
-		}},
-		{"m4-rare", mission{
-			"Signal in the Dark",
-			"A confirmed transit candidate needs a surface assay. Choose any reachable body and bring back rare material.",
-			"cryos", "COMMAND", "L3", "Complete M3",
-			4, 4, 2, 6, true, false,
-			map[string]float64{"rare": 4},
-			6200000, 620, 20,
-		}},
+		{"starter-bulk", missionTemplate{"STARTER", "L1", "starter", "mineral_base_price * amount * 1600 * multiplier", []string{"iron", "silicon", "carbon"}, 4, 8, 1, 4, 1.0}},
+		{"volatile-bulk", missionTemplate{"BULK", "L2", "bulk", "mineral_base_price * amount * 1450 * multiplier", []string{"ice", "carbon", "silicon"}, 8, 14, 1, 5, 1.35}},
+		{"metal-prospect", missionTemplate{"PROSPECT", "L2", "prospect", "mineral_base_price * amount * 1350 * multiplier", []string{"nickel", "cobalt", "gold"}, 3, 8, 2, 5, 2.25}},
+		{"command-reserve", missionTemplate{"COMMAND", "L3", "command", "mineral_base_price * amount * 1300 * multiplier", []string{"gold", "rare", "cobalt"}, 3, 6, 2, 6, 3.5}},
 	}
-	for _, m := range missions {
+	for _, t := range templates {
+		seedRecord(app, "mission_templates", t.slug, map[string]any{
+			"tag": t.tag, "difficulty": t.difficulty,
+			"mineral_keys": t.mineralKeys,
+			"cargo_min":    t.cargoMin, "cargo_max": t.cargoMax,
+			"drill_tier_min": t.drillTier, "orbit_max": t.orbitMax,
+			"payout_multiplier": t.payoutMultiplier,
+			"contractor_role":   t.contractorRole,
+			"payout_formula":    t.payoutFormula,
+		})
+	}
+
+	mineralPrices := map[string]float64{}
+	for _, m := range minerals {
+		mineralPrices[m.slug] = m.price
+	}
+
+	type missionSeed struct {
+		slug, title, brief, contractorSlug, templateSlug, unlockAt string
+		sequence, amount, affinity                                 float64
+		locked                                                     bool
+		minerals                                                   map[string]float64
+	}
+	missionSeeds := []missionSeed{
+		{"m1-iron", "Iron Reserve Order", "Contractor Slot 03A needs a starter iron shipment from a reachable asteroid.", "contractor-03a", "starter-bulk", "", 1, 6, 10, false, map[string]float64{"iron": 6}},
+		{"m2-silicon", "Silicon Bulk Order", "Contractor Slot 03B needs raw silicon for electronics-grade supply contracts.", "contractor-03b", "volatile-bulk", "Complete M1", 2, 8, 8, false, map[string]float64{"silicon": 8}},
+		{"m3-nickel-cobalt", "Nickel-Cobalt Assay", "Contractor Slot 04A wants battery metals from confirmed belt targets only.", "contractor-04a", "metal-prospect", "Complete M2", 3, 6, 15, true, map[string]float64{"nickel": 4, "cobalt": 2}},
+		{"m4-gold-reserve", "Gold Reserve Run", "Contractor Slot 04B has a premium gold order from the main belt.", "contractor-04b", "command-reserve", "Complete M3", 4, 4, 20, true, map[string]float64{"gold": 4}},
+	}
+	templateBySlug := map[string]missionTemplate{}
+	for _, t := range templates {
+		templateBySlug[t.slug] = t.missionTemplate
+	}
+	for _, m := range missionSeeds {
+		t := templateBySlug[m.templateSlug]
+		payout := 0.0
+		for mineral, amount := range m.minerals {
+			payout += mineralPrices[mineral] * amount * 1500 * t.payoutMultiplier
+		}
 		seedRecord(app, "missions_catalog", m.slug, map[string]any{
 			"title": m.title, "brief": m.brief,
-			"contractor_slug": m.contractorSlug, "tag": m.tag,
-			"difficulty": m.difficulty, "locked": m.locked,
-			"sequence": m.sequence, "requires_classification": m.requiresClassification,
-			"unlock_at": m.unlockAt,
-			"requires_minerals": m.minerals,
-			"requires_cargo_min": m.cargoMin, "requires_drill_tier": m.drillTier,
-			"requires_max_orbit": m.maxOrbit,
-			"payout_francs": m.payoutFrancs, "payout_xp": m.payoutXP,
-			"payout_affinity": m.payoutAffinity,
+			"contractor_slug": m.contractorSlug, "tag": t.tag,
+			"difficulty": t.difficulty, "locked": m.locked,
+			"sequence": m.sequence, "requires_classification": false,
+			"unlock_at":          m.unlockAt,
+			"requires_minerals":  m.minerals,
+			"requires_cargo_min": m.amount, "requires_drill_tier": t.drillTier,
+			"requires_max_orbit": t.orbitMax,
+			"payout_francs":      payout, "payout_xp": payout / 10000,
+			"payout_affinity": m.affinity,
 		})
 	}
 }

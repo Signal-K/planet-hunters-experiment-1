@@ -116,7 +116,7 @@ describe('Full Game Loop — Landnam', () => {
       visitWithState(fullState({ screen: 'missions', doneSteps: { 1: true } }))
       cy.get('[data-testid="mission-card-m1-iron"]').should('be.visible')
       cy.get('[data-testid="mission-card-m1-iron"]').should('have.attr', 'data-mission-id', 'm1-iron')
-      cy.contains('Iron for Foundry-3').should('be.visible')
+      cy.contains('Iron Reserve Order').should('be.visible')
     })
 
     it('picking M1 transitions to target picker', () => {
@@ -192,7 +192,7 @@ describe('Full Game Loop — Landnam', () => {
         doneSteps: { 1: true, 2: true, 3: true, 5: true },
         player: {
           francs: 9_500_000_000,
-          activeMission: { id: 'm1-iron', label: 'Iron for Foundry-3 → Mars' },
+          activeMission: { id: 'm1-iron', label: 'Iron Reserve Order → Mars' },
           missionCount: 1,
           pendingLaunch: false,
           placed: ['launchpad'],
@@ -224,7 +224,7 @@ describe('Full Game Loop — Landnam', () => {
         doneSteps: { 1: true, 2: true, 3: true, 5: true, 6: false },
         player: {
           francs: 9_500_000_000,
-          activeMission: { id: 'm1-iron', label: 'Iron for Foundry-3 → Mars' },
+          activeMission: { id: 'm1-iron', label: 'Iron Reserve Order → Mars' },
           missionCount: 1,
           pendingLaunch: false,
           placed: ['launchpad'],
@@ -261,7 +261,7 @@ describe('Full Game Loop — Landnam', () => {
         doneSteps: { 1: true, 2: true, 3: true, 5: true, 6: true, 9: false },
         player: {
           francs: 9_500_000_000,
-          activeMission: { id: 'm1-iron', label: 'Iron for Foundry-3 → Mars' },
+          activeMission: { id: 'm1-iron', label: 'Iron Reserve Order → Mars' },
           missionCount: 1,
           pendingLaunch: false,
           placed: ['launchpad'],
@@ -297,7 +297,7 @@ describe('Full Game Loop — Landnam', () => {
         doneSteps: { 1: true, 2: true, 3: true, 5: true, 6: true },
         player: {
           francs: 9_500_000_000,
-          activeMission: { id: 'm1-iron', label: 'Iron for Foundry-3 → Mars' },
+          activeMission: { id: 'm1-iron', label: 'Iron Reserve Order → Mars' },
           missionCount: 1,
           pendingLaunch: false,
           placed: ['launchpad'],

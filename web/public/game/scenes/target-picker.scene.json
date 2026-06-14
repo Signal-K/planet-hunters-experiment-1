@@ -9,10 +9,10 @@
     { "id": "vesta", "name": "4 Vesta", "transform": { "position": { "x": 240.99, "y": 115.66 }, "rotation": 0, "scale": { "x": 1, "y": 1 } }, "components": [{ "type": "CelestialBody", "orbit": 3 }] },
     { "id": "psyche", "name": "16 Psyche", "transform": { "position": { "x": 196.42, "y": 287.59 }, "rotation": 0, "scale": { "x": 1, "y": 1 } }, "components": [{ "type": "CelestialBody", "orbit": 4 }] },
     { "id": "bennu", "name": "101955 Bennu", "transform": { "position": { "x": 127.91, "y": 190.42 }, "rotation": 0, "scale": { "x": 1, "y": 1 } }, "components": [{ "type": "CelestialBody", "orbit": 2 }] },
+    { "id": "itokawa", "name": "25143 Itokawa", "transform": { "position": { "x": 263.0, "y": 190.0 }, "rotation": 0, "scale": { "x": 1, "y": 1 } }, "components": [{ "type": "CelestialBody", "orbit": 2 }] },
+    { "id": "ryugu", "name": "162173 Ryugu", "transform": { "position": { "x": 82.0, "y": 112.0 }, "rotation": 0, "scale": { "x": 1, "y": 1 } }, "components": [{ "type": "CelestialBody", "orbit": 3 }] },
     { "id": "belt", "name": "Asteroid Belt", "transform": { "position": { "x": 141.85, "y": 55.95 }, "rotation": 0, "scale": { "x": 1, "y": 1 } }, "components": [{ "type": "CelestialBody", "orbit": 5 }] },
     { "id": "ceres", "name": "1 Ceres", "transform": { "position": { "x": 57.03, "y": 157.08 }, "rotation": 0, "scale": { "x": 1, "y": 1 } }, "components": [{ "type": "CelestialBody", "orbit": 5 }] },
-    { "id": "jupiter", "name": "Jupiter", "transform": { "position": { "x": 323.83, "y": 259 }, "rotation": 0, "scale": { "x": 1, "y": 1 } }, "components": [{ "type": "CelestialBody", "orbit": 6 }] },
-    { "id": "tess-451b", "name": "TESS-451 b", "transform": { "position": { "x": 319, "y": 180 }, "rotation": 0, "scale": { "x": 1, "y": 1 } }, "components": [{ "type": "CelestialBody", "orbit": 5 }] },
-    { "id": "koi-7923-belt", "name": "KOI-7923 Belt", "transform": { "position": { "x": 371, "y": 180 }, "rotation": 0, "scale": { "x": 1, "y": 1 } }, "components": [{ "type": "CelestialBody", "orbit": 7 }] }
+    { "id": "jupiter", "name": "Jupiter", "transform": { "position": { "x": 323.83, "y": 259 }, "rotation": 0, "scale": { "x": 1, "y": 1 } }, "components": [{ "type": "CelestialBody", "orbit": 6 }] }
   ]
 }

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import type { Target } from '@/lib/data'
+import { Scene } from '@/lib/engine'
 import TopBar from '@/components/ui/TopBar'
 import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
 
@@ -11,6 +12,13 @@ export default function TransitScreen({ target, onArrive, onBack, onAbandon }: {
   useEffect(() => {
     const timer = window.setInterval(() => setProgress(value => Math.min(100, value + 2)), 100)
     return () => window.clearInterval(timer)
+  }, [])
+
+  // Arriving always opens the mining scene — prefetch its JSON now so the
+  // fetch is already resolved (via Scene.load's cache) by the time
+  // MiningCanvas mounts, removing it from the visible transition stutter.
+  useEffect(() => {
+    void Scene.load('/game/scenes/mining.scene.json')
   }, [])
 
   useEffect(() => {
@@ -24,7 +32,7 @@ export default function TransitScreen({ target, onArrive, onBack, onAbandon }: {
     <div className="game-screen transit-screen">
       <TopBar eyebrow="MISSION TRANSIT" title={`Outbound · ${target.name}`} onBack={onBack} />
       <div className="transit-stage">
-        <div className="target-orb"><span>{target.name}</span></div>
+        <div className="target-orb" data-testid="transit-target"><span>{target.name}</span></div>
         <div className="rocket-mark" data-testid="transit-rocket" style={{ left: `${18 + progress * 0.62}%`, top: `${70 - progress * 0.42}%` }}>
           <svg width="54" height="82" viewBox="0 0 44 70" aria-hidden="true">
             <path d="M22 4 32 18v26H12V18Z" fill="var(--ln-text)" stroke="var(--ln-cyan)" />
