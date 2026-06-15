@@ -15,6 +15,7 @@ export default function DevShortcuts() {
   return (
     <div style={{ position: 'absolute', top: 8, left: 8, zIndex: 999, userSelect: 'none' }}>
       <button
+        data-testid="dev-shortcuts-toggle"
         onClick={() => setOpen(o => !o)}
         style={{
           padding: '3px 8px',
@@ -47,7 +48,7 @@ export default function DevShortcuts() {
           overflowY: 'auto',
           boxShadow: '0 8px 32px rgba(0,0,0,0.8)',
         }}>
-          <div style={{ padding: '0 12px 6px', fontFamily: 'var(--ln-font-mono)', fontSize: 9, letterSpacing: '0.2em', color: '#2a5a2a', textTransform: 'uppercase' }}>
+          <div data-testid="dev-shortcuts-panel" style={{ padding: '0 12px 6px', fontFamily: 'var(--ln-font-mono)', fontSize: 9, letterSpacing: '0.2em', color: '#2a5a2a', textTransform: 'uppercase' }}>
             Scene One-Shots
           </div>
 
@@ -57,7 +58,7 @@ export default function DevShortcuts() {
 
               <div style={{ padding: '4px 12px 2px', display: 'flex', alignItems: 'center', gap: 6 }}>
                 <div style={{ width: 6, height: 6, borderRadius: 999, background: group.color, flexShrink: 0 }} />
-                <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', color: group.color, textTransform: 'uppercase' }}>
+                <span data-testid={`dev-group-${group.label.toLowerCase().replace(/\s+/g, '-')}`} style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', color: group.color, textTransform: 'uppercase' }}>
                   {group.label}
                 </span>
               </div>
@@ -66,6 +67,7 @@ export default function DevShortcuts() {
                 {group.shots.map(shot => (
                   <button
                     key={shot.key}
+                    data-testid={`dev-shot-${shot.key}`}
                     onClick={() => jump(shot.key)}
                     title={shot.hint}
                     style={{
