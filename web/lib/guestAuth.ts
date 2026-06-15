@@ -8,44 +8,78 @@ interface GuestCredentials {
   password: string
 }
 
-/**
- * Ensures `pbShared` has a valid auth session, creating a throwaway guest
- * PocketBase account on first visit so the game can sync state to the
- * backend without requiring the user to register.
- *
- * - If a valid session already exists (guest or full account), does nothing.
- * - If guest credentials were saved from a previous visit, re-authenticates
- *   with them (covers expired tokens).
- * - Otherwise registers a new `guest_<random>` account and persists its
- *   credentials so this device can re-authenticate later.
- */
-export async function ensureGuestAuth(): Promise<void> {
-  if (pbShared.authStore.isValid) return
+// Retry delays (ms) between attempts — covers a Fly.io cold start of up to
+// ~8 s. Sequence: immediate → +1 s → +3 s → +5 s = 9 s total window.
+const RETRY_DELAYS = [1000, 3000, 5000]
 
-  const stored = readStoredCredentials()
+function sleep(ms: number) {
+  return new Promise<void>(r => setTimeout(r, ms))
+}
+
+async function tryAuth(stored: GuestCredentials | null): Promise<GuestCredentials | null> {
   if (stored) {
     try {
       await pbShared.collection('users').authWithPassword(stored.email, stored.password)
-      return
+      return null // used stored creds; caller has nothing new to persist
     } catch {
       localStorage.removeItem(GUEST_CREDENTIALS_KEY)
     }
   }
 
+  // Create a fresh throwaway account.
   const guestId = `guest_${Math.random().toString(36).slice(2, 10)}`
-  const credentials: GuestCredentials = {
+  const fresh: GuestCredentials = {
     email: `${guestId}@landnam.guest`,
     password: 'GuestPassword123!',
   }
-
   await pbShared.collection('users').create({
-    email: credentials.email,
-    password: credentials.password,
-    passwordConfirm: credentials.password,
+    email: fresh.email,
+    password: fresh.password,
+    passwordConfirm: fresh.password,
     name: 'Anonymous Explorer',
   })
-  await pbShared.collection('users').authWithPassword(credentials.email, credentials.password)
-  localStorage.setItem(GUEST_CREDENTIALS_KEY, JSON.stringify(credentials))
+  await pbShared.collection('users').authWithPassword(fresh.email, fresh.password)
+  return fresh
+}
+
+/**
+ * Ensures `pbShared` has a valid auth session, creating a throwaway guest
+ * PocketBase account on first visit so the game can sync state to the
+ * backend without requiring the user to register.
+ *
+ * Retries with staged backoff to survive Fly.io cold starts (typically
+ * 2–5 s). The game runs fully from localStorage while this resolves in the
+ * background — it does not block rendering.
+ *
+ * - Valid session already present → returns immediately.
+ * - Stored guest credentials → re-authenticates (covers expired tokens).
+ * - No credentials → creates new guest account and persists credentials.
+ */
+export async function ensureGuestAuth(): Promise<void> {
+  if (pbShared.authStore.isValid) return
+
+  const stored = readStoredCredentials()
+  let lastError: unknown
+
+  for (let i = 0; i <= RETRY_DELAYS.length; i++) {
+    if (i > 0) await sleep(RETRY_DELAYS[i - 1])
+    // Only try stored credentials on the first pass; if they failed, clear
+    // them and register a fresh guest on subsequent attempts.
+    try {
+      const newCreds = await tryAuth(i === 0 ? stored : null)
+      if (newCreds) localStorage.setItem(GUEST_CREDENTIALS_KEY, JSON.stringify(newCreds))
+      return
+    } catch (err) {
+      lastError = err
+    }
+  }
+
+  throw lastError
+}
+
+/** True if this device has stored guest credentials — i.e. this is a returning user. */
+export function hasStoredCredentials(): boolean {
+  try { return !!localStorage.getItem(GUEST_CREDENTIALS_KEY) } catch { return false }
 }
 
 function readStoredCredentials(): GuestCredentials | null {
@@ -69,12 +103,6 @@ export function isGuestAccount(): boolean {
 /**
  * Upgrades the current guest account to a full email/password account,
  * retaining the user's PB record id (and therefore all linked game data).
- *
- * PocketBase requires email changes to go through `requestEmailChange` /
- * `confirmEmailChange` (a confirmation link sent to the new address) — it
- * rejects a direct `email` field update for non-superusers. So this sets
- * the new password immediately (the account is now usable with email +
- * password) and kicks off the email-change confirmation in parallel.
  */
 export async function upgradeGuestAccount(email: string, password: string): Promise<{ emailChangeRequested: boolean }> {
   const stored = readStoredCredentials()
@@ -87,15 +115,9 @@ export async function upgradeGuestAccount(email: string, password: string): Prom
     name: '',
   })
 
-  // Changing the password invalidates the previous auth token — re-auth
-  // with the new password (email is still the guest placeholder until the
-  // confirmation link below is clicked) before requesting the email change.
   await pbShared.collection('users').authWithPassword(stored.email, password)
   localStorage.removeItem(GUEST_CREDENTIALS_KEY)
 
-  // The email-change confirmation link requires a working mailer. The
-  // password is already updated and the account is fully usable even if
-  // this fails (e.g. SMTP not configured in this environment).
   let emailChangeRequested = true
   try {
     await pbShared.collection('users').requestEmailChange(email)

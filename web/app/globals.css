@@ -282,6 +282,11 @@ button { cursor: pointer; }
 .intro-subtitle { color: var(--ln-text-dim); font: 400 14px/1.5 var(--ln-font-body); max-width: 280px; margin: 0 0 36px; }
 .intro-begin-btn { padding: 18px 40px; background: linear-gradient(180deg, var(--ln-cyan-bright) 0%, var(--ln-cyan-press) 100%); color: #06121f; font-family: var(--ln-font-display); font-weight: 800; font-size: 16px; letter-spacing: 0.14em; text-transform: uppercase; border: none; border-radius: 12px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.4), 0 4px 0 rgba(0,0,0,0.3), 0 0 22px rgba(63,169,255,0.4); cursor: pointer; transition: transform 100ms; }
 .intro-begin-btn:active { transform: translateY(2px); }
+.intro-reconnecting-indicator { display: flex; gap: 8px; align-items: center; justify-content: center; margin-top: 4px; }
+.intro-reconnecting-indicator span { width: 6px; height: 6px; border-radius: 50%; background: var(--ln-cyan); opacity: 0.3; animation: ln-pulse 1.2s ease-in-out infinite; }
+.intro-reconnecting-indicator span:nth-child(2) { animation-delay: 0.2s; }
+.intro-reconnecting-indicator span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes ln-pulse { 0%, 100% { opacity: 0.2; transform: scale(0.85); } 50% { opacity: 1; transform: scale(1); } }
 
 .mission-card-btn:focus-visible { outline-color: var(--ln-cyan) !important; outline-offset: 2px !important; }
 .mission-card-btn:hover { outline-color: rgba(63,169,255,0.35) !important; outline-offset: 2px !important; }

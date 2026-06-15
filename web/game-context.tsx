@@ -8,7 +8,7 @@ function nextToastId() { return `t${++toastSeq}` }
 import { type Mission, type Target, type RocketConfig, MISSIONS, TARGETS, PROGRESSION_STEPS, suggestBuild, REFINERY_RECIPES, MINERAL_META } from '@/lib/data'
 import { resolvePreset } from '@/lib/devPresets'
 import { pbShared } from '@/lib/pb'
-import { ensureGuestAuth, isGuestAccount, upgradeGuestAccount } from '@/lib/guestAuth'
+import { ensureGuestAuth, hasStoredCredentials, isGuestAccount, upgradeGuestAccount } from '@/lib/guestAuth'
 import { pbLandnam } from '@/lib/pb-landnam'
 import { type Catalog, STATIC_CATALOG, fetchCatalog } from '@/lib/catalog'
 
@@ -105,6 +105,7 @@ interface GameActions {
   upgradePromptOpen: boolean
   dismissUpgradePrompt: () => void
   upgradeAccount: (email: string, password: string) => Promise<void>
+  awaitingRemoteState: boolean
 }
 
 const GameContext = createContext<(GameState & GameActions) | null>(null)
@@ -183,6 +184,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const isPreview = useRef(false)
   const [backendReady, setBackendReady] = useState(false)
   const [upgradePromptOpen, setUpgradePromptOpen] = useState(false)
+  const [awaitingRemoteState, setAwaitingRemoteState] = useState(false)
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -226,18 +228,31 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     setAuthUserId(record?.id ?? null)
   }), [])
 
+  // Detect returning-user-on-new-device: no local game state but credentials
+  // exist (stored guest email or a valid auth record). Show a reconnecting
+  // screen instead of the new-player intro until the remote state loads.
+  useEffect(() => {
+    if (!hydrated || isPreview.current) return
+    const noLocalState = !localStorage.getItem(STORAGE_KEY)
+    const isReturning = hasStoredCredentials() || pbShared.authStore.isValid
+    if (noLocalState && isReturning) setAwaitingRemoteState(true)
+  }, [hydrated])
+
+  // Clear once remote state has been merged in (or if we know it never will).
+  useEffect(() => {
+    if (backendReady) setAwaitingRemoteState(false)
+  }, [backendReady])
+
   // Auto-create/restore a guest PocketBase session so progress syncs to the
-  // backend without forcing the player through /auth. Failure just leaves
-  // the game running in local-storage-only "offline" mode.
+  // backend without forcing the player through /auth. ensureGuestAuth already
+  // retries with backoff for cold starts — failure leaves the game in
+  // localStorage-only mode which is fully playable.
   useEffect(() => {
     if (isPreview.current) return
     if (pbShared.authStore.isValid) return
-    ensureGuestAuth().catch(() =>
-      // Transient network hiccups are common on first load — retry once
-      // before settling into offline mode.
-      new Promise(resolve => setTimeout(resolve, 3000)).then(() => ensureGuestAuth())
-    ).catch(() => {
+    ensureGuestAuth().catch(() => {
       addToast('Offline mode — progress saved on this device only', 'warn')
+      setAwaitingRemoteState(false) // gave up — let them play as a fresh start
     })
   }, [])
 
@@ -256,23 +271,45 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!hydrated || isPreview.current || !authUserId || backendLoadedFor.current === authUserId) return
     let active = true
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    function applyRecord(record: any) {
+      backendRecordId.current = record.id
+      backendLoadedFor.current = authUserId!
+      const remoteState = record.state as Partial<GameState>
+      setState(current => ({ ...current, ...remoteState }))
+      setBackendReady(true)
+    }
+
+    // pbLandnam may be cold-starting independently of pbShared (they're
+    // separate Fly machines). Retry once after 4 s on network failure.
     pbLandnam.collection('game_states')
       .getFirstListItem(`user = "${authUserId}"`)
-      .then(record => {
-        if (!active) return
-        backendRecordId.current = record.id
-        backendLoadedFor.current = authUserId
-        const remoteState = record.state as Partial<GameState>
-        setState(current => ({ ...current, ...remoteState }))
-        setBackendReady(true)
-      })
+      .then(record => { if (active) applyRecord(record) })
       .catch(error => {
         if (!active) return
         if (typeof error === 'object' && error && 'status' in error && error.status === 404) {
-          backendLoadedFor.current = authUserId
+          backendLoadedFor.current = authUserId!
           setBackendReady(true)
+          return
         }
+        // Network error — Landnam backend may still be warming. Retry after 4 s.
+        setTimeout(() => {
+          if (!active) return
+          pbLandnam.collection('game_states')
+            .getFirstListItem(`user = "${authUserId}"`)
+            .then(record => { if (active) applyRecord(record) })
+            .catch(err => {
+              if (!active) return
+              if (typeof err === 'object' && err && 'status' in err && err.status === 404) {
+                backendLoadedFor.current = authUserId!
+                setBackendReady(true)
+              }
+              // Still failing after retry — stay in localStorage-only mode.
+            })
+        }, 4000)
       })
+
     return () => { active = false }
   }, [authUserId, hydrated])
 
@@ -750,6 +787,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       upgradePromptOpen,
       dismissUpgradePrompt,
       upgradeAccount,
+      awaitingRemoteState,
     }}>
       {children}
     </GameContext.Provider>

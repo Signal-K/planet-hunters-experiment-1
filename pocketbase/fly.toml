@@ -1,0 +1,30 @@
+# Landnam PocketBase backend
+# Change the app name to something unique on Fly, then run:
+#   make fly-setup-landnam   (first time only)
+#   make deploy-landnam
+
+app = "signal-k-landnam"
+primary_region = "lhr"
+
+[build]
+
+[[mounts]]
+  source      = "pb_data"
+  destination = "/pb/pb_data"
+
+[http_service]
+  internal_port       = 8090
+  force_https         = true
+  auto_stop_machines  = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [http_service.concurrency]
+    type       = "requests"
+    soft_limit = 200
+    hard_limit = 250
+
+[[vm]]
+  cpu_kind   = "shared"
+  cpus       = 1
+  memory_mb  = 256

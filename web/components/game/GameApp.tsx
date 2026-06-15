@@ -82,7 +82,13 @@ function GameCanvas() {
         <BackendStatus />
         {process.env.NODE_ENV === 'development' && <DevShortcuts />}
         {game.screen === 'intro' && (
-          <IntroScreen onBegin={() => game.go('build')} returning={game.player.missionsDone > 0 || game.player.placed.length > 0} missionsDone={game.player.missionsDone} totalEarned={game.player.francs} />
+          <IntroScreen
+            onBegin={() => game.go('build')}
+            returning={game.player.missionsDone > 0 || game.player.placed.length > 0}
+            missionsDone={game.player.missionsDone}
+            totalEarned={game.player.francs}
+            awaitingRemoteState={game.awaitingRemoteState}
+          />
         )}
         {game.screen === 'build' && (
           <BuildPlaceScreen
