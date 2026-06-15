@@ -70,6 +70,11 @@ export interface GameState {
 
 interface GameActions {
   catalog: Catalog
+  authGateOpen: boolean
+  authGateError: string | null
+  signInFromGate: (email: string, password: string) => Promise<void>
+  createAccountFromGate: (email: string, password: string) => Promise<void>
+  skipAuthGate: () => void
   go: (screen: Screen) => void
   setPlayer: React.Dispatch<React.SetStateAction<Player>>
   setMissionId: (id: string | null) => void
@@ -185,6 +190,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const [backendReady, setBackendReady] = useState(false)
   const [upgradePromptOpen, setUpgradePromptOpen] = useState(false)
   const [awaitingRemoteState, setAwaitingRemoteState] = useState(false)
+  const [authGateOpen, setAuthGateOpen] = useState(false)
+  const [authGateError, setAuthGateError] = useState<string | null>(null)
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -243,16 +250,23 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     if (backendReady) setAwaitingRemoteState(false)
   }, [backendReady])
 
-  // Auto-create/restore a guest PocketBase session so progress syncs to the
-  // backend without forcing the player through /auth. ensureGuestAuth already
-  // retries with backoff for cold starts — failure leaves the game in
-  // localStorage-only mode which is fully playable.
+  // Show an auth gate for brand-new users (no stored credentials, no active
+  // session). Returning guests and signed-in users skip straight to the game.
+  useEffect(() => {
+    if (!hydrated || isPreview.current) return
+    if (pbShared.authStore.isValid || hasStoredCredentials()) return
+    setAuthGateOpen(true)
+  }, [hydrated])
+
+  // Restore a returning guest's session. New users go through the auth gate
+  // above and call skipAuthGate() / signInFromGate() instead.
   useEffect(() => {
     if (isPreview.current) return
     if (pbShared.authStore.isValid) return
+    if (!hasStoredCredentials()) return
     ensureGuestAuth().catch(() => {
       addToast('Offline mode — progress saved on this device only', 'warn')
-      setAwaitingRemoteState(false) // gave up — let them play as a fresh start
+      setAwaitingRemoteState(false)
     })
   }, [])
 
@@ -745,6 +759,39 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     })
   }, [addToast])
 
+  const signInFromGate = useCallback(async (email: string, password: string) => {
+    setAuthGateError(null)
+    try {
+      await pbShared.collection('users').authWithPassword(email, password)
+      setAuthGateOpen(false)
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Sign in failed'
+      setAuthGateError(msg)
+      throw new Error(msg)
+    }
+  }, [])
+
+  const createAccountFromGate = useCallback(async (email: string, password: string) => {
+    setAuthGateError(null)
+    try {
+      await pbShared.collection('users').create({ email, password, passwordConfirm: password, name: '' })
+      await pbShared.collection('users').authWithPassword(email, password)
+      setAuthGateOpen(false)
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Account creation failed'
+      setAuthGateError(msg)
+      throw new Error(msg)
+    }
+  }, [])
+
+  const skipAuthGate = useCallback(() => {
+    setAuthGateOpen(false)
+    ensureGuestAuth().catch(() => {
+      addToast('Offline mode — progress saved on this device only', 'warn')
+      setAwaitingRemoteState(false)
+    })
+  }, [addToast])
+
   const mission = state.missionId ? catalog.missions.find(m => m.id === state.missionId) ?? null : null
   const target = state.targetId ? catalog.targets.find(t => t.id === state.targetId) ?? null : null
 
@@ -788,6 +835,11 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       dismissUpgradePrompt,
       upgradeAccount,
       awaitingRemoteState,
+      authGateOpen,
+      authGateError,
+      signInFromGate,
+      createAccountFromGate,
+      skipAuthGate,
     }}>
       {children}
     </GameContext.Provider>

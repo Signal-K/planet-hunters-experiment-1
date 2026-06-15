@@ -26,6 +26,7 @@ import FeedbackButton from '@/components/ui/FeedbackButton'
 import ToastLayer from '@/components/ui/ToastLayer'
 import { initPostHog } from '@/lib/posthog'
 import DevShortcuts from '@/components/dev/DevShortcuts'
+import AuthGateSheet from '@/components/game/AuthGateSheet'
 
 if (typeof window !== 'undefined') initPostHog()
 
@@ -238,6 +239,14 @@ function GameCanvas() {
         )}
         {game.upgradePromptOpen && !game.popup && !game.buildGate && (
           <SaveProgressPrompt onUpgrade={game.upgradeAccount} onDismiss={game.dismissUpgradePrompt} />
+        )}
+        {game.authGateOpen && (
+          <AuthGateSheet
+            error={game.authGateError}
+            onSignIn={game.signInFromGate}
+            onCreateAccount={game.createAccountFromGate}
+            onSkip={game.skipAuthGate}
+          />
         )}
       </div>
     </main>

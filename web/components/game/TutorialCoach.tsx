@@ -26,7 +26,7 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
       ? (spot.y + spot.h / 2 < 437 ? undefined : 84)
       : (step.anchor === 'bottom' ? undefined : 84)
   const compactBottom = step.screen === 'targets'
-    ? 12
+    ? 92
     : compactTop == null ? 110 : undefined
 
   const dots = (
