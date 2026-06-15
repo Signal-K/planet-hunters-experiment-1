@@ -6,6 +6,7 @@ import type { Toast } from '@/components/ui/ToastLayer'
 let toastSeq = 0
 function nextToastId() { return `t${++toastSeq}` }
 import { type Mission, type Target, type RocketConfig, MISSIONS, TARGETS, PROGRESSION_STEPS, suggestBuild, REFINERY_RECIPES, MINERAL_META } from '@/lib/data'
+import { resolvePreset } from '@/lib/devPresets'
 import { pbShared } from '@/lib/pb'
 import { ensureGuestAuth, isGuestAccount, upgradeGuestAccount } from '@/lib/guestAuth'
 import { pbLandnam } from '@/lib/pb-landnam'
@@ -184,7 +185,9 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const [upgradePromptOpen, setUpgradePromptOpen] = useState(false)
 
   useEffect(() => {
-    const previewScreen = new URLSearchParams(window.location.search).get('preview')
+    const params = new URLSearchParams(window.location.search)
+    const previewScreen = params.get('preview')
+    const presetName = params.get('preset')
     if (previewScreen) {
       isPreview.current = true
       setState({
@@ -197,6 +200,16 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       })
       setHydrated(true)
       return
+    }
+    if (presetName) {
+      const preset = resolvePreset(presetName)
+      if (preset) {
+        isPreview.current = true
+        setState({ ...DEFAULT_STATE, ...preset })
+        window.history.replaceState({}, '', window.location.pathname)
+        setHydrated(true)
+        return
+      }
     }
     setState(loadState())
     setHydrated(true)

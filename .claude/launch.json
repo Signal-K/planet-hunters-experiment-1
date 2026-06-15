@@ -2,6 +2,13 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "Landnam Web",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "cwd": "web",
+      "port": 3000
+    },
+    {
       "name": "React Shell Dev",
       "runtimeExecutable": "node",
       "runtimeArgs": ["dev-server.js"],

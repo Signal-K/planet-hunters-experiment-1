@@ -25,6 +25,7 @@ import BackendStatus from '@/components/game/BackendStatus'
 import FeedbackButton from '@/components/ui/FeedbackButton'
 import ToastLayer from '@/components/ui/ToastLayer'
 import { initPostHog } from '@/lib/posthog'
+import DevShortcuts from '@/components/dev/DevShortcuts'
 
 if (typeof window !== 'undefined') initPostHog()
 
@@ -79,6 +80,7 @@ function GameCanvas() {
     <main className="game-stage" aria-label="Landnam game">
       <div className="portrait-canvas">
         <BackendStatus />
+        {process.env.NODE_ENV === 'development' && <DevShortcuts />}
         {game.screen === 'intro' && (
           <IntroScreen onBegin={() => game.go('build')} returning={game.player.missionsDone > 0 || game.player.placed.length > 0} missionsDone={game.player.missionsDone} totalEarned={game.player.francs} />
         )}
