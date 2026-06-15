@@ -31,12 +31,6 @@ jobs:
           mkdir -p sandbox/output
           docker run --rm \
             --shm-size=256mb \
-            -e DISPLAY=:99 \
-            -e GODOT_DISABLE_ZIVA_AGENT=1 \
-            -e GALLIUM_DRIVER=softpipe \
-            -e MESA_GL_VERSION_OVERRIDE=3.3 \
-            -e MESA_GLSL_VERSION_OVERRIDE=330 \
-            -v "${{ github.workspace }}/scene:/app/scene:ro" \
             -v "${{ github.workspace }}/sandbox/output:/output" \
             landnam-sandbox:ci
 

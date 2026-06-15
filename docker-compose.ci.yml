@@ -1,0 +1,64 @@
+# Local CI parity — mirrors each GitHub Actions job exactly.
+#
+# Usage:
+#   docker compose -f docker-compose.ci.yml run --rm web-unit    # Typecheck + unit tests + migration check
+#   docker compose -f docker-compose.ci.yml run --rm web-build   # Next.js production build
+#   docker compose -f docker-compose.ci.yml run --rm sandbox     # M1→M3 Cypress E2E suite
+#
+# Run all in sequence (same as CI):
+#   docker compose -f docker-compose.ci.yml run --rm web-unit && \
+#   docker compose -f docker-compose.ci.yml run --rm web-build && \
+#   docker compose -f docker-compose.ci.yml run --rm sandbox
+
+services:
+
+  # Mirrors: Web CI / Typecheck & Unit Tests
+  web-unit:
+    image: node:20
+    working_dir: /repo/web
+    volumes:
+      - ./web:/repo/web
+      - ./pocketbase:/repo/pocketbase:ro
+      - web_ci_nm:/repo/web/node_modules
+    command: >
+      sh -c "
+        npm ci &&
+        npm run typecheck &&
+        npm run test:unit &&
+        for f in /repo/pocketbase/pb_migrations/*.js; do
+          node --check \"$$f\" && echo \"OK: $$f\" || exit 1;
+        done
+      "
+    environment:
+      CI: "true"
+
+  # Mirrors: Web CI / Next.js Build Check
+  web-build:
+    image: node:20
+    working_dir: /repo/web
+    volumes:
+      - ./web:/repo/web
+      - web_ci_build_nm:/repo/web/node_modules
+      - web_ci_next:/repo/web/.next
+    command: sh -c "npm ci && npm run build"
+    environment:
+      NEXT_TELEMETRY_DISABLED: "1"
+      NEXT_PUBLIC_SHARED_PB_URL: http://localhost:8090
+      NEXT_PUBLIC_LANDNAM_PB_URL: http://localhost:8091
+      CI: "true"
+
+  # Mirrors: Mission Sandbox / M1→M3 Mission Flow Sandbox
+  sandbox:
+    build:
+      context: .
+      dockerfile: Dockerfile.sandbox
+    volumes:
+      - ./sandbox/output:/output
+    shm_size: 256mb
+    environment:
+      CI: "true"
+
+volumes:
+  web_ci_nm:
+  web_ci_build_nm:
+  web_ci_next:

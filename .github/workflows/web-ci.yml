@@ -43,6 +43,7 @@ jobs:
         run: npm run test:unit
 
       - name: Validate PB migration files
+        working-directory: .
         run: |
           for f in pocketbase/pb_migrations/*.js; do
             node --check "$f" && echo "OK: $f" || exit 1

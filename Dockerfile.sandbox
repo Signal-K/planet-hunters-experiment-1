@@ -1,0 +1,53 @@
+# M1→M3 Mission Flow Sandbox
+# Builds the Next.js app and runs the offline Cypress E2E suite against it.
+# Outputs /output/sandbox.log and /output/sandbox_issues.json on failure.
+#
+# Used by .github/workflows/sandbox.yml and docker-compose.ci.yml.
+
+# Stage 1: build Next.js
+FROM node:20-bookworm AS builder
+WORKDIR /build
+COPY web/package.json web/package-lock.json ./
+ENV CYPRESS_INSTALL_BINARY=0
+ENV NEXT_TELEMETRY_DISABLED=1
+RUN npm ci
+COPY web/ .
+ARG NEXT_PUBLIC_SHARED_PB_URL=http://localhost:8090
+ARG NEXT_PUBLIC_LANDNAM_PB_URL=http://localhost:8091
+ENV NEXT_PUBLIC_SHARED_PB_URL=$NEXT_PUBLIC_SHARED_PB_URL
+ENV NEXT_PUBLIC_LANDNAM_PB_URL=$NEXT_PUBLIC_LANDNAM_PB_URL
+RUN npm run build && \
+    cp -r public .next/standalone/public && \
+    cp -r .next/static .next/standalone/.next/static
+
+# Stage 2: test runner — node:20 + Cypress Linux deps + Cypress binary
+FROM node:20-bookworm
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgtk2.0-0 libgtk-3-0 libgbm1 libnotify4 \
+    libnss3 libxss1 libasound2 libxtst6 xauth xvfb \
+    libatk1.0-0 libatk-bridge2.0-0 libcups2 \
+    libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 \
+  && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /sandbox
+
+# Install Cypress (and only Cypress — skip Next.js heavy deps)
+COPY web/package.json web/package-lock.json ./
+ENV NEXT_TELEMETRY_DISABLED=1
+RUN npm ci
+
+# Copy built standalone app and Cypress test files
+COPY --from=builder /build/.next/standalone ./.next/standalone
+COPY web/cypress ./cypress
+COPY web/cypress.config.ts ./cypress.config.ts
+COPY web/tsconfig.json ./tsconfig.json
+
+COPY sandbox-run.sh /sandbox-run.sh
+RUN chmod +x /sandbox-run.sh && mkdir -p /output
+
+ENV CYPRESS_PROFILE=offline
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
+
+ENTRYPOINT []
+CMD ["/sandbox-run.sh"]

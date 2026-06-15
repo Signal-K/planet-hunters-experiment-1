@@ -74,3 +74,6 @@ pocketbase/pb_data/
 ux-screenshots/
 test-results/
 *.bak
+
+# CI sandbox output
+sandbox/output/
