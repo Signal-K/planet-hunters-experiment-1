@@ -1,0 +1,45 @@
+// Landnam game data — minerals
+
+import type { MineralMeta, Mission } from './types'
+
+export const MINERAL_META: Record<string, MineralMeta> = {
+  iron:    { name: 'Iron',    sym: 'Fe', color: '#d97150', price: 120,   rarity: 'common',   constructionUse: 'Structural frames, smelting feedstock', laserAccess: 1 },
+  silicon: { name: 'Silicon', sym: 'Si', color: '#b9d8ff', price: 180,   rarity: 'common',   constructionUse: 'Electronics, solar panels',                 laserAccess: 1 },
+  ice:     { name: 'Ice',     sym: 'H2O', color: '#9becff', price: 90,   rarity: 'uncommon', constructionUse: 'Propellant, life support',              laserAccess: 1 },
+  carbon:  { name: 'Carbon',  sym: 'C',  color: '#6a7280', price: 60,   rarity: 'common',   constructionUse: 'Composites, fuel',                       laserAccess: 1 },
+  gold:    { name: 'Gold',    sym: 'Au', color: '#ffd166', price: 800,   rarity: 'rare',     constructionUse: 'Circuitry, radiation shielding',            laserAccess: 2 },
+  rare:    { name: 'Xenon',   sym: 'Xe', color: '#c084ff', price: 2000,  rarity: 'exotic',   constructionUse: 'Quantum sensors, ion propellant',           laserAccess: 3 },
+  nickel:  { name: 'Nickel',  sym: 'Ni', color: '#b0b8c4', price: 150,   rarity: 'uncommon', constructionUse: 'Alloys, battery production',              laserAccess: 1 },
+  cobalt:  { name: 'Cobalt',  sym: 'Co', color: '#4f9cf7', price: 450,   rarity: 'uncommon', constructionUse: 'Battery cathodes, superalloys',          laserAccess: 2 },
+}
+
+export const MINERAL_COLORS: Record<string, string> = {
+  iron: '#d97150',
+  silicon: '#b9d8ff',
+  ice: '#9becff',
+  carbon: '#6a7280',
+  gold: '#ffd166',
+  rare: '#c084ff',
+  nickel: '#b0b8c4',
+  cobalt: '#4f9cf7',
+}
+
+export function sellCargo(cargo: Record<string, number>, minerals: Record<string, MineralMeta> = MINERAL_META): number {
+  return Object.entries(cargo).reduce((sum, [k, v]) => {
+    const meta = minerals[k]
+    return sum + (meta ? meta.price * v : 0)
+  }, 0)
+}
+
+export function rateMission(opts: {
+  mission: Mission | null
+  cargo: Record<string, number>
+  elapsed: number
+}): number {
+  if (!opts.mission) return 0
+  const reqMet = Object.entries(opts.mission.requires.minerals).every(
+    ([k, v]) => (opts.cargo[k] ?? 0) >= v
+  )
+  if (!reqMet) return 1
+  return opts.elapsed < 30 ? 3 : opts.elapsed < 60 ? 2 : 1
+}
