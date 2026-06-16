@@ -13,13 +13,6 @@ export function initPostHog() {
   initialised = true
 }
 
-export function openFeedbackSurvey() {
-  const surveyId = process.env.NEXT_PUBLIC_POSTHOG_SURVEY_ID
-  if (!surveyId || typeof window === 'undefined') return
-  initPostHog()
-  posthog.capture('survey shown', { $survey_id: surveyId })
-}
-
 export function submitFeedback(text: string) {
   if (typeof window === 'undefined') return
   initPostHog()

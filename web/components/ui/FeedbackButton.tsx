@@ -8,10 +8,15 @@ export default function FeedbackButton() {
   const [text, setText] = useState('')
   const [sent, setSent] = useState(false)
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!text.trim()) return
     submitFeedback(text.trim())
+    fetch('/api/feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: text.trim() }),
+    }).catch(() => {})
     setSent(true)
     setTimeout(() => {
       setOpen(false)

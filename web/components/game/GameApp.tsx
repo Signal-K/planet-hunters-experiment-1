@@ -23,6 +23,7 @@ import UnlockPopup from '@/components/game/UnlockPopup'
 import RadialNav from '@/components/layout/RadialNav'
 import BackendStatus from '@/components/game/BackendStatus'
 import FeedbackButton from '@/components/ui/FeedbackButton'
+import SurveySheet from '@/components/ui/SurveySheet'
 import ToastLayer from '@/components/ui/ToastLayer'
 import { initPostHog } from '@/lib/posthog'
 import DevShortcuts from '@/components/dev/DevShortcuts'
@@ -194,6 +195,7 @@ function GameCanvas() {
 
         <ToastLayer toasts={game.toasts} onDismiss={game.dismissToast} />
         <FeedbackButton />
+        <SurveySheet />
         {showNav && <RadialNav current={currentNav} onNav={goFromNav} />}
 
         {coach && (

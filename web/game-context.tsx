@@ -11,6 +11,7 @@ import { pbShared } from '@/lib/pb'
 import { ensureGuestAuth, hasStoredCredentials, isGuestAccount, upgradeGuestAccount } from '@/lib/guestAuth'
 import { pbLandnam } from '@/lib/pb-landnam'
 import { type Catalog, STATIC_CATALOG, fetchCatalog } from '@/lib/catalog'
+import { enqueueSurvey } from '@/lib/surveys'
 
 export type Screen =
   | 'intro'
@@ -180,6 +181,8 @@ function loadState(): GameState {
 
 export function GameProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<GameState>(DEFAULT_STATE)
+  const stateRef = useRef(state)
+  stateRef.current = state
   const [hydrated, setHydrated] = useState(false)
   const [catalog, setCatalog] = useState<Catalog>(STATIC_CATALOG)
   const [toasts, setToasts] = useState<Toast[]>([])
@@ -269,6 +272,11 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       setAwaitingRemoteState(false)
     })
   }, [])
+
+  useEffect(() => {
+    if (!hydrated || isPreview.current) return
+    if (state.player.missionsDone > 0) enqueueSurvey('lnm_return_visit', 3000)
+  }, [hydrated]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Periodically nudge guest players to save their progress to a full
   // account. Re-checked whenever a mission completes (missionsDone changes)
@@ -439,6 +447,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       screen: catalog.missions.find(m => m.id === id)?.requiresClassification ? 'classify' : 'targets',
       doneSteps: { ...s.doneSteps, 2: true },
     }))
+    enqueueSurvey('lnm_contractor_pick')
   }, [catalog.missions])
 
   const onStartRefine = useCallback((recipeId: string) => {
@@ -482,6 +491,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const classifyCandidate = useCallback((verdict: 'planet' | 'not_planet' | 'unsure', subjectId: string, dipMarkers: number[]) => {
+    if (verdict === 'planet') enqueueSurvey('lnm_planet_discovery', 2500)
     setState(s => {
       if (verdict === 'not_planet') {
         return {
@@ -584,6 +594,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const onLaunch = useCallback(() => {
+    const isFirstEver = stateRef.current.player.missionsDone === 0
     setState(s => {
       const mission = s.missionId ? MISSIONS.find(m => m.id === s.missionId) : null
       const target = s.targetId ? TARGETS.find(t => t.id === s.targetId) : null
@@ -600,6 +611,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         doneSteps: { ...s.doneSteps, 5: true },
       }
     })
+    if (isFirstEver) enqueueSurvey('lnm_first_launch', 4000)
   }, [])
 
   const onMiningDone = useCallback((cargo: Record<string, number>) => {
@@ -617,9 +629,11 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       }
     })
     addToast('Rocket has returned — cargo secured', 'ok')
+    enqueueSurvey('lnm_mining_feel', 2000)
   }, [addToast])
 
   const onDebriefDone = useCallback((total: number, _affinity: number = 0, consumed: Record<string, number> = {}) => {
+    const newMissionsDone = stateRef.current.player.missionsDone + 1
     setState(s => {
       const missionsDone = s.player.missionsDone + 1
       const freeOperations = missionsDone >= 3
@@ -674,6 +688,9 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       }
     })
     addToast(`Mission payout received: +${(total / 1_000_000).toFixed(0)}M F`, 'ok')
+    enqueueSurvey('lnm_mission_friction', 2000)
+    if (newMissionsDone === 1) enqueueSurvey('lnm_progression_feel', 8000)
+    if (newMissionsDone >= 3) enqueueSurvey('lnm_end_of_content', 5000)
   }, [addToast])
 
   const coachManualNext = useCallback(() => {

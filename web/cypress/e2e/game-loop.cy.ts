@@ -40,6 +40,7 @@ function visitWithState(state: Partial<GameState>) {
   cy.visit('/game', {
     onBeforeLoad(win) {
       win.localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...defaults, ...state }))
+      win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({ email: 'e2e@landnam.guest', password: 'e2e-guest-test' }))
     },
   })
 }
@@ -243,7 +244,7 @@ describe('Full Game Loop — Landnam', () => {
           loanOffered: false,
         },
       }))
-      cy.get('[data-testid="mining-ship"]').should('be.visible')
+      cy.get('[data-testid="mining-canvas"]').should('be.visible')
       cy.get('[data-testid="fire-laser-btn"]').should('be.visible')
       cy.get('[data-testid="return-home-btn"]').should('be.visible')
       cy.contains('Mining Run').should('be.visible')

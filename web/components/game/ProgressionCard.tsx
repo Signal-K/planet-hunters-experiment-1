@@ -36,13 +36,7 @@ export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132
       go: () => onGoBuilding('launchpad'),
     }
   } else {
-    card = {
-      accent: '#f5a623',
-      eyebrow: 'Next Mission Available',
-      title: `${player.missionCount} contracts on the board`,
-      cta: 'Open Missions',
-      go: () => onNav('missions'),
-    }
+    return null
   }
 
   return (
