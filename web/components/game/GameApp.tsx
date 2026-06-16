@@ -219,7 +219,7 @@ function GameCanvas() {
         {game.buildGate && (
           <BuildGatePrompt francs={game.player.francs} onBuild={game.buildControlStation} onClose={() => game.setBuildGate(false)} />
         )}
-        {game.popup && (
+        {game.popup && game.screen !== 'market' && (
           <UnlockPopup
             kind={game.popup}
             onClose={() => {

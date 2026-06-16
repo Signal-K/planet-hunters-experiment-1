@@ -353,6 +353,57 @@ describe('Full Game Loop — Landnam', () => {
       cy.contains('Vehicle Unlocked').should('be.visible')
       cy.contains('Got it').should('be.visible')
     })
+
+    it('M1 completion: market is accessible before SR2 popup, excess minerals can be sold', () => {
+      // M1 requires 6 iron; player mined 8 so 2 are excess after delivery
+      visitWithState(fullState({
+        screen: 'debrief',
+        missionId: 'm1-iron',
+        targetId: 'mars',
+        lastCargo: { iron: 8 },
+        doneSteps: { 1: true, 2: true, 3: true, 5: true, 6: true },
+        player: {
+          francs: 9_500_000_000,
+          activeMission: { id: 'm1-iron', label: 'Iron Reserve Order → Mars' },
+          stash: { iron: 8 },
+          missionCount: 1,
+          pendingLaunch: false,
+          placed: ['launchpad'],
+          placementPlots: { launchpad: 0 },
+          controlBuilt: false,
+          missionsDone: 0,
+          freeOperations: false,
+          contractorMissions: {},
+          contractorCooldowns: {},
+          researchAnnotations: 0,
+          refineryBuilt: false,
+          refineryQueue: [],
+          refinedGoods: {},
+          launchpadUpgraded: false,
+          loanDebt: 0,
+          loanOffered: false,
+        },
+        tutorial: false,
+      }))
+
+      cy.get('[data-testid="resolve-cargo-btn"]').click()
+      cy.get('[data-testid="collect-reward-btn"]').click()
+
+      // Market screen must be interactable — SR2 popup must NOT block it
+      cy.contains('Commodity Exchange').should('be.visible')
+      cy.contains('STARTER ROCKET 2').should('not.exist')
+
+      // 2 excess iron units remain in stash after consuming 6 for delivery
+      cy.contains('Iron').should('be.visible')
+      cy.contains('Sell All Minerals').should('be.visible').click()
+      cy.contains('Confirm').should('be.visible').click()
+      cy.contains('No minerals in stash').should('be.visible')
+
+      // Returning to hub shows the deferred SR2 unlock popup
+      cy.get('[aria-label="back"]').click()
+      cy.contains('STARTER ROCKET 2').should('be.visible')
+      cy.contains('Vehicle Unlocked').should('be.visible')
+    })
   })
 
   describe('Phase 6: Post-M1 → SR2 unlock', () => {
