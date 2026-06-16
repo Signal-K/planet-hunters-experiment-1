@@ -4,11 +4,13 @@
 #   docker compose -f docker-compose.ci.yml run --rm web-unit    # Typecheck + unit tests + migration check
 #   docker compose -f docker-compose.ci.yml run --rm web-build   # Next.js production build
 #   docker compose -f docker-compose.ci.yml run --rm sandbox     # M1→M3 Cypress E2E suite
+#   docker compose -f docker-compose.ci.yml run --rm seed-data   # RSpec tests + seed:import (mirrors seed-data.yml)
 #
 # Run all in sequence (same as CI):
 #   docker compose -f docker-compose.ci.yml run --rm web-unit && \
 #   docker compose -f docker-compose.ci.yml run --rm web-build && \
-#   docker compose -f docker-compose.ci.yml run --rm sandbox
+#   docker compose -f docker-compose.ci.yml run --rm sandbox && \
+#   docker compose -f docker-compose.ci.yml run --rm seed-data
 
 services:
 
@@ -58,7 +60,25 @@ services:
     environment:
       CI: "true"
 
+  # Mirrors: Seed Data Import / seed-data.yml (rspec + seed:import)
+  seed-data:
+    image: ruby:3.3
+    working_dir: /repo/tools/ruby-asset-pipeline
+    volumes:
+      - ./tools/ruby-asset-pipeline:/repo/tools/ruby-asset-pipeline
+      - ./backend/migrations:/repo/backend/migrations
+      - seed_data_bundle:/usr/local/bundle
+    command: >
+      sh -c "
+        bundle install &&
+        bundle exec rspec spec/ &&
+        bundle exec rake seed:import[catalog/astronomy.json,celestial_bodies]
+      "
+    environment:
+      CI: "true"
+
 volumes:
   web_ci_nm:
   web_ci_build_nm:
   web_ci_next:
+  seed_data_bundle:
