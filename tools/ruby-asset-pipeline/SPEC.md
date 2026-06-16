@@ -79,9 +79,26 @@ for these fields.
 | Seed data (`seed:import`) | CI (`seed-data.yml`) + local | Operates on evolving catalog data; CI keeps `backend/migrations/` in sync with source changes. |
 | Mock API stubs (`mock/`) | Local only | Prototyping aid, never deployed. |
 
+## Testing
+
+RSpec covers both primary tasks:
+
+| Spec file | Coverage |
+|---|---|
+| `spec/sprite_generator_spec.rb` | `SpriteGenerator.generate` — 512×512 PNG dimensions |
+| `spec/seed_importer_spec.rb` | `SeedImporter.load_source` (missing file, valid JSON), `SeedImporter.import` (output path, JSON content, dir creation) |
+| `spec/missions_schema_spec.rb` | `missions-schema.yml` structure validation |
+
+Run locally: `bundle exec rspec spec/`
+
+CI runs RSpec before `rake seed:import` in `.github/workflows/seed-data.yml`
+and in the `seed-data` service in `docker-compose.ci.yml`.
+
 ## References
 
 - @doc/Landnam-docs_game-art_rocket-part-sprite-generation-spec — sprite
   parameter contract.
 - `tools/ruby-asset-pipeline/missions-schema.yml` — YAML mission/event
   definition schema (task 018394).
+- `.github/workflows/seed-data.yml` — CI workflow running rspec + seed:import.
+- `docker-compose.ci.yml` (service: `seed-data`) — local CI parity for the seed pipeline.
