@@ -1,4 +1,18 @@
 services:
+  geometry-service:
+    build:
+      context: ./tools/geometry-service
+      dockerfile: Dockerfile
+    ports:
+      - "4002:4002"
+    environment:
+      PORT: "4002"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4002/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
   pocketbase:
     build:
       context: ./pocketbase
@@ -37,6 +51,8 @@ services:
       - "3000:3000"
     depends_on:
       pocketbase:
+        condition: service_healthy
+      geometry-service:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/api/backend-health"]
