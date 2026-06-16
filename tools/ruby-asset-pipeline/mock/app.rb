@@ -17,4 +17,13 @@ class MockApi < Sinatra::Base
       epoch: body['epoch'] || 0
     }.to_json
   end
+
+  # Add new stub routes here while prototyping. Once the shape is validated
+  # against the Next.js client, implement the real endpoint in Go/Elixir and
+  # remove the stub.
+
+  get '/health' do
+    content_type :json
+    { status: 'ok' }.to_json
+  end
 end
