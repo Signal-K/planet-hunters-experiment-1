@@ -231,7 +231,6 @@ function GameCanvas() {
               game.setPopup(null)
               if (popup === 'sr2') {
                 game.go('hub')
-                game.setBuildGate(true)
               } else if (popup === 'freeops') {
                 game.go('hub')
               }
