@@ -94,6 +94,30 @@ Run locally: `bundle exec rspec spec/`
 CI runs RSpec before `rake seed:import` in `.github/workflows/seed-data.yml`
 and in the `seed-data` service in `docker-compose.ci.yml`.
 
+## ChunkyPNG Spike Findings
+
+Discovered during @task-4f921e. ChunkyPNG is sufficient for the full Tier 1
+sprite requirement with one constraint:
+
+| Capability | Status | Notes |
+|---|---|---|
+| 512×512 RGBA PNG generation | ✓ Works | No size limit in practice |
+| Filled rectangles (`rect` with fill color) | ✓ Works | Hull, window, and hatch shapes |
+| Single-pixel lines (`line`) | ✓ Works | Panel lines, edge trim |
+| Per-pixel access (`set_pixel`) | ✓ Works | For advanced procedural fill |
+| Anti-aliased lines / curves | ✗ Not supported | ChunkyPNG is pixel-grid only |
+| Bezier / spline curves | ✗ Not supported | Would require manual rasterisation |
+| Text rendering | ✗ Not supported | Labels must be composited externally |
+| Multi-layer blend modes | ✗ Not supported | Blending must be done per-pixel manually |
+| JPEG / WebP output | ✗ Not supported | PNG only (acceptable for game sprites) |
+| External system dependencies | ✓ None required | Pure Ruby; `gem install chunky_png` is sufficient |
+
+**Verdict**: ChunkyPNG handles all Tier 1 sprite operations (geometric shapes,
+panel lines, filled windows/hatches). Anti-aliasing and curves are out of
+scope for the spike. If smooth curves become a requirement, migrate to Vips
+(via `ruby-vips`) or Imagemagick (`mini_magick`), both of which have system
+library deps but add full anti-aliasing and blend mode support.
+
 ## References
 
 - @doc/Landnam-docs_game-art_rocket-part-sprite-generation-spec — sprite
