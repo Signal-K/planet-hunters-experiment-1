@@ -6,6 +6,11 @@ on:
     paths:
       - 'tools/ruby-asset-pipeline/**'
       - 'backend/migrations/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/ruby-asset-pipeline/**'
+      - 'backend/migrations/**'
   workflow_dispatch: {}
 
 jobs:
@@ -19,6 +24,10 @@ jobs:
           ruby-version: '3.3'
           bundler-cache: true
           working-directory: tools/ruby-asset-pipeline
+
+      - name: Run RSpec tests
+        working-directory: tools/ruby-asset-pipeline
+        run: bundle exec rspec spec/
 
       - name: Import catalog seed data
         working-directory: tools/ruby-asset-pipeline
