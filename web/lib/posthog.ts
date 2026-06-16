@@ -20,4 +20,10 @@ export function openFeedbackSurvey() {
   posthog.capture('survey shown', { $survey_id: surveyId })
 }
 
+export function submitFeedback(text: string) {
+  if (typeof window === 'undefined') return
+  initPostHog()
+  posthog.capture('feedback_submitted', { text, source: 'in_game_button' })
+}
+
 export { posthog }

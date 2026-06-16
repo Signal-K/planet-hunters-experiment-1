@@ -79,14 +79,14 @@ describe('MiningController', () => {
     expect(ore.transform.position.x).toBeLessThan(before)
   })
 
-  it('fires a laser projectile that moves right', () => {
+  it('fires a laser projectile that moves down', () => {
     const { controller, host } = makeController()
     controller.start()
     controller.fireLaser()
     const laser = host.children.find(c => c.id.startsWith('laser-'))!
-    const before = laser.transform.position.x
+    const before = laser.transform.position.y
     controller.update(1)
-    expect(laser.transform.position.x).toBeGreaterThan(before)
+    expect(laser.transform.position.y).toBeGreaterThan(before)
   })
 
   it('collects ore and calls onCollect when hp depletes', () => {
@@ -94,15 +94,17 @@ describe('MiningController', () => {
     const { controller, host } = makeController(onCollect)
     controller.start()
     const ore = host.children.find(c => c.id === 'ore-0')!
-    ore.transform.position.x = 60 // ship at x=50, ship y=140; ore default y ~140
-    ore.transform.position.y = 140
+    // Ship fires at x=80; ore must be within HIT_TOLERANCE (28px) of x=80
+    // Ores spawn at y = SURFACE_Y - ORE_SIZE/2 = 200 - 10 = 190
+    ore.transform.position.x = 80
+    ore.transform.position.y = 190
 
-    // Fire enough lasers to deplete ore hp (maxHp is 3-5)
-    for (let i = 0; i < 6; i++) {
+    // Fire enough lasers to deplete ore hp (maxHp is 2-3)
+    for (let i = 0; i < 4; i++) {
       controller.fireLaser()
       const laser = host.children.find(c => c.id.startsWith('laser-') && c.active)!
-      laser.transform.position.x = 60
-      laser.transform.position.y = 140
+      laser.transform.position.x = 80
+      laser.transform.position.y = 190 // laser at ore's y → collision
       controller.update(0) // zero dt: resolve collision without moving
     }
 

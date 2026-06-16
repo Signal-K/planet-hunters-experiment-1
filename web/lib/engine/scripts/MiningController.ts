@@ -5,17 +5,16 @@ import { GameObject } from '../GameObject'
 import type { RuntimeContext } from '../RuntimeContext'
 import type { EntityBounds } from '../InputManager'
 
-/** Pixels/second. Matches the original DOM side-scroller (1.2px @ 60fps). */
 const SCROLL_SPEED = 72
-/** Pixels/second. Matches the original DOM side-scroller (8px @ 60fps). */
 const LASER_SPEED = 480
-const SHIP_X = 50
-const SHIP_Y = 140
-const ORE_SIZE = 28
-const LASER_SIZE = { width: 14, height: 4 }
+export const SHIP_X = 80
+export const SHIP_Y = 72
+export const SURFACE_Y = 200
+const ORE_SIZE = 20
+const HIT_TOLERANCE = 28
+const LASER_SIZE = { width: 4, height: 16 }
 const LASER_COLOR = '#9becff'
 const ORE_STROKE = '#0a0a12'
-/** Caps unbounded ore growth if the player goes a long time without firing. */
 const MAX_ORES = 60
 
 export interface MiningControllerOptions {
@@ -39,9 +38,8 @@ interface LaserEntity {
 }
 
 /**
- * Drives the mining minigame: spawns scrolling ore nodes, fires/advances laser
- * projectiles, and resolves AABB collisions. Mirrors the constants and collision
- * logic of the original DOM-based MiningScreen so gameplay feel matches.
+ * Side-scrolling mining: ship cruises at the top, asteroid surface at the
+ * bottom. Player fires laser DOWNWARD at ore nodes embedded in the rock.
  */
 export class MiningController extends ScriptBehaviour {
   private opts: MiningControllerOptions
@@ -56,39 +54,39 @@ export class MiningController extends ScriptBehaviour {
   }
 
   start(): void {
-    let x = 100
+    let x = 200
     for (let i = 0; i < 20; i++) {
-      x += i === 0 ? 0 : 180 + Math.random() * 60
+      x += i === 0 ? 0 : 120 + Math.random() * 60
       this.spawnOre(x)
     }
   }
 
   update(dt: number): void {
     const dx = SCROLL_SPEED * dt
+    const ldy = LASER_SPEED * dt
 
     for (const ore of this.ores) {
       ore.go.transform.position.x -= dx
     }
+
     const last = this.ores[this.ores.length - 1]
     const needsSpawn = !last || last.go.transform.position.x < this.opts.worldWidth + 100
     if (needsSpawn && this.ores.length < MAX_ORES) {
       const lastX = last ? last.go.transform.position.x : 0
-      this.spawnOre(lastX + 180 + Math.random() * 60)
+      this.spawnOre(lastX + 120 + Math.random() * 60)
     }
 
-    const ldx = LASER_SPEED * dt
     for (const laser of this.lasers) {
-      laser.go.transform.position.x += ldx
+      laser.go.transform.position.y += ldy
     }
 
     this.resolveCollisions()
     this.removeOffscreen()
   }
 
-  /** Fire a new laser projectile from the ship's position. */
   fireLaser(): void {
     const go = new GameObject(`laser-${this.laserCounter++}`, 'Laser', {
-      position: { x: SHIP_X, y: SHIP_Y + (Math.random() - 0.5) * 20 },
+      position: { x: SHIP_X, y: SHIP_Y + 16 },
     })
     go.addComponent(
       new ShapeRenderer(
@@ -103,8 +101,8 @@ export class MiningController extends ScriptBehaviour {
 
   private spawnOre(x: number): void {
     const mineral = this.opts.minerals[this.oreCounter % this.opts.minerals.length]
-    const maxHp = 3 + Math.floor(Math.random() * 3)
-    const y = 140 + Math.sin(this.oreCounter * 1.5) * 30
+    const maxHp = 2 + Math.floor(Math.random() * 2)
+    const y = SURFACE_Y - ORE_SIZE / 2
     const go = new GameObject(`ore-${this.oreCounter++}`, 'Ore', { position: { x, y } })
     go.addComponent(
       new ShapeRenderer(
@@ -123,16 +121,17 @@ export class MiningController extends ScriptBehaviour {
     this.ores.push({ go, mineral, hp: maxHp, maxHp })
   }
 
-  /** AABB collision: laser.x in [ore.x-10, ore.x+30] and |laser.y - SHIP_Y| < 40. */
   private resolveCollisions(): void {
     for (const laser of this.lasers) {
       const lx = laser.go.transform.position.x
       const ly = laser.go.transform.position.y
-      if (Math.abs(ly - SHIP_Y) >= 40) continue
 
       for (const ore of this.ores) {
         const ox = ore.go.transform.position.x
-        if (lx < ox - 10 || lx > ox + 30) continue
+        const oy = ore.go.transform.position.y
+
+        if (ly < oy - ORE_SIZE / 2 || ly > oy + ORE_SIZE / 2) continue
+        if (Math.abs(lx - ox) >= HIT_TOLERANCE) continue
 
         ore.hp -= 1
         laser.go.active = false
@@ -154,15 +153,14 @@ export class MiningController extends ScriptBehaviour {
     })
 
     this.lasers = this.lasers.filter(laser => {
-      if (laser.go.active && laser.go.transform.position.x < this.opts.worldWidth + LASER_SIZE.width) return true
+      if (laser.go.active && laser.go.transform.position.y < this.opts.worldHeight + LASER_SIZE.height) return true
       laser.go.destroy()
       this.gameObject.children = this.gameObject.children.filter(c => c !== laser.go)
       return false
     })
   }
 
-  /** Bounds of the ship, for InputManager entity-scoped listeners or hit-testing. */
   static shipBounds(): EntityBounds {
-    return { x: SHIP_X, y: SHIP_Y, width: 40, height: 50 }
+    return { x: SHIP_X - 20, y: SHIP_Y - 12, width: 56, height: 24 }
   }
 }

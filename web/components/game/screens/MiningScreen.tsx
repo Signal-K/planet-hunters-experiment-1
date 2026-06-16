@@ -65,14 +65,6 @@ export default function MiningScreen({ mission, target, onComplete, onBack, mine
           onCollect={collectMineral}
           fireRef={fireRef}
         />
-
-        <div className="mining-ship" data-testid="mining-ship">
-          <svg width="40" height="50" viewBox="0 0 40 50">
-            <polygon points="0,25 40,0 40,50" fill="#6cc2ff" stroke="#2d8de0" strokeWidth="2" />
-            <rect x="10" y="18" width="8" height="14" rx="2" fill="#06121f" />
-            <rect x="22" y="18" width="8" height="14" rx="2" fill="#06121f" />
-          </svg>
-        </div>
       </div>
 
       <div className="mining-controls">

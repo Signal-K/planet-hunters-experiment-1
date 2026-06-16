@@ -230,7 +230,7 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
       </div>
 
       {pickedTarget && (
-        <div className="sticky-actions">
+        <div className="sticky-actions" style={hasCoach ? { zIndex: 90 } : undefined}>
           <PrimaryBtn onClick={() => onPick(pickedTarget.id)}>Continue · Build →</PrimaryBtn>
         </div>
       )}

@@ -239,8 +239,8 @@ button { cursor: pointer; }
 .progress-track { height: 12px; overflow: hidden; border: 1px solid var(--ln-cyan-border); border-radius: var(--ln-r-pill); background: var(--ln-void); }
 .progress-track span { display: block; height: 100%; background: linear-gradient(90deg, var(--ln-amber), var(--ln-cyan)); box-shadow: var(--ln-glow-cyan); transition: width 100ms linear; }
 
-.mining-screen { background: radial-gradient(circle at 50% 70%, #1a2a3f, #0a121d 58%, var(--ln-void)); display: flex; flex-direction: column; height: 100%; }
-.mining-viewport { position: relative; flex: 1; overflow: hidden; min-height: 0; }
+.mining-screen { background: var(--ln-void); display: flex; flex-direction: column; height: 100%; }
+.mining-viewport { position: relative; flex: 0 0 auto; width: 100%; aspect-ratio: 2 / 1; overflow: hidden; }
 .mining-canvas { position: absolute; inset: 0; z-index: 1; }
 .game-canvas-loading {
   position: absolute; inset: 0; display: grid; place-items: center;
@@ -249,7 +249,6 @@ button { cursor: pointer; }
 }
 .mining-stars { position: absolute; inset: 0; background: radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,.3), transparent), radial-gradient(1px 1px at 40% 70%, rgba(255,255,255,.2), transparent), radial-gradient(1.5px 1.5px at 60% 20%, rgba(255,255,255,.25), transparent), radial-gradient(1px 1px at 80% 50%, rgba(255,255,255,.15), transparent), radial-gradient(1px 1px at 10% 80%, rgba(255,255,255,.2), transparent), radial-gradient(1.5px 1.5px at 90% 10%, rgba(255,255,255,.3), transparent); animation: star-drift 3s linear infinite; }
 @keyframes star-drift { from { transform: translateX(0); } to { transform: translateX(-40px); } }
-.mining-ship { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); z-index: 10; filter: drop-shadow(0 0 12px rgba(63,169,255,.6)); }
 .ore-deposit { position: absolute; width: 36px; height: 36px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 3px; z-index: 5; }
 .ore-icon { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%; border: 1.5px solid var(--ore); color: var(--ore); background: color-mix(in srgb, var(--ore) 14%, var(--ln-void)); font: 800 11px var(--ln-font-mono); box-shadow: 0 0 14px color-mix(in srgb, var(--ore) 40%, transparent); }
 .ore-hp-bar { width: 30px; height: 3px; overflow: hidden; border-radius: 2px; background: rgba(255,255,255,.1); }
