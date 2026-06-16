@@ -7,6 +7,7 @@ defmodule GeometryService.Application do
     port = String.to_integer(System.get_env("PORT", "4002"))
 
     children = [
+      GeometryService.Metrics,
       {Plug.Cowboy, scheme: :http, plug: GeometryService.Router, options: [port: port]}
     ]
 

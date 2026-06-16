@@ -14,6 +14,14 @@ defmodule GeometryService.Router do
     send_json(conn, 200, %{status: "ok"})
   end
 
+  get "/metrics" do
+    body = GeometryService.Metrics.prometheus_text()
+
+    conn
+    |> put_resp_content_type("text/plain; version=0.0.4")
+    |> send_resp(200, body)
+  end
+
   post "/coordinate-conversion" do
     %{"ra_deg" => ra, "dec_deg" => dec} = conn.body_params
     {x, y, z} = GeometryService.Geometry.equatorial_to_cartesian(ra, dec)
