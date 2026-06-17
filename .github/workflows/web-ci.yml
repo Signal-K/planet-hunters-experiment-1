@@ -5,11 +5,13 @@ on:
     branches: [master, main, "claude/**"]
     paths:
       - "web/**"
+      - "pocketbase/pb_migrations/**"
       - ".github/workflows/web-ci.yml"
   pull_request:
     branches: [master, main]
     paths:
       - "web/**"
+      - "pocketbase/pb_migrations/**"
       - ".github/workflows/web-ci.yml"
   workflow_dispatch:
 
@@ -45,7 +47,13 @@ jobs:
       - name: Validate PB migration files
         working-directory: .
         run: |
-          for f in pocketbase/pb_migrations/*.js; do
+          shopt -s nullglob
+          files=(pocketbase/pb_migrations/*.js)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No migration files found — skipping."
+            exit 0
+          fi
+          for f in "${files[@]}"; do
             node --check "$f" && echo "OK: $f" || exit 1
           done
 
