@@ -424,12 +424,15 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         response_time_ms: 0,
       }).then(() => {
         setState(s => ({ ...s, classificationError: null }))
-      }).catch((err) => {
-        const msg = err?.message ?? err?.status ?? 'Classification write failed'
+      }).catch((err: unknown) => {
+        const msg = (err as { message?: string; status?: string })?.message
+          ?? (err as { message?: string; status?: string })?.status
+          ?? 'Classification write failed'
         setState(s => ({ ...s, classificationError: msg }))
+        addToast('Classification sync failed — will retry next session', 'warn')
       })
     }
-  }, [])
+  }, [addToast])
 
   const onSatelliteClassify = useCallback((verdict: 'planet' | 'not_planet' | 'unsure') => {
     // All verdicts (including unsure) count toward researchAnnotations —
