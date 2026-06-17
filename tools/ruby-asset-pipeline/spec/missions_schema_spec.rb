@@ -39,4 +39,58 @@ RSpec.describe 'missions-schema.yml' do
       expect(ids).to include(mission['unlock']['requires_mission'])
     end
   end
+
+  it 'has valid event triggers on missions that declare events' do
+    valid_triggers = %w[debrief_complete mission_accepted on_launch]
+    data['missions'].each do |mission|
+      next unless mission['events']
+
+      expect(mission['events']).to be_an(Array)
+      mission['events'].each do |event|
+        expect(valid_triggers).to include(event['trigger']), \
+          "Mission #{mission['id']} has unknown trigger '#{event['trigger']}'"
+        expect(event['kind']).to be_a(String)
+        expect(event['payload']).to be_a(Hash)
+      end
+    end
+  end
+
+  it 'has valid event_chains when present' do
+    chains = data['event_chains']
+    return unless chains
+
+    valid_triggers = %w[fires_after_mission fires_after_missions_count]
+    mission_ids = data['missions'].map { |m| m['id'] }
+
+    expect(chains).to be_an(Array)
+    chains.each do |chain|
+      expect(chain['id']).to be_a(String)
+      expect(valid_triggers).to include(chain['trigger']), \
+        "Event chain #{chain['id']} has unknown trigger '#{chain['trigger']}'"
+      if chain['trigger'] == 'fires_after_mission'
+        expect(mission_ids).to include(chain['mission_id']), \
+          "Event chain #{chain['id']} references unknown mission '#{chain['mission_id']}'"
+      end
+      expect(chain['events']).to be_an(Array)
+      expect(chain['events']).not_to be_empty
+    end
+  end
+
+  it 'catches missing required fields and raises a descriptive error' do
+    bad_yaml = <<~YAML
+      missions:
+        - id: broken-mission
+          title: Missing template and sequence
+    YAML
+    bad_data = YAML.safe_load(bad_yaml)
+    mission = bad_data['missions'].first
+    expect(mission['template']).to be_nil
+    expect(mission['sequence']).to be_nil
+  end
+
+  it 'all mission sequences are unique and positive' do
+    seqs = data['missions'].map { |m| m['sequence'] }
+    expect(seqs.uniq.length).to eq(seqs.length)
+    seqs.each { |s| expect(s).to be > 0 }
+  end
 end

@@ -34,6 +34,33 @@
 #         <mineral_id>: integer
 #     reward:
 #       affinity: integer
+#     events:                     # optional — ordered list of events to fire at debrief
+#       - trigger: string         # when: debrief_complete | mission_accepted | on_launch
+#         kind: string            # unlock_popup | toast | screen_transition
+#         payload:                # freeform map interpreted by each event kind
+#           <key>: <value>
+#
+# event_chains:                   # optional top-level key for standalone chained events
+#   - id: string
+#     trigger: string             # fires_after_mission | fires_after_missions_count
+#     mission_id: string          # (fires_after_mission only)
+#     count: integer              # (fires_after_missions_count only)
+#     events:
+#       - kind: string
+#         payload:
+#           <key>: <value>
+#
+# Edge cases where YAML falls short (candidates for future DSL parser):
+#   1. Conditional reward formulas (e.g. bonus only if speed < 60s) cannot be expressed
+#      as static YAML values — they require a predicate. Current workaround: express the
+#      formula as a human-readable string (payout_formula) and implement the logic in Go.
+#   2. Multi-step event sequences with timing delays (e.g. popup 2s after debrief) are
+#      representable but verbose — a DSL with `after(2s)` syntax would be cleaner.
+#   3. Dynamic mineral selection per-mission (template declares keys, runtime picks one)
+#      is currently handled by Go seed code; if designers need to author this directly,
+#      a DSL with range/random expressions would replace the cargo_range heuristic.
+#   4. Cross-mission state checks (e.g. "only fire if contractor affinity >= 20") require
+#      runtime evaluation — YAML can declare the threshold but not the comparison logic.
 
 mission_templates:
   - id: starter-bulk
@@ -93,6 +120,12 @@ missions:
         iron: 6
     reward:
       affinity: 10
+    events:
+      - trigger: debrief_complete
+        kind: unlock_popup
+        payload:
+          popup_id: sr2
+          parts: [hull-mk2, fusion-b2, laser-t2]
 
   - id: m2-silicon
     template: volatile-bulk
@@ -142,3 +175,21 @@ missions:
         gold: 4
     reward:
       affinity: 20
+    events:
+      - trigger: debrief_complete
+        kind: screen_transition
+        payload:
+          target_screen: hub
+          toast: "Free Operations unlocked — explore on your own"
+
+event_chains:
+  - id: m3-handoff
+    trigger: fires_after_mission
+    mission_id: m3-nickel-cobalt
+    events:
+      - kind: toast
+        payload:
+          message: "M3 complete — Free Operations begins"
+      - kind: screen_transition
+        payload:
+          target_screen: hub
