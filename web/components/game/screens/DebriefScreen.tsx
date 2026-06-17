@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import type { Mission, Target, MineralMeta } from '@/lib/data'
-import { sellCargo } from '@/lib/data'
+import { sellCargo, calibrateOnboardingPayout } from '@/lib/data'
 import Panel from '@/components/ui/Panel'
 import TopBar from '@/components/ui/TopBar'
 import { PrimaryBtn } from '@/components/ui/Button'
@@ -14,7 +14,7 @@ const DEBRIEF_GUIDE = [
   { label: 'MINERAL VALUE', desc: 'Market rate for every unit of ore in your cargo. You always receive this regardless of contract status.' },
 ]
 
-export default function DebriefScreen({ mission, target, cargo, onDone, minerals, freeOperations, annotations }: {
+export default function DebriefScreen({ mission, target, cargo, onDone, minerals, freeOperations, annotations, missionsDone }: {
   mission: Mission
   target: Target
   cargo: Record<string, number>
@@ -22,13 +22,15 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   minerals: Record<string, MineralMeta>
   freeOperations?: boolean
   annotations?: number
+  missionsDone?: number
 }) {
   const [step, setStep] = useState(0)
   const [guideOpen, setGuideOpen] = useState(false)
   const subtotal = sellCargo(cargo, minerals)
   const delivered = Object.entries(mission.requires.minerals).every(([id, amount]) => (cargo[id] ?? 0) >= amount)
   const discoveryBonus = freeOperations ? Math.round(subtotal * (0.10 + 0.01 * (annotations ?? 0))) : 0
-  const total = subtotal + (delivered ? mission.payout.francs : 0) + discoveryBonus
+  const rawTotal = subtotal + (delivered ? mission.payout.francs : 0) + discoveryBonus
+  const total = calibrateOnboardingPayout(rawTotal, missionsDone ?? 0)
 
   return (
     <div className="game-screen debrief-screen">

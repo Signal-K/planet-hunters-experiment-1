@@ -5,6 +5,8 @@ import {
   validateBuild,
   compatibleTargetsFor,
   rateMission,
+  calibrateOnboardingPayout,
+  STARTER_ROCKET_COST,
   MINERAL_META,
   MISSIONS,
   MISSION_TEMPLATES,
@@ -145,6 +147,32 @@ describe('rateMission', () => {
   it('returns 1 star for a slow delivery', () => {
     const m1 = MISSIONS.find(m => m.id === 'm1-iron')!
     expect(rateMission({ mission: m1, cargo: { iron: 6 }, elapsed: 90 })).toBe(1)
+  })
+})
+
+describe('calibrateOnboardingPayout', () => {
+  const floor1 = Math.round(STARTER_ROCKET_COST * 1.5)
+
+  it('enforces a floor of 1.5× rocket cost on the first mission', () => {
+    expect(calibrateOnboardingPayout(0, 0)).toBe(floor1)
+    expect(calibrateOnboardingPayout(floor1 - 1, 0)).toBe(floor1)
+  })
+
+  it('does not reduce a first-mission payout already above the floor', () => {
+    expect(calibrateOnboardingPayout(floor1 + 100_000, 0)).toBe(floor1 + 100_000)
+  })
+
+  it('nudges second-mission payout toward 1.15× rocket cost', () => {
+    const target = Math.round(STARTER_ROCKET_COST * 1.15)
+    const rawBelow = target - 10_000
+    const result = calibrateOnboardingPayout(rawBelow, 1)
+    expect(result).toBeGreaterThanOrEqual(rawBelow)
+    expect(result).toBeLessThanOrEqual(target)
+  })
+
+  it('leaves payouts unchanged for missions after the second', () => {
+    expect(calibrateOnboardingPayout(999, 2)).toBe(999)
+    expect(calibrateOnboardingPayout(999, 10)).toBe(999)
   })
 })
 

@@ -69,3 +69,26 @@ function buildResourceMission(seed: ResourceMissionSeed): Mission {
 }
 
 export const MISSIONS: Mission[] = RESOURCE_MISSION_SEEDS.map(buildResourceMission)
+
+// Baseline cost of assembling the starter SR1 rocket (hull-mk1 + ion-a1 + hand-drill).
+// Used as the reference point for onboarding payout floors.
+export const STARTER_ROCKET_COST = 500_000
+
+/**
+ * Ensures the first mission pays generously (floor at 1.5× rocket cost) and
+ * early follow-up missions nudge toward a normal economy (1.15× target).
+ *
+ * @param rawNet - the raw payout before calibration
+ * @param missionsDone - missions completed before this one
+ */
+export function calibrateOnboardingPayout(rawNet: number, missionsDone: number): number {
+  if (missionsDone === 0) {
+    return Math.max(rawNet, Math.round(STARTER_ROCKET_COST * 1.5))
+  }
+  if (missionsDone === 1) {
+    const target = Math.round(STARTER_ROCKET_COST * 1.15)
+    // Nudge toward target: average rawNet with the target floor rather than hard-snapping.
+    return Math.max(rawNet, Math.round((rawNet + target) / 2))
+  }
+  return rawNet
+}
