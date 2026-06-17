@@ -7,6 +7,13 @@ import Panel from '@/components/ui/Panel'
 import { PrimaryBtn } from '@/components/ui/Button'
 import MiningCanvas from './MiningCanvas'
 
+const MINING_GUIDE = [
+  { label: 'FIRE LASER', desc: 'Fires your mining laser at the asteroid. Collect ore by hitting ore veins.' },
+  { label: 'RETURN HOME', desc: 'Return to base. Only enabled once your cargo meets the mission order.' },
+  { label: 'ORE COUNTER', desc: 'Shows collected vs. required per mineral. Fill all slots to unlock return.' },
+  { label: 'TOTAL', desc: 'Combined ore progress across all required minerals for this contract.' },
+]
+
 export default function MiningScreen({ mission, target, onComplete, onBack, minerals }: {
   mission: Mission
   target: Target
@@ -51,10 +58,26 @@ export default function MiningScreen({ mission, target, onComplete, onBack, mine
 
   const totalNeeded = Object.entries(mission.requires.minerals).reduce((sum, [, v]) => sum + v, 0)
   const totalCollected = Object.entries(cargoRef.current).reduce((sum, [, v]) => sum + v, 0)
+  const [guideOpen, setGuideOpen] = useState(false)
 
   return (
     <div className="game-screen mining-screen">
       <TopBar eyebrow={`${target.name.toUpperCase()} · SURFACE`} title="Mining Run" onBack={onBack} />
+
+      {guideOpen && (
+        <div style={{ position: 'absolute', inset: 0, zIndex: 70, background: 'rgba(3,6,12,0.82)', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: 16, gap: 8 }} onClick={() => setGuideOpen(false)}>
+          <div style={{ background: 'rgba(8,16,30,0.97)', border: '1px solid rgba(100,180,255,0.3)', borderRadius: 14, padding: 14 }} onClick={e => e.stopPropagation()}>
+            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', color: '#87CFFA', textTransform: 'uppercase', marginBottom: 10 }}>Mining Controls</div>
+            {MINING_GUIDE.map(item => (
+              <div key={item.label} style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', color: '#f5a623', whiteSpace: 'nowrap', minWidth: 90 }}>{item.label}</span>
+                <span style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', lineHeight: 1.4 }}>{item.desc}</span>
+              </div>
+            ))}
+            <button onClick={() => setGuideOpen(false)} style={{ marginTop: 4, width: '100%', padding: '8px 0', background: 'rgba(100,180,255,0.1)', border: '1px solid rgba(100,180,255,0.3)', borderRadius: 8, fontFamily: 'var(--ln-font-display)', fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', color: '#87CFFA', cursor: 'pointer', textTransform: 'uppercase' }}>Close</button>
+          </div>
+        </div>
+      )}
 
       <div className="mining-viewport">
         <div className="mining-stars" />
@@ -110,6 +133,13 @@ export default function MiningScreen({ mission, target, onComplete, onBack, mine
           >
             {orderFilled ? 'RETURN HOME' : 'FILL ORDER TO RETURN'}
           </PrimaryBtn>
+          <button
+            data-testid="mining-guide-btn"
+            onClick={() => setGuideOpen(o => !o)}
+            style={{ padding: '8px 12px', borderRadius: 8, background: 'rgba(8,12,22,0.7)', border: '1px solid rgba(100,180,255,0.35)', fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', color: '#87CFFA', cursor: 'pointer', textTransform: 'uppercase' }}
+          >
+            ? Guide
+          </button>
         </div>
       </div>
     </div>
