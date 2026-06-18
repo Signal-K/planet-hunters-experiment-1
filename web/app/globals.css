@@ -42,6 +42,13 @@
   --ln-amber-soft:   rgba(245, 166, 35, 0.14);
   --ln-amber-border: rgba(245, 166, 35, 0.55);
 
+  --ln-crimson:        #c8293e;
+  --ln-crimson-bright: #e83a52;
+  --ln-crimson-press:  #a0202f;
+  --ln-crimson-soft:   rgba(200, 41, 62, 0.14);
+  --ln-crimson-border: rgba(200, 41, 62, 0.52);
+  --ln-glow-crimson:   0 0 0 1px rgba(200,41,62,0.7), 0 0 18px rgba(200,41,62,0.4);
+
   --ln-ok:        #39d36a;
   --ln-ok-soft:   rgba(57, 211, 106, 0.18);
   --ln-warn:      #ffb347;

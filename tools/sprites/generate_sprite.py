@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Landnam sprite generator — uses Replicate (Flux) to create spacecraft part sprites.
+Landnam sprite generator — uses Replicate (Flux) to create spacecraft sprites.
 
 Models:
   schnell  fast, $0.003/image  (default — use for NL iteration)
@@ -8,18 +8,19 @@ Models:
 
 Single sprite:
   python3 tools/sprites/generate_sprite.py \\
-      --prompt "a small ion thruster, flat vector icon, white background" \\
+      --profile room_module \\
+      --prompt "Tier 1 cockpit command room with pilot console and star chart" \\
       --name ion_thruster_t3 \\
       --count 2 \\
       --aspect-ratio 1:1 \\
       --model pro \\
-      --out-dir web/public/parts/_generated
+      --out-dir tools/sprites/output/_generated
 
 Batch (multiple different sprites in one run):
   python3 tools/sprites/generate_sprite.py \\
-      --batch '[{"name":"main_stage_t1","prompt":"...","aspect_ratio":"1:2"},{"name":"booster_t1","prompt":"..."}]' \\
+      --batch-file tools/sprites/ship_room_batch.json \\
       --model pro \\
-      --out-dir web/public/parts/_generated
+      --out-dir tools/sprites/output/_generated
 
 Setup:
   Add REPLICATE_API_TOKEN=<your token> to Landnam/web/.env.local
@@ -53,17 +54,76 @@ ASPECT_RATIO_ALIASES = {
     "3:1": "21:9",
 }
 
-STYLE_SUFFIX = (
-    "2D flat game sprite icon in the style of Master of Orion 2 or Stellaris unit icons. "
-    "Strict 2D orthographic view — side view for ships, top-down for structures. "
-    "Color palette: hull in muted steel blue-grey (#1e2d3d / #2c4a6b), "
-    "cyan-teal accent trim (#00e5ff / #4ab8c1), amber indicator detail (#f5a623), "
-    "dark navy outline (#0d1520 / #0a0f1e), pure black or transparent background. "
-    "Flat shading ONLY — no gradients, no specular highlights, no ambient occlusion, "
-    "no normal maps, no rim lighting. "
-    "Crisp clean silhouette, single isolated object centered in frame, no scene context. "
-    "Looks like a Figma or Illustrator vector export — NOT a Blender render."
+LANDNAM_PALETTE = (
+    "Landnam command-deck palette: dark navy and blue-black hull shadows, "
+    "muted steel blue-grey panels (#1e2d3d / #2c4a6b), cyan-teal trims and light strips "
+    "(#00e5ff / #4ab8c1), amber hazard and power details (#f5a623), deep ink outline "
+    "(#0a0f1e)."
 )
+
+COMMON_STYLE = (
+    "Pixel-art game sprite, side-view orthographic camera, crisp readable silhouette, "
+    "chunky dark outline, visible hand-placed panel lines, no UI labels, no text, no crew characters. "
+    "Transparent or pure black background only. "
+    f"{LANDNAM_PALETTE} "
+    "Readable at mobile-game size; avoid tiny greebles that collapse when scaled down."
+)
+
+STYLE_PROFILES = {
+    "part_icon": (
+        "Single isolated rocket part catalog icon. "
+        "Object centered in frame, three-quarter-flat or strict side view, no surrounding scene. "
+        "Studio-lit sprite tile feel, but still flat/pixel-art rather than 3D. "
+        f"{COMMON_STYLE}"
+    ),
+    "ship_exterior": (
+        "Complete exterior rocket/ship sprite for a regular closed-hull view, inspired by modular "
+        "side-view ship management games. Long horizontal silhouette with hull, nose, engines, fins, "
+        "container modules and stage seams visible from the outside. No visible rooms. "
+        "The ship should read as one assembled vehicle, centered with empty transparent margin. "
+        f"{COMMON_STYLE}"
+    ),
+    "ship_container": (
+        "Open cutaway rocket/ship container sprite for an interior-management view. "
+        "Flat side-elevation cutaway, like the port wall has been removed; not top-down, not blueprint plan view. "
+        "Use a clean horizontal deck grid inside the hull: empty rectangular bays, floor/ceiling rails, vertical "
+        "bulkheads, connector corridors, stage seams, engine/nose boundaries. Do not fill bays with "
+        "room equipment; this is the reusable container layer that room sprites sit inside. "
+        f"{COMMON_STYLE}"
+    ),
+    "room_module": (
+        "Individual interior room/module sprite tile for placement inside the ship cutaway. "
+        "Rectangular room bay with floor, ceiling, side bulkheads, machinery silhouettes, consoles, "
+        "pipes, storage racks, screens, or equipment appropriate to the room. No exterior hull. "
+        "Keep the module orthographic and grid-aligned so multiple rooms can tile together. "
+        f"{COMMON_STYLE}"
+    ),
+    "launch_rocket_part": (
+        "Isolated rocket component sprite for a launch sequence animation. "
+        "VERTICAL portrait orientation — the rocket points UPWARD in the frame. "
+        "Single separable rocket component centered in frame with transparent/black margins. "
+        "Crisp chunky pixel-art silhouette, visible panel seams and bolted flanges, "
+        "cyan thruster details, amber coupling rings and hazard markings. "
+        "No background, no ground, no scene — isolated sprite only. "
+        f"{COMMON_STYLE}"
+    ),
+    "launch_effect": (
+        "Rocket exhaust, flame, or smoke effect sprite for a pixel-art launch animation. "
+        "Effect isolated on pure black background. "
+        "Bright cyan-white core fading to amber-orange outer glow, "
+        "chunky pixel shapes not photo-realistic fire. "
+        "Frame centered on the effect with black margins. "
+        f"{COMMON_STYLE}"
+    ),
+    "launch_background": (
+        "Pixel-art background layer for a rocket launch sequence. "
+        "Wide panoramic scene layer for parallax scrolling, no moving elements, "
+        "pure side-view or elevation composition. "
+        "Flat readable pixel art, dark Landnam palette, "
+        "readable depth cues through color and silhouette only. "
+        f"{COMMON_STYLE}"
+    ),
+}
 
 # Passed as negative_prompt to Flux to hard-block photorealistic / 3D styles.
 NEGATIVE_PROMPT = (
@@ -72,8 +132,8 @@ NEGATIVE_PROMPT = (
     "subsurface scattering, specular highlight, normal map, bump map, "
     "painterly, watercolor, oil painting, sketch, pencil drawing, "
     "white background, grey background, gradient background, "
-    "scene, landscape, environment, multiple objects, "
-    "person, human, text, label, border, frame, decorative elements"
+    "full scene, landscape, planet background, unrelated multiple objects, "
+    "person, human, text, label, UI, border, frame, watermark"
 )
 
 POLL_INTERVAL = 1.5
@@ -174,8 +234,12 @@ def download(url: str, dest: Path) -> None:
         dest.write_bytes(resp.read())
 
 
-def enrich_prompt(prompt: str) -> str:
-    return f"{prompt}. {STYLE_SUFFIX}"
+def enrich_prompt(prompt: str, profile: str) -> str:
+    suffix = STYLE_PROFILES.get(profile)
+    if suffix is None:
+        valid = ", ".join(sorted(STYLE_PROFILES))
+        raise ValueError(f"unknown profile '{profile}' (valid: {valid})")
+    return f"{prompt}. {suffix}"
 
 
 def generate_one(
@@ -189,8 +253,9 @@ def generate_one(
     total: int,
     count: int = 1,
     aspect_ratio: str = "1:1",
+    profile: str = "part_icon",
 ) -> list[Path]:
-    full_prompt = enrich_prompt(prompt)
+    full_prompt = enrich_prompt(prompt, profile)
     generated = []
 
     for i in range(1, count + 1):
@@ -226,11 +291,13 @@ def generate_one(
 def generate_one_safe(
     name: str, prompt: str, model_slug: str, token: str, out_dir: Path,
     timestamp: str, index: int, total: int, count: int = 1, aspect_ratio: str = "1:1",
+    profile: str = "part_icon",
 ) -> tuple[list[Path], str | None]:
     """Wrapper around generate_one that catches errors instead of propagating them."""
     try:
         files = generate_one(name, prompt, model_slug, token, out_dir,
-                             timestamp, index, total, count=count, aspect_ratio=aspect_ratio)
+                             timestamp, index, total, count=count, aspect_ratio=aspect_ratio,
+                             profile=profile)
         return files, None
     except ReplicateError as e:
         return [], str(e)
@@ -243,30 +310,38 @@ def main() -> None:
     # Single sprite mode
     parser.add_argument("--prompt",       default="", help="Visual description (single sprite mode)")
     parser.add_argument("--name",         default="sprite", help="Base filename, snake_case, no extension")
+    parser.add_argument("--profile", choices=sorted(STYLE_PROFILES), default="part_icon",
+                        help="Prompt profile for single sprite mode")
     parser.add_argument("--count",        type=int, default=1, help="Variants to generate (single mode)")
     parser.add_argument("--aspect-ratio", default="1:1", dest="aspect_ratio",
                         help="Image aspect ratio, e.g. 1:1, 1:2, 2:3 (default: 1:1)")
     # Batch mode
     parser.add_argument("--batch", default="",
-                        help='JSON array: [{"name":"...", "prompt":"...", "aspect_ratio":"1:1"}]')
+                        help='JSON array: [{"name":"...", "profile":"room_module", "prompt":"...", "aspect_ratio":"1:1"}]')
+    parser.add_argument("--batch-file", default="", help="Path to JSON batch file")
     # Shared
     parser.add_argument("--model",   choices=list(MODELS), default="schnell")
-    parser.add_argument("--out-dir", default="web/public/parts/_generated")
+    parser.add_argument("--out-dir", default="tools/sprites/output/_generated")
+    parser.add_argument("--dry-run", action="store_true", help="Print enriched prompts without calling Replicate")
     args = parser.parse_args()
 
-    token = load_token()
     model_slug = MODELS[args.model]
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    token = "" if args.dry_run else load_token()
 
     # ── Batch mode ────────────────────────────────────────────────────────────
-    if args.batch and args.batch.strip() not in ("", "[]"):
+    batch_payload = args.batch
+    if args.batch_file:
+        batch_payload = Path(args.batch_file).read_text()
+
+    if batch_payload and batch_payload.strip() not in ("", "[]"):
         try:
-            items = json.loads(args.batch)
+            items = json.loads(batch_payload)
         except json.JSONDecodeError as e:
             # Print first 500 chars of the received value to help diagnose
-            preview = args.batch[:500] + ("…" if len(args.batch) > 500 else "")
+            preview = batch_payload[:500] + ("…" if len(batch_payload) > 500 else "")
             sys.exit(f"Error: --batch is not valid JSON: {e}\nReceived: {preview}")
 
         if not isinstance(items, list) or not items:
@@ -275,6 +350,8 @@ def main() -> None:
         print(f"Batch mode  : {len(items)} sprites")
         print(f"Model       : {model_slug}")
         print(f"Output      : {out_dir.resolve()}")
+        if args.dry_run:
+            print("Dry run     : yes")
         print()
 
         all_generated: list[Path] = []
@@ -283,20 +360,31 @@ def main() -> None:
             name   = item.get("name", f"sprite_{idx}")
             prompt = item.get("prompt", "")
             ar     = item.get("aspect_ratio", "1:1")
+            profile = item.get("profile", "part_icon")
             if not prompt:
                 print(f"[{idx}/{len(items)}] SKIPPED {name} — no prompt")
                 continue
+            if args.dry_run:
+                print(f"[{idx}/{len(items)}] {name}")
+                print(f"  profile: {profile}")
+                print(f"  ratio  : {resolve_aspect_ratio(ar)}")
+                print(f"  prompt : {enrich_prompt(prompt, profile)}")
+                print()
+                continue
             files, err = generate_one_safe(name, prompt, model_slug, token, out_dir,
-                                           timestamp, idx, len(items), aspect_ratio=ar)
+                                           timestamp, idx, len(items), aspect_ratio=ar,
+                                           profile=profile)
             if err:
                 print(f"  ERROR: {err}")
                 errors.append((name, err))
             else:
                 all_generated.extend(files)
-            # Brief pause between calls to avoid rate limits
+            # Respect rate limit: Pro model allows ~6/min (10s gap keeps us safe)
             if idx < len(items):
-                time.sleep(0.5)
+                time.sleep(12)
 
+        if args.dry_run:
+            return
         print()
         print(f"Done — {len(all_generated)}/{len(items)} sprites generated in {out_dir.resolve()}")
         for p in all_generated:
@@ -314,15 +402,21 @@ def main() -> None:
         sys.exit("Error: provide --prompt for single sprite mode, or --batch for multi-sprite mode")
 
     print(f"Model  : {model_slug}")
+    print(f"Profile: {args.profile}")
     print(f"Prompt : {args.prompt[:100]}{'…' if len(args.prompt) > 100 else ''}")
     print(f"Count  : {args.count}")
     print(f"Ratio  : {args.aspect_ratio}")
     print(f"Output : {out_dir.resolve()}")
     print()
 
+    if args.dry_run:
+        print(enrich_prompt(args.prompt, args.profile))
+        return
+
     files, err = generate_one_safe(
         args.name, args.prompt, model_slug, token, out_dir,
         timestamp, 1, 1, count=args.count, aspect_ratio=args.aspect_ratio,
+        profile=args.profile,
     )
     if err:
         sys.exit(f"Error: {err}")
@@ -334,8 +428,8 @@ def main() -> None:
         for p in generated:
             print(f"  {p.name}")
         print()
-        print("Note: images have white backgrounds. Use Preview > Instant Alpha")
-        print("or the game engine's color-key to drop white before importing.")
+        print("Note: drafts should be reviewed, cleaned/cropped if needed, then promoted")
+        print("to stable runtime filenames under web/public/game/assets/...")
     else:
         print("No files generated — check errors above.")
 

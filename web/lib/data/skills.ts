@@ -1,7 +1,7 @@
 import type { Part, Target } from './types'
 
-export type SkillBranch = 'mining' | 'cargo' | 'range'
-export type SkillNodeId = 'laser-charge-1' | 'cargo-slot-1' | 'near-range-1'
+export type SkillBranch = 'mining' | 'cargo' | 'range' | 'engineering'
+export type SkillNodeId = 'laser-charge-1' | 'cargo-slot-1' | 'near-range-1' | 'ship-customizer-1'
 
 export interface SkillNode {
   id: SkillNodeId
@@ -34,6 +34,13 @@ export const SKILL_NODES: SkillNode[] = [
     cost: 2,
     description: 'L1 travel time is reduced by 15% and near-range reach improves.',
   },
+  {
+    id: 'ship-customizer-1',
+    name: 'Ship Customizer',
+    branch: 'engineering',
+    cost: 1,
+    description: 'Unlocks the hangar interior view with slotted ship rooms.',
+  },
 ]
 
 export function hasSkill(unlocked: string[] | undefined, id: SkillNodeId): boolean {
@@ -57,6 +64,10 @@ export function canUnlockSkillNode(opts: {
 
 export function getLaserChargeCap(unlockedSkillNodes?: string[]): number {
   return BASE_LASER_CHARGES + (hasSkill(unlockedSkillNodes, 'laser-charge-1') ? 2 : 0)
+}
+
+export function hasShipCustomizer(unlockedSkillNodes?: string[]): boolean {
+  return hasSkill(unlockedSkillNodes, 'ship-customizer-1')
 }
 
 export function effectiveCargoCapacity(part: Part, unlockedSkillNodes?: string[]): number {

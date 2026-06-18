@@ -9,6 +9,7 @@ const profiles: Record<string, Cypress.EndToEndConfigOptions> = {
       'cypress/e2e/smoke.cy.ts',
       'cypress/e2e/game-loop.cy.ts',
       'cypress/e2e/dev-shortcuts.cy.ts',
+      'cypress/e2e/ship-customizer.cy.ts',
       'cypress/e2e/m3-territory.cy.ts',
       'cypress/e2e/tutorial-m1.cy.ts',
     ],

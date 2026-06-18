@@ -16,13 +16,26 @@ import {
   CONTRACTOR_SLOTS,
   BASE_LASER_CHARGES,
   canAffordStructure,
+  canConfirmCustomizerBuild,
   canUnlockSkillNode,
+  calculateShipSuccessChance,
+  canInstallPartInSlot,
+  chooseCustomizerPart,
+  confirmCustomizerBuild,
+  createCustomizerBuildState,
+  CUSTOMIZER_BUILD_SEQUENCE,
+  CUSTOMIZER_PARTS,
   effectiveCargoCapacity,
   effectiveMaxOrbit,
   FREE_OPS_START_MISSIONS_DONE,
   generateFreeOpsMissions,
+  getShipInteriorLayout,
+  hasShipCustomizer,
+  SKILL_NODES,
   getLaserChargeCap,
   REFINERY_RECIPES,
+  refundCustomizerPart,
+  selectedCustomizerPartIds,
   structureUnlocked,
   travelDurationMs,
 } from './data'
@@ -127,6 +140,12 @@ describe('skill nodes', () => {
     expect(canUnlockSkillNode({ id: 'laser-charge-1', skillPoints: 3, unlockedSkillNodes: ['laser-charge-1'] })).toBe(false)
   })
 
+  it('defines the ship customizer unlock node', () => {
+    expect(SKILL_NODES.some(node => node.id === 'ship-customizer-1' && node.branch === 'engineering')).toBe(true)
+    expect(hasShipCustomizer([])).toBe(false)
+    expect(hasShipCustomizer(['ship-customizer-1'])).toBe(true)
+  })
+
   it('applies Sprint 5 node effects to laser, cargo, range, and travel time', () => {
     const unlocked = ['laser-charge-1', 'cargo-slot-1', 'near-range-1']
     expect(getLaserChargeCap(unlocked)).toBe(BASE_LASER_CHARGES + 2)
@@ -158,6 +177,93 @@ describe('skill nodes', () => {
     })
     expect(locked.ok).toBe(false)
     expect(unlocked.ok).toBe(true)
+  })
+})
+
+describe('ship room layouts', () => {
+  it('slots SR1 rooms into the cutaway container bounds', () => {
+    const layout = getShipInteriorLayout('sr1')
+    expect(layout?.containerSrc).toBe('/game/assets/ships/containers/sr1_cutaway.png')
+    expect(layout?.slots.map(slot => slot.kind).sort()).toEqual(['booster', 'cockpit', 'engine', 'payload'])
+    for (const slot of layout?.slots ?? []) {
+      expect(slot.x).toBeGreaterThanOrEqual(0)
+      expect(slot.y).toBeGreaterThanOrEqual(0)
+      expect(slot.x + slot.w).toBeLessThanOrEqual(100)
+      expect(slot.y + slot.h).toBeLessThanOrEqual(100)
+    }
+  })
+})
+
+describe('ship customizer parts', () => {
+  it('walks the builder from engine through payload', () => {
+    expect(CUSTOMIZER_BUILD_SEQUENCE).toEqual(['engine', 'booster', 'cockpit', 'payload'])
+    expect(CUSTOMIZER_BUILD_SEQUENCE.map(kind => CUSTOMIZER_PARTS.filter(part => part.kind === kind).length)).toEqual([2, 2, 2, 2])
+  })
+
+  it('calculates a higher success chance as required rooms are installed', () => {
+    const empty = calculateShipSuccessChance([])
+    const full = calculateShipSuccessChance(CUSTOMIZER_PARTS.map(part => part.id))
+    expect(full).toBeGreaterThan(empty)
+    expect(full).toBeLessThanOrEqual(96)
+  })
+
+  it('only allows matching part kinds in hull slots', () => {
+    const cockpit = CUSTOMIZER_PARTS.find(part => part.kind === 'cockpit')!
+    const engine = CUSTOMIZER_PARTS.find(part => part.kind === 'engine')!
+    expect(canInstallPartInSlot(cockpit, 'cockpit')).toBe(true)
+    expect(canInstallPartInSlot(cockpit, 'engine')).toBe(false)
+    expect(canInstallPartInSlot(engine, 'engine')).toBe(true)
+  })
+
+  it('buys, replaces, and refunds staged parts at full market price before confirmation', () => {
+    const ion = CUSTOMIZER_PARTS.find(part => part.id === 'ion-thruster-t1')!
+    const pulse = CUSTOMIZER_PARTS.find(part => part.id === 'pulse-thruster-t1')!
+    const initial = createCustomizerBuildState(1_000_000_000)
+
+    const bought = chooseCustomizerPart(initial, ion.id)
+    expect(bought.ok).toBe(true)
+    expect(bought.state.balance).toBe(1_000_000_000 - ion.price)
+    expect(bought.state.installed.engine).toBe(ion.id)
+
+    const replaced = chooseCustomizerPart(bought.state, pulse.id)
+    expect(replaced.ok).toBe(true)
+    expect(replaced.state.balance).toBe(1_000_000_000 - pulse.price)
+    expect(replaced.state.installed.engine).toBe(pulse.id)
+
+    const refunded = refundCustomizerPart(replaced.state, 'engine')
+    expect(refunded.ok).toBe(true)
+    expect(refunded.state.balance).toBe(1_000_000_000)
+    expect(refunded.state.installed.engine).toBeUndefined()
+  })
+
+  it('blocks unaffordable parts without mutating the build state', () => {
+    const state = createCustomizerBuildState(100)
+    const result = chooseCustomizerPart(state, 'ion-thruster-t1')
+    expect(result.ok).toBe(false)
+    expect(result.reason).toBe('insufficient-balance')
+    expect(result.state).toBe(state)
+  })
+
+  it('requires all four stages before confirmation and locks changes afterwards', () => {
+    let state = createCustomizerBuildState(3_000_000_000)
+
+    const incomplete = confirmCustomizerBuild(state)
+    expect(incomplete.ok).toBe(false)
+    expect(incomplete.reason).toBe('incomplete-build')
+    expect(canConfirmCustomizerBuild(state.installed)).toBe(false)
+
+    for (const partId of ['ion-thruster-t1', 'strap-booster-t1', 'cockpit-command-t1', 'cargo-payload-t1']) {
+      state = chooseCustomizerPart(state, partId).state
+    }
+
+    expect(selectedCustomizerPartIds(state.installed)).toEqual(['ion-thruster-t1', 'strap-booster-t1', 'cockpit-command-t1', 'cargo-payload-t1'])
+    expect(canConfirmCustomizerBuild(state.installed)).toBe(true)
+
+    const confirmed = confirmCustomizerBuild(state)
+    expect(confirmed.ok).toBe(true)
+    expect(confirmed.state.confirmed).toBe(true)
+    expect(chooseCustomizerPart(confirmed.state, 'pulse-thruster-t1').reason).toBe('confirmed')
+    expect(refundCustomizerPart(confirmed.state, 'engine').reason).toBe('confirmed')
   })
 })
 

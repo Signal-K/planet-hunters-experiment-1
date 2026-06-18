@@ -12,7 +12,7 @@ export const STARTER_ROCKETS: StarterRocket[] = [
     missionsRequired: 0,
     locked: false,
     stats: { cargo: 6, maxOrbit: 5, drillTier: 1 },
-    img: '/parts/starter_rocket_t1.png',
+    img: '/game/assets/ships/ship_sr1.png',
     unlockHint: 'Available from the start',
   },
   {

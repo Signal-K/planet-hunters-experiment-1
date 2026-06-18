@@ -139,7 +139,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const previewScreen = params.get('preview')
-    const presetName = params.get('preset')
+    const routePreset = window.location.pathname.endsWith('/game/ship-customizer') ? 'ship-customizer' : null
+    const presetName = routePreset ?? params.get('preset')
     if (previewScreen) {
       isPreview.current = true
       setState({
@@ -158,7 +159,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       if (preset) {
         isPreview.current = true
         setState({ ...DEFAULT_STATE, ...preset })
-        window.history.replaceState({}, '', window.location.pathname)
+        if (!routePreset) window.history.replaceState({}, '', window.location.pathname)
         setHydrated(true)
         return
       }

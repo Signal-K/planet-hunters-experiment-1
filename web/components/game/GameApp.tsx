@@ -1,6 +1,7 @@
 'use client'
 
-import { useMemo, useEffect, useRef } from 'react'
+import { useMemo, useEffect, useRef, useState, useCallback } from 'react'
+import { LaunchSequenceCanvas } from '@/components/game/LaunchSequenceCanvas'
 import { GameProvider, type Screen, useGame } from '@/game-context'
 import { M1_STEPS, M2_STEPS, M3_STEPS, PROGRESSION_STEPS } from '@/lib/data'
 import IntroScreen from '@/components/game/screens/IntroScreen'
@@ -39,6 +40,16 @@ function GameCanvas() {
   const game = useGame()
   const arrivalScheduledFor = useRef<number | null>(null)
   const returnScheduledKey = useRef<string | null>(null)
+  const [launchPending, setLaunchPending] = useState(false)
+
+  const handleLaunch = useCallback(() => {
+    setLaunchPending(true)
+  }, [])
+
+  const handleLaunchComplete = useCallback(() => {
+    setLaunchPending(false)
+    game.onLaunch()
+  }, [game.onLaunch])
 
   // When a timed transit starts, schedule a push notification.
   useEffect(() => {
@@ -247,6 +258,7 @@ function GameCanvas() {
           <HangarScreen
             francs={game.player.francs}
             missionsDone={game.player.missionsDone}
+            unlockedSkillNodes={game.player.unlockedSkillNodes ?? []}
             onBack={() => game.go('hub')}
           />
         )}
@@ -288,7 +300,7 @@ function GameCanvas() {
             parts={game.catalog.parts}
             missionsDone={game.player.missionsDone}
             unlockedSkillNodes={game.player.unlockedSkillNodes ?? []}
-            onLaunch={game.onLaunch}
+            onLaunch={handleLaunch}
             onBack={() => game.go('rocket-buy')}
             hasCoach={hasCoach}
             coachManual={coach?.manual ?? false}
@@ -321,6 +333,15 @@ function GameCanvas() {
         )}
         {game.screen === 'debrief' && game.mission && game.target && (
           <DebriefScreen mission={game.mission} target={game.target} cargo={game.lastCargo ?? {}} onDone={game.onDebriefDone} minerals={game.catalog.minerals} contractors={game.catalog.contractors} contractorMissions={game.player.contractorMissions} freeOperations={game.player.freeOperations} annotations={game.player.researchAnnotations} missionsDone={game.player.missionsDone} hasCoach={hasCoach} />
+        )}
+
+        {/* Launch sequence — plays between fab confirmation and transit */}
+        {launchPending && (
+          <LaunchSequenceCanvas
+            rocketName="Starter Rocket 1"
+            targetName={game.target?.name ?? 'TARGET'}
+            onComplete={handleLaunchComplete}
+          />
         )}
 
         <ToastLayer toasts={game.toasts} onDismiss={game.dismissToast} />

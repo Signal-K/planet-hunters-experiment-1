@@ -10,6 +10,7 @@ const BRANCH_META = {
   mining: { label: 'Mining', accent: 'var(--ln-cyan)' },
   cargo: { label: 'Cargo', accent: 'var(--ln-amber)' },
   range: { label: 'Range', accent: 'var(--ln-ok)' },
+  engineering: { label: 'Engineering', accent: 'var(--ln-cyan-bright)' },
 } as const
 
 export default function SkillTreeScreen({ skillPoints, unlockedSkillNodes, onUnlock, onBack }: {

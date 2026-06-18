@@ -12,8 +12,9 @@ describe('DEV_GROUPS', () => {
     const labels = DEV_GROUPS.map(g => g.label)
     expect(labels).toContain('Mission 1')
     expect(labels).toContain('Mission 2')
+    expect(labels).toContain('Systems')
     expect(labels).not.toContain('Mission 3')
-    expect(labels).toHaveLength(2)
+    expect(labels).toHaveLength(3)
   })
 
   it('every shot key resolves to a non-null preset', () => {
@@ -136,6 +137,18 @@ describe('resolvePreset — Mission 2 arc', () => {
     expect(p.player!.stash).toEqual(SECOND_MISSION.requires.minerals)
     expect(p.lastCargo).toEqual(SECOND_MISSION.requires.minerals)
     expect(p.player!.missionsDone).toBe(1)
+  })
+})
+
+describe('resolvePreset — ship customizer', () => {
+  it('opens hangar with the ship customizer unlocked independent of profile state', () => {
+    const p = resolvePreset('ship-customizer')!
+    expect(p.screen).toBe('hangar')
+    expect(p.tutorial).toBe(false)
+    expect(p.player!.placed).toContain('launchpad')
+    expect(p.player!.unlockedSkillNodes).toContain('ship-customizer-1')
+    expect(p.missionId).toBe(SECOND_MISSION.id)
+    expect(p.targetId).toBe('eros')
   })
 })
 

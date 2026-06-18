@@ -1,0 +1,38 @@
+[
+  {
+    "name": "ship_sr1_exterior",
+    "profile": "ship_exterior",
+    "prompt": "Tier 1 starter mining rocket, compact horizontal side-view ship, blunt reinforced nose, single central cargo spine, two small strap-on fuel pods, one bright cyan engine nozzle, visible stage seams, practical garage-built space program feel, closed exterior hull only",
+    "aspect_ratio": "21:9"
+  },
+  {
+    "name": "ship_sr1_cutaway_container",
+    "profile": "ship_container",
+    "prompt": "Tier 1 starter mining rocket opened for room management, flat side-elevation cutaway hull shell with the near wall removed, blunt nose at left and engine bay at right, one horizontal deck with five to seven empty rectangular room bays, cyan bay borders, floor rails, ceiling rails, vertical bulkheads, visible stage seams, no equipment inside bays, not top-down",
+    "aspect_ratio": "21:9"
+  },
+  {
+    "name": "room_cockpit_t1",
+    "profile": "room_module",
+    "prompt": "Tier 1 cockpit command room module, rectangular bay, pilot chair silhouette, compact control console, small star chart screen, window slit, cyan instrument lights, amber caution pixels, utilitarian early space program hardware",
+    "aspect_ratio": "4:3"
+  },
+  {
+    "name": "room_engine_t1",
+    "profile": "room_module",
+    "prompt": "Tier 1 engine and power room module, rectangular bay, compact reactor cylinder, fuel pipes, small turbine silhouette, heat vents, cyan power conduits, amber warning strips, rugged starter-rocket machinery",
+    "aspect_ratio": "4:3"
+  },
+  {
+    "name": "room_cargo_bay_t1",
+    "profile": "room_module",
+    "prompt": "Tier 1 cargo bay room module, rectangular bay, stacked mineral crates, tie-down rails, netted storage wall, small cargo scale display, cyan edge lights, amber inventory marker pixels, practical mining logistics room",
+    "aspect_ratio": "4:3"
+  },
+  {
+    "name": "room_mining_drill_t1",
+    "profile": "room_module",
+    "prompt": "Tier 1 mining drill equipment room module, rectangular bay, folded drill arm mount, rock sample hopper, tool rack, hydraulic pump, cyan diagnostic screen, amber hazard stripes, compact industrial mining hardware",
+    "aspect_ratio": "4:3"
+  }
+]

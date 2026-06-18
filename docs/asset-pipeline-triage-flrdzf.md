@@ -57,6 +57,13 @@ Issue: `web/public/game/assets/manifest.json` declares:
 
 Those files do not exist. Current rocket and part UI instead uses `/parts/*.png` through `web/lib/data/parts.ts` and `web/lib/data/rockets.ts`.
 
+Decision: ship art should support two views, similar to Pixel Starships:
+
+- Exterior view: stable complete ship/container sprites for the rocket hull/stages.
+- Interior view: room/module sprites that can be shown inside or over the opened ship container.
+
+This means `ships/` should not be treated as a dumping ground for every part icon. Keep it for full exterior/container sprites and, if useful, a clearly named subfolder for stage/container layers. Room sprites should have their own stable runtime path, separate from ore sprites and generic part catalog art.
+
 ### `web/public/parts/_generated/`
 
 Current files:
@@ -98,14 +105,14 @@ Near-duplicate/redundant set:
 - `web/public/scenes/earth-day-sm.png`
 - `web/public/scenes/earth-day.png`
 
-Recommendation:
+Decision:
 
 - Keep canonical Earth scene assets under `web/public/scenes/`.
 - Migrate root-level consumers away from `/earth-day.jpg` and `/earth-dusk.png`.
 - Delete `web/public/earth-dusk.png` after `IntroScreen.tsx` moves to `/scenes/earth-dusk-sm.png` or `/scenes/earth-dusk.png`.
 - Delete `web/public/scenes/earth-day-sm.png` unless a responsive image path is added.
 - Keep `web/public/scenes/earth-day.png`.
-- Keep either `web/public/scenes/earth-dusk.png` for full-resolution dusk scenes or `web/public/scenes/earth-dusk-sm.png` for intro-sized loading. Do not keep both unless components use size-specific variants intentionally.
+- Keep `web/public/scenes/earth-dusk.png` as the canonical full-resolution dusk scene. Do not keep `web/public/scenes/earth-dusk-sm.png` unless responsive scene sizing is implemented intentionally.
 
 ## Files To Keep
 
@@ -136,7 +143,7 @@ Keep in `web/public/parts/` because they are referenced by current data:
 Keep canonical Earth scene assets:
 
 - `web/public/scenes/earth-day.png`
-- One dusk canonical: preferably `web/public/scenes/earth-dusk.png` for full-size scene use, or `web/public/scenes/earth-dusk-sm.png` if only the intro needs the smaller asset.
+- `web/public/scenes/earth-dusk.png`
 
 ## Files To Delete Or Deduplicate
 
@@ -149,7 +156,7 @@ Delete after confirming no external references:
 
 Deduplicate or replace:
 
-- `web/public/parts/basic_hull_t1.png` and `web/public/parts/starter_rocket_t1.png` are byte-identical. Keep `starter_rocket_t1.png` for SR1. Replace `basic_hull_t1.png` with distinct art or update SR4/SR5 placeholders to reuse `starter_rocket_t1.png` explicitly.
+- `web/public/parts/basic_hull_t1.png` and `web/public/parts/starter_rocket_t1.png` are byte-identical. Keep `starter_rocket_t1.png` for SR1. Replace `basic_hull_t1.png` with distinct hull/container art.
 - `web/public/earth-dusk.png` and `web/public/scenes/earth-dusk-sm.png` are byte-identical. Keep only one canonical path.
 
 Archive outside runtime public assets, or delete if no source history is needed:
@@ -200,6 +207,15 @@ web/public/game/assets/
     ship_sr1.png
     ship_sr2.png
     ship_sr3.png
+    containers/
+      hull_t1.png
+      stage_main_t1.png
+      stage_booster_t1.png
+  rooms/
+    cockpit_t1.png
+    cargo_bay_t1.png
+    engine_room_t1.png
+    mining_room_t1.png
 ```
 
 Keep part/component art separate from ship art:
@@ -228,14 +244,17 @@ tools/sprites/output/_generated/
 ## Final Layout Decision For `ships/` And `ores/`
 
 - `web/public/game/assets/ores/` is the canonical runtime directory for mineral node sprites. It should contain one stable `ore_<mineral>.png` for every key in `MINERAL_META` that can appear in targets or generated missions. Add the four missing mineral icons and keep the current eight.
-- `web/public/game/assets/ships/` is the canonical runtime directory for complete ship sprites only, matching manifest keys such as `ship_sr1`. Do not place component/part sprites here. Either generate/promote `ship_sr1.png`, `ship_sr2.png`, and `ship_sr3.png` into this directory, or remove those manifest entries until the game actually uses full ship sprites.
+- `web/public/game/assets/ships/` is the canonical runtime directory for complete exterior ship sprites and ship container/stage sprites. Complete exterior sprites should match manifest keys such as `ship_sr1`. Container/stage sprites should use stable filenames and can live under `web/public/game/assets/ships/containers/`.
+- `web/public/game/assets/rooms/` is the canonical runtime directory for interior room/module sprites used by the open/interior ship view.
 - `web/public/parts/` remains the runtime directory for assembly part icons and rocket-part catalog art.
 - Timestamped generated drafts should not remain under `web/public/`; promote approved images to stable filenames, then archive or delete the drafts.
 
 ## Follow-Up Implementation Checklist
 
 1. Generate missing ore icons for `copper`, `aluminium`, `hydrogen`, and `uranium`; update `tools/ruby-asset-pipeline/lib/ore_icon.rb` so `generate_assets ores` produces all `MINERAL_META` keys.
-2. Decide whether full starter rocket sprites are needed. If yes, populate `web/public/game/assets/ships/ship_sr1.png`, `ship_sr2.png`, and `ship_sr3.png`; if no, remove stale ship entries from `manifest.json`.
-3. Move `tools/sprites/generate_sprite.py` default output away from `web/public/parts/_generated` to `tools/sprites/output/_generated`.
-4. Migrate Earth image references to `web/public/scenes/` and delete duplicate root-level Earth assets.
-5. Fix or remove the missing `/parts/drill-hand.png` reference.
+2. Populate `web/public/game/assets/ships/` with complete exterior ship sprites (`ship_sr1.png`, `ship_sr2.png`, `ship_sr3.png`) and add container/stage sprites for hull/stage layers.
+3. Add room/module sprites under `web/public/game/assets/rooms/` for the open/interior ship view.
+4. Move `tools/sprites/generate_sprite.py` default output away from `web/public/parts/_generated` to `tools/sprites/output/_generated`.
+5. Migrate Earth image references to `web/public/scenes/` and delete duplicate root-level Earth assets.
+6. Fix or remove the missing `/parts/drill-hand.png` reference.
+7. Replace `web/public/parts/basic_hull_t1.png` with distinct hull/container art.
